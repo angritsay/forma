@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  # Feature branches are covered by pull_request, so only main needs a push trigger.
+  push:
+    branches: [main]
+  # No branch filter: stacked PRs target feature branches, not just main.
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 20 is the engines floor and what both Dockerfiles ship; 22 catches drift.
+        node-version: ['20', '22']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # docker-compose.yml uses ${VAR:?} interpolation, so these must be set for
+      # the file to parse. Throwaway values: nothing is started, only built.
+      - run: docker compose build
+        env:
+          SYNC_TOKEN: ci-build-token-0123456789
+          ROLLS_DOMAIN: ':80'
