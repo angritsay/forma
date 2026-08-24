@@ -1,0 +1,29 @@
+# Alternative to Docker Compose. Install:
+#   1. Build on the server:  npm ci && npm run build, deploy the tree to /opt/rolls
+#   2. echo 'SYNC_TOKEN=<openssl rand -hex 32>' > /etc/rolls.env && chmod 600 /etc/rolls.env
+#   3. cp this file to /etc/systemd/system/rolls.service
+#   4. systemctl enable --now rolls
+# Data lives in /var/lib/rolls (created and owned via StateDirectory).
+# Run Caddy separately (distro package) with caddy/Caddyfile.
+
+[Unit]
+Description=Rolls photo-session sync server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/node /opt/rolls/dist/server.js
+EnvironmentFile=/etc/rolls.env
+Environment=DATA_DIR=/var/lib/rolls
+Environment=PORT=8080
+Environment=HOST=127.0.0.1
+DynamicUser=yes
+StateDirectory=rolls
+Restart=on-failure
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
