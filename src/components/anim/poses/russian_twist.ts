@@ -5,9 +5,9 @@
  * beside the other hip.
  *
  * The rig has no rotation axis, so the twist is expressed by what the profile actually shows:
- * the hands dropping to the floor beside the hip and rising through the centre, the trunk
- * leaning back a little further at each touch, and the near/far arms swapping their lead (the
- * far arm reaches further when rotating away from the viewer).
+ * the hands dropping to the floor beside the hip (arm hanging from the shoulder, forearm
+ * forward to the floor) and rising through the centre, the trunk leaning back a little further
+ * at each touch, and the near/far arms swapping their lead.
  */
 import { GROUND_Y, basePose } from '../rig';
 import type { Pose, PoseSet } from './types';
@@ -18,10 +18,11 @@ const seat: Pose = {
   rootY: GROUND_Y - 4,
   torso: -40,
   head: 25,
-  shoulderL: 50,
-  shoulderR: 50,
-  elbowL: 20,
-  elbowR: 20,
+  // Hands together in front of the chest.
+  shoulderL: 38,
+  shoulderR: 38,
+  elbowL: 42,
+  elbowR: 42,
   // Thighs 50° above the floor (hip 100 with torso −40), shins folded down (knee 90), feet up.
   hipL: 100,
   hipR: 100,
@@ -31,12 +32,28 @@ const seat: Pose = {
   ankleR: -40,
 };
 
-// Touch beside the near hip: hands low, trunk a touch further back, far arm leading.
-const touchNear: Pose = { ...seat, torso: -44, head: 28, shoulderR: 12, shoulderL: 24 };
+// Touch beside the near hip: upper arms hang from the shoulders, forearms reach the floor.
+const touchNear: Pose = {
+  ...seat,
+  torso: -44,
+  head: 28,
+  shoulderR: -40,
+  shoulderL: -30,
+  elbowR: 74,
+  elbowL: 74,
+};
 // Through the centre: hands in front of the chest.
 const centre: Pose = { ...seat, torso: -38, head: 23 };
-// Touch beside the far hip: near arm leading.
-const touchFar: Pose = { ...seat, torso: -44, head: 28, shoulderR: 24, shoulderL: 12 };
+// Touch beside the far hip: the near arm leads.
+const touchFar: Pose = {
+  ...seat,
+  torso: -44,
+  head: 28,
+  shoulderR: -30,
+  shoulderL: -40,
+  elbowR: 74,
+  elbowL: 74,
+};
 
 export const russian_twist: PoseSet = {
   id: 'russian_twist',

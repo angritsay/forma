@@ -24,7 +24,7 @@ export interface TestStepProps {
 type Phase = 'ready' | 'running' | 'result';
 
 /**
- * Max-effort test item. Timed tests count down the window (the athlete may stop early), then ask
+ * Max-effort test item. Timed tests count down the windowSec (the athlete may stop early), then ask
  * for the result: reps for rep exercises, the held seconds for timed ones. The measurement is
  * stored as `testValue`/`testUnit` (fed to benchmarks); the step counts as complete once done.
  */
@@ -41,11 +41,11 @@ export function TestStep({
   const exercise = findExercise(step.exerciseId);
   const measureUnit: ExerciseUnit = exercise?.unit ?? 'reps';
   const timed = step.mode === 'timer' && (step.durationSec ?? 0) > 0;
-  const window = timed ? (step.durationSec ?? step.target) : undefined;
+  const windowSec = timed ? (step.durationSec ?? step.target) : undefined;
 
   const [phase, setPhase] = useState<Phase>(timed ? 'ready' : 'result');
   const [value, setValue] = useState(0);
-  const clock = useStepClock(phase === 'running' && !paused, window);
+  const clock = useStepClock(phase === 'running' && !paused, windowSec);
 
   const toResult = useCallback(
     (seconds: number) => {
@@ -54,7 +54,7 @@ export function TestStep({
     },
     [measureUnit],
   );
-  const onDone = useCallback(() => toResult(window ?? 0), [toResult, window]);
+  const onDone = useCallback(() => toResult(windowSec ?? 0), [toResult, windowSec]);
   useCountdownCues(clock, phase === 'running' && !paused, beep, onDone);
 
   const start = () => {
@@ -81,7 +81,7 @@ export function TestStep({
   });
 
   const targetChip = timed
-    ? `${t('training.block_test')} · ${Math.round((window ?? 0) / 60) > 0 ? t('common.minutesShort', { n: Math.round((window ?? 0) / 60) }) : `${window} ${t('training.seconds')}`}`
+    ? `${t('training.block_test')} · ${Math.round((windowSec ?? 0) / 60) > 0 ? t('common.minutesShort', { n: Math.round((windowSec ?? 0) / 60) }) : `${windowSec} ${t('training.seconds')}`}`
     : t('training.block_test');
 
   return (
@@ -110,7 +110,7 @@ export function TestStep({
           </>
         ) : (
           <BigClock
-            seconds={phase === 'ready' ? (window ?? 0) : clock.remainingSec}
+            seconds={phase === 'ready' ? (windowSec ?? 0) : clock.remainingSec}
             tone={phase === 'running' && clock.remainingSec <= 3 ? 'accent' : 'default'}
             caption={step.item.note ? l(step.item.note) : undefined}
           />
