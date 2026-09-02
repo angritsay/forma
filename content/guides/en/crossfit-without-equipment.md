@@ -1,6 +1,6 @@
 ---
 title: 'CrossFit Without Equipment: Home Workouts'
-description: 'CrossFit without equipment: which bodyweight exercises to build on, a 10-minute AMRAP you can do in a hallway, the common mistakes and how to progress. Try it today.'
+description: 'CrossFit without equipment: which bodyweight exercises to build on, a 10-minute AMRAP for a small flat, the common mistakes and how to progress. Try it today.'
 h1: 'CrossFit without equipment: how to train at home with your bodyweight'
 targetKeyword: 'crossfit without equipment'
 secondaryKeywords:

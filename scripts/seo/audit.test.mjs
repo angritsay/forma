@@ -354,6 +354,37 @@ describe('auditHtml / parseSitemap', () => {
     const r = auditHtml(good, 'dist/exercises/prisedaniya/index.html');
     expect(r.issues).toEqual([]);
     expect(r.title).toBe('Приседания: техника, ошибки, варианты — Forma');
+    expect(r.canonical).toBe('https://example.com/exercises/prisedaniya/');
+    expect(r.alternates).toEqual([
+      { hreflang: 'ru', href: 'https://example.com/exercises/prisedaniya/' },
+      { hreflang: 'en', href: 'https://example.com/en/exercises/air-squat/' },
+      { hreflang: 'x-default', href: 'https://example.com/exercises/prisedaniya/' },
+    ]);
+  });
+  it('reads canonical/alternate links regardless of attribute order and entities', () => {
+    const html = `<link href="https://a.b/x/?q=1&amp;r=2" rel="canonical"><link hreflang="en" href="https://a.b/en/x/" rel="alternate">`;
+    expect(extractCanonical(html)).toBe('https://a.b/x/?q=1&r=2');
+    expect(extractAlternates(html)).toEqual([{ hreflang: 'en', href: 'https://a.b/en/x/' }]);
+    expect(extractCanonical('<link rel="stylesheet" href="x.css">')).toBeNull();
+  });
+  it('flags a self-hreflang that disagrees with the canonical', () => {
+    const html = good.replace(
+      'hreflang="ru" href="https://example.com/exercises/prisedaniya/"',
+      'hreflang="ru" href="https://example.com/exercises/other/"',
+    );
+    const msgs = auditHtml(html, 'x').issues.map((i) => `${i.level}:${i.message}`);
+    expect(msgs).toContain(
+      'error:hreflang="ru" (https://example.com/exercises/other/) differs from the canonical (https://example.com/exercises/prisedaniya/)',
+    );
+  });
+  it('maps URLs to dist files with and without a base path', () => {
+    expect(urlToDistFile('https://a.b/exercises/x/', '/d', '/')).toBe('/d/exercises/x/index.html');
+    expect(urlToDistFile('https://a.b/', '/d', '/')).toBe('/d/index.html');
+    expect(urlToDistFile('https://a.b/forma/en/x/', '/d', '/forma/')).toBe('/d/en/x/index.html');
+    expect(urlToDistFile('https://a.b/forma/', '/d', '/forma/')).toBe('/d/index.html');
+    expect(urlToDistFile('https://a.b/forma/sitemap.xml', '/d', '/forma/')).toBe('/d/sitemap.xml');
+    expect(urlToDistFile('https://a.b/en/x/', '/d', '/forma/')).toBe('/d/__outside-base__/en/x/');
+    expect(urlToDistFile('not a url', '/d', '/')).toBeNull();
   });
   it('flags missing tags and noindex', () => {
     const bad = `<html><head><title>A</title><title>B</title><meta name="robots" content="noindex"></head><body></body></html>`;
