@@ -509,9 +509,22 @@ async function main() {
       process.exitCode = 1;
     }
   }
+  // A full run owns public/og: drop cards for content that no longer exists (renamed ids,
+  // unpublished guides) so a stale PNG can never be picked up by ogImagePath().
+  let pruned = 0;
+  if (!only && limit === Infinity && process.exitCode !== 1) {
+    const expected = new Set(jobs.map((j) => j.file));
+    for (const f of readdirSync(OUT_DIR)) {
+      if (/\.png$/i.test(f) && !expected.has(f)) {
+        rmSync(join(OUT_DIR, f));
+        pruned++;
+      }
+    }
+  }
   const secs = ((Date.now() - started) / 1000).toFixed(1);
   log(
-    `[og] wrote ${written}/${jobs.length} images (${figures} with a figure) to public/og in ${secs}s`,
+    `[og] wrote ${written}/${jobs.length} images (${figures} with a figure) to public/og in ${secs}s` +
+      (pruned ? `, removed ${pruned} stale` : ''),
   );
 }
 
