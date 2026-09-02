@@ -78,6 +78,14 @@ describe('parseFrontmatter', () => {
     expect(data.draft).toBe(false);
   });
 
+  it('reads dates the same way whether quoted or bare (YAML would make the bare one a Date)', () => {
+    const bare = parseFrontmatter('---\npublishedAt: 2026-09-02\nupdatedAt: "2026-09-02"\n---\n');
+    expect(bare.data.publishedAt).toBe('2026-09-02');
+    expect(bare.data.updatedAt).toBe('2026-09-02');
+    const scaffold = parseFrontmatter("---\npublishedAt: '2026-09-02'\n---\n");
+    expect(scaffold.data.publishedAt).toBe('2026-09-02');
+  });
+
   it('returns the whole text as body when there is no frontmatter', () => {
     const r = parseFrontmatter('# Just markdown');
     expect(r.hasFrontmatter).toBe(false);
