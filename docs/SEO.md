@@ -8,11 +8,19 @@ Quick commands:
 
 | Command                             | What it does                                                             |
 | ----------------------------------- | ------------------------------------------------------------------------ |
-| `npm run seo:audit`                 | Static content audit (+ built-site checks when `dist/` exists). Exit 1 on errors. |
+| `npm run seo:audit`                 | Static content audit (+ built-site checks when `dist/` exists). Exit 1 on errors. Flags: `-- --dist <dir>`, `--base </forma/>` (or `BASE_PATH`), `--no-dist`, `--json`. |
 | `npm run seo:new-guide -- …`        | Scaffold a guide with the right frontmatter and section skeleton (`draft: true`). |
-| `npm run seo:og`                    | Render OG images into `public/og/` (run **before** `astro build`).       |
+| `npm run seo:og`                    | Render OG images into `public/og/` (run **before** `astro build`). Flags: `-- --only exercise,guide`, `--limit N`, `--quiet`. |
 | `npm run seo:indexnow`              | Submit sitemap URLs to IndexNow after deploy (needs `INDEXNOW_KEY`).     |
 | `npx vitest run scripts/seo src/lib/seo` | Unit tests for the parser, rules, link resolver and page registry. |
+
+A local end-to-end check (no dev server needed):
+
+```sh
+npm run seo:og
+SITE_URL=https://example.com BASE_PATH=/forma/ npx astro build --outDir /tmp/build-seo
+node scripts/seo/audit.mjs --dist /tmp/build-seo --base /forma/
+```
 
 ## 1. How pages are generated
 
@@ -31,9 +39,13 @@ Building blocks (all under `src/lib/seo/` and `src/components/seo/`):
   `title`, `description`, `changefreq`, `priority`, `lastmod`, hreflang `alternates`, `kind`.
   `/app/` is never listed. Feeds the sitemap and `llms.txt`.
 - `meta.ts` — title/description generators. Titles fit a **60-char** budget including the
-  `" — Forma"` suffix (`exerciseTitle` cascades through three templates); descriptions are built
-  from whole sentences to **120–160** chars and get a CTA sentence when short. `ogImagePath()`
-  returns the generated PNG or `/og/default.png` when it does not exist.
+  `" — Forma"` suffix (`exerciseTitle` cascades through three templates, then cuts at a word
+  boundary). `buildDescription()` targets **120–160** chars from real prose only: whole
+  sentences first; when short it tries, in order, sentences + the CTA line, the prose cut at the
+  budget with an ellipsis, cut prose + CTA — and never pads with invented text (a very short
+  exercise description simply yields a shorter meta description, which the audit warns about
+  below 80 chars). `ogImagePath()` returns the generated PNG or `/og/default.png` when it does
+  not exist.
 - `jsonld.ts` — schema.org builders (`organizationJsonLd`, `websiteJsonLd`, `personJsonLd`,
   `breadcrumbJsonLd`, `faqJsonLd`, `itemListJsonLd`, `collectionPageJsonLd`, `howToJsonLd`,
   `videoObjectJsonLd`, `articleJsonLd`, `courseJsonLd`). `JsonLd.astro` merges them into one
@@ -85,7 +97,10 @@ related exercises/courses/guides and a CTA course; hubs link to every child page
 
 ## 3. On-page checklist (guides)
 
-The audit enforces the hard limits and warns on the soft ones.
+The audit enforces the hard limits and warns on the soft ones. The content-collection schema
+(`src/content.config.ts`) is stricter than the audit for a few fields and fails the **build**:
+title 10–70, description 60–170, h1 5–90 chars, valid cluster, `YYYY-MM-DD` dates — so run the
+audit before pushing.
 
 - **title** ≤ 60 chars (schema allows 70; the audit errors above 70) — the keyword in it, brand
   suffix is added automatically.
@@ -98,8 +113,12 @@ The audit enforces the hard limits and warns on the soft ones.
   how to progress → short conclusion with the CTA sentence.
 - **≥ 900 words** in the body (hard minimum 800).
 - **Internal links:** ≥ 3 content links (`exercise:` / `guide:` / `course:`) and ≥ 1 course link
-  (or `cta.courseId`). Every referenced id must exist; fill `relatedExercises`,
-  `relatedCourses`, `relatedGuides` (translationKeys).
+  (or `cta.courseId`). Every referenced id must exist **at audit time** — an exercise that the
+  library has not shipped yet or a guide that is still planned is an error, not a placeholder;
+  add the link when the target exists. Fill `relatedExercises`, `relatedCourses`,
+  `relatedGuides` (translationKeys). At build time an unresolved body link is rendered as plain
+  text and unknown related ids are dropped, so a stale reference never 404s — but it also never
+  links.
 - **FAQ:** 3–5 items, answers 1–3 sentences, self-contained (they become `FAQPage` JSON-LD).
 - **Images:** every image has a meaningful `alt`.
 - **Translation pair:** the same `translationKey` exists in the other locale (warning until it does).
@@ -118,7 +137,7 @@ The audit enforces the hard limits and warns on the soft ones.
 | llms.txt | `src/pages/llms.txt.ts` | Generated: brand, intro, courses, guides, exercise library, about, legal — EN and RU sections. |
 | RSS | `src/pages/rss.xml.ts` | Guides feed, RU items first. |
 | IndexNow key file | `src/pages/[key].txt.ts` | Emitted only when `INDEXNOW_KEY` is set at build time. |
-| OG images | `scripts/seo/og.mjs` → `public/og/*.png` | 1200×630, dark card with the athlete figure on the course gradient. `public/og/` is git-ignored; the deploy workflow runs `npm run seo:og` before `npm run build`. Fonts are bundled (OFL) in `scripts/seo/fonts/`. |
+| OG images | `scripts/seo/og.mjs` → `public/og/*.png` | 1200×630, dark card with the athlete figure on the course gradient: `default.png`, `hub-<home\|courses\|exercises\|guides>-<locale>.png`, `course-<id>-<locale>.png`, `exercise-<id>-<locale>.png`, `guide-<translationKey>-<locale>.png`. `public/og/` is git-ignored; the deploy workflow runs `npm run seo:og` before `npm run build`. Fonts (Manrope, Playfair Display Italic) are bundled under the OFL in `scripts/seo/fonts/` and passed to resvg with `loadSystemFonts: false`; if the folder is emptied the script warns and falls back to system fonts. Content and i18n are imported straight from the TypeScript sources (Node ≥ 22.13 type stripping via `scripts/seo/ts-loader.mjs`); the figure comes from `src/components/anim/render.ts`, and an exercise whose pose set has not shipped yet renders the standing pose (the `[anim] unknown animation` lines in the log). |
 | Analytics / verification | `Analytics.astro`, `SeoHead.astro` | `PUBLIC_YANDEX_METRIKA_ID`, `PUBLIC_GA_ID`, `PUBLIC_YANDEX_VERIFICATION`, `PUBLIC_GOOGLE_VERIFICATION` — rendered only when set. |
 | `/app/` | `src/pages/app/index.astro` | `noindex, nofollow`, excluded from the sitemap and disallowed in robots. |
 
@@ -130,6 +149,14 @@ Validate structured data after a build or deploy:
 - Yandex **Валидатор микроразметки** (https://webmaster.yandex.ru/tools/microtest/).
 - `VideoObject` needs `uploadDate` for Google video rich results; the content schema has no
   upload date yet — add it before relying on video snippets.
+
+What the built-site part of the audit checks on every `dist/**/index.html` (except `/app/` and
+`404`): exactly one `<title>` (≤ 60 soft / 70 hard) unique across the site, one `<h1>`, a meta
+description (80–160 soft), `lang` on `<html>`, exactly one canonical that points at the page's
+own file, hreflang alternates including `x-default` whose targets all exist, the page's own
+`hreflang` equal to its canonical, no `noindex`, and presence in `sitemap.xml`; plus, for the
+sitemap itself: every URL inside the base path, unique, and backed by a file. `robots.txt`,
+`llms.txt` and `rss.xml` must exist.
 
 ## 5. After deploy
 

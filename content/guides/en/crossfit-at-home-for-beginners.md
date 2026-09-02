@@ -11,8 +11,8 @@ secondaryKeywords:
   - 'home workout plan for beginners'
 cluster: beginners
 translationKey: crossfit-home-beginners
-publishedAt: 2026-09-02
-updatedAt: 2026-09-02
+publishedAt: '2026-09-02'
+updatedAt: '2026-09-02'
 faq:
   - q: 'Can I do CrossFit at home with zero experience?'
     a: 'Yes, as long as you start with the basic movements and no jumping: squats, incline push-ups, glute bridges and planks. Three short sessions a week with a rest day in between is a safe starting dose for a beginner.'

@@ -11,8 +11,8 @@ secondaryKeywords:
   - 'home crossfit without gear'
 cluster: no_equipment
 translationKey: no-equipment-crossfit
-publishedAt: 2026-09-02
-updatedAt: 2026-09-02
+publishedAt: '2026-09-02'
+updatedAt: '2026-09-02'
 faq:
   - q: 'Can you build strength without dumbbells or a barbell?'
     a: 'Yes, up to a point: until you can do 20 full push-ups and 30 squats in a row, your bodyweight is enough resistance. Load goes up through harder versions of each movement, slower tempo and shorter rest.'
