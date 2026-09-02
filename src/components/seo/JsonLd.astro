@@ -27,4 +27,4 @@ function toGraph(input: object | object[]): object {
 const json = data ? JSON.stringify(toGraph(data)).replace(/</g, '\\u003c') : null;
 ---
 
-{json && <script type="application/ld+json" set:html={json} />}
+{json && <script is:inline type="application/ld+json" set:html={json} />}

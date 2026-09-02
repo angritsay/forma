@@ -80,15 +80,36 @@ describe('description helpers', () => {
 
   it('produces 120–160 chars from long, medium and short prose', () => {
     const cta = 'Animation, step-by-step technique, cues and scaling options in the Forma library.';
-    const long = 'A'.repeat(90) + '. ' + 'B'.repeat(90) + '. ' + 'C'.repeat(50) + '.';
+    const long =
+      'The base movement for the whole lower body: quads, glutes and the core all work together. ' +
+      'Forma courses use it in warm-ups, strength blocks and metcons because it teaches you to sit down and stand up under load. ' +
+      'Master it before adding weight.';
     const medium = 'Medium sentence about the exercise that is around one hundred characters long, more or less ok.';
-    const short = 'Short text about squats.';
+    const short = 'Short text about squats that still says something useful.';
     for (const text of [long, medium, short]) {
       const d = buildDescription(text, cta);
       expect(charLength(d), text.slice(0, 20)).toBeGreaterThanOrEqual(DESCRIPTION_MIN);
       expect(charLength(d), text.slice(0, 20)).toBeLessThanOrEqual(DESCRIPTION_MAX);
     }
-    expect(buildDescription(medium, cta)).toBe(`${medium} ${cta}`.slice(0, 160).replace(/\s+\S*$/, '').length > 0 ? buildDescription(medium, cta) : '');
+    // Long prose: whole sentences are preferred over the CTA.
+    expect(buildDescription(long, cta)).toBe(
+      'The base movement for the whole lower body: quads, glutes and the core all work together. Master it before adding weight.'
+        .split('. Master')[0] + '. Forma courses use it in warm-ups, strength blocks and metcons because it teaches you to sit down and stand up under…',
+    );
+    // Short prose: sentence + CTA.
+    expect(buildDescription(short, cta)).toBe(`${short} ${cta}`);
+    // Medium prose: the sentence plus the CTA would overflow, so the prose is cut with an ellipsis.
+    const m = buildDescription(medium, cta);
+    expect(m.endsWith(cta)).toBe(true);
+    expect(m).toContain('…');
+  });
+
+  it('never invents text: a tiny source yields the source plus the CTA, under the maximum', () => {
+    const cta = 'Animation, step-by-step technique, cues and scaling options in the Forma library.';
+    const tiny = 'Short text about squats.';
+    expect(buildDescription(tiny, cta)).toBe(`${tiny} ${cta}`);
+    expect(charLength(buildDescription(tiny, cta))).toBeLessThanOrEqual(DESCRIPTION_MAX);
+    expect(buildDescription(tiny)).toBe(tiny);
   });
 
   it('builds exercise descriptions in range for both locales', () => {

@@ -16,7 +16,7 @@ const metrikaPixel = metrikaId ? `https://mc.yandex.ru/watch/${metrikaId}` : '';
 {
   metrikaId && (
     <Fragment>
-      <script define:vars={{ metrikaId }}>
+      <script is:inline define:vars={{ metrikaId }}>
         (function (m, e, t, r, i, k, a) {
           m[i] =
             m[i] ||
@@ -52,7 +52,7 @@ const metrikaPixel = metrikaId ? `https://mc.yandex.ru/watch/${metrikaId}` : '';
   gaId && (
     <Fragment>
       <script is:inline async src={gaSrc} />
-      <script define:vars={{ gaId }}>
+      <script is:inline define:vars={{ gaId }}>
         window.dataLayer = window.dataLayer || [];
         function gtag() {
           dataLayer.push(arguments);

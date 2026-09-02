@@ -13,6 +13,7 @@ import { exercisesByPattern, patternName } from '@/lib/seo/exercises';
 import { breadcrumbJsonLd, collectionPageJsonLd } from '@/lib/seo/jsonld';
 import { ogImagePath } from '@/lib/seo/meta';
 import { canonicalUrl, siteOrigin } from '@/lib/seo/urls';
+import { href } from '@/lib/util/paths';
 
 export function getStaticPaths() {
   return [{ params: { lang: undefined } }, { params: { lang: 'en' } }];
