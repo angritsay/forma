@@ -1,6 +1,6 @@
 ---
 title: 'CrossFit for Fat Loss at Home: What Actually Works'
-description: 'CrossFit for fat loss at home: how many sessions a week, which formats burn the most, why steps and food matter. A coach''s two-month plan you can start today.'
+description: "CrossFit for fat loss at home: how many sessions a week, which formats burn the most, why steps and food matter. A coach's two-month plan you can start today."
 h1: 'CrossFit for fat loss: how to train at home so you lose fat, not strength'
 targetKeyword: 'crossfit for fat loss'
 secondaryKeywords:
@@ -82,15 +82,15 @@ The better strategy is to manage density, not length. Short HIIT for fat loss gi
 
 A working layout for the first two months:
 
-| Day       | What to do                                 | Time         |
-| --------- | ------------------------------------------ | ------------ |
-| Monday    | Strength: squat, push-up, lunge, plank     | 30–35 min    |
-| Tuesday   | Walk, 7,000+ steps                         | 60 min total |
-| Wednesday | Metcon: AMRAP or EMOM, no equipment        | 25–30 min    |
-| Thursday  | Walk, light stretching                     | 60 min total |
-| Friday    | Strength: hinge, core, step-ups            | 30–35 min    |
-| Saturday  | Short metcon or a Tabata finisher          | 20 min       |
-| Sunday    | Rest, steps without a target               | —            |
+| Day       | What to do                             | Time         |
+| --------- | -------------------------------------- | ------------ |
+| Monday    | Strength: squat, push-up, lunge, plank | 30–35 min    |
+| Tuesday   | Walk, 7,000+ steps                     | 60 min total |
+| Wednesday | Metcon: AMRAP or EMOM, no equipment    | 25–30 min    |
+| Thursday  | Walk, light stretching                 | 60 min total |
+| Friday    | Strength: hinge, core, step-ups        | 30–35 min    |
+| Saturday  | Short metcon or a Tabata finisher      | 20 min       |
+| Sunday    | Rest, steps without a target           | —            |
 
 Three or four sessions a week with a day between the intense ones is the volume you can recover from and keep up past week three. Walking is mandatory here, not optional: in the app a day with 7,000 steps counts toward your streak just like a workout, and large cohort studies have linked around 7,000 steps a day with markedly lower all-cause mortality, with the benefit levelling off near 10,000. For how to spread the days, see the guide on [how many times a week to work out at home](guide:training-frequency).
 

@@ -1,7 +1,7 @@
 ---
 title: 'How Many Times a Week Should You Work Out at Home?'
-description: 'How many times a week should you work out at home? A coach''s answer by level, ready 3-, 4- and 5-day schedules and the rule for adding days. Pick your week.'
-h1: 'How many times a week should you work out at home: a coach''s answer by level and goal'
+description: "How many times a week should you work out at home? A coach's answer by level, ready 3-, 4- and 5-day schedules and the rule for adding days. Pick your week."
+h1: "How many times a week should you work out at home: a coach's answer by level and goal"
 targetKeyword: 'how many times a week should you work out at home'
 secondaryKeywords:
   - 'how often to work out at home'
@@ -63,13 +63,13 @@ How many times a week should you work out at home? The short answer: three if yo
 
 How many days a week you train depends on your training age and your goal, not on your mood.
 
-| Who you are                        | Sessions a week          | What goes between them                 |
-| ---------------------------------- | ------------------------ | -------------------------------------- |
-| Beginner or returning after a break | 3                       | One rest day between sessions          |
-| 3 to 6 months of training          | 3–4                      | No more than two days in a row         |
-| More than six months               | 4–5                      | Different focus on neighbouring days   |
-| Goal: fat loss                     | 3–4 plus daily walking   | A walk on non-training days            |
-| Goal: strength and technique       | 3                        | A full 48 hours between strength days  |
+| Who you are                         | Sessions a week        | What goes between them                |
+| ----------------------------------- | ---------------------- | ------------------------------------- |
+| Beginner or returning after a break | 3                      | One rest day between sessions         |
+| 3 to 6 months of training           | 3–4                    | No more than two days in a row        |
+| More than six months                | 4–5                    | Different focus on neighbouring days  |
+| Goal: fat loss                      | 3–4 plus daily walking | A walk on non-training days           |
+| Goal: strength and technique        | 3                      | A full 48 hours between strength days |
 
 Where the numbers come from. The WHO recommends adults get 150 to 300 minutes of moderate activity a week, or 75 to 150 minutes of vigorous activity, plus muscle-strengthening work for the major muscle groups on at least two days. The ACSM is more specific about the strength part: two to three days a week, with about 48 hours between sessions that load the same muscle groups for novices. Three 30- to 40-minute home sessions cover the strength target, and walks on the other days cover the aerobic one. Anything beyond that is not an obligation; it is a recovery question. Workout frequency for beginners is a solved problem: three sessions, spaced out, done consistently.
 
