@@ -1,6 +1,6 @@
 ---
 title: 'Full Body Dumbbell Workout at Home: A Coach''s Plan'
-description: 'A full body dumbbell workout at home: which exercises to pick, how to choose the weight, sets, reps and rest, and how to progress with one pair. Read the plan and start today.'
+description: 'A full body dumbbell workout at home: which exercises to pick, how to choose the weight, sets, reps and rest, and how to progress. Read the plan and start today.'
 h1: 'Full body dumbbell workout at home: a coach''s plan for the whole body'
 targetKeyword: 'full body dumbbell workout at home'
 secondaryKeywords:
