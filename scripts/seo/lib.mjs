@@ -75,7 +75,8 @@ export const LIMITS = {
  * @returns {{ data: Record<string, unknown>, body: string, hasFrontmatter: boolean }}
  */
 export function parseFrontmatter(md) {
-  const m = md.match(/^﻿?---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)([\s\S]*)$/);
+  // Optional UTF-8 BOM (U+FEFF) before the opening frontmatter fence.
+  const m = md.match(/^\uFEFF?---\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)([\s\S]*)$/);
   if (!m) return { data: {}, body: md, hasFrontmatter: false };
   return { data: parseYaml(m[1] ?? ''), body: m[2] ?? '', hasFrontmatter: true };
 }
