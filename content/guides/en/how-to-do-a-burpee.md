@@ -1,6 +1,6 @@
 ---
 title: 'How to Do a Burpee: Technique, Mistakes and Progressions'
-description: 'How to do a burpee with clean technique: the six steps, breathing, easier variants and the mistakes that hurt wrists and backs. A coach''s guide with a 10-minute workout to try.'
+description: 'How to do a burpee with clean technique: six steps, easier variants and the mistakes that hurt your back. A coach''s guide with a 10-minute workout to try.'
 h1: 'How to do a burpee: step-by-step technique, common mistakes and a beginner progression'
 targetKeyword: 'how to do a burpee'
 secondaryKeywords:
