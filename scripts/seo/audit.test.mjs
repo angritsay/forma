@@ -68,7 +68,10 @@ describe('parseFrontmatter', () => {
         q: 'What does AMRAP mean?',
         a: 'As many rounds as possible: you repeat the circuit until the clock runs out.',
       },
-      { q: 'Is EMOM good for beginners?', a: 'Yes — the built-in rest keeps the intensity in check.' },
+      {
+        q: 'Is EMOM good for beginners?',
+        a: 'Yes — the built-in rest keeps the intensity in check.',
+      },
     ]);
     expect(data.relatedExercises).toEqual(['burpee', 'air_squat']);
     expect(data.relatedCourses).toEqual([]);
@@ -186,11 +189,35 @@ export const COURSES = [COURSE];
 
 function makeIndex() {
   const exercises = new Map([
-    ['air_squat', { id: 'air_squat', slug: { ru: 'prisedaniya', en: 'air-squat' }, name: { ru: 'Приседания', en: 'Air squat' }, file: 'content/exercises/a.ts' }],
-    ['burpee', { id: 'burpee', slug: { ru: 'berpi', en: 'burpee' }, name: { ru: 'Бёрпи', en: 'Burpee' }, file: 'content/exercises/a.ts' }],
+    [
+      'air_squat',
+      {
+        id: 'air_squat',
+        slug: { ru: 'prisedaniya', en: 'air-squat' },
+        name: { ru: 'Приседания', en: 'Air squat' },
+        file: 'content/exercises/a.ts',
+      },
+    ],
+    [
+      'burpee',
+      {
+        id: 'burpee',
+        slug: { ru: 'berpi', en: 'burpee' },
+        name: { ru: 'Бёрпи', en: 'Burpee' },
+        file: 'content/exercises/a.ts',
+      },
+    ],
   ]);
   const courses = new Map([
-    ['start', { id: 'start', slug: { ru: 'start', en: 'start' }, name: { ru: 'Старт', en: 'Start' }, file: 'content/courses/start.ts' }],
+    [
+      'start',
+      {
+        id: 'start',
+        slug: { ru: 'start', en: 'start' },
+        name: { ru: 'Старт', en: 'Start' },
+        file: 'content/courses/start.ts',
+      },
+    ],
   ]);
   return { exercises, courses, issues: [] };
 }
@@ -204,15 +231,37 @@ describe('resolveContentLink / localizedHref', () => {
   ];
   const ctx = { ...index, guides };
   it('resolves exercises, courses and guides per locale', () => {
-    expect(resolveContentLink('exercise:air_squat', 'ru', ctx)).toEqual({ kind: 'exercise', id: 'air_squat', sitePath: '/exercises/prisedaniya/' });
-    expect(resolveContentLink('exercise:air_squat', 'en', ctx)).toEqual({ kind: 'exercise', id: 'air_squat', sitePath: '/exercises/air-squat/' });
-    expect(resolveContentLink('course:start', 'en', ctx)).toEqual({ kind: 'course', id: 'start', sitePath: '/courses/start/' });
-    expect(resolveContentLink('guide:how-to-burpee', 'en', ctx)).toEqual({ kind: 'guide', id: 'how-to-burpee', sitePath: '/guides/how-to-do-a-burpee/' });
+    expect(resolveContentLink('exercise:air_squat', 'ru', ctx)).toEqual({
+      kind: 'exercise',
+      id: 'air_squat',
+      sitePath: '/exercises/prisedaniya/',
+    });
+    expect(resolveContentLink('exercise:air_squat', 'en', ctx)).toEqual({
+      kind: 'exercise',
+      id: 'air_squat',
+      sitePath: '/exercises/air-squat/',
+    });
+    expect(resolveContentLink('course:start', 'en', ctx)).toEqual({
+      kind: 'course',
+      id: 'start',
+      sitePath: '/courses/start/',
+    });
+    expect(resolveContentLink('guide:how-to-burpee', 'en', ctx)).toEqual({
+      kind: 'guide',
+      id: 'how-to-burpee',
+      sitePath: '/guides/how-to-do-a-burpee/',
+    });
   });
   it('reports unknown ids and missing locale versions; ignores normal hrefs', () => {
-    expect(resolveContentLink('exercise:nope', 'ru', ctx)).toMatchObject({ error: 'unknown exercise "nope"' });
-    expect(resolveContentLink('guide:ru-only', 'en', ctx)).toMatchObject({ error: 'guide "ru-only" has no en version' });
-    expect(resolveContentLink('guide:missing', 'ru', ctx)).toMatchObject({ error: 'unknown guide "missing"' });
+    expect(resolveContentLink('exercise:nope', 'ru', ctx)).toMatchObject({
+      error: 'unknown exercise "nope"',
+    });
+    expect(resolveContentLink('guide:ru-only', 'en', ctx)).toMatchObject({
+      error: 'guide "ru-only" has no en version',
+    });
+    expect(resolveContentLink('guide:missing', 'ru', ctx)).toMatchObject({
+      error: 'unknown guide "missing"',
+    });
     expect(resolveContentLink('https://example.com', 'ru', ctx)).toBeNull();
     expect(resolveContentLink('/courses/', 'ru', ctx)).toBeNull();
   });
@@ -243,7 +292,10 @@ describe('checkLength', () => {
 function guideMarkdown(opts = {}) {
   const words = opts.words ?? 950;
   const scaffold = wordCount(guideMarkdownWith('', opts).split(/^---$/m)[2] ?? '');
-  const filler = Array.from({ length: Math.max(0, words - scaffold) }, (_, i) => `word${i % 37}`).join(' ');
+  const filler = Array.from(
+    { length: Math.max(0, words - scaffold) },
+    (_, i) => `word${i % 37}`,
+  ).join(' ');
   return guideMarkdownWith(filler, opts);
 }
 
@@ -267,7 +319,9 @@ function guideMarkdownWith(filler, opts = {}) {
     { q: 'Do I need gear?', a: 'No — the first weeks are bodyweight only.' },
     { q: 'What if it hurts?', a: 'Stop and talk to a doctor if pain persists.' },
   ];
-  const links = opts.links ?? '[air squats](exercise:air_squat), [burpees](exercise:burpee) and [the Start course](course:start)';
+  const links =
+    opts.links ??
+    '[air squats](exercise:air_squat), [burpees](exercise:burpee) and [the Start course](course:start)';
   return `---
 title: "${fm.title}"
 description: "${fm.description}"
@@ -306,7 +360,14 @@ describe('auditGuides', () => {
   const index = makeIndex();
   it('passes a well-formed pair without errors', () => {
     const ru = readGuideFile(
-      guideMarkdown({ keyword: 'кроссфит дома для начинающих', title: 'Кроссфит дома для начинающих: первые 4 недели', h1: 'Кроссфит дома для начинающих', h2: 'Кроссфит дома для начинающих: план', description: 'Кроссфит дома для начинающих: как начать безопасно, что делать в первые четыре недели и как прогрессировать. Читай план и начинай сегодня.' }),
+      guideMarkdown({
+        keyword: 'кроссфит дома для начинающих',
+        title: 'Кроссфит дома для начинающих: первые 4 недели',
+        h1: 'Кроссфит дома для начинающих',
+        h2: 'Кроссфит дома для начинающих: план',
+        description:
+          'Кроссфит дома для начинающих: как начать безопасно, что делать в первые четыре недели и как прогрессировать. Читай план и начинай сегодня.',
+      }),
       'ru',
       'crossfit-doma-dlya-nachinayushchih.md',
     );
@@ -318,7 +379,12 @@ describe('auditGuides', () => {
 
   it('flags short bodies, unknown links, missing translations, duplicate titles and cluster-slug collisions', () => {
     const short = readGuideFile(
-      guideMarkdown({ words: 200, links: '[nope](exercise:nope) and [course](course:missing)', relatedExercises: ['ghost'], translationKey: 'a' }),
+      guideMarkdown({
+        words: 200,
+        links: '[nope](exercise:nope) and [course](course:missing)',
+        relatedExercises: ['ghost'],
+        translationKey: 'a',
+      }),
       'en',
       'a.md',
     );
@@ -336,10 +402,18 @@ describe('auditGuides', () => {
 
   it('skips drafts and warns on soft limits', () => {
     const draft = readGuideFile(guideMarkdown({ draft: true, words: 10 }), 'en', 'draft.md');
-    const soft = readGuideFile(guideMarkdown({ words: 850, faq: [], translationKey: 'soft' }), 'en', 'soft.md');
+    const soft = readGuideFile(
+      guideMarkdown({ words: 850, faq: [], translationKey: 'soft' }),
+      'en',
+      'soft.md',
+    );
     const issues = auditGuides([draft, soft], index);
-    expect(issues.filter((i) => i.file.endsWith('draft.md'))).toEqual([{ level: 'info', file: 'content/guides/en/draft.md', message: 'draft — skipped' }]);
-    const softMsgs = issues.filter((i) => i.file.endsWith('soft.md')).map((i) => `${i.level}:${i.message}`);
+    expect(issues.filter((i) => i.file.endsWith('draft.md'))).toEqual([
+      { level: 'info', file: 'content/guides/en/draft.md', message: 'draft — skipped' },
+    ]);
+    const softMsgs = issues
+      .filter((i) => i.file.endsWith('soft.md'))
+      .map((i) => `${i.level}:${i.message}`);
     expect(softMsgs).toContain('warning:850 words (aim ≥ 900)');
     expect(softMsgs).toContain('warning:0 FAQ items (aim 3–5)');
     expect(softMsgs.some((m) => m.startsWith('error:'))).toBe(false);
@@ -349,7 +423,12 @@ describe('auditGuides', () => {
 describe('auditContentIndex', () => {
   it('requires both locales and unique kebab-case slugs', () => {
     const index = makeIndex();
-    index.exercises.set('dup', { id: 'dup', slug: { ru: 'prisedaniya', en: 'Bad Slug' }, name: { ru: 'X' }, file: 'content/exercises/b.ts' });
+    index.exercises.set('dup', {
+      id: 'dup',
+      slug: { ru: 'prisedaniya', en: 'Bad Slug' },
+      name: { ru: 'X' },
+      file: 'content/exercises/b.ts',
+    });
     const msgs = auditContentIndex(index).map((i) => i.message);
     expect(msgs).toContain('exercise "dup" duplicates ru slug "prisedaniya" of "air_squat"');
     expect(msgs).toContain('exercise "dup" en slug "Bad Slug" is not kebab-case');
@@ -411,7 +490,9 @@ describe('auditHtml / parseSitemap', () => {
     expect(msgs).toContain('error:noindex on a public page');
     expect(msgs).toContain('error:no meta description');
     expect(msgs).toContain('error:no lang attribute on <html>');
-    expect(auditHtml(bad, 'x', { allowNoindex: true }).issues.map((i) => i.message)).not.toContain('noindex on a public page');
+    expect(auditHtml(bad, 'x', { allowNoindex: true }).issues.map((i) => i.message)).not.toContain(
+      'noindex on a public page',
+    );
   });
   it('parses sitemap entries', () => {
     const xml = `<?xml version="1.0"?><urlset><url><loc>https://a.b/x/</loc><lastmod>2026-09-01</lastmod></url><url><loc>https://a.b/y/?q=1&amp;r=2</loc></url></urlset>`;

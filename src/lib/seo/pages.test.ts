@@ -38,7 +38,16 @@ describe('buildPages', () => {
     const home = pages.filter((p) => p.sitePath === '/');
     expect(home.map((p) => p.path).sort()).toEqual(['/', '/en/']);
     expect(home[0]?.alternates).toEqual({ ru: '/', en: '/' });
-    for (const sp of ['/courses/', '/exercises/', '/guides/', '/about/', '/contact/', '/privacy/', '/terms/', '/refund/']) {
+    for (const sp of [
+      '/courses/',
+      '/exercises/',
+      '/guides/',
+      '/about/',
+      '/contact/',
+      '/privacy/',
+      '/terms/',
+      '/refund/',
+    ]) {
       expect(pages.filter((p) => p.sitePath === sp)).toHaveLength(2);
     }
     expect(pages.some((p) => p.path.includes('/app'))).toBe(false);
@@ -69,8 +78,14 @@ describe('buildPages', () => {
   });
 
   it('builds cluster hubs only for clusters that have guides in the locale', () => {
-    const hubs = pages.filter((p) => p.kind === 'hub' && p.sitePath.startsWith('/guides/') && p.sitePath !== '/guides/');
-    expect(hubs.map((p) => p.path).sort()).toEqual(['/en/guides/beginners/', '/guides/beginners/', '/guides/formats/']);
+    const hubs = pages.filter(
+      (p) => p.kind === 'hub' && p.sitePath.startsWith('/guides/') && p.sitePath !== '/guides/',
+    );
+    expect(hubs.map((p) => p.path).sort()).toEqual([
+      '/en/guides/beginners/',
+      '/guides/beginners/',
+      '/guides/formats/',
+    ]);
     const formats = hubs.find((p) => p.path === '/guides/formats/');
     expect(formats?.alternates).toEqual({ ru: '/guides/formats/' });
     expect(formats?.lastmod).toBe('2026-09-05');

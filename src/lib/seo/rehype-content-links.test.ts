@@ -41,7 +41,12 @@ afterAll(() => {
 });
 
 function a(href: string, text: string): HastNode {
-  return { type: 'element', tagName: 'a', properties: { href }, children: [{ type: 'text', value: text }] };
+  return {
+    type: 'element',
+    tagName: 'a',
+    properties: { href },
+    children: [{ type: 'text', value: text }],
+  };
 }
 
 function tree(...links: HastNode[]): HastNode {
@@ -61,14 +66,27 @@ describe('rehypeContentLinks', () => {
 
   it('rewrites content hrefs to localized, base-prefixed URLs', () => {
     const run = rehypeContentLinks({ root, base: '/forma/' });
-    const t = tree(a('exercise:air_squat', 'squats'), a('course:start', 'course'), a('guide:workout-formats', 'guide'), a('https://x.y/', 'ext'));
+    const t = tree(
+      a('exercise:air_squat', 'squats'),
+      a('course:start', 'course'),
+      a('guide:workout-formats', 'guide'),
+      a('https://x.y/', 'ext'),
+    );
     run(t, { path: join(root, 'content', 'guides', 'en', 'formats.md') });
     const hrefs = (t.children![0]!.children ?? []).map((n) => n.properties?.href);
-    expect(hrefs).toEqual(['/forma/en/exercises/air-squat/', '/forma/en/courses/start/', '/forma/en/guides/formats/', 'https://x.y/']);
+    expect(hrefs).toEqual([
+      '/forma/en/exercises/air-squat/',
+      '/forma/en/courses/start/',
+      '/forma/en/guides/formats/',
+      'https://x.y/',
+    ]);
 
     const ru = tree(a('exercise:air_squat', 'присед'), a('guide:workout-formats', 'гайд'));
     run(ru, { history: [join(root, 'content', 'guides', 'ru', 'formaty.md')] });
-    expect((ru.children![0]!.children ?? []).map((n) => n.properties?.href)).toEqual(['/forma/exercises/prisedaniya/', '/forma/guides/formaty/']);
+    expect((ru.children![0]!.children ?? []).map((n) => n.properties?.href)).toEqual([
+      '/forma/exercises/prisedaniya/',
+      '/forma/guides/formaty/',
+    ]);
   });
 
   it('unwraps unknown targets to text and records a warning', () => {
@@ -82,7 +100,10 @@ describe('rehypeContentLinks', () => {
     expect(children[0]).toEqual({ type: 'text', value: 'ghost text' });
     expect(children[1]?.properties?.href).toBe('/exercises/prisedaniya/');
     expect(CONTENT_LINK_WARNINGS.length).toBe(before + 1);
-    expect(CONTENT_LINK_WARNINGS.at(-1)).toMatchObject({ href: 'exercise:ghost', reason: 'unknown exercise "ghost"' });
+    expect(CONTENT_LINK_WARNINGS.at(-1)).toMatchObject({
+      href: 'exercise:ghost',
+      reason: 'unknown exercise "ghost"',
+    });
     expect(warn).toHaveBeenCalled();
     warn.mockRestore();
   });

@@ -50,9 +50,9 @@ const fixture: Exercise = ExerciseSchema.parse({
 describe('title helpers', () => {
   it('picks the first candidate within budget, else cuts the last at a word boundary', () => {
     expect(fitTitle(['short title', 'x'], 20)).toBe('short title');
-    expect(fitTitle(['this candidate is far too long for the budget', 'second one is also long'], 12)).toBe(
-      'second one',
-    );
+    expect(
+      fitTitle(['this candidate is far too long for the budget', 'second one is also long'], 12),
+    ).toBe('second one');
     expect(truncateWords('Приседания: техника, ошибки, варианты', 20)).toBe('Приседания: техника');
     expect(truncateWords('Приседания: техника, ошибки, варианты', 19)).toBe('Приседания: техника');
     expect(truncateWords('Приседания: техника, ошибки, варианты', 18)).toBe('Приседания');
@@ -66,7 +66,13 @@ describe('title helpers', () => {
       expect(title).toContain(fixture.name[locale]);
     }
     expect(exerciseTitle(fixture, 'ru')).toBe('Упражнение Приседания: техника, ошибки, варианты');
-    const long = { ...fixture, name: { ru: 'Румынская тяга на одной ноге с гантелью в противоположной руке', en: 'Single-leg Romanian deadlift with the dumbbell in the opposite hand' } };
+    const long = {
+      ...fixture,
+      name: {
+        ru: 'Румынская тяга на одной ноге с гантелью в противоположной руке',
+        en: 'Single-leg Romanian deadlift with the dumbbell in the opposite hand',
+      },
+    };
     for (const locale of ['ru', 'en'] as const) {
       expect(charLength(exerciseTitle(long, locale))).toBeLessThanOrEqual(TITLE_BUDGET);
     }
@@ -84,7 +90,8 @@ describe('description helpers', () => {
       'The base movement for the whole lower body: quads, glutes and the core all work together. ' +
       'Forma courses use it in warm-ups, strength blocks and metcons because it teaches you to sit down and stand up under load. ' +
       'Master it before adding weight.';
-    const medium = 'Medium sentence about the exercise that is around one hundred characters long, more or less ok.';
+    const medium =
+      'Medium sentence about the exercise that is around one hundred characters long, more or less ok.';
     const short = 'Short text about squats that still says something useful.';
     for (const text of [long, medium, short]) {
       const d = buildDescription(text, cta);
@@ -94,7 +101,11 @@ describe('description helpers', () => {
     // Long prose: the first sentence plus the CTA would overflow, so more of the real text is
     // preferred over the CTA — cut at a word boundary with an ellipsis.
     const d = buildDescription(long, cta);
-    expect(d.startsWith('The base movement for the whole lower body: quads, glutes and the core all work together. Forma courses')).toBe(true);
+    expect(
+      d.startsWith(
+        'The base movement for the whole lower body: quads, glutes and the core all work together. Forma courses',
+      ),
+    ).toBe(true);
     expect(d.endsWith('…')).toBe(true);
     expect(d).not.toContain(cta);
     // Short prose: sentence + CTA.

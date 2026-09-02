@@ -5,145 +5,726 @@
     {
       "id": "beginners",
       "keywords": [
-        { "locale": "ru", "keyword": "кроссфит дома для начинающих", "type": "head", "intent": "informational", "targetPage": "/guides/crossfit-doma-dlya-nachinayushchih/", "priority": 1 },
-        { "locale": "ru", "keyword": "кроссфит для начинающих программа тренировок", "type": "long_tail", "intent": "informational", "targetPage": "/guides/crossfit-doma-dlya-nachinayushchih/", "priority": 1 },
-        { "locale": "ru", "keyword": "с чего начать кроссфит дома", "type": "long_tail", "intent": "informational", "targetPage": "/guides/crossfit-doma-dlya-nachinayushchih/", "priority": 2 },
-        { "locale": "ru", "keyword": "как научиться отжиматься с нуля", "type": "head", "intent": "informational", "targetPage": "/guides/kak-nauchitsya-otzhimatsya/", "priority": 1 },
-        { "locale": "ru", "keyword": "отжимания для начинающих девушек", "type": "long_tail", "intent": "informational", "targetPage": "/guides/kak-nauchitsya-otzhimatsya/", "priority": 2 },
-        { "locale": "ru", "keyword": "кроссфит после 40 лет", "type": "head", "intent": "informational", "targetPage": "/guides/crossfit-posle-40/", "priority": 2 },
-        { "locale": "ru", "keyword": "можно ли заниматься кроссфитом после 40", "type": "long_tail", "intent": "informational", "targetPage": "/guides/crossfit-posle-40/", "priority": 3 },
-        { "locale": "en", "keyword": "crossfit at home for beginners", "type": "head", "intent": "informational", "targetPage": "/guides/crossfit-doma-dlya-nachinayushchih/", "priority": 1 },
-        { "locale": "en", "keyword": "beginner crossfit workouts at home no equipment", "type": "long_tail", "intent": "informational", "targetPage": "/guides/crossfit-doma-dlya-nachinayushchih/", "priority": 2 },
-        { "locale": "en", "keyword": "push-up progression for beginners", "type": "head", "intent": "informational", "targetPage": "/guides/kak-nauchitsya-otzhimatsya/", "priority": 1 },
-        { "locale": "en", "keyword": "how to do your first push-up", "type": "long_tail", "intent": "informational", "targetPage": "/guides/kak-nauchitsya-otzhimatsya/", "priority": 2 },
-        { "locale": "en", "keyword": "crossfit at home after 40", "type": "head", "intent": "informational", "targetPage": "/guides/crossfit-posle-40/", "priority": 2 },
-        { "locale": "en", "keyword": "is crossfit safe over 40", "type": "long_tail", "intent": "informational", "targetPage": "/guides/crossfit-posle-40/", "priority": 3 }
+        {
+          "locale": "ru",
+          "keyword": "кроссфит дома для начинающих",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/crossfit-doma-dlya-nachinayushchih/",
+          "priority": 1
+        },
+        {
+          "locale": "ru",
+          "keyword": "кроссфит для начинающих программа тренировок",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/crossfit-doma-dlya-nachinayushchih/",
+          "priority": 1
+        },
+        {
+          "locale": "ru",
+          "keyword": "с чего начать кроссфит дома",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/crossfit-doma-dlya-nachinayushchih/",
+          "priority": 2
+        },
+        {
+          "locale": "ru",
+          "keyword": "как научиться отжиматься с нуля",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/kak-nauchitsya-otzhimatsya/",
+          "priority": 1
+        },
+        {
+          "locale": "ru",
+          "keyword": "отжимания для начинающих девушек",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/kak-nauchitsya-otzhimatsya/",
+          "priority": 2
+        },
+        {
+          "locale": "ru",
+          "keyword": "кроссфит после 40 лет",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/crossfit-posle-40/",
+          "priority": 2
+        },
+        {
+          "locale": "ru",
+          "keyword": "можно ли заниматься кроссфитом после 40",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/crossfit-posle-40/",
+          "priority": 3
+        },
+        {
+          "locale": "en",
+          "keyword": "crossfit at home for beginners",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/crossfit-doma-dlya-nachinayushchih/",
+          "priority": 1
+        },
+        {
+          "locale": "en",
+          "keyword": "beginner crossfit workouts at home no equipment",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/crossfit-doma-dlya-nachinayushchih/",
+          "priority": 2
+        },
+        {
+          "locale": "en",
+          "keyword": "push-up progression for beginners",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/kak-nauchitsya-otzhimatsya/",
+          "priority": 1
+        },
+        {
+          "locale": "en",
+          "keyword": "how to do your first push-up",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/kak-nauchitsya-otzhimatsya/",
+          "priority": 2
+        },
+        {
+          "locale": "en",
+          "keyword": "crossfit at home after 40",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/crossfit-posle-40/",
+          "priority": 2
+        },
+        {
+          "locale": "en",
+          "keyword": "is crossfit safe over 40",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/crossfit-posle-40/",
+          "priority": 3
+        }
       ]
     },
     {
       "id": "no_equipment",
       "keywords": [
-        { "locale": "ru", "keyword": "кроссфит без оборудования", "type": "head", "intent": "informational", "targetPage": "/guides/crossfit-bez-oborudovaniya/", "priority": 1 },
-        { "locale": "ru", "keyword": "кроссфит дома без инвентаря комплексы", "type": "long_tail", "intent": "informational", "targetPage": "/guides/crossfit-bez-oborudovaniya/", "priority": 2 },
-        { "locale": "ru", "keyword": "как делать бёрпи правильно", "type": "head", "intent": "informational", "targetPage": "/guides/kak-delat-berpi/", "priority": 1 },
-        { "locale": "ru", "keyword": "бёрпи техника выполнения для начинающих", "type": "long_tail", "intent": "informational", "targetPage": "/guides/kak-delat-berpi/", "priority": 2 },
-        { "locale": "ru", "keyword": "тренировка 20 минут дома", "type": "head", "intent": "informational", "targetPage": "/guides/trenirovka-20-minut-doma/", "priority": 1 },
-        { "locale": "ru", "keyword": "короткая тренировка дома на всё тело", "type": "long_tail", "intent": "informational", "targetPage": "/guides/trenirovka-20-minut-doma/", "priority": 2 },
-        { "locale": "ru", "keyword": "упражнения для кроссфита дома", "type": "head", "intent": "informational", "targetPage": "/exercises/", "priority": 1 },
-        { "locale": "en", "keyword": "crossfit without equipment", "type": "head", "intent": "informational", "targetPage": "/guides/crossfit-bez-oborudovaniya/", "priority": 1 },
-        { "locale": "en", "keyword": "bodyweight crossfit wod at home", "type": "long_tail", "intent": "informational", "targetPage": "/guides/crossfit-bez-oborudovaniya/", "priority": 2 },
-        { "locale": "en", "keyword": "how to do a burpee", "type": "head", "intent": "informational", "targetPage": "/guides/kak-delat-berpi/", "priority": 1 },
-        { "locale": "en", "keyword": "burpee form for beginners", "type": "long_tail", "intent": "informational", "targetPage": "/guides/kak-delat-berpi/", "priority": 2 },
-        { "locale": "en", "keyword": "20 minute home workout", "type": "head", "intent": "informational", "targetPage": "/guides/trenirovka-20-minut-doma/", "priority": 1 },
-        { "locale": "en", "keyword": "home crossfit exercises", "type": "head", "intent": "informational", "targetPage": "/exercises/", "priority": 1 }
+        {
+          "locale": "ru",
+          "keyword": "кроссфит без оборудования",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/crossfit-bez-oborudovaniya/",
+          "priority": 1
+        },
+        {
+          "locale": "ru",
+          "keyword": "кроссфит дома без инвентаря комплексы",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/crossfit-bez-oborudovaniya/",
+          "priority": 2
+        },
+        {
+          "locale": "ru",
+          "keyword": "как делать бёрпи правильно",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/kak-delat-berpi/",
+          "priority": 1
+        },
+        {
+          "locale": "ru",
+          "keyword": "бёрпи техника выполнения для начинающих",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/kak-delat-berpi/",
+          "priority": 2
+        },
+        {
+          "locale": "ru",
+          "keyword": "тренировка 20 минут дома",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/trenirovka-20-minut-doma/",
+          "priority": 1
+        },
+        {
+          "locale": "ru",
+          "keyword": "короткая тренировка дома на всё тело",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/trenirovka-20-minut-doma/",
+          "priority": 2
+        },
+        {
+          "locale": "ru",
+          "keyword": "упражнения для кроссфита дома",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/exercises/",
+          "priority": 1
+        },
+        {
+          "locale": "en",
+          "keyword": "crossfit without equipment",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/crossfit-bez-oborudovaniya/",
+          "priority": 1
+        },
+        {
+          "locale": "en",
+          "keyword": "bodyweight crossfit wod at home",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/crossfit-bez-oborudovaniya/",
+          "priority": 2
+        },
+        {
+          "locale": "en",
+          "keyword": "how to do a burpee",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/kak-delat-berpi/",
+          "priority": 1
+        },
+        {
+          "locale": "en",
+          "keyword": "burpee form for beginners",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/kak-delat-berpi/",
+          "priority": 2
+        },
+        {
+          "locale": "en",
+          "keyword": "20 minute home workout",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/trenirovka-20-minut-doma/",
+          "priority": 1
+        },
+        {
+          "locale": "en",
+          "keyword": "home crossfit exercises",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/exercises/",
+          "priority": 1
+        }
       ]
     },
     {
       "id": "dumbbells",
       "keywords": [
-        { "locale": "ru", "keyword": "тренировка с гантелями дома", "type": "head", "intent": "informational", "targetPage": "/guides/trenirovka-s-gantelyami-doma/", "priority": 1 },
-        { "locale": "ru", "keyword": "программа тренировок с гантелями дома на всё тело", "type": "long_tail", "intent": "informational", "targetPage": "/guides/trenirovka-s-gantelyami-doma/", "priority": 2 },
-        { "locale": "ru", "keyword": "какой вес гантелей выбрать для дома", "type": "long_tail", "intent": "commercial", "targetPage": "/guides/oborudovanie-dlya-crossfita-doma/", "priority": 2 },
-        { "locale": "ru", "keyword": "трастеры с гантелями техника", "type": "long_tail", "intent": "informational", "targetPage": "planned", "priority": 3 },
-        { "locale": "en", "keyword": "full body dumbbell workout at home", "type": "head", "intent": "informational", "targetPage": "/guides/trenirovka-s-gantelyami-doma/", "priority": 1 },
-        { "locale": "en", "keyword": "dumbbell crossfit workouts for beginners", "type": "long_tail", "intent": "informational", "targetPage": "/guides/trenirovka-s-gantelyami-doma/", "priority": 2 },
-        { "locale": "en", "keyword": "what dumbbell weight should a beginner use", "type": "long_tail", "intent": "commercial", "targetPage": "/guides/oborudovanie-dlya-crossfita-doma/", "priority": 3 }
+        {
+          "locale": "ru",
+          "keyword": "тренировка с гантелями дома",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/trenirovka-s-gantelyami-doma/",
+          "priority": 1
+        },
+        {
+          "locale": "ru",
+          "keyword": "программа тренировок с гантелями дома на всё тело",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/trenirovka-s-gantelyami-doma/",
+          "priority": 2
+        },
+        {
+          "locale": "ru",
+          "keyword": "какой вес гантелей выбрать для дома",
+          "type": "long_tail",
+          "intent": "commercial",
+          "targetPage": "/guides/oborudovanie-dlya-crossfita-doma/",
+          "priority": 2
+        },
+        {
+          "locale": "ru",
+          "keyword": "трастеры с гантелями техника",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "planned",
+          "priority": 3
+        },
+        {
+          "locale": "en",
+          "keyword": "full body dumbbell workout at home",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/trenirovka-s-gantelyami-doma/",
+          "priority": 1
+        },
+        {
+          "locale": "en",
+          "keyword": "dumbbell crossfit workouts for beginners",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/trenirovka-s-gantelyami-doma/",
+          "priority": 2
+        },
+        {
+          "locale": "en",
+          "keyword": "what dumbbell weight should a beginner use",
+          "type": "long_tail",
+          "intent": "commercial",
+          "targetPage": "/guides/oborudovanie-dlya-crossfita-doma/",
+          "priority": 3
+        }
       ]
     },
     {
       "id": "kettlebell",
       "keywords": [
-        { "locale": "ru", "keyword": "тренировки с гирей дома", "type": "head", "intent": "informational", "targetPage": "/guides/trenirovki-s-girey-doma/", "priority": 1 },
-        { "locale": "ru", "keyword": "гиря для начинающих упражнения", "type": "long_tail", "intent": "informational", "targetPage": "/guides/trenirovki-s-girey-doma/", "priority": 2 },
-        { "locale": "ru", "keyword": "махи гирей техника выполнения", "type": "long_tail", "intent": "informational", "targetPage": "planned", "priority": 2 },
-        { "locale": "ru", "keyword": "турецкий подъём с гирей техника", "type": "long_tail", "intent": "informational", "targetPage": "planned", "priority": 3 },
-        { "locale": "en", "keyword": "kettlebell workouts at home for beginners", "type": "head", "intent": "informational", "targetPage": "/guides/trenirovki-s-girey-doma/", "priority": 1 },
-        { "locale": "en", "keyword": "one kettlebell full body workout", "type": "long_tail", "intent": "informational", "targetPage": "/guides/trenirovki-s-girey-doma/", "priority": 2 },
-        { "locale": "en", "keyword": "kettlebell swing form", "type": "long_tail", "intent": "informational", "targetPage": "planned", "priority": 2 }
+        {
+          "locale": "ru",
+          "keyword": "тренировки с гирей дома",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/trenirovki-s-girey-doma/",
+          "priority": 1
+        },
+        {
+          "locale": "ru",
+          "keyword": "гиря для начинающих упражнения",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/trenirovki-s-girey-doma/",
+          "priority": 2
+        },
+        {
+          "locale": "ru",
+          "keyword": "махи гирей техника выполнения",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "planned",
+          "priority": 2
+        },
+        {
+          "locale": "ru",
+          "keyword": "турецкий подъём с гирей техника",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "planned",
+          "priority": 3
+        },
+        {
+          "locale": "en",
+          "keyword": "kettlebell workouts at home for beginners",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/trenirovki-s-girey-doma/",
+          "priority": 1
+        },
+        {
+          "locale": "en",
+          "keyword": "one kettlebell full body workout",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/trenirovki-s-girey-doma/",
+          "priority": 2
+        },
+        {
+          "locale": "en",
+          "keyword": "kettlebell swing form",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "planned",
+          "priority": 2
+        }
       ]
     },
     {
       "id": "formats",
       "keywords": [
-        { "locale": "ru", "keyword": "amrap что это в кроссфите", "type": "head", "intent": "informational", "targetPage": "/guides/amrap-emom-for-time-tabata/", "priority": 1 },
-        { "locale": "ru", "keyword": "emom тренировка что это", "type": "head", "intent": "informational", "targetPage": "/guides/amrap-emom-for-time-tabata/", "priority": 1 },
-        { "locale": "ru", "keyword": "табата дома для начинающих", "type": "long_tail", "intent": "informational", "targetPage": "/guides/amrap-emom-for-time-tabata/", "priority": 2 },
-        { "locale": "ru", "keyword": "for time кроссфит что значит", "type": "long_tail", "intent": "informational", "targetPage": "/guides/amrap-emom-for-time-tabata/", "priority": 3 },
-        { "locale": "en", "keyword": "amrap workout meaning", "type": "head", "intent": "informational", "targetPage": "/guides/amrap-emom-for-time-tabata/", "priority": 1 },
-        { "locale": "en", "keyword": "emom vs amrap", "type": "long_tail", "intent": "informational", "targetPage": "/guides/amrap-emom-for-time-tabata/", "priority": 2 },
-        { "locale": "en", "keyword": "tabata workout at home", "type": "long_tail", "intent": "informational", "targetPage": "/guides/amrap-emom-for-time-tabata/", "priority": 2 }
+        {
+          "locale": "ru",
+          "keyword": "amrap что это в кроссфите",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/amrap-emom-for-time-tabata/",
+          "priority": 1
+        },
+        {
+          "locale": "ru",
+          "keyword": "emom тренировка что это",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/amrap-emom-for-time-tabata/",
+          "priority": 1
+        },
+        {
+          "locale": "ru",
+          "keyword": "табата дома для начинающих",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/amrap-emom-for-time-tabata/",
+          "priority": 2
+        },
+        {
+          "locale": "ru",
+          "keyword": "for time кроссфит что значит",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/amrap-emom-for-time-tabata/",
+          "priority": 3
+        },
+        {
+          "locale": "en",
+          "keyword": "amrap workout meaning",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/amrap-emom-for-time-tabata/",
+          "priority": 1
+        },
+        {
+          "locale": "en",
+          "keyword": "emom vs amrap",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/amrap-emom-for-time-tabata/",
+          "priority": 2
+        },
+        {
+          "locale": "en",
+          "keyword": "tabata workout at home",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/amrap-emom-for-time-tabata/",
+          "priority": 2
+        }
       ]
     },
     {
       "id": "fat_loss",
       "keywords": [
-        { "locale": "ru", "keyword": "кроссфит для похудения", "type": "head", "intent": "informational", "targetPage": "/guides/crossfit-dlya-pohudeniya/", "priority": 1 },
-        { "locale": "ru", "keyword": "кроссфит дома для похудения девушкам", "type": "long_tail", "intent": "informational", "targetPage": "/guides/crossfit-dlya-pohudeniya/", "priority": 2 },
-        { "locale": "ru", "keyword": "сколько калорий сжигает кроссфит", "type": "long_tail", "intent": "informational", "targetPage": "/guides/crossfit-dlya-pohudeniya/", "priority": 3 },
-        { "locale": "en", "keyword": "crossfit for fat loss", "type": "head", "intent": "informational", "targetPage": "/guides/crossfit-dlya-pohudeniya/", "priority": 1 },
-        { "locale": "en", "keyword": "does crossfit burn fat at home", "type": "long_tail", "intent": "informational", "targetPage": "/guides/crossfit-dlya-pohudeniya/", "priority": 2 }
+        {
+          "locale": "ru",
+          "keyword": "кроссфит для похудения",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/crossfit-dlya-pohudeniya/",
+          "priority": 1
+        },
+        {
+          "locale": "ru",
+          "keyword": "кроссфит дома для похудения девушкам",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/crossfit-dlya-pohudeniya/",
+          "priority": 2
+        },
+        {
+          "locale": "ru",
+          "keyword": "сколько калорий сжигает кроссфит",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/crossfit-dlya-pohudeniya/",
+          "priority": 3
+        },
+        {
+          "locale": "en",
+          "keyword": "crossfit for fat loss",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/crossfit-dlya-pohudeniya/",
+          "priority": 1
+        },
+        {
+          "locale": "en",
+          "keyword": "does crossfit burn fat at home",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/crossfit-dlya-pohudeniya/",
+          "priority": 2
+        }
       ]
     },
     {
       "id": "programming",
       "keywords": [
-        { "locale": "ru", "keyword": "сколько раз в неделю тренироваться дома", "type": "head", "intent": "informational", "targetPage": "/guides/skolko-raz-v-nedelyu-trenirovatsya-doma/", "priority": 1 },
-        { "locale": "ru", "keyword": "rpe как подобрать нагрузку", "type": "head", "intent": "informational", "targetPage": "/guides/rpe-kak-podobrat-nagruzku/", "priority": 2 },
-        { "locale": "ru", "keyword": "шкала rpe в тренировках что это", "type": "long_tail", "intent": "informational", "targetPage": "/guides/rpe-kak-podobrat-nagruzku/", "priority": 2 },
-        { "locale": "ru", "keyword": "разгрузочная неделя в тренировках зачем", "type": "long_tail", "intent": "informational", "targetPage": "planned", "priority": 3 },
-        { "locale": "en", "keyword": "how many times a week should you work out at home", "type": "head", "intent": "informational", "targetPage": "/guides/skolko-raz-v-nedelyu-trenirovatsya-doma/", "priority": 1 },
-        { "locale": "en", "keyword": "rpe scale how hard should a workout be", "type": "head", "intent": "informational", "targetPage": "/guides/rpe-kak-podobrat-nagruzku/", "priority": 2 },
-        { "locale": "en", "keyword": "what is a deload week", "type": "long_tail", "intent": "informational", "targetPage": "planned", "priority": 3 }
+        {
+          "locale": "ru",
+          "keyword": "сколько раз в неделю тренироваться дома",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/skolko-raz-v-nedelyu-trenirovatsya-doma/",
+          "priority": 1
+        },
+        {
+          "locale": "ru",
+          "keyword": "rpe как подобрать нагрузку",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/rpe-kak-podobrat-nagruzku/",
+          "priority": 2
+        },
+        {
+          "locale": "ru",
+          "keyword": "шкала rpe в тренировках что это",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/rpe-kak-podobrat-nagruzku/",
+          "priority": 2
+        },
+        {
+          "locale": "ru",
+          "keyword": "разгрузочная неделя в тренировках зачем",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "planned",
+          "priority": 3
+        },
+        {
+          "locale": "en",
+          "keyword": "how many times a week should you work out at home",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/skolko-raz-v-nedelyu-trenirovatsya-doma/",
+          "priority": 1
+        },
+        {
+          "locale": "en",
+          "keyword": "rpe scale how hard should a workout be",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/rpe-kak-podobrat-nagruzku/",
+          "priority": 2
+        },
+        {
+          "locale": "en",
+          "keyword": "what is a deload week",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "planned",
+          "priority": 3
+        }
       ]
     },
     {
       "id": "recovery",
       "keywords": [
-        { "locale": "ru", "keyword": "дни отдыха между тренировками", "type": "head", "intent": "informational", "targetPage": "/guides/dni-otdyha-i-7000-shagov/", "priority": 1 },
-        { "locale": "ru", "keyword": "7000 шагов в день польза", "type": "long_tail", "intent": "informational", "targetPage": "/guides/dni-otdyha-i-7000-shagov/", "priority": 2 },
-        { "locale": "ru", "keyword": "восстановление после тренировки дома", "type": "long_tail", "intent": "informational", "targetPage": "/guides/dni-otdyha-i-7000-shagov/", "priority": 2 },
-        { "locale": "en", "keyword": "rest days recovery", "type": "head", "intent": "informational", "targetPage": "/guides/dni-otdyha-i-7000-shagov/", "priority": 1 },
-        { "locale": "en", "keyword": "7000 steps a day benefits", "type": "long_tail", "intent": "informational", "targetPage": "/guides/dni-otdyha-i-7000-shagov/", "priority": 2 }
+        {
+          "locale": "ru",
+          "keyword": "дни отдыха между тренировками",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/dni-otdyha-i-7000-shagov/",
+          "priority": 1
+        },
+        {
+          "locale": "ru",
+          "keyword": "7000 шагов в день польза",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/dni-otdyha-i-7000-shagov/",
+          "priority": 2
+        },
+        {
+          "locale": "ru",
+          "keyword": "восстановление после тренировки дома",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/dni-otdyha-i-7000-shagov/",
+          "priority": 2
+        },
+        {
+          "locale": "en",
+          "keyword": "rest days recovery",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/dni-otdyha-i-7000-shagov/",
+          "priority": 1
+        },
+        {
+          "locale": "en",
+          "keyword": "7000 steps a day benefits",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/dni-otdyha-i-7000-shagov/",
+          "priority": 2
+        }
       ]
     },
     {
       "id": "mobility",
       "keywords": [
-        { "locale": "ru", "keyword": "разминка перед тренировкой дома", "type": "head", "intent": "informational", "targetPage": "/guides/razminka-pered-trenirovkoy-doma/", "priority": 1 },
-        { "locale": "ru", "keyword": "разминка перед кроссфитом упражнения", "type": "long_tail", "intent": "informational", "targetPage": "/guides/razminka-pered-trenirovkoy-doma/", "priority": 2 },
-        { "locale": "ru", "keyword": "заминка после тренировки растяжка", "type": "long_tail", "intent": "informational", "targetPage": "planned", "priority": 3 },
-        { "locale": "en", "keyword": "warm up before a home workout", "type": "head", "intent": "informational", "targetPage": "/guides/razminka-pered-trenirovkoy-doma/", "priority": 1 },
-        { "locale": "en", "keyword": "dynamic warm up exercises at home", "type": "long_tail", "intent": "informational", "targetPage": "/guides/razminka-pered-trenirovkoy-doma/", "priority": 2 }
+        {
+          "locale": "ru",
+          "keyword": "разминка перед тренировкой дома",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/razminka-pered-trenirovkoy-doma/",
+          "priority": 1
+        },
+        {
+          "locale": "ru",
+          "keyword": "разминка перед кроссфитом упражнения",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/razminka-pered-trenirovkoy-doma/",
+          "priority": 2
+        },
+        {
+          "locale": "ru",
+          "keyword": "заминка после тренировки растяжка",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "planned",
+          "priority": 3
+        },
+        {
+          "locale": "en",
+          "keyword": "warm up before a home workout",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/razminka-pered-trenirovkoy-doma/",
+          "priority": 1
+        },
+        {
+          "locale": "en",
+          "keyword": "dynamic warm up exercises at home",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/razminka-pered-trenirovkoy-doma/",
+          "priority": 2
+        }
       ]
     },
     {
       "id": "motivation",
       "keywords": [
-        { "locale": "ru", "keyword": "как не бросить тренировки", "type": "head", "intent": "informational", "targetPage": "/guides/kak-ne-brosit-trenirovki/", "priority": 1 },
-        { "locale": "ru", "keyword": "как заставить себя тренироваться дома", "type": "long_tail", "intent": "informational", "targetPage": "/guides/kak-ne-brosit-trenirovki/", "priority": 2 },
-        { "locale": "en", "keyword": "how to stay consistent with workouts", "type": "head", "intent": "informational", "targetPage": "/guides/kak-ne-brosit-trenirovki/", "priority": 1 },
-        { "locale": "en", "keyword": "how to build a workout habit at home", "type": "long_tail", "intent": "informational", "targetPage": "/guides/kak-ne-brosit-trenirovki/", "priority": 2 }
+        {
+          "locale": "ru",
+          "keyword": "как не бросить тренировки",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/kak-ne-brosit-trenirovki/",
+          "priority": 1
+        },
+        {
+          "locale": "ru",
+          "keyword": "как заставить себя тренироваться дома",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/kak-ne-brosit-trenirovki/",
+          "priority": 2
+        },
+        {
+          "locale": "en",
+          "keyword": "how to stay consistent with workouts",
+          "type": "head",
+          "intent": "informational",
+          "targetPage": "/guides/kak-ne-brosit-trenirovki/",
+          "priority": 1
+        },
+        {
+          "locale": "en",
+          "keyword": "how to build a workout habit at home",
+          "type": "long_tail",
+          "intent": "informational",
+          "targetPage": "/guides/kak-ne-brosit-trenirovki/",
+          "priority": 2
+        }
       ]
     },
     {
       "id": "equipment",
       "keywords": [
-        { "locale": "ru", "keyword": "оборудование для кроссфита дома", "type": "head", "intent": "commercial", "targetPage": "/guides/oborudovanie-dlya-crossfita-doma/", "priority": 1 },
-        { "locale": "ru", "keyword": "что купить для тренировок дома", "type": "long_tail", "intent": "commercial", "targetPage": "/guides/oborudovanie-dlya-crossfita-doma/", "priority": 2 },
-        { "locale": "ru", "keyword": "какую гирю выбрать для начинающих", "type": "long_tail", "intent": "commercial", "targetPage": "/guides/oborudovanie-dlya-crossfita-doma/", "priority": 2 },
-        { "locale": "en", "keyword": "home crossfit equipment what to buy", "type": "head", "intent": "commercial", "targetPage": "/guides/oborudovanie-dlya-crossfita-doma/", "priority": 1 },
-        { "locale": "en", "keyword": "minimal home gym for crossfit", "type": "long_tail", "intent": "commercial", "targetPage": "/guides/oborudovanie-dlya-crossfita-doma/", "priority": 2 },
-        { "locale": "en", "keyword": "which kettlebell weight to start with", "type": "long_tail", "intent": "commercial", "targetPage": "/guides/oborudovanie-dlya-crossfita-doma/", "priority": 3 }
+        {
+          "locale": "ru",
+          "keyword": "оборудование для кроссфита дома",
+          "type": "head",
+          "intent": "commercial",
+          "targetPage": "/guides/oborudovanie-dlya-crossfita-doma/",
+          "priority": 1
+        },
+        {
+          "locale": "ru",
+          "keyword": "что купить для тренировок дома",
+          "type": "long_tail",
+          "intent": "commercial",
+          "targetPage": "/guides/oborudovanie-dlya-crossfita-doma/",
+          "priority": 2
+        },
+        {
+          "locale": "ru",
+          "keyword": "какую гирю выбрать для начинающих",
+          "type": "long_tail",
+          "intent": "commercial",
+          "targetPage": "/guides/oborudovanie-dlya-crossfita-doma/",
+          "priority": 2
+        },
+        {
+          "locale": "en",
+          "keyword": "home crossfit equipment what to buy",
+          "type": "head",
+          "intent": "commercial",
+          "targetPage": "/guides/oborudovanie-dlya-crossfita-doma/",
+          "priority": 1
+        },
+        {
+          "locale": "en",
+          "keyword": "minimal home gym for crossfit",
+          "type": "long_tail",
+          "intent": "commercial",
+          "targetPage": "/guides/oborudovanie-dlya-crossfita-doma/",
+          "priority": 2
+        },
+        {
+          "locale": "en",
+          "keyword": "which kettlebell weight to start with",
+          "type": "long_tail",
+          "intent": "commercial",
+          "targetPage": "/guides/oborudovanie-dlya-crossfita-doma/",
+          "priority": 3
+        }
       ]
     },
     {
       "id": "courses",
       "$comment": "Transactional intent handled by the course pages, not guides.",
       "keywords": [
-        { "locale": "ru", "keyword": "курс кроссфита для дома", "type": "head", "intent": "transactional", "targetPage": "/courses/", "priority": 1 },
-        { "locale": "ru", "keyword": "программа домашних тренировок с тренером", "type": "long_tail", "intent": "transactional", "targetPage": "/courses/", "priority": 2 },
-        { "locale": "en", "keyword": "home crossfit program", "type": "head", "intent": "transactional", "targetPage": "/courses/", "priority": 1 },
-        { "locale": "en", "keyword": "adaptive home workout program", "type": "long_tail", "intent": "transactional", "targetPage": "/", "priority": 2 }
+        {
+          "locale": "ru",
+          "keyword": "курс кроссфита для дома",
+          "type": "head",
+          "intent": "transactional",
+          "targetPage": "/courses/",
+          "priority": 1
+        },
+        {
+          "locale": "ru",
+          "keyword": "программа домашних тренировок с тренером",
+          "type": "long_tail",
+          "intent": "transactional",
+          "targetPage": "/courses/",
+          "priority": 2
+        },
+        {
+          "locale": "en",
+          "keyword": "home crossfit program",
+          "type": "head",
+          "intent": "transactional",
+          "targetPage": "/courses/",
+          "priority": 1
+        },
+        {
+          "locale": "en",
+          "keyword": "adaptive home workout program",
+          "type": "long_tail",
+          "intent": "transactional",
+          "targetPage": "/",
+          "priority": 2
+        }
       ]
     }
   ]

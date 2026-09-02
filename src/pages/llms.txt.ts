@@ -26,17 +26,23 @@ export const GET: APIRoute = async ({ site }) => {
         `- [${l(c.name, locale)}](${link(locale, `/courses/${c.slug[locale]}/`)}): ${l(c.tagline, locale)}`,
       );
     }
-    lines.push(`- [${t(locale, 'seo.coursesHubTitle')}](${link(locale, '/courses/')}): ${t(locale, 'seo.coursesHubDescription')}`);
+    lines.push(
+      `- [${t(locale, 'seo.coursesHubTitle')}](${link(locale, '/courses/')}): ${t(locale, 'seo.coursesHubDescription')}`,
+    );
     lines.push('');
     lines.push(`## ${t(locale, 'seo.llmsGuides')}`);
     const guides = guidesForLocale(all, locale);
     for (const g of guides) {
       lines.push(`- [${g.data.title}](${link(locale, guidePath(g))}): ${g.data.description}`);
     }
-    lines.push(`- [${t(locale, 'seo.guidesHubH1')}](${link(locale, '/guides/')}): ${t(locale, 'seo.guidesHubDescription')}`);
+    lines.push(
+      `- [${t(locale, 'seo.guidesHubH1')}](${link(locale, '/guides/')}): ${t(locale, 'seo.guidesHubDescription')}`,
+    );
     lines.push('');
     lines.push(`## ${t(locale, 'seo.llmsExercises')}`);
-    lines.push(`- [${t(locale, 'seo.exercisesHubH1')}](${link(locale, '/exercises/')}): ${t(locale, 'seo.llmsExercisesLine')}`);
+    lines.push(
+      `- [${t(locale, 'seo.exercisesHubH1')}](${link(locale, '/exercises/')}): ${t(locale, 'seo.llmsExercisesLine')}`,
+    );
     lines.push('');
     lines.push(`## ${t(locale, 'seo.llmsAbout')}`);
     lines.push(`- [${BRAND.name}](${link(locale, '/')}): ${BRAND.tagline[locale]}`);

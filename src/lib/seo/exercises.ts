@@ -115,7 +115,8 @@ function toClause(sentence: string): string {
   const s = sentence.trim().replace(/[.!?…]+$/, '');
   const first = s.charAt(0);
   const second = s.charAt(1);
-  const startsWithAcronym = second !== '' && second === second.toUpperCase() && /\p{L}/u.test(second);
+  const startsWithAcronym =
+    second !== '' && second === second.toUpperCase() && /\p{L}/u.test(second);
   return startsWithAcronym ? s : first.toLowerCase() + s.slice(1);
 }
 

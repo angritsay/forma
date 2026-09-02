@@ -436,7 +436,8 @@ export function containsPhrase(haystack, needle) {
 export function parseTsLiterals(source) {
   /** @type {{ name: string, value: unknown }[]} */
   const out = [];
-  const re = /(?:^|[\n;])[ \t]*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*(?::\s*[^=;]+?)?\s*=\s*/g;
+  const re =
+    /(?:^|[\n;])[ \t]*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*(?::\s*[^=;]+?)?\s*=\s*/g;
   for (const m of source.matchAll(re)) {
     const start = m.index + m[0].length;
     try {
@@ -562,7 +563,9 @@ function parseL10nCall(raw) {
     if (inner[i] === ',') i = skipWs(inner, i + 1);
     else if (i < inner.length) return null;
   }
-  return args.length === 2 ? { ru: /** @type {string} */ (args[0]), en: /** @type {string} */ (args[1]) } : null;
+  return args.length === 2
+    ? { ru: /** @type {string} */ (args[0]), en: /** @type {string} */ (args[1]) }
+    : null;
 }
 
 /**
@@ -765,7 +768,9 @@ export function loadGuideClusters(root) {
   for (const rel of ['src/lib/seo/clusters.ts', 'src/content.config.ts']) {
     const file = join(root, rel);
     if (!existsSync(file)) continue;
-    const found = parseTsLiterals(readFileSync(file, 'utf8')).find((x) => x.name === 'GUIDE_CLUSTERS');
+    const found = parseTsLiterals(readFileSync(file, 'utf8')).find(
+      (x) => x.name === 'GUIDE_CLUSTERS',
+    );
     if (found && Array.isArray(found.value) && found.value.every((v) => typeof v === 'string')) {
       return /** @type {string[]} */ (found.value);
     }
@@ -845,7 +850,11 @@ export function resolveContentLink(href, locale, ctx) {
     const g = ctx.guides.find((x) => x.locale === locale && x.data.translationKey === id);
     if (g) return { kind, id, sitePath: `/guides/${g.slug}/` };
     const other = ctx.guides.find((x) => x.data.translationKey === id);
-    return { kind, id, error: other ? `guide "${id}" has no ${locale} version` : `unknown guide "${id}"` };
+    return {
+      kind,
+      id,
+      error: other ? `guide "${id}" has no ${locale} version` : `unknown guide "${id}"`,
+    };
   }
   const map = kind === 'exercise' ? ctx.exercises : ctx.courses;
   const entry = map.get(id);
@@ -916,17 +925,33 @@ export function auditContentIndex(index) {
       for (const e of map.values()) {
         const slug = e.slug[locale];
         if (!slug) {
-          issues.push({ level: 'error', file: e.file, message: `${label} "${e.id}" has no ${locale} slug` });
+          issues.push({
+            level: 'error',
+            file: e.file,
+            message: `${label} "${e.id}" has no ${locale} slug`,
+          });
           continue;
         }
         if (!slugRe.test(slug))
-          issues.push({ level: 'error', file: e.file, message: `${label} "${e.id}" ${locale} slug "${slug}" is not kebab-case` });
+          issues.push({
+            level: 'error',
+            file: e.file,
+            message: `${label} "${e.id}" ${locale} slug "${slug}" is not kebab-case`,
+          });
         const prev = seen.get(slug);
         if (prev)
-          issues.push({ level: 'error', file: e.file, message: `${label} "${e.id}" duplicates ${locale} slug "${slug}" of "${prev}"` });
+          issues.push({
+            level: 'error',
+            file: e.file,
+            message: `${label} "${e.id}" duplicates ${locale} slug "${slug}" of "${prev}"`,
+          });
         else seen.set(slug, e.id);
         if (!e.name[locale])
-          issues.push({ level: 'error', file: e.file, message: `${label} "${e.id}" has no ${locale} name` });
+          issues.push({
+            level: 'error',
+            file: e.file,
+            message: `${label} "${e.id}" has no ${locale} name`,
+          });
       }
     }
   }
@@ -960,7 +985,16 @@ export function auditGuides(guides, index, clusters = DEFAULT_GUIDE_CLUSTERS) {
       const push = (/** @type {'error' | 'warning'} */ level, /** @type {string} */ message) =>
         issues.push({ level, file: g.file, message });
 
-      for (const field of ['title', 'description', 'h1', 'targetKeyword', 'cluster', 'translationKey', 'publishedAt', 'updatedAt']) {
+      for (const field of [
+        'title',
+        'description',
+        'h1',
+        'targetKeyword',
+        'cluster',
+        'translationKey',
+        'publishedAt',
+        'updatedAt',
+      ]) {
         if (!str(d[field])) push('error', `frontmatter "${field}" is missing`);
       }
       if (d.cluster && !clusters.includes(str(d.cluster)))
@@ -969,15 +1003,27 @@ export function auditGuides(guides, index, clusters = DEFAULT_GUIDE_CLUSTERS) {
         const v = str(d[field]);
         if (v && !/^\d{4}-\d{2}-\d{2}$/.test(v)) push('error', `"${field}" must be YYYY-MM-DD`);
       }
-      if (clusterSlugs.has(g.slug)) push('error', `slug "${g.slug}" collides with a cluster hub URL`);
+      if (clusterSlugs.has(g.slug))
+        push('error', `slug "${g.slug}" collides with a cluster hub URL`);
 
-      const tl = title && checkLength(title, { min: 10, max: LIMITS.titleMax, hardMin: 10, hardMax: LIMITS.titleHardMax }, 'title');
+      const tl =
+        title &&
+        checkLength(
+          title,
+          { min: 10, max: LIMITS.titleMax, hardMin: 10, hardMax: LIMITS.titleHardMax },
+          'title',
+        );
       if (tl) push(tl.level, tl.message);
       const dl =
         description &&
         checkLength(
           description,
-          { min: LIMITS.descriptionMin, max: LIMITS.descriptionMax, hardMin: LIMITS.descriptionHardMin, hardMax: LIMITS.descriptionHardMax },
+          {
+            min: LIMITS.descriptionMin,
+            max: LIMITS.descriptionMax,
+            hardMin: LIMITS.descriptionHardMin,
+            hardMax: LIMITS.descriptionHardMax,
+          },
           'description',
         );
       if (dl) push(dl.level, dl.message);
@@ -995,19 +1041,25 @@ export function auditGuides(guides, index, clusters = DEFAULT_GUIDE_CLUSTERS) {
       }
 
       if (keyword) {
-        if (!containsPhrase(title, keyword)) push('warning', `target keyword "${keyword}" not in title`);
+        if (!containsPhrase(title, keyword))
+          push('warning', `target keyword "${keyword}" not in title`);
         if (!containsPhrase(h1, keyword)) push('warning', `target keyword "${keyword}" not in h1`);
-        if (!containsPhrase(description, keyword)) push('warning', `target keyword "${keyword}" not in description`);
-        if (!containsPhrase(firstWords(g.body, 100), keyword)) push('warning', `target keyword "${keyword}" not in the first 100 words`);
+        if (!containsPhrase(description, keyword))
+          push('warning', `target keyword "${keyword}" not in description`);
+        if (!containsPhrase(firstWords(g.body, 100), keyword))
+          push('warning', `target keyword "${keyword}" not in the first 100 words`);
         if (!g.headings.some((h) => h.depth === 2 && containsPhrase(h.text, keyword)))
           push('warning', `target keyword "${keyword}" not in any H2`);
       }
 
-      if (g.words < LIMITS.guideWordsHardMin) push('error', `${g.words} words (min ${LIMITS.guideWordsHardMin})`);
-      else if (g.words < LIMITS.guideWordsMin) push('warning', `${g.words} words (aim ≥ ${LIMITS.guideWordsMin})`);
+      if (g.words < LIMITS.guideWordsHardMin)
+        push('error', `${g.words} words (min ${LIMITS.guideWordsHardMin})`);
+      else if (g.words < LIMITS.guideWordsMin)
+        push('warning', `${g.words} words (aim ≥ ${LIMITS.guideWordsMin})`);
       const h2s = g.headings.filter((h) => h.depth === 2).length;
       if (h2s < LIMITS.h2Min) push('warning', `${h2s} H2 sections (aim ≥ ${LIMITS.h2Min})`);
-      if (g.headings.some((h) => h.depth === 1)) push('warning', 'body contains an H1 (the template renders h1 from frontmatter)');
+      if (g.headings.some((h) => h.depth === 1))
+        push('warning', 'body contains an H1 (the template renders h1 from frontmatter)');
 
       const faq = Array.isArray(d.faq) ? d.faq : [];
       if (faq.length < LIMITS.faqMin || faq.length > LIMITS.faqMax)
@@ -1032,19 +1084,31 @@ export function auditGuides(guides, index, clusters = DEFAULT_GUIDE_CLUSTERS) {
         const list = Array.isArray(d[field]) ? d[field] : [];
         for (const ref of list) {
           const id = str(ref);
-          const kind = field === 'relatedExercises' ? 'exercise' : field === 'relatedCourses' ? 'course' : 'guide';
+          const kind =
+            field === 'relatedExercises'
+              ? 'exercise'
+              : field === 'relatedCourses'
+                ? 'course'
+                : 'guide';
           const r = resolveContentLink(`${kind}:${id}`, locale, ctx);
-          if (!r || 'error' in r) push('error', `${field} "${id}": ${r && 'error' in r ? r.error : 'invalid id'}`);
+          if (!r || 'error' in r)
+            push('error', `${field} "${id}": ${r && 'error' in r ? r.error : 'invalid id'}`);
         }
       }
-      const cta = d.cta && typeof d.cta === 'object' ? /** @type {Record<string, unknown>} */ (d.cta) : {};
+      const cta =
+        d.cta && typeof d.cta === 'object' ? /** @type {Record<string, unknown>} */ (d.cta) : {};
       if (str(cta.courseId) && !index.courses.has(str(cta.courseId)))
         push('error', `cta.courseId "${str(cta.courseId)}" is unknown`);
       if (contentLinks < LIMITS.internalLinksMin)
-        push('warning', `${contentLinks} internal content links (aim ≥ ${LIMITS.internalLinksMin})`);
-      if (courseLinks < 1 && !str(cta.courseId)) push('warning', 'no course link and no cta.courseId');
+        push(
+          'warning',
+          `${contentLinks} internal content links (aim ≥ ${LIMITS.internalLinksMin})`,
+        );
+      if (courseLinks < 1 && !str(cta.courseId))
+        push('warning', 'no course link and no cta.courseId');
 
-      for (const img of g.images) if (!img.alt.trim()) push('warning', `image "${img.src}" has no alt text`);
+      for (const img of g.images)
+        if (!img.alt.trim()) push('warning', `image "${img.src}" has no alt text`);
 
       const key = str(d.translationKey);
       if (key) {
@@ -1110,7 +1174,10 @@ export function parseSitemap(xml) {
     const loc = block.match(/<loc>([^<]+)<\/loc>/);
     if (!loc) continue;
     const lastmod = block.match(/<lastmod>([^<]+)<\/lastmod>/);
-    out.push({ loc: decodeEntities((loc[1] ?? '').trim()), lastmod: lastmod ? (lastmod[1] ?? '').trim() : undefined });
+    out.push({
+      loc: decodeEntities((loc[1] ?? '').trim()),
+      lastmod: lastmod ? (lastmod[1] ?? '').trim() : undefined,
+    });
   }
   return out;
 }
@@ -1166,7 +1233,11 @@ export function auditHtml(html, file, opts = {}) {
   const title = titles.length ? decodeEntities((titles[0]?.[1] ?? '').trim()) : null;
   if (titles.length !== 1) push('error', `${titles.length} <title> tags`);
   else {
-    const tl = checkLength(title ?? '', { min: 10, max: LIMITS.titleMax, hardMin: 5, hardMax: LIMITS.titleHardMax }, '<title>');
+    const tl = checkLength(
+      title ?? '',
+      { min: 10, max: LIMITS.titleMax, hardMin: 5, hardMax: LIMITS.titleHardMax },
+      '<title>',
+    );
     if (tl) push(tl.level, tl.message);
   }
   const h1s = (html.match(/<h1[\s>]/gi) ?? []).length;
@@ -1178,21 +1249,30 @@ export function auditHtml(html, file, opts = {}) {
   else if (canonicals.length > 1) push('error', `${canonicals.length} canonical links`);
   const alternates = extractAlternates(html);
   if (alternates.length === 0) push('warning', 'no hreflang alternates');
-  else if (!alternates.some((a) => a.hreflang === 'x-default')) push('warning', 'no x-default alternate');
+  else if (!alternates.some((a) => a.hreflang === 'x-default'))
+    push('warning', 'no x-default alternate');
   const htmlLang = html.match(/<html[^>]*\slang="([^"]*)"/i)?.[1];
   if (htmlLang === undefined) push('error', 'no lang attribute on <html>');
   else if (alternates.length > 0 && canonical) {
     const self = alternates.find((a) => a.hreflang === htmlLang);
     if (!self) push('warning', `no hreflang="${htmlLang}" alternate for the page's own language`);
     else if (self.href !== canonical)
-      push('error', `hreflang="${htmlLang}" (${self.href}) differs from the canonical (${canonical})`);
+      push(
+        'error',
+        `hreflang="${htmlLang}" (${self.href}) differs from the canonical (${canonical})`,
+      );
   }
   const robots = metaContent(html, 'robots');
-  if (robots && /noindex/i.test(robots) && !opts.allowNoindex) push('error', 'noindex on a public page');
+  if (robots && /noindex/i.test(robots) && !opts.allowNoindex)
+    push('error', 'noindex on a public page');
   const description = metaContent(html, 'description');
   if (description === null) push('error', 'no meta description');
   else {
-    const dl = checkLength(description, { min: 80, max: LIMITS.descriptionMax, hardMin: 20, hardMax: 200 }, 'meta description');
+    const dl = checkLength(
+      description,
+      { min: 80, max: LIMITS.descriptionMax, hardMin: 20, hardMax: 200 },
+      'meta description',
+    );
     if (dl) push(dl.level, dl.message);
   }
   return { issues, title, description, canonical, alternates };
@@ -1245,7 +1325,8 @@ export function auditDist(dist, opts = {}) {
   const hasSitemap = existsSync(sitemapPath);
   if (hasSitemap) {
     const entries = parseSitemap(readFileSync(sitemapPath, 'utf8'));
-    if (entries.length === 0) issues.push({ level: 'error', file: 'dist/sitemap.xml', message: 'sitemap has no URLs' });
+    if (entries.length === 0)
+      issues.push({ level: 'error', file: 'dist/sitemap.xml', message: 'sitemap has no URLs' });
     for (const { loc } of entries) {
       const target = urlToDistFile(loc, dist, base);
       if (!target) {
@@ -1256,9 +1337,17 @@ export function auditDist(dist, opts = {}) {
         issues.push({ level: 'error', file: 'dist/sitemap.xml', message: `duplicate URL ${loc}` });
       sitemapUrls.add(loc);
       if (base !== '/' && !new URL(loc).pathname.startsWith(base))
-        issues.push({ level: 'error', file: 'dist/sitemap.xml', message: `${loc} is outside the base path ${base}` });
+        issues.push({
+          level: 'error',
+          file: 'dist/sitemap.xml',
+          message: `${loc} is outside the base path ${base}`,
+        });
       else if (!existsSync(target)) {
-        issues.push({ level: 'error', file: 'dist/sitemap.xml', message: `${loc} has no dist/${rel(dist, target)}` });
+        issues.push({
+          level: 'error',
+          file: 'dist/sitemap.xml',
+          message: `${loc} has no dist/${rel(dist, target)}`,
+        });
       } else inSitemap.add(target);
     }
   } else {
@@ -1286,13 +1375,22 @@ export function auditDist(dist, opts = {}) {
     }
     if (r.description) {
       const prev = descriptions.get(r.description);
-      if (prev) issues.push({ level: 'warning', file: label, message: `meta description duplicates ${prev}` });
+      if (prev)
+        issues.push({
+          level: 'warning',
+          file: label,
+          message: `meta description duplicates ${prev}`,
+        });
       else descriptions.set(r.description, label);
     }
     if (r.canonical) {
       const target = urlToDistFile(r.canonical, dist, base);
       if (target !== file)
-        issues.push({ level: 'error', file: label, message: `canonical points elsewhere: ${r.canonical}` });
+        issues.push({
+          level: 'error',
+          file: label,
+          message: `canonical points elsewhere: ${r.canonical}`,
+        });
       else if (hasSitemap && !sitemapUrls.has(r.canonical))
         issues.push({ level: 'warning', file: label, message: 'page is not in the sitemap' });
     } else if (hasSitemap && !inSitemap.has(file)) {
@@ -1301,7 +1399,11 @@ export function auditDist(dist, opts = {}) {
     for (const a of r.alternates) {
       const target = urlToDistFile(a.href, dist, base);
       if (!target || !existsSync(target))
-        issues.push({ level: 'error', file: label, message: `hreflang="${a.hreflang}" target has no page: ${a.href}` });
+        issues.push({
+          level: 'error',
+          file: label,
+          message: `hreflang="${a.hreflang}" target has no page: ${a.href}`,
+        });
     }
   }
   return issues;
@@ -1332,7 +1434,8 @@ export function formatIssues(issues) {
   const fileWidth = Math.min(48, Math.max(...sorted.map((i) => i.file.length), 4));
   const rows = sorted.map((i) => {
     const level = i.level.toUpperCase().padEnd(7);
-    const file = i.file.length > fileWidth ? `…${i.file.slice(-(fileWidth - 1))}` : i.file.padEnd(fileWidth);
+    const file =
+      i.file.length > fileWidth ? `…${i.file.slice(-(fileWidth - 1))}` : i.file.padEnd(fileWidth);
     return `  ${level} ${file}  ${i.message}`;
   });
   return rows.join('\n');

@@ -30,7 +30,11 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--sitemap' && argv[i + 1]) out.sitemap = argv[++i];
-    else if (a === '--urls' && argv[i + 1]) out.urls = argv[++i].split(',').map((s) => s.trim()).filter(Boolean);
+    else if (a === '--urls' && argv[i + 1])
+      out.urls = argv[++i]
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
     else if (a === '--changed-since' && argv[i + 1]) out.changedSince = argv[++i];
     else if (a === '--dry-run') out.dryRun = true;
   }
@@ -55,7 +59,9 @@ async function main() {
   else {
     const file = resolve(ROOT, args.sitemap);
     if (!existsSync(file)) {
-      console.error(`[indexnow] sitemap not found: ${args.sitemap} (build the site first or pass --urls)`);
+      console.error(
+        `[indexnow] sitemap not found: ${args.sitemap} (build the site first or pass --urls)`,
+      );
       return 1;
     }
     entries = parseSitemap(readFileSync(file, 'utf8'));
@@ -84,7 +90,9 @@ async function main() {
   const keyLocation = `${siteUrl}/${key}.txt`;
   const foreign = urlList.filter((u) => new URL(u).host !== host);
   if (foreign.length) {
-    console.error(`[indexnow] ${foreign.length} URL(s) do not belong to ${host}, e.g. ${foreign[0]}`);
+    console.error(
+      `[indexnow] ${foreign.length} URL(s) do not belong to ${host}, e.g. ${foreign[0]}`,
+    );
     return 1;
   }
 
@@ -92,7 +100,9 @@ async function main() {
   for (let i = 0; i < urlList.length; i += CHUNK) {
     const chunk = urlList.slice(i, i + CHUNK);
     const payload = { host, key, keyLocation, urlList: chunk };
-    console.log(`[indexnow] submitting ${chunk.length} URL(s) for ${host} (key file ${keyLocation})`);
+    console.log(
+      `[indexnow] submitting ${chunk.length} URL(s) for ${host} (key file ${keyLocation})`,
+    );
     if (args.dryRun) {
       console.log(JSON.stringify({ ...payload, key: '***', urlList: chunk.slice(0, 10) }, null, 2));
       if (chunk.length > 10) console.log(`  … and ${chunk.length - 10} more`);
@@ -105,7 +115,9 @@ async function main() {
         body: JSON.stringify(payload),
       });
       const body = (await res.text()).trim();
-      console.log(`[indexnow] response: ${res.status} ${res.statusText}${body ? ` — ${body}` : ''}`);
+      console.log(
+        `[indexnow] response: ${res.status} ${res.statusText}${body ? ` — ${body}` : ''}`,
+      );
       if (res.status === 200 || res.status === 202) continue;
       const hints = {
         400: 'invalid request format',
@@ -116,7 +128,9 @@ async function main() {
       console.error(`[indexnow] ${hints[res.status] ?? 'unexpected status'}`);
       failed = true;
     } catch (err) {
-      console.error(`[indexnow] request failed: ${err instanceof Error ? err.message : String(err)}`);
+      console.error(
+        `[indexnow] request failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
       failed = true;
     }
   }

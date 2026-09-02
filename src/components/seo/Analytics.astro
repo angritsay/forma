@@ -4,19 +4,19 @@
  *   PUBLIC_YANDEX_METRIKA_ID — Yandex Metrika counter (numeric)
  *   PUBLIC_GA_ID             — Google Analytics 4 measurement id (G-XXXXXXX)
  * Included by Landing.astro in the <head>. The app (/app/) does not include it.
+ * Metrika's optional <noscript> pixel is omitted on purpose: it is an <img> and this component
+ * renders inside <head>, where that markup is invalid.
  */
 const metrikaRaw = (import.meta.env.PUBLIC_YANDEX_METRIKA_ID ?? '').trim();
 const gaRaw = (import.meta.env.PUBLIC_GA_ID ?? '').trim();
 const metrikaId = /^\d{4,12}$/.test(metrikaRaw) ? Number(metrikaRaw) : null;
 const gaId = /^[A-Za-z0-9-]{4,32}$/.test(gaRaw) ? gaRaw : null;
 const gaSrc = gaId ? `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(gaId)}` : '';
-const metrikaPixel = metrikaId ? `https://mc.yandex.ru/watch/${metrikaId}` : '';
 ---
 
 {
   metrikaId && (
-    <Fragment>
-      <script is:inline define:vars={{ metrikaId }}>
+    <script is:inline define:vars={{ metrikaId }}>
         (function (m, e, t, r, i, k, a) {
           m[i] =
             m[i] ||

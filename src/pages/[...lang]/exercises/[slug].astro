@@ -72,17 +72,25 @@ const video = publicVideoUrl(ex, locale);
 const embed = video ? videoEmbed(video) : null;
 
 const facts: { label: string; value: string }[] = [
-  { label: t(locale, 'seo.factMuscles'), value: ex.muscles.map((m) => muscleName(m, locale)).join(', ') },
+  {
+    label: t(locale, 'seo.factMuscles'),
+    value: ex.muscles.map((m) => muscleName(m, locale)).join(', '),
+  },
   { label: t(locale, 'seo.factPattern'), value: patternName(ex.pattern, locale) },
   { label: t(locale, 'seo.factEquipment'), value: equipmentNames(ex, locale).join(', ') },
   { label: t(locale, 'seo.factLevel'), value: levelName(ex.level, locale) },
   { label: t(locale, 'seo.factUnit'), value: unitName(ex.unit, locale) },
 ];
 if (ex.secondsPerRep) {
-  facts.push({ label: t(locale, 'seo.factTempo'), value: t(locale, 'seo.tempoPerRep', { n: ex.secondsPerRep }) });
+  facts.push({
+    label: t(locale, 'seo.factTempo'),
+    value: t(locale, 'seo.tempoPerRep', { n: ex.secondsPerRep }),
+  });
 }
 
-const ctaHref = primary ? href(locale, `/courses/${primary.slug[locale]}/`) : href(locale, '/courses/');
+const ctaHref = primary
+  ? href(locale, `/courses/${primary.slug[locale]}/`)
+  : href(locale, '/courses/');
 const ctaText = primary
   ? t(locale, 'seo.exerciseCtaText', { name, course: l(primary.name, locale) })
   : t(locale, 'seo.exerciseCtaTextGeneric');
@@ -90,13 +98,19 @@ const ctaButton = primary ? t(locale, 'seo.exerciseCtaButton') : t(locale, 'seo.
 
 const crumbs = [
   { name: t(locale, 'seo.home'), url: canonicalUrl(site, locale, '/'), href: href(locale, '/') },
-  { name: t(locale, 'seo.exercises'), url: canonicalUrl(site, locale, '/exercises/'), href: href(locale, '/exercises/') },
+  {
+    name: t(locale, 'seo.exercises'),
+    url: canonicalUrl(site, locale, '/exercises/'),
+    href: href(locale, '/exercises/'),
+  },
   { name, url },
 ];
 const jsonLd = [
   howToJsonLd({ exercise: ex, locale, url, image: imageUrl, description }),
   breadcrumbJsonLd(crumbs),
-  video ? videoObjectJsonLd({ name, description, url: video, thumbnailUrl: imageUrl, locale }) : null,
+  video
+    ? videoObjectJsonLd({ name, description, url: video, thumbnailUrl: imageUrl, locale })
+    : null,
   faqJsonLd(faq),
 ].filter((x): x is NonNullable<typeof x> => x !== null);
 ---
@@ -157,7 +171,9 @@ const jsonLd = [
     </section>
 
     <section aria-labelledby="facts-title" class="mt-14">
-      <h2 id="facts-title" class="font-display text-2xl md:text-3xl">{t(locale, 'seo.exerciseFacts')}</h2>
+      <h2 id="facts-title" class="font-display text-2xl md:text-3xl">
+        {t(locale, 'seo.exerciseFacts')}
+      </h2>
       <dl class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {
           facts.map((f) => (
@@ -172,7 +188,9 @@ const jsonLd = [
 
     <div class="mt-14 grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
       <section aria-labelledby="howto-title">
-        <h2 id="howto-title" class="font-display text-2xl md:text-3xl">{t(locale, 'seo.exerciseHowTo')}</h2>
+        <h2 id="howto-title" class="font-display text-2xl md:text-3xl">
+          {t(locale, 'seo.exerciseHowTo')}
+        </h2>
         <ol class="mt-6 space-y-4">
           {
             ex.howTo.map((step, i) => (
@@ -189,7 +207,9 @@ const jsonLd = [
 
       <div class="space-y-10">
         <section aria-labelledby="cues-title">
-          <h2 id="cues-title" class="font-display text-2xl md:text-3xl">{t(locale, 'seo.exerciseCues')}</h2>
+          <h2 id="cues-title" class="font-display text-2xl md:text-3xl">
+            {t(locale, 'seo.exerciseCues')}
+          </h2>
           <ul class="mt-6 space-y-2">
             {
               ex.cues.map((c) => (
@@ -204,7 +224,9 @@ const jsonLd = [
           </ul>
         </section>
         <section aria-labelledby="mistakes-title">
-          <h2 id="mistakes-title" class="font-display text-2xl md:text-3xl">{t(locale, 'seo.exerciseMistakes')}</h2>
+          <h2 id="mistakes-title" class="font-display text-2xl md:text-3xl">
+            {t(locale, 'seo.exerciseMistakes')}
+          </h2>
           <ul class="mt-6 space-y-2">
             {
               ex.mistakes.map((m) => (
@@ -247,7 +269,9 @@ const jsonLd = [
               .filter((x) => x.item)
               .map((x) => (
                 <li>
-                  <span class="mb-2 block text-xs uppercase tracking-wide text-muted">{x.label}</span>
+                  <span class="mb-2 block text-xs uppercase tracking-wide text-muted">
+                    {x.label}
+                  </span>
                   <ExerciseCard exercise={x.item!} locale={locale} />
                 </li>
               ))}

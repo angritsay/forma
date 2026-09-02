@@ -37,7 +37,13 @@ const PASTELS = [
   ['#D9C9FF', '#FFD6C2'],
   ['#C2F0FF', '#D6FFC9'],
 ];
-const COLORS = { bg: '#0B0B0D', text: '#F5F5F7', muted: '#9A9AA3', muted2: '#6B6B73', ink: '#0B0B0D' };
+const COLORS = {
+  bg: '#0B0B0D',
+  text: '#F5F5F7',
+  muted: '#9A9AA3',
+  muted2: '#6B6B73',
+  ink: '#0B0B0D',
+};
 
 // Node prints an ExperimentalWarning for type stripping; keep every other warning.
 process.removeAllListeners('warning');
@@ -84,7 +90,9 @@ async function loadContent() {
       : [];
     return { exercises, courses, source: 'typescript' };
   } catch (err) {
-    console.warn(`[og] could not import content TypeScript (${errMessage(err)}); using a regex scan`);
+    console.warn(
+      `[og] could not import content TypeScript (${errMessage(err)}); using a regex scan`,
+    );
     const idx = loadContentIndex(ROOT);
     return {
       exercises: [...idx.exercises.values()].map((e) => ({ id: e.id, name: e.name, slug: e.slug })),
@@ -105,11 +113,25 @@ async function loadLabels() {
       ]);
       labels[locale] = { ...seo, tagline: common.tagline, brand: common.brand };
     } catch (err) {
-      console.warn(`[og] could not import i18n for ${locale} (${errMessage(err)}); using minimal labels`);
+      console.warn(
+        `[og] could not import i18n for ${locale} (${errMessage(err)}); using minimal labels`,
+      );
       labels[locale] =
         locale === 'ru'
-          ? { ogExercise: 'Упражнение', ogCourse: 'Курс', ogGuide: 'Гайд', tagline: 'Кроссфит дома. Под тебя.', brand: 'Forma' }
-          : { ogExercise: 'Exercise', ogCourse: 'Course', ogGuide: 'Guide', tagline: 'Home CrossFit that adapts to you.', brand: 'Forma' };
+          ? {
+              ogExercise: 'Упражнение',
+              ogCourse: 'Курс',
+              ogGuide: 'Гайд',
+              tagline: 'Кроссфит дома. Под тебя.',
+              brand: 'Forma',
+            }
+          : {
+              ogExercise: 'Exercise',
+              ogCourse: 'Course',
+              ogGuide: 'Guide',
+              tagline: 'Home CrossFit that adapts to you.',
+              brand: 'Forma',
+            };
     }
   }
   return labels;
@@ -231,19 +253,35 @@ function template(c) {
   const margin = 80;
   const tile = { x: 720, y: 105, size: 420, r: 48 };
   const textWidth = tile.x - margin - 56;
-  const title = fitText(c.title, c.big ? [120, 100] : [64, 56, 48, 42, 36], textWidth, c.big ? 1 : 3, 0.5);
-  const subtitle = c.subtitle ? fitText(c.subtitle, [26, 24, 22], textWidth, 3, 0.55) : { size: 26, lines: [] };
+  const title = fitText(
+    c.title,
+    c.big ? [120, 100] : [64, 56, 48, 42, 36],
+    textWidth,
+    c.big ? 1 : 3,
+    0.5,
+  );
+  const subtitle = c.subtitle
+    ? fitText(c.subtitle, [26, 24, 22], textWidth, 3, 0.55)
+    : { size: 26, lines: [] };
   const titleLineHeight = title.size * 1.08;
   const eyebrowY = 150;
   let y = c.eyebrow ? 216 : 190;
   const titleTspans = title.lines
-    .map((line, i) => `<tspan x="${margin}" y="${(y + i * titleLineHeight).toFixed(1)}">${esc(line)}</tspan>`)
+    .map(
+      (line, i) =>
+        `<tspan x="${margin}" y="${(y + i * titleLineHeight).toFixed(1)}">${esc(line)}</tspan>`,
+    )
     .join('');
   y += title.lines.length * titleLineHeight + 18;
   const subtitleTspans = subtitle.lines
-    .map((line, i) => `<tspan x="${margin}" y="${(y + i * subtitle.size * 1.4).toFixed(1)}">${esc(line)}</tspan>`)
+    .map(
+      (line, i) =>
+        `<tspan x="${margin}" y="${(y + i * subtitle.size * 1.4).toFixed(1)}">${esc(line)}</tspan>`,
+    )
     .join('');
-  const figure = c.figureSvg ? embedFigure(c.figureSvg, tile.x + 50, tile.y + 50, tile.size - 100) : '';
+  const figure = c.figureSvg
+    ? embedFigure(c.figureSvg, tile.x + 50, tile.y + 50, tile.size - 100)
+    : '';
   const [g1, g2] = c.gradient;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
   <defs>
@@ -281,7 +319,10 @@ function pick(v, locale) {
 
 /** @param {string} text */
 function firstSentence(text) {
-  const m = text.replace(/\s+/g, ' ').trim().match(/^[^.!?…]+[.!?…]+/);
+  const m = text
+    .replace(/\s+/g, ' ')
+    .trim()
+    .match(/^[^.!?…]+[.!?…]+/);
   return (m ? m[0] : text).trim();
 }
 
@@ -301,8 +342,10 @@ function buildJobs(content, labels, host) {
     for (const w of course.workouts ?? []) {
       for (const b of w.blocks ?? []) {
         for (const it of b.items ?? []) {
-          if (!courseGradientForExercise.has(it.exerciseId)) courseGradientForExercise.set(it.exerciseId, course.gradient);
-          if (!courseFigure.has(course.id)) courseFigure.set(course.id, exerciseById.get(it.exerciseId)?.animation);
+          if (!courseGradientForExercise.has(it.exerciseId))
+            courseGradientForExercise.set(it.exerciseId, course.gradient);
+          if (!courseFigure.has(course.id))
+            courseFigure.set(course.id, exerciseById.get(it.exerciseId)?.animation);
         }
       }
     }
@@ -336,7 +379,16 @@ function buildJobs(content, labels, host) {
       jobs.push({
         file: `hub-${id}-${locale}.png`,
         kind: 'hub',
-        card: { eyebrow: '', title, subtitle, gradient: BRAND_GRADIENT, figureSvg: null, brand, host, animation },
+        card: {
+          eyebrow: '',
+          title,
+          subtitle,
+          gradient: BRAND_GRADIENT,
+          figureSvg: null,
+          brand,
+          host,
+          animation,
+        },
       });
     }
     for (const course of content.courses) {
@@ -410,8 +462,11 @@ function fontOptions() {
         .filter((f) => /\.(ttf|otf)$/i.test(f))
         .map((f) => join(FONTS_DIR, f))
     : [];
-  if (files.length > 0) return { fontFiles: files, loadSystemFonts: false, defaultFontFamily: 'Manrope' };
-  console.warn('[og] bundled fonts not found in scripts/seo/fonts — falling back to system fonts (text may differ)');
+  if (files.length > 0)
+    return { fontFiles: files, loadSystemFonts: false, defaultFontFamily: 'Manrope' };
+  console.warn(
+    '[og] bundled fonts not found in scripts/seo/fonts — falling back to system fonts (text may differ)',
+  );
   return { loadSystemFonts: true };
 }
 
@@ -424,8 +479,14 @@ async function main() {
   } catch {
     host = '';
   }
-  const [content, labels, figureOf] = await Promise.all([loadContent(), loadLabels(), loadFigureRenderer()]);
-  log(`[og] content: ${content.exercises.length} exercises, ${content.courses.length} courses (${content.source})`);
+  const [content, labels, figureOf] = await Promise.all([
+    loadContent(),
+    loadLabels(),
+    loadFigureRenderer(),
+  ]);
+  log(
+    `[og] content: ${content.exercises.length} exercises, ${content.courses.length} courses (${content.source})`,
+  );
   const font = fontOptions();
   mkdirSync(OUT_DIR, { recursive: true });
 
@@ -449,7 +510,9 @@ async function main() {
     }
   }
   const secs = ((Date.now() - started) / 1000).toFixed(1);
-  log(`[og] wrote ${written}/${jobs.length} images (${figures} with a figure) to public/og in ${secs}s`);
+  log(
+    `[og] wrote ${written}/${jobs.length} images (${figures} with a figure) to public/og in ${secs}s`,
+  );
 }
 
 main().catch((err) => {

@@ -29,6 +29,8 @@ const clusterTitle = t(locale, `seo.cluster_${guide.data.cluster}_title` as cons
   <span class="mt-2 line-clamp-3 text-sm leading-relaxed text-muted">{guide.data.description}</span>
   <span class="mt-auto flex gap-3 pt-4 text-xs text-muted-2">
     <span>{t(locale, 'seo.readingTime', { n: minutes })}</span>
-    <time datetime={guide.data.publishedAt}>{formatDate(locale, guide.data.publishedAt, 'long')}</time>
+    <time datetime={guide.data.publishedAt}
+      >{formatDate(locale, guide.data.publishedAt, 'long')}</time
+    >
   </span>
 </a>

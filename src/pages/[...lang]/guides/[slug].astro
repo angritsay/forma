@@ -26,10 +26,16 @@ export async function getStaticPaths() {
   for (const locale of LOCALES) {
     const lang = locale === 'ru' ? undefined : locale;
     for (const cluster of clustersWithGuides(all, locale)) {
-      paths.push({ params: { lang, slug: clusterSlug(cluster) }, props: { kind: 'cluster', cluster, locale } });
+      paths.push({
+        params: { lang, slug: clusterSlug(cluster) },
+        props: { kind: 'cluster', cluster, locale },
+      });
     }
     for (const g of guidesForLocale(all, locale)) {
-      paths.push({ params: { lang, slug: guideSlug(g) }, props: { kind: 'guide', id: g.id, locale } });
+      paths.push({
+        params: { lang, slug: guideSlug(g) },
+        props: { kind: 'guide', id: g.id, locale },
+      });
     }
   }
   return paths;

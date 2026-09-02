@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { CourseSchema, type Course } from '@/content/schema';
-import { breadcrumbJsonLd, courseJsonLd, courseWorkload, faqJsonLd, itemListJsonLd, videoEmbed } from './jsonld';
+import {
+  breadcrumbJsonLd,
+  courseJsonLd,
+  courseWorkload,
+  faqJsonLd,
+  itemListJsonLd,
+  videoEmbed,
+} from './jsonld';
 
 const course: Course = CourseSchema.parse({
   id: 'start',
@@ -9,9 +16,19 @@ const course: Course = CourseSchema.parse({
   name: { ru: 'Старт', en: 'Start' },
   tagline: { ru: 'Первые шаги', en: 'First steps' },
   description: { ru: 'Описание', en: 'Description' },
-  longDescription: [{ ru: 'а', en: 'a' }, { ru: 'б', en: 'b' }],
-  forWhom: [{ ru: 'а', en: 'a' }, { ru: 'б', en: 'b' }],
-  outcomes: [{ ru: 'а', en: 'a' }, { ru: 'б', en: 'b' }, { ru: 'в', en: 'c' }],
+  longDescription: [
+    { ru: 'а', en: 'a' },
+    { ru: 'б', en: 'b' },
+  ],
+  forWhom: [
+    { ru: 'а', en: 'a' },
+    { ru: 'б', en: 'b' },
+  ],
+  outcomes: [
+    { ru: 'а', en: 'a' },
+    { ru: 'б', en: 'b' },
+    { ru: 'в', en: 'c' },
+  ],
   equipment: ['none'],
   level: 1,
   weeks: 4,
@@ -27,7 +44,15 @@ const course: Course = CourseSchema.parse({
       focus: { ru: 'ф', en: 'f' },
       description: { ru: 'о', en: 'd' },
       basePoints: 100,
-      blocks: [{ id: 'b1', type: 'metcon', format: 'amrap', durationSec: 600, items: [{ exerciseId: 'air_squat', reps: 10 }] }],
+      blocks: [
+        {
+          id: 'b1',
+          type: 'metcon',
+          format: 'amrap',
+          durationSec: 600,
+          items: [{ exerciseId: 'air_squat', reps: 10 }],
+        },
+      ],
     },
   ],
   nodes: [
@@ -45,9 +70,14 @@ const course: Course = CourseSchema.parse({
 
 describe('jsonld builders', () => {
   it('numbers breadcrumb and list items from 1', () => {
-    const bc = breadcrumbJsonLd([{ name: 'Home', url: 'https://x/' }, { name: 'Guides', url: 'https://x/guides/' }]) as { itemListElement: { position: number }[] };
+    const bc = breadcrumbJsonLd([
+      { name: 'Home', url: 'https://x/' },
+      { name: 'Guides', url: 'https://x/guides/' },
+    ]) as { itemListElement: { position: number }[] };
     expect(bc.itemListElement.map((i) => i.position)).toEqual([1, 2]);
-    const list = itemListJsonLd([{ name: 'a', url: 'https://x/a' }], 'List') as { numberOfItems: number };
+    const list = itemListJsonLd([{ name: 'a', url: 'https://x/a' }], 'List') as {
+      numberOfItems: number;
+    };
     expect(list.numberOfItems).toBe(1);
   });
   it('returns null for an empty FAQ', () => {
@@ -55,15 +85,34 @@ describe('jsonld builders', () => {
     expect(faqJsonLd([{ q: 'q', a: 'a' }])).toMatchObject({ '@type': 'FAQPage' });
   });
   it('classifies video URLs', () => {
-    expect(videoEmbed('https://www.youtube.com/watch?v=abc123XYZ')).toEqual({ kind: 'youtube', embedUrl: 'https://www.youtube-nocookie.com/embed/abc123XYZ' });
+    expect(videoEmbed('https://www.youtube.com/watch?v=abc123XYZ')).toEqual({
+      kind: 'youtube',
+      embedUrl: 'https://www.youtube-nocookie.com/embed/abc123XYZ',
+    });
     expect(videoEmbed('https://youtu.be/abc123XYZ')).toMatchObject({ kind: 'youtube' });
-    expect(videoEmbed('https://vimeo.com/12345')).toEqual({ kind: 'vimeo', embedUrl: 'https://player.vimeo.com/video/12345' });
-    expect(videoEmbed('https://cdn.example.com/v.mp4')).toEqual({ kind: 'file', contentUrl: 'https://cdn.example.com/v.mp4' });
+    expect(videoEmbed('https://vimeo.com/12345')).toEqual({
+      kind: 'vimeo',
+      embedUrl: 'https://player.vimeo.com/video/12345',
+    });
+    expect(videoEmbed('https://cdn.example.com/v.mp4')).toEqual({
+      kind: 'file',
+      contentUrl: 'https://cdn.example.com/v.mp4',
+    });
   });
   it('builds a Course with locale-specific offers and an ISO workload', () => {
     expect(courseWorkload(course)).toBe('PT5H');
-    const ru = courseJsonLd({ course, locale: 'ru', site: 'https://x', url: 'https://x/courses/start/' }) as { offers: { price: number; priceCurrency: string }[] };
-    const en = courseJsonLd({ course, locale: 'en', site: 'https://x', url: 'https://x/en/courses/start/' }) as { offers: { price: number; priceCurrency: string }[] };
+    const ru = courseJsonLd({
+      course,
+      locale: 'ru',
+      site: 'https://x',
+      url: 'https://x/courses/start/',
+    }) as { offers: { price: number; priceCurrency: string }[] };
+    const en = courseJsonLd({
+      course,
+      locale: 'en',
+      site: 'https://x',
+      url: 'https://x/en/courses/start/',
+    }) as { offers: { price: number; priceCurrency: string }[] };
     expect(ru.offers[0]).toMatchObject({ price: 2990, priceCurrency: 'RUB' });
     expect(en.offers[0]).toMatchObject({ price: 29, priceCurrency: 'USD' });
   });

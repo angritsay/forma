@@ -42,7 +42,9 @@ function parseArgs(argv) {
     else if (a === '--no-dist') out.noDist = true;
     else if (a === '--json') out.json = true;
     else if (a === '--help' || a === '-h') {
-      console.log('usage: node scripts/seo/audit.mjs [--dist <dir>] [--base </path/>] [--no-dist] [--json]');
+      console.log(
+        'usage: node scripts/seo/audit.mjs [--dist <dir>] [--base </path/>] [--no-dist] [--json]',
+      );
       process.exit(0);
     }
   }
@@ -71,7 +73,9 @@ if (args.json) {
     (loc) => `${loc}: ${guides.filter((g) => g.locale === loc && g.data.draft !== true).length}`,
   ).join(', ');
   console.log('SEO audit');
-  console.log(`  exercises: ${index.exercises.size}  courses: ${index.courses.size}  guides: ${perLocale}`);
+  console.log(
+    `  exercises: ${index.exercises.size}  courses: ${index.courses.size}  guides: ${perLocale}`,
+  );
   console.log(
     distChecked
       ? `  built site: ${args.dist}/ checked (base path ${args.base ?? '/'})`

@@ -62,7 +62,9 @@ if (clusters.map((c) => c.replace(/_/g, '-')).includes(slug))
 if (problems.length) {
   console.error('[new-guide] cannot scaffold:');
   for (const p of problems) console.error(`  - ${p}`);
-  console.error('\nExample: npm run seo:new-guide -- --lang ru --slug kak-delat-berpi --key how-to-burpee --cluster no_equipment --keyword "как делать бёрпи"');
+  console.error(
+    '\nExample: npm run seo:new-guide -- --lang ru --slug kak-delat-berpi --key how-to-burpee --cluster no_equipment --keyword "как делать бёрпи"',
+  );
   process.exit(1);
 }
 

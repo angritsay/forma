@@ -43,8 +43,16 @@ function guide(id: string, over: Partial<GuideData> = {}, body = ''): GuideLike 
 
 const ruA = guide('ru/a-ru', { translationKey: 'a', publishedAt: '2026-09-01' });
 const enA = guide('en/a-en', { translationKey: 'a', publishedAt: '2026-09-01' });
-const ruB = guide('ru/b-ru', { translationKey: 'b', cluster: 'formats', publishedAt: '2026-09-03' });
-const ruC = guide('ru/c-ru', { translationKey: 'c', relatedGuides: ['b'], publishedAt: '2026-08-01' });
+const ruB = guide('ru/b-ru', {
+  translationKey: 'b',
+  cluster: 'formats',
+  publishedAt: '2026-09-03',
+});
+const ruC = guide('ru/c-ru', {
+  translationKey: 'c',
+  relatedGuides: ['b'],
+  publishedAt: '2026-08-01',
+});
 const draft = guide('en/draft', { translationKey: 'draft', draft: true });
 const all = [ruA, enA, ruB, ruC, draft];
 

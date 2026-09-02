@@ -10,7 +10,13 @@ import type { Locale } from '@/content/schema';
 import { LOCALES } from '@/content/schema';
 import { plural, t } from '@/i18n/index';
 import type { GuideCluster } from '@/lib/seo/clusters';
-import { clusterPath, clustersWithGuides, guidePath, guidesForLocale, type GuideLike } from '@/lib/seo/guides';
+import {
+  clusterPath,
+  clustersWithGuides,
+  guidePath,
+  guidesForLocale,
+  type GuideLike,
+} from '@/lib/seo/guides';
 import { breadcrumbJsonLd, collectionPageJsonLd } from '@/lib/seo/jsonld';
 import { ogImagePath } from '@/lib/seo/meta';
 import { canonicalUrl, siteOrigin } from '@/lib/seo/urls';
@@ -32,7 +38,8 @@ const title = t(locale, 'seo.clusterHubTitle', { cluster: clusterTitle });
 const list = guidesForLocale(all, locale).filter((g) => g.data.cluster === cluster);
 
 const localizedPaths: Partial<Record<Locale, string>> = {};
-for (const loc of LOCALES) if (clustersWithGuides(all, loc).includes(cluster)) localizedPaths[loc] = sitePath;
+for (const loc of LOCALES)
+  if (clustersWithGuides(all, loc).includes(cluster)) localizedPaths[loc] = sitePath;
 
 const countLabel = `${list.length} ${plural(locale, list.length, {
   one: t(locale, 'seo.guideWordOne'),
@@ -42,7 +49,11 @@ const countLabel = `${list.length} ${plural(locale, list.length, {
 
 const crumbs = [
   { name: t(locale, 'seo.home'), url: canonicalUrl(site, locale, '/'), href: href(locale, '/') },
-  { name: t(locale, 'seo.guides'), url: canonicalUrl(site, locale, '/guides/'), href: href(locale, '/guides/') },
+  {
+    name: t(locale, 'seo.guides'),
+    url: canonicalUrl(site, locale, '/guides/'),
+    href: href(locale, '/guides/'),
+  },
   { name: clusterTitle, url },
 ];
 const jsonLd = [
@@ -77,7 +88,9 @@ const jsonLd = [
       <p class="text-xs uppercase tracking-wide text-muted">{t(locale, 'seo.guides')}</p>
       <h1 class="mt-3 font-display text-4xl md:text-6xl">{clusterTitle}</h1>
       <p class="mt-5 text-lg leading-relaxed text-muted">{description}</p>
-      <p class="mt-3 text-sm text-muted-2">{t(locale, 'seo.clusterHubIntro', { count: countLabel })}</p>
+      <p class="mt-3 text-sm text-muted-2">
+        {t(locale, 'seo.clusterHubIntro', { count: countLabel })}
+      </p>
     </header>
     <ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {

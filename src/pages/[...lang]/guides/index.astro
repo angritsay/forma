@@ -112,7 +112,10 @@ const countLabel = (n: number) =>
                     {t(locale, `seo.cluster_${g.cluster}_description` as const)}
                   </p>
                 </div>
-                <a class="text-sm text-muted hover:text-text" href={href(locale, clusterPath(g.cluster))}>
+                <a
+                  class="text-sm text-muted hover:text-text"
+                  href={href(locale, clusterPath(g.cluster))}
+                >
                   {countLabel(g.items.length)} →
                 </a>
               </div>

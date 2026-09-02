@@ -116,11 +116,7 @@ export function clustersWithGuides(all: readonly GuideLike[], locale: Locale): G
 }
 
 /** Related guides: explicit `relatedGuides` keys first, then the same cluster, newest first. */
-export function relatedGuidesFor<T extends GuideLike>(
-  g: T,
-  all: readonly T[],
-  max = 3,
-): T[] {
+export function relatedGuidesFor<T extends GuideLike>(g: T, all: readonly T[], max = 3): T[] {
   const locale = guideLocale(g);
   const pool = guidesForLocale(all, locale).filter((x) => x.id !== g.id);
   const picked: T[] = [];
