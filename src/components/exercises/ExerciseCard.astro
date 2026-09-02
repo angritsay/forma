@@ -1,0 +1,54 @@
+---
+/**
+ * Exercise card: static first-frame figure thumb, name, level and equipment chips.
+ * Used by the /exercises/ hub and "related exercises" blocks.
+ */
+import ExerciseFigure from '@/components/anim/ExerciseFigure';
+import type { Exercise, Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { equipmentNames, exerciseGradient, levelName, patternName } from '@/lib/seo/exercises';
+import { href } from '@/lib/util/paths';
+
+interface Props {
+  exercise: Exercise;
+  locale: Locale;
+}
+
+const { exercise: ex, locale } = Astro.props;
+const name = l(ex.name, locale);
+---
+
+<a
+  href={href(locale, `/exercises/${ex.slug[locale]}/`)}
+  class="flex h-full gap-4 rounded-card border border-border bg-surface p-4 transition-colors hover:border-border-strong"
+>
+  <div class="shrink-0">
+    <ExerciseFigure
+      animation={ex.animation}
+      variant="thumb"
+      gradient={exerciseGradient(ex)}
+      label={name}
+    />
+  </div>
+  <div class="min-w-0">
+    <span class="text-xs uppercase tracking-wide text-muted">{patternName(ex.pattern, locale)}</span>
+    <h3 class="mt-0.5 font-semibold leading-snug">{name}</h3>
+    <ul class="mt-2 flex flex-wrap gap-1.5">
+      <li class="rounded-pill bg-surface-2 px-2.5 py-0.5 text-xs text-muted">
+        {levelName(ex.level, locale)}
+      </li>
+      {
+        equipmentNames(ex, locale).map((eq) => (
+          <li class="rounded-pill bg-surface-2 px-2.5 py-0.5 text-xs text-muted">{eq}</li>
+        ))
+      }
+      {
+        ex.isTest && (
+          <li class="rounded-pill bg-accent/15 px-2.5 py-0.5 text-xs text-accent">
+            {t(locale, 'seo.exerciseTestBadge')}
+          </li>
+        )
+      }
+    </ul>
+  </div>
+</a>

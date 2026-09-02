@@ -2,6 +2,7 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
+import rehypeContentLinks from './src/lib/seo/rehype-content-links';
 
 /**
  * SITE_URL  — canonical origin of the deployed site, e.g. https://forma.example.com
@@ -38,6 +39,11 @@ export default defineConfig({
     },
   },
   integrations: [react()],
+  markdown: {
+    // Guides link to content with exercise:<id> / course:<id> / guide:<translationKey> hrefs;
+    // the plugin rewrites them to localized, base-prefixed URLs (see src/lib/seo).
+    rehypePlugins: [[rehypeContentLinks, { base: BASE_PATH }]],
+  },
   vite: {
     plugins: [tailwindcss()],
   },

@@ -1,26 +1,30 @@
 /**
- * App entry. Placeholder during scaffolding — the app area replaces this with the real router,
- * stores and screens (see docs/SPEC.md §10).
+ * App entry (mounted client-only from src/pages/app/index.astro).
+ * HashRouter → AppProviders (session bootstrap, locale, toasts, error boundary) → AppRoutes.
+ * Without backend env the app shows the setup screen instead of crashing.
  */
-import { HashRouter, Route, Routes } from 'react-router';
-import { detectLocale, t } from '@/i18n/index';
-
-function Placeholder() {
-  const locale = detectLocale();
-  return (
-    <main className="mx-auto flex min-h-dvh max-w-[480px] flex-col items-center justify-center gap-4 px-6 text-center">
-      <h1 className="font-display text-5xl">{t(locale, 'common.brand')}</h1>
-      <p className="text-muted">{t(locale, 'common.loading')}</p>
-    </main>
-  );
-}
+import { HashRouter } from 'react-router';
+import { isConfigured } from '@/lib/api/client';
+import { AppProviders } from './components/AppProviders';
+import { AppFrame } from './components/AppShell';
+import { AppRoutes } from './router';
+import NotConfiguredScreen from './screens/NotConfiguredScreen';
 
 export default function App() {
+  if (!isConfigured()) {
+    return (
+      <AppFrame>
+        <NotConfiguredScreen />
+      </AppFrame>
+    );
+  }
   return (
     <HashRouter>
-      <Routes>
-        <Route path="*" element={<Placeholder />} />
-      </Routes>
+      <AppProviders>
+        <AppFrame>
+          <AppRoutes />
+        </AppFrame>
+      </AppProviders>
     </HashRouter>
   );
 }

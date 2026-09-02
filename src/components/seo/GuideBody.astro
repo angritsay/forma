@@ -1,0 +1,137 @@
+---
+/**
+ * Typography wrapper for rendered guide markdown. Prose styles are written with the design
+ * tokens (no @tailwindcss/typography): comfortable measure, italic display H2s, token colors.
+ */
+interface Props {
+  class?: string;
+}
+const { class: className = '' } = Astro.props;
+---
+
+<div class:list={['guide-body', className]}>
+  <slot />
+</div>
+
+<style>
+  .guide-body {
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    color: var(--text);
+    max-width: 72ch;
+  }
+  .guide-body :global(h2),
+  .guide-body :global(h3),
+  .guide-body :global(h4) {
+    scroll-margin-top: 6rem;
+    color: var(--text);
+  }
+  .guide-body :global(h2) {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    font-size: 1.85rem;
+    margin: 2.75rem 0 1rem;
+  }
+  .guide-body :global(h3) {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 2rem 0 0.75rem;
+  }
+  .guide-body :global(h4) {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 1.5rem 0 0.5rem;
+  }
+  .guide-body :global(p) {
+    margin: 0 0 1.15rem;
+  }
+  .guide-body :global(a) {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    text-underline-offset: 0.2em;
+  }
+  .guide-body :global(a:hover) {
+    text-decoration-color: var(--accent);
+  }
+  .guide-body :global(strong) {
+    color: var(--text);
+    font-weight: 700;
+  }
+  .guide-body :global(ul),
+  .guide-body :global(ol) {
+    margin: 0 0 1.25rem;
+    padding-left: 1.4rem;
+  }
+  .guide-body :global(ul) {
+    list-style: disc;
+  }
+  .guide-body :global(ol) {
+    list-style: decimal;
+  }
+  .guide-body :global(li) {
+    margin: 0.35rem 0;
+  }
+  .guide-body :global(li::marker) {
+    color: var(--muted);
+  }
+  .guide-body :global(blockquote) {
+    margin: 1.5rem 0;
+    padding: 0.25rem 0 0.25rem 1.25rem;
+    border-left: 2px solid var(--accent);
+    color: var(--muted);
+  }
+  .guide-body :global(hr) {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+  .guide-body :global(code) {
+    font-size: 0.9em;
+    background: var(--surface-2);
+    border-radius: 6px;
+    padding: 0.1em 0.4em;
+  }
+  .guide-body :global(pre) {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-inner);
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+    margin: 0 0 1.25rem;
+  }
+  .guide-body :global(pre code) {
+    background: transparent;
+    padding: 0;
+  }
+  .guide-body :global(table) {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+    margin: 0 0 1.5rem;
+    font-size: 0.95rem;
+  }
+  .guide-body :global(th),
+  .guide-body :global(td) {
+    text-align: left;
+    padding: 0.6rem 0.9rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .guide-body :global(th) {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .guide-body :global(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--r-inner);
+  }
+</style>

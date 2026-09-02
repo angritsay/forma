@@ -1,0 +1,34 @@
+---
+/**
+ * Guide card for hubs and "read next" lists: cluster eyebrow, title, description, reading time,
+ * publish date.
+ */
+import type { Locale } from '@/content/schema';
+import { formatDate, t } from '@/i18n/index';
+import { guideLocale, guidePath, guideReadingTime, type GuideLike } from '@/lib/seo/guides';
+import { href } from '@/lib/util/paths';
+
+interface Props {
+  guide: GuideLike;
+  locale?: Locale;
+  showCluster?: boolean;
+}
+
+const { guide, showCluster = true } = Astro.props;
+const locale = Astro.props.locale ?? guideLocale(guide);
+const minutes = guideReadingTime(guide);
+const clusterTitle = t(locale, `seo.cluster_${guide.data.cluster}_title` as const);
+---
+
+<a
+  href={href(locale, guidePath(guide))}
+  class="flex h-full flex-col rounded-card border border-border bg-surface p-5 transition-colors hover:border-border-strong"
+>
+  {showCluster && <span class="text-xs uppercase tracking-wide text-muted">{clusterTitle}</span>}
+  <span class="mt-1 font-semibold leading-snug">{guide.data.title}</span>
+  <span class="mt-2 line-clamp-3 text-sm leading-relaxed text-muted">{guide.data.description}</span>
+  <span class="mt-auto flex gap-3 pt-4 text-xs text-muted-2">
+    <span>{t(locale, 'seo.readingTime', { n: minutes })}</span>
+    <time datetime={guide.data.publishedAt}>{formatDate(locale, guide.data.publishedAt, 'long')}</time>
+  </span>
+</a>

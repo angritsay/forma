@@ -6,11 +6,18 @@ import type {
   BlockFormat,
   BlockType,
   Equipment,
+  Exercise,
   ExerciseUnit,
   L10n,
   Level,
   Load,
 } from '@/content/schema';
+
+/**
+ * Exercise metadata resolver. Engine functions default to the content registry; tests and
+ * previews may pass their own lookup so the engine never depends on real content.
+ */
+export type ExerciseLookup = (id: string) => Exercise | undefined;
 
 export type AgeBand = '18-24' | '25-34' | '35-44' | '45-54' | '55-64' | '65+';
 export type Sex = 'male' | 'female' | 'na';
@@ -59,6 +66,11 @@ export interface FitnessAssessment {
   level: Level;
   /** Each component normalized to 0..100. */
   components: Record<FitnessComponent, number>;
+  /**
+   * Components the athlete did not test (their `components` value is imputed from the rest).
+   * When every self-test is missing the index is capped (see docs/TRAINING_SCIENCE.md).
+   */
+  missing?: FitnessComponent[];
 }
 
 export type DifficultyChoice = 'easier' | 'normal' | 'harder';
@@ -272,6 +284,28 @@ export interface Recommendation {
   reason: L10n;
 }
 
+/** Extra context for `recommendDifficulty` that is not part of the course state. */
+export interface RecommendationContext {
+  /** Steps logged for the previous local day (a heavy walking day suggests an easier session). */
+  stepsYesterday?: number;
+}
+
+/** Options for `summarizeSession`. Timestamps are ISO strings; the engine never reads the clock. */
+export interface SummarizeOptions {
+  courseId: string;
+  nodeId: string;
+  sessionId?: string;
+  /** When the athlete pressed Start (used with `completedAt` for the real duration). */
+  startedAt?: string;
+  /** When the session was finished — pass "now" from the caller. */
+  completedAt: string;
+  /** Body weight for the calorie estimate; defaults to DEFAULT_WEIGHT_KG. */
+  weightKg?: number;
+  /** The exact steps the results refer to; rebuilt with `buildPlayerSteps` when omitted. */
+  steps?: PlayerStep[];
+  exerciseLookup?: ExerciseLookup;
+}
+
 export interface ScaleAdjustment {
   scale: number;
   delta: number;
@@ -301,4 +335,15 @@ export interface Achievement {
   unlocked: (stats: UserStats) => boolean;
   /** Optional 0..1 progress for locked achievements. */
   progress?: (stats: UserStats) => number;
+}
+
+/** Serializable result of `evaluateAchievements` (no functions, safe to store or render). */
+export interface AchievementStatus {
+  id: string;
+  title: L10n;
+  description: L10n;
+  icon: string;
+  unlocked: boolean;
+  /** 0..1, 1 when unlocked. */
+  progress: number;
 }

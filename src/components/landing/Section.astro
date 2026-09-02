@@ -1,0 +1,47 @@
+---
+/**
+ * Landing section: eyebrow + italic display title (+ optional intro), then the slot content.
+ */
+interface Props {
+  id?: string;
+  eyebrow?: string;
+  title: string;
+  intro?: string;
+  /** Heading element for the title (h2 by default). */
+  headingTag?: 'h1' | 'h2';
+  align?: 'left' | 'center';
+  /** Extra classes on the <section>. */
+  class?: string;
+  /** Narrower header (max-w-2xl) by default; pass false for full-width headers. */
+  narrow?: boolean;
+}
+
+const {
+  id,
+  eyebrow,
+  title,
+  intro,
+  headingTag: Tag = 'h2',
+  align = 'left',
+  class: extra = '',
+  narrow = true,
+} = Astro.props;
+const headerCls = [narrow ? 'max-w-2xl' : '', align === 'center' ? 'mx-auto text-center' : ''].join(
+  ' ',
+);
+---
+
+<section id={id} class={`mx-auto max-w-6xl px-5 py-16 md:py-24 ${extra}`}>
+  <header class={headerCls}>
+    {
+      eyebrow && (
+        <p class="text-xs font-semibold tracking-[0.2em] text-muted uppercase">{eyebrow}</p>
+      )
+    }
+    <Tag class="font-display mt-3 text-4xl text-balance md:text-5xl">{title}</Tag>
+    {intro && <p class="mt-4 text-lg leading-relaxed text-muted">{intro}</p>}
+  </header>
+  <div class="mt-10 md:mt-12">
+    <slot />
+  </div>
+</section>

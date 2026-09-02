@@ -1,0 +1,381 @@
+---
+/**
+ * Course page: hero, description, for whom / outcomes, equipment, program overview, sample
+ * workout, how the app adapts, order form, FAQ, related guides and exercises.
+ * JSON-LD: Course, BreadcrumbList, FAQPage.
+ */
+import type { InferGetStaticPropsType } from 'astro';
+import { getCollection } from 'astro:content';
+import Landing from '@/layouts/Landing.astro';
+import ExerciseFigure from '@/components/anim/ExerciseFigure';
+import Breadcrumbs from '@/components/landing/Breadcrumbs.astro';
+import Button from '@/components/landing/Button.astro';
+import Faq from '@/components/landing/Faq.astro';
+import FeatureChip from '@/components/landing/FeatureChip.astro';
+import OrderForm from '@/components/landing/OrderForm';
+import ProgramOverview from '@/components/landing/ProgramOverview.astro';
+import Section from '@/components/landing/Section.astro';
+import WorkoutPlan from '@/components/landing/WorkoutPlan.astro';
+import {
+  courseEquipmentForDisplay,
+  coursePath,
+  equipmentLabel,
+  exerciseHref,
+  isBodyweightCourse,
+  levelLabel,
+  metaDescription,
+  sampleWorkout,
+  sessionsLabel,
+  signatureExercise,
+  weeksLabel,
+} from '@/components/landing/courseHelpers';
+import { breadcrumbLd, courseLd, faqLd } from '@/components/landing/jsonld';
+import { COURSES, courseExercises, getCourse } from '@/content/registry';
+import type { Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { canonicalUrl } from '@/lib/seo/urls';
+import { absoluteUrl, appHref, href } from '@/lib/util/paths';
+import { BRAND } from '@content/site/brand';
+import { LINKS } from '@content/site/links';
+import { formatPrice, isFree } from '@content/site/pricing';
+
+export function getStaticPaths() {
+  return COURSES.flatMap((c) => [
+    { params: { lang: undefined, slug: c.slug.ru }, props: { courseId: c.id } },
+    { params: { lang: 'en', slug: c.slug.en }, props: { courseId: c.id } },
+  ]);
+}
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { courseId } = Astro.props as Props;
+const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';
+const site = (Astro.site?.toString() ?? 'http://localhost:4321').replace(/\/$/, '');
+
+const course = getCourse(courseId);
+const name = l(course.name, locale);
+// Keep <title> ≤ 60 chars once SeoHead appends " — Forma": drop the suffix for long names.
+const titleWithSuffix = `${name} — ${t(locale, 'landing.courseTitleSuffix')}`;
+const title = `${titleWithSuffix} — ${BRAND.name}`.length <= 60 ? titleWithSuffix : name;
+const description = metaDescription(
+  `${l(course.tagline, locale)} ${l(course.description, locale)}`,
+);
+const localizedPaths = { ru: coursePath('ru', course), en: coursePath('en', course) };
+const url = canonicalUrl(site, locale, coursePath(locale, course));
+const image = absoluteUrl(site, BRAND.ogImage);
+
+const signature = signatureExercise(course);
+const workout = sampleWorkout(course);
+const exercises = courseExercises(course);
+const equipment = courseEquipmentForDisplay(course);
+const [g1, g2] = course.gradient;
+const price = isFree(course.price, locale)
+  ? t(locale, 'landing.priceFree')
+  : formatPrice(locale, course.price);
+const paymentUrl = course.paymentUrl?.[locale] || course.paymentUrl?.ru || course.paymentUrl?.en;
+
+const guides = (
+  await getCollection(
+    'guides',
+    (g) =>
+      !g.data.draft && g.id.startsWith(`${locale}/`) && g.data.relatedCourses.includes(course.id),
+  )
+).sort((a, b) => b.data.priority - a.data.priority);
+
+const supportEmail = LINKS.supportEmail || BRAND.contactEmail;
+const supportTelegram = LINKS.supportTelegram || BRAND.telegram;
+
+const jsonLd = [
+  courseLd(site, locale, course, { url, image }),
+  breadcrumbLd([
+    { name: t(locale, 'landing.breadcrumbHome'), url: canonicalUrl(site, locale, '/') },
+    { name: t(locale, 'landing.breadcrumbCourses'), url: canonicalUrl(site, locale, '/courses/') },
+    { name, url },
+  ]),
+  faqLd(course.faq, locale),
+];
+---
+
+<Landing
+  locale={locale}
+  title={title}
+  description={description}
+  sitePath={coursePath(locale, course)}
+  localizedPaths={localizedPaths}
+  jsonLd={jsonLd}
+>
+  <div class="mx-auto max-w-6xl px-5 pt-8 md:pt-12">
+    <Breadcrumbs
+      ariaLabel={t(locale, 'landing.breadcrumbHome')}
+      items={[
+        { label: t(locale, 'landing.breadcrumbHome'), href: href(locale, '/') },
+        { label: t(locale, 'landing.breadcrumbCourses'), href: href(locale, '/courses/') },
+        { label: name },
+      ]}
+    />
+
+    <section
+      class="mt-6 grid items-center gap-8 md:grid-cols-[1fr_0.9fr] md:gap-14"
+      style={`--course-accent:${course.accent}`}
+    >
+      <div>
+        <p class="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
+          {levelLabel(locale, course.level)} · {weeksLabel(locale, course.weeks)}
+        </p>
+        <h1 class="font-display mt-3 text-5xl text-balance md:text-6xl lg:text-7xl">{name}</h1>
+        <p class="mt-4 max-w-xl text-lg leading-relaxed text-muted md:text-xl">
+          {l(course.tagline, locale)}
+        </p>
+        <ul class="mt-6 flex flex-wrap gap-2">
+          <li><FeatureChip>{weeksLabel(locale, course.weeks)}</FeatureChip></li>
+          <li><FeatureChip>{sessionsLabel(locale, course.sessionsPerWeek)}</FeatureChip></li>
+          <li>
+            <FeatureChip>{t(locale, 'landing.avgSession', { n: course.avgSessionMin })}</FeatureChip
+            >
+          </li>
+          {
+            equipment.map((e) => (
+              <li>
+                <FeatureChip>{equipmentLabel(locale, e)}</FeatureChip>
+              </li>
+            ))
+          }
+        </ul>
+        <div class="mt-8 flex flex-wrap items-center gap-4">
+          <span class="font-display text-4xl tabular">{price}</span>
+          <Button href="#order" size="lg">{t(locale, 'landing.courseCtaOrder')}</Button>
+        </div>
+        <p class="mt-3 text-sm text-muted">{t(locale, 'landing.courseLifetimeNote')}</p>
+      </div>
+
+      <div
+        class="hero-art relative mx-auto flex aspect-[4/5] w-full max-w-md items-center justify-center overflow-hidden rounded-card shadow-glow md:max-w-none"
+        style={`--course-g1:${g1};--course-g2:${g2}`}
+      >
+        {
+          signature && (
+            <ExerciseFigure
+              client:visible
+              animation={signature.animation}
+              variant="hero"
+              gradient={[g1, g2]}
+              label={l(signature.name, locale)}
+            />
+          )
+        }
+        {
+          signature && (
+            <span class="absolute bottom-5 left-5 rounded-pill bg-bg/85 px-3 py-1.5 text-xs font-semibold text-text">
+              {l(signature.name, locale)}
+            </span>
+          )
+        }
+      </div>
+    </section>
+  </div>
+
+  <Section id="about" title={t(locale, 'landing.courseAboutTitle')} class="!py-12 md:!py-16">
+    <div class="grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
+      <div class="flex flex-col gap-4 text-lg leading-relaxed text-muted">
+        {course.longDescription.map((p) => <p>{l(p, locale)}</p>)}
+      </div>
+      <div class="flex flex-col gap-4">
+        <div class="rounded-card border border-border bg-surface p-6">
+          <h3 class="text-sm font-semibold tracking-wide text-muted uppercase">
+            {t(locale, 'landing.courseForWhomTitle')}
+          </h3>
+          <ul class="mt-3 flex flex-col gap-2">
+            {
+              course.forWhom.map((x) => (
+                <li class="flex gap-3">
+                  <span class="mt-2 size-1.5 shrink-0 rounded-pill bg-accent" aria-hidden="true" />
+                  <span>{l(x, locale)}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+        <div class="rounded-card border border-border bg-surface p-6">
+          <h3 class="text-sm font-semibold tracking-wide text-muted uppercase">
+            {t(locale, 'landing.courseOutcomesTitle')}
+          </h3>
+          <ul class="mt-3 flex flex-col gap-2">
+            {
+              course.outcomes.map((x) => (
+                <li class="flex gap-3">
+                  <svg
+                    class="mt-1 shrink-0 text-accent"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 18 18"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 9.5l4 4 8-9" />
+                  </svg>
+                  <span>{l(x, locale)}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+        <div class="rounded-card border border-border bg-surface p-6">
+          <h3 class="text-sm font-semibold tracking-wide text-muted uppercase">
+            {t(locale, 'landing.courseEquipmentTitle')}
+          </h3>
+          {
+            isBodyweightCourse(course) ? (
+              <p class="mt-3 text-muted">{t(locale, 'landing.courseEquipmentNone')}</p>
+            ) : (
+              <ul class="mt-3 flex flex-wrap gap-2">
+                {equipment.map((e) => (
+                  <li>
+                    <FeatureChip tone="outline">{equipmentLabel(locale, e)}</FeatureChip>
+                  </li>
+                ))}
+              </ul>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </Section>
+
+  <Section
+    id="program"
+    title={t(locale, 'landing.courseProgramTitle')}
+    intro={t(locale, 'landing.courseProgramIntro')}
+    class="!py-12 md:!py-16"
+  >
+    <ProgramOverview locale={locale} course={course} />
+  </Section>
+
+  {
+    workout && (
+      <Section
+        id="sample"
+        title={t(locale, 'landing.courseSampleTitle')}
+        intro={t(locale, 'landing.courseSampleIntro')}
+        class="!py-12 md:!py-16"
+      >
+        <div class="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <WorkoutPlan locale={locale} workout={workout} />
+          <div class="rounded-card border border-border bg-surface p-6 md:p-8">
+            <h3 class="font-display text-2xl">{t(locale, 'landing.courseAdaptTitle')}</h3>
+            <p class="mt-3 leading-relaxed text-muted">{t(locale, 'landing.courseAdaptText')}</p>
+          </div>
+        </div>
+      </Section>
+    )
+  }
+
+  <Section
+    id="order"
+    title={t(locale, 'landing.courseOrderTitle')}
+    intro={t(locale, 'landing.courseOrderIntro')}
+    class="scroll-mt-16 !py-12 md:!py-16"
+  >
+    <div class="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+      <div
+        class="hero-art flex flex-col justify-between rounded-card p-6 md:p-8"
+        style={`--course-g1:${g1};--course-g2:${g2}`}
+      >
+        <div>
+          <p class="text-xs font-semibold tracking-[0.2em] uppercase opacity-70">
+            {levelLabel(locale, course.level)}
+          </p>
+          <p class="font-display mt-2 text-3xl md:text-4xl">{name}</p>
+          <p class="mt-2 opacity-80">{l(course.tagline, locale)}</p>
+        </div>
+        <div class="mt-8 flex items-end justify-between gap-4">
+          <span class="font-display text-4xl tabular">{price}</span>
+          <span class="text-sm opacity-80">{weeksLabel(locale, course.weeks)}</span>
+        </div>
+      </div>
+      <div class="rounded-card border border-border bg-surface p-6 md:p-8">
+        <OrderForm
+          client:load
+          courseId={course.id}
+          courseName={name}
+          locale={locale}
+          paymentUrl={paymentUrl}
+          appUrl={appHref()}
+          privacyUrl={href(locale, '/privacy/')}
+          supportEmail={supportEmail}
+          supportTelegram={supportTelegram}
+          labels={{
+            emailLabel: t(locale, 'landing.orderEmailLabel'),
+            emailPlaceholder: t(locale, 'landing.orderEmailPlaceholder'),
+            consent: t(locale, 'landing.orderConsent'),
+            consentLink: t(locale, 'landing.orderConsentPrivacy'),
+            submit: t(locale, 'landing.orderSubmit'),
+            submitting: t(locale, 'landing.orderSubmitting'),
+            redirecting: t(locale, 'landing.orderRedirecting'),
+            successTitle: t(locale, 'landing.orderSuccessTitle'),
+            successText: t(locale, 'landing.orderSuccessText'),
+            successApp: t(locale, 'landing.orderSuccessApp'),
+            errorEmail: t(locale, 'landing.orderErrorEmail'),
+            errorConsent: t(locale, 'landing.orderErrorConsent'),
+            errorNetwork: t(locale, 'landing.orderErrorNetwork'),
+            errorGeneric: t(locale, 'landing.orderErrorGeneric'),
+            notConfigured: t(locale, 'landing.orderNotConfigured'),
+            tryAgain: t(locale, 'landing.orderTryAgain'),
+            lifetimeNote: t(locale, 'landing.courseLifetimeNote'),
+            telegramLabel: t(locale, 'landing.contactTelegram'),
+          }}
+        />
+      </div>
+    </div>
+  </Section>
+
+  <Section id="faq" title={t(locale, 'landing.courseFaqTitle')} class="!py-12 md:!py-16">
+    <Faq items={course.faq.map((f) => ({ q: l(f.q, locale), a: l(f.a, locale) }))} />
+  </Section>
+
+  {
+    (guides.length > 0 || exercises.length > 0) && (
+      <section class="mx-auto max-w-6xl px-5 py-12 md:py-16">
+        <div class="grid gap-8 lg:grid-cols-2">
+          {guides.length > 0 && (
+            <div>
+              <h2 class="font-display text-3xl">{t(locale, 'landing.courseGuidesTitle')}</h2>
+              <ul class="mt-5 flex flex-col gap-3">
+                {guides.map((g) => (
+                  <li>
+                    <a
+                      href={href(locale, `/guides/${g.id.slice(locale.length + 1)}/`)}
+                      class="block rounded-card border border-border bg-surface p-5 transition hover:border-border-strong"
+                    >
+                      <span class="font-semibold">{g.data.h1}</span>
+                      <span class="mt-1 block text-sm text-muted">{g.data.description}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {exercises.length > 0 && (
+            <div>
+              <h2 class="font-display text-3xl">{t(locale, 'landing.courseExercisesTitle')}</h2>
+              <ul class="mt-5 flex flex-wrap gap-2">
+                {exercises.map((ex) => (
+                  <li>
+                    <a
+                      href={exerciseHref(locale, ex)}
+                      class="inline-flex rounded-pill border border-border bg-surface px-3.5 py-1.5 text-sm transition hover:border-text"
+                    >
+                      {l(ex.name, locale)}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </section>
+    )
+  }
+</Landing>

@@ -1,0 +1,61 @@
+---
+/**
+ * Sample workout: blocks with format/volume labels and items linking to exercise pages.
+ * Numbers are the authored (scale 1.0) values — the app adapts them per athlete.
+ */
+import { EXERCISE_BY_ID } from '@/content/registry';
+import type { Locale, Workout } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { blockMetaLabel, exerciseHref, itemTargetLabel } from './courseHelpers';
+
+interface Props {
+  locale: Locale;
+  workout: Workout;
+}
+const { locale, workout } = Astro.props;
+---
+
+<div class="rounded-card border border-border bg-surface p-5 md:p-7">
+  <div class="flex flex-wrap items-baseline justify-between gap-2">
+    <h3 class="font-display text-2xl">{l(workout.name, locale)}</h3>
+    <span class="text-sm text-muted">{l(workout.focus, locale)}</span>
+  </div>
+  <p class="mt-2 text-sm leading-relaxed text-muted">{l(workout.description, locale)}</p>
+  <ol class="mt-5 flex flex-col gap-3">
+    {
+      workout.blocks.map((b) => (
+        <li class="rounded-inner border border-border bg-bg p-4">
+          <div class="flex flex-wrap items-baseline justify-between gap-2">
+            <span class="font-semibold">
+              {b.title ? l(b.title, locale) : t(locale, `training.block_${b.type}`)}
+            </span>
+            <span class="text-xs text-muted">{blockMetaLabel(locale, b)}</span>
+          </div>
+          {b.description && <p class="mt-1 text-xs text-muted">{l(b.description, locale)}</p>}
+          <ul class="mt-2 flex flex-col gap-1.5 text-sm">
+            {b.items.map((it) => {
+              const ex = EXERCISE_BY_ID.get(it.exerciseId);
+              return (
+                <li class="flex items-baseline justify-between gap-3">
+                  {ex ? (
+                    <a
+                      href={exerciseHref(locale, ex)}
+                      class="underline decoration-border-strong underline-offset-4 hover:text-accent"
+                    >
+                      {l(ex.name, locale)}
+                    </a>
+                  ) : (
+                    <span>{it.exerciseId}</span>
+                  )}
+                  <span class="tabular text-muted whitespace-nowrap">
+                    {itemTargetLabel(locale, it)}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </li>
+      ))
+    }
+  </ol>
+</div>

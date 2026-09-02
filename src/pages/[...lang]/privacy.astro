@@ -1,0 +1,27 @@
+---
+/** Privacy policy (bilingual template — see docs/LEGAL.md). */
+import Landing from '@/layouts/Landing.astro';
+import LegalDoc from '@/components/landing/LegalDoc.astro';
+import { privacyDocument } from '@/components/landing/legal';
+import type { Locale } from '@/content/schema';
+import { t } from '@/i18n/index';
+import { PRICING } from '@content/site/pricing';
+
+export function getStaticPaths() {
+  return [{ params: { lang: undefined } }, { params: { lang: 'en' } }];
+}
+
+const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';
+const title = t(locale, 'landing.privacyTitle');
+const description = t(locale, 'landing.privacyDescription');
+---
+
+<Landing locale={locale} title={title} description={description} sitePath="/privacy/">
+  <LegalDoc
+    locale={locale}
+    title={title}
+    intro={description}
+    doc={privacyDocument()}
+    updatedAt={PRICING.legalUpdatedAt}
+  />
+</Landing>

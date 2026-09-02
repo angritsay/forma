@@ -1,0 +1,19 @@
+---
+/** Pill chip for metrics and features. Pass `tone="accent"` for a highlighted chip. */
+interface Props {
+  tone?: 'default' | 'accent' | 'outline';
+  class?: string;
+}
+const { tone = 'default', class: extra = '' } = Astro.props;
+const tones = {
+  default: 'border border-border bg-surface text-text',
+  accent: 'bg-accent text-on-primary',
+  outline: 'border border-border-strong text-muted',
+};
+---
+
+<span
+  class={`inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-sm font-medium whitespace-nowrap ${tones[tone]} ${extra}`}
+>
+  <slot />
+</span>

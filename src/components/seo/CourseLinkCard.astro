@@ -1,0 +1,65 @@
+---
+/**
+ * Compact course card for "used in courses" / "courses on this topic" lists on SEO pages.
+ * The landing area has its own richer CourseCard; this one only needs registry data.
+ */
+import ExerciseFigure from '@/components/anim/ExerciseFigure';
+import { courseExercises } from '@/content/registry';
+import type { Course, Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { equipmentName, levelName } from '@/lib/seo/exercises';
+import { href } from '@/lib/util/paths';
+
+interface Props {
+  course: Course;
+  locale: Locale;
+}
+
+const { course, locale } = Astro.props;
+const name = l(course.name, locale);
+const signature = courseExercises(course)[0];
+const gear = course.equipment.filter((eq) => eq !== 'none').map((eq) => equipmentName(eq, locale));
+const chips = [
+  levelName(course.level, locale),
+  t(locale, 'seo.weeksShort', { n: course.weeks }),
+  t(locale, 'seo.perWeek', { n: course.sessionsPerWeek }),
+  t(locale, 'common.minutesShort', { n: course.avgSessionMin }),
+  ...(gear.length ? gear : [equipmentName('none', locale)]),
+];
+---
+
+<a
+  href={href(locale, `/courses/${course.slug[locale]}/`)}
+  class="flex h-full gap-4 rounded-card border border-border bg-surface p-4 transition-colors hover:border-border-strong"
+>
+  <div class="shrink-0">
+    {
+      signature ? (
+        <ExerciseFigure
+          animation={signature.animation}
+          variant="thumb"
+          gradient={[course.gradient[0], course.gradient[1]]}
+          label={name}
+        />
+      ) : (
+        <div
+          class="hero-art h-[72px] w-[72px] rounded-inner"
+          style={`--course-g1:${course.gradient[0]};--course-g2:${course.gradient[1]}`}
+          aria-hidden="true"
+        />
+      )
+    }
+  </div>
+  <div class="min-w-0">
+    <span class="text-xs uppercase tracking-wide text-muted">{t(locale, 'seo.ogCourse')}</span>
+    <span class="mt-0.5 block font-semibold leading-snug">{name}</span>
+    <span class="mt-1 line-clamp-2 block text-sm text-muted">{l(course.tagline, locale)}</span>
+    <ul class="mt-3 flex flex-wrap gap-1.5">
+      {
+        chips.map((c) => (
+          <li class="rounded-pill bg-surface-2 px-2.5 py-0.5 text-xs text-muted">{c}</li>
+        ))
+      }
+    </ul>
+  </div>
+</a>

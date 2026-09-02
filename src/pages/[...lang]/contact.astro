@@ -1,0 +1,96 @@
+---
+/** Contact page: email / Telegram from config, no invented response times. */
+import Landing from '@/layouts/Landing.astro';
+import Breadcrumbs from '@/components/landing/Breadcrumbs.astro';
+import { breadcrumbLd } from '@/components/landing/jsonld';
+import type { Locale } from '@/content/schema';
+import { t } from '@/i18n/index';
+import { canonicalUrl } from '@/lib/seo/urls';
+import { href } from '@/lib/util/paths';
+import { BRAND } from '@content/site/brand';
+import { LINKS } from '@content/site/links';
+
+export function getStaticPaths() {
+  return [{ params: { lang: undefined } }, { params: { lang: 'en' } }];
+}
+
+const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';
+const site = (Astro.site?.toString() ?? 'http://localhost:4321').replace(/\/$/, '');
+const title = t(locale, 'landing.contactTitle');
+const description = t(locale, 'landing.contactDescription');
+// Widened to `string`: the config literals are '' until the owner fills them in.
+const email: string = LINKS.supportEmail || BRAND.contactEmail;
+const telegram: string = LINKS.supportTelegram || BRAND.telegram;
+
+const jsonLd = breadcrumbLd([
+  { name: t(locale, 'landing.breadcrumbHome'), url: canonicalUrl(site, locale, '/') },
+  { name: title, url: canonicalUrl(site, locale, '/contact/') },
+]);
+---
+
+<Landing
+  locale={locale}
+  title={title}
+  description={description}
+  sitePath="/contact/"
+  jsonLd={jsonLd}
+>
+  <div class="mx-auto max-w-3xl px-5 pt-8 pb-12 md:pt-12 md:pb-20">
+    <Breadcrumbs
+      ariaLabel={t(locale, 'landing.breadcrumbHome')}
+      items={[
+        { label: t(locale, 'landing.breadcrumbHome'), href: href(locale, '/') },
+        { label: title },
+      ]}
+    />
+    <h1 class="font-display mt-6 text-5xl md:text-6xl">{title}</h1>
+    <p class="mt-4 text-lg leading-relaxed text-muted">{t(locale, 'landing.contactIntro')}</p>
+
+    <ul class="mt-8 grid gap-4 sm:grid-cols-2">
+      <li class="rounded-card border border-border bg-surface p-6">
+        <p class="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
+          {t(locale, 'landing.contactEmail')}
+        </p>
+        <a
+          href={`mailto:${email}`}
+          class="mt-2 block text-xl font-semibold break-all underline decoration-border-strong underline-offset-4 hover:text-accent"
+        >
+          {email}
+        </a>
+      </li>
+      {
+        telegram && (
+          <li class="rounded-card border border-border bg-surface p-6">
+            <p class="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
+              {t(locale, 'landing.contactTelegram')}
+            </p>
+            <a
+              href={telegram}
+              rel="noopener"
+              class="mt-2 block text-xl font-semibold break-all underline decoration-border-strong underline-offset-4 hover:text-accent"
+            >
+              {telegram.replace(/^https?:\/\//, '')}
+            </a>
+          </li>
+        )
+      }
+    </ul>
+    <p class="mt-4 text-sm text-muted">{t(locale, 'landing.contactOrder')}</p>
+
+    <section class="mt-10 rounded-card border border-border bg-surface p-6">
+      <h2 class="text-lg font-semibold">{t(locale, 'landing.contactBeforeTitle')}</h2>
+      <ul class="mt-3 list-disc space-y-2 pl-5 leading-relaxed text-muted marker:text-muted-2">
+        <li>{t(locale, 'landing.contactBefore1')}</li>
+        <li>{t(locale, 'landing.contactBefore2')}</li>
+        <li>
+          <a
+            href={href(locale, '/refund/')}
+            class="underline decoration-border-strong underline-offset-4 hover:text-text"
+          >
+            {t(locale, 'landing.contactBefore3')}
+          </a>
+        </li>
+      </ul>
+    </section>
+  </div>
+</Landing>

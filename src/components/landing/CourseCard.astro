@@ -1,0 +1,102 @@
+---
+/**
+ * Course card for the home grid and the courses hub: gradient tile with the signature exercise
+ * figure (static render), name, tagline, metric chips, price and a link.
+ */
+import ExerciseFigure from '@/components/anim/ExerciseFigure';
+import type { Course, Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { formatPrice, isFree } from '@content/site/pricing';
+import FeatureChip from './FeatureChip.astro';
+import {
+  courseEquipmentForDisplay,
+  courseHref,
+  equipmentLabel,
+  levelLabel,
+  sessionsLabel,
+  signatureExercise,
+  weeksLabel,
+} from './courseHelpers';
+
+interface Props {
+  course: Course;
+  locale: Locale;
+  /** Heading level inside the card. */
+  headingLevel?: 'h2' | 'h3';
+}
+
+const { course, locale, headingLevel: Heading = 'h3' } = Astro.props;
+const url = courseHref(locale, course);
+const signature = signatureExercise(course);
+const [g1, g2] = course.gradient;
+const equipment = courseEquipmentForDisplay(course);
+const price = isFree(course.price, locale)
+  ? t(locale, 'landing.priceFree')
+  : formatPrice(locale, course.price);
+---
+
+<article
+  class="group flex h-full flex-col overflow-hidden rounded-card border border-border bg-surface transition hover:border-border-strong"
+  data-course-card
+  data-equipment={course.equipment.join(' ')}
+  data-level={course.level}
+>
+  <a
+    href={url}
+    class="hero-art relative flex aspect-[16/10] items-center justify-center overflow-hidden"
+    style={`--course-g1:${g1};--course-g2:${g2}`}
+    aria-label={l(course.name, locale)}
+    tabindex="-1"
+  >
+    {
+      signature ? (
+        <ExerciseFigure
+          animation={signature.animation}
+          variant="card"
+          playing={false}
+          gradient={[g1, g2]}
+          label={l(signature.name, locale)}
+        />
+      ) : null
+    }
+    <span
+      class="absolute top-4 left-4 rounded-pill bg-bg/85 px-3 py-1 text-xs font-semibold text-text"
+    >
+      {levelLabel(locale, course.level)}
+    </span>
+  </a>
+
+  <div class="flex flex-1 flex-col gap-3 p-6">
+    <Heading class="font-display text-2xl">
+      <a href={url} class="hover:underline">{l(course.name, locale)}</a>
+    </Heading>
+    <p class="text-muted">{l(course.tagline, locale)}</p>
+    <ul class="mt-1 flex flex-wrap gap-1.5">
+      <li><FeatureChip tone="outline">{weeksLabel(locale, course.weeks)}</FeatureChip></li>
+      <li>
+        <FeatureChip tone="outline">{sessionsLabel(locale, course.sessionsPerWeek)}</FeatureChip>
+      </li>
+      <li>
+        <FeatureChip tone="outline"
+          >{t(locale, 'landing.avgSession', { n: course.avgSessionMin })}</FeatureChip
+        >
+      </li>
+      {
+        equipment.map((e) => (
+          <li>
+            <FeatureChip tone="outline">{equipmentLabel(locale, e)}</FeatureChip>
+          </li>
+        ))
+      }
+    </ul>
+    <div class="mt-auto flex items-center justify-between gap-3 pt-3">
+      <span class="text-xl font-semibold tabular">{price}</span>
+      <a
+        href={url}
+        class="rounded-pill bg-primary px-4 py-2 text-sm font-semibold text-on-primary transition group-hover:opacity-90"
+      >
+        {t(locale, 'landing.cardView')}
+      </a>
+    </div>
+  </div>
+</article>

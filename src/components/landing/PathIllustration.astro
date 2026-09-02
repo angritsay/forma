@@ -1,0 +1,164 @@
+---
+/**
+ * Duolingo-style course path drawn with CSS/SVG from real course nodes (first six).
+ * Illustrative state: first node done, second up next, the rest locked.
+ */
+import type { CourseNode, Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { nodeKindLabel } from './courseHelpers';
+
+interface Props {
+  locale: Locale;
+  courseName: string;
+  nodes: CourseNode[];
+}
+const { locale, courseName, nodes } = Astro.props;
+
+const shown = nodes.slice(0, 6);
+const positions = [
+  { x: 60, y: 40 },
+  { x: 120, y: 110 },
+  { x: 180, y: 180 },
+  { x: 120, y: 250 },
+  { x: 60, y: 320 },
+  { x: 120, y: 390 },
+];
+const path = positions
+  .slice(0, shown.length)
+  .map((p, i) => {
+    if (i === 0) return `M${p.x} ${p.y}`;
+    const prev = positions[i - 1]!;
+    return `C${prev.x} ${prev.y + 35} ${p.x} ${p.y - 35} ${p.x} ${p.y}`;
+  })
+  .join(' ');
+const height = (positions[shown.length - 1]?.y ?? 40) + 40;
+
+type State = 'done' | 'current' | 'locked';
+function stateOf(i: number): State {
+  return i === 0 ? 'done' : i === 1 ? 'current' : 'locked';
+}
+const stateCls: Record<State, string> = {
+  done: 'bg-accent text-on-primary',
+  current: 'bg-primary text-on-primary ring-4 ring-accent/40',
+  locked: 'bg-surface-3 text-muted',
+};
+const stateLabel: Record<State, string> = {
+  done: t(locale, 'landing.pathNodeDone'),
+  current: t(locale, 'landing.pathNodeCurrent'),
+  locked: t(locale, 'landing.pathNodeLocked'),
+};
+const doneShare = shown.length ? Math.round((1 / shown.length) * 100) : 0;
+---
+
+<div class="px-4 pt-3 pb-4">
+  <div class="flex items-center justify-between gap-2">
+    <span class="font-display text-lg">{courseName}</span>
+    <span class="text-[11px] text-muted">{t(locale, 'landing.pathProgress')} · {doneShare}%</span>
+  </div>
+  <div class="mt-2 h-1.5 w-full overflow-hidden rounded-pill bg-surface-3" aria-hidden="true">
+    <div class="h-full rounded-pill bg-accent" style={`width:${doneShare}%`}></div>
+  </div>
+</div>
+
+<div class="relative mx-auto w-[240px]" style={`height:${height}px`}>
+  <svg
+    class="absolute inset-0"
+    viewBox={`0 0 240 ${height}`}
+    width="240"
+    height={height}
+    aria-hidden="true"
+  >
+    <path
+      d={path}
+      fill="none"
+      stroke="currentColor"
+      class="text-border-strong"
+      stroke-width="3"
+      stroke-dasharray="6 8"
+      stroke-linecap="round"></path>
+  </svg>
+  <ol class="absolute inset-0 m-0 list-none p-0">
+    {
+      shown.map((node, i) => {
+        const pos = positions[i]!;
+        const state = stateOf(i);
+        const isRest = node.kind === 'rest';
+        const isTest = node.kind === 'test' || node.kind === 'benchmark';
+        const labelLeft = pos.x > 120;
+        return (
+          <li
+            class="absolute flex items-center gap-2"
+            style={`top:${pos.y - 22}px; ${labelLeft ? `right:${240 - pos.x - 22}px; flex-direction:row-reverse;` : `left:${pos.x - 22}px;`}`}
+          >
+            <span
+              class={`flex size-11 shrink-0 items-center justify-center rounded-full ${isRest && state === 'locked' ? 'border border-border bg-surface-2 text-muted' : stateCls[state]}`}
+              title={stateLabel[state]}
+            >
+              {state === 'done' ? (
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 18 18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M3 9.5l4 4 8-9" />
+                </svg>
+              ) : isRest ? (
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 18 18"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M12.6 2.2a6.8 6.8 0 1 0 3.2 9.9 5.2 5.2 0 0 1-3.2-9.9z" />
+                </svg>
+              ) : isTest ? (
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 18 18"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M4 2h1.5v14H4zM6.5 2.5h8l-2 3.5 2 3.5h-8z" />
+                </svg>
+              ) : state === 'current' ? (
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 18 18"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M5 3l10 6-10 6z" />
+                </svg>
+              ) : (
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M4 7V5a4 4 0 1 1 8 0v2h1v8H3V7h1zm2 0h4V5a2 2 0 1 0-4 0v2z" />
+                </svg>
+              )}
+            </span>
+            <span class={`flex max-w-[120px] flex-col ${labelLeft ? 'items-end text-right' : ''}`}>
+              <span class="text-[12px] leading-tight font-semibold">{l(node.title, locale)}</span>
+              <span class="text-[10px] leading-tight text-muted">
+                {nodeKindLabel(locale, node)}
+              </span>
+            </span>
+          </li>
+        );
+      })
+    }
+  </ol>
+</div>

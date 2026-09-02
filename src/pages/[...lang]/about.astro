@@ -1,0 +1,101 @@
+---
+/** About the coach: profile from config, principles, the science in short. JSON-LD: Person. */
+import Landing from '@/layouts/Landing.astro';
+import Breadcrumbs from '@/components/landing/Breadcrumbs.astro';
+import Button from '@/components/landing/Button.astro';
+import CoachCard from '@/components/landing/CoachCard.astro';
+import Cta from '@/components/landing/Cta.astro';
+import Section from '@/components/landing/Section.astro';
+import { breadcrumbLd, personLd } from '@/components/landing/jsonld';
+import type { Locale } from '@/content/schema';
+import { t } from '@/i18n/index';
+import { canonicalUrl } from '@/lib/seo/urls';
+import { appHref, href } from '@/lib/util/paths';
+
+export function getStaticPaths() {
+  return [{ params: { lang: undefined } }, { params: { lang: 'en' } }];
+}
+
+const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';
+const site = (Astro.site?.toString() ?? 'http://localhost:4321').replace(/\/$/, '');
+const title = t(locale, 'landing.aboutTitle');
+const description = t(locale, 'landing.aboutDescription');
+
+const principles = [
+  {
+    title: t(locale, 'landing.aboutPhilosophy1Title'),
+    text: t(locale, 'landing.aboutPhilosophy1Text'),
+  },
+  {
+    title: t(locale, 'landing.aboutPhilosophy2Title'),
+    text: t(locale, 'landing.aboutPhilosophy2Text'),
+  },
+  {
+    title: t(locale, 'landing.aboutPhilosophy3Title'),
+    text: t(locale, 'landing.aboutPhilosophy3Text'),
+  },
+];
+
+const jsonLd = [
+  personLd(site, locale),
+  breadcrumbLd([
+    { name: t(locale, 'landing.breadcrumbHome'), url: canonicalUrl(site, locale, '/') },
+    { name: title, url: canonicalUrl(site, locale, '/about/') },
+  ]),
+];
+---
+
+<Landing locale={locale} title={title} description={description} sitePath="/about/" jsonLd={jsonLd}>
+  <div class="mx-auto max-w-6xl px-5 pt-8 md:pt-12">
+    <Breadcrumbs
+      ariaLabel={t(locale, 'landing.breadcrumbHome')}
+      items={[
+        { label: t(locale, 'landing.breadcrumbHome'), href: href(locale, '/') },
+        { label: title },
+      ]}
+    />
+    <div class="mt-6">
+      <CoachCard locale={locale} variant="full" />
+    </div>
+  </div>
+
+  <Section
+    id="principles"
+    title={t(locale, 'landing.aboutPhilosophyTitle')}
+    class="!py-12 md:!py-16"
+  >
+    <ol class="grid gap-4 md:grid-cols-3">
+      {
+        principles.map((p, i) => (
+          <li class="flex flex-col gap-3 rounded-card border border-border bg-surface p-6">
+            <span class="font-display text-5xl text-accent" aria-hidden="true">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <h3 class="text-xl font-semibold">{p.title}</h3>
+            <p class="leading-relaxed text-muted">{p.text}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </Section>
+
+  <Section id="science" title={t(locale, 'landing.aboutScienceTitle')} class="!py-12 md:!py-16">
+    <div class="rounded-card border border-border bg-surface p-6 md:p-8">
+      <p class="max-w-3xl text-lg leading-relaxed text-muted">
+        {t(locale, 'landing.aboutScienceText')}
+      </p>
+      <div class="mt-6">
+        <Button href={href(locale, '/guides/')} variant="secondary">
+          {t(locale, 'landing.aboutScienceLink')} →
+        </Button>
+      </div>
+    </div>
+  </Section>
+
+  <Cta
+    title={t(locale, 'landing.ctaTitle')}
+    text={t(locale, 'landing.ctaText')}
+    primary={{ label: t(locale, 'landing.ctaPrimary'), href: href(locale, '/courses/') }}
+    secondary={{ label: t(locale, 'landing.ctaSecondary'), href: appHref() }}
+  />
+</Landing>

@@ -1,0 +1,29 @@
+---
+/** Breadcrumb trail; the last item is the current page (no link). */
+interface Props {
+  items: { label: string; href?: string }[];
+  ariaLabel: string;
+}
+const { items, ariaLabel } = Astro.props;
+---
+
+<nav aria-label={ariaLabel} class="text-sm text-muted">
+  <ol class="flex flex-wrap items-center gap-2">
+    {
+      items.map((it, i) => (
+        <li class="flex items-center gap-2">
+          {i > 0 && <span aria-hidden="true">/</span>}
+          {it.href ? (
+            <a href={it.href} class="hover:text-text">
+              {it.label}
+            </a>
+          ) : (
+            <span aria-current="page" class="text-text">
+              {it.label}
+            </span>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</nav>

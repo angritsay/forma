@@ -4,22 +4,11 @@
  */
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { GUIDE_CLUSTERS } from '@/lib/seo/clusters';
+
+export { GUIDE_CLUSTERS };
 
 const faq = z.array(z.object({ q: z.string().min(1), a: z.string().min(1) }));
-
-export const GUIDE_CLUSTERS = [
-  'beginners',
-  'no_equipment',
-  'dumbbells',
-  'kettlebell',
-  'formats',
-  'fat_loss',
-  'programming',
-  'recovery',
-  'mobility',
-  'motivation',
-  'equipment',
-] as const;
 
 const guides = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './content/guides' }),

@@ -1,0 +1,41 @@
+---
+/**
+ * Visible breadcrumb trail. The matching BreadcrumbList JSON-LD is built by the page with
+ * `breadcrumbJsonLd()` so both stay in sync from the same items array.
+ */
+import type { Locale } from '@/content/schema';
+import { t } from '@/i18n/index';
+
+interface Props {
+  locale: Locale;
+  items: { name: string; href?: string }[];
+  class?: string;
+}
+
+const { locale, items, class: className = '' } = Astro.props;
+---
+
+<nav aria-label={t(locale, 'seo.breadcrumbsLabel')} class:list={['text-sm text-muted', className]}>
+  <ol class="flex flex-wrap items-center gap-x-2 gap-y-1">
+    {
+      items.map((it, i) => (
+        <li class="flex items-center gap-2">
+          {i > 0 && (
+            <span aria-hidden="true" class="text-muted-2">
+              /
+            </span>
+          )}
+          {it.href && i < items.length - 1 ? (
+            <a class="hover:text-text" href={it.href}>
+              {it.name}
+            </a>
+          ) : (
+            <span aria-current="page" class="text-text">
+              {it.name}
+            </span>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</nav>

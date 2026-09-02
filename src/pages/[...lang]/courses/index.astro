@@ -1,0 +1,245 @@
+---
+/**
+ * Courses hub: intro, client-side filters by equipment/level (progressive enhancement over
+ * plain links), course cards. JSON-LD: ItemList + BreadcrumbList.
+ */
+import Landing from '@/layouts/Landing.astro';
+import Breadcrumbs from '@/components/landing/Breadcrumbs.astro';
+import CourseCard from '@/components/landing/CourseCard.astro';
+import Cta from '@/components/landing/Cta.astro';
+import {
+  coursePath,
+  equipmentAcrossCourses,
+  equipmentLabel,
+  levelLabel,
+  levelsAcrossCourses,
+} from '@/components/landing/courseHelpers';
+import { breadcrumbLd, itemListLd } from '@/components/landing/jsonld';
+import { COURSES } from '@/content/registry';
+import { EQUIPMENT, type Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { canonicalUrl } from '@/lib/seo/urls';
+import { appHref, href } from '@/lib/util/paths';
+
+export function getStaticPaths() {
+  return [{ params: { lang: undefined } }, { params: { lang: 'en' } }];
+}
+
+const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';
+const site = (Astro.site?.toString() ?? 'http://localhost:4321').replace(/\/$/, '');
+
+const title = t(locale, 'landing.coursesHubTitle');
+const description = t(locale, 'landing.coursesHubDescription');
+
+const equipmentOptions = equipmentAcrossCourses(COURSES, EQUIPMENT);
+const levelOptions = levelsAcrossCourses(COURSES);
+const self = href(locale, '/courses/');
+
+const jsonLd = [
+  breadcrumbLd([
+    { name: t(locale, 'landing.breadcrumbHome'), url: canonicalUrl(site, locale, '/') },
+    { name: t(locale, 'landing.breadcrumbCourses'), url: canonicalUrl(site, locale, '/courses/') },
+  ]),
+  itemListLd(
+    COURSES.map((c) => ({
+      name: l(c.name, locale),
+      url: canonicalUrl(site, locale, coursePath(locale, c)),
+    })),
+    t(locale, 'landing.coursesHubH1'),
+  ),
+];
+---
+
+<Landing
+  locale={locale}
+  title={title}
+  description={description}
+  sitePath="/courses/"
+  jsonLd={jsonLd}
+>
+  <div class="mx-auto max-w-6xl px-5 pt-8 md:pt-12">
+    <Breadcrumbs
+      ariaLabel={t(locale, 'landing.breadcrumbHome')}
+      items={[
+        { label: t(locale, 'landing.breadcrumbHome'), href: href(locale, '/') },
+        { label: t(locale, 'landing.breadcrumbCourses') },
+      ]}
+    />
+    <h1 class="font-display mt-6 text-5xl md:text-6xl">{t(locale, 'landing.coursesHubH1')}</h1>
+    <p class="mt-4 max-w-2xl text-lg leading-relaxed text-muted">
+      {t(locale, 'landing.coursesHubIntro')}
+    </p>
+
+    <div
+      class="mt-8 flex flex-col gap-4 rounded-card border border-border bg-surface p-5"
+      data-course-filters
+    >
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="mr-2 text-sm font-semibold">{t(locale, 'landing.filterEquipment')}</span>
+        <a
+          href={`${self}#courses`}
+          data-filter="equipment"
+          data-value="all"
+          aria-pressed="true"
+          class="filter-chip"
+        >
+          {t(locale, 'landing.filterAll')}
+        </a>
+        {
+          equipmentOptions.map((e) => (
+            <a
+              href={`${self}?equipment=${e}#courses`}
+              data-filter="equipment"
+              data-value={e}
+              aria-pressed="false"
+              class="filter-chip"
+            >
+              {equipmentLabel(locale, e)}
+            </a>
+          ))
+        }
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="mr-2 text-sm font-semibold">{t(locale, 'landing.filterLevel')}</span>
+        <a
+          href={`${self}#courses`}
+          data-filter="level"
+          data-value="all"
+          aria-pressed="true"
+          class="filter-chip"
+        >
+          {t(locale, 'landing.filterAll')}
+        </a>
+        {
+          levelOptions.map((lv) => (
+            <a
+              href={`${self}?level=${lv}#courses`}
+              data-filter="level"
+              data-value={String(lv)}
+              aria-pressed="false"
+              class="filter-chip"
+            >
+              {levelLabel(locale, lv)}
+            </a>
+          ))
+        }
+      </div>
+    </div>
+
+    <ul
+      id="courses"
+      class="mt-8 grid scroll-mt-24 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+      aria-label={t(locale, 'landing.filterResultsLabel')}
+    >
+      {
+        COURSES.map((c) => (
+          <li data-course-item data-equipment={c.equipment.join(' ')} data-level={c.level}>
+            <CourseCard course={c} locale={locale} headingLevel="h2" />
+          </li>
+        ))
+      }
+    </ul>
+    <p
+      hidden
+      data-filter-empty
+      class="mt-8 rounded-card border border-border bg-surface p-6 text-muted"
+    >
+      {t(locale, 'landing.filterNoResults')}
+      <a href={`${self}#courses`} data-filter-reset class="ml-2 font-semibold text-text underline">
+        {t(locale, 'landing.filterReset')}
+      </a>
+    </p>
+  </div>
+
+  <Cta
+    title={t(locale, 'landing.ctaTitle')}
+    text={t(locale, 'landing.ctaText')}
+    primary={{ label: t(locale, 'landing.heroCtaApp'), href: appHref() }}
+  />
+</Landing>
+
+<style>
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    border-radius: var(--r-pill);
+    border: 1px solid var(--border);
+    padding: 0.375rem 0.875rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--muted);
+    transition:
+      color 0.15s,
+      border-color 0.15s,
+      background 0.15s;
+  }
+  .filter-chip:hover {
+    color: var(--text);
+    border-color: var(--border-strong);
+  }
+  .filter-chip[aria-pressed='true'] {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--on-primary);
+  }
+</style>
+
+<script>
+  // Client-side filtering. Without JS the chips are plain links and all courses stay visible.
+  const root = document.querySelector<HTMLElement>('[data-course-filters]');
+  if (root) {
+    const chips = Array.from(root.querySelectorAll<HTMLAnchorElement>('a[data-filter]'));
+    const items = Array.from(document.querySelectorAll<HTMLElement>('[data-course-item]'));
+    const empty = document.querySelector<HTMLElement>('[data-filter-empty]');
+    const reset = document.querySelector<HTMLAnchorElement>('[data-filter-reset]');
+    type FilterKey = 'equipment' | 'level';
+    const isFilterKey = (k: string | undefined): k is FilterKey =>
+      k === 'equipment' || k === 'level';
+    const state: Record<FilterKey, string> = { equipment: 'all', level: 'all' };
+
+    const apply = () => {
+      let visible = 0;
+      for (const item of items) {
+        const eq = (item.dataset.equipment ?? '').split(' ');
+        const okEq = state.equipment === 'all' || eq.includes(state.equipment);
+        const okLv = state.level === 'all' || item.dataset.level === state.level;
+        const show = okEq && okLv;
+        item.hidden = !show;
+        if (show) visible++;
+      }
+      if (empty) empty.hidden = visible > 0;
+      for (const chip of chips) {
+        const key = chip.dataset.filter;
+        const pressed = isFilterKey(key) && state[key] === chip.dataset.value;
+        chip.setAttribute('aria-pressed', String(pressed));
+      }
+      const params = new URLSearchParams();
+      if (state.equipment !== 'all') params.set('equipment', state.equipment);
+      if (state.level !== 'all') params.set('level', state.level);
+      const qs = params.toString();
+      history.replaceState(null, '', `${location.pathname}${qs ? `?${qs}` : ''}${location.hash}`);
+    };
+
+    const initial = new URLSearchParams(location.search);
+    for (const key of ['equipment', 'level'] as const) {
+      const v = initial.get(key);
+      if (v) state[key] = v;
+    }
+    for (const chip of chips) {
+      chip.addEventListener('click', (e) => {
+        e.preventDefault();
+        const key = chip.dataset.filter;
+        if (!isFilterKey(key)) return;
+        state[key] = chip.dataset.value ?? 'all';
+        apply();
+      });
+    }
+    reset?.addEventListener('click', (e) => {
+      e.preventDefault();
+      state.equipment = 'all';
+      state.level = 'all';
+      apply();
+    });
+    apply();
+  }
+</script>

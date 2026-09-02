@@ -1,0 +1,18 @@
+Forma
+
+Твой код для входа: {{ .Token }}
+
+Введи этот код в приложении Forma. Он действует 10 минут.
+Если ты не запрашивал(а) код — просто проигнорируй это письмо.
+Никому не сообщай код: он даёт доступ к твоему аккаунту.
+
+---
+
+Your sign-in code: {{ .Token }}
+
+Enter the code in the Forma app. It is valid for 10 minutes.
+If you didn't request a code, you can safely ignore this email.
+Never share the code: it grants access to your account.
+
+Письмо отправлено на {{ .Email }} · Sent to {{ .Email }}
+{{ .SiteURL }}

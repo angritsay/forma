@@ -1,0 +1,117 @@
+---
+/**
+ * Exercise library hub: /exercises/ and /en/exercises/. Grouped by movement pattern with anchor
+ * navigation; JSON-LD CollectionPage (with ItemList) + BreadcrumbList.
+ */
+import Landing from '@/layouts/Landing.astro';
+import Breadcrumbs from '@/components/seo/Breadcrumbs.astro';
+import ExerciseCard from '@/components/exercises/ExerciseCard.astro';
+import { EXERCISES } from '@/content/registry';
+import type { Locale } from '@/content/schema';
+import { l, plural, t } from '@/i18n/index';
+import { exercisesByPattern, patternName } from '@/lib/seo/exercises';
+import { breadcrumbJsonLd, collectionPageJsonLd } from '@/lib/seo/jsonld';
+import { ogImagePath } from '@/lib/seo/meta';
+import { canonicalUrl, siteOrigin } from '@/lib/seo/urls';
+
+export function getStaticPaths() {
+  return [{ params: { lang: undefined } }, { params: { lang: 'en' } }];
+}
+
+const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';
+const site = siteOrigin(Astro.site);
+const sitePath = '/exercises/';
+const url = canonicalUrl(site, locale, sitePath);
+const title = t(locale, 'seo.exercisesHubTitle');
+const description = t(locale, 'seo.exercisesHubDescription');
+const groups = exercisesByPattern(locale);
+const count = EXERCISES.length;
+const countLabel = `${count} ${plural(locale, count, {
+  one: t(locale, 'seo.exerciseWordOne'),
+  few: t(locale, 'seo.exerciseWordFew'),
+  many: t(locale, 'seo.exerciseWordMany'),
+})}`;
+
+const crumbs = [
+  { name: t(locale, 'seo.home'), url: canonicalUrl(site, locale, '/'), href: canonicalUrl(site, locale, '/') },
+  { name: t(locale, 'seo.exercises'), url, href: url },
+];
+const jsonLd = [
+  collectionPageJsonLd({
+    site,
+    locale,
+    name: t(locale, 'seo.exercisesHubH1'),
+    description,
+    url,
+    items: groups.flatMap((g) =>
+      g.items.map((ex) => ({
+        name: l(ex.name, locale),
+        url: canonicalUrl(site, locale, `/exercises/${ex.slug[locale]}/`),
+      })),
+    ),
+  }),
+  breadcrumbJsonLd(crumbs),
+];
+---
+
+<Landing
+  locale={locale}
+  title={title}
+  description={description}
+  sitePath={sitePath}
+  image={ogImagePath('hub', 'exercises', locale)}
+  jsonLd={jsonLd}
+>
+  <main class="mx-auto max-w-6xl px-5 pb-16 pt-8 md:pt-12">
+    <Breadcrumbs locale={locale} items={crumbs} />
+    <header class="mt-6 max-w-3xl">
+      <h1 class="font-display text-4xl md:text-6xl">{t(locale, 'seo.exercisesHubH1')}</h1>
+      <p class="mt-5 text-lg leading-relaxed text-muted">{t(locale, 'seo.exercisesHubIntro')}</p>
+      {count > 0 && <p class="mt-3 text-sm text-muted-2">{countLabel}</p>}
+    </header>
+
+    {
+      groups.length === 0 ? (
+        <p class="mt-10 rounded-card border border-border bg-surface p-6 text-muted">
+          {t(locale, 'seo.exercisesHubEmpty')}
+        </p>
+      ) : (
+        <Fragment>
+          <nav aria-label={t(locale, 'seo.exercisesHubPatternsNav')} class="mt-8">
+            <ul class="flex flex-wrap gap-2">
+              {groups.map((g) => (
+                <li>
+                  <a
+                    href={`#pattern-${g.pattern}`}
+                    class="inline-flex items-center gap-1.5 rounded-pill border border-border px-3 py-1.5 text-sm text-muted hover:text-text"
+                  >
+                    {patternName(g.pattern, locale)}
+                    <span class="text-muted-2">{g.items.length}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          {groups.map((g) => (
+            <section
+              id={`pattern-${g.pattern}`}
+              class="mt-12 scroll-mt-24"
+              aria-labelledby={`pattern-${g.pattern}-title`}
+            >
+              <h2 id={`pattern-${g.pattern}-title`} class="font-display text-2xl md:text-3xl">
+                {patternName(g.pattern, locale)}
+              </h2>
+              <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {g.items.map((ex) => (
+                  <li>
+                    <ExerciseCard exercise={ex} locale={locale} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </Fragment>
+      )
+    }
+  </main>
+</Landing>

@@ -1,0 +1,20 @@
+---
+/** CSS phone bezel used to frame app-like tiles on the landing. */
+interface Props {
+  class?: string;
+  /** Accessible description of what the screen shows. */
+  label?: string;
+}
+const { class: extra = '', label } = Astro.props;
+---
+
+<div
+  class={`relative mx-auto w-[280px] max-w-full rounded-[40px] border border-border-strong bg-surface-2 p-2.5 shadow-card ${extra}`}
+  role={label ? 'img' : undefined}
+  aria-label={label}
+>
+  <div class="relative overflow-hidden rounded-[32px] bg-bg">
+    <div class="mx-auto mt-2 h-1.5 w-20 rounded-pill bg-surface-3" aria-hidden="true"></div>
+    <slot />
+  </div>
+</div>

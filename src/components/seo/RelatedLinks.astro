@@ -1,0 +1,53 @@
+---
+/**
+ * Generic "related" card grid used for internal linking (exercises, guides, any list of links).
+ * Course cards use CourseLinkCard so that every course link carries its gradient and chips.
+ */
+export interface RelatedItem {
+  title: string;
+  href: string;
+  description?: string;
+  eyebrow?: string;
+  meta?: string;
+}
+
+interface Props {
+  title: string;
+  items: RelatedItem[];
+  id?: string;
+  class?: string;
+}
+
+const { title, items, id = 'related', class: className = '' } = Astro.props;
+---
+
+{
+  items.length > 0 && (
+    <section aria-labelledby={`${id}-title`} class:list={['mt-16', className]}>
+      <h2 id={`${id}-title`} class="font-display text-2xl md:text-3xl">
+        {title}
+      </h2>
+      <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((it) => (
+          <li>
+            <a
+              href={it.href}
+              class="flex h-full flex-col rounded-card border border-border bg-surface p-5 transition-colors hover:border-border-strong"
+            >
+              {it.eyebrow && (
+                <span class="text-xs uppercase tracking-wide text-muted">{it.eyebrow}</span>
+              )}
+              <span class="mt-1 font-semibold leading-snug">{it.title}</span>
+              {it.description && (
+                <span class="mt-2 line-clamp-3 text-sm leading-relaxed text-muted">
+                  {it.description}
+                </span>
+              )}
+              {it.meta && <span class="mt-auto pt-3 text-xs text-muted-2">{it.meta}</span>}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}

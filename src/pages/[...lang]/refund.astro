@@ -1,0 +1,30 @@
+---
+/** Refund policy (bilingual template — see docs/LEGAL.md). Numbers come from pricing.ts. */
+import Landing from '@/layouts/Landing.astro';
+import LegalDoc from '@/components/landing/LegalDoc.astro';
+import { refundDocument } from '@/components/landing/legal';
+import type { Locale } from '@/content/schema';
+import { t } from '@/i18n/index';
+import { PRICING } from '@content/site/pricing';
+
+export function getStaticPaths() {
+  return [{ params: { lang: undefined } }, { params: { lang: 'en' } }];
+}
+
+const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';
+const title = t(locale, 'landing.refundTitle');
+const description = t(locale, 'landing.refundDescription', {
+  days: PRICING.refundDays,
+  n: PRICING.refundMaxCompletedWorkouts,
+});
+---
+
+<Landing locale={locale} title={title} description={description} sitePath="/refund/">
+  <LegalDoc
+    locale={locale}
+    title={title}
+    intro={description}
+    doc={refundDocument()}
+    updatedAt={PRICING.legalUpdatedAt}
+  />
+</Landing>

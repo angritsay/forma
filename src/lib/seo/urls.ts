@@ -40,3 +40,16 @@ export function alternates(
 export function ogLocale(locale: Locale): string {
   return locale === 'ru' ? 'ru_RU' : 'en_US';
 }
+
+/** BCP-47 tag for `inLanguage` / `<html lang>`-style consumers. */
+export function langTag(locale: Locale): string {
+  return locale === 'ru' ? 'ru-RU' : 'en-US';
+}
+
+/**
+ * Site origin (no trailing slash) from `Astro.site` / an endpoint's `context.site`.
+ * Falls back to localhost for local builds without SITE_URL, like SeoHead does.
+ */
+export function siteOrigin(site: URL | string | undefined): string {
+  return (site ? site.toString() : 'http://localhost:4321').replace(/\/$/, '');
+}

@@ -1,0 +1,46 @@
+---
+/**
+ * Landing button: white primary pill, outlined secondary, quiet ghost.
+ * Renders <a> when `href` is set, otherwise <button>.
+ */
+interface Props {
+  href?: string;
+  variant?: 'primary' | 'secondary' | 'ghost';
+  size?: 'md' | 'lg';
+  type?: 'button' | 'submit';
+  class?: string;
+  ariaLabel?: string;
+}
+
+const {
+  href,
+  variant = 'primary',
+  size = 'md',
+  type = 'button',
+  class: extra = '',
+  ariaLabel,
+} = Astro.props;
+
+const base =
+  'inline-flex items-center justify-center gap-2 rounded-pill font-semibold transition focus-visible:outline-accent';
+const sizes = { md: 'px-5 py-2.5 text-sm', lg: 'px-7 py-3.5 text-base' };
+const variants = {
+  primary: 'bg-primary text-on-primary hover:opacity-90',
+  secondary:
+    'border border-border-strong bg-surface text-text hover:border-text hover:bg-surface-2',
+  ghost: 'text-muted hover:text-text',
+};
+const cls = `${base} ${sizes[size]} ${variants[variant]} ${extra}`;
+---
+
+{
+  href ? (
+    <a href={href} class={cls} aria-label={ariaLabel}>
+      <slot />
+    </a>
+  ) : (
+    <button type={type} class={cls} aria-label={ariaLabel}>
+      <slot />
+    </button>
+  )
+}

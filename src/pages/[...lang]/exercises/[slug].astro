@@ -1,0 +1,337 @@
+---
+/**
+ * Programmatic exercise page: /exercises/<slug>/ (RU) and /en/exercises/<slug>/.
+ * Everything on the page comes from the exercise entry and the registry — nothing is invented.
+ * JSON-LD: HowTo (steps), BreadcrumbList, VideoObject (public video only), FAQPage.
+ */
+import Landing from '@/layouts/Landing.astro';
+import Breadcrumbs from '@/components/seo/Breadcrumbs.astro';
+import CourseLinkCard from '@/components/seo/CourseLinkCard.astro';
+import FaqAccordion from '@/components/seo/FaqAccordion.astro';
+import ExerciseCard from '@/components/exercises/ExerciseCard.astro';
+import ExerciseFigure from '@/components/anim/ExerciseFigure';
+import { EXERCISES, coursesUsingExercise, getExercise } from '@/content/registry';
+import { LOCALES, type Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import {
+  equipmentNames,
+  exerciseFaq,
+  exerciseGradient,
+  levelName,
+  muscleName,
+  patternName,
+  publicVideoUrl,
+  relatedExercises,
+  scalingExercises,
+  unitName,
+} from '@/lib/seo/exercises';
+import {
+  breadcrumbJsonLd,
+  faqJsonLd,
+  howToJsonLd,
+  videoEmbed,
+  videoObjectJsonLd,
+} from '@/lib/seo/jsonld';
+import { exerciseDescription, exerciseTitle, ogImagePath } from '@/lib/seo/meta';
+import { canonicalUrl, siteOrigin } from '@/lib/seo/urls';
+import { absoluteUrl, href } from '@/lib/util/paths';
+
+export function getStaticPaths() {
+  return EXERCISES.flatMap((ex) =>
+    LOCALES.map((locale) => ({
+      params: { lang: locale === 'ru' ? undefined : locale, slug: ex.slug[locale] },
+      props: { id: ex.id, locale },
+    })),
+  );
+}
+
+interface Props {
+  id: string;
+  locale: Locale;
+}
+
+const { id, locale } = Astro.props;
+const ex = getExercise(id);
+const site = siteOrigin(Astro.site);
+const name = l(ex.name, locale);
+const localizedPaths = { ru: `/exercises/${ex.slug.ru}/`, en: `/exercises/${ex.slug.en}/` };
+const sitePath = localizedPaths.ru;
+const url = canonicalUrl(site, locale, localizedPaths[locale]);
+const title = exerciseTitle(ex, locale);
+const description = exerciseDescription(ex, locale);
+const image = ogImagePath('exercise', ex.id, locale);
+const imageUrl = absoluteUrl(site, image);
+const gradient = exerciseGradient(ex);
+
+const courses = coursesUsingExercise(ex.id);
+const primary = courses[0];
+const { easier, harder } = scalingExercises(ex);
+const related = relatedExercises(ex, locale);
+const faq = exerciseFaq(ex, locale);
+const video = publicVideoUrl(ex, locale);
+const embed = video ? videoEmbed(video) : null;
+
+const facts: { label: string; value: string }[] = [
+  { label: t(locale, 'seo.factMuscles'), value: ex.muscles.map((m) => muscleName(m, locale)).join(', ') },
+  { label: t(locale, 'seo.factPattern'), value: patternName(ex.pattern, locale) },
+  { label: t(locale, 'seo.factEquipment'), value: equipmentNames(ex, locale).join(', ') },
+  { label: t(locale, 'seo.factLevel'), value: levelName(ex.level, locale) },
+  { label: t(locale, 'seo.factUnit'), value: unitName(ex.unit, locale) },
+];
+if (ex.secondsPerRep) {
+  facts.push({ label: t(locale, 'seo.factTempo'), value: t(locale, 'seo.tempoPerRep', { n: ex.secondsPerRep }) });
+}
+
+const ctaHref = primary ? href(locale, `/courses/${primary.slug[locale]}/`) : href(locale, '/courses/');
+const ctaText = primary
+  ? t(locale, 'seo.exerciseCtaText', { name, course: l(primary.name, locale) })
+  : t(locale, 'seo.exerciseCtaTextGeneric');
+const ctaButton = primary ? t(locale, 'seo.exerciseCtaButton') : t(locale, 'seo.chooseCourse');
+
+const crumbs = [
+  { name: t(locale, 'seo.home'), url: canonicalUrl(site, locale, '/'), href: href(locale, '/') },
+  { name: t(locale, 'seo.exercises'), url: canonicalUrl(site, locale, '/exercises/'), href: href(locale, '/exercises/') },
+  { name, url },
+];
+const jsonLd = [
+  howToJsonLd({ exercise: ex, locale, url, image: imageUrl, description }),
+  breadcrumbJsonLd(crumbs),
+  video ? videoObjectJsonLd({ name, description, url: video, thumbnailUrl: imageUrl, locale }) : null,
+  faqJsonLd(faq),
+].filter((x): x is NonNullable<typeof x> => x !== null);
+---
+
+<Landing
+  locale={locale}
+  title={title}
+  description={description}
+  sitePath={sitePath}
+  localizedPaths={localizedPaths}
+  image={image}
+  jsonLd={jsonLd}
+>
+  <main class="mx-auto max-w-6xl px-5 pb-16 pt-8 md:pt-12">
+    <Breadcrumbs locale={locale} items={crumbs} />
+
+    <section class="mt-6 grid items-start gap-8 md:grid-cols-[minmax(0,1fr)_minmax(260px,400px)]">
+      <div>
+        <p class="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide text-muted">
+          <span>{patternName(ex.pattern, locale)}</span>
+          {
+            ex.isTest && (
+              <span class="rounded-pill bg-accent/15 px-2.5 py-0.5 normal-case tracking-normal text-accent">
+                {t(locale, 'seo.exerciseTestBadge')}
+              </span>
+            )
+          }
+        </p>
+        <h1 class="mt-3 font-display text-4xl md:text-6xl">{name}</h1>
+        <p class="mt-5 max-w-2xl text-lg leading-relaxed text-muted">{l(ex.description, locale)}</p>
+        <ul class="mt-5 flex flex-wrap gap-2">
+          <li class="rounded-pill border border-border px-3 py-1 text-sm text-muted">
+            {levelName(ex.level, locale)}
+          </li>
+          {
+            equipmentNames(ex, locale).map((eq) => (
+              <li class="rounded-pill border border-border px-3 py-1 text-sm text-muted">{eq}</li>
+            ))
+          }
+        </ul>
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a class="rounded-pill bg-primary px-6 py-3 font-semibold text-on-primary" href={ctaHref}>
+            {ctaButton}
+          </a>
+        </div>
+      </div>
+      <div class="mx-auto w-full max-w-sm md:max-w-none">
+        <div class="aspect-square w-full overflow-hidden rounded-card">
+          <ExerciseFigure
+            client:visible
+            animation={ex.animation}
+            variant="hero"
+            gradient={gradient}
+            label={name}
+          />
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="facts-title" class="mt-14">
+      <h2 id="facts-title" class="font-display text-2xl md:text-3xl">{t(locale, 'seo.exerciseFacts')}</h2>
+      <dl class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {
+          facts.map((f) => (
+            <div class="rounded-inner bg-surface p-4">
+              <dt class="text-xs uppercase tracking-wide text-muted">{f.label}</dt>
+              <dd class="mt-1 font-semibold">{f.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </section>
+
+    <div class="mt-14 grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <section aria-labelledby="howto-title">
+        <h2 id="howto-title" class="font-display text-2xl md:text-3xl">{t(locale, 'seo.exerciseHowTo')}</h2>
+        <ol class="mt-6 space-y-4">
+          {
+            ex.howTo.map((step, i) => (
+              <li class="flex gap-4 rounded-card border border-border bg-surface p-5">
+                <span class="tabular flex h-8 w-8 shrink-0 items-center justify-center rounded-pill bg-surface-2 text-sm font-semibold">
+                  {i + 1}
+                </span>
+                <p class="leading-relaxed">{l(step, locale)}</p>
+              </li>
+            ))
+          }
+        </ol>
+      </section>
+
+      <div class="space-y-10">
+        <section aria-labelledby="cues-title">
+          <h2 id="cues-title" class="font-display text-2xl md:text-3xl">{t(locale, 'seo.exerciseCues')}</h2>
+          <ul class="mt-6 space-y-2">
+            {
+              ex.cues.map((c) => (
+                <li class="flex gap-3 rounded-inner bg-surface p-4">
+                  <span aria-hidden="true" class="text-accent">
+                    ✓
+                  </span>
+                  <span>{l(c, locale)}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+        <section aria-labelledby="mistakes-title">
+          <h2 id="mistakes-title" class="font-display text-2xl md:text-3xl">{t(locale, 'seo.exerciseMistakes')}</h2>
+          <ul class="mt-6 space-y-2">
+            {
+              ex.mistakes.map((m) => (
+                <li class="flex gap-3 rounded-inner bg-surface p-4">
+                  <span aria-hidden="true" class="text-danger">
+                    ✕
+                  </span>
+                  <span>{l(m, locale)}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+        {
+          ex.breathing && (
+            <section aria-labelledby="breathing-title">
+              <h2 id="breathing-title" class="font-display text-2xl md:text-3xl">
+                {t(locale, 'seo.exerciseBreathing')}
+              </h2>
+              <p class="mt-6 rounded-inner bg-surface p-4 leading-relaxed text-muted">
+                {l(ex.breathing, locale)}
+              </p>
+            </section>
+          )
+        }
+      </div>
+    </div>
+
+    {
+      (easier || harder) && (
+        <section aria-labelledby="scaling-title" class="mt-16">
+          <h2 id="scaling-title" class="font-display text-2xl md:text-3xl">
+            {t(locale, 'seo.exerciseScaling')}
+          </h2>
+          <ul class="mt-6 grid gap-4 sm:grid-cols-2">
+            {[
+              { label: t(locale, 'seo.exerciseEasier'), item: easier },
+              { label: t(locale, 'seo.exerciseHarder'), item: harder },
+            ]
+              .filter((x) => x.item)
+              .map((x) => (
+                <li>
+                  <span class="mb-2 block text-xs uppercase tracking-wide text-muted">{x.label}</span>
+                  <ExerciseCard exercise={x.item!} locale={locale} />
+                </li>
+              ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {
+      video && embed && (
+        <section aria-labelledby="video-title" class="mt-16">
+          <h2 id="video-title" class="font-display text-2xl md:text-3xl">
+            {t(locale, 'seo.exerciseVideo')}
+          </h2>
+          <div class="mt-6 aspect-video overflow-hidden rounded-card border border-border bg-surface">
+            {embed.kind === 'file' ? (
+              <video controls preload="metadata" class="h-full w-full" src={embed.contentUrl}>
+                <p class="p-4 text-muted">{t(locale, 'seo.exerciseVideoUnsupported')}</p>
+              </video>
+            ) : (
+              <iframe
+                class="h-full w-full"
+                src={embed.embedUrl}
+                title={name}
+                loading="lazy"
+                allow="accelerometer; encrypted-media; picture-in-picture"
+                allowfullscreen
+                referrerpolicy="strict-origin-when-cross-origin"
+              />
+            )}
+          </div>
+        </section>
+      )
+    }
+
+    {
+      courses.length > 0 && (
+        <section aria-labelledby="courses-title" class="mt-16">
+          <h2 id="courses-title" class="font-display text-2xl md:text-3xl">
+            {t(locale, 'seo.exerciseUsedIn')}
+          </h2>
+          <ul class="mt-6 grid gap-4 md:grid-cols-2">
+            {courses.map((c) => (
+              <li>
+                <CourseLinkCard course={c} locale={locale} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {
+      related.length > 0 && (
+        <section aria-labelledby="related-title" class="mt-16">
+          <h2 id="related-title" class="font-display text-2xl md:text-3xl">
+            {t(locale, 'seo.exerciseRelated')}
+          </h2>
+          <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {related.map((r) => (
+              <li>
+                <ExerciseCard exercise={r} locale={locale} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <FaqAccordion title={t(locale, 'seo.faqTitle')} items={faq} />
+
+    <section
+      class="mt-16 rounded-card border border-border bg-surface p-6 md:flex md:items-center md:justify-between md:gap-8 md:p-10"
+    >
+      <div>
+        <h2 class="font-display text-2xl md:text-3xl">{t(locale, 'seo.exerciseCtaTitle')}</h2>
+        <p class="mt-3 max-w-xl leading-relaxed text-muted">{ctaText}</p>
+      </div>
+      <a
+        class="mt-6 inline-flex shrink-0 rounded-pill bg-primary px-6 py-3 font-semibold text-on-primary md:mt-0"
+        href={ctaHref}
+      >
+        {ctaButton}
+      </a>
+    </section>
+  </main>
+</Landing>

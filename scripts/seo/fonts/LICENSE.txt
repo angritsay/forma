@@ -1,0 +1,14 @@
+Fonts bundled for the build-time OG image generator (scripts/seo/og.mjs).
+
+- Manrope[wght].ttf
+  Copyright 2018 The Manrope Project Authors (https://github.com/sharanda/manrope)
+  Licensed under the SIL Open Font License, Version 1.1 — see OFL-Manrope.txt.
+
+- PlayfairDisplay-Italic[wght].ttf
+  Copyright 2017 The Playfair Display Project Authors
+  (https://github.com/clauseggers/Playfair-Display), with Reserved Font Name "Playfair Display".
+  Licensed under the SIL Open Font License, Version 1.1 — see OFL-PlayfairDisplay.txt.
+
+Both files were copied unmodified from https://github.com/google/fonts (ofl/manrope and
+ofl/playfairdisplay). The OFL permits bundling and redistribution of the font software with
+this project; the fonts are used only to rasterize social-preview images and are not sold.

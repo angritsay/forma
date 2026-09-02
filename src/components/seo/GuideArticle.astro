@@ -1,0 +1,238 @@
+---
+/**
+ * Guide article page body: /guides/<slug>/. Renders the markdown entry with a header, TOC (h2),
+ * prose body, FAQ, related content, CTA. JSON-LD: Article + BreadcrumbList + FAQPage.
+ */
+import { render, type CollectionEntry } from 'astro:content';
+import Landing from '@/layouts/Landing.astro';
+import Breadcrumbs from '@/components/seo/Breadcrumbs.astro';
+import CourseLinkCard from '@/components/seo/CourseLinkCard.astro';
+import FaqAccordion from '@/components/seo/FaqAccordion.astro';
+import GuideBody from '@/components/seo/GuideBody.astro';
+import RelatedLinks from '@/components/seo/RelatedLinks.astro';
+import ExerciseCard from '@/components/exercises/ExerciseCard.astro';
+import { COURSE_BY_ID, EXERCISE_BY_ID } from '@/content/registry';
+import type { Course, Exercise, Locale } from '@/content/schema';
+import { formatDate, l, t } from '@/i18n/index';
+import {
+  clusterPath,
+  guideLocalizedPaths,
+  guidePath,
+  guideReadingTime,
+  guideWords,
+  relatedGuidesFor,
+  type GuideLike,
+} from '@/lib/seo/guides';
+import { articleJsonLd, breadcrumbJsonLd, faqJsonLd } from '@/lib/seo/jsonld';
+import { ogImagePath, readingTimeMinutes } from '@/lib/seo/meta';
+import { canonicalUrl, siteOrigin } from '@/lib/seo/urls';
+import { absoluteUrl, href } from '@/lib/util/paths';
+import { COACH } from '@content/site/coach';
+
+interface Props {
+  entry: CollectionEntry<'guides'>;
+  locale: Locale;
+  all: GuideLike[];
+}
+
+const { entry, locale, all } = Astro.props;
+const { Content, headings } = await render(entry);
+const d = entry.data;
+const site = siteOrigin(Astro.site);
+const path = guidePath(entry);
+const localizedPaths = guideLocalizedPaths(entry, all);
+const sitePath = localizedPaths.ru ?? path;
+const url = canonicalUrl(site, locale, path);
+const image = ogImagePath('guide', d.translationKey, locale);
+const words = guideWords(entry);
+const minutes = readingTimeMinutes(words, locale);
+const toc = headings.filter((h) => h.depth === 2);
+const clusterTitle = t(locale, `seo.cluster_${d.cluster}_title` as const);
+
+const relatedExercises = d.relatedExercises
+  .map((id) => EXERCISE_BY_ID.get(id))
+  .filter((x): x is Exercise => x !== undefined);
+const relatedCourses = d.relatedCourses
+  .map((id) => COURSE_BY_ID.get(id))
+  .filter((x): x is Course => x !== undefined);
+const relatedGuides = relatedGuidesFor(entry, all);
+const ctaCourse = (d.cta.courseId ? COURSE_BY_ID.get(d.cta.courseId) : undefined) ?? relatedCourses[0];
+const ctaHref = ctaCourse ? href(locale, `/courses/${ctaCourse.slug[locale]}/`) : href(locale, '/courses/');
+const ctaText = ctaCourse
+  ? t(locale, 'seo.guideCtaText', { course: l(ctaCourse.name, locale) })
+  : t(locale, 'seo.guideCtaTextGeneric');
+const ctaButton = d.cta.label ?? (ctaCourse ? t(locale, 'seo.guideCtaButton') : t(locale, 'seo.chooseCourse'));
+
+const crumbs = [
+  { name: t(locale, 'seo.home'), url: canonicalUrl(site, locale, '/'), href: href(locale, '/') },
+  { name: t(locale, 'seo.guides'), url: canonicalUrl(site, locale, '/guides/'), href: href(locale, '/guides/') },
+  { name: clusterTitle, url: canonicalUrl(site, locale, clusterPath(d.cluster)), href: href(locale, clusterPath(d.cluster)) },
+  { name: d.h1, url },
+];
+const jsonLd = [
+  articleJsonLd({
+    site,
+    locale,
+    headline: d.h1,
+    description: d.description,
+    url,
+    image: absoluteUrl(site, image),
+    datePublished: d.publishedAt,
+    dateModified: d.updatedAt,
+    wordCount: words,
+    keywords: [d.targetKeyword, ...d.secondaryKeywords],
+  }),
+  breadcrumbJsonLd(crumbs),
+  faqJsonLd(d.faq),
+].filter((x): x is NonNullable<typeof x> => x !== null);
+---
+
+<Landing
+  locale={locale}
+  title={d.title}
+  description={d.description}
+  sitePath={sitePath}
+  localizedPaths={localizedPaths}
+  type="article"
+  image={image}
+  jsonLd={jsonLd}
+  publishedAt={d.publishedAt}
+  updatedAt={d.updatedAt}
+>
+  <main class="mx-auto max-w-6xl px-5 pb-16 pt-8 md:pt-12">
+    <Breadcrumbs locale={locale} items={crumbs} />
+
+    <div class="mt-6 grid gap-10 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <article>
+        <header>
+          <a class="text-xs uppercase tracking-wide text-muted hover:text-text" href={href(locale, clusterPath(d.cluster))}>
+            {clusterTitle}
+          </a>
+          <h1 class="mt-3 font-display text-4xl md:text-5xl">{d.h1}</h1>
+          <p class="mt-4 text-lg leading-relaxed text-muted">{d.description}</p>
+          <dl class="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-2">
+            <div class="flex gap-2">
+              <dt>{t(locale, 'seo.published')}</dt>
+              <dd><time datetime={d.publishedAt}>{formatDate(locale, d.publishedAt, 'long')}</time></dd>
+            </div>
+            {
+              d.updatedAt !== d.publishedAt && (
+                <div class="flex gap-2">
+                  <dt>{t(locale, 'seo.updated')}</dt>
+                  <dd>
+                    <time datetime={d.updatedAt}>{formatDate(locale, d.updatedAt, 'long')}</time>
+                  </dd>
+                </div>
+              )
+            }
+            <div><dd>{t(locale, 'seo.readingTime', { n: minutes })}</dd></div>
+            <div><dd>{t(locale, 'seo.byAuthor', { name: l(COACH.name, locale) })}</dd></div>
+          </dl>
+        </header>
+
+        {
+          toc.length > 1 && (
+            <nav aria-label={t(locale, 'seo.tocTitle')} class="mt-8 rounded-card border border-border bg-surface p-5 lg:hidden">
+              <p class="text-xs uppercase tracking-wide text-muted">{t(locale, 'seo.tocTitle')}</p>
+              <ol class="mt-3 space-y-1.5 text-sm">
+                {toc.map((h) => (
+                  <li>
+                    <a class="text-muted hover:text-text" href={`#${h.slug}`}>
+                      {h.text}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          )
+        }
+
+        <GuideBody class="mt-10">
+          <Content />
+        </GuideBody>
+
+        <FaqAccordion title={t(locale, 'seo.faqTitle')} items={d.faq} />
+      </article>
+
+      <aside class="hidden lg:block">
+        {
+          toc.length > 1 && (
+            <nav aria-label={t(locale, 'seo.tocTitle')} class="sticky top-24 rounded-card border border-border bg-surface p-5">
+              <p class="text-xs uppercase tracking-wide text-muted">{t(locale, 'seo.tocTitle')}</p>
+              <ol class="mt-3 space-y-2 text-sm">
+                {toc.map((h) => (
+                  <li>
+                    <a class="text-muted hover:text-text" href={`#${h.slug}`}>
+                      {h.text}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          )
+        }
+      </aside>
+    </div>
+
+    {
+      relatedExercises.length > 0 && (
+        <section aria-labelledby="related-exercises-title" class="mt-16">
+          <h2 id="related-exercises-title" class="font-display text-2xl md:text-3xl">
+            {t(locale, 'seo.relatedExercises')}
+          </h2>
+          <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {relatedExercises.map((ex) => (
+              <li>
+                <ExerciseCard exercise={ex} locale={locale} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {
+      relatedCourses.length > 0 && (
+        <section aria-labelledby="related-courses-title" class="mt-16">
+          <h2 id="related-courses-title" class="font-display text-2xl md:text-3xl">
+            {t(locale, 'seo.relatedCourses')}
+          </h2>
+          <ul class="mt-6 grid gap-4 md:grid-cols-2">
+            {relatedCourses.map((c) => (
+              <li>
+                <CourseLinkCard course={c} locale={locale} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <RelatedLinks
+      id="related-guides"
+      title={t(locale, 'seo.relatedGuides')}
+      items={relatedGuides.map((g) => ({
+        title: g.data.title,
+        description: g.data.description,
+        href: href(locale, guidePath(g)),
+        eyebrow: t(locale, `seo.cluster_${g.data.cluster}_title` as const),
+        meta: t(locale, 'seo.readingTime', { n: guideReadingTime(g) }),
+      }))}
+    />
+
+    <section
+      class="mt-16 rounded-card border border-border bg-surface p-6 md:flex md:items-center md:justify-between md:gap-8 md:p-10"
+    >
+      <div>
+        <h2 class="font-display text-2xl md:text-3xl">{t(locale, 'seo.guideCtaTitle')}</h2>
+        <p class="mt-3 max-w-xl leading-relaxed text-muted">{ctaText}</p>
+      </div>
+      <a
+        class="mt-6 inline-flex shrink-0 rounded-pill bg-primary px-6 py-3 font-semibold text-on-primary md:mt-0"
+        href={ctaHref}
+      >
+        {ctaButton}
+      </a>
+    </section>
+  </main>
+</Landing>

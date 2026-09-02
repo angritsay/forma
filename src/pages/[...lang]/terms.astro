@@ -1,0 +1,27 @@
+---
+/** Public offer / terms of service (bilingual template — see docs/LEGAL.md). */
+import Landing from '@/layouts/Landing.astro';
+import LegalDoc from '@/components/landing/LegalDoc.astro';
+import { termsDocument } from '@/components/landing/legal';
+import type { Locale } from '@/content/schema';
+import { t } from '@/i18n/index';
+import { PRICING } from '@content/site/pricing';
+
+export function getStaticPaths() {
+  return [{ params: { lang: undefined } }, { params: { lang: 'en' } }];
+}
+
+const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';
+const title = t(locale, 'landing.termsTitle');
+const description = t(locale, 'landing.termsDescription');
+---
+
+<Landing locale={locale} title={title} description={description} sitePath="/terms/">
+  <LegalDoc
+    locale={locale}
+    title={title}
+    intro={description}
+    doc={termsDocument()}
+    updatedAt={PRICING.legalUpdatedAt}
+  />
+</Landing>

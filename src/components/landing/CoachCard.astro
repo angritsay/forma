@@ -1,0 +1,93 @@
+---
+/** Coach profile from content/site/coach.ts — renders only the fields that are filled in. */
+import type { Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { withBase } from '@/lib/util/paths';
+import { COACH } from '@content/site/coach';
+
+interface Props {
+  locale: Locale;
+  /** Compact = home section; full = /about hero. */
+  variant?: 'compact' | 'full';
+  moreHref?: string;
+}
+const { locale, variant = 'compact', moreHref } = Astro.props;
+const name = l(COACH.name, locale);
+const role = l(COACH.role, locale);
+const bio = l(COACH.bio, locale);
+const initial = name.trim().charAt(0).toUpperCase();
+---
+
+<div
+  class={`grid gap-8 rounded-card border border-border bg-surface p-6 md:p-10 ${variant === 'full' ? 'md:grid-cols-[200px_1fr]' : 'md:grid-cols-[160px_1fr]'}`}
+>
+  {
+    COACH.photo ? (
+      <img
+        src={withBase(COACH.photo)}
+        alt={name}
+        width={variant === 'full' ? 200 : 160}
+        height={variant === 'full' ? 200 : 160}
+        class="hero-art aspect-square w-40 rounded-card object-cover md:w-full"
+        loading="lazy"
+      />
+    ) : (
+      <div
+        class="hero-art flex aspect-square w-40 items-center justify-center rounded-card md:w-full"
+        aria-hidden="true"
+      >
+        <span class="font-display text-6xl">{initial}</span>
+      </div>
+    )
+  }
+  <div>
+    <p class="text-xs font-semibold tracking-[0.2em] text-muted uppercase">{role}</p>
+    {
+      variant === 'full' ? (
+        <h1 class="font-display mt-2 text-4xl md:text-5xl">{name}</h1>
+      ) : (
+        <h3 class="font-display mt-2 text-3xl md:text-4xl">{name}</h3>
+      )
+    }
+    {bio && <p class="mt-4 max-w-2xl leading-relaxed text-muted">{bio}</p>}
+    {
+      COACH.credentials.length > 0 && (
+        <div class="mt-5">
+          <p class="text-sm font-semibold">{t(locale, 'landing.coachCredentials')}</p>
+          <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-muted">
+            {COACH.credentials.map((c) => (
+              <li>{l(c, locale)}</li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
+    {
+      COACH.links.length > 0 && (
+        <ul class="mt-5 flex flex-wrap gap-2">
+          {COACH.links.map((x) => (
+            <li>
+              <a
+                href={x.url}
+                rel="me noopener"
+                class="rounded-pill border border-border px-3 py-1.5 text-sm hover:border-text"
+              >
+                {x.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+    {
+      moreHref && (
+        <a
+          href={moreHref}
+          class="mt-6 inline-flex items-center gap-1 text-sm font-semibold underline decoration-border-strong underline-offset-4 hover:text-accent"
+        >
+          {t(locale, 'landing.coachMore')} →
+        </a>
+      )
+    }
+  </div>
+</div>

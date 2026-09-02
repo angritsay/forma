@@ -1,0 +1,57 @@
+---
+/**
+ * /guides/<slug>/ serves two families from one route (Astro cannot have two dynamic segments
+ * at the same depth): cluster hubs (/guides/no-equipment/) and articles (/guides/<article>/).
+ * The audit rejects article slugs that collide with cluster slugs.
+ */
+import { getCollection, type CollectionEntry } from 'astro:content';
+import GuideArticle from '@/components/seo/GuideArticle.astro';
+import GuideClusterHub from '@/components/seo/GuideClusterHub.astro';
+import { LOCALES, type Locale } from '@/content/schema';
+import type { GuideCluster } from '@/lib/seo/clusters';
+import {
+  clusterSlug,
+  clustersWithGuides,
+  guideSlug,
+  guidesForLocale,
+  isPublished,
+} from '@/lib/seo/guides';
+
+export async function getStaticPaths() {
+  const all = (await getCollection('guides')).filter(isPublished);
+  const paths: {
+    params: { lang: string | undefined; slug: string };
+    props: Props;
+  }[] = [];
+  for (const locale of LOCALES) {
+    const lang = locale === 'ru' ? undefined : locale;
+    for (const cluster of clustersWithGuides(all, locale)) {
+      paths.push({ params: { lang, slug: clusterSlug(cluster) }, props: { kind: 'cluster', cluster, locale } });
+    }
+    for (const g of guidesForLocale(all, locale)) {
+      paths.push({ params: { lang, slug: guideSlug(g) }, props: { kind: 'guide', id: g.id, locale } });
+    }
+  }
+  return paths;
+}
+
+type Props =
+  | { kind: 'cluster'; cluster: GuideCluster; locale: Locale }
+  | { kind: 'guide'; id: string; locale: Locale };
+
+const props = Astro.props;
+const all = (await getCollection('guides')).filter(isPublished);
+let entry: CollectionEntry<'guides'> | undefined;
+if (props.kind === 'guide') {
+  entry = all.find((g) => g.id === props.id);
+  if (!entry) throw new Error(`Guide entry not found: ${props.id}`);
+}
+---
+
+{
+  props.kind === 'cluster' ? (
+    <GuideClusterHub cluster={props.cluster} locale={props.locale} all={all} />
+  ) : (
+    <GuideArticle entry={entry!} locale={props.locale} all={all} />
+  )
+}

@@ -1,0 +1,60 @@
+---
+/** Bilingual 404 (served by GitHub Pages for any unknown path). */
+import Base from '@/layouts/Base.astro';
+import { t } from '@/i18n/index';
+import { appHref, href, withBase } from '@/lib/util/paths';
+import { BRAND } from '@content/site/brand';
+
+const blocks = [
+  {
+    locale: 'ru' as const,
+    title: t('ru', 'landing.notFoundTitle'),
+    text: t('ru', 'landing.notFoundText'),
+    home: t('ru', 'landing.notFoundHome'),
+    app: t('ru', 'landing.notFoundApp'),
+  },
+  {
+    locale: 'en' as const,
+    title: t('en', 'landing.notFoundTitle'),
+    text: t('en', 'landing.notFoundText'),
+    home: t('en', 'landing.notFoundHome'),
+    app: t('en', 'landing.notFoundApp'),
+  },
+];
+---
+
+<Base locale="ru">
+  <Fragment slot="head">
+    <title>404 — {BRAND.name}</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="description" content={`${blocks[0]!.title} / ${blocks[1]!.title}`} />
+  </Fragment>
+  <main class="mx-auto flex min-h-dvh max-w-3xl flex-col justify-center gap-10 px-6 py-16">
+    <a href={withBase('/')} class="font-display text-3xl">{BRAND.name}</a>
+    <p class="font-display text-8xl text-muted-2" aria-hidden="true">404</p>
+    <div class="grid gap-8 md:grid-cols-2">
+      {
+        blocks.map((b) => (
+          <section lang={b.locale} class="rounded-card border border-border bg-surface p-6">
+            <h1 class="font-display text-3xl">{b.title}</h1>
+            <p class="mt-2 text-muted">{b.text}</p>
+            <div class="mt-5 flex flex-wrap gap-2">
+              <a
+                href={href(b.locale, '/')}
+                class="rounded-pill bg-primary px-4 py-2 text-sm font-semibold text-on-primary"
+              >
+                {b.home}
+              </a>
+              <a
+                href={appHref()}
+                class="rounded-pill border border-border-strong px-4 py-2 text-sm font-semibold"
+              >
+                {b.app}
+              </a>
+            </div>
+          </section>
+        ))
+      }
+    </div>
+  </main>
+</Base>
