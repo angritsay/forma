@@ -523,11 +523,11 @@ const W_SQUAT_PUSH_C: WorkoutInput = {
       type: 'strength',
       format: 'sets',
       sets: 5,
-      restBetweenSetsSec: 90,
+      restBetweenSetsSec: 75,
       title: l('Сила', 'Strength'),
       description: l(
-        'Пять подходов по кругу: присед → швунг → прыжковые выпады → узкие отжимания. 20 секунд между упражнениями, 90 между подходами. Вес тяжёлый, техника не ломается: если два последних повторения не идут чисто — уменьши вес, а не глубину.',
-        'Five sets in rotation: squat → push press → jumping lunges → diamond push-ups. Twenty seconds between exercises, 90 between sets. Heavy weight, form holds: if the last two reps are not clean, drop the weight, not the depth.',
+        'Пять подходов по кругу: присед → швунг → прыжковые выпады → узкие отжимания. 20 секунд между упражнениями, 75 между подходами. Вес тяжёлый, техника не ломается: если два последних повторения не идут чисто — уменьши вес, а не глубину.',
+        'Five sets in rotation: squat → push press → jumping lunges → diamond push-ups. Twenty seconds between exercises, 75 between sets. Heavy weight, form holds: if the last two reps are not clean, drop the weight, not the depth.',
       ),
       items: [
         { exerciseId: 'db_front_squat', reps: 8, load: 'heavy', restAfterSec: 20 },
@@ -846,12 +846,12 @@ const W_PULL_HINGE_C: WorkoutInput = {
       id: 'phc_hinge',
       type: 'strength',
       format: 'sets',
-      sets: 5,
-      restBetweenSetsSec: 90,
+      sets: 4,
+      restBetweenSetsSec: 75,
       title: l('Тяга и хват', 'Hinge & grip'),
       description: l(
-        'Пять подходов по кругу: становая → тяга ренегата → прогулка фермера. 20 секунд между упражнениями, 90 между подходами. Прогулка с тяжёлой парой: если гантели тянут плечи вперёд — вес правильный, просто не давай им это сделать.',
-        'Five sets in rotation: deadlift → renegade row → farmer carry. Twenty seconds between exercises, 90 between sets. Carry the heavy pair: if the dumbbells try to pull your shoulders forward, the weight is right — just do not let them.',
+        'Четыре подхода по кругу: становая → тяга ренегата → прогулка фермера. 20 секунд между упражнениями, 75 между подходами. Прогулка с тяжёлой парой: если гантели тянут плечи вперёд — вес правильный, просто не давай им это сделать.',
+        'Four sets in rotation: deadlift → renegade row → farmer carry. Twenty seconds between exercises, 75 between sets. Carry the heavy pair: if the dumbbells try to pull your shoulders forward, the weight is right — just do not let them.',
       ),
       items: [
         { exerciseId: 'db_deadlift', reps: 8, load: 'heavy', restAfterSec: 20 },
@@ -2172,8 +2172,8 @@ export const COURSE_ATHLETE: CourseInput = {
     {
       q: l('Сколько длится тренировка?', 'How long is a session?'),
       a: l(
-        'В среднем около 40 минут с разминкой и заминкой. Силовые дни — 35–45 минут, «двигатель» — 30–35, чипперы и репетиции «Мёрфа» — 30–40. Два исключения — бенчмарки: «Синди» с разминкой занимает около 35 минут, половина «Мёрфа» — до часа. Перед стартом приложение показывает расчётное время для каждого из трёх режимов сложности.',
-        'About 40 minutes on average with warm-up and cool-down. Strength days run 35–45 minutes, engine days 30–35, chippers and Murph rehearsals 30–40. The two exceptions are the benchmarks: Cindy takes about 35 minutes with the warm-up, Half Murph up to an hour. Before you start, the app shows the estimated time for each of the three difficulty options.',
+        'В среднем 35–40 минут с разминкой и заминкой. Силовые дни — 40–50 минут (в пиковые недели ближе к 50), «двигатель» — около 30, чипперы и репетиции «Мёрфа» — 25–35. Два исключения — бенчмарки: «Синди» с разминкой занимает около 35 минут, половина «Мёрфа» — до часа. Перед стартом приложение показывает расчётное время для каждого из трёх режимов сложности.',
+        'Between 35 and 40 minutes on average with warm-up and cool-down. Strength days run 40–50 minutes (closer to 50 in the peak weeks), engine days about 30, chippers and Murph rehearsals 25–35. The two exceptions are the benchmarks: Cindy takes about 35 minutes with the warm-up, Half Murph up to an hour. Before you start, the app shows the estimated time for each of the three difficulty options.',
       ),
     },
     {

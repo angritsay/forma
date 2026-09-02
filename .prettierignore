@@ -3,3 +3,5 @@ node_modules
 .astro
 public/og
 package-lock.json
+# Guides are hand-formatted markdown; prettier would rewrap prose and requote frontmatter.
+content/guides/**/*.md
