@@ -5,9 +5,27 @@
  */
 import type { PoseSet } from './types';
 import { air_squat } from './air_squat';
+import { dead_bug } from './dead_bug';
+import { flutter_kick } from './flutter_kick';
+import { hollow_hold } from './hollow_hold';
+import { leg_raise } from './leg_raise';
+import { plank } from './plank';
+import { side_plank } from './side_plank';
+import { sit_up } from './sit_up';
+import { superman } from './superman';
+import { v_up } from './v_up';
 
 export const POSES: Record<string, PoseSet> = {
   air_squat,
+  dead_bug,
+  flutter_kick,
+  hollow_hold,
+  leg_raise,
+  plank,
+  side_plank,
+  sit_up,
+  superman,
+  v_up,
 };
 
 /** Registered animation ids, sorted. */
