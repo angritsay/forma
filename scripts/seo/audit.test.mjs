@@ -6,6 +6,8 @@ import {
   checkLength,
   collectObjectsWithId,
   containsPhrase,
+  extractAlternates,
+  extractCanonical,
   extractHeadings,
   extractImages,
   extractLinks,
@@ -15,6 +17,7 @@ import {
   parseTsLiterals,
   readGuideFile,
   resolveContentLink,
+  urlToDistFile,
   wordCount,
 } from './lib.mjs';
 
