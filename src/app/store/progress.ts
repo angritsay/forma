@@ -47,8 +47,11 @@ export const ACTIVE_COURSE_KEY = 'forma.activeCourse';
 export const RECENT_SESSIONS_LIMIT = 60;
 /** Days of step logs kept in memory (today included). */
 export const DAILY_LOG_DAYS = 90;
-/** `load()` refreshes in the background when the data is older than this. */
-const STALE_MS = 60_000;
+/**
+ * `load()` refreshes in the background when the data is older than this. Short on purpose:
+ * every screen mount after a workout (summary → home) picks up the saved session and state.
+ */
+const STALE_MS = 10_000;
 
 export type ProgressStatus = 'idle' | 'loading' | 'ready' | 'error';
 
