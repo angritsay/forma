@@ -34,8 +34,8 @@ const countLabel = `${count} ${plural(locale, count, {
 })}`;
 
 const crumbs = [
-  { name: t(locale, 'seo.home'), url: canonicalUrl(site, locale, '/'), href: canonicalUrl(site, locale, '/') },
-  { name: t(locale, 'seo.exercises'), url, href: url },
+  { name: t(locale, 'seo.home'), url: canonicalUrl(site, locale, '/'), href: href(locale, '/') },
+  { name: t(locale, 'seo.exercises'), url, href: href(locale, sitePath) },
 ];
 const jsonLd = [
   collectionPageJsonLd({

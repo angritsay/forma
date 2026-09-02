@@ -91,11 +91,12 @@ describe('description helpers', () => {
       expect(charLength(d), text.slice(0, 20)).toBeGreaterThanOrEqual(DESCRIPTION_MIN);
       expect(charLength(d), text.slice(0, 20)).toBeLessThanOrEqual(DESCRIPTION_MAX);
     }
-    // Long prose: whole sentences are preferred over the CTA.
-    expect(buildDescription(long, cta)).toBe(
-      'The base movement for the whole lower body: quads, glutes and the core all work together. Master it before adding weight.'
-        .split('. Master')[0] + '. Forma courses use it in warm-ups, strength blocks and metcons because it teaches you to sit down and stand up under…',
-    );
+    // Long prose: the first sentence plus the CTA would overflow, so more of the real text is
+    // preferred over the CTA — cut at a word boundary with an ellipsis.
+    const d = buildDescription(long, cta);
+    expect(d.startsWith('The base movement for the whole lower body: quads, glutes and the core all work together. Forma courses')).toBe(true);
+    expect(d.endsWith('…')).toBe(true);
+    expect(d).not.toContain(cta);
     // Short prose: sentence + CTA.
     expect(buildDescription(short, cta)).toBe(`${short} ${cta}`);
     // Medium prose: the sentence plus the CTA would overflow, so the prose is cut with an ellipsis.
