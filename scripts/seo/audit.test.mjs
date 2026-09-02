@@ -134,10 +134,14 @@ export const EXERCISES_A: ExerciseInput[] = [
   },
   { id: 'burpee', slug: { ru: 'berpi', en: 'burpee' }, name: { ru: 'Бёрпи', en: 'Burpee' }, level: 2 },
 ];
+const l = (ru: string, en: string): L10n => ({ ru, en });
 const COURSE = {
   id: 'start', order: 1,
   slug: { ru: 'start', en: 'start' },
-  name: { ru: 'Старт', en: 'Start' },
+  name: l('Старт', 'Start'),
+  tagline: l("It's a 'quoted' one", "en"),
+  weeks: WEEKS as number,
+  accent: pickAccent('start', 2),
   workouts: [{ id: 'w1', blocks: [{ id: 'b1', items: [{ exerciseId: 'air_squat', reps: 10 }] }] }],
   faq: [],
 } satisfies CourseInput;
@@ -158,6 +162,10 @@ export const COURSES = [COURSE];
     expect(second.id).toBe('burpee');
     const course = lits.find((x) => x.name === 'COURSE');
     expect(course.value.workouts[0].blocks[0].items[0].exerciseId).toBe('air_squat');
+    expect(course.value.name).toEqual({ ru: 'Старт', en: 'Start' });
+    expect(course.value.tagline).toEqual({ ru: "It's a 'quoted' one", en: 'en' });
+    expect(course.value.weeks).toEqual({ raw: 'WEEKS' });
+    expect(course.value.accent).toEqual({ raw: "pickAccent('start', 2)" });
     const courses = lits.find((x) => x.name === 'COURSES');
     expect(courses.value).toEqual([{ raw: 'COURSE' }]);
   });

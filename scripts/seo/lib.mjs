@@ -426,8 +426,10 @@ export function containsPhrase(haystack, needle) {
 
 /**
  * Extract every `const NAME = <literal>` from a TypeScript source as plain JS values.
- * Objects, arrays, strings, numbers and booleans are converted; anything else (identifiers,
- * calls, spreads) becomes `{ raw }`. Type annotations, `as const` and `satisfies X` are skipped.
+ * Objects, arrays, strings, numbers and booleans are converted; a call with exactly two string
+ * arguments — the `l('ru', 'en')` L10n helper content files use — becomes `{ ru, en }`; anything
+ * else (identifiers, other calls, spreads) becomes `{ raw }`. Type annotations, `as const` and
+ * `satisfies X` are skipped.
  * @param {string} source
  * @returns {{ name: string, value: unknown }[]}
  */
@@ -534,7 +536,33 @@ function parseRaw(s, i) {
   if (raw === 'true') return { value: true, end: j };
   if (raw === 'false') return { value: false, end: j };
   if (raw === 'null' || raw === 'undefined') return { value: null, end: j };
+  const l10n = parseL10nCall(raw);
+  if (l10n) return { value: l10n, end: j };
   return { value: { raw }, end: j };
+}
+
+/**
+ * `helper('ru text', 'en text')` → `{ ru, en }`; null for anything else.
+ * @param {string} raw
+ * @returns {{ ru: string, en: string } | null}
+ */
+function parseL10nCall(raw) {
+  const m = raw.match(/^[A-Za-z_$][\w$]*\s*\(([\s\S]*)\)$/);
+  if (!m) return null;
+  const inner = m[1] ?? '';
+  /** @type {string[]} */
+  const args = [];
+  let i = skipWs(inner, 0);
+  while (i < inner.length) {
+    const c = inner[i];
+    if (c !== "'" && c !== '"' && c !== '`') return null;
+    const r = parseString(inner, i);
+    args.push(/** @type {string} */ (r.value));
+    i = skipWs(inner, r.end);
+    if (inner[i] === ',') i = skipWs(inner, i + 1);
+    else if (i < inner.length) return null;
+  }
+  return args.length === 2 ? { ru: /** @type {string} */ (args[0]), en: /** @type {string} */ (args[1]) } : null;
 }
 
 /**
