@@ -45,6 +45,7 @@ export function useTodayModel(): TodayModel {
   const streak = useStreak();
   const ctx = useTrainingContext();
   const profile = useSession((s) => s.profile);
+  const streakDays = streak.current;
 
   return useMemo<TodayModel>(() => {
     const course = courseId ? COURSE_BY_ID.get(courseId) : undefined;
@@ -72,7 +73,7 @@ export function useTodayModel(): TodayModel {
             level: ctx.level,
             deload: node.deload === true,
             repeat,
-            streakDays: streak.current,
+            streakDays,
           };
           const prescribed = prescribeWorkout(workout, opts);
           durationSec = estimateDuration(prescribed).totalSec;
@@ -90,5 +91,5 @@ export function useTodayModel(): TodayModel {
         };
       }
     }
-  }, [courseId, row, stepsToday, streak.current, ctx, profile]);
+  }, [courseId, row, stepsToday, streakDays, ctx, profile]);
 }

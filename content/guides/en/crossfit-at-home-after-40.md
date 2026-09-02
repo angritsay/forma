@@ -1,6 +1,6 @@
 ---
 title: 'CrossFit at Home After 40: How to Start Safely'
-description: 'CrossFit at home after 40: what changes in your body, how to start safely, how much to train and rest, and how to protect knees, back and shoulders. A coach''s plan — read and begin.'
+description: 'CrossFit at home after 40: what changes, how to start safely, how much to train and rest, and how to protect knees and back. A coach''s plan — read and begin.'
 h1: 'CrossFit at home after 40: how to start safely and actually get stronger'
 targetKeyword: 'crossfit at home after 40'
 secondaryKeywords:

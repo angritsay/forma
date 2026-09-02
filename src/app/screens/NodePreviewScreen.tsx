@@ -78,6 +78,7 @@ export default function NodePreviewScreen() {
 
   const repeat = row?.completedNodeIds.includes(nodeId) ?? false;
   const deload = node?.deload === true;
+  const streakDays = streak.current;
 
   const recommendation = useMemo<Recommendation | null>(
     () =>

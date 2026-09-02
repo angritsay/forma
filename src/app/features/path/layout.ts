@@ -46,7 +46,8 @@ export interface PathLayout {
 
 /** Sine wave with a period of four nodes: right → centre → left → centre → … */
 export function nodeOffset(index: number): number {
-  return Math.round(AMPLITUDE * Math.sin((index * Math.PI) / 2 + Math.PI / 2));
+  // `|| 0` normalizes the -0 that Math.round yields at the sine's zero crossings.
+  return Math.round(AMPLITUDE * Math.sin((index * Math.PI) / 2 + Math.PI / 2)) || 0;
 }
 
 export function layoutPath(
