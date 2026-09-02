@@ -87,7 +87,8 @@ describe('markdown helpers', () => {
   const md = `# H1 title\n\nIntro with a [link](exercise:burpee) and ![figure](img.png) and ![](noalt.png).\n\n## Section one\n\nText **bold** \`code\`.\n\n### Sub\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n## Section two\n\n- item one\n- item [two](course:start)\n`;
   it('counts words without markup', () => {
     expect(wordCount('one two three')).toBe(3);
-    expect(wordCount('**bold** and `code` and [link text](x)')).toBe(5);
+    expect(wordCount('**bold** and `code` and [link text](x)')).toBe(6);
+    expect(wordCount('## Heading\n\n| a | b |\n|---|---|\n| one | two |')).toBe(5);
     expect(wordCount('<!-- comment words -->\nreal')).toBe(1);
   });
   it('extracts headings, links and images', () => {
@@ -216,10 +217,19 @@ describe('checkLength', () => {
   });
 });
 
+/**
+ * Guide fixture whose body has exactly `opts.words` words (the intro, headings and closing
+ * sections count too, so the filler is sized to hit the total).
+ */
 function guideMarkdown(opts = {}) {
   const words = opts.words ?? 950;
+  const scaffold = wordCount(guideMarkdownWith('', opts).split(/^---$/m)[2] ?? '');
+  const filler = Array.from({ length: Math.max(0, words - scaffold) }, (_, i) => `word${i % 37}`).join(' ');
+  return guideMarkdownWith(filler, opts);
+}
+
+function guideMarkdownWith(filler, opts = {}) {
   const keyword = opts.keyword ?? 'crossfit at home for beginners';
-  const filler = Array.from({ length: words }, (_, i) => `word${i % 37}`).join(' ');
   const fm = {
     title: opts.title ?? 'CrossFit at home for beginners: first 4 weeks',
     description:

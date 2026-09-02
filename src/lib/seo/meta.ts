@@ -21,13 +21,30 @@ export function charLength(s: string): number {
   return [...s].length;
 }
 
-/** Cut at a word boundary so the result is ≤ `max` chars; strips dangling punctuation. */
+const WORD_CHAR = /[\p{L}\p{N}]/u;
+
+/**
+ * Cut at a word boundary so the result is ≤ `max` chars; strips dangling punctuation.
+ * A word that ends exactly at the cut (followed by a space or punctuation) is kept.
+ */
 export function truncateWords(text: string, max: number): string {
   const s = text.replace(/\s+/g, ' ').trim();
-  if (charLength(s) <= max) return s;
-  const head = [...s].slice(0, max).join('');
-  const cut = head.replace(/\s+\S*$/, '').replace(/[\s,;:–—-]+$/, '');
+  const chars = [...s];
+  if (chars.length <= max) return s;
+  const head = chars.slice(0, max).join('');
+  const next = chars[max] ?? '';
+  const splitsWord = WORD_CHAR.test(next) && WORD_CHAR.test(chars[max - 1] ?? '');
+  const whole = splitsWord ? head.replace(/\s+\S*$/, '') : head;
+  const cut = whole.replace(/[\s,;:–—-]+$/, '');
   return cut.length > 0 ? cut : head;
+}
+
+/** `truncateWords` plus an ellipsis when something was cut (total stays ≤ `max`). */
+export function cutWithEllipsis(text: string, max: number): string {
+  const s = text.replace(/\s+/g, ' ').trim();
+  if (charLength(s) <= max) return s;
+  const head = truncateWords(s, max - 1);
+  return /[.!?…]$/.test(head) ? head : `${head}…`;
 }
 
 /** First candidate that fits the budget; otherwise the last one cut at a word boundary. */
@@ -44,9 +61,11 @@ export function sentences(text: string): string[] {
 }
 
 /**
- * Build a meta description of DESCRIPTION_MIN..DESCRIPTION_MAX chars from prose:
- * whole sentences first; when too short, extend with the next partial sentence or append the
- * CTA sentence, whichever keeps the result inside the budget.
+ * Build a meta description of DESCRIPTION_MIN..DESCRIPTION_MAX chars from prose.
+ * Whole sentences first; when they fall short, the candidates in order of preference are:
+ * sentences + CTA, prose cut at the budget (with an ellipsis), cut prose + CTA. The first one
+ * inside the budget wins; otherwise the longest that fits. Nothing is ever invented — a very
+ * short source simply yields a short description (the audit warns below 80 chars).
  */
 export function buildDescription(
   text: string,
@@ -61,22 +80,23 @@ export function buildDescription(
     if (charLength(next) > max) break;
     out = next;
   }
-  if (!out) out = truncateWords(full, max);
+  if (!out) out = cutWithEllipsis(full, max);
   if (charLength(out) >= min) return out;
 
-  const withCta = cta ? `${out} ${cta}` : out;
-  if (cta && charLength(withCta) <= max && charLength(withCta) >= min) return withCta;
-  if (charLength(full) > charLength(out)) {
-    const extended = truncateWords(full, max);
-    if (charLength(extended) >= min) return extended;
-  }
+  const candidates: string[] = [];
+  if (cta) candidates.push(`${out} ${cta}`);
+  if (charLength(full) > charLength(out)) candidates.push(cutWithEllipsis(full, max));
   if (cta) {
-    const room = max - charLength(cta) - 1;
-    const head = truncateWords(full, room);
-    if (charLength(head) >= 40) return `${head} ${cta}`;
-    return charLength(withCta) <= max ? withCta : truncateWords(withCta, max);
+    const head = cutWithEllipsis(full, max - charLength(cta) - 1);
+    if (charLength(head) >= 40 && charLength(head) < charLength(full)) {
+      candidates.push(`${head} ${cta}`);
+    }
   }
-  return out;
+  const fitting = candidates.filter((c) => charLength(c) <= max);
+  const inRange = fitting.find((c) => charLength(c) >= min);
+  if (inRange) return inRange;
+  fitting.sort((a, b) => charLength(b) - charLength(a));
+  return fitting[0] ?? out;
 }
 
 export function exerciseTitle(ex: Exercise, locale: Locale): string {

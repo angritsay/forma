@@ -54,6 +54,8 @@ describe('title helpers', () => {
       'second one',
     );
     expect(truncateWords('Приседания: техника, ошибки, варианты', 20)).toBe('Приседания: техника');
+    expect(truncateWords('Приседания: техника, ошибки, варианты', 19)).toBe('Приседания: техника');
+    expect(truncateWords('Приседания: техника, ошибки, варианты', 18)).toBe('Приседания');
     expect(truncateWords('short', 20)).toBe('short');
   });
 

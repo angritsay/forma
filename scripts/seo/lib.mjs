@@ -525,7 +525,11 @@ function parseRaw(s, i) {
     } else if ((c === ',' || c === ';' || c === '\n') && depth === 0) break;
     j++;
   }
-  const raw = s.slice(i, j).trim();
+  // Drop trailing type assertions: `1 as const`, `x as Foo`, `{…} satisfies Bar`.
+  const raw = s
+    .slice(i, j)
+    .trim()
+    .replace(/\s+(?:as|satisfies)\s+[\s\S]*$/, '');
   if (/^-?\d+(?:\.\d+)?$/.test(raw)) return { value: Number(raw), end: j };
   if (raw === 'true') return { value: true, end: j };
   if (raw === 'false') return { value: false, end: j };
