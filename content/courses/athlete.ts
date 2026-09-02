@@ -509,10 +509,7 @@ const W_SQUAT_PUSH_B: WorkoutInput = {
 const W_SQUAT_PUSH_C: WorkoutInput = {
   id: 'w_squat_push_c',
   name: l('Присед и жим C', 'Squat & push C'),
-  focus: l(
-    'Тяжёлая пара и AMRAP 10 в ритме Мёрфа',
-    'The heavy pair and a Murph-paced AMRAP 10',
-  ),
+  focus: l('Тяжёлая пара и AMRAP 10 в ритме Мёрфа', 'The heavy pair and a Murph-paced AMRAP 10'),
   description: l(
     'Пик силового дня, недели с пятой по седьмую: пять подходов по восемь с тяжёлой парой в приседе и швунге, 24 прыжковых выпада, 12 узких отжиманий. Потом десять минут AMRAP — дьявольский жим, отжимания, приседания, скакалка — это объём, из которого сложится «Мёрф». Кор — лодочка и складка.',
     'The strength day peaks, weeks five to seven: five sets of eight with the heavy pair in the squat and the push press, 24 jumping lunges, 12 diamond push-ups. Then a ten-minute AMRAP — devil presses, push-ups, air squats, rope — the volume Murph is built from. Core: hollow hold and V-ups.',
