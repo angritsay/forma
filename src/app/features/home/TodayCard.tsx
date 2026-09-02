@@ -51,7 +51,13 @@ function Frame({
 }
 
 /** The "Today" hero tile: next node of the active course, or a nudge to pick a course. */
-export function TodayCard({ model, onStart, onOpenPath, onLogSteps, onPickCourse }: TodayCardProps) {
+export function TodayCard({
+  model,
+  onStart,
+  onOpenPath,
+  onLogSteps,
+  onPickCourse,
+}: TodayCardProps) {
   const { t, l, locale } = useT();
   const eyebrow = t('app.homeTodayEyebrow');
 
@@ -145,7 +151,10 @@ export function TodayCard({ model, onStart, onOpenPath, onLogSteps, onPickCourse
     case 'workout': {
       const { course, node, workout, exercise } = model;
       const subtitle = node.subtitle ? l(node.subtitle) : l(workout.focus);
-      const style = { '--course-g1': course.gradient[0], '--course-g2': course.gradient[1] } as CSSProperties;
+      const style = {
+        '--course-g1': course.gradient[0],
+        '--course-g2': course.gradient[1],
+      } as CSSProperties;
       return (
         <Frame
           gradient={course.gradient}

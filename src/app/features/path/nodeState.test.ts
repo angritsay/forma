@@ -21,9 +21,9 @@ describe('currentNodeIndex', () => {
     expect(currentNodeIndex(nodes, { currentNodeIndex: 1, completedNodeIds: ['a', 'b'] })).toBe(2);
   });
   it('falls back to an unfinished earlier node when the index ran past the end', () => {
-    expect(currentNodeIndex(nodes, { currentNodeIndex: 4, completedNodeIds: ['a', 'c', 'd'] })).toBe(
-      1,
-    );
+    expect(
+      currentNodeIndex(nodes, { currentNodeIndex: 4, completedNodeIds: ['a', 'c', 'd'] }),
+    ).toBe(1);
   });
   it('returns -1 when everything is done', () => {
     expect(
@@ -85,7 +85,11 @@ describe('completeNodePatch', () => {
     expect(patch.currentNodeIndex).toBe(4);
   });
   it('keeps the index on a repeat of an earlier node', () => {
-    const patch = completeNodePatch(nodes, { currentNodeIndex: 3, completedNodeIds: ['a', 'b', 'c'] }, 'a');
+    const patch = completeNodePatch(
+      nodes,
+      { currentNodeIndex: 3, completedNodeIds: ['a', 'b', 'c'] },
+      'a',
+    );
     expect(patch.currentNodeIndex).toBe(3);
   });
 });

@@ -125,11 +125,7 @@ export default function HomeScreen() {
   } else {
     body = (
       <div className="flex flex-col gap-5 py-2">
-        <StreakCard
-          streak={streak}
-          stepsGoal={STEPS_GOAL}
-          onLogSteps={() => navigate('/steps')}
-        />
+        <StreakCard streak={streak} stepsGoal={STEPS_GOAL} onLogSteps={() => navigate('/steps')} />
         <TodayCard
           model={today}
           onStart={(courseId, nodeId) => navigate(`/courses/${courseId}/nodes/${nodeId}`)}

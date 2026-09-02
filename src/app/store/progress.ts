@@ -13,10 +13,7 @@ import { useEffect, useMemo } from 'react';
 import { create } from 'zustand';
 import { COURSES, COURSE_BY_ID, getCourse } from '@/content/registry';
 import { listBenchmarks } from '@/lib/api/benchmarks';
-import {
-  listCourseStates,
-  upsertCourseState as apiUpsertCourseState,
-} from '@/lib/api/courseState';
+import { listCourseStates, upsertCourseState as apiUpsertCourseState } from '@/lib/api/courseState';
 import { listDailyLogs } from '@/lib/api/dailyLogs';
 import { toAppError, type AppError } from '@/lib/api/errors';
 import { listRecentSessions } from '@/lib/api/sessions';
@@ -414,8 +411,5 @@ export function useTotalPoints(): number {
   const totals = useProgress((s) => s.totals);
   const sessions = useProgress((s) => s.recentSessions);
   const logs = useProgress((s) => s.dailyLogs);
-  return useMemo(
-    () => totals?.points ?? totalPoints(sessions, logs),
-    [totals, sessions, logs],
-  );
+  return useMemo(() => totals?.points ?? totalPoints(sessions, logs), [totals, sessions, logs]);
 }

@@ -54,7 +54,9 @@ function PlanBlock({ block }: { block: PrescribedBlock }) {
         <span className="text-[15px] font-semibold">
           {block.title ? l(block.title) : t(`training.block_${block.type}`)}
         </span>
-        <span className="tabular text-xs text-muted">{formatDuration(locale, block.estimatedSec)}</span>
+        <span className="tabular text-xs text-muted">
+          {formatDuration(locale, block.estimatedSec)}
+        </span>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Chip size="sm" tone={block.type === 'test' ? 'accent' : 'default'}>
@@ -64,9 +66,7 @@ function PlanBlock({ block }: { block: PrescribedBlock }) {
           <span className="text-xs text-muted">{t('app.nodeRestAfter', { s: between })}</span>
         ) : null}
       </div>
-      {block.description ? (
-        <p className="text-sm text-muted">{l(block.description)}</p>
-      ) : null}
+      {block.description ? <p className="text-sm text-muted">{l(block.description)}</p> : null}
       <ul className="flex flex-col divide-y divide-border">
         {block.items.map((item, i) => (
           <PlanItem key={`${item.exerciseId}-${i}`} item={item} />

@@ -22,11 +22,7 @@ import { useT } from '@/app/hooks/useT';
 import { courseLandingHref } from '@/app/features/courses/courseMeta';
 import { LinkButton } from '@/app/features/courses/LinkButton';
 import { NodeSheet } from '@/app/features/path/NodeSheet';
-import {
-  courseProgress,
-  nodeStatus,
-  type NodeStatus,
-} from '@/app/features/path/nodeState';
+import { courseProgress, nodeStatus, type NodeStatus } from '@/app/features/path/nodeState';
 import { PathView } from '@/app/features/path/PathView';
 import { ScaleSheet } from '@/app/features/path/ScaleSheet';
 import {
@@ -163,11 +159,7 @@ export default function CoursePathScreen() {
         title={t('app.homeErrorTitle')}
         description={t('app.homeErrorBody')}
         action={
-          <Button
-            size="lg"
-            loading={loading}
-            onClick={() => void useProgress.getState().refresh()}
-          >
+          <Button size="lg" loading={loading} onClick={() => void useProgress.getState().refresh()}>
             {t('common.retry')}
           </Button>
         }

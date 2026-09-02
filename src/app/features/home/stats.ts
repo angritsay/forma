@@ -116,10 +116,7 @@ export function stepsWeek(logs: DailyLogMap, todayIso: string): StepsDay[] {
 }
 
 /** Points from the loaded sessions and logs (fallback when the totals RPC is unavailable). */
-export function totalPoints(
-  sessions: readonly WorkoutSessionRow[],
-  logs: DailyLogMap,
-): number {
+export function totalPoints(sessions: readonly WorkoutSessionRow[], logs: DailyLogMap): number {
   let total = 0;
   for (const s of sessions) if (isCompletedSession(s)) total += s.points;
   for (const log of Object.values(logs)) total += log.points;

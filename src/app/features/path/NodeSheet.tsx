@@ -72,13 +72,7 @@ export function NodeSheet({
       ) : null}
     </div>
   ) : (
-    <Button
-      size="lg"
-      fullWidth
-      loading={busy}
-      disabled={done}
-      onClick={() => onComplete(false)}
-    >
+    <Button size="lg" fullWidth loading={busy} disabled={done} onClick={() => onComplete(false)}>
       {done ? t('app.pathMilestoneDone') : t('app.pathMilestoneMark')}
     </Button>
   );

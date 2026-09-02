@@ -9,7 +9,14 @@ import {
 } from './progress';
 
 function stateRow(courseId: string, updatedAt: string): CourseStateRow {
-  return { userId: 'u', courseId, scale: 1.1, currentNodeIndex: 3, completedNodeIds: ['a'], updatedAt };
+  return {
+    userId: 'u',
+    courseId,
+    scale: 1.1,
+    currentNodeIndex: 3,
+    completedNodeIds: ['a'],
+    updatedAt,
+  };
 }
 
 function session(partial: Partial<WorkoutSessionRow>): WorkoutSessionRow {

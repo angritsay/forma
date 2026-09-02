@@ -21,7 +21,12 @@ export interface DifficultyChooserProps {
 }
 
 /** Three cards (Easier / As usual / Harder) with time, points and kcal; one badged as recommended. */
-export function DifficultyChooser({ options, value, onChange, recommended }: DifficultyChooserProps) {
+export function DifficultyChooser({
+  options,
+  value,
+  onChange,
+  recommended,
+}: DifficultyChooserProps) {
   const { t, l } = useT();
   return (
     <div className="flex flex-col gap-3">

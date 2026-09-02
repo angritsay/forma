@@ -35,7 +35,10 @@ const TODAY = '2026-09-02';
 describe('buildDayActivity', () => {
   it('merges sessions and logs per day, ignoring unfinished sessions', () => {
     const days = buildDayActivity(
-      [session({ localDate: '2026-09-01' }), session({ localDate: '2026-09-02', completedAt: null })],
+      [
+        session({ localDate: '2026-09-01' }),
+        session({ localDate: '2026-09-02', completedAt: null }),
+      ],
       { '2026-09-01': log('2026-09-01', 3000), '2026-08-30': log('2026-08-30', 8000) },
     );
     expect(days).toEqual([
@@ -95,7 +98,10 @@ describe('totalPoints', () => {
   it('adds completed session points and log points', () => {
     expect(
       totalPoints(
-        [session({ localDate: '2026-09-01', points: 120 }), session({ localDate: '2026-09-02', completedAt: null })],
+        [
+          session({ localDate: '2026-09-01', points: 120 }),
+          session({ localDate: '2026-09-02', completedAt: null }),
+        ],
         { '2026-09-01': log('2026-09-01', 8000, 35) },
       ),
     ).toBe(155);

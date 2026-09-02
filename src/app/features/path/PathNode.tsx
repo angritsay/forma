@@ -108,9 +108,7 @@ export function PathNode({ node, status, x, y, exercise, onPress, buttonRef }: P
         >
           {title}
         </span>
-        {subtitle ? (
-          <span className="w-full truncate text-xs text-muted-2">{subtitle}</span>
-        ) : null}
+        {subtitle ? <span className="w-full truncate text-xs text-muted-2">{subtitle}</span> : null}
       </div>
     </div>
   );
