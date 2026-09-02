@@ -13,7 +13,7 @@
  * The exercise/course figure comes from src/components/anim/render.ts (figureSvgString) when the
  * animation area has shipped it, else from src/components/anim/figures.json, else it is omitted.
  */
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { register } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';

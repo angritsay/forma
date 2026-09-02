@@ -14,6 +14,13 @@ import { dirname, resolve as resolvePath } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = resolvePath(dirname(fileURLToPath(import.meta.url)), '../..');
+
+// Hooks run on their own thread, so the ExperimentalWarning that stripTypeScriptTypes emits must
+// be filtered here (og.mjs filters the main thread). Every other warning is kept.
+process.removeAllListeners('warning');
+process.on('warning', (w) => {
+  if (w.name !== 'ExperimentalWarning') console.warn(w);
+});
 const CANDIDATES = [
   '',
   '.ts',
