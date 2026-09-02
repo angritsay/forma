@@ -1,0 +1,30 @@
+---
+/**
+ * Renders one or more schema.org objects as a single JSON-LD graph.
+ * Objects may carry their own @context; it is stripped inside the graph.
+ */
+interface Props {
+  data: object | object[] | null | undefined;
+}
+const { data } = Astro.props;
+
+function toGraph(input: object | object[]): object {
+  const list = (Array.isArray(input) ? input : [input]).filter(Boolean) as Record<
+    string,
+    unknown
+  >[];
+  if (list.length === 1) return { '@context': 'https://schema.org', ...list[0] };
+  return {
+    '@context': 'https://schema.org',
+    '@graph': list.map((node) => {
+      const copy = { ...node };
+      delete copy['@context'];
+      return copy;
+    }),
+  };
+}
+
+const json = data ? JSON.stringify(toGraph(data)).replace(/</g, '\\u003c') : null;
+---
+
+{json && <script type="application/ld+json" set:html={json} />}

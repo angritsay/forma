@@ -1,0 +1,87 @@
+---
+/**
+ * All <head> SEO tags for a page: title, description, canonical, hreflang alternates,
+ * OpenGraph/Twitter, robots, verification metas, JSON-LD.
+ *
+ * Usage (inside <Base>'s "head" slot):
+ *   <SeoHead locale={locale} title="…" description="…" sitePath="/courses/" jsonLd={[...]} />
+ *
+ * `sitePath` is locale-agnostic; pass `localizedPaths` when slugs differ per locale.
+ */
+import { BRAND } from '@content/site/brand';
+import type { Locale } from '@/content/schema';
+import { alternates, canonicalUrl, ogLocale } from '@/lib/seo/urls';
+import { absoluteUrl } from '@/lib/util/paths';
+import JsonLd from './JsonLd.astro';
+
+interface Props {
+  locale: Locale;
+  title: string;
+  description: string;
+  sitePath: string;
+  localizedPaths?: Partial<Record<Locale, string>>;
+  type?: 'website' | 'article';
+  /** Site-relative image path ("/og/courses-start.png") or absolute URL. */
+  image?: string;
+  noindex?: boolean;
+  jsonLd?: object | object[] | null;
+  publishedAt?: string;
+  updatedAt?: string;
+}
+
+const {
+  locale,
+  title,
+  description,
+  sitePath,
+  localizedPaths,
+  type = 'website',
+  image,
+  noindex = false,
+  jsonLd,
+  publishedAt,
+  updatedAt,
+} = Astro.props;
+
+const site = (Astro.site?.toString() ?? 'http://localhost:4321').replace(/\/$/, '');
+const canonical = canonicalUrl(site, locale, localizedPaths?.[locale] ?? sitePath);
+const alts = alternates(site, sitePath, localizedPaths);
+const imgPath = image ?? BRAND.ogImage;
+const imageUrl = /^https?:\/\//.test(imgPath) ? imgPath : absoluteUrl(site, imgPath);
+const fullTitle = title.includes(BRAND.name) ? title : `${title} — ${BRAND.name}`;
+const yandexVerification = import.meta.env.PUBLIC_YANDEX_VERIFICATION;
+const googleVerification = import.meta.env.PUBLIC_GOOGLE_VERIFICATION;
+---
+
+<title>{fullTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+{alts.map((a) => <link rel="alternate" hreflang={a.locale} href={a.href} />)}
+<meta
+  name="robots"
+  content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large'}
+/>
+<meta property="og:type" content={type} />
+<meta property="og:site_name" content={BRAND.name} />
+<meta property="og:locale" content={ogLocale(locale)} />
+{
+  alts
+    .filter((a) => a.locale !== 'x-default' && a.locale !== locale)
+    .map((a) => <meta property="og:locale:alternate" content={ogLocale(a.locale as Locale)} />)
+}
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={imageUrl} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+{publishedAt && <meta property="article:published_time" content={publishedAt} />}
+{updatedAt && <meta property="article:modified_time" content={updatedAt} />}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={fullTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={imageUrl} />
+{BRAND.twitter && <meta name="twitter:site" content={`@${BRAND.twitter}`} />}
+{yandexVerification && <meta name="yandex-verification" content={yandexVerification} />}
+{googleVerification && <meta name="google-site-verification" content={googleVerification} />}
+<JsonLd data={jsonLd} />

@@ -1,0 +1,122 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/manrope';
+@import '@fontsource/playfair-display/500-italic.css';
+@import '@fontsource/playfair-display/600-italic.css';
+
+/*
+ * Forma design tokens.
+ * Dark-first product. Landing and app share these tokens; course accents are injected as
+ * --course-accent / --course-g1 / --course-g2 on the nearest container.
+ */
+:root {
+  --bg: #0b0b0d;
+  --surface: #151519;
+  --surface-2: #1e1e24;
+  --surface-3: #2a2a31;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --text: #f5f5f7;
+  --muted: #9a9aa3;
+  --muted-2: #6b6b73;
+  --primary: #ffffff;
+  --on-primary: #0b0b0d;
+  --accent: #b9f3e0;
+  --accent-2: #c9d6ff;
+  --success: #7ce0b0;
+  --warning: #ffd166;
+  --danger: #ff6b6b;
+  --r-card: 24px;
+  --r-inner: 16px;
+  --r-pill: 999px;
+  --shadow-card: 0 12px 40px rgba(0, 0, 0, 0.35);
+  --shadow-glow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 20px 60px rgba(185, 243, 224, 0.12);
+  --font-sans: 'Manrope Variable', 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  color-scheme: dark;
+}
+
+@theme {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-muted-2: var(--muted-2);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --radius-card: var(--r-card);
+  --radius-inner: var(--r-inner);
+  --radius-pill: var(--r-pill);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+  --shadow-card: var(--shadow-card);
+  --shadow-glow: var(--shadow-glow);
+}
+
+html {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Display headings: italic serif, tight leading, like the reference screens. */
+.font-display,
+.display {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pastel hero-art gradient surface; course colors override the stops. */
+.hero-art {
+  --course-g1: var(--accent);
+  --course-g2: var(--accent-2);
+  background: linear-gradient(160deg, var(--course-g1) 0%, var(--course-g2) 100%);
+  color: #0b0b0d;
+}
+
+/* Focus ring for keyboard users. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--on-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

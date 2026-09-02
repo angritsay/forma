@@ -1,0 +1,133 @@
+---
+/**
+ * Landing shell: Base + top navigation + footer + language switcher.
+ * The landing area owns the visual design of nav/footer; other areas only pass props.
+ *
+ * `sitePath` / `localizedPaths` are forwarded to the language switcher so that the switch keeps
+ * the visitor on the same page in the other language.
+ */
+import Base from './Base.astro';
+import SeoHead from '@/components/seo/SeoHead.astro';
+import { t } from '@/i18n/index';
+import { href, appHref } from '@/lib/util/paths';
+import { BRAND } from '@content/site/brand';
+import type { Locale } from '@/content/schema';
+
+interface Props {
+  locale: Locale;
+  title: string;
+  description: string;
+  sitePath: string;
+  localizedPaths?: Partial<Record<Locale, string>>;
+  type?: 'website' | 'article';
+  image?: string;
+  noindex?: boolean;
+  jsonLd?: object | object[] | null;
+  publishedAt?: string;
+  updatedAt?: string;
+}
+
+const { locale, sitePath, localizedPaths, ...seo } = Astro.props;
+const other: Locale = locale === 'ru' ? 'en' : 'ru';
+const otherPath = localizedPaths ? (localizedPaths[other] ?? '/') : sitePath;
+const year = new Date().getFullYear();
+---
+
+<Base locale={locale}>
+  <Fragment slot="head">
+    <SeoHead locale={locale} sitePath={sitePath} localizedPaths={localizedPaths} {...seo} />
+    <slot name="head" />
+  </Fragment>
+
+  <header class="sticky top-0 z-40 border-b border-border bg-bg/80 backdrop-blur">
+    <nav
+      class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4"
+      aria-label="Main"
+    >
+      <a href={href(locale, '/')} class="font-display text-2xl">{BRAND.name}</a>
+      <ul class="hidden items-center gap-6 text-sm text-muted md:flex">
+        <li>
+          <a class="hover:text-text" href={href(locale, '/courses/')}
+            >{t(locale, 'landing.navCourses')}</a>
+        </li>
+        <li>
+          <a class="hover:text-text" href={href(locale, '/exercises/')}
+            >{t(locale, 'landing.navExercises')}</a>
+        </li>
+        <li>
+          <a class="hover:text-text" href={href(locale, '/guides/')}
+            >{t(locale, 'landing.navGuides')}</a>
+        </li>
+        <li>
+          <a class="hover:text-text" href={href(locale, '/about/')}
+            >{t(locale, 'landing.navAbout')}</a>
+        </li>
+      </ul>
+      <div class="flex items-center gap-3">
+        <a
+          href={href(other, otherPath)}
+          hreflang={other}
+          lang={other}
+          class="rounded-pill border border-border px-3 py-1.5 text-xs uppercase tracking-wide text-muted hover:text-text"
+          aria-label={t(locale, 'common.language')}
+        >
+          {other}
+        </a>
+        <a
+          href={appHref()}
+          class="rounded-pill bg-primary px-4 py-2 text-sm font-semibold text-on-primary"
+        >
+          {t(locale, 'landing.navApp')}
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <slot />
+
+  <footer class="mt-24 border-t border-border">
+    <div
+      class="mx-auto flex max-w-6xl flex-col gap-6 px-5 py-10 text-sm text-muted md:flex-row md:items-start md:justify-between"
+    >
+      <div>
+        <div class="font-display text-xl text-text">{BRAND.name}</div>
+        <p class="mt-2 max-w-xs">{t(locale, 'common.tagline')}</p>
+      </div>
+      <ul class="grid grid-cols-2 gap-x-10 gap-y-2">
+        <li>
+          <a class="hover:text-text" href={href(locale, '/courses/')}
+            >{t(locale, 'landing.navCourses')}</a>
+        </li>
+        <li>
+          <a class="hover:text-text" href={href(locale, '/exercises/')}
+            >{t(locale, 'landing.navExercises')}</a>
+        </li>
+        <li>
+          <a class="hover:text-text" href={href(locale, '/guides/')}
+            >{t(locale, 'landing.navGuides')}</a>
+        </li>
+        <li>
+          <a class="hover:text-text" href={href(locale, '/about/')}
+            >{t(locale, 'landing.navAbout')}</a>
+        </li>
+        <li>
+          <a class="hover:text-text" href={href(locale, '/privacy/')}
+            >{t(locale, 'landing.footerPrivacy')}</a>
+        </li>
+        <li>
+          <a class="hover:text-text" href={href(locale, '/terms/')}
+            >{t(locale, 'landing.footerTerms')}</a>
+        </li>
+        <li>
+          <a class="hover:text-text" href={href(locale, '/refund/')}
+            >{t(locale, 'landing.footerRefund')}</a>
+        </li>
+        <li>
+          <a class="hover:text-text" href={href(locale, '/contact/')}
+            >{t(locale, 'landing.footerContact')}</a>
+        </li>
+      </ul>
+      <p>© {year} {BRAND.organization}</p>
+    </div>
+  </footer>
+</Base>

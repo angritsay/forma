@@ -1,0 +1,19 @@
+---
+/**
+ * The React app island. Rendered client-only (it depends on auth state); excluded from indexing.
+ */
+import Base from '@/layouts/Base.astro';
+import App from '@/app/main';
+import { withBase } from '@/lib/util/paths';
+---
+
+<Base locale="ru" bodyClass="app-body">
+  <Fragment slot="head">
+    <title>Forma</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="apple-touch-icon" href={withBase('/favicon.svg')} />
+  </Fragment>
+  <App client:only="react" />
+</Base>
