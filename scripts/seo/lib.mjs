@@ -1088,11 +1088,46 @@ export function parseSitemap(xml) {
 }
 
 /**
+ * `<link rel="…" …>` tags with the given rel; attributes may come in any order.
+ * @param {string} html
+ * @param {string} rel
+ * @returns {Record<string, string>[]}
+ */
+function linkTags(html, rel) {
+  /** @type {Record<string, string>[]} */
+  const out = [];
+  for (const m of html.matchAll(/<link\b([^>]*)>/gi)) {
+    /** @type {Record<string, string>} */
+    const attrs = {};
+    for (const a of (m[1] ?? '').matchAll(/([a-zA-Z-]+)\s*=\s*"([^"]*)"/g)) {
+      attrs[(a[1] ?? '').toLowerCase()] = decodeEntities(a[2] ?? '');
+    }
+    if ((attrs.rel ?? '').toLowerCase() === rel) out.push(attrs);
+  }
+  return out;
+}
+
+/** @param {string} html */
+export function extractCanonical(html) {
+  return linkTags(html, 'canonical')[0]?.href ?? null;
+}
+
+/**
+ * @param {string} html
+ * @returns {{ hreflang: string, href: string }[]}
+ */
+export function extractAlternates(html) {
+  return linkTags(html, 'alternate')
+    .filter((a) => a.hreflang !== undefined)
+    .map((a) => ({ hreflang: a.hreflang ?? '', href: a.href ?? '' }));
+}
+
+/**
  * Check one rendered HTML document (exported for tests).
  * @param {string} html
  * @param {string} file
  * @param {{ allowNoindex?: boolean }} [opts]
- * @returns {{ issues: Issue[], title: string | null, description: string | null }}
+ * @returns {{ issues: Issue[], title: string | null, description: string | null, canonical: string | null, alternates: { hreflang: string, href: string }[] }}
  */
 export function auditHtml(html, file, opts = {}) {
   /** @type {Issue[]} */
@@ -1109,10 +1144,21 @@ export function auditHtml(html, file, opts = {}) {
   const h1s = (html.match(/<h1[\s>]/gi) ?? []).length;
   if (h1s === 0) push('error', 'no <h1>');
   else if (h1s > 1) push('warning', `${h1s} <h1> tags`);
-  if (!/<link\s+rel="canonical"/i.test(html)) push('error', 'no canonical link');
-  const alternates = (html.match(/<link\s+rel="alternate"\s+hreflang=/gi) ?? []).length;
-  if (alternates === 0) push('warning', 'no hreflang alternates');
-  else if (!/hreflang="x-default"/i.test(html)) push('warning', 'no x-default alternate');
+  const canonicals = linkTags(html, 'canonical');
+  const canonical = canonicals[0]?.href ?? null;
+  if (canonicals.length === 0) push('error', 'no canonical link');
+  else if (canonicals.length > 1) push('error', `${canonicals.length} canonical links`);
+  const alternates = extractAlternates(html);
+  if (alternates.length === 0) push('warning', 'no hreflang alternates');
+  else if (!alternates.some((a) => a.hreflang === 'x-default')) push('warning', 'no x-default alternate');
+  const htmlLang = html.match(/<html[^>]*\slang="([^"]*)"/i)?.[1];
+  if (htmlLang === undefined) push('error', 'no lang attribute on <html>');
+  else if (alternates.length > 0 && canonical) {
+    const self = alternates.find((a) => a.hreflang === htmlLang);
+    if (!self) push('warning', `no hreflang="${htmlLang}" alternate for the page's own language`);
+    else if (self.href !== canonical)
+      push('error', `hreflang="${htmlLang}" (${self.href}) differs from the canonical (${canonical})`);
+  }
   const robots = metaContent(html, 'robots');
   if (robots && /noindex/i.test(robots) && !opts.allowNoindex) push('error', 'noindex on a public page');
   const description = metaContent(html, 'description');
@@ -1121,8 +1167,30 @@ export function auditHtml(html, file, opts = {}) {
     const dl = checkLength(description, { min: 80, max: LIMITS.descriptionMax, hardMin: 20, hardMax: 200 }, 'meta description');
     if (dl) push(dl.level, dl.message);
   }
-  if (!/<html[^>]*\slang="/i.test(html)) push('error', 'no lang attribute on <html>');
-  return { issues, title, description };
+  return { issues, title, description, canonical, alternates };
+}
+
+/**
+ * Map an absolute page URL to its `index.html` inside dist (honouring the base path).
+ * Returns null for URLs that cannot be parsed.
+ * @param {string} url
+ * @param {string} dist
+ * @param {string} base normalized base path ("/" or "/forma/")
+ */
+export function urlToDistFile(url, dist, base) {
+  let pathname;
+  try {
+    pathname = decodeURI(new URL(url).pathname);
+  } catch {
+    return null;
+  }
+  let sitePath = pathname;
+  if (base !== '/') {
+    if (!sitePath.startsWith(base)) return join(dist, '__outside-base__', sitePath);
+    sitePath = `/${sitePath.slice(base.length)}`;
+  }
+  if (/\.[a-z0-9]+$/i.test(sitePath)) return join(dist, sitePath);
+  return join(dist, sitePath, 'index.html');
 }
 
 /**
@@ -1144,22 +1212,25 @@ export function auditDist(dist, opts = {}) {
 
   /** @type {Set<string>} */
   const inSitemap = new Set();
-  if (existsSync(sitemapPath)) {
+  /** @type {Set<string>} */
+  const sitemapUrls = new Set();
+  const hasSitemap = existsSync(sitemapPath);
+  if (hasSitemap) {
     const entries = parseSitemap(readFileSync(sitemapPath, 'utf8'));
     if (entries.length === 0) issues.push({ level: 'error', file: 'dist/sitemap.xml', message: 'sitemap has no URLs' });
     for (const { loc } of entries) {
-      let pathname;
-      try {
-        pathname = decodeURI(new URL(loc).pathname);
-      } catch {
+      const target = urlToDistFile(loc, dist, base);
+      if (!target) {
         issues.push({ level: 'error', file: 'dist/sitemap.xml', message: `invalid URL ${loc}` });
         continue;
       }
-      let sitePath = pathname;
-      if (base !== '/' && sitePath.startsWith(base)) sitePath = `/${sitePath.slice(base.length)}`;
-      const target = join(dist, sitePath, 'index.html');
-      if (!existsSync(target)) {
-        issues.push({ level: 'error', file: 'dist/sitemap.xml', message: `${loc} has no dist${sitePath}index.html` });
+      if (sitemapUrls.has(loc))
+        issues.push({ level: 'error', file: 'dist/sitemap.xml', message: `duplicate URL ${loc}` });
+      sitemapUrls.add(loc);
+      if (base !== '/' && !new URL(loc).pathname.startsWith(base))
+        issues.push({ level: 'error', file: 'dist/sitemap.xml', message: `${loc} is outside the base path ${base}` });
+      else if (!existsSync(target)) {
+        issues.push({ level: 'error', file: 'dist/sitemap.xml', message: `${loc} has no dist/${rel(dist, target)}` });
       } else inSitemap.add(target);
     }
   } else {
@@ -1190,8 +1261,20 @@ export function auditDist(dist, opts = {}) {
       if (prev) issues.push({ level: 'warning', file: label, message: `meta description duplicates ${prev}` });
       else descriptions.set(r.description, label);
     }
-    if (existsSync(sitemapPath) && !inSitemap.has(file))
+    if (r.canonical) {
+      const target = urlToDistFile(r.canonical, dist, base);
+      if (target !== file)
+        issues.push({ level: 'error', file: label, message: `canonical points elsewhere: ${r.canonical}` });
+      else if (hasSitemap && !sitemapUrls.has(r.canonical))
+        issues.push({ level: 'warning', file: label, message: 'page is not in the sitemap' });
+    } else if (hasSitemap && !inSitemap.has(file)) {
       issues.push({ level: 'warning', file: label, message: 'page is not in the sitemap' });
+    }
+    for (const a of r.alternates) {
+      const target = urlToDistFile(a.href, dist, base);
+      if (!target || !existsSync(target))
+        issues.push({ level: 'error', file: label, message: `hreflang="${a.hreflang}" target has no page: ${a.href}` });
+    }
   }
   return issues;
 }
