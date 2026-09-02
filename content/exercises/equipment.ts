@@ -46,7 +46,10 @@ export const EXERCISES_C: ExerciseInput[] = [
         ru: 'Неполная амплитуда — руки не выпрямляются внизу',
         en: 'Half reps: arms never straighten at the bottom',
       },
-      { ru: 'Подбородок тянется вверх, плечи уходят к ушам', en: 'Chin reaching up while the shoulders shrug' },
+      {
+        ru: 'Подбородок тянется вверх, плечи уходят к ушам',
+        en: 'Chin reaching up while the shoulders shrug',
+      },
     ],
     breathing: {
       ru: 'Выдох на подъёме, вдох при опускании.',
@@ -317,9 +320,15 @@ export const EXERCISES_C: ExerciseInput[] = [
       { ru: 'Плечи вниз', en: 'Shoulders down' },
     ],
     mistakes: [
-      { ru: 'Локти сгибаются — работает бицепс, а не спина', en: 'Elbows bending so the biceps take over' },
+      {
+        ru: 'Локти сгибаются — работает бицепс, а не спина',
+        en: 'Elbows bending so the biceps take over',
+      },
       { ru: 'Плечи задираются к ушам', en: 'Shoulders creeping up to the ears' },
-      { ru: 'Прогиб в пояснице и выпяченные рёбра', en: 'Arching the lower back and flaring the ribs' },
+      {
+        ru: 'Прогиб в пояснице и выпяченные рёбра',
+        en: 'Arching the lower back and flaring the ribs',
+      },
     ],
     breathing: {
       ru: 'Выдох на разведении, вдох на возврате.',
@@ -371,7 +380,10 @@ export const EXERCISES_C: ExerciseInput[] = [
       { ru: 'Мягко на носки', en: 'Soft on the balls of the feet' },
     ],
     mistakes: [
-      { ru: 'Слишком высокие прыжки с поджиманием ног', en: 'Jumping too high and tucking the legs' },
+      {
+        ru: 'Слишком высокие прыжки с поджиманием ног',
+        en: 'Jumping too high and tucking the legs',
+      },
       { ru: 'Крутишь всей рукой от плеча', en: 'Turning the rope from the shoulders' },
       { ru: 'Приземление на всю стопу или на пятки', en: 'Landing flat-footed or on the heels' },
     ],
@@ -425,8 +437,14 @@ export const EXERCISES_C: ExerciseInput[] = [
     ],
     mistakes: [
       { ru: 'Поджимание коленей и «лягушка» в воздухе', en: 'Tucking the knees into a frog jump' },
-      { ru: 'Руки уходят в стороны, скакалка становится короткой', en: 'Arms drifting wide so the rope gets too short' },
-      { ru: 'Каждый прыжок «на пределе» — нет ритма', en: 'Every jump at max effort with no rhythm' },
+      {
+        ru: 'Руки уходят в стороны, скакалка становится короткой',
+        en: 'Arms drifting wide so the rope gets too short',
+      },
+      {
+        ru: 'Каждый прыжок «на пределе» — нет ритма',
+        en: 'Every jump at max effort with no rhythm',
+      },
     ],
     breathing: {
       ru: 'Дыши ритмично и не задерживай дыхание на высокой скорости.',
@@ -478,7 +496,10 @@ export const EXERCISES_C: ExerciseInput[] = [
       { ru: 'Пятки на полу', en: 'Heels down' },
     ],
     mistakes: [
-      { ru: 'Гантель отходит от груди — плечи и спина устают раньше ног', en: 'Dumbbell drifting away from the chest so the shoulders and back tire before the legs' },
+      {
+        ru: 'Гантель отходит от груди — плечи и спина устают раньше ног',
+        en: 'Dumbbell drifting away from the chest so the shoulders and back tire before the legs',
+      },
       { ru: 'Колени сваливаются внутрь', en: 'Knees caving inward' },
       { ru: 'Спина округляется в нижней точке', en: 'Back rounding at the bottom' },
     ],
@@ -531,7 +552,10 @@ export const EXERCISES_C: ExerciseInput[] = [
       { ru: 'Колени в стороны', en: 'Knees out' },
     ],
     mistakes: [
-      { ru: 'Локти падают, гантели скатываются вперёд', en: 'Elbows dropping so the dumbbells roll forward' },
+      {
+        ru: 'Локти падают, гантели скатываются вперёд',
+        en: 'Elbows dropping so the dumbbells roll forward',
+      },
       { ru: 'Наклон корпуса вперёд в нижней точке', en: 'Torso folding forward at the bottom' },
       { ru: 'Пятки отрываются от пола', en: 'Heels lifting off the floor' },
     ],
@@ -584,9 +608,15 @@ export const EXERCISES_C: ExerciseInput[] = [
       { ru: 'Гантели над макушкой', en: 'Dumbbells over the crown of the head' },
     ],
     mistakes: [
-      { ru: 'Пауза наверху приседа — теряется разгон', en: 'Pausing at the top of the squat and losing the drive' },
+      {
+        ru: 'Пауза наверху приседа — теряется разгон',
+        en: 'Pausing at the top of the squat and losing the drive',
+      },
       { ru: 'Неполное выпрямление рук над головой', en: 'Arms not fully locked out overhead' },
-      { ru: 'Гантели уходят вперёд, спина прогибается', en: 'Dumbbells drifting forward and the back arching' },
+      {
+        ru: 'Гантели уходят вперёд, спина прогибается',
+        en: 'Dumbbells drifting forward and the back arching',
+      },
     ],
     breathing: {
       ru: 'Вдох на опускании в присед, выдох на жиме.',
@@ -637,7 +667,10 @@ export const EXERCISES_C: ExerciseInput[] = [
       { ru: 'Толкай пол ногами', en: 'Push the floor away' },
     ],
     mistakes: [
-      { ru: 'Округление спины при подъёме с пола', en: 'Rounding the back as the weight leaves the floor' },
+      {
+        ru: 'Округление спины при подъёме с пола',
+        en: 'Rounding the back as the weight leaves the floor',
+      },
       { ru: 'Таз поднимается раньше плеч', en: 'Hips shooting up before the shoulders' },
       { ru: 'Прогиб назад в верхней точке', en: 'Leaning back at the top' },
     ],
@@ -691,7 +724,10 @@ export const EXERCISES_C: ExerciseInput[] = [
     ],
     mistakes: [
       { ru: 'Округлённая спина', en: 'Rounded back' },
-      { ru: 'Слишком сильное сгибание коленей — получается присед', en: 'Bending the knees too much so it becomes a squat' },
+      {
+        ru: 'Слишком сильное сгибание коленей — получается присед',
+        en: 'Bending the knees too much so it becomes a squat',
+      },
       { ru: 'Гантели отходят от ног вперёд', en: 'Dumbbells drifting away from the legs' },
     ],
     breathing: {
@@ -796,7 +832,10 @@ export const EXERCISES_C: ExerciseInput[] = [
       { ru: 'Полное выпрямление наверху', en: 'Full lockout at the top' },
     ],
     mistakes: [
-      { ru: 'Прогиб в пояснице, рёбра выпячены', en: 'Arching the lower back and flaring the ribs' },
+      {
+        ru: 'Прогиб в пояснице, рёбра выпячены',
+        en: 'Arching the lower back and flaring the ribs',
+      },
       { ru: 'Подталкивание ногами', en: 'Dipping the knees to help the press' },
       { ru: 'Гантели уходят вперёд, а не вверх', en: 'Dumbbells pressed forward instead of up' },
     ],
@@ -903,8 +942,14 @@ export const EXERCISES_C: ExerciseInput[] = [
       { ru: 'Жёсткая фиксация наверху', en: 'Solid lockout overhead' },
     ],
     mistakes: [
-      { ru: 'Подъём рукой без разгибания ног и таза', en: 'Muscling it up with the arm without extending the legs and hips' },
-      { ru: 'Гантель летит по дуге далеко от тела', en: 'Dumbbell swinging out in an arc away from the body' },
+      {
+        ru: 'Подъём рукой без разгибания ног и таза',
+        en: 'Muscling it up with the arm without extending the legs and hips',
+      },
+      {
+        ru: 'Гантель летит по дуге далеко от тела',
+        en: 'Dumbbell swinging out in an arc away from the body',
+      },
       { ru: 'Круглая спина в стартовом положении', en: 'Rounded back at the start' },
     ],
     breathing: {
@@ -956,8 +1001,14 @@ export const EXERCISES_C: ExerciseInput[] = [
       { ru: 'Прими вес в подседе', en: 'Catch in a quarter squat' },
     ],
     mistakes: [
-      { ru: 'Подъём гантелей бицепсами без разгибания таза', en: 'Curling the dumbbells up without the hip extension' },
-      { ru: 'Гантели ударяют по плечам — нет подседа', en: 'Dumbbells crashing onto the shoulders with no dip to catch them' },
+      {
+        ru: 'Подъём гантелей бицепсами без разгибания таза',
+        en: 'Curling the dumbbells up without the hip extension',
+      },
+      {
+        ru: 'Гантели ударяют по плечам — нет подседа',
+        en: 'Dumbbells crashing onto the shoulders with no dip to catch them',
+      },
       { ru: 'Круглая спина на старте', en: 'Rounded back at the start' },
     ],
     breathing: {
@@ -1009,8 +1060,14 @@ export const EXERCISES_C: ExerciseInput[] = [
       { ru: 'Толкайся передней пяткой', en: 'Push through the front heel' },
     ],
     mistakes: [
-      { ru: 'Плечи заваливаются вперёд под весом', en: 'Shoulders folding forward under the weight' },
-      { ru: 'Короткий шаг — колено далеко за носком', en: 'Step too short so the knee drifts far past the toes' },
+      {
+        ru: 'Плечи заваливаются вперёд под весом',
+        en: 'Shoulders folding forward under the weight',
+      },
+      {
+        ru: 'Короткий шаг — колено далеко за носком',
+        en: 'Step too short so the knee drifts far past the toes',
+      },
       { ru: 'Гантели раскачиваются', en: 'Dumbbells swinging' },
     ],
     breathing: {
@@ -1117,7 +1174,10 @@ export const EXERCISES_C: ExerciseInput[] = [
     mistakes: [
       { ru: 'Корпус разворачивается при тяге', en: 'Trunk rotating during the row' },
       { ru: 'Провисание поясницы', en: 'Lower back sagging' },
-      { ru: 'Гантель катится — используй гантели с гранями или коврик', en: 'Dumbbell rolling — use hex dumbbells or a mat' },
+      {
+        ru: 'Гантель катится — используй гантели с гранями или коврик',
+        en: 'Dumbbell rolling — use hex dumbbells or a mat',
+      },
     ],
     breathing: {
       ru: 'Выдох на тяге, вдох при опускании.',
@@ -1221,7 +1281,10 @@ export const EXERCISES_C: ExerciseInput[] = [
       { ru: 'Держи ровный темп', en: 'Pace it' },
     ],
     mistakes: [
-      { ru: 'Круглая спина при подъёме гантелей с пола', en: 'Rounded back when lifting the dumbbells off the floor' },
+      {
+        ru: 'Круглая спина при подъёме гантелей с пола',
+        en: 'Rounded back when lifting the dumbbells off the floor',
+      },
       { ru: 'Отжимание с провисшей поясницей', en: 'Push-up with a sagging lower back' },
       { ru: 'Гантели не доходят до полной фиксации', en: 'Dumbbells stopping short of lockout' },
     ],
@@ -1328,7 +1391,10 @@ export const EXERCISES_C: ExerciseInput[] = [
       { ru: 'Грудь вверх', en: 'Chest up' },
     ],
     mistakes: [
-      { ru: 'Гиря отходит от груди, спина округляется', en: 'Bell drifting away from the chest and the back rounding' },
+      {
+        ru: 'Гиря отходит от груди, спина округляется',
+        en: 'Bell drifting away from the chest and the back rounding',
+      },
       { ru: 'Колени сваливаются внутрь', en: 'Knees caving inward' },
       { ru: 'Пятки отрываются от пола', en: 'Heels lifting off the floor' },
     ],
@@ -1436,8 +1502,14 @@ export const EXERCISES_C: ExerciseInput[] = [
     ],
     mistakes: [
       { ru: 'Гиря ударяет по предплечью', en: 'Bell banging the forearm' },
-      { ru: 'Широкая дуга — гиря летит далеко от тела', en: 'Wide arc with the bell far from the body' },
-      { ru: 'Подъём гири бицепсом без разгибания таза', en: 'Curling the bell up without the hip snap' },
+      {
+        ru: 'Широкая дуга — гиря летит далеко от тела',
+        en: 'Wide arc with the bell far from the body',
+      },
+      {
+        ru: 'Подъём гири бицепсом без разгибания таза',
+        en: 'Curling the bell up without the hip snap',
+      },
     ],
     breathing: {
       ru: 'Выдох на приёме гири на грудь, вдох на сбросе.',
@@ -1543,7 +1615,10 @@ export const EXERCISES_C: ExerciseInput[] = [
     ],
     mistakes: [
       { ru: 'Гиря ударяет по предплечью наверху', en: 'Bell slamming the forearm at the top' },
-      { ru: 'Широкая дуга — рывок превращается в мах с подъёмом руки', en: 'Wide arc that turns the snatch into a swing plus an arm raise' },
+      {
+        ru: 'Широкая дуга — рывок превращается в мах с подъёмом руки',
+        en: 'Wide arc that turns the snatch into a swing plus an arm raise',
+      },
       { ru: 'Круглая спина на замахе', en: 'Rounded back on the backswing' },
     ],
     breathing: {
@@ -1561,5 +1636,285 @@ export const EXERCISES_C: ExerciseInput[] = [
     scaling: { easier: 'kb_swing' },
     animation: 'bell_snatch',
     tags: ['explosive', 'cardio', 'unilateral', 'benchmark'],
+  },
+  {
+    id: 'kb_halo',
+    slug: { ru: 'galo-s-girey', en: 'kettlebell-halo' },
+    name: { ru: 'Гало с гирей', en: 'Kettlebell halo' },
+    shortName: { ru: 'Гало', en: 'Halo' },
+    description: {
+      ru: 'Гало — медленное обведение гири вокруг головы, держа её за рога дном вверх. Это разминка для плеч, грудного отдела и мышц вокруг лопаток: пока гиря идёт по кругу, суставы проходят полную амплитуду под небольшой нагрузкой и включаются в работу. Мы начинаем с гало почти каждую гиревую тренировку, чтобы плечи были готовы к жимам и рывкам. Половину повторений крути в одну сторону, половину — в другую.',
+      en: 'The halo is a slow circle of the kettlebell around your head, held by the horns with the bell upside down. It warms up the shoulders, thoracic spine and the muscles around the shoulder blades: as the bell travels around, the joints move through their full range under a light load and switch on. We open almost every kettlebell session with halos so the shoulders are ready for presses and snatches. Circle one way for half the reps and the other way for the rest.',
+    },
+    howTo: [
+      {
+        ru: 'Встань прямо, стопы на ширине таза, возьми гирю за рога дном вверх и подними её к груди.',
+        en: 'Stand tall, feet hip-width apart, hold the bell by the horns with the bottom up and bring it to your chest.',
+      },
+      {
+        ru: 'Медленно веди гирю вокруг головы: за правое ухо, за затылок, за левое ухо — локти согнуты, гиря проходит близко к голове.',
+        en: 'Slowly move the bell around your head: past the right ear, behind the head, past the left ear — elbows bent, bell staying close to the head.',
+      },
+      {
+        ru: 'Корпус и голова неподвижны, пресс напряжён, рёбра опущены — двигаются только руки и плечи.',
+        en: 'Torso and head stay still, abs braced, ribs down — only the arms and shoulders move.',
+      },
+      {
+        ru: 'Верни гирю к груди — это одно повторение. Сделай половину повторений в одну сторону, затем поменяй направление.',
+        en: 'Return the bell to your chest — that is one rep. Do half the reps in one direction, then reverse.',
+      },
+    ],
+    cues: [
+      { ru: 'Гиря близко к голове', en: 'Bell close to the head' },
+      { ru: 'Медленно и плавно', en: 'Slow and smooth' },
+      { ru: 'Рёбра вниз', en: 'Ribs down' },
+    ],
+    mistakes: [
+      {
+        ru: 'Прогиб в пояснице, когда гиря за головой',
+        en: 'Arching the lower back as the bell passes behind the head',
+      },
+      { ru: 'Слишком быстрые круги', en: 'Circling too fast' },
+      { ru: 'Голова наклоняется вслед за гирей', en: 'Head tilting to follow the bell' },
+    ],
+    breathing: {
+      ru: 'Ровное дыхание, один круг — один вдох-выдох.',
+      en: 'Steady breathing, one breath per circle.',
+    },
+    muscles: ['shoulders', 'back', 'core', 'triceps'],
+    pattern: 'mobility',
+    equipment: ['kettlebell'],
+    level: 1,
+    unit: 'reps',
+    secondsPerRep: 4.0,
+    met: 3.0,
+    loadable: true,
+    scaling: { easier: 'arm_circles', harder: 'kb_turkish_get_up' },
+    animation: 'kb_halo',
+    tags: ['warmup', 'mobility', 'upper'],
+  },
+  {
+    id: 'kb_turkish_get_up',
+    slug: { ru: 'turetskiy-podem', en: 'turkish-get-up' },
+    name: { ru: 'Турецкий подъём', en: 'Turkish get-up' },
+    shortName: { ru: 'Турецкий подъём', en: 'Get-up' },
+    description: {
+      ru: 'Турецкий подъём — вставание с пола с гирей, поднятой над головой на прямой руке, и такое же медленное возвращение обратно. Одно повторение занимает около полминуты и проходит через семь положений: локоть, ладонь, мост, колено, выпад, стойка — и назад. Это одновременно упражнение на стабильность плеча, кор, подвижность бёдер и внимание; ни одно другое движение не учит так хорошо владеть своим телом под нагрузкой. Начни без веса или с бутылкой воды, чтобы выучить последовательность. Повторения указаны на каждую сторону.',
+      en: 'The Turkish get-up takes you from lying on the floor to standing with a kettlebell locked out overhead, and just as slowly back down. One rep takes about half a minute and passes through seven positions: elbow, hand, bridge, knee, lunge, standing — and back. It trains shoulder stability, core, hip mobility and focus all at once; no other movement teaches body control under load so well. Start with no weight or a water bottle to learn the sequence. Reps are per side.',
+    },
+    howTo: [
+      {
+        ru: 'Ляг на спину, гиря в правой руке на прямой руке над плечом, правое колено согнуто, стопа на полу. Левая рука и нога лежат на полу под углом 45° от тела.',
+        en: 'Lie on your back with the bell in your right hand locked out over the shoulder, right knee bent with the foot flat. Left arm and leg rest on the floor about 45 degrees from the body.',
+      },
+      {
+        ru: 'Оттолкнись правой стопой и поднимись на левый локоть, затем на левую ладонь; взгляд на гирю, рука с гирей всё время вертикальна.',
+        en: 'Push through the right foot and roll up onto your left elbow, then onto your left hand; eyes on the bell, the loaded arm vertical the whole time.',
+      },
+      {
+        ru: 'Подними таз в мост, протяни левую ногу назад под себя и встань на левое колено; выпрями корпус — ты в положении выпада с гирей над головой.',
+        en: 'Lift your hips into a bridge, sweep the left leg back under you and come onto the left knee; straighten the torso — you are in a lunge with the bell overhead.',
+      },
+      {
+        ru: 'Встань из выпада. Затем пройди все положения в обратном порядке до положения лёжа — это одно повторение. Поменяй сторону.',
+        en: 'Stand up from the lunge. Then reverse every position back down to lying — that is one rep. Switch sides.',
+      },
+    ],
+    cues: [
+      { ru: 'Рука с гирей всегда вертикальна', en: 'Loaded arm stays vertical' },
+      { ru: 'Смотри на гирю', en: 'Eyes on the bell' },
+      { ru: 'Каждая позиция — с паузой', en: 'Pause in every position' },
+      { ru: 'Плечо опущено от уха', en: 'Shoulder packed down' },
+    ],
+    mistakes: [
+      {
+        ru: 'Рука с гирей сгибается или уходит в сторону',
+        en: 'Loaded arm bending or drifting sideways',
+      },
+      { ru: 'Пропуск положений, спешка', en: 'Rushing and skipping positions' },
+      { ru: 'Слишком тяжёлая гиря для чистой техники', en: 'Bell too heavy for clean technique' },
+    ],
+    breathing: {
+      ru: 'Спокойное дыхание, выдох на каждом переходе между положениями.',
+      en: 'Calm breathing, exhale on each transition between positions.',
+    },
+    muscles: ['shoulders', 'core', 'obliques', 'glutes', 'full_body'],
+    pattern: 'full_body',
+    equipment: ['kettlebell'],
+    level: 3,
+    unit: 'reps',
+    secondsPerRep: 30.0,
+    met: 6.0,
+    loadable: true,
+    scaling: { easier: 'kb_halo' },
+    animation: 'turkish_get_up',
+    tags: ['core', 'upper', 'mobility', 'unilateral'],
+  },
+  {
+    id: 'kb_sumo_high_pull',
+    slug: { ru: 'tyaga-sumo-k-podborodku', en: 'sumo-deadlift-high-pull' },
+    name: { ru: 'Тяга сумо к подбородку', en: 'Sumo deadlift high pull' },
+    shortName: { ru: 'Тяга сумо', en: 'Sumo high pull' },
+    description: {
+      ru: 'Тяга сумо к подбородку — становая тяга в широкой стойке, которая переходит в тягу гири к подбородку за счёт разгона ног и таза. Это одно из классических кроссфит-движений: за одно повторение работают ноги, ягодицы, спина, трапеции и плечи, а пульс растёт как в метконе. Ключ — локти выше кистей и разгон снизу: руки не тянут сами по себе, а лишь заканчивают движение.',
+      en: 'The sumo deadlift high pull is a wide-stance deadlift that flows into pulling the bell to chin height using the drive of the legs and hips. It is one of the classic CrossFit movements: legs, glutes, back, traps and shoulders all work in one rep while the heart rate climbs like a metcon. The key is elbows above the hands and drive from below: the arms never pull on their own, they only finish the movement.',
+    },
+    howTo: [
+      {
+        ru: 'Поставь гирю между стоп, стопы широко, носки развёрнуты наружу. Отведи таз назад, присядь с прямой спиной и возьмись за ручку обеими руками.',
+        en: 'Place the bell between your feet, feet wide with toes turned out. Push the hips back, squat down with a flat back and grip the handle with both hands.',
+      },
+      {
+        ru: 'Мощно разогни ноги и таз, как в становой; гиря идёт вертикально вверх, руки пока прямые.',
+        en: 'Extend the legs and hips powerfully as in a deadlift; the bell rises straight up with the arms still straight.',
+      },
+      {
+        ru: 'Когда таз полностью разогнут, продолжай движение: пожми плечами и тяни локти вверх и в стороны, пока гиря не поднимется к подбородку.',
+        en: 'Once the hips are fully extended, keep the momentum going: shrug and pull the elbows up and out until the bell reaches your chin.',
+      },
+      {
+        ru: 'Опусти гирю тем же путём — сначала руки, потом таз — и поставь на пол или сразу иди в следующее повторение.',
+        en: 'Lower the bell along the same path — arms first, then hips — to the floor or straight into the next rep.',
+      },
+    ],
+    cues: [
+      { ru: 'Сначала ноги, потом руки', en: 'Legs first, arms last' },
+      { ru: 'Локти выше кистей', en: 'Elbows above the hands' },
+      { ru: 'Гиря вплотную к телу', en: 'Bell close to the body' },
+    ],
+    mistakes: [
+      { ru: 'Тяга руками без разгибания таза', en: 'Pulling with the arms before the hips extend' },
+      { ru: 'Круглая спина на старте', en: 'Rounded back at the start' },
+      { ru: 'Локти ниже кистей наверху', en: 'Elbows below the hands at the top' },
+    ],
+    breathing: {
+      ru: 'Вдох внизу, выдох на подъёме гири к подбородку.',
+      en: 'Inhale at the bottom, exhale as the bell rises to the chin.',
+    },
+    muscles: ['glutes', 'quads', 'hamstrings', 'back', 'shoulders', 'cardio'],
+    pattern: 'hinge',
+    equipment: ['kettlebell'],
+    level: 2,
+    unit: 'reps',
+    secondsPerRep: 2.0,
+    met: 7.0,
+    loadable: true,
+    scaling: { easier: 'kb_deadlift' },
+    animation: 'sumo_high_pull',
+    tags: ['lower', 'upper', 'explosive', 'cardio'],
+  },
+  {
+    id: 'kb_suitcase_carry',
+    slug: { ru: 'progulka-s-girey-v-odnoy-ruke', en: 'suitcase-carry' },
+    name: { ru: 'Прогулка с гирей в одной руке', en: 'Suitcase carry' },
+    shortName: { ru: 'Прогулка с гирей', en: 'Suitcase carry' },
+    description: {
+      ru: 'Прогулка с гирей в одной руке — ходьба с весом на одной стороне, как с чемоданом. Вес тянет тебя вбок, а косые мышцы и кор не дают наклониться — это лучшее упражнение на боковую стабильность корпуса и защиту поясницы в жизни. Заодно тренируются хват и осанка. Держи плечи на одной высоте и иди так, будто гири нет. Время указано на каждую сторону.',
+      en: 'The suitcase carry is walking with a weight on one side, like carrying a suitcase. The bell pulls you sideways while the obliques and core stop you from leaning — the best exercise for lateral trunk stability and a lower back that holds up in daily life. Grip and posture get trained along the way. Keep your shoulders level and walk as if the bell were not there. The time is per side.',
+    },
+    howTo: [
+      {
+        ru: 'Поставь гирю рядом со стопой, присядь с прямой спиной, возьми её одной рукой и встань.',
+        en: 'Set the bell beside your foot, squat down with a flat back, grip it with one hand and stand up.',
+      },
+      {
+        ru: 'Выпрямись: плечи на одной высоте, свободная рука спокойно вдоль тела или на поясе, пресс напряжён.',
+        en: 'Stand tall: shoulders level, free arm relaxed by your side or on your hip, abs braced.',
+      },
+      {
+        ru: 'Иди короткими ровными шагами, не наклоняясь в сторону гири и не отклоняясь от неё.',
+        en: 'Walk with short, even steps without leaning toward the bell or away from it.',
+      },
+      {
+        ru: 'По окончании времени поставь гирю на пол с прямой спиной, поменяй руку и повтори.',
+        en: 'When the time is up, set the bell down with a flat back, switch hands and repeat.',
+      },
+    ],
+    cues: [
+      { ru: 'Плечи ровно', en: 'Shoulders level' },
+      { ru: 'Не наклоняйся к гире', en: 'Do not lean into the bell' },
+      { ru: 'Сожми ручку', en: 'Crush the handle' },
+    ],
+    mistakes: [
+      { ru: 'Наклон корпуса в сторону гири', en: 'Leaning toward the bell' },
+      {
+        ru: 'Отклонение в противоположную сторону',
+        en: 'Leaning away from the bell to compensate',
+      },
+      { ru: 'Плечо с гирей подтянуто к уху', en: 'Loaded shoulder shrugged to the ear' },
+    ],
+    breathing: {
+      ru: 'Ровное дыхание в такт шагам.',
+      en: 'Even breathing in time with your steps.',
+    },
+    muscles: ['obliques', 'core', 'back', 'shoulders', 'glutes'],
+    pattern: 'carry',
+    equipment: ['kettlebell'],
+    level: 1,
+    unit: 'seconds',
+    met: 5.0,
+    loadable: true,
+    scaling: { easier: 'farmer_carry' },
+    animation: 'suitcase_carry',
+    tags: ['carry', 'core', 'unilateral'],
+  },
+  {
+    id: 'kb_lunge',
+    slug: { ru: 'obratnye-vypady-s-girey-u-grudi', en: 'kettlebell-front-rack-reverse-lunge' },
+    name: { ru: 'Обратные выпады с гирей у груди', en: 'Kettlebell front-rack reverse lunge' },
+    shortName: { ru: 'Выпады с гирей', en: 'KB reverse lunge' },
+    description: {
+      ru: 'Обратные выпады с гирей у груди — выпады назад с гирей, лежащей на предплечье в положении «на груди». Вес спереди и сбоку заставляет корпус держаться вертикально и не заваливаться в сторону, поэтому вместе с ногами работают пресс и косые мышцы. Это основное одностороннее упражнение гиревого курса и следующий шаг после гоблет-приседа. Повторения считаем суммарно, чередуя ноги; половину подхода гиря в одной руке, половину — в другой.',
+      en: 'The kettlebell front-rack reverse lunge is a backward lunge with the bell racked on your forearm at the chest. The load in front and to one side forces the trunk to stay upright and not tip sideways, so the abs and obliques work alongside the legs. It is the main single-leg exercise of the kettlebell course and the next step after the goblet squat. Reps are counted as the total, alternating legs; rack the bell in one hand for half the set and the other hand for the rest.',
+    },
+    howTo: [
+      {
+        ru: 'Возьми гирю на грудь одной рукой: гиря на предплечье, локоть прижат к корпусу, кисть прямая. Стопы на ширине таза.',
+        en: 'Clean the bell to the rack with one hand: bell on the forearm, elbow tucked to the body, wrist straight. Feet hip-width apart.',
+      },
+      {
+        ru: 'Сделай длинный шаг назад и опусти заднее колено к полу, сгибая обе ноги до прямых углов.',
+        en: 'Take a long step back and lower the rear knee toward the floor, bending both knees to about 90 degrees.',
+      },
+      {
+        ru: 'Корпус вертикален, плечи на одной высоте, гиря неподвижна у груди, переднее колено над стопой.',
+        en: 'Torso upright, shoulders level, bell still at the chest, front knee over the foot.',
+      },
+      {
+        ru: 'Оттолкнись передней пяткой и вернись в стойку. Чередуй ноги; в середине подхода переложи гирю в другую руку.',
+        en: 'Push through the front heel to return to standing. Alternate legs; halfway through the set, switch the bell to the other hand.',
+      },
+    ],
+    cues: [
+      { ru: 'Локоть к корпусу', en: 'Elbow tight to the body' },
+      { ru: 'Плечи ровно', en: 'Shoulders level' },
+      { ru: 'Толкайся передней пяткой', en: 'Push through the front heel' },
+    ],
+    mistakes: [
+      { ru: 'Наклон корпуса в сторону гири', en: 'Leaning toward the bell' },
+      {
+        ru: 'Локоть отходит от корпуса, гиря тянет вперёд',
+        en: 'Elbow drifting away so the bell pulls you forward',
+      },
+      {
+        ru: 'Короткий шаг — колено далеко за носком',
+        en: 'Step too short so the knee drifts far past the toes',
+      },
+    ],
+    breathing: {
+      ru: 'Вдох на шаге назад, выдох на возврате.',
+      en: 'Inhale as you step back, exhale as you return.',
+    },
+    muscles: ['quads', 'glutes', 'hamstrings', 'core', 'obliques'],
+    pattern: 'lunge',
+    equipment: ['kettlebell'],
+    level: 2,
+    unit: 'reps',
+    secondsPerRep: 3.0,
+    met: 6.0,
+    loadable: true,
+    scaling: { easier: 'reverse_lunge' },
+    animation: 'bell_lunge',
+    tags: ['lower', 'unilateral', 'core'],
   },
 ];

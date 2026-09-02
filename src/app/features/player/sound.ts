@@ -39,7 +39,7 @@ let unavailable = false;
 function getContext(): AudioContext | null {
   if (context) return context;
   if (unavailable || typeof window === 'undefined') return null;
-  const w = window as Window & { webkitAudioContext?: AudioContextCtor };
+  const w = window as typeof window & { webkitAudioContext?: AudioContextCtor };
   const Ctor = w.AudioContext ?? w.webkitAudioContext;
   if (!Ctor) {
     unavailable = true;

@@ -36,7 +36,11 @@ import {
   testResults,
 } from '@/app/features/player/summaryModel';
 import { useT } from '@/app/hooks/useT';
-import { useActiveWorkoutStore, type ActiveSession, type PlayerResult } from '@/app/store/activeWorkout';
+import {
+  useActiveWorkoutStore,
+  type ActiveSession,
+  type PlayerResult,
+} from '@/app/store/activeWorkout';
 import { useSession } from '@/app/store/session';
 import { isAppError } from '@/lib/api/errors';
 import { getSession } from '@/lib/api/sessions';
@@ -179,7 +183,14 @@ interface LocalSummaryProps {
   onSaved: (saved: SavedState) => void;
 }
 
-function LocalSummary({ session, steps, results, elapsedSec, finishedAt, onSaved }: LocalSummaryProps) {
+function LocalSummary({
+  session,
+  steps,
+  results,
+  elapsedSec,
+  finishedAt,
+  onSaved,
+}: LocalSummaryProps) {
   const { t, locale } = useT();
   const navigate = useNavigate();
   const toast = useToast();
@@ -214,7 +225,10 @@ function LocalSummary({ session, steps, results, elapsedSec, finishedAt, onSaved
     () => blockCompletions(prescribed, steps, results, t, locale),
     [prescribed, steps, results, t, locale],
   );
-  const tests = useMemo(() => testResults(prescribed, steps, results, locale), [prescribed, steps, results, locale]);
+  const tests = useMemo(
+    () => testResults(prescribed, steps, results, locale),
+    [prescribed, steps, results, locale],
+  );
   const benchmark = useMemo(() => benchmarkResult(steps, results), [steps, results]);
 
   // Baseline for "what did this session unlock"; a failure only hides the achievements card.
@@ -264,16 +278,37 @@ function LocalSummary({ session, steps, results, elapsedSec, finishedAt, onSaved
     } catch (e) {
       setStatus('error');
       setErrorText(
-        isAppError(e) && e.code === 'network' ? t('common.errorOffline') : t('app.summarySaveError'),
+        isAppError(e) && e.code === 'network'
+          ? t('common.errorOffline')
+          : t('app.summarySaveError'),
       );
     }
-  }, [feedback, session, steps, results, completedAt, elapsedSec, weightKg, before, onSaved, abandon, toast, t, names.workout]);
+  }, [
+    feedback,
+    session,
+    steps,
+    results,
+    completedAt,
+    elapsedSec,
+    weightKg,
+    before,
+    onSaved,
+    abandon,
+    toast,
+    t,
+    names.workout,
+  ]);
 
   const locked = status !== 'idle';
 
   return (
     <Screen
-      header={<TopBar title={t('app.summaryEyebrow')} back={() => navigate(`/courses/${session.courseId}`)} />}
+      header={
+        <TopBar
+          title={t('app.summaryEyebrow')}
+          back={() => navigate(`/courses/${session.courseId}`)}
+        />
+      }
       footer={
         <div className="flex flex-col gap-2">
           {errorText ? (

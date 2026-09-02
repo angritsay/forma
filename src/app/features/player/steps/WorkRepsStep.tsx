@@ -28,7 +28,10 @@ export function WorkRepsStep({
 }: WorkRepsStepProps) {
   const { t, l } = useT();
   const [count, setCount] = useState(step.target);
-  const load = loadLabel(t, { ...step.item, ...(step.loadKg !== undefined ? { loadKg: step.loadKg } : {}) });
+  const load = loadLabel(t, {
+    ...step.item,
+    ...(step.loadKg !== undefined ? { loadKg: step.loadKg } : {}),
+  });
 
   const done = () => {
     const result: PlayerResult = {

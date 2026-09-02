@@ -5,7 +5,12 @@
 import type { BlockFormat, BlockType, Exercise, ExerciseUnit, Load } from '@/content/schema';
 import { EXERCISE_BY_ID } from '@/content/registry';
 import { plural, type Locale, type TKey, type TParams } from '@/i18n/index';
-import type { PlayerStep, PrescribedBlock, PrescribedItem, PrescribedWorkout } from '@/lib/training/types';
+import type {
+  PlayerStep,
+  PrescribedBlock,
+  PrescribedItem,
+  PrescribedWorkout,
+} from '@/lib/training/types';
 import type { PlayerResult } from '@/app/store/activeWorkout';
 
 export type Translate = (key: TKey, params?: TParams) => string;

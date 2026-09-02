@@ -35,7 +35,11 @@ function SoundIcon({ muted }: { muted: boolean }) {
       aria-hidden="true"
     >
       <path d="M4 9v6h4l5 4V5L8 9z" />
-      {muted ? <path d="M16 9l5 6M21 9l-5 6" /> : <path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" />}
+      {muted ? (
+        <path d="M16 9l5 6M21 9l-5 6" />
+      ) : (
+        <path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" />
+      )}
     </svg>
   );
 }
@@ -61,7 +65,12 @@ export function PlayerHeader({ title, muted, onBack, onToggleSound, onMenu }: Pl
         aria-pressed={!muted}
         onClick={onToggleSound}
       />
-      <IconButton label={t('app.playerMenu')} icon={<MoreIcon />} variant="on-art" onClick={onMenu} />
+      <IconButton
+        label={t('app.playerMenu')}
+        icon={<MoreIcon />}
+        variant="on-art"
+        onClick={onMenu}
+      />
     </header>
   );
 }
@@ -79,7 +88,10 @@ export function ProgressRow({ stepIndex, totalSteps, elapsedSec }: ProgressRowPr
   const value = Math.min(1, stepIndex / last);
   return (
     <div className="flex items-center gap-3 px-5 pb-2 pt-4">
-      <span className="tabular flex items-center gap-1 text-sm font-semibold" aria-label={t('app.playerElapsed')}>
+      <span
+        className="tabular flex items-center gap-1 text-sm font-semibold"
+        aria-label={t('app.playerElapsed')}
+      >
         <Icon name="clock" size={16} className="text-muted" />
         {formatClock(elapsedSec)}
       </span>
@@ -113,7 +125,13 @@ export function Controls({ paused, canPrev, onPrev, onTogglePause, onNext }: Con
   return (
     <div className="sticky bottom-0 z-20 bg-linear-to-t from-bg via-bg/95 to-transparent px-5 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-4">
       <div className="flex items-center justify-center gap-6">
-        <button type="button" className={side} onClick={onPrev} disabled={!canPrev} aria-label={t('app.playerPrev')}>
+        <button
+          type="button"
+          className={side}
+          onClick={onPrev}
+          disabled={!canPrev}
+          aria-label={t('app.playerPrev')}
+        >
           <Icon name="prev" size={22} />
         </button>
         <button

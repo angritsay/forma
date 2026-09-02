@@ -29,7 +29,9 @@ export function AdaptationCard({ adjustment }: { adjustment: ScaleAdjustment }) 
         <Card level={2} className="flex gap-3 border-danger/30">
           <Icon name="warning" className="mt-0.5 shrink-0 text-danger" />
           <div className="flex flex-col gap-1">
-            <span className="text-[15px] font-semibold text-danger">{t('app.summarySafetyTitle')}</span>
+            <span className="text-[15px] font-semibold text-danger">
+              {t('app.summarySafetyTitle')}
+            </span>
             <p className="text-[15px] text-muted">{l(adjustment.safetyNote)}</p>
           </div>
         </Card>

@@ -42,7 +42,9 @@ export function ItemList({ items, compact = false, className }: ItemListProps) {
               {item.substituted && !compact ? (
                 <span className="block truncate text-xs text-muted">
                   {t('training.substitutedFrom', {
-                    name: findExercise(item.originalExerciseId)?.name[locale] ?? item.originalExerciseId,
+                    name:
+                      findExercise(item.originalExerciseId)?.name[locale] ??
+                      item.originalExerciseId,
                   })}
                 </span>
               ) : null}

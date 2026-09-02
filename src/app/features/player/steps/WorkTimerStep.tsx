@@ -39,7 +39,10 @@ export function WorkTimerStep({
   const recorded = useRef(false);
   const clock = useStepClock(!paused, duration);
   const isEmom = format === 'emom';
-  const load = loadLabel(t, { ...step.item, ...(step.loadKg !== undefined ? { loadKg: step.loadKg } : {}) });
+  const load = loadLabel(t, {
+    ...step.item,
+    ...(step.loadKg !== undefined ? { loadKg: step.loadKg } : {}),
+  });
 
   const complete = useCallback(
     (achievedSec: number) => {

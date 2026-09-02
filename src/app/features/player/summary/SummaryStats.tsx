@@ -58,7 +58,9 @@ export function BlockList({ blocks }: { blocks: readonly BlockCompletion[] }) {
               {b.skipped ? (
                 <Badge tone="warning">{t('app.summarySkipped')}</Badge>
               ) : (
-                <span className="tabular text-sm text-muted">{Math.round(b.completion * 100)}%</span>
+                <span className="tabular text-sm text-muted">
+                  {Math.round(b.completion * 100)}%
+                </span>
               )}
             </div>
             <ProgressBar
@@ -90,7 +92,8 @@ export function TestResultList({ tests }: { tests: readonly TestResultView[] }) 
           >
             <span className="truncate text-[15px] font-medium">{x.name}</span>
             <span className="tabular shrink-0 font-semibold">
-              {x.value} <span className="text-sm font-medium text-muted">{unitLabel(t, x.unit)}</span>
+              {x.value}{' '}
+              <span className="text-sm font-medium text-muted">{unitLabel(t, x.unit)}</span>
             </span>
           </li>
         ))}

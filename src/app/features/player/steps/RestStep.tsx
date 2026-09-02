@@ -63,7 +63,9 @@ export function RestStep({ step, prescribed, paused, beep, onNext, registerNext 
             </span>
           </span>
           {nextItem ? (
-            <span className="tabular shrink-0 text-sm font-semibold">{targetLabel(t, nextItem)}</span>
+            <span className="tabular shrink-0 text-sm font-semibold">
+              {targetLabel(t, nextItem)}
+            </span>
           ) : null}
         </div>
       ) : null}

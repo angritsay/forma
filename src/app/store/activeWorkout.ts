@@ -193,7 +193,12 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState>()(
             return;
           }
           const elapsedMs = elapsedNow(s);
-          set({ paused: true, activeSince: null, elapsedMs, elapsedSec: Math.floor(elapsedMs / 1000) });
+          set({
+            paused: true,
+            activeSince: null,
+            elapsedMs,
+            elapsedSec: Math.floor(elapsedMs / 1000),
+          });
         } else if (s.activeSince === null) {
           set({ paused: false, activeSince: Date.now() });
         } else if (s.paused) {

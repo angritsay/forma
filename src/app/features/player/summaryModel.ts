@@ -6,7 +6,12 @@ import type { ExerciseUnit } from '@/content/schema';
 import { COURSE_BY_ID } from '@/content/registry';
 import { formatClock, type Locale } from '@/i18n/index';
 import { stepCompletion, stepWeightSec } from '@/lib/training/session';
-import type { ExerciseResult, PlayerStep, PrescribedWorkout, SessionSummary } from '@/lib/training/types';
+import type {
+  ExerciseResult,
+  PlayerStep,
+  PrescribedWorkout,
+  SessionSummary,
+} from '@/lib/training/types';
 import type { PlayerResult } from '@/app/store/activeWorkout';
 import { blockTitle, exerciseName, findBlock, type Translate } from './model';
 

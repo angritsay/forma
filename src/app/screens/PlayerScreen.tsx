@@ -17,7 +17,12 @@ import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
 import { Sheet } from '@/components/ui/Sheet';
 import { TopBar } from '@/app/components/TopBar';
-import { Controls, PausedOverlay, PlayerHeader, ProgressRow } from '@/app/features/player/PlayerChrome';
+import {
+  Controls,
+  PausedOverlay,
+  PlayerHeader,
+  ProgressRow,
+} from '@/app/features/player/PlayerChrome';
 import {
   findBlock,
   findExercise,
@@ -38,7 +43,11 @@ import { WorkTimerStep } from '@/app/features/player/steps/WorkTimerStep';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
 import { useWakeLock } from '@/app/features/player/useWakeLock';
 import { useT } from '@/app/hooks/useT';
-import { useActiveWorkoutStore, type ActiveSession, type PlayerResult } from '@/app/store/activeWorkout';
+import {
+  useActiveWorkoutStore,
+  type ActiveSession,
+  type PlayerResult,
+} from '@/app/store/activeWorkout';
 import { COURSE_BY_ID } from '@/content/registry';
 import type { PlayerStep } from '@/lib/training/types';
 
@@ -118,7 +127,16 @@ interface StepViewProps {
   registerNext: (fn: (() => void) | null) => void;
 }
 
-function StepView({ step, index, session, paused, beep, onRecord, onNext, registerNext }: StepViewProps) {
+function StepView({
+  step,
+  index,
+  session,
+  paused,
+  beep,
+  onRecord,
+  onNext,
+  registerNext,
+}: StepViewProps) {
   const prescribed = session.prescribed;
   switch (step.kind) {
     case 'block_intro':
@@ -214,7 +232,8 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
 
   const title = step ? stepTitle(t, locale, step, prescribed) : '';
   const animation = step ? stepAnimation(step, prescribed) : undefined;
-  const videoRef = step?.kind === 'explain' ? findExercise(step.exerciseId)?.video?.[locale] : undefined;
+  const videoRef =
+    step?.kind === 'explain' ? findExercise(step.exerciseId)?.video?.[locale] : undefined;
   const videoUrl = useMediaUrl(videoRef);
 
   // The last step is `done`: close the session and hand over to the summary.
@@ -257,7 +276,8 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
       if (overlayOpen || e.altKey || e.ctrlKey || e.metaKey) return;
       const el = e.target as HTMLElement | null;
       const tag = el?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el?.isContentEditable) return;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el?.isContentEditable)
+        return;
       if (e.key === ' ' || e.code === 'Space') {
         if (tag === 'BUTTON') return;
         e.preventDefault();

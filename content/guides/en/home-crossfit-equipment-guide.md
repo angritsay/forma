@@ -38,6 +38,7 @@ relatedCourses:
   - dumbbells
   - kettlebell
   - engine
+  - athlete
 relatedGuides:
   - dumbbell-home-workout
   - kettlebell-beginners
@@ -89,7 +90,7 @@ The rule for the light pair: you can press it overhead cleanly 15 times in a row
 
 ### Which kettlebell to buy
 
-One bell is enough for a full course: [swings](exercise:kb_swing), [goblet squats](exercise:kb_goblet_squat), the [standing press](exercise:kb_press), the [Turkish get-up](exercise:kb_turkish_get_up) and carries. The weight guideline is the same one the Forma course uses: men with some training experience 16 kg, without it 12 kg; women 8 to 12 kg. A bell you cannot swing cleanly ten times is too heavy to start with; one that leaves your heart rate flat after twenty swings is too light.
+One bell is enough for a full course: [swings](exercise:kb_swing), [goblet squats](exercise:kb_goblet_squat), the [standing press](exercise:kb_press), the [Turkish get-up](exercise:kb_turkish_get_up) and [carries](exercise:kb_suitcase_carry). The weight guideline is the same one the Forma course uses: men with some training experience 16 kg, without it 12 kg; women 8 to 12 kg. A bell you cannot swing cleanly ten times is too heavy to start with; one that leaves your heart rate flat after twenty swings is too light.
 
 Two body types: cast iron (the size grows with the weight) and competition steel (the same size at every weight). Both work at home; the handle matters more: smooth, no seam or burrs, wide enough for a two-hand grip in the swing. Rough paint or a rubber coating gets in the way when the bell has to rotate in your hand during cleans and snatches.
 
@@ -111,6 +112,9 @@ Two body types: cast iron (the size grows with the weight) and competition steel
 | [Bodyweight Engine](course:engine) | Mat, chair | Jump rope |
 | [Dumbbell Builder](course:dumbbells) | A pair of dumbbells, mat | A second pair or adjustables |
 | [Kettlebell Power](course:kettlebell) | One kettlebell, mat | A second bell of a different weight |
+| [Home Athlete](course:athlete) | A pair of dumbbells, pull-up bar, mat | Jump rope, a second pair |
+
+Note the last row: the bar is mandatory there, because without pull-ups the course loses its centrepiece. It is the only Forma program where tier 3 is needed from day one.
 
 How the app works with your gear. In your profile you tick what you own and enter the weights of your dumbbells and bells. Loads in the programs are labelled light, medium and heavy, and Forma maps them to your implements: with a single bell all three labels point to it and the volume and rest adjust instead. No rope means rope jumps become [jumping jacks](exercise:jumping_jack) and the program stays the same. And the chair can always be swapped for squats or reverse lunges when nothing sturdy is at hand.
 

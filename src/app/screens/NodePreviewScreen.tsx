@@ -99,7 +99,7 @@ export default function NodePreviewScreen() {
         level: ctx.level,
         deload,
         repeat,
-        streakDays: streak.current,
+        streakDays,
       };
       const prescribed = prescribeWorkout(workout, opts);
       return {
@@ -110,7 +110,7 @@ export default function NodePreviewScreen() {
         calories: estimateCalories(prescribed, ctx.weightKg),
       };
     });
-  }, [workout, ctx, engineState.scale, deload, repeat, streak.current]);
+  }, [workout, ctx, engineState.scale, deload, repeat, streakDays]);
 
   const selected: DifficultyChoice = choice ?? recommendation?.choice ?? 'normal';
   const plan = plans?.find((p) => p.choice === selected) ?? null;

@@ -85,7 +85,10 @@ export function FortimeStep({
             seconds={clock.elapsedSec}
             label={t('training.format_fortime')}
             tone={remaining !== undefined && remaining <= 30 ? 'warning' : 'default'}
-            caption={t('app.playerFortimeRound', { n: Math.min(roundsDone + 1, step.rounds), total: step.rounds })}
+            caption={t('app.playerFortimeRound', {
+              n: Math.min(roundsDone + 1, step.rounds),
+              total: step.rounds,
+            })}
           />
           {cap !== undefined ? (
             <div className="flex justify-center">
@@ -93,7 +96,10 @@ export function FortimeStep({
             </div>
           ) : null}
           <ItemList items={step.items} compact className="rounded-inner bg-surface-2 px-4 py-2" />
-          <ol className="flex flex-wrap justify-center gap-2" aria-label={t('app.playerAmrapRounds')}>
+          <ol
+            className="flex flex-wrap justify-center gap-2"
+            aria-label={t('app.playerAmrapRounds')}
+          >
             {Array.from({ length: step.rounds }, (_, i) => {
               const done = i < roundsDone;
               const current = i === roundsDone;
@@ -117,17 +123,28 @@ export function FortimeStep({
             })}
           </ol>
           <Button size="lg" fullWidth onClick={roundDone}>
-            {roundsDone + 1 >= step.rounds ? t('app.playerFortimeFinished') : t('app.playerRoundDone')}
+            {roundsDone + 1 >= step.rounds
+              ? t('app.playerFortimeFinished')
+              : t('app.playerRoundDone')}
           </Button>
         </>
       ) : (
         <>
           <div className="flex flex-col items-center gap-2 text-center">
-            <span className={clsx('font-display text-4xl', phase === 'finished' ? 'text-accent' : 'text-warning')}>
-              {phase === 'finished' ? t('app.playerFortimeFinished') : t('app.playerFortimeCapReached')}
+            <span
+              className={clsx(
+                'font-display text-4xl',
+                phase === 'finished' ? 'text-accent' : 'text-warning',
+              )}
+            >
+              {phase === 'finished'
+                ? t('app.playerFortimeFinished')
+                : t('app.playerFortimeCapReached')}
             </span>
             <p className="text-[15px] text-muted">
-              {phase === 'finished' ? t('app.playerFortimeYourTime') : t('app.playerFortimeCapBody')}
+              {phase === 'finished'
+                ? t('app.playerFortimeYourTime')
+                : t('app.playerFortimeCapBody')}
             </p>
             <span className="tabular text-6xl font-bold leading-none">
               {formatClock(phase === 'finished' ? clock.elapsedSec : (cap ?? clock.elapsedSec))}
