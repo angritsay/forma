@@ -10,6 +10,7 @@
  */
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import type { ExerciseUnit } from '@/content/schema';
 import { buildPlayerSteps } from '@/lib/training/player';
 import type { ExerciseResult, PlayerStep, PrescribedWorkout } from '@/lib/training/types';
 
@@ -35,7 +36,7 @@ export type BeginInput = ActiveSession;
  */
 export type PlayerResult = ExerciseResult & {
   testValue?: number;
-  testUnit?: 'reps' | 'seconds';
+  testUnit?: ExerciseUnit;
 };
 
 export interface ActiveWorkoutState {
