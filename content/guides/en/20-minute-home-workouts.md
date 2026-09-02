@@ -1,7 +1,7 @@
 ---
 title: '20-Minute Home Workout: Four No-Equipment Sessions'
-description: 'A 20-minute home workout with no equipment: four coach-built sessions — AMRAP, EMOM, a strength circuit and Tabata — mapped minute by minute with easier options. Pick one and start today.'
-h1: '20-minute home workout: four ready-to-run sessions with no equipment and how to progress them'
+description: 'A 20-minute home workout with no equipment: four sessions — AMRAP, EMOM, a strength circuit and Tabata — mapped minute by minute. Pick one and start today.'
+h1: '20-minute home workout: four no-equipment sessions and how to progress them'
 targetKeyword: '20 minute home workout'
 secondaryKeywords:
   - 'short home workout'

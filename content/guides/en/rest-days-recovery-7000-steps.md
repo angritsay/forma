@@ -1,6 +1,6 @@
 ---
 title: 'Rest Days: Recovery, 7000 Steps and Why They Matter'
-description: 'Rest days, recovery, 7000 steps: why your body adapts between workouts, what to do on a day off and how a walk keeps your streak alive. A coach explains — read it and plan your week.'
+description: 'Rest days, recovery, 7000 steps: why the body adapts between workouts, what to do on a day off and how a walk keeps your streak alive. Read and plan your week.'
 h1: 'Rest days: recovery, 7000 steps and why progress happens between workouts'
 targetKeyword: 'rest days recovery 7000 steps'
 secondaryKeywords:
