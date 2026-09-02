@@ -1,0 +1,124 @@
+name: Deploy to GitHub Pages
+
+# Deploys the static site (landing + app) to GitHub Pages.
+# Repository → Settings → Pages → Source: "GitHub Actions" must be selected once.
+#
+# Repository variables (Settings → Secrets and variables → Actions → Variables):
+#   PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY   (required for the app to work)
+#   SITE_URL        optional — custom domain origin, e.g. https://forma.example.com
+#   BASE_PATH       optional — defaults to "/<repo>/" on github.io, "/" on a custom domain
+#   CUSTOM_DOMAIN   optional — writes dist/CNAME so Pages keeps the custom domain
+#   PUBLIC_YANDEX_METRIKA_ID, PUBLIC_GA_ID, PUBLIC_YANDEX_VERIFICATION, PUBLIC_GOOGLE_VERIFICATION
+# Repository secrets:
+#   INDEXNOW_KEY    optional — enables IndexNow submission after deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      - name: Resolve site URL and base path
+        env:
+          VAR_SITE_URL: ${{ vars.SITE_URL }}
+          VAR_BASE_PATH: ${{ vars.BASE_PATH }}
+        run: |
+          REPO_NAME="${GITHUB_REPOSITORY#*/}"
+          OWNER_LC="$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')"
+          SITE_URL="$VAR_SITE_URL"
+          BASE_PATH="$VAR_BASE_PATH"
+          if [ -z "$SITE_URL" ]; then
+            case "$REPO_NAME" in
+              *.github.io) SITE_URL="https://${REPO_NAME}" ;;
+              *) SITE_URL="https://${OWNER_LC}.github.io/${REPO_NAME}" ;;
+            esac
+          fi
+          if [ -z "$BASE_PATH" ]; then
+            case "$SITE_URL" in
+              *github.io/*) BASE_PATH="/${REPO_NAME}/" ;;
+              *) BASE_PATH="/" ;;
+            esac
+          fi
+          echo "SITE_URL=$SITE_URL" >> "$GITHUB_ENV"
+          echo "BASE_PATH=$BASE_PATH" >> "$GITHUB_ENV"
+          echo "Site: $SITE_URL  Base: $BASE_PATH"
+
+      - name: Generate OG images
+        env:
+          SITE_URL: ${{ env.SITE_URL }}
+        run: npm run seo:og
+
+      - name: Build
+        env:
+          SITE_URL: ${{ env.SITE_URL }}
+          BASE_PATH: ${{ env.BASE_PATH }}
+          PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+          PUBLIC_YANDEX_METRIKA_ID: ${{ vars.PUBLIC_YANDEX_METRIKA_ID }}
+          PUBLIC_GA_ID: ${{ vars.PUBLIC_GA_ID }}
+          PUBLIC_YANDEX_VERIFICATION: ${{ vars.PUBLIC_YANDEX_VERIFICATION }}
+          PUBLIC_GOOGLE_VERIFICATION: ${{ vars.PUBLIC_GOOGLE_VERIFICATION }}
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+        run: npm run build
+
+      - name: SEO audit (fails the deploy on SEO errors)
+        run: npm run seo:audit
+
+      - name: Custom domain
+        if: ${{ vars.CUSTOM_DOMAIN != '' }}
+        env:
+          CUSTOM_DOMAIN: ${{ vars.CUSTOM_DOMAIN }}
+        run: echo "$CUSTOM_DOMAIN" > dist/CNAME
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  indexnow:
+    needs: deploy
+    if: ${{ always() && needs.deploy.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Submit changed URLs to IndexNow (Yandex, Bing)
+        env:
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          PAGE_URL: ${{ needs.deploy.outputs.page_url }}
+        run: node scripts/seo/indexnow.mjs --from-live
