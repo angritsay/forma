@@ -7,7 +7,7 @@ import { COURSE_BY_ID } from '@/content/registry';
 import { recordBenchmark } from '@/lib/api/benchmarks';
 import { getCourseState, upsertCourseState } from '@/lib/api/courseState';
 import { completeSession } from '@/lib/api/sessions';
-import type { CourseStatePatch, WorkoutSessionRow } from '@/lib/api/types';
+import type { CourseStatePatch, CourseStateRow, WorkoutSessionRow } from '@/lib/api/types';
 import { adaptScale, summarizeSession } from '@/lib/training/session';
 import type {
   CourseState,
@@ -33,7 +33,12 @@ export interface SaveInput {
 export interface SaveOutcome {
   summary: SessionSummary;
   adjustment: ScaleAdjustment;
+  /** The completed `workout_sessions` row. */
   row: WorkoutSessionRow;
+  /** The adapted `user_course_state` row. */
+  courseState: CourseStateRow;
+  /** Personal records written this time (test measurements, benchmark score). */
+  benchmarksRecorded: number;
 }
 
 /** Build the session summary the same way the saver does (for the preview before feedback). */
@@ -76,7 +81,7 @@ export function createSummarySaver(input: SaveInput): () => Promise<SaveOutcome>
   let summary: SessionSummary | null = null;
   let row: WorkoutSessionRow | null = null;
   let adjustment: ScaleAdjustment | null = null;
-  let courseStateSaved = false;
+  let courseState: CourseStateRow | null = null;
   const benchmarksSaved = new Set<number>();
 
   return async function run(): Promise<SaveOutcome> {
@@ -96,7 +101,7 @@ export function createSummarySaver(input: SaveInput): () => Promise<SaveOutcome>
       });
     }
 
-    if (!courseStateSaved) {
+    if (!courseState) {
       const current = await getCourseState(session.courseId);
       const state: CourseState = {
         scale: current?.scale ?? session.prescribed.scale,
@@ -113,8 +118,7 @@ export function createSummarySaver(input: SaveInput): () => Promise<SaveOutcome>
       if (nodeIndex >= 0 && (current === null || current.currentNodeIndex === nodeIndex)) {
         patch.currentNodeIndex = nodeIndex + 1;
       }
-      await upsertCourseState(session.courseId, patch);
-      courseStateSaved = true;
+      courseState = await upsertCourseState(session.courseId, patch);
     }
 
     const entries = benchmarkEntries(input);
@@ -126,6 +130,6 @@ export function createSummarySaver(input: SaveInput): () => Promise<SaveOutcome>
     }
 
     if (!adjustment) throw new Error('summary saver: adjustment missing');
-    return { summary, adjustment, row };
+    return { summary, adjustment, row, courseState, benchmarksRecorded: benchmarksSaved.size };
   };
 }

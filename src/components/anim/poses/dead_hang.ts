@@ -31,10 +31,10 @@ const relaxed: Pose = onBar({
   shoulderR: 180,
   elbowL: 0,
   elbowR: 0,
-  hipL: 6,
-  hipR: 9,
-  kneeL: 18,
-  kneeR: 22,
+  hipL: 4,
+  hipR: 6,
+  kneeL: 10,
+  kneeR: 14,
   ankleL: -25,
   ankleR: -28,
 });
@@ -48,10 +48,10 @@ const inhale: Pose = onBar({
   shoulderR: 178,
   elbowL: 3,
   elbowR: 3,
-  hipL: 8,
-  hipR: 11,
-  kneeL: 20,
-  kneeR: 24,
+  hipL: 6,
+  hipR: 8,
+  kneeL: 12,
+  kneeR: 16,
 });
 
 export const dead_hang: PoseSet = {

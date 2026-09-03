@@ -16,7 +16,7 @@ import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { TopBar } from '@/app/components/TopBar';
-import { refreshProgress } from '@/app/features/player/progress';
+import { publishSessionResult } from '@/app/features/player/progress';
 import { buildSummary, createSummarySaver, type SaveOutcome } from '@/app/features/player/save';
 import { loadUserStats } from '@/app/features/player/stats';
 import { FeedbackForm, type FeedbackValue } from '@/app/features/player/summary/FeedbackForm';
@@ -272,7 +272,7 @@ function LocalSummary({
       }
       onSaved({ outcome, unlocked, workoutName: names.workout, courseId: session.courseId });
       abandon();
-      void refreshProgress();
+      publishSessionResult(outcome);
       toast.show({ kind: 'success', title: t('app.summarySavedTitle') });
     } catch (e) {
       setStatus('error');

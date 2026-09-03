@@ -5,6 +5,8 @@
  */
 import type { PoseSet } from './types';
 import { air_squat } from './air_squat';
+import { arm_circles } from './arm_circles';
+import { band_pull_apart } from './band_pull_apart';
 import { band_row } from './band_row';
 import { bear_crawl } from './bear_crawl';
 import { bird_dog } from './bird_dog';
@@ -16,6 +18,7 @@ import { child_pose } from './child_pose';
 import { dead_bug } from './dead_bug';
 import { dead_hang } from './dead_hang';
 import { diamond_push_up } from './diamond_push_up';
+import { double_under } from './double_under';
 import { flutter_kick } from './flutter_kick';
 import { glute_bridge } from './glute_bridge';
 import { half_burpee } from './half_burpee';
@@ -28,8 +31,10 @@ import { inchworm } from './inchworm';
 import { incline_push_up } from './incline_push_up';
 import { jog_in_place } from './jog_in_place';
 import { jump_squat } from './jump_squat';
+import { jumping_jack } from './jumping_jack';
 import { jumping_lunge } from './jumping_lunge';
 import { knee_push_up } from './knee_push_up';
+import { lateral_lunge } from './lateral_lunge';
 import { leg_raise } from './leg_raise';
 import { leg_swing } from './leg_swing';
 import { mountain_climber } from './mountain_climber';
@@ -44,7 +49,9 @@ import { russian_twist } from './russian_twist';
 import { side_plank } from './side_plank';
 import { single_leg_glute_bridge } from './single_leg_glute_bridge';
 import { single_leg_rdl } from './single_leg_rdl';
+import { single_under } from './single_under';
 import { sit_up } from './sit_up';
+import { skater } from './skater';
 import { squat_hold } from './squat_hold';
 import { squat_to_stand } from './squat_to_stand';
 import { step_up } from './step_up';
@@ -57,6 +64,8 @@ import { worlds_greatest_stretch } from './worlds_greatest_stretch';
 
 export const POSES: Record<string, PoseSet> = {
   air_squat,
+  arm_circles,
+  band_pull_apart,
   band_row,
   bear_crawl,
   bird_dog,
@@ -68,6 +77,7 @@ export const POSES: Record<string, PoseSet> = {
   dead_bug,
   dead_hang,
   diamond_push_up,
+  double_under,
   flutter_kick,
   glute_bridge,
   half_burpee,
@@ -80,8 +90,10 @@ export const POSES: Record<string, PoseSet> = {
   incline_push_up,
   jog_in_place,
   jump_squat,
+  jumping_jack,
   jumping_lunge,
   knee_push_up,
+  lateral_lunge,
   leg_raise,
   leg_swing,
   mountain_climber,
@@ -96,7 +108,9 @@ export const POSES: Record<string, PoseSet> = {
   side_plank,
   single_leg_glute_bridge,
   single_leg_rdl,
+  single_under,
   sit_up,
+  skater,
   squat_hold,
   squat_to_stand,
   step_up,
