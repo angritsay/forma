@@ -37,7 +37,15 @@ const hold: Pose = plant(
 
 // Breath: the hips settle ~1° and the head nods a touch; the elbow lifts < 2 px, invisible.
 const breathe: Pose = plant(
-  { ...hold, torso: T - 0.6, shoulderL: T - 0.6, shoulderR: T - 0.6, hipL: 1.2, hipR: 1.2, head: -2 },
+  {
+    ...hold,
+    torso: T - 0.6,
+    shoulderL: T - 0.6,
+    shoulderR: T - 0.6,
+    hipL: 1.2,
+    hipR: 1.2,
+    head: -2,
+  },
   'side',
   { leg: 'R', x: ANKLE.x, y: ANKLE.y },
 );
