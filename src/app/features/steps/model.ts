@@ -22,7 +22,7 @@ export function clampSteps(n: number): number {
  * ignored; an empty field is `null`; anything else non-numeric is `null` too.
  */
 export function parseSteps(text: string): number | null {
-  const clean = text.replace(/[\s.,  ]/g, '');
+  const clean = text.replace(/[\s.,]/g, '');
   if (clean === '') return null;
   if (!/^\d+$/.test(clean)) return null;
   return clampSteps(Number(clean));
