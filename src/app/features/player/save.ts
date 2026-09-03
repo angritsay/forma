@@ -16,6 +16,7 @@ import type {
   SessionFeedback,
   SessionSummary,
 } from '@/lib/training/types';
+import { completeNodePatch } from '@/app/features/path/nodeState';
 import type { ActiveSession, PlayerResult } from '@/app/store/activeWorkout';
 import { benchmarkRecord, benchmarkResult, elapsedStartedAt } from './summaryModel';
 
@@ -110,14 +111,14 @@ export function createSummarySaver(input: SaveInput): () => Promise<SaveOutcome>
       };
       adjustment = adaptScale(state, summary);
       const course = COURSE_BY_ID.get(session.courseId);
-      const nodeIndex = course ? course.nodes.findIndex((n) => n.id === session.nodeId) : -1;
-      const patch: CourseStatePatch = {
-        scale: adjustment.scale,
-        completedNodeIds: [...new Set([...state.completedNodeIds, session.nodeId])],
-      };
-      if (nodeIndex >= 0 && (current === null || current.currentNodeIndex === nodeIndex)) {
-        patch.currentNodeIndex = nodeIndex + 1;
-      }
+      // Same semantics as the path screen's `completeNode`: the node joins `completedNodeIds` and
+      // the index moves to the next unfinished node (a repeat of an earlier node leaves it put).
+      const patch: CourseStatePatch = course
+        ? { scale: adjustment.scale, ...completeNodePatch(course.nodes, current, session.nodeId) }
+        : {
+            scale: adjustment.scale,
+            completedNodeIds: [...new Set([...state.completedNodeIds, session.nodeId])],
+          };
       courseState = await upsertCourseState(session.courseId, patch);
     }
 

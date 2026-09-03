@@ -32,7 +32,8 @@ function completeBlock(blockId: string): PlayerResult[] {
   const out: PlayerResult[] = [];
   steps.forEach((s, i) => {
     if (!('blockId' in s) || s.blockId !== blockId) return;
-    if (s.kind === 'work') out.push({ stepIndex: i, blockId, exerciseId: s.exerciseId, completed: true });
+    if (s.kind === 'work')
+      out.push({ stepIndex: i, blockId, exerciseId: s.exerciseId, completed: true });
     if (s.kind === 'amrap') out.push({ stepIndex: i, blockId, completed: true, rounds: 99 });
     if (s.kind === 'fortime') out.push({ stepIndex: i, blockId, completed: true, timeSec: 1 });
   });
@@ -101,12 +102,18 @@ describe('benchmarkResult / benchmarkRecord', () => {
     const p = prescribeWorkout(w, opts, fixtureLookup);
     const s = buildPlayerSteps(p);
     const i = s.findIndex((x) => x.kind === 'fortime');
-    const done = benchmarkResult(s, [{ stepIndex: i, blockId: 'ft', completed: true, timeSec: 412 }]);
+    const done = benchmarkResult(s, [
+      { stepIndex: i, blockId: 'ft', completed: true, timeSec: 412 },
+    ]);
     expect(done).toMatchObject({ kind: 'fortime', timeSec: 412, completed: true, capSec: 600 });
     expect(benchmarkRecord(done!)).toEqual({ value: 412, unit: 'seconds' });
-    const capped = benchmarkResult(s, [{ stepIndex: i, blockId: 'ft', completed: false, timeSec: 600 }]);
+    const capped = benchmarkResult(s, [
+      { stepIndex: i, blockId: 'ft', completed: false, timeSec: 600 },
+    ]);
     expect(benchmarkRecord(capped!)).toBeNull();
-    expect(benchmarkResult(s, [{ stepIndex: i, blockId: 'ft', completed: false, skipped: true }])).toBeNull();
+    expect(
+      benchmarkResult(s, [{ stepIndex: i, blockId: 'ft', completed: false, skipped: true }]),
+    ).toBeNull();
   });
 });
 
@@ -151,7 +158,13 @@ describe('testResults', () => {
     expect(pushUp.step.kind === 'work' && pushUp.step.mode).toBe('timer');
 
     const results: PlayerResult[] = [
-      { stepIndex: squat.i, blockId: 'warm', exerciseId: 'air_squat', completed: true, achieved: 10 },
+      {
+        stepIndex: squat.i,
+        blockId: 'warm',
+        exerciseId: 'air_squat',
+        completed: true,
+        achieved: 10,
+      },
       {
         stepIndex: plank.i,
         blockId: 'test',

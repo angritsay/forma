@@ -17,6 +17,7 @@ import { STEPS_GOAL } from '@/lib/training/constants';
 import { useT } from '@/app/hooks/useT';
 import { CourseMiniCard, CourseRow } from '@/app/features/home/CourseRow';
 import { dayPart, GREETING_KEY, greetingName } from '@/app/features/home/greeting';
+import { ResumeCard } from '@/app/features/home/ResumeCard';
 import { StatsGrid } from '@/app/features/home/StatsGrid';
 import { StreakCard } from '@/app/features/home/StreakCard';
 import { TodayCard } from '@/app/features/home/TodayCard';
@@ -125,6 +126,7 @@ export default function HomeScreen() {
   } else {
     body = (
       <div className="flex flex-col gap-5 py-2">
+        <ResumeCard onResume={(path) => navigate(path)} />
         <StreakCard streak={streak} stepsGoal={STEPS_GOAL} onLogSteps={() => navigate('/steps')} />
         <TodayCard
           model={today}

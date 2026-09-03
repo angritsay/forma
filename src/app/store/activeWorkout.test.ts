@@ -142,7 +142,9 @@ describe('activeWorkout store', () => {
 
   it('abandon() clears everything', () => {
     begin();
-    useActiveWorkoutStore.getState().recordResult({ stepIndex: 2, blockId: 'warmup', completed: true });
+    useActiveWorkoutStore
+      .getState()
+      .recordResult({ stepIndex: 2, blockId: 'warmup', completed: true });
     useActiveWorkoutStore.getState().abandon();
     const s = useActiveWorkoutStore.getState();
     expect(s.session).toBeNull();
@@ -163,10 +165,11 @@ describe('activeWorkout store', () => {
     expect(persisted.state).not.toHaveProperty('steps');
     expect(persisted.state).not.toHaveProperty('activeSince');
 
-    // Simulate a reload: tamper with the index, reset memory, rehydrate from storage.
+    // Simulate a reload: reset memory first (the persist middleware writes every setState through
+    // to storage), then plant a tampered index and rehydrate from storage.
+    useActiveWorkoutStore.setState({ session: null, steps: [], stepIndex: 0, paused: true });
     persisted.state.stepIndex = 10_000;
     storage.setItem(ACTIVE_WORKOUT_STORAGE_KEY, JSON.stringify(persisted));
-    useActiveWorkoutStore.setState({ session: null, steps: [], stepIndex: 0, paused: true });
     await useActiveWorkoutStore.persist.rehydrate();
 
     const s = useActiveWorkoutStore.getState();

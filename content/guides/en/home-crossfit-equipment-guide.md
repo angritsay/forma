@@ -1,5 +1,5 @@
 ---
-title: 'Home CrossFit Equipment: What to Buy and What to Skip'
+title: 'Home CrossFit Equipment: What to Buy'
 description: 'Home CrossFit equipment: what to buy first, what to skip, which dumbbells and kettlebell to pick and what each course needs. A coach''s guide — read and decide.'
 h1: 'Home CrossFit equipment: what to buy first, what to buy later and what to skip'
 targetKeyword: 'home crossfit equipment what to buy'

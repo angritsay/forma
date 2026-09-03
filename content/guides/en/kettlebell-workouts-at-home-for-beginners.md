@@ -1,5 +1,5 @@
 ---
-title: 'Kettlebell Workouts at Home for Beginners: a Coach''s Plan'
+title: 'Kettlebell Workouts at Home for Beginners'
 description: 'Kettlebell workouts at home for beginners: which bell to buy, five moves to learn first, a sample session and a progression. A coach''s plan to start today.'
 h1: 'Kettlebell workouts at home for beginners: how to start with one bell'
 targetKeyword: 'kettlebell workouts at home for beginners'

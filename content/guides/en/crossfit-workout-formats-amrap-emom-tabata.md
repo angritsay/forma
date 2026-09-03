@@ -1,5 +1,5 @@
 ---
-title: 'AMRAP, EMOM, For Time and Tabata Explained by a Coach'
+title: 'AMRAP, EMOM, For Time and Tabata Explained'
 description: 'AMRAP, EMOM, For Time and Tabata explained: what each format fixes, how to score and pace it at home. A coach''s breakdown with four sample workouts to try.'
 h1: 'AMRAP, EMOM, For Time and Tabata explained: how to train in each format'
 targetKeyword: 'AMRAP, EMOM, For Time and Tabata explained'

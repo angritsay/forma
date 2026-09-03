@@ -1,5 +1,5 @@
 ---
-title: 'RPE Scale: How Hard Should a Workout Be? A Coach''s Guide'
+title: 'RPE Scale: How Hard Should a Workout Be?'
 description: 'RPE scale: how hard should a workout be, what the numbers 1–10 mean and how the app adjusts your volume from one rating. A coach''s guide to read and try.'
 h1: 'RPE scale: how hard should a workout be, and how to pick the load at home'
 targetKeyword: 'RPE scale how hard should a workout be'

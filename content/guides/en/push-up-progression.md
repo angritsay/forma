@@ -1,5 +1,5 @@
 ---
-title: 'Push-Up Progression for Beginners: From Incline to Full Reps'
+title: 'Push-Up Progression for Beginners'
 description: 'A push-up progression for beginners: five steps from incline push-ups to full reps, form cues, a weekly plan and the mistakes that stall you. Start today.'
 h1: 'Push-up progression for beginners: from your first incline rep to a full push-up'
 targetKeyword: 'push-up progression for beginners'

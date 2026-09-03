@@ -1,5 +1,5 @@
 ---
-title: 'How to Stay Consistent With Workouts: Streaks That Last'
+title: 'How to Stay Consistent With Workouts'
 description: 'How to stay consistent with workouts at home: the minimum-session rule, streaks, points and achievements in Forma, and what to do after a missed day. Try it.'
 h1: 'How to stay consistent with workouts: a system that survives bad weeks'
 targetKeyword: 'how to stay consistent with workouts'
