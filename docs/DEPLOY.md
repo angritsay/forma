@@ -6,7 +6,7 @@ and served by GitHub Pages. The backend is Supabase (see `docs/SETUP.md`).
 ## One-time setup
 
 1. **Repository → Settings → Pages → Build and deployment → Source: "GitHub Actions".**
-2. **Variables** (Settings → Secrets and variables → Actions → *Variables*):
+2. **Variables** (Settings → Secrets and variables → Actions → _Variables_):
    - `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY` — from the Supabase project settings (API).
    - Optional: `SITE_URL` (custom domain origin, e.g. `https://forma.example.com`), `BASE_PATH`
      (auto-detected: `/<repo>/` on github.io, `/` on a custom domain), `CUSTOM_DOMAIN`
@@ -14,7 +14,7 @@ and served by GitHub Pages. The backend is Supabase (see `docs/SETUP.md`).
      `PUBLIC_YANDEX_VERIFICATION`, `PUBLIC_GOOGLE_VERIFICATION`).
 3. **Secrets**: optional `INDEXNOW_KEY` (any 8–128 char hex/alphanumeric string) — enables the
    IndexNow submission step (Yandex + Bing) after every deploy.
-4. Push to `main` (or run the *Deploy to GitHub Pages* workflow manually). The site appears at
+4. Push to `main` (or run the _Deploy to GitHub Pages_ workflow manually). The site appears at
    `https://<owner>.github.io/<repo>/` within a minute or two.
 
 ## Custom domain

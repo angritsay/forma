@@ -29,14 +29,14 @@ npm run seo:audit           # SEO conveyor checks
 
 ## Documentation
 
-| Doc | What it covers |
-| --- | --- |
-| [`docs/SPEC.md`](docs/SPEC.md) | Product & engineering specification (the contract everything is built against) |
-| [`docs/SETUP.md`](docs/SETUP.md) | Supabase project, auth email template, admins, storage, env vars, fill-in checklist |
-| [`docs/DEPLOY.md`](docs/DEPLOY.md) | GitHub Pages deployment, custom domain, moving to a new repository |
-| [`docs/TRAINING_SCIENCE.md`](docs/TRAINING_SCIENCE.md) | Every rule and constant of the adaptive engine with sources |
-| [`docs/CONTENT.md`](docs/CONTENT.md) | Authoring exercises, courses, guides, videos, animations |
-| [`docs/SEO.md`](docs/SEO.md) | The SEO conveyor runbook (keywords → pages → audit → deploy → IndexNow) |
+| Doc                                                    | What it covers                                                                      |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| [`docs/SPEC.md`](docs/SPEC.md)                         | Product & engineering specification (the contract everything is built against)      |
+| [`docs/SETUP.md`](docs/SETUP.md)                       | Supabase project, auth email template, admins, storage, env vars, fill-in checklist |
+| [`docs/DEPLOY.md`](docs/DEPLOY.md)                     | GitHub Pages deployment, custom domain, moving to a new repository                  |
+| [`docs/TRAINING_SCIENCE.md`](docs/TRAINING_SCIENCE.md) | Every rule and constant of the adaptive engine with sources                         |
+| [`docs/CONTENT.md`](docs/CONTENT.md)                   | Authoring exercises, courses, guides, videos, animations                            |
+| [`docs/SEO.md`](docs/SEO.md)                           | The SEO conveyor runbook (keywords → pages → audit → deploy → IndexNow)             |
 
 ## Repository layout
 
@@ -50,17 +50,17 @@ docs/        specification and runbooks
 
 ## Scripts
 
-| Command | Purpose |
-| --- | --- |
-| `npm run build` | Build the static site (landing + app) into `dist/` |
-| `npm run check` | Astro + TypeScript type checks |
-| `npm run lint` / `npm run format` | ESLint / Prettier |
-| `npm run test` | Vitest: engine, content registry, i18n parity, SEO scripts |
-| `npm run content:validate` | Validate `/content` against the schemas |
-| `npm run seo:audit` | Audit guides/content and (if present) `dist/` for SEO rules |
-| `npm run seo:og` | Generate OpenGraph images into `public/og/` |
-| `npm run seo:new-guide` | Scaffold a new guide from the writing checklist |
-| `npm run seo:indexnow` | Submit URLs to IndexNow (needs `INDEXNOW_KEY`) |
+| Command                           | Purpose                                                     |
+| --------------------------------- | ----------------------------------------------------------- |
+| `npm run build`                   | Build the static site (landing + app) into `dist/`          |
+| `npm run check`                   | Astro + TypeScript type checks                              |
+| `npm run lint` / `npm run format` | ESLint / Prettier                                           |
+| `npm run test`                    | Vitest: engine, content registry, i18n parity, SEO scripts  |
+| `npm run content:validate`        | Validate `/content` against the schemas                     |
+| `npm run seo:audit`               | Audit guides/content and (if present) `dist/` for SEO rules |
+| `npm run seo:og`                  | Generate OpenGraph images into `public/og/`                 |
+| `npm run seo:new-guide`           | Scaffold a new guide from the writing checklist             |
+| `npm run seo:indexnow`            | Submit URLs to IndexNow (needs `INDEXNOW_KEY`)              |
 
 ## License
 

@@ -28,18 +28,18 @@ reviews, statistics, testimonials or "trusted by" claims.
 
 ## 2. Tech stack (pinned in package.json — do not add dependencies)
 
-| Area | Choice |
-| --- | --- |
-| Site framework | Astro 5, static output, i18n routing (`ru` default without prefix, `en` prefixed) |
-| App | React 19 island (`client:only`) mounted at `/app/`, `react-router` HashRouter |
-| Styling | Tailwind CSS v4 (`@tailwindcss/vite`) + design tokens in `src/styles/global.css` |
-| Fonts | `@fontsource-variable/manrope` (UI/body), `@fontsource/playfair-display` italic (display) — both have Cyrillic |
-| State | zustand (persisted where noted) |
-| Backend SDK | `@supabase/supabase-js` v2 |
-| Validation | zod (content schemas, forms) |
-| Tests | vitest (pure modules: training engine, seo scripts, content validation) |
-| Lint/format | eslint (flat config) + prettier |
-| OG images | `@resvg/resvg-js` (SVG → PNG at build time) |
+| Area           | Choice                                                                                                         |
+| -------------- | -------------------------------------------------------------------------------------------------------------- |
+| Site framework | Astro 5, static output, i18n routing (`ru` default without prefix, `en` prefixed)                              |
+| App            | React 19 island (`client:only`) mounted at `/app/`, `react-router` HashRouter                                  |
+| Styling        | Tailwind CSS v4 (`@tailwindcss/vite`) + design tokens in `src/styles/global.css`                               |
+| Fonts          | `@fontsource-variable/manrope` (UI/body), `@fontsource/playfair-display` italic (display) — both have Cyrillic |
+| State          | zustand (persisted where noted)                                                                                |
+| Backend SDK    | `@supabase/supabase-js` v2                                                                                     |
+| Validation     | zod (content schemas, forms)                                                                                   |
+| Tests          | vitest (pure modules: training engine, seo scripts, content validation)                                        |
+| Lint/format    | eslint (flat config) + prettier                                                                                |
+| OG images      | `@resvg/resvg-js` (SVG → PNG at build time)                                                                    |
 
 Quality gates (all must pass before a commit): `npm run check` (astro check + tsc), `npm run lint`,
 `npm run test`, `npm run build`, `npm run seo:audit`.
@@ -231,15 +231,15 @@ Tables (all with RLS enabled):
   `completed_node_ids text[]`, `updated_at`), pk `(user_id, course_id)`. Own rows.
 - `workout_sessions` (`id uuid`, `user_id`, `course_id`, `node_id`, `workout_id`, `difficulty text`,
   `scale numeric`, `prescribed jsonb`, `results jsonb`, `rpe int`, `feeling text`, `completion
-  numeric`, `points int`, `duration_sec int`, `calories int`, `started_at`, `completed_at`,
+numeric`, `points int`, `duration_sec int`, `calories int`, `started_at`, `completed_at`,
   `local_date date`). Own rows.
 - `daily_logs` (`user_id`, `local_date date`, `steps int`, `points int`, `note text`, `updated_at`),
   pk `(user_id, local_date)`. Own rows.
 - `benchmarks` (`user_id`, `key text`, `value numeric`, `unit text`, `recorded_at`) — personal
   records from test nodes. Own rows.
 - Leaderboard: security-definer function `get_leaderboard(p_period text /*week|all*/, p_course_id
-  text default null, p_limit int default 100)` returning `(user_id, display_name, avatar_seed,
-  points, rank, is_me)`. Never exposes emails. `points` = sum of `workout_sessions.points` (+
+text default null, p_limit int default 100)` returning `(user_id, display_name, avatar_seed,
+points, rank, is_me)`. Never exposes emails. `points` = sum of `workout_sessions.points` (+
   `daily_logs.points` for global). Week = current ISO week (UTC).
 - Storage bucket `videos` (private): read policy for authenticated users with an active purchase of
   the course encoded as the first path segment (`<course_id>/…`) or under `shared/`.
