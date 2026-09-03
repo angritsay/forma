@@ -76,7 +76,8 @@ export function equipmentSummary(tr: Translator, tp: UserTrainingProfile | null)
   return items
     .map((e) => {
       const label = tr.t(EQUIPMENT_LABEL[e]);
-      const kg = e === 'dumbbells' ? tp?.dumbbellKg : e === 'kettlebell' ? tp?.kettlebellKg : undefined;
+      const kg =
+        e === 'dumbbells' ? tp?.dumbbellKg : e === 'kettlebell' ? tp?.kettlebellKg : undefined;
       return kg && kg.length > 0
         ? `${label} (${tr.t('app.profileWeightsKg', { list: kg.join(', ') })})`
         : label;

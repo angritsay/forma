@@ -80,7 +80,9 @@ export default function LeaderboardScreen() {
       <EmptyState
         icon="warning"
         title={t('app.leaderboardErrorTitle')}
-        description={error?.code === 'network' ? t('common.errorOffline') : t('common.errorGeneric')}
+        description={
+          error?.code === 'network' ? t('common.errorOffline') : t('common.errorGeneric')
+        }
         action={
           <Button size="lg" onClick={reload}>
             {t('common.retry')}
@@ -93,7 +95,9 @@ export default function LeaderboardScreen() {
       <EmptyState
         icon="trophy"
         title={t('app.leaderboardEmptyTitle')}
-        description={period === 'week' ? t('app.leaderboardEmptyWeek') : t('app.leaderboardEmptyAll')}
+        description={
+          period === 'week' ? t('app.leaderboardEmptyWeek') : t('app.leaderboardEmptyAll')
+        }
       />
     );
   } else {

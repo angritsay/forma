@@ -14,7 +14,14 @@ import {
 const TODAY = '2026-09-03';
 
 function log(localDate: string, steps: number, points: number): DailyLogRow {
-  return { userId: 'u1', localDate, steps, points, note: null, updatedAt: `${localDate}T20:00:00Z` };
+  return {
+    userId: 'u1',
+    localDate,
+    steps,
+    points,
+    note: null,
+    updatedAt: `${localDate}T20:00:00Z`,
+  };
 }
 
 function streak(partial: Partial<StreakInfo>): StreakInfo {
@@ -61,10 +68,7 @@ describe('historyDays', () => {
 describe('streakFeedback', () => {
   it('detects a kept streak, a new streak, a day below the goal and a plain update', () => {
     expect(
-      streakFeedback(
-        streak({ current: 3, atRisk: true }),
-        streak({ current: 4, todayDone: true }),
-      ),
+      streakFeedback(streak({ current: 3, atRisk: true }), streak({ current: 4, todayDone: true })),
     ).toBe('kept');
     expect(streakFeedback(streak({}), streak({ current: 1, todayDone: true }))).toBe('started');
     expect(streakFeedback(streak({ current: 3, atRisk: true }), streak({ current: 3 }))).toBe(

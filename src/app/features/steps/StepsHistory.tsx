@@ -37,9 +37,7 @@ export function StepsHistory({ days, goal, onEdit }: StepsHistoryProps) {
                 }
                 title={formatDate(locale, d.date)}
                 subtitle={
-                  d.logged
-                    ? t('app.stepsPointsPreview', { n: d.points })
-                    : t('app.stepsNotLogged')
+                  d.logged ? t('app.stepsPointsPreview', { n: d.points }) : t('app.stepsNotLogged')
                 }
                 trailing={
                   <>

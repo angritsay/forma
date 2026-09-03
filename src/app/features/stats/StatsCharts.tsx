@@ -6,7 +6,13 @@ import { Icon } from '@/components/ui/Icon';
 import { formatDate, formatNumber, plural } from '@/i18n/index';
 import { weekdayLabel } from '@/app/features/home/StatsGrid';
 import { useT } from '@/app/hooks/useT';
-import { dayMonthLabel, dayOfMonthLabel, type DayLoad, type StepsPoint, type WeekPoints } from './model';
+import {
+  dayMonthLabel,
+  dayOfMonthLabel,
+  type DayLoad,
+  type StepsPoint,
+  type WeekPoints,
+} from './model';
 
 function ChartHeader({ label, value }: { label: string; value: string }) {
   return (
@@ -24,7 +30,11 @@ export function WeeklyChart({ days }: { days: readonly DayLoad[] }) {
   const minutes = days.reduce((n, d) => n + d.minutes, 0);
   const data = useMemo<BarDatum[]>(
     () =>
-      days.map((d) => ({ label: weekdayLabel(locale, d.date), value: d.minutes, highlight: d.today })),
+      days.map((d) => ({
+        label: weekdayLabel(locale, d.date),
+        value: d.minutes,
+        highlight: d.today,
+      })),
     [days, locale],
   );
   const workoutsWord = plural(locale, workouts, {

@@ -149,11 +149,7 @@ export default function StatsScreen() {
           <AchievementsGrid items={achievements} />
         </Section>
         <Section title={t('app.statsTotalsTitle')}>
-          <TotalsRow
-            workouts={stats.workouts}
-            minutes={stats.totalMinutes}
-            calories={calories}
-          />
+          <TotalsRow workouts={stats.workouts} minutes={stats.totalMinutes} calories={calories} />
         </Section>
       </div>
     );

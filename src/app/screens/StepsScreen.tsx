@@ -78,7 +78,10 @@ function EditSheet({ date, initialSteps, onClose, onSaved }: EditSheetProps) {
     } catch (e) {
       toast.show({
         kind: 'error',
-        title: isAppError(e) && e.code === 'network' ? t('common.errorOffline') : t('app.stepsSaveError'),
+        title:
+          isAppError(e) && e.code === 'network'
+            ? t('common.errorOffline')
+            : t('app.stepsSaveError'),
       });
     } finally {
       setSaving(false);
@@ -188,7 +191,10 @@ export default function StepsScreen() {
     } catch (e) {
       toast.show({
         kind: 'error',
-        title: isAppError(e) && e.code === 'network' ? t('common.errorOffline') : t('app.stepsSaveError'),
+        title:
+          isAppError(e) && e.code === 'network'
+            ? t('common.errorOffline')
+            : t('app.stepsSaveError'),
       });
     } finally {
       setSaving(false);
@@ -209,7 +215,9 @@ export default function StepsScreen() {
       <EmptyState
         icon="warning"
         title={t('app.stepsErrorTitle')}
-        description={error?.code === 'network' ? t('common.errorOffline') : t('common.errorGeneric')}
+        description={
+          error?.code === 'network' ? t('common.errorOffline') : t('common.errorGeneric')
+        }
         action={
           <Button size="lg" loading={loading} onClick={() => void useProgress.getState().refresh()}>
             {t('common.retry')}
@@ -253,7 +261,13 @@ export default function StepsScreen() {
       header={<TopBar back title={t('app.stepsTitle')} />}
       footer={
         status === 'ready' ? (
-          <Button size="lg" fullWidth loading={saving} disabled={!dirty} onClick={() => void save()}>
+          <Button
+            size="lg"
+            fullWidth
+            loading={saving}
+            disabled={!dirty}
+            onClick={() => void save()}
+          >
             {t('common.save')}
           </Button>
         ) : undefined

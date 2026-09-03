@@ -67,7 +67,9 @@ export default function ProfileScreen() {
       toast.show({
         kind: 'error',
         title:
-          isAppError(e) && e.code === 'network' ? t('common.errorOffline') : t('app.profileSaveError'),
+          isAppError(e) && e.code === 'network'
+            ? t('common.errorOffline')
+            : t('app.profileSaveError'),
       });
       return false;
     } finally {

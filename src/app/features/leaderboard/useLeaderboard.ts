@@ -14,7 +14,10 @@ export interface LeaderboardState {
   reload: () => void;
 }
 
-export function useLeaderboard(period: LeaderboardPeriod, courseId: string | null): LeaderboardState {
+export function useLeaderboard(
+  period: LeaderboardPeriod,
+  courseId: string | null,
+): LeaderboardState {
   const [rows, setRows] = useState<LeaderboardRow[]>([]);
   const [status, setStatus] = useState<LeaderboardStatus>('loading');
   const [error, setError] = useState<AppError | null>(null);

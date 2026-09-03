@@ -148,7 +148,8 @@ export default function AdminScreen() {
       reload();
     } catch (e) {
       if (isAppError(e) && e.code === 'validation') setAddError(t('app.adminInvalidEmail'));
-      else toast.show({ kind: 'error', title: t('app.adminActionError'), description: errorText(e) });
+      else
+        toast.show({ kind: 'error', title: t('app.adminActionError'), description: errorText(e) });
     } finally {
       setAdding(false);
     }
@@ -296,7 +297,9 @@ export default function AdminScreen() {
               }`
             : undefined
         }
-        confirmLabel={pending?.status === 'refunded' ? t('app.adminRefund') : t('app.adminActivate')}
+        confirmLabel={
+          pending?.status === 'refunded' ? t('app.adminRefund') : t('app.adminActivate')
+        }
         cancelLabel={t('common.cancel')}
         danger={pending?.status === 'refunded'}
         loading={busyId !== null}

@@ -24,10 +24,7 @@ import {
 
 const TODAY = '2026-09-03'; // Thursday; ISO week starts 2026-08-31
 
-function session(
-  localDate: string,
-  extra: Partial<WorkoutSessionRow> = {},
-): WorkoutSessionRow {
+function session(localDate: string, extra: Partial<WorkoutSessionRow> = {}): WorkoutSessionRow {
   return {
     id: `s-${localDate}-${extra.id ?? '1'}`,
     userId: 'u1',
@@ -52,7 +49,14 @@ function session(
 }
 
 function log(localDate: string, steps: number, points = 0): DailyLogRow {
-  return { userId: 'u1', localDate, steps, points, note: null, updatedAt: `${localDate}T20:00:00Z` };
+  return {
+    userId: 'u1',
+    localDate,
+    steps,
+    points,
+    note: null,
+    updatedAt: `${localDate}T20:00:00Z`,
+  };
 }
 
 function logs(rows: DailyLogRow[]): Record<string, DailyLogRow> {

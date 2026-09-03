@@ -6,12 +6,7 @@
  */
 import { COURSE_BY_ID, COURSES, EXERCISE_BY_ID } from '@/content/registry';
 import type { Locale } from '@/content/schema';
-import type {
-  BenchmarkSeries,
-  CourseStateRow,
-  MyTotals,
-  WorkoutSessionRow,
-} from '@/lib/api/types';
+import type { BenchmarkSeries, CourseStateRow, MyTotals, WorkoutSessionRow } from '@/lib/api/types';
 import { STEPS_GOAL } from '@/lib/training/constants';
 import { computeStreak } from '@/lib/training/streak';
 import type { UserStats } from '@/lib/training/types';
@@ -210,7 +205,8 @@ export function recordLabel(key: string, locale: Locale): RecordLabel {
   if (exercise) return { kind: 'exercise', name: exercise.name[locale] };
   for (const course of COURSES) {
     const workout = course.workouts.find((w) => w.id === key);
-    if (workout) return { kind: 'workout', name: workout.name[locale], context: course.name[locale] };
+    if (workout)
+      return { kind: 'workout', name: workout.name[locale], context: course.name[locale] };
   }
   return { kind: 'unknown', name: key.replace(/_/g, ' ') };
 }
