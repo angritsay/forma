@@ -3,18 +3,36 @@
 The whole product is a static site: the landing pages and the app are built by Astro into `dist/`
 and served by any static host. The backend is Supabase (see `docs/SETUP.md`).
 
-One workflow (`.github/workflows/deploy.yml`) builds once and publishes to one of two hosts, chosen
-by the `DEPLOY_TARGET` repository variable:
+One workflow (`.github/workflows/deploy.yml`) builds once and publishes to one host, chosen by the
+`DEPLOY_TARGET` repository variable:
 
-| `DEPLOY_TARGET`        | Host             | URL                         | Notes                                          |
-| ---------------------- | ---------------- | --------------------------- | ---------------------------------------------- |
-| unset / `github-pages` | GitHub Pages     | `<owner>.github.io/<repo>/` | Public repository required on the free plan    |
-| `cloudflare`           | Cloudflare Pages | `<project>.pages.dev`       | Serves at `/`, works with a private repository |
+| `DEPLOY_TARGET`           | Host             | URL                         | Setup required                                |
+| ------------------------- | ---------------- | --------------------------- | --------------------------------------------- |
+| unset / `gh-pages-branch` | GitHub Pages     | `<owner>.github.io/<repo>/` | **None** — public repository is enough        |
+| `github-pages-actions`    | GitHub Pages     | `<owner>.github.io/<repo>/` | Pages → Source: "GitHub Actions", by an admin |
+| `cloudflare`              | Cloudflare Pages | `<project>.pages.dev`       | Two Cloudflare secrets; repo may stay private |
 
 The canonical origin is baked into the build (canonical tags, sitemap, hreflang, JSON-LD), so
 switching hosts means a rebuild — which the workflow does anyway on every run.
 
-## Option A — Cloudflare Pages
+## Option A — GitHub Pages via the `gh-pages` branch (default, zero setup)
+
+This is the only route that needs nothing configured by a human, which is why it is the default.
+Pushing a branch named `gh-pages` to a public repository creates the Pages site by itself, and
+`GITHUB_TOKEN` is allowed to push branches — unlike creating a Pages site, which needs an admin.
+
+Nothing to do: push to `main` and the workflow publishes. The site appears at
+`https://<owner>.github.io/<repo>/` a minute or two later, and a "pages build and deployment" run
+shows up in the Actions tab next to the "Deploy site" one.
+
+The branch holds only the generated build. It is rebuilt from scratch and force-pushed on every
+deploy, so its history stays one commit deep and the 500+ built files never accumulate in the
+repository. Never edit it by hand — the next deploy overwrites it.
+
+Its one drawback is the `/<repo>/` path prefix: `robots.txt` at a subpath is not read by crawlers
+(see `docs/SEO.md`). A custom domain or Cloudflare fixes that.
+
+## Option B — Cloudflare Pages
 
 Free, unlimited bandwidth, serves at the domain root (better for SEO than a `/repo/` subpath), and
 does not care whether the repository is public.
@@ -38,7 +56,10 @@ set the `SITE_URL` variable to the same origin so canonical URLs follow.
 Note that every deployment also gets a throwaway `https://<hash>.<project>.pages.dev` alias. That is
 normal; only `SITE_URL` is ever advertised to search engines.
 
-## Option B — GitHub Pages
+## Option C — GitHub Pages via actions/deploy-pages
+
+Set `DEPLOY_TARGET` to `github-pages-actions`. Cleaner than Option A (no build committed to a
+branch), but it needs the one admin step that a workflow token cannot perform.
 
 0. **The repository must be public** — unless the account is on GitHub Pro, Team or Enterprise
    Cloud. GitHub Pages can only publish a _private_ repository on a paid plan; on the free plan the

@@ -3,10 +3,15 @@ name: Deploy site
 # Builds the static site (landing + app) once and publishes it to one host.
 #
 # Target — repository variable DEPLOY_TARGET:
-#   unset / "github-pages"  → GitHub Pages. Needs Settings → Pages → Source: "GitHub Actions"
-#                             selected once by an admin; a workflow token cannot create the site.
-#   "cloudflare"            → Cloudflare Pages. Needs the two Cloudflare secrets below; the
-#                             project is created automatically on the first run.
+#   unset / "gh-pages-branch"  → GitHub Pages, publishing the build to the `gh-pages` branch.
+#                                Needs nothing set up: pushing that branch to a public repository
+#                                creates the Pages site by itself, and GITHUB_TOKEN is allowed to
+#                                push it. This is the only target that needs no human step.
+#   "github-pages-actions"     → GitHub Pages via actions/deploy-pages. Nicer (no build committed
+#                                to a branch) but needs Settings → Pages → Source: "GitHub Actions"
+#                                selected once by an admin; a workflow token cannot do it.
+#   "cloudflare"               → Cloudflare Pages. Needs the two Cloudflare secrets below; the
+#                                project is created automatically on the first run.
 #
 # Repository variables (Settings → Secrets and variables → Actions → Variables):
 #   PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY   (required for the app to work)
@@ -58,7 +63,7 @@ jobs:
       # owner turns it on once under Settings → Pages → Source: "GitHub Actions". Never fail the
       # build here; the deploy job reports the real problem if Pages is still off.
       - name: Configure GitHub Pages
-        if: ${{ vars.DEPLOY_TARGET != 'cloudflare' }}
+        if: ${{ vars.DEPLOY_TARGET == 'github-pages-actions' }}
         uses: actions/configure-pages@v5
         continue-on-error: true
         with:
@@ -150,14 +155,53 @@ jobs:
           CUSTOM_DOMAIN: ${{ vars.CUSTOM_DOMAIN }}
         run: echo "$CUSTOM_DOMAIN" > dist/CNAME
 
-      # A Pages artifact is a plain tar of dist/, so both deploy jobs consume the same upload.
+      # A Pages artifact is a plain tar of dist/, so every publish job below reuses this one upload.
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
+  # Publishes by pushing the build to the `gh-pages` branch, which needs no repository setting:
+  # the branch itself creates the Pages site, and GITHUB_TOKEN may push it. The branch is rebuilt
+  # from scratch and force-pushed every time, so its history stays one commit deep and 500+ built
+  # files per deploy never accumulate in the repository.
+  gh_pages_branch:
+    needs: build
+    if: ${{ vars.DEPLOY_TARGET == '' || vars.DEPLOY_TARGET == 'gh-pages-branch' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: github-pages
+          path: artifact
+
+      - name: Unpack the build
+        run: |
+          mkdir -p dist
+          tar -xf artifact/artifact.tar -C dist
+
+      - name: Push the build to the gh-pages branch
+        id: deployment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd dist
+          git init -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Publish site build ${GITHUB_SHA}"
+          git push -q --force \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+          OWNER_LC="$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')"
+          echo "page_url=https://${OWNER_LC}.github.io/${GITHUB_REPOSITORY#*/}/" >> "$GITHUB_OUTPUT"
+
   deploy:
     needs: build
-    if: ${{ vars.DEPLOY_TARGET != 'cloudflare' }}
+    if: ${{ vars.DEPLOY_TARGET == 'github-pages-actions' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -208,8 +252,8 @@ jobs:
           command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PROJECT || github.event.repository.name }} --branch=main
 
   indexnow:
-    needs: [build, deploy, cloudflare]
-    if: ${{ always() && (needs.deploy.result == 'success' || needs.cloudflare.result == 'success') }}
+    needs: [build, gh_pages_branch, deploy, cloudflare]
+    if: ${{ always() && (needs.gh_pages_branch.result == 'success' || needs.deploy.result == 'success' || needs.cloudflare.result == 'success') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
