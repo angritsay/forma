@@ -5,6 +5,14 @@ and served by GitHub Pages. The backend is Supabase (see `docs/SETUP.md`).
 
 ## One-time setup
 
+0. **The repository must be public** — unless the account is on GitHub Pro, Team or Enterprise
+   Cloud. GitHub Pages can only publish a _private_ repository on a paid plan; on the free plan the
+   Pages "Source" control stays unavailable and `actions/deploy-pages` fails with
+   `Failed to create deployment (status: 404)`. Make it public under
+   Settings → General → Danger Zone → Change repository visibility → Public. Nothing secret lives in
+   the repo: `.env.example` holds placeholders only, and the Supabase URL and anon key are public
+   values by design (RLS is what protects the data), injected at build time from repository
+   variables — they are never committed.
 1. **Repository → Settings → Pages → Build and deployment → Source: "GitHub Actions".**
    This one is unavoidable: creating a Pages site needs repository-admin rights, which a workflow
    token does not have. The workflow tries anyway and carries on if it cannot, so the first deploy
