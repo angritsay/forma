@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /forma/app/
+
+Sitemap: https://angritsay.github.io/forma/sitemap.xml
+Host: https://angritsay.github.io

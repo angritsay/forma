@@ -1,0 +1,95 @@
+# Forma
+
+> Home CrossFit that adapts to you. / Кроссфит дома. Под тебя.
+
+Forma is a coach-made set of home CrossFit-style courses: five programs with and without equipment. The web app adapts reps, rest and load to your level after every session; access is lifetime after purchase. The site and the app are available in Russian and English.
+
+Forma — курсы кроссфита для дома от тренера: пять программ с оборудованием и без. Веб-приложение подстраивает повторы, отдых и нагрузку под уровень после каждой тренировки; доступ после покупки бессрочный. Сайт и приложение на русском и английском.
+
+# English
+
+## Courses
+- [Start: home CrossFit basics](https://angritsay.github.io/forma/en/courses/start-home-crossfit-basics/): Your first four weeks: technique, short circuits and zero equipment.
+- [Bodyweight Engine](https://angritsay.github.io/forma/en/courses/bodyweight-engine/): Six weeks of bodyweight strength and conditioning — four sessions a week, no gear.
+- [Dumbbell Builder](https://angritsay.github.io/forma/en/courses/dumbbell-builder/): Six weeks of strength training with a pair of dumbbells — squats, deadlifts, presses and thrusters, four days a week.
+- [Kettlebell Power](https://angritsay.github.io/forma/en/courses/kettlebell-power/): Six weeks with a single kettlebell: from the deadlift to the snatch, three sessions a week.
+- [Home Athlete](https://angritsay.github.io/forma/en/courses/home-athlete/): Eight weeks of advanced CrossFit at home: pull-ups, double-unders, devil presses, long AMRAPs — and Murph at the end.
+- [Home CrossFit courses](https://angritsay.github.io/forma/en/courses/): Five home CrossFit-style courses with and without equipment. Pick one, sign in with your email and the app adapts every workout to you.
+
+## Guides
+- [20-Minute Home Workout: Four No-Equipment Sessions](https://angritsay.github.io/forma/en/guides/20-minute-home-workouts/): A 20-minute home workout with no equipment: four sessions — AMRAP, EMOM, a strength circuit and Tabata — mapped minute by minute. Pick one and start today.
+- [AMRAP, EMOM, For Time and Tabata Explained](https://angritsay.github.io/forma/en/guides/crossfit-workout-formats-amrap-emom-tabata/): AMRAP, EMOM, For Time and Tabata explained: what each format fixes, how to score and pace it at home. A coach's breakdown with four sample workouts to try.
+- [CrossFit at Home After 40: How to Start Safely](https://angritsay.github.io/forma/en/guides/crossfit-at-home-after-40/): CrossFit at home after 40: what changes, how to start safely, how much to train and rest, and how to protect knees and back. A coach's plan — read and begin.
+- [CrossFit at Home for Beginners: How to Start](https://angritsay.github.io/forma/en/guides/crossfit-at-home-for-beginners/): CrossFit at home for beginners: how to start with no equipment, a complete first workout, the common mistakes and a four-week plan. Read it and start today.
+- [CrossFit for Fat Loss at Home: What Actually Works](https://angritsay.github.io/forma/en/guides/crossfit-for-fat-loss/): CrossFit for fat loss at home: how many sessions a week, which formats burn the most, why steps and food matter. A coach's two-month plan you can start today.
+- [CrossFit Without Equipment: Home Workouts](https://angritsay.github.io/forma/en/guides/crossfit-without-equipment/): CrossFit without equipment: which bodyweight exercises to build on, a 10-minute AMRAP for a small flat, the common mistakes and how to progress. Try it today.
+- [Full Body Dumbbell Workout at Home: A Coach's Plan](https://angritsay.github.io/forma/en/guides/full-body-dumbbell-workout-at-home/): A full body dumbbell workout at home: which exercises to pick, how to pick the weight, sets, reps and rest, and how to progress. Read the plan and start today.
+- [Home CrossFit Equipment: What to Buy](https://angritsay.github.io/forma/en/guides/home-crossfit-equipment-guide/): Home CrossFit equipment: what to buy first, what to skip, which dumbbells and kettlebell to pick and what each course needs. A coach's guide — read and decide.
+- [How Many Times a Week Should You Work Out at Home?](https://angritsay.github.io/forma/en/guides/how-many-times-a-week-to-work-out-at-home/): How many times a week should you work out at home? A coach's answer by level, ready 3-, 4- and 5-day schedules and the rule for adding days. Pick your week.
+- [How to Do a Burpee: Technique and Mistakes](https://angritsay.github.io/forma/en/guides/how-to-do-a-burpee/): How to do a burpee with clean technique: six steps, easier variants and the mistakes that hurt your back. A coach's guide with a 10-minute workout to try.
+- [How to Stay Consistent With Workouts](https://angritsay.github.io/forma/en/guides/how-to-stay-consistent-with-workouts/): How to stay consistent with workouts at home: the minimum-session rule, streaks, points and achievements in Forma, and what to do after a missed day. Try it.
+- [Kettlebell Workouts at Home for Beginners](https://angritsay.github.io/forma/en/guides/kettlebell-workouts-at-home-for-beginners/): Kettlebell workouts at home for beginners: which bell to buy, five moves to learn first, a sample session and a progression. A coach's plan to start today.
+- [Push-Up Progression for Beginners](https://angritsay.github.io/forma/en/guides/push-up-progression/): A push-up progression for beginners: five steps from incline push-ups to full reps, form cues, a weekly plan and the mistakes that stall you. Start today.
+- [Rest Days: Recovery, 7000 Steps and Why They Matter](https://angritsay.github.io/forma/en/guides/rest-days-recovery-7000-steps/): Rest days, recovery, 7000 steps: why the body adapts between workouts, what to do on a day off and how a walk keeps your streak alive. Read and plan your week.
+- [RPE Scale: How Hard Should a Workout Be?](https://angritsay.github.io/forma/en/guides/rpe-scale-how-hard-should-workouts-be/): RPE scale: how hard should a workout be, what the numbers 1–10 mean and how the app adjusts your volume from one rating. A coach's guide to read and try.
+- [Warm-Up Before a Home Workout: The 7-Minute Routine](https://angritsay.github.io/forma/en/guides/warm-up-before-a-home-workout/): Warm up before a home workout the right way: a 7-minute routine from the exercise library, what to prep before squats, push-ups and jumps. Read and try it.
+- [Home CrossFit guides](https://angritsay.github.io/forma/en/guides/): Coach-written guides on home CrossFit: where to start, AMRAP and EMOM formats, dumbbell and kettlebell workouts, recovery and motivation. Pick a topic and read.
+
+## Exercise library
+- [Home CrossFit exercises](https://angritsay.github.io/forma/en/exercises/): Every exercise used in the courses, with technique, mistakes and scaling.
+
+## About
+- [Forma](https://angritsay.github.io/forma/en/): Home CrossFit that adapts to you.
+- [About the coach](https://angritsay.github.io/forma/en/about/)
+- [Contact](https://angritsay.github.io/forma/en/contact/)
+
+## Optional
+- [Privacy policy](https://angritsay.github.io/forma/en/privacy/)
+- [Terms of service](https://angritsay.github.io/forma/en/terms/)
+- [Refund policy](https://angritsay.github.io/forma/en/refund/)
+
+# Русский
+
+## Курсы
+- [Старт: кроссфит дома без оборудования](https://angritsay.github.io/forma/courses/start-krossfit-doma-bez-oborudovaniya/): Первые четыре недели: техника, короткие круги и ноль оборудования.
+- [Своим весом: сила и выносливость](https://angritsay.github.io/forma/courses/svoim-vesom-sila-i-vynoslivost/): Шесть недель силы и выносливости на собственном весе — четыре тренировки в неделю, без инвентаря.
+- [Гантели дома: сила и рельеф](https://angritsay.github.io/forma/courses/ganteli-doma-sila-i-relef/): Шесть недель силовых тренировок с парой гантелей — присед, тяга, жим и трастеры, четыре дня в неделю.
+- [Гиря: сила и метаболизм](https://angritsay.github.io/forma/courses/girya-sila-i-metabolizm/): Шесть недель с одной гирей: от становой тяги до рывка, три тренировки в неделю.
+- [Атлет: продвинутый домашний кроссфит](https://angritsay.github.io/forma/courses/atlet-prodvinutyj-domashnij-krossfit/): Восемь недель продвинутого кроссфита дома: подтягивания, двойные прыжки, дьявольский жим, длинные AMRAP — и «Мёрф» в финале.
+- [Курсы кроссфита для дома](https://angritsay.github.io/forma/courses/): Пять курсов кроссфита для дома — с оборудованием и без. Выбери программу, войди по email, и приложение подстроит каждую тренировку под тебя.
+
+## Гайды
+- [AMRAP, EMOM, For Time, табата: что это и как выбрать](https://angritsay.github.io/forma/guides/amrap-emom-for-time-tabata/): AMRAP, EMOM, For Time, табата — что это, чем форматы отличаются, как считать результат и подбирать нагрузку дома. Разбор тренера с примерами: читай и пробуй.
+- [RPE: как подобрать нагрузку на тренировке дома](https://angritsay.github.io/forma/guides/rpe-kak-podobrat-nagruzku/): Шкала RPE: как подобрать нагрузку дома по ощущениям, что значат цифры от 1 до 10 и как приложение меняет объём по твоей оценке. Разбор тренера — читай и пробуй.
+- [Дни отдыха: восстановление, 7000 шагов и прогресс](https://angritsay.github.io/forma/guides/dni-otdyha-i-7000-shagov/): Дни отдыха, восстановление, 7000 шагов: зачем телу пауза между тренировками, что делать в выходной и как прогулка идёт в серию. Читай и планируй неделю.
+- [Как делать бёрпи: техника, ошибки, прогрессия](https://angritsay.github.io/forma/guides/kak-delat-berpi/): Как делать бёрпи правильно: техника по шагам, облегчённые варианты и ошибки, которые бьют по пояснице. Разбор тренера и тренировка на 10 минут — пробуй.
+- [Как научиться отжиматься с нуля: прогрессия](https://angritsay.github.io/forma/guides/kak-nauchitsya-otzhimatsya/): Как научиться отжиматься с нуля: пять ступеней от отжиманий от опоры до полного отжимания, техника, план на неделю и ошибки. Разбор тренера — начни сегодня.
+- [Как не бросить тренировки: серии и минимум дня](https://angritsay.github.io/forma/guides/kak-ne-brosit-trenirovki/): Как не бросить тренировки дома: правило минимальной тренировки, серии дней, очки и достижения в Forma, что делать после пропуска. Советы тренера — попробуй.
+- [Кроссфит без оборудования: тренировки дома](https://angritsay.github.io/forma/guides/crossfit-bez-oborudovaniya/): Кроссфит без оборудования: какие упражнения с собственным весом брать за основу, пример AMRAP на 10 минут, ошибки и как усложнять нагрузку. Попробуй сегодня.
+- [Кроссфит для похудения дома: что реально работает](https://angritsay.github.io/forma/guides/crossfit-dlya-pohudeniya/): Кроссфит для похудения дома: сколько тренировок в неделю, какие форматы тратят больше и при чём тут шаги и еда. План тренера на два месяца — читай и начинай.
+- [Кроссфит дома для начинающих: с чего начать](https://angritsay.github.io/forma/guides/crossfit-doma-dlya-nachinayushchih/): Кроссфит дома для начинающих: как начать без оборудования, пример первой тренировки, типичные ошибки и план на четыре недели. Читай и начинай сегодня.
+- [Кроссфит после 40: как начать дома без травм](https://angritsay.github.io/forma/guides/crossfit-posle-40/): Кроссфит после 40: что меняется в теле, как начать дома без травм, сколько тренироваться и отдыхать, как беречь колени и спину. План тренера — читай и начинай.
+- [Оборудование для кроссфита дома: что купить](https://angritsay.github.io/forma/guides/oborudovanie-dlya-crossfita-doma/): Оборудование для кроссфита дома: с чего начать, какие гантели и гирю выбрать, что нужно для каждого курса и без чего обойтись. Разбор тренера — читай и решай.
+- [Разминка перед тренировкой дома за 7 минут](https://angritsay.github.io/forma/guides/razminka-pered-trenirovkoy-doma/): Разминка перед тренировкой дома: готовый план на 7 минут из упражнений библиотеки, что разминать перед приседом, жимом и прыжками. Читай и пробуй.
+- [Сколько раз в неделю тренироваться дома](https://angritsay.github.io/forma/guides/skolko-raz-v-nedelyu-trenirovatsya-doma/): Сколько раз в неделю тренироваться дома, чтобы был результат без перегрузки: ответ по уровням, схемы на 3, 4 и 5 дней и как добавлять дни. Выбери свою неделю.
+- [Тренировка 20 минут дома: 4 комплекса](https://angritsay.github.io/forma/guides/trenirovka-20-minut-doma/): Тренировка 20 минут дома без оборудования: четыре готовых комплекса — AMRAP, EMOM, силовой круг и табата — с раскладкой по минутам. Выбирай и начинай.
+- [Тренировка с гантелями дома: программа на всё тело](https://angritsay.github.io/forma/guides/trenirovka-s-gantelyami-doma/): Тренировка с гантелями дома на всё тело: какие упражнения взять, как выбрать вес, сколько подходов делать и как прогрессировать. План тренера — читай и начинай.
+- [Тренировки с гирей дома для начинающих](https://angritsay.github.io/forma/guides/trenirovki-s-girey-doma/): Тренировки с гирей дома для начинающих: какую гирю выбрать, пять базовых движений, схема недели и готовая тренировка. Разбор тренера — читай и начинай.
+- [Гайды по кроссфиту дома](https://angritsay.github.io/forma/guides/): Статьи тренера о кроссфите дома: с чего начать, форматы AMRAP и EMOM, тренировки с гантелями и гирей, восстановление и мотивация. Выбирай тему и читай.
+
+## Библиотека упражнений
+- [Упражнения для кроссфита дома](https://angritsay.github.io/forma/exercises/): Все упражнения из курсов: техника, ошибки, варианты проще и сложнее.
+
+## О проекте
+- [Forma](https://angritsay.github.io/forma/): Кроссфит дома. Под тебя.
+- [О тренере](https://angritsay.github.io/forma/about/)
+- [Контакты](https://angritsay.github.io/forma/contact/)
+
+## Дополнительно
+- [Политика конфиденциальности](https://angritsay.github.io/forma/privacy/)
+- [Пользовательское соглашение](https://angritsay.github.io/forma/terms/)
+- [Возврат](https://angritsay.github.io/forma/refund/)
+
+## Feeds
+- [Sitemap (XML)](https://angritsay.github.io/forma/sitemap.xml)
+- [Guides feed (RSS)](https://angritsay.github.io/forma/rss.xml)

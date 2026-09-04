@@ -1,0 +1,1 @@
+import{j as e}from"./jsx-runtime.D_zvdyIk.js";function n({title:t,aside:s,children:l}){return e.jsxs("section",{className:"flex flex-col gap-3",children:[e.jsxs("div",{className:"flex items-center justify-between gap-3 px-1",children:[e.jsx("h2",{className:"eyebrow",children:t}),s?e.jsx("span",{className:"tabular text-xs text-muted",children:s}):null]}),l]})}export{n as S};
