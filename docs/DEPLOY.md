@@ -6,6 +6,9 @@ and served by GitHub Pages. The backend is Supabase (see `docs/SETUP.md`).
 ## One-time setup
 
 1. **Repository → Settings → Pages → Build and deployment → Source: "GitHub Actions".**
+   This one is unavoidable: creating a Pages site needs repository-admin rights, which a workflow
+   token does not have. The workflow tries anyway and carries on if it cannot, so the first deploy
+   after you flip this switch succeeds without any other change.
 2. **Variables** (Settings → Secrets and variables → Actions → _Variables_):
    - `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY` — from the Supabase project settings (API).
    - Optional: `SITE_URL` (custom domain origin, e.g. `https://forma.example.com`), `BASE_PATH`
