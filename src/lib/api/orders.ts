@@ -2,12 +2,15 @@
  * Landing order form (RPC `create_order`, callable by anonymous visitors).
  */
 import { supabase } from './client';
+import { demo } from './demo/load';
 import { AppError } from './errors';
 import { COURSE_ID_RE, EMAIL_RE, guard, unwrap } from './internal';
+import { isDemo } from './mode';
 import type { OrderInput } from './types';
 
 /** Record `email ↔ course` as a pending purchase; returns the purchase id. Idempotent per pair. */
 export async function createOrder(input: OrderInput): Promise<string> {
+  if (isDemo()) return (await demo()).createOrder(input);
   return guard(async () => {
     const email = input.email.trim().toLowerCase();
     if (!EMAIL_RE.test(email) || email.length > 254) {

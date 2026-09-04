@@ -3,6 +3,7 @@
  * See docs/SPEC.md §8 and supabase/migrations for the server side.
  */
 export { isConfigured, supabase } from './client';
+export * from './mode';
 export * from './types';
 export * from './errors';
 export * from './profiles';

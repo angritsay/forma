@@ -615,4 +615,27 @@ export const app = {
   adminEmptyTitle: 'Nothing here',
   adminEmptyBody: 'No purchases match the filter.',
   adminErrorTitle: 'Couldn’t load purchases',
+
+  // Demo mode (docs/SETUP.md §10) — a testing sandbox, never the live app
+  demoBadgeLabel: 'Demo',
+  demoBadge: 'Test data — it lives only in this browser',
+  demoOpen: 'Open the demo',
+  demoOpenLead: 'Just want to look around?',
+  demoOpenBody:
+    'Demo mode runs the whole app on made-up data stored in this browser. Nothing is sent anywhere and no Supabase project is needed.',
+  demoAuthCode: 'Demo: code is {code}',
+  demoAuthCodeHint: 'No email is sent in the demo — type the code above.',
+  demoSection: 'Demo mode',
+  demoDataNote:
+    'Made-up data in this browser: two open courses, invented names on the leaderboard, step history for the past two weeks.',
+  demoReset: 'Reset demo data',
+  demoResetHint: 'Start over with a fresh demo account',
+  demoResetTitle: 'Reset demo data?',
+  demoResetBody:
+    'The demo profile, progress and purchases in this browser are deleted and you are signed out. Nothing was ever sent anywhere.',
+  demoLeave: 'Leave demo mode',
+  demoLeaveHint: 'Back to the setup screen',
+  demoLeaveTitle: 'Leave demo mode?',
+  demoLeaveBody:
+    'The app goes back to the setup screen. Your demo data stays in this browser — turning the demo on again brings it back.',
 } as const;

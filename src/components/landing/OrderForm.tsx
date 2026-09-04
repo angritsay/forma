@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type SubmitEvent } from 'react';
 import type { Locale } from '@/content/schema';
 import { isConfigured } from '@/lib/api/client';
 import { isAppError } from '@/lib/api/errors';
+import { isDemo, isDemoEnv } from '@/lib/api/mode';
 import { createOrder } from '@/lib/api/orders';
 
 export interface OrderFormLabels {
@@ -117,8 +118,18 @@ export default function OrderForm({
   const emailRef = useRef<HTMLInputElement>(null);
   const consentRef = useRef<HTMLInputElement>(null);
   const successRef = useRef<HTMLDivElement>(null);
+  /**
+   * Demo mode records the order in the visitor's browser instead of failing on a missing
+   * backend. The build flag is the only part known during the static render, so the
+   * localStorage half is picked up after hydration — the first paint stays identical.
+   */
+  const [demo, setDemo] = useState(isDemoEnv);
 
-  const configured = isConfigured();
+  useEffect(() => {
+    setDemo(isDemo());
+  }, []);
+
+  const configured = isConfigured() || demo;
   const [consentBefore, consentAfter] = labels.consent.split('{privacy}');
   // Only an https link is ever followed; see paymentTarget().
   const payment = paymentTarget(paymentUrl);
@@ -154,7 +165,8 @@ export default function OrderForm({
       setStatus({ kind: 'error', reason: errorReason(err) });
       return;
     }
-    if (payment) {
+    // A demo order never leaves the browser, so it never hands anyone to a payment page.
+    if (payment && !demo) {
       setStatus({ kind: 'redirecting' });
       window.location.assign(withEmail(payment, trimmed));
       return;
@@ -283,7 +295,7 @@ export default function OrderForm({
         </span>
       </label>
 
-      {payment && labels.paymentNote && (
+      {payment && !demo && labels.paymentNote && (
         <p className="text-xs text-muted">{fill(labels.paymentNote, { host: payment.host })}</p>
       )}
 

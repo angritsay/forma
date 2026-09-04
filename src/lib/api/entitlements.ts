@@ -2,12 +2,15 @@
  * Courses the signed-in user owns (view `my_entitlements`, filtered by the auth email).
  */
 import { supabase } from './client';
+import { demo } from './demo/load';
 import { guard, requireUser, unwrap } from './internal';
 import { entitlementFromDb, type DbEntitlement } from './mappers';
+import { isDemo } from './mode';
 import type { Entitlement } from './types';
 
 /** Active purchases for the current user's email, newest activation first. */
 export async function listEntitlements(): Promise<Entitlement[]> {
+  if (isDemo()) return (await demo()).listEntitlements();
   return guard(async () => {
     await requireUser();
     const rows = unwrap<DbEntitlement[]>(

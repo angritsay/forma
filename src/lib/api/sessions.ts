@@ -3,6 +3,7 @@
  * A session is started before the player opens and completed from the summary screen.
  */
 import { supabase } from './client';
+import { demo } from './demo/load';
 import { AppError } from './errors';
 import { assertLocalDate, guard, requireUser, unwrap } from './internal';
 import {
@@ -11,12 +12,14 @@ import {
   startSessionToDb,
   type DbWorkoutSession,
 } from './mappers';
+import { isDemo } from './mode';
 import type { CompleteSessionInput, StartSessionInput, WorkoutSessionRow } from './types';
 
 const TABLE = 'workout_sessions';
 
 /** Insert a started session and return its id (store it with the local player state). */
 export async function startSession(input: StartSessionInput): Promise<{ id: string }> {
+  if (isDemo()) return (await demo()).startSession(input);
   return guard(async () => {
     assertLocalDate(input.localDate, 'local_date');
     const me = await requireUser();
@@ -32,6 +35,7 @@ export async function completeSession(
   id: string,
   patch: CompleteSessionInput,
 ): Promise<WorkoutSessionRow> {
+  if (isDemo()) return (await demo()).completeSession(id, patch);
   return guard(async () => {
     if (!(patch.rpe >= 1 && patch.rpe <= 10)) throw new AppError('validation', 'invalid_rpe');
     if (!(patch.completion >= 0 && patch.completion <= 1)) {
@@ -56,6 +60,7 @@ export async function listRecentSessions(
   limit = 20,
   courseId?: string,
 ): Promise<WorkoutSessionRow[]> {
+  if (isDemo()) return (await demo()).listRecentSessions(limit, courseId);
   return guard(async () => {
     const me = await requireUser();
     let query = supabase()
@@ -76,6 +81,7 @@ export async function listSessionsBetween(
   fromLocalDate: string,
   toLocalDate: string,
 ): Promise<WorkoutSessionRow[]> {
+  if (isDemo()) return (await demo()).listSessionsBetween(fromLocalDate, toLocalDate);
   return guard(async () => {
     assertLocalDate(fromLocalDate, 'from');
     assertLocalDate(toLocalDate, 'to');
@@ -96,6 +102,7 @@ export async function listSessionsBetween(
 
 /** One session by id (own rows only); `not_found` otherwise. */
 export async function getSession(id: string): Promise<WorkoutSessionRow> {
+  if (isDemo()) return (await demo()).getWorkoutSession(id);
   return guard(async () => {
     const me = await requireUser();
     const row = unwrap<DbWorkoutSession>(

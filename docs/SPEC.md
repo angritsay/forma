@@ -259,6 +259,22 @@ points, rank, is_me)`. Never exposes emails. `points` = sum of `workout_sessions
 `PUBLIC_SUPABASE_ANON_KEY`. `isConfigured()` returns false when env is missing; the app shows a
 localized "backend not configured" screen instead of crashing.
 
+**Demo mode** (`src/lib/api/mode.ts`, `src/lib/api/demo/*`, runbook in docs/SETUP.md §10) is a
+deliberate, clearly-labelled testing feature: a browser-local backend implementing the same API
+surface over `localStorage` (namespace `forma.demo.*`, versioned), so the whole product — sign-in,
+onboarding, the player, stats, leaderboard, admin, the landing order form — can be walked through
+before Supabase exists. Rows are stored in the shapes `mappers.ts` converts from, so the domain
+types keep one definition; errors keep the `AppError`/`AuthError` contract; every call is delayed
+~120 ms so loading states stay visible. Auth uses a locally generated 6-digit code shown on the
+auth screen in a demo hint. A new demo account is seeded with the `start` and `engine` courses
+active, no history, two weeks of step logs, twelve invented leaderboard athletes and admin
+rights. Activation is exactly two paths: `PUBLIC_DEMO_MODE=true` at build time, or — only when
+Supabase is **not** configured — a visitor flag (`forma.demo`) set by the button on the setup
+screen. With Supabase configured and the build flag absent, `isDemo()` returns false without
+reading storage and the demo implementation (a dynamically imported chunk) is never fetched, so
+production behaviour is unchanged. A persistent badge in the app chrome states on every screen
+that the data lives only in this browser; demo content never reaches the marketing site.
+
 ## 9. Routes
 
 Landing (Astro, static, RU default / EN under `/en/`):

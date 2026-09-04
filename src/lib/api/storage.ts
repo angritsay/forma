@@ -5,8 +5,10 @@
  *   undefined                                → undefined
  */
 import { supabase } from './client';
+import { demo } from './demo/load';
 import { guard } from './internal';
 import { parseStorageRef } from './mappers';
+import { isDemo } from './mode';
 
 export const SIGNED_URL_TTL_SEC = 3600;
 /** Re-sign a little before expiry so a URL handed to a <video> never dies mid-playback. */
@@ -21,6 +23,7 @@ export function clearMediaUrlCache(): void {
 
 /** Resolve a content media reference to a URL the browser can load. */
 export async function resolveMediaUrl(ref: string | undefined): Promise<string | undefined> {
+  if (isDemo()) return (await demo()).resolveMediaUrl(ref);
   if (!ref) return undefined;
   const trimmed = ref.trim();
   if (!trimmed) return undefined;

@@ -14,6 +14,7 @@ import { Screen } from '@/components/ui/Screen';
 import { useToast } from '@/components/ui/Toast';
 import type { Equipment } from '@/content/schema';
 import { isAppError } from '@/lib/api/errors';
+import { disableDemo, isDemo, isDemoForced, resetDemo } from '@/lib/api/mode';
 import type { ProfilePatch } from '@/lib/api/types';
 import type { Limitation } from '@/lib/training/types';
 import { LanguageToggle } from '@/app/components/LanguageToggle';
@@ -41,6 +42,7 @@ import { useSession } from '@/app/store/session';
 
 type Busy = 'avatar' | 'name' | 'equipment' | 'limitations' | null;
 type SheetName = 'equipment' | 'limitations' | null;
+type DemoDialog = 'reset' | 'leave' | null;
 
 export default function ProfileScreen() {
   const tr = useT();
@@ -56,6 +58,10 @@ export default function ProfileScreen() {
   const [sheet, setSheet] = useState<SheetName>(null);
   const [signOutOpen, setSignOutOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [demoDialog, setDemoDialog] = useState<DemoDialog>(null);
+  const demo = isDemo();
+  // A build with PUBLIC_DEMO_MODE=true cannot be left from the UI; the visitor flag can.
+  const canLeaveDemo = demo && !isDemoForced();
 
   const save = async (patch: ProfilePatch, key: Exclude<Busy, null>): Promise<boolean> => {
     setBusy(key);
@@ -204,6 +210,34 @@ export default function ProfileScreen() {
           </Card>
         </Section>
 
+        {demo ? (
+          <Section title={t('app.demoSection')}>
+            <Card padding="none">
+              <ul className="divide-y divide-border">
+                <li className="px-4 py-3 text-sm text-muted">{t('app.demoDataNote')}</li>
+                <li>
+                  <ListRow
+                    leading={<Icon name="refresh" />}
+                    title={t('app.demoReset')}
+                    subtitle={t('app.demoResetHint')}
+                    onClick={() => setDemoDialog('reset')}
+                  />
+                </li>
+                {canLeaveDemo ? (
+                  <li>
+                    <ListRow
+                      leading={<Icon name="logout" />}
+                      title={t('app.demoLeave')}
+                      subtitle={t('app.demoLeaveHint')}
+                      onClick={() => setDemoDialog('leave')}
+                    />
+                  </li>
+                ) : null}
+              </ul>
+            </Card>
+          </Section>
+        ) : null}
+
         <Section title={t('app.profileAccountSection')}>
           <Card padding="none">
             <ul className="divide-y divide-border">
@@ -252,6 +286,28 @@ export default function ProfileScreen() {
           />
         </>
       ) : null}
+      <Modal
+        open={demoDialog === 'reset'}
+        onClose={() => setDemoDialog(null)}
+        title={t('app.demoResetTitle')}
+        description={t('app.demoResetBody')}
+        confirmLabel={t('app.demoReset')}
+        cancelLabel={t('common.cancel')}
+        danger
+        onConfirm={() => resetDemo()}
+      />
+      <Modal
+        open={demoDialog === 'leave'}
+        onClose={() => setDemoDialog(null)}
+        title={t('app.demoLeaveTitle')}
+        description={t('app.demoLeaveBody')}
+        confirmLabel={t('app.demoLeave')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={() => {
+          disableDemo();
+          window.location.reload();
+        }}
+      />
       <Modal
         open={signOutOpen}
         onClose={() => setSignOutOpen(false)}

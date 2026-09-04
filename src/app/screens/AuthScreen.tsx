@@ -18,6 +18,7 @@ import { useCountdown } from '@/app/hooks/useTimer';
 import { useSession } from '@/app/store/session';
 import {
   AuthError,
+  demoPendingCode,
   isValidEmail,
   normalizeEmail,
   requestCode,
@@ -67,6 +68,8 @@ export default function AuthScreen() {
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<AuthError | null>(null);
+  /** Demo mode only: the code the local backend just issued (there is no inbox to check). */
+  const [demoCode, setDemoCode] = useState<string | null>(null);
   const countdown = useCountdown(RESEND_SEC);
 
   const errorText = error ? t(authErrorKey(error)) : undefined;
@@ -80,6 +83,7 @@ export default function AuthScreen() {
     setBusy(true);
     try {
       await requestCode(email);
+      setDemoCode(await demoPendingCode());
       setCode('');
       setStep('code');
       countdown.restart();
@@ -125,6 +129,7 @@ export default function AuthScreen() {
     setStep('email');
     setCode('');
     setError(null);
+    setDemoCode(null);
     countdown.reset();
   };
 
@@ -175,6 +180,14 @@ export default function AuthScreen() {
               title={t('app.authCodeTitle')}
               subtitle={t('app.authCodeLead', { email: normalizeEmail(email) })}
             />
+            {demoCode ? (
+              <div className="rounded-inner border border-warning/40 bg-warning/10 px-4 py-3">
+                <p className="text-base font-semibold text-warning">
+                  {t('app.demoAuthCode', { code: demoCode })}
+                </p>
+                <p className="mt-1 text-sm text-muted">{t('app.demoAuthCodeHint')}</p>
+              </div>
+            ) : null}
             <CodeInput
               length={CODE_LENGTH}
               value={code}
@@ -220,7 +233,9 @@ export default function AuthScreen() {
               >
                 {t('app.authChangeEmail')}
               </button>
-              <p className="text-center text-sm text-muted-2">{t('app.authSpamHint')}</p>
+              {demoCode ? null : (
+                <p className="text-center text-sm text-muted-2">{t('app.authSpamHint')}</p>
+              )}
             </div>
           </form>
         )}

@@ -2,9 +2,11 @@
  * Leaderboard (RPC `get_leaderboard`, security definer — never exposes emails).
  */
 import { supabase } from './client';
+import { demo } from './demo/load';
 import { AppError } from './errors';
 import { COURSE_ID_RE, guard, requireUser, unwrap } from './internal';
 import { leaderboardRowFromDb, type DbLeaderboardRow } from './mappers';
+import { isDemo } from './mode';
 import type { LeaderboardPeriod, LeaderboardRow } from './types';
 
 /** Top `limit` athletes for the period (+ the caller's own row, always included). */
@@ -13,6 +15,7 @@ export async function getLeaderboard(
   courseId?: string,
   limit = 100,
 ): Promise<LeaderboardRow[]> {
+  if (isDemo()) return (await demo()).getLeaderboard(period, courseId, limit);
   return guard(async () => {
     if (courseId !== undefined && !COURSE_ID_RE.test(courseId)) {
       throw new AppError('validation', 'invalid_course');

@@ -2,9 +2,11 @@
  * Personal records from test / benchmark nodes (table `benchmarks`).
  */
 import { supabase } from './client';
+import { demo } from './demo/load';
 import { AppError } from './errors';
 import { guard, requireUser, unwrap } from './internal';
 import { benchmarkFromDb, groupBenchmarks, type DbBenchmark } from './mappers';
+import { isDemo } from './mode';
 import type { BenchmarkRow, BenchmarkSeries } from './types';
 
 const TABLE = 'benchmarks';
@@ -16,6 +18,7 @@ export async function recordBenchmark(
   value: number,
   unit: string,
 ): Promise<BenchmarkRow> {
+  if (isDemo()) return (await demo()).recordBenchmark(key, value, unit);
   return guard(async () => {
     if (!KEY_RE.test(key)) throw new AppError('validation', 'invalid_key');
     if (!Number.isFinite(value)) throw new AppError('validation', 'invalid_value');
@@ -34,6 +37,7 @@ export async function recordBenchmark(
 
 /** Every benchmark key with its latest record and history (most recent first). */
 export async function listBenchmarks(): Promise<BenchmarkSeries[]> {
+  if (isDemo()) return (await demo()).listBenchmarks();
   return guard(async () => {
     const me = await requireUser();
     const rows = unwrap<DbBenchmark[]>(

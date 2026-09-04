@@ -6,6 +6,9 @@ first full setup.
 
 Legend: **Dashboard** = the Supabase web console for your project; **repo** = this repository.
 
+Want to see the product before provisioning anything? Build the site, open `/app/` and press
+**Открыть демо / Open the demo** — every screen works on browser-local data. See §10.
+
 ---
 
 ## 0. Fill-in checklist
@@ -480,3 +483,86 @@ typo; case is ignored). Sign out and back in after inserting. If it still does n
 account itself is not usable as an identity — check
 `select email, email_confirmed_at, banned_until, deleted_at from auth.users where email = '…';`
 (§3.1): `is_admin()` only answers for a confirmed, live, unbanned user.
+
+---
+
+## 10. Demo mode (try the app before provisioning anything)
+
+Demo mode replaces the Supabase backend with a **browser-local** one: the same API surface, the
+same row shapes, the same errors, backed by `localStorage` instead of the network. Every screen
+and every flow works — sign-in, onboarding, the player, stats, the leaderboard, the admin
+screen — so the product can be walked through end to end before a project exists.
+
+It is a testing sandbox, never a fallback. A persistent strip at the bottom of the app says so on
+every screen, and nothing it stores ever leaves the browser or reaches the marketing site.
+
+### 10.1 Turning it on
+
+Two ways, and only two:
+
+- **The button.** With `PUBLIC_SUPABASE_URL` / `PUBLIC_SUPABASE_ANON_KEY` unset, `/app/` shows the
+  "backend is not configured" screen. It now also offers **Открыть демо / Open the demo**, which
+  sets a flag in `localStorage` (`forma.demo`) and boots the app. Only that visitor, only that
+  browser.
+- **The build flag.** `PUBLIC_DEMO_MODE=true` at build time forces demo mode for everyone who
+  opens that build:
+
+  ```bash
+  SITE_URL=https://example.com BASE_PATH=/ PUBLIC_DEMO_MODE=true npm run build
+  ```
+
+  Use it for a throwaway preview deploy — never for the real site.
+
+**When Supabase is configured and `PUBLIC_DEMO_MODE` is not `true`, demo mode is inert.** The
+visitor flag is not even read, and the demo implementation is a lazily-imported chunk that is
+never fetched, so a production build behaves exactly as it did before this feature existed.
+
+### 10.2 Signing in
+
+There is no email. Type any syntactically valid address, press "Send code", and the code appears
+on screen in a marked demo hint (`Демо: код 123456` / `Demo: code is 123456`). A wrong code is
+rejected exactly like a real one, so the error state stays testable. Signing out and back in with
+the same address restores that account; a different address starts a fresh one.
+
+### 10.3 What a new demo account gets
+
+Invented data, generated in `src/lib/api/demo/store.ts` and never shown anywhere else:
+
+| Seeded               | Value                                                                                                |
+| -------------------- | ---------------------------------------------------------------------------------------------------- |
+| Entitlements         | `start` and `engine` active; `dumbbells`, `kettlebell`, `athlete` locked                             |
+| Training profile     | none — the onboarding wizard is part of the walkthrough                                              |
+| Workout history      | empty — the first workout really is the first                                                        |
+| Steps (`daily_logs`) | the previous 14 days, mixing days above and below the 7 000 goal (streak, charts, calendar)          |
+| Benchmarks           | empty; the self-tests and test nodes fill them                                                       |
+| Leaderboard          | 12 invented athletes with plausible points, plus your own row computed from your real local sessions |
+| Purchases            | four `@example.com` orders (pending / active / refunded) so the admin flows have something to act on |
+| Admin                | the demo account is always the coach, so `/admin` is reachable                                       |
+
+The landing order form also works: in demo mode it records the order locally and shows the
+success state (no payment redirect), and the order then appears in the admin list where you can
+activate it and watch the course unlock.
+
+Two things are deliberately missing: private-bucket videos (a `storage:` reference resolves to
+nothing and the player falls back to the built-in animations), and any kind of email.
+
+### 10.4 Resetting and leaving
+
+Profile → **Демо-режим / Demo mode**:
+
+- **Сбросить демо-данные / Reset demo data** — deletes every `forma.demo.*` key and reloads, so
+  the next sign-in seeds a fresh account.
+- **Выйти из демо / Leave demo mode** — clears the flag and returns to the setup screen. Only
+  offered when demo mode came from the button; a `PUBLIC_DEMO_MODE=true` build cannot be left
+  from the UI.
+
+Clearing site data in the browser has the same effect as a reset.
+
+### 10.5 Before going to production
+
+- `PUBLIC_DEMO_MODE` must be unset (or anything other than `true`) in the deploy workflow and in
+  every repository variable.
+- Configure `PUBLIC_SUPABASE_URL` and `PUBLIC_SUPABASE_ANON_KEY` (§6). With those set, the flag
+  absent, demo mode cannot switch itself on.
+- A visitor who tried the demo earlier keeps a stale `forma.demo` key in their browser; it is
+  ignored once the backend is configured.

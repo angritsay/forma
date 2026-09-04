@@ -3,7 +3,9 @@
  */
 import type { User } from '@supabase/supabase-js';
 import { supabase } from './client';
+import { demo } from './demo/load';
 import { currentUser, guard, requireUser, unwrap, unwrapMaybe } from './internal';
+import { isDemo } from './mode';
 import { profileFromDb, profilePatchToDb, type DbProfile } from './mappers';
 import type { Profile, ProfilePatch } from './types';
 
@@ -20,6 +22,7 @@ function nameFromMetadata(user: User): string | null {
 
 /** Current user's profile; null when signed out. Creates the row if the auth trigger did not. */
 export async function getProfile(): Promise<Profile | null> {
+  if (isDemo()) return (await demo()).getProfile();
   return guard(async () => {
     const me = await currentUser();
     if (!me) return null;
@@ -52,6 +55,7 @@ export async function getProfile(): Promise<Profile | null> {
 
 /** Update the current user's profile (email and id are never writable). */
 export async function updateProfile(patch: ProfilePatch): Promise<Profile> {
+  if (isDemo()) return (await demo()).updateProfile(patch);
   return guard(async () => {
     const me = await requireUser();
     const dbPatch = profilePatchToDb(patch);

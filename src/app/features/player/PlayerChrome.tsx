@@ -123,7 +123,7 @@ export function Controls({ paused, canPrev, onPrev, onTogglePause, onNext }: Con
   const side =
     'flex h-14 w-14 items-center justify-center rounded-pill border border-border-strong bg-transparent text-text transition-colors hover:bg-white/5 disabled:pointer-events-none disabled:opacity-40';
   return (
-    <div className="sticky bottom-0 z-20 bg-linear-to-t from-bg via-bg/95 to-transparent px-5 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-4">
+    <div className="sticky bottom-0 z-20 bg-linear-to-t from-bg via-bg/95 to-transparent px-5 pb-[calc(env(safe-area-inset-bottom)+16px+var(--demo-inset,0px))] pt-4">
       <div className="flex items-center justify-center gap-6">
         <button
           type="button"

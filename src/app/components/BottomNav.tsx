@@ -24,7 +24,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label={t('app.navMain')}
-      className="fixed bottom-0 left-1/2 z-30 w-full max-w-[480px] -translate-x-1/2 pr-[max(env(safe-area-inset-right),16px)] pl-[max(env(safe-area-inset-left),16px)] pb-[max(env(safe-area-inset-bottom),12px)]"
+      className="fixed bottom-0 left-1/2 z-30 w-full max-w-[480px] -translate-x-1/2 pr-[max(env(safe-area-inset-right),16px)] pl-[max(env(safe-area-inset-left),16px)] pb-[calc(max(env(safe-area-inset-bottom),12px)+var(--demo-inset,0px))]"
     >
       <div className="flex h-16 items-center justify-around rounded-pill border border-border bg-surface/95 px-2 shadow-card backdrop-blur-md">
         {ITEMS.map((item) => {

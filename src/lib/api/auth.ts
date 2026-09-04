@@ -6,7 +6,9 @@
  */
 import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 import { supabase } from './client';
+import { demo } from './demo/load';
 import { AppError, toAppError, type AppErrorCode } from './errors';
+import { isDemo } from './mode';
 
 export type AuthReason = 'invalid_email' | 'rate_limited' | 'invalid_code' | 'signup_disabled';
 
@@ -93,6 +95,7 @@ export function toAuthError(e: unknown): AuthError {
 
 /** Step 1: send a 6-digit code to the email (creates the user when new). */
 export async function requestCode(email: string): Promise<void> {
+  if (isDemo()) return (await demo()).requestCode(email);
   const clean = normalizeEmail(email);
   if (!isValidEmail(clean)) {
     throw new AuthError('validation', 'Invalid email', { reason: 'invalid_email' });
@@ -104,8 +107,18 @@ export async function requestCode(email: string): Promise<void> {
   if (error) throw toAuthError(error);
 }
 
+/**
+ * Demo mode only: the code the demo backend just issued, so the auth screen can print it —
+ * there is no inbox to check. Always null with a real backend.
+ */
+export async function demoPendingCode(): Promise<string | null> {
+  if (!isDemo()) return null;
+  return (await demo()).pendingCode();
+}
+
 /** Step 2: exchange the code for a session. */
 export async function verifyCode(email: string, token: string): Promise<void> {
+  if (isDemo()) return (await demo()).verifyCode(email, token);
   const clean = normalizeEmail(email);
   const code = token.replace(/\D/g, '');
   if (!isValidCode(code)) {
@@ -116,12 +129,14 @@ export async function verifyCode(email: string, token: string): Promise<void> {
 }
 
 export async function signOut(): Promise<void> {
+  if (isDemo()) return (await demo()).signOut();
   const { error } = await supabase().auth.signOut();
   if (error) throw toAuthError(error);
 }
 
 /** Persisted auth session, or null when signed out. */
 export async function getSession(): Promise<Session | null> {
+  if (isDemo()) return (await demo()).getSession();
   const { data, error } = await supabase().auth.getSession();
   if (error) throw toAuthError(error);
   return data.session;
@@ -129,6 +144,7 @@ export async function getSession(): Promise<Session | null> {
 
 /** Server-verified user, or null when there is no session. */
 export async function getUser(): Promise<User | null> {
+  if (isDemo()) return (await demo()).getUser();
   const { data, error } = await supabase().auth.getUser();
   if (error) {
     const app = toAuthError(error);
@@ -142,6 +158,19 @@ export type AuthChangeCallback = (event: AuthChangeEvent, session: Session | nul
 
 /** Subscribe to auth changes; returns the unsubscribe function. */
 export function onAuthChange(cb: AuthChangeCallback): () => void {
+  if (isDemo()) {
+    // The demo backend is a lazy chunk, so the real subscription lands one tick later.
+    let unsubscribe: (() => void) | null = null;
+    let cancelled = false;
+    void demo().then((m) => {
+      if (cancelled) return;
+      unsubscribe = m.onAuthChange(cb);
+    });
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
+  }
   const {
     data: { subscription },
   } = supabase().auth.onAuthStateChange((event, session) => cb(event, session));

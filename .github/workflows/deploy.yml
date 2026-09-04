@@ -72,6 +72,25 @@ jobs:
           echo "BASE_PATH=$BASE_PATH" >> "$GITHUB_ENV"
           echo "Site: $SITE_URL  Base: $BASE_PATH"
 
+      # Until a Supabase project is configured, publish the app in demo mode (browser-local
+      # backend, sign-in code shown on screen) so the deployed site is usable. Setting
+      # PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY switches the next deploy to the real
+      # backend automatically. Set the DEMO_MODE variable to "true" to force it either way.
+      - name: Resolve demo mode
+        env:
+          VAR_DEMO_MODE: ${{ vars.DEMO_MODE }}
+          SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+        run: |
+          if [ -n "$VAR_DEMO_MODE" ]; then
+            DEMO="$VAR_DEMO_MODE"
+          elif [ -z "$SUPABASE_URL" ]; then
+            DEMO=true
+          else
+            DEMO=false
+          fi
+          echo "PUBLIC_DEMO_MODE=$DEMO" >> "$GITHUB_ENV"
+          echo "Demo mode: $DEMO"
+
       - name: Generate OG images
         env:
           SITE_URL: ${{ env.SITE_URL }}
@@ -83,6 +102,7 @@ jobs:
           BASE_PATH: ${{ env.BASE_PATH }}
           PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+          PUBLIC_DEMO_MODE: ${{ env.PUBLIC_DEMO_MODE }}
           PUBLIC_YANDEX_METRIKA_ID: ${{ vars.PUBLIC_YANDEX_METRIKA_ID }}
           PUBLIC_GA_ID: ${{ vars.PUBLIC_GA_ID }}
           PUBLIC_YANDEX_VERIFICATION: ${{ vars.PUBLIC_YANDEX_VERIFICATION }}

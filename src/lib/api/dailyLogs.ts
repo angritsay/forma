@@ -3,9 +3,11 @@
  */
 import { addDays, toLocalDateIso } from '@/lib/util/dates';
 import { supabase } from './client';
+import { demo } from './demo/load';
 import { AppError } from './errors';
 import { assertLocalDate, guard, requireUser, unwrap } from './internal';
 import { dailyLogFromDb, type DbDailyLog } from './mappers';
+import { isDemo } from './mode';
 import type { DailyLogRow } from './types';
 
 const TABLE = 'daily_logs';
@@ -37,6 +39,7 @@ export async function upsertDailyLog(
   steps: number,
   note?: string | null,
 ): Promise<DailyLogRow> {
+  if (isDemo()) return (await demo()).upsertDailyLog(localDate, steps, note);
   return guard(async () => {
     assertLocalDate(localDate, 'local_date');
     assertWritableDate(localDate);
@@ -66,6 +69,7 @@ export async function listDailyLogs(
   fromLocalDate: string,
   toLocalDate: string,
 ): Promise<DailyLogRow[]> {
+  if (isDemo()) return (await demo()).listDailyLogs(fromLocalDate, toLocalDate);
   return guard(async () => {
     assertLocalDate(fromLocalDate, 'from');
     assertLocalDate(toLocalDate, 'to');

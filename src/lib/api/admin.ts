@@ -2,15 +2,18 @@
  * Coach / admin operations. Every call is re-checked server-side by `is_admin()`.
  */
 import { supabase } from './client';
+import { demo } from './demo/load';
 import { AppError } from './errors';
 import { COURSE_ID_RE, EMAIL_RE, currentUser, guard, unwrap, unwrapVoid } from './internal';
 import { purchaseFromDb, type DbPurchase } from './mappers';
+import { isDemo } from './mode';
 import type { PurchaseFilter, PurchaseRow, PurchaseStatus } from './types';
 
 const STATUSES: readonly PurchaseStatus[] = ['pending', 'active', 'refunded'];
 
 /** True when the signed-in email is in `admins`; false when signed out. */
 export async function isAdmin(): Promise<boolean> {
+  if (isDemo()) return (await demo()).isAdmin();
   return guard(async () => {
     const me = await currentUser();
     if (!me) return false;
@@ -22,6 +25,7 @@ export async function isAdmin(): Promise<boolean> {
 
 /** Purchases, newest first, optionally filtered by status and an email / course substring. */
 export async function listPurchases(filter: PurchaseFilter = {}): Promise<PurchaseRow[]> {
+  if (isDemo()) return (await demo()).listPurchases(filter);
   return guard(async () => {
     let query = supabase()
       .from('purchases')
@@ -42,6 +46,7 @@ export async function listPurchases(filter: PurchaseFilter = {}): Promise<Purcha
 
 /** Activate / refund / reset a purchase (RPC `admin_set_purchase_status`). */
 export async function setPurchaseStatus(id: string, status: PurchaseStatus): Promise<void> {
+  if (isDemo()) return (await demo()).setPurchaseStatus(id, status);
   return guard(async () => {
     if (!STATUSES.includes(status)) throw new AppError('validation', 'invalid_status');
     unwrapVoid(await supabase().rpc('admin_set_purchase_status', { p_id: id, p_status: status }));
@@ -50,6 +55,7 @@ export async function setPurchaseStatus(id: string, status: PurchaseStatus): Pro
 
 /** Grant a course to an email manually (RPC `admin_add_purchase`); returns the purchase id. */
 export async function addPurchase(email: string, courseId: string, note?: string): Promise<string> {
+  if (isDemo()) return (await demo()).addPurchase(email, courseId, note);
   return guard(async () => {
     const clean = email.trim().toLowerCase();
     if (!EMAIL_RE.test(clean)) throw new AppError('validation', 'invalid_email');
