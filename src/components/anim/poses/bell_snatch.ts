@@ -66,11 +66,10 @@ const turnover: Pose = plant(
   { leg: 'R', x: 100 },
 );
 
-const lockout: Pose = plant(
-  { ...basePose('side'), head: -4, ...oneArm(178, 0) },
-  'side',
-  { leg: 'R', x: 100 },
-);
+const lockout: Pose = plant({ ...basePose('side'), head: -4, ...oneArm(178, 0) }, 'side', {
+  leg: 'R',
+  x: 100,
+});
 
 const rack: Pose = { ...lockout, head: 0, ...oneArm(47, 140) };
 const hip: Pose = { ...lockout, head: 0, ...oneArm(8, 0) };
