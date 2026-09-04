@@ -67,6 +67,12 @@ export const landing = {
     'Open the app, enter the code from the email, and go: a week-by-week path, a timer, technique cues and a load that adapts to you.',
 
   // Home: courses
+  resultsEyebrow: 'Results',
+  resultsTitle: 'Before and after',
+  resultsIntro:
+    'Real athletes and real timelines. Every pair of photos is published with that person’s permission.',
+  resultsBefore: 'Before',
+  resultsAfter: 'After',
   coursesEyebrow: 'Courses',
   coursesTitle: 'Pick your program',
   coursesIntro:

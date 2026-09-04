@@ -5,6 +5,7 @@
  */
 import Landing from '@/layouts/Landing.astro';
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
+import BeforeAfter from '@/components/landing/BeforeAfter.astro';
 import Button from '@/components/landing/Button.astro';
 import CoachCard from '@/components/landing/CoachCard.astro';
 import CourseCard from '@/components/landing/CourseCard.astro';
@@ -26,6 +27,7 @@ import {
 } from '@/components/landing/courseHelpers';
 import { faqLd, itemListLd, organizationLd, websiteLd } from '@/components/landing/jsonld';
 import { COURSES, COURSE_BY_ID, EXERCISE_BY_ID } from '@/content/registry';
+import { publishableResults } from '@content/site/results';
 import type { Exercise, Locale, WorkoutItem } from '@/content/schema';
 import { formatNumber, l, t } from '@/i18n/index';
 import { canonicalUrl } from '@/lib/seo/urls';
@@ -407,6 +409,21 @@ const jsonLd = [
       )
     }
   </Section>
+
+  {
+    /* Social proof sits next to the coach. The whole section is skipped while there is nothing
+       publishable, so the landing never shows an empty "before and after" promise. */
+    publishableResults().length > 0 && (
+      <Section
+        id="results"
+        eyebrow={t(locale, 'landing.resultsEyebrow')}
+        title={t(locale, 'landing.resultsTitle')}
+        intro={t(locale, 'landing.resultsIntro')}
+      >
+        <BeforeAfter locale={locale} />
+      </Section>
+    )
+  }
 
   <Section
     id="coach"
