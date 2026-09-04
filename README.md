@@ -10,7 +10,8 @@ Forma is the web product of a CrossFit coach who sells home-training courses:
   harder" with estimated duration and points), streaks with 7 000-step rest days, leaderboard,
   statistics, achievements. Language switchable in settings.
 - **Backend**: Supabase (Postgres + Row Level Security, email OTP auth, private video storage).
-- **Hosting**: static build on GitHub Pages via GitHub Actions.
+- **Hosting**: static build published by GitHub Actions to Cloudflare Pages or GitHub Pages
+  (one workflow, selected by a repository variable — see `docs/DEPLOY.md`).
 
 The load-adaptation logic is deterministic sports science (progressive overload, RPE-based
 autoregulation, deload weeks, MET-based energy estimates) — see `docs/TRAINING_SCIENCE.md`. Nothing

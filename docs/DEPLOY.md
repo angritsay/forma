@@ -1,9 +1,44 @@
-# Deployment (GitHub Pages)
+# Deployment
 
 The whole product is a static site: the landing pages and the app are built by Astro into `dist/`
-and served by GitHub Pages. The backend is Supabase (see `docs/SETUP.md`).
+and served by any static host. The backend is Supabase (see `docs/SETUP.md`).
 
-## One-time setup
+One workflow (`.github/workflows/deploy.yml`) builds once and publishes to one of two hosts, chosen
+by the `DEPLOY_TARGET` repository variable:
+
+| `DEPLOY_TARGET`        | Host             | URL                         | Notes                                          |
+| ---------------------- | ---------------- | --------------------------- | ---------------------------------------------- |
+| unset / `github-pages` | GitHub Pages     | `<owner>.github.io/<repo>/` | Public repository required on the free plan    |
+| `cloudflare`           | Cloudflare Pages | `<project>.pages.dev`       | Serves at `/`, works with a private repository |
+
+The canonical origin is baked into the build (canonical tags, sitemap, hreflang, JSON-LD), so
+switching hosts means a rebuild — which the workflow does anyway on every run.
+
+## Option A — Cloudflare Pages
+
+Free, unlimited bandwidth, serves at the domain root (better for SEO than a `/repo/` subpath), and
+does not care whether the repository is public.
+
+1. Create a free account at [dash.cloudflare.com](https://dash.cloudflare.com).
+2. **Account ID** — Workers & Pages → the ID in the right sidebar (it is also the hex segment in the
+   dashboard URL).
+3. **API token** — My Profile → API Tokens → Create Token → Custom token, with the single permission
+   _Account → Cloudflare Pages → Edit_.
+4. In the GitHub repository, Settings → Secrets and variables → Actions:
+   - _Secrets_: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
+   - _Variables_: `DEPLOY_TARGET` = `cloudflare`.
+   - Optional variable `CLOUDFLARE_PROJECT` — the project name, which is globally unique and decides
+     the URL. Defaults to the repository name; set it if `<repo>.pages.dev` is already taken.
+5. Run the _Deploy site_ workflow. The first run creates the Pages project itself; nothing needs to
+   be clicked in the Cloudflare dashboard.
+
+Custom domain: add it under the project → Custom domains (Cloudflare issues the certificate), and
+set the `SITE_URL` variable to the same origin so canonical URLs follow.
+
+Note that every deployment also gets a throwaway `https://<hash>.<project>.pages.dev` alias. That is
+normal; only `SITE_URL` is ever advertised to search engines.
+
+## Option B — GitHub Pages
 
 0. **The repository must be public** — unless the account is on GitHub Pro, Team or Enterprise
    Cloud. GitHub Pages can only publish a _private_ repository on a paid plan; on the free plan the
@@ -25,10 +60,10 @@ and served by GitHub Pages. The backend is Supabase (see `docs/SETUP.md`).
      `PUBLIC_YANDEX_VERIFICATION`, `PUBLIC_GOOGLE_VERIFICATION`).
 3. **Secrets**: optional `INDEXNOW_KEY` (any 8–128 char hex/alphanumeric string) — enables the
    IndexNow submission step (Yandex + Bing) after every deploy.
-4. Push to `main` (or run the _Deploy to GitHub Pages_ workflow manually). The site appears at
+4. Push to `main` (or run the _Deploy site_ workflow manually). The site appears at
    `https://<owner>.github.io/<repo>/` within a minute or two.
 
-## Custom domain
+### Custom domain on GitHub Pages
 
 Set `CUSTOM_DOMAIN=forma.example.com` and `SITE_URL=https://forma.example.com`, add the DNS records
 GitHub Pages asks for (CNAME to `<owner>.github.io`), enable "Enforce HTTPS" in the Pages settings.

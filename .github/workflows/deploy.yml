@@ -1,15 +1,25 @@
-name: Deploy to GitHub Pages
+name: Deploy site
 
-# Deploys the static site (landing + app) to GitHub Pages.
-# Repository → Settings → Pages → Source: "GitHub Actions" must be selected once.
+# Builds the static site (landing + app) once and publishes it to one host.
+#
+# Target — repository variable DEPLOY_TARGET:
+#   unset / "github-pages"  → GitHub Pages. Needs Settings → Pages → Source: "GitHub Actions"
+#                             selected once by an admin; a workflow token cannot create the site.
+#   "cloudflare"            → Cloudflare Pages. Needs the two Cloudflare secrets below; the
+#                             project is created automatically on the first run.
 #
 # Repository variables (Settings → Secrets and variables → Actions → Variables):
 #   PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY   (required for the app to work)
+#   DEPLOY_TARGET        optional — see above
+#   CLOUDFLARE_PROJECT   optional — Cloudflare Pages project name, defaults to the repository name.
+#                        The name is globally unique and decides the URL: <name>.pages.dev
 #   SITE_URL        optional — custom domain origin, e.g. https://forma.example.com
-#   BASE_PATH       optional — defaults to "/<repo>/" on github.io, "/" on a custom domain
-#   CUSTOM_DOMAIN   optional — writes dist/CNAME so Pages keeps the custom domain
+#   BASE_PATH       optional — defaults to "/<repo>/" on github.io, "/" everywhere else
+#   CUSTOM_DOMAIN   optional — writes dist/CNAME so GitHub Pages keeps the custom domain
+#                   (on Cloudflare a custom domain is attached in the dashboard instead)
 #   PUBLIC_YANDEX_METRIKA_ID, PUBLIC_GA_ID, PUBLIC_YANDEX_VERIFICATION, PUBLIC_GOOGLE_VERIFICATION
 # Repository secrets:
+#   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID   required when DEPLOY_TARGET is "cloudflare"
 #   INDEXNOW_KEY    optional — enables IndexNow submission after deploy
 
 on:
@@ -30,6 +40,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    outputs:
+      site_url: ${{ steps.site.outputs.site_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -46,25 +58,36 @@ jobs:
       # owner turns it on once under Settings → Pages → Source: "GitHub Actions". Never fail the
       # build here; the deploy job reports the real problem if Pages is still off.
       - name: Configure GitHub Pages
+        if: ${{ vars.DEPLOY_TARGET != 'cloudflare' }}
         uses: actions/configure-pages@v5
         continue-on-error: true
         with:
           enablement: true
 
+      # The canonical origin is baked into the build (canonical tags, sitemap, hreflang, JSON-LD),
+      # so it has to be resolved before `npm run build`, not at deploy time.
       - name: Resolve site URL and base path
+        id: site
         env:
           VAR_SITE_URL: ${{ vars.SITE_URL }}
           VAR_BASE_PATH: ${{ vars.BASE_PATH }}
+          DEPLOY_TARGET: ${{ vars.DEPLOY_TARGET }}
+          VAR_CF_PROJECT: ${{ vars.CLOUDFLARE_PROJECT }}
         run: |
           REPO_NAME="${GITHUB_REPOSITORY#*/}"
           OWNER_LC="$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')"
+          CF_PROJECT="${VAR_CF_PROJECT:-$REPO_NAME}"
           SITE_URL="$VAR_SITE_URL"
           BASE_PATH="$VAR_BASE_PATH"
           if [ -z "$SITE_URL" ]; then
-            case "$REPO_NAME" in
-              *.github.io) SITE_URL="https://${REPO_NAME}" ;;
-              *) SITE_URL="https://${OWNER_LC}.github.io/${REPO_NAME}" ;;
-            esac
+            if [ "$DEPLOY_TARGET" = "cloudflare" ]; then
+              SITE_URL="https://${CF_PROJECT}.pages.dev"
+            else
+              case "$REPO_NAME" in
+                *.github.io) SITE_URL="https://${REPO_NAME}" ;;
+                *) SITE_URL="https://${OWNER_LC}.github.io/${REPO_NAME}" ;;
+              esac
+            fi
           fi
           if [ -z "$BASE_PATH" ]; then
             case "$SITE_URL" in
@@ -74,6 +97,8 @@ jobs:
           fi
           echo "SITE_URL=$SITE_URL" >> "$GITHUB_ENV"
           echo "BASE_PATH=$BASE_PATH" >> "$GITHUB_ENV"
+          echo "CF_PROJECT=$CF_PROJECT" >> "$GITHUB_ENV"
+          echo "site_url=$SITE_URL" >> "$GITHUB_OUTPUT"
           echo "Site: $SITE_URL  Base: $BASE_PATH"
 
       # Until a Supabase project is configured, publish the app in demo mode (browser-local
@@ -117,38 +142,84 @@ jobs:
       - name: SEO audit (fails the deploy on SEO errors)
         run: npm run seo:audit
 
+      # CNAME is how GitHub Pages remembers a custom domain; Cloudflare keeps that in its own
+      # dashboard, so the file would just be dead weight in the deployment there.
       - name: Custom domain
-        if: ${{ vars.CUSTOM_DOMAIN != '' }}
+        if: ${{ vars.CUSTOM_DOMAIN != '' && vars.DEPLOY_TARGET != 'cloudflare' }}
         env:
           CUSTOM_DOMAIN: ${{ vars.CUSTOM_DOMAIN }}
         run: echo "$CUSTOM_DOMAIN" > dist/CNAME
 
+      # A Pages artifact is a plain tar of dist/, so both deploy jobs consume the same upload.
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
   deploy:
     needs: build
+    if: ${{ vars.DEPLOY_TARGET != 'cloudflare' }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
 
+  cloudflare:
+    needs: build
+    if: ${{ vars.DEPLOY_TARGET == 'cloudflare' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: cloudflare-pages
+      url: ${{ steps.deployment.outputs.deployment-url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.deployment-url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: github-pages
+          path: artifact
+
+      - name: Unpack the build
+        run: |
+          mkdir -p dist
+          tar -xf artifact/artifact.tar -C dist
+          echo "Files: $(find dist -type f | wc -l)"
+
+      # Creating an existing project is an error, so this is best-effort: on every run after the
+      # first it fails harmlessly and the deploy below does the real work.
+      - name: Ensure the Cloudflare Pages project exists
+        uses: cloudflare/wrangler-action@v3
+        continue-on-error: true
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages project create ${{ vars.CLOUDFLARE_PROJECT || github.event.repository.name }} --production-branch=main
+
+      - name: Deploy to Cloudflare Pages
+        id: deployment
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PROJECT || github.event.repository.name }} --branch=main
+
   indexnow:
-    needs: deploy
-    if: ${{ always() && needs.deploy.result == 'success' }}
+    needs: [build, deploy, cloudflare]
+    if: ${{ always() && (needs.deploy.result == 'success' || needs.cloudflare.result == 'success') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      # The origin the build was made for — not a deploy job's URL, which on Cloudflare is the
+      # per-deployment alias (<hash>.<project>.pages.dev) rather than the canonical one.
       - name: Submit changed URLs to IndexNow (Yandex, Bing)
         env:
           INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
-          SITE_URL: ${{ vars.SITE_URL }}
-          PAGE_URL: ${{ needs.deploy.outputs.page_url }}
+          SITE_URL: ${{ needs.build.outputs.site_url }}
         run: node scripts/seo/indexnow.mjs --from-live
