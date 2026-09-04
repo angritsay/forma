@@ -43,9 +43,7 @@ export function LeaderboardRowView({ row, pinned }: LeaderboardRowViewProps) {
       <Avatar seed={row.avatarSeed} name={row.displayName} size={40} />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[15px] font-medium">{row.displayName}</span>
-        {row.isMe ? (
-          <span className="block text-xs font-semibold text-accent">{t('app.leaderboardYou')}</span>
-        ) : null}
+        {row.isMe ? <span className="sr-only">{t('app.leaderboardYou')}</span> : null}
       </span>
       <span className="tabular shrink-0 text-[15px] font-semibold">
         {t('app.leaderboardPoints', { n: formatNumber(locale, row.points) })}

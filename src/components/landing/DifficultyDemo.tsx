@@ -110,7 +110,7 @@ export default function DifficultyDemo({
               >
                 {isRec && (
                   <span
-                    className={`rounded-pill px-2 py-0.5 text-xs font-semibold uppercase ${
+                    className={`rounded-pill px-2 py-0.5 text-xs font-semibold ${
                       active ? 'bg-on-primary text-primary' : 'bg-accent text-on-primary'
                     }`}
                   >
@@ -130,9 +130,7 @@ export default function DifficultyDemo({
         </div>
         <p className="mt-3 text-sm text-muted">{recommendedReason}</p>
 
-        <h3 className="mt-6 text-sm font-semibold uppercase tracking-wide text-muted">
-          {labels.planTitle}
-        </h3>
+        <h3 className="eyebrow mt-6">{labels.planTitle}</h3>
         <ol className="mt-3 flex flex-col gap-3">
           {selected.blocks.map((b) => (
             <li key={b.id} className="rounded-inner border border-border bg-bg p-4">
@@ -187,7 +185,7 @@ export default function DifficultyDemo({
         >
           {scenario ? (
             <>
-              <p className="text-sm uppercase tracking-wide text-muted">{labels.nextTime}</p>
+              <p className="eyebrow">{labels.nextTime}</p>
               <p
                 className={`font-display mt-1 text-4xl ${
                   scenario.deltaPercent > 0

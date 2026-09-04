@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
-import { Icon } from '@/components/ui/Icon';
 import { PageTitle } from '@/components/ui/PageTitle';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { RingProgress } from '@/components/ui/RingProgress';
@@ -18,7 +17,6 @@ const COMPONENT_ORDER: readonly FitnessComponent[] = [
   'activity',
   'experience',
 ];
-const SELF_TESTS: readonly FitnessComponent[] = ['pushups', 'squats', 'plank'];
 
 export function StepResult({ draft }: StepProps) {
   const { t } = useT();
@@ -28,7 +26,6 @@ export function StepResult({ draft }: StepProps) {
   if (!assessment) return null;
 
   const missing = new Set(assessment.missing ?? []);
-  const skippedTests = SELF_TESTS.filter((c) => missing.has(c));
   const levelName = t(LEVEL_LABEL[assessment.level]);
 
   return (
@@ -56,9 +53,7 @@ export function StepResult({ draft }: StepProps) {
         </p>
       </Card>
       <Card level={2} className="flex flex-col gap-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted">
-          {t('app.onbResultComponents')}
-        </h2>
+        <h2 className="eyebrow">{t('app.onbResultComponents')}</h2>
         <ul className="flex flex-col gap-3">
           {COMPONENT_ORDER.map((c) => {
             const value = assessment.components[c];
@@ -83,16 +78,6 @@ export function StepResult({ draft }: StepProps) {
           })}
         </ul>
       </Card>
-      {skippedTests.length > 0 ? (
-        <p className="flex gap-2 text-sm text-muted">
-          <Icon name="info" size={18} className="mt-0.5 shrink-0" />
-          <span>{t('app.onbResultTestsSkipped')}</span>
-        </p>
-      ) : null}
-      <p className="flex gap-2 text-sm text-muted">
-        <Icon name="bolt" size={18} className="mt-0.5 shrink-0" />
-        <span>{t('app.onbResultAdaptNote')}</span>
-      </p>
     </div>
   );
 }

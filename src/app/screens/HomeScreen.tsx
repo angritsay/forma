@@ -84,7 +84,7 @@ export default function HomeScreen() {
 
   const header = (
     <div className="flex h-16 items-center gap-3 px-5">
-      <h1 className="font-display min-w-0 flex-1 truncate text-2xl">{greeting}</h1>
+      <h1 className="font-display min-w-0 flex-1 truncate text-2xl leading-[1.3]">{greeting}</h1>
       <IconButton
         label={t('app.homeRefresh')}
         icon={loading ? <Spinner size={18} /> : 'refresh'}

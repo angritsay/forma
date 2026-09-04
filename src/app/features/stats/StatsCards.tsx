@@ -21,10 +21,10 @@ export function LevelCard({ points, level }: LevelCardProps) {
     <Card gradient className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1">
-          <span className="text-xs font-semibold uppercase tracking-[0.12em] opacity-70">
+          <span className="eyebrow text-current opacity-70">
             {t('app.statsLevelEyebrow', { n: level.level })}
           </span>
-          <h2 className="font-display truncate text-4xl">{l(level.title)}</h2>
+          <h2 className="font-display truncate text-4xl leading-[1.3]">{l(level.title)}</h2>
         </div>
         <Badge tone="on-art" icon="bolt" size="md">
           {t('app.statsPointsValue', { n: formatNumber(locale, points) })}

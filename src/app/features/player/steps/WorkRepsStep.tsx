@@ -50,9 +50,7 @@ export function WorkRepsStep({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col items-center gap-2 text-center">
-        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-          {setLabel(t, format, step.set, step.totalSets)}
-        </span>
+        <span className="eyebrow">{setLabel(t, format, step.set, step.totalSets)}</span>
         <Stepper
           value={count}
           onChange={setCount}
@@ -73,7 +71,6 @@ export function WorkRepsStep({
         </div>
         {step.item.note ? <p className="text-[15px] text-muted">{l(step.item.note)}</p> : null}
       </div>
-      <p className="text-center text-sm text-muted">{t('app.playerAdjustHint')}</p>
       <Button size="lg" fullWidth onClick={done}>
         {t('common.done')}
       </Button>

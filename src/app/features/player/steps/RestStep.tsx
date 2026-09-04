@@ -55,9 +55,7 @@ export function RestStep({ step, prescribed, paused, beep, onNext, registerNext 
             />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-              {t('app.playerRestNext')}
-            </span>
+            <span className="block eyebrow">{t('app.playerRestNext')}</span>
             <span className="block truncate text-[15px] font-medium">
               {nextExercise ? nextExercise.name[locale] : nextId}
             </span>

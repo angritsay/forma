@@ -31,11 +31,7 @@ export function BigClock({
 }: BigClockProps) {
   return (
     <div className={clsx('flex flex-col items-center gap-1 text-center', className)}>
-      {label ? (
-        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-          {label}
-        </span>
-      ) : null}
+      {label ? <span className="eyebrow">{label}</span> : null}
       <div
         aria-live="polite"
         aria-atomic="true"

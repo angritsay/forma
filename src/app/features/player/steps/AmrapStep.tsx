@@ -70,9 +70,7 @@ export function AmrapStep({
           <ItemList items={step.items} compact className="rounded-inner bg-surface-2 px-4 py-2" />
           <div className="flex items-center justify-between gap-3 rounded-card bg-surface-2 p-4">
             <div className="flex flex-col">
-              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-                {t('app.playerAmrapRounds')}
-              </span>
+              <span className="eyebrow">{t('app.playerAmrapRounds')}</span>
               <span className="tabular text-5xl font-bold leading-none">{rounds}</span>
             </div>
             <div className="flex items-center gap-2">
@@ -93,12 +91,9 @@ export function AmrapStep({
         <>
           <div className="flex flex-col items-center gap-1 text-center">
             <span className="font-display text-4xl text-accent">{t('app.playerTimeUp')}</span>
-            <p className="text-[15px] text-muted">{t('app.playerAmrapScoreLead')}</p>
           </div>
           <div className="flex flex-col gap-4 rounded-card bg-surface-2 p-4">
-            <span className="text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-              {t('app.playerAmrapRounds')}
-            </span>
+            <span className="text-center eyebrow">{t('app.playerAmrapRounds')}</span>
             <Stepper
               value={rounds}
               onChange={setRounds}
@@ -107,9 +102,7 @@ export function AmrapStep({
               decreaseLabel={t('app.playerDecrease')}
               increaseLabel={t('app.playerIncrease')}
             />
-            <span className="text-center text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-              {t('app.playerAmrapPartial')}
-            </span>
+            <span className="text-center eyebrow">{t('app.playerAmrapPartial')}</span>
             <Stepper
               value={extraReps}
               onChange={setExtraReps}

@@ -118,7 +118,7 @@ const jsonLd = [
       style={`--course-accent:${course.accent}`}
     >
       <div>
-        <p class="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
+        <p class="eyebrow">
           {levelLabel(locale, course.level)} · {weeksLabel(locale, course.weeks)}
         </p>
         <h1 class="font-display mt-3 text-5xl text-balance md:text-6xl lg:text-7xl">{name}</h1>
@@ -180,7 +180,7 @@ const jsonLd = [
       </div>
       <div class="flex flex-col gap-4">
         <div class="rounded-card border border-border bg-surface p-6">
-          <h3 class="text-sm font-semibold tracking-wide text-muted uppercase">
+          <h3 class="eyebrow">
             {t(locale, 'landing.courseForWhomTitle')}
           </h3>
           <ul class="mt-3 flex flex-col gap-2">
@@ -195,7 +195,7 @@ const jsonLd = [
           </ul>
         </div>
         <div class="rounded-card border border-border bg-surface p-6">
-          <h3 class="text-sm font-semibold tracking-wide text-muted uppercase">
+          <h3 class="eyebrow">
             {t(locale, 'landing.courseOutcomesTitle')}
           </h3>
           <ul class="mt-3 flex flex-col gap-2">
@@ -223,7 +223,7 @@ const jsonLd = [
           </ul>
         </div>
         <div class="rounded-card border border-border bg-surface p-6">
-          <h3 class="text-sm font-semibold tracking-wide text-muted uppercase">
+          <h3 class="eyebrow">
             {t(locale, 'landing.courseEquipmentTitle')}
           </h3>
           {
@@ -284,7 +284,7 @@ const jsonLd = [
         style={`--course-g1:${g1};--course-g2:${g2}`}
       >
         <div>
-          <p class="text-xs font-semibold tracking-[0.2em] uppercase opacity-70">
+          <p class="eyebrow text-current opacity-70">
             {levelLabel(locale, course.level)}
           </p>
           <p class="font-display mt-2 text-3xl md:text-4xl">{name}</p>

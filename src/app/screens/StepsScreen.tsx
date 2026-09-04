@@ -29,19 +29,31 @@ import {
   useTodayIso,
 } from '@/app/store/progress';
 
+/**
+ * Why steps are entered by hand. The explanation is the longest single string in the app, and it
+ * answers a question most athletes ask once — so it collapses behind its own title. `<details>`
+ * carries the expanded/collapsed state to assistive technology without any JavaScript.
+ */
 function WhyManualCard() {
   const { t, locale } = useT();
   return (
-    <Card level={2} className="flex gap-3">
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-pill bg-accent-2/15 text-accent-2">
-        <Icon name="info" size={20} />
-      </span>
-      <div className="flex min-w-0 flex-col gap-1">
-        <h2 className="text-[15px] font-semibold">{t('app.stepsWhyTitle')}</h2>
-        <p className="text-sm leading-relaxed text-muted">
+    <Card level={2} padding="none">
+      <details className="group">
+        <summary className="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-pill bg-accent-2/15 text-accent-2">
+            <Icon name="info" size={20} />
+          </span>
+          <h2 className="min-w-0 flex-1 text-[15px] font-semibold">{t('app.stepsWhyTitle')}</h2>
+          <Icon
+            name="chevron"
+            size={18}
+            className="shrink-0 text-muted transition-transform group-open:rotate-90"
+          />
+        </summary>
+        <p className="px-4 pb-4 text-sm leading-relaxed text-muted">
           {t('app.stepsWhyBody', { goal: formatNumber(locale, STEPS_GOAL) })}
         </p>
-      </div>
+      </details>
     </Card>
   );
 }
@@ -229,7 +241,7 @@ export default function StepsScreen() {
     body = (
       <div className="flex flex-col gap-6 py-2">
         <section className="flex flex-col gap-4">
-          <h2 className="px-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+          <h2 className="px-1 eyebrow">
             {t('app.stepsTodayLabel')} · {formatDate(locale, today)}
           </h2>
           <Card>
@@ -247,9 +259,7 @@ export default function StepsScreen() {
         </section>
         <WhyManualCard />
         <section className="flex flex-col gap-3">
-          <h2 className="px-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-            {t('app.stepsHistoryTitle')}
-          </h2>
+          <h2 className="px-1 eyebrow">{t('app.stepsHistoryTitle')}</h2>
           <StepsHistory days={history} goal={STEPS_GOAL} onEdit={setEditDate} />
         </section>
       </div>

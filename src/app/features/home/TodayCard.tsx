@@ -37,9 +37,7 @@ function Frame({
     <Card gradient={gradient ?? true} padding="md" className="flex flex-col gap-4">
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <span className="text-xs font-semibold uppercase tracking-[0.12em] opacity-70">
-            {eyebrow}
-          </span>
+          <span className="eyebrow text-current opacity-70">{eyebrow}</span>
           <h2 className="font-display mt-1 text-[28px] text-balance">{title}</h2>
           {subtitle ? <p className="mt-1 text-sm font-medium opacity-80">{subtitle}</p> : null}
         </div>

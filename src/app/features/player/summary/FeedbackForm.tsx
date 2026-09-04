@@ -35,7 +35,6 @@ export function FeedbackForm({ value, onChange, disabled }: FeedbackFormProps) {
     <Card className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <h2 className="font-display text-3xl">{t('app.summaryFeedbackTitle')}</h2>
-        <p className="text-[15px] text-muted">{t('app.summaryFeedbackLead')}</p>
       </div>
 
       <Slider

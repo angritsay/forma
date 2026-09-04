@@ -120,8 +120,13 @@ public/                     # favicon.svg, icons, manifest
   `--muted-2 #6B6B73`, `--primary #FFFFFF` (on-primary `#0B0B0D`), `--accent #B9F3E0` (mint),
   `--accent-2 #C9D6FF` (sky), `--success #7CE0B0`, `--warning #FFD166`, `--danger #FF6B6B`,
   radii `--r-card 24px`, `--r-inner 16px`, `--r-pill 999px`.
-- Typography: display = Playfair Display italic 500/600 (`font-display`), body/UI = Manrope
-  variable (`font-sans`). Numbers in timers use `font-sans` with tabular figures.
+- Typography: display = Unbounded variable 700 upright (`font-display`), body/UI = Onest variable
+  (`font-sans`). Both are chosen for Cyrillic first: the previous pair drew и, п and т as
+  composite glyphs pointing at the Latin u, n and m outlines, so every Russian heading rendered as
+  pseudo-Latin. Display leading is 1.2 and tracking 0 — measured floors, not taste: Ё reaches
+  0.993em above the baseline and у drops to -0.181em in Unbounded, so lines collide below 1.174em.
+  Labels are never uppercased; Cyrillic capitals are near-uniform rectangles and lose their word
+  silhouette. Numbers in timers use `font-sans` with tabular figures — both faces expose `tnum`.
 - Hero art: we have no photos. Use the animated SVG figure on pastel gradient cards
   (`components/anim`) — this is the brand illustration system on both landing and app.
 

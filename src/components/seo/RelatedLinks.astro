@@ -34,9 +34,7 @@ const { title, items, id = 'related', class: className = '' } = Astro.props;
               href={it.href}
               class="flex h-full flex-col rounded-card border border-border bg-surface p-5 transition-colors hover:border-border-strong"
             >
-              {it.eyebrow && (
-                <span class="text-xs uppercase tracking-wide text-muted">{it.eyebrow}</span>
-              )}
+              {it.eyebrow && <span class="eyebrow">{it.eyebrow}</span>}
               <span class="mt-1 font-semibold leading-snug">{it.title}</span>
               {it.description && (
                 <span class="mt-2 line-clamp-3 text-sm leading-relaxed text-muted">

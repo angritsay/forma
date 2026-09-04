@@ -117,10 +117,7 @@ const jsonLd = [
     <div class="mt-6 grid gap-10 lg:grid-cols-[minmax(0,1fr)_280px]">
       <article>
         <header>
-          <a
-            class="text-xs uppercase tracking-wide text-muted hover:text-text"
-            href={href(locale, clusterPath(d.cluster))}
-          >
+          <a class="eyebrow hover:text-text" href={href(locale, clusterPath(d.cluster))}>
             {clusterTitle}
           </a>
           <h1 class="mt-3 font-display text-4xl md:text-5xl">{d.h1}</h1>
@@ -153,7 +150,7 @@ const jsonLd = [
               aria-label={t(locale, 'seo.tocTitle')}
               class="mt-8 rounded-card border border-border bg-surface p-5 lg:hidden"
             >
-              <p class="text-xs uppercase tracking-wide text-muted">{t(locale, 'seo.tocTitle')}</p>
+              <p class="eyebrow">{t(locale, 'seo.tocTitle')}</p>
               <ol class="mt-3 space-y-1.5 text-sm">
                 {toc.map((h) => (
                   <li>
@@ -181,7 +178,7 @@ const jsonLd = [
               aria-label={t(locale, 'seo.tocTitle')}
               class="sticky top-24 rounded-card border border-border bg-surface p-5"
             >
-              <p class="text-xs uppercase tracking-wide text-muted">{t(locale, 'seo.tocTitle')}</p>
+              <p class="eyebrow">{t(locale, 'seo.tocTitle')}</p>
               <ol class="mt-3 space-y-2 text-sm">
                 {toc.map((h) => (
                   <li>

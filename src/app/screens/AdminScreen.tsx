@@ -270,9 +270,7 @@ export default function AdminScreen() {
           ))}
         </div>
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-            {t('app.adminPurchases')}
-          </h2>
+          <h2 className="eyebrow">{t('app.adminPurchases')}</h2>
           {status === 'ready' ? (
             <span className="tabular text-xs text-muted">{countWord}</span>
           ) : null}

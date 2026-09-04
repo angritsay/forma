@@ -28,7 +28,7 @@ export function ResumeCard({ onResume }: ResumeCardProps) {
   return (
     <Card level={2} padding="md" className="flex items-center gap-4">
       <div className="min-w-0 flex-1">
-        <span className="text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+        <span className="eyebrow">
           {t(finished ? 'app.homeResumeFinishedEyebrow' : 'app.homeResumeEyebrow')}
         </span>
         <h2 className="mt-1 truncate text-lg font-semibold">

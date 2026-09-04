@@ -35,9 +35,7 @@ export function ExplainStep({ step, onNext }: ExplainStepProps) {
       </div>
       {cues.length > 0 ? (
         <div className="flex flex-col gap-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-            {t('app.playerCues')}
-          </span>
+          <span className="eyebrow">{t('app.playerCues')}</span>
           <ol className="flex flex-col gap-2">
             {cues.map((cue, i) => (
               <li key={i} className="flex gap-3 rounded-inner bg-surface-2 px-4 py-3">

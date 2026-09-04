@@ -16,9 +16,7 @@ export function AdaptationCard({ adjustment }: { adjustment: ScaleAdjustment }) 
     <div className="flex flex-col gap-3">
       <Card level={2} className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-            {t('app.summaryAdaptTitle')}
-          </span>
+          <span className="eyebrow">{t('app.summaryAdaptTitle')}</span>
           <Badge tone={pct > 0 ? 'success' : pct < 0 ? 'warning' : 'neutral'} size="md">
             {deltaText}
           </Badge>
@@ -45,9 +43,7 @@ export function AchievementList({ items }: { items: readonly AchievementStatus[]
   if (items.length === 0) return null;
   return (
     <Card gradient className="flex flex-col gap-3">
-      <span className="text-xs font-semibold uppercase tracking-[0.12em] opacity-70">
-        {t('app.summaryAchievementsTitle')}
-      </span>
+      <span className="eyebrow text-current opacity-70">{t('app.summaryAchievementsTitle')}</span>
       <ul className="flex flex-col gap-2">
         {items.map((a) => (
           <li key={a.id} className="flex items-center gap-3">

@@ -129,7 +129,7 @@ const jsonLd = [
 
     <section class="mt-6 grid items-start gap-8 md:grid-cols-[minmax(0,1fr)_minmax(260px,400px)]">
       <div>
-        <p class="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide text-muted">
+        <p class="flex flex-wrap items-center gap-2 eyebrow">
           <span>{patternName(ex.pattern, locale)}</span>
           {
             ex.isTest && (
@@ -178,7 +178,7 @@ const jsonLd = [
         {
           facts.map((f) => (
             <div class="rounded-inner bg-surface p-4">
-              <dt class="text-xs uppercase tracking-wide text-muted">{f.label}</dt>
+              <dt class="eyebrow">{f.label}</dt>
               <dd class="mt-1 font-semibold">{f.value}</dd>
             </div>
           ))
@@ -269,9 +269,7 @@ const jsonLd = [
               .filter((x) => x.item)
               .map((x) => (
                 <li>
-                  <span class="mb-2 block text-xs uppercase tracking-wide text-muted">
-                    {x.label}
-                  </span>
+                  <span class="mb-2 block eyebrow">{x.label}</span>
                   <ExerciseCard exercise={x.item!} locale={locale} />
                 </li>
               ))}

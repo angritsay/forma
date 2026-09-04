@@ -271,7 +271,7 @@ export default function NodePreviewScreen() {
         <Card gradient={course.gradient} padding="md" className="flex flex-col gap-4">
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
-              <span className="text-xs font-semibold uppercase tracking-[0.12em] opacity-70">
+              <span className="eyebrow text-current opacity-70">
                 {l(course.name)} · {t('app.homeTodayWeek', { week: node.week, day: node.day })}
               </span>
               <h2 className="font-display mt-1 text-[28px] text-balance">{l(workout.name)}</h2>
@@ -339,9 +339,7 @@ export default function NodePreviewScreen() {
 
         <section className="flex flex-col gap-3">
           <div className="flex items-baseline justify-between gap-3">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted">
-              {t('app.nodeDifficultyTitle')}
-            </h3>
+            <h3 className="eyebrow">{t('app.nodeDifficultyTitle')}</h3>
             <span className="tabular text-xs text-muted-2">
               {t('app.nodeEstimatedFor', { scale: formatNumber(locale, engineState.scale, 2) })}
             </span>
@@ -356,9 +354,7 @@ export default function NodePreviewScreen() {
 
         {plan ? (
           <section className="flex flex-col gap-3">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted">
-              {t('app.nodePlanTitle')}
-            </h3>
+            <h3 className="eyebrow">{t('app.nodePlanTitle')}</h3>
             <PlanBlocks prescribed={plan.prescribed} />
           </section>
         ) : null}

@@ -11,7 +11,7 @@ import { courseLandingHref, courseSignatureExercise } from '@/app/features/cours
 export function CourseRow({ title, children }: { title: ReactNode; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted">{title}</h2>
+      <h2 className="eyebrow">{title}</h2>
       <div className="-mx-5 flex snap-x gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
         {children}
       </div>

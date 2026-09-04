@@ -85,7 +85,9 @@ export default function ProfileScreen() {
 
   const header = (
     <div className="flex h-16 items-center gap-2 px-5">
-      <h1 className="font-display min-w-0 flex-1 truncate text-2xl">{t('app.profileTitle')}</h1>
+      <h1 className="font-display min-w-0 flex-1 truncate text-2xl leading-[1.3]">
+        {t('app.profileTitle')}
+      </h1>
     </div>
   );
 

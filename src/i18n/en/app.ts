@@ -176,9 +176,6 @@ export const app = {
   onbCompPlank: 'Plank',
   onbCompActivity: 'Daily activity',
   onbCompExperience: 'Experience',
-  onbResultTestsSkipped:
-    'You skipped some tests, so the index is an estimate. Retake them anytime in your profile.',
-  onbResultAdaptNote: 'The load adapts after every workout based on how it felt.',
   onbResultStart: 'Start training',
   onbSaveError: 'Couldn’t save your profile. Check the connection and try again.',
 
@@ -349,7 +346,6 @@ export const app = {
   playerCues: 'Key cues',
   playerGotIt: 'Got it',
   playerAdjustReps: 'Reps count',
-  playerAdjustHint: 'Did more or fewer? Adjust the number, then tap Done.',
   playerTarget: 'Target',
   playerDecrease: 'Fewer',
   playerIncrease: 'More',
@@ -367,7 +363,6 @@ export const app = {
   playerAmrapRemoveRound: 'Undo round',
   playerRoundDone: 'Round done',
   playerTimeUp: 'Time!',
-  playerAmrapScoreLead: 'Count the full rounds and the reps of the unfinished one.',
   playerAmrapPartial: 'Reps in the unfinished round',
   playerSaveScore: 'Save score',
   playerFortimeRound: 'Round {n} of {total}',
@@ -417,7 +412,6 @@ export const app = {
   summaryExtraReps: '+{n} reps',
   summaryPartial: 'partial',
   summaryFeedbackTitle: 'How was it?',
-  summaryFeedbackLead: 'Honest answers tune your next workout.',
   summaryRpeLabel: 'Effort (RPE)',
   summaryRpeMin: 'very easy',
   summaryRpeMax: 'maximal',

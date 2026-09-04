@@ -12,7 +12,7 @@ export function Section({ title, aside, children }: SectionProps) {
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3 px-1">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">{title}</h2>
+        <h2 className="eyebrow">{title}</h2>
         {aside ? <span className="tabular text-xs text-muted">{aside}</span> : null}
       </div>
       {children}

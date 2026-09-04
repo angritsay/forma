@@ -175,9 +175,6 @@ export const app = {
   onbCompPlank: 'Планка',
   onbCompActivity: 'Активность',
   onbCompExperience: 'Опыт',
-  onbResultTestsSkipped:
-    'Часть тестов пропущена, поэтому индекс приблизительный. Пройти их можно в любой момент в профиле.',
-  onbResultAdaptNote: 'Нагрузка подстраивается после каждой тренировки — по тому, как она далась.',
   onbResultStart: 'Начать тренироваться',
   onbSaveError: 'Не удалось сохранить профиль. Проверь соединение и попробуй снова.',
 
@@ -348,7 +345,6 @@ export const app = {
   playerCues: 'На что обратить внимание',
   playerGotIt: 'Понятно',
   playerAdjustReps: 'Количество повторений',
-  playerAdjustHint: 'Получилось больше или меньше? Поправь число и нажми «Готово».',
   playerTarget: 'План',
   playerDecrease: 'Меньше',
   playerIncrease: 'Больше',
@@ -366,7 +362,6 @@ export const app = {
   playerAmrapRemoveRound: 'Убрать круг',
   playerRoundDone: 'Круг готов',
   playerTimeUp: 'Время!',
-  playerAmrapScoreLead: 'Посчитай полные круги и повторения в незавершённом.',
   playerAmrapPartial: 'Повторения в незавершённом круге',
   playerSaveScore: 'Записать результат',
   playerFortimeRound: 'Круг {n} из {total}',
@@ -416,7 +411,6 @@ export const app = {
   summaryExtraReps: '+{n} повт.',
   summaryPartial: 'частично',
   summaryFeedbackTitle: 'Как прошло?',
-  summaryFeedbackLead: 'Честные ответы помогают подстроить следующую тренировку под тебя.',
   summaryRpeLabel: 'Нагрузка (RPE)',
   summaryRpeMin: 'очень легко',
   summaryRpeMax: 'предел',

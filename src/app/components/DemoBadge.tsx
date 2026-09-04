@@ -22,7 +22,7 @@ export function DemoBadge() {
         style={{ height: DEMO_BADGE_HEIGHT }}
         className="flex items-center justify-center gap-2 px-4 text-[11px] leading-none text-muted"
       >
-        <span className="rounded-pill bg-warning/20 px-1.5 py-1 text-[10px] font-bold tracking-wide text-warning uppercase">
+        <span className="rounded-pill bg-warning/20 px-1.5 py-1 text-[10px] font-bold tracking-wide text-warning">
           {t('app.demoBadgeLabel')}
         </span>
         <span className="truncate">{t('app.demoBadge')}</span>

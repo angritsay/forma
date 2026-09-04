@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 
 export interface PageTitleProps {
   title: ReactNode;
-  /** Small uppercase label above the title. */
+  /** Small label above the title. */
   eyebrow?: ReactNode;
   subtitle?: ReactNode;
   size?: 'md' | 'lg' | 'xl';
@@ -32,11 +32,7 @@ export function PageTitle({
         className,
       )}
     >
-      {eyebrow ? (
-        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-          {eyebrow}
-        </span>
-      ) : null}
+      {eyebrow ? <span className="eyebrow">{eyebrow}</span> : null}
       <Tag className={clsx('font-display text-balance', SIZE[size])}>{title}</Tag>
       {subtitle ? <p className="text-[15px] text-muted">{subtitle}</p> : null}
     </div>

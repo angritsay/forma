@@ -26,7 +26,7 @@ export function BlockIntroStep({ step, prescribed, onNext }: BlockIntroStepProps
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
-        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+        <span className="eyebrow">
           {t('app.playerBlockOf', { n: step.blockIndex + 1, total })} ·{' '}
           {blockTypeLabel(t, step.type)}
         </span>

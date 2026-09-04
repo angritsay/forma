@@ -47,9 +47,7 @@ export function BlockList({ blocks }: { blocks: readonly BlockCompletion[] }) {
   const { t } = useT();
   return (
     <Card padding="sm" className="flex flex-col gap-3">
-      <span className="px-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-        {t('app.summaryBlocks')}
-      </span>
+      <span className="px-1 eyebrow">{t('app.summaryBlocks')}</span>
       <ul className="flex flex-col gap-3">
         {blocks.map((b) => (
           <li key={b.blockId} className="flex flex-col gap-1.5 px-1">
@@ -81,9 +79,7 @@ export function TestResultList({ tests }: { tests: readonly TestResultView[] }) 
   if (tests.length === 0) return null;
   return (
     <Card padding="sm" className="flex flex-col gap-2">
-      <span className="px-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-        {t('app.summaryTests')}
-      </span>
+      <span className="px-1 eyebrow">{t('app.summaryTests')}</span>
       <ul className="flex flex-col">
         {tests.map((x, i) => (
           <li
@@ -120,9 +116,7 @@ export function BenchmarkCard({ result }: { result: BenchmarkView | null }) {
   }
   return (
     <Card padding="sm" className="flex items-center justify-between gap-3">
-      <span className="px-1 text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-        {t('app.summaryBenchmark')}
-      </span>
+      <span className="px-1 eyebrow">{t('app.summaryBenchmark')}</span>
       <span className="tabular flex items-baseline gap-2 px-1 font-semibold">
         {value}
         {note ? <span className="text-sm font-medium text-muted">{note}</span> : null}

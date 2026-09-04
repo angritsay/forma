@@ -24,7 +24,7 @@ const clusterTitle = t(locale, `seo.cluster_${guide.data.cluster}_title` as cons
   href={href(locale, guidePath(guide))}
   class="flex h-full flex-col rounded-card border border-border bg-surface p-5 transition-colors hover:border-border-strong"
 >
-  {showCluster && <span class="text-xs uppercase tracking-wide text-muted">{clusterTitle}</span>}
+  {showCluster && <span class="eyebrow">{clusterTitle}</span>}
   <span class="mt-1 font-semibold leading-snug">{guide.data.title}</span>
   <span class="mt-2 line-clamp-3 text-sm leading-relaxed text-muted">{guide.data.description}</span>
   <span class="mt-auto flex gap-3 pt-4 text-xs text-muted-2">

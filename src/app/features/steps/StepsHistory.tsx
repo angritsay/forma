@@ -28,7 +28,7 @@ export function StepsHistory({ days, goal, onEdit }: StepsHistoryProps) {
                 leading={
                   <span
                     className={clsx(
-                      'flex size-10 items-center justify-center rounded-pill text-xs font-semibold uppercase',
+                      'flex size-10 items-center justify-center rounded-pill text-xs font-semibold',
                       atGoal ? 'bg-success/20 text-success' : 'bg-surface-2 text-muted',
                     )}
                   >

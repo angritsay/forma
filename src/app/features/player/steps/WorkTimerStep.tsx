@@ -79,9 +79,7 @@ export function WorkTimerStep({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col items-center gap-3 text-center">
-        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-          {setLabel(t, format, step.set, step.totalSets)}
-        </span>
+        <span className="eyebrow">{setLabel(t, format, step.set, step.totalSets)}</span>
         <BigClock
           seconds={clock.remainingSec}
           tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'accent' : 'default'}

@@ -177,6 +177,106 @@ function errMessage(err) {
 /* ------------------------------------------------------------------------------------------ */
 
 /** @param {string} s */
+/** Bundled OG faces. Both are baked latin+cyrillic so one file covers a Russian card. */
+const DISPLAY = 'Unbounded';
+const BODY = 'Onest';
+const FONT_FILES = { [DISPLAY]: 'Unbounded-Bold.ttf', [BODY]: 'Onest-Regular.ttf' };
+
+/** @type {Map<string, {upem: number, cmap: Map<number, number>, hmtx: number[], fallback: number}>} */
+const METRICS = new Map();
+
+/**
+ * Minimal TrueType reader: enough of `head`, `hhea`, `hmtx` and `cmap` to sum advance widths.
+ * Kept inline rather than pulling in fontkit — the site build must not grow a dependency for a
+ * few hundred lines of table parsing, and these two files never change without this script.
+ * @param {string} family
+ */
+function metrics(family) {
+  const cached = METRICS.get(family);
+  if (cached) return cached;
+  const buf = readFileSync(join(FONTS_DIR, FONT_FILES[family]));
+  const u16 = (/** @type {number} */ o) => buf.readUInt16BE(o);
+  const u32 = (/** @type {number} */ o) => buf.readUInt32BE(o);
+
+  /** @type {Record<string, number>} */
+  const tables = {};
+  for (let i = 0, n = u16(4); i < n; i++) {
+    const rec = 12 + i * 16;
+    tables[buf.toString('ascii', rec, rec + 4)] = u32(rec + 8);
+  }
+  const upem = u16(tables.head + 18);
+  const numHMetrics = u16(tables.hhea + 34);
+  /** @type {number[]} */
+  const hmtx = [];
+  for (let i = 0; i < numHMetrics; i++) hmtx.push(u16(tables.hmtx + i * 4));
+
+  // Pick a Unicode subtable: prefer format 12 (full range), else format 4 (BMP).
+  const cmap = new Map();
+  let best = 0;
+  for (let i = 0, n = u16(tables.cmap + 2); i < n; i++) {
+    const rec = tables.cmap + 4 + i * 8;
+    const platform = u16(rec);
+    const encoding = u16(rec + 2);
+    const sub = tables.cmap + u32(rec + 4);
+    const unicode = platform === 0 || (platform === 3 && (encoding === 1 || encoding === 10));
+    if (unicode && (best === 0 || u16(sub) === 12)) best = sub;
+  }
+  const format = u16(best);
+  if (format === 12) {
+    for (let g = 0, n = u32(best + 12); g < n; g++) {
+      const rec = best + 16 + g * 12;
+      const start = u32(rec);
+      const end = u32(rec + 4);
+      const startGlyph = u32(rec + 8);
+      for (let cp = start; cp <= end; cp++) cmap.set(cp, startGlyph + (cp - start));
+    }
+  } else if (format === 4) {
+    const segX2 = u16(best + 6);
+    const ends = best + 14;
+    const starts = ends + segX2 + 2;
+    const deltas = starts + segX2;
+    const ranges = deltas + segX2;
+    for (let s2 = 0; s2 < segX2; s2 += 2) {
+      const end = u16(ends + s2);
+      const start = u16(starts + s2);
+      const delta = buf.readInt16BE(deltas + s2);
+      const rangeOffset = u16(ranges + s2);
+      for (let cp = start; cp <= end && cp !== 0xffff; cp++) {
+        let glyph;
+        if (rangeOffset === 0) glyph = (cp + delta) & 0xffff;
+        else {
+          const at = ranges + s2 + rangeOffset + (cp - start) * 2;
+          if (at + 1 >= buf.length) continue;
+          const raw = u16(at);
+          glyph = raw === 0 ? 0 : (raw + delta) & 0xffff;
+        }
+        if (glyph) cmap.set(cp, glyph);
+      }
+    }
+  }
+  // Space is the safest stand-in for a codepoint this face does not carry.
+  const fallback = hmtx[cmap.get(0x20) ?? 0] ?? upem / 2;
+  const m = { upem, cmap, hmtx, fallback };
+  METRICS.set(family, m);
+  return m;
+}
+
+/**
+ * Advance width of `text` in em units (multiply by font size for pixels).
+ * @param {string} text
+ * @param {string} family
+ */
+function advanceWidth(text, family) {
+  const { upem, cmap, hmtx, fallback } = metrics(family);
+  let total = 0;
+  for (const ch of text) {
+    const glyph = cmap.get(ch.codePointAt(0) ?? 0);
+    const adv = glyph === undefined ? fallback : (hmtx[glyph] ?? hmtx[hmtx.length - 1] ?? fallback);
+    total += adv;
+  }
+  return total / upem;
+}
+
 function esc(s) {
   return String(s)
     .replace(/&/g, '&amp;')
@@ -186,16 +286,19 @@ function esc(s) {
 }
 
 /**
- * Greedy word wrap using an average glyph width (Playfair italic ≈ 0.5em, Manrope ≈ 0.57em;
- * Cyrillic runs a little wider).
+ * Greedy word wrap measured against the real font, not an average glyph width.
+ *
+ * The previous heuristic multiplied character count by a per-family ratio and nudged Cyrillic by
+ * a flat 1.06, which under-measured Russian by well over 10% — so RU titles were sized and broken
+ * as if they were narrower than they render, and overflowed the card.
+ *
  * @param {string} text
  * @param {number} fontSize
  * @param {number} maxWidth
- * @param {number} ratio
+ * @param {string} family — key into ADVANCES, so each face is measured with its own metrics
  */
-function wrap(text, fontSize, maxWidth, ratio) {
-  const cyr = /[Ѐ-ӿ]/.test(text) ? 1.06 : 1;
-  const width = (/** @type {string} */ s) => [...s].length * fontSize * ratio * cyr;
+function wrap(text, fontSize, maxWidth, family) {
+  const width = (/** @type {string} */ s) => advanceWidth(s, family) * fontSize;
   /** @type {string[]} */
   const lines = [];
   let cur = '';
@@ -217,15 +320,15 @@ function wrap(text, fontSize, maxWidth, ratio) {
  * @param {number[]} sizes
  * @param {number} maxWidth
  * @param {number} maxLines
- * @param {number} ratio
+ * @param {string} family
  */
-function fitText(text, sizes, maxWidth, maxLines, ratio) {
+function fitText(text, sizes, maxWidth, maxLines, family) {
   for (const size of sizes) {
-    const lines = wrap(text, size, maxWidth, ratio);
+    const lines = wrap(text, size, maxWidth, family);
     if (lines.length <= maxLines) return { size, lines };
   }
   const size = sizes[sizes.length - 1];
-  const lines = wrap(text, size, maxWidth, ratio).slice(0, maxLines);
+  const lines = wrap(text, size, maxWidth, family).slice(0, maxLines);
   const last = lines[maxLines - 1];
   if (last) lines[maxLines - 1] = `${last.replace(/[\s,;:–—-]+$/, '')}…`;
   return { size, lines };
@@ -258,12 +361,13 @@ function template(c) {
     c.big ? [120, 100] : [64, 56, 48, 42, 36],
     textWidth,
     c.big ? 1 : 3,
-    0.5,
+    DISPLAY,
   );
   const subtitle = c.subtitle
-    ? fitText(c.subtitle, [26, 24, 22], textWidth, 3, 0.55)
+    ? fitText(c.subtitle, [26, 24, 22], textWidth, 3, BODY)
     : { size: 26, lines: [] };
-  const titleLineHeight = title.size * 1.08;
+  // 1.174em is where Ё on one line meets у on the line above in Unbounded's Cyrillic; 1.2 clears it.
+  const titleLineHeight = title.size * 1.2;
   const eyebrowY = 150;
   let y = c.eyebrow ? 216 : 190;
   const titleTspans = title.lines
@@ -298,11 +402,11 @@ function template(c) {
   <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#glow)"/>
   <rect x="${tile.x}" y="${tile.y}" width="${tile.size}" height="${tile.size}" rx="${tile.r}" fill="url(#tile)"/>
   ${figure}
-  ${c.eyebrow ? `<text x="${margin}" y="${eyebrowY}" font-family="Manrope" font-size="22" letter-spacing="2.2" fill="${COLORS.muted}">${esc(c.eyebrow.toUpperCase())}</text>` : ''}
-  <text font-family="Playfair Display" font-style="italic" font-size="${title.size}" fill="${COLORS.text}">${titleTspans}</text>
-  <text font-family="Manrope" font-size="${subtitle.size}" fill="${COLORS.muted}">${subtitleTspans}</text>
-  <text x="${margin}" y="${HEIGHT - 62}" font-family="Playfair Display" font-style="italic" font-size="36" fill="${COLORS.text}">${esc(c.brand)}</text>
-  <text x="${margin + c.brand.length * 20 + 20}" y="${HEIGHT - 62}" font-family="Manrope" font-size="20" fill="${COLORS.muted2}">${esc(c.host)}</text>
+  ${c.eyebrow ? `<text x="${margin}" y="${eyebrowY}" font-family="Onest" font-size="22" letter-spacing="0.4" fill="${COLORS.muted}">${esc(c.eyebrow)}</text>` : ''}
+  <text font-family="Unbounded" font-size="${title.size}" fill="${COLORS.text}">${titleTspans}</text>
+  <text font-family="Onest" font-size="${subtitle.size}" fill="${COLORS.muted}">${subtitleTspans}</text>
+  <text x="${margin}" y="${HEIGHT - 62}" font-family="Unbounded" font-size="36" fill="${COLORS.text}">${esc(c.brand)}</text>
+  <text x="${margin + advanceWidth(c.brand, DISPLAY) * 36 + 20}" y="${HEIGHT - 62}" font-family="Onest" font-size="20" fill="${COLORS.muted2}">${esc(c.host)}</text>
 </svg>`;
 }
 
@@ -463,7 +567,7 @@ function fontOptions() {
         .map((f) => join(FONTS_DIR, f))
     : [];
   if (files.length > 0)
-    return { fontFiles: files, loadSystemFonts: false, defaultFontFamily: 'Manrope' };
+    return { fontFiles: files, loadSystemFonts: false, defaultFontFamily: 'Onest' };
   console.warn(
     '[og] bundled fonts not found in scripts/seo/fonts — falling back to system fonts (text may differ)',
   );

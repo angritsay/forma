@@ -1,7 +1,6 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/manrope';
-@import '@fontsource/playfair-display/500-italic.css';
-@import '@fontsource/playfair-display/600-italic.css';
+@import '@fontsource-variable/onest';
+@import '@fontsource-variable/unbounded';
 
 /*
  * Forma design tokens.
@@ -36,9 +35,8 @@
   --r-pill: 999px;
   --shadow-card: 0 12px 40px rgba(0, 0, 0, 0.35);
   --shadow-glow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 20px 60px rgba(185, 243, 224, 0.12);
-  --font-sans:
-    'Manrope Variable', 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Onest Variable', 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Unbounded Variable', 'Unbounded', 'Onest Variable', system-ui, sans-serif;
   color-scheme: dark;
 }
 
@@ -86,16 +84,50 @@ body {
   overflow-wrap: break-word;
 }
 
-/* Display headings: italic serif, tight leading, like the reference screens. */
-.font-display,
-.display {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  line-height: 1.05;
+/*
+ * Display headings.
+ *
+ * These live in the components layer rather than outside the cascade, so a Tailwind utility on
+ * the element still wins — under the previous unlayered rule every `leading-*`, `font-*` and
+ * `not-italic` utility was silently discarded.
+ *
+ * The face is upright, not italic. Playfair Display's Cyrillic italic draws и, п and т as
+ * composite glyphs pointing at the Latin u, n and m outlines, so every Russian display heading
+ * in the product rendered as pseudo-Latin. Unbounded draws Cyrillic as Cyrillic.
+ */
+@layer components {
+  .font-display,
+  .display {
+    font-family: var(--font-display);
+    font-weight: 700;
+    /*
+     * Zero tracking and 1.2 leading are Cyrillic budgets, not Latin ones. Measured against
+     * Unbounded: Ё reaches 0.993em above the baseline and у drops to -0.181em, so two adjacent
+     * lines need 1.174em of advance before the riser of one touches the descender of the other.
+     * The old -0.01em/1.05 pairing was budgeted for Latin ink and collided on every RU heading.
+     * Headings that also clip (`truncate`) need 1.24em of content box and set their own leading.
+     */
+    letter-spacing: 0;
+    line-height: 1.2;
+  }
+
+  /*
+   * Section eyebrow — deliberately not uppercase. Cyrillic capitals are near-uniform rectangles
+   * (П Н И Ш Ц Т Г Е Б В) with none of the distinguishing shapes Latin caps have, so uppercasing
+   * a Russian label erases its word silhouette, and wide tracking then pushes it to roughly twice
+   * the set width of the English original. Weight, size and colour carry the same hierarchy at
+   * no cost to either script.
+   */
+  .eyebrow {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.3;
+    color: var(--muted);
+  }
 }
 
+/* Both display and body faces expose `tnum`, so this now applies to metrics in either. */
 .tabular {
   font-variant-numeric: tabular-nums;
 }

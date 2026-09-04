@@ -37,9 +37,7 @@ export function FitnessCard({ fitness, onRetake, onSetup }: FitnessCardProps) {
       </RingProgress>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="flex flex-col">
-          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
-            {t('app.profileFitnessEyebrow')}
-          </span>
+          <span className="eyebrow">{t('app.profileFitnessEyebrow')}</span>
           <span className="text-[15px] font-semibold">
             {t('app.profileFitnessLevel', {
               n: fitness.level,
