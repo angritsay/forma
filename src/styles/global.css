@@ -16,8 +16,14 @@
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.16);
   --text: #f5f5f7;
-  --muted: #9a9aa3;
-  --muted-2: #6b6b73;
+  /*
+   * Both muted tones must clear WCAG AA (4.5:1) for body text on every surface they are used on,
+   * including the darkest one (--surface-3). Measured ratios:
+   *   --muted   on bg 8.34 · surface 7.73 · surface-2 7.03 · surface-3 6.04
+   *   --muted-2 on bg 6.46 · surface 5.98 · surface-2 5.45 · surface-3 4.68
+   */
+  --muted: #a8a8b2;
+  --muted-2: #93939d;
   --primary: #ffffff;
   --on-primary: #0b0b0d;
   --accent: #b9f3e0;
@@ -76,6 +82,8 @@ body {
   min-height: 100dvh;
   background: var(--bg);
   color: var(--text);
+  /* Long URLs, e-mails and unbroken words must wrap instead of widening the viewport. */
+  overflow-wrap: break-word;
 }
 
 /* Display headings: italic serif, tight leading, like the reference screens. */
@@ -100,11 +108,42 @@ body {
   color: #0b0b0d;
 }
 
-/* Focus ring for keyboard users. */
+/*
+ * Touch targets. Some controls are deliberately small (icon buttons, chips, segmented switches);
+ * these classes grow the *hit area* to the 44px minimum with a pseudo-element instead of growing
+ * the box, so the visual design is untouched.
+ *   .tap-target   — 44×44 minimum in both axes (icon buttons)
+ *   .tap-target-y — 44px minimum vertically only, for controls sitting side by side in a row
+ */
+.tap-target,
+.tap-target-y {
+  position: relative;
+}
+.tap-target::before,
+.tap-target-y::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  height: 100%;
+  min-height: 44px;
+  transform: translateY(-50%);
+}
+.tap-target::before {
+  left: 50%;
+  width: 100%;
+  min-width: 44px;
+  transform: translate(-50%, -50%);
+}
+.tap-target-y::before {
+  left: 0;
+  right: 0;
+}
+
+/* Focus ring for keyboard users. The outline follows the element's own radius — never override it
+   here, or pills and cards would square off while focused. */
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 8px;
 }
 
 ::selection {
@@ -113,11 +152,17 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
   }
 }

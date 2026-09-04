@@ -262,6 +262,24 @@ export type CourseNode = z.infer<typeof CourseNodeSchema>;
 export const FaqItemSchema = z.object({ q: L10nSchema, a: L10nSchema });
 export type FaqItem = z.infer<typeof FaqItemSchema>;
 
+/**
+ * External payment page. The order form sends the visitor there with their email in
+ * the query string, so the value must be an absolute `https://` URL — never a
+ * relative path and never `javascript:` / `http:` (OrderForm re-checks at runtime).
+ */
+export const HttpsUrlSchema = z
+  .string()
+  .url()
+  .refine((v) => v.toLowerCase().startsWith('https://'), {
+    message: 'must be an absolute https:// URL',
+  });
+
+export const PaymentUrlSchema = z.object({
+  ru: HttpsUrlSchema.optional(),
+  en: HttpsUrlSchema.optional(),
+});
+export type PaymentUrl = z.infer<typeof PaymentUrlSchema>;
+
 export const CourseSchema = z.object({
   id: z.string().regex(idRegex),
   order: z.number().int().positive(),
@@ -280,7 +298,7 @@ export const CourseSchema = z.object({
   accent: z.string().regex(hexRegex),
   gradient: z.tuple([z.string().regex(hexRegex), z.string().regex(hexRegex)]),
   price: z.object({ rub: z.number().nonnegative(), usd: z.number().nonnegative() }),
-  paymentUrl: OptionalL10nSchema.optional(),
+  paymentUrl: PaymentUrlSchema.optional(),
   introVideo: OptionalL10nSchema.optional(),
   workouts: z.array(WorkoutSchema).min(1),
   nodes: z.array(CourseNodeSchema).min(4),

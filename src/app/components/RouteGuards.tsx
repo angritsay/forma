@@ -15,7 +15,9 @@ export function RequireAuth() {
   const location = useLocation();
   if (status === 'booting') return <BootScreen />;
   if (status === 'signed_out') {
-    return <Navigate to="/auth" replace state={{ from: location.pathname } satisfies FromState} />;
+    // Keep the query string too, so e.g. /leaderboard?course=x comes back intact.
+    const from = `${location.pathname}${location.search}`;
+    return <Navigate to="/auth" replace state={{ from } satisfies FromState} />;
   }
   return <Outlet />;
 }
@@ -67,7 +69,7 @@ export function RedirectIfAuthed() {
   if (status === 'booting') return <BootScreen />;
   if (status === 'signed_in') {
     const from = (location.state as FromState | null)?.from;
-    return <Navigate to={from && from !== '/auth' ? from : '/'} replace />;
+    return <Navigate to={from && !from.startsWith('/auth') ? from : '/'} replace />;
   }
   return <Outlet />;
 }

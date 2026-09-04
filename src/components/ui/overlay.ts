@@ -1,21 +1,37 @@
 /** Shared hooks for overlays (Sheet, Modal): Esc to close, focus trap, body scroll lock. */
-import { useEffect, useState, type RefObject } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+/**
+ * Every open overlay in mount order. Esc must close only the topmost one — without this a Sheet
+ * opened from inside a Modal would tear down both at once.
+ */
+const escapeStack: symbol[] = [];
+
 export function useEscape(active: boolean, onClose: () => void): void {
+  // The handler is read through a ref so re-created `onClose` callbacks do not re-order the stack.
+  const close = useRef(onClose);
+  close.current = onClose;
+
   useEffect(() => {
     if (!active) return;
+    const token = Symbol('overlay');
+    escapeStack.push(token);
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        onClose();
-      }
+      if (e.key !== 'Escape') return;
+      if (escapeStack[escapeStack.length - 1] !== token) return;
+      e.stopPropagation();
+      close.current();
     };
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [active, onClose]);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      const i = escapeStack.lastIndexOf(token);
+      if (i >= 0) escapeStack.splice(i, 1);
+    };
+  }, [active]);
 }
 
 /** Keeps Tab focus inside `ref` while active; restores the previously focused element after. */
@@ -26,7 +42,12 @@ export function useFocusTrap(ref: RefObject<HTMLElement | null>, active: boolean
     if (!container) return;
     const previous = document.activeElement as HTMLElement | null;
 
-    const focusables = () => Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE));
+    // Hidden controls (a collapsed section, an element behind `display:none`) are skipped so Tab
+    // never appears to stall on an invisible target.
+    const focusables = () =>
+      Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+        (el) => el.offsetParent !== null || el === document.activeElement,
+      );
     const initial = container.querySelector<HTMLElement>('[data-autofocus]') ?? focusables()[0];
     (initial ?? container).focus({ preventScroll: true });
 
@@ -52,7 +73,8 @@ export function useFocusTrap(ref: RefObject<HTMLElement | null>, active: boolean
     document.addEventListener('keydown', onKey);
     return () => {
       document.removeEventListener('keydown', onKey);
-      previous?.focus?.({ preventScroll: true });
+      // Focus goes back to whatever opened the overlay, unless that element is gone.
+      if (previous?.isConnected) previous.focus({ preventScroll: true });
     };
   }, [ref, active]);
 }

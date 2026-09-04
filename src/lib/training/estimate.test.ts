@@ -9,6 +9,7 @@ import {
   profile,
   workout,
 } from './fixtures.test-helpers';
+import { buildPlayerSteps } from './player';
 import { prescribeWorkout } from './prescribe';
 import type { PrescribeOptions } from './types';
 
@@ -54,7 +55,7 @@ describe('estimateDuration', () => {
     expect(e.workSec).toBe(420);
   });
 
-  it('tabata and interval: rounds × (work + rest) × items', () => {
+  it('tabata and interval: rounds × work × items plus the rests the player actually plays', () => {
     const t = estimateDuration(
       one({
         id: 't',
@@ -65,9 +66,10 @@ describe('estimateDuration', () => {
         items: [item('plank', { seconds: 20 })],
       }),
     );
-    expect(t.totalSec).toBe(260);
+    // 8 × 20 s work, 7 rests of 10 s (no trailing rest), 20 s intro
+    expect(t.totalSec).toBe(250);
     expect(t.workSec).toBe(160);
-    expect(t.restSec).toBe(80);
+    expect(t.restSec).toBe(70);
     const t2 = estimateDuration(
       one({
         id: 't',
@@ -78,7 +80,8 @@ describe('estimateDuration', () => {
         items: [item('plank', { seconds: 20 }), item('air_squat', { reps: 10 })],
       }),
     );
-    expect(t2.totalSec).toBe(500);
+    // two Tabatas: 2 × 8 × 20 s work, 2 × 7 rests + one 10 s gap between them
+    expect(t2.totalSec).toBe(490);
     const i = estimateDuration(
       one({
         id: 'i',
@@ -89,7 +92,58 @@ describe('estimateDuration', () => {
         items: [item('run', { meters: 100 }), item('burpee', { reps: 5 })],
       }),
     );
-    expect(i.totalSec).toBe(500);
+    // 8 work intervals of 40 s, 7 rests of 20 s
+    expect(i.totalSec).toBe(480);
+  });
+
+  it('uses the format defaults when a tabata block omits work and rest seconds', () => {
+    const d = estimateDuration(
+      one({ id: 't', format: 'tabata', rounds: 8, items: [item('air_squat', { reps: 10 })] }),
+    );
+    expect(d.workSec).toBe(160);
+    expect(d.restSec).toBe(70);
+  });
+
+  it('never counts a rest the player skips (trailing rests, last set, last round)', () => {
+    const w = workout({
+      id: 'w',
+      blocks: [
+        block({
+          id: 's',
+          format: 'sets',
+          sets: 3,
+          restBetweenSetsSec: 60,
+          items: [
+            item('push_up', { reps: 10, restAfterSec: 30 }),
+            item('air_squat', { reps: 15, restAfterSec: 45 }),
+          ],
+        }),
+        block({
+          id: 't',
+          format: 'tabata',
+          rounds: 8,
+          workSec: 20,
+          restSec: 10,
+          restBetweenRoundsSec: 60,
+          items: [item('air_squat', { reps: 10 }), item('burpee', { reps: 5 })],
+        }),
+        block({
+          id: 'i',
+          format: 'interval',
+          rounds: 4,
+          workSec: 40,
+          restSec: 20,
+          items: [item('run', { meters: 100 }), item('burpee', { reps: 5 })],
+        }),
+      ],
+    });
+    const p = prescribe(w);
+    const played = buildPlayerSteps(p)
+      .filter((s) => s.kind === 'rest')
+      .reduce((total, s) => total + (s.kind === 'rest' ? s.durationSec : 0), 0);
+    // 3 × 30 + 2 × 60 | 2 × 7 × 10 + 60 gap | 7 × 20
+    expect(played).toBe(210 + 200 + 140);
+    expect(estimateDuration(p).restSec).toBe(played);
   });
 
   it('fortime: estimated work × 1.15 + rest between rounds, capped by durationSec', () => {

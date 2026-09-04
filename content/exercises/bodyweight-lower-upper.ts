@@ -35,7 +35,7 @@ export const EXERCISES_A: ExerciseInput[] = [
     ],
     cues: [
       { ru: 'Колени в стороны', en: 'Knees out' },
-      { ru: 'Вес на пятках', en: 'Weight in the heels' },
+      { ru: 'Вес на всей стопе, пятки прижаты', en: 'Weight through the whole foot, heels down' },
       { ru: 'Грудь вперёд', en: 'Chest up' },
       { ru: 'Полное разгибание наверху', en: 'Stand all the way up' },
     ],
@@ -125,8 +125,8 @@ export const EXERCISES_A: ExerciseInput[] = [
     },
     howTo: [
       {
-        ru: 'Прислонись спиной к стене, стопы на ширине плеч, вынеси их вперёд примерно на полшага.',
-        en: 'Stand with your back against a wall, feet shoulder-width apart and about half a step in front of you.',
+        ru: 'Прислонись спиной к стене, стопы на ширине плеч, вынеси их вперёд на 50–60 см — примерно на длину бедра.',
+        en: 'Stand with your back against a wall, feet shoulder-width apart and 50–60 cm in front of you — roughly the length of your thigh.',
       },
       {
         ru: 'Скользи спиной вниз по стене, пока бёдра не станут параллельны полу, а колени не согнутся под прямым углом.',

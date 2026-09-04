@@ -318,8 +318,8 @@ const WORKOUTS: WorkoutInput[] = [
     name: l('Наклон и корпус: основа', 'Hinge & core: the base'),
     focus: l('Наклон, ягодицы и задняя поверхность бедра', 'Hinge, glutes and the posterior chain'),
     description: l(
-      'День наклона: учимся включать ягодицы и заднюю поверхность бедра — мостик, супермен и обратные выпады. Затем короткий круг на корпус. Это фундамент для становой тяги и махов гирей, если когда-нибудь до них дойдёшь.',
-      'Hinge day: we learn to switch on the glutes and hamstrings — bridges, supermans and reverse lunges — then a short core circuit. This is the foundation for deadlifts and kettlebell swings, if you ever get there.',
+      'День наклона: учимся включать ягодицы и заднюю поверхность бедра — мостик, супермен и обратные выпады. Затем короткий круг на корпус. Это фундамент для становой тяги и махов гирей — к ним ты придёшь в следующих курсах.',
+      'Hinge day: we learn to switch on the glutes and hamstrings — bridges, supermans and reverse lunges — then a short core circuit. This is the foundation for the deadlifts and kettlebell swings waiting for you in the next courses.',
     ),
     basePoints: 100,
     tags: ['hinge', 'core', 'technique', 'beginner'],
@@ -703,7 +703,7 @@ const WORKOUTS: WorkoutInput[] = [
         id: 'mc_benchmark_four_rounds',
         type: 'metcon',
         format: 'fortime',
-        rounds: 4,
+        sets: 4,
         durationSec: 720,
         title: l('4 круга на время', '4 rounds for time'),
         description: l(
@@ -1181,8 +1181,8 @@ export const COURSE_START: CourseInput = {
     {
       q: l('Сколько времени занимает тренировка?', 'How long is a session?'),
       a: l(
-        'В среднем около 22 минут вместе с разминкой и заминкой. Самые короткие — тест и EMOM, самые длинные — дни с AMRAP и круговая, около 25 минут. Перед стартом приложение показывает расчётное время для каждого режима сложности.',
-        'About 22 minutes on average including warm-up and cool-down. The test and the EMOM are the shortest; AMRAP and circuit days are the longest at around 25 minutes. Before you start, the app shows the estimated time for each difficulty option.',
+        'В среднем около 22 минут вместе с разминкой и заминкой. Самая короткая тренировка — бенчмарк на третьей неделе, около 18 минут; самые длинные — дни с AMRAP и круговая, около 25 минут. Перед стартом приложение показывает расчётное время для каждого режима сложности.',
+        'About 22 minutes on average including warm-up and cool-down. The shortest session is the week-three benchmark at around 18 minutes; the longest are the AMRAP and circuit days at around 25. Before you start, the app shows the estimated time for each difficulty option.',
       ),
     },
     {

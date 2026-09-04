@@ -362,22 +362,31 @@ function RemoteSummary({ sessionId }: { sessionId: string }) {
   const [row, setRow] = useState<WorkoutSessionRow | null>(null);
   const [error, setError] = useState<'not_found' | 'network' | 'unknown' | null>(null);
   const [loading, setLoading] = useState(true);
+  const [attempt, setAttempt] = useState(0);
 
-  const load = useCallback(() => {
+  // A response for a previous session id (or a superseded retry) must never win.
+  useEffect(() => {
+    let alive = true;
     setLoading(true);
     setError(null);
     getSession(sessionId)
-      .then((r) => setRow(r))
+      .then((r) => {
+        if (alive) setRow(r);
+      })
       .catch((e: unknown) => {
+        if (!alive) return;
         const code = isAppError(e) ? e.code : 'unknown';
         setError(code === 'not_found' ? 'not_found' : code === 'network' ? 'network' : 'unknown');
       })
-      .finally(() => setLoading(false));
-  }, [sessionId]);
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [sessionId, attempt]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  const load = useCallback(() => setAttempt((n) => n + 1), []);
 
   const header = <TopBar title={t('app.summaryEyebrow')} back="/" />;
 

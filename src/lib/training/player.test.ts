@@ -197,6 +197,23 @@ describe('buildPlayerSteps — timed formats', () => {
     expect(w.map((x) => x.mode)).toEqual(['timer', 'timer']);
     expect(w.map((x) => x.durationSec)).toEqual([60, 120]);
     expect(w.map((x) => x.target)).toEqual([60, 120]);
+    // Flagged so the UI records a score (reps held / reps done) instead of a completion ratio.
+    expect(w.every((x) => x.isTest === true)).toBe(true);
+    const normal = works(
+      stepsFor({ id: 's', format: 'sets', sets: 1, items: [item('plank', { seconds: 30 })] }),
+    );
+    expect(normal.every((x) => x.isTest === undefined)).toBe(true);
+  });
+
+  it('amrapExpectedRounds stays a positive integer when item estimates are broken', () => {
+    const p = prescribeWorkout(FULL_WORKOUT, opts, fixtureLookup);
+    const amrap = p.blocks[2]!;
+    const broken = {
+      ...amrap,
+      items: amrap.items.map((i) => ({ ...i, estimatedSec: Number.NaN })),
+    };
+    expect(amrapExpectedRounds(broken)).toBe(1);
+    expect(amrapExpectedRounds({ ...amrap, durationSec: Number.NaN })).toBe(1);
   });
 
   it('carries block metadata into the intro and is deterministic', () => {

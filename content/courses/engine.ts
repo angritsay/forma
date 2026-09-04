@@ -13,6 +13,11 @@
  *
  * Numbers are authored for a level-2 athlete at scale 1.0; the training engine scales
  * every block marked `scalable` by the athlete's course scale and difficulty choice.
+ *
+ * Engine facts this file relies on: a `fortime` block takes its round count from `sets`
+ * (omitted = one pass); an `emom` block rotates its items minute by minute (four items over
+ * 12 minutes = three cycles); a `tabata` block runs all `rounds` of item 1, then item 2, so
+ * two items × 4 rounds = the eight 20/10 intervals of one four-minute Tabata.
  */
 import type { CourseInput, L10n, WorkoutInput } from '@/content/schema';
 
@@ -425,20 +430,20 @@ const W_HINGE_CORE_B: WorkoutInput = {
   blocks: [
     warmup('hcb_warmup', [
       { exerciseId: 'cat_cow', reps: 8 },
-      { exerciseId: 'bird_dog', reps: 12 },
-      { exerciseId: 'worlds_greatest_stretch', reps: 4, perSide: true },
+      { exerciseId: 'bird_dog', reps: 10 },
+      { exerciseId: 'worlds_greatest_stretch', reps: 3, perSide: true },
       { exerciseId: 'jog_in_place', seconds: 45 },
     ]),
     {
       id: 'hcb_strength',
       type: 'strength',
       format: 'sets',
-      sets: 4,
+      sets: 3,
       restBetweenSetsSec: 60,
       title: { ru: 'Силовой блок', en: 'Strength' },
       description: {
-        ru: 'Четыре подхода. Слабую ногу делай первой — так ты не «добьёшь» её уставшим.',
-        en: 'Four sets. Start each unilateral move with your weaker leg so you never do it tired.',
+        ru: 'Три подхода, как и раньше, но мостик переехал на одну ногу, а повторений на ногу стало больше. Слабую ногу делай первой — так ты не «добьёшь» её уставшим.',
+        en: 'Three sets as before, but the bridge has moved to one leg and there are more reps per leg. Start each unilateral move with your weaker leg so you never do it tired.',
       },
       items: [
         { exerciseId: 'single_leg_glute_bridge', reps: 10, perSide: true, restAfterSec: 15 },
@@ -451,12 +456,12 @@ const W_HINGE_CORE_B: WorkoutInput = {
       id: 'hcb_core',
       type: 'core',
       format: 'circuit',
-      sets: 3,
+      sets: 2,
       restBetweenRoundsSec: 30,
       title: { ru: 'Кор', en: 'Core' },
       description: {
-        ru: 'Три круга без спешки. В лодочке поясница вжата в пол; в твисте поворачивай грудь, а не только руки.',
-        en: 'Three unhurried rounds. Lower back glued to the floor in the hollow hold; rotate the chest, not just the arms, in the twist.',
+        ru: 'Два круга без спешки — четыре упражнения подряд, это больше работы на кор, чем кажется. В лодочке поясница вжата в пол; в твисте поворачивай грудь, а не только руки.',
+        en: 'Two unhurried rounds — four exercises back to back is more core work than it looks. Lower back glued to the floor in the hollow hold; rotate the chest, not just the arms, in the twist.',
       },
       items: [
         { exerciseId: 'hollow_hold', seconds: 30 },
@@ -512,12 +517,12 @@ const W_HINGE_CORE_C: WorkoutInput = {
       id: 'hcc_core',
       type: 'core',
       format: 'circuit',
-      sets: 3,
+      sets: 2,
       restBetweenRoundsSec: 30,
       title: { ru: 'Кор', en: 'Core' },
       description: {
-        ru: 'Три круга. В ножницах ноги низко над полом, но поясница не отрывается — если отрывается, подними ноги выше.',
-        en: 'Three rounds. In flutter kicks keep the legs low but the lower back down — if it lifts, raise the legs higher.',
+        ru: 'Два круга из четырёх упражнений. В ножницах ноги низко над полом, но поясница не отрывается — если отрывается, подними ноги выше.',
+        en: 'Two rounds of four exercises. In flutter kicks keep the legs low but the lower back down — if it lifts, raise the legs higher.',
       },
       items: [
         { exerciseId: 'hollow_hold', seconds: 30 },
@@ -653,8 +658,8 @@ const W_ENGINE_TABATA: WorkoutInput = {
   name: { ru: 'Двигатель: табата', en: 'Engine: Tabata' },
   focus: { ru: 'Интервалы 20/10', en: '20/10 intervals' },
   description: {
-    ru: 'Три табаты по четыре минуты: 20 секунд работы, 10 отдыха, восемь раундов, два упражнения чередуются. Первая — прыжки и бёрпи, вторая — отжимания и скалолаз, третья — бег с высоким коленом и конькобежец. Между табатами отдышись минуту. Число рядом с упражнением — ориентир на один 20-секундный раунд.',
-    en: 'Three four-minute Tabatas: 20 seconds on, 10 off, eight rounds, two exercises alternating. The first is jumps and burpees, the second push-ups and mountain climbers, the third high knees and skaters. Catch your breath for a minute between Tabatas. The number next to each exercise is the target for one 20-second round.',
+    ru: 'Три табаты по четыре минуты: 20 секунд работы, 10 секунд отдыха, восемь раундов — четыре на первое упражнение, четыре на второе. Первая табата — прыжковый присед и бёрпи, вторая — отжимания и скалолаз, третья — бег с высоким коленом и конькобежец. Между табатами отдышись минуту. Число рядом с упражнением — ориентир на один 20-секундный раунд.',
+    en: 'Three four-minute Tabatas: 20 seconds on, 10 seconds off, eight rounds — four on the first exercise, four on the second. The first Tabata is jump squats and burpees, the second push-ups and mountain climbers, the third high knees and skaters. Catch your breath for a minute between Tabatas. The number next to each exercise is the target for one 20-second round.',
   },
   basePoints: 100,
   tags: ['metcon', 'tabata', 'cardio'],
@@ -671,11 +676,11 @@ const W_ENGINE_TABATA: WorkoutInput = {
       format: 'tabata',
       workSec: 20,
       restSec: 10,
-      rounds: 8,
+      rounds: 4,
       title: { ru: 'Табата 1: ноги', en: 'Tabata 1: legs' },
       description: {
-        ru: 'Прыжковый присед и бёрпи по очереди, 8 раундов по 20 секунд.',
-        en: 'Jump squats and burpees alternating, 8 rounds of 20 seconds.',
+        ru: 'Четыре раунда прыжкового приседа, затем четыре раунда бёрпи: 20 секунд работы, 10 отдыха. Всего восемь раундов — четыре минуты.',
+        en: 'Four rounds of jump squats, then four rounds of burpees: 20 seconds on, 10 off. Eight rounds in total — four minutes.',
       },
       items: [
         { exerciseId: 'jump_squat', reps: 8 },
@@ -688,11 +693,11 @@ const W_ENGINE_TABATA: WorkoutInput = {
       format: 'tabata',
       workSec: 20,
       restSec: 10,
-      rounds: 8,
+      rounds: 4,
       title: { ru: 'Табата 2: жим и кор', en: 'Tabata 2: push and core' },
       description: {
-        ru: 'Отжимания и скалолаз по очереди. Перед стартом отдохни минуту после первой табаты.',
-        en: 'Push-ups and mountain climbers alternating. Take a minute after the first Tabata before you start.',
+        ru: 'Четыре раунда отжиманий, затем четыре раунда скалолаза. Перед стартом отдышись минуту после первой табаты.',
+        en: 'Four rounds of push-ups, then four rounds of mountain climbers. Take a minute to catch your breath after the first Tabata before you start.',
       },
       items: [
         { exerciseId: 'push_up', reps: 8 },
@@ -705,11 +710,11 @@ const W_ENGINE_TABATA: WorkoutInput = {
       format: 'tabata',
       workSec: 20,
       restSec: 10,
-      rounds: 8,
+      rounds: 4,
       title: { ru: 'Табата 3: двигатель', en: 'Tabata 3: engine' },
       description: {
-        ru: 'Бег с высоким коленом и конькобежец. Последняя табата — держи высоту колена и ширину прыжка до конца.',
-        en: 'High knees and skaters. Last Tabata — keep the knees high and the jumps wide to the end.',
+        ru: 'Четыре раунда бега с высоким коленом, затем четыре раунда конькобежца. Последняя табата — держи высоту колена и ширину прыжка до конца.',
+        en: 'Four rounds of high knees, then four rounds of skaters. Last Tabata — keep the knees high and the jumps wide to the end.',
       },
       items: [
         { exerciseId: 'high_knees', seconds: 20 },
@@ -799,7 +804,7 @@ const W_CHIPPER_A: WorkoutInput = {
       id: 'cha_fortime',
       type: 'metcon',
       format: 'fortime',
-      rounds: 3,
+      sets: 3,
       durationSec: 900,
       title: { ru: '3 круга на время', en: '3 rounds for time' },
       description: {
@@ -844,7 +849,7 @@ const W_CHIPPER_B: WorkoutInput = {
       id: 'chb_fortime',
       type: 'metcon',
       format: 'fortime',
-      rounds: 4,
+      sets: 4,
       durationSec: 1200,
       title: { ru: '4 круга на время', en: '4 rounds for time' },
       description: {
@@ -948,7 +953,7 @@ const W_BENCH_BURPEES: WorkoutInput = {
       id: 'bb_fortime',
       type: 'metcon',
       format: 'fortime',
-      rounds: 1,
+      sets: 1,
       durationSec: 720,
       title: { ru: '100 бёрпи на время', en: '100 burpees for time' },
       description: {
@@ -1125,7 +1130,7 @@ const NODES: NodeInput[] = [
     kind: 'workout',
     workoutId: 'w_hinge_core_b',
     title: T_HINGE_CORE,
-    subtitle: { ru: '4 подхода · на одной ноге', en: '4 sets · single-leg' },
+    subtitle: { ru: '3 подхода · на одной ноге', en: '3 sets · single-leg' },
   },
   {
     id: 'w3d4_engine',
@@ -1401,8 +1406,8 @@ export const COURSE_ENGINE: CourseInput = {
     {
       q: { ru: 'Сколько времени занимает тренировка?', en: 'How long is a session?' },
       a: {
-        ru: 'В среднем 30 минут вместе с разминкой и заминкой: силовые дни — 25–35 минут, «двигатель» — около 25, чипперы и бенчмарки — до 35. Перед стартом приложение показывает расчётную длительность именно для твоего объёма.',
-        en: 'About 30 minutes on average including warm-up and cool-down: strength days run 25–35 minutes, engine days about 25, chippers and benchmarks up to 35. Before you start, the app shows the estimated duration for your own volume.',
+        ru: 'В среднем около 30 минут вместе с разминкой и заминкой: силовые дни — 27–37 минут, «двигатель» — 24–30, чипперы, бенчмарки и лёгкий день — 20–30. Перед стартом приложение показывает расчётную длительность именно для твоего объёма.',
+        en: 'About 30 minutes on average including warm-up and cool-down: strength days run 27–37 minutes, engine days 24–30, chippers, benchmarks and the easy day 20–30. Before you start, the app shows the estimated duration for your own volume.',
       },
     },
     {

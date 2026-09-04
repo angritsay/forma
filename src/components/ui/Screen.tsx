@@ -16,6 +16,9 @@ export interface ScreenProps {
 /**
  * Safe-area aware screen container. The app shell exposes `--nav-inset` (height of the bottom
  * nav, 0 when hidden) so content and the sticky footer clear it.
+ *
+ * The content area is the app's `<main>` landmark — screens are never nested, so there is exactly
+ * one per route.
  */
 export function Screen({
   header,
@@ -34,7 +37,7 @@ export function Screen({
       ) : (
         <div className="h-[env(safe-area-inset-top)]" />
       )}
-      <div
+      <main
         className={clsx(
           'flex-1 pb-[calc(var(--nav-inset,0px)+env(safe-area-inset-bottom)+24px)]',
           padded && 'px-5',
@@ -42,7 +45,7 @@ export function Screen({
         )}
       >
         {children}
-      </div>
+      </main>
       {footer ? (
         <div className="sticky bottom-[var(--nav-inset,0px)] z-20 bg-linear-to-t from-bg via-bg/90 to-transparent px-5 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-6">
           {footer}

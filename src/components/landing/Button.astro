@@ -21,8 +21,9 @@ const {
   ariaLabel,
 } = Astro.props;
 
+// `min-h-11` keeps every button at the 44px minimum touch target on coarse pointers.
 const base =
-  'inline-flex items-center justify-center gap-2 rounded-pill font-semibold transition focus-visible:outline-accent';
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-pill font-semibold transition focus-visible:outline-accent';
 const sizes = { md: 'px-5 py-2.5 text-sm', lg: 'px-7 py-3.5 text-base' };
 const variants = {
   primary: 'bg-primary text-on-primary hover:opacity-90',

@@ -21,8 +21,9 @@ const VARIANT: Record<IconButtonVariant, string> = {
   'on-art': 'bg-black/10 text-on-primary hover:bg-black/20',
 };
 
+// `sm` is 36px by design; `tap-target` (global.css) grows its hit area to the 44px minimum.
 const SIZE: Record<IconButtonSize, string> = {
-  sm: 'h-9 w-9',
+  sm: 'h-9 w-9 tap-target',
   md: 'h-11 w-11',
 };
 

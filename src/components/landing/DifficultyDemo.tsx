@@ -84,7 +84,7 @@ export default function DifficultyDemo({
   if (!selected) return null;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
       <div className="rounded-card border border-border bg-surface p-5 md:p-7">
         <p className="text-sm text-muted">{workoutLabel}</p>
 
@@ -110,7 +110,7 @@ export default function DifficultyDemo({
               >
                 {isRec && (
                   <span
-                    className={`rounded-pill px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                    className={`rounded-pill px-2 py-0.5 text-xs font-semibold uppercase ${
                       active ? 'bg-on-primary text-primary' : 'bg-accent text-on-primary'
                     }`}
                   >
@@ -118,17 +118,17 @@ export default function DifficultyDemo({
                   </span>
                 )}
                 <span className="font-semibold">{c.label}</span>
-                <span className={`text-xs ${active ? 'text-on-primary/70' : 'text-muted'}`}>
+                <span className={`text-sm ${active ? 'text-on-primary/70' : 'text-muted'}`}>
                   {labels.duration}: <span className="tabular">{c.duration}</span>
                 </span>
-                <span className={`text-xs ${active ? 'text-on-primary/70' : 'text-muted'}`}>
+                <span className={`text-sm ${active ? 'text-on-primary/70' : 'text-muted'}`}>
                   {labels.points}: <span className="tabular">{c.points}</span>
                 </span>
               </button>
             );
           })}
         </div>
-        <p className="mt-3 text-xs text-muted">{recommendedReason}</p>
+        <p className="mt-3 text-sm text-muted">{recommendedReason}</p>
 
         <h3 className="mt-6 text-sm font-semibold uppercase tracking-wide text-muted">
           {labels.planTitle}
@@ -187,7 +187,7 @@ export default function DifficultyDemo({
         >
           {scenario ? (
             <>
-              <p className="text-xs uppercase tracking-wide text-muted">{labels.nextTime}</p>
+              <p className="text-sm uppercase tracking-wide text-muted">{labels.nextTime}</p>
               <p
                 className={`font-display mt-1 text-4xl ${
                   scenario.deltaPercent > 0
@@ -199,7 +199,7 @@ export default function DifficultyDemo({
               >
                 {fmtDelta(scenario.deltaPercent)}
               </p>
-              <p className="mt-1 text-xs text-muted tabular">
+              <p className="mt-1 text-sm text-muted tabular">
                 {labels.scaleNow.replace('{scale}', String(scenario.scale))}
               </p>
               <p className="mt-3 text-sm">{scenario.reason}</p>

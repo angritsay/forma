@@ -1460,8 +1460,8 @@ export const COURSE_KETTLEBELL: CourseInput = {
     {
       q: { ru: 'Сколько времени занимает тренировка?', en: 'How long is a session?' },
       a: {
-        ru: 'В среднем 32 минуты вместе с разминкой и заминкой: силовые дни и «Школа маха» — 28–37 минут, метаболические дни — 25–30, «Лёгкий поток» — около 20, бенчмарк — 20–25. Три тренировки в неделю; в последней неделе добавляется короткий технический день перед повторным тестом. Перед стартом приложение показывает расчётную длительность именно для твоего объёма.',
-        en: 'About 32 minutes on average including warm-up and cool-down: strength days and Swing school run 28–37 minutes, metabolic days 25–30, Easy flow about 20, the benchmark 20–25. Three sessions a week; the final week adds a short technique day before the retest. Before you start, the app shows the estimated duration for your own volume.',
+        ru: 'Около получаса вместе с разминкой и заминкой: силовые дни и «Школа маха» — 27–38 минут, метаболические дни — 21–29, «Лёгкий поток» — около 20, бенчмарк — около 18: он короткий, но самый тяжёлый в курсе. Три тренировки в неделю; в последней неделе добавляется короткий технический день перед повторным тестом. Перед стартом приложение показывает расчётную длительность именно для твоего объёма.',
+        en: 'About half an hour including warm-up and cool-down: strength days and Swing school run 27–38 minutes, metabolic days 21–29, Easy flow about 20, and the benchmark about 18 — short, but the hardest session of the course. Three sessions a week; the final week adds a short technique day before the retest. Before you start, the app shows the estimated duration for your own volume.',
       },
     },
     {

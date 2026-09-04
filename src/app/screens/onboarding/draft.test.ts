@@ -9,9 +9,13 @@ import {
   loadDraft,
   ONBOARDING_DRAFT_KEY,
   parseIntField,
+  parseWeightField,
+  resumeStepIndex,
   saveDraft,
   STEP_IDS,
   toggleIn,
+  WEIGHT_MAX_KG,
+  WEIGHT_MIN_KG,
   type OnboardingDraft,
 } from './draft';
 
@@ -155,5 +159,45 @@ describe('onboarding draft', () => {
     expect(toggleIn(list, 'c')).toEqual(['a', 'b', 'c']);
     expect(toggleIn(list, 'a')).toEqual(['b']);
     expect(list).toEqual(['a', 'b']);
+  });
+});
+
+describe('parseWeightField', () => {
+  it('accepts a weight inside the range, comma decimals included', () => {
+    expect(parseWeightField('70')).toEqual({ weightKg: 70, invalid: false });
+    expect(parseWeightField(' 62,5 ')).toEqual({ weightKg: 62.5, invalid: false });
+    expect(parseWeightField('80.44')).toEqual({ weightKg: 80.4, invalid: false });
+  });
+
+  it('treats an empty field as "not answered", never as an error', () => {
+    expect(parseWeightField('')).toEqual({ invalid: false });
+    expect(parseWeightField('   ')).toEqual({ invalid: false });
+  });
+
+  it('reports out-of-range and non-numeric input without storing a weight', () => {
+    expect(parseWeightField('7')).toEqual({ invalid: true });
+    expect(parseWeightField(String(WEIGHT_MIN_KG - 1))).toEqual({ invalid: true });
+    expect(parseWeightField(String(WEIGHT_MAX_KG + 1))).toEqual({ invalid: true });
+    expect(parseWeightField('abc')).toEqual({ invalid: true });
+  });
+
+  it('keeps the range bounds themselves valid', () => {
+    expect(parseWeightField(String(WEIGHT_MIN_KG)).weightKg).toBe(WEIGHT_MIN_KG);
+    expect(parseWeightField(String(WEIGHT_MAX_KG)).weightKg).toBe(WEIGHT_MAX_KG);
+  });
+});
+
+describe('resumeStepIndex', () => {
+  it('maps "tests" to the first self-test and step ids to their index', () => {
+    expect(resumeStepIndex('tests')).toBe(STEP_IDS.indexOf('testPushups'));
+    expect(resumeStepIndex('goal')).toBe(STEP_IDS.indexOf('goal'));
+    expect(resumeStepIndex('language')).toBe(0);
+  });
+
+  it('ignores a missing or unknown parameter', () => {
+    expect(resumeStepIndex(null)).toBeNull();
+    expect(resumeStepIndex(undefined)).toBeNull();
+    expect(resumeStepIndex('')).toBeNull();
+    expect(resumeStepIndex('nope')).toBeNull();
   });
 });

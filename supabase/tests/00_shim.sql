@@ -6,6 +6,7 @@
 --   psql -v ON_ERROR_STOP=1 -d forma_test -f supabase/migrations/0001_init.sql
 --   psql -v ON_ERROR_STOP=1 -d forma_test -f supabase/migrations/0002_functions.sql
 --   psql -v ON_ERROR_STOP=1 -d forma_test -f supabase/migrations/0003_storage.sql
+--   psql -v ON_ERROR_STOP=1 -d forma_test -f supabase/migrations/0004_content_seed.sql
 --   psql -v ON_ERROR_STOP=1 -d forma_test -f supabase/tests/10_smoke.sql   # prints ALL TESTS PASSED
 -- Never run the shim against a real Supabase project: it exists only to stand in
 -- for the auth/storage schemas Supabase already provides.
@@ -18,12 +19,21 @@ do $$ begin
 end $$;
 
 create schema if not exists auth;
+-- The columns public.current_email() relies on exist in the real GoTrue schema too.
+-- email_confirmed_at defaults to now() here so a test user is "confirmed" unless a
+-- test explicitly says otherwise.
 create table if not exists auth.users (
   id uuid primary key default gen_random_uuid(),
   email varchar(255),
+  email_confirmed_at timestamptz default now(),
+  banned_until timestamptz,
+  deleted_at timestamptz,
   raw_user_meta_data jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
+alter table auth.users add column if not exists email_confirmed_at timestamptz default now();
+alter table auth.users add column if not exists banned_until timestamptz;
+alter table auth.users add column if not exists deleted_at timestamptz;
 
 -- Supabase reads JWT claims from a GUC; the tests set request.jwt.claims explicitly.
 create or replace function auth.uid() returns uuid language sql stable as $$
@@ -62,3 +72,9 @@ $$;
 grant usage on schema storage to anon, authenticated, service_role;
 grant select on storage.buckets to anon, authenticated, service_role;
 grant select, insert, update, delete on storage.objects to anon, authenticated, service_role;
+
+-- Supabase ships this default privilege, which is why `revoke execute … from public`
+-- alone does not take EXECUTE away from the API roles. Mirroring it here makes the
+-- local run reflect production: the migrations must revoke from anon/authenticated
+-- explicitly (0001_init.sql turns the default off first).
+alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;

@@ -168,7 +168,7 @@ const jsonLd = [
     title={t(locale, 'landing.pathTitle')}
     intro={t(locale, 'landing.pathIntro')}
   >
-    <div class="grid items-start gap-8 lg:grid-cols-[320px_1fr] lg:gap-14">
+    <div class="grid items-start gap-8 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-14">
       {
         demoCourse && (
           <PhoneFrame label={`${l(demoCourse.name, locale)} — ${t(locale, 'landing.pathEyebrow')}`}>

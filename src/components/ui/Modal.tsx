@@ -47,9 +47,12 @@ export function Modal({
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+      {/* Backdrop: a pointer shortcut only. It is hidden from assistive tech and from the tab
+          order because the dialog already exposes a real cancel button (and Esc). */}
       <button
         type="button"
-        aria-label={labels.close}
+        aria-hidden="true"
+        tabIndex={-1}
         onClick={onClose}
         className={clsx(
           'absolute inset-0 bg-black/60 transition-opacity duration-200',
@@ -58,7 +61,9 @@ export function Modal({
       />
       <div
         ref={ref}
-        role="alertdialog"
+        // `alertdialog` is only correct when the dialog asks for a decision; a plain message
+        // dialog is a `dialog`.
+        role={onConfirm ? 'alertdialog' : 'dialog'}
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={description ? descId : undefined}

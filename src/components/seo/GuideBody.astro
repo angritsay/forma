@@ -9,9 +9,32 @@ interface Props {
 const { class: className = '' } = Astro.props;
 ---
 
-<div class:list={['guide-body', className]}>
+<div class:list={['guide-body', className]} data-guide-body>
   <slot />
 </div>
+
+<script>
+  // Markdown tables can be wider than a phone. Without JS the table itself scrolls (display:block),
+  // which costs its table semantics; with JS we move the scrolling to a focusable wrapper so
+  // keyboard users can pan it and the table stays a real table for assistive technology.
+  // The wrapper is only given a region role when the table carries a caption to name it with.
+  for (const body of document.querySelectorAll<HTMLElement>('[data-guide-body]')) {
+    for (const table of body.querySelectorAll('table')) {
+      if (table.parentElement?.dataset.tableScroll !== undefined) continue;
+      const wrap = document.createElement('div');
+      wrap.dataset.tableScroll = '';
+      wrap.className = 'guide-table-scroll';
+      wrap.tabIndex = 0;
+      const name = table.querySelector('caption')?.textContent?.trim();
+      if (name) {
+        wrap.setAttribute('role', 'region');
+        wrap.setAttribute('aria-label', name);
+      }
+      table.replaceWith(wrap);
+      wrap.append(table);
+    }
+  }
+</script>
 
 <style>
   .guide-body {
@@ -19,6 +42,22 @@ const { class: className = '' } = Astro.props;
     line-height: 1.7;
     color: var(--text);
     max-width: 72ch;
+    /* Long URLs and identifiers in prose must wrap rather than widen the page. */
+    overflow-wrap: break-word;
+  }
+  .guide-body :global(.guide-table-scroll) {
+    overflow-x: auto;
+    margin: 0 0 1.5rem;
+  }
+  .guide-body :global(.guide-table-scroll:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  /* Inside the scroll wrapper the table can be a real table again. */
+  .guide-body :global(.guide-table-scroll > table) {
+    display: table;
+    overflow-x: visible;
+    margin: 0;
   }
   .guide-body :global(h2),
   .guide-body :global(h3),

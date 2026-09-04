@@ -31,23 +31,23 @@ const blocks = [
   </Fragment>
   <main class="mx-auto flex min-h-dvh max-w-3xl flex-col justify-center gap-10 px-6 py-16">
     <a href={withBase('/')} class="font-display text-3xl">{BRAND.name}</a>
-    <p class="font-display text-8xl text-muted-2" aria-hidden="true">404</p>
+    <h1 class="font-display text-8xl text-muted-2">404</h1>
     <div class="grid gap-8 md:grid-cols-2">
       {
         blocks.map((b) => (
           <section lang={b.locale} class="rounded-card border border-border bg-surface p-6">
-            <h1 class="font-display text-3xl">{b.title}</h1>
+            <h2 class="font-display text-3xl">{b.title}</h2>
             <p class="mt-2 text-muted">{b.text}</p>
             <div class="mt-5 flex flex-wrap gap-2">
               <a
                 href={href(b.locale, '/')}
-                class="rounded-pill bg-primary px-4 py-2 text-sm font-semibold text-on-primary"
+                class="inline-flex min-h-11 items-center rounded-pill bg-primary px-4 text-sm font-semibold text-on-primary"
               >
                 {b.home}
               </a>
               <a
                 href={appHref()}
-                class="rounded-pill border border-border-strong px-4 py-2 text-sm font-semibold"
+                class="inline-flex min-h-11 items-center rounded-pill border border-border-strong px-4 text-sm font-semibold"
               >
                 {b.app}
               </a>

@@ -18,6 +18,12 @@ describe('isActiveDay', () => {
     expect(isActiveDay(day('2026-09-01', { steps: 5000, stepsGoal: 5000 }))).toBe(true);
     expect(isActiveDay(day('2026-09-01', { steps: 9000, stepsGoal: 10000 }))).toBe(false);
   });
+
+  it('falls back to the default goal when the given goal is not a positive number', () => {
+    expect(isActiveDay(day('2026-09-01', { steps: 0, stepsGoal: 0 }))).toBe(false);
+    expect(isActiveDay(day('2026-09-01', { steps: 7000, stepsGoal: 0 }))).toBe(true);
+    expect(isActiveDay(day('2026-09-01', { steps: 0, stepsGoal: Number.NaN }))).toBe(false);
+  });
 });
 
 describe('computeStreak', () => {

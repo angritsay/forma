@@ -41,30 +41,35 @@ const price = isFree(course.price, locale)
   data-equipment={course.equipment.join(' ')}
   data-level={course.level}
 >
-  <a
-    href={url}
-    class="hero-art relative flex aspect-[16/10] items-center justify-center overflow-hidden"
-    style={`--course-g1:${g1};--course-g2:${g2}`}
-    aria-label={l(course.name, locale)}
-    tabindex="-1"
-  >
-    {
-      signature ? (
-        <ExerciseFigure
-          animation={signature.animation}
-          variant="card"
-          playing={false}
-          gradient={[g1, g2]}
-          label={l(signature.name, locale)}
-        />
-      ) : null
-    }
+  <div class="relative">
+    <!-- Decorative duplicate of the title link below: hidden from AT and from the tab order so the
+         card exposes one link per destination instead of three. The level badge stays outside it
+         so it is still announced. -->
+    <a
+      href={url}
+      class="hero-art relative flex aspect-[16/10] items-center justify-center overflow-hidden"
+      style={`--course-g1:${g1};--course-g2:${g2}`}
+      aria-hidden="true"
+      tabindex="-1"
+    >
+      {
+        signature ? (
+          <ExerciseFigure
+            animation={signature.animation}
+            variant="card"
+            playing={false}
+            gradient={[g1, g2]}
+            label={l(signature.name, locale)}
+          />
+        ) : null
+      }
+    </a>
     <span
-      class="absolute top-4 left-4 rounded-pill bg-bg/85 px-3 py-1 text-xs font-semibold text-text"
+      class="absolute top-4 left-4 rounded-pill bg-bg/85 px-3 py-1 text-sm font-semibold text-text"
     >
       {levelLabel(locale, course.level)}
     </span>
-  </a>
+  </div>
 
   <div class="flex flex-1 flex-col gap-3 p-6">
     <Heading class="font-display text-2xl">
@@ -93,7 +98,7 @@ const price = isFree(course.price, locale)
       <span class="text-xl font-semibold tabular">{price}</span>
       <a
         href={url}
-        class="rounded-pill bg-primary px-4 py-2 text-sm font-semibold text-on-primary transition group-hover:opacity-90"
+        class="inline-flex min-h-11 items-center rounded-pill bg-primary px-4 text-sm font-semibold text-on-primary transition group-hover:opacity-90"
       >
         {t(locale, 'landing.cardView')}
       </a>

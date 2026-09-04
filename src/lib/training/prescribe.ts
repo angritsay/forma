@@ -46,7 +46,7 @@ import type {
   PrescribedWorkout,
   UserTrainingProfile,
 } from './types';
-import { clamp, round5, sum } from './util';
+import { clamp, num, round5, sum } from './util';
 
 /* ---------------------------------------------------------------------------------------------
  * Exercise classification helpers
@@ -165,6 +165,12 @@ interface SubstitutionContext {
   level: 1 | 2 | 3;
   choice: DifficultyChoice;
   lookup: ExerciseLookup;
+  /**
+   * False in blocks that must keep the authored movement (warm-ups, cool-downs and, above all,
+   * tests: a benchmark is only comparable when it is the same exercise every time).
+   * Defaults to true.
+   */
+  allowHarderVariant?: boolean;
 }
 
 type Issue = 'equipment' | 'limitation' | 'level';
@@ -224,6 +230,7 @@ export function substituteExercise(
   if (originalIssues.size === 0) {
     if (
       ctx.choice === 'harder' &&
+      ctx.allowHarderVariant !== false &&
       ctx.level === 3 &&
       isBodyweight(original) &&
       original.scaling.harder
@@ -309,6 +316,38 @@ function effectiveSets(block: Block, scale: number, scalable: boolean): number {
   }
 }
 
+/**
+ * Re-express a target in the substitute's unit, keeping the estimated work time: a 20 m crawl
+ * becomes ~4 dead bugs, not "20 m of dead bug". Same-unit substitutions keep the number.
+ */
+export function convertTarget(
+  unit: ExerciseUnit,
+  target: number,
+  original: Exercise,
+  substitute: Exercise,
+): { unit: ExerciseUnit; target: number } {
+  if (substitute.unit === unit) return { unit, target };
+  const sec = estimateItemSec(unit, target, false, original);
+  let value: number;
+  switch (substitute.unit) {
+    case 'reps': {
+      const perRep = num(substitute.secondsPerRep, DEFAULT_SECONDS_PER_REP);
+      value = sec / (perRep > 0 ? perRep : DEFAULT_SECONDS_PER_REP);
+      break;
+    }
+    case 'seconds':
+      value = sec;
+      break;
+    case 'meters':
+      value = sec * METERS_PER_SEC;
+      break;
+    case 'calories':
+      value = sec / SEC_PER_CALORIE;
+      break;
+  }
+  return { unit: substitute.unit, target: scaleTarget(substitute.unit, value, 1) };
+}
+
 export function estimateItemSec(
   unit: ExerciseUnit,
   target: number,
@@ -346,8 +385,10 @@ export function prescribeWorkout(
   // Pregnancy caps intensity: the whole prescription is built as "easier".
   const choice: DifficultyChoice = limitations.has('pregnancy') ? 'easier' : opts.choice;
   const deload = opts.deload === true;
+  // Stored scales come back from JSON: never let a missing or NaN scale reach the targets.
+  const scale = num(opts.scale, 1);
   const effectiveScale = clamp(
-    opts.scale * CHOICE_VOLUME[choice] * (deload ? DELOAD_VOLUME : 1),
+    scale * CHOICE_VOLUME[choice] * (deload ? DELOAD_VOLUME : 1),
     EFFECTIVE_SCALE_MIN,
     EFFECTIVE_SCALE_MAX,
   );
@@ -365,18 +406,30 @@ export function prescribeWorkout(
     const s = scalable ? effectiveScale : 1;
     const restMul = scalable ? restMultiplier : CHOICE_REST[choice];
     const sets = effectiveSets(block, effectiveScale, scalable);
+    // Warm-ups, cool-downs and tests keep the authored movement, not only the authored numbers.
+    const blockCtx: SubstitutionContext = {
+      ...ctx,
+      allowHarderVariant: scalable && block.type !== 'test',
+    };
 
     const items: PrescribedItem[] = block.items.map((item) => {
       const original = exerciseLookup(item.exerciseId);
       let exercise = original;
       let note: L10n | undefined;
       if (original) {
-        const r = substituteExercise(original, item, ctx);
+        const r = substituteExercise(original, item, blockCtx);
         exercise = r.exercise;
         note = r.note;
       }
-      const { unit, value } = givenUnit(item);
-      let target = scaleTarget(unit, value, s);
+      const given = givenUnit(item);
+      let unit = given.unit;
+      let target = scaleTarget(unit, given.value, s);
+      // A substitute measured in another unit gets the same work time, not the same number.
+      if (original && exercise && exercise.id !== original.id) {
+        const converted = convertTarget(unit, target, original, exercise);
+        unit = converted.unit;
+        target = converted.target;
+      }
       if (
         limitations.has('hypertension') &&
         unit === 'seconds' &&
@@ -435,7 +488,7 @@ export function prescribeWorkout(
   return {
     workoutId: workout.id,
     choice,
-    scale: opts.scale,
+    scale,
     effectiveScale,
     deload,
     blocks,

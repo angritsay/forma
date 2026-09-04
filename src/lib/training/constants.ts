@@ -97,6 +97,18 @@ export const FORTIME_PACE_FACTOR = 1.15;
 /** Default Tabata rounds when a block does not set them. */
 export const TABATA_DEFAULT_ROUNDS = 8;
 
+/**
+ * Work / rest seconds assumed when a tabata or interval block omits them. The content schema
+ * requires both, so these only cover hand-built blocks — the player and the duration estimate
+ * read them from here so the two can never disagree.
+ */
+export const FORMAT_DEFAULT_WORK_REST: Readonly<
+  Record<'tabata' | 'interval', { readonly workSec: number; readonly restSec: number }>
+> = {
+  tabata: { workSec: 20, restSec: 10 },
+  interval: { workSec: 30, restSec: 30 },
+};
+
 /* ---------------------------------------------------------------------------------------------
  * Steps and levels
  * ------------------------------------------------------------------------------------------- */

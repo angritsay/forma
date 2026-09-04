@@ -80,6 +80,7 @@ export const app = {
   onbSexNa: 'Не хочу указывать',
   onbWeightLabel: 'Вес, кг',
   onbWeightHint: 'Нужен только для расчёта калорий.',
+  onbWeightRange: 'Укажи вес от {min} до {max} кг.',
   onbActivityTitle: 'Насколько активна твоя обычная неделя?',
   onbActivityLead: 'Не считая тренировок.',
   onbActivitySedentary: 'В основном сижу',
@@ -321,6 +322,9 @@ export const app = {
   nodeLoadKg: '{kg} кг',
   nodeRestAfter: 'отдых {s} с',
   nodeStart: 'Начать тренировку',
+  nodeReplaceTitle: 'Есть незаконченная тренировка',
+  nodeReplaceBody:
+    'Если начнёшь эту, та тренировка и всё, что в ней отмечено, пропадут. Может, сначала доделаешь её с главного экрана?',
   nodeStartError: 'Не удалось начать тренировку. Проверь соединение и попробуй снова.',
   nodeLocked: 'Сначала пройди предыдущие тренировки — тогда эта откроется.',
   nodeNotFound: 'Тренировка не найдена',

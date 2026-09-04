@@ -318,7 +318,9 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
   };
 
   return (
-    <div
+    // The player is the only route that does not go through <Screen>, so it carries the app's
+    // <main> landmark itself.
+    <main
       className="relative flex min-h-dvh flex-col bg-bg"
       style={courseVars}
       onPointerDownCapture={unlock}
@@ -404,7 +406,7 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
         onConfirm={endWorkout}
         danger
       />
-    </div>
+    </main>
   );
 }
 

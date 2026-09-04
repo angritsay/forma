@@ -15,7 +15,7 @@ export const ADAPT_REASON = {
     en: 'The load was just right — adding 2%.',
   },
   down5: {
-    ru: 'Было тяжело — снижаю объём на 5%, чтобы ты успел восстановиться.',
+    ru: 'Было тяжело — снижаю объём на 5%, чтобы тело успело восстановиться.',
     en: 'That was tough — trimming volume by 5% so you can recover.',
   },
   keep: {
@@ -31,7 +31,7 @@ export const ADAPT_REASON = {
     en: 'You are at the top of the scale: volume stops growing here, time for a harder course.',
   },
   atMin: {
-    ru: 'Ты на минимуме шкалы: ниже объём не опускаю. Отдохни и вернись, когда будешь готов.',
+    ru: 'Ты на минимуме шкалы: ниже объём не опускаю. Отдохни и возвращайся, когда будут силы.',
     en: 'You are at the bottom of the scale: volume will not go lower. Rest and come back when ready.',
   },
 } as const satisfies Record<string, L10n>;

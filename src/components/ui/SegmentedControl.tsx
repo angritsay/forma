@@ -80,7 +80,8 @@ export function SegmentedControl<T extends string>({
             onKeyDown={onKeyDown(i)}
             className={clsx(
               'inline-flex items-center justify-center gap-1.5 rounded-pill font-medium transition-colors',
-              'disabled:opacity-40',
+              // 32/40px tall by design; `tap-target-y` (global.css) reaches the 44px minimum.
+              'tap-target-y disabled:opacity-40',
               size === 'sm' ? 'h-8 px-3 text-sm' : 'h-10 px-4 text-[15px]',
               fullWidth && 'flex-1',
               selected ? 'bg-primary text-on-primary' : 'text-muted hover:text-text',

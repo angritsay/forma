@@ -81,6 +81,7 @@ export const app = {
   onbSexNa: 'Prefer not to say',
   onbWeightLabel: 'Weight, kg',
   onbWeightHint: 'Used only for the calorie estimate.',
+  onbWeightRange: 'Enter a weight between {min} and {max} kg.',
   onbActivityTitle: 'How active is your typical week?',
   onbActivityLead: 'Not counting workouts.',
   onbActivitySedentary: 'Mostly sitting',
@@ -322,6 +323,9 @@ export const app = {
   nodeLoadKg: '{kg} kg',
   nodeRestAfter: 'rest {s} s',
   nodeStart: 'Start workout',
+  nodeReplaceTitle: 'Another workout is unfinished',
+  nodeReplaceBody:
+    'Starting this one drops the workout in progress and everything logged in it. Finish it from the home screen instead?',
   nodeStartError: 'Couldn’t start the session. Check the connection and try again.',
   nodeLocked: 'Finish the previous workouts to unlock this one.',
   nodeNotFound: 'Workout not found',

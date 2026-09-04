@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Icon } from '@/components/ui/Icon';
+import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
@@ -71,8 +72,10 @@ export default function NodePreviewScreen() {
   const ctx = useTrainingContext();
   const streak = useStreak();
   const stepsYesterday = useStepsYesterday();
+  const activeSession = useActiveWorkoutStore((s) => s.session);
   const [choice, setChoice] = useState<DifficultyChoice | null>(null);
   const [busy, setBusy] = useState(false);
+  const [replaceOpen, setReplaceOpen] = useState(false);
   // "Now" is fixed per mount so the recommendation does not flicker between renders.
   const nowIso = useMemo(() => new Date().toISOString(), []);
 
@@ -193,6 +196,7 @@ export default function NodePreviewScreen() {
 
   const start = async () => {
     if (!plan || locked) return;
+    setReplaceOpen(false);
     setBusy(true);
     try {
       const state = await useProgress.getState().ensureCourseState(course.id);
@@ -235,6 +239,12 @@ export default function NodePreviewScreen() {
     }
   };
 
+  // Beginning a session replaces the persisted one, so an unsaved workout must be confirmed away.
+  const onStartPress = () => {
+    if (activeSession) setReplaceOpen(true);
+    else void start();
+  };
+
   const isTest = node.kind === 'test';
   const isBenchmark = node.kind === 'benchmark';
 
@@ -249,7 +259,7 @@ export default function NodePreviewScreen() {
             fullWidth
             loading={busy}
             disabled={locked || !plan}
-            onClick={() => void start()}
+            onClick={onStartPress}
             icon={<Icon name="play" size={18} />}
           >
             {t('app.nodeStart')}
@@ -353,6 +363,18 @@ export default function NodePreviewScreen() {
           </section>
         ) : null}
       </div>
+
+      <Modal
+        open={replaceOpen}
+        onClose={() => setReplaceOpen(false)}
+        title={t('app.nodeReplaceTitle')}
+        description={t('app.nodeReplaceBody')}
+        confirmLabel={t('app.nodeStart')}
+        cancelLabel={t('common.cancel')}
+        danger
+        loading={busy}
+        onConfirm={() => void start()}
+      />
     </Screen>
   );
 }

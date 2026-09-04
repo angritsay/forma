@@ -2172,8 +2172,8 @@ export const COURSE_ATHLETE: CourseInput = {
     {
       q: l('Сколько длится тренировка?', 'How long is a session?'),
       a: l(
-        'В среднем 35–40 минут с разминкой и заминкой. Силовые дни — 40–50 минут (в пиковые недели ближе к 50), «двигатель» — около 30, чипперы и репетиции «Мёрфа» — 25–35. Два исключения — бенчмарки: «Синди» с разминкой занимает около 35 минут, половина «Мёрфа» — до часа. Перед стартом приложение показывает расчётное время для каждого из трёх режимов сложности.',
-        'Between 35 and 40 minutes on average with warm-up and cool-down. Strength days run 40–50 minutes (closer to 50 in the peak weeks), engine days about 30, chippers and Murph rehearsals 25–35. The two exceptions are the benchmarks: Cindy takes about 35 minutes with the warm-up, Half Murph up to an hour. Before you start, the app shows the estimated time for each of the three difficulty options.',
+        'В среднем 35–40 минут с разминкой и заминкой. Силовые дни — 40–48 минут (в пиковые недели ближе к 48), «двигатель» — около 30, чипперы и репетиции «Мёрфа» — 20–30. Два исключения — бенчмарки: «Синди» с разминкой занимает около 30 минут, половина «Мёрфа» — от 35 минут до часа, в зависимости от того, как ты разобьёшь повторения. Перед стартом приложение показывает расчётное время для каждого из трёх режимов сложности.',
+        'Between 35 and 40 minutes on average with warm-up and cool-down. Strength days run 40–48 minutes (closer to 48 in the peak weeks), engine days about 30, chippers and Murph rehearsals 20–30. The two exceptions are the benchmarks: Cindy takes about 30 minutes with the warm-up, Half Murph anywhere from 35 minutes to an hour depending on how you partition the reps. Before you start, the app shows the estimated time for each of the three difficulty options.',
       ),
     },
     {

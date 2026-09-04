@@ -36,10 +36,13 @@ export function initials(name?: string | null): string {
 export function Avatar({ seed, name, size = 40, className }: AvatarProps) {
   const [g1, g2] = avatarGradient(seed);
   const text = initials(name);
+  const label = (name ?? '').trim();
   return (
     <span
-      role="img"
-      aria-label={name ?? undefined}
+      // A nameless avatar is decoration: `role="img"` without an accessible name is a violation.
+      role={label ? 'img' : undefined}
+      aria-label={label || undefined}
+      aria-hidden={label ? undefined : true}
       className={clsx(
         'inline-flex shrink-0 select-none items-center justify-center rounded-pill font-semibold text-on-primary',
         className,

@@ -504,8 +504,8 @@ export const EXERCISES_C: ExerciseInput[] = [
       { ru: 'Спина округляется в нижней точке', en: 'Back rounding at the bottom' },
     ],
     breathing: {
-      ru: 'Вдох перед приседом, задержи на опускании, выдох на подъёме.',
-      en: 'Inhale before the squat, hold on the way down, exhale as you stand.',
+      ru: 'Вдох и напряжение живота перед приседом, выдох на подъёме. Не задерживай дыхание дольше одного повторения.',
+      en: 'Inhale and brace your belly before the squat, exhale as you stand. Do not hold your breath for longer than a single rep.',
     },
     muscles: ['quads', 'glutes', 'core', 'back'],
     pattern: 'squat',
@@ -560,8 +560,8 @@ export const EXERCISES_C: ExerciseInput[] = [
       { ru: 'Пятки отрываются от пола', en: 'Heels lifting off the floor' },
     ],
     breathing: {
-      ru: 'Вдох наверху, задержи дыхание на опускании, выдох на подъёме.',
-      en: 'Inhale at the top, hold through the descent, exhale as you stand.',
+      ru: 'Вдох и напряжение живота наверху, выдох на подъёме. Дыхание задерживай не дольше чем на одно повторение — иначе поднимется давление.',
+      en: 'Inhale and brace at the top, exhale as you stand. Never hold your breath for more than one rep — it drives your blood pressure up.',
     },
     muscles: ['quads', 'glutes', 'core', 'back', 'shoulders'],
     pattern: 'squat',
@@ -1474,7 +1474,7 @@ export const EXERCISES_C: ExerciseInput[] = [
     shortName: { ru: 'Взятие гири', en: 'KB clean' },
     description: {
       ru: 'Взятие гири на грудь — подъём гири с замаха между ног в положение «на груди»: гиря лежит на предплечье, локоть прижат к телу. Это мах, который заканчивается не перед собой, а на груди, поэтому сила снова идёт из таза, а рука лишь направляет гирю. Чистое взятие — тихое: гиря мягко ложится на предплечье, а не ударяет по нему. Оно открывает дорогу к жиму, выпадам с гирей у груди и рывку. Повторения указаны на каждую руку.',
-      en: 'The kettlebell clean brings the bell from a swing between your legs to the rack position: bell resting on the forearm, elbow tucked to the body. It is a swing that finishes at your chest rather than in front of you, so the power still comes from the hips while the arm only guides the bell. A clean clean is quiet: the bell settles softly onto the forearm instead of banging it. It opens the door to the press, front-rack lunges and the snatch. Reps are per arm.',
+      en: 'The kettlebell clean brings the bell from a swing between your legs to the rack position: bell resting on the forearm, elbow tucked to the body. It is a swing that finishes at your chest rather than in front of you, so the power still comes from the hips while the arm only guides the bell. A good clean is quiet: the bell settles softly onto the forearm instead of banging it. It opens the door to the press, front-rack lunges and the snatch. Reps are per arm.',
     },
     howTo: [
       {

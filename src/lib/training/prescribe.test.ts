@@ -49,6 +49,20 @@ describe('effective scale', () => {
     expect(p({ scale: 2, choice: 'harder' })).toBe(2);
   });
 
+  it('falls back to scale 1 when the stored scale is not a number', () => {
+    const p = prescribeWorkout(
+      FULL_WORKOUT,
+      base({ scale: Number.NaN as unknown as number }),
+      fixtureLookup,
+    );
+    expect(p.scale).toBe(1);
+    expect(p.effectiveScale).toBe(1);
+    expect(Number.isFinite(p.estimatedSec)).toBe(true);
+    const numbers = p.blocks.flatMap((b) => b.items.flatMap((i) => [i.target, i.estimatedSec]));
+    expect(numbers.every((n) => Number.isFinite(n))).toBe(true);
+    expect(p.blocks[1]!.items[0]!.target).toBe(10);
+  });
+
   it('echoes the inputs (workoutId, scale, choice, deload)', () => {
     const p = prescribeWorkout(
       FULL_WORKOUT,
@@ -337,6 +351,53 @@ describe('substitutions', () => {
     expect(firstItem(single([item('air_squat')]), knees, 0).exerciseId).toBe('air_squat');
   });
 
+  it('converts the target to the substitute unit, keeping the work time', () => {
+    // 20 m of bear crawl ≈ 13 s of work → dead bug at 3 s per rep ≈ 4 reps (not "20 m of dead bug")
+    const wr = base({ profile: profile({ limitations: ['wrists'] }) });
+    const crawl = firstItem(single([item('bear_crawl', { meters: 20 })]), wr, 0);
+    expect(crawl.exerciseId).toBe('dead_bug');
+    expect(crawl.unit).toBe('reps');
+    expect(crawl.target).toBe(4);
+    expect(crawl.estimatedSec).toBe(12);
+    // a 30 s superman hold ≈ 12 glute bridges at 2.5 s per rep
+    const back = base({ profile: profile({ limitations: ['lower_back'] }) });
+    const hold = firstItem(single([item('superman', { seconds: 30 })]), back, 0);
+    expect(hold.exerciseId).toBe('glute_bridge');
+    expect(hold.unit).toBe('reps');
+    expect(hold.target).toBe(12);
+    // same-unit substitutions keep the authored number
+    const push = firstItem(
+      single([item('push_up', { reps: 12 })]),
+      base({ level: 1, choice: 'easier' }),
+      0,
+    );
+    expect(push.exerciseId).toBe('knee_push_up');
+    expect(push.unit).toBe('reps');
+    expect(push.target).toBe(10);
+  });
+
+  it('never swaps in a harder variant inside a non-scalable block (warm-ups, cool-downs, tests)', () => {
+    const hard = base({ choice: 'harder', level: 3 });
+    const warm = prescribeWorkout(FULL_WORKOUT, hard, fixtureLookup).blocks[0]!;
+    expect(warm.items.map((i) => i.exerciseId)).toEqual(['air_squat', 'plank']);
+    const test = workout({
+      id: 'w',
+      blocks: [
+        block({
+          id: 'test',
+          type: 'test',
+          format: 'sets',
+          sets: 1,
+          scalable: false,
+          items: [item('push_up', { seconds: 120 }), item('air_squat', { seconds: 60 })],
+        }),
+      ],
+    });
+    const p = prescribeWorkout(test, hard, fixtureLookup).blocks[0]!;
+    expect(p.items.map((i) => i.exerciseId)).toEqual(['push_up', 'air_squat']);
+    expect(p.items.every((i) => !i.substituted)).toBe(true);
+  });
+
   it('exposes the classification helpers', () => {
     expect(hasEquipmentFor(fx('push_up'), [])).toBe(true);
     expect(hasEquipmentFor(fx('db_goblet_squat'), ['kettlebell'])).toBe(true);
@@ -414,8 +475,8 @@ describe('estimates and points', () => {
 
   it('fills block and total estimates and the points', () => {
     const p = prescribeWorkout(FULL_WORKOUT, base(), fixtureLookup);
-    expect(p.blocks.map((b) => b.estimatedSec)).toEqual([81, 446, 620, 260, 53]);
-    expect(p.estimatedSec).toBe(1460);
+    expect(p.blocks.map((b) => b.estimatedSec)).toEqual([81, 446, 620, 250, 53]);
+    expect(p.estimatedSec).toBe(1450);
     expect(p.points).toBe(120);
     expect(
       prescribeWorkout(

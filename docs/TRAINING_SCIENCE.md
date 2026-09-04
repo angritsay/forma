@@ -5,7 +5,10 @@ set the way it is, and where the number comes from. Values marked **expert ancho
 judgement calls, not published norms; they are deliberately conservative and easy to tune in
 `constants.ts`. Everything else is traced to a named guideline or paper in the [Sources](#sources)
 section. The engine is pure TypeScript: no I/O, no clock (timestamps are passed in), and every
-function is unit-tested (`*.test.ts` next to each module).
+function is unit-tested (`*.test.ts` next to each module). Numbers that come back from storage — a
+course scale, a persisted prescription, a player step — are guarded: a missing or non-finite value
+falls back to its documented default instead of spreading `NaN` through targets, points and
+calories.
 
 ## 1. Principles
 
@@ -101,6 +104,11 @@ is intentionally not sex- or age-normalized because the evidence base is thin.
 
 `prescribeWorkout(workout, opts, exerciseLookup?)` turns an authored workout into concrete numbers.
 
+Two profile fields are deliberately **not** inputs here: `timePerSessionMin` and `goal`. Session
+length follows from the authored workout and the scale, and the goal from the course the athlete
+bought; both are collected for choosing and presenting courses, not for scaling a session. Nothing
+in the engine reads them — do not assume otherwise when wiring the app.
+
 ### 3.1 Effective scale and difficulty choice
 
 ```
@@ -138,6 +146,12 @@ For `sets` / `circuit`: effective scale ≥ 1.3 adds one set; ≤ 0.7 removes on
 unless authored with fewer). This keeps per-set reps in the authored range instead of stretching
 one set to absurd lengths. EMOM minutes and Tabata / interval rounds are format-fixed.
 
+The set change **compounds** with the scaled targets — it does not redistribute them. At the far
+ends the total volume therefore moves further than the scale alone: a three-set block at effective
+scale 1.5 becomes 4 × 1.5 = 2.0 of the authored volume, and at 0.65 it becomes 2 × 0.65 = 0.43. A
+deload at a course scale near 1.0 lands in that lower band on purpose: a deload week is meant to be
+noticeably lighter, and going under the 65% headline figure costs nothing but a little stimulus.
+
 ### 3.4 Rest
 
 `restBetweenSetsSec`, `restBetweenRoundsSec`, item `restAfterSec` and interval `restSec` are
@@ -158,8 +172,15 @@ the athlete's level; (3) first **easier** variant the athlete can do although it
 limitation — prescribed with a caution note (the wrist rule, for example, steps a push-up down to a
 knee/incline variant which reduces, but does not remove, wrist load); (4) otherwise the original
 with an "equipment needed" note. Level-3 athletes choosing `harder` get `scaling.harder` for
-bodyweight exercises when the harder variant is itself doable and safe. `substituted` and
-`originalExerciseId` are always set so the UI can say "instead of X".
+bodyweight exercises when the harder variant is itself doable and safe — but **never in a block
+that is not scaled** (warm-ups, cool-downs) or in a `test` block: a warm-up is authored as it is,
+and a benchmark is only comparable when it is the same movement at the start and at the end of the
+course. `substituted` and `originalExerciseId` are always set so the UI can say "instead of X".
+
+**Units.** Scaling chains cross units (a 30 s `hollow_hold` steps down to `dead_bug`, measured in
+reps). A substitute measured in another unit keeps the **work time**, not the number: the scaled
+target is converted through the estimate of §3.8 (20 m of bear crawl ≈ 13 s ≈ 4 dead bugs at 3 s per
+rep) and re-rounded with the §3.2 rules. Same-unit substitutions keep the authored number.
 
 ### 3.6 Limitations
 
@@ -193,14 +214,21 @@ shuttle pace, **expert anchor**); calories × 4 s (a moderate rower/bike pace of
 Per block, plus 20 s block intro (`BLOCK_INTRO_SEC`) and 8 s transition between items
 (`TRANSITION_SEC`) — both **expert anchors** measured on the app's own player flow.
 
-| Format         | Duration                                                                                  |
-| -------------- | ----------------------------------------------------------------------------------------- |
-| sets / circuit | sets × (Σ item work + Σ restAfter + 8 s × items) + (sets − 1) × rest between sets/rounds  |
-| amrap          | `durationSec` (70% work / 30% rest)                                                       |
-| emom           | minutes × 60 (70% / 30%)                                                                  |
-| tabata         | rounds × (work + rest) × items — each item gets its own Tabata unless it is the only item |
-| interval       | rounds × (work + rest) × items                                                            |
-| fortime        | min(cap, rounds × Σ item work × 1.15 + (rounds − 1) × rest between rounds)                |
+The estimate counts **only the rests the player actually plays** (§6), so the two never disagree:
+there is no rest after the last set, the last Tabata round or the last interval.
+
+| Format         | Duration                                                                                                                                                                    |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| sets / circuit | sets × (Σ item work + 8 s × items) + sets × Σ restAfter (all items but the last) + (sets − 1) × (rest between sets/rounds, or the last item's restAfter when there is none) |
+| amrap          | `durationSec` (70% work / 30% rest)                                                                                                                                         |
+| emom           | minutes × 60 (70% / 30%)                                                                                                                                                    |
+| tabata         | rounds × work × items + items × (rounds − 1) × rest + (items − 1) × max(rest between rounds, rest) — each item gets its own Tabata                                          |
+| interval       | rounds × work × items + (rounds × items − 1) × rest — items alternate every round                                                                                           |
+| fortime        | min(cap, rounds × Σ item work × 1.15 + (rounds − 1) × rest between rounds)                                                                                                  |
+
+A tabata or interval block that omits `workSec` / `restSec` (the content schema requires them, so
+this only happens for hand-built blocks) falls back to `FORMAT_DEFAULT_WORK_REST` — 20/10 for
+tabata, 30/30 for interval — in both the estimate and the player.
 
 The 1.15 For-time pacing factor and the 70/30 AMRAP split are **expert anchors**: athletes slow down
 under the clock, and observed AMRAP work density sits around two thirds to three quarters.
@@ -225,20 +253,33 @@ unknown. The result is an estimate for motivation and trend, not a measurement.
 - **emom:** one 60 s `timer` step per minute, items round-robin, `target` = reps of that item;
 - **tabata:** per item, rounds × (work + rest) without the trailing rest; a rest between items;
 - **interval:** items alternate every round, trailing rest skipped;
-- **amrap:** one `amrap` step with `expectedRounds = floor(duration / (Σ item seconds + 8 s × items))`, min 1;
+- **amrap:** one `amrap` step with `expectedRounds = floor(duration / (Σ item seconds + 8 s × items))`, min 1
+  (min 1 as well when the item estimates are missing, so a lost number can never inflate the target);
 - **fortime:** one `fortime` step (rounds = authored sets or 1, cap = `durationSec`);
 - test blocks are authored as timed items (e.g. 60 s max push-ups), so they become `timer` steps
-  whose achieved reps the UI records; then `done`.
+  that carry `isTest: true`. The UI runs the window and then records the **measurement** (reps done
+  or seconds held) as the benchmark value; completion ignores that number and counts the step as
+  done or skipped (§7.1), because a max effort has no target to fall short of. Then `done`.
 
 ## 7. After the session (`session.ts`)
 
 ### 7.1 Completion
 
-Each work-type step is weighted by its estimated seconds. `work`: `min(1, achieved / target)`
-(timer mode: seconds / duration; a step marked completed without a number counts as 1). `amrap`:
-`min(1, (rounds + extraReps / Σ reps per round) / expectedRounds)`. `fortime`: finished → 1,
-timed out → `min(1, time / cap) × 0.5`. Skipped or missing → 0. Completion is rounded to two
-decimals.
+Each work-type step is weighted by its estimated seconds.
+
+- `work`: `min(1, achieved / target)`. **`achieved` is measured the way the step is run**: seconds
+  for a timer step (a seconds item, an EMOM minute, a Tabata or interval round — the clock is what
+  the player can observe), reps for a reps step. A step marked completed without a number counts
+  as 1.
+- `work` in a **test** block (`isTest`): the athlete works the whole window for a max score, so the
+  recorded number is the result, not a share of a target — the step counts 1 when completed and 0
+  when skipped, whatever the client sends. Without this rule a client that records the score
+  ("30 push-ups in a 120 s window") would report 25% completion and quietly cut both the points and
+  the course scale.
+- `amrap`: `min(1, (rounds + extraReps / Σ reps per round) / expectedRounds)`.
+- `fortime`: finished → 1, timed out → `min(1, time / cap) × 0.5`.
+- Skipped or missing → 0; a step whose stored numbers are unusable is dropped from the weighting
+  instead of poisoning the ratio. Completion is rounded to two decimals.
 
 ### 7.2 Points, duration, calories
 
@@ -269,17 +310,23 @@ and the RIR mapping follows Zourdos et al. (2016): RPE 10 = 0 RIR, 9 = 1, 8 = 2,
 2. No history → `normal` ("first session").
 3. `easier` when the last session had pain, RPE ≥ 9, completion < 0.8, was < 24 h ago, or
    yesterday's steps ≥ 15 000 (heavy leg day, **expert anchor**).
-4. `harder` when the last two sessions had RPE ≤ 6 and completion ≥ 0.95 and ≥ 48 h passed —
-   the 48–72 h between sessions for the same muscle groups recommended for novices in the ACSM
-   Position Stand (2009).
+4. `harder` when the last two sessions had RPE ≤ 6, completion ≥ 0.95 and **no pain**, and ≥ 48 h
+   passed — the 48–72 h between sessions for the same muscle groups recommended for novices in the
+   ACSM Position Stand (2009). Pain anywhere in that window blocks the upgrade: principle 4 above
+   says pain reduces load, so it must never help earn one.
 5. Otherwise `normal`.
+
+History is sorted by instant (`Date.parse`), not by string, so sessions stored with different UTC
+offsets still order correctly; an unparsable timestamp falls back to a string comparison and never
+counts as "≥ 48 h of rest".
 
 Each recommendation carries a one-sentence bilingual reason.
 
 ## 8. Streaks and steps (`streak.ts`)
 
 A day is active when a workout was completed or logged steps reached the goal (7 000 by default,
-per-day override for rest nodes). The current streak counts back from today when today is active,
+per-day override for rest nodes; a missing or non-positive override falls back to the default, so a
+zero goal can never turn an empty day into an active one). The current streak counts back from today when today is active,
 otherwise from yesterday with `atRisk = true` — today never breaks a streak until it ends. `longest`
 is computed over the whole history; input may be unsorted, sparse and contain duplicates.
 
@@ -323,6 +370,7 @@ takes weeks (Lally et al. 2010), and a 7-day streak is the first milestone worth
 | `REST_MET` / `DEFAULT_MET` / `DEFAULT_WEIGHT_KG`                       | 1.5 / 5 / 70               | Compendium                 |
 | `METERS_PER_SEC` / `SEC_PER_CALORIE` / `DEFAULT_SECONDS_PER_REP`       | 1.5 m/s / 4 s / 3 s        | expert anchor              |
 | `AMRAP_WORK_SHARE` / `FORTIME_PACE_FACTOR`                             | 0.7 / 1.15                 | expert anchor              |
+| `TABATA_DEFAULT_ROUNDS` / `FORMAT_DEFAULT_WORK_REST`                   | 8; 20/10 s, 30/30 s        | expert anchor              |
 | `STEPS_GOAL`, `STEPS_POINTS_*`                                         | 7 000; 30 / +5 / 60        | Paluch 2021; design        |
 | `LEVEL_THRESHOLDS`, `LEVEL_TIER`                                       | §9; 35 / 66                | design                     |
 | `ADAPTATION`                                                           | §7.3                       | ACSM 2009; Zourdos 2016    |

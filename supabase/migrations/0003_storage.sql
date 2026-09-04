@@ -1,6 +1,6 @@
 -- =============================================================================
 -- Forma — 0003_storage: private `videos` bucket + access policies.
--- Requires 0001_init.sql (purchases, is_admin). Idempotent.
+-- Requires 0001_init.sql (purchases, has_entitlement, is_admin). Idempotent.
 --
 -- Object naming convention (docs/SETUP.md §5):
 --   videos/<course_id>/<exercise_id>.<lang>.mp4   → needs an active purchase of <course_id>
@@ -15,6 +15,8 @@ on conflict (id) do nothing;
 
 -- Read: signed-in users with an active purchase of the course in the first path
 -- segment, everyone signed-in for `shared/`, and admins for everything.
+-- The entitlement test lives in public.has_entitlement() (security definer, keyed
+-- on the verified email) because customers cannot read public.purchases directly.
 drop policy if exists "videos: entitled select" on storage.objects;
 create policy "videos: entitled select"
   on storage.objects for select
@@ -23,14 +25,7 @@ create policy "videos: entitled select"
     bucket_id = 'videos'
     and (
       (storage.foldername(name))[1] = 'shared'
-      or exists (
-        select 1
-        from public.purchases p
-        where p.status = 'active'
-          and p.email = auth.email()::citext
-          and p.course_id = (storage.foldername(name))[1]
-      )
-      or public.is_admin()
+      or public.has_entitlement((storage.foldername(name))[1])
     )
   );
 

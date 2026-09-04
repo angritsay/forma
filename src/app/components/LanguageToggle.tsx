@@ -15,8 +15,10 @@ export function LanguageToggle({ className }: { className?: string }) {
       onChange={setLocale}
       className={className}
       options={[
-        { value: 'ru', label: t('app.navLocaleRu') },
-        { value: 'en', label: t('app.navLocaleEn') },
+        // `lang` marks each code as being in the language it selects, so screen readers switch
+        // voice for it — the same contract as the landing's hreflang/lang switcher.
+        { value: 'ru', label: <span lang="ru">{t('app.navLocaleRu')}</span> },
+        { value: 'en', label: <span lang="en">{t('app.navLocaleEn')}</span> },
       ]}
     />
   );

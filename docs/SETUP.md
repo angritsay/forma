@@ -57,12 +57,16 @@ Dashboard → **SQL Editor** → **New query**, paste each file in this order an
 2. `supabase/migrations/0002_functions.sql` — `create_order`, `my_entitlements`,
    admin RPCs, `get_leaderboard`, `get_my_totals`
 3. `supabase/migrations/0003_storage.sql` — private `videos` bucket and its policies
-4. `supabase/seed.sql` — nothing runs by default; open it, uncomment the `insert into
+4. `supabase/migrations/0004_content_seed.sql` — **required**: the course and workout
+   catalogue the backend enforces (see §2.1)
+5. `supabase/seed.sql` — nothing runs by default; open it, uncomment the `insert into
 public.admins` line with the coach's email (see §4)
 
 Each run must end with "Success. No rows returned". If a statement fails, fix the cause and
 re-run the whole file — the `create … if not exists` / `drop policy if exists` guards make that
-safe.
+safe. Re-running the whole set in order is also how you upgrade an existing project: new
+bounds are added as `not valid` constraints, so they apply to every new write without ever
+failing on rows written earlier.
 
 ### Option B — Supabase CLI
 
@@ -75,22 +79,44 @@ supabase db push           # applies supabase/migrations/*.sql in filename order
 ```
 
 `seed.sql` is intentionally not applied by `db push`; run it in the SQL editor.
+`0004_content_seed.sql` **is** applied by `db push` (it is a normal migration).
+
+### 2.1 The generated catalogue (`0004_content_seed.sql`)
+
+The backend has to know which courses exist and how many points each workout may be worth —
+otherwise a modified client could order a course that does not exist or claim any number of
+points. Those two tables (`public.courses`, `public.workouts`) are generated from
+`content/courses/*.ts`:
+
+```bash
+node scripts/content/gen-seed.mjs           # rewrites supabase/migrations/0004_content_seed.sql
+node scripts/content/gen-seed.mjs --check   # CI-style check that the file matches the content
+```
+
+**Re-run it and re-apply the migration whenever you add or rename a course or a workout, or
+change a workout's `basePoints`.** Until you do: a new course id is rejected by the order form
+(`invalid_course`), and a new workout id still records sessions but caps their points at the
+lowest value the content model allows.
 
 ### What the migrations create
 
-| Object                                                              | Purpose                                                                    |
-| ------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `profiles`                                                          | One row per auth user (trigger `on_auth_user_created`); own row read/write |
-| `admins` + `is_admin()`                                             | Coach emails; gate for admin RPCs and video uploads                        |
-| `purchases`                                                         | `email ↔ course_id`, status `pending / active / refunded`                  |
-| `create_order()`                                                    | Anonymous RPC used by the landing order form (validates, upserts pending)  |
-| `my_entitlements`                                                   | View: active courses of the signed-in email                                |
-| `admin_set_purchase_status()`, `admin_add_purchase()`               | Admin RPCs behind the `/app/#/admin` screen                                |
-| `user_course_state`, `workout_sessions`, `daily_logs`, `benchmarks` | Training data, own rows only                                               |
-| `steps_points()` + trigger                                          | Recomputes step points server-side so the leaderboard cannot be gamed      |
-| `get_leaderboard()`                                                 | Top 100 + own row; never returns emails                                    |
-| `get_my_totals()`                                                   | Points / workouts / minutes for the home screen                            |
-| Storage bucket `videos` (private)                                   | Read requires an active purchase of the course in the path, or `shared/`   |
+| Object                                                              | Purpose                                                                      |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `profiles`                                                          | One row per auth user (trigger `on_auth_user_created`); own row read/write   |
+| `current_email()`                                                   | The caller's **verified** email (auth.users, confirmed + not banned)         |
+| `admins` + `is_admin()`                                             | Coach emails; gate for admin RPCs and video uploads                          |
+| `purchases`                                                         | `email ↔ course_id`, status `pending / active / refunded` (admin-only read)  |
+| `courses`, `workouts`                                               | Generated catalogue (§2.1): the id allowlist and the points ceilings         |
+| `create_order()` + `order_throttle`                                 | Anonymous RPC used by the landing order form (validates, throttles, upserts) |
+| `my_entitlements`                                                   | View: active courses of the signed-in user (`course_id`, `activated_at`)     |
+| `has_entitlement(course_id)`                                        | Does the caller own this course? (sessions, video access; admins own all)    |
+| `admin_set_purchase_status()`, `admin_add_purchase()`               | Admin RPCs behind the `/app/#/admin` screen                                  |
+| `user_course_state`, `workout_sessions`, `daily_logs`, `benchmarks` | Training data, own rows only                                                 |
+| `workout_sessions_guard` trigger                                    | Server timestamps, date window, per-workout points ceiling, 4 sessions/day   |
+| `steps_points()` + trigger                                          | Recomputes step points server-side so the leaderboard cannot be gamed        |
+| `get_leaderboard()`                                                 | Top 100 + own row; never returns emails                                      |
+| `get_my_totals()`                                                   | Points / workouts / minutes for the home screen                              |
+| Storage bucket `videos` (private)                                   | Read requires an active purchase of the course in the path, or `shared/`     |
 
 ---
 
@@ -111,6 +137,20 @@ Dashboard → **Authentication → Providers → Email**:
 - **Email OTP length**: 6 (default). The app's code field is six digits.
 - **Email OTP expiration**: `600` seconds (10 minutes). The email copy promises 10 minutes; keep
   them in sync if you change one.
+
+**These settings are part of the security model.** Admin rights, course access and video access
+are keyed to an email address, and the database resolves that address with
+`public.current_email()`: it reads `auth.users` for the id inside the token and answers only for
+a user whose `email_confirmed_at` is set and who is neither deleted nor banned. The `email`
+claim inside the JWT is never trusted, so a token that merely _says_ it belongs to the coach
+gets nothing. Two rules keep that true:
+
+- **Email OTP is the only provider.** Do not enable a social / SAML / phone provider, password
+  sign-in or anonymous sign-ins unless you have to — a provider that hands out an address the
+  user has not proven is a way to become the coach. If you ever add one, turn **Confirm email**
+  on at the same time.
+- **Nobody signs in as the coach's address but the coach.** Rotating the admin address means
+  editing `public.admins` (§4), not editing anything in Auth.
 
 ### 3.2 Email template — this step is mandatory
 
@@ -268,6 +308,10 @@ price: { rub: 2990, usd: 29 },
 paymentUrl: { ru: 'https://…/pay/start-ru', en: 'https://…/pay/start-en' },
 ```
 
+The link must be an absolute **`https://`** URL: the content schema rejects anything else at
+build time, and the order form refuses to navigate to it at runtime (the customer's email is
+appended to the URL, so it must not leak over plain HTTP or point at a `javascript:` target).
+
 The landing order form:
 
 1. Validates the email, calls `create_order(email, course_id, locale, source)` → a `pending`
@@ -306,15 +350,37 @@ email=… and course_id=…` with the service role key. Nothing in the frontend 
   Level Security and the policies in `0001_init.sql` decide what a request may do. The
   `service_role` key must never appear in the repo, in `.env.example`, in CI logs or in the
   browser.
-- **What anonymous requests can do**: call `create_order()` (rate-guarded: max 10 pending orders
-  per email) — nothing else. They cannot read `purchases`, profiles or videos.
-- **What signed-in users can do**: read/write their own rows, read their own purchases, read the
-  leaderboard (no emails in it), sign video URLs for courses they own.
+- **What anonymous requests can do**: call `create_order()` — nothing else. They cannot read
+  `purchases`, profiles or videos. That one RPC is guarded four ways: the course id must exist
+  in `public.courses`, an email may have at most 10 pending orders (serialized by an advisory
+  lock, so it cannot be raced), one IP may place 30 orders per hour (`public.order_throttle`;
+  requests without a forwarded IP share a 200/hour bucket), and an **active** purchase is never
+  modified — knowing a customer's address does not let anyone change their order.
+- **What signed-in users can do**: read/write their own rows, see the courses they own through
+  `my_entitlements`, read the leaderboard (no emails in it), sign video URLs for courses they
+  own. They cannot read `public.purchases` itself, so the coach's `note` and `source` stay
+  internal.
+- **Identity is the verified email**, resolved by `current_email()` from `auth.users`, never
+  from the JWT claim — see §3.1 for the settings that keep that guarantee.
+- **Only the listed RPCs are callable.** `0001_init.sql` turns off Supabase's default
+  "every new function is executable by anon and authenticated" grant, and each function is then
+  granted to exactly the roles it needs. If you add your own function in schema `public`, it is
+  not reachable from the API until you `grant execute on function … to authenticated;`.
 - **Admins** are just emails in `public.admins`; `is_admin()` is evaluated on the server for
   every admin RPC and storage policy, so a modified client cannot escalate.
-- **Points integrity**: step points are recomputed by a trigger; workout points are client
-  computed but capped by a CHECK (`0..500`). If you ever see abuse, move `estimatePoints()` into
-  an RPC.
+- **Points integrity**: step points are recomputed by a trigger. Workout points are computed by
+  the client but clamped by `workout_sessions_guard` to that workout's own ceiling
+  (`base_points` from §2.1 × difficulty × repeat × the maximum streak bonus), and hard-capped at
+  375 by a CHECK. The same trigger stamps `started_at` / `completed_at` from the server clock,
+  refuses a `local_date` more than a day from the server date, and allows at most 4 completed
+  sessions per day; sessions can only be logged for a course the athlete owns.
+- **Step logs** can only be written for the last 7 days and up to tomorrow, so the weekly board
+  cannot be backfilled.
+- **Upgrading an old project**: the bounds are added as `not valid` constraints, so applying the
+  migrations never fails on rows written earlier — but those rows are also never re-checked.
+  After cleaning any legacy data you can promote a constraint with
+  `alter table public.<table> validate constraint <name>;` (list them with
+  `select conrelid::regclass, conname from pg_constraint where not convalidated;`).
 - **Rotating keys**: Dashboard → Project Settings → API (or API Keys) → _Generate new anon key_ /
   create a new publishable key → update `.env` and the GitHub repo variable → redeploy. Old
   static builds stop working until redeployed, which is the point.
@@ -380,6 +446,28 @@ The path in content must match the object key exactly (case-sensitive), the firs
 be a course id the user has an active purchase for (or `shared`), and the user must be signed
 in. Test as an admin first: admins can read everything in the bucket.
 
+**The order form says the course is unknown (`invalid_course`)**
+
+`0004_content_seed.sql` was not applied, or the course id changed in content and the file was
+not regenerated. Run `node scripts/content/gen-seed.mjs` and apply the migration again (§2.1).
+
+**The order form says there are too many orders (`too_many_orders`)**
+
+The per-IP throttle (30 per hour) fired — usually a test loop or a whole office behind one
+address. It clears by itself; to clear it now, `delete from public.order_throttle where bucket
+= '<ip>';`.
+
+**A workout will not save**
+
+`42501` means the athlete has no active purchase for that course (activate it in §7.2, or the
+purchase was refunded). `invalid_local_date` means the device clock is more than a day away
+from real time. `too_many_sessions_today` is the 4-completed-sessions-per-day cap.
+
+**Points look lower than the app showed**
+
+`workout_sessions_guard` clamped them to that workout's ceiling. If the workout is newer than
+the applied catalogue it is capped hard — regenerate the seed (§2.1).
+
 **Leaderboard is empty**
 
 Only sessions with `completed_at` set and step logs count, and the weekly board resets on Monday
@@ -388,4 +476,7 @@ Only sessions with `completed_at` set and step logs count, and the weekly board 
 **Admin link does not show**
 
 The signed-in email is not in `public.admins`, or differs from the one inserted (check for a
-typo; case is ignored). Sign out and back in after inserting.
+typo; case is ignored). Sign out and back in after inserting. If it still does not show, the
+account itself is not usable as an identity — check
+`select email, email_confirmed_at, banned_until, deleted_at from auth.users where email = '…';`
+(§3.1): `is_admin()` only answers for a confirmed, live, unbanned user.

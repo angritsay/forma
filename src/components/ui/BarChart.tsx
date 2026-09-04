@@ -60,7 +60,9 @@ export function BarChart({
       viewBox={`0 0 ${width} ${height}`}
       width="100%"
       height={height}
-      role="img"
+      // `group`, not `img`: an `img` hides its subtree, which would silence the per-bar labels
+      // while leaving the bars in the tab order.
+      role="group"
       aria-labelledby={`${id}-title`}
       aria-describedby={`${id}-desc`}
       className={clsx('block overflow-visible select-none', className)}
@@ -108,12 +110,13 @@ export function BarChart({
           <g
             key={i}
             tabIndex={0}
-            role="listitem"
+            // `listitem` needs a list parent; each bar is a named graphic instead. The focus ring
+            // comes from the global :focus-visible rule — never suppress it here.
+            role="img"
             aria-label={`${d.label}: ${formatValue(d.value)}`}
             onMouseEnter={() => setActive(i)}
             onFocus={() => setActive(i)}
             onBlur={() => setActive(null)}
-            className="outline-none"
           >
             {/* Hit target larger than the mark. */}
             <rect x={slot * i} y={0} width={slot} height={height} fill="transparent" />

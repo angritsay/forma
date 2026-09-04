@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { Sheet } from '@/components/ui/Sheet';
@@ -25,9 +25,12 @@ export function LimitationsSheet({
 }: LimitationsSheetProps) {
   const { t } = useT();
   const [selected, setSelected] = useState<Limitation[]>([]);
+  const wasOpen = useRef(false);
 
+  // Seed only when the sheet opens: a profile update elsewhere must not wipe an edit in progress.
   useEffect(() => {
-    if (open) setSelected([...limitations]);
+    if (open && !wasOpen.current) setSelected([...limitations]);
+    wasOpen.current = open;
   }, [open, limitations]);
 
   const none = selected.length === 0;

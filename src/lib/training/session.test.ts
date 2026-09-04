@@ -61,6 +61,13 @@ const result = (stepIndex: number, o: Partial<ExerciseResult> = {}): ExerciseRes
 });
 const allDone = workIndexes.map((i) => result(i));
 
+/** Indexes of every work step, in player order. */
+const workIndexesOf = (list: PlayerStep[]) =>
+  list.map((s, i) => (s.kind === 'work' ? i : -1)).filter((i) => i >= 0);
+
+const prescribeOne = (b: Parameters<typeof block>[0]) =>
+  prescribeWorkout(workout({ id: 'w', blocks: [block(b)] }), opts, fixtureLookup);
+
 describe('computeCompletion', () => {
   it('is 1 when every work step is completed and 0 with no results', () => {
     expect(workIndexes).toEqual([2, 4, 5, 6]);
@@ -121,6 +128,103 @@ describe('computeCompletion', () => {
     expect(r({ completed: false, timeSec: 600 })).toBe(0.5);
     expect(r({ completed: false, timeSec: 300 })).toBe(0.25);
     expect(r({ completed: false })).toBe(0);
+  });
+
+  it('scores a timer step on its clock: an EMOM minute counts the minute, not the reps', () => {
+    const p = prescribeOne({
+      id: 'e',
+      format: 'emom',
+      rounds: 4,
+      items: [item('burpee', { reps: 8 })],
+    });
+    const st = buildPlayerSteps(p);
+    const idx = workIndexesOf(st);
+    expect(idx).toHaveLength(4);
+    const done = (achieved: number) =>
+      idx.map((i) => ({ stepIndex: i, blockId: 'e', completed: true, achieved }));
+    // The player records the seconds worked; a finished minute is a full minute.
+    expect(computeCompletion(st, done(60))).toBe(1);
+    expect(computeCompletion(st, done(30))).toBe(0.5);
+    // A minute marked done without a number counts in full as well.
+    expect(
+      computeCompletion(
+        st,
+        idx.map((i) => ({ stepIndex: i, blockId: 'e', completed: true })),
+      ),
+    ).toBe(1);
+  });
+
+  it('scores a Tabata round on its work interval', () => {
+    const p = prescribeOne({
+      id: 't',
+      format: 'tabata',
+      rounds: 4,
+      workSec: 20,
+      restSec: 10,
+      items: [item('air_squat', { reps: 12 })],
+    });
+    const st = buildPlayerSteps(p);
+    const idx = workIndexesOf(st);
+    expect(idx).toHaveLength(4);
+    const done = idx.map((i) => ({ stepIndex: i, blockId: 't', completed: true, achieved: 20 }));
+    expect(computeCompletion(st, done)).toBe(1);
+  });
+
+  it('counts a max-effort test step in full whatever number the client records', () => {
+    const p = prescribeOne({
+      id: 'test',
+      type: 'test',
+      format: 'sets',
+      sets: 1,
+      scalable: false,
+      items: [item('push_up', { seconds: 120 }), item('plank', { seconds: 60 })],
+    });
+    const st = buildPlayerSteps(p);
+    const idx = workIndexesOf(st);
+    // 32 push-ups in the two-minute window: a score, not a fifth of a "target" of 120.
+    expect(
+      computeCompletion(st, [
+        { stepIndex: idx[0]!, blockId: 'test', completed: true, achieved: 32 },
+        { stepIndex: idx[1]!, blockId: 'test', completed: true, achieved: 60 },
+      ]),
+    ).toBe(1);
+    // The app records the measurement separately and sends no `achieved` at all.
+    expect(
+      computeCompletion(st, [
+        { stepIndex: idx[0]!, blockId: 'test', completed: true },
+        { stepIndex: idx[1]!, blockId: 'test', completed: true },
+      ]),
+    ).toBe(1);
+    // A skipped test still counts as work not done.
+    expect(
+      computeCompletion(st, [
+        { stepIndex: idx[0]!, blockId: 'test', completed: false, skipped: true },
+        { stepIndex: idx[1]!, blockId: 'test', completed: true, achieved: 60 },
+      ]),
+    ).toBe(0.33);
+  });
+
+  it('never returns NaN when persisted steps carry broken numbers', () => {
+    const broken = steps.map((s) =>
+      s.kind === 'work'
+        ? { ...s, durationSec: Number.NaN, item: { ...s.item, estimatedSec: Number.NaN } }
+        : s,
+    );
+    const c = computeCompletion(broken, allDone);
+    expect(Number.isFinite(c)).toBe(true);
+    expect(c).toBe(0);
+    const amrapStep: PlayerStep = {
+      kind: 'amrap',
+      blockId: 'a',
+      durationSec: 600,
+      expectedRounds: Number.NaN,
+      items: prescribed.blocks[0]!.items,
+    };
+    const c2 = computeCompletion(
+      [amrapStep, { kind: 'done' }],
+      [{ stepIndex: 0, blockId: 'a', completed: true, rounds: 3 }],
+    );
+    expect(c2).toBe(1);
   });
 });
 
@@ -361,6 +465,21 @@ describe('recommendDifficulty', () => {
       easy('2026-08-28T10:00:00.000Z'),
     );
     expect(recommendDifficulty(unsorted, p, now).choice).toBe('easier');
+  });
+
+  it('never recommends "harder" when one of the last two sessions reported pain', () => {
+    const r = recommendDifficulty(
+      hist(easy('2026-08-30T10:00:00.000Z', { feeling: 'pain' }), easy('2026-09-02T10:00:00.000Z')),
+      p,
+      now,
+    );
+    expect(r.choice).toBe('normal');
+  });
+
+  it('orders history chronologically even when timestamps carry different offsets', () => {
+    // 2026-09-03T23:00+03:00 is 20:00Z — the 21:00Z session is the more recent one.
+    const state = hist(easy('2026-09-03T21:00:00Z', { rpe: 9 }), easy('2026-09-03T23:00:00+03:00'));
+    expect(recommendDifficulty(state, p, now).choice).toBe('easier');
   });
 
   it('always keeps pregnancy at "easier"', () => {

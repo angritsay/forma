@@ -91,7 +91,8 @@ export function Tabs<T extends string>({
                       : 'border-transparent text-muted hover:text-text',
                   )
                 : clsx(
-                    'h-10 flex-1 justify-center rounded-pill px-4 text-[15px]',
+                    // 40px tall by design; `tap-target-y` (global.css) reaches the 44px minimum.
+                    'tap-target-y h-10 flex-1 justify-center rounded-pill px-4 text-[15px]',
                     selected ? 'bg-primary text-on-primary' : 'text-muted hover:text-text',
                   ),
             )}

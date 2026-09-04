@@ -1673,8 +1673,8 @@ export const COURSE_DUMBBELLS: CourseInput = {
     {
       q: l('Сколько времени занимает тренировка?', 'How long is a session?'),
       a: l(
-        'В среднем около 35 минут вместе с разминкой и заминкой. Силовые дни — 30–40 минут, «двигатель» — около 25, комплексы и бенчмарки — до 35. Перед стартом приложение показывает расчётное время для каждого из трёх режимов сложности.',
-        'About 35 minutes on average including warm-up and cool-down. Strength days run 30–40 minutes, engine days about 25, complexes and benchmarks up to 35. Before you start, the app shows the estimated time for each of the three difficulty options.',
+        'Силовые дни — 30–40 минут вместе с разминкой и заминкой, «двигатель» — около 25, комплексы — около 30, бенчмарки — 18–20 минут: они короткие, но самые тяжёлые в курсе. В среднем выходит чуть больше получаса. Перед стартом приложение показывает расчётное время для каждого из трёх режимов сложности.',
+        'Strength days run 30–40 minutes including warm-up and cool-down, engine days about 25, complexes about 30, and the benchmarks 18–20 minutes: short, but the hardest sessions of the course. The average lands a little over half an hour. Before you start, the app shows the estimated time for each of the three difficulty options.',
       ),
     },
     {

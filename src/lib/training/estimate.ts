@@ -10,10 +10,12 @@ import {
   CHOICE_POINTS,
   DEFAULT_MET,
   DEFAULT_WEIGHT_KG,
+  FORMAT_DEFAULT_WORK_REST,
   FORTIME_PACE_FACTOR,
   REPEAT_POINTS,
   REST_MET,
   STREAK_BONUS,
+  TABATA_DEFAULT_ROUNDS,
   TRANSITION_SEC,
 } from './constants';
 import type {
@@ -43,16 +45,21 @@ function metOf(item: PrescribedItem, lookup: ExerciseLookup): number {
   return num(lookup(item.exerciseId)?.met, DEFAULT_MET);
 }
 
+/** Estimated work seconds of one item, never negative and never NaN (stored JSON can be null). */
+function itemSec(item: PrescribedItem): number {
+  return Math.max(0, num(item.estimatedSec));
+}
+
 /** Time-weighted average MET of a block's items (AMRAP/EMOM where items interleave). */
 function averageMet(items: readonly PrescribedItem[], lookup: ExerciseLookup): number {
-  const total = sum(items.map((it) => it.estimatedSec));
+  const total = sum(items.map(itemSec));
   if (total <= 0) return items.length ? metOf(items[0]!, lookup) : DEFAULT_MET;
-  return sum(items.map((it) => (it.estimatedSec / total) * metOf(it, lookup)));
+  return sum(items.map((it) => (itemSec(it) / total) * metOf(it, lookup)));
 }
 
 /** Rounds of a For-time block: authored sets, else 1. */
 function fortimeRounds(block: PrescribedBlock): number {
-  return Math.max(1, block.sets);
+  return Math.max(1, num(block.sets, 1));
 }
 
 /**
@@ -72,41 +79,58 @@ export function blockSegments(
   switch (block.format) {
     case 'sets':
     case 'circuit': {
-      const sets = Math.max(1, block.sets);
-      const between =
+      const sets = Math.max(1, num(block.sets, 1));
+      const between = num(
         block.format === 'circuit'
           ? block.restBetweenRoundsSec || block.restBetweenSetsSec
-          : block.restBetweenSetsSec || block.restBetweenRoundsSec;
-      for (const it of items) work.push({ sec: sets * it.estimatedSec, met: metOf(it, lookup) });
-      restSec = sets * sum(items.map((it) => it.restAfterSec)) + (sets - 1) * between;
+          : block.restBetweenSetsSec || block.restBetweenRoundsSec,
+      );
+      for (const it of items) work.push({ sec: sets * itemSec(it), met: metOf(it, lookup) });
+      if (n > 0) {
+        // The player rests after every item but the last, and between sets only between sets:
+        // the trailing rest of the final set is never played.
+        const inSet = sum(items.slice(0, n - 1).map((it) => num(it.restAfterSec)));
+        const tail = between > 0 ? between : num(items[n - 1]?.restAfterSec);
+        restSec = sets * inSet + (sets - 1) * tail;
+      }
       overheadSec += sets * n * TRANSITION_SEC;
       break;
     }
     case 'amrap': {
-      const d = num(block.durationSec);
+      const d = Math.max(0, num(block.durationSec));
       work.push({ sec: d * AMRAP_WORK_SHARE, met: averageMet(items, lookup) });
       restSec = d * (1 - AMRAP_WORK_SHARE);
       break;
     }
     case 'emom': {
-      const d = Math.max(1, block.sets) * 60;
+      const d = Math.max(1, num(block.sets, 1)) * 60;
       work.push({ sec: d * AMRAP_WORK_SHARE, met: averageMet(items, lookup) });
       restSec = d * (1 - AMRAP_WORK_SHARE);
       break;
     }
-    case 'tabata':
-    case 'interval': {
-      const rounds = Math.max(1, block.sets);
-      const w = num(block.workSec);
-      const r = num(block.restSec);
+    case 'tabata': {
+      const rounds = Math.max(1, num(block.sets, TABATA_DEFAULT_ROUNDS));
+      const w = Math.max(0, num(block.workSec, FORMAT_DEFAULT_WORK_REST.tabata.workSec));
+      const r = Math.max(0, num(block.restSec, FORMAT_DEFAULT_WORK_REST.tabata.restSec));
       for (const it of items) work.push({ sec: rounds * w, met: metOf(it, lookup) });
-      restSec = rounds * r * n;
+      // One Tabata per item: no rest after the last round, plus the gap between items.
+      const gap = Math.max(num(block.restBetweenRoundsSec), r);
+      restSec = n * (rounds - 1) * r + Math.max(0, n - 1) * gap;
+      break;
+    }
+    case 'interval': {
+      const rounds = Math.max(1, num(block.sets, 1));
+      const w = Math.max(0, num(block.workSec, FORMAT_DEFAULT_WORK_REST.interval.workSec));
+      const r = Math.max(0, num(block.restSec, FORMAT_DEFAULT_WORK_REST.interval.restSec));
+      for (const it of items) work.push({ sec: rounds * w, met: metOf(it, lookup) });
+      // Items alternate every round; the rest after the very last interval is never played.
+      restSec = Math.max(0, rounds * n - 1) * r;
       break;
     }
     case 'fortime': {
       const rounds = fortimeRounds(block);
-      const estWork = rounds * sum(items.map((it) => it.estimatedSec)) * FORTIME_PACE_FACTOR;
-      const estRest = (rounds - 1) * block.restBetweenRoundsSec;
+      const estWork = rounds * sum(items.map(itemSec)) * FORTIME_PACE_FACTOR;
+      const estRest = (rounds - 1) * num(block.restBetweenRoundsSec);
       const cap = num(block.durationSec, Number.POSITIVE_INFINITY);
       const raw = estWork + estRest;
       const ratio = raw > 0 ? Math.min(1, cap / raw) : 1;

@@ -31,9 +31,12 @@ export function Sheet({ open, onClose, title, children, footer, label, className
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center">
+      {/* Backdrop: a pointer shortcut only. It is hidden from assistive tech and from the tab
+          order because the sheet already exposes a real close button (and Esc). */}
       <button
         type="button"
-        aria-label={labels.close}
+        aria-hidden="true"
+        tabIndex={-1}
         onClick={onClose}
         className={clsx(
           'absolute inset-0 bg-black/60 transition-opacity duration-200',

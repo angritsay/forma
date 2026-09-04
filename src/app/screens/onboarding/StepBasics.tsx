@@ -1,21 +1,22 @@
+import { useState } from 'react';
 import { Input } from '@/components/ui/Input';
 import { PageTitle } from '@/components/ui/PageTitle';
 import { useT } from '@/app/hooks/useT';
 import type { AgeBand, Sex } from '@/lib/training/types';
 import { ChipGroup } from './ChipGroup';
-import { AGE_BANDS, SEXES, WEIGHT_MAX_KG, WEIGHT_MIN_KG } from './draft';
+import { AGE_BANDS, parseWeightField, SEXES, WEIGHT_MAX_KG, WEIGHT_MIN_KG } from './draft';
 import { AGE_BAND_LABEL, SEX_LABEL } from './labels';
 import type { StepProps } from './types';
 
-function parseWeight(value: string): number | undefined {
-  const n = Number(value.replace(',', '.'));
-  if (value.trim() === '' || !Number.isFinite(n)) return undefined;
-  if (n < WEIGHT_MIN_KG || n > WEIGHT_MAX_KG) return undefined;
-  return Math.round(n * 10) / 10;
-}
-
 export function StepBasics({ draft, update }: StepProps) {
   const { t } = useT();
+  // The field keeps its own text so half-typed weights ("7" before "70") survive; only a valid
+  // weight reaches the draft.
+  const [weightText, setWeightText] = useState(() =>
+    draft.weightKg === undefined ? '' : String(draft.weightKg),
+  );
+  const weight = parseWeightField(weightText);
+
   return (
     <div className="flex flex-col gap-7">
       <PageTitle title={t('app.onbBasicsTitle')} subtitle={t('app.onbBasicsLead')} />
@@ -45,9 +46,17 @@ export function StepBasics({ draft, update }: StepProps) {
         step={0.5}
         label={`${t('app.onbWeightLabel')} · ${t('app.onbOptional')}`}
         placeholder="70"
-        value={draft.weightKg ?? ''}
-        onChange={(e) => update({ weightKg: parseWeight(e.target.value) })}
+        value={weightText}
+        onChange={(e) => {
+          setWeightText(e.target.value);
+          update({ weightKg: parseWeightField(e.target.value).weightKg });
+        }}
         hint={t('app.onbWeightHint')}
+        error={
+          weight.invalid
+            ? t('app.onbWeightRange', { min: WEIGHT_MIN_KG, max: WEIGHT_MAX_KG })
+            : undefined
+        }
       />
     </div>
   );

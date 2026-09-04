@@ -53,6 +53,11 @@ function toUser(session: SessionLike): SessionUser {
 
 let wired = false;
 let inflight: { userId: string; promise: Promise<void> } | null = null;
+/**
+ * Bumped whenever the session ends. A `loadUser` that started before the sign-out must not write
+ * `signed_in` back into the store when its requests finally resolve.
+ */
+let epoch = 0;
 
 const SIGNED_OUT = {
   status: 'signed_out' as const,
@@ -61,13 +66,22 @@ const SIGNED_OUT = {
   entitlements: [] as string[],
 };
 
+/** Drop the signed-in state and invalidate any in-flight profile load. */
+function endSession(): void {
+  epoch += 1;
+  inflight = null;
+}
+
 export const useSession = create<SessionState>((set, get) => {
   /** Load profile + entitlements for a user; concurrent calls for the same user share one request. */
   function loadUser(user: SessionUser): Promise<void> {
     if (inflight && inflight.userId === user.id) return inflight.promise;
+    const startedAt = epoch;
     const promise = (async () => {
       set({ user, error: undefined });
       const [profileRes, entRes] = await Promise.allSettled([getProfile(), listEntitlements()]);
+      // The user signed out (or a new session started) while the requests were in flight.
+      if (startedAt !== epoch) return;
       const profile = profileRes.status === 'fulfilled' ? profileRes.value : null;
       const entitlements =
         entRes.status === 'fulfilled' ? entRes.value.map((e) => e.courseId) : get().entitlements;
@@ -90,6 +104,7 @@ export const useSession = create<SessionState>((set, get) => {
         const s = get();
         if (event === 'INITIAL_SESSION') return; // boot() handles the initial session
         if (event === 'SIGNED_OUT' || !session) {
+          endSession();
           if (s.status !== 'signed_out') set({ ...SIGNED_OUT, error: undefined });
           return;
         }
@@ -123,11 +138,13 @@ export const useSession = create<SessionState>((set, get) => {
       try {
         const session = await getSession();
         if (!session) {
+          endSession();
           set({ ...SIGNED_OUT, error: undefined });
           return;
         }
         await loadUser(toUser(session));
       } catch (e) {
+        endSession();
         set({ ...SIGNED_OUT, error: toAuthError(e) });
       }
     },
@@ -162,9 +179,13 @@ export const useSession = create<SessionState>((set, get) => {
 
     signOut: async () => {
       clearDraft();
+      // Invalidate before the request: a profile load already in flight must not sign the user
+      // back in when it resolves.
+      endSession();
       try {
         await apiSignOut();
       } finally {
+        endSession();
         set({ ...SIGNED_OUT, error: undefined });
       }
     },

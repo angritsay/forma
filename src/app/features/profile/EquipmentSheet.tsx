@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Sheet } from '@/components/ui/Sheet';
 import type { Equipment } from '@/content/schema';
@@ -22,12 +22,16 @@ export function EquipmentSheet({ open, profile, busy, onClose, onSave }: Equipme
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [dumbbellKg, setDumbbellKg] = useState<number[]>([]);
   const [kettlebellKg, setKettlebellKg] = useState<number[]>([]);
+  const wasOpen = useRef(false);
 
+  // Seed only when the sheet opens: a profile update elsewhere must not wipe an edit in progress.
   useEffect(() => {
-    if (!open) return;
-    setEquipment(profile.equipment.filter((e) => e !== 'none'));
-    setDumbbellKg(profile.dumbbellKg ?? []);
-    setKettlebellKg(profile.kettlebellKg ?? []);
+    if (open && !wasOpen.current) {
+      setEquipment(profile.equipment.filter((e) => e !== 'none'));
+      setDumbbellKg(profile.dumbbellKg ?? []);
+      setKettlebellKg(profile.kettlebellKg ?? []);
+    }
+    wasOpen.current = open;
   }, [open, profile]);
 
   const weightOptions = WEIGHT_OPTIONS_KG.map((kg) => ({ value: kg, label: String(kg) }));

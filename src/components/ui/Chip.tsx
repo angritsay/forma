@@ -55,8 +55,10 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
     'inline-flex shrink-0 items-center whitespace-nowrap rounded-pill border font-medium',
     SIZE[size],
     selected ? 'bg-primary border-primary text-on-primary' : TONE[tone],
+    // Interactive chips are 28/36px tall by design; `tap-target-y` (global.css) lifts the hit area
+    // to the 44px minimum without changing the layout.
     onClick &&
-      'transition-colors active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none',
+      'tap-target-y transition-colors active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none',
     className,
   );
   if (onClick) {

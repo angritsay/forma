@@ -70,7 +70,7 @@ const socials = [
 
   <a
     href="#main"
-    class="sr-only z-50 rounded-pill bg-primary px-4 py-2 text-sm font-semibold text-on-primary focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+    class="sr-only z-50 rounded-pill bg-primary px-5 text-sm font-semibold text-on-primary focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:inline-flex focus:min-h-11 focus:items-center"
   >
     {t(locale, 'landing.skipToContent')}
   </a>
@@ -99,9 +99,10 @@ const socials = [
       <div class="flex items-center gap-2">
         <a
           href={href(other, otherPath)}
+          rel="alternate"
           hreflang={other}
           lang={other}
-          class="rounded-pill border border-border px-3 py-1.5 text-xs font-semibold tracking-wide text-muted uppercase transition hover:border-text hover:text-text"
+          class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-pill border border-border px-3 text-xs font-semibold tracking-wide text-muted uppercase transition hover:border-text hover:text-text"
           aria-label={otherLabel}
           title={otherLabel}
         >
@@ -109,15 +110,17 @@ const socials = [
         </a>
         <a
           href={appHref()}
-          class="hidden rounded-pill bg-primary px-4 py-2 text-sm font-semibold text-on-primary transition hover:opacity-90 sm:inline-flex"
+          class="hidden min-h-11 items-center rounded-pill bg-primary px-4 text-sm font-semibold text-on-primary transition hover:opacity-90 sm:inline-flex"
         >
           {t(locale, 'landing.navApp')}
         </a>
 
         <details class="group md:hidden" data-mobile-nav>
           <summary
-            class="flex size-10 cursor-pointer list-none items-center justify-center rounded-pill border border-border text-text [&::-webkit-details-marker]:hidden"
+            class="flex size-11 cursor-pointer list-none items-center justify-center rounded-pill border border-border text-text [&::-webkit-details-marker]:hidden"
             aria-label={t(locale, 'landing.navMenu')}
+            aria-expanded="false"
+            aria-controls="mobile-nav-panel"
           >
             <svg
               class="group-open:hidden"
@@ -147,32 +150,39 @@ const socials = [
             </svg>
           </summary>
           <div
+            id="mobile-nav-panel"
             class="absolute inset-x-0 top-full border-b border-border bg-bg/95 px-5 pt-2 pb-6 shadow-card backdrop-blur"
           >
             <ul class="flex flex-col">
               <li>
-                <a class="block py-3 text-lg font-medium" href={href(locale, '/')}>
+                <a
+                  class="flex min-h-11 items-center py-3 text-lg font-medium"
+                  href={href(locale, '/')}
+                >
                   {t(locale, 'landing.navHome')}
                 </a>
               </li>
               {
                 navLinks.map((x) => (
                   <li>
-                    <a class="block py-3 text-lg font-medium" href={x.href}>
+                    <a class="flex min-h-11 items-center py-3 text-lg font-medium" href={x.href}>
                       {x.label}
                     </a>
                   </li>
                 ))
               }
               <li>
-                <a class="block py-3 text-lg font-medium" href={href(locale, '/contact/')}>
+                <a
+                  class="flex min-h-11 items-center py-3 text-lg font-medium"
+                  href={href(locale, '/contact/')}
+                >
                   {t(locale, 'landing.navContact')}
                 </a>
               </li>
             </ul>
             <a
               href={appHref()}
-              class="mt-3 flex items-center justify-center rounded-pill bg-primary px-5 py-3 text-base font-semibold text-on-primary"
+              class="mt-3 flex min-h-11 items-center justify-center rounded-pill bg-primary px-5 py-3 text-base font-semibold text-on-primary"
             >
               {t(locale, 'landing.navApp')}
             </a>
@@ -182,12 +192,14 @@ const socials = [
     </nav>
   </header>
 
-  <main id="main" class={mainClass}>
+  <main id="main" class={mainClass} tabindex="-1">
     <slot />
   </main>
 
   <footer class="mt-24 border-t border-border">
-    <div class="mx-auto grid max-w-6xl gap-10 px-5 py-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+    <div
+      class="mx-auto grid max-w-6xl gap-10 px-5 py-12 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]"
+    >
       <div>
         <a href={href(locale, '/')} class="font-display text-2xl">{BRAND.name}</a>
         <p class="mt-3 max-w-xs text-sm leading-relaxed text-muted">
@@ -195,7 +207,7 @@ const socials = [
         </p>
         <a
           href={appHref()}
-          class="mt-5 inline-flex rounded-pill border border-border-strong px-4 py-2 text-sm font-semibold transition hover:border-text"
+          class="mt-5 inline-flex min-h-11 items-center rounded-pill border border-border-strong px-4 text-sm font-semibold transition hover:border-text"
         >
           {t(locale, 'common.openApp')}
         </a>
@@ -238,7 +250,10 @@ const socials = [
         </p>
         <ul class="mt-3 flex flex-col gap-2 text-sm">
           <li>
-            <a class="text-muted transition hover:text-text" href={`mailto:${contactEmail}`}>
+            <a
+              class="text-muted transition break-words hover:text-text"
+              href={`mailto:${contactEmail}`}
+            >
               {contactEmail}
             </a>
           </li>
@@ -255,6 +270,7 @@ const socials = [
             <a
               class="text-muted transition hover:text-text"
               href={href(other, otherPath)}
+              rel="alternate"
               hreflang={other}
               lang={other}
             >
@@ -265,7 +281,7 @@ const socials = [
       </div>
     </div>
     <div class="border-t border-border">
-      <p class="mx-auto max-w-6xl px-5 py-5 text-xs text-muted-2">
+      <p class="mx-auto max-w-6xl px-5 py-5 text-sm text-muted">
         © {year}
         {BRAND.organization}
       </p>
@@ -273,20 +289,33 @@ const socials = [
   </footer>
 
   <script>
-    // Mobile menu: close on Esc, on link click, on outside click and when the viewport grows.
+    // Mobile menu: keep aria-expanded in sync and close on Esc, on link click, on outside click
+    // and when the viewport grows. Esc always returns focus to the summary that opened the menu.
     const nav = document.querySelector<HTMLDetailsElement>('[data-mobile-nav]');
     if (nav) {
+      const summary = nav.querySelector<HTMLElement>('summary');
       const close = () => {
         nav.open = false;
       };
+      nav.addEventListener('toggle', () => {
+        summary?.setAttribute('aria-expanded', String(nav.open));
+      });
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && nav.open) {
           close();
-          nav.querySelector<HTMLElement>('summary')?.focus();
+          summary?.focus();
         }
       });
       nav.addEventListener('click', (e) => {
         if (e.target instanceof Element && e.target.closest('a')) close();
+      });
+      // Tabbing out of the open panel closes it, so focus never lands behind an invisible menu.
+      nav.addEventListener('focusout', (e) => {
+        if (!nav.open) return;
+        const next = e.relatedTarget;
+        if (next instanceof Node && nav.contains(next)) return;
+        if (next === null) return;
+        close();
       });
       document.addEventListener('click', (e) => {
         if (nav.open && e.target instanceof Node && !nav.contains(e.target)) close();

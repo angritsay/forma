@@ -170,11 +170,11 @@ Public API (types in `types.ts`):
 ```ts
 computeFitnessIndex(profile: UserTrainingProfile): { index: number /*0..100*/; level: 1|2|3; components: Record<string, number> }
 initialScale(index: number): number              // maps 0..100 → 0.6..1.3 (volume multiplier)
-recommendDifficulty(state: CourseState, profile: UserTrainingProfile, nowIso: string): { choice: DifficultyChoice; reason: L10n }
-prescribeWorkout(workout: Workout, opts: PrescribeOptions): PrescribedWorkout   // concrete reps/seconds/loads, substitutions, rest
+recommendDifficulty(state: CourseState, profile: UserTrainingProfile, nowIso: string, context?: RecommendationContext /* stepsYesterday */): { choice: DifficultyChoice; reason: L10n }
+prescribeWorkout(workout: Workout, opts: PrescribeOptions, lookup?: ExerciseLookup): PrescribedWorkout   // concrete reps/seconds/loads, substitutions, rest
 estimateDuration(p: PrescribedWorkout): DurationEstimate                        // seconds, per block
 estimatePoints(workout: Workout, choice: DifficultyChoice, opts?: { repeat?: boolean; streakDays?: number }): number
-estimateCalories(p: PrescribedWorkout, weightKg: number): number
+estimateCalories(p: PrescribedWorkout, weightKg?: number, lookup?: ExerciseLookup): number
 buildPlayerSteps(p: PrescribedWorkout): PlayerStep[]                            // explain → work → rest … → done
 summarizeSession(p: PrescribedWorkout, results: ExerciseResult[], feedback: SessionFeedback, opts): SessionSummary
 adaptScale(state: CourseState, summary: SessionSummary): { scale: number; delta: number; reason: L10n }
@@ -191,16 +191,24 @@ Rules (defaults; constants live in `constants.ts`):
 - Adaptation after a session (Borg CR10 RPE + completion ratio): completion ≥0.95 and RPE ≤6 →
   scale +0.05; RPE 7–8 and completion ≥0.9 → +0.02; RPE ≥9 or completion <0.8 → −0.05;
   feeling `pain` → −0.10 and a "see a professional / reduce load" note. Scale clamped to 0.5..1.5.
-- Recommendation before a workout: `harder` if the last two sessions had RPE ≤6 and completion ≥0.95
-  and ≥48h passed since the last session; `easier` if the last RPE ≥9, or completion <0.8, or
-  <24h since the last session, or yesterday's steps ≥ 15 000 (heavy day); otherwise `normal`.
+- Recommendation before a workout: `harder` if the last two sessions had RPE ≤6, completion ≥0.95
+  and no pain, and ≥48h passed since the last session; `easier` if the last session reported pain or
+  RPE ≥9, or completion <0.8, or <24h since the last session, or yesterday's steps ≥ 15 000 (heavy
+  day); otherwise `normal`. History is ordered chronologically (instants, not strings).
 - Deload nodes: volume ×0.65, rest ×1.2, points as normal.
 - Duration: reps × `secondsPerRep` (× scale), seconds as given, plus rest, plus 8s transition per
   item, plus 20s per block intro; AMRAP/EMOM/Tabata durations are fixed by format; For-time uses the
-  estimated work time capped by `durationSec`.
+  estimated work time capped by `durationSec`. Only the rests the player actually plays are counted
+  (no rest after the last set, round or interval), so the estimate matches the player timeline.
+- Completion: each work step is weighted by its estimated seconds; `achieved` is read the way the
+  step is run — seconds for a timer step (seconds item, EMOM minute, Tabata/interval round), reps
+  for a reps step. A `test` block's step (`isTest`) is a max effort against the clock: the client
+  records the measurement for the benchmark and the step counts as done or skipped.
 - Calories: MET × weightKg × hours per work interval (rest at 1.5 MET), default weight 70 kg.
 - Substitutions: level 1 users or limitations map exercises to `scaling.easier` (recursively up to 2
-  steps); `harder` choice at level 3 may use `scaling.harder` for bodyweight items.
+  steps); `harder` choice at level 3 may use `scaling.harder` for bodyweight items, never inside a
+  non-scalable block (warm-up, cool-down) or a `test` block — a benchmark must stay the same
+  movement. A substitute measured in another unit keeps the work time, not the number.
 - Streak: a day counts if a workout session was completed **or** logged steps ≥ goal (7000). The
   current day does not break the streak until it ends (`atRisk` flag when nothing logged yet).
 - Steps points: 30 at goal, +5 per extra 1000 (cap 60), 0 below goal.

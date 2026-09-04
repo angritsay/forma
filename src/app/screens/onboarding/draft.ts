@@ -268,6 +268,39 @@ export function draftToTrainingProfile(d: OnboardingDraft): UserTrainingProfile 
   return profile;
 }
 
+export interface WeightField {
+  /** Weight to store; undefined while the field is empty or not a valid weight yet. */
+  weightKg?: number;
+  /** The text is neither empty nor a weight inside [WEIGHT_MIN_KG, WEIGHT_MAX_KG]. */
+  invalid: boolean;
+}
+
+/**
+ * Parse the optional weight field. The raw text stays in the step component, so half-typed input
+ * ("7" on the way to "70") is not wiped by the controlled value — only a valid weight is stored.
+ */
+export function parseWeightField(text: string): WeightField {
+  const trimmed = text.trim();
+  if (trimmed === '') return { invalid: false };
+  const n = Number(trimmed.replace(',', '.'));
+  if (!Number.isFinite(n)) return { invalid: true };
+  const kg = Math.round(n * 10) / 10;
+  if (kg < WEIGHT_MIN_KG || kg > WEIGHT_MAX_KG) return { invalid: true };
+  return { weightKg: kg, invalid: false };
+}
+
+/**
+ * Step index a `?step=` query parameter asks the wizard to resume at (`tests` is an alias for the
+ * first self-test), or null when the parameter is missing or unknown. The caller still clamps it
+ * to the first incomplete step so the athlete can never skip an unanswered question.
+ */
+export function resumeStepIndex(param: string | null | undefined): number | null {
+  if (!param) return null;
+  if (param === 'tests') return STEP_IDS.indexOf('testPushups');
+  const i = (STEP_IDS as readonly string[]).indexOf(param);
+  return i >= 0 ? i : null;
+}
+
 /** Parse a numeric text field into an integer within bounds, or undefined when empty/invalid. */
 export function parseIntField(value: string, max: number): number | undefined {
   const trimmed = value.trim();

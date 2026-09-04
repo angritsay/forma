@@ -12,9 +12,15 @@ import {
 import type { DayActivity, StreakInfo } from './types';
 import { num } from './util';
 
+/** The day's step goal, falling back to STEPS_GOAL for a missing or non-positive one. */
+function goalOf(goal: number | undefined): number {
+  const g = num(goal, STEPS_GOAL);
+  return g > 0 ? g : STEPS_GOAL;
+}
+
 /** A day is active when a workout was completed or the steps goal was reached. */
 export function isActiveDay(day: DayActivity): boolean {
-  return day.workoutDone === true || num(day.steps) >= num(day.stepsGoal, STEPS_GOAL);
+  return day.workoutDone === true || num(day.steps) >= goalOf(day.stepsGoal);
 }
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -63,7 +69,7 @@ export function computeStreak(days: readonly DayActivity[], todayIso: string): S
 /** 0 below the goal, 30 at the goal, +5 per full extra 1 000 steps, capped at 60. */
 export function stepsPoints(steps: number, goal: number = STEPS_GOAL): number {
   const s = Math.max(0, num(steps));
-  const g = num(goal, STEPS_GOAL) > 0 ? num(goal, STEPS_GOAL) : STEPS_GOAL;
+  const g = goalOf(goal);
   if (s < g) return 0;
   const extra = Math.floor((s - g) / 1000);
   return Math.min(STEPS_POINTS_MAX, STEPS_POINTS_AT_GOAL + extra * STEPS_POINTS_PER_EXTRA_1000);

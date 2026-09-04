@@ -19,7 +19,7 @@ const initial = name.trim().charAt(0).toUpperCase();
 ---
 
 <div
-  class={`grid gap-8 rounded-card border border-border bg-surface p-6 md:p-10 ${variant === 'full' ? 'md:grid-cols-[200px_1fr]' : 'md:grid-cols-[160px_1fr]'}`}
+  class={`grid gap-8 rounded-card border border-border bg-surface p-6 md:p-10 ${variant === 'full' ? 'md:grid-cols-[200px_minmax(0,1fr)]' : 'md:grid-cols-[160px_minmax(0,1fr)]'}`}
 >
   {
     COACH.photo ? (
@@ -70,7 +70,7 @@ const initial = name.trim().charAt(0).toUpperCase();
               <a
                 href={x.url}
                 rel="me noopener"
-                class="rounded-pill border border-border px-3 py-1.5 text-sm hover:border-text"
+                class="inline-flex min-h-11 items-center rounded-pill border border-border px-4 text-sm hover:border-text"
               >
                 {x.label}
               </a>
@@ -83,7 +83,7 @@ const initial = name.trim().charAt(0).toUpperCase();
       moreHref && (
         <a
           href={moreHref}
-          class="mt-6 inline-flex items-center gap-1 text-sm font-semibold underline decoration-border-strong underline-offset-4 hover:text-accent"
+          class="mt-6 inline-flex min-h-11 items-center gap-1 text-sm font-semibold underline decoration-border-strong underline-offset-4 hover:text-accent"
         >
           {t(locale, 'landing.coachMore')} →
         </a>

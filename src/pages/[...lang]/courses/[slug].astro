@@ -114,7 +114,7 @@ const jsonLd = [
     />
 
     <section
-      class="mt-6 grid items-center gap-8 md:grid-cols-[1fr_0.9fr] md:gap-14"
+      class="mt-6 grid items-center gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] md:gap-14"
       style={`--course-accent:${course.accent}`}
     >
       <div>
@@ -174,7 +174,7 @@ const jsonLd = [
   </div>
 
   <Section id="about" title={t(locale, 'landing.courseAboutTitle')} class="!py-12 md:!py-16">
-    <div class="grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
+    <div class="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
       <div class="flex flex-col gap-4 text-lg leading-relaxed text-muted">
         {course.longDescription.map((p) => <p>{l(p, locale)}</p>)}
       </div>
@@ -261,7 +261,7 @@ const jsonLd = [
         intro={t(locale, 'landing.courseSampleIntro')}
         class="!py-12 md:!py-16"
       >
-        <div class="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+        <div class="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
           <WorkoutPlan locale={locale} workout={workout} />
           <div class="rounded-card border border-border bg-surface p-6 md:p-8">
             <h3 class="font-display text-2xl">{t(locale, 'landing.courseAdaptTitle')}</h3>
@@ -278,7 +278,7 @@ const jsonLd = [
     intro={t(locale, 'landing.courseOrderIntro')}
     class="scroll-mt-16 !py-12 md:!py-16"
   >
-    <div class="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
       <div
         class="hero-art flex flex-col justify-between rounded-card p-6 md:p-8"
         style={`--course-g1:${g1};--course-g2:${g2}`}
@@ -365,7 +365,7 @@ const jsonLd = [
                   <li>
                     <a
                       href={exerciseHref(locale, ex)}
-                      class="inline-flex rounded-pill border border-border bg-surface px-3.5 py-1.5 text-sm transition hover:border-text"
+                      class="inline-flex min-h-11 items-center rounded-pill border border-border bg-surface px-4 text-sm transition hover:border-text"
                     >
                       {l(ex.name, locale)}
                     </a>

@@ -29,15 +29,18 @@ import { clamp, num, round2, sum } from './util';
 /** Estimated seconds of a work-type step: its weight in the completion ratio. */
 export function stepWeightSec(step: PlayerStep): number {
   switch (step.kind) {
-    case 'work':
-      return step.mode === 'timer'
-        ? num(step.durationSec, step.item.estimatedSec)
-        : step.item.estimatedSec;
+    case 'work': {
+      const itemSec = num(step.item?.estimatedSec);
+      return Math.max(0, step.mode === 'timer' ? num(step.durationSec, itemSec) : itemSec);
+    }
     case 'amrap':
-      return step.durationSec;
+      return Math.max(0, num(step.durationSec));
     case 'fortime': {
-      const est = step.rounds * sum(step.items.map((it) => it.estimatedSec)) * FORTIME_PACE_FACTOR;
-      return Math.min(step.capSec > 0 ? step.capSec : est, est);
+      const rounds = Math.max(1, num(step.rounds, 1));
+      const items = sum(step.items.map((it) => Math.max(0, num(it.estimatedSec))));
+      const est = rounds * items * FORTIME_PACE_FACTOR;
+      const cap = Math.max(0, num(step.capSec));
+      return Math.min(cap > 0 ? cap : est, est);
     }
     case 'block_intro':
     case 'explain':
@@ -49,29 +52,34 @@ export function stepWeightSec(step: PlayerStep): number {
 
 /**
  * Completion share (0..1) of one work-type step given its result.
- * Timer-mode work steps expect `achieved` in seconds; reps-mode in reps. Marking a step
- * `completed` without `achieved` counts as fully done.
+ * `achieved` is measured the way the step is run: **seconds** for a timer step (including an EMOM
+ * minute or a Tabata round, where the clock, not the rep count, is what the player can observe)
+ * and **reps** for a reps step. Marking a step `completed` without `achieved` counts as fully done.
+ * A test step is a max effort against the clock — its recorded number is a score, not a share of
+ * the target — so it counts as done or skipped whatever the client sends.
  */
 export function stepCompletion(step: PlayerStep, result: ExerciseResult | undefined): number {
   if (!result || result.skipped) return 0;
   switch (step.kind) {
     case 'work': {
-      if (result.achieved === undefined) return result.completed ? 1 : 0;
-      const denom = step.mode === 'timer' ? num(step.durationSec, step.target) : step.target;
+      if (step.isTest || result.achieved === undefined) return result.completed ? 1 : 0;
+      const denom =
+        step.mode === 'timer' ? num(step.durationSec, num(step.target)) : num(step.target);
       if (denom <= 0) return result.completed ? 1 : 0;
       return clamp(num(result.achieved) / denom, 0, 1);
     }
     case 'amrap': {
       if (result.rounds === undefined) return result.completed ? 1 : 0;
-      const repsPerRound = sum(step.items.map((it) => it.target));
+      const repsPerRound = sum(step.items.map((it) => num(it.target)));
       const partial = repsPerRound > 0 ? num(result.extraReps) / repsPerRound : 0;
-      const expected = Math.max(1, step.expectedRounds);
+      const expected = Math.max(1, num(step.expectedRounds, 1));
       return clamp((num(result.rounds) + partial) / expected, 0, 1);
     }
     case 'fortime': {
       if (result.completed) return 1;
-      if (result.timeSec === undefined || step.capSec <= 0) return 0;
-      return clamp(num(result.timeSec) / step.capSec, 0, 1) * 0.5;
+      const cap = num(step.capSec);
+      if (result.timeSec === undefined || cap <= 0) return 0;
+      return clamp(num(result.timeSec) / cap, 0, 1) * 0.5;
     }
     case 'block_intro':
     case 'explain':
@@ -91,10 +99,10 @@ export function computeCompletion(
   let weighted = 0;
   let total = 0;
   steps.forEach((step, i) => {
-    const w = stepWeightSec(step);
+    const w = num(stepWeightSec(step));
     if (w <= 0) return;
     total += w;
-    weighted += w * stepCompletion(step, byIndex.get(i));
+    weighted += w * clamp(num(stepCompletion(step, byIndex.get(i))), 0, 1);
   });
   if (total <= 0) return 0;
   return round2(clamp(weighted / total, 0, 1));
@@ -189,12 +197,24 @@ export function adaptScale(state: CourseState, summary: SessionSummary): ScaleAd
  * Recommendation
  * ------------------------------------------------------------------------------------------- */
 
+/** Chronological order: timestamps may carry different offsets, so compare instants, not strings. */
 function sortedHistory(state: CourseState): SessionSummary[] {
-  return [...(state.history ?? [])].sort((a, b) => a.completedAt.localeCompare(b.completedAt));
+  const at = (s: SessionSummary) => Date.parse(s.completedAt);
+  return [...(state.history ?? [])].sort((a, b) => {
+    const ta = at(a);
+    const tb = at(b);
+    if (Number.isFinite(ta) && Number.isFinite(tb)) return ta - tb;
+    return a.completedAt.localeCompare(b.completedAt);
+  });
 }
 
+/** Easy, complete and painless — the bar a session must clear to justify pushing harder. */
 function isEasyAndComplete(s: SessionSummary): boolean {
-  return num(s.rpe) <= ADAPTATION.easyRpe && num(s.completion) >= ADAPTATION.fullCompletion;
+  return (
+    s.feeling !== 'pain' &&
+    num(s.rpe) <= ADAPTATION.easyRpe &&
+    num(s.completion) >= ADAPTATION.fullCompletion
+  );
 }
 
 export function recommendDifficulty(

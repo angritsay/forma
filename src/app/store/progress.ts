@@ -212,7 +212,8 @@ const EMPTY_DATA = {
 };
 
 let wired = false;
-let inflight: Promise<void> | null = null;
+/** Keyed by user id so a load started for the previous user is never reused for the next one. */
+let inflight: { userId: string; promise: Promise<void> } | null = null;
 
 function isRejected(r: PromiseSettledResult<unknown>): r is PromiseRejectedResult {
   return r.status === 'rejected';
@@ -264,11 +265,12 @@ export const useProgress = create<ProgressState>((set, get) => {
   }
 
   function run(userId: string, blocking: boolean): Promise<void> {
-    if (inflight) return inflight;
-    inflight = fetchAll(userId, blocking).finally(() => {
-      inflight = null;
+    if (inflight && inflight.userId === userId) return inflight.promise;
+    const promise = fetchAll(userId, blocking).finally(() => {
+      if (inflight?.promise === promise) inflight = null;
     });
-    return inflight;
+    inflight = { userId, promise };
+    return promise;
   }
 
   return {

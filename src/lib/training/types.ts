@@ -211,6 +211,12 @@ export type PlayerStep =
       /** Reps (or seconds/meters/calories for reps-mode display). */
       target: number;
       loadKg?: number;
+      /**
+       * True inside a `test` block: the athlete works for the whole interval and the UI records a
+       * score (reps done / seconds held), not a share of the target. Completion counts such a step
+       * as done or skipped — see docs/TRAINING_SCIENCE.md §7.1.
+       */
+      isTest?: boolean;
     }
   | {
       kind: 'rest';

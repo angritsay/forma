@@ -4,7 +4,7 @@
  * The result step saves the profile and sends the user home.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { IconButton } from '@/components/ui/IconButton';
 import { ProgressBar } from '@/components/ui/ProgressBar';
@@ -19,6 +19,7 @@ import {
   firstIncompleteStep,
   isStepComplete,
   loadDraft,
+  resumeStepIndex,
   saveDraft,
   STEP_IDS,
   type OnboardingDraft,
@@ -62,9 +63,15 @@ const STEP_COMPONENT: Record<StepId, (props: StepProps) => React.ReactElement | 
   result: StepResult,
 };
 
+/**
+ * Draft the wizard opens with: the persisted one, seeded with the profile's locale/name.
+ * `?step=` (e.g. `?step=tests` from "retake tests") asks for a starting step; it is clamped to the
+ * first incomplete step, so it can never skip an unanswered question.
+ */
 function initialDraft(
   locale: OnboardingDraft['locale'],
   displayName: string | null | undefined,
+  requestedStep: number | null,
 ): OnboardingDraft {
   const saved = loadDraft();
   const draft: OnboardingDraft = {
@@ -72,16 +79,20 @@ function initialDraft(
     locale: saved.locale ?? locale,
     displayName: saved.displayName ?? displayName ?? undefined,
   };
-  return { ...draft, step: Math.min(draft.step, firstIncompleteStep(draft)) };
+  const wanted = requestedStep === null ? draft.step : Math.max(draft.step, requestedStep);
+  return { ...draft, step: Math.min(wanted, firstIncompleteStep(draft)) };
 }
 
 export default function OnboardingScreen() {
   const { t, locale } = useT();
   const navigate = useNavigate();
   const toast = useToast();
+  const [searchParams] = useSearchParams();
   const profileName = useSession((s) => s.profile?.displayName);
   const signOut = useSession((s) => s.signOut);
-  const [draft, setDraft] = useState<OnboardingDraft>(() => initialDraft(locale, profileName));
+  const [draft, setDraft] = useState<OnboardingDraft>(() =>
+    initialDraft(locale, profileName, resumeStepIndex(searchParams.get('step'))),
+  );
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -140,13 +151,15 @@ export default function OnboardingScreen() {
     const assessment = computeFitnessIndex(trainingProfile);
     setSaving(true);
     try {
+      // Retaking the tests must not rewrite the date the athlete first finished onboarding.
+      const onboardedAt = useSession.getState().profile?.onboardedAt ?? new Date().toISOString();
       await useSession.getState().saveProfile({
         displayName,
         locale: draft.locale ?? locale,
         trainingProfile,
         fitnessIndex: assessment.index,
         fitnessLevel: assessment.level,
-        onboardedAt: new Date().toISOString(),
+        onboardedAt,
       });
       clearDraft();
       navigate('/', { replace: true });

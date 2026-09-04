@@ -2,7 +2,7 @@
  * Course order form (client:load). Records email ↔ course through the backend RPC, then either
  * shows the success state or redirects to the course's external payment link.
  */
-import { useState, type SubmitEvent } from 'react';
+import { useEffect, useRef, useState, type SubmitEvent } from 'react';
 import type { Locale } from '@/content/schema';
 import { isConfigured } from '@/lib/api/client';
 import { isAppError } from '@/lib/api/errors';
@@ -30,6 +30,11 @@ export interface OrderFormLabels {
   tryAgain: string;
   lifetimeNote: string;
   telegramLabel: string;
+  /**
+   * Shown next to the consent when the course has a payment link: the visitor is
+   * handed over to that page with their email. Template with {host}.
+   */
+  paymentNote?: string;
 }
 
 export interface OrderFormProps {
@@ -72,9 +77,27 @@ function errorReason(err: unknown): ErrorReason {
   return msg.includes('fetch') || msg.includes('network') ? 'network' : 'generic';
 }
 
-function withEmail(url: string, email: string): string {
-  const sep = url.includes('?') ? '&' : '?';
-  return `${url}${sep}email=${encodeURIComponent(email)}`;
+/**
+ * The payment link is content, and following it hands the visitor's email to a third
+ * party — so only an absolute `https://` URL is ever navigated to. Anything else
+ * (relative path, `http:`, `javascript:`, a typo) is ignored and the order simply
+ * ends in the success state. `PaymentUrlSchema` enforces the same rule at build time.
+ */
+function paymentTarget(url: string | undefined): URL | null {
+  if (!url) return null;
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  return parsed.protocol === 'https:' ? parsed : null;
+}
+
+function withEmail(target: URL, email: string): string {
+  const url = new URL(target.href);
+  url.searchParams.set('email', email);
+  return url.href;
 }
 
 export default function OrderForm({
@@ -91,9 +114,27 @@ export default function OrderForm({
   const [email, setEmail] = useState('');
   const [consent, setConsent] = useState(false);
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
+  const emailRef = useRef<HTMLInputElement>(null);
+  const consentRef = useRef<HTMLInputElement>(null);
+  const successRef = useRef<HTMLDivElement>(null);
 
   const configured = isConfigured();
   const [consentBefore, consentAfter] = labels.consent.split('{privacy}');
+  // Only an https link is ever followed; see paymentTarget().
+  const payment = paymentTarget(paymentUrl);
+
+  // Validation errors must reach keyboard and screen-reader users: the message is announced by its
+  // role="alert" and focus moves to the control that has to change.
+  useEffect(() => {
+    if (status.kind !== 'error') return;
+    if (status.reason === 'consent') consentRef.current?.focus();
+    else emailRef.current?.focus();
+  }, [status]);
+
+  // The success panel replaces the form, so focus would otherwise fall back to <body>.
+  useEffect(() => {
+    if (status.kind === 'success') successRef.current?.focus();
+  }, [status.kind]);
 
   async function onSubmit(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -113,9 +154,9 @@ export default function OrderForm({
       setStatus({ kind: 'error', reason: errorReason(err) });
       return;
     }
-    if (paymentUrl) {
+    if (payment) {
       setStatus({ kind: 'redirecting' });
-      window.location.assign(withEmail(paymentUrl, trimmed));
+      window.location.assign(withEmail(payment, trimmed));
       return;
     }
     setStatus({ kind: 'success', email: trimmed });
@@ -152,14 +193,19 @@ export default function OrderForm({
 
   if (status.kind === 'success') {
     return (
-      <div className="rounded-inner border border-success/40 bg-success/10 p-5" role="status">
+      <div
+        ref={successRef}
+        tabIndex={-1}
+        className="rounded-inner border border-success/40 bg-success/10 p-5 outline-none"
+        role="status"
+      >
         <p className="font-display text-2xl">{labels.successTitle}</p>
         <p className="mt-2 text-sm leading-relaxed">
           {fill(labels.successText, { course: courseName, email: status.email })}
         </p>
         <a
           href={appUrl}
-          className="mt-4 inline-flex items-center justify-center rounded-pill bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary"
+          className="mt-4 inline-flex min-h-11 items-center justify-center rounded-pill bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary"
         >
           {labels.successApp}
         </a>
@@ -179,6 +225,7 @@ export default function OrderForm({
             : fill(labels.errorGeneric, { email: supportEmail })
       : '';
   const emailInvalid = status.kind === 'error' && status.reason === 'email';
+  const consentInvalid = status.kind === 'error' && status.reason === 'consent';
 
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
@@ -187,6 +234,7 @@ export default function OrderForm({
           {labels.emailLabel}
         </label>
         <input
+          ref={emailRef}
           id="order-email"
           name="email"
           type="email"
@@ -196,7 +244,7 @@ export default function OrderForm({
           value={email}
           disabled={busy}
           aria-invalid={emailInvalid || undefined}
-          aria-describedby={errorText ? 'order-error' : undefined}
+          aria-describedby={errorText && !consentInvalid ? 'order-error' : undefined}
           onChange={(e) => {
             setEmail(e.target.value);
             if (status.kind === 'error') setStatus({ kind: 'idle' });
@@ -210,15 +258,18 @@ export default function OrderForm({
 
       <label className="flex cursor-pointer items-start gap-3 text-sm text-muted">
         <input
+          ref={consentRef}
           type="checkbox"
           name="consent"
           checked={consent}
           disabled={busy}
+          aria-invalid={consentInvalid || undefined}
+          aria-describedby={consentInvalid ? 'order-error' : undefined}
           onChange={(e) => {
             setConsent(e.target.checked);
             if (status.kind === 'error') setStatus({ kind: 'idle' });
           }}
-          className="mt-1 size-4 shrink-0 accent-accent"
+          className="mt-1 size-5 shrink-0 accent-accent"
         />
         <span>
           {consentBefore}
@@ -231,6 +282,10 @@ export default function OrderForm({
           {consentAfter}
         </span>
       </label>
+
+      {payment && labels.paymentNote && (
+        <p className="text-xs text-muted">{fill(labels.paymentNote, { host: payment.host })}</p>
+      )}
 
       {errorText && (
         <p
@@ -245,7 +300,7 @@ export default function OrderForm({
       <button
         type="submit"
         disabled={busy}
-        className="inline-flex items-center justify-center rounded-pill bg-primary px-6 py-3.5 text-base font-semibold text-on-primary transition hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
+        className="inline-flex min-h-11 items-center justify-center rounded-pill bg-primary px-6 py-3.5 text-base font-semibold text-on-primary transition hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
       >
         {status.kind === 'submitting'
           ? labels.submitting
@@ -253,7 +308,7 @@ export default function OrderForm({
             ? labels.redirecting
             : labels.submit}
       </button>
-      <p className="text-xs text-muted">{labels.lifetimeNote}</p>
+      <p className="text-sm text-muted">{labels.lifetimeNote}</p>
     </form>
   );
 }
