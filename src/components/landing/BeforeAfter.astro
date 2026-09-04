@@ -6,12 +6,15 @@
  * pairs without both photos and a recorded consent date are filtered out in the content layer
  * (content/site/results.ts).
  *
- * The two photos sit side by side rather than under a drag divider — a slider only reads well when
- * both frames share an exact camera position, which real client photos rarely do.
+ * Two shapes, because coaching archives hold both: a single image with the panels already joined
+ * (the common case — sometimes three panels for a longer progression), or two separate files that
+ * this component joins itself. Neither uses a drag divider: a slider only reads well when both
+ * frames share an exact camera position, which real client photos rarely do.
  */
 import { publishableResults } from '@content/site/results';
 import { t } from '@/i18n';
 import type { Locale } from '@/i18n';
+import { withBase } from '@/lib/util/paths';
 import { weeksLabel } from './courseHelpers';
 
 interface Props {
@@ -27,36 +30,48 @@ const results = publishableResults();
     <ul class="grid gap-6 sm:grid-cols-2">
       {results.map((r) => (
         <li class="overflow-hidden rounded-card border border-border bg-surface">
-          <div class="grid grid-cols-2 gap-px bg-border">
-            <figure class="relative m-0 bg-surface-2">
-              <img
-                src={r.before}
-                alt={r.beforeAlt[locale]}
-                loading="lazy"
-                decoding="async"
-                width="400"
-                height="533"
-                class="aspect-[3/4] w-full object-cover"
-              />
-              <figcaption class="absolute top-2 left-2 rounded-pill bg-bg/70 px-2 py-0.5 text-xs font-semibold backdrop-blur">
-                {t(locale, 'landing.resultsBefore')}
-              </figcaption>
-            </figure>
-            <figure class="relative m-0 bg-surface-2">
-              <img
-                src={r.after}
-                alt={r.afterAlt[locale]}
-                loading="lazy"
-                decoding="async"
-                width="400"
-                height="533"
-                class="aspect-[3/4] w-full object-cover"
-              />
-              <figcaption class="absolute top-2 left-2 rounded-pill bg-accent px-2 py-0.5 text-xs font-semibold text-on-primary">
-                {t(locale, 'landing.resultsAfter')}
-              </figcaption>
-            </figure>
-          </div>
+          {r.composite ? (
+            /* The panels are already joined in the file — one image, no overlaid labels, because
+               where "before" sits inside the frame is the photographer's decision, not ours. */
+            <img
+              src={withBase(r.composite)}
+              alt={r.compositeAlt ? r.compositeAlt[locale] : ''}
+              loading="lazy"
+              decoding="async"
+              class="w-full bg-surface-2 object-cover"
+            />
+          ) : (
+            <div class="grid grid-cols-2 gap-px bg-border">
+              <figure class="relative m-0 bg-surface-2">
+                <img
+                  src={withBase(r.before ?? '')}
+                  alt={r.beforeAlt ? r.beforeAlt[locale] : ''}
+                  loading="lazy"
+                  decoding="async"
+                  width="400"
+                  height="533"
+                  class="aspect-[3/4] w-full object-cover"
+                />
+                <figcaption class="absolute top-2 left-2 rounded-pill bg-bg/70 px-2 py-0.5 text-xs font-semibold backdrop-blur">
+                  {t(locale, 'landing.resultsBefore')}
+                </figcaption>
+              </figure>
+              <figure class="relative m-0 bg-surface-2">
+                <img
+                  src={withBase(r.after ?? '')}
+                  alt={r.afterAlt ? r.afterAlt[locale] : ''}
+                  loading="lazy"
+                  decoding="async"
+                  width="400"
+                  height="533"
+                  class="aspect-[3/4] w-full object-cover"
+                />
+                <figcaption class="absolute top-2 left-2 rounded-pill bg-accent px-2 py-0.5 text-xs font-semibold text-on-primary">
+                  {t(locale, 'landing.resultsAfter')}
+                </figcaption>
+              </figure>
+            </div>
+          )}
           <div class="flex flex-col gap-2 p-5">
             <p class="flex flex-wrap items-baseline gap-x-2">
               {r.name && <span class="text-[15px] font-semibold">{r.name[locale]}</span>}
