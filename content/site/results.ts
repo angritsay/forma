@@ -6,9 +6,13 @@
  *
  * Before publishing a pair:
  *  - get the client's written permission for the specific photos, on a public commercial page;
- *  - set `consent` to the date that permission was given (the section skips pairs without it);
- *  - keep `weeks` honest and say what the program was — a result over 24 weeks presented as 8
- *    is the kind of claim consumer-protection law treats as misleading advertising.
+ *  - set `consent` to the date that permission was given (the section skips pairs without it).
+ *
+ * The page shows the photographs and nothing else. No "12 weeks", no course name: the owner asked
+ * for neither, and that is the safer choice anyway — a duration or a programme named next to a
+ * transformation is a performance claim, and a claim has to be substantiated. `weeks` and
+ * `courseId` stay in the type as internal record-keeping so the provenance of a photo is known
+ * even though it is not printed.
  *
  * Photos live under /public/results/ and are referenced from the site root, e.g.
  * '/results/anna.jpg'. Two shapes are supported, because real coaching photos come both ways:
@@ -34,9 +38,9 @@ export interface ResultPair {
   afterAlt?: L10n;
   /** Who this is, as they agreed to be named — a first name or an initial is fine. */
   name?: L10n;
-  /** How long the change took. Never round this down. */
-  weeks: number;
-  /** Which course they followed, by course id, so the claim is attributable. */
+  /** How long the change took. Recorded, never displayed. Never round this down. */
+  weeks?: number;
+  /** Which course they followed, by course id. Recorded, never displayed. */
   courseId?: string;
   /** One honest sentence in the client's or coach's words. */
   quote?: L10n;
