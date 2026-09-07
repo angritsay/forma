@@ -132,6 +132,24 @@
     "note": "second take of air_squat"
   },
   {
+    "key": "IMG_0305",
+    "file": "IMG_0305.mp4",
+    "exerciseId": "",
+    "note": "NOT AN EXERCISE: seventh talking-head clip"
+  },
+  {
+    "key": "IMG_0307",
+    "file": "IMG_0307.mp4",
+    "exerciseId": "",
+    "note": "NOT AN EXERCISE: eighth talking-head clip"
+  },
+  {
+    "key": "IMG_0308",
+    "file": "IMG_0308.mp4",
+    "exerciseId": "",
+    "note": "The movement is a glute bridge and it is performed correctly, but this clip is filmed somewhere else entirely \u2014 green turf, a wooden barn ceiling, a purple mat \u2014 by a man in a grey shirt and orange shoes. Every other demo is Sergey in the same gym in a white shirt. Left unassigned deliberately: whether a demo that is visibly not the coach, in a different venue, should be sold as part of his course is the owner's decision, not a technical one. Setting exerciseId here would ship it by default"
+  },
+  {
     "key": "IMG_0347",
     "file": "IMG_0347.mp4",
     "exerciseId": "",
@@ -490,6 +508,12 @@
     "file": "IMG_6711.mp4",
     "exerciseId": "",
     "note": "second take of knee_push_up"
+  },
+  {
+    "key": "IMG_6712",
+    "file": "IMG_6712.mp4",
+    "exerciseId": "",
+    "note": "second take of sit_up"
   },
   {
     "key": "IMG_6713",
