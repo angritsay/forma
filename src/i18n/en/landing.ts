@@ -69,8 +69,10 @@ export const landing = {
   // Home: courses
   resultsEyebrow: 'Results',
   resultsTitle: 'Before and after',
+  // Deliberately does not claim these came from the courses on this page. They are Sergey's
+  // one-to-one clients; saying otherwise would be a claim we cannot substantiate.
   resultsIntro:
-    'Real athletes and real timelines. Every pair of photos is published with that person’s permission.',
+    'People Sergey has coached. Every photograph is published with that person’s permission.',
   resultsBefore: 'Before',
   resultsAfter: 'After',
   coursesEyebrow: 'Courses',

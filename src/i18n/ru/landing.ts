@@ -69,8 +69,7 @@ export const landing = {
   // Главная: курсы
   resultsEyebrow: 'Результаты',
   resultsTitle: 'До и после',
-  resultsIntro:
-    'Реальные ученики и реальные сроки. Каждая пара фотографий опубликована с согласия человека.',
+  resultsIntro: 'Люди, которых тренировал Сергей. Каждая фотография опубликована с их разрешения.',
   resultsBefore: 'До',
   resultsAfter: 'После',
   coursesEyebrow: 'Курсы',

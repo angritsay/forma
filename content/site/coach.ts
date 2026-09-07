@@ -45,8 +45,13 @@ export const COACH = {
     },
     { ru: 'В спорте с 2010 года', en: 'In sport since 2010' },
   ] as L10n[],
-  /** Photo path under /public (optional). */
-  photo: '',
+  /**
+   * Photo path under /public (optional; the card falls back to a monogram tile without it).
+   * This is his own profi.ru portrait, cropped square by salience so the crop keeps his headroom.
+   * The source is only 240x320, so it is sharp at 1x in the 200 px slot and soft on a retina
+   * screen — worth replacing with a larger original when one is to hand.
+   */
+  photo: '/coach/sergey.jpg',
   links: [{ label: 'profi.ru', url: 'https://profi.ru/profile/TitovSA5/' }] as {
     label: string;
     url: string;

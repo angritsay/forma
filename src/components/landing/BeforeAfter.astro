@@ -14,6 +14,11 @@
  * The card carries the photograph and, at most, a name and a sentence in the client's words. No
  * duration and no course name: both are performance claims that would need substantiating, and
  * the owner asked for neither.
+ *
+ * Composites are declared square so the browser reserves the space before the file arrives. The
+ * archive's files run from 1.000 to 0.968 of square, so the object-cover crop takes at most 1.6%
+ * off the top and bottom of the tallest one — invisible on a full-body shot, and worth it to stop
+ * ten lazy-loaded images shoving the page around as they land.
  */
 import { publishableResults } from '@content/site/results';
 import { t } from '@/i18n';
@@ -41,7 +46,9 @@ const results = publishableResults();
               alt={r.compositeAlt ? r.compositeAlt[locale] : ''}
               loading="lazy"
               decoding="async"
-              class="w-full bg-surface-2 object-cover"
+              width="1000"
+              height="1000"
+              class="aspect-square w-full bg-surface-2 object-cover"
             />
           ) : (
             <div class="grid grid-cols-2 gap-px bg-border">
