@@ -910,6 +910,7 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'incline_push_up' },
     animation: 'chair_dip',
+    video: { ru: 'storage:videos/shared/chair_dip.ru.mp4' },
     tags: ['upper', 'push'],
   },
   {

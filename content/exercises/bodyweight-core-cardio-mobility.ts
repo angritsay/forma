@@ -284,6 +284,7 @@ export const EXERCISES_B: ExerciseInput[] = [
     loadable: false,
     scaling: { harder: 'v_up' },
     animation: 'sit_up',
+    video: { ru: 'storage:videos/shared/sit_up.ru.mp4' },
     tags: ['core'],
   },
   {
@@ -684,6 +685,7 @@ export const EXERCISES_B: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'high_knees' },
     animation: 'mountain_climber',
+    video: { ru: 'storage:videos/shared/mountain_climber.ru.mp4' },
     tags: ['cardio', 'core'],
   },
   {
@@ -850,6 +852,7 @@ export const EXERCISES_B: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'jog_in_place', harder: 'skater' },
     animation: 'jumping_jack',
+    video: { ru: 'storage:videos/shared/jumping_jack.ru.mp4' },
     tags: ['cardio', 'warmup'],
   },
   {

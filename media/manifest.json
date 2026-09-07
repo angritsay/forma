@@ -9,13 +9,13 @@
     "key": "IMG_0908",
     "file": "IMG_0908.mp4",
     "exerciseId": "",
-    "note": "was recorded as air_squat from a 4-frame sheet, but a dumbbell is held at the chest in the opening frames while the squat frames show the arms reaching forward. Goblet or air squat — re-check on the 12-frame sheet"
+    "note": "was recorded as air_squat from a 4-frame sheet, but a dumbbell is held at the chest in the opening frames while the squat frames show the arms reaching forward. Goblet or air squat \u2014 re-check on the 12-frame sheet"
   },
   {
     "key": "IMG_0909",
     "file": "IMG_0909.mp4",
     "exerciseId": "db_front_squat",
-    "note": "dumbbell racked at the shoulder, squat only — no overhead press"
+    "note": "dumbbell racked at the shoulder, squat only \u2014 no overhead press"
   },
   {
     "key": "IMG_0913",
@@ -51,7 +51,7 @@
     "key": "IMG_0923",
     "file": "IMG_0923.mp4",
     "exerciseId": "db_lunge",
-    "note": "dumbbells hanging at the sides, stepping back — matches the authored description, which specifies arms down"
+    "note": "dumbbells hanging at the sides, stepping back \u2014 matches the authored description, which specifies arms down"
   },
   {
     "key": "IMG_0924",
@@ -76,5 +76,53 @@
     "file": "IMG_0928.mp4",
     "exerciseId": "push_up",
     "note": "full plank on the toes, chest to the mat"
+  },
+  {
+    "key": "IMG_0946",
+    "file": "IMG_0946.mp4",
+    "exerciseId": "chair_dip",
+    "note": "hands behind on a bench, legs out in front, elbows bending to lower the hips"
+  },
+  {
+    "key": "IMG_0952",
+    "file": "IMG_0952.mp4",
+    "exerciseId": "db_devil_press",
+    "note": "dumbbells to the floor, push-up on them, then stood up and swung overhead \u2014 the full devil press sequence"
+  },
+  {
+    "key": "IMG_0953",
+    "file": "IMG_0953.mp4",
+    "exerciseId": "jumping_jack",
+    "note": "feet apart and arms overhead in the same beat, repeated"
+  },
+  {
+    "key": "IMG_0954",
+    "file": "IMG_0954.mp4",
+    "exerciseId": "single_under",
+    "note": "jump rope, one pass of the rope per jump"
+  },
+  {
+    "key": "IMG_0957",
+    "file": "IMG_0957.mp4",
+    "exerciseId": "double_under",
+    "note": "jump rope with noticeably more height than IMG_0954, and the only other rope movement in the library. Inferred rather than counted \u2014 worth confirming"
+  },
+  {
+    "key": "IMG_0964",
+    "file": "IMG_0964.mp4",
+    "exerciseId": "sit_up",
+    "note": "flat on the mat to fully upright, knees bent, no weight"
+  },
+  {
+    "key": "IMG_0966",
+    "file": "IMG_0966.mp4",
+    "exerciseId": "mountain_climber",
+    "note": "plank on the hands, knees driving to the chest alternately"
+  },
+  {
+    "key": "IMG_0968",
+    "file": "IMG_0968.mp4",
+    "exerciseId": "",
+    "note": "plank with the knees coming forward \u2014 either a second take of mountain_climber or bear_crawl; the hip height that separates them is not readable at 8 frames"
   }
 ]

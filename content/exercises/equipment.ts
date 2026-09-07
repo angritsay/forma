@@ -401,6 +401,7 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'jumping_jack', harder: 'double_under' },
     animation: 'single_under',
+    video: { ru: 'storage:videos/shared/single_under.ru.mp4' },
     tags: ['cardio', 'warmup'],
   },
   {
@@ -460,6 +461,7 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'single_under' },
     animation: 'double_under',
+    video: { ru: 'storage:videos/shared/double_under.ru.mp4' },
     tags: ['cardio', 'explosive', 'benchmark'],
   },
   {
@@ -1307,6 +1309,7 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: true,
     scaling: { easier: 'burpee' },
     animation: 'devil_press',
+    video: { ru: 'storage:videos/shared/db_devil_press.ru.mp4' },
     tags: ['cardio', 'explosive', 'benchmark'],
   },
   {
