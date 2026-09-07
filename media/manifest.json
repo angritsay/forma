@@ -124,5 +124,53 @@
     "file": "IMG_0968.mp4",
     "exerciseId": "",
     "note": "plank with the knees coming forward \u2014 either a second take of mountain_climber or bear_crawl; the hip height that separates them is not readable at 8 frames"
+  },
+  {
+    "key": "IMG_0969",
+    "file": "IMG_0969.mp4",
+    "exerciseId": "",
+    "note": "forearm plank that turns into single-leg lifts \u2014 the hold and the leg raise are different exercises and this clip shows both"
+  },
+  {
+    "key": "IMG_0970",
+    "file": "IMG_0970.mp4",
+    "exerciseId": "v_up",
+    "note": "flat on the back, legs and torso rising together, hands reaching to the feet"
+  },
+  {
+    "key": "IMG_0973",
+    "file": "IMG_0973.mp4",
+    "exerciseId": "",
+    "note": "another hollow-shaped hold; IMG_0977 shows the position more cleanly, so this one is left out rather than duplicating the id"
+  },
+  {
+    "key": "IMG_0974",
+    "file": "IMG_0974.mp4",
+    "exerciseId": "",
+    "note": "on the back with the arms overhead and legs raising \u2014 hollow_hold or leg_raise, not separable here"
+  },
+  {
+    "key": "IMG_0976",
+    "file": "IMG_0976.mp4",
+    "exerciseId": "flutter_kick",
+    "note": "on the back, legs held low and alternating in small beats"
+  },
+  {
+    "key": "IMG_0977",
+    "file": "IMG_0977.mp4",
+    "exerciseId": "hollow_hold",
+    "note": "on the back, arms by the ears and legs raised, lower back pressed down and held"
+  },
+  {
+    "key": "IMG_0978",
+    "file": "IMG_0978.mp4",
+    "exerciseId": "",
+    "note": "lying oblique crunch, elbow toward the opposite knee. The library's russian_twist is a seated twist, so there is no match for this"
+  },
+  {
+    "key": "IMG_0979",
+    "file": "IMG_0979.mp4",
+    "exerciseId": "",
+    "note": "plank on the hands with what may be a shoulder tap; the lifted hand is not clearly readable"
   }
 ]

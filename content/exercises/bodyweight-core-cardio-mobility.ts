@@ -172,6 +172,7 @@ export const EXERCISES_B: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'dead_bug', harder: 'v_up' },
     animation: 'hollow_hold',
+    video: { ru: 'storage:videos/shared/hollow_hold.ru.mp4' },
     tags: ['core'],
   },
   {
@@ -347,6 +348,7 @@ export const EXERCISES_B: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'sit_up' },
     animation: 'v_up',
+    video: { ru: 'storage:videos/shared/v_up.ru.mp4' },
     tags: ['core', 'explosive'],
   },
   {
@@ -629,6 +631,7 @@ export const EXERCISES_B: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'dead_bug' },
     animation: 'flutter_kick',
+    video: { ru: 'storage:videos/shared/flutter_kick.ru.mp4' },
     tags: ['core', 'cardio'],
   },
   {
