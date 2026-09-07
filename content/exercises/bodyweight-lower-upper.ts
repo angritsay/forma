@@ -967,6 +967,7 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'plank' },
     animation: 'plank_shoulder_tap',
+    video: { ru: 'storage:videos/shared/plank_shoulder_tap.ru.mp4' },
     tags: ['core', 'upper'],
   },
   {
@@ -1020,6 +1021,7 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'plank' },
     animation: 'up_down_plank',
+    video: { ru: 'storage:videos/shared/up_down_plank.ru.mp4' },
     tags: ['core', 'upper', 'cardio'],
   },
   {

@@ -61,6 +61,7 @@ export const EXERCISES_B: ExerciseInput[] = [
     loadable: false,
     scaling: { harder: 'side_plank' },
     animation: 'plank',
+    video: { ru: 'storage:videos/shared/plank.ru.mp4' },
     tags: ['core', 'benchmark'],
     isTest: true,
   },
@@ -114,6 +115,7 @@ export const EXERCISES_B: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'plank' },
     animation: 'side_plank',
+    video: { ru: 'storage:videos/shared/side_plank.ru.mp4' },
     tags: ['core', 'unilateral'],
   },
   {
@@ -580,6 +582,7 @@ export const EXERCISES_B: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'dead_bug' },
     animation: 'russian_twist',
+    video: { ru: 'storage:videos/shared/russian_twist.ru.mp4' },
     tags: ['core'],
   },
   {
