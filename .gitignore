@@ -9,3 +9,6 @@ coverage/
 .DS_Store
 .vercel
 public/og/
+
+# Exercise clips: paid content, ~250 MB. They live in the private Supabase bucket.
+media/clips/

@@ -38,26 +38,47 @@ node scripts/media/prepare-videos.mjs ~/ChatExport_НОВИЧКИ --out media/cl
 #    Re-running step 1 never overwrites an identification you have already made.
 
 # 3. Apply the manifest to the exercise library (writes `video:` onto each matched exercise).
-node scripts/media/apply-manifest.mjs        # TODO: write once the manifest is filled in
+node scripts/media/apply-manifest.mjs --dir media
+node scripts/media/apply-manifest.mjs --dir media --check   # CI: fails if content has drifted
+
+# 4. Push the clips into the private bucket. Service role key, never the anon key, and never
+#    committed — it bypasses RLS because the insert policy is admin-only.
+SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… \
+  node scripts/media/upload-videos.mjs --dir media/clips
 ```
 
-## The open question: where do the files live?
+## Progress
 
-This is the decision that has to be made before any of it ships, and it is a business decision, not
-a technical one.
+|              |                               |
+| ------------ | ----------------------------- |
+| Unique clips | 145                           |
+| Identified   | 4 — see `media/manifest.json` |
 
-**Option A — public, in the repo.** Transcoded to 720p at CRF 28 the clips come to roughly 1–2 MB
-each, so ~200–300 MB for all 145. That fits GitHub Pages (1 GB soft limit) and ships immediately
-with no backend. The cost: the demos are freely viewable by anyone, bought or not.
+Identification is the slow part and it does not parallelise: four frames are often not enough. The
+clip that looked like a shoulder press turned out to be a thruster — a front squat driving into an
+overhead press — which only became clear from a denser frame strip. Every entry in the manifest
+carries a note saying what was actually seen.
 
-**Option B — private, in Supabase Storage.** What the app was designed for, and the plumbing is
-already written: a private `videos` bucket, RLS policies that check the viewer's entitlement, and
-`resolveMediaUrl()` handing back short-lived signed URLs. Requires a Supabase project to exist
-(`docs/SETUP.md`); until then the app runs in demo mode and there is nowhere to put a file.
+## Where the files live: private, in Supabase
 
-Worth weighing: the exercise encyclopedia on the landing is already public SEO content, and what a
-buyer actually pays for is the programme, the adaptation and the tracking — not the demo clip. Most
-fitness products keep demos public for exactly that reason. But it is the owner's call.
+Decided by the owner: the clips are paid content and go in the private `videos` bucket, not into
+the repository. The plumbing already exists — `supabase/migrations/0003_storage.sql` creates the
+bucket and the policies, and `resolveMediaUrl()` turns a `storage:` reference into a short-lived
+signed URL.
+
+Exercise demos go to `shared/`, not under a course id. The same movement appears in several
+courses, so gating a demo behind one of them would hide it from someone who bought a different
+one; `shared/` still requires a signed-in session, and the bucket is private either way.
+
+    videos/shared/<exercise_id>.ru.mp4
+
+**Nothing plays until a Supabase project exists** (`docs/SETUP.md`). Until then the app runs in
+demo mode, where `resolveMediaUrl` returns `undefined` for every `storage:` reference.
+
+That is safe rather than broken, and it is why the `video:` references can be committed ahead of
+the upload: `useMediaUrl` swallows the failure and `ArtLayer` keeps drawing the animated figure.
+An exercise starts playing real video the moment its object appears in the bucket — no code
+change, no redeploy.
 
 ## Known constraint on fetching
 

@@ -573,6 +573,7 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: true,
     scaling: { easier: 'db_goblet_squat', harder: 'db_thruster' },
     animation: 'db_front_squat',
+    video: { ru: 'storage:videos/shared/db_front_squat.ru.mp4' },
     tags: ['lower'],
   },
   {
@@ -632,6 +633,7 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: true,
     scaling: { easier: 'db_front_squat' },
     animation: 'db_thruster',
+    video: { ru: 'storage:videos/shared/db_thruster.ru.mp4' },
     tags: ['lower', 'upper', 'push', 'cardio'],
   },
   {
@@ -1084,6 +1086,7 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: true,
     scaling: { easier: 'reverse_lunge' },
     animation: 'bell_lunge',
+    video: { ru: 'storage:videos/shared/db_lunge.ru.mp4' },
     tags: ['lower', 'unilateral'],
   },
   {

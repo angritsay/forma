@@ -1,0 +1,30 @@
+[
+  {
+    "key": "IMG_0908",
+    "file": "IMG_0908.mp4",
+    "postedAs": [3, 90, 133, 139, 149],
+    "exerciseId": "air_squat",
+    "note": "bodyweight, arms forward, full depth"
+  },
+  {
+    "key": "IMG_0909",
+    "file": "IMG_0909.mp4",
+    "postedAs": [4],
+    "exerciseId": "db_front_squat",
+    "note": "dumbbells racked at the shoulders, squat only — no overhead press"
+  },
+  {
+    "key": "IMG_0913",
+    "file": "IMG_0913.mp4",
+    "postedAs": [7],
+    "exerciseId": "db_thruster",
+    "note": "front squat driving into an overhead press; not db_shoulder_press"
+  },
+  {
+    "key": "IMG_0924",
+    "file": "IMG_0924.mp4",
+    "postedAs": [16],
+    "exerciseId": "db_lunge",
+    "note": "dumbbells at the shoulders, alternating lunges"
+  }
+]

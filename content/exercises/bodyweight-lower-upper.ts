@@ -58,6 +58,7 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: { harder: 'jump_squat' },
     animation: 'air_squat',
+    video: { ru: 'storage:videos/shared/air_squat.ru.mp4' },
     tags: ['lower', 'benchmark'],
     isTest: true,
   },
