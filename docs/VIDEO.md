@@ -24,8 +24,13 @@ which exercise.
 
 Telegram's thumbnails do not help either: the first frame of each clip is Sergey standing still,
 introducing the movement to camera. He performs it several seconds in. So identification means
-watching each clip — `prepare-videos.mjs` writes a four-frame contact sheet per clip to make that
+watching each clip — `prepare-videos.mjs` writes an eight-frame contact sheet per clip to make that
 quick, but a person or a model still has to look.
+
+The frames are sampled **by time**, evenly across the clip, not at fixed frame numbers. Fixed
+indices assume a length and a frame rate: on an eleven-second clip the later ones land past the end
+and the strip comes out short. Eight rather than four because four missed the middle of the
+movement — see the thruster below.
 
 ## Pipeline
 
@@ -39,9 +44,11 @@ All of these run **from inside the repository**, after `npm install`.
 #    hand is not worth anyone's time.
 npm run media:prepare
 npm run media:prepare -- ~/Downloads/ChatExport_… --out media/clips   # or point it yourself
+npm run media:prepare -- --frames-only    # rebuild the contact sheets, skip re-encoding
 
-# 2. Look at media/clips/frames/<key>.jpg and fill in `exerciseId` in media/clips/manifest.json.
-#    Re-running step 1 never overwrites an identification you have already made.
+# 2. Look at media/clips/frames/<key>.jpg and fill in `exerciseId` in media/manifest.json.
+#    Re-running step 1 merges into that file: an identification is never overwritten, and the
+#    `note` recording what was seen travels with it.
 
 # 3. Apply the manifest to the exercise library (writes `video:` onto each matched exercise).
 npm run media:apply
@@ -52,21 +59,28 @@ npm run media:apply -- --check      # CI: fails instead of writing, if content h
 SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… npm run media:upload
 ```
 
-Transcoding takes roughly 1 GB down to 230 MB, which also puts every clip under the 10 MB ceiling
-the Google Drive connector imposes — so the output folder can be shared back for identification
-even though the originals cannot.
+Transcoding takes roughly 1 GB down to 178 MB across 145 clips, the largest 3.1 MB.
+
+### The manifest is not in the clips folder
+
+`media/clips/` is gitignored — it is paid content and 178 MB of it. The manifest is not: it lives
+at `media/manifest.json`, under version control, because identification is the expensive part of
+this job and losing it to a fresh clone would mean watching 145 clips again. All three scripts read
+and write that path. An earlier version wrote it inside `media/clips/`, which meant a run on
+another machine reported `identified: 0/145` while four identifications sat in the repository.
 
 ## Progress
 
-|              |                               |
-| ------------ | ----------------------------- |
-| Unique clips | 145                           |
-| Identified   | 4 — see `media/manifest.json` |
+|                |                                      |
+| -------------- | ------------------------------------ |
+| Unique clips   | 145 (178 MB transcoded)              |
+| Identified     | 4 — see `media/manifest.json`        |
+| Contact sheets | generated locally, ~6 MB for all 145 |
 
 Identification is the slow part and it does not parallelise: four frames are often not enough. The
 clip that looked like a shoulder press turned out to be a thruster — a front squat driving into an
-overhead press — which only became clear from a denser frame strip. Every entry in the manifest
-carries a note saying what was actually seen.
+overhead press — which only became clear from a denser frame strip. That is why the sheets are now
+eight frames. Every entry in the manifest carries a note saying what was actually seen.
 
 ## Where the files live: private, in Supabase
 
@@ -89,8 +103,14 @@ the upload: `useMediaUrl` swallows the failure and `ArtLayer` keeps drawing the 
 An exercise starts playing real video the moment its object appears in the bucket — no code
 change, no redeploy.
 
-## Known constraint on fetching
+## Moving the work between machines
 
-The Google Drive connector refuses files over 10 MB, and 29 of the clips exceed it. Those cannot be
-pulled through that route at all — they need to reach the machine some other way (a local clone of
-the export, or the files attached directly).
+The video never needs to travel. Identification is done from the contact sheets, and all 145 of
+them together are about 6 MB — one zip, comfortably under the 10 MB ceiling the Google Drive
+connector imposes, where the clips themselves are 178 MB and 29 of them individually exceed it.
+
+    cd media/clips && zip -r ~/Downloads/frames.zip frames
+
+The clips stay where they were transcoded and go straight from there into Supabase with
+`npm run media:upload`. What comes back is `media/manifest.json` with the `exerciseId` fields
+filled in — a few kilobytes of text, which is the whole point of keeping it out of `media/clips/`.

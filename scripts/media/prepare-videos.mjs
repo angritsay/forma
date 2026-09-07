@@ -20,7 +20,7 @@
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { basename, extname, join } from 'node:path';
+import { basename, dirname, extname, join } from 'node:path';
 import { homedir } from 'node:os';
 import { createRequire } from 'node:module';
 
@@ -35,15 +35,25 @@ try {
 
 const args = process.argv.slice(2);
 /** Flags that consume the next argument — their values must not be mistaken for the export dir. */
-const VALUED = new Set(['--out', '--width', '--crf']);
+const VALUED = new Set(['--out', '--width', '--crf', '--manifest']);
 const flag = (name, fallback) => {
   const i = args.indexOf(`--${name}`);
   return i >= 0 && args[i + 1] ? args[i + 1] : fallback;
 };
 const exportDir = args.find((a, i) => !a.startsWith('--') && !(i > 0 && VALUED.has(args[i - 1])));
 const outDir = flag('out', 'media/clips');
+/** Rebuild contact sheets without re-encoding: the mp4s are done, the sampling changed. */
+const framesOnly = args.includes('--frames-only');
 const width = Number(flag('width', '720'));
 const crf = Number(flag('crf', '28'));
+/**
+ * Where the identifications live. Deliberately *not* inside `--out`: the clips directory is
+ * gitignored — 180 MB of paid content that never belongs in a public repository — so a manifest
+ * written there is invisible to everyone else and starts from zero on a fresh clone. That is
+ * exactly what happened: a run reported `identified: 0/145` while four identifications sat in
+ * `media/manifest.json` all along. This path is version controlled and merged into, not replaced.
+ */
+const manifestPath = flag('manifest', 'media/manifest.json');
 
 /**
  * Find the Telegram export without anyone having to type its name. Telegram names the folder
@@ -131,6 +141,24 @@ if (!exportDir) {
   console.log('');
 }
 
+/** Frames per contact sheet. Four proved too few to tell a press from a thruster. */
+const TILES = 8;
+
+/**
+ * Clip length in seconds, parsed from ffmpeg's own banner — ffmpeg-static ships no ffprobe.
+ * Returns 0 when it cannot be read, and the caller falls back to one frame per second.
+ */
+function durationOf(file) {
+  try {
+    execFileSync(ffmpeg, ['-i', file], { stdio: 'pipe' });
+    return 0;
+  } catch (err) {
+    const text = String(err.stderr ?? '');
+    const m = /Duration:\s*(\d+):(\d+):(\d+(?:\.\d+)?)/.exec(text);
+    return m ? Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]) : 0;
+  }
+}
+
 /** Camera filename without Telegram's per-message prefix: 104_IMG_9823.MP4 → IMG_9823. */
 const sourceKey = (file) => basename(file, extname(file)).replace(/^\d+_/, '');
 
@@ -181,16 +209,21 @@ for (const clip of seen.values()) {
       '-y',
     ]);
   }
-  // Four evenly spread frames: the first is him introducing the movement, the rest show it.
   const sheet = join(outDir, 'frames', `${clip.key}.jpg`);
-  if (!existsSync(sheet)) {
+  if (framesOnly || !existsSync(sheet)) {
+    // Sample by *time*, not by frame number. Fixed indices (0, 90, 200, 320) assumed a long clip
+    // at a known frame rate: on a 11-second clip the last index lands past the end and the strip
+    // comes out short. Eight frames evenly spread also matters because four were not enough — the
+    // clip that reads as a shoulder press is a thruster, and the squat only shows up in between.
+    const seconds = durationOf(out);
+    const fps = seconds > 0 ? TILES / seconds : 1;
     execFileSync(ffmpeg, [
       '-v',
       'error',
       '-i',
       out,
       '-vf',
-      "select='eq(n\\,0)+eq(n\\,90)+eq(n\\,200)+eq(n\\,320)',scale=260:-1,tile=4x1",
+      `fps=${fps.toFixed(4)},scale=220:-1,tile=${TILES}x1`,
       '-frames:v',
       '1',
       '-vsync',
@@ -212,17 +245,31 @@ for (const clip of seen.values()) {
   );
 }
 
-// Never clobber identifications already made.
-const manifestPath = join(outDir, 'manifest.json');
+// Never clobber identifications already made. The note travels with the id: it records what was
+// actually seen in the frames, which is the only reason to trust the id over a second guess.
 if (existsSync(manifestPath)) {
   const prev = new Map(JSON.parse(readFileSync(manifestPath, 'utf8')).map((c) => [c.key, c]));
-  for (const c of manifest)
-    if (prev.get(c.key)?.exerciseId) c.exerciseId = prev.get(c.key).exerciseId;
+  for (const c of manifest) {
+    const was = prev.get(c.key);
+    if (!was?.exerciseId) continue;
+    c.exerciseId = was.exerciseId;
+    if (was.note) c.note = was.note;
+  }
+  // An identification whose clip is no longer in the export would be dropped without a word, and
+  // it is the one thing here that cost real time to produce. Say so; do not delete it quietly.
+  const keys = new Set(manifest.map((c) => c.key));
+  for (const c of prev.values()) {
+    if (!c.exerciseId || keys.has(c.key)) continue;
+    console.error(`  kept: "${c.key}" (${c.exerciseId}) is identified but not in this export`);
+    manifest.push(c);
+  }
 }
+mkdirSync(dirname(manifestPath), { recursive: true });
 writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 
-const total = manifest.reduce((n, c) => n + c.bytes, 0);
+// Entries carried over from a previous export have no file here, so they count towards neither.
+const total = manifest.reduce((n, c) => n + (c.bytes ?? 0), 0);
+console.log(`\n${seen.size} unique clips → ${outDir}  (${(total / 1e6).toFixed(0)} MB total)`);
 console.log(
-  `\n${manifest.length} unique clips → ${outDir}  (${(total / 1e6).toFixed(0)} MB total)`,
+  `identified: ${manifest.filter((c) => c.exerciseId).length}/${manifest.length}  (${manifestPath})`,
 );
-console.log(`identified: ${manifest.filter((c) => c.exerciseId).length}/${manifest.length}`);

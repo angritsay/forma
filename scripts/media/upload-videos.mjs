@@ -5,6 +5,9 @@
  *   SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… \
  *     node scripts/media/upload-videos.mjs [--dir media/clips] [--lang ru] [--dry-run]
  *
+ * `--dir` is where the mp4s are (gitignored); the identifications come from `media/manifest.json`,
+ * which is version controlled. They are separate on purpose — see media/README.md.
+ *
  * Paths follow supabase/migrations/0003_storage.sql:
  *   videos/shared/<exercise_id>.<lang>.mp4     any signed-in user
  *   videos/<course_id>/<exercise_id>.<lang>.mp4 needs an active purchase of that course
@@ -29,6 +32,7 @@ const flag = (name, fallback) => {
   return i >= 0 && args[i + 1] && !args[i + 1].startsWith('--') ? args[i + 1] : fallback;
 };
 const dir = flag('dir', 'media/clips');
+const manifestPath = flag('manifest', 'media/manifest.json');
 const lang = flag('lang', 'ru');
 const dryRun = args.includes('--dry-run');
 
@@ -39,7 +43,6 @@ if (!dryRun && (!url || !key)) {
   process.exit(1);
 }
 
-const manifestPath = join(dir, 'manifest.json');
 if (!existsSync(manifestPath)) {
   console.error(`no manifest at ${manifestPath} — run prepare-videos.mjs first`);
   process.exit(1);

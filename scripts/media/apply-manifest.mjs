@@ -2,7 +2,7 @@
 /**
  * Write `video:` references onto the exercises named in the clip manifest.
  *
- *   node scripts/media/apply-manifest.mjs [--dir media/clips] [--check]
+ *   node scripts/media/apply-manifest.mjs [--manifest media/manifest.json] [--check]
  *
  * Turns each identified clip into the storage reference the app resolves at runtime:
  *
@@ -24,11 +24,10 @@ const flag = (name, fallback) => {
   const i = args.indexOf(`--${name}`);
   return i >= 0 && args[i + 1] && !args[i + 1].startsWith('--') ? args[i + 1] : fallback;
 };
-const dir = flag('dir', 'media/clips');
+const manifestPath = flag('manifest', 'media/manifest.json');
 const check = args.includes('--check');
 const CONTENT = 'content/exercises';
 
-const manifestPath = join(dir, 'manifest.json');
 if (!existsSync(manifestPath)) {
   console.error(`no manifest at ${manifestPath} — run prepare-videos.mjs first`);
   process.exit(1);

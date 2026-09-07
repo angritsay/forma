@@ -19,7 +19,7 @@
     "seo:new-guide": "node scripts/seo/new-guide.mjs",
     "seo:og": "node scripts/seo/og.mjs",
     "media:prepare": "node scripts/media/prepare-videos.mjs",
-    "media:apply": "node scripts/media/apply-manifest.mjs --dir media",
+    "media:apply": "node scripts/media/apply-manifest.mjs",
     "media:upload": "node scripts/media/upload-videos.mjs --dir media/clips"
   },
   "dependencies": {
