@@ -1,30 +1,80 @@
 [
   {
+    "key": "IMG_0907",
+    "file": "IMG_0907.mp4",
+    "exerciseId": "air_squat",
+    "note": "bodyweight, arms reaching forward, full depth; no weight anywhere in the clip"
+  },
+  {
     "key": "IMG_0908",
     "file": "IMG_0908.mp4",
-    "postedAs": [3, 90, 133, 139, 149],
-    "exerciseId": "air_squat",
-    "note": "bodyweight, arms forward, full depth"
+    "exerciseId": "",
+    "note": "was recorded as air_squat from a 4-frame sheet, but a dumbbell is held at the chest in the opening frames while the squat frames show the arms reaching forward. Goblet or air squat — re-check on the 12-frame sheet"
   },
   {
     "key": "IMG_0909",
     "file": "IMG_0909.mp4",
-    "postedAs": [4],
     "exerciseId": "db_front_squat",
-    "note": "dumbbells racked at the shoulders, squat only — no overhead press"
+    "note": "dumbbell racked at the shoulder, squat only — no overhead press"
   },
   {
     "key": "IMG_0913",
     "file": "IMG_0913.mp4",
-    "postedAs": [7],
     "exerciseId": "db_thruster",
-    "note": "front squat driving into an overhead press; not db_shoulder_press"
+    "note": "front squat driving into an overhead press; confirmed at 8 frames, not db_shoulder_press"
+  },
+  {
+    "key": "IMG_0915",
+    "file": "IMG_0915.mp4",
+    "exerciseId": "db_row",
+    "note": "hinged at the hips, dumbbell hanging, repeated pull to the ribs"
+  },
+  {
+    "key": "IMG_0917",
+    "file": "IMG_0917.mp4",
+    "exerciseId": "db_rdl",
+    "note": "hip hinge with near-straight legs, flat back, dumbbells tracking down the shins"
+  },
+  {
+    "key": "IMG_0919",
+    "file": "IMG_0919.mp4",
+    "exerciseId": "step_up",
+    "note": "stepping up onto and down off a low box, bodyweight. IMG_0920 is the same movement loaded with dumbbells; the library has no weighted variant"
+  },
+  {
+    "key": "IMG_0922",
+    "file": "IMG_0922.mp4",
+    "exerciseId": "reverse_lunge",
+    "note": "bodyweight step back, rear knee to the floor, alternating"
+  },
+  {
+    "key": "IMG_0923",
+    "file": "IMG_0923.mp4",
+    "exerciseId": "db_lunge",
+    "note": "dumbbells hanging at the sides, stepping back — matches the authored description, which specifies arms down"
   },
   {
     "key": "IMG_0924",
     "file": "IMG_0924.mp4",
-    "postedAs": [16],
-    "exerciseId": "db_lunge",
-    "note": "dumbbells at the shoulders, alternating lunges"
+    "exerciseId": "",
+    "note": "was recorded as db_lunge, but the dumbbells are front-racked at the shoulders and db_lunge is authored as arms at the sides. No front-rack dumbbell lunge exists in the library"
+  },
+  {
+    "key": "IMG_0926",
+    "file": "IMG_0926.mp4",
+    "exerciseId": "jumping_lunge",
+    "note": "split-stance lunges with a clear airborne frame between them"
+  },
+  {
+    "key": "IMG_0927",
+    "file": "IMG_0927.mp4",
+    "exerciseId": "knee_push_up",
+    "note": "knees on the mat, hips in line, chest to the floor. IMG_0929 is a second take of the same movement"
+  },
+  {
+    "key": "IMG_0928",
+    "file": "IMG_0928.mp4",
+    "exerciseId": "push_up",
+    "note": "full plank on the toes, chest to the mat"
   }
 ]

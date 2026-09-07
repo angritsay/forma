@@ -342,6 +342,7 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: { harder: 'jumping_lunge' },
     animation: 'reverse_lunge',
+    video: { ru: 'storage:videos/shared/reverse_lunge.ru.mp4' },
     tags: ['lower', 'unilateral'],
   },
   {
@@ -398,6 +399,7 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'reverse_lunge' },
     animation: 'jumping_lunge',
+    video: { ru: 'storage:videos/shared/jumping_lunge.ru.mp4' },
     tags: ['lower', 'explosive', 'cardio', 'unilateral'],
   },
   {
@@ -513,6 +515,7 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: {},
     animation: 'step_up',
+    video: { ru: 'storage:videos/shared/step_up.ru.mp4' },
     tags: ['lower', 'unilateral'],
   },
   {
@@ -629,6 +632,7 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'knee_push_up', harder: 'diamond_push_up' },
     animation: 'push_up',
+    video: { ru: 'storage:videos/shared/push_up.ru.mp4' },
     tags: ['upper', 'push', 'benchmark'],
     isTest: true,
   },
@@ -686,6 +690,7 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'incline_push_up', harder: 'push_up' },
     animation: 'knee_push_up',
+    video: { ru: 'storage:videos/shared/knee_push_up.ru.mp4' },
     tags: ['upper', 'push', 'benchmark'],
     isTest: true,
   },

@@ -746,6 +746,7 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: true,
     scaling: { easier: 'db_deadlift' },
     animation: 'db_rdl',
+    video: { ru: 'storage:videos/shared/db_rdl.ru.mp4' },
     tags: ['lower'],
   },
   {
@@ -799,6 +800,7 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: true,
     scaling: { harder: 'db_renegade_row' },
     animation: 'db_row',
+    video: { ru: 'storage:videos/shared/db_row.ru.mp4' },
     tags: ['upper', 'pull', 'unilateral'],
   },
   {
