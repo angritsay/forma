@@ -80,19 +80,35 @@ another machine reported `identified: 0/145` while four identifications sat in t
 
 ## Progress
 
-|                |                                      |
-| -------------- | ------------------------------------ |
-| Unique clips   | 145 (178 MB transcoded)              |
-| Identified     | 4 — see `media/manifest.json`        |
-| Contact sheets | generated locally, ~6 MB for all 145 |
+All 145 clips have been reviewed against the 83-exercise library. The headline number is not
+145 demonstrations — it is 36.
 
-Identification is the slow part and it does not parallelise: four frames are often not enough. The
-clip that looked like a shoulder press turned out to be a thruster — a front squat driving into an
-overhead press — which only became clear from a denser frame strip. Every entry in the manifest
-carries a note saying what was actually seen.
+|                               |     |                                                       |
+| ----------------------------- | --: | ----------------------------------------------------- |
+| Identified                    |  36 | mapped to an exercise and referenced in `content/`    |
+| Second takes                  |  64 | the same movement filmed again on another day         |
+| No counterpart in the library |  13 | a real exercise, but not one of the 83                |
+| Not exercises at all          |   8 | seven talking-head clips and one about drinking water |
+| Still undecidable             |  24 | dumbbell lifts that 8 frames cannot separate          |
 
-The dumbbell lifts are the hard ones: clean, snatch, push press and devil press share a start and a
-finish and differ only in the middle, which is exactly what a sparse strip drops.
+Two findings matter more than the count.
+
+**The export is one beginner session filmed five or six times.** `IMG_016x`, `IMG_024x`,
+`IMG_029x-030x`, `IMG_03xx`, `IMG_41xx`, `IMG_98xx` and `IMG_99xx` all cover the same dozen
+movements — air squat, knee push-up, reverse lunge, bench dip, mountain climber, jumping jack,
+sit-up, dead bug, V-up. Sergey appears to have re-recorded the set for each new intake. Where a
+movement has several takes, there is a choice about which to ship; right now the id sits on
+whichever take was seen first, which is arbitrary and worth revisiting.
+
+**Eight clips are not exercise footage.** Seven are talking-head videos filmed at home by someone
+who is not Sergey; one is Sergey with a water bottle. They sit in `video_files/` with the same
+naming as everything else and are distinguishable only by watching them. Any process that filled
+this manifest in without looking would have served a personal video message to a paying customer
+as an exercise demonstration.
+
+One clip, `IMG_0308`, is a correct glute bridge filmed in a different venue by someone in
+different clothing. It is left unassigned: whether a demo that is visibly not the coach belongs in
+his course is the owner's call, and a blank id means it does not ship by default.
 
 ## Where the files live: private, in Supabase
 

@@ -192,6 +192,12 @@
     "note": "second take of knee_push_up"
   },
   {
+    "key": "IMG_0394",
+    "file": "IMG_0394.mp4",
+    "exerciseId": "",
+    "note": "second take of reverse_lunge"
+  },
+  {
     "key": "IMG_0395",
     "file": "IMG_0395.mp4",
     "exerciseId": "",
@@ -228,10 +234,28 @@
     "note": "dumbbell racked at the shoulder, squat only \u2014 no overhead press"
   },
   {
+    "key": "IMG_0910",
+    "file": "IMG_0910.mp4",
+    "exerciseId": "db_snatch",
+    "note": "single dumbbell from below the knees to a locked-out arm overhead in one motion, received in a partial squat"
+  },
+  {
+    "key": "IMG_0911",
+    "file": "IMG_0911.mp4",
+    "exerciseId": "db_deadlift",
+    "note": "hinge to the floor with the knees clearly bent \u2014 the deadlift pattern. IMG_0917 holds db_rdl, which keeps the legs near-straight; the two clips differ exactly there"
+  },
+  {
     "key": "IMG_0913",
     "file": "IMG_0913.mp4",
     "exerciseId": "db_thruster",
     "note": "front squat driving into an overhead press; confirmed at 8 frames, not db_shoulder_press"
+  },
+  {
+    "key": "IMG_0914",
+    "file": "IMG_0914.mp4",
+    "exerciseId": "db_push_press",
+    "note": "single dumbbell at the shoulder, a visible dip in the knees, then drive to overhead"
   },
   {
     "key": "IMG_0915",
@@ -252,6 +276,18 @@
     "note": "stepping up onto and down off a low box, bodyweight. IMG_0920 is the same movement loaded with dumbbells; the library has no weighted variant"
   },
   {
+    "key": "IMG_0920",
+    "file": "IMG_0920.mp4",
+    "exerciseId": "",
+    "note": "NO LIBRARY MATCH: box step-up holding a dumbbell in each hand. step_up is authored as bodyweight"
+  },
+  {
+    "key": "IMG_0921",
+    "file": "IMG_0921.mp4",
+    "exerciseId": "",
+    "note": "loaded squat with the arms swinging back, and the position shifts between frames \u2014 jump_squat or broad_jump, still not separable"
+  },
+  {
     "key": "IMG_0922",
     "file": "IMG_0922.mp4",
     "exerciseId": "reverse_lunge",
@@ -268,6 +304,12 @@
     "file": "IMG_0924.mp4",
     "exerciseId": "",
     "note": "was recorded as db_lunge, but the dumbbells are front-racked at the shoulders and db_lunge is authored as arms at the sides. No front-rack dumbbell lunge exists in the library"
+  },
+  {
+    "key": "IMG_0925",
+    "file": "IMG_0925.mp4",
+    "exerciseId": "",
+    "note": "NO LIBRARY MATCH: lunging with a single dumbbell locked out overhead. No overhead lunge exists in the library"
   },
   {
     "key": "IMG_0926",
@@ -288,10 +330,130 @@
     "note": "full plank on the toes, chest to the mat"
   },
   {
+    "key": "IMG_0929",
+    "file": "IMG_0929.mp4",
+    "exerciseId": "",
+    "note": "second take of knee_push_up"
+  },
+  {
+    "key": "IMG_0930",
+    "file": "IMG_0930.mp4",
+    "exerciseId": "",
+    "note": "straight-body hold on the hands; the library's plank is on the forearms and IMG_0982 shows that plainly"
+  },
+  {
+    "key": "IMG_0931",
+    "file": "IMG_0931.mp4",
+    "exerciseId": "",
+    "note": "dumbbell hinged low then driven overhead \u2014 the same shape as IMG_0910, which holds db_snatch. Either a second take or a different lift; the middle of the movement decides it and is not visible"
+  },
+  {
+    "key": "IMG_0932",
+    "file": "IMG_0932.mp4",
+    "exerciseId": "",
+    "note": "as IMG_0931: low, overhead, back to the shoulder. Not separable from a snatch or a clean-and-jerk here"
+  },
+  {
+    "key": "IMG_0933",
+    "file": "IMG_0933.mp4",
+    "exerciseId": "db_clean",
+    "note": "dumbbell from the floor caught at the shoulder and stopped there \u2014 no overhead phase"
+  },
+  {
+    "key": "IMG_0934",
+    "file": "IMG_0934.mp4",
+    "exerciseId": "",
+    "note": "single dumbbell floor to overhead \u2014 clean/snatch family, undecidable at 8 frames"
+  },
+  {
+    "key": "IMG_0935",
+    "file": "IMG_0935.mp4",
+    "exerciseId": "db_shoulder_press",
+    "note": "two dumbbells from the shoulders to overhead with the legs still \u2014 no dip, which is what separates this from db_push_press"
+  },
+  {
+    "key": "IMG_0936",
+    "file": "IMG_0936.mp4",
+    "exerciseId": "",
+    "note": "single dumbbell pressed overhead, arms alternating. Could be db_shoulder_press single-arm, which IMG_0935 already covers two-handed"
+  },
+  {
+    "key": "IMG_0937",
+    "file": "IMG_0937.mp4",
+    "exerciseId": "",
+    "note": "dumbbell hinge to the shoulder \u2014 clean family, and IMG_0933 shows that pattern more plainly"
+  },
+  {
+    "key": "IMG_0938",
+    "file": "IMG_0938.mp4",
+    "exerciseId": "",
+    "note": "NO LIBRARY MATCH: single-arm overhead triceps extension"
+  },
+  {
+    "key": "IMG_0939",
+    "file": "IMG_0939.mp4",
+    "exerciseId": "",
+    "note": "dumbbell hinge to overhead \u2014 snatch family"
+  },
+  {
+    "key": "IMG_0940",
+    "file": "IMG_0940.mp4",
+    "exerciseId": "",
+    "note": "dumbbell to the shoulder then overhead \u2014 a clean and press, or a push press; the dip decides it and is not visible"
+  },
+  {
+    "key": "IMG_0942",
+    "file": "IMG_0942.mp4",
+    "exerciseId": "",
+    "note": "NO LIBRARY MATCH: dumbbell lateral raise"
+  },
+  {
+    "key": "IMG_0943",
+    "file": "IMG_0943.mp4",
+    "exerciseId": "",
+    "note": "NO LIBRARY MATCH: dumbbell front raise"
+  },
+  {
+    "key": "IMG_0944",
+    "file": "IMG_0944.mp4",
+    "exerciseId": "",
+    "note": "NO LIBRARY MATCH: small dumbbell movement at the hips, reads as a curl. There is no biceps curl among the 83"
+  },
+  {
+    "key": "IMG_0945",
+    "file": "IMG_0945.mp4",
+    "exerciseId": "",
+    "note": "dumbbells held at the sides with little visible movement \u2014 the working portion of the clip is not in these frames"
+  },
+  {
     "key": "IMG_0946",
     "file": "IMG_0946.mp4",
     "exerciseId": "chair_dip",
     "note": "hands behind on a bench, legs out in front, elbows bending to lower the hips"
+  },
+  {
+    "key": "IMG_0948",
+    "file": "IMG_0948.mp4",
+    "exerciseId": "",
+    "note": "second take of burpee"
+  },
+  {
+    "key": "IMG_0949",
+    "file": "IMG_0949.mp4",
+    "exerciseId": "",
+    "note": "down to the floor and back up; whether there is a jump at the top, which separates burpee from half_burpee, is not visible"
+  },
+  {
+    "key": "IMG_0950",
+    "file": "IMG_0950.mp4",
+    "exerciseId": "",
+    "note": "second take of db_devil_press"
+  },
+  {
+    "key": "IMG_0951",
+    "file": "IMG_0951.mp4",
+    "exerciseId": "",
+    "note": "second take of db_devil_press"
   },
   {
     "key": "IMG_0952",
@@ -318,10 +480,40 @@
     "note": "jump rope with noticeably more height than IMG_0954, and the only other rope movement in the library. Inferred rather than counted \u2014 worth confirming"
   },
   {
+    "key": "IMG_0960",
+    "file": "IMG_0960.mp4",
+    "exerciseId": "",
+    "note": "second take of inchworm"
+  },
+  {
+    "key": "IMG_0961",
+    "file": "IMG_0961.mp4",
+    "exerciseId": "",
+    "note": "second take of russian_twist, already covered by IMG_0988"
+  },
+  {
+    "key": "IMG_0962",
+    "file": "IMG_0962.mp4",
+    "exerciseId": "",
+    "note": "NO LIBRARY MATCH: russian twist holding a dumbbell. The authored russian_twist is bodyweight"
+  },
+  {
+    "key": "IMG_0963",
+    "file": "IMG_0963.mp4",
+    "exerciseId": "",
+    "note": "second take of dead_bug"
+  },
+  {
     "key": "IMG_0964",
     "file": "IMG_0964.mp4",
     "exerciseId": "sit_up",
     "note": "flat on the mat to fully upright, knees bent, no weight"
+  },
+  {
+    "key": "IMG_0965",
+    "file": "IMG_0965.mp4",
+    "exerciseId": "",
+    "note": "NO LIBRARY MATCH: sit-up holding a dumbbell at the chest. The authored sit_up is bodyweight"
   },
   {
     "key": "IMG_0966",
@@ -480,6 +672,12 @@
     "note": "stepping wide to one side, sinking onto that leg with the other kept straight, alternating"
   },
   {
+    "key": "IMG_0998",
+    "file": "IMG_0998.mp4",
+    "exerciseId": "",
+    "note": "A Turkish get-up, performed correctly, but with a dumbbell. The library's kb_turkish_get_up is authored for a kettlebell \u2014 the implement is named throughout its technique and cues. Whether a dumbbell demo is close enough to stand in is a judgement for the coach"
+  },
+  {
     "key": "IMG_2628",
     "file": "IMG_2628.mp4",
     "exerciseId": "dead_bug",
@@ -586,6 +784,24 @@
     "file": "IMG_6717.mp4",
     "exerciseId": "",
     "note": "NOT AN EXERCISE: second talking-head clip, same person and setting as IMG_6716"
+  },
+  {
+    "key": "IMG_9820",
+    "file": "IMG_9820.mp4",
+    "exerciseId": "",
+    "note": "second take of dead_bug"
+  },
+  {
+    "key": "IMG_9821",
+    "file": "IMG_9821.mp4",
+    "exerciseId": "",
+    "note": "second take of knee_push_up"
+  },
+  {
+    "key": "IMG_9822",
+    "file": "IMG_9822.mp4",
+    "exerciseId": "",
+    "note": "second take of sit_up"
   },
   {
     "key": "IMG_9823",
