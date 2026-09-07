@@ -21,10 +21,17 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, extname, join } from 'node:path';
+import { homedir } from 'node:os';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const ffmpeg = require('ffmpeg-static');
+let ffmpeg;
+try {
+  ffmpeg = require('ffmpeg-static');
+} catch {
+  console.error('ffmpeg-static is missing. Run `npm install` in the repository first.');
+  process.exit(1);
+}
 
 const args = process.argv.slice(2);
 const exportDir = args.find((a) => !a.startsWith('--'));
@@ -36,10 +43,50 @@ const outDir = flag('out', 'media/clips');
 const width = Number(flag('width', '720'));
 const crf = Number(flag('crf', '28'));
 
-if (!exportDir || !existsSync(join(exportDir, 'video_files'))) {
-  console.error('usage: prepare-videos.mjs <export-dir with video_files/> [--out DIR] [--width N]');
+/**
+ * Find the Telegram export without anyone having to type its name. Telegram names the folder
+ * after the channel, so this one is `ChatExport_‼️НОВИЧКИ‼️` — emoji and all, which is miserable
+ * to type and worse to paste correctly. Look in the usual places instead.
+ */
+function findExport() {
+  const roots = [
+    process.cwd(),
+    homedir(),
+    join(homedir(), 'Downloads'),
+    join(homedir(), 'Desktop'),
+  ];
+  for (const root of roots) {
+    let entries;
+    try {
+      entries = readdirSync(root, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const e of entries) {
+      if (!e.isDirectory() || !e.name.startsWith('ChatExport')) continue;
+      const dir = join(root, e.name);
+      if (existsSync(join(dir, 'video_files'))) return dir;
+    }
+  }
+  return undefined;
+}
+
+const resolved = exportDir ?? findExport();
+if (!resolved || !existsSync(join(resolved, 'video_files'))) {
+  console.error('Could not find the Telegram export.');
+  console.error('');
+  console.error('  Run this from inside the repository, and either pass the folder:');
+  console.error(
+    '    node scripts/media/prepare-videos.mjs ~/Downloads/ChatExport_… --out media/clips',
+  );
+  console.error('');
+  console.error('  ...or just let it look in ~, ~/Downloads and ~/Desktop:');
+  console.error('    node scripts/media/prepare-videos.mjs');
+  console.error('');
+  if (exportDir) console.error(`  (no video_files/ inside "${exportDir}")`);
   process.exit(1);
 }
+if (!exportDir) console.log(`found export: ${resolved}\n`);
 
 /** Camera filename without Telegram's per-message prefix: 104_IMG_9823.MP4 → IMG_9823. */
 const sourceKey = (file) => basename(file, extname(file)).replace(/^\d+_/, '');
@@ -47,7 +94,7 @@ const sourceKey = (file) => basename(file, extname(file)).replace(/^\d+_/, '');
 /** Message order, so clips keep the sequence the coach posted them in. */
 const messageNo = (file) => Number(/^(\d+)_/.exec(basename(file))?.[1] ?? 0);
 
-const videoDir = join(exportDir, 'video_files');
+const videoDir = join(resolved, 'video_files');
 const seen = new Map();
 for (const file of readdirSync(videoDir).sort((a, b) => messageNo(a) - messageNo(b))) {
   if (!/\.(mov|mp4)$/i.test(file)) continue;

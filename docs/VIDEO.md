@@ -29,23 +29,32 @@ quick, but a person or a model still has to look.
 
 ## Pipeline
 
+All of these run **from inside the repository**, after `npm install`.
+
 ```bash
 # 1. Transcode to web-playable MP4 (iPhone HEVC .MOV will not play in Chrome or Firefox),
-#    dedupe re-posts, and write one contact sheet per clip.
-node scripts/media/prepare-videos.mjs ~/ChatExport_НОВИЧКИ --out media/clips
+#    dedupe re-posts, and write one contact sheet per clip. With no argument it looks for a
+#    ChatExport* folder in the current directory, ~, ~/Downloads and ~/Desktop — the export is
+#    named after the channel, so the real folder is `ChatExport_‼️НОВИЧКИ‼️` and typing that by
+#    hand is not worth anyone's time.
+npm run media:prepare
+npm run media:prepare -- ~/Downloads/ChatExport_… --out media/clips   # or point it yourself
 
 # 2. Look at media/clips/frames/<key>.jpg and fill in `exerciseId` in media/clips/manifest.json.
 #    Re-running step 1 never overwrites an identification you have already made.
 
 # 3. Apply the manifest to the exercise library (writes `video:` onto each matched exercise).
-node scripts/media/apply-manifest.mjs --dir media
-node scripts/media/apply-manifest.mjs --dir media --check   # CI: fails if content has drifted
+npm run media:apply
+npm run media:apply -- --check      # CI: fails instead of writing, if content has drifted
 
 # 4. Push the clips into the private bucket. Service role key, never the anon key, and never
 #    committed — it bypasses RLS because the insert policy is admin-only.
-SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… \
-  node scripts/media/upload-videos.mjs --dir media/clips
+SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… npm run media:upload
 ```
+
+Transcoding takes roughly 1 GB down to 230 MB, which also puts every clip under the 10 MB ceiling
+the Google Drive connector imposes — so the output folder can be shared back for identification
+even though the originals cannot.
 
 ## Progress
 

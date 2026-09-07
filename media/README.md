@@ -8,12 +8,13 @@ The clips themselves are not. They are ~250 MB of paid content and belong in the
 `videos` bucket, not in a public git repository. `prepare-videos.mjs` writes them here and
 `.gitignore` keeps them out.
 
+Run these from the repository root, after `npm install`:
+
 ```bash
-node scripts/media/prepare-videos.mjs <export-dir> --out media/clips   # transcode + dedupe
+npm run media:prepare        # find the export, transcode, dedupe, write contact sheets
 # identify: watch media/clips/frames/<key>.jpg, set exerciseId in the manifest
-node scripts/media/apply-manifest.mjs --dir media                      # write video: refs
-SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… \
-  node scripts/media/upload-videos.mjs --dir media/clips               # push to the bucket
+npm run media:apply          # write video: refs onto the matched exercises
+SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… npm run media:upload
 ```
 
 `postedAs` lists every Telegram message the clip appeared in, so a clip can always be traced back
