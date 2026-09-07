@@ -41,10 +41,10 @@ describe('effective scale', () => {
     const p = (o: Partial<PrescribeOptions>) =>
       prescribeWorkout(FULL_WORKOUT, base(o), fixtureLookup).effectiveScale;
     expect(p({})).toBe(1);
-    expect(p({ choice: 'harder' })).toBeCloseTo(1.15);
-    expect(p({ choice: 'easier' })).toBeCloseTo(0.85);
+    expect(p({ choice: 'harder' })).toBeCloseTo(1.1);
+    expect(p({ choice: 'easier' })).toBeCloseTo(0.9);
     expect(p({ deload: true })).toBeCloseTo(0.65);
-    expect(p({ scale: 1.5, choice: 'harder' })).toBeCloseTo(1.725);
+    expect(p({ scale: 1.5, choice: 'harder' })).toBeCloseTo(1.65);
     expect(p({ scale: 0.5, choice: 'easier', deload: true })).toBe(0.3);
     expect(p({ scale: 2, choice: 'harder' })).toBe(2);
   });
@@ -99,11 +99,11 @@ describe('targets', () => {
     expect(warm.items[1]!.target).toBe(20);
     const strength = p.blocks[1]!;
     expect(strength.scaled).toBe(true);
-    expect(strength.items[0]!.target).toBe(12);
-    expect(strength.items[1]!.target).toBe(14);
+    expect(strength.items[0]!.target).toBe(11);
+    expect(strength.items[1]!.target).toBe(13);
   });
 
-  it('does not scale AMRAP / EMOM / Tabata durations, only the reps inside', () => {
+  it('moves the AMRAP window and the EMOM / Tabata round count with the choice', () => {
     const w = workout({
       id: 'w',
       blocks: [
@@ -124,14 +124,20 @@ describe('targets', () => {
         }),
       ],
     });
+    // These formats have no sets to add, so the clock itself is the lever: a 10 min AMRAP
+    // becomes 12, a 10-round EMOM becomes 12. Work/rest inside a Tabata interval stays canonical.
     const p = prescribeWorkout(w, base({ choice: 'harder', scale: 1.2 }), fixtureLookup);
-    expect(p.blocks[0]!.durationSec).toBe(600);
-    expect(p.blocks[0]!.items[0]!.target).toBe(14);
-    expect(p.blocks[1]!.sets).toBe(10);
-    expect(p.blocks[1]!.items[0]!.target).toBe(14);
-    expect(p.blocks[2]!.sets).toBe(8);
+    expect(p.blocks[0]!.durationSec).toBe(720);
+    expect(p.blocks[0]!.items[0]!.target).toBe(13);
+    expect(p.blocks[1]!.sets).toBe(12);
+    expect(p.blocks[1]!.items[0]!.target).toBe(13);
+    expect(p.blocks[2]!.sets).toBe(10);
     expect(p.blocks[2]!.workSec).toBe(20);
     expect(p.blocks[2]!.restSec).toBe(10);
+
+    const easy = prescribeWorkout(w, base({ choice: 'easier' }), fixtureLookup);
+    expect(easy.blocks[0]!.durationSec).toBe(480);
+    expect(easy.blocks[1]!.sets).toBe(8);
   });
 });
 
@@ -140,7 +146,7 @@ describe('sets', () => {
     prescribeWorkout(single([item('push_up')], { sets: authored }), base({ scale }), fixtureLookup)
       .blocks[0]!.sets;
 
-  it('adds a set at effective scale ≥ 1.3 and removes one at ≤ 0.7 (min 2)', () => {
+  it('adds a set at scale ≥ 1.3 and removes one at ≤ 0.7 (min 2)', () => {
     expect(sets(1)).toBe(3);
     expect(sets(1.3)).toBe(4);
     expect(sets(1.29)).toBe(3);
@@ -162,19 +168,25 @@ describe('rest', () => {
     expect(scaleRest(2, 0.9)).toBe(5);
   });
 
-  it('applies the multipliers to block and item rests', () => {
-    const p = prescribeWorkout(FULL_WORKOUT, base({ choice: 'harder' }), fixtureLookup);
-    expect(p.blocks[1]!.restBetweenSetsSec).toBe(55);
-    expect(p.blocks[1]!.items[0]!.restAfterSec).toBe(25);
+  it('leaves rest alone for the difficulty choice and stretches it only on a deload', () => {
+    // How long you need between sets is a property of the movement, not of how ambitious you
+    // feel. Moving it with the choice is also what used to cancel the choice's own effect on
+    // session length — see CHOICE_SETS_DELTA in constants.ts.
+    const authoredRest = prescribeWorkout(FULL_WORKOUT, base(), fixtureLookup).blocks[1]!;
+    for (const choice of ['easier', 'harder'] as const) {
+      const p = prescribeWorkout(FULL_WORKOUT, base({ choice }), fixtureLookup);
+      expect(p.blocks[1]!.restBetweenSetsSec).toBe(authoredRest.restBetweenSetsSec);
+      expect(p.blocks[1]!.items[0]!.restAfterSec).toBe(authoredRest.items[0]!.restAfterSec);
+    }
     const d = prescribeWorkout(
       FULL_WORKOUT,
       base({ choice: 'easier', deload: true }),
       fixtureLookup,
     );
-    expect(d.blocks[1]!.restBetweenSetsSec).toBe(85);
+    expect(d.blocks[1]!.restBetweenSetsSec).toBe(70);
   });
 
-  it('scales rest in non-scalable blocks by the choice only (no deload)', () => {
+  it('never touches rest in a non-scalable block', () => {
     const w = workout({
       id: 'w',
       blocks: [
@@ -195,10 +207,10 @@ describe('rest', () => {
     expect(
       prescribeWorkout(w, base({ choice: 'easier' }), fixtureLookup).blocks[0]!
         .restBetweenRoundsSec,
-    ).toBe(35);
+    ).toBe(30);
   });
 
-  it('scales interval rest but not tabata rest', () => {
+  it('keeps interval and tabata work/rest at their authored, canonical values', () => {
     const w = workout({
       id: 'w',
       blocks: [
@@ -221,8 +233,12 @@ describe('rest', () => {
       ],
     });
     const p = prescribeWorkout(w, base({ choice: 'easier' }), fixtureLookup);
-    expect(p.blocks[0]!.restSec).toBe(25);
+    expect(p.blocks[0]!.restSec).toBe(20);
     expect(p.blocks[1]!.restSec).toBe(10);
+    // The rounds move instead. An interval block already at the four-round floor stays there;
+    // a Tabata has rounds to spare and drops from 8 to 6.
+    expect(p.blocks[0]!.sets).toBe(4);
+    expect(p.blocks[1]!.sets).toBe(6);
   });
 });
 
@@ -326,7 +342,7 @@ describe('substitutions', () => {
     const w = single([item('sit_up'), item('jump_squat'), item('kb_deadlift', { load: 'heavy' })]);
     const p = prescribeWorkout(w, pg, fixtureLookup);
     expect(p.choice).toBe('easier');
-    expect(p.effectiveScale).toBeCloseTo(0.85);
+    expect(p.effectiveScale).toBeCloseTo(0.9);
     expect(p.blocks[0]!.items[0]!.exerciseId).toBe('dead_bug');
     expect(p.blocks[0]!.items[1]!.exerciseId).toBe('air_squat');
     expect(p.blocks[0]!.items[2]!.loadLabel).toBe('medium');
@@ -373,7 +389,7 @@ describe('substitutions', () => {
     );
     expect(push.exerciseId).toBe('knee_push_up');
     expect(push.unit).toBe('reps');
-    expect(push.target).toBe(10);
+    expect(push.target).toBe(11);
   });
 
   it('never swaps in a harder variant inside a non-scalable block (warm-ups, cool-downs, tests)', () => {

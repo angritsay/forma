@@ -379,23 +379,6 @@ const W_SQUAT_PUSH_A: WorkoutInput = {
         },
       ],
     },
-    {
-      id: 'spa_core',
-      type: 'core',
-      format: 'circuit',
-      sets: 2,
-      restBetweenRoundsSec: 30,
-      title: l('Кор', 'Core'),
-      description: l(
-        'Два круга. Лодочка — поясница вжата в пол, руки за головой; складка — руки и ноги встречаются над животом.',
-        'Two rounds. Hollow hold: lower back pressed into the floor, arms overhead; V-up: hands and feet meet over the belly.',
-      ),
-      items: [
-        { exerciseId: 'hollow_hold', seconds: 30 },
-        { exerciseId: 'v_up', reps: 12 },
-        { exerciseId: 'plank_shoulder_tap', reps: 20 },
-      ],
-    },
     cdLower('spa_cooldown'),
   ],
 };
@@ -416,7 +399,7 @@ const W_SQUAT_PUSH_B: WorkoutInput = {
       id: 'spb_strength',
       type: 'strength',
       format: 'sets',
-      sets: 5,
+      sets: 4,
       restBetweenSetsSec: 90,
       title: l('Сила', 'Strength'),
       description: l(
@@ -485,23 +468,6 @@ const W_SQUAT_PUSH_B: WorkoutInput = {
         },
       ],
     },
-    {
-      id: 'spb_core',
-      type: 'core',
-      format: 'circuit',
-      sets: 2,
-      restBetweenRoundsSec: 30,
-      title: l('Кор', 'Core'),
-      description: l(
-        'Два круга. В складке не «прыгай» поясницей с пола — поднимай корпус и ноги одновременно.',
-        'Two rounds. In the V-up do not bounce the lower back off the floor — lift the torso and the legs together.',
-      ),
-      items: [
-        { exerciseId: 'hollow_hold', seconds: 40 },
-        { exerciseId: 'v_up', reps: 15 },
-        { exerciseId: 'plank_shoulder_tap', reps: 20 },
-      ],
-    },
     cdLower('spb_cooldown'),
   ],
 };
@@ -522,7 +488,7 @@ const W_SQUAT_PUSH_C: WorkoutInput = {
       id: 'spc_strength',
       type: 'strength',
       format: 'sets',
-      sets: 5,
+      sets: 4,
       restBetweenSetsSec: 75,
       title: l('Сила', 'Strength'),
       description: l(
@@ -577,23 +543,6 @@ const W_SQUAT_PUSH_C: WorkoutInput = {
           reps: 30,
           note: l('Или 60 синглов', 'Or 60 singles'),
         },
-      ],
-    },
-    {
-      id: 'spc_core',
-      type: 'core',
-      format: 'circuit',
-      sets: 2,
-      restBetweenRoundsSec: 30,
-      title: l('Кор', 'Core'),
-      description: l(
-        'Два круга. Самый длинный hollow hold курса — держи, пока поясница прижата; оторвалась — согни колени, но не бросай.',
-        'Two rounds. The longest hollow hold of the course — hold while the lower back stays down; if it lifts, bend the knees, but do not quit.',
-      ),
-      items: [
-        { exerciseId: 'hollow_hold', seconds: 45 },
-        { exerciseId: 'v_up', reps: 15 },
-        { exerciseId: 'plank_shoulder_tap', reps: 24 },
       ],
     },
     cdLower('spc_cooldown'),
@@ -688,23 +637,6 @@ const W_PULL_HINGE_A: WorkoutInput = {
         },
       ],
     },
-    {
-      id: 'pha_core',
-      type: 'core',
-      format: 'circuit',
-      sets: 2,
-      restBetweenRoundsSec: 30,
-      title: l('Кор', 'Core'),
-      description: l(
-        'Два круга без спешки: таз не проваливается в боковой планке, в супермене пауза секунда наверху.',
-        'Two unhurried rounds: hips stay up in the side plank, a one-second pause at the top of the superman.',
-      ),
-      items: [
-        { exerciseId: 'hollow_hold', seconds: 30 },
-        { exerciseId: 'side_plank', seconds: 30, perSide: true },
-        { exerciseId: 'superman', reps: 12 },
-      ],
-    },
     cdPull('pha_cooldown'),
   ],
 };
@@ -725,7 +657,7 @@ const W_PULL_HINGE_B: WorkoutInput = {
       id: 'phb_pull',
       type: 'strength',
       format: 'sets',
-      sets: 5,
+      sets: 4,
       restBetweenSetsSec: 90,
       title: l('Подтягивания', 'Pull-ups'),
       description: l(
@@ -782,23 +714,6 @@ const W_PULL_HINGE_B: WorkoutInput = {
         },
       ],
     },
-    {
-      id: 'phb_core',
-      type: 'core',
-      format: 'circuit',
-      sets: 2,
-      restBetweenRoundsSec: 30,
-      title: l('Кор', 'Core'),
-      description: l(
-        'Два круга. В лодочке поясница прижата к полу; если отрывается — согни колени.',
-        'Two rounds. In the hollow hold press the lower back into the floor; if it lifts, bend the knees.',
-      ),
-      items: [
-        { exerciseId: 'hollow_hold', seconds: 40 },
-        { exerciseId: 'v_up', reps: 12 },
-        { exerciseId: 'side_plank', seconds: 30, perSide: true },
-      ],
-    },
     cdPull('phb_cooldown'),
   ],
 };
@@ -822,7 +737,7 @@ const W_PULL_HINGE_C: WorkoutInput = {
       id: 'phc_pull',
       type: 'strength',
       format: 'sets',
-      sets: 5,
+      sets: 4,
       restBetweenSetsSec: 90,
       title: l('Подтягивания', 'Pull-ups'),
       description: l(
@@ -874,23 +789,6 @@ const W_PULL_HINGE_C: WorkoutInput = {
             'Shoulders back and down, walk the room back and forth',
           ),
         },
-      ],
-    },
-    {
-      id: 'phc_core',
-      type: 'core',
-      format: 'circuit',
-      sets: 2,
-      restBetweenRoundsSec: 30,
-      title: l('Кор', 'Core'),
-      description: l(
-        'Два круга. Самый большой объём на корпус за курс — держи позиции, пока техника чистая, и не задерживай дыхание.',
-        'Two rounds. The biggest core volume of the course — hold each position only while form is clean, and do not hold your breath.',
-      ),
-      items: [
-        { exerciseId: 'hollow_hold', seconds: 45 },
-        { exerciseId: 'v_up', reps: 15 },
-        { exerciseId: 'side_plank', seconds: 40, perSide: true },
       ],
     },
     cdPull('phc_cooldown'),
@@ -971,7 +869,7 @@ const W_ENGINE_EMOM12: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: l('Кор', 'Core'),
       description: l(
         'Два круга. В ножницах поясница на полу, ноги низко, пятки не касаются пола.',
@@ -1123,7 +1021,7 @@ const W_ENGINE_TABATA: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: l('Кор', 'Core'),
       description: l(
         'Два круга. В русском твисте пятки на полу или на весу — как держишь спину прямой.',
@@ -1209,7 +1107,7 @@ const W_ENGINE_EMOM16: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: l('Кор', 'Core'),
       description: l(
         'Два круга. После EMOM хват устал — в подъёмах коленей держи перекладину спокойно, без сжатия до белых пальцев.',
@@ -1520,7 +1418,7 @@ const W_SKILL_FLOW: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: l('Кор', 'Core'),
       description: l(
         'Два спокойных круга. Дыши ровно, движения медленные.',

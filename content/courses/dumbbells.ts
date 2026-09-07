@@ -341,7 +341,7 @@ const W_SQUAT_PRESS_A: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: l('Кор', 'Core'),
       description: l(
         'Два круга. Таз не крутится в касаниях плеч — поставь ноги шире, если нужно.',
@@ -433,22 +433,6 @@ const W_SQUAT_PRESS_B: WorkoutInput = {
         { exerciseId: 'air_squat', reps: 12 },
       ],
     },
-    {
-      id: 'spb_core',
-      type: 'core',
-      format: 'circuit',
-      sets: 2,
-      restBetweenRoundsSec: 30,
-      title: l('Кор', 'Core'),
-      description: l(
-        'Два круга. В лодочке поясница прижата к полу; если отрывается — согни колени.',
-        'Two rounds. In the hollow hold press the lower back into the floor; if it lifts, bend the knees.',
-      ),
-      items: [
-        { exerciseId: 'hollow_hold', seconds: 30 },
-        { exerciseId: 'plank_shoulder_tap', reps: 20 },
-      ],
-    },
     cdLower('spb_cooldown'),
   ],
 };
@@ -516,30 +500,6 @@ const W_SQUAT_PRESS_C: WorkoutInput = {
         { exerciseId: 'db_thruster', reps: 8, load: 'light' },
         { exerciseId: 'burpee', reps: 5 },
         { exerciseId: 'sit_up', reps: 10 },
-      ],
-    },
-    {
-      id: 'spc_core',
-      type: 'core',
-      format: 'circuit',
-      sets: 2,
-      restBetweenRoundsSec: 30,
-      title: l('Кор', 'Core'),
-      description: l(
-        'Два круга. Складка — руки и ноги встречаются над животом; поясница не «прыгает» с пола.',
-        'Two rounds. In the V-up hands and feet meet over the belly; do not bounce the lower back off the floor.',
-      ),
-      items: [
-        { exerciseId: 'hollow_hold', seconds: 30 },
-        {
-          exerciseId: 'v_up',
-          reps: 10,
-          note: l(
-            'Не идёт складка — ситапы с прямыми руками над головой',
-            'No V-ups yet? Sit-ups with straight arms overhead',
-          ),
-        },
-        { exerciseId: 'plank_shoulder_tap', reps: 20 },
       ],
     },
     cdLower('spc_cooldown'),
@@ -615,7 +575,7 @@ const W_HINGE_PULL_A: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: l('Кор', 'Core'),
       description: l(
         'Два круга без спешки: таз не проваливается в боковой планке, поясница на полу в подъёмах ног.',
@@ -673,7 +633,7 @@ const W_HINGE_PULL_B: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 3,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: l('Кор и хват', 'Core & grip'),
       description: l(
         'Три круга. Прогулка фермера с тяжёлой парой: если гантели тянут плечи вперёд — вес правильный, просто не давай им это сделать.',
@@ -741,7 +701,7 @@ const W_HINGE_PULL_C: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: l('Кор', 'Core'),
       description: l(
         'Два круга. Самый большой объём на корпус за курс — держи позиции, пока техника чистая, и не задерживай дыхание.',
@@ -1047,7 +1007,7 @@ const W_COMPLEX_B: WorkoutInput = {
       id: 'cxb_complex',
       type: 'strength',
       format: 'circuit',
-      sets: 5,
+      sets: 4,
       restBetweenRoundsSec: 75,
       title: l('Комплекс: 5 кругов', 'Complex: 5 rounds'),
       description: l(
@@ -1141,7 +1101,7 @@ const W_TECHNIQUE_FLOW: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: l('Кор', 'Core'),
       description: l(
         'Два спокойных круга. Дыши ровно, движения медленные.',

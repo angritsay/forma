@@ -298,7 +298,7 @@ const WORKOUTS: WorkoutInput[] = [
         type: 'core',
         format: 'circuit',
         sets: 2,
-        restBetweenRoundsSec: 30,
+        restBetweenRoundsSec: 45,
         title: l('Кор', 'Core'),
         description: l(
           'Два круга. Главное — не прогибать поясницу: живот подтянут, дыхание ровное.',
@@ -368,7 +368,7 @@ const WORKOUTS: WorkoutInput[] = [
         type: 'core',
         format: 'circuit',
         sets: 2,
-        restBetweenRoundsSec: 30,
+        restBetweenRoundsSec: 45,
         title: l('Кор', 'Core'),
         description: l(
           'Два круга в спокойном темпе. В ситапах не тяни себя за шею — поднимайся за счёт живота.',
@@ -438,7 +438,7 @@ const WORKOUTS: WorkoutInput[] = [
         type: 'core',
         format: 'circuit',
         sets: 2,
-        restBetweenRoundsSec: 30,
+        restBetweenRoundsSec: 45,
         title: l('Кор', 'Core'),
         description: l(
           'Два круга. Планка на пять секунд дольше, чем на прошлой неделе.',
@@ -491,7 +491,7 @@ const WORKOUTS: WorkoutInput[] = [
         type: 'core',
         format: 'circuit',
         sets: 2,
-        restBetweenRoundsSec: 30,
+        restBetweenRoundsSec: 45,
         title: l('Кор', 'Core'),
         description: l(
           'Два круга. В «мёртвом жуке» поясница прижата к полу всё время.',
@@ -664,7 +664,7 @@ const WORKOUTS: WorkoutInput[] = [
         type: 'core',
         format: 'circuit',
         sets: 2,
-        restBetweenRoundsSec: 30,
+        restBetweenRoundsSec: 45,
         title: l('Кор', 'Core'),
         description: l(
           'Два круга. Боковая планка — новое упражнение: таз не проваливается, тело в одной линии.',
@@ -838,7 +838,7 @@ const WORKOUTS: WorkoutInput[] = [
         type: 'core',
         format: 'circuit',
         sets: 3,
-        restBetweenRoundsSec: 30,
+        restBetweenRoundsSec: 45,
         title: l('Кор: 3 круга', 'Core: 3 rounds'),
         description: l(
           'Три круга. Самый большой объём на корпус за курс — держи планку, пока техника чистая, и не задерживай дыхание.',

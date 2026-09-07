@@ -228,7 +228,7 @@ const W_SQUAT_PUSH_A: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: { ru: 'Кор', en: 'Core' },
       items: [
         { exerciseId: 'plank', seconds: 40 },
@@ -279,7 +279,7 @@ const W_SQUAT_PUSH_B: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 3,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: { ru: 'Кор', en: 'Core' },
       items: [
         { exerciseId: 'hollow_hold', seconds: 30 },
@@ -311,7 +311,7 @@ const W_SQUAT_PUSH_C: WorkoutInput = {
       id: 'spc_strength',
       type: 'strength',
       format: 'sets',
-      sets: 4,
+      sets: 3,
       restBetweenSetsSec: 75,
       title: { ru: 'Силовой блок', en: 'Strength' },
       description: {
@@ -339,7 +339,7 @@ const W_SQUAT_PUSH_C: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 3,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: { ru: 'Кор', en: 'Core' },
       items: [
         { exerciseId: 'hollow_hold', seconds: 40 },
@@ -397,7 +397,7 @@ const W_HINGE_CORE_A: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 3,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: { ru: 'Кор', en: 'Core' },
       description: {
         ru: 'Три круга. Поясница прижата к полу в жуке, таз не проваливается в планках.',
@@ -457,7 +457,7 @@ const W_HINGE_CORE_B: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: { ru: 'Кор', en: 'Core' },
       description: {
         ru: 'Два круга без спешки — четыре упражнения подряд, это больше работы на кор, чем кажется. В лодочке поясница вжата в пол; в твисте поворачивай грудь, а не только руки.',
@@ -518,7 +518,7 @@ const W_HINGE_CORE_C: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: { ru: 'Кор', en: 'Core' },
       description: {
         ru: 'Два круга из четырёх упражнений. В ножницах ноги низко над полом, но поясница не отрывается — если отрывается, подними ноги выше.',
@@ -585,7 +585,7 @@ const W_ENGINE_AMRAP10: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: { ru: 'Кор', en: 'Core' },
       items: [
         { exerciseId: 'plank', seconds: 45 },
@@ -642,7 +642,7 @@ const W_ENGINE_EMOM12: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: { ru: 'Кор', en: 'Core' },
       items: [
         { exerciseId: 'hollow_hold', seconds: 30 },
@@ -772,7 +772,7 @@ const W_ENGINE_AMRAP15: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: { ru: 'Кор', en: 'Core' },
       items: [
         { exerciseId: 'side_plank', seconds: 40, perSide: true },
@@ -915,7 +915,7 @@ const W_EASY_FLOW: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: { ru: 'Кор', en: 'Core' },
       items: [
         { exerciseId: 'bird_dog', reps: 10 },

@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   AGE_BAND_NORM_BANDS,
   CHOICE_POINTS,
-  CHOICE_REST,
+  CHOICE_SETS_DELTA,
   CHOICE_VOLUME,
+  CHOICE_WINDOW,
   FITNESS_WEIGHTS,
   LEVEL_THRESHOLDS,
   LEVEL_TIER,
@@ -26,12 +27,21 @@ describe('constants', () => {
     expect(LEVEL_TIER.level2From).toBeLessThan(LEVEL_TIER.level3From);
   });
 
-  it('difficulty multipliers are ordered easier < normal < harder', () => {
+  it('every difficulty lever is ordered easier < normal < harder', () => {
     expect(CHOICE_VOLUME.easier).toBeLessThan(CHOICE_VOLUME.normal);
     expect(CHOICE_VOLUME.harder).toBeGreaterThan(CHOICE_VOLUME.normal);
-    expect(CHOICE_REST.easier).toBeGreaterThan(CHOICE_REST.harder);
+    expect(CHOICE_SETS_DELTA.easier).toBeLessThan(CHOICE_SETS_DELTA.normal);
+    expect(CHOICE_SETS_DELTA.harder).toBeGreaterThan(CHOICE_SETS_DELTA.normal);
+    expect(CHOICE_WINDOW.easier).toBeLessThan(CHOICE_WINDOW.normal);
+    expect(CHOICE_WINDOW.harder).toBeGreaterThan(CHOICE_WINDOW.normal);
     expect(CHOICE_POINTS.easier).toBeLessThan(CHOICE_POINTS.harder);
     expect(STREAK_BONUS[0]!.days).toBeGreaterThan(STREAK_BONUS[1]!.days);
+  });
+
+  it('the choice moves whole sets, so it can never be cancelled by a rest tweak', () => {
+    // The old design paired a volume cut with a rest increase, and the two cancelled: all three
+    // options finished within ~1.4 min of each other. A set is not cancellable that way.
+    expect(CHOICE_SETS_DELTA.harder - CHOICE_SETS_DELTA.easier).toBe(2);
   });
 
   it('push-up norms are monotonic within a row and every age band maps to a norm band', () => {

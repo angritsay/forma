@@ -14,19 +14,64 @@ import type {
  * Difficulty choice, repeats, streaks, deloads
  * ------------------------------------------------------------------------------------------- */
 
-/** Volume multiplier per difficulty choice (reps, seconds, meters, calories). */
-export const CHOICE_VOLUME: Readonly<Record<DifficultyChoice, number>> = {
-  easier: 0.85,
-  normal: 1,
-  harder: 1.15,
+/**
+ * Easier / As usual / Harder must be *felt*, and the thing an athlete feels is how long the
+ * session takes and how many sets they have to get through. The lever is therefore structural —
+ * a set added or removed, a window lengthened or shortened — with only a small nudge to the
+ * per-set numbers. Target: roughly 5-10 minutes between one choice and the next.
+ *
+ * Rest per set deliberately does NOT change with the choice. How long you need between sets is a
+ * property of the movement, not of how ambitious you feel; and an earlier design that lengthened
+ * rest as it cut volume cancelled its own duration effect, which is why the three options used to
+ * finish within ~1.4 min of each other (and, in five workouts, "easier" ran *longer* than
+ * "harder"). Rest stays a lever for deloads only.
+ */
+
+/**
+ * How many blocks the choice may add a set to (or take one from). Capped, because trimming a set
+ * from every block of a five-block workout halves it — at which point it is a different session,
+ * not the same one taken easier. The cap lands the step at roughly 5-8 minutes.
+ */
+export const MAX_CHOICE_SET_BLOCKS = 2;
+
+/** Sets added or removed per difficulty choice (sets/circuit blocks). The main lever. */
+export const CHOICE_SETS_DELTA: Readonly<Record<DifficultyChoice, number>> = {
+  easier: -1,
+  normal: 0,
+  harder: 1,
 };
 
-/** Rest multiplier per difficulty choice. */
-export const CHOICE_REST: Readonly<Record<DifficultyChoice, number>> = {
-  easier: 1.15,
+/**
+ * Multiplier for a format's own clock: EMOM/Tabata/interval rounds and the AMRAP / for-time
+ * window. These formats have no sets to add, so the window itself is what moves.
+ */
+export const CHOICE_WINDOW: Readonly<Record<DifficultyChoice, number>> = {
+  easier: 0.8,
   normal: 1,
-  harder: 0.9,
+  harder: 1.2,
 };
+
+/** Volume multiplier per difficulty choice (reps, seconds, meters, calories). */
+export const CHOICE_VOLUME: Readonly<Record<DifficultyChoice, number>> = {
+  easier: 0.9,
+  normal: 1,
+  harder: 1.1,
+};
+
+/**
+ * Volume multiplier for for-time work. Stronger than CHOICE_VOLUME because a for-time piece has
+ * nothing else to give: no rest to trade, and often a single round. Cutting a 21-15-9 to 15-12-9
+ * is how a coach scales one, so reps carry the whole change here.
+ */
+export const CHOICE_VOLUME_FORTIME: Readonly<Record<DifficultyChoice, number>> = {
+  easier: 0.8,
+  normal: 1,
+  harder: 1.2,
+};
+
+/** Never take a format's own clock below this, whatever the choice (rounds, or seconds). */
+export const MIN_FORMAT_ROUNDS = 4;
+export const MIN_WINDOW_SEC = 240;
 
 /** Points multiplier per difficulty choice. */
 export const CHOICE_POINTS: Readonly<Record<DifficultyChoice, number>> = {
@@ -62,11 +107,19 @@ export const SCALE_INITIAL_MAX = 1.3;
 export const EFFECTIVE_SCALE_MIN = 0.3;
 export const EFFECTIVE_SCALE_MAX = 2;
 
-/** Effective-scale thresholds at which one set is added / removed (sets & circuit formats). */
+/**
+ * Scale thresholds at which adaptation adds / removes one set (sets & circuit formats).
+ * Measured against the athlete's own scale, NOT against scale x choice: the choice gets its own
+ * set delta (CHOICE_SETS_DELTA), and counting it twice would make "harder" jump two sets.
+ */
 export const SETS_ADD_AT = 1.3;
 export const SETS_REMOVE_AT = 0.7;
-/** Never drop below this many sets when removing one (unless authored with fewer). */
+/** Floor when adaptation removes a set (unless the block was authored with fewer). */
 export const MIN_SETS_AFTER_REMOVE = 2;
+/** Floor when the athlete chose "easier" — one honest set beats skipping the session. */
+export const MIN_SETS_EASIER = 1;
+/** Most sets adaptation and the choice may add on top of what was authored. */
+export const MAX_SETS_ADDED = 2;
 /** Shortest timed target after scaling (seconds). */
 export const MIN_SECONDS_TARGET = 10;
 

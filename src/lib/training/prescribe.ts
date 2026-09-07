@@ -13,8 +13,10 @@ import type {
   WorkoutItem,
 } from '@/content/schema';
 import {
-  CHOICE_REST,
+  CHOICE_SETS_DELTA,
   CHOICE_VOLUME,
+  CHOICE_VOLUME_FORTIME,
+  CHOICE_WINDOW,
   DEFAULT_SECONDS_PER_REP,
   DELOAD_REST,
   DELOAD_VOLUME,
@@ -24,9 +26,14 @@ import {
   ISOMETRIC_ID_PATTERN,
   KNEE_RISKY_IDS,
   LOWER_BACK_RISKY_IDS,
+  MAX_CHOICE_SET_BLOCKS,
+  MAX_SETS_ADDED,
   METERS_PER_SEC,
+  MIN_FORMAT_ROUNDS,
   MIN_SECONDS_TARGET,
   MIN_SETS_AFTER_REMOVE,
+  MIN_SETS_EASIER,
+  MIN_WINDOW_SEC,
   ON_HANDS_ID_PATTERN,
   OVERHEAD_ID_PATTERN,
   SEC_PER_CALORIE,
@@ -293,27 +300,82 @@ export function scaleRest(sec: number | undefined, multiplier: number): number {
   return Math.max(5, round5(base * multiplier));
 }
 
-function effectiveSets(block: Block, scale: number, scalable: boolean): number {
+/**
+ * Sets (or rounds) actually prescribed.
+ *
+ * `structuralScale` is the athlete's own scale WITHOUT the difficulty choice folded in — the
+ * choice contributes through CHOICE_SETS_DELTA instead, so it is counted exactly once.
+ * Formats that run on their own clock (EMOM, Tabata, intervals) move their round count with
+ * CHOICE_WINDOW rather than by whole sets.
+ */
+function effectiveSets(
+  block: Block,
+  structuralScale: number,
+  scalable: boolean,
+  choice: DifficultyChoice,
+  choiceMovesThisBlock: boolean,
+): number {
   switch (block.format) {
     case 'sets':
     case 'circuit': {
       const base = block.sets ?? 1;
       if (!scalable) return base;
-      if (scale >= SETS_ADD_AT) return base + 1;
-      if (scale <= SETS_REMOVE_AT) return Math.max(Math.min(base, MIN_SETS_AFTER_REMOVE), base - 1);
-      return base;
+      const fromScale =
+        structuralScale >= SETS_ADD_AT ? 1 : structuralScale <= SETS_REMOVE_AT ? -1 : 0;
+      const fromChoice = choiceMovesThisBlock ? CHOICE_SETS_DELTA[choice] : 0;
+      const floor = Math.min(base, choice === 'easier' ? MIN_SETS_EASIER : MIN_SETS_AFTER_REMOVE);
+      return clamp(base + fromScale + fromChoice, floor, base + MAX_SETS_ADDED);
     }
     case 'emom':
-      return block.rounds ?? 1;
+      return scaleRounds(block.rounds ?? 1, scalable, choice);
     case 'tabata':
-      return block.rounds ?? TABATA_DEFAULT_ROUNDS;
+      return scaleRounds(block.rounds ?? TABATA_DEFAULT_ROUNDS, scalable, choice);
     case 'interval':
-      return block.rounds ?? 1;
+      return scaleRounds(block.rounds ?? 1, scalable, choice);
     case 'amrap':
       return 1;
+    // For-time has no rest to trade away, so its rounds are the lever. A single-round chipper
+    // has none to give and moves on volume and the cap alone.
     case 'fortime':
-      return block.sets ?? 1;
+      return scaleRounds(block.sets ?? 1, scalable, choice, 1);
   }
+}
+
+/** Rounds of a self-clocked format, moved by the choice and never below `floor`. */
+function scaleRounds(
+  rounds: number,
+  scalable: boolean,
+  choice: DifficultyChoice,
+  floor: number = MIN_FORMAT_ROUNDS,
+): number {
+  if (!scalable || CHOICE_WINDOW[choice] === 1) return rounds;
+  const scaled = Math.round(rounds * CHOICE_WINDOW[choice]);
+  return Math.max(Math.min(rounds, floor), scaled);
+}
+
+/**
+ * The blocks whose set count the choice is allowed to move: the biggest working blocks, capped at
+ * MAX_CHOICE_SET_BLOCKS. Ranked by authored sets so the change lands on the main strength and
+ * conditioning work rather than on a two-round core finisher.
+ */
+export function choiceSetBlockIds(workout: Workout): ReadonlySet<string> {
+  const eligible = workout.blocks
+    .filter((b) => b.scalable !== false && (b.format === 'sets' || b.format === 'circuit'))
+    .map((b, order) => ({ id: b.id, sets: b.sets ?? 1, order }))
+    .sort((a, b) => b.sets - a.sets || a.order - b.order)
+    .slice(0, MAX_CHOICE_SET_BLOCKS);
+  return new Set(eligible.map((b) => b.id));
+}
+
+/**
+ * AMRAP / for-time window, moved by the choice and rounded to a whole half-minute.
+ * "As usual" returns the authored number untouched: rounding a 200 s cap to the nearest 30 s
+ * would quietly turn it into 210 even when the athlete asked for no change at all.
+ */
+function scaleWindow(sec: number, scalable: boolean, choice: DifficultyChoice): number {
+  if (!scalable || CHOICE_WINDOW[choice] === 1) return sec;
+  const scaled = Math.round((sec * CHOICE_WINDOW[choice]) / 30) * 30;
+  return Math.max(Math.min(sec, MIN_WINDOW_SEC), scaled);
 }
 
 /**
@@ -387,12 +449,24 @@ export function prescribeWorkout(
   const deload = opts.deload === true;
   // Stored scales come back from JSON: never let a missing or NaN scale reach the targets.
   const scale = num(opts.scale, 1);
-  const effectiveScale = clamp(
-    scale * CHOICE_VOLUME[choice] * (deload ? DELOAD_VOLUME : 1),
+  const volumeScale = (multiplier: number) =>
+    clamp(
+      scale * multiplier * (deload ? DELOAD_VOLUME : 1),
+      EFFECTIVE_SCALE_MIN,
+      EFFECTIVE_SCALE_MAX,
+    );
+  const effectiveScale = volumeScale(CHOICE_VOLUME[choice]);
+  const fortimeScale = volumeScale(CHOICE_VOLUME_FORTIME[choice]);
+  // Set counts key off the athlete's own scale, without the choice: the choice adds its own set
+  // delta, and folding it in here as well would move "harder" by two sets instead of one.
+  const structuralScale = clamp(
+    scale * (deload ? DELOAD_VOLUME : 1),
     EFFECTIVE_SCALE_MIN,
     EFFECTIVE_SCALE_MAX,
   );
-  const restMultiplier = CHOICE_REST[choice] * (deload ? DELOAD_REST : 1);
+  // Rest tracks the deload only — see CHOICE_SETS_DELTA in constants.ts for why the choice
+  // deliberately leaves it alone.
+  const restMultiplier = deload ? DELOAD_REST : 1;
   const ctx: SubstitutionContext = {
     profile: opts.profile,
     limitations,
@@ -401,11 +475,20 @@ export function prescribeWorkout(
     lookup: exerciseLookup,
   };
 
+  const choiceBlocks = choiceSetBlockIds(workout);
+
   const blocks = workout.blocks.map((block) => {
     const scalable = block.scalable !== false;
-    const s = scalable ? effectiveScale : 1;
-    const restMul = scalable ? restMultiplier : CHOICE_REST[choice];
-    const sets = effectiveSets(block, effectiveScale, scalable);
+    const blockScale = block.format === 'fortime' ? fortimeScale : effectiveScale;
+    const s = scalable ? blockScale : 1;
+    const restMul = scalable ? restMultiplier : 1;
+    const sets = effectiveSets(
+      block,
+      structuralScale,
+      scalable,
+      choice,
+      choiceBlocks.has(block.id),
+    );
     // Warm-ups, cool-downs and tests keep the authored movement, not only the authored numbers.
     const blockCtx: SubstitutionContext = {
       ...ctx,
@@ -475,7 +558,11 @@ export function prescribeWorkout(
     };
     if (block.title) prescribed.title = block.title;
     if (block.description) prescribed.description = block.description;
-    if (block.durationSec !== undefined) prescribed.durationSec = block.durationSec;
+    if (block.durationSec !== undefined) {
+      // AMRAP has no sets to add; the window itself is the lever. For-time keeps its rounds, so
+      // moving the cap only changes how much slack a slower athlete has.
+      prescribed.durationSec = scaleWindow(block.durationSec, scalable, choice);
+    }
     if (block.workSec !== undefined) prescribed.workSec = block.workSec;
     if (block.restSec !== undefined) {
       prescribed.restSec =

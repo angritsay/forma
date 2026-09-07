@@ -266,7 +266,7 @@ const W_SQUAT_PRESS_A: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: { ru: 'Кор', en: 'Core' },
       items: [
         { exerciseId: 'plank', seconds: 40 },
@@ -333,7 +333,7 @@ const W_SQUAT_PRESS_B: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: { ru: 'Кор', en: 'Core' },
       items: [
         { exerciseId: 'side_plank', seconds: 30, perSide: true },
@@ -513,7 +513,7 @@ const W_SWING_SCHOOL_A: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: { ru: 'Переноска и кор', en: 'Carry and core' },
       description: {
         ru: 'Два круга. В переноске плечи на одном уровне, корпус не заваливается к гире — это и есть упражнение на кор.',
@@ -607,7 +607,7 @@ const W_SWING_SCHOOL_B: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: { ru: 'Переноска и спина', en: 'Carry and back' },
       items: [
         { exerciseId: 'kb_suitcase_carry', seconds: 40, perSide: true, load: 'heavy' },
@@ -689,7 +689,7 @@ const W_CLEAN_PRESS: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: { ru: 'Хват и кор', en: 'Grip and core' },
       items: [
         {
@@ -788,7 +788,7 @@ const W_SNATCH_SWING: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: { ru: 'Переноска и кор', en: 'Carry and core' },
       items: [
         { exerciseId: 'kb_suitcase_carry', seconds: 40, perSide: true, load: 'heavy' },
@@ -839,7 +839,7 @@ const W_METCON_EMOM12: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: { ru: 'Кор', en: 'Core' },
       items: [
         { exerciseId: 'plank', seconds: 45 },
@@ -913,7 +913,7 @@ const W_METCON_LADDER: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: { ru: 'Кор', en: 'Core' },
       items: [
         { exerciseId: 'dead_bug', reps: 12 },
@@ -963,7 +963,7 @@ const W_METCON_AMRAP15: WorkoutInput = {
       type: 'core',
       format: 'circuit',
       sets: 2,
-      restBetweenRoundsSec: 30,
+      restBetweenRoundsSec: 45,
       title: { ru: 'Кор', en: 'Core' },
       items: [
         { exerciseId: 'hollow_hold', seconds: 30 },

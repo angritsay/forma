@@ -115,36 +115,60 @@ in the engine reads them — do not assume otherwise when wiring the app.
 effectiveScale = clamp(scale × CHOICE_VOLUME[choice] × (deload ? 0.65 : 1), 0.3, 2)
 ```
 
-| Choice | Volume |  Rest | Points |
-| ------ | -----: | ----: | -----: |
-| easier |  ×0.85 | ×1.15 |   ×0.8 |
-| normal |  ×1.00 | ×1.00 |   ×1.0 |
-| harder |  ×1.15 | ×0.90 |  ×1.25 |
+| Choice | Volume | Volume (for-time) | Sets (up to 2 blocks) | Window / rounds | Rest | Points |
+| ------ | -----: | ----------------: | --------------------: | --------------: | ---: | -----: |
+| easier |  ×0.90 |             ×0.80 |                    −1 |           ×0.80 | ×1.0 |   ×0.8 |
+| normal |  ×1.00 |             ×1.00 |                     0 |           ×1.00 | ×1.0 |   ×1.0 |
+| harder |  ×1.10 |             ×1.20 |                    +1 |           ×1.20 | ×1.0 |  ×1.25 |
 
-±15% volume is one honest "step" for a single session — big enough to feel, small enough that a
-bad guess is recoverable; the rest multipliers move the opposite way so density changes too. Points
-reward the harder choice more than proportionally (×1.25) to make it attractive, and pay 80% for the
-easier choice so it is never punished. **Deload:** volume ×0.65 and rest ×1.2, points as normal —
-a one-third volume reduction is the common deload magnitude reported by strength coaches
+**The choice has to be felt, and what an athlete feels is the clock.** The target is 5–10 minutes
+between one option and the next; measured across the 75 published workouts the average step is
+5.6 min, and 103 of 150 steps land in a 4–11 min band.
+
+The lever is therefore _structural_ — a set added or removed, a window lengthened or shortened —
+rather than a few percent on the reps:
+
+- **Sets** are the main lever, applied to at most `MAX_CHOICE_SET_BLOCKS` (2) blocks, ranked by
+  authored set count. Capped because trimming a set from every block of a five-block workout halves
+  it, at which point it is a different session rather than the same one taken easier.
+- **Self-clocked formats** (EMOM, Tabata, interval, AMRAP, for-time cap) have no sets to add, so
+  the window itself moves. "As usual" returns the authored number untouched — no rounding.
+- **For-time volume** moves further (±20%) because a for-time piece has nothing else to give: no
+  rest to trade, and often a single round. Cutting a 21-15-9 to 15-12-9 is how a coach scales one.
+- **Rest does not move with the choice at all.** How long you need between sets is a property of
+  the movement, not of how ambitious you feel. It is also what broke the previous design: volume
+  fell as rest rose, the two cancelled, and all three options finished within ~1.4 min of each
+  other — in five workouts "easier" ran _longer_ than "harder". Rest remains a deload lever only.
+
+Points reward the harder choice more than proportionally (×1.25) to make it attractive, and pay 80%
+for the easier choice so it is never punished. **Deload:** volume ×0.65 and rest ×1.2, points as
+normal — a one-third volume reduction is the common deload magnitude reported by strength coaches
 (Bell et al. 2022). Pregnancy forces the whole prescription to `easier` (see 3.6).
+
+Set counts key off the athlete's own `scale` **without** the choice folded in (`structuralScale`);
+the choice contributes through `CHOICE_SETS_DELTA` instead, so it is never counted twice.
 
 ### 3.2 Targets
 
-Blocks authored with `scalable: false` (warm-ups, cool-downs, tests) keep their numbers; their rest
-still follows the choice multiplier (not the deload one). For scalable blocks:
+Blocks authored with `scalable: false` (warm-ups, cool-downs, tests) keep their numbers, and their
+rest is left exactly as authored. For scalable blocks:
 
 - reps → `max(1, round(reps × es))`
 - seconds → `max(10, round to 5 s)`
 - meters → round to 5 m (min 5)
 - calories → `max(1, round)`
-- AMRAP / EMOM / Tabata durations are fixed by format; only the reps inside scale.
+- AMRAP windows and EMOM / Tabata / interval / for-time rounds follow the difficulty choice
+  (§3.1); the work/rest inside a Tabata or interval stays at its authored, canonical value.
 - Hypertension: isometric holds are capped at 30 s (see 3.6).
 
 ### 3.3 Sets
 
-For `sets` / `circuit`: effective scale ≥ 1.3 adds one set; ≤ 0.7 removes one (never below 2,
-unless authored with fewer). This keeps per-set reps in the authored range instead of stretching
-one set to absurd lengths. EMOM minutes and Tabata / interval rounds are format-fixed.
+For `sets` / `circuit`: the athlete's own scale ≥ 1.3 adds one set and ≤ 0.7 removes one (never
+below 2, unless authored with fewer), and the difficulty choice adds or removes one more on up to
+two blocks (floor of 1 set when the athlete chose `easier` — one honest set beats skipping the
+session). The two together may never add more than `MAX_SETS_ADDED` (2) on top of what was
+authored. This keeps per-set reps in the authored range instead of stretching one set to absurd
+lengths. EMOM minutes and Tabata / interval / for-time rounds move with the choice instead.
 
 The set change **compounds** with the scaled targets — it does not redistribute them. At the far
 ends the total volume therefore moves further than the scale alone: a three-set block at effective
@@ -154,9 +178,10 @@ noticeably lighter, and going under the 65% headline figure costs nothing but a 
 
 ### 3.4 Rest
 
-`restBetweenSetsSec`, `restBetweenRoundsSec`, item `restAfterSec` and interval `restSec` are
-multiplied by `CHOICE_REST[choice] × (deload ? 1.2 : 1)` and rounded to 5 s (a non-zero rest never
-rounds down to 0). Tabata rest is not scaled — 20/10 is the format.
+`restBetweenSetsSec`, `restBetweenRoundsSec` and item `restAfterSec` are multiplied by
+`(deload ? 1.2 : 1)` and rounded to 5 s (a non-zero rest never rounds down to 0) — that is, they
+follow the deload and nothing else. Interval and Tabata `restSec` are never scaled: 20/10 is the
+format, not a suggestion.
 
 ### 3.5 Substitutions
 
@@ -208,6 +233,42 @@ weights → `loadKg` is undefined and the label is kept for display.
 reps × `secondsPerRep` (×2 for `perSide`); seconds as given; meters ÷ 1.5 m/s (easy run /
 shuttle pace, **expert anchor**); calories × 4 s (a moderate rower/bike pace of ~15 cal/min,
 **expert anchor**). Unknown exercises fall back to 3 s per rep and MET 5.
+
+## 3.9 How hard a published session is allowed to be
+
+The first version of the programs was reviewed by the coach whose name is on them, and his verdict
+was that a client would not come back after a session like that. He was right, and the numbers show
+why: sessions ran up to 48 minutes and routinely stacked three main pieces — a strength block, a
+metcon _and_ a core finisher — with core circuits set at 30 s between rounds on already-tired legs.
+
+The programs now hold to these rules, enforced by `src/content/course-load.test.ts` so new content
+cannot quietly regress:
+
+| Rule                                              | Value                         |
+| ------------------------------------------------- | ----------------------------- |
+| Longest session at "as usual" (level 2, scale 1)  | 40 min                        |
+| Longest session in the beginner course (`start`)  | 30 min                        |
+| Rest between rounds of a multi-round core circuit | ≥ 45 s                        |
+| Difficulty step, where a block's sets can move    | 3–14 min                      |
+| Tests and benchmarks                              | identical at every difficulty |
+
+What changed in the content: the trailing core circuit was removed from the eight sessions that
+already had both a strength block and a conditioning piece; five-set strength blocks were cut to
+four; the one strength block carrying five separate movements dropped from four sets to three; and
+every multi-round core circuit went from 30 s to 45 s between rounds.
+
+The result, per course (session at "as usual", minutes):
+
+| Course       | Before (min / avg / max) | After                           |
+| ------------ | ------------------------ | ------------------------------- |
+| `start`      | 18.3 / 23.0 / 26.2       | unchanged — it was already sane |
+| `engine`     | 20.0 / 29.0 / 36.9       | 20.0 / 28.8 / 36.9              |
+| `dumbbells`  | 17.6 / 28.1 / 40.0       | 17.6 / 28.1 / 38.7              |
+| `kettlebell` | 17.6 / 29.0 / 38.5       | 17.6 / 29.0 / 38.0              |
+| `athlete`    | 20.5 / 33.5 / 48.3       | 20.5 / 30.8 / 38.2              |
+
+Core work was not deleted from the product — it survives in the warm-ups, in the sessions built
+around it (`w_hinge_core_*`), and in every session that does not already ask for two main pieces.
 
 ## 4. Duration (`estimate.ts`)
 
@@ -357,29 +418,29 @@ takes weeks (Lally et al. 2010), and a 7-day streak is the first milestone worth
 
 ## 10. Constants reference (`constants.ts`)
 
-| Constant                                                               | Value                      | Kind                       |
-| ---------------------------------------------------------------------- | -------------------------- | -------------------------- |
-| `CHOICE_VOLUME` / `CHOICE_REST` / `CHOICE_POINTS`                      | see §3.1                   | expert anchor              |
-| `REPEAT_POINTS`                                                        | 0.5                        | design                     |
-| `STREAK_BONUS`                                                         | ≥ 30 d +20%, ≥ 7 d +10%    | design                     |
-| `DELOAD_VOLUME` / `DELOAD_REST`                                        | 0.65 / 1.2                 | Bell et al. 2022           |
-| `SCALE_MIN..MAX`, `SCALE_INITIAL_MIN..MAX`, `EFFECTIVE_SCALE_MIN..MAX` | 0.5–1.5, 0.6–1.3, 0.3–2    | design                     |
-| `SETS_ADD_AT` / `SETS_REMOVE_AT` / `MIN_SETS_AFTER_REMOVE`             | 1.3 / 0.7 / 2              | expert anchor              |
-| `MIN_SECONDS_TARGET`                                                   | 10 s                       | expert anchor              |
-| `TRANSITION_SEC` / `BLOCK_INTRO_SEC`                                   | 8 s / 20 s                 | expert anchor              |
-| `REST_MET` / `DEFAULT_MET` / `DEFAULT_WEIGHT_KG`                       | 1.5 / 5 / 70               | Compendium                 |
-| `METERS_PER_SEC` / `SEC_PER_CALORIE` / `DEFAULT_SECONDS_PER_REP`       | 1.5 m/s / 4 s / 3 s        | expert anchor              |
-| `AMRAP_WORK_SHARE` / `FORTIME_PACE_FACTOR`                             | 0.7 / 1.15                 | expert anchor              |
-| `TABATA_DEFAULT_ROUNDS` / `FORMAT_DEFAULT_WORK_REST`                   | 8; 20/10 s, 30/30 s        | expert anchor              |
-| `STEPS_GOAL`, `STEPS_POINTS_*`                                         | 7 000; 30 / +5 / 60        | Paluch 2021; design        |
-| `LEVEL_THRESHOLDS`, `LEVEL_TIER`                                       | §9; 35 / 66                | design                     |
-| `ADAPTATION`                                                           | §7.3                       | ACSM 2009; Zourdos 2016    |
-| `RECOMMENDATION`                                                       | 48 h / 24 h / 15 000 steps | ACSM 2009; expert anchor   |
-| `FITNESS_WEIGHTS`, `NO_TEST_INDEX_CAP`, `KNEE_PUSHUP_FACTOR`           | §2; 60; 0.6                | design; expert anchor      |
-| `PUSHUP_NORMS`, `AGE_BAND_NORM_BANDS`                                  | §2.1                       | CSEP / ACSM                |
-| `SQUAT_ANCHORS`, `SQUAT_AGE_SHIFT_PER_BAND`, `PLANK_ANCHORS`           | §2.2–2.3                   | expert anchor              |
-| `ACTIVITY_SCORE`, `EXPERIENCE_SCORE`                                   | §2                         | design                     |
-| `HYPERTENSION_MAX_HOLD_SEC`, `*_RISKY_IDS`, `*_ID_PATTERN`             | §3.6                       | ACSM / ACOG; expert anchor |
+| Constant                                                                  | Value                      | Kind                       |
+| ------------------------------------------------------------------------- | -------------------------- | -------------------------- |
+| `CHOICE_VOLUME` / `CHOICE_SETS_DELTA` / `CHOICE_WINDOW` / `CHOICE_POINTS` | see §3.1                   | expert anchor              |
+| `REPEAT_POINTS`                                                           | 0.5                        | design                     |
+| `STREAK_BONUS`                                                            | ≥ 30 d +20%, ≥ 7 d +10%    | design                     |
+| `DELOAD_VOLUME` / `DELOAD_REST`                                           | 0.65 / 1.2                 | Bell et al. 2022           |
+| `SCALE_MIN..MAX`, `SCALE_INITIAL_MIN..MAX`, `EFFECTIVE_SCALE_MIN..MAX`    | 0.5–1.5, 0.6–1.3, 0.3–2    | design                     |
+| `SETS_ADD_AT` / `SETS_REMOVE_AT` / `MIN_SETS_AFTER_REMOVE`                | 1.3 / 0.7 / 2              | expert anchor              |
+| `MIN_SECONDS_TARGET`                                                      | 10 s                       | expert anchor              |
+| `TRANSITION_SEC` / `BLOCK_INTRO_SEC`                                      | 8 s / 20 s                 | expert anchor              |
+| `REST_MET` / `DEFAULT_MET` / `DEFAULT_WEIGHT_KG`                          | 1.5 / 5 / 70               | Compendium                 |
+| `METERS_PER_SEC` / `SEC_PER_CALORIE` / `DEFAULT_SECONDS_PER_REP`          | 1.5 m/s / 4 s / 3 s        | expert anchor              |
+| `AMRAP_WORK_SHARE` / `FORTIME_PACE_FACTOR`                                | 0.7 / 1.15                 | expert anchor              |
+| `TABATA_DEFAULT_ROUNDS` / `FORMAT_DEFAULT_WORK_REST`                      | 8; 20/10 s, 30/30 s        | expert anchor              |
+| `STEPS_GOAL`, `STEPS_POINTS_*`                                            | 7 000; 30 / +5 / 60        | Paluch 2021; design        |
+| `LEVEL_THRESHOLDS`, `LEVEL_TIER`                                          | §9; 35 / 66                | design                     |
+| `ADAPTATION`                                                              | §7.3                       | ACSM 2009; Zourdos 2016    |
+| `RECOMMENDATION`                                                          | 48 h / 24 h / 15 000 steps | ACSM 2009; expert anchor   |
+| `FITNESS_WEIGHTS`, `NO_TEST_INDEX_CAP`, `KNEE_PUSHUP_FACTOR`              | §2; 60; 0.6                | design; expert anchor      |
+| `PUSHUP_NORMS`, `AGE_BAND_NORM_BANDS`                                     | §2.1                       | CSEP / ACSM                |
+| `SQUAT_ANCHORS`, `SQUAT_AGE_SHIFT_PER_BAND`, `PLANK_ANCHORS`              | §2.2–2.3                   | expert anchor              |
+| `ACTIVITY_SCORE`, `EXPERIENCE_SCORE`                                      | §2                         | design                     |
+| `HYPERTENSION_MAX_HOLD_SEC`, `*_RISKY_IDS`, `*_ID_PATTERN`                | §3.6                       | ACSM / ACOG; expert anchor |
 
 ## Sources
 
