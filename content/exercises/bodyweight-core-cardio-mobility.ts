@@ -464,6 +464,7 @@ export const EXERCISES_B: ExerciseInput[] = [
     loadable: false,
     scaling: { harder: 'leg_raise' },
     animation: 'dead_bug',
+    video: { ru: 'storage:videos/shared/dead_bug.ru.mp4' },
     tags: ['core', 'warmup'],
   },
   {

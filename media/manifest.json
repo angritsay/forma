@@ -1,5 +1,29 @@
 [
   {
+    "key": "C273FBFF-0631-4408-9B10-86EC61CAE163",
+    "file": "C273FBFF-0631-4408-9B10-86EC61CAE163.mp4",
+    "exerciseId": "",
+    "note": "second take of knee_push_up"
+  },
+  {
+    "key": "E3481B4D-EB75-4599-973E-3BB794946A4E",
+    "file": "E3481B4D-EB75-4599-973E-3BB794946A4E.mp4",
+    "exerciseId": "",
+    "note": "second take of reverse_lunge, already covered by IMG_0922"
+  },
+  {
+    "key": "F0F16BEB-1C84-4DFB-8E07-F56973539C3F",
+    "file": "F0F16BEB-1C84-4DFB-8E07-F56973539C3F.mp4",
+    "exerciseId": "",
+    "note": "second take of air_squat"
+  },
+  {
+    "key": "IMG_0169",
+    "file": "IMG_0169.mp4",
+    "exerciseId": "",
+    "note": "second take of chair_dip, already covered by IMG_0946"
+  },
+  {
     "key": "IMG_0907",
     "file": "IMG_0907.mp4",
     "exerciseId": "air_squat",
@@ -172,5 +196,53 @@
     "file": "IMG_0979.mp4",
     "exerciseId": "",
     "note": "plank on the hands with what may be a shoulder tap; the lifted hand is not clearly readable"
+  },
+  {
+    "key": "IMG_2628",
+    "file": "IMG_2628.mp4",
+    "exerciseId": "dead_bug",
+    "note": "on the back, opposite arm and leg extending and returning under control"
+  },
+  {
+    "key": "IMG_2629",
+    "file": "IMG_2629.mp4",
+    "exerciseId": "",
+    "note": "second take of air_squat, already covered by IMG_0907"
+  },
+  {
+    "key": "IMG_2630",
+    "file": "IMG_2630.mp4",
+    "exerciseId": "",
+    "note": "second take of knee_push_up, already covered by IMG_0927"
+  },
+  {
+    "key": "IMG_6711",
+    "file": "IMG_6711.mp4",
+    "exerciseId": "",
+    "note": "second take of knee_push_up"
+  },
+  {
+    "key": "IMG_6713",
+    "file": "IMG_6713.mp4",
+    "exerciseId": "",
+    "note": "second take of air_squat"
+  },
+  {
+    "key": "IMG_6715",
+    "file": "IMG_6715.mp4",
+    "exerciseId": "",
+    "note": "second take of dead_bug, already covered by IMG_2628"
+  },
+  {
+    "key": "IMG_6716",
+    "file": "IMG_6716.mp4",
+    "exerciseId": "",
+    "note": "NOT AN EXERCISE: a talking-head clip filmed at home \u2014 a bearded man in headphones in a circular crop, speaking to camera. Not Sergey and not a demonstration. Must never be mapped to an exercise"
+  },
+  {
+    "key": "IMG_6717",
+    "file": "IMG_6717.mp4",
+    "exerciseId": "",
+    "note": "NOT AN EXERCISE: second talking-head clip, same person and setting as IMG_6716"
   }
 ]
