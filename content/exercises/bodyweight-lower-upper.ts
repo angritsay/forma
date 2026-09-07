@@ -1364,6 +1364,7 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: {},
     animation: 'inchworm',
+    video: { ru: 'storage:videos/shared/inchworm.ru.mp4' },
     tags: ['warmup', 'mobility'],
   },
 ];

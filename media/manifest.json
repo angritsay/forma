@@ -384,6 +384,12 @@
     "note": "second take of knee_push_up, already covered by IMG_0927"
   },
   {
+    "key": "IMG_2631",
+    "file": "IMG_2631.mp4",
+    "exerciseId": "",
+    "note": "second take of sit_up"
+  },
+  {
     "key": "IMG_6711",
     "file": "IMG_6711.mp4",
     "exerciseId": "",
@@ -412,5 +418,71 @@
     "file": "IMG_6717.mp4",
     "exerciseId": "",
     "note": "NOT AN EXERCISE: second talking-head clip, same person and setting as IMG_6716"
+  },
+  {
+    "key": "IMG_9823",
+    "file": "IMG_9823.mp4",
+    "exerciseId": "",
+    "note": "second take of air_squat"
+  },
+  {
+    "key": "IMG_9824",
+    "file": "IMG_9824.mp4",
+    "exerciseId": "",
+    "note": "second take of reverse_lunge"
+  },
+  {
+    "key": "IMG_9826",
+    "file": "IMG_9826.mp4",
+    "exerciseId": "",
+    "note": "second take of chair_dip"
+  },
+  {
+    "key": "IMG_9827",
+    "file": "IMG_9827.mp4",
+    "exerciseId": "",
+    "note": "second take of mountain_climber"
+  },
+  {
+    "key": "IMG_9828",
+    "file": "IMG_9828.mp4",
+    "exerciseId": "",
+    "note": "second take of jumping_jack"
+  },
+  {
+    "key": "IMG_9829",
+    "file": "IMG_9829.mp4",
+    "exerciseId": "inchworm",
+    "note": "hinge to the floor, hands walking out to a plank and back to the feet"
+  },
+  {
+    "key": "IMG_9943",
+    "file": "IMG_9943.mp4",
+    "exerciseId": "",
+    "note": "second take of single_under, already covered by IMG_0954"
+  },
+  {
+    "key": "IMG_9944",
+    "file": "IMG_9944.mp4",
+    "exerciseId": "",
+    "note": "second take of inchworm, already covered by IMG_9829"
+  },
+  {
+    "key": "IMG_9945",
+    "file": "IMG_9945.mp4",
+    "exerciseId": "",
+    "note": "second take of jumping_jack"
+  },
+  {
+    "key": "IMG_9946",
+    "file": "IMG_9946.mp4",
+    "exerciseId": "",
+    "note": "second take of air_squat"
+  },
+  {
+    "key": "IMG_9947",
+    "file": "IMG_9947.mp4",
+    "exerciseId": "",
+    "note": "second take of knee_push_up"
   }
 ]
