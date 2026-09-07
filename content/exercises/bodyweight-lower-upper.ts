@@ -459,6 +459,7 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'reverse_lunge' },
     animation: 'lateral_lunge',
+    video: { ru: 'storage:videos/shared/lateral_lunge.ru.mp4' },
     tags: ['lower', 'unilateral', 'mobility'],
   },
   {
@@ -1086,6 +1087,7 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'half_burpee' },
     animation: 'burpee',
+    video: { ru: 'storage:videos/shared/burpee.ru.mp4' },
     tags: ['cardio', 'explosive', 'benchmark'],
     isTest: true,
   },
@@ -1252,6 +1254,7 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'jump_squat' },
     animation: 'tuck_jump',
+    video: { ru: 'storage:videos/shared/tuck_jump.ru.mp4' },
     tags: ['lower', 'explosive', 'cardio'],
   },
   {
