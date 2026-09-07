@@ -34,11 +34,13 @@ try {
 }
 
 const args = process.argv.slice(2);
-const exportDir = args.find((a) => !a.startsWith('--'));
+/** Flags that consume the next argument — their values must not be mistaken for the export dir. */
+const VALUED = new Set(['--out', '--width', '--crf']);
 const flag = (name, fallback) => {
   const i = args.indexOf(`--${name}`);
   return i >= 0 && args[i + 1] ? args[i + 1] : fallback;
 };
+const exportDir = args.find((a, i) => !a.startsWith('--') && !(i > 0 && VALUED.has(args[i - 1])));
 const outDir = flag('out', 'media/clips');
 const width = Number(flag('width', '720'));
 const crf = Number(flag('crf', '28'));
@@ -46,47 +48,88 @@ const crf = Number(flag('crf', '28'));
 /**
  * Find the Telegram export without anyone having to type its name. Telegram names the folder
  * after the channel, so this one is `ChatExport_‼️НОВИЧКИ‼️` — emoji and all, which is miserable
- * to type and worse to paste correctly. Look in the usual places instead.
+ * to type and worse to paste correctly.
+ *
+ * The signature we look for is a directory containing `video_files/`, not the name: the folder
+ * gets moved and nested (the first attempt missed it because it sat one level down inside another
+ * folder), and a renamed export is still an export. Bounded to three levels and skipping the
+ * places that make a home directory slow to walk, so this stays a search rather than a crawl.
  */
-function findExport() {
+function findExports(maxDepth = 3) {
+  const skip = new Set([
+    'node_modules',
+    '.git',
+    'Library',
+    'Applications',
+    '.Trash',
+    '.cache',
+    '.npm',
+    'dist',
+  ]);
   const roots = [
     process.cwd(),
+    join(process.cwd(), '..'),
     homedir(),
     join(homedir(), 'Downloads'),
     join(homedir(), 'Desktop'),
+    join(homedir(), 'Documents'),
   ];
-  for (const root of roots) {
+  const found = [];
+  const visited = new Set();
+
+  const walk = (dir, depth) => {
+    if (depth > maxDepth || visited.has(dir)) return;
+    visited.add(dir);
     let entries;
     try {
-      entries = readdirSync(root, { withFileTypes: true });
+      entries = readdirSync(dir, { withFileTypes: true });
     } catch {
-      continue;
+      return;
+    }
+    if (entries.some((e) => e.isDirectory() && e.name === 'video_files')) {
+      found.push(dir);
+      return; // an export contains no nested exports
     }
     for (const e of entries) {
-      if (!e.isDirectory() || !e.name.startsWith('ChatExport')) continue;
-      const dir = join(root, e.name);
-      if (existsSync(join(dir, 'video_files'))) return dir;
+      if (!e.isDirectory() || skip.has(e.name) || e.name.startsWith('.')) continue;
+      walk(join(dir, e.name), depth + 1);
     }
-  }
-  return undefined;
+  };
+
+  for (const root of roots) walk(root, 0);
+  // A folder actually named ChatExport* is the safer bet when there is more than one.
+  return found.sort(
+    (a, b) =>
+      Number(basename(b).startsWith('ChatExport')) - Number(basename(a).startsWith('ChatExport')),
+  );
 }
 
-const resolved = exportDir ?? findExport();
+const candidates = exportDir ? [] : findExports();
+const resolved = exportDir ?? candidates[0];
 if (!resolved || !existsSync(join(resolved, 'video_files'))) {
   console.error('Could not find the Telegram export.');
   console.error('');
-  console.error('  Run this from inside the repository, and either pass the folder:');
-  console.error(
-    '    node scripts/media/prepare-videos.mjs ~/Downloads/ChatExport_… --out media/clips',
-  );
+  if (exportDir) {
+    console.error(`  "${exportDir}" has no video_files/ directory inside it.`);
+  } else {
+    console.error('  Looked for a folder containing video_files/ here and three levels below:');
+    console.error(`    ${process.cwd()}`);
+    console.error(`    ${homedir()} , ~/Downloads, ~/Desktop, ~/Documents`);
+  }
   console.error('');
-  console.error('  ...or just let it look in ~, ~/Downloads and ~/Desktop:');
-  console.error('    node scripts/media/prepare-videos.mjs');
+  console.error('  Point at it directly instead. On macOS, drag the folder from Finder into');
+  console.error('  Terminal and it pastes the path for you — no need to type the emoji:');
+  console.error('    npm run media:prepare -- "/path/to/ChatExport_…"');
   console.error('');
-  if (exportDir) console.error(`  (no video_files/ inside "${exportDir}")`);
+  console.error('  To find it yourself:');
+  console.error('    find ~ -maxdepth 5 -type d -name video_files 2>/dev/null');
   process.exit(1);
 }
-if (!exportDir) console.log(`found export: ${resolved}\n`);
+if (!exportDir) {
+  console.log(`found export: ${resolved}`);
+  for (const other of candidates.slice(1)) console.log(`  (also found, ignored: ${other})`);
+  console.log('');
+}
 
 /** Camera filename without Telegram's per-message prefix: 104_IMG_9823.MP4 → IMG_9823. */
 const sourceKey = (file) => basename(file, extname(file)).replace(/^\d+_/, '');
