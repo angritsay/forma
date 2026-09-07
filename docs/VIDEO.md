@@ -27,10 +27,19 @@ introducing the movement to camera. He performs it several seconds in. So identi
 watching each clip — `prepare-videos.mjs` writes an eight-frame contact sheet per clip to make that
 quick, but a person or a model still has to look.
 
-The frames are sampled **by time**, evenly across the clip, not at fixed frame numbers. Fixed
-indices assume a length and a frame rate: on an eleven-second clip the later ones land past the end
-and the strip comes out short. Eight rather than four because four missed the middle of the
-movement — see the thruster below.
+The frames are sampled **by time**, not at fixed frame numbers. Fixed indices assume a length and
+a frame rate: on an eleven-second clip the later ones land past the end and the strip comes out
+short.
+
+Two things decide how many frames are useful, and neither is obvious:
+
+- **Skip the intro.** Every clip opens with Sergey facing the camera explaining the movement; he
+  performs it several seconds in. Sampling the full duration spent a quarter of the frames on a man
+  standing still, which is why a dumbbell clean, a snatch and a push press all reduced to the same
+  three usable frames. Sampling starts at 30% of the clip.
+- **Two rows, not one.** Anything viewed is scaled to fit a fixed width, so twelve frames in a
+  single row are each _smaller_ than eight. A 6×2 grid stays under that ceiling: twelve frames at
+  full tile size.
 
 ## Pipeline
 
@@ -79,8 +88,11 @@ another machine reported `identified: 0/145` while four identifications sat in t
 
 Identification is the slow part and it does not parallelise: four frames are often not enough. The
 clip that looked like a shoulder press turned out to be a thruster — a front squat driving into an
-overhead press — which only became clear from a denser frame strip. That is why the sheets are now
-eight frames. Every entry in the manifest carries a note saying what was actually seen.
+overhead press — which only became clear from a denser frame strip. Every entry in the manifest
+carries a note saying what was actually seen.
+
+The dumbbell lifts are the hard ones: clean, snatch, push press and devil press share a start and a
+finish and differ only in the middle, which is exactly what a sparse strip drops.
 
 ## Where the files live: private, in Supabase
 

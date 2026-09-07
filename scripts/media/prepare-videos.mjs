@@ -141,8 +141,23 @@ if (!exportDir) {
   console.log('');
 }
 
-/** Frames per contact sheet. Four proved too few to tell a press from a thruster. */
-const TILES = 8;
+/**
+ * Contact sheet grid. Four frames proved too few to tell a press from a thruster, but a single
+ * long row is self-defeating: anything viewed gets scaled to fit a fixed width, so twelve frames
+ * in one row are each *smaller* than eight. Six by two keeps the sheet under that ceiling, so
+ * every tile stays full size and there are twelve of them.
+ */
+const COLS = 6;
+const ROWS = 2;
+const TILES = COLS * ROWS;
+/**
+ * Fraction of the clip to skip before sampling. Every clip opens with Sergey facing the camera
+ * explaining the movement — he performs it several seconds in. Sampling the full duration spent a
+ * quarter of the frames on a man standing still talking, which is why a dumbbell clean, snatch and
+ * push press all reduced to the same three usable frames. Starting at 30% roughly doubles the
+ * frames that actually show the movement, at no cost in file size.
+ */
+const SKIP_INTRO = 0.3;
 
 /**
  * Clip length in seconds, parsed from ffmpeg's own banner — ffmpeg-static ships no ffprobe.
@@ -213,17 +228,23 @@ for (const clip of seen.values()) {
   if (framesOnly || !existsSync(sheet)) {
     // Sample by *time*, not by frame number. Fixed indices (0, 90, 200, 320) assumed a long clip
     // at a known frame rate: on a 11-second clip the last index lands past the end and the strip
-    // comes out short. Eight frames evenly spread also matters because four were not enough — the
-    // clip that reads as a shoulder press is a thruster, and the squat only shows up in between.
+    // comes out short. Frames spread evenly also matters because four were not enough — the clip
+    // that reads as a shoulder press is a thruster, and the squat only shows up in between.
+    //
+    // Seeking past the intro is what makes the rest of them legible: -ss before -i so ffmpeg skips
+    // rather than decodes-and-discards, and the remaining span is what TILES divides into.
     const seconds = durationOf(out);
-    const fps = seconds > 0 ? TILES / seconds : 1;
+    const start = seconds > 0 ? seconds * SKIP_INTRO : 0;
+    const span = seconds - start;
+    const fps = span > 0 ? TILES / span : 1;
     execFileSync(ffmpeg, [
       '-v',
       'error',
+      ...(start > 0 ? ['-ss', start.toFixed(2)] : []),
       '-i',
       out,
       '-vf',
-      `fps=${fps.toFixed(4)},scale=220:-1,tile=${TILES}x1`,
+      `fps=${fps.toFixed(4)},scale=200:-1,tile=${COLS}x${ROWS}`,
       '-frames:v',
       '1',
       '-vsync',
