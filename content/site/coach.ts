@@ -52,6 +52,17 @@ export const COACH = {
    * screen — worth replacing with a larger original when one is to hand.
    */
   photo: '/coach/sergey.jpg',
+  /**
+   * Large portrait for the home hero, under /public. Empty until one exists, and the hero falls
+   * back to the animated figure meanwhile — deliberately, because the 240x240 file above is a
+   * third of the width the tile renders at and upscaling it looks worse than the illustration
+   * it would replace.
+   *
+   * What to supply: a 4:5 portrait, at least 900x1125, Sergey in the gym, framed so the crop can
+   * lose a little from top and bottom without cutting his head. Drop it in /public/coach/ and
+   * put its path here; nothing else needs changing.
+   */
+  heroPhoto: '' as string,
   links: [{ label: 'profi.ru', url: 'https://profi.ru/profile/TitovSA5/' }] as {
     label: string;
     url: string;

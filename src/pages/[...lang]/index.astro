@@ -31,7 +31,8 @@ import { publishableResults } from '@content/site/results';
 import type { Exercise, Locale, WorkoutItem } from '@/content/schema';
 import { formatNumber, l, t } from '@/i18n/index';
 import { canonicalUrl } from '@/lib/seo/urls';
-import { appHref, href } from '@/lib/util/paths';
+import { appHref, href, withBase } from '@/lib/util/paths';
+import { COACH } from '@content/site/coach';
 import { FAQ } from '@content/site/faq';
 
 export function getStaticPaths() {
@@ -105,6 +106,9 @@ const jsonLd = [
     secondary={{ label: t(locale, 'landing.heroCtaApp'), href: appHref() }}
     chips={chips}
     figure={{ animation: 'burpee', label: t(locale, 'landing.heroFigureAlt') }}
+    photo={COACH.heroPhoto
+      ? { src: withBase(COACH.heroPhoto), alt: COACH.name[locale] }
+      : undefined}
     tileTop={t(locale, 'landing.heroTileTop')}
     tileBottom={t(locale, 'landing.heroTileBottom')}
   />

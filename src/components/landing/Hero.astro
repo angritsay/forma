@@ -1,6 +1,11 @@
 ---
 /**
- * Home hero: value proposition, two CTAs, feature chips and the animated hero-art tile.
+ * Home hero: value proposition, two CTAs, feature chips and the coach's photograph.
+ *
+ * The tile used to hold a drawn figure on a mint-to-lavender gradient. Against a dark landing
+ * selling a real person's coaching it read as clipart, and a photograph of the coach does the
+ * selling that an illustration cannot. `photo` therefore wins when it is set; the animated
+ * figure stays as the fallback so the hero still renders before a usable photograph exists.
  */
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
 import Button from './Button.astro';
@@ -13,21 +18,24 @@ interface Props {
   secondary: { label: string; href: string };
   chips: string[];
   figure: { animation: string; label: string };
+  /** The coach, photographed. Takes precedence over `figure`. */
+  photo?: { src: string; alt: string };
   tileTop: string;
   tileBottom: string;
 }
 
-const { title, subtitle, primary, secondary, chips, figure, tileTop, tileBottom } = Astro.props;
+const { title, subtitle, primary, secondary, chips, figure, photo, tileTop, tileBottom } =
+  Astro.props;
 ---
 
 <section
   class="mx-auto grid max-w-6xl items-center gap-10 px-5 pt-10 pb-16 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] md:gap-16 md:pt-20 md:pb-24"
 >
   <div>
-    <h1 class="font-display text-[clamp(2rem,8.5vw,2.75rem)] text-balance sm:text-6xl lg:text-7xl">
+    <h1 class="font-display text-[clamp(1.75rem,7vw,2.75rem)] text-balance">
       {title}
     </h1>
-    <p class="mt-6 max-w-xl text-lg leading-relaxed text-muted md:text-xl">{subtitle}</p>
+    <p class="mt-6 max-w-xl text-lg leading-relaxed text-muted">{subtitle}</p>
     <div class="mt-8 flex flex-wrap gap-3">
       <Button href={primary.href} size="lg">{primary.label}</Button>
       <Button href={secondary.href} variant="secondary" size="lg">{secondary.label}</Button>
@@ -45,19 +53,36 @@ const { title, subtitle, primary, secondary, chips, figure, tileTop, tileBottom 
 
   <div class="relative mx-auto w-full max-w-md md:max-w-none">
     <div
-      class="hero-art relative flex aspect-[4/5] w-full items-center justify-center overflow-hidden rounded-card shadow-glow"
+      class:list={[
+        'relative flex aspect-[4/5] w-full items-center justify-center overflow-hidden rounded-card',
+        photo ? 'bg-surface-2 shadow-card' : 'hero-art shadow-glow',
+      ]}
     >
       <span
         class="absolute top-5 left-5 rounded-pill bg-bg/85 px-3 py-1.5 text-xs font-semibold text-text"
       >
         {tileTop}
       </span>
-      <ExerciseFigure
-        client:visible
-        animation={figure.animation}
-        variant="hero"
-        label={figure.label}
-      />
+      {
+        photo ? (
+          <img
+            src={photo.src}
+            alt={photo.alt}
+            width="900"
+            height="1125"
+            fetchpriority="high"
+            decoding="async"
+            class="absolute inset-0 size-full object-cover"
+          />
+        ) : (
+          <ExerciseFigure
+            client:visible
+            animation={figure.animation}
+            variant="hero"
+            label={figure.label}
+          />
+        )
+      }
       <span
         class="absolute right-5 bottom-5 rounded-pill bg-bg/85 px-3 py-1.5 text-xs font-semibold text-text"
       >

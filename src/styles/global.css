@@ -64,6 +64,38 @@
   --font-display: var(--font-display);
   --shadow-card: var(--shadow-card);
   --shadow-glow: var(--shadow-glow);
+
+  /*
+   * Type scale.
+   *
+   * Tailwind's defaults are drawn for Latin marketing pages and ran large here: a 72px h1 and a
+   * 48px h2 over 20px body. On a page whose headlines are Russian — where the average word is
+   * appreciably longer than its English equivalent — that read as shouting, and the hero wrapped
+   * onto five lines and broke mid-word.
+   *
+   * Every step also carries an explicit line-height at or above 1.2. That number is a Cyrillic
+   * budget, not a Latin one: measured against Unbounded, Ё reaches 0.993em above the baseline and
+   * у drops to 0.181em below, so two lines need ~1.174em of advance before they touch. The
+   * `.font-display` rule already asked for 1.2, but Tailwind's per-step line-height is a utility
+   * and so beat it — the old 72px h1 was actually setting solid at 1.0. Naming the value here is
+   * what makes the rule hold.
+   */
+  --text-lg: 1rem;
+  --text-lg--line-height: 1.6;
+  --text-xl: 1.0625rem;
+  --text-xl--line-height: 1.6;
+  --text-2xl: 1.25rem;
+  --text-2xl--line-height: 1.35;
+  --text-3xl: 1.5rem;
+  --text-3xl--line-height: 1.25;
+  --text-4xl: 1.75rem;
+  --text-4xl--line-height: 1.2;
+  --text-5xl: 1.875rem;
+  --text-5xl--line-height: 1.2;
+  --text-6xl: 2.25rem;
+  --text-6xl--line-height: 1.2;
+  --text-7xl: 2.75rem;
+  --text-7xl--line-height: 1.2;
 }
 
 html {
