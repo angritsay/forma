@@ -85,6 +85,26 @@ body {
 }
 
 /*
+ * Grid and flex children may shrink below their content.
+ *
+ * Both default to `min-width: auto`, which means a track never shrinks below its content's
+ * intrinsic minimum. One long unbreakable word, one image carrying a width attribute, or one
+ * `whitespace-nowrap` label is then enough to widen the track past the viewport — and because
+ * the overflow is on a track rather than a visible box, the symptom is the whole page scrolling
+ * sideways on a phone with nothing obviously sticking out.
+ *
+ * Three separate places had grown their own workaround for this: `md:grid-cols-[minmax(0,1fr)_…]`
+ * on the two-column layouts, which fixed the desktop tracks and left the single mobile column
+ * unguarded. This is the rule those were approximating. `:where()` keeps specificity at zero, so
+ * any `min-w-*` utility still wins where a real minimum is wanted.
+ */
+@layer base {
+  :where(.grid, .flex, .inline-flex) > * {
+    min-width: 0;
+  }
+}
+
+/*
  * Display headings.
  *
  * These live in the components layer rather than outside the cascade, so a Tailwind utility on
@@ -109,6 +129,17 @@ body {
      */
     letter-spacing: 0;
     line-height: 1.2;
+    /*
+     * `body` sets `overflow-wrap: break-word` so a long URL can never widen the viewport. At
+     * display sizes that rule snaps words mid-syllable — a 320px screen rendered the hero as
+     * "Кроссфи / т дома" and "подстраи / вается". Headings opt out and hyphenate instead: the
+     * browser breaks at a real syllable boundary and shows the hyphen, using the patterns for
+     * whatever <html lang> declares. `overflow-wrap: break-word` stays inherited from body as
+     * the last resort — without it a word with no hyphenation patterns available (Russian, in
+     * some engines) cannot break at all and overflows the viewport instead. Fluid sizes below
+     * mean most headings never reach either fallback.
+     */
+    hyphens: auto;
   }
 
   /*

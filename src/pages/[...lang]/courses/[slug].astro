@@ -121,7 +121,11 @@ const jsonLd = [
         <p class="eyebrow">
           {levelLabel(locale, course.level)} · {weeksLabel(locale, course.weeks)}
         </p>
-        <h1 class="font-display mt-3 text-5xl text-balance md:text-6xl lg:text-7xl">{name}</h1>
+        <h1
+          class="font-display mt-3 text-[clamp(1.875rem,7.5vw,3rem)] text-balance md:text-6xl lg:text-7xl"
+        >
+          {name}
+        </h1>
         <p class="mt-4 max-w-xl text-lg leading-relaxed text-muted md:text-xl">
           {l(course.tagline, locale)}
         </p>

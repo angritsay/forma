@@ -141,8 +141,13 @@ export default function DifficultyDemo({
               <ul className="mt-2 flex flex-col gap-1 text-sm">
                 {b.items.map((it, i) => (
                   <li key={`${b.id}-${i}`} className="flex items-baseline justify-between gap-3">
-                    <span className={it.substituted ? 'text-accent' : ''}>{it.name}</span>
-                    <span className="tabular whitespace-nowrap text-muted">
+                    <span className={`min-w-0 ${it.substituted ? 'text-accent' : ''}`}>
+                      {it.name}
+                    </span>
+                    {/* Doses run from "3 × 12" to "30 сек на каждую сторону". Forcing one line
+                        pushed the row past a 320px viewport; right-aligned wrapping keeps the
+                        short ones intact and lets the long ones break. */}
+                    <span className="tabular text-right text-muted">
                       {it.target} {it.unit}
                       {it.perSide ? ` ${it.perSide}` : ''}
                       {it.load ? ` · ${it.load}` : ''}

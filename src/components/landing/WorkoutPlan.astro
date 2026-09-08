@@ -47,9 +47,7 @@ const { locale, workout } = Astro.props;
                   ) : (
                     <span>{it.exerciseId}</span>
                   )}
-                  <span class="tabular text-muted whitespace-nowrap">
-                    {itemTargetLabel(locale, it)}
-                  </span>
+                  <span class="tabular text-right text-muted">{itemTargetLabel(locale, it)}</span>
                 </li>
               );
             })}
