@@ -155,7 +155,17 @@ gets nothing. Two rules keep that true:
 - **Nobody signs in as the coach's address but the coach.** Rotating the admin address means
   editing `public.admins` (§4), not editing anything in Auth.
 
-### 3.2 Email template — this step is mandatory
+### 3.2 Email template — this step is mandatory, and SMTP now comes first
+
+**Supabase no longer lets a project edit its email templates until custom SMTP is configured.**
+The dashboard shows "Set up custom SMTP to edit templates" and the body is read-only. Observed on
+a free project in September 2026; the runbook previously assumed the templates were editable from
+the start and treated SMTP as a pre-launch task. It is not — it is a prerequisite for signing in
+at all, so **do §3.5 before this step**.
+
+Why it blocks everything: the stock template sends a _link_, and the app asks for a six-digit
+code. Left as shipped, a new user receives an email with nothing they can type into the sign-in
+screen.
 
 Supabase sends the one-time code through the **Magic Link** template (and the **Confirm signup**
 template for brand-new users when confirmations are enabled). Out of the box those templates
@@ -193,11 +203,16 @@ Dashboard → **Authentication → Rate Limits**:
 - Keep "OTP requests per 5 minutes" and "token verifications" at their defaults; the app enforces
   a 60-second resend timer on top.
 
-### 3.5 Custom SMTP (deliverability)
+### 3.5 Custom SMTP — required before 3.2, not just before launch
 
 Dashboard → **Project Settings → Authentication → SMTP Settings** → enable custom SMTP.
 
-Recommended providers (all have a free tier that covers a small course business):
+**Without a domain of your own**, use a mailbox you already have. Gmail: turn on 2FA, create an
+app password at myaccount.google.com/apppasswords, then `smtp.gmail.com:465` with that password
+and your address as both username and sender. Roughly 500 emails a day, which is ample to launch
+on, and it costs nothing. Swapping to a provider later is a five-minute settings change.
+
+**With a domain** (worth having anyway — it also moves the site off github.io):
 
 | Provider                | Good for                                  | Notes                                                                 |
 | ----------------------- | ----------------------------------------- | --------------------------------------------------------------------- |
