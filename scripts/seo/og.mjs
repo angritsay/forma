@@ -530,7 +530,10 @@ function buildJobs(content, labels, host) {
     }
   }
 
-  const guides = loadGuides(ROOT).filter((g) => g.data.draft !== true);
+  // Unpublished languages have no page, so they get no card: labels only cover LOCALES.
+  const guides = loadGuides(ROOT).filter(
+    (g) => g.data.draft !== true && LOCALES.includes(g.locale),
+  );
   const clusterIndex = new Map();
   for (const g of guides) {
     const L = labels[g.locale];
