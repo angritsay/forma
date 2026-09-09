@@ -7,31 +7,29 @@ name: Upload videos
 # repository. The identifications come from the version-controlled media/manifest.json; prepare
 # merges into it and never clears an id, so re-running is safe.
 #
+# The 36 identified source clips are fetched straight from the owner's Google Drive by file id
+# (media/drive-files.json, generated from the export). Nothing to zip or upload by hand — the
+# export's `video_files` folder only needs to be shared "anyone with the link" so the runner can
+# read each file.
+#
 # One-time setup — Settings -> Secrets and variables -> Actions:
 #   secret  SUPABASE_SERVICE_ROLE_KEY  Supabase -> Project Settings -> API -> service_role key.
 #                                      It is a password (bypasses RLS); only this workflow reads it.
 #   var     PUBLIC_SUPABASE_URL        already set for the app; reused here.
 #
-# Each run:
-#   1. Zip the Telegram export's `video_files/` folder (the .MOV/.MP4 files) — or the whole export
-#      folder, as long as it still contains video_files/ — into one .zip.
-#   2. Upload that .zip to Google Drive and share it "anyone with the link".
-#   3. Run this workflow (Actions -> Upload videos -> Run workflow) with that link.
-#      Leave "dry_run" on for the first run: it transcodes and lists what it would upload without
-#      writing anything and without needing the secret. Then run again with dry_run off.
+# Run it from Actions -> Upload videos -> Run workflow. Keep "dry_run" on for the first run: it
+# downloads and transcodes and lists what it would upload, without writing anything and without
+# needing the secret. Then run again with dry_run off.
 
 on:
   workflow_dispatch:
     inputs:
-      export_zip_url:
-        description: 'Google Drive share link to a .zip of the export (must contain video_files/)'
-        required: true
       lang:
         description: 'Language tag stored on each file'
         required: false
         default: 'ru'
       dry_run:
-        description: 'Preview only — transcode and list, upload nothing (no secret needed)'
+        description: 'Preview only — download, transcode and list, upload nothing (no secret needed)'
         type: boolean
         default: true
 
@@ -65,29 +63,27 @@ jobs:
       - name: Install gdown
         run: python3 -m pip install --user --quiet gdown
 
-      - name: Download the export zip
+      - name: Download the identified clips from Drive
         run: |
-          python3 -m gdown --fuzzy "${{ inputs.export_zip_url }}" -O export.zip
-          ls -lh export.zip
-
-      - name: Unzip
-        run: |
-          mkdir -p export && unzip -q export.zip -d export
-
-      - name: Locate the export directory
-        id: loc
-        run: |
-          vf="$(find export -type d -name video_files -print -quit)"
-          if [ -z "$vf" ]; then
-            echo "::error::no video_files/ folder found inside the zip"; exit 1
-          fi
-          dir="$(dirname "$vf")"
-          echo "dir=$dir" >> "$GITHUB_OUTPUT"
-          echo "export found at: $dir"
-          ls -1 "$vf" | head
+          mkdir -p export/video_files
+          count=$(node -e 'console.log(require("./media/drive-files.json").length)')
+          echo "downloading $count clips by id"
+          node -e 'for (const c of require("./media/drive-files.json")) console.log(c.key, c.id)' \
+          | while read key id; do
+              out="export/video_files/${key}.mp4"
+              python3 -m gdown --quiet -O "$out" "https://drive.google.com/uc?id=${id}" || {
+                echo "::error::could not download ${key} (${id}) — is the video_files folder shared 'anyone with the link'?"; exit 1;
+              }
+              # gdown writes an HTML page instead of the file when access is denied; catch that.
+              if head -c 15 "$out" | grep -qi '<!DOCTYPE\|<html'; then
+                echo "::error::${key} came back as an HTML page, not a video — the folder is not link-shared"; exit 1;
+              fi
+              echo "  ok  ${key}  ($(du -h "$out" | cut -f1))"
+            done
+          ls -1 export/video_files | wc -l
 
       - name: Transcode (merges into manifest, never clears an id)
-        run: node scripts/media/prepare-videos.mjs "${{ steps.loc.outputs.dir }}" --out media/clips
+        run: node scripts/media/prepare-videos.mjs export --out media/clips
 
       - name: Upload to Supabase (or preview when dry_run)
         run: |

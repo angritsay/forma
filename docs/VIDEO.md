@@ -152,9 +152,15 @@ GitHub secret instead and runs the same two scripts on a runner.
 One-time: add the secret `SUPABASE_SERVICE_ROLE_KEY` (Settings -> Secrets and variables ->
 Actions); `PUBLIC_SUPABASE_URL` is already a variable and is reused.
 
-Each run: zip the export's `video_files/` folder (or the whole export, as long as it still
-contains `video_files/`), upload that one `.zip` to Google Drive, share it "anyone with the link",
-and start the workflow with the link. Keep **dry_run** on for the first pass — it transcodes and
-lists what it would upload without writing anything or needing the secret — then run again with it
-off. `prepare` merges into `media/manifest.json` and never clears an identification, so a re-run
-only fills in what is missing.
+The 36 identified source clips are fetched straight from the owner's Google Drive by file id.
+`media/drive-files.json` maps each `exerciseId`/camera `key` to its Drive file id (generated from
+the export with the Drive listing); the Action `gdown`s exactly those, transcodes and uploads. So
+there is nothing to zip: the export's `video_files/` folder only needs to be shared "anyone with
+the link" once, so the runner can read each file.
+
+Keep **dry_run** on for the first pass — it downloads, transcodes and lists what it would upload
+without writing anything or needing the secret — then run again with it off. `prepare` merges into
+`media/manifest.json` and never clears an identification, so a re-run only fills in what is missing.
+
+If clips are re-identified later, regenerate `media/drive-files.json` from the export (each entry
+is `{ exerciseId, key, id }`, one per identified clip) and the next run picks them up.
