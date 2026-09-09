@@ -292,6 +292,7 @@ Landing (Astro, static, RU default / EN under `/en/`):
 /exercises/<slug>/         exercise page: animation, how-to, cues, mistakes, scaling, related
 /guides/                   guides hub (clusters)
 /guides/<slug>/            SEO article (content collection)
+/subscribe/               every course by subscription (monthly / annual), plan choice + order form
 /about/  /privacy/  /terms/  /refund/  /contact/
 /app/                      React app (noindex)
 /sitemap.xml  /robots.txt  /llms.txt  /rss.xml  /<indexnow-key>.txt  /manifest.webmanifest  /404
@@ -299,7 +300,13 @@ Landing (Astro, static, RU default / EN under `/en/`):
 
 App (HashRouter under `/app/#/`): `/auth`, `/onboarding`, `/` (home), `/courses`, `/courses/:id`,
 `/courses/:id/nodes/:nodeId` (preview + difficulty), `/play` (active session), `/summary/:sessionId`,
-`/stats`, `/leaderboard`, `/steps`, `/profile`, `/book` (one-to-one session with the coach), `/admin`.
+`/stats`, `/leaderboard`, `/steps`, `/profile`, `/book` (one-to-one session with the coach), `/admin`
+(purchases and subscriptions).
+
+Products: a **course** is bought once and kept forever (`purchases`); a **subscription**
+(`subscriptions`, monthly or annual) lists every course through `my_entitlements` while its paid
+period runs, and is activated by the coach or by the Prodamus webhook; an **hour with the coach**
+(`content/site/booking.ts`) is the only product that uses his time.
 
 ## 10. App flows (must match exactly)
 

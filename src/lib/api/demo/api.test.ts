@@ -167,6 +167,70 @@ describe('demo backend — the tester journey', () => {
     expect(await demo.listRecentSessions()).toHaveLength(1);
   });
 
+  it('subscribes, is activated by the admin, sees every course, and loses them when it ends', async () => {
+    demo.clearDemoStore();
+    await demo.requestCode(EMAIL);
+    await demo.verifyCode(EMAIL, demo.pendingCode()!);
+    const before = await demo.listEntitlements();
+    expect(before.map((e) => e.courseId).sort()).toEqual(['engine', 'start']);
+    expect(await demo.getMySubscription()).toBeNull();
+
+    // The subscribe form records an intent; nothing opens yet.
+    const id = await demo.createSubscriptionOrder({ email: EMAIL, plan: 'annual', locale: 'ru' });
+    const pending = await demo.getMySubscription();
+    expect(pending).toMatchObject({ plan: 'annual', status: 'pending', isLive: false });
+    expect((await demo.listEntitlements()).length).toBe(2);
+    // Re-submitting keeps one row and follows the latest choice while nothing is paid.
+    expect(await demo.createSubscriptionOrder({ email: EMAIL, plan: 'monthly' })).toBe(id);
+    expect((await demo.getMySubscription())?.plan).toBe('monthly');
+
+    // The coach grants a month by hand: every course, one period from now.
+    await demo.setSubscription({ email: EMAIL, plan: 'monthly', status: 'active' });
+    const live = await demo.getMySubscription();
+    expect(live?.isLive).toBe(true);
+    const days = (Date.parse(live!.expiresAt!) - Date.now()) / 86_400_000;
+    expect(days).toBeGreaterThan(29);
+    expect(days).toBeLessThan(31);
+    expect((await demo.listEntitlements()).length).toBe(5);
+    // A form submission never downgrades a live subscription.
+    await demo.createSubscriptionOrder({ email: EMAIL, plan: 'annual' });
+    expect((await demo.getMySubscription())?.plan).toBe('monthly');
+
+    // Cancelling keeps the paid period.
+    await demo.setSubscription({ email: EMAIL, plan: 'monthly', status: 'cancelled' });
+    const cancelled = await demo.getMySubscription();
+    expect(cancelled).toMatchObject({ status: 'cancelled', isLive: true });
+    expect((await demo.listEntitlements()).length).toBe(5);
+
+    // The admin list shows the seeded rows plus this one, filterable by status and email.
+    const all = await demo.listSubscriptions();
+    expect(all.some((r) => r.email === EMAIL && r.status === 'cancelled')).toBe(true);
+    expect(
+      (await demo.listSubscriptions({ status: 'pending' })).every((r) => r.status === 'pending'),
+    ).toBe(true);
+    expect((await demo.listSubscriptions({ search: 'lena' })).map((r) => r.email)).toEqual([
+      'lena.demo@example.com',
+    ]);
+
+    // Once the period is over, only the two purchased courses remain.
+    await demo.setSubscription({
+      email: EMAIL,
+      plan: 'monthly',
+      status: 'active',
+      expiresAt: new Date(Date.now() - 1000).toISOString(),
+    });
+    expect((await demo.getMySubscription())?.isLive).toBe(false);
+    expect((await demo.listEntitlements()).length).toBe(2);
+
+    // Validation matches the RPCs.
+    await expect(
+      demo.createSubscriptionOrder({ email: 'nope', plan: 'monthly' }),
+    ).rejects.toMatchObject({ code: 'validation' });
+    await expect(
+      demo.setSubscription({ email: 'nobody@example.com', plan: 'monthly', status: 'cancelled' }),
+    ).rejects.toMatchObject({ code: 'not_found' });
+  });
+
   it('keeps the AppError contract for every failure', async () => {
     await signIn();
     await expect(demo.getWorkoutSession('nope')).rejects.toMatchObject({ code: 'not_found' });

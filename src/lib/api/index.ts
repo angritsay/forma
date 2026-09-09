@@ -15,6 +15,7 @@ export * from './benchmarks';
 export * from './leaderboard';
 export * from './stats';
 export * from './orders';
+export * from './subscriptions';
 export * from './admin';
 export * from './storage';
 // auth.ts is written by the app shell (requestCode / verifyCode / signOut / onAuthChange).

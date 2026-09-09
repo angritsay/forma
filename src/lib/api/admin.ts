@@ -5,9 +5,21 @@ import { supabase } from './client';
 import { demo } from './demo/load';
 import { AppError } from './errors';
 import { COURSE_ID_RE, EMAIL_RE, currentUser, guard, unwrap, unwrapVoid } from './internal';
-import { purchaseFromDb, type DbPurchase } from './mappers';
+import {
+  purchaseFromDb,
+  subscriptionRowFromDb,
+  type DbPurchase,
+  type DbSubscriptionRow,
+} from './mappers';
 import { isDemo } from './mode';
-import type { PurchaseFilter, PurchaseRow, PurchaseStatus } from './types';
+import type {
+  PurchaseFilter,
+  PurchaseRow,
+  PurchaseStatus,
+  SubscriptionChange,
+  SubscriptionFilter,
+  SubscriptionRow,
+} from './types';
 
 const STATUSES: readonly PurchaseStatus[] = ['pending', 'active', 'refunded'];
 
@@ -65,6 +77,52 @@ export async function addPurchase(email: string, courseId: string, note?: string
         p_email: clean,
         p_course_id: courseId,
         p_note: note?.trim() || null,
+      }),
+    );
+  });
+}
+
+/** Subscriptions, newest first, optionally filtered by status and an email substring. */
+export async function listSubscriptions(
+  filter: SubscriptionFilter = {},
+): Promise<SubscriptionRow[]> {
+  if (isDemo()) return (await demo()).listSubscriptions(filter);
+  return guard(async () => {
+    let query = supabase()
+      .from('subscriptions')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(500);
+    if (filter.status) query = query.eq('status', filter.status);
+    const term = (filter.search ?? '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9@._+-]/g, '');
+    if (term) query = query.ilike('email', `%${term}%`);
+    const rows = unwrap<DbSubscriptionRow[]>(await query);
+    return rows.map(subscriptionRowFromDb);
+  });
+}
+
+/** Grant, extend or cancel a subscription by hand (RPC `admin_set_subscription`); returns the row id. */
+export async function setSubscription(change: SubscriptionChange): Promise<string> {
+  if (isDemo()) return (await demo()).setSubscription(change);
+  return guard(async () => {
+    const clean = change.email.trim().toLowerCase();
+    if (!EMAIL_RE.test(clean)) throw new AppError('validation', 'invalid_email');
+    if (change.plan !== 'monthly' && change.plan !== 'annual') {
+      throw new AppError('validation', 'invalid_plan');
+    }
+    if (change.status !== 'active' && change.status !== 'cancelled') {
+      throw new AppError('validation', 'invalid_status');
+    }
+    return unwrap<string>(
+      await supabase().rpc('admin_set_subscription', {
+        p_email: clean,
+        p_plan: change.plan,
+        p_status: change.status,
+        p_expires_at: change.expiresAt ?? null,
+        p_note: change.note?.trim() || null,
       }),
     );
   });

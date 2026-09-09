@@ -11,7 +11,12 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['src/**/*.test.ts', 'content/**/*.test.ts', 'scripts/**/*.test.mjs'],
+    include: [
+      'src/**/*.test.ts',
+      'content/**/*.test.ts',
+      'scripts/**/*.test.mjs',
+      'supabase/functions/**/*.test.ts',
+    ],
     passWithNoTests: false,
   },
 });

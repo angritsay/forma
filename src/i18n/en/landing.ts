@@ -5,6 +5,7 @@ export const landing = {
   navExercises: 'Exercises',
   navGuides: 'Guides',
   navAbout: 'About',
+  navSubscribe: 'Subscription',
   navApp: 'Open app',
   navHome: 'Home',
   navContact: 'Contact',
@@ -202,7 +203,8 @@ export const landing = {
   courseOrderTitle: 'Get access to the course',
   courseOrderIntro:
     'Leave your email — the coach confirms access and the course appears in the app under this email.',
-  courseLifetimeNote: 'Lifetime access · RU and EN · no subscription',
+  courseLifetimeNote: 'One payment, access forever · RU and EN',
+  courseOrSubscribe: 'Or all five courses by subscription — from {price} a month',
   nodeWorkout: 'Workout',
   nodeRest: 'Rest · {steps} steps',
   nodeTest: 'Test',
@@ -234,6 +236,43 @@ export const landing = {
   orderNotConfigured:
     'Ordering is not connected yet. Write to us and we will open access manually:',
   orderTryAgain: 'Try again',
+
+  // Subscribe page
+  subscribeTitle: 'All courses. One subscription.',
+  subscribeDescription:
+    'Every Forma course in one subscription: five home CrossFit programs, load that adapts to you, new courses included. Monthly or annual.',
+  subscribeEyebrow: 'Subscription',
+  subscribeLead:
+    'One course is a start. A subscription is how you keep training: every program, the next one ready when this one ends, and the load still yours.',
+  subscribeIncludes: 'What you get',
+  subscribePlanLabel: 'Plan',
+  subscribePerMonth: '/ month',
+  subscribePerYear: '/ year',
+  subscribeBestValue: 'Best value',
+  subscribeOrderTitle: 'Subscribe',
+  subscribeOrderIntro:
+    'Leave your email, pay on the next page, and the courses open in the app under this email as soon as the payment lands.',
+  subscribeNote: 'Renews automatically · cancel any time · access stays until the paid period ends',
+  subscribeSuccessText:
+    'We have recorded a {course} subscription for {email}. Once the payment lands, open the app and sign in with this email.',
+  subscribeCourseHint: 'Prefer one course for good?',
+  subscribeCourseLink: 'See the courses',
+  subscribeVsTitle: 'Course or subscription?',
+  subscribeVsCourse:
+    'One course, paid once, yours forever. Right when you know what you want and where you will stop.',
+  subscribeVsPlan:
+    'Every course, paid monthly or yearly, while you train. Right when the goal is to keep going.',
+  subscribeFaq1Q: 'Can I cancel?',
+  subscribeFaq1A:
+    'Yes, any time, from the payment service or by writing to us. The courses stay open until the end of the period you paid for.',
+  subscribeFaq2Q: 'What happens when it ends?',
+  subscribeFaq2A:
+    'The courses close, your progress and stats stay. Subscribe again and you continue where you stopped.',
+  subscribeFaq3Q: 'I already bought a course. Does it count?',
+  subscribeFaq3A:
+    'A bought course is yours forever, subscription or not. The subscription adds the other four on top.',
+  planMonthlyName: 'Monthly',
+  planAnnualName: 'Annual',
 
   // About
   aboutTitle: 'About the coach',

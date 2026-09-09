@@ -19,8 +19,9 @@ import type { CourseNode } from '@/content/schema';
 import { formatNumber } from '@/i18n/index';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
-import { courseLandingHref } from '@/app/features/courses/courseMeta';
+import { courseLandingHref, subscribeHref } from '@/app/features/courses/courseMeta';
 import { LinkButton } from '@/app/features/courses/LinkButton';
+import { PLANS_ENABLED } from '@content/site/plans';
 import { NodeSheet } from '@/app/features/path/NodeSheet';
 import { courseProgress, nodeStatus, type NodeStatus } from '@/app/features/path/nodeState';
 import { PathView } from '@/app/features/path/PathView';
@@ -79,9 +80,17 @@ export default function CoursePathScreen() {
           title={t('app.pathNotOwnedTitle')}
           description={t('app.pathNotOwnedBody')}
           action={
-            <LinkButton href={courseLandingHref(locale, course)}>
-              {t('app.pathNotOwnedCta')}
-            </LinkButton>
+            <div className="flex flex-col gap-2">
+              {PLANS_ENABLED ? (
+                <LinkButton href={subscribeHref(locale)}>{t('app.coursesSubscribe')}</LinkButton>
+              ) : null}
+              <LinkButton
+                href={courseLandingHref(locale, course)}
+                variant={PLANS_ENABLED ? 'secondary' : 'primary'}
+              >
+                {t('app.pathNotOwnedCta')}
+              </LinkButton>
+            </div>
           }
         />
       </Screen>

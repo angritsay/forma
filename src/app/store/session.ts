@@ -14,6 +14,8 @@ import {
 } from '@/lib/api/auth';
 import { getProfile, updateProfile, type Profile, type ProfilePatch } from '@/lib/api/profiles';
 import { listEntitlements } from '@/lib/api/entitlements';
+import { getMySubscription } from '@/lib/api/subscriptions';
+import type { Subscription } from '@/lib/api/types';
 import { clearDraft } from '@/app/screens/onboarding/draft';
 import { useLocale } from './locale';
 
@@ -32,6 +34,8 @@ export interface SessionState {
   profile: Profile | null;
   /** Ids of courses the user owns (active purchases). */
   entitlements: string[];
+  /** The user's subscription, or null when they never subscribed; access itself is in `entitlements`. */
+  subscription: Subscription | null;
   /** Last error from boot / profile load; RouteGuards show a retry state when profile is null. */
   error?: AuthError;
   boot: () => Promise<void>;
@@ -64,6 +68,7 @@ const SIGNED_OUT = {
   user: null,
   profile: null,
   entitlements: [] as string[],
+  subscription: null as Subscription | null,
 };
 
 /** Drop the signed-in state and invalidate any in-flight profile load. */
@@ -79,14 +84,19 @@ export const useSession = create<SessionState>((set, get) => {
     const startedAt = epoch;
     const promise = (async () => {
       set({ user, error: undefined });
-      const [profileRes, entRes] = await Promise.allSettled([getProfile(), listEntitlements()]);
+      const [profileRes, entRes, subRes] = await Promise.allSettled([
+        getProfile(),
+        listEntitlements(),
+        getMySubscription(),
+      ]);
       // The user signed out (or a new session started) while the requests were in flight.
       if (startedAt !== epoch) return;
       const profile = profileRes.status === 'fulfilled' ? profileRes.value : null;
       const entitlements =
         entRes.status === 'fulfilled' ? entRes.value.map((e) => e.courseId) : get().entitlements;
+      const subscription = subRes.status === 'fulfilled' ? subRes.value : get().subscription;
       const error = profileRes.status === 'rejected' ? toAuthError(profileRes.reason) : undefined;
-      set({ status: 'signed_in', user, profile, entitlements, error });
+      set({ status: 'signed_in', user, profile, entitlements, subscription, error });
       if (profile) useLocale.getState().setLocale(profile.locale);
     })().finally(() => {
       if (inflight?.promise === promise) inflight = null;
@@ -162,9 +172,9 @@ export const useSession = create<SessionState>((set, get) => {
     },
 
     refreshEntitlements: async () => {
-      const rows = await listEntitlements();
+      const [rows, subscription] = await Promise.all([listEntitlements(), getMySubscription()]);
       const entitlements = rows.map((r) => r.courseId);
-      set({ entitlements });
+      set({ entitlements, subscription });
       return entitlements;
     },
 

@@ -15,9 +15,14 @@ import {
   courseSignatureExercise,
   perWeekLabel,
   weeksLabel,
+  subscribeHref,
 } from './courseMeta';
 import { EquipmentIcon } from './EquipmentIcon';
+import { PLAN_BY_ID, PLANS_ENABLED } from '@content/site/plans';
+import { formatPrice } from '@content/site/pricing';
 import { LinkButton } from './LinkButton';
+
+const monthlyPlan = PLAN_BY_ID.get('monthly');
 
 export interface CourseTileProps {
   course: Course;
@@ -110,14 +115,34 @@ export function CourseTile({ course, owned, progress, onOpen }: CourseTileProps)
           </>
         ) : (
           <>
-            <LinkButton
-              href={courseLandingHref(locale, course)}
-              fullWidth
-              icon={<Icon name="lock" size={18} />}
-            >
-              {t('app.coursesGetAccess')}
-            </LinkButton>
-            <p className="text-center text-xs text-muted">{t('app.coursesBoughtHint')}</p>
+            {PLANS_ENABLED && monthlyPlan ? (
+              <>
+                <LinkButton
+                  href={subscribeHref(locale)}
+                  fullWidth
+                  icon={<Icon name="lock" size={18} />}
+                >
+                  {t('app.coursesSubscribe')}
+                </LinkButton>
+                <p className="text-center text-xs text-muted">
+                  {t('app.coursesSubscribeHint', { price: formatPrice(locale, monthlyPlan.price) })}
+                </p>
+                <LinkButton href={courseLandingHref(locale, course)} variant="secondary" fullWidth>
+                  {t('app.coursesBuyOne')}
+                </LinkButton>
+              </>
+            ) : (
+              <>
+                <LinkButton
+                  href={courseLandingHref(locale, course)}
+                  fullWidth
+                  icon={<Icon name="lock" size={18} />}
+                >
+                  {t('app.coursesGetAccess')}
+                </LinkButton>
+                <p className="text-center text-xs text-muted">{t('app.coursesBoughtHint')}</p>
+              </>
+            )}
           </>
         )}
       </div>

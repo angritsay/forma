@@ -23,6 +23,7 @@ import type {
   DbLeaderboardRow,
   DbProfile,
   DbPurchase,
+  DbSubscriptionRow,
   DbTotals,
   DbWorkoutSession,
 } from '../mappers';
@@ -39,7 +40,7 @@ export interface StorageLike {
 export const DEMO_DB_KEY = 'forma.demo.db';
 export const DEMO_AUTH_KEY = 'forma.demo.auth';
 /** Bumped when the row shapes change; a stored database of another version is discarded. */
-export const DEMO_SCHEMA_VERSION = 1;
+export const DEMO_SCHEMA_VERSION = 2;
 
 /** In-memory storage used when `localStorage` is unavailable (SSR, tests, private mode). */
 export function memoryStorage(): StorageLike {
@@ -82,6 +83,7 @@ export interface DemoDb {
   version: number;
   profiles: DbProfile[];
   purchases: DbPurchase[];
+  subscriptions: DbSubscriptionRow[];
   courseStates: DbCourseState[];
   sessions: DbWorkoutSession[];
   dailyLogs: DbDailyLog[];
@@ -257,6 +259,19 @@ const SEED_PURCHASES: readonly { email: string; courseId: string; status: Purcha
   { email: 'pavel.demo@example.com', courseId: 'athlete', status: 'refunded' },
 ];
 
+/** Other people's subscriptions, for the admin tab: one live annual, one lapsed monthly. */
+const SEED_SUBSCRIPTIONS: readonly {
+  email: string;
+  plan: 'monthly' | 'annual';
+  status: 'pending' | 'active' | 'cancelled';
+  /** Days from "now" to the end of access; negative = already over. */
+  expiresInDays: number | null;
+}[] = [
+  { email: 'lena.demo@example.com', plan: 'annual', status: 'active', expiresInDays: 300 },
+  { email: 'igor.demo@example.com', plan: 'monthly', status: 'cancelled', expiresInDays: -12 },
+  { email: 'olga.demo@example.com', plan: 'monthly', status: 'pending', expiresInDays: null },
+];
+
 // --- helpers ----------------------------------------------------------------
 
 let counter = 0;
@@ -281,6 +296,7 @@ export function emptyDb(): DemoDb {
     version: DEMO_SCHEMA_VERSION,
     profiles: [],
     purchases: [],
+    subscriptions: [],
     courseStates: [],
     sessions: [],
     dailyLogs: [],
@@ -314,6 +330,7 @@ export function readDb(storage: StorageLike = defaultStorage()): DemoDb {
       version: DEMO_SCHEMA_VERSION,
       profiles: asRows<DbProfile>(parsed.profiles),
       purchases: asRows<DbPurchase>(parsed.purchases),
+      subscriptions: asRows<DbSubscriptionRow>(parsed.subscriptions),
       courseStates: asRows<DbCourseState>(parsed.courseStates),
       sessions: asRows<DbWorkoutSession>(parsed.sessions),
       dailyLogs: asRows<DbDailyLog>(parsed.dailyLogs),
@@ -397,6 +414,25 @@ function seedDailyLogs(userId: string, today: string): DbDailyLog[] {
   }));
 }
 
+function seedSubscriptions(createdAt: string): DbSubscriptionRow[] {
+  const base = Date.parse(createdAt);
+  return SEED_SUBSCRIPTIONS.map((x) => ({
+    id: demoId('sub'),
+    email: x.email,
+    plan: x.plan,
+    status: x.status,
+    started_at: x.status === 'pending' ? null : createdAt,
+    expires_at:
+      x.expiresInDays === null ? null : new Date(base + x.expiresInDays * 86_400_000).toISOString(),
+    source: 'demo',
+    provider_ref: null,
+    locale: 'ru',
+    note: 'Demo data',
+    created_at: createdAt,
+    updated_at: createdAt,
+  }));
+}
+
 function seedPurchases(email: string, createdAt: string): DbPurchase[] {
   const own: DbPurchase[] = DEMO_ENTITLED_COURSES.map((courseId) => ({
     id: demoId('pur'),
@@ -447,6 +483,12 @@ export function seedUser(db: DemoDb, email: string, today = toLocalDateIso()): D
   };
   db.profiles.push(profile);
   db.dailyLogs.push(...seedDailyLogs(userId, today));
+  const knownSubs = new Set(db.subscriptions.map((x) => x.email));
+  for (const sub of seedSubscriptions(createdAt)) {
+    if (knownSubs.has(sub.email)) continue;
+    knownSubs.add(sub.email);
+    db.subscriptions.push(sub);
+  }
   const known = new Set(db.purchases.map((p) => `${p.email} ${p.course_id}`));
   for (const purchase of seedPurchases(email, createdAt)) {
     const key = `${purchase.email} ${purchase.course_id}`;

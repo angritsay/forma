@@ -5,6 +5,7 @@
  * from the browser-local store and go through the same mappers, so the app cannot tell the
  * difference beyond the demo badge.
  */
+import { COURSES } from '@/content/registry';
 import { stepsPoints } from '@/lib/training/streak';
 import { addDays, toLocalDateIso } from '@/lib/util/dates';
 import { AppError } from '../errors';
@@ -23,11 +24,15 @@ import {
   profilePatchToDb,
   purchaseFromDb,
   sessionFromDb,
+  subscriptionFromDb,
+  subscriptionLive,
+  subscriptionRowFromDb,
   totalsFromDb,
   type DbBenchmark,
   type DbCourseState,
   type DbDailyLog,
   type DbPurchase,
+  type DbSubscriptionRow,
   type DbWorkoutSession,
 } from '../mappers';
 import type {
@@ -48,6 +53,13 @@ import type {
   PurchaseRow,
   PurchaseStatus,
   StartSessionInput,
+  Subscription,
+  SubscriptionChange,
+  SubscriptionFilter,
+  SubscriptionOrderInput,
+  SubscriptionPlan,
+  SubscriptionRow,
+  SubscriptionStatus,
   WorkoutSessionRow,
 } from '../types';
 import { delay } from './latency';
@@ -66,6 +78,16 @@ import {
 } from './store';
 
 const STATUSES: readonly PurchaseStatus[] = ['pending', 'active', 'refunded'];
+const PLANS: readonly SubscriptionPlan[] = ['monthly', 'annual'];
+const PERIOD_MS: Record<SubscriptionPlan, number> = {
+  monthly: 30 * 86_400_000,
+  annual: 365 * 86_400_000,
+};
+
+function liveSubscription(db: DemoDb, email: string): DbSubscriptionRow | null {
+  const row = db.subscriptions.find((x) => x.email === email);
+  return row && subscriptionLive(row.status as SubscriptionStatus, row.expires_at) ? row : null;
+}
 const MAX_STEPS = 100_000;
 const STEPS_EDIT_DAYS_BACK = 7;
 const BENCHMARK_KEY_RE = /^[a-z0-9_]{2,60}$/;
@@ -116,9 +138,150 @@ function activePurchases(db: DemoDb, email: string): DbPurchase[] {
 export async function listEntitlements(): Promise<Entitlement[]> {
   return run(() => {
     const user = requireDemoUser();
-    return activePurchases(readDb(), user.email)
+    const db = readDb();
+    const owned = activePurchases(db, user.email)
       .sort((a, b) => (b.activated_at ?? '').localeCompare(a.activated_at ?? ''))
       .map((p) => entitlementFromDb({ course_id: p.course_id, activated_at: p.activated_at }));
+    const sub = liveSubscription(db, user.email);
+    if (!sub) return owned;
+    // Same union as the my_entitlements view: a live subscription lists every course.
+    const seen = new Set(owned.map((e) => e.courseId));
+    for (const course of COURSES) {
+      if (seen.has(course.id)) continue;
+      owned.push(entitlementFromDb({ course_id: course.id, activated_at: sub.started_at }));
+    }
+    return owned;
+  });
+}
+
+// --- subscriptions ----------------------------------------------------------
+
+export async function getMySubscription(): Promise<Subscription | null> {
+  return run(() => {
+    const user = requireDemoUser();
+    const row = readDb().subscriptions.find((x) => x.email === user.email);
+    if (!row) return null;
+    return subscriptionFromDb({
+      plan: row.plan,
+      status: row.status,
+      started_at: row.started_at,
+      expires_at: row.expires_at,
+      is_live: subscriptionLive(row.status as SubscriptionStatus, row.expires_at),
+    });
+  });
+}
+
+export async function createSubscriptionOrder(input: SubscriptionOrderInput): Promise<string> {
+  return run(() => {
+    const email = normalizeDemoEmail(input.email);
+    if (!EMAIL_RE.test(email) || email.length > 254) {
+      throw new AppError('validation', 'invalid_email');
+    }
+    if (!PLANS.includes(input.plan)) throw new AppError('validation', 'invalid_plan');
+    return mutateDb((db) => {
+      const now = nowIso();
+      const existing = db.subscriptions.find((x) => x.email === email);
+      if (existing) {
+        // A live subscription is never downgraded by a form, exactly like the RPC.
+        if (!subscriptionLive(existing.status as SubscriptionStatus, existing.expires_at)) {
+          existing.plan = input.plan;
+          existing.source = input.source ?? 'landing';
+        }
+        existing.locale = input.locale ?? existing.locale;
+        existing.updated_at = now;
+        return existing.id;
+      }
+      const row: DbSubscriptionRow = {
+        id: demoId('sub'),
+        email,
+        plan: input.plan,
+        status: 'pending',
+        started_at: null,
+        expires_at: null,
+        source: input.source ?? 'landing',
+        provider_ref: null,
+        locale: input.locale ?? 'ru',
+        note: null,
+        created_at: now,
+        updated_at: now,
+      };
+      db.subscriptions.push(row);
+      return row.id;
+    });
+  });
+}
+
+export async function listSubscriptions(
+  filter: SubscriptionFilter = {},
+): Promise<SubscriptionRow[]> {
+  return run(() => {
+    requireDemoUser();
+    const term = (filter.search ?? '')
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9@._+-]/g, '');
+    return readDb()
+      .subscriptions.filter((x) => {
+        if (filter.status && x.status !== filter.status) return false;
+        return !term || x.email.toLowerCase().includes(term);
+      })
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .slice(0, 500)
+      .map(subscriptionRowFromDb);
+  });
+}
+
+/** Mirrors admin_set_subscription(): grant / extend from the current expiry, or cancel keeping it. */
+export async function setSubscription(change: SubscriptionChange): Promise<string> {
+  return run(() => {
+    const email = normalizeDemoEmail(change.email);
+    if (!EMAIL_RE.test(email)) throw new AppError('validation', 'invalid_email');
+    if (!PLANS.includes(change.plan)) throw new AppError('validation', 'invalid_plan');
+    if (change.status !== 'active' && change.status !== 'cancelled') {
+      throw new AppError('validation', 'invalid_status');
+    }
+    requireDemoUser();
+    return mutateDb((db) => {
+      const now = nowIso();
+      const existing = db.subscriptions.find((x) => x.email === email);
+      const live =
+        existing && subscriptionLive(existing.status as SubscriptionStatus, existing.expires_at);
+      let expiresAt: string | null;
+      if (change.status === 'active') {
+        const from = live && existing?.expires_at ? Date.parse(existing.expires_at) : Date.now();
+        expiresAt = change.expiresAt ?? new Date(from + PERIOD_MS[change.plan]).toISOString();
+      } else {
+        if (!existing) throw new AppError('not_found', 'not_found');
+        expiresAt = existing.expires_at ?? now;
+      }
+      const note = change.note?.trim().slice(0, 500) || null;
+      if (existing) {
+        existing.plan = change.plan;
+        existing.status = change.status;
+        existing.started_at = existing.started_at ?? now;
+        existing.expires_at = expiresAt;
+        existing.source = 'admin';
+        existing.note = note ?? existing.note;
+        existing.updated_at = now;
+        return existing.id;
+      }
+      const row: DbSubscriptionRow = {
+        id: demoId('sub'),
+        email,
+        plan: change.plan,
+        status: change.status,
+        started_at: now,
+        expires_at: expiresAt,
+        source: 'admin',
+        provider_ref: null,
+        locale: null,
+        note,
+        created_at: now,
+        updated_at: now,
+      };
+      db.subscriptions.push(row);
+      return row.id;
+    });
   });
 }
 

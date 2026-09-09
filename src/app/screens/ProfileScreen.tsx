@@ -40,7 +40,10 @@ import { APP_VERSION, BUILD_MODE } from '@/app/features/profile/version';
 import { Section } from '@/app/features/stats/Section';
 import { saveDraft } from '@/app/screens/onboarding/draft';
 import { useSession } from '@/app/store/session';
+import { subscribeHref } from '@/app/features/courses/courseMeta';
+import { subscriptionSubtitle, subscriptionTitle } from '@/app/features/profile/subscription';
 import { BOOKING } from '@content/site/booking';
+import { PLANS_ENABLED } from '@content/site/plans';
 import { formatPrice } from '@content/site/pricing';
 
 type Busy = 'avatar' | 'name' | 'equipment' | 'limitations' | null;
@@ -54,6 +57,7 @@ export default function ProfileScreen() {
   const toast = useToast();
   const profile = useSession((s) => s.profile);
   const user = useSession((s) => s.user);
+  const subscription = useSession((s) => s.subscription);
   const admin = useIsAdmin();
   const muted = useSoundStore((s) => s.muted);
   const setMuted = useSoundStore((s) => s.setMuted);
@@ -161,6 +165,19 @@ export default function ProfileScreen() {
           onRetake={retakeTests}
           onSetup={() => navigate('/onboarding')}
         />
+
+        {PLANS_ENABLED ? (
+          <Section title={t('app.profileSubscriptionSection')}>
+            <Card padding="none">
+              <ListRow
+                leading={<Icon name="star" />}
+                title={subscriptionTitle(tr, subscription)}
+                subtitle={subscriptionSubtitle(tr, subscription)}
+                href={subscribeHref(locale)}
+              />
+            </Card>
+          </Section>
+        ) : null}
 
         {BOOKING.enabled ? (
           <Section title={t('app.profileCoachSection')}>

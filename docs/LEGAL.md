@@ -31,6 +31,10 @@ Update `legalUpdatedAt` whenever the wording changes.
   needs the real seller (individual entrepreneur / company), registration details and the governing
   law.
 - **Lifetime access definition** (terms §4) and the shutdown notice period.
+- **Subscription** (terms §1, §4, §5; refund policy §1a): automatic renewal at the sign-up price,
+  14 days' notice before a price change, cancellation keeps the paid period, only the first payment
+  is refundable under the course rule, renewals are not. Check against consumer law on recurring
+  payments and on the notice a seller must give before each charge.
 - **Refund rule** (14 days / fewer than 3 completed workouts) versus statutory consumer rights for
   digital content in the target countries.
 - **Health disclaimer** (terms §6) wording for the target market.

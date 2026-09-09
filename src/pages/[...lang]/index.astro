@@ -9,6 +9,7 @@ import BeforeAfter from '@/components/landing/BeforeAfter.astro';
 import Button from '@/components/landing/Button.astro';
 import CoachCard from '@/components/landing/CoachCard.astro';
 import CourseCard from '@/components/landing/CourseCard.astro';
+import SubscribeBanner from '@/components/landing/SubscribeBanner.astro';
 import Cta from '@/components/landing/Cta.astro';
 import DifficultyDemo from '@/components/landing/DifficultyDemo';
 import Faq from '@/components/landing/Faq.astro';
@@ -143,6 +144,7 @@ const jsonLd = [
         {t(locale, 'landing.coursesAll')} →
       </Button>
     </div>
+    <SubscribeBanner locale={locale} class="mt-10" />
   </Section>
 
   {

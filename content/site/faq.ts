@@ -29,8 +29,8 @@ export const FAQ: FaqItem[] = [
   {
     q: { ru: 'Как я получу доступ к курсу?', en: 'How do I get access to a course?' },
     a: {
-      ru: 'На странице курса оставь e-mail. Мы записываем связку «почта — курс», тренер подтверждает доступ, и курс появляется в приложении под этой почтой. Доступ пожизненный: без подписки и продлений.',
-      en: 'Leave your email on the course page. We record the email–course pair, the coach confirms access, and the course shows up in the app under that email. Access is for life: no subscription, no renewals.',
+      ru: 'На странице курса оставь e-mail. Мы записываем связку «почта — курс», тренер подтверждает доступ, и курс появляется в приложении под этой почтой. Купленный курс — навсегда. Если нужны все курсы сразу, есть подписка — помесячно или на год.',
+      en: 'Leave your email on the course page. We record the email–course pair, the coach confirms access, and the course shows up in the app under that email. A bought course is yours for life. If you want every course at once, there is a subscription — monthly or annual.',
     },
   },
   {

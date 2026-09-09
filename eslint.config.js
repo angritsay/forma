@@ -6,7 +6,14 @@ import globals from 'globals';
 
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'node_modules/**', '.astro/**', 'public/**', '**/*.astro'],
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      '.astro/**',
+      'public/**',
+      '**/*.astro',
+      'supabase/functions/**/index.ts',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

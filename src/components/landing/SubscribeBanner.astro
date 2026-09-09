@@ -1,0 +1,51 @@
+---
+/** One band that sells the subscription next to the courses: the price, what it covers, a link. */
+import type { Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { href } from '@/lib/util/paths';
+import { PLAN_BY_ID, PLAN_INCLUDES, PLANS_ENABLED } from '@content/site/plans';
+import { formatPrice } from '@content/site/pricing';
+import Button from './Button.astro';
+
+interface Props {
+  locale: Locale;
+  class?: string;
+}
+const { locale, class: extra = '' } = Astro.props;
+const monthly = PLAN_BY_ID.get('monthly');
+const annual = PLAN_BY_ID.get('annual');
+---
+
+{
+  PLANS_ENABLED && monthly && annual && (
+    <div
+      class={`grid gap-6 rounded-card border border-border bg-surface p-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:p-8 ${extra}`}
+    >
+      <div>
+        <p class="eyebrow">{t(locale, 'landing.subscribeEyebrow')}</p>
+        <h3 class="font-display mt-2 text-2xl text-balance md:text-3xl">
+          {t(locale, 'landing.subscribeTitle')}
+        </h3>
+        <ul class="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted">
+          {PLAN_INCLUDES.map((x) => (
+            <li class="flex items-center gap-2">
+              <span class="size-1.5 rounded-full bg-accent" aria-hidden="true" />
+              {l(x, locale)}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div class="flex flex-col items-start gap-3 md:items-end">
+        <p class="tabular">
+          <span class="font-display text-3xl">{formatPrice(locale, monthly.price)}</span>
+          <span class="text-sm text-muted"> {t(locale, 'landing.subscribePerMonth')}</span>
+        </p>
+        <p class="text-sm text-muted">
+          {formatPrice(locale, annual.price)} {t(locale, 'landing.subscribePerYear')} ·{' '}
+          {l(annual.note, locale)}
+        </p>
+        <Button href={href(locale, '/subscribe/')}>{t(locale, 'landing.navSubscribe')} →</Button>
+      </div>
+    </div>
+  )
+}

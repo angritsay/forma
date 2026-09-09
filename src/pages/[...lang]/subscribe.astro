@@ -1,0 +1,205 @@
+---
+/**
+ * Subscription page: every course for a monthly or annual price. Plan choice + order form
+ * (records the intent, then hands over to the plan's payment page), what is included, course vs
+ * subscription, a short FAQ. JSON-LD: Product with one Offer per plan, BreadcrumbList, FAQPage.
+ */
+import Landing from '@/layouts/Landing.astro';
+import Breadcrumbs from '@/components/landing/Breadcrumbs.astro';
+import Faq from '@/components/landing/Faq.astro';
+import OrderForm, { type PlanOption } from '@/components/landing/OrderForm';
+import Section from '@/components/landing/Section.astro';
+import { breadcrumbLd, faqLd, organizationId } from '@/components/landing/jsonld';
+import type { Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { canonicalUrl } from '@/lib/seo/urls';
+import { appHref, href } from '@/lib/util/paths';
+import { BRAND } from '@content/site/brand';
+import { LINKS } from '@content/site/links';
+import { PLAN_INCLUDES, PLANS, PLANS_ENABLED } from '@content/site/plans';
+import { formatPrice, priceForLocale } from '@content/site/pricing';
+
+export function getStaticPaths() {
+  return [{ params: { lang: undefined } }, { params: { lang: 'en' } }];
+}
+
+const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';
+const site = (Astro.site?.toString() ?? 'http://localhost:4321').replace(/\/$/, '');
+const title = t(locale, 'landing.subscribeTitle');
+const description = t(locale, 'landing.subscribeDescription');
+const supportEmail = LINKS.supportEmail || BRAND.contactEmail;
+const supportTelegram = LINKS.supportTelegram || BRAND.telegram || undefined;
+
+const planOptions: PlanOption[] = PLANS.map((p) => ({
+  id: p.id,
+  name: l(p.name, locale),
+  price: formatPrice(locale, p.price),
+  period: t(locale, p.period === 'year' ? 'landing.subscribePerYear' : 'landing.subscribePerMonth'),
+  note: l(p.note, locale),
+  badge: p.id === 'annual' ? t(locale, 'landing.subscribeBestValue') : undefined,
+  paymentUrl: p.paymentUrl?.[locale] ?? p.paymentUrl?.ru,
+}));
+
+const faq = [1, 2, 3].map((n) => ({
+  q: t(locale, `landing.subscribeFaq${n}Q` as 'landing.subscribeFaq1Q'),
+  a: t(locale, `landing.subscribeFaq${n}A` as 'landing.subscribeFaq1A'),
+}));
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: `${BRAND.name} — ${title}`,
+    description,
+    brand: { '@id': organizationId(site) },
+    offers: PLANS.map((p) => {
+      const { amount, currency } = priceForLocale(p.price, locale);
+      return {
+        '@type': 'Offer',
+        name: l(p.name, locale),
+        price: amount,
+        priceCurrency: currency,
+        availability: 'https://schema.org/InStock',
+        url: canonicalUrl(site, locale, '/subscribe/'),
+      };
+    }),
+  },
+  breadcrumbLd([
+    { name: t(locale, 'landing.breadcrumbHome'), url: canonicalUrl(site, locale, '/') },
+    { name: title, url: canonicalUrl(site, locale, '/subscribe/') },
+  ]),
+  faqLd(
+    faq.map((f) => ({ q: { ru: f.q, en: f.q }, a: { ru: f.a, en: f.a } })),
+    locale,
+  ),
+];
+---
+
+<Landing
+  locale={locale}
+  title={title}
+  description={description}
+  sitePath="/subscribe/"
+  jsonLd={jsonLd}
+>
+  <div class="mx-auto max-w-6xl px-5 pt-8 md:pt-12">
+    <Breadcrumbs
+      ariaLabel={t(locale, 'landing.breadcrumbHome')}
+      items={[
+        { label: t(locale, 'landing.breadcrumbHome'), href: href(locale, '/') },
+        { label: t(locale, 'landing.navSubscribe') },
+      ]}
+    />
+    <div class="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12">
+      <div>
+        <p class="eyebrow">{t(locale, 'landing.subscribeEyebrow')}</p>
+        <h1 class="font-display mt-2 text-4xl text-balance md:text-5xl">{title}</h1>
+        <p class="mt-4 max-w-2xl text-lg leading-relaxed text-muted">
+          {t(locale, 'landing.subscribeLead')}
+        </p>
+        <h2 class="mt-8 text-sm font-semibold">{t(locale, 'landing.subscribeIncludes')}</h2>
+        <ul class="mt-3 grid gap-2 sm:grid-cols-2">
+          {
+            PLAN_INCLUDES.map((x) => (
+              <li class="flex items-start gap-3 rounded-inner border border-border bg-surface px-4 py-3">
+                <span class="mt-2 size-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+                <span>{l(x, locale)}</span>
+              </li>
+            ))
+          }
+        </ul>
+        <div class="mt-6 grid gap-3 sm:grid-cols-2">
+          {
+            planOptions.map((p) => (
+              <div class="rounded-inner border border-border bg-surface px-4 py-3">
+                <p class="flex items-baseline justify-between gap-3">
+                  <span class="font-semibold">{p.name}</span>
+                  {p.badge && (
+                    <span class="rounded-pill bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent">
+                      {p.badge}
+                    </span>
+                  )}
+                </p>
+                <p class="tabular mt-1">
+                  <span class="font-display text-2xl">{p.price}</span>
+                  <span class="text-sm text-muted"> {p.period}</span>
+                </p>
+                {p.note && <p class="mt-1 text-xs text-muted">{p.note}</p>}
+              </div>
+            ))
+          }
+        </div>
+        <p class="mt-6 text-sm text-muted">
+          {t(locale, 'landing.subscribeCourseHint')}
+          <a
+            href={href(locale, '/courses/')}
+            class="ml-1 font-semibold text-text underline decoration-border-strong underline-offset-4 hover:text-accent"
+          >
+            {t(locale, 'landing.subscribeCourseLink')} →
+          </a>
+        </p>
+      </div>
+
+      <div id="order" class="rounded-card border border-border bg-surface p-6 md:p-8">
+        <h2 class="font-display text-2xl">{t(locale, 'landing.subscribeOrderTitle')}</h2>
+        <p class="mt-2 text-sm text-muted">{t(locale, 'landing.subscribeOrderIntro')}</p>
+        <div class="mt-6">
+          {
+            PLANS_ENABLED && (
+              <OrderForm
+                client:load
+                courseId="subscription"
+                courseName={t(locale, 'landing.navSubscribe')}
+                locale={locale}
+                plans={planOptions}
+                defaultPlan="annual"
+                appUrl={appHref()}
+                privacyUrl={href(locale, '/privacy/')}
+                supportEmail={supportEmail}
+                supportTelegram={supportTelegram}
+                labels={{
+                  emailLabel: t(locale, 'landing.orderEmailLabel'),
+                  emailPlaceholder: t(locale, 'landing.orderEmailPlaceholder'),
+                  consent: t(locale, 'landing.orderConsent'),
+                  consentLink: t(locale, 'landing.orderConsentPrivacy'),
+                  submit: t(locale, 'landing.subscribeOrderTitle'),
+                  submitting: t(locale, 'landing.orderSubmitting'),
+                  redirecting: t(locale, 'landing.orderRedirecting'),
+                  successTitle: t(locale, 'landing.orderSuccessTitle'),
+                  successText: t(locale, 'landing.subscribeSuccessText'),
+                  successApp: t(locale, 'landing.orderSuccessApp'),
+                  errorEmail: t(locale, 'landing.orderErrorEmail'),
+                  errorConsent: t(locale, 'landing.orderErrorConsent'),
+                  errorNetwork: t(locale, 'landing.orderErrorNetwork'),
+                  errorGeneric: t(locale, 'landing.orderErrorGeneric'),
+                  notConfigured: t(locale, 'landing.orderNotConfigured'),
+                  tryAgain: t(locale, 'landing.orderTryAgain'),
+                  lifetimeNote: t(locale, 'landing.subscribeNote'),
+                  telegramLabel: t(locale, 'landing.contactTelegram'),
+                  plansLabel: t(locale, 'landing.subscribePlanLabel'),
+                }}
+              />
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <Section id="vs" title={t(locale, 'landing.subscribeVsTitle')} class="!py-12 md:!py-16">
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="rounded-card border border-border bg-surface p-6">
+        <p class="eyebrow">{t(locale, 'landing.navCourses')}</p>
+        <p class="mt-3 leading-relaxed text-muted">{t(locale, 'landing.subscribeVsCourse')}</p>
+      </div>
+      <div class="rounded-card border border-accent/40 bg-surface p-6">
+        <p class="eyebrow">{t(locale, 'landing.navSubscribe')}</p>
+        <p class="mt-3 leading-relaxed text-muted">{t(locale, 'landing.subscribeVsPlan')}</p>
+      </div>
+    </div>
+  </Section>
+
+  <Section id="faq" title={t(locale, 'landing.faqTitle')} class="!pt-0 !pb-12 md:!pb-16">
+    <Faq items={faq} />
+  </Section>
+</Landing>

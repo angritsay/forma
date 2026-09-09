@@ -1,6 +1,8 @@
 /**
- * Course order form (client:load). Records email ↔ course through the backend RPC, then either
- * shows the success state or redirects to the course's external payment link.
+ * Order form (client:load) for a course or for a subscription plan. Records email ↔ product
+ * through the backend RPC, then either shows the success state or redirects to the product's
+ * external payment link. With `plans` the form also carries the plan choice, so one email field,
+ * one consent and one submit serve both products.
  */
 import { useEffect, useRef, useState, type SubmitEvent } from 'react';
 import type { Locale } from '@/content/schema';
@@ -8,6 +10,8 @@ import { isConfigured } from '@/lib/api/client';
 import { isAppError } from '@/lib/api/errors';
 import { isDemo, isDemoEnv } from '@/lib/api/mode';
 import { createOrder } from '@/lib/api/orders';
+import { createSubscriptionOrder } from '@/lib/api/subscriptions';
+import type { SubscriptionPlan } from '@/lib/api/types';
 import { paymentTarget, withEmail } from '@/lib/util/payment';
 
 export interface OrderFormLabels {
@@ -37,13 +41,34 @@ export interface OrderFormLabels {
    * handed over to that page with their email. Template with {host}.
    */
   paymentNote?: string;
+  /** Accessible name of the plan choice; required when `plans` is given. */
+  plansLabel?: string;
+}
+
+export interface PlanOption {
+  id: SubscriptionPlan;
+  name: string;
+  /** Formatted, e.g. "1 990 ₽". */
+  price: string;
+  /** "/ month" or "/ year". */
+  period: string;
+  note?: string;
+  /** Badge text on the featured plan (e.g. "Best value"). */
+  badge?: string;
+  paymentUrl?: string;
 }
 
 export interface OrderFormProps {
+  /** Course id for a course order; ignored when `plans` is given. */
   courseId: string;
+  /** Course name for the success text, or the product name for a plan order. */
   courseName: string;
   locale: Locale;
   paymentUrl?: string;
+  /** Subscription plans: the form records a subscription intent instead of a course order. */
+  plans?: PlanOption[];
+  /** Initially selected plan; defaults to the first one. */
+  defaultPlan?: SubscriptionPlan;
   appUrl: string;
   privacyUrl: string;
   supportEmail: string;
@@ -84,6 +109,8 @@ export default function OrderForm({
   courseName,
   locale,
   paymentUrl,
+  plans,
+  defaultPlan,
   appUrl,
   privacyUrl,
   supportEmail,
@@ -91,6 +118,10 @@ export default function OrderForm({
   labels,
 }: OrderFormProps) {
   const [email, setEmail] = useState('');
+  const [planId, setPlanId] = useState<SubscriptionPlan>(
+    defaultPlan ?? plans?.[0]?.id ?? 'monthly',
+  );
+  const plan = plans?.find((p) => p.id === planId) ?? plans?.[0];
   const [consent, setConsent] = useState(false);
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
   const emailRef = useRef<HTMLInputElement>(null);
@@ -110,7 +141,8 @@ export default function OrderForm({
   const configured = isConfigured() || demo;
   const [consentBefore, consentAfter] = labels.consent.split('{privacy}');
   // Only an https link is ever followed; see lib/util/payment.
-  const payment = paymentTarget(paymentUrl);
+  const payment = paymentTarget(plan ? plan.paymentUrl : paymentUrl);
+  const productName = plan ? plan.name : courseName;
 
   // Validation errors must reach keyboard and screen-reader users: the message is announced by its
   // role="alert" and focus moves to the control that has to change.
@@ -138,7 +170,16 @@ export default function OrderForm({
     }
     setStatus({ kind: 'submitting' });
     try {
-      await createOrder({ email: trimmed, courseId, locale, source: 'landing' });
+      if (plan) {
+        await createSubscriptionOrder({
+          email: trimmed,
+          plan: plan.id,
+          locale,
+          source: 'subscribe',
+        });
+      } else {
+        await createOrder({ email: trimmed, courseId, locale, source: 'landing' });
+      }
     } catch (err) {
       setStatus({ kind: 'error', reason: errorReason(err) });
       return;
@@ -191,7 +232,7 @@ export default function OrderForm({
       >
         <p className="font-display text-2xl">{labels.successTitle}</p>
         <p className="mt-2 text-sm leading-relaxed">
-          {fill(labels.successText, { course: courseName, email: status.email })}
+          {fill(labels.successText, { course: productName, email: status.email })}
         </p>
         <a
           href={appUrl}
@@ -219,6 +260,46 @@ export default function OrderForm({
 
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+      {plans && plans.length > 0 && (
+        <fieldset className="m-0 border-0 p-0" disabled={busy}>
+          <legend className="text-sm font-medium">{labels.plansLabel}</legend>
+          <div className="mt-2 grid gap-3 sm:grid-cols-2">
+            {plans.map((p) => {
+              const selected = p.id === plan?.id;
+              return (
+                <label
+                  key={p.id}
+                  className={`relative flex cursor-pointer flex-col gap-1 rounded-inner border p-4 transition ${
+                    selected ? 'border-text bg-bg' : 'border-border hover:border-border-strong'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="plan"
+                    value={p.id}
+                    checked={selected}
+                    onChange={() => setPlanId(p.id)}
+                    className="sr-only"
+                  />
+                  <span className="flex items-baseline justify-between gap-3">
+                    <span className="text-base font-semibold">{p.name}</span>
+                    {p.badge && (
+                      <span className="rounded-pill bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent">
+                        {p.badge}
+                      </span>
+                    )}
+                  </span>
+                  <span className="tabular">
+                    <span className="font-display text-2xl">{p.price}</span>
+                    <span className="text-sm text-muted"> {p.period}</span>
+                  </span>
+                  {p.note && <span className="text-xs text-muted">{p.note}</span>}
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+      )}
       <div>
         <label htmlFor="order-email" className="block text-sm font-medium">
           {labels.emailLabel}

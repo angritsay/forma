@@ -370,11 +370,41 @@ Same rule as courses: `https://` only, the signed-in email is appended as `?emai
 instead of a payment button, so the offer is live from day one. A Google Calendar appointment
 schedule is free and enough for `scheduleUrl`; set `enabled: false` to hide the offer everywhere.
 
-### 7.4 Automating later
+### 7.4 Subscription: two plans, one webhook
 
-If you adopt a provider with webhooks, add a Supabase Edge Function that verifies the webhook
-signature and runs `update public.purchases set status='active', activated_at=now() where
-email=… and course_id=…` with the service role key. Nothing in the frontend has to change.
+`content/site/plans.ts` holds the two plans (monthly 1 990 ₽ / annual 9 990 ₽ by default) and
+their payment links, one per locale, pointing at the seller's Prodamus subscription products:
+
+```ts
+paymentUrl: { ru: 'https://<shop>.payform.ru/?subscription=<id>', en: '…' },
+```
+
+The `/subscribe/` page records the intent (`create_subscription_order`) and hands the visitor to
+that link with `?email=`. Access opens when the payment is confirmed — either by the coach in
+**Profile → Admin → Subscriptions** (activate / extend / cancel; "Add subscription" grants a
+period by hand) or automatically by the webhook below. A subscription lists every course through
+`my_entitlements` while it is live; cancelling stops renewals and keeps the paid period.
+
+**Webhook (`supabase/functions/prodamus-webhook`)** — activates and extends subscriptions from
+Prodamus notifications, so nobody has to press anything:
+
+1. `supabase functions deploy prodamus-webhook --no-verify-jwt`
+2. `supabase secrets set WEBHOOK_TOKEN=<long random string> PRODAMUS_SECRET=<secret key from the
+Prodamus form settings>` — the token guards the URL, the secret verifies the `Sign` header.
+   Without `PRODAMUS_SECRET` the function still works on the token alone and logs a warning.
+3. In Prodamus, set the notification URL to
+   `https://<project-ref>.functions.supabase.co/prodamus-webhook?token=<WEBHOOK_TOKEN>`.
+4. Make one real payment and read the function logs: `ok: monthly for …` means the signature
+   matched and `apply_subscription_payment()` ran. A `signature mismatch` line means the
+   preparation Prodamus uses differs from `verify.ts` — nothing was activated; compare the
+   posted fields with the code and adjust once, or run on the token alone meanwhile.
+
+The plan is recognised by the amount (`PLAN_MONTHLY_RUB` / `PLAN_ANNUAL_RUB` secrets override the
+defaults), so keep the Prodamus prices equal to `plans.ts`. Any other amount — a course, a
+session with the coach — is acknowledged and left to the manual flow. Notifications are
+idempotent per order id: a retry never extends twice.
+
+### 7.5 Automating course purchases later
 
 ---
 

@@ -87,6 +87,14 @@ const STATIC_PAGES: StaticDef[] = [
     description: (loc) => t(loc, 'seo.guidesHubDescription'),
   },
   {
+    sitePath: '/subscribe/',
+    kind: 'hub',
+    changefreq: 'monthly',
+    priority: 0.8,
+    title: (loc) => t(loc, 'landing.subscribeTitle'),
+    description: (loc) => t(loc, 'landing.subscribeDescription'),
+  },
+  {
     sitePath: '/about/',
     kind: 'other',
     changefreq: 'monthly',

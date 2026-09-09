@@ -4,9 +4,9 @@
  *
  *   node scripts/db/bundle.mjs
  *
- * The four migrations exist separately because that is how they are applied by the CLI and how
+ * The migrations exist separately because that is how they are applied by the CLI and how
  * they are reviewed. But a first-time setup through the dashboard means opening each one, pasting,
- * running, and checking the result four times over — four chances to paste the wrong file or run
+ * running, and checking the result once per file — that many chances to paste the wrong file or run
  * them out of order, and the order matters: 0002 defines functions over tables 0001 creates.
  *
  * The bundle is generated, never edited. Change a migration and re-run this.
@@ -17,12 +17,13 @@ import { join, dirname } from 'node:path';
 const MIGRATIONS = 'supabase/migrations';
 const DEST = 'supabase/setup-all.sql';
 
-/** In application order. 0002 references what 0001 creates, so this list is not sorted for looks. */
+/** In application order. 0002 references what 0001 creates, 0005 redefines a view from 0002. */
 const FILES = [
   ['0001_init.sql', 'tables, triggers, row-level security, grants'],
   ['0002_functions.sql', 'create_order, entitlements, admin RPCs, leaderboard'],
   ['0003_storage.sql', 'the private videos bucket and its access policies'],
   ['0004_content_seed.sql', 'the course and workout catalogue the backend enforces'],
+  ['0005_subscriptions.sql', 'monthly / annual subscriptions and the entitlements union'],
 ];
 
 const rule = '-- ' + '='.repeat(77);

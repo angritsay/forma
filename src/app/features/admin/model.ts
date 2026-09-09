@@ -4,7 +4,13 @@
  */
 import { COURSE_BY_ID } from '@/content/registry';
 import type { Locale } from '@/content/schema';
-import type { PurchaseFilter, PurchaseRow, PurchaseStatus } from '@/lib/api/types';
+import type {
+  PurchaseFilter,
+  PurchaseRow,
+  PurchaseStatus,
+  SubscriptionFilter,
+  SubscriptionStatus,
+} from '@/lib/api/types';
 
 export const STATUS_FILTERS = ['all', 'pending', 'active', 'refunded'] as const;
 export type StatusFilter = (typeof STATUS_FILTERS)[number];
@@ -53,4 +59,16 @@ export function withStatus(
       updatedAt: nowIso,
     };
   });
+}
+
+export const SUB_STATUS_FILTERS = ['all', 'pending', 'active', 'cancelled'] as const;
+export type SubStatusFilter = (typeof SUB_STATUS_FILTERS)[number];
+
+/** Filter for `listSubscriptions`; same shape as the purchases one. */
+export function subscriptionFilter(status: SubStatusFilter, search: string): SubscriptionFilter {
+  const filter: SubscriptionFilter = {};
+  if (status !== 'all') filter.status = status as SubscriptionStatus;
+  const term = search.trim();
+  if (term) filter.search = term;
+  return filter;
 }

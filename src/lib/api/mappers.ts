@@ -27,6 +27,10 @@ import type {
   PurchaseStatus,
   StartSessionInput,
   WorkoutSessionRow,
+  Subscription,
+  SubscriptionPlan,
+  SubscriptionRow,
+  SubscriptionStatus,
 } from './types';
 
 type Num = number | string | null | undefined;
@@ -73,6 +77,29 @@ export interface DbPurchase {
   note: string | null;
   created_at: string;
   activated_at: string | null;
+  updated_at: string;
+}
+
+export interface DbSubscription {
+  plan: string;
+  status: string;
+  started_at: string | null;
+  expires_at: string | null;
+  is_live: boolean | null;
+}
+
+export interface DbSubscriptionRow {
+  id: string;
+  email: string;
+  plan: string;
+  status: string;
+  started_at: string | null;
+  expires_at: string | null;
+  source: string | null;
+  provider_ref: string | null;
+  locale: string | null;
+  note: string | null;
+  created_at: string;
   updated_at: string;
 }
 
@@ -243,6 +270,53 @@ export function profilePatchToDb(p: ProfilePatch): DbProfilePatch {
 
 export function entitlementFromDb(r: DbEntitlement): Entitlement {
   return { courseId: r.course_id, activatedAt: r.activated_at ?? null };
+}
+
+function asPlan(v: string): SubscriptionPlan {
+  return v === 'annual' ? 'annual' : 'monthly';
+}
+
+function asSubscriptionStatus(v: string): SubscriptionStatus {
+  return v === 'active' || v === 'cancelled' ? v : 'pending';
+}
+
+/** Client-side copy of `subscription_live()`: used only where the server verdict is not to hand. */
+export function subscriptionLive(
+  status: SubscriptionStatus,
+  expiresAt: string | null,
+  now = Date.now(),
+): boolean {
+  if (status === 'pending' || !expiresAt) return false;
+  const t = Date.parse(expiresAt);
+  return Number.isFinite(t) && t > now;
+}
+
+export function subscriptionFromDb(r: DbSubscription): Subscription {
+  const status = asSubscriptionStatus(r.status);
+  return {
+    plan: asPlan(r.plan),
+    status,
+    startedAt: r.started_at ?? null,
+    expiresAt: r.expires_at ?? null,
+    isLive: r.is_live ?? subscriptionLive(status, r.expires_at ?? null),
+  };
+}
+
+export function subscriptionRowFromDb(r: DbSubscriptionRow): SubscriptionRow {
+  return {
+    id: r.id,
+    email: r.email,
+    plan: asPlan(r.plan),
+    status: asSubscriptionStatus(r.status),
+    startedAt: r.started_at ?? null,
+    expiresAt: r.expires_at ?? null,
+    source: r.source ?? null,
+    providerRef: r.provider_ref ?? null,
+    locale: r.locale ?? null,
+    note: r.note ?? null,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
 }
 
 export function purchaseFromDb(r: DbPurchase): PurchaseRow {

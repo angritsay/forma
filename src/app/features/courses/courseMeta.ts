@@ -25,6 +25,11 @@ export function courseLandingHref(locale: Locale, course: Course): string {
   return href(locale, `/courses/${course.slug[locale]}/`);
 }
 
+/** The landing page that sells the subscription (every course). */
+export function subscribeHref(locale: Locale): string {
+  return href(locale, '/subscribe/');
+}
+
 export function isBodyweightCourse(course: Course): boolean {
   return course.equipment.every((e) => e === 'none' || e === 'mat');
 }

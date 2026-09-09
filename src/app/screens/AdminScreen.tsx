@@ -13,16 +13,31 @@ import { IconButton } from '@/components/ui/IconButton';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { plural, type TKey } from '@/i18n/index';
-import { addPurchase, listPurchases, setPurchaseStatus } from '@/lib/api/admin';
+import {
+  addPurchase,
+  listPurchases,
+  listSubscriptions,
+  setPurchaseStatus,
+  setSubscription,
+} from '@/lib/api/admin';
 import { isAppError, toAppError, type AppError } from '@/lib/api/errors';
-import type { PurchaseRow, PurchaseStatus } from '@/lib/api/types';
+import type {
+  PurchaseRow,
+  PurchaseStatus,
+  SubscriptionPlan,
+  SubscriptionRow,
+} from '@/lib/api/types';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { AddPurchaseSheet } from '@/app/features/admin/AddPurchaseSheet';
+import { AddSubscriptionSheet } from '@/app/features/admin/AddSubscriptionSheet';
+import { SubscriptionList, type SubscriptionAction } from '@/app/features/admin/SubscriptionList';
+import { PLANS_ENABLED } from '@content/site/plans';
 import {
   courseName,
   purchaseFilter,
@@ -30,6 +45,9 @@ import {
   STATUS_FILTERS,
   withStatus,
   type StatusFilter,
+  SUB_STATUS_FILTERS,
+  subscriptionFilter,
+  type SubStatusFilter,
 } from '@/app/features/admin/model';
 import { PurchaseList, STATUS_LABEL } from '@/app/features/admin/PurchaseList';
 import { useDebounced } from '@/app/features/admin/useDebounced';
@@ -41,6 +59,20 @@ interface PendingAction {
   row: PurchaseRow;
   status: PurchaseStatus;
 }
+
+type Tab = 'purchases' | 'subscriptions';
+
+interface PendingSubAction {
+  row: SubscriptionRow;
+  action: SubscriptionAction;
+}
+
+const SUB_FILTER_LABEL: Record<SubStatusFilter, TKey> = {
+  all: 'app.adminFilterAll',
+  pending: 'app.adminSubStatusPending',
+  active: 'app.adminSubStatusActive',
+  cancelled: 'app.adminSubStatusCancelled',
+};
 
 const FILTER_LABEL: Record<StatusFilter, TKey> = {
   all: 'app.adminFilterAll',
@@ -75,6 +107,37 @@ export default function AdminScreen() {
   const [addOpen, setAddOpen] = useState(false);
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>('purchases');
+  const [subFilter, setSubFilter] = useState<SubStatusFilter>('all');
+  const [subRows, setSubRows] = useState<SubscriptionRow[]>([]);
+  const [subStatus, setSubStatus] = useState<ListStatus>('loading');
+  const [subError, setSubError] = useState<AppError | null>(null);
+  const [pendingSub, setPendingSub] = useState<PendingSubAction | null>(null);
+  const [subAddOpen, setSubAddOpen] = useState(false);
+  const [subAdding, setSubAdding] = useState(false);
+  const [subAddError, setSubAddError] = useState<string | null>(null);
+  const subscriptions = tab === 'subscriptions';
+
+  useEffect(() => {
+    if (admin !== true || !subscriptions) return;
+    let alive = true;
+    setSubStatus('loading');
+    setSubError(null);
+    listSubscriptions(subscriptionFilter(subFilter, debouncedSearch))
+      .then((data) => {
+        if (!alive) return;
+        setSubRows(data);
+        setSubStatus('ready');
+      })
+      .catch((e: unknown) => {
+        if (!alive) return;
+        setSubError(toAppError(e));
+        setSubStatus('error');
+      });
+    return () => {
+      alive = false;
+    };
+  }, [admin, subscriptions, subFilter, debouncedSearch, tick]);
 
   useEffect(() => {
     if (admin !== true) return;
@@ -134,6 +197,49 @@ export default function AdminScreen() {
     }
   };
 
+  const applySubAction = async () => {
+    if (!pendingSub) return;
+    const { row, action } = pendingSub;
+    setBusyId(row.id);
+    try {
+      if (action === 'cancel') {
+        await setSubscription({ email: row.email, plan: row.plan, status: 'cancelled' });
+      } else {
+        const plan: SubscriptionPlan = action === 'extend_year' ? 'annual' : 'monthly';
+        await setSubscription({ email: row.email, plan, status: 'active' });
+      }
+      toast.show({ kind: 'success', title: t('app.adminStatusUpdated') });
+      setPendingSub(null);
+      reload();
+    } catch (e) {
+      toast.show({ kind: 'error', title: t('app.adminActionError'), description: errorText(e) });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const addSubscription = async (
+    email: string,
+    plan: SubscriptionPlan,
+    until: string | null,
+    note: string,
+  ) => {
+    setSubAdding(true);
+    setSubAddError(null);
+    try {
+      await setSubscription({ email, plan, status: 'active', expiresAt: until, note });
+      toast.show({ kind: 'success', title: t('app.adminSubAdded'), description: email });
+      setSubAddOpen(false);
+      reload();
+    } catch (e) {
+      if (isAppError(e) && e.code === 'validation') setSubAddError(t('app.adminInvalidEmail'));
+      else
+        toast.show({ kind: 'error', title: t('app.adminActionError'), description: errorText(e) });
+    } finally {
+      setSubAdding(false);
+    }
+  };
+
   const add = async (email: string, courseId: string, note: string) => {
     setAdding(true);
     setAddError(null);
@@ -162,9 +268,11 @@ export default function AdminScreen() {
       right={
         <IconButton
           label={t('app.adminRefresh')}
-          icon={status === 'loading' ? <Spinner size={18} /> : 'refresh'}
+          icon={
+            (subscriptions ? subStatus : status) === 'loading' ? <Spinner size={18} /> : 'refresh'
+          }
           variant="ghost"
-          disabled={admin !== true || status === 'loading'}
+          disabled={admin !== true || (subscriptions ? subStatus : status) === 'loading'}
           onClick={reload}
         />
       }
@@ -182,14 +290,53 @@ export default function AdminScreen() {
   }
   if (admin === false) return <Navigate to="/profile" replace />;
 
-  const countWord = plural(locale, rows.length, {
-    one: t('app.adminCountOne', { n: rows.length }),
-    few: t('app.adminCountFew', { n: rows.length }),
-    many: t('app.adminCountMany', { n: rows.length }),
-  });
+  const countWord = subscriptions
+    ? plural(locale, subRows.length, {
+        one: t('app.adminSubCountOne', { n: subRows.length }),
+        few: t('app.adminSubCountFew', { n: subRows.length }),
+        many: t('app.adminSubCountMany', { n: subRows.length }),
+      })
+    : plural(locale, rows.length, {
+        one: t('app.adminCountOne', { n: rows.length }),
+        few: t('app.adminCountFew', { n: rows.length }),
+        many: t('app.adminCountMany', { n: rows.length }),
+      });
 
   let body: React.ReactNode;
-  if (status === 'loading') {
+  if (subscriptions) {
+    if (subStatus === 'loading') {
+      body = <ListSkeleton />;
+    } else if (subStatus === 'error') {
+      body = (
+        <EmptyState
+          icon="warning"
+          title={t('app.adminSubErrorTitle')}
+          description={errorText(subError)}
+          action={
+            <Button size="lg" onClick={reload}>
+              {t('common.retry')}
+            </Button>
+          }
+        />
+      );
+    } else if (subRows.length === 0) {
+      body = (
+        <EmptyState
+          icon="search"
+          title={t('app.adminEmptyTitle')}
+          description={t('app.adminSubEmptyBody')}
+        />
+      );
+    } else {
+      body = (
+        <SubscriptionList
+          rows={subRows}
+          busyId={busyId}
+          onAction={(row, action) => setPendingSub({ row, action })}
+        />
+      );
+    }
+  } else if (status === 'loading') {
     body = <ListSkeleton />;
   } else if (status === 'error') {
     body = (
@@ -231,15 +378,32 @@ export default function AdminScreen() {
           fullWidth
           icon={<Icon name="plus" size={18} />}
           onClick={() => {
-            setAddError(null);
-            setAddOpen(true);
+            if (subscriptions) {
+              setSubAddError(null);
+              setSubAddOpen(true);
+            } else {
+              setAddError(null);
+              setAddOpen(true);
+            }
           }}
         >
-          {t('app.adminAdd')}
+          {subscriptions ? t('app.adminSubAdd') : t('app.adminAdd')}
         </Button>
       }
     >
       <div className="flex flex-col gap-4 py-2">
+        {PLANS_ENABLED ? (
+          <SegmentedControl<Tab>
+            fullWidth
+            label={t('app.adminTitle')}
+            value={tab}
+            onChange={setTab}
+            options={[
+              { value: 'purchases', label: t('app.adminTabPurchases') },
+              { value: 'subscriptions', label: t('app.adminTabSubscriptions') },
+            ]}
+          />
+        ) : null}
         <Input
           type="search"
           inputMode="email"
@@ -257,21 +421,35 @@ export default function AdminScreen() {
           aria-label={t('app.adminFilterLabel')}
           className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1"
         >
-          {STATUS_FILTERS.map((f) => (
-            <Chip
-              key={f}
-              role="radio"
-              aria-checked={filter === f}
-              selected={filter === f}
-              onClick={() => setFilter(f)}
-            >
-              {t(FILTER_LABEL[f])}
-            </Chip>
-          ))}
+          {subscriptions
+            ? SUB_STATUS_FILTERS.map((f) => (
+                <Chip
+                  key={f}
+                  role="radio"
+                  aria-checked={subFilter === f}
+                  selected={subFilter === f}
+                  onClick={() => setSubFilter(f)}
+                >
+                  {t(SUB_FILTER_LABEL[f])}
+                </Chip>
+              ))
+            : STATUS_FILTERS.map((f) => (
+                <Chip
+                  key={f}
+                  role="radio"
+                  aria-checked={filter === f}
+                  selected={filter === f}
+                  onClick={() => setFilter(f)}
+                >
+                  {t(FILTER_LABEL[f])}
+                </Chip>
+              ))}
         </div>
         <div className="flex items-center justify-between px-1">
-          <h2 className="eyebrow">{t('app.adminPurchases')}</h2>
-          {status === 'ready' ? (
+          <h2 className="eyebrow">
+            {subscriptions ? t('app.adminSubscriptions') : t('app.adminPurchases')}
+          </h2>
+          {(subscriptions ? subStatus : status) === 'ready' ? (
             <span className="tabular text-xs text-muted">{countWord}</span>
           ) : null}
         </div>
@@ -309,6 +487,42 @@ export default function AdminScreen() {
         error={addError}
         onClose={() => setAddOpen(false)}
         onSubmit={(email, courseId, note) => void add(email, courseId, note)}
+      />
+      <Modal
+        open={pendingSub !== null}
+        onClose={() => setPendingSub(null)}
+        title={
+          pendingSub?.action === 'cancel'
+            ? t('app.adminSubConfirmCancelTitle')
+            : t('app.adminSubConfirmExtendTitle')
+        }
+        description={
+          pendingSub
+            ? `${pendingSub.row.email}. ${
+                pendingSub.action === 'cancel'
+                  ? t('app.adminSubConfirmCancelBody')
+                  : t('app.adminSubConfirmExtendBody')
+              }`
+            : undefined
+        }
+        confirmLabel={
+          pendingSub?.action === 'cancel'
+            ? t('app.adminSubCancel')
+            : pendingSub?.action === 'extend_year'
+              ? t('app.adminSubExtendYear')
+              : t('app.adminSubExtendMonth')
+        }
+        cancelLabel={t('common.cancel')}
+        danger={pendingSub?.action === 'cancel'}
+        loading={busyId !== null}
+        onConfirm={() => void applySubAction()}
+      />
+      <AddSubscriptionSheet
+        open={subAddOpen}
+        busy={subAdding}
+        error={subAddError}
+        onClose={() => setSubAddOpen(false)}
+        onSubmit={(email, plan, until, note) => void addSubscription(email, plan, until, note)}
       />
     </Screen>
   );

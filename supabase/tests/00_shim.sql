@@ -17,6 +17,10 @@ do $$ begin
   if not exists (select 1 from pg_roles where rolname = 'authenticated') then create role authenticated nologin; end if;
   if not exists (select 1 from pg_roles where rolname = 'service_role') then create role service_role nologin bypassrls; end if;
 end $$;
+-- Roles are cluster-wide and may predate this line: make sure the service role bypasses RLS,
+-- as it does on Supabase, so webhook-path tests see the rows they write.
+alter role service_role bypassrls;
+alter default privileges in schema public grant all on tables to service_role;
 
 create schema if not exists auth;
 -- The columns public.current_email() relies on exist in the real GoTrue schema too.

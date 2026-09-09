@@ -78,6 +78,62 @@ export interface OrderInput {
   source?: string;
 }
 
+// --- subscriptions ----------------------------------------------------------
+
+export type SubscriptionPlan = 'monthly' | 'annual';
+/** pending → active (paid) → cancelled (no more renewals; access lasts until expiresAt). */
+export type SubscriptionStatus = 'pending' | 'active' | 'cancelled';
+
+/** The signed-in user's own subscription (view `my_subscription`). */
+export interface Subscription {
+  plan: SubscriptionPlan;
+  status: SubscriptionStatus;
+  startedAt: string | null;
+  expiresAt: string | null;
+  /** Server-side verdict: active or cancelled, and the paid period not over. */
+  isLive: boolean;
+}
+
+/** A row of `subscriptions` as the admin sees it. */
+export interface SubscriptionRow {
+  id: string;
+  email: string;
+  plan: SubscriptionPlan;
+  status: SubscriptionStatus;
+  startedAt: string | null;
+  expiresAt: string | null;
+  source: string | null;
+  providerRef: string | null;
+  locale: string | null;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SubscriptionFilter {
+  status?: SubscriptionStatus;
+  /** Case-insensitive substring of the email. */
+  search?: string;
+}
+
+/** Subscribe form payload (anonymous): records the intent, never grants access. */
+export interface SubscriptionOrderInput {
+  email: string;
+  plan: SubscriptionPlan;
+  locale?: Locale;
+  source?: string;
+}
+
+/** Admin grant / extension / cancellation (RPC `admin_set_subscription`). */
+export interface SubscriptionChange {
+  email: string;
+  plan: SubscriptionPlan;
+  status: Extract<SubscriptionStatus, 'active' | 'cancelled'>;
+  /** Explicit end of access; omitted → one plan period from now or from the current expiry. */
+  expiresAt?: string | null;
+  note?: string | null;
+}
+
 // --- course state -----------------------------------------------------------
 
 export interface CourseStateRow {

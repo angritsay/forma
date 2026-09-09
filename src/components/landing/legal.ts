@@ -247,6 +247,10 @@ export function termsDocument(): LegalDocument {
             ru: 'Приложение — веб-приложение по адресу /app/, в котором проходят тренировки.',
             en: 'App — the web application at /app/ where the training happens.',
           },
+          {
+            ru: 'Подписка — доступ ко всем Курсам на оплаченный период (месяц или год) с автоматическим продлением, пока Пользователь его не отключит.',
+            en: 'Subscription — access to every Course for a paid period (a month or a year), renewing automatically until the User turns renewal off.',
+          },
         ],
       },
       {
@@ -254,8 +258,8 @@ export function termsDocument(): LegalDocument {
         heading: { ru: '2. Предмет оферты', en: '2. Subject' },
         paragraphs: [
           {
-            ru: 'Исполнитель предоставляет Пользователю доступ к выбранному Курсу в Приложении, а Пользователь оплачивает его по цене, указанной на странице Курса на момент заявки. Курс — цифровой продукт для самостоятельных занятий; он не является медицинской, физкультурно-оздоровительной или образовательной услугой с индивидуальным сопровождением.',
-            en: 'The Provider grants the User access to the chosen Course in the App, and the User pays the price shown on the Course page at the time of the order. The Course is a digital product for self-directed training; it is not a medical, healthcare or educational service with individual supervision.',
+            ru: 'Исполнитель предоставляет Пользователю доступ к выбранному Курсу или, по Подписке, ко всем Курсам в Приложении, а Пользователь оплачивает его по цене, указанной на странице Курса или Подписки на момент заявки. Курс — цифровой продукт для самостоятельных занятий; он не является медицинской, физкультурно-оздоровительной или образовательной услугой с индивидуальным сопровождением.',
+            en: 'The Provider grants the User access to the chosen Course or, under a Subscription, to every Course in the App, and the User pays the price shown on the Course or Subscription page at the time of the order. The Course is a digital product for self-directed training; it is not a medical, healthcare or educational service with individual supervision.',
           },
           {
             ru: 'Оферта считается принятой (акцепт) в момент, когда Пользователь оставил e-mail на странице Курса и оплатил его, а если Курс бесплатный — в момент заявки.',
@@ -283,11 +287,15 @@ export function termsDocument(): LegalDocument {
       },
       {
         id: 'lifetime',
-        heading: { ru: '4. Пожизненный доступ', en: '4. Lifetime access' },
+        heading: { ru: '4. Срок доступа', en: '4. Term of access' },
         paragraphs: [
           {
-            ru: 'Пожизненный доступ означает: Курс доступен Пользователю без ограничения срока и без дополнительной платы, пока существует Приложение. Обновления Курса (исправления, новые описания, видео) включены.',
-            en: 'Lifetime access means the Course is available to the User with no time limit and no extra charge for as long as the App exists. Course updates (fixes, new descriptions, videos) are included.',
+            ru: 'Купленный Курс доступен Пользователю без ограничения срока и без дополнительной платы, пока существует Приложение. Обновления Курса (исправления, новые описания, видео) включены.',
+            en: 'A purchased Course is available to the User with no time limit and no extra charge for as long as the App exists. Course updates (fixes, new descriptions, videos) are included.',
+          },
+          {
+            ru: 'Подписка открывает все Курсы на оплаченный период. Доступ прекращается в конце периода, если он не продлён. Отключение автопродления не прерывает уже оплаченный период. Прогресс и статистика Пользователя сохраняются и после окончания Подписки.',
+            en: "A Subscription opens every Course for the paid period. Access ends at the end of the period unless it is renewed. Turning renewal off does not cut the period already paid for. The User's progress and statistics are kept after the Subscription ends.",
           },
           {
             ru: `Если Исполнитель решит прекратить работу Приложения, он уведомит Пользователей по e-mail не менее чем за ${notice} дней.`,
@@ -300,8 +308,12 @@ export function termsDocument(): LegalDocument {
         heading: { ru: '5. Стоимость и оплата', en: '5. Price and payment' },
         paragraphs: [
           {
-            ru: 'Цена каждого Курса указана на его странице в рублях (для русской версии сайта) или в долларах США (для английской). Оплата проходит через внешний платёжный сервис по ссылке со страницы Курса; чек или подтверждение выдаёт этот сервис. Если платёжная ссылка не подключена, порядок оплаты согласовывается по e-mail.',
-            en: 'Each Course price is shown on its page in Russian roubles (Russian version of the site) or US dollars (English version). Payment goes through an external payment service linked from the Course page; the receipt is issued by that service. If no payment link is connected, payment is arranged by email.',
+            ru: 'Цена каждого Курса и Подписки указана на его странице в рублях (для русской версии сайта) или в долларах США (для английской). Оплата проходит через внешний платёжный сервис по ссылке со страницы; чек или подтверждение выдаёт этот сервис. Если платёжная ссылка не подключена, порядок оплаты согласовывается по e-mail.',
+            en: 'Each Course and Subscription price is shown on its page in Russian roubles (Russian version of the site) or US dollars (English version). Payment goes through an external payment service linked from that page; the receipt is issued by that service. If no payment link is connected, payment is arranged by email.',
+          },
+          {
+            ru: 'Подписка списывается автоматически в начале каждого периода по цене, действовавшей при оформлении. Об изменении цены Исполнитель уведомляет по e-mail не менее чем за 14 дней до следующего списания; Пользователь вправе отключить продление до этой даты.',
+            en: "A Subscription is charged automatically at the start of each period at the price in effect when it was taken out. The Provider gives at least 14 days' notice by email before a price change applies to the next charge; the User may turn renewal off before that date.",
           },
         ],
       },
@@ -410,6 +422,16 @@ export function refundDocument(): LegalDocument {
           {
             ru: 'Оба условия проверяются по данным Приложения на момент запроса.',
             en: 'Both conditions are checked against App data at the time of the request.',
+          },
+        ],
+      },
+      {
+        id: 'subscription',
+        heading: { ru: '1а. Подписка', en: '1a. Subscription' },
+        paragraphs: [
+          {
+            ru: `Первый платёж по Подписке возвращается на тех же условиях: не больше ${days} дней с момента оплаты и меньше ${maxWorkouts} выполненных тренировок за этот период. Продления возврату не подлежат — вместо этого отключи автопродление: доступ останется до конца оплаченного периода, дальше списаний не будет.`,
+            en: `The first Subscription payment is refundable on the same terms: no more than ${days} days since the payment and fewer than ${maxWorkouts} workouts completed in that period. Renewals are not refunded — turn renewal off instead: access stays until the end of the paid period, and nothing is charged after it.`,
           },
         ],
       },
