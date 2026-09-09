@@ -51,10 +51,16 @@ ${rule}
 -- Admin access — EDIT THIS BEFORE RUNNING
 --
 -- Replace the address with the one the coach will sign in with. Case does not matter (the column
--- is citext). Add a line per person who needs the admin screen.
+-- is citext). Several people? One address per line, each in its own parentheses, commas between:
+--
+--   insert into public.admins (email) values
+--     ('coach@example.com'),
+--     ('assistant@example.com')
+--   on conflict (email) do nothing;
 ${rule}
 
-insert into public.admins (email) values ('CHANGE-ME@example.com')
+insert into public.admins (email) values
+  ('CHANGE-ME@example.com')
 on conflict (email) do nothing;
 `;
 
