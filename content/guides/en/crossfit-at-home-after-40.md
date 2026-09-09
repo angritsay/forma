@@ -128,7 +128,7 @@ Home workouts for over 40 only work together with recovery. Three pillars. Sleep
 
 ## How to progress
 
-1. **Month 1.** The first half of the Start course or the structure from this guide: three sessions a week, a test on day one, every jump with a step-based option, no burpees.
+1. **Month 1.** The first half of the Start course or the structure from this guide: three sessions a week, no max-effort test on day one, every jump with a step-based option, no burpees.
 2. **Month 2.** The second half of Start or the same movements with more volume; push-ups move from the chair to the knees and then to the floor; the first AMRAPs and EMOMs appear with generous rest; a retest at the end.
 3. **Month 3.** A fourth session a week or your first piece of iron: a kettlebell for the hinge and swings if your lower back is fine, see the [Kettlebell Power course](course:kettlebell); or the [Bodyweight Engine course](course:engine) if you prefer to stay equipment-free.
 4. **The signal that it is time to go harder:** two consecutive sessions rated 6 out of 10 or lower with the full plan completed. That is the rule Forma uses to recommend the "harder" option.

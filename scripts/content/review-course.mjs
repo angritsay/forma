@@ -63,8 +63,8 @@ const ANNOTATIONS = {
       messages: [],
       flags: [
         l(
-          'Этого нет в канале: тест нужен приложению, чтобы задать стартовую нагрузку и сравнить цифры в конце. Те же три упражнения, что в анкете.',
-          'Not from the channel: the app needs a test to set the starting load and compare numbers at the end. The same three movements as the onboarding.',
+          'Этого нет в канале. Теста на максимум в первый день больше нет — по твоему замечанию. Остался только повтор в конце курса: те же три упражнения, что в анкете при первом входе, чтобы сравнить цифры за 8 недель. Оставить или убрать и его?',
+          'Not from the channel. The day-one max test is gone, per your note. Only the end-of-course repeat remains: the same three movements as the onboarding on first login, to compare the numbers after 8 weeks. Keep it, or drop this one too?',
         ),
       ],
     },
@@ -78,8 +78,8 @@ const ANNOTATIONS = {
           'The two-rounds-with-a-minute-rest version (message 80) is used. The second run (198–201) had the same session on a timer: one minute per exercise, the fourth minute rest. Which should stay?',
         ),
         l(
-          'Цифры «как написано» — середина твоих диапазонов (8 / 15 / 15). Новичок с коэффициентом 0,6 получит 5 / 9 / 9 — твой «минимум».',
-          'The authored numbers are the middle of your ranges (8 / 15 / 15). A beginner at scale 0.6 gets 5 / 9 / 9 — your "minimum".',
+          'Переписано по твоей «идеальной» первой тренировке: «жук» — основной вариант (6–10 на сторону), ситапы — если уверенно; отжимания 5–10, приседания 8–15; техника и комфорт, без максимумов. «Как написано» 8 / 8 на сторону / 13; новичок с коэффициентом 0,6 получит 5 / 5 / 8 — твой «минимум».',
+          'Rewritten from your "ideal" first workout: dead bug as the main option (6–10 per side), sit-ups only if confident; push-ups 5–10, squats 8–15; technique and comfort, no maxes. Authored 8 / 8 per side / 13; a beginner at scale 0.6 gets 5 / 5 / 8 — your "minimum".',
         ),
       ],
     },
@@ -322,12 +322,12 @@ const GENERAL_NOTES = {
       'The export holds 24 distinct workouts. Numbers 19 and 20 are missing from the channel, and 13 and 18 appear twice — everything here is renumbered 1–24 in posting order, with your number shown beside it.',
     ),
     l(
-      'Разминки и заминки — из приложения (твоих трёх разминок в экспорте нет). Они не масштабируются и занимают около 6 и 4 минут.',
-      'Warm-ups and cool-downs are the app’s (your three warm-ups are not in the export). They do not scale and take about 6 and 4 minutes.',
+      'Разминка — суставная гимнастика без бега, один круг из четырёх движений, около 3 минут; заминка-растяжка около 4 минут. Твоих трёх разминочных роликов в экспорте нет — если пришлёшь, подставим их. Разминка и заминка не масштабируются и в «5–15 минут тренировки» не входят.',
+      'The warm-up is joint mobility with no running — one round of four movements, about 3 minutes; the cool-down stretch is about 4. Your three warm-up clips are not in the export — send them and we will wire them in. Warm-up and cool-down do not scale and are not counted in the "5–15 minutes of training".',
     ),
     l(
-      'Цифры «как написано» — для уверенного новичка. Приложение умножает их на коэффициент человека: после входного теста новичок получает 0,6–0,8, и цифры сходятся с твоим «начинайте с минимума». Ниже показано и то и другое.',
-      'The authored numbers are for a confident beginner. The app multiplies them by the person’s scale: after the baseline test a beginner gets 0.6–0.8, which lands on your "start from the minimum". Both are shown below.',
+      'Цифры «как написано» — для уверенного новичка. Приложение умножает их на коэффициент человека: после анкеты при первом входе новичок получает 0,6–0,8, и цифры сходятся с твоим «начинайте с минимума». Ниже показано и то и другое.',
+      'The authored numbers are for a confident beginner. The app multiplies them by the person’s scale: after the onboarding on first login a beginner gets 0.6–0.8, which lands on your "start from the minimum". Both are shown below.',
     ),
     l(
       'Разгрузочной недели нет — как и в канале. Если нужна, скажи, на какой неделе.',

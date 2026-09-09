@@ -211,6 +211,9 @@ export function contentIssues(): ContentIssue[] {
       }
       if (n.kind === 'test' || n.kind === 'benchmark') {
         if (i === 0) kinds.start = true;
+        // A beginner course opens with its first workout: the onboarding self-tests already set
+        // the starting load, and the coach's rule is that day one is never a max effort.
+        if (c.level === 1) kinds.start = true;
         if (i === c.nodes.length - 1) kinds.end = true;
       }
       if (n.kind === 'workout') {
@@ -226,7 +229,7 @@ export function contentIssues(): ContentIssue[] {
     if (!kinds.start)
       issues.push({
         path: `courses.${c.id}.nodes`,
-        message: 'first node must be a test/benchmark (baseline)',
+        message: 'first node must be a test/benchmark (baseline) unless the course is level 1',
       });
     if (!kinds.end)
       issues.push({

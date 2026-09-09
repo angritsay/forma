@@ -96,8 +96,8 @@ describe('completeNodePatch', () => {
 
 describe('with real content', () => {
   const course = getCourse('start');
-  it('nextNode is the baseline test for a fresh athlete', () => {
-    expect(nextNode(course, null)?.kind).toBe('test');
+  it('nextNode is the first node of the path for a fresh athlete', () => {
+    expect(nextNode(course, null)?.id).toBe(course.nodes[0]?.id);
   });
   it('groups nodes by week in order with global indexes', () => {
     const groups = groupNodesByWeek(course);

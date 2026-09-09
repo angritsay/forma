@@ -16,7 +16,10 @@ describe('nodeOffset', () => {
 describe('layoutPath', () => {
   const course = getCourse('start');
   const groups = groupNodesByWeek(course);
-  const state: PathState = { currentNodeIndex: 2, completedNodeIds: ['w1_d1_test', 'w1_d2_rest'] };
+  const state: PathState = {
+    currentNodeIndex: 2,
+    completedNodeIds: course.nodes.slice(0, 2).map((n) => n.id),
+  };
   const layout = layoutPath(groups, (i) => nodeStatus(i, course.nodes, state));
 
   it('emits one header per week and one row per node, in order', () => {

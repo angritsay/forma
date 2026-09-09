@@ -4,8 +4,10 @@
  * Level 1, 8 weeks, 3 sessions per week: the coach's own beginner programme, transcribed from
  * the 24 workouts he posted to his `‼️НОВИЧКИ‼️` channel (docs/COACH_SOURCE.md — each workout
  * below names the message it comes from). The app adds what the channel did not have: a
- * baseline test on day one and a retest at the end so the engine can set and check the load,
- * warm-up / cool-down blocks in the player, and rest days with a step goal in between.
+ * retest at the end so the numbers can be compared with the onboarding self-tests, warm-up /
+ * cool-down blocks in the player, and rest days with a step goal in between. There is no
+ * max-effort test on day one: the coach's rule is that the first session must not destroy
+ * anyone, and the onboarding already sets the starting load.
  *
  * Authoring rules for this course:
  * - Only movements the coach demonstrates on video (media/manifest.json) are used in the main
@@ -34,109 +36,35 @@ const l = (ru: string, en: string): L10n => ({ ru, en });
 /* ---------------------------------------------------------------------------------------- */
 
 /**
- * The coach's rule is "warm up before every session, no exceptions" and he gives three warm-ups
- * to rotate. These are the app's three, rotated in the same spirit.
+ * The coach's warm-up is joint mobility — "суставная гимнастика", rotations, no running — and it
+ * is mandatory before every session but not part of the session's work. Three movements, all of
+ * them done once, the way he gives his own three warm-up videos.
  */
-
-/** Warm-up 1: locomotion, shoulders, squat pattern, hinge pattern. */
-function warmup1(): BlockInput {
+function warmup(): BlockInput {
   return {
-    id: 'wu_1',
+    id: 'wu_mobility',
     type: 'warmup',
     format: 'circuit',
-    sets: 2,
+    sets: 1,
     scalable: false,
-    title: l('Разминка 1', 'Warm-up 1'),
+    title: l('Разминка', 'Warm-up'),
     description: l(
-      'Два круга в спокойном темпе: разогрей суставы и вспомни движения, которые будут в тренировке. Разминка обязательна — без неё не начинаем.',
-      'Two easy rounds: warm up the joints and rehearse the movements you are about to train. The warm-up is mandatory — we do not start without it.',
+      'Суставная гимнастика в спокойном темпе: плечи, тазобедренные, спина, присед. Разминка обязательна — без неё не начинаем.',
+      'Easy joint mobility: shoulders, hips, spine, squat. The warm-up is mandatory — we do not start without it.',
     ),
     items: [
       {
-        exerciseId: 'jog_in_place',
-        seconds: 45,
-        note: l('Можно шагать на месте', 'March in place if you prefer'),
+        exerciseId: 'arm_circles',
+        seconds: 40,
+        note: l('Вперёд и назад, по кругу всё шире', 'Forward and back, widening the circle'),
       },
-      { exerciseId: 'arm_circles', seconds: 30 },
-      { exerciseId: 'squat_to_stand', reps: 6 },
-      { exerciseId: 'inchworm', reps: 4 },
-    ],
-  };
-}
-
-/** Warm-up 2: spine, hips, rotation. */
-function warmup2(): BlockInput {
-  return {
-    id: 'wu_2',
-    type: 'warmup',
-    format: 'circuit',
-    sets: 2,
-    scalable: false,
-    title: l('Разминка 2', 'Warm-up 2'),
-    description: l(
-      'Два круга без спешки. Разбуди спину и тазобедренные суставы. Разминка обязательна — без неё не начинаем.',
-      'Two unhurried rounds. Wake up the spine and the hips. The warm-up is mandatory — we do not start without it.',
-    ),
-    items: [
-      {
-        exerciseId: 'jog_in_place',
-        seconds: 45,
-        note: l('Можно шагать на месте', 'March in place if you prefer'),
-      },
+      { exerciseId: 'leg_swing', reps: 8, perSide: true },
       { exerciseId: 'cat_cow', reps: 8 },
-      { exerciseId: 'leg_swing', reps: 8, perSide: true },
-      { exerciseId: 'worlds_greatest_stretch', reps: 3, perSide: true },
-    ],
-  };
-}
-
-/** Warm-up 3: a little longer on the feet, then hips and squats — before timed work. */
-function warmup3(): BlockInput {
-  return {
-    id: 'wu_3',
-    type: 'warmup',
-    format: 'circuit',
-    sets: 2,
-    scalable: false,
-    title: l('Разминка 3', 'Warm-up 3'),
-    description: l(
-      'Два круга. Во втором круге чуть быстрее, чем в первом: пульс должен подняться до старта таймера. Разминка обязательна.',
-      'Two rounds, the second slightly quicker than the first: your heart rate should be up before the clock starts. The warm-up is mandatory.',
-    ),
-    items: [
       {
-        exerciseId: 'jog_in_place',
-        seconds: 60,
-        note: l('Можно шагать на месте', 'March in place if you prefer'),
+        exerciseId: 'squat_to_stand',
+        reps: 6,
+        note: l('Медленно, до комфортной глубины', 'Slowly, to a comfortable depth'),
       },
-      { exerciseId: 'arm_circles', seconds: 30 },
-      { exerciseId: 'leg_swing', reps: 8, perSide: true },
-      { exerciseId: 'squat_to_stand', reps: 6 },
-    ],
-  };
-}
-
-/** Light warm-up before the test: enough to be ready, not enough to steal reps. */
-function warmupTest(): BlockInput {
-  return {
-    id: 'wu_test',
-    type: 'warmup',
-    format: 'circuit',
-    sets: 2,
-    scalable: false,
-    description: l(
-      'Лёгкая разминка. Не утомляйся: силы нужны для теста.',
-      'A light warm-up. Do not tire yourself out: save your strength for the test.',
-    ),
-    items: [
-      {
-        exerciseId: 'jog_in_place',
-        seconds: 45,
-        note: l('Можно шагать на месте', 'March in place if you prefer'),
-      },
-      { exerciseId: 'arm_circles', seconds: 30 },
-      { exerciseId: 'squat_to_stand', reps: 6 },
-      { exerciseId: 'inchworm', reps: 3 },
     ],
   };
 }
@@ -189,19 +117,19 @@ const NOTE_LUNGE_TOTAL = l('Считаем в сумме на две ноги', 
 const TEST_WORKOUT_ID = 'w_test_start';
 
 const WORKOUTS: WorkoutInput[] = [
-  /* --- Baseline test / retest ----------------------------------------------------------- */
+  /* --- Retest at the end of the course -------------------------------------------------- */
   {
     id: TEST_WORKOUT_ID,
     name: l('Тест: отжимания, присед, планка', 'Test: push-ups, squats, plank'),
-    focus: l('Точка отсчёта', 'Your baseline'),
+    focus: l('Сравни с анкетой', 'Compare with your onboarding'),
     description: l(
-      'Три простых теста, которые покажут, откуда ты стартуешь, и помогут приложению подобрать нагрузку. В конце курса ты повторишь их и сравнишь цифры. Не выкладывайся до тошноты — просто сделай честный максимум.',
-      'Three simple tests that show where you are starting from and let the app set your load. At the end of the course you will repeat them and compare the numbers. Do not push to the point of nausea — just an honest max.',
+      'Те же три теста, что ты делал в анкете при первом входе. Восемь недель спустя повтори их и сравни цифры. Не выкладывайся до тошноты — просто сделай честный максимум с хорошей техникой.',
+      'The same three tests you did in the onboarding on your first login. Eight weeks later, repeat them and compare the numbers. Do not push to the point of nausea — just an honest max with good technique.',
     ),
     basePoints: 80,
     tags: ['test', 'push', 'squat', 'core'],
     blocks: [
-      warmupTest(),
+      warmup(),
       {
         id: 'test_start',
         type: 'test',
@@ -250,16 +178,16 @@ const WORKOUTS: WorkoutInput[] = [
   /* --- 1. Message 80 / 198–201 ---------------------------------------------------------- */
   {
     id: 'w_s01_sets',
-    name: l('Отжимания, ситапы, приседания', 'Push-ups, sit-ups, squats'),
-    focus: l('Большие группы мышц, включаемся в процесс', 'Big muscle groups, getting you going'),
+    name: l('Отжимания, «жук», приседания', 'Push-ups, dead bugs, squats'),
+    focus: l('Знакомим тело с тренировками', 'Introducing the body to training'),
     description: l(
-      'Тренировка 1. Цель — проработать большие группы мышц и включить тебя в процесс. Три упражнения, после каждого минута отдыха, и такой круг два раза. Новичкам советую начать с минимальных цифр: лучше сделать меньше и чисто, чем больше и через силу.',
-      'Workout 1. The goal is to work the big muscle groups and get you into the process. Three exercises with a minute of rest after each, and that round twice. Beginners: start at the minimum — fewer clean reps beat more forced ones.',
+      'Тренировка 1. Сегодня задача — познакомить тело с тренировками, включить в работу основные группы мышц и просто начать. Не нужно делать быстро или как можно больше повторений: главное — техника и комфортная нагрузка. Три упражнения, после каждого минута отдыха, и такой круг два раза. Первая тренировка не должна тебя уничтожить — она должна помочь захотеть прийти на вторую.',
+      'Workout 1. Today the task is to introduce the body to training, switch on the main muscle groups and simply begin. No need to go fast or chase reps: technique and a comfortable load come first. Three exercises with a minute of rest after each, and that round twice. The first session should not destroy you — it should make you want to come to the second.',
     ),
     basePoints: 100,
     tags: ['push', 'squat', 'core', 'beginner'],
     blocks: [
-      warmup1(),
+      warmup(),
       {
         id: 's01_main',
         type: 'strength',
@@ -268,13 +196,37 @@ const WORKOUTS: WorkoutInput[] = [
         restBetweenRoundsSec: 60,
         title: l('2 круга', '2 rounds'),
         description: l(
-          'Отжимания с колен — минута отдыха — ситапы или «жук» — минута отдыха — приседания — минута отдыха, и ещё раз такой же круг. Тренер: «5–15 отжиманий, 10–25 ситапов, 10–20 приседаний, по ощущениям».',
-          'Knee push-ups — a minute of rest — sit-ups or dead bugs — a minute of rest — squats — a minute of rest, then the same round again. The coach: "5–15 push-ups, 10–25 sit-ups, 10–20 squats, by feel".',
+          'Отжимания с колен — минута отдыха — «мёртвый жук» — минута отдыха — приседания — минута отдыха, и ещё раз такой же круг. Не пытайся дойти до максимума: выбирай число, при котором последние повторения ощущаются, но техника остаётся хорошей. Острая боль — не норма: появилась — останавливаемся.',
+          'Knee push-ups — a minute of rest — dead bugs — a minute of rest — squats — a minute of rest, then the same round again. Do not chase a maximum: pick a number where the last reps are felt but the technique stays good. Sharp pain is not normal: if it appears, stop.',
         ),
         items: [
-          { exerciseId: 'knee_push_up', reps: 8, restAfterSec: 60 },
-          { exerciseId: 'sit_up', reps: 15, restAfterSec: 60, note: NOTE_DEAD_BUG },
-          { exerciseId: 'air_squat', reps: 15 },
+          {
+            exerciseId: 'knee_push_up',
+            reps: 8,
+            restAfterSec: 60,
+            note: l(
+              'Тренер: 5–10, совсем новичок — с 5. Медленно и подконтрольно: корпус ровно, живот слегка напряжён, таз не проваливаем, локти не разводим широко. Если и 5 тяжело — отжимайся от высокой опоры',
+              'The coach: 5–10, complete beginners start at 5. Slow and controlled: body straight, belly lightly braced, hips do not sag, elbows not flared. If even 5 is hard, push up from a high surface',
+            ),
+          },
+          {
+            exerciseId: 'dead_bug',
+            reps: 8,
+            perSide: true,
+            restAfterSec: 60,
+            note: l(
+              'Основной вариант для новичков: 6–10 на каждую сторону, медленно, корпус под контролем. Если уверенно и без дискомфорта — можно ситапы 8–15. При диастазе — только «жук»',
+              'The main option for beginners: 6–10 per side, slow, trunk under control. If you are confident and comfortable, sit-ups 8–15 instead. With diastasis, dead bugs only',
+            ),
+          },
+          {
+            exerciseId: 'air_squat',
+            reps: 13,
+            note: l(
+              'Тренер: 8–15. Тяжело приседать — с 8. Глубина комфортная: не нужно садиться максимально низко, если техника пока не держится',
+              'The coach: 8–15. Squats feel hard? Start at 8. Comfortable depth: no need to go as low as possible while the technique is not there yet',
+            ),
+          },
         ],
       },
       cooldown(),
@@ -293,7 +245,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 100,
     tags: ['push', 'lunge', 'core', 'beginner'],
     blocks: [
-      warmup2(),
+      warmup(),
       {
         id: 's02_main',
         type: 'strength',
@@ -332,7 +284,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 100,
     tags: ['push', 'squat', 'lunge', 'core', 'beginner'],
     blocks: [
-      warmup1(),
+      warmup(),
       {
         id: 's03_push',
         type: 'strength',
@@ -397,7 +349,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 100,
     tags: ['hinge', 'glutes', 'fortime', 'beginner'],
     blocks: [
-      warmup2(),
+      warmup(),
       {
         id: 's04_main',
         type: 'metcon',
@@ -427,7 +379,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 100,
     tags: ['benchmark', 'fortime', 'full_body', 'beginner'],
     blocks: [
-      warmup3(),
+      warmup(),
       {
         id: 's05_main',
         type: 'metcon',
@@ -462,7 +414,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 100,
     tags: ['amrap', 'full_body', 'beginner'],
     blocks: [
-      warmup3(),
+      warmup(),
       {
         id: 's06_main',
         type: 'metcon',
@@ -495,7 +447,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 100,
     tags: ['core', 'fortime', 'beginner'],
     blocks: [
-      warmup2(),
+      warmup(),
       {
         id: 's07_main',
         type: 'metcon',
@@ -531,7 +483,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 100,
     tags: ['emom', 'full_body', 'beginner'],
     blocks: [
-      warmup3(),
+      warmup(),
       {
         id: 's08_main',
         type: 'metcon',
@@ -565,7 +517,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 110,
     tags: ['fortime', 'conditioning', 'full_body'],
     blocks: [
-      warmup3(),
+      warmup(),
       {
         id: 's09_main',
         type: 'metcon',
@@ -604,7 +556,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 100,
     tags: ['interval', 'full_body', 'beginner'],
     blocks: [
-      warmup1(),
+      warmup(),
       {
         id: 's10_main',
         type: 'metcon',
@@ -638,7 +590,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 100,
     tags: ['emom', 'full_body', 'beginner'],
     blocks: [
-      warmup3(),
+      warmup(),
       {
         id: 's11_main',
         type: 'metcon',
@@ -672,7 +624,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 100,
     tags: ['fortime', 'lunge', 'full_body'],
     blocks: [
-      warmup1(),
+      warmup(),
       {
         id: 's12_main',
         type: 'metcon',
@@ -713,7 +665,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 110,
     tags: ['amrap', 'full_body', 'conditioning'],
     blocks: [
-      warmup3(),
+      warmup(),
       {
         id: 's13_main',
         type: 'metcon',
@@ -748,7 +700,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 80,
     tags: ['amrap', 'squat', 'beginner'],
     blocks: [
-      warmup1(),
+      warmup(),
       {
         id: 's14_main',
         type: 'metcon',
@@ -777,7 +729,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 110,
     tags: ['fortime', 'lunge', 'push', 'core'],
     blocks: [
-      warmup2(),
+      warmup(),
       {
         id: 's15_two_rounds',
         type: 'metcon',
@@ -828,7 +780,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 100,
     tags: ['amrap', 'conditioning', 'cardio'],
     blocks: [
-      warmup3(),
+      warmup(),
       {
         id: 's16_main',
         type: 'metcon',
@@ -861,7 +813,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 120,
     tags: ['fortime', 'chipper', 'full_body'],
     blocks: [
-      warmup3(),
+      warmup(),
       {
         id: 's17_main',
         type: 'metcon',
@@ -902,7 +854,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 100,
     tags: ['interval', 'full_body', 'conditioning'],
     blocks: [
-      warmup3(),
+      warmup(),
       {
         id: 's18_main',
         type: 'metcon',
@@ -944,7 +896,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 110,
     tags: ['interval', 'full_body', 'conditioning'],
     blocks: [
-      warmup3(),
+      warmup(),
       {
         id: 's19_window_1',
         type: 'metcon',
@@ -1027,7 +979,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 120,
     tags: ['emom', 'burpee', 'benchmark', 'conditioning'],
     blocks: [
-      warmup3(),
+      warmup(),
       {
         id: 's20_main',
         type: 'metcon',
@@ -1069,7 +1021,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 110,
     tags: ['fortime', 'conditioning', 'full_body'],
     blocks: [
-      warmup3(),
+      warmup(),
       {
         id: 's22_main',
         type: 'metcon',
@@ -1105,7 +1057,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 110,
     tags: ['amrap', 'full_body', 'conditioning'],
     blocks: [
-      warmup3(),
+      warmup(),
       {
         id: 's23_main',
         type: 'metcon',
@@ -1140,7 +1092,7 @@ const WORKOUTS: WorkoutInput[] = [
     basePoints: 110,
     tags: ['fortime', 'lunge', 'cardio'],
     blocks: [
-      warmup3(),
+      warmup(),
       {
         id: 's24_main',
         type: 'metcon',
@@ -1251,38 +1203,28 @@ const REST_BEFORE_TEST = l(
 );
 
 const NODES: NodeInput[] = [
-  /* Week 1 */
-  {
-    id: 'w1_d1_test',
-    week: 1,
-    day: 1,
-    kind: 'test',
-    workoutId: TEST_WORKOUT_ID,
-    title: l('Входной тест', 'Baseline test'),
-    subtitle: l('Отжимания, приседания, планка', 'Push-ups, squats, plank'),
-  },
-  restNode(1, 2, REST_STEPS),
-  workoutNode(1, 3, 1, 'w_s01_sets', l('2 круга, минута отдыха', '2 rounds, a minute of rest')),
-  restNode(1, 4, REST_SORENESS),
-  workoutNode(1, 5, 2, 'w_s02_sets', l('2 круга, минута отдыха', '2 rounds, a minute of rest')),
-  restNode(1, 6, REST_RECOVERY),
-  workoutNode(1, 7, 3, 'w_s03_pairs', l('Три пары по 2 круга', 'Three pairs, 2 rounds each')),
+  /* Week 1 — no baseline test: the coach's first session is deliberately the first session. */
+  workoutNode(1, 1, 1, 'w_s01_sets', l('2 круга, минута отдыха', '2 rounds, a minute of rest')),
+  restNode(1, 2, REST_SORENESS),
+  workoutNode(1, 3, 2, 'w_s02_sets', l('2 круга, минута отдыха', '2 rounds, a minute of rest')),
+  restNode(1, 4, REST_STEPS),
+  workoutNode(1, 5, 3, 'w_s03_pairs', l('Три пары по 2 круга', 'Three pairs, 2 rounds each')),
+  restNode(1, 7, REST_WEEKEND),
 
   /* Week 2 */
-  restNode(2, 1, REST_STEPS),
-  workoutNode(2, 2, 4, 'w_s04_bridges', l('200 мостов, крышка 10 мин', '200 bridges, 10-min cap')),
-  restNode(2, 3, REST_SORENESS),
+  workoutNode(2, 1, 4, 'w_s04_bridges', l('200 мостов, крышка 10 мин', '200 bridges, 10-min cap')),
+  restNode(2, 2, REST_SORENESS),
   workoutNode(
     2,
-    4,
+    3,
     5,
     'w_s05_three_rounds',
     l('3 круга на время — запиши время', '3 rounds for time — note the time'),
     'benchmark',
   ),
-  restNode(2, 5, REST_RECOVERY),
-  workoutNode(2, 6, 6, 'w_s06_amrap8', l('AMRAP 8 мин', 'AMRAP 8 min')),
-  restNode(2, 7, REST_STEPS),
+  restNode(2, 4, REST_RECOVERY),
+  workoutNode(2, 5, 6, 'w_s06_amrap8', l('AMRAP 8 мин', 'AMRAP 8 min')),
+  restNode(2, 7, REST_WEEKEND),
 
   /* Week 3 */
   workoutNode(3, 1, 7, 'w_s07_hundred_situps', l('100 ситапов на время', '100 sit-ups for time')),
@@ -1402,8 +1344,8 @@ export const COURSE_START: CourseInput = {
     'Eight weeks of the coach’s own beginner programme: short, in rounds, with no equipment.',
   ),
   description: l(
-    'Программа для тех, кто начинает с нуля или возвращается после долгого перерыва. Двадцать четыре короткие тренировки — те самые, по которым тренер ведёт новичков: отжимания с колен, приседания, ситапы, выпады и первые бёрпи. Три раза в неделю по 15–20 минут, нагрузка подстраивается под тебя.',
-    'A programme for complete beginners and anyone coming back after a long break. Twenty-four short sessions — the same ones the coach runs his beginners through: knee push-ups, squats, sit-ups, lunges and your first burpees. Three times a week, 15–20 minutes each, and the load adapts to you.',
+    'Программа для тех, кто начинает с нуля или возвращается после долгого перерыва. Двадцать четыре короткие тренировки — те самые, по которым тренер ведёт новичков: отжимания с колен, приседания, ситапы, выпады и первые бёрпи. Три раза в неделю по 12–20 минут, нагрузка подстраивается под тебя.',
+    'A programme for complete beginners and anyone coming back after a long break. Twenty-four short sessions — the same ones the coach runs his beginners through: knee push-ups, squats, sit-ups, lunges and your first burpees. Three times a week, 12–20 minutes each, and the load adapts to you.',
   ),
   longDescription: [
     l(
@@ -1415,12 +1357,12 @@ export const COURSE_START: CourseInput = {
       'The first weeks are simple rounds with a minute of rest after every exercise. Then the CrossFit formats arrive one at a time: three rounds for time, AMRAP, EMOM, work by the minute, ladders and a long chipper for time. Burpees only appear in week five. Between sessions are rest days with a 7,000-step goal — muscles recover better when you move than when you lie still.',
     ),
     l(
-      'Тренировки короткие — 15–20 минут вместе с разминкой и заминкой, самая длинная около 25. Из инвентаря нужны коврик и устойчивый стул: от него ты будешь отжиматься и на него зашагивать. Приложение считает, сколько повторений тебе делать сегодня, по результатам прошлой тренировки — было тяжело, легко или в самый раз. Тяжёлые упражнения заменяются простыми: ситапы — «мёртвым жуком», прыжки — шагом.',
-      'Sessions are short — 15–20 minutes including warm-up and cool-down, the longest around 25. You need a mat and a sturdy chair: you will do dips off it and step-ups onto it. The app works out how many reps you should do today from how your last session went — too hard, too easy or just right. Hard movements swap for simple ones: sit-ups for dead bugs, jumps for steps.',
+      'Тренировки короткие — 12–20 минут вместе с разминкой и заминкой, самая длинная около 21. Сама работа — 5–15 минут, как у тренера; разминка — суставная гимнастика без бега — в это время не входит. Из инвентаря нужны коврик и устойчивый стул: от него ты будешь отжиматься и на него зашагивать. Приложение считает, сколько повторений тебе делать сегодня, по результатам прошлой тренировки — было тяжело, легко или в самый раз. Тяжёлые упражнения заменяются простыми: ситапы — «мёртвым жуком», прыжки — шагом.',
+      'Sessions are short — 12–20 minutes including warm-up and cool-down, the longest around 21. The work itself is 5–15 minutes, as the coach runs it; the warm-up — joint mobility, no running — is not counted in that. You need a mat and a sturdy chair: you will do dips off it and step-ups onto it. The app works out how many reps you should do today from how your last session went — too hard, too easy or just right. Hard movements swap for simple ones: sit-ups for dead bugs, jumps for steps.',
     ),
     l(
-      'В начале и в конце курса — один и тот же тест: отжимания с колен за 2 минуты, приседания за минуту и планка на максимум. А внутри программы у тренера свои точки отсчёта: три круга на время во второй неделе, которые ты повторишь в седьмой, и лесенка бёрпи, к которой вернёшься через месяц-два.',
-      'The course opens and closes with the same test: knee push-ups in 2 minutes, squats in 1 minute and a max plank hold. Inside the programme the coach has his own reference points: three rounds for time in week two that you repeat in week seven, and a burpee ladder you will come back to in a month or two.',
+      'Первый день — это первая тренировка, а не тест на максимум: тренер считает, что первое занятие не должно тебя уничтожить. Стартовую нагрузку задаёт анкета при первом входе, а в конце курса ты повторишь её три теста и сравнишь цифры. Внутри программы у тренера свои точки отсчёта: три круга на время во второй неделе, которые ты повторишь в седьмой, и лесенка бёрпи, к которой вернёшься через месяц-два.',
+      'Day one is the first workout, not a max-effort test: the coach believes the first session must not destroy you. Your starting load comes from the onboarding on first login, and at the end of the course you repeat its three tests and compare the numbers. Inside the programme the coach has his own reference points: three rounds for time in week two that you repeat in week seven, and a burpee ladder you will come back to in a month or two.',
     ),
   ],
   forWhom: [
@@ -1459,8 +1401,8 @@ export const COURSE_START: CourseInput = {
       'A working knowledge of every CrossFit format: rounds, for-time, AMRAP, EMOM, ladders, the chipper.',
     ),
     l(
-      'Твои личные цифры: тест в начале и в конце, время трёх кругов во второй и седьмой неделе.',
-      'Your own numbers: the test at the start and the end, and your three-round time in weeks two and seven.',
+      'Твои личные цифры: тест в конце курса против анкеты, время трёх кругов во второй и седьмой неделе.',
+      'Your own numbers: the end-of-course test against your onboarding, and your three-round time in weeks two and seven.',
     ),
     l(
       'Готовность перейти к курсу «Своим весом» или к тренировкам с гантелями.',
@@ -1471,7 +1413,7 @@ export const COURSE_START: CourseInput = {
   level: 1,
   weeks: 8,
   sessionsPerWeek: 3,
-  avgSessionMin: 18,
+  avgSessionMin: 16,
   accent: '#B9F3E0',
   gradient: ['#B9F3E0', '#C9D6FF'],
   price: { rub: 2990, usd: 29 },
@@ -1488,15 +1430,15 @@ export const COURSE_START: CourseInput = {
     {
       q: l('Я совсем не в форме. Точно получится?', 'I am completely out of shape. Will I cope?'),
       a: l(
-        'Курс написан именно для этого. Тренер советует новичкам начинать с минимальных цифр — и приложение делает это за тебя: после входного теста оно уменьшает количество повторений, а после каждой тренировки спрашивает, как было, и корректирует следующую. Если тяжело — выбирай режим «Полегче»: это не поражение, а часть плана. Ситапы можно всегда заменить «мёртвым жуком», а бёрпи делать шагом.',
-        'That is exactly who this course is for. The coach tells beginners to start at the minimum — and the app does it for you: after the baseline test it lowers the rep counts, then asks how each session felt and adjusts the next one. If it is hard, pick "Easier" — that is not failure, it is part of the plan. Sit-ups can always become dead bugs, and burpees can be stepped.',
+        'Курс написан именно для этого. Тренер советует новичкам начинать с минимальных цифр — и приложение делает это за тебя: после анкеты при первом входе оно уменьшает количество повторений, а после каждой тренировки спрашивает, как было, и корректирует следующую. Если тяжело — выбирай режим «Полегче»: это не поражение, а часть плана. Ситапы можно всегда заменить «мёртвым жуком», а бёрпи делать шагом.',
+        'That is exactly who this course is for. The coach tells beginners to start at the minimum — and the app does it for you: after the onboarding on first login it lowers the rep counts, then asks how each session felt and adjusts the next one. If it is hard, pick "Easier" — that is not failure, it is part of the plan. Sit-ups can always become dead bugs, and burpees can be stepped.',
       ),
     },
     {
       q: l('Сколько времени занимает тренировка?', 'How long is a session?'),
       a: l(
-        'В среднем около 18 минут вместе с разминкой и заминкой. Самые короткие — 4 минуты приседаний и 100 ситапов, около 12–15 минут; самые длинные — длинный комплекс и лесенка бёрпи, около 20–25 минут. Перед стартом приложение показывает расчётное время для каждого режима сложности.',
-        'About 18 minutes on average including warm-up and cool-down. The shortest are the 4 minutes of squats and the 100 sit-ups at around 12–15 minutes; the longest are the chipper and the burpee ladder at around 20–25. Before you start, the app shows the estimated time for each difficulty option.',
+        'В среднем около 16 минут вместе с разминкой и заминкой. Самые короткие — 4 минуты приседаний и 100 ситапов, около 11–12 минут; самые длинные — три пары упражнений и лесенка бёрпи, около 19–21 минуты. Перед стартом приложение показывает расчётное время для каждого режима сложности.',
+        'About 16 minutes on average including warm-up and cool-down. The shortest are the 4 minutes of squats and the 100 sit-ups at around 11–12 minutes; the longest are the three pairs and the burpee ladder at around 19–21. Before you start, the app shows the estimated time for each difficulty option.',
       ),
     },
     {

@@ -91,7 +91,7 @@ The rule for the first two weeks: **no jumping**. Burpees, jump squats and rope 
 
 ## Your first workout
 
-This is a workout for your first day; in the Start course day one is the baseline test, followed by the same simple rounds with a minute of rest. With the warm-up and cool-down it takes about 30 minutes. The strength block is slow: two seconds down, one second up; if your form breaks, end the set early.
+This is a workout for your first day; in the Start course day one is exactly this kind of session: simple rounds with a minute of rest and no max-effort test. With the warm-up and cool-down it takes about 30 minutes. The strength block is slow: two seconds down, one second up; if your form breaks, end the set early.
 
 **Warm-up — 2 rounds, no rest:**
 
