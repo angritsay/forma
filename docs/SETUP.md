@@ -423,6 +423,15 @@ Telegram and adapts. All that is needed on Telegram's side is a bot whose menu b
 
 Setting the menu button again overwrites it; there is nothing to undo.
 
+**A direct link** is worth more than the menu button: it is what goes in an Instagram bio, in the
+Telegram channel and in any post. `/newapp` → the bot → title, short description, a 640×360
+image (`npm run telegram:icon` renders one from the brand), `/empty` for the demo GIF, then the
+same URL and a short name. The result is `t.me/<bot>/<short name>`, which opens the app in one tap.
+
+A bot with no program behind it does not answer `/start` — that silence is expected, and the menu
+button and the direct link work regardless. Replying to `/start` with a greeting and a launch
+button needs a webhook (an Edge Function holding the bot token); not built yet.
+
 **What the app does inside Telegram** (`src/lib/telegram/webapp.ts`, no-ops everywhere else):
 
 - Telegram's SDK is loaded **only** when Telegram opened the page — a plain web visitor makes no
