@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Forma \u2014 adaptive home CrossFit-style training app and SEO landing (Astro + React + Supabase)",
+  "description": "Forma — adaptive home CrossFit-style training app and SEO landing (Astro + React + Supabase)",
   "scripts": {
     "build": "astro build",
     "postbuild": "node scripts/seo/postbuild.mjs",
@@ -14,6 +14,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "content:validate": "node scripts/content/validate.mjs",
+    "content:review": "node scripts/content/review-course.mjs",
     "seo:audit": "node scripts/seo/audit.mjs",
     "seo:indexnow": "node scripts/seo/indexnow.mjs",
     "seo:new-guide": "node scripts/seo/new-guide.mjs",

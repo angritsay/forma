@@ -124,4 +124,4 @@ For how to spread sessions across the week, read the [beginner's guide to CrossF
 
 ## Wrap-up
 
-Staying consistent means removing everything that depends on your mood: fix the time, lower the bar to eight minutes, and see a trace of every day. Streaks, points and achievements in the app exist for that, as an honest counter rather than a game. If you want a program where rest days, minimum options and recommendations are already built in, open the [Start: home CrossFit basics course](course:start): four weeks, three sessions a week, and the streak starts growing on day one.
+Staying consistent means removing everything that depends on your mood: fix the time, lower the bar to eight minutes, and see a trace of every day. Streaks, points and achievements in the app exist for that, as an honest counter rather than a game. If you want a program where rest days, minimum options and recommendations are already built in, open the [Start: home CrossFit basics course](course:start): eight weeks, three sessions a week, and the streak starts growing on day one.

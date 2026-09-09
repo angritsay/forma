@@ -79,7 +79,7 @@ People ask whether CrossFit is safe after 40. The honest answer is that the form
 
 The first thing you need is a reference point. Three simple tests: [knee push-ups](exercise:knee_push_up) in two minutes, [air squats](exercise:air_squat) in one minute and a max [plank](exercise:plank) hold. Not a heroic max, an honest one: the numbers set your volume and show your progress a month later.
 
-A week has three days. Squat and press day: squats, incline push-ups, a wall sit or step-ups, a short core block. Hinge day: glute bridges, supermans, reverse lunges, planks. Conditioning day: a no-jump circuit at an even pace. Between them are rest days with a walk. That is exactly how the [Start course](course:start) is built: four weeks, 20 to 25 minutes a session, zero jumps in the first two weeks, and every later jump has a step-based option. If you want the logic of the first weeks in more depth, read the [beginner's guide to CrossFit at home](guide:crossfit-home-beginners).
+A week has three days with rest and a walk between them, and every session has a strength block on the basic movements plus a short conditioning block. That is exactly how the [Start course](course:start) is built: eight weeks, 24 workouts of 15 to 20 minutes, and nothing but a mat and a sturdy chair. The movements are squats, knee push-ups, sit-ups, reverse lunges, chair dips and step-ups onto the chair; the formats arrive one at a time, from simple rounds with a minute of rest to AMRAP, EMOM and ladders; burpees only appear in week five, and every jump has a step-based option. If you want the logic of the first weeks in more depth, read the [beginner's guide to CrossFit at home](guide:crossfit-home-beginners).
 
 ## Sample session: squat and press day
 
@@ -95,7 +95,7 @@ About 25 minutes. You need a mat and a sturdy chair.
 
 **Cool-down.** [Hip flexor stretch](exercise:hip_flexor_stretch) and [hamstring stretch](exercise:hamstring_stretch), 30 seconds per side, [child's pose](exercise:child_pose) 45 seconds.
 
-How the app scales this session. Forma sets the volume of every set from your test and offers "easier", "as planned" or "harder" before you start; "easier" trims the reps by about 15 percent and lengthens the rest. If you flagged knees, lower back or shoulders in your profile, jumping and impact movements are replaced with step-based versions and heavy hinges with gentler ones. After the session you rate the effort from 1 to 10 and mark pain if there was any; the next session gets easier or harder from that data, and week four of the course is an automatic deload.
+How the app scales this session. Forma sets the volume of every set from your test and offers "easier", "as planned" or "harder" before you start; "easier" trims the reps by about 15 percent and lengthens the rest. If you flagged knees, lower back or shoulders in your profile, jumping and impact movements are replaced with step-based versions and heavy hinges with gentler ones. After the session you rate the effort from 1 to 10 and mark pain if there was any; the next session gets easier or harder from that data. The Start course has no deload week — the coach’s programme is short as it is; in the courses that follow, every fourth week is a deload.
 
 ## Knees, lower back, shoulders: training around limitations
 
@@ -128,11 +128,11 @@ Home workouts for over 40 only work together with recovery. Three pillars. Sleep
 
 ## How to progress
 
-1. **Month 1.** The Start course or the structure from this guide: three sessions a week, no jumps in the first two weeks, a retest at the end.
-2. **Month 2.** The same movements with more volume; push-ups move from the chair to the knees and then to the floor; the first AMRAPs and EMOMs appear with generous rest.
+1. **Month 1.** The first half of the Start course or the structure from this guide: three sessions a week, a test on day one, every jump with a step-based option, no burpees.
+2. **Month 2.** The second half of Start or the same movements with more volume; push-ups move from the chair to the knees and then to the floor; the first AMRAPs and EMOMs appear with generous rest; a retest at the end.
 3. **Month 3.** A fourth session a week or your first piece of iron: a kettlebell for the hinge and swings if your lower back is fine, see the [Kettlebell Power course](course:kettlebell); or the [Bodyweight Engine course](course:engine) if you prefer to stay equipment-free.
 4. **The signal that it is time to go harder:** two consecutive sessions rated 6 out of 10 or lower with the full plan completed. That is the rule Forma uses to recommend the "harder" option.
 
 ## Wrap-up
 
-CrossFit at home after 40 is strength work on the basic patterns, a long warm-up, three days a week and honest numbers. Your body still responds to load; it just asks for a little more patience and respect for the connective tissue. If you would rather have the volume, the substitutions and the deload calculated for you, open the [Start course](course:start): it is written for people starting from zero or after a long break, and it adapts to your test from day one.
+CrossFit at home after 40 is strength work on the basic patterns, a long warm-up, three days a week and honest numbers. Your body still responds to load; it just asks for a little more patience and respect for the connective tissue. If you would rather have the volume and the substitutions calculated for you, open the [Start course](course:start): it is written for people starting from zero or after a long break, and it adapts to your test from day one.

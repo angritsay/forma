@@ -139,4 +139,4 @@ To see how these sessions fit inside a complete program, read the [beginner's gu
 
 ## Wrap-up
 
-Learning the push-up is not about talent; it is about the right step and eight weeks of patience. Hold the four checkpoints, move up by the 3 × 12 rule, and train the trunk as seriously as the arms. If you would rather have the step, the volume and the substitutions picked automatically from your test, open the [Start: home CrossFit basics course](course:start): push-ups progress there from week one to week four without any arithmetic on your side.
+Learning the push-up is not about talent; it is about the right step and eight weeks of patience. Hold the four checkpoints, move up by the 3 × 12 rule, and train the trunk as seriously as the arms. If you would rather have the step, the volume and the substitutions picked automatically from your test, open the [Start: home CrossFit basics course](course:start): knee push-ups progress there from week one to week eight without any arithmetic on your side.

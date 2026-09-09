@@ -55,7 +55,7 @@ CrossFit at home for beginners is not box jumps and a barbell overhead. It is th
 
 - A plain explanation of what CrossFit for beginners actually is at home and how it differs from "doing some exercise".
 - The six movements to learn before you add anything harder.
-- A complete first workout with exact reps and rest — the same session that opens the Start course.
+- A complete first workout with exact reps and rest — built on the same logic as week one of the Start course.
 - The common mistakes and a progression plan for your first four weeks.
 
 ## CrossFit at home for beginners: where to start
@@ -87,11 +87,11 @@ A beginner CrossFit workout is built from six patterns. Learn each in its simple
 | Core       | [Plank](exercise:plank)                  | Trunk stability, lower-back protection        |
 | Locomotion | [Jog in place](exercise:jog_in_place)    | Heart rate, warm-up, transitions              |
 
-The rule for the first two weeks: **no jumping**. Burpees, jump squats and rope work come once your knees and ankles have adapted to the volume. That is exactly how [the Start course](course:start) is built: no jumps in weeks one and two, and every later jump carries a step-based option in its note.
+The rule for the first two weeks: **no jumping**. Burpees, jump squats and rope work come once your knees and ankles have adapted to the volume. That is how [the Start course](course:start) is built too: jumping jacks only appear from week three, always with a "step out to the sides" option, and burpees only in week five.
 
 ## Your first workout
 
-This is day one of the Start course. With the warm-up and cool-down it takes about 30 minutes. The strength block is slow: two seconds down, one second up; if your form breaks, end the set early.
+This is a workout for your first day; in the Start course day one is the baseline test, followed by the same simple rounds with a minute of rest. With the warm-up and cool-down it takes about 30 minutes. The strength block is slow: two seconds down, one second up; if your form breaks, end the set early.
 
 **Warm-up — 2 rounds, no rest:**
 

@@ -101,7 +101,9 @@ describe('with real content', () => {
   });
   it('groups nodes by week in order with global indexes', () => {
     const groups = groupNodesByWeek(course);
-    expect(groups.map((g) => g.week)).toEqual([1, 2, 3, 4]);
+    expect(groups.map((g) => g.week)).toEqual(
+      Array.from({ length: course.weeks }, (_, i) => i + 1),
+    );
     expect(groups[0]?.nodes[0]?.index).toBe(0);
     const total = groups.reduce((n, g) => n + g.nodes.length, 0);
     expect(total).toBe(course.nodes.length);

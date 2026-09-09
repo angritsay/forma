@@ -262,6 +262,7 @@ The result, per course (session at "as usual", minutes):
 | Course       | Before (min / avg / max) | After                           |
 | ------------ | ------------------------ | ------------------------------- |
 | `start`      | 18.3 / 23.0 / 26.2       | unchanged — it was already sane |
+| `start` (v2) | —                        | 14.1 / 18.9 / 23.6 (see below)  |
 | `engine`     | 20.0 / 29.0 / 36.9       | 20.0 / 28.8 / 36.9              |
 | `dumbbells`  | 17.6 / 28.1 / 40.0       | 17.6 / 28.1 / 38.7              |
 | `kettlebell` | 17.6 / 29.0 / 38.5       | 17.6 / 29.0 / 38.0              |
@@ -269,6 +270,14 @@ The result, per course (session at "as usual", minutes):
 
 Core work was not deleted from the product — it survives in the warm-ups, in the sessions built
 around it (`w_hinge_core_*`), and in every session that does not already ask for two main pieces.
+
+**The beginner course was later rebuilt around the coach's own programme** (`start` v2): the 24
+workouts he posted for his beginner group (`docs/COACH_SOURCE.md`), transcribed one to one, over 8
+weeks. Every session is one warm-up, one piece of main work (two only where he wrote two) and a
+cool-down; the main work runs 4–12 minutes and a session 14–24 minutes at "as usual". The numbers
+are authored at his "confident beginner" figure, so a real beginner at scale 0.6–0.8 lands on his
+"start from the minimum" advice. `npm run content:review` renders the course day by day with these
+estimates for the coach to check.
 
 ## 4. Duration (`estimate.ts`)
 

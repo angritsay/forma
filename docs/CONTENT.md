@@ -41,6 +41,12 @@ A course is a list of unique `workouts` plus an ordered list of `nodes` (the Duo
 
 Adding a course: create the file, add it to `content/courses/index.ts`, run `npm run test`.
 
+Reviewing a course with the coach: `npm run content:review -- --course start` renders the path
+day by day into `review/<course>.html` (gitignored) — every workout with its blocks, the authored
+and beginner-scaled numbers, the engine's duration at each difficulty, and which movements have
+the coach's video. The `start` course is his own beginner programme (`docs/COACH_SOURCE.md`);
+each workout's source message is listed there and on the review page.
+
 ## Guides (`content/guides/{ru,en}/<slug>.md`)
 
 SEO articles with frontmatter validated by `src/content.config.ts`. Pair RU and EN versions with the

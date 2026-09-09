@@ -285,7 +285,8 @@ export const EXERCISES_B: ExerciseInput[] = [
     secondsPerRep: 2.5,
     met: 3.8,
     loadable: false,
-    scaling: { harder: 'v_up' },
+    // The coach's own rule: sit-ups are not for diastasis — do dead bugs instead.
+    scaling: { easier: 'dead_bug', harder: 'v_up' },
     animation: 'sit_up',
     video: { ru: 'storage:videos/shared/sit_up.ru.mp4' },
     tags: ['core'],

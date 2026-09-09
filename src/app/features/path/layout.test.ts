@@ -21,7 +21,9 @@ describe('layoutPath', () => {
 
   it('emits one header per week and one row per node, in order', () => {
     const headers = layout.rows.filter((r) => r.kind === 'header');
-    expect(headers.map((h) => (h.kind === 'header' ? h.week : -1))).toEqual([1, 2, 3, 4]);
+    expect(headers.map((h) => (h.kind === 'header' ? h.week : -1))).toEqual(
+      Array.from({ length: course.weeks }, (_, i) => i + 1),
+    );
     expect(layout.nodes.length).toBe(course.nodes.length);
     expect(layout.nodes.map((n) => n.index)).toEqual(course.nodes.map((_, i) => i));
   });

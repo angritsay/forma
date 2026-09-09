@@ -102,7 +102,7 @@ A workout is anything after which you honestly rate the effort at 4 out of 10 or
 | 4    | Strength A | Metcon | Steps      | Strength B | Steps      | Short metcon      | Rest |
 | 5    | Strength A | Metcon | Strength B | Steps      | Metcon     | Core and mobility | Rest |
 
-The principle in all three: strength days never sit next to each other, an intense metcon does not follow a strength day that loaded the same muscles, and one day a week is complete rest with no step target. That is how the nodes are laid out in the Forma courses: Start runs three days a week, Bodyweight Engine four, and every fourth week is a deload, with volume cut by about a third and longer rest between sets. The deload is part of the plan, not a sign you are slacking.
+The principle in all three: strength days never sit next to each other, an intense metcon does not follow a strength day that loaded the same muscles, and one day a week is complete rest with no step target. That is how the nodes are laid out in the Forma courses: Start runs three days a week on the coach’s programme with no deload week, Bodyweight Engine four, and there every fourth week is a deload, with volume cut by about a third and longer rest between sets. The deload is part of the plan, not a sign you are slacking.
 
 ## A sample 3 day workout week
 
@@ -139,4 +139,4 @@ If the goal is fat loss, more often is not better: three or four sessions plus d
 
 ## Wrap-up
 
-Three sessions a week at home is the right start for most people, four is the working norm after a few months, and five only when the days differ in focus and sleep is in order. The count is secondary; what comes first is the rest between sessions, walking on the free days and a deload every fourth week. If you would rather have the rest days, the deload and the "easier or harder" calls handled automatically, start with [the Start course](course:start): four weeks, three sessions a week, no equipment. After a month of stable threes, move up to four in [the Bodyweight Engine course](course:engine).
+Three sessions a week at home is the right start for most people, four is the working norm after a few months, and five only when the days differ in focus and sleep is in order. The count is secondary; what comes first is the rest between sessions, walking on the free days and a deload every fourth week. If you would rather have the rest days, the deload and the "easier or harder" calls handled automatically, start with [the Start course](course:start): eight weeks, three sessions a week, no equipment. After two months of stable threes, move up to four in [the Bodyweight Engine course](course:engine).

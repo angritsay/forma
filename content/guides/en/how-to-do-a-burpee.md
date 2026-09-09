@@ -142,4 +142,4 @@ Burpees fit into any [no-equipment CrossFit workout](guide:no-equipment-crossfit
 
 ## Wrap-up
 
-A burpee is six simple movements that only work when you do them in order and at an even pace. Start with the half burpee, add the push-up and the jump as you earn them, count only clean reps, and do not turn burpees into a daily ritual. If you would rather have the stage, the volume and the rest chosen for you, open the [Start: home CrossFit basics course](course:start), where the burpee appears exactly when you are ready for it, and the [Bodyweight Engine course](course:engine) takes it all the way to the test and the metcons.
+A burpee is six simple movements that only work when you do them in order and at an even pace. Start with the half burpee, add the push-up and the jump as you earn them, count only clean reps, and do not turn burpees into a daily ritual. If you would rather have the stage, the volume and the rest chosen for you, open the [Start: home CrossFit basics course](course:start), where the burpee only appears in week five, once you are ready for it, and the [Bodyweight Engine course](course:engine) takes it all the way to the test and the metcons.

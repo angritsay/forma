@@ -162,7 +162,7 @@ cooldown are not scaled).
 Content rules: exercises referenced by workouts must exist; every exercise used by a course must be
 doable with the course equipment (or `none`); every course has ≥1 test node at start
 (baseline) and end; rest nodes between consecutive workout days; week 4 (and 8) are deload weeks in
-6–8-week courses.
+6–8-week courses (the beginner course `start` follows the coach's own programme and has none).
 
 ## 7. Training-science engine (contract: `src/lib/training/index.ts`)
 

@@ -151,4 +151,4 @@ For keeping motivation over a long streak, read [how to stay consistent with wor
 
 ## Wrap-up
 
-Progress is made between workouts, not during them: 48 to 72 hours between sessions for the same muscles, 7000 steps on rest days, at least seven hours of sleep and a deload week once a month. The app counts such a day toward your streak and tells you when to back off. If you would rather have the workouts and rest days already in place, open the [Start: home CrossFit basics course](course:start): three sessions a week with walks in between, and the first four weeks are planned for you.
+Progress is made between workouts, not during them: 48 to 72 hours between sessions for the same muscles, 7000 steps on rest days, at least seven hours of sleep and a deload week once a month. The app counts such a day toward your streak and tells you when to back off. If you would rather have the workouts and rest days already in place, open the [Start: home CrossFit basics course](course:start): three sessions a week with walks in between, and all eight weeks are planned for you.
