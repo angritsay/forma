@@ -145,4 +145,4 @@ If you are just starting and are not sure these four sessions are within reach, 
 
 ## Wrap-up
 
-Twenty minutes is enough when three of them go to the warm-up, three to the cool-down and fourteen to one dense, timed format. The four sessions above cover strength, conditioning and core, and rotating them keeps the body from settling. If you would rather have those twenty minutes already placed on the calendar with the volume adapting to your results, open the [Start: home CrossFit basics course](course:start): eight weeks, three sessions a week, about 16 minutes each on average.
+Twenty minutes is enough when three of them go to the warm-up, three to the cool-down and fourteen to one dense, timed format. The four sessions above cover strength, conditioning and core, and rotating them keeps the body from settling. If you would rather have those twenty minutes already placed on the calendar with the volume adapting to your results, open the [Start: home CrossFit basics course](course:start): eight weeks, three sessions a week, about 18 minutes each on average.

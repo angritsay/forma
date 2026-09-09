@@ -1408,4 +1408,335 @@ export const EXERCISES_B: ExerciseInput[] = [
     animation: 'squat_hold',
     tags: ['warmup', 'mobility', 'lower'],
   },
+  /* --- Joint mobility: the coach's warm-up, top to bottom ---------------------------------- */
+  {
+    id: 'neck_circles',
+    slug: { ru: 'krugi-golovoy', en: 'neck-circles' },
+    name: { ru: 'Круги головой', en: 'Neck circles' },
+    shortName: { ru: 'Круги головой', en: 'Neck circles' },
+    description: {
+      ru: 'Круги головой открывают суставную гимнастику: шея первой получает движение, потому что она первой зажимается от телефона и стола. Медленные полукруги от плеча к плечу разогревают мелкие мышцы шеи и верх трапеции перед отжиманиями и планками, где голова должна держаться в линии с корпусом. Это подготовка, а не упражнение на силу: никаких резких движений и никаких запрокидываний назад.',
+      en: 'Neck circles open the joint-mobility warm-up: the neck moves first because it is the first thing to stiffen from phones and desks. Slow half-circles from shoulder to shoulder warm up the small neck muscles and the upper trapezius before push-ups and planks, where the head has to stay in line with the trunk. It is preparation, not strength work: nothing sudden and no dropping the head back.',
+    },
+    howTo: [
+      {
+        ru: 'Встань прямо, руки на пояс, плечи опущены.',
+        en: 'Stand tall, hands on your hips, shoulders down.',
+      },
+      {
+        ru: 'Опусти подбородок к груди и медленно перекати голову к одному плечу, потом к другому — полукругом спереди.',
+        en: 'Drop your chin to your chest and slowly roll your head to one shoulder, then to the other — a half-circle across the front.',
+      },
+      {
+        ru: 'Сделай несколько полукругов в одну сторону, потом в другую; амплитуда растёт постепенно.',
+        en: 'Do several half-circles one way, then the other; let the range grow gradually.',
+      },
+      {
+        ru: 'Назад голову не запрокидывай — только вперёд и в стороны.',
+        en: 'Do not drop the head back — forward and to the sides only.',
+      },
+    ],
+    cues: [
+      { ru: 'Медленно, без рывков', en: 'Slow, no jerks' },
+      { ru: 'Плечи не поднимаются', en: 'Shoulders stay down' },
+    ],
+    mistakes: [
+      { ru: 'Полный круг с запрокидыванием назад', en: 'A full circle with the head dropped back' },
+      { ru: 'Быстрые рывки', en: 'Fast, jerky movement' },
+    ],
+    breathing: { ru: 'Спокойное, ровное дыхание.', en: 'Calm, even breathing.' },
+    muscles: ['back', 'shoulders'],
+    pattern: 'mobility',
+    equipment: ['none'],
+    level: 1,
+    unit: 'seconds',
+    met: 2.0,
+    loadable: false,
+    scaling: {},
+    animation: 'neck_circles',
+    tags: ['warmup', 'mobility', 'upper'],
+  },
+  {
+    id: 'elbow_wrist_circles',
+    slug: { ru: 'vrashcheniya-loktyami-i-kistyami', en: 'elbow-and-wrist-circles' },
+    name: { ru: 'Вращения локтями и кистями', en: 'Elbow and wrist circles' },
+    shortName: { ru: 'Локти и кисти', en: 'Elbows and wrists' },
+    description: {
+      ru: 'Вращения локтями и кистями — часть суставной гимнастики перед любой работой на руках: отжиманиями, планками, червячками и бёрпи. Кисти принимают на себя вес тела в упоре лёжа, и без разогрева именно они первыми начинают ныть. Руки в стороны, локти согнуты, предплечья рисуют круги; затем ладони в замок и круги кистями.',
+      en: 'Elbow and wrist circles are the part of the joint warm-up that comes before any work on the hands: push-ups, planks, inchworms and burpees. The wrists carry your body weight in the plank position, and without a warm-up they are the first thing to complain. Arms out, elbows bent, the forearms draw circles; then clasp the hands and circle the wrists.',
+    },
+    howTo: [
+      {
+        ru: 'Разведи руки в стороны на уровне плеч и согни локти под прямым углом.',
+        en: 'Take your arms out to the sides at shoulder height and bend the elbows to a right angle.',
+      },
+      {
+        ru: 'Рисуй предплечьями круги — сначала внутрь, потом наружу, локти на месте.',
+        en: 'Draw circles with the forearms — inward first, then outward, elbows staying put.',
+      },
+      {
+        ru: 'Сцепи пальцы в замок перед грудью и покрути кистями в обе стороны.',
+        en: 'Clasp your fingers in front of the chest and circle the wrists both ways.',
+      },
+      {
+        ru: 'Закончи несколькими сжатиями и разжатиями кулаков.',
+        en: 'Finish by opening and closing the fists a few times.',
+      },
+    ],
+    cues: [
+      { ru: 'Локти на уровне плеч', en: 'Elbows at shoulder height' },
+      { ru: 'В обе стороны поровну', en: 'Both directions equally' },
+    ],
+    mistakes: [{ ru: 'Плечи задраны к ушам', en: 'Shoulders shrugged up to the ears' }],
+    breathing: { ru: 'Спокойное, ровное дыхание.', en: 'Calm, even breathing.' },
+    muscles: ['shoulders', 'triceps'],
+    pattern: 'mobility',
+    equipment: ['none'],
+    level: 1,
+    unit: 'seconds',
+    met: 2.3,
+    loadable: false,
+    scaling: {},
+    animation: 'elbow_wrist_circles',
+    tags: ['warmup', 'mobility', 'upper'],
+  },
+  {
+    id: 'side_bend',
+    slug: { ru: 'naklony-v-storony', en: 'side-bends' },
+    name: { ru: 'Наклоны корпуса в стороны', en: 'Side bends' },
+    shortName: { ru: 'Наклоны в стороны', en: 'Side bends' },
+    description: {
+      ru: 'Наклоны в стороны разминают позвоночник и косые мышцы живота — то, что держит корпус в ситапах, русском твисте и планках. Ноги на ширине плеч, одна рука тянется через голову, корпус наклоняется от талии, таз остаётся на месте. Это мягкое движение, а не растяжка до предела: амплитуда растёт от повтора к повтору.',
+      en: 'Side bends warm up the spine and the obliques — the muscles that hold the trunk in sit-ups, Russian twists and planks. Feet shoulder-width, one arm reaches over the head, the trunk bends from the waist and the hips stay put. It is a gentle movement, not a stretch to the limit: the range grows rep by rep.',
+    },
+    howTo: [
+      {
+        ru: 'Встань прямо, ноги на ширине плеч, руки вдоль тела.',
+        en: 'Stand tall, feet shoulder-width, arms by your sides.',
+      },
+      {
+        ru: 'Подними одну руку через голову и наклонись в противоположную сторону, вторая рука скользит по бедру.',
+        en: 'Raise one arm over your head and bend to the opposite side; the other hand slides down the thigh.',
+      },
+      {
+        ru: 'Вернись в центр и наклонись в другую сторону, поменяв руку.',
+        en: 'Come back to centre and bend the other way, swapping arms.',
+      },
+      {
+        ru: 'Таз не уезжает в сторону, корпус не заваливается вперёд.',
+        en: 'Hips do not shift sideways and the trunk does not fall forward.',
+      },
+    ],
+    cues: [
+      { ru: 'Наклон строго вбок', en: 'Bend straight to the side' },
+      { ru: 'Таз на месте', en: 'Hips stay put' },
+    ],
+    mistakes: [
+      { ru: 'Корпус уходит вперёд вместо наклона вбок', en: 'Leaning forward instead of sideways' },
+    ],
+    breathing: {
+      ru: 'Выдох на наклоне, вдох на возврате.',
+      en: 'Exhale into the bend, inhale back up.',
+    },
+    muscles: ['obliques', 'core', 'back'],
+    pattern: 'mobility',
+    equipment: ['none'],
+    level: 1,
+    unit: 'seconds',
+    met: 2.5,
+    loadable: false,
+    scaling: {},
+    animation: 'side_bend',
+    tags: ['warmup', 'mobility', 'core'],
+  },
+  {
+    id: 'hip_circles',
+    slug: { ru: 'vrashcheniya-tazom', en: 'hip-circles' },
+    name: { ru: 'Вращения тазом', en: 'Hip circles' },
+    shortName: { ru: 'Вращения тазом', en: 'Hip circles' },
+    description: {
+      ru: 'Вращения тазом разминают тазобедренные суставы и поясницу перед приседаниями, выпадами и ягодичным мостом. Руки на поясе, ноги на ширине плеч, таз рисует большой медленный круг, будто ты крутишь обруч, а плечи и стопы остаются на месте. Половину времени крути в одну сторону, половину — в другую.',
+      en: 'Hip circles warm up the hip joints and the lower back before squats, lunges and glute bridges. Hands on the hips, feet shoulder-width, the pelvis draws a big slow circle as if you were spinning a hoop, while the shoulders and feet stay where they are. Circle one way for half the time and the other way for the rest.',
+    },
+    howTo: [
+      {
+        ru: 'Встань прямо, ноги на ширине плеч, руки на пояс.',
+        en: 'Stand tall, feet shoulder-width, hands on your hips.',
+      },
+      {
+        ru: 'Медленно проведи таз по кругу: вперёд, в сторону, назад, в другую сторону.',
+        en: 'Slowly take the pelvis round a circle: forward, to the side, back, to the other side.',
+      },
+      {
+        ru: 'Сделай несколько кругов в одну сторону, потом столько же в другую.',
+        en: 'Do several circles one way, then as many the other way.',
+      },
+      {
+        ru: 'Плечи почти не двигаются — работает только таз.',
+        en: 'The shoulders barely move — only the pelvis works.',
+      },
+    ],
+    cues: [
+      { ru: 'Круг большой и медленный', en: 'Big, slow circle' },
+      { ru: 'Стопы приклеены к полу', en: 'Feet glued to the floor' },
+    ],
+    mistakes: [
+      {
+        ru: 'Круг рисуют плечи, а не таз',
+        en: 'The shoulders draw the circle instead of the hips',
+      },
+    ],
+    breathing: { ru: 'Спокойное, ровное дыхание.', en: 'Calm, even breathing.' },
+    muscles: ['hip_flexors', 'glutes', 'core'],
+    pattern: 'mobility',
+    equipment: ['none'],
+    level: 1,
+    unit: 'seconds',
+    met: 2.3,
+    loadable: false,
+    scaling: {},
+    animation: 'hip_circles',
+    tags: ['warmup', 'mobility', 'lower'],
+  },
+  {
+    id: 'knee_circles',
+    slug: { ru: 'krugi-kolenyami', en: 'knee-circles' },
+    name: { ru: 'Круги коленями', en: 'Knee circles' },
+    shortName: { ru: 'Круги коленями', en: 'Knee circles' },
+    description: {
+      ru: 'Круги коленями — классика суставной гимнастики перед приседаниями и выпадами. Стопы вместе, ладони на коленях, колени рисуют небольшие круги; сустав получает движение и синовиальную жидкость до того, как на него ляжет нагрузка. Круги маленькие и мягкие — колено не любит больших кругов под весом.',
+      en: 'Knee circles are a joint-mobility classic before squats and lunges. Feet together, palms on the knees, the knees draw small circles; the joint gets movement and synovial fluid before any load lands on it. Keep the circles small and soft — knees do not like big circles under body weight.',
+    },
+    howTo: [
+      {
+        ru: 'Поставь стопы вместе, слегка согни колени и положи на них ладони.',
+        en: 'Put your feet together, bend the knees slightly and rest your palms on them.',
+      },
+      {
+        ru: 'Рисуй коленями небольшие круги в одну сторону, стопы стоят плоско.',
+        en: 'Draw small circles with the knees one way, feet flat on the floor.',
+      },
+      {
+        ru: 'Смени направление и сделай столько же кругов в другую сторону.',
+        en: 'Change direction and do as many circles the other way.',
+      },
+      {
+        ru: 'Закончи несколькими мягкими сгибаниями-разгибаниями коленей.',
+        en: 'Finish with a few gentle knee bends and straightenings.',
+      },
+    ],
+    cues: [
+      { ru: 'Круги маленькие', en: 'Small circles' },
+      { ru: 'Пятки на полу', en: 'Heels on the floor' },
+    ],
+    mistakes: [
+      { ru: 'Слишком большие круги с отрывом пяток', en: 'Circles too big, heels lifting' },
+    ],
+    breathing: { ru: 'Спокойное, ровное дыхание.', en: 'Calm, even breathing.' },
+    muscles: ['quads', 'calves'],
+    pattern: 'mobility',
+    equipment: ['none'],
+    level: 1,
+    unit: 'seconds',
+    met: 2.3,
+    loadable: false,
+    scaling: {},
+    animation: 'knee_circles',
+    tags: ['warmup', 'mobility', 'lower'],
+  },
+  {
+    id: 'ankle_circles',
+    slug: { ru: 'vrashcheniya-stopami', en: 'ankle-circles' },
+    name: { ru: 'Вращения стопами', en: 'Ankle circles' },
+    shortName: { ru: 'Вращения стопами', en: 'Ankle circles' },
+    description: {
+      ru: 'Вращения стопами завершают суставную гимнастику сверху вниз. Голеностоп — сустав, который в приседе решает, останутся ли пятки на полу, а в прыжках и джампинг-джеках принимает первый удар. Стоя на одной ноге, вторую приподними и покрути стопой в обе стороны; в задании время указано на одну ногу.',
+      en: 'Ankle circles finish the top-to-bottom joint warm-up. The ankle is the joint that decides whether your heels stay down in the squat, and it takes the first impact in jumps and jumping jacks. Standing on one leg, lift the other a little and circle the foot both ways; the time in the workout is per leg.',
+    },
+    howTo: [
+      {
+        ru: 'Встань на одну ногу, при необходимости держась за стену или стул.',
+        en: 'Stand on one leg, holding a wall or chair if you need to.',
+      },
+      {
+        ru: 'Приподними вторую ногу и рисуй стопой круги — сначала в одну сторону, потом в другую.',
+        en: 'Lift the other foot and draw circles with it — one way first, then the other.',
+      },
+      {
+        ru: 'Потяни носок на себя и от себя несколько раз.',
+        en: 'Pull the toes toward you and point them away a few times.',
+      },
+      {
+        ru: 'Поменяй ногу.',
+        en: 'Switch legs.',
+      },
+    ],
+    cues: [
+      { ru: 'Крутит только стопа', en: 'Only the foot moves' },
+      { ru: 'В обе стороны поровну', en: 'Both directions equally' },
+    ],
+    mistakes: [
+      { ru: 'Круг рисует вся нога, а не стопа', en: 'The whole leg circles instead of the foot' },
+    ],
+    breathing: { ru: 'Спокойное, ровное дыхание.', en: 'Calm, even breathing.' },
+    muscles: ['calves'],
+    pattern: 'mobility',
+    equipment: ['none'],
+    level: 1,
+    unit: 'seconds',
+    met: 2.0,
+    loadable: false,
+    scaling: {},
+    animation: 'ankle_circles',
+    tags: ['warmup', 'mobility', 'lower'],
+  },
+  {
+    id: 'quad_stretch',
+    slug: { ru: 'rastyazhka-kvadritsepsa-stoya', en: 'standing-quad-stretch' },
+    name: { ru: 'Растяжка передней поверхности бедра', en: 'Standing quad stretch' },
+    shortName: { ru: 'Растяжка бедра', en: 'Quad stretch' },
+    description: {
+      ru: 'Растяжка передней поверхности бедра стоя — заминка после приседаний, выпадов, зашагиваний и бёрпи. Пятка подтягивается к ягодице, колени вместе, таз чуть подан вперёд — тянется квадрицепс и передняя часть бедра. Держи стену или стул для равновесия; в задании время указано на одну ногу.',
+      en: 'The standing quad stretch is the cool-down after squats, lunges, step-ups and burpees. The heel is pulled toward the glute, knees together, hips pushed slightly forward — the quadriceps and the front of the hip stretch. Hold a wall or chair for balance; the time in the workout is per leg.',
+    },
+    howTo: [
+      {
+        ru: 'Встань боком к стене или стулу и обопрись одной рукой.',
+        en: 'Stand side-on to a wall or chair and rest one hand on it.',
+      },
+      {
+        ru: 'Согни другую ногу и возьми стопу за подъём, подтяни пятку к ягодице.',
+        en: 'Bend the other leg, take hold of the foot and pull the heel toward the glute.',
+      },
+      {
+        ru: 'Колени вместе, таз чуть подай вперёд — натяжение появится спереди бедра.',
+        en: 'Knees together, push the hips slightly forward — you will feel the front of the thigh.',
+      },
+      {
+        ru: 'Держи спокойно, дыши; потом поменяй ногу.',
+        en: 'Hold calmly, breathe; then switch legs.',
+      },
+    ],
+    cues: [
+      { ru: 'Колени вместе', en: 'Knees together' },
+      { ru: 'Не прогибай поясницу', en: 'Do not arch the lower back' },
+    ],
+    mistakes: [
+      {
+        ru: 'Колено уходит в сторону, поясница прогибается',
+        en: 'Knee drifts out and the lower back arches',
+      },
+    ],
+    breathing: { ru: 'Длинный выдох в положении.', en: 'A long exhale in the position.' },
+    muscles: ['quads', 'hip_flexors'],
+    pattern: 'mobility',
+    equipment: ['none'],
+    level: 1,
+    unit: 'seconds',
+    met: 2.3,
+    loadable: false,
+    scaling: {},
+    animation: 'quad_stretch',
+    tags: ['cooldown', 'mobility', 'lower'],
+  },
 ];

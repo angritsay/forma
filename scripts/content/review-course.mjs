@@ -322,8 +322,8 @@ const GENERAL_NOTES = {
       'The export holds 24 distinct workouts. Numbers 19 and 20 are missing from the channel, and 13 and 18 appear twice — everything here is renumbered 1–24 in posting order, with your number shown beside it.',
     ),
     l(
-      'Разминка — суставная гимнастика без бега, один круг из четырёх движений, около 3 минут; заминка-растяжка около 4 минут. Твоих трёх разминочных роликов в экспорте нет — если пришлёшь, подставим их. Разминка и заминка не масштабируются и в «5–15 минут тренировки» не входят.',
-      'The warm-up is joint mobility with no running — one round of four movements, about 3 minutes; the cool-down stretch is about 4. Your three warm-up clips are not in the export — send them and we will wire them in. Warm-up and cool-down do not scale and are not counted in the "5–15 minutes of training".',
+      'Разминка — суставная гимнастика сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы, потом медленный присед; без бега, около 5 минут. Заминка — растяжка: спина, бёдра, сгибатели бедра, поза ребёнка — и запись ощущений. Твоих трёх разминочных роликов в экспорте нет — если пришлёшь, подставим их. Разминка и заминка не масштабируются и в «5–15 минут тренировки» не входят.',
+      'The warm-up is joint mobility from the top down: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles, then a slow squat; no running, about 5 minutes. The cool-down is a stretch — spine, thighs, hip flexors, child pose — and a note of how it felt. Your three warm-up clips are not in the export — send them and we will wire them in. Warm-up and cool-down do not scale and are not counted in the "5–15 minutes of training".',
     ),
     l(
       'Цифры «как написано» — для уверенного новичка. Приложение умножает их на коэффициент человека: после анкеты при первом входе новичок получает 0,6–0,8, и цифры сходятся с твоим «начинайте с минимума». Ниже показано и то и другое.',

@@ -5,6 +5,7 @@
  */
 import type { PoseSet } from './types';
 import { air_squat } from './air_squat';
+import { ankle_circles } from './ankle_circles';
 import { arm_circles } from './arm_circles';
 import { band_pull_apart } from './band_pull_apart';
 import { band_row } from './band_row';
@@ -30,6 +31,7 @@ import { dead_hang } from './dead_hang';
 import { devil_press } from './devil_press';
 import { diamond_push_up } from './diamond_push_up';
 import { double_under } from './double_under';
+import { elbow_wrist_circles } from './elbow_wrist_circles';
 import { farmer_carry } from './farmer_carry';
 import { flutter_kick } from './flutter_kick';
 import { glute_bridge } from './glute_bridge';
@@ -38,6 +40,7 @@ import { half_burpee } from './half_burpee';
 import { hamstring_stretch } from './hamstring_stretch';
 import { hanging_knee_raise } from './hanging_knee_raise';
 import { high_knees } from './high_knees';
+import { hip_circles } from './hip_circles';
 import { hip_flexor_stretch } from './hip_flexor_stretch';
 import { hollow_hold } from './hollow_hold';
 import { inchworm } from './inchworm';
@@ -48,11 +51,13 @@ import { jumping_jack } from './jumping_jack';
 import { jumping_lunge } from './jumping_lunge';
 import { kb_halo } from './kb_halo';
 import { kb_swing } from './kb_swing';
+import { knee_circles } from './knee_circles';
 import { knee_push_up } from './knee_push_up';
 import { lateral_lunge } from './lateral_lunge';
 import { leg_raise } from './leg_raise';
 import { leg_swing } from './leg_swing';
 import { mountain_climber } from './mountain_climber';
+import { neck_circles } from './neck_circles';
 import { negative_pull_up } from './negative_pull_up';
 import { overhead_press } from './overhead_press';
 import { pike_push_up } from './pike_push_up';
@@ -60,9 +65,11 @@ import { plank } from './plank';
 import { plank_shoulder_tap } from './plank_shoulder_tap';
 import { pull_up } from './pull_up';
 import { push_up } from './push_up';
+import { quad_stretch } from './quad_stretch';
 import { renegade_row } from './renegade_row';
 import { reverse_lunge } from './reverse_lunge';
 import { russian_twist } from './russian_twist';
+import { side_bend } from './side_bend';
 import { side_plank } from './side_plank';
 import { single_leg_glute_bridge } from './single_leg_glute_bridge';
 import { single_leg_rdl } from './single_leg_rdl';
@@ -84,6 +91,7 @@ import { worlds_greatest_stretch } from './worlds_greatest_stretch';
 
 export const POSES: Record<string, PoseSet> = {
   air_squat,
+  ankle_circles,
   arm_circles,
   band_pull_apart,
   band_row,
@@ -109,6 +117,7 @@ export const POSES: Record<string, PoseSet> = {
   devil_press,
   diamond_push_up,
   double_under,
+  elbow_wrist_circles,
   farmer_carry,
   flutter_kick,
   glute_bridge,
@@ -117,6 +126,7 @@ export const POSES: Record<string, PoseSet> = {
   hamstring_stretch,
   hanging_knee_raise,
   high_knees,
+  hip_circles,
   hip_flexor_stretch,
   hollow_hold,
   inchworm,
@@ -127,11 +137,13 @@ export const POSES: Record<string, PoseSet> = {
   jumping_lunge,
   kb_halo,
   kb_swing,
+  knee_circles,
   knee_push_up,
   lateral_lunge,
   leg_raise,
   leg_swing,
   mountain_climber,
+  neck_circles,
   negative_pull_up,
   overhead_press,
   pike_push_up,
@@ -139,9 +151,11 @@ export const POSES: Record<string, PoseSet> = {
   plank_shoulder_tap,
   pull_up,
   push_up,
+  quad_stretch,
   renegade_row,
   reverse_lunge,
   russian_twist,
+  side_bend,
   side_plank,
   single_leg_glute_bridge,
   single_leg_rdl,

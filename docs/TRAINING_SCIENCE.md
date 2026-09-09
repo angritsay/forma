@@ -262,7 +262,7 @@ The result, per course (session at "as usual", minutes):
 | Course       | Before (min / avg / max) | After                           |
 | ------------ | ------------------------ | ------------------------------- |
 | `start`      | 18.3 / 23.0 / 26.2       | unchanged — it was already sane |
-| `start` (v2) | —                        | 11.3 / 15.8 / 20.8 (see below)  |
+| `start` (v2) | —                        | 13.7 / 18.2 / 23.2 (see below)  |
 | `engine`     | 20.0 / 29.0 / 36.9       | 20.0 / 28.8 / 36.9              |
 | `dumbbells`  | 17.6 / 28.1 / 40.0       | 17.6 / 28.1 / 38.7              |
 | `kettlebell` | 17.6 / 29.0 / 38.5       | 17.6 / 29.0 / 38.0              |
@@ -274,8 +274,9 @@ around it (`w_hinge_core_*`), and in every session that does not already ask for
 **The beginner course was later rebuilt around the coach's own programme** (`start` v2): the 24
 workouts he posted for his beginner group (`docs/COACH_SOURCE.md`), transcribed one to one, over 8
 weeks. Every session is one warm-up, one piece of main work (two only where he wrote two) and a
-cool-down; the main work runs 4–12 minutes and a session 11–21 minutes at "as usual". The warm-up
-is joint mobility without running, since the coach counts it outside the session. There is no
+cool-down; the main work runs 4–12 minutes and a session 14–23 minutes at "as usual". The warm-up
+is top-to-bottom joint mobility (about 5 minutes) without running, and the cool-down a stretch of
+the same length, since the coach counts both outside the session. There is no
 max-effort test on day one — his rule is that the first session must not destroy anyone — only a
 retest at the end against the onboarding self-tests. The numbers
 are authored at his "confident beginner" figure, so a real beginner at scale 0.6–0.8 lands on his
