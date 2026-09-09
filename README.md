@@ -37,6 +37,7 @@ npm run seo:audit           # SEO conveyor checks
 | [`docs/DEPLOY.md`](docs/DEPLOY.md)                     | GitHub Pages deployment, custom domain, moving to a new repository                  |
 | [`docs/TRAINING_SCIENCE.md`](docs/TRAINING_SCIENCE.md) | Every rule and constant of the adaptive engine with sources                         |
 | [`docs/CONTENT.md`](docs/CONTENT.md)                   | Authoring exercises, courses, guides, videos, animations                            |
+| [`docs/COACH_RULES.md`](docs/COACH_RULES.md)           | The coach's rules for the beginner course — read before editing its workouts        |
 | [`docs/SEO.md`](docs/SEO.md)                           | The SEO conveyor runbook (keywords → pages → audit → deploy → IndexNow)             |
 
 ## Repository layout
