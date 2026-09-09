@@ -1,0 +1,98 @@
+name: Upload videos
+
+# Transcodes the coach's exercise clips and pushes them into the private Supabase `videos` bucket,
+# so the app plays real video where the fallback animation shows now. It runs the very same two
+# scripts a maintainer would run locally (scripts/media/prepare-videos.mjs, then upload-videos.mjs)
+# — here, so the service-role key lives only in a GitHub secret and never touches a laptop or the
+# repository. The identifications come from the version-controlled media/manifest.json; prepare
+# merges into it and never clears an id, so re-running is safe.
+#
+# One-time setup — Settings -> Secrets and variables -> Actions:
+#   secret  SUPABASE_SERVICE_ROLE_KEY  Supabase -> Project Settings -> API -> service_role key.
+#                                      It is a password (bypasses RLS); only this workflow reads it.
+#   var     PUBLIC_SUPABASE_URL        already set for the app; reused here.
+#
+# Each run:
+#   1. Zip the Telegram export's `video_files/` folder (the .MOV/.MP4 files) — or the whole export
+#      folder, as long as it still contains video_files/ — into one .zip.
+#   2. Upload that .zip to Google Drive and share it "anyone with the link".
+#   3. Run this workflow (Actions -> Upload videos -> Run workflow) with that link.
+#      Leave "dry_run" on for the first run: it transcodes and lists what it would upload without
+#      writing anything and without needing the secret. Then run again with dry_run off.
+
+on:
+  workflow_dispatch:
+    inputs:
+      export_zip_url:
+        description: 'Google Drive share link to a .zip of the export (must contain video_files/)'
+        required: true
+      lang:
+        description: 'Language tag stored on each file'
+        required: false
+        default: 'ru'
+      dry_run:
+        description: 'Preview only — transcode and list, upload nothing (no secret needed)'
+        type: boolean
+        default: true
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - name: Preconditions
+        run: |
+          if [ -z "$SUPABASE_URL" ]; then
+            echo "::error::PUBLIC_SUPABASE_URL variable is not set (Settings -> Variables)"; exit 1
+          fi
+          if [ "${{ inputs.dry_run }}" != "true" ] && [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::SUPABASE_SERVICE_ROLE_KEY secret is not set — add it, or keep dry_run on"; exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies (includes ffmpeg-static)
+        run: npm ci --no-audit --no-fund
+
+      - name: Install gdown
+        run: python3 -m pip install --user --quiet gdown
+
+      - name: Download the export zip
+        run: |
+          python3 -m gdown --fuzzy "${{ inputs.export_zip_url }}" -O export.zip
+          ls -lh export.zip
+
+      - name: Unzip
+        run: |
+          mkdir -p export && unzip -q export.zip -d export
+
+      - name: Locate the export directory
+        id: loc
+        run: |
+          vf="$(find export -type d -name video_files -print -quit)"
+          if [ -z "$vf" ]; then
+            echo "::error::no video_files/ folder found inside the zip"; exit 1
+          fi
+          dir="$(dirname "$vf")"
+          echo "dir=$dir" >> "$GITHUB_OUTPUT"
+          echo "export found at: $dir"
+          ls -1 "$vf" | head
+
+      - name: Transcode (merges into manifest, never clears an id)
+        run: node scripts/media/prepare-videos.mjs "${{ steps.loc.outputs.dir }}" --out media/clips
+
+      - name: Upload to Supabase (or preview when dry_run)
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            node scripts/media/upload-videos.mjs --dir media/clips --lang "${{ inputs.lang }}" --dry-run
+          else
+            node scripts/media/upload-videos.mjs --dir media/clips --lang "${{ inputs.lang }}"
+          fi

@@ -142,3 +142,19 @@ connector imposes, where the clips themselves are 178 MB and 29 of them individu
 The clips stay where they were transcoded and go straight from there into Supabase with
 `npm run media:upload`. What comes back is `media/manifest.json` with the `exerciseId` fields
 filled in — a few kilobytes of text, which is the whole point of keeping it out of `media/clips/`.
+
+## Uploading from CI (no laptop, no key on disk)
+
+The upload needs the **service-role** key, which must never live on a personal machine or in the
+repo. The `Upload videos` GitHub Action (`.github/workflows/upload-videos.yml`) keeps it in a
+GitHub secret instead and runs the same two scripts on a runner.
+
+One-time: add the secret `SUPABASE_SERVICE_ROLE_KEY` (Settings -> Secrets and variables ->
+Actions); `PUBLIC_SUPABASE_URL` is already a variable and is reused.
+
+Each run: zip the export's `video_files/` folder (or the whole export, as long as it still
+contains `video_files/`), upload that one `.zip` to Google Drive, share it "anyone with the link",
+and start the workflow with the link. Keep **dry_run** on for the first pass — it transcodes and
+lists what it would upload without writing anything or needing the secret — then run again with it
+off. `prepare` merges into `media/manifest.json` and never clears an identification, so a re-run
+only fills in what is missing.
