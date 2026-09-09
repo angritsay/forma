@@ -13,7 +13,7 @@ import { DemoBadge, DEMO_BADGE_HEIGHT } from './DemoBadge';
  * which the bottom chrome adds to its own padding. Outside the tabbed area `--nav-inset` defaults
  * to that same height, so sticky footers clear the strip too.
  */
-export function AppFrame({ children }: { children: ReactNode }) {
+export function AppFrame({ children }: { children?: ReactNode }) {
   const demo = isDemo();
   const style = demo
     ? ({ '--demo-inset': DEMO_BADGE_HEIGHT, '--nav-inset': 'var(--demo-inset)' } as CSSProperties)
@@ -21,7 +21,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
   return (
     <div
       style={style}
-      className="relative mx-auto min-h-dvh w-full max-w-[480px] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] md:border-x md:border-border"
+      className="relative mx-auto min-h-dvh w-full max-w-[480px] pl-[var(--safe-left)] pr-[var(--safe-right)] md:border-x md:border-border"
     >
       {children}
       {demo ? <DemoBadge /> : null}

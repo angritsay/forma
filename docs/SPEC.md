@@ -294,7 +294,7 @@ Landing (Astro, static, RU default / EN under `/en/`):
 /guides/<slug>/            SEO article (content collection)
 /subscribe/               every course by subscription (monthly / annual), plan choice + order form
 /about/  /privacy/  /terms/  /refund/  /contact/
-/app/                      React app (noindex)
+/app/                      React app (noindex; also the Telegram Mini App surface)
 /sitemap.xml  /robots.txt  /llms.txt  /rss.xml  /<indexnow-key>.txt  /manifest.webmanifest  /404
 ```
 
@@ -307,6 +307,10 @@ Products: a **course** is bought once and kept forever (`purchases`); a **subscr
 (`subscriptions`, monthly or annual) lists every course through `my_entitlements` while its paid
 period runs, and is activated by the coach or by the Prodamus webhook; an **hour with the coach**
 (`content/site/booking.ts`) is the only product that uses his time.
+
+The same `/app/` build runs inside Telegram as a Mini App (`src/lib/telegram/webapp.ts`): the SDK
+is loaded only when Telegram opened the page, Telegram's back button follows the route, and links
+that leave the app open outside it. Everything Telegram-specific is a no-op on the open web.
 
 ## 10. App flows (must match exactly)
 

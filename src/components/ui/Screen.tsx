@@ -31,15 +31,15 @@ export function Screen({
   return (
     <div className={clsx('flex min-h-dvh flex-col', className)}>
       {header ? (
-        <div className="sticky top-0 z-20 bg-bg/85 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+        <div className="sticky top-0 z-20 bg-bg/85 pt-[var(--safe-top)] backdrop-blur-md">
           {header}
         </div>
       ) : (
-        <div className="h-[env(safe-area-inset-top)]" />
+        <div className="h-[var(--safe-top)]" />
       )}
       <main
         className={clsx(
-          'flex-1 pb-[calc(var(--nav-inset,0px)+env(safe-area-inset-bottom)+24px)]',
+          'flex-1 pb-[calc(var(--nav-inset,0px)+var(--safe-bottom)+24px)]',
           padded && 'px-5',
           contentClassName,
         )}
@@ -47,7 +47,7 @@ export function Screen({
         {children}
       </main>
       {footer ? (
-        <div className="sticky bottom-[var(--nav-inset,0px)] z-20 bg-linear-to-t from-bg via-bg/90 to-transparent px-5 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-6">
+        <div className="sticky bottom-[var(--nav-inset,0px)] z-20 bg-linear-to-t from-bg via-bg/90 to-transparent px-5 pb-[calc(var(--safe-bottom)+16px)] pt-6">
           {footer}
         </div>
       ) : null}

@@ -81,7 +81,7 @@ export function ToastStack({
   return (
     <div
       aria-live="polite"
-      className="pointer-events-none fixed left-1/2 top-[calc(env(safe-area-inset-top)+12px)] z-[60] flex w-[calc(100%-32px)] max-w-[448px] -translate-x-1/2 flex-col gap-2"
+      className="pointer-events-none fixed left-1/2 top-[calc(var(--safe-top)+12px)] z-[60] flex w-[calc(100%-32px)] max-w-[448px] -translate-x-1/2 flex-col gap-2"
     >
       {toasts.map((t) => (
         <div key={t.id} className="pointer-events-auto">

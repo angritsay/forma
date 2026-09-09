@@ -14,6 +14,7 @@ import { useToast } from '@/components/ui/Toast';
 import { l } from '@/i18n/index';
 import { isDemo } from '@/lib/api/mode';
 import { withBase } from '@/lib/util/paths';
+import { openExternal } from '@/lib/telegram/webapp';
 import { paymentTarget, withEmail } from '@/lib/util/payment';
 import { TopBar } from '@/app/components/TopBar';
 import { LinkButton } from '@/app/features/courses/LinkButton';
@@ -57,8 +58,11 @@ export default function BookScreen() {
       toast.show({ kind: 'info', title: t('app.bookDemoNote') });
       return;
     }
+    const target = withEmail(payment, email);
+    // Inside Telegram the payment page opens in the person's own browser, not in the Mini App.
+    if (openExternal(target)) return;
     setRedirecting(true);
-    window.location.assign(withEmail(payment, email));
+    window.location.assign(target);
   };
 
   return (

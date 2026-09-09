@@ -40,6 +40,7 @@ import { RestStep } from '@/app/features/player/steps/RestStep';
 import { TestStep } from '@/app/features/player/steps/TestStep';
 import { WorkRepsStep } from '@/app/features/player/steps/WorkRepsStep';
 import { WorkTimerStep } from '@/app/features/player/steps/WorkTimerStep';
+import { haptic, setClosingConfirmation } from '@/lib/telegram/webapp';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
 import { useWakeLock } from '@/app/features/player/useWakeLock';
 import { useT } from '@/app/hooks/useT';
@@ -239,9 +240,16 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
   // The last step is `done`: close the session and hand over to the summary.
   useEffect(() => {
     if (step?.kind !== 'done') return;
+    haptic('success');
     finish();
     navigate(summaryPath, { replace: true });
   }, [step?.kind, finish, navigate, summaryPath]);
+
+  // Inside Telegram, closing the Mini App mid-workout would lose the session: ask first.
+  useEffect(() => {
+    setClosingConfirmation(true);
+    return () => setClosingConfirmation(false);
+  }, []);
 
   // Elapsed clock: the store derives seconds from timestamps; this only asks it to re-derive.
   useEffect(() => {
