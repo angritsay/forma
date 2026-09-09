@@ -4,7 +4,7 @@
  * Functions accept a structural `GuideLike` so tests can pass fixtures without `astro:content`.
  */
 import type { CollectionEntry } from 'astro:content';
-import type { Locale } from '@/content/schema';
+import { LOCALES, type Locale } from '@/content/schema';
 import { wordCount } from '../../../scripts/seo/lib.mjs';
 import { GUIDE_CLUSTERS, isGuideCluster, type GuideCluster } from './clusters';
 import { readingTimeMinutes } from './meta';
@@ -78,16 +78,23 @@ export function guidePairs<T extends GuideLike>(
   return map;
 }
 
-/** hreflang paths for a guide: its translation pair when present, otherwise only itself. */
+/**
+ * hreflang paths for a guide: its translation pair when present, otherwise only itself.
+ *
+ * Only published languages are listed. A translation that exists in the collection but is not
+ * published has no URL, and pointing hreflang or the sitemap at one would be a promise the site
+ * cannot keep.
+ */
 export function guideLocalizedPaths(
   g: GuideLike,
   all: readonly GuideLike[],
 ): Partial<Record<Locale, string>> {
-  const out: Partial<Record<Locale, string>> = { [guideLocale(g)]: guidePath(g) };
+  const out: Partial<Record<Locale, string>> = {};
+  if (LOCALES.includes(guideLocale(g))) out[guideLocale(g)] = guidePath(g);
   const pair = guidePairs(all).get(g.data.translationKey);
   if (pair) {
     for (const [loc, entry] of Object.entries(pair) as [Locale, GuideLike][]) {
-      if (entry.id !== g.id) out[loc] = guidePath(entry);
+      if (entry.id !== g.id && LOCALES.includes(loc)) out[loc] = guidePath(entry);
     }
   }
   return out;

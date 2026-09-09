@@ -34,12 +34,15 @@ const guides = [
 describe('buildPages', () => {
   const pages = buildPages(guides);
 
-  it('lists every static page in both locales with shared alternates and never /app/', () => {
+  // Forma publishes Russian only (LOCALES in src/content/schema.ts): one page per site path, no
+  // /en/ anywhere. These assertions are what would have to change to publish a second language.
+  it('lists every static page once, in Russian, and never /app/', () => {
     const home = pages.filter((p) => p.sitePath === '/');
-    expect(home.map((p) => p.path).sort()).toEqual(['/', '/en/']);
-    expect(home[0]?.alternates).toEqual({ ru: '/', en: '/' });
+    expect(home.map((p) => p.path)).toEqual(['/']);
+    expect(home[0]?.alternates).toEqual({ ru: '/' });
     for (const sp of [
       '/courses/',
+      '/subscribe/',
       '/exercises/',
       '/guides/',
       '/about/',
@@ -48,8 +51,10 @@ describe('buildPages', () => {
       '/terms/',
       '/refund/',
     ]) {
-      expect(pages.filter((p) => p.sitePath === sp)).toHaveLength(2);
+      expect(pages.filter((p) => p.sitePath === sp)).toHaveLength(1);
     }
+    expect(pages.some((p) => p.path.startsWith('/en/'))).toBe(false);
+    expect(pages.some((p) => p.locale !== 'ru')).toBe(false);
     expect(pages.some((p) => p.path.includes('/app'))).toBe(false);
   });
 
@@ -60,36 +65,30 @@ describe('buildPages', () => {
       expect(p.priority).toBeGreaterThan(0);
       expect(p.priority).toBeLessThanOrEqual(1);
       expect(p.lastmod).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-      expect(p.path.startsWith(p.locale === 'en' ? '/en/' : '/')).toBe(true);
+      expect(p.path.startsWith('/')).toBe(true);
       expect(p.alternates[p.locale]).toBeDefined();
     }
   });
 
-  it('pairs guides by translationKey and uses updatedAt as lastmod', () => {
+  it('publishes the Russian guide of a translated pair and uses updatedAt as lastmod', () => {
     const ru = pages.find((p) => p.path === '/guides/a-ru/');
-    const en = pages.find((p) => p.path === '/en/guides/a-en/');
     expect(ru?.kind).toBe('guide');
-    expect(ru?.alternates).toEqual({ ru: '/guides/a-ru/', en: '/guides/a-en/' });
-    expect(en?.alternates).toEqual({ ru: '/guides/a-ru/', en: '/guides/a-en/' });
     expect(ru?.lastmod).toBe('2026-09-05');
     expect(ru?.priority).toBe(0.8);
+    // Its English translation exists in the collection and is simply not published.
+    expect(pages.find((p) => p.path === '/en/guides/a-en/')).toBeUndefined();
+    expect(ru?.alternates).toEqual({ ru: '/guides/a-ru/' });
     const only = pages.find((p) => p.path === '/guides/only-ru/');
     expect(only?.alternates).toEqual({ ru: '/guides/only-ru/' });
   });
 
-  it('builds cluster hubs only for clusters that have guides in the locale', () => {
+  it('builds cluster hubs only for clusters that have guides', () => {
     const hubs = pages.filter(
       (p) => p.kind === 'hub' && p.sitePath.startsWith('/guides/') && p.sitePath !== '/guides/',
     );
-    expect(hubs.map((p) => p.path).sort()).toEqual([
-      '/en/guides/beginners/',
-      '/guides/beginners/',
-      '/guides/formats/',
-    ]);
+    expect(hubs.map((p) => p.path).sort()).toEqual(['/guides/beginners/', '/guides/formats/']);
     const formats = hubs.find((p) => p.path === '/guides/formats/');
     expect(formats?.alternates).toEqual({ ru: '/guides/formats/' });
     expect(formats?.lastmod).toBe('2026-09-05');
-    const beginnersEn = hubs.find((p) => p.path === '/en/guides/beginners/');
-    expect(beginnersEn?.alternates).toEqual({ ru: '/guides/beginners/', en: '/guides/beginners/' });
   });
 });

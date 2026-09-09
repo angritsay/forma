@@ -377,7 +377,7 @@ describe('auditGuides', () => {
     expect(issues.filter((i) => i.level === 'warning')).toEqual([]);
   });
 
-  it('flags short bodies, unknown links, missing translations, duplicate titles and cluster-slug collisions', () => {
+  it('flags short bodies, unknown links, duplicate titles and cluster-slug collisions', () => {
     const short = readGuideFile(
       guideMarkdown({
         words: 200,
@@ -395,7 +395,9 @@ describe('auditGuides', () => {
     expect(msgs).toContain('error:link "exercise:nope": unknown exercise "nope"');
     expect(msgs).toContain('error:link "course:missing": unknown course "missing"');
     expect(msgs).toContain('error:relatedExercises "ghost": unknown exercise "ghost"');
-    expect(msgs.some((m) => m.startsWith('warning:no ru translation'))).toBe(true);
+    // Pairing is only required for languages the site publishes; Russian-only means an English
+    // article without a Russian counterpart is not a problem, it simply has no page.
+    expect(msgs.some((m) => m.startsWith('warning:no ru translation'))).toBe(false);
     expect(msgs.some((m) => m.startsWith('error:title duplicates'))).toBe(true);
     expect(msgs).toContain('error:slug "no-equipment" collides with a cluster hub URL');
   });

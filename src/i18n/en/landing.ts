@@ -51,7 +51,7 @@ export const landing = {
   chipCourses: '{n} {word}',
   chipLifetime: 'Lifetime access',
   chipAdaptive: 'Adapts to you',
-  chipLang: 'RU / EN',
+  chipLang: 'In Russian',
   chipHome: 'At home, with or without equipment',
 
   // Home: how it works
@@ -203,7 +203,7 @@ export const landing = {
   courseOrderTitle: 'Get access to the course',
   courseOrderIntro:
     'Leave your email — the coach confirms access and the course appears in the app under this email.',
-  courseLifetimeNote: 'One payment, access forever · RU and EN',
+  courseLifetimeNote: 'One payment, access forever',
   courseOrSubscribe: 'Or all five courses by subscription — from {price} a month',
   nodeWorkout: 'Workout',
   nodeRest: 'Rest · {steps} steps',

@@ -20,12 +20,17 @@ export function canonicalUrl(site: string, locale: Locale, sitePath: string): st
  * hreflang alternates. `localizedPaths` maps a locale to its site path when slugs differ
  * per locale (exercises, courses); when omitted the same path is used for every locale.
  * x-default points at the default locale (ru).
+ *
+ * With a single published language there is nothing to alternate between, and a lone
+ * self-referencing hreflang is noise a crawler should not have to read: the list is empty, and
+ * fills itself again the moment LOCALES grows.
  */
 export function alternates(
   site: string,
   sitePath: string,
   localizedPaths?: Partial<Record<Locale, string>>,
 ): Alternate[] {
+  if (LOCALES.length < 2) return [];
   const out: Alternate[] = [];
   for (const loc of LOCALES) {
     const p = localizedPaths?.[loc];

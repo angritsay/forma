@@ -59,8 +59,6 @@ export const app = {
   // Onboarding
   onbStepOf: 'Шаг {n} из {total}',
   onbOptional: 'необязательно',
-  onbLanguageTitle: 'На каком языке тебе удобнее?',
-  onbLanguageLead: 'Потом язык можно поменять в профиле.',
   onbNameTitle: 'Как тебя называть?',
   onbNameLead: 'Это имя будет видно в рейтинге.',
   onbNamePlaceholder: 'Твоё имя',

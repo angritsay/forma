@@ -13,14 +13,14 @@ import { breadcrumbLd, faqLd, organizationId } from '@/components/landing/jsonld
 import type { Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { canonicalUrl } from '@/lib/seo/urls';
-import { appHref, href } from '@/lib/util/paths';
+import { appHref, href, localeStaticPaths } from '@/lib/util/paths';
 import { BRAND } from '@content/site/brand';
 import { LINKS } from '@content/site/links';
 import { PLAN_INCLUDES, PLANS, PLANS_ENABLED } from '@content/site/plans';
 import { formatPrice, priceForLocale } from '@content/site/pricing';
 
 export function getStaticPaths() {
-  return [{ params: { lang: undefined } }, { params: { lang: 'en' } }];
+  return localeStaticPaths();
 }
 
 const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';

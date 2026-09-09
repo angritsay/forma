@@ -10,10 +10,10 @@ import { breadcrumbLd, personLd } from '@/components/landing/jsonld';
 import type { Locale } from '@/content/schema';
 import { t } from '@/i18n/index';
 import { canonicalUrl } from '@/lib/seo/urls';
-import { appHref, href } from '@/lib/util/paths';
+import { appHref, href, localeStaticPaths } from '@/lib/util/paths';
 
 export function getStaticPaths() {
-  return [{ params: { lang: undefined } }, { params: { lang: 'en' } }];
+  return localeStaticPaths();
 }
 
 const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';

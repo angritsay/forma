@@ -52,7 +52,7 @@ function svg() {
   <rect x="56" y="196" width="72" height="4" rx="2" fill="url(#rule)"/>
   <text x="56" y="168" font-family="Unbounded" font-weight="700" font-size="76" fill="${TEXT}">Forma</text>
   <text x="56" y="240" font-family="Onest" font-size="24" fill="${MUTED}">Кроссфит дома. Под тебя.</text>
-  <text x="56" y="284" font-family="Onest" font-size="20" fill="${MUTED}">5 курсов · нагрузка подстраивается · RU / EN</text>
+  <text x="56" y="284" font-family="Onest" font-size="20" fill="${MUTED}">5 курсов · нагрузка подстраивается под тебя</text>
 </svg>`;
 }
 

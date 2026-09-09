@@ -15,8 +15,7 @@ unless the spec is provably wrong — in that case fix the spec in the same chan
 - **Web app** (`/app/`): the user enters the email, receives a one-time code by email, confirms it,
   and gets the fitness app: all courses (owned / locked), a Duolingo-style path per course, a
   leaderboard, streaks, adaptive difficulty, a workout player with exercise animations/videos,
-  progress statistics. Two languages (RU/EN) switchable in settings — copy, descriptions and videos
-  follow the language.
+  progress statistics. Russian throughout — copy, descriptions and videos.
 - **Backend**: Supabase (Postgres + Auth email OTP + Storage). Frontend is fully static and is
   deployed to GitHub Pages by GitHub Actions.
 
@@ -87,9 +86,12 @@ public/                     # favicon.svg, icons, manifest
 
 ## 4. Conventions
 
-- Code, comments, commit messages, docs: **English**. Product copy: RU and EN via i18n/L10n.
+- Code, comments, commit messages, docs: **English**. Product copy: **Russian** — every string and
+  every content field still carries an English value (L10n), but `LOCALES` in
+  `src/content/schema.ts` publishes Russian only: no /en/ pages, no hreflang, no language switch.
+  Publishing English again is that one line plus a copy review.
 - TypeScript strict. No `any` unless interfacing with untyped JSON (then narrow immediately).
-- Every user-visible string goes through i18n (`t()`) or an `L10n` content field. No hardcoded RU/EN
+- Every user-visible string goes through i18n (`t()`) or an `L10n` content field. No hardcoded
   strings in components.
 - File ownership: each area owns its folders (see §3). Shared contracts (`src/content/schema.ts`,
   `src/i18n/index.ts`, `src/styles/global.css`, `src/lib/training/index.ts` exports) change only with
@@ -315,8 +317,8 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
 ## 10. App flows (must match exactly)
 
 1. **Auth**: email field → "Send code" → 6-digit code field (paste-friendly, resend timer 60s) →
-   session. Errors localized. Language switch available on the auth screen.
-2. **Onboarding** (first login, resumable): language → name → basics (age band, sex optional,
+   session. Errors localized.
+2. **Onboarding** (first login, resumable): name → basics (age band, sex optional,
    weight optional) → activity level → experience → equipment (+ dumbbell/kettlebell weights) →
    limitations → self-tests (max push-ups with knee option, air squats in 60s with in-app timer,
    plank hold with timer) → time per session → goal → result screen (fitness index, level,
@@ -340,7 +342,7 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    achievements.
 9. **Leaderboard**: tabs week / all-time, course filter, top-100 with own row pinned.
 10. **Steps**: log today's steps (manual input; explain why), history, goal 7000.
-11. **Profile**: name, avatar seed, language (RU/EN), units, equipment/weights, retake tests, sign
+11. **Profile**: name, avatar seed, units, equipment/weights, retake tests, sign
     out; admin link if admin.
 12. **Admin**: purchases list (search by email, filter status), activate / refund, add purchase.
 

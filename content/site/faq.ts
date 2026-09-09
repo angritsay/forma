@@ -70,8 +70,8 @@ export const FAQ: FaqItem[] = [
   {
     q: { ru: 'На каком языке тренировки?', en: 'What language are the workouts in?' },
     a: {
-      ru: 'На русском и английском. Язык переключается в настройках приложения — вслед за ним меняются описания, подсказки по технике и видео.',
-      en: 'Russian and English. Switch the language in the app settings and the descriptions, technique cues and videos follow.',
+      ru: 'На русском: описания упражнений, подсказки по технике и видео — всё на русском.',
+      en: 'In Russian: exercise descriptions, technique cues and videos are all in Russian.',
     },
   },
   {

@@ -32,12 +32,12 @@ import { publishableResults } from '@content/site/results';
 import type { Exercise, Locale, WorkoutItem } from '@/content/schema';
 import { formatNumber, l, t } from '@/i18n/index';
 import { canonicalUrl } from '@/lib/seo/urls';
-import { appHref, href, withBase } from '@/lib/util/paths';
+import { appHref, href, localeStaticPaths, withBase } from '@/lib/util/paths';
 import { COACH } from '@content/site/coach';
 import { FAQ } from '@content/site/faq';
 
 export function getStaticPaths() {
-  return [{ params: { lang: undefined } }, { params: { lang: 'en' } }];
+  return localeStaticPaths();
 }
 
 const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';

@@ -1,7 +1,7 @@
 /**
  * URL helpers that respect the Astro base path (GitHub Pages project sites) and locale prefixes.
  */
-import { DEFAULT_LOCALE, type Locale } from '@/content/schema';
+import { DEFAULT_LOCALE, type Locale, LOCALES } from '@/content/schema';
 
 /** Base path with leading and trailing slash, e.g. "/" or "/forma/". */
 export const BASE: string = normalizeBase(import.meta.env.BASE_URL ?? '/');
@@ -29,6 +29,17 @@ export function localePath(locale: Locale, path = '/'): string {
 /** Locale-prefixed path including the base path → ready for href. */
 export function href(locale: Locale, path = '/'): string {
   return withBase(localePath(locale, path));
+}
+
+/**
+ * `getStaticPaths` entries for every published locale: the default one renders without a prefix.
+ * Pages call this instead of listing languages, so publishing one more is a change in one place
+ * (LOCALES in src/content/schema.ts) rather than in every page.
+ */
+export function localeStaticPaths(): { params: { lang: string | undefined } }[] {
+  return LOCALES.map((locale) => ({
+    params: { lang: locale === DEFAULT_LOCALE ? undefined : locale },
+  }));
 }
 
 /** Path to the app, optionally with a hash route: appHref('#/courses'). */

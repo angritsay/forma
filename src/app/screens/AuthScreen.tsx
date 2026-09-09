@@ -12,7 +12,6 @@ import { Input } from '@/components/ui/Input';
 import { PageTitle } from '@/components/ui/PageTitle';
 import { Screen } from '@/components/ui/Screen';
 import { useToast } from '@/components/ui/Toast';
-import { LanguageToggle } from '@/app/components/LanguageToggle';
 import { useT } from '@/app/hooks/useT';
 import { useCountdown } from '@/app/hooks/useTimer';
 import { useSession } from '@/app/store/session';
@@ -134,13 +133,7 @@ export default function AuthScreen() {
   };
 
   return (
-    <Screen
-      header={
-        <div className="flex h-14 items-center justify-end px-4">
-          <LanguageToggle />
-        </div>
-      }
-    >
+    <Screen>
       <div className="flex flex-col gap-6 py-4">
         <Card gradient padding="lg" className="flex min-h-40 flex-col justify-end gap-1">
           <span className="font-display text-5xl">{t('common.brand')}</span>

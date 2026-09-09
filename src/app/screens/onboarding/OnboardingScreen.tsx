@@ -31,7 +31,6 @@ import { StepBasics } from './StepBasics';
 import { StepEquipment } from './StepEquipment';
 import { StepExperience } from './StepExperience';
 import { StepGoal } from './StepGoal';
-import { StepLanguage } from './StepLanguage';
 import { StepLimitations } from './StepLimitations';
 import { StepName } from './StepName';
 import { StepResult } from './StepResult';
@@ -48,7 +47,6 @@ const SKIPPABLE: Partial<Record<StepId, TestKey>> = {
 };
 
 const STEP_COMPONENT: Record<StepId, (props: StepProps) => React.ReactElement | null> = {
-  language: StepLanguage,
   name: StepName,
   basics: StepBasics,
   activity: StepActivity,
@@ -100,7 +98,7 @@ export default function OnboardingScreen() {
   }, [draft]);
 
   const stepIndex = draft.step;
-  const step: StepId = STEP_IDS[stepIndex] ?? 'language';
+  const step: StepId = STEP_IDS[stepIndex] ?? 'name';
   const total = STEP_IDS.length;
   const isLast = step === 'result';
   const canContinue = isStepComplete(draft, step);
@@ -119,7 +117,7 @@ export default function OnboardingScreen() {
 
   const next = useCallback(() => {
     setDraft((d) => {
-      const current = STEP_IDS[d.step] ?? 'language';
+      const current = STEP_IDS[d.step] ?? 'name';
       if (!isStepComplete(d, current)) return d;
       return { ...d, step: Math.min(total - 1, d.step + 1) };
     });

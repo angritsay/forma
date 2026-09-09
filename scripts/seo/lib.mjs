@@ -31,7 +31,17 @@ import { join, relative, sep } from 'node:path';
  * @property {{ alt: string, src: string }[]} images
  */
 
-export const LOCALES = /** @type {const} */ (['ru', 'en']);
+/**
+ * Languages content is written in. Quality checks — word counts, slugs, links, alt text — run over
+ * all of them, because an article that is not published today may be tomorrow and should not rot.
+ */
+export const AUTHORED_LOCALES = /** @type {const} */ (['ru', 'en']);
+
+/**
+ * Languages the site publishes, mirroring LOCALES in src/content/schema.ts. Only checks about
+ * pages that actually exist — hreflang, translation pairing — use this one.
+ */
+export const LOCALES = /** @type {const} */ (['ru']);
 
 /** Fallback when src/content.config.ts cannot be parsed. Keep in sync with GUIDE_CLUSTERS. */
 export const DEFAULT_GUIDE_CLUSTERS = [
@@ -786,7 +796,7 @@ export function loadGuideClusters(root) {
 export function loadGuides(root) {
   /** @type {GuideFile[]} */
   const out = [];
-  for (const locale of LOCALES) {
+  for (const locale of AUTHORED_LOCALES) {
     const d = join(root, 'content', 'guides', locale);
     if (!existsSync(d)) continue;
     for (const f of readdirSync(d)
@@ -905,7 +915,7 @@ export function checkLength(value, limits, label) {
 }
 
 /**
- * Audit exercise/course content: both locales, slug uniqueness and format.
+ * Audit exercise/course content: every authored locale, slug uniqueness and format.
  * @param {ContentIndex} index
  * @returns {Issue[]}
  */
@@ -919,7 +929,7 @@ export function auditContentIndex(index) {
     ['course', index.courses],
   ];
   for (const [label, map] of groups) {
-    for (const locale of LOCALES) {
+    for (const locale of AUTHORED_LOCALES) {
       /** @type {Map<string, string>} */
       const seen = new Map();
       for (const e of map.values()) {
@@ -972,7 +982,7 @@ export function auditGuides(guides, index, clusters = DEFAULT_GUIDE_CLUSTERS) {
   const ctx = { exercises: index.exercises, courses: index.courses, guides };
   const published = guides.filter((g) => g.data.draft !== true);
 
-  for (const locale of LOCALES) {
+  for (const locale of AUTHORED_LOCALES) {
     /** @type {Record<'title' | 'h1' | 'translationKey' | 'slug', Map<string, string>>} */
     const seen = { title: new Map(), h1: new Map(), translationKey: new Map(), slug: new Map() };
     for (const g of published.filter((x) => x.locale === locale)) {
@@ -1111,7 +1121,9 @@ export function auditGuides(guides, index, clusters = DEFAULT_GUIDE_CLUSTERS) {
         if (!img.alt.trim()) push('warning', `image "${img.src}" has no alt text`);
 
       const key = str(d.translationKey);
-      if (key) {
+      // A missing translation only matters for a language that is published; the key still has to
+      // be unique, which is checked below.
+      if (key && LOCALES.length > 1) {
         const other = locale === 'ru' ? 'en' : 'ru';
         if (!guides.some((x) => x.locale === other && x.data.translationKey === key))
           push('warning', `no ${other} translation with translationKey "${key}"`);
@@ -1248,9 +1260,13 @@ export function auditHtml(html, file, opts = {}) {
   if (canonicals.length === 0) push('error', 'no canonical link');
   else if (canonicals.length > 1) push('error', `${canonicals.length} canonical links`);
   const alternates = extractAlternates(html);
-  if (alternates.length === 0) push('warning', 'no hreflang alternates');
-  else if (!alternates.some((a) => a.hreflang === 'x-default'))
-    push('warning', 'no x-default alternate');
+  // With one published language there is nothing to alternate between, and the tags are correctly
+  // absent; the check comes back the moment a second language ships.
+  if (LOCALES.length > 1) {
+    if (alternates.length === 0) push('warning', 'no hreflang alternates');
+    else if (!alternates.some((a) => a.hreflang === 'x-default'))
+      push('warning', 'no x-default alternate');
+  }
   const htmlLang = html.match(/<html[^>]*\slang="([^"]*)"/i)?.[1];
   if (htmlLang === undefined) push('error', 'no lang attribute on <html>');
   else if (alternates.length > 0 && canonical) {

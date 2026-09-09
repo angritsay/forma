@@ -26,7 +26,8 @@ const OUT_DIR = join(ROOT, 'public', 'og');
 const FONTS_DIR = join(HERE, 'fonts');
 const WIDTH = 1200;
 const HEIGHT = 630;
-const LOCALES = ['ru', 'en'];
+// Published languages, mirroring LOCALES in src/content/schema.ts: a card per page that exists.
+const LOCALES = ['ru'];
 const BRAND_GRADIENT = ['#B9F3E0', '#C9D6FF'];
 /** Pastel pairs for guide cards (rotated per cluster so hubs look varied but deterministic). */
 const PASTELS = [
@@ -461,7 +462,7 @@ function buildJobs(content, labels, host) {
     card: {
       eyebrow: '',
       title: brand,
-      subtitle: `${labels.ru.tagline} ${labels.en.tagline}`,
+      subtitle: LOCALES.map((loc) => labels[loc].tagline).join(' '),
       gradient: BRAND_GRADIENT,
       figureSvg: null,
       brand,

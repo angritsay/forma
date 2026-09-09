@@ -174,10 +174,10 @@ contain a link, not a code, so the user would never see the code.
 Dashboard → **Authentication → Email Templates**:
 
 1. Open **Magic Link**.
-2. Subject: `Код для входа в Forma · Your Forma sign-in code`
+2. Subject: `Код для входа в Forma`
    (do not put `{{ .Token }}` in the subject — it ends up in notification previews and logs).
-3. Replace the body with the contents of `supabase/templates/otp.html`. It is a bilingual
-   (RU first, EN below) dark, table-based email with the code in large type and a 10-minute note.
+3. Replace the body with the contents of `supabase/templates/otp.html`: a dark, table-based
+   Russian email with the code in large type and a 10-minute note.
    The template uses `{{ .Token }}`, `{{ .Email }}` and `{{ .SiteURL }}`.
 4. Repeat for **Confirm signup** with the same subject and body.
 5. There is no separate plain-text field in the dashboard; `supabase/templates/otp.txt` is the

@@ -43,7 +43,9 @@ Adding a course: create the file, add it to `content/courses/index.ts`, run `npm
 
 ## Guides (`content/guides/{ru,en}/<slug>.md`)
 
-SEO articles with frontmatter validated by `src/content.config.ts`. Pair RU and EN versions with the
+SEO articles with frontmatter validated by `src/content.config.ts`. Only Russian is published
+(`LOCALES` in `src/content/schema.ts`); English entries stay in the collection unrendered. Pair RU
+and EN versions with the
 same `translationKey`. Link to content with `exercise:<id>`, `course:<id>`, `guide:<translationKey>`
 hrefs — they are rewritten to localized URLs at build time. Scaffold a new article with
 `npm run seo:new-guide -- --lang ru --slug my-slug --key my-key --cluster beginners --keyword "…"`.

@@ -2,7 +2,6 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { PageTitle } from '@/components/ui/PageTitle';
 import { Screen } from '@/components/ui/Screen';
-import { LanguageToggle } from '@/app/components/LanguageToggle';
 import { useT } from '@/app/hooks/useT';
 
 const ENV_VARS = ['PUBLIC_SUPABASE_URL', 'PUBLIC_SUPABASE_ANON_KEY'] as const;
@@ -12,13 +11,11 @@ export interface NotConfiguredScreenProps {
   onOpenDemo: () => void;
 }
 
-/** Shown when the Supabase env is missing (docs/SPEC.md §8): explains what to set, RU/EN. */
+/** Shown when the Supabase env is missing (docs/SPEC.md §8): explains what to set. */
 export default function NotConfiguredScreen({ onOpenDemo }: NotConfiguredScreenProps) {
   const { t } = useT();
   return (
-    <Screen
-      header={<div className="flex h-14 items-center justify-end px-4">{<LanguageToggle />}</div>}
-    >
+    <Screen>
       <div className="flex flex-col gap-6 py-6">
         <PageTitle
           eyebrow={t('common.brand')}

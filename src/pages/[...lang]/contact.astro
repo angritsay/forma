@@ -6,12 +6,12 @@ import { breadcrumbLd } from '@/components/landing/jsonld';
 import type { Locale } from '@/content/schema';
 import { t } from '@/i18n/index';
 import { canonicalUrl } from '@/lib/seo/urls';
-import { href } from '@/lib/util/paths';
+import { href, localeStaticPaths } from '@/lib/util/paths';
 import { BRAND } from '@content/site/brand';
 import { LINKS } from '@content/site/links';
 
 export function getStaticPaths() {
-  return [{ params: { lang: undefined } }, { params: { lang: 'en' } }];
+  return localeStaticPaths();
 }
 
 const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';
