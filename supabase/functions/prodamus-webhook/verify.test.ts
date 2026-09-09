@@ -28,7 +28,9 @@ describe('parseForm', () => {
 
 describe('canonicalize + encode', () => {
   it('sorts keys at every level and keeps unicode and slashes as they are', () => {
-    const tree = parseForm(new URLSearchParams('b=2&a[y]=1&a[x]=%D0%9C%D0%B5%D1%81%D1%8F%D1%86&url=https://x/y'));
+    const tree = parseForm(
+      new URLSearchParams('b=2&a[y]=1&a[x]=%D0%9C%D0%B5%D1%81%D1%8F%D1%86&url=https://x/y'),
+    );
     expect(canonicalize(tree)).toEqual({ a: { x: 'Месяц', y: '1' }, b: '2', url: 'https://x/y' });
     expect(encode(tree)).toBe('{"a":{"x":"Месяц","y":"1"},"b":"2","url":"https://x/y"}');
   });
@@ -63,7 +65,13 @@ describe('planForAmount', () => {
 describe('readPayment', () => {
   it('normalises the email and keeps the order id for idempotency', () => {
     expect(
-      readPayment(parseForm(new URLSearchParams('customer_email=%20Sub@Example.com&sum=1990&payment_status=success&order_id=o-1'))),
+      readPayment(
+        parseForm(
+          new URLSearchParams(
+            'customer_email=%20Sub@Example.com&sum=1990&payment_status=success&order_id=o-1',
+          ),
+        ),
+      ),
     ).toEqual({ email: 'sub@example.com', sum: '1990', status: 'success', ref: 'o-1' });
     expect(readPayment(parseForm(new URLSearchParams('sum=1990')))).toBeNull();
   });
