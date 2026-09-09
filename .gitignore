@@ -15,3 +15,6 @@ media/clips/
 
 # Generated from the brand by `npm run telegram:icon`, like public/og/ — not a source file.
 media/telegram/
+
+# Local preview root: `serve/forma -> dist` so a static server reproduces the /forma/ base path.
+serve/

@@ -68,13 +68,6 @@ export const FAQ: FaqItem[] = [
     },
   },
   {
-    q: { ru: 'На каком языке тренировки?', en: 'What language are the workouts in?' },
-    a: {
-      ru: 'На русском: описания упражнений, подсказки по технике и видео — всё на русском.',
-      en: 'In Russian: exercise descriptions, technique cues and videos are all in Russian.',
-    },
-  },
-  {
     q: { ru: 'Можно ли вернуть деньги?', en: 'Can I get a refund?' },
     a: {
       ru: `Да, в течение ${PRICING.refundDays} дней после активации доступа, если ты выполнил меньше ${PRICING.refundMaxCompletedWorkouts} тренировок курса. Как это сделать — в политике возврата.`,

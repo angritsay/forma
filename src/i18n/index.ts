@@ -61,20 +61,6 @@ export function isLocale(x: unknown): x is Locale {
   return typeof x === 'string' && (LOCALES as readonly string[]).includes(x);
 }
 
-export function otherLocale(locale: Locale): Locale {
-  return locale === 'ru' ? 'en' : 'ru';
-}
-
-/** Detect the preferred locale from the browser, falling back to the default. */
-export function detectLocale(navigatorLanguages?: readonly string[]): Locale {
-  const langs = navigatorLanguages ?? (typeof navigator !== 'undefined' ? navigator.languages : []);
-  for (const lang of langs) {
-    const base = lang.toLowerCase().split('-')[0];
-    if (isLocale(base)) return base;
-  }
-  return DEFAULT_LOCALE;
-}
-
 /** Plural helper: pick a form by count. RU has 3 forms (1, 2-4, 5+), EN has 2. */
 export function plural(
   locale: Locale,
