@@ -12,3 +12,6 @@ public/og/
 
 # Exercise clips: paid content, ~250 MB. They live in the private Supabase bucket.
 media/clips/
+
+# Generated from the brand by `npm run telegram:icon`, like public/og/ — not a source file.
+media/telegram/
