@@ -22,7 +22,8 @@
     "db:bundle": "node scripts/db/bundle.mjs",
     "media:prepare": "node scripts/media/prepare-videos.mjs",
     "media:apply": "node scripts/media/apply-manifest.mjs",
-    "media:upload": "node scripts/media/upload-videos.mjs --dir media/clips"
+    "media:upload": "node scripts/media/upload-videos.mjs --dir media/clips",
+    "telegram:icon": "node scripts/telegram/app-icon.mjs"
   },
   "dependencies": {
     "@astrojs/react": "4.4.2",

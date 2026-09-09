@@ -6,11 +6,17 @@ name: Check backend
 #   - the RPCs the site calls exist (setup-all.sql was applied, including 0005)
 #   - customers cannot read purchases / subscriptions anonymously (RLS)
 #   - the private videos bucket exists (§5)
-# Uses only the public URL and anon key from the repository variables; nothing is written.
-# SMTP cannot be checked here — that needs a real sign-in.
+# Uses only the public URL and anon key from the repository variables; nothing is written unless
+# the optional `email` input is given, which asks Supabase to send that address a real sign-in
+# code — the only way to tell "SMTP is misconfigured" from "the letter went to spam".
 
 on:
   workflow_dispatch:
+    inputs:
+      email:
+        description: 'Send a real sign-in code to this address (leave empty to skip)'
+        required: false
+        default: ''
 
 jobs:
   probe:
@@ -86,4 +92,20 @@ jobs:
             400|401|403) echo "OK?  bucket request refused for anonymous (HTTP $code) — expected for a private bucket";;
             404) echo "MISSING  bucket videos (HTTP 404) — 0003_storage.sql not applied";;
             *) echo "?    HTTP $code: $(head -c 200 /tmp/body)";;
+          esac
+
+      - name: Send a real sign-in code (only when an address was given)
+        if: inputs.email != ''
+        env:
+          TO: ${{ inputs.email }}
+        run: |
+          code=$(curl -sS -o /tmp/body -w '%{http_code}' -X POST "$URL/auth/v1/otp" \
+            -H "apikey: $KEY" -H 'Content-Type: application/json' \
+            -d "{\"email\":\"$TO\",\"create_user\":true}")
+          body=$(head -c 400 /tmp/body)
+          case "$code" in
+            200) echo "OK   Supabase accepted the request and sent a code to $TO — check that inbox (and spam).";;
+            *)   echo "FAILED  HTTP $code: $body"
+                 echo "        A 500 with 'error sending' means the SMTP settings are wrong (host, port, app password or sender address)."
+                 echo "        A 429 means the rate limit was hit — wait an hour or raise it under Authentication → Rate Limits.";;
           esac

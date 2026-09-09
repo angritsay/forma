@@ -8,11 +8,17 @@
  *   t('ru', 'app.home.title')            → 'Главная'
  *   t('en', 'common.minutesShort', {n})  → '{n} min' with interpolation
  */
-import { DEFAULT_LOCALE, LOCALES, type L10n, type Locale } from '@/content/schema';
+import {
+  AUTHORED_LOCALES,
+  DEFAULT_LOCALE,
+  LOCALES,
+  type L10n,
+  type Locale,
+} from '@/content/schema';
 import * as en from './en/index';
 import * as ru from './ru/index';
 
-export { DEFAULT_LOCALE, LOCALES, type Locale };
+export { AUTHORED_LOCALES, DEFAULT_LOCALE, LOCALES, type Locale };
 
 type EnDict = typeof en.dict;
 /** Structural dictionary type: same namespaces/keys as EN, string values. */
@@ -22,6 +28,7 @@ export type TKey = { [N in Namespace]: `${N & string}.${keyof Dict[N] & string}`
 
 // Assigning ru.dict to Dict is a compile-time parity check: a key missing in RU fails `astro check`.
 const DICTS: Record<Locale, Dict> = { en: en.dict, ru: ru.dict };
+void AUTHORED_LOCALES; // both dictionaries stay complete; only LOCALES decides what is served
 
 export type TParams = Record<string, string | number>;
 
@@ -49,22 +56,9 @@ export function l(value: L10n | undefined | null, locale: Locale): string {
   return value[locale] || value[DEFAULT_LOCALE] || value.en || '';
 }
 
+/** True for a language the site actually serves — an unpublished one must not be routed to. */
 export function isLocale(x: unknown): x is Locale {
   return typeof x === 'string' && (LOCALES as readonly string[]).includes(x);
-}
-
-export function otherLocale(locale: Locale): Locale {
-  return locale === 'ru' ? 'en' : 'ru';
-}
-
-/** Detect the preferred locale from the browser, falling back to the default. */
-export function detectLocale(navigatorLanguages?: readonly string[]): Locale {
-  const langs = navigatorLanguages ?? (typeof navigator !== 'undefined' ? navigator.languages : []);
-  for (const lang of langs) {
-    const base = lang.toLowerCase().split('-')[0];
-    if (isLocale(base)) return base;
-  }
-  return DEFAULT_LOCALE;
 }
 
 /** Plural helper: pick a form by count. RU has 3 forms (1, 2-4, 5+), EN has 2. */

@@ -6,9 +6,10 @@ import { refundDocument } from '@/components/landing/legal';
 import type { Locale } from '@/content/schema';
 import { t } from '@/i18n/index';
 import { PRICING } from '@content/site/pricing';
+import { localeStaticPaths } from '@/lib/util/paths';
 
 export function getStaticPaths() {
-  return [{ params: { lang: undefined } }, { params: { lang: 'en' } }];
+  return localeStaticPaths();
 }
 
 const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';

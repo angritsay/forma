@@ -174,10 +174,10 @@ contain a link, not a code, so the user would never see the code.
 Dashboard → **Authentication → Email Templates**:
 
 1. Open **Magic Link**.
-2. Subject: `Код для входа в Forma · Your Forma sign-in code`
+2. Subject: `Код для входа в Forma`
    (do not put `{{ .Token }}` in the subject — it ends up in notification previews and logs).
-3. Replace the body with the contents of `supabase/templates/otp.html`. It is a bilingual
-   (RU first, EN below) dark, table-based email with the code in large type and a 10-minute note.
+3. Replace the body with the contents of `supabase/templates/otp.html`: a dark, table-based
+   Russian email with the code in large type and a 10-minute note.
    The template uses `{{ .Token }}`, `{{ .Email }}` and `{{ .SiteURL }}`.
 4. Repeat for **Confirm signup** with the same subject and body.
 5. There is no separate plain-text field in the dashboard; `supabase/templates/otp.txt` is the
@@ -405,6 +405,58 @@ session with the coach — is acknowledged and left to the manual flow. Notifica
 idempotent per order id: a retry never extends twice.
 
 ### 7.5 Automating course purchases later
+
+---
+
+## 7.6 Telegram Mini App
+
+The app runs inside Telegram as a Mini App with no separate build: the same `/app/` page detects
+Telegram and adapts. All that is needed on Telegram's side is a bot whose menu button opens it.
+
+**Create the bot** (in Telegram, with @BotFather):
+
+1. `/newbot` → a name, then a username ending in `bot` (ours: `@forma_training_bot`).
+2. `/mybots` → the bot → **Bot Settings → Menu Button → Configure menu button**. BotFather asks
+   two questions, answer them as two separate messages: the URL
+   (`https://<user>.github.io/<repo>/app/`), then the button text.
+3. Optional but worth it: `/setuserpic`, `/setdescription`, `/setabouttext`.
+
+Setting the menu button again overwrites it; there is nothing to undo.
+
+**A direct link** is worth more than the menu button: it is what goes in an Instagram bio, in the
+Telegram channel and in any post. `/newapp` → the bot → title, short description, a 640×360
+image (`npm run telegram:icon` renders one from the brand), `/empty` for the demo GIF, then the
+same URL and a short name. The result is `t.me/<bot>/<short name>`, which opens the app in one tap.
+
+A bot with no program behind it does not answer `/start` — that silence is expected, and the menu
+button and the direct link work regardless. Replying to `/start` with a greeting and a launch
+button needs a webhook (an Edge Function holding the bot token); not built yet.
+
+**What the app does inside Telegram** (`src/lib/telegram/webapp.ts`, no-ops everywhere else):
+
+- Telegram's SDK is loaded **only** when Telegram opened the page — a plain web visitor makes no
+  request to telegram.org. The inline bootstrap in `src/pages/app/index.astro` must stay in the
+  head and run before the React island: Telegram passes its launch data in the URL hash, which
+  HashRouter rewrites on mount, so the app holds its first render until the SDK has read it.
+- Full height, Forma's own header and background colour, and vertical swipes disabled — a downward
+  swipe during a workout would otherwise close the app mid-set.
+- Telegram's back button follows the route (hidden on the four tabs, where its gesture should close
+  the app), a confirmation before closing during a workout, and a haptic when one is finished.
+- Safe areas come from Telegram rather than the webview: the SDK's insets are published as
+  `--tg-safe-*` and every screen reads `--safe-*` (see `src/styles/global.css`).
+- Links that leave the app — the site, a payment page — are opened **outside** Telegram, and
+  `t.me` links inside it. A payment page inside a Mini App webview cannot reach the customer's
+  bank app or saved cards.
+
+**Selling inside Telegram.** Telegram's rules push digital goods sold _inside_ a Mini App towards
+Telegram Stars, particularly on iOS. Forma therefore sells on the website: the app's buttons open
+the course or subscription page in the person's own browser. Check the current rules before
+selling in-app.
+
+**Signing in.** Email one-time codes work inside Telegram, but the person has to leave for their
+mail app and come back. One-tap sign-in from Telegram's own identity needs an Edge Function that
+verifies `initData` server-side and mints a Supabase session; not built yet, and worth doing only
+once Telegram proves to be a real channel.
 
 ---
 

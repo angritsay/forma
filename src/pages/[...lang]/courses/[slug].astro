@@ -31,7 +31,7 @@ import {
 } from '@/components/landing/courseHelpers';
 import { breadcrumbLd, courseLd, faqLd } from '@/components/landing/jsonld';
 import { COURSES, courseExercises, getCourse } from '@/content/registry';
-import type { Locale } from '@/content/schema';
+import { DEFAULT_LOCALE, LOCALES, type Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { canonicalUrl } from '@/lib/seo/urls';
 import { absoluteUrl, appHref, href } from '@/lib/util/paths';
@@ -41,10 +41,12 @@ import { formatPrice, isFree } from '@content/site/pricing';
 import { PLAN_BY_ID, PLANS_ENABLED } from '@content/site/plans';
 
 export function getStaticPaths() {
-  return COURSES.flatMap((c) => [
-    { params: { lang: undefined, slug: c.slug.ru }, props: { courseId: c.id } },
-    { params: { lang: 'en', slug: c.slug.en }, props: { courseId: c.id } },
-  ]);
+  return COURSES.flatMap((c) =>
+    LOCALES.map((locale) => ({
+      params: { lang: locale === DEFAULT_LOCALE ? undefined : locale, slug: c.slug[locale] },
+      props: { courseId: c.id },
+    })),
+  );
 }
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 

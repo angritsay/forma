@@ -79,11 +79,11 @@ export function Sheet({ open, onClose, title, children, footer, label, className
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">{children}</div>
         {footer ? (
-          <div className="shrink-0 border-t border-border px-5 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-4">
+          <div className="shrink-0 border-t border-border px-5 pb-[calc(var(--safe-bottom)+16px)] pt-4">
             {footer}
           </div>
         ) : (
-          <div className="h-[env(safe-area-inset-bottom)]" />
+          <div className="h-[var(--safe-bottom)]" />
         )}
       </div>
     </div>,

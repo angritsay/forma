@@ -22,8 +22,9 @@ export const GET: APIRoute = async ({ site }) => {
   const pages = await allPages();
   const entries = pages.map((p) => {
     const loc = absoluteUrl(origin, p.path);
+    // One published language: every entry is its own alternate, which says nothing.
     const alts: string[] = [];
-    for (const locale of LOCALES) {
+    for (const locale of LOCALES.length > 1 ? LOCALES : []) {
       const sp = p.alternates[locale];
       if (sp) {
         alts.push(
@@ -31,7 +32,7 @@ export const GET: APIRoute = async ({ site }) => {
         );
       }
     }
-    const xDefaultPath = p.alternates.ru ?? p.alternates.en;
+    const xDefaultPath = LOCALES.length > 1 ? (p.alternates.ru ?? p.alternates.en) : undefined;
     if (xDefaultPath) {
       const xLocale = p.alternates.ru ? 'ru' : 'en';
       alts.push(

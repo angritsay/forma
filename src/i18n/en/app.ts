@@ -60,8 +60,6 @@ export const app = {
   // Onboarding
   onbStepOf: 'Step {n} of {total}',
   onbOptional: 'optional',
-  onbLanguageTitle: 'Which language do you prefer?',
-  onbLanguageLead: 'You can change it anytime in your profile.',
   onbNameTitle: 'What should we call you?',
   onbNameLead: 'This name shows up on the leaderboard.',
   onbNamePlaceholder: 'Your name',

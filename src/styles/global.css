@@ -134,6 +134,25 @@ body {
   :where(.grid, .flex, .inline-flex) > * {
     min-width: 0;
   }
+
+  /*
+   * Safe areas, from whichever host knows about them.
+   *
+   * On the open web that is the browser (`env(safe-area-inset-*)`, the notch and the home bar).
+   * Inside a Telegram Mini App the webview knows nothing about Telegram's own chrome, and the
+   * SDK reports it separately — src/lib/telegram/webapp.ts publishes it as `--tg-safe-*`.
+   * Every screen reads `--safe-*`, so one layout serves both.
+   */
+  :root {
+    --tg-safe-top: 0px;
+    --tg-safe-bottom: 0px;
+    --tg-safe-left: 0px;
+    --tg-safe-right: 0px;
+    --safe-top: max(env(safe-area-inset-top, 0px), var(--tg-safe-top));
+    --safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--tg-safe-bottom));
+    --safe-left: max(env(safe-area-inset-left, 0px), var(--tg-safe-left));
+    --safe-right: max(env(safe-area-inset-right, 0px), var(--tg-safe-right));
+  }
 }
 
 /*

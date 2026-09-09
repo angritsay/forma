@@ -1,6 +1,6 @@
 /**
  * Profile (docs/SPEC.md §10 flow 11): avatar, name, email, fitness index, equipment and
- * limitations editors, the coach's bookable hour, language, player sounds, sign out, version,
+ * limitations editors, the coach's bookable hour, player sounds, sign out, version,
  * and the admin entry point.
  * "Retake tests" seeds the onboarding draft from the profile so the wizard resumes at the tests.
  */
@@ -18,7 +18,6 @@ import { isAppError } from '@/lib/api/errors';
 import { disableDemo, isDemo, isDemoForced, resetDemo } from '@/lib/api/mode';
 import type { ProfilePatch } from '@/lib/api/types';
 import type { Limitation } from '@/lib/training/types';
-import { LanguageToggle } from '@/app/components/LanguageToggle';
 import { useT } from '@/app/hooks/useT';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { useSoundStore } from '@/app/features/player/sound';
@@ -223,13 +222,6 @@ export default function ProfileScreen() {
         <Section title={t('app.profileSettingsSection')}>
           <Card padding="none">
             <ul className="divide-y divide-border">
-              <li>
-                <ListRow
-                  leading={<Icon name="globe" />}
-                  title={t('common.language')}
-                  trailing={<LanguageToggle />}
-                />
-              </li>
               <li>
                 <ListRow
                   leading={<Icon name="bolt" />}

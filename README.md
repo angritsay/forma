@@ -8,7 +8,7 @@ Forma is the web product of a CrossFit coach who sells home-training courses:
 - **App** (`/app/`): sign in with an email code, onboarding with self-tests, Duolingo-style course
   paths, a workout player with exercise animations/videos, adaptive difficulty ("easier / as usual /
   harder" with estimated duration and points), streaks with 7 000-step rest days, leaderboard,
-  statistics, achievements. Language switchable in settings.
+  statistics, achievements. Russian throughout.
 - **Backend**: Supabase (Postgres + Row Level Security, email OTP auth, private video storage).
 - **Hosting**: static build published by GitHub Actions to Cloudflare Pages or GitHub Pages
   (one workflow, selected by a repository variable — see `docs/DEPLOY.md`).

@@ -18,7 +18,6 @@ import type {
 export const ONBOARDING_DRAFT_KEY = 'forma.onboarding';
 
 export const STEP_IDS = [
-  'language',
   'name',
   'basics',
   'activity',
@@ -183,8 +182,6 @@ export function isValidName(name: string | undefined): boolean {
 /** Whether a step has everything it needs for "Continue". */
 export function isStepComplete(d: OnboardingDraft, step: StepId): boolean {
   switch (step) {
-    case 'language':
-      return d.locale !== undefined;
     case 'name':
       return isValidName(d.displayName);
     case 'basics':

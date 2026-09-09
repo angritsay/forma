@@ -181,7 +181,7 @@ export const seo = {
 
   // llms.txt / RSS / OG
   llmsIntro:
-    'Forma is a coach-made set of home CrossFit-style courses: five programs with and without equipment. The web app adapts reps, rest and load to your level after every session; access is lifetime after purchase. The site and the app are available in Russian and English.',
+    'Forma is a coach-made set of home CrossFit-style courses: five programs with and without equipment. The web app adapts reps, rest and load to your level after every session; access is lifetime after purchase.',
   llmsCourses: 'Courses',
   llmsGuides: 'Guides',
   llmsExercises: 'Exercise library',

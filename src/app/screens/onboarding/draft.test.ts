@@ -80,13 +80,9 @@ describe('onboarding draft', () => {
 
   it('walks the wizard step by step', () => {
     const d = emptyDraft();
-    expect(firstIncompleteStep({ ...d, locale: 'en' })).toBe(STEP_IDS.indexOf('name'));
-    expect(firstIncompleteStep({ ...d, locale: 'en', displayName: '  ' })).toBe(
-      STEP_IDS.indexOf('name'),
-    );
-    expect(firstIncompleteStep({ ...d, locale: 'en', displayName: 'Sam' })).toBe(
-      STEP_IDS.indexOf('basics'),
-    );
+    expect(firstIncompleteStep(d)).toBe(STEP_IDS.indexOf('name'));
+    expect(firstIncompleteStep({ ...d, displayName: '  ' })).toBe(STEP_IDS.indexOf('name'));
+    expect(firstIncompleteStep({ ...d, displayName: 'Настя' })).toBe(STEP_IDS.indexOf('basics'));
     expect(firstIncompleteStep(completeDraft())).toBe(STEP_IDS.indexOf('result'));
     expect(isStepComplete(completeDraft(), 'result')).toBe(true);
   });
@@ -191,7 +187,7 @@ describe('resumeStepIndex', () => {
   it('maps "tests" to the first self-test and step ids to their index', () => {
     expect(resumeStepIndex('tests')).toBe(STEP_IDS.indexOf('testPushups'));
     expect(resumeStepIndex('goal')).toBe(STEP_IDS.indexOf('goal'));
-    expect(resumeStepIndex('language')).toBe(0);
+    expect(resumeStepIndex('name')).toBe(0);
   });
 
   it('ignores a missing or unknown parameter', () => {

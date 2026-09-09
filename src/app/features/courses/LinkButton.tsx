@@ -1,7 +1,14 @@
-/** Anchor styled like the kit's Button — for links that leave the app (landing pages). */
+/**
+ * Anchor styled like the kit's Button — for links that leave the app (landing pages, payment).
+ *
+ * Inside a Telegram Mini App such a link must not navigate the webview: the app would be replaced
+ * by the site, and a payment page needs the person's own browser. The click is handed to Telegram
+ * instead, which opens it outside; on the open web the anchor behaves like any other.
+ */
 import { clsx } from 'clsx';
-import type { ReactNode } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import type { ButtonSize, ButtonVariant } from '@/components/ui/Button';
+import { externalTarget, openExternal } from '@/lib/telegram/webapp';
 
 const VARIANT: Record<ButtonVariant, string> = {
   primary: 'bg-primary text-on-primary hover:bg-primary/90',
@@ -37,9 +44,15 @@ export function LinkButton({
   external,
   className,
 }: LinkButtonProps) {
+  const onClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    const target = externalTarget(href);
+    if (target && openExternal(target)) e.preventDefault();
+  };
+
   return (
     <a
       href={href}
+      onClick={onClick}
       target={external ? '_blank' : undefined}
       rel={external ? 'noopener' : undefined}
       className={clsx(

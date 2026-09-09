@@ -1,29 +1,22 @@
 /**
- * UI locale, persisted in localStorage under `forma.locale`.
- * On sign-in the session store adopts `profile.locale`; when a signed-in user changes the locale
- * the session store pushes it to the profile (see store/session.ts `wire()`).
+ * UI locale.
+ *
+ * Forma is published in Russian only (LOCALES in src/content/schema.ts), so there is nothing to
+ * detect, persist or switch: the store hands out the default and `setLocale` accepts a published
+ * language, ignoring anything else. It stays a store rather than a constant because the app reads
+ * the locale in dozens of places, and publishing a second language should not be a refactor.
  */
 import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
-import { detectLocale, type Locale } from '@/i18n/index';
+import { DEFAULT_LOCALE, isLocale, type Locale } from '@/i18n/index';
 
 export interface LocaleState {
   locale: Locale;
   setLocale: (locale: Locale) => void;
 }
 
-export const LOCALE_STORAGE_KEY = 'forma.locale';
-
-export const useLocale = create<LocaleState>()(
-  persist(
-    (set) => ({
-      locale: detectLocale(),
-      setLocale: (locale) => set({ locale }),
-    }),
-    {
-      name: LOCALE_STORAGE_KEY,
-      storage: createJSONStorage(() => localStorage),
-      partialize: (s) => ({ locale: s.locale }),
-    },
-  ),
-);
+export const useLocale = create<LocaleState>()((set) => ({
+  locale: DEFAULT_LOCALE,
+  setLocale: (locale) => {
+    if (isLocale(locale)) set({ locale });
+  },
+}));

@@ -1,6 +1,8 @@
 /**
  * App routes (docs/SPEC.md §9). Auth and onboarding live outside the tabbed shell; everything
  * else renders inside <AppShell> behind RequireAuth → RequireOnboarded.
+ *
+ * Inside a Telegram Mini App the same routes also drive Telegram's own back button.
  */
 import { Suspense } from 'react';
 import { Navigate, Route, Routes, useNavigate } from 'react-router';
@@ -12,6 +14,7 @@ import { BootScreen } from './components/BootScreen';
 import { RedirectIfAuthed, RequireAuth, RequireOnboarded } from './components/RouteGuards';
 import { TopBar } from './components/TopBar';
 import { useT } from './hooks/useT';
+import { useTelegramBack } from './hooks/useTelegramBack';
 import AuthScreen from './screens/AuthScreen';
 import OnboardingScreen from './screens/onboarding/OnboardingScreen';
 import { getScreen, type ScreenName } from './screens/registry';
@@ -38,6 +41,8 @@ function LazyScreen({ name }: { name: ScreenName }) {
 }
 
 export function AppRoutes() {
+  // Telegram's header back button follows the route; no-op on the open web.
+  useTelegramBack();
   return (
     <Suspense fallback={<BootScreen />}>
       <Routes>

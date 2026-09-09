@@ -5,8 +5,19 @@
  */
 import { z } from 'zod';
 
-export const LOCALES = ['ru', 'en'] as const;
-export type Locale = (typeof LOCALES)[number];
+/**
+ * Languages content is *authored* in. Every L10n value carries all of them, so a translation is
+ * never lost and adding a language back is a one-line change to LOCALES below.
+ */
+export const AUTHORED_LOCALES = ['ru', 'en'] as const;
+export type Locale = (typeof AUTHORED_LOCALES)[number];
+
+/**
+ * Languages the product is *published* in: what the site renders and links, what the sitemap and
+ * hreflang list, and what the app offers. Forma is Russian-only — the English half of the content
+ * stays in the files, it simply has no surface.
+ */
+export const LOCALES: readonly Locale[] = ['ru'];
 export const DEFAULT_LOCALE: Locale = 'ru';
 
 export const L10nSchema = z.object({ ru: z.string().min(1), en: z.string().min(1) });

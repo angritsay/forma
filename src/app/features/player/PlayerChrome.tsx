@@ -55,7 +55,7 @@ export interface PlayerHeaderProps {
 export function PlayerHeader({ title, muted, onBack, onToggleSound, onMenu }: PlayerHeaderProps) {
   const { t } = useT();
   return (
-    <header className="relative z-10 flex h-14 items-center gap-2 px-3 pt-[env(safe-area-inset-top)] text-on-primary">
+    <header className="relative z-10 flex h-14 items-center gap-2 px-3 pt-[var(--safe-top)] text-on-primary">
       <IconButton label={t('common.back')} icon="back" variant="on-art" onClick={onBack} />
       <h1 className="min-w-0 flex-1 truncate text-center text-base font-semibold">{title}</h1>
       <IconButton
@@ -123,7 +123,7 @@ export function Controls({ paused, canPrev, onPrev, onTogglePause, onNext }: Con
   const side =
     'flex h-14 w-14 items-center justify-center rounded-pill border border-border-strong bg-transparent text-text transition-colors hover:bg-white/5 disabled:pointer-events-none disabled:opacity-40';
   return (
-    <div className="sticky bottom-0 z-20 bg-linear-to-t from-bg via-bg/95 to-transparent px-5 pb-[calc(env(safe-area-inset-bottom)+16px+var(--demo-inset,0px))] pt-4">
+    <div className="sticky bottom-0 z-20 bg-linear-to-t from-bg via-bg/95 to-transparent px-5 pb-[calc(var(--safe-bottom)+16px+var(--demo-inset,0px))] pt-4">
       <div className="flex items-center justify-center gap-6">
         <button
           type="button"

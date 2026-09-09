@@ -11,7 +11,6 @@ export const landing = {
   navContact: 'Contact',
   navMenu: 'Menu',
   skipToContent: 'Skip to content',
-  langSwitch: 'Switch to Russian',
   footerPrivacy: 'Privacy policy',
   footerTerms: 'Terms of service',
   footerRefund: 'Refund policy',
@@ -37,12 +36,12 @@ export const landing = {
   // Home: SEO
   homeTitle: 'Forma — home CrossFit that adapts to you',
   homeDescription:
-    'Five home CrossFit courses, with or without equipment. Lifetime access, a load that adapts to your level, workouts in Russian and English.',
+    'Five home CrossFit courses, with or without equipment. Lifetime access, a load that adapts to your level, video for every exercise.',
 
   // Home: hero
   heroTitle: 'Home CrossFit that adapts to you',
   heroSubtitle:
-    'Courses for home training, with or without equipment. Lifetime access, workouts in Russian and English, and a load that grows with you.',
+    'Courses for home training, with or without equipment. Lifetime access, video for every exercise, and a load that grows with you.',
   heroCtaCourses: 'Choose a course',
   heroCtaApp: 'Open app',
   heroFigureAlt: 'Animated athlete doing a burpee',
@@ -51,7 +50,6 @@ export const landing = {
   chipCourses: '{n} {word}',
   chipLifetime: 'Lifetime access',
   chipAdaptive: 'Adapts to you',
-  chipLang: 'RU / EN',
   chipHome: 'At home, with or without equipment',
 
   // Home: how it works
@@ -167,7 +165,7 @@ export const landing = {
   // Courses hub
   coursesHubTitle: 'Home CrossFit courses — with or without equipment',
   coursesHubDescription:
-    'Five home CrossFit courses: bodyweight, dumbbells, kettlebell and pull-up bar. Lifetime access, adaptive load, Russian and English.',
+    'Five home CrossFit courses: bodyweight, dumbbells, kettlebell and pull-up bar. Lifetime access, adaptive load, video for every exercise.',
   coursesHubH1: 'Courses',
   coursesHubIntro:
     'Filter by equipment and level. Each course is a week-by-week program with a test at the start and the end, and lifetime access.',
@@ -203,7 +201,7 @@ export const landing = {
   courseOrderTitle: 'Get access to the course',
   courseOrderIntro:
     'Leave your email — the coach confirms access and the course appears in the app under this email.',
-  courseLifetimeNote: 'One payment, access forever · RU and EN',
+  courseLifetimeNote: 'One payment, access forever',
   courseOrSubscribe: 'Or all five courses by subscription — from {price} a month',
   nodeWorkout: 'Workout',
   nodeRest: 'Rest · {steps} steps',

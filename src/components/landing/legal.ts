@@ -54,8 +54,8 @@ function cookiesSection(): LegalSection {
           en: `The site uses ${analyticsNamesEn} for anonymous visit statistics: which pages are opened, from which devices and for how long. These services set their own cookies and process data under their own policies. You can block cookies in your browser settings; the site and the app keep working.`,
         },
         {
-          ru: 'Приложение хранит в браузере (localStorage) только служебные данные: сессию входа, выбранный язык и незавершённую тренировку. Это не рекламные cookies и они не передаются третьим лицам.',
-          en: 'The app keeps only functional data in the browser (localStorage): the login session, the chosen language and an unfinished workout. These are not advertising cookies and are not shared with third parties.',
+          ru: 'Приложение хранит в браузере (localStorage) только служебные данные: сессию входа, незавершённую тренировку и настройки — звук и выбранный курс. Это не рекламные cookies и они не передаются третьим лицам.',
+          en: 'The app keeps only functional data in the browser (localStorage): the login session, an unfinished workout and settings — sound and the chosen course. These are not advertising cookies and are not shared with third parties.',
         },
       ],
     };
@@ -65,8 +65,8 @@ function cookiesSection(): LegalSection {
     heading: { ru: 'Cookies и аналитика', en: 'Cookies and analytics' },
     paragraphs: [
       {
-        ru: 'Сайт не использует рекламные и аналитические cookies. Приложение хранит в браузере (localStorage) только служебные данные: сессию входа, выбранный язык и незавершённую тренировку. Они не передаются третьим лицам.',
-        en: 'The site uses no advertising or analytics cookies. The app keeps only functional data in the browser (localStorage): the login session, the chosen language and an unfinished workout. They are not shared with third parties.',
+        ru: 'Сайт не использует рекламные и аналитические cookies. Приложение хранит в браузере (localStorage) только служебные данные: сессию входа, незавершённую тренировку и настройки — звук и выбранный курс. Они не передаются третьим лицам.',
+        en: 'The site uses no advertising or analytics cookies. The app keeps only functional data in the browser (localStorage): the login session, an unfinished workout and settings — sound and the chosen course. They are not shared with third parties.',
       },
     ],
   };
@@ -106,8 +106,8 @@ export function privacyDocument(): LegalDocument {
             en: 'Training data: your onboarding answers (age band, optional sex and weight, experience, equipment, limitations), test results, completed workouts, effort and feeling ratings, steps, points and streaks.',
           },
           {
-            ru: 'Технические данные: язык интерфейса, время действий и данные сессии, необходимые для работы входа.',
-            en: 'Technical data: interface language, timestamps of actions and the session data needed for sign-in to work.',
+            ru: 'Технические данные: время действий и данные сессии, необходимые для работы входа.',
+            en: 'Technical data: timestamps of actions and the session data needed for sign-in to work.',
           },
         ],
       },
@@ -181,8 +181,8 @@ export function privacyDocument(): LegalDocument {
             en: 'Know which data about you is stored.',
           },
           {
-            ru: 'Исправить имя, аватар, язык и данные профиля — прямо в приложении.',
-            en: 'Correct your name, avatar, language and profile data — directly in the app.',
+            ru: 'Исправить имя, аватар и данные профиля — прямо в приложении.',
+            en: 'Correct your name, avatar and profile data — directly in the app.',
           },
           {
             ru: 'Удалить аккаунт и данные тренировок. Учти: вместе с ними удаляется и связь «почта — курс», то есть доступ к курсам.',
@@ -308,8 +308,8 @@ export function termsDocument(): LegalDocument {
         heading: { ru: '5. Стоимость и оплата', en: '5. Price and payment' },
         paragraphs: [
           {
-            ru: 'Цена каждого Курса и Подписки указана на его странице в рублях (для русской версии сайта) или в долларах США (для английской). Оплата проходит через внешний платёжный сервис по ссылке со страницы; чек или подтверждение выдаёт этот сервис. Если платёжная ссылка не подключена, порядок оплаты согласовывается по e-mail.',
-            en: 'Each Course and Subscription price is shown on its page in Russian roubles (Russian version of the site) or US dollars (English version). Payment goes through an external payment service linked from that page; the receipt is issued by that service. If no payment link is connected, payment is arranged by email.',
+            ru: 'Цена каждого Курса и Подписки указана на его странице в рублях. Оплата проходит через внешний платёжный сервис по ссылке со страницы; чек или подтверждение выдаёт этот сервис. Если платёжная ссылка не подключена, порядок оплаты согласовывается по e-mail.',
+            en: 'Each Course and Subscription price is shown on its page in Russian roubles. Payment goes through an external payment service linked from that page; the receipt is issued by that service. If no payment link is connected, payment is arranged by email.',
           },
           {
             ru: 'Подписка списывается автоматически в начале каждого периода по цене, действовавшей при оформлении. Об изменении цены Исполнитель уведомляет по e-mail не менее чем за 14 дней до следующего списания; Пользователь вправе отключить продление до этой даты.',

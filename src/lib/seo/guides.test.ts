@@ -77,8 +77,10 @@ describe('pairing and hreflang', () => {
     const pairs = guidePairs(all);
     expect(pairs.get('a')).toEqual({ ru: ruA, en: enA });
     expect(pairs.has('draft')).toBe(false);
-    expect(guideLocalizedPaths(ruA, all)).toEqual({ ru: '/guides/a-ru/', en: '/guides/a-en/' });
+    // Pairing still sees both languages — hreflang lists only the published one (Russian).
+    expect(guideLocalizedPaths(ruA, all)).toEqual({ ru: '/guides/a-ru/' });
     expect(guideLocalizedPaths(ruB, all)).toEqual({ ru: '/guides/b-ru/' });
+    expect(guideLocalizedPaths(enA, all)).toEqual({ ru: '/guides/a-ru/' });
     expect(pairedGuide(enA, all)).toBe(ruA);
     expect(pairedGuide(ruB, all)).toBeUndefined();
   });
