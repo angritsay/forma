@@ -1,0 +1,89 @@
+name: Check backend
+
+# Asks the Supabase project a few harmless questions and prints the answers, so "is Supabase set up?"
+# can be answered from the Actions tab without anyone opening the dashboard:
+#   - auth settings: email sign-in on, confirmation off (§3.1)
+#   - the RPCs the site calls exist (setup-all.sql was applied, including 0005)
+#   - customers cannot read purchases / subscriptions anonymously (RLS)
+#   - the private videos bucket exists (§5)
+# Uses only the public URL and anon key from the repository variables; nothing is written.
+# SMTP cannot be checked here — that needs a real sign-in.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    env:
+      URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+      KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+    steps:
+      - name: Variables present
+        run: |
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "::error::PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY are not set (Settings → Secrets and variables → Actions → Variables)"
+            exit 1
+          fi
+          echo "Project: $URL"
+
+      - name: Auth settings (email provider, confirmation)
+        run: |
+          curl -sS "$URL/auth/v1/settings" -H "apikey: $KEY" | python3 -c '
+          import json,sys
+          s=json.load(sys.stdin)
+          ext=s.get("external",{})
+          print("email provider enabled:", ext.get("email"))
+          print("mailer_autoconfirm (Confirm email OFF → true):", s.get("mailer_autoconfirm"))
+          print("disable_signup:", s.get("disable_signup"))
+          others=[k for k,v in ext.items() if v and k not in ("email",)]
+          print("other providers enabled:", others or "none")
+          '
+
+      - name: RPCs exist (courses, subscriptions)
+        run: |
+          probe() {
+            code=$(curl -sS -o /tmp/body -w '%{http_code}' -X POST "$URL/rest/v1/rpc/$1" \
+              -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H 'Content-Type: application/json' -d "$2")
+            body=$(head -c 300 /tmp/body)
+            case "$body" in
+              *invalid_email*) echo "OK   $1 exists (rejected the test email as expected)";;
+              *PGRST202*|*"Could not find the function"*) echo "MISSING  $1 — setup-all.sql has not been run (or an old version)";;
+              *) echo "?    $1 → HTTP $code: $body";;
+            esac
+          }
+          probe create_order '{"p_email":"not-an-email","p_course_id":"start","p_locale":"ru","p_source":"probe"}'
+          probe create_subscription_order '{"p_email":"not-an-email","p_plan":"monthly","p_locale":"ru","p_source":"probe"}'
+
+      - name: Data is not readable anonymously (RLS)
+        run: |
+          for t in purchases subscriptions my_entitlements my_subscription; do
+            code=$(curl -sS -o /tmp/body -w '%{http_code}' "$URL/rest/v1/$t?select=*&limit=1" -H "apikey: $KEY" -H "Authorization: Bearer $KEY")
+            body=$(head -c 200 /tmp/body)
+            case "$code" in
+              401|403) echo "OK   $t is protected (HTTP $code)";;
+              404) echo "MISSING  $t (HTTP 404) — setup-all.sql not applied";;
+              200) if [ "$body" = "[]" ]; then echo "OK   $t readable but empty for anonymous (HTTP 200, no rows)"; else echo "CHECK  $t returned rows anonymously: $body"; fi;;
+              *) echo "?    $t → HTTP $code: $body";;
+            esac
+          done
+
+      - name: Webhook RPC refuses anonymous callers
+        run: |
+          code=$(curl -sS -o /tmp/body -w '%{http_code}' -X POST "$URL/rest/v1/rpc/apply_subscription_payment" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H 'Content-Type: application/json' -d '{"p_email":"probe@example.com","p_plan":"monthly"}')
+          body=$(head -c 200 /tmp/body)
+          case "$code" in
+            401|403|404) echo "OK   apply_subscription_payment is not callable anonymously (HTTP $code)";;
+            *) echo "CHECK  apply_subscription_payment → HTTP $code: $body";;
+          esac
+
+      - name: Videos bucket
+        run: |
+          code=$(curl -sS -o /tmp/body -w '%{http_code}' "$URL/storage/v1/bucket/videos" -H "apikey: $KEY" -H "Authorization: Bearer $KEY")
+          case "$code" in
+            200) echo "OK   bucket videos exists: $(head -c 120 /tmp/body)";;
+            400|401|403) echo "OK?  bucket request refused for anonymous (HTTP $code) — expected for a private bucket";;
+            404) echo "MISSING  bucket videos (HTTP 404) — 0003_storage.sql not applied";;
+            *) echo "?    HTTP $code: $(head -c 200 /tmp/body)";;
+          esac
