@@ -354,7 +354,23 @@ When money arrives:
 **Gift / bank transfer without an order**: **Add purchase** → email + course (+ note) →
 `admin_add_purchase()` creates an active row.
 
-### 7.3 Automating later
+### 7.3 One-to-one sessions with the coach
+
+`content/site/booking.ts` describes the bookable hour (length, price, what it covers). It is
+offered on Home, in Profile and on the coach card of the landing, and it is the only product that
+asks for the coach's time — everything else runs without him.
+
+```ts
+paymentUrl: { ru: 'https://…/pay/session-ru', en: 'https://…/pay/session-en' },
+scheduleUrl: 'https://calendar.app.google/…', // where the client picks a slot after paying
+```
+
+Same rule as courses: `https://` only, the signed-in email is appended as `?email=`. Until
+`paymentUrl` is set the screen shows **Message the coach** (Telegram from `links.ts`, else mail)
+instead of a payment button, so the offer is live from day one. A Google Calendar appointment
+schedule is free and enough for `scheduleUrl`; set `enabled: false` to hide the offer everywhere.
+
+### 7.4 Automating later
 
 If you adopt a provider with webhooks, add a Supabase Edge Function that verifies the webhook
 signature and runs `update public.purchases set status='active', activated_at=now() where

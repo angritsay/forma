@@ -2,8 +2,11 @@
 /** Coach profile from content/site/coach.ts — renders only the fields that are filled in. */
 import type { Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
-import { withBase } from '@/lib/util/paths';
+import { appHref, withBase } from '@/lib/util/paths';
+import { BOOKING } from '@content/site/booking';
 import { COACH } from '@content/site/coach';
+import { formatPrice } from '@content/site/pricing';
+import Button from './Button.astro';
 
 interface Props {
   locale: Locale;
@@ -16,6 +19,10 @@ const name = l(COACH.name, locale);
 const role = l(COACH.role, locale);
 const bio = l(COACH.bio, locale);
 const initial = name.trim().charAt(0).toUpperCase();
+const bookHint = t(locale, 'landing.coachBookHint', {
+  duration: BOOKING.durationMin,
+  price: formatPrice(locale, BOOKING.price),
+});
 ---
 
 <div
@@ -80,10 +87,18 @@ const initial = name.trim().charAt(0).toUpperCase();
       )
     }
     {
+      BOOKING.enabled && (
+        <div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <Button href={appHref('#/book')}>{t(locale, 'landing.coachBook')}</Button>
+          <span class="text-sm text-muted">{bookHint}</span>
+        </div>
+      )
+    }
+    {
       moreHref && (
         <a
           href={moreHref}
-          class="mt-6 inline-flex min-h-11 items-center gap-1 text-sm font-semibold underline decoration-border-strong underline-offset-4 hover:text-accent"
+          class="mt-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold underline decoration-border-strong underline-offset-4 hover:text-accent"
         >
           {t(locale, 'landing.coachMore')} →
         </a>

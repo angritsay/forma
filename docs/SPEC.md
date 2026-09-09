@@ -299,7 +299,7 @@ Landing (Astro, static, RU default / EN under `/en/`):
 
 App (HashRouter under `/app/#/`): `/auth`, `/onboarding`, `/` (home), `/courses`, `/courses/:id`,
 `/courses/:id/nodes/:nodeId` (preview + difficulty), `/play` (active session), `/summary/:sessionId`,
-`/stats`, `/leaderboard`, `/steps`, `/profile`, `/admin`.
+`/stats`, `/leaderboard`, `/steps`, `/profile`, `/book` (one-to-one session with the coach), `/admin`.
 
 ## 10. App flows (must match exactly)
 

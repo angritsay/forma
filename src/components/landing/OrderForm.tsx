@@ -8,6 +8,7 @@ import { isConfigured } from '@/lib/api/client';
 import { isAppError } from '@/lib/api/errors';
 import { isDemo, isDemoEnv } from '@/lib/api/mode';
 import { createOrder } from '@/lib/api/orders';
+import { paymentTarget, withEmail } from '@/lib/util/payment';
 
 export interface OrderFormLabels {
   emailLabel: string;
@@ -78,29 +79,6 @@ function errorReason(err: unknown): ErrorReason {
   return msg.includes('fetch') || msg.includes('network') ? 'network' : 'generic';
 }
 
-/**
- * The payment link is content, and following it hands the visitor's email to a third
- * party — so only an absolute `https://` URL is ever navigated to. Anything else
- * (relative path, `http:`, `javascript:`, a typo) is ignored and the order simply
- * ends in the success state. `PaymentUrlSchema` enforces the same rule at build time.
- */
-function paymentTarget(url: string | undefined): URL | null {
-  if (!url) return null;
-  let parsed: URL;
-  try {
-    parsed = new URL(url);
-  } catch {
-    return null;
-  }
-  return parsed.protocol === 'https:' ? parsed : null;
-}
-
-function withEmail(target: URL, email: string): string {
-  const url = new URL(target.href);
-  url.searchParams.set('email', email);
-  return url.href;
-}
-
 export default function OrderForm({
   courseId,
   courseName,
@@ -131,7 +109,7 @@ export default function OrderForm({
 
   const configured = isConfigured() || demo;
   const [consentBefore, consentAfter] = labels.consent.split('{privacy}');
-  // Only an https link is ever followed; see paymentTarget().
+  // Only an https link is ever followed; see lib/util/payment.
   const payment = paymentTarget(paymentUrl);
 
   // Validation errors must reach keyboard and screen-reader users: the message is announced by its

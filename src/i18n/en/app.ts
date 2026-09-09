@@ -566,6 +566,33 @@ export const app = {
   profileAccountSection: 'Account',
   profileAdmin: 'Admin',
   profileAdminHint: 'Purchases and access',
+  profileCoachSection: 'Coach',
+  profileBook: 'One-to-one with the coach',
+  profileBookHint: '{duration} min online · {price}',
+
+  // Home: the coach's hour
+  homeBookTitle: 'One-to-one with the coach',
+  homeBookText: '{duration} min with {name} over video · {price}',
+
+  // Book a session
+  bookTitle: 'One-to-one with the coach',
+  bookLead: 'An hour on your training: technique, the program under your goal, your questions.',
+  bookFormatLabel: 'Format',
+  bookDurationLabel: 'Length',
+  bookDuration: '{n} min',
+  bookPriceLabel: 'Price',
+  bookIncludes: 'What the hour covers',
+  bookHow: 'How it works',
+  bookStep1: 'Pay by card on the payment page',
+  bookStep2: 'Pick a time in the calendar right after paying',
+  bookStep3: 'The call link arrives at {email}',
+  bookStep3Fallback: 'your email',
+  bookPay: 'Pay {price}',
+  bookPickTime: 'Pick a time',
+  bookContact: 'Message the coach',
+  bookContactHint:
+    'Payment isn’t connected yet: write, and you agree on a time and payment directly.',
+  bookDemoNote: 'Payments are off in demo mode.',
   profileSignOut: 'Sign out',
   profileSignOutTitle: 'Sign out?',
   profileSignOutBody:

@@ -22,6 +22,8 @@ export interface LinkButtonProps {
   size?: ButtonSize;
   fullWidth?: boolean;
   icon?: ReactNode;
+  /** Open in a new tab (a calendar, a payment page the user comes back from). */
+  external?: boolean;
   className?: string;
 }
 
@@ -32,11 +34,14 @@ export function LinkButton({
   size = 'md',
   fullWidth,
   icon,
+  external,
   className,
 }: LinkButtonProps) {
   return (
     <a
       href={href}
+      target={external ? '_blank' : undefined}
+      rel={external ? 'noopener' : undefined}
       className={clsx(
         'inline-flex select-none items-center justify-center gap-2 rounded-pill font-semibold',
         'transition-[background-color,opacity,transform] duration-150 active:scale-[0.98]',

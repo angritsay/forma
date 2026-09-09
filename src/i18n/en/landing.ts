@@ -152,6 +152,8 @@ export const landing = {
   coachEyebrow: 'Coach',
   coachCredentials: 'Credentials',
   coachMore: 'More about the coach',
+  coachBook: 'Book a one-to-one',
+  coachBookHint: '{duration} min online · {price} · in the app',
 
   // Home: FAQ + CTA
   faqEyebrow: 'FAQ',

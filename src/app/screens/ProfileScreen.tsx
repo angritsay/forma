@@ -1,6 +1,7 @@
 /**
  * Profile (docs/SPEC.md §10 flow 11): avatar, name, email, fitness index, equipment and
- * limitations editors, language, player sounds, sign out, version, and the admin entry point.
+ * limitations editors, the coach's bookable hour, language, player sounds, sign out, version,
+ * and the admin entry point.
  * "Retake tests" seeds the onboarding draft from the profile so the wizard resumes at the tests.
  */
 import { useState } from 'react';
@@ -39,6 +40,8 @@ import { APP_VERSION, BUILD_MODE } from '@/app/features/profile/version';
 import { Section } from '@/app/features/stats/Section';
 import { saveDraft } from '@/app/screens/onboarding/draft';
 import { useSession } from '@/app/store/session';
+import { BOOKING } from '@content/site/booking';
+import { formatPrice } from '@content/site/pricing';
 
 type Busy = 'avatar' | 'name' | 'equipment' | 'limitations' | null;
 type SheetName = 'equipment' | 'limitations' | null;
@@ -158,6 +161,22 @@ export default function ProfileScreen() {
           onRetake={retakeTests}
           onSetup={() => navigate('/onboarding')}
         />
+
+        {BOOKING.enabled ? (
+          <Section title={t('app.profileCoachSection')}>
+            <Card padding="none">
+              <ListRow
+                leading={<Icon name="calendar" />}
+                title={t('app.profileBook')}
+                subtitle={t('app.profileBookHint', {
+                  duration: BOOKING.durationMin,
+                  price: formatPrice(locale, BOOKING.price),
+                })}
+                onClick={() => navigate('/book')}
+              />
+            </Card>
+          </Section>
+        ) : null}
 
         <Section title={t('app.profileTrainingSection')}>
           <Card padding="none">

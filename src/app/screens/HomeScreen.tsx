@@ -1,6 +1,6 @@
 /**
  * Home (docs/SPEC.md §10 flow 3): greeting, streak, the "Today" card for the active course,
- * weekly stats and the owned / locked course rows.
+ * weekly stats, the coach's bookable hour, and the owned / locked course rows.
  */
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router';
@@ -15,6 +15,7 @@ import { useToast } from '@/components/ui/Toast';
 import { COURSES } from '@/content/registry';
 import { STEPS_GOAL } from '@/lib/training/constants';
 import { useT } from '@/app/hooks/useT';
+import { BookCard } from '@/app/features/home/BookCard';
 import { CourseMiniCard, CourseRow } from '@/app/features/home/CourseRow';
 import { dayPart, GREETING_KEY, greetingName } from '@/app/features/home/greeting';
 import { ResumeCard } from '@/app/features/home/ResumeCard';
@@ -32,6 +33,7 @@ import {
   useWeekStats,
 } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
+import { BOOKING } from '@content/site/booking';
 
 function HomeSkeleton() {
   return (
@@ -136,6 +138,7 @@ export default function HomeScreen() {
           onPickCourse={() => navigate('/courses')}
         />
         <StatsGrid week={week} steps={steps} totalPoints={totalPoints} stepsGoal={STEPS_GOAL} />
+        {BOOKING.enabled ? <BookCard onOpen={() => navigate('/book')} /> : null}
         {owned.length > 0 ? (
           <CourseRow title={t('app.homeYourCourses')}>
             {owned.map((course) => (

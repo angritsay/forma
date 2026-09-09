@@ -20,6 +20,7 @@ export const SCREEN_NAMES = [
   'LeaderboardScreen',
   'StepsScreen',
   'ProfileScreen',
+  'BookScreen',
   'AdminScreen',
 ] as const;
 

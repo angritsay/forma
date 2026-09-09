@@ -151,6 +151,8 @@ export const landing = {
   coachEyebrow: 'Тренер',
   coachCredentials: 'Образование и сертификаты',
   coachMore: 'Подробнее о тренере',
+  coachBook: 'Записаться на занятие',
+  coachBookHint: '{duration} мин онлайн · {price} · в приложении',
 
   // Главная: FAQ + CTA
   faqEyebrow: 'Вопросы',

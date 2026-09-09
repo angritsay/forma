@@ -5,12 +5,27 @@
 import type { FaqItem } from '@/content/schema';
 import { BRAND } from './brand';
 import { LINKS } from './links';
-import { PRICING } from './pricing';
+import { BOOKING } from './booking';
+import { formatPrice, PRICING } from './pricing';
 
 const supportEmail = LINKS.supportEmail || BRAND.contactEmail;
 const hasTelegram = Boolean(LINKS.supportTelegram || BRAND.telegram);
 
 export const FAQ: FaqItem[] = [
+  ...(BOOKING.enabled
+    ? [
+        {
+          q: {
+            ru: 'Можно позаниматься с тренером лично?',
+            en: 'Can I train with the coach one-to-one?',
+          },
+          a: {
+            ru: `Да. В приложении есть занятие один на один: ${BOOKING.durationMin} минут по видеосвязи за ${formatPrice('ru', BOOKING.price)} — разбор техники, корректировка программы, ответы на вопросы. Курсы при этом не требуют участия тренера: программа адаптируется сама.`,
+            en: `Yes. The app offers a one-to-one session: ${BOOKING.durationMin} minutes over video for ${formatPrice('en', BOOKING.price)} — technique review, program adjustments, your questions. The courses themselves need no coach involvement: the program adapts on its own.`,
+          },
+        },
+      ]
+    : []),
   {
     q: { ru: 'Как я получу доступ к курсу?', en: 'How do I get access to a course?' },
     a: {
