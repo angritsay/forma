@@ -5,10 +5,13 @@ import type { PrescribedWorkout } from '@/lib/training/types';
 import { ItemList } from '../ItemList';
 import {
   blockMeta,
+  blockSection,
   blockTitle,
   blockTypeLabel,
   findBlock,
   formatLabel,
+  mainPart,
+  sectionLabel,
   type BlockIntroStep as Step,
 } from '../model';
 
@@ -22,13 +25,14 @@ export interface BlockIntroStepProps {
 export function BlockIntroStep({ step, prescribed, onNext }: BlockIntroStepProps) {
   const { t, l, locale } = useT();
   const block = findBlock(prescribed, step.blockId);
-  const total = prescribed.blocks.length;
+  const section = blockSection(step.type);
+  const part = section === 'main' ? mainPart(prescribed, step.blockId) : null;
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
         <span className="eyebrow">
-          {t('app.playerBlockOf', { n: step.blockIndex + 1, total })} ·{' '}
-          {blockTypeLabel(t, step.type)}
+          {sectionLabel(t, section)}
+          {part ? ` · ${t('app.playerSectionPart', { n: part.n, total: part.total })}` : ''}
         </span>
         <h2 className="font-display text-4xl">
           {block ? blockTitle(t, locale, block) : blockTypeLabel(t, step.type)}

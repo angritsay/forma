@@ -22,14 +22,17 @@ import {
   PausedOverlay,
   PlayerHeader,
   ProgressRow,
+  SectionStepper,
 } from '@/app/features/player/PlayerChrome';
 import {
   findBlock,
   findExercise,
   isTestBlock,
+  sectionOfStep,
   skippedResult,
   stepAnimation,
   stepTitle,
+  workoutSections,
 } from '@/app/features/player/model';
 import { useSound } from '@/app/features/player/sound';
 import { AmrapStep } from '@/app/features/player/steps/AmrapStep';
@@ -343,6 +346,12 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
       />
       <div className="h-[calc(42dvh-56px)] shrink-0" aria-hidden="true" />
       <section className="relative z-10 flex flex-1 flex-col rounded-t-card bg-bg shadow-card">
+        {step ? (
+          <SectionStepper
+            sections={workoutSections(prescribed)}
+            current={sectionOfStep(step, prescribed)}
+          />
+        ) : null}
         <ProgressRow stepIndex={stepIndex} totalSteps={steps.length} elapsedSec={elapsedSec} />
         <div className="relative flex-1 px-5 pb-6 pt-2">
           {step ? (

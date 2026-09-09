@@ -85,6 +85,61 @@ export function blockTitle(
   return block.title ? block.title[locale] : blockTypeLabel(t, block.type);
 }
 
+/**
+ * The three parts a session reads as, the way the coach describes it: the warm-up, the workout
+ * itself, and the cool-down. Every granular block type folds into one of them — warm-up and
+ * cool-down are their own, everything else (strength, metcon, core, skill, the test) is the workout.
+ */
+export type BlockSection = 'warmup' | 'main' | 'cooldown';
+
+export function blockSection(type: BlockType): BlockSection {
+  if (type === 'warmup') return 'warmup';
+  if (type === 'cooldown') return 'cooldown';
+  return 'main';
+}
+
+const SECTION_KEY: Record<BlockSection, TKey> = {
+  warmup: 'app.playerSectionWarmup',
+  main: 'app.playerSectionMain',
+  cooldown: 'app.playerSectionCooldown',
+};
+
+export function sectionLabel(t: Translate, section: BlockSection): string {
+  return t(SECTION_KEY[section]);
+}
+
+/** The section the current step belongs to; a block intro carries its own type. */
+export function sectionOfStep(step: PlayerStep, p: PrescribedWorkout): BlockSection {
+  if (step.kind === 'block_intro') return blockSection(step.type);
+  if (step.kind === 'done') {
+    const last = p.blocks[p.blocks.length - 1];
+    return last ? blockSection(last.type) : 'main';
+  }
+  const block = findBlock(p, step.blockId);
+  return block ? blockSection(block.type) : 'main';
+}
+
+/** Sections present in this workout, in order (warm-up → workout → cool-down), de-duplicated. */
+export function workoutSections(p: PrescribedWorkout): BlockSection[] {
+  const out: BlockSection[] = [];
+  for (const b of p.blocks) {
+    const s = blockSection(b.type);
+    if (!out.includes(s)) out.push(s);
+  }
+  return out;
+}
+
+/** When the workout section spans several blocks, which part this one is: {n, total}, else null. */
+export function mainPart(
+  p: PrescribedWorkout,
+  blockId: string,
+): { n: number; total: number } | null {
+  const mains = p.blocks.filter((b) => blockSection(b.type) === 'main');
+  if (mains.length < 2) return null;
+  const i = mains.findIndex((b) => b.blockId === blockId);
+  return i < 0 ? null : { n: i + 1, total: mains.length };
+}
+
 /** "Set 2 of 3" / "Round 2 of 3" / "Minute 2 of 12" depending on the block format. */
 export function setLabel(t: Translate, format: BlockFormat, set: number, total: number): string {
   switch (format) {

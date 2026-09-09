@@ -10,6 +10,7 @@ import { IconButton } from '@/components/ui/IconButton';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { useT } from '@/app/hooks/useT';
 import { formatClock } from '@/i18n/index';
+import { sectionLabel, type BlockSection } from './model';
 
 function MoreIcon() {
   return (
@@ -106,6 +107,47 @@ export function ProgressRow({ stepIndex, totalSteps, elapsedSec }: ProgressRowPr
         {Math.min(stepIndex + 1, last)}/{last}
       </span>
     </div>
+  );
+}
+
+export interface SectionStepperProps {
+  sections: BlockSection[];
+  current: BlockSection;
+}
+
+/**
+ * The three parts of a session — Разминка · Тренировка · Заминка — as a stepper, so the athlete
+ * always sees where they are and what is left. Hidden when a workout has only one part (a bare
+ * test), where it would say nothing.
+ */
+export function SectionStepper({ sections, current }: SectionStepperProps) {
+  const { t } = useT();
+  if (sections.length < 2) return null;
+  const currentIdx = sections.indexOf(current);
+  return (
+    <ol className="flex items-center gap-1.5 px-5 pt-4" aria-label={t('app.playerSectionsLabel')}>
+      {sections.map((section, i) => {
+        const done = i < currentIdx;
+        const active = i === currentIdx;
+        return (
+          <li
+            key={section}
+            className={clsx(
+              'flex flex-1 items-center justify-center gap-1 rounded-pill px-2 py-1 text-xs font-semibold transition-colors',
+              active
+                ? 'bg-accent text-on-primary'
+                : done
+                  ? 'bg-white/10 text-text'
+                  : 'bg-white/5 text-muted',
+            )}
+            aria-current={active ? 'step' : undefined}
+          >
+            {done ? <Icon name="check" size={12} /> : null}
+            {sectionLabel(t, section)}
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
