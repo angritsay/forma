@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { useT } from '@/app/hooks/useT';
+import { ExplainPanel } from '../ExplainPanel';
 import { findExercise, loadLabel, targetLabel, type ExplainStep as Step } from '../model';
 
 export interface ExplainStepProps {
@@ -8,11 +9,13 @@ export interface ExplainStepProps {
   onNext: () => void;
 }
 
-/** Exercise name, prescribed target and 2–3 technique cues; "Got it" moves on. */
+/**
+ * An exercise the athlete has not met yet, and no rest to show it in: the coach's video plays
+ * above, the name and target sit here, the words wait behind "Подробнее". One tap starts.
+ */
 export function ExplainStep({ step, onNext }: ExplainStepProps) {
   const { t, l, locale } = useT();
   const exercise = findExercise(step.exerciseId);
-  const cues = exercise ? exercise.cues.slice(0, 3) : [];
   const load = loadLabel(t, step.item);
   const original = step.item.substituted ? findExercise(step.item.originalExerciseId) : undefined;
 
@@ -33,21 +36,9 @@ export function ExplainStep({ step, onNext }: ExplainStepProps) {
         ) : null}
         {step.item.note ? <p className="text-[15px] text-muted">{l(step.item.note)}</p> : null}
       </div>
-      {cues.length > 0 ? (
-        <div className="flex flex-col gap-2">
-          <span className="eyebrow">{t('app.playerCues')}</span>
-          <ol className="flex flex-col gap-2">
-            {cues.map((cue, i) => (
-              <li key={i} className="flex gap-3 rounded-inner bg-surface-2 px-4 py-3">
-                <span className="tabular shrink-0 font-semibold text-accent">{i + 1}</span>
-                <span className="text-[15px]">{l(cue)}</span>
-              </li>
-            ))}
-          </ol>
-        </div>
-      ) : null}
-      <Button size="lg" fullWidth onClick={onNext}>
-        {t('app.playerGotIt')}
+      <ExplainPanel exerciseId={step.exerciseId} item={step.item} />
+      <Button size="lg" fullWidth onClick={onNext} data-autofocus>
+        {t('app.playerGo')}
       </Button>
     </div>
   );

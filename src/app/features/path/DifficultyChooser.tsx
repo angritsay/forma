@@ -1,6 +1,5 @@
 import { clsx } from 'clsx';
 import { Badge } from '@/components/ui/Badge';
-import { Card } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';
 import { useT } from '@/app/hooks/useT';
 import type { DifficultyChoice, Recommendation } from '@/lib/training/types';
@@ -20,7 +19,11 @@ export interface DifficultyChooserProps {
   recommended: Recommendation;
 }
 
-/** Three cards (Easier / As usual / Harder) with time, points and kcal; one badged as recommended. */
+/**
+ * Easier / As usual / Harder as three stacked rows — a radio, the name and the recommended badge
+ * on the left, the minutes big on the right, points and kcal under them. One row is selected;
+ * the coach's reason for the recommendation reads underneath.
+ */
 export function DifficultyChooser({
   options,
   value,
@@ -33,37 +36,51 @@ export function DifficultyChooser({
       <div
         role="radiogroup"
         aria-label={t('app.nodeDifficultyTitle')}
-        className="grid grid-cols-3 gap-2"
+        className="flex flex-col gap-2"
       >
         {options.map((o) => {
           const selected = o.choice === value;
           const isRecommended = o.choice === recommended.choice;
           return (
-            <Card
+            <button
               key={o.choice}
-              level={2}
-              padding="sm"
+              type="button"
               role="radio"
               aria-checked={selected}
-              selected={selected}
               onClick={() => onChange(o.choice)}
-              className={clsx('flex flex-col gap-2', selected && 'bg-surface-3')}
+              className={clsx(
+                'flex w-full items-center gap-3 rounded-inner border px-4 py-3 text-left transition-colors',
+                selected
+                  ? 'border-accent bg-surface-3'
+                  : 'border-border bg-surface-2 hover:bg-surface-3',
+              )}
             >
-              <div className="flex min-h-6 items-start">
-                {isRecommended ? (
-                  <Badge tone="accent" size="sm" icon="star">
-                    {t('training.recommended')}
-                  </Badge>
-                ) : null}
-              </div>
-              <span className="text-sm font-semibold">{t(DIFFICULTY_LABEL[o.choice])}</span>
-              <span className="tabular text-xl font-bold leading-none">
+              <span
+                aria-hidden="true"
+                className={clsx(
+                  'flex h-5 w-5 shrink-0 items-center justify-center rounded-pill border-2',
+                  selected ? 'border-accent bg-accent text-on-primary' : 'border-border-strong',
+                )}
+              >
+                {selected ? <Icon name="check" size={12} /> : null}
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col gap-1">
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="text-[15px] font-semibold">{t(DIFFICULTY_LABEL[o.choice])}</span>
+                  {isRecommended ? (
+                    <Badge tone="accent" size="sm" icon="star">
+                      {t('training.recommended')}
+                    </Badge>
+                  ) : null}
+                </span>
+                <span className="tabular text-xs text-muted">
+                  {t('app.nodePoints', { n: o.points })} · {t('app.nodeKcal', { n: o.calories })}
+                </span>
+              </span>
+              <span className="tabular shrink-0 text-xl font-bold leading-none">
                 {t('app.nodeDuration', { min: Math.max(1, Math.round(o.durationSec / 60)) })}
               </span>
-              <span className="tabular text-xs text-muted">
-                {t('app.nodePoints', { n: o.points })} · {t('app.nodeKcal', { n: o.calories })}
-              </span>
-            </Card>
+            </button>
           );
         })}
       </div>

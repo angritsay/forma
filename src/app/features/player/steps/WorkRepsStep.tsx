@@ -72,7 +72,7 @@ export function WorkRepsStep({
         {step.item.note ? <p className="text-[15px] text-muted">{l(step.item.note)}</p> : null}
       </div>
       <Button size="lg" fullWidth onClick={done}>
-        {t('common.done')}
+        {t('app.playerNextUp')}
       </Button>
     </div>
   );

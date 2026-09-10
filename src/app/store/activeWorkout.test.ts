@@ -68,7 +68,8 @@ describe('activeWorkout store', () => {
     begin();
     const s = useActiveWorkoutStore.getState();
     expect(s.steps).toEqual(buildPlayerSteps(prescribed));
-    expect(s.steps[0]?.kind).toBe('block_intro');
+    // The fixture opens with a warm-up, so the first step is the "warm up first?" gate.
+    expect(s.steps[0]?.kind).toBe('warmup_gate');
     expect(s.steps[s.steps.length - 1]?.kind).toBe('done');
     expect(s.stepIndex).toBe(0);
     expect(s.paused).toBe(false);

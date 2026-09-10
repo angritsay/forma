@@ -5,7 +5,10 @@
 import type { BlockFormat, BlockType, Exercise, ExerciseUnit, Load } from '@/content/schema';
 import { EXERCISE_BY_ID } from '@/content/registry';
 import { plural, type Locale, type TKey, type TParams } from '@/i18n/index';
+import { ISOMETRIC_ID_PATTERN } from '@/lib/training/constants';
+import { conflictsWithLimitations } from '@/lib/training/prescribe';
 import type {
+  Limitation,
   PlayerStep,
   PrescribedBlock,
   PrescribedItem,
@@ -43,6 +46,51 @@ export function isTestBlock(block: PrescribedBlock | undefined): boolean {
 export function exerciseName(id: string, locale: Locale): string {
   const e = findExercise(id);
   return e ? e.name[locale] : id;
+}
+
+/**
+ * The coach's video for an exercise in the viewer's language, falling back to Russian: the clips
+ * are filmed once, and a language without its own recording still gets the demonstration.
+ */
+export function exerciseVideoRef(id: string | undefined, locale: Locale): string | undefined {
+  const v = id ? findExercise(id)?.video : undefined;
+  return v?.[locale] ?? v?.ru ?? undefined;
+}
+
+const ALL_LIMITATIONS: readonly Limitation[] = [
+  'knees',
+  'lower_back',
+  'shoulders',
+  'wrists',
+  'hypertension',
+  'pregnancy',
+];
+
+/**
+ * Conditions under which the coach would swap or cap this movement — read straight off the
+ * engine's substitution rules, so the "contraindications" tab never says something the app would
+ * not itself act on. Hypertension is the one rule expressed as a cap (long isometric holds), not a
+ * swap, so it is listed for holds.
+ */
+export function contraindicationsFor(exercise: Exercise, load?: Load): Limitation[] {
+  return ALL_LIMITATIONS.filter((lim) =>
+    lim === 'hypertension'
+      ? ISOMETRIC_ID_PATTERN.test(exercise.id)
+      : conflictsWithLimitations(exercise, load, new Set([lim])),
+  );
+}
+
+const LIMITATION_KEY: Record<Limitation, TKey> = {
+  knees: 'app.onbLimKnees',
+  lower_back: 'app.onbLimLowerBack',
+  shoulders: 'app.onbLimShoulders',
+  wrists: 'app.onbLimWrists',
+  hypertension: 'app.onbLimHypertension',
+  pregnancy: 'app.onbLimPregnancy',
+};
+
+export function limitationLabel(t: Translate, lim: Limitation): string {
+  return t(LIMITATION_KEY[lim]);
 }
 
 export function unitLabel(t: Translate, unit: ExerciseUnit): string {
@@ -110,6 +158,7 @@ export function sectionLabel(t: Translate, section: BlockSection): string {
 
 /** The section the current step belongs to; a block intro carries its own type. */
 export function sectionOfStep(step: PlayerStep, p: PrescribedWorkout): BlockSection {
+  if (step.kind === 'warmup_gate') return 'warmup';
   if (step.kind === 'block_intro') return blockSection(step.type);
   if (step.kind === 'done') {
     const last = p.blocks[p.blocks.length - 1];
@@ -201,6 +250,8 @@ export function stepTitle(
   prescribed: PrescribedWorkout,
 ): string {
   switch (step.kind) {
+    case 'warmup_gate':
+      return t('app.playerSectionWarmup');
     case 'block_intro':
       return step.title ? step.title[locale] : blockTypeLabel(t, step.type);
     case 'explain':
@@ -230,6 +281,7 @@ export function stepAnimation(step: PlayerStep, prescribed: PrescribedWorkout): 
     case 'rest':
       exerciseId = step.nextExerciseId ?? first(step.blockId);
       break;
+    case 'warmup_gate':
     case 'block_intro':
     case 'amrap':
     case 'fortime':
@@ -256,6 +308,7 @@ export function skippedResult(step: PlayerStep, stepIndex: number): PlayerResult
     case 'amrap':
     case 'fortime':
       return { stepIndex, blockId: step.blockId, completed: false, skipped: true };
+    case 'warmup_gate':
     case 'block_intro':
     case 'explain':
     case 'rest':

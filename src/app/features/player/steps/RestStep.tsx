@@ -1,9 +1,10 @@
 import { useCallback, useRef } from 'react';
-import ExerciseFigure from '@/components/anim/ExerciseFigure';
 import { Button } from '@/components/ui/Button';
+import { Chip } from '@/components/ui/Chip';
 import { useT } from '@/app/hooks/useT';
 import type { PrescribedWorkout } from '@/lib/training/types';
 import { BigClock } from '../BigClock';
+import { ExplainPanel } from '../ExplainPanel';
 import { findBlock, findExercise, targetLabel, type RestStep as Step } from '../model';
 import type { Cue } from '../sound';
 import { useCountdownCues, useNextHandler, useStepClock } from '../useStepClock';
@@ -17,7 +18,11 @@ export interface RestStepProps {
   registerNext: (fn: (() => void) | null) => void;
 }
 
-/** Rest countdown with the next exercise preview; skippable, auto-advances at zero. */
+/**
+ * Rest is when the coach talks. The countdown runs, his video for the next exercise plays above,
+ * its name and target sit here, and the words wait behind "Подробнее". Auto-advances at zero;
+ * "Поехали" goes early.
+ */
 export function RestStep({ step, prescribed, paused, beep, onNext, registerNext }: RestStepProps) {
   const { t, locale } = useT();
   const advanced = useRef(false);
@@ -39,36 +44,28 @@ export function RestStep({ step, prescribed, paused, beep, onNext, registerNext 
     : undefined;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <BigClock
         seconds={clock.remainingSec}
         label={t('training.rest')}
         tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'accent' : 'default'}
       />
       {nextId ? (
-        <div className="flex items-center gap-3 rounded-inner bg-surface-2 px-4 py-3">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-inner bg-surface-3 text-text">
-            <ExerciseFigure
-              animation={nextExercise?.animation ?? nextId}
-              variant="thumb"
-              className="h-10 w-10"
-            />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block eyebrow">{t('app.playerRestNext')}</span>
-            <span className="block truncate text-[15px] font-medium">
-              {nextExercise ? nextExercise.name[locale] : nextId}
-            </span>
-          </span>
+        <div className="flex flex-col gap-2">
+          <span className="eyebrow">{t('app.playerRestNext')}</span>
+          <h2 className="font-display text-3xl">
+            {nextExercise ? nextExercise.name[locale] : nextId}
+          </h2>
           {nextItem ? (
-            <span className="tabular shrink-0 text-sm font-semibold">
-              {targetLabel(t, nextItem)}
-            </span>
+            <div className="flex flex-wrap gap-2">
+              <Chip tone="accent">{targetLabel(t, nextItem)}</Chip>
+            </div>
           ) : null}
         </div>
       ) : null}
-      <Button size="lg" fullWidth variant="secondary" onClick={advance}>
-        {t('app.playerSkipRest')}
+      {nextId && nextItem ? <ExplainPanel exerciseId={nextId} item={nextItem} /> : null}
+      <Button size="lg" fullWidth onClick={advance}>
+        {t('app.playerGo')}
       </Button>
     </div>
   );

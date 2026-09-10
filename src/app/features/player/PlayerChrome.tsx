@@ -22,7 +22,7 @@ function MoreIcon() {
   );
 }
 
-function SoundIcon({ muted }: { muted: boolean }) {
+export function SoundIcon({ muted }: { muted: boolean }) {
   return (
     <svg
       width="20"

@@ -59,25 +59,39 @@ export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
   const steps: PlayerStep[] = [];
   const explained = new Set<string>();
 
+  /**
+   * Introduce an exercise once. An explanation is its own step only when nothing else shows it:
+   * a rest that already names this exercise as "next" is where the coach's video and notes play
+   * (the athlete watches while resting), so no separate explain step follows it.
+   */
   const explain = (block: PrescribedBlock, item: PrescribedItem) => {
     if (explained.has(item.exerciseId)) return;
     explained.add(item.exerciseId);
+    const last = steps[steps.length - 1];
+    if (last?.kind === 'rest' && last.nextExerciseId === item.exerciseId) return;
     steps.push({ kind: 'explain', blockId: block.blockId, exerciseId: item.exerciseId, item });
   };
 
+  // A session that opens with a warm-up starts on the gate ("Сначала разомнёмся?") instead of
+  // the warm-up's block intro; `skipToIndex` is filled in once the warm-up's steps are known.
+  const gateFor = p.blocks[0]?.type === 'warmup' ? p.blocks[0] : undefined;
+  if (gateFor) steps.push({ kind: 'warmup_gate', blockId: gateFor.blockId, skipToIndex: 0 });
+
   p.blocks.forEach((block, blockIndex) => {
-    const intro: Extract<PlayerStep, { kind: 'block_intro' }> = {
-      kind: 'block_intro',
-      blockId: block.blockId,
-      blockIndex,
-      type: block.type,
-      format: block.format,
-      sets: block.sets,
-    };
-    if (block.title) intro.title = block.title;
-    if (block.description) intro.description = block.description;
-    if (block.durationSec !== undefined) intro.durationSec = block.durationSec;
-    steps.push(intro);
+    if (block !== gateFor) {
+      const intro: Extract<PlayerStep, { kind: 'block_intro' }> = {
+        kind: 'block_intro',
+        blockId: block.blockId,
+        blockIndex,
+        type: block.type,
+        format: block.format,
+        sets: block.sets,
+      };
+      if (block.title) intro.title = block.title;
+      if (block.description) intro.description = block.description;
+      if (block.durationSec !== undefined) intro.durationSec = block.durationSec;
+      steps.push(intro);
+    }
 
     const items = block.items;
     const n = items.length;
@@ -177,5 +191,14 @@ export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
   });
 
   steps.push({ kind: 'done' });
+
+  // Skipping the warm-up lands on the first step that is not part of it (a block intro or done).
+  const gate = steps[0];
+  if (gate?.kind === 'warmup_gate') {
+    const after = steps.findIndex(
+      (s, i) => i > 0 && (s.kind === 'done' || !('blockId' in s) || s.blockId !== gate.blockId),
+    );
+    gate.skipToIndex = after < 0 ? steps.length - 1 : after;
+  }
   return steps;
 }

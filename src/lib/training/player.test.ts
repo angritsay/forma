@@ -29,12 +29,13 @@ describe('buildPlayerSteps — sets and circuits', () => {
       restBetweenSetsSec: 60,
       items: [item('push_up', { reps: 10, restAfterSec: 30 }), item('air_squat', { reps: 15 })],
     });
+    // air_squat needs no explain step of its own: the rest after push_up names it as next, and
+    // that is where the coach explains it.
     expect(kinds(steps)).toEqual([
       'block_intro',
       'explain',
       'work',
       'rest',
-      'explain',
       'work',
       'rest',
       'work',
@@ -72,13 +73,13 @@ describe('buildPlayerSteps — sets and circuits', () => {
     expect(w[1]!.loadKg).toBe(14);
   });
 
-  it('explains an exercise only the first time it appears in the whole workout', () => {
+  it('never explains an exercise twice — a rest that names it counts as the introduction', () => {
     const steps = buildPlayerSteps(prescribeWorkout(FULL_WORKOUT, opts, fixtureLookup));
     const explained = steps
       .filter((s) => s.kind === 'explain')
       .map((s) => (s.kind === 'explain' ? s.exerciseId : ''));
-    expect(explained.filter((id) => id === 'air_squat')).toHaveLength(1);
-    expect(explained.filter((id) => id === 'plank')).toHaveLength(1);
+    expect(explained.filter((id) => id === 'air_squat').length).toBeLessThanOrEqual(1);
+    expect(explained.filter((id) => id === 'plank').length).toBeLessThanOrEqual(1);
     expect(new Set(explained).size).toBe(explained.length);
   });
 
@@ -133,7 +134,9 @@ describe('buildPlayerSteps — timed formats', () => {
       restSec: 10,
       items: [item('plank', { seconds: 20 }), item('air_squat', { reps: 8 })],
     });
-    expect(two).toHaveLength(1 + 16 + 1 + 16 + 1);
+    // intro, plank (explain + 8 work + 7 rest), the gap rest, air_squat (no explain of its own —
+    // the gap rest names it — + 8 work + 7 rest), done.
+    expect(two).toHaveLength(1 + 16 + 1 + 15 + 1);
     expect(
       works(two)
         .slice(8)
@@ -153,7 +156,8 @@ describe('buildPlayerSteps — timed formats', () => {
     expect(works(steps).map((w) => w.exerciseId)).toEqual(['run', 'burpee', 'run', 'burpee']);
     expect(rests(steps)).toHaveLength(3);
     expect(rests(steps)[0]!.nextExerciseId).toBe('burpee');
-    expect(steps).toHaveLength(11);
+    // burpee is introduced by that first rest, so it has no explain step: one step fewer.
+    expect(steps).toHaveLength(10);
   });
 
   it('amrap: a single step with expected rounds derived from item estimates', () => {
@@ -221,13 +225,57 @@ describe('buildPlayerSteps — timed formats', () => {
     const a = buildPlayerSteps(p);
     const b = buildPlayerSteps(p);
     expect(a).toEqual(b);
-    const intro = a[0];
+    // The opening warm-up is introduced by the gate, which stands in for its block intro.
+    const gate = a[0];
+    if (gate?.kind !== 'warmup_gate') throw new Error('expected the warm-up gate');
+    expect(p.blocks[0]?.type).toBe('warmup');
+    expect(gate.blockId).toBe(p.blocks[0]?.blockId);
+    // The first real block intro is the block after the warm-up, with its metadata carried over.
+    const intro = a.find((s) => s.kind === 'block_intro');
     if (intro?.kind !== 'block_intro') throw new Error('expected intro');
-    expect(intro.blockIndex).toBe(0);
-    expect(intro.type).toBe('warmup');
-    expect(intro.format).toBe('circuit');
-    expect(intro.title?.en).toBe('Warm-up');
-    expect(a.filter((s) => s.kind === 'block_intro')).toHaveLength(5);
+    expect(intro.blockIndex).toBe(1);
+    expect(intro.blockId).toBe(p.blocks[1]?.blockId);
+    expect(intro.type).toBe(p.blocks[1]?.type);
+    expect(intro.format).toBe(p.blocks[1]?.format);
+    // Five blocks, four intros: the warm-up's is the gate.
+    expect(a.filter((s) => s.kind === 'block_intro')).toHaveLength(4);
     expect(a[a.length - 1]).toEqual({ kind: 'done' });
+  });
+});
+
+describe('buildPlayerSteps — the coach explains during rest', () => {
+  it('drops the explain step when the rest before it already names the exercise', () => {
+    const steps = stepsFor({
+      id: 's',
+      type: 'strength',
+      format: 'sets',
+      sets: 1,
+      items: [item('push_up', { reps: 10, restAfterSec: 30 }), item('air_squat', { reps: 15 })],
+    });
+    expect(kinds(steps)).toEqual(['block_intro', 'explain', 'work', 'rest', 'work', 'done']);
+    expect(rests(steps)[0]!.nextExerciseId).toBe('air_squat');
+    // air_squat is introduced by that rest, never by a separate explain step.
+    const explained = steps
+      .filter((s) => s.kind === 'explain')
+      .map((s) => (s.kind === 'explain' ? s.exerciseId : ''));
+    expect(explained).toEqual(['push_up']);
+  });
+
+  it('opens a session that starts with a warm-up on the gate; skipping lands after the warm-up', () => {
+    const steps = buildPlayerSteps(prescribeWorkout(FULL_WORKOUT, opts, fixtureLookup));
+    const gate = steps[0];
+    expect(gate?.kind).toBe('warmup_gate');
+    if (gate?.kind !== 'warmup_gate') return;
+    // Everything before the skip target belongs to the warm-up block.
+    for (let i = 1; i < gate.skipToIndex; i++) {
+      const s = steps[i]!;
+      expect('blockId' in s ? s.blockId : gate.blockId).toBe(gate.blockId);
+    }
+    const target = steps[gate.skipToIndex]!;
+    expect(target.kind === 'done' || ('blockId' in target && target.blockId !== gate.blockId)).toBe(
+      true,
+    );
+    // The gate is the warm-up's intro: no separate block intro for that block.
+    expect(steps.some((s) => s.kind === 'block_intro' && s.blockId === gate.blockId)).toBe(false);
   });
 });

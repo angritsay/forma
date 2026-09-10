@@ -23,10 +23,11 @@ import {
   PlayerHeader,
   ProgressRow,
   SectionStepper,
+  SoundIcon,
 } from '@/app/features/player/PlayerChrome';
 import {
+  exerciseVideoRef,
   findBlock,
-  findExercise,
   isTestBlock,
   sectionOfStep,
   skippedResult,
@@ -41,6 +42,7 @@ import { ExplainStep } from '@/app/features/player/steps/ExplainStep';
 import { FortimeStep } from '@/app/features/player/steps/FortimeStep';
 import { RestStep } from '@/app/features/player/steps/RestStep';
 import { TestStep } from '@/app/features/player/steps/TestStep';
+import { WarmupGateStep } from '@/app/features/player/steps/WarmupGateStep';
 import { WorkRepsStep } from '@/app/features/player/steps/WorkRepsStep';
 import { WorkTimerStep } from '@/app/features/player/steps/WorkTimerStep';
 import { haptic, setClosingConfirmation } from '@/lib/telegram/webapp';
@@ -78,16 +80,19 @@ interface ArtLayerProps {
   animation: string | undefined;
   playing: boolean;
   videoUrl: string | undefined;
+  /** The coach's voice is off by default; the athlete opts in with the unmute button. */
+  muted: boolean;
 }
 
-function ArtLayer({ animation, playing, videoUrl }: ArtLayerProps) {
+function ArtLayer({ animation, playing, videoUrl, muted }: ArtLayerProps) {
   const video = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const el = video.current;
     if (!el) return;
+    el.muted = muted;
     if (playing) void el.play().catch(() => undefined);
     else el.pause();
-  }, [playing, videoUrl]);
+  }, [playing, videoUrl, muted]);
 
   return (
     <div
@@ -101,7 +106,7 @@ function ArtLayer({ animation, playing, videoUrl }: ArtLayerProps) {
           src={videoUrl}
           className="h-full w-full object-cover"
           playsInline
-          muted
+          muted={muted}
           loop
           autoPlay
           preload="metadata"
@@ -128,6 +133,7 @@ interface StepViewProps {
   beep: (cue: 'tick' | 'go' | 'round' | 'end') => void;
   onRecord: (result: PlayerResult) => void;
   onNext: () => void;
+  onGoTo: (index: number) => void;
   registerNext: (fn: (() => void) | null) => void;
 }
 
@@ -139,10 +145,13 @@ function StepView({
   beep,
   onRecord,
   onNext,
+  onGoTo,
   registerNext,
 }: StepViewProps) {
   const prescribed = session.prescribed;
   switch (step.kind) {
+    case 'warmup_gate':
+      return <WarmupGateStep onGo={onNext} onSkip={() => onGoTo(step.skipToIndex)} />;
     case 'block_intro':
       return <BlockIntroStep step={step} prescribed={prescribed} onNext={onNext} />;
     case 'explain':
@@ -211,6 +220,7 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
   const sound = useSound();
   const next = useActiveWorkoutStore((s) => s.next);
   const prev = useActiveWorkoutStore((s) => s.prev);
+  const goTo = useActiveWorkoutStore((s) => s.goTo);
   const recordResult = useActiveWorkoutStore((s) => s.recordResult);
   const setPaused = useActiveWorkoutStore((s) => s.setPaused);
   const tick = useActiveWorkoutStore((s) => s.tick);
@@ -220,6 +230,7 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [endOpen, setEndOpen] = useState(false);
   const [restartNonce, setRestartNonce] = useState(0);
+  const [videoMuted, setVideoMuted] = useState(true);
   const nextHandler = useRef<(() => void) | null>(null);
   const registerNext = useCallback((fn: (() => void) | null) => {
     nextHandler.current = fn;
@@ -236,8 +247,14 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
 
   const title = step ? stepTitle(t, locale, step, prescribed) : '';
   const animation = step ? stepAnimation(step, prescribed) : undefined;
+  // The coach's video plays where he explains: on an explain step, and during rest for the
+  // exercise that comes next. Work itself keeps the animated figure.
   const videoRef =
-    step?.kind === 'explain' ? findExercise(step.exerciseId)?.video?.[locale] : undefined;
+    step?.kind === 'explain'
+      ? exerciseVideoRef(step.exerciseId, locale)
+      : step?.kind === 'rest'
+        ? exerciseVideoRef(step.nextExerciseId, locale)
+        : undefined;
   const videoUrl = useMediaUrl(videoRef);
 
   // The last step is `done`: close the session and hand over to the summary.
@@ -336,7 +353,7 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
       style={courseVars}
       onPointerDownCapture={unlock}
     >
-      <ArtLayer animation={animation} playing={!paused} videoUrl={videoUrl} />
+      <ArtLayer animation={animation} playing={!paused} videoUrl={videoUrl} muted={videoMuted} />
       <PlayerHeader
         title={title}
         muted={sound.muted}
@@ -344,6 +361,19 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
         onToggleSound={sound.toggle}
         onMenu={() => setMenuOpen(true)}
       />
+      {videoUrl ? (
+        // The coach's voice is off until asked for: a video that starts talking on its own
+        // mid-session is a shock, and the demonstration reads fine silent.
+        <button
+          type="button"
+          onClick={() => setVideoMuted((m) => !m)}
+          aria-label={t(videoMuted ? 'app.playerVideoUnmute' : 'app.playerVideoMute')}
+          aria-pressed={!videoMuted}
+          className="absolute right-3 top-[calc(var(--safe-top)+64px)] z-20 flex h-10 w-10 items-center justify-center rounded-pill bg-black/35 text-on-primary backdrop-blur-sm"
+        >
+          <SoundIcon muted={videoMuted} />
+        </button>
+      ) : null}
       <div className="h-[calc(42dvh-56px)] shrink-0" aria-hidden="true" />
       <section className="relative z-10 flex flex-1 flex-col rounded-t-card bg-bg shadow-card">
         {step ? (
@@ -364,6 +394,7 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
               beep={sound.beep}
               onRecord={recordResult}
               onNext={next}
+              onGoTo={goTo}
               registerNext={registerNext}
             />
           ) : null}
