@@ -1,6 +1,5 @@
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { formatDate, type TKey } from '@/i18n/index';
 import { subscriptionLive } from '@/lib/api/mappers';
 import type { SubscriptionRow, SubscriptionStatus } from '@/lib/api/types';
@@ -31,7 +30,7 @@ export interface SubscriptionListProps {
 export function SubscriptionList({ rows, busyId, onAction }: SubscriptionListProps) {
   const { t, locale } = useT();
   return (
-    <ul className="flex flex-col gap-3">
+    <ul className="flex flex-col">
       {rows.map((row) => {
         const live = subscriptionLive(row.status, row.expiresAt);
         const plan = row.plan === 'annual' ? t('app.planAnnual') : t('app.planMonthly');
@@ -42,10 +41,12 @@ export function SubscriptionList({ rows, busyId, onAction }: SubscriptionListPro
           : null;
         return (
           <li key={row.id}>
-            <Card padding="sm" className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 border-t border-border py-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-0.5">
-                  <span className="truncate text-[15px] font-medium">{row.email}</span>
+                  <span className="font-display truncate text-[15px] leading-[1.24]">
+                    {row.email}
+                  </span>
                   <span className="truncate text-sm text-muted">
                     {plan}
                     {until ? ` · ${until}` : ''}
@@ -92,7 +93,7 @@ export function SubscriptionList({ rows, busyId, onAction }: SubscriptionListPro
                   </Button>
                 ) : null}
               </div>
-            </Card>
+            </div>
           </li>
         );
       })}

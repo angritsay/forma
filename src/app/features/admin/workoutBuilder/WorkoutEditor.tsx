@@ -188,7 +188,10 @@ export function WorkoutEditor({
       </div>
 
       {sections.map((section) => (
-        <section key={section.kind} className="flex flex-col gap-3 rounded-card bg-surface-2 p-4">
+        <section
+          key={section.kind}
+          className="flex flex-col gap-3 border-t border-border pt-4 pb-2"
+        >
           <div className="flex items-center justify-between">
             <h3 className="font-display text-lg">{t(SECTION_KEY[section.kind])}</h3>
             {section.kind === 'main' ? (
@@ -204,7 +207,7 @@ export function WorkoutEditor({
                     onChange={(e) =>
                       updateSection('main', { sets: clampInt(e.target.value, 1, 20, 1) })
                     }
-                    className="tabular w-14 rounded-inner border border-border bg-surface px-2 py-1 text-center text-text"
+                    className="tabular w-14 rounded-control border border-border bg-transparent px-2 py-1 text-center text-text"
                   />
                 </label>
               </div>
@@ -216,7 +219,10 @@ export function WorkoutEditor({
           ) : (
             <ul className="flex flex-col gap-3">
               {section.items.map((it, i) => (
-                <li key={it.key} className="flex flex-col gap-2 rounded-inner bg-surface p-3">
+                <li
+                  key={it.key}
+                  className="flex flex-col gap-2 rounded-inner border border-border p-3"
+                >
                   <div className="flex items-center justify-between gap-2">
                     <span className="min-w-0 flex-1 truncate text-[15px] font-medium">
                       {it.nameRu}
@@ -269,7 +275,7 @@ export function WorkoutEditor({
                           target: clampInt(e.target.value, 1, 999, 1),
                         })
                       }
-                      className="tabular w-16 rounded-inner border border-border bg-surface-2 px-2 py-1.5 text-center text-text"
+                      className="tabular w-16 rounded-control border border-border bg-transparent px-2 py-1.5 text-center text-text"
                     />
                     <label className="flex items-center gap-1.5 text-xs text-muted">
                       <input
@@ -294,7 +300,7 @@ export function WorkoutEditor({
                             restAfterSec: clampInt(e.target.value, 0, 600, 0),
                           })
                         }
-                        className="tabular w-16 rounded-inner border border-border bg-surface-2 px-2 py-1.5 text-center text-text"
+                        className="tabular w-16 rounded-control border border-border bg-transparent px-2 py-1.5 text-center text-text"
                       />
                     </label>
                   </div>

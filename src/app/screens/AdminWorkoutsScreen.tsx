@@ -165,11 +165,11 @@ export default function AdminWorkoutsScreen() {
           description={t('app.builderEmptyBody')}
         />
       ) : (
-        <ul className="flex flex-col gap-2 py-2">
+        <ul className="flex flex-col py-2">
           {rows.map((w) => {
             const minutes = w.estSec ? Math.max(1, Math.round(w.estSec / 60)) : null;
             return (
-              <li key={w.id} className="flex flex-col gap-3 rounded-card bg-surface-2 p-4">
+              <li key={w.id} className="flex flex-col gap-3 border-t border-border py-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h3 className="truncate font-display text-lg">{w.title}</h3>
@@ -290,7 +290,7 @@ function ShareSheet({
         <p className="text-sm text-muted">{t('app.builderShareHint')}</p>
         {token ? (
           <>
-            <div className="break-all rounded-inner bg-surface-2 p-3 text-sm">
+            <div className="break-all rounded-inner border border-border p-3 text-sm">
               {shareUrl(token)}
             </div>
             <div className="flex gap-2">
@@ -384,11 +384,11 @@ function AssignSheet({
           </Button>
         </div>
         {assignees.length > 0 ? (
-          <ul className="flex flex-col gap-1">
+          <ul className="flex flex-col">
             {assignees.map((a) => (
               <li
                 key={a.email}
-                className="flex items-center justify-between gap-3 rounded-inner bg-surface-2 px-3 py-2 text-sm"
+                className="flex items-center justify-between gap-3 border-t border-border px-1 py-2.5 text-sm"
               >
                 <span className="truncate">{a.email}</span>
                 <button

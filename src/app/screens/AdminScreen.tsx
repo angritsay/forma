@@ -85,7 +85,7 @@ function ListSkeleton() {
   return (
     <div className="flex flex-col gap-3" aria-hidden="true">
       {Array.from({ length: 4 }, (_, i) => (
-        <Skeleton key={i} rounded="card" className="h-28" />
+        <Skeleton key={i} rounded="control" className="h-24" />
       ))}
     </div>
   );
@@ -454,12 +454,12 @@ export default function AdminScreen() {
                 </Chip>
               ))}
         </div>
-        <div className="flex items-center justify-between px-1">
-          <h2 className="eyebrow">
+        <div className="flex items-baseline justify-between gap-3 border-t border-border pt-5 pb-1">
+          <h2 className="font-display text-xl">
             {subscriptions ? t('app.adminSubscriptions') : t('app.adminPurchases')}
           </h2>
           {(subscriptions ? subStatus : status) === 'ready' ? (
-            <span className="tabular text-xs text-muted">{countWord}</span>
+            <span className="eyebrow">{countWord}</span>
           ) : null}
         </div>
         {body}
