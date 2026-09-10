@@ -15,7 +15,7 @@ export function EmptyState({ icon, title, description, action, className }: Empt
   return (
     <div className={clsx('flex flex-col items-center gap-3 px-6 py-10 text-center', className)}>
       {icon ? (
-        <span className="flex h-14 w-14 items-center justify-center rounded-pill bg-surface-2 text-muted">
+        <span className="flex h-14 w-14 items-center justify-center rounded-control border border-border text-muted">
           <Icon name={icon} size={26} />
         </span>
       ) : null}

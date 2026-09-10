@@ -1590,8 +1590,7 @@ export const COURSE_DUMBBELLS: CourseInput = {
   weeks: 6,
   sessionsPerWeek: 4,
   avgSessionMin: 35,
-  accent: '#C9D6FF',
-  gradient: ['#C9D6FF', '#E7C6FF'],
+  tile: '#16202b', // --tile-3
   price: { rub: 3990, usd: 39 },
   workouts: [
     W_TEST,

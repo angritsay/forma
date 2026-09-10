@@ -32,15 +32,12 @@ export interface CourseTileProps {
   onOpen: () => void;
 }
 
-/** Catalogue tile: gradient header with the figure, meta chips and the owned / locked CTA. */
+/** Catalogue tile: course-tile header with the figure, meta chips and the owned / locked CTA. */
 export function CourseTile({ course, owned, progress, onOpen }: CourseTileProps) {
   const tr = useT();
   const { t, l, locale } = tr;
   const exercise = courseSignatureExercise(course);
-  const style = {
-    '--course-g1': course.gradient[0],
-    '--course-g2': course.gradient[1],
-  } as CSSProperties;
+  const style = { '--course-tile': course.tile } as CSSProperties;
   const pct = progress?.pct ?? 0;
   const finished = progress !== null && progress.total > 0 && progress.done >= progress.total;
   const ownedLabel = finished

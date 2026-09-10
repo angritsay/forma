@@ -18,7 +18,7 @@ export function LevelCard({ points, level }: LevelCardProps) {
   const remaining = level.nextAt !== null ? Math.max(0, level.nextAt - points) : 0;
   const pct = Math.round(level.progress * 100);
   return (
-    <Card gradient className="flex flex-col gap-4">
+    <Card tile className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1">
           <span className="eyebrow text-current opacity-70">
@@ -36,10 +36,10 @@ export function LevelCard({ points, level }: LevelCardProps) {
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={pct}
-        className="h-2.5 w-full overflow-hidden rounded-pill bg-black/10"
+        className="h-2.5 w-full overflow-hidden rounded-control bg-black/10"
       >
         <div
-          className="h-full rounded-pill bg-on-primary transition-[width] duration-500 ease-out"
+          className="h-full rounded-control bg-on-primary transition-[width] duration-500 ease-out"
           style={{ width: `${pct}%` }}
         />
       </div>

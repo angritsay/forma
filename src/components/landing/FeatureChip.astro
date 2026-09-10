@@ -1,19 +1,24 @@
 ---
-/** Pill chip for metrics and features. Pass `tone="accent"` for a highlighted chip. */
+/**
+ * Squared outline chip for metrics and features. Pass `tone="accent"` for a highlighted chip.
+ *
+ * Eight of these appear under a single course, and as filled pills they read as eight things
+ * competing to be tapped. Outlined rectangles read as what they are: a specification list.
+ */
 interface Props {
   tone?: 'default' | 'accent' | 'outline';
   class?: string;
 }
 const { tone = 'default', class: extra = '' } = Astro.props;
 const tones = {
-  default: 'border border-border bg-surface text-text',
-  accent: 'bg-accent text-on-primary',
-  outline: 'border border-border-strong text-muted',
+  default: 'border border-border text-text',
+  accent: 'border border-accent/40 text-accent',
+  outline: 'border border-border text-muted',
 };
 ---
 
 <span
-  class={`inline-flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-sm font-medium whitespace-nowrap ${tones[tone]} ${extra}`}
+  class={`control-label inline-flex items-center gap-1.5 rounded-control px-2.5 py-1.5 text-[10px] whitespace-nowrap ${tones[tone]} ${extra}`}
 >
   <slot />
 </span>

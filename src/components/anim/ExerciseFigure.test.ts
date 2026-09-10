@@ -14,24 +14,24 @@ describe('ExerciseFigure (server render)', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders a card tile with the gradient variables and an accessible label', () => {
+  it('renders a card tile with the course tile variable and an accessible label', () => {
     const html = renderToStaticMarkup(
       createElement(ExerciseFigure, {
         animation: 'air_squat',
         variant: 'card',
-        gradient: ['#FFD6C2', '#D9C9FF'],
+        tile: '#20293C',
         label: 'Air squat',
       }),
     );
     expect(html).toContain('hero-art');
     expect(html).toContain('size-[200px]');
-    expect(html).toContain('--course-g1:#FFD6C2');
-    expect(html).toContain('--course-g2:#D9C9FF');
+    expect(html).toContain('--course-tile:#20293C');
     expect(html).toContain('role="img"');
     expect(html).toContain('aria-label="Air squat"');
     expect(html).toContain('viewBox="0 0 200 200"');
     expect(html).toContain('stroke="currentColor"');
-    expect(html).not.toContain('#0B0B0D');
+    // The figure is drawn with `currentColor` — no ink value is ever baked into the markup.
+    expect(html).not.toContain('#DCE9FA');
   });
 
   it('renders the hero variant filling its container', () => {

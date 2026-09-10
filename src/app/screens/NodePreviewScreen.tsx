@@ -189,8 +189,7 @@ export default function NodePreviewScreen() {
   const locked = nodeStatus(nodeIndex, course.nodes, row) === 'locked';
   const exercise = workoutSignatureExercise(workout);
   const figureStyle = {
-    '--course-g1': course.gradient[0],
-    '--course-g2': course.gradient[1],
+    '--course-tile': course.tile,
   } as CSSProperties;
   const profile = ctx.profile;
 
@@ -268,7 +267,7 @@ export default function NodePreviewScreen() {
       }
     >
       <div className="flex flex-col gap-5 py-2">
-        <Card gradient={course.gradient} padding="md" className="flex flex-col gap-4">
+        <Card tile={course.tile} padding="md" className="flex flex-col gap-4">
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
               <span className="eyebrow text-current opacity-70">
@@ -281,7 +280,7 @@ export default function NodePreviewScreen() {
               <ExerciseFigure
                 animation={exercise?.animation ?? 'air_squat'}
                 variant="hero"
-                gradient={course.gradient}
+                tile={course.tile}
                 label={exercise ? l(exercise.name) : undefined}
               />
             </div>

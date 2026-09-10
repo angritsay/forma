@@ -252,6 +252,11 @@ export const app = {
   // Путь курса
   pathProgressLabel: 'Прогресс курса',
   pathProgress: '{done} из {total}',
+  // Кикеры под цифрами в шапке курса. Держи их в одно слово: они набраны капсом с трекингом
+  // .14em и стоят в колонке шириной в треть экрана — два слова уже переносятся.
+  pathStatDone: 'Пройдено',
+  pathStatDays: 'Дней',
+  pathStatLoad: 'Нагрузка',
   pathLeaderboard: 'Рейтинг',
   pathScaleBadge: 'Твоя нагрузка ×{scale}',
   pathScaleTitle: 'Как подстраивается нагрузка',

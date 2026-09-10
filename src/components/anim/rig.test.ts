@@ -249,11 +249,13 @@ describe('scene and static rendering', () => {
     expect(svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"')).toBe(
       true,
     );
-    expect(svg).toContain('linearGradient');
+    // The tile behind the figure is one flat fill — no <defs>, no gradient stops.
+    expect(svg).toContain('<rect width="200" height="200" rx="24" fill="#1A2634"/>');
+    expect(svg).not.toContain('linearGradient');
     expect(svg).toContain('<circle');
     expect(svg.endsWith('</svg>')).toBe(true);
     const bare = figureSvgString('air_squat', 0, { background: false, size: 96 });
-    expect(bare).not.toContain('linearGradient');
+    expect(bare).not.toContain('<rect');
     expect(bare).toContain('width="96"');
   });
 });

@@ -39,7 +39,7 @@ function stateOf(i: number): State {
 }
 const stateCls: Record<State, string> = {
   done: 'bg-accent text-on-primary',
-  current: 'bg-primary text-on-primary ring-4 ring-accent/40',
+  current: 'bg-accent text-on-primary ring-4 ring-accent/40',
   locked: 'bg-surface-3 text-muted',
 };
 const stateLabel: Record<State, string> = {
@@ -55,8 +55,8 @@ const doneShare = shown.length ? Math.round((1 / shown.length) * 100) : 0;
     <span class="font-display text-lg">{courseName}</span>
     <span class="text-[11px] text-muted">{t(locale, 'landing.pathProgress')} · {doneShare}%</span>
   </div>
-  <div class="mt-2 h-1.5 w-full overflow-hidden rounded-pill bg-surface-3" aria-hidden="true">
-    <div class="h-full rounded-pill bg-accent" style={`width:${doneShare}%`}></div>
+  <div class="mt-2 h-1.5 w-full overflow-hidden rounded-control bg-surface-3" aria-hidden="true">
+    <div class="h-full rounded-control bg-accent" style={`width:${doneShare}%`}></div>
   </div>
 </div>
 
@@ -91,7 +91,7 @@ const doneShare = shown.length ? Math.round((1 / shown.length) * 100) : 0;
             style={`top:${pos.y - 22}px; ${labelLeft ? `right:${240 - pos.x - 22}px; flex-direction:row-reverse;` : `left:${pos.x - 22}px;`}`}
           >
             <span
-              class={`flex size-11 shrink-0 items-center justify-center rounded-full ${isRest && state === 'locked' ? 'border border-border bg-surface-2 text-muted' : stateCls[state]}`}
+              class={`flex size-11 shrink-0 items-center justify-center rounded-control ${isRest && state === 'locked' ? 'border border-border bg-surface-2 text-muted' : stateCls[state]}`}
               title={stateLabel[state]}
             >
               {state === 'done' ? (

@@ -1,9 +1,10 @@
 /**
  * Workout player (docs/SPEC.md §10 flow 6) at /play.
  *
- * Immersive layout: course-gradient hero art with the animated figure (or the exercise video on
- * explain steps) behind a top bar, then a dark panel with the step progress row, the current step
- * and the Previous / Pause / Next controls. State lives in `useActiveWorkoutStore` (persisted), so
+ * Immersive layout: the course's tile as full-bleed art with the animated figure (or the
+ * exercise video on explain steps) behind a top bar, then a dark panel with the step progress
+ * row, the current step and the Previous / Pause / Next controls. State lives in
+ * `useActiveWorkoutStore` (persisted), so
  * leaving keeps the session resumable. Keyboard: Space = pause, → next, ← previous.
  */
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
@@ -57,8 +58,8 @@ import {
 import { COURSE_BY_ID } from '@/content/registry';
 import type { PlayerStep } from '@/lib/training/types';
 
-/** The figure tile is transparent so the full-bleed course gradient shows through without a seam. */
-const TRANSPARENT_TILE: [string, string] = ['transparent', 'transparent'];
+/** The figure's own tile is transparent so the full-bleed course art shows through without a seam. */
+const TRANSPARENT_TILE = 'transparent';
 const ELAPSED_TICK_MS = 500;
 
 function NoSession() {
@@ -117,7 +118,7 @@ function ArtLayer({ animation, playing, videoUrl, muted }: ArtLayerProps) {
             animation={animation}
             variant="hero"
             playing={playing}
-            gradient={TRANSPARENT_TILE}
+            tile={TRANSPARENT_TILE}
           />
         </div>
       ) : null}
@@ -240,10 +241,8 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
   const step = steps[stepIndex];
   const prescribed = session.prescribed;
   const summaryPath = `/summary/${session.sessionId}`;
-  const gradient = COURSE_BY_ID.get(session.courseId)?.gradient;
-  const courseVars = gradient
-    ? ({ '--course-g1': gradient[0], '--course-g2': gradient[1] } as CSSProperties)
-    : undefined;
+  const courseTile = COURSE_BY_ID.get(session.courseId)?.tile;
+  const courseVars = courseTile ? ({ '--course-tile': courseTile } as CSSProperties) : undefined;
 
   const title = step ? stepTitle(t, locale, step, prescribed) : '';
   const animation = step ? stepAnimation(step, prescribed) : undefined;
@@ -370,7 +369,7 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
           onClick={() => setVideoMuted((m) => !m)}
           aria-label={t(videoMuted ? 'app.playerVideoUnmute' : 'app.playerVideoMute')}
           aria-pressed={!videoMuted}
-          className="absolute right-3 top-[calc(var(--safe-top)+64px)] z-20 flex h-10 w-10 items-center justify-center rounded-pill bg-black/35 text-on-primary backdrop-blur-sm"
+          className="absolute right-3 top-[calc(var(--safe-top)+64px)] z-20 flex h-10 w-10 items-center justify-center rounded-control bg-black/35 text-on-primary backdrop-blur-sm"
         >
           <SoundIcon muted={videoMuted} />
         </button>

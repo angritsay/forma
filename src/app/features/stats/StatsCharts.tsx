@@ -60,14 +60,14 @@ export function WeeklyChart({ days }: { days: readonly DayLoad[] }) {
             })}
           >
             {d.workouts > 0 ? (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-pill bg-accent px-1 text-[11px] font-bold text-on-primary">
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-control bg-accent px-1 text-[11px] font-bold text-on-primary">
                 {d.workouts > 1 ? d.workouts : <Icon name="check" size={12} strokeWidth={3} />}
               </span>
             ) : (
               <span
                 aria-hidden="true"
                 className={clsx(
-                  'h-5 w-5 rounded-pill border',
+                  'h-5 w-5 rounded-control border',
                   d.future ? 'border-border/60' : 'border-border-strong',
                 )}
               />

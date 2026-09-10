@@ -57,10 +57,7 @@ export function Sheet({ open, onClose, title, children, footer, label, className
           className,
         )}
       >
-        <div
-          className="mx-auto mt-3 h-1 w-10 shrink-0 rounded-pill bg-white/20"
-          aria-hidden="true"
-        />
+        <div className="mx-auto mt-3 h-0.5 w-10 shrink-0 bg-white/25" aria-hidden="true" />
         <div className="flex items-center justify-between gap-3 px-5 pb-2 pt-3">
           {title ? (
             <h2 id={titleId} className="text-lg font-semibold">

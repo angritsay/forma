@@ -16,8 +16,8 @@ import {
 import { EXERCISE_BY_ID, EXERCISES, coursesUsingExercise } from '@/content/registry';
 import { l, t } from '@/i18n/index';
 
-/** Brand mint → sky, used when an exercise is not (yet) part of any course. */
-export const DEFAULT_GRADIENT: [string, string] = ['#B9F3E0', '#C9D6FF'];
+/** The default course tile (--tile-1), used when an exercise is not (yet) part of any course. */
+export const DEFAULT_TILE = '#1a2634';
 
 export function patternName(pattern: MovementPattern, locale: Locale): string {
   return t(locale, `seo.pattern_${pattern}` as const);
@@ -66,9 +66,9 @@ export function primaryCourse(ex: Exercise): Course | undefined {
   return coursesUsingExercise(ex.id)[0];
 }
 
-export function exerciseGradient(ex: Exercise): [string, string] {
+export function exerciseTile(ex: Exercise): string {
   const course = primaryCourse(ex);
-  return course ? [course.gradient[0], course.gradient[1]] : DEFAULT_GRADIENT;
+  return course ? course.tile : DEFAULT_TILE;
 }
 
 export function scalingExercises(ex: Exercise): { easier?: Exercise; harder?: Exercise } {

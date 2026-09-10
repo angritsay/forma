@@ -189,7 +189,7 @@ const jsonLd = [
         <article class="flex flex-col gap-3 rounded-card border border-border bg-surface p-6">
           <div class="flex items-center justify-between gap-3">
             <span
-              class="flex size-10 items-center justify-center rounded-pill bg-warning/20 text-warning"
+              class="flex size-10 items-center justify-center rounded-control bg-warning/20 text-warning"
               aria-hidden="true"
             >
               <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
@@ -205,7 +205,7 @@ const jsonLd = [
             {
               weekdays.map((d, i) => (
                 <li
-                  class={`flex size-8 items-center justify-center rounded-pill text-[11px] font-semibold ${
+                  class={`flex size-8 items-center justify-center rounded-control text-[11px] font-semibold ${
                     i < 3
                       ? 'bg-accent text-on-primary'
                       : i === 3
@@ -260,24 +260,21 @@ const jsonLd = [
           <ol class="flex flex-col gap-2" aria-hidden="true">
             {
               [
-                { w: '100%', g: ['#B9F3E0', '#C9D6FF'], you: false },
-                { w: '78%', g: ['#FFD6C2', '#E4C9FF'], you: true },
-                { w: '61%', g: ['#C9D6FF', '#B9F3E0'], you: false },
+                { w: '100%', tile: '#1a2634', you: false },
+                { w: '78%', tile: '#20293c', you: true },
+                { w: '61%', tile: '#16202b', you: false },
               ].map((row, i) => (
                 <li class="flex items-center gap-2 text-xs">
                   <span class="w-4 text-right font-semibold tabular text-muted">{i + 1}</span>
-                  <span
-                    class="size-6 shrink-0 rounded-pill"
-                    style={`background:linear-gradient(160deg,${row.g[0]},${row.g[1]})`}
-                  />
-                  <span class="h-2.5 flex-1 overflow-hidden rounded-pill bg-surface-3">
+                  <span class="size-6 shrink-0 rounded-control" style={`background:${row.tile}`} />
+                  <span class="h-2.5 flex-1 overflow-hidden rounded-control bg-surface-3">
                     <span
-                      class={`block h-full rounded-pill ${row.you ? 'bg-primary' : 'bg-surface-2'}`}
+                      class={`block h-full rounded-control ${row.you ? 'bg-accent' : 'bg-surface-2'}`}
                       style={`width:${row.w}`}
                     />
                   </span>
                   {row.you && (
-                    <span class="rounded-pill bg-primary px-2 py-0.5 text-[10px] font-semibold text-on-primary">
+                    <span class="rounded-control bg-accent px-2 py-0.5 text-[10px] font-semibold text-on-primary">
                       {t(locale, 'landing.pathYou')}
                     </span>
                   )}
@@ -357,7 +354,7 @@ const jsonLd = [
                 variant="card"
                 label={l(workTile.exercise.name, locale)}
               />
-              <span class="absolute right-4 bottom-4 rounded-pill bg-bg/85 px-3 py-1.5 text-sm font-semibold text-text tabular">
+              <span class="absolute right-4 bottom-4 rounded-control bg-bg/85 px-3 py-1.5 text-sm font-semibold text-text tabular">
                 {itemTargetLabel(locale, workTile.item)}
               </span>
             </div>

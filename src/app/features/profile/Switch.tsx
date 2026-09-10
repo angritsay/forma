@@ -19,14 +19,14 @@ export function Switch({ checked, onChange, label, disabled }: SwitchProps) {
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={clsx(
-        'relative h-7 w-12 shrink-0 rounded-pill transition-colors disabled:opacity-50',
+        'relative h-7 w-12 shrink-0 rounded-control transition-colors disabled:opacity-50',
         checked ? 'bg-accent' : 'bg-white/15',
       )}
     >
       <span
         aria-hidden="true"
         className={clsx(
-          'absolute top-0.5 left-0.5 size-6 rounded-pill bg-primary shadow-card transition-transform',
+          'absolute top-0.5 left-0.5 size-6 rounded-control bg-primary shadow-card transition-transform',
           checked && 'translate-x-5',
         )}
       />

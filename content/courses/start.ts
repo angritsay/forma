@@ -1241,8 +1241,7 @@ export const COURSE_START: CourseInput = {
   weeks: 4,
   sessionsPerWeek: 5,
   avgSessionMin: 18,
-  accent: '#B9F3E0',
-  gradient: ['#B9F3E0', '#C9D6FF'],
+  tile: '#1a2634', // --tile-1
   price: { rub: 2990, usd: 29 },
   workouts: WORKOUTS.map(withCues),
   nodes: NODES,

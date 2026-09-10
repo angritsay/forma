@@ -3,7 +3,6 @@
  * Reads the persisted player store; renders nothing when there is no active session.
  */
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';
 import { COURSE_BY_ID } from '@/content/registry';
 import { useT } from '@/app/hooks/useT';
@@ -26,12 +25,17 @@ export function ResumeCard({ onResume }: ResumeCardProps) {
   const finished = finishedAt !== null;
 
   return (
-    <Card level={2} padding="md" className="flex items-center gap-4">
+    /*
+     * A marked strip, not a card. This sits directly above the photograph of today's session, and
+     * an unfinished workout has to read as an interruption to deal with rather than as a second
+     * offer competing with it — so it is one line with the accent marking its left edge.
+     */
+    <section className="flex items-center gap-4 border-l-2 border-accent py-3 pl-4">
       <div className="min-w-0 flex-1">
-        <span className="eyebrow">
+        <span className="eyebrow text-accent">
           {t(finished ? 'app.homeResumeFinishedEyebrow' : 'app.homeResumeEyebrow')}
         </span>
-        <h2 className="mt-1 truncate text-lg font-semibold">
+        <h2 className="font-display mt-1 truncate text-lg leading-[1.24]">
           {workout ? l(workout.name) : t('app.homeResumeFallback')}
         </h2>
         {course ? <p className="truncate text-sm text-muted">{l(course.name)}</p> : null}
@@ -39,10 +43,10 @@ export function ResumeCard({ onResume }: ResumeCardProps) {
       <Button
         size="md"
         onClick={() => onResume(path)}
-        icon={<Icon name={finished ? 'check' : 'play'} size={18} />}
+        icon={<Icon name={finished ? 'check' : 'play'} size={16} />}
       >
         {t(finished ? 'app.homeResumeSave' : 'app.homeResumeCta')}
       </Button>
-    </Card>
+    </section>
   );
 }

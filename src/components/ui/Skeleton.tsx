@@ -3,13 +3,17 @@ import { clsx } from 'clsx';
 export interface SkeletonProps {
   /** Size through classes (e.g. "h-4 w-32"). */
   className?: string;
-  /** Radius: 'inner' (16px), 'card' (24px), 'pill'. Default 'inner'. */
-  rounded?: 'inner' | 'card' | 'pill';
+  /** Radius: 'inner' (16px), 'card' (24px), 'control' (4px). Default 'inner'. */
+  rounded?: 'inner' | 'card' | 'control';
   /** Render N stacked text lines instead of one block. */
   lines?: number;
 }
 
-const RADIUS = { inner: 'rounded-inner', card: 'rounded-card', pill: 'rounded-pill' } as const;
+const RADIUS = {
+  inner: 'rounded-inner',
+  card: 'rounded-card',
+  control: 'rounded-control',
+} as const;
 
 export function Skeleton({ className, rounded = 'inner', lines }: SkeletonProps) {
   if (lines && lines > 1) {
@@ -20,7 +24,7 @@ export function Skeleton({ className, rounded = 'inner', lines }: SkeletonProps)
             key={i}
             className={clsx(
               'h-3.5 animate-pulse bg-surface-3',
-              RADIUS.pill,
+              RADIUS.control,
               i === lines - 1 && 'w-2/3',
             )}
           />

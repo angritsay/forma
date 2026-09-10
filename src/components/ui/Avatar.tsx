@@ -1,26 +1,36 @@
 import { clsx } from 'clsx';
 
+/**
+ * The five course tiles, repeated here as literals rather than read from CSS: the avatar has to
+ * pick one synchronously in JS, and a custom property is only resolvable once the element is in
+ * the document. Keep in step with --tile-1…5 in src/styles/global.css.
+ */
+const TILES = ['#1a2634', '#20293c', '#16202b', '#232f42', '#1c2532'] as const;
+
 export interface AvatarProps {
-  /** Seed stored on the profile; drives the gradient so the avatar is stable across devices. */
+  /** Seed stored on the profile; picks the tile so the avatar is stable across devices. */
   seed: string;
   /** Display name (or email) used for the initials. */
   name?: string | null;
-  /** Diameter in px. Default 40. */
+  /** Size in px. Default 40. */
   size?: number;
   className?: string;
 }
 
-/** FNV-1a hash → two pastel hues (HSL) for a soft gradient in the brand's "hero art" spirit. */
-export function avatarGradient(seed: string): [string, string] {
+/**
+ * FNV-1a hash → one of the five course tiles.
+ *
+ * This used to hash to two pastel HSL hues and draw a gradient. Both halves of that are now off
+ * the brand — there are no gradients, and no pastels outside the one blue accent — so the seed
+ * picks a tile instead. Same input, same avatar, still stable across devices.
+ */
+export function avatarTile(seed: string): string {
   let h = 0x811c9dc5;
   for (let i = 0; i < seed.length; i++) {
     h ^= seed.charCodeAt(i);
     h = Math.imul(h, 0x01000193);
   }
-  const hash = h >>> 0;
-  const h1 = hash % 360;
-  const h2 = (h1 + 35 + ((hash >>> 9) % 70)) % 360;
-  return [`hsl(${h1} 70% 80%)`, `hsl(${h2} 70% 76%)`];
+  return TILES[(h >>> 0) % TILES.length]!;
 }
 
 export function initials(name?: string | null): string {
@@ -34,7 +44,7 @@ export function initials(name?: string | null): string {
 }
 
 export function Avatar({ seed, name, size = 40, className }: AvatarProps) {
-  const [g1, g2] = avatarGradient(seed);
+  const tile = avatarTile(seed);
   const text = initials(name);
   const label = (name ?? '').trim();
   return (
@@ -44,14 +54,14 @@ export function Avatar({ seed, name, size = 40, className }: AvatarProps) {
       aria-label={label || undefined}
       aria-hidden={label ? undefined : true}
       className={clsx(
-        'inline-flex shrink-0 select-none items-center justify-center rounded-pill font-semibold text-on-primary',
+        'font-display inline-flex shrink-0 select-none items-center justify-center rounded-control font-semibold text-tile-fg',
         className,
       )}
       style={{
         width: size,
         height: size,
         fontSize: Math.round(size * 0.38),
-        background: `linear-gradient(135deg, ${g1}, ${g2})`,
+        background: tile,
       }}
     >
       {text}

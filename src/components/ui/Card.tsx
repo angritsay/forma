@@ -8,10 +8,13 @@ export interface CardProps extends Omit<HTMLAttributes<HTMLElement>, 'onClick'> 
   /** Surface level (1 = base card, 3 = most elevated). */
   level?: CardLevel;
   /**
-   * Pastel "hero art" gradient. `true` uses the brand mint → sky; a `[from, to]` tuple
-   * (course accent colors from content) overrides the stops through CSS variables.
+   * Draw the card as course art rather than a surface. `true` uses the default tile; a hex
+   * string (a course's `tile` from content) picks that course's tile through a CSS variable.
+   *
+   * This replaces the old `gradient` prop, which took a `[from, to]` pastel pair. The brand has
+   * no gradients now: course art is one flat, muted dark blue.
    */
-  gradient?: boolean | [string, string];
+  tile?: boolean | string;
   padding?: CardPadding;
   /** Renders a <button> so the whole card is an accessible, focusable control. */
   onClick?: MouseEventHandler<HTMLElement>;
@@ -36,7 +39,7 @@ const PADDING: Record<CardPadding, string> = {
 export const Card = forwardRef<HTMLElement, CardProps>(function Card(
   {
     level = 1,
-    gradient,
+    tile,
     padding = 'md',
     onClick,
     disabled,
@@ -48,19 +51,18 @@ export const Card = forwardRef<HTMLElement, CardProps>(function Card(
   },
   ref,
 ) {
-  const gradientStyle: CSSProperties | undefined = Array.isArray(gradient)
-    ? ({ '--course-g1': gradient[0], '--course-g2': gradient[1] } as CSSProperties)
-    : undefined;
+  const tileStyle: CSSProperties | undefined =
+    typeof tile === 'string' ? ({ '--course-tile': tile } as CSSProperties) : undefined;
   const classes = clsx(
     'relative rounded-card',
-    gradient ? 'hero-art border-0' : LEVEL[level],
+    tile ? 'hero-art border-0' : LEVEL[level],
     PADDING[padding],
-    selected && 'ring-2 ring-primary',
+    selected && 'ring-2 ring-accent',
     onClick &&
       'w-full text-left transition-[background-color,transform] active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none',
     className,
   );
-  const merged = gradientStyle ? { ...gradientStyle, ...style } : style;
+  const merged = tileStyle ? { ...tileStyle, ...style } : style;
 
   if (onClick) {
     return (

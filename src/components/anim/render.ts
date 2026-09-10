@@ -4,7 +4,7 @@
  */
 import { getPoseSet } from './lookup';
 import {
-  DEFAULT_GRADIENT,
+  DEFAULT_TILE,
   INK,
   VIEWBOX,
   figureScene,
@@ -54,9 +54,9 @@ export function figureMarkup(
 export interface FigureSvgOptions {
   /** Pixel size of the square image (default 200). */
   size?: number;
-  /** Tile gradient [from, to]; default brand mint → sky. */
-  gradient?: [string, string];
-  /** Draw the rounded gradient tile behind the figure (default true). */
+  /** Flat course tile colour; defaults to --tile-1. */
+  tile?: string;
+  /** Draw the rounded tile behind the figure (default true). */
   background?: boolean;
 }
 
@@ -71,14 +71,13 @@ export function figureSvgString(
 ): string {
   const set = getPoseSet(animationId);
   const size = opts.size ?? VIEWBOX;
-  const [g1, g2] = opts.gradient ?? DEFAULT_GRADIENT;
+  const tile = opts.tile ?? DEFAULT_TILE;
   const background = opts.background ?? true;
   const pose = poseAt(set, t);
   const body = figureMarkup(pose, set.view, { props: set.props, t: t - Math.floor(t) });
-  const gradId = `g-${set.id}-${Math.round((t - Math.floor(t)) * 1000)}`;
+  // One flat fill, so no <defs>/<linearGradient> and no per-frame gradient id to keep unique.
   const defs = background
-    ? `<defs><linearGradient id="${gradId}" x1="0.33" y1="0" x2="0.67" y2="1"><stop offset="0" stop-color="${escapeAttr(g1)}"/><stop offset="1" stop-color="${escapeAttr(g2)}"/></linearGradient></defs>` +
-      `<rect width="${VIEWBOX}" height="${VIEWBOX}" rx="24" fill="url(#${gradId})"/>`
+    ? `<rect width="${VIEWBOX}" height="${VIEWBOX}" rx="24" fill="${escapeAttr(tile)}"/>`
     : '';
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="${n(size)}" height="${n(size)}" viewBox="0 0 ${VIEWBOX} ${VIEWBOX}" color="${INK}">` +

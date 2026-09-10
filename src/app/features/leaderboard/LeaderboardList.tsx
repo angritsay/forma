@@ -33,7 +33,7 @@ export function LeaderboardRowView({ row, pinned }: LeaderboardRowViewProps) {
     >
       <span
         className={clsx(
-          'tabular flex size-9 shrink-0 items-center justify-center rounded-pill text-sm font-bold',
+          'tabular flex size-9 shrink-0 items-center justify-center rounded-control text-sm font-bold',
           place ? PODIUM_CLASS[place] : 'bg-surface-2 text-muted',
         )}
         aria-label={t('app.leaderboardRankLabel', { n: row.rank })}

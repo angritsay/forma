@@ -1,20 +1,34 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
-import { Badge } from '@/components/ui/Badge';
-import { Card } from '@/components/ui/Card';
+import { Icon } from '@/components/ui/Icon';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import type { Course } from '@/content/schema';
 import { useT } from '@/app/hooks/useT';
 import { courseLandingHref, courseSignatureExercise } from '@/app/features/courses/courseMeta';
 
-/** Titled horizontal scroller for course tiles. */
-export function CourseRow({ title, children }: { title: ReactNode; children: ReactNode }) {
+export interface CourseRowProps {
+  title: ReactNode;
+  /** Range marker set opposite the title, e.g. "01–04". */
+  index?: ReactNode;
+  children: ReactNode;
+}
+
+/**
+ * A titled index of courses.
+ *
+ * This was a horizontally scrolling shelf of 176×176 gradient tiles — the shape every content app
+ * uses, and much of why the home screen read as a feed. It is a vertical ruled list now: the
+ * title sits opposite a range marker, and each course is a row. Nothing hides off the right edge,
+ * which on a 390px screen was most of the third tile.
+ */
+export function CourseRow({ title, index, children }: CourseRowProps) {
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="eyebrow">{title}</h2>
-      <div className="-mx-5 flex snap-x gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none]">
-        {children}
+    <section className="flex flex-col">
+      <div className="flex items-baseline justify-between gap-3 border-t border-border pt-5 pb-1">
+        <h2 className="font-display text-xl">{title}</h2>
+        {index ? <span className="eyebrow">{index}</span> : null}
       </div>
+      {children}
     </section>
   );
 }
@@ -24,61 +38,80 @@ interface MiniCardProps {
   /** Completed share, 0..100 (owned courses). */
   pct?: number;
   locked?: boolean;
+  /** 1-based position in the list, drawn as the row's numeral. */
+  n?: number;
   onOpen?: () => void;
 }
 
-/** Compact gradient tile: figure, name and either progress or a lock with a landing link. */
-export function CourseMiniCard({ course, pct = 0, locked = false, onOpen }: MiniCardProps) {
+/**
+ * One course as a ruled row: numeral, pictogram on its course tile, name, progress.
+ *
+ * A locked course keeps the same row rather than becoming a different object — the difference is
+ * carried by dimming it and swapping the chevron for a lock, the way a printed catalogue index
+ * distinguishes what you have from what you do not.
+ */
+export function CourseMiniCard({ course, pct = 0, locked = false, n, onOpen }: MiniCardProps) {
   const { t, l, locale } = useT();
   const exercise = courseSignatureExercise(course);
+
   const body = (
     <>
-      <div className="flex items-start justify-between gap-2">
-        <span className="line-clamp-2 text-[15px] font-semibold leading-tight">
-          {l(course.name)}
-        </span>
-        {locked ? (
-          <Badge tone="on-art" icon="lock">
-            {t('app.homeCourseLocked')}
-          </Badge>
-        ) : null}
-      </div>
-      <div className="flex flex-1 items-end justify-between gap-2">
+      {n !== undefined ? (
+        <span className="numeral pt-0.5 text-sm text-accent">{String(n).padStart(2, '0')}</span>
+      ) : null}
+      <span
+        className="hero-art flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-control"
+        style={{ '--course-tile': course.tile } as CSSProperties}
+      >
         <ExerciseFigure
           animation={exercise?.animation ?? 'air_squat'}
           variant="thumb"
-          className="size-14 opacity-90"
+          className="size-9"
         />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="font-display block truncate text-[15px] leading-[1.24]">
+          {l(course.name)}
+        </span>
         {locked ? (
-          <a
-            href={courseLandingHref(locale, course)}
-            className="text-sm font-semibold underline underline-offset-4"
-          >
-            {t('app.homeCourseGet')}
-          </a>
-        ) : null}
-      </div>
-      {!locked ? (
-        <div className="flex flex-col gap-1.5">
-          <ProgressBar value={pct / 100} tone="primary" size="sm" label={l(course.name)} />
-          <span className="tabular text-xs font-medium opacity-80">
-            {t('app.homeCourseProgress', { pct })}
+          <span className="mt-0.5 block truncate text-xs text-muted">
+            {t('app.homeCourseLocked')}
           </span>
-        </div>
-      ) : null}
+        ) : (
+          <span className="mt-2 flex flex-col gap-1">
+            <ProgressBar value={pct / 100} tone="accent" size="sm" label={l(course.name)} />
+            <span className="tabular text-xs text-muted">
+              {t('app.homeCourseProgress', { pct })}
+            </span>
+          </span>
+        )}
+      </span>
+      <span className="flex shrink-0 items-center text-muted">
+        <Icon name={locked ? 'lock' : 'chevron'} size={16} />
+      </span>
     </>
   );
-  const classes = 'flex h-44 w-44 shrink-0 snap-start flex-col gap-3';
-  if (onOpen && !locked) {
+
+  const classes =
+    'flex w-full items-center gap-3.5 border-t border-border py-4 text-left first:border-t-0';
+
+  if (locked) {
     return (
-      <Card gradient={course.gradient} padding="sm" className={classes} onClick={onOpen}>
+      <a
+        href={courseLandingHref(locale, course)}
+        className={`${classes} opacity-60`}
+        aria-label={`${l(course.name)} — ${t('app.homeCourseGet')}`}
+      >
         {body}
-      </Card>
+      </a>
     );
   }
-  return (
-    <Card gradient={course.gradient} padding="sm" className={classes}>
-      {body}
-    </Card>
-  );
+  if (onOpen) {
+    return (
+      <button type="button" onClick={onOpen} className={classes}>
+        {body}
+      </button>
+    );
+  }
+  return <div className={classes}>{body}</div>;
 }

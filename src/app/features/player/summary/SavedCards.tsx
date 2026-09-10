@@ -42,12 +42,12 @@ export function AchievementList({ items }: { items: readonly AchievementStatus[]
   const { t, l } = useT();
   if (items.length === 0) return null;
   return (
-    <Card gradient className="flex flex-col gap-3">
+    <Card tile className="flex flex-col gap-3">
       <span className="eyebrow text-current opacity-70">{t('app.summaryAchievementsTitle')}</span>
       <ul className="flex flex-col gap-2">
         {items.map((a) => (
           <li key={a.id} className="flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-pill bg-black/10 text-2xl">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-black/10 text-2xl">
               <span aria-hidden="true">{a.icon}</span>
             </span>
             <span className="min-w-0 flex-1">

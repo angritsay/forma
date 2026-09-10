@@ -135,7 +135,7 @@ export default function AuthScreen() {
   return (
     <Screen>
       <div className="flex flex-col gap-6 py-4">
-        <Card gradient padding="lg" className="flex min-h-40 flex-col justify-end gap-1">
+        <Card tile padding="lg" className="flex min-h-40 flex-col justify-end gap-1">
           <span className="font-display text-5xl">{t('common.brand')}</span>
           <span className="text-[15px] font-medium opacity-80">{t('common.tagline')}</span>
         </Card>

@@ -236,7 +236,7 @@ export default function OrderForm({
         </p>
         <a
           href={appUrl}
-          className="mt-4 inline-flex min-h-11 items-center justify-center rounded-pill bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary"
+          className="mt-4 inline-flex min-h-11 items-center justify-center rounded-control bg-accent px-5 py-2.5 text-sm font-semibold text-on-primary"
         >
           {labels.successApp}
         </a>
@@ -284,7 +284,7 @@ export default function OrderForm({
                   <span className="flex items-baseline justify-between gap-3">
                     <span className="text-base font-semibold">{p.name}</span>
                     {p.badge && (
-                      <span className="rounded-pill bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent">
+                      <span className="rounded-control bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent">
                         {p.badge}
                       </span>
                     )}
@@ -371,7 +371,7 @@ export default function OrderForm({
       <button
         type="submit"
         disabled={busy}
-        className="inline-flex min-h-11 items-center justify-center rounded-pill bg-primary px-6 py-3.5 text-base font-semibold text-on-primary transition hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
+        className="inline-flex min-h-11 items-center justify-center rounded-control bg-accent px-6 py-3.5 text-base font-semibold text-on-primary transition hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
       >
         {status.kind === 'submitting'
           ? labels.submitting

@@ -39,10 +39,16 @@ export const STROKE = {
 
 /** Opacity of far-side limbs in the side view. */
 export const FAR_OPACITY = 0.55;
-/** Ink colour used by the standalone renderer (the component uses currentColor). */
-export const INK = '#0B0B0D';
-/** Brand mint → sky, the default tile gradient. */
-export const DEFAULT_GRADIENT: [string, string] = ['#B9F3E0', '#C9D6FF'];
+/**
+ * Ink colour used by the standalone renderer (the component uses currentColor).
+ *
+ * The figure was drawn black because it sat on a pastel gradient tile. Course tiles are dark
+ * now, so the figure is drawn in the tile's own foreground (--tile-fg) instead — the same
+ * inversion the React component gets for free by inheriting `color` from `.hero-art`.
+ */
+export const INK = '#DCE9FA';
+/** The default course tile (--tile-1 in global.css), used when no course colour is supplied. */
+export const DEFAULT_TILE = '#1A2634';
 
 const SHOULDER_HALF: Record<View, number> = { side: 0, front: 13 };
 const HIP_HALF: Record<View, number> = { side: 0, front: 6 };

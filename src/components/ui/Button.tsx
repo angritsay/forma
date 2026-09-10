@@ -17,16 +17,27 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   iconRight?: ReactNode;
 }
 
+/*
+ * The primary button is where most of the accent's budget in the product is spent, and it can
+ * afford to be a solid blue fill precisely because there is at most one of them in view at a
+ * time. Secondary loses its filled surface and becomes an outline, so two buttons side by side
+ * read as one offer and one alternative rather than two equal blocks.
+ */
 const VARIANT: Record<ButtonVariant, string> = {
-  primary: 'bg-primary text-on-primary hover:bg-primary/90',
-  secondary: 'bg-surface-2 text-text border border-border hover:bg-surface-3',
+  primary: 'bg-accent text-on-primary hover:opacity-85',
+  secondary: 'bg-transparent text-text border border-border-strong hover:bg-surface-2',
   ghost: 'bg-transparent text-text hover:bg-white/5',
-  danger: 'bg-danger/15 text-danger hover:bg-danger/25',
+  danger: 'bg-transparent text-danger border border-danger/40 hover:bg-danger/10',
 };
 
+/*
+ * Labels are uppercase and tracked at 0.08em, which sets appreciably wider than the sentence-case
+ * equivalent — hence the smaller type at each step. Heights are unchanged and both clear the 44px
+ * touch minimum on their own.
+ */
 const SIZE: Record<ButtonSize, string> = {
-  md: 'h-12 px-5 text-[15px]',
-  lg: 'h-14 px-6 text-base',
+  md: 'h-12 px-5 text-[12px]',
+  lg: 'h-14 px-6 text-[13px]',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
@@ -52,7 +63,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={clsx(
-        'inline-flex select-none items-center justify-center gap-2 rounded-pill font-semibold',
+        'control-label inline-flex select-none items-center justify-center gap-2 rounded-control',
         'transition-[background-color,opacity,transform] duration-150 active:scale-[0.98]',
         'disabled:pointer-events-none disabled:opacity-50',
         VARIANT[variant],

@@ -40,16 +40,15 @@ export function ProgressBar({
         aria-valuemax={100}
         aria-valuenow={Math.round(v * 100)}
         aria-valuetext={valueText}
-        className={clsx(
-          'w-full overflow-hidden rounded-pill bg-white/10',
-          size === 'sm' ? 'h-1.5' : 'h-2.5',
-        )}
+        /*
+         * A rule, not a capsule. The rounded 6/10px bar was the most repeated pill shape in the
+         * product — one per course, per day, per stat — and thinning it and squaring the ends is
+         * most of what makes a list of courses read as a ruled index rather than a dashboard.
+         */
+        className={clsx('w-full overflow-hidden bg-surface-3', size === 'sm' ? 'h-0.5' : 'h-1')}
       >
         <div
-          className={clsx(
-            'h-full rounded-pill transition-[width] duration-500 ease-out',
-            TONE[tone],
-          )}
+          className={clsx('h-full transition-[width] duration-500 ease-out', TONE[tone])}
           style={{ width: `${v * 100}%` }}
         />
       </div>

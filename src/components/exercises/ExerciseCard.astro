@@ -1,12 +1,16 @@
 ---
 /**
- * Exercise card: static first-frame figure thumb, name, level and equipment chips.
+ * Exercise row: static first-frame figure on the course tile, name, level and equipment chips.
  * Used by the /exercises/ hub and "related exercises" blocks.
+ *
+ * A ruled row rather than a bordered card. These appear thirty at a time on the encyclopedia hub,
+ * and thirty bordered boxes is a wall — hairlines let the column read as an index, which is what
+ * a reference list of exercises actually is.
  */
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
 import type { Exercise, Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
-import { equipmentNames, exerciseGradient, levelName, patternName } from '@/lib/seo/exercises';
+import { equipmentNames, exerciseTile, levelName, patternName } from '@/lib/seo/exercises';
 import { href } from '@/lib/util/paths';
 
 interface Props {
@@ -16,35 +20,32 @@ interface Props {
 
 const { exercise: ex, locale } = Astro.props;
 const name = l(ex.name, locale);
+const CHIP = 'control-label rounded-control border px-2 py-1 text-[10px]';
 ---
 
 <a
   href={href(locale, `/exercises/${ex.slug[locale]}/`)}
-  class="flex h-full gap-4 rounded-card border border-border bg-surface p-4 transition-colors hover:border-border-strong"
+  class="flex h-full gap-4 border-t border-border py-4 transition-colors hover:border-border-strong"
 >
-  <div class="shrink-0">
-    <ExerciseFigure
-      animation={ex.animation}
-      variant="thumb"
-      gradient={exerciseGradient(ex)}
-      label={name}
-    />
+  <div
+    class="hero-art flex size-[72px] shrink-0 items-center justify-center overflow-hidden rounded-control"
+    style={`--course-tile:${exerciseTile(ex)}`}
+  >
+    <ExerciseFigure animation={ex.animation} variant="thumb" label={name} />
   </div>
   <div class="min-w-0">
     <span class="eyebrow">{patternName(ex.pattern, locale)}</span>
-    <h3 class="mt-0.5 font-semibold leading-snug">{name}</h3>
+    <h3 class="font-display mt-1 leading-snug">{name}</h3>
     <ul class="mt-2 flex flex-wrap gap-1.5">
-      <li class="rounded-pill bg-surface-2 px-2.5 py-0.5 text-xs text-muted">
-        {levelName(ex.level, locale)}
-      </li>
+      <li class={`${CHIP} border-border text-muted`}>{levelName(ex.level, locale)}</li>
       {
         equipmentNames(ex, locale).map((eq) => (
-          <li class="rounded-pill bg-surface-2 px-2.5 py-0.5 text-xs text-muted">{eq}</li>
+          <li class={`${CHIP} border-border text-muted`}>{eq}</li>
         ))
       }
       {
         ex.isTest && (
-          <li class="rounded-pill bg-accent/15 px-2.5 py-0.5 text-xs text-accent">
+          <li class={`${CHIP} border-accent/40 text-accent`}>
             {t(locale, 'seo.exerciseTestBadge')}
           </li>
         )

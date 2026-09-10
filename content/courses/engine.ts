@@ -1363,8 +1363,7 @@ export const COURSE_ENGINE: CourseInput = {
   weeks: 6,
   sessionsPerWeek: 4,
   avgSessionMin: 30,
-  accent: '#FFD9A8',
-  gradient: ['#FFD9A8', '#FFB4C8'],
+  tile: '#20293c', // --tile-2
   price: { rub: 3990, usd: 39 },
   workouts: [
     W_TEST,

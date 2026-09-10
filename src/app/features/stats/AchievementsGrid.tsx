@@ -23,14 +23,14 @@ export function AchievementsGrid({ items }: { items: readonly AchievementStatus[
             <div className="flex items-center justify-between gap-2">
               <span
                 className={clsx(
-                  'flex size-10 items-center justify-center rounded-pill text-xl',
+                  'flex size-10 items-center justify-center rounded-control text-xl',
                   a.unlocked ? 'bg-accent/15' : 'bg-surface-3 grayscale',
                 )}
               >
                 <span aria-hidden="true">{a.icon}</span>
               </span>
               {a.unlocked ? (
-                <span className="flex size-6 items-center justify-center rounded-pill bg-success/20 text-success">
+                <span className="flex size-6 items-center justify-center rounded-control bg-success/20 text-success">
                   <Icon name="check" size={14} strokeWidth={3} />
                 </span>
               ) : null}

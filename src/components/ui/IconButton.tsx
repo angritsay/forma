@@ -15,10 +15,15 @@ export interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonEle
 }
 
 const VARIANT: Record<IconButtonVariant, string> = {
-  surface: 'bg-surface-2 border border-border text-text hover:bg-surface-3',
+  surface: 'bg-transparent border border-border text-text hover:bg-surface-2',
   ghost: 'bg-transparent text-text hover:bg-white/5',
-  primary: 'bg-primary text-on-primary hover:bg-primary/90',
-  'on-art': 'bg-black/10 text-on-primary hover:bg-black/20',
+  primary: 'bg-accent text-on-primary hover:opacity-85',
+  /*
+   * `on-art` sits on a dark course tile or on a photograph, not on a pastel one any more, so it
+   * darkens instead of lightening and carries a hairline of its own to stay findable against a
+   * busy frame.
+   */
+  'on-art': 'bg-black/45 border border-white/25 text-white hover:bg-black/60',
 };
 
 // `sm` is 36px by design; `tap-target` (global.css) grows its hit area to the 44px minimum.
@@ -38,7 +43,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       aria-label={label}
       title={label}
       className={clsx(
-        'inline-flex shrink-0 items-center justify-center rounded-pill transition-colors',
+        'inline-flex shrink-0 items-center justify-center rounded-control transition-colors',
         'disabled:pointer-events-none disabled:opacity-50',
         VARIANT[variant],
         SIZE[size],

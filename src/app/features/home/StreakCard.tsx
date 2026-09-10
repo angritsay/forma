@@ -1,6 +1,5 @@
 import { clsx } from 'clsx';
 import { Badge } from '@/components/ui/Badge';
-import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
 import { Icon } from '@/components/ui/Icon';
 import { formatNumber, plural } from '@/i18n/index';
@@ -30,24 +29,29 @@ export function StreakCard({ streak, stepsGoal, onLogSteps }: StreakCardProps) {
       : t('app.homeStreakEmpty', { steps: goal });
 
   return (
-    <Card className="flex items-start gap-4" aria-label={t('app.homeStreakTitle')}>
-      <span
-        className={clsx(
-          'flex size-14 shrink-0 items-center justify-center rounded-pill',
-          active ? 'bg-warning/15 text-warning' : 'bg-surface-2 text-muted',
-        )}
-      >
-        <Icon name="flame" size={28} />
-      </span>
+    /*
+     * The streak led by its number. A card with a 56px flame roundel in front of a small figure
+     * put the decoration first and the fact second; here the count is the largest thing on the
+     * line, and the flame is a 16px mark beside the label, coloured only while the streak is live.
+     */
+    <section
+      className="flex items-start gap-4 border-t border-border pt-5"
+      aria-label={t('app.homeStreakTitle')}
+    >
+      <span className="numeral tabular shrink-0 text-5xl leading-none">{streak.current}</span>
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-          <span className="tabular text-3xl font-bold leading-none">{streak.current}</span>
-          <span className="text-sm text-muted">{word}</span>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <Icon
+            name="flame"
+            size={16}
+            className={clsx('shrink-0', active ? 'text-warning' : 'text-muted')}
+          />
+          <span className="eyebrow">{word}</span>
           {streak.longest > streak.current ? (
             <Badge tone="neutral">{t('app.homeStreakBest', { n: streak.longest })}</Badge>
           ) : null}
         </div>
-        <p className={clsx('mt-1.5 text-sm', streak.atRisk ? 'text-warning' : 'text-muted')}>
+        <p className={clsx('mt-2 text-sm', streak.atRisk ? 'text-warning' : 'text-muted')}>
           {subtitle}
         </p>
         {!streak.todayDone ? (
@@ -56,6 +60,6 @@ export function StreakCard({ streak, stepsGoal, onLogSteps }: StreakCardProps) {
           </Chip>
         ) : null}
       </div>
-    </Card>
+    </section>
   );
 }

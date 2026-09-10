@@ -40,7 +40,7 @@ function WhyManualCard() {
     <Card level={2} padding="none">
       <details className="group">
         <summary className="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-pill bg-accent-2/15 text-accent-2">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-accent-2/15 text-accent-2">
             <Icon name="info" size={20} />
           </span>
           <h2 className="min-w-0 flex-1 text-[15px] font-semibold">{t('app.stepsWhyTitle')}</h2>
@@ -217,7 +217,7 @@ export default function StepsScreen() {
   if (status === 'loading' || status === 'idle') {
     body = (
       <div className="flex flex-col items-center gap-5 py-2" aria-hidden="true">
-        <Skeleton rounded="pill" className="size-[200px]" />
+        <Skeleton rounded="control" className="size-[200px]" />
         <Skeleton rounded="card" className="h-24 w-full" />
         <Skeleton rounded="card" className="h-64 w-full" />
       </div>

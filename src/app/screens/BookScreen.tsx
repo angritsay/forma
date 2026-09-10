@@ -68,14 +68,14 @@ export default function BookScreen() {
   return (
     <Screen header={<TopBar back title={t('app.bookTitle')} />}>
       <div className="flex flex-col gap-5 py-2">
-        <Card gradient className="flex items-start gap-4">
+        <Card tile className="flex items-start gap-4">
           {COACH.photo ? (
             <img
               src={withBase(COACH.photo)}
               alt={name}
               width={64}
               height={64}
-              className="size-16 shrink-0 rounded-pill object-cover"
+              className="size-16 shrink-0 rounded-control object-cover"
             />
           ) : (
             <Avatar seed={name} name={name} size={64} />
@@ -126,7 +126,7 @@ export default function BookScreen() {
             <ol className="flex flex-col gap-3">
               {steps.map((step, i) => (
                 <li key={step} className="flex items-start gap-3 text-[15px]">
-                  <span className="tabular flex size-6 shrink-0 items-center justify-center rounded-pill bg-surface-2 text-xs font-semibold text-muted">
+                  <span className="tabular flex size-6 shrink-0 items-center justify-center rounded-control bg-surface-2 text-xs font-semibold text-muted">
                     {i + 1}
                   </span>
                   <span className="pt-0.5">{step}</span>
