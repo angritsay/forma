@@ -1,0 +1,100 @@
+name: Probe video access
+
+# Answers one question from the Actions tab: can a real signed-in user get a signed URL for an
+# exercise clip? The app plays the coach's video only when that works; when it does not, it falls
+# back to the animation without a word, so this is the only way to see the actual failure.
+#
+# The service-role key is used for exactly one thing — minting a login link for the test user —
+# and never touches storage. Every storage call below runs as that user, with the anon key and
+# the user's own token, so row-level security is enforced exactly as it is for a customer.
+#
+# Needs: var PUBLIC_SUPABASE_URL, var PUBLIC_SUPABASE_ANON_KEY, secret SUPABASE_SERVICE_ROLE_KEY.
+
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: 'An existing user to test as'
+        required: true
+        default: 'anastacia8988@gmail.com'
+      object:
+        description: 'Object to sign inside the videos bucket'
+        required: false
+        default: 'shared/knee_push_up.ru.mp4'
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    env:
+      URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+      ANON: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
+      SERVICE: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      EMAIL: ${{ inputs.email }}
+      OBJECT: ${{ inputs.object }}
+    steps:
+      - name: Preconditions
+        run: |
+          [ -n "$URL" ] || { echo "::error::PUBLIC_SUPABASE_URL not set"; exit 1; }
+          [ -n "$ANON" ] || { echo "::error::PUBLIC_SUPABASE_ANON_KEY not set"; exit 1; }
+          [ -n "$SERVICE" ] || { echo "::error::SUPABASE_SERVICE_ROLE_KEY secret not set"; exit 1; }
+
+      - name: Sign in as the user (magic link minted server-side, verified like a real login)
+        id: login
+        run: |
+          body=$(jq -nc --arg e "$EMAIL" '{type:"magiclink", email:$e}')
+          resp=$(curl -sS -X POST "$URL/auth/v1/admin/generate_link" \
+            -H "apikey: $SERVICE" -H "Authorization: Bearer $SERVICE" \
+            -H 'Content-Type: application/json' -d "$body")
+          hashed=$(echo "$resp" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get("hashed_token") or d.get("properties",{}).get("hashed_token") or "")')
+          if [ -z "$hashed" ]; then echo "::error::could not mint a login link: $(echo "$resp" | head -c 300)"; exit 1; fi
+          vbody=$(jq -nc --arg h "$hashed" '{type:"magiclink", token_hash:$h}')
+          session=$(curl -sS -X POST "$URL/auth/v1/verify" -H "apikey: $ANON" \
+            -H 'Content-Type: application/json' -d "$vbody")
+          token=$(echo "$session" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("access_token",""))')
+          if [ -z "$token" ]; then echo "::error::login failed: $(echo "$session" | head -c 300)"; exit 1; fi
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+          role=$(echo "$token" | cut -d. -f2 | tr '_-' '/+' | base64 -d 2>/dev/null | python3 -c 'import json,sys; print(json.load(sys.stdin).get("role",""))' 2>/dev/null || echo "?")
+          echo "signed in as $EMAIL (role: $role)"
+
+      - name: What does this user see under videos/shared/ ?
+        env:
+          TOKEN: ${{ steps.login.outputs.token }}
+        run: |
+          code=$(curl -sS -o /tmp/list -w '%{http_code}' -X POST "$URL/storage/v1/object/list/videos" \
+            -H "apikey: $ANON" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+            -d '{"prefix":"shared/","limit":200,"offset":0}')
+          echo "list HTTP $code"
+          python3 - <<'PY'
+          import json
+          try:
+              d=json.load(open('/tmp/list'))
+          except Exception as e:
+              print("  (not JSON)", open('/tmp/list').read()[:300]); raise SystemExit
+          if isinstance(d, list):
+              names=[x.get('name') for x in d]
+              print(f"  objects visible: {len(names)}")
+              for n in names[:50]: print("   -", n)
+          else:
+              print("  response:", json.dumps(d)[:400])
+          PY
+
+      - name: Can this user sign the clip the player asks for?
+        env:
+          TOKEN: ${{ steps.login.outputs.token }}
+        run: |
+          code=$(curl -sS -o /tmp/sign -w '%{http_code}' -X POST "$URL/storage/v1/object/sign/videos/$OBJECT" \
+            -H "apikey: $ANON" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+            -d '{"expiresIn":60}')
+          echo "sign as user → HTTP $code"
+          python3 -c 'import json; d=json.load(open("/tmp/sign")); print("  signedURL present:", bool(d.get("signedURL"))); print("  message:", d.get("message") or d.get("error") or "-")' 2>/dev/null || cat /tmp/sign
+          case "$code" in
+            200) echo "OK — a signed-in user CAN get the clip; the app should play it";;
+            *)   echo "::error::signing failed as the user (HTTP $code) — this is why the app shows the animation"; exit 1;;
+          esac
+
+      - name: Sanity — anonymous must be refused
+        run: |
+          code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$URL/storage/v1/object/sign/videos/$OBJECT" \
+            -H "apikey: $ANON" -H 'Content-Type: application/json' -d '{"expiresIn":60}')
+          echo "sign as anonymous → HTTP $code (expected 400/401/403)"
