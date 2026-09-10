@@ -10,7 +10,13 @@ export interface PhotoBlockProps {
   ratio?: 'portrait' | 'landscape' | 'square';
   /** Overlay content — kicker, title, actions. Laid out against the bottom of the frame. */
   children?: ReactNode;
-  /** Kicker set vertically down the left edge, outside the photograph. */
+  /**
+   * Kicker set vertically down the left edge, in the margin *outside* the photograph.
+   *
+   * It is drawn 16px to the left of the frame, so the caller must leave it that much room: bleed
+   * the photo off the right edge (`-mr-5`) and keep the page's left gutter. A block that bleeds
+   * both ways (`-mx-5`) has no margin to put this in and would push the page sideways.
+   */
   edgeLabel?: ReactNode;
   /** Corner stamp (day counter, duration) in the top right. */
   stamp?: ReactNode;
@@ -70,10 +76,13 @@ export function PhotoBlock({
         ) : null}
       </div>
       {edgeLabel ? (
-        <span
-          className="eyebrow kicker-vertical absolute -left-4 top-1 hidden sm:block"
-          aria-hidden="true"
-        >
+        /*
+         * Shown at every width, phones included — a 390px Telegram Mini App is this app's main
+         * screen, and hiding the label below `sm` would have meant it never appeared there at
+         * all. At 390px the frame starts at the 20px gutter, so the label occupies x=4..19 and
+         * stays inside the viewport.
+         */
+        <span className="eyebrow kicker-vertical absolute -left-4 top-1" aria-hidden="true">
           {edgeLabel}
         </span>
       ) : null}
