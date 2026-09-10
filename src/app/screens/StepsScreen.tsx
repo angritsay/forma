@@ -5,7 +5,6 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Icon } from '@/components/ui/Icon';
 import { Screen } from '@/components/ui/Screen';
@@ -37,7 +36,7 @@ import {
 function WhyManualCard() {
   const { t, locale } = useT();
   return (
-    <Card level={2} padding="none">
+    <div className="border-t border-border">
       <details className="group">
         <summary className="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-accent-2/15 text-accent-2">
@@ -54,7 +53,7 @@ function WhyManualCard() {
           {t('app.stepsWhyBody', { goal: formatNumber(locale, STEPS_GOAL) })}
         </p>
       </details>
-    </Card>
+    </div>
   );
 }
 
@@ -244,7 +243,7 @@ export default function StepsScreen() {
           <h2 className="px-1 eyebrow">
             {t('app.stepsTodayLabel')} · {formatDate(locale, today)}
           </h2>
-          <Card>
+          <div className="border-t border-border pt-4">
             <StepsEditor
               text={text}
               onText={(v) => {
@@ -255,7 +254,7 @@ export default function StepsScreen() {
               label={t('app.stepsInputLabel')}
               disabled={saving}
             />
-          </Card>
+          </div>
         </section>
         <WhyManualCard />
         <section className="flex flex-col gap-3">

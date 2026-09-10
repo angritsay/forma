@@ -175,21 +175,31 @@ export default function OnboardingScreen() {
   return (
     <Screen
       header={
-        <div className="flex h-14 items-center gap-3 px-3">
-          <div className="flex w-11 shrink-0 items-center">
-            {stepIndex > 0 ? (
-              <IconButton label={t('common.back')} icon="back" variant="ghost" onClick={back} />
-            ) : null}
+        /*
+         * The step counter is set as a numeral pair — 03/12 — rather than as small grey text, and
+         * the progress rule sits under the whole bar instead of competing with it for width. On a
+         * twelve-step form the number is the thing you look for, so it is the thing that is legible.
+         */
+        <div>
+          <div className="flex h-14 items-center gap-3 px-3">
+            <div className="flex w-11 shrink-0 items-center">
+              {stepIndex > 0 ? (
+                <IconButton label={t('common.back')} icon="back" variant="ghost" onClick={back} />
+              ) : null}
+            </div>
+            <span className="eyebrow flex-1">
+              {t('app.onbStepOf', { n: stepIndex + 1, total })}
+            </span>
+            <span className="numeral tabular shrink-0 text-right text-sm">
+              <span className="text-accent">{String(stepIndex + 1).padStart(2, '0')}</span>
+              <span className="text-muted-2">/{String(total).padStart(2, '0')}</span>
+            </span>
           </div>
           <ProgressBar
             value={stepIndex / (total - 1)}
             label={t('app.onbStepOf', { n: stepIndex + 1, total })}
             size="sm"
-            className="flex-1"
           />
-          <span className="tabular w-11 shrink-0 text-right text-xs text-muted">
-            {stepIndex + 1}/{total}
-          </span>
         </div>
       }
       footer={

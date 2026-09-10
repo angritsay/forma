@@ -28,12 +28,19 @@ export default function CoursesScreen() {
 
   return (
     <Screen>
-      <div className="flex flex-col gap-5 py-4">
+      <div className="flex flex-col gap-2 py-4">
         <PageTitle title={t('app.coursesTitle')} subtitle={t('app.coursesLead')} />
-        <div className="flex flex-col gap-4">
+        {/*
+          No gap: each entry draws its own top hairline and owns the space above it, so the
+          catalogue reads as one ruled column. Owned courses come first and the numerals follow
+          that order rather than the content's, because the number is a position in this list.
+        */}
+        <div className="flex flex-col">
           {pending
-            ? COURSES.map((course) => <Skeleton key={course.id} rounded="card" className="h-72" />)
-            : [...owned, ...locked].map((course) => {
+            ? COURSES.map((course) => (
+                <Skeleton key={course.id} rounded="control" className="mt-5 h-56" />
+              ))
+            : [...owned, ...locked].map((course, i) => {
                 const isOwned = entitlements.includes(course.id);
                 const state = courseStates[course.id];
                 return (
@@ -41,6 +48,7 @@ export default function CoursesScreen() {
                     key={course.id}
                     course={course}
                     owned={isOwned}
+                    n={i + 1}
                     progress={state ? courseProgress(course.nodes, state) : null}
                     onOpen={() => navigate(`/courses/${course.id}`)}
                   />

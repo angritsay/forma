@@ -2,7 +2,6 @@ import type { CSSProperties } from 'react';
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
 import { Icon } from '@/components/ui/Icon';
 import { ProgressBar } from '@/components/ui/ProgressBar';
@@ -29,11 +28,20 @@ export interface CourseTileProps {
   owned: boolean;
   /** Null when the course has not been started. */
   progress: CourseProgress | null;
+  /** 1-based position in the catalogue, drawn as the entry's numeral. */
+  n?: number;
   onOpen: () => void;
 }
 
-/** Catalogue tile: course-tile header with the figure, meta chips and the owned / locked CTA. */
-export function CourseTile({ course, owned, progress, onOpen }: CourseTileProps) {
+/**
+ * One course in the catalogue: numeral, tile-mounted figure, name, specification, action.
+ *
+ * This was a bordered card split into a filled header and a filled body — two surfaces stacked
+ * inside a third, five times down the screen. It is a catalogue entry now: the course's own tile
+ * is the only filled thing in it, and hairlines separate the name from the specification from the
+ * action, which is the order a course is actually read in.
+ */
+export function CourseTile({ course, owned, progress, n, onOpen }: CourseTileProps) {
   const tr = useT();
   const { t, l, locale } = tr;
   const exercise = courseSignatureExercise(course);
@@ -47,31 +55,37 @@ export function CourseTile({ course, owned, progress, onOpen }: CourseTileProps)
       : t('app.coursesStart');
 
   return (
-    <Card padding="none" className="overflow-hidden">
-      <div className="hero-art flex items-start gap-4 p-5" style={style}>
+    <article className="flex flex-col border-t border-border pt-5">
+      <div className="flex items-start gap-4">
+        {n !== undefined ? (
+          <span className="numeral pt-1 text-sm text-accent">{String(n).padStart(2, '0')}</span>
+        ) : null}
+        <span
+          className="hero-art flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-tile"
+          style={style}
+        >
+          <ExerciseFigure
+            animation={exercise?.animation ?? 'air_squat'}
+            variant="thumb"
+            className="size-16"
+            label={exercise ? l(exercise.name) : undefined}
+          />
+        </span>
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            {owned ? (
-              <Badge tone="on-art" icon="check">
-                {t('app.coursesOwned')}
-              </Badge>
-            ) : (
-              <Badge tone="on-art" icon="lock">
-                {t('app.coursesLocked')}
-              </Badge>
-            )}
-          </div>
-          <h2 className="font-display mt-2 text-[26px] text-balance">{l(course.name)}</h2>
-          <p className="mt-1 text-sm font-medium opacity-80">{l(course.tagline)}</p>
+          {owned ? (
+            <Badge tone="success" icon="check">
+              {t('app.coursesOwned')}
+            </Badge>
+          ) : (
+            <Badge tone="neutral" icon="lock">
+              {t('app.coursesLocked')}
+            </Badge>
+          )}
+          <h2 className="font-display mt-2 text-xl text-balance">{l(course.name)}</h2>
+          <p className="mt-1 text-sm text-muted">{l(course.tagline)}</p>
         </div>
-        <ExerciseFigure
-          animation={exercise?.animation ?? 'air_squat'}
-          variant="thumb"
-          className="size-24 shrink-0"
-          label={exercise ? l(exercise.name) : undefined}
-        />
       </div>
-      <div className="flex flex-col gap-4 p-5">
+      <div className="mt-5 flex flex-col gap-4">
         <div className="flex flex-wrap gap-2">
           <Chip size="sm" icon="calendar">
             {weeksLabel(tr, course.weeks)}
@@ -106,7 +120,7 @@ export function CourseTile({ course, owned, progress, onOpen }: CourseTileProps)
                 valueText={`${pct}%`}
               />
             ) : null}
-            <Button fullWidth onClick={onOpen} iconRight={<Icon name="chevron" size={18} />}>
+            <Button fullWidth onClick={onOpen} iconRight={<Icon name="chevron" size={16} />}>
               {ownedLabel}
             </Button>
           </>
@@ -117,7 +131,7 @@ export function CourseTile({ course, owned, progress, onOpen }: CourseTileProps)
                 <LinkButton
                   href={subscribeHref(locale)}
                   fullWidth
-                  icon={<Icon name="lock" size={18} />}
+                  icon={<Icon name="lock" size={16} />}
                 >
                   {t('app.coursesSubscribe')}
                 </LinkButton>
@@ -133,7 +147,7 @@ export function CourseTile({ course, owned, progress, onOpen }: CourseTileProps)
                 <LinkButton
                   href={courseLandingHref(locale, course)}
                   fullWidth
-                  icon={<Icon name="lock" size={18} />}
+                  icon={<Icon name="lock" size={16} />}
                 >
                   {t('app.coursesGetAccess')}
                 </LinkButton>
@@ -143,6 +157,6 @@ export function CourseTile({ course, owned, progress, onOpen }: CourseTileProps)
           </>
         )}
       </div>
-    </Card>
+    </article>
   );
 }
