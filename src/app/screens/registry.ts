@@ -22,6 +22,8 @@ export const SCREEN_NAMES = [
   'ProfileScreen',
   'BookScreen',
   'AdminScreen',
+  'AdminWorkoutsScreen',
+  'CustomWorkoutScreen',
 ] as const;
 
 export type ScreenName = (typeof SCREEN_NAMES)[number];

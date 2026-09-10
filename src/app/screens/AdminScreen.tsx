@@ -4,7 +4,7 @@
  * "Add purchase" grants a course by hand. Every call is re-checked by `is_admin()` server-side.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { Navigate } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -95,6 +95,7 @@ export default function AdminScreen() {
   const { t, locale } = useT();
   const toast = useToast();
   const admin = useIsAdmin();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<StatusFilter>('all');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounced(search, SEARCH_DEBOUNCE_MS);
@@ -392,6 +393,14 @@ export default function AdminScreen() {
       }
     >
       <div className="flex flex-col gap-4 py-2">
+        <Button
+          variant="secondary"
+          fullWidth
+          icon={<Icon name="edit" size={18} />}
+          onClick={() => navigate('/admin/workouts')}
+        >
+          {t('app.builderScreenTitle')}
+        </Button>
         {PLANS_ENABLED ? (
           <SegmentedControl<Tab>
             fullWidth

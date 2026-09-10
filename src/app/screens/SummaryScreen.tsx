@@ -142,7 +142,11 @@ function SavedView({
       header={<TopBar title={t('app.summaryEyebrow')} />}
       footer={
         <div className="flex flex-col gap-2">
-          <Button size="lg" fullWidth onClick={() => navigate(`/courses/${courseId}`)}>
+          <Button
+            size="lg"
+            fullWidth
+            onClick={() => navigate(courseId === 'custom' ? '/' : `/courses/${courseId}`)}
+          >
             {t('app.summaryBackToCourse')}
           </Button>
           <ShareButton text={shareText(t, workoutName, summary)} />
@@ -305,7 +309,9 @@ function LocalSummary({
       header={
         <TopBar
           title={t('app.summaryEyebrow')}
-          back={() => navigate(`/courses/${session.courseId}`)}
+          back={() =>
+            navigate(session.courseId === 'custom' ? '/' : `/courses/${session.courseId}`)
+          }
         />
       }
       footer={
@@ -442,7 +448,9 @@ function RemoteSummary({ sessionId }: { sessionId: string }) {
           title={t('app.summaryNoResultsTitle')}
           description={t('app.summaryNoResultsBody')}
           action={
-            <Button onClick={() => navigate(`/courses/${row.courseId}`)}>
+            <Button
+              onClick={() => navigate(row.courseId === 'custom' ? '/' : `/courses/${row.courseId}`)}
+            >
               {t('app.summaryBackToCourse')}
             </Button>
           }

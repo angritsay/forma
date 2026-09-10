@@ -143,6 +143,15 @@ export function courseNames(
   workoutId: string,
   locale: Locale,
 ): { course: string; node: string; workout: string } {
+  // A custom (coach-built) workout is not in the catalogue; give it a readable label.
+  if (courseId === 'custom') {
+    const ru = locale === 'ru';
+    return {
+      course: ru ? 'Своя тренировка' : 'Custom workout',
+      node: '',
+      workout: ru ? 'Тренировка от тренера' : 'Coach workout',
+    };
+  }
   const course = COURSE_BY_ID.get(courseId);
   const node = course?.nodes.find((n) => n.id === nodeId);
   const workout = course?.workouts.find((w) => w.id === workoutId);

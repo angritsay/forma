@@ -61,6 +61,8 @@ export function AppRoutes() {
                 element={<LazyScreen name="NodePreviewScreen" />}
               />
               <Route path="/play" element={<LazyScreen name="PlayerScreen" />} />
+              <Route path="/assigned/:id" element={<LazyScreen name="CustomWorkoutScreen" />} />
+              <Route path="/shared/:token" element={<LazyScreen name="CustomWorkoutScreen" />} />
               <Route path="/summary/:sessionId" element={<LazyScreen name="SummaryScreen" />} />
               <Route path="/stats" element={<LazyScreen name="StatsScreen" />} />
               <Route path="/leaderboard" element={<LazyScreen name="LeaderboardScreen" />} />
@@ -68,6 +70,7 @@ export function AppRoutes() {
               <Route path="/profile" element={<LazyScreen name="ProfileScreen" />} />
               <Route path="/book" element={<LazyScreen name="BookScreen" />} />
               <Route path="/admin" element={<LazyScreen name="AdminScreen" />} />
+              <Route path="/admin/workouts" element={<LazyScreen name="AdminWorkoutsScreen" />} />
             </Route>
           </Route>
         </Route>

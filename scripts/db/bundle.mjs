@@ -24,6 +24,8 @@ const FILES = [
   ['0003_storage.sql', 'the private videos bucket and its access policies'],
   ['0004_content_seed.sql', 'the course and workout catalogue the backend enforces'],
   ['0005_subscriptions.sql', 'monthly / annual subscriptions and the entitlements union'],
+  ['0006_custom_workouts.sql', 'exercise catalogue + coach-built custom workouts, sharing, assign'],
+  ['0007_exercise_seed.sql', 'the exercise library seeded into the database'],
 ];
 
 const rule = '-- ' + '='.repeat(77);

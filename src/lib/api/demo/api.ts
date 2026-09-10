@@ -9,6 +9,15 @@ import { COURSES } from '@/content/registry';
 import { stepsPoints } from '@/lib/training/streak';
 import { addDays, toLocalDateIso } from '@/lib/util/dates';
 import { AppError } from '../errors';
+import type {
+  AssignedWorkoutRow,
+  CustomWorkoutRow,
+  CustomWorkoutSummary,
+  ExerciseCatalogRow,
+  ExerciseMarkupPatch,
+  WorkoutAssigneeRow,
+} from '../types';
+import type { CustomWorkoutInput } from '../customWorkouts';
 import { assertLocalDate, COURSE_ID_RE, EMAIL_RE, guard } from '../internal';
 import {
   benchmarkFromDb,
@@ -693,4 +702,80 @@ export async function resolveMediaUrl(ref: string | undefined): Promise<string |
   if (!trimmed) return undefined;
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
   return parseStorageRef(trimmed) ? undefined : trimmed;
+}
+
+// --- exercise catalogue + custom workouts -----------------------------------
+// Demo mode has no coach tools and no assignments: the catalogue and lists come back empty and
+// admin writes are refused. The builder is admin-only, and isAdmin() is false in demo, so it is
+// never reached here; these keep the read paths (home, share link) from crashing a demo build.
+
+export async function listExerciseCatalog(): Promise<ExerciseCatalogRow[]> {
+  return [];
+}
+
+export async function updateExerciseMarkup(
+  _id: string,
+  _patch: ExerciseMarkupPatch,
+): Promise<ExerciseCatalogRow> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function listCustomWorkouts(): Promise<CustomWorkoutSummary[]> {
+  return [];
+}
+
+export async function getCustomWorkout(_id: string): Promise<CustomWorkoutRow> {
+  throw new AppError('not_found', 'not_found');
+}
+
+export async function createCustomWorkout(
+  _input: CustomWorkoutInput,
+): Promise<CustomWorkoutRow> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function updateCustomWorkout(
+  _id: string,
+  _input: CustomWorkoutInput,
+): Promise<CustomWorkoutRow> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function deleteCustomWorkout(_id: string): Promise<void> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function setCustomWorkoutShare(
+  _id: string,
+  _enabled: boolean,
+): Promise<string | null> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function listWorkoutAssignees(
+  _workoutId: string,
+): Promise<WorkoutAssigneeRow[]> {
+  return [];
+}
+
+export async function assignCustomWorkout(
+  _workoutId: string,
+  _email: string,
+  _note?: string,
+): Promise<void> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function unassignCustomWorkout(_workoutId: string, _email: string): Promise<void> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function listMyAssignedWorkouts(): Promise<AssignedWorkoutRow[]> {
+  return [];
+}
+
+export async function getSharedCustomWorkout(
+  _token: string,
+): Promise<AssignedWorkoutRow | null> {
+  return null;
 }

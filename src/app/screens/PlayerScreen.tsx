@@ -342,7 +342,8 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
   const leave = () => {
     setLeaveOpen(false);
     setPaused(true);
-    navigate(`/courses/${session.courseId}`);
+    // A custom workout has no course path to return to.
+    navigate(session.courseId === 'custom' ? '/' : `/courses/${session.courseId}`);
   };
 
   return (

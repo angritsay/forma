@@ -247,3 +247,70 @@ export interface MyTotals {
   workouts: number;
   minutes: number;
 }
+
+// --- exercise catalogue -----------------------------------------------------
+
+/** A row of the database exercise library, for the builder and the admin catalogue. */
+export interface ExerciseCatalogRow {
+  id: string;
+  nameRu: string;
+  nameEn: string | null;
+  shortNameRu: string | null;
+  primaryMuscle: string | null;
+  muscles: string[];
+  pattern: string | null;
+  equipment: string[];
+  level: number | null;
+  unit: 'reps' | 'seconds' | 'meters' | 'calories';
+  animation: string | null;
+  videoRu: string | null;
+  videoEn: string | null;
+  tags: string[];
+  isTest: boolean;
+}
+
+/** Hand-editable markup on an exercise (video links and tags). */
+export interface ExerciseMarkupPatch {
+  videoRu?: string | null;
+  videoEn?: string | null;
+  tags?: string[];
+}
+
+// --- custom (coach-built) workouts ------------------------------------------
+
+/** A coach-built workout as the admin list needs it (no structure). */
+export interface CustomWorkoutSummary {
+  id: string;
+  shortId: string;
+  title: string;
+  description: string | null;
+  estSec: number | null;
+  points: number | null;
+  shareToken: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** A coach-built workout with its full structure JSON. */
+export interface CustomWorkoutRow extends CustomWorkoutSummary {
+  structure: unknown;
+}
+
+/** A custom workout assigned to the signed-in user. */
+export interface AssignedWorkoutRow {
+  id: string;
+  shortId: string;
+  title: string;
+  description: string | null;
+  structure: unknown;
+  estSec: number | null;
+  points: number | null;
+  assignedAt: string;
+}
+
+/** Who a custom workout has been granted to. */
+export interface WorkoutAssigneeRow {
+  email: string;
+  note: string | null;
+  createdAt: string;
+}

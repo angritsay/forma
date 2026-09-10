@@ -15,6 +15,7 @@ import { useToast } from '@/components/ui/Toast';
 import { COURSES } from '@/content/registry';
 import { STEPS_GOAL } from '@/lib/training/constants';
 import { useT } from '@/app/hooks/useT';
+import { AssignedWorkoutsCard } from '@/app/features/customWorkout/AssignedWorkoutsCard';
 import { BookCard } from '@/app/features/home/BookCard';
 import { CourseMiniCard, CourseRow } from '@/app/features/home/CourseRow';
 import { dayPart, GREETING_KEY, greetingName } from '@/app/features/home/greeting';
@@ -138,6 +139,7 @@ export default function HomeScreen() {
           onPickCourse={() => navigate('/courses')}
         />
         <StatsGrid week={week} steps={steps} totalPoints={totalPoints} stepsGoal={STEPS_GOAL} />
+        <AssignedWorkoutsCard onOpen={(id) => navigate(`/assigned/${id}`)} />
         {BOOKING.enabled ? <BookCard onOpen={() => navigate('/book')} /> : null}
         {owned.length > 0 ? (
           <CourseRow title={t('app.homeYourCourses')}>
