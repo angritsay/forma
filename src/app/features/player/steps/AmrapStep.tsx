@@ -102,7 +102,7 @@ export function AmrapStep({
               decreaseLabel={t('app.playerDecrease')}
               increaseLabel={t('app.playerIncrease')}
             />
-            <span className="text-center eyebrow">{t('app.playerAmrapPartial')}</span>
+            <span className="eyebrow-sentence text-center">{t('app.playerAmrapPartial')}</span>
             <Stepper
               value={extraReps}
               onChange={setExtraReps}

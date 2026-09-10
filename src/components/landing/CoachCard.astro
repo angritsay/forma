@@ -60,7 +60,7 @@ const bookHint = t(locale, 'landing.coachBookHint', {
     {
       COACH.credentials.length > 0 && (
         <div class="mt-5">
-          <p class="eyebrow">{t(locale, 'landing.coachCredentials')}</p>
+          <p class="eyebrow-sentence">{t(locale, 'landing.coachCredentials')}</p>
           <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-muted">
             {COACH.credentials.map((c) => (
               <li>{l(c, locale)}</li>

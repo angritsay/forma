@@ -105,7 +105,9 @@ const price = isFree(course.price, locale)
         ))
       }
     </ul>
-    <div class="mt-auto flex items-center justify-between gap-3 border-t border-border pt-4 mt-4">
+    <!-- `mt-auto` pins the price row to the bottom so cards of unequal height line their prices
+         up; the rule above it gets its air from `pt-4`, not from a second margin. -->
+    <div class="mt-auto flex items-center justify-between gap-3 border-t border-border pt-4">
       <span class="numeral tabular text-xl">{price}</span>
       <a
         href={url}
