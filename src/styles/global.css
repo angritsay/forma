@@ -31,8 +31,11 @@
   --on-primary: #0b0b0d;
   /*
    * The accent is the one blue in the system. `--accent` is the fill (buttons, the logo dot);
-   * `--accent-2` is periwinkle, used only where two cool tones must be told apart. Both clear AA
-   * as text on every surface: #9ecbff on --bg is 11.0:1, on --surface-3 is 7.9:1.
+   * `--accent-2` is periwinkle, used only where two cool tones must be told apart.
+   *
+   * #9ecbff clears AA as text on every surface — measured against --bg 11.65:1, --surface-1
+   * 10.79, --surface-2 9.82, --surface-3 8.44 — and --on-primary on an accent fill is the same
+   * 11.65:1, which is what lets the primary button be solid blue.
    */
   --accent: #9ecbff;
   --accent-2: #c9d6ff;
@@ -41,8 +44,9 @@
   --danger: #ff6b6b;
   /*
    * Course tiles. Muted dark-blue surfaces, not gradients — content assigns one per course via
-   * `--course-tile`. `--tile-fg` is the ink for figures and labels sitting on them (AA on all
-   * five: 12.4:1 on the lightest, --tile-4).
+   * `--course-tile`. `--tile-fg` is the ink for figures and labels sitting on them, and clears AA
+   * on all five: 10.97:1 against the lightest (--tile-4) up to 13.39:1 against the darkest
+   * (--tile-3).
    */
   --tile-1: #1a2634;
   --tile-2: #20293c;
