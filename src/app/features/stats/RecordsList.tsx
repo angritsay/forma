@@ -1,5 +1,4 @@
 import { Badge } from '@/components/ui/Badge';
-import { Card } from '@/components/ui/Card';
 import { formatClock, formatDate, formatNumber, plural, type TKey } from '@/i18n/index';
 import type { Translator } from '@/app/hooks/useT';
 import { useT } from '@/app/hooks/useT';
@@ -38,13 +37,13 @@ export function RecordsList({ records }: { records: readonly PersonalRecord[] })
   const { t, locale } = tr;
   if (records.length === 0) {
     return (
-      <Card level={2} padding="sm">
+      <div className="pb-2">
         <p className="px-1 text-sm text-muted">{t('app.statsRecordsEmpty')}</p>
-      </Card>
+      </div>
     );
   }
   return (
-    <Card padding="none">
+    <div className="border-t border-border">
       <ul className="divide-y divide-border">
         {records.map((r) => {
           const improved = recordImproved(r);
@@ -76,6 +75,6 @@ export function RecordsList({ records }: { records: readonly PersonalRecord[] })
           );
         })}
       </ul>
-    </Card>
+    </div>
   );
 }

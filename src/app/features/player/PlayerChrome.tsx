@@ -125,7 +125,7 @@ export function SectionStepper({ sections, current }: SectionStepperProps) {
   if (sections.length < 2) return null;
   const currentIdx = sections.indexOf(current);
   return (
-    <ol className="flex items-center gap-1.5 px-5 pt-4" aria-label={t('app.playerSectionsLabel')}>
+    <ol className="flex items-stretch gap-2 px-5 pt-4" aria-label={t('app.playerSectionsLabel')}>
       {sections.map((section, i) => {
         const done = i < currentIdx;
         const active = i === currentIdx;
@@ -133,12 +133,12 @@ export function SectionStepper({ sections, current }: SectionStepperProps) {
           <li
             key={section}
             className={clsx(
-              'flex flex-1 items-center justify-center gap-1 rounded-control px-2 py-1 text-xs font-semibold transition-colors',
+              'control-label flex flex-1 items-center justify-center gap-1 border-t-2 px-2 py-2 text-[10px] transition-colors',
               active
-                ? 'bg-accent text-on-primary'
+                ? 'border-accent text-text'
                 : done
-                  ? 'bg-white/10 text-text'
-                  : 'bg-white/5 text-muted',
+                  ? 'border-border-strong text-muted'
+                  : 'border-border text-muted-2',
             )}
             aria-current={active ? 'step' : undefined}
           >
@@ -159,7 +159,7 @@ export interface ControlsProps {
   onNext: () => void;
 }
 
-/** Previous (outlined) — Pause/Play (big white) — Next (outlined). */
+/** Previous (outlined) — Pause/Play (big, accent) — Next (outlined). */
 export function Controls({ paused, canPrev, onPrev, onTogglePause, onNext }: ControlsProps) {
   const { t } = useT();
   const side =

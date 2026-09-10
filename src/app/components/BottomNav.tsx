@@ -18,7 +18,7 @@ const ITEMS: readonly NavItem[] = [
   { to: '/profile', icon: 'profile', labelKey: 'app.tabProfile' },
 ];
 
-/** Floating pill tab bar; the active tab is a white pill with icon + label. */
+/** Floating tab bar; the active tab is a squared accent block with icon + label. */
 export function BottomNav() {
   const { t } = useT();
   return (
@@ -45,7 +45,7 @@ export function BottomNav() {
               {({ isActive }) => (
                 <>
                   <Icon name={item.icon} size={22} />
-                  {isActive ? <span className="text-sm font-semibold">{label}</span> : null}
+                  {isActive ? <span className="control-label text-[11px]">{label}</span> : null}
                 </>
               )}
             </NavLink>

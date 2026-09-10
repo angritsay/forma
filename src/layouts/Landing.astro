@@ -68,7 +68,7 @@ const socials = [
 
   <a
     href="#main"
-    class="sr-only z-50 rounded-control bg-accent px-5 text-sm font-semibold text-on-primary focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:inline-flex focus:min-h-11 focus:items-center"
+    class="control-label sr-only z-50 rounded-control bg-accent px-5 text-[12px] text-on-primary focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:inline-flex focus:min-h-11 focus:items-center"
   >
     {t(locale, 'landing.skipToContent')}
   </a>
@@ -78,8 +78,8 @@ const socials = [
       class="relative mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3.5"
       aria-label={t(locale, 'landing.navMenu')}
     >
-      <a href={href(locale, '/')} class="font-display text-2xl" aria-label={BRAND.name}>
-        {BRAND.name}
+      <a href={href(locale, '/')} class="wordmark text-2xl" aria-label={BRAND.name}>
+        {BRAND.name}<span class="text-accent">.</span>
       </a>
 
       <ul class="hidden items-center gap-7 text-sm text-muted md:flex">
@@ -97,7 +97,7 @@ const socials = [
       <div class="flex items-center gap-2">
         <a
           href={appHref()}
-          class="hidden min-h-11 items-center rounded-control bg-accent px-4 text-sm font-semibold text-on-primary transition hover:opacity-90 sm:inline-flex"
+          class="control-label hidden min-h-11 items-center rounded-control bg-accent px-4 text-[12px] text-on-primary transition hover:opacity-85 sm:inline-flex"
         >
           {t(locale, 'landing.navApp')}
         </a>
@@ -169,7 +169,7 @@ const socials = [
             </ul>
             <a
               href={appHref()}
-              class="mt-3 flex min-h-11 items-center justify-center rounded-control bg-accent px-5 py-3 text-base font-semibold text-on-primary"
+              class="control-label mt-3 flex min-h-11 items-center justify-center rounded-control bg-accent px-5 py-3 text-[13px] text-on-primary"
             >
               {t(locale, 'landing.navApp')}
             </a>
@@ -188,13 +188,15 @@ const socials = [
       class="mx-auto grid max-w-6xl gap-10 px-5 py-12 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]"
     >
       <div>
-        <a href={href(locale, '/')} class="font-display text-2xl">{BRAND.name}</a>
+        <a href={href(locale, '/')} class="wordmark text-2xl"
+          >{BRAND.name}<span class="text-accent">.</span></a
+        >
         <p class="mt-3 max-w-xs text-sm leading-relaxed text-muted">
           {t(locale, 'common.tagline')}
         </p>
         <a
           href={appHref()}
-          class="mt-5 inline-flex min-h-11 items-center rounded-control border border-border-strong px-4 text-sm font-semibold transition hover:border-text"
+          class="control-label mt-5 inline-flex min-h-11 items-center rounded-control border border-border-strong px-4 text-[12px] transition hover:border-text"
         >
           {t(locale, 'common.openApp')}
         </a>

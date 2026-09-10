@@ -1,5 +1,4 @@
 import { clsx } from 'clsx';
-import { Card } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';
 import { formatDate } from '@/i18n/index';
 import type { StreakInfo } from '@/lib/training/types';
@@ -31,7 +30,7 @@ export function StreakCalendar({ weeks, streak }: StreakCalendarProps) {
   const headers = weeks[0]?.cells.map((c) => weekdayLabel(locale, c.date)) ?? [];
 
   return (
-    <Card level={2} padding="sm" className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 pb-2">
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-sm text-muted">{t('app.statsCalendarTitle')}</span>
         <span className="tabular shrink-0 text-sm font-semibold">
@@ -77,6 +76,6 @@ export function StreakCalendar({ weeks, streak }: StreakCalendarProps) {
           </li>
         ))}
       </ul>
-    </Card>
+    </div>
   );
 }

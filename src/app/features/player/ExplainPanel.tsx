@@ -74,8 +74,10 @@ export function ExplainPanel({ exerciseId, item }: ExplainPanelProps) {
                 aria-selected={tab === x.id}
                 onClick={() => setTab(x.id)}
                 className={clsx(
-                  'flex-1 rounded-control px-2 py-1.5 text-xs font-semibold transition-colors',
-                  tab === x.id ? 'bg-accent text-on-primary' : 'bg-white/5 text-muted',
+                  'control-label flex-1 rounded-control border px-2 py-1.5 text-[10px] transition-colors',
+                  tab === x.id
+                    ? 'border-accent bg-accent text-on-primary'
+                    : 'border-border text-muted',
                 )}
               >
                 {t(x.key)}

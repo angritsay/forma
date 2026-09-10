@@ -12,10 +12,18 @@ export function AchievementsGrid({ items }: { items: readonly AchievementStatus[
     <ul className="grid grid-cols-2 gap-3">
       {items.map((a) => (
         <li key={a.id}>
+          {/*
+            An outline, not a filled surface. A grid of twelve filled cards is a wall; unfilled,
+            they read as what they are — a set of slots, most of them still empty — and the accent
+            border does the whole job of marking the ones that are not.
+          */}
           <Card
             level={2}
             padding="sm"
-            className={clsx('flex h-full flex-col gap-2', a.unlocked && 'border-accent/40')}
+            className={clsx(
+              'flex h-full flex-col gap-2 bg-transparent',
+              a.unlocked ? 'border-accent/40' : 'border-border',
+            )}
             aria-label={`${l(a.title)} — ${
               a.unlocked ? t('app.statsAchievementUnlocked') : t('app.statsAchievementLocked')
             }`}
