@@ -1,12 +1,17 @@
 name: Probe video access
 
-# Answers one question from the Actions tab: can a real signed-in user get a signed URL for an
-# exercise clip? The app plays the coach's video only when that works; when it does not, it falls
-# back to the animation without a word, so this is the only way to see the actual failure.
+# Answers one question from the Actions tab: does a real signed-in user get the coach's clip in
+# the player? The app plays the video only when the browser can sign the storage object as the
+# current user; when that fails it falls back to the animation without a word, so this is the
+# only way to see the actual failure.
+#
+# Two halves. The REST half repeats the client's calls one by one (list, sign, fetch the file);
+# the browser half drives the deployed app itself in Chrome as that user — opens the workout,
+# skips the warm-up and reports what the <video> element does on the explain and rest steps.
 #
 # The service-role key is used for exactly one thing — minting a login link for the test user —
-# and never touches storage. Every storage call below runs as that user, with the anon key and
-# the user's own token, so row-level security is enforced exactly as it is for a customer.
+# and never touches storage or the app. Every other call runs as that user, with the anon key
+# and the user's own token, so row-level security is enforced exactly as it is for a customer.
 #
 # Needs: var PUBLIC_SUPABASE_URL, var PUBLIC_SUPABASE_ANON_KEY, secret SUPABASE_SERVICE_ROLE_KEY.
 
@@ -21,16 +26,32 @@ on:
         description: 'Object to sign inside the videos bucket'
         required: false
         default: 'shared/knee_push_up.ru.mp4'
+      site:
+        description: 'Deployed site origin + base path'
+        required: false
+        default: 'https://angritsay.github.io/forma'
+      course:
+        description: 'Course id to open in the browser'
+        required: false
+        default: 'start'
+      node:
+        description: 'Course node id to start'
+        required: false
+        default: 'w1_d1_s01'
 
 jobs:
   probe:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       URL: ${{ vars.PUBLIC_SUPABASE_URL }}
       ANON: ${{ vars.PUBLIC_SUPABASE_ANON_KEY }}
       SERVICE: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       EMAIL: ${{ inputs.email }}
       OBJECT: ${{ inputs.object }}
+      SITE: ${{ inputs.site }}
+      COURSE: ${{ inputs.course }}
+      NODE_ID: ${{ inputs.node }}
     steps:
       - name: Preconditions
         run: |
@@ -52,8 +73,12 @@ jobs:
             -H 'Content-Type: application/json' -d "$vbody")
           token=$(echo "$session" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("access_token",""))')
           if [ -z "$token" ]; then echo "::error::login failed: $(echo "$session" | head -c 300)"; exit 1; fi
+          refresh=$(echo "$session" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("refresh_token",""))')
           echo "::add-mask::$token"
+          [ -z "$refresh" ] || echo "::add-mask::$refresh"
           echo "token=$token" >> "$GITHUB_OUTPUT"
+          # The browser half needs the whole session object (what supabase-js keeps in localStorage).
+          printf '%s' "$session" > /tmp/session.json
           role=$(echo "$token" | cut -d. -f2 | tr '_-' '/+' | base64 -d 2>/dev/null | python3 -c 'import json,sys; print(json.load(sys.stdin).get("role",""))' 2>/dev/null || echo "?")
           echo "signed in as $EMAIL (role: $role)"
 
@@ -72,29 +97,260 @@ jobs:
           except Exception as e:
               print("  (not JSON)", open('/tmp/list').read()[:300]); raise SystemExit
           if isinstance(d, list):
-              names=[x.get('name') for x in d]
-              print(f"  objects visible: {len(names)}")
-              for n in names[:50]: print("   -", n)
+              print(f"  objects visible: {len(d)}")
+              for x in d[:50]:
+                  m = x.get('metadata') or {}
+                  print("   -", x.get('name'), "|", m.get('mimetype'), "|", m.get('size'), "bytes")
           else:
               print("  response:", json.dumps(d)[:400])
           PY
 
       - name: Can this user sign the clip the player asks for?
+        id: sign
         env:
           TOKEN: ${{ steps.login.outputs.token }}
         run: |
           code=$(curl -sS -o /tmp/sign -w '%{http_code}' -X POST "$URL/storage/v1/object/sign/videos/$OBJECT" \
             -H "apikey: $ANON" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-            -d '{"expiresIn":60}')
+            -d '{"expiresIn":600}')
           echo "sign as user → HTTP $code"
           python3 -c 'import json; d=json.load(open("/tmp/sign")); print("  signedURL present:", bool(d.get("signedURL"))); print("  message:", d.get("message") or d.get("error") or "-")' 2>/dev/null || cat /tmp/sign
           case "$code" in
-            200) echo "OK — a signed-in user CAN get the clip; the app should play it";;
+            200) echo "OK — a signed-in user CAN get the clip";;
             *)   echo "::error::signing failed as the user (HTTP $code) — this is why the app shows the animation"; exit 1;;
           esac
+          rel=$(python3 -c 'import json; print(json.load(open("/tmp/sign")).get("signedURL",""))')
+          case "$rel" in
+            http*) full="$rel";;
+            *) full="$URL/storage/v1${rel}";;
+          esac
+          echo "::add-mask::${full#*token=}"
+          echo "signed_url=$full" >> "$GITHUB_OUTPUT"
+
+      - name: Is the file itself playable? (headers + codec)
+        env:
+          SIGNED: ${{ steps.sign.outputs.signed_url }}
+        run: |
+          echo "HEAD (token hidden): ${SIGNED%%\?*}?token=…"
+          curl -sS -I "$SIGNED" | grep -iE '^(HTTP|content-type|content-length|accept-ranges|cache-control|access-control)' || true
+          curl -sS -o /tmp/clip.mp4 "$SIGNED"
+          ls -l /tmp/clip.mp4
+          if command -v ffprobe >/dev/null; then
+            ffprobe -v error -show_entries stream=codec_name,profile,pix_fmt,width,height,r_frame_rate:format=duration,size -of default=noprint_wrappers=1 /tmp/clip.mp4
+          else
+            echo "(ffprobe not installed on this runner)"
+          fi
 
       - name: Sanity — anonymous must be refused
         run: |
           code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$URL/storage/v1/object/sign/videos/$OBJECT" \
             -H "apikey: $ANON" -H 'Content-Type: application/json' -d '{"expiresIn":60}')
           echo "sign as anonymous → HTTP $code (expected 400/401/403)"
+
+      - name: Browser — install Playwright (Google Chrome from the runner image plays H.264)
+        run: |
+          mkdir -p /tmp/probe && cd /tmp/probe
+          npm init -y >/dev/null
+          npm i --no-audit --no-fund 'playwright@^1.55' >/dev/null
+          if command -v google-chrome >/dev/null; then google-chrome --version; else npx playwright install --with-deps chromium; fi
+
+      - name: Browser — open workout 1 in the live app as the user and watch the player
+        working-directory: /tmp/probe
+        env:
+          SESSION_FILE: /tmp/session.json
+        run: |
+          cat > player.cjs <<'JS'
+          /* Drives the deployed app in a real browser as the signed-in user and reports what the
+           * player does with the coach's video. Run by .github/workflows/probe-video.yml. */
+          const { chromium } = require('playwright');
+          const fs = require('node:fs');
+
+          const SITE = (process.env.SITE || '').replace(/\/$/, '');
+          const APP = `${SITE}/app/`;
+          const SESSION = JSON.parse(fs.readFileSync(process.env.SESSION_FILE, 'utf8'));
+          const SUPABASE_URL = process.env.URL;
+          const ANON = process.env.ANON;
+          const COURSE = process.env.COURSE || 'start';
+          const NODE_ID = process.env.NODE_ID || 'w1_d1_s01';
+
+          const say = (...a) => console.log(...a);
+          const strip = (u) => String(u).replace(/token=[^&]+/g, 'token=…');
+          let startedSessionId = null;
+
+          async function launch() {
+            try {
+              return await chromium.launch({ channel: 'chrome' });
+            } catch (e) {
+              say(`Google Chrome unavailable (${String(e.message).split('\n')[0]}); using bundled Chromium (no H.264 decoder)`);
+              return chromium.launch();
+            }
+          }
+
+          async function snapshot(page, tag) {
+            const s = await page.evaluate(() => {
+              const visible = (el) => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
+              const texts = (sel) => [...document.querySelectorAll(sel)].filter(visible)
+                .map((e) => (e.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 60)).filter(Boolean);
+              const ls = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
+              return { hash: location.hash, headings: texts('h1,h2').slice(0, 5), buttons: texts('button').slice(0, 14), demo: ls('forma.demo'), authStored: Boolean(ls('forma.auth')) };
+            });
+            say(`\n[${tag}] ${s.hash || '(no hash)'}  demo=${s.demo ?? 'off'} authStored=${s.authStored}`);
+            say(`  headings: ${JSON.stringify(s.headings)}`);
+            say(`  buttons:  ${JSON.stringify(s.buttons)}`);
+            await page.screenshot({ path: `shots/${tag}.jpg`, type: 'jpeg', quality: 45 }).catch(() => {});
+            return s;
+          }
+
+          async function videoState(page) {
+            return page.evaluate(() => {
+              const el = document.querySelector('video');
+              if (!el) return null;
+              const r = el.getBoundingClientRect();
+              const cs = getComputedStyle(el);
+              return {
+                src: el.currentSrc || el.getAttribute('src') || '',
+                readyState: el.readyState, networkState: el.networkState,
+                w: el.videoWidth, h: el.videoHeight, paused: el.paused, muted: el.muted, t: el.currentTime,
+                error: el.error ? { code: el.error.code, message: el.error.message } : null,
+                box: [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height)],
+                display: cs.display, visibility: cs.visibility, opacity: cs.opacity,
+              };
+            });
+          }
+
+          async function videoReport(page, tag, waitMs) {
+            const deadline = Date.now() + waitMs;
+            let v = await videoState(page);
+            while (Date.now() < deadline && !(v && (v.readyState >= 2 || v.error))) {
+              await page.waitForTimeout(400);
+              v = await videoState(page);
+            }
+            if (!v) { say(`[${tag}] NO <video> element after ${waitMs} ms — the app showed the animation, not the clip`); return null; }
+            say(`[${tag}] <video> src=${strip(v.src).slice(0, 160)}`);
+            say(`  readyState=${v.readyState} networkState=${v.networkState} decoded=${v.w}x${v.h} paused=${v.paused} muted=${v.muted} currentTime=${v.t.toFixed(2)} box=${JSON.stringify(v.box)} display=${v.display} visibility=${v.visibility} opacity=${v.opacity}`);
+            if (v.error) say(`  MEDIA ERROR code=${v.error.code} ${v.error.message}`);
+            return v;
+          }
+
+          async function clickIf(page, name) {
+            const b = page.getByRole('button', { name, exact: true });
+            if ((await b.count()) === 0) return false;
+            await b.first().click();
+            say(`  pressed "${name}"`);
+            return true;
+          }
+
+          async function bail(browser, ctx, msg) {
+            say(`::error::${msg}`);
+            await ctx.close();
+            await browser.close();
+            process.exit(1);
+          }
+
+          (async () => {
+            fs.mkdirSync('shots', { recursive: true });
+            const browser = await launch();
+            const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, locale: 'ru-RU' });
+            const page = await ctx.newPage();
+            page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') say(`  console.${m.type()}: ${m.text().slice(0, 300)}`); });
+            page.on('pageerror', (e) => say(`  pageerror: ${String(e.message).slice(0, 300)}`));
+            page.on('requestfailed', (r) => say(`  request failed: ${r.method()} ${strip(r.url()).slice(0, 180)} — ${r.failure()?.errorText}`));
+            page.on('response', async (r) => {
+              const u = r.url();
+              const m = r.request().method();
+              if (u.includes('/storage/v1/')) say(`  storage ${r.status()} ${m} ${strip(u).slice(0, 180)}`);
+              else if ((u.includes('/rest/v1/') || u.includes('/auth/v1/')) && r.status() >= 400) say(`  ${r.status()} ${m} ${strip(u).slice(0, 180)}`);
+              if (u.includes('/rest/v1/workout_sessions') && m === 'POST' && r.ok()) {
+                try { const j = await r.json(); const row = Array.isArray(j) ? j[0] : j; if (row && row.id) startedSessionId = row.id; } catch { /* not JSON */ }
+              }
+            });
+            // What supabase-js keeps in localStorage after a real sign-in; only planted when absent so a
+            // refreshed session is never clobbered.
+            await page.addInitScript(([k, s]) => { try { if (!localStorage.getItem(k)) localStorage.setItem(k, JSON.stringify(s)); } catch { /* storage blocked */ } }, ['forma.auth', SESSION]);
+
+            const target = `${APP}#/courses/${COURSE}/nodes/${NODE_ID}`;
+            say(`Opening ${target} as ${(SESSION.user && SESSION.user.email) || '?'}`);
+            await page.goto(target, { waitUntil: 'load', timeout: 60000 });
+            await page.waitForTimeout(4000);
+            await snapshot(page, '1-node');
+
+            const start = page.getByRole('button', { name: 'Начать тренировку', exact: true });
+            const hasStart = await start.waitFor({ state: 'visible', timeout: 15000 }).then(() => true).catch(() => false);
+            if (!hasStart) await bail(browser, ctx, 'No "Начать тренировку" button: the app did not reach the workout screen as this user (see the headings above)');
+            await page.waitForFunction(() => {
+              const b = [...document.querySelectorAll('button')].find((x) => /Начать тренировку/.test(x.textContent || ''));
+              return Boolean(b && !b.disabled);
+            }, null, { timeout: 20000 }).catch(() => say('  start button stayed disabled (locked node or plan not ready)'));
+            await start.click();
+            say('  pressed "Начать тренировку"');
+            const reachedPlay = await page.waitForFunction(() => location.hash.startsWith('#/play'), null, { timeout: 15000 }).then(() => true).catch(() => false);
+            await page.waitForTimeout(1500);
+            await snapshot(page, '2-play');
+            if (!reachedPlay) await bail(browser, ctx, 'Did not reach the player after pressing start (a toast above would say why)');
+
+            if (!(await clickIf(page, 'Пропустить разминку'))) say('  no "Пропустить разминку" on the first step — stale build, or the player opened elsewhere');
+            await page.waitForTimeout(800);
+            await snapshot(page, '3-after-skip');
+
+            if (!(await clickIf(page, 'Поехали'))) { await page.keyboard.press('ArrowRight'); say('  ArrowRight'); }
+            await page.waitForTimeout(600);
+            await snapshot(page, '4-explain');
+            const v1 = await videoReport(page, '4-explain', 12000);
+            await page.waitForTimeout(3000);
+            const v1b = await videoState(page);
+            if (v1b) say(`  after 3 s: readyState=${v1b.readyState} currentTime=${v1b.t.toFixed(2)} paused=${v1b.paused} decoded=${v1b.w}x${v1b.h}${v1b.error ? ` error=${v1b.error.code}` : ''}`);
+            await page.screenshot({ path: 'shots/4-explain-after.jpg', type: 'jpeg', quality: 45 }).catch(() => {});
+
+            // On to the work step, then "Дальше" → the rest step, where the next exercise's clip plays.
+            if (!(await clickIf(page, 'Поехали'))) await page.keyboard.press('ArrowRight');
+            await page.waitForTimeout(600);
+            await snapshot(page, '5-work');
+            if (!(await clickIf(page, 'Дальше'))) await page.keyboard.press('ArrowRight');
+            await page.waitForTimeout(600);
+            await snapshot(page, '6-rest');
+            const v2 = await videoReport(page, '6-rest', 12000);
+            await page.waitForTimeout(2000);
+            await page.screenshot({ path: 'shots/6-rest-after.jpg', type: 'jpeg', quality: 45 }).catch(() => {});
+
+            const good = (v) => v && !v.error && v.readyState >= 2 && v.w > 0;
+            say('');
+            if (good(v1) || good(v2)) say("VERDICT: the deployed app requests, receives and decodes the coach's clip for this user in Chrome. A device that still shows the animation is on a cached old build or cannot play this file (see the media check above).");
+            else if (v1 || v2) say('VERDICT: the app gets a URL and renders <video>, but the browser cannot play it — see the MEDIA ERROR / decoded size above.');
+            else say('VERDICT: the app never renders <video> on the explain/rest steps — no signed URL reached the player (storage lines above: none = never requested, 4xx = refused).');
+
+            await ctx.close();
+            await browser.close();
+
+            // Leave no trace: the started session belongs to the probe, not to a workout.
+            if (startedSessionId) {
+              const res = await fetch(`${SUPABASE_URL}/rest/v1/workout_sessions?id=eq.${encodeURIComponent(startedSessionId)}`, {
+                method: 'DELETE',
+                headers: { apikey: ANON, Authorization: `Bearer ${SESSION.access_token}`, Prefer: 'return=representation' },
+              }).catch((e) => ({ status: 0, text: async () => String(e) }));
+              let removed = 0;
+              try { const j = JSON.parse(await res.text()); removed = Array.isArray(j) ? j.length : 0; } catch { /* no body */ }
+              say(`cleanup: probe session ${startedSessionId} → HTTP ${res.status}, rows removed: ${removed}${removed ? '' : ' (no delete policy — it stays as an unfinished session in this account)'}`);
+            }
+          })().catch((e) => { console.error('::error::' + (e && e.stack ? e.stack : e)); process.exit(1); });
+          JS
+          node player.cjs
+
+      - name: Browser — screenshots (base64 JPEG, decode locally to view)
+        if: always()
+        working-directory: /tmp/probe
+        run: |
+          for f in shots/4-explain-after.jpg shots/6-rest-after.jpg shots/1-node.jpg shots/2-play.jpg; do
+            [ -f "$f" ] || continue
+            echo "::group::$f"
+            base64 -w0 "$f"
+            echo
+            echo "::endgroup::"
+          done
+
+      - name: Browser — keep the screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: player-screenshots
+          path: /tmp/probe/shots
+          if-no-files-found: ignore
