@@ -28,22 +28,17 @@ const WIDTH = 1200;
 const HEIGHT = 630;
 // Published languages, mirroring LOCALES in src/content/schema.ts: a card per page that exists.
 const LOCALES = ['ru'];
-const BRAND_GRADIENT = ['#B9F3E0', '#C9D6FF'];
-/** Pastel pairs for guide cards (rotated per cluster so hubs look varied but deterministic). */
-const PASTELS = [
-  ['#B9F3E0', '#C9D6FF'],
-  ['#FFD6C2', '#D9C9FF'],
-  ['#FFF1B8', '#B9F3E0'],
-  ['#C9D6FF', '#FFC9E0'],
-  ['#D9C9FF', '#FFD6C2'],
-  ['#C2F0FF', '#D6FFC9'],
-];
+const BRAND_TILE = '#1A2634';
+/** The five course tiles (--tile-1..5), rotated per cluster so guide hubs vary deterministically. */
+const TILES = ['#1A2634', '#20293C', '#16202B', '#232F42', '#1C2532'];
 const COLORS = {
   bg: '#0B0B0D',
-  text: '#F5F5F7',
+  text: '#F4F4F6',
   muted: '#9A9AA3',
   muted2: '#6B6B73',
-  ink: '#0B0B0D',
+  accent: '#9ECBFF',
+  /** Ink on a course tile — the figure is drawn in it, so it is light, not black. */
+  tileFg: '#DCE9FA',
 };
 
 // Node prints an ExperimentalWarning for type stripping; keep every other warning.
@@ -179,9 +174,19 @@ function errMessage(err) {
 
 /** @param {string} s */
 /** Bundled OG faces. Both are baked latin+cyrillic so one file covers a Russian card. */
-const DISPLAY = 'Unbounded';
+const DISPLAY = 'Manrope';
 const BODY = 'Onest';
-const FONT_FILES = { [DISPLAY]: 'Unbounded-Bold.ttf', [BODY]: 'Onest-Regular.ttf' };
+/**
+ * The wordmark is Manrope 800 while headlines are Manrope 600, and resvg picks a face by weight —
+ * so both static instances are bundled and measured separately. `WORDMARK` is only a key into
+ * FONT_FILES for the metrics parser; both files declare the same family name to the renderer.
+ */
+const WORDMARK = 'Manrope800';
+const FONT_FILES = {
+  [DISPLAY]: 'Manrope-SemiBold.ttf',
+  [WORDMARK]: 'Manrope-ExtraBold.ttf',
+  [BODY]: 'Onest-Regular.ttf',
+};
 
 /** @type {Map<string, {upem: number, cmap: Map<number, number>, hmtx: number[], fallback: number}>} */
 const METRICS = new Map();
@@ -351,7 +356,7 @@ function embedFigure(svg, x, y, size) {
 }
 
 /**
- * @param {{ eyebrow: string, title: string, subtitle: string, gradient: string[], figureSvg: string | null, brand: string, host: string, big?: boolean }} c
+ * @param {{ eyebrow: string, title: string, subtitle: string, tile: string, figureSvg: string | null, brand: string, host: string, big?: boolean }} c
  */
 function template(c) {
   const margin = 80;
@@ -364,10 +369,7 @@ function template(c) {
     c.big ? 1 : 3,
     DISPLAY,
   );
-  const subtitle = c.subtitle
-    ? fitText(c.subtitle, [26, 24, 22], textWidth, 3, BODY)
-    : { size: 26, lines: [] };
-  // 1.174em is where Ё on one line meets у on the line above in Unbounded's Cyrillic; 1.2 clears it.
+  // 1.166em is where Й on one line meets у on the line above in Manrope's Cyrillic; 1.2 clears it.
   const titleLineHeight = title.size * 1.2;
   const eyebrowY = 150;
   let y = c.eyebrow ? 216 : 190;
@@ -378,36 +380,51 @@ function template(c) {
     )
     .join('');
   y += title.lines.length * titleLineHeight + 18;
+  /*
+   * How many subtitle lines actually fit above the wordmark.
+   *
+   * The subtitle was capped at a flat three lines wherever the title happened to leave it, which
+   * on a three-line title put its last descender within a few pixels of the wordmark's cap
+   * height — legible on its own, cramped in a Telegram preview. The budget is measured instead:
+   * from the subtitle's first baseline down to the wordmark's cap line, less 20px of air.
+   */
+  const wordmarkCapY = HEIGHT - 62 - 36;
+  const subtitleBudget = wordmarkCapY - 20 - y;
+  const maxSubtitleLines = Math.max(1, Math.min(3, Math.floor(subtitleBudget / (26 * 1.4)) + 1));
+  const subtitle = c.subtitle
+    ? fitText(c.subtitle, [26, 24, 22], textWidth, maxSubtitleLines, BODY)
+    : { size: 26, lines: [] };
   const subtitleTspans = subtitle.lines
     .map(
       (line, i) =>
         `<tspan x="${margin}" y="${(y + i * subtitle.size * 1.4).toFixed(1)}">${esc(line)}</tspan>`,
     )
     .join('');
+  // The wordmark is set in ExtraBold, so its width has to be measured against that face rather
+  // than the SemiBold the headline uses — the blue full stop is positioned off this number.
+  const wordmarkWidth = advanceWidth(c.brand.toUpperCase(), WORDMARK) * 36;
+  // `color` on the group is what the embedded figure's `currentColor` resolves against: embedFigure
+  // strips the figure's own <svg> wrapper, and the attribute that carried the ink goes with it.
   const figure = c.figureSvg
-    ? embedFigure(c.figureSvg, tile.x + 50, tile.y + 50, tile.size - 100)
+    ? `<g color="${COLORS.tileFg}">${embedFigure(c.figureSvg, tile.x + 50, tile.y + 50, tile.size - 100)}</g>`
     : '';
-  const [g1, g2] = c.gradient;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
   <defs>
-    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="${g1}"/>
-      <stop offset="1" stop-color="${g2}"/>
-    </linearGradient>
     <radialGradient id="glow" cx="0.85" cy="0.5" r="0.6">
-      <stop offset="0" stop-color="${g1}" stop-opacity="0.18"/>
-      <stop offset="1" stop-color="${g1}" stop-opacity="0"/>
+      <stop offset="0" stop-color="${COLORS.accent}" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="${COLORS.accent}" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <rect width="${WIDTH}" height="${HEIGHT}" fill="${COLORS.bg}"/>
   <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#glow)"/>
-  <rect x="${tile.x}" y="${tile.y}" width="${tile.size}" height="${tile.size}" rx="${tile.r}" fill="url(#tile)"/>
+  <rect x="${tile.x}" y="${tile.y}" width="${tile.size}" height="${tile.size}" rx="${tile.r}" fill="${c.tile}"/>
   ${figure}
-  ${c.eyebrow ? `<text x="${margin}" y="${eyebrowY}" font-family="Onest" font-size="22" letter-spacing="0.4" fill="${COLORS.muted}">${esc(c.eyebrow)}</text>` : ''}
-  <text font-family="Unbounded" font-size="${title.size}" fill="${COLORS.text}">${titleTspans}</text>
+  ${c.eyebrow ? `<text x="${margin}" y="${eyebrowY}" font-family="Onest" font-size="22" letter-spacing="3" fill="${COLORS.muted}">${esc(c.eyebrow.toUpperCase())}</text>` : ''}
+  <text font-family="Manrope" font-size="${title.size}" fill="${COLORS.text}">${titleTspans}</text>
   <text font-family="Onest" font-size="${subtitle.size}" fill="${COLORS.muted}">${subtitleTspans}</text>
-  <text x="${margin}" y="${HEIGHT - 62}" font-family="Unbounded" font-size="36" fill="${COLORS.text}">${esc(c.brand)}</text>
-  <text x="${margin + advanceWidth(c.brand, DISPLAY) * 36 + 20}" y="${HEIGHT - 62}" font-family="Onest" font-size="20" fill="${COLORS.muted2}">${esc(c.host)}</text>
+  <text x="${margin}" y="${HEIGHT - 62}" font-family="Manrope" font-weight="800" font-size="36" fill="${COLORS.text}">${esc(c.brand.toUpperCase())}</text>
+  <text x="${margin + wordmarkWidth}" y="${HEIGHT - 62}" font-family="Manrope" font-weight="800" font-size="36" fill="${COLORS.accent}">.</text>
+  <text x="${margin + wordmarkWidth + 26}" y="${HEIGHT - 62}" font-family="Onest" font-size="20" fill="${COLORS.muted2}">${esc(c.host)}</text>
 </svg>`;
 }
 
@@ -441,14 +458,14 @@ function buildJobs(content, labels, host) {
   const jobs = [];
   const brand = labels.ru.brand ?? 'Forma';
   const exerciseById = new Map(content.exercises.map((e) => [e.id, e]));
-  const courseGradientForExercise = new Map();
+  const courseTileForExercise = new Map();
   const courseFigure = new Map();
   for (const course of content.courses) {
     for (const w of course.workouts ?? []) {
       for (const b of w.blocks ?? []) {
         for (const it of b.items ?? []) {
-          if (!courseGradientForExercise.has(it.exerciseId))
-            courseGradientForExercise.set(it.exerciseId, course.gradient);
+          if (!courseTileForExercise.has(it.exerciseId))
+            courseTileForExercise.set(it.exerciseId, course.tile);
           if (!courseFigure.has(course.id))
             courseFigure.set(course.id, exerciseById.get(it.exerciseId)?.animation);
         }
@@ -463,7 +480,7 @@ function buildJobs(content, labels, host) {
       eyebrow: '',
       title: brand,
       subtitle: LOCALES.map((loc) => labels[loc].tagline).join(' '),
-      gradient: BRAND_GRADIENT,
+      tile: BRAND_TILE,
       figureSvg: null,
       brand,
       host,
@@ -488,7 +505,7 @@ function buildJobs(content, labels, host) {
           eyebrow: '',
           title,
           subtitle,
-          gradient: BRAND_GRADIENT,
+          tile: BRAND_TILE,
           figureSvg: null,
           brand,
           host,
@@ -504,7 +521,7 @@ function buildJobs(content, labels, host) {
           eyebrow: L.ogCourse ?? '',
           title: pick(course.name, locale),
           subtitle: pick(course.tagline, locale),
-          gradient: Array.isArray(course.gradient) ? course.gradient : BRAND_GRADIENT,
+          tile: typeof course.tile === 'string' ? course.tile : BRAND_TILE,
           figureSvg: null,
           brand,
           host,
@@ -520,7 +537,7 @@ function buildJobs(content, labels, host) {
           eyebrow: L.ogExercise ?? '',
           title: pick(ex.name, locale),
           subtitle: firstSentence(pick(ex.description, locale)),
-          gradient: courseGradientForExercise.get(ex.id) ?? BRAND_GRADIENT,
+          tile: courseTileForExercise.get(ex.id) ?? BRAND_TILE,
           figureSvg: null,
           brand,
           host,
@@ -549,7 +566,7 @@ function buildJobs(content, labels, host) {
         eyebrow: `${L.ogGuide ?? ''} · ${clusterTitle}`,
         title: String(g.data.h1 ?? g.data.title ?? ''),
         subtitle: String(g.data.description ?? ''),
-        gradient: PASTELS[clusterIndex.get(cluster) % PASTELS.length],
+        tile: TILES[clusterIndex.get(cluster) % TILES.length],
         figureSvg: null,
         brand,
         host,

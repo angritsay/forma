@@ -6,7 +6,6 @@
  */
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Card } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';
 import { ListRow } from '@/components/ui/ListRow';
 import { Modal } from '@/components/ui/Modal';
@@ -167,20 +166,20 @@ export default function ProfileScreen() {
 
         {PLANS_ENABLED ? (
           <Section title={t('app.profileSubscriptionSection')}>
-            <Card padding="none">
+            <div className="border-t border-border">
               <ListRow
                 leading={<Icon name="star" />}
                 title={subscriptionTitle(tr, subscription)}
                 subtitle={subscriptionSubtitle(tr, subscription)}
                 href={subscribeHref(locale)}
               />
-            </Card>
+            </div>
           </Section>
         ) : null}
 
         {BOOKING.enabled ? (
           <Section title={t('app.profileCoachSection')}>
-            <Card padding="none">
+            <div className="border-t border-border">
               <ListRow
                 leading={<Icon name="calendar" />}
                 title={t('app.profileBook')}
@@ -190,12 +189,12 @@ export default function ProfileScreen() {
                 })}
                 onClick={() => navigate('/book')}
               />
-            </Card>
+            </div>
           </Section>
         ) : null}
 
         <Section title={t('app.profileTrainingSection')}>
-          <Card padding="none">
+          <div className="border-t border-border">
             <ul className="divide-y divide-border">
               <li>
                 <ListRow
@@ -216,11 +215,11 @@ export default function ProfileScreen() {
                 />
               </li>
             </ul>
-          </Card>
+          </div>
         </Section>
 
         <Section title={t('app.profileSettingsSection')}>
-          <Card padding="none">
+          <div className="border-t border-border">
             <ul className="divide-y divide-border">
               <li>
                 <ListRow
@@ -237,12 +236,12 @@ export default function ProfileScreen() {
                 />
               </li>
             </ul>
-          </Card>
+          </div>
         </Section>
 
         {demo ? (
           <Section title={t('app.demoSection')}>
-            <Card padding="none">
+            <div className="border-t border-border">
               <ul className="divide-y divide-border">
                 <li className="px-4 py-3 text-sm text-muted">{t('app.demoDataNote')}</li>
                 <li>
@@ -264,12 +263,12 @@ export default function ProfileScreen() {
                   </li>
                 ) : null}
               </ul>
-            </Card>
+            </div>
           </Section>
         ) : null}
 
         <Section title={t('app.profileAccountSection')}>
-          <Card padding="none">
+          <div className="border-t border-border">
             <ul className="divide-y divide-border">
               {admin === true ? (
                 <li>
@@ -290,7 +289,7 @@ export default function ProfileScreen() {
                 />
               </li>
             </ul>
-          </Card>
+          </div>
         </Section>
 
         <p className="text-center text-xs text-muted-2">

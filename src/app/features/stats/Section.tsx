@@ -7,13 +7,19 @@ export interface SectionProps {
   children: ReactNode;
 }
 
-/** Eyebrow-titled block of the Stats and Profile screens. */
+/**
+ * Titled block of the Stats and Profile screens.
+ *
+ * A display heading opposite its aside over a hairline — the same header the course index and the
+ * home sections use, so the four screens read as one document rather than as four layouts that
+ * happen to share a colour scheme.
+ */
 export function Section({ title, aside, children }: SectionProps) {
   return (
-    <section className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-3 px-1">
-        <h2 className="eyebrow">{title}</h2>
-        {aside ? <span className="tabular text-xs text-muted">{aside}</span> : null}
+    <section className="flex flex-col">
+      <div className="flex items-baseline justify-between gap-3 border-t border-border pt-5 pb-2">
+        <h2 className="font-display text-xl">{title}</h2>
+        {aside ? <span className="eyebrow">{aside}</span> : null}
       </div>
       {children}
     </section>

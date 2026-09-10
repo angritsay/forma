@@ -1,7 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { IconButton } from '@/components/ui/IconButton';
 import { Input } from '@/components/ui/Input';
 import { useT } from '@/app/hooks/useT';
@@ -35,7 +34,9 @@ function NameEditor({ name, busy, onSave }: NameEditorProps) {
   if (!editing) {
     return (
       <div className="flex min-w-0 items-center gap-1">
-        <span className="truncate text-xl font-semibold">{name || t('app.profileNoName')}</span>
+        <span className="font-display truncate text-2xl leading-[1.24]">
+          {name || t('app.profileNoName')}
+        </span>
         <IconButton
           label={t('app.profileEditName')}
           icon="edit"
@@ -93,7 +94,12 @@ export function ProfileHeader({
 }: ProfileHeaderProps) {
   const { t } = useT();
   return (
-    <Card className="flex items-start gap-4">
+    /*
+     * No card. This is the top of the profile, and the page's own ground behind it is what lets
+     * the name sit as a page title rather than as the first row of a list of settings.
+     * `bg-bg` on the re-roll button keeps it legible where it overlaps the avatar's corner.
+     */
+    <section className="flex items-start gap-4 pb-1">
       <div className="relative shrink-0">
         <Avatar seed={seed} name={name || email} size={72} />
         <IconButton
@@ -103,7 +109,7 @@ export function ProfileHeader({
           variant="surface"
           disabled={busy === 'avatar'}
           onClick={onNewAvatar}
-          className="absolute -bottom-1 -right-1 shadow-card"
+          className="absolute -bottom-1 -right-1 bg-bg shadow-card"
         />
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -112,6 +118,6 @@ export function ProfileHeader({
           {email}
         </span>
       </div>
-    </Card>
+    </section>
   );
 }

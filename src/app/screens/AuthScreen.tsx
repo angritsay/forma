@@ -5,13 +5,14 @@
 import { useCallback, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { CodeInput } from '@/components/ui/CodeInput';
 import { Icon } from '@/components/ui/Icon';
 import { Input } from '@/components/ui/Input';
 import { PageTitle } from '@/components/ui/PageTitle';
+import { PhotoBlock } from '@/components/ui/PhotoBlock';
 import { Screen } from '@/components/ui/Screen';
 import { useToast } from '@/components/ui/Toast';
+import { PHOTOS } from '@/lib/media/photos';
 import { useT } from '@/app/hooks/useT';
 import { useCountdown } from '@/app/hooks/useTimer';
 import { useSession } from '@/app/store/session';
@@ -135,10 +136,20 @@ export default function AuthScreen() {
   return (
     <Screen>
       <div className="flex flex-col gap-6 py-4">
-        <Card tile padding="lg" className="flex min-h-40 flex-col justify-end gap-1">
-          <span className="font-display text-5xl">{t('common.brand')}</span>
-          <span className="text-[15px] font-medium opacity-80">{t('common.tagline')}</span>
-        </Card>
+        {/*
+         * The first screen anyone sees, so it is the brand's own argument: a photograph of someone
+         * training, running past both gutters, with the wordmark and the tagline over it. A flat
+         * tile carrying the same two lines said nothing that the words did not already say.
+         */}
+        <div className="-mx-5">
+          <PhotoBlock photo={PHOTOS.auth} alt="" ratio="landscape" priority>
+            <span className="wordmark block text-4xl text-white">
+              {t('common.brand')}
+              <span className="text-accent">.</span>
+            </span>
+            <span className="mt-2 block text-[15px] text-white/80">{t('common.tagline')}</span>
+          </PhotoBlock>
+        </div>
 
         {step === 'email' ? (
           <form onSubmit={onSubmitEmail} className="flex flex-col gap-5" noValidate>
