@@ -728,9 +728,7 @@ export async function getCustomWorkout(_id: string): Promise<CustomWorkoutRow> {
   throw new AppError('not_found', 'not_found');
 }
 
-export async function createCustomWorkout(
-  _input: CustomWorkoutInput,
-): Promise<CustomWorkoutRow> {
+export async function createCustomWorkout(_input: CustomWorkoutInput): Promise<CustomWorkoutRow> {
   throw new AppError('forbidden', 'demo_read_only');
 }
 
@@ -752,9 +750,7 @@ export async function setCustomWorkoutShare(
   throw new AppError('forbidden', 'demo_read_only');
 }
 
-export async function listWorkoutAssignees(
-  _workoutId: string,
-): Promise<WorkoutAssigneeRow[]> {
+export async function listWorkoutAssignees(_workoutId: string): Promise<WorkoutAssigneeRow[]> {
   return [];
 }
 
@@ -774,8 +770,6 @@ export async function listMyAssignedWorkouts(): Promise<AssignedWorkoutRow[]> {
   return [];
 }
 
-export async function getSharedCustomWorkout(
-  _token: string,
-): Promise<AssignedWorkoutRow | null> {
+export async function getSharedCustomWorkout(_token: string): Promise<AssignedWorkoutRow | null> {
   return null;
 }
