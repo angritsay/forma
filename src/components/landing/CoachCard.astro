@@ -26,7 +26,7 @@ const bookHint = t(locale, 'landing.coachBookHint', {
 ---
 
 <div
-  class={`grid gap-8 rounded-card border border-border bg-surface p-6 md:p-10 ${variant === 'full' ? 'md:grid-cols-[200px_minmax(0,1fr)]' : 'md:grid-cols-[160px_minmax(0,1fr)]'}`}
+  class={`grid items-start gap-8 ${variant === 'full' ? 'md:grid-cols-[240px_minmax(0,1fr)]' : 'md:grid-cols-[200px_minmax(0,1fr)]'}`}
 >
   {
     COACH.photo ? (
@@ -35,12 +35,12 @@ const bookHint = t(locale, 'landing.coachBookHint', {
         alt={name}
         width={variant === 'full' ? 200 : 160}
         height={variant === 'full' ? 200 : 160}
-        class="hero-art aspect-square w-40 rounded-card object-cover md:w-full"
+        class="photo-mono aspect-[4/5] w-40 object-cover md:w-full"
         loading="lazy"
       />
     ) : (
       <div
-        class="hero-art flex aspect-square w-40 items-center justify-center rounded-card md:w-full"
+        class="hero-art flex aspect-[4/5] w-40 items-center justify-center md:w-full"
         aria-hidden="true"
       >
         <span class="font-display text-6xl">{initial}</span>
@@ -60,7 +60,7 @@ const bookHint = t(locale, 'landing.coachBookHint', {
     {
       COACH.credentials.length > 0 && (
         <div class="mt-5">
-          <p class="text-sm font-semibold">{t(locale, 'landing.coachCredentials')}</p>
+          <p class="eyebrow">{t(locale, 'landing.coachCredentials')}</p>
           <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-muted">
             {COACH.credentials.map((c) => (
               <li>{l(c, locale)}</li>
@@ -77,7 +77,7 @@ const bookHint = t(locale, 'landing.coachBookHint', {
               <a
                 href={x.url}
                 rel="me noopener"
-                class="inline-flex min-h-11 items-center rounded-control border border-border px-4 text-sm hover:border-text"
+                class="control-label inline-flex min-h-11 items-center rounded-control border border-border px-4 text-[11px] text-muted hover:border-text hover:text-text"
               >
                 {x.label}
               </a>

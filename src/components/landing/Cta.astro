@@ -12,17 +12,22 @@ const { title, text, primary, secondary } = Astro.props;
 ---
 
 <section class="mx-auto max-w-6xl px-5 py-8 md:py-12">
-  <div
-    class="relative overflow-hidden rounded-card border border-border bg-surface px-6 py-12 text-center md:px-12 md:py-16"
-  >
+  <!--
+    The closing argument, set left over a rule rather than centred inside a filled, glowing panel.
+    Centred text in a bordered box is the shape of every SaaS footer CTA; the page's last word
+    reads better in the same column everything above it was read in. The glow stays — it is the
+    one soft thing in the system and it marks the end — but it sits behind the type now rather
+    than around a box.
+  -->
+  <div class="relative overflow-hidden border-t border-border pt-12 md:pt-16">
     <div
-      class="pointer-events-none absolute -top-24 left-1/2 h-64 w-[40rem] -translate-x-1/2 rounded-full bg-accent/15 blur-3xl"
+      class="pointer-events-none absolute -top-32 left-0 h-64 w-[40rem] rounded-full bg-accent/12 blur-3xl"
       aria-hidden="true"
     >
     </div>
-    <h2 class="font-display relative text-4xl text-balance md:text-5xl">{title}</h2>
-    <p class="relative mx-auto mt-4 max-w-xl text-lg text-muted">{text}</p>
-    <div class="relative mt-8 flex flex-wrap justify-center gap-3">
+    <h2 class="font-display relative max-w-3xl text-4xl text-balance md:text-5xl">{title}</h2>
+    <p class="relative mt-4 max-w-xl text-lg text-muted">{text}</p>
+    <div class="relative mt-8 flex flex-wrap gap-3">
       <Button href={primary.href} size="lg">{primary.label}</Button>
       {
         secondary && (

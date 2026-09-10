@@ -18,7 +18,7 @@ const { title, items, id = 'faq', class: className = '' } = Astro.props;
       <h2 id={`${id}-title`} class="font-display text-2xl md:text-3xl">
         {title}
       </h2>
-      <div class="mt-6 divide-y divide-border rounded-card border border-border bg-surface">
+      <div class="mt-6 divide-y divide-border border-t border-border">
         {items.map((it) => (
           <details class="group px-5 py-4">
             <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold [&::-webkit-details-marker]:hidden">

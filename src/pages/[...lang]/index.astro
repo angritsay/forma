@@ -113,7 +113,12 @@ const jsonLd = [
     tileBottom={t(locale, 'landing.heroTileBottom')}
   />
 
-  <Section id="how" eyebrow={t(locale, 'landing.howEyebrow')} title={t(locale, 'landing.howTitle')}>
+  <Section
+    id="how"
+    n={1}
+    eyebrow={t(locale, 'landing.howEyebrow')}
+    title={t(locale, 'landing.howTitle')}
+  >
     <Steps
       steps={[
         { title: t(locale, 'landing.howStep1Title'), text: t(locale, 'landing.howStep1Text') },
@@ -125,15 +130,16 @@ const jsonLd = [
 
   <Section
     id="courses"
+    n={2}
     eyebrow={t(locale, 'landing.coursesEyebrow')}
     title={t(locale, 'landing.coursesTitle')}
     intro={t(locale, 'landing.coursesIntro')}
   >
     <ul class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {
-        COURSES.map((c) => (
+        COURSES.map((c, i) => (
           <li>
-            <CourseCard course={c} locale={locale} />
+            <CourseCard course={c} locale={locale} n={i + 1} />
           </li>
         ))
       }
@@ -169,6 +175,7 @@ const jsonLd = [
 
   <Section
     id="path"
+    n={3}
     eyebrow={t(locale, 'landing.pathEyebrow')}
     title={t(locale, 'landing.pathTitle')}
     intro={t(locale, 'landing.pathIntro')}
@@ -291,6 +298,7 @@ const jsonLd = [
 
   <Section
     id="inside"
+    n={4}
     eyebrow={t(locale, 'landing.insideEyebrow')}
     title={t(locale, 'landing.insideTitle')}
     intro={t(locale, 'landing.insideIntro')}
@@ -429,13 +437,19 @@ const jsonLd = [
 
   <Section
     id="coach"
+    n={5}
     eyebrow={t(locale, 'landing.coachEyebrow')}
     title={t(locale, 'landing.navAbout')}
   >
     <CoachCard locale={locale} moreHref={href(locale, '/about/')} />
   </Section>
 
-  <Section id="faq" eyebrow={t(locale, 'landing.faqEyebrow')} title={t(locale, 'landing.faqTitle')}>
+  <Section
+    id="faq"
+    n={6}
+    eyebrow={t(locale, 'landing.faqEyebrow')}
+    title={t(locale, 'landing.faqTitle')}
+  >
     <Faq items={FAQ.map((f) => ({ q: l(f.q, locale), a: l(f.a, locale) }))} />
   </Section>
 
