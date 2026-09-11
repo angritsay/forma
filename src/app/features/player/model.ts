@@ -60,6 +60,31 @@ export function exerciseVideoRef(id: string | undefined, locale: Locale): string
   return v?.[locale] ?? v?.ru ?? undefined;
 }
 
+/**
+ * The clip to play behind a step, if the exercise has one.
+ *
+ * Wherever an exercise is the subject of the screen, its footage is what belongs on it: while it is
+ * explained, while it is being done, and — for the exercise coming next — through the rest before
+ * it. Work was once excluded on the theory that a recording cannot match a prescribed count. It
+ * cannot, but that is not what these clips are: they are the movement itself, filmed once and
+ * looped, with no separate "explaining" version to hold back for. The animated figure stays for
+ * every exercise with no footage, which is most of them.
+ *
+ * Steps that are about a block rather than a movement — the intro, a whole AMRAP — get nothing and
+ * keep the figure.
+ */
+export function stepVideoRef(step: PlayerStep | undefined, locale: Locale): string | undefined {
+  switch (step?.kind) {
+    case 'explain':
+    case 'work':
+      return exerciseVideoRef(step.exerciseId, locale);
+    case 'rest':
+      return exerciseVideoRef(step.nextExerciseId, locale);
+    default:
+      return undefined;
+  }
+}
+
 const ALL_LIMITATIONS: readonly Limitation[] = [
   'knees',
   'lower_back',
