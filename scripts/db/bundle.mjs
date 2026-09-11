@@ -85,7 +85,13 @@ ${rule}
 -- sign-in addresses here. Case does not matter. One address per line, commas between; add or
 -- remove lines freely.
 --
--- Leave the placeholders in and the script stops right here, having changed nothing.
+-- Any line still reading CHANGE-ME-… is ignored, so if only one of you needs adding, overwrite
+-- one line and leave the other alone. Overwrite neither and the script stops right here, having
+-- changed nothing.
+--
+-- Adding someone who is already an admin does nothing — so if you have added an address before,
+-- straight into the dashboard, there is no harm in listing it again. To see who is already there:
+--   select email from public.admins order by email;
 ${rule}
 
 create temporary table _forma_admin_emails (email text);
@@ -94,20 +100,23 @@ insert into _forma_admin_emails (email) values
   ('CHANGE-ME-owner@example.com'),
   ('CHANGE-ME-coach@example.com');
 
+/*
+ * Placeholders are dropped rather than rejected.
+ *
+ * Refusing the whole run because one of the two lines was left alone punishes the common case:
+ * one of the pair is already an admin, added by hand months ago, and only the other needs a row.
+ * Dropping them keeps the property that matters — the run cannot finish with nobody able to open
+ * the admin panel — because the check below then fires on the empty set.
+ */
+delete from _forma_admin_emails where email like 'CHANGE-ME-%';
+
 do $adm$
 begin
-  if exists (select 1 from _forma_admin_emails where email like 'CHANGE-ME-%') then
-    raise exception using
-      message = 'Stopped, and nothing was changed: the admin addresses are still the placeholders.',
-      hint    = 'Near the top of this script, replace CHANGE-ME-owner@example.com and '
-                'CHANGE-ME-coach@example.com with the real sign-in addresses, then run it again.';
-  end if;
-
   if not exists (select 1 from _forma_admin_emails) then
     raise exception using
-      message = 'Stopped, and nothing was changed: there are no admin addresses.',
-      hint    = 'Without one the admin panel cannot be opened. Add at least one address near '
-                'the top of this script and run it again.';
+      message = 'Stopped, and nothing was changed: no admin addresses were filled in.',
+      hint    = 'Near the top of this script, replace CHANGE-ME-owner@example.com and/or '
+                'CHANGE-ME-coach@example.com with a real sign-in address, then run it again.';
   end if;
 end $adm$;
 `;

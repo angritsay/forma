@@ -58,16 +58,27 @@ The schema lives in `supabase/migrations/` and is idempotent: re-running a file 
 there is one thing to paste instead of ten, and no way to run them out of order.
 
 1. Open [`supabase/setup-all.sql`](../supabase/setup-all.sql). **Edit the admin block near the
-   top** — those addresses are the people who can open the admin panel. Left as the `CHANGE-ME-…`
-   placeholders, the script stops on its first statement and changes nothing. That is deliberate:
-   an admins table holding only an address nobody can sign in with locks you out of your own admin
-   panel, and it is a slow thing to discover afterwards.
+   top** — those addresses are the people who can open the admin panel. A line left as
+   `CHANGE-ME-…` is ignored, so filling in one and leaving the other alone is fine; fill in
+   neither and the script stops on its first statement, having changed nothing. That is
+   deliberate: an admins table holding only an address nobody can sign in with locks you out of
+   your own admin panel, and it is a slow thing to discover afterwards.
+
+   Anyone already in the table stays — the insert ignores addresses that are there already, so
+   listing one twice is harmless. To see who is already an admin:
+   `select email from public.admins order by email;`
+
 2. Dashboard → **SQL Editor** → **New query** → paste the whole file → **Run**. It ends with
    "Success. No rows returned".
-3. Optional, and the reason the five existing courses become editable:
-   `supabase/migrations/0009_course_import.sql`. At 660 KB it is too big to paste comfortably —
-   download it and use **SQL Editor → + → Import SQL file** instead. Skip it and the course
-   builder still works, it is just empty.
+3. Optional, and the reason the five existing courses become editable: the files in
+   [`supabase/course-import/`](../supabase/course-import/), one per course. Paste and run them
+   **in order** — a course's days reference its course row. Skip them and the course builder
+   still works, it is just empty.
+
+   They are `0009_course_import.sql` cut one course per file by `node scripts/db/split-import.mjs`,
+   because the whole thing is 660 KB — too big for a browser text area, and importing a file is
+   more ceremony than pasting five. Running the single migration instead (or letting the CLI apply
+   it) loads exactly the same rows; `scripts/db/verify-bundle.sh` checks that the two agree.
 
 Both steps are safe to re-run, and re-running is how an existing project is upgraded.
 
