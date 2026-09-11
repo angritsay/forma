@@ -364,8 +364,6 @@ export const app = {
   playerTabCautions: 'Противопоказания',
   playerCautionsLead: 'С осторожностью или с заменой при:',
   playerCautionsNone: 'Особых ограничений нет — следи за техникой и не терпи острую боль.',
-  playerVideoUnmute: 'Включить звук видео',
-  playerVideoMute: 'Выключить звук видео',
   playerCues: 'На что обратить внимание',
   playerGotIt: 'Понятно',
   playerAdjustReps: 'Количество повторений',

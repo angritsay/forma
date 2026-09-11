@@ -24,7 +24,6 @@ import {
   PlayerHeader,
   ProgressRow,
   SectionStepper,
-  SoundIcon,
 } from '@/app/features/player/PlayerChrome';
 import {
   exerciseVideoRef,
@@ -81,19 +80,25 @@ interface ArtLayerProps {
   animation: string | undefined;
   playing: boolean;
   videoUrl: string | undefined;
-  /** The coach's voice is off by default; the athlete opts in with the unmute button. */
-  muted: boolean;
 }
 
-function ArtLayer({ animation, playing, videoUrl, muted }: ArtLayerProps) {
+/**
+ * The demonstration, as video when there is one and as the drawn figure when there is not.
+ *
+ * Either way it is a silent loop behind the timer. The clips are encoded with no audio track at
+ * all (scripts/media/prepare-videos.mjs), so there is nothing to mute: the coach talks through
+ * each movement while filming, which is worth watching once and wrong to have start up by itself
+ * in the middle of someone's set. `muted` is still set on the element — without it a browser
+ * refuses to autoplay, audio track or no.
+ */
+function ArtLayer({ animation, playing, videoUrl }: ArtLayerProps) {
   const video = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const el = video.current;
     if (!el) return;
-    el.muted = muted;
     if (playing) void el.play().catch(() => undefined);
     else el.pause();
-  }, [playing, videoUrl, muted]);
+  }, [playing, videoUrl]);
 
   return (
     <div
@@ -107,7 +112,7 @@ function ArtLayer({ animation, playing, videoUrl, muted }: ArtLayerProps) {
           src={videoUrl}
           className="h-full w-full object-cover"
           playsInline
-          muted={muted}
+          muted
           loop
           autoPlay
           preload="metadata"
@@ -231,7 +236,6 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [endOpen, setEndOpen] = useState(false);
   const [restartNonce, setRestartNonce] = useState(0);
-  const [videoMuted, setVideoMuted] = useState(true);
   const nextHandler = useRef<(() => void) | null>(null);
   const registerNext = useCallback((fn: (() => void) | null) => {
     nextHandler.current = fn;
@@ -353,7 +357,7 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
       style={courseVars}
       onPointerDownCapture={unlock}
     >
-      <ArtLayer animation={animation} playing={!paused} videoUrl={videoUrl} muted={videoMuted} />
+      <ArtLayer animation={animation} playing={!paused} videoUrl={videoUrl} />
       <PlayerHeader
         title={title}
         muted={sound.muted}
@@ -361,19 +365,12 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
         onToggleSound={sound.toggle}
         onMenu={() => setMenuOpen(true)}
       />
-      {videoUrl ? (
-        // The coach's voice is off until asked for: a video that starts talking on its own
-        // mid-session is a shock, and the demonstration reads fine silent.
-        <button
-          type="button"
-          onClick={() => setVideoMuted((m) => !m)}
-          aria-label={t(videoMuted ? 'app.playerVideoUnmute' : 'app.playerVideoMute')}
-          aria-pressed={!videoMuted}
-          className="absolute right-3 top-[calc(var(--safe-top)+64px)] z-20 flex h-10 w-10 items-center justify-center rounded-control bg-black/35 text-on-primary backdrop-blur-sm"
-        >
-          <SoundIcon muted={videoMuted} />
-        </button>
-      ) : null}
+      {/*
+       * There is no unmute button over the video any more. The clips carry no audio track at all
+       * now (scripts/media/prepare-videos.mjs), so the button toggled nothing — it just promised
+       * a voice that was not there. The header's sound control is a different thing and stays:
+       * that one is the app's own timer cues.
+       */}
       <div className="h-[calc(42dvh-56px)] shrink-0" aria-hidden="true" />
       <section className="relative z-10 flex flex-1 flex-col rounded-t-card bg-bg shadow-card">
         {step ? (

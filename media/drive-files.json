@@ -1,50 +1,62 @@
 [
-  { "exerciseId": "air_squat", "key": "IMG_0907", "id": "1sedqYB9o21F8sBd9vB8lIjd36SfTlMW_" },
-  { "exerciseId": "db_front_squat", "key": "IMG_0909", "id": "1mlUG694KTM4uycyRB8VzqoiAlyDU2im9" },
-  { "exerciseId": "db_snatch", "key": "IMG_0910", "id": "1GO3RuDsYLd0QxWnJzZwEXDopB4TtSomZ" },
-  { "exerciseId": "db_deadlift", "key": "IMG_0911", "id": "1drd9znqGkg59I1fZEHLY8Vecdp7njXru" },
-  { "exerciseId": "db_thruster", "key": "IMG_0913", "id": "17MEJg2vxBEeJUT-Jigf309KH5J9fdnSv" },
-  { "exerciseId": "db_push_press", "key": "IMG_0914", "id": "12gzRHtzbM65V1wT0tieV42gXnzrdwMgu" },
-  { "exerciseId": "db_row", "key": "IMG_0915", "id": "1ZmMGfw8zVna649BuTRsUtBbWLYNaeh0m" },
-  { "exerciseId": "db_rdl", "key": "IMG_0917", "id": "1SN7MwNDXlN3TifBdp0eUog3Mn-6qD6Ff" },
-  { "exerciseId": "step_up", "key": "IMG_0919", "id": "13wBZCssRgAo-ozG1rswwdSMHwroRth0D" },
-  { "exerciseId": "reverse_lunge", "key": "IMG_0922", "id": "1igCBqOVOWi6SRprJT9rDXaAz6P6pX9Ij" },
-  { "exerciseId": "db_lunge", "key": "IMG_0923", "id": "1xEV6ruIp1CAxFCKF1zTkNLULl7a71yX6" },
-  { "exerciseId": "jumping_lunge", "key": "IMG_0926", "id": "1alZ9Osz1k_sQtmknPTpKar74avSMQdW8" },
-  { "exerciseId": "knee_push_up", "key": "IMG_0927", "id": "1A1JrbldfWU26H8L_4i1dT0yLPIPkqz8z" },
-  { "exerciseId": "push_up", "key": "IMG_0928", "id": "1ni95Wcbpb7iHFDxFwjwFjirA6vPESHZG" },
-  { "exerciseId": "db_clean", "key": "IMG_0933", "id": "1nxU9dKxrKVleQcxkacku647WZ4Fn8d_m" },
   {
-    "exerciseId": "db_shoulder_press",
-    "key": "IMG_0935",
-    "id": "1vEugs2QlukNxCHPPlu0_Atf8YGx6kgJ3"
+    "exerciseId": "air_squat",
+    "key": "prisedaniya",
+    "id": "1t3CUQpUwYMKVQQPKpNxpANhCcfyf1NnF"
   },
-  { "exerciseId": "chair_dip", "key": "IMG_0946", "id": "1QhMiOYaCWCkTcZtYfDHdHB7gtVmTxuyl" },
-  { "exerciseId": "db_devil_press", "key": "IMG_0952", "id": "1cIICtGc-NuY0lnpP_g4akGUa4J9EVL33" },
-  { "exerciseId": "jumping_jack", "key": "IMG_0953", "id": "1Afz_eqjf1SlEyk6rkfBsCSrdIe_myrLN" },
-  { "exerciseId": "single_under", "key": "IMG_0954", "id": "1ph07zBRfaBOvpFXm_HeYi5oacyPPEFBE" },
-  { "exerciseId": "double_under", "key": "IMG_0957", "id": "1auA69JKz_UrEZSxT4zQ1OHEXu8OfEomu" },
-  { "exerciseId": "sit_up", "key": "IMG_0964", "id": "1yJKKGSeGMtziZ4Sj51qRt-Wxj0drx-rt" },
+  {
+    "exerciseId": "push_up",
+    "key": "otzhimaniya",
+    "id": "1NSRQKRUxo_Qo8Pfm9goxR7S6hWinwhng"
+  },
+  {
+    "exerciseId": "knee_push_up",
+    "key": "otzhimaniya_kolen",
+    "id": "1iiVMl-WBCTslGFerHFO-KH2MTLRKDKEg"
+  },
+  {
+    "exerciseId": "chair_dip",
+    "key": "obratnye_otzhim",
+    "id": "1LvdjJpLmcuc79cUCz_83Qhu-3lnXd1ik"
+  },
+  {
+    "exerciseId": "reverse_lunge",
+    "key": "vypady",
+    "id": "1MWlj5UNFCBeiLq4jZhWbJystfQNbKd3_"
+  },
+  {
+    "exerciseId": "step_up",
+    "key": "zashagivaniya",
+    "id": "1xgszhrQ2Nw_R0h2snOJkqjbkkWK9D2-G"
+  },
+  {
+    "exerciseId": "glute_bridge",
+    "key": "yagodichny_most",
+    "id": "14xiX5dUOLSj1APTxsN-7LiEZa-ESHvx5"
+  },
   {
     "exerciseId": "mountain_climber",
-    "key": "IMG_0966",
-    "id": "1bR5nVZP9Yj0rl8K53yygTYquUnPf3BK7"
+    "key": "skalolaz",
+    "id": "1DIcqAhwZbFh5iw1HwKYqAgMUcV_5MwvX"
   },
-  { "exerciseId": "v_up", "key": "IMG_0970", "id": "1oQJE6TozmLBpENbPidwklR0OpqeD5c7Z" },
-  { "exerciseId": "flutter_kick", "key": "IMG_0976", "id": "1lQAmUD4kF_k3eYp6pUz4mCIlWvbXpIFu" },
-  { "exerciseId": "hollow_hold", "key": "IMG_0977", "id": "1k3mZcJtIyvsJ9N0Z_zAfhEl-5PehuWOE" },
   {
-    "exerciseId": "plank_shoulder_tap",
-    "key": "IMG_0980",
-    "id": "1akpt4NTGWdEKOuYt4AS3BapjRjn3ipu9"
+    "exerciseId": "russian_twist",
+    "key": "russky_tvist",
+    "id": "1yLFjq0tia8tJynU2UuH7cO1Rpp9YIB_g"
   },
-  { "exerciseId": "plank", "key": "IMG_0982", "id": "1UuwYsrUXEfURzJSpd16WfUxdnqdWGGx7" },
-  { "exerciseId": "side_plank", "key": "IMG_0983", "id": "19hdKeQKhDx1SSrEPHtzA0HE0df9_6iEy" },
-  { "exerciseId": "up_down_plank", "key": "IMG_0985", "id": "1WFouIKjs8wOWVRqIilrO5QkWsP5sATgQ" },
-  { "exerciseId": "russian_twist", "key": "IMG_0988", "id": "1rL-nPciNJdnOgQBRJNot20vxZh1Kgf9o" },
-  { "exerciseId": "tuck_jump", "key": "IMG_0990", "id": "1evk-uXXd7Mnym52TjhdANCct7InoUMRf" },
-  { "exerciseId": "burpee", "key": "IMG_0991", "id": "1s8EBuhFyH6gqk8t67-vtqiWAENp5I1fn" },
-  { "exerciseId": "lateral_lunge", "key": "IMG_0997", "id": "1xZMA6OGgVeyMFhgi3nDNxoqMOKuNwdhm" },
-  { "exerciseId": "dead_bug", "key": "IMG_2628", "id": "1waVdFia7EBnNrWGFIvwfMZTnN0MpVyo3" },
-  { "exerciseId": "inchworm", "key": "IMG_9829", "id": "1Vab7_JKKpS2UfAo7cruxANAKfjBqp_XV" }
+  {
+    "exerciseId": "sit_up",
+    "key": "setapy",
+    "id": "1-zBL_O77DQB_zEhRgnNd7TkAIwhRnDPw"
+  },
+  {
+    "exerciseId": "dead_bug",
+    "key": "zhuk",
+    "id": "1o-KWI1AcjmBgMj5z-n5czRNbH93fC5vl"
+  },
+  {
+    "exerciseId": "inchworm",
+    "key": "chervyak",
+    "id": "13ndwAKU22jH1oOSQIPy6VN3uv-1fBvSd"
+  }
 ]

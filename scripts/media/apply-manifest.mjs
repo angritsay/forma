@@ -83,6 +83,26 @@ for (const file of files) {
     }
   }
 
+  /*
+   * Drop `video:` from any exercise the manifest no longer claims.
+   *
+   * The manifest decides which exercises have footage, so applying it has to be able to take a
+   * reference away as well as put one in — otherwise retiring a clip leaves content pointing at a
+   * storage object that is not there. The app survives that (the signed-URL fetch fails and the
+   * drawn figure keeps playing), which is exactly why it would go unnoticed: the file would claim
+   * a video for months with nothing behind it.
+   *
+   * Walked last-to-first so each removal cannot shift the offsets of the ones still to come.
+   */
+  for (const m of [...after.matchAll(/^[ \t]*video: \{.*\n/gm)].reverse()) {
+    const idAt = after.lastIndexOf("id: '", m.index);
+    const exerciseId = idAt === -1 ? null : /id: '([^']+)'/.exec(after.slice(idAt))?.[1];
+    if (exerciseId && !wanted.has(exerciseId)) {
+      after = after.slice(0, m.index) + after.slice(m.index + m[0].length);
+      changes.push(`${exerciseId} (removed — no longer in the manifest)`);
+    }
+  }
+
   if (after !== before && !check) writeFileSync(path, after);
 }
 

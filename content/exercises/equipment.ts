@@ -401,7 +401,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'jumping_jack', harder: 'double_under' },
     animation: 'single_under',
-    video: { ru: 'storage:videos/shared/single_under.ru.mp4' },
     tags: ['cardio', 'warmup'],
   },
   {
@@ -461,7 +460,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'single_under' },
     animation: 'double_under',
-    video: { ru: 'storage:videos/shared/double_under.ru.mp4' },
     tags: ['cardio', 'explosive', 'benchmark'],
   },
   {
@@ -575,7 +573,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: true,
     scaling: { easier: 'db_goblet_squat', harder: 'db_thruster' },
     animation: 'db_front_squat',
-    video: { ru: 'storage:videos/shared/db_front_squat.ru.mp4' },
     tags: ['lower'],
   },
   {
@@ -635,7 +632,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: true,
     scaling: { easier: 'db_front_squat' },
     animation: 'db_thruster',
-    video: { ru: 'storage:videos/shared/db_thruster.ru.mp4' },
     tags: ['lower', 'upper', 'push', 'cardio'],
   },
   {
@@ -692,7 +688,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: true,
     scaling: { easier: 'glute_bridge', harder: 'db_rdl' },
     animation: 'bell_deadlift',
-    video: { ru: 'storage:videos/shared/db_deadlift.ru.mp4' },
     tags: ['lower'],
   },
   {
@@ -749,7 +744,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: true,
     scaling: { easier: 'db_deadlift' },
     animation: 'db_rdl',
-    video: { ru: 'storage:videos/shared/db_rdl.ru.mp4' },
     tags: ['lower'],
   },
   {
@@ -803,7 +797,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: true,
     scaling: { harder: 'db_renegade_row' },
     animation: 'db_row',
-    video: { ru: 'storage:videos/shared/db_row.ru.mp4' },
     tags: ['upper', 'pull', 'unilateral'],
   },
   {
@@ -860,7 +853,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: true,
     scaling: { easier: 'pike_push_up', harder: 'db_push_press' },
     animation: 'overhead_press',
-    video: { ru: 'storage:videos/shared/db_shoulder_press.ru.mp4' },
     tags: ['upper', 'push'],
   },
   {
@@ -914,7 +906,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: true,
     scaling: { easier: 'db_shoulder_press', harder: 'db_thruster' },
     animation: 'db_push_press',
-    video: { ru: 'storage:videos/shared/db_push_press.ru.mp4' },
     tags: ['upper', 'push', 'explosive'],
   },
   {
@@ -975,7 +966,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: true,
     scaling: { easier: 'db_clean' },
     animation: 'bell_snatch',
-    video: { ru: 'storage:videos/shared/db_snatch.ru.mp4' },
     tags: ['explosive', 'cardio', 'unilateral'],
   },
   {
@@ -1035,7 +1025,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: true,
     scaling: { easier: 'db_deadlift', harder: 'db_snatch' },
     animation: 'bell_clean',
-    video: { ru: 'storage:videos/shared/db_clean.ru.mp4' },
     tags: ['explosive', 'lower', 'upper'],
   },
   {
@@ -1095,7 +1084,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: true,
     scaling: { easier: 'reverse_lunge' },
     animation: 'bell_lunge',
-    video: { ru: 'storage:videos/shared/db_lunge.ru.mp4' },
     tags: ['lower', 'unilateral'],
   },
   {
@@ -1314,7 +1302,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     loadable: true,
     scaling: { easier: 'burpee' },
     animation: 'devil_press',
-    video: { ru: 'storage:videos/shared/db_devil_press.ru.mp4' },
     tags: ['cardio', 'explosive', 'benchmark'],
   },
   {

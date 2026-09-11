@@ -367,8 +367,6 @@ export const app = {
   playerCautionsLead: 'Take care, or swap, with:',
   playerCautionsNone:
     'No special restrictions — keep the technique and never push through sharp pain.',
-  playerVideoUnmute: 'Unmute video',
-  playerVideoMute: 'Mute video',
   playerCues: 'Key cues',
   playerGotIt: 'Got it',
   playerAdjustReps: 'Reps count',

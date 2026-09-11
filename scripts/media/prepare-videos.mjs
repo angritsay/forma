@@ -214,10 +214,17 @@ for (const clip of seen.values()) {
       String(crf),
       '-pix_fmt',
       'yuv420p',
-      '-c:a',
-      'aac',
-      '-b:a',
-      '96k',
+      /*
+       * No audio track at all.
+       *
+       * These are demonstrations, and the app plays them the way it plays the drawn figure: a
+       * short loop behind the timer. The coach films himself talking through each movement, which
+       * is worth watching once and wrong to have start up on its own in the middle of a set.
+       * Muting in the player was the old answer, but a muted <video> still carries the track,
+       * still fetches it, and still leaves an unmute button implying there is something to hear.
+       * Dropping it here is the honest version, and takes a tenth off every file.
+       */
+      '-an',
       '-movflags',
       '+faststart',
       out,

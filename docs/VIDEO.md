@@ -78,10 +78,47 @@ this job and losing it to a fresh clone would mean watching 145 clips again. All
 and write that path. An earlier version wrote it inside `media/clips/`, which meant a run on
 another machine reported `identified: 0/145` while four identifications sat in the repository.
 
+## The coach's own clips replace the export
+
+On 11 September 2026 the coach filmed the movements deliberately: one file per exercise, trimmed
+to the movement, **named after the exercise in Russian**. That makes identification a filename
+lookup — no contact sheets, no watching, none of the guesswork the export demanded.
+
+Twelve exercises are covered:
+
+| File (Drive)           | Exercise           |
+| ---------------------- | ------------------ |
+| приседания.mov         | `air_squat`        |
+| отжимания.mov          | `push_up`          |
+| отжимания с колен.mov  | `knee_push_up`     |
+| обратные отжимания.mov | `chair_dip`        |
+| выпады.mov             | `reverse_lunge`    |
+| зашагивания.mov        | `step_up`          |
+| ягодичный мост.mov     | `glute_bridge`     |
+| скалолаз.mov           | `mountain_climber` |
+| русский твист.mov      | `russian_twist`    |
+| сетапы.mov             | `sit_up`           |
+| жук.mov                | `dead_bug`         |
+| червяк.mov             | `inchworm`         |
+
+**The Telegram export is retired wholesale**, on the owner's instruction: all 36 of its
+identifications were dropped. Its clips are still listed in the manifest, with a note recording
+what each one was, but no clip in it carries an `exerciseId` any more. An exercise without one of
+the twelve new clips shows the drawn figure, which is the honest fallback — better than a talking
+intro, a second take, or the one clip that turned out to be filmed by somebody who is not the
+coach.
+
+The clips are encoded with **no audio track at all** (`-an`). The coach talks through each
+movement while filming; that is worth watching once and wrong to start up by itself in the middle
+of a set. Muting in the player was the old answer, but a muted `<video>` still carries the track
+and still showed an unmute button implying there was something to hear — so that button is gone
+too. The header's sound control is a different thing and stays: it is the app's own timer cues.
+
 ## Progress
 
-All 145 clips have been reviewed against the 83-exercise library. The headline number is not
-145 demonstrations — it is 36.
+All 145 clips were reviewed against the exercise library when the export was the only footage
+there was. The table below is kept as the record of what that review found — it is why the
+export was retired rather than trimmed.
 
 |                               |     |                                                       |
 | ----------------------------- | --: | ----------------------------------------------------- |

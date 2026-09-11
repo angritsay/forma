@@ -147,7 +147,7 @@
     "key": "IMG_0308",
     "file": "IMG_0308.mp4",
     "exerciseId": "",
-    "note": "The movement is a glute bridge and it is performed correctly, but this clip is filmed somewhere else entirely \u2014 green turf, a wooden barn ceiling, a purple mat \u2014 by a man in a grey shirt and orange shoes. Every other demo is Sergey in the same gym in a white shirt. Left unassigned deliberately: whether a demo that is visibly not the coach, in a different venue, should be sold as part of his course is the owner's decision, not a technical one. Setting exerciseId here would ship it by default"
+    "note": "The movement is a glute bridge and it is performed correctly, but this clip is filmed somewhere else entirely — green turf, a wooden barn ceiling, a purple mat — by a man in a grey shirt and orange shoes. Every other demo is Sergey in the same gym in a white shirt. Left unassigned deliberately: whether a demo that is visibly not the coach, in a different venue, should be sold as part of his course is the owner's decision, not a technical one. Setting exerciseId here would ship it by default"
   },
   {
     "key": "IMG_0347",
@@ -218,62 +218,62 @@
   {
     "key": "IMG_0907",
     "file": "IMG_0907.mp4",
-    "exerciseId": "air_squat",
-    "note": "bodyweight, arms reaching forward, full depth; no weight anywhere in the clip"
+    "exerciseId": "",
+    "note": "was air_squat; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0908",
     "file": "IMG_0908.mp4",
     "exerciseId": "",
-    "note": "was recorded as air_squat from a 4-frame sheet, but a dumbbell is held at the chest in the opening frames while the squat frames show the arms reaching forward. Goblet or air squat \u2014 re-check on the 12-frame sheet"
+    "note": "was recorded as air_squat from a 4-frame sheet, but a dumbbell is held at the chest in the opening frames while the squat frames show the arms reaching forward. Goblet or air squat — re-check on the 12-frame sheet"
   },
   {
     "key": "IMG_0909",
     "file": "IMG_0909.mp4",
-    "exerciseId": "db_front_squat",
-    "note": "dumbbell racked at the shoulder, squat only \u2014 no overhead press"
+    "exerciseId": "",
+    "note": "was db_front_squat; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0910",
     "file": "IMG_0910.mp4",
-    "exerciseId": "db_snatch",
-    "note": "single dumbbell from below the knees to a locked-out arm overhead in one motion, received in a partial squat"
+    "exerciseId": "",
+    "note": "was db_snatch; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0911",
     "file": "IMG_0911.mp4",
-    "exerciseId": "db_deadlift",
-    "note": "hinge to the floor with the knees clearly bent \u2014 the deadlift pattern. IMG_0917 holds db_rdl, which keeps the legs near-straight; the two clips differ exactly there"
+    "exerciseId": "",
+    "note": "was db_deadlift; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0913",
     "file": "IMG_0913.mp4",
-    "exerciseId": "db_thruster",
-    "note": "front squat driving into an overhead press; confirmed at 8 frames, not db_shoulder_press"
+    "exerciseId": "",
+    "note": "was db_thruster; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0914",
     "file": "IMG_0914.mp4",
-    "exerciseId": "db_push_press",
-    "note": "single dumbbell at the shoulder, a visible dip in the knees, then drive to overhead"
+    "exerciseId": "",
+    "note": "was db_push_press; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0915",
     "file": "IMG_0915.mp4",
-    "exerciseId": "db_row",
-    "note": "hinged at the hips, dumbbell hanging, repeated pull to the ribs"
+    "exerciseId": "",
+    "note": "was db_row; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0917",
     "file": "IMG_0917.mp4",
-    "exerciseId": "db_rdl",
-    "note": "hip hinge with near-straight legs, flat back, dumbbells tracking down the shins"
+    "exerciseId": "",
+    "note": "was db_rdl; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0919",
     "file": "IMG_0919.mp4",
-    "exerciseId": "step_up",
-    "note": "stepping up onto and down off a low box, bodyweight. IMG_0920 is the same movement loaded with dumbbells; the library has no weighted variant"
+    "exerciseId": "",
+    "note": "was step_up; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0920",
@@ -285,19 +285,19 @@
     "key": "IMG_0921",
     "file": "IMG_0921.mp4",
     "exerciseId": "",
-    "note": "loaded squat with the arms swinging back, and the position shifts between frames \u2014 jump_squat or broad_jump, still not separable"
+    "note": "loaded squat with the arms swinging back, and the position shifts between frames — jump_squat or broad_jump, still not separable"
   },
   {
     "key": "IMG_0922",
     "file": "IMG_0922.mp4",
-    "exerciseId": "reverse_lunge",
-    "note": "bodyweight step back, rear knee to the floor, alternating"
+    "exerciseId": "",
+    "note": "was reverse_lunge; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0923",
     "file": "IMG_0923.mp4",
-    "exerciseId": "db_lunge",
-    "note": "dumbbells hanging at the sides, stepping back \u2014 matches the authored description, which specifies arms down"
+    "exerciseId": "",
+    "note": "was db_lunge; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0924",
@@ -314,20 +314,20 @@
   {
     "key": "IMG_0926",
     "file": "IMG_0926.mp4",
-    "exerciseId": "jumping_lunge",
-    "note": "split-stance lunges with a clear airborne frame between them"
+    "exerciseId": "",
+    "note": "was jumping_lunge; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0927",
     "file": "IMG_0927.mp4",
-    "exerciseId": "knee_push_up",
-    "note": "knees on the mat, hips in line, chest to the floor. IMG_0929 is a second take of the same movement"
+    "exerciseId": "",
+    "note": "was knee_push_up; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0928",
     "file": "IMG_0928.mp4",
-    "exerciseId": "push_up",
-    "note": "full plank on the toes, chest to the mat"
+    "exerciseId": "",
+    "note": "was push_up; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0929",
@@ -345,7 +345,7 @@
     "key": "IMG_0931",
     "file": "IMG_0931.mp4",
     "exerciseId": "",
-    "note": "dumbbell hinged low then driven overhead \u2014 the same shape as IMG_0910, which holds db_snatch. Either a second take or a different lift; the middle of the movement decides it and is not visible"
+    "note": "dumbbell hinged low then driven overhead — the same shape as IMG_0910, which holds db_snatch. Either a second take or a different lift; the middle of the movement decides it and is not visible"
   },
   {
     "key": "IMG_0932",
@@ -356,20 +356,20 @@
   {
     "key": "IMG_0933",
     "file": "IMG_0933.mp4",
-    "exerciseId": "db_clean",
-    "note": "dumbbell from the floor caught at the shoulder and stopped there \u2014 no overhead phase"
+    "exerciseId": "",
+    "note": "was db_clean; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0934",
     "file": "IMG_0934.mp4",
     "exerciseId": "",
-    "note": "single dumbbell floor to overhead \u2014 clean/snatch family, undecidable at 8 frames"
+    "note": "single dumbbell floor to overhead — clean/snatch family, undecidable at 8 frames"
   },
   {
     "key": "IMG_0935",
     "file": "IMG_0935.mp4",
-    "exerciseId": "db_shoulder_press",
-    "note": "two dumbbells from the shoulders to overhead with the legs still \u2014 no dip, which is what separates this from db_push_press"
+    "exerciseId": "",
+    "note": "was db_shoulder_press; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0936",
@@ -381,7 +381,7 @@
     "key": "IMG_0937",
     "file": "IMG_0937.mp4",
     "exerciseId": "",
-    "note": "dumbbell hinge to the shoulder \u2014 clean family, and IMG_0933 shows that pattern more plainly"
+    "note": "dumbbell hinge to the shoulder — clean family, and IMG_0933 shows that pattern more plainly"
   },
   {
     "key": "IMG_0938",
@@ -393,13 +393,13 @@
     "key": "IMG_0939",
     "file": "IMG_0939.mp4",
     "exerciseId": "",
-    "note": "dumbbell hinge to overhead \u2014 snatch family"
+    "note": "dumbbell hinge to overhead — snatch family"
   },
   {
     "key": "IMG_0940",
     "file": "IMG_0940.mp4",
     "exerciseId": "",
-    "note": "dumbbell to the shoulder then overhead \u2014 a clean and press, or a push press; the dip decides it and is not visible"
+    "note": "dumbbell to the shoulder then overhead — a clean and press, or a push press; the dip decides it and is not visible"
   },
   {
     "key": "IMG_0942",
@@ -423,13 +423,13 @@
     "key": "IMG_0945",
     "file": "IMG_0945.mp4",
     "exerciseId": "",
-    "note": "dumbbells held at the sides with little visible movement \u2014 the working portion of the clip is not in these frames"
+    "note": "dumbbells held at the sides with little visible movement — the working portion of the clip is not in these frames"
   },
   {
     "key": "IMG_0946",
     "file": "IMG_0946.mp4",
-    "exerciseId": "chair_dip",
-    "note": "hands behind on a bench, legs out in front, elbows bending to lower the hips"
+    "exerciseId": "",
+    "note": "was chair_dip; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0948",
@@ -458,26 +458,26 @@
   {
     "key": "IMG_0952",
     "file": "IMG_0952.mp4",
-    "exerciseId": "db_devil_press",
-    "note": "dumbbells to the floor, push-up on them, then stood up and swung overhead \u2014 the full devil press sequence"
+    "exerciseId": "",
+    "note": "was db_devil_press; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0953",
     "file": "IMG_0953.mp4",
-    "exerciseId": "jumping_jack",
-    "note": "feet apart and arms overhead in the same beat, repeated"
+    "exerciseId": "",
+    "note": "was jumping_jack; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0954",
     "file": "IMG_0954.mp4",
-    "exerciseId": "single_under",
-    "note": "jump rope, one pass of the rope per jump"
+    "exerciseId": "",
+    "note": "was single_under; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0957",
     "file": "IMG_0957.mp4",
-    "exerciseId": "double_under",
-    "note": "jump rope with noticeably more height than IMG_0954, and the only other rope movement in the library. Inferred rather than counted \u2014 worth confirming"
+    "exerciseId": "",
+    "note": "was double_under; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0960",
@@ -506,8 +506,8 @@
   {
     "key": "IMG_0964",
     "file": "IMG_0964.mp4",
-    "exerciseId": "sit_up",
-    "note": "flat on the mat to fully upright, knees bent, no weight"
+    "exerciseId": "",
+    "note": "was sit_up; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0965",
@@ -518,26 +518,26 @@
   {
     "key": "IMG_0966",
     "file": "IMG_0966.mp4",
-    "exerciseId": "mountain_climber",
-    "note": "plank on the hands, knees driving to the chest alternately"
+    "exerciseId": "",
+    "note": "was mountain_climber; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0968",
     "file": "IMG_0968.mp4",
     "exerciseId": "",
-    "note": "plank with the knees coming forward \u2014 either a second take of mountain_climber or bear_crawl; the hip height that separates them is not readable at 8 frames"
+    "note": "plank with the knees coming forward — either a second take of mountain_climber or bear_crawl; the hip height that separates them is not readable at 8 frames"
   },
   {
     "key": "IMG_0969",
     "file": "IMG_0969.mp4",
     "exerciseId": "",
-    "note": "forearm plank that turns into single-leg lifts \u2014 the hold and the leg raise are different exercises and this clip shows both"
+    "note": "forearm plank that turns into single-leg lifts — the hold and the leg raise are different exercises and this clip shows both"
   },
   {
     "key": "IMG_0970",
     "file": "IMG_0970.mp4",
-    "exerciseId": "v_up",
-    "note": "flat on the back, legs and torso rising together, hands reaching to the feet"
+    "exerciseId": "",
+    "note": "was v_up; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0973",
@@ -549,19 +549,19 @@
     "key": "IMG_0974",
     "file": "IMG_0974.mp4",
     "exerciseId": "",
-    "note": "on the back with the arms overhead and legs raising \u2014 hollow_hold or leg_raise, not separable here"
+    "note": "on the back with the arms overhead and legs raising — hollow_hold or leg_raise, not separable here"
   },
   {
     "key": "IMG_0976",
     "file": "IMG_0976.mp4",
-    "exerciseId": "flutter_kick",
-    "note": "on the back, legs held low and alternating in small beats"
+    "exerciseId": "",
+    "note": "was flutter_kick; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0977",
     "file": "IMG_0977.mp4",
-    "exerciseId": "hollow_hold",
-    "note": "on the back, arms by the ears and legs raised, lower back pressed down and held"
+    "exerciseId": "",
+    "note": "was hollow_hold; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0978",
@@ -578,32 +578,32 @@
   {
     "key": "IMG_0980",
     "file": "IMG_0980.mp4",
-    "exerciseId": "plank_shoulder_tap",
-    "note": "plank on the hands, one hand lifted across to the opposite shoulder and back"
+    "exerciseId": "",
+    "note": "was plank_shoulder_tap; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0982",
     "file": "IMG_0982.mp4",
-    "exerciseId": "plank",
-    "note": "forearm plank held, elbows under the shoulders, body in one line"
+    "exerciseId": "",
+    "note": "was plank; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0983",
     "file": "IMG_0983.mp4",
-    "exerciseId": "side_plank",
-    "note": "on one forearm, hips stacked and lifted, top arm reaching straight up"
+    "exerciseId": "",
+    "note": "was side_plank; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0984",
     "file": "IMG_0984.mp4",
     "exerciseId": "",
-    "note": "plank next to a dumbbell standing on the mat, one hand reaching \u2014 possibly db_renegade_row, but only one dumbbell is in shot and no row is visible"
+    "note": "plank next to a dumbbell standing on the mat, one hand reaching — possibly db_renegade_row, but only one dumbbell is in shot and no row is visible"
   },
   {
     "key": "IMG_0985",
     "file": "IMG_0985.mp4",
-    "exerciseId": "up_down_plank",
-    "note": "alternating from the hands down onto the forearms and back up"
+    "exerciseId": "",
+    "note": "was up_down_plank; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0986",
@@ -620,32 +620,32 @@
   {
     "key": "IMG_0988",
     "file": "IMG_0988.mp4",
-    "exerciseId": "russian_twist",
-    "note": "seated, leaning back with the feet off the floor, torso rotating side to side"
+    "exerciseId": "",
+    "note": "was russian_twist; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0989",
     "file": "IMG_0989.mp4",
     "exerciseId": "",
-    "note": "NO LIBRARY MATCH: stability ball. The library's equipment set is none/chair/box/mat/pull-up bar/bands/jump rope/dumbbells/kettlebell \u2014 there is no ball"
+    "note": "NO LIBRARY MATCH: stability ball. The library's equipment set is none/chair/box/mat/pull-up bar/bands/jump rope/dumbbells/kettlebell — there is no ball"
   },
   {
     "key": "IMG_0990",
     "file": "IMG_0990.mp4",
-    "exerciseId": "tuck_jump",
-    "note": "jump from standing with both knees pulled to the chest at the top"
+    "exerciseId": "",
+    "note": "was tuck_jump; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0991",
     "file": "IMG_0991.mp4",
-    "exerciseId": "burpee",
-    "note": "down to the chest on the floor and back to standing, repeated"
+    "exerciseId": "",
+    "note": "was burpee; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0992",
     "file": "IMG_0992.mp4",
     "exerciseId": "",
-    "note": "down to the floor and back up, but with no clear stand or jump \u2014 burpee or half_burpee, and IMG_0991 shows the full version more plainly"
+    "note": "down to the floor and back up, but with no clear stand or jump — burpee or half_burpee, and IMG_0991 shows the full version more plainly"
   },
   {
     "key": "IMG_0994",
@@ -668,20 +668,20 @@
   {
     "key": "IMG_0997",
     "file": "IMG_0997.mp4",
-    "exerciseId": "lateral_lunge",
-    "note": "stepping wide to one side, sinking onto that leg with the other kept straight, alternating"
+    "exerciseId": "",
+    "note": "was lateral_lunge; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_0998",
     "file": "IMG_0998.mp4",
     "exerciseId": "",
-    "note": "A Turkish get-up, performed correctly, but with a dumbbell. The library's kb_turkish_get_up is authored for a kettlebell \u2014 the implement is named throughout its technique and cues. Whether a dumbbell demo is close enough to stand in is a judgement for the coach"
+    "note": "A Turkish get-up, performed correctly, but with a dumbbell. The library's kb_turkish_get_up is authored for a kettlebell — the implement is named throughout its technique and cues. Whether a dumbbell demo is close enough to stand in is a judgement for the coach"
   },
   {
     "key": "IMG_2628",
     "file": "IMG_2628.mp4",
-    "exerciseId": "dead_bug",
-    "note": "on the back, opposite arm and leg extending and returning under control"
+    "exerciseId": "",
+    "note": "was dead_bug; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_2629",
@@ -777,7 +777,7 @@
     "key": "IMG_6716",
     "file": "IMG_6716.mp4",
     "exerciseId": "",
-    "note": "NOT AN EXERCISE: a talking-head clip filmed at home \u2014 a bearded man in headphones in a circular crop, speaking to camera. Not Sergey and not a demonstration. Must never be mapped to an exercise"
+    "note": "NOT AN EXERCISE: a talking-head clip filmed at home — a bearded man in headphones in a circular crop, speaking to camera. Not Sergey and not a demonstration. Must never be mapped to an exercise"
   },
   {
     "key": "IMG_6717",
@@ -836,8 +836,8 @@
   {
     "key": "IMG_9829",
     "file": "IMG_9829.mp4",
-    "exerciseId": "inchworm",
-    "note": "hinge to the floor, hands walking out to a plank and back to the feet"
+    "exerciseId": "",
+    "note": "was inchworm; retired 2026-09-11 — the export is replaced by the coach's own clips"
   },
   {
     "key": "IMG_9943",
@@ -868,5 +868,77 @@
     "file": "IMG_9947.mp4",
     "exerciseId": "",
     "note": "second take of knee_push_up"
+  },
+  {
+    "key": "prisedaniya",
+    "file": "prisedaniya.mp4",
+    "exerciseId": "air_squat",
+    "note": "coach, 2026-09-11, filmed for this — Drive: приседания.mov"
+  },
+  {
+    "key": "otzhimaniya",
+    "file": "otzhimaniya.mp4",
+    "exerciseId": "push_up",
+    "note": "coach, 2026-09-11, filmed for this — Drive: отжимания.mov"
+  },
+  {
+    "key": "otzhimaniya_kolen",
+    "file": "otzhimaniya_kolen.mp4",
+    "exerciseId": "knee_push_up",
+    "note": "coach, 2026-09-11, filmed for this — Drive: отжимания с колен.mov"
+  },
+  {
+    "key": "obratnye_otzhim",
+    "file": "obratnye_otzhim.mp4",
+    "exerciseId": "chair_dip",
+    "note": "coach, 2026-09-11, filmed for this — Drive: обратные отжимания.mov"
+  },
+  {
+    "key": "vypady",
+    "file": "vypady.mp4",
+    "exerciseId": "reverse_lunge",
+    "note": "coach, 2026-09-11, filmed for this — Drive: выпады.mov"
+  },
+  {
+    "key": "zashagivaniya",
+    "file": "zashagivaniya.mp4",
+    "exerciseId": "step_up",
+    "note": "coach, 2026-09-11, filmed for this — Drive: зашагивания.mov"
+  },
+  {
+    "key": "yagodichny_most",
+    "file": "yagodichny_most.mp4",
+    "exerciseId": "glute_bridge",
+    "note": "coach, 2026-09-11, filmed for this — Drive: ягодичный мост.mov"
+  },
+  {
+    "key": "skalolaz",
+    "file": "skalolaz.mp4",
+    "exerciseId": "mountain_climber",
+    "note": "coach, 2026-09-11, filmed for this — Drive: скалолаз.mov"
+  },
+  {
+    "key": "russky_tvist",
+    "file": "russky_tvist.mp4",
+    "exerciseId": "russian_twist",
+    "note": "coach, 2026-09-11, filmed for this — Drive: русский твист.mov"
+  },
+  {
+    "key": "setapy",
+    "file": "setapy.mp4",
+    "exerciseId": "sit_up",
+    "note": "coach, 2026-09-11, filmed for this — Drive: сетапы.mov"
+  },
+  {
+    "key": "zhuk",
+    "file": "zhuk.mp4",
+    "exerciseId": "dead_bug",
+    "note": "coach, 2026-09-11, filmed for this — Drive: жук.mov"
+  },
+  {
+    "key": "chervyak",
+    "file": "chervyak.mp4",
+    "exerciseId": "inchworm",
+    "note": "coach, 2026-09-11, filmed for this — Drive: червяк.mov"
   }
 ]
