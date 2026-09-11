@@ -159,7 +159,26 @@
   color: var(--text);
 }
 
-@theme {
+/*
+ * The token layer, and it has to be `inline` — that is a correctness requirement, not a style.
+ *
+ * A plain `@theme` entry is emitted as a custom property on `:root`, and the utility refers to it:
+ * `text-muted` becomes `color: var(--color-muted)`. Custom properties inherit as *computed* values,
+ * so `--color-muted: var(--muted)` is substituted once, at `:root`, against the dark palette — and
+ * every element in the document inherits that dark grey no matter what is redefined below it. Both
+ * of this file's subtree overrides were dead because of it:
+ *
+ *   - `[data-theme='paper']` redefines fourteen tokens for the white screens, and not one of them
+ *     reached a Tailwind utility. The profile's running text kept the dark theme's #b9b9c0 on
+ *     white — 1.95:1, against the 4.5 it needs — while the headings looked right only because they
+ *     inherit the plain `color` declaration rather than going through a utility.
+ *   - `--course-tile`, set per course by `courseTileVars()`, could never colour `text-course`.
+ *
+ * `inline` substitutes the value into the utility instead, so `text-muted` compiles to
+ * `color: var(--muted)` and resolves on the element that uses it. Nothing outside this file reads
+ * a `--color-*` variable, so there is nothing to lose by it.
+ */
+@theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
@@ -183,6 +202,13 @@
   --color-course-yoga: var(--course-yoga);
   --color-course-marathon: var(--course-marathon);
   --color-on-course: var(--on-course);
+  /*
+   * Not one colour but "whatever colour this course is": `courseTileVars()` sets `--course-tile`
+   * on a subtree and these read it there. The fallback keeps an unassigned tile a quiet neutral.
+   */
+  --color-course: var(--course-tile, var(--tile-4));
+  --color-tile: var(--course-tile, var(--tile-4));
+  --color-tile-fg: var(--course-tile-fg, var(--tile-fg-dark));
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
@@ -234,28 +260,6 @@
   --text-6xl--line-height: 1.05;
   --text-7xl: 2.5rem;
   --text-7xl--line-height: 1.02;
-}
-
-/*
- * The three tokens that are not one colour but "whatever colour this course is".
- *
- * They have to be `inline`, and that is not a style choice. A plain `@theme` entry is emitted as a
- * custom property on `:root` and the utility refers to it — `text-course` becomes
- * `color: var(--color-course)`. Custom properties inherit as *computed* values, so
- * `--color-course: var(--course-tile, var(--tile-4))` is substituted once, at `:root`, where no
- * course has been opened and `--course-tile` is unset: every element in the tree then inherits the
- * fallback, and a `--course-tile` set further down by `courseTileVars()` changes nothing. The whole
- * per-course colour system was silently dead — the yellow tile was right there on the same element
- * and `text-course` still computed to `#1f1f24`.
- *
- * `@theme inline` substitutes the value into the utility instead, so `text-course` compiles to
- * `color: var(--course-tile, var(--tile-4))` and the `var()` is resolved on the element that uses
- * it — which is the entire point of the token.
- */
-@theme inline {
-  --color-course: var(--course-tile, var(--tile-4));
-  --color-tile: var(--course-tile, var(--tile-4));
-  --color-tile-fg: var(--course-tile-fg, var(--tile-fg-dark));
 }
 
 html {
