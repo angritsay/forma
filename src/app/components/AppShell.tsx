@@ -57,6 +57,27 @@ function widthFor(pathname: string): keyof typeof CONTENT_WIDTH {
 }
 
 /**
+ * Layout for the screens outside the tabbed area: sign-in and onboarding.
+ *
+ * They carry no navigation — that is the point of them — but they still need a column. `AppFrame`
+ * releases its 480px cap from `lg` so the admin can use the whole screen, and with nothing here
+ * these two took the release literally: on a 1440px browser the sign-in form ran the full width of
+ * the window, under a photograph a thousand pixels tall.
+ *
+ * Narrower than the tabbed column on purpose: both screens are a stack of one-line fields, and a
+ * single form reads better in a short measure.
+ */
+export function FocusShell() {
+  return (
+    <div style={{ '--nav-inset': 'var(--demo-inset, 0px)' } as CSSProperties}>
+      <div className="mx-auto w-full lg:max-w-[560px]">
+        <Outlet />
+      </div>
+    </div>
+  );
+}
+
+/**
  * Layout for the tabbed area: navigation + outlet.
  *
  * Below `lg` that is the phone bottom nav over a full-bleed outlet, unchanged. From `lg` it is a

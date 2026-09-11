@@ -393,9 +393,9 @@ export default function AdminScreen() {
       }
     >
       <div className="flex flex-col gap-4 py-2">
-        {/* The coach's two authoring tools. SideNav carries them from `lg` up; on a phone this
-            is the only way in. */}
-        <div className="flex flex-col gap-2 lg:flex-row">
+        {/* The coach's authoring tools. Hidden from `lg` up, where SideNav lists the same three
+            and repeating them is just clutter in the screen she works in all day. */}
+        <div className="flex flex-col gap-2 sm:flex-row lg:hidden">
           <Button
             variant="secondary"
             fullWidth

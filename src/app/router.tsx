@@ -9,7 +9,7 @@ import { Navigate, Route, Routes, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Screen } from '@/components/ui/Screen';
-import { AppShell } from './components/AppShell';
+import { AppShell, FocusShell } from './components/AppShell';
 import { BootScreen } from './components/BootScreen';
 import { RedirectIfAuthed, RequireAuth, RequireOnboarded } from './components/RouteGuards';
 import { TopBar } from './components/TopBar';
@@ -46,11 +46,15 @@ export function AppRoutes() {
   return (
     <Suspense fallback={<BootScreen />}>
       <Routes>
-        <Route element={<RedirectIfAuthed />}>
-          <Route path="/auth" element={<AuthScreen />} />
+        <Route element={<FocusShell />}>
+          <Route element={<RedirectIfAuthed />}>
+            <Route path="/auth" element={<AuthScreen />} />
+          </Route>
+          <Route element={<RequireAuth />}>
+            <Route path="/onboarding/*" element={<OnboardingScreen />} />
+          </Route>
         </Route>
         <Route element={<RequireAuth />}>
-          <Route path="/onboarding/*" element={<OnboardingScreen />} />
           <Route element={<RequireOnboarded />}>
             <Route element={<AppShell />}>
               <Route index element={<LazyScreen name="HomeScreen" />} />
@@ -72,6 +76,8 @@ export function AppRoutes() {
               <Route path="/admin" element={<LazyScreen name="AdminScreen" />} />
               <Route path="/admin/workouts" element={<LazyScreen name="AdminWorkoutsScreen" />} />
               <Route path="/admin/exercises" element={<LazyScreen name="AdminExercisesScreen" />} />
+              <Route path="/admin/courses" element={<LazyScreen name="AdminCoursesScreen" />} />
+              <Route path="/admin/courses/:id" element={<LazyScreen name="AdminCourseScreen" />} />
             </Route>
           </Route>
         </Route>

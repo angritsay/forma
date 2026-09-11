@@ -27,6 +27,7 @@ import {
 } from '@/content/schema';
 import type {
   CustomSectionKind,
+  CustomWorkoutItem,
   CustomWorkoutSection,
   CustomWorkoutStructure,
 } from '@/lib/training/customWorkout';
@@ -152,25 +153,136 @@ const SECTION_TITLE: Record<CustomSectionKind, L10n> = {
   cooldown: { ru: 'Заминка', en: 'Cool-down' },
 };
 
+/**
+ * Which of the three builder sections a content block belongs in.
+ *
+ * `BlockType` has seven values and the builder has three slots, so this is lossy in one direction —
+ * but `sectionToBlock` reads the type back off the section it was stored with, so a round trip
+ * keeps it. Only a *new* section written in the builder gets a type from its kind.
+ */
+function kindForBlockType(type: Block['type']): CustomSectionKind {
+  if (type === 'warmup') return 'warmup';
+  if (type === 'cooldown') return 'cooldown';
+  return 'main';
+}
+
+/**
+ * A content workout's block, as a builder section.
+ *
+ * The inverse of {@link sectionToBlock}, and the reason a course written as a file can be imported
+ * into the builder and come back out unchanged — which `draft.test.ts` asserts block by block over
+ * every workout of every compiled course.
+ */
+export function blockToSection(block: Block): CustomWorkoutSection {
+  return {
+    kind: kindForBlockType(block.type),
+    blockType: block.type,
+    format: block.format,
+    sets: block.sets ?? block.rounds ?? 1,
+    setsField: block.sets !== undefined ? 'sets' : block.rounds !== undefined ? 'rounds' : 'none',
+    // Only when the block carried both; otherwise `sets` + `setsField` already say everything.
+    ...(block.sets !== undefined && block.rounds !== undefined ? { rounds: block.rounds } : {}),
+    ...(block.durationSec !== undefined ? { durationSec: block.durationSec } : {}),
+    ...(block.workSec !== undefined ? { workSec: block.workSec } : {}),
+    ...(block.restSec !== undefined ? { restSec: block.restSec } : {}),
+    ...(block.restBetweenSetsSec !== undefined
+      ? { restBetweenSetsSec: block.restBetweenSetsSec }
+      : {}),
+    ...(block.restBetweenRoundsSec !== undefined
+      ? { restBetweenRoundsSec: block.restBetweenRoundsSec }
+      : {}),
+    ...(block.title ? { title: block.title.ru, titleEn: block.title.en } : {}),
+    ...(block.description
+      ? { description: block.description.ru, descriptionEn: block.description.en }
+      : {}),
+    scalable: block.scalable,
+    blockId: block.id,
+    items: block.items.map((it) => ({
+      exerciseId: it.exerciseId,
+      unit: measureOf(it).unit,
+      target: measureOf(it).target,
+      ...(it.perSide ? { perSide: true } : {}),
+      restAfterSec: it.restAfterSec ?? 0,
+      ...(it.note ? { note: it.note.ru, noteEn: it.note.en } : {}),
+      ...(it.load ? { load: it.load } : {}),
+    })),
+  };
+}
+
+/** The one measure a workout item carries, as a unit and a number. */
+function measureOf(it: WorkoutItem): { unit: CustomWorkoutItem['unit']; target: number } {
+  if (it.seconds !== undefined) return { unit: 'seconds', target: it.seconds };
+  if (it.meters !== undefined) return { unit: 'meters', target: it.meters };
+  if (it.calories !== undefined) return { unit: 'calories', target: it.calories };
+  return { unit: 'reps', target: it.reps ?? 1 };
+}
+
+/** Every block of a workout, as the structure a `custom_workouts` row stores. */
+export function workoutToStructure(workout: Workout): CustomWorkoutStructure {
+  return { sections: workout.blocks.map(blockToSection) };
+}
+
 function sectionToBlock(section: CustomWorkoutSection, index: number): Block {
   const items: WorkoutItem[] = section.items.map((it) => ({
     exerciseId: it.exerciseId,
-    // WorkoutItemSchema demands exactly one measure; the builder only ever writes these two.
-    ...(it.unit === 'seconds' ? { seconds: it.target } : { reps: it.target }),
+    // WorkoutItemSchema demands exactly one measure, and exactly one of these keys is written.
+    ...(it.unit === 'seconds'
+      ? { seconds: it.target }
+      : it.unit === 'meters'
+        ? { meters: it.target }
+        : it.unit === 'calories'
+          ? { calories: it.target }
+          : { reps: it.target }),
     ...(it.perSide ? { perSide: true } : {}),
+    ...(it.load ? { load: it.load } : {}),
     ...(it.restAfterSec > 0 ? { restAfterSec: it.restAfterSec } : {}),
-    ...(it.note?.trim() ? { note: { ru: it.note.trim(), en: it.note.trim() } } : {}),
+    ...(it.note?.trim()
+      ? { note: { ru: it.note.trim(), en: it.noteEn?.trim() || it.note.trim() } }
+      : {}),
   }));
 
+  /*
+   * One number, three meanings, two fields. `sets` on a section carries sets (sets/circuit), rounds
+   * (emom/tabata/interval), or nothing at all — an AMRAP and a for-time piece are bounded by
+   * `durationSec` and BlockSchema gives them neither `sets` nor `rounds`. Put it back where the
+   * schema expects it, or a re-imported EMOM fails validation for a missing `rounds` and an AMRAP
+   * comes back carrying a set count it never had.
+   */
+  const roundsFormat =
+    section.format === 'emom' || section.format === 'tabata' || section.format === 'interval';
+  const field = section.setsField ?? (roundsFormat ? 'rounds' : 'sets');
+
   return {
-    id: `b_${index + 1}_${section.kind}`,
-    type: SECTION_TYPE[section.kind],
+    // A section imported from content keeps the block's own id and type, so the trip is lossless.
+    // One written in the builder gets an id from its position and a type from its kind.
+    id: section.blockId ?? `b_${index + 1}_${section.kind}`,
+    type: section.blockType ?? SECTION_TYPE[section.kind],
     format: section.format,
-    title: section.title ? { ru: section.title, en: section.title } : SECTION_TITLE[section.kind],
-    sets: Math.max(1, section.sets),
-    ...(section.restBetweenRoundsSec ? { restBetweenRoundsSec: section.restBetweenRoundsSec } : {}),
+    title: section.title
+      ? { ru: section.title, en: section.titleEn ?? section.title }
+      : SECTION_TITLE[section.kind],
+    ...(section.description
+      ? {
+          description: {
+            ru: section.description,
+            en: section.descriptionEn ?? section.description,
+          },
+        }
+      : {}),
+    ...(field === 'rounds' ? { rounds: Math.max(1, section.sets) } : {}),
+    ...(field === 'sets' ? { sets: Math.max(1, section.sets) } : {}),
+    ...(field === 'sets' && section.rounds !== undefined ? { rounds: section.rounds } : {}),
+    ...(section.durationSec !== undefined ? { durationSec: section.durationSec } : {}),
+    ...(section.workSec !== undefined ? { workSec: section.workSec } : {}),
+    ...(section.restSec !== undefined ? { restSec: section.restSec } : {}),
+    ...(section.restBetweenSetsSec !== undefined
+      ? { restBetweenSetsSec: section.restBetweenSetsSec }
+      : {}),
+    ...(section.restBetweenRoundsSec !== undefined
+      ? { restBetweenRoundsSec: section.restBetweenRoundsSec }
+      : {}),
     items,
-    scalable: true,
+    scalable: section.scalable ?? true,
   };
 }
 

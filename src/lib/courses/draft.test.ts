@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { COURSES } from '@/content/registry';
 import { CourseSchema } from '@/content/schema';
 import type { CustomWorkoutStructure } from '@/lib/training/customWorkout';
 import {
@@ -7,6 +8,7 @@ import {
   parseCourseContent,
   parseDayContent,
   slugFromId,
+  workoutToStructure,
   type CourseDayDraft,
   type CourseDraft,
   type WorkoutDraft,
@@ -204,4 +206,47 @@ describe('slugFromId', () => {
     expect(slugFromId('yoga_start')).toBe('yoga-start');
     expect(slugFromId('start')).toBe('start');
   });
+});
+
+describe('importing a course written as a file', () => {
+  /*
+   * The point of this block: Anastasia asked to move the existing courses into the builder so she
+   * can reorder a day or change a set count. That is only safe if the builder's structure can hold
+   * everything a content workout holds — and 59 of the 147 blocks in these courses are EMOMs,
+   * AMRAPs, for-time pieces and Tabatas, whose timing lives in fields the builder did not have.
+   *
+   * So: take every workout of every compiled course, convert it to the structure a `custom_workouts`
+   * row stores, convert it back, and require the result to equal what went in.
+   */
+  const workouts = COURSES.flatMap((c) => c.workouts.map((w) => [c.id, w] as const));
+
+  it('covers every compiled workout', () => {
+    expect(workouts.length).toBeGreaterThan(50);
+  });
+
+  for (const [courseId, workout] of workouts) {
+    it(`${courseId}/${workout.id} survives a round trip through the builder`, () => {
+      const structure = workoutToStructure(workout);
+      const { course } = draftToCourse(
+        completeDraft(),
+        [
+          day('d1', 0, { workoutShortId: workout.id }),
+          day('d2', 1, { kind: 'rest', workoutShortId: null }),
+          day('d3', 2, { workoutShortId: workout.id }),
+          day('d4', 3, { workoutShortId: workout.id }),
+        ],
+        [
+          {
+            shortId: workout.id,
+            title: workout.name.ru,
+            description: workout.description.ru,
+            points: workout.basePoints,
+            structure,
+          },
+        ],
+      );
+      expect(course.workouts[0]!.blocks).toEqual(workout.blocks);
+      expect(course.workouts[0]!.basePoints).toBe(workout.basePoints);
+    });
+  }
 });

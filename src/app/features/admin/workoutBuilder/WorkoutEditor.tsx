@@ -1,7 +1,14 @@
 /**
  * The workout builder form: a title, a description, and three sections (warm-up / main / cool-down),
  * each a list of exercises picked from the catalogue with reps-or-seconds and a rest. Produces a
- * CustomWorkoutInput for the API. v1 sections are round-based circuits; the main section can repeat.
+ * CustomWorkoutInput for the API. Sections written here are round-based circuits; the main section
+ * can repeat.
+ *
+ * It also has to *edit* workouts it did not write. A course imported from content brings EMOMs,
+ * AMRAPs, for-time pieces and Tabatas, whose timing this form has no controls for — so every
+ * section and item keeps the object it came from, and saving merges the edited fields over it
+ * rather than rebuilding from the form's own state. Without that, opening a 12-minute EMOM and
+ * changing one rep count would drop the twelve minutes.
  */
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -11,7 +18,13 @@ import { Input } from '@/components/ui/Input';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import type { CustomWorkoutInput } from '@/lib/api/customWorkouts';
 import type { ExerciseCatalogRow } from '@/lib/api/types';
-import type { CustomSectionKind, CustomWorkoutStructure } from '@/lib/training/customWorkout';
+import type {
+  CustomSectionKind,
+  CustomWorkoutItem,
+  CustomWorkoutSection,
+  CustomWorkoutStructure,
+} from '@/lib/training/customWorkout';
+import type { ExerciseUnit } from '@/content/schema';
 import { findExercise } from '@/content/catalogue';
 import type { TKey } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
@@ -21,11 +34,13 @@ interface DraftItem {
   key: string;
   exerciseId: string;
   nameRu: string;
-  unit: 'reps' | 'seconds';
+  unit: ExerciseUnit;
   target: number;
   perSide: boolean;
   restAfterSec: number;
   note: string;
+  /** The item this was read from, so fields the form has no control for survive a save. */
+  source?: CustomWorkoutItem;
 }
 
 interface DraftSection {
@@ -33,6 +48,8 @@ interface DraftSection {
   sets: number;
   restBetweenRoundsSec: number;
   items: DraftItem[];
+  /** The section this was read from; see the note at the top of the file. */
+  source?: CustomWorkoutSection;
 }
 
 export interface WorkoutEditorProps {
@@ -61,6 +78,7 @@ function emptySections(initial?: CustomWorkoutStructure): DraftSection[] {
       kind,
       sets: found?.sets ?? 1,
       restBetweenRoundsSec: found?.restBetweenRoundsSec ?? (kind === 'main' ? 60 : 0),
+      source: found,
       items: (found?.items ?? []).map((it) => ({
         key: nextKey(),
         exerciseId: it.exerciseId,
@@ -70,6 +88,7 @@ function emptySections(initial?: CustomWorkoutStructure): DraftSection[] {
         perSide: it.perSide === true,
         restAfterSec: it.restAfterSec,
         note: it.note ?? '',
+        source: it,
       })),
     };
   });
@@ -149,21 +168,31 @@ export function WorkoutEditor({
   };
 
   const save = () => {
+    /*
+     * Merge over the source rather than rebuild. Only the fields this form actually shows are
+     * overwritten; a section's format, its EMOM minutes or AMRAP length, an item's load — anything
+     * that came from an imported course and has no control here — is carried through untouched.
+     */
     const structure: CustomWorkoutStructure = {
       sections: sections
         .filter((s) => s.items.length > 0)
         .map((s) => ({
+          ...s.source,
           kind: s.kind,
-          format: 'circuit',
-          sets: s.kind === 'main' ? Math.max(1, s.sets) : 1,
-          restBetweenRoundsSec: s.kind === 'main' ? Math.max(0, s.restBetweenRoundsSec) : 0,
+          format: s.source?.format ?? 'circuit',
+          sets: s.kind === 'main' ? Math.max(1, s.sets) : (s.source?.sets ?? 1),
+          restBetweenRoundsSec:
+            s.kind === 'main'
+              ? Math.max(0, s.restBetweenRoundsSec)
+              : (s.source?.restBetweenRoundsSec ?? 0),
           items: s.items.map((it) => ({
+            ...it.source,
             exerciseId: it.exerciseId,
             unit: it.unit,
             target: Math.max(1, it.target),
-            ...(it.perSide ? { perSide: true } : {}),
+            ...(it.perSide ? { perSide: true } : { perSide: undefined }),
             restAfterSec: Math.max(0, it.restAfterSec),
-            ...(it.note.trim() ? { note: it.note.trim() } : {}),
+            ...(it.note.trim() ? { note: it.note.trim() } : { note: undefined }),
           })),
         })),
     };
@@ -257,14 +286,26 @@ export function WorkoutEditor({
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 lg:order-2 lg:flex-nowrap">
-                    <SegmentedControl<'reps' | 'seconds'>
-                      value={it.unit}
-                      onChange={(unit) => updateItem(section.kind, it.key, { unit })}
-                      options={[
-                        { value: 'reps', label: t('app.builderUnitReps') },
-                        { value: 'seconds', label: t('app.builderUnitSeconds') },
-                      ]}
-                    />
+                    {/*
+                     * Metres and calories exist in the content model and arrive with an imported
+                     * course, but nothing this builder writes uses them, and a control with four
+                     * choices to serve two is worse for the two. Such an item shows its unit as a
+                     * label and keeps it; the amount stays editable.
+                     */}
+                    {it.unit === 'reps' || it.unit === 'seconds' ? (
+                      <SegmentedControl<'reps' | 'seconds'>
+                        value={it.unit}
+                        onChange={(unit) => updateItem(section.kind, it.key, { unit })}
+                        options={[
+                          { value: 'reps', label: t('app.builderUnitReps') },
+                          { value: 'seconds', label: t('app.builderUnitSeconds') },
+                        ]}
+                      />
+                    ) : (
+                      <span className="control-label text-xs text-muted">
+                        {t(it.unit === 'meters' ? 'app.exUnitMeters' : 'app.exUnitCalories')}
+                      </span>
+                    )}
                     <input
                       type="number"
                       inputMode="numeric"

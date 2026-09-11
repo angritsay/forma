@@ -858,6 +858,7 @@ export const app = {
   mediaTooLarge: 'Файл больше {mb} МБ',
 
   // --- course builder (admin) -----------------------------------------------
+  courseNavLabel: 'Конструктор курсов',
   courseScreenTitle: 'Курсы',
   courseNew: 'Новый курс',
   courseNewBody:

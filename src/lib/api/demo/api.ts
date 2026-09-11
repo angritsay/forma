@@ -5,7 +5,7 @@
  * from the browser-local store and go through the same mappers, so the app cannot tell the
  * difference beyond the demo badge.
  */
-import { COURSES } from '@/content/registry';
+import { COURSES, EXERCISES } from '@/content/registry';
 import { stepsPoints } from '@/lib/training/streak';
 import { addDays, toLocalDateIso } from '@/lib/util/dates';
 import { AppError } from '../errors';
@@ -24,6 +24,10 @@ import type {
   WorkoutAssigneeRow,
 } from '../types';
 import type { CustomWorkoutInput } from '../customWorkouts';
+import {
+  buildPrescribedFromCustom,
+  type CustomWorkoutStructure,
+} from '@/lib/training/customWorkout';
 import { assertLocalDate, COURSE_ID_RE, EMAIL_RE, guard } from '../internal';
 import {
   benchmarkFromDb,
@@ -88,6 +92,7 @@ import {
   normalizeDemoEmail,
   nowIso,
   readDb,
+  writeDb,
   type DemoDb,
   type DemoUser,
 } from './store';
@@ -711,48 +716,241 @@ export async function resolveMediaUrl(ref: string | undefined): Promise<string |
 }
 
 // --- exercise catalogue + custom workouts -----------------------------------
-// Demo mode has no coach tools and no assignments: the catalogue and lists come back empty and
-// admin writes are refused. The builder is admin-only, and isAdmin() is false in demo, so it is
-// never reached here; these keep the read paths (home, share link) from crashing a demo build.
+//
+// The demo account is the coach (isAdmin() above returns true for it), so the builder screens are
+// reachable and have to work. They run on the same browser-local database as everything else:
+// the exercise library starts as the compiled one, and anything the coach writes — a pose, a
+// workout, a course — is stored in `forma.demo.*` and never leaves the browser.
+//
+// Assignments and share links are the exception and stay empty: both hand a workout to *another*
+// person, and a demo has nobody else in it.
+
+/** The compiled library, in the shape `public.exercises` returns. */
+function compiledExerciseRows(): ExerciseCatalogRow[] {
+  return EXERCISES.map((e) => ({
+    id: e.id,
+    nameRu: e.name.ru,
+    nameEn: e.name.en,
+    shortNameRu: e.shortName?.ru ?? null,
+    descriptionRu: e.description.ru,
+    descriptionEn: e.description.en,
+    howTo: e.howTo.map((v) => ({ ru: v.ru, en: v.en })),
+    cues: e.cues.map((v) => ({ ru: v.ru, en: v.en })),
+    mistakes: e.mistakes.map((v) => ({ ru: v.ru, en: v.en })),
+    breathingRu: e.breathing?.ru ?? null,
+    primaryMuscle: e.muscles[0] ?? null,
+    muscles: [...e.muscles],
+    pattern: e.pattern,
+    equipment: [...e.equipment],
+    level: e.level,
+    unit: e.unit,
+    secondsPerRep: e.secondsPerRep ?? null,
+    animation: e.animation,
+    videoRu: e.video?.ru ?? null,
+    videoEn: e.video?.en ?? null,
+    image: null,
+    tags: [...e.tags],
+    isTest: e.isTest === true,
+    isCustom: false,
+  }));
+}
+
+/** Compiled rows, with anything written in the admin panel layered over them by id. */
+function exerciseRows(db: DemoDb): ExerciseCatalogRow[] {
+  const byId = new Map(compiledExerciseRows().map((r) => [r.id, r]));
+  for (const row of db.exercises) byId.set(row.id, row);
+  return [...byId.values()];
+}
 
 export async function listExerciseCatalog(): Promise<ExerciseCatalogRow[]> {
-  return [];
+  return run(() => exerciseRows(readDb()));
+}
+
+/** Write an exercise into the overlay, materialising the compiled row first if need be. */
+function upsertExercise(id: string, patch: Partial<ExerciseCatalogRow>): ExerciseCatalogRow {
+  const db = readDb();
+  const current = exerciseRows(db).find((r) => r.id === id);
+  if (!current) throw new AppError('not_found', 'not_found');
+  const next = { ...current, ...patch };
+  db.exercises = [...db.exercises.filter((r) => r.id !== id), next];
+  writeDb(db);
+  return next;
 }
 
 export async function updateExerciseMarkup(
-  _id: string,
-  _patch: ExerciseMarkupPatch,
+  id: string,
+  patch: ExerciseMarkupPatch,
 ): Promise<ExerciseCatalogRow> {
-  throw new AppError('forbidden', 'demo_read_only');
+  return run(() => {
+    requireDemoUser();
+    return upsertExercise(id, {
+      ...(patch.videoRu !== undefined ? { videoRu: patch.videoRu || null } : {}),
+      ...(patch.videoEn !== undefined ? { videoEn: patch.videoEn || null } : {}),
+      ...(patch.tags !== undefined ? { tags: patch.tags } : {}),
+    });
+  });
 }
+
+function draftToRow(draft: ExerciseDraft, base?: ExerciseCatalogRow): ExerciseCatalogRow {
+  return {
+    id: draft.id,
+    nameRu: draft.nameRu,
+    nameEn: draft.nameEn ?? base?.nameEn ?? null,
+    shortNameRu: draft.shortNameRu ?? base?.shortNameRu ?? null,
+    descriptionRu: draft.descriptionRu ?? base?.descriptionRu ?? null,
+    descriptionEn: draft.descriptionEn ?? base?.descriptionEn ?? null,
+    howTo: draft.howTo ?? base?.howTo ?? [],
+    cues: draft.cues ?? base?.cues ?? [],
+    mistakes: draft.mistakes ?? base?.mistakes ?? [],
+    breathingRu: draft.breathingRu ?? base?.breathingRu ?? null,
+    primaryMuscle: draft.primaryMuscle ?? base?.primaryMuscle ?? null,
+    muscles: draft.muscles ?? base?.muscles ?? [],
+    pattern: draft.pattern ?? base?.pattern ?? null,
+    equipment: draft.equipment ?? base?.equipment ?? ['none'],
+    level: draft.level ?? base?.level ?? 1,
+    unit: draft.unit ?? base?.unit ?? 'reps',
+    secondsPerRep: draft.secondsPerRep ?? base?.secondsPerRep ?? null,
+    animation: base?.animation ?? null,
+    videoRu: draft.videoRu ?? base?.videoRu ?? null,
+    videoEn: draft.videoEn ?? base?.videoEn ?? null,
+    image: draft.image ?? base?.image ?? null,
+    tags: draft.tags ?? base?.tags ?? [],
+    isTest: draft.isTest ?? base?.isTest ?? false,
+    isCustom: base?.isCustom ?? true,
+  };
+}
+
+export async function createExercise(draft: ExerciseDraft): Promise<ExerciseCatalogRow> {
+  return run(() => {
+    requireDemoUser();
+    if (!/^[a-z0-9_]{2,60}$/.test(draft.id)) throw new AppError('validation', 'invalid_id');
+    const db = readDb();
+    if (exerciseRows(db).some((r) => r.id === draft.id)) {
+      throw new AppError('validation', 'duplicate_id');
+    }
+    const row = draftToRow(draft);
+    db.exercises = [...db.exercises, row];
+    writeDb(db);
+    return row;
+  });
+}
+
+export async function updateExercise(
+  id: string,
+  draft: Partial<ExerciseDraft>,
+): Promise<ExerciseCatalogRow> {
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    const current = exerciseRows(db).find((r) => r.id === id);
+    if (!current) throw new AppError('not_found', 'not_found');
+    return upsertExercise(
+      id,
+      draftToRow({ ...draft, id, nameRu: draft.nameRu ?? current.nameRu }, current),
+    );
+  });
+}
+
+export async function deleteExercise(id: string): Promise<void> {
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    // Same rule as the real backend: only an admin-authored exercise can be removed.
+    db.exercises = db.exercises.filter((r) => !(r.id === id && r.isCustom));
+    writeDb(db);
+  });
+}
+
+// --- custom workouts --------------------------------------------------------
 
 export async function listCustomWorkouts(): Promise<CustomWorkoutSummary[]> {
-  return [];
+  return run(() =>
+    [...readDb().customWorkouts]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .map(({ structure: _structure, ...summary }) => summary),
+  );
 }
 
-export async function getCustomWorkout(_id: string): Promise<CustomWorkoutRow> {
-  throw new AppError('not_found', 'not_found');
+export async function getCustomWorkout(id: string): Promise<CustomWorkoutRow> {
+  return run(() => {
+    const row = readDb().customWorkouts.find((w) => w.id === id);
+    if (!row) throw new AppError('not_found', 'not_found');
+    return row;
+  });
 }
 
-export async function createCustomWorkout(_input: CustomWorkoutInput): Promise<CustomWorkoutRow> {
-  throw new AppError('forbidden', 'demo_read_only');
+/** Duration and points, from the same estimator the real backend stores them with. */
+function derived(structure: CustomWorkoutStructure): { estSec: number; points: number } {
+  const p = buildPrescribedFromCustom('cw_preview', structure);
+  return { estSec: p.estimatedSec, points: p.points };
+}
+
+export async function createCustomWorkout(input: CustomWorkoutInput): Promise<CustomWorkoutRow> {
+  return run(() => {
+    requireDemoUser();
+    const now = new Date().toISOString();
+    const { estSec, points } = derived(input.structure);
+    const row: CustomWorkoutRow = {
+      id: demoId('cw'),
+      shortId: demoId('w'),
+      title: input.title,
+      description: input.description ?? null,
+      structure: input.structure,
+      estSec,
+      points,
+      shareToken: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const db = readDb();
+    db.customWorkouts = [...db.customWorkouts, row];
+    writeDb(db);
+    return row;
+  });
 }
 
 export async function updateCustomWorkout(
-  _id: string,
-  _input: CustomWorkoutInput,
+  id: string,
+  input: CustomWorkoutInput,
 ): Promise<CustomWorkoutRow> {
-  throw new AppError('forbidden', 'demo_read_only');
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    const current = db.customWorkouts.find((w) => w.id === id);
+    if (!current) throw new AppError('not_found', 'not_found');
+    const { estSec, points } = derived(input.structure);
+    const next: CustomWorkoutRow = {
+      ...current,
+      title: input.title,
+      description: input.description ?? null,
+      structure: input.structure,
+      estSec,
+      points,
+      updatedAt: new Date().toISOString(),
+    };
+    db.customWorkouts = db.customWorkouts.map((w) => (w.id === id ? next : w));
+    writeDb(db);
+    return next;
+  });
 }
 
-export async function deleteCustomWorkout(_id: string): Promise<void> {
-  throw new AppError('forbidden', 'demo_read_only');
+export async function deleteCustomWorkout(id: string): Promise<void> {
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    db.customWorkouts = db.customWorkouts.filter((w) => w.id !== id);
+    db.adminCourseDays = db.adminCourseDays.map((d) =>
+      d.customWorkoutId === id ? { ...d, customWorkoutId: null } : d,
+    );
+    writeDb(db);
+  });
 }
 
 export async function setCustomWorkoutShare(
   _id: string,
   _enabled: boolean,
 ): Promise<string | null> {
+  // A share link hands a workout to somebody else, and a demo has nobody else in it.
   throw new AppError('forbidden', 'demo_read_only');
 }
 
@@ -781,70 +979,231 @@ export async function getSharedCustomWorkout(_token: string): Promise<AssignedWo
 }
 
 // --- courses built in the admin panel ---------------------------------------
-// Same rule as the builder above: demo mode has no coach tools, so the lists are empty and every
-// write is refused. listPublishedCourses() returning nothing is also correct rather than merely
-// convenient — a demo build ships with the compiled courses and no database behind it.
+//
+// Same browser-local database as everything else. Publishing is real in the sense that matters
+// here: a published course is what `listPublishedCourses()` returns, so it shows up in the demo
+// catalogue and can be walked and played exactly as a compiled one. What it cannot do is what
+// publishing does on the server — write `public.courses` and `public.workouts` — because in a demo
+// there is no purchase to entitle and no ceiling to enforce.
 
-export async function listAdminCourses(): Promise<AdminCourseRow[]> {
-  return [];
+function courseOr404(db: DemoDb, id: string): AdminCourseRow {
+  const row = db.adminCourses.find((c) => c.id === id);
+  if (!row) throw new AppError('not_found', 'not_found');
+  return row;
 }
 
-export async function getAdminCourse(_id: string): Promise<AdminCourseBundle> {
-  throw new AppError('not_found', 'not_found');
+function bundleFor(db: DemoDb, course: AdminCourseRow): AdminCourseBundle {
+  const days = db.adminCourseDays
+    .filter((d) => d.courseId === course.id)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+  const used = new Set(days.map((d) => d.customWorkoutId).filter((v): v is string => !!v));
+  return { course, days, workouts: db.customWorkouts.filter((w) => used.has(w.id)) };
+}
+
+export async function listAdminCourses(): Promise<AdminCourseRow[]> {
+  return run(() =>
+    [...readDb().adminCourses].sort(
+      (a, b) => a.sortOrder - b.sortOrder || a.createdAt.localeCompare(b.createdAt),
+    ),
+  );
+}
+
+export async function getAdminCourse(id: string): Promise<AdminCourseBundle> {
+  return run(() => {
+    const db = readDb();
+    return bundleFor(db, courseOr404(db, id));
+  });
 }
 
 export async function createAdminCourse(
-  _slugId: string,
-  _patch: AdminCoursePatch,
+  slugId: string,
+  patch: AdminCoursePatch,
 ): Promise<AdminCourseRow> {
-  throw new AppError('forbidden', 'demo_read_only');
+  return run(() => {
+    requireDemoUser();
+    if (!COURSE_ID_RE.test(slugId)) throw new AppError('validation', 'invalid_id');
+    const db = readDb();
+    if (db.adminCourses.some((c) => c.slugId === slugId)) {
+      throw new AppError('validation', 'duplicate_id');
+    }
+    const now = nowIso();
+    const row: AdminCourseRow = {
+      id: demoId('ac'),
+      slugId,
+      status: 'draft',
+      sortOrder: 0,
+      level: 1,
+      weeks: 4,
+      sessionsPerWeek: 3,
+      avgSessionMin: 30,
+      equipment: ['none'],
+      tile: '#1A2634',
+      priceRub: 0,
+      priceUsd: 0,
+      content: { longDescription: [], forWhom: [], outcomes: [], faq: [] },
+      publishedAt: null,
+      createdAt: now,
+      updatedAt: now,
+      ...patch,
+    };
+    db.adminCourses = [...db.adminCourses, row];
+    writeDb(db);
+    return row;
+  });
 }
 
 export async function updateAdminCourse(
-  _id: string,
-  _patch: AdminCoursePatch,
+  id: string,
+  patch: AdminCoursePatch,
 ): Promise<AdminCourseRow> {
-  throw new AppError('forbidden', 'demo_read_only');
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    const current = courseOr404(db, id);
+    // The real table freezes slug_id once published, because it is the id in every purchase and
+    // every recorded session. Same rule here, so the demo cannot teach a habit the server refuses.
+    if (patch.slugId && patch.slugId !== current.slugId && current.publishedAt) {
+      throw new AppError('validation', 'slug_frozen');
+    }
+    const next: AdminCourseRow = { ...current, ...patch, updatedAt: nowIso() };
+    db.adminCourses = db.adminCourses.map((c) => (c.id === id ? next : c));
+    writeDb(db);
+    return next;
+  });
 }
 
-export async function deleteAdminCourse(_id: string): Promise<void> {
-  throw new AppError('forbidden', 'demo_read_only');
+export async function deleteAdminCourse(id: string): Promise<void> {
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    db.adminCourses = db.adminCourses.filter((c) => c.id !== id);
+    db.adminCourseDays = db.adminCourseDays.filter((d) => d.courseId !== id);
+    writeDb(db);
+  });
 }
 
-export async function publishAdminCourse(_id: string): Promise<void> {
-  throw new AppError('forbidden', 'demo_read_only');
+export async function publishAdminCourse(id: string): Promise<void> {
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    const course = courseOr404(db, id);
+    const bundle = bundleFor(db, course);
+    // The same two checks admin_publish_course() makes.
+    if (bundle.days.length < 4) throw new AppError('validation', 'course_too_short');
+    const empty = bundle.days.some((d) => {
+      if (!['workout', 'test', 'benchmark'].includes(d.kind)) return false;
+      const w = bundle.workouts.find((x) => x.id === d.customWorkoutId);
+      const structure = w?.structure as CustomWorkoutStructure | undefined;
+      return !structure || structure.sections.length === 0;
+    });
+    if (empty) throw new AppError('validation', 'course_has_empty_days');
+    db.adminCourses = db.adminCourses.map((c) =>
+      c.id === id
+        ? { ...c, status: 'published', publishedAt: c.publishedAt ?? nowIso(), updatedAt: nowIso() }
+        : c,
+    );
+    writeDb(db);
+  });
 }
 
-export async function unpublishAdminCourse(_id: string): Promise<void> {
-  throw new AppError('forbidden', 'demo_read_only');
+export async function unpublishAdminCourse(id: string): Promise<void> {
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    courseOr404(db, id);
+    db.adminCourses = db.adminCourses.map((c) =>
+      c.id === id ? { ...c, status: 'draft', updatedAt: nowIso() } : c,
+    );
+    writeDb(db);
+  });
 }
 
 export async function createCourseDay(
-  _courseId: string,
-  _patch: AdminCourseDayPatch,
+  courseId: string,
+  patch: AdminCourseDayPatch,
 ): Promise<AdminCourseDayRow> {
-  throw new AppError('forbidden', 'demo_read_only');
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    courseOr404(db, courseId);
+    const row: AdminCourseDayRow = {
+      id: demoId('cd'),
+      courseId,
+      nodeId: patch.nodeId ?? demoId('n'),
+      week: patch.week ?? 1,
+      day: patch.day ?? 1,
+      kind: patch.kind ?? 'workout',
+      customWorkoutId: patch.customWorkoutId ?? null,
+      content: patch.content ?? { body: [] },
+      deload: patch.deload ?? false,
+      stepsGoal: patch.stepsGoal ?? null,
+      sortOrder:
+        patch.sortOrder ?? db.adminCourseDays.filter((d) => d.courseId === courseId).length,
+    };
+    // The table has a unique (course_id, week, day); refuse the collision here too.
+    if (
+      db.adminCourseDays.some(
+        (d) => d.courseId === courseId && d.week === row.week && d.day === row.day,
+      )
+    ) {
+      throw new AppError('validation', 'day_taken');
+    }
+    db.adminCourseDays = [...db.adminCourseDays, row];
+    writeDb(db);
+    return row;
+  });
 }
 
 export async function updateCourseDay(
-  _id: string,
-  _patch: AdminCourseDayPatch,
+  id: string,
+  patch: AdminCourseDayPatch,
 ): Promise<AdminCourseDayRow> {
-  throw new AppError('forbidden', 'demo_read_only');
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    const current = db.adminCourseDays.find((d) => d.id === id);
+    if (!current) throw new AppError('not_found', 'not_found');
+    const next: AdminCourseDayRow = { ...current, ...patch };
+    // Mirrors admin_course_days_workout_required.
+    if (!['workout', 'test', 'benchmark'].includes(next.kind)) next.customWorkoutId = null;
+    db.adminCourseDays = db.adminCourseDays.map((d) => (d.id === id ? next : d));
+    writeDb(db);
+    return next;
+  });
 }
 
-export async function deleteCourseDay(_id: string): Promise<void> {
-  throw new AppError('forbidden', 'demo_read_only');
+export async function deleteCourseDay(id: string): Promise<void> {
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    db.adminCourseDays = db.adminCourseDays.filter((d) => d.id !== id);
+    writeDb(db);
+  });
 }
 
 export async function reorderCourseDays(
-  _days: readonly { id: string; sortOrder: number; week: number; day: number }[],
+  days: readonly { id: string; sortOrder: number; week: number; day: number }[],
 ): Promise<void> {
-  throw new AppError('forbidden', 'demo_read_only');
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    const byId = new Map(days.map((d) => [d.id, d]));
+    db.adminCourseDays = db.adminCourseDays.map((d) => {
+      const patch = byId.get(d.id);
+      return patch ? { ...d, sortOrder: patch.sortOrder, week: patch.week, day: patch.day } : d;
+    });
+    writeDb(db);
+  });
 }
 
 export async function listPublishedCourses(): Promise<AdminCourseBundle[]> {
-  return [];
+  return run(() => {
+    const db = readDb();
+    return db.adminCourses
+      .filter((c) => c.status === 'published')
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((c) => bundleFor(db, c));
+  });
 }
 
 export async function uploadMedia(_bucket: string, _path: string, _file: Blob): Promise<string> {
@@ -852,20 +1211,5 @@ export async function uploadMedia(_bucket: string, _path: string, _file: Blob): 
 }
 
 export async function deleteMedia(_ref: string): Promise<void> {
-  throw new AppError('forbidden', 'demo_read_only');
-}
-
-export async function createExercise(_draft: ExerciseDraft): Promise<ExerciseCatalogRow> {
-  throw new AppError('forbidden', 'demo_read_only');
-}
-
-export async function updateExercise(
-  _id: string,
-  _draft: Partial<ExerciseDraft>,
-): Promise<ExerciseCatalogRow> {
-  throw new AppError('forbidden', 'demo_read_only');
-}
-
-export async function deleteExercise(_id: string): Promise<void> {
   throw new AppError('forbidden', 'demo_read_only');
 }

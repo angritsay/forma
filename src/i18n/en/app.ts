@@ -860,6 +860,7 @@ export const app = {
   mediaTooLarge: 'The file is larger than {mb} MB',
 
   // --- course builder (admin) -----------------------------------------------
+  courseNavLabel: 'Course builder',
   courseScreenTitle: 'Courses',
   courseNew: 'New course',
   courseNewBody:
