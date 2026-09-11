@@ -221,6 +221,14 @@ export const landing = {
   orderSubmit: 'Получить доступ',
   orderSubmitting: 'Отправляем…',
   orderRedirecting: 'Переходим к оплате…',
+  /*
+   * Prepares the buyer for the two ways the payment page will not look like this one. The product
+   * wording quoted here is the processor's own fiscal label, copied as it appears on the form — it
+   * belongs on a receipt and is not ours to rewrite, so our side explains it instead. If that label
+   * is ever changed in Prodamus, change it here too.
+   */
+  orderPaymentNote:
+    'Оплата — на {host}. Курс там указан как «Доступ к обучающим материалам»: это он и есть. Укажи ту же почту, что и здесь, — по ней тренер откроет доступ, другой адрес мы не свяжем с заказом.',
   orderSuccessTitle: 'Заявка принята',
   orderSuccessText:
     'Тренер подтвердит доступ к курсу «{course}» для {email}. После этого открой приложение и войди с этой почтой.',

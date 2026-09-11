@@ -37,8 +37,17 @@ export interface OrderFormLabels {
   lifetimeNote: string;
   telegramLabel: string;
   /**
-   * Shown next to the consent when the course has a payment link: the visitor is
-   * handed over to that page with their email. Template with {host}.
+   * Shown next to the consent when the course has a payment link, preparing the buyer for the two
+   * ways that page will not look like this one. Template with {host}.
+   *
+   * It lists the course under the processor's own fiscal wording, not the name we sell it by — that
+   * wording belongs on a receipt and is not ours to rewrite — and it does not prefill the email: a
+   * Prodamus short link redirects to the shop form and drops the query parameters it was given, so
+   * `customer_email` never arrives (the parameters stay in `withEmail`, since they cost nothing and
+   * work the moment the link is one that forwards them). Of the two, the email is the one that
+   * matters: it is the only thing tying a payment back to an order, so a buyer who retypes it one
+   * letter different, or reaches for a second address out of habit, leaves a paid order nobody can
+   * match to a purchase.
    */
   paymentNote?: string;
   /** Accessible name of the plan choice; required when `plans` is given. */
@@ -79,7 +88,7 @@ export interface OrderFormProps {
 type Status =
   | { kind: 'idle' }
   | { kind: 'submitting' }
-  | { kind: 'redirecting' }
+  | { kind: 'redirecting'; email: string }
   | { kind: 'success'; email: string }
   | { kind: 'error'; reason: ErrorReason };
 
@@ -186,7 +195,7 @@ export default function OrderForm({
     }
     // A demo order never leaves the browser, so it never hands anyone to a payment page.
     if (payment && !demo) {
-      setStatus({ kind: 'redirecting' });
+      setStatus({ kind: 'redirecting', email: trimmed });
       window.location.assign(withEmail(payment, trimmed));
       return;
     }
@@ -362,7 +371,7 @@ export default function OrderForm({
       </label>
 
       {payment && !demo && labels.paymentNote && (
-        <p className="text-xs text-muted">{fill(labels.paymentNote, { host: payment.host })}</p>
+        <p className="text-sm text-muted">{fill(labels.paymentNote, { host: payment.host })}</p>
       )}
 
       {errorText && (

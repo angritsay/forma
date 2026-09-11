@@ -223,6 +223,9 @@ export const landing = {
   orderSubmit: 'Get access',
   orderSubmitting: 'Sending…',
   orderRedirecting: 'Taking you to payment…',
+  /* See the note on the Russian string — the quoted product wording is the processor's own. */
+  orderPaymentNote:
+    'Payment is handled on {host}, where the course is listed as “Доступ к обучающим материалам” — that is this course. Use the same email you entered here: that is how the coach opens your access, and another address will not be matched to the order.',
   orderSuccessTitle: 'Order received',
   orderSuccessText:
     'The coach will confirm access to {course} for {email}. Then open the app and sign in with this email.',
