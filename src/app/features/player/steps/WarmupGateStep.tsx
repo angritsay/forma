@@ -12,10 +12,7 @@ export function WarmupGateStep({ onGo, onSkip }: WarmupGateStepProps) {
   const { t } = useT();
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3">
-        <DisplayTitle as="h2" text={t('app.playerGateTitle')} className="text-5xl" />
-        <p className="text-[15px] text-muted">{t('app.playerGateBody')}</p>
-      </div>
+      <DisplayTitle as="h2" text={t('app.playerGateTitle')} className="text-4xl" />
       <div className="flex flex-col gap-2">
         <Button size="lg" fullWidth onClick={onGo} data-autofocus>
           {t('app.playerGo')}

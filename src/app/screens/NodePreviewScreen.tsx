@@ -54,9 +54,6 @@ interface Plan extends DifficultyOption {
   prescribed: PrescribedWorkout;
 }
 
-/** The figure's own tile is transparent so the art block behind it paints the colour, seamlessly. */
-const TRANSPARENT_TILE = 'transparent';
-
 export default function NodePreviewScreen() {
   useProgressLoader();
   const { id = '', nodeId = '' } = useParams();
@@ -264,21 +261,21 @@ export default function NodePreviewScreen() {
             {locked ? (
               <p className="text-center text-sm text-muted">{t('app.nodeLocked')}</p>
             ) : null}
-            {/* Two buttons on one row: the quiet way out on the left, the one thing to do on the right. */}
-            <div className="grid grid-cols-[112px_minmax(0,1fr)] gap-2.5">
-              <Button size="lg" variant="secondary" onClick={() => navigate(backPath)}>
-                {t('app.nodeLater')}
-              </Button>
-              <Button
-                size="lg"
-                loading={busy}
-                disabled={locked || !plan}
-                onClick={onStartPress}
-                iconRight={<Glyph size={14}>→</Glyph>}
-              >
-                {t('app.nodeStart')}
-              </Button>
-            </div>
+            {/*
+             * One button, full width. It shared the row with a «Позже» that led where the back arrow
+             * and the tab bar already lead, and 112px for that left «ПОЗ…» while the one thing this
+             * screen exists for read «НАЧАТЬ ТРЕНИ…». A truncated primary action is not a trade.
+             */}
+            <Button
+              size="lg"
+              fullWidth
+              loading={busy}
+              disabled={locked || !plan}
+              onClick={onStartPress}
+              iconRight={<Glyph size={14}>→</Glyph>}
+            >
+              {t('app.nodeStart')}
+            </Button>
           </div>
         }
       >
@@ -290,10 +287,16 @@ export default function NodePreviewScreen() {
            */}
           <div className="hero-art relative -mx-5 flex aspect-[4/3] items-center justify-center overflow-hidden lg:-mx-8 lg:aspect-auto lg:h-[360px]">
             <div className="h-full max-h-full">
+              {/*
+               * The course's own tile, not a transparent one. `ExerciseFigure` derives its ink from
+               * whatever tile it is given, and a transparent tile reads as dark — which drew a white
+               * figure on the yellow cover. The block behind is already this colour, so passing it
+               * changes nothing but the line, which goes to the black the brandbook asks for.
+               */}
               <ExerciseFigure
                 animation={exercise?.animation ?? 'air_squat'}
                 variant="hero"
-                tile={TRANSPARENT_TILE}
+                tile={course.tile}
                 className="h-full w-auto"
                 label={exercise ? l(exercise.name) : undefined}
               />

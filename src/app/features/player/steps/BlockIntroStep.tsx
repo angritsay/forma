@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/Button';
 import { useT } from '@/app/hooks/useT';
 import { DisplayTitle } from '@/app/features/home/DisplayTitle';
 import type { PrescribedWorkout } from '@/lib/training/types';
-import { ItemList } from '../ItemList';
 import {
   blockMeta,
   blockSection,
@@ -24,7 +23,7 @@ export interface BlockIntroStepProps {
 
 /** Block title, structure and its exercises; "Go" starts the block. */
 export function BlockIntroStep({ step, prescribed, onNext }: BlockIntroStepProps) {
-  const { t, l, locale } = useT();
+  const { t, locale } = useT();
   const block = findBlock(prescribed, step.blockId);
   const section = blockSection(step.type);
   const part = section === 'main' ? mainPart(prescribed, step.blockId) : null;
@@ -38,7 +37,7 @@ export function BlockIntroStep({ step, prescribed, onNext }: BlockIntroStepProps
         <DisplayTitle
           as="h2"
           text={block ? blockTitle(t, locale, block) : blockTypeLabel(t, step.type)}
-          className="text-5xl"
+          className="text-4xl"
         />
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone="neutral" size="md">
@@ -51,9 +50,7 @@ export function BlockIntroStep({ step, prescribed, onNext }: BlockIntroStepProps
             </Badge>
           ) : null}
         </div>
-        {step.description ? <p className="text-[15px] text-muted">{l(step.description)}</p> : null}
       </div>
-      {block ? <ItemList items={block.items} className="border-t border-border-strong" /> : null}
       <Button size="lg" fullWidth onClick={onNext} data-autofocus>
         {t('app.playerGo')}
       </Button>

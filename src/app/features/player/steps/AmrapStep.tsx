@@ -4,7 +4,6 @@ import { IconButton } from '@/components/ui/IconButton';
 import { useT } from '@/app/hooks/useT';
 import type { PlayerResult } from '@/app/store/activeWorkout';
 import { BigClock } from '../BigClock';
-import { ItemList } from '../ItemList';
 import { Stepper } from '../Stepper';
 import { clampCount, type AmrapStep as Step } from '../model';
 import type { Cue } from '../sound';
@@ -67,7 +66,6 @@ export function AmrapStep({
             tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'accent' : 'default'}
             caption={`${t('training.amrapHint', { min: minutes })} · ${t('training.amrapExpected', { n: step.expectedRounds })}`}
           />
-          <ItemList items={step.items} compact className="border-t border-border-strong" />
           {/* The round count on a rule, the two controls opposite it — no box. */}
           <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
             <div className="flex flex-col">

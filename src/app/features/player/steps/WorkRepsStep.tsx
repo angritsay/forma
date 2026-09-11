@@ -4,7 +4,6 @@ import { Chip } from '@/components/ui/Chip';
 import { useT } from '@/app/hooks/useT';
 import type { PlayerResult } from '@/app/store/activeWorkout';
 import type { BlockFormat } from '@/content/schema';
-import { ExplainPanel } from '../ExplainPanel';
 import { Stepper } from '../Stepper';
 import { loadLabel, setLabel, unitLabel, type WorkStep } from '../model';
 import { useNextHandler } from '../useStepClock';
@@ -18,7 +17,12 @@ export interface WorkRepsStepProps {
   registerNext: (fn: (() => void) | null) => void;
 }
 
-/** Rep-based work: the target as a big adjustable number; "Done" records what was achieved. */
+/**
+ * Rep-based work: the target as a big adjustable number; "Done" records what was achieved.
+ *
+ * This renders into the player's footer, over the clip, so it carries only what is read and tapped
+ * mid-set. The coach's note and the technique sit below the fold — see StepDetails.
+ */
 export function WorkRepsStep({
   step,
   index,
@@ -27,7 +31,7 @@ export function WorkRepsStep({
   onNext,
   registerNext,
 }: WorkRepsStepProps) {
-  const { t, l } = useT();
+  const { t } = useT();
   const [count, setCount] = useState(step.target);
   const load = loadLabel(t, {
     ...step.item,
@@ -49,7 +53,7 @@ export function WorkRepsStep({
   useNextHandler(registerNext, done);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <div className="flex flex-col items-center gap-2 text-center">
         <span className="eyebrow">{setLabel(t, format, step.set, step.totalSets)}</span>
         <Stepper
@@ -70,15 +74,7 @@ export function WorkRepsStep({
             <Chip tone="warning">{`${t('app.playerTarget')}: ${step.target}`}</Chip>
           ) : null}
         </div>
-        {step.item.note ? <p className="text-[15px] text-muted">{l(step.item.note)}</p> : null}
       </div>
-      {/*
-       * The words the introduction screen used to carry. It is gone — the clip demonstrates the
-       * movement while it is being done — so technique, muscles and cautions live here instead,
-       * collapsed behind a handle. Mid-set is exactly when someone wonders whether their back is
-       * meant to round, and until now the only way to check was to leave the workout.
-       */}
-      <ExplainPanel exerciseId={step.exerciseId} item={step.item} />
       <Button size="lg" fullWidth onClick={done}>
         {t('app.playerNextUp')}
       </Button>

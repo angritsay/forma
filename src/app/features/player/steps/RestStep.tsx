@@ -5,7 +5,6 @@ import { DisplayTitle } from '@/app/features/home/DisplayTitle';
 import { FactChips } from '@/app/features/path/FactChips';
 import type { PrescribedWorkout } from '@/lib/training/types';
 import { BigClock } from '../BigClock';
-import { ExplainPanel } from '../ExplainPanel';
 import { findBlock, findExercise, targetLabel, type RestStep as Step } from '../model';
 import type { Cue } from '../sound';
 import { useCountdownCues, useNextHandler, useStepClock } from '../useStepClock';
@@ -57,12 +56,11 @@ export function RestStep({ step, prescribed, paused, beep, onNext, registerNext 
           <DisplayTitle
             as="h2"
             text={nextExercise ? nextExercise.name[locale] : nextId}
-            className="text-5xl"
+            className="text-4xl"
           />
           {nextItem ? <FactChips items={[targetLabel(t, nextItem)]} /> : null}
         </div>
       ) : null}
-      {nextId && nextItem ? <ExplainPanel exerciseId={nextId} item={nextItem} /> : null}
       <Button size="lg" fullWidth onClick={advance}>
         {t('app.playerGo')}
       </Button>

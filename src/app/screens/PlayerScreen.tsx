@@ -1,10 +1,13 @@
 /**
  * Workout player (docs/SPEC.md §10 flow 6) at /play.
  *
- * Immersive layout: the course's tile as full-bleed art carrying the coach's clip for the exercise
- * on screen — or the animated figure where there is none — behind a top bar, then a dark panel with
- * the step progress row, the current step and the Previous / Pause / Next controls. State lives in
- * `useActiveWorkoutStore` (persisted), so leaving keeps the session resumable.
+ * The screen is the coach's clip — one full viewport of it, or the drawn figure where a movement has
+ * no footage — and over it only what someone mid-set can read at arm's length: the step and the elapsed clock pinned to the top, the movement's own numbers and the
+ * transport pinned to the bottom. Everything that is words — technique, the block's list, the
+ * coach's notes — is below the fold, reached by a scroll, so it can never come between the athlete
+ * and the demonstration. Both pinned ends stay put while those words scroll past.
+ *
+ * State lives in `useActiveWorkoutStore` (persisted), so leaving keeps the session resumable.
  * Keyboard: Space = pause, → next, ← previous.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -20,8 +23,10 @@ import { TopBar } from '@/app/components/TopBar';
 import {
   Controls,
   PausedOverlay,
+  PlayerFooter,
   PlayerHeader,
   ProgressRow,
+  ScrollCue,
   SectionStepper,
 } from '@/app/features/player/PlayerChrome';
 import {
@@ -35,6 +40,7 @@ import {
   workoutSections,
 } from '@/app/features/player/model';
 import { useSound } from '@/app/features/player/sound';
+import { StepDetails } from '@/app/features/player/StepDetails';
 import { AmrapStep } from '@/app/features/player/steps/AmrapStep';
 import { BlockIntroStep } from '@/app/features/player/steps/BlockIntroStep';
 import { FortimeStep } from '@/app/features/player/steps/FortimeStep';
@@ -56,7 +62,7 @@ import {
 import { findCourse } from '@/content/catalogue';
 import type { PlayerStep } from '@/lib/training/types';
 
-/** The figure's own tile is transparent so the full-bleed course art shows through without a seam. */
+/** No tile of its own: the figure is drawn straight onto the player's ground. */
 const TRANSPARENT_TILE = 'transparent';
 const ELAPSED_TICK_MS = 500;
 
@@ -81,9 +87,10 @@ interface ArtLayerProps {
 }
 
 /**
- * The demonstration, as video when there is one and as the drawn figure when there is not.
+ * The demonstration, filling the screen: video where the movement was filmed, the drawn figure on
+ * the programme colour where it was not.
  *
- * Either way it is a silent loop behind the timer. The clips are encoded with no audio track at
+ * Either way it is a silent loop behind the clock. The clips are encoded with no audio track at
  * all (scripts/media/prepare-videos.mjs), so there is nothing to mute: the coach talks through
  * each movement while filming, which is worth watching once and wrong to have start up by itself
  * in the middle of someone's set. `muted` is still set on the element — without it a browser
@@ -98,29 +105,30 @@ function ArtLayer({ animation, playing, videoUrl }: ArtLayerProps) {
     else el.pause();
   }, [playing, videoUrl]);
 
+  /*
+   * The ground is the app's own near-black, not the programme colour, even behind the drawn figure.
+   * A screen of full-bleed yellow was the handsomer idea and it does not survive contact with the
+   * chrome: the clock, the transport and the header all have to stay legible over whatever is
+   * behind them, which means an ink scrim, which turns yellow to olive. Black keeps one set of
+   * colours for both cases — a white line on dark, white type on dark — and the programme colour
+   * still runs the course path, the section stepper and the progress bar.
+   */
   return (
-    <div
-      className="hero-art pointer-events-none absolute inset-x-0 top-0 h-[42dvh] overflow-hidden"
-      aria-hidden="true"
-    >
+    <div className="pointer-events-none absolute inset-0 overflow-hidden bg-bg" aria-hidden="true">
       {videoUrl ? (
-        <>
-          <video
-            key={videoUrl}
-            ref={video}
-            src={videoUrl}
-            className="h-full w-full object-cover"
-            playsInline
-            muted
-            loop
-            autoPlay
-            preload="metadata"
-          />
-          {/* A scrim under the header so its white title reads on a bright frame. */}
-          <div className="absolute inset-x-0 top-0 h-28 bg-linear-to-b from-bg/60 to-transparent" />
-        </>
+        <video
+          key={videoUrl}
+          ref={video}
+          src={videoUrl}
+          className="size-full object-cover"
+          playsInline
+          muted
+          loop
+          autoPlay
+          preload="metadata"
+        />
       ) : animation ? (
-        <div className="mx-auto w-[min(100%,42dvh)]">
+        <div className="flex size-full items-center justify-center p-8">
           <ExerciseFigure
             animation={animation}
             variant="hero"
@@ -344,61 +352,78 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
   return (
     // The player is the only route that does not go through <Screen>, so it carries the app's
     // <main> landmark itself.
-    <main
-      className="relative flex min-h-dvh flex-col bg-bg"
-      style={courseVars}
-      onPointerDownCapture={unlock}
-    >
-      <ArtLayer animation={animation} playing={!paused} videoUrl={videoUrl} />
-      <PlayerHeader
-        title={title}
-        muted={sound.muted}
-        overVideo={Boolean(videoUrl)}
-        onBack={() => setLeaveOpen(true)}
-        onToggleSound={sound.toggle}
-        onMenu={() => setMenuOpen(true)}
-      />
+    <main className="relative bg-bg" style={courseVars} onPointerDownCapture={unlock}>
       {/*
-       * There is no unmute button over the video any more. The clips carry no audio track at all
-       * now (scripts/media/prepare-videos.mjs), so the button toggled nothing — it just promised
-       * a voice that was not there. The header's sound control is a different thing and stays:
-       * that one is the app's own timer cues.
+       * The stage: one viewport of the demonstration and nothing in it. The header floats over the
+       * top of it and the footer over the bottom, so the frame really does run edge to edge.
        */}
-      <div className="h-[calc(42dvh-56px)] shrink-0" aria-hidden="true" />
-      {/* The panel meets the art on a straight edge — no rounded shoulder, no shadow. */}
-      <section className="relative z-10 flex flex-1 flex-col bg-bg">
+      <section className="relative h-dvh w-full overflow-hidden">
+        <ArtLayer animation={animation} playing={!paused} videoUrl={videoUrl} />
+      </section>
+
+      {/*
+       * Below the fold. Nothing here is needed to do the set — it is the part someone scrolls to
+       * when they want to check how the movement goes, or what else is in this block.
+       */}
+      <section /*
+       * `pb-8` clears the fade the footer draws above itself: it is decoration over the page,
+       * and without the room the last line of the technique ends underneath it.
+       */
+        className="relative z-10 mx-auto flex w-full max-w-[560px] flex-col gap-5 bg-bg px-5 pt-5 pb-8"
+      >
         {step ? (
           <SectionStepper
             sections={workoutSections(prescribed)}
             current={sectionOfStep(step, prescribed)}
           />
         ) : null}
-        <ProgressRow stepIndex={stepIndex} totalSteps={steps.length} elapsedSec={elapsedSec} />
-        <div className="relative flex-1 px-5 pb-6 pt-2">
-          {step ? (
-            <StepView
-              key={`${stepIndex}:${restartNonce}`}
-              step={step}
-              index={stepIndex}
-              session={session}
-              paused={paused}
-              beep={sound.beep}
-              onRecord={recordResult}
-              onNext={next}
-              onGoTo={goTo}
-              registerNext={registerNext}
-            />
-          ) : null}
-          {paused && step?.kind !== 'done' ? <PausedOverlay onResume={togglePause} /> : null}
-        </div>
-        <Controls
-          paused={paused}
-          canPrev={stepIndex > 0}
-          onPrev={doPrev}
-          onTogglePause={togglePause}
-          onNext={doNext}
-        />
+        <ProgressRow stepIndex={stepIndex} totalSteps={steps.length} />
+        {step ? <StepDetails step={step} prescribed={prescribed} /> : null}
       </section>
+
+      <PlayerHeader
+        title={title}
+        muted={sound.muted}
+        stepIndex={stepIndex}
+        totalSteps={steps.length}
+        elapsedSec={elapsedSec}
+        onBack={() => setLeaveOpen(true)}
+        onToggleSound={sound.toggle}
+        onMenu={() => setMenuOpen(true)}
+      />
+      {/*
+       * There is no unmute button over the video. The clips carry no audio track at all
+       * (scripts/media/prepare-videos.mjs), so the button toggled nothing — it just promised a
+       * voice that was not there. The header's sound control is a different thing and stays: that
+       * one is the app's own timer cues.
+       */}
+      <PlayerFooter>
+        {step ? (
+          <StepView
+            key={`${stepIndex}:${restartNonce}`}
+            step={step}
+            index={stepIndex}
+            session={session}
+            paused={paused}
+            beep={sound.beep}
+            onRecord={recordResult}
+            onNext={next}
+            onGoTo={goTo}
+            registerNext={registerNext}
+          />
+        ) : null}
+        <div className="mt-5">
+          <Controls
+            paused={paused}
+            canPrev={stepIndex > 0}
+            onPrev={doPrev}
+            onTogglePause={togglePause}
+            onNext={doNext}
+          />
+        </div>
+        <ScrollCue label={t('app.playerMoreBelow')} />
+      </PlayerFooter>
+      {paused && step?.kind !== 'done' ? <PausedOverlay onResume={togglePause} /> : null}
 
       <Sheet open={menuOpen} onClose={() => setMenuOpen(false)} title={t('app.playerMenu')}>
         {/* Three words on three lines; the rows carry no marks, the danger one is red. */}

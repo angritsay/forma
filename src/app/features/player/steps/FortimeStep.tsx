@@ -7,7 +7,6 @@ import { useT } from '@/app/hooks/useT';
 import type { PlayerResult } from '@/app/store/activeWorkout';
 import { formatClock } from '@/i18n/index';
 import { BigClock } from '../BigClock';
-import { ItemList } from '../ItemList';
 import type { FortimeStep as Step } from '../model';
 import type { Cue } from '../sound';
 import { useCountdownCues, useNextHandler, useStepClock } from '../useStepClock';
@@ -95,7 +94,6 @@ export function FortimeStep({
               <Chip>{t('app.playerFortimeCap', { time: formatClock(cap) })}</Chip>
             </div>
           ) : null}
-          <ItemList items={step.items} compact className="border-t border-border-strong" />
           {/*
            * The rounds as a row of square cells: a finished one is a ticked outline, the current
            * one is the white fill, the rest are faint numbers.

@@ -396,6 +396,7 @@ export const app = {
   playerUnmute: 'Включить звук',
   playerMenu: 'Ещё',
   playerElapsed: 'Прошло',
+  playerMoreBelow: 'Как делать',
   playerStepOf: 'Шаг {n} из {total}',
   playerPrev: 'Предыдущий шаг',
   playerNext: 'Следующий шаг',
