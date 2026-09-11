@@ -62,7 +62,14 @@ Dashboard → **SQL Editor** → **New query**, paste each file in this order an
 3. `supabase/migrations/0003_storage.sql` — private `videos` bucket and its policies
 4. `supabase/migrations/0004_content_seed.sql` — **required**: the course and workout
    catalogue the backend enforces (see §2.1)
-5. `supabase/seed.sql` — nothing runs by default; open it, uncomment the `insert into
+5. `supabase/migrations/0005_subscriptions.sql` — subscription plans, intents and activation
+6. `supabase/migrations/0006_custom_workouts.sql` — the `exercises` library, the coach-built
+   `custom_workouts` and the `assigned_workouts` that grant them to an email
+7. `supabase/migrations/0007_exercise_seed.sql` — generated: the exercise library, from
+   `content/exercises` (see §2.1)
+8. `supabase/migrations/0008_course_builder.sql` — `admin_courses` and `admin_course_days`,
+   the public `images` bucket, and `admin_publish_course()` (see §2.2)
+9. `supabase/seed.sql` — nothing runs by default; open it, uncomment the `insert into
 public.admins` line with the coach's email (see §4)
 
 Each run must end with "Success. No rows returned". If a statement fails, fix the cause and
@@ -101,25 +108,59 @@ change a workout's `basePoints`.** Until you do: a new course id is rejected by 
 (`invalid_course`), and a new workout id still records sessions but caps their points at the
 lowest value the content model allows.
 
+### 2.2 Courses built in the admin panel (`0008_course_builder.sql`)
+
+A course does not have to be a file. `admin_courses` + `admin_course_days` hold courses the coach
+composes in the admin panel: the days in order, each one pointing at a `custom_workouts` row from
+the workout library, so a workout is built once and reused across days and courses.
+
+Two things to know:
+
+- **Publishing is what makes a course real.** A draft is visible only to admins.
+  `admin_publish_course(id)` validates it (at least four days, every training day carrying a
+  workout with at least one section) and then writes the rows the rest of the schema keys off:
+  `public.courses` (the id allowlist) and `public.workouts` (the points ceilings). Those two tables
+  have no write policy for anyone — this security-definer function is the only way in besides a
+  migration, which is why §2.1 still applies to the courses that live in content files.
+- **`slug_id` is frozen once published.** It is the id written into every purchase, session and
+  storage path, so renaming it would orphan that history. The table refuses the update.
+
+`admin_unpublish_course(id)` takes a course off the catalogue but leaves both generated rows in
+place, so people who already bought it keep their entitlement and their scoring.
+
+### Verifying the migrations locally
+
+`supabase/tests/` runs the whole schema against a plain Postgres 16 — no Supabase needed. See the
+header of `supabase/tests/00_shim.sql` for the exact commands; the short version is: create a
+throwaway database, apply `00_shim.sql` and then every file in `supabase/migrations/` in order,
+then run `10_smoke.sql`, `20_subscriptions.sql` and `30_course_builder.sql`. Each ends with a
+"PASSED" line. The test files are **not** idempotent — they insert fixtures — so rebuild the
+database for each run.
+
 ### What the migrations create
 
-| Object                                                              | Purpose                                                                      |
-| ------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `profiles`                                                          | One row per auth user (trigger `on_auth_user_created`); own row read/write   |
-| `current_email()`                                                   | The caller's **verified** email (auth.users, confirmed + not banned)         |
-| `admins` + `is_admin()`                                             | Coach emails; gate for admin RPCs and video uploads                          |
-| `purchases`                                                         | `email ↔ course_id`, status `pending / active / refunded` (admin-only read)  |
-| `courses`, `workouts`                                               | Generated catalogue (§2.1): the id allowlist and the points ceilings         |
-| `create_order()` + `order_throttle`                                 | Anonymous RPC used by the landing order form (validates, throttles, upserts) |
-| `my_entitlements`                                                   | View: active courses of the signed-in user (`course_id`, `activated_at`)     |
-| `has_entitlement(course_id)`                                        | Does the caller own this course? (sessions, video access; admins own all)    |
-| `admin_set_purchase_status()`, `admin_add_purchase()`               | Admin RPCs behind the `/app/#/admin` screen                                  |
-| `user_course_state`, `workout_sessions`, `daily_logs`, `benchmarks` | Training data, own rows only                                                 |
-| `workout_sessions_guard` trigger                                    | Server timestamps, date window, per-workout points ceiling, 4 sessions/day   |
-| `steps_points()` + trigger                                          | Recomputes step points server-side so the leaderboard cannot be gamed        |
-| `get_leaderboard()`                                                 | Top 100 + own row; never returns emails                                      |
-| `get_my_totals()`                                                   | Points / workouts / minutes for the home screen                              |
-| Storage bucket `videos` (private)                                   | Read requires an active purchase of the course in the path, or `shared/`     |
+| Object                                                              | Purpose                                                                       |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `profiles`                                                          | One row per auth user (trigger `on_auth_user_created`); own row read/write    |
+| `current_email()`                                                   | The caller's **verified** email (auth.users, confirmed + not banned)          |
+| `admins` + `is_admin()`                                             | Coach emails; gate for admin RPCs and video uploads                           |
+| `purchases`                                                         | `email ↔ course_id`, status `pending / active / refunded` (admin-only read)   |
+| `courses`, `workouts`                                               | Generated catalogue (§2.1): the id allowlist and the points ceilings          |
+| `create_order()` + `order_throttle`                                 | Anonymous RPC used by the landing order form (validates, throttles, upserts)  |
+| `my_entitlements`                                                   | View: active courses of the signed-in user (`course_id`, `activated_at`)      |
+| `has_entitlement(course_id)`                                        | Does the caller own this course? (sessions, video access; admins own all)     |
+| `admin_set_purchase_status()`, `admin_add_purchase()`               | Admin RPCs behind the `/app/#/admin` screen                                   |
+| `user_course_state`, `workout_sessions`, `daily_logs`, `benchmarks` | Training data, own rows only                                                  |
+| `workout_sessions_guard` trigger                                    | Server timestamps, date window, per-workout points ceiling, 4 sessions/day    |
+| `steps_points()` + trigger                                          | Recomputes step points server-side so the leaderboard cannot be gamed         |
+| `get_leaderboard()`                                                 | Top 100 + own row; never returns emails                                       |
+| `get_my_totals()`                                                   | Points / workouts / minutes for the home screen                               |
+| `exercises`                                                         | The exercise library in the database; seeded from content, extendable by hand |
+| `custom_workouts`, `assigned_workouts`                              | Coach-built workouts and the emails they are granted to                       |
+| `admin_courses`, `admin_course_days`                                | Courses composed in the admin panel (§2.2); days point at `custom_workouts`   |
+| `admin_publish_course()`, `admin_unpublish_course()`                | The only non-migration writers of `courses` / `workouts` (§2.2)               |
+| `images` bucket                                                     | Public: course covers, day pictures, exercise stills (`videos` stays private) |
+| Storage bucket `videos` (private)                                   | Read requires an active purchase of the course in the path, or `shared/`      |
 
 ---
 

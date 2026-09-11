@@ -65,10 +65,35 @@ end $$;
 do $$ begin
   assert (select count(*) from public.courses) >= 5, 'courses seeded';
   assert (select count(*) from public.workouts where course_id = 'start') > 0, 'workouts seeded';
-  assert (select base_points from public.workouts where course_id = 'start' and id = 'w_squat_push_1') = 100,
-    'base points come from content';
+  /*
+   * base_points must be the values content authored, not a uniform default. Naming one workout
+   * here is what this assertion used to do, and rewriting the beginner course (which renamed
+   * every workout) broke it silently — so test the property instead of the id: real content gives
+   * a course several different ceilings, all inside the range WorkoutSchema allows.
+   */
+  assert (select count(distinct base_points) from public.workouts where course_id = 'start') > 1,
+    'base points come from content, not one default';
+  assert (select bool_and(base_points between 60 and 250) from public.workouts),
+    'base points inside the content model range';
   raise notice 'OK content seed';
 end $$;
+
+/*
+ * Fixture workouts for the session-scoring tests below.
+ *
+ * Those tests need ids whose base_points ceiling they know exactly (100), and they used to borrow
+ * three ids from the beginner course. Rewriting that course renamed every workout, the lookup
+ * started returning null, the trigger fell back to its minimum of 60 and half the scoring
+ * assertions failed — for a reason that had nothing to do with scoring. The fixtures are declared
+ * here instead, so the test owns its own ceilings and content can churn freely.
+ *
+ * w_not_in_catalogue is deliberately *not* inserted: one test asserts the unknown-id fallback.
+ */
+insert into public.workouts (course_id, id, base_points) values
+  ('start', 'w_squat_push_1', 100),
+  ('start', 'w_squat_push_2', 100),
+  ('start', 'w_squat_push_3', 100)
+on conflict (course_id, id) do update set base_points = excluded.base_points;
 
 -- Anonymous orders --------------------------------------------------------------
 select pg_temp.as_anon();
