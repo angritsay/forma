@@ -1176,7 +1176,7 @@ export const COURSE_START: CourseInput = {
   ),
   longDescription: [
     l(
-      '«Старт» — это программа для новичков, которую тренер ведёт в своей группе, перенесённая в приложение без изменений в сути: те же 20 тренировок, тот же порядок, те же слова. Цель первых недель — проработать большие группы мышц и включить тебя в процесс, а не выжать до предела. Каждую тренировку тренер показывает сам: на каждое движение есть его видео.',
+      '«Форма с нуля» — это программа для новичков, которую тренер ведёт в своей группе, перенесённая в приложение без изменений в сути: те же 20 тренировок, тот же порядок, те же слова. Цель первых недель — проработать большие группы мышц и включить тебя в процесс, а не выжать до предела. Каждую тренировку тренер показывает сам: на каждое движение есть его видео.',
       'Start is the beginner programme the coach runs with his own group, moved into the app without changing what matters: the same 20 sessions, the same order, the same words. The aim of the first weeks is to work the big muscle groups and get you into the process, not to wring you out. The coach demonstrates every session himself: every movement has his video.',
     ),
     l(
@@ -1232,8 +1232,8 @@ export const COURSE_START: CourseInput = {
       'Your own numbers: the coach’s reference points — the inchworm ladder and the final three rounds against your very first workout.',
     ),
     l(
-      'Готовность перейти к курсу «Своим весом» или к тренировкам с гантелями.',
-      'Readiness to move on to the Bodyweight Engine course or to dumbbell training.',
+      'Готовность перейти к курсу «Форма своим весом» или к тренировкам с гантелями.',
+      'Readiness to move on to Forma Bodyweight or to dumbbell training.',
     ),
   ],
   equipment: ['none', 'mat', 'chair'],

@@ -1,5 +1,5 @@
 /**
- * Course "dumbbells" — «Гантели дома: сила и рельеф» / "Dumbbell Builder".
+ * Course "dumbbells" — «Форма с гантелями: сила и рельеф» / "Forma. Dumbbells".
  *
  * Level 2, six weeks, four sessions a week, a pair of dumbbells and a mat.
  *
@@ -1546,8 +1546,8 @@ export const COURSE_DUMBBELLS: CourseInput = {
       'You own a pair of dumbbells (two pairs or adjustables are better) and a mat.',
     ),
     l(
-      'Ты уже отжимаешься 8–10 раз подряд и держишь планку минуту — или прошёл курс «Старт».',
-      'You can already do 8–10 push-ups in a row and hold a plank for a minute — or you finished the Start course.',
+      'Ты уже отжимаешься 8–10 раз подряд и держишь планку минуту — или прошёл курс «Форма с нуля».',
+      'You can already do 8–10 push-ups in a row and hold a plank for a minute — or you finished Forma Start.',
     ),
     l(
       'Хочешь стать сильнее и подтянуть рельеф, а не только сбросить вес.',
@@ -1621,12 +1621,12 @@ export const COURSE_DUMBBELLS: CourseInput = {
     },
     {
       q: l(
-        'Мне подойдёт этот курс или лучше начать со «Старта»?',
-        'Is this course right for me, or should I begin with Start?',
+        'Мне подойдёт этот курс или лучше начать с «Формы с нуля»?',
+        'Is this course right for me, or should I begin with Forma Start?',
       ),
       a: l(
-        'Ориентир: 8–10 отжиманий от пола подряд, минута планки и 15 приседаний с гантелью у груди без одышки. Если это про тебя — заходи. Если пока нет, пройди «Старт» или «Своим весом»: там те же паттерны движения без веса, а через месяц-полтора гантели дадутся легче и безопаснее.',
-        'Rule of thumb: 8–10 full push-ups in a row, a one-minute plank and 15 goblet squats without getting winded. If that is you, jump in. If not yet, do Start or Bodyweight Engine first: the same movement patterns without load, and in a month or so the dumbbells will come easier and safer.',
+        'Ориентир: 8–10 отжиманий от пола подряд, минута планки и 15 приседаний с гантелью у груди без одышки. Если это про тебя — заходи. Если пока нет, пройди «Форма с нуля» или «Форма своим весом»: там те же паттерны движения без веса, а через месяц-полтора гантели дадутся легче и безопаснее.',
+        'Rule of thumb: 8–10 full push-ups in a row, a one-minute plank and 15 goblet squats without getting winded. If that is you, jump in. If not yet, do Forma Start or Forma Bodyweight first: the same movement patterns without load, and in a month or so the dumbbells will come easier and safer.',
       ),
     },
     {

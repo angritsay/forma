@@ -1,5 +1,5 @@
 /**
- * Course "athlete" — «Атлет: продвинутый домашний кроссфит» / "Home Athlete".
+ * Course "athlete" — «Форма атлета: продвинутый домашний кроссфит» / "Forma. Athlete".
  *
  * Level 3, eight weeks, four sessions a week, dumbbells + pull-up bar + jump rope.
  *
@@ -1975,8 +1975,8 @@ export const COURSE_ATHLETE: CourseInput = {
       'You own a pair of dumbbells (two pairs or adjustables are better), a pull-up bar and a jump rope.',
     ),
     l(
-      'Ты отжимаешься 20–25 раз подряд, держишь планку две минуты и висишь на турнике хотя бы 30 секунд — или прошёл «Своим весом» или «Гантели дома».',
-      'You do 20–25 push-ups in a row, hold a plank for two minutes and can hang from the bar for at least 30 seconds — or you finished Bodyweight Engine or Dumbbell Builder.',
+      'Ты отжимаешься 20–25 раз подряд, держишь планку две минуты и висишь на турнике хотя бы 30 секунд — или прошёл «Форма своим весом» или «Форма с гантелями».',
+      'You do 20–25 push-ups in a row, hold a plank for two minutes and can hang from the bar for at least 30 seconds — or you finished Forma Bodyweight or Forma Dumbbells.',
     ),
     l(
       'Хочешь первое строгое подтягивание — или десятое — и серии двойных на скакалке.',
@@ -2062,8 +2062,8 @@ export const COURSE_ATHLETE: CourseInput = {
         "I don't have a single strict pull-up yet. Is it too early?",
       ),
       a: l(
-        'Нет, если ты можешь висеть на турнике 30 секунд и медленно опускаться из верхней точки. Первые две недели курса — только негативные подтягивания, и именно так большинство людей получают первое строгое. С третьей недели в подходах появляются строгие, а рядом с каждым таким упражнением написано, как заменить: два строгих и два негативных, или негативные с прыжком в метконах. Если и вис пока даётся тяжело, начни с «Гантели дома» или «Своим весом» — там есть тяги и планки, которые готовят спину.',
-        'Not if you can hang from the bar for 30 seconds and lower yourself slowly from the top. The first two weeks are negatives only, and that is how most people get their first strict rep. From week three strict reps appear in the sets, and every such exercise says how to scale: two strict plus two negatives, or jumping negatives in the metcons. If even the hang is hard for now, start with Dumbbell Builder or Bodyweight Engine — the rows and planks there prepare your back.',
+        'Нет, если ты можешь висеть на турнике 30 секунд и медленно опускаться из верхней точки. Первые две недели курса — только негативные подтягивания, и именно так большинство людей получают первое строгое. С третьей недели в подходах появляются строгие, а рядом с каждым таким упражнением написано, как заменить: два строгих и два негативных, или негативные с прыжком в метконах. Если и вис пока даётся тяжело, начни с «Форма с гантелями» или «Форма своим весом» — там есть тяги и планки, которые готовят спину.',
+        'Not if you can hang from the bar for 30 seconds and lower yourself slowly from the top. The first two weeks are negatives only, and that is how most people get their first strict rep. From week three strict reps appear in the sets, and every such exercise says how to scale: two strict plus two negatives, or jumping negatives in the metcons. If even the hang is hard for now, start with Forma Dumbbells or Forma Bodyweight — the rows and planks there prepare your back.',
       ),
     },
     {
