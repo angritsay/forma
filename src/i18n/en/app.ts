@@ -399,6 +399,7 @@ export const app = {
   playerUnmute: 'Turn sounds on',
   playerMenu: 'More',
   playerElapsed: 'Elapsed',
+  playerMoreBelow: 'How to do it',
   playerStepOf: 'Step {n} of {total}',
   playerPrev: 'Previous step',
   playerNext: 'Next step',

@@ -4,7 +4,6 @@ import { useT } from '@/app/hooks/useT';
 import type { PlayerResult } from '@/app/store/activeWorkout';
 import type { BlockFormat } from '@/content/schema';
 import { BigClock } from '../BigClock';
-import { ExplainPanel } from '../ExplainPanel';
 import { loadLabel, setLabel, unitLabel, type WorkStep } from '../model';
 import type { Cue } from '../sound';
 import { useCountdownCues, useNextHandler, useStepClock } from '../useStepClock';
@@ -35,7 +34,7 @@ export function WorkTimerStep({
   onNext,
   registerNext,
 }: WorkTimerStepProps) {
-  const { t, l } = useT();
+  const { t } = useT();
   const duration = Math.max(1, step.durationSec ?? step.target);
   const recorded = useRef(false);
   const clock = useStepClock(!paused, duration);
@@ -69,13 +68,15 @@ export function WorkTimerStep({
   useNextHandler(registerNext, () => complete(isEmom ? duration : clock.elapsedSec));
 
   const isHold = step.item.unit === 'seconds';
+  /*
+   * One short line under the digits, never the coach's note: this sits in the footer over the clip,
+   * and a sentence there would push the transport off a small screen. The note is below the fold.
+   */
   const caption = isEmom
     ? t('training.emomMinuteHint', { n: step.target })
-    : step.item.note
-      ? l(step.item.note)
-      : isHold
-        ? t('app.playerHold')
-        : t('app.playerWork');
+    : isHold
+      ? t('app.playerHold')
+      : t('app.playerWork');
 
   return (
     <div className="flex flex-col gap-6">
@@ -96,13 +97,6 @@ export function WorkTimerStep({
           {load ? <Chip>{load}</Chip> : null}
         </div>
       </div>
-      {/*
-       * The words the introduction screen used to carry. It is gone — the clip demonstrates the
-       * movement while it is being done — so technique, muscles and cautions live here instead,
-       * collapsed behind a handle. Mid-set is exactly when someone wonders whether their back is
-       * meant to round, and until now the only way to check was to leave the workout.
-       */}
-      <ExplainPanel exerciseId={step.exerciseId} item={step.item} />
     </div>
   );
 }
