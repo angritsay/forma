@@ -28,12 +28,14 @@ export {
   type SegmentOption,
   type SegmentedControlProps,
 } from './SegmentedControl';
+export { Select, type SelectOption, type SelectProps } from './Select';
 export { Sheet, type SheetProps } from './Sheet';
 export { Skeleton, type SkeletonProps } from './Skeleton';
 export { Slider, type SliderProps } from './Slider';
 export { Spinner, type SpinnerProps } from './Spinner';
 export { StatTile, type StatTileProps, type StatTrend } from './StatTile';
 export { Tabs, tabPanelId, type TabItem, type TabsProps } from './Tabs';
+export { Textarea, type TextareaProps } from './Textarea';
 export {
   Toast,
   ToastProvider,

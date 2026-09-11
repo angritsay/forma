@@ -393,14 +393,26 @@ export default function AdminScreen() {
       }
     >
       <div className="flex flex-col gap-4 py-2">
-        <Button
-          variant="secondary"
-          fullWidth
-          icon={<Icon name="edit" size={18} />}
-          onClick={() => navigate('/admin/workouts')}
-        >
-          {t('app.builderScreenTitle')}
-        </Button>
+        {/* The coach's two authoring tools. SideNav carries them from `lg` up; on a phone this
+            is the only way in. */}
+        <div className="flex flex-col gap-2 lg:flex-row">
+          <Button
+            variant="secondary"
+            fullWidth
+            icon={<Icon name="edit" size={18} />}
+            onClick={() => navigate('/admin/workouts')}
+          >
+            {t('app.builderScreenTitle')}
+          </Button>
+          <Button
+            variant="secondary"
+            fullWidth
+            icon={<Icon name="courses" size={18} />}
+            onClick={() => navigate('/admin/exercises')}
+          >
+            {t('app.exScreenTitle')}
+          </Button>
+        </div>
         {PLANS_ENABLED ? (
           <SegmentedControl<Tab>
             fullWidth
