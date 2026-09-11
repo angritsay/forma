@@ -98,10 +98,15 @@ const primaryLink =
         Сергей Титов» has none: the separator collapses and his name wraps under the mark, which
         reads as one broken word rather than as a lockup. The mark alone is the correct form at
         that width — the brandbook's lockup is for where it fits.
+
+        Hidden with `max-md:hidden`, not `hidden md:inline-flex`. Both are display utilities in the
+        same layer, so the one Tailwind emits last wins — and `.inline-flex` is emitted after
+        `.hidden`, which `Logo` sets on itself. `hidden` on such a component is silently ignored;
+        `max-md:hidden` is a media rule and wins wherever it applies.
       -->
       <a href={href(locale, '/')} class="text-[17px] text-text md:text-lg">
         <Logo label={BRAND.name} class="md:hidden" />
-        <Logo lockup label={BRAND.name} class="hidden md:inline-flex" />
+        <Logo lockup label={BRAND.name} class="max-md:hidden" />
       </a>
 
       <ul class="hidden items-center gap-7 md:flex">
@@ -120,7 +125,8 @@ const primaryLink =
       </ul>
 
       <div class="flex items-center gap-2">
-        <a href={appHref()} class:list={[primaryLink, 'hidden sm:inline-flex']}>
+        <!-- `max-sm:hidden`, not `hidden sm:inline-flex` — see the note on the lockup above. -->
+        <a href={appHref()} class:list={[primaryLink, 'max-sm:hidden']}>
           {t(locale, 'landing.navApp')}
         </a>
 

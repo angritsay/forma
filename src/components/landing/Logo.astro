@@ -22,8 +22,10 @@ const { lockup = false, label = 'Forma', class: className = '' } = Astro.props;
   {
     lockup && (
       <>
+        {/* `{'//'}`, not a bare `//`: inside an expression the Astro compiler reads two slashes as
+            the start of a JS line comment and silently ate this whole span, separator and all. */}
         <span class="glyph text-[0.55em] text-muted-2" aria-hidden="true">
-          //
+          {'//'}
         </span>
         <span class="text-[0.68em] font-semibold uppercase tracking-[0.1em] text-muted">
           Сергей Титов
