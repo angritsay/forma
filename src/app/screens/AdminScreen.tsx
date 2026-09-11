@@ -408,6 +408,14 @@ export default function AdminScreen() {
             variant="secondary"
             fullWidth
             icon={<Icon name="courses" size={18} />}
+            onClick={() => navigate('/admin/courses')}
+          >
+            {t('app.courseScreenTitle')}
+          </Button>
+          <Button
+            variant="secondary"
+            fullWidth
+            icon={<Icon name="stats" size={18} />}
             onClick={() => navigate('/admin/exercises')}
           >
             {t('app.exScreenTitle')}

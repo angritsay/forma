@@ -23,7 +23,8 @@ const ITEMS: readonly NavItem[] = [
 const ADMIN_ITEMS: readonly NavItem[] = [
   { to: '/admin', icon: 'settings', labelKey: 'app.adminPurchases', end: true },
   { to: '/admin/workouts', icon: 'edit', labelKey: 'app.builderScreenTitle' },
-  { to: '/admin/exercises', icon: 'courses', labelKey: 'app.exScreenTitle' },
+  { to: '/admin/courses', icon: 'courses', labelKey: 'app.courseScreenTitle' },
+  { to: '/admin/exercises', icon: 'stats', labelKey: 'app.exScreenTitle' },
 ];
 
 const LINK =
