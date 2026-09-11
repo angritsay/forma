@@ -4,7 +4,7 @@
  */
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
-import { COURSE_BY_ID } from '@/content/registry';
+import { findCourse } from '@/content/catalogue';
 import { useT } from '@/app/hooks/useT';
 import { activeWorkoutPath, useActiveWorkoutStore } from '@/app/store/activeWorkout';
 
@@ -20,7 +20,7 @@ export function ResumeCard({ onResume }: ResumeCardProps) {
   const path = activeWorkoutPath({ session, finishedAt });
   if (!path) return null;
 
-  const course = COURSE_BY_ID.get(session.courseId);
+  const course = findCourse(session.courseId);
   const workout = course?.workouts.find((w) => w.id === session.workoutId);
   const finished = finishedAt !== null;
 

@@ -15,7 +15,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
-import { COURSE_BY_ID } from '@/content/registry';
+import { findCourse } from '@/content/catalogue';
 import { formatNumber } from '@/i18n/index';
 import { startSession } from '@/lib/api/sessions';
 import { estimateCalories, estimateDuration } from '@/lib/training/estimate';
@@ -59,7 +59,7 @@ export default function NodePreviewScreen() {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const course = COURSE_BY_ID.get(id);
+  const course = findCourse(id);
   const nodeIndex = course ? course.nodes.findIndex((n) => n.id === nodeId) : -1;
   const node = nodeIndex >= 0 ? course?.nodes[nodeIndex] : undefined;
   const workout =

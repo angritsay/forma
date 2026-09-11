@@ -13,7 +13,6 @@ import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Spinner } from '@/components/ui/Spinner';
 import { Tabs, tabPanelId } from '@/components/ui/Tabs';
-import { COURSES } from '@/content/registry';
 import type { LeaderboardPeriod } from '@/lib/api/types';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
@@ -21,6 +20,7 @@ import { LeaderboardList, LeaderboardRowView } from '@/app/features/leaderboard/
 import { resolveCourseParam, splitLeaderboard } from '@/app/features/leaderboard/model';
 import { PointsSheet } from '@/app/features/leaderboard/PointsSheet';
 import { useLeaderboard } from '@/app/features/leaderboard/useLeaderboard';
+import { useCatalogue } from '@/app/store/catalogue';
 import { useSession } from '@/app/store/session';
 
 function ListSkeleton() {
@@ -42,7 +42,8 @@ export default function LeaderboardScreen() {
   const [infoOpen, setInfoOpen] = useState(false);
   const { rows, status, error, reload } = useLeaderboard(period, courseId);
   const view = useMemo(() => splitLeaderboard(rows), [rows]);
-  const ownedCourses = COURSES.filter((c) => entitlements.includes(c.id));
+  const courses = useCatalogue((s) => s.courses);
+  const ownedCourses = courses.filter((c) => entitlements.includes(c.id));
 
   const selectCourse = (id: string | null) => {
     setSearchParams(id ? { course: id } : {}, { replace: true });

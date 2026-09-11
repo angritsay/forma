@@ -13,7 +13,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Icon } from '@/components/ui/Icon';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { EXERCISE_BY_ID } from '@/content/registry';
+import { findExercise } from '@/content/catalogue';
 import { getSharedCustomWorkout, listMyAssignedWorkouts } from '@/lib/api/customWorkouts';
 import type { AssignedWorkoutRow } from '@/lib/api/types';
 import { isAppError } from '@/lib/api/errors';
@@ -131,7 +131,7 @@ export default function CustomWorkoutScreen() {
         </div>
         <ul className="flex flex-col gap-1">
           {section.items.map((it, i) => {
-            const ex = EXERCISE_BY_ID.get(it.exerciseId);
+            const ex = findExercise(it.exerciseId);
             const exName = ex ? l(ex.name) : it.exerciseId;
             const amount =
               it.unit === 'seconds'

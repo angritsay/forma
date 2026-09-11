@@ -4,7 +4,7 @@
  * expects. Everything reads the progress store's rows; dates are local YYYY-MM-DD strings and
  * "today" is passed in so the module stays testable in node.
  */
-import { COURSE_BY_ID, COURSES, EXERCISE_BY_ID } from '@/content/registry';
+import { allCourses, findCourse, findExercise } from '@/content/catalogue';
 import type { Locale } from '@/content/schema';
 import type { BenchmarkSeries, CourseStateRow, MyTotals, WorkoutSessionRow } from '@/lib/api/types';
 import { STEPS_GOAL } from '@/lib/training/constants';
@@ -201,9 +201,9 @@ type RecordLabel = { kind: 'exercise' | 'workout' | 'unknown'; name: string; con
 
 /** Benchmark keys are exercise ids (test blocks) or workout ids (benchmark nodes). */
 export function recordLabel(key: string, locale: Locale): RecordLabel {
-  const exercise = EXERCISE_BY_ID.get(key);
+  const exercise = findExercise(key);
   if (exercise) return { kind: 'exercise', name: exercise.name[locale] };
-  for (const course of COURSES) {
+  for (const course of allCourses()) {
     const workout = course.workouts.find((w) => w.id === key);
     if (workout)
       return { kind: 'workout', name: workout.name[locale], context: course.name[locale] };
@@ -260,7 +260,7 @@ export interface ProgressSnapshot {
 
 /** Every workout, test and benchmark node of the course is in `completedNodeIds`. */
 export function isCourseCompleted(state: CourseStateRow): boolean {
-  const course = COURSE_BY_ID.get(state.courseId);
+  const course = findCourse(state.courseId);
   if (!course) return false;
   const done = new Set(state.completedNodeIds);
   return course.nodes

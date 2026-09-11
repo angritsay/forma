@@ -2,7 +2,7 @@
  * Labels and lookups for a prescribed plan (node preview): difficulty options, block meta,
  * item targets and the exercise whose figure represents a workout.
  */
-import { EXERCISE_BY_ID } from '@/content/registry';
+import { findExercise } from '@/content/catalogue';
 import type { Exercise, Workout } from '@/content/schema';
 import { plural, type TKey } from '@/i18n/index';
 import type { Translator } from '@/app/hooks/useT';
@@ -21,11 +21,11 @@ export function workoutSignatureExercise(workout: Workout): Exercise | undefined
   const block =
     workout.blocks.find((b) => b.type !== 'warmup' && b.type !== 'cooldown') ?? workout.blocks[0];
   const item = block?.items[0];
-  return item ? EXERCISE_BY_ID.get(item.exerciseId) : undefined;
+  return item ? findExercise(item.exerciseId) : undefined;
 }
 
 export function exerciseName(tr: Translator, exerciseId: string): string {
-  const e = EXERCISE_BY_ID.get(exerciseId);
+  const e = findExercise(exerciseId);
   return e ? tr.l(e.name) : exerciseId;
 }
 

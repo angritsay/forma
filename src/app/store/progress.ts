@@ -11,7 +11,7 @@
  */
 import { useEffect, useMemo } from 'react';
 import { create } from 'zustand';
-import { COURSES, COURSE_BY_ID, getCourse } from '@/content/registry';
+import { allCourses, findCourse, hasCourse } from '@/content/catalogue';
 import { listBenchmarks } from '@/lib/api/benchmarks';
 import { listCourseStates, upsertCourseState as apiUpsertCourseState } from '@/lib/api/courseState';
 import { listDailyLogs } from '@/lib/api/dailyLogs';
@@ -94,7 +94,7 @@ export interface ProgressState {
 function readActiveCourse(): string | null {
   try {
     const v = typeof localStorage !== 'undefined' ? localStorage.getItem(ACTIVE_COURSE_KEY) : null;
-    return v && COURSE_BY_ID.has(v) ? v : null;
+    return v && hasCourse(v) ? v : null;
   } catch {
     return null;
   }
@@ -127,8 +127,8 @@ export function resolveActiveCourseId(
   courseStates: Readonly<Record<string, CourseStateRow>>,
   owned: readonly string[],
 ): string | null {
-  if (preferred && owned.includes(preferred) && COURSE_BY_ID.has(preferred)) return preferred;
-  const ownedCourses = COURSES.filter((c) => owned.includes(c.id));
+  if (preferred && owned.includes(preferred) && hasCourse(preferred)) return preferred;
+  const ownedCourses = allCourses().filter((c) => owned.includes(c.id));
   if (ownedCourses.length === 0) return null;
   let latest: CourseStateRow | undefined;
   for (const c of ownedCourses) {
@@ -278,7 +278,7 @@ export const useProgress = create<ProgressState>((set, get) => {
     activeCourseId: readActiveCourse(),
 
     setActiveCourse: (courseId) => {
-      const id = courseId && COURSE_BY_ID.has(courseId) ? courseId : null;
+      const id = courseId && hasCourse(courseId) ? courseId : null;
       writeActiveCourse(id);
       set({ activeCourseId: id });
     },
@@ -331,7 +331,10 @@ export const useProgress = create<ProgressState>((set, get) => {
     },
 
     completeNode: async (courseId, nodeId) => {
-      const course = getCourse(courseId);
+      const course = findCourse(courseId);
+      // The catalogue can legitimately not have it — an unpublished course, a catalogue that failed
+      // to load — and this used to throw a bare registry error from inside a tap handler.
+      if (!course) throw new Error(`unknown course: ${courseId}`);
       const current = await get().ensureCourseState(courseId);
       const patch = completeNodePatch(course.nodes, current, nodeId);
       const row = await apiUpsertCourseState(courseId, patch);

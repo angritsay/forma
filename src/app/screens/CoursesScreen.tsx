@@ -6,10 +6,10 @@ import { useNavigate } from 'react-router';
 import { PageTitle } from '@/components/ui/PageTitle';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { COURSES } from '@/content/registry';
 import { useT } from '@/app/hooks/useT';
 import { CourseTile } from '@/app/features/courses/CourseTile';
 import { courseProgress } from '@/app/features/path/nodeState';
+import { useCatalogue } from '@/app/store/catalogue';
 import { useProgress, useProgressLoader } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
 
@@ -21,8 +21,9 @@ export default function CoursesScreen() {
   const status = useProgress((s) => s.status);
   const courseStates = useProgress((s) => s.courseStates);
 
-  const owned = COURSES.filter((c) => entitlements.includes(c.id));
-  const locked = COURSES.filter((c) => !entitlements.includes(c.id));
+  const courses = useCatalogue((s) => s.courses);
+  const owned = courses.filter((c) => entitlements.includes(c.id));
+  const locked = courses.filter((c) => !entitlements.includes(c.id));
   // Without the course states an owned, half-finished course would read "Start the course".
   const pending = status === 'idle' || status === 'loading';
 
@@ -42,7 +43,7 @@ export default function CoursesScreen() {
         */}
         <div className="flex flex-col lg:grid lg:grid-cols-2 lg:gap-x-10">
           {pending
-            ? COURSES.map((course) => (
+            ? courses.map((course) => (
                 <Skeleton key={course.id} rounded="control" className="mt-5 h-56" />
               ))
             : [...owned, ...locked].map((course, i) => {

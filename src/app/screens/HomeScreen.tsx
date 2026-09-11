@@ -12,7 +12,6 @@ import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
-import { COURSES } from '@/content/registry';
 import { STEPS_GOAL } from '@/lib/training/constants';
 import { useT } from '@/app/hooks/useT';
 import { AssignedWorkoutsCard } from '@/app/features/customWorkout/AssignedWorkoutsCard';
@@ -25,6 +24,7 @@ import { StreakCard } from '@/app/features/home/StreakCard';
 import { TodayCard } from '@/app/features/home/TodayCard';
 import { useTodayModel } from '@/app/features/home/useTodayModel';
 import { courseProgress } from '@/app/features/path/nodeState';
+import { useCatalogue } from '@/app/store/catalogue';
 import {
   useProgress,
   useProgressLoader,
@@ -78,6 +78,7 @@ export default function HomeScreen() {
   const steps = useStepsWeek();
   const totalPoints = useTotalPoints();
   const today = useTodayModel();
+  const courses = useCatalogue((s) => s.courses);
 
   const name = greetingName(profile?.displayName, user?.email ?? '');
   const greeting = t(GREETING_KEY[dayPart(new Date().getHours())], { name });
@@ -92,8 +93,8 @@ export default function HomeScreen() {
     }
   }, [toast, t]);
 
-  const owned = COURSES.filter((c) => entitlements.includes(c.id));
-  const locked = COURSES.filter((c) => !entitlements.includes(c.id));
+  const owned = courses.filter((c) => entitlements.includes(c.id));
+  const locked = courses.filter((c) => !entitlements.includes(c.id));
 
   /*
    * The wordmark leads and the greeting sits under it as a kicker, with a hairline closing the

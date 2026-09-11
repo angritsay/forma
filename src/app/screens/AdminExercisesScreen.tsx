@@ -18,7 +18,6 @@ import { Screen } from '@/components/ui/Screen';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
-import { COURSES } from '@/content/registry';
 import {
   createExercise,
   deleteExercise,
@@ -31,6 +30,7 @@ import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { SEARCH_DEBOUNCE_MS } from '@/app/features/admin/model';
 import { useDebounced } from '@/app/features/admin/useDebounced';
+import { useCatalogue } from '@/app/store/catalogue';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { ExerciseEditor } from '@/app/features/admin/exercises/ExerciseEditor';
 
@@ -42,6 +42,7 @@ export default function AdminExercisesScreen() {
   const toast = useToast();
   const admin = useIsAdmin();
 
+  const courses = useCatalogue((s) => s.courses);
   const [rows, setRows] = useState<ExerciseCatalogRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -120,7 +121,7 @@ export default function AdminExercisesScreen() {
       >
         <ExerciseEditor
           initial={isNew ? null : editing}
-          courseIds={COURSES.map((c) => c.id)}
+          courseIds={courses.map((c) => c.id)}
           saving={saving}
           onSave={(d) => void onSave(d)}
           onCancel={() => setEditing(null)}

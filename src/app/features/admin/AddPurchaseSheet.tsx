@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Input } from '@/components/ui/Input';
 import { Sheet } from '@/components/ui/Sheet';
-import { COURSES } from '@/content/registry';
 import { isValidEmail, normalizeEmail } from '@/lib/api/auth';
+import { useCatalogue } from '@/app/store/catalogue';
 import { useT } from '@/app/hooks/useT';
 import { ChipGroup } from '@/app/screens/onboarding/ChipGroup';
 
@@ -20,6 +20,7 @@ export interface AddPurchaseSheetProps {
 /** Grant a course to an email by hand (bank transfer, gift, support case). */
 export function AddPurchaseSheet({ open, busy, error, onClose, onSubmit }: AddPurchaseSheetProps) {
   const { t, l } = useT();
+  const courses = useCatalogue((s) => s.courses);
   const [email, setEmail] = useState('');
   const [courseId, setCourseId] = useState<string | null>(null);
   const [note, setNote] = useState('');
@@ -84,7 +85,7 @@ export function AddPurchaseSheet({ open, busy, error, onClose, onSubmit }: AddPu
             label={t('app.adminAddCourse')}
             values={courseId ? [courseId] : []}
             onToggle={(id) => setCourseId(id)}
-            options={COURSES.map((c) => ({ value: c.id, label: l(c.name) }))}
+            options={courses.map((c) => ({ value: c.id, label: l(c.name) }))}
           />
         </div>
         <Input

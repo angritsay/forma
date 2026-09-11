@@ -2,7 +2,7 @@
  * Pure helpers for the leaderboard: which course the URL asks for, and how the RPC rows split
  * into the top list and the athlete's own row (pinned when outside the top).
  */
-import { COURSE_BY_ID } from '@/content/registry';
+import { hasCourse } from '@/content/catalogue';
 import type { LeaderboardRow } from '@/lib/api/types';
 
 export const LEADERBOARD_LIMIT = 100;
@@ -12,7 +12,7 @@ export function resolveCourseParam(
   param: string | null | undefined,
   owned: readonly string[],
 ): string | null {
-  if (!param || !COURSE_BY_ID.has(param) || !owned.includes(param)) return null;
+  if (!param || !hasCourse(param) || !owned.includes(param)) return null;
   return param;
 }
 

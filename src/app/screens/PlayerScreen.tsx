@@ -55,7 +55,7 @@ import {
   type ActiveSession,
   type PlayerResult,
 } from '@/app/store/activeWorkout';
-import { COURSE_BY_ID } from '@/content/registry';
+import { findCourse } from '@/content/catalogue';
 import type { PlayerStep } from '@/lib/training/types';
 
 /** The figure's own tile is transparent so the full-bleed course art shows through without a seam. */
@@ -241,7 +241,7 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
   const step = steps[stepIndex];
   const prescribed = session.prescribed;
   const summaryPath = `/summary/${session.sessionId}`;
-  const courseTile = COURSE_BY_ID.get(session.courseId)?.tile;
+  const courseTile = findCourse(session.courseId)?.tile;
   const courseVars = courseTile ? ({ '--course-tile': courseTile } as CSSProperties) : undefined;
 
   const title = step ? stepTitle(t, locale, step, prescribed) : '';

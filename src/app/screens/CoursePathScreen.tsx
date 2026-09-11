@@ -14,7 +14,7 @@ import { PhotoBlock } from '@/components/ui/PhotoBlock';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
-import { COURSE_BY_ID } from '@/content/registry';
+import { findCourse } from '@/content/catalogue';
 import type { CourseNode } from '@/content/schema';
 import { formatNumber } from '@/i18n/index';
 import { PHOTOS } from '@/lib/media/photos';
@@ -42,7 +42,7 @@ export default function CoursePathScreen() {
   const { t, l, locale } = useT();
   const navigate = useNavigate();
   const toast = useToast();
-  const course = COURSE_BY_ID.get(id);
+  const course = findCourse(id);
   const entitlements = useSession((s) => s.entitlements);
   const profile = useSession((s) => s.profile);
   const status = useProgress((s) => s.status);

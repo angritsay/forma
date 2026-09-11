@@ -1,7 +1,7 @@
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
 import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
-import { EXERCISE_BY_ID } from '@/content/registry';
+import { findExercise } from '@/content/catalogue';
 import { formatDuration } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
 import type { PrescribedBlock, PrescribedItem, PrescribedWorkout } from '@/lib/training/types';
@@ -10,7 +10,7 @@ import { blockMetaLabel, exerciseName, itemLoadLabel, itemTargetLabel } from './
 function PlanItem({ item }: { item: PrescribedItem }) {
   const tr = useT();
   const { t, l } = tr;
-  const exercise = EXERCISE_BY_ID.get(item.exerciseId);
+  const exercise = findExercise(item.exerciseId);
   const name = exercise ? l(exercise.name) : item.exerciseId;
   const load = itemLoadLabel(tr, item);
   return (

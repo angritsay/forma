@@ -12,7 +12,7 @@ import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import type { CustomWorkoutInput } from '@/lib/api/customWorkouts';
 import type { ExerciseCatalogRow } from '@/lib/api/types';
 import type { CustomSectionKind, CustomWorkoutStructure } from '@/lib/training/customWorkout';
-import { EXERCISE_BY_ID } from '@/content/registry';
+import { findExercise } from '@/content/catalogue';
 import type { TKey } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
 import { ExercisePickerSheet } from './ExercisePickerSheet';
@@ -64,7 +64,7 @@ function emptySections(initial?: CustomWorkoutStructure): DraftSection[] {
       items: (found?.items ?? []).map((it) => ({
         key: nextKey(),
         exerciseId: it.exerciseId,
-        nameRu: EXERCISE_BY_ID.get(it.exerciseId)?.name.ru ?? it.exerciseId,
+        nameRu: findExercise(it.exerciseId)?.name.ru ?? it.exerciseId,
         unit: it.unit,
         target: it.target,
         perSide: it.perSide === true,

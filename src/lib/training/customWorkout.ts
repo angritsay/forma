@@ -7,7 +7,7 @@
  * the athlete gets exactly what the coach wrote. Sections become blocks (warm-up / main / cool-down),
  * so the player's three-part stepper, warm-up gate, explanations and rest all work unchanged.
  */
-import { EXERCISE_BY_ID } from '@/content/registry';
+import { findExercise } from '@/content/catalogue';
 import type { BlockFormat, BlockType, L10n } from '@/content/schema';
 import { estimateBlockDuration } from './estimate';
 import { estimateItemSec } from './prescribe';
@@ -76,7 +76,7 @@ export function buildPrescribedFromCustom(
 ): PrescribedWorkout {
   const blocks: PrescribedBlock[] = structure.sections.map((section, index) => {
     const items: PrescribedItem[] = section.items.map((it) => {
-      const exercise = EXERCISE_BY_ID.get(it.exerciseId);
+      const exercise = findExercise(it.exerciseId);
       const perSide = it.perSide === true;
       const item: PrescribedItem = {
         exerciseId: it.exerciseId,
