@@ -242,6 +242,59 @@ do $$ begin
   raise notice 'OK re-seed leaves admin-authored exercises alone';
 end $$;
 
+-- The imported courses (0009_course_import.sql) ------------------------------------
+--
+-- The five courses written as files are also rows, so the coach can open what the trainer wrote
+-- and change a set count or the order of two days. The conversion is proved lossless by
+-- src/lib/courses/draft.test.ts; what is checked here is that the rows actually landed, and that
+-- the two id spaces did not collide on the way in.
+select pg_temp.as_super();
+do $$ declare v_workouts int; v_shared int; begin
+  assert (select count(*) from public.admin_courses where status = 'draft' and slug_id <> 'yoga') = 5,
+    'all five compiled courses imported, as drafts';
+  assert (select count(*) from public.admin_course_days d
+          join public.admin_courses c on c.id = d.course_id
+          where c.slug_id <> 'yoga') = 204,
+    'every day of every course imported';
+  assert (select count(*) from public.admin_course_days
+          where kind in ('workout', 'test', 'benchmark') and custom_workout_id is null) = 0,
+    'every training day points at a workout';
+
+  /*
+   * The collision this guards against: workout ids are unique inside a course (public.workouts is
+   * keyed on course_id + id) while custom_workouts.short_id is unique globally, and eighteen of the
+   * eighty-three workouts share a name across courses — `w_test` alone appears four times.
+   * Importing them under their own ids made four courses share a single row.
+   */
+  select count(*) into v_workouts from public.custom_workouts where short_id not like 'y|_%' escape '|';
+  assert v_workouts = 83, 'every workout has its own row, got ' || v_workouts;
+
+  select count(*) into v_shared from (
+    select d.custom_workout_id
+    from public.admin_course_days d
+    where d.custom_workout_id is not null
+    group by d.custom_workout_id
+    having count(distinct d.course_id) > 1
+  ) x;
+  assert v_shared = 0, 'no workout row is shared between two courses, got ' || v_shared;
+
+  raise notice 'OK imported courses';
+end $$;
+
+-- Publishing an imported course works end to end -----------------------------------
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c', 'coach@example.com');
+do $$ declare v_course uuid; begin
+  select id into v_course from public.admin_courses where slug_id = 'start';
+  perform public.admin_publish_course(v_course);
+  assert (select status from public.admin_courses where id = v_course) = 'published';
+  -- 0004_content_seed.sql already wrote the compiled course's 20 workouts under the same course id;
+  -- the import adds its own 20 under prefixed ids, so both sets are there and neither overwrote the
+  -- other.
+  assert (select count(*) from public.workouts where course_id = 'start' and id like 'start|_%' escape '|') = 20,
+    'the imported workouts got their points ceilings';
+  raise notice 'OK publishing an imported course';
+end $$;
+
 select pg_temp.as_super();
 \echo ''
 \echo 'COURSE BUILDER TESTS PASSED'

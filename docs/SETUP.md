@@ -69,7 +69,9 @@ Dashboard → **SQL Editor** → **New query**, paste each file in this order an
    `content/exercises` (see §2.1)
 8. `supabase/migrations/0008_course_builder.sql` — `admin_courses` and `admin_course_days`,
    the public `images` bucket, and `admin_publish_course()` (see §2.2)
-9. `supabase/seed.sql` — nothing runs by default; open it, uncomment the `insert into
+9. `supabase/migrations/0009_course_import.sql` — generated: the five courses written as files,
+   as rows the admin panel can edit (see §2.3). Optional, and safe to skip.
+10. `supabase/seed.sql` — nothing runs by default; open it, uncomment the `insert into
 public.admins` line with the coach's email (see §4)
 
 Each run must end with "Success. No rows returned". If a statement fails, fix the cause and
@@ -127,6 +129,31 @@ Two things to know:
 
 `admin_unpublish_course(id)` takes a course off the catalogue but leaves both generated rows in
 place, so people who already bought it keep their entitlement and their scoring.
+
+### 2.3 The compiled courses, as editable rows (`0009_course_import.sql`)
+
+The five courses live in `content/courses/*.ts`. To be able to open one in the admin panel and
+change a set count or the order of two days, they also have to exist as `admin_courses` +
+`admin_course_days` + `custom_workouts` rows:
+
+```bash
+node scripts/content/gen-course-import.mjs           # rewrites 0009_course_import.sql
+node scripts/content/gen-course-import.mjs --check   # CI-style check that it matches the content
+```
+
+Three things worth knowing:
+
+- **They arrive as drafts, and change nothing.** The app prefers compiled content on an id
+  collision (`setCatalogueOverlay` in `src/content/catalogue.ts`), so even after publishing one from
+  the admin panel the file keeps winning while it exists. Delete the course file to hand a course
+  over to the database for good.
+- **The conversion is lossless, and that is tested.** `src/lib/courses/draft.test.ts` takes every
+  workout of every course into the builder's structure and back, and requires the result to equal
+  what went in, block for block. That matters because 59 of the 147 blocks are EMOMs, AMRAPs,
+  for-time pieces and Tabatas whose timing has nowhere to live in a plain circuit.
+- **Workout ids get a course prefix.** Workout ids are unique _inside_ a course; `short_id` is
+  unique globally, and eighteen workouts share a name across courses. So `w_s01_emom` of the start
+  course becomes `start_w_s01_emom`. Progress is keyed on the node id, which is unchanged.
 
 ### Verifying the migrations locally
 
