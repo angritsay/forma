@@ -37,7 +37,6 @@ relatedExercises:
   - superman
 relatedCourses:
   - start
-  - engine
 relatedGuides:
   - crossfit-home-beginners
   - no-equipment-crossfit

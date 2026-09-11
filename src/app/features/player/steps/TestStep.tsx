@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
-import { Icon } from '@/components/ui/Icon';
 import { useT } from '@/app/hooks/useT';
 import type { PlayerResult } from '@/app/store/activeWorkout';
 import type { ExerciseUnit } from '@/content/schema';
@@ -120,7 +119,7 @@ export function TestStep({
       </div>
 
       {phase === 'ready' ? (
-        <Button size="lg" fullWidth onClick={start} icon={<Icon name="play" size={20} />}>
+        <Button size="lg" fullWidth onClick={start}>
           {t('app.playerTestStart')}
         </Button>
       ) : phase === 'running' ? (

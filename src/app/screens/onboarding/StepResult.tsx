@@ -1,5 +1,5 @@
+import { clsx } from 'clsx';
 import { useMemo } from 'react';
-import { Card } from '@/components/ui/Card';
 import { PageTitle } from '@/components/ui/PageTitle';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { RingProgress } from '@/components/ui/RingProgress';
@@ -18,6 +18,11 @@ const COMPONENT_ORDER: readonly FitnessComponent[] = [
   'experience',
 ];
 
+/**
+ * The result: the index as the screen's one big number inside the kit's ring, what the level
+ * means as a paragraph under a hairline, and the five components as a numbered, ruled list with
+ * a 4px bar each. No course is in scope yet, so the ring and the bars are white.
+ */
 export function StepResult({ draft }: StepProps) {
   const { t } = useT();
   const profile = useMemo(() => draftToTrainingProfile(draft), [draft]);
@@ -29,55 +34,58 @@ export function StepResult({ draft }: StepProps) {
   const levelName = t(LEVEL_LABEL[assessment.level]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <PageTitle
         eyebrow={t('app.onbResultEyebrow')}
         title={t('app.onbResultLevel', { n: assessment.level, name: levelName })}
-        align="center"
       />
-      <div className="flex justify-center">
-        <RingProgress
-          value={assessment.index / 100}
-          size={200}
-          stroke={14}
-          label={t('app.onbResultEyebrow')}
-          valueText={`${assessment.index} / 100`}
-        >
-          <span className="tabular text-6xl font-bold leading-none">{assessment.index}</span>
-          <span className="mt-1 text-sm text-muted">{t('app.onbIndexOutOf')}</span>
-        </RingProgress>
-      </div>
-      <Card tile>
-        <p className="text-[15px] font-medium leading-relaxed">
-          {t(LEVEL_MEANING[assessment.level])}
-        </p>
-      </Card>
-      <Card level={2} className="flex flex-col gap-4">
+      <RingProgress
+        value={assessment.index / 100}
+        size={180}
+        stroke={8}
+        label={t('app.onbResultEyebrow')}
+        valueText={`${assessment.index} / 100`}
+      >
+        <span className="display text-7xl">{assessment.index}</span>
+        <span className="eyebrow mt-1">{t('app.onbIndexOutOf')}</span>
+      </RingProgress>
+      <p className="hairline pt-5 text-[15px] leading-relaxed">
+        {t(LEVEL_MEANING[assessment.level])}
+      </p>
+      <section className="flex flex-col gap-3">
         <h2 className="eyebrow">{t('app.onbResultComponents')}</h2>
-        <ul className="flex flex-col gap-3">
-          {COMPONENT_ORDER.map((c) => {
+        <ul className="flex flex-col border-b border-border">
+          {COMPONENT_ORDER.map((c, i) => {
             const value = assessment.components[c];
             const imputed = missing.has(c);
             return (
-              <li key={c} className="flex flex-col gap-1.5">
-                <div className="flex items-center justify-between text-sm">
-                  <span className={imputed ? 'text-muted' : undefined}>
-                    {t(COMPONENT_LABEL[c])}
-                    {imputed ? ` · ${t('app.onbTestSkipped')}` : ''}
-                  </span>
-                  <span className="tabular font-semibold">{value}</span>
-                </div>
+              <li
+                key={c}
+                className="grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 border-t border-border py-3"
+              >
+                <span className="numeral text-sm text-muted-2">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span className={clsx('text-sm', imputed && 'text-muted')}>
+                  {t(COMPONENT_LABEL[c])}
+                  {imputed ? ` · ${t('app.onbTestSkipped')}` : ''}
+                </span>
+                <span className="numeral tabular text-sm">{value}</span>
+                {/*
+                 * A skipped test is scored from the rest, so its bar is drawn at half strength:
+                 * the same white, honestly fainter.
+                 */}
                 <ProgressBar
                   value={value / 100}
-                  size="sm"
-                  tone={imputed ? 'primary' : 'accent'}
+                  tone="primary"
                   label={t(COMPONENT_LABEL[c])}
+                  className={clsx('col-span-2 col-start-2', imputed && 'opacity-50')}
                 />
               </li>
             );
           })}
         </ul>
-      </Card>
+      </section>
     </div>
   );
 }

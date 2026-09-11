@@ -37,7 +37,6 @@ relatedExercises:
   - side_plank
 relatedCourses:
   - start
-  - engine
 relatedGuides:
   - crossfit-home-beginners
   - rest-days-steps

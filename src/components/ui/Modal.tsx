@@ -20,7 +20,13 @@ export interface ModalProps {
   className?: string;
 }
 
-/** Centered confirm dialog. Esc/backdrop close; focus trapped; initial focus on Cancel. */
+/**
+ * Centered confirm dialog. Esc/backdrop close; focus trapped; initial focus on Cancel.
+ *
+ * The panel is a sharp --surface-2 rectangle behind a strong hairline, with no shadow — on a
+ * dimmed ground the edge is enough. It arrives as a fade with a small upward shift, 150ms on the
+ * brand's ease-out; nothing scales or bounces.
+ */
 export function Modal({
   open,
   onClose,
@@ -55,7 +61,7 @@ export function Modal({
         tabIndex={-1}
         onClick={onClose}
         className={clsx(
-          'absolute inset-0 bg-black/60 transition-opacity duration-200',
+          'absolute inset-0 bg-ink/60 transition-opacity duration-150 ease-(--ease-out)',
           shown ? 'opacity-100' : 'opacity-0',
         )}
       />
@@ -69,17 +75,17 @@ export function Modal({
         aria-describedby={description ? descId : undefined}
         tabIndex={-1}
         className={clsx(
-          'relative w-full max-w-[400px] rounded-card border border-border bg-surface-2 p-6 shadow-card outline-none',
-          'transition-[opacity,transform] duration-200',
-          shown ? 'scale-100 opacity-100' : 'scale-95 opacity-0',
+          'relative w-full max-w-[400px] rounded-card border border-border-strong bg-surface-2 p-6 outline-none',
+          'transition-[opacity,transform] duration-150 ease-(--ease-out)',
+          shown ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0',
           className,
         )}
       >
-        <h2 id={titleId} className="text-xl font-semibold">
+        <h2 id={titleId} className="font-display text-2xl text-balance">
           {title}
         </h2>
         {description ? (
-          <p id={descId} className="mt-2 text-[15px] text-muted">
+          <p id={descId} className="mt-3 text-[15px] text-muted">
             {description}
           </p>
         ) : null}

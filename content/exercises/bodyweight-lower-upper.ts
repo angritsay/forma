@@ -233,6 +233,7 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: { harder: 'single_leg_glute_bridge' },
     animation: 'glute_bridge',
+    video: { ru: 'storage:videos/shared/glute_bridge.ru.mp4' },
     tags: ['lower', 'warmup'],
   },
   {
@@ -399,7 +400,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'reverse_lunge' },
     animation: 'jumping_lunge',
-    video: { ru: 'storage:videos/shared/jumping_lunge.ru.mp4' },
     tags: ['lower', 'explosive', 'cardio', 'unilateral'],
   },
   {
@@ -459,7 +459,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'reverse_lunge' },
     animation: 'lateral_lunge',
-    video: { ru: 'storage:videos/shared/lateral_lunge.ru.mp4' },
     tags: ['lower', 'unilateral', 'mobility'],
   },
   {
@@ -968,7 +967,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'plank' },
     animation: 'plank_shoulder_tap',
-    video: { ru: 'storage:videos/shared/plank_shoulder_tap.ru.mp4' },
     tags: ['core', 'upper'],
   },
   {
@@ -1022,7 +1020,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'plank' },
     animation: 'up_down_plank',
-    video: { ru: 'storage:videos/shared/up_down_plank.ru.mp4' },
     tags: ['core', 'upper', 'cardio'],
   },
   {
@@ -1087,7 +1084,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'half_burpee' },
     animation: 'burpee',
-    video: { ru: 'storage:videos/shared/burpee.ru.mp4' },
     tags: ['cardio', 'explosive', 'benchmark'],
     isTest: true,
   },
@@ -1254,7 +1250,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'jump_squat' },
     animation: 'tuck_jump',
-    video: { ru: 'storage:videos/shared/tuck_jump.ru.mp4' },
     tags: ['lower', 'explosive', 'cardio'],
   },
   {

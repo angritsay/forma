@@ -2,6 +2,11 @@
 /**
  * Guide card for hubs and "read next" lists: cluster eyebrow, title, description, reading time,
  * publish date.
+ *
+ * A hairline row rather than a boxed card — a hub lists a dozen of these and a dozen boxes is a
+ * wall. The title stays in Onest: guide titles are search phrases, often forty characters and
+ * more, and Unbounded in capitals would set one across four lines of a three-column grid. The
+ * display face is for the words a reader can take in at a glance.
  */
 import type { Locale } from '@/content/schema';
 import { formatDate, t } from '@/i18n/index';
@@ -22,12 +27,14 @@ const clusterTitle = t(locale, `seo.cluster_${guide.data.cluster}_title` as cons
 
 <a
   href={href(locale, guidePath(guide))}
-  class="flex h-full flex-col rounded-card border border-border bg-surface p-5 transition-colors hover:border-border-strong"
+  class="group flex h-full flex-col border-t border-border py-5 transition-colors duration-150 hover:border-border-strong"
 >
   {showCluster && <span class="eyebrow">{clusterTitle}</span>}
-  <span class="mt-1 font-semibold leading-snug">{guide.data.title}</span>
+  <span class="mt-2 text-[15px] leading-snug font-semibold group-hover:underline"
+    >{guide.data.title}</span
+  >
   <span class="mt-2 line-clamp-3 text-sm leading-relaxed text-muted">{guide.data.description}</span>
-  <span class="mt-auto flex gap-3 pt-4 text-xs text-muted-2">
+  <span class="tabular mt-auto flex gap-3 pt-4 text-xs text-muted-2">
     <span>{t(locale, 'seo.readingTime', { n: minutes })}</span>
     <time datetime={guide.data.publishedAt}
       >{formatDate(locale, guide.data.publishedAt, 'long')}</time

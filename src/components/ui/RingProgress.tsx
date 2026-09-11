@@ -1,36 +1,43 @@
 import { clsx } from 'clsx';
 import type { ReactNode } from 'react';
-import type { ProgressTone } from './ProgressBar';
+import { COURSE_FILL, type ProgressTone } from './ProgressBar';
 
 export interface RingProgressProps {
   /** Progress 0..1 (clamped). */
   value: number;
   /** Outer diameter in px. Default 120. */
   size?: number;
-  /** Stroke width in px. Default 10. */
+  /** Stroke width in px. Default 6. */
   stroke?: number;
+  /** Stroke colour. Default `course`: the programme colour if a course is in scope, else white. */
   tone?: ProgressTone;
   /** Accessible name. */
   label?: string;
   valueText?: string;
-  /** Content centered inside the ring (number, icon…). */
+  /** Content centered inside the ring (a numeral, a word). */
   children?: ReactNode;
   className?: string;
 }
 
-const TONE: Record<ProgressTone, string> = {
+const TONE: Record<Exclude<ProgressTone, 'course'>, string> = {
   primary: 'stroke-primary',
-  accent: 'stroke-accent',
+  accent: 'stroke-primary',
   success: 'stroke-success',
   warning: 'stroke-warning',
   danger: 'stroke-danger',
 };
 
+/**
+ * The one ring the system allows — the design system ships it for the fitness index and the day's
+ * completion. Same colour rule as {@link ProgressBar}: the programme colour when a course is in
+ * scope, white otherwise. The arc ends are square, not rounded; a round cap on a thick stroke is a
+ * pill end, and the system has none.
+ */
 export function RingProgress({
   value,
   size = 120,
-  stroke = 10,
-  tone = 'accent',
+  stroke = 6,
+  tone = 'course',
   label,
   valueText,
   children,
@@ -62,7 +69,7 @@ export function RingProgress({
           r={r}
           fill="none"
           strokeWidth={stroke}
-          className="stroke-white/10"
+          className="stroke-surface-3"
         />
         <circle
           cx={half}
@@ -70,10 +77,14 @@ export function RingProgress({
           r={r}
           fill="none"
           strokeWidth={stroke}
-          strokeLinecap="round"
+          strokeLinecap="butt"
           strokeDasharray={`${c * v} ${c}`}
           transform={`rotate(-90 ${half} ${half})`}
-          className={clsx('transition-[stroke-dasharray] duration-700 ease-out', TONE[tone])}
+          className={clsx(
+            'transition-[stroke-dasharray] duration-280 ease-(--ease-out)',
+            tone !== 'course' && TONE[tone],
+          )}
+          style={tone === 'course' ? { stroke: COURSE_FILL } : undefined}
         />
       </svg>
       {children ? (

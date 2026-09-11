@@ -27,11 +27,14 @@ import {
   sampleWorkout,
 } from '@/components/landing/courseHelpers';
 import { faqLd, itemListLd, organizationLd, websiteLd } from '@/components/landing/jsonld';
-import { COURSES, COURSE_BY_ID, EXERCISE_BY_ID } from '@/content/registry';
+import { COURSE_BY_ID, EXERCISE_BY_ID } from '@/content/registry';
+import { SITE_COURSES } from '@/content/published';
 import { publishableResults } from '@content/site/results';
 import type { Exercise, Locale, WorkoutItem } from '@/content/schema';
 import { formatNumber, l, t } from '@/i18n/index';
+import { PHOTOS, photoSrc } from '@/lib/media/photos';
 import { canonicalUrl } from '@/lib/seo/urls';
+import { courseTileStyle } from '@/lib/ui/tile';
 import { appHref, href, localeStaticPaths, withBase } from '@/lib/util/paths';
 import { COACH } from '@content/site/coach';
 import { FAQ } from '@content/site/faq';
@@ -46,8 +49,10 @@ const site = (Astro.site?.toString() ?? 'http://localhost:4321').replace(/\/$/, 
 const title = t(locale, 'landing.homeTitle');
 const description = t(locale, 'landing.homeDescription');
 
-const demoCourse = COURSE_BY_ID.get(DEMO_COURSE_ID) ?? COURSES[0];
+const demoCourse = COURSE_BY_ID.get(DEMO_COURSE_ID) ?? SITE_COURSES[0];
 const demo = demoCourse ? buildDemo(locale, demoCourse) : null;
+// The demo course's programme colour is the one colour the path and player tiles may take.
+const demoTile = demoCourse ? courseTileStyle(demoCourse.tile) : undefined;
 
 // "Inside a workout" tiles use real items of the demo course's first workout.
 const insideWorkout = demoCourse ? sampleWorkout(demoCourse) : undefined;
@@ -76,7 +81,7 @@ const workTile = insideItems[1] ?? insideItems[0];
 const restSec = insideItems.find((x) => x.restSec > 0)?.restSec ?? 0;
 
 const chips = [
-  COURSES.length > 0 ? coursesCountLabel(locale, COURSES.length) : '',
+  SITE_COURSES.length > 0 ? coursesCountLabel(locale, SITE_COURSES.length) : '',
   t(locale, 'landing.chipLifetime'),
   t(locale, 'landing.chipAdaptive'),
   t(locale, 'landing.chipHome'),
@@ -84,12 +89,27 @@ const chips = [
 
 const weekdays = t(locale, 'landing.pathWeekdays').split(',');
 
+/*
+ * The coach's own photograph wins; until it exists the hero shows the monochrome placeholder
+ * from src/lib/media/photos.ts (decorative — the headline says everything the picture would).
+ */
+const heroPhoto = COACH.heroPhoto
+  ? { src: withBase(COACH.heroPhoto), alt: COACH.name[locale] }
+  : { src: photoSrc(PHOTOS.landingHero), alt: '' };
+
+// Leaderboard demo rows: three neutral avatars, the visitor's row picked out by the white bar.
+const boardRows = [
+  { w: '100%', you: false },
+  { w: '78%', you: true },
+  { w: '61%', you: false },
+];
+
 const jsonLd = [
   websiteLd(site, locale, description),
   organizationLd(site, locale),
   faqLd(FAQ, locale),
   itemListLd(
-    COURSES.map((c) => ({
+    SITE_COURSES.map((c) => ({
       name: l(c.name, locale),
       url: canonicalUrl(site, locale, coursePath(locale, c)),
     })),
@@ -106,9 +126,7 @@ const jsonLd = [
     secondary={{ label: t(locale, 'landing.heroCtaApp'), href: appHref() }}
     chips={chips}
     figure={{ animation: 'burpee', label: t(locale, 'landing.heroFigureAlt') }}
-    photo={COACH.heroPhoto
-      ? { src: withBase(COACH.heroPhoto), alt: COACH.name[locale] }
-      : undefined}
+    photo={heroPhoto}
     tileTop={t(locale, 'landing.heroTileTop')}
     tileBottom={t(locale, 'landing.heroTileBottom')}
   />
@@ -137,7 +155,7 @@ const jsonLd = [
   >
     <ul class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {
-        COURSES.map((c, i) => (
+        SITE_COURSES.map((c, i) => (
           <li>
             <CourseCard course={c} locale={locale} n={i + 1} />
           </li>
@@ -146,10 +164,11 @@ const jsonLd = [
     </ul>
     <div class="mt-8">
       <Button href={href(locale, '/courses/')} variant="secondary">
-        {t(locale, 'landing.coursesAll')} →
+        {t(locale, 'landing.coursesAll')}
+        <span class="glyph" aria-hidden="true">→</span>
       </Button>
     </div>
-    <SubscribeBanner locale={locale} class="mt-10" />
+    <SubscribeBanner locale={locale} class="mt-12" />
   </Section>
 
   {
@@ -161,13 +180,22 @@ const jsonLd = [
         intro={t(locale, 'landing.adaptIntro')}
       >
         <DifficultyDemo client:visible {...demo} />
-        <div class="mt-6 rounded-card border border-border bg-surface p-5 md:p-7">
+        <div class="mt-10 border-t border-border pt-5">
           <h3 class="eyebrow-sentence">{t(locale, 'landing.adaptHowTitle')}</h3>
-          <ul class="mt-3 grid gap-3 text-sm leading-relaxed md:grid-cols-3">
-            <li class="rounded-inner bg-bg p-4">{t(locale, 'landing.adaptHow1')}</li>
-            <li class="rounded-inner bg-bg p-4">{t(locale, 'landing.adaptHow2')}</li>
-            <li class="rounded-inner bg-bg p-4">{t(locale, 'landing.adaptHow3')}</li>
-          </ul>
+          <ol class="mt-4 grid gap-x-8 text-sm leading-relaxed md:grid-cols-3">
+            {[
+              t(locale, 'landing.adaptHow1'),
+              t(locale, 'landing.adaptHow2'),
+              t(locale, 'landing.adaptHow3'),
+            ].map((rule, i) => (
+              <li class="flex items-baseline gap-4 border-t border-border py-4">
+                <span class="numeral text-sm text-muted" aria-hidden="true">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span>{rule}</span>
+              </li>
+            ))}
+          </ol>
         </div>
       </Section>
     )
@@ -180,7 +208,7 @@ const jsonLd = [
     title={t(locale, 'landing.pathTitle')}
     intro={t(locale, 'landing.pathIntro')}
   >
-    <div class="grid items-start gap-8 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-14">
+    <div class="grid items-start gap-10 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-14">
       {
         demoCourse && (
           <PhoneFrame label={`${l(demoCourse.name, locale)} — ${t(locale, 'landing.pathEyebrow')}`}>
@@ -188,35 +216,31 @@ const jsonLd = [
               locale={locale}
               courseName={l(demoCourse.name, locale)}
               nodes={demoCourse.nodes}
+              tile={demoCourse.tile}
             />
           </PhoneFrame>
         )
       }
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-3">
-        <article class="flex flex-col gap-3 rounded-card border border-border bg-surface p-6">
+      <!--
+        Three facts as hairline columns rather than three cards. No icon on the streak — the
+        row of days is the picture — and the visitor's row on the board is the one white bar.
+      -->
+      <div class="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-3">
+        <article class="flex flex-col gap-4 border-t border-border py-6">
           <div class="flex items-center justify-between gap-3">
-            <span
-              class="flex size-10 items-center justify-center rounded-control bg-warning/20 text-warning"
-              aria-hidden="true"
+            <span class="numeral text-sm text-muted" aria-hidden="true">01</span>
+            <FeatureChip tone="accent" size="sm">{t(locale, 'landing.pathStreakBonus')}</FeatureChip
             >
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
-                <path
-                  d="M9 1.5c.6 2.7-1.2 4-1.9 6.1-.4-1-.9-1.6-1.6-2.1C4 7.3 3.2 9 3.2 10.7A5.8 5.8 0 0 0 9 16.5a5.8 5.8 0 0 0 5.8-5.8c0-3.7-3.4-5.2-5.8-9.2z"
-                ></path>
-              </svg>
-            </span>
-            <FeatureChip tone="accent">{t(locale, 'landing.pathStreakBonus')}</FeatureChip>
           </div>
-          <h3 class="text-lg font-semibold">{t(locale, 'landing.pathStreakTitle')}</h3>
           <ul class="flex gap-1.5" aria-hidden="true">
             {
               weekdays.map((d, i) => (
                 <li
-                  class={`flex size-8 items-center justify-center rounded-control text-[11px] font-semibold ${
+                  class={`numeral flex size-8 items-center justify-center text-[11px] ${
                     i < 3
-                      ? 'bg-accent text-on-primary'
+                      ? 'bg-primary text-on-primary'
                       : i === 3
-                        ? 'border border-accent text-accent'
+                        ? 'border border-primary text-text'
                         : 'border border-border text-muted-2'
                   }`}
                 >
@@ -225,11 +249,14 @@ const jsonLd = [
               ))
             }
           </ul>
+          <h3 class="font-display text-base">{t(locale, 'landing.pathStreakTitle')}</h3>
           <p class="text-sm leading-relaxed text-muted">{t(locale, 'landing.pathStreakText')}</p>
         </article>
 
-        <article class="flex flex-col gap-3 rounded-card border border-border bg-surface p-6">
+        <article class="flex flex-col gap-4 border-t border-border py-6">
+          <span class="numeral text-sm text-muted" aria-hidden="true">02</span>
           <div class="flex items-center gap-4">
+            <!-- Ring: square (butt) caps, white stroke — the day's goal, not a course. -->
             <svg width="72" height="72" viewBox="0 0 72 72" aria-hidden="true" class="shrink-0">
               <circle
                 cx="36"
@@ -238,50 +265,49 @@ const jsonLd = [
                 fill="none"
                 stroke="currentColor"
                 class="text-surface-3"
-                stroke-width="8"></circle>
+                stroke-width="6"></circle>
               <circle
                 cx="36"
                 cy="36"
                 r="30"
                 fill="none"
                 stroke="currentColor"
-                class="text-accent"
-                stroke-width="8"
-                stroke-linecap="round"
+                class="text-primary"
+                stroke-width="6"
+                stroke-linecap="butt"
                 stroke-dasharray="188.5"
                 stroke-dashoffset="75"
                 transform="rotate(-90 36 36)"></circle>
             </svg>
             <div>
-              <p class="font-display text-3xl tabular">{formatNumber(locale, 7000)}</p>
-              <p class="text-xs text-muted">
+              <p class="numeral tabular text-3xl">{formatNumber(locale, 7000)}</p>
+              <p class="mt-1 text-xs text-muted">
                 {t(locale, 'common.steps')} · {t(locale, 'landing.pathStepsGoal')}
               </p>
             </div>
           </div>
-          <h3 class="text-lg font-semibold">{t(locale, 'landing.pathStepsTitle')}</h3>
+          <h3 class="font-display text-base">{t(locale, 'landing.pathStepsTitle')}</h3>
           <p class="text-sm leading-relaxed text-muted">{t(locale, 'landing.pathStepsText')}</p>
         </article>
 
-        <article class="flex flex-col gap-3 rounded-card border border-border bg-surface p-6">
+        <article class="flex flex-col gap-4 border-t border-border py-6">
+          <span class="numeral text-sm text-muted" aria-hidden="true">03</span>
           <ol class="flex flex-col gap-2" aria-hidden="true">
             {
-              [
-                { w: '100%', tile: '#1a2634', you: false },
-                { w: '78%', tile: '#20293c', you: true },
-                { w: '61%', tile: '#16202b', you: false },
-              ].map((row, i) => (
+              boardRows.map((row, i) => (
                 <li class="flex items-center gap-2 text-xs">
-                  <span class="w-4 text-right font-semibold tabular text-muted">{i + 1}</span>
-                  <span class="size-6 shrink-0 rounded-control" style={`background:${row.tile}`} />
-                  <span class="h-2.5 flex-1 overflow-hidden rounded-control bg-surface-3">
+                  <span class="numeral w-4 text-right text-muted">{i + 1}</span>
+                  <span
+                    class={`size-6 shrink-0 ${row.you ? 'bg-surface-3' : 'border border-border bg-surface-2'}`}
+                  />
+                  <span class="h-1 flex-1 overflow-hidden bg-surface-3">
                     <span
-                      class={`block h-full rounded-control ${row.you ? 'bg-accent' : 'bg-surface-2'}`}
+                      class={`block h-full ${row.you ? 'bg-primary' : 'bg-border-strong'}`}
                       style={`width:${row.w}`}
                     />
                   </span>
                   {row.you && (
-                    <span class="rounded-control bg-accent px-2 py-0.5 text-[10px] font-semibold text-on-primary">
+                    <span class="inline-flex h-5 items-center bg-primary px-1.5 text-[10px] font-semibold tracking-[0.12em] text-on-primary uppercase">
                       {t(locale, 'landing.pathYou')}
                     </span>
                   )}
@@ -289,7 +315,7 @@ const jsonLd = [
               ))
             }
           </ol>
-          <h3 class="text-lg font-semibold">{t(locale, 'landing.pathBoardTitle')}</h3>
+          <h3 class="font-display text-base">{t(locale, 'landing.pathBoardTitle')}</h3>
           <p class="text-sm leading-relaxed text-muted">{t(locale, 'landing.pathBoardText')}</p>
         </article>
       </div>
@@ -326,60 +352,64 @@ const jsonLd = [
     />
     {
       explainTile && workTile && (
-        <div class="mt-6 grid gap-4 md:grid-cols-3">
-          <div class="overflow-hidden rounded-card border border-border bg-surface">
-            <div class="flex items-center justify-between px-5 py-3 eyebrow">
+        /* The player's three beats, on the demo course's colour. One screen, one colour. */
+        <div class="mt-8 grid gap-4 md:grid-cols-3" style={demoTile}>
+          <div class="overflow-hidden border border-border bg-surface">
+            <div class="eyebrow flex items-center justify-between px-5 py-3">
               <span>{t(locale, 'landing.insideStep1Title')}</span>
-              <span>1/3</span>
+              <span class="numeral text-text">1/3</span>
             </div>
             <div class="hero-art flex aspect-square items-center justify-center">
               <ExerciseFigure
                 animation={explainTile.exercise.animation}
                 variant="card"
                 playing={false}
+                tile={demoCourse?.tile}
                 label={l(explainTile.exercise.name, locale)}
               />
             </div>
-            <div class="p-5">
-              <p class="font-semibold">{l(explainTile.exercise.name, locale)}</p>
-              <p class="mt-1 text-sm text-muted">{l(explainTile.exercise.cues[0]!, locale)}</p>
+            <div class="border-t border-border p-5">
+              <p class="font-display text-sm">{l(explainTile.exercise.name, locale)}</p>
+              <p class="mt-2 text-sm text-muted">{l(explainTile.exercise.cues[0]!, locale)}</p>
             </div>
           </div>
 
-          <div class="overflow-hidden rounded-card border border-border bg-surface">
-            <div class="flex items-center justify-between px-5 py-3 eyebrow">
+          <div class="overflow-hidden border border-border bg-surface">
+            <div class="eyebrow flex items-center justify-between px-5 py-3">
               <span>
                 {workTile.item.seconds !== undefined
                   ? t(locale, 'landing.insideTimerLabel')
                   : t(locale, 'landing.insideRepsLabel')}
               </span>
-              <span>2/3</span>
+              <span class="numeral text-text">2/3</span>
             </div>
             <div class="hero-art relative flex aspect-square items-center justify-center">
               <ExerciseFigure
                 client:visible
                 animation={workTile.exercise.animation}
                 variant="card"
+                tile={demoCourse?.tile}
                 label={l(workTile.exercise.name, locale)}
               />
-              <span class="absolute right-4 bottom-4 rounded-control bg-bg/85 px-3 py-1.5 text-sm font-semibold text-text tabular">
+              <span class="numeral tabular absolute right-4 bottom-4 bg-ink/85 px-3 py-1.5 text-sm text-paper">
                 {itemTargetLabel(locale, workTile.item)}
               </span>
             </div>
-            <div class="p-5">
-              <p class="font-semibold">{l(workTile.exercise.name, locale)}</p>
-              <p class="mt-1 text-sm text-muted">
+            <div class="border-t border-border p-5">
+              <p class="font-display text-sm">{l(workTile.exercise.name, locale)}</p>
+              <p class="mt-2 text-sm text-muted">
                 {l(workTile.exercise.cues[1] ?? workTile.exercise.cues[0]!, locale)}
               </p>
             </div>
           </div>
 
-          <div class="overflow-hidden rounded-card border border-border bg-surface">
-            <div class="flex items-center justify-between px-5 py-3 eyebrow">
+          <div class="overflow-hidden border border-border bg-surface">
+            <div class="eyebrow flex items-center justify-between px-5 py-3">
               <span>{t(locale, 'landing.insideRestLabel')}</span>
-              <span>3/3</span>
+              <span class="numeral text-text">3/3</span>
             </div>
-            <div class="flex aspect-square flex-col items-center justify-center gap-2 bg-surface-2">
+            <div class="relative flex aspect-square flex-col items-center justify-center bg-surface-2">
+              {/* Rest ring: the stroke is the course colour, the same as the app's progress. */}
               <svg width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
                 <circle
                   cx="60"
@@ -395,24 +425,23 @@ const jsonLd = [
                   cy="60"
                   r="52"
                   fill="none"
-                  stroke="currentColor"
-                  class="text-accent-2"
+                  stroke="var(--course-tile, var(--primary))"
                   stroke-width="6"
-                  stroke-linecap="round"
+                  stroke-linecap="butt"
                   stroke-dasharray="326.7"
                   stroke-dashoffset="110"
                   transform="rotate(-90 60 60)"
                 />
               </svg>
               {restSec > 0 && (
-                <p class="font-display -mt-[5.25rem] text-3xl tabular">
+                <p class="numeral tabular absolute text-2xl">
                   {restSec} {t(locale, 'training.seconds')}
                 </p>
               )}
             </div>
-            <div class="p-5">
-              <p class="font-semibold">{t(locale, 'training.rest')}</p>
-              <p class="mt-1 text-sm text-muted">{t(locale, 'landing.insideStep4Text')}</p>
+            <div class="border-t border-border p-5">
+              <p class="font-display text-sm">{t(locale, 'training.rest')}</p>
+              <p class="mt-2 text-sm text-muted">{t(locale, 'landing.insideStep4Text')}</p>
             </div>
           </div>
         </div>

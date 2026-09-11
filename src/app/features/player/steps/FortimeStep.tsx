@@ -2,7 +2,7 @@ import { clsx } from 'clsx';
 import { useCallback, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
-import { Icon } from '@/components/ui/Icon';
+import { Glyph } from '@/components/ui/Icon';
 import { useT } from '@/app/hooks/useT';
 import type { PlayerResult } from '@/app/store/activeWorkout';
 import { formatClock } from '@/i18n/index';
@@ -92,10 +92,14 @@ export function FortimeStep({
           />
           {cap !== undefined ? (
             <div className="flex justify-center">
-              <Chip icon="clock">{t('app.playerFortimeCap', { time: formatClock(cap) })}</Chip>
+              <Chip>{t('app.playerFortimeCap', { time: formatClock(cap) })}</Chip>
             </div>
           ) : null}
-          <ItemList items={step.items} compact className="rounded-inner bg-surface-2 px-4 py-2" />
+          <ItemList items={step.items} compact className="border-t border-border-strong" />
+          {/*
+           * The rounds as a row of square cells: a finished one is a ticked outline, the current
+           * one is the white fill, the rest are faint numbers.
+           */}
           <ol
             className="flex flex-wrap justify-center gap-2"
             aria-label={t('app.playerAmrapRounds')}
@@ -108,15 +112,15 @@ export function FortimeStep({
                   key={i}
                   aria-current={current ? 'step' : undefined}
                   className={clsx(
-                    'tabular flex h-9 min-w-9 items-center justify-center gap-1 rounded-control border px-3 text-sm font-semibold',
+                    'numeral tabular flex h-9 min-w-9 items-center justify-center gap-1 border px-3 text-sm',
                     done
-                      ? 'border-success/30 bg-success/15 text-success'
+                      ? 'border-border-strong text-muted'
                       : current
-                        ? 'border-accent bg-accent text-on-primary'
-                        : 'border-border bg-surface-2 text-muted',
+                        ? 'border-primary bg-primary text-on-primary'
+                        : 'border-border text-muted-2',
                   )}
                 >
-                  {done ? <Icon name="check" size={14} /> : null}
+                  {done ? <Glyph size={11}>✓</Glyph> : null}
                   {i + 1}
                 </li>
               );
@@ -131,22 +135,17 @@ export function FortimeStep({
       ) : (
         <>
           <div className="flex flex-col items-center gap-2 text-center">
-            <span
-              className={clsx(
-                'font-display text-4xl',
-                phase === 'finished' ? 'text-accent' : 'text-warning',
-              )}
-            >
+            <h2 className={clsx('display text-5xl', phase === 'capped' && 'text-warning')}>
               {phase === 'finished'
                 ? t('app.playerFortimeFinished')
                 : t('app.playerFortimeCapReached')}
-            </span>
+            </h2>
             <p className="text-[15px] text-muted">
               {phase === 'finished'
                 ? t('app.playerFortimeYourTime')
                 : t('app.playerFortimeCapBody')}
             </p>
-            <span className="tabular text-6xl font-bold leading-none">
+            <span className="numeral tabular text-[64px] leading-none">
               {formatClock(phase === 'finished' ? clock.elapsedSec : (cap ?? clock.elapsedSec))}
             </span>
           </div>

@@ -1,5 +1,5 @@
 /** Course-level lookups and labels shared by the Home rows and the Courses screen. */
-import { EXERCISE_BY_ID } from '@/content/registry';
+import { findExercise } from '@/content/catalogue';
 import type { Course, Equipment, Exercise, Locale } from '@/content/schema';
 import { plural } from '@/i18n/index';
 import { href } from '@/lib/util/paths';
@@ -17,7 +17,7 @@ export function courseSignatureExercise(course: Course): Exercise | undefined {
   const fromWorkout = workout ? workoutSignatureExercise(workout) : undefined;
   if (fromWorkout) return fromWorkout;
   const first = course.workouts[0]?.blocks[0]?.items[0];
-  return first ? EXERCISE_BY_ID.get(first.exerciseId) : undefined;
+  return first ? findExercise(first.exerciseId) : undefined;
 }
 
 /** Landing course page (same site, base-prefixed) — where a locked course is bought. */

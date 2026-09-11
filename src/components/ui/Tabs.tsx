@@ -4,7 +4,7 @@ import { useRef, type KeyboardEvent, type ReactNode } from 'react';
 export interface TabItem<T extends string> {
   id: T;
   label: ReactNode;
-  /** Optional counter badge. */
+  /** Optional counter shown after the label. */
   count?: number;
   disabled?: boolean;
 }
@@ -14,7 +14,12 @@ export interface TabsProps<T extends string> {
   value: T;
   onChange: (id: T) => void;
   label?: string;
-  variant?: 'underline' | 'pills';
+  /**
+   * `underline`: white text over a 2px white rule. `fill`: the selected tab is the white fill
+   * with black text inside a hairline frame. `pills` is the previous name for `fill` and keeps
+   * working — there are no pills any more, only the frame.
+   */
+  variant?: 'underline' | 'fill' | 'pills';
   className?: string;
 }
 
@@ -23,6 +28,12 @@ export function tabPanelId(tabId: string): string {
   return `tabpanel-${tabId}`;
 }
 
+/*
+ * Tabs are typographic: capitals at 12px tracked like a control label, and the selected one is
+ * told apart by the white it wears — as a rule under it or as the fill behind it — never by a
+ * second colour or a rounded slab. The counter is a plain tabular figure after the label rather
+ * than a badge, so a tab with a count is still one word and a number.
+ */
 export function Tabs<T extends string>({
   tabs,
   value,
@@ -32,6 +43,7 @@ export function Tabs<T extends string>({
   className,
 }: TabsProps<T>) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const fill = variant !== 'underline';
 
   const move = (from: number, dir: 1 | -1) => {
     const enabled = tabs.map((t, i) => (t.disabled ? -1 : i)).filter((i) => i >= 0);
@@ -59,10 +71,8 @@ export function Tabs<T extends string>({
       role="tablist"
       aria-label={label}
       className={clsx(
-        'flex gap-1',
-        variant === 'underline'
-          ? 'border-b border-border'
-          : 'rounded-control border border-border p-1',
+        'flex',
+        fill ? 'border border-border-strong' : 'gap-5 border-b border-border',
         className,
       )}
     >
@@ -84,32 +94,25 @@ export function Tabs<T extends string>({
             onClick={() => onChange(tab.id)}
             onKeyDown={onKeyDown(i)}
             className={clsx(
-              'inline-flex items-center gap-2 font-medium transition-colors disabled:opacity-40',
-              variant === 'underline'
+              'control-label inline-flex items-center gap-2 text-[12px] transition-colors duration-150 ease-(--ease-out) disabled:opacity-40',
+              fill
                 ? clsx(
-                    // The underline is one of the accent's sanctioned homes: a 2px rule, not a fill.
-                    '-mb-px border-b-2 px-3 py-3 text-[15px]',
-                    selected
-                      ? 'border-accent text-text'
-                      : 'border-transparent text-muted hover:text-text',
+                    // 40px tall by design; `tap-target-y` (global.css) reaches the 44px minimum.
+                    // Cells are ruled off from each other by a hairline, not by a gap.
+                    'tap-target-y h-10 flex-1 justify-center border-l border-border-strong px-4 first:border-l-0',
+                    selected ? 'bg-primary text-on-primary' : 'text-muted hover:text-text',
                   )
                 : clsx(
-                    // 40px tall by design; `tap-target-y` (global.css) reaches the 44px minimum.
-                    'control-label tap-target-y h-10 flex-1 justify-center rounded-control px-4 text-[11px]',
-                    selected ? 'bg-surface-3 text-text' : 'text-muted hover:text-text',
+                    '-mb-px border-b-2 py-3',
+                    selected
+                      ? 'border-primary text-text'
+                      : 'border-transparent text-muted hover:text-text',
                   ),
             )}
           >
             {tab.label}
             {tab.count !== undefined ? (
-              <span
-                className={clsx(
-                  'tabular rounded-control px-1.5 text-xs',
-                  selected && variant === 'pills' ? 'bg-white/15' : 'bg-white/10',
-                )}
-              >
-                {tab.count}
-              </span>
+              <span className="tabular text-[11px] font-medium opacity-70">{tab.count}</span>
             ) : null}
           </button>
         );

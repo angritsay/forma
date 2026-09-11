@@ -1,5 +1,5 @@
 ---
-/** Breadcrumb trail; the last item is the current page (no link). */
+/** Breadcrumb trail; the last item is the current page (no link). Items are divided by a › glyph. */
 interface Props {
   items: { label: string; href?: string }[];
   ariaLabel: string;
@@ -12,7 +12,11 @@ const { items, ariaLabel } = Astro.props;
     {
       items.map((it, i) => (
         <li class="flex items-center gap-2">
-          {i > 0 && <span aria-hidden="true">/</span>}
+          {i > 0 && (
+            <span class="glyph text-muted-2" aria-hidden="true">
+              ›
+            </span>
+          )}
           {it.href ? (
             <a href={it.href} class="hover:text-text">
               {it.label}

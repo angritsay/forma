@@ -5,7 +5,7 @@
  */
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
-import { COURSES } from '@/content/registry';
+import { SITE_COURSES } from '@/content/published';
 import type { Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { guidePath, guidesForLocale } from '@/lib/seo/guides';
@@ -21,7 +21,7 @@ export const GET: APIRoute = async ({ site }) => {
   const section = (locale: Locale): string[] => {
     const lines: string[] = [];
     lines.push(`## ${t(locale, 'seo.llmsCourses')}`);
-    for (const c of COURSES) {
+    for (const c of SITE_COURSES) {
       lines.push(
         `- [${l(c.name, locale)}](${link(locale, `/courses/${c.slug[locale]}/`)}): ${l(c.tagline, locale)}`,
       );

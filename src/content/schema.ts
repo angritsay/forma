@@ -294,8 +294,34 @@ export type PaymentUrl = z.infer<typeof PaymentUrlSchema>;
 export const CourseSchema = z.object({
   id: z.string().regex(idRegex),
   order: z.number().int().positive(),
+  /*
+   * Is this course on sale?
+   *
+   * `false` hides it everywhere a customer could meet it — the catalogue, the home page, the
+   * sitemap, llms.txt, OG cards, the app's course list — and stops its landing page being built
+   * at all. It stays in `content/` and stays valid, and `getCourse()` still resolves it, so the
+   * workouts keep loading for anyone who already has access and the fixtures keep working.
+   *
+   * This is for a course that is written but not being sold yet: at launch only the beginner
+   * course is offered. Deleting the others would take their 83 workouts and every guide link that
+   * points at them with it; a flag keeps the work and sells one thing.
+   *
+   * Defaults to true, so an author opts a course *out* rather than having to remember to opt in.
+   */
+  published: z.boolean().default(true),
   slug: SlugL10nSchema,
   name: L10nSchema,
+  /*
+   * The name as the app says it, when the full name is too long to set in display capitals.
+   *
+   * `name` is written for search and for a customer who has never heard of us — «Форма с нуля:
+   * кроссфит дома без оборудования» tells a stranger on Google exactly what they are looking at.
+   * Inside the app that same string is four lines of Unbounded capitals above the day list, and
+   * the descriptive half is telling the athlete something they decided weeks ago. Everywhere the
+   * app names a course it uses this instead, falling back to `name`; the landing, the OG cards and
+   * the metadata keep the full one.
+   */
+  shortName: L10nSchema.optional(),
   tagline: L10nSchema,
   description: L10nSchema,
   longDescription: z.array(L10nSchema).min(2),
@@ -307,16 +333,16 @@ export const CourseSchema = z.object({
   sessionsPerWeek: z.number().int().min(2).max(6),
   avgSessionMin: z.number().int().min(10).max(90),
   /*
-   * The course's tile colour: one flat, muted dark blue, drawn behind the course's figure and
-   * name wherever the course appears as art.
+   * The course's tile colour — the one colour on the screen while this course is open. It paints
+   * the cover, the progress and the number of the current day, and never a button.
    *
-   * This replaces the `accent` + `gradient` pair each course used to carry. The gradients were
-   * pastel two-stop ramps (mint→periwinkle, peach→pink) and the brand no longer uses gradients
-   * at all; `accent` was written onto a `--course-accent` custom property that nothing ever read.
-   * There is now exactly one accent in the product — #9ecbff, spent on the thing that acts — so a
-   * course identifies itself by the weight of its tile rather than by a hue of its own.
+   * It is a *programme* colour, not a course's own hue: beginners #f2f52d, yoga #a8c8ff, marathon
+   * #f08a3c (--course-* in src/styles/global.css). A course that belongs to none of those
+   * programmes takes a neutral surface (--tile-4 #1f1f24 or --tile-5 #2a2a30) and the interface
+   * around it stays black and white, which is the design: one screen, one colour, or none.
    *
-   * Use one of --tile-1…5 from src/styles/global.css; the five courses take the five tiles.
+   * Ink on the tile is derived from the hex by `courseTileVars()` (src/lib/ui/tile.ts) — black on
+   * a programme colour, light on a surface — so content never has to say which it is.
    */
   tile: z.string().regex(hexRegex),
   price: z.object({ rub: z.number().nonnegative(), usd: z.number().nonnegative() }),

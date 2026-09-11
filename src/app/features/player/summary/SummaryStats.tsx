@@ -1,5 +1,4 @@
 import { Badge } from '@/components/ui/Badge';
-import { Card } from '@/components/ui/Card';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { StatTile } from '@/components/ui/StatTile';
 import { useT } from '@/app/hooks/useT';
@@ -15,32 +14,33 @@ export interface SummaryStatsProps {
   completion: number;
 }
 
-/** The four headline numbers of a session. */
+/**
+ * The four headline numbers of a session. The points are the one key fact, so they get the
+ * crosshair plate — ticks in the programme colour, when the screen is inside a course — and the
+ * other three sit on one ruled line under it. No icons: the word under each figure says what it is.
+ */
 export function SummaryStats({ durationSec, points, calories, completion }: SummaryStatsProps) {
   const { t } = useT();
   return (
-    // A 2×2 block ruled by hairlines rather than four bordered cards: these are one
-    // set of numbers about one session, not four separate facts.
-    <div className="grid grid-cols-2 divide-x divide-y divide-border border-t border-border">
-      <StatTile label={t('app.summaryTime')} icon="clock" value={formatClock(durationSec)} />
-      <StatTile
-        label={t('app.summaryPoints')}
-        icon="bolt"
-        value={points}
-        unit={t('common.pointsShort')}
-      />
-      <StatTile
-        label={t('app.summaryCalories')}
-        icon="flame"
-        value={calories}
-        unit={t('common.kcal')}
-      />
-      <StatTile
-        label={t('app.summaryCompletion')}
-        icon="check"
-        value={Math.round(completion * 100)}
-        unit="%"
-      />
+    <div className="flex flex-col gap-5">
+      <div className="plate-target px-5 py-6">
+        <span className="plate-ticks" />
+        <span className="eyebrow">{t('app.summaryPoints')}</span>
+        <div className="mt-2 flex items-baseline gap-2">
+          <span className="numeral tabular text-7xl leading-none">{points}</span>
+          <span className="text-sm text-muted">{t('common.pointsShort')}</span>
+        </div>
+      </div>
+      <div className="grid grid-cols-3 divide-x divide-border border-t border-border">
+        <StatTile label={t('app.summaryTime')} value={formatClock(durationSec)} className="pl-0" />
+        <StatTile label={t('app.summaryCalories')} value={calories} unit={t('common.kcal')} />
+        <StatTile
+          label={t('app.summaryCompletion')}
+          value={Math.round(completion * 100)}
+          unit="%"
+          className="pr-0"
+        />
+      </div>
     </div>
   );
 }
@@ -48,11 +48,11 @@ export function SummaryStats({ durationSec, points, calories, completion }: Summ
 export function BlockList({ blocks }: { blocks: readonly BlockCompletion[] }) {
   const { t } = useT();
   return (
-    <Card padding="sm" className="flex flex-col gap-3">
-      <span className="px-1 eyebrow">{t('app.summaryBlocks')}</span>
+    <section className="flex flex-col gap-3 border-t border-border pt-4">
+      <span className="eyebrow">{t('app.summaryBlocks')}</span>
       <ul className="flex flex-col gap-3">
         {blocks.map((b) => (
-          <li key={b.blockId} className="flex flex-col gap-1.5 px-1">
+          <li key={b.blockId} className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between gap-3">
               <span className="truncate text-[15px] font-medium">{b.title}</span>
               {b.skipped ? (
@@ -63,16 +63,17 @@ export function BlockList({ blocks }: { blocks: readonly BlockCompletion[] }) {
                 </span>
               )}
             </div>
+            {/* The fill is the programme colour; a block well short of its plan warns instead. */}
             <ProgressBar
               value={b.completion}
               size="sm"
-              tone={b.completion >= 0.95 ? 'success' : b.completion >= 0.8 ? 'accent' : 'warning'}
+              tone={b.completion >= 0.8 ? 'course' : 'warning'}
               label={b.title}
             />
           </li>
         ))}
       </ul>
-    </Card>
+    </section>
   );
 }
 
@@ -80,23 +81,25 @@ export function TestResultList({ tests }: { tests: readonly TestResultView[] }) 
   const { t } = useT();
   if (tests.length === 0) return null;
   return (
-    <Card padding="sm" className="flex flex-col gap-2">
-      <span className="px-1 eyebrow">{t('app.summaryTests')}</span>
+    <section className="flex flex-col gap-2 border-t border-border pt-4">
+      <span className="eyebrow">{t('app.summaryTests')}</span>
       <ul className="flex flex-col">
         {tests.map((x, i) => (
           <li
             key={`${x.exerciseId}-${i}`}
-            className="flex items-center justify-between gap-3 px-1 py-2"
+            className="flex items-center justify-between gap-3 border-t border-border py-2.5 first:border-t-0"
           >
             <span className="truncate text-[15px] font-medium">{x.name}</span>
-            <span className="tabular shrink-0 font-semibold">
+            <span className="numeral tabular shrink-0">
               {x.value}{' '}
-              <span className="text-sm font-medium text-muted">{unitLabel(t, x.unit)}</span>
+              <span className="font-sans text-sm font-medium text-muted">
+                {unitLabel(t, x.unit)}
+              </span>
             </span>
           </li>
         ))}
       </ul>
-    </Card>
+    </section>
   );
 }
 
@@ -117,12 +120,12 @@ export function BenchmarkCard({ result }: { result: BenchmarkView | null }) {
     if (!result.completed) note = t('app.summaryPartial');
   }
   return (
-    <Card padding="sm" className="flex items-center justify-between gap-3">
-      <span className="px-1 eyebrow">{t('app.summaryBenchmark')}</span>
-      <span className="tabular flex items-baseline gap-2 px-1 font-semibold">
+    <section className="flex items-baseline justify-between gap-3 border-t border-border pt-4">
+      <span className="eyebrow">{t('app.summaryBenchmark')}</span>
+      <span className="numeral tabular flex items-baseline gap-2 text-xl">
         {value}
-        {note ? <span className="text-sm font-medium text-muted">{note}</span> : null}
+        {note ? <span className="font-sans text-sm font-medium text-muted">{note}</span> : null}
       </span>
-    </Card>
+    </section>
   );
 }

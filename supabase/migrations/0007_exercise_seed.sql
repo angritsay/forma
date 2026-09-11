@@ -119,4 +119,7 @@ on conflict (id) do update set
   animation = excluded.animation,
   is_test = excluded.is_test,
   sort_order = excluded.sort_order,
-  updated_at = now();
+  updated_at = now()
+-- An exercise written in the admin panel is not owned by these files. If its id ever collides with
+-- a generated one, the hand-written row wins and the re-seed leaves it alone (0008).
+where public.exercises.is_custom = false;

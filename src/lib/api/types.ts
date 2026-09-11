@@ -3,6 +3,7 @@
  * Database rows (snake_case) are converted in mappers.ts; the app never sees raw rows.
  */
 import type { Locale } from '@/content/schema';
+import type { CourseDayContent, CourseDraftContent } from '@/lib/courses/draft';
 import type {
   DifficultyChoice,
   ExerciseResult,
@@ -256,17 +257,31 @@ export interface ExerciseCatalogRow {
   nameRu: string;
   nameEn: string | null;
   shortNameRu: string | null;
+  descriptionRu: string | null;
+  descriptionEn: string | null;
+  howTo: { ru?: string; en?: string }[];
+  cues: { ru?: string; en?: string }[];
+  mistakes: { ru?: string; en?: string }[];
+  breathingRu: string | null;
   primaryMuscle: string | null;
   muscles: string[];
   pattern: string | null;
   equipment: string[];
   level: number | null;
   unit: 'reps' | 'seconds' | 'meters' | 'calories';
+  secondsPerRep: number | null;
+  /**
+   * The drawn pose set (src/components/anim/poses) — code, so it is null for anything written in
+   * the admin panel. Such an exercise leads with its video or still instead.
+   */
   animation: string | null;
   videoRu: string | null;
   videoEn: string | null;
+  image: string | null;
   tags: string[];
   isTest: boolean;
+  /** True when authored in the admin panel; the generated seed never overwrites these rows. */
+  isCustom: boolean;
 }
 
 /** Hand-editable markup on an exercise (video links and tags). */
@@ -313,4 +328,113 @@ export interface WorkoutAssigneeRow {
   email: string;
   note: string | null;
   createdAt: string;
+}
+
+// --- courses built in the admin panel ---------------------------------------
+
+export type AdminCourseStatus = 'draft' | 'published' | 'archived';
+export type CourseDayKind = 'workout' | 'rest' | 'test' | 'benchmark' | 'milestone';
+
+/** A row of `admin_courses`. `content` is the validated prose blob (CourseDraftContent). */
+export interface AdminCourseRow {
+  id: string;
+  /** The id everything else keys off: purchases, sessions, storage paths. Frozen once published. */
+  slugId: string;
+  status: AdminCourseStatus;
+  sortOrder: number;
+  level: number;
+  weeks: number;
+  sessionsPerWeek: number;
+  avgSessionMin: number;
+  equipment: string[];
+  tile: string;
+  priceRub: number;
+  priceUsd: number;
+  content: CourseDraftContent;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Everything about a course that is editable; `slugId` only before the first publish. */
+export type AdminCoursePatch = Partial<
+  Pick<
+    AdminCourseRow,
+    | 'slugId'
+    | 'sortOrder'
+    | 'level'
+    | 'weeks'
+    | 'sessionsPerWeek'
+    | 'avgSessionMin'
+    | 'equipment'
+    | 'tile'
+    | 'priceRub'
+    | 'priceUsd'
+    | 'content'
+  >
+>;
+
+/** A row of `admin_course_days`. */
+export interface AdminCourseDayRow {
+  id: string;
+  courseId: string;
+  nodeId: string;
+  week: number;
+  day: number;
+  kind: CourseDayKind;
+  /** The `custom_workouts.id` (uuid) this day plays, or null for a rest day / milestone. */
+  customWorkoutId: string | null;
+  content: CourseDayContent;
+  deload: boolean;
+  stepsGoal: number | null;
+  sortOrder: number;
+}
+
+export type AdminCourseDayPatch = Partial<
+  Pick<
+    AdminCourseDayRow,
+    | 'nodeId'
+    | 'week'
+    | 'day'
+    | 'kind'
+    | 'customWorkoutId'
+    | 'content'
+    | 'deload'
+    | 'stepsGoal'
+    | 'sortOrder'
+  >
+>;
+
+/** Everything the editor needs to render, preview and validate one course in a single load. */
+export interface AdminCourseBundle {
+  course: AdminCourseRow;
+  days: AdminCourseDayRow[];
+  /** The custom workouts the days reference, keyed by `custom_workouts.id`. */
+  workouts: CustomWorkoutRow[];
+}
+
+/** Fields of an admin-authored exercise, beyond the markup an existing one accepts. */
+export interface ExerciseDraft {
+  id: string;
+  nameRu: string;
+  nameEn?: string | null;
+  shortNameRu?: string | null;
+  descriptionRu?: string | null;
+  descriptionEn?: string | null;
+  howTo?: { ru?: string; en?: string }[];
+  cues?: { ru?: string; en?: string }[];
+  mistakes?: { ru?: string; en?: string }[];
+  breathingRu?: string | null;
+  primaryMuscle?: string | null;
+  muscles?: string[];
+  pattern?: string | null;
+  equipment?: string[];
+  level?: number | null;
+  unit?: 'reps' | 'seconds' | 'meters' | 'calories';
+  secondsPerRep?: number | null;
+  videoRu?: string | null;
+  videoEn?: string | null;
+  image?: string | null;
+  tags?: string[];
+  isTest?: boolean;
 }

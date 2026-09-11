@@ -1,32 +1,30 @@
 import { clsx } from 'clsx';
 import { NavLink } from 'react-router';
-import { Icon, type IconName } from '@/components/ui/Icon';
+import { Logo } from '@/components/ui/Logo';
 import { useT } from '@/app/hooks/useT';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import type { TKey } from '@/i18n/index';
 
 interface NavItem {
   to: string;
-  icon: IconName;
   labelKey: TKey;
   end?: boolean;
 }
 
 const ITEMS: readonly NavItem[] = [
-  { to: '/', icon: 'home', labelKey: 'app.tabHome', end: true },
-  { to: '/courses', icon: 'courses', labelKey: 'app.tabCourses' },
-  { to: '/stats', icon: 'stats', labelKey: 'app.tabStats' },
-  { to: '/profile', icon: 'profile', labelKey: 'app.tabProfile' },
+  { to: '/', labelKey: 'app.tabHome', end: true },
+  { to: '/courses', labelKey: 'app.tabCourses' },
+  { to: '/stats', labelKey: 'app.tabStats' },
+  { to: '/profile', labelKey: 'app.tabProfile' },
 ];
 
 /** Admin destinations, appended for admins only — the same links the profile screen exposes. */
 const ADMIN_ITEMS: readonly NavItem[] = [
-  { to: '/admin', icon: 'settings', labelKey: 'app.adminPurchases', end: true },
-  { to: '/admin/workouts', icon: 'edit', labelKey: 'app.builderScreenTitle' },
+  { to: '/admin', labelKey: 'app.adminPurchases', end: true },
+  { to: '/admin/workouts', labelKey: 'app.builderScreenTitle' },
+  { to: '/admin/courses', labelKey: 'app.courseNavLabel' },
+  { to: '/admin/exercises', labelKey: 'app.exScreenTitle' },
 ];
-
-const LINK =
-  'flex items-center gap-3 border-l-2 py-2.5 pl-4 text-[15px] transition-colors' as const;
 
 function NavRow({ item }: { item: NavItem }) {
   const { t } = useT();
@@ -37,14 +35,15 @@ function NavRow({ item }: { item: NavItem }) {
       end={item.end}
       className={({ isActive }) =>
         clsx(
-          LINK,
+          'flex min-h-11 items-center px-5.5 transition-colors duration-150 ease-(--ease-out)',
+          // The same two voices as the tab bar: the current place is the one word in the display
+          // face, everything else is a small tracked label that only brightens under the pointer.
           isActive
-            ? 'border-l-accent text-text'
-            : 'border-l-transparent text-muted hover:border-l-border-strong hover:text-text',
+            ? 'font-display text-base text-text'
+            : 'control-label text-[10px] text-muted-2 hover:text-text',
         )
       }
     >
-      <Icon name={item.icon} size={18} />
       <span className="truncate">{label}</span>
     </NavLink>
   );
@@ -54,11 +53,10 @@ function NavRow({ item }: { item: NavItem }) {
  * The desktop navigation: a fixed column of destinations down the left edge, shown from `lg` up
  * where `BottomNav` hides.
  *
- * A phone tab bar transplanted onto a 1440px screen leaves four icons stranded at the bottom of
+ * A phone tab bar transplanted onto a 1440px screen leaves four words stranded at the bottom of
  * an otherwise empty page; a column puts them where a pointer already is and leaves room for the
- * admin destinations, which is where the owner actually spends her time. Marking the active item
- * with an accent left edge rather than a filled block is the same treatment the leaderboard uses
- * for "this is you".
+ * admin destinations, which is where the owner actually spends her time. It is typographic like
+ * the tab bar — no icons, no accent edge: the active item is simply the one set large.
  */
 export function SideNav() {
   const { t } = useT();
@@ -68,9 +66,7 @@ export function SideNav() {
       aria-label={t('app.navMain')}
       className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-8 overflow-y-auto border-r border-border py-6 lg:flex"
     >
-      <span className="wordmark px-4 text-xl">
-        Forma<span className="text-accent">.</span>
-      </span>
+      <Logo className="px-5.5 text-xl" />
       <div className="flex flex-col">
         {ITEMS.map((item) => (
           <NavRow key={item.to} item={item} />
@@ -78,7 +74,9 @@ export function SideNav() {
       </div>
       {admin ? (
         <div className="flex flex-col">
-          <span className="eyebrow px-4 pb-2">{t('app.adminTitle')}</span>
+          <span className="eyebrow mx-5.5 border-t border-border pt-4 pb-2">
+            {t('app.adminTitle')}
+          </span>
           {ADMIN_ITEMS.map((item) => (
             <NavRow key={item.to} item={item} />
           ))}

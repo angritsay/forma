@@ -3,7 +3,7 @@
  * estimate for workouts), a rest day, a milestone, a finished course, or "pick a course".
  */
 import { useMemo } from 'react';
-import { COURSE_BY_ID } from '@/content/registry';
+import { findCourse } from '@/content/catalogue';
 import type { Course, CourseNode, Exercise, Workout } from '@/content/schema';
 import { STEPS_GOAL } from '@/lib/training/constants';
 import { estimateDuration } from '@/lib/training/estimate';
@@ -48,7 +48,7 @@ export function useTodayModel(): TodayModel {
   const streakDays = streak.current;
 
   return useMemo<TodayModel>(() => {
-    const course = courseId ? COURSE_BY_ID.get(courseId) : undefined;
+    const course = courseId ? findCourse(courseId) : undefined;
     if (!course) return { kind: 'none' };
     const node = nextNode(course, row);
     if (!node) return { kind: 'completed', course };

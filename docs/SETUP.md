@@ -52,7 +52,37 @@ visible to customers until replaced.
 
 The schema lives in `supabase/migrations/` and is idempotent: re-running a file is safe.
 
-### Option A — SQL editor (no tooling)
+### Option A — two steps, no tooling (start here)
+
+`supabase/setup-all.sql` is every migration below concatenated in order by `npm run db:bundle`, so
+there is one thing to paste instead of ten, and no way to run them out of order.
+
+1. Open [`supabase/setup-all.sql`](../supabase/setup-all.sql). **Edit the admin block near the
+   top** — those addresses are the people who can open the admin panel. A line left as
+   `CHANGE-ME-…` is ignored, so filling in one and leaving the other alone is fine; fill in
+   neither and the script stops on its first statement, having changed nothing. That is
+   deliberate: an admins table holding only an address nobody can sign in with locks you out of
+   your own admin panel, and it is a slow thing to discover afterwards.
+
+   Anyone already in the table stays — the insert ignores addresses that are there already, so
+   listing one twice is harmless. To see who is already an admin:
+   `select email from public.admins order by email;`
+
+2. Dashboard → **SQL Editor** → **New query** → paste the whole file → **Run**. It ends with
+   "Success. No rows returned".
+3. Optional, and the reason the five existing courses become editable: the files in
+   [`supabase/course-import/`](../supabase/course-import/), one per course. Paste and run them
+   **in order** — a course's days reference its course row. Skip them and the course builder
+   still works, it is just empty.
+
+   They are `0009_course_import.sql` cut one course per file by `node scripts/db/split-import.mjs`,
+   because the whole thing is 660 KB — too big for a browser text area, and importing a file is
+   more ceremony than pasting five. Running the single migration instead (or letting the CLI apply
+   it) loads exactly the same rows; `scripts/db/verify-bundle.sh` checks that the two agree.
+
+Both steps are safe to re-run, and re-running is how an existing project is upgraded.
+
+### Option B — file by file
 
 Dashboard → **SQL Editor** → **New query**, paste each file in this order and click **Run**:
 
@@ -62,7 +92,18 @@ Dashboard → **SQL Editor** → **New query**, paste each file in this order an
 3. `supabase/migrations/0003_storage.sql` — private `videos` bucket and its policies
 4. `supabase/migrations/0004_content_seed.sql` — **required**: the course and workout
    catalogue the backend enforces (see §2.1)
-5. `supabase/seed.sql` — nothing runs by default; open it, uncomment the `insert into
+5. `supabase/migrations/0005_subscriptions.sql` — subscription plans, intents and activation
+6. `supabase/migrations/0006_custom_workouts.sql` — the `exercises` library, the coach-built
+   `custom_workouts` and the `assigned_workouts` that grant them to an email
+7. `supabase/migrations/0007_exercise_seed.sql` — generated: the exercise library, from
+   `content/exercises` (see §2.1)
+8. `supabase/migrations/0008_course_builder.sql` — `admin_courses` and `admin_course_days`,
+   the public `images` bucket, and `admin_publish_course()` (see §2.2)
+9. `supabase/migrations/0009_course_import.sql` — generated: the five courses written as files,
+   as rows the admin panel can edit (see §2.3). Optional, and safe to skip.
+10. `supabase/migrations/0010_public_course_pages.sql` — lets the static site read a published
+    course so it can have a landing page (see §2.4)
+11. `supabase/seed.sql` — nothing runs by default; open it, uncomment the `insert into
 public.admins` line with the coach's email (see §4)
 
 Each run must end with "Success. No rows returned". If a statement fails, fix the cause and
@@ -71,7 +112,7 @@ safe. Re-running the whole set in order is also how you upgrade an existing proj
 bounds are added as `not valid` constraints, so they apply to every new write without ever
 failing on rows written earlier.
 
-### Option B — Supabase CLI
+### Option C — Supabase CLI
 
 ```bash
 npm i -g supabase          # or: brew install supabase/tap/supabase
@@ -101,25 +142,105 @@ change a workout's `basePoints`.** Until you do: a new course id is rejected by 
 (`invalid_course`), and a new workout id still records sessions but caps their points at the
 lowest value the content model allows.
 
+### 2.2 Courses built in the admin panel (`0008_course_builder.sql`)
+
+A course does not have to be a file. `admin_courses` + `admin_course_days` hold courses the coach
+composes in the admin panel: the days in order, each one pointing at a `custom_workouts` row from
+the workout library, so a workout is built once and reused across days and courses.
+
+Two things to know:
+
+- **Publishing is what makes a course real.** A draft is visible only to admins.
+  `admin_publish_course(id)` validates it (at least four days, every training day carrying a
+  workout with at least one section) and then writes the rows the rest of the schema keys off:
+  `public.courses` (the id allowlist) and `public.workouts` (the points ceilings). Those two tables
+  have no write policy for anyone — this security-definer function is the only way in besides a
+  migration, which is why §2.1 still applies to the courses that live in content files.
+- **`slug_id` is frozen once published.** It is the id written into every purchase, session and
+  storage path, so renaming it would orphan that history. The table refuses the update.
+
+`admin_unpublish_course(id)` takes a course off the catalogue but leaves both generated rows in
+place, so people who already bought it keep their entitlement and their scoring.
+
+### 2.3 The compiled courses, as editable rows (`0009_course_import.sql`)
+
+The five courses live in `content/courses/*.ts`. To be able to open one in the admin panel and
+change a set count or the order of two days, they also have to exist as `admin_courses` +
+`admin_course_days` + `custom_workouts` rows:
+
+```bash
+node scripts/content/gen-course-import.mjs           # rewrites 0009_course_import.sql
+node scripts/content/gen-course-import.mjs --check   # CI-style check that it matches the content
+```
+
+Three things worth knowing:
+
+- **They arrive as drafts, and change nothing.** The app prefers compiled content on an id
+  collision (`setCatalogueOverlay` in `src/content/catalogue.ts`), so even after publishing one from
+  the admin panel the file keeps winning while it exists. Delete the course file to hand a course
+  over to the database for good.
+- **The conversion is lossless, and that is tested.** `src/lib/courses/draft.test.ts` takes every
+  workout of every course into the builder's structure and back, and requires the result to equal
+  what went in, block for block. That matters because 59 of the 147 blocks are EMOMs, AMRAPs,
+  for-time pieces and Tabatas whose timing has nowhere to live in a plain circuit.
+- **Workout ids get a course prefix.** Workout ids are unique _inside_ a course; `short_id` is
+  unique globally, and eighteen workouts share a name across courses. So `w_s01_emom` of the start
+  course becomes `start_w_s01_emom`. Progress is keyed on the node id, which is unchanged.
+
+### 2.4 A published course's page on the website (`0010_public_course_pages.sql`)
+
+Publishing a course makes it real in the app immediately. The website is different: the course
+pages are static HTML, generated once at build time, so a database course has to be _read during
+the build_.
+
+- **What becomes public.** 0010 lets an anonymous reader — including a build with no session —
+  see a published course's marketing fields and its days: name, description, who it is for, the
+  outcomes, price, FAQ, and the week-by-week shape of the programme. That is what the course page
+  already shows for the compiled courses.
+- **What does not.** `custom_workouts` is untouched: the exercises, reps and timings stay readable
+  only by an admin, by someone the workout was assigned to, or by someone who owns the course. A
+  database course's page therefore has no sample-workout section — that part of the page is for
+  the courses whose sample was chosen by hand in a content file.
+- **When the page appears.** On the next build. `.github/workflows/deploy.yml` runs nightly at
+  03:00 UTC for exactly this, and **Actions → Deploy site → Run workflow** does it now. The publish
+  tab in the admin panel says so too.
+
+The build needs `PUBLIC_SUPABASE_URL` and `PUBLIC_SUPABASE_ANON_KEY` as repository variables (§6) —
+without them it quietly builds the compiled courses only and says so in the log.
+
+### Verifying the migrations locally
+
+`supabase/tests/` runs the whole schema against a plain Postgres 16 — no Supabase needed. See the
+header of `supabase/tests/00_shim.sql` for the exact commands; the short version is: create a
+throwaway database, apply `00_shim.sql` and then every file in `supabase/migrations/` in order,
+then run `10_smoke.sql`, `20_subscriptions.sql` and `30_course_builder.sql`. Each ends with a
+"PASSED" line. The test files are **not** idempotent — they insert fixtures — so rebuild the
+database for each run.
+
 ### What the migrations create
 
-| Object                                                              | Purpose                                                                      |
-| ------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `profiles`                                                          | One row per auth user (trigger `on_auth_user_created`); own row read/write   |
-| `current_email()`                                                   | The caller's **verified** email (auth.users, confirmed + not banned)         |
-| `admins` + `is_admin()`                                             | Coach emails; gate for admin RPCs and video uploads                          |
-| `purchases`                                                         | `email ↔ course_id`, status `pending / active / refunded` (admin-only read)  |
-| `courses`, `workouts`                                               | Generated catalogue (§2.1): the id allowlist and the points ceilings         |
-| `create_order()` + `order_throttle`                                 | Anonymous RPC used by the landing order form (validates, throttles, upserts) |
-| `my_entitlements`                                                   | View: active courses of the signed-in user (`course_id`, `activated_at`)     |
-| `has_entitlement(course_id)`                                        | Does the caller own this course? (sessions, video access; admins own all)    |
-| `admin_set_purchase_status()`, `admin_add_purchase()`               | Admin RPCs behind the `/app/#/admin` screen                                  |
-| `user_course_state`, `workout_sessions`, `daily_logs`, `benchmarks` | Training data, own rows only                                                 |
-| `workout_sessions_guard` trigger                                    | Server timestamps, date window, per-workout points ceiling, 4 sessions/day   |
-| `steps_points()` + trigger                                          | Recomputes step points server-side so the leaderboard cannot be gamed        |
-| `get_leaderboard()`                                                 | Top 100 + own row; never returns emails                                      |
-| `get_my_totals()`                                                   | Points / workouts / minutes for the home screen                              |
-| Storage bucket `videos` (private)                                   | Read requires an active purchase of the course in the path, or `shared/`     |
+| Object                                                              | Purpose                                                                       |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `profiles`                                                          | One row per auth user (trigger `on_auth_user_created`); own row read/write    |
+| `current_email()`                                                   | The caller's **verified** email (auth.users, confirmed + not banned)          |
+| `admins` + `is_admin()`                                             | Coach emails; gate for admin RPCs and video uploads                           |
+| `purchases`                                                         | `email ↔ course_id`, status `pending / active / refunded` (admin-only read)   |
+| `courses`, `workouts`                                               | Generated catalogue (§2.1): the id allowlist and the points ceilings          |
+| `create_order()` + `order_throttle`                                 | Anonymous RPC used by the landing order form (validates, throttles, upserts)  |
+| `my_entitlements`                                                   | View: active courses of the signed-in user (`course_id`, `activated_at`)      |
+| `has_entitlement(course_id)`                                        | Does the caller own this course? (sessions, video access; admins own all)     |
+| `admin_set_purchase_status()`, `admin_add_purchase()`               | Admin RPCs behind the `/app/#/admin` screen                                   |
+| `user_course_state`, `workout_sessions`, `daily_logs`, `benchmarks` | Training data, own rows only                                                  |
+| `workout_sessions_guard` trigger                                    | Server timestamps, date window, per-workout points ceiling, 4 sessions/day    |
+| `steps_points()` + trigger                                          | Recomputes step points server-side so the leaderboard cannot be gamed         |
+| `get_leaderboard()`                                                 | Top 100 + own row; never returns emails                                       |
+| `get_my_totals()`                                                   | Points / workouts / minutes for the home screen                               |
+| `exercises`                                                         | The exercise library in the database; seeded from content, extendable by hand |
+| `custom_workouts`, `assigned_workouts`                              | Coach-built workouts and the emails they are granted to                       |
+| `admin_courses`, `admin_course_days`                                | Courses composed in the admin panel (§2.2); days point at `custom_workouts`   |
+| `admin_publish_course()`, `admin_unpublish_course()`                | The only non-migration writers of `courses` / `workouts` (§2.2)               |
+| `images` bucket                                                     | Public: course covers, day pictures, exercise stills (`videos` stays private) |
+| Storage bucket `videos` (private)                                   | Read requires an active purchase of the course in the path, or `shared/`      |
 
 ---
 
@@ -188,9 +309,9 @@ Dashboard → **Authentication → Email Templates**:
 
 Dashboard → **Authentication → URL Configuration**:
 
-- **Site URL**: your production origin, e.g. `https://<user>.github.io/<repo>` or
-  `https://forma.example.com`. It only feeds `{{ .SiteURL }}` in the email footer — the app does
-  not use redirects.
+- **Site URL**: the production origin — `https://forma-app.co`. It only feeds `{{ .SiteURL }}` in
+  the email footer; the app does not use redirects. Keep it in step with the `SITE_URL`
+  repository variable, or the sign-in email points at the previous address.
 - **Redirect URLs**: nothing to add. The OTP flow never redirects.
 
 ### 3.4 Rate limits
@@ -221,7 +342,7 @@ on, and it costs nothing. Swapping to a provider later is a five-minute settings
 | Yandex 360 for Business | RU audience, mail.ru / yandex.ru inboxing | Use an app password, `smtp.yandex.ru:465`                             |
 | Mail.ru for business    | RU audience                               | `smtp.mail.ru:465`, app password                                      |
 
-Set **Sender email** to an address on your own domain (e.g. `hello@forma.example.com`) and
+Set **Sender email** to an address on your own domain (e.g. `hello@forma-app.co`) and
 **Sender name** to `Forma`. Add SPF, DKIM and DMARC records at your DNS provider; without them
 Gmail and Mail.ru will junk the codes.
 
@@ -291,14 +412,14 @@ a signed URL valid for one hour. Plain `https://…` URLs (YouTube, a CDN) pass 
 
 All variables are read at build time. `PUBLIC_*` values are embedded in the static bundle.
 
-| Variable                                                                                               | Local `.env` | GitHub Pages      | Value                                                            |
-| ------------------------------------------------------------------------------------------------------ | ------------ | ----------------- | ---------------------------------------------------------------- |
-| `PUBLIC_SUPABASE_URL`                                                                                  | yes          | repo **variable** | Project URL from §1                                              |
-| `PUBLIC_SUPABASE_ANON_KEY`                                                                             | yes          | repo **variable** | anon / publishable key from §1                                   |
-| `SITE_URL`                                                                                             | yes          | repo **variable** | `https://<user>.github.io/<repo>` or `https://forma.example.com` |
-| `BASE_PATH`                                                                                            | yes          | repo **variable** | `/<repo>/` for a project page, `/` for a custom domain           |
-| `INDEXNOW_KEY`                                                                                         | optional     | repo **secret**   | 8–128 hex/alphanumeric chars; see docs/SEO.md                    |
-| `PUBLIC_YANDEX_METRIKA_ID`, `PUBLIC_GA_ID`, `PUBLIC_YANDEX_VERIFICATION`, `PUBLIC_GOOGLE_VERIFICATION` | optional     | repo variables    | Rendered only when set                                           |
+| Variable                                                                                               | Local `.env` | GitHub Pages      | Value                                                         |
+| ------------------------------------------------------------------------------------------------------ | ------------ | ----------------- | ------------------------------------------------------------- |
+| `PUBLIC_SUPABASE_URL`                                                                                  | yes          | repo **variable** | Project URL from §1                                           |
+| `PUBLIC_SUPABASE_ANON_KEY`                                                                             | yes          | repo **variable** | anon / publishable key from §1                                |
+| `SITE_URL`                                                                                             | yes          | repo **variable** | `https://forma-app.co` (or `https://<user>.github.io/<repo>`) |
+| `BASE_PATH`                                                                                            | yes          | repo **variable** | `/<repo>/` for a project page, `/` for a custom domain        |
+| `INDEXNOW_KEY`                                                                                         | optional     | repo **secret**   | 8–128 hex/alphanumeric chars; see docs/SEO.md                 |
+| `PUBLIC_YANDEX_METRIKA_ID`, `PUBLIC_GA_ID`, `PUBLIC_YANDEX_VERIFICATION`, `PUBLIC_GOOGLE_VERIFICATION` | optional     | repo variables    | Rendered only when set                                        |
 
 Local: `cp .env.example .env` and fill in the values (`.env` is git-ignored).
 

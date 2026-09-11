@@ -3,7 +3,7 @@
  * labels for targets / sets / block formats, and result shapes.
  */
 import type { BlockFormat, BlockType, Exercise, ExerciseUnit, Load } from '@/content/schema';
-import { EXERCISE_BY_ID } from '@/content/registry';
+import { findExercise } from '@/content/catalogue';
 import { plural, type Locale, type TKey, type TParams } from '@/i18n/index';
 import { ISOMETRIC_ID_PATTERN } from '@/lib/training/constants';
 import { conflictsWithLimitations } from '@/lib/training/prescribe';
@@ -30,9 +30,12 @@ export function isWorkType(step: PlayerStep): boolean {
   return step.kind === 'work' || step.kind === 'amrap' || step.kind === 'fortime';
 }
 
-export function findExercise(id: string): Exercise | undefined {
-  return EXERCISE_BY_ID.get(id);
-}
+/*
+ * Re-exported so the player's own modules have one place to ask from. It used to read the compiled
+ * registry directly; it now goes through the catalogue, which also knows the exercises written in
+ * the admin panel — without that, a yoga pose would be an unknown id mid-workout.
+ */
+export { findExercise };
 
 export function findBlock(p: PrescribedWorkout, blockId: string): PrescribedBlock | undefined {
   return p.blocks.find((b) => b.blockId === blockId);

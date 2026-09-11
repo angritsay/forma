@@ -36,15 +36,14 @@ relatedExercises:
   - kb_turkish_get_up
   - kb_snatch
 relatedCourses:
-  - kettlebell
-  - dumbbells
+  - start
 relatedGuides:
   - dumbbell-home-workout
   - workout-formats
   - crossfit-home-beginners
   - home-gym-equipment
 cta:
-  courseId: kettlebell
+  courseId: start
 priority: 0.8
 draft: false
 ---

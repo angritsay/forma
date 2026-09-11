@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 import type { ReactNode } from 'react';
-import { Icon, type IconName } from './Icon';
+import type { IconName } from './Icon';
 
 export interface StatTrend {
   /** Signed change; the sign picks the color. */
@@ -12,6 +12,11 @@ export interface StatTrend {
 export interface StatTileProps {
   value: ReactNode;
   label: ReactNode;
+  /**
+   * Accepted for compatibility and not drawn. A stat is a number with its name under it; the
+   * brandbook takes the decorative icon off stat tiles because the number already says what it
+   * is, and a row of little pictures next to a row of figures is noise.
+   */
   icon?: IconName;
   /** Unit shown next to the value in a smaller size. */
   unit?: ReactNode;
@@ -21,23 +26,16 @@ export interface StatTileProps {
 }
 
 /**
- * A statistic set editorially: the number first and large, its name underneath as a kicker.
+ * A statistic set editorially: the number first and large in the display face, its name
+ * underneath as a kicker.
  *
- * This is no longer a Card. A row of bordered, filled boxes each holding one small number is
- * what a dashboard looks like; the brandbook's version is a figure you read at a glance with a
- * label under it, and the containing grid draws hairlines between them. Callers that want the
- * cells separated should put `divide-x divide-border` on the grid rather than asking for a
- * surface here — hence the removed `level` prop.
+ * This is not a Card. A row of bordered, filled boxes each holding one small number is what a
+ * dashboard looks like; the brandbook's version is a figure you read at a glance with a label
+ * under it, and the containing grid draws hairlines between them. Callers that want the cells
+ * separated should put `divide-x divide-border` on the grid rather than asking for a surface
+ * here — hence no `level` prop.
  */
-export function StatTile({
-  value,
-  label,
-  icon,
-  unit,
-  trend,
-  size = 'md',
-  className,
-}: StatTileProps) {
+export function StatTile({ value, label, unit, trend, size = 'md', className }: StatTileProps) {
   return (
     <div className={clsx('flex flex-col gap-2 px-4 py-5', className)}>
       <div className="flex items-baseline gap-1.5">
@@ -46,12 +44,9 @@ export function StatTile({
         >
           {value}
         </span>
-        {unit ? <span className="text-sm text-muted">{unit}</span> : null}
+        {unit ? <span className="text-[13px] text-muted">{unit}</span> : null}
       </div>
-      <div className="flex items-center justify-between gap-2 text-muted">
-        <span className="eyebrow">{label}</span>
-        {icon ? <Icon name={icon} size={16} /> : null}
-      </div>
+      <span className="eyebrow">{label}</span>
       {trend ? (
         <span
           className={clsx(

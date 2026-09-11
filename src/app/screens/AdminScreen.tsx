@@ -8,7 +8,7 @@ import { Navigate, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Icon } from '@/components/ui/Icon';
+import { Glyph } from '@/components/ui/Icon';
 import { IconButton } from '@/components/ui/IconButton';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
@@ -80,6 +80,13 @@ const FILTER_LABEL: Record<StatusFilter, TKey> = {
   active: STATUS_LABEL.active,
   refunded: STATUS_LABEL.refunded,
 };
+
+/** The three authoring tools, in the order the coach reaches for them. */
+const TOOLS: { key: TKey; to: string }[] = [
+  { key: 'app.builderScreenTitle', to: '/admin/workouts' },
+  { key: 'app.courseScreenTitle', to: '/admin/courses' },
+  { key: 'app.exScreenTitle', to: '/admin/exercises' },
+];
 
 function ListSkeleton() {
   return (
@@ -267,12 +274,18 @@ export default function AdminScreen() {
       back="/profile"
       title={t('app.adminTitle')}
       right={
+        /*
+         * Reload is an icon-only control, and its mark stays an SVG: there is no glyph for
+         * "again" in the brand's set, and the arrow-in-a-loop is a physical sign a glyph cannot
+         * say. Monochrome, 16px, with its name on the button.
+         */
         <IconButton
           label={t('app.adminRefresh')}
           icon={
-            (subscriptions ? subStatus : status) === 'loading' ? <Spinner size={18} /> : 'refresh'
+            (subscriptions ? subStatus : status) === 'loading' ? <Spinner size={16} /> : 'refresh'
           }
           variant="ghost"
+          size="sm"
           disabled={admin !== true || (subscriptions ? subStatus : status) === 'loading'}
           onClick={reload}
         />
@@ -310,7 +323,6 @@ export default function AdminScreen() {
     } else if (subStatus === 'error') {
       body = (
         <EmptyState
-          icon="warning"
           title={t('app.adminSubErrorTitle')}
           description={errorText(subError)}
           action={
@@ -322,11 +334,7 @@ export default function AdminScreen() {
       );
     } else if (subRows.length === 0) {
       body = (
-        <EmptyState
-          icon="search"
-          title={t('app.adminEmptyTitle')}
-          description={t('app.adminSubEmptyBody')}
-        />
+        <EmptyState title={t('app.adminEmptyTitle')} description={t('app.adminSubEmptyBody')} />
       );
     } else {
       body = (
@@ -342,7 +350,6 @@ export default function AdminScreen() {
   } else if (status === 'error') {
     body = (
       <EmptyState
-        icon="warning"
         title={t('app.adminErrorTitle')}
         description={errorText(error)}
         action={
@@ -353,13 +360,7 @@ export default function AdminScreen() {
       />
     );
   } else if (rows.length === 0) {
-    body = (
-      <EmptyState
-        icon="search"
-        title={t('app.adminEmptyTitle')}
-        description={t('app.adminEmptyBody')}
-      />
-    );
+    body = <EmptyState title={t('app.adminEmptyTitle')} description={t('app.adminEmptyBody')} />;
   } else {
     body = (
       <PurchaseList
@@ -377,7 +378,7 @@ export default function AdminScreen() {
         <Button
           size="lg"
           fullWidth
-          icon={<Icon name="plus" size={18} />}
+          icon={<Glyph size={16}>+</Glyph>}
           onClick={() => {
             if (subscriptions) {
               setSubAddError(null);
@@ -393,14 +394,32 @@ export default function AdminScreen() {
       }
     >
       <div className="flex flex-col gap-4 py-2">
-        <Button
-          variant="secondary"
-          fullWidth
-          icon={<Icon name="edit" size={18} />}
-          onClick={() => navigate('/admin/workouts')}
-        >
-          {t('app.builderScreenTitle')}
-        </Button>
+        {/*
+         * The coach's authoring tools as a numbered index — 01 / 02 / 03, hairlines, a › at the
+         * end of each row — rather than three framed buttons with pictures on them. Hidden from
+         * `lg` up, where SideNav lists the same three and repeating them is just clutter in the
+         * screen she works in all day.
+         */}
+        <nav aria-label={t('app.adminTitle')} className="flex flex-col lg:hidden">
+          {TOOLS.map((tool, i) => (
+            <button
+              key={tool.to}
+              type="button"
+              onClick={() => navigate(tool.to)}
+              className="flex w-full items-center gap-4 border-t border-border py-3.5 text-left transition-colors duration-150 ease-(--ease-out) first:border-t-0 hover:bg-surface-2 active:bg-surface-3"
+            >
+              <span className="numeral tabular w-6 shrink-0 text-[13px] text-muted-2">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <span className="font-display min-w-0 flex-1 truncate text-[15px]">
+                {t(tool.key)}
+              </span>
+              <Glyph size={16} className="shrink-0 text-muted-2">
+                ›
+              </Glyph>
+            </button>
+          ))}
+        </nav>
         {PLANS_ENABLED ? (
           <SegmentedControl<Tab>
             fullWidth
@@ -421,7 +440,6 @@ export default function AdminScreen() {
           spellCheck={false}
           aria-label={t('app.adminSearch')}
           placeholder={t('app.adminSearch')}
-          leading={<Icon name="search" size={18} />}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -459,7 +477,7 @@ export default function AdminScreen() {
             {subscriptions ? t('app.adminSubscriptions') : t('app.adminPurchases')}
           </h2>
           {(subscriptions ? subStatus : status) === 'ready' ? (
-            <span className="eyebrow">{countWord}</span>
+            <span className="eyebrow tabular">{countWord}</span>
           ) : null}
         </div>
         {body}

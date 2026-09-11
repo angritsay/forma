@@ -13,6 +13,8 @@ export default tseslint.config(
       'public/**',
       '**/*.astro',
       'supabase/functions/**/index.ts',
+      // The vendored design system: reference .jsx for a browser bundle, not this toolchain.
+      'design/**',
     ],
   },
   js.configs.recommended,

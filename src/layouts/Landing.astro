@@ -3,16 +3,23 @@
  * Landing shell: Base + top navigation (with a mobile menu) + footer.
  * The landing area owns the visual design of nav/footer; other areas only pass props.
  *
+ * The header is the lockup «FORMA // Сергей Титов» on the left, the navigation as text-only caps
+ * kickers, one white button for the app, and a hairline under it all. No icons anywhere — the
+ * mobile menu opens on the word «Меню» and closes on a × glyph. The footer is the mark, the
+ * tagline and three columns of links divided by hairlines, not boxes.
+ *
  * `sitePath` / `localizedPaths` are forwarded to <SeoHead> for the canonical URL (and for the
  * hreflang alternates, which a single published language leaves empty).
  */
 import Base from './Base.astro';
 import SeoHead from '@/components/seo/SeoHead.astro';
 import Analytics from '@/components/seo/Analytics.astro';
+import Logo from '@/components/landing/Logo.astro';
 import { t } from '@/i18n/index';
 import { href, appHref } from '@/lib/util/paths';
 import { BRAND } from '@content/site/brand';
 import { LINKS } from '@content/site/links';
+import { PLANS_ENABLED } from '@content/site/plans';
 import type { Locale } from '@/content/schema';
 
 interface Props {
@@ -36,7 +43,12 @@ const year = new Date().getFullYear();
 
 const navLinks = [
   { href: href(locale, '/courses/'), label: t(locale, 'landing.navCourses') },
-  { href: href(locale, '/subscribe/'), label: t(locale, 'landing.navSubscribe') },
+  // While the subscription is off sale there is no /subscribe/ page, so the nav must not offer
+  // one: every other entry point already checks this flag, and an unguarded link in the header
+  // sits on every page of the site — the most visible 404 it is possible to ship.
+  ...(PLANS_ENABLED
+    ? [{ href: href(locale, '/subscribe/'), label: t(locale, 'landing.navSubscribe') }]
+    : []),
   { href: href(locale, '/exercises/'), label: t(locale, 'landing.navExercises') },
   { href: href(locale, '/guides/'), label: t(locale, 'landing.navGuides') },
   { href: href(locale, '/about/'), label: t(locale, 'landing.navAbout') },
@@ -57,6 +69,9 @@ const socials = [
   { url: BRAND.instagram, label: 'Instagram' },
   { url: BRAND.youtube, label: 'YouTube' },
 ].filter((s) => Boolean(s.url));
+
+const primaryLink =
+  'control-label inline-flex h-10 items-center rounded-control bg-primary px-4.5 text-[12px] text-on-primary transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-85 active:scale-[0.98]';
 ---
 
 <Base locale={locale}>
@@ -68,25 +83,35 @@ const socials = [
 
   <a
     href="#main"
-    class="control-label sr-only z-50 rounded-control bg-accent px-5 text-[12px] text-on-primary focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:inline-flex focus:min-h-11 focus:items-center"
+    class="control-label sr-only z-50 rounded-control bg-primary px-5 text-[12px] text-on-primary focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:inline-flex focus:min-h-11 focus:items-center"
   >
     {t(locale, 'landing.skipToContent')}
   </a>
 
-  <header class="sticky top-0 z-40 border-b border-border bg-bg/80 backdrop-blur">
+  <header class="sticky top-0 z-40 border-b border-border bg-bg/85 backdrop-blur">
     <nav
-      class="relative mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3.5"
+      class="relative mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-5 md:h-18"
       aria-label={t(locale, 'landing.navMenu')}
     >
-      <a href={href(locale, '/')} class="wordmark text-2xl" aria-label={BRAND.name}>
-        {BRAND.name}<span class="text-accent">.</span>
+      <!--
+        The lockup needs room. On a 390px header, next to the app button and the menu, «FORMA //
+        Сергей Титов» has none: the separator collapses and his name wraps under the mark, which
+        reads as one broken word rather than as a lockup. The mark alone is the correct form at
+        that width — the brandbook's lockup is for where it fits.
+      -->
+      <a href={href(locale, '/')} class="text-[17px] text-text md:text-lg">
+        <Logo label={BRAND.name} class="md:hidden" />
+        <Logo lockup label={BRAND.name} class="hidden md:inline-flex" />
       </a>
 
-      <ul class="hidden items-center gap-7 text-sm text-muted md:flex">
+      <ul class="hidden items-center gap-7 md:flex">
         {
           navLinks.map((x) => (
             <li>
-              <a class="transition hover:text-text" href={x.href}>
+              <a
+                class="eyebrow tap-target-y inline-flex items-center transition-colors duration-150 hover:text-text"
+                href={x.href}
+              >
                 {x.label}
               </a>
             </li>
@@ -95,64 +120,38 @@ const socials = [
       </ul>
 
       <div class="flex items-center gap-2">
-        <a
-          href={appHref()}
-          class="control-label hidden min-h-11 items-center rounded-control bg-accent px-4 text-[12px] text-on-primary transition hover:opacity-85 sm:inline-flex"
-        >
+        <a href={appHref()} class:list={[primaryLink, 'hidden sm:inline-flex']}>
           {t(locale, 'landing.navApp')}
         </a>
 
         <details class="group md:hidden" data-mobile-nav>
+          <!--
+            A word, not a hamburger: the brand has almost no icons, and «Меню» says what three
+            lines only imply. The open state shows a × glyph, which is punctuation, not a picture.
+          -->
           <summary
-            class="flex size-11 cursor-pointer list-none items-center justify-center rounded-control border border-border text-text [&::-webkit-details-marker]:hidden"
+            class="control-label flex h-10 min-w-11 cursor-pointer list-none items-center justify-center whitespace-nowrap rounded-control border border-border-strong px-3 text-[12px] text-text [&::-webkit-details-marker]:hidden"
             aria-label={t(locale, 'landing.navMenu')}
             aria-expanded="false"
             aria-controls="mobile-nav-panel"
           >
-            <svg
-              class="group-open:hidden"
-              width="18"
-              height="18"
-              viewBox="0 0 18 18"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              aria-hidden="true"
-            >
-              <path d="M2 4.5h14M2 9h14M2 13.5h14"></path>
-            </svg>
-            <svg
-              class="hidden group-open:block"
-              width="18"
-              height="18"
-              viewBox="0 0 18 18"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              aria-hidden="true"
-            >
-              <path d="M3 3l12 12M15 3L3 15"></path>
-            </svg>
+            <span class="group-open:hidden">{t(locale, 'landing.navMenu')}</span>
+            <span class="glyph hidden text-lg group-open:inline-flex" aria-hidden="true">×</span>
           </summary>
           <div
             id="mobile-nav-panel"
-            class="absolute inset-x-0 top-full border-b border-border bg-bg px-5 pt-2 pb-6 shadow-card"
+            class="absolute inset-x-0 top-full border-b border-border bg-bg px-5 pt-2 pb-6"
           >
-            <ul class="flex flex-col">
+            <ul class="flex flex-col divide-y divide-border">
               <li>
-                <a
-                  class="flex min-h-11 items-center py-3 text-lg font-medium"
-                  href={href(locale, '/')}
-                >
+                <a class="font-display flex min-h-12 items-center text-sm" href={href(locale, '/')}>
                   {t(locale, 'landing.navHome')}
                 </a>
               </li>
               {
                 navLinks.map((x) => (
                   <li>
-                    <a class="flex min-h-11 items-center py-3 text-lg font-medium" href={x.href}>
+                    <a class="font-display flex min-h-12 items-center text-sm" href={x.href}>
                       {x.label}
                     </a>
                   </li>
@@ -160,7 +159,7 @@ const socials = [
               }
               <li>
                 <a
-                  class="flex min-h-11 items-center py-3 text-lg font-medium"
+                  class="font-display flex min-h-12 items-center text-sm"
                   href={href(locale, '/contact/')}
                 >
                   {t(locale, 'landing.navContact')}
@@ -169,7 +168,7 @@ const socials = [
             </ul>
             <a
               href={appHref()}
-              class="control-label mt-3 flex min-h-11 items-center justify-center rounded-control bg-accent px-5 py-3 text-[13px] text-on-primary"
+              class="control-label mt-4 flex h-12 items-center justify-center rounded-control bg-primary px-5 text-[13px] text-on-primary"
             >
               {t(locale, 'landing.navApp')}
             </a>
@@ -185,31 +184,32 @@ const socials = [
 
   <footer class="mt-24 border-t border-border">
     <div
-      class="mx-auto grid max-w-6xl gap-10 px-5 py-12 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]"
+      class="mx-auto grid max-w-6xl gap-x-10 px-5 py-12 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)]"
     >
-      <div>
-        <a href={href(locale, '/')} class="wordmark text-2xl"
-          >{BRAND.name}<span class="text-accent">.</span></a
-        >
-        <p class="mt-3 max-w-xs text-sm leading-relaxed text-muted">
+      <div class="pb-8 md:pb-0">
+        <a href={href(locale, '/')} class="inline-flex text-2xl text-text">
+          <Logo label={BRAND.name} />
+        </a>
+        <p class="mt-4 max-w-xs text-sm leading-relaxed text-muted">
           {t(locale, 'common.tagline')}
         </p>
         <a
           href={appHref()}
-          class="control-label mt-5 inline-flex min-h-11 items-center rounded-control border border-border-strong px-4 text-[12px] transition hover:border-text"
+          class="control-label mt-6 inline-flex h-10 items-center rounded-control border border-border-strong bg-surface-2 px-4.5 text-[12px] transition-colors duration-150 hover:bg-surface-3"
         >
           {t(locale, 'common.openApp')}
         </a>
       </div>
-      <div>
+      <!-- Each column starts with a hairline on the phone and a hairline on its left above it. -->
+      <div class="border-t border-border pt-6 md:border-t-0 md:border-l md:pt-0 md:pl-6">
         <p class="eyebrow">
           {t(locale, 'landing.footerProduct')}
         </p>
-        <ul class="mt-3 flex flex-col gap-2 text-sm">
+        <ul class="mt-4 flex flex-col gap-2.5 text-sm">
           {
             productLinks.map((x) => (
               <li>
-                <a class="text-muted transition hover:text-text" href={x.href}>
+                <a class="text-muted transition-colors duration-150 hover:text-text" href={x.href}>
                   {x.label}
                 </a>
               </li>
@@ -217,15 +217,17 @@ const socials = [
           }
         </ul>
       </div>
-      <div>
+      <div
+        class="mt-8 border-t border-border pt-6 md:mt-0 md:border-t-0 md:border-l md:pt-0 md:pl-6"
+      >
         <p class="eyebrow">
           {t(locale, 'landing.footerLegal')}
         </p>
-        <ul class="mt-3 flex flex-col gap-2 text-sm">
+        <ul class="mt-4 flex flex-col gap-2.5 text-sm">
           {
             legalLinks.map((x) => (
               <li>
-                <a class="text-muted transition hover:text-text" href={x.href}>
+                <a class="text-muted transition-colors duration-150 hover:text-text" href={x.href}>
                   {x.label}
                 </a>
               </li>
@@ -233,14 +235,16 @@ const socials = [
           }
         </ul>
       </div>
-      <div>
+      <div
+        class="mt-8 border-t border-border pt-6 md:mt-0 md:border-t-0 md:border-l md:pt-0 md:pl-6"
+      >
         <p class="eyebrow">
           {t(locale, 'landing.footerReach')}
         </p>
-        <ul class="mt-3 flex flex-col gap-2 text-sm">
+        <ul class="mt-4 flex flex-col gap-2.5 text-sm">
           <li>
             <a
-              class="text-muted transition break-words hover:text-text"
+              class="break-words text-muted transition-colors duration-150 hover:text-text"
               href={`mailto:${contactEmail}`}
             >
               {contactEmail}
@@ -249,7 +253,11 @@ const socials = [
           {
             socials.map((s) => (
               <li>
-                <a class="text-muted transition hover:text-text" href={s.url} rel="noopener">
+                <a
+                  class="text-muted transition-colors duration-150 hover:text-text"
+                  href={s.url}
+                  rel="noopener"
+                >
                   {s.label}
                 </a>
               </li>
@@ -259,10 +267,14 @@ const socials = [
       </div>
     </div>
     <div class="border-t border-border">
-      <p class="mx-auto max-w-6xl px-5 py-5 text-sm text-muted">
-        © {year}
-        {BRAND.organization}
-      </p>
+      <div
+        class="mx-auto flex max-w-6xl flex-wrap items-baseline justify-between gap-x-6 gap-y-2 px-5 py-5 text-xs tracking-[0.04em] text-muted-2"
+      >
+        <span class="inline-flex text-sm text-muted">
+          <Logo lockup label={BRAND.name} />
+        </span>
+        <span>© {year} {BRAND.organization}</span>
+      </div>
     </div>
   </footer>
 

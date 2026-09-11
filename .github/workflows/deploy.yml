@@ -30,6 +30,11 @@ name: Deploy site
 on:
   push:
     branches: [main]
+  # A course published from the admin panel lives in the database, and its landing page is static
+  # HTML built from it — so the page appears on the next build, not on publish. A nightly rebuild
+  # means that happens by itself; "Run workflow" below does it now. See docs/SETUP.md §2.4.
+  schedule:
+    - cron: '0 3 * * *'
   workflow_dispatch:
 
 permissions:

@@ -1,10 +1,12 @@
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
-import { Icon } from '@/components/ui/Icon';
+import { Glyph } from '@/components/ui/Icon';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import type { Course } from '@/content/schema';
+import { courseTileVars } from '@/lib/ui/tile';
 import { useT } from '@/app/hooks/useT';
 import { courseLandingHref, courseSignatureExercise } from '@/app/features/courses/courseMeta';
+import { courseTitle } from '@/content/catalogue';
 
 export interface CourseRowProps {
   title: ReactNode;
@@ -23,7 +25,7 @@ export interface CourseRowProps {
  */
 export function CourseRow({ title, index, children }: CourseRowProps) {
   return (
-    <section className="flex flex-col">
+    <section className="mt-6 flex flex-col">
       <div className="flex items-baseline justify-between gap-3 border-t border-border pt-5 pb-1">
         <h2 className="font-display text-xl">{title}</h2>
         {index ? <span className="eyebrow">{index}</span> : null}
@@ -46,23 +48,23 @@ interface MiniCardProps {
 /**
  * One course as a ruled row: numeral, pictogram on its course tile, name, progress.
  *
- * A locked course keeps the same row rather than becoming a different object — the difference is
- * carried by dimming it and swapping the chevron for a lock, the way a printed catalogue index
- * distinguishes what you have from what you do not.
+ * The tile is the one place on the home screen the programme colour lands — the row carries
+ * `--course-tile`, so the square and the 4px progress fill take the course's colour and the figure
+ * draws in the ink that colour wants. The numeral stays grey; a list of positions is not a list of
+ * current days. A locked course keeps the same row rather than becoming a different object: it is
+ * dimmed, and its trailing mark is an arrow leading out to the page where access is bought.
  */
 export function CourseMiniCard({ course, pct = 0, locked = false, n, onOpen }: MiniCardProps) {
   const { t, l, locale } = useT();
   const exercise = courseSignatureExercise(course);
+  const vars = courseTileVars(course.tile);
 
   const body = (
     <>
       {n !== undefined ? (
-        <span className="numeral pt-0.5 text-sm text-accent">{String(n).padStart(2, '0')}</span>
+        <span className="numeral pt-0.5 text-sm text-muted">{String(n).padStart(2, '0')}</span>
       ) : null}
-      <span
-        className="hero-art flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-control"
-        style={{ '--course-tile': course.tile } as CSSProperties}
-      >
+      <span className="hero-art flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-tile">
         <ExerciseFigure
           animation={exercise?.animation ?? 'air_squat'}
           variant="thumb"
@@ -71,7 +73,7 @@ export function CourseMiniCard({ course, pct = 0, locked = false, n, onOpen }: M
       </span>
       <span className="min-w-0 flex-1">
         <span className="font-display block truncate text-[15px] leading-[1.24]">
-          {l(course.name)}
+          {l(courseTitle(course))}
         </span>
         {locked ? (
           <span className="mt-0.5 block truncate text-xs text-muted">
@@ -79,16 +81,16 @@ export function CourseMiniCard({ course, pct = 0, locked = false, n, onOpen }: M
           </span>
         ) : (
           <span className="mt-2 flex flex-col gap-1">
-            <ProgressBar value={pct / 100} tone="accent" size="sm" label={l(course.name)} />
+            <ProgressBar value={pct / 100} size="sm" label={l(courseTitle(course))} />
             <span className="tabular text-xs text-muted">
               {t('app.homeCourseProgress', { pct })}
             </span>
           </span>
         )}
       </span>
-      <span className="flex shrink-0 items-center text-muted">
-        <Icon name={locked ? 'lock' : 'chevron'} size={16} />
-      </span>
+      <Glyph size={16} className="shrink-0 text-muted-2">
+        {locked ? '→' : '›'}
+      </Glyph>
     </>
   );
 
@@ -99,8 +101,9 @@ export function CourseMiniCard({ course, pct = 0, locked = false, n, onOpen }: M
     return (
       <a
         href={courseLandingHref(locale, course)}
-        className={`${classes} opacity-60`}
-        aria-label={`${l(course.name)} — ${t('app.homeCourseGet')}`}
+        className={`${classes} opacity-50`}
+        style={vars}
+        aria-label={`${l(courseTitle(course))} — ${t('app.homeCourseGet')}`}
       >
         {body}
       </a>
@@ -108,10 +111,14 @@ export function CourseMiniCard({ course, pct = 0, locked = false, n, onOpen }: M
   }
   if (onOpen) {
     return (
-      <button type="button" onClick={onOpen} className={classes}>
+      <button type="button" onClick={onOpen} className={classes} style={vars}>
         {body}
       </button>
     );
   }
-  return <div className={classes}>{body}</div>;
+  return (
+    <div className={classes} style={vars}>
+      {body}
+    </div>
+  );
 }

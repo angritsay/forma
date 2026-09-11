@@ -92,7 +92,7 @@ export function WorkTimerStep({
               {step.item.perSide ? ` · ${t('training.perSide')}` : ''}
             </Chip>
           ) : null}
-          {load ? <Chip icon="bolt">{load}</Chip> : null}
+          {load ? <Chip>{load}</Chip> : null}
         </div>
       </div>
     </div>

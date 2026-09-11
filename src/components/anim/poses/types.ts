@@ -87,7 +87,7 @@ export type Prop =
   | { kind: 'bar' }
   /** Chair silhouette; `x` is the seat centre (default 60: behind a side-view athlete). */
   | { kind: 'chair'; x?: number }
-  /** Plyo box: a rounded rectangle standing on the ground. Defaults: height 40, width 44, x 130. */
+  /** Plyo box: an outlined rectangle standing on the ground. Defaults: height 40, width 44, x 130. */
   | { kind: 'box'; height?: number; width?: number; x?: number };
 
 export interface PoseSet {

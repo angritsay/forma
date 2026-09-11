@@ -3,14 +3,17 @@
  * Course card for the home grid and the courses hub: the course tile carrying the signature
  * exercise figure (static render), then name, tagline, metric chips, price and a link.
  *
- * The card keeps its 24px radius and its border — this is the one place on the landing where a
- * course has to read as a discrete, buyable object, and a grid of ruled rows would lose that. The
- * art above it is a flat course tile now instead of a pastel gradient, the chips are outlines,
- * and the "view" control is a squared caps label rather than a white pill.
+ * The one place on the landing where a course has to read as a discrete, buyable object, so it
+ * keeps a 1px frame — and nothing else: no radius, no shadow. The cover is the programme colour
+ * set through `courseTileStyle()`, which also sets the ink the figure and the stamps on it are
+ * drawn in, so a yellow cover never carries white text. The level is stamped in the programme
+ * colour's own badge tone — the one badge allowed to take colour, because it names the
+ * programme — and the number in the corner is the card's numeral, not a decoration.
  */
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
 import type { Course, Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
+import { courseTileStyle } from '@/lib/ui/tile';
 import { formatPrice, isFree } from '@content/site/pricing';
 import FeatureChip from './FeatureChip.astro';
 import {
@@ -42,7 +45,8 @@ const price = isFree(course.price, locale)
 ---
 
 <article
-  class="group flex h-full flex-col overflow-hidden rounded-card border border-border transition hover:border-border-strong"
+  class="group flex h-full flex-col overflow-hidden border border-border transition-colors duration-150 hover:border-border-strong"
+  style={courseTileStyle(course.tile)}
   data-course-card
   data-equipment={course.equipment.join(' ')}
   data-level={course.level}
@@ -54,7 +58,6 @@ const price = isFree(course.price, locale)
     <a
       href={url}
       class="hero-art relative flex aspect-[16/10] items-center justify-center overflow-hidden"
-      style={`--course-tile:${course.tile}`}
       aria-hidden="true"
       tabindex="-1"
     >
@@ -72,46 +75,54 @@ const price = isFree(course.price, locale)
     </a>
     {
       n !== undefined && (
-        <span class="numeral absolute top-4 left-5 text-sm text-tile-fg/70">
+        <span class="numeral absolute top-4 left-5 text-sm text-tile-fg">
           {String(n).padStart(2, '0')}
         </span>
       )
     }
-    <span class="eyebrow absolute right-5 bottom-4 text-tile-fg">
+    <span
+      class="absolute right-4 bottom-4 inline-flex h-6 items-center bg-ink/85 px-2.5 text-[11px] font-semibold tracking-[0.12em] text-paper uppercase"
+    >
       {levelLabel(locale, course.level)}
     </span>
   </div>
 
   <div class="flex flex-1 flex-col gap-3 p-6">
-    <Heading class="font-display text-2xl">
+    <Heading class="font-display text-xl">
       <a href={url} class="hover:underline">{l(course.name, locale)}</a>
     </Heading>
-    <p class="text-muted">{l(course.tagline, locale)}</p>
+    <p class="text-sm leading-relaxed text-muted">{l(course.tagline, locale)}</p>
     <ul class="mt-1 flex flex-wrap gap-1.5">
-      <li><FeatureChip tone="outline">{weeksLabel(locale, course.weeks)}</FeatureChip></li>
       <li>
-        <FeatureChip tone="outline">{sessionsLabel(locale, course.sessionsPerWeek)}</FeatureChip>
+        <FeatureChip tone="outline" size="sm">{weeksLabel(locale, course.weeks)}</FeatureChip>
       </li>
       <li>
-        <FeatureChip tone="outline"
+        <FeatureChip tone="outline" size="sm"
+          >{sessionsLabel(locale, course.sessionsPerWeek)}</FeatureChip
+        >
+      </li>
+      <li>
+        <FeatureChip tone="outline" size="sm"
           >{t(locale, 'landing.avgSession', { n: course.avgSessionMin })}</FeatureChip
         >
       </li>
       {
         equipment.map((e) => (
           <li>
-            <FeatureChip tone="outline">{equipmentLabel(locale, e)}</FeatureChip>
+            <FeatureChip tone="outline" size="sm">
+              {equipmentLabel(locale, e)}
+            </FeatureChip>
           </li>
         ))
       }
     </ul>
     <!-- `mt-auto` pins the price row to the bottom so cards of unequal height line their prices
-         up; the rule above it gets its air from `pt-4`, not from a second margin. -->
+         up; the hairline above it gets its air from `pt-4`, not from a second margin. -->
     <div class="mt-auto flex items-center justify-between gap-3 border-t border-border pt-4">
       <span class="numeral tabular text-xl">{price}</span>
       <a
         href={url}
-        class="control-label inline-flex min-h-11 items-center rounded-control bg-accent px-4 text-[12px] text-on-primary transition group-hover:opacity-85"
+        class="control-label inline-flex h-10 items-center rounded-control bg-primary px-4.5 text-[12px] text-on-primary transition-opacity duration-150 group-hover:opacity-85"
       >
         {t(locale, 'landing.cardView')}
       </a>

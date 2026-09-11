@@ -1,4 +1,4 @@
-/** Forma UI kit — dark, editorial, token-driven React components. One component per file. */
+/** Forma UI kit — black and white, sharp, editorial, token-driven React components. One component per file. */
 export { Avatar, avatarTile, initials, type AvatarProps } from './Avatar';
 export { Badge, type BadgeProps, type BadgeTone } from './Badge';
 export { BarChart, type BarChartProps, type BarDatum } from './BarChart';
@@ -8,7 +8,15 @@ export { Chip, type ChipProps, type ChipSize, type ChipTone } from './Chip';
 export { CodeInput, type CodeInputProps } from './CodeInput';
 export { Divider, type DividerProps } from './Divider';
 export { EmptyState, type EmptyStateProps } from './EmptyState';
-export { Icon, ICON_NAMES, ICONS, type IconName, type IconProps } from './Icon';
+export {
+  Glyph,
+  Icon,
+  ICON_NAMES,
+  ICONS,
+  type GlyphProps,
+  type IconName,
+  type IconProps,
+} from './Icon';
 export {
   IconButton,
   type IconButtonProps,
@@ -18,6 +26,7 @@ export {
 export { Input, type InputProps } from './Input';
 export { KitProvider, useKitLabels, type KitLabels } from './KitContext';
 export { ListRow, type ListRowProps } from './ListRow';
+export { Logo, type LogoProps } from './Logo';
 export { Modal, type ModalProps } from './Modal';
 export { PageTitle, type PageTitleProps } from './PageTitle';
 export { ProgressBar, type ProgressBarProps, type ProgressTone } from './ProgressBar';
@@ -28,12 +37,14 @@ export {
   type SegmentOption,
   type SegmentedControlProps,
 } from './SegmentedControl';
+export { Select, type SelectOption, type SelectProps } from './Select';
 export { Sheet, type SheetProps } from './Sheet';
 export { Skeleton, type SkeletonProps } from './Skeleton';
 export { Slider, type SliderProps } from './Slider';
 export { Spinner, type SpinnerProps } from './Spinner';
 export { StatTile, type StatTileProps, type StatTrend } from './StatTile';
 export { Tabs, tabPanelId, type TabItem, type TabsProps } from './Tabs';
+export { Textarea, type TextareaProps } from './Textarea';
 export {
   Toast,
   ToastProvider,

@@ -1,9 +1,9 @@
 # Figure rig — animated SVG athlete
 
-The brand illustration system: a 2-D pictogram athlete (dark `#0B0B0D` strokes, round caps,
-thick limbs, detached round head) drawn on the pastel gradient tiles. It is used by the app player
-(hero background), course/exercise cards, exercise thumbnails, the landing hero and the OG image
-generator. Pose data drives everything — there are no hand-drawn frames.
+The brand illustration system: a 2-D **blueprint stick figure** — one 7-unit mono line with square
+ends, an outlined square head, no fills — drawn in `currentColor` on a flat course tile. It is used
+by the app player (hero background), course/exercise cards, exercise thumbnails, the landing hero
+and the OG image generator. Pose data drives everything — there are no hand-drawn frames.
 
 ```
 src/components/anim/
@@ -19,17 +19,49 @@ src/components/anim/
 scripts/anim/preview.mjs   wrapper: node scripts/anim/preview.mjs air_squat burpee
 ```
 
+## Drawing style (brandbook §6)
+
+The second brandbook makes the interface strictly black and white, with the programme colour of
+the current course as the only colour on screen. The figures follow the reference drafts in the
+design system (`assets/figures/*.svg`, "фигурки-палочки в стиле чертежа"):
+
+- **One line weight.** Limbs, torso, neck and solid equipment are all `STROKE.line = 7` viewBox
+  units — the reference's 5-unit line on a 120-unit drawing, scaled to our 140-unit-tall athlete.
+  Construction lines that are not objects (floor, band, rope) use `STROKE.thin = 3`.
+- **Square ends, sharp corners.** `stroke-linecap: butt`, `stroke-linejoin: miter`. Each limb is
+  one polyline (`M shoulder L elbow L wrist`) so bent joints mitre instead of leaving a notch.
+- **The head is a 22×22 outlined square** (`HEAD_SIZE`), axis-aligned whatever the body does
+  — the reference plank keeps a level square on a sloping body. The neck runs from the shoulder
+  and stops on the square's edge.
+- **Nothing is filled and there is no circle.** The `Primitive` vocabulary is `line | path | rect`,
+  all stroked, so a frame cannot leave the style by accident. The front-view torso is a spine with
+  a shoulder bar and a hip bar; equipment is redrawn as outlines (dumbbell `|—|`, kettlebell as an
+  open handle over a square body, box as one rectangle, chair as four lines).
+- **Colour comes from outside.** Every stroke is `currentColor`. `courseTileVars()` derives
+  `--course-tile-fg` from the tile hex and `.hero-art` applies it: black ink on a programme colour
+  or on paper, light ink on a dark surface. The figure never carries a colour of its own and is
+  never painted in the programme colour — the tile is.
+- **Depth is opacity, not weight.** In the side view the far limbs are drawn first at
+  `FAR_OPACITY = 0.55`. The reference figures are flat, but a profile with both arms and both legs
+  at full ink collapses into one line at every crossing; a lighter far side is the one depth cue
+  that keeps a squat readable without a second weight or a fill.
+- **No radius anywhere.** The tile behind the figure is a sharp square; `ExerciseFigure` adds no
+  `rounded-*` class.
+
 ## Public API
 
 ```ts
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
-<ExerciseFigure animation="air_squat" variant="card" gradient={course.gradient} label={name} />
+<ExerciseFigure animation="air_squat" variant="card" tile={course.tile} label={name} />
 // variant: 'thumb' (72px, static first frame, tight crop, currentColor, no tile)
-//          'card'  (200px gradient tile)   'hero' (fills the container, square tile)
+//          'card'  (200px flat tile)   'hero' (fills the container, square tile)
 // playing?: boolean (thumb defaults to false)   speed?: number   className?: string
+// tile?: course colour hex; defaults to the neutral dark surface (DEFAULT_TILE '#1f1f24')
 
 import { figureSvgString } from '@/components/anim/render';
-figureSvgString('air_squat', 0.5, { size: 600, gradient: ['#B9F3E0', '#C9D6FF'], background: true });
+figureSvgString('air_squat', 0.5, { size: 600, tile: '#F2F52D', background: true });
+// The tile also picks the ink (black on a programme colour, light on a dark surface) — pass it
+// even with background: false when the figure will sit on a known tile.
 
 import { POSES, ANIMATION_IDS } from '@/components/anim/poses/index';
 import { basePose, plant, poseAt, solve, validatePoseSet } from '@/components/anim/rig';
@@ -41,9 +73,9 @@ and `console.warn` once per id.
 ## Coordinate system
 
 200×200 viewBox, y grows downward, ground line at `GROUND_Y = 172`. Standing athlete: hips at
-(100, 106), shoulders at y 62, head centre at y 43, feet on 172. Segment lengths (viewBox units):
-torso 44, neck gap 8, head radius 11, upper arm 26, forearm 24, thigh 34, shin 32, foot 12
-(front view foot 8). Strokes: limbs 10, torso 13, props 5, thin lines 3.
+(100, 106), shoulders at y 62, head centre at y 43 (square from 32 to 54), feet on 172. Segment
+lengths (viewBox units): torso 44, neck gap 8, head half-side 11, upper arm 26, forearm 24, thigh
+34, shin 32, foot 12 (front view foot 8). Strokes: figure and equipment 7, construction lines 3.
 
 ## Views
 
@@ -51,9 +83,9 @@ torso 44, neck gap 8, head radius 11, upper arm 26, forearm 24, thigh 34, shin 3
   `L` limbs are the far side (drawn behind at 55 % opacity). Use for squats, hinges, lunges,
   push-ups, burpees, presses, rows, swings, runs.
 - `front` — facing the viewer, limbs move in the frontal plane (abduction). `L` is on the screen
-  left, `R` on the screen right (mirror view). Shoulders are 26 wide, hips 12 wide, torso is a
-  rounded trapezoid. Use for jumping jacks, skaters, lateral lunges, arm circles, band pull-aparts,
-  jump rope, side bends.
+  left, `R` on the screen right (mirror view). Shoulders are 26 wide, hips 12 wide; the torso is a
+  spine with a shoulder bar and a hip bar. Use for jumping jacks, skaters, lateral lunges, arm
+  circles, band pull-aparts, jump rope, side bends.
 
 ## Pose = joint angles (degrees) + root
 
@@ -84,8 +116,8 @@ Every angle is **relative to its parent segment**, 0 = straight/along the parent
 directions (side view, athlete facing right):
 
 ```
-                 head  (+ = chin down)
-                  O
+                 head  (+ = chin down; the square itself stays level)
+                 [ ]
       torso +     |      torso: + leans forward (top of the body moves →)
       (lean →)    |
                   |──→  shoulder: + = flexion, the arm swings forward/up
@@ -180,18 +212,19 @@ legs split).
 
 ## Props
 
-Props are listed on the set and drawn at anchors computed from the pose each frame:
+Props are listed on the set and drawn at anchors computed from the pose each frame. They share
+the figure's line weight (or the thin construction line) and are never filled:
 
 | prop                                                                 | anchor / placement                                                                                                                                   |
 | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `{ kind: 'floor' }`                                                  | thin line at the ground under the feet — use on every grounded set                                                                                   |
-| `{ kind: 'dumbbells' }`                                              | bar + two plates across each wrist, perpendicular to the forearm                                                                                     |
-| `{ kind: 'kettlebell', grip?: 'inline' \| 'hang' }`                  | midpoint of the wrists; `inline` follows the forearm (swings), `hang` drops vertically (goblet/carry)                                                |
-| `{ kind: 'band', anchor?: 'wrists' \| 'feet' \| 'front' \| 'back' }` | line between the wrists / from under the feet to both wrists / from the right or left edge to the wrists                                             |
-| `{ kind: 'rope' }`                                                   | arc between the wrists that sweeps under the feet at `t ≈ 0` and over the head at `t ≈ 0.5` — time your jump so the feet are airborne around `t = 0` |
+| `{ kind: 'dumbbells' }`                                              | bar across each wrist, perpendicular to the forearm, with a short plate line at each end                                                             |
+| `{ kind: 'kettlebell', grip?: 'inline' \| 'hang' }`                  | midpoint of the wrists; an open handle over an outlined square body. `inline` follows the forearm (swings), `hang` drops vertically (goblet/carry)   |
+| `{ kind: 'band', anchor?: 'wrists' \| 'feet' \| 'front' \| 'back' }` | thin line between the wrists / from under the feet to both wrists / from the right or left edge to the wrists                                        |
+| `{ kind: 'rope' }`                                                   | thin arc between the wrists that sweeps under the feet at `t ≈ 0` and over the head at `t ≈ 0.5` — time the jump so the feet are airborne at `t = 0` |
 | `{ kind: 'bar' }`                                                    | horizontal bar at the higher wrist — keep the wrists at a fixed world y and move the root for pull-ups                                               |
-| `{ kind: 'chair', x? }`                                              | chair silhouette, seat at ground − 44, default x 60 (behind a side-view athlete)                                                                     |
-| `{ kind: 'box', height?, width?, x? }`                               | rounded box standing on the ground, default 44×40 at x 130 (in front); put the foot on `GROUND_Y − height` with `plant(..., { y })`                  |
+| `{ kind: 'chair', x? }`                                              | chair as four lines (seat, back, two legs), seat at ground − 44, default x 60 (behind a side-view athlete)                                           |
+| `{ kind: 'box', height?, width?, x? }`                               | one outlined rectangle standing on the ground, default 44×40 at x 130 (in front); put the foot on `GROUND_Y − height` with `plant(..., { y })`       |
 
 ## Adding an animation
 
@@ -212,9 +245,9 @@ node scripts/anim/preview.mjs all
 ```
 
 Writes `/tmp/anim-preview/<id>-<t>.png` for `t = 0, 0.25, 0.5, 0.75` and `<id>-sheet.png` with
-eight frames (`t = 0 … 0.875`) in a row. Then open/Read the PNGs. `ANIM_PREVIEW_OUT` changes the
-folder, `ANIM_PREVIEW_SIZE` the frame size in px (default 400). Without `ANIM_PREVIEW` the test
-file skips silently, so it is safe in the normal test run.
+eight frames (`t = 0 … 0.875`) in a row on the dark ground. Then open/Read the PNGs.
+`ANIM_PREVIEW_OUT` changes the folder, `ANIM_PREVIEW_SIZE` the frame size in px (default 400).
+Without `ANIM_PREVIEW` the test file skips silently, so it is safe in the normal test run.
 
 ## Quality checklist
 
@@ -224,11 +257,13 @@ file skips silently, so it is safe in the normal test run.
 - Joint ranges are human: knee 0..140, hip −20..130, elbow 0..150, shoulder −60..190, ankle
   −40..35, torso −20..95 (side). Nothing hyper-extends the wrong way.
 - Head stays roughly level with the gaze direction of the exercise (`head ≈ −0.7 × torso` keeps
-  the athlete looking forward while leaning).
+  the athlete looking forward while leaning). The square itself never rotates.
 - One repetition per cycle, ending where it starts; timing feels like a coached tempo (descents
   slower than the drive, short pause at the top). `durationMs` 1200–3200 for most movements.
 - Arms/legs of a pair are offset a few degrees where they leave the body so the far limb shows.
 - Props are attached to the right anchor and do not clip through the figure.
 - The first frame (`t = 0`) is a clean, upright start position — it is the static thumbnail.
 - `poster` points at the most characteristic frame (the bottom of a squat, the top of a jump).
+- Nothing in the drawing is filled, round or coloured: if a change needs a new primitive, it is
+  another stroke in `STROKE.line` or `STROKE.thin`, in `currentColor`.
 - `npx vitest run src/components/anim` passes; `npx prettier --write` and `npx eslint` are clean.

@@ -1,31 +1,30 @@
-import ExerciseFigure from '@/components/anim/ExerciseFigure';
-import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
-import { EXERCISE_BY_ID } from '@/content/registry';
+import { findExercise } from '@/content/catalogue';
 import { formatDuration } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
 import type { PrescribedBlock, PrescribedItem, PrescribedWorkout } from '@/lib/training/types';
 import { blockMetaLabel, exerciseName, itemLoadLabel, itemTargetLabel } from './plan';
 
-function PlanItem({ item }: { item: PrescribedItem }) {
+/**
+ * One movement of a block: its number, its name (with the swap note and the coach's note under
+ * it) and the target on the right. The number replaces the thumbnail that used to sit here — a
+ * plan is read as a list, and 01/02/03 is how the brand numbers a list.
+ */
+function PlanItem({ item, n }: { item: PrescribedItem; n: number }) {
   const tr = useT();
   const { t, l } = tr;
-  const exercise = EXERCISE_BY_ID.get(item.exerciseId);
+  const exercise = findExercise(item.exerciseId);
   const name = exercise ? l(exercise.name) : item.exerciseId;
   const load = itemLoadLabel(tr, item);
   return (
-    <li className="flex items-center gap-3 py-2">
-      <span className="flex size-11 shrink-0 items-center justify-center rounded-inner bg-surface-3 text-text">
-        <ExerciseFigure
-          animation={exercise?.animation ?? 'air_squat'}
-          variant="thumb"
-          className="size-9"
-        />
+    <li className="flex items-center gap-3.5 border-t border-border py-3 first:border-t-0">
+      <span className="numeral tabular w-6 shrink-0 text-sm text-muted">
+        {String(n).padStart(2, '0')}
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[15px] font-medium">{name}</span>
         {item.substituted ? (
-          <span className="block truncate text-xs text-accent">
+          <span className="block truncate text-xs text-muted">
             {t('training.substitutedFrom', { name: exerciseName(tr, item.originalExerciseId) })}
           </span>
         ) : null}
@@ -44,17 +43,18 @@ function PlanItem({ item }: { item: PrescribedItem }) {
   );
 }
 
+/** A block: its title and length on one line, the format chip, the description, then its items. */
 function PlanBlock({ block }: { block: PrescribedBlock }) {
   const tr = useT();
   const { t, l, locale } = tr;
   const between = block.restBetweenSetsSec || block.restBetweenRoundsSec;
   return (
-    <Card padding="sm" className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-[15px] font-semibold">
+    <section className="flex flex-col gap-3 border-t border-border-strong pt-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h4 className="font-display text-[15px]">
           {block.title ? l(block.title) : t(`training.block_${block.type}`)}
-        </span>
-        <span className="tabular text-xs text-muted">
+        </h4>
+        <span className="numeral tabular text-xs text-muted">
           {formatDuration(locale, block.estimatedSec)}
         </span>
       </div>
@@ -67,19 +67,19 @@ function PlanBlock({ block }: { block: PrescribedBlock }) {
         ) : null}
       </div>
       {block.description ? <p className="text-sm text-muted">{l(block.description)}</p> : null}
-      <ul className="flex flex-col divide-y divide-border">
+      <ul className="flex flex-col">
         {block.items.map((item, i) => (
-          <PlanItem key={`${item.exerciseId}-${i}`} item={item} />
+          <PlanItem key={`${item.exerciseId}-${i}`} item={item} n={i + 1} />
         ))}
       </ul>
-    </Card>
+    </section>
   );
 }
 
 /** The prescribed plan: every block with its format chip and concrete item targets. */
 export function PlanBlocks({ prescribed }: { prescribed: PrescribedWorkout }) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-6">
       {prescribed.blocks.map((block) => (
         <PlanBlock key={block.blockId} block={block} />
       ))}

@@ -4,7 +4,7 @@
  */
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
-import { Icon } from '@/components/ui/Icon';
+import { Glyph } from '@/components/ui/Icon';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Sheet } from '@/components/ui/Sheet';
 import type { CourseNode } from '@/content/schema';
@@ -61,7 +61,6 @@ export function NodeSheet({
         variant={!done && reached ? 'secondary' : 'primary'}
         disabled={busy}
         onClick={onLogSteps}
-        icon={<Icon name="steps" size={18} />}
       >
         {t('app.pathRestLogSteps')}
       </Button>
@@ -86,19 +85,19 @@ export function NodeSheet({
     >
       {node ? (
         <div className="flex flex-col gap-4 py-2">
-          <div className="flex items-start gap-4">
-            <span className="flex size-14 shrink-0 items-center justify-center rounded-control bg-surface-2 text-text">
-              <Icon name={isRest ? 'steps' : 'star'} size={28} />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-lg font-semibold">{l(node.title)}</p>
-              {node.subtitle ? <p className="text-sm text-muted">{l(node.subtitle)}</p> : null}
-            </div>
+          <div>
+            <p className="font-display text-xl">{l(node.title)}</p>
+            {node.subtitle ? <p className="mt-1 text-sm text-muted">{l(node.subtitle)}</p> : null}
           </div>
           {isRest ? (
-            <div className="flex flex-col gap-3 rounded-inner bg-surface-2 p-4">
+            /*
+             * The goal, today's count and the bar on a hairline rather than in a filled box. The
+             * bar takes the programme colour — the sheet opens over the course screen, which has
+             * set it — and goes green only once the goal is reached.
+             */
+            <div className="flex flex-col gap-3 border-t border-border pt-4">
               <div className="flex flex-wrap items-center gap-2">
-                <Chip size="sm" tone="accent" icon="steps">
+                <Chip size="sm" tone="accent">
                   {t('app.pathRestGoal', { goal: formatNumber(locale, goal) })}
                 </Chip>
                 <span className="tabular text-sm text-muted">
@@ -107,14 +106,16 @@ export function NodeSheet({
               </div>
               <ProgressBar
                 value={pct}
-                tone={reached ? 'success' : 'accent'}
+                tone={reached ? 'success' : 'course'}
                 label={t('app.pathRestTitle')}
                 valueText={`${Math.round(pct * 100)}%`}
               />
             </div>
           ) : null}
           <p className="flex gap-2 text-sm text-muted">
-            <Icon name="info" size={18} className="mt-0.5 shrink-0" />
+            <Glyph size={12} className="mt-1 shrink-0 text-muted-2">
+              //
+            </Glyph>
             <span>{hint}</span>
           </p>
         </div>

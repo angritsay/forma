@@ -1,6 +1,10 @@
 ---
-/** Bilingual 404 (served by GitHub Pages for any unknown path). */
+/**
+ * Bilingual 404 (served by GitHub Pages for any unknown path). The mark, one big numeral, then
+ * the two languages as hairline columns with a white button each — no boxes.
+ */
 import Base from '@/layouts/Base.astro';
+import Logo from '@/components/landing/Logo.astro';
 import { t } from '@/i18n/index';
 import { appHref, href, withBase } from '@/lib/util/paths';
 import { BRAND } from '@content/site/brand';
@@ -29,25 +33,30 @@ const blocks = [
     <meta name="robots" content="noindex, nofollow" />
     <meta name="description" content={`${blocks[0]!.title} / ${blocks[1]!.title}`} />
   </Fragment>
-  <main class="mx-auto flex min-h-dvh max-w-3xl flex-col justify-center gap-10 px-6 py-16">
-    <a href={withBase('/')} class="font-display text-3xl">{BRAND.name}</a>
-    <h1 class="font-display text-8xl text-muted-2">404</h1>
-    <div class="grid gap-8 md:grid-cols-2">
+  <main class="mx-auto flex min-h-dvh max-w-3xl flex-col justify-center gap-12 px-6 py-16">
+    <a href={withBase('/')} class="inline-flex text-2xl text-text">
+      <Logo lockup label={BRAND.name} />
+    </a>
+    <h1 class="display text-7xl text-muted-2 md:text-8xl">404</h1>
+    <div class="grid gap-x-10 md:grid-cols-2">
       {
-        blocks.map((b) => (
-          <section lang={b.locale} class="rounded-card border border-border bg-surface p-6">
-            <h2 class="font-display text-3xl">{b.title}</h2>
-            <p class="mt-2 text-muted">{b.text}</p>
-            <div class="mt-5 flex flex-wrap gap-2">
+        blocks.map((b, i) => (
+          <section
+            lang={b.locale}
+            class:list={['border-t border-border pt-6', i > 0 && 'mt-8 md:mt-0']}
+          >
+            <h2 class="font-display text-xl">{b.title}</h2>
+            <p class="mt-3 text-muted">{b.text}</p>
+            <div class="mt-6 flex flex-wrap gap-3">
               <a
                 href={href(b.locale, '/')}
-                class="inline-flex min-h-11 items-center rounded-control bg-accent px-4 text-sm font-semibold text-on-primary"
+                class="control-label inline-flex h-12 items-center bg-primary px-6.5 text-[13px] text-on-primary hover:opacity-85"
               >
                 {b.home}
               </a>
               <a
                 href={appHref()}
-                class="inline-flex min-h-11 items-center rounded-control border border-border-strong px-4 text-sm font-semibold"
+                class="control-label inline-flex h-12 items-center border border-border-strong bg-surface-2 px-6.5 text-[13px] hover:bg-surface-3"
               >
                 {b.app}
               </a>

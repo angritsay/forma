@@ -1,7 +1,8 @@
 ---
 /**
  * Visible breadcrumb trail. The matching BreadcrumbList JSON-LD is built by the page with
- * `breadcrumbJsonLd()` so both stay in sync from the same items array.
+ * `breadcrumbJsonLd()` so both stay in sync from the same items array. Items are divided by a
+ * › glyph.
  */
 import type { Locale } from '@/content/schema';
 import { t } from '@/i18n/index';
@@ -21,8 +22,8 @@ const { locale, items, class: className = '' } = Astro.props;
       items.map((it, i) => (
         <li class="flex items-center gap-2">
           {i > 0 && (
-            <span aria-hidden="true" class="text-muted-2">
-              /
+            <span aria-hidden="true" class="glyph text-muted-2">
+              ›
             </span>
           )}
           {it.href && i < items.length - 1 ? (

@@ -13,7 +13,9 @@
  *
  * The card carries the photograph and, at most, a name and a sentence in the client's words. No
  * duration and no course name: both are performance claims that would need substantiating, and
- * the owner asked for neither.
+ * the owner asked for neither. Photographs are monochrome with grain like every other photograph
+ * in the product, and the «До» / «После» stamps are the same dark plate in both panels — the
+ * result is in the picture, not in a highlighted label.
  *
  * Composites are declared square so the browser reserves the space before the file arrives. The
  * archive's files run from 1.000 to 0.968 of square, so the object-cover crop takes at most 1.6%
@@ -31,25 +33,30 @@ interface Props {
 
 const { locale } = Astro.props;
 const results = publishableResults();
+const STAMP =
+  'absolute top-3 left-3 inline-flex h-6 items-center bg-ink/85 px-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-paper';
 ---
 
 {
   results.length > 0 && (
     <ul class="grid gap-6 sm:grid-cols-2">
       {results.map((r) => (
-        <li class="overflow-hidden rounded-card border border-border bg-surface">
+        <li class="overflow-hidden border border-border bg-surface">
           {r.composite ? (
             /* The panels are already joined in the file — one image, no overlaid labels, because
                where "before" sits inside the frame is the photographer's decision, not ours. */
-            <img
-              src={withBase(r.composite)}
-              alt={r.compositeAlt ? r.compositeAlt[locale] : ''}
-              loading="lazy"
-              decoding="async"
-              width="1000"
-              height="1000"
-              class="aspect-square w-full bg-surface-2 object-cover"
-            />
+            <div class="relative">
+              <img
+                src={withBase(r.composite)}
+                alt={r.compositeAlt ? r.compositeAlt[locale] : ''}
+                loading="lazy"
+                decoding="async"
+                width="1000"
+                height="1000"
+                class="photo-mono aspect-square w-full bg-surface-2 object-cover"
+              />
+              <div class="photo-grain" aria-hidden="true" />
+            </div>
           ) : (
             <div class="grid grid-cols-2 gap-px bg-border">
               <figure class="relative m-0 bg-surface-2">
@@ -60,11 +67,10 @@ const results = publishableResults();
                   decoding="async"
                   width="400"
                   height="533"
-                  class="aspect-[3/4] w-full object-cover"
+                  class="photo-mono aspect-[3/4] w-full object-cover"
                 />
-                <figcaption class="absolute top-2 left-2 rounded-control bg-bg/70 px-2 py-0.5 text-xs font-semibold backdrop-blur">
-                  {t(locale, 'landing.resultsBefore')}
-                </figcaption>
+                <div class="photo-grain" aria-hidden="true" />
+                <figcaption class={STAMP}>{t(locale, 'landing.resultsBefore')}</figcaption>
               </figure>
               <figure class="relative m-0 bg-surface-2">
                 <img
@@ -74,17 +80,16 @@ const results = publishableResults();
                   decoding="async"
                   width="400"
                   height="533"
-                  class="aspect-[3/4] w-full object-cover"
+                  class="photo-mono aspect-[3/4] w-full object-cover"
                 />
-                <figcaption class="absolute top-2 left-2 rounded-control bg-accent px-2 py-0.5 text-xs font-semibold text-on-primary">
-                  {t(locale, 'landing.resultsAfter')}
-                </figcaption>
+                <div class="photo-grain" aria-hidden="true" />
+                <figcaption class={STAMP}>{t(locale, 'landing.resultsAfter')}</figcaption>
               </figure>
             </div>
           )}
           {(r.name || r.quote) && (
-            <div class="flex flex-col gap-2 p-5">
-              {r.name && <p class="text-[15px] font-semibold">{r.name[locale]}</p>}
+            <div class="flex flex-col gap-2 border-t border-border p-5">
+              {r.name && <p class="font-display text-sm">{r.name[locale]}</p>}
               {r.quote && <p class="text-[15px] leading-relaxed text-muted">{r.quote[locale]}</p>}
             </div>
           )}

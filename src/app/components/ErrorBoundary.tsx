@@ -15,8 +15,8 @@ function ErrorFallback({ onRetry }: { onRetry: () => void }) {
   const { t } = useT();
   return (
     <div className="flex min-h-dvh items-center justify-center px-5">
+      {/* No warning triangle over the heading: the words say what happened. */}
       <EmptyState
-        icon="warning"
         title={t('app.errorTitle')}
         description={t('app.errorBody')}
         action={

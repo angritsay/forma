@@ -39,7 +39,6 @@ relatedExercises:
   - child_pose
 relatedCourses:
   - start
-  - engine
 relatedGuides:
   - crossfit-home-beginners
   - no-equipment-crossfit

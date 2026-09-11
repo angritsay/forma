@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
-import { Icon } from '@/components/ui/Icon';
+import { Glyph } from '@/components/ui/Icon';
 import { Screen } from '@/components/ui/Screen';
 import { useToast } from '@/components/ui/Toast';
 import { l } from '@/i18n/index';
@@ -17,6 +17,7 @@ import { openExternal } from '@/lib/telegram/webapp';
 import { paymentTarget, withEmail } from '@/lib/util/payment';
 import { TopBar } from '@/app/components/TopBar';
 import { LinkButton } from '@/app/features/courses/LinkButton';
+import { splitName } from '@/app/features/profile/model';
 import { useT } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
 import { BOOKING } from '@content/site/booking';
@@ -42,6 +43,7 @@ export default function BookScreen() {
   const email = profile?.email || user?.email || '';
   const price = formatPrice(locale, BOOKING.price);
   const name = l(COACH.name, locale);
+  const { heavy, thin } = splitName(name);
   const payment = paymentTarget(BOOKING.paymentUrl[locale] ?? BOOKING.paymentUrl.ru);
   const schedule = paymentTarget(BOOKING.scheduleUrl);
   const steps = [
@@ -66,73 +68,92 @@ export default function BookScreen() {
 
   return (
     <Screen header={<TopBar back title={t('app.bookTitle')} />}>
-      <div className="flex flex-col gap-5 py-2">
-        <section className="flex items-start gap-4 pb-1">
-          {COACH.photo ? (
-            <img
-              src={withBase(COACH.photo)}
-              alt={name}
-              width={64}
-              height={64}
-              className="photo-mono size-16 shrink-0 rounded-control object-cover"
-            />
-          ) : (
-            <Avatar seed={name} name={name} size={64} />
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="font-display text-xl leading-tight">{name}</p>
-            <p className="mt-1 text-sm text-on-primary/80">{l(COACH.role, locale)}</p>
-            <p className="mt-3 text-[15px] leading-snug">{t('app.bookLead')}</p>
+      <div className="flex flex-col gap-6 pt-5">
+        {/*
+          The coach as the screen's one display line — first name at 800, surname at 200 — under
+          his role as the kicker, with the monochrome portrait beside it. The lead reads on after.
+        */}
+        <section className="flex flex-col gap-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <span className="eyebrow">{l(COACH.role, locale)}</span>
+              <h2 className="display text-5xl text-balance">
+                {heavy}
+                {thin ? (
+                  <>
+                    {' '}
+                    <span className="t-thin">{thin}</span>
+                  </>
+                ) : null}
+              </h2>
+            </div>
+            {COACH.photo ? (
+              <img
+                src={withBase(COACH.photo)}
+                alt={name}
+                width={72}
+                height={72}
+                className="photo-mono size-18 shrink-0 object-cover"
+              />
+            ) : (
+              <Avatar seed={name} name={name} size={72} />
+            )}
           </div>
+          <p className="max-w-[40ch] text-[15px] leading-relaxed text-muted">{t('app.bookLead')}</p>
         </section>
 
-        <div className="border-t border-border">
-          <dl className="divide-y divide-border">
-            <div className="flex items-center justify-between gap-3 px-4 py-3">
-              <dt className="text-sm text-muted">{t('app.bookFormatLabel')}</dt>
-              <dd className="text-right text-[15px] font-medium">{l(BOOKING.format, locale)}</dd>
-            </div>
-            <div className="flex items-center justify-between gap-3 px-4 py-3">
-              <dt className="text-sm text-muted">{t('app.bookDurationLabel')}</dt>
-              <dd className="tabular text-right text-[15px] font-medium">
-                {t('app.bookDuration', { n: BOOKING.durationMin })}
-              </dd>
-            </div>
-            <div className="flex items-center justify-between gap-3 px-4 py-3">
-              <dt className="text-sm text-muted">{t('app.bookPriceLabel')}</dt>
-              <dd className="tabular text-right text-lg font-semibold">{price}</dd>
-            </div>
-          </dl>
-        </div>
+        {/* The facts, ruled: format and duration as hairline rows, the price on the crosshair plate. */}
+        <dl className="flex flex-col">
+          <div className="flex items-center justify-between gap-3 border-t border-border py-3">
+            <dt className="eyebrow">{t('app.bookFormatLabel')}</dt>
+            <dd className="text-right text-[15px] font-medium">{l(BOOKING.format, locale)}</dd>
+          </div>
+          <div className="flex items-center justify-between gap-3 border-y border-border py-3">
+            <dt className="eyebrow">{t('app.bookDurationLabel')}</dt>
+            <dd className="numeral tabular text-right text-[15px]">
+              {t('app.bookDuration', { n: BOOKING.durationMin })}
+            </dd>
+          </div>
+          {/*
+            One key fact per screen gets the plate: the price. No course is in scope here, so the
+            ticks fall back to white — the plate says "this is the number" without a colour.
+          */}
+          <div className="plate-target mt-4 flex items-baseline justify-between gap-3 px-4 py-4">
+            <span className="plate-ticks" aria-hidden="true" />
+            <dt className="eyebrow">{t('app.bookPriceLabel')}</dt>
+            <dd className="display tabular text-right text-4xl">{price}</dd>
+          </div>
+        </dl>
 
         <section className="flex flex-col gap-3">
-          <h2 className="eyebrow px-1">{t('app.bookIncludes')}</h2>
-          <div className="border-t border-border pt-4">
-            <ul className="flex flex-col gap-2.5">
-              {BOOKING.includes.map((item) => (
-                <li key={item.en} className="flex items-start gap-3 text-[15px]">
-                  <Icon name="check" size={18} className="mt-0.5 shrink-0 text-accent" />
-                  <span>{l(item, locale)}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <h3 className="eyebrow">{t('app.bookIncludes')}</h3>
+          <ul className="flex flex-col border-t border-border">
+            {BOOKING.includes.map((item) => (
+              <li
+                key={item.en}
+                className="flex items-start gap-3 border-t border-border py-2.5 text-[15px] first:border-t-0 first:pt-3"
+              >
+                <Glyph size={14} className="mt-1 text-muted">
+                  ✓
+                </Glyph>
+                <span>{l(item, locale)}</span>
+              </li>
+            ))}
+          </ul>
         </section>
 
         <section className="flex flex-col gap-3">
-          <h2 className="eyebrow px-1">{t('app.bookHow')}</h2>
-          <div className="border-t border-border pt-4">
-            <ol className="flex flex-col gap-3">
-              {steps.map((step, i) => (
-                <li key={step} className="flex items-start gap-3 text-[15px]">
-                  <span className="numeral tabular w-6 shrink-0 text-sm text-accent">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <span>{step}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
+          <h3 className="eyebrow">{t('app.bookHow')}</h3>
+          <ol className="flex flex-col gap-3 border-t border-border pt-4">
+            {steps.map((step, i) => (
+              <li key={step} className="flex items-start gap-3 text-[15px]">
+                <span className="numeral tabular w-7 shrink-0 pt-0.5 text-sm text-muted-2">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
         </section>
 
         <div className="flex flex-col gap-3">
@@ -145,7 +166,7 @@ export default function BookScreen() {
               <LinkButton href={contactHref(t('app.bookTitle'))} size="lg" fullWidth external>
                 {t('app.bookContact')}
               </LinkButton>
-              <p className="px-1 text-center text-sm text-muted">{t('app.bookContactHint')}</p>
+              <p className="text-sm text-muted">{t('app.bookContactHint')}</p>
             </>
           )}
           {schedule ? (
@@ -153,7 +174,7 @@ export default function BookScreen() {
               {t('app.bookPickTime')}
             </LinkButton>
           ) : null}
-          <p className="px-1 text-center text-xs text-muted-2">{l(BOOKING.reschedule, locale)}</p>
+          <p className="text-xs text-muted-2">{l(BOOKING.reschedule, locale)}</p>
         </div>
       </div>
     </Screen>

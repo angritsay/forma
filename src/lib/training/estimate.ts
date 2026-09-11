@@ -2,7 +2,7 @@
  * Duration, calorie and points estimates for a prescribed workout.
  * Rules: docs/TRAINING_SCIENCE.md §4–§5.
  */
-import { EXERCISE_BY_ID } from '@/content/registry';
+import { findExercise } from '@/content/catalogue';
 import type { Workout } from '@/content/schema';
 import {
   AMRAP_WORK_SHARE,
@@ -28,7 +28,7 @@ import type {
 } from './types';
 import { num, sum } from './util';
 
-export const registryLookup: ExerciseLookup = (id) => EXERCISE_BY_ID.get(id);
+export const registryLookup: ExerciseLookup = (id) => findExercise(id);
 
 /** A block split into MET-weighted work segments, rest and overhead (transitions + intro). */
 export interface BlockSegments {

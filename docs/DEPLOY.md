@@ -86,9 +86,42 @@ branch), but it needs the one admin step that a workflow token cannot perform.
 
 ### Custom domain on GitHub Pages
 
-Set `CUSTOM_DOMAIN=forma.example.com` and `SITE_URL=https://forma.example.com`, add the DNS records
-GitHub Pages asks for (CNAME to `<owner>.github.io`), enable "Enforce HTTPS" in the Pages settings.
-Canonical URLs, sitemap, robots and hreflang all follow `SITE_URL`.
+The production domain is **forma-app.co**. To attach it (or any other):
+
+1. **Repository variables** (Settings → Secrets and variables → Actions → _Variables_):
+   - `SITE_URL` = `https://forma-app.co`
+   - `CUSTOM_DOMAIN` = `forma-app.co`
+
+   `CUSTOM_DOMAIN` is not a duplicate of `SITE_URL`. GitHub Pages remembers a custom domain in a
+   `CNAME` file at the root of the published branch, and the `gh-pages` target force-pushes that
+   branch on every deploy — so a `CNAME` written once through the dashboard is erased by the next
+   deploy and the domain silently detaches. The workflow writes the file itself from this variable.
+
+   `BASE_PATH` needs no value: it derives to `/` for any URL that is not `github.io/<repo>`.
+
+2. **DNS**, at the registrar. For an apex domain (`forma-app.co`), four `A` records:
+
+   ```
+   A      @      185.199.108.153
+   A      @      185.199.109.153
+   A      @      185.199.110.153
+   A      @      185.199.111.153
+   CNAME  www    angritsay.github.io
+   ```
+
+   For a subdomain (`app.forma-app.co`) a single `CNAME` to `angritsay.github.io` is enough.
+
+3. **Settings → Pages → Custom domain**: enter it, save, wait for the DNS check, then tick
+   **Enforce HTTPS** (the certificate takes a few minutes to issue).
+
+4. Re-run _Deploy site_. Canonical URLs, the sitemap, `robots.txt`, hreflang, JSON-LD and the OG
+   card URLs all follow `SITE_URL`; the old `github.io` address redirects to the new domain.
+
+Two places outside this repository hold the origin as well, and both need the same value:
+
+- **Supabase** → Authentication → URL Configuration → **Site URL** (it is the link in the
+  sign-in email).
+- **@BotFather** → the bot → Bot Settings → Menu Button → `https://forma-app.co/app/`.
 
 ## Moving this code to its own repository
 

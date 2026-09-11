@@ -1,7 +1,7 @@
 /**
  * Guards the constraint that the uppercase kicker carries.
  *
- * `.eyebrow` (src/styles/global.css) sets its label in capitals at 0.14em tracking. That works on
+ * `.eyebrow` (src/styles/global.css) sets its label in capitals at 0.18em tracking. That works on
  * a section marker and fails on a sentence: Cyrillic capitals are near-uniform rectangles, so
  * uppercasing a Russian phrase erases its word silhouette, and the tracking then pushes it to
  * roughly twice the set width of the sentence-case original — on a 390px screen a long one wraps
@@ -20,9 +20,10 @@ import { dict as en } from './en/index';
 import { dict as ru } from './ru/index';
 
 /**
- * Measured against the rendered face: at 11px with 0.14em tracking, Manrope's Cyrillic capitals
- * average ~9px of advance, so 22 characters is ~200px — about half of a 390px screen, which is
- * the most a kicker should take before it stops reading as a label.
+ * Measured against the rendered face: at 11px with 0.18em tracking, Onest's Cyrillic capitals
+ * average ~9.5px of advance, so 22 characters is ~210px — a little over half of a 390px screen,
+ * which is the most a kicker should take before it stops reading as a label. The brandbook's
+ * wider tracking (.18em, up from .14em) makes this ceiling tighter, not looser.
  */
 const MAX_KICKER_CHARS = 22;
 

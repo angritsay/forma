@@ -16,7 +16,7 @@ import { join, relative, sep } from 'node:path';
 
 /** @typedef {'ru' | 'en'} Locale */
 /** @typedef {{ level: 'error' | 'warning' | 'info', file: string, message: string }} Issue */
-/** @typedef {{ id: string, slug: { ru?: string, en?: string }, name: { ru?: string, en?: string }, file: string }} ContentEntry */
+/** @typedef {{ id: string, slug: { ru?: string, en?: string }, name: { ru?: string, en?: string }, file: string, published: boolean }} ContentEntry */
 /** @typedef {{ exercises: Map<string, ContentEntry>, courses: Map<string, ContentEntry>, issues: Issue[] }} ContentIndex */
 /**
  * @typedef {object} GuideFile
@@ -753,7 +753,15 @@ export function loadContentIndex(root) {
         for (const obj of collectObjectsWithId(value)) {
           if (!obj.slug || typeof obj.slug !== 'object') continue; // workouts / blocks / nodes
           const id = /** @type {string} */ (obj.id);
-          const entry = { id, slug: pickL10n(obj.slug), name: pickL10n(obj.name), file };
+          // `published: false` takes a course off sale: it keeps its content and its id, but it has
+          // no page, so a link to it must not be written as one. Anything else counts as on sale.
+          const entry = {
+            id,
+            slug: pickL10n(obj.slug),
+            name: pickL10n(obj.name),
+            file,
+            published: obj.published !== false,
+          };
           const prev = map.get(id);
           if (prev) {
             index.issues.push({
@@ -849,7 +857,10 @@ export function clusterSlug(cluster) {
  * @param {string} href
  * @param {Locale} locale
  * @param {{ exercises: Map<string, ContentEntry>, courses: Map<string, ContentEntry>, guides: Pick<GuideFile, 'locale' | 'slug' | 'data'>[] }} ctx
- * @returns {{ kind: 'exercise' | 'course' | 'guide', id: string, sitePath: string } | { kind: 'exercise' | 'course' | 'guide', id: string, error: string } | null}
+ * @returns {{ kind: 'exercise' | 'course' | 'guide', id: string, sitePath: string }
+ *   | { kind: 'exercise' | 'course' | 'guide', id: string, error: string }
+ *   | { kind: 'exercise' | 'course' | 'guide', id: string, unpublished: true }
+ *   | null}
  */
 export function resolveContentLink(href, locale, ctx) {
   const m = href.match(CONTENT_LINK_RE);
@@ -869,6 +880,13 @@ export function resolveContentLink(href, locale, ctx) {
   const map = kind === 'exercise' ? ctx.exercises : ctx.courses;
   const entry = map.get(id);
   if (!entry) return { kind, id, error: `unknown ${kind} "${id}"` };
+  /*
+   * A course that is written but not on sale has no page to point at. That is not a mistake in the
+   * guide — the link was right when it was written and will be right again — so it is reported as
+   * `unpublished` rather than as an error: the markdown keeps the sentence and drops the link, and
+   * the audit stays green instead of failing every time a course is held back.
+   */
+  if (entry.published === false) return { kind, id, unpublished: true };
   const slug = entry.slug[locale];
   if (!slug) return { kind, id, error: `${kind} "${id}" has no ${locale} slug` };
   return { kind, id, sitePath: `/${kind === 'exercise' ? 'exercises' : 'courses'}/${slug}/` };
@@ -1085,6 +1103,10 @@ export function auditGuides(guides, index, clusters = DEFAULT_GUIDE_CLUSTERS) {
         const r = resolveContentLink(link.href, locale, ctx);
         if (!r) continue;
         if ('error' in r) push('error', `link "${link.href}": ${r.error}`);
+        // A course held back from sale renders as plain text, so it is not an internal link and
+        // must not be counted as one — otherwise a guide whose only course link is to a hidden
+        // course looks well-linked and ships with none.
+        else if ('unpublished' in r) continue;
         else {
           contentLinks++;
           if (r.kind === 'course') courseLinks++;
@@ -1103,12 +1125,19 @@ export function auditGuides(guides, index, clusters = DEFAULT_GUIDE_CLUSTERS) {
           const r = resolveContentLink(`${kind}:${id}`, locale, ctx);
           if (!r || 'error' in r)
             push('error', `${field} "${id}": ${r && 'error' in r ? r.error : 'invalid id'}`);
+          // `related*` becomes a card with a link. Pointing one at a course that is not on sale
+          // would render a card to a page that was never built, so it is an error here rather
+          // than something the template has to remember to filter.
+          else if ('unpublished' in r)
+            push('error', `${field} "${id}": that course is not published (no page to link to)`);
         }
       }
       const cta =
         d.cta && typeof d.cta === 'object' ? /** @type {Record<string, unknown>} */ (d.cta) : {};
       if (str(cta.courseId) && !index.courses.has(str(cta.courseId)))
         push('error', `cta.courseId "${str(cta.courseId)}" is unknown`);
+      else if (str(cta.courseId) && index.courses.get(str(cta.courseId))?.published === false)
+        push('error', `cta.courseId "${str(cta.courseId)}" is not published (no page to link to)`);
       if (contentLinks < LIMITS.internalLinksMin)
         push(
           'warning',

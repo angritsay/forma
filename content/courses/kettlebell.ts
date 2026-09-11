@@ -1,5 +1,5 @@
 /**
- * Course "kettlebell" — «Гиря: сила и метаболизм» / "Kettlebell Power".
+ * Course "kettlebell" — «Форма с гирей: сила и метаболизм» / "Forma. Kettlebell".
  *
  * Six weeks, three sessions a week, level 2, one kettlebell plus a mat.
  *
@@ -1351,8 +1351,17 @@ const NODES: NodeInput[] = [
 export const COURSE_KETTLEBELL: CourseInput = {
   id: 'kettlebell',
   order: 4,
+  /*
+   * Written and playable, but not on sale yet: at launch Forma offers the beginner course only.
+   * See `published` in src/content/schema.ts for what the flag hides.
+   */
+  published: false,
   slug: { ru: 'girya-sila-i-metabolizm', en: 'kettlebell-power' },
-  name: { ru: 'Гиря: сила и метаболизм', en: 'Kettlebell Power' },
+  name: {
+    ru: 'Форма с гирей: сила и метаболизм',
+    en: 'Forma. Kettlebell: strength and metabolism',
+  },
+  shortName: { ru: 'Форма с гирей', en: 'Forma. Kettlebell' },
   tagline: {
     ru: 'Шесть недель с одной гирей: от становой тяги до рывка, три тренировки в неделю.',
     en: 'Six weeks with a single kettlebell: from the deadlift to the snatch, three sessions a week.',
@@ -1389,8 +1398,8 @@ export const COURSE_KETTLEBELL: CourseInput = {
       en: 'You want strength and conditioning at the same time — in 30–35 minutes, three times a week.',
     },
     {
-      ru: 'Ты прошёл «Старт» или «Своим весом» и хочешь добавить к собственному весу железо.',
-      en: 'You finished Start or Bodyweight Engine and want to add iron to bodyweight.',
+      ru: 'Ты прошёл «Форма с нуля» или «Форма своим весом» и хочешь добавить к собственному весу железо.',
+      en: 'You finished Forma Start or Forma Bodyweight and want to add iron to bodyweight.',
     },
   ],
   outcomes: [
@@ -1420,7 +1429,7 @@ export const COURSE_KETTLEBELL: CourseInput = {
   weeks: 6,
   sessionsPerWeek: 3,
   avgSessionMin: 32,
-  tile: '#232f42', // --tile-4
+  tile: '#1f1f24', // --tile-4 — neutral; no programme colour yet
   price: { rub: 3990, usd: 39 },
   workouts: [
     W_TEST,
@@ -1452,8 +1461,8 @@ export const COURSE_KETTLEBELL: CourseInput = {
         en: 'I have never trained with a kettlebell. Is this for me?',
       },
       a: {
-        ru: 'Да, если у тебя есть общая база: 8–10 отжиманий от пола подряд, минута планки, 15–20 приседаний без одышки. Гиревая техника здесь строится с нуля: первые две недели — только тяга, мах и разбор турецкого подъёма, взятие появляется на второй неделе, жим из взятия на третьей, рывок на пятой. Если базы пока нет, пройди сначала «Старт» — четыре недели без инвентаря, и возвращайся.',
-        en: 'Yes, if you have a general base: 8–10 full push-ups in a row, a one-minute plank, 15–20 squats without getting winded. Kettlebell technique is built from scratch here: the first two weeks are only the deadlift, the swing and the get-up steps; the clean appears in week two, the press out of the clean in week three, the snatch in week five. If the base is not there yet, do Start first — four weeks with no equipment — and come back.',
+        ru: 'Да, если у тебя есть общая база: 8–10 отжиманий от пола подряд, минута планки, 15–20 приседаний без одышки. Гиревая техника здесь строится с нуля: первые две недели — только тяга, мах и разбор турецкого подъёма, взятие появляется на второй неделе, жим из взятия на третьей, рывок на пятой. Если базы пока нет, пройди сначала «Форма с нуля» — четыре недели без инвентаря, и возвращайся.',
+        en: 'Yes, if you have a general base: 8–10 full push-ups in a row, a one-minute plank, 15–20 squats without getting winded. Kettlebell technique is built from scratch here: the first two weeks are only the deadlift, the swing and the get-up steps; the clean appears in week two, the press out of the clean in week three, the snatch in week five. If the base is not there yet, do Forma Start first — four weeks with no equipment — and come back.',
       },
     },
     {

@@ -21,6 +21,10 @@ export interface StepsEditorProps {
 /**
  * Goal ring with the big numeric field inside, quick-add chips and the points preview.
  * Shared by today's editor and the history edit sheet.
+ *
+ * The ring is white whatever the count — steps belong to no course, and reaching the goal is
+ * said by the badge under the ring, not by the ring turning green. The quick adds are the kit's
+ * chips with the `+` glyph; the figure in the ring is set as a numeral in the display face.
  */
 export function StepsEditor({ text, onText, goal, label, disabled, autoFocus }: StepsEditorProps) {
   const { t, locale } = useT();
@@ -36,8 +40,8 @@ export function StepsEditor({ text, onText, goal, label, disabled, autoFocus }: 
       <RingProgress
         value={value / goal}
         size={200}
-        stroke={14}
-        tone={value >= goal ? 'success' : 'accent'}
+        stroke={8}
+        tone="primary"
         label={t('app.stepsRingLabel')}
         valueText={`${formatNumber(locale, value)} / ${formatNumber(locale, goal)}`}
       >
@@ -58,9 +62,9 @@ export function StepsEditor({ text, onText, goal, label, disabled, autoFocus }: 
           placeholder="0"
           aria-invalid={invalid || undefined}
           aria-describedby={invalid ? `${id}-error` : undefined}
-          className="tabular w-32 bg-transparent text-center text-4xl font-bold leading-none outline-none placeholder:text-muted-2 disabled:opacity-50"
+          className="numeral w-32 bg-transparent text-center text-5xl leading-none outline-none placeholder:text-muted-2 disabled:opacity-40"
         />
-        <span className="mt-1 text-sm text-muted">
+        <span className="eyebrow mt-2">
           {t('app.stepsOfGoal', { goal: formatNumber(locale, goal) })}
         </span>
       </RingProgress>

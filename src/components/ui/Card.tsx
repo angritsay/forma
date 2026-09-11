@@ -1,18 +1,19 @@
 import { clsx } from 'clsx';
-import { forwardRef, type CSSProperties, type HTMLAttributes, type MouseEventHandler } from 'react';
+import { forwardRef, type HTMLAttributes, type MouseEventHandler } from 'react';
+import { courseTileVars } from '@/lib/ui/tile';
 
 export type CardLevel = 1 | 2 | 3;
 export type CardPadding = 'none' | 'sm' | 'md' | 'lg';
 
 export interface CardProps extends Omit<HTMLAttributes<HTMLElement>, 'onClick'> {
-  /** Surface level (1 = base card, 3 = most elevated). */
+  /** Surface level (1 = base card, 3 = most raised). */
   level?: CardLevel;
   /**
-   * Draw the card as course art rather than a surface. `true` uses the default tile; a hex
-   * string (a course's `tile` from content) picks that course's tile through a CSS variable.
+   * Draw the card as course art rather than a surface. `true` uses the neutral default tile; a
+   * hex string (a course's `tile` from content) sets `--course-tile` and the matching ink through
+   * courseTileVars(), so text lands black on a programme colour and light on a neutral surface.
    *
-   * This replaces the old `gradient` prop, which took a `[from, to]` pastel pair. The brand has
-   * no gradients now: course art is one flat, muted dark blue.
+   * This is the one place a Card takes colour, and it is the course's colour, never the kit's.
    */
   tile?: boolean | string;
   padding?: CardPadding;
@@ -23,6 +24,11 @@ export interface CardProps extends Omit<HTMLAttributes<HTMLElement>, 'onClick'> 
   selected?: boolean;
 }
 
+/*
+ * A card is a sharp rectangle one surface up from its ground, told apart by a hairline and
+ * nothing else — --shadow-card is none, and a dark card on a dark ground does not need a shadow
+ * to look raised, it needs an edge.
+ */
 const LEVEL: Record<CardLevel, string> = {
   1: 'bg-surface border border-border',
   2: 'bg-surface-2 border border-border',
@@ -51,15 +57,16 @@ export const Card = forwardRef<HTMLElement, CardProps>(function Card(
   },
   ref,
 ) {
-  const tileStyle: CSSProperties | undefined =
-    typeof tile === 'string' ? ({ '--course-tile': tile } as CSSProperties) : undefined;
+  const tileStyle = typeof tile === 'string' ? courseTileVars(tile) : undefined;
   const classes = clsx(
     'relative rounded-card',
     tile ? 'hero-art border-0' : LEVEL[level],
     PADDING[padding],
-    selected && 'ring-2 ring-accent',
+    // Selection is a 1px white line inside the edge — an inset ring, so it never changes the
+    // card's size and never carries a colour.
+    selected && 'ring-1 ring-inset ring-primary',
     onClick &&
-      'w-full text-left transition-[background-color,transform] active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none',
+      'w-full text-left transition-[background-color,transform] duration-150 ease-(--ease-out) active:scale-[0.99] disabled:opacity-40 disabled:pointer-events-none',
     className,
   );
   const merged = tileStyle ? { ...tileStyle, ...style } : style;

@@ -40,7 +40,7 @@ export const BOOKING = {
     en: 'Reschedule up to 24 hours before the session',
   } satisfies L10n,
   /** Payment page per locale (Prodamus product link). Empty until it exists. */
-  paymentUrl: {} as PaymentUrl,
+  paymentUrl: { ru: 'https://payform.ru/jncx6bM/' } as PaymentUrl,
   /** Slot picker the client opens after paying. Empty → the coach writes to the client. */
   scheduleUrl: '' as string,
 } as const;

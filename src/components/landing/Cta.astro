@@ -1,5 +1,12 @@
 ---
-/** Final call-to-action band. */
+/**
+ * Final call-to-action band.
+ *
+ * The closing argument, set left over a hairline rather than centred inside a filled panel.
+ * Centred text in a bordered box is the shape of every SaaS footer CTA; the page's last word
+ * reads better in the same column everything above it was read in. Nothing glows any more — the
+ * only emphasis is the weight of the type and the white button.
+ */
 import Button from './Button.astro';
 
 interface Props {
@@ -12,30 +19,22 @@ const { title, text, primary, secondary } = Astro.props;
 ---
 
 <section class="mx-auto max-w-6xl px-5 py-8 md:py-12">
-  <!--
-    The closing argument, set left over a rule rather than centred inside a filled, glowing panel.
-    Centred text in a bordered box is the shape of every SaaS footer CTA; the page's last word
-    reads better in the same column everything above it was read in. The glow stays — it is the
-    one soft thing in the system and it marks the end — but it sits behind the type now rather
-    than around a box.
-  -->
-  <div class="relative overflow-hidden border-t border-border pt-12 md:pt-16">
-    <div
-      class="pointer-events-none absolute -top-32 left-0 h-64 w-[40rem] rounded-full bg-accent/12 blur-3xl"
-      aria-hidden="true"
-    >
-    </div>
-    <h2 class="font-display relative max-w-3xl text-4xl text-balance md:text-5xl">{title}</h2>
-    <p class="relative mt-4 max-w-xl text-lg text-muted">{text}</p>
-    <div class="relative mt-8 flex flex-wrap gap-3">
-      <Button href={primary.href} size="lg">{primary.label}</Button>
-      {
-        secondary && (
-          <Button href={secondary.href} variant="secondary" size="lg">
-            {secondary.label}
-          </Button>
-        )
-      }
+  <div class="border-t border-border pt-12 md:pt-16">
+    <div class="flex flex-wrap items-end justify-between gap-x-12 gap-y-8">
+      <div class="max-w-3xl">
+        <h2 class="font-display text-4xl text-balance md:text-5xl">{title}</h2>
+        <p class="mt-5 max-w-xl text-lg text-muted">{text}</p>
+      </div>
+      <div class="flex flex-wrap gap-4">
+        <Button href={primary.href} size="lg">{primary.label}</Button>
+        {
+          secondary && (
+            <Button href={secondary.href} variant="secondary" size="lg">
+              {secondary.label}
+            </Button>
+          )
+        }
+      </div>
     </div>
   </div>
 </section>

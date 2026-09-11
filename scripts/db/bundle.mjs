@@ -26,7 +26,22 @@ const FILES = [
   ['0005_subscriptions.sql', 'monthly / annual subscriptions and the entitlements union'],
   ['0006_custom_workouts.sql', 'exercise catalogue + coach-built custom workouts, sharing, assign'],
   ['0007_exercise_seed.sql', 'the exercise library seeded into the database'],
+  ['0008_course_builder.sql', 'courses and days authored in the admin panel, and publishing'],
+  ['0010_public_course_pages.sql', 'anonymous reads of a published course, so it gets a page'],
 ];
+
+/**
+ * 0009_course_import.sql is deliberately NOT bundled.
+ *
+ * It carries the five existing courses — 83 workouts and 204 days of Sergey's programming — as
+ * editable rows, and at 660 KB it is four times the size of everything else here put together.
+ * Pasting that into a browser text editor is a bad experience and an easy way to lose a paste
+ * halfway through; it wants to be opened as a file instead (SQL Editor's "+" -> Import SQL file).
+ *
+ * Nothing else depends on it: it only needs the tables 0008 creates, and skipping it leaves a
+ * working, empty course builder. So it stays a separate, optional second step.
+ */
+const SEPARATE = '0009_course_import.sql';
 
 const rule = '-- ' + '='.repeat(77);
 
@@ -43,30 +58,80 @@ const head = `${rule}
 -- Safe to re-run: every statement is guarded (create ... if not exists, drop policy if exists),
 -- which is also how an existing project is upgraded.
 --
--- ONE THING TO EDIT: the last section makes the coach an admin. Put his real sign-in address
--- there before running, or the admin screen — where purchases are activated — stays locked.
+-- ONE THING TO EDIT: the section immediately below lists who can open the admin panel. Put the
+-- real sign-in addresses there. Left as they are, the script stops without changing anything.
+--
+-- AFTERWARDS, OPTIONAL: ${SEPARATE} loads the five existing courses as rows the admin
+-- panel can edit. It is 660 KB — too big to paste comfortably — so open it as a file instead:
+-- SQL Editor -> "+" -> Import SQL file. Skip it and the course builder still works, just empty.
 ${rule}
+`;
+
+/*
+ * The admin addresses are collected at the TOP, before any DDL, and used at the bottom.
+ *
+ * They are checked where they are typed, which means a script still carrying the placeholders
+ * stops on its very first statement — nothing is created, whether the runner wraps the file in a
+ * transaction (the Supabase SQL editor does) or commits statement by statement (psql does not).
+ * Putting the insert at the end and the edit at the end too, as this used to, had the opposite
+ * property under psql: the whole schema was built and only then did the admin row turn out to be
+ * a placeholder nobody can sign in with, leaving a database whose admin panel cannot be opened.
+ */
+const adminBlock = `
+${rule}
+-- EDIT THIS FIRST — who can open the admin panel
+--
+-- These are the people who build courses, activate purchases and upload video. Put the real
+-- sign-in addresses here. Case does not matter. One address per line, commas between; add or
+-- remove lines freely.
+--
+-- Any line still reading CHANGE-ME-… is ignored, so if only one of you needs adding, overwrite
+-- one line and leave the other alone. Overwrite neither and the script stops right here, having
+-- changed nothing.
+--
+-- Adding someone who is already an admin does nothing — so if you have added an address before,
+-- straight into the dashboard, there is no harm in listing it again. To see who is already there:
+--   select email from public.admins order by email;
+${rule}
+
+create temporary table _forma_admin_emails (email text);
+
+insert into _forma_admin_emails (email) values
+  ('CHANGE-ME-owner@example.com'),
+  ('CHANGE-ME-coach@example.com');
+
+/*
+ * Placeholders are dropped rather than rejected.
+ *
+ * Refusing the whole run because one of the two lines was left alone punishes the common case:
+ * one of the pair is already an admin, added by hand months ago, and only the other needs a row.
+ * Dropping them keeps the property that matters — the run cannot finish with nobody able to open
+ * the admin panel — because the check below then fires on the empty set.
+ */
+delete from _forma_admin_emails where email like 'CHANGE-ME-%';
+
+do $adm$
+begin
+  if not exists (select 1 from _forma_admin_emails) then
+    raise exception using
+      message = 'Stopped, and nothing was changed: no admin addresses were filled in.',
+      hint    = 'Near the top of this script, replace CHANGE-ME-owner@example.com and/or '
+                'CHANGE-ME-coach@example.com with a real sign-in address, then run it again.';
+  end if;
+end $adm$;
 `;
 
 const tail = `
 ${rule}
--- Admin access — EDIT THIS BEFORE RUNNING
---
--- Replace the address with the one the coach will sign in with. Case does not matter (the column
--- is citext). Several people? One address per line, each in its own parentheses, commas between:
---
---   insert into public.admins (email) values
---     ('coach@example.com'),
---     ('assistant@example.com')
---   on conflict (email) do nothing;
+-- Admin access — the addresses collected at the top of this script.
 ${rule}
 
-insert into public.admins (email) values
-  ('CHANGE-ME@example.com')
+insert into public.admins (email)
+select email from _forma_admin_emails
 on conflict (email) do nothing;
 `;
 
-const parts = [head];
+const parts = [head, adminBlock];
 for (const [name, what] of FILES) {
   parts.push(`\n${rule}\n-- ${name} — ${what}\n${rule}\n\n`);
   parts.push(`${readFileSync(join(MIGRATIONS, name), 'utf8').trimEnd()}\n`);

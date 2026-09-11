@@ -37,13 +37,13 @@ export function Slider({
       {(label || descriptor) && (
         <div className="flex items-baseline justify-between gap-3">
           {label ? (
-            <label htmlFor={id} className="text-sm font-medium text-muted">
+            <label htmlFor={id} className="text-[13px] font-semibold text-muted">
               {label}
             </label>
           ) : (
             <span />
           )}
-          <span className="tabular text-3xl font-bold">{value}</span>
+          <span className="numeral text-3xl">{value}</span>
         </div>
       )}
       <input
@@ -61,25 +61,26 @@ export function Slider({
          * how you paint a filled portion in WebKit, which has no ::-moz-range-progress. It is not
          * a decorative gradient and is not what the brand's no-gradients rule is about.
          *
-         * Thumb and track are squared off like every other control; the thumb keeps its 28px so
-         * it stays draggable.
+         * The slider is a control, so its fill is white (`--primary`), not the programme colour
+         * — that is reserved for progress. Thumb and track are squared off like every other
+         * control, and the thumb keeps its 28px so it stays draggable.
          */
         className={clsx(
-          'h-8 w-full cursor-pointer appearance-none bg-transparent disabled:opacity-50',
+          'h-8 w-full cursor-pointer appearance-none bg-transparent disabled:opacity-40',
           '[&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:rounded-none',
-          '[&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,var(--accent)_var(--slider-pct),var(--surface-3)_var(--slider-pct))]',
+          '[&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,var(--primary)_var(--slider-pct),var(--surface-3)_var(--slider-pct))]',
           '[&::-webkit-slider-thumb]:-mt-3 [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:w-7',
           '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-control',
-          '[&::-webkit-slider-thumb]:bg-accent [&::-webkit-slider-thumb]:shadow-card',
+          '[&::-webkit-slider-thumb]:bg-primary',
           '[&::-moz-range-track]:h-1 [&::-moz-range-track]:rounded-none [&::-moz-range-track]:bg-surface-3',
-          '[&::-moz-range-progress]:h-1 [&::-moz-range-progress]:rounded-none [&::-moz-range-progress]:bg-accent',
+          '[&::-moz-range-progress]:h-1 [&::-moz-range-progress]:rounded-none [&::-moz-range-progress]:bg-primary',
           '[&::-moz-range-thumb]:h-7 [&::-moz-range-thumb]:w-7 [&::-moz-range-thumb]:rounded-control',
-          '[&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-accent',
+          '[&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-primary',
         )}
       />
-      {descriptor ? <p className="text-sm text-muted">{descriptor}</p> : null}
+      {descriptor ? <p className="text-[13px] text-muted">{descriptor}</p> : null}
       {(minLabel || maxLabel) && (
-        <div className="flex justify-between text-xs text-muted-2">
+        <div className="eyebrow flex justify-between">
           <span>{minLabel}</span>
           <span>{maxLabel}</span>
         </div>

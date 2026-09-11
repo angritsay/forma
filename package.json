@@ -24,13 +24,15 @@
     "media:prepare": "node scripts/media/prepare-videos.mjs",
     "media:apply": "node scripts/media/apply-manifest.mjs",
     "media:upload": "node scripts/media/upload-videos.mjs --dir media/clips",
-    "telegram:icon": "node scripts/telegram/app-icon.mjs"
+    "telegram:icon": "node scripts/telegram/app-icon.mjs",
+    "content:import": "node scripts/content/gen-course-import.mjs"
   },
   "dependencies": {
     "@astrojs/react": "4.4.2",
     "@astrojs/rss": "4.0.19",
     "@fontsource-variable/manrope": "5.2.8",
     "@fontsource-variable/onest": "5.3.1",
+    "@fontsource-variable/unbounded": "^5.3.0",
     "@supabase/supabase-js": "2.113.0",
     "@tailwindcss/vite": "4.3.3",
     "astro": "5.18.2",

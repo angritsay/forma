@@ -5,12 +5,14 @@
  *
  * A ruled row rather than a bordered card. These appear thirty at a time on the encyclopedia hub,
  * and thirty bordered boxes is a wall — hairlines let the column read as an index, which is what
- * a reference list of exercises actually is.
+ * a reference list of exercises actually is. The tile takes the programme colour of the course
+ * the exercise belongs to, and `courseTileStyle()` sets the ink the figure is drawn in to match.
  */
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
 import type { Exercise, Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { equipmentNames, exerciseTile, levelName, patternName } from '@/lib/seo/exercises';
+import { courseTileStyle } from '@/lib/ui/tile';
 import { href } from '@/lib/util/paths';
 
 interface Props {
@@ -20,22 +22,21 @@ interface Props {
 
 const { exercise: ex, locale } = Astro.props;
 const name = l(ex.name, locale);
-const CHIP = 'control-label rounded-control border px-2 py-1 text-[10px]';
+const CHIP =
+  'inline-flex h-7 items-center rounded-control border px-2.5 text-[11px] font-semibold uppercase tracking-[0.06em]';
 ---
 
 <a
   href={href(locale, `/exercises/${ex.slug[locale]}/`)}
-  class="flex h-full gap-4 border-t border-border py-4 transition-colors hover:border-border-strong"
+  class="flex h-full gap-4 border-t border-border py-4 transition-colors duration-150 hover:border-border-strong"
+  style={courseTileStyle(exerciseTile(ex))}
 >
-  <div
-    class="hero-art flex size-[72px] shrink-0 items-center justify-center overflow-hidden rounded-control"
-    style={`--course-tile:${exerciseTile(ex)}`}
-  >
+  <div class="hero-art flex size-[72px] shrink-0 items-center justify-center overflow-hidden">
     <ExerciseFigure animation={ex.animation} variant="thumb" label={name} />
   </div>
   <div class="min-w-0">
     <span class="eyebrow">{patternName(ex.pattern, locale)}</span>
-    <h3 class="font-display mt-1 leading-snug">{name}</h3>
+    <h3 class="font-display mt-1 text-[15px]">{name}</h3>
     <ul class="mt-2 flex flex-wrap gap-1.5">
       <li class={`${CHIP} border-border text-muted`}>{levelName(ex.level, locale)}</li>
       {
@@ -45,7 +46,7 @@ const CHIP = 'control-label rounded-control border px-2 py-1 text-[10px]';
       }
       {
         ex.isTest && (
-          <li class={`${CHIP} border-accent/40 text-accent`}>
+          <li class={`${CHIP} border-border-strong text-text`}>
             {t(locale, 'seo.exerciseTestBadge')}
           </li>
         )

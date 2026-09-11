@@ -42,11 +42,11 @@ export function StepTestPlank({ draft, update }: StepProps) {
         done={!watch.running && watch.elapsedMs > 0}
       >
         {watch.running ? (
-          <Button variant="danger" size="lg" onClick={stop} icon={<Icon name="pause" size={18} />}>
+          <Button variant="danger" size="lg" onClick={stop} icon={<Icon name="pause" size={16} />}>
             {t('app.onbTimerStop')}
           </Button>
         ) : (
-          <Button size="lg" onClick={watch.start} icon={<Icon name="play" size={18} />}>
+          <Button size="lg" onClick={watch.start} icon={<Icon name="play" size={16} />}>
             {watch.elapsedMs > 0 ? t('common.continue') : t('common.start')}
           </Button>
         )}

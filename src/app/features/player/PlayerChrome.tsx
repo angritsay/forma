@@ -1,38 +1,32 @@
 /**
- * Player chrome: the top bar over the hero art, the step progress row, the bottom control row and
- * the paused overlay. Presentational — the screen owns the state.
+ * Player chrome: the top bar over the hero art, the section stepper, the step progress row, the
+ * bottom control row and the paused overlay. Presentational — the screen owns the state.
  */
 import { clsx } from 'clsx';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Icon } from '@/components/ui/Icon';
+import { Glyph, Icon } from '@/components/ui/Icon';
 import { IconButton } from '@/components/ui/IconButton';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { useT } from '@/app/hooks/useT';
 import { formatClock } from '@/i18n/index';
 import { sectionLabel, type BlockSection } from './model';
 
-function MoreIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <circle cx="5" cy="12" r="2" />
-      <circle cx="12" cy="12" r="2" />
-      <circle cx="19" cy="12" r="2" />
-    </svg>
-  );
-}
-
+/*
+ * A loudspeaker is a physical object no glyph says, so it stays an icon: 16px, square caps, a
+ * cross through it when muted. The only picture in the player's chrome besides play and pause.
+ */
 export function SoundIcon({ muted }: { muted: boolean }) {
   return (
     <svg
-      width="20"
-      height="20"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      strokeLinecap="butt"
+      strokeLinejoin="miter"
       aria-hidden="true"
     >
       <path d="M4 9v6h4l5 4V5L8 9z" />
@@ -48,17 +42,36 @@ export function SoundIcon({ muted }: { muted: boolean }) {
 export interface PlayerHeaderProps {
   title: string;
   muted: boolean;
+  /** True while the coach's video is behind the bar: the title goes white over the frame. */
+  overVideo?: boolean;
   onBack: () => void;
   onToggleSound: () => void;
   onMenu: () => void;
 }
 
-export function PlayerHeader({ title, muted, onBack, onToggleSound, onMenu }: PlayerHeaderProps) {
+/**
+ * Back, the step's name, sound and the menu, laid over the art. The three controls are ink plates
+ * (`on-art`), findable on a yellow tile and on a video frame alike; the title reads in the ink the
+ * tile wants and in white over a video, where the art layer draws a scrim for it.
+ */
+export function PlayerHeader({
+  title,
+  muted,
+  overVideo = false,
+  onBack,
+  onToggleSound,
+  onMenu,
+}: PlayerHeaderProps) {
   const { t } = useT();
   return (
-    <header className="relative z-10 flex h-14 items-center gap-2 px-3 pt-[var(--safe-top)] text-on-primary">
+    <header
+      className={clsx(
+        'relative z-10 flex h-14 items-center gap-2 px-3 pt-[var(--safe-top)]',
+        overVideo ? 'text-paper' : 'text-tile-fg',
+      )}
+    >
       <IconButton label={t('common.back')} icon="back" variant="on-art" onClick={onBack} />
-      <h1 className="min-w-0 flex-1 truncate text-center text-base font-semibold">{title}</h1>
+      <h1 className="font-display min-w-0 flex-1 truncate text-center text-[13px]">{title}</h1>
       <IconButton
         label={muted ? t('app.playerUnmute') : t('app.playerMute')}
         icon={<SoundIcon muted={muted} />}
@@ -68,7 +81,7 @@ export function PlayerHeader({ title, muted, onBack, onToggleSound, onMenu }: Pl
       />
       <IconButton
         label={t('app.playerMenu')}
-        icon={<MoreIcon />}
+        icon={<Glyph size={16}>···</Glyph>}
         variant="on-art"
         onClick={onMenu}
       />
@@ -82,30 +95,28 @@ export interface ProgressRowProps {
   elapsedSec: number;
 }
 
-/** Elapsed clock, step progress bar and the step counter. */
+/**
+ * The step counter as a kicker on the left, the elapsed clock in the display face on the right,
+ * and the 4px bar under both — the design system's player row. The bar is the one thing here
+ * that takes the programme colour; the clock is type.
+ */
 export function ProgressRow({ stepIndex, totalSteps, elapsedSec }: ProgressRowProps) {
   const { t } = useT();
   const last = Math.max(1, totalSteps - 1);
   const value = Math.min(1, stepIndex / last);
+  const n = Math.min(stepIndex + 1, last);
   return (
-    <div className="flex items-center gap-3 px-5 pb-2 pt-4">
-      <span
-        className="tabular flex items-center gap-1 text-sm font-semibold"
-        aria-label={t('app.playerElapsed')}
-      >
-        <Icon name="clock" size={16} className="text-muted" />
-        {formatClock(elapsedSec)}
-      </span>
-      <ProgressBar
-        value={value}
-        size="sm"
-        tone="accent"
-        label={t('app.playerStepOf', { n: Math.min(stepIndex + 1, last), total: last })}
-        className="flex-1"
-      />
-      <span className="tabular text-xs font-medium text-muted">
-        {Math.min(stepIndex + 1, last)}/{last}
-      </span>
+    <div className="flex flex-col gap-3 px-5 pt-4 pb-2">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="eyebrow tabular">{t('app.playerStepOf', { n, total: last })}</span>
+        <span
+          className="font-display tabular text-[22px] leading-none"
+          aria-label={t('app.playerElapsed')}
+        >
+          {formatClock(elapsedSec)}
+        </span>
+      </div>
+      <ProgressBar value={value} label={t('app.playerStepOf', { n, total: last })} />
     </div>
   );
 }
@@ -116,16 +127,17 @@ export interface SectionStepperProps {
 }
 
 /**
- * The three parts of a session — Разминка · Тренировка · Заминка — as a stepper, so the athlete
- * always sees where they are and what is left. Hidden when a workout has only one part (a bare
- * test), where it would say nothing.
+ * The three parts of a session — Разминка · Тренировка · Заминка — as kickers over 2px rules,
+ * so the athlete always sees where they are and what is left. The active part is the one kicker
+ * on the screen in the programme colour; a finished part ends in a tick. Hidden when a workout
+ * has only one part (a bare test), where it would say nothing.
  */
 export function SectionStepper({ sections, current }: SectionStepperProps) {
   const { t } = useT();
   if (sections.length < 2) return null;
   const currentIdx = sections.indexOf(current);
   return (
-    <ol className="flex items-stretch gap-2 px-5 pt-4" aria-label={t('app.playerSectionsLabel')}>
+    <ol className="flex items-stretch gap-2.5 px-5 pt-4" aria-label={t('app.playerSectionsLabel')}>
       {sections.map((section, i) => {
         const done = i < currentIdx;
         const active = i === currentIdx;
@@ -133,17 +145,17 @@ export function SectionStepper({ sections, current }: SectionStepperProps) {
           <li
             key={section}
             className={clsx(
-              'control-label flex flex-1 items-center justify-center gap-1 border-t-2 px-2 py-2 text-[10px] transition-colors',
+              'eyebrow flex flex-1 items-center gap-1.5 border-t-2 pt-2 transition-colors duration-150 ease-(--ease-out)',
               active
-                ? 'border-accent text-text'
+                ? 'border-course text-course'
                 : done
                   ? 'border-border-strong text-muted'
                   : 'border-border text-muted-2',
             )}
             aria-current={active ? 'step' : undefined}
           >
-            {done ? <Icon name="check" size={12} /> : null}
             {sectionLabel(t, section)}
+            {done ? <Glyph size={11}>✓</Glyph> : null}
           </li>
         );
       })}
@@ -159,14 +171,19 @@ export interface ControlsProps {
   onNext: () => void;
 }
 
-/** Previous (outlined) — Pause/Play (big, accent) — Next (outlined). */
+/**
+ * Previous ‹ — Pause/Play — Next ›. The two side controls are 52px squares with a hairline and a
+ * glyph; the middle one is 64px, the white fill, and carries the one picture the brand keeps for
+ * the player. Everything is square: the circle the brandbook allows is a play button laid over a
+ * video, and this row sits under the art, not on it.
+ */
 export function Controls({ paused, canPrev, onPrev, onTogglePause, onNext }: ControlsProps) {
   const { t } = useT();
   const side =
-    'flex h-14 w-14 items-center justify-center rounded-control border border-border-strong bg-transparent text-text transition-colors hover:bg-white/5 disabled:pointer-events-none disabled:opacity-40';
+    'flex h-[52px] w-[52px] items-center justify-center rounded-control border border-border-strong bg-transparent text-text transition-[background-color,transform] duration-150 ease-(--ease-out) hover:bg-surface-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40';
   return (
     <div className="sticky bottom-0 z-20 bg-linear-to-t from-bg via-bg/95 to-transparent px-5 pb-[calc(var(--safe-bottom)+16px+var(--demo-inset,0px))] pt-4">
-      <div className="flex items-center justify-center gap-6">
+      <div className="flex items-center justify-center gap-3.5">
         <button
           type="button"
           className={side}
@@ -174,19 +191,19 @@ export function Controls({ paused, canPrev, onPrev, onTogglePause, onNext }: Con
           disabled={!canPrev}
           aria-label={t('app.playerPrev')}
         >
-          <Icon name="prev" size={22} />
+          <Glyph size={18}>‹</Glyph>
         </button>
         <button
           type="button"
-          className="flex h-[76px] w-[76px] items-center justify-center rounded-control bg-accent text-on-primary shadow-card transition-transform active:scale-95"
+          className="flex h-16 w-16 items-center justify-center rounded-control bg-primary text-on-primary transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-85 active:scale-[0.98]"
           onClick={onTogglePause}
           aria-label={paused ? t('app.playerResume') : t('app.playerPause')}
           aria-pressed={paused}
         >
-          <Icon name={paused ? 'play' : 'pause'} size={34} />
+          <Icon name={paused ? 'play' : 'pause'} size={20} />
         </button>
         <button type="button" className={side} onClick={onNext} aria-label={t('app.playerNext')}>
-          <Icon name="next" size={22} />
+          <Glyph size={18}>›</Glyph>
         </button>
       </div>
     </div>
@@ -206,13 +223,13 @@ export function PausedOverlay({ onResume, children, className }: PausedOverlayPr
     <div
       role="status"
       className={clsx(
-        'absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 rounded-card bg-bg/85 px-6 text-center backdrop-blur-sm',
+        'absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-bg/92 px-6 text-center',
         className,
       )}
     >
       <span className="font-display text-4xl">{t('app.playerPausedTitle')}</span>
       <p className="max-w-[30ch] text-[15px] text-muted">{t('app.playerPausedBody')}</p>
-      <Button size="lg" onClick={onResume} icon={<Icon name="play" size={20} />} data-autofocus>
+      <Button size="lg" onClick={onResume} icon={<Icon name="play" size={16} />} data-autofocus>
         {t('app.playerResume')}
       </Button>
       {children}

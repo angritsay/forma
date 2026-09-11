@@ -2,7 +2,7 @@
  * Pure helpers for the Admin screen: filter → API filter, allowed status transitions, course
  * names and the optimistic row update after a status change.
  */
-import { COURSE_BY_ID } from '@/content/registry';
+import { findCourse } from '@/content/catalogue';
 import type { Locale } from '@/content/schema';
 import type {
   PurchaseFilter,
@@ -39,7 +39,7 @@ export function nextStatuses(status: PurchaseStatus): PurchaseStatus[] {
 }
 
 export function courseName(courseId: string, locale: Locale): string {
-  const course = COURSE_BY_ID.get(courseId);
+  const course = findCourse(courseId);
   return course ? course.name[locale] : courseId;
 }
 

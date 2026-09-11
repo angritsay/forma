@@ -28,18 +28,43 @@ const WIDTH = 1200;
 const HEIGHT = 630;
 // Published languages, mirroring LOCALES in src/content/schema.ts: a card per page that exists.
 const LOCALES = ['ru'];
-const BRAND_TILE = '#1A2634';
-/** The five course tiles (--tile-1..5), rotated per cluster so guide hubs vary deterministically. */
-const TILES = ['#1A2634', '#20293C', '#16202B', '#232F42', '#1C2532'];
+/*
+ * Second brandbook (src/styles/global.css). The card is black and white; the only colour on it is
+ * the programme colour of the course it advertises, on the tile. Brand and hub cards, which are
+ * about no course in particular, take a neutral surface rather than a colour of their own.
+ */
+const BRAND_TILE = '#1F1F24';
+/**
+ * The five course tiles (--tile-1..5): the three programme colours, then the two neutral
+ * surfaces. Rotated per guide cluster so hub cards vary deterministically.
+ */
+const TILES = ['#F2F52D', '#A8C8FF', '#F08A3C', '#1F1F24', '#2A2A30'];
 const COLORS = {
-  bg: '#0B0B0D',
-  text: '#F4F4F6',
-  muted: '#9A9AA3',
-  muted2: '#6B6B73',
-  accent: '#9ECBFF',
-  /** Ink on a course tile — the figure is drawn in it, so it is light, not black. */
-  tileFg: '#DCE9FA',
+  bg: '#0F0F11',
+  text: '#F6F6F7',
+  muted: '#B9B9C0',
+  muted2: '#93939D',
+  /** Ink for a figure or label on a *light* tile (a programme colour). */
+  inkOnLight: '#0F0F11',
+  /** Ink on a *dark* tile (a neutral surface). */
+  inkOnDark: '#F6F6F7',
 };
+
+/**
+ * Black ink on a programme colour, light ink on a neutral surface — the same rule as
+ * `tileInk()` in src/lib/ui/tile.ts, repeated here because this script must not import from src
+ * at module load (the TypeScript loader is registered later).
+ * @param {string} hex
+ */
+function inkOn(hex) {
+  const h = hex.replace('#', '');
+  const ch = (/** @type {number} */ i) => {
+    const c = parseInt(h.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  const lum = 0.2126 * ch(0) + 0.7152 * ch(2) + 0.0722 * ch(4);
+  return lum > 0.35 ? COLORS.inkOnLight : COLORS.inkOnDark;
+}
 
 // Node prints an ExperimentalWarning for type stripping; keep every other warning.
 process.removeAllListeners('warning');
@@ -173,18 +198,23 @@ function errMessage(err) {
 /* ------------------------------------------------------------------------------------------ */
 
 /** @param {string} s */
-/** Bundled OG faces. Both are baked latin+cyrillic so one file covers a Russian card. */
-const DISPLAY = 'Manrope';
-const BODY = 'Onest';
 /**
- * The wordmark is Manrope 800 while headlines are Manrope 600, and resvg picks a face by weight —
- * so both static instances are bundled and measured separately. `WORDMARK` is only a key into
- * FONT_FILES for the metrics parser; both files declare the same family name to the renderer.
+ * Bundled OG faces, all baked latin+cyrillic so one file covers a Russian card.
+ *
+ * Display is Unbounded, in capitals, at three weights: 600 for the headline, 800 and 200 for the
+ * wordmark's «FOR» and «MA». resvg picks a face by `font-weight`, so each weight is a separate
+ * static instance (cut from Google's variable file with fontTools; see fonts/OFL-Unbounded.txt).
+ * The keys below are for the metrics parser only — to the renderer every Unbounded file declares
+ * the same family name and differs by weight.
  */
-const WORDMARK = 'Manrope800';
+const DISPLAY = 'Unbounded';
+const BODY = 'Onest';
+const WORDMARK = 'Unbounded800';
+const WORDMARK_THIN = 'Unbounded200';
 const FONT_FILES = {
-  [DISPLAY]: 'Manrope-SemiBold.ttf',
-  [WORDMARK]: 'Manrope-ExtraBold.ttf',
+  [DISPLAY]: 'Unbounded-SemiBold.ttf',
+  [WORDMARK]: 'Unbounded-ExtraBold.ttf',
+  [WORDMARK_THIN]: 'Unbounded-ExtraLight.ttf',
   [BODY]: 'Onest-Regular.ttf',
 };
 
@@ -360,17 +390,24 @@ function embedFigure(svg, x, y, size) {
  */
 function template(c) {
   const margin = 80;
-  const tile = { x: 720, y: 105, size: 420, r: 48 };
+  // The tile is a sharp square: the brand has one shape and it has no radius.
+  const tile = { x: 720, y: 105, size: 420, r: 0 };
   const textWidth = tile.x - margin - 56;
+  /*
+   * The headline is Unbounded in capitals, so it is measured and drawn uppercased. Unbounded is
+   * wide — a Russian title takes half again the width it took in Manrope — hence the smaller
+   * size ladder: the fit picks the largest step that still wraps within three lines.
+   */
+  const titleText = c.title.toUpperCase();
   const title = fitText(
-    c.title,
-    c.big ? [120, 100] : [64, 56, 48, 42, 36],
+    titleText,
+    c.big ? [96, 80] : [52, 46, 40, 36, 32],
     textWidth,
     c.big ? 1 : 3,
     DISPLAY,
   );
-  // 1.166em is where Й on one line meets у on the line above in Manrope's Cyrillic; 1.2 clears it.
-  const titleLineHeight = title.size * 1.2;
+  // Capitals have no descenders except the tails of Д, Ц and Щ; 1.08 clears Й's breve below them.
+  const titleLineHeight = title.size * 1.08;
   const eyebrowY = 150;
   let y = c.eyebrow ? 216 : 190;
   const titleTspans = title.lines
@@ -400,31 +437,39 @@ function template(c) {
         `<tspan x="${margin}" y="${(y + i * subtitle.size * 1.4).toFixed(1)}">${esc(line)}</tspan>`,
     )
     .join('');
-  // The wordmark is set in ExtraBold, so its width has to be measured against that face rather
-  // than the SemiBold the headline uses — the blue full stop is positioned off this number.
-  const wordmarkWidth = advanceWidth(c.brand.toUpperCase(), WORDMARK) * 36;
+  /*
+   * The wordmark: «FOR» at 800 and «MA» at 200, the first F stretched ×1.22 with a wider gap
+   * after it — the same three pieces as src/components/ui/Logo.tsx. Each piece is measured
+   * against its own face so the next one starts where the last one ends; the F is drawn in its
+   * own <text> because a <tspan> cannot carry the scale. No full stop: it went with the blue.
+   */
+  const wmSize = 36;
+  const wmY = HEIGHT - 62;
+  const wmTracking = wmSize * 0.05;
+  const fWidth = advanceWidth('F', WORDMARK) * wmSize * 1.22 + wmSize * 0.16;
+  const orWidth = (advanceWidth('OR', WORDMARK) + 0.05 * 2) * wmSize;
+  const maWidth = (advanceWidth('MA', WORDMARK_THIN) + 0.05 * 2) * wmSize;
+  const wordmarkWidth = fWidth + orWidth + maWidth;
+  const wordmark = `
+  <g fill="${COLORS.text}" font-family="Unbounded" font-size="${wmSize}">
+    <text x="0" y="${wmY}" font-weight="800" transform="translate(${margin} 0) scale(1.22 1)">F</text>
+    <text x="${(margin + fWidth).toFixed(1)}" y="${wmY}" font-weight="800" letter-spacing="${wmTracking}">OR</text>
+    <text x="${(margin + fWidth + orWidth).toFixed(1)}" y="${wmY}" font-weight="200" letter-spacing="${wmTracking}">MA</text>
+  </g>`;
   // `color` on the group is what the embedded figure's `currentColor` resolves against: embedFigure
   // strips the figure's own <svg> wrapper, and the attribute that carried the ink goes with it.
+  // Black on a programme colour, light on a neutral surface — decided from the tile itself.
   const figure = c.figureSvg
-    ? `<g color="${COLORS.tileFg}">${embedFigure(c.figureSvg, tile.x + 50, tile.y + 50, tile.size - 100)}</g>`
+    ? `<g color="${inkOn(c.tile)}">${embedFigure(c.figureSvg, tile.x + 50, tile.y + 50, tile.size - 100)}</g>`
     : '';
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
-  <defs>
-    <radialGradient id="glow" cx="0.85" cy="0.5" r="0.6">
-      <stop offset="0" stop-color="${COLORS.accent}" stop-opacity="0.14"/>
-      <stop offset="1" stop-color="${COLORS.accent}" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
   <rect width="${WIDTH}" height="${HEIGHT}" fill="${COLORS.bg}"/>
-  <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#glow)"/>
-  <rect x="${tile.x}" y="${tile.y}" width="${tile.size}" height="${tile.size}" rx="${tile.r}" fill="${c.tile}"/>
+  <rect x="${tile.x}" y="${tile.y}" width="${tile.size}" height="${tile.size}" fill="${c.tile}"/>
   ${figure}
-  ${c.eyebrow ? `<text x="${margin}" y="${eyebrowY}" font-family="Onest" font-size="22" letter-spacing="3" fill="${COLORS.muted}">${esc(c.eyebrow.toUpperCase())}</text>` : ''}
-  <text font-family="Manrope" font-size="${title.size}" fill="${COLORS.text}">${titleTspans}</text>
-  <text font-family="Onest" font-size="${subtitle.size}" fill="${COLORS.muted}">${subtitleTspans}</text>
-  <text x="${margin}" y="${HEIGHT - 62}" font-family="Manrope" font-weight="800" font-size="36" fill="${COLORS.text}">${esc(c.brand.toUpperCase())}</text>
-  <text x="${margin + wordmarkWidth}" y="${HEIGHT - 62}" font-family="Manrope" font-weight="800" font-size="36" fill="${COLORS.accent}">.</text>
-  <text x="${margin + wordmarkWidth + 26}" y="${HEIGHT - 62}" font-family="Onest" font-size="20" fill="${COLORS.muted2}">${esc(c.host)}</text>
+  ${c.eyebrow ? `<text x="${margin}" y="${eyebrowY}" font-family="Onest" font-size="20" letter-spacing="3.6" fill="${COLORS.muted}">${esc(c.eyebrow.toUpperCase())}</text>` : ''}
+  <text font-family="Unbounded" font-weight="600" font-size="${title.size}" fill="${COLORS.text}">${titleTspans}</text>
+  <text font-family="Onest" font-size="${subtitle.size}" fill="${COLORS.muted}">${subtitleTspans}</text>${wordmark}
+  <text x="${(margin + wordmarkWidth + 26).toFixed(1)}" y="${wmY}" font-family="Onest" font-size="20" fill="${COLORS.muted2}">${esc(c.host)}</text>
 </svg>`;
 }
 
@@ -458,6 +503,12 @@ function buildJobs(content, labels, host) {
   const jobs = [];
   const brand = labels.ru.brand ?? 'Forma';
   const exerciseById = new Map(content.exercises.map((e) => [e.id, e]));
+  /*
+   * Only courses on sale get a card: a card is an invitation to a page, and a course held back
+   * has none. The tile map below still walks every course, so an exercise that only appears in a
+   * held-back course keeps a sensible tile on its own card.
+   */
+  const liveCourses = content.courses.filter((c) => c.published !== false);
   const courseTileForExercise = new Map();
   const courseFigure = new Map();
   for (const course of content.courses) {
@@ -513,7 +564,7 @@ function buildJobs(content, labels, host) {
         },
       });
     }
-    for (const course of content.courses) {
+    for (const course of liveCourses) {
       jobs.push({
         file: `course-${course.id}-${locale}.png`,
         kind: 'course',

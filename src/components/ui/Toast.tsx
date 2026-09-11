@@ -4,7 +4,7 @@
  */
 import { clsx } from 'clsx';
 import { createContext, useContext, type ReactNode } from 'react';
-import { Icon, type IconName } from './Icon';
+import { Glyph } from './Icon';
 import { IconButton } from './IconButton';
 import { useKitLabels } from './KitContext';
 
@@ -37,9 +37,14 @@ export function useToast(): ToastApi {
   return useContext(ToastContext);
 }
 
-const KIND_ICON: Record<ToastKind, IconName> = { info: 'info', success: 'check', error: 'warning' };
+/*
+ * The mark is a typographic glyph, not an icon: a tick for done, a cross for failed, `//` for a
+ * plain notice — the brand's own punctuation. The semantic colour sits on the glyph alone; the
+ * rest of the toast is monochrome.
+ */
+const KIND_GLYPH: Record<ToastKind, string> = { info: '//', success: '✓', error: '×' };
 const KIND_CLASS: Record<ToastKind, string> = {
-  info: 'text-accent-2',
+  info: 'text-muted',
   success: 'text-success',
   error: 'text-danger',
 };
@@ -49,13 +54,15 @@ export function Toast({ toast, onDismiss }: { toast: ToastItem; onDismiss: (id: 
   return (
     <div
       role={toast.kind === 'error' ? 'alert' : 'status'}
-      className="flex items-start gap-3 rounded-inner border border-border-strong bg-surface-3 p-4 shadow-card"
+      className="flex items-start gap-3 rounded-card border border-border-strong bg-surface-3 p-4"
     >
-      <Icon name={KIND_ICON[toast.kind]} className={clsx('mt-0.5', KIND_CLASS[toast.kind])} />
+      <Glyph size={14} className={clsx('mt-1', KIND_CLASS[toast.kind])}>
+        {KIND_GLYPH[toast.kind]}
+      </Glyph>
       <div className="min-w-0 flex-1">
         <p className="text-[15px] font-semibold">{toast.title}</p>
         {toast.description ? (
-          <p className="mt-0.5 text-sm text-muted">{toast.description}</p>
+          <p className="mt-0.5 text-[13px] text-muted">{toast.description}</p>
         ) : null}
       </div>
       <IconButton
@@ -63,7 +70,7 @@ export function Toast({ toast, onDismiss }: { toast: ToastItem; onDismiss: (id: 
         icon="close"
         size="sm"
         variant="ghost"
-        className="-mr-2 -mt-2"
+        className="-mt-2 -mr-2"
         onClick={() => onDismiss(toast.id)}
       />
     </div>
@@ -81,7 +88,7 @@ export function ToastStack({
   return (
     <div
       aria-live="polite"
-      className="pointer-events-none fixed left-1/2 top-[calc(var(--safe-top)+12px)] z-[60] flex w-[calc(100%-32px)] max-w-[448px] -translate-x-1/2 flex-col gap-2"
+      className="pointer-events-none fixed top-[calc(var(--safe-top)+12px)] left-1/2 z-[60] flex w-[calc(100%-32px)] max-w-[448px] -translate-x-1/2 flex-col gap-2"
     >
       {toasts.map((t) => (
         <div key={t.id} className="pointer-events-auto">

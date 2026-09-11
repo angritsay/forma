@@ -3,7 +3,7 @@
  * the share text and the duration handed to the engine.
  */
 import type { ExerciseUnit } from '@/content/schema';
-import { COURSE_BY_ID } from '@/content/registry';
+import { findCourse } from '@/content/catalogue';
 import { formatClock, type Locale } from '@/i18n/index';
 import { stepCompletion, stepWeightSec } from '@/lib/training/session';
 import type {
@@ -152,7 +152,7 @@ export function courseNames(
       workout: ru ? 'Тренировка от тренера' : 'Coach workout',
     };
   }
-  const course = COURSE_BY_ID.get(courseId);
+  const course = findCourse(courseId);
   const node = course?.nodes.find((n) => n.id === nodeId);
   const workout = course?.workouts.find((w) => w.id === workoutId);
   return {

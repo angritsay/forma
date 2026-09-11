@@ -34,7 +34,6 @@ relatedExercises:
   - hollow_hold
   - jump_squat
 relatedCourses:
-  - engine
   - start
 relatedGuides:
   - crossfit-home-beginners
@@ -43,7 +42,7 @@ relatedGuides:
   - how-to-burpee
   - home-gym-equipment
 cta:
-  courseId: engine
+  courseId: start
 priority: 0.8
 draft: false
 ---

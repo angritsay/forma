@@ -3,7 +3,7 @@
  * does not depend on another area's cache. Called before and after saving a session; the
  * difference in unlocked achievements is what the athlete just earned.
  */
-import { COURSE_BY_ID } from '@/content/registry';
+import { findCourse } from '@/content/catalogue';
 import { listBenchmarks } from '@/lib/api/benchmarks';
 import { listCourseStates } from '@/lib/api/courseState';
 import { listDailyLogs } from '@/lib/api/dailyLogs';
@@ -41,7 +41,7 @@ export async function loadUserStats(today: string = toLocalDateIso()): Promise<U
 
   const streak = computeStreak([...days.values()], today);
   const coursesCompleted = states.filter((st) => {
-    const course = COURSE_BY_ID.get(st.courseId);
+    const course = findCourse(st.courseId);
     if (!course) return false;
     const done = new Set(st.completedNodeIds);
     return course.nodes

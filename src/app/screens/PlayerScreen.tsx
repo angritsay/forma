@@ -7,12 +7,11 @@
  * `useActiveWorkoutStore` (persisted), so
  * leaving keeps the session resumable. Keyboard: Space = pause, → next, ← previous.
  */
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Icon } from '@/components/ui/Icon';
 import { ListRow } from '@/components/ui/ListRow';
 import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
@@ -24,7 +23,6 @@ import {
   PlayerHeader,
   ProgressRow,
   SectionStepper,
-  SoundIcon,
 } from '@/app/features/player/PlayerChrome';
 import {
   exerciseVideoRef,
@@ -47,6 +45,7 @@ import { WarmupGateStep } from '@/app/features/player/steps/WarmupGateStep';
 import { WorkRepsStep } from '@/app/features/player/steps/WorkRepsStep';
 import { WorkTimerStep } from '@/app/features/player/steps/WorkTimerStep';
 import { haptic, setClosingConfirmation } from '@/lib/telegram/webapp';
+import { courseTileVars } from '@/lib/ui/tile';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
 import { useWakeLock } from '@/app/features/player/useWakeLock';
 import { useT } from '@/app/hooks/useT';
@@ -55,7 +54,7 @@ import {
   type ActiveSession,
   type PlayerResult,
 } from '@/app/store/activeWorkout';
-import { COURSE_BY_ID } from '@/content/registry';
+import { findCourse } from '@/content/catalogue';
 import type { PlayerStep } from '@/lib/training/types';
 
 /** The figure's own tile is transparent so the full-bleed course art shows through without a seam. */
@@ -68,7 +67,6 @@ function NoSession() {
   return (
     <Screen header={<TopBar back="/" title={t('app.playerNoSessionTitle')} />}>
       <EmptyState
-        icon="info"
         title={t('app.playerNoSessionTitle')}
         description={t('app.playerNoSessionBody')}
         action={<Button onClick={() => navigate('/courses')}>{t('app.tabCourses')}</Button>}
@@ -81,19 +79,25 @@ interface ArtLayerProps {
   animation: string | undefined;
   playing: boolean;
   videoUrl: string | undefined;
-  /** The coach's voice is off by default; the athlete opts in with the unmute button. */
-  muted: boolean;
 }
 
-function ArtLayer({ animation, playing, videoUrl, muted }: ArtLayerProps) {
+/**
+ * The demonstration, as video when there is one and as the drawn figure when there is not.
+ *
+ * Either way it is a silent loop behind the timer. The clips are encoded with no audio track at
+ * all (scripts/media/prepare-videos.mjs), so there is nothing to mute: the coach talks through
+ * each movement while filming, which is worth watching once and wrong to have start up by itself
+ * in the middle of someone's set. `muted` is still set on the element — without it a browser
+ * refuses to autoplay, audio track or no.
+ */
+function ArtLayer({ animation, playing, videoUrl }: ArtLayerProps) {
   const video = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const el = video.current;
     if (!el) return;
-    el.muted = muted;
     if (playing) void el.play().catch(() => undefined);
     else el.pause();
-  }, [playing, videoUrl, muted]);
+  }, [playing, videoUrl]);
 
   return (
     <div
@@ -101,17 +105,21 @@ function ArtLayer({ animation, playing, videoUrl, muted }: ArtLayerProps) {
       aria-hidden="true"
     >
       {videoUrl ? (
-        <video
-          key={videoUrl}
-          ref={video}
-          src={videoUrl}
-          className="h-full w-full object-cover"
-          playsInline
-          muted={muted}
-          loop
-          autoPlay
-          preload="metadata"
-        />
+        <>
+          <video
+            key={videoUrl}
+            ref={video}
+            src={videoUrl}
+            className="h-full w-full object-cover"
+            playsInline
+            muted
+            loop
+            autoPlay
+            preload="metadata"
+          />
+          {/* A scrim under the header so its white title reads on a bright frame. */}
+          <div className="absolute inset-x-0 top-0 h-28 bg-linear-to-b from-bg/60 to-transparent" />
+        </>
       ) : animation ? (
         <div className="mx-auto w-[min(100%,42dvh)]">
           <ExerciseFigure
@@ -231,7 +239,6 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [endOpen, setEndOpen] = useState(false);
   const [restartNonce, setRestartNonce] = useState(0);
-  const [videoMuted, setVideoMuted] = useState(true);
   const nextHandler = useRef<(() => void) | null>(null);
   const registerNext = useCallback((fn: (() => void) | null) => {
     nextHandler.current = fn;
@@ -241,8 +248,8 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
   const step = steps[stepIndex];
   const prescribed = session.prescribed;
   const summaryPath = `/summary/${session.sessionId}`;
-  const courseTile = COURSE_BY_ID.get(session.courseId)?.tile;
-  const courseVars = courseTile ? ({ '--course-tile': courseTile } as CSSProperties) : undefined;
+  // The programme colour for the art, the phase kicker and the progress bar — and the ink to match.
+  const courseVars = courseTileVars(findCourse(session.courseId)?.tile);
 
   const title = step ? stepTitle(t, locale, step, prescribed) : '';
   const animation = step ? stepAnimation(step, prescribed) : undefined;
@@ -353,29 +360,24 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
       style={courseVars}
       onPointerDownCapture={unlock}
     >
-      <ArtLayer animation={animation} playing={!paused} videoUrl={videoUrl} muted={videoMuted} />
+      <ArtLayer animation={animation} playing={!paused} videoUrl={videoUrl} />
       <PlayerHeader
         title={title}
         muted={sound.muted}
+        overVideo={Boolean(videoUrl)}
         onBack={() => setLeaveOpen(true)}
         onToggleSound={sound.toggle}
         onMenu={() => setMenuOpen(true)}
       />
-      {videoUrl ? (
-        // The coach's voice is off until asked for: a video that starts talking on its own
-        // mid-session is a shock, and the demonstration reads fine silent.
-        <button
-          type="button"
-          onClick={() => setVideoMuted((m) => !m)}
-          aria-label={t(videoMuted ? 'app.playerVideoUnmute' : 'app.playerVideoMute')}
-          aria-pressed={!videoMuted}
-          className="absolute right-3 top-[calc(var(--safe-top)+64px)] z-20 flex h-10 w-10 items-center justify-center rounded-control bg-black/35 text-on-primary backdrop-blur-sm"
-        >
-          <SoundIcon muted={videoMuted} />
-        </button>
-      ) : null}
+      {/*
+       * There is no unmute button over the video any more. The clips carry no audio track at all
+       * now (scripts/media/prepare-videos.mjs), so the button toggled nothing — it just promised
+       * a voice that was not there. The header's sound control is a different thing and stays:
+       * that one is the app's own timer cues.
+       */}
       <div className="h-[calc(42dvh-56px)] shrink-0" aria-hidden="true" />
-      <section className="relative z-10 flex flex-1 flex-col rounded-t-card bg-bg shadow-card">
+      {/* The panel meets the art on a straight edge — no rounded shoulder, no shadow. */}
+      <section className="relative z-10 flex flex-1 flex-col bg-bg">
         {step ? (
           <SectionStepper
             sections={workoutSections(prescribed)}
@@ -410,21 +412,11 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
       </section>
 
       <Sheet open={menuOpen} onClose={() => setMenuOpen(false)} title={t('app.playerMenu')}>
+        {/* Three words on three lines; the rows carry no marks, the danger one is red. */}
         <div className="-mx-4 flex flex-col">
+          <ListRow title={t('app.playerSkipStep')} onClick={skipStep} trailing={null} />
+          <ListRow title={t('app.playerRestartStep')} onClick={restartStep} trailing={null} />
           <ListRow
-            leading={<Icon name="next" />}
-            title={t('app.playerSkipStep')}
-            onClick={skipStep}
-            trailing={null}
-          />
-          <ListRow
-            leading={<Icon name="refresh" />}
-            title={t('app.playerRestartStep')}
-            onClick={restartStep}
-            trailing={null}
-          />
-          <ListRow
-            leading={<Icon name="close" />}
             title={<span className="text-danger">{t('app.playerEndWorkout')}</span>}
             onClick={() => {
               setMenuOpen(false);

@@ -10,12 +10,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Icon } from '@/components/ui/Icon';
 import { PageTitle } from '@/components/ui/PageTitle';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { TopBar } from '@/app/components/TopBar';
+import { DisplayText } from '@/app/features/home/DisplayTitle';
 import { publishSessionResult } from '@/app/features/player/progress';
 import { buildSummary, createSummarySaver, type SaveOutcome } from '@/app/features/player/save';
 import { loadUserStats } from '@/app/features/player/stats';
@@ -41,11 +41,13 @@ import {
   type PlayerResult,
 } from '@/app/store/activeWorkout';
 import { useSession } from '@/app/store/session';
+import { findCourse } from '@/content/catalogue';
 import { isAppError } from '@/lib/api/errors';
 import { getSession } from '@/lib/api/sessions';
 import type { WorkoutSessionRow } from '@/lib/api/types';
 import { evaluateAchievements } from '@/lib/training/levels';
 import { buildPlayerSteps } from '@/lib/training/player';
+import { courseTileVars } from '@/lib/ui/tile';
 import type {
   AchievementStatus,
   PlayerStep,
@@ -97,7 +99,6 @@ function ShareButton({ text }: { text: string }) {
       variant="secondary"
       size="lg"
       fullWidth
-      icon={<Icon name="star" size={18} />}
       onClick={() => {
         void shareOrCopy(text).then((r) => {
           if (r === 'copied') toast.show({ kind: 'success', title: t('app.summaryShareCopied') });
@@ -153,10 +154,13 @@ function SavedView({
         </div>
       }
     >
-      <div className="flex flex-col gap-5 py-4">
+      {/* The programme colour, for the plate's ticks and the block bars; a custom workout has none. */}
+      <div className="flex flex-col gap-6 py-4" style={courseTileVars(findCourse(courseId)?.tile)}>
         <PageTitle
+          display
+          size="xl"
           eyebrow={adjustment ? t('app.summarySavedTitle') : t('app.summaryTitle')}
-          title={workoutName}
+          title={<DisplayText text={workoutName} />}
           subtitle={`${courseName} · ${nodeName}`}
         />
         {alreadySaved ? <p className="text-sm text-muted">{t('app.summaryAlreadySaved')}</p> : null}
@@ -337,10 +341,15 @@ function LocalSummary({
         </div>
       }
     >
-      <div className="flex flex-col gap-5 py-2">
+      <div
+        className="flex flex-col gap-6 py-2"
+        style={courseTileVars(findCourse(session.courseId)?.tile)}
+      >
         <PageTitle
+          display
+          size="xl"
           eyebrow={t('app.summaryTitle')}
-          title={names.workout}
+          title={<DisplayText text={names.workout} />}
           subtitle={`${names.course} · ${names.node}`}
         />
         <SummaryStats
@@ -399,13 +408,13 @@ function RemoteSummary({ sessionId }: { sessionId: string }) {
   if (loading) {
     return (
       <Screen header={header}>
-        <div className="flex flex-col gap-4 py-4">
+        <div className="flex flex-col gap-4 py-4" aria-hidden="true">
           <Skeleton className="h-10 w-2/3" />
-          <div className="grid grid-cols-2 gap-3">
-            <Skeleton className="h-24" />
-            <Skeleton className="h-24" />
-            <Skeleton className="h-24" />
-            <Skeleton className="h-24" />
+          <Skeleton className="h-28" />
+          <div className="grid grid-cols-3 gap-3">
+            <Skeleton className="h-20" />
+            <Skeleton className="h-20" />
+            <Skeleton className="h-20" />
           </div>
         </div>
       </Screen>
@@ -417,7 +426,6 @@ function RemoteSummary({ sessionId }: { sessionId: string }) {
     return (
       <Screen header={header}>
         <EmptyState
-          icon={notFound ? 'info' : 'warning'}
           title={notFound ? t('app.summaryNotFoundTitle') : t('app.summaryLoadErrorTitle')}
           description={
             notFound
@@ -444,7 +452,6 @@ function RemoteSummary({ sessionId }: { sessionId: string }) {
     return (
       <Screen header={header}>
         <EmptyState
-          icon="info"
           title={t('app.summaryNoResultsTitle')}
           description={t('app.summaryNoResultsBody')}
           action={

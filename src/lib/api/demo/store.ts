@@ -27,7 +27,14 @@ import type {
   DbTotals,
   DbWorkoutSession,
 } from '../mappers';
-import type { LeaderboardPeriod, PurchaseStatus } from '../types';
+import type {
+  AdminCourseDayRow,
+  AdminCourseRow,
+  CustomWorkoutRow,
+  ExerciseCatalogRow,
+  LeaderboardPeriod,
+  PurchaseStatus,
+} from '../types';
 
 // --- storage ----------------------------------------------------------------
 
@@ -40,7 +47,7 @@ export interface StorageLike {
 export const DEMO_DB_KEY = 'forma.demo.db';
 export const DEMO_AUTH_KEY = 'forma.demo.auth';
 /** Bumped when the row shapes change; a stored database of another version is discarded. */
-export const DEMO_SCHEMA_VERSION = 2;
+export const DEMO_SCHEMA_VERSION = 3;
 
 /** In-memory storage used when `localStorage` is unavailable (SSR, tests, private mode). */
 export function memoryStorage(): StorageLike {
@@ -89,6 +96,15 @@ export interface DemoDb {
   dailyLogs: DbDailyLog[];
   benchmarks: DbBenchmark[];
   rivals: DemoRival[];
+  /*
+   * The coach's tools. Held as the domain rows the API layer returns rather than as database rows,
+   * because unlike the tables above these have no PostgREST shape worth mirroring — the demo
+   * backend is the only thing that ever writes them.
+   */
+  exercises: ExerciseCatalogRow[];
+  customWorkouts: CustomWorkoutRow[];
+  adminCourses: AdminCourseRow[];
+  adminCourseDays: AdminCourseDayRow[];
 }
 
 export interface DemoAuthState {
@@ -302,6 +318,10 @@ export function emptyDb(): DemoDb {
     dailyLogs: [],
     benchmarks: [],
     rivals: SEED_RIVALS.map((r) => ({ ...r })),
+    exercises: [],
+    customWorkouts: [],
+    adminCourses: [],
+    adminCourseDays: [],
   };
 }
 
@@ -336,6 +356,10 @@ export function readDb(storage: StorageLike = defaultStorage()): DemoDb {
       dailyLogs: asRows<DbDailyLog>(parsed.dailyLogs),
       benchmarks: asRows<DbBenchmark>(parsed.benchmarks),
       rivals: rivals.length > 0 ? rivals : SEED_RIVALS.map((r) => ({ ...r })),
+      exercises: asRows<ExerciseCatalogRow>(parsed.exercises),
+      customWorkouts: asRows<CustomWorkoutRow>(parsed.customWorkouts),
+      adminCourses: asRows<AdminCourseRow>(parsed.adminCourses),
+      adminCourseDays: asRows<AdminCourseDayRow>(parsed.adminCourseDays),
     };
   } catch {
     return emptyDb();

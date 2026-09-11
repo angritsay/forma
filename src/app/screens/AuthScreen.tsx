@@ -6,8 +6,8 @@ import { useCallback, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { CodeInput } from '@/components/ui/CodeInput';
-import { Icon } from '@/components/ui/Icon';
 import { Input } from '@/components/ui/Input';
+import { Logo } from '@/components/ui/Logo';
 import { PageTitle } from '@/components/ui/PageTitle';
 import { PhotoBlock } from '@/components/ui/PhotoBlock';
 import { Screen } from '@/components/ui/Screen';
@@ -138,16 +138,17 @@ export default function AuthScreen() {
       <div className="flex flex-col gap-6 py-4">
         {/*
          * The first screen anyone sees, so it is the brand's own argument: a photograph of someone
-         * training, running past both gutters, with the wordmark and the tagline over it. A flat
-         * tile carrying the same two lines said nothing that the words did not already say.
+         * training, running past both gutters, with the lockup and the tagline over it. The
+         * tagline is the screen's one display line, set the brand's way — the claim at 800, the
+         * promise at 200 — and it is a paragraph, not a heading: the heading of this page is
+         * «Вход», below the fold of the picture.
          */}
         <div className="-mx-5 lg:mx-0">
           <PhotoBlock photo={PHOTOS.auth} alt="" ratio="landscape" priority>
-            <span className="wordmark block text-4xl text-white">
-              {t('common.brand')}
-              <span className="text-accent">.</span>
-            </span>
-            <span className="mt-2 block text-[15px] text-white/80">{t('common.tagline')}</span>
+            <Logo lockup className="text-[22px] text-paper" />
+            <p className="display mt-4 text-5xl text-paper lg:text-6xl">
+              {t('app.authHeroHeavy')} <span className="t-thin">{t('app.authHeroThin')}</span>
+            </p>
           </PhotoBlock>
         </div>
 
@@ -171,7 +172,6 @@ export default function AuthScreen() {
                 if (error) setError(null);
               }}
               error={errorText}
-              leading={<Icon name="mail" />}
             />
             <Button type="submit" size="lg" fullWidth loading={busy} disabled={email.trim() === ''}>
               {t('app.authSendCode')}
@@ -185,7 +185,8 @@ export default function AuthScreen() {
               subtitle={t('app.authCodeLead', { email: normalizeEmail(email) })}
             />
             {demoCode ? (
-              <div className="rounded-inner border border-warning/40 bg-warning/10 px-4 py-3">
+              /* A warning is a coloured word behind a hairline, never a tinted block. */
+              <div className="border border-border-strong px-4 py-3">
                 <p className="text-base font-semibold text-warning">
                   {t('app.demoAuthCode', { code: demoCode })}
                 </p>
@@ -219,26 +220,21 @@ export default function AuthScreen() {
             >
               {t('app.authConfirm')}
             </Button>
-            <div className="flex flex-col items-center gap-3">
+            <div className="flex flex-col items-start gap-1">
               <Button
                 variant="ghost"
                 disabled={!countdown.done || busy}
                 onClick={() => void send(true)}
-                icon={<Icon name="refresh" size={18} />}
               >
                 {countdown.done
                   ? t('app.authResend')
                   : t('app.authResendIn', { s: countdown.remainingSec })}
               </Button>
-              <button
-                type="button"
-                onClick={changeEmail}
-                className="text-sm text-muted underline underline-offset-4 hover:text-text"
-              >
+              <Button variant="ghost" size="sm" onClick={changeEmail}>
                 {t('app.authChangeEmail')}
-              </button>
+              </Button>
               {demoCode ? null : (
-                <p className="text-center text-sm text-muted-2">{t('app.authSpamHint')}</p>
+                <p className="mt-2 text-sm text-muted-2">{t('app.authSpamHint')}</p>
               )}
             </div>
           </form>

@@ -53,16 +53,21 @@ export const COACH = {
    */
   photo: '/coach/sergey.jpg',
   /**
-   * Large portrait for the home hero, under /public. Empty until one exists, and the hero falls
-   * back to the animated figure meanwhile — deliberately, because the 240x240 file above is a
-   * third of the width the tile renders at and upscaling it looks worse than the illustration
-   * it would replace.
+   * Large photograph for the home hero, under /public. Empty falls back to the animated figure.
    *
-   * What to supply: a 4:5 portrait, at least 900x1125, Sergey in the gym, framed so the crop can
-   * lose a little from top and bottom without cutting his head. Drop it in /public/coach/ and
-   * put its path here; nothing else needs changing.
+   * This is the whole frame of the owner's photograph, resized to 1200x1600 and not cropped —
+   * the brand's hero is a full-bleed shot with the person small in it, and cropping in on him
+   * would throw away the sky and the horizon that make the composition. It ships in colour: the
+   * hero applies `.photo-mono`, `.photo-grain` and `.photo-scrim` in CSS, so the monochrome
+   * treatment lives in one place and this file can be swapped without re-editing it.
+   *
+   * Worth replacing when there is a better frame: he is looking at a phone here, and his eyes are
+   * behind sunglasses, so this reads as atmosphere rather than as a portrait. A photograph of him
+   * coaching — 4:5, at least 1200x1600, room around him — would say more. The small square
+   * portrait above (`photo`) is the one that carries his face, and it is 240x240: a larger
+   * version of *that* is the more valuable of the two to find.
    */
-  heroPhoto: '' as string,
+  heroPhoto: '/coach/sergey-hero.jpg' as string,
   links: [{ label: 'profi.ru', url: 'https://profi.ru/profile/TitovSA5/' }] as {
     label: string;
     url: string;

@@ -25,10 +25,16 @@ export interface PhotoBlockProps {
   className?: string;
 }
 
+/*
+ * The aspect ratios are chosen for a phone, where the column is ~390px wide and a 4:5 portrait is
+ * a comfortable 490px tall. On a desktop the same ratio in a 760px column is 950px — taller than
+ * the viewport, so the screen opens on a photograph and nothing else. The max-heights cap that
+ * without changing the shape anywhere the column is narrow.
+ */
 const RATIO: Record<NonNullable<PhotoBlockProps['ratio']>, string> = {
-  portrait: 'aspect-[4/5]',
-  landscape: 'aspect-[4/3]',
-  square: 'aspect-square',
+  portrait: 'aspect-[4/5] lg:max-h-[560px]',
+  landscape: 'aspect-[4/3] lg:max-h-[420px]',
+  square: 'aspect-square lg:max-h-[480px]',
 };
 
 /**

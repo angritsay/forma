@@ -1,0 +1,37 @@
+<!-- @dsCard group="Приложение" viewport="390x844" name="Mini App — Forma" subtitle="Ч/б интерфейс + цвет курса; кликабельные 4 экрана" -->
+<!-- @startingPoint section="Приложение" subtitle="Экраны Telegram Mini App (390px)" viewport="390x844" -->
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Forma — Mini App</title>
+<link rel="stylesheet" href="../../styles.css">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200;300;500;600;800&family=Onest:wght@400;500;600;700&display=block">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<script src="../../_ds_bundle.js"></script>
+<script src="../../image-slot.js"></script>
+<style>body{margin:0;background:#26262b;display:flex;justify-content:center;padding:0}a{color:var(--text-2)}a:hover{color:var(--text-1)}</style>
+</head><body><div id="root"></div>
+<script type="text/babel" src="HomeScreen.jsx"></script>
+<script type="text/babel" src="CourseScreen.jsx"></script>
+<script type="text/babel" src="ExerciseScreen.jsx"></script>
+<script type="text/babel" src="ProfileScreen.jsx"></script>
+<script type="text/babel">
+const { TabBar } = window.FormaDesignSystem_383a1d;
+function App(){
+  const [tab, setTab] = React.useState(0);
+  const [view, setView] = React.useState('tab'); // tab | course | exercise
+  const body = view === 'course' ? <window.CourseScreen onBack={()=>setView('tab')} onOpenExercise={()=>setView('exercise')}/>
+    : view === 'exercise' ? <window.ExerciseScreen onBack={()=>setView('course')}/>
+    : tab === 0 ? <window.HomeScreen onOpenCourse={()=>setView('course')} onOpenExercise={()=>setView('exercise')}/>
+    : tab === 1 ? <window.CourseScreen onBack={()=>setTab(0)} onOpenExercise={()=>setView('exercise')}/>
+    : <window.ProfileScreen/>;
+  return (
+    <div style={{width:390,minHeight:844,background:'var(--bg-0)',position:'relative',display:'flex',flexDirection:'column'}}>
+      {body}
+      {view === 'tab' ? <TabBar items={[{label:'Сегодня'},{label:'Курс'},{label:'Профиль'}]} activeIndex={tab} onChange={i=>{setTab(i);setView('tab');}} style={{position:'sticky',bottom:0}}/> : null}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script></body></html>

@@ -1,5 +1,5 @@
 /**
- * Course "engine" — «Своим весом: сила и выносливость» / "Bodyweight Engine".
+ * Course "engine" — «Форма своим весом: сила и выносливость» / "Forma. Bodyweight".
  *
  * Six weeks, four sessions a week, level 2, no equipment beyond a chair, a mat and an
  * optional jump rope (the engine substitutes single-unders with jumping jacks when the
@@ -1294,8 +1294,17 @@ const NODES: NodeInput[] = [
 export const COURSE_ENGINE: CourseInput = {
   id: 'engine',
   order: 2,
+  /*
+   * Written and playable, but not on sale yet: at launch Forma offers the beginner course only.
+   * See `published` in src/content/schema.ts for what the flag hides.
+   */
+  published: false,
   slug: { ru: 'svoim-vesom-sila-i-vynoslivost', en: 'bodyweight-engine' },
-  name: { ru: 'Своим весом: сила и выносливость', en: 'Bodyweight Engine' },
+  name: {
+    ru: 'Форма своим весом: сила и выносливость',
+    en: 'Forma. Bodyweight: strength and conditioning',
+  },
+  shortName: { ru: 'Форма своим весом', en: 'Forma. Bodyweight' },
   tagline: {
     ru: 'Шесть недель силы и выносливости на собственном весе — четыре тренировки в неделю, без инвентаря.',
     en: 'Six weeks of bodyweight strength and conditioning — four sessions a week, no gear.',
@@ -1324,7 +1333,7 @@ export const COURSE_ENGINE: CourseInput = {
       en: 'You have trained before: you can do 8–10 full push-ups in a row and hold a plank for a minute.',
     },
     {
-      ru: 'Ты прошёл курс «Старт» и хочешь следующий уровень.',
+      ru: 'Ты прошёл курс «Форма с нуля» и хочешь следующий уровень.',
       en: 'You finished the Start course and want the next level.',
     },
     {
@@ -1363,7 +1372,7 @@ export const COURSE_ENGINE: CourseInput = {
   weeks: 6,
   sessionsPerWeek: 4,
   avgSessionMin: 30,
-  tile: '#20293c', // --tile-2
+  tile: '#1f1f24', // --tile-4 — neutral; no programme colour yet
   price: { rub: 3990, usd: 39 },
   workouts: [
     W_TEST,
@@ -1394,12 +1403,12 @@ export const COURSE_ENGINE: CourseInput = {
     },
     {
       q: {
-        ru: 'Мне подойдёт этот курс или лучше начать со «Старта»?',
-        en: 'Is this course right for me, or should I begin with Start?',
+        ru: 'Мне подойдёт этот курс или лучше начать с «Формы с нуля»?',
+        en: 'Is this course right for me, or should I begin with Forma Start?',
       },
       a: {
-        ru: 'Ориентир такой: 8–10 отжиманий от пола подряд, минута планки и 15–20 приседаний без одышки. Если это про тебя — заходи. Если пока нет, пройди «Старт»: там те же паттерны движений, но без прыжков и с отжиманиями с колен, а через четыре недели вернёшься сюда.',
-        en: 'A rule of thumb: 8–10 full push-ups in a row, a one-minute plank and 15–20 squats without getting winded. If that is you, jump in. If not yet, do Start first: same movement patterns, no jumps and knee push-ups, and you come back here in four weeks.',
+        ru: 'Ориентир такой: 8–10 отжиманий от пола подряд, минута планки и 15–20 приседаний без одышки. Если это про тебя — заходи. Если пока нет, пройди «Форма с нуля»: там те же паттерны движений, но без прыжков и с отжиманиями с колен, а через четыре недели вернёшься сюда.',
+        en: 'A rule of thumb: 8–10 full push-ups in a row, a one-minute plank and 15–20 squats without getting winded. If that is you, jump in. If not yet, do Forma Start first: same movement patterns, no jumps and knee push-ups, and you come back here in four weeks.',
       },
     },
     {

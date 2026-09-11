@@ -36,7 +36,11 @@ export function AppFrame({ children }: { children?: ReactNode }) {
   );
 }
 
-const NAV_INSET = '96px';
+/*
+ * The tab bar's height without the safe area: it is a 56px strip on the bottom edge now, not a
+ * floating island with a margin under it. <Screen> adds `--safe-bottom` on top of this itself.
+ */
+const NAV_INSET = '56px';
 
 /**
  * How wide the content column runs from `lg` up.
@@ -54,6 +58,27 @@ const CONTENT_WIDTH = {
 /** Routes whose content is data-dense enough to want the wide column. */
 function widthFor(pathname: string): keyof typeof CONTENT_WIDTH {
   return pathname.startsWith('/admin') ? 'wide' : 'default';
+}
+
+/**
+ * Layout for the screens outside the tabbed area: sign-in and onboarding.
+ *
+ * They carry no navigation — that is the point of them — but they still need a column. `AppFrame`
+ * releases its 480px cap from `lg` so the admin can use the whole screen, and with nothing here
+ * these two took the release literally: on a 1440px browser the sign-in form ran the full width of
+ * the window, under a photograph a thousand pixels tall.
+ *
+ * Narrower than the tabbed column on purpose: both screens are a stack of one-line fields, and a
+ * single form reads better in a short measure.
+ */
+export function FocusShell() {
+  return (
+    <div style={{ '--nav-inset': 'var(--demo-inset, 0px)' } as CSSProperties}>
+      <div className="mx-auto w-full lg:max-w-[560px]">
+        <Outlet />
+      </div>
+    </div>
+  );
 }
 
 /**

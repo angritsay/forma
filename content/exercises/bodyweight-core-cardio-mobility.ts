@@ -61,7 +61,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     loadable: false,
     scaling: { harder: 'side_plank' },
     animation: 'plank',
-    video: { ru: 'storage:videos/shared/plank.ru.mp4' },
     tags: ['core', 'benchmark'],
     isTest: true,
   },
@@ -115,7 +114,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'plank' },
     animation: 'side_plank',
-    video: { ru: 'storage:videos/shared/side_plank.ru.mp4' },
     tags: ['core', 'unilateral'],
   },
   {
@@ -174,7 +172,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'dead_bug', harder: 'v_up' },
     animation: 'hollow_hold',
-    video: { ru: 'storage:videos/shared/hollow_hold.ru.mp4' },
     tags: ['core'],
   },
   {
@@ -351,7 +348,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'sit_up' },
     animation: 'v_up',
-    video: { ru: 'storage:videos/shared/v_up.ru.mp4' },
     tags: ['core', 'explosive'],
   },
   {
@@ -636,7 +632,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'dead_bug' },
     animation: 'flutter_kick',
-    video: { ru: 'storage:videos/shared/flutter_kick.ru.mp4' },
     tags: ['core', 'cardio'],
   },
   {
@@ -860,7 +855,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     loadable: false,
     scaling: { easier: 'jog_in_place', harder: 'skater' },
     animation: 'jumping_jack',
-    video: { ru: 'storage:videos/shared/jumping_jack.ru.mp4' },
     tags: ['cardio', 'warmup'],
   },
   {

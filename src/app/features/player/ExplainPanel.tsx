@@ -1,7 +1,7 @@
-import { clsx } from 'clsx';
 import { useRef, useState } from 'react';
 import { Chip } from '@/components/ui/Chip';
-import { Icon } from '@/components/ui/Icon';
+import { Glyph } from '@/components/ui/Icon';
+import { Tabs, tabPanelId } from '@/components/ui/Tabs';
 import { useT } from '@/app/hooks/useT';
 import type { TKey } from '@/i18n/index';
 import type { PrescribedItem } from '@/lib/training/types';
@@ -53,85 +53,83 @@ export function ExplainPanel({ exerciseId, item }: ExplainPanelProps) {
 
   return (
     <div className="flex flex-col gap-3" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      {/* The handle is a word with a glyph, not a pill: + to open, − to close. */}
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="mx-auto flex items-center gap-1.5 rounded-control bg-white/5 px-3 py-1.5 text-xs font-semibold text-muted transition-colors hover:bg-white/10"
+        className="control-label tap-target-y mx-auto flex items-center gap-2 text-[11px] text-muted transition-colors duration-150 ease-(--ease-out) hover:text-text"
       >
-        <Icon name={open ? 'minus' : 'plus'} size={14} />
+        <Glyph size={14}>{open ? '−' : '+'}</Glyph>
         {t(open ? 'app.playerDetailsHide' : 'app.playerDetails')}
       </button>
 
       {open ? (
         <div className="flex flex-col gap-3">
-          <div role="tablist" className="flex gap-1.5">
-            {TABS.map((x) => (
-              <button
-                key={x.id}
-                type="button"
-                role="tab"
-                aria-selected={tab === x.id}
-                onClick={() => setTab(x.id)}
-                className={clsx(
-                  'control-label flex-1 rounded-control border px-2 py-1.5 text-[10px] transition-colors',
-                  tab === x.id
-                    ? 'border-accent bg-accent text-on-primary'
-                    : 'border-border text-muted',
-                )}
-              >
-                {t(x.key)}
-              </button>
-            ))}
-          </div>
+          <Tabs
+            variant="fill"
+            tabs={TABS.map((x) => ({ id: x.id, label: t(x.key) }))}
+            value={tab}
+            onChange={setTab}
+          />
 
-          {tab === 'technique' ? (
-            <div className="flex flex-col gap-2">
-              <ol className="flex flex-col gap-2">
-                {exercise.howTo.map((line, i) => (
-                  <li key={i} className="flex gap-3 rounded-inner bg-surface-2 px-4 py-3">
-                    <span className="tabular shrink-0 font-semibold text-accent">{i + 1}</span>
-                    <span className="text-[15px]">{l(line)}</span>
-                  </li>
-                ))}
-              </ol>
-              {exercise.cues.length > 0 ? (
-                <ul className="flex flex-col gap-1.5 px-1 text-sm text-muted">
-                  {exercise.cues.slice(0, 3).map((cue, i) => (
-                    <li key={i} className="flex gap-2">
-                      <span aria-hidden="true">•</span>
-                      <span>{l(cue)}</span>
+          <div id={tabPanelId(tab)} role="tabpanel" aria-labelledby={`tab-${tab}`}>
+            {tab === 'technique' ? (
+              <div className="flex flex-col gap-2">
+                {/* Numbered and ruled — 01/02/03 down the left, the step beside it. */}
+                <ol className="flex flex-col">
+                  {exercise.howTo.map((line, i) => (
+                    <li
+                      key={i}
+                      className="flex gap-3.5 border-t border-border py-3 first:border-t-0"
+                    >
+                      <span className="numeral tabular w-6 shrink-0 text-sm text-muted">
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                      <span className="text-[15px]">{l(line)}</span>
                     </li>
                   ))}
-                </ul>
-              ) : null}
-            </div>
-          ) : null}
-
-          {tab === 'muscles' ? (
-            <div className="flex flex-wrap gap-2">
-              {exercise.muscles.map((m) => (
-                <Chip key={m}>{t(`seo.muscle_${m}` as TKey)}</Chip>
-              ))}
-            </div>
-          ) : null}
-
-          {tab === 'cautions' ? (
-            cautions.length > 0 ? (
-              <div className="flex flex-col gap-2">
-                <span className="text-sm text-muted">{t('app.playerCautionsLead')}</span>
-                <div className="flex flex-wrap gap-2">
-                  {cautions.map((lim) => (
-                    <Chip key={lim} tone="warning">
-                      {limitationLabel(t, lim)}
-                    </Chip>
-                  ))}
-                </div>
+                </ol>
+                {exercise.cues.length > 0 ? (
+                  <ul className="flex flex-col gap-1.5 border-t border-border pt-3 text-sm text-muted">
+                    {exercise.cues.slice(0, 3).map((cue, i) => (
+                      <li key={i} className="flex gap-2">
+                        <Glyph size={12} className="mt-1 shrink-0 text-muted-2">
+                          ›
+                        </Glyph>
+                        <span>{l(cue)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </div>
-            ) : (
-              <p className="text-sm text-muted">{t('app.playerCautionsNone')}</p>
-            )
-          ) : null}
+            ) : null}
+
+            {tab === 'muscles' ? (
+              <div className="flex flex-wrap gap-2">
+                {exercise.muscles.map((m) => (
+                  <Chip key={m}>{t(`seo.muscle_${m}` as TKey)}</Chip>
+                ))}
+              </div>
+            ) : null}
+
+            {tab === 'cautions' ? (
+              cautions.length > 0 ? (
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm text-muted">{t('app.playerCautionsLead')}</span>
+                  <div className="flex flex-wrap gap-2">
+                    {cautions.map((lim) => (
+                      <Chip key={lim} tone="warning">
+                        {limitationLabel(t, lim)}
+                      </Chip>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted">{t('app.playerCautionsNone')}</p>
+              )
+            ) : null}
+          </div>
         </div>
       ) : null}
     </div>

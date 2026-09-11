@@ -1,15 +1,17 @@
 ---
 /**
- * Home hero: value proposition, two CTAs, feature chips and the coach's photograph.
- *
- * The tile used to hold a drawn figure on a mint-to-lavender gradient. Against a dark landing
- * selling a real person's coaching it read as clipart, and a photograph of the coach does the
- * selling that an illustration cannot. `photo` therefore wins when it is set; the animated
- * figure stays as the fallback so the hero still renders before a usable photograph exists.
+ * Home hero: the one big line, two CTAs, the fact chips and a full-bleed monochrome photograph.
  *
  * The composition is editorial rather than centred: a 7/5 grid instead of a balanced split, the
- * columns aligned on their baselines rather than their middles, and the photograph running past
- * the page gutter with a vertical label down its outer margin.
+ * columns aligned on their baselines rather than their middles, the photograph running past the
+ * page gutter with a vertical kicker down its outer margin, and one "crosshair" plate cut into
+ * its corner for the brand's formula. The headline is the brand's main typographic device — two
+ * weights in one line, 800 and 200: «КРОССФИТ ДОМА, который подстраивается под тебя». The copy
+ * is not touched; the split falls at the first comma, or after the first two words when there
+ * is none, and `thin` overrides it where a page knows better.
+ *
+ * `photo` wins when it is set; the animated figure stays as the fallback so the hero still
+ * renders before a usable photograph exists.
  */
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
 import Button from './Button.astro';
@@ -17,6 +19,8 @@ import FeatureChip from './FeatureChip.astro';
 
 interface Props {
   title: string;
+  /** The part of `title` set at weight 200. Derived from the title when omitted. */
+  thin?: string;
   subtitle: string;
   primary: { label: string; href: string };
   secondary: { label: string; href: string };
@@ -30,26 +34,40 @@ interface Props {
 
 const { title, subtitle, primary, secondary, chips, figure, photo, tileTop, tileBottom } =
   Astro.props;
+
+/** Where the heavy half of the headline ends: at the first comma, else after two words. */
+function splitHeadline(text: string, thin?: string): [string, string] {
+  if (thin) {
+    const at = text.indexOf(thin);
+    if (at > 0) return [text.slice(0, at), text.slice(at)];
+  }
+  const comma = text.indexOf(',');
+  if (comma > 0) return [text.slice(0, comma + 1), text.slice(comma + 1)];
+  const words = text.split(' ');
+  if (words.length < 3) return [text, ''];
+  return [words.slice(0, 2).join(' '), ' ' + words.slice(2).join(' ')];
+}
+const [heavy, light] = splitHeadline(title, Astro.props.thin);
 ---
 
 <section
-  class="mx-auto grid max-w-6xl items-end gap-10 px-5 pt-10 pb-16 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:gap-14 md:pt-20 md:pb-24"
+  class="mx-auto grid max-w-6xl items-end gap-12 px-5 pt-10 pb-16 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:gap-14 md:pt-20 md:pb-28"
 >
-  <div>
+  <div class="relative z-10">
     <p class="eyebrow">{tileTop}</p>
-    <h1 class="font-display mt-5 text-[clamp(1.75rem,7vw,2.75rem)] text-balance">
-      {title}
+    <h1 class="display mt-6 max-w-[16ch] text-[clamp(1.75rem,6.5vw,2.75rem)]">
+      {heavy}{light && <span class="t-thin">{light}</span>}
     </h1>
-    <p class="mt-6 max-w-xl text-lg leading-relaxed text-muted">{subtitle}</p>
-    <div class="mt-8 flex flex-wrap gap-3">
+    <p class="mt-7 max-w-xl text-lg leading-relaxed text-muted">{subtitle}</p>
+    <div class="mt-10 flex flex-wrap items-center gap-4">
       <Button href={primary.href} size="lg">{primary.label}</Button>
       <Button href={secondary.href} variant="secondary" size="lg">{secondary.label}</Button>
     </div>
-    <ul class="mt-8 flex flex-wrap gap-2">
+    <ul class="mt-10 flex flex-wrap gap-2 border-t border-border pt-5">
       {
         chips.map((c) => (
           <li>
-            <FeatureChip>{c}</FeatureChip>
+            <FeatureChip tone="outline">{c}</FeatureChip>
           </li>
         ))
       }
@@ -57,16 +75,15 @@ const { title, subtitle, primary, secondary, chips, figure, photo, tileTop, tile
   </div>
 
   <!--
-    `-mr-5` on the phone, `md:-mr-10` above it: the photograph runs past the page gutter instead of
-    sitting inside a rounded, shadowed card. Square corners, monochrome, grain — a photograph is
-    the one element in this system allowed to reach the edge of the page, and rounding it would
-    turn it straight back into the tile this hero used to be.
+    `-mr-5` on the phone, `md:-mr-10` above it: the photograph runs past the page gutter. Square
+    corners, monochrome, grain — a photograph is the one element in this system allowed to reach
+    the edge of the page, and rounding it would turn it straight back into a tile.
   -->
   <div class="relative -mr-5 md:-mr-10">
     <div
       class:list={[
         'relative flex aspect-[4/5] w-full items-center justify-center overflow-hidden',
-        photo ? '' : 'hero-art',
+        photo ? 'bg-surface' : 'hero-art',
       ]}
     >
       {
@@ -83,7 +100,6 @@ const { title, subtitle, primary, secondary, chips, figure, photo, tileTop, tile
             />
             <div class="photo-grain" aria-hidden="true" />
             <div class="photo-scrim" aria-hidden="true" />
-            <span class="eyebrow absolute right-5 bottom-5 text-white/80">{tileBottom}</span>
           </>
         ) : (
           <ExerciseFigure
@@ -95,8 +111,16 @@ const { title, subtitle, primary, secondary, chips, figure, photo, tileTop, tile
         )
       }
     </div>
-    <span class="eyebrow kicker-vertical absolute -left-5 top-1 hidden md:block" aria-hidden="true">
+    <span class="eyebrow kicker-vertical absolute top-1 -left-5 hidden md:block" aria-hidden="true">
       {tileTop}
     </span>
+    <!--
+      The one crosshair plate on this screen. No course is in scope on the home page, so the
+      ticks fall back to white; on a course page the same plate would take the programme colour.
+    -->
+    <div class="plate-target absolute bottom-6 -left-3 max-w-[16rem] px-5 py-4 md:-left-10">
+      <span class="plate-ticks"></span>
+      <p class="font-display text-[13px] leading-snug">{tileBottom}</p>
+    </div>
   </div>
 </section>

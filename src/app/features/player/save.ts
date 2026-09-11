@@ -3,7 +3,7 @@
  * benchmarks. Built as a resumable saver: a retry after a network error re-runs only the stages
  * that have not succeeded, so nothing is written twice and nothing is lost.
  */
-import { COURSE_BY_ID } from '@/content/registry';
+import { findCourse } from '@/content/catalogue';
 import { recordBenchmark } from '@/lib/api/benchmarks';
 import { getCourseState, upsertCourseState } from '@/lib/api/courseState';
 import { completeSession } from '@/lib/api/sessions';
@@ -68,7 +68,7 @@ function benchmarkEntries(input: SaveInput): { key: string; value: number; unit:
     if (!step || step.kind !== 'work' || blockType.get(step.blockId) !== 'test') continue;
     entries.push({ key: r.exerciseId, value: r.testValue, unit: r.testUnit });
   }
-  const course = COURSE_BY_ID.get(session.courseId);
+  const course = findCourse(session.courseId);
   const node = course?.nodes.find((n) => n.id === session.nodeId);
   if (node?.kind === 'benchmark') {
     const view = benchmarkResult(steps, results);
@@ -110,7 +110,7 @@ export function createSummarySaver(input: SaveInput): () => Promise<SaveOutcome>
         completedNodeIds: current?.completedNodeIds ?? [],
       };
       adjustment = adaptScale(state, summary);
-      const course = COURSE_BY_ID.get(session.courseId);
+      const course = findCourse(session.courseId);
       // Same semantics as the path screen's `completeNode`: the node joins `completedNodeIds` and
       // the index moves to the next unfinished node (a repeat of an earlier node leaves it put).
       const patch: CourseStatePatch = course

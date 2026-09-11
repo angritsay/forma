@@ -13,16 +13,16 @@ describe('paymentTarget', () => {
 });
 
 describe('withEmail', () => {
-  it('adds the email as a query parameter without touching the rest', () => {
+  it('adds the email under both parameter names without touching the rest', () => {
     const target = paymentTarget('https://pay.example.com/p/1?utm=x')!;
     expect(withEmail(target, 'a+b@example.com')).toBe(
-      'https://pay.example.com/p/1?utm=x&email=a%2Bb%40example.com',
+      'https://pay.example.com/p/1?utm=x&email=a%2Bb%40example.com&customer_email=a%2Bb%40example.com',
     );
   });
   it('replaces an email already in the link', () => {
     const target = paymentTarget('https://pay.example.com/p/1?email=old@example.com')!;
     expect(withEmail(target, 'new@example.com')).toBe(
-      'https://pay.example.com/p/1?email=new%40example.com',
+      'https://pay.example.com/p/1?email=new%40example.com&customer_email=new%40example.com',
     );
   });
 });

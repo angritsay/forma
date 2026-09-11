@@ -7,10 +7,9 @@ import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { IconButton } from '@/components/ui/IconButton';
+import { Glyph } from '@/components/ui/Icon';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { STEPS_GOAL } from '@/lib/training/constants';
 import { evaluateAchievements, levelForPoints } from '@/lib/training/levels';
@@ -46,6 +45,29 @@ function StatsSkeleton() {
       <Skeleton rounded="control" className="h-44" />
       <Skeleton rounded="control" className="h-52" />
     </div>
+  );
+}
+
+/**
+ * The two places the screen leads to — the steps log and the leaderboard — as a ruled pair of
+ * text links with an arrow, in place of the two pictograms the header used to carry. Each cell is
+ * a full-width button so the whole rule is the target.
+ */
+function Crosslinks({ items }: { items: readonly { label: string; onClick: () => void }[] }) {
+  return (
+    <nav className="grid grid-cols-2 divide-x divide-border border-y border-border">
+      {items.map((item) => (
+        <button
+          key={item.label}
+          type="button"
+          onClick={item.onClick}
+          className="control-label flex h-12 items-center justify-between gap-3 pr-4 text-left text-[12px] text-text transition-colors duration-150 ease-(--ease-out) hover:bg-surface-2 active:bg-surface-3 [&:not(:first-child)]:pl-4"
+        >
+          <span className="truncate">{item.label}</span>
+          <Glyph size={14}>→</Glyph>
+        </button>
+      ))}
+    </nav>
   );
 }
 
@@ -88,30 +110,23 @@ export default function StatsScreen() {
     }
   }, [toast, t]);
 
+  /*
+   * The title and one word: «Обновить». A circular arrow is neither a glyph nor a physical
+   * object, so the refresh control is its label, set as a small ghost button; the spinner takes
+   * its place while a reload is in flight.
+   */
   const header = (
-    <div className="flex h-16 items-center gap-2 border-b border-border px-5">
-      <h1 className="font-display min-w-0 flex-1 truncate text-2xl leading-[1.24]">
-        {t('app.statsTitle')}
-      </h1>
-      <IconButton
-        label={t('app.statsLogSteps')}
-        icon="steps"
+    <div className="flex h-14 items-center gap-2 border-b border-border px-5">
+      <h1 className="font-display min-w-0 flex-1 truncate text-base">{t('app.statsTitle')}</h1>
+      <Button
         variant="ghost"
-        onClick={() => navigate('/steps')}
-      />
-      <IconButton
-        label={t('app.statsLeaderboard')}
-        icon="trophy"
-        variant="ghost"
-        onClick={() => navigate('/leaderboard')}
-      />
-      <IconButton
-        label={t('app.statsRefresh')}
-        icon={loading ? <Spinner size={18} /> : 'refresh'}
-        variant="ghost"
-        disabled={loading}
+        size="sm"
+        className="-mr-4.5"
+        loading={loading}
         onClick={() => void refresh()}
-      />
+      >
+        {t('app.statsRefresh')}
+      </Button>
     </div>
   );
 
@@ -121,7 +136,6 @@ export default function StatsScreen() {
   } else if (status === 'error') {
     body = (
       <EmptyState
-        icon="warning"
         title={t('app.statsErrorTitle')}
         description={error?.code === 'network' ? t('common.errorOffline') : t('app.statsErrorBody')}
         action={
@@ -133,14 +147,22 @@ export default function StatsScreen() {
     );
   } else {
     body = (
-      <div className="flex flex-col pt-5">
+      <div className="flex flex-col gap-2 pt-5">
         <LevelCard points={totalPoints} level={level} />
+        <Crosslinks
+          items={[
+            { label: t('app.statsLogSteps'), onClick: () => navigate('/steps') },
+            { label: t('app.statsLeaderboard'), onClick: () => navigate('/leaderboard') },
+          ]}
+        />
         <Section title={t('app.statsWeekTitle')}>
           <WeeklyChart days={week} />
         </Section>
-        <PointsChart weeks={weeks} />
-        <StreakCalendar weeks={calendar} streak={streak} />
-        <StepsChart points={steps} goal={STEPS_GOAL} />
+        <div className="flex flex-col gap-6 border-t border-border pt-5">
+          <PointsChart weeks={weeks} />
+          <StreakCalendar weeks={calendar} streak={streak} />
+          <StepsChart points={steps} goal={STEPS_GOAL} />
+        </div>
         <Section title={t('app.statsRecordsTitle')}>
           <RecordsList records={records} />
         </Section>

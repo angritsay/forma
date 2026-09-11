@@ -64,7 +64,7 @@ export function WorkRepsStep({
           increaseLabel={t('app.playerIncrease')}
         />
         <div className="flex flex-wrap justify-center gap-2">
-          {load ? <Chip icon="bolt">{load}</Chip> : null}
+          {load ? <Chip>{load}</Chip> : null}
           {count !== step.target ? (
             <Chip tone="warning">{`${t('app.playerTarget')}: ${step.target}`}</Chip>
           ) : null}

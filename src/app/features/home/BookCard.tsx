@@ -1,6 +1,6 @@
 /** One row on Home for the coach's hour: his face, what it is, the price — tap to book. */
 import { Avatar } from '@/components/ui/Avatar';
-import { Icon } from '@/components/ui/Icon';
+import { Glyph } from '@/components/ui/Icon';
 import { l } from '@/i18n/index';
 import { withBase } from '@/lib/util/paths';
 import { useT } from '@/app/hooks/useT';
@@ -24,7 +24,7 @@ export function BookCard({ onOpen }: BookCardProps) {
     <button
       type="button"
       onClick={onOpen}
-      className="flex w-full items-center gap-4 border-t border-border py-5 text-left"
+      className="mt-6 flex w-full items-center gap-4 border-t border-border py-5 text-left"
       aria-label={t('app.homeBookTitle')}
     >
       {COACH.photo ? (
@@ -50,7 +50,9 @@ export function BookCard({ onOpen }: BookCardProps) {
           })}
         </span>
       </span>
-      <Icon name="chevron" size={16} className="shrink-0 text-muted" />
+      <Glyph size={16} className="shrink-0 text-muted-2">
+        ›
+      </Glyph>
     </button>
   );
 }

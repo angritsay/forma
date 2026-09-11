@@ -1,24 +1,36 @@
 ---
 /**
- * Squared outline chip for metrics and features. Pass `tone="accent"` for a highlighted chip.
+ * Chip — the Astro twin of the kit's Chip (src/components/ui/Chip.tsx): a small fact stated in
+ * capitals. 34px (`md`) or 28px (`sm`, for the metric row inside a card), 12/11px SemiBold,
+ * tracked .06em — less than a button label, because a chip is read as a word, not scanned as a
+ * control.
  *
- * Eight of these appear under a single course, and as filled pills they read as eight things
- * competing to be tapped. Outlined rectangles read as what they are: a specification list.
+ * `default` sits on --surface-3 behind a hairline. `accent` used to be the blue highlight and is
+ * now the same chip with a stronger hairline and full-white text — a chip that states the one
+ * thing worth noticing. `outline` is the quiet specification chip: no fill, muted text. Eight of
+ * these under a course must read as a list of facts, not eight things competing to be tapped,
+ * which is why none of them is ever the white fill — that is the *selected* state, and a static
+ * chip is never selected.
  */
 interface Props {
   tone?: 'default' | 'accent' | 'outline';
+  size?: 'sm' | 'md';
   class?: string;
 }
-const { tone = 'default', class: extra = '' } = Astro.props;
+const { tone = 'default', size = 'md', class: extra = '' } = Astro.props;
 const tones = {
-  default: 'border border-border text-text',
-  accent: 'border border-accent/40 text-accent',
-  outline: 'border border-border text-muted',
+  default: 'border-border bg-surface-3 text-text',
+  accent: 'border-border-strong bg-surface-3 text-text',
+  outline: 'border-border bg-transparent text-muted',
+};
+const sizes = {
+  sm: 'h-7 gap-1 px-2.5 text-[11px]',
+  md: 'h-8.5 gap-1.5 px-3 text-[12px]',
 };
 ---
 
 <span
-  class={`control-label inline-flex items-center gap-1.5 rounded-control px-2.5 py-1.5 text-[10px] whitespace-nowrap ${tones[tone]} ${extra}`}
+  class={`inline-flex items-center rounded-control border font-semibold tracking-[0.06em] whitespace-nowrap uppercase ${sizes[size]} ${tones[tone]} ${extra}`}
 >
   <slot />
 </span>

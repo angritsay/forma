@@ -30,7 +30,6 @@ function ProfileLoadError() {
   return (
     <div className="flex min-h-dvh items-center justify-center px-5">
       <EmptyState
-        icon="warning"
         title={t('app.errorLoadProfileTitle')}
         description={
           error?.code === 'network' ? t('common.errorOffline') : t('app.errorLoadProfileBody')

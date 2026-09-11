@@ -1,7 +1,9 @@
 ---
 /**
  * Typography wrapper for rendered guide markdown. Prose styles are written with the design
- * tokens (no @tailwindcss/typography): comfortable measure, italic display H2s, token colors.
+ * tokens (no @tailwindcss/typography): comfortable measure, display-face H2s in capitals, token
+ * colours, and no radius on anything — code, images, blocks are all square like the rest of the
+ * product.
  */
 interface Props {
   class?: string;
@@ -50,7 +52,7 @@ const { class: className = '' } = Astro.props;
     margin: 0 0 1.5rem;
   }
   .guide-body :global(.guide-table-scroll:focus-visible) {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--primary);
     outline-offset: 2px;
   }
   /* Inside the scroll wrapper the table can be a real table again. */
@@ -65,14 +67,22 @@ const { class: className = '' } = Astro.props;
     scroll-margin-top: 6rem;
     color: var(--text);
   }
+  /*
+   * Section heads in the display face: Unbounded SemiBold, capitals, no italics (the brandbook
+   * has none). Capitals set wide, so the size stays modest and the browser is allowed to
+   * hyphenate at a real syllable boundary rather than snap a long word mid-letter.
+   */
   .guide-body :global(h2) {
     font-family: var(--font-display);
-    font-style: italic;
-    font-weight: 500;
-    letter-spacing: -0.01em;
-    line-height: 1.1;
-    font-size: 1.85rem;
-    margin: 2.75rem 0 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0;
+    line-height: 1.2;
+    font-size: 1.25rem;
+    hyphens: auto;
+    margin: 3rem 0 1rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
   }
   .guide-body :global(h3) {
     font-size: 1.2rem;
@@ -87,14 +97,15 @@ const { class: className = '' } = Astro.props;
   .guide-body :global(p) {
     margin: 0 0 1.15rem;
   }
+  /* Links are white text with a hairline underline that darkens on hover — no second colour. */
   .guide-body :global(a) {
-    color: var(--accent);
+    color: var(--text);
     text-decoration: underline;
-    text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    text-decoration-color: var(--border-strong);
     text-underline-offset: 0.2em;
   }
   .guide-body :global(a:hover) {
-    text-decoration-color: var(--accent);
+    text-decoration-color: var(--text);
   }
   .guide-body :global(strong) {
     color: var(--text);
@@ -120,7 +131,7 @@ const { class: className = '' } = Astro.props;
   .guide-body :global(blockquote) {
     margin: 1.5rem 0;
     padding: 0.25rem 0 0.25rem 1.25rem;
-    border-left: 2px solid var(--accent);
+    border-left: 2px solid var(--border-strong);
     color: var(--muted);
   }
   .guide-body :global(hr) {
@@ -131,13 +142,11 @@ const { class: className = '' } = Astro.props;
   .guide-body :global(code) {
     font-size: 0.9em;
     background: var(--surface-2);
-    border-radius: 6px;
     padding: 0.1em 0.4em;
   }
   .guide-body :global(pre) {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--r-inner);
     padding: 1rem 1.25rem;
     overflow-x: auto;
     margin: 0 0 1.25rem;
@@ -168,9 +177,10 @@ const { class: className = '' } = Astro.props;
     /* Not uppercased: Russian table headers lose their word shape in all-caps Cyrillic. */
     letter-spacing: 0.01em;
   }
+  /* Photographs in prose are monochrome like every other photograph in the product. */
   .guide-body :global(img) {
     max-width: 100%;
     height: auto;
-    border-radius: var(--r-inner);
+    filter: grayscale(1) contrast(1.05) brightness(0.92);
   }
 </style>

@@ -5,6 +5,8 @@ import type { Pose, PoseSet } from './poses/types';
 import { figureSvgString } from './render';
 import {
   GROUND_Y,
+  HEAD_SIZE,
+  STROKE,
   basePose,
   figurePath,
   figureScene,
@@ -219,10 +221,50 @@ describe('scene and static rendering', () => {
       'footL',
     ]);
     const scene = figureScene(basePose('side'), 'side');
-    const firstNear = scene.findIndex((p) => p.kind === 'line' && p.opacity === 1);
-    const lastFar = scene.map((p) => p.kind === 'line' && p.opacity < 1).lastIndexOf(true);
+    const firstNear = scene.findIndex((p) => p.kind === 'path' && p.opacity === 1);
+    const lastFar = scene.map((p) => p.kind === 'path' && p.opacity < 1).lastIndexOf(true);
+    expect(lastFar).toBeGreaterThanOrEqual(0);
     expect(lastFar).toBeLessThan(firstNear);
-    expect(scene[scene.length - 1]!.kind).toBe('circle'); // head on top
+    expect(scene[scene.length - 1]!.kind).toBe('rect'); // head on top
+    // Each limb is one polyline (mitred joints), so a bare side figure is far arm, far leg,
+    // torso+neck, near leg, near arm, head.
+    expect(scene.map((p) => p.kind)).toEqual(['path', 'path', 'path', 'path', 'path', 'rect']);
+  });
+
+  it('is a blueprint: one line weight, square outlined head, nothing filled', () => {
+    for (const view of ['side', 'front'] as const) {
+      const pose = basePose(view);
+      const scene = figureScene(pose, view);
+      // Every figure stroke is the single brand weight (props may use the thin construction line).
+      expect(new Set(scene.map((p) => p.width))).toEqual(new Set([STROKE.line]));
+      expect(scene.some((p) => (p.kind as string) === 'circle')).toBe(false);
+      // The head is an axis-aligned 22×22 square centred on the head joint, outlined at line
+      // weight — the 16×16 square of the 120-unit brand figures at the rig's scale.
+      const { joints } = solve(pose, view);
+      const head = scene[scene.length - 1]!;
+      expect(head.kind).toBe('rect');
+      if (head.kind === 'rect') {
+        expect(head.w).toBe(HEAD_SIZE);
+        expect(head.h).toBe(HEAD_SIZE);
+        expect(head.x + head.w / 2).toBeCloseTo(joints.head.x);
+        expect(head.y + head.h / 2).toBeCloseTo(joints.head.y);
+        expect(head.width).toBe(STROKE.line);
+      }
+      // The neck runs from the shoulder and stops on the square's edge, never inside it.
+      const neck = figurePath(pose, view).segments.find((s) => s.part === 'neck')!;
+      expect(neck.y1).toBeCloseTo(joints.shoulder.y);
+      expect(
+        Math.max(Math.abs(neck.x2 - joints.head.x), Math.abs(neck.y2 - joints.head.y)),
+      ).toBeCloseTo(HEAD_SIZE / 2);
+    }
+    // The front torso is a spine with shoulder and hip bars, not a filled trapezoid.
+    const front = figurePath(basePose('front'), 'front').segments.map((s) => s.part);
+    expect(front).toContain('torso');
+    expect(front).toContain('shoulders');
+    expect(front).toContain('hips');
+    expect(figurePath(basePose('side'), 'side').segments.map((s) => s.part)).not.toContain(
+      'shoulders',
+    );
   });
 
   it('renders props at anchors', () => {
@@ -234,11 +276,30 @@ describe('scene and static rendering', () => {
       figureScene(pose, 'side', { props: [{ kind: 'floor' }, { kind: 'bar' }, { kind: 'rope' }] })
         .length,
     ).toBe(plain + 3);
+    // The front figure carries two more lines (shoulder and hip bars), so it has its own baseline.
+    const front = basePose('front');
+    const plainFront = figureScene(front, 'front').length;
+    expect(plainFront).toBe(plain + 2);
     expect(
-      figureScene(pose, 'front', {
+      figureScene(front, 'front', {
         props: [{ kind: 'band', anchor: 'feet' }, { kind: 'box' }, { kind: 'chair' }],
       }).length,
-    ).toBe(plain + 8);
+    ).toBe(plainFront + 7);
+    // Equipment is outlined in the same weight; the floor, bands and the rope are thin lines.
+    const widths = new Set(
+      figureScene(pose, 'side', {
+        props: [{ kind: 'dumbbells' }, { kind: 'kettlebell' }, { kind: 'floor' }, { kind: 'box' }],
+      }).map((p) => p.width),
+    );
+    expect(widths).toEqual(new Set([STROKE.line, STROKE.thin]));
+    // The box stands on the floor line with its outer face on the stated width.
+    const box = figureScene(pose, 'side', { props: [{ kind: 'box', height: 40, width: 44 }] })[0]!;
+    expect(box.kind).toBe('rect');
+    if (box.kind === 'rect') {
+      expect(box.x - box.width / 2).toBeCloseTo(130 - 22);
+      expect(box.x + box.w + box.width / 2).toBeCloseTo(130 + 22);
+      expect(box.y + box.h + box.width / 2).toBeCloseTo(GROUND_Y + STROKE.line / 2);
+    }
     const b = sceneBounds(figureScene(pose, 'side'));
     expect(b.y).toBeGreaterThan(20);
     expect(b.y + b.h).toBeLessThan(GROUND_Y + 6);
@@ -249,13 +310,22 @@ describe('scene and static rendering', () => {
     expect(svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"')).toBe(
       true,
     );
-    // The tile behind the figure is one flat fill — no <defs>, no gradient stops.
-    expect(svg).toContain('<rect width="200" height="200" rx="24" fill="#1A2634"/>');
+    // The tile behind the figure is one flat, sharp fill — no radius, no <defs>, no gradient.
+    expect(svg).toContain('<rect width="200" height="200" fill="#1f1f24"/>');
+    expect(svg).not.toContain('rx=');
     expect(svg).not.toContain('linearGradient');
-    expect(svg).toContain('<circle');
+    // Blueprint strokes: square ends, sharp joins, never a fill or a circle.
+    expect(svg).toContain('stroke-linecap="butt"');
+    expect(svg).toContain('stroke-linejoin="miter"');
+    expect(svg).not.toContain('stroke-linecap="round"');
+    expect(svg).not.toContain('<circle');
+    expect(svg).not.toContain('fill="currentColor"');
     expect(svg.endsWith('</svg>')).toBe(true);
+    // Light ink on the default dark surface, black ink on a programme colour.
+    expect(svg).toContain('color="#f6f6f7"');
+    expect(figureSvgString('air_squat', 0, { tile: '#F2F52D' })).toContain('color="#0f0f11"');
     const bare = figureSvgString('air_squat', 0, { background: false, size: 96 });
-    expect(bare).not.toContain('<rect');
+    expect(bare).not.toContain('fill="#1f1f24"');
     expect(bare).toContain('width="96"');
   });
 });

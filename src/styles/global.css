@@ -1,79 +1,162 @@
 @import 'tailwindcss';
 @import '@fontsource-variable/onest';
-@import '@fontsource-variable/manrope';
+@import '@fontsource-variable/unbounded';
 
 /*
- * Forma design tokens.
+ * Forma design tokens — second brandbook (design system CHANGELOG §1–7).
  *
- * Dark-only product. The brandbook's rule for the accent is dosage: #9ecbff marks the primary
- * button, the logo's full stop, a hairline, a kicker — never a large fill. Big areas are shades
- * of black and full-bleed monochrome photography. Course art used to be a pastel gradient per
- * course; it is now a muted dark-blue tile (--tile-1…5) with light figures on it, so a course
- * still reads as itself without the accent shouting.
+ * The interface is strictly black and white. The base is #0f0f11 with three surfaces above it;
+ * the profile and marketing backdrops are white "paper". There is no coloured UI accent any more
+ * — the primary button is a white fill with black text — and the only colour anywhere is the
+ * colour of the *programme* someone is training in: beginners #f2f52d, yoga #a8c8ff, marathon
+ * #f08a3c. One screen, one colour; it paints the course cover, the progress and the day number,
+ * and never a button. Text on a programme colour is always black.
+ *
+ * Every radius is 0. The one circle in the system is the play button over a video.
  */
 :root {
-  --bg: #0b0b0d;
-  --surface: #151519;
-  --surface-2: #1e1e24;
-  --surface-3: #2a2a31;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.14);
-  --text: #f4f4f6;
+  --bg: #0f0f11;
+  --surface: #17171a;
+  --surface-2: #1f1f24;
+  --surface-3: #2a2a30;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --text: #f6f6f7;
   /*
    * Both muted tones must clear WCAG AA (4.5:1) for body text on every surface they are used on,
-   * including the darkest one (--surface-3). Measured ratios:
-   *   --muted   on bg 8.34 · surface 7.73 · surface-2 7.03 · surface-3 6.04
-   *   --muted-2 on bg 6.46 · surface 5.98 · surface-2 5.45 · surface-3 4.68
+   * including the darkest one (--surface-3). Measured:
+   *   --muted   #b9b9c0  on bg 9.81 · surface 9.17 · surface-2 8.41 · surface-3 7.31
+   *   --muted-2 #93939d  on bg 6.29 · surface 5.88 · surface-2 5.39 · surface-3 4.69
+   *
+   * The design system's own text-3 is #84848d. It is not adopted: on --surface-2 it measures
+   * 4.43 and on --surface-3 3.85, and this codebase uses --muted-2 for small running text on
+   * both. #93939d is the closest grey that clears AA everywhere; the difference is invisible.
    */
-  --muted: #a8a8b2;
+  --muted: #b9b9c0;
   --muted-2: #93939d;
   --primary: #ffffff;
-  --on-primary: #0b0b0d;
+  --on-primary: #0f0f11;
   /*
-   * The accent is the one blue in the system. `--accent` is the fill (buttons, the logo dot);
-   * `--accent-2` is periwinkle, used only where two cool tones must be told apart.
-   *
-   * #9ecbff clears AA as text on every surface — measured against --bg 11.65:1, --surface-1
-   * 10.79, --surface-2 9.82, --surface-3 8.44 — and --on-primary on an accent fill is the same
-   * 11.65:1, which is what lets the primary button be solid blue.
+   * The accent is white. `--accent` used to be the one blue in the system and marked the primary
+   * button, the logo's full stop and the active tab; all of those are now white on black, so the
+   * token stays — every `bg-accent` in the tree keeps meaning "the thing that acts" — and only
+   * its value changes. `--accent-2` (periwinkle) is gone with it and aliases the same white.
    */
-  --accent: #9ecbff;
-  --accent-2: #c9d6ff;
+  --accent: #ffffff;
+  --accent-2: #ffffff;
+  --on-accent: #0f0f11;
+  /*
+   * Paper: the white screens. The profile sits on it, so do the marketing backdrops, and a dark
+   * card cut into paper is the "inset" the brandbook asks for. Scoped as a theme below so a whole
+   * subtree flips at once with [data-theme='paper'].
+   */
+  --paper: #ffffff;
+  --paper-2: #f2f2f0;
+  --ink: #0f0f11;
+  --border-ink: rgba(15, 15, 17, 0.14);
+  --border-ink-strong: rgba(15, 15, 17, 0.25);
+  /*
+   * Programme colours — the only colour in the system, and it comes from the course, never from
+   * the interface. Black ink on all three clears AA with room: 16.30 on yellow, 11.28 on blue,
+   * 7.66 on orange. As text on the dark ground they clear it too (same ratios), which is what
+   * lets a day number or a kicker take the course colour.
+   *
+   * The `-ink` variants are the same hues darkened for use as text on paper, each ≥ 5.3:1.
+   */
+  --course-beginners: #f2f52d;
+  --course-yoga: #a8c8ff;
+  --course-marathon: #f08a3c;
+  --on-course: #0f0f11;
+  --course-beginners-ink: #6c7005;
+  --course-yoga-ink: #2f5f9e;
+  --course-marathon-ink: #a4530a;
   --success: #7ce0b0;
   --warning: #ffd166;
   --danger: #ff6b6b;
+  --success-ink: #1c7a52;
+  --warning-ink: #8a6100;
+  --danger-ink: #c53030;
   /*
-   * Course tiles. Muted dark-blue surfaces, not gradients — content assigns one per course via
-   * `--course-tile`. `--tile-fg` is the ink for figures and labels sitting on them, and clears AA
-   * on all five: 10.97:1 against the lightest (--tile-4) up to 13.39:1 against the darkest
-   * (--tile-3).
+   * Course tiles. A course sets `--course-tile` to one of these (content stores the hex). The
+   * first three are the programme colours and take black ink (`--tile-fg`); the last two are
+   * neutral surfaces for programmes that have no colour of their own and take light ink
+   * (`--tile-fg-dark`). `.hero-art` reads `--course-tile-fg` so whoever sets the tile sets the
+   * ink to match — `courseTileVars()` in src/lib/ui/tile.ts does both from the one hex.
    */
-  --tile-1: #1a2634;
-  --tile-2: #20293c;
-  --tile-3: #16202b;
-  --tile-4: #232f42;
-  --tile-5: #1c2532;
-  --tile-fg: #dce9fa;
+  --tile-1: var(--course-beginners);
+  --tile-2: var(--course-yoga);
+  --tile-3: var(--course-marathon);
+  --tile-4: var(--surface-2);
+  --tile-5: var(--surface-3);
+  --tile-fg: #0f0f11;
+  --tile-fg-dark: #f6f6f7;
   /*
-   * Radii. Cards keep the brand's generous 24px; tiles 20px; inputs 16px. Buttons and chips are
-   * deliberately near-square (4px) with capitalised labels — the brandbook drops pills entirely,
-   * and a 999px control next to a 24px card is what made the old UI read as generic.
+   * Radii: one shape, the sharp rectangle. Every radius token is 0 so the ~200 `rounded-*`
+   * utilities in the tree square off at once. `--r-pill` survives for the single legitimate
+   * circle — the play button laid over a video — and nothing else may use it.
    */
-  --r-card: 24px;
-  --r-tile: 20px;
-  --r-inner: 16px;
-  --r-control: 4px;
+  --r-card: 0px;
+  --r-tile: 0px;
+  --r-inner: 0px;
+  --r-control: 0px;
   --r-pill: 999px;
-  --shadow-card: 0 12px 40px rgba(0, 0, 0, 0.35);
-  --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.35);
-  --shadow-glow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 20px 60px rgba(158, 203, 255, 0.14);
+  /* Shadows are almost gone; paper polaroids get a soft one, dark cards get none. */
+  --shadow-card: none;
+  --shadow-soft: 0 12px 30px rgba(0, 0, 0, 0.3);
+  --shadow-paper: 0 12px 30px rgba(15, 15, 17, 0.18);
+  --shadow-glow: none;
+  /*
+   * Type. Unbounded for display — always uppercase, 800 for the big lines and 600 for headings,
+   * with the brand's main device being two weights in one line (800 + 200: «ПРИСЕД без боли»).
+   * Onest for everything that is read. Both are variable faces served from the package, not from
+   * Google Fonts: the app runs inside Telegram, where a third-party font request is one more
+   * thing to fail before the first screen paints.
+   */
   --font-sans: 'Onest Variable', 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Manrope Variable', 'Manrope', 'Onest Variable', system-ui, sans-serif;
+  --font-display: 'Unbounded Variable', 'Unbounded', 'Onest Variable', system-ui, sans-serif;
+  /* Kickers are tracked wide (.18em); control labels a little less (.16em) so they fit their box. */
+  --tracking-kicker: 0.18em;
+  --tracking-label: 0.16em;
   /* Calm fades and shifts, never bounce. */
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
   --dur-fast: 150ms;
   --dur-med: 280ms;
   color-scheme: dark;
+}
+
+/*
+ * Paper theme — the white screens. Set `data-theme="paper"` on a subtree (the profile, a
+ * marketing block) and every token below flips: the ground goes white, text goes ink, the
+ * primary button inverts to black-on-white, and the semantic colours switch to their ink
+ * variants so they still clear AA on a light ground. Measured: --muted #4c4c53 on paper 8.52,
+ * on the raised surfaces 7.60 / 7.00 / 6.31; --muted-2 #66666f on paper 5.68, paper-2 5.07,
+ * surface-2 4.67 — all AA.
+ */
+[data-theme='paper'] {
+  --bg: var(--paper);
+  --surface: var(--paper-2);
+  --surface-2: #e9e9e6;
+  --surface-3: #dededa;
+  --border: var(--border-ink);
+  --border-strong: rgba(15, 15, 17, 0.2);
+  --text: var(--ink);
+  --muted: #4c4c53;
+  --muted-2: #66666f;
+  --primary: var(--ink);
+  --on-primary: #ffffff;
+  --accent: var(--ink);
+  --accent-2: var(--ink);
+  --on-accent: #ffffff;
+  --success: var(--success-ink);
+  --warning: var(--warning-ink);
+  --danger: var(--danger-ink);
+  --tile-4: #e9e9e6;
+  --tile-5: #dededa;
+  --tile-fg-dark: var(--ink);
+  --shadow-soft: 0 8px 30px rgba(15, 15, 17, 0.1);
+  color-scheme: light;
+  background: var(--bg);
+  color: var(--text);
 }
 
 @theme {
@@ -90,11 +173,20 @@
   --color-on-primary: var(--on-primary);
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
+  --color-on-accent: var(--on-accent);
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-ink: var(--ink);
+  --color-border-ink: var(--border-ink);
+  --color-border-ink-strong: var(--border-ink-strong);
+  --color-course-beginners: var(--course-beginners);
+  --color-course-yoga: var(--course-yoga);
+  --color-course-marathon: var(--course-marathon);
+  --color-on-course: var(--on-course);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
-  --color-tile: var(--course-tile, var(--tile-1));
-  --color-tile-fg: var(--tile-fg);
+  --color-tile-fg-dark: var(--tile-fg-dark);
   --radius-card: var(--r-card);
   --radius-tile: var(--r-tile);
   --radius-inner: var(--r-inner);
@@ -104,7 +196,10 @@
   --font-display: var(--font-display);
   --shadow-card: var(--shadow-card);
   --shadow-soft: var(--shadow-soft);
+  --shadow-paper: var(--shadow-paper);
   --shadow-glow: var(--shadow-glow);
+  --tracking-kicker: var(--tracking-kicker);
+  --tracking-label: var(--tracking-label);
 
   /*
    * Type scale.
@@ -114,34 +209,53 @@
    * appreciably longer than its English equivalent — that read as shouting, and the hero wrapped
    * onto five lines and broke mid-word.
    *
-   * The sizes stay where they are now that the display face is Manrope rather than Unbounded.
-   * Manrope sets appreciably narrower, so the same numbers wrap onto fewer lines — the gain is
-   * taken as shorter headlines, not as bigger type.
+   * The display face is Unbounded again, and Unbounded is wide: set in capitals, as the brand
+   * asks, a Russian word takes half again the width it took in Manrope. The display steps
+   * (3xl–7xl) come down to the design system's mobile scale — 40px is display-xl, 28px is
+   * display-l — and the reading steps (lg–2xl) stay where they were, because Onest did not
+   * change. The gain is taken as fewer, wider words per line, not as smaller type.
    *
-   * Every step carries an explicit line-height. That number is a Cyrillic budget, not a Latin
-   * one: measured against Manrope SemiBold, Й reaches 0.926em above the baseline and у drops to
-   * 0.240em below, so two lines need 1.166em of advance before the riser of one touches the
-   * descender of the other. 1.18 on the display steps clears that and sets tighter than the old
-   * Unbounded budget of 1.174 allowed; body steps stay looser for reading. The `.font-display`
-   * rule also asks for a line-height, but Tailwind's per-step value is a utility and beats it —
-   * naming the value here is what makes the rule hold.
+   * Line heights on the display steps are for capitals: no descenders except the tails of Д, Ц
+   * and Щ, so 1.05 clears the breve of Й on the line below. Body steps stay looser for reading.
    */
   --text-lg: 1rem;
   --text-lg--line-height: 1.6;
   --text-xl: 1.0625rem;
   --text-xl--line-height: 1.6;
-  --text-2xl: 1.25rem;
+  --text-2xl: 1.125rem;
   --text-2xl--line-height: 1.35;
-  --text-3xl: 1.5rem;
-  --text-3xl--line-height: 1.25;
-  --text-4xl: 1.75rem;
-  --text-4xl--line-height: 1.2;
-  --text-5xl: 1.875rem;
-  --text-5xl--line-height: 1.2;
-  --text-6xl: 2.25rem;
-  --text-6xl--line-height: 1.18;
-  --text-7xl: 2.75rem;
-  --text-7xl--line-height: 1.18;
+  --text-3xl: 1.25rem;
+  --text-3xl--line-height: 1.2;
+  --text-4xl: 1.5rem;
+  --text-4xl--line-height: 1.1;
+  --text-5xl: 1.75rem;
+  --text-5xl--line-height: 1.08;
+  --text-6xl: 2.125rem;
+  --text-6xl--line-height: 1.05;
+  --text-7xl: 2.5rem;
+  --text-7xl--line-height: 1.02;
+}
+
+/*
+ * The three tokens that are not one colour but "whatever colour this course is".
+ *
+ * They have to be `inline`, and that is not a style choice. A plain `@theme` entry is emitted as a
+ * custom property on `:root` and the utility refers to it — `text-course` becomes
+ * `color: var(--color-course)`. Custom properties inherit as *computed* values, so
+ * `--color-course: var(--course-tile, var(--tile-4))` is substituted once, at `:root`, where no
+ * course has been opened and `--course-tile` is unset: every element in the tree then inherits the
+ * fallback, and a `--course-tile` set further down by `courseTileVars()` changes nothing. The whole
+ * per-course colour system was silently dead — the yellow tile was right there on the same element
+ * and `text-course` still computed to `#1f1f24`.
+ *
+ * `@theme inline` substitutes the value into the utility instead, so `text-course` compiles to
+ * `color: var(--course-tile, var(--tile-4))` and the `var()` is resolved on the element that uses
+ * it — which is the entire point of the token.
+ */
+@theme inline {
+  --color-course: var(--course-tile, var(--tile-4));
+  --color-tile: var(--course-tile, var(--tile-4));
+  --color-tile-fg: var(--course-tile-fg, var(--tile-fg-dark));
 }
 
 html {
@@ -202,52 +316,60 @@ body {
 }
 
 /*
- * Display headings.
+ * Display type.
  *
  * These live in the components layer rather than outside the cascade, so a Tailwind utility on
  * the element still wins — under the previous unlayered rule every `leading-*`, `font-*` and
  * `not-italic` utility was silently discarded.
- *
- * The face is upright, not italic. Playfair Display's Cyrillic italic draws и, п and т as
- * composite glyphs pointing at the Latin u, n and m outlines, so every Russian display heading
- * in the product rendered as pseudo-Latin. Manrope draws Cyrillic as Cyrillic.
  */
 @layer components {
-  .font-display,
-  .display {
+  /*
+   * A heading in the display face: Unbounded, capitals, SemiBold. This is the *heading* weight —
+   * card titles, section heads, the numbers on a stat tile. The brand's big lines use `.display`
+   * below at 800, and the two are told apart on purpose: 800 capitals at 17px read as a headline
+   * in a news feed, and a card has to sit quietly next to the thing it belongs to.
+   */
+  .font-display {
     font-family: var(--font-display);
-    /*
-     * 600, not 700. Manrope's Bold is heavy enough at display sizes to read as a headline in a
-     * news feed; SemiBold is the brandbook's display weight and is what makes a large Russian
-     * heading sit quietly. The wordmark is the one exception and sets its own 800.
-     */
     font-weight: 600;
-    /*
-     * -0.02em tracking is affordable in Manrope where it was not in Unbounded, whose Cyrillic is
-     * already tightly fitted. 1.18 leading is the Cyrillic budget: Й reaches 0.926em above the
-     * baseline and у drops to -0.240em, so adjacent lines collide below 1.166em.
-     * Headings that also clip (`truncate`) need 1.24em of content box and set their own leading.
-     */
-    letter-spacing: -0.02em;
-    line-height: 1.18;
+    text-transform: uppercase;
+    letter-spacing: 0;
+    line-height: 1.2;
     /*
      * `body` sets `overflow-wrap: break-word` so a long URL can never widen the viewport. At
      * display sizes that rule snaps words mid-syllable — a 320px screen rendered the hero as
      * "Кроссфи / т дома" and "подстраи / вается". Headings opt out and hyphenate instead: the
      * browser breaks at a real syllable boundary and shows the hyphen, using the patterns for
      * whatever <html lang> declares. `overflow-wrap: break-word` stays inherited from body as
-     * the last resort — without it a word with no hyphenation patterns available (Russian, in
-     * some engines) cannot break at all and overflows the viewport instead. Fluid sizes below
-     * mean most headings never reach either fallback.
+     * the last resort. Unbounded in capitals is the widest thing on the page, which makes this
+     * rule more load-bearing than it was, not less.
      */
     hyphens: auto;
   }
 
   /*
-   * Section eyebrow / kicker — 11px, uppercase, 0.14em tracking, per the brandbook.
+   * The big line. 800, capitals, tracked a hair tight, set on a line-height drawn for capitals.
+   * The device that makes it the brand's is `.t-thin` on part of the line: «ПРИСЕД» at 800 and
+   * «без боли» at 200 — strength and lightness in one breath. Prefer that to a second colour,
+   * an outline or a blur echo, all of which the brandbook has retired.
+   */
+  .display {
+    font-family: var(--font-display);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+    hyphens: auto;
+  }
+
+  .t-thin {
+    font-weight: 200;
+  }
+
+  /*
+   * Section eyebrow / kicker — 11px, capitals, .18em tracking, per the brandbook.
    *
-   * This overrides a deliberate earlier decision, and the reasoning behind that decision still
-   * stands: Cyrillic capitals are near-uniform rectangles (П Н И Ш Ц Т Г Е Б В) with none of the
+   * Cyrillic capitals are near-uniform rectangles (П Н И Ш Ц Т Г Е Б В) with none of the
    * distinguishing shapes Latin caps have, so uppercasing a Russian label erases its word
    * silhouette, and wide tracking then pushes it to roughly twice the set width of the English
    * original. The brandbook accepts that cost because the kicker is a label, not something to be
@@ -261,7 +383,7 @@ body {
   .eyebrow {
     font-size: 0.6875rem;
     font-weight: 600;
-    letter-spacing: 0.14em;
+    letter-spacing: var(--tracking-kicker);
     line-height: 1.3;
     text-transform: uppercase;
     color: var(--muted);
@@ -277,41 +399,119 @@ body {
   }
 
   /*
-   * Control label — capitalised, tracked, on buttons and chips. Tighter tracking than a kicker
-   * (0.08em) because a control label sits inside a box and must not push its own width out.
+   * Control label — capitals, Bold, tracked .16em, on buttons and chips. A little tighter than
+   * a kicker because a control label sits inside a box and must not push its own width out.
    */
   .control-label {
-    font-weight: 600;
-    letter-spacing: 0.08em;
+    font-weight: 700;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
   }
 
   /*
-   * The wordmark. Latin "FORMA" plus a blue full stop — the dot is the single most reliable
-   * place the accent appears, so it is a token, not a literal, everywhere it is drawn.
+   * The wordmark: «FORMA» in Unbounded, FOR at 800 and MA at 200, the first F stretched ×1.22
+   * as the anchor letter, .05em tracking and a wider gap after the F. No full stop — the blue
+   * dot is gone with the blue. The `<Logo>` component (src/components/ui/Logo.tsx, Logo.astro)
+   * draws the spans; these classes are what it draws with, and `.wordmark` on its own is the
+   * plain fallback for anywhere that still sets the word as one string.
    */
   .wordmark {
     font-family: var(--font-display);
     font-weight: 800;
-    letter-spacing: -0.02em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .wordmark-f {
+    display: inline-block;
+    transform: scaleX(1.22);
+    transform-origin: left center;
+    margin-right: 0.16em;
+  }
+  .wordmark-thin {
+    font-weight: 200;
+  }
+
+  /*
+   * Typographic glyph — the brand's replacement for an icon. → ‹ › ✓ × + 01 // ›_ 12′ set in
+   * Unbounded SemiBold at the size of the text they sit beside. Always monochrome: glyphs do not
+   * take the programme colour.
+   */
+  .glyph {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1;
+    text-transform: uppercase;
+    display: inline-flex;
+    flex: none;
+  }
+
+  /*
+   * The "crosshair" plate: a dark plate for one key fact, marked by 14×2px ticks in the
+   * programme colour at all four corners and no other border. One per screen at most — it is
+   * the loudest thing the colour is allowed to do outside the cover.
+   *
+   * Four corners from one element: two pseudo-elements draw the top-left and bottom-right Ls,
+   * and an empty child `<span class="plate-ticks" />` draws the other two. Without the child you
+   * get a two-corner plate, which is still a plate.
+   */
+  .plate-target {
+    position: relative;
+    background: var(--bg);
+    --plate-tick: 14px;
+    --plate-stroke: 2px;
+    --plate-color: var(--course-tile, var(--text));
+  }
+  .plate-target::before,
+  .plate-target::after,
+  .plate-target > .plate-ticks::before,
+  .plate-target > .plate-ticks::after {
+    content: '';
+    position: absolute;
+    width: var(--plate-tick);
+    height: var(--plate-tick);
+    pointer-events: none;
+  }
+  .plate-target::before {
+    top: 0;
+    left: 0;
+    border-top: var(--plate-stroke) solid var(--plate-color);
+    border-left: var(--plate-stroke) solid var(--plate-color);
+  }
+  .plate-target::after {
+    right: 0;
+    bottom: 0;
+    border-right: var(--plate-stroke) solid var(--plate-color);
+    border-bottom: var(--plate-stroke) solid var(--plate-color);
+  }
+  .plate-target > .plate-ticks::before {
+    top: 0;
+    right: 0;
+    border-top: var(--plate-stroke) solid var(--plate-color);
+    border-right: var(--plate-stroke) solid var(--plate-color);
+  }
+  .plate-target > .plate-ticks::after {
+    bottom: 0;
+    left: 0;
+    border-bottom: var(--plate-stroke) solid var(--plate-color);
+    border-left: var(--plate-stroke) solid var(--plate-color);
   }
 }
 
-/* Both display and body faces expose `tnum`, so this now applies to metrics in either. */
+/* Both display and body faces expose `tnum`, so this applies to metrics in either. */
 .tabular {
   font-variant-numeric: tabular-nums;
 }
 
 /*
- * Course art surface. This replaces the pastel mint→lavender gradient the class used to draw.
- * A course sets `--course-tile` to one of --tile-1…5; the default keeps a tile rendering before
- * content has assigned one. Ink on it is light (--tile-fg), not black, because the tile is now a
- * dark surface rather than a pastel one.
+ * Course art surface. A course sets `--course-tile` (its programme colour, or a neutral surface
+ * when it has none) and `--course-tile-fg` (black ink on a colour, light ink on a surface). The
+ * defaults keep an unassigned tile rendering as a quiet neutral rather than shouting yellow.
  */
 .hero-art {
-  background: var(--course-tile, var(--tile-1));
-  color: var(--tile-fg);
+  background: var(--course-tile, var(--tile-4));
+  color: var(--course-tile-fg, var(--tile-fg-dark));
 }
 
 /*
@@ -343,7 +543,7 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, transparent 45%, rgba(0, 0, 0, 0.75) 100%);
+  background: linear-gradient(180deg, transparent 45%, rgba(15, 15, 17, 0.8) 100%);
 }
 
 /*
@@ -357,14 +557,30 @@ body {
 }
 
 /*
- * Editorial number — the 01/02/03 that marks a step, a course or a day. Tabular so a column of
- * them aligns, and it never wraps.
+ * Editorial number — the 01/02/03 that marks a step, a course or a day. Unbounded SemiBold,
+ * tabular so a column of them aligns, and it never wraps. The one place the programme colour
+ * may land on type: the number of the *current* day takes it, the rest stay grey.
  */
 .numeral {
   font-family: var(--font-display);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
+}
+
+/* Hairline — the brand's divider. A 1px line in --border where a box used to be. */
+.hairline {
+  border-top: 1px solid var(--border);
+}
+
+/*
+ * Blueprint figures. The stick figures are drawn in `currentColor`; on a programme colour or on
+ * paper that is black ink as drawn, and on a dark surface the whole figure inverts. The class
+ * goes on the figure's container, and `.hero-art` sets the colour for both cases through
+ * `--course-tile-fg`, so this is only for a figure sitting on a plain dark ground.
+ */
+.figure-on-dark {
+  filter: invert(1);
 }
 
 /*
@@ -396,32 +612,4 @@ body {
 .tap-target-y::before {
   left: 0;
   right: 0;
-}
-
-/* Focus ring for keyboard users. The outline follows the element's own radius — never override it
-   here, or a 24px card would square off to a 4px control while focused. */
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-::selection {
-  background: var(--accent);
-  color: var(--on-primary);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-delay: 0ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    transition-delay: 0ms !important;
-    scroll-behavior: auto !important;
-  }
 }
