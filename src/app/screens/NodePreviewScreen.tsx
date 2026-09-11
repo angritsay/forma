@@ -14,7 +14,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
-import { findCourse } from '@/content/catalogue';
+import { courseTitle, findCourse } from '@/content/catalogue';
 import { formatNumber } from '@/i18n/index';
 import { startSession } from '@/lib/api/sessions';
 import { estimateCalories, estimateDuration } from '@/lib/training/estimate';
@@ -135,7 +135,7 @@ export default function NodePreviewScreen() {
   }
   if (!entitlements.includes(course.id)) {
     return (
-      <Screen header={<TopBar back="/courses" title={l(course.name)} />}>
+      <Screen header={<TopBar back="/courses" title={l(courseTitle(course))} />}>
         <EmptyState
           title={t('app.pathNotOwnedTitle')}
           description={t('app.pathNotOwnedBody')}
@@ -317,7 +317,8 @@ export default function NodePreviewScreen() {
             <span className="eyebrow-sentence text-course">{t('app.nodeFormulaKicker')}</span>
             <DisplayTitle as="h2" text={l(workout.name)} className="mt-2.5 text-6xl" />
             <p className="eyebrow mt-3.5">
-              {l(course.name)} · {t('app.homeTodayWeek', { week: node.week, day: node.day })}
+              {l(courseTitle(course))} ·{' '}
+              {t('app.homeTodayWeek', { week: node.week, day: node.day })}
             </p>
             <p className="mt-4 text-[15px] font-medium">{l(workout.focus)}</p>
             <p className="mt-2 text-[15px] leading-relaxed text-muted">{l(workout.description)}</p>

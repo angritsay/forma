@@ -91,6 +91,16 @@ export const findCourse = (id: string): Course | undefined => courseById.get(id)
 export const findExercise = (id: string): Exercise | undefined => exerciseById.get(id);
 export const hasCourse = (id: string): boolean => courseById.has(id);
 
+/**
+ * What to call a course inside the app.
+ *
+ * `name` carries the descriptive half a stranger needs on a search page; an athlete four weeks into
+ * the course does not, and set in display capitals it runs to four lines. Use this anywhere the app
+ * names a course to someone who already has it, and `course.name` on the landing, in metadata and
+ * on the OG cards.
+ */
+export const courseTitle = (course: Course): Course['name'] => course.shortName ?? course.name;
+
 /** A workout of a course, by id. Ids are unique inside a course, not globally. */
 export const findWorkout = (course: Course, workoutId: string): Workout | undefined =>
   course.workouts.find((w) => w.id === workoutId);

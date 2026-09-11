@@ -311,6 +311,17 @@ export const CourseSchema = z.object({
   published: z.boolean().default(true),
   slug: SlugL10nSchema,
   name: L10nSchema,
+  /*
+   * The name as the app says it, when the full name is too long to set in display capitals.
+   *
+   * `name` is written for search and for a customer who has never heard of us — «Форма с нуля:
+   * кроссфит дома без оборудования» tells a stranger on Google exactly what they are looking at.
+   * Inside the app that same string is four lines of Unbounded capitals above the day list, and
+   * the descriptive half is telling the athlete something they decided weeks ago. Everywhere the
+   * app names a course it uses this instead, falling back to `name`; the landing, the OG cards and
+   * the metadata keep the full one.
+   */
+  shortName: L10nSchema.optional(),
   tagline: L10nSchema,
   description: L10nSchema,
   longDescription: z.array(L10nSchema).min(2),

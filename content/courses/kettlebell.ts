@@ -1361,6 +1361,7 @@ export const COURSE_KETTLEBELL: CourseInput = {
     ru: 'Форма с гирей: сила и метаболизм',
     en: 'Forma. Kettlebell: strength and metabolism',
   },
+  shortName: { ru: 'Форма с гирей', en: 'Forma. Kettlebell' },
   tagline: {
     ru: 'Шесть недель с одной гирей: от становой тяги до рывка, три тренировки в неделю.',
     en: 'Six weeks with a single kettlebell: from the deadlift to the snatch, three sessions a week.',

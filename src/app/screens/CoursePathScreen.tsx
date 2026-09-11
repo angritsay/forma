@@ -13,7 +13,7 @@ import { Glyph } from '@/components/ui/Icon';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
-import { findCourse } from '@/content/catalogue';
+import { courseTitle, findCourse } from '@/content/catalogue';
 import type { Course, CourseNode } from '@/content/schema';
 import { formatNumber } from '@/i18n/index';
 import { courseTileVars } from '@/lib/ui/tile';
@@ -132,7 +132,7 @@ export default function CoursePathScreen() {
 
   if (!owned) {
     return (
-      <Screen header={<TopBar back="/courses" title={l(course.name)} />}>
+      <Screen header={<TopBar back="/courses" title={l(courseTitle(course))} />}>
         <EmptyState
           title={t('app.pathNotOwnedTitle')}
           description={t('app.pathNotOwnedBody')}
@@ -255,7 +255,7 @@ export default function CoursePathScreen() {
             </button>
           </div>
           <div className="mt-8">
-            <DisplayTitle text={l(course.name)} className="text-6xl lg:text-7xl" />
+            <DisplayTitle text={l(courseTitle(course))} className="text-6xl lg:text-7xl" />
             {/*
              * The tagline is set to be read, not looked at: Onest, sentence case.
              *

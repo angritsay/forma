@@ -22,6 +22,7 @@ import { PointsSheet } from '@/app/features/leaderboard/PointsSheet';
 import { useLeaderboard } from '@/app/features/leaderboard/useLeaderboard';
 import { useCatalogue } from '@/app/store/catalogue';
 import { useSession } from '@/app/store/session';
+import { courseTitle } from '@/content/catalogue';
 
 function ListSkeleton() {
   return (
@@ -144,7 +145,7 @@ export default function LeaderboardScreen() {
               selected={courseId === course.id}
               onClick={() => selectCourse(course.id)}
             >
-              {l(course.name)}
+              {l(courseTitle(course))}
             </Chip>
           ))}
         </div>

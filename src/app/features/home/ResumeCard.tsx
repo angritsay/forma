@@ -4,7 +4,7 @@
  */
 import { Button } from '@/components/ui/Button';
 import { Glyph, Icon } from '@/components/ui/Icon';
-import { findCourse } from '@/content/catalogue';
+import { courseTitle, findCourse } from '@/content/catalogue';
 import { useT } from '@/app/hooks/useT';
 import { activeWorkoutPath, useActiveWorkoutStore } from '@/app/store/activeWorkout';
 
@@ -38,7 +38,7 @@ export function ResumeCard({ onResume }: ResumeCardProps) {
         <h2 className="font-display mt-1 truncate text-lg leading-[1.24]">
           {workout ? l(workout.name) : t('app.homeResumeFallback')}
         </h2>
-        {course ? <p className="truncate text-sm text-muted">{l(course.name)}</p> : null}
+        {course ? <p className="truncate text-sm text-muted">{l(courseTitle(course))}</p> : null}
       </div>
       <Button
         size="md"

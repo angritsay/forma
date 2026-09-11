@@ -9,6 +9,7 @@ import { PHOTOS, photoSrc } from '@/lib/media/photos';
 import { useT } from '@/app/hooks/useT';
 import { DisplayTitle } from './DisplayTitle';
 import type { TodayModel } from './useTodayModel';
+import { courseTitle } from '@/content/catalogue';
 
 export interface TodayCardProps {
   model: TodayModel;
@@ -197,7 +198,7 @@ export function TodayCard({
           <PhotoHero
             chrome={chrome}
             eyebrow={eyebrow}
-            kicker={l(model.course.name)}
+            kicker={l(courseTitle(model.course))}
             title={t('app.homeTodayCompletedTitle')}
             subtitle={t('app.homeTodayCompletedBody')}
           />

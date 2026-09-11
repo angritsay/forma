@@ -19,6 +19,7 @@ import {
 import { PLAN_BY_ID, PLANS_ENABLED } from '@content/site/plans';
 import { formatPrice } from '@content/site/pricing';
 import { LinkButton } from './LinkButton';
+import { courseTitle } from '@/content/catalogue';
 
 const monthlyPlan = PLAN_BY_ID.get('monthly');
 
@@ -74,7 +75,9 @@ export function CourseTile({ course, owned, progress, n, onOpen }: CourseTilePro
       </div>
       <div className="flex flex-col gap-4 p-4">
         <div>
-          <h2 className="font-display text-[15px] leading-[1.3] text-balance">{l(course.name)}</h2>
+          <h2 className="font-display text-[15px] leading-[1.3] text-balance">
+            {l(courseTitle(course))}
+          </h2>
           <p className="mt-1 text-[13px] text-muted">{l(course.tagline)}</p>
         </div>
         {/* The specification as capitals chips — words, no pictograms; the word says what it is. */}
@@ -94,7 +97,7 @@ export function CourseTile({ course, owned, progress, n, onOpen }: CourseTilePro
             {progress && progress.done > 0 ? (
               <ProgressBar
                 value={pct / 100}
-                label={l(course.name)}
+                label={l(courseTitle(course))}
                 valueText={`${pct}%`}
                 className="mt-1"
               />
