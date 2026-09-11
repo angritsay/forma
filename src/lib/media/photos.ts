@@ -57,14 +57,33 @@ export const PHOTOS = {
   landingHero: unsplash('1583454110551-21f2fa2afe61', 1400, 1750, 'Jonathan Borba / Unsplash'),
   /** The coach block on the landing, when `public/coach/sergey.jpg` is not used. */
   coach: unsplash('1534438327276-14e5300c3a48', 1200, 1500, 'Sven Mieke / Unsplash'),
-  /** App home, the "today" block. */
-  homeToday: unsplash('1571019613454-1cb2f99b2d8b', 1200, 1500, 'Jonathan Borba / Unsplash'),
+  /**
+   * App home, the "today" block — the screen an athlete opens every day.
+   *
+   * The coach's own photograph, vendored. It replaces a stock frame of a stranger in a gym, and
+   * being a local file it also drops the runtime dependency on someone else's CDN for the single
+   * most-seen surface in the product. Same frame as the sign-in screen below: there is one
+   * photograph of him, and showing him twice beats showing someone else once.
+   */
+  homeToday: {
+    local: '/coach/sergey-hero.jpg',
+    url: '',
+    credit: 'Сергей Титов',
+    width: 1200,
+    height: 1600,
+  } satisfies Photo,
   /** Course path header. */
   coursePath: unsplash('1517836357463-d25dfeac3438', 1400, 1050, 'Victor Freitas / Unsplash'),
   /** Player / exercise still, behind the video frame. */
   exercise: unsplash('1518611012118-696072aa579a', 1200, 1500, 'Meghan Holmes / Unsplash'),
-  /** Sign-in screen. */
-  auth: unsplash('1571731956672-f2b94d7dd0cb', 1200, 1500, 'Alora Griffiths / Unsplash'),
+  /** Sign-in screen. The coach's own photograph — see `homeToday`. */
+  auth: {
+    local: '/coach/sergey-hero.jpg',
+    url: '',
+    credit: 'Сергей Титов',
+    width: 1200,
+    height: 1600,
+  } satisfies Photo,
   /** Statistics header. */
   stats: unsplash('1605296867304-46d5465a13f1', 1400, 1050, 'Jonathan Borba / Unsplash'),
   /** Profile header. */

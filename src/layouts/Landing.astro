@@ -93,8 +93,15 @@ const primaryLink =
       class="relative mx-auto flex h-16 max-w-6xl items-center justify-between gap-6 px-5 md:h-18"
       aria-label={t(locale, 'landing.navMenu')}
     >
+      <!--
+        The lockup needs room. On a 390px header, next to the app button and the menu, «FORMA //
+        Сергей Титов» has none: the separator collapses and his name wraps under the mark, which
+        reads as one broken word rather than as a lockup. The mark alone is the correct form at
+        that width — the brandbook's lockup is for where it fits.
+      -->
       <a href={href(locale, '/')} class="text-[17px] text-text md:text-lg">
-        <Logo lockup label={BRAND.name} />
+        <Logo label={BRAND.name} class="md:hidden" />
+        <Logo lockup label={BRAND.name} class="hidden md:inline-flex" />
       </a>
 
       <ul class="hidden items-center gap-7 md:flex">
@@ -123,7 +130,7 @@ const primaryLink =
             lines only imply. The open state shows a × glyph, which is punctuation, not a picture.
           -->
           <summary
-            class="control-label flex h-10 min-w-11 cursor-pointer list-none items-center justify-center rounded-control border border-border-strong px-3 text-[12px] text-text [&::-webkit-details-marker]:hidden"
+            class="control-label flex h-10 min-w-11 cursor-pointer list-none items-center justify-center whitespace-nowrap rounded-control border border-border-strong px-3 text-[12px] text-text [&::-webkit-details-marker]:hidden"
             aria-label={t(locale, 'landing.navMenu')}
             aria-expanded="false"
             aria-controls="mobile-nav-panel"

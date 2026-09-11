@@ -256,7 +256,19 @@ export default function CoursePathScreen() {
           </div>
           <div className="mt-8">
             <DisplayTitle text={l(course.name)} className="text-6xl lg:text-7xl" />
-            <p className="display t-thin mt-1.5 text-3xl">{l(course.tagline)}</p>
+            {/*
+             * The tagline is set to be read, not looked at: Onest, sentence case.
+             *
+             * It was `.display t-thin`, which forces capitals — and a tagline is a sentence, not a
+             * label. «ЧЕТЫРЕ НЕДЕЛИ ПО ПРОГРАММЕ ТРЕНЕРА ДЛЯ НОВИЧКОВ: КОРОТКО, ПО КРУГУ, БЕЗ
+             * ОБОРУДОВАНИЯ.» ran four lines of Cyrillic capitals under the title, where the word
+             * shapes are near-identical rectangles and nothing can be skimmed. The brandbook puts
+             * capitals on kickers and on the one big line; the thin weight is the device for
+             * *that* line, not a way to set running copy.
+             */}
+            <p className="mt-2 max-w-[34ch] text-base leading-snug opacity-80">
+              {l(course.tagline)}
+            </p>
             <p className="eyebrow mt-4 text-current opacity-60">
               {weeksLabel(tr, course.weeks)} · {perWeekLabel(tr, course.sessionsPerWeek)}
             </p>

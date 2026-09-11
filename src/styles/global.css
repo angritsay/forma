@@ -183,12 +183,9 @@
   --color-course-yoga: var(--course-yoga);
   --color-course-marathon: var(--course-marathon);
   --color-on-course: var(--on-course);
-  --color-course: var(--course-tile, var(--tile-4));
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
-  --color-tile: var(--course-tile, var(--tile-4));
-  --color-tile-fg: var(--course-tile-fg, var(--tile-fg-dark));
   --color-tile-fg-dark: var(--tile-fg-dark);
   --radius-card: var(--r-card);
   --radius-tile: var(--r-tile);
@@ -237,6 +234,28 @@
   --text-6xl--line-height: 1.05;
   --text-7xl: 2.5rem;
   --text-7xl--line-height: 1.02;
+}
+
+/*
+ * The three tokens that are not one colour but "whatever colour this course is".
+ *
+ * They have to be `inline`, and that is not a style choice. A plain `@theme` entry is emitted as a
+ * custom property on `:root` and the utility refers to it — `text-course` becomes
+ * `color: var(--color-course)`. Custom properties inherit as *computed* values, so
+ * `--color-course: var(--course-tile, var(--tile-4))` is substituted once, at `:root`, where no
+ * course has been opened and `--course-tile` is unset: every element in the tree then inherits the
+ * fallback, and a `--course-tile` set further down by `courseTileVars()` changes nothing. The whole
+ * per-course colour system was silently dead — the yellow tile was right there on the same element
+ * and `text-course` still computed to `#1f1f24`.
+ *
+ * `@theme inline` substitutes the value into the utility instead, so `text-course` compiles to
+ * `color: var(--course-tile, var(--tile-4))` and the `var()` is resolved on the element that uses
+ * it — which is the entire point of the token.
+ */
+@theme inline {
+  --color-course: var(--course-tile, var(--tile-4));
+  --color-tile: var(--course-tile, var(--tile-4));
+  --color-tile-fg: var(--course-tile-fg, var(--tile-fg-dark));
 }
 
 html {
