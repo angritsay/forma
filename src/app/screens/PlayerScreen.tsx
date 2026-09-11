@@ -1,12 +1,11 @@
 /**
  * Workout player (docs/SPEC.md §10 flow 6) at /play.
  *
- * Immersive layout: the course's tile as full-bleed art with the coach's clip for the exercise on
- * screen — or the animated figure where there is none — behind a top bar, then a dark panel with
- * the step progress
- * row, the current step and the Previous / Pause / Next controls. State lives in
- * `useActiveWorkoutStore` (persisted), so
- * leaving keeps the session resumable. Keyboard: Space = pause, → next, ← previous.
+ * Immersive layout: the course's tile as full-bleed art carrying the coach's clip for the exercise
+ * on screen — or the animated figure where there is none — behind a top bar, then a dark panel with
+ * the step progress row, the current step and the Previous / Pause / Next controls. State lives in
+ * `useActiveWorkoutStore` (persisted), so leaving keeps the session resumable.
+ * Keyboard: Space = pause, → next, ← previous.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router';
@@ -38,7 +37,6 @@ import {
 import { useSound } from '@/app/features/player/sound';
 import { AmrapStep } from '@/app/features/player/steps/AmrapStep';
 import { BlockIntroStep } from '@/app/features/player/steps/BlockIntroStep';
-import { ExplainStep } from '@/app/features/player/steps/ExplainStep';
 import { FortimeStep } from '@/app/features/player/steps/FortimeStep';
 import { RestStep } from '@/app/features/player/steps/RestStep';
 import { TestStep } from '@/app/features/player/steps/TestStep';
@@ -164,8 +162,6 @@ function StepView({
       return <WarmupGateStep onGo={onNext} onSkip={() => onGoTo(step.skipToIndex)} />;
     case 'block_intro':
       return <BlockIntroStep step={step} prescribed={prescribed} onNext={onNext} />;
-    case 'explain':
-      return <ExplainStep step={step} onNext={onNext} />;
     case 'work': {
       const block = findBlock(prescribed, step.blockId);
       const format = block?.format ?? 'sets';

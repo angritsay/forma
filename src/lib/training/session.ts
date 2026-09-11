@@ -44,7 +44,6 @@ export function stepWeightSec(step: PlayerStep): number {
     }
     case 'warmup_gate':
     case 'block_intro':
-    case 'explain':
     case 'rest':
     case 'done':
       return 0;
@@ -84,7 +83,6 @@ export function stepCompletion(step: PlayerStep, result: ExerciseResult | undefi
     }
     case 'warmup_gate':
     case 'block_intro':
-    case 'explain':
     case 'rest':
     case 'done':
       return 0;

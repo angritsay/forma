@@ -50,11 +50,6 @@ describe('stepVideoRef', () => {
     expect(stepVideoRef(step, 'ru')).toBe(clip);
   });
 
-  it('plays it while it is being explained', () => {
-    const step = { kind: 'explain', exerciseId: 'air_squat' } as unknown as PlayerStep;
-    expect(stepVideoRef(step, 'ru')).toBe(clip);
-  });
-
   it('previews what is coming during rest, not what has just been done', () => {
     const step = { kind: 'rest', nextExerciseId: 'push_up' } as unknown as PlayerStep;
     expect(next).toBeTruthy();

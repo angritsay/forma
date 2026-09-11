@@ -19,7 +19,6 @@ import type { PlayerResult } from '@/app/store/activeWorkout';
 export type Translate = (key: TKey, params?: TParams) => string;
 
 export type BlockIntroStep = Extract<PlayerStep, { kind: 'block_intro' }>;
-export type ExplainStep = Extract<PlayerStep, { kind: 'explain' }>;
 export type WorkStep = Extract<PlayerStep, { kind: 'work' }>;
 export type RestStep = Extract<PlayerStep, { kind: 'rest' }>;
 export type AmrapStep = Extract<PlayerStep, { kind: 'amrap' }>;
@@ -75,7 +74,6 @@ export function exerciseVideoRef(id: string | undefined, locale: Locale): string
  */
 export function stepVideoRef(step: PlayerStep | undefined, locale: Locale): string | undefined {
   switch (step?.kind) {
-    case 'explain':
     case 'work':
       return exerciseVideoRef(step.exerciseId, locale);
     case 'rest':
@@ -282,7 +280,6 @@ export function stepTitle(
       return t('app.playerSectionWarmup');
     case 'block_intro':
       return step.title ? step.title[locale] : blockTypeLabel(t, step.type);
-    case 'explain':
     case 'work':
       return exerciseName(step.exerciseId, locale);
     case 'rest':
@@ -302,7 +299,6 @@ export function stepAnimation(step: PlayerStep, prescribed: PrescribedWorkout): 
   const first = (blockId: string) => findBlock(prescribed, blockId)?.items[0]?.exerciseId;
   let exerciseId: string | undefined;
   switch (step.kind) {
-    case 'explain':
     case 'work':
       exerciseId = step.exerciseId;
       break;
@@ -338,7 +334,6 @@ export function skippedResult(step: PlayerStep, stepIndex: number): PlayerResult
       return { stepIndex, blockId: step.blockId, completed: false, skipped: true };
     case 'warmup_gate':
     case 'block_intro':
-    case 'explain':
     case 'rest':
     case 'done':
       return null;

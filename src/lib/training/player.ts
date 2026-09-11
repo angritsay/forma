@@ -1,7 +1,14 @@
 /**
  * Turn a prescribed workout into a deterministic, index-addressable list of player steps:
- * block_intro → (explain → work → rest …) → done. The app persists `stepIndex`, so the order
- * must only depend on the prescription. Rules: docs/TRAINING_SCIENCE.md §6.
+ * block_intro → (work → rest …) → done. The app persists `stepIndex`, so the order must only
+ * depend on the prescription. Rules: docs/TRAINING_SCIENCE.md §6.
+ *
+ * No step exists only to introduce an exercise. There used to be one, from before the coach's clips
+ * did: a screen with the name, the target and the words, shown once per movement. The clips turned
+ * out to be the movement itself rather than a talk about it, so the demonstration now runs through
+ * the work — and an introduction with nothing left to introduce is one more tap between the athlete
+ * and their workout. What it carried is still on screen: a rest previews the exercise that follows
+ * it, and the technique, muscles and cautions sit behind «Подробнее» on the work step itself.
  */
 import { FORMAT_DEFAULT_WORK_REST, TABATA_DEFAULT_ROUNDS, TRANSITION_SEC } from './constants';
 import type { PlayerStep, PrescribedBlock, PrescribedItem, PrescribedWorkout } from './types';
@@ -57,21 +64,6 @@ export function amrapExpectedRounds(block: PrescribedBlock): number {
 
 export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
   const steps: PlayerStep[] = [];
-  const explained = new Set<string>();
-
-  /**
-   * Introduce an exercise once. An explanation is its own step only when nothing else shows it:
-   * a rest that already names this exercise as "next" is where the coach's video and notes play
-   * (the athlete watches while resting), so no separate explain step follows it.
-   */
-  const explain = (block: PrescribedBlock, item: PrescribedItem) => {
-    if (explained.has(item.exerciseId)) return;
-    explained.add(item.exerciseId);
-    const last = steps[steps.length - 1];
-    if (last?.kind === 'rest' && last.nextExerciseId === item.exerciseId) return;
-    steps.push({ kind: 'explain', blockId: block.blockId, exerciseId: item.exerciseId, item });
-  };
-
   // A session that opens with a warm-up starts on the gate ("Сначала разомнёмся?") instead of
   // the warm-up's block intro; `skipToIndex` is filled in once the warm-up's steps are known.
   const gateFor = p.blocks[0]?.type === 'warmup' ? p.blocks[0] : undefined;
@@ -108,7 +100,6 @@ export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
         );
         for (let s = 1; s <= sets; s++) {
           items.forEach((item, i) => {
-            explain(block, item);
             steps.push(workStep(block, item, s, sets));
             const after = num(item.restAfterSec);
             const isLastItem = i === n - 1;
@@ -126,7 +117,6 @@ export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
         const minutes = Math.max(1, num(block.sets, 1));
         for (let m = 1; m <= minutes; m++) {
           const item = items[(m - 1) % n]!;
-          explain(block, item);
           steps.push(workStep(block, item, m, minutes, { durationSec: 60, target: item.target }));
         }
         break;
@@ -136,7 +126,6 @@ export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
         const w = Math.max(0, num(block.workSec, FORMAT_DEFAULT_WORK_REST.tabata.workSec));
         const r = Math.max(0, num(block.restSec, FORMAT_DEFAULT_WORK_REST.tabata.restSec));
         items.forEach((item, i) => {
-          explain(block, item);
           const target = item.unit === 'reps' ? item.target : w;
           for (let round = 1; round <= rounds; round++) {
             steps.push(workStep(block, item, round, rounds, { durationSec: w, target }));
@@ -156,7 +145,6 @@ export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
         const r = Math.max(0, num(block.restSec, FORMAT_DEFAULT_WORK_REST.interval.restSec));
         for (let round = 1; round <= rounds; round++) {
           items.forEach((item, i) => {
-            explain(block, item);
             const target = item.unit === 'reps' ? item.target : w;
             steps.push(workStep(block, item, round, rounds, { durationSec: w, target }));
             const isLast = round === rounds && i === n - 1;
@@ -166,7 +154,6 @@ export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
         break;
       }
       case 'amrap': {
-        for (const item of items) explain(block, item);
         steps.push({
           kind: 'amrap',
           blockId: block.blockId,
@@ -177,7 +164,6 @@ export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
         break;
       }
       case 'fortime': {
-        for (const item of items) explain(block, item);
         steps.push({
           kind: 'fortime',
           blockId: block.blockId,
