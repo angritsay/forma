@@ -46,7 +46,15 @@ export function TextList({
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-sm font-medium text-muted">{label}</span>
+      {/*
+       * The hint belongs under the label, not under the "add a line" button at the bottom. It read
+       * as the caption of whatever field came next — "Минимум два пункта" sitting directly above
+       * "Что будет в результате" says the wrong thing about the wrong field.
+       */}
+      <div className="flex flex-col gap-0.5">
+        <span className="text-sm font-medium text-muted">{label}</span>
+        {hint ? <p className="text-sm text-muted-2">{hint}</p> : null}
+      </div>
       {rows.map((row, i) => (
         <div key={row.key} className="flex items-start gap-2">
           <Textarea
@@ -75,7 +83,6 @@ export function TextList({
       >
         {t('app.exAddLine')}
       </Button>
-      {hint ? <p className="text-sm text-muted">{hint}</p> : null}
     </div>
   );
 }

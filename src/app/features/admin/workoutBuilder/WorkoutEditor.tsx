@@ -201,17 +201,22 @@ export function WorkoutEditor({
 
   return (
     <div className="flex flex-col gap-5 py-2">
+      {/*
+       * Visible labels, not just `aria-label`. These two carried a placeholder alone, which
+       * disappears the moment you type — so a half-filled form stopped saying which field was
+       * which, and the rest of the builder labels everything.
+       */}
       <div className="flex flex-col gap-3 lg:flex-row">
         <Input
           wrapperClassName="lg:flex-1"
-          aria-label={t('app.builderTitle')}
+          label={t('app.builderTitle')}
           placeholder={t('app.builderTitlePlaceholder')}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
         <Input
           wrapperClassName="lg:flex-[2]"
-          aria-label={t('app.builderDescription')}
+          label={t('app.builderDescription')}
           placeholder={t('app.builderDescriptionPlaceholder')}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
