@@ -6,9 +6,9 @@
  * instead, which opens it outside; on the open web the anchor behaves like any other.
  */
 import { clsx } from 'clsx';
-import type { MouseEvent, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import type { ButtonSize, ButtonVariant } from '@/components/ui/Button';
-import { externalTarget, openExternal } from '@/lib/telegram/webapp';
+import { externalLinkProps } from '@/app/hooks/useExternalLink';
 
 /*
  * The same four looks as Button, kept in step by hand because an <a> cannot be a <button>: the
@@ -51,15 +51,9 @@ export function LinkButton({
   external,
   className,
 }: LinkButtonProps) {
-  const onClick = (e: MouseEvent<HTMLAnchorElement>) => {
-    const target = externalTarget(href);
-    if (target && openExternal(target)) e.preventDefault();
-  };
-
   return (
     <a
-      href={href}
-      onClick={onClick}
+      {...externalLinkProps(href)}
       target={external ? '_blank' : undefined}
       rel={external ? 'noopener' : undefined}
       className={clsx(

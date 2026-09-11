@@ -5,6 +5,7 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import type { Course } from '@/content/schema';
 import { courseTileVars } from '@/lib/ui/tile';
 import { useT } from '@/app/hooks/useT';
+import { externalLinkProps } from '@/app/hooks/useExternalLink';
 import { courseLandingHref, courseSignatureExercise } from '@/app/features/courses/courseMeta';
 import { courseTitle } from '@/content/catalogue';
 
@@ -100,7 +101,7 @@ export function CourseMiniCard({ course, pct = 0, locked = false, n, onOpen }: M
   if (locked) {
     return (
       <a
-        href={courseLandingHref(locale, course)}
+        {...externalLinkProps(courseLandingHref(locale, course))}
         className={`${classes} opacity-50`}
         style={vars}
         aria-label={`${l(courseTitle(course))} — ${t('app.homeCourseGet')}`}
