@@ -93,15 +93,15 @@ export function PathView({ course, state, onNodePress }: PathViewProps) {
           return (
             <div
               key={`w${row.week}`}
-              className="absolute inset-x-0 flex items-center justify-between gap-3 px-1"
+              className="absolute inset-x-0 flex items-baseline justify-between gap-3 border-t border-border px-1 pt-3"
               style={{ top: row.y, height: 48 }}
             >
-              <div className="flex items-center gap-2">
-                <span className="font-display text-2xl">{t('app.pathWeek', { n: row.week })}</span>
+              <div className="flex items-baseline gap-2">
+                <span className="font-display text-xl">{t('app.pathWeek', { n: row.week })}</span>
                 {row.deload ? <Badge tone="accent">{t('training.deloadBadge')}</Badge> : null}
               </div>
-              <span className="tabular text-xs font-medium text-muted">
-                {row.done}/{row.total}
+              <span className="numeral tabular text-xs text-muted">
+                {String(row.done).padStart(2, '0')}/{String(row.total).padStart(2, '0')}
               </span>
             </div>
           );

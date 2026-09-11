@@ -1,6 +1,5 @@
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { formatDate, type TKey } from '@/i18n/index';
 import type { PurchaseRow, PurchaseStatus } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
@@ -30,17 +29,24 @@ export interface PurchaseListProps {
   onAction: (row: PurchaseRow, status: PurchaseStatus) => void;
 }
 
-/** Purchases as cards: email, course, status badge, dates, note and the allowed actions. */
+/**
+ * Purchases as ruled rows: email, course, status badge, dates, note and the allowed actions.
+ *
+ * This is a work queue — a hundred of these in a column — so it is a ledger, not a stack of
+ * cards. The email leads in the display face because it is what an admin scans for.
+ */
 export function PurchaseList({ rows, busyId, onAction }: PurchaseListProps) {
   const { t, locale } = useT();
   return (
-    <ul className="flex flex-col gap-3">
+    <ul className="flex flex-col">
       {rows.map((row) => (
         <li key={row.id}>
-          <Card padding="sm" className="flex flex-col gap-3">
-            <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-3 border-t border-border py-4 lg:flex-row lg:items-center lg:gap-6">
+            <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
               <div className="flex min-w-0 flex-col gap-0.5">
-                <span className="truncate text-[15px] font-medium">{row.email}</span>
+                <span className="font-display truncate text-[15px] leading-[1.24]">
+                  {row.email}
+                </span>
                 <span className="truncate text-sm text-muted">
                   {courseName(row.courseId, locale)}
                 </span>
@@ -55,7 +61,7 @@ export function PurchaseList({ rows, busyId, onAction }: PurchaseListProps) {
               </div>
               <Badge tone={STATUS_TONE[row.status]}>{t(STATUS_LABEL[row.status])}</Badge>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 lg:shrink-0">
               {nextStatuses(row.status).map((status) => (
                 <Button
                   key={status}
@@ -68,7 +74,7 @@ export function PurchaseList({ rows, busyId, onAction }: PurchaseListProps) {
                 </Button>
               ))}
             </div>
-          </Card>
+          </div>
         </li>
       ))}
     </ul>

@@ -125,7 +125,7 @@ export function SectionStepper({ sections, current }: SectionStepperProps) {
   if (sections.length < 2) return null;
   const currentIdx = sections.indexOf(current);
   return (
-    <ol className="flex items-center gap-1.5 px-5 pt-4" aria-label={t('app.playerSectionsLabel')}>
+    <ol className="flex items-stretch gap-2 px-5 pt-4" aria-label={t('app.playerSectionsLabel')}>
       {sections.map((section, i) => {
         const done = i < currentIdx;
         const active = i === currentIdx;
@@ -133,12 +133,12 @@ export function SectionStepper({ sections, current }: SectionStepperProps) {
           <li
             key={section}
             className={clsx(
-              'flex flex-1 items-center justify-center gap-1 rounded-pill px-2 py-1 text-xs font-semibold transition-colors',
+              'control-label flex flex-1 items-center justify-center gap-1 border-t-2 px-2 py-2 text-[10px] transition-colors',
               active
-                ? 'bg-accent text-on-primary'
+                ? 'border-accent text-text'
                 : done
-                  ? 'bg-white/10 text-text'
-                  : 'bg-white/5 text-muted',
+                  ? 'border-border-strong text-muted'
+                  : 'border-border text-muted-2',
             )}
             aria-current={active ? 'step' : undefined}
           >
@@ -159,11 +159,11 @@ export interface ControlsProps {
   onNext: () => void;
 }
 
-/** Previous (outlined) — Pause/Play (big white) — Next (outlined). */
+/** Previous (outlined) — Pause/Play (big, accent) — Next (outlined). */
 export function Controls({ paused, canPrev, onPrev, onTogglePause, onNext }: ControlsProps) {
   const { t } = useT();
   const side =
-    'flex h-14 w-14 items-center justify-center rounded-pill border border-border-strong bg-transparent text-text transition-colors hover:bg-white/5 disabled:pointer-events-none disabled:opacity-40';
+    'flex h-14 w-14 items-center justify-center rounded-control border border-border-strong bg-transparent text-text transition-colors hover:bg-white/5 disabled:pointer-events-none disabled:opacity-40';
   return (
     <div className="sticky bottom-0 z-20 bg-linear-to-t from-bg via-bg/95 to-transparent px-5 pb-[calc(var(--safe-bottom)+16px+var(--demo-inset,0px))] pt-4">
       <div className="flex items-center justify-center gap-6">
@@ -178,7 +178,7 @@ export function Controls({ paused, canPrev, onPrev, onTogglePause, onNext }: Con
         </button>
         <button
           type="button"
-          className="flex h-[76px] w-[76px] items-center justify-center rounded-pill bg-primary text-on-primary shadow-card transition-transform active:scale-95"
+          className="flex h-[76px] w-[76px] items-center justify-center rounded-control bg-accent text-on-primary shadow-card transition-transform active:scale-95"
           onClick={onTogglePause}
           aria-label={paused ? t('app.playerResume') : t('app.playerPause')}
           aria-pressed={paused}

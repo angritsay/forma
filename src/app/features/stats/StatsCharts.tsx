@@ -1,7 +1,6 @@
 import { clsx } from 'clsx';
 import { useMemo } from 'react';
 import { BarChart, type BarDatum } from '@/components/ui/BarChart';
-import { Card } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';
 import { formatDate, formatNumber, plural } from '@/i18n/index';
 import { weekdayLabel } from '@/app/features/home/StatsGrid';
@@ -17,8 +16,8 @@ import {
 function ChartHeader({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <span className="text-sm text-muted">{label}</span>
-      <span className="tabular shrink-0 text-sm font-semibold">{value}</span>
+      <span className="eyebrow">{label}</span>
+      <span className="numeral tabular shrink-0 text-sm">{value}</span>
     </div>
   );
 }
@@ -43,7 +42,7 @@ export function WeeklyChart({ days }: { days: readonly DayLoad[] }) {
     many: t('app.homeWorkoutWordMany'),
   });
   return (
-    <Card level={2} padding="sm" className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 pb-2">
       <ChartHeader
         label={t('app.statsWeekMinutes')}
         value={`${workouts} ${workoutsWord} · ${t('common.minutesShort', { n: minutes })}`}
@@ -60,14 +59,14 @@ export function WeeklyChart({ days }: { days: readonly DayLoad[] }) {
             })}
           >
             {d.workouts > 0 ? (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-pill bg-accent px-1 text-[11px] font-bold text-on-primary">
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-control bg-accent px-1 text-[11px] font-bold text-on-primary">
                 {d.workouts > 1 ? d.workouts : <Icon name="check" size={12} strokeWidth={3} />}
               </span>
             ) : (
               <span
                 aria-hidden="true"
                 className={clsx(
-                  'h-5 w-5 rounded-pill border',
+                  'h-5 w-5 rounded-control border',
                   d.future ? 'border-border/60' : 'border-border-strong',
                 )}
               />
@@ -81,7 +80,7 @@ export function WeeklyChart({ days }: { days: readonly DayLoad[] }) {
         formatValue={(v) => t('common.minutesShort', { n: v })}
         ariaLabel={t('app.statsWeekChartLabel')}
       />
-    </Card>
+    </div>
   );
 }
 
@@ -99,7 +98,7 @@ export function PointsChart({ weeks }: { weeks: readonly WeekPoints[] }) {
     [weeks, locale],
   );
   return (
-    <Card level={2} padding="sm" className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 pb-2">
       <ChartHeader
         label={t('app.statsPointsTitle')}
         value={t('app.statsPointsValue', { n: formatNumber(locale, total) })}
@@ -110,7 +109,7 @@ export function PointsChart({ weeks }: { weeks: readonly WeekPoints[] }) {
         formatValue={(v) => formatNumber(locale, v)}
         ariaLabel={t('app.statsPointsChartLabel')}
       />
-    </Card>
+    </div>
   );
 }
 
@@ -129,7 +128,7 @@ export function StepsChart({ points, goal }: StepsChartProps) {
     [points],
   );
   return (
-    <Card level={2} padding="sm" className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 pb-2">
       <ChartHeader
         label={t('app.statsStepsTitle')}
         value={t('app.statsStepsAtGoal', { n: atGoal, total: points.length })}
@@ -142,6 +141,6 @@ export function StepsChart({ points, goal }: StepsChartProps) {
         formatValue={(v) => formatNumber(locale, v)}
         ariaLabel={t('app.statsStepsChartLabel')}
       />
-    </Card>
+    </div>
   );
 }

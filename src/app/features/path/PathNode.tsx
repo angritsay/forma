@@ -17,11 +17,19 @@ export const NODE_STATUS_LABEL: Record<NodeStatus, TKey> = {
   locked: 'app.pathNodeLocked',
 };
 
-const CIRCLE: Record<NodeStatus, string> = {
-  done: 'bg-accent text-on-primary',
-  current: 'bg-surface-2 text-text ring-4 ring-primary',
-  open: 'bg-surface-2 text-text border border-border-strong',
-  locked: 'bg-surface-3 text-muted-2',
+/**
+ * The four states of a stop on the path.
+ *
+ * These were circles. They are 20px-radius tiles now — the same shape as the course art, so a day
+ * on the path and the course it belongs to read as one family of object. Only `current` carries
+ * the accent, which is what makes "you are here" findable in a column of thirty stops; `done`
+ * recedes to a filled surface rather than claiming the blue for every day already behind you.
+ */
+const TILE: Record<NodeStatus, string> = {
+  done: 'bg-surface-2 text-muted border border-border',
+  current: 'bg-surface-2 text-text ring-2 ring-accent',
+  open: 'bg-transparent text-text border border-border-strong',
+  locked: 'bg-transparent text-muted-2 border border-border',
 };
 
 const KIND_ICON: Record<Exclude<CourseNode['kind'], 'workout'>, IconName> = {
@@ -44,7 +52,7 @@ export interface PathNodeProps {
   buttonRef?: (el: HTMLButtonElement | null) => void;
 }
 
-/** One stop on the path: a 72px circle (figure / footprints / trophy / star) plus its label. */
+/** One stop on the path: a 72px tile (figure / footprints / trophy / star) plus its label. */
 export function PathNode({ node, status, x, y, exercise, onPress, buttonRef }: PathNodeProps) {
   const { t, l } = useT();
   const title = l(node.title);
@@ -77,7 +85,7 @@ export function PathNode({ node, status, x, y, exercise, onPress, buttonRef }: P
         {status === 'current' ? (
           <span
             aria-hidden="true"
-            className="absolute -inset-2 animate-pulse rounded-pill border-2 border-primary/60"
+            className="absolute -inset-2 animate-pulse rounded-[28px] border border-accent/60"
           />
         ) : null}
         <button
@@ -87,14 +95,14 @@ export function PathNode({ node, status, x, y, exercise, onPress, buttonRef }: P
           aria-label={`${title} — ${t(NODE_STATUS_LABEL[status])}`}
           aria-current={status === 'current' ? 'step' : undefined}
           className={clsx(
-            'relative flex size-full items-center justify-center rounded-pill transition-transform active:scale-95',
-            CIRCLE[status],
+            'relative flex size-full items-center justify-center rounded-tile transition-transform active:scale-95',
+            TILE[status],
           )}
         >
           {glyph}
           {status === 'done' ? (
-            <span className="absolute -bottom-0.5 -right-0.5 flex size-6 items-center justify-center rounded-pill bg-primary text-on-primary ring-2 ring-bg">
-              <Icon name="check" size={14} strokeWidth={3} />
+            <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-control bg-accent text-on-primary">
+              <Icon name="check" size={12} strokeWidth={3} />
             </span>
           ) : null}
         </button>
@@ -102,7 +110,7 @@ export function PathNode({ node, status, x, y, exercise, onPress, buttonRef }: P
       <div className="flex w-full flex-col items-center text-center">
         <span
           className={clsx(
-            'w-full truncate text-[13px] font-semibold',
+            'font-display w-full truncate text-[13px] leading-[1.24]',
             status === 'locked' ? 'text-muted' : 'text-text',
           )}
         >

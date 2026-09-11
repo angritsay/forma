@@ -20,7 +20,7 @@ export interface SegmentedControlProps<T extends string> {
   className?: string;
 }
 
-/** Radio-group styled as a pill switch; arrow keys move the selection. */
+/** Radio-group styled as a squared switch; arrow keys move the selection. */
 export function SegmentedControl<T extends string>({
   options,
   value,
@@ -58,7 +58,7 @@ export function SegmentedControl<T extends string>({
       role="radiogroup"
       aria-label={label}
       className={clsx(
-        'inline-flex rounded-pill border border-border bg-surface-2 p-1',
+        'inline-flex rounded-control border border-border bg-transparent p-1',
         fullWidth && 'flex w-full',
         className,
       )}
@@ -79,12 +79,14 @@ export function SegmentedControl<T extends string>({
             onClick={() => onChange(o.value)}
             onKeyDown={onKeyDown(i)}
             className={clsx(
-              'inline-flex items-center justify-center gap-1.5 rounded-pill font-medium transition-colors',
+              'control-label inline-flex items-center justify-center gap-1.5 rounded-control transition-colors',
               // 32/40px tall by design; `tap-target-y` (global.css) reaches the 44px minimum.
               'tap-target-y disabled:opacity-40',
-              size === 'sm' ? 'h-8 px-3 text-sm' : 'h-10 px-4 text-[15px]',
+              size === 'sm' ? 'h-8 px-3 text-[10px]' : 'h-10 px-4 text-[11px]',
               fullWidth && 'flex-1',
-              selected ? 'bg-primary text-on-primary' : 'text-muted hover:text-text',
+              // Selected is a raised surface, not a white slab: a segmented control is a filter,
+              // and a filter should never outweigh the primary button on the same screen.
+              selected ? 'bg-surface-3 text-text' : 'text-muted hover:text-text',
             )}
           >
             {o.icon ? <Icon name={o.icon} size={size === 'sm' ? 14 : 16} /> : null}

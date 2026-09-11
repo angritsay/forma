@@ -40,7 +40,7 @@ export function Screen({
       <main
         className={clsx(
           'flex-1 pb-[calc(var(--nav-inset,0px)+var(--safe-bottom)+24px)]',
-          padded && 'px-5',
+          padded && 'px-5 lg:px-8',
           contentClassName,
         )}
       >

@@ -60,7 +60,9 @@ export function Tabs<T extends string>({
       aria-label={label}
       className={clsx(
         'flex gap-1',
-        variant === 'underline' ? 'border-b border-border' : 'rounded-pill bg-surface-2 p-1',
+        variant === 'underline'
+          ? 'border-b border-border'
+          : 'rounded-control border border-border p-1',
         className,
       )}
     >
@@ -85,15 +87,16 @@ export function Tabs<T extends string>({
               'inline-flex items-center gap-2 font-medium transition-colors disabled:opacity-40',
               variant === 'underline'
                 ? clsx(
+                    // The underline is one of the accent's sanctioned homes: a 2px rule, not a fill.
                     '-mb-px border-b-2 px-3 py-3 text-[15px]',
                     selected
-                      ? 'border-primary text-text'
+                      ? 'border-accent text-text'
                       : 'border-transparent text-muted hover:text-text',
                   )
                 : clsx(
                     // 40px tall by design; `tap-target-y` (global.css) reaches the 44px minimum.
-                    'tap-target-y h-10 flex-1 justify-center rounded-pill px-4 text-[15px]',
-                    selected ? 'bg-primary text-on-primary' : 'text-muted hover:text-text',
+                    'control-label tap-target-y h-10 flex-1 justify-center rounded-control px-4 text-[11px]',
+                    selected ? 'bg-surface-3 text-text' : 'text-muted hover:text-text',
                   ),
             )}
           >
@@ -101,8 +104,8 @@ export function Tabs<T extends string>({
             {tab.count !== undefined ? (
               <span
                 className={clsx(
-                  'tabular rounded-pill px-1.5 text-xs',
-                  selected && variant === 'pills' ? 'bg-black/10' : 'bg-white/10',
+                  'tabular rounded-control px-1.5 text-xs',
+                  selected && variant === 'pills' ? 'bg-white/15' : 'bg-white/10',
                 )}
               >
                 {tab.count}

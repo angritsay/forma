@@ -27,7 +27,12 @@ export function TopBar({ title, back, right, align = 'center', className }: TopB
     else void navigate(-1);
   };
   return (
-    <header className={clsx('flex h-14 items-center gap-2 px-3', className)}>
+    /*
+     * The hairline under the bar is what separates chrome from page now that neither is a distinct
+     * surface — the header is the same black as everything under it, and without a rule the title
+     * and the screen's first heading run into each other while scrolling.
+     */
+    <header className={clsx('flex h-14 items-center gap-2 border-b border-border px-3', className)}>
       <div className="flex min-w-11 shrink-0 items-center">
         {back ? (
           <IconButton label={t('common.back')} icon="back" variant="ghost" onClick={onBack} />
@@ -35,7 +40,7 @@ export function TopBar({ title, back, right, align = 'center', className }: TopB
       </div>
       <div
         className={clsx(
-          'min-w-0 flex-1 truncate text-base font-semibold',
+          'font-display min-w-0 flex-1 truncate text-base leading-[1.24]',
           align === 'center' ? 'text-center' : 'text-left',
         )}
       >

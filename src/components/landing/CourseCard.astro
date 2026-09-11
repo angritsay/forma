@@ -1,7 +1,12 @@
 ---
 /**
- * Course card for the home grid and the courses hub: gradient tile with the signature exercise
- * figure (static render), name, tagline, metric chips, price and a link.
+ * Course card for the home grid and the courses hub: the course tile carrying the signature
+ * exercise figure (static render), then name, tagline, metric chips, price and a link.
+ *
+ * The card keeps its 24px radius and its border — this is the one place on the landing where a
+ * course has to read as a discrete, buyable object, and a grid of ruled rows would lose that. The
+ * art above it is a flat course tile now instead of a pastel gradient, the chips are outlines,
+ * and the "view" control is a squared caps label rather than a white pill.
  */
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
 import type { Course, Locale } from '@/content/schema';
@@ -23,12 +28,13 @@ interface Props {
   locale: Locale;
   /** Heading level inside the card. */
   headingLevel?: 'h2' | 'h3';
+  /** 1-based position in the grid, drawn as the card's numeral. */
+  n?: number;
 }
 
-const { course, locale, headingLevel: Heading = 'h3' } = Astro.props;
+const { course, locale, headingLevel: Heading = 'h3', n } = Astro.props;
 const url = courseHref(locale, course);
 const signature = signatureExercise(course);
-const [g1, g2] = course.gradient;
 const equipment = courseEquipmentForDisplay(course);
 const price = isFree(course.price, locale)
   ? t(locale, 'landing.priceFree')
@@ -36,7 +42,7 @@ const price = isFree(course.price, locale)
 ---
 
 <article
-  class="group flex h-full flex-col overflow-hidden rounded-card border border-border bg-surface transition hover:border-border-strong"
+  class="group flex h-full flex-col overflow-hidden rounded-card border border-border transition hover:border-border-strong"
   data-course-card
   data-equipment={course.equipment.join(' ')}
   data-level={course.level}
@@ -48,7 +54,7 @@ const price = isFree(course.price, locale)
     <a
       href={url}
       class="hero-art relative flex aspect-[16/10] items-center justify-center overflow-hidden"
-      style={`--course-g1:${g1};--course-g2:${g2}`}
+      style={`--course-tile:${course.tile}`}
       aria-hidden="true"
       tabindex="-1"
     >
@@ -58,15 +64,20 @@ const price = isFree(course.price, locale)
             animation={signature.animation}
             variant="card"
             playing={false}
-            gradient={[g1, g2]}
+            tile={course.tile}
             label={l(signature.name, locale)}
           />
         ) : null
       }
     </a>
-    <span
-      class="absolute top-4 left-4 rounded-pill bg-bg/85 px-3 py-1 text-sm font-semibold text-text"
-    >
+    {
+      n !== undefined && (
+        <span class="numeral absolute top-4 left-5 text-sm text-tile-fg/70">
+          {String(n).padStart(2, '0')}
+        </span>
+      )
+    }
+    <span class="eyebrow absolute right-5 bottom-4 text-tile-fg">
       {levelLabel(locale, course.level)}
     </span>
   </div>
@@ -94,11 +105,13 @@ const price = isFree(course.price, locale)
         ))
       }
     </ul>
-    <div class="mt-auto flex items-center justify-between gap-3 pt-3">
-      <span class="text-xl font-semibold tabular">{price}</span>
+    <!-- `mt-auto` pins the price row to the bottom so cards of unequal height line their prices
+         up; the rule above it gets its air from `pt-4`, not from a second margin. -->
+    <div class="mt-auto flex items-center justify-between gap-3 border-t border-border pt-4">
+      <span class="numeral tabular text-xl">{price}</span>
       <a
         href={url}
-        class="inline-flex min-h-11 items-center rounded-pill bg-primary px-4 text-sm font-semibold text-on-primary transition group-hover:opacity-90"
+        class="control-label inline-flex min-h-11 items-center rounded-control bg-accent px-4 text-[12px] text-on-primary transition group-hover:opacity-85"
       >
         {t(locale, 'landing.cardView')}
       </a>

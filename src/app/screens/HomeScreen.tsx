@@ -37,18 +37,28 @@ import { useSession } from '@/app/store/session';
 import { BOOKING } from '@content/site/booking';
 
 function HomeSkeleton() {
+  /*
+   * The skeleton mirrors the real rhythm: a short streak line, the tall photograph that bleeds
+   * off the right edge, then the ruled statistics. Square corners, because nothing it stands in
+   * for is rounded any more.
+   */
   return (
-    <div className="flex flex-col gap-5 py-2" aria-hidden="true">
-      <Skeleton rounded="card" className="h-28" />
-      <Skeleton rounded="card" className="h-64" />
-      <Skeleton rounded="card" className="h-52" />
+    <div className="flex flex-col gap-6 py-5" aria-hidden="true">
+      <Skeleton rounded="control" className="h-16" />
+      <Skeleton rounded="control" className="-mr-5 aspect-[4/5] lg:mr-0" />
+      <Skeleton rounded="control" className="h-40" />
       <div className="grid grid-cols-3 gap-3">
-        <Skeleton rounded="card" className="h-24" />
-        <Skeleton rounded="card" className="h-24" />
-        <Skeleton rounded="card" className="h-24" />
+        <Skeleton rounded="control" className="h-20" />
+        <Skeleton rounded="control" className="h-20" />
+        <Skeleton rounded="control" className="h-20" />
       </div>
     </div>
   );
+}
+
+/** "01–04" for a list of four — the range marker set opposite an index heading. */
+function indexRange(count: number): string {
+  return count > 1 ? `01–${String(count).padStart(2, '0')}` : '01';
 }
 
 export default function HomeScreen() {
@@ -85,9 +95,19 @@ export default function HomeScreen() {
   const owned = COURSES.filter((c) => entitlements.includes(c.id));
   const locked = COURSES.filter((c) => !entitlements.includes(c.id));
 
+  /*
+   * The wordmark leads and the greeting sits under it as a kicker, with a hairline closing the
+   * header off from the page. The greeting used to be a 20px display heading filling the whole
+   * bar: nothing identified the app, and it competed with the session title directly below it.
+   */
   const header = (
-    <div className="flex h-16 items-center gap-3 px-5">
-      <h1 className="font-display min-w-0 flex-1 truncate text-2xl leading-[1.3]">{greeting}</h1>
+    <div className="flex h-16 items-center gap-3 border-b border-border px-5">
+      <h1 className="min-w-0 flex-1">
+        <span className="wordmark block text-base">
+          Forma<span className="text-accent">.</span>
+        </span>
+        <span className="eyebrow mt-0.5 block truncate">{greeting}</span>
+      </h1>
       <IconButton
         label={t('app.homeRefresh')}
         icon={loading ? <Spinner size={18} /> : 'refresh'}
@@ -99,7 +119,7 @@ export default function HomeScreen() {
         type="button"
         aria-label={t('app.homeProfile')}
         onClick={() => navigate('/profile')}
-        className="shrink-0 rounded-pill"
+        className="shrink-0 rounded-control"
       >
         <Avatar
           seed={profile?.avatarSeed ?? user?.id ?? ''}
@@ -127,10 +147,14 @@ export default function HomeScreen() {
       />
     );
   } else {
+    /*
+     * No gap on the stack: every section below draws its own top hairline and owns the space
+     * above it, so a container gap would double the rhythm and break the ruled column the page
+     * is built on. The photo block is the one exception — it bleeds and carries no rule.
+     */
     body = (
-      <div className="flex flex-col gap-5 py-2">
+      <div className="flex flex-col pt-4">
         <ResumeCard onResume={(path) => navigate(path)} />
-        <StreakCard streak={streak} stepsGoal={STEPS_GOAL} onLogSteps={() => navigate('/steps')} />
         <TodayCard
           model={today}
           onStart={(courseId, nodeId) => navigate(`/courses/${courseId}/nodes/${nodeId}`)}
@@ -138,15 +162,17 @@ export default function HomeScreen() {
           onLogSteps={() => navigate('/steps')}
           onPickCourse={() => navigate('/courses')}
         />
+        <StreakCard streak={streak} stepsGoal={STEPS_GOAL} onLogSteps={() => navigate('/steps')} />
         <StatsGrid week={week} steps={steps} totalPoints={totalPoints} stepsGoal={STEPS_GOAL} />
         <AssignedWorkoutsCard onOpen={(id) => navigate(`/assigned/${id}`)} />
         {BOOKING.enabled ? <BookCard onOpen={() => navigate('/book')} /> : null}
         {owned.length > 0 ? (
-          <CourseRow title={t('app.homeYourCourses')}>
-            {owned.map((course) => (
+          <CourseRow title={t('app.homeYourCourses')} index={indexRange(owned.length)}>
+            {owned.map((course, i) => (
               <CourseMiniCard
                 key={course.id}
                 course={course}
+                n={i + 1}
                 pct={courseProgress(course.nodes, courseStates[course.id]).pct}
                 onOpen={() => navigate(`/courses/${course.id}`)}
               />
@@ -154,9 +180,9 @@ export default function HomeScreen() {
           </CourseRow>
         ) : null}
         {locked.length > 0 ? (
-          <CourseRow title={t('app.homeMoreCourses')}>
-            {locked.map((course) => (
-              <CourseMiniCard key={course.id} course={course} locked />
+          <CourseRow title={t('app.homeMoreCourses')} index={indexRange(locked.length)}>
+            {locked.map((course, i) => (
+              <CourseMiniCard key={course.id} course={course} n={i + 1} locked />
             ))}
           </CourseRow>
         ) : null}

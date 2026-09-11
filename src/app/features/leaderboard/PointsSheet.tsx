@@ -54,7 +54,7 @@ export function PointsSheet({ open, onClose }: PointsSheetProps) {
       <ul className="flex flex-col gap-4 py-2">
         {items.map((item, i) => (
           <li key={i} className="flex gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-pill bg-accent/15 text-accent">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-accent/15 text-accent">
               <Icon name={item.icon} size={20} />
             </span>
             <p className="text-[15px] leading-relaxed">{item.text}</p>

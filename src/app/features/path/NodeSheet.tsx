@@ -87,7 +87,7 @@ export function NodeSheet({
       {node ? (
         <div className="flex flex-col gap-4 py-2">
           <div className="flex items-start gap-4">
-            <span className="flex size-14 shrink-0 items-center justify-center rounded-pill bg-surface-2 text-text">
+            <span className="flex size-14 shrink-0 items-center justify-center rounded-control bg-surface-2 text-text">
               <Icon name={isRest ? 'steps' : 'star'} size={28} />
             </span>
             <div className="min-w-0 flex-1">

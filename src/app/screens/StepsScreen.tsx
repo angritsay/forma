@@ -5,7 +5,6 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Icon } from '@/components/ui/Icon';
 import { Screen } from '@/components/ui/Screen';
@@ -37,10 +36,10 @@ import {
 function WhyManualCard() {
   const { t, locale } = useT();
   return (
-    <Card level={2} padding="none">
+    <div className="border-t border-border">
       <details className="group">
         <summary className="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-pill bg-accent-2/15 text-accent-2">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-accent-2/15 text-accent-2">
             <Icon name="info" size={20} />
           </span>
           <h2 className="min-w-0 flex-1 text-[15px] font-semibold">{t('app.stepsWhyTitle')}</h2>
@@ -54,7 +53,7 @@ function WhyManualCard() {
           {t('app.stepsWhyBody', { goal: formatNumber(locale, STEPS_GOAL) })}
         </p>
       </details>
-    </Card>
+    </div>
   );
 }
 
@@ -217,7 +216,7 @@ export default function StepsScreen() {
   if (status === 'loading' || status === 'idle') {
     body = (
       <div className="flex flex-col items-center gap-5 py-2" aria-hidden="true">
-        <Skeleton rounded="pill" className="size-[200px]" />
+        <Skeleton rounded="control" className="size-[200px]" />
         <Skeleton rounded="card" className="h-24 w-full" />
         <Skeleton rounded="card" className="h-64 w-full" />
       </div>
@@ -244,7 +243,7 @@ export default function StepsScreen() {
           <h2 className="px-1 eyebrow">
             {t('app.stepsTodayLabel')} · {formatDate(locale, today)}
           </h2>
-          <Card>
+          <div className="border-t border-border pt-4">
             <StepsEditor
               text={text}
               onText={(v) => {
@@ -255,7 +254,7 @@ export default function StepsScreen() {
               label={t('app.stepsInputLabel')}
               disabled={saving}
             />
-          </Card>
+          </div>
         </section>
         <WhyManualCard />
         <section className="flex flex-col gap-3">

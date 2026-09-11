@@ -1,0 +1,72 @@
+---
+/**
+ * The landing's photograph frame — the Astro twin of src/components/ui/PhotoBlock.tsx.
+ *
+ * Kept as a separate file rather than hydrating the React one: every landing photo is static, and
+ * shipping React to the browser to draw an <img> would undo the point of a static build.
+ */
+import { photoSrc, type Photo } from '@/lib/media/photos';
+
+interface Props {
+  photo: Photo;
+  alt: string;
+  ratio?: 'portrait' | 'landscape' | 'square';
+  /** Kicker set vertically down the left edge, outside the photograph. */
+  edgeLabel?: string;
+  /** Load eagerly — the hero photo only. */
+  priority?: boolean;
+  class?: string;
+}
+
+const RATIO = {
+  portrait: 'aspect-[4/5]',
+  landscape: 'aspect-[4/3]',
+  square: 'aspect-square',
+} as const;
+
+const {
+  photo,
+  alt,
+  ratio = 'portrait',
+  edgeLabel,
+  priority = false,
+  class: extra = '',
+} = Astro.props;
+const hasOverlay = Astro.slots.has('default');
+---
+
+<div class={`relative ${extra}`}>
+  <div class={`relative overflow-hidden ${RATIO[ratio]}`}>
+    <img
+      src={photoSrc(photo)}
+      alt={alt}
+      width={photo.width}
+      height={photo.height}
+      loading={priority ? 'eager' : 'lazy'}
+      fetchpriority={priority ? 'high' : undefined}
+      decoding="async"
+      class="photo-mono absolute inset-0 size-full object-cover"
+    />
+    <div class="photo-grain" aria-hidden="true"></div>
+    {
+      hasOverlay && (
+        <>
+          <div class="photo-scrim" aria-hidden="true" />
+          <div class="absolute inset-x-5 bottom-5 md:inset-x-8 md:bottom-8">
+            <slot />
+          </div>
+        </>
+      )
+    }
+  </div>
+  {
+    edgeLabel && (
+      <span
+        class="eyebrow kicker-vertical absolute -left-5 top-1 hidden md:block"
+        aria-hidden="true"
+      >
+        {edgeLabel}
+      </span>
+    )
+  }
+</div>

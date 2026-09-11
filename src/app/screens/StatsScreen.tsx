@@ -40,11 +40,11 @@ import {
 
 function StatsSkeleton() {
   return (
-    <div className="flex flex-col gap-5 py-2" aria-hidden="true">
-      <Skeleton rounded="card" className="h-40" />
-      <Skeleton rounded="card" className="h-52" />
-      <Skeleton rounded="card" className="h-48" />
-      <Skeleton rounded="card" className="h-56" />
+    <div className="flex flex-col gap-6 py-5" aria-hidden="true">
+      <Skeleton rounded="control" className="h-24" />
+      <Skeleton rounded="control" className="h-44" />
+      <Skeleton rounded="control" className="h-44" />
+      <Skeleton rounded="control" className="h-52" />
     </div>
   );
 }
@@ -89,8 +89,8 @@ export default function StatsScreen() {
   }, [toast, t]);
 
   const header = (
-    <div className="flex h-16 items-center gap-2 px-5">
-      <h1 className="font-display min-w-0 flex-1 truncate text-2xl leading-[1.3]">
+    <div className="flex h-16 items-center gap-2 border-b border-border px-5">
+      <h1 className="font-display min-w-0 flex-1 truncate text-2xl leading-[1.24]">
         {t('app.statsTitle')}
       </h1>
       <IconButton
@@ -133,7 +133,7 @@ export default function StatsScreen() {
     );
   } else {
     body = (
-      <div className="flex flex-col gap-6 py-2">
+      <div className="flex flex-col pt-5">
         <LevelCard points={totalPoints} level={level} />
         <Section title={t('app.statsWeekTitle')}>
           <WeeklyChart days={week} />

@@ -19,7 +19,9 @@ export interface SummaryStatsProps {
 export function SummaryStats({ durationSec, points, calories, completion }: SummaryStatsProps) {
   const { t } = useT();
   return (
-    <div className="grid grid-cols-2 gap-3">
+    // A 2×2 block ruled by hairlines rather than four bordered cards: these are one
+    // set of numbers about one session, not four separate facts.
+    <div className="grid grid-cols-2 divide-x divide-y divide-border border-t border-border">
       <StatTile label={t('app.summaryTime')} icon="clock" value={formatClock(durationSec)} />
       <StatTile
         label={t('app.summaryPoints')}

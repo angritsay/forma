@@ -10,13 +10,18 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   size?: 'sm' | 'md';
 }
 
+/*
+ * A badge is a stamp on top of something else (a count on a tab, a state on a card), so unlike
+ * Chip it keeps a fill — an outline would disappear against the busy surface it labels. The
+ * fills are kept dim; `accent` is the only solid one and is reserved for a genuine "this one".
+ */
 const TONE: Record<BadgeTone, string> = {
   neutral: 'bg-white/10 text-text',
   accent: 'bg-accent text-on-primary',
   success: 'bg-success/20 text-success',
   warning: 'bg-warning/20 text-warning',
   danger: 'bg-danger/20 text-danger',
-  'on-art': 'bg-black/15 text-on-primary',
+  'on-art': 'bg-black/35 text-tile-fg',
 };
 
 export function Badge({
@@ -30,8 +35,8 @@ export function Badge({
   return (
     <span
       className={clsx(
-        'inline-flex items-center gap-1 whitespace-nowrap rounded-pill font-semibold',
-        size === 'sm' ? 'h-6 px-2 text-xs' : 'h-7 px-2.5 text-sm',
+        'control-label inline-flex items-center gap-1 whitespace-nowrap rounded-control',
+        size === 'sm' ? 'h-6 px-2 text-[10px]' : 'h-7 px-2.5 text-[11px]',
         TONE[tone],
         className,
       )}

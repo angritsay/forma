@@ -1,10 +1,14 @@
+<!--
+  The app mark: the wordmark's F on a blue tile, plus the accent full stop that ends "FORMA."
+  everywhere else in the identity.
+
+  It was a mint-to-sky gradient F on the dark ground — a gradient, in the one asset that has to
+  read at 16px, from a brand that no longer has gradients. The tile is flat now and the ink is
+  the ground colour: #0B0B0D on #9ECBFF is 11.65:1, which is what holds the letter together in a
+  tab strip. The F outline is unchanged.
+-->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#B9F3E0"/>
-      <stop offset="1" stop-color="#C9D6FF"/>
-    </linearGradient>
-  </defs>
-  <rect width="64" height="64" rx="16" fill="#0B0B0D"/>
-  <path d="M20 46V18h24v6H27v6h14v6H27v10z" fill="url(#g)"/>
+  <rect width="64" height="64" rx="14" fill="#9ECBFF"/>
+  <path d="M20 46V18h24v6H27v6h14v6H27v10z" fill="#0B0B0D"/>
+  <circle cx="47" cy="43" r="3.5" fill="#0B0B0D"/>
 </svg>

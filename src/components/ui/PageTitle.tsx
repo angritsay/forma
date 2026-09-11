@@ -14,7 +14,7 @@ export interface PageTitleProps {
 
 const SIZE = { md: 'text-3xl', lg: 'text-4xl', xl: 'text-5xl' } as const;
 
-/** Italic display heading in the reference style. */
+/** Display heading for the top of a screen: optional kicker, title, optional subtitle. */
 export function PageTitle({
   title,
   eyebrow,

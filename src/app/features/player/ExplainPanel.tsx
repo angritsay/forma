@@ -57,7 +57,7 @@ export function ExplainPanel({ exerciseId, item }: ExplainPanelProps) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="mx-auto flex items-center gap-1.5 rounded-pill bg-white/5 px-3 py-1.5 text-xs font-semibold text-muted transition-colors hover:bg-white/10"
+        className="mx-auto flex items-center gap-1.5 rounded-control bg-white/5 px-3 py-1.5 text-xs font-semibold text-muted transition-colors hover:bg-white/10"
       >
         <Icon name={open ? 'minus' : 'plus'} size={14} />
         {t(open ? 'app.playerDetailsHide' : 'app.playerDetails')}
@@ -74,8 +74,10 @@ export function ExplainPanel({ exerciseId, item }: ExplainPanelProps) {
                 aria-selected={tab === x.id}
                 onClick={() => setTab(x.id)}
                 className={clsx(
-                  'flex-1 rounded-pill px-2 py-1.5 text-xs font-semibold transition-colors',
-                  tab === x.id ? 'bg-accent text-on-primary' : 'bg-white/5 text-muted',
+                  'control-label flex-1 rounded-control border px-2 py-1.5 text-[10px] transition-colors',
+                  tab === x.id
+                    ? 'border-accent bg-accent text-on-primary'
+                    : 'border-border text-muted',
                 )}
               >
                 {t(x.key)}

@@ -108,11 +108,11 @@ export function FortimeStep({
                   key={i}
                   aria-current={current ? 'step' : undefined}
                   className={clsx(
-                    'tabular flex h-9 min-w-9 items-center justify-center gap-1 rounded-pill border px-3 text-sm font-semibold',
+                    'tabular flex h-9 min-w-9 items-center justify-center gap-1 rounded-control border px-3 text-sm font-semibold',
                     done
                       ? 'border-success/30 bg-success/15 text-success'
                       : current
-                        ? 'border-primary bg-primary text-on-primary'
+                        ? 'border-accent bg-accent text-on-primary'
                         : 'border-border bg-surface-2 text-muted',
                   )}
                 >

@@ -11,7 +11,7 @@ import type { ButtonSize, ButtonVariant } from '@/components/ui/Button';
 import { externalTarget, openExternal } from '@/lib/telegram/webapp';
 
 const VARIANT: Record<ButtonVariant, string> = {
-  primary: 'bg-primary text-on-primary hover:bg-primary/90',
+  primary: 'bg-accent text-on-primary hover:bg-accent/90',
   secondary: 'bg-surface-2 text-text border border-border hover:bg-surface-3',
   ghost: 'bg-transparent text-text hover:bg-white/5',
   danger: 'bg-danger/15 text-danger hover:bg-danger/25',
@@ -56,7 +56,7 @@ export function LinkButton({
       target={external ? '_blank' : undefined}
       rel={external ? 'noopener' : undefined}
       className={clsx(
-        'inline-flex select-none items-center justify-center gap-2 rounded-pill font-semibold',
+        'inline-flex select-none items-center justify-center gap-2 rounded-control font-semibold',
         'transition-[background-color,opacity,transform] duration-150 active:scale-[0.98]',
         VARIANT[variant],
         SIZE[size],

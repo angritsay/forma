@@ -6,6 +6,10 @@
  * selling a real person's coaching it read as clipart, and a photograph of the coach does the
  * selling that an illustration cannot. `photo` therefore wins when it is set; the animated
  * figure stays as the fallback so the hero still renders before a usable photograph exists.
+ *
+ * The composition is editorial rather than centred: a 7/5 grid instead of a balanced split, the
+ * columns aligned on their baselines rather than their middles, and the photograph running past
+ * the page gutter with a vertical label down its outer margin.
  */
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
 import Button from './Button.astro';
@@ -29,10 +33,11 @@ const { title, subtitle, primary, secondary, chips, figure, photo, tileTop, tile
 ---
 
 <section
-  class="mx-auto grid max-w-6xl items-center gap-10 px-5 pt-10 pb-16 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] md:gap-16 md:pt-20 md:pb-24"
+  class="mx-auto grid max-w-6xl items-end gap-10 px-5 pt-10 pb-16 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:gap-14 md:pt-20 md:pb-24"
 >
   <div>
-    <h1 class="font-display text-[clamp(1.75rem,7vw,2.75rem)] text-balance">
+    <p class="eyebrow">{tileTop}</p>
+    <h1 class="font-display mt-5 text-[clamp(1.75rem,7vw,2.75rem)] text-balance">
       {title}
     </h1>
     <p class="mt-6 max-w-xl text-lg leading-relaxed text-muted">{subtitle}</p>
@@ -51,29 +56,35 @@ const { title, subtitle, primary, secondary, chips, figure, photo, tileTop, tile
     </ul>
   </div>
 
-  <div class="relative mx-auto w-full max-w-md md:max-w-none">
+  <!--
+    `-mr-5` on the phone, `md:-mr-10` above it: the photograph runs past the page gutter instead of
+    sitting inside a rounded, shadowed card. Square corners, monochrome, grain — a photograph is
+    the one element in this system allowed to reach the edge of the page, and rounding it would
+    turn it straight back into the tile this hero used to be.
+  -->
+  <div class="relative -mr-5 md:-mr-10">
     <div
       class:list={[
-        'relative flex aspect-[4/5] w-full items-center justify-center overflow-hidden rounded-card',
-        photo ? 'bg-surface-2 shadow-card' : 'hero-art shadow-glow',
+        'relative flex aspect-[4/5] w-full items-center justify-center overflow-hidden',
+        photo ? '' : 'hero-art',
       ]}
     >
-      <span
-        class="absolute top-5 left-5 rounded-pill bg-bg/85 px-3 py-1.5 text-xs font-semibold text-text"
-      >
-        {tileTop}
-      </span>
       {
         photo ? (
-          <img
-            src={photo.src}
-            alt={photo.alt}
-            width="900"
-            height="1125"
-            fetchpriority="high"
-            decoding="async"
-            class="absolute inset-0 size-full object-cover"
-          />
+          <>
+            <img
+              src={photo.src}
+              alt={photo.alt}
+              width="900"
+              height="1125"
+              fetchpriority="high"
+              decoding="async"
+              class="photo-mono absolute inset-0 size-full object-cover"
+            />
+            <div class="photo-grain" aria-hidden="true" />
+            <div class="photo-scrim" aria-hidden="true" />
+            <span class="eyebrow absolute right-5 bottom-5 text-white/80">{tileBottom}</span>
+          </>
         ) : (
           <ExerciseFigure
             client:visible
@@ -83,11 +94,9 @@ const { title, subtitle, primary, secondary, chips, figure, photo, tileTop, tile
           />
         )
       }
-      <span
-        class="absolute right-5 bottom-5 rounded-pill bg-bg/85 px-3 py-1.5 text-xs font-semibold text-text"
-      >
-        {tileBottom}
-      </span>
     </div>
+    <span class="eyebrow kicker-vertical absolute -left-5 top-1 hidden md:block" aria-hidden="true">
+      {tileTop}
+    </span>
   </div>
 </section>

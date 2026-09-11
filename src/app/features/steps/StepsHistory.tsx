@@ -1,5 +1,4 @@
 import { clsx } from 'clsx';
-import { Card } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';
 import { ListRow } from '@/components/ui/ListRow';
 import { formatDate, formatNumber } from '@/i18n/index';
@@ -17,7 +16,7 @@ export interface StepsHistoryProps {
 export function StepsHistory({ days, goal, onEdit }: StepsHistoryProps) {
   const { t, locale } = useT();
   return (
-    <Card padding="none">
+    <div className="border-t border-border">
       <ul className="divide-y divide-border">
         {days.map((d) => {
           const atGoal = d.logged && d.steps >= goal;
@@ -28,7 +27,7 @@ export function StepsHistory({ days, goal, onEdit }: StepsHistoryProps) {
                 leading={
                   <span
                     className={clsx(
-                      'flex size-10 items-center justify-center rounded-pill text-xs font-semibold',
+                      'flex size-10 items-center justify-center rounded-control text-xs font-semibold',
                       atGoal ? 'bg-success/20 text-success' : 'bg-surface-2 text-muted',
                     )}
                   >
@@ -57,6 +56,6 @@ export function StepsHistory({ days, goal, onEdit }: StepsHistoryProps) {
           );
         })}
       </ul>
-    </Card>
+    </div>
   );
 }

@@ -1,11 +1,15 @@
 @import 'tailwindcss';
 @import '@fontsource-variable/onest';
-@import '@fontsource-variable/unbounded';
+@import '@fontsource-variable/manrope';
 
 /*
  * Forma design tokens.
- * Dark-first product. Landing and app share these tokens; course accents are injected as
- * --course-accent / --course-g1 / --course-g2 on the nearest container.
+ *
+ * Dark-only product. The brandbook's rule for the accent is dosage: #9ecbff marks the primary
+ * button, the logo's full stop, a hairline, a kicker — never a large fill. Big areas are shades
+ * of black and full-bleed monochrome photography. Course art used to be a pastel gradient per
+ * course; it is now a muted dark-blue tile (--tile-1…5) with light figures on it, so a course
+ * still reads as itself without the accent shouting.
  */
 :root {
   --bg: #0b0b0d;
@@ -13,8 +17,8 @@
   --surface-2: #1e1e24;
   --surface-3: #2a2a31;
   --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.16);
-  --text: #f5f5f7;
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --text: #f4f4f6;
   /*
    * Both muted tones must clear WCAG AA (4.5:1) for body text on every surface they are used on,
    * including the darkest one (--surface-3). Measured ratios:
@@ -25,18 +29,50 @@
   --muted-2: #93939d;
   --primary: #ffffff;
   --on-primary: #0b0b0d;
-  --accent: #b9f3e0;
+  /*
+   * The accent is the one blue in the system. `--accent` is the fill (buttons, the logo dot);
+   * `--accent-2` is periwinkle, used only where two cool tones must be told apart.
+   *
+   * #9ecbff clears AA as text on every surface — measured against --bg 11.65:1, --surface-1
+   * 10.79, --surface-2 9.82, --surface-3 8.44 — and --on-primary on an accent fill is the same
+   * 11.65:1, which is what lets the primary button be solid blue.
+   */
+  --accent: #9ecbff;
   --accent-2: #c9d6ff;
   --success: #7ce0b0;
   --warning: #ffd166;
   --danger: #ff6b6b;
+  /*
+   * Course tiles. Muted dark-blue surfaces, not gradients — content assigns one per course via
+   * `--course-tile`. `--tile-fg` is the ink for figures and labels sitting on them, and clears AA
+   * on all five: 10.97:1 against the lightest (--tile-4) up to 13.39:1 against the darkest
+   * (--tile-3).
+   */
+  --tile-1: #1a2634;
+  --tile-2: #20293c;
+  --tile-3: #16202b;
+  --tile-4: #232f42;
+  --tile-5: #1c2532;
+  --tile-fg: #dce9fa;
+  /*
+   * Radii. Cards keep the brand's generous 24px; tiles 20px; inputs 16px. Buttons and chips are
+   * deliberately near-square (4px) with capitalised labels — the brandbook drops pills entirely,
+   * and a 999px control next to a 24px card is what made the old UI read as generic.
+   */
   --r-card: 24px;
+  --r-tile: 20px;
   --r-inner: 16px;
+  --r-control: 4px;
   --r-pill: 999px;
   --shadow-card: 0 12px 40px rgba(0, 0, 0, 0.35);
-  --shadow-glow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 20px 60px rgba(185, 243, 224, 0.12);
+  --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --shadow-glow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 20px 60px rgba(158, 203, 255, 0.14);
   --font-sans: 'Onest Variable', 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Unbounded Variable', 'Unbounded', 'Onest Variable', system-ui, sans-serif;
+  --font-display: 'Manrope Variable', 'Manrope', 'Onest Variable', system-ui, sans-serif;
+  /* Calm fades and shifts, never bounce. */
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --dur-fast: 150ms;
+  --dur-med: 280ms;
   color-scheme: dark;
 }
 
@@ -57,12 +93,17 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+  --color-tile: var(--course-tile, var(--tile-1));
+  --color-tile-fg: var(--tile-fg);
   --radius-card: var(--r-card);
+  --radius-tile: var(--r-tile);
   --radius-inner: var(--r-inner);
+  --radius-control: var(--r-control);
   --radius-pill: var(--r-pill);
   --font-sans: var(--font-sans);
   --font-display: var(--font-display);
   --shadow-card: var(--shadow-card);
+  --shadow-soft: var(--shadow-soft);
   --shadow-glow: var(--shadow-glow);
 
   /*
@@ -73,12 +114,17 @@
    * appreciably longer than its English equivalent — that read as shouting, and the hero wrapped
    * onto five lines and broke mid-word.
    *
-   * Every step also carries an explicit line-height at or above 1.2. That number is a Cyrillic
-   * budget, not a Latin one: measured against Unbounded, Ё reaches 0.993em above the baseline and
-   * у drops to 0.181em below, so two lines need ~1.174em of advance before they touch. The
-   * `.font-display` rule already asked for 1.2, but Tailwind's per-step line-height is a utility
-   * and so beat it — the old 72px h1 was actually setting solid at 1.0. Naming the value here is
-   * what makes the rule hold.
+   * The sizes stay where they are now that the display face is Manrope rather than Unbounded.
+   * Manrope sets appreciably narrower, so the same numbers wrap onto fewer lines — the gain is
+   * taken as shorter headlines, not as bigger type.
+   *
+   * Every step carries an explicit line-height. That number is a Cyrillic budget, not a Latin
+   * one: measured against Manrope SemiBold, Й reaches 0.926em above the baseline and у drops to
+   * 0.240em below, so two lines need 1.166em of advance before the riser of one touches the
+   * descender of the other. 1.18 on the display steps clears that and sets tighter than the old
+   * Unbounded budget of 1.174 allowed; body steps stay looser for reading. The `.font-display`
+   * rule also asks for a line-height, but Tailwind's per-step value is a utility and beats it —
+   * naming the value here is what makes the rule hold.
    */
   --text-lg: 1rem;
   --text-lg--line-height: 1.6;
@@ -93,9 +139,9 @@
   --text-5xl: 1.875rem;
   --text-5xl--line-height: 1.2;
   --text-6xl: 2.25rem;
-  --text-6xl--line-height: 1.2;
+  --text-6xl--line-height: 1.18;
   --text-7xl: 2.75rem;
-  --text-7xl--line-height: 1.2;
+  --text-7xl--line-height: 1.18;
 }
 
 html {
@@ -164,22 +210,26 @@ body {
  *
  * The face is upright, not italic. Playfair Display's Cyrillic italic draws и, п and т as
  * composite glyphs pointing at the Latin u, n and m outlines, so every Russian display heading
- * in the product rendered as pseudo-Latin. Unbounded draws Cyrillic as Cyrillic.
+ * in the product rendered as pseudo-Latin. Manrope draws Cyrillic as Cyrillic.
  */
 @layer components {
   .font-display,
   .display {
     font-family: var(--font-display);
-    font-weight: 700;
     /*
-     * Zero tracking and 1.2 leading are Cyrillic budgets, not Latin ones. Measured against
-     * Unbounded: Ё reaches 0.993em above the baseline and у drops to -0.181em, so two adjacent
-     * lines need 1.174em of advance before the riser of one touches the descender of the other.
-     * The old -0.01em/1.05 pairing was budgeted for Latin ink and collided on every RU heading.
+     * 600, not 700. Manrope's Bold is heavy enough at display sizes to read as a headline in a
+     * news feed; SemiBold is the brandbook's display weight and is what makes a large Russian
+     * heading sit quietly. The wordmark is the one exception and sets its own 800.
+     */
+    font-weight: 600;
+    /*
+     * -0.02em tracking is affordable in Manrope where it was not in Unbounded, whose Cyrillic is
+     * already tightly fitted. 1.18 leading is the Cyrillic budget: Й reaches 0.926em above the
+     * baseline and у drops to -0.240em, so adjacent lines collide below 1.166em.
      * Headings that also clip (`truncate`) need 1.24em of content box and set their own leading.
      */
-    letter-spacing: 0;
-    line-height: 1.2;
+    letter-spacing: -0.02em;
+    line-height: 1.18;
     /*
      * `body` sets `overflow-wrap: break-word` so a long URL can never widen the viewport. At
      * display sizes that rule snaps words mid-syllable — a 320px screen rendered the hero as
@@ -194,18 +244,57 @@ body {
   }
 
   /*
-   * Section eyebrow — deliberately not uppercase. Cyrillic capitals are near-uniform rectangles
-   * (П Н И Ш Ц Т Г Е Б В) with none of the distinguishing shapes Latin caps have, so uppercasing
-   * a Russian label erases its word silhouette, and wide tracking then pushes it to roughly twice
-   * the set width of the English original. Weight, size and colour carry the same hierarchy at
-   * no cost to either script.
+   * Section eyebrow / kicker — 11px, uppercase, 0.14em tracking, per the brandbook.
+   *
+   * This overrides a deliberate earlier decision, and the reasoning behind that decision still
+   * stands: Cyrillic capitals are near-uniform rectangles (П Н И Ш Ц Т Г Е Б В) with none of the
+   * distinguishing shapes Latin caps have, so uppercasing a Russian label erases its word
+   * silhouette, and wide tracking then pushes it to roughly twice the set width of the English
+   * original. The brandbook accepts that cost because the kicker is a label, not something to be
+   * read as language — its job is to mark a section, and at 11px in --muted it is the quietest
+   * thing on the screen.
+   *
+   * The cost is only affordable while kickers stay SHORT. Keep them to two or three words
+   * ("НЕДЕЛЯ 2", "СЕГОДНЯ · 12 МИНУТ"). A sentence-length kicker in Cyrillic caps is unreadable
+   * and will also wrap to two lines on a 390px screen — use `.eyebrow-sentence` for those.
    */
   .eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    line-height: 1.3;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* The long-label escape hatch: same slot in the hierarchy, no caps, no tracking. */
+  .eyebrow-sentence {
     font-size: 0.8125rem;
     font-weight: 600;
     letter-spacing: 0.01em;
     line-height: 1.3;
     color: var(--muted);
+  }
+
+  /*
+   * Control label — capitalised, tracked, on buttons and chips. Tighter tracking than a kicker
+   * (0.08em) because a control label sits inside a box and must not push its own width out.
+   */
+  .control-label {
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /*
+   * The wordmark. Latin "FORMA" plus a blue full stop — the dot is the single most reliable
+   * place the accent appears, so it is a token, not a literal, everywhere it is drawn.
+   */
+  .wordmark {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
   }
 }
 
@@ -214,12 +303,68 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Pastel hero-art gradient surface; course colors override the stops. */
+/*
+ * Course art surface. This replaces the pastel mint→lavender gradient the class used to draw.
+ * A course sets `--course-tile` to one of --tile-1…5; the default keeps a tile rendering before
+ * content has assigned one. Ink on it is light (--tile-fg), not black, because the tile is now a
+ * dark surface rather than a pastel one.
+ */
 .hero-art {
-  --course-g1: var(--accent);
-  --course-g2: var(--accent-2);
-  background: linear-gradient(160deg, var(--course-g1) 0%, var(--course-g2) 100%);
-  color: #0b0b0d;
+  background: var(--course-tile, var(--tile-1));
+  color: var(--tile-fg);
+}
+
+/*
+ * Photography is the product's main visual surface, and it is always monochrome with grain over
+ * it — colour stock photography is what made the landing read as a stock template.
+ *
+ * `.photo-mono` desaturates the image itself. `.photo-grain` and `.photo-scrim` are *overlay
+ * elements*, not pseudo-elements on the frame: they have to sit between the image and any text
+ * laid over it, and an `::after` on the frame would paint above that text instead — grain over a
+ * headline at 0.35 is exactly as muddy as it sounds. Both stretch to their positioned parent.
+ */
+.photo-mono {
+  filter: grayscale(1) contrast(1.05) brightness(0.92);
+}
+
+.photo-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+/*
+ * Protection gradient for white text laid over a photograph. Dark from the bottom, transparent
+ * by 45% up — the text block sits in the bottom third, and anything above it stays photograph.
+ */
+.photo-scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 45%, rgba(0, 0, 0, 0.75) 100%);
+}
+
+/*
+ * Vertical kicker running down the edge of a photograph. `writing-mode` rather than a rotate
+ * transform: a rotated box keeps its unrotated footprint in layout and overlapped the header
+ * above it, whereas this one occupies the column it actually draws in.
+ */
+.kicker-vertical {
+  writing-mode: vertical-rl;
+  white-space: nowrap;
+}
+
+/*
+ * Editorial number — the 01/02/03 that marks a step, a course or a day. Tabular so a column of
+ * them aligns, and it never wraps.
+ */
+.numeral {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
 /*
@@ -254,7 +399,7 @@ body {
 }
 
 /* Focus ring for keyboard users. The outline follows the element's own radius — never override it
-   here, or pills and cards would square off while focused. */
+   here, or a 24px card would square off to a 4px control while focused. */
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;

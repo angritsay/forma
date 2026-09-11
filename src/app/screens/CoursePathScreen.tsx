@@ -7,16 +7,17 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Chip } from '@/components/ui/Chip';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Icon } from '@/components/ui/Icon';
 import { IconButton } from '@/components/ui/IconButton';
-import { RingProgress } from '@/components/ui/RingProgress';
+import { PhotoBlock } from '@/components/ui/PhotoBlock';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { COURSE_BY_ID } from '@/content/registry';
 import type { CourseNode } from '@/content/schema';
 import { formatNumber } from '@/i18n/index';
+import { PHOTOS } from '@/lib/media/photos';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { courseLandingHref, subscribeHref } from '@/app/features/courses/courseMeta';
@@ -155,10 +156,10 @@ export default function CoursePathScreen() {
   if (status === 'loading' || status === 'idle') {
     body = (
       <div className="flex flex-col items-center gap-6 py-6" aria-hidden="true">
-        <Skeleton rounded="pill" className="size-[72px]" />
-        <Skeleton rounded="pill" className="size-[72px] translate-x-16" />
-        <Skeleton rounded="pill" className="size-[72px]" />
-        <Skeleton rounded="pill" className="size-[72px] -translate-x-16" />
+        <Skeleton rounded="card" className="size-[72px]" />
+        <Skeleton rounded="card" className="size-[72px] translate-x-16" />
+        <Skeleton rounded="card" className="size-[72px]" />
+        <Skeleton rounded="card" className="size-[72px] -translate-x-16" />
       </div>
     );
   } else if (status === 'error') {
@@ -180,35 +181,60 @@ export default function CoursePathScreen() {
 
   return (
     <Screen header={header}>
-      <div className="flex items-center gap-4 py-3">
-        <RingProgress
-          value={progress.pct / 100}
-          size={56}
-          stroke={6}
-          tone="accent"
-          label={t('app.pathProgressLabel')}
-          valueText={`${progress.pct}%`}
+      {/*
+       * The course opens on a photograph with its name across it, then a ruled strip of the three
+       * numbers that describe where you are. The strip replaces a progress ring sitting next to
+       * two lines of prose — a ring is decoration around a number that is already written, and on
+       * a 390px screen it took the width that "8 of 28" needed to be legible.
+       */}
+      <div className="-mr-5 pt-4 lg:mr-0">
+        <PhotoBlock
+          photo={PHOTOS.coursePath}
+          alt=""
+          ratio="landscape"
+          priority
+          edgeLabel={t('app.pathProgressLabel')}
         >
-          <span className="tabular text-xs font-bold">{progress.pct}%</span>
-        </RingProgress>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm text-muted">{t('app.pathProgressLabel')}</p>
-          <p className="tabular text-[15px] font-semibold">
+          <span className="eyebrow text-accent">
             {t('app.pathProgress', { done: progress.done, total: progress.total })}
-          </p>
+          </span>
+          <h2 className="font-display mt-2 text-3xl text-balance text-white">{l(course.name)}</h2>
+        </PhotoBlock>
+      </div>
+      <div className="grid grid-cols-3 divide-x divide-border border-y border-border">
+        <div className="px-4 py-4">
+          <div className="numeral tabular text-2xl leading-none">{progress.pct}%</div>
+          <div className="eyebrow mt-2">{t('app.pathStatDone')}</div>
         </div>
-        <Chip tone="accent" size="sm" icon="bolt" onClick={() => setScaleOpen(true)}>
-          {t('app.pathScaleBadge', { scale: formatNumber(locale, scale, 2) })}
-        </Chip>
+        <div className="px-4 py-4">
+          <div className="numeral tabular text-2xl leading-none">
+            {String(progress.done).padStart(2, '0')}/{String(progress.total).padStart(2, '0')}
+          </div>
+          <div className="eyebrow mt-2">{t('app.pathStatDays')}</div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setScaleOpen(true)}
+          className="px-4 py-4 text-left"
+          aria-label={t('app.pathScaleBadge', { scale: formatNumber(locale, scale, 2) })}
+        >
+          <div className="numeral tabular text-2xl leading-none text-accent">
+            ×{formatNumber(locale, scale, 2)}
+          </div>
+          <div className="eyebrow mt-2 flex items-center gap-1">
+            <Icon name="bolt" size={12} />
+            {t('app.pathStatLoad')}
+          </div>
+        </button>
       </div>
       {finished ? (
-        <div className="pb-2">
+        <div className="py-4">
           <Badge tone="success" icon="trophy" size="md">
             {t('app.pathCompleted')}
           </Badge>
         </div>
       ) : null}
-      {body}
+      <div className="pt-6">{body}</div>
       <NodeSheet
         node={sheetNode}
         status={sheetStatus}

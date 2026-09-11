@@ -18,15 +18,16 @@ const ITEMS: readonly NavItem[] = [
   { to: '/profile', icon: 'profile', labelKey: 'app.tabProfile' },
 ];
 
-/** Floating pill tab bar; the active tab is a white pill with icon + label. */
+/** Floating tab bar; the active tab is a squared accent block with icon + label. */
 export function BottomNav() {
   const { t } = useT();
   return (
     <nav
       aria-label={t('app.navMain')}
-      className="fixed bottom-0 left-1/2 z-30 w-full max-w-[480px] -translate-x-1/2 pr-[max(var(--safe-right),16px)] pl-[max(var(--safe-left),16px)] pb-[calc(max(var(--safe-bottom),12px)+var(--demo-inset,0px))]"
+      // Hidden from `lg` up, where SideNav takes over; AppShell drops `--nav-inset` to match.
+      className="fixed bottom-0 left-1/2 z-30 w-full max-w-[480px] -translate-x-1/2 pr-[max(var(--safe-right),16px)] pl-[max(var(--safe-left),16px)] pb-[calc(max(var(--safe-bottom),12px)+var(--demo-inset,0px))] lg:hidden"
     >
-      <div className="flex h-16 items-center justify-around rounded-pill border border-border bg-surface/95 px-2 shadow-card backdrop-blur-md">
+      <div className="flex h-16 items-center justify-around rounded-control border border-border bg-surface/95 px-2 shadow-card backdrop-blur-md">
         {ITEMS.map((item) => {
           const label = t(item.labelKey);
           return (
@@ -37,15 +38,15 @@ export function BottomNav() {
               aria-label={label}
               className={({ isActive }) =>
                 clsx(
-                  'flex h-12 items-center justify-center gap-2 rounded-pill transition-colors',
-                  isActive ? 'bg-primary px-4 text-on-primary' : 'px-3 text-muted hover:text-text',
+                  'flex h-12 items-center justify-center gap-2 rounded-control transition-colors',
+                  isActive ? 'bg-accent px-4 text-on-primary' : 'px-3 text-muted hover:text-text',
                 )
               }
             >
               {({ isActive }) => (
                 <>
                   <Icon name={item.icon} size={22} />
-                  {isActive ? <span className="text-sm font-semibold">{label}</span> : null}
+                  {isActive ? <span className="control-label text-[11px]">{label}</span> : null}
                 </>
               )}
             </NavLink>

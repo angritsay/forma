@@ -104,13 +104,13 @@ export default function DifficultyDemo({
                 onClick={() => setChoice(c.choice)}
                 className={`relative flex flex-col items-start gap-1 rounded-inner border p-3 text-left transition md:p-4 ${
                   active
-                    ? 'border-primary bg-primary text-on-primary'
+                    ? 'border-primary bg-accent text-on-primary'
                     : 'border-border bg-surface-2 text-text hover:border-border-strong'
                 }`}
               >
                 {isRec && (
                   <span
-                    className={`rounded-pill px-2 py-0.5 text-xs font-semibold ${
+                    className={`rounded-control px-2 py-0.5 text-xs font-semibold ${
                       active ? 'bg-on-primary text-primary' : 'bg-accent text-on-primary'
                     }`}
                   >
@@ -174,7 +174,7 @@ export default function DifficultyDemo({
                 onClick={() => setScenarioId(s.id)}
                 className={`rounded-inner border px-3 py-3 text-sm font-medium transition ${
                   active
-                    ? 'border-primary bg-primary text-on-primary'
+                    ? 'border-primary bg-accent text-on-primary'
                     : 'border-border bg-surface-2 hover:border-border-strong'
                 }`}
               >

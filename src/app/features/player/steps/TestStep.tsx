@@ -87,7 +87,7 @@ export function TestStep({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col items-center gap-3 text-center">
-        <span className="eyebrow">{t('training.testHint')}</span>
+        <span className="eyebrow-sentence">{t('training.testHint')}</span>
 
         {phase === 'result' ? (
           <>

@@ -1420,8 +1420,7 @@ export const COURSE_KETTLEBELL: CourseInput = {
   weeks: 6,
   sessionsPerWeek: 3,
   avgSessionMin: 32,
-  accent: '#FFB4A8',
-  gradient: ['#FFB4A8', '#FFD9A8'],
+  tile: '#232f42', // --tile-4
   price: { rub: 3990, usd: 39 },
   workouts: [
     W_TEST,

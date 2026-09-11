@@ -47,7 +47,7 @@ export function StepResult({ draft }: StepProps) {
           <span className="mt-1 text-sm text-muted">{t('app.onbIndexOutOf')}</span>
         </RingProgress>
       </div>
-      <Card gradient>
+      <Card tile>
         <p className="text-[15px] font-medium leading-relaxed">
           {t(LEVEL_MEANING[assessment.level])}
         </p>

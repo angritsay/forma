@@ -47,7 +47,7 @@ export function OptionList<T extends string | number>({
               aria-hidden="true"
               className={
                 selected
-                  ? 'flex h-6 w-6 shrink-0 items-center justify-center rounded-pill bg-primary text-on-primary'
+                  ? 'flex h-6 w-6 shrink-0 items-center justify-center rounded-pill bg-accent text-on-primary'
                   : 'h-6 w-6 shrink-0 rounded-pill border border-border-strong'
               }
             >

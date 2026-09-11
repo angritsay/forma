@@ -253,6 +253,11 @@ export const app = {
   // Course path
   pathProgressLabel: 'Course progress',
   pathProgress: '{done} of {total}',
+  // Kickers under the figures in the course header. Keep them to one word: they are set in caps
+  // at 0.14em tracking in a third-of-screen column, and two words already wrap.
+  pathStatDone: 'Done',
+  pathStatDays: 'Days',
+  pathStatLoad: 'Load',
   pathLeaderboard: 'Leaderboard',
   pathScaleBadge: 'Your load ×{scale}',
   pathScaleTitle: 'How your load adapts',

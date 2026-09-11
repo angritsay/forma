@@ -1,5 +1,4 @@
 import { Badge } from '@/components/ui/Badge';
-import { Card } from '@/components/ui/Card';
 import { StatTile } from '@/components/ui/StatTile';
 import { formatNumber } from '@/i18n/index';
 import { levelForPoints } from '@/lib/training/levels';
@@ -11,22 +10,27 @@ export interface LevelCardProps {
   level: LevelInfo;
 }
 
-/** Hero-art card: level title, points and the progress towards the next level. */
+/** Masthead of the statistics screen: level number, title, points and progress to the next one. */
 export function LevelCard({ points, level }: LevelCardProps) {
   const { t, l, locale } = useT();
   const next = level.nextAt !== null ? levelForPoints(level.nextAt) : null;
   const remaining = level.nextAt !== null ? Math.max(0, level.nextAt - points) : 0;
   const pct = Math.round(level.progress * 100);
   return (
-    <Card gradient className="flex flex-col gap-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-1">
-          <span className="eyebrow text-current opacity-70">
-            {t('app.statsLevelEyebrow', { n: level.level })}
-          </span>
-          <h2 className="font-display truncate text-4xl leading-[1.3]">{l(level.title)}</h2>
+    /*
+     * The athlete's level is the masthead of the statistics screen, so it is set like one: the
+     * level number large in the margin, the title as a display heading, a hairline of progress
+     * under both. It was a filled tile with a 40px heading and a fat rounded bar, which made the
+     * top of the screen the loudest thing on it and left the real numbers below fighting it.
+     */
+    <section className="flex flex-col gap-4 pb-1">
+      <div className="flex items-start gap-4">
+        <span className="numeral tabular shrink-0 text-5xl leading-none">{level.level}</span>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <span className="eyebrow">{t('app.statsLevelEyebrow', { n: level.level })}</span>
+          <h2 className="font-display truncate text-2xl leading-[1.24]">{l(level.title)}</h2>
         </div>
-        <Badge tone="on-art" icon="bolt" size="md">
+        <Badge tone="accent" icon="bolt" size="md">
           {t('app.statsPointsValue', { n: formatNumber(locale, points) })}
         </Badge>
       </div>
@@ -36,19 +40,19 @@ export function LevelCard({ points, level }: LevelCardProps) {
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={pct}
-        className="h-2.5 w-full overflow-hidden rounded-pill bg-black/10"
+        className="h-1 w-full overflow-hidden bg-surface-3"
       >
         <div
-          className="h-full rounded-pill bg-on-primary transition-[width] duration-500 ease-out"
+          className="h-full bg-accent transition-[width] duration-500 ease-out"
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="text-sm font-medium opacity-80">
+      <p className="text-sm text-muted">
         {next
           ? t('app.statsLevelNext', { n: formatNumber(locale, remaining), title: l(next.title) })
           : t('app.statsLevelMax')}
       </p>
-    </Card>
+    </section>
   );
 }
 
@@ -62,11 +66,12 @@ export interface TotalsRowProps {
 export function TotalsRow({ workouts, minutes, calories }: TotalsRowProps) {
   const { t, locale } = useT();
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-3 divide-x divide-border border-t border-border">
       <StatTile
         label={t('app.statsTotalWorkouts')}
         icon="check"
         value={formatNumber(locale, workouts)}
+        className="pl-0"
       />
       <StatTile
         label={t('app.statsTotalMinutes')}
@@ -77,6 +82,7 @@ export function TotalsRow({ workouts, minutes, calories }: TotalsRowProps) {
         label={t('app.statsTotalKcal')}
         icon="flame"
         value={formatNumber(locale, calories)}
+        className="pr-0"
       />
     </div>
   );

@@ -16,7 +16,7 @@ import { l, t } from '@/i18n/index';
 import {
   equipmentNames,
   exerciseFaq,
-  exerciseGradient,
+  exerciseTile,
   levelName,
   muscleName,
   patternName,
@@ -61,7 +61,7 @@ const title = exerciseTitle(ex, locale);
 const description = exerciseDescription(ex, locale);
 const image = ogImagePath('exercise', ex.id, locale);
 const imageUrl = absoluteUrl(site, image);
-const gradient = exerciseGradient(ex);
+const tile = exerciseTile(ex);
 
 const courses = coursesUsingExercise(ex.id);
 const primary = courses[0];
@@ -133,7 +133,7 @@ const jsonLd = [
           <span>{patternName(ex.pattern, locale)}</span>
           {
             ex.isTest && (
-              <span class="rounded-pill bg-accent/15 px-2.5 py-0.5 normal-case tracking-normal text-accent">
+              <span class="rounded-control bg-accent/15 px-2.5 py-0.5 normal-case tracking-normal text-accent">
                 {t(locale, 'seo.exerciseTestBadge')}
               </span>
             )
@@ -142,17 +142,22 @@ const jsonLd = [
         <h1 class="mt-3 font-display text-4xl md:text-6xl">{name}</h1>
         <p class="mt-5 max-w-2xl text-lg leading-relaxed text-muted">{l(ex.description, locale)}</p>
         <ul class="mt-5 flex flex-wrap gap-2">
-          <li class="rounded-pill border border-border px-3 py-1 text-sm text-muted">
+          <li class="rounded-control border border-border px-3 py-1 text-sm text-muted">
             {levelName(ex.level, locale)}
           </li>
           {
             equipmentNames(ex, locale).map((eq) => (
-              <li class="rounded-pill border border-border px-3 py-1 text-sm text-muted">{eq}</li>
+              <li class="rounded-control border border-border px-3 py-1 text-sm text-muted">
+                {eq}
+              </li>
             ))
           }
         </ul>
         <div class="mt-8 flex flex-wrap gap-3">
-          <a class="rounded-pill bg-primary px-6 py-3 font-semibold text-on-primary" href={ctaHref}>
+          <a
+            class="rounded-control bg-accent px-6 py-3 font-semibold text-on-primary"
+            href={ctaHref}
+          >
             {ctaButton}
           </a>
         </div>
@@ -163,7 +168,7 @@ const jsonLd = [
             client:visible
             animation={ex.animation}
             variant="hero"
-            gradient={gradient}
+            tile={tile}
             label={name}
           />
         </div>
@@ -195,7 +200,7 @@ const jsonLd = [
           {
             ex.howTo.map((step, i) => (
               <li class="flex gap-4 rounded-card border border-border bg-surface p-5">
-                <span class="tabular flex h-8 w-8 shrink-0 items-center justify-center rounded-pill bg-surface-2 text-sm font-semibold">
+                <span class="tabular flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-surface-2 text-sm font-semibold">
                   {i + 1}
                 </span>
                 <p class="leading-relaxed">{l(step, locale)}</p>
@@ -349,7 +354,7 @@ const jsonLd = [
         <p class="mt-3 max-w-xl leading-relaxed text-muted">{ctaText}</p>
       </div>
       <a
-        class="mt-6 inline-flex shrink-0 rounded-pill bg-primary px-6 py-3 font-semibold text-on-primary md:mt-0"
+        class="mt-6 inline-flex shrink-0 rounded-control bg-accent px-6 py-3 font-semibold text-on-primary md:mt-0"
         href={ctaHref}
       >
         {ctaButton}

@@ -546,7 +546,7 @@ const page = html`<title>${course.name.ru}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link
     rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;600&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;800&family=Onest:wght@400;500;600&display=swap"
   />
   <style>
     :root {
@@ -572,7 +572,7 @@ const page = html`<title>${course.name.ru}</title>
       --bar: #1f9c78;
       --bar-range: rgba(31, 156, 120, 0.25);
       --font-sans: 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-      --font-display: 'Unbounded', 'Onest', system-ui, sans-serif;
+      --font-display: 'Manrope', 'Onest', system-ui, sans-serif;
     }
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme='light']) {
@@ -583,11 +583,11 @@ const page = html`<title>${course.name.ru}</title>
         --surface-3: #2a2a31;
         --border: rgba(255, 255, 255, 0.08);
         --border-strong: rgba(255, 255, 255, 0.18);
-        --text: #f5f5f7;
+        --text: #f4f4f6;
         --muted: #a8a8b2;
         --muted-2: #93939d;
-        --accent: #b9f3e0;
-        --accent-soft: rgba(185, 243, 224, 0.14);
+        --accent: #9ecbff;
+        --accent-soft: rgba(158, 203, 255, 0.14);
         --accent-2: #c9d6ff;
         --accent-2-soft: rgba(201, 214, 255, 0.14);
         --warning: #ffd166;
@@ -595,8 +595,8 @@ const page = html`<title>${course.name.ru}</title>
         --danger: #ff8a80;
         --danger-soft: rgba(255, 107, 107, 0.16);
         --rest: #121216;
-        --bar: #7ce0b0;
-        --bar-range: rgba(124, 224, 176, 0.25);
+        --bar: #9ecbff;
+        --bar-range: rgba(158, 203, 255, 0.25);
       }
     }
     :root[data-theme='dark'] {
@@ -607,11 +607,11 @@ const page = html`<title>${course.name.ru}</title>
       --surface-3: #2a2a31;
       --border: rgba(255, 255, 255, 0.08);
       --border-strong: rgba(255, 255, 255, 0.18);
-      --text: #f5f5f7;
+      --text: #f4f4f6;
       --muted: #a8a8b2;
       --muted-2: #93939d;
-      --accent: #b9f3e0;
-      --accent-soft: rgba(185, 243, 224, 0.14);
+      --accent: #9ecbff;
+      --accent-soft: rgba(158, 203, 255, 0.14);
       --accent-2: #c9d6ff;
       --accent-2-soft: rgba(201, 214, 255, 0.14);
       --warning: #ffd166;
@@ -619,8 +619,8 @@ const page = html`<title>${course.name.ru}</title>
       --danger: #ff8a80;
       --danger-soft: rgba(255, 107, 107, 0.16);
       --rest: #121216;
-      --bar: #7ce0b0;
-      --bar-range: rgba(124, 224, 176, 0.25);
+      --bar: #9ecbff;
+      --bar-range: rgba(158, 203, 255, 0.25);
     }
 
     * {

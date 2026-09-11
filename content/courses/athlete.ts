@@ -2022,8 +2022,7 @@ export const COURSE_ATHLETE: CourseInput = {
   weeks: 8,
   sessionsPerWeek: 4,
   avgSessionMin: 40,
-  accent: '#E7C6FF',
-  gradient: ['#E7C6FF', '#B9F3E0'],
+  tile: '#1c2532', // --tile-5
   price: { rub: 4990, usd: 49 },
   workouts: [
     W_TEST,

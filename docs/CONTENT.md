@@ -37,7 +37,8 @@ A course is a list of unique `workouts` plus an ordered list of `nodes` (the Duo
   Warm-up/cool-down blocks are `scalable: false` so the engine does not shrink them.
 - Author numbers for a level-2 athlete at scale 1.0 (level-1 courses: for a beginner). The engine
   multiplies volume by the user's scale (0.5–1.5) and the chosen difficulty.
-- `price`, `paymentUrl`, `accent`, `gradient` are owner-editable.
+- `price`, `paymentUrl` and `tile` are owner-editable. `tile` is the course's flat art colour;
+  use one of `--tile-1…5` from `src/styles/global.css` (the five courses take the five tiles).
 
 Adding a course: create the file, add it to `content/courses/index.ts`, run `npm run test`.
 

@@ -17,7 +17,7 @@ export function ScaleSheet({ open, scale, onClose }: ScaleSheetProps) {
     <Sheet open={open} onClose={onClose} title={t('app.pathScaleTitle')}>
       <div className="flex flex-col gap-4 py-2">
         <div className="flex items-center gap-4 rounded-inner bg-surface-2 p-4">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-pill bg-accent/15 text-accent">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-control bg-accent/15 text-accent">
             <Icon name="bolt" size={24} />
           </span>
           <span className="tabular text-4xl font-bold leading-none">×{value}</span>

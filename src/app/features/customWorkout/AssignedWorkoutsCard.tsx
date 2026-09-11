@@ -34,39 +34,41 @@ export function AssignedWorkoutsCard({ onOpen }: AssignedWorkoutsCardProps) {
   if (rows.length === 0) return null;
 
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="font-display text-lg">{t('app.homeCoachWorkouts')}</h2>
-      <div className="flex flex-col gap-2">
-        {rows.map((w) => {
-          const minutes = w.estSec ? Math.max(1, Math.round(w.estSec / 60)) : null;
-          return (
-            <button
-              key={w.id}
-              type="button"
-              onClick={() => onOpen(w.id)}
-              className="flex items-center gap-3 rounded-card border border-border bg-surface-2 px-4 py-3 text-left transition-colors hover:bg-surface-3"
-            >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-inner bg-accent/15 text-accent">
-                <Icon name="play" size={18} />
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="truncate text-[15px] font-semibold">{w.title}</span>
-                <span className="flex flex-wrap items-center gap-2 text-xs text-muted">
-                  <span>{t('app.customWorkoutFromCoach')}</span>
-                  {minutes ? (
-                    <span className="tabular">· {t('app.nodeDuration', { min: minutes })}</span>
-                  ) : null}
-                </span>
-              </span>
-              {w.points ? (
-                <Badge tone="accent" size="sm" icon="star">
-                  {w.points}
-                </Badge>
-              ) : null}
-            </button>
-          );
-        })}
+    <section className="flex flex-col">
+      <div className="flex items-baseline justify-between gap-3 border-t border-border pt-5 pb-1">
+        <h2 className="font-display text-xl">{t('app.homeCoachWorkouts')}</h2>
+        <span className="eyebrow">{String(rows.length).padStart(2, '0')}</span>
       </div>
+      {rows.map((w, i) => {
+        const minutes = w.estSec ? Math.max(1, Math.round(w.estSec / 60)) : null;
+        return (
+          <button
+            key={w.id}
+            type="button"
+            onClick={() => onOpen(w.id)}
+            className="flex items-center gap-3.5 border-t border-border py-4 text-left first:border-t-0"
+          >
+            <span className="numeral shrink-0 text-sm text-accent">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col gap-1">
+              <span className="font-display truncate text-[15px] leading-[1.24]">{w.title}</span>
+              <span className="flex flex-wrap items-center gap-2 text-xs text-muted">
+                <span>{t('app.customWorkoutFromCoach')}</span>
+                {minutes ? (
+                  <span className="tabular">· {t('app.nodeDuration', { min: minutes })}</span>
+                ) : null}
+              </span>
+            </span>
+            {w.points ? (
+              <Badge tone="accent" size="sm" icon="star">
+                {w.points}
+              </Badge>
+            ) : null}
+            <Icon name="chevron" size={16} className="shrink-0 text-muted" />
+          </button>
+        );
+      })}
     </section>
   );
 }

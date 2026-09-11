@@ -1,5 +1,5 @@
-/** Forma UI kit — dark, rounded, token-driven React components. One component per file. */
-export { Avatar, avatarGradient, initials, type AvatarProps } from './Avatar';
+/** Forma UI kit — dark, editorial, token-driven React components. One component per file. */
+export { Avatar, avatarTile, initials, type AvatarProps } from './Avatar';
 export { Badge, type BadgeProps, type BadgeTone } from './Badge';
 export { BarChart, type BarChartProps, type BarDatum } from './BarChart';
 export { Button, type ButtonProps, type ButtonSize, type ButtonVariant } from './Button';

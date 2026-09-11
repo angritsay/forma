@@ -27,18 +27,18 @@ reviews, statistics, testimonials or "trusted by" claims.
 
 ## 2. Tech stack (pinned in package.json — do not add dependencies)
 
-| Area           | Choice                                                                                                         |
-| -------------- | -------------------------------------------------------------------------------------------------------------- |
-| Site framework | Astro 5, static output, i18n routing (`ru` default without prefix, `en` prefixed)                              |
-| App            | React 19 island (`client:only`) mounted at `/app/`, `react-router` HashRouter                                  |
-| Styling        | Tailwind CSS v4 (`@tailwindcss/vite`) + design tokens in `src/styles/global.css`                               |
-| Fonts          | `@fontsource-variable/manrope` (UI/body), `@fontsource/playfair-display` italic (display) — both have Cyrillic |
-| State          | zustand (persisted where noted)                                                                                |
-| Backend SDK    | `@supabase/supabase-js` v2                                                                                     |
-| Validation     | zod (content schemas, forms)                                                                                   |
-| Tests          | vitest (pure modules: training engine, seo scripts, content validation)                                        |
-| Lint/format    | eslint (flat config) + prettier                                                                                |
-| OG images      | `@resvg/resvg-js` (SVG → PNG at build time)                                                                    |
+| Area           | Choice                                                                                                |
+| -------------- | ----------------------------------------------------------------------------------------------------- |
+| Site framework | Astro 5, static output, i18n routing (`ru` default without prefix, `en` prefixed)                     |
+| App            | React 19 island (`client:only`) mounted at `/app/`, `react-router` HashRouter                         |
+| Styling        | Tailwind CSS v4 (`@tailwindcss/vite`) + design tokens in `src/styles/global.css`                      |
+| Fonts          | `@fontsource-variable/onest` (UI/body), `@fontsource-variable/manrope` (display) — both have Cyrillic |
+| State          | zustand (persisted where noted)                                                                       |
+| Backend SDK    | `@supabase/supabase-js` v2                                                                            |
+| Validation     | zod (content schemas, forms)                                                                          |
+| Tests          | vitest (pure modules: training engine, seo scripts, content validation)                               |
+| Lint/format    | eslint (flat config) + prettier                                                                       |
+| OG images      | `@resvg/resvg-js` (SVG → PNG at build time)                                                           |
 
 Quality gates (all must pass before a commit): `npm run check` (astro check + tsc), `npm run lint`,
 `npm run test`, `npm run build`, `npm run seo:audit`.
@@ -98,8 +98,8 @@ public/                     # favicon.svg, icons, manifest
   care and a note in the result.
 - i18n namespaces: `common`, `landing`, `app`, `training`, `seo`. Each namespace is a file in
   `src/i18n/ru/<ns>.ts` and `src/i18n/en/<ns>.ts` with identical key sets (a test enforces parity).
-- Tailwind utilities + tokens; no inline hex colors in components. Course accent colors come from
-  content (`course.accent`, `course.gradient`) and are applied via CSS variables.
+- Tailwind utilities + tokens; no inline hex colors in components. A course's tile colour comes
+  from content (`course.tile`) and is applied via the `--course-tile` CSS variable.
 - Accessibility: interactive elements are `<button>`/`<a>`, images have `alt`, overlays close on
   Esc, focus visible, color contrast ≥ 4.5:1 for text on dark surfaces.
 - Mobile-first. The app is designed for a phone (390px) and must be usable up to desktop
@@ -112,25 +112,42 @@ public/                     # favicon.svg, icons, manifest
 
 - Name: **Forma** (`content/site/brand.ts`). Tagline RU "Кроссфит дома. Под тебя." EN "Home CrossFit
   that adapts to you."
-- Look (from the reference screens): near-black background, dark rounded cards, white primary
-  buttons with black text, pastel gradient "hero art" cards (mint → sky, peach → lilac, etc.), pill
-  chips for metrics (kcal, min), italic display headings, bottom tab bar in the app
-  (Home / Courses / Stats / Profile), large rounded corners (24px cards, 16px inner elements),
-  generous spacing, subtle 1px borders (`--border`).
+- Look: near-black ground throughout, structured by hairline rules and editorial numerals rather
+  than by a card around every object. Composition is asymmetric — a 7/5 grid, not a balanced
+  split; headings sit low against their column; photographs bleed past the page gutter. Large
+  radii survive where a card is genuinely a discrete object (24px cards, 20px tiles, 16px inputs),
+  but buttons and chips are near-square (4px) with capitalised, tracked labels — no pills. Bottom
+  tab bar in the app (Home / Courses / Stats / Profile), generous spacing, 1px borders
+  (`--border`).
+- The accent is a dosage rule, not just a colour: `#9ECBFF` marks the primary button, the
+  wordmark's full stop, a rule, a kicker, "you are here". Never a large fill. Large areas are
+  shades of black and full-bleed monochrome photography.
 - Tokens (`src/styles/global.css`): `--bg #0B0B0D`, `--surface #151519`, `--surface-2 #1E1E24`,
-  `--surface-3 #2A2A31`, `--border rgba(255,255,255,.08)`, `--text #F5F5F7`, `--muted #9A9AA3`,
-  `--muted-2 #6B6B73`, `--primary #FFFFFF` (on-primary `#0B0B0D`), `--accent #B9F3E0` (mint),
-  `--accent-2 #C9D6FF` (sky), `--success #7CE0B0`, `--warning #FFD166`, `--danger #FF6B6B`,
-  radii `--r-card 24px`, `--r-inner 16px`, `--r-pill 999px`.
-- Typography: display = Unbounded variable 700 upright (`font-display`), body/UI = Onest variable
-  (`font-sans`). Both are chosen for Cyrillic first: the previous pair drew и, п and т as
-  composite glyphs pointing at the Latin u, n and m outlines, so every Russian heading rendered as
-  pseudo-Latin. Display leading is 1.2 and tracking 0 — measured floors, not taste: Ё reaches
-  0.993em above the baseline and у drops to -0.181em in Unbounded, so lines collide below 1.174em.
-  Labels are never uppercased; Cyrillic capitals are near-uniform rectangles and lose their word
-  silhouette. Numbers in timers use `font-sans` with tabular figures — both faces expose `tnum`.
-- Hero art: we have no photos. Use the animated SVG figure on pastel gradient cards
-  (`components/anim`) — this is the brand illustration system on both landing and app.
+  `--surface-3 #2A2A31`, `--border rgba(255,255,255,.08)`, `--text #F4F4F6`, `--muted #A8A8B2`,
+  `--muted-2 #93939D`, `--primary #FFFFFF` (on-primary `#0B0B0D`), `--accent #9ECBFF`,
+  `--accent-2 #C9D6FF` (periwinkle), `--success #7CE0B0`, `--warning #FFD166`, `--danger #FF6B6B`,
+  course tiles `--tile-1…5` with `--tile-fg #DCE9FA` as their ink, radii `--r-card 24px`,
+  `--r-tile 20px`, `--r-inner 16px`, `--r-control 4px`.
+- Typography: display = Manrope variable 600 (`font-display`; 800 for the wordmark), body/UI =
+  Onest variable (`font-sans`). Both are chosen for Cyrillic first: an earlier pair drew и, п and
+  т as composite glyphs pointing at the Latin u, n and m outlines, so every Russian heading
+  rendered as pseudo-Latin. Display leading is 1.18 and tracking -0.02em — measured floors, not
+  taste: Й reaches 0.926em above the baseline and у drops to -0.240em in Manrope, so lines collide
+  below 1.166em. Numbers in timers use `font-sans` with tabular figures — both faces expose
+  `tnum`.
+- Kickers (`.eyebrow`) are uppercase at 0.14em tracking, per the brandbook. This is a deliberate
+  trade, and it reverses an earlier rule in this spec: Cyrillic capitals are near-uniform
+  rectangles, so a Russian label in caps loses its word silhouette and roughly doubles its set
+  width. It is affordable for short labels only — use `.eyebrow-sentence` for anything longer.
+  `src/i18n/eyebrow.test.ts` fails the build on a string over 22 characters inside an `.eyebrow`.
+- Photography is the main visual surface: full-bleed, monochrome, grained, white text over a
+  protection gradient (`.photo-mono` / `.photo-grain` / `.photo-scrim`, and the two `PhotoBlock`
+  components). **The current photographs are placeholders** — see `src/lib/media/photos.ts`: they
+  are remote Unsplash URLs rather than vendored files, and the pictures themselves are wrong for a
+  product about training at home.
+- The animated SVG figure (`components/anim`) is the second illustration system, drawn in
+  `--tile-fg` on a flat course tile. It carries a course's identity wherever a photograph does not
+  exist: catalogue rows, path nodes, OG cards.
 
 ## 6. Content model (contract: `src/content/schema.ts`)
 
@@ -158,7 +175,7 @@ cooldown are not scaled).
 (rest nodes, default 7000).
 **Course** — `id`, `order`, `slug: L10n`, `name`, `tagline`, `description`, `longDescription[]`,
 `forWhom[]`, `outcomes[]`, `equipment[]`, `level`, `weeks`, `sessionsPerWeek`, `avgSessionMin`,
-`accent` (hex), `gradient` `[hex, hex]`, `price {rub, usd}`, `paymentUrl? {ru?, en?}`,
+`tile` (hex — one of `--tile-1…5`), `price {rub, usd}`, `paymentUrl? {ru?, en?}`,
 `introVideo? {ru?, en?}`, `workouts[]`, `nodes[]`, `faq[]`.
 
 Content rules: exercises referenced by workouts must exist; every exercise used by a course must be

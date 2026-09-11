@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { BarChart, type BarDatum } from '@/components/ui/BarChart';
-import { Card } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';
 import { StatTile } from '@/components/ui/StatTile';
 import { formatNumber, plural, type Locale } from '@/i18n/index';
@@ -41,18 +40,24 @@ export function StatsGrid({ week, steps, totalPoints, stepsGoal }: StatsGridProp
   });
 
   return (
-    <div className="flex flex-col gap-3">
-      <Card level={2} padding="sm" className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-2 text-muted">
-          <span className="text-sm">{t('app.homeStatsSteps')}</span>
-          <Icon name="steps" size={18} />
-        </div>
-        <div className="flex items-baseline gap-1.5">
-          <span className="tabular text-3xl font-bold leading-none">
-            {formatNumber(locale, week.steps)}
-          </span>
-          <span className="text-sm text-muted">{t('common.steps')}</span>
-        </div>
+    /*
+     * The week as a spread rather than a grid of boxes: the steps figure large over its chart,
+     * then the three secondary numbers on one ruled line. Hairlines do the separating four
+     * bordered cards used to, which is what lets three numbers sit side by side on a 390px screen
+     * without any of them shrinking to unreadable.
+     */
+    <section className="flex flex-col border-t border-border pt-5">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="eyebrow">{t('app.homeStatsSteps')}</span>
+        <Icon name="steps" size={16} className="text-muted" />
+      </div>
+      <div className="mt-2 flex items-baseline gap-2">
+        <span className="numeral tabular text-5xl leading-none">
+          {formatNumber(locale, week.steps)}
+        </span>
+        <span className="text-sm text-muted">{t('common.steps')}</span>
+      </div>
+      <div className="mt-4">
         <BarChart
           data={data}
           goal={stepsGoal}
@@ -61,12 +66,13 @@ export function StatsGrid({ week, steps, totalPoints, stepsGoal }: StatsGridProp
           formatValue={(v) => formatNumber(locale, v)}
           ariaLabel={t('app.homeStatsSteps')}
         />
-      </Card>
-      <div className="grid grid-cols-3 gap-3">
+      </div>
+      <div className="mt-4 grid grid-cols-3 divide-x divide-border border-t border-border">
         <StatTile
           label={t('app.homeStatsKcal')}
           icon="flame"
           value={formatNumber(locale, week.calories)}
+          className="pl-0"
         />
         <StatTile
           label={t('app.homeStatsMinutes')}
@@ -79,8 +85,9 @@ export function StatsGrid({ week, steps, totalPoints, stepsGoal }: StatsGridProp
           icon="bolt"
           value={formatNumber(locale, totalPoints)}
           trend={{ value: 0, label: t('app.homeStatsPointsHint') }}
+          className="pr-0"
         />
       </div>
-    </div>
+    </section>
   );
 }

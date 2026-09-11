@@ -34,8 +34,7 @@ const course: Course = CourseSchema.parse({
   weeks: 4,
   sessionsPerWeek: 3,
   avgSessionMin: 25,
-  accent: '#B9F3E0',
-  gradient: ['#B9F3E0', '#C9D6FF'],
+  tile: '#1a2634',
   price: { rub: 2990, usd: 29 },
   workouts: [
     {

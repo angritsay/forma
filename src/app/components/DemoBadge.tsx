@@ -16,13 +16,13 @@ export function DemoBadge() {
   return (
     <aside
       aria-label={t('app.demoBadgeLabel')}
-      className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[480px] border-t border-border bg-surface/95 pb-[var(--safe-bottom)] backdrop-blur-md"
+      className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[480px] border-t border-border bg-surface/95 pb-[var(--safe-bottom)] backdrop-blur-md lg:max-w-none"
     >
       <p
         style={{ height: DEMO_BADGE_HEIGHT }}
         className="flex items-center justify-center gap-2 px-4 text-[11px] leading-none text-muted"
       >
-        <span className="rounded-pill bg-warning/20 px-1.5 py-1 text-[10px] font-bold tracking-wide text-warning">
+        <span className="rounded-control bg-warning/20 px-1.5 py-1 text-[10px] font-bold tracking-wide text-warning">
           {t('app.demoBadgeLabel')}
         </span>
         <span className="truncate">{t('app.demoBadge')}</span>

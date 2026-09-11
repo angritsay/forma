@@ -1,5 +1,12 @@
 ---
-/** Numbered steps (how it works). */
+/**
+ * Numbered steps (how it works).
+ *
+ * Ruled rows, not bordered cards. This block carries the brand's own "объяснили → сделали →
+ * отдохнули" — three beats of one sentence — and three filled boxes side by side read as three
+ * separate offers instead. A hairline above each and the numeral in the margin, and the sequence
+ * reads as a sequence.
+ */
 interface Props {
   steps: { title: string; text: string }[];
   columns?: 3 | 4;
@@ -8,14 +15,14 @@ const { steps, columns = 3 } = Astro.props;
 const cols = columns === 4 ? 'md:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-3';
 ---
 
-<ol class={`grid gap-4 ${cols}`}>
+<ol class={`grid gap-x-8 gap-y-2 ${cols}`}>
   {
     steps.map((s, i) => (
-      <li class="flex flex-col gap-3 rounded-card border border-border bg-surface p-6">
-        <span class="font-display text-5xl text-accent" aria-hidden="true">
+      <li class="flex flex-col gap-3 border-t border-border pt-5 pb-2">
+        <span class="numeral text-4xl text-accent" aria-hidden="true">
           {String(i + 1).padStart(2, '0')}
         </span>
-        <h3 class="text-xl font-semibold">{s.title}</h3>
+        <h3 class="font-display text-xl">{s.title}</h3>
         <p class="leading-relaxed text-muted">{s.text}</p>
       </li>
     ))

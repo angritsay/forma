@@ -1,16 +1,17 @@
 /**
  * Animated exercise figure (SVG pictogram athlete driven by pose sets).
  *
- *   <ExerciseFigure animation="air_squat" variant="card" gradient={['#B9F3E0', '#C9D6FF']} />
+ *   <ExerciseFigure animation="air_squat" variant="card" tile="#1a2634" />
  *
  * - `animation`: id from src/components/anim/poses (matches Exercise.animation). Unknown ids
  *   render the standing pose and warn once — never throw.
- * - `variant`: 'thumb' (72px, static first frame, tight crop, no gradient chrome — inherits
- *              currentColor from its parent), 'card' (200px gradient tile),
- *              'hero' (fills its container, square, gradient tile — player background / landing).
+ * - `variant`: 'thumb' (72px, static first frame, tight crop, no tile chrome — inherits
+ *              currentColor from its parent), 'card' (200px tile),
+ *              'hero' (fills its container, square, tile — player background / landing).
  * - `playing`: animate (default true; 'thumb' defaults to false)
  * - `speed`: playback multiplier (default 1)
- * - `gradient`: [from, to] hex for the tile background; defaults to brand mint → sky
+ * - `tile`: flat course tile colour behind the figure; defaults to --tile-1. The figure itself
+ *   is `currentColor`, which `.hero-art` sets to --tile-fg, so it reads light on the dark tile.
  *
  * Playback pauses when `playing` is false, when the tab is hidden and under
  * `prefers-reduced-motion` (a mid-motion poster frame is shown instead). SSR-safe: the first
@@ -18,21 +19,14 @@
  */
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactElement } from 'react';
 import { getPoseSet } from './lookup';
-import {
-  DEFAULT_GRADIENT,
-  VIEWBOX,
-  figureScene,
-  poseAt,
-  tightViewBox,
-  type Primitive,
-} from './rig';
+import { DEFAULT_TILE, VIEWBOX, figureScene, poseAt, tightViewBox, type Primitive } from './rig';
 
 export interface ExerciseFigureProps {
   animation: string;
   variant?: 'thumb' | 'card' | 'hero';
   playing?: boolean;
   speed?: number;
-  gradient?: [string, string];
+  tile?: string;
   className?: string;
   /** Accessible label (exercise name in the current locale). */
   label?: string;
@@ -109,7 +103,7 @@ export default function ExerciseFigure({
   variant = 'card',
   playing,
   speed = 1,
-  gradient,
+  tile,
   className = '',
   label,
 }: ExerciseFigureProps) {
@@ -210,16 +204,14 @@ export default function ExerciseFigure({
     );
   }
 
-  const [g1, g2] = gradient ?? DEFAULT_GRADIENT;
-  const style: CSSProperties & Record<'--course-g1' | '--course-g2', string> = {
-    '--course-g1': g1,
-    '--course-g2': g2,
+  const style: CSSProperties & Record<'--course-tile', string> = {
+    '--course-tile': tile ?? DEFAULT_TILE,
   };
   const sizeClass = variant === 'card' ? 'size-[200px]' : 'w-full aspect-square';
 
   return (
     <div
-      className={`hero-art overflow-hidden rounded-card ${sizeClass} ${className}`}
+      className={`hero-art overflow-hidden rounded-tile ${sizeClass} ${className}`}
       style={style}
       {...a11y}
     >

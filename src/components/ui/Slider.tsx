@@ -56,17 +56,25 @@ export function Slider({
         disabled={disabled}
         onChange={(e) => onChange(Number(e.target.value))}
         style={{ '--slider-pct': `${pct}%` } as React.CSSProperties}
+        /*
+         * The track's `linear-gradient` is a hard two-stop colour switch at --slider-pct, i.e.
+         * how you paint a filled portion in WebKit, which has no ::-moz-range-progress. It is not
+         * a decorative gradient and is not what the brand's no-gradients rule is about.
+         *
+         * Thumb and track are squared off like every other control; the thumb keeps its 28px so
+         * it stays draggable.
+         */
         className={clsx(
           'h-8 w-full cursor-pointer appearance-none bg-transparent disabled:opacity-50',
-          '[&::-webkit-slider-runnable-track]:h-2 [&::-webkit-slider-runnable-track]:rounded-pill',
-          '[&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,var(--accent)_var(--slider-pct),rgba(255,255,255,0.12)_var(--slider-pct))]',
-          '[&::-webkit-slider-thumb]:-mt-2.5 [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:w-7',
-          '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-pill',
-          '[&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-card',
-          '[&::-moz-range-track]:h-2 [&::-moz-range-track]:rounded-pill [&::-moz-range-track]:bg-white/10',
-          '[&::-moz-range-progress]:h-2 [&::-moz-range-progress]:rounded-pill [&::-moz-range-progress]:bg-accent',
-          '[&::-moz-range-thumb]:h-7 [&::-moz-range-thumb]:w-7 [&::-moz-range-thumb]:rounded-pill',
-          '[&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-primary',
+          '[&::-webkit-slider-runnable-track]:h-1 [&::-webkit-slider-runnable-track]:rounded-none',
+          '[&::-webkit-slider-runnable-track]:bg-[linear-gradient(to_right,var(--accent)_var(--slider-pct),var(--surface-3)_var(--slider-pct))]',
+          '[&::-webkit-slider-thumb]:-mt-3 [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:w-7',
+          '[&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-control',
+          '[&::-webkit-slider-thumb]:bg-accent [&::-webkit-slider-thumb]:shadow-card',
+          '[&::-moz-range-track]:h-1 [&::-moz-range-track]:rounded-none [&::-moz-range-track]:bg-surface-3',
+          '[&::-moz-range-progress]:h-1 [&::-moz-range-progress]:rounded-none [&::-moz-range-progress]:bg-accent',
+          '[&::-moz-range-thumb]:h-7 [&::-moz-range-thumb]:w-7 [&::-moz-range-thumb]:rounded-control',
+          '[&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:bg-accent',
         )}
       />
       {descriptor ? <p className="text-sm text-muted">{descriptor}</p> : null}

@@ -306,8 +306,19 @@ export const CourseSchema = z.object({
   weeks: z.number().int().min(2).max(16),
   sessionsPerWeek: z.number().int().min(2).max(6),
   avgSessionMin: z.number().int().min(10).max(90),
-  accent: z.string().regex(hexRegex),
-  gradient: z.tuple([z.string().regex(hexRegex), z.string().regex(hexRegex)]),
+  /*
+   * The course's tile colour: one flat, muted dark blue, drawn behind the course's figure and
+   * name wherever the course appears as art.
+   *
+   * This replaces the `accent` + `gradient` pair each course used to carry. The gradients were
+   * pastel two-stop ramps (mint→periwinkle, peach→pink) and the brand no longer uses gradients
+   * at all; `accent` was written onto a `--course-accent` custom property that nothing ever read.
+   * There is now exactly one accent in the product — #9ecbff, spent on the thing that acts — so a
+   * course identifies itself by the weight of its tile rather than by a hue of its own.
+   *
+   * Use one of --tile-1…5 from src/styles/global.css; the five courses take the five tiles.
+   */
+  tile: z.string().regex(hexRegex),
   price: z.object({ rub: z.number().nonnegative(), usd: z.number().nonnegative() }),
   paymentUrl: PaymentUrlSchema.optional(),
   introVideo: OptionalL10nSchema.optional(),

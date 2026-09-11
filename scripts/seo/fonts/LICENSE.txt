@@ -1,14 +1,23 @@
-Fonts bundled for the build-time OG image generator (scripts/seo/og.mjs).
+Fonts bundled for the build-time OG image generator (scripts/seo/og.mjs) and the Telegram app
+icon (scripts/telegram/app-icon.mjs).
 
-- Manrope[wght].ttf
+- Manrope-SemiBold.ttf and Manrope-ExtraBold.ttf
   Copyright 2018 The Manrope Project Authors (https://github.com/sharanda/manrope)
   Licensed under the SIL Open Font License, Version 1.1 — see OFL-Manrope.txt.
 
-- PlayfairDisplay-Italic[wght].ttf
-  Copyright 2017 The Playfair Display Project Authors
-  (https://github.com/clauseggers/Playfair-Display), with Reserved Font Name "Playfair Display".
-  Licensed under the SIL Open Font License, Version 1.1 — see OFL-PlayfairDisplay.txt.
+  MODIFIED: these are static instances of the variable font ofl/manrope/Manrope[wght].ttf from
+  https://github.com/google/fonts, pinned to wght=600 (the brand's display weight) and wght=800
+  (the wordmark). Two files rather than one because resvg picks a face by weight and cannot
+  interpolate; and static rather than variable because the upstream variable font defaults to
+  wght=200 and resvg rasterizes a variable font at its default instance, so shipping it would
+  have set every social card in ExtraLight. The instances were cut with
+  fontTools.varLib.instancer; no outlines were redrawn. The OFL permits modification and
+  redistribution provided the software is not sold on its own; Manrope declares no Reserved Font
+  Name, so the family name is kept.
 
-Both files were copied unmodified from https://github.com/google/fonts (ofl/manrope and
-ofl/playfairdisplay). The OFL permits bundling and redistribution of the font software with
-this project; the fonts are used only to rasterize social-preview images and are not sold.
+- Onest-Regular.ttf
+  Copyright 2021 The Onest Project Authors (https://github.com/googlefonts/onest)
+  Licensed under the SIL Open Font License, Version 1.1 — see OFL-Onest.txt.
+  Copied unmodified from https://github.com/google/fonts (ofl/onest).
+
+The fonts are used only to rasterize social-preview images and the app icon, and are not sold.

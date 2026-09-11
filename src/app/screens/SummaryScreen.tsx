@@ -153,7 +153,7 @@ function SavedView({
         </div>
       }
     >
-      <div className="flex flex-col gap-5 py-2">
+      <div className="flex flex-col gap-5 py-4">
         <PageTitle
           eyebrow={adjustment ? t('app.summarySavedTitle') : t('app.summaryTitle')}
           title={workoutName}
