@@ -27,6 +27,10 @@ const ITEMS: readonly NavItem[] = [
  * It runs the full width of the phone column — a translucent strip on a hairline, blurred over
  * whatever scrolls under it — rather than floating as a rounded island. 56px tall plus the safe
  * area; every link is at least 44px tall so the small labels are still easy to hit.
+ *
+ * Opaque, not frosted. At 88% with a blur, a list scrolling underneath still read through the words
+ * — the last row of a course path sat behind «КУРСЫ» as a grey ghost. Chrome a label is read from
+ * cannot be a window.
  */
 export function BottomNav() {
   const { t } = useT();
@@ -40,7 +44,7 @@ export function BottomNav() {
        */
       className={clsx(
         'fixed bottom-0 left-1/2 z-30 w-full max-w-[480px] -translate-x-1/2 lg:hidden',
-        'flex items-center gap-6 border-t border-border bg-bg/88 backdrop-blur-lg max-[420px]:gap-4',
+        'flex items-center gap-6 border-t border-border bg-bg max-[420px]:gap-4',
         'pl-[max(var(--safe-left),22px)] pr-[max(var(--safe-right),22px)]',
         'pb-[calc(var(--safe-bottom)+var(--demo-inset,0px))]',
       )}
