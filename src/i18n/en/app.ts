@@ -608,7 +608,7 @@ export const app = {
   homeBookText: '{duration} min with {name} over video · {price}',
 
   // Book a session
-  bookTitle: 'One-to-one with the coach',
+  bookTitle: 'Forma. One-to-One',
   bookLead: 'An hour on your training: technique, the program under your goal, your questions.',
   bookFormatLabel: 'Format',
   bookDurationLabel: 'Length',

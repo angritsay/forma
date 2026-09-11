@@ -1942,7 +1942,7 @@ export const COURSE_ATHLETE: CourseInput = {
   id: 'athlete',
   order: 5,
   slug: { ru: 'atlet-prodvinutyj-domashnij-krossfit', en: 'home-athlete' },
-  name: l('Атлет: продвинутый домашний кроссфит', 'Home Athlete'),
+  name: l('Форма атлета: продвинутый домашний кроссфит', 'Forma. Athlete: advanced home CrossFit'),
   tagline: l(
     'Восемь недель продвинутого кроссфита дома: подтягивания, двойные прыжки, дьявольский жим, длинные AMRAP — и «Мёрф» в финале.',
     'Eight weeks of advanced CrossFit at home: pull-ups, double-unders, devil presses, long AMRAPs — and Murph at the end.',

@@ -606,7 +606,7 @@ export const app = {
   homeBookText: '{duration} мин с тренером по видеосвязи · {price}',
 
   // Book a session
-  bookTitle: 'Занятие с тренером',
+  bookTitle: 'Форма один на один',
   bookLead: 'Час про твои тренировки: техника, программа под твою цель, твои вопросы.',
   bookFormatLabel: 'Формат',
   bookDurationLabel: 'Длительность',

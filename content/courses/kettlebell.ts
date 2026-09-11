@@ -1352,7 +1352,10 @@ export const COURSE_KETTLEBELL: CourseInput = {
   id: 'kettlebell',
   order: 4,
   slug: { ru: 'girya-sila-i-metabolizm', en: 'kettlebell-power' },
-  name: { ru: 'Гиря: сила и метаболизм', en: 'Kettlebell Power' },
+  name: {
+    ru: 'Форма с гирей: сила и метаболизм',
+    en: 'Forma. Kettlebell: strength and metabolism',
+  },
   tagline: {
     ru: 'Шесть недель с одной гирей: от становой тяги до рывка, три тренировки в неделю.',
     en: 'Six weeks with a single kettlebell: from the deadlift to the snatch, three sessions a week.',

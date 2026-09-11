@@ -29,7 +29,7 @@ export interface Plan {
 export const PLANS: readonly Plan[] = [
   {
     id: 'monthly',
-    name: { ru: 'Месяц', en: 'Monthly' },
+    name: { ru: 'Форма на месяц', en: 'Forma. Monthly' },
     price: { rub: 1990, usd: 19 },
     period: 'month',
     note: { ru: 'Отмена в любой момент', en: 'Cancel any time' },
@@ -37,7 +37,7 @@ export const PLANS: readonly Plan[] = [
   },
   {
     id: 'annual',
-    name: { ru: 'Год', en: 'Annual' },
+    name: { ru: 'Форма на год', en: 'Forma. Annual' },
     price: { rub: 9990, usd: 99 },
     period: 'year',
     note: {

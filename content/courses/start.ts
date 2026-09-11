@@ -1165,7 +1165,7 @@ export const COURSE_START: CourseInput = {
     ru: 'start-krossfit-doma-bez-oborudovaniya',
     en: 'start-home-crossfit-basics',
   },
-  name: l('Старт: кроссфит дома без оборудования', 'Start: home CrossFit basics'),
+  name: l('Форма с нуля: кроссфит дома без оборудования', 'Forma. Start: home CrossFit basics'),
   tagline: l(
     'Четыре недели по программе тренера для новичков: коротко, по кругу, без оборудования.',
     'Four weeks of the coach’s own beginner programme: short, in rounds, no equipment.',

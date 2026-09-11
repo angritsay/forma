@@ -1295,7 +1295,10 @@ export const COURSE_ENGINE: CourseInput = {
   id: 'engine',
   order: 2,
   slug: { ru: 'svoim-vesom-sila-i-vynoslivost', en: 'bodyweight-engine' },
-  name: { ru: 'Своим весом: сила и выносливость', en: 'Bodyweight Engine' },
+  name: {
+    ru: 'Форма своим весом: сила и выносливость',
+    en: 'Forma. Bodyweight: strength and conditioning',
+  },
   tagline: {
     ru: 'Шесть недель силы и выносливости на собственном весе — четыре тренировки в неделю, без инвентаря.',
     en: 'Six weeks of bodyweight strength and conditioning — four sessions a week, no gear.',

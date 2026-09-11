@@ -1513,7 +1513,7 @@ export const COURSE_DUMBBELLS: CourseInput = {
   id: 'dumbbells',
   order: 3,
   slug: { ru: 'ganteli-doma-sila-i-relef', en: 'dumbbell-builder' },
-  name: l('Гантели дома: сила и рельеф', 'Dumbbell Builder'),
+  name: l('Форма с гантелями: сила и рельеф', 'Forma. Dumbbells: strength and definition'),
   tagline: l(
     'Шесть недель силовых тренировок с парой гантелей — присед, тяга, жим и трастеры, четыре дня в неделю.',
     'Six weeks of strength training with a pair of dumbbells — squats, deadlifts, presses and thrusters, four days a week.',
