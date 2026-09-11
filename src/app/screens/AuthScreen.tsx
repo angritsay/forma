@@ -141,7 +141,7 @@ export default function AuthScreen() {
          * training, running past both gutters, with the wordmark and the tagline over it. A flat
          * tile carrying the same two lines said nothing that the words did not already say.
          */}
-        <div className="-mx-5">
+        <div className="-mx-5 lg:mx-0">
           <PhotoBlock photo={PHOTOS.auth} alt="" ratio="landscape" priority>
             <span className="wordmark block text-4xl text-white">
               {t('common.brand')}

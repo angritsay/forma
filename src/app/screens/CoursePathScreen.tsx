@@ -187,7 +187,7 @@ export default function CoursePathScreen() {
        * two lines of prose — a ring is decoration around a number that is already written, and on
        * a 390px screen it took the width that "8 of 28" needed to be legible.
        */}
-      <div className="-mr-5 pt-4">
+      <div className="-mr-5 pt-4 lg:mr-0">
         <PhotoBlock
           photo={PHOTOS.coursePath}
           alt=""

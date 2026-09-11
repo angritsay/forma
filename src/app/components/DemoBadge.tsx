@@ -16,7 +16,7 @@ export function DemoBadge() {
   return (
     <aside
       aria-label={t('app.demoBadgeLabel')}
-      className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[480px] border-t border-border bg-surface/95 pb-[var(--safe-bottom)] backdrop-blur-md"
+      className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[480px] border-t border-border bg-surface/95 pb-[var(--safe-bottom)] backdrop-blur-md lg:max-w-none"
     >
       <p
         style={{ height: DEMO_BADGE_HEIGHT }}

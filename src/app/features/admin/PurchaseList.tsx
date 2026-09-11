@@ -41,8 +41,8 @@ export function PurchaseList({ rows, busyId, onAction }: PurchaseListProps) {
     <ul className="flex flex-col">
       {rows.map((row) => (
         <li key={row.id}>
-          <div className="flex flex-col gap-3 border-t border-border py-4">
-            <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-3 border-t border-border py-4 lg:flex-row lg:items-center lg:gap-6">
+            <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
               <div className="flex min-w-0 flex-col gap-0.5">
                 <span className="font-display truncate text-[15px] leading-[1.24]">
                   {row.email}
@@ -61,7 +61,7 @@ export function PurchaseList({ rows, busyId, onAction }: PurchaseListProps) {
               </div>
               <Badge tone={STATUS_TONE[row.status]}>{t(STATUS_LABEL[row.status])}</Badge>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 lg:shrink-0">
               {nextStatuses(row.status).map((status) => (
                 <Button
                   key={status}

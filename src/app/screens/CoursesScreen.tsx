@@ -35,7 +35,12 @@ export default function CoursesScreen() {
           catalogue reads as one ruled column. Owned courses come first and the numerals follow
           that order rather than the content's, because the number is a position in this list.
         */}
-        <div className="flex flex-col">
+        {/*
+          Two columns from `lg`: five courses in one column on a desktop is a lot of scrolling for
+          a catalogue whose whole job is comparison. `divide-x` keeps the rule between them so the
+          grid still reads as ruled rather than as two floating lists.
+        */}
+        <div className="flex flex-col lg:grid lg:grid-cols-2 lg:gap-x-10">
           {pending
             ? COURSES.map((course) => (
                 <Skeleton key={course.id} rounded="control" className="mt-5 h-56" />

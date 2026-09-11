@@ -45,7 +45,7 @@ function HomeSkeleton() {
   return (
     <div className="flex flex-col gap-6 py-5" aria-hidden="true">
       <Skeleton rounded="control" className="h-16" />
-      <Skeleton rounded="control" className="-mr-5 aspect-[4/5]" />
+      <Skeleton rounded="control" className="-mr-5 aspect-[4/5] lg:mr-0" />
       <Skeleton rounded="control" className="h-40" />
       <div className="grid grid-cols-3 gap-3">
         <Skeleton rounded="control" className="h-20" />

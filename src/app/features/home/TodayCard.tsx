@@ -48,7 +48,7 @@ function PhotoFrame({
      * column's left margin — the asymmetry is the point, and it leaves the gutter the vertical
      * course label needs.
      */
-    <section className="-mr-5">
+    <section className="-mr-5 lg:mr-0">
       <PhotoBlock
         photo={PHOTOS.homeToday}
         alt=""

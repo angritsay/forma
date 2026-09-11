@@ -172,14 +172,16 @@ export function WorkoutEditor({
 
   return (
     <div className="flex flex-col gap-5 py-2">
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3 lg:flex-row">
         <Input
+          wrapperClassName="lg:flex-1"
           aria-label={t('app.builderTitle')}
           placeholder={t('app.builderTitlePlaceholder')}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
         <Input
+          wrapperClassName="lg:flex-[2]"
           aria-label={t('app.builderDescription')}
           placeholder={t('app.builderDescriptionPlaceholder')}
           value={description}
@@ -221,13 +223,13 @@ export function WorkoutEditor({
               {section.items.map((it, i) => (
                 <li
                   key={it.key}
-                  className="flex flex-col gap-2 rounded-inner border border-border p-3"
+                  className="flex flex-col gap-2 rounded-inner border border-border p-3 lg:grid lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center lg:gap-4"
                 >
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center justify-between gap-2 lg:contents">
                     <span className="min-w-0 flex-1 truncate text-[15px] font-medium">
                       {it.nameRu}
                     </span>
-                    <div className="flex shrink-0 items-center gap-1">
+                    <div className="flex shrink-0 items-center gap-1 lg:order-3">
                       <IconButton
                         size="sm"
                         variant="ghost"
@@ -254,7 +256,7 @@ export function WorkoutEditor({
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 lg:order-2 lg:flex-nowrap">
                     <SegmentedControl<'reps' | 'seconds'>
                       value={it.unit}
                       onChange={(unit) => updateItem(section.kind, it.key, { unit })}
