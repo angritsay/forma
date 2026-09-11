@@ -52,7 +52,26 @@ visible to customers until replaced.
 
 The schema lives in `supabase/migrations/` and is idempotent: re-running a file is safe.
 
-### Option A — SQL editor (no tooling)
+### Option A — two steps, no tooling (start here)
+
+`supabase/setup-all.sql` is every migration below concatenated in order by `npm run db:bundle`, so
+there is one thing to paste instead of ten, and no way to run them out of order.
+
+1. Open [`supabase/setup-all.sql`](../supabase/setup-all.sql). **Edit the admin block near the
+   top** — those addresses are the people who can open the admin panel. Left as the `CHANGE-ME-…`
+   placeholders, the script stops on its first statement and changes nothing. That is deliberate:
+   an admins table holding only an address nobody can sign in with locks you out of your own admin
+   panel, and it is a slow thing to discover afterwards.
+2. Dashboard → **SQL Editor** → **New query** → paste the whole file → **Run**. It ends with
+   "Success. No rows returned".
+3. Optional, and the reason the five existing courses become editable:
+   `supabase/migrations/0009_course_import.sql`. At 660 KB it is too big to paste comfortably —
+   download it and use **SQL Editor → + → Import SQL file** instead. Skip it and the course
+   builder still works, it is just empty.
+
+Both steps are safe to re-run, and re-running is how an existing project is upgraded.
+
+### Option B — file by file
 
 Dashboard → **SQL Editor** → **New query**, paste each file in this order and click **Run**:
 
@@ -82,7 +101,7 @@ safe. Re-running the whole set in order is also how you upgrade an existing proj
 bounds are added as `not valid` constraints, so they apply to every new write without ever
 failing on rows written earlier.
 
-### Option B — Supabase CLI
+### Option C — Supabase CLI
 
 ```bash
 npm i -g supabase          # or: brew install supabase/tap/supabase
