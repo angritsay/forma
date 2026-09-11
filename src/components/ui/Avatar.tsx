@@ -1,14 +1,19 @@
 import { clsx } from 'clsx';
 
 /**
- * The five course tiles, repeated here as literals rather than read from CSS: the avatar has to
- * pick one synchronously in JS, and a custom property is only resolvable once the element is in
- * the document. Keep in step with --tile-1…5 in src/styles/global.css.
+ * The three monochrome treatments an avatar can have: two surface fills and a hairline outline.
+ * Custom properties, not hexes, so they flip with the paper theme — the previous five tiles were
+ * literal dark blues and read as blue on white. Kept as literals in JS rather than read from CSS
+ * because the pick has to happen synchronously at render.
  */
-const TILES = ['#1a2634', '#20293c', '#16202b', '#232f42', '#1c2532'] as const;
+const TILES = [
+  { fill: 'var(--surface-2)', outline: false },
+  { fill: 'var(--surface-3)', outline: false },
+  { fill: 'transparent', outline: true },
+] as const;
 
 export interface AvatarProps {
-  /** Seed stored on the profile; picks the tile so the avatar is stable across devices. */
+  /** Seed stored on the profile; picks the treatment so the avatar is stable across devices. */
   seed: string;
   /** Display name (or email) used for the initials. */
   name?: string | null;
@@ -17,20 +22,25 @@ export interface AvatarProps {
   className?: string;
 }
 
-/**
- * FNV-1a hash → one of the five course tiles.
- *
- * This used to hash to two pastel HSL hues and draw a gradient. Both halves of that are now off
- * the brand — there are no gradients, and no pastels outside the one blue accent — so the seed
- * picks a tile instead. Same input, same avatar, still stable across devices.
- */
-export function avatarTile(seed: string): string {
+/** FNV-1a over the seed, reduced to an index into TILES. */
+function tileIndex(seed: string): number {
   let h = 0x811c9dc5;
   for (let i = 0; i < seed.length; i++) {
     h ^= seed.charCodeAt(i);
     h = Math.imul(h, 0x01000193);
   }
-  return TILES[(h >>> 0) % TILES.length]!;
+  return (h >>> 0) % TILES.length;
+}
+
+/**
+ * The avatar's background for a seed — a CSS colour string.
+ *
+ * This used to hash to two pastel HSL hues and draw a gradient, then to one of five blue tiles.
+ * The brand has no colour of its own now, so the seed picks a monochrome treatment instead. Same
+ * input, same avatar, still stable across devices.
+ */
+export function avatarTile(seed: string): string {
+  return TILES[tileIndex(seed)]!.fill;
 }
 
 export function initials(name?: string | null): string {
@@ -43,8 +53,12 @@ export function initials(name?: string | null): string {
   return (first + second).toUpperCase();
 }
 
+/**
+ * A square with the initials set in the display face. No picture, no colour: a list of people
+ * varies by surface and outline only, and the type does the identifying.
+ */
 export function Avatar({ seed, name, size = 40, className }: AvatarProps) {
-  const tile = avatarTile(seed);
+  const tile = TILES[tileIndex(seed)]!;
   const text = initials(name);
   const label = (name ?? '').trim();
   return (
@@ -54,14 +68,15 @@ export function Avatar({ seed, name, size = 40, className }: AvatarProps) {
       aria-label={label || undefined}
       aria-hidden={label ? undefined : true}
       className={clsx(
-        'font-display inline-flex shrink-0 select-none items-center justify-center rounded-control font-semibold text-tile-fg',
+        'font-display inline-flex shrink-0 select-none items-center justify-center rounded-control text-text',
+        tile.outline && 'border border-border-strong',
         className,
       )}
       style={{
         width: size,
         height: size,
-        fontSize: Math.round(size * 0.38),
-        background: tile,
+        fontSize: Math.round(size * 0.34),
+        background: tile.fill,
       }}
     >
       {text}

@@ -36,7 +36,11 @@ export function AppFrame({ children }: { children?: ReactNode }) {
   );
 }
 
-const NAV_INSET = '96px';
+/*
+ * The tab bar's height without the safe area: it is a 56px strip on the bottom edge now, not a
+ * floating island with a margin under it. <Screen> adds `--safe-bottom` on top of this itself.
+ */
+const NAV_INSET = '56px';
 
 /**
  * How wide the content column runs from `lg` up.

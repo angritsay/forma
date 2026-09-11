@@ -367,6 +367,13 @@ export function draftToCourse(
     id: draft.slugId,
     // CourseSchema wants a positive integer; sort_order defaults to 0 and is free to be anything.
     order: Math.max(1, draft.sortOrder || 1),
+    /*
+     * Always true. A course only reaches this function once it has been published from the admin
+     * panel — `status = 'published'` is what both readers filter on — so being here *is* being on
+     * sale. The flag exists for the compiled courses in content/, where an author holds one back
+     * by hand; a database course is held back by not publishing it.
+     */
+    published: true,
     // Ids are snake_case, URL slugs are kebab-case: a raw slug_id would fail SlugL10nSchema.
     slug: draft.content.slug ?? { ru: slugFromId(draft.slugId), en: slugFromId(draft.slugId) },
     name,

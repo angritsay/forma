@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { PLANS_ENABLED } from '@content/site/plans';
 import type { GuideData, GuideLike } from './guides';
 import { buildPages } from './pages';
 
@@ -42,7 +43,6 @@ describe('buildPages', () => {
     expect(home[0]?.alternates).toEqual({ ru: '/' });
     for (const sp of [
       '/courses/',
-      '/subscribe/',
       '/exercises/',
       '/guides/',
       '/about/',
@@ -53,6 +53,13 @@ describe('buildPages', () => {
     ]) {
       expect(pages.filter((p) => p.sitePath === sp)).toHaveLength(1);
     }
+    /*
+     * /subscribe/ comes and goes with the subscription. The sitemap and `subscribe.astro` read the
+     * same flag, so this asserts the pair agrees: listed exactly once when the subscription is on
+     * sale, absent when it is not. A URL in the sitemap with no page behind it is a 404 served to
+     * a crawler, which is the failure this guards.
+     */
+    expect(pages.filter((p) => p.sitePath === '/subscribe/')).toHaveLength(PLANS_ENABLED ? 1 : 0);
     expect(pages.some((p) => p.path.startsWith('/en/'))).toBe(false);
     expect(pages.some((p) => p.locale !== 'ru')).toBe(false);
     expect(pages.some((p) => p.path.includes('/app'))).toBe(false);

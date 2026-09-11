@@ -1,6 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Icon } from '@/components/ui/Icon';
 import { Input } from '@/components/ui/Input';
 import { Sheet } from '@/components/ui/Sheet';
 import { isValidEmail, normalizeEmail } from '@/lib/api/auth';
@@ -72,15 +71,15 @@ export function AddPurchaseSheet({ open, busy, error, onClose, onSubmit }: AddPu
           spellCheck={false}
           label={t('app.adminAddEmail')}
           placeholder={t('app.authEmailPlaceholder')}
-          leading={<Icon name="mail" size={18} />}
           value={email}
           disabled={busy}
           onChange={(e) => setEmail(e.target.value)}
           onBlur={() => setTouched(true)}
           error={error ?? (touched && email && !emailOk ? t('app.adminInvalidEmail') : undefined)}
         />
+        {/* The same 13px label the kit puts over a field, so the chip row reads as one more field. */}
         <div className="flex flex-col gap-2">
-          <span className="text-sm font-medium text-muted">{t('app.adminAddCourse')}</span>
+          <span className="text-[13px] font-semibold text-muted">{t('app.adminAddCourse')}</span>
           <ChipGroup<string>
             label={t('app.adminAddCourse')}
             values={courseId ? [courseId] : []}

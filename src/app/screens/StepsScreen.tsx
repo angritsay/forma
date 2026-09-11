@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Icon } from '@/components/ui/Icon';
+import { Glyph } from '@/components/ui/Icon';
 import { Screen } from '@/components/ui/Screen';
 import { Sheet } from '@/components/ui/Sheet';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -36,20 +36,19 @@ import {
 function WhyManualCard() {
   const { t, locale } = useT();
   return (
-    <div className="border-t border-border">
+    <div className="border-y border-border">
       <details className="group">
-        <summary className="flex cursor-pointer list-none items-center gap-3 p-4 [&::-webkit-details-marker]:hidden">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-accent-2/15 text-accent-2">
-            <Icon name="info" size={20} />
-          </span>
+        {/* A hairline row: the question, and a `›` that turns down when it is open. No "i" in a box. */}
+        <summary className="flex min-h-12 cursor-pointer list-none items-center gap-3 py-3 [&::-webkit-details-marker]:hidden">
           <h2 className="min-w-0 flex-1 text-[15px] font-semibold">{t('app.stepsWhyTitle')}</h2>
-          <Icon
-            name="chevron"
-            size={18}
-            className="shrink-0 text-muted transition-transform group-open:rotate-90"
-          />
+          <Glyph
+            size={16}
+            className="shrink-0 text-muted-2 transition-transform duration-150 ease-(--ease-out) group-open:rotate-90"
+          >
+            ›
+          </Glyph>
         </summary>
-        <p className="px-4 pb-4 text-sm leading-relaxed text-muted">
+        <p className="pb-4 text-sm leading-relaxed text-muted">
           {t('app.stepsWhyBody', { goal: formatNumber(locale, STEPS_GOAL) })}
         </p>
       </details>
@@ -224,7 +223,6 @@ export default function StepsScreen() {
   } else if (status === 'error') {
     body = (
       <EmptyState
-        icon="warning"
         title={t('app.stepsErrorTitle')}
         description={
           error?.code === 'network' ? t('common.errorOffline') : t('common.errorGeneric')
@@ -240,7 +238,7 @@ export default function StepsScreen() {
     body = (
       <div className="flex flex-col gap-6 py-2">
         <section className="flex flex-col gap-4">
-          <h2 className="px-1 eyebrow">
+          <h2 className="eyebrow">
             {t('app.stepsTodayLabel')} · {formatDate(locale, today)}
           </h2>
           <div className="border-t border-border pt-4">
@@ -258,7 +256,7 @@ export default function StepsScreen() {
         </section>
         <WhyManualCard />
         <section className="flex flex-col gap-3">
-          <h2 className="px-1 eyebrow">{t('app.stepsHistoryTitle')}</h2>
+          <h2 className="eyebrow">{t('app.stepsHistoryTitle')}</h2>
           <StepsHistory days={history} goal={STEPS_GOAL} onEdit={setEditDate} />
         </section>
       </div>

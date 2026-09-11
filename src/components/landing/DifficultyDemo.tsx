@@ -85,7 +85,7 @@ export default function DifficultyDemo({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-      <div className="rounded-card border border-border bg-surface p-5 md:p-7">
+      <div className="border border-border bg-surface p-5 md:p-7">
         <p className="text-sm text-muted">{workoutLabel}</p>
 
         <div
@@ -102,22 +102,24 @@ export default function DifficultyDemo({
                 type="button"
                 aria-pressed={active}
                 onClick={() => setChoice(c.choice)}
-                className={`relative flex flex-col items-start gap-1 rounded-inner border p-3 text-left transition md:p-4 ${
+                className={`relative flex flex-col items-start gap-1 border p-3 text-left transition-[background-color,color,border-color,transform] duration-150 ease-(--ease-out) active:scale-[0.98] md:p-4 ${
                   active
-                    ? 'border-primary bg-accent text-on-primary'
+                    ? 'border-primary bg-primary text-on-primary'
                     : 'border-border bg-surface-2 text-text hover:border-border-strong'
                 }`}
               >
                 {isRec && (
                   <span
-                    className={`rounded-control px-2 py-0.5 text-xs font-semibold ${
-                      active ? 'bg-on-primary text-primary' : 'bg-accent text-on-primary'
+                    className={`inline-flex h-6 items-center border px-2.5 text-[11px] font-semibold tracking-[0.12em] uppercase ${
+                      active
+                        ? 'border-on-primary/40 text-on-primary'
+                        : 'border-border-strong text-text'
                     }`}
                   >
                     {labels.recommended}
                   </span>
                 )}
-                <span className="font-semibold">{c.label}</span>
+                <span className="font-display text-sm">{c.label}</span>
                 <span className={`text-sm ${active ? 'text-on-primary/70' : 'text-muted'}`}>
                   {labels.duration}: <span className="tabular">{c.duration}</span>
                 </span>
@@ -133,7 +135,7 @@ export default function DifficultyDemo({
         <h3 className="eyebrow mt-6">{labels.planTitle}</h3>
         <ol className="mt-3 flex flex-col gap-3">
           {selected.blocks.map((b) => (
-            <li key={b.id} className="rounded-inner border border-border bg-bg p-4">
+            <li key={b.id} className="border-t border-border pt-3">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <span className="font-semibold">{b.title}</span>
                 <span className="text-xs text-muted">{b.meta}</span>
@@ -141,7 +143,9 @@ export default function DifficultyDemo({
               <ul className="mt-2 flex flex-col gap-1 text-sm">
                 {b.items.map((it, i) => (
                   <li key={`${b.id}-${i}`} className="flex items-baseline justify-between gap-3">
-                    <span className={`min-w-0 ${it.substituted ? 'text-accent' : ''}`}>
+                    <span
+                      className={`min-w-0 ${it.substituted ? 'underline decoration-border-strong underline-offset-4' : ''}`}
+                    >
                       {it.name}
                     </span>
                     {/* Doses run from "3 × 12" to "30 сек на каждую сторону". Forcing one line
@@ -160,8 +164,8 @@ export default function DifficultyDemo({
         </ol>
       </div>
 
-      <div className="rounded-card border border-border bg-surface p-5 md:p-7">
-        <h3 className="font-display text-2xl">{labels.rpeTitle}</h3>
+      <div className="border border-border bg-surface p-5 md:p-7">
+        <h3 className="font-display text-xl">{labels.rpeTitle}</h3>
         <p className="mt-2 text-sm text-muted">{labels.rpeIntro}</p>
         <div className="mt-5 grid grid-cols-2 gap-2" role="group" aria-label={labels.rpeTitle}>
           {scenarios.map((s) => {
@@ -172,10 +176,10 @@ export default function DifficultyDemo({
                 type="button"
                 aria-pressed={active}
                 onClick={() => setScenarioId(s.id)}
-                className={`rounded-inner border px-3 py-3 text-sm font-medium transition ${
+                className={`control-label border px-3 py-3 text-[12px] transition-[background-color,color,border-color,transform] duration-150 ease-(--ease-out) active:scale-[0.98] ${
                   active
-                    ? 'border-primary bg-accent text-on-primary'
-                    : 'border-border bg-surface-2 hover:border-border-strong'
+                    ? 'border-primary bg-primary text-on-primary'
+                    : 'border-border bg-surface-2 text-muted hover:border-border-strong hover:text-text'
                 }`}
               >
                 {s.label}
@@ -184,15 +188,12 @@ export default function DifficultyDemo({
           })}
         </div>
 
-        <div
-          className="mt-5 min-h-28 rounded-inner border border-border bg-bg p-4"
-          aria-live="polite"
-        >
+        <div className="mt-5 min-h-28 border-t border-border pt-4" aria-live="polite">
           {scenario ? (
             <>
               <p className="eyebrow">{labels.nextTime}</p>
               <p
-                className={`font-display mt-1 text-4xl ${
+                className={`numeral mt-2 text-4xl ${
                   scenario.deltaPercent > 0
                     ? 'text-success'
                     : scenario.deltaPercent < 0
@@ -207,7 +208,7 @@ export default function DifficultyDemo({
               </p>
               <p className="mt-3 text-sm">{scenario.reason}</p>
               {scenario.safetyNote && (
-                <p className="mt-2 rounded-inner bg-danger/10 px-3 py-2 text-sm text-danger">
+                <p className="mt-3 border-l-2 border-danger pl-3 text-sm text-danger">
                   {scenario.safetyNote}
                 </p>
               )}

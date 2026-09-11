@@ -41,9 +41,25 @@ const exercisesResult = validate(ExerciseSchema, RAW_EXERCISES as unknown[], 'ex
 const coursesResult = validate(CourseSchema, RAW_COURSES as unknown[], 'courses');
 
 export const EXERCISES: readonly Exercise[] = exercisesResult.items;
+
+/**
+ * Every course in `content/`, on sale or not.
+ *
+ * This is the set to look an id up in: a course that is not sold is still playable for anyone who
+ * has access, still referenced by guides, and still needed by the fixtures and the demo backend.
+ * For anything a customer sees — a list, a page, a sitemap entry — use {@link LIVE_COURSES}.
+ */
 export const COURSES: readonly Course[] = [...coursesResult.items].sort(
   (a, b) => a.order - b.order,
 );
+
+/**
+ * The courses actually on sale (`published !== false` — see CourseSchema).
+ *
+ * Every listing, every generated page and every feed is built from this one, so taking a course
+ * off sale is a single flag in content rather than a hunt through the templates.
+ */
+export const LIVE_COURSES: readonly Course[] = COURSES.filter((c) => c.published);
 
 export const EXERCISE_BY_ID: ReadonlyMap<string, Exercise> = new Map(
   EXERCISES.map((e) => [e.id, e]),

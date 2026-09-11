@@ -92,6 +92,42 @@ export function limitationsSummary(tr: Translator, tp: UserTrainingProfile | nul
 }
 
 /**
+ * Month and year of an ISO timestamp for the «В форме с …» kicker: "июля 2026 г." / "July 2026".
+ *
+ * `Intl` has no month-year format that declines the month: `{ month: 'long', year: 'numeric' }`
+ * gives the nominative «июль 2026 г.», and «с июль» is wrong Russian. Formatting with a day and
+ * dropping the day part (and the separator that follows it) keeps the genitive the full date
+ * uses. Empty for an unparseable timestamp rather than "Invalid Date" on the profile.
+ */
+export function sinceLabel(locale: Locale, iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const parts = new Intl.DateTimeFormat(locale === 'ru' ? 'ru-RU' : 'en-US', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).formatToParts(d);
+  const out: string[] = [];
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i]!;
+    if (part.type === 'day') {
+      if (parts[i + 1]?.type === 'literal') i++;
+      continue;
+    }
+    out.push(part.value);
+  }
+  return out.join('').trim();
+}
+
+/** First word of the name and the rest: the profile sets them at 800 and 200 in one line. */
+export function splitName(name: string): { heavy: string; thin: string } {
+  const trimmed = name.trim();
+  const space = trimmed.indexOf(' ');
+  if (space < 0) return { heavy: trimmed, thin: '' };
+  return { heavy: trimmed.slice(0, space), thin: trimmed.slice(space + 1).trim() };
+}
+
+/**
  * Onboarding draft that resumes at the self-tests: every other answer comes from the profile,
  * the tests are cleared so the wizard's "first incomplete step" is the push-up test. Null when
  * the profile has no training data (the wizard then starts from scratch).

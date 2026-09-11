@@ -1,0 +1,6 @@
+/* Кириллица: Unbounded (дисплей, капс) + Onest (текст) — Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@200;300;500;600;800&family=Onest:wght@400;500;600;700&display=swap');
+:root{
+--font-display:'Unbounded',system-ui,sans-serif;
+--font-body:'Onest',system-ui,sans-serif;
+}

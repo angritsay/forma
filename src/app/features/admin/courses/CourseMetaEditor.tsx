@@ -10,7 +10,9 @@
  * Numeric fields are the one exception — they commit on blur. Held as strings while being typed so
  * that clearing one to retype it does not snap the value to zero and save that.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Glyph } from '@/components/ui/Icon';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
@@ -18,12 +20,21 @@ import { EQUIPMENT } from '@/content/schema';
 import { PRIVATE_BUCKET, PUBLIC_BUCKET } from '@/lib/api/storage';
 import type { AdminCoursePatch, AdminCourseRow } from '@/lib/api/types';
 import type { CourseDraftContent } from '@/lib/courses/draft';
+import { courseTileVars } from '@/lib/ui/tile';
 import { useT } from '@/app/hooks/useT';
-import { ChipToggles, TextList } from '@/app/features/admin/forms/TextList';
+import { ChipToggles, FieldLabel, TextList } from '@/app/features/admin/forms/TextList';
 import { MediaField } from '@/app/features/admin/media/MediaField';
 
-/** The five course tiles from src/styles/global.css. A course identifies itself by weight, not hue. */
-const TILES = ['#1A2634', '#20293C', '#16202B', '#232F42', '#1C2532'] as const;
+/*
+ * The five tiles a course may take, from src/styles/global.css: the three programme colours —
+ * beginners, yoga, marathon — and the two neutral surfaces for a course that belongs to no
+ * programme. The tile is the one colour on the screen while the course is open, so this row is
+ * the only place in the admin where colour is chosen at all.
+ */
+const TILES = ['#f2f52d', '#a8c8ff', '#f08a3c', '#1f1f24', '#2a2a30'] as const;
+
+/** The same shape `CourseSchema` accepts for `tile` (src/content/schema.ts) — six hex digits. */
+const HEX_RE = /^#[0-9a-f]{6}$/i;
 
 export interface CourseMetaEditorProps {
   course: AdminCourseRow;
@@ -52,6 +63,23 @@ export function CourseMetaEditor({ course, onPatch }: CourseMetaEditorProps) {
   const [minutes, setMinutes] = useState(String(course.avgSessionMin));
   const [rub, setRub] = useState(String(course.priceRub));
   const [usd, setUsd] = useState(String(course.priceUsd));
+
+  /*
+   * The tile hex is typed as well as picked. Held as a string while being edited and committed on
+   * blur only when it is a colour, so a half-typed "#f2f" is never written; a swatch tap commits
+   * at once and the field follows it.
+   */
+  const [tileText, setTileText] = useState(course.tile);
+  useEffect(() => setTileText(course.tile), [course.tile]);
+  const commitTile = () => {
+    const next = tileText.trim().toLowerCase();
+    if (HEX_RE.test(next)) {
+      if (next !== course.tile.toLowerCase()) onPatch({ tile: next });
+    } else {
+      setTileText(course.tile);
+    }
+  };
+  const tileInvalid = tileText.trim() !== '' && !HEX_RE.test(tileText.trim());
 
   const setList = (key: 'longDescription' | 'forWhom' | 'outcomes', values: string[]) =>
     onPatch({ content: { ...c, [key]: values.map((v) => ({ ru: v })) } });
@@ -177,26 +205,67 @@ export function CourseMetaEditor({ course, onPatch }: CourseMetaEditorProps) {
         onChange={(equipment) => onPatch({ equipment: equipment.length ? equipment : ['none'] })}
       />
 
-      <div className="flex flex-col gap-2">
-        <span className="text-sm font-medium text-muted">{t('app.courseTile')}</span>
-        <div className="flex flex-wrap gap-3">
-          {TILES.map((tile) => (
-            <button
-              key={tile}
-              type="button"
-              aria-label={tile}
-              aria-pressed={course.tile.toLowerCase() === tile.toLowerCase()}
-              onClick={() => onPatch({ tile })}
-              className={
-                course.tile.toLowerCase() === tile.toLowerCase()
-                  ? 'size-12 rounded-tile ring-2 ring-accent ring-offset-2 ring-offset-bg'
-                  : 'size-12 rounded-tile border border-border'
-              }
-              style={{ background: tile }}
-            />
-          ))}
+      <div className="flex flex-col gap-3">
+        <FieldLabel label={t('app.courseTile')} hint={t('app.courseTileHint')} />
+        {/*
+         * The preview is the cover as the app will draw it: `.hero-art` painted with the chosen
+         * hex through courseTileVars(), which also picks the ink — black on a programme colour,
+         * light on a neutral surface — so the coach sees the name in the colour it will actually
+         * be read in, not just a swatch.
+         */}
+        <div
+          className="hero-art flex min-h-24 items-end p-4"
+          style={courseTileVars(course.tile)}
+          aria-hidden="true"
+        >
+          <span className="font-display truncate text-xl">
+            {c.name?.ru?.trim() || course.slugId}
+          </span>
         </div>
-        <p className="text-sm text-muted">{t('app.courseTileHint')}</p>
+        <div
+          className="flex flex-wrap items-center gap-3"
+          role="group"
+          aria-label={t('app.courseTile')}
+        >
+          {TILES.map((tile) => {
+            const on = course.tile.toLowerCase() === tile;
+            return (
+              <button
+                key={tile}
+                type="button"
+                aria-label={tile}
+                aria-pressed={on}
+                onClick={() => onPatch({ tile })}
+                style={courseTileVars(tile)}
+                className={
+                  // A swatch is a square of course art; the chosen one is outlined in the interface
+                  // white and carries a tick in the tile's own ink.
+                  on
+                    ? 'hero-art flex size-11 items-center justify-center outline-2 outline-offset-2 outline-primary'
+                    : 'hero-art size-11 border border-border-strong transition-opacity duration-150 ease-(--ease-out) hover:opacity-85'
+                }
+              >
+                {on ? <Glyph size={14}>✓</Glyph> : null}
+              </button>
+            );
+          })}
+          <Input
+            wrapperClassName="w-36"
+            className="font-mono"
+            aria-label={t('app.courseTile')}
+            placeholder="#1f1f24"
+            autoCapitalize="none"
+            spellCheck={false}
+            maxLength={7}
+            value={tileText}
+            error={tileInvalid ? t('app.courseTileInvalid') : undefined}
+            onChange={(e) => setTileText(e.target.value)}
+            onBlur={commitTile}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commitTile();
+            }}
+          />
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -238,46 +307,52 @@ export function CourseMetaEditor({ course, onPatch }: CourseMetaEditorProps) {
       />
 
       <div className="flex flex-col gap-3">
-        <span className="text-sm font-medium text-muted">{t('app.courseFaq')}</span>
+        <FieldLabel label={t('app.courseFaq')} hint={t('app.courseFaqHint')} />
+        {/* Each question is a numbered, ruled group — 01, 02 — rather than a bordered card. */}
         {faq.map((item, i) => (
-          <div
-            key={`faq_${i}`}
-            className="flex flex-col gap-2 rounded-inner border border-border p-3"
-          >
-            <Input
-              aria-label={t('app.courseFaqQ')}
-              placeholder={t('app.courseFaqQ')}
-              value={item.q?.ru ?? ''}
-              onChange={(e) =>
-                setFaq(faq.map((f, j) => (j === i ? { ...f, q: { ru: e.target.value } } : f)))
-              }
-            />
-            <Textarea
-              rows={2}
-              aria-label={t('app.courseFaqA')}
-              placeholder={t('app.courseFaqA')}
-              value={item.a?.ru ?? ''}
-              onChange={(e) =>
-                setFaq(faq.map((f, j) => (j === i ? { ...f, a: { ru: e.target.value } } : f)))
-              }
-            />
-            <button
-              type="button"
-              className="self-start text-sm text-muted underline underline-offset-4 hover:text-text"
-              onClick={() => setFaq(faq.filter((_, j) => j !== i))}
-            >
-              {t('app.exRemoveLine')}
-            </button>
+          <div key={`faq_${i}`} className="flex gap-3 border-t border-border pt-4">
+            <span className="numeral tabular w-6 shrink-0 pt-3.5 text-[13px] text-muted-2">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <Input
+                aria-label={t('app.courseFaqQ')}
+                placeholder={t('app.courseFaqQ')}
+                value={item.q?.ru ?? ''}
+                onChange={(e) =>
+                  setFaq(faq.map((f, j) => (j === i ? { ...f, q: { ru: e.target.value } } : f)))
+                }
+              />
+              <Textarea
+                rows={2}
+                aria-label={t('app.courseFaqA')}
+                placeholder={t('app.courseFaqA')}
+                value={item.a?.ru ?? ''}
+                onChange={(e) =>
+                  setFaq(faq.map((f, j) => (j === i ? { ...f, a: { ru: e.target.value } } : f)))
+                }
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="self-start"
+                icon={<Glyph size={14}>×</Glyph>}
+                onClick={() => setFaq(faq.filter((_, j) => j !== i))}
+              >
+                {t('app.exRemoveLine')}
+              </Button>
+            </div>
           </div>
         ))}
-        <button
-          type="button"
-          className="self-start text-sm text-accent underline underline-offset-4"
+        <Button
+          variant="ghost"
+          size="sm"
+          className="self-start"
+          icon={<Glyph size={14}>+</Glyph>}
           onClick={() => setFaq([...faq, { q: {}, a: {} }])}
         >
           {t('app.courseFaqAdd')}
-        </button>
-        <p className="text-sm text-muted">{t('app.courseFaqHint')}</p>
+        </Button>
       </div>
     </div>
   );

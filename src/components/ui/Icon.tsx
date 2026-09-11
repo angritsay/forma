@@ -1,10 +1,15 @@
 /**
- * Inline SVG icon set (24×24 grid, 2px strokes, round caps). Icons inherit `currentColor`
- * so they follow the text color of their container. Decorative by default (`aria-hidden`);
- * pass `title` to make an icon meaningful on its own.
+ * Marks. The brand has almost no icons: the first choice is a typographic glyph — → ← ‹ › ✓ × +
+ * − set in Unbounded — and an SVG icon is kept only for play/pause and for a physical object a
+ * glyph cannot say (a flame, a lock, a clock, an envelope). Both go through one `<Icon name>` so
+ * a caller never has to know which is which: the names that carry a `glyph` render as type, the
+ * rest as 24×24 paths at 12–16px.
+ *
+ * Everything is monochrome and inherits `currentColor`; a mark never takes the programme colour.
+ * Decorative by default (`aria-hidden`); pass `title` to make one meaningful on its own.
  */
 import { clsx } from 'clsx';
-import type { SVGProps } from 'react';
+import type { HTMLAttributes, ReactNode, SVGProps } from 'react';
 
 export const ICON_NAMES = [
   'home',
@@ -44,12 +49,19 @@ export const ICON_NAMES = [
 export type IconName = (typeof ICON_NAMES)[number];
 
 interface IconDef {
-  /** Stroked paths (default). */
+  /** A typographic glyph: rendered as text in the display face, never as an SVG. */
+  glyph?: string;
+  /** Stroked paths. */
   d?: string;
-  /** Filled paths (solid glyphs such as play/pause). */
+  /** Filled paths — play and pause, which no glyph says. */
   fill?: string;
 }
 
+/*
+ * Navigation and confirmation are punctuation, not pictures: an arrow, an angle bracket, a
+ * tick, a cross, plus and minus. Each of those names carries a glyph and nothing else, so there
+ * is exactly one way it renders. The stroked set that remains is physical objects.
+ */
 export const ICONS: Record<IconName, IconDef> = {
   home: { d: 'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z' },
   courses: {
@@ -57,17 +69,13 @@ export const ICONS: Record<IconName, IconDef> = {
   },
   stats: { d: 'M5 20v-8M12 20V4M19 20v-6' },
   profile: { d: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0' },
-  back: { d: 'M15 18l-6-6 6-6' },
-  close: { d: 'M6 6l12 12M18 6L6 18' },
+  back: { glyph: '←' },
+  close: { glyph: '×' },
   play: { fill: 'M8 5.5v13a1 1 0 0 0 1.5.9l11-6.5a1 1 0 0 0 0-1.8l-11-6.5A1 1 0 0 0 8 5.5z' },
   pause: { fill: 'M6 5h4v14H6zM14 5h4v14h-4z' },
-  next: {
-    fill: 'M5 6.2v11.6a1 1 0 0 0 1.5.8l9-5.8a1 1 0 0 0 0-1.6l-9-5.8A1 1 0 0 0 5 6.2zM18 5h2v14h-2z',
-  },
-  prev: {
-    fill: 'M19 6.2v11.6a1 1 0 0 1-1.5.8l-9-5.8a1 1 0 0 1 0-1.6l9-5.8a1 1 0 0 1 1.5.8zM4 5h2v14H4z',
-  },
-  check: { d: 'M5 12.5l4.5 4.5L19 7.5' },
+  next: { glyph: '›' },
+  prev: { glyph: '‹' },
+  check: { glyph: '✓' },
   lock: { d: 'M6 11h12v9a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1zM8 11V7a4 4 0 0 1 8 0v4' },
   flame: {
     d: 'M12 3c.6 3.2 3.4 4.6 4.6 7.6.9 2.4.3 5-1.7 6.6A6 6 0 0 1 6.4 13c0-1.6.7-3 1.6-4.2.2 1.2.9 2.2 1.9 2.7-.3-2.6.5-5.4 2.1-8.5z',
@@ -80,9 +88,9 @@ export const ICONS: Record<IconName, IconDef> = {
   trophy: {
     d: 'M7 4h10v5a5 5 0 0 1-10 0zM7 6H4.5a2.5 2.5 0 0 0 2.5 4M17 6h2.5a2.5 2.5 0 0 1-2.5 4M12 14v3M8 21h8M10 17h4v4h-4z',
   },
-  chevron: { d: 'M9 6l6 6-6 6' },
-  plus: { d: 'M12 5v14M5 12h14' },
-  minus: { d: 'M5 12h14' },
+  chevron: { glyph: '›' },
+  plus: { glyph: '+' },
+  minus: { glyph: '−' },
   settings: {
     d: 'M4 7h8M16 7h4M4 12h2M10 12h10M4 17h9M17 17h3M14 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM8 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM15 15a2 2 0 1 0 0 4 2 2 0 0 0 0-4z',
   },
@@ -103,9 +111,39 @@ export const ICONS: Record<IconName, IconDef> = {
   user: { d: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0' },
 };
 
+export interface GlyphProps extends HTMLAttributes<HTMLSpanElement> {
+  /** The mark itself: → ← ‹ › ✓ × + − 01 // ›_ 12′ … */
+  children: ReactNode;
+  /** Font size in px. Left unset, the glyph takes the size of the text it sits in. */
+  size?: number;
+  /** Accessible name; without one the glyph is decorative. */
+  label?: string;
+}
+
+/**
+ * A typographic glyph — the brand's replacement for an icon. Unbounded SemiBold on a line height
+ * of 1, so it sits in a line of text or in a button's box like a character, not a picture. Use it
+ * directly for the marks that are also words (`01`, `//`, `12′`); `<Icon>` reaches for it on its
+ * own for the navigation names.
+ */
+export function Glyph({ children, size, label, className, style, ...rest }: GlyphProps) {
+  return (
+    <span
+      className={clsx('glyph', className)}
+      style={size ? { fontSize: size, ...style } : style}
+      aria-hidden={label ? undefined : true}
+      role={label ? 'img' : undefined}
+      aria-label={label}
+      {...rest}
+    >
+      {children}
+    </span>
+  );
+}
+
 export interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {
   name: IconName;
-  /** Pixel size (width = height). Default 20. */
+  /** Pixel size (width = height, or the font size of a glyph). Default 16. */
   size?: number;
   /** Stroke width for outlined icons. Default 2. */
   strokeWidth?: number;
@@ -113,8 +151,20 @@ export interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {
   title?: string;
 }
 
-export function Icon({ name, size = 20, strokeWidth = 2, title, className, ...rest }: IconProps) {
+export function Icon({ name, size = 16, strokeWidth = 2, title, className, ...rest }: IconProps) {
   const def = ICONS[name];
+  if (def.glyph) {
+    /*
+     * The props are typed for an <svg>; the ones a caller actually passes here (className, style,
+     * data- and aria- attributes, onClick) exist on a <span> just the same.
+     */
+    const spanProps = rest as unknown as HTMLAttributes<HTMLSpanElement>;
+    return (
+      <Glyph size={size} label={title} className={className} {...spanProps}>
+        {def.glyph}
+      </Glyph>
+    );
+  }
   return (
     <svg
       width={size}
@@ -129,12 +179,13 @@ export function Icon({ name, size = 20, strokeWidth = 2, title, className, ...re
       {title ? <title>{title}</title> : null}
       {def.fill ? <path d={def.fill} fill="currentColor" /> : null}
       {def.d ? (
+        /* Square caps and joins — the same sharp line as the blueprint figures, not a rounded one. */
         <path
           d={def.d}
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          strokeLinecap="butt"
+          strokeLinejoin="miter"
         />
       ) : null}
     </svg>

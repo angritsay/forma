@@ -35,7 +35,6 @@ relatedExercises:
   - burpee
 relatedCourses:
   - start
-  - engine
 relatedGuides:
   - workout-formats
   - no-equipment-crossfit

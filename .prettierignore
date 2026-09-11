@@ -5,3 +5,6 @@ public/og
 package-lock.json
 # Guides are hand-formatted markdown; prettier would rewrap prose and requote frontmatter.
 content/guides/**/*.md
+# The vendored design system (design/) is the brand's own reference; its .jsx/.html/.css are
+# read, never built, and keep the author's formatting.
+design/**

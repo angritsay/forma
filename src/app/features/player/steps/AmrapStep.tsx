@@ -67,11 +67,12 @@ export function AmrapStep({
             tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'accent' : 'default'}
             caption={`${t('training.amrapHint', { min: minutes })} · ${t('training.amrapExpected', { n: step.expectedRounds })}`}
           />
-          <ItemList items={step.items} compact className="rounded-inner bg-surface-2 px-4 py-2" />
-          <div className="flex items-center justify-between gap-3 rounded-card bg-surface-2 p-4">
+          <ItemList items={step.items} compact className="border-t border-border-strong" />
+          {/* The round count on a rule, the two controls opposite it — no box. */}
+          <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
             <div className="flex flex-col">
               <span className="eyebrow">{t('app.playerAmrapRounds')}</span>
-              <span className="tabular text-5xl font-bold leading-none">{rounds}</span>
+              <span className="numeral tabular mt-1 text-5xl leading-none">{rounds}</span>
             </div>
             <div className="flex items-center gap-2">
               <IconButton
@@ -89,11 +90,9 @@ export function AmrapStep({
         </>
       ) : (
         <>
-          <div className="flex flex-col items-center gap-1 text-center">
-            <span className="font-display text-4xl text-accent">{t('app.playerTimeUp')}</span>
-          </div>
-          <div className="flex flex-col gap-4 rounded-card bg-surface-2 p-4">
-            <span className="text-center eyebrow">{t('app.playerAmrapRounds')}</span>
+          <h2 className="display text-center text-5xl">{t('app.playerTimeUp')}</h2>
+          <div className="flex flex-col gap-4 border-t border-border pt-4">
+            <span className="eyebrow text-center">{t('app.playerAmrapRounds')}</span>
             <Stepper
               value={rounds}
               onChange={setRounds}

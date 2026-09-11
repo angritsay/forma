@@ -62,9 +62,7 @@ export function RecordsList({ records }: { records: readonly PersonalRecord[] })
                 </span>
               </span>
               <span className="flex shrink-0 flex-col items-end gap-1">
-                <span className="tabular text-[15px] font-semibold">
-                  {formatRecordValue(tr, r)}
-                </span>
+                <span className="numeral tabular text-[15px]">{formatRecordValue(tr, r)}</span>
                 {improved !== null ? (
                   <Badge tone={improved ? 'success' : 'danger'}>
                     {formatRecordDelta(tr, r)} {t('app.statsRecordFirst')}

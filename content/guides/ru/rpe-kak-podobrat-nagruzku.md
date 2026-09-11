@@ -34,7 +34,6 @@ relatedExercises:
   - half_burpee
   - sit_up
 relatedCourses:
-  - engine
   - start
 relatedGuides:
   - training-frequency
@@ -42,7 +41,7 @@ relatedGuides:
   - rest-days-steps
   - crossfit-home-beginners
 cta:
-  courseId: engine
+  courseId: start
 priority: 0.8
 draft: false
 ---

@@ -11,7 +11,7 @@ import {
   resetCatalogueOverlay,
   setCatalogueOverlay,
 } from './catalogue';
-import { COURSES, EXERCISES } from './registry';
+import { COURSES, EXERCISES, LIVE_COURSES } from './registry';
 import type { Course, Exercise } from './schema';
 
 afterEach(() => resetCatalogueOverlay());
@@ -35,16 +35,31 @@ function fakeExercise(id: string): Exercise {
 
 describe('catalogue', () => {
   it('is exactly the compiled content until something is loaded', () => {
-    expect(allCourses()).toEqual(COURSES);
+    expect(allCourses()).toEqual(LIVE_COURSES);
     expect(allExercises()).toEqual(EXERCISES);
     expect(findCourse('start')?.id).toBe('start');
+  });
+
+  /*
+   * The shelf and the shelf's index are different sets, and this is the test that says so: a
+   * course taken off sale must vanish from every list and still resolve by id, because somebody
+   * who bought it before it was withdrawn still opens it and their history still names it.
+   */
+  it('hides a course that is not on sale but can still resolve it', () => {
+    const hidden = COURSES.filter((c) => !c.published);
+    expect(hidden.length).toBeGreaterThan(0);
+    for (const c of hidden) {
+      expect(allCourses().map((x) => x.id)).not.toContain(c.id);
+      expect(findCourse(c.id)?.id).toBe(c.id);
+      expect(hasCourse(c.id)).toBe(true);
+    }
   });
 
   it('adds published courses and keeps catalogue order', () => {
     setCatalogueOverlay({ courses: [fakeCourse('yoga', 2)], exercises: [] });
     const ids = allCourses().map((c) => c.id);
     expect(ids).toContain('yoga');
-    expect(ids.length).toBe(COURSES.length + 1);
+    expect(ids.length).toBe(LIVE_COURSES.length + 1);
     // `order` decides where it sits, not the order it arrived in.
     const orders = allCourses().map((c) => c.order);
     expect([...orders].sort((a, b) => a - b)).toEqual(orders);
@@ -61,7 +76,7 @@ describe('catalogue', () => {
       exercises: [],
     });
     expect(findCourse(compiled.id)?.name.ru).toBe(compiled.name.ru);
-    expect(allCourses().length).toBe(COURSES.length);
+    expect(allCourses().length).toBe(LIVE_COURSES.length);
     expect(isCompiledCourse(compiled.id)).toBe(true);
   });
 
@@ -80,7 +95,7 @@ describe('catalogue', () => {
   it('goes back to the compiled content on reset', () => {
     setCatalogueOverlay({ courses: [fakeCourse('yoga', 2)], exercises: [] });
     resetCatalogueOverlay();
-    expect(allCourses()).toEqual(COURSES);
+    expect(allCourses()).toEqual(LIVE_COURSES);
     expect(findCourse('yoga')).toBeUndefined();
   });
 

@@ -3,8 +3,7 @@
  * Renders nothing until at least one exists, so it never shows an empty shell.
  */
 import { useEffect, useState } from 'react';
-import { Badge } from '@/components/ui/Badge';
-import { Icon } from '@/components/ui/Icon';
+import { Glyph } from '@/components/ui/Icon';
 import { listMyAssignedWorkouts } from '@/lib/api/customWorkouts';
 import type { AssignedWorkoutRow } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
@@ -34,7 +33,7 @@ export function AssignedWorkoutsCard({ onOpen }: AssignedWorkoutsCardProps) {
   if (rows.length === 0) return null;
 
   return (
-    <section className="flex flex-col">
+    <section className="mt-6 flex flex-col">
       <div className="flex items-baseline justify-between gap-3 border-t border-border pt-5 pb-1">
         <h2 className="font-display text-xl">{t('app.homeCoachWorkouts')}</h2>
         <span className="eyebrow">{String(rows.length).padStart(2, '0')}</span>
@@ -42,13 +41,14 @@ export function AssignedWorkoutsCard({ onOpen }: AssignedWorkoutsCardProps) {
       {rows.map((w, i) => {
         const minutes = w.estSec ? Math.max(1, Math.round(w.estSec / 60)) : null;
         return (
+          /* Numeral, name, the facts as a kicker, and the points opposite — no stamp, no star. */
           <button
             key={w.id}
             type="button"
             onClick={() => onOpen(w.id)}
             className="flex items-center gap-3.5 border-t border-border py-4 text-left first:border-t-0"
           >
-            <span className="numeral shrink-0 text-sm text-accent">
+            <span className="numeral shrink-0 text-sm text-muted">
               {String(i + 1).padStart(2, '0')}
             </span>
             <span className="flex min-w-0 flex-1 flex-col gap-1">
@@ -61,11 +61,13 @@ export function AssignedWorkoutsCard({ onOpen }: AssignedWorkoutsCardProps) {
               </span>
             </span>
             {w.points ? (
-              <Badge tone="accent" size="sm" icon="star">
-                {w.points}
-              </Badge>
+              <span className="numeral tabular shrink-0 text-sm text-muted">
+                {t('app.nodePoints', { n: w.points })}
+              </span>
             ) : null}
-            <Icon name="chevron" size={16} className="shrink-0 text-muted" />
+            <Glyph size={16} className="shrink-0 text-muted-2">
+              ›
+            </Glyph>
           </button>
         );
       })}

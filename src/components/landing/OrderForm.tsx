@@ -195,12 +195,12 @@ export default function OrderForm({
 
   if (!configured) {
     return (
-      <div className="rounded-inner border border-border bg-bg p-5">
+      <div className="border-t border-border pt-5">
         <p className="text-sm text-muted">{labels.notConfigured}</p>
         <ul className="mt-3 flex flex-col gap-1 text-base font-medium">
           <li>
             <a
-              className="underline decoration-border-strong underline-offset-4 hover:text-accent"
+              className="underline decoration-border-strong underline-offset-4 hover:decoration-text"
               href={`mailto:${supportEmail}`}
             >
               {supportEmail}
@@ -209,7 +209,7 @@ export default function OrderForm({
           {supportTelegram && (
             <li>
               <a
-                className="underline decoration-border-strong underline-offset-4 hover:text-accent"
+                className="underline decoration-border-strong underline-offset-4 hover:decoration-text"
                 href={supportTelegram}
                 rel="noopener"
               >
@@ -227,16 +227,21 @@ export default function OrderForm({
       <div
         ref={successRef}
         tabIndex={-1}
-        className="rounded-inner border border-success/40 bg-success/10 p-5 outline-none"
+        className="border border-border-strong bg-surface-2 p-5 outline-none"
         role="status"
       >
-        <p className="font-display text-2xl">{labels.successTitle}</p>
+        <p className="font-display flex items-baseline gap-3 text-xl">
+          <span className="glyph text-success" aria-hidden="true">
+            ✓
+          </span>
+          {labels.successTitle}
+        </p>
         <p className="mt-2 text-sm leading-relaxed">
           {fill(labels.successText, { course: productName, email: status.email })}
         </p>
         <a
           href={appUrl}
-          className="mt-4 inline-flex min-h-11 items-center justify-center rounded-control bg-accent px-5 py-2.5 text-sm font-semibold text-on-primary"
+          className="control-label mt-5 inline-flex h-12 items-center justify-center rounded-control bg-primary px-6.5 text-[13px] text-on-primary transition-opacity duration-150 hover:opacity-85"
         >
           {labels.successApp}
         </a>
@@ -262,15 +267,17 @@ export default function OrderForm({
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
       {plans && plans.length > 0 && (
         <fieldset className="m-0 border-0 p-0" disabled={busy}>
-          <legend className="text-sm font-medium">{labels.plansLabel}</legend>
+          <legend className="text-[13px] font-semibold text-muted">{labels.plansLabel}</legend>
           <div className="mt-2 grid gap-3 sm:grid-cols-2">
             {plans.map((p) => {
               const selected = p.id === plan?.id;
               return (
                 <label
                   key={p.id}
-                  className={`relative flex cursor-pointer flex-col gap-1 rounded-inner border p-4 transition ${
-                    selected ? 'border-text bg-bg' : 'border-border hover:border-border-strong'
+                  className={`relative flex cursor-pointer flex-col gap-1 border p-4 transition-colors duration-150 ${
+                    selected
+                      ? 'border-primary bg-surface-2'
+                      : 'border-border hover:border-border-strong'
                   }`}
                 >
                   <input
@@ -282,15 +289,15 @@ export default function OrderForm({
                     className="sr-only"
                   />
                   <span className="flex items-baseline justify-between gap-3">
-                    <span className="text-base font-semibold">{p.name}</span>
+                    <span className="font-display text-sm">{p.name}</span>
                     {p.badge && (
-                      <span className="rounded-control bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent">
+                      <span className="inline-flex h-6 items-center bg-primary px-2.5 text-[11px] font-semibold tracking-[0.12em] uppercase text-on-primary">
                         {p.badge}
                       </span>
                     )}
                   </span>
                   <span className="tabular">
-                    <span className="font-display text-2xl">{p.price}</span>
+                    <span className="numeral text-2xl">{p.price}</span>
                     <span className="text-sm text-muted"> {p.period}</span>
                   </span>
                   {p.note && <span className="text-xs text-muted">{p.note}</span>}
@@ -301,7 +308,7 @@ export default function OrderForm({
         </fieldset>
       )}
       <div>
-        <label htmlFor="order-email" className="block text-sm font-medium">
+        <label htmlFor="order-email" className="block text-[13px] font-semibold text-muted">
           {labels.emailLabel}
         </label>
         <input
@@ -321,7 +328,7 @@ export default function OrderForm({
             if (status.kind === 'error') setStatus({ kind: 'idle' });
           }}
           placeholder={labels.emailPlaceholder}
-          className={`mt-2 w-full rounded-inner border bg-bg px-4 py-3 text-base text-text placeholder:text-muted-2 focus:border-border-strong focus:outline-none ${
+          className={`mt-2 h-12 w-full border bg-surface-2 px-4 text-base text-text placeholder:text-muted-2 focus:border-primary focus:outline-none ${
             emailInvalid ? 'border-danger' : 'border-border'
           }`}
         />
@@ -340,7 +347,7 @@ export default function OrderForm({
             setConsent(e.target.checked);
             if (status.kind === 'error') setStatus({ kind: 'idle' });
           }}
-          className="mt-1 size-5 shrink-0 accent-accent"
+          className="mt-0.5 size-5 shrink-0 accent-primary"
         />
         <span>
           {consentBefore}
@@ -362,7 +369,7 @@ export default function OrderForm({
         <p
           id="order-error"
           role="alert"
-          className="rounded-inner bg-danger/10 px-4 py-3 text-sm text-danger"
+          className="border-l-2 border-danger pl-3 text-sm text-danger"
         >
           {errorText}
         </p>
@@ -371,7 +378,7 @@ export default function OrderForm({
       <button
         type="submit"
         disabled={busy}
-        className="inline-flex min-h-11 items-center justify-center rounded-control bg-accent px-6 py-3.5 text-base font-semibold text-on-primary transition hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
+        className="control-label inline-flex h-14 items-center justify-center rounded-control bg-primary px-8 text-[13px] text-on-primary transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-85 active:scale-[0.98] disabled:cursor-wait disabled:opacity-40"
       >
         {status.kind === 'submitting'
           ? labels.submitting

@@ -35,8 +35,6 @@ relatedExercises:
   - half_burpee
 relatedCourses:
   - start
-  - engine
-  - kettlebell
 relatedGuides:
   - crossfit-home-beginners
   - warm-up-home

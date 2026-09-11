@@ -6,6 +6,8 @@ import {
   fitnessOf,
   newAvatarSeed,
   profileToDraft,
+  sinceLabel,
+  splitName,
   TESTS_STEP_INDEX,
   withEquipment,
   withLimitations,
@@ -107,5 +109,25 @@ describe('profileToDraft', () => {
     );
     expect(draft).toMatchObject({ limitationsNone: true, equipment: [] });
     expect(profileToDraft({ ...PROFILE, trainingProfile: null }, 'ru')).toBeNull();
+  });
+});
+
+describe('sinceLabel', () => {
+  it('keeps the genitive month in Russian and the plain month in English', () => {
+    // ICU joins the year and «г.» with a narrow no-break space; either space is the right text.
+    expect(sinceLabel('ru', '2026-07-14T10:00:00Z').replace(/\s/g, ' ')).toBe('июля 2026 г.');
+    expect(sinceLabel('en', '2026-07-14T10:00:00Z')).toBe('July 2026');
+  });
+
+  it('is empty for an unparseable timestamp', () => {
+    expect(sinceLabel('ru', 'not a date')).toBe('');
+  });
+});
+
+describe('splitName', () => {
+  it('splits the first word from the rest and trims', () => {
+    expect(splitName('Анастасия Грицай')).toEqual({ heavy: 'Анастасия', thin: 'Грицай' });
+    expect(splitName('  Настя ')).toEqual({ heavy: 'Настя', thin: '' });
+    expect(splitName('Анна  Мария Ли')).toEqual({ heavy: 'Анна', thin: 'Мария Ли' });
   });
 });

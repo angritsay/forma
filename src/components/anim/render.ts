@@ -2,10 +2,10 @@
  * Static SVG rendering of the figure — standalone strings for build scripts (OG images),
  * previews and tests. No DOM, no React.
  */
+import { tileInk } from '../../lib/ui/tile';
 import { getPoseSet } from './lookup';
 import {
   DEFAULT_TILE,
-  INK,
   VIEWBOX,
   figureScene,
   poseAt,
@@ -21,24 +21,24 @@ function escapeAttr(v: string): string {
   return v.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }
 
-/** One primitive → SVG element markup. Colour comes from `currentColor`. */
+/**
+ * Stroke attributes shared by every primitive: square ends and sharp corners, never a fill. The
+ * colour is `currentColor`, so the embedding context (a tile, a page, an OG card) decides the ink.
+ */
+const STROKE_ATTRS =
+  'stroke="currentColor" fill="none" stroke-linecap="butt" stroke-linejoin="miter"';
+
+/** One primitive → SVG element markup. */
 export function primitiveToSvg(p: Primitive): string {
   const op = p.opacity < 1 ? ` opacity="${n(p.opacity)}"` : '';
+  const sw = `stroke-width="${n(p.width)}"`;
   switch (p.kind) {
     case 'line':
-      return `<line x1="${n(p.x1)}" y1="${n(p.y1)}" x2="${n(p.x2)}" y2="${n(p.y2)}" stroke="currentColor" stroke-width="${n(p.width)}" stroke-linecap="round"${op}/>`;
-    case 'circle':
-      return p.fill
-        ? `<circle cx="${n(p.cx)}" cy="${n(p.cy)}" r="${n(p.r)}" fill="currentColor"${op}/>`
-        : `<circle cx="${n(p.cx)}" cy="${n(p.cy)}" r="${n(p.r)}" fill="none" stroke="currentColor" stroke-width="${n(p.width)}"${op}/>`;
+      return `<line x1="${n(p.x1)}" y1="${n(p.y1)}" x2="${n(p.x2)}" y2="${n(p.y2)}" ${STROKE_ATTRS} ${sw}${op}/>`;
     case 'path':
-      return p.fill
-        ? `<path d="${p.d}" fill="currentColor" stroke="currentColor" stroke-width="${n(p.width)}" stroke-linejoin="round"${op}/>`
-        : `<path d="${p.d}" fill="none" stroke="currentColor" stroke-width="${n(p.width)}" stroke-linecap="round" stroke-linejoin="round"${op}/>`;
+      return `<path d="${p.d}" ${STROKE_ATTRS} ${sw}${op}/>`;
     case 'rect':
-      return p.fill
-        ? `<rect x="${n(p.x)}" y="${n(p.y)}" width="${n(p.w)}" height="${n(p.h)}" rx="${n(p.rx)}" fill="currentColor"${op}/>`
-        : `<rect x="${n(p.x)}" y="${n(p.y)}" width="${n(p.w)}" height="${n(p.h)}" rx="${n(p.rx)}" fill="none" stroke="currentColor" stroke-width="${n(p.width)}"${op}/>`;
+      return `<rect x="${n(p.x)}" y="${n(p.y)}" width="${n(p.w)}" height="${n(p.h)}" ${STROKE_ATTRS} ${sw}${op}/>`;
   }
 }
 
@@ -54,9 +54,13 @@ export function figureMarkup(
 export interface FigureSvgOptions {
   /** Pixel size of the square image (default 200). */
   size?: number;
-  /** Flat course tile colour; defaults to --tile-1. */
+  /**
+   * Flat course tile colour; defaults to the neutral dark surface. It also decides the ink —
+   * black on a programme colour, light on a dark surface — so pass it even with `background`
+   * off when the figure is going to sit on a known tile.
+   */
   tile?: string;
-  /** Draw the rounded tile behind the figure (default true). */
+  /** Draw the square tile behind the figure (default true). */
   background?: boolean;
 }
 
@@ -75,12 +79,12 @@ export function figureSvgString(
   const background = opts.background ?? true;
   const pose = poseAt(set, t);
   const body = figureMarkup(pose, set.view, { props: set.props, t: t - Math.floor(t) });
-  // One flat fill, so no <defs>/<linearGradient> and no per-frame gradient id to keep unique.
+  // One flat, sharp-cornered fill: the brand has one shape and it has no radius.
   const defs = background
-    ? `<rect width="${VIEWBOX}" height="${VIEWBOX}" rx="24" fill="${escapeAttr(tile)}"/>`
+    ? `<rect width="${VIEWBOX}" height="${VIEWBOX}" fill="${escapeAttr(tile)}"/>`
     : '';
   return (
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${n(size)}" height="${n(size)}" viewBox="0 0 ${VIEWBOX} ${VIEWBOX}" color="${INK}">` +
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${n(size)}" height="${n(size)}" viewBox="0 0 ${VIEWBOX} ${VIEWBOX}" color="${escapeAttr(tileInk(tile))}">` +
     defs +
     `<g>${body}</g>` +
     `</svg>`

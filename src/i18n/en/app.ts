@@ -899,7 +899,7 @@ export const app = {
   courseEquipment: 'Equipment',
   courseTile: 'Course tile',
   courseTileHint:
-    'A course is recognised by the weight of its tile, not its hue: the app has one accent.',
+    'The one colour on the course screen. Programme colours: beginners #f2f52d, yoga #a8c8ff, marathon #f08a3c. Any other course takes one of the two neutral surfaces: #1f1f24 or #2a2a30.',
   courseCover: 'Cover image',
   courseCoverHint: 'Shown on the course page and in the catalogue',
   courseIntroVideo: 'Intro video',
@@ -959,4 +959,22 @@ export const app = {
   dayDeload: 'Deload week',
   dayImage: 'Day image',
   dayImageHint: "Shown on the day's screen",
+  // Sign-in hero: the tagline split at the weight change — 800 for the claim, 200 for the promise.
+  authHeroHeavy: 'Home CrossFit',
+  authHeroThin: 'that adapts to you.',
+  // Home: the ruled facts under today's session and the index of the days after it.
+  homeUpNext: 'Next in the course',
+  homeUpNextDay: 'Day {n}',
+  homeTodayStatDay: 'Day of {total}',
+  homeTodayStatExercises: 'Exercises',
+  homeTodayStatTime: 'Time',
+  // Node preview: the formula kicker and the secondary action of the two-button row.
+  nodeFormulaKicker: 'Explained → done → rested',
+  nodeLater: 'Later',
+  // Profile on paper: the kicker under the name, the "of 100" tail of the index numeral.
+  profileSince: 'In shape since {date}',
+  profileFitnessOf: 'of 100',
+  // Admin: the exercise row's "has a video" stamp, and the course tile field's format error.
+  exHasVideo: 'video',
+  courseTileInvalid: 'A colour is six hex digits, e.g. #1f1f24',
 } as const;

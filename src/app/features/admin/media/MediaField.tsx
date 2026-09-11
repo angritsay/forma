@@ -8,8 +8,6 @@
  */
 import { useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Icon } from '@/components/ui/Icon';
-import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { PUBLIC_BUCKET, publicMediaUrl, uploadMedia } from '@/lib/api/storage';
 import { useT } from '@/app/hooks/useT';
@@ -89,13 +87,22 @@ export function MediaField({
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-sm font-medium text-muted">{label}</span>
-      <div className="flex items-start gap-3">
+      <div className="flex flex-col gap-0.5">
+        <span className="text-[13px] font-semibold text-muted">{label}</span>
+        {hint ? <p className="text-[13px] text-muted-2">{hint}</p> : null}
+      </div>
+      {/*
+       * The field is a ruled strip, not a box: a hairline above and below, the square thumbnail
+       * on the left where a row's numeral would be, the reference and the two actions beside it.
+       * The thumbnail is shown as uploaded — the product will draw it monochrome, but here the
+       * coach is checking that the right file went up.
+       */}
+      <div className="flex items-start gap-3 border-y border-border py-3">
         {preview ? (
           <img
             src={preview}
             alt=""
-            className="size-20 shrink-0 rounded-inner border border-border object-cover"
+            className="size-20 shrink-0 border border-border object-cover"
           />
         ) : null}
         <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -104,31 +111,25 @@ export function MediaField({
               {value}
             </span>
           ) : (
-            <span className="text-sm text-muted-2">{t('app.mediaNone')}</span>
+            <span className="text-[13px] text-muted-2">{t('app.mediaNone')}</span>
           )}
           <div className="flex flex-wrap gap-2">
             <Button
+              size="sm"
               variant="secondary"
-              disabled={busy}
-              icon={busy ? <Spinner size={16} /> : <Icon name="plus" size={16} />}
+              loading={busy}
               onClick={() => input.current?.click()}
             >
               {value ? t('app.mediaReplace') : t('app.mediaUpload')}
             </Button>
             {value ? (
-              <Button
-                variant="ghost"
-                disabled={busy}
-                icon={<Icon name="close" size={16} />}
-                onClick={() => onChange(null)}
-              >
+              <Button size="sm" variant="ghost" disabled={busy} onClick={() => onChange(null)}>
                 {t('app.mediaRemove')}
               </Button>
             ) : null}
           </div>
         </div>
       </div>
-      {hint ? <p className="text-sm text-muted">{hint}</p> : null}
       <input
         ref={input}
         type="file"

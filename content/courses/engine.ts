@@ -1294,6 +1294,11 @@ const NODES: NodeInput[] = [
 export const COURSE_ENGINE: CourseInput = {
   id: 'engine',
   order: 2,
+  /*
+   * Written and playable, but not on sale yet: at launch Forma offers the beginner course only.
+   * See `published` in src/content/schema.ts for what the flag hides.
+   */
+  published: false,
   slug: { ru: 'svoim-vesom-sila-i-vynoslivost', en: 'bodyweight-engine' },
   name: {
     ru: 'Форма своим весом: сила и выносливость',
@@ -1366,7 +1371,7 @@ export const COURSE_ENGINE: CourseInput = {
   weeks: 6,
   sessionsPerWeek: 4,
   avgSessionMin: 30,
-  tile: '#20293c', // --tile-2
+  tile: '#1f1f24', // --tile-4 — neutral; no programme colour yet
   price: { rub: 3990, usd: 39 },
   workouts: [
     W_TEST,

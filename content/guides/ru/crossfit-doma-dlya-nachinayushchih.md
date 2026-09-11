@@ -36,7 +36,6 @@ relatedExercises:
   - half_burpee
 relatedCourses:
   - start
-  - engine
 relatedGuides:
   - no-equipment-crossfit
   - workout-formats

@@ -1,7 +1,7 @@
 /**
- * Animated exercise figure (SVG pictogram athlete driven by pose sets).
+ * Animated exercise figure (SVG blueprint stick figure driven by pose sets).
  *
- *   <ExerciseFigure animation="air_squat" variant="card" tile="#1a2634" />
+ *   <ExerciseFigure animation="air_squat" variant="card" tile="#F2F52D" />
  *
  * - `animation`: id from src/components/anim/poses (matches Exercise.animation). Unknown ids
  *   render the standing pose and warn once — never throw.
@@ -10,14 +10,17 @@
  *              'hero' (fills its container, square, tile — player background / landing).
  * - `playing`: animate (default true; 'thumb' defaults to false)
  * - `speed`: playback multiplier (default 1)
- * - `tile`: flat course tile colour behind the figure; defaults to --tile-1. The figure itself
- *   is `currentColor`, which `.hero-art` sets to --tile-fg, so it reads light on the dark tile.
+ * - `tile`: flat course tile colour behind the figure; defaults to the neutral dark surface.
+ *   The figure itself is `currentColor`: `courseTileVars()` derives `--course-tile-fg` from the
+ *   tile and `.hero-art` applies it, so the line is black on a programme colour and light on a
+ *   dark surface without the figure knowing which it sits on.
  *
  * Playback pauses when `playing` is false, when the tab is hidden and under
  * `prefers-reduced-motion` (a mid-motion poster frame is shown instead). SSR-safe: the first
  * render is the t = 0 frame with no browser APIs touched.
  */
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactElement } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { courseTileVars } from '@/lib/ui/tile';
 import { getPoseSet } from './lookup';
 import { DEFAULT_TILE, VIEWBOX, figureScene, poseAt, tightViewBox, type Primitive } from './rig';
 
@@ -35,6 +38,14 @@ export interface ExerciseFigureProps {
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 const MAX_FRAME_DELTA_MS = 100;
 
+/** Square ends, sharp corners, no fill — the same stroke contract as render.ts. */
+const STROKE_PROPS = {
+  stroke: 'currentColor',
+  fill: 'none',
+  strokeLinecap: 'butt',
+  strokeLinejoin: 'miter',
+} as const;
+
 function primitiveToElement(p: Primitive, key: number): ReactElement {
   const opacity = p.opacity < 1 ? p.opacity : undefined;
   switch (p.kind) {
@@ -46,40 +57,13 @@ function primitiveToElement(p: Primitive, key: number): ReactElement {
           y1={p.y1}
           x2={p.x2}
           y2={p.y2}
-          stroke="currentColor"
-          strokeWidth={p.width}
-          strokeLinecap="round"
-          opacity={opacity}
-        />
-      );
-    case 'circle':
-      return p.fill ? (
-        <circle key={key} cx={p.cx} cy={p.cy} r={p.r} fill="currentColor" opacity={opacity} />
-      ) : (
-        <circle
-          key={key}
-          cx={p.cx}
-          cy={p.cy}
-          r={p.r}
-          fill="none"
-          stroke="currentColor"
           strokeWidth={p.width}
           opacity={opacity}
+          {...STROKE_PROPS}
         />
       );
     case 'path':
-      return (
-        <path
-          key={key}
-          d={p.d}
-          fill={p.fill ? 'currentColor' : 'none'}
-          stroke="currentColor"
-          strokeWidth={p.width}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          opacity={opacity}
-        />
-      );
+      return <path key={key} d={p.d} strokeWidth={p.width} opacity={opacity} {...STROKE_PROPS} />;
     case 'rect':
       return (
         <rect
@@ -88,11 +72,9 @@ function primitiveToElement(p: Primitive, key: number): ReactElement {
           y={p.y}
           width={p.w}
           height={p.h}
-          rx={p.rx}
-          fill={p.fill ? 'currentColor' : 'none'}
-          stroke={p.fill ? undefined : 'currentColor'}
-          strokeWidth={p.fill ? undefined : p.width}
+          strokeWidth={p.width}
           opacity={opacity}
+          {...STROKE_PROPS}
         />
       );
   }
@@ -204,17 +186,13 @@ export default function ExerciseFigure({
     );
   }
 
-  const style: CSSProperties & Record<'--course-tile', string> = {
-    '--course-tile': tile ?? DEFAULT_TILE,
-  };
+  // Both tile properties from the one hex, so the ink flips with the surface (black on a
+  // programme colour, light on a dark one). No radius: the tile is the brand's sharp rectangle.
+  const style = courseTileVars(tile ?? DEFAULT_TILE);
   const sizeClass = variant === 'card' ? 'size-[200px]' : 'w-full aspect-square';
 
   return (
-    <div
-      className={`hero-art overflow-hidden rounded-tile ${sizeClass} ${className}`}
-      style={style}
-      {...a11y}
-    >
+    <div className={`hero-art overflow-hidden ${sizeClass} ${className}`} style={style} {...a11y}>
       <svg viewBox={viewBox} width="100%" height="100%" className="block" aria-hidden="true">
         {scene.map(primitiveToElement)}
       </svg>

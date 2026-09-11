@@ -1,7 +1,8 @@
 /**
  * Single-series bar chart in plain SVG (steps per day, points per week…).
- * One hue, thin rounded bars anchored to the baseline, recessive axis, values in text tokens,
- * per-bar hover/focus reveals the value; highlighted bars (e.g. today) show it always.
+ * Monochrome: thin square bars anchored to a hairline baseline, the highlighted bar (today) in
+ * full white and the rest at 40%, values in text tokens; per-bar hover/focus reveals the value,
+ * highlighted bars show it always. No colour — a chart reports, it does not belong to a course.
  */
 import { clsx } from 'clsx';
 import { useId, useState } from 'react';
@@ -30,7 +31,6 @@ export interface BarChartProps {
 
 const LABEL_H = 20;
 const VALUE_H = 18;
-const RADIUS = 4;
 
 export function BarChart({
   data,
@@ -75,7 +75,7 @@ export function BarChart({
         x2={width}
         y1={baseline}
         y2={baseline}
-        className="stroke-white/10"
+        className="stroke-border"
         strokeWidth={1}
       />
       {goal !== undefined && goal > 0 ? (
@@ -101,11 +101,6 @@ export function BarChart({
         const top = y(d.value);
         const h = Math.max(0, baseline - top);
         const showValue = d.highlight || active === i;
-        const r = Math.min(RADIUS, h / 2);
-        const path =
-          h <= 0
-            ? ''
-            : `M${cx - barW / 2} ${baseline} v${-(h - r)} a${r} ${r} 0 0 1 ${r} ${-r} h${barW - 2 * r} a${r} ${r} 0 0 1 ${r} ${r} v${h - r} z`;
         return (
           <g
             key={i}
@@ -121,11 +116,15 @@ export function BarChart({
             {/* Hit target larger than the mark. */}
             <rect x={slot * i} y={0} width={slot} height={height} fill="transparent" />
             {h > 0 ? (
-              <path
-                d={path}
+              /* A plain rect: square shoulders, like every other shape in the system. */
+              <rect
+                x={cx - barW / 2}
+                y={top}
+                width={barW}
+                height={h}
                 className={clsx(
                   'transition-opacity',
-                  d.highlight ? 'fill-accent' : 'fill-accent/45',
+                  d.highlight ? 'fill-primary' : 'fill-text/40',
                   active === i && 'opacity-100',
                 )}
               />
@@ -135,7 +134,7 @@ export function BarChart({
                 y={baseline - 2}
                 width={barW}
                 height={2}
-                className="fill-white/15"
+                className="fill-border-strong"
               />
             )}
             {showValue ? (

@@ -1,13 +1,17 @@
 ---
 /**
- * Compact course card for "used in courses" / "courses on this topic" lists on SEO pages.
+ * Compact course row for "used in courses" / "courses on this topic" lists on SEO pages.
  * The landing area has its own richer CourseCard; this one only needs registry data.
+ *
+ * A hairline row, not a box: a 72px tile in the programme colour, the name in the display face,
+ * and the facts as small outlined chips.
  */
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
 import { courseExercises } from '@/content/registry';
 import type { Course, Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { equipmentName, levelName } from '@/lib/seo/exercises';
+import { courseTileStyle } from '@/lib/ui/tile';
 import { href } from '@/lib/util/paths';
 
 interface Props {
@@ -30,23 +34,23 @@ const chips = [
 
 <a
   href={href(locale, `/courses/${course.slug[locale]}/`)}
-  class="flex h-full gap-4 border-t border-border py-4 transition-colors hover:border-border-strong"
+  class="flex h-full gap-4 border-t border-border py-4 transition-colors duration-150 hover:border-border-strong"
+  style={courseTileStyle(course.tile)}
 >
   <div
-    class="hero-art flex size-[72px] shrink-0 items-center justify-center overflow-hidden rounded-control"
-    style={`--course-tile:${course.tile}`}
+    class="hero-art flex size-[72px] shrink-0 items-center justify-center overflow-hidden"
     aria-hidden={signature ? undefined : 'true'}
   >
     {signature && <ExerciseFigure animation={signature.animation} variant="thumb" label={name} />}
   </div>
   <div class="min-w-0">
     <span class="eyebrow">{t(locale, 'seo.ogCourse')}</span>
-    <span class="font-display mt-1 block leading-snug">{name}</span>
+    <span class="font-display mt-1 block text-[15px]">{name}</span>
     <span class="mt-1 line-clamp-2 block text-sm text-muted">{l(course.tagline, locale)}</span>
     <ul class="mt-3 flex flex-wrap gap-1.5">
       {
         chips.map((c) => (
-          <li class="control-label rounded-control border border-border px-2 py-1 text-[10px] text-muted">
+          <li class="inline-flex h-7 items-center rounded-control border border-border px-2.5 text-[11px] font-semibold tracking-[0.06em] text-muted uppercase">
             {c}
           </li>
         ))

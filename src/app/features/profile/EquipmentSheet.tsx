@@ -65,7 +65,7 @@ export function EquipmentSheet({ open, profile, busy, onClose, onSave }: Equipme
         />
         {hasDumbbells ? (
           <section className="flex flex-col gap-3">
-            <h3 className="text-sm font-medium text-muted">{t('app.onbDumbbellWeights')}</h3>
+            <h3 className="text-[13px] font-semibold text-muted">{t('app.onbDumbbellWeights')}</h3>
             <ChipGroup<number>
               multiple
               label={t('app.onbDumbbellWeights')}
@@ -77,7 +77,9 @@ export function EquipmentSheet({ open, profile, busy, onClose, onSave }: Equipme
         ) : null}
         {hasKettlebell ? (
           <section className="flex flex-col gap-3">
-            <h3 className="text-sm font-medium text-muted">{t('app.onbKettlebellWeights')}</h3>
+            <h3 className="text-[13px] font-semibold text-muted">
+              {t('app.onbKettlebellWeights')}
+            </h3>
             <ChipGroup<number>
               multiple
               label={t('app.onbKettlebellWeights')}

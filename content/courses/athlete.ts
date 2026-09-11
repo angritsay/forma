@@ -1941,6 +1941,11 @@ const NODES: NodeInput[] = [
 export const COURSE_ATHLETE: CourseInput = {
   id: 'athlete',
   order: 5,
+  /*
+   * Written and playable, but not on sale yet: at launch Forma offers the beginner course only.
+   * See `published` in src/content/schema.ts for what the flag hides.
+   */
+  published: false,
   slug: { ru: 'atlet-prodvinutyj-domashnij-krossfit', en: 'home-athlete' },
   name: l('Форма атлета: продвинутый домашний кроссфит', 'Forma. Athlete: advanced home CrossFit'),
   tagline: l(
@@ -2022,7 +2027,7 @@ export const COURSE_ATHLETE: CourseInput = {
   weeks: 8,
   sessionsPerWeek: 4,
   avgSessionMin: 40,
-  tile: '#1c2532', // --tile-5
+  tile: '#2a2a30', // --tile-5 — neutral; no programme colour yet
   price: { rub: 4990, usd: 49 },
   workouts: [
     W_TEST,

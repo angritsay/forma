@@ -1,7 +1,8 @@
 import { useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Chip } from '@/components/ui/Chip';
 import { useT } from '@/app/hooks/useT';
+import { DisplayTitle } from '@/app/features/home/DisplayTitle';
+import { FactChips } from '@/app/features/path/FactChips';
 import type { PrescribedWorkout } from '@/lib/training/types';
 import { BigClock } from '../BigClock';
 import { ExplainPanel } from '../ExplainPanel';
@@ -51,16 +52,14 @@ export function RestStep({ step, prescribed, paused, beep, onNext, registerNext 
         tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'accent' : 'default'}
       />
       {nextId ? (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2.5 border-t border-border pt-4">
           <span className="eyebrow">{t('app.playerRestNext')}</span>
-          <h2 className="font-display text-3xl">
-            {nextExercise ? nextExercise.name[locale] : nextId}
-          </h2>
-          {nextItem ? (
-            <div className="flex flex-wrap gap-2">
-              <Chip tone="accent">{targetLabel(t, nextItem)}</Chip>
-            </div>
-          ) : null}
+          <DisplayTitle
+            as="h2"
+            text={nextExercise ? nextExercise.name[locale] : nextId}
+            className="text-5xl"
+          />
+          {nextItem ? <FactChips items={[targetLabel(t, nextItem)]} /> : null}
         </div>
       ) : null}
       {nextId && nextItem ? <ExplainPanel exerciseId={nextId} item={nextItem} /> : null}

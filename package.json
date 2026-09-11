@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Forma \u2014 adaptive home CrossFit-style training app and SEO landing (Astro + React + Supabase)",
+  "description": "Forma — adaptive home CrossFit-style training app and SEO landing (Astro + React + Supabase)",
   "scripts": {
     "build": "astro build",
     "postbuild": "node scripts/seo/postbuild.mjs",
@@ -32,6 +32,7 @@
     "@astrojs/rss": "4.0.19",
     "@fontsource-variable/manrope": "5.2.8",
     "@fontsource-variable/onest": "5.3.1",
+    "@fontsource-variable/unbounded": "^5.3.0",
     "@supabase/supabase-js": "2.113.0",
     "@tailwindcss/vite": "4.3.3",
     "astro": "5.18.2",

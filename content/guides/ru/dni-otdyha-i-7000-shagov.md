@@ -35,7 +35,6 @@ relatedExercises:
   - child_pose
 relatedCourses:
   - start
-  - engine
 relatedGuides:
   - training-frequency
   - streaks-consistency

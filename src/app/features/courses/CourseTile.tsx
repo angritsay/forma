@@ -1,11 +1,11 @@
-import type { CSSProperties } from 'react';
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
-import { Icon } from '@/components/ui/Icon';
+import { Glyph } from '@/components/ui/Icon';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import type { Course } from '@/content/schema';
+import { courseTileVars } from '@/lib/ui/tile';
 import { useT } from '@/app/hooks/useT';
 import type { CourseProgress } from '@/app/features/path/nodeState';
 import {
@@ -16,7 +16,6 @@ import {
   weeksLabel,
   subscribeHref,
 } from './courseMeta';
-import { EquipmentIcon } from './EquipmentIcon';
 import { PLAN_BY_ID, PLANS_ENABLED } from '@content/site/plans';
 import { formatPrice } from '@content/site/pricing';
 import { LinkButton } from './LinkButton';
@@ -34,18 +33,16 @@ export interface CourseTileProps {
 }
 
 /**
- * One course in the catalogue: numeral, tile-mounted figure, name, specification, action.
- *
- * This was a bordered card split into a filled header and a filled body — two surfaces stacked
- * inside a third, five times down the screen. It is a catalogue entry now: the course's own tile
- * is the only filled thing in it, and hairlines separate the name from the specification from the
- * action, which is the order a course is actually read in.
+ * One course in the catalogue, the design system's CourseCard: a band in the programme colour
+ * with the course's figure drawn on it in the ink that colour wants, a dark stamp in its corner
+ * saying whether you have it, then the name in the display face, the specification in muted
+ * text, a 4px progress rule and the action. A 1px hairline frames the whole card; no shadow, no
+ * radius, and the tile is the only thing on the screen that is not black or white.
  */
 export function CourseTile({ course, owned, progress, n, onOpen }: CourseTileProps) {
   const tr = useT();
   const { t, l, locale } = tr;
   const exercise = courseSignatureExercise(course);
-  const style = { '--course-tile': course.tile } as CSSProperties;
   const pct = progress?.pct ?? 0;
   const finished = progress !== null && progress.total > 0 && progress.done >= progress.total;
   const ownedLabel = finished
@@ -55,56 +52,39 @@ export function CourseTile({ course, owned, progress, n, onOpen }: CourseTilePro
       : t('app.coursesStart');
 
   return (
-    <article className="flex flex-col border-t border-border pt-5">
-      <div className="flex items-start gap-4">
+    <article
+      className="flex flex-col border border-border bg-surface"
+      style={courseTileVars(course.tile)}
+    >
+      <div className="hero-art relative flex h-36 items-center justify-center">
+        <ExerciseFigure
+          animation={exercise?.animation ?? 'air_squat'}
+          variant="thumb"
+          className="size-24"
+          label={exercise ? l(exercise.name) : undefined}
+        />
+        <Badge tone="on-art" className="absolute top-3 right-3">
+          {owned ? t('app.coursesOwned') : t('app.coursesLocked')}
+        </Badge>
         {n !== undefined ? (
-          <span className="numeral pt-1 text-sm text-accent">{String(n).padStart(2, '0')}</span>
+          <span className="numeral absolute top-3 left-3 text-sm text-current opacity-70">
+            {String(n).padStart(2, '0')}
+          </span>
         ) : null}
-        <span
-          className="hero-art flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-tile"
-          style={style}
-        >
-          <ExerciseFigure
-            animation={exercise?.animation ?? 'air_squat'}
-            variant="thumb"
-            className="size-16"
-            label={exercise ? l(exercise.name) : undefined}
-          />
-        </span>
-        <div className="min-w-0 flex-1">
-          {owned ? (
-            <Badge tone="success" icon="check">
-              {t('app.coursesOwned')}
-            </Badge>
-          ) : (
-            <Badge tone="neutral" icon="lock">
-              {t('app.coursesLocked')}
-            </Badge>
-          )}
-          <h2 className="font-display mt-2 text-xl text-balance">{l(course.name)}</h2>
-          <p className="mt-1 text-sm text-muted">{l(course.tagline)}</p>
-        </div>
       </div>
-      <div className="mt-5 flex flex-col gap-4">
+      <div className="flex flex-col gap-4 p-4">
+        <div>
+          <h2 className="font-display text-[15px] leading-[1.3] text-balance">{l(course.name)}</h2>
+          <p className="mt-1 text-[13px] text-muted">{l(course.tagline)}</p>
+        </div>
+        {/* The specification as capitals chips — words, no pictograms; the word says what it is. */}
         <div className="flex flex-wrap gap-2">
-          <Chip size="sm" icon="calendar">
-            {weeksLabel(tr, course.weeks)}
-          </Chip>
-          <Chip size="sm" icon="refresh">
-            {perWeekLabel(tr, course.sessionsPerWeek)}
-          </Chip>
-          <Chip size="sm" icon="clock">
-            {t('app.coursesAvgMin', { n: course.avgSessionMin })}
-          </Chip>
-          <Chip size="sm" icon="star">
-            {t(`common.level_${course.level}`)}
-          </Chip>
+          <Chip size="sm">{weeksLabel(tr, course.weeks)}</Chip>
+          <Chip size="sm">{perWeekLabel(tr, course.sessionsPerWeek)}</Chip>
+          <Chip size="sm">{t('app.coursesAvgMin', { n: course.avgSessionMin })}</Chip>
+          <Chip size="sm">{t(`common.level_${course.level}`)}</Chip>
           {courseEquipmentForDisplay(course).map((eq) => (
-            <Chip
-              key={eq}
-              size="sm"
-              icon={eq === 'none' ? undefined : <EquipmentIcon equipment={eq} size={14} />}
-            >
+            <Chip key={eq} size="sm">
               {t(`common.equipment_${eq}`)}
             </Chip>
           ))}
@@ -114,13 +94,12 @@ export function CourseTile({ course, owned, progress, n, onOpen }: CourseTilePro
             {progress && progress.done > 0 ? (
               <ProgressBar
                 value={pct / 100}
-                tone="accent"
-                size="sm"
                 label={l(course.name)}
                 valueText={`${pct}%`}
+                className="mt-1"
               />
             ) : null}
-            <Button fullWidth onClick={onOpen} iconRight={<Icon name="chevron" size={16} />}>
+            <Button fullWidth onClick={onOpen} iconRight={<Glyph size={14}>→</Glyph>}>
               {ownedLabel}
             </Button>
           </>
@@ -128,11 +107,7 @@ export function CourseTile({ course, owned, progress, n, onOpen }: CourseTilePro
           <>
             {PLANS_ENABLED && monthlyPlan ? (
               <>
-                <LinkButton
-                  href={subscribeHref(locale)}
-                  fullWidth
-                  icon={<Icon name="lock" size={16} />}
-                >
+                <LinkButton href={subscribeHref(locale)} fullWidth>
                   {t('app.coursesSubscribe')}
                 </LinkButton>
                 <p className="text-center text-xs text-muted">
@@ -144,11 +119,7 @@ export function CourseTile({ course, owned, progress, n, onOpen }: CourseTilePro
               </>
             ) : (
               <>
-                <LinkButton
-                  href={courseLandingHref(locale, course)}
-                  fullWidth
-                  icon={<Icon name="lock" size={16} />}
-                >
+                <LinkButton href={courseLandingHref(locale, course)} fullWidth>
                   {t('app.coursesGetAccess')}
                 </LinkButton>
                 <p className="text-center text-xs text-muted">{t('app.coursesBoughtHint')}</p>

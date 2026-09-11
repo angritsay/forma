@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 import { forwardRef, useId, type ReactNode, type SelectHTMLAttributes } from 'react';
-import { Icon } from './Icon';
+import { Glyph } from './Icon';
 
 export interface SelectOption<T extends string = string> {
   value: T;
@@ -22,7 +22,8 @@ export interface SelectProps<T extends string = string> extends Omit<
 }
 
 /**
- * A native `<select>` in the kit's clothing.
+ * A native `<select>` in the kit's clothing: the same 48px field as {@link Input}, with a `›`
+ * turned downwards where the platform arrow was.
  *
  * {@link SegmentedControl} covers two or three choices; this is for the long ones the course
  * builder needs — a movement pattern out of sixteen, a muscle group out of fifteen, which course
@@ -54,14 +55,14 @@ function SelectInner<T extends string>(
   return (
     <div className={clsx('flex flex-col gap-1.5', wrapperClassName)}>
       {label ? (
-        <label htmlFor={fieldId} className="text-sm font-medium text-muted">
+        <label htmlFor={fieldId} className="text-[13px] font-semibold text-muted">
           {label}
         </label>
       ) : null}
       <div
         className={clsx(
-          'relative flex h-14 items-center rounded-inner border bg-surface-2 transition-colors',
-          'focus-within:border-border-strong',
+          'relative flex h-12 items-center rounded-control border bg-surface-2',
+          'transition-colors duration-150 ease-(--ease-out) focus-within:border-primary',
           error ? 'border-danger' : 'border-border',
         )}
       >
@@ -73,10 +74,10 @@ function SelectInner<T extends string>(
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           className={clsx(
-            // `appearance-none` drops the platform arrow so the kit's chevron can sit on the right;
+            // `appearance-none` drops the platform arrow so the kit's glyph can sit on the right;
             // the padding keeps the text clear of it.
             'h-full w-full appearance-none bg-transparent pr-11 pl-4 text-base text-text outline-none',
-            'disabled:opacity-50',
+            'disabled:opacity-40',
             className,
           )}
           {...rest}
@@ -87,18 +88,16 @@ function SelectInner<T extends string>(
             </option>
           ))}
         </select>
-        <Icon
-          name="chevron"
-          size={16}
-          className="pointer-events-none absolute right-4 rotate-90 text-muted"
-        />
+        <Glyph size={16} className="pointer-events-none absolute right-4 rotate-90 text-muted">
+          ›
+        </Glyph>
       </div>
       {error ? (
-        <p id={errorId} role="alert" className="text-sm text-danger">
+        <p id={errorId} role="alert" className="text-[13px] text-danger">
           {error}
         </p>
       ) : hint ? (
-        <p id={hintId} className="text-sm text-muted">
+        <p id={hintId} className="text-[13px] text-muted">
           {hint}
         </p>
       ) : null}

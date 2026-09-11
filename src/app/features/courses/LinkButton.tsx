@@ -10,16 +10,23 @@ import type { MouseEvent, ReactNode } from 'react';
 import type { ButtonSize, ButtonVariant } from '@/components/ui/Button';
 import { externalTarget, openExternal } from '@/lib/telegram/webapp';
 
+/*
+ * The same four looks as Button, kept in step by hand because an <a> cannot be a <button>: the
+ * white fill, the raised surface behind a strong hairline, bare muted text, and the red outline.
+ * None of them ever takes the programme colour.
+ */
 const VARIANT: Record<ButtonVariant, string> = {
-  primary: 'bg-accent text-on-primary hover:bg-accent/90',
-  secondary: 'bg-surface-2 text-text border border-border hover:bg-surface-3',
-  ghost: 'bg-transparent text-text hover:bg-white/5',
-  danger: 'bg-danger/15 text-danger hover:bg-danger/25',
+  primary: 'bg-primary text-on-primary hover:opacity-85',
+  secondary: 'bg-surface-2 text-text border border-border-strong hover:bg-surface-3',
+  ghost: 'bg-transparent text-muted hover:text-text',
+  danger: 'bg-transparent text-danger border border-border-strong hover:bg-surface-2',
 };
 
+/* 40 / 48 / 56 tall with a 12–13px capitals label, as Button. */
 const SIZE: Record<ButtonSize, string> = {
-  md: 'h-12 px-5 text-[15px]',
-  lg: 'h-14 px-6 text-base',
+  sm: 'tap-target-y h-10 px-4.5 text-[12px]',
+  md: 'h-12 px-6.5 text-[13px]',
+  lg: 'h-14 px-8 text-[13px]',
 };
 
 export interface LinkButtonProps {
@@ -56,8 +63,8 @@ export function LinkButton({
       target={external ? '_blank' : undefined}
       rel={external ? 'noopener' : undefined}
       className={clsx(
-        'inline-flex select-none items-center justify-center gap-2 rounded-control font-semibold',
-        'transition-[background-color,opacity,transform] duration-150 active:scale-[0.98]',
+        'control-label inline-flex select-none items-center justify-center gap-2 rounded-control',
+        'transition-[background-color,color,opacity,transform] duration-150 ease-(--ease-out) active:scale-[0.98]',
         VARIANT[variant],
         SIZE[size],
         fullWidth && 'w-full',

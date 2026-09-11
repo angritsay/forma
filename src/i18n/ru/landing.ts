@@ -200,7 +200,7 @@ export const landing = {
   courseOrderIntro:
     'Оставь e-mail — тренер подтвердит доступ, и курс появится в приложении под этой почтой.',
   courseLifetimeNote: 'Одна оплата, доступ навсегда',
-  courseOrSubscribe: 'Или все пять курсов по подписке — от {price} в месяц',
+  courseOrSubscribe: 'Или все курсы по подписке — от {price} в месяц',
   nodeWorkout: 'Тренировка',
   nodeRest: 'Отдых · {steps} шагов',
   nodeTest: 'Тест',

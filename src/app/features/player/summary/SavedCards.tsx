@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/Badge';
-import { Icon } from '@/components/ui/Icon';
+import { Glyph } from '@/components/ui/Icon';
 import { useT } from '@/app/hooks/useT';
 import type { AchievementStatus, ScaleAdjustment } from '@/lib/training/types';
 
@@ -25,11 +25,13 @@ export function AdaptationCard({ adjustment }: { adjustment: ScaleAdjustment }) 
       {/*
         The safety note keeps a border, and it is the danger colour on all four sides. This is the
         one message in the product that must not be skimmed past — a hairline like everything else
-        would bury it in the rhythm of the page.
+        would bury it in the rhythm of the page. Its mark is the brand's notice glyph, in red.
       */}
       {adjustment.safetyNote ? (
-        <div className="flex gap-3 rounded-inner border border-danger/40 p-4">
-          <Icon name="warning" className="mt-0.5 shrink-0 text-danger" />
+        <div className="flex gap-3 border border-danger/40 p-4">
+          <Glyph size={13} className="mt-1 shrink-0 text-danger">
+            //
+          </Glyph>
           <div className="flex flex-col gap-1">
             <span className="text-[15px] font-semibold text-danger">
               {t('app.summarySafetyTitle')}
@@ -42,23 +44,28 @@ export function AdaptationCard({ adjustment }: { adjustment: ScaleAdjustment }) 
   );
 }
 
+/**
+ * Freshly unlocked achievements as a numbered ruled list. The emoji that used to sit in a framed
+ * square before each one is not drawn — the interface has no emoji — and the number takes its
+ * place, the way every list in the brand is numbered.
+ */
 export function AchievementList({ items }: { items: readonly AchievementStatus[] }) {
   const { t, l } = useT();
   if (items.length === 0) return null;
   return (
     <section className="flex flex-col gap-3 border-t border-border pt-5">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="eyebrow text-accent">{t('app.summaryAchievementsTitle')}</span>
-        <span className="numeral text-sm text-accent">{String(items.length).padStart(2, '0')}</span>
+        <span className="eyebrow">{t('app.summaryAchievementsTitle')}</span>
+        <span className="numeral text-sm text-muted">{String(items.length).padStart(2, '0')}</span>
       </div>
       <ul className="flex flex-col">
         {items.map((a, i) => (
           <li
             key={a.id}
-            className={`flex items-center gap-3 py-3 ${i > 0 ? 'border-t border-border' : ''}`}
+            className={`flex items-center gap-3.5 py-3 ${i > 0 ? 'border-t border-border' : ''}`}
           >
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-control border border-accent/40 text-xl">
-              <span aria-hidden="true">{a.icon}</span>
+            <span className="numeral tabular w-6 shrink-0 text-sm text-muted">
+              {String(i + 1).padStart(2, '0')}
             </span>
             <span className="min-w-0 flex-1">
               <span className="font-display block truncate text-[15px] leading-[1.24]">

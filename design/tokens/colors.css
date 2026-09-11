@@ -1,0 +1,79 @@
+:root{
+/* Ч/б база — интерфейс всегда монохромный */
+--bg-0:#0f0f11;
+--surface-1:#17171a;
+--surface-2:#1f1f24;
+--surface-3:#2a2a30;
+--border-1:rgba(255,255,255,.10);
+--border-2:rgba(255,255,255,.18);
+--text-1:#f6f6f7;
+--text-2:#b9b9c0;
+--text-3:#84848d;
+--text-inverse:#0f0f11;
+/* Белая «бумага» — профиль, светлые экраны, полароид */
+--paper:#ffffff;
+--paper-2:#f2f2f0;
+--ink:#0f0f11;
+--border-ink-1:rgba(15,15,17,.14);
+--border-ink-2:rgba(15,15,17,.25);
+/* Акцент интерфейса — белый */
+--accent:#ffffff;
+--text-on-accent:#0f0f11;
+/* Цвета программ: единственный цвет в системе — из курса */
+--course-marathon:#f08a3c;  /* марафон / игра */
+--course-yoga:#a8c8ff;      /* йога */
+--course-beginners:#f2f52d; /* программа новичков */
+--text-on-course:#0f0f11;
+/* Чернила курсов — для текста на белом (AA) */
+--course-marathon-ink:#a4530a;
+--course-yoga-ink:#2f5f9e;
+--course-beginners-ink:#6c7005;
+/* Легаси-алиасы (не использовать в новом коде) */
+--blue:var(--course-yoga);
+--peri:var(--course-yoga);
+--blue-fg:var(--course-yoga);
+--peri-fg:var(--course-yoga);
+--blue-ink:var(--course-yoga-ink);
+--peri-ink:var(--course-yoga-ink);
+/* Плитки курсов = цвета программ */
+--tile-1:var(--course-beginners);
+--tile-2:var(--course-yoga);
+--tile-3:var(--course-marathon);
+--tile-4:var(--surface-2);
+--tile-5:var(--surface-3);
+--tile-fg:#0f0f11;
+/* Семантика (на тёмном) */
+--success:#7ce0b0;
+--warning:#ffd166;
+--error:#ff6b6b;
+--success-ink:#1c7a52;
+--warning-ink:#8a6100;
+--error-ink:#c53030;
+/* Семантические алиасы */
+--surface-card:var(--surface-1);
+--surface-raised:var(--surface-2);
+--surface-input:var(--surface-2);
+--accent-2:var(--accent);
+--text-on-tile:var(--tile-fg);
+}
+/* Светлая (бумажная) тема — по явному атрибуту, для белых экранов и маркетинга */
+[data-forma-theme="light"]{
+--bg-0:#ffffff;
+--surface-1:#f2f2f0;
+--surface-2:#e9e9e6;
+--surface-3:#dededa;
+--border-1:rgba(15,15,17,.10);
+--border-2:rgba(15,15,17,.20);
+--text-1:#0f0f11;
+--text-2:#4c4c53;
+--text-3:#7c7c85;
+--text-inverse:#f6f6f7;
+--accent:#0f0f11;
+--text-on-accent:#ffffff;
+--success:#1c7a52;
+--warning:#8a6100;
+--error:#c53030;
+--surface-card:#ffffff;
+--surface-raised:#ffffff;
+--surface-input:#ffffff;
+}

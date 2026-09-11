@@ -20,7 +20,13 @@ export interface SegmentedControlProps<T extends string> {
   className?: string;
 }
 
-/** Radio-group styled as a squared switch; arrow keys move the selection. */
+/**
+ * Radio-group styled as a switch; arrow keys move the selection.
+ *
+ * A hairline frame divided into cells by hairlines, with the chosen cell inverted — white fill,
+ * black text — and the rest set in muted capitals. No inner padding and no sliding thumb: the
+ * switch is drawn with lines and one inversion, the same way the chips and the tabs are.
+ */
 export function SegmentedControl<T extends string>({
   options,
   value,
@@ -58,7 +64,7 @@ export function SegmentedControl<T extends string>({
       role="radiogroup"
       aria-label={label}
       className={clsx(
-        'inline-flex rounded-control border border-border bg-transparent p-1',
+        'inline-flex rounded-control border border-border-strong',
         fullWidth && 'flex w-full',
         className,
       )}
@@ -79,17 +85,16 @@ export function SegmentedControl<T extends string>({
             onClick={() => onChange(o.value)}
             onKeyDown={onKeyDown(i)}
             className={clsx(
-              'control-label inline-flex items-center justify-center gap-1.5 rounded-control transition-colors',
+              'control-label inline-flex items-center justify-center gap-1.5 border-l border-border-strong first:border-l-0',
+              'transition-colors duration-150 ease-(--ease-out)',
               // 32/40px tall by design; `tap-target-y` (global.css) reaches the 44px minimum.
               'tap-target-y disabled:opacity-40',
-              size === 'sm' ? 'h-8 px-3 text-[10px]' : 'h-10 px-4 text-[11px]',
+              size === 'sm' ? 'h-8 px-3 text-[11px]' : 'h-10 px-4 text-[12px]',
               fullWidth && 'flex-1',
-              // Selected is a raised surface, not a white slab: a segmented control is a filter,
-              // and a filter should never outweigh the primary button on the same screen.
-              selected ? 'bg-surface-3 text-text' : 'text-muted hover:text-text',
+              selected ? 'bg-primary text-on-primary' : 'bg-transparent text-muted hover:text-text',
             )}
           >
-            {o.icon ? <Icon name={o.icon} size={size === 'sm' ? 14 : 16} /> : null}
+            {o.icon ? <Icon name={o.icon} size={12} /> : null}
             {o.label}
           </button>
         );

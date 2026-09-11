@@ -895,7 +895,8 @@ export const app = {
   coursePriceUsd: 'Цена, $',
   courseEquipment: 'Оборудование',
   courseTile: 'Плашка курса',
-  courseTileHint: 'Курс узнают по весу плашки, а не по цвету: акцент в приложении один.',
+  courseTileHint:
+    'Единственный цвет на экране курса. Цвета программ: новичкам #f2f52d, йога #a8c8ff, марафон #f08a3c. Другому курсу — одна из двух нейтральных поверхностей: #1f1f24 или #2a2a30.',
   courseCover: 'Обложка',
   courseCoverHint: 'Показывается на странице курса и в каталоге',
   courseIntroVideo: 'Вступительное видео',
@@ -955,4 +956,22 @@ export const app = {
   dayDeload: 'Разгрузочная неделя',
   dayImage: 'Картинка дня',
   dayImageHint: 'Показывается на экране дня',
+  // Sign-in hero: the tagline split at the weight change — 800 for the claim, 200 for the promise.
+  authHeroHeavy: 'Кроссфит дома.',
+  authHeroThin: 'Под тебя.',
+  // Home: the ruled facts under today's session and the index of the days after it.
+  homeUpNext: 'Дальше по курсу',
+  homeUpNextDay: 'День {n}',
+  homeTodayStatDay: 'День из {total}',
+  homeTodayStatExercises: 'Упражнения',
+  homeTodayStatTime: 'Времени',
+  // Node preview: the formula kicker and the secondary action of the two-button row.
+  nodeFormulaKicker: 'Объяснили → сделали → отдохнули',
+  nodeLater: 'Позже',
+  // Profile on paper: the kicker under the name, the "of 100" tail of the index numeral.
+  profileSince: 'В форме с {date}',
+  profileFitnessOf: 'из 100',
+  // Admin: the exercise row's "has a video" stamp, and the course tile field's format error.
+  exHasVideo: 'видео',
+  courseTileInvalid: 'Цвет — шесть шестнадцатеричных знаков, например #1f1f24',
 } as const;

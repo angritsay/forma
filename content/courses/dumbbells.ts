@@ -1512,6 +1512,11 @@ const NODES: NodeInput[] = [
 export const COURSE_DUMBBELLS: CourseInput = {
   id: 'dumbbells',
   order: 3,
+  /*
+   * Written and playable, but not on sale yet: at launch Forma offers the beginner course only.
+   * See `published` in src/content/schema.ts for what the flag hides.
+   */
+  published: false,
   slug: { ru: 'ganteli-doma-sila-i-relef', en: 'dumbbell-builder' },
   name: l('Форма с гантелями: сила и рельеф', 'Forma. Dumbbells: strength and definition'),
   tagline: l(
@@ -1590,7 +1595,7 @@ export const COURSE_DUMBBELLS: CourseInput = {
   weeks: 6,
   sessionsPerWeek: 4,
   avgSessionMin: 35,
-  tile: '#16202b', // --tile-3
+  tile: '#2a2a30', // --tile-5 — neutral; no programme colour yet
   price: { rub: 3990, usd: 39 },
   workouts: [
     W_TEST,

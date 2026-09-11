@@ -37,7 +37,6 @@ relatedExercises:
   - jump_squat
 relatedCourses:
   - start
-  - engine
 relatedGuides:
   - no-equipment-crossfit
   - workout-formats

@@ -1,5 +1,11 @@
 ---
-/** Coach profile from content/site/coach.ts — renders only the fields that are filled in. */
+/**
+ * Coach profile from content/site/coach.ts — renders only the fields that are filled in.
+ *
+ * The photograph is monochrome with grain, 4:5, with the lockup running vertically down its edge
+ * on wide screens — the same frame the design system's landing gives the coach. Links are quiet
+ * outlined labels; the one filled button is the booking, and only when booking is on.
+ */
 import type { Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { appHref, withBase } from '@/lib/util/paths';
@@ -26,44 +32,54 @@ const bookHint = t(locale, 'landing.coachBookHint', {
 ---
 
 <div
-  class={`grid items-start gap-8 ${variant === 'full' ? 'md:grid-cols-[240px_minmax(0,1fr)]' : 'md:grid-cols-[200px_minmax(0,1fr)]'}`}
+  class={`grid items-start gap-8 ${variant === 'full' ? 'md:grid-cols-[280px_minmax(0,1fr)] md:gap-14' : 'md:grid-cols-[240px_minmax(0,1fr)] md:gap-12'}`}
 >
-  {
-    COACH.photo ? (
-      <img
-        src={withBase(COACH.photo)}
-        alt={name}
-        width={variant === 'full' ? 200 : 160}
-        height={variant === 'full' ? 200 : 160}
-        class="photo-mono aspect-[4/5] w-40 object-cover md:w-full"
-        loading="lazy"
-      />
-    ) : (
-      <div
-        class="hero-art flex aspect-[4/5] w-40 items-center justify-center md:w-full"
-        aria-hidden="true"
-      >
-        <span class="font-display text-6xl">{initial}</span>
-      </div>
-    )
-  }
+  <div class="relative w-40 md:w-full">
+    {
+      COACH.photo ? (
+        <div class="relative aspect-[4/5] overflow-hidden bg-surface">
+          <img
+            src={withBase(COACH.photo)}
+            alt={name}
+            width={variant === 'full' ? 280 : 240}
+            height={variant === 'full' ? 350 : 300}
+            class="photo-mono absolute inset-0 size-full object-cover"
+            loading="lazy"
+          />
+          <div class="photo-grain" aria-hidden="true" />
+        </div>
+      ) : (
+        <div class="hero-art flex aspect-[4/5] items-center justify-center" aria-hidden="true">
+          <span class="display text-6xl">{initial}</span>
+        </div>
+      )
+    }
+    <span class="eyebrow kicker-vertical absolute top-1 -left-5 hidden md:block" aria-hidden="true">
+      FORMA // {name}
+    </span>
+  </div>
   <div>
     <p class="eyebrow">{role}</p>
     {
       variant === 'full' ? (
-        <h1 class="font-display mt-2 text-4xl md:text-5xl">{name}</h1>
+        <h1 class="display mt-3 text-4xl md:text-5xl">{name}</h1>
       ) : (
-        <h3 class="font-display mt-2 text-3xl md:text-4xl">{name}</h3>
+        <h3 class="font-display mt-3 text-2xl md:text-3xl">{name}</h3>
       )
     }
-    {bio && <p class="mt-4 max-w-2xl leading-relaxed text-muted">{bio}</p>}
+    {bio && <p class="mt-5 max-w-2xl text-lg leading-relaxed text-muted">{bio}</p>}
     {
       COACH.credentials.length > 0 && (
-        <div class="mt-5">
+        <div class="mt-6 border-t border-border pt-5">
           <p class="eyebrow-sentence">{t(locale, 'landing.coachCredentials')}</p>
-          <ul class="mt-2 list-disc space-y-1 pl-5 text-sm text-muted">
-            {COACH.credentials.map((c) => (
-              <li>{l(c, locale)}</li>
+          <ul class="mt-3 flex flex-col divide-y divide-border text-sm text-muted">
+            {COACH.credentials.map((c, i) => (
+              <li class="flex items-baseline gap-4 py-2">
+                <span class="numeral text-xs text-muted-2" aria-hidden="true">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                {l(c, locale)}
+              </li>
             ))}
           </ul>
         </div>
@@ -71,13 +87,13 @@ const bookHint = t(locale, 'landing.coachBookHint', {
     }
     {
       COACH.links.length > 0 && (
-        <ul class="mt-5 flex flex-wrap gap-2">
+        <ul class="mt-6 flex flex-wrap gap-2">
           {COACH.links.map((x) => (
             <li>
               <a
                 href={x.url}
                 rel="me noopener"
-                class="control-label inline-flex min-h-11 items-center rounded-control border border-border px-4 text-[11px] text-muted hover:border-text hover:text-text"
+                class="control-label inline-flex h-10 items-center rounded-control border border-border-strong px-4 text-[12px] text-muted transition-colors duration-150 hover:bg-surface-2 hover:text-text"
               >
                 {x.label}
               </a>
@@ -88,7 +104,7 @@ const bookHint = t(locale, 'landing.coachBookHint', {
     }
     {
       BOOKING.enabled && (
-        <div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div class="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2">
           <Button href={appHref('#/book')}>{t(locale, 'landing.coachBook')}</Button>
           <span class="text-sm text-muted">{bookHint}</span>
         </div>
@@ -98,9 +114,12 @@ const bookHint = t(locale, 'landing.coachBookHint', {
       moreHref && (
         <a
           href={moreHref}
-          class="mt-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold underline decoration-border-strong underline-offset-4 hover:text-accent"
+          class="control-label mt-6 inline-flex min-h-11 items-center gap-2 text-[12px] text-text hover:opacity-85"
         >
-          {t(locale, 'landing.coachMore')} →
+          {t(locale, 'landing.coachMore')}
+          <span class="glyph" aria-hidden="true">
+            →
+          </span>
         </a>
       )
     }

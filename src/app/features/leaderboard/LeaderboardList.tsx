@@ -1,18 +1,17 @@
 import { clsx } from 'clsx';
 import { Avatar } from '@/components/ui/Avatar';
-import { Icon } from '@/components/ui/Icon';
 import { formatNumber } from '@/i18n/index';
 import type { LeaderboardRow } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
 import { podiumPlace, type Podium } from './model';
 
 /*
- * The top three are marked by ink, not by three differently-coloured filled badges. A leaderboard
- * with a gold, a silver and a lilac chip in the same column reads as three unrelated states;
- * ranking is one scale, so it is one treatment getting quieter as it descends.
+ * The top three are marked by ink, not by a trophy and two coloured badges. Ranking is one scale,
+ * so it is one treatment — the numeral, 01/02/03 — getting quieter as it descends: the podium in
+ * full white, the rest in the second grey. No gold: the brandbook keeps colour for programmes.
  */
 const PODIUM_CLASS: Record<Podium, string> = {
-  1: 'text-warning',
+  1: 'text-text',
   2: 'text-text',
   3: 'text-muted',
 };
@@ -23,7 +22,7 @@ export interface LeaderboardRowViewProps {
   pinned?: boolean;
 }
 
-/** One athlete: rank (podium badge for the top three), avatar, name and points. */
+/** One athlete: rank as a numeral, square avatar, name and points. */
 export function LeaderboardRowView({ row, pinned }: LeaderboardRowViewProps) {
   const { t, locale } = useT();
   const place = podiumPlace(row.rank);
@@ -31,8 +30,8 @@ export function LeaderboardRowView({ row, pinned }: LeaderboardRowViewProps) {
     <div
       className={clsx(
         'flex items-center gap-3 border-t py-3',
-        // Your own row is the one place the accent appears: a marked left edge, not a tinted fill.
-        row.isMe ? 'border-l-2 border-l-accent border-t-border pl-3' : 'border-t-border',
+        // Your own row is the one marked row: a 2px white rule down its left edge, not a tinted fill.
+        row.isMe ? 'border-l-2 border-l-primary border-t-border pl-3' : 'border-t-border',
         pinned && 'border-t-0 bg-bg',
       )}
       aria-current={row.isMe ? 'true' : undefined}
@@ -44,7 +43,7 @@ export function LeaderboardRowView({ row, pinned }: LeaderboardRowViewProps) {
         )}
         aria-label={t('app.leaderboardRankLabel', { n: row.rank })}
       >
-        {place === 1 ? <Icon name="trophy" size={16} /> : String(row.rank).padStart(2, '0')}
+        {String(row.rank).padStart(2, '0')}
       </span>
       <Avatar seed={row.avatarSeed} name={row.displayName} size={36} />
       <span className="min-w-0 flex-1">

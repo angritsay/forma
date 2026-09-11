@@ -1,0 +1,34 @@
+---
+/**
+ * The wordmark for .astro templates — the same three spans as src/components/ui/Logo.tsx, kept
+ * in step by hand. «FORMA»: FOR at 800, MA at 200, the first F stretched ×1.22. With `lockup`,
+ * «FORMA // Сергей Титов». Colour is inherited; size is the font-size of the wrapper.
+ */
+interface Props {
+  lockup?: boolean;
+  label?: string;
+  class?: string;
+}
+const { lockup = false, label = 'Forma', class: className = '' } = Astro.props;
+---
+
+<span
+  class:list={['inline-flex items-baseline', lockup && 'gap-[0.6em]', className]}
+  aria-label={lockup ? `${label} — Сергей Титов` : label}
+>
+  <span class="wordmark inline-flex items-baseline" aria-hidden="true">
+    <span class="wordmark-f">F</span><span>OR</span><span class="wordmark-thin">MA</span>
+  </span>
+  {
+    lockup && (
+      <>
+        <span class="glyph text-[0.55em] text-muted-2" aria-hidden="true">
+          //
+        </span>
+        <span class="text-[0.68em] font-semibold uppercase tracking-[0.1em] text-muted">
+          Сергей Титов
+        </span>
+      </>
+    )
+  }
+</span>

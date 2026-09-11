@@ -191,14 +191,14 @@ export default function OnboardingScreen() {
               {t('app.onbStepOf', { n: stepIndex + 1, total })}
             </span>
             <span className="numeral tabular shrink-0 text-right text-sm">
-              <span className="text-accent">{String(stepIndex + 1).padStart(2, '0')}</span>
+              <span className="text-text">{String(stepIndex + 1).padStart(2, '0')}</span>
               <span className="text-muted-2">/{String(total).padStart(2, '0')}</span>
             </span>
           </div>
+          {/* The brandbook's 4px rule; white, because no course is in scope during onboarding. */}
           <ProgressBar
             value={stepIndex / (total - 1)}
             label={t('app.onbStepOf', { n: stepIndex + 1, total })}
-            size="sm"
           />
         </div>
       }

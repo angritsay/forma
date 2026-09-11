@@ -8,7 +8,6 @@
  */
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Icon } from '@/components/ui/Icon';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { PUBLIC_BUCKET } from '@/lib/api/storage';
@@ -16,7 +15,7 @@ import type { AdminCourseDayPatch, AdminCourseDayRow, CourseDayKind } from '@/li
 import type { CustomWorkoutSummary } from '@/lib/api/types';
 import type { TKey } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
-import { TextList } from '@/app/features/admin/forms/TextList';
+import { FieldLabel, TextList } from '@/app/features/admin/forms/TextList';
 import { MediaField } from '@/app/features/admin/media/MediaField';
 import { WorkoutPickerSheet } from './WorkoutPickerSheet';
 
@@ -126,40 +125,37 @@ export function DayEditor({
 
       {isTraining ? (
         <div className="flex flex-col gap-2">
-          <span className="text-sm font-medium text-muted">{t('app.dayWorkout')}</span>
+          <FieldLabel label={t('app.dayWorkout')} />
+          {/*
+           * The attached workout is a ruled row, the same row the library lists it in; with none
+           * attached the strip holds the two ways to get one. No dashed drop-zone box — a hairline
+           * says "slot" well enough.
+           */}
           {workout ? (
-            <div className="flex flex-wrap items-center gap-3 rounded-inner border border-border p-3">
+            <div className="flex flex-wrap items-center gap-3 border-y border-border py-3">
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[15px] font-medium">{workout.title}</span>
-                <span className="tabular mt-0.5 block text-xs text-muted">
+                <span className="tabular mt-0.5 block text-[13px] text-muted">
                   {workout.estSec
                     ? t('app.nodeDuration', { min: Math.max(1, Math.round(workout.estSec / 60)) })
                     : null}
                 </span>
               </span>
-              <Button variant="secondary" onClick={() => onEditWorkout(workout.id)}>
+              <Button size="sm" variant="secondary" onClick={() => onEditWorkout(workout.id)}>
                 {t('app.builderEditBtn')}
               </Button>
-              <Button variant="ghost" onClick={() => setPicking(true)}>
+              <Button size="sm" variant="ghost" onClick={() => setPicking(true)}>
                 {t('app.dayChangeWorkout')}
               </Button>
             </div>
           ) : (
-            <div className="flex flex-col gap-2 rounded-inner border border-dashed border-border p-4">
-              <p className="text-sm text-muted">{t('app.dayNoWorkout')}</p>
+            <div className="flex flex-col gap-3 border-y border-border py-3">
+              <p className="text-[15px] text-muted">{t('app.dayNoWorkout')}</p>
               <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="secondary"
-                  icon={<Icon name="search" size={16} />}
-                  onClick={() => setPicking(true)}
-                >
+                <Button size="sm" variant="secondary" onClick={() => setPicking(true)}>
                   {t('app.dayPickWorkout')}
                 </Button>
-                <Button
-                  variant="secondary"
-                  icon={<Icon name="plus" size={16} />}
-                  onClick={onBuildNewWorkout}
-                >
+                <Button size="sm" variant="secondary" onClick={onBuildNewWorkout}>
                   {t('app.dayBuildWorkout')}
                 </Button>
               </div>
@@ -186,9 +182,11 @@ export function DayEditor({
       ) : null}
 
       {isTraining ? (
-        <label className="flex items-center gap-2 text-sm text-muted">
+        <label className="tap-target-y flex items-center gap-2.5 text-[15px] text-muted">
+          {/* The native box, in the interface white: a square tick, no colour. */}
           <input
             type="checkbox"
+            className="size-4 accent-primary"
             checked={day.deload}
             onChange={(e) => onPatch({ deload: e.target.checked })}
           />
@@ -207,7 +205,7 @@ export function DayEditor({
         maxBytes={8 * 1024 * 1024}
       />
 
-      <Button variant="ghost" icon={<Icon name="close" size={16} />} onClick={onDelete}>
+      <Button variant="danger" size="sm" className="self-start" onClick={onDelete}>
         {t('app.dayDelete')}
       </Button>
 

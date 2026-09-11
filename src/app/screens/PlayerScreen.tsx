@@ -7,12 +7,11 @@
  * `useActiveWorkoutStore` (persisted), so
  * leaving keeps the session resumable. Keyboard: Space = pause, → next, ← previous.
  */
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Icon } from '@/components/ui/Icon';
 import { ListRow } from '@/components/ui/ListRow';
 import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
@@ -46,6 +45,7 @@ import { WarmupGateStep } from '@/app/features/player/steps/WarmupGateStep';
 import { WorkRepsStep } from '@/app/features/player/steps/WorkRepsStep';
 import { WorkTimerStep } from '@/app/features/player/steps/WorkTimerStep';
 import { haptic, setClosingConfirmation } from '@/lib/telegram/webapp';
+import { courseTileVars } from '@/lib/ui/tile';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
 import { useWakeLock } from '@/app/features/player/useWakeLock';
 import { useT } from '@/app/hooks/useT';
@@ -67,7 +67,6 @@ function NoSession() {
   return (
     <Screen header={<TopBar back="/" title={t('app.playerNoSessionTitle')} />}>
       <EmptyState
-        icon="info"
         title={t('app.playerNoSessionTitle')}
         description={t('app.playerNoSessionBody')}
         action={<Button onClick={() => navigate('/courses')}>{t('app.tabCourses')}</Button>}
@@ -106,17 +105,21 @@ function ArtLayer({ animation, playing, videoUrl }: ArtLayerProps) {
       aria-hidden="true"
     >
       {videoUrl ? (
-        <video
-          key={videoUrl}
-          ref={video}
-          src={videoUrl}
-          className="h-full w-full object-cover"
-          playsInline
-          muted
-          loop
-          autoPlay
-          preload="metadata"
-        />
+        <>
+          <video
+            key={videoUrl}
+            ref={video}
+            src={videoUrl}
+            className="h-full w-full object-cover"
+            playsInline
+            muted
+            loop
+            autoPlay
+            preload="metadata"
+          />
+          {/* A scrim under the header so its white title reads on a bright frame. */}
+          <div className="absolute inset-x-0 top-0 h-28 bg-linear-to-b from-bg/60 to-transparent" />
+        </>
       ) : animation ? (
         <div className="mx-auto w-[min(100%,42dvh)]">
           <ExerciseFigure
@@ -245,8 +248,8 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
   const step = steps[stepIndex];
   const prescribed = session.prescribed;
   const summaryPath = `/summary/${session.sessionId}`;
-  const courseTile = findCourse(session.courseId)?.tile;
-  const courseVars = courseTile ? ({ '--course-tile': courseTile } as CSSProperties) : undefined;
+  // The programme colour for the art, the phase kicker and the progress bar — and the ink to match.
+  const courseVars = courseTileVars(findCourse(session.courseId)?.tile);
 
   const title = step ? stepTitle(t, locale, step, prescribed) : '';
   const animation = step ? stepAnimation(step, prescribed) : undefined;
@@ -361,6 +364,7 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
       <PlayerHeader
         title={title}
         muted={sound.muted}
+        overVideo={Boolean(videoUrl)}
         onBack={() => setLeaveOpen(true)}
         onToggleSound={sound.toggle}
         onMenu={() => setMenuOpen(true)}
@@ -372,7 +376,8 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
        * that one is the app's own timer cues.
        */}
       <div className="h-[calc(42dvh-56px)] shrink-0" aria-hidden="true" />
-      <section className="relative z-10 flex flex-1 flex-col rounded-t-card bg-bg shadow-card">
+      {/* The panel meets the art on a straight edge — no rounded shoulder, no shadow. */}
+      <section className="relative z-10 flex flex-1 flex-col bg-bg">
         {step ? (
           <SectionStepper
             sections={workoutSections(prescribed)}
@@ -407,21 +412,11 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
       </section>
 
       <Sheet open={menuOpen} onClose={() => setMenuOpen(false)} title={t('app.playerMenu')}>
+        {/* Three words on three lines; the rows carry no marks, the danger one is red. */}
         <div className="-mx-4 flex flex-col">
+          <ListRow title={t('app.playerSkipStep')} onClick={skipStep} trailing={null} />
+          <ListRow title={t('app.playerRestartStep')} onClick={restartStep} trailing={null} />
           <ListRow
-            leading={<Icon name="next" />}
-            title={t('app.playerSkipStep')}
-            onClick={skipStep}
-            trailing={null}
-          />
-          <ListRow
-            leading={<Icon name="refresh" />}
-            title={t('app.playerRestartStep')}
-            onClick={restartStep}
-            trailing={null}
-          />
-          <ListRow
-            leading={<Icon name="close" />}
             title={<span className="text-danger">{t('app.playerEndWorkout')}</span>}
             onClick={() => {
               setMenuOpen(false);

@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { useT } from '@/app/hooks/useT';
+import { DisplayTitle } from '@/app/features/home/DisplayTitle';
 import type { PrescribedWorkout } from '@/lib/training/types';
 import { ItemList } from '../ItemList';
 import {
@@ -29,16 +30,18 @@ export function BlockIntroStep({ step, prescribed, onNext }: BlockIntroStepProps
   const part = section === 'main' ? mainPart(prescribed, step.blockId) : null;
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2.5">
         <span className="eyebrow">
           {sectionLabel(t, section)}
           {part ? ` · ${t('app.playerSectionPart', { n: part.n, total: part.total })}` : ''}
         </span>
-        <h2 className="font-display text-4xl">
-          {block ? blockTitle(t, locale, block) : blockTypeLabel(t, step.type)}
-        </h2>
+        <DisplayTitle
+          as="h2"
+          text={block ? blockTitle(t, locale, block) : blockTypeLabel(t, step.type)}
+          className="text-5xl"
+        />
         <div className="flex flex-wrap items-center gap-2">
-          <Badge tone="accent" size="md">
+          <Badge tone="neutral" size="md">
             {formatLabel(t, step.format)}
           </Badge>
           {block ? <span className="text-sm text-muted">{blockMeta(t, locale, block)}</span> : null}
@@ -50,7 +53,7 @@ export function BlockIntroStep({ step, prescribed, onNext }: BlockIntroStepProps
         </div>
         {step.description ? <p className="text-[15px] text-muted">{l(step.description)}</p> : null}
       </div>
-      {block ? <ItemList items={block.items} /> : null}
+      {block ? <ItemList items={block.items} className="border-t border-border-strong" /> : null}
       <Button size="lg" fullWidth onClick={onNext} data-autofocus>
         {t('app.playerGo')}
       </Button>

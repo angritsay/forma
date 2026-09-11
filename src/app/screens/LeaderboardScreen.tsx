@@ -8,10 +8,10 @@ import { useSearchParams } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Glyph } from '@/components/ui/Icon';
 import { IconButton } from '@/components/ui/IconButton';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Spinner } from '@/components/ui/Spinner';
 import { Tabs, tabPanelId } from '@/components/ui/Tabs';
 import type { LeaderboardPeriod } from '@/lib/api/types';
 import { TopBar } from '@/app/components/TopBar';
@@ -25,9 +25,9 @@ import { useSession } from '@/app/store/session';
 
 function ListSkeleton() {
   return (
-    <div className="flex flex-col gap-2" aria-hidden="true">
+    <div className="flex flex-col gap-px" aria-hidden="true">
       {Array.from({ length: 6 }, (_, i) => (
-        <Skeleton key={i} className="h-16" />
+        <Skeleton key={i} className="h-15" />
       ))}
     </div>
   );
@@ -49,22 +49,22 @@ export default function LeaderboardScreen() {
     setSearchParams(id ? { course: id } : {}, { replace: true });
   };
 
+  /*
+   * Two controls on the right, neither a picture: «Обновить» as a word (a circular arrow is not
+   * one of the brand's glyphs), and a `?` for how the points are counted — punctuation is a glyph.
+   */
   const header = (
     <TopBar
       back
       title={t('app.leaderboardTitle')}
       right={
         <>
-          <IconButton
-            label={t('app.leaderboardRefresh')}
-            icon={status === 'loading' ? <Spinner size={18} /> : 'refresh'}
-            variant="ghost"
-            disabled={status === 'loading'}
-            onClick={reload}
-          />
+          <Button variant="ghost" size="sm" loading={status === 'loading'} onClick={reload}>
+            {t('app.leaderboardRefresh')}
+          </Button>
           <IconButton
             label={t('app.leaderboardHowTitle')}
-            icon="info"
+            icon={<Glyph size={16}>?</Glyph>}
             variant="ghost"
             onClick={() => setInfoOpen(true)}
           />
@@ -79,7 +79,6 @@ export default function LeaderboardScreen() {
   } else if (status === 'error') {
     body = (
       <EmptyState
-        icon="warning"
         title={t('app.leaderboardErrorTitle')}
         description={
           error?.code === 'network' ? t('common.errorOffline') : t('common.errorGeneric')
@@ -94,7 +93,6 @@ export default function LeaderboardScreen() {
   } else if (view.empty) {
     body = (
       <EmptyState
-        icon="trophy"
         title={t('app.leaderboardEmptyTitle')}
         description={
           period === 'week' ? t('app.leaderboardEmptyWeek') : t('app.leaderboardEmptyAll')
@@ -116,7 +114,7 @@ export default function LeaderboardScreen() {
     >
       <div className="flex flex-col gap-4 py-2">
         <Tabs<LeaderboardPeriod>
-          variant="pills"
+          variant="fill"
           label={t('app.leaderboardTitle')}
           value={period}
           onChange={setPeriod}
@@ -134,7 +132,6 @@ export default function LeaderboardScreen() {
             role="radio"
             aria-checked={courseId === null}
             selected={courseId === null}
-            icon="globe"
             onClick={() => selectCourse(null)}
           >
             {t('app.leaderboardGlobal')}

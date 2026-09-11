@@ -1,4 +1,4 @@
-import { Icon } from '@/components/ui/Icon';
+import { Glyph } from '@/components/ui/Icon';
 import { Sheet } from '@/components/ui/Sheet';
 import { formatNumber } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
@@ -16,17 +16,18 @@ export function ScaleSheet({ open, scale, onClose }: ScaleSheetProps) {
   return (
     <Sheet open={open} onClose={onClose} title={t('app.pathScaleTitle')}>
       <div className="flex flex-col gap-4 py-2">
-        <div className="flex items-center gap-4 rounded-inner bg-surface-2 p-4">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-control bg-accent/15 text-accent">
-            <Icon name="bolt" size={24} />
-          </span>
-          <span className="tabular text-4xl font-bold leading-none">×{value}</span>
+        {/* The multiplier alone, as a numeral on a rule — the number is the illustration. */}
+        <div className="border-b border-border pb-4">
+          <span className="eyebrow">{t('app.pathStatLoad')}</span>
+          <div className="numeral tabular mt-2 text-5xl leading-none">×{value}</div>
         </div>
         <p className="text-[15px] leading-relaxed">{t('app.pathScaleBody1', { scale: value })}</p>
         <p className="text-[15px] leading-relaxed text-muted">{t('app.pathScaleBody2')}</p>
         <p className="text-[15px] leading-relaxed text-muted">{t('app.pathScaleBody3')}</p>
         <p className="flex gap-2 text-sm text-muted-2">
-          <Icon name="info" size={18} className="mt-0.5 shrink-0" />
+          <Glyph size={12} className="mt-1 shrink-0">
+            //
+          </Glyph>
           <span>{t('app.pathScaleStart')}</span>
         </p>
       </div>

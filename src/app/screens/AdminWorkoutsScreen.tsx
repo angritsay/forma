@@ -7,7 +7,8 @@ import { Navigate } from 'react-router';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Icon } from '@/components/ui/Icon';
+import { Glyph } from '@/components/ui/Icon';
+import { IconButton } from '@/components/ui/IconButton';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
@@ -147,7 +148,7 @@ export default function AdminWorkoutsScreen() {
         <Button
           size="lg"
           fullWidth
-          icon={<Icon name="plus" size={18} />}
+          icon={<Glyph size={16}>+</Glyph>}
           onClick={() => setEditing('new')}
         >
           {t('app.builderNew')}
@@ -159,64 +160,49 @@ export default function AdminWorkoutsScreen() {
           <Spinner />
         </div>
       ) : rows.length === 0 ? (
-        <EmptyState
-          icon="courses"
-          title={t('app.builderEmptyTitle')}
-          description={t('app.builderEmptyBody')}
-        />
+        <EmptyState title={t('app.builderEmptyTitle')} description={t('app.builderEmptyBody')} />
       ) : (
         <ul className="flex flex-col py-2">
-          {rows.map((w) => {
+          {rows.map((w, i) => {
             const minutes = w.estSec ? Math.max(1, Math.round(w.estSec / 60)) : null;
             return (
-              <li key={w.id} className="flex flex-col gap-3 border-t border-border py-4">
-                <div className="flex items-start justify-between gap-3">
+              <li key={w.id} className="flex gap-3 border-t border-border py-4 lg:gap-4">
+                <span className="numeral tabular w-6 shrink-0 pt-1 text-[13px] text-muted-2">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <div className="flex min-w-0 flex-1 flex-col gap-3">
                   <div className="min-w-0">
                     <h3 className="truncate font-display text-lg">{w.title}</h3>
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-[13px] text-muted">
                       {minutes ? (
                         <span className="tabular">{t('app.nodeDuration', { min: minutes })}</span>
                       ) : null}
                       {w.points ? (
                         <span className="tabular">· {t('app.nodePoints', { n: w.points })}</span>
                       ) : null}
+                      {/* A live share link is the one white stamp on the row. */}
                       {w.shareToken ? (
-                        <Badge tone="accent" size="sm">
+                        <Badge tone="inverse" size="sm">
                           {t('app.builderShared')}
                         </Badge>
                       ) : null}
                     </div>
                   </div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant="secondary"
-                    icon={<Icon name="edit" size={16} />}
-                    onClick={() => void startEdit(w.id)}
-                  >
-                    {t('app.builderEditBtn')}
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    icon={<Icon name="globe" size={16} />}
-                    onClick={() => setShareFor(w)}
-                  >
-                    {t('app.builderShareBtn')}
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    icon={<Icon name="user" size={16} />}
-                    onClick={() => setAssignFor(w)}
-                  >
-                    {t('app.builderAssignBtn')}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    icon={<Icon name="close" size={16} />}
-                    onClick={() => setDeleteId(w.id)}
-                  >
-                    {t('app.builderDeleteBtn')}
-                  </Button>
+                  {/* Row actions are words in small buttons; the pictures they used to carry said nothing the words did not. */}
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="secondary" onClick={() => void startEdit(w.id)}>
+                      {t('app.builderEditBtn')}
+                    </Button>
+                    <Button size="sm" variant="secondary" onClick={() => setShareFor(w)}>
+                      {t('app.builderShareBtn')}
+                    </Button>
+                    <Button size="sm" variant="secondary" onClick={() => setAssignFor(w)}>
+                      {t('app.builderAssignBtn')}
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setDeleteId(w.id)}>
+                      {t('app.builderDeleteBtn')}
+                    </Button>
+                  </div>
                 </div>
               </li>
             );
@@ -287,10 +273,11 @@ function ShareSheet({
   return (
     <Sheet open onClose={onClose} title={t('app.builderShareBtn')}>
       <div className="flex flex-col gap-3">
-        <p className="text-sm text-muted">{t('app.builderShareHint')}</p>
+        <p className="text-[15px] text-muted">{t('app.builderShareHint')}</p>
         {token ? (
           <>
-            <div className="break-all rounded-inner border border-border p-3 text-sm">
+            {/* The link is shown as a read-only field — the same surface a field has — so it looks like something to select and copy. */}
+            <div className="border border-border bg-surface-2 px-4 py-3 font-mono text-[13px] break-all select-all">
               {shareUrl(token)}
             </div>
             <div className="flex gap-2">
@@ -367,7 +354,7 @@ function AssignSheet({
   return (
     <Sheet open onClose={onClose} title={t('app.builderAssignBtn')}>
       <div className="flex flex-col gap-3">
-        <p className="text-sm text-muted">{t('app.builderAssignHint')}</p>
+        <p className="text-[15px] text-muted">{t('app.builderAssignHint')}</p>
         <div className="flex gap-2">
           <Input
             type="email"
@@ -375,6 +362,8 @@ function AssignSheet({
             autoComplete="off"
             autoCapitalize="none"
             spellCheck={false}
+            wrapperClassName="flex-1"
+            aria-label={t('app.builderEmailPlaceholder')}
             placeholder={t('app.builderEmailPlaceholder')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -385,20 +374,23 @@ function AssignSheet({
         </div>
         {assignees.length > 0 ? (
           <ul className="flex flex-col">
-            {assignees.map((a) => (
+            {assignees.map((a, i) => (
               <li
                 key={a.email}
-                className="flex items-center justify-between gap-3 border-t border-border px-1 py-2.5 text-sm"
+                className="flex items-center gap-3 border-t border-border py-1.5 text-[15px]"
               >
-                <span className="truncate">{a.email}</span>
-                <button
-                  type="button"
-                  className="shrink-0 text-muted hover:text-danger"
-                  aria-label={t('app.builderUnassign')}
+                <span className="numeral tabular w-6 shrink-0 text-[13px] text-muted-2">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span className="min-w-0 flex-1 truncate">{a.email}</span>
+                <IconButton
+                  size="sm"
+                  variant="ghost"
+                  label={t('app.builderUnassign')}
+                  icon="close"
+                  className="-mr-2 text-muted-2 hover:text-danger"
                   onClick={() => void remove(a.email)}
-                >
-                  <Icon name="close" size={16} />
-                </button>
+                />
               </li>
             ))}
           </ul>

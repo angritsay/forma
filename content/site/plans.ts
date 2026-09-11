@@ -52,7 +52,15 @@ export const PLAN_BY_ID: ReadonlyMap<SubscriptionPlan, Plan> = new Map(PLANS.map
 
 /** What every plan includes; shown on the subscribe page and in the app. */
 export const PLAN_INCLUDES: readonly L10n[] = [
-  { ru: 'Все 5 курсов — 30 недель программ', en: 'All 5 courses — 30 weeks of programs' },
+  /*
+   * Deliberately not a count. Only the beginner course is on sale at launch (`published` in
+   * src/content/schema.ts), and a line that names a number goes stale the moment a course is
+   * held back or added — which is exactly when nobody re-reads the marketing copy.
+   */
+  {
+    ru: 'Все курсы Forma — и каждый новый, как только выходит',
+    en: 'Every Forma course — and each new one the day it lands',
+  },
   {
     ru: 'Нагрузка подстраивается под тебя после каждой тренировки',
     en: 'Load adapts to you after every workout',
@@ -61,5 +69,17 @@ export const PLAN_INCLUDES: readonly L10n[] = [
   { ru: 'Статистика, шаги, таблица лидеров', en: 'Stats, steps and the leaderboard' },
 ];
 
-/** Is the subscription on sale at all: hides the page, the cards and the app entry points. */
-export const PLANS_ENABLED = true;
+/**
+ * Is the subscription on sale at all: hides the page, the cards and the app entry points.
+ *
+ * Off at launch. Only the beginner course is being sold, so a subscription would be 1 990 ₽ a
+ * month for access to one 2 990 ₽ course — which makes the subscription look poor value and the
+ * course look expensive, and both of those cost more than the subscription would earn. Turn it
+ * back on when there is a second course to subscribe to, and fill in the two `paymentUrl` fields
+ * above at the same time.
+ *
+ * `false` removes the /subscribe/ page from the build and the sitemap (src/lib/seo/pages.ts),
+ * the plan card from the course page, the banner from the landing, and the subscription rows
+ * from Profile and Admin. Nothing else needs editing.
+ */
+export const PLANS_ENABLED = false;

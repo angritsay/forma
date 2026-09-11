@@ -35,7 +35,6 @@ relatedExercises:
   - cat_cow
 relatedCourses:
   - start
-  - engine
 relatedGuides:
   - crossfit-home-beginners
   - training-frequency

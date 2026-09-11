@@ -34,7 +34,6 @@ relatedExercises:
   - db_thruster
   - farmer_carry
 relatedCourses:
-  - dumbbells
   - start
 relatedGuides:
   - workout-formats
@@ -42,7 +41,7 @@ relatedGuides:
   - home-gym-equipment
   - training-frequency
 cta:
-  courseId: dumbbells
+  courseId: start
 priority: 0.8
 draft: false
 ---

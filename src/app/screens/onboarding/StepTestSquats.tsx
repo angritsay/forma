@@ -34,15 +34,16 @@ export function StepTestSquats({ draft, update }: StepProps) {
         subtitle={t('app.onbSquatsLead')}
       />
       <TimerDisplay seconds={timer.remainingSec} done={timer.done} status={status}>
+        {/* Play and pause are the two marks the brand keeps as icons; "reset" is said by its label. */}
         {timer.running ? (
-          <Button variant="secondary" onClick={timer.pause} icon={<Icon name="pause" size={18} />}>
+          <Button variant="secondary" onClick={timer.pause} icon={<Icon name="pause" size={16} />}>
             {t('app.onbTimerPause')}
           </Button>
         ) : (
           <Button
             variant={timer.done ? 'secondary' : 'primary'}
             onClick={timer.done ? timer.restart : timer.start}
-            icon={<Icon name={timer.done ? 'refresh' : 'play'} size={18} />}
+            icon={timer.done ? undefined : <Icon name="play" size={16} />}
           >
             {timer.done ? t('app.onbTimerReset') : t('common.start')}
           </Button>

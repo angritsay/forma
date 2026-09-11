@@ -35,20 +35,51 @@ const REQUIRED = [
   'refresh',
 ] as const;
 
+/**
+ * The marks the brandbook sets as type rather than draws (design system CHANGELOG §5). A caller
+ * asking for `back` must get an arrow character, not an SVG that looks like one.
+ */
+const GLYPHS = {
+  back: '←',
+  close: '×',
+  next: '›',
+  prev: '‹',
+  check: '✓',
+  chevron: '›',
+  plus: '+',
+  minus: '−',
+} as const;
+
 describe('icon set', () => {
-  it('contains every required icon with path data', () => {
+  it('contains every required name, drawn as a glyph or as path data', () => {
     for (const name of REQUIRED) {
       expect(ICON_NAMES, name).toContain(name);
       const def = ICONS[name];
-      expect(Boolean(def.d || def.fill), `${name} has no path`).toBe(true);
+      expect(Boolean(def.glyph || def.d || def.fill), `${name} has no drawing`).toBe(true);
+    }
+  });
+
+  it('sets navigation and confirmation as typographic glyphs, with no SVG left behind', () => {
+    for (const [name, glyph] of Object.entries(GLYPHS) as [keyof typeof GLYPHS, string][]) {
+      const def = ICONS[name];
+      expect(def.glyph, name).toBe(glyph);
+      // One name, one rendering: a glyph mark must not also carry path data.
+      expect(def.d ?? def.fill, `${name} still has path data`).toBeUndefined();
+    }
+  });
+
+  it('keeps play and pause as filled shapes', () => {
+    for (const name of ['play', 'pause'] as const) {
+      expect(ICONS[name].fill, name).toBeTruthy();
+      expect(ICONS[name].glyph, name).toBeUndefined();
     }
   });
 
   it('has no empty definitions', () => {
     for (const name of ICON_NAMES) {
       const def = ICONS[name];
-      for (const d of [def.d, def.fill]) {
-        if (d !== undefined) expect(d.trim().length, name).toBeGreaterThan(0);
+      for (const part of [def.glyph, def.d, def.fill]) {
+        if (part !== undefined) expect(part.trim().length, name).toBeGreaterThan(0);
       }
     }
   });

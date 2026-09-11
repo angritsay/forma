@@ -11,7 +11,7 @@ import { Navigate, useNavigate } from 'react-router';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Icon } from '@/components/ui/Icon';
+import { Glyph } from '@/components/ui/Icon';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
@@ -19,6 +19,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { createAdminCourse, listAdminCourses } from '@/lib/api/courseBuilder';
 import type { AdminCourseRow } from '@/lib/api/types';
+import { courseTileVars } from '@/lib/ui/tile';
 import { BootScreen } from '@/app/components/BootScreen';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
@@ -76,7 +77,7 @@ export default function AdminCoursesScreen() {
         <Button
           size="lg"
           fullWidth
-          icon={<Icon name="plus" size={18} />}
+          icon={<Glyph size={16}>+</Glyph>}
           onClick={() => setCreating(true)}
         >
           {t('app.courseNew')}
@@ -88,24 +89,28 @@ export default function AdminCoursesScreen() {
           <Spinner />
         </div>
       ) : rows.length === 0 ? (
-        <EmptyState
-          icon="courses"
-          title={t('app.courseEmptyTitle')}
-          description={t('app.courseEmptyBody')}
-        />
+        <EmptyState title={t('app.courseEmptyTitle')} description={t('app.courseEmptyBody')} />
       ) : (
         <ul className="flex flex-col py-2">
-          {rows.map((c) => (
+          {rows.map((c, i) => (
             <li key={c.id}>
               <button
                 type="button"
                 onClick={() => navigate(`/admin/courses/${c.id}`)}
-                className="flex w-full items-center gap-3 border-t border-border py-4 text-left transition-colors hover:bg-surface-2"
+                className="flex w-full items-center gap-3 border-t border-border py-4 text-left transition-colors duration-150 ease-(--ease-out) hover:bg-surface-2 active:bg-surface-3"
               >
+                <span className="numeral tabular w-6 shrink-0 text-[13px] text-muted-2">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                {/*
+                 * The swatch is the course's cover in miniature — `.hero-art` painted with its
+                 * tile through courseTileVars() — so the list shows the one colour each course
+                 * will bring to the screen, and the interface around it stays black and white.
+                 */}
                 <span
                   aria-hidden="true"
-                  className="size-10 shrink-0 rounded-tile"
-                  style={{ background: c.tile }}
+                  className="hero-art size-10 shrink-0"
+                  style={courseTileVars(c.tile)}
                 />
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="flex items-center gap-2">
@@ -113,13 +118,16 @@ export default function AdminCoursesScreen() {
                       {/* An unnamed draft falls back to its id — it still has to be findable. */}
                       {c.content.name?.ru?.trim() || c.slugId}
                     </span>
-                    <Badge tone={c.status === 'published' ? 'success' : 'neutral'} size="sm">
+                    {/* Published is the one white stamp; a draft is an outline. */}
+                    <Badge tone={c.status === 'published' ? 'inverse' : 'neutral'} size="sm">
                       {t(c.status === 'published' ? 'app.coursePublished' : 'app.courseDraft')}
                     </Badge>
                   </span>
                   <span className="mt-0.5 truncate font-mono text-xs text-muted">{c.slugId}</span>
                 </span>
-                <Icon name="chevron" size={18} className="shrink-0 text-muted" />
+                <Glyph size={16} className="shrink-0 text-muted-2">
+                  ›
+                </Glyph>
               </button>
             </li>
           ))}

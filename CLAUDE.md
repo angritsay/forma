@@ -8,6 +8,13 @@
   channel export.
 - Quality gates before a commit: `npm run check`, `npm run lint`, `npm run format:check`,
   `npm run test`, `npm run build`, `npm run seo:audit`. Do not run a dev or preview server.
+- **Visual rules live in `design/`** — the vendored design system. `design/SKILL.md` is the
+  one-paragraph law, `design/CHANGELOG.md` says what changed from the first brandbook, and
+  `design/tokens/*.css` are the values; `src/styles/global.css` is their implementation and
+  documents every deliberate deviation (two greys darkened for AA). Interface strictly black
+  and white, radius 0, Unbounded capitals for display, Onest for text, the programme colour of
+  the open course as the only colour, glyphs instead of icons. Check a new screen against
+  `design/ui_kits`-style references before inventing a pattern.
 - Code, comments, commit messages and docs in English; product copy is Russian with an English
   value on every `L10n` field.
 - After changing a course, render the review page for the coach:

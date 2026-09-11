@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/Button';
-import { Chip } from '@/components/ui/Chip';
 import { useT } from '@/app/hooks/useT';
+import { DisplayTitle } from '@/app/features/home/DisplayTitle';
+import { FactChips } from '@/app/features/path/FactChips';
 import { ExplainPanel } from '../ExplainPanel';
 import { findExercise, loadLabel, targetLabel, type ExplainStep as Step } from '../model';
 
@@ -18,17 +19,17 @@ export function ExplainStep({ step, onNext }: ExplainStepProps) {
   const exercise = findExercise(step.exerciseId);
   const load = loadLabel(t, step.item);
   const original = step.item.substituted ? findExercise(step.item.originalExerciseId) : undefined;
+  const facts = [targetLabel(t, step.item), ...(load ? [load] : [])];
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-2">
-        <h2 className="font-display text-4xl">
-          {exercise ? exercise.name[locale] : step.exerciseId}
-        </h2>
-        <div className="flex flex-wrap gap-2">
-          <Chip tone="accent">{targetLabel(t, step.item)}</Chip>
-          {load ? <Chip>{load}</Chip> : null}
-        </div>
+      <div className="flex flex-col gap-3">
+        <DisplayTitle
+          as="h2"
+          text={exercise ? exercise.name[locale] : step.exerciseId}
+          className="text-5xl"
+        />
+        <FactChips items={facts} />
         {original ? (
           <p className="text-sm text-muted">
             {t('training.substitutedFrom', { name: original.name[locale] })}

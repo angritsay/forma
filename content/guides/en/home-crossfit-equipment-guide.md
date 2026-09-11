@@ -35,10 +35,6 @@ relatedExercises:
   - farmer_carry
 relatedCourses:
   - start
-  - dumbbells
-  - kettlebell
-  - engine
-  - athlete
 relatedGuides:
   - dumbbell-home-workout
   - kettlebell-beginners

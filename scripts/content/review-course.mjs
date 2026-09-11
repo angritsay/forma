@@ -546,81 +546,83 @@ const page = html`<title>${course.name.ru}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link
     rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;800&family=Onest:wght@400;500;600&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=Onest:wght@400;500;600&display=swap"
   />
   <style>
+    /* Second brandbook: strictly black and white (paper by default, #0f0f11 dark), Unbounded for
+       display, one shape — no radius. The accent is ink/white; nothing here is blue any more. */
     :root {
       color-scheme: light;
-      --bg: #f4f6f4;
-      --surface: #ffffff;
-      --surface-2: #eaf0ec;
-      --surface-3: #dde6e0;
-      --border: rgba(18, 24, 21, 0.1);
-      --border-strong: rgba(18, 24, 21, 0.2);
-      --text: #121815;
-      --muted: #5a645f;
-      --muted-2: #7a847f;
-      --accent: #14805f;
-      --accent-soft: #cdeee0;
-      --accent-2: #4a5bbf;
-      --accent-2-soft: #dfe4fb;
-      --warning: #9a6a00;
-      --warning-soft: #fff0c2;
-      --danger: #b3342f;
-      --danger-soft: #ffe0de;
-      --rest: #e9ede9;
-      --bar: #1f9c78;
-      --bar-range: rgba(31, 156, 120, 0.25);
+      --bg: #ffffff;
+      --surface: #f2f2f0;
+      --surface-2: #e9e9e6;
+      --surface-3: #dededa;
+      --border: rgba(15, 15, 17, 0.14);
+      --border-strong: rgba(15, 15, 17, 0.25);
+      --text: #0f0f11;
+      --muted: #4c4c53;
+      --muted-2: #66666f;
+      --accent: #0f0f11;
+      --accent-soft: rgba(15, 15, 17, 0.08);
+      --accent-2: #0f0f11;
+      --accent-2-soft: rgba(15, 15, 17, 0.08);
+      --warning: #8a6100;
+      --warning-soft: rgba(138, 97, 0, 0.12);
+      --danger: #c53030;
+      --danger-soft: rgba(197, 48, 48, 0.12);
+      --rest: #f2f2f0;
+      --bar: #0f0f11;
+      --bar-range: rgba(15, 15, 17, 0.2);
       --font-sans: 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-      --font-display: 'Manrope', 'Onest', system-ui, sans-serif;
+      --font-display: 'Unbounded', 'Onest', system-ui, sans-serif;
     }
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme='light']) {
         color-scheme: dark;
-        --bg: #0b0b0d;
-        --surface: #151519;
-        --surface-2: #1e1e24;
-        --surface-3: #2a2a31;
-        --border: rgba(255, 255, 255, 0.08);
+        --bg: #0f0f11;
+        --surface: #17171a;
+        --surface-2: #1f1f24;
+        --surface-3: #2a2a30;
+        --border: rgba(255, 255, 255, 0.1);
         --border-strong: rgba(255, 255, 255, 0.18);
-        --text: #f4f4f6;
-        --muted: #a8a8b2;
+        --text: #f6f6f7;
+        --muted: #b9b9c0;
         --muted-2: #93939d;
-        --accent: #9ecbff;
-        --accent-soft: rgba(158, 203, 255, 0.14);
-        --accent-2: #c9d6ff;
-        --accent-2-soft: rgba(201, 214, 255, 0.14);
+        --accent: #ffffff;
+        --accent-soft: rgba(255, 255, 255, 0.12);
+        --accent-2: #ffffff;
+        --accent-2-soft: rgba(255, 255, 255, 0.12);
         --warning: #ffd166;
         --warning-soft: rgba(255, 209, 102, 0.14);
-        --danger: #ff8a80;
+        --danger: #ff6b6b;
         --danger-soft: rgba(255, 107, 107, 0.16);
-        --rest: #121216;
-        --bar: #9ecbff;
-        --bar-range: rgba(158, 203, 255, 0.25);
+        --rest: #17171a;
+        --bar: #ffffff;
+        --bar-range: rgba(255, 255, 255, 0.25);
       }
     }
     :root[data-theme='dark'] {
       color-scheme: dark;
-      --bg: #0b0b0d;
-      --surface: #151519;
-      --surface-2: #1e1e24;
-      --surface-3: #2a2a31;
-      --border: rgba(255, 255, 255, 0.08);
+      --bg: #0f0f11;
+      --surface: #17171a;
+      --surface-2: #1f1f24;
+      --surface-3: #2a2a30;
+      --border: rgba(255, 255, 255, 0.1);
       --border-strong: rgba(255, 255, 255, 0.18);
-      --text: #f4f4f6;
-      --muted: #a8a8b2;
+      --text: #f6f6f7;
+      --muted: #b9b9c0;
       --muted-2: #93939d;
-      --accent: #9ecbff;
-      --accent-soft: rgba(158, 203, 255, 0.14);
-      --accent-2: #c9d6ff;
-      --accent-2-soft: rgba(201, 214, 255, 0.14);
+      --accent: #ffffff;
+      --accent-soft: rgba(255, 255, 255, 0.12);
+      --accent-2: #ffffff;
+      --accent-2-soft: rgba(255, 255, 255, 0.12);
       --warning: #ffd166;
       --warning-soft: rgba(255, 209, 102, 0.14);
-      --danger: #ff8a80;
+      --danger: #ff6b6b;
       --danger-soft: rgba(255, 107, 107, 0.16);
-      --rest: #121216;
-      --bar: #9ecbff;
-      --bar-range: rgba(158, 203, 255, 0.25);
+      --rest: #17171a;
+      --bar: #ffffff;
+      --bar-range: rgba(255, 255, 255, 0.25);
     }
 
     * {
@@ -679,7 +681,7 @@ const page = html`<title>${course.name.ru}</title>
       color: inherit;
       background: none;
       border: 1px solid var(--border-strong);
-      border-radius: 999px;
+      border-radius: 0;
       padding: 6px 14px;
       cursor: pointer;
     }
@@ -730,7 +732,7 @@ const page = html`<title>${course.name.ru}</title>
     .stat {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: 0;
       padding: 14px 16px;
       display: grid;
       gap: 2px;
@@ -799,7 +801,7 @@ const page = html`<title>${course.name.ru}</title>
     }
     .day {
       min-height: 118px;
-      border-radius: 14px;
+      border-radius: 0;
       padding: 10px 11px;
       display: grid;
       align-content: start;
@@ -864,7 +866,7 @@ const page = html`<title>${course.name.ru}</title>
     .chip {
       display: inline-block;
       padding: 1px 8px;
-      border-radius: 999px;
+      border-radius: 0;
       font-size: 11px;
       font-weight: 600;
       letter-spacing: 0.02em;
@@ -893,7 +895,7 @@ const page = html`<title>${course.name.ru}</title>
       gap: 4px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: 0;
       padding: 16px 18px;
     }
     .chart .row {
@@ -923,14 +925,14 @@ const page = html`<title>${course.name.ru}</title>
       position: absolute;
       top: 3px;
       height: 8px;
-      border-radius: 4px;
+      border-radius: 0;
       background: var(--bar-range);
     }
     .chart .bar {
       position: absolute;
       top: 3px;
       height: 8px;
-      border-radius: 4px;
+      border-radius: 0;
       background: var(--bar);
     }
     .chart .cap {
@@ -962,7 +964,7 @@ const page = html`<title>${course.name.ru}</title>
       display: inline-block;
       width: 14px;
       height: 8px;
-      border-radius: 4px;
+      border-radius: 0;
       vertical-align: middle;
       margin-right: 6px;
     }
@@ -975,7 +977,7 @@ const page = html`<title>${course.name.ru}</title>
     article.w {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 0;
       padding: 20px 22px;
       display: grid;
       gap: 18px;
@@ -1028,7 +1030,7 @@ const page = html`<title>${course.name.ru}</title>
       display: grid;
       gap: 0;
       padding: 6px 10px;
-      border-radius: 10px;
+      border-radius: 0;
       background: var(--surface-2);
     }
     .w-times b {
@@ -1061,7 +1063,7 @@ const page = html`<title>${course.name.ru}</title>
     }
     .block {
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 0;
       padding: 12px 14px;
       display: grid;
       gap: 8px;
@@ -1143,13 +1145,13 @@ const page = html`<title>${course.name.ru}</title>
       white-space: pre-wrap;
       font: 13px/1.45 var(--font-sans);
       background: var(--surface-2);
-      border-radius: 12px;
+      border-radius: 0;
       padding: 12px 14px;
       color: var(--text);
     }
     .source details {
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 0;
       padding: 8px 12px;
     }
     .source summary {
@@ -1163,7 +1165,7 @@ const page = html`<title>${course.name.ru}</title>
     }
     .flags li {
       background: var(--warning-soft);
-      border-radius: 10px;
+      border-radius: 0;
       padding: 8px 12px;
       font-size: 13px;
     }
@@ -1184,7 +1186,7 @@ const page = html`<title>${course.name.ru}</title>
       font-size: 13px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: 0;
       overflow: hidden;
     }
     table.ex th,

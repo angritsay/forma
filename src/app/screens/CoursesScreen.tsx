@@ -1,5 +1,5 @@
 /**
- * Courses catalogue: every course as a tile — owned ones continue into the path, locked ones
+ * Courses catalogue: every course as a card — owned ones continue into the path, locked ones
  * link to the landing course page where access is bought.
  */
 import { useNavigate } from 'react-router';
@@ -29,23 +29,17 @@ export default function CoursesScreen() {
 
   return (
     <Screen>
-      <div className="flex flex-col gap-2 py-4">
-        <PageTitle title={t('app.coursesTitle')} subtitle={t('app.coursesLead')} />
+      <div className="flex flex-col gap-6 py-5">
+        <PageTitle display title={t('app.coursesTitle')} subtitle={t('app.coursesLead')} />
         {/*
-          No gap: each entry draws its own top hairline and owns the space above it, so the
-          catalogue reads as one ruled column. Owned courses come first and the numerals follow
-          that order rather than the content's, because the number is a position in this list.
+          Owned courses come first and the numerals follow that order rather than the content's,
+          because the number is a position in this list. Two columns from `lg`: five courses in
+          one column on a desktop is a lot of scrolling for a catalogue whose whole job is
+          comparison.
         */}
-        {/*
-          Two columns from `lg`: five courses in one column on a desktop is a lot of scrolling for
-          a catalogue whose whole job is comparison. `divide-x` keeps the rule between them so the
-          grid still reads as ruled rather than as two floating lists.
-        */}
-        <div className="flex flex-col lg:grid lg:grid-cols-2 lg:gap-x-10">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
           {pending
-            ? courses.map((course) => (
-                <Skeleton key={course.id} rounded="control" className="mt-5 h-56" />
-              ))
+            ? courses.map((course) => <Skeleton key={course.id} rounded="card" className="h-80" />)
             : [...owned, ...locked].map((course, i) => {
                 const isOwned = entitlements.includes(course.id);
                 const state = courseStates[course.id];

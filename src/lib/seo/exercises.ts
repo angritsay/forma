@@ -17,7 +17,7 @@ import { EXERCISE_BY_ID, EXERCISES, coursesUsingExercise } from '@/content/regis
 import { l, t } from '@/i18n/index';
 
 /** The default course tile (--tile-1), used when an exercise is not (yet) part of any course. */
-export const DEFAULT_TILE = '#1a2634';
+export const DEFAULT_TILE = '#1f1f24';
 
 export function patternName(pattern: MovementPattern, locale: Locale): string {
   return t(locale, `seo.pattern_${pattern}` as const);

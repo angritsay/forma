@@ -12,7 +12,7 @@ import { Navigate, useParams } from 'react-router';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Icon } from '@/components/ui/Icon';
+import { Glyph } from '@/components/ui/Icon';
 import { Screen } from '@/components/ui/Screen';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Spinner } from '@/components/ui/Spinner';
@@ -316,7 +316,8 @@ export default function AdminCourseScreen() {
           back="/admin/courses"
           title={course.content.name?.ru || course.slugId}
           right={
-            <Badge tone={published ? 'success' : 'neutral'} size="sm">
+            /* Published is the one white stamp; a draft is an outline. */
+            <Badge tone={published ? 'inverse' : 'neutral'} size="sm">
               {t(published ? 'app.coursePublished' : 'app.courseDraft')}
             </Badge>
           }
@@ -327,7 +328,7 @@ export default function AdminCourseScreen() {
           <Button
             size="lg"
             fullWidth
-            icon={<Icon name="plus" size={18} />}
+            icon={<Glyph size={16}>+</Glyph>}
             onClick={() => void addDay()}
           >
             {t('app.dayAdd')}
@@ -352,11 +353,7 @@ export default function AdminCourseScreen() {
 
       {tab === 'days' ? (
         days.length === 0 ? (
-          <EmptyState
-            icon="courses"
-            title={t('app.dayEmptyTitle')}
-            description={t('app.dayEmptyBody')}
-          />
+          <EmptyState title={t('app.dayEmptyTitle')} description={t('app.dayEmptyBody')} />
         ) : (
           <DayList
             days={days}
@@ -368,25 +365,39 @@ export default function AdminCourseScreen() {
 
       {tab === 'publish' ? (
         <div className="flex flex-col gap-5 py-4">
+          {/*
+           * The verdict is a ruled line, not a tinted callout: the semantic colour sits on the
+           * words alone, and the things still missing follow as a numbered list — 01, 02 — in
+           * `CourseSchema`'s own wording, each on its own hairline.
+           */}
           {issues.length === 0 ? (
-            <p className="rounded-inner border border-success/40 bg-success/10 px-4 py-3 text-sm text-success">
+            <p className="eyebrow-sentence border-y border-border py-3 text-success">
               {t('app.coursePublishReady')}
             </p>
           ) : (
-            <div className="rounded-inner border border-warning/40 bg-warning/10 px-4 py-3">
-              <p className="text-sm font-medium text-warning">{t('app.coursePublishBlocked')}</p>
-              <ul className="mt-2 flex list-disc flex-col gap-1 pl-5 text-sm text-muted">
-                {issues.map((issue) => (
-                  <li key={issue}>{issue}</li>
+            <div className="flex flex-col border-t border-border">
+              <p className="eyebrow-sentence py-3 text-warning">{t('app.coursePublishBlocked')}</p>
+              <ul className="flex flex-col">
+                {issues.map((issue, i) => (
+                  <li
+                    key={issue}
+                    className="flex gap-3 border-t border-border py-2.5 text-[15px] text-muted last:border-b"
+                  >
+                    <span className="numeral tabular w-6 shrink-0 text-[13px] text-muted-2">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <span className="min-w-0 flex-1">{issue}</span>
+                  </li>
                 ))}
               </ul>
             </div>
           )}
 
-          <p className="text-sm text-muted">{t('app.coursePublishExplain')}</p>
+          <p className="text-[15px] text-muted">{t('app.coursePublishExplain')}</p>
           {/* Publishing is instant in the app and not on the website; say so where it is decided. */}
-          <p className="text-sm text-muted">{t('app.coursePublishSite')}</p>
+          <p className="text-[15px] text-muted">{t('app.coursePublishSite')}</p>
 
+          {/* Publish is the one white button on this tab; taking it back is a secondary. */}
           {published ? (
             <Button
               variant="secondary"
@@ -409,7 +420,9 @@ export default function AdminCourseScreen() {
 
           {!published && days.length === 0 ? (
             <Button
-              variant="ghost"
+              variant="danger"
+              size="sm"
+              className="self-start"
               onClick={() => {
                 void deleteAdminCourse(course.id).then(() => {
                   window.location.hash = '#/admin/courses';

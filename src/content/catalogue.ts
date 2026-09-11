@@ -18,12 +18,21 @@
  * With nothing loaded — a static landing build, a script, a test — every accessor returns exactly
  * what the compiled registry holds.
  */
-import { COURSES, EXERCISE_BY_ID, EXERCISES } from './registry';
+import { COURSES, EXERCISE_BY_ID, EXERCISES, LIVE_COURSES } from './registry';
 import type { Course, CourseNode, Exercise, Workout } from './schema';
 
 const COMPILED_COURSE_BY_ID: ReadonlyMap<string, Course> = new Map(COURSES.map((c) => [c.id, c]));
 
-let courses: readonly Course[] = COURSES;
+/*
+ * The list and the lookup are deliberately different sets.
+ *
+ * `courses` is what the app *offers* — the course list, the home page — so it holds only what is
+ * on sale. `courseById` is what the app can *resolve*, and that has to stay every compiled course:
+ * somebody who bought a course before it was taken off sale still opens it, their history still
+ * names it, and the demo backend still seeds it. A course off sale disappears from the shelf, not
+ * from the product.
+ */
+let courses: readonly Course[] = LIVE_COURSES;
 let courseById: ReadonlyMap<string, Course> = COMPILED_COURSE_BY_ID;
 let exercises: readonly Exercise[] = EXERCISES;
 let exerciseById: ReadonlyMap<string, Exercise> = EXERCISE_BY_ID;
@@ -52,8 +61,9 @@ export function setCatalogueOverlay(overlay: {
   const extraCourses = overlay.courses.filter((c) => !COMPILED_COURSE_BY_ID.has(c.id));
   const extraExercises = overlay.exercises.filter((e) => !EXERCISE_BY_ID.has(e.id));
 
-  courses = [...COURSES, ...extraCourses].sort((a, b) => a.order - b.order);
-  courseById = new Map(courses.map((c) => [c.id, c]));
+  courses = [...LIVE_COURSES, ...extraCourses].sort((a, b) => a.order - b.order);
+  // Keyed over every compiled course, not just the ones on sale — see the note by the declaration.
+  courseById = new Map([...COURSES, ...extraCourses].map((c) => [c.id, c]));
   exercises = [...EXERCISES, ...extraExercises];
   exerciseById = new Map(exercises.map((e) => [e.id, e]));
 
@@ -62,7 +72,7 @@ export function setCatalogueOverlay(overlay: {
 
 /** Drop back to the compiled content. For tests, and for signing out. */
 export function resetCatalogueOverlay(): void {
-  courses = COURSES;
+  courses = LIVE_COURSES;
   courseById = COMPILED_COURSE_BY_ID;
   exercises = EXERCISES;
   exerciseById = EXERCISE_BY_ID;

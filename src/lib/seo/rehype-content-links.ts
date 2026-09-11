@@ -112,12 +112,22 @@ export default function rehypeContentLinks(options: RehypeContentLinksOptions = 
         el.properties = { ...el.properties, href: localizedHref(locale, resolved.sitePath, base) };
         return undefined;
       }
+      const unwrap = () => {
+        const replacement = el.children ?? [];
+        parent.children?.splice(index, 1, ...replacement);
+        return replacement.length;
+      };
+      /*
+       * A course held back from sale still has its content, and the guides still name it in prose.
+       * The sentence stays and the link goes — quietly: this is a deliberate state, not a mistake
+       * to be fixed, and warning about it once per guide per build would bury the warnings that
+       * do mean something.
+       */
+      if (resolved && 'unpublished' in resolved) return unwrap();
       const reason = resolved && 'error' in resolved ? resolved.error : `unresolvable "${href}"`;
       CONTENT_LINK_WARNINGS.push({ file: path, href, reason });
       console.warn(`[content-links] ${path}: ${reason}`);
-      const replacement = el.children ?? [];
-      parent.children?.splice(index, 1, ...replacement);
-      return replacement.length;
+      return unwrap();
     });
   };
 }

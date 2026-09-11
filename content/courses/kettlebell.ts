@@ -1351,6 +1351,11 @@ const NODES: NodeInput[] = [
 export const COURSE_KETTLEBELL: CourseInput = {
   id: 'kettlebell',
   order: 4,
+  /*
+   * Written and playable, but not on sale yet: at launch Forma offers the beginner course only.
+   * See `published` in src/content/schema.ts for what the flag hides.
+   */
+  published: false,
   slug: { ru: 'girya-sila-i-metabolizm', en: 'kettlebell-power' },
   name: {
     ru: 'Форма с гирей: сила и метаболизм',
@@ -1423,7 +1428,7 @@ export const COURSE_KETTLEBELL: CourseInput = {
   weeks: 6,
   sessionsPerWeek: 3,
   avgSessionMin: 32,
-  tile: '#232f42', // --tile-4
+  tile: '#1f1f24', // --tile-4 — neutral; no programme colour yet
   price: { rub: 3990, usd: 39 },
   workouts: [
     W_TEST,

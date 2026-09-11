@@ -34,7 +34,6 @@ relatedExercises:
   - sit_up
   - jumping_jack
 relatedCourses:
-  - engine
   - start
 relatedGuides:
   - crossfit-home-beginners
@@ -42,7 +41,7 @@ relatedGuides:
   - rpe-autoregulation
   - dumbbell-home-workout
 cta:
-  courseId: engine
+  courseId: start
 priority: 0.8
 draft: false
 ---

@@ -19,7 +19,7 @@
  * Because the fetch happens at build time, a course published in the admin panel gets its page on
  * the next deploy — which `publishAdminCourse()` asks for (see docs/SETUP.md §2.4).
  */
-import { COURSES } from './registry';
+import { COURSES, LIVE_COURSES } from './registry';
 import type { Course } from './schema';
 import { draftToCourse, parseCourseContent, parseDayContent } from '@/lib/courses/draft';
 
@@ -135,15 +135,21 @@ export const PUBLISHED_COURSES: readonly Course[] = await load().catch((e: unkno
 });
 
 /**
- * Every course the **site** should have a page for: the compiled ones, plus the published ones.
+ * Every course the **site** should have a page for: the compiled ones that are on sale, plus the
+ * ones published from the admin panel.
  *
  * Compiled wins an id collision, exactly as `src/content/catalogue.ts` decides it for the app. That
  * matters during the migration of the five existing courses: both copies exist for a while, and the
  * reviewed file is the one that should be on sale.
+ *
+ * The compiled half is `LIVE_COURSES`, not `COURSES` — a course whose `published` flag is false has
+ * no page, no sitemap entry and no card anywhere. The id collision is still tested against *all*
+ * compiled courses, so taking one off sale does not quietly hand its slug to a database row of the
+ * same id.
  */
 export const SITE_COURSES: readonly Course[] = (() => {
   const compiled = new Set(COURSES.map((c) => c.id));
-  return [...COURSES, ...PUBLISHED_COURSES.filter((c) => !compiled.has(c.id))].sort(
+  return [...LIVE_COURSES, ...PUBLISHED_COURSES.filter((c) => !compiled.has(c.id))].sort(
     (a, b) => a.order - b.order,
   );
 })();

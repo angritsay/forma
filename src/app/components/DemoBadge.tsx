@@ -16,15 +16,17 @@ export function DemoBadge() {
   return (
     <aside
       aria-label={t('app.demoBadgeLabel')}
-      className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[480px] border-t border-border bg-surface/95 pb-[var(--safe-bottom)] backdrop-blur-md lg:max-w-none"
+      className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[480px] border-t border-border bg-bg/88 pb-[var(--safe-bottom)] backdrop-blur-lg lg:max-w-none"
     >
       <p
         style={{ height: DEMO_BADGE_HEIGHT }}
-        className="flex items-center justify-center gap-2 px-4 text-[11px] leading-none text-muted"
+        className="flex items-center justify-center gap-2.5 px-4 text-[11px] leading-none text-muted"
       >
-        <span className="rounded-control bg-warning/20 px-1.5 py-1 text-[10px] font-bold tracking-wide text-warning">
-          {t('app.demoBadgeLabel')}
-        </span>
+        {/*
+         * The word is the badge: a warning tone stays on the text and never becomes a tinted
+         * block — the same rule the kit's Badge follows, at a size that fits a 26px strip.
+         */}
+        <span className="control-label text-[10px] text-warning">{t('app.demoBadgeLabel')}</span>
         <span className="truncate">{t('app.demoBadge')}</span>
       </p>
     </aside>

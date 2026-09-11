@@ -11,7 +11,7 @@
  */
 import { useEffect, useMemo } from 'react';
 import { create } from 'zustand';
-import { allCourses, findCourse, hasCourse } from '@/content/catalogue';
+import { findCourse, hasCourse } from '@/content/catalogue';
 import { listBenchmarks } from '@/lib/api/benchmarks';
 import { listCourseStates, upsertCourseState as apiUpsertCourseState } from '@/lib/api/courseState';
 import { listDailyLogs } from '@/lib/api/dailyLogs';
@@ -128,7 +128,19 @@ export function resolveActiveCourseId(
   owned: readonly string[],
 ): string | null {
   if (preferred && owned.includes(preferred) && hasCourse(preferred)) return preferred;
-  const ownedCourses = allCourses().filter((c) => owned.includes(c.id));
+  /*
+   * Resolved from what the athlete owns, not from what is on sale.
+   *
+   * This used to filter `allCourses()`, which lists only the courses currently offered — so the
+   * day a course was withdrawn, everyone training in it lost it as their active course and Home
+   * silently moved them to one they had never opened. Owning a course and the shop still selling
+   * it are different facts, and only the first belongs here; `findCourse()` resolves every
+   * compiled course, withdrawn or not. Catalogue order is still what breaks a tie.
+   */
+  const ownedCourses = owned
+    .map((id) => findCourse(id))
+    .filter((c): c is NonNullable<ReturnType<typeof findCourse>> => Boolean(c))
+    .sort((a, b) => a.order - b.order);
   if (ownedCourses.length === 0) return null;
   let latest: CourseStateRow | undefined;
   for (const c of ownedCourses) {

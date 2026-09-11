@@ -1,0 +1,7 @@
+:root{
+--sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:20px;--sp-6:24px;--sp-7:32px;--sp-8:40px;--sp-9:56px;--sp-10:80px;
+--page-pad:20px;      /* поля экрана 390px */
+--card-pad:20px;
+--section-gap:32px;
+--hit-min:44px; /* @kind spacing */       /* минимальная цель нажатия */
+}

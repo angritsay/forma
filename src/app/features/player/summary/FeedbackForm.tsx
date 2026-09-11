@@ -1,7 +1,7 @@
 import { useId } from 'react';
-import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
 import { Slider } from '@/components/ui/Slider';
+import { Textarea } from '@/components/ui/Textarea';
 import { useT } from '@/app/hooks/useT';
 import type { TKey } from '@/i18n/index';
 import type { Feeling } from '@/lib/training/types';
@@ -26,16 +26,13 @@ function rpeKey(rpe: number): TKey {
   return `training.rpe${n}` as TKey;
 }
 
-/** RPE slider with Borg CR10 descriptors, feeling chips and a free note. */
+/** RPE slider with Borg CR10 descriptors, feeling chips and a free note — one ruled section. */
 export function FeedbackForm({ value, onChange, disabled }: FeedbackFormProps) {
   const { t } = useT();
-  const noteId = useId();
   const feelingLabelId = useId();
   return (
-    <Card className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h2 className="font-display text-3xl">{t('app.summaryFeedbackTitle')}</h2>
-      </div>
+    <section className="flex flex-col gap-6 border-t border-border-strong pt-5">
+      <h2 className="font-display text-2xl">{t('app.summaryFeedbackTitle')}</h2>
 
       <Slider
         value={value.rpe}
@@ -50,7 +47,7 @@ export function FeedbackForm({ value, onChange, disabled }: FeedbackFormProps) {
       />
 
       <div className="flex flex-col gap-3">
-        <span id={feelingLabelId} className="text-sm font-medium text-muted">
+        <span id={feelingLabelId} className="text-[13px] font-semibold text-muted">
           {t('app.summaryFeelingLabel')}
         </span>
         <div role="group" aria-labelledby={feelingLabelId} className="flex flex-wrap gap-2">
@@ -68,21 +65,15 @@ export function FeedbackForm({ value, onChange, disabled }: FeedbackFormProps) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor={noteId} className="text-sm font-medium text-muted">
-          {t('app.summaryNoteLabel')}
-        </label>
-        <textarea
-          id={noteId}
-          value={value.note}
-          maxLength={NOTE_MAX}
-          rows={3}
-          disabled={disabled}
-          placeholder={t('app.summaryNotePlaceholder')}
-          onChange={(e) => onChange({ ...value, note: e.target.value })}
-          className="min-h-24 w-full resize-y rounded-inner border border-border bg-surface-2 px-4 py-3 text-base text-text outline-none transition-colors placeholder:text-muted-2 focus:border-border-strong disabled:opacity-50"
-        />
-      </div>
-    </Card>
+      <Textarea
+        label={t('app.summaryNoteLabel')}
+        value={value.note}
+        maxLength={NOTE_MAX}
+        rows={3}
+        disabled={disabled}
+        placeholder={t('app.summaryNotePlaceholder')}
+        onChange={(e) => onChange({ ...value, note: e.target.value })}
+      />
+    </section>
   );
 }

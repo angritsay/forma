@@ -11,7 +11,7 @@ import { Navigate } from 'react-router';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Icon } from '@/components/ui/Icon';
+import { Glyph } from '@/components/ui/Icon';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
@@ -137,7 +137,7 @@ export default function AdminExercisesScreen() {
         <Button
           size="lg"
           fullWidth
-          icon={<Icon name="plus" size={18} />}
+          icon={<Glyph size={16}>+</Glyph>}
           onClick={() => setEditing('new')}
         >
           {t('app.exNew')}
@@ -150,8 +150,8 @@ export default function AdminExercisesScreen() {
           autoComplete="off"
           autoCapitalize="none"
           spellCheck={false}
+          aria-label={t('app.exSearch')}
           placeholder={t('app.exSearch')}
-          leading={<Icon name="search" size={18} />}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -171,40 +171,37 @@ export default function AdminExercisesScreen() {
           <Spinner />
         </div>
       ) : filtered.length === 0 ? (
-        <EmptyState icon="search" title={t('app.exNoMatches')} />
+        <EmptyState title={t('app.exNoMatches')} />
       ) : (
         <ul className="flex flex-col">
-          {filtered.map((e) => (
+          {filtered.map((e, i) => (
             <li key={e.id} className="flex items-center gap-3 border-t border-border py-3 lg:gap-4">
+              <span className="numeral tabular w-6 shrink-0 text-[13px] text-muted-2">
+                {String(i + 1).padStart(2, '0')}
+              </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="truncate text-[15px] font-medium">{e.nameRu}</span>
+                  {/* The coach's own movement is the one white stamp in the row. */}
                   {e.isCustom ? (
-                    <Badge tone="accent" size="sm">
+                    <Badge tone="inverse" size="sm">
                       {t('app.exCustomBadge')}
                     </Badge>
                   ) : null}
-                </div>
-                <div className="mt-0.5 flex items-center gap-2 text-xs text-muted">
-                  <span className="truncate font-mono">{e.id}</span>
+                  {/* A word, not a play icon: the row is read, not watched. */}
                   {e.videoRu ? (
-                    <Icon name="play" size={12} className="shrink-0 text-accent" />
+                    <Badge tone="neutral" size="sm">
+                      {t('app.exHasVideo')}
+                    </Badge>
                   ) : null}
                 </div>
+                <div className="mt-0.5 truncate font-mono text-xs text-muted">{e.id}</div>
               </div>
-              <Button
-                variant="secondary"
-                icon={<Icon name="edit" size={16} />}
-                onClick={() => setEditing(e)}
-              >
+              <Button size="sm" variant="secondary" onClick={() => setEditing(e)}>
                 {t('app.builderEditBtn')}
               </Button>
               {e.isCustom ? (
-                <Button
-                  variant="ghost"
-                  icon={<Icon name="close" size={16} />}
-                  onClick={() => setDeleteRow(e)}
-                >
+                <Button size="sm" variant="ghost" onClick={() => setDeleteRow(e)}>
                   {t('app.builderDeleteBtn')}
                 </Button>
               ) : null}

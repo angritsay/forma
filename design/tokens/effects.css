@@ -1,0 +1,27 @@
+:root{
+/* Скругления: система острая, редакционная */
+--r-card:0px;
+--r-tile:0px;
+--r-input:0px;
+--r-small:0px;
+--r-pill:999px;
+--r-btn:0px; /* кнопки — острые прямоугольники */
+/* Тени — минимум; бумага-полароид даёт мягкую тень */
+--shadow-soft:0 12px 30px rgba(0,0,0,.30);
+--shadow-card:none;
+--shadow-paper:0 12px 30px rgba(15,15,17,.18);
+--glow-blue:none; /* @kind other */
+--glow-peri:none; /* @kind other */
+/* Анимация: спокойные fades, без bounce */
+--ease-out:cubic-bezier(.22,.61,.36,1); /* @kind other */
+--dur-fast:150ms; /* @kind other */
+--dur-med:280ms; /* @kind other */
+}
+[data-forma-theme="light"]{
+--shadow-soft:0 8px 30px rgba(15,15,17,.10);
+}
+/* Зерно для фото (наложить поверх изображения) */
+.photo-grain{position:relative}
+.photo-grain::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.35;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E")}
+/* Монохромная обработка фото */
+.photo-mono{filter:grayscale(1) contrast(1.05) brightness(.92)}

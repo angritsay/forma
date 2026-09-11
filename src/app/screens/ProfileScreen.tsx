@@ -3,11 +3,15 @@
  * limitations editors, the coach's bookable hour, player sounds, sign out, version,
  * and the admin entry point.
  * "Retake tests" seeds the onboarding draft from the profile so the wizard resumes at the tests.
+ *
+ * This is the one screen on paper. `data-theme="paper"` on the root flips every token under it —
+ * white ground, ink text, a black primary button — while the sheets and dialogs it opens are
+ * portalled to <body> and stay on the dark theme, as overlays do.
  */
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Icon } from '@/components/ui/Icon';
 import { ListRow } from '@/components/ui/ListRow';
+import { Logo } from '@/components/ui/Logo';
 import { Modal } from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Screen } from '@/components/ui/Screen';
@@ -28,6 +32,7 @@ import {
   limitationsSummary,
   newAvatarSeed,
   profileToDraft,
+  sinceLabel,
   withEquipment,
   withLimitations,
 } from '@/app/features/profile/model';
@@ -47,6 +52,15 @@ import { formatPrice } from '@content/site/pricing';
 type Busy = 'avatar' | 'name' | 'equipment' | 'limitations' | null;
 type SheetName = 'equipment' | 'limitations' | null;
 type DemoDialog = 'reset' | 'leave' | null;
+
+/** The paper root. `min-h-dvh` so the white ground runs under the whole screen, not just the content. */
+function Paper({ children }: { children: React.ReactNode }) {
+  return (
+    <div data-theme="paper" className="min-h-dvh">
+      {children}
+    </div>
+  );
+}
 
 export default function ProfileScreen() {
   const tr = useT();
@@ -88,29 +102,37 @@ export default function ProfileScreen() {
     }
   };
 
+  /*
+   * The wordmark on the left, the screen's name as a kicker on the right — the design system's
+   * paper header. The kicker is still the page's <h1>: the big line below is the person's name,
+   * and a heading that changes with the visitor is no name for the screen.
+   */
   const header = (
-    <div className="flex h-16 items-center gap-2 px-5">
-      <h1 className="font-display min-w-0 flex-1 truncate text-2xl leading-[1.3]">
-        {t('app.profileTitle')}
-      </h1>
+    <div className="flex h-14 items-center justify-between gap-3 px-5">
+      <Logo className="text-[15px]" />
+      <h1 className="eyebrow">{t('app.profileTitle')}</h1>
     </div>
   );
 
   if (!profile) {
     return (
-      <Screen header={header}>
-        <div className="flex flex-col gap-5 py-2" aria-hidden="true">
-          <Skeleton rounded="card" className="h-28" />
-          <Skeleton rounded="card" className="h-28" />
-          <Skeleton rounded="card" className="h-40" />
-        </div>
-      </Screen>
+      <Paper>
+        <Screen header={header}>
+          <div className="flex flex-col gap-6 pt-6" aria-hidden="true">
+            <Skeleton rounded="card" className="h-20" />
+            <Skeleton rounded="card" className="h-36" />
+            <Skeleton rounded="card" className="h-40" />
+          </div>
+        </Screen>
+      </Paper>
     );
   }
 
   const tp = profile.trainingProfile;
   const fitness = fitnessOf(profile);
   const email = profile.email || user?.email || '';
+  const sinceDate = sinceLabel(locale, profile.createdAt);
+  const since = sinceDate ? t('app.profileSince', { date: sinceDate }) : undefined;
 
   const retakeTests = () => {
     const draft = profileToDraft(profile, locale);
@@ -148,206 +170,206 @@ export default function ProfileScreen() {
   };
 
   return (
-    <Screen header={header}>
-      <div className="flex flex-col gap-6 py-2">
-        <ProfileHeader
-          seed={profile.avatarSeed || profile.id}
-          name={profile.displayName ?? ''}
-          email={email}
-          busy={busy === 'avatar' || busy === 'name' ? busy : null}
-          onNewAvatar={() => void save({ avatarSeed: newAvatarSeed() }, 'avatar')}
-          onSaveName={(name) => save({ displayName: name }, 'name')}
-        />
-        <FitnessCard
-          fitness={fitness}
-          onRetake={retakeTests}
-          onSetup={() => navigate('/onboarding')}
-        />
+    <Paper>
+      <Screen header={header}>
+        <div className="flex flex-col gap-8 pt-6">
+          <ProfileHeader
+            seed={profile.avatarSeed || profile.id}
+            name={profile.displayName ?? ''}
+            email={email}
+            since={since}
+            busy={busy === 'avatar' || busy === 'name' ? busy : null}
+            onNewAvatar={() => void save({ avatarSeed: newAvatarSeed() }, 'avatar')}
+            onSaveName={(name) => save({ displayName: name }, 'name')}
+          />
+          <FitnessCard
+            fitness={fitness}
+            onRetake={retakeTests}
+            onSetup={() => navigate('/onboarding')}
+          />
 
-        {PLANS_ENABLED ? (
-          <Section title={t('app.profileSubscriptionSection')}>
-            <div className="border-t border-border">
-              <ListRow
-                leading={<Icon name="star" />}
-                title={subscriptionTitle(tr, subscription)}
-                subtitle={subscriptionSubtitle(tr, subscription)}
-                href={subscribeHref(locale)}
-              />
-            </div>
-          </Section>
-        ) : null}
-
-        {BOOKING.enabled ? (
-          <Section title={t('app.profileCoachSection')}>
-            <div className="border-t border-border">
-              <ListRow
-                leading={<Icon name="calendar" />}
-                title={t('app.profileBook')}
-                subtitle={t('app.profileBookHint', {
-                  duration: BOOKING.durationMin,
-                  price: formatPrice(locale, BOOKING.price),
-                })}
-                onClick={() => navigate('/book')}
-              />
-            </div>
-          </Section>
-        ) : null}
-
-        <Section title={t('app.profileTrainingSection')}>
-          <div className="border-t border-border">
-            <ul className="divide-y divide-border">
-              <li>
-                <ListRow
-                  leading={<Icon name="settings" />}
-                  title={t('app.profileEquipment')}
-                  subtitle={equipmentSummary(tr, tp)}
-                  disabled={!tp}
-                  onClick={() => setSheet('equipment')}
-                />
-              </li>
-              <li>
-                <ListRow
-                  leading={<Icon name="warning" />}
-                  title={t('app.profileLimitations')}
-                  subtitle={limitationsSummary(tr, tp)}
-                  disabled={!tp}
-                  onClick={() => setSheet('limitations')}
-                />
-              </li>
-            </ul>
-          </div>
-        </Section>
-
-        <Section title={t('app.profileSettingsSection')}>
-          <div className="border-t border-border">
-            <ul className="divide-y divide-border">
-              <li>
-                <ListRow
-                  leading={<Icon name="bolt" />}
-                  title={t('app.profileSound')}
-                  subtitle={muted ? t('app.profileSoundOff') : t('app.profileSoundOn')}
-                  trailing={
-                    <Switch
-                      checked={!muted}
-                      onChange={(on) => setMuted(!on)}
-                      label={t('app.profileSound')}
-                    />
-                  }
-                />
-              </li>
-            </ul>
-          </div>
-        </Section>
-
-        {demo ? (
-          <Section title={t('app.demoSection')}>
-            <div className="border-t border-border">
-              <ul className="divide-y divide-border">
-                <li className="px-4 py-3 text-sm text-muted">{t('app.demoDataNote')}</li>
-                <li>
+          {/*
+            Settings are hairline rows and words. The row icons that used to lead each one are
+            gone: the title says what the row is, and the subtitle says what it is set to.
+          */}
+          <div className="flex flex-col gap-2">
+            {PLANS_ENABLED ? (
+              <Section title={t('app.profileSubscriptionSection')}>
+                <div className="border-t border-border">
                   <ListRow
-                    leading={<Icon name="refresh" />}
-                    title={t('app.demoReset')}
-                    subtitle={t('app.demoResetHint')}
-                    onClick={() => setDemoDialog('reset')}
+                    title={subscriptionTitle(tr, subscription)}
+                    subtitle={subscriptionSubtitle(tr, subscription)}
+                    href={subscribeHref(locale)}
                   />
-                </li>
-                {canLeaveDemo ? (
+                </div>
+              </Section>
+            ) : null}
+
+            {BOOKING.enabled ? (
+              <Section title={t('app.profileCoachSection')}>
+                <div className="border-t border-border">
+                  <ListRow
+                    title={t('app.profileBook')}
+                    subtitle={t('app.profileBookHint', {
+                      duration: BOOKING.durationMin,
+                      price: formatPrice(locale, BOOKING.price),
+                    })}
+                    onClick={() => navigate('/book')}
+                  />
+                </div>
+              </Section>
+            ) : null}
+
+            <Section title={t('app.profileTrainingSection')}>
+              <div className="border-t border-border">
+                <ul className="divide-y divide-border">
                   <li>
                     <ListRow
-                      leading={<Icon name="logout" />}
-                      title={t('app.demoLeave')}
-                      subtitle={t('app.demoLeaveHint')}
-                      onClick={() => setDemoDialog('leave')}
+                      title={t('app.profileEquipment')}
+                      subtitle={equipmentSummary(tr, tp)}
+                      disabled={!tp}
+                      onClick={() => setSheet('equipment')}
                     />
                   </li>
-                ) : null}
-              </ul>
-            </div>
-          </Section>
-        ) : null}
+                  <li>
+                    <ListRow
+                      title={t('app.profileLimitations')}
+                      subtitle={limitationsSummary(tr, tp)}
+                      disabled={!tp}
+                      onClick={() => setSheet('limitations')}
+                    />
+                  </li>
+                </ul>
+              </div>
+            </Section>
 
-        <Section title={t('app.profileAccountSection')}>
-          <div className="border-t border-border">
-            <ul className="divide-y divide-border">
-              {admin === true ? (
-                <li>
-                  <ListRow
-                    leading={<Icon name="star" />}
-                    title={t('app.profileAdmin')}
-                    subtitle={t('app.profileAdminHint')}
-                    onClick={() => navigate('/admin')}
-                  />
-                </li>
-              ) : null}
-              <li>
-                <ListRow
-                  leading={<Icon name="logout" className="text-danger" />}
-                  title={<span className="text-danger">{t('app.profileSignOut')}</span>}
-                  trailing={null}
-                  onClick={() => setSignOutOpen(true)}
-                />
-              </li>
-            </ul>
+            <Section title={t('app.profileSettingsSection')}>
+              <div className="border-t border-border">
+                <ul className="divide-y divide-border">
+                  <li>
+                    <ListRow
+                      title={t('app.profileSound')}
+                      subtitle={muted ? t('app.profileSoundOff') : t('app.profileSoundOn')}
+                      trailing={
+                        <Switch
+                          checked={!muted}
+                          onChange={(on) => setMuted(!on)}
+                          label={t('app.profileSound')}
+                        />
+                      }
+                    />
+                  </li>
+                </ul>
+              </div>
+            </Section>
+
+            {demo ? (
+              <Section title={t('app.demoSection')}>
+                <div className="border-t border-border">
+                  <ul className="divide-y divide-border">
+                    <li className="px-4 py-3 text-sm text-muted">{t('app.demoDataNote')}</li>
+                    <li>
+                      <ListRow
+                        title={t('app.demoReset')}
+                        subtitle={t('app.demoResetHint')}
+                        onClick={() => setDemoDialog('reset')}
+                      />
+                    </li>
+                    {canLeaveDemo ? (
+                      <li>
+                        <ListRow
+                          title={t('app.demoLeave')}
+                          subtitle={t('app.demoLeaveHint')}
+                          onClick={() => setDemoDialog('leave')}
+                        />
+                      </li>
+                    ) : null}
+                  </ul>
+                </div>
+              </Section>
+            ) : null}
+
+            <Section title={t('app.profileAccountSection')}>
+              <div className="border-t border-border">
+                <ul className="divide-y divide-border">
+                  {admin === true ? (
+                    <li>
+                      <ListRow
+                        title={t('app.profileAdmin')}
+                        subtitle={t('app.profileAdminHint')}
+                        onClick={() => navigate('/admin')}
+                      />
+                    </li>
+                  ) : null}
+                  <li>
+                    <ListRow
+                      title={<span className="text-danger">{t('app.profileSignOut')}</span>}
+                      trailing={null}
+                      onClick={() => setSignOutOpen(true)}
+                    />
+                  </li>
+                </ul>
+              </div>
+            </Section>
           </div>
-        </Section>
 
-        <p className="text-center text-xs text-muted-2">
-          {t('app.profileVersion', { version: APP_VERSION, mode: BUILD_MODE })}
-        </p>
-      </div>
+          <p className="text-[11px] text-muted-2">
+            {t('app.profileVersion', { version: APP_VERSION, mode: BUILD_MODE })}
+          </p>
+        </div>
 
-      {tp ? (
-        <>
-          <EquipmentSheet
-            open={sheet === 'equipment'}
-            profile={tp}
-            busy={busy === 'equipment'}
-            onClose={() => setSheet(null)}
-            onSave={(eq, d, k) => void saveEquipment(eq, d, k)}
-          />
-          <LimitationsSheet
-            open={sheet === 'limitations'}
-            limitations={tp.limitations}
-            busy={busy === 'limitations'}
-            onClose={() => setSheet(null)}
-            onSave={(items) => void saveLimitations(items)}
-          />
-        </>
-      ) : null}
-      <Modal
-        open={demoDialog === 'reset'}
-        onClose={() => setDemoDialog(null)}
-        title={t('app.demoResetTitle')}
-        description={t('app.demoResetBody')}
-        confirmLabel={t('app.demoReset')}
-        cancelLabel={t('common.cancel')}
-        danger
-        onConfirm={() => resetDemo()}
-      />
-      <Modal
-        open={demoDialog === 'leave'}
-        onClose={() => setDemoDialog(null)}
-        title={t('app.demoLeaveTitle')}
-        description={t('app.demoLeaveBody')}
-        confirmLabel={t('app.demoLeave')}
-        cancelLabel={t('common.cancel')}
-        onConfirm={() => {
-          disableDemo();
-          window.location.reload();
-        }}
-      />
-      <Modal
-        open={signOutOpen}
-        onClose={() => setSignOutOpen(false)}
-        title={t('app.profileSignOutTitle')}
-        description={t('app.profileSignOutBody')}
-        confirmLabel={t('app.profileSignOut')}
-        cancelLabel={t('common.cancel')}
-        danger
-        loading={signingOut}
-        onConfirm={() => void signOut()}
-      />
-    </Screen>
+        {tp ? (
+          <>
+            <EquipmentSheet
+              open={sheet === 'equipment'}
+              profile={tp}
+              busy={busy === 'equipment'}
+              onClose={() => setSheet(null)}
+              onSave={(eq, d, k) => void saveEquipment(eq, d, k)}
+            />
+            <LimitationsSheet
+              open={sheet === 'limitations'}
+              limitations={tp.limitations}
+              busy={busy === 'limitations'}
+              onClose={() => setSheet(null)}
+              onSave={(items) => void saveLimitations(items)}
+            />
+          </>
+        ) : null}
+        <Modal
+          open={demoDialog === 'reset'}
+          onClose={() => setDemoDialog(null)}
+          title={t('app.demoResetTitle')}
+          description={t('app.demoResetBody')}
+          confirmLabel={t('app.demoReset')}
+          cancelLabel={t('common.cancel')}
+          danger
+          onConfirm={() => resetDemo()}
+        />
+        <Modal
+          open={demoDialog === 'leave'}
+          onClose={() => setDemoDialog(null)}
+          title={t('app.demoLeaveTitle')}
+          description={t('app.demoLeaveBody')}
+          confirmLabel={t('app.demoLeave')}
+          cancelLabel={t('common.cancel')}
+          onConfirm={() => {
+            disableDemo();
+            window.location.reload();
+          }}
+        />
+        <Modal
+          open={signOutOpen}
+          onClose={() => setSignOutOpen(false)}
+          title={t('app.profileSignOutTitle')}
+          description={t('app.profileSignOutBody')}
+          confirmLabel={t('app.profileSignOut')}
+          cancelLabel={t('common.cancel')}
+          danger
+          loading={signingOut}
+          onConfirm={() => void signOut()}
+        />
+      </Screen>
+    </Paper>
   );
 }

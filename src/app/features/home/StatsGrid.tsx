@@ -1,7 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { BarChart, type BarDatum } from '@/components/ui/BarChart';
-import { Icon } from '@/components/ui/Icon';
-import { StatTile } from '@/components/ui/StatTile';
 import { formatNumber, plural, type Locale } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
 import type { StepsDay, WeekStats } from './stats';
@@ -21,7 +19,18 @@ export function weekdayLabel(locale: Locale, isoDate: string): string {
     .replace(/\.$/, '');
 }
 
-/** Steps chart (7 days) plus kcal / minutes / points tiles. */
+/** One figure of the week: the number at 20px in the display face, its name under it as a kicker. */
+function Fact({ value, label, hint }: { value: ReactNode; label: ReactNode; hint?: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="numeral tabular text-3xl leading-none">{value}</span>
+      <span className="eyebrow mt-1">{label}</span>
+      {hint ? <span className="text-xs text-muted-2">{hint}</span> : null}
+    </div>
+  );
+}
+
+/** kcal / minutes / points on one ruled line, then the steps figure over its chart. */
 export function StatsGrid({ week, steps, totalPoints, stepsGoal }: StatsGridProps) {
   const { t, locale } = useT();
   const data = useMemo<BarDatum[]>(
@@ -41,52 +50,43 @@ export function StatsGrid({ week, steps, totalPoints, stepsGoal }: StatsGridProp
 
   return (
     /*
-     * The week as a spread rather than a grid of boxes: the steps figure large over its chart,
-     * then the three secondary numbers on one ruled line. Hairlines do the separating four
-     * bordered cards used to, which is what lets three numbers sit side by side on a 390px screen
-     * without any of them shrinking to unreadable.
+     * The week as a spread rather than a grid of boxes: three numbers on one rule, then the
+     * steps figure over its chart. Hairlines do the separating four bordered cards used to,
+     * which is what lets three figures sit side by side on a 390px screen without any of them
+     * shrinking to unreadable. No icons — the number and the word under it say what it is.
      */
-    <section className="flex flex-col border-t border-border pt-5">
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="eyebrow">{t('app.homeStatsSteps')}</span>
-        <Icon name="steps" size={16} className="text-muted" />
-      </div>
-      <div className="mt-2 flex items-baseline gap-2">
-        <span className="numeral tabular text-5xl leading-none">
-          {formatNumber(locale, week.steps)}
-        </span>
-        <span className="text-sm text-muted">{t('common.steps')}</span>
-      </div>
-      <div className="mt-4">
-        <BarChart
-          data={data}
-          goal={stepsGoal}
-          goalLabel={`${t('app.homeStatsGoal')} ${formatNumber(locale, stepsGoal)}`}
-          height={120}
-          formatValue={(v) => formatNumber(locale, v)}
-          ariaLabel={t('app.homeStatsSteps')}
-        />
-      </div>
-      <div className="mt-4 grid grid-cols-3 divide-x divide-border border-t border-border">
-        <StatTile
-          label={t('app.homeStatsKcal')}
-          icon="flame"
-          value={formatNumber(locale, week.calories)}
-          className="pl-0"
-        />
-        <StatTile
+    <section className="mt-6 flex flex-col">
+      <div className="grid grid-cols-3 gap-3 border-t border-border pt-4">
+        <Fact label={t('app.homeStatsKcal')} value={formatNumber(locale, week.calories)} />
+        <Fact
           label={t('app.homeStatsMinutes')}
-          icon="clock"
           value={formatNumber(locale, week.minutes)}
-          trend={{ value: 0, label: `${week.workouts} ${workoutsWord}` }}
+          hint={`${week.workouts} ${workoutsWord}`}
         />
-        <StatTile
+        <Fact
           label={t('app.homeStatsPoints')}
-          icon="bolt"
           value={formatNumber(locale, totalPoints)}
-          trend={{ value: 0, label: t('app.homeStatsPointsHint') }}
-          className="pr-0"
+          hint={t('app.homeStatsPointsHint')}
         />
+      </div>
+      <div className="mt-6 border-t border-border pt-4">
+        <span className="eyebrow">{t('app.homeStatsSteps')}</span>
+        <div className="mt-2 flex items-baseline gap-2">
+          <span className="numeral tabular text-4xl leading-none">
+            {formatNumber(locale, week.steps)}
+          </span>
+          <span className="text-sm text-muted">{t('common.steps')}</span>
+        </div>
+        <div className="mt-4">
+          <BarChart
+            data={data}
+            goal={stepsGoal}
+            goalLabel={`${t('app.homeStatsGoal')} ${formatNumber(locale, stepsGoal)}`}
+            height={120}
+            formatValue={(v) => formatNumber(locale, v)}
+            ariaLabel={t('app.homeStatsSteps')}
+          />
+        </div>
       </div>
     </section>
   );

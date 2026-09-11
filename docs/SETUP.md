@@ -309,9 +309,9 @@ Dashboard → **Authentication → Email Templates**:
 
 Dashboard → **Authentication → URL Configuration**:
 
-- **Site URL**: your production origin, e.g. `https://<user>.github.io/<repo>` or
-  `https://forma.example.com`. It only feeds `{{ .SiteURL }}` in the email footer — the app does
-  not use redirects.
+- **Site URL**: the production origin — `https://forma-app.co`. It only feeds `{{ .SiteURL }}` in
+  the email footer; the app does not use redirects. Keep it in step with the `SITE_URL`
+  repository variable, or the sign-in email points at the previous address.
 - **Redirect URLs**: nothing to add. The OTP flow never redirects.
 
 ### 3.4 Rate limits
@@ -342,7 +342,7 @@ on, and it costs nothing. Swapping to a provider later is a five-minute settings
 | Yandex 360 for Business | RU audience, mail.ru / yandex.ru inboxing | Use an app password, `smtp.yandex.ru:465`                             |
 | Mail.ru for business    | RU audience                               | `smtp.mail.ru:465`, app password                                      |
 
-Set **Sender email** to an address on your own domain (e.g. `hello@forma.example.com`) and
+Set **Sender email** to an address on your own domain (e.g. `hello@forma-app.co`) and
 **Sender name** to `Forma`. Add SPF, DKIM and DMARC records at your DNS provider; without them
 Gmail and Mail.ru will junk the codes.
 
@@ -412,14 +412,14 @@ a signed URL valid for one hour. Plain `https://…` URLs (YouTube, a CDN) pass 
 
 All variables are read at build time. `PUBLIC_*` values are embedded in the static bundle.
 
-| Variable                                                                                               | Local `.env` | GitHub Pages      | Value                                                            |
-| ------------------------------------------------------------------------------------------------------ | ------------ | ----------------- | ---------------------------------------------------------------- |
-| `PUBLIC_SUPABASE_URL`                                                                                  | yes          | repo **variable** | Project URL from §1                                              |
-| `PUBLIC_SUPABASE_ANON_KEY`                                                                             | yes          | repo **variable** | anon / publishable key from §1                                   |
-| `SITE_URL`                                                                                             | yes          | repo **variable** | `https://<user>.github.io/<repo>` or `https://forma.example.com` |
-| `BASE_PATH`                                                                                            | yes          | repo **variable** | `/<repo>/` for a project page, `/` for a custom domain           |
-| `INDEXNOW_KEY`                                                                                         | optional     | repo **secret**   | 8–128 hex/alphanumeric chars; see docs/SEO.md                    |
-| `PUBLIC_YANDEX_METRIKA_ID`, `PUBLIC_GA_ID`, `PUBLIC_YANDEX_VERIFICATION`, `PUBLIC_GOOGLE_VERIFICATION` | optional     | repo variables    | Rendered only when set                                           |
+| Variable                                                                                               | Local `.env` | GitHub Pages      | Value                                                         |
+| ------------------------------------------------------------------------------------------------------ | ------------ | ----------------- | ------------------------------------------------------------- |
+| `PUBLIC_SUPABASE_URL`                                                                                  | yes          | repo **variable** | Project URL from §1                                           |
+| `PUBLIC_SUPABASE_ANON_KEY`                                                                             | yes          | repo **variable** | anon / publishable key from §1                                |
+| `SITE_URL`                                                                                             | yes          | repo **variable** | `https://forma-app.co` (or `https://<user>.github.io/<repo>`) |
+| `BASE_PATH`                                                                                            | yes          | repo **variable** | `/<repo>/` for a project page, `/` for a custom domain        |
+| `INDEXNOW_KEY`                                                                                         | optional     | repo **secret**   | 8–128 hex/alphanumeric chars; see docs/SEO.md                 |
+| `PUBLIC_YANDEX_METRIKA_ID`, `PUBLIC_GA_ID`, `PUBLIC_YANDEX_VERIFICATION`, `PUBLIC_GOOGLE_VERIFICATION` | optional     | repo variables    | Rendered only when set                                        |
 
 Local: `cp .env.example .env` and fill in the values (`.env` is git-ignored).
 

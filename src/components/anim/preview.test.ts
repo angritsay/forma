@@ -54,7 +54,7 @@ describe.skipIf(ids.length === 0)('anim preview', () => {
       }).join('');
       const sheet =
         `<svg xmlns="http://www.w3.org/2000/svg" width="${sheetWidth}" height="${cell + gap * 2}" viewBox="0 0 ${sheetWidth} ${cell + gap * 2}">` +
-        `<rect width="${sheetWidth}" height="${cell + gap * 2}" fill="#0B0B0D"/>${inner}</svg>`;
+        `<rect width="${sheetWidth}" height="${cell + gap * 2}" fill="#0f0f11"/>${inner}</svg>`;
       const sheetPng = new Resvg(sheet, { fitTo: { mode: 'width', value: sheetWidth * 2 } })
         .render()
         .asPng();

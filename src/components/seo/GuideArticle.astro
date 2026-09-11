@@ -11,6 +11,7 @@ import FaqAccordion from '@/components/seo/FaqAccordion.astro';
 import GuideBody from '@/components/seo/GuideBody.astro';
 import RelatedLinks from '@/components/seo/RelatedLinks.astro';
 import ExerciseCard from '@/components/exercises/ExerciseCard.astro';
+import Button from '@/components/landing/Button.astro';
 import { COURSE_BY_ID, EXERCISE_BY_ID } from '@/content/registry';
 import type { Course, Exercise, Locale } from '@/content/schema';
 import { formatDate, l, t } from '@/i18n/index';
@@ -120,9 +121,12 @@ const jsonLd = [
           <a class="eyebrow hover:text-text" href={href(locale, clusterPath(d.cluster))}>
             {clusterTitle}
           </a>
-          <h1 class="mt-3 font-display text-4xl md:text-5xl">{d.h1}</h1>
-          <p class="mt-4 text-lg leading-relaxed text-muted">{d.description}</p>
-          <dl class="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-2">
+          <!-- The article's h1 is the one 800 line on the page; long SEO titles hyphenate. -->
+          <h1 class="display mt-4 text-3xl md:text-5xl">{d.h1}</h1>
+          <p class="mt-5 text-lg leading-relaxed text-muted">{d.description}</p>
+          <dl
+            class="mt-6 flex flex-wrap gap-x-6 gap-y-2 border-t border-border pt-4 text-sm text-muted-2"
+          >
             <div class="flex gap-2">
               <dt>{t(locale, 'seo.published')}</dt>
               <dd>
@@ -148,12 +152,15 @@ const jsonLd = [
           toc.length > 1 && (
             <nav
               aria-label={t(locale, 'seo.tocTitle')}
-              class="mt-8 rounded-card border border-border bg-surface p-5 lg:hidden"
+              class="mt-8 border-t border-border pt-4 lg:hidden"
             >
               <p class="eyebrow">{t(locale, 'seo.tocTitle')}</p>
-              <ol class="mt-3 space-y-1.5 text-sm">
-                {toc.map((h) => (
-                  <li>
+              <ol class="mt-3 text-sm">
+                {toc.map((h, i) => (
+                  <li class="flex items-baseline gap-3 border-b border-border py-2">
+                    <span class="numeral text-xs text-muted-2" aria-hidden="true">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
                     <a class="text-muted hover:text-text" href={`#${h.slug}`}>
                       {h.text}
                     </a>
@@ -176,12 +183,15 @@ const jsonLd = [
           toc.length > 1 && (
             <nav
               aria-label={t(locale, 'seo.tocTitle')}
-              class="sticky top-24 rounded-card border border-border bg-surface p-5"
+              class="sticky top-24 border-t border-border pt-4"
             >
               <p class="eyebrow">{t(locale, 'seo.tocTitle')}</p>
-              <ol class="mt-3 space-y-2 text-sm">
-                {toc.map((h) => (
-                  <li>
+              <ol class="mt-3 text-sm">
+                {toc.map((h, i) => (
+                  <li class="flex items-baseline gap-3 border-b border-border py-2">
+                    <span class="numeral text-xs text-muted-2" aria-hidden="true">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
                     <a class="text-muted hover:text-text" href={`#${h.slug}`}>
                       {h.text}
                     </a>
@@ -197,10 +207,10 @@ const jsonLd = [
     {
       relatedExercises.length > 0 && (
         <section aria-labelledby="related-exercises-title" class="mt-16">
-          <h2 id="related-exercises-title" class="font-display text-2xl md:text-3xl">
+          <h2 id="related-exercises-title" class="font-display text-xl md:text-2xl">
             {t(locale, 'seo.relatedExercises')}
           </h2>
-          <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul class="mt-6 grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
             {relatedExercises.map((ex) => (
               <li>
                 <ExerciseCard exercise={ex} locale={locale} />
@@ -214,10 +224,10 @@ const jsonLd = [
     {
       relatedCourses.length > 0 && (
         <section aria-labelledby="related-courses-title" class="mt-16">
-          <h2 id="related-courses-title" class="font-display text-2xl md:text-3xl">
+          <h2 id="related-courses-title" class="font-display text-xl md:text-2xl">
             {t(locale, 'seo.relatedCourses')}
           </h2>
-          <ul class="mt-6 grid gap-4 md:grid-cols-2">
+          <ul class="mt-6 grid gap-x-8 md:grid-cols-2">
             {relatedCourses.map((c) => (
               <li>
                 <CourseLinkCard course={c} locale={locale} />
@@ -240,19 +250,15 @@ const jsonLd = [
       }))}
     />
 
+    <!-- The closing call, set over a hairline like the landing's own CTA — no box, no glow. -->
     <section
-      class="mt-16 rounded-card border border-border bg-surface p-6 md:flex md:items-center md:justify-between md:gap-8 md:p-10"
+      class="mt-16 border-t border-border pt-10 md:flex md:items-end md:justify-between md:gap-8"
     >
       <div>
         <h2 class="font-display text-2xl md:text-3xl">{t(locale, 'seo.guideCtaTitle')}</h2>
-        <p class="mt-3 max-w-xl leading-relaxed text-muted">{ctaText}</p>
+        <p class="mt-4 max-w-xl leading-relaxed text-muted">{ctaText}</p>
       </div>
-      <a
-        class="mt-6 inline-flex shrink-0 rounded-control bg-accent px-6 py-3 font-semibold text-on-primary md:mt-0"
-        href={ctaHref}
-      >
-        {ctaButton}
-      </a>
+      <Button href={ctaHref} size="lg" class="mt-6 shrink-0 md:mt-0">{ctaButton}</Button>
     </section>
   </div>
 </Landing>

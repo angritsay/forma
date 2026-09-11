@@ -7,7 +7,7 @@
  * a copy of the structure.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { Icon } from '@/components/ui/Icon';
+import { Glyph } from '@/components/ui/Icon';
 import { Input } from '@/components/ui/Input';
 import { Sheet } from '@/components/ui/Sheet';
 import { Spinner } from '@/components/ui/Spinner';
@@ -65,8 +65,8 @@ export function WorkoutPickerSheet({ open, onClose, onPick }: WorkoutPickerSheet
           autoComplete="off"
           autoCapitalize="none"
           spellCheck={false}
+          aria-label={t('app.daySearchWorkout')}
           placeholder={t('app.daySearchWorkout')}
-          leading={<Icon name="search" size={18} />}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -75,28 +75,31 @@ export function WorkoutPickerSheet({ open, onClose, onPick }: WorkoutPickerSheet
             <Spinner />
           </div>
         ) : (
-          <ul className="-mx-2 flex max-h-[55dvh] flex-col overflow-y-auto">
+          /* Hairline rows; the `+` on the right is the whole row's verb, so it stays quiet. */
+          <ul className="flex max-h-[55dvh] flex-col overflow-y-auto">
             {filtered.map((w) => (
               <li key={w.id}>
                 <button
                   type="button"
                   onClick={() => onPick(w)}
-                  className="flex w-full items-center gap-3 rounded-inner px-2 py-2.5 text-left transition-colors hover:bg-surface-3"
+                  className="flex w-full items-center gap-3 border-t border-border py-3 text-left transition-colors duration-150 ease-(--ease-out) hover:bg-surface-2 active:bg-surface-3"
                 >
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate text-[15px] font-medium">{w.title}</span>
-                    <span className="tabular truncate text-xs text-muted">
+                    <span className="tabular truncate text-[13px] text-muted">
                       {w.estSec
                         ? t('app.nodeDuration', { min: Math.max(1, Math.round(w.estSec / 60)) })
                         : (w.description ?? '')}
                     </span>
                   </span>
-                  <Icon name="plus" size={18} className="shrink-0 text-accent" />
+                  <Glyph size={16} className="shrink-0 text-muted-2">
+                    +
+                  </Glyph>
                 </button>
               </li>
             ))}
             {filtered.length === 0 ? (
-              <li className="px-2 py-6 text-center text-sm text-muted">
+              <li className="border-t border-border py-6 text-[15px] text-muted">
                 {t('app.builderNoMatches')}
               </li>
             ) : null}

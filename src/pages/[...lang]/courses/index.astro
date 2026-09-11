@@ -66,17 +66,18 @@ const jsonLd = [
         { label: t(locale, 'landing.breadcrumbCourses') },
       ]}
     />
-    <h1 class="font-display mt-6 text-5xl md:text-6xl">{t(locale, 'landing.coursesHubH1')}</h1>
-    <p class="mt-4 max-w-2xl text-lg leading-relaxed text-muted">
+    <h1 class="display mt-6 text-5xl md:text-6xl">{t(locale, 'landing.coursesHubH1')}</h1>
+    <p class="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
       {t(locale, 'landing.coursesHubIntro')}
     </p>
 
+    <!-- Filters as two hairline rows: a kicker, then the chips. -->
     <div
-      class="mt-8 flex flex-col gap-4 rounded-card border border-border bg-surface p-5"
+      class="mt-10 flex flex-col divide-y divide-border border-y border-border"
       data-course-filters
     >
-      <div class="flex flex-wrap items-center gap-2">
-        <span class="mr-2 text-sm font-semibold">{t(locale, 'landing.filterEquipment')}</span>
+      <div class="flex flex-wrap items-center gap-2 py-3">
+        <span class="eyebrow mr-3">{t(locale, 'landing.filterEquipment')}</span>
         <a
           href={`${self}#courses`}
           data-filter="equipment"
@@ -99,8 +100,8 @@ const jsonLd = [
           ))
         }
       </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <span class="mr-2 text-sm font-semibold">{t(locale, 'landing.filterLevel')}</span>
+      <div class="flex flex-wrap items-center gap-2 py-3">
+        <span class="eyebrow mr-3">{t(locale, 'landing.filterLevel')}</span>
         <a
           href={`${self}#courses`}
           data-filter="level"
@@ -138,17 +139,12 @@ const jsonLd = [
         ))
       }
     </ul>
-    <p
-      hidden
-      data-filter-empty
-      role="status"
-      class="mt-8 rounded-card border border-border bg-surface p-6 text-muted"
-    >
+    <p hidden data-filter-empty role="status" class="mt-8 border-t border-border pt-5 text-muted">
       {t(locale, 'landing.filterNoResults')}
       <a
         href={`${self}#courses`}
         data-filter-reset
-        class="ml-2 inline-flex min-h-11 items-center font-semibold text-text underline"
+        class="control-label ml-3 inline-flex min-h-11 items-center text-[12px] text-text hover:opacity-85"
       >
         {t(locale, 'landing.filterReset')}
       </a>
@@ -168,35 +164,46 @@ const jsonLd = [
 
 <style>
   /*
-   * These were pills written in a scoped <style> block rather than as Tailwind classes, which is
-   * how they outlived the sweep that squared off every other chip in the product. Same shape as
-   * the kit's Chip now: a 4px rectangle with a capitalised, tracked label.
+   * The kit's Chip as a scoped style (the chips are plain <a> links so filtering works without
+   * JS): 34px, capitals at 12px tracked .06em, --surface-3 behind a hairline. The selected filter
+   * is the white fill with black text — the same inversion the primary button uses, and the only
+   * fill in the row. The visual box is 34px; the pseudo-element grows the hit area to 44px.
    */
   .filter-chip {
+    position: relative;
     display: inline-flex;
     align-items: center;
-    border-radius: var(--r-control);
+    height: 2.125rem;
+    padding: 0 0.75rem;
     border: 1px solid var(--border);
-    min-height: 2.75rem;
-    padding: 0.375rem 1rem;
-    font-size: 0.6875rem;
+    background: var(--surface-3);
+    font-size: 0.75rem;
     font-weight: 600;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
+    white-space: nowrap;
     color: var(--muted);
     transition:
-      color 0.15s,
-      border-color 0.15s,
-      background 0.15s;
+      color 150ms var(--ease-out),
+      border-color 150ms var(--ease-out),
+      background 150ms var(--ease-out),
+      transform 150ms var(--ease-out);
+  }
+  .filter-chip::before {
+    content: '';
+    position: absolute;
+    inset: -5px 0;
   }
   .filter-chip:hover {
     color: var(--text);
     border-color: var(--border-strong);
   }
-  /* The selected filter takes the accent — one of its sanctioned homes, and the only fill here. */
+  .filter-chip:active {
+    transform: scale(0.98);
+  }
   .filter-chip[aria-current='true'] {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: var(--primary);
+    border-color: var(--primary);
     color: var(--on-primary);
   }
 </style>

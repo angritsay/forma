@@ -172,7 +172,8 @@ export function ExerciseEditor({
       </div>
 
       {!ownFields ? (
-        <p className="rounded-inner border border-border bg-surface-2 px-4 py-3 text-sm text-muted">
+        /* A notice is a ruled line of text, not a callout box. */
+        <p className="border-y border-border py-3 text-[15px] text-muted">
           {t('app.exSeededNotice')}
         </p>
       ) : null}
@@ -309,7 +310,8 @@ export function ExerciseEditor({
         onChange={(e) => setTags(e.target.value)}
       />
 
-      <div className="flex gap-2">
+      {/* The one white button on the screen is Save; Cancel is text beside it. */}
+      <div className="flex gap-2 border-t border-border pt-5">
         <Button variant="ghost" fullWidth onClick={onCancel}>
           {t('common.cancel')}
         </Button>

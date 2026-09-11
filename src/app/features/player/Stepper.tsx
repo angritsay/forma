@@ -19,7 +19,7 @@ export interface StepperProps {
   className?: string;
 }
 
-/** −/+ counter around a big number (rep counts, rounds). */
+/** −/+ counter around a big numeral (rep counts, rounds); the two marks are glyphs in square frames. */
 export function Stepper({
   value,
   onChange,
@@ -46,10 +46,7 @@ export function Stepper({
         <span
           role="status"
           aria-label={label}
-          className={clsx(
-            'tabular font-bold leading-none',
-            size === 'lg' ? 'text-[72px]' : 'text-5xl',
-          )}
+          className={clsx('numeral leading-none', size === 'lg' ? 'text-[64px]' : 'text-[40px]')}
         >
           {value}
         </span>

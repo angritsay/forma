@@ -1,14 +1,13 @@
 <!--
-  The app mark: the wordmark's F on a blue tile, plus the accent full stop that ends "FORMA."
-  everywhere else in the identity.
+  The app mark: the wordmark's wide F on a black square. Second brandbook — the identity is
+  black and white, the shape is the sharp rectangle (no radius), and the full stop that used to
+  end "FORMA." is gone with the blue it was drawn in.
 
-  It was a mint-to-sky gradient F on the dark ground — a gradient, in the one asset that has to
-  read at 16px, from a brand that no longer has gradients. The tile is flat now and the ink is
-  the ground colour: #0B0B0D on #9ECBFF is 11.65:1, which is what holds the letter together in a
-  tab strip. The F outline is unchanged.
+  The F is the anchor letter of the wordmark, stretched ×1.22 as it is in the lockup, so the
+  favicon and the header are recognisably one letterform. Light ink on the dark ground: #f6f6f7
+  on #0f0f11 is 17.7:1, which is what holds it together at 16px in a tab strip.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#9ECBFF"/>
-  <path d="M20 46V18h24v6H27v6h14v6H27v10z" fill="#0B0B0D"/>
-  <circle cx="47" cy="43" r="3.5" fill="#0B0B0D"/>
+  <rect width="64" height="64" fill="#0f0f11"/>
+  <path d="M16 48V16h32v7H25v7h20v7H25v11z" fill="#f6f6f7"/>
 </svg>

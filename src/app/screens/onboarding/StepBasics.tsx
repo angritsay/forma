@@ -21,7 +21,7 @@ export function StepBasics({ draft, update }: StepProps) {
     <div className="flex flex-col gap-7">
       <PageTitle title={t('app.onbBasicsTitle')} subtitle={t('app.onbBasicsLead')} />
       <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-medium text-muted">{t('app.onbAgeLabel')}</h2>
+        <h2 className="eyebrow">{t('app.onbAgeLabel')}</h2>
         <ChipGroup<AgeBand>
           label={t('app.onbAgeLabel')}
           values={draft.ageBand ? [draft.ageBand] : []}
@@ -30,7 +30,7 @@ export function StepBasics({ draft, update }: StepProps) {
         />
       </section>
       <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-medium text-muted">{t('app.onbSexLabel')}</h2>
+        <h2 className="eyebrow">{t('app.onbSexLabel')}</h2>
         <ChipGroup<Sex>
           label={t('app.onbSexLabel')}
           values={draft.sex ? [draft.sex] : []}

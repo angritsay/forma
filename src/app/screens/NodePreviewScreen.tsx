@@ -1,16 +1,15 @@
 /**
- * Node preview (docs/SPEC.md §10 flow 5): hero, description, difficulty chooser with estimates
- * and the recommendation, the concrete plan, and "Start workout" which opens a session and
- * hands it to the player.
+ * Node preview (docs/SPEC.md §10 flow 5): the course art, the workout's name as the one big line,
+ * the description, the difficulty chooser with estimates and the recommendation, the concrete
+ * plan, and "Start workout" which opens a session and hands it to the player.
  */
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useMemo, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router';
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Icon } from '@/components/ui/Icon';
+import { Glyph } from '@/components/ui/Icon';
 import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -27,12 +26,15 @@ import type {
   PrescribedWorkout,
   Recommendation,
 } from '@/lib/training/types';
+import { courseTileVars } from '@/lib/ui/tile';
 import { toLocalDateIso } from '@/lib/util/dates';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { courseLandingHref } from '@/app/features/courses/courseMeta';
 import { LinkButton } from '@/app/features/courses/LinkButton';
+import { DisplayTitle } from '@/app/features/home/DisplayTitle';
 import { DifficultyChooser, type DifficultyOption } from '@/app/features/path/DifficultyChooser';
+import { FactChips } from '@/app/features/path/FactChips';
 import { nodeStatus } from '@/app/features/path/nodeState';
 import { DIFFICULTY_CHOICES, workoutSignatureExercise } from '@/app/features/path/plan';
 import { PlanBlocks } from '@/app/features/path/PlanBlocks';
@@ -51,6 +53,9 @@ import { useSession } from '@/app/store/session';
 interface Plan extends DifficultyOption {
   prescribed: PrescribedWorkout;
 }
+
+/** The figure's own tile is transparent so the art block behind it paints the colour, seamlessly. */
+const TRANSPARENT_TILE = 'transparent';
 
 export default function NodePreviewScreen() {
   useProgressLoader();
@@ -122,7 +127,6 @@ export default function NodePreviewScreen() {
     return (
       <Screen header={<TopBar back="/courses" />}>
         <EmptyState
-          icon="warning"
           title={t('app.nodeNotFound')}
           action={<Button onClick={() => navigate('/courses')}>{t('app.tabCourses')}</Button>}
         />
@@ -133,7 +137,6 @@ export default function NodePreviewScreen() {
     return (
       <Screen header={<TopBar back="/courses" title={l(course.name)} />}>
         <EmptyState
-          icon="lock"
           title={t('app.pathNotOwnedTitle')}
           description={t('app.pathNotOwnedBody')}
           action={
@@ -156,7 +159,6 @@ export default function NodePreviewScreen() {
     return (
       <Screen header={header}>
         <EmptyState
-          icon="user"
           title={t('app.nodeProfileMissingTitle')}
           description={t('app.nodeProfileMissingBody')}
           action={
@@ -173,13 +175,9 @@ export default function NodePreviewScreen() {
     return (
       <Screen header={header}>
         <div className="flex flex-col gap-4 py-2" aria-hidden="true">
-          <Skeleton rounded="card" className="h-56" />
+          <Skeleton rounded="card" className="-mx-5 aspect-[4/3] lg:-mx-8" />
           <Skeleton lines={3} />
-          <div className="grid grid-cols-3 gap-2">
-            <Skeleton rounded="card" className="h-28" />
-            <Skeleton rounded="card" className="h-28" />
-            <Skeleton rounded="card" className="h-28" />
-          </div>
+          <Skeleton rounded="card" className="h-40" />
           <Skeleton rounded="card" className="h-40" />
         </div>
       </Screen>
@@ -188,9 +186,6 @@ export default function NodePreviewScreen() {
 
   const locked = nodeStatus(nodeIndex, course.nodes, row) === 'locked';
   const exercise = workoutSignatureExercise(workout);
-  const figureStyle = {
-    '--course-tile': course.tile,
-  } as CSSProperties;
   const profile = ctx.profile;
 
   const start = async () => {
@@ -247,129 +242,151 @@ export default function NodePreviewScreen() {
   const isTest = node.kind === 'test';
   const isBenchmark = node.kind === 'benchmark';
 
+  // The selected plan's facts: how long, how many points, how many kcal.
+  const facts = plan
+    ? [
+        t('app.nodeDuration', { min: Math.max(1, Math.round(plan.durationSec / 60)) }),
+        t('app.nodePoints', { n: plan.points }),
+        t('app.nodeKcal', { n: plan.calories }),
+      ]
+    : [];
+
   return (
-    <Screen
-      header={header}
-      footer={
-        <div className="flex flex-col gap-2">
-          {locked ? <p className="text-center text-sm text-muted">{t('app.nodeLocked')}</p> : null}
-          <Button
-            size="lg"
-            fullWidth
-            loading={busy}
-            disabled={locked || !plan}
-            onClick={onStartPress}
-            icon={<Icon name="play" size={18} />}
-          >
-            {t('app.nodeStart')}
-          </Button>
-        </div>
-      }
-    >
-      <div className="flex flex-col gap-5 py-2">
-        <Card tile={course.tile} padding="md" className="flex flex-col gap-4">
-          <div className="flex items-start gap-3">
-            <div className="min-w-0 flex-1">
-              <span className="eyebrow text-current opacity-70">
-                {l(course.name)} · {t('app.homeTodayWeek', { week: node.week, day: node.day })}
-              </span>
-              <h2 className="font-display mt-1 text-[28px] text-balance">{l(workout.name)}</h2>
-              <p className="mt-1 text-sm font-medium opacity-80">{l(workout.focus)}</p>
+    /*
+     * `--course-tile` scopes the screen so the art block, the formula kicker and the progress the
+     * plan may draw all read the one colour.
+     */
+    <div style={courseTileVars(course.tile)}>
+      <Screen
+        header={header}
+        footer={
+          <div className="flex flex-col gap-2">
+            {locked ? (
+              <p className="text-center text-sm text-muted">{t('app.nodeLocked')}</p>
+            ) : null}
+            {/* Two buttons on one row: the quiet way out on the left, the one thing to do on the right. */}
+            <div className="grid grid-cols-[112px_minmax(0,1fr)] gap-2.5">
+              <Button size="lg" variant="secondary" onClick={() => navigate(backPath)}>
+                {t('app.nodeLater')}
+              </Button>
+              <Button
+                size="lg"
+                loading={busy}
+                disabled={locked || !plan}
+                onClick={onStartPress}
+                iconRight={<Glyph size={14}>→</Glyph>}
+              >
+                {t('app.nodeStart')}
+              </Button>
             </div>
-            <div className="w-28 shrink-0 overflow-hidden rounded-inner" style={figureStyle}>
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-6 pb-2">
+          {/*
+           * The course art, full-bleed and square-shouldered: the programme colour with the
+           * workout's signature figure drawn on it in the ink the colour wants, and the day's
+           * stamps in the corner as dark plates.
+           */}
+          <div className="hero-art relative -mx-5 flex aspect-[4/3] items-center justify-center overflow-hidden lg:-mx-8 lg:aspect-auto lg:h-[360px]">
+            <div className="h-full max-h-full">
               <ExerciseFigure
                 animation={exercise?.animation ?? 'air_squat'}
                 variant="hero"
-                tile={course.tile}
+                tile={TRANSPARENT_TILE}
+                className="h-full w-auto"
                 label={exercise ? l(exercise.name) : undefined}
               />
             </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {isTest ? (
-              <Badge tone="on-art" icon="trophy" size="md">
-                {t('app.nodeTestBadge')}
-              </Badge>
-            ) : null}
-            {isBenchmark ? (
-              <Badge tone="on-art" icon="trophy" size="md">
-                {t('app.nodeBenchmarkBadge')}
-              </Badge>
-            ) : null}
-            {deload ? (
-              <Badge tone="on-art" size="md">
-                {t('training.deloadBadge')}
-              </Badge>
-            ) : null}
-            {repeat ? (
-              <Badge tone="on-art" icon="refresh" size="md">
-                {t('training.repeatPoints')}
-              </Badge>
+            {isTest || isBenchmark || deload || repeat ? (
+              <div className="absolute top-3 right-3 flex flex-wrap justify-end gap-1.5">
+                {isTest ? <Badge tone="on-art">{t('app.nodeTestBadge')}</Badge> : null}
+                {isBenchmark ? <Badge tone="on-art">{t('app.nodeBenchmarkBadge')}</Badge> : null}
+                {deload ? <Badge tone="on-art">{t('training.deloadBadge')}</Badge> : null}
+                {repeat ? <Badge tone="on-art">{t('training.repeatPoints')}</Badge> : null}
+              </div>
             ) : null}
           </div>
-        </Card>
 
-        <p className="text-[15px] leading-relaxed text-muted">{l(workout.description)}</p>
-
-        {isTest || isBenchmark ? (
-          <Card level={2} className="flex flex-col gap-2">
-            <h3 className="flex items-center gap-2 text-[15px] font-semibold">
-              <Icon name="trophy" size={18} className="text-accent" />
-              {isTest ? t('app.nodeTestTitle') : t('app.nodeBenchmarkTitle')}
-            </h3>
-            <p className="text-sm text-muted">
-              {isTest ? t('app.nodeTestBody') : t('app.nodeBenchmarkBody')}
+          <div>
+            {/*
+             * The formula, in the programme colour — the one kicker the colour is allowed. It is
+             * a sentence, and a Cyrillic sentence in tracked capitals wraps on a 390px screen
+             * (src/i18n/eyebrow.test.ts guards this), so it takes the sentence-case kicker slot.
+             */}
+            <span className="eyebrow-sentence text-course">{t('app.nodeFormulaKicker')}</span>
+            <DisplayTitle as="h2" text={l(workout.name)} className="mt-2.5 text-6xl" />
+            <p className="eyebrow mt-3.5">
+              {l(course.name)} · {t('app.homeTodayWeek', { week: node.week, day: node.day })}
             </p>
-          </Card>
-        ) : null}
-
-        {deload ? (
-          <p className="flex gap-2 text-sm text-muted">
-            <Icon name="info" size={18} className="mt-0.5 shrink-0 text-accent" />
-            <span>{t('app.nodeDeloadNote')}</span>
-          </p>
-        ) : null}
-        {repeat ? (
-          <p className="flex gap-2 text-sm text-muted">
-            <Icon name="refresh" size={18} className="mt-0.5 shrink-0 text-accent" />
-            <span>{t('app.nodeRepeatNote')}</span>
-          </p>
-        ) : null}
-
-        <section className="flex flex-col gap-3">
-          <div className="flex items-baseline justify-between gap-3">
-            <h3 className="eyebrow">{t('app.nodeDifficultyTitle')}</h3>
-            <span className="tabular text-xs text-muted-2">
-              {t('app.nodeEstimatedFor', { scale: formatNumber(locale, engineState.scale, 2) })}
-            </span>
+            <p className="mt-4 text-[15px] font-medium">{l(workout.focus)}</p>
+            <p className="mt-2 text-[15px] leading-relaxed text-muted">{l(workout.description)}</p>
+            <FactChips items={facts} className="mt-5" />
           </div>
-          <DifficultyChooser
-            options={plans}
-            value={selected}
-            onChange={setChoice}
-            recommended={recommendation}
-          />
-        </section>
 
-        {plan ? (
-          <section className="flex flex-col gap-3">
-            <h3 className="eyebrow">{t('app.nodePlanTitle')}</h3>
-            <PlanBlocks prescribed={plan.prescribed} />
+          {isTest || isBenchmark ? (
+            <section className="flex flex-col gap-2 border-t border-border pt-4">
+              <h3 className="eyebrow">
+                {isTest ? t('app.nodeTestTitle') : t('app.nodeBenchmarkTitle')}
+              </h3>
+              <p className="text-sm text-muted">
+                {isTest ? t('app.nodeTestBody') : t('app.nodeBenchmarkBody')}
+              </p>
+            </section>
+          ) : null}
+
+          {deload ? (
+            <p className="flex gap-2 text-sm text-muted">
+              <Glyph size={12} className="mt-1 shrink-0 text-muted-2">
+                //
+              </Glyph>
+              <span>{t('app.nodeDeloadNote')}</span>
+            </p>
+          ) : null}
+          {repeat ? (
+            <p className="flex gap-2 text-sm text-muted">
+              <Glyph size={12} className="mt-1 shrink-0 text-muted-2">
+                //
+              </Glyph>
+              <span>{t('app.nodeRepeatNote')}</span>
+            </p>
+          ) : null}
+
+          <section className="flex flex-col gap-3 border-t border-border pt-4">
+            <div className="flex items-baseline justify-between gap-3">
+              <h3 className="eyebrow">{t('app.nodeDifficultyTitle')}</h3>
+              <span className="tabular text-xs text-muted-2">
+                {t('app.nodeEstimatedFor', { scale: formatNumber(locale, engineState.scale, 2) })}
+              </span>
+            </div>
+            <DifficultyChooser
+              options={plans}
+              value={selected}
+              onChange={setChoice}
+              recommended={recommendation}
+            />
           </section>
-        ) : null}
-      </div>
 
-      <Modal
-        open={replaceOpen}
-        onClose={() => setReplaceOpen(false)}
-        title={t('app.nodeReplaceTitle')}
-        description={t('app.nodeReplaceBody')}
-        confirmLabel={t('app.nodeStart')}
-        cancelLabel={t('common.cancel')}
-        danger
-        loading={busy}
-        onConfirm={() => void start()}
-      />
-    </Screen>
+          {plan ? (
+            <section className="flex flex-col gap-4 border-t border-border pt-4">
+              <h3 className="eyebrow">{t('app.nodePlanTitle')}</h3>
+              <PlanBlocks prescribed={plan.prescribed} />
+            </section>
+          ) : null}
+        </div>
+
+        <Modal
+          open={replaceOpen}
+          onClose={() => setReplaceOpen(false)}
+          title={t('app.nodeReplaceTitle')}
+          description={t('app.nodeReplaceBody')}
+          confirmLabel={t('app.nodeStart')}
+          cancelLabel={t('common.cancel')}
+          danger
+          loading={busy}
+          onConfirm={() => void start()}
+        />
+      </Screen>
+    </div>
   );
 }

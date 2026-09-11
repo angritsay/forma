@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { allCourses, isCompiledCourse } from '@/content/catalogue';
 import type { CourseStateRow, WorkoutSessionRow } from '@/lib/api/types';
 import {
   engineCourseState,
@@ -58,6 +59,21 @@ describe('resolveActiveCourseId', () => {
     };
     expect(resolveActiveCourseId(null, states, ['start', 'engine'])).toBe('engine');
     expect(resolveActiveCourseId(null, {}, ['engine', 'start'])).toBe('start');
+  });
+
+  /*
+   * `engine` is a course that is written but not on sale (`published: false`). Someone who bought
+   * it before it was withdrawn must still land on it: the shop hides a course, the product does
+   * not forget it. Resolving from the catalogue *listing* instead of from what is owned moved
+   * those athletes to a course they had never opened, without a word.
+   */
+  it('still resolves a course the athlete owns after it leaves the catalogue', () => {
+    expect(isCompiledCourse('engine')).toBe(true);
+    expect(allCourses().some((c) => c.id === 'engine')).toBe(false);
+    expect(resolveActiveCourseId(null, {}, ['engine'])).toBe('engine');
+    expect(resolveActiveCourseId('engine', {}, ['engine'])).toBe('engine');
+    const states = { engine: stateRow('engine', '2026-09-01T00:00:00Z') };
+    expect(resolveActiveCourseId(null, states, ['start', 'engine'])).toBe('engine');
   });
   it('is null without owned courses', () => {
     expect(resolveActiveCourseId('start', {}, [])).toBeNull();

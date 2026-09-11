@@ -202,7 +202,7 @@ export const landing = {
   courseOrderIntro:
     'Leave your email — the coach confirms access and the course appears in the app under this email.',
   courseLifetimeNote: 'One payment, access forever',
-  courseOrSubscribe: 'Or all five courses by subscription — from {price} a month',
+  courseOrSubscribe: 'Or every course by subscription — from {price} a month',
   nodeWorkout: 'Workout',
   nodeRest: 'Rest · {steps} steps',
   nodeTest: 'Test',

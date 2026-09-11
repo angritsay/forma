@@ -10,6 +10,7 @@ import { SITE_COURSES } from '@/content/published';
 import { l, t } from '@/i18n/index';
 import { localePath } from '@/lib/util/paths';
 import { BRAND } from '@content/site/brand';
+import { PLANS_ENABLED } from '@content/site/plans';
 import { type GuideCluster } from './clusters';
 import {
   clusterPath,
@@ -87,14 +88,24 @@ const STATIC_PAGES: StaticDef[] = [
     title: (loc) => t(loc, 'seo.guidesHubTitle'),
     description: (loc) => t(loc, 'seo.guidesHubDescription'),
   },
-  {
-    sitePath: '/subscribe/',
-    kind: 'hub',
-    changefreq: 'monthly',
-    priority: 0.8,
-    title: (loc) => t(loc, 'landing.subscribeTitle'),
-    description: (loc) => t(loc, 'landing.subscribeDescription'),
-  },
+  /*
+   * The subscription page exists only while the subscription is on sale. `subscribe.astro`
+   * returns no paths on the same flag, and the two must agree: a sitemap entry with no page
+   * behind it is a 404 handed to a crawler, and a page missing from the sitemap is one nobody
+   * finds. One flag, both halves.
+   */
+  ...(PLANS_ENABLED
+    ? [
+        {
+          sitePath: '/subscribe/',
+          kind: 'hub',
+          changefreq: 'monthly',
+          priority: 0.8,
+          title: (loc: Locale) => t(loc, 'landing.subscribeTitle'),
+          description: (loc: Locale) => t(loc, 'landing.subscribeDescription'),
+        } satisfies StaticDef,
+      ]
+    : []),
   {
     sitePath: '/about/',
     kind: 'other',

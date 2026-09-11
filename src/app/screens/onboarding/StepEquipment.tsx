@@ -33,7 +33,7 @@ export function StepEquipment({ draft, update }: StepProps) {
       />
       {hasDumbbells ? (
         <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-medium text-muted">{t('app.onbDumbbellWeights')}</h2>
+          <h2 className="eyebrow">{t('app.onbDumbbellWeights')}</h2>
           <ChipGroup<number>
             multiple
             label={t('app.onbDumbbellWeights')}
@@ -45,7 +45,7 @@ export function StepEquipment({ draft, update }: StepProps) {
       ) : null}
       {hasKettlebell ? (
         <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-medium text-muted">{t('app.onbKettlebellWeights')}</h2>
+          <h2 className="eyebrow">{t('app.onbKettlebellWeights')}</h2>
           <ChipGroup<number>
             multiple
             label={t('app.onbKettlebellWeights')}
