@@ -4,6 +4,7 @@ import { Chip } from '@/components/ui/Chip';
 import { useT } from '@/app/hooks/useT';
 import type { PlayerResult } from '@/app/store/activeWorkout';
 import type { BlockFormat } from '@/content/schema';
+import { ExplainPanel } from '../ExplainPanel';
 import { Stepper } from '../Stepper';
 import { loadLabel, setLabel, unitLabel, type WorkStep } from '../model';
 import { useNextHandler } from '../useStepClock';
@@ -71,6 +72,13 @@ export function WorkRepsStep({
         </div>
         {step.item.note ? <p className="text-[15px] text-muted">{l(step.item.note)}</p> : null}
       </div>
+      {/*
+       * The words the introduction screen used to carry. It is gone — the clip demonstrates the
+       * movement while it is being done — so technique, muscles and cautions live here instead,
+       * collapsed behind a handle. Mid-set is exactly when someone wonders whether their back is
+       * meant to round, and until now the only way to check was to leave the workout.
+       */}
+      <ExplainPanel exerciseId={step.exerciseId} item={step.item} />
       <Button size="lg" fullWidth onClick={done}>
         {t('app.playerNextUp')}
       </Button>

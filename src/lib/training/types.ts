@@ -202,12 +202,6 @@ export type PlayerStep =
       durationSec?: number;
     }
   | {
-      kind: 'explain';
-      blockId: string;
-      exerciseId: string;
-      item: PrescribedItem;
-    }
-  | {
       kind: 'work';
       blockId: string;
       exerciseId: string;

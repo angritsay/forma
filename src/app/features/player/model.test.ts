@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EXERCISE_BY_ID } from '@/content/registry';
-import { contraindicationsFor, exerciseVideoRef } from './model';
+import { contraindicationsFor, exerciseVideoRef, stepVideoRef } from './model';
+import type { PlayerStep } from '@/lib/training/types';
 
 const ex = (id: string) => {
   const e = EXERCISE_BY_ID.get(id);
@@ -31,5 +32,34 @@ describe('exerciseVideoRef', () => {
   it('is undefined for an unknown id or an exercise without video', () => {
     expect(exerciseVideoRef(undefined, 'ru')).toBeUndefined();
     expect(exerciseVideoRef('no_such_exercise', 'ru')).toBeUndefined();
+  });
+});
+
+describe('stepVideoRef', () => {
+  const clip = exerciseVideoRef('air_squat', 'ru');
+  const next = exerciseVideoRef('push_up', 'ru');
+
+  /*
+   * The one the athlete actually asked for. Work carried the drawn figure while the coach's own
+   * recording of that exact movement sat unused — the clips are the movement, not a separate
+   * explanation, so the moment of doing it is exactly when it should be on screen.
+   */
+  it('plays the exercise while it is being done', () => {
+    const step = { kind: 'work', exerciseId: 'air_squat' } as unknown as PlayerStep;
+    expect(clip).toBeTruthy();
+    expect(stepVideoRef(step, 'ru')).toBe(clip);
+  });
+
+  it('previews what is coming during rest, not what has just been done', () => {
+    const step = { kind: 'rest', nextExerciseId: 'push_up' } as unknown as PlayerStep;
+    expect(next).toBeTruthy();
+    expect(stepVideoRef(step, 'ru')).toBe(next);
+    expect(stepVideoRef(step, 'ru')).not.toBe(clip);
+  });
+
+  it('shows nothing on a step that is about a block rather than a movement', () => {
+    expect(stepVideoRef({ kind: 'block_intro' } as unknown as PlayerStep, 'ru')).toBeUndefined();
+    expect(stepVideoRef({ kind: 'amrap' } as unknown as PlayerStep, 'ru')).toBeUndefined();
+    expect(stepVideoRef(undefined, 'ru')).toBeUndefined();
   });
 });

@@ -4,6 +4,7 @@ import { useT } from '@/app/hooks/useT';
 import type { PlayerResult } from '@/app/store/activeWorkout';
 import type { BlockFormat } from '@/content/schema';
 import { BigClock } from '../BigClock';
+import { ExplainPanel } from '../ExplainPanel';
 import { loadLabel, setLabel, unitLabel, type WorkStep } from '../model';
 import type { Cue } from '../sound';
 import { useCountdownCues, useNextHandler, useStepClock } from '../useStepClock';
@@ -95,6 +96,13 @@ export function WorkTimerStep({
           {load ? <Chip>{load}</Chip> : null}
         </div>
       </div>
+      {/*
+       * The words the introduction screen used to carry. It is gone — the clip demonstrates the
+       * movement while it is being done — so technique, muscles and cautions live here instead,
+       * collapsed behind a handle. Mid-set is exactly when someone wonders whether their back is
+       * meant to round, and until now the only way to check was to leave the workout.
+       */}
+      <ExplainPanel exerciseId={step.exerciseId} item={step.item} />
     </div>
   );
 }

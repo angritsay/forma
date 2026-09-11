@@ -29,7 +29,7 @@ import type {
 
 const opts: PrescribeOptions = { profile: profile(), scale: 1, choice: 'normal', level: 2 };
 
-/** 2 sets × (push_up 10 reps [20 s], plank 30 s) → work steps at indexes 2, 4, 5, 6. */
+/** 2 sets × (push_up 10 reps [20 s], plank 30 s) → four work steps; `workIndexes` finds them. */
 const SIMPLE = workout({
   id: 'simple',
   basePoints: 100,
@@ -60,6 +60,12 @@ const result = (stepIndex: number, o: Partial<ExerciseResult> = {}): ExerciseRes
   ...o,
 });
 const allDone = workIndexes.map((i) => result(i));
+/*
+ * The four work steps by position, not by literal index: removing the introduction step shifted
+ * every one of these by one, and a test that spells the numbers out only says where the steps
+ * happened to sit on the day it was written.
+ */
+const [push1, plank1, push2, plank2] = workIndexes as [number, number, number, number];
 
 /** Indexes of every work step, in player order. */
 const workIndexesOf = (list: PlayerStep[]) =>
@@ -70,23 +76,32 @@ const prescribeOne = (b: Parameters<typeof block>[0]) =>
 
 describe('computeCompletion', () => {
   it('is 1 when every work step is completed and 0 with no results', () => {
-    expect(workIndexes).toEqual([2, 4, 5, 6]);
+    expect(workIndexes).toEqual([1, 2, 3, 4]);
     expect(computeCompletion(steps, allDone)).toBe(1);
     expect(computeCompletion(steps, [])).toBe(0);
   });
 
   it('weights partial reps by the estimated seconds of each step', () => {
-    const results = [result(2, { achieved: 5 }), result(4), result(5, { achieved: 5 }), result(6)];
+    const results = [
+      result(push1, { achieved: 5 }),
+      result(plank1),
+      result(push2, { achieved: 5 }),
+      result(plank2),
+    ];
     // push_up steps weigh 20 s each at 50%, plank steps 30 s each at 100% → 80 / 100
     expect(computeCompletion(steps, results)).toBe(0.8);
   });
 
   it('treats skipped and missing steps as 0 and timer achieved as seconds', () => {
-    const results = [result(2, { skipped: true }), result(4, { achieved: 15 }), result(5)];
+    const results = [
+      result(push1, { skipped: true }),
+      result(plank1, { achieved: 15 }),
+      result(push2),
+    ];
     // 0 × 20 + 0.5 × 30 + 1 × 20 + missing 0 × 30 = 35 / 100
     expect(computeCompletion(steps, results)).toBe(0.35);
-    expect(computeCompletion(steps, [result(2, { completed: false })])).toBe(0);
-    expect(computeCompletion(steps, [result(2, { achieved: 25 })])).toBe(0.2);
+    expect(computeCompletion(steps, [result(push1, { completed: false })])).toBe(0);
+    expect(computeCompletion(steps, [result(push1, { achieved: 25 })])).toBe(0.2);
   });
 
   it('scores AMRAP by rounds + partial reps over expected rounds', () => {
@@ -235,7 +250,12 @@ describe('summarizeSession', () => {
     expect(full.points).toBe(100);
     const partial = summarizeSession(
       prescribed,
-      [result(2, { achieved: 5 }), result(4), result(5, { achieved: 5 }), result(6)],
+      [
+        result(push1, { achieved: 5 }),
+        result(plank1),
+        result(push2, { achieved: 5 }),
+        result(plank2),
+      ],
       feedback,
       sopts,
     );
@@ -244,7 +264,12 @@ describe('summarizeSession', () => {
     // 9/10 push-ups twice: (18 + 30 + 18 + 30) / 100 = 0.96 → still full points
     const almost = summarizeSession(
       prescribed,
-      [result(2, { achieved: 9 }), result(4), result(5, { achieved: 9 }), result(6)],
+      [
+        result(push1, { achieved: 9 }),
+        result(plank1),
+        result(push2, { achieved: 9 }),
+        result(plank2),
+      ],
       feedback,
       sopts,
     );
@@ -262,7 +287,12 @@ describe('summarizeSession', () => {
     expect(est.durationSec).toBe(prescribed.estimatedSec);
     const half = summarizeSession(
       prescribed,
-      [result(2, { achieved: 5 }), result(4), result(5, { achieved: 5 }), result(6)],
+      [
+        result(push1, { achieved: 5 }),
+        result(plank1),
+        result(push2, { achieved: 5 }),
+        result(plank2),
+      ],
       feedback,
       sopts,
     );

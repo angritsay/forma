@@ -21,7 +21,7 @@ const rests = (steps: PlayerStep[]) =>
   steps.filter((s): s is Extract<PlayerStep, { kind: 'rest' }> => s.kind === 'rest');
 
 describe('buildPlayerSteps — sets and circuits', () => {
-  it('sequences intro → explain → work → rest per set, with no rest after the last set', () => {
+  it('sequences intro → work → rest per set, with no rest after the last set', () => {
     const steps = stepsFor({
       id: 's',
       format: 'sets',
@@ -29,11 +29,10 @@ describe('buildPlayerSteps — sets and circuits', () => {
       restBetweenSetsSec: 60,
       items: [item('push_up', { reps: 10, restAfterSec: 30 }), item('air_squat', { reps: 15 })],
     });
-    // air_squat needs no explain step of its own: the rest after push_up names it as next, and
-    // that is where the coach explains it.
+    // Nothing between the intro and the first movement: the demonstration plays through the work
+    // itself, so there is no step whose only job is to introduce an exercise.
     expect(kinds(steps)).toEqual([
       'block_intro',
-      'explain',
       'work',
       'rest',
       'work',
@@ -73,14 +72,16 @@ describe('buildPlayerSteps — sets and circuits', () => {
     expect(w[1]!.loadKg).toBe(14);
   });
 
-  it('never explains an exercise twice — a rest that names it counts as the introduction', () => {
+  /*
+   * The whole of a real workout, not a two-item fixture: an introduction step would be easy to
+   * reintroduce for one format and miss here.
+   */
+  it('never puts a step between the athlete and a movement', () => {
     const steps = buildPlayerSteps(prescribeWorkout(FULL_WORKOUT, opts, fixtureLookup));
-    const explained = steps
-      .filter((s) => s.kind === 'explain')
-      .map((s) => (s.kind === 'explain' ? s.exerciseId : ''));
-    expect(explained.filter((id) => id === 'air_squat').length).toBeLessThanOrEqual(1);
-    expect(explained.filter((id) => id === 'plank').length).toBeLessThanOrEqual(1);
-    expect(new Set(explained).size).toBe(explained.length);
+    const kindsSeen = new Set(steps.map((s) => s.kind));
+    expect([...kindsSeen]).not.toContain('explain');
+    // Every movement still reaches the athlete: each work step names its exercise.
+    expect(works(steps).every((w) => Boolean(w.exerciseId))).toBe(true);
   });
 
   it('circuits rest between rounds', () => {
@@ -123,7 +124,8 @@ describe('buildPlayerSteps — timed formats', () => {
       restSec: 10,
       items: [item('plank', { seconds: 20 })],
     });
-    expect(steps).toHaveLength(1 + 1 + 15 + 1);
+    // intro, 8 work + 7 rest, done.
+    expect(steps).toHaveLength(1 + 15 + 1);
     expect(works(steps).every((w) => w.mode === 'timer' && w.durationSec === 20)).toBe(true);
     expect(rests(steps)).toHaveLength(7);
     const two = stepsFor({
@@ -134,9 +136,8 @@ describe('buildPlayerSteps — timed formats', () => {
       restSec: 10,
       items: [item('plank', { seconds: 20 }), item('air_squat', { reps: 8 })],
     });
-    // intro, plank (explain + 8 work + 7 rest), the gap rest, air_squat (no explain of its own —
-    // the gap rest names it — + 8 work + 7 rest), done.
-    expect(two).toHaveLength(1 + 16 + 1 + 15 + 1);
+    // intro, plank (8 work + 7 rest), the gap rest, air_squat (8 work + 7 rest), done.
+    expect(two).toHaveLength(1 + 15 + 1 + 15 + 1);
     expect(
       works(two)
         .slice(8)
@@ -156,8 +157,8 @@ describe('buildPlayerSteps — timed formats', () => {
     expect(works(steps).map((w) => w.exerciseId)).toEqual(['run', 'burpee', 'run', 'burpee']);
     expect(rests(steps)).toHaveLength(3);
     expect(rests(steps)[0]!.nextExerciseId).toBe('burpee');
-    // burpee is introduced by that first rest, so it has no explain step: one step fewer.
-    expect(steps).toHaveLength(10);
+    // intro, 4 work interleaved with 3 rests, done.
+    expect(steps).toHaveLength(1 + 4 + 3 + 1);
   });
 
   it('amrap: a single step with expected rounds derived from item estimates', () => {
@@ -181,8 +182,8 @@ describe('buildPlayerSteps — timed formats', () => {
       durationSec: 900,
       items: [item('burpee'), item('air_squat')],
     });
-    expect(kinds(steps)).toEqual(['block_intro', 'explain', 'explain', 'fortime', 'done']);
-    const ft = steps[3];
+    expect(kinds(steps)).toEqual(['block_intro', 'fortime', 'done']);
+    const ft = steps[1];
     if (ft?.kind !== 'fortime') throw new Error('expected fortime');
     expect(ft.rounds).toBe(3);
     expect(ft.capSec).toBe(900);
@@ -243,8 +244,8 @@ describe('buildPlayerSteps — timed formats', () => {
   });
 });
 
-describe('buildPlayerSteps — the coach explains during rest', () => {
-  it('drops the explain step when the rest before it already names the exercise', () => {
+describe('buildPlayerSteps — rest previews what is coming', () => {
+  it('goes straight from the intro into the first movement, and names the next one in the rest', () => {
     const steps = stepsFor({
       id: 's',
       type: 'strength',
@@ -252,13 +253,9 @@ describe('buildPlayerSteps — the coach explains during rest', () => {
       sets: 1,
       items: [item('push_up', { reps: 10, restAfterSec: 30 }), item('air_squat', { reps: 15 })],
     });
-    expect(kinds(steps)).toEqual(['block_intro', 'explain', 'work', 'rest', 'work', 'done']);
+    expect(kinds(steps)).toEqual(['block_intro', 'work', 'rest', 'work', 'done']);
+    // The rest is where the athlete meets air_squat: its clip plays above and its cues sit below.
     expect(rests(steps)[0]!.nextExerciseId).toBe('air_squat');
-    // air_squat is introduced by that rest, never by a separate explain step.
-    const explained = steps
-      .filter((s) => s.kind === 'explain')
-      .map((s) => (s.kind === 'explain' ? s.exerciseId : ''));
-    expect(explained).toEqual(['push_up']);
   });
 
   it('opens a session that starts with a warm-up on the gate; skipping lands after the warm-up', () => {
