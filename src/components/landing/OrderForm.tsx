@@ -33,6 +33,8 @@ export interface OrderFormLabels {
   /** Template with {email}. */
   errorGeneric: string;
   notConfigured: string;
+  /** Offered when the order could not be recorded, so a backend fault does not kill the sale. */
+  payAnyway: string;
   tryAgain: string;
   lifetimeNote: string;
   telegramLabel: string;
@@ -90,7 +92,8 @@ type Status =
   | { kind: 'submitting' }
   | { kind: 'redirecting'; email: string }
   | { kind: 'success'; email: string }
-  | { kind: 'error'; reason: ErrorReason };
+  /** `retryEmail` is set when the address was valid and the backend is what failed. */
+  | { kind: 'error'; reason: ErrorReason; retryEmail?: string };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -159,6 +162,12 @@ export default function OrderForm({
     if (status.kind !== 'error') return;
     if (status.reason === 'consent') consentRef.current?.focus();
     else emailRef.current?.focus();
+    /*
+     * And bring the message on screen. A backend failure renders below the button, which on a phone
+     * is below the fold — pressing "Получить доступ" then looks like it did nothing at all, which
+     * is exactly how it was reported.
+     */
+    document.getElementById('order-error')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }, [status]);
 
   // The success panel replaces the form, so focus would otherwise fall back to <body>.
@@ -190,7 +199,13 @@ export default function OrderForm({
         await createOrder({ email: trimmed, courseId, locale, source: 'landing' });
       }
     } catch (err) {
-      setStatus({ kind: 'error', reason: errorReason(err) });
+      /*
+       * The visitor gets one of four sentences; whoever is debugging needs the actual cause.
+       * Reported as "nothing happens" — the order is recorded before the hand-off, so a backend
+       * that rejects it ends the flow with a line of red text and no way to tell why.
+       */
+      console.error('[order] create failed', err);
+      setStatus({ kind: 'error', reason: errorReason(err), retryEmail: trimmed });
       return;
     }
     // A demo order never leaves the browser, so it never hands anyone to a payment page.
@@ -382,6 +397,24 @@ export default function OrderForm({
         >
           {errorText}
         </p>
+      )}
+
+      {/*
+       * Recording the order failed, but the customer still wants to buy.
+       *
+       * The order row is how a payment is matched back to a person, so it is written first — and
+       * that made a backend problem a dead end for the sale: the visitor is told to try again and
+       * has nowhere else to go. They can still pay; the processor's own notification carries the
+       * same email, and the coach grants access from it by hand. So offer the payment page rather
+       * than lose the purchase, and say plainly that the address has to match.
+       */}
+      {status.kind === 'error' && status.retryEmail && payment && !demo && (
+        <a
+          href={withEmail(payment, status.retryEmail)}
+          className="control-label inline-flex h-12 items-center justify-center rounded-control border border-border-strong px-6 text-[12px] text-text"
+        >
+          {labels.payAnyway}
+        </a>
       )}
 
       <button

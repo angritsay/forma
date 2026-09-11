@@ -31,9 +31,9 @@ export function Screen({
   return (
     <div className={clsx('flex min-h-dvh flex-col', className)}>
       {header ? (
-        <div className="sticky top-0 z-20 bg-bg/85 pt-[var(--safe-top)] backdrop-blur-md">
-          {header}
-        </div>
+        // Opaque for the same reason as the footer: at 85% the content scrolling under the bar
+        // still reads through it, and a blur only turns that into a smear behind the title.
+        <div className="sticky top-0 z-20 bg-bg pt-[var(--safe-top)]">{header}</div>
       ) : (
         <div className="h-[var(--safe-top)]" />
       )}
@@ -46,8 +46,21 @@ export function Screen({
       >
         {children}
       </main>
+      {/*
+       * The band behind the primary action is opaque, and the fade is a separate strip above it.
+       *
+       * It used to be one `to-transparent` gradient across the whole band, which meant the top of
+       * it — where the button actually sits — was see-through: on the onboarding steps the input
+       * and its label scrolled underneath and read straight through «Продолжить». A gradient can
+       * soften the edge between content and chrome, but it cannot be the background of the control
+       * itself.
+       */}
       {footer ? (
-        <div className="sticky bottom-[var(--nav-inset,0px)] z-20 bg-linear-to-t from-bg via-bg/90 to-transparent px-5 pb-[calc(var(--safe-bottom)+16px)] pt-6">
+        <div className="sticky bottom-[var(--nav-inset,0px)] z-20 bg-bg px-5 pt-4 pb-[calc(var(--safe-bottom)+16px)]">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 bottom-full h-6 bg-linear-to-t from-bg to-transparent"
+          />
           {footer}
         </div>
       ) : null}
