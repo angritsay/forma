@@ -212,6 +212,36 @@ do $$ declare v_err text; begin
   raise notice 'OK write is admin-only';
 end $$;
 
+-- An admin-authored exercise survives a re-seed ------------------------------------
+--
+-- 0007_exercise_seed.sql is regenerated from content/exercises and re-applied whenever the library
+-- changes. A pose written in the admin panel is not owned by those files, so the generated upsert
+-- carries `where is_custom = false`. This takes the id of a *seeded* exercise — the worst case —
+-- edits it as if by hand, re-runs the real migration and checks the edit is still there.
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c', 'coach@example.com');
+do $$ begin
+  insert into public.exercises (id, name_ru, unit, is_custom)
+  values ('child_pose', 'Поза ребёнка (моя версия)', 'seconds', true)
+  on conflict (id) do update
+    set name_ru = excluded.name_ru, is_custom = true;
+  insert into public.exercises (id, name_ru, unit, is_custom, video_ru)
+  values ('yoga_downward_dog', 'Собака мордой вниз', 'seconds', true,
+          'storage:videos/yoga/downward_dog.ru.mp4');
+end $$;
+
+select pg_temp.as_super();
+\i supabase/migrations/0007_exercise_seed.sql
+
+do $$ begin
+  assert (select name_ru from public.exercises where id = 'child_pose') = 'Поза ребёнка (моя версия)',
+    'a hand-edited exercise is not overwritten by the generated seed';
+  assert (select count(*) from public.exercises where id = 'yoga_downward_dog') = 1,
+    'a pose that exists only in the admin panel survives a re-seed';
+  assert (select name_ru from public.exercises where id = 'air_squat') = 'Приседания',
+    'and an ordinary seeded exercise is still re-seeded normally';
+  raise notice 'OK re-seed leaves admin-authored exercises alone';
+end $$;
+
 select pg_temp.as_super();
 \echo ''
 \echo 'COURSE BUILDER TESTS PASSED'

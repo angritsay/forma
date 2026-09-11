@@ -70,6 +70,45 @@ revoke all on public.exercises from anon, authenticated;
 grant select, insert, update, delete on public.exercises to authenticated;
 
 -- -----------------------------------------------------------------------------
+-- exercises: the columns an admin-authored exercise needs.
+--
+-- The table above mirrors the compiled library, so it carries only what the builder reads.
+-- Authoring a new exercise — a yoga pose, say — needs the teaching text too, and a flag that keeps
+-- the generated re-seed from touching rows that were written by hand.
+--
+-- These live here, with the table, rather than in 0008 where the rest of the course builder is:
+-- 0007_exercise_seed.sql is generated with a `where is_custom = false` guard on its upsert, and it
+-- runs before 0008 would have added the column.
+-- -----------------------------------------------------------------------------
+alter table public.exercises add column if not exists description_en text;
+-- how_to / cues / mistakes: arrays of {ru,en} strings, as ExerciseSchema defines them.
+alter table public.exercises add column if not exists how_to jsonb not null default '[]'::jsonb;
+alter table public.exercises add column if not exists cues jsonb not null default '[]'::jsonb;
+alter table public.exercises add column if not exists mistakes jsonb not null default '[]'::jsonb;
+alter table public.exercises add column if not exists breathing_ru text;
+alter table public.exercises add column if not exists slug_ru text;
+alter table public.exercises add column if not exists slug_en text;
+-- A still image, for a pose whose video has not been shot yet.
+alter table public.exercises add column if not exists image text;
+alter table public.exercises add column if not exists author_id uuid references auth.users (id) on delete set null;
+
+-- is_custom marks a row that was authored in the admin panel rather than generated from the
+-- exercise files under content/exercises. scripts/content/gen-exercise-seed.mjs writes its upsert
+-- to skip these, so a re-seed can never overwrite a pose the coach wrote.
+--
+-- (Line comments, not a block: Postgres nests block comments, so a path containing a slash-star
+-- would open a second level and swallow the rest of the file.)
+alter table public.exercises add column if not exists is_custom boolean not null default false;
+
+comment on column public.exercises.is_custom is
+  'True for an exercise authored in the admin panel. The generated seed (0007) never updates these rows.';
+
+-- animation names a pose set defined in src/components/anim/poses — code the admin cannot write.
+-- An admin-authored exercise leads with its video or image instead, so the column must be nullable.
+-- (It already is; asserted here so a future tightening does not break authoring.)
+alter table public.exercises alter column animation drop not null;
+
+-- -----------------------------------------------------------------------------
 -- custom_workouts — a workout the coach composed.
 -- -----------------------------------------------------------------------------
 create table if not exists public.custom_workouts (

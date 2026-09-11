@@ -10,10 +10,16 @@ import { stepsPoints } from '@/lib/training/streak';
 import { addDays, toLocalDateIso } from '@/lib/util/dates';
 import { AppError } from '../errors';
 import type {
+  AdminCourseBundle,
+  AdminCourseDayPatch,
+  AdminCourseDayRow,
+  AdminCoursePatch,
+  AdminCourseRow,
   AssignedWorkoutRow,
   CustomWorkoutRow,
   CustomWorkoutSummary,
   ExerciseCatalogRow,
+  ExerciseDraft,
   ExerciseMarkupPatch,
   WorkoutAssigneeRow,
 } from '../types';
@@ -772,4 +778,94 @@ export async function listMyAssignedWorkouts(): Promise<AssignedWorkoutRow[]> {
 
 export async function getSharedCustomWorkout(_token: string): Promise<AssignedWorkoutRow | null> {
   return null;
+}
+
+// --- courses built in the admin panel ---------------------------------------
+// Same rule as the builder above: demo mode has no coach tools, so the lists are empty and every
+// write is refused. listPublishedCourses() returning nothing is also correct rather than merely
+// convenient — a demo build ships with the compiled courses and no database behind it.
+
+export async function listAdminCourses(): Promise<AdminCourseRow[]> {
+  return [];
+}
+
+export async function getAdminCourse(_id: string): Promise<AdminCourseBundle> {
+  throw new AppError('not_found', 'not_found');
+}
+
+export async function createAdminCourse(
+  _slugId: string,
+  _patch: AdminCoursePatch,
+): Promise<AdminCourseRow> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function updateAdminCourse(
+  _id: string,
+  _patch: AdminCoursePatch,
+): Promise<AdminCourseRow> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function deleteAdminCourse(_id: string): Promise<void> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function publishAdminCourse(_id: string): Promise<void> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function unpublishAdminCourse(_id: string): Promise<void> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function createCourseDay(
+  _courseId: string,
+  _patch: AdminCourseDayPatch,
+): Promise<AdminCourseDayRow> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function updateCourseDay(
+  _id: string,
+  _patch: AdminCourseDayPatch,
+): Promise<AdminCourseDayRow> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function deleteCourseDay(_id: string): Promise<void> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function reorderCourseDays(
+  _days: readonly { id: string; sortOrder: number; week: number; day: number }[],
+): Promise<void> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function listPublishedCourses(): Promise<AdminCourseBundle[]> {
+  return [];
+}
+
+export async function uploadMedia(_bucket: string, _path: string, _file: Blob): Promise<string> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function deleteMedia(_ref: string): Promise<void> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function createExercise(_draft: ExerciseDraft): Promise<ExerciseCatalogRow> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function updateExercise(
+  _id: string,
+  _draft: Partial<ExerciseDraft>,
+): Promise<ExerciseCatalogRow> {
+  throw new AppError('forbidden', 'demo_read_only');
+}
+
+export async function deleteExercise(_id: string): Promise<void> {
+  throw new AppError('forbidden', 'demo_read_only');
 }

@@ -19,6 +19,7 @@ export * from './subscriptions';
 export * from './admin';
 export * from './exercises';
 export * from './customWorkouts';
+export * from './courseBuilder';
 export * from './storage';
 // auth.ts is written by the app shell (requestCode / verifyCode / signOut / onAuthChange).
 export * from './auth';
