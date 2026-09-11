@@ -913,6 +913,8 @@ export const app = {
   courseUnpublish: 'Снять с публикации',
   coursePublishReady: 'Курс готов к публикации.',
   coursePublishBlocked: 'Пока опубликовать нельзя:',
+  coursePublishSite:
+    'Страница курса на сайте появится после следующей сборки — она собирается раз в сутки. Нужно сразу — запусти «Deploy site» в GitHub Actions.',
   coursePublishExplain:
     'После публикации курс появится в каталоге и его можно будет купить. Снять с публикации можно в любой момент — у тех, кто уже купил, курс останется.',
   coursePublishedToast: 'Курс опубликован',

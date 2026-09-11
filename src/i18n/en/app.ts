@@ -917,6 +917,8 @@ export const app = {
   courseUnpublish: 'Unpublish',
   coursePublishReady: 'The course is ready to publish.',
   coursePublishBlocked: 'Not publishable yet:',
+  coursePublishSite:
+    'The course page on the website appears on the next build, which runs nightly. Need it now — run "Deploy site" in GitHub Actions.',
   coursePublishExplain:
     'Publishing puts the course in the catalogue and makes it purchasable. You can unpublish at any time — anyone who already bought it keeps it.',
   coursePublishedToast: 'Course published',

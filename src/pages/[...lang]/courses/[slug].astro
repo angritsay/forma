@@ -30,7 +30,8 @@ import {
   weeksLabel,
 } from '@/components/landing/courseHelpers';
 import { breadcrumbLd, courseLd, faqLd } from '@/components/landing/jsonld';
-import { COURSES, courseExercises, getCourse } from '@/content/registry';
+import { courseExercises } from '@/content/registry';
+import { SITE_COURSES } from '@/content/published';
 import { DEFAULT_LOCALE, LOCALES, type Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { canonicalUrl } from '@/lib/seo/urls';
@@ -41,7 +42,7 @@ import { formatPrice, isFree } from '@content/site/pricing';
 import { PLAN_BY_ID, PLANS_ENABLED } from '@content/site/plans';
 
 export function getStaticPaths() {
-  return COURSES.flatMap((c) =>
+  return SITE_COURSES.flatMap((c) =>
     LOCALES.map((locale) => ({
       params: { lang: locale === DEFAULT_LOCALE ? undefined : locale, slug: c.slug[locale] },
       props: { courseId: c.id },
@@ -55,7 +56,7 @@ const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';
 const monthlyPlan = PLAN_BY_ID.get('monthly');
 const site = (Astro.site?.toString() ?? 'http://localhost:4321').replace(/\/$/, '');
 
-const course = getCourse(courseId);
+const course = SITE_COURSES.find((c) => c.id === courseId)!;
 const name = l(course.name, locale);
 // Keep <title> ≤ 60 chars once SeoHead appends " — Forma": drop the suffix for long names.
 const titleWithSuffix = `${name} — ${t(locale, 'landing.courseTitleSuffix')}`;

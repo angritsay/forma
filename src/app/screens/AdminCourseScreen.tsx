@@ -384,6 +384,8 @@ export default function AdminCourseScreen() {
           )}
 
           <p className="text-sm text-muted">{t('app.coursePublishExplain')}</p>
+          {/* Publishing is instant in the app and not on the website; say so where it is decided. */}
+          <p className="text-sm text-muted">{t('app.coursePublishSite')}</p>
 
           {published ? (
             <Button

@@ -27,7 +27,8 @@ import {
   sampleWorkout,
 } from '@/components/landing/courseHelpers';
 import { faqLd, itemListLd, organizationLd, websiteLd } from '@/components/landing/jsonld';
-import { COURSES, COURSE_BY_ID, EXERCISE_BY_ID } from '@/content/registry';
+import { COURSE_BY_ID, EXERCISE_BY_ID } from '@/content/registry';
+import { SITE_COURSES } from '@/content/published';
 import { publishableResults } from '@content/site/results';
 import type { Exercise, Locale, WorkoutItem } from '@/content/schema';
 import { formatNumber, l, t } from '@/i18n/index';
@@ -46,7 +47,7 @@ const site = (Astro.site?.toString() ?? 'http://localhost:4321').replace(/\/$/, 
 const title = t(locale, 'landing.homeTitle');
 const description = t(locale, 'landing.homeDescription');
 
-const demoCourse = COURSE_BY_ID.get(DEMO_COURSE_ID) ?? COURSES[0];
+const demoCourse = COURSE_BY_ID.get(DEMO_COURSE_ID) ?? SITE_COURSES[0];
 const demo = demoCourse ? buildDemo(locale, demoCourse) : null;
 
 // "Inside a workout" tiles use real items of the demo course's first workout.
@@ -76,7 +77,7 @@ const workTile = insideItems[1] ?? insideItems[0];
 const restSec = insideItems.find((x) => x.restSec > 0)?.restSec ?? 0;
 
 const chips = [
-  COURSES.length > 0 ? coursesCountLabel(locale, COURSES.length) : '',
+  SITE_COURSES.length > 0 ? coursesCountLabel(locale, SITE_COURSES.length) : '',
   t(locale, 'landing.chipLifetime'),
   t(locale, 'landing.chipAdaptive'),
   t(locale, 'landing.chipHome'),
@@ -89,7 +90,7 @@ const jsonLd = [
   organizationLd(site, locale),
   faqLd(FAQ, locale),
   itemListLd(
-    COURSES.map((c) => ({
+    SITE_COURSES.map((c) => ({
       name: l(c.name, locale),
       url: canonicalUrl(site, locale, coursePath(locale, c)),
     })),
@@ -137,7 +138,7 @@ const jsonLd = [
   >
     <ul class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {
-        COURSES.map((c, i) => (
+        SITE_COURSES.map((c, i) => (
           <li>
             <CourseCard course={c} locale={locale} n={i + 1} />
           </li>

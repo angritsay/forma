@@ -16,7 +16,7 @@ import {
   levelsAcrossCourses,
 } from '@/components/landing/courseHelpers';
 import { breadcrumbLd, itemListLd } from '@/components/landing/jsonld';
-import { COURSES } from '@/content/registry';
+import { SITE_COURSES } from '@/content/published';
 import { EQUIPMENT, type Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { canonicalUrl } from '@/lib/seo/urls';
@@ -32,8 +32,8 @@ const site = (Astro.site?.toString() ?? 'http://localhost:4321').replace(/\/$/, 
 const title = t(locale, 'landing.coursesHubTitle');
 const description = t(locale, 'landing.coursesHubDescription');
 
-const equipmentOptions = equipmentAcrossCourses(COURSES, EQUIPMENT);
-const levelOptions = levelsAcrossCourses(COURSES);
+const equipmentOptions = equipmentAcrossCourses(SITE_COURSES, EQUIPMENT);
+const levelOptions = levelsAcrossCourses(SITE_COURSES);
 const self = href(locale, '/courses/');
 
 const jsonLd = [
@@ -42,7 +42,7 @@ const jsonLd = [
     { name: t(locale, 'landing.breadcrumbCourses'), url: canonicalUrl(site, locale, '/courses/') },
   ]),
   itemListLd(
-    COURSES.map((c) => ({
+    SITE_COURSES.map((c) => ({
       name: l(c.name, locale),
       url: canonicalUrl(site, locale, coursePath(locale, c)),
     })),
@@ -131,7 +131,7 @@ const jsonLd = [
       aria-label={t(locale, 'landing.filterResultsLabel')}
     >
       {
-        COURSES.map((c) => (
+        SITE_COURSES.map((c) => (
           <li data-course-item data-equipment={c.equipment.join(' ')} data-level={c.level}>
             <CourseCard course={c} locale={locale} headingLevel="h2" />
           </li>

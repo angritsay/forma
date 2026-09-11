@@ -71,7 +71,9 @@ Dashboard → **SQL Editor** → **New query**, paste each file in this order an
    the public `images` bucket, and `admin_publish_course()` (see §2.2)
 9. `supabase/migrations/0009_course_import.sql` — generated: the five courses written as files,
    as rows the admin panel can edit (see §2.3). Optional, and safe to skip.
-10. `supabase/seed.sql` — nothing runs by default; open it, uncomment the `insert into
+10. `supabase/migrations/0010_public_course_pages.sql` — lets the static site read a published
+    course so it can have a landing page (see §2.4)
+11. `supabase/seed.sql` — nothing runs by default; open it, uncomment the `insert into
 public.admins` line with the coach's email (see §4)
 
 Each run must end with "Success. No rows returned". If a statement fails, fix the cause and
@@ -154,6 +156,27 @@ Three things worth knowing:
 - **Workout ids get a course prefix.** Workout ids are unique _inside_ a course; `short_id` is
   unique globally, and eighteen workouts share a name across courses. So `w_s01_emom` of the start
   course becomes `start_w_s01_emom`. Progress is keyed on the node id, which is unchanged.
+
+### 2.4 A published course's page on the website (`0010_public_course_pages.sql`)
+
+Publishing a course makes it real in the app immediately. The website is different: the course
+pages are static HTML, generated once at build time, so a database course has to be _read during
+the build_.
+
+- **What becomes public.** 0010 lets an anonymous reader — including a build with no session —
+  see a published course's marketing fields and its days: name, description, who it is for, the
+  outcomes, price, FAQ, and the week-by-week shape of the programme. That is what the course page
+  already shows for the compiled courses.
+- **What does not.** `custom_workouts` is untouched: the exercises, reps and timings stay readable
+  only by an admin, by someone the workout was assigned to, or by someone who owns the course. A
+  database course's page therefore has no sample-workout section — that part of the page is for
+  the courses whose sample was chosen by hand in a content file.
+- **When the page appears.** On the next build. `.github/workflows/deploy.yml` runs nightly at
+  03:00 UTC for exactly this, and **Actions → Deploy site → Run workflow** does it now. The publish
+  tab in the admin panel says so too.
+
+The build needs `PUBLIC_SUPABASE_URL` and `PUBLIC_SUPABASE_ANON_KEY` as repository variables (§6) —
+without them it quietly builds the compiled courses only and says so in the log.
 
 ### Verifying the migrations locally
 

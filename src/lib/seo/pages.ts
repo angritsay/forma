@@ -5,7 +5,8 @@
  */
 import type { Locale } from '@/content/schema';
 import { LOCALES } from '@/content/schema';
-import { COURSES, EXERCISES } from '@/content/registry';
+import { EXERCISES } from '@/content/registry';
+import { SITE_COURSES } from '@/content/published';
 import { l, t } from '@/i18n/index';
 import { localePath } from '@/lib/util/paths';
 import { BRAND } from '@content/site/brand';
@@ -163,7 +164,7 @@ export function buildPages(guides: readonly GuideLike[]): SeoPage[] {
     }
   }
 
-  for (const course of COURSES) {
+  for (const course of SITE_COURSES) {
     const alternates: Partial<Record<Locale, string>> = {};
     for (const loc of LOCALES) alternates[loc] = `/courses/${course.slug[loc]}/`;
     for (const locale of LOCALES) {

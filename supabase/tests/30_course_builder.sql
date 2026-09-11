@@ -295,6 +295,56 @@ do $$ declare v_course uuid; begin
   raise notice 'OK publishing an imported course';
 end $$;
 
+-- What an anonymous visitor can read (0010) ----------------------------------------
+--
+-- The website's course pages are static HTML built with no session at all, so a published course
+-- has to be readable by `anon` or it can never be sold. The line this draws is the product: the
+-- marketing copy and the shape of the programme are public, the workouts are not.
+create or replace function pg_temp.as_anon() returns void language plpgsql as $$
+begin
+  perform set_config('request.jwt.claims', '{"role":"anon"}', false);
+  set role anon;
+end $$;
+
+-- Re-publish the yoga course; the unpublish test above left it a draft.
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c', 'coach@example.com');
+select public.admin_publish_course((select id from public.admin_courses where slug_id = 'yoga'));
+
+select pg_temp.as_anon();
+do $$ begin
+  assert (select count(*) from public.admin_courses where slug_id = 'yoga') = 1,
+    'a published course is readable without signing in';
+  -- Scoped to yoga: `start` was published earlier in this file, so its 28 days are public too.
+  assert (select count(*) from public.admin_course_days d
+          join public.admin_courses c on c.id = d.course_id
+          where c.slug_id = 'yoga') = 4,
+    'and so are its days, which is the shape of the programme';
+  /*
+   * The part people pay for stays shut — and shut harder than an empty result: `anon` has no grant
+   * on the table at all, so the read is refused rather than filtered. Asserting the refusal is the
+   * stronger statement, and it is what actually protects the product.
+   */
+  begin
+    perform count(*) from public.custom_workouts;
+    raise exception 'the workouts of a published course must not be public';
+  exception when insufficient_privilege then null;
+  end;
+  raise notice 'OK anonymous reads exactly the sales page';
+end $$;
+
+-- A draft stays invisible to anonymous readers too.
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c', 'coach@example.com');
+select public.admin_unpublish_course((select id from public.admin_courses where slug_id = 'yoga'));
+select pg_temp.as_anon();
+do $$ begin
+  assert (select count(*) from public.admin_courses where slug_id = 'yoga') = 0,
+    'an unpublished course disappears from the public side';
+  assert (select count(*) from public.admin_course_days d
+          join public.admin_courses c on c.id = d.course_id
+          where c.slug_id = 'yoga') = 0, 'and so do its days';
+  raise notice 'OK a draft is not public';
+end $$;
+
 select pg_temp.as_super();
 \echo ''
 \echo 'COURSE BUILDER TESTS PASSED'
