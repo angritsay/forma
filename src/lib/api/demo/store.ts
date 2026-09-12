@@ -33,8 +33,15 @@ import type {
   CustomWorkoutRow,
   ExerciseCatalogRow,
   LeaderboardPeriod,
+  MarathonAdjustmentRow,
+  MarathonMemberRow,
+  MarathonRow,
+  MarathonSubmissionRow,
+  MarathonTaskRow,
+  MarathonTeamRow,
   PurchaseStatus,
 } from '../types';
+import { seedMarathon } from './marathonSeed';
 
 // --- storage ----------------------------------------------------------------
 
@@ -47,7 +54,7 @@ export interface StorageLike {
 export const DEMO_DB_KEY = 'forma.demo.db';
 export const DEMO_AUTH_KEY = 'forma.demo.auth';
 /** Bumped when the row shapes change; a stored database of another version is discarded. */
-export const DEMO_SCHEMA_VERSION = 3;
+export const DEMO_SCHEMA_VERSION = 4;
 
 /** In-memory storage used when `localStorage` is unavailable (SSR, tests, private mode). */
 export function memoryStorage(): StorageLike {
@@ -105,6 +112,13 @@ export interface DemoDb {
   customWorkouts: CustomWorkoutRow[];
   adminCourses: AdminCourseRow[];
   adminCourseDays: AdminCourseDayRow[];
+  /* The marathon format. Seeded mid-flight with the demo account's first sign-in. */
+  marathons: MarathonRow[];
+  marathonTeams: MarathonTeamRow[];
+  marathonMembers: MarathonMemberRow[];
+  marathonTasks: MarathonTaskRow[];
+  marathonSubmissions: MarathonSubmissionRow[];
+  marathonAdjustments: MarathonAdjustmentRow[];
 }
 
 export interface DemoAuthState {
@@ -322,6 +336,12 @@ export function emptyDb(): DemoDb {
     customWorkouts: [],
     adminCourses: [],
     adminCourseDays: [],
+    marathons: [],
+    marathonTeams: [],
+    marathonMembers: [],
+    marathonTasks: [],
+    marathonSubmissions: [],
+    marathonAdjustments: [],
   };
 }
 
@@ -360,6 +380,12 @@ export function readDb(storage: StorageLike = defaultStorage()): DemoDb {
       customWorkouts: asRows<CustomWorkoutRow>(parsed.customWorkouts),
       adminCourses: asRows<AdminCourseRow>(parsed.adminCourses),
       adminCourseDays: asRows<AdminCourseDayRow>(parsed.adminCourseDays),
+      marathons: asRows<MarathonRow>(parsed.marathons),
+      marathonTeams: asRows<MarathonTeamRow>(parsed.marathonTeams),
+      marathonMembers: asRows<MarathonMemberRow>(parsed.marathonMembers),
+      marathonTasks: asRows<MarathonTaskRow>(parsed.marathonTasks),
+      marathonSubmissions: asRows<MarathonSubmissionRow>(parsed.marathonSubmissions),
+      marathonAdjustments: asRows<MarathonAdjustmentRow>(parsed.marathonAdjustments),
     };
   } catch {
     return emptyDb();
@@ -519,6 +545,17 @@ export function seedUser(db: DemoDb, email: string, today = toLocalDateIso()): D
     if (known.has(key)) continue;
     known.add(key);
     db.purchases.push(purchase);
+  }
+  // The marathon is seeded once, for the first account the demo sees: a second one joins the run
+  // that already exists rather than starting a parallel one nobody else is in.
+  if (db.marathons.length === 0) {
+    const seed = seedMarathon(email, today);
+    db.marathons.push(seed.marathon);
+    db.marathonTeams.push(...seed.teams);
+    db.marathonMembers.push(...seed.members);
+    db.marathonTasks.push(...seed.tasks);
+    db.marathonSubmissions.push(...seed.submissions);
+    db.marathonAdjustments.push(...seed.adjustments);
   }
   return profile;
 }
