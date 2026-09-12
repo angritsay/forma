@@ -103,8 +103,8 @@ Dashboard → **SQL Editor** → **New query**, paste each file in this order an
    as rows the admin panel can edit (see §2.3). Optional, and safe to skip.
 10. `supabase/migrations/0010_public_course_pages.sql` — lets the static site read a published
     course so it can have a landing page (see §2.4)
-11. `supabase/migrations/0011_marathon.sql` — the marathon format: daily tasks, proof, teams,
-    the private `proofs` bucket and the weekly board (see §2.5)
+11. `supabase/migrations/0011_marathon.sql` — the marathon format: daily tasks, proof, pairs or
+    everyone-for-themselves, the private `proofs` bucket and the weekly board (see §2.5)
 12. `supabase/seed.sql` — nothing runs by default; open it, uncomment the `insert into
 public.admins` line with the coach's email (see §4)
 
@@ -216,6 +216,13 @@ A course is a programme you walk at your own pace; a marathon is a game played o
 day the coach sets tasks in the admin, members send proof, and a weekly leaderboard decides who
 wins. It shares nothing with the course builder, so it is its own set of tables.
 
+- **Two ways to play, one setting.** `team_size` on the marathon decides it: `2` is Sergey's
+  format, where a pair shares every task and «только если сделают все» means both of them; `1` is
+  everyone for themselves. Solo is not "pairs left empty" — `marathon_is_solo()` is read by the
+  scoring, the task targeting and the proof-sharing rule, so switching a running marathon to solo
+  un-pairs everybody at once, a task addressed to a team then reaches nobody, and the table refuses
+  to put anyone in a team at all. The admin asks which it is when the marathon is created, and the
+  screens change with it: no team column, no rule that waits for a partner.
 - **Points are never stored.** `marathon_scores(marathon, week)` derives the board from submissions
   and adjustments on every call, so voiding a proof, re-pairing a team or fixing a task's points
   corrects the history instead of leaving a stale balance behind.
@@ -263,7 +270,7 @@ rebuild the database for each run.
 | `admin_publish_course()`, `admin_unpublish_course()`                | The only non-migration writers of `courses` / `workouts` (§2.2)               |
 | `images` bucket                                                     | Public: course covers, day pictures, exercise stills (`videos` stays private) |
 | Storage bucket `videos` (private)                                   | Read requires an active purchase of the course in the path, or `shared/`      |
-| `marathons`, `marathon_teams`, `marathon_members`                   | A marathon run, its pairs, and who plays (by email, like purchases) (§2.5)    |
+| `marathons`, `marathon_teams`, `marathon_members`                   | A marathon run, its pairs (none when `team_size = 1`), and who plays (§2.5)   |
 | `marathon_tasks`, `marathon_submissions`, `marathon_adjustments`    | The daily plan, the proof sent against it, and the coach's manual ±points     |
 | `marathon_scores()`, `marathon_my_points()`                         | The weekly board and one athlete's days; points are derived, never stored     |
 | `my_marathons()`, `marathon_roster()`                               | What the app opens the format with; the roster returns names, never emails    |

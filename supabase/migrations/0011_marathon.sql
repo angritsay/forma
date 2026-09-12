@@ -171,8 +171,27 @@ create trigger marathon_members_touch
   before update on public.marathon_members
   for each row execute function public.set_updated_at();
 
+-- Is this a marathon where everyone plays for themselves?
+--
+-- `team_size = 1` is the whole answer, and it is deliberately the *only* one: a separate mode flag
+-- beside a size would let the two disagree. Solo is not "teams that happen to be empty" — every
+-- function below reads this and then stops looking at `team_id` at all, so flipping a running
+-- marathon to solo really does un-pair everybody rather than leaving stale pairs quietly scoring
+-- together.
+create or replace function public.marathon_is_solo(p_marathon_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+  select coalesce((select m.team_size from public.marathons m where m.id = p_marathon_id), 2) <= 1;
+$$;
+
 -- A team belongs to exactly one marathon, and so does the member pointing at it. Without this a
 -- stray update could pair someone with a team from another run and the board would count them twice.
+-- A solo marathon has no teams to point at, so a team on a member there is refused outright: the
+-- admin screen hides pairing in that mode, and the table should not have to trust the screen.
 create or replace function public.marathon_members_check_team()
 returns trigger
 language plpgsql
@@ -184,6 +203,9 @@ begin
     where t.id = new.team_id and t.marathon_id = new.marathon_id
   ) then
     raise exception 'team_from_another_marathon' using errcode = 'P0001';
+  end if;
+  if new.team_id is not null and public.marathon_is_solo(new.marathon_id) then
+    raise exception 'solo_marathon_has_no_teams' using errcode = 'P0001';
   end if;
   return new;
 end;
@@ -518,7 +540,13 @@ as $$
         or exists (
           select 1 from public.marathon_task_targets g
           where g.task_id = t.id
-            and (g.member_id = mem.id or (g.team_id is not null and g.team_id = mem.team_id))
+            and (
+              g.member_id = mem.id
+              -- A target left over from before the marathon was switched to solo names a team
+              -- nobody is in any more; it must not keep delivering tasks.
+              or (g.team_id is not null and g.team_id = mem.team_id
+                  and not public.marathon_is_solo(t.marathon_id))
+            )
         )
       )
   );
@@ -562,6 +590,10 @@ as $$
     join public.marathon_tasks t on t.id = p_task_id
     where mine.id = public.marathon_member_id(p_marathon_id)
       and mine.team_id is not null
+      -- In a solo marathon there are no teammates, so `proof_visibility = 'team'` means the author
+      -- and the coach. Guarded here as well as by the empty teams, so that flipping a running
+      -- marathon to solo closes the sharing immediately rather than when the pairs are deleted.
+      and not public.marathon_is_solo(p_marathon_id)
       and theirs.id = p_member_id
       and theirs.status = 'active'
       and t.proof_visibility = 'team'
@@ -961,6 +993,8 @@ declare
   v_me   uuid := public.marathon_member_id(p_marathon_id);
   v_m    public.marathons%rowtype;
   v_week int;
+  -- Solo: every member is their own entry and no team is consulted, whatever the teams table says.
+  v_solo boolean;
 begin
   if v_me is null and not public.is_admin() then
     raise exception 'not_a_member' using errcode = '42501';
@@ -970,6 +1004,7 @@ begin
   if not found then
     raise exception 'unknown_marathon' using errcode = 'P0001';
   end if;
+  v_solo := coalesce(v_m.team_size, 2) <= 1;
 
   v_week := coalesce(
     p_week,
@@ -986,10 +1021,10 @@ begin
   people as (
     select
       mem.id as member_id,
-      coalesce(mem.team_id, mem.id) as entry_id,
-      case when mem.team_id is not null then 'team' else 'solo' end as entry_kind,
+      case when v_solo then mem.id else coalesce(mem.team_id, mem.id) end as entry_id,
+      case when not v_solo and mem.team_id is not null then 'team' else 'solo' end as entry_kind,
       coalesce(
-        t.name,
+        case when v_solo then null else t.name end,
         nullif(trim(mem.display_name), ''),
         nullif(trim(p.display_name), ''),
         'Участник'
@@ -999,8 +1034,8 @@ begin
         nullif(trim(p.display_name), ''),
         'Участник'
       ), 60) as member_name,
-      coalesce(t.sort_order, 0) as sort_order,
-      mem.team_id,
+      case when v_solo then 0 else coalesce(t.sort_order, 0) end as sort_order,
+      case when v_solo then null else mem.team_id end as team_id,
       mem.created_at
     from public.marathon_members mem
     left join public.marathon_teams t on t.id = mem.team_id
@@ -1061,7 +1096,8 @@ begin
         select 1
         from public.marathon_task_targets g
         where g.task_id = t.id
-          and (g.member_id = pe.member_id or (g.team_id is not null and g.team_id = pe.team_id))
+          and (g.member_id = pe.member_id
+               or (not v_solo and g.team_id is not null and g.team_id = pe.team_id))
       )
   ),
   -- How many of an entry's recipients delivered each task, and how many were asked.
@@ -1156,12 +1192,14 @@ declare
   v_me   uuid := public.marathon_member_id(p_marathon_id);
   v_m    public.marathons%rowtype;
   v_today int;
+  v_solo boolean;
 begin
   if v_me is null then
     raise exception 'not_a_member' using errcode = '42501';
   end if;
 
   select * into v_m from public.marathons where id = p_marathon_id;
+  v_solo := coalesce(v_m.team_size, 2) <= 1;
   v_today := least(public.marathon_day_index(p_marathon_id), v_m.days);
   if v_today < 1 then
     return;
@@ -1172,7 +1210,10 @@ begin
     select generate_series(1, v_today) as d
   ),
   mine as (
-    select mem.id as member_id, mem.team_id, coalesce(mem.team_id, mem.id) as entry_id
+    select
+      mem.id as member_id,
+      case when v_solo then null else mem.team_id end as team_id,
+      case when v_solo then mem.id else coalesce(mem.team_id, mem.id) end as entry_id
     from public.marathon_members mem where mem.id = v_me
   ),
   /*
@@ -1193,7 +1234,7 @@ begin
           select 1 from public.marathon_task_targets g
           where g.task_id = t.id
             and (g.member_id = mine.member_id
-                 or (g.team_id is not null and g.team_id = mine.team_id))
+                 or (not v_solo and g.team_id is not null and g.team_id = mine.team_id))
         )
       )
   ),
@@ -1218,7 +1259,8 @@ begin
     where s.voided_at is null
       and mem.marathon_id = p_marathon_id
       and mem.status = 'active'
-      and coalesce(mem.team_id, mem.id) = (select entry_id from mine)
+      and (case when v_solo then mem.id else coalesce(mem.team_id, mem.id) end)
+            = (select entry_id from mine)
       and (
         t.late_counts
         or s.submitted_at <= (
@@ -1234,7 +1276,8 @@ begin
     join public.marathon_members mem
       on mem.marathon_id = p_marathon_id
      and mem.status = 'active'
-     and coalesce(mem.team_id, mem.id) = (select entry_id from mine)
+     and (case when v_solo then mem.id else coalesce(mem.team_id, mem.id) end)
+           = (select entry_id from mine)
      and (
        not exists (select 1 from public.marathon_task_targets g where g.task_id = t.id)
        or exists (
@@ -1269,7 +1312,8 @@ begin
     from public.marathon_adjustments a
     join public.marathon_members mem on mem.id = a.member_id
     where a.marathon_id = p_marathon_id
-      and coalesce(mem.team_id, mem.id) = (select entry_id from mine)
+      and (case when v_solo then mem.id else coalesce(mem.team_id, mem.id) end)
+            = (select entry_id from mine)
     group by a.day_index
   )
   select

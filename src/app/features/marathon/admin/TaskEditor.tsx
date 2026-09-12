@@ -41,15 +41,19 @@ export interface TaskDraft {
   lateCounts: boolean;
 }
 
-export function emptyDraft(): TaskDraft {
+export function emptyDraft(solo = false): TaskDraft {
   return {
     title: '',
     body: '',
     proofKind: 'done',
     unit: '',
     targetNum: '',
-    // The pair rule is the marathon's default because it is the one the format is built on.
-    rule: 'all_members',
+    /*
+     * The pair rule is the default in a pair marathon because it is the one that format is built
+     * on. With everyone playing for themselves there is nobody to wait for, so the honest default
+     * is "you did it, you scored".
+     */
+    rule: solo ? 'per_member' : 'all_members',
     points: '10',
     cap: '',
     proofVisibility: 'team',
@@ -112,6 +116,8 @@ export interface TaskEditorProps {
   lastDay: number;
   teams: readonly MarathonTeamRow[];
   members: readonly MarathonMemberRow[];
+  /** Everyone for themselves: no teams to send to and no rule that waits for a partner. */
+  solo: boolean;
   /** Who it currently goes to; an empty list is everyone. */
   initialTargets: readonly MarathonTaskTarget[];
   onClose: () => void;
@@ -131,6 +137,7 @@ export function TaskEditor({
   lastDay,
   teams,
   members,
+  solo,
   initialTargets,
   onClose,
   onSave,
@@ -144,10 +151,10 @@ export function TaskEditor({
 
   useEffect(() => {
     if (!open) return;
-    setDraft(task ? draftFrom(task) : emptyDraft());
+    setDraft(task ? draftFrom(task) : emptyDraft(solo));
     setTargets(initialTargets);
     setRepeatUntil('');
-  }, [open, task, initialTargets]);
+  }, [open, task, initialTargets, solo]);
 
   const set = <K extends keyof TaskDraft>(key: K, value: TaskDraft[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
@@ -240,16 +247,29 @@ export function TaskEditor({
           </div>
         ) : null}
 
+        {/*
+         * Over an entry of one, «только если сделают все», «за каждого» and a ceiling are the same
+         * arithmetic three times, so a solo marathon is offered the only two answers that differ:
+         * it scores, or it is an announcement. Offering the other two would be offering a choice
+         * whose options cannot be told apart afterwards.
+         */}
         <Select<MarathonRule>
           label={t('app.mAdminRule')}
-          value={draft.rule}
+          value={solo && draft.rule !== 'none' ? 'per_member' : draft.rule}
           onChange={(v) => set('rule', v)}
-          options={[
-            { value: 'all_members', label: t('app.mAdminRuleAll') },
-            { value: 'per_member', label: t('app.mAdminRulePer') },
-            { value: 'capped', label: t('app.mAdminRuleCapped') },
-            { value: 'none', label: t('app.mAdminRuleNone') },
-          ]}
+          options={
+            solo
+              ? [
+                  { value: 'per_member', label: t('app.mAdminRuleSoloScores') },
+                  { value: 'none', label: t('app.mAdminRuleNone') },
+                ]
+              : [
+                  { value: 'all_members', label: t('app.mAdminRuleAll') },
+                  { value: 'per_member', label: t('app.mAdminRulePer') },
+                  { value: 'capped', label: t('app.mAdminRuleCapped') },
+                  { value: 'none', label: t('app.mAdminRuleNone') },
+                ]
+          }
         />
         {draft.rule !== 'none' ? (
           <div className="flex gap-3">
@@ -260,7 +280,7 @@ export function TaskEditor({
               onChange={(e) => set('points', e.target.value)}
               wrapperClassName="flex-1"
             />
-            {draft.rule === 'capped' ? (
+            {!solo && draft.rule === 'capped' ? (
               <Input
                 label={t('app.mAdminCap')}
                 inputMode="numeric"
@@ -273,16 +293,28 @@ export function TaskEditor({
           </div>
         ) : null}
 
-        <Recipients teams={teams} members={members} value={targets} onChange={setTargets} />
-        <Select<ProofVisibility>
-          label={t('app.mAdminVisibility')}
-          value={draft.proofVisibility}
-          onChange={(v) => set('proofVisibility', v)}
-          options={[
-            { value: 'team', label: t('app.mAdminVisibilityTeam') },
-            { value: 'coach', label: t('app.mAdminVisibilityCoach') },
-          ]}
+        <Recipients
+          teams={solo ? [] : teams}
+          members={members}
+          solo={solo}
+          value={targets}
+          onChange={setTargets}
         />
+        {/*
+         * With no teams there is no "the team sees it" to choose: both settings mean the author and
+         * the coach, so the question is not asked. The stored value stays whatever it was.
+         */}
+        {solo ? null : (
+          <Select<ProofVisibility>
+            label={t('app.mAdminVisibility')}
+            value={draft.proofVisibility}
+            onChange={(v) => set('proofVisibility', v)}
+            options={[
+              { value: 'team', label: t('app.mAdminVisibilityTeam') },
+              { value: 'coach', label: t('app.mAdminVisibilityCoach') },
+            ]}
+          />
+        )}
 
         <Input
           label={t('app.mAdminDueTime')}
@@ -322,6 +354,8 @@ export function TaskEditor({
 interface RecipientsProps {
   teams: readonly MarathonTeamRow[];
   members: readonly MarathonMemberRow[];
+  /** Everyone for themselves: the list is people, and nobody is covered by anybody. */
+  solo: boolean;
   value: readonly MarathonTaskTarget[];
   onChange: (next: readonly MarathonTaskTarget[]) => void;
 }
@@ -338,7 +372,7 @@ interface RecipientsProps {
  * scores it over both. Ticking one person sends it to them alone — and «только если сделают все»
  * then means that one person, which is the sentence that makes the rule work at any size.
  */
-function Recipients({ teams, members, value, onChange }: RecipientsProps) {
+function Recipients({ teams, members, solo, value, onChange }: RecipientsProps) {
   const { t } = useT();
   const everyone = value.length === 0;
   const hasTeam = (id: string) => value.some((g) => g.teamId === id);
@@ -359,7 +393,7 @@ function Recipients({ teams, members, value, onChange }: RecipientsProps) {
 
   /** Members already covered by a ticked team — shown as such rather than tickable twice. */
   const coveredByTeam = (member: MarathonMemberRow) =>
-    member.teamId !== null && hasTeam(member.teamId);
+    !solo && member.teamId !== null && hasTeam(member.teamId);
 
   return (
     <fieldset className="flex flex-col gap-2">
