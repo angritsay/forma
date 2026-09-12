@@ -323,6 +323,7 @@ export const app = {
   nodeBlockMinutes: '{n} мин',
   nodeBlockTabata: '{work} с / {rest} с × {n}',
   nodeLoadKg: '{kg} кг',
+  nodeInWorkout: 'За тренировку',
   nodeRestAfter: 'отдых {s} с',
   nodeStart: 'Начать тренировку',
   nodeReplaceTitle: 'Есть незаконченная тренировка',

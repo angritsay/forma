@@ -324,6 +324,7 @@ export const app = {
   nodeBlockMinutes: '{n} min',
   nodeBlockTabata: '{work}s on / {rest}s off × {n}',
   nodeLoadKg: '{kg} kg',
+  nodeInWorkout: 'In this workout',
   nodeRestAfter: 'rest {s} s',
   nodeStart: 'Start workout',
   nodeReplaceTitle: 'Another workout is unfinished',
