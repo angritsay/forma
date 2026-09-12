@@ -644,9 +644,41 @@ Telegram channel and in any post. `/newapp` → the bot → title, short descrip
 image (`npm run telegram:icon` renders one from the brand), `/empty` for the demo GIF, then the
 same URL and a short name. The result is `t.me/<bot>/<short name>`, which opens the app in one tap.
 
-A bot with no program behind it does not answer `/start` — that silence is expected, and the menu
-button and the direct link work regardless. Replying to `/start` with a greeting and a launch
-button needs a webhook (an Edge Function holding the bot token); not built yet.
+**Answering `/start`.** A bot with no program behind it is silent when someone opens the chat and
+taps **Start**, which is the one moment the menu button and the direct link do not cover — the
+person is looking at an empty chat. `supabase/functions/telegram-bot` closes that and nothing else:
+every private message gets the same greeting with an inline button that launches the app.
+
+1. **The token.** @BotFather → `/mybots` → the bot → **API Token**. It never goes in this
+   repository, which is public — it is a Supabase secret and nothing else. If it is ever pasted
+   somewhere it should not be, `/revoke` in BotFather issues a new one.
+2. **Deploy the function.** Dashboard → **Edge Functions** → **Deploy a new function** → name it
+   `telegram-bot`, paste `index.ts` and `update.ts`, and turn **Verify JWT** off (Telegram does not
+   carry one). With the CLI it is `supabase functions deploy telegram-bot --no-verify-jwt`.
+3. **The secrets.** Dashboard → **Edge Functions** → **Secrets**, or the CLI:
+
+   ```sh
+   supabase secrets set \
+     TELEGRAM_BOT_TOKEN=123456:AA… \
+     TELEGRAM_WEBHOOK_SECRET=$(openssl rand -hex 24) \
+     MINI_APP_URL=https://forma-app.co/app/
+   ```
+
+   `TELEGRAM_GREETING` and `TELEGRAM_BUTTON_TEXT` override the Russian copy baked into
+   `update.ts`; leave them unset to use it.
+
+4. **Point Telegram at it**, once, by opening this URL in a browser:
+
+   ```
+   https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://<project>.functions.supabase.co/telegram-bot&secret_token=<TELEGRAM_WEBHOOK_SECRET>
+   ```
+
+   `{"ok":true,"result":true}` means it is live. `…/getWebhookInfo` shows what Telegram thinks the
+   webhook is, including the last delivery error, and `…/deleteWebhook` takes it off again.
+
+The secret is what guards the door: Telegram echoes it back in `X-Telegram-Bot-Api-Secret-Token` on
+every delivery, so a request without it is not Telegram and gets a 403. Without the secret set the
+function still runs and says so in its log, but the URL is then the only thing protecting it.
 
 **What the app does inside Telegram** (`src/lib/telegram/webapp.ts`, no-ops everywhere else):
 
