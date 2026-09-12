@@ -15,17 +15,14 @@ import { Navigate, useNavigate } from 'react-router';
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { ListRow } from '@/components/ui/ListRow';
 import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
-import { Sheet } from '@/components/ui/Sheet';
 import { TopBar } from '@/app/components/TopBar';
 import {
   Controls,
   PausedOverlay,
   PlayerFooter,
   PlayerHeader,
-  ProgressRow,
   ScrollCue,
   SectionStepper,
 } from '@/app/features/player/PlayerChrome';
@@ -36,7 +33,7 @@ import {
   skippedResult,
   stepAnimation,
   stepVideoRef,
-  stepTitle,
+  nextStepTitle,
   workoutSections,
 } from '@/app/features/player/model';
 import { useSound } from '@/app/features/player/sound';
@@ -240,7 +237,6 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
   const tick = useActiveWorkoutStore((s) => s.tick);
   const finish = useActiveWorkoutStore((s) => s.finish);
 
-  const [menuOpen, setMenuOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [endOpen, setEndOpen] = useState(false);
   const [restartNonce, setRestartNonce] = useState(0);
@@ -249,15 +245,21 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
     nextHandler.current = fn;
   }, []);
 
-  const overlayOpen = menuOpen || leaveOpen || endOpen;
+  const overlayOpen = leaveOpen || endOpen;
   const step = steps[stepIndex];
   const prescribed = session.prescribed;
   const summaryPath = `/summary/${session.sessionId}`;
   // The programme colour for the art, the phase kicker and the progress bar — and the ink to match.
   const courseVars = courseTileVars(findCourse(session.courseId)?.tile);
 
-  const title = step ? stepTitle(t, locale, step, prescribed) : '';
   const animation = step ? stepAnimation(step, prescribed) : undefined;
+  /*
+   * «Дальше: приседания», under the transport.
+   *
+   * She asked for it in as many words — "чтобы он сразу понимал, что он делает сейчас и что он
+   * делает потом" — and it is the one piece of text this screen gained while losing four others.
+   */
+  const nextTitle = nextStepTitle(t, locale, steps, stepIndex, prescribed);
   const videoUrl = useMediaUrl(stepVideoRef(step, locale));
 
   // The last step is `done`: close the session and hand over to the summary.
@@ -326,7 +328,6 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
   }, [overlayOpen, togglePause, doNext, doPrev]);
 
   const skipStep = () => {
-    setMenuOpen(false);
     if (step) {
       const skipped = skippedResult(step, stepIndex);
       if (skipped) recordResult(skipped);
@@ -334,7 +335,6 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
     next();
   };
   const restartStep = () => {
-    setMenuOpen(false);
     setRestartNonce((n) => n + 1);
   };
   const endWorkout = () => {
@@ -377,19 +377,13 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
             current={sectionOfStep(step, prescribed)}
           />
         ) : null}
-        <ProgressRow stepIndex={stepIndex} totalSteps={steps.length} />
         {step ? <StepDetails step={step} prescribed={prescribed} /> : null}
       </section>
 
       <PlayerHeader
-        title={title}
-        muted={sound.muted}
-        stepIndex={stepIndex}
-        totalSteps={steps.length}
+        progress={steps.length > 1 ? stepIndex / (steps.length - 1) : 0}
         elapsedSec={elapsedSec}
         onBack={() => setLeaveOpen(true)}
-        onToggleSound={sound.toggle}
-        onMenu={() => setMenuOpen(true)}
       />
       {/*
        * There is no unmute button over the video. The clips carry no audio track at all
@@ -412,34 +406,52 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
             registerNext={registerNext}
           />
         ) : null}
-        <div className="mt-5">
-          <Controls
-            paused={paused}
-            canPrev={stepIndex > 0}
-            onPrev={doPrev}
-            onTogglePause={togglePause}
-            onNext={doNext}
-          />
+        {nextTitle ? (
+          <p className="mt-4 truncate text-center text-[13px] text-paper/70">
+            <span className="control-label text-[10px] text-paper/50">
+              {t('app.playerNextLabel')}
+            </span>{' '}
+            {nextTitle}
+          </p>
+        ) : null}
+        <div className="mt-4">
+          <Controls paused={paused} onTogglePause={togglePause} />
         </div>
         <ScrollCue label={t('app.playerMoreBelow')} />
       </PlayerFooter>
-      {paused && step?.kind !== 'done' ? <PausedOverlay onResume={togglePause} /> : null}
-
-      <Sheet open={menuOpen} onClose={() => setMenuOpen(false)} title={t('app.playerMenu')}>
-        {/* Three words on three lines; the rows carry no marks, the danger one is red. */}
-        <div className="-mx-4 flex flex-col">
-          <ListRow title={t('app.playerSkipStep')} onClick={skipStep} trailing={null} />
-          <ListRow title={t('app.playerRestartStep')} onClick={restartStep} trailing={null} />
-          <ListRow
-            title={<span className="text-danger">{t('app.playerEndWorkout')}</span>}
-            onClick={() => {
-              setMenuOpen(false);
-              setEndOpen(true);
-            }}
-            trailing={null}
-          />
-        </div>
-      </Sheet>
+      {paused && step?.kind !== 'done' ? (
+        <PausedOverlay
+          onResume={togglePause}
+          actions={[
+            ...(stepIndex > 0
+              ? [
+                  {
+                    label: t('app.playerPrevStep'),
+                    onClick: () => {
+                      setPaused(false);
+                      doPrev();
+                    },
+                  },
+                ]
+              : []),
+            {
+              label: t('app.playerRestartStep'),
+              onClick: () => {
+                setPaused(false);
+                restartStep();
+              },
+            },
+            {
+              label: t('app.playerSkipStep'),
+              onClick: () => {
+                setPaused(false);
+                skipStep();
+              },
+            },
+            { label: t('app.playerEndWorkout'), danger: true, onClick: () => setEndOpen(true) },
+          ]}
+        />
+      ) : null}
 
       <Modal
         open={leaveOpen}

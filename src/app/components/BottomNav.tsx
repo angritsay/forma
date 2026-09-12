@@ -1,51 +1,57 @@
 import { clsx } from 'clsx';
 import { NavLink } from 'react-router';
+import { Icon, type IconName } from '@/components/ui/Icon';
 import { useT } from '@/app/hooks/useT';
 import type { TKey } from '@/i18n/index';
 
 interface NavItem {
   to: string;
   labelKey: TKey;
+  icon: IconName;
   end?: boolean;
 }
 
 const ITEMS: readonly NavItem[] = [
-  { to: '/', labelKey: 'app.tabHome', end: true },
-  { to: '/courses', labelKey: 'app.tabCourses' },
-  { to: '/stats', labelKey: 'app.tabStats' },
-  { to: '/profile', labelKey: 'app.tabProfile' },
+  { to: '/', labelKey: 'app.tabHome', icon: 'home', end: true },
+  { to: '/courses', labelKey: 'app.tabCourses', icon: 'courses' },
+  { to: '/stats', labelKey: 'app.tabStats', icon: 'stats' },
+  { to: '/profile', labelKey: 'app.tabProfile', icon: 'user' },
 ];
 
 /**
- * The tab bar, set in type alone.
+ * The tab bar: four equal columns, a mark over a word, and a rule over the one you are on.
  *
- * The brandbook's bar has no icons: the current destination is the one word set large in the
- * display face, the others are small tracked capitals in the quietest grey, and everything is
- * pushed to the left edge like a running head. Hierarchy comes from size, not from a filled
- * block, so nothing on the bar competes with the programme colour on the screen above it.
+ * It was set in type alone — four words pushed to the left edge, the current one large in the
+ * display face and the rest as small tracked capitals. On its own terms that worked, but on a
+ * screen that is already mostly words it read as one more line of them: nothing said these four
+ * were a set, nothing said they were the same kind of thing as each other, and nothing said any
+ * of them could be tapped at all.
  *
- * It runs the full width of the phone column — a translucent strip on a hairline, blurred over
- * whatever scrolls under it — rather than floating as a rounded island. 56px tall plus the safe
- * area; every link is at least 44px tall so the small labels are still easy to hit.
+ * So it spends the one convention every phone owner already knows, and spends it carefully:
+ *   - four equal columns, because equal width is what says "pick one of these";
+ *   - a mark over each word, because a shape is recognised before a word is read;
+ *   - a 2px rule along the top of the current column — the same device the player's section
+ *     stepper uses for the part you are in.
  *
- * Opaque, not frosted. At 88% with a blur, a list scrolling underneath still read through the words
- * — the last row of a course path sat behind «КУРСЫ» as a grey ghost. Chrome a label is read from
- * cannot be a window.
+ * The rule is white, not the programme colour. Outside a course screen `--course-tile` is unset
+ * and the token falls back to `--tile-4`, which is a dark neutral: the rule came out near-black on
+ * a near-black bar and could not be seen at all. White is also the honest choice here — the bar is
+ * the app's chrome, and the brandbook keeps colour for the programmes themselves.
+ *
+ * The type stays quiet: 10px tracked capitals on every tab, the current one in full white and the
+ * others in the second grey. Hierarchy is the rule and the ink now, not the size, so the bar reads
+ * as chrome instead of competing with the screen above it.
  */
 export function BottomNav() {
   const { t } = useT();
   return (
     <nav
       aria-label={t('app.navMain')}
-      /*
-       * Hidden from `lg` up, where SideNav takes over; AppShell drops `--nav-inset` to match.
-       * Four Russian labels at these sizes just fit 390px with the design system's 24px gap; the
-       * gap steps down below 420px so the widest active word never pushes the last tab off the edge.
-       */
+      /* Hidden from `lg` up, where SideNav takes over; AppShell drops `--nav-inset` to match. */
       className={clsx(
         'fixed bottom-0 left-1/2 z-30 w-full max-w-[480px] -translate-x-1/2 lg:hidden',
-        'flex items-center gap-6 border-t border-border bg-bg max-[420px]:gap-4',
-        'pl-[max(var(--safe-left),22px)] pr-[max(var(--safe-right),22px)]',
+        'flex items-stretch border-t border-border bg-bg',
+        'pl-[var(--safe-left)] pr-[var(--safe-right)]',
         'pb-[calc(var(--safe-bottom)+var(--demo-inset,0px))]',
       )}
     >
@@ -59,16 +65,33 @@ export function BottomNav() {
             aria-label={label}
             className={({ isActive }) =>
               clsx(
-                // The 56px row lives on the links, so the bar's own padding (safe area, demo
-                // strip) adds to it instead of eating into it — and every tab is a 56px target.
-                'flex min-h-14 shrink-0 items-center whitespace-nowrap transition-colors duration-150 ease-(--ease-out)',
-                isActive
-                  ? 'font-display text-base text-text'
-                  : 'control-label text-[10px] text-muted-2 hover:text-text',
+                /*
+                 * The 56px row lives on the links, so the bar's own padding (safe area, demo
+                 * strip) adds to it instead of eating into it — and every tab is a 56px target.
+                 */
+                'relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1',
+                'transition-colors duration-150 ease-(--ease-out)',
+                isActive ? 'text-text' : 'text-muted-2 hover:text-muted',
               )
             }
           >
-            {label}
+            {({ isActive }) => (
+              <>
+                {/*
+                 * The rule sits on the bar's own hairline rather than beside it, so the current
+                 * tab reads as a tab pulled forward rather than as a word that changed colour.
+                 */}
+                <span
+                  aria-hidden="true"
+                  className={clsx(
+                    'absolute inset-x-0 top-[-1px] h-[2px]',
+                    isActive ? 'bg-primary' : 'bg-transparent',
+                  )}
+                />
+                <Icon name={item.icon} size={20} strokeWidth={isActive ? 2.25 : 2} />
+                <span className="control-label text-[10px] whitespace-nowrap">{label}</span>
+              </>
+            )}
           </NavLink>
         );
       })}

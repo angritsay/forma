@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Chip } from '@/components/ui/Chip';
 import { useT } from '@/app/hooks/useT';
 import type { PlayerResult } from '@/app/store/activeWorkout';
 import type { BlockFormat } from '@/content/schema';
 import { Stepper } from '../Stepper';
-import { loadLabel, setLabel, unitLabel, type WorkStep } from '../model';
+import { exerciseName, loadLabel, setLabel, unitLabel, type WorkStep } from '../model';
 import { useNextHandler } from '../useStepClock';
+import { StepHeading } from './StepHeading';
 
 export interface WorkRepsStepProps {
   step: WorkStep;
@@ -18,10 +18,13 @@ export interface WorkRepsStepProps {
 }
 
 /**
- * Rep-based work: the target as a big adjustable number; "Done" records what was achieved.
+ * Rep-based work: the movement's name, the target as a big adjustable number, and one button.
  *
  * This renders into the player's footer, over the clip, so it carries only what is read and tapped
- * mid-set. The coach's note and the technique sit below the fold — see StepDetails.
+ * mid-set. There were two chips under the number — the load, and a warning when the count differed
+ * from the target — and neither survived: the load is a fact, so it is a line, and the target is
+ * what the stepper already opens on, so a chip announcing that you have changed it is telling
+ * someone what they just did. The coach's note and the technique sit below the fold (StepDetails).
  */
 export function WorkRepsStep({
   step,
@@ -31,7 +34,7 @@ export function WorkRepsStep({
   onNext,
   registerNext,
 }: WorkRepsStepProps) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const [count, setCount] = useState(step.target);
   const load = loadLabel(t, {
     ...step.item,
@@ -53,9 +56,12 @@ export function WorkRepsStep({
   useNextHandler(registerNext, done);
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-col items-center gap-2 text-center">
-        <span className="eyebrow">{setLabel(t, format, step.set, step.totalSets)}</span>
+    <div className="flex flex-col gap-4">
+      <StepHeading
+        eyebrow={step.totalSets > 1 ? setLabel(t, format, step.set, step.totalSets) : undefined}
+        title={exerciseName(step.exerciseId, locale)}
+      />
+      <div className="flex flex-col items-center gap-1.5">
         <Stepper
           value={count}
           onChange={setCount}
@@ -68,15 +74,10 @@ export function WorkRepsStep({
           decreaseLabel={t('app.playerDecrease')}
           increaseLabel={t('app.playerIncrease')}
         />
-        <div className="flex flex-wrap justify-center gap-2">
-          {load ? <Chip>{load}</Chip> : null}
-          {count !== step.target ? (
-            <Chip tone="warning">{`${t('app.playerTarget')}: ${step.target}`}</Chip>
-          ) : null}
-        </div>
+        {load ? <span className="text-[13px] text-paper/70">{load}</span> : null}
       </div>
       <Button size="lg" fullWidth onClick={done}>
-        {t('app.playerNextUp')}
+        {t('app.playerDone')}
       </Button>
     </div>
   );

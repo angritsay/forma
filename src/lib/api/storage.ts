@@ -5,7 +5,7 @@
  *   'https://…'                              → unchanged
  *   undefined                                → undefined
  */
-import { supabase } from './client';
+import { isConfigured, supabase } from './client';
 import { demo } from './demo/load';
 import { guard } from './internal';
 import { parseStorageRef } from './mappers';
@@ -68,6 +68,24 @@ export function publicMediaUrl(ref: string): string {
   const parsed = parseStorageRef(ref);
   if (!parsed) return ref;
   return supabase().storage.from(parsed.bucket).getPublicUrl(parsed.path).data.publicUrl;
+}
+
+/**
+ * Where a still from an exercise's clip lives, by convention.
+ *
+ * `images/exercises/<id>.jpg` in the public bucket, written by scripts/media/upload-videos.mjs
+ * next to the clip it came from. Derived rather than stored on the exercise: the path is already
+ * deterministic, and making it a content field would mean editing every exercise file each time a
+ * batch of clips is uploaded — for a value that can only ever be this one string. The caller shows
+ * the drawn figure when the image does not load, which is also what happens before any clip for
+ * that movement exists.
+ *
+ * Empty when Supabase is not configured (the demo, a build with no backend): there is no bucket to
+ * point at, and the figure is the whole answer.
+ */
+export function exerciseStillUrl(exerciseId: string): string | undefined {
+  if (!isConfigured() || isDemo()) return undefined;
+  return publicMediaUrl(`storage:${PUBLIC_BUCKET}/exercises/${exerciseId}.jpg`);
 }
 
 /**

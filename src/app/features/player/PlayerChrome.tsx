@@ -1,26 +1,32 @@
 /**
- * Player chrome: the bar over the clip, the section stepper, the step progress bar, the transport
- * row and the paused overlay. Presentational — the screen owns the state.
+ * Player chrome: the bar over the clip, the section stepper, the transport and the paused overlay.
+ * Presentational — the screen owns the state.
  *
- * The player is one viewport of the coach's clip with nothing on it but what an athlete mid-set can
- * read at arm's length: where they are and how long it has run, at the top; the movement's own
- * numbers and the transport, at the bottom. Both float over the footage on their own scrim and stay
- * put while the page scrolls, so the words — technique, the block's list, the notes — can live
- * below the fold without ever taking the timer with them.
+ * One rule decides what is allowed on this screen: while the clip is playing an athlete is
+ * mid-movement, and the only things worth reading at arm's length are **what they are doing, the
+ * number, and what comes next**. Everything else — skipping a step, restarting it, ending the
+ * session, the sound cues — is a decision, and a decision belongs behind Pause, which is where
+ * someone has already stopped to make one.
+ *
+ * That is why the top bar is a back arrow and a clock, why the transport is a single pause button
+ * with no chevrons beside it, and why the step count is a hairline rather than «Шаг 5 из 20». The
+ * words — technique, the block's list, the coach's note — live below the fold and never take the
+ * timer with them.
  */
 import { clsx } from 'clsx';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Glyph, Icon } from '@/components/ui/Icon';
 import { IconButton } from '@/components/ui/IconButton';
-import { ProgressBar } from '@/components/ui/ProgressBar';
 import { useT } from '@/app/hooks/useT';
 import { formatClock } from '@/i18n/index';
 import { sectionLabel, type BlockSection } from './model';
 
 /*
  * A loudspeaker is a physical object no glyph says, so it stays an icon: 16px, square caps, a
- * cross through it when muted. The only picture in the player's chrome besides play and pause.
+ * cross through it when muted. It is the only picture in the app's chrome besides play and pause,
+ * and it lives on the profile screen — the timer cues are a preference, set once, not something
+ * to weigh up between two sets.
  */
 export function SoundIcon({ muted }: { muted: boolean }) {
   return (
@@ -66,38 +72,28 @@ function usePageScrolled(threshold = 8): boolean {
 }
 
 export interface PlayerHeaderProps {
-  title: string;
-  muted: boolean;
-  stepIndex: number;
-  totalSteps: number;
+  /** 0..1 — how far through the session. Drawn as a hairline, never as a sentence. */
+  progress: number;
   elapsedSec: number;
   onBack: () => void;
-  onToggleSound: () => void;
-  onMenu: () => void;
 }
 
 /**
- * Fixed to the top of the viewport, over the clip: back, the movement's name, sound and the menu,
- * then the one line an athlete looks up for — which step this is, and how long the session has run.
+ * Fixed to the top of the viewport, over the clip: a hairline of progress, a way out, and the
+ * clock.
+ *
+ * It used to carry the movement's name at 13px, a sound toggle, a «···» menu and «Шаг 5 из 20».
+ * The name has moved down to the footer where it is the biggest thing on the screen — it is the
+ * answer to "what am I doing", which is not a caption — and the rest has gone behind Pause. What
+ * is left is the one number you look *up* for, which is how long you have been going.
  *
  * Everything is `--paper` on an ink scrim rather than the tile's ink. The frame underneath is a
  * photograph of a room and can be any brightness, and a bright yellow tile is no safer: white on a
  * gradient to near-black reads on both, and it is the same bar whichever the step turns out to have.
  */
-export function PlayerHeader({
-  title,
-  muted,
-  stepIndex,
-  totalSteps,
-  elapsedSec,
-  onBack,
-  onToggleSound,
-  onMenu,
-}: PlayerHeaderProps) {
+export function PlayerHeader({ progress, elapsedSec, onBack }: PlayerHeaderProps) {
   const { t } = useT();
   const scrolled = usePageScrolled();
-  const last = Math.max(1, totalSteps - 1);
-  const n = Math.min(stepIndex + 1, last);
   return (
     <header className="fixed inset-x-0 top-0 z-30 text-paper">
       {/* Its own layer, so over the clip it can run past the bar and fade out over the frame. */}
@@ -110,30 +106,31 @@ export function PlayerHeader({
             : 'h-[calc(100%+40px)] bg-linear-to-b from-ink/85 via-ink/55 to-transparent',
         )}
       />
+      {/*
+       * How far through the session, as a 2px rule along the very top edge.
+       *
+       * A rule says the same thing «Шаг 5 из 20» said, without asking anyone to read two numbers
+       * and divide them mid-set. It is the one place the programme colour appears up here.
+       */}
+      <div
+        className="relative h-[2px] w-full bg-paper/15"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(progress * 100)}
+        aria-label={t('app.playerProgressLabel')}
+      >
+        <div
+          className="h-full bg-course transition-[width] duration-300 ease-(--ease-out)"
+          style={{ width: `${Math.min(1, Math.max(0, progress)) * 100}%` }}
+        />
+      </div>
       <div className="relative mx-auto w-full max-w-[560px] px-3 pt-[var(--safe-top)]">
         <div className="flex h-14 items-center gap-2">
           <IconButton label={t('common.back')} icon="back" variant="on-art" onClick={onBack} />
-          <h1 className="font-display min-w-0 flex-1 truncate text-center text-[13px]">{title}</h1>
-          <IconButton
-            label={muted ? t('app.playerUnmute') : t('app.playerMute')}
-            icon={<SoundIcon muted={muted} />}
-            variant="on-art"
-            aria-pressed={!muted}
-            onClick={onToggleSound}
-          />
-          <IconButton
-            label={t('app.playerMenu')}
-            icon={<Glyph size={16}>···</Glyph>}
-            variant="on-art"
-            onClick={onMenu}
-          />
-        </div>
-        <div className="flex items-baseline justify-between gap-3 px-1 pb-2">
-          <span className="eyebrow tabular text-paper/75">
-            {t('app.playerStepOf', { n, total: last })}
-          </span>
+          <span className="flex-1" />
           <span
-            className="font-display tabular text-[22px] leading-none"
+            className="font-display tabular pr-1 text-[22px] leading-none"
             aria-label={t('app.playerElapsed')}
           >
             {formatClock(elapsedSec)}
@@ -166,7 +163,14 @@ export function PlayerFooter({ children }: PlayerFooterProps) {
           'pointer-events-none absolute inset-x-0 bottom-0',
           scrolled
             ? 'h-full bg-bg'
-            : 'h-[calc(100%+72px)] bg-linear-to-t from-bg via-bg/92 to-transparent',
+            : /*
+               * Solid for the lower half, then a long fade.
+               *
+               * It used to start fading immediately, and the movement's name — now the biggest
+               * thing in the footer — landed in the faint part, with the figure's legs running
+               * straight through the letters. The ground under words has to be a ground.
+               */
+              'h-[calc(100%+96px)] bg-linear-to-t from-bg from-55% via-bg/90 via-80% to-transparent',
         )}
       />
       {/* A short fade above the solid band, so the words do not end on a hard edge. */}
@@ -181,20 +185,6 @@ export function PlayerFooter({ children }: PlayerFooterProps) {
       </div>
     </div>
   );
-}
-
-export interface ProgressRowProps {
-  stepIndex: number;
-  totalSteps: number;
-}
-
-/** The 4px rule under the details, the one thing here that takes the programme colour. */
-export function ProgressRow({ stepIndex, totalSteps }: ProgressRowProps) {
-  const { t } = useT();
-  const last = Math.max(1, totalSteps - 1);
-  const value = Math.min(1, stepIndex / last);
-  const n = Math.min(stepIndex + 1, last);
-  return <ProgressBar value={value} label={t('app.playerStepOf', { n, total: last })} />;
 }
 
 export interface SectionStepperProps {
@@ -241,35 +231,25 @@ export function SectionStepper({ sections, current }: SectionStepperProps) {
 
 export interface ControlsProps {
   paused: boolean;
-  canPrev: boolean;
-  onPrev: () => void;
   onTogglePause: () => void;
-  onNext: () => void;
 }
 
 /**
- * Previous ‹ — Pause/Play — Next ›, over the clip.
+ * Pause. That is the whole transport.
  *
- * The two side controls are ink plates behind a light hairline, the same `on-art` treatment the
- * header uses, so they are findable on a bright frame; the middle one keeps the white fill, because
- * pause is the control someone reaches for without looking. Everything is square: the one circle
- * the brandbook allows is a play button laid over a video, and this is a row of three.
+ * There were chevrons either side of it, and both were redundant: every step already carries the
+ * one action that moves it on — «Готово» on a set, «Поехали» on a rest, and a timed step advances
+ * itself — so «›» was a second next button sitting next to the first. «‹» went the other way, a
+ * control you only want after a mis-tap, offered at the exact moment a mis-tap is easiest. It is
+ * behind Pause now, with the other decisions.
+ *
+ * Square, like everything else: the one circle the brandbook allows is a play button laid over a
+ * video, and this is a control bar.
  */
-export function Controls({ paused, canPrev, onPrev, onTogglePause, onNext }: ControlsProps) {
+export function Controls({ paused, onTogglePause }: ControlsProps) {
   const { t } = useT();
-  const side =
-    'flex h-[52px] w-[52px] items-center justify-center rounded-control border border-paper/25 bg-ink/55 text-paper transition-[background-color,transform] duration-150 ease-(--ease-out) hover:bg-ink/70 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40';
   return (
-    <div className="flex items-center justify-center gap-3.5">
-      <button
-        type="button"
-        className={side}
-        onClick={onPrev}
-        disabled={!canPrev}
-        aria-label={t('app.playerPrev')}
-      >
-        <Glyph size={18}>‹</Glyph>
-      </button>
+    <div className="flex items-center justify-center">
       <button
         type="button"
         className="flex h-16 w-16 items-center justify-center rounded-control bg-primary text-on-primary transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-85 active:scale-[0.98]"
@@ -279,27 +259,41 @@ export function Controls({ paused, canPrev, onPrev, onTogglePause, onNext }: Con
       >
         <Icon name={paused ? 'play' : 'pause'} size={20} />
       </button>
-      <button type="button" className={side} onClick={onNext} aria-label={t('app.playerNext')}>
-        <Glyph size={18}>›</Glyph>
-      </button>
     </div>
   );
 }
 
+export interface PausedAction {
+  label: string;
+  onClick: () => void;
+  /** Ending the session is the one that cannot be undone. */
+  danger?: boolean;
+}
+
 export interface PausedOverlayProps {
   onResume: () => void;
-  children?: ReactNode;
+  /** Everything the player used to offer mid-set: go back a step, restart it, skip it, end. */
+  actions?: readonly PausedAction[];
   className?: string;
 }
 
-/** Covers the whole player while paused; every timer underneath is frozen. */
-export function PausedOverlay({ onResume, children, className }: PausedOverlayProps) {
+/**
+ * Covers the whole player while paused; every timer underneath is frozen.
+ *
+ * This is also where the player keeps its decisions. Skipping a step, restarting it and ending the
+ * session were a «···» menu in the top bar — three taps away and, more to the point, three things
+ * to ignore on a screen someone is using to do burpees. Pausing is the moment a person has already
+ * decided to stop and think, so the list opens where the thinking happens.
+ */
+export function PausedOverlay({ onResume, actions, className }: PausedOverlayProps) {
   const { t } = useT();
   return (
     <div
       role="status"
       className={clsx(
-        'fixed inset-0 z-40 flex flex-col items-center justify-center gap-4 bg-bg/92 px-6 text-center',
+        // Opaque, not 92%: the frozen clock and the movement's name read straight through a
+        // translucent panel, so the list of decisions sat on top of the numbers it replaces.
+        'fixed inset-0 z-40 flex flex-col items-center justify-center gap-4 bg-bg px-6 text-center',
         className,
       )}
     >
@@ -308,7 +302,23 @@ export function PausedOverlay({ onResume, children, className }: PausedOverlayPr
       <Button size="lg" onClick={onResume} icon={<Icon name="play" size={16} />} data-autofocus>
         {t('app.playerResume')}
       </Button>
-      {children}
+      {actions && actions.length > 0 ? (
+        <div className="mt-2 flex w-full max-w-[320px] flex-col">
+          {actions.map((action) => (
+            <button
+              key={action.label}
+              type="button"
+              onClick={action.onClick}
+              className={clsx(
+                'control-label border-t border-border py-3.5 text-[11px] transition-colors duration-150 ease-(--ease-out)',
+                action.danger ? 'text-danger' : 'text-muted hover:text-text',
+              )}
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

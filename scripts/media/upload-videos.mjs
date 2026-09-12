@@ -12,6 +12,13 @@
  *   videos/shared/<exercise_id>.<lang>.mp4     any signed-in user
  *   videos/<course_id>/<exercise_id>.<lang>.mp4 needs an active purchase of that course
  *
+ * The poster frame prepare-videos.mjs cut from each clip goes up too, into the **public** bucket:
+ *   images/exercises/<exercise_id>.jpg
+ * That is what the workout preview shows for each movement («За тренировку»). Public on purpose —
+ * it is one frame of a demonstration, the app draws it in a grid with no session in hand on the
+ * landing side, and `exerciseStillUrl()` in src/lib/api/storage.ts derives exactly this path. A
+ * missing poster is not an error: the app falls back to the drawn figure.
+ *
  * Exercise demos go to `shared/`: the same movement appears in several courses, so gating a
  * demo behind one of them would hide it from someone who bought a different one. The bucket is
  * private either way — nothing here is reachable without a signed-in session and a signed URL.
@@ -32,6 +39,7 @@ const flag = (name, fallback) => {
   return i >= 0 && args[i + 1] && !args[i + 1].startsWith('--') ? args[i + 1] : fallback;
 };
 const dir = flag('dir', 'media/clips');
+const posterDir = flag('posters', join(flag('dir', 'media/clips'), 'posters'));
 const manifestPath = flag('manifest', 'media/manifest.json');
 const lang = flag('lang', 'ru');
 const dryRun = args.includes('--dry-run');
@@ -71,6 +79,7 @@ for (const c of ready) {
 const client = dryRun ? null : createClient(url, key, { auth: { persistSession: false } });
 let uploaded = 0;
 let failed = 0;
+let posters = 0;
 
 for (const clip of ready) {
   const path = `shared/${clip.exerciseId}.${lang}.mp4`;
@@ -95,7 +104,32 @@ for (const clip of ready) {
     console.log(`  ok       videos/${path}`);
     uploaded++;
   }
+
+  /*
+   * The still, into the public bucket. Language-independent — it is a picture of a body, not of
+   * any words — so there is one per exercise however many languages the clip has.
+   */
+  const posterFile = join(posterDir, `${clip.key}.jpg`);
+  if (!existsSync(posterFile)) continue;
+  const posterPath = `exercises/${clip.exerciseId}.jpg`;
+  if (dryRun) {
+    console.log(`  would upload  ${clip.key}.jpg  →  images/${posterPath}`);
+    posters++;
+    continue;
+  }
+  const still = await client.storage
+    .from('images')
+    .upload(posterPath, readFileSync(posterFile), { contentType: 'image/jpeg', upsert: true });
+  if (still.error) {
+    // Not fatal: the clip is up, and without a still the app shows the drawn figure.
+    console.error(`  no still ${posterPath}: ${still.error.message}`);
+  } else {
+    console.log(`  ok       images/${posterPath}`);
+    posters++;
+  }
 }
 
-console.log(`\n${uploaded} uploaded, ${failed} failed, ${pending} clips still unidentified.`);
+console.log(
+  `\n${uploaded} uploaded, ${posters} stills, ${failed} failed, ${pending} clips still unidentified.`,
+);
 if (failed) process.exit(1);

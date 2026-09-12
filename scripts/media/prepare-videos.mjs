@@ -160,6 +160,16 @@ const TILES = COLS * ROWS;
 const SKIP_INTRO = 0.3;
 
 /**
+ * Where the single poster frame is taken from, and how wide it is kept.
+ *
+ * 45% rather than the middle: several of these clips end with the coach standing back up and
+ * talking, so the exact midpoint is often a man facing the camera rather than the movement. 640px
+ * is twice the widest a tile is drawn at on a phone.
+ */
+const POSTER_AT = 0.45;
+const POSTER_WIDTH = 640;
+
+/**
  * Clip length in seconds, parsed from ffmpeg's own banner — ffmpeg-static ships no ffprobe.
  * Returns 0 when it cannot be read, and the caller falls back to one frame per second.
  */
@@ -192,6 +202,7 @@ for (const file of readdirSync(videoDir).sort((a, b) => messageNo(a) - messageNo
 
 mkdirSync(outDir, { recursive: true });
 mkdirSync(join(outDir, 'frames'), { recursive: true });
+mkdirSync(join(outDir, 'posters'), { recursive: true });
 
 const manifest = [];
 let done = 0;
@@ -257,6 +268,35 @@ for (const clip of seen.values()) {
       '-vsync',
       '0',
       sheet,
+      '-y',
+    ]);
+  }
+  /*
+   * One frame, for the app to show as a picture of the movement.
+   *
+   * Not the same thing as the contact sheet above: that is twelve thumbnails for a human to
+   * identify the clip by, and it never leaves this machine. This is a single readable still that
+   * gets uploaded next to the clip and shown on the workout preview («За тренировку»), so it is
+   * taken from the same point every time — 45% in, past the intro and into the movement itself —
+   * and kept at a size a phone grid can use.
+   */
+  const poster = join(outDir, 'posters', `${clip.key}.jpg`);
+  if (framesOnly || !existsSync(poster)) {
+    const seconds = durationOf(out);
+    const at = seconds > 0 ? seconds * POSTER_AT : 0;
+    execFileSync(ffmpeg, [
+      '-v',
+      'error',
+      ...(at > 0 ? ['-ss', at.toFixed(2)] : []),
+      '-i',
+      out,
+      '-vf',
+      `scale='min(${POSTER_WIDTH},iw)':-2`,
+      '-frames:v',
+      '1',
+      '-q:v',
+      '4',
+      poster,
       '-y',
     ]);
   }
