@@ -195,6 +195,37 @@ export function estimateCalories(
   return Math.round(kcal);
 }
 
+/**
+ * How much work a prescription actually asks for, as opposed to how long it takes.
+ *
+ * The difficulty chooser needs this because duration is a bad way to tell the three apart: easier
+ * drops a set *and* shortens the rest, so a third less work can come out at the same thirteen
+ * minutes, and the screen then offers three options that look identical. Reps do not lie — the
+ * number of squats is the difference the athlete will feel.
+ *
+ * Per-side items count twice: ten per leg is twenty. AMRAP counts one round, because how many
+ * rounds you get is the athlete's answer rather than the plan's; its difficulty shows up in the
+ * window instead, which is minutes.
+ */
+export interface WorkoutVolume {
+  /** Repetitions prescribed across the whole session. */
+  reps: number;
+  /** Seconds of prescribed work — holds, timed rounds — with no rest in them. */
+  workSec: number;
+}
+
+export function workoutVolume(p: PrescribedWorkout): WorkoutVolume {
+  let reps = 0;
+  for (const block of p.blocks) {
+    const rounds = Math.max(1, num(block.sets, 1));
+    for (const item of block.items) {
+      if (item.unit !== 'reps') continue;
+      reps += Math.max(0, num(item.target)) * rounds * (item.perSide ? 2 : 1);
+    }
+  }
+  return { reps: Math.round(reps), workSec: estimateDuration(p).workSec };
+}
+
 /** Streak bonus share for a streak length (first matching tier wins). */
 export function streakBonus(streakDays: number | undefined): number {
   const days = num(streakDays);

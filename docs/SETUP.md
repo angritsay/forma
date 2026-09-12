@@ -511,6 +511,18 @@ The landing order form:
 Configure your payment page to ask for the **same email** the customer typed; that is the key
 that links the payment to the order.
 
+**The price lives on the payment page, never in this link.** Nothing in this repository sends an
+amount: the app appends the email and nothing else, so whatever the page asks for is whatever the
+processor is configured to ask for. That is deliberate — the site is static and public, so a price
+carried in the URL is a price the payer can edit before paying, and `…&price=3500` becomes
+`…&price=1` in about two seconds.
+
+So the link must point at a product with a **fixed amount set on the processor's side**. On
+Prodamus that is a payment link created from a product/tariff with its price locked, not the shop's
+open form: the open form shows an editable «сумма» field and lets the customer pay 1 ₽. If the page
+you get shows a sum the customer can type into, the link is the wrong one — fix it in the processor,
+not here. The same rule covers `content/site/booking.ts`, where the coach's hour is priced (§7.3).
+
 ### 7.2 Activating
 
 When money arrives:
@@ -536,10 +548,21 @@ paymentUrl: { ru: 'https://…/pay/session-ru', en: 'https://…/pay/session-en'
 scheduleUrl: 'https://calendar.app.google/…', // where the client picks a slot after paying
 ```
 
-Same rule as courses: `https://` only, the signed-in email is appended as `?email=`. Until
-`paymentUrl` is set the screen shows **Message the coach** (Telegram from `links.ts`, else mail)
-instead of a payment button, so the offer is live from day one. A Google Calendar appointment
-schedule is free and enough for `scheduleUrl`; set `enabled: false` to hide the offer everywhere.
+Same rule as courses in every respect, including the important one: `https://` only, the signed-in
+email is appended as `?email=`, and **the amount is set on the processor, never here**. The app's
+button says «Оплатить 3 500 ₽» because `price` in this file is what the product costs; if the page
+it opens asks for a sum the customer can type, the link is pointing at an open form rather than at
+a product with a locked price, and the two will disagree until the link is fixed on the processor
+(see §7.1).
+
+`scheduleUrl` is the second half of the flow and the screen already has the button for it —
+**Выбрать время**, shown under the payment button only when this is set. Leave it empty and the
+client pays and then waits for the coach to write; a free Google Calendar appointment schedule is
+enough to close that gap.
+
+Until `paymentUrl` is set the screen shows **Message the coach** (Telegram from `links.ts`, else
+mail) instead of a payment button, so the offer is live from day one. Set `enabled: false` to hide
+the offer everywhere.
 
 ### 7.4 Subscription: two plans, one webhook
 

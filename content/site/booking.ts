@@ -39,8 +39,22 @@ export const BOOKING = {
     ru: 'Перенос — не позднее чем за 24 часа до занятия',
     en: 'Reschedule up to 24 hours before the session',
   } satisfies L10n,
-  /** Payment page per locale (Prodamus product link). Empty until it exists. */
+  /**
+   * Payment page per locale. Empty until it exists.
+   *
+   * It must be a link to a **product with the price locked on the processor's side** — on Prodamus,
+   * a payment link made from a product or tariff, not the shop's open form. Nothing here sends an
+   * amount: the app appends the customer's email and nothing else, on purpose, because this site is
+   * static and public and a price carried in a URL is a price the payer can edit. If the page this
+   * opens shows a «сумма» field the customer can type into, the link is the wrong one and the app's
+   * «Оплатить 3 500 ₽» button is writing a cheque the payment page will not honour. See
+   * docs/SETUP.md §7.1 and §7.3.
+   */
   paymentUrl: { ru: 'https://payform.ru/jncx6bM/' } as PaymentUrl,
-  /** Slot picker the client opens after paying. Empty → the coach writes to the client. */
+  /**
+   * Slot picker the client opens after paying — a Google Calendar appointment page is enough.
+   * Empty → the button is not drawn and the coach writes to the client instead, which is the
+   * missing half of «оплатил → выбрал время».
+   */
   scheduleUrl: '' as string,
 } as const;

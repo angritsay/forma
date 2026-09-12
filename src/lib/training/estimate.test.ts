@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_WEIGHT_KG, REST_MET } from './constants';
-import { estimateCalories, estimateDuration, estimatePoints, streakBonus } from './estimate';
+import {
+  estimateCalories,
+  estimateDuration,
+  estimatePoints,
+  streakBonus,
+  workoutVolume,
+} from './estimate';
 import {
   block,
   fixtureLookup,
@@ -231,5 +237,52 @@ describe('estimatePoints', () => {
     expect(streakBonus(29)).toBe(0.1);
     expect(streakBonus(30)).toBe(0.2);
     expect(streakBonus(365)).toBe(0.2);
+  });
+});
+
+/*
+ * `workoutVolume` exists because the difficulty chooser could not tell its three options apart:
+ * easier drops a whole set and shortens the rest to match, so the minutes and the calories come out
+ * near enough identical and the screen offered three rows that looked the same. Reps do not lie.
+ */
+describe('workoutVolume', () => {
+  it('counts every set of every rep-based item', () => {
+    const p = one({ id: 's', format: 'sets', sets: 3, items: [item('air_squat', { reps: 10 })] });
+    expect(workoutVolume(p).reps).toBe(30);
+  });
+
+  it('counts a per-side item twice: ten per leg is twenty', () => {
+    const plain = one({
+      id: 'a',
+      format: 'sets',
+      sets: 2,
+      items: [item('air_squat', { reps: 10 })],
+    });
+    const perSide = one({
+      id: 'b',
+      format: 'sets',
+      sets: 2,
+      items: [item('air_squat', { reps: 10, perSide: true })],
+    });
+    expect(workoutVolume(perSide).reps).toBe(workoutVolume(plain).reps * 2);
+  });
+
+  it('ignores work measured in seconds, and reports it as seconds instead', () => {
+    const p = one({ id: 'h', format: 'sets', sets: 3, items: [item('plank', { seconds: 20 })] });
+    const v = workoutVolume(p);
+    expect(v.reps).toBe(0);
+    expect(v.workSec).toBeGreaterThan(0);
+  });
+
+  it('separates the three difficulties far more clearly than the clock does', () => {
+    const at = (choice: 'easier' | 'normal' | 'harder') =>
+      workoutVolume(prescribeWorkout(FULL_WORKOUT, { ...opts, choice }, fixtureLookup));
+    const easier = at('easier').reps;
+    const normal = at('normal').reps;
+    const harder = at('harder').reps;
+    expect(easier).toBeLessThan(normal);
+    expect(normal).toBeLessThan(harder);
+    // The whole point: the spread is something a bar can draw and a person can feel.
+    expect(harder - easier).toBeGreaterThan(normal * 0.1);
   });
 });
