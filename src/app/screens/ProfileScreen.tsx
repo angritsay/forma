@@ -249,7 +249,7 @@ export default function ProfileScreen() {
                   <li>
                     <ListRow
                       title={t('app.profileSound')}
-                      subtitle={muted ? t('app.profileSoundOff') : t('app.profileSoundOn')}
+                      subtitle={t('app.profileSoundHint')}
                       trailing={
                         <Switch
                           checked={!muted}

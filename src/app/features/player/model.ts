@@ -346,3 +346,27 @@ export function clampCount(n: number, max = COUNT_MAX): number {
   if (!Number.isFinite(n)) return 0;
   return Math.max(0, Math.min(max, Math.round(n)));
 }
+
+/**
+ * The name of what comes after this step, or undefined when there is nothing worth naming.
+ *
+ * Rest already says what it is resting *for*, so a step whose successor is a rest looks one
+ * further on: «Дальше: отдых» tells an athlete nothing they cannot see from the countdown that is
+ * about to fill the screen. The end of the session is not announced either — the last set should
+ * feel like a set, not like a countdown to a screen.
+ */
+export function nextStepTitle(
+  t: Translate,
+  locale: Locale,
+  steps: readonly PlayerStep[],
+  index: number,
+  prescribed: PrescribedWorkout,
+): string | undefined {
+  for (let i = index + 1; i < steps.length; i += 1) {
+    const step = steps[i];
+    if (!step || step.kind === 'done') return undefined;
+    if (step.kind === 'rest' || step.kind === 'block_intro') continue;
+    return stepTitle(t, locale, step, prescribed);
+  }
+  return undefined;
+}

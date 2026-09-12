@@ -39,6 +39,7 @@ import { nodeStatus } from '@/app/features/path/nodeState';
 import { DIFFICULTY_CHOICES, workoutSignatureExercise } from '@/app/features/path/plan';
 import { PlanBlocks } from '@/app/features/path/PlanBlocks';
 import { useTrainingContext } from '@/app/features/path/useTrainingContext';
+import { WorkoutStrip } from '@/app/features/path/WorkoutStrip';
 import { useActiveWorkoutStore } from '@/app/store/activeWorkout';
 import {
   useCourseStateRow,
@@ -370,6 +371,12 @@ export default function NodePreviewScreen() {
               recommended={recommendation}
             />
           </section>
+
+          {/*
+           * The movements as pictures, before the plan as a list. «Что я сейчас буду делать» is
+           * answered by shapes in one look; the numbered list below is for checking the detail.
+           */}
+          {plan ? <WorkoutStrip prescribed={plan.prescribed} /> : null}
 
           {plan ? (
             <section className="flex flex-col gap-4 border-t border-border pt-4">

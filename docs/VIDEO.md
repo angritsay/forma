@@ -63,12 +63,28 @@ npm run media:prepare -- --frames-only    # rebuild the contact sheets, skip re-
 npm run media:apply
 npm run media:apply -- --check      # CI: fails instead of writing, if content has drifted
 
-# 4. Push the clips into the private bucket. Service role key, never the anon key, and never
-#    committed — it bypasses RLS because the insert policy is admin-only.
+# 4. Push the clips into the private bucket, and each clip's still into the public one. Service
+#    role key, never the anon key, and never committed — it bypasses RLS because the insert
+#    policy is admin-only.
 SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… npm run media:upload
 ```
 
 Transcoding takes roughly 1 GB down to 178 MB across 145 clips, the largest 3.1 MB.
+
+### The still, and why it is a different picture from the contact sheet
+
+Step 1 writes two things per clip. `frames/<key>.jpg` is the twelve-thumbnail contact sheet you
+identify the clip from; it never leaves your machine. `posters/<key>.jpg` is a single readable
+frame taken 45% in, and step 4 uploads it to `images/exercises/<exercise_id>.jpg` in the **public**
+bucket. That is what the workout preview draws for every movement in a session («За тренировку»).
+
+45% rather than the midpoint because several clips end with the coach standing back up to talk,
+and the exact middle is then a man facing the camera rather than the movement.
+
+Nothing references it by name: `exerciseStillUrl()` derives that path from the exercise id, so a
+clip uploaded today shows up on the preview with no content edit and no deploy. A movement with no
+still yet is not a gap either — the app draws its blueprint figure, which is what the whole app is
+drawn in.
 
 ### The manifest is not in the clips folder
 
