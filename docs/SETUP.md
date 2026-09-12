@@ -105,7 +105,9 @@ Dashboard → **SQL Editor** → **New query**, paste each file in this order an
     course so it can have a landing page (see §2.4)
 11. `supabase/migrations/0011_marathon.sql` — the marathon format: daily tasks, proof, pairs or
     everyone-for-themselves, the private `proofs` bucket and the weekly board (see §2.5)
-12. `supabase/seed.sql` — nothing runs by default; open it, uncomment the `insert into
+12. `supabase/migrations/0012_step_proofs.sql` — a screenshot of the step counter, filed against
+    the day (see §2.6)
+13. `supabase/seed.sql` — nothing runs by default; open it, uncomment the `insert into
 public.admins` line with the coach's email (see §4)
 
 Each run must end with "Success. No rows returned". If a statement fails, fix the cause and
@@ -237,12 +239,31 @@ wins. It shares nothing with the course builder, so it is its own set of tables.
 - **`proofs` is a private bucket** (photo and video proof): the athlete who sent it and the coach,
   nobody else — not even a teammate, who sees only that the proof exists.
 
+### 2.6 Step screenshots (`0012_step_proofs.sql`)
+
+Steps are typed in by hand — no phone health API is reachable from a Mini App — which makes them
+the one number in the product that is purely the athlete's word. A day may now carry a screenshot
+of their own step counter alongside it, in `daily_logs.proof_path`.
+
+- **It is evidence, not arithmetic.** Points still come from `steps` through the same trigger, and
+  nothing reads the image. A screenshot is something a coach can glance at, not something to verify.
+- **One object per day**, at `steps/<user_id>/<local_date>.<ext>` in the private `proofs` bucket, so
+  a second screenshot of the same day replaces the first instead of leaving an orphan. The storage
+  policy reads that `<user_id>` folder to decide who may touch it, which is why the shape matters.
+- **The athlete owns it and the coach can see it.** Nobody else can, not even another athlete who
+  knows the path — `supabase/tests/50_step_proofs.sql` is that assertion.
+- The bucket is declared here as well as in 0011, with `on conflict do nothing`, so step proofs do
+  not depend on the marathon migration having been run.
+- The app shrinks the picture before it goes up (`src/lib/util/image.ts`): a phone screenshot is two
+  to four megabytes of PNG, and the coach needs to read a number off it.
+
 ### Verifying the migrations locally
 
 `supabase/tests/` runs the whole schema against a plain Postgres 16 — no Supabase needed. See the
 header of `supabase/tests/00_shim.sql` for the exact commands; the short version is: create a
 throwaway database, apply `00_shim.sql` and then every file in `supabase/migrations/` in order,
-then run `10_smoke.sql`, `20_subscriptions.sql`, `30_course_builder.sql` and `40_marathon.sql`.
+then run `10_smoke.sql`, `20_subscriptions.sql`, `30_course_builder.sql`, `40_marathon.sql`
+and `50_step_proofs.sql`.
 Each ends with a "PASSED" line. The test files are **not** idempotent — they insert fixtures — so
 rebuild the database for each run.
 
@@ -272,6 +293,7 @@ rebuild the database for each run.
 | Storage bucket `videos` (private)                                   | Read requires an active purchase of the course in the path, or `shared/`      |
 | `marathons`, `marathon_teams`, `marathon_members`                   | A marathon run, its pairs (none when `team_size = 1`), and who plays (§2.5)   |
 | `marathon_tasks`, `marathon_submissions`, `marathon_adjustments`    | The daily plan, the proof sent against it, and the coach's manual ±points     |
+| `daily_logs.proof_path`                                             | A screenshot of the day's step counter, in the private `proofs` bucket (§2.6) |
 | `marathon_scores()`, `marathon_my_points()`                         | The weekly board and one athlete's days; points are derived, never stored     |
 | `my_marathons()`, `marathon_roster()`                               | What the app opens the format with; the roster returns names, never emails    |
 | Storage bucket `proofs` (private)                                   | Photo and video proof: its author and the coach only, never a teammate        |

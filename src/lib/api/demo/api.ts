@@ -8,6 +8,7 @@
 import { COURSES, EXERCISES } from '@/content/registry';
 import { stepsPoints } from '@/lib/training/streak';
 import { addDays, toLocalDateIso } from '@/lib/util/dates';
+import { downscaleImage, toDataUrl, type DownscaleOptions } from '@/lib/util/image';
 import { AppError } from '../errors';
 import type {
   AdminCourseBundle,
@@ -493,6 +494,7 @@ export async function upsertDailyLog(
   localDate: string,
   steps: number,
   note?: string | null,
+  proofPath?: string | null,
 ): Promise<DailyLogRow> {
   return run(() => {
     assertLocalDate(localDate, 'local_date');
@@ -521,6 +523,8 @@ export async function upsertDailyLog(
       // Same recomputation the daily_logs_points trigger does server-side.
       row.points = stepsPoints(steps);
       if (note !== undefined) row.note = note === null ? null : note.trim() || null;
+      // Undefined keeps the screenshot; null takes it off. Correcting the number must not lose it.
+      if (proofPath !== undefined) row.proof_path = proofPath || null;
       row.updated_at = nowIso();
       return dailyLogFromDb(row);
     });
@@ -1237,8 +1241,20 @@ export async function listPublishedCourses(): Promise<AdminCourseBundle[]> {
   });
 }
 
-export async function uploadMedia(_bucket: string, _path: string, _file: Blob): Promise<string> {
-  throw new AppError('forbidden', 'demo_read_only');
+/**
+ * Demo mode has no bucket, so an uploaded file becomes a `data:` URL and the caller stores that
+ * where a `storage:` reference would go. `resolveMediaUrl` hands back anything that is not a
+ * storage reference untouched, so the picture shows.
+ *
+ * Only the athlete's own step screenshots take this path — everything else in the builder is
+ * genuinely read-only in a demo. It is capped hard: this ends up in `localStorage` alongside the
+ * rest of the demo database, and a full-size screenshot per day would fill it in a fortnight.
+ */
+const DEMO_IMAGE: DownscaleOptions = { maxPx: 640, quality: 0.6 };
+
+export async function uploadMedia(bucket: string, _path: string, file: Blob): Promise<string> {
+  if (bucket !== 'proofs') throw new AppError('forbidden', 'demo_read_only');
+  return toDataUrl(await downscaleImage(file, DEMO_IMAGE));
 }
 
 export async function deleteMedia(_ref: string): Promise<void> {

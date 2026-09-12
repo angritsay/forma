@@ -20,6 +20,7 @@ export const common = {
   save: 'Сохранить',
   done: 'Готово',
   close: 'Закрыть',
+  remove: 'Убрать',
   skip: 'Пропустить',
   start: 'Начать',
   openApp: 'Открыть приложение',

@@ -55,6 +55,7 @@ function log(localDate: string, steps: number, points = 0): DailyLogRow {
     steps,
     points,
     note: null,
+    proofPath: null,
     updatedAt: `${localDate}T20:00:00Z`,
   };
 }

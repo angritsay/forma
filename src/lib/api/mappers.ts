@@ -167,6 +167,8 @@ export interface DbDailyLog {
   steps: Num;
   points: Num;
   note: string | null;
+  /** Added by 0012; a project on the older schema simply sends no column. */
+  proof_path?: string | null;
   updated_at: string;
 }
 
@@ -415,6 +417,7 @@ export function dailyLogFromDb(r: DbDailyLog): DailyLogRow {
     steps: toNumberOr(r.steps, 0),
     points: toNumberOr(r.points, 0),
     note: r.note ?? null,
+    proofPath: r.proof_path ?? null,
     updatedAt: r.updated_at,
   };
 }
