@@ -1040,6 +1040,9 @@ export const app = {
   mAdminStarts: 'Starts',
   mAdminDays: 'Days',
   mAdminTeamSize: 'Team size',
+  mAdminTeamSizeHint:
+    'How points are counted: a pair shares a task, or everyone plays for themselves',
+  mAdminRuleSoloScores: 'Scores when done',
   mAdminTeamSizeSolo: 'Everyone on their own',
   mAdminTeamSizePair: 'Pairs',
   mAdminTimezone: 'Time zone',

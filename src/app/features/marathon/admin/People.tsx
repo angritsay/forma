@@ -1,9 +1,14 @@
 /**
- * Who plays, and who they are paired with.
+ * Who plays, and — in a marathon run in pairs — who they are paired with.
  *
  * Pairing is a select on the person's row rather than a drag between two lists: the coach knows the
  * pairs before he opens the screen — he decided them in the group chat — so the job is transcription,
  * and a select is the fastest way to transcribe.
+ *
+ * In a marathon where everyone plays for themselves there is nothing to pair, so the team column,
+ * the team field in the add sheet and «Добавить команду» are simply not drawn. A disabled control
+ * would be a promise that this mode has teams in it somewhere; it does not, and the table refuses
+ * them outright (`solo_marathon_has_no_teams` in migration 0011).
  *
  * People are added by email whether or not they have ever opened the app. That is the same rule as
  * purchases, and it is what lets a marathon be built on a Sunday from a Telegram thread.
@@ -20,6 +25,8 @@ import { useT } from '@/app/hooks/useT';
 export interface PeopleProps {
   members: readonly MarathonMemberRow[];
   teams: readonly MarathonTeamRow[];
+  /** Everyone for themselves: no teams anywhere on this screen. */
+  solo: boolean;
   onAddMember: (input: {
     email: string;
     displayName: string;
@@ -33,6 +40,7 @@ export interface PeopleProps {
 export function People({
   members,
   teams,
+  solo,
   onAddMember,
   onSetTeam,
   onSetStatus,
@@ -85,7 +93,7 @@ export function People({
               </span>
               {member.status === 'removed' ? (
                 <Badge tone="warning">{t('app.mAdminRemoved')}</Badge>
-              ) : (
+              ) : solo ? null : (
                 <Select
                   label={undefined}
                   aria-label={t('app.mAdminTeam')}
@@ -113,9 +121,11 @@ export function People({
         <Button variant="secondary" size="md" onClick={() => setAddOpen(true)}>
           {t('app.mAdminAddPerson')}
         </Button>
-        <Button variant="ghost" size="md" onClick={() => setTeamOpen(true)}>
-          {t('app.mAdminAddTeam')}
-        </Button>
+        {solo ? null : (
+          <Button variant="ghost" size="md" onClick={() => setTeamOpen(true)}>
+            {t('app.mAdminAddTeam')}
+          </Button>
+        )}
       </div>
 
       <Sheet
@@ -148,12 +158,14 @@ export function People({
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-          <Select
-            label={t('app.mAdminTeam')}
-            value={teamId}
-            onChange={setTeamId}
-            options={teamOptions}
-          />
+          {solo ? null : (
+            <Select
+              label={t('app.mAdminTeam')}
+              value={teamId}
+              onChange={setTeamId}
+              options={teamOptions}
+            />
+          )}
         </div>
       </Sheet>
 

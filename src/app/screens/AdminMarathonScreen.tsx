@@ -207,6 +207,9 @@ export default function AdminMarathonScreen() {
     }
   };
 
+  // Everyone for themselves: the one setting that changes what the rest of this screen offers.
+  const solo = marathon.teamSize <= 1;
+
   return (
     <Screen header={<TopBar back title={marathon.title} />}>
       <div className="flex flex-col gap-5 py-2">
@@ -251,6 +254,7 @@ export default function AdminMarathonScreen() {
             <People
               members={members}
               teams={teams}
+              solo={solo}
               onAddMember={async (input) => {
                 try {
                   await addMarathonMember({ marathonId: id, ...input });
@@ -312,6 +316,7 @@ export default function AdminMarathonScreen() {
         lastDay={marathon.days}
         teams={teams}
         members={members}
+        solo={solo}
         initialTargets={(editing ? targets.get(editing.id) : undefined) ?? []}
         onClose={() => setEditorOpen(false)}
         onSave={saveTask}
@@ -409,8 +414,14 @@ function Settings({
           wrapperClassName="w-32"
         />
       </div>
+      {/*
+       * Switching a running marathon here really does change the game: solo stops consulting teams
+       * anywhere, so the pairs stop scoring together from the next board onwards. The hint says so
+       * rather than leaving it to be discovered on Monday.
+       */}
       <Select
         label={t('app.mAdminTeamSize')}
+        hint={t('app.mAdminTeamSizeHint')}
         value={String(draft.teamSize)}
         onChange={(v) => {
           set('teamSize', Number(v));

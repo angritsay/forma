@@ -426,5 +426,147 @@ do $$ begin
   raise notice 'OK a finished marathon takes no more proof';
 end $$;
 
+-- =============================================================================
+-- A second marathon, run the other way: everyone for themselves (team_size = 1).
+--
+-- The format Sergey started with is pairs, and the scoring is written around an *entry* rather than
+-- a team precisely so that this mode costs nothing: an entry is one person here. What this block
+-- checks is that nothing quietly keeps looking at teams — that a stale pair cannot score two people
+-- together, that a task addressed to a team reaches nobody, and that «только если сделают все»
+-- over an entry of one is simply "if you did it".
+-- =============================================================================
+select pg_temp.as_super();
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-000000000051', 'dima@example.com', '{}'),
+  ('00000000-0000-0000-0000-000000000052', 'lena@example.com', '{}'),
+  ('00000000-0000-0000-0000-000000000053', 'sasha@example.com', '{}')
+on conflict (id) do nothing;
+
+create or replace function pg_temp.solo_m() returns uuid language sql stable security definer as $$
+  select id from public.marathons where slug = 'each_alone';
+$$;
+create or replace function pg_temp.solo_member(p_email text) returns uuid language sql stable security definer as $$
+  select mem.id from public.marathon_members mem
+  where mem.marathon_id = pg_temp.solo_m() and mem.email = p_email::citext;
+$$;
+create or replace function pg_temp.solo_task(p_title text) returns uuid language sql stable security definer as $$
+  select t.id from public.marathon_tasks t
+  where t.marathon_id = pg_temp.solo_m() and t.title = p_title;
+$$;
+create or replace function pg_temp.solo_in_time(p_day int) returns timestamptz language sql stable security definer as $$
+  select (((m.starts_on + (p_day - 1))::timestamp + m.due_time) at time zone m.timezone)
+         - interval '1 hour'
+  from public.marathons m where m.id = pg_temp.solo_m();
+$$;
+create or replace function pg_temp.solo_points(p_title text, p_week int default 1)
+returns bigint language sql stable as $$
+  select s.points from public.marathon_scores(pg_temp.solo_m(), p_week) s where s.title = p_title;
+$$;
+
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c', 'coach@example.com');
+
+do $$ declare v_m uuid; begin
+  insert into public.marathons (slug, title, status, starts_on, days, team_size, timezone, due_time)
+  values ('each_alone', 'Каждый сам за себя', 'active',
+          (now() at time zone 'UTC')::date - 8, 28, 1, 'UTC', '22:00')
+  returning id into v_m;
+
+  insert into public.marathon_members (marathon_id, email, display_name) values
+    (v_m, 'dima@example.com', 'Дима'),
+    (v_m, 'lena@example.com', 'Лена'),
+    (v_m, 'sasha@example.com', 'Саша');
+
+  assert public.marathon_is_solo(v_m), 'team_size 1 is the solo mode';
+  assert not public.marathon_is_solo(pg_temp.m()), 'and the pair marathon is not';
+  raise notice 'OK a solo marathon and its three players';
+end $$;
+
+-- Pairing is refused outright, so a mis-click in the admin cannot create a team nobody can see.
+do $$ declare v_team uuid; begin
+  insert into public.marathon_teams (marathon_id, name) values (pg_temp.solo_m(), 'Пара')
+  returning id into v_team;
+  begin
+    update public.marathon_members set team_id = v_team
+    where id = pg_temp.solo_member('dima@example.com');
+    raise exception 'should have failed';
+  exception when sqlstate 'P0001' then null;
+  end;
+  raise notice 'OK a solo marathon takes no teams';
+end $$;
+
+-- The day plan. `all_members` over an entry of one means "if you did it"; `capped` still caps.
+do $$ declare v_m uuid := pg_temp.solo_m(); v_team uuid; begin
+  insert into public.marathon_tasks (marathon_id, day_index, title, rule, points, proof_kind)
+  values (v_m, 1, 'Зарядка', 'all_members', 10, 'done');
+  insert into public.marathon_tasks (marathon_id, day_index, title, rule, points, proof_kind, unit)
+  values (v_m, 2, 'Шаги', 'per_member', 5, 'number', 'шагов');
+  -- Addressed to one person, exactly as in the pair marathon.
+  insert into public.marathon_tasks (marathon_id, day_index, title, rule, points)
+  values (v_m, 3, 'Только Лене', 'per_member', 4);
+  insert into public.marathon_task_targets (task_id, member_id)
+  values (pg_temp.solo_task('Только Лене'), pg_temp.solo_member('lena@example.com'));
+
+  -- A target left pointing at a team — the shape an admin would leave behind by switching a
+  -- running marathon to solo. It must reach nobody rather than everybody.
+  select id into v_team from public.marathon_teams where marathon_id = v_m;
+  insert into public.marathon_tasks (marathon_id, day_index, title, rule, points)
+  values (v_m, 4, 'Осиротевшая', 'per_member', 50);
+  insert into public.marathon_task_targets (task_id, team_id)
+  values (pg_temp.solo_task('Осиротевшая'), v_team);
+  raise notice 'OK the solo day plan';
+end $$;
+
+-- The proof, entered by the coach with the times it actually arrived (only an admin may set
+-- `submitted_at`; for everyone else the guard stamps it, which is what stops backdating).
+do $$ begin
+  insert into public.marathon_submissions (task_id, member_id, submitted_at) values
+    (pg_temp.solo_task('Зарядка'), pg_temp.solo_member('dima@example.com'), pg_temp.solo_in_time(1)),
+    (pg_temp.solo_task('Зарядка'), pg_temp.solo_member('lena@example.com'), pg_temp.solo_in_time(1)),
+    -- Саша did not do the Зарядка: with an entry of one, that is simply 0 for them.
+    (pg_temp.solo_task('Шаги'), pg_temp.solo_member('dima@example.com'), pg_temp.solo_in_time(2)),
+    (pg_temp.solo_task('Шаги'), pg_temp.solo_member('sasha@example.com'), pg_temp.solo_in_time(2)),
+    (pg_temp.solo_task('Только Лене'), pg_temp.solo_member('lena@example.com'), pg_temp.solo_in_time(3));
+end $$;
+
+do $$ begin
+  -- Three entries, one per person — never two, which is what a stale pair would produce.
+  assert (select count(*) from public.marathon_scores(pg_temp.solo_m(), 1)) = 3, 'three entries';
+  assert (select count(*) from public.marathon_scores(pg_temp.solo_m(), 1) s
+          where s.entry_kind = 'solo') = 3, 'every entry is a person';
+  -- Дима: Зарядка 10 + Шаги 5 = 15. Лена: Зарядка 10 + Только Лене 4 = 14. Саша: Шаги 5 = 5.
+  assert pg_temp.solo_points('Дима') = 15, 'Дима 15, got ' || pg_temp.solo_points('Дима');
+  assert pg_temp.solo_points('Лена') = 14, 'Лена 14, got ' || pg_temp.solo_points('Лена');
+  assert pg_temp.solo_points('Саша') = 5, 'Саша 5, got ' || pg_temp.solo_points('Саша');
+  raise notice 'OK solo scoring: all_members over an entry of one is just "did you do it"';
+end $$;
+
+-- The orphaned team target reaches nobody, and a task for one person stays for one person.
+select pg_temp.as_user('00000000-0000-0000-0000-000000000051', 'dima@example.com');
+do $$ begin
+  assert not public.marathon_task_is_for_me(pg_temp.solo_task('Осиротевшая')),
+    'a team target in a solo marathon addresses nobody';
+  assert not public.marathon_task_is_for_me(pg_temp.solo_task('Только Лене')),
+    'and someone else''s task is still someone else''s';
+  assert public.marathon_task_is_for_me(pg_temp.solo_task('Зарядка')), 'but everyone gets Зарядка';
+  -- Nobody is a teammate here, so nobody else's proof is readable.
+  assert not public.can_read_teammate_proof(
+    pg_temp.solo_m(), pg_temp.solo_member('lena@example.com'), pg_temp.solo_task('Зарядка')),
+    'there are no teammates in a solo marathon';
+  -- Дима sent Зарядка and Шаги; Лена's and Саша's proof is invisible to him.
+  assert (select count(*) from public.marathon_submissions) = 2, 'I see only my own proof';
+  raise notice 'OK solo visibility';
+end $$;
+
+-- My own column: the days I was asked, and the days I delivered.
+do $$ declare v_day1 record; v_day4 record; begin
+  select * into v_day1 from public.marathon_my_points(pg_temp.solo_m()) where day_index = 1;
+  assert v_day1.tasks_total = 1 and v_day1.tasks_done = 1 and v_day1.points = 10,
+    'day 1: one task, done, 10 points';
+  select * into v_day4 from public.marathon_my_points(pg_temp.solo_m()) where day_index = 4;
+  -- Day 4 holds only the orphaned team task, which is addressed to nobody.
+  assert v_day4.tasks_total = 0, 'day 4 asks me for nothing';
+  raise notice 'OK solo my_points';
+end $$;
+
 select pg_temp.as_super();
 \echo MARATHON TESTS PASSED

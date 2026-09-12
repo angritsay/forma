@@ -1263,31 +1263,51 @@ function myMember(db: DemoDb, marathonId: string): MarathonMemberRow | null {
   );
 }
 
+/**
+ * Does this marathon put people in teams at all?
+ *
+ * `teamSize = 1` is the mode where everyone plays for themselves, and it is authoritative: a
+ * marathon switched to solo stops consulting `team_id` entirely, so a pair left over from before
+ * cannot go on quietly scoring two people as one. Mirrors `marathon_is_solo()` in migration 0011.
+ */
+function isSolo(marathon: Pick<MarathonRow, 'teamSize'>): boolean {
+  return (marathon.teamSize ?? 2) <= 1;
+}
+
+/** The team a member races under here — null in a solo marathon, whatever their row says. */
+function raceTeamId(db: DemoDb, member: MarathonMemberRow): string | null {
+  const marathon = db.marathons.find((m) => m.id === member.marathonId);
+  return marathon && isSolo(marathon) ? null : member.teamId;
+}
+
 /** Everyone scored together with this member: their team, or just them. */
 function entryMembers(db: DemoDb, member: MarathonMemberRow): MarathonMemberRow[] {
-  if (!member.teamId) return [member];
+  const teamId = raceTeamId(db, member);
+  if (!teamId) return [member];
   return db.marathonMembers.filter(
-    (m) =>
-      m.marathonId === member.marathonId && m.status === 'active' && m.teamId === member.teamId,
+    (m) => m.marathonId === member.marathonId && m.status === 'active' && m.teamId === teamId,
   );
 }
 
 /** Every racer in a marathon, as the board understands them. */
 function entriesOf(db: DemoDb, marathonId: string): ScorableEntry[] {
+  const marathon = db.marathons.find((m) => m.id === marathonId);
+  const solo = marathon ? isSolo(marathon) : false;
   const active = db.marathonMembers.filter(
     (m) => m.marathonId === marathonId && m.status === 'active',
   );
   const byEntry = new Map<string, ScorableEntry>();
   for (const m of active) {
-    const id = m.teamId ?? m.id;
+    const teamId = solo ? null : m.teamId;
+    const id = teamId ?? m.id;
     const existing = byEntry.get(id);
     if (existing) existing.memberIds.push(m.id);
     else
       byEntry.set(id, {
         id,
-        kind: m.teamId ? 'team' : 'solo',
+        kind: teamId ? 'team' : 'solo',
         memberIds: [m.id],
-        teamId: m.teamId,
+        teamId,
       });
   }
   return [...byEntry.values()];
@@ -1347,7 +1367,8 @@ export async function listMyMarathons(): Promise<MyMarathon[]> {
         );
         if (!mine) return [];
         const dayIndex = Math.min(dayIndexOf(m.startsOn, m.timezone), m.days);
-        const team = mine.teamId ? db.marathonTeams.find((t) => t.id === mine.teamId) : undefined;
+        const teamId = isSolo(m) ? null : mine.teamId;
+        const team = teamId ? db.marathonTeams.find((t) => t.id === teamId) : undefined;
         return [
           {
             id: m.id,
@@ -1363,7 +1384,7 @@ export async function listMyMarathons(): Promise<MyMarathon[]> {
             week: weekOf(Math.max(dayIndex, 1)),
             totalWeeks: weekOf(m.days),
             memberId: mine.id,
-            teamId: mine.teamId,
+            teamId,
             teamName: team?.name ?? null,
           },
         ];
@@ -1377,13 +1398,16 @@ export async function getMarathonRoster(marathonId: string): Promise<MarathonRos
     const me = myMember(db, marathonId);
     return db.marathonMembers
       .filter((m) => m.marathonId === marathonId && m.status === 'active')
-      .map((m) => ({
-        memberId: m.id,
-        displayName: displayNameOf(m),
-        teamId: m.teamId,
-        teamName: m.teamId ? (db.marathonTeams.find((t) => t.id === m.teamId)?.name ?? null) : null,
-        isMe: m.id === me?.id,
-      }));
+      .map((m) => {
+        const teamId = raceTeamId(db, m);
+        return {
+          memberId: m.id,
+          displayName: displayNameOf(m),
+          teamId,
+          teamName: teamId ? (db.marathonTeams.find((t) => t.id === teamId)?.name ?? null) : null,
+          isMe: m.id === me?.id,
+        };
+      });
   });
 }
 
@@ -1400,7 +1424,7 @@ export async function getMarathonDay(
 
     return db.marathonTasks
       .filter((t) => t.marathonId === marathon.id && t.dayIndex === dayIndex)
-      .filter((t) => isRecipient(scorable(db, t), me.id, me.teamId))
+      .filter((t) => isRecipient(scorable(db, t), me.id, raceTeamId(db, me)))
       .sort((a, b) => a.sortOrder - b.sortOrder)
       .map((task) => {
         const forTask = db.marathonSubmissions.filter((s) => s.taskId === task.id);
@@ -1476,11 +1500,12 @@ export async function getMarathonMyPoints(marathonId: string): Promise<MarathonD
     const today = Math.min(dayIndexOf(marathon.startsOn, marathon.timezone), marathon.days);
     if (today < 1) return [];
 
+    const myTeamId = raceTeamId(db, me);
     const entry: ScorableEntry = {
-      id: me.teamId ?? me.id,
-      kind: me.teamId ? 'team' : 'solo',
+      id: myTeamId ?? me.id,
+      kind: myTeamId ? 'team' : 'solo',
       memberIds: entryMembers(db, me).map((m) => m.id),
-      teamId: me.teamId,
+      teamId: myTeamId,
     };
     const counted = countedProofs(db, marathon);
     const adjustments = db.marathonAdjustments.filter((a) => a.marathonId === marathonId);
@@ -1492,7 +1517,7 @@ export async function getMarathonMyPoints(marathonId: string): Promise<MarathonD
       const dayTasks = db.marathonTasks
         .filter((t) => t.marathonId === marathonId && t.dayIndex === day && t.rule !== 'none')
         .map((t) => scorable(db, t))
-        .filter((t) => isRecipient(t, me.id, me.teamId));
+        .filter((t) => isRecipient(t, me.id, myTeamId));
       const points = dayTasks.reduce((sum, task) => {
         const asked = recipientsIn(task, entry);
         if (asked.length === 0) return sum;
@@ -1791,6 +1816,19 @@ export async function deleteMarathonTeam(id: string): Promise<void> {
   );
 }
 
+/**
+ * A solo marathon has nobody to pair with, so a team on a member is refused here as it is by the
+ * table (`solo_marathon_has_no_teams` in migration 0011). The admin screen already hides pairing in
+ * that mode; this is what keeps the two backends telling the same story if it ever does not.
+ */
+function assertPairable(db: DemoDb, marathonId: string, teamId: string | null): void {
+  if (!teamId) return;
+  const marathon = db.marathons.find((m) => m.id === marathonId);
+  if (marathon && isSolo(marathon)) {
+    throw new AppError('validation', 'solo_marathon_has_no_teams');
+  }
+}
+
 export async function listMarathonMembers(marathonId: string): Promise<MarathonMemberRow[]> {
   return run(() => readDb().marathonMembers.filter((m) => m.marathonId === marathonId));
 }
@@ -1808,6 +1846,7 @@ export async function addMarathonMember(input: {
       if (db.marathonMembers.some((m) => m.marathonId === input.marathonId && m.email === email)) {
         throw new AppError('validation', 'already_a_member');
       }
+      assertPairable(db, input.marathonId, input.teamId ?? null);
       const row: MarathonMemberRow = {
         id: demoId('mmember'),
         marathonId: input.marathonId,
@@ -1833,6 +1872,7 @@ export async function updateMarathonMember(
       const current = db.marathonMembers.find((m) => m.id === id);
       if (!current) throw new AppError('not_found', 'not_found');
       const next: MarathonMemberRow = { ...current, ...patch };
+      assertPairable(db, next.marathonId, next.teamId);
       db.marathonMembers = db.marathonMembers.map((m) => (m.id === id ? next : m));
       return next;
     }),

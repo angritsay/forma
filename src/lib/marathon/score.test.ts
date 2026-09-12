@@ -269,3 +269,73 @@ describe('which day it is', () => {
     expect(dayIndexOf('2026-09-01', 'Europe/Moscow', new Date('2026-08-30T10:00:00Z'))).toBe(0);
   });
 });
+
+/*
+ * The other way to run a marathon: everyone for themselves.
+ *
+ * This is the exact fixture supabase/tests/40_marathon.sql builds as `each_alone`, scored here so
+ * the two cannot drift. The point being made is that solo needs no new arithmetic at all — an
+ * entry of one satisfies `all_members` by itself — and that a target left pointing at a team, the
+ * shape a marathon switched to solo leaves behind, must reach nobody rather than everybody.
+ */
+describe('a marathon where everyone plays for themselves', () => {
+  const dima: ScorableEntry = { id: 'dima', kind: 'solo', memberIds: ['dima'], teamId: null };
+  const lena: ScorableEntry = { id: 'lena', kind: 'solo', memberIds: ['lena'], teamId: null };
+  const sasha: ScorableEntry = { id: 'sasha', kind: 'solo', memberIds: ['sasha'], teamId: null };
+
+  const tasks: ScorableTask[] = [
+    { id: 'zaryadka', dayIndex: 1, rule: 'all_members', points: 10, cap: null, targets: [] },
+    { id: 'shagi', dayIndex: 2, rule: 'per_member', points: 5, cap: null, targets: [] },
+    {
+      id: 'lena_only',
+      dayIndex: 3,
+      rule: 'per_member',
+      points: 4,
+      cap: null,
+      targets: [{ teamId: null, memberId: 'lena' }],
+    },
+    {
+      // The orphan: addressed to a team, in a marathon that no longer has any.
+      id: 'orphan',
+      dayIndex: 4,
+      rule: 'per_member',
+      points: 50,
+      cap: null,
+      targets: [{ teamId: 'gone', memberId: null }],
+    },
+  ];
+
+  const counted: CountedProof[] = [
+    { taskId: 'zaryadka', memberId: 'dima' },
+    { taskId: 'zaryadka', memberId: 'lena' },
+    { taskId: 'shagi', memberId: 'dima' },
+    { taskId: 'shagi', memberId: 'sasha' },
+    { taskId: 'lena_only', memberId: 'lena' },
+  ];
+
+  it('scores every person as their own entry, the same totals the SQL suite asserts', () => {
+    const rows = board([dima, lena, sasha], tasks, counted, 1);
+    const points = (id: string) => rows.find((r) => r.entryId === id)?.points;
+    // Дима 10 + 5, Лена 10 + 4, Саша 5 — and nobody touches the 50-point orphan.
+    expect(points('dima')).toBe(15);
+    expect(points('lena')).toBe(14);
+    expect(points('sasha')).toBe(5);
+    expect(rows.every((r) => r.entryKind === 'solo')).toBe(true);
+  });
+
+  it('satisfies all_members with one person, because an entry of one is the whole entry', () => {
+    const zaryadka = tasks[0]!;
+    expect(scoreTask(zaryadka, 1, 1)).toBe(10);
+    // Саша did not send it: that is simply nothing, not a partner they let down.
+    expect(scoreTask(zaryadka, 0, 1)).toBe(0);
+  });
+
+  it('sends a task aimed at a team to nobody once there are no teams', () => {
+    const orphan = tasks[3]!;
+    expect(isRecipient(orphan, 'dima', null)).toBe(false);
+    expect(recipientsIn(orphan, dima)).toEqual([]);
+    // And a task for one person is still for that one person.
+    expect(isRecipient(tasks[2]!, 'lena', null)).toBe(true);
+    expect(isRecipient(tasks[2]!, 'dima', null)).toBe(false);
+  });
+});

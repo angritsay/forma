@@ -13,6 +13,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Glyph } from '@/components/ui/Icon';
 import { Input } from '@/components/ui/Input';
 import { Screen } from '@/components/ui/Screen';
+import { Select } from '@/components/ui/Select';
 import { Sheet } from '@/components/ui/Sheet';
 import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
@@ -38,6 +39,14 @@ export default function AdminMarathonsScreen() {
   const [slug, setSlug] = useState('');
   const [title, setTitle] = useState('');
   const [startsOn, setStartsOn] = useState(toLocalDateIso());
+  /*
+   * How it is played, asked here rather than left to a settings tab afterwards.
+   *
+   * It decides what every other screen offers — whether there are teams to build, whether a task
+   * can wait for a partner — so it is the wrong thing to discover after the people have been added
+   * and the first week planned. Pairs stay the default because that is Sergey's format.
+   */
+  const [teamSize, setTeamSize] = useState('2');
   const [busy, setBusy] = useState(false);
 
   const refresh = useCallback(() => {
@@ -62,10 +71,16 @@ export default function AdminMarathonsScreen() {
     if (!MARATHON_SLUG_RE.test(slug) || !title.trim()) return;
     setBusy(true);
     try {
-      const made = await createMarathon({ slug, title: title.trim(), startsOn });
+      const made = await createMarathon({
+        slug,
+        title: title.trim(),
+        startsOn,
+        teamSize: Number(teamSize),
+      });
       setOpen(false);
       setSlug('');
       setTitle('');
+      setTeamSize('2');
       navigate(`/admin/marathons/${made.id}`);
     } catch {
       toast.show({ kind: 'error', title: t('app.mAdminCreateError') });
@@ -154,6 +169,16 @@ export default function AdminMarathonsScreen() {
             type="date"
             value={startsOn}
             onChange={(e) => setStartsOn(e.target.value)}
+          />
+          <Select
+            label={t('app.mAdminTeamSize')}
+            hint={t('app.mAdminTeamSizeHint')}
+            value={teamSize}
+            onChange={setTeamSize}
+            options={[
+              { value: '2', label: t('app.mAdminTeamSizePair') },
+              { value: '1', label: t('app.mAdminTeamSizeSolo') },
+            ]}
           />
         </div>
       </Sheet>

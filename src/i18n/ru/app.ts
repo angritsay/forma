@@ -1038,6 +1038,8 @@ export const app = {
   mAdminStarts: 'Старт',
   mAdminDays: 'Дней',
   mAdminTeamSize: 'Размер команды',
+  mAdminTeamSizeHint: 'Как считаются очки: пара делит задание на двоих или каждый играет за себя',
+  mAdminRuleSoloScores: 'Очки за выполнение',
   mAdminTeamSizeSolo: 'Каждый сам за себя',
   mAdminTeamSizePair: 'Пары',
   mAdminTimezone: 'Часовой пояс',
