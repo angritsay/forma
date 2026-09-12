@@ -71,6 +71,9 @@ export function AppRoutes() {
               <Route path="/stats" element={<LazyScreen name="StatsScreen" />} />
               <Route path="/leaderboard" element={<LazyScreen name="LeaderboardScreen" />} />
               <Route path="/steps" element={<LazyScreen name="StepsScreen" />} />
+              <Route path="/marathon" element={<LazyScreen name="MarathonScreen" />} />
+              <Route path="/marathon/board" element={<LazyScreen name="MarathonBoardScreen" />} />
+              <Route path="/marathon/points" element={<LazyScreen name="MarathonPointsScreen" />} />
               <Route path="/profile" element={<LazyScreen name="ProfileScreen" />} />
               <Route path="/book" element={<LazyScreen name="BookScreen" />} />
               <Route path="/admin" element={<LazyScreen name="AdminScreen" />} />
@@ -78,6 +81,11 @@ export function AppRoutes() {
               <Route path="/admin/exercises" element={<LazyScreen name="AdminExercisesScreen" />} />
               <Route path="/admin/courses" element={<LazyScreen name="AdminCoursesScreen" />} />
               <Route path="/admin/courses/:id" element={<LazyScreen name="AdminCourseScreen" />} />
+              <Route path="/admin/marathons" element={<LazyScreen name="AdminMarathonsScreen" />} />
+              <Route
+                path="/admin/marathons/:id"
+                element={<LazyScreen name="AdminMarathonScreen" />}
+              />
             </Route>
           </Route>
         </Route>

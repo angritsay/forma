@@ -24,6 +24,7 @@ const ADMIN_ITEMS: readonly NavItem[] = [
   { to: '/admin/workouts', labelKey: 'app.builderScreenTitle' },
   { to: '/admin/courses', labelKey: 'app.courseNavLabel' },
   { to: '/admin/exercises', labelKey: 'app.exScreenTitle' },
+  { to: '/admin/marathons', labelKey: 'app.mAdminNav' },
 ];
 
 function NavRow({ item }: { item: NavItem }) {

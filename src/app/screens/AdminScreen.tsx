@@ -86,6 +86,7 @@ const TOOLS: { key: TKey; to: string }[] = [
   { key: 'app.builderScreenTitle', to: '/admin/workouts' },
   { key: 'app.courseScreenTitle', to: '/admin/courses' },
   { key: 'app.exScreenTitle', to: '/admin/exercises' },
+  { key: 'app.mAdminNav', to: '/admin/marathons' },
 ];
 
 function ListSkeleton() {

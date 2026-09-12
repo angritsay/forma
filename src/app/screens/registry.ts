@@ -19,6 +19,9 @@ export const SCREEN_NAMES = [
   'StatsScreen',
   'LeaderboardScreen',
   'StepsScreen',
+  'MarathonScreen',
+  'MarathonBoardScreen',
+  'MarathonPointsScreen',
   'ProfileScreen',
   'BookScreen',
   'AdminScreen',
@@ -26,6 +29,8 @@ export const SCREEN_NAMES = [
   'AdminExercisesScreen',
   'AdminCoursesScreen',
   'AdminCourseScreen',
+  'AdminMarathonsScreen',
+  'AdminMarathonScreen',
   'CustomWorkoutScreen',
 ] as const;
 

@@ -103,7 +103,9 @@ Dashboard → **SQL Editor** → **New query**, paste each file in this order an
    as rows the admin panel can edit (see §2.3). Optional, and safe to skip.
 10. `supabase/migrations/0010_public_course_pages.sql` — lets the static site read a published
     course so it can have a landing page (see §2.4)
-11. `supabase/seed.sql` — nothing runs by default; open it, uncomment the `insert into
+11. `supabase/migrations/0011_marathon.sql` — the marathon format: daily tasks, proof, teams,
+    the private `proofs` bucket and the weekly board (see §2.5)
+12. `supabase/seed.sql` — nothing runs by default; open it, uncomment the `insert into
 public.admins` line with the coach's email (see §4)
 
 Each run must end with "Success. No rows returned". If a statement fails, fix the cause and
@@ -208,14 +210,34 @@ the build_.
 The build needs `PUBLIC_SUPABASE_URL` and `PUBLIC_SUPABASE_ANON_KEY` as repository variables (§6) —
 without them it quietly builds the compiled courses only and says so in the log.
 
+### 2.5 Marathons (`0011_marathon.sql`)
+
+A course is a programme you walk at your own pace; a marathon is a game played on a calendar. Every
+day the coach sets tasks in the admin, members send proof, and a weekly leaderboard decides who
+wins. It shares nothing with the course builder, so it is its own set of tables.
+
+- **Points are never stored.** `marathon_scores(marathon, week)` derives the board from submissions
+  and adjustments on every call, so voiding a proof, re-pairing a team or fixing a task's points
+  corrects the history instead of leaving a stale balance behind.
+- **Proof is trusted on arrival, not approved.** A submission counts the moment it is written; the
+  coach voids it afterwards with a reason. Approve-then-count would need someone to clear a queue
+  every evening or the board is simply wrong.
+- **Members are keyed on email**, like purchases, so the coach can add someone from his Telegram
+  group before they have ever opened the app. Nothing in the app reads that table — members get
+  names through `marathon_roster()`.
+- **A day opens at a time.** Row-level security hides any task whose `day_index` is past today, so
+  the plan cannot be read ahead of the morning it arrives.
+- **`proofs` is a private bucket** (photo and video proof): the athlete who sent it and the coach,
+  nobody else — not even a teammate, who sees only that the proof exists.
+
 ### Verifying the migrations locally
 
 `supabase/tests/` runs the whole schema against a plain Postgres 16 — no Supabase needed. See the
 header of `supabase/tests/00_shim.sql` for the exact commands; the short version is: create a
 throwaway database, apply `00_shim.sql` and then every file in `supabase/migrations/` in order,
-then run `10_smoke.sql`, `20_subscriptions.sql` and `30_course_builder.sql`. Each ends with a
-"PASSED" line. The test files are **not** idempotent — they insert fixtures — so rebuild the
-database for each run.
+then run `10_smoke.sql`, `20_subscriptions.sql`, `30_course_builder.sql` and `40_marathon.sql`.
+Each ends with a "PASSED" line. The test files are **not** idempotent — they insert fixtures — so
+rebuild the database for each run.
 
 ### What the migrations create
 
@@ -241,6 +263,11 @@ database for each run.
 | `admin_publish_course()`, `admin_unpublish_course()`                | The only non-migration writers of `courses` / `workouts` (§2.2)               |
 | `images` bucket                                                     | Public: course covers, day pictures, exercise stills (`videos` stays private) |
 | Storage bucket `videos` (private)                                   | Read requires an active purchase of the course in the path, or `shared/`      |
+| `marathons`, `marathon_teams`, `marathon_members`                   | A marathon run, its pairs, and who plays (by email, like purchases) (§2.5)    |
+| `marathon_tasks`, `marathon_submissions`, `marathon_adjustments`    | The daily plan, the proof sent against it, and the coach's manual ±points     |
+| `marathon_scores()`, `marathon_my_points()`                         | The weekly board and one athlete's days; points are derived, never stored     |
+| `my_marathons()`, `marathon_roster()`                               | What the app opens the format with; the roster returns names, never emails    |
+| Storage bucket `proofs` (private)                                   | Photo and video proof: its author and the coach only, never a teammate        |
 
 ---
 

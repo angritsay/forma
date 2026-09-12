@@ -21,8 +21,39 @@ import type {
   ExerciseCatalogRow,
   ExerciseDraft,
   ExerciseMarkupPatch,
+  MarathonAdjustmentRow,
+  MarathonDayPoints,
+  MarathonMemberPatch,
+  MarathonMemberRow,
+  MarathonPatch,
+  MarathonProofRow,
+  MarathonRosterRow,
+  MarathonRow,
+  MarathonScoreRow,
+  MarathonSubmissionRow,
+  MarathonTaskPatch,
+  MarathonTaskRow,
+  MarathonTaskTarget,
+  MarathonTeamRow,
+  MarathonTodayTask,
+  MyMarathon,
+  ProofInput,
   WorkoutAssigneeRow,
 } from '../types';
+import type { ProofFilter } from '../marathonAdmin';
+import {
+  board,
+  countsFor,
+  dayIndexOf,
+  deadlineFor,
+  isRecipient,
+  recipientsIn,
+  scoreTask,
+  weekOf,
+  type CountedProof,
+  type ScorableEntry,
+  type ScorableTask,
+} from '@/lib/marathon/score';
 import type { CustomWorkoutInput } from '../customWorkouts';
 import {
   buildPrescribedFromCustom,
@@ -1212,4 +1243,724 @@ export async function uploadMedia(_bucket: string, _path: string, _file: Blob): 
 
 export async function deleteMedia(_ref: string): Promise<void> {
   throw new AppError('forbidden', 'demo_read_only');
+}
+
+// --- marathons ---------------------------------------------------------------
+
+/*
+ * The marathon in demo mode. The scoring is not re-implemented here: `src/lib/marathon/score.ts`
+ * holds the rules once, and both this and its unit tests go through it, so a demo board and a real
+ * one can only disagree if the SQL has moved and the test suite has not noticed.
+ */
+
+/** The member row the signed-in demo account plays as, or null when it is in no marathon. */
+function myMember(db: DemoDb, marathonId: string): MarathonMemberRow | null {
+  const user = requireDemoUser();
+  return (
+    db.marathonMembers.find(
+      (m) => m.marathonId === marathonId && m.status === 'active' && m.email === user.email,
+    ) ?? null
+  );
+}
+
+/** Everyone scored together with this member: their team, or just them. */
+function entryMembers(db: DemoDb, member: MarathonMemberRow): MarathonMemberRow[] {
+  if (!member.teamId) return [member];
+  return db.marathonMembers.filter(
+    (m) =>
+      m.marathonId === member.marathonId && m.status === 'active' && m.teamId === member.teamId,
+  );
+}
+
+/** Every racer in a marathon, as the board understands them. */
+function entriesOf(db: DemoDb, marathonId: string): ScorableEntry[] {
+  const active = db.marathonMembers.filter(
+    (m) => m.marathonId === marathonId && m.status === 'active',
+  );
+  const byEntry = new Map<string, ScorableEntry>();
+  for (const m of active) {
+    const id = m.teamId ?? m.id;
+    const existing = byEntry.get(id);
+    if (existing) existing.memberIds.push(m.id);
+    else
+      byEntry.set(id, {
+        id,
+        kind: m.teamId ? 'team' : 'solo',
+        memberIds: [m.id],
+        teamId: m.teamId,
+      });
+  }
+  return [...byEntry.values()];
+}
+
+/** Proof that counts: not struck out, and in time unless the task forgives lateness. */
+function countedProofs(db: DemoDb, marathon: MarathonRow): CountedProof[] {
+  const taskById = new Map(db.marathonTasks.map((t) => [t.id, t]));
+  return db.marathonSubmissions
+    .filter((s) => s.marathonId === marathon.id)
+    .filter((s) => {
+      const task = taskById.get(s.taskId);
+      if (!task) return false;
+      const deadline = deadlineFor(
+        marathon.startsOn,
+        task.dayIndex,
+        task.dueTime ?? marathon.dueTime,
+        marathon.timezone,
+      );
+      return countsFor(s, deadline, task.lateCounts);
+    })
+    .map((s) => ({ taskId: s.taskId, memberId: s.memberId }));
+}
+
+/** A task with the recipients the shared scorer needs attached. */
+function scorable(db: DemoDb, task: MarathonTaskRow): ScorableTask {
+  return {
+    id: task.id,
+    dayIndex: task.dayIndex,
+    rule: task.rule,
+    points: task.points,
+    cap: task.cap,
+    targets: db.marathonTaskTargets
+      .filter((g) => g.taskId === task.id)
+      .map((g) => ({ teamId: g.teamId, memberId: g.memberId })),
+  };
+}
+
+function marathonOr404(db: DemoDb, id: string): MarathonRow {
+  const found = db.marathons.find((m) => m.id === id);
+  if (!found) throw new AppError('not_found', 'not_found');
+  return found;
+}
+
+const displayNameOf = (m: MarathonMemberRow): string =>
+  (m.displayName ?? '').trim() || m.email.split('@')[0] || 'Участник';
+
+export async function listMyMarathons(): Promise<MyMarathon[]> {
+  return run(() => {
+    const db = readDb();
+    const user = requireDemoUser();
+    return db.marathons
+      .filter((m) => m.status === 'active' || m.status === 'finished')
+      .flatMap((m) => {
+        const mine = db.marathonMembers.find(
+          (x) => x.marathonId === m.id && x.status === 'active' && x.email === user.email,
+        );
+        if (!mine) return [];
+        const dayIndex = Math.min(dayIndexOf(m.startsOn, m.timezone), m.days);
+        const team = mine.teamId ? db.marathonTeams.find((t) => t.id === mine.teamId) : undefined;
+        return [
+          {
+            id: m.id,
+            slug: m.slug,
+            title: m.title,
+            description: m.description,
+            status: m.status,
+            startsOn: m.startsOn,
+            days: m.days,
+            teamSize: m.teamSize,
+            prize: m.prize,
+            dayIndex,
+            week: weekOf(Math.max(dayIndex, 1)),
+            totalWeeks: weekOf(m.days),
+            memberId: mine.id,
+            teamId: mine.teamId,
+            teamName: team?.name ?? null,
+          },
+        ];
+      });
+  });
+}
+
+export async function getMarathonRoster(marathonId: string): Promise<MarathonRosterRow[]> {
+  return run(() => {
+    const db = readDb();
+    const me = myMember(db, marathonId);
+    return db.marathonMembers
+      .filter((m) => m.marathonId === marathonId && m.status === 'active')
+      .map((m) => ({
+        memberId: m.id,
+        displayName: displayNameOf(m),
+        teamId: m.teamId,
+        teamName: m.teamId ? (db.marathonTeams.find((t) => t.id === m.teamId)?.name ?? null) : null,
+        isMe: m.id === me?.id,
+      }));
+  });
+}
+
+export async function getMarathonDay(
+  marathon: MyMarathon,
+  dayIndex: number,
+): Promise<MarathonTodayTask[]> {
+  return run(() => {
+    const db = readDb();
+    const me = db.marathonMembers.find((m) => m.id === marathon.memberId);
+    if (!me) throw new AppError('forbidden', 'not_a_member');
+    const mates = entryMembers(db, me);
+    const mateIds = new Set(mates.map((m) => m.id));
+
+    return db.marathonTasks
+      .filter((t) => t.marathonId === marathon.id && t.dayIndex === dayIndex)
+      .filter((t) => isRecipient(scorable(db, t), me.id, me.teamId))
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((task) => {
+        const forTask = db.marathonSubmissions.filter((s) => s.taskId === task.id);
+        return {
+          task,
+          mine: forTask.find((s) => s.memberId === me.id) ?? null,
+          teammatesDone:
+            task.proofVisibility === 'team'
+              ? forTask
+                  .filter((s) => s.memberId !== me.id && mateIds.has(s.memberId) && !s.voidedAt)
+                  .map((s) => s.memberId)
+              : [],
+          entrySize: mates.length,
+        };
+      });
+  });
+}
+
+export async function getMarathonScores(
+  marathonId: string,
+  week?: number,
+): Promise<MarathonScoreRow[]> {
+  return run(() => {
+    const db = readDb();
+    const marathon = marathonOr404(db, marathonId);
+    const me = myMember(db, marathonId);
+    const entries = entriesOf(db, marathonId);
+    const tasks = db.marathonTasks
+      .filter((t) => t.marathonId === marathonId && t.dayIndex <= marathon.days)
+      .map((t) => scorable(db, t));
+    const theWeek =
+      week ??
+      weekOf(
+        Math.max(Math.min(dayIndexOf(marathon.startsOn, marathon.timezone), marathon.days), 1),
+      );
+    const rows = board(
+      entries,
+      tasks,
+      countedProofs(db, marathon),
+      theWeek,
+      db.marathonAdjustments.filter((a) => a.marathonId === marathonId),
+    );
+    const nameOf = (id: string) => db.marathonMembers.find((m) => m.id === id);
+    return rows.map((r) => {
+      const entry = entries.find((e) => e.id === r.entryId);
+      const memberRows = (entry?.memberIds ?? [])
+        .map(nameOf)
+        .filter((m): m is MarathonMemberRow => !!m);
+      return {
+        entryKind: r.entryKind,
+        entryId: r.entryId,
+        title:
+          r.entryKind === 'team'
+            ? (db.marathonTeams.find((t) => t.id === r.entryId)?.name ?? '—')
+            : memberRows[0]
+              ? displayNameOf(memberRows[0])
+              : '—',
+        members: memberRows.map(displayNameOf),
+        points: r.points,
+        rank: r.rank,
+        isMine: Boolean(me && (entry?.memberIds ?? []).includes(me.id)),
+      };
+    });
+  });
+}
+
+export async function getMarathonMyPoints(marathonId: string): Promise<MarathonDayPoints[]> {
+  return run(() => {
+    const db = readDb();
+    const marathon = marathonOr404(db, marathonId);
+    const me = myMember(db, marathonId);
+    if (!me) throw new AppError('forbidden', 'not_a_member');
+    const today = Math.min(dayIndexOf(marathon.startsOn, marathon.timezone), marathon.days);
+    if (today < 1) return [];
+
+    const entry: ScorableEntry = {
+      id: me.teamId ?? me.id,
+      kind: me.teamId ? 'team' : 'solo',
+      memberIds: entryMembers(db, me).map((m) => m.id),
+      teamId: me.teamId,
+    };
+    const counted = countedProofs(db, marathon);
+    const adjustments = db.marathonAdjustments.filter((a) => a.marathonId === marathonId);
+
+    const out: MarathonDayPoints[] = [];
+    for (let day = today; day >= 1; day -= 1) {
+      // Only the tasks that score, and only the ones I was sent: an info-only message is not
+      // something you can miss, and neither is a task addressed to somebody else.
+      const dayTasks = db.marathonTasks
+        .filter((t) => t.marathonId === marathonId && t.dayIndex === day && t.rule !== 'none')
+        .map((t) => scorable(db, t))
+        .filter((t) => isRecipient(t, me.id, me.teamId));
+      const points = dayTasks.reduce((sum, task) => {
+        const asked = recipientsIn(task, entry);
+        if (asked.length === 0) return sum;
+        const done = counted.filter(
+          (c) => c.taskId === task.id && asked.includes(c.memberId),
+        ).length;
+        return sum + scoreTask(task, done, asked.length);
+      }, 0);
+      const fromCoach = adjustments
+        .filter((a) => a.dayIndex === day && entry.memberIds.includes(a.memberId))
+        .reduce((sum, a) => sum + a.points, 0);
+      out.push({
+        dayIndex: day,
+        week: weekOf(day),
+        tasksTotal: dayTasks.length,
+        tasksDone: db.marathonSubmissions.filter(
+          (s) => s.memberId === me.id && !s.voidedAt && dayTasks.some((t) => t.id === s.taskId),
+        ).length,
+        points: points + fromCoach,
+      });
+    }
+    return out;
+  });
+}
+
+export async function sendProof(input: ProofInput): Promise<MarathonSubmissionRow> {
+  return run(() =>
+    mutateDb((db) => {
+      const task = db.marathonTasks.find((t) => t.id === input.taskId);
+      if (!task) throw new AppError('not_found', 'unknown_task');
+      const existing = db.marathonSubmissions.find(
+        (s) => s.taskId === input.taskId && s.memberId === input.memberId,
+      );
+      if (existing?.voidedAt) throw new AppError('forbidden', 'proof_voided');
+      const row: MarathonSubmissionRow = {
+        id: existing?.id ?? demoId('msub'),
+        taskId: input.taskId,
+        memberId: input.memberId,
+        marathonId: task.marathonId,
+        dayIndex: task.dayIndex,
+        valueText: input.valueText ?? null,
+        valueNum: input.valueNum ?? null,
+        mediaPath: input.mediaPath ?? null,
+        // Like the guard trigger: the clock is the server's, not the client's.
+        submittedAt: existing?.submittedAt ?? nowIso(),
+        voidedAt: null,
+        voidReason: null,
+      };
+      db.marathonSubmissions = existing
+        ? db.marathonSubmissions.map((s) => (s.id === existing.id ? row : s))
+        : [...db.marathonSubmissions, row];
+      return row;
+    }),
+  );
+}
+
+// --- marathons: the coach's side ---------------------------------------------
+
+export async function listMarathons(): Promise<MarathonRow[]> {
+  return run(() => {
+    requireDemoUser();
+    return [...readDb().marathons].sort((a, b) => b.startsOn.localeCompare(a.startsOn));
+  });
+}
+
+export async function getMarathon(id: string): Promise<MarathonRow> {
+  return run(() => marathonOr404(readDb(), id));
+}
+
+export async function createMarathon(input: {
+  slug: string;
+  title: string;
+  startsOn: string;
+  days?: number;
+  teamSize?: number;
+  timezone?: string;
+  dueTime?: string;
+}): Promise<MarathonRow> {
+  return run(() =>
+    mutateDb((db) => {
+      if (db.marathons.some((m) => m.slug === input.slug)) {
+        throw new AppError('validation', 'slug_taken');
+      }
+      const at = nowIso();
+      const row: MarathonRow = {
+        id: demoId('marathon'),
+        slug: input.slug,
+        title: input.title,
+        description: null,
+        status: 'draft',
+        startsOn: input.startsOn,
+        days: input.days ?? 28,
+        teamSize: input.teamSize ?? 2,
+        timezone: input.timezone ?? 'Europe/Moscow',
+        dueTime: input.dueTime ?? '22:00:00',
+        prize: null,
+        createdAt: at,
+        updatedAt: at,
+      };
+      db.marathons.push(row);
+      return row;
+    }),
+  );
+}
+
+export async function updateMarathon(id: string, patch: MarathonPatch): Promise<MarathonRow> {
+  return run(() =>
+    mutateDb((db) => {
+      const current = marathonOr404(db, id);
+      const next: MarathonRow = { ...current, ...patch, updatedAt: nowIso() };
+      db.marathons = db.marathons.map((m) => (m.id === id ? next : m));
+      return next;
+    }),
+  );
+}
+
+export async function deleteMarathon(id: string): Promise<void> {
+  return run(() =>
+    mutateDb((db) => {
+      db.marathons = db.marathons.filter((m) => m.id !== id);
+      db.marathonTeams = db.marathonTeams.filter((t) => t.marathonId !== id);
+      db.marathonMembers = db.marathonMembers.filter((m) => m.marathonId !== id);
+      db.marathonTasks = db.marathonTasks.filter((t) => t.marathonId !== id);
+      db.marathonSubmissions = db.marathonSubmissions.filter((s) => s.marathonId !== id);
+      db.marathonAdjustments = db.marathonAdjustments.filter((a) => a.marathonId !== id);
+    }),
+  );
+}
+
+export async function listMarathonTasks(marathonId: string): Promise<MarathonTaskRow[]> {
+  return run(() =>
+    readDb()
+      .marathonTasks.filter((t) => t.marathonId === marathonId)
+      .sort((a, b) => a.dayIndex - b.dayIndex || a.sortOrder - b.sortOrder),
+  );
+}
+
+export async function createMarathonTask(
+  marathonId: string,
+  patch: MarathonTaskPatch & { dayIndex: number; title: string },
+): Promise<MarathonTaskRow> {
+  return run(() =>
+    mutateDb((db) => {
+      const row: MarathonTaskRow = {
+        id: demoId('mtask'),
+        marathonId,
+        dayIndex: patch.dayIndex,
+        sortOrder:
+          patch.sortOrder ??
+          db.marathonTasks.filter(
+            (t) => t.marathonId === marathonId && t.dayIndex === patch.dayIndex,
+          ).length,
+        title: patch.title,
+        body: patch.body ?? null,
+        mediaUrl: patch.mediaUrl ?? null,
+        proofKind: patch.proofKind ?? 'done',
+        unit: patch.unit ?? null,
+        targetNum: patch.targetNum ?? null,
+        rule: patch.rule ?? 'all_members',
+        points: patch.points ?? 0,
+        cap: patch.rule === 'capped' ? (patch.cap ?? 0) : null,
+        proofVisibility: patch.proofVisibility ?? 'team',
+        dueTime: patch.dueTime ?? null,
+        lateCounts: patch.lateCounts ?? false,
+      };
+      db.marathonTasks.push(row);
+      return row;
+    }),
+  );
+}
+
+export async function updateMarathonTask(
+  id: string,
+  patch: MarathonTaskPatch,
+): Promise<MarathonTaskRow> {
+  return run(() =>
+    mutateDb((db) => {
+      const current = db.marathonTasks.find((t) => t.id === id);
+      if (!current) throw new AppError('not_found', 'not_found');
+      const next: MarathonTaskRow = { ...current, ...patch };
+      // Mirrors marathon_tasks_cap_required: a ceiling exists only for the capped rule.
+      if (next.rule !== 'capped') next.cap = null;
+      else if (next.cap === null) next.cap = 0;
+      db.marathonTasks = db.marathonTasks.map((t) => (t.id === id ? next : t));
+      return next;
+    }),
+  );
+}
+
+export async function deleteMarathonTask(id: string): Promise<void> {
+  return run(() =>
+    mutateDb((db) => {
+      db.marathonTasks = db.marathonTasks.filter((t) => t.id !== id);
+      db.marathonSubmissions = db.marathonSubmissions.filter((s) => s.taskId !== id);
+    }),
+  );
+}
+
+export async function copyDayTasks(
+  marathonId: string,
+  fromDay: number,
+  toDay: number,
+): Promise<MarathonTaskRow[]> {
+  return run(() =>
+    mutateDb((db) => {
+      const source = db.marathonTasks.filter(
+        (t) => t.marathonId === marathonId && t.dayIndex === fromDay,
+      );
+      if (source.length === 0) throw new AppError('not_found', 'no_tasks_on_that_day');
+      const made = source.map((t) => ({ ...t, id: demoId('mtask'), dayIndex: toDay }));
+      db.marathonTasks.push(...made);
+      return made;
+    }),
+  );
+}
+
+export async function setTaskTargets(
+  taskId: string,
+  targets: readonly MarathonTaskTarget[],
+): Promise<void> {
+  return run(() =>
+    mutateDb((db) => {
+      db.marathonTaskTargets = [
+        ...db.marathonTaskTargets.filter((g) => g.taskId !== taskId),
+        ...targets.map((g) => ({
+          taskId,
+          teamId: g.teamId ?? null,
+          memberId: g.memberId ?? null,
+        })),
+      ];
+    }),
+  );
+}
+
+export async function listTaskTargets(
+  marathonId: string,
+): Promise<Map<string, MarathonTaskTarget[]>> {
+  return run(() => {
+    const db = readDb();
+    const ids = new Set(
+      db.marathonTasks.filter((t) => t.marathonId === marathonId).map((t) => t.id),
+    );
+    const map = new Map<string, MarathonTaskTarget[]>();
+    for (const g of db.marathonTaskTargets) {
+      if (!ids.has(g.taskId)) continue;
+      const list = map.get(g.taskId) ?? [];
+      list.push({ teamId: g.teamId, memberId: g.memberId });
+      map.set(g.taskId, list);
+    }
+    return map;
+  });
+}
+
+export async function listMarathonTeams(marathonId: string): Promise<MarathonTeamRow[]> {
+  return run(() =>
+    readDb()
+      .marathonTeams.filter((t) => t.marathonId === marathonId)
+      .sort((a, b) => a.sortOrder - b.sortOrder),
+  );
+}
+
+export async function createMarathonTeam(
+  marathonId: string,
+  name: string,
+  sortOrder = 0,
+): Promise<MarathonTeamRow> {
+  return run(() =>
+    mutateDb((db) => {
+      const row: MarathonTeamRow = { id: demoId('mteam'), marathonId, name, sortOrder };
+      db.marathonTeams.push(row);
+      return row;
+    }),
+  );
+}
+
+export async function renameMarathonTeam(id: string, name: string): Promise<MarathonTeamRow> {
+  return run(() =>
+    mutateDb((db) => {
+      const current = db.marathonTeams.find((t) => t.id === id);
+      if (!current) throw new AppError('not_found', 'not_found');
+      const next = { ...current, name };
+      db.marathonTeams = db.marathonTeams.map((t) => (t.id === id ? next : t));
+      return next;
+    }),
+  );
+}
+
+export async function deleteMarathonTeam(id: string): Promise<void> {
+  return run(() =>
+    mutateDb((db) => {
+      db.marathonTeams = db.marathonTeams.filter((t) => t.id !== id);
+      db.marathonMembers = db.marathonMembers.map((m) =>
+        m.teamId === id ? { ...m, teamId: null } : m,
+      );
+    }),
+  );
+}
+
+export async function listMarathonMembers(marathonId: string): Promise<MarathonMemberRow[]> {
+  return run(() => readDb().marathonMembers.filter((m) => m.marathonId === marathonId));
+}
+
+export async function addMarathonMember(input: {
+  marathonId: string;
+  email: string;
+  displayName?: string | null;
+  teamId?: string | null;
+  note?: string | null;
+}): Promise<MarathonMemberRow> {
+  return run(() =>
+    mutateDb((db) => {
+      const email = normalizeDemoEmail(input.email);
+      if (db.marathonMembers.some((m) => m.marathonId === input.marathonId && m.email === email)) {
+        throw new AppError('validation', 'already_a_member');
+      }
+      const row: MarathonMemberRow = {
+        id: demoId('mmember'),
+        marathonId: input.marathonId,
+        email,
+        teamId: input.teamId ?? null,
+        displayName: input.displayName ?? null,
+        status: 'active',
+        note: input.note ?? null,
+        createdAt: nowIso(),
+      };
+      db.marathonMembers.push(row);
+      return row;
+    }),
+  );
+}
+
+export async function updateMarathonMember(
+  id: string,
+  patch: MarathonMemberPatch,
+): Promise<MarathonMemberRow> {
+  return run(() =>
+    mutateDb((db) => {
+      const current = db.marathonMembers.find((m) => m.id === id);
+      if (!current) throw new AppError('not_found', 'not_found');
+      const next: MarathonMemberRow = { ...current, ...patch };
+      db.marathonMembers = db.marathonMembers.map((m) => (m.id === id ? next : m));
+      return next;
+    }),
+  );
+}
+
+export async function listMarathonProofs(filter: ProofFilter): Promise<MarathonProofRow[]> {
+  return run(() => {
+    const db = readDb();
+    const taskById = new Map(db.marathonTasks.map((t) => [t.id, t]));
+    const memberById = new Map(db.marathonMembers.map((m) => [m.id, m]));
+    return db.marathonSubmissions
+      .filter((s) => s.marathonId === filter.marathonId)
+      .filter((s) => filter.dayIndex === undefined || s.dayIndex === filter.dayIndex)
+      .filter((s) => !filter.taskId || s.taskId === filter.taskId)
+      .filter((s) => !filter.memberId || s.memberId === filter.memberId)
+      .filter((s) => !filter.voidedOnly || s.voidedAt !== null)
+      .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))
+      .slice(0, filter.limit ?? 200)
+      .map((s) => {
+        const task = taskById.get(s.taskId);
+        const member = memberById.get(s.memberId);
+        return {
+          ...s,
+          memberName: member ? displayNameOf(member) : '—',
+          teamName: member?.teamId
+            ? (db.marathonTeams.find((t) => t.id === member.teamId)?.name ?? null)
+            : null,
+          taskTitle: task?.title ?? '—',
+          proofKind: task?.proofKind ?? 'done',
+          unit: task?.unit ?? null,
+        };
+      });
+  });
+}
+
+export async function voidProof(id: string, reason: string): Promise<void> {
+  return run(() =>
+    mutateDb((db) => {
+      db.marathonSubmissions = db.marathonSubmissions.map((s) =>
+        s.id === id ? { ...s, voidedAt: nowIso(), voidReason: reason } : s,
+      );
+    }),
+  );
+}
+
+export async function restoreProof(id: string): Promise<void> {
+  return run(() =>
+    mutateDb((db) => {
+      db.marathonSubmissions = db.marathonSubmissions.map((s) =>
+        s.id === id ? { ...s, voidedAt: null, voidReason: null } : s,
+      );
+    }),
+  );
+}
+
+export async function recordProofFor(input: {
+  taskId: string;
+  memberId: string;
+  valueText?: string | null;
+  valueNum?: number | null;
+  submittedAt?: string;
+}): Promise<void> {
+  return run(() =>
+    mutateDb((db) => {
+      const task = db.marathonTasks.find((t) => t.id === input.taskId);
+      if (!task) throw new AppError('not_found', 'unknown_task');
+      const existing = db.marathonSubmissions.find(
+        (s) => s.taskId === input.taskId && s.memberId === input.memberId,
+      );
+      const row: MarathonSubmissionRow = {
+        id: existing?.id ?? demoId('msub'),
+        taskId: input.taskId,
+        memberId: input.memberId,
+        marathonId: task.marathonId,
+        dayIndex: task.dayIndex,
+        valueText: input.valueText ?? null,
+        valueNum: input.valueNum ?? null,
+        mediaPath: existing?.mediaPath ?? null,
+        submittedAt: input.submittedAt ?? nowIso(),
+        voidedAt: null,
+        voidReason: null,
+      };
+      db.marathonSubmissions = existing
+        ? db.marathonSubmissions.map((s) => (s.id === existing.id ? row : s))
+        : [...db.marathonSubmissions, row];
+    }),
+  );
+}
+
+export async function listMarathonAdjustments(
+  marathonId: string,
+): Promise<MarathonAdjustmentRow[]> {
+  return run(() =>
+    readDb()
+      .marathonAdjustments.filter((a) => a.marathonId === marathonId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+  );
+}
+
+export async function addMarathonAdjustment(input: {
+  marathonId: string;
+  memberId: string;
+  dayIndex: number;
+  points: number;
+  reason: string;
+}): Promise<MarathonAdjustmentRow> {
+  return run(() =>
+    mutateDb((db) => {
+      const row: MarathonAdjustmentRow = {
+        id: demoId('madj'),
+        marathonId: input.marathonId,
+        memberId: input.memberId,
+        dayIndex: input.dayIndex,
+        points: input.points,
+        reason: input.reason,
+        createdAt: nowIso(),
+      };
+      db.marathonAdjustments.push(row);
+      return row;
+    }),
+  );
+}
+
+export async function deleteMarathonAdjustment(id: string): Promise<void> {
+  return run(() =>
+    mutateDb((db) => {
+      db.marathonAdjustments = db.marathonAdjustments.filter((a) => a.id !== id);
+    }),
+  );
 }

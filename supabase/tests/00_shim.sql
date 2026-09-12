@@ -8,6 +8,8 @@
 --   psql -v ON_ERROR_STOP=1 -d forma_test -f supabase/migrations/0003_storage.sql
 --   psql -v ON_ERROR_STOP=1 -d forma_test -f supabase/migrations/0004_content_seed.sql
 --   psql -v ON_ERROR_STOP=1 -d forma_test -f supabase/tests/10_smoke.sql   # prints ALL TESTS PASSED
+-- Then, on the same database, the later suites: 20_subscriptions.sql, 30_course_builder.sql and
+-- 40_marathon.sql, after applying the migrations they cover (0005-0008, 0010, 0011).
 -- Never run the shim against a real Supabase project: it exists only to stand in
 -- for the auth/storage schemas Supabase already provides.
 -- =============================================================================

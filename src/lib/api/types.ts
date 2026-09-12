@@ -413,6 +413,242 @@ export interface AdminCourseBundle {
   workouts: CustomWorkoutRow[];
 }
 
+// --- marathons ---------------------------------------------------------------
+
+export type MarathonStatus = 'draft' | 'active' | 'finished' | 'archived';
+/** What a member has to send back. `media` is a photo or a clip, private to the coach. */
+export type ProofKind = 'done' | 'text' | 'number' | 'media';
+/**
+ * How a task scores. The authority is `marathon_scores()` in supabase/migrations/0011_marathon.sql;
+ * {@link scoreTask} in src/lib/marathon/score.ts mirrors it for demo mode.
+ */
+export type MarathonRule = 'all_members' | 'per_member' | 'capped' | 'none';
+export type ProofVisibility = 'team' | 'coach';
+
+/** A row of `marathons`. */
+export interface MarathonRow {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  status: MarathonStatus;
+  /** YYYY-MM-DD. Day 1 of the marathon. */
+  startsOn: string;
+  days: number;
+  /** 2 is a pair; 1 makes every member their own entry on the board. */
+  teamSize: number;
+  /** IANA name. The day closes at `dueTime` here, not on the athlete's phone. */
+  timezone: string;
+  /** HH:MM:SS. */
+  dueTime: string;
+  prize: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type MarathonPatch = Partial<
+  Pick<
+    MarathonRow,
+    | 'slug'
+    | 'title'
+    | 'description'
+    | 'status'
+    | 'startsOn'
+    | 'days'
+    | 'teamSize'
+    | 'timezone'
+    | 'dueTime'
+    | 'prize'
+  >
+>;
+
+/** One marathon the signed-in member plays, with where it has got to. From `my_marathons()`. */
+export interface MyMarathon {
+  id: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  status: MarathonStatus;
+  startsOn: string;
+  days: number;
+  teamSize: number;
+  prize: string | null;
+  /** 1-based, clamped to `days`. 0 before it starts. */
+  dayIndex: number;
+  week: number;
+  totalWeeks: number;
+  memberId: string;
+  teamId: string | null;
+  teamName: string | null;
+}
+
+/** A row of `marathon_teams`. */
+export interface MarathonTeamRow {
+  id: string;
+  marathonId: string;
+  name: string;
+  sortOrder: number;
+}
+
+/** A row of `marathon_members`. Admin-only: it carries the email and the coach's note. */
+export interface MarathonMemberRow {
+  id: string;
+  marathonId: string;
+  email: string;
+  teamId: string | null;
+  displayName: string | null;
+  status: 'active' | 'removed';
+  note: string | null;
+  createdAt: string;
+}
+
+export type MarathonMemberPatch = Partial<
+  Pick<MarathonMemberRow, 'teamId' | 'displayName' | 'status' | 'note'>
+>;
+
+/** What a member is allowed to know about the others: names, never emails. From `marathon_roster()`. */
+export interface MarathonRosterRow {
+  memberId: string;
+  displayName: string;
+  teamId: string | null;
+  teamName: string | null;
+  isMe: boolean;
+}
+
+/** A row of `marathon_tasks` — the thing the coach writes every morning. */
+export interface MarathonTaskRow {
+  id: string;
+  marathonId: string;
+  /** 1-based day of the marathon. */
+  dayIndex: number;
+  sortOrder: number;
+  title: string;
+  body: string | null;
+  mediaUrl: string | null;
+  proofKind: ProofKind;
+  unit: string | null;
+  targetNum: number | null;
+  rule: MarathonRule;
+  points: number;
+  /** Only for `capped`: the ceiling on one entry's total for this task. */
+  cap: number | null;
+  proofVisibility: ProofVisibility;
+  /** HH:MM:SS, or null to use the marathon's own deadline. */
+  dueTime: string | null;
+  lateCounts: boolean;
+}
+
+export type MarathonTaskPatch = Partial<
+  Pick<
+    MarathonTaskRow,
+    | 'dayIndex'
+    | 'sortOrder'
+    | 'title'
+    | 'body'
+    | 'mediaUrl'
+    | 'proofKind'
+    | 'unit'
+    | 'targetNum'
+    | 'rule'
+    | 'points'
+    | 'cap'
+    | 'proofVisibility'
+    | 'dueTime'
+    | 'lateCounts'
+  >
+>;
+
+/**
+ * Who a task was sent to. An empty list means everyone in the marathon.
+ *
+ * A target is a team (the pair does it together) or one member (it is theirs alone) — the coach
+ * picks them off the roster rather than off a list of categories.
+ */
+export interface MarathonTaskTarget {
+  teamId: string | null;
+  memberId: string | null;
+}
+
+/** A row of `marathon_submissions`. */
+export interface MarathonSubmissionRow {
+  id: string;
+  taskId: string;
+  memberId: string;
+  marathonId: string;
+  dayIndex: number;
+  valueText: string | null;
+  valueNum: number | null;
+  /** Object path inside the private `proofs` bucket, never a URL. */
+  mediaPath: string | null;
+  submittedAt: string;
+  voidedAt: string | null;
+  voidReason: string | null;
+}
+
+/** What the app sends when proof is delivered. The server decides the day and the clock. */
+export interface ProofInput {
+  taskId: string;
+  memberId: string;
+  valueText?: string | null;
+  valueNum?: number | null;
+  mediaPath?: string | null;
+}
+
+/** One task as the Today screen needs it: the task, my proof, and how the rest of my entry is doing. */
+export interface MarathonTodayTask {
+  task: MarathonTaskRow;
+  /** My own proof, or null if I have not sent it. */
+  mine: MarathonSubmissionRow | null;
+  /**
+   * The teammates I am scored with who have delivered, by member id. Empty for a solo entry, and
+   * for a task whose proof the coach keeps to himself.
+   */
+  teammatesDone: string[];
+  /** Everyone I am scored with, me included — what `all_members` is measured against. */
+  entrySize: number;
+}
+
+/** One row of the weekly board. From `marathon_scores()`. */
+export interface MarathonScoreRow {
+  entryKind: 'team' | 'solo';
+  entryId: string;
+  title: string;
+  members: string[];
+  points: number;
+  rank: number;
+  isMine: boolean;
+}
+
+/** One day of my own marathon. From `marathon_my_points()`. */
+export interface MarathonDayPoints {
+  dayIndex: number;
+  week: number;
+  tasksTotal: number;
+  tasksDone: number;
+  /** What my entry took that day — in a pair, not the same thing as what I did. */
+  points: number;
+}
+
+/** A row of `marathon_adjustments`: the coach's manual ±points, always with a reason. */
+export interface MarathonAdjustmentRow {
+  id: string;
+  marathonId: string;
+  memberId: string;
+  dayIndex: number;
+  points: number;
+  reason: string;
+  createdAt: string;
+}
+
+/** One line of the admin's proofs feed: the proof, plus who sent it and what for. */
+export interface MarathonProofRow extends MarathonSubmissionRow {
+  memberName: string;
+  teamName: string | null;
+  taskTitle: string;
+  proofKind: ProofKind;
+  unit: string | null;
+}
+
 /** Fields of an admin-authored exercise, beyond the markup an existing one accepts. */
 export interface ExerciseDraft {
   id: string;
