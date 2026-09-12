@@ -126,9 +126,18 @@ do $$ declare v_m uuid := pg_temp.m(); begin
   -- none: the morning message. Never scores, whoever ticks it.
   insert into public.marathon_tasks (marathon_id, day_index, title, rule, points)
   values (v_m, 4, 'Доброе утро', 'none', 0);
-  -- solo audience: set to whoever plays alone, invisible to the pairs' scores.
-  insert into public.marathon_tasks (marathon_id, day_index, title, rule, points, audience)
-  values (v_m, 5, 'Одиночная', 'per_member', 3, 'solo');
+  -- Addressed to one person: nobody else sees it and nobody else scores it.
+  insert into public.marathon_tasks (marathon_id, day_index, title, rule, points)
+  values (v_m, 5, 'Одиночная', 'per_member', 3);
+  insert into public.marathon_task_targets (task_id, member_id)
+  values (pg_temp.task('Одиночная'), pg_temp.member('zhenya@example.com'));
+
+  -- Addressed to one pair: the other pair and the solo player never see it.
+  insert into public.marathon_tasks (marathon_id, day_index, title, rule, points)
+  values (v_m, 6, 'Только для пары', 'all_members', 9);
+  insert into public.marathon_task_targets (task_id, team_id)
+  values (pg_temp.task('Только для пары'), (select id from public.marathon_teams
+          where marathon_id = v_m and name = 'Оля и Катя'));
   -- late proof is recorded but does not score.
   insert into public.marathon_tasks (marathon_id, day_index, title, rule, points)
   values (v_m, 6, 'Планка', 'per_member', 4);
@@ -188,10 +197,16 @@ do $$ begin
     (pg_temp.task('Доброе утро'), pg_temp.member('vanya@example.com'), pg_temp.in_time(4)),
     (pg_temp.task('Доброе утро'), pg_temp.member('olya@example.com'), pg_temp.in_time(4));
 
-  -- Одиночная (solo audience): Женя earns; a pair member's proof scores nothing.
+  -- Одиночная: sent to Женя alone, so only Женя's proof counts. Ваня's is recorded (the coach can
+  -- enter anything) and scores nothing, because he was never a recipient.
   insert into public.marathon_submissions (task_id, member_id, submitted_at) values
     (pg_temp.task('Одиночная'), pg_temp.member('zhenya@example.com'), pg_temp.in_time(5)),
     (pg_temp.task('Одиночная'), pg_temp.member('vanya@example.com'), pg_temp.in_time(5));
+
+  -- Только для пары: sent to Оля и Катя, and both deliver.
+  insert into public.marathon_submissions (task_id, member_id, submitted_at) values
+    (pg_temp.task('Только для пары'), pg_temp.member('olya@example.com'), pg_temp.in_time(6)),
+    (pg_temp.task('Только для пары'), pg_temp.member('katya@example.com'), pg_temp.in_time(6));
 
   -- Планка: an hour after the deadline.
   insert into public.marathon_submissions (task_id, member_id, submitted_at)
@@ -203,17 +218,18 @@ do $$ begin
   assert pg_temp.points('Ваня и Витя') = 22,
     'pair: 10 both + 5 one of two + 7 capped, nothing for the solo task or the late one, got '
     || pg_temp.points('Ваня и Витя');
-  assert pg_temp.points('Оля и Катя') = 10,
-    'pair: 0 (only one did Зарядка) + 10, got ' || pg_temp.points('Оля и Катя');
+  assert pg_temp.points('Оля и Катя') = 19,
+    'pair: 0 (only one did Зарядка) + 10 + 9 (the task sent only to them), got '
+    || pg_temp.points('Оля и Катя');
   assert pg_temp.points('Женя') = 13,
     'solo: 10 (a team of one is satisfied by one) + 3, got ' || pg_temp.points('Женя');
   assert (select rank from public.marathon_scores(pg_temp.m(), 1) where title = 'Ваня и Витя') = 1;
-  assert (select rank from public.marathon_scores(pg_temp.m(), 1) where title = 'Женя') = 2;
-  assert (select rank from public.marathon_scores(pg_temp.m(), 1) where title = 'Оля и Катя') = 3;
+  assert (select rank from public.marathon_scores(pg_temp.m(), 1) where title = 'Оля и Катя') = 2;
+  assert (select rank from public.marathon_scores(pg_temp.m(), 1) where title = 'Женя') = 3;
   assert (select count(*) from public.marathon_scores(pg_temp.m(), 1)) = 3, 'one row per entry';
   assert (select members from public.marathon_scores(pg_temp.m(), 1) where title = 'Ваня и Витя')
          = array['Ваня', 'Витя'];
-  raise notice 'OK the four rules, the deadline and the audience';
+  raise notice 'OK the four rules, the deadline and who a task was sent to';
 end $$;
 
 -- The week is the race: week 2 has its own board, and the default week is the current one.
@@ -237,7 +253,7 @@ do $$ begin
   insert into public.marathon_adjustments (marathon_id, member_id, day_index, points, reason, created_by)
   values (pg_temp.m(), pg_temp.member('katya@example.com'), 3, 5, 'вытащила напарницу',
           '00000000-0000-0000-0000-00000000000c');
-  assert pg_temp.points('Оля и Катя') = 15, 'the adjustment lands on the team, got '
+  assert pg_temp.points('Оля и Катя') = 24, 'the adjustment lands on the team, got '
     || pg_temp.points('Оля и Катя');
   -- An adjustment in week 1 does not move week 2.
   assert (select sum(points) from public.marathon_scores(pg_temp.m(), 2)) = 0;
@@ -260,7 +276,14 @@ do $$ begin
   -- Tomorrow's task does not exist as far as the app is concerned.
   assert (select count(*) from public.marathon_tasks where title = 'Завтра') = 0, 'no reading ahead';
   assert (select count(*) from public.marathon_tasks where title = 'Сегодня') = 1, 'today is open';
-  assert (select count(*) from public.marathon_tasks) = 8, 'days 1..9';
+  -- Nine tasks exist on days 1..9; two of them were addressed to other people, so seven are his.
+  assert (select count(*) from public.marathon_tasks) = 7,
+    'days 1..9, minus the two addressed to other people, got '
+    || (select count(*) from public.marathon_tasks);
+  assert (select count(*) from public.marathon_tasks where title = 'Одиночная') = 0,
+    'a task sent to one person is not on anyone else''s screen';
+  assert (select count(*) from public.marathon_tasks where title = 'Только для пары') = 0,
+    'nor is a task sent to the other pair';
   raise notice 'OK the plan opens one day at a time';
 end $$;
 
@@ -333,7 +356,7 @@ do $$ begin
   assert (select points from public.marathon_my_points(pg_temp.m()) where day_index = 3) = 5;
   assert (select tasks_done from public.marathon_my_points(pg_temp.m()) where day_index = 3) = 0,
     'a voided proof is not something I did';
-  -- The solo task was never mine: it is not even counted in the day's total.
+  -- The task sent to Женя alone was never mine: it is not even counted in the day's total.
   assert (select tasks_total from public.marathon_my_points(pg_temp.m()) where day_index = 5) = 0;
   -- Nor is the morning message: ticking «Доброе утро» is not a task, and not ticking it is not a
   -- day missed.

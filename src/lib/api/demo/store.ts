@@ -54,7 +54,7 @@ export interface StorageLike {
 export const DEMO_DB_KEY = 'forma.demo.db';
 export const DEMO_AUTH_KEY = 'forma.demo.auth';
 /** Bumped when the row shapes change; a stored database of another version is discarded. */
-export const DEMO_SCHEMA_VERSION = 4;
+export const DEMO_SCHEMA_VERSION = 5;
 
 /** In-memory storage used when `localStorage` is unavailable (SSR, tests, private mode). */
 export function memoryStorage(): StorageLike {
@@ -117,6 +117,8 @@ export interface DemoDb {
   marathonTeams: MarathonTeamRow[];
   marathonMembers: MarathonMemberRow[];
   marathonTasks: MarathonTaskRow[];
+  /** Who each task went to; no row for a task means everyone. */
+  marathonTaskTargets: { taskId: string; teamId: string | null; memberId: string | null }[];
   marathonSubmissions: MarathonSubmissionRow[];
   marathonAdjustments: MarathonAdjustmentRow[];
 }
@@ -340,6 +342,7 @@ export function emptyDb(): DemoDb {
     marathonTeams: [],
     marathonMembers: [],
     marathonTasks: [],
+    marathonTaskTargets: [],
     marathonSubmissions: [],
     marathonAdjustments: [],
   };
@@ -384,6 +387,11 @@ export function readDb(storage: StorageLike = defaultStorage()): DemoDb {
       marathonTeams: asRows<MarathonTeamRow>(parsed.marathonTeams),
       marathonMembers: asRows<MarathonMemberRow>(parsed.marathonMembers),
       marathonTasks: asRows<MarathonTaskRow>(parsed.marathonTasks),
+      marathonTaskTargets: asRows<{
+        taskId: string;
+        teamId: string | null;
+        memberId: string | null;
+      }>(parsed.marathonTaskTargets),
       marathonSubmissions: asRows<MarathonSubmissionRow>(parsed.marathonSubmissions),
       marathonAdjustments: asRows<MarathonAdjustmentRow>(parsed.marathonAdjustments),
     };
@@ -554,6 +562,7 @@ export function seedUser(db: DemoDb, email: string, today = toLocalDateIso()): D
     db.marathonTeams.push(...seed.teams);
     db.marathonMembers.push(...seed.members);
     db.marathonTasks.push(...seed.tasks);
+    db.marathonTaskTargets.push(...seed.targets);
     db.marathonSubmissions.push(...seed.submissions);
     db.marathonAdjustments.push(...seed.adjustments);
   }

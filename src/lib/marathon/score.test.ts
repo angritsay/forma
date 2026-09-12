@@ -9,11 +9,12 @@
  */
 import { describe, expect, it } from 'vitest';
 import {
-  appliesTo,
   board,
   countsFor,
   dayIndexOf,
   deadlineFor,
+  isRecipient,
+  recipientsIn,
   scoreTask,
   weekOf,
   type CountedProof,
@@ -27,14 +28,14 @@ const task = (
   rule: 'per_member',
   points: 0,
   cap: null,
-  audience: 'all',
+  targets: [],
   ...over,
 });
 
 const ENTRIES: ScorableEntry[] = [
-  { id: 'team_a', kind: 'team', memberIds: ['vanya', 'vitya'] },
-  { id: 'team_b', kind: 'team', memberIds: ['olya', 'katya'] },
-  { id: 'zhenya', kind: 'solo', memberIds: ['zhenya'] },
+  { id: 'team_a', kind: 'team', memberIds: ['vanya', 'vitya'], teamId: 'team_a' },
+  { id: 'team_b', kind: 'team', memberIds: ['olya', 'katya'], teamId: 'team_b' },
+  { id: 'zhenya', kind: 'solo', memberIds: ['zhenya'], teamId: null },
 ];
 
 const TASKS: ScorableTask[] = [
@@ -42,7 +43,14 @@ const TASKS: ScorableTask[] = [
   task({ id: 'shagi', dayIndex: 2, rule: 'per_member', points: 5 }),
   task({ id: 'paluba', dayIndex: 3, rule: 'capped', points: 5, cap: 7 }),
   task({ id: 'utro', dayIndex: 4, rule: 'none', points: 0 }),
-  task({ id: 'odinochnaya', dayIndex: 5, rule: 'per_member', points: 3, audience: 'solo' }),
+  // Sent to Женя alone: nobody else was asked, so nobody else can score it.
+  task({
+    id: 'odinochnaya',
+    dayIndex: 5,
+    rule: 'per_member',
+    points: 3,
+    targets: [{ teamId: null, memberId: 'zhenya' }],
+  }),
   task({ id: 'planka', dayIndex: 6, rule: 'per_member', points: 4 }),
 ];
 
@@ -94,14 +102,25 @@ describe('the four rules', () => {
   });
 });
 
-describe('audience', () => {
-  it('sets a task to teams, to solo players, or to everyone', () => {
-    expect(appliesTo('all', 'team')).toBe(true);
-    expect(appliesTo('all', 'solo')).toBe(true);
-    expect(appliesTo('teams', 'team')).toBe(true);
-    expect(appliesTo('teams', 'solo')).toBe(false);
-    expect(appliesTo('solo', 'solo')).toBe(true);
-    expect(appliesTo('solo', 'team')).toBe(false);
+describe('who a task was sent to', () => {
+  const entry = ENTRIES[0]!;
+
+  it('goes to everyone when nobody is named', () => {
+    expect(isRecipient({ targets: [] }, 'vanya', 'team_a')).toBe(true);
+    expect(isRecipient({ targets: [] }, 'zhenya', null)).toBe(true);
+  });
+
+  it('reaches a person who is named, and nobody else', () => {
+    const only = { targets: [{ teamId: null, memberId: 'vanya' }] };
+    expect(isRecipient(only, 'vanya', 'team_a')).toBe(true);
+    expect(isRecipient(only, 'vitya', 'team_a')).toBe(false);
+    expect(recipientsIn(only, entry)).toEqual(['vanya']);
+  });
+
+  it('reaches both halves of a pair when the team is named', () => {
+    const pair = { targets: [{ teamId: 'team_a', memberId: null }] };
+    expect(recipientsIn(pair, entry)).toEqual(['vanya', 'vitya']);
+    expect(isRecipient(pair, 'olya', 'team_b')).toBe(false);
   });
 });
 
@@ -132,9 +151,29 @@ describe('the board', () => {
     expect(rows.map((r) => r.rank)).toEqual([1, 2, 3]);
   });
 
-  it("leaves the solo task out of a pair's score", () => {
-    // Ваня sent proof for Одиночная; his entry is a team, so the task was never his to do.
+  it("leaves a task sent to someone else out of a pair's score", () => {
+    // Ваня sent proof for Одиночная; it was addressed to Женя, so he was never asked.
     expect(points(board(ENTRIES, TASKS, COUNTED, 1), 'team_a')).toBe(22);
+  });
+
+  it('pays a pair task addressed to one of them when that one delivers', () => {
+    // «Только если сделают все» means everyone it was *sent* to — here, one person.
+    const solo = [
+      task({
+        id: 'personal',
+        dayIndex: 1,
+        rule: 'all_members',
+        points: 8,
+        targets: [{ teamId: null, memberId: 'vanya' }],
+      }),
+    ];
+    expect(
+      points(board(ENTRIES, solo, [{ taskId: 'personal', memberId: 'vanya' }], 1), 'team_a'),
+    ).toBe(8);
+    // And not when the person it was sent to has not.
+    expect(
+      points(board(ENTRIES, solo, [{ taskId: 'personal', memberId: 'vitya' }], 1), 'team_a'),
+    ).toBe(0);
   });
 
   it('starts every entry at zero in the next week', () => {

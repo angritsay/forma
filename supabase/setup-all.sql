@@ -3070,9 +3070,6 @@ create table if not exists public.marathon_tasks (
   points      int not null default 0 check (points between 0 and 1000),
   cap         int check (cap is null or cap between 0 and 10000),
 
-  -- Who the task is for. 'teams' and 'solo' let one day carry a task for the pairs and another for
-  -- whoever is playing alone.
-  audience    text not null default 'all' check (audience in ('all', 'teams', 'solo')),
   -- Whether a teammate sees that you delivered (and your text or number). Photos are never shown
   -- to teammates — only to the coach — so this is about the fact and the figure, not the media.
   proof_visibility text not null default 'team' check (proof_visibility in ('team', 'coach')),
@@ -3087,7 +3084,37 @@ create table if not exists public.marathon_tasks (
 );
 
 comment on table public.marathon_tasks is
-  'One task on one day of a marathon. Repeating a task across days creates one row per day, so any single day can still be edited.';
+  'One task on one day of a marathon. Who it is for lives in marathon_task_targets; no rows there means everyone.';
+
+-- -----------------------------------------------------------------------------
+-- marathon_task_targets — who a task was actually sent to.
+--
+-- The coach does not think in categories. He opens a day and sends *this* task to *that* pair, or
+-- to one person who is behind on something, and someone else that morning gets a different one.
+-- An `audience` column with 'all' / 'teams' / 'solo' could not say any of that, so the recipients
+-- are rows: a team (the pair does it together) or a single member (it is theirs alone).
+--
+-- No rows at all means everybody, which is both the common case and the safe default — a task
+-- created and never addressed goes to the whole marathon rather than to nobody.
+-- -----------------------------------------------------------------------------
+create table if not exists public.marathon_task_targets (
+  id        uuid primary key default gen_random_uuid(),
+  task_id   uuid not null references public.marathon_tasks (id) on delete cascade,
+  team_id   uuid references public.marathon_teams (id) on delete cascade,
+  member_id uuid references public.marathon_members (id) on delete cascade,
+  -- Exactly one of the two: a row is either "this pair" or "this person".
+  constraint marathon_task_targets_one check (
+    (team_id is not null and member_id is null) or (team_id is null and member_id is not null)
+  ),
+  unique (task_id, team_id, member_id)
+);
+
+comment on table public.marathon_task_targets is
+  'Recipients of one task: a team, or one member. No rows for a task means everyone in the marathon.';
+
+create index if not exists marathon_task_targets_task_idx on public.marathon_task_targets (task_id);
+create index if not exists marathon_task_targets_team_idx on public.marathon_task_targets (team_id);
+create index if not exists marathon_task_targets_member_idx on public.marathon_task_targets (member_id);
 
 -- A number needs a unit to mean anything; a cap only means something for the capped rule.
 alter table public.marathon_tasks drop constraint if exists marathon_tasks_unit_required;
@@ -3301,6 +3328,35 @@ $$;
  * all, and it keeps the rule in one readable place instead of spread across three policies.
  */
 
+-- Was this task sent to me? No recipients at all means it went to everyone; otherwise I am named,
+-- or my team is. Row-level security asks this, so a task the coach aimed at one pair is not merely
+-- unscored for everybody else — it is not on their screen at all.
+create or replace function public.marathon_task_is_for_me(p_task_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+  select exists (
+    select 1
+    from public.marathon_tasks t
+    join public.marathon_members mem
+      on mem.marathon_id = t.marathon_id
+     and mem.status = 'active'
+     and mem.email = public.current_email()
+    where t.id = p_task_id
+      and (
+        not exists (select 1 from public.marathon_task_targets g where g.task_id = t.id)
+        or exists (
+          select 1 from public.marathon_task_targets g
+          where g.task_id = t.id
+            and (g.member_id = mem.id or (g.team_id is not null and g.team_id = mem.team_id))
+        )
+      )
+  );
+$$;
+
 -- May this task be written to right now? The marathon is running and the day has arrived. Whether
 -- proof this late still *scores* is the task's own business (late_counts) — it is recorded either way.
 create or replace function public.marathon_task_is_open(p_task_id uuid)
@@ -3359,11 +3415,13 @@ revoke execute on function public.marathon_member_id(uuid) from public, anon;
 revoke execute on function public.is_marathon_member(uuid) from public, anon;
 revoke execute on function public.marathon_day_index(uuid) from public, anon;
 revoke execute on function public.marathon_task_is_open(uuid) from public, anon;
+revoke execute on function public.marathon_task_is_for_me(uuid) from public, anon;
 revoke execute on function public.can_read_teammate_proof(uuid, uuid, uuid) from public, anon;
 grant execute on function public.marathon_member_id(uuid) to authenticated;
 grant execute on function public.is_marathon_member(uuid) to authenticated;
 grant execute on function public.marathon_day_index(uuid) to authenticated;
 grant execute on function public.marathon_task_is_open(uuid) to authenticated;
+grant execute on function public.marathon_task_is_for_me(uuid) to authenticated;
 grant execute on function public.can_read_teammate_proof(uuid, uuid, uuid) to authenticated;
 grant execute on function public.marathon_week_of(int) to authenticated;
 
@@ -3375,6 +3433,7 @@ alter table public.marathons enable row level security;
 alter table public.marathon_teams enable row level security;
 alter table public.marathon_members enable row level security;
 alter table public.marathon_tasks enable row level security;
+alter table public.marathon_task_targets enable row level security;
 alter table public.marathon_submissions enable row level security;
 alter table public.marathon_adjustments enable row level security;
 
@@ -3438,7 +3497,18 @@ create policy "marathon_tasks: members read up to today"
   using (
     public.is_marathon_member(marathon_id)
     and day_index <= public.marathon_day_index(marathon_id)
+    and public.marathon_task_is_for_me(id)
   );
+
+-- marathon_task_targets ---------------------------------------------------------
+-- Admins only. A member never needs to read it: the task list they can see is already filtered by
+-- `marathon_task_is_for_me`, and who *else* a task went to is not theirs to know.
+drop policy if exists "marathon_task_targets: admins all" on public.marathon_task_targets;
+create policy "marathon_task_targets: admins all"
+  on public.marathon_task_targets for all
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
 
 -- marathon_submissions ---------------------------------------------------------
 drop policy if exists "marathon_submissions: admins all" on public.marathon_submissions;
@@ -3477,6 +3547,7 @@ create policy "marathon_submissions: own write"
   with check (
     member_id = public.marathon_member_id(marathon_id)
     and public.marathon_task_is_open(task_id)
+    and public.marathon_task_is_for_me(task_id)
   );
 
 drop policy if exists "marathon_submissions: own update" on public.marathon_submissions;
@@ -3512,6 +3583,7 @@ revoke all on public.marathons from anon, authenticated;
 revoke all on public.marathon_teams from anon, authenticated;
 revoke all on public.marathon_members from anon, authenticated;
 revoke all on public.marathon_tasks from anon, authenticated;
+revoke all on public.marathon_task_targets from anon, authenticated;
 revoke all on public.marathon_submissions from anon, authenticated;
 revoke all on public.marathon_adjustments from anon, authenticated;
 
@@ -3519,6 +3591,7 @@ grant select, insert, update, delete on public.marathons to authenticated;
 grant select, insert, update, delete on public.marathon_teams to authenticated;
 grant select, insert, update, delete on public.marathon_members to authenticated;
 grant select, insert, update, delete on public.marathon_tasks to authenticated;
+grant select, insert, update, delete on public.marathon_task_targets to authenticated;
 grant select, insert, update, delete on public.marathon_submissions to authenticated;
 grant select, insert, update, delete on public.marathon_adjustments to authenticated;
 
@@ -3760,6 +3833,7 @@ begin
         'Участник'
       ), 60) as member_name,
       coalesce(t.sort_order, 0) as sort_order,
+      mem.team_id,
       mem.created_at
     from public.marathon_members mem
     left join public.marathon_teams t on t.id = mem.team_id
@@ -3803,31 +3877,48 @@ begin
         )
       )
   ),
-  -- How many of an entry's members delivered each task it was set.
+  /*
+   * Who each task was actually sent to.
+   *
+   * A task with no target rows went to everyone; otherwise a person is a recipient when they are
+   * named, or when their team is. This is the join that replaced an `audience` column, and it is
+   * also what makes the rules below read the same for a task sent to the whole marathon and one
+   * sent to a single person: the rule always applies over *the recipients inside this entry*.
+   */
+  recipients as (
+    select t.id as task_id, t.rule, t.points, t.cap, pe.entry_id, pe.member_id
+    from week_tasks t
+    join people pe
+      on not exists (select 1 from public.marathon_task_targets g where g.task_id = t.id)
+      or exists (
+        select 1
+        from public.marathon_task_targets g
+        where g.task_id = t.id
+          and (g.member_id = pe.member_id or (g.team_id is not null and g.team_id = pe.team_id))
+      )
+  ),
+  -- How many of an entry's recipients delivered each task, and how many were asked.
   per_task as (
     select
-      e.entry_id,
-      t.id as task_id,
-      t.rule,
-      t.points,
-      t.cap,
-      e.member_count,
+      r.entry_id,
+      r.task_id,
+      min(r.rule) as rule,
+      min(r.points) as points,
+      min(r.cap) as cap,
+      count(*)::int as asked,
       count(c.member_id)::int as done
-    from entries e
-    join week_tasks t
-      on t.audience = 'all'
-      or (t.audience = 'teams' and e.entry_kind = 'team')
-      or (t.audience = 'solo' and e.entry_kind = 'solo')
-    left join people pe on pe.entry_id = e.entry_id
-    left join counted c on c.task_id = t.id and c.member_id = pe.member_id
-    group by e.entry_id, t.id, t.rule, t.points, t.cap, e.member_count
+    from recipients r
+    left join counted c on c.task_id = r.task_id and c.member_id = r.member_id
+    group by r.entry_id, r.task_id
   ),
   task_points as (
     select
       pt.entry_id,
       sum(
         case pt.rule
-          when 'all_members' then case when pt.done >= pt.member_count then pt.points else 0 end
+          -- "Everyone" means everyone it was sent to, which for a task aimed at one member of a
+          -- pair is that one member.
+          when 'all_members' then case when pt.done >= pt.asked then pt.points else 0 end
           when 'per_member'  then pt.done * pt.points
           when 'capped'      then least(pt.done * pt.points, pt.cap)
           else 0
@@ -3914,21 +4005,30 @@ begin
     select generate_series(1, v_today) as d
   ),
   mine as (
-    select mem.id as member_id, coalesce(mem.team_id, mem.id) as entry_id,
-           case when mem.team_id is not null then 'team' else 'solo' end as entry_kind
+    select mem.id as member_id, mem.team_id, coalesce(mem.team_id, mem.id) as entry_id
     from public.marathon_members mem where mem.id = v_me
   ),
-  -- The tasks set to my entry, per day.
-  -- Only the tasks that score. The morning message is set to everyone and worth nothing, and
-  -- counting it would tell someone they had missed 1 of 3 for not ticking «Доброе утро».
+  /*
+   * The tasks I was actually sent, per day.
+   *
+   * Only the ones that score: the morning message goes to everyone and is worth nothing, and
+   * counting it would tell someone they had missed 1 of 3 for not ticking «Доброе утро».
+   */
   my_tasks as (
     select t.*
     from public.marathon_tasks t, mine
     where t.marathon_id = p_marathon_id
       and t.day_index <= v_today
       and t.rule <> 'none'
-      and (t.audience = 'all' or (t.audience = 'teams' and mine.entry_kind = 'team')
-           or (t.audience = 'solo' and mine.entry_kind = 'solo'))
+      and (
+        not exists (select 1 from public.marathon_task_targets g where g.task_id = t.id)
+        or exists (
+          select 1 from public.marathon_task_targets g
+          where g.task_id = t.id
+            and (g.member_id = mine.member_id
+                 or (g.team_id is not null and g.team_id = mine.team_id))
+        )
+      )
   ),
   done as (
     select s.day_index, count(*)::int as n
@@ -3960,15 +4060,27 @@ begin
         )
       )
   ),
-  entry_size as (
-    select count(*)::int as n
-    from public.marathon_members mem
-    where mem.marathon_id = p_marathon_id and mem.status = 'active'
-      and coalesce(mem.team_id, mem.id) = (select entry_id from mine)
+  -- Everyone in my entry the task was sent to — the same question the board asks, narrowed to me.
+  asked as (
+    select t.id as task_id, count(*)::int as n
+    from my_tasks t
+    join public.marathon_members mem
+      on mem.marathon_id = p_marathon_id
+     and mem.status = 'active'
+     and coalesce(mem.team_id, mem.id) = (select entry_id from mine)
+     and (
+       not exists (select 1 from public.marathon_task_targets g where g.task_id = t.id)
+       or exists (
+         select 1 from public.marathon_task_targets g
+         where g.task_id = t.id
+           and (g.member_id = mem.id or (g.team_id is not null and g.team_id = mem.team_id))
+       )
+     )
+    group by t.id
   ),
   per_task as (
     select t.day_index, t.rule, t.points, t.cap,
-           (select n from entry_size) as member_count,
+           coalesce((select n from asked a where a.task_id = t.id), 0) as asked_n,
            (select count(*) from counted c where c.task_id = t.id)::int as done_n
     from my_tasks t
   ),
@@ -3976,7 +4088,7 @@ begin
     select pt.day_index,
            sum(
              case pt.rule
-               when 'all_members' then case when pt.done_n >= pt.member_count then pt.points else 0 end
+               when 'all_members' then case when pt.asked_n > 0 and pt.done_n >= pt.asked_n then pt.points else 0 end
                when 'per_member'  then pt.done_n * pt.points
                when 'capped'      then least(pt.done_n * pt.points, pt.cap)
                else 0

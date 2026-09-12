@@ -29,8 +29,10 @@ import {
   listMarathonProofs,
   listMarathonTasks,
   listMarathonTeams,
+  listTaskTargets,
   repeatTask,
   restoreProof,
+  setTaskTargets,
   updateMarathon,
   updateMarathonMember,
   updateMarathonTask,
@@ -44,13 +46,14 @@ import type {
   MarathonStatus,
   MarathonTaskPatch,
   MarathonTaskRow,
+  MarathonTaskTarget,
   MarathonTeamRow,
 } from '@/lib/api/types';
 import { BootScreen } from '@/app/components/BootScreen';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
-import { DayPlan } from '@/app/features/marathon/admin/DayPlan';
+import { DayPlan, dateOfDay, longDate } from '@/app/features/marathon/admin/DayPlan';
 import { People } from '@/app/features/marathon/admin/People';
 import { ProofsFeed } from '@/app/features/marathon/admin/ProofsFeed';
 import { TaskEditor } from '@/app/features/marathon/admin/TaskEditor';
@@ -59,7 +62,7 @@ import { statusKey } from '@/app/features/marathon/admin/model';
 type Tab = 'plan' | 'people' | 'proofs' | 'settings';
 
 export default function AdminMarathonScreen() {
-  const { t } = useT();
+  const { t, locale } = useT();
   const toast = useToast();
   const admin = useIsAdmin();
   const { id = '' } = useParams();
@@ -70,6 +73,7 @@ export default function AdminMarathonScreen() {
   const [members, setMembers] = useState<MarathonMemberRow[]>([]);
   const [teams, setTeams] = useState<MarathonTeamRow[]>([]);
   const [proofs, setProofs] = useState<MarathonProofRow[]>([]);
+  const [targets, setTargets] = useState<Map<string, MarathonTaskTarget[]>>(new Map());
   const [dayFilter, setDayFilter] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [day, setDay] = useState(1);
@@ -83,18 +87,30 @@ export default function AdminMarathonScreen() {
   );
 
   const refresh = useCallback(async () => {
-    const [m, ts, ms, tm] = await Promise.all([
+    const [m, ts, ms, tm, tg] = await Promise.all([
       getMarathon(id),
       listMarathonTasks(id),
       listMarathonMembers(id),
       listMarathonTeams(id),
+      listTaskTargets(id),
     ]);
     setMarathon(m);
     setTasks(ts);
     setMembers(ms);
     setTeams(tm);
+    setTargets(tg);
     return m;
   }, [id]);
+
+  /** Names for the recipient chips: a team id or a member id in, a word out. */
+  const names = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const team of teams) map.set(team.id, team.name);
+    for (const member of members) {
+      map.set(member.id, member.displayName?.trim() || member.email);
+    }
+    return map;
+  }, [teams, members]);
 
   useEffect(() => {
     if (!admin || !id) return;
@@ -142,19 +158,32 @@ export default function AdminMarathonScreen() {
     );
   }
 
-  const saveTask = async (patch: MarathonTaskPatch, repeatUntil: number | null) => {
+  const saveTask = async (
+    patch: MarathonTaskPatch,
+    who: readonly MarathonTaskTarget[],
+    repeatUntil: number | null,
+  ) => {
     try {
       if (editing) {
         await updateMarathonTask(editing.id, patch);
+        await setTaskTargets(editing.id, who);
       } else {
         const made = await createMarathonTask(id, {
           ...patch,
           dayIndex: day,
           title: patch.title ?? '',
         });
-        if (repeatUntil) await repeatTask(made, repeatUntil);
+        await setTaskTargets(made.id, who);
+        // A repeat copies the recipients too: «эту неделю Ване и Вите каждое утро» is one action.
+        if (repeatUntil) {
+          for (const copy of await repeatTask(made, repeatUntil)) {
+            await setTaskTargets(copy.id, who);
+          }
+        }
       }
-      setTasks(await listMarathonTasks(id));
+      const [ts, tg] = await Promise.all([listMarathonTasks(id), listTaskTargets(id)]);
+      setTasks(ts);
+      setTargets(tg);
     } catch {
       fail('app.mAdminSaveError')();
     }
@@ -199,6 +228,8 @@ export default function AdminMarathonScreen() {
             <DayPlan
               marathon={marathon}
               tasks={tasks}
+              targets={targets}
+              names={names}
               day={day}
               today={today}
               onDay={setDay}
@@ -276,8 +307,12 @@ export default function AdminMarathonScreen() {
       <TaskEditor
         open={editorOpen}
         task={editing}
+        dayLabel={longDate(locale, dateOfDay(marathon.startsOn, day))}
         dayIndex={day}
         lastDay={marathon.days}
+        teams={teams}
+        members={members}
+        initialTargets={(editing ? targets.get(editing.id) : undefined) ?? []}
         onClose={() => setEditorOpen(false)}
         onSave={saveTask}
         onDelete={editing ? removeTask : undefined}

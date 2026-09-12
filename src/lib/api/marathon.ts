@@ -58,7 +58,6 @@ export interface DbMarathonTask {
   rule: MarathonTaskRow['rule'];
   points: number;
   cap: number | null;
-  audience: MarathonTaskRow['audience'];
   proof_visibility: MarathonTaskRow['proofVisibility'];
   due_time: string | null;
   late_counts: boolean;
@@ -97,7 +96,6 @@ export function taskFromDb(r: DbMarathonTask): MarathonTaskRow {
     rule: r.rule,
     points: r.points,
     cap: r.cap,
-    audience: r.audience,
     proofVisibility: r.proof_visibility,
     dueTime: r.due_time,
     lateCounts: r.late_counts,
@@ -178,8 +176,11 @@ export async function getMarathonRoster(marathonId: string): Promise<MarathonRos
 }
 
 /**
- * One day of a marathon, as the Today screen needs it: the tasks set to my entry, my own proof
- * against each, and which of the people I am scored with have already delivered.
+ * One day of a marathon, as the Today screen needs it: the tasks I was sent, my own proof against
+ * each, and which of the people I am scored with have already delivered.
+ *
+ * No filtering here on who a task was for — row-level security does that, so a task the coach
+ * addressed to another pair never reaches this client at all.
  *
  * The partner state is the reason this is one function rather than three calls in the screen — the
  * whole tension of a paired marathon is «Ваня сделал, ждём Витю», and that sentence needs the task,
@@ -216,28 +217,20 @@ export async function getMarathonDay(
         ),
     ).map(submissionFromDb);
 
-    return tasks
-      .filter((t) => appliesToMe(t, marathon))
-      .map((task) => {
-        const forTask = proofs.filter((p) => p.taskId === task.id);
-        return {
-          task,
-          mine: forTask.find((p) => p.memberId === marathon.memberId) ?? null,
-          teammatesDone: forTask
-            .filter(
-              (p) => p.memberId !== marathon.memberId && entryIds.has(p.memberId) && !p.voidedAt,
-            )
-            .map((p) => p.memberId),
-          entrySize: entryIds.size,
-        };
-      });
+    return tasks.map((task) => {
+      const forTask = proofs.filter((p) => p.taskId === task.id);
+      return {
+        task,
+        mine: forTask.find((p) => p.memberId === marathon.memberId) ?? null,
+        teammatesDone: forTask
+          .filter(
+            (p) => p.memberId !== marathon.memberId && entryIds.has(p.memberId) && !p.voidedAt,
+          )
+          .map((p) => p.memberId),
+        entrySize: entryIds.size,
+      };
+    });
   });
-}
-
-/** Is this task set to my kind of entry at all? Mirrors the `audience` arm of `marathon_scores`. */
-function appliesToMe(task: MarathonTaskRow, marathon: MyMarathon): boolean {
-  if (task.audience === 'all') return true;
-  return task.audience === 'teams' ? marathon.teamId !== null : marathon.teamId === null;
 }
 
 /** The board for one week. Omit the week for the current one. */

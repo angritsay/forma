@@ -33,6 +33,7 @@ import type {
   MarathonSubmissionRow,
   MarathonTaskPatch,
   MarathonTaskRow,
+  MarathonTaskTarget,
   MarathonTeamRow,
   MarathonTodayTask,
   MyMarathon,
@@ -41,15 +42,17 @@ import type {
 } from '../types';
 import type { ProofFilter } from '../marathonAdmin';
 import {
-  appliesTo,
   board,
   countsFor,
   dayIndexOf,
   deadlineFor,
+  isRecipient,
+  recipientsIn,
   scoreTask,
   weekOf,
   type CountedProof,
   type ScorableEntry,
+  type ScorableTask,
 } from '@/lib/marathon/score';
 import type { CustomWorkoutInput } from '../customWorkouts';
 import {
@@ -1279,7 +1282,13 @@ function entriesOf(db: DemoDb, marathonId: string): ScorableEntry[] {
     const id = m.teamId ?? m.id;
     const existing = byEntry.get(id);
     if (existing) existing.memberIds.push(m.id);
-    else byEntry.set(id, { id, kind: m.teamId ? 'team' : 'solo', memberIds: [m.id] });
+    else
+      byEntry.set(id, {
+        id,
+        kind: m.teamId ? 'team' : 'solo',
+        memberIds: [m.id],
+        teamId: m.teamId,
+      });
   }
   return [...byEntry.values()];
 }
@@ -1301,6 +1310,20 @@ function countedProofs(db: DemoDb, marathon: MarathonRow): CountedProof[] {
       return countsFor(s, deadline, task.lateCounts);
     })
     .map((s) => ({ taskId: s.taskId, memberId: s.memberId }));
+}
+
+/** A task with the recipients the shared scorer needs attached. */
+function scorable(db: DemoDb, task: MarathonTaskRow): ScorableTask {
+  return {
+    id: task.id,
+    dayIndex: task.dayIndex,
+    rule: task.rule,
+    points: task.points,
+    cap: task.cap,
+    targets: db.marathonTaskTargets
+      .filter((g) => g.taskId === task.id)
+      .map((g) => ({ teamId: g.teamId, memberId: g.memberId })),
+  };
 }
 
 function marathonOr404(db: DemoDb, id: string): MarathonRow {
@@ -1377,7 +1400,7 @@ export async function getMarathonDay(
 
     return db.marathonTasks
       .filter((t) => t.marathonId === marathon.id && t.dayIndex === dayIndex)
-      .filter((t) => appliesTo(t.audience, me.teamId ? 'team' : 'solo'))
+      .filter((t) => isRecipient(scorable(db, t), me.id, me.teamId))
       .sort((a, b) => a.sortOrder - b.sortOrder)
       .map((task) => {
         const forTask = db.marathonSubmissions.filter((s) => s.taskId === task.id);
@@ -1405,9 +1428,9 @@ export async function getMarathonScores(
     const marathon = marathonOr404(db, marathonId);
     const me = myMember(db, marathonId);
     const entries = entriesOf(db, marathonId);
-    const tasks = db.marathonTasks.filter(
-      (t) => t.marathonId === marathonId && t.dayIndex <= marathon.days,
-    );
+    const tasks = db.marathonTasks
+      .filter((t) => t.marathonId === marathonId && t.dayIndex <= marathon.days)
+      .map((t) => scorable(db, t));
     const theWeek =
       week ??
       weekOf(
@@ -1453,26 +1476,30 @@ export async function getMarathonMyPoints(marathonId: string): Promise<MarathonD
     const today = Math.min(dayIndexOf(marathon.startsOn, marathon.timezone), marathon.days);
     if (today < 1) return [];
 
-    const kind = me.teamId ? 'team' : 'solo';
     const entry: ScorableEntry = {
       id: me.teamId ?? me.id,
-      kind,
+      kind: me.teamId ? 'team' : 'solo',
       memberIds: entryMembers(db, me).map((m) => m.id),
+      teamId: me.teamId,
     };
     const counted = countedProofs(db, marathon);
     const adjustments = db.marathonAdjustments.filter((a) => a.marathonId === marathonId);
 
     const out: MarathonDayPoints[] = [];
     for (let day = today; day >= 1; day -= 1) {
-      // Only the tasks that score: an info-only message is not something you can miss.
+      // Only the tasks that score, and only the ones I was sent: an info-only message is not
+      // something you can miss, and neither is a task addressed to somebody else.
       const dayTasks = db.marathonTasks
         .filter((t) => t.marathonId === marathonId && t.dayIndex === day && t.rule !== 'none')
-        .filter((t) => appliesTo(t.audience, kind));
+        .map((t) => scorable(db, t))
+        .filter((t) => isRecipient(t, me.id, me.teamId));
       const points = dayTasks.reduce((sum, task) => {
+        const asked = recipientsIn(task, entry);
+        if (asked.length === 0) return sum;
         const done = counted.filter(
-          (c) => c.taskId === task.id && entry.memberIds.includes(c.memberId),
+          (c) => c.taskId === task.id && asked.includes(c.memberId),
         ).length;
-        return sum + scoreTask(task, done, entry.memberIds.length);
+        return sum + scoreTask(task, done, asked.length);
       }, 0);
       const fromCoach = adjustments
         .filter((a) => a.dayIndex === day && entry.memberIds.includes(a.memberId))
@@ -1627,7 +1654,6 @@ export async function createMarathonTask(
         rule: patch.rule ?? 'all_members',
         points: patch.points ?? 0,
         cap: patch.rule === 'capped' ? (patch.cap ?? 0) : null,
-        audience: patch.audience ?? 'all',
         proofVisibility: patch.proofVisibility ?? 'team',
         dueTime: patch.dueTime ?? null,
         lateCounts: patch.lateCounts ?? false,
@@ -1681,6 +1707,43 @@ export async function copyDayTasks(
       return made;
     }),
   );
+}
+
+export async function setTaskTargets(
+  taskId: string,
+  targets: readonly MarathonTaskTarget[],
+): Promise<void> {
+  return run(() =>
+    mutateDb((db) => {
+      db.marathonTaskTargets = [
+        ...db.marathonTaskTargets.filter((g) => g.taskId !== taskId),
+        ...targets.map((g) => ({
+          taskId,
+          teamId: g.teamId ?? null,
+          memberId: g.memberId ?? null,
+        })),
+      ];
+    }),
+  );
+}
+
+export async function listTaskTargets(
+  marathonId: string,
+): Promise<Map<string, MarathonTaskTarget[]>> {
+  return run(() => {
+    const db = readDb();
+    const ids = new Set(
+      db.marathonTasks.filter((t) => t.marathonId === marathonId).map((t) => t.id),
+    );
+    const map = new Map<string, MarathonTaskTarget[]>();
+    for (const g of db.marathonTaskTargets) {
+      if (!ids.has(g.taskId)) continue;
+      const list = map.get(g.taskId) ?? [];
+      list.push({ teamId: g.teamId, memberId: g.memberId });
+      map.set(g.taskId, list);
+    }
+    return map;
+  });
 }
 
 export async function listMarathonTeams(marathonId: string): Promise<MarathonTeamRow[]> {

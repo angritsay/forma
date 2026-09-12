@@ -423,7 +423,6 @@ export type ProofKind = 'done' | 'text' | 'number' | 'media';
  * {@link scoreTask} in src/lib/marathon/score.ts mirrors it for demo mode.
  */
 export type MarathonRule = 'all_members' | 'per_member' | 'capped' | 'none';
-export type MarathonAudience = 'all' | 'teams' | 'solo';
 export type ProofVisibility = 'team' | 'coach';
 
 /** A row of `marathons`. */
@@ -533,7 +532,6 @@ export interface MarathonTaskRow {
   points: number;
   /** Only for `capped`: the ceiling on one entry's total for this task. */
   cap: number | null;
-  audience: MarathonAudience;
   proofVisibility: ProofVisibility;
   /** HH:MM:SS, or null to use the marathon's own deadline. */
   dueTime: string | null;
@@ -554,12 +552,22 @@ export type MarathonTaskPatch = Partial<
     | 'rule'
     | 'points'
     | 'cap'
-    | 'audience'
     | 'proofVisibility'
     | 'dueTime'
     | 'lateCounts'
   >
 >;
+
+/**
+ * Who a task was sent to. An empty list means everyone in the marathon.
+ *
+ * A target is a team (the pair does it together) or one member (it is theirs alone) — the coach
+ * picks them off the roster rather than off a list of categories.
+ */
+export interface MarathonTaskTarget {
+  teamId: string | null;
+  memberId: string | null;
+}
 
 /** A row of `marathon_submissions`. */
 export interface MarathonSubmissionRow {

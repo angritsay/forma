@@ -16,10 +16,12 @@ import { Select } from '@/components/ui/Select';
 import { Sheet } from '@/components/ui/Sheet';
 import { Textarea } from '@/components/ui/Textarea';
 import type {
-  MarathonAudience,
+  MarathonMemberRow,
   MarathonRule,
   MarathonTaskPatch,
   MarathonTaskRow,
+  MarathonTaskTarget,
+  MarathonTeamRow,
   ProofKind,
   ProofVisibility,
 } from '@/lib/api/types';
@@ -34,7 +36,6 @@ export interface TaskDraft {
   rule: MarathonRule;
   points: string;
   cap: string;
-  audience: MarathonAudience;
   proofVisibility: ProofVisibility;
   dueTime: string;
   lateCounts: boolean;
@@ -51,7 +52,6 @@ export function emptyDraft(): TaskDraft {
     rule: 'all_members',
     points: '10',
     cap: '',
-    audience: 'all',
     proofVisibility: 'team',
     dueTime: '',
     lateCounts: false,
@@ -68,7 +68,6 @@ export function draftFrom(task: MarathonTaskRow): TaskDraft {
     rule: task.rule,
     points: String(task.points),
     cap: task.cap === null ? '' : String(task.cap),
-    audience: task.audience,
     proofVisibility: task.proofVisibility,
     // Postgres hands back HH:MM:SS; a time input wants HH:MM.
     dueTime: task.dueTime ? task.dueTime.slice(0, 5) : '',
@@ -88,7 +87,6 @@ export function draftToPatch(draft: TaskDraft): MarathonTaskPatch {
     rule: draft.rule,
     points: draft.rule === 'none' ? 0 : Number(draft.points || 0),
     cap: draft.rule === 'capped' ? Number(draft.cap || 0) : null,
-    audience: draft.audience,
     proofVisibility: draft.proofVisibility,
     dueTime: draft.dueTime ? `${draft.dueTime}:00` : null,
     lateCounts: draft.lateCounts,
@@ -107,33 +105,49 @@ export interface TaskEditorProps {
   open: boolean;
   /** The task being edited, or null for a new one. */
   task: MarathonTaskRow | null;
+  /** The date this task is on, in words — the calendar picked it, so the sheet only confirms it. */
+  dayLabel: string;
   dayIndex: number;
   /** Last day of the marathon, so "repeat until" cannot run off the end. */
   lastDay: number;
+  teams: readonly MarathonTeamRow[];
+  members: readonly MarathonMemberRow[];
+  /** Who it currently goes to; an empty list is everyone. */
+  initialTargets: readonly MarathonTaskTarget[];
   onClose: () => void;
-  onSave: (patch: MarathonTaskPatch, repeatUntil: number | null) => Promise<void>;
+  onSave: (
+    patch: MarathonTaskPatch,
+    targets: readonly MarathonTaskTarget[],
+    repeatUntil: number | null,
+  ) => Promise<void>;
   onDelete?: () => Promise<void>;
 }
 
 export function TaskEditor({
   open,
   task,
+  dayLabel,
   dayIndex,
   lastDay,
+  teams,
+  members,
+  initialTargets,
   onClose,
   onSave,
   onDelete,
 }: TaskEditorProps) {
   const { t } = useT();
   const [draft, setDraft] = useState<TaskDraft>(emptyDraft());
+  const [targets, setTargets] = useState<readonly MarathonTaskTarget[]>([]);
   const [repeatUntil, setRepeatUntil] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setDraft(task ? draftFrom(task) : emptyDraft());
+    setTargets(initialTargets);
     setRepeatUntil('');
-  }, [open, task]);
+  }, [open, task, initialTargets]);
 
   const set = <K extends keyof TaskDraft>(key: K, value: TaskDraft[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
@@ -145,7 +159,7 @@ export function TaskEditor({
     setBusy(true);
     try {
       const until = repeatUntil ? Math.min(Number(repeatUntil), lastDay) : null;
-      await onSave(draftToPatch(draft), until && until > dayIndex ? until : null);
+      await onSave(draftToPatch(draft), targets, until && until > dayIndex ? until : null);
       onClose();
     } finally {
       setBusy(false);
@@ -156,7 +170,7 @@ export function TaskEditor({
     <Sheet
       open={open}
       onClose={onClose}
-      title={task ? t('app.mAdminTaskEdit') : t('app.mAdminTaskNew')}
+      title={dayLabel}
       footer={
         <div className="flex gap-3">
           <Button
@@ -259,16 +273,7 @@ export function TaskEditor({
           </div>
         ) : null}
 
-        <Select<MarathonAudience>
-          label={t('app.mAdminAudience')}
-          value={draft.audience}
-          onChange={(v) => set('audience', v)}
-          options={[
-            { value: 'all', label: t('app.mAdminAudienceAll') },
-            { value: 'teams', label: t('app.mAdminAudienceTeams') },
-            { value: 'solo', label: t('app.mAdminAudienceSolo') },
-          ]}
-        />
+        <Recipients teams={teams} members={members} value={targets} onChange={setTargets} />
         <Select<ProofVisibility>
           label={t('app.mAdminVisibility')}
           value={draft.proofVisibility}
@@ -311,5 +316,110 @@ export function TaskEditor({
         ) : null}
       </div>
     </Sheet>
+  );
+}
+
+interface RecipientsProps {
+  teams: readonly MarathonTeamRow[];
+  members: readonly MarathonMemberRow[];
+  value: readonly MarathonTaskTarget[];
+  onChange: (next: readonly MarathonTaskTarget[]) => void;
+}
+
+/**
+ * Who this one gets sent to: everybody, or the pairs and people you tick.
+ *
+ * This is the part the coach asked for in as many words — «кому мы это отправляем: двум или
+ * одному». It replaced a three-way category (all / teams / solo), which could say "to the pairs"
+ * but never "to *that* pair", and that is the distinction the format runs on: one morning Ваня и
+ * Витя get the deck task and Оля gets something else entirely.
+ *
+ * Teams come first because a pair is the usual unit; ticking a team sends it to both of them and
+ * scores it over both. Ticking one person sends it to them alone — and «только если сделают все»
+ * then means that one person, which is the sentence that makes the rule work at any size.
+ */
+function Recipients({ teams, members, value, onChange }: RecipientsProps) {
+  const { t } = useT();
+  const everyone = value.length === 0;
+  const hasTeam = (id: string) => value.some((g) => g.teamId === id);
+  const hasMember = (id: string) => value.some((g) => g.memberId === id);
+
+  const toggleTeam = (id: string) =>
+    onChange(
+      hasTeam(id)
+        ? value.filter((g) => g.teamId !== id)
+        : [...value, { teamId: id, memberId: null }],
+    );
+  const toggleMember = (id: string) =>
+    onChange(
+      hasMember(id)
+        ? value.filter((g) => g.memberId !== id)
+        : [...value, { teamId: null, memberId: id }],
+    );
+
+  /** Members already covered by a ticked team — shown as such rather than tickable twice. */
+  const coveredByTeam = (member: MarathonMemberRow) =>
+    member.teamId !== null && hasTeam(member.teamId);
+
+  return (
+    <fieldset className="flex flex-col gap-2">
+      <legend className="pb-1.5 text-[13px] font-semibold text-muted">
+        {t('app.mAdminSendTo')}
+      </legend>
+
+      <label className="flex items-center gap-3 border-t border-border py-2.5 text-[15px]">
+        <input
+          type="checkbox"
+          checked={everyone}
+          onChange={() => onChange([])}
+          className="size-5 accent-primary"
+        />
+        {t('app.mAdminSendAll')}
+      </label>
+
+      {teams.map((team) => (
+        <label
+          key={team.id}
+          className="flex items-center gap-3 border-t border-border py-2.5 text-[15px]"
+        >
+          <input
+            type="checkbox"
+            checked={hasTeam(team.id)}
+            onChange={() => toggleTeam(team.id)}
+            className="size-5 accent-primary"
+          />
+          <span className="min-w-0 flex-1 truncate">{team.name}</span>
+          <span className="control-label text-[10px] text-muted-2">{t('app.mAdminTeam')}</span>
+        </label>
+      ))}
+
+      {members
+        .filter((m) => m.status === 'active')
+        .map((member) => {
+          const covered = coveredByTeam(member);
+          return (
+            <label
+              key={member.id}
+              className="flex items-center gap-3 border-t border-border py-2.5 text-[15px]"
+            >
+              <input
+                type="checkbox"
+                checked={hasMember(member.id) || covered}
+                disabled={covered}
+                onChange={() => toggleMember(member.id)}
+                className="size-5 accent-primary disabled:opacity-40"
+              />
+              <span className="min-w-0 flex-1 truncate">
+                {member.displayName?.trim() || member.email}
+              </span>
+              {covered ? (
+                <span className="control-label text-[10px] text-muted-2">
+                  {t('app.mAdminSendViaTeam')}
+                </span>
+              ) : null}
+            </label>
+          );
+        })}
+    </fieldset>
   );
 }

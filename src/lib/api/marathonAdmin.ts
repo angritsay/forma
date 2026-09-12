@@ -28,6 +28,7 @@ import type {
   MarathonRow,
   MarathonTaskPatch,
   MarathonTaskRow,
+  MarathonTaskTarget,
   MarathonTeamRow,
 } from './types';
 
@@ -158,7 +159,6 @@ export function taskPatchToDb(patch: MarathonTaskPatch): Record<string, unknown>
   // A cap only exists for the capped rule; the table's check constraint says so, and clearing it
   // here means switching a task's rule in the editor never leaves a stale ceiling behind.
   if (patch.cap !== undefined) db.cap = patch.cap;
-  if (patch.audience !== undefined) db.audience = patch.audience;
   if (patch.proofVisibility !== undefined) db.proof_visibility = patch.proofVisibility;
   if (patch.dueTime !== undefined) db.due_time = patch.dueTime;
   if (patch.lateCounts !== undefined) db.late_counts = patch.lateCounts;
@@ -316,7 +316,6 @@ function taskSeed(task: MarathonTaskRow): MarathonTaskPatch & { title: string } 
     rule: task.rule,
     points: task.points,
     cap: task.cap,
-    audience: task.audience,
     proofVisibility: task.proofVisibility,
     dueTime: task.dueTime,
     lateCounts: task.lateCounts,
@@ -359,6 +358,59 @@ export async function repeatTask(
     made.push(await createMarathonTask(task.marathonId, { ...taskSeed(task), dayIndex: day }));
   }
   return made;
+}
+
+/**
+ * Who a task goes to. Replacing the whole set in one call, rather than adding and removing rows,
+ * is what the editor actually does — the coach ticks names in a sheet and saves.
+ */
+export async function setTaskTargets(
+  taskId: string,
+  targets: readonly MarathonTaskTarget[],
+): Promise<void> {
+  if (isDemo()) return (await demo()).setTaskTargets(taskId, targets);
+  return guard(async () => {
+    unwrapVoid(await supabase().from('marathon_task_targets').delete().eq('task_id', taskId));
+    if (targets.length === 0) return;
+    unwrapVoid(
+      await supabase()
+        .from('marathon_task_targets')
+        .insert(
+          targets.map((g) => ({
+            task_id: taskId,
+            team_id: g.teamId ?? null,
+            member_id: g.memberId ?? null,
+          })),
+        ),
+    );
+  });
+}
+
+/** Every task's recipients in one load, keyed by task id — the day plan reads it to say «кому». */
+export async function listTaskTargets(
+  marathonId: string,
+): Promise<Map<string, MarathonTaskTarget[]>> {
+  if (isDemo()) return (await demo()).listTaskTargets(marathonId);
+  return guard(async () => {
+    const tasks = await listMarathonTasks(marathonId);
+    const byTask = new Map<string, MarathonTaskTarget[]>();
+    if (tasks.length === 0) return byTask;
+    const rows = unwrap<{ task_id: string; team_id: string | null; member_id: string | null }[]>(
+      await supabase()
+        .from('marathon_task_targets')
+        .select('*')
+        .in(
+          'task_id',
+          tasks.map((t) => t.id),
+        ),
+    );
+    for (const row of rows) {
+      const list = byTask.get(row.task_id) ?? [];
+      list.push({ teamId: row.team_id, memberId: row.member_id });
+      byTask.set(row.task_id, list);
+    }
+    return byTask;
+  });
 }
 
 // --- people and teams --------------------------------------------------------

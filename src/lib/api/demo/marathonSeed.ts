@@ -152,6 +152,8 @@ export interface DemoMarathonSeed {
   teams: MarathonTeamRow[];
   members: MarathonMemberRow[];
   tasks: MarathonTaskRow[];
+  /** Who a task went to; a task with no row here went to everyone. */
+  targets: { taskId: string; teamId: string | null; memberId: string | null }[];
   submissions: MarathonSubmissionRow[];
   adjustments: MarathonAdjustmentRow[];
 }
@@ -267,7 +269,15 @@ export function seedMarathon(email: string, today = toLocalDateIso()): DemoMarat
     },
   ];
 
-  return { marathon, teams, members, tasks, submissions, adjustments };
+  /*
+   * One task addressed to a single pair, because that is the thing the format turns on and an
+   * all-to-everyone seed would never show it: «Растяжка» on day 11 is for Ты и Марек and nobody
+   * else sees it.
+   */
+  const stretch = tasks.find((t) => t.title === 'Растяжка');
+  const targets = stretch ? [{ taskId: stretch.id, teamId: TEAM_MINE, memberId: null }] : [];
+
+  return { marathon, teams, members, tasks, targets, submissions, adjustments };
 }
 
 /** The viewer's own zone, so the demo marathon's day never disagrees with their calendar. */

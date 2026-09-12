@@ -14,7 +14,7 @@
  * team is their own entry of one. That is why `all_members` needs no special case for someone
  * playing alone — a team of one is satisfied by one person.
  */
-import type { MarathonAudience, MarathonRule } from '@/lib/api/types';
+import type { MarathonRule, MarathonTaskTarget } from '@/lib/api/types';
 
 /** The part of a task that decides points. */
 export interface ScorableTask {
@@ -23,7 +23,8 @@ export interface ScorableTask {
   rule: MarathonRule;
   points: number;
   cap: number | null;
-  audience: MarathonAudience;
+  /** Who it was sent to. Empty means everyone. */
+  targets: readonly MarathonTaskTarget[];
 }
 
 /** A proof that has been checked for lateness and voiding already — see {@link countsFor}. */
@@ -37,6 +38,8 @@ export interface ScorableEntry {
   id: string;
   kind: 'team' | 'solo';
   memberIds: string[];
+  /** The team every member of this entry is on, when it is a team. */
+  teamId?: string | null;
 }
 
 /** Week 1 is days 1–7, counted from the marathon's own start rather than from Monday. */
@@ -44,23 +47,44 @@ export function weekOf(dayIndex: number): number {
   return dayIndex < 1 ? 0 : Math.floor((dayIndex - 1) / 7) + 1;
 }
 
-/** Is this task set to this kind of entry at all? */
-export function appliesTo(audience: MarathonAudience, kind: ScorableEntry['kind']): boolean {
-  return audience === 'all' || (audience === 'teams' ? kind === 'team' : kind === 'solo');
+/**
+ * Was this task sent to this person?
+ *
+ * No targets at all means everyone; otherwise they are named, or their team is. This replaced an
+ * audience category, and it is why the rules below read the same for a task sent to the whole
+ * marathon and one sent to a single person: a rule always applies over *the recipients*.
+ */
+export function isRecipient(
+  task: Pick<ScorableTask, 'targets'>,
+  memberId: string,
+  teamId: string | null | undefined,
+): boolean {
+  if (task.targets.length === 0) return true;
+  return task.targets.some(
+    (g) => g.memberId === memberId || (g.teamId !== null && g.teamId === teamId),
+  );
+}
+
+/** The members of an entry a task was sent to. */
+export function recipientsIn(task: Pick<ScorableTask, 'targets'>, entry: ScorableEntry): string[] {
+  return entry.memberIds.filter((id) => isRecipient(task, id, entry.teamId ?? null));
 }
 
 /**
  * What one entry takes for one task, given how many of its members delivered.
  *
- *   all_members  everyone, or nothing — the rule a pair is built on
- *   per_member   every member who delivered earns
+ *   all_members  everyone it was sent to, or nothing — the rule a pair is built on
+ *   per_member   every recipient who delivered earns
  *   capped       per_member, with a ceiling on the entry's total
  *   none         the morning message: never scores
+ *
+ * `asked` is how many members of this entry the task went to — the whole entry for a task sent to
+ * everybody, one person for a task sent to one person.
  */
-export function scoreTask(task: ScorableTask, done: number, entrySize: number): number {
+export function scoreTask(task: ScorableTask, done: number, asked: number): number {
   switch (task.rule) {
     case 'all_members':
-      return entrySize > 0 && done >= entrySize ? task.points : 0;
+      return asked > 0 && done >= asked ? task.points : 0;
     case 'per_member':
       return done * task.points;
     case 'capped':
@@ -172,14 +196,12 @@ export function board(
 ): BoardRow[] {
   const weekTasks = tasks.filter((t) => weekOf(t.dayIndex) === week);
   const totals = entries.map((entry) => {
-    const fromTasks = weekTasks
-      .filter((t) => appliesTo(t.audience, entry.kind))
-      .reduce((sum, task) => {
-        const done = counted.filter(
-          (c) => c.taskId === task.id && entry.memberIds.includes(c.memberId),
-        ).length;
-        return sum + scoreTask(task, done, entry.memberIds.length);
-      }, 0);
+    const fromTasks = weekTasks.reduce((sum, task) => {
+      const asked = recipientsIn(task, entry);
+      if (asked.length === 0) return sum;
+      const done = counted.filter((c) => c.taskId === task.id && asked.includes(c.memberId)).length;
+      return sum + scoreTask(task, done, asked.length);
+    }, 0);
     const fromCoach = adjustments
       .filter((a) => weekOf(a.dayIndex) === week && entry.memberIds.includes(a.memberId))
       .reduce((sum, a) => sum + a.points, 0);

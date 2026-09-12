@@ -1,23 +1,32 @@
 /**
- * The day plan: a strip of days across the top, the chosen day's tasks below it.
+ * The day plan: a calendar you open, a date you tap, and that day's tasks under it.
  *
- * The strip is the point. A marathon is authored one morning at a time, so the question the screen
- * has to answer instantly is "what did I set yesterday, and what is there for tomorrow" — a list of
- * every task in the run, sorted by day, answers it much worse than fourteen numbers you can tap.
+ * It was a horizontal strip of day numbers — 1, 2, 3 … 28 — and that is not how anyone plans a
+ * week. The coach thinks in dates: "Monday" and "the 14th" and "tomorrow", not "day 9 of 28". A
+ * calendar is also the only shape that shows a whole week at once, which is the question he
+ * actually has on a Sunday evening — what is set for the days coming up, and which mornings are
+ * still blank.
  *
- * A day that already has tasks is marked; today is marked differently. That is the whole legend.
+ * Marathon days are the only tappable cells; everything outside the run is drawn but dead. A day
+ * with something on it carries a dot, today carries a ring, and the day being edited is filled.
+ * That is the whole legend.
  */
 import { clsx } from 'clsx';
-import { useEffect, useRef } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Glyph } from '@/components/ui/Icon';
 import { formatNumber, type TKey, type TParams } from '@/i18n/index';
-import type { MarathonRow, MarathonTaskRow } from '@/lib/api/types';
+import type { MarathonRow, MarathonTaskRow, MarathonTaskTarget } from '@/lib/api/types';
+import { addDays } from '@/lib/util/dates';
 import { useT } from '@/app/hooks/useT';
 
 export interface DayPlanProps {
   marathon: MarathonRow;
   tasks: readonly MarathonTaskRow[];
+  /** Who each task goes to, by task id. Missing or empty means everyone. */
+  targets: Map<string, MarathonTaskTarget[]>;
+  /** Names for the recipients, by team id and member id. */
+  names: Map<string, string>;
   day: number;
   today: number;
   onDay: (day: number) => void;
@@ -26,9 +35,28 @@ export interface DayPlanProps {
   onCopyYesterday: () => void;
 }
 
+/** The date a marathon day falls on. Day 1 is `startsOn`. */
+export function dateOfDay(startsOn: string, dayIndex: number): string {
+  return addDays(startsOn, dayIndex - 1);
+}
+
+/** Which marathon day a date is, or 0 when it is outside the run. */
+function dayOfDate(startsOn: string, days: number, iso: string): number {
+  const ms = Date.parse(`${iso}T00:00:00Z`) - Date.parse(`${startsOn}T00:00:00Z`);
+  const n = Math.round(ms / 86_400_000) + 1;
+  return n >= 1 && n <= days ? n : 0;
+}
+
+/** Monday-first weekday index, because the weeks in this product start on Monday. */
+function mondayFirst(date: Date): number {
+  return (date.getUTCDay() + 6) % 7;
+}
+
 export function DayPlan({
   marathon,
   tasks,
+  targets,
+  names,
   day,
   today,
   onDay,
@@ -37,84 +65,142 @@ export function DayPlan({
   onCopyYesterday,
 }: DayPlanProps) {
   const { t, locale } = useT();
-  const strip = useRef<HTMLDivElement>(null);
-  const days = Array.from({ length: marathon.days }, (_, i) => i + 1);
+  const selectedIso = dateOfDay(marathon.startsOn, day);
+  const [monthOf, setMonthOf] = useState(selectedIso.slice(0, 7));
 
-  /*
-   * Bring the chosen day into view. The screen opens on today, which on a four-week marathon is
-   * far off the right edge of the strip — without this the coach lands on a row of days he is not
-   * working on and has to scroll to find the one he is.
-   */
-  useEffect(() => {
-    const selected = strip.current?.querySelector<HTMLElement>('[aria-checked="true"]');
-    selected?.scrollIntoView({ inline: 'center', block: 'nearest' });
-  }, [day]);
-  const counts = new Map<number, number>();
-  for (const task of tasks) counts.set(task.dayIndex, (counts.get(task.dayIndex) ?? 0) + 1);
+  const counts = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const task of tasks) map.set(task.dayIndex, (map.get(task.dayIndex) ?? 0) + 1);
+    return map;
+  }, [tasks]);
+
+  /** The visible month as a grid of whole weeks, so every row has seven cells. */
+  const grid = useMemo(() => {
+    const [y, m] = monthOf.split('-').map(Number);
+    const first = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1, 1));
+    const start = new Date(first);
+    start.setUTCDate(1 - mondayFirst(first));
+    return Array.from({ length: 42 }, (_, i) => {
+      const d = new Date(start);
+      d.setUTCDate(start.getUTCDate() + i);
+      return d.toISOString().slice(0, 10);
+    });
+  }, [monthOf]);
+
+  const monthName = new Intl.DateTimeFormat(locale === 'ru' ? 'ru-RU' : 'en-GB', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(`${monthOf}-01T00:00:00Z`));
+
+  const shiftMonth = (by: number) => {
+    const [y, m] = monthOf.split('-').map(Number);
+    const d = new Date(Date.UTC(y ?? 1970, (m ?? 1) - 1 + by, 1));
+    setMonthOf(d.toISOString().slice(0, 7));
+  };
+
   const onThisDay = tasks
     .filter((task) => task.dayIndex === day)
     .sort((a, b) => a.sortOrder - b.sortOrder);
 
+  const weekdays = useMemo(() => {
+    const fmt = new Intl.DateTimeFormat(locale === 'ru' ? 'ru-RU' : 'en-GB', {
+      weekday: 'short',
+      timeZone: 'UTC',
+    });
+    // 2024-01-01 was a Monday, so this walks Monday → Sunday in the viewer's own language.
+    return Array.from({ length: 7 }, (_, i) => fmt.format(new Date(Date.UTC(2024, 0, 1 + i))));
+  }, [locale]);
+
   return (
     <div className="flex flex-col gap-5">
-      <div
-        ref={strip}
-        role="radiogroup"
-        aria-label={t('app.mAdminTabPlan')}
-        className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 lg:-mx-8 lg:px-8"
-      >
-        {days.map((n) => {
-          const count = counts.get(n) ?? 0;
-          const selected = n === day;
-          return (
-            <button
-              key={n}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              onClick={() => onDay(n)}
-              className={clsx(
-                'flex size-12 shrink-0 flex-col items-center justify-center border transition-colors duration-150 ease-(--ease-out)',
-                selected
-                  ? 'border-primary bg-primary text-bg'
-                  : 'border-border text-muted hover:bg-surface-2',
-              )}
-            >
-              <span className="numeral tabular text-[15px] leading-none">{n}</span>
-              {/*
-               * One dot for "this day has something in it". A count would be noise: what matters
-               * at a glance is which mornings are still blank.
-               */}
-              <span
-                aria-hidden="true"
-                className={clsx(
-                  'mt-1 size-1 rounded-full',
-                  count > 0 ? (selected ? 'bg-bg' : 'bg-muted') : 'bg-transparent',
-                )}
-              />
-            </button>
-          );
-        })}
+      <div className="flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={() => shiftMonth(-1)}
+          aria-label={t('app.mAdminPrevMonth')}
+          className="flex size-9 items-center justify-center text-muted hover:text-text"
+        >
+          <Glyph size={16}>‹</Glyph>
+        </button>
+        <h2 className="font-display text-base first-letter:uppercase">{monthName}</h2>
+        <button
+          type="button"
+          onClick={() => shiftMonth(1)}
+          aria-label={t('app.mAdminNextMonth')}
+          className="flex size-9 items-center justify-center text-muted hover:text-text"
+        >
+          <Glyph size={16}>›</Glyph>
+        </button>
       </div>
 
-      {/*
-       * The day's heading on its own line. It shared a row with «Скопировать вчерашний день», and
-       * the two of them together are wider than a phone: the heading wrapped between «ДЕНЬ» and
-       * «10», which is the one thing on this screen that must read at a glance.
-       */}
-      <h2 className="font-display text-xl">
-        {t('app.mAdminDay', { n: formatNumber(locale, day) })}
-        {day === today ? (
-          <span className="ml-2 text-[13px] font-normal text-muted-2">
-            {t('app.mAdminDayToday')}
-          </span>
-        ) : null}
-      </h2>
+      <div>
+        <div className="grid grid-cols-7 gap-1 pb-1.5">
+          {weekdays.map((name) => (
+            <span key={name} className="control-label text-center text-[10px] text-muted-2">
+              {name}
+            </span>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-1" role="grid" aria-label={t('app.mAdminTabPlan')}>
+          {grid.map((iso) => {
+            const n = dayOfDate(marathon.startsOn, marathon.days, iso);
+            const inRun = n > 0;
+            const selected = n === day;
+            const isToday = n > 0 && n === today;
+            const count = counts.get(n) ?? 0;
+            const dayNumber = Number(iso.slice(8, 10));
+            return (
+              <button
+                key={iso}
+                type="button"
+                role="gridcell"
+                disabled={!inRun}
+                aria-current={selected ? 'date' : undefined}
+                aria-label={`${iso}${count > 0 ? ` · ${t('app.mAdminTaskCount', { n: count })}` : ''}`}
+                onClick={() => inRun && onDay(n)}
+                className={clsx(
+                  'relative flex aspect-square flex-col items-center justify-center border text-[13px]',
+                  'transition-colors duration-150 ease-(--ease-out)',
+                  selected
+                    ? 'border-primary bg-primary text-bg'
+                    : inRun
+                      ? 'border-border text-text hover:bg-surface-2'
+                      : // Outside the run: drawn so the week keeps its shape, and nothing more.
+                        'border-transparent text-muted-2/40',
+                  isToday && !selected && 'border-primary',
+                )}
+              >
+                <span className="numeral tabular leading-none">{dayNumber}</span>
+                <span
+                  aria-hidden="true"
+                  className={clsx(
+                    'mt-1 size-1 rounded-full',
+                    count > 0 ? (selected ? 'bg-bg' : 'bg-text') : 'bg-transparent',
+                  )}
+                />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex items-baseline justify-between gap-3 border-t border-border pt-4">
+        <h3 className="font-display text-xl">
+          {longDate(locale, selectedIso)}
+          {day === today ? (
+            <span className="ml-2 text-[13px] font-normal text-muted-2">
+              {t('app.mAdminDayToday')}
+            </span>
+          ) : null}
+        </h3>
+        <span className="eyebrow whitespace-nowrap">
+          {t('app.mAdminDay', { n: formatNumber(locale, day) })}
+        </span>
+      </div>
 
       {onThisDay.length === 0 ? (
-        <p className="border-t border-border py-6 text-[15px] text-muted-2">
-          {t('app.mAdminDayEmpty')}
-        </p>
+        <p className="py-4 text-[15px] text-muted-2">{t('app.mAdminDayEmpty')}</p>
       ) : (
         <ul className="flex flex-col">
           {onThisDay.map((task) => (
@@ -129,21 +215,11 @@ export function DayPlan({
                     {task.title}
                   </span>
                   <span className="flex flex-wrap items-center gap-2 text-xs text-muted">
-                    <span>{ruleWord(task, t)}</span>
-                    {task.audience !== 'all' ? (
-                      <span>
-                        ·{' '}
-                        {task.audience === 'teams'
-                          ? t('app.mAdminAudienceTeams')
-                          : t('app.mAdminAudienceSolo')}
-                      </span>
-                    ) : null}
-                    {task.proofVisibility === 'coach' ? (
-                      <span>· {t('app.mAdminVisibilityCoach')}</span>
-                    ) : null}
+                    {/* Who it went to comes first: on a day with three tasks it is the difference. */}
+                    <span>{recipientsLabel(t, targets.get(task.id), names)}</span>
+                    <span className="text-muted-2">· {ruleWord(task, t)}</span>
                   </span>
                 </span>
-                {/* The rule already says «Без баллов»; a badge repeating it is the same word twice. */}
                 {task.rule !== 'none' ? (
                   <span className="numeral tabular shrink-0 text-sm text-muted">
                     {formatNumber(locale, task.points)}
@@ -170,6 +246,34 @@ export function DayPlan({
       </div>
     </div>
   );
+}
+
+/**
+ * «12 сентября, сб» — the heading over the day being edited, and the title of the sheet that
+ * opens from it. A short weekday, because the long one wrapped the heading onto two lines and the
+ * date is the part being read.
+ */
+export function longDate(locale: string, iso: string): string {
+  return new Intl.DateTimeFormat(locale === 'ru' ? 'ru-RU' : 'en-GB', {
+    day: 'numeric',
+    month: 'long',
+    weekday: 'short',
+    timeZone: 'UTC',
+  }).format(new Date(`${iso}T00:00:00Z`));
+}
+
+/** «Всем», or the names it was actually sent to. */
+function recipientsLabel(
+  t: (key: TKey, params?: TParams) => string,
+  targets: MarathonTaskTarget[] | undefined,
+  names: Map<string, string>,
+): string {
+  if (!targets || targets.length === 0) return t('app.mAdminSendAll');
+  const who = targets
+    .map((g) => names.get(g.teamId ?? g.memberId ?? '') ?? '—')
+    .filter(Boolean)
+    .join(', ');
+  return t('app.mAdminSendSummary', { who });
 }
 
 /** The rule in the same words the athlete's card uses, so both sides describe it the same way. */
