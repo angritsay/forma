@@ -200,7 +200,8 @@ prescribeWorkout(workout: Workout, opts: PrescribeOptions, lookup?: ExerciseLook
 estimateDuration(p: PrescribedWorkout): DurationEstimate                        // seconds, per block
 estimatePoints(workout: Workout, choice: DifficultyChoice, opts?: { repeat?: boolean; streakDays?: number }): number
 estimateCalories(p: PrescribedWorkout, weightKg?: number, lookup?: ExerciseLookup): number
-buildPlayerSteps(p: PrescribedWorkout): PlayerStep[]                            // explain → work → rest … → done
+buildPlayerSteps(p: PrescribedWorkout): PlayerStep[]                            // block_intro → work → rest … → done
+warmupSkipIndex(steps: readonly PlayerStep[], p: PrescribedWorkout): number | null  // where "skip the warm-up" lands
 summarizeSession(p: PrescribedWorkout, results: ExerciseResult[], feedback: SessionFeedback, opts): SessionSummary
 adaptScale(state: CourseState, summary: SessionSummary): { scale: number; delta: number; reason: L10n }
 computeStreak(days: DayActivity[], todayIso: string): StreakInfo
@@ -346,14 +347,21 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    points), owned courses row, locked courses row with "Get course" CTA linking to landing.
 4. **Course path**: vertical winding path grouped by week; node states done/current/locked; rest
    nodes; test/benchmark nodes; header with progress %, leaderboard button.
-5. **Node preview**: plan (blocks → exercises with animation thumbnails and prescribed numbers),
-   difficulty chooser with three cards (Easier / As usual / Harder): each shows estimated duration
-   and points; the recommended one is badged with the reason; "Start".
-6. **Player**: per exercise: explanation step (name, animation/video, cues) → work step
-   (animation background + timer for seconds / rep counter with "Done" for reps / load shown when
-   loadable) → rest countdown (skippable) → next. Controls: Previous, Pause, Next. Block intros.
-   Progress bar and elapsed time. Leaving asks for confirmation; unfinished session persists locally
-   and can be resumed.
+5. **Node preview**: the picture (a still from the movement's clip, else the drawn figure), the
+   workout's name, the programme and day, three facts, and "Start". Everything else — focus,
+   description, the movement grid, the plan block by block — is folded behind "What's inside".
+   Pressing Start opens the difficulty sheet (Easier / As usual / Harder, each with its estimated
+   duration, points and kcal; the recommended one badged with the reason); picking one starts the
+   session immediately — there is no second preview and no confirm button.
+6. **Player**: one card the size of the screen, with two sides. Front: the clip (or the drawn
+   figure), auto-playing, with a back arrow and pause at the top and, at the bottom, the movement's
+   name and its one number — a countdown for timed work, an adjustable rep count with "Done" for
+   reps. Nothing else: no elapsed clock, no sound control, no step counter, no next-up line. Back:
+   the coach's words as tabs (technique + breathing, cues + mistakes, contraindications + muscles),
+   reached by swiping up or the "How to do it" handle — never by scrolling over the clip. A session
+   that opens with a warm-up starts inside it, with no gate and no intro; skipping the warm-up,
+   skipping or restarting a step, stepping back and ending the session all live behind Pause.
+   Leaving asks for confirmation; an unfinished session persists locally and can be resumed.
 7. **Summary + feedback**: time, points, calories, completion; RPE slider 1–10 with descriptors;
    feeling chips (great / ok / hard / pain); notes; "Save" → adaptation message ("next time +5%").
 8. **Stats**: weekly workouts/minutes/points chart, streak calendar, steps chart, personal records,

@@ -7,7 +7,7 @@ import {
   profile,
   workout,
 } from './fixtures.test-helpers';
-import { amrapExpectedRounds, buildPlayerSteps } from './player';
+import { amrapExpectedRounds, buildPlayerSteps, warmupSkipIndex } from './player';
 import { prescribeWorkout } from './prescribe';
 import type { PlayerStep, PrescribeOptions } from './types';
 
@@ -226,19 +226,18 @@ describe('buildPlayerSteps — timed formats', () => {
     const a = buildPlayerSteps(p);
     const b = buildPlayerSteps(p);
     expect(a).toEqual(b);
-    // The opening warm-up is introduced by the gate, which stands in for its block intro.
-    const gate = a[0];
-    if (gate?.kind !== 'warmup_gate') throw new Error('expected the warm-up gate');
+    // The opening warm-up has no screen in front of it at all: the session starts inside it.
     expect(p.blocks[0]?.type).toBe('warmup');
-    expect(gate.blockId).toBe(p.blocks[0]?.blockId);
-    // The first real block intro is the block after the warm-up, with its metadata carried over.
+    expect(a[0]?.kind).not.toBe('block_intro');
+    expect('blockId' in a[0]! ? a[0]!.blockId : null).toBe(p.blocks[0]?.blockId);
+    // The first block intro is the block after the warm-up, with its metadata carried over.
     const intro = a.find((s) => s.kind === 'block_intro');
     if (intro?.kind !== 'block_intro') throw new Error('expected intro');
     expect(intro.blockIndex).toBe(1);
     expect(intro.blockId).toBe(p.blocks[1]?.blockId);
     expect(intro.type).toBe(p.blocks[1]?.type);
     expect(intro.format).toBe(p.blocks[1]?.format);
-    // Five blocks, four intros: the warm-up's is the gate.
+    // Five blocks, four intros: the warm-up gets none.
     expect(a.filter((s) => s.kind === 'block_intro')).toHaveLength(4);
     expect(a[a.length - 1]).toEqual({ kind: 'done' });
   });
@@ -258,21 +257,36 @@ describe('buildPlayerSteps — rest previews what is coming', () => {
     expect(rests(steps)[0]!.nextExerciseId).toBe('air_squat');
   });
 
-  it('opens a session that starts with a warm-up on the gate; skipping lands after the warm-up', () => {
-    const steps = buildPlayerSteps(prescribeWorkout(FULL_WORKOUT, opts, fixtureLookup));
-    const gate = steps[0];
-    expect(gate?.kind).toBe('warmup_gate');
-    if (gate?.kind !== 'warmup_gate') return;
+  it('opens a session straight inside the warm-up, and says where skipping it lands', () => {
+    const p = prescribeWorkout(FULL_WORKOUT, opts, fixtureLookup);
+    const steps = buildPlayerSteps(p);
+    const warmupId = p.blocks[0]!.blockId;
+    // No gate and no intro: the first step is the first movement of the warm-up itself.
+    expect(steps[0]?.kind).toBe('work');
+    expect(steps.some((s) => s.kind === 'block_intro' && s.blockId === warmupId)).toBe(false);
+
+    const skipTo = warmupSkipIndex(steps, p);
+    if (skipTo === null) throw new Error('expected a warm-up to skip');
     // Everything before the skip target belongs to the warm-up block.
-    for (let i = 1; i < gate.skipToIndex; i++) {
+    for (let i = 0; i < skipTo; i++) {
       const s = steps[i]!;
-      expect('blockId' in s ? s.blockId : gate.blockId).toBe(gate.blockId);
+      expect('blockId' in s ? s.blockId : warmupId).toBe(warmupId);
     }
-    const target = steps[gate.skipToIndex]!;
-    expect(target.kind === 'done' || ('blockId' in target && target.blockId !== gate.blockId)).toBe(
+    const target = steps[skipTo]!;
+    expect(target.kind === 'done' || ('blockId' in target && target.blockId !== warmupId)).toBe(
       true,
     );
-    // The gate is the warm-up's intro: no separate block intro for that block.
-    expect(steps.some((s) => s.kind === 'block_intro' && s.blockId === gate.blockId)).toBe(false);
+  });
+
+  it('has nothing to skip when the workout does not open with a warm-up', () => {
+    const p = prescribeWorkout(
+      {
+        ...FULL_WORKOUT,
+        blocks: FULL_WORKOUT.blocks.filter((b) => b.type !== 'warmup'),
+      },
+      opts,
+      fixtureLookup,
+    );
+    expect(warmupSkipIndex(buildPlayerSteps(p), p)).toBeNull();
   });
 });

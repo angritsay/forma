@@ -1,29 +1,39 @@
 /**
  * Workout player (docs/SPEC.md §10 flow 6) at /play.
  *
- * The screen is the coach's clip — one full viewport of it, or the drawn figure where a movement has
- * no footage — and over it only what someone mid-set can read at arm's length: the step and the elapsed clock pinned to the top, the movement's own numbers and the
- * transport pinned to the bottom. Everything that is words — technique, the block's list, the
- * coach's notes — is below the fold, reached by a scroll, so it can never come between the athlete
- * and the demonstration. Both pinned ends stay put while those words scroll past.
+ * The player is **one card**, the size of the screen, and it has two sides.
+ *
+ * Its front is the coach's clip — one full viewport of it, playing by itself the moment the step
+ * arrives, or the drawn figure where a movement has no footage. Over it: a way out and a way to
+ * stop at the top, and at the bottom the movement's name and the one number that matters, «10
+ * повторов» or a countdown. Nothing else is on it. No elapsed clock, no sound control, no step
+ * counter, no preview of the next movement — an athlete mid-set should not have to read anything
+ * they did not come here to read.
+ *
+ * Its back is every word the coach wrote: how the movement goes, what he keeps correcting, who
+ * should not do it. You get there by turning the card over — a swipe up, or the handle under the
+ * transport — and never by scrolling, because scrolling a video is how text ends up half on top of
+ * the demonstration.
  *
  * State lives in `useActiveWorkoutStore` (persisted), so leaving keeps the session resumable.
- * Keyboard: Space = pause, → next, ← previous.
+ * Keyboard: Space = pause, → next, ← previous, Esc = turn the card back over.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { IconButton } from '@/components/ui/IconButton';
 import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
 import { TopBar } from '@/app/components/TopBar';
+import { CardBack } from '@/app/features/player/CardBack';
+import { FlipCard } from '@/app/features/player/FlipCard';
 import {
-  Controls,
+  FlipHandle,
   PausedOverlay,
   PlayerFooter,
   PlayerHeader,
-  ScrollCue,
   SectionStepper,
 } from '@/app/features/player/PlayerChrome';
 import {
@@ -32,21 +42,20 @@ import {
   sectionOfStep,
   skippedResult,
   stepAnimation,
+  stepTitle,
   stepVideoRef,
-  nextStepTitle,
   workoutSections,
 } from '@/app/features/player/model';
 import { useSound } from '@/app/features/player/sound';
-import { StepDetails } from '@/app/features/player/StepDetails';
 import { AmrapStep } from '@/app/features/player/steps/AmrapStep';
 import { BlockIntroStep } from '@/app/features/player/steps/BlockIntroStep';
 import { FortimeStep } from '@/app/features/player/steps/FortimeStep';
 import { RestStep } from '@/app/features/player/steps/RestStep';
 import { TestStep } from '@/app/features/player/steps/TestStep';
-import { WarmupGateStep } from '@/app/features/player/steps/WarmupGateStep';
 import { WorkRepsStep } from '@/app/features/player/steps/WorkRepsStep';
 import { WorkTimerStep } from '@/app/features/player/steps/WorkTimerStep';
 import { haptic, setClosingConfirmation } from '@/lib/telegram/webapp';
+import { warmupSkipIndex } from '@/lib/training/player';
 import { courseTileVars } from '@/lib/ui/tile';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
 import { useWakeLock } from '@/app/features/player/useWakeLock';
@@ -84,14 +93,14 @@ interface ArtLayerProps {
 }
 
 /**
- * The demonstration, filling the screen: video where the movement was filmed, the drawn figure on
+ * The demonstration, filling the card: video where the movement was filmed, the drawn figure on
  * the programme colour where it was not.
  *
- * Either way it is a silent loop behind the clock. The clips are encoded with no audio track at
- * all (scripts/media/prepare-videos.mjs), so there is nothing to mute: the coach talks through
- * each movement while filming, which is worth watching once and wrong to have start up by itself
- * in the middle of someone's set. `muted` is still set on the element — without it a browser
- * refuses to autoplay, audio track or no.
+ * It starts by itself the moment the step changes — that is what `key={videoUrl}` and the effect
+ * below are for — because the athlete arriving at a movement wants to see it, not press play on
+ * it. Either way it is a silent loop: the clips are encoded with no audio track at all
+ * (scripts/media/prepare-videos.mjs), so there is nothing to mute. `muted` is still set on the
+ * element — without it a browser refuses to autoplay, audio track or no.
  */
 function ArtLayer({ animation, playing, videoUrl }: ArtLayerProps) {
   const video = useRef<HTMLVideoElement>(null);
@@ -146,7 +155,6 @@ interface StepViewProps {
   beep: (cue: 'tick' | 'go' | 'round' | 'end') => void;
   onRecord: (result: PlayerResult) => void;
   onNext: () => void;
-  onGoTo: (index: number) => void;
   registerNext: (fn: (() => void) | null) => void;
 }
 
@@ -158,13 +166,10 @@ function StepView({
   beep,
   onRecord,
   onNext,
-  onGoTo,
   registerNext,
 }: StepViewProps) {
   const prescribed = session.prescribed;
   switch (step.kind) {
-    case 'warmup_gate':
-      return <WarmupGateStep onGo={onNext} onSkip={() => onGoTo(step.skipToIndex)} />;
     case 'block_intro':
       return <BlockIntroStep step={step} prescribed={prescribed} onNext={onNext} />;
     case 'work': {
@@ -222,10 +227,9 @@ interface PlayerProps {
   steps: PlayerStep[];
   stepIndex: number;
   paused: boolean;
-  elapsedSec: number;
 }
 
-function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) {
+function Player({ session, steps, stepIndex, paused }: PlayerProps) {
   const { t, locale } = useT();
   const navigate = useNavigate();
   const sound = useSound();
@@ -239,6 +243,7 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
 
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [endOpen, setEndOpen] = useState(false);
+  const [flipped, setFlipped] = useState(false);
   const [restartNonce, setRestartNonce] = useState(0);
   const nextHandler = useRef<(() => void) | null>(null);
   const registerNext = useCallback((fn: (() => void) | null) => {
@@ -253,14 +258,15 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
   const courseVars = courseTileVars(findCourse(session.courseId)?.tile);
 
   const animation = step ? stepAnimation(step, prescribed) : undefined;
-  /*
-   * «Дальше: приседания», under the transport.
-   *
-   * She asked for it in as many words — "чтобы он сразу понимал, что он делает сейчас и что он
-   * делает потом" — and it is the one piece of text this screen gained while losing four others.
-   */
-  const nextTitle = nextStepTitle(t, locale, steps, stepIndex, prescribed);
   const videoUrl = useMediaUrl(stepVideoRef(step, locale));
+
+  /*
+   * Arriving at a new movement always shows the movement. Someone who turned the card over to read
+   * the technique of the last exercise did not ask to start the next one facing away from it.
+   */
+  useEffect(() => {
+    setFlipped(false);
+  }, [stepIndex]);
 
   // The last step is `done`: close the session and hand over to the summary.
   useEffect(() => {
@@ -276,7 +282,10 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
     return () => setClosingConfirmation(false);
   }, []);
 
-  // Elapsed clock: the store derives seconds from timestamps; this only asks it to re-derive.
+  /*
+   * The store still derives an elapsed time from timestamps — the summary reports it — and this
+   * only asks it to re-derive. It is no longer drawn anywhere on the card.
+   */
   useEffect(() => {
     if (paused) return;
     tick();
@@ -311,6 +320,10 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
       const tag = el?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el?.isContentEditable)
         return;
+      if (e.key === 'Escape') {
+        setFlipped(false);
+        return;
+      }
       if (e.key === ' ' || e.code === 'Space') {
         if (tag === 'BUTTON') return;
         e.preventDefault();
@@ -349,80 +362,100 @@ function Player({ session, steps, stepIndex, paused, elapsedSec }: PlayerProps) 
     navigate(session.courseId === 'custom' ? '/' : `/courses/${session.courseId}`);
   };
 
+  /*
+   * «Пропустить разминку», offered for as long as the athlete is still inside it.
+   *
+   * The session no longer asks "shall we warm up?" before it starts — it just starts warming up —
+   * so the way out of the warm-up has to be available the whole way through it rather than once,
+   * at a gate, before anyone has seen what the warm-up is.
+   */
+  const skipWarmupTo = warmupSkipIndex(steps, prescribed);
+  const inWarmup =
+    skipWarmupTo !== null && stepIndex < skipWarmupTo && step?.kind !== 'done'
+      ? skipWarmupTo
+      : null;
+
   return (
     // The player is the only route that does not go through <Screen>, so it carries the app's
-    // <main> landmark itself.
-    <main className="relative bg-bg" style={courseVars} onPointerDownCapture={unlock}>
-      {/*
-       * The stage: one viewport of the demonstration and nothing in it. The header floats over the
-       * top of it and the footer over the bottom, so the frame really does run edge to edge.
-       */}
-      <section className="relative h-dvh w-full overflow-hidden">
-        <ArtLayer animation={animation} playing={!paused} videoUrl={videoUrl} />
-      </section>
-
-      {/*
-       * Below the fold. Nothing here is needed to do the set — it is the part someone scrolls to
-       * when they want to check how the movement goes, or what else is in this block.
-       */}
-      <section /*
-       * `pb-8` clears the fade the footer draws above itself: it is decoration over the page,
-       * and without the room the last line of the technique ends underneath it.
-       */
-        className="relative z-10 mx-auto flex w-full max-w-[560px] flex-col gap-5 bg-bg px-5 pt-5 pb-8"
-      >
-        {step ? (
-          <SectionStepper
-            sections={workoutSections(prescribed)}
-            current={sectionOfStep(step, prescribed)}
-          />
-        ) : null}
-        {step ? <StepDetails step={step} prescribed={prescribed} /> : null}
-      </section>
-
-      <PlayerHeader
-        progress={steps.length > 1 ? stepIndex / (steps.length - 1) : 0}
-        elapsedSec={elapsedSec}
-        onBack={() => setLeaveOpen(true)}
+    // <main> landmark itself. Fixed and clipped: the card is exactly the viewport, and the page
+    // behind it does not scroll — turning the card over is the only way off the front.
+    <main className="fixed inset-0 overflow-hidden bg-bg" style={courseVars}>
+      <FlipCard
+        flipped={flipped}
+        onFlip={setFlipped}
+        front={
+          <div className="relative size-full overflow-hidden" onPointerDownCapture={unlock}>
+            <ArtLayer animation={animation} playing={!paused} videoUrl={videoUrl} />
+            <PlayerHeader
+              progress={steps.length > 1 ? stepIndex / (steps.length - 1) : 0}
+              paused={paused}
+              onBack={() => setLeaveOpen(true)}
+              onTogglePause={togglePause}
+            />
+            <PlayerFooter>
+              {step ? (
+                <StepView
+                  key={`${stepIndex}:${restartNonce}`}
+                  step={step}
+                  index={stepIndex}
+                  session={session}
+                  paused={paused}
+                  beep={sound.beep}
+                  onRecord={recordResult}
+                  onNext={next}
+                  registerNext={registerNext}
+                />
+              ) : null}
+              {step && step.kind !== 'done' ? (
+                <FlipHandle onFlip={() => setFlipped(true)} label={t('app.playerHowTo')} />
+              ) : null}
+            </PlayerFooter>
+          </div>
+        }
+        back={
+          <div className="flex size-full flex-col bg-surface text-text">
+            <header className="flex items-center gap-2 border-b border-border px-3 pt-[var(--safe-top)]">
+              <div className="flex h-14 min-w-0 flex-1 items-center">
+                <span className="font-display truncate text-[17px]">
+                  {step ? stepTitle(t, locale, step, prescribed) : ''}
+                </span>
+              </div>
+              <IconButton
+                label={t('app.playerBackToVideo')}
+                icon="close"
+                onClick={() => setFlipped(false)}
+              />
+            </header>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              <div className="mx-auto flex w-full max-w-[560px] flex-col gap-5 px-5 pt-5 pb-[calc(var(--safe-bottom)+32px+var(--demo-inset,0px))]">
+                {step ? (
+                  <SectionStepper
+                    sections={workoutSections(prescribed)}
+                    current={sectionOfStep(step, prescribed)}
+                  />
+                ) : null}
+                {step ? <CardBack step={step} prescribed={prescribed} /> : null}
+              </div>
+            </div>
+          </div>
+        }
       />
-      {/*
-       * There is no unmute button over the video. The clips carry no audio track at all
-       * (scripts/media/prepare-videos.mjs), so the button toggled nothing — it just promised a
-       * voice that was not there. The header's sound control is a different thing and stays: that
-       * one is the app's own timer cues.
-       */}
-      <PlayerFooter>
-        {step ? (
-          <StepView
-            key={`${stepIndex}:${restartNonce}`}
-            step={step}
-            index={stepIndex}
-            session={session}
-            paused={paused}
-            beep={sound.beep}
-            onRecord={recordResult}
-            onNext={next}
-            onGoTo={goTo}
-            registerNext={registerNext}
-          />
-        ) : null}
-        {nextTitle ? (
-          <p className="mt-4 truncate text-center text-[13px] text-paper/70">
-            <span className="control-label text-[10px] text-paper/50">
-              {t('app.playerNextLabel')}
-            </span>{' '}
-            {nextTitle}
-          </p>
-        ) : null}
-        <div className="mt-4">
-          <Controls paused={paused} onTogglePause={togglePause} />
-        </div>
-        <ScrollCue label={t('app.playerMoreBelow')} />
-      </PlayerFooter>
+
       {paused && step?.kind !== 'done' ? (
         <PausedOverlay
           onResume={togglePause}
           actions={[
+            ...(inWarmup !== null
+              ? [
+                  {
+                    label: t('app.playerSkipWarmup'),
+                    onClick: () => {
+                      setPaused(false);
+                      goTo(inWarmup);
+                    },
+                  },
+                ]
+              : []),
             ...(stepIndex > 0
               ? [
                   {
@@ -481,18 +514,9 @@ export default function PlayerScreen() {
   const steps = useActiveWorkoutStore((s) => s.steps);
   const stepIndex = useActiveWorkoutStore((s) => s.stepIndex);
   const paused = useActiveWorkoutStore((s) => s.paused);
-  const elapsedSec = useActiveWorkoutStore((s) => s.elapsedSec);
   const finishedAt = useActiveWorkoutStore((s) => s.finishedAt);
 
   if (!session) return <NoSession />;
   if (finishedAt) return <Navigate to={`/summary/${session.sessionId}`} replace />;
-  return (
-    <Player
-      session={session}
-      steps={steps}
-      stepIndex={stepIndex}
-      paused={paused}
-      elapsedSec={elapsedSec}
-    />
-  );
+  return <Player session={session} steps={steps} stepIndex={stepIndex} paused={paused} />;
 }

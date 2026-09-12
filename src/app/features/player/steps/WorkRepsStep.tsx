@@ -24,7 +24,8 @@ export interface WorkRepsStepProps {
  * mid-set. There were two chips under the number — the load, and a warning when the count differed
  * from the target — and neither survived: the load is a fact, so it is a line, and the target is
  * what the stepper already opens on, so a chip announcing that you have changed it is telling
- * someone what they just did. The coach's note and the technique sit below the fold (StepDetails).
+ * someone what they just did. The coach's note and the technique are on the back of the card
+ * (CardBack.tsx).
  */
 export function WorkRepsStep({
   step,

@@ -99,7 +99,9 @@ export function Tabs<T extends string>({
                 ? clsx(
                     // 40px tall by design; `tap-target-y` (global.css) reaches the 44px minimum.
                     // Cells are ruled off from each other by a hairline, not by a gap.
-                    'tap-target-y h-10 flex-1 justify-center border-l border-border-strong px-4 first:border-l-0',
+                    // `min-w-0` so three long labels shrink their cells instead of running over
+                    // each other — a Russian «Противопоказания» is wider than a third of a phone.
+                    'tap-target-y h-10 min-w-0 flex-1 justify-center border-l border-border-strong px-2 first:border-l-0',
                     selected ? 'bg-primary text-on-primary' : 'text-muted hover:text-text',
                   )
                 : clsx(
@@ -110,7 +112,7 @@ export function Tabs<T extends string>({
                   ),
             )}
           >
-            {tab.label}
+            <span className={clsx(fill && 'min-w-0 truncate')}>{tab.label}</span>
             {tab.count !== undefined ? (
               <span className="tabular text-[11px] font-medium opacity-70">{tab.count}</span>
             ) : null}

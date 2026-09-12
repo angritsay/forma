@@ -181,16 +181,6 @@ export interface DurationEstimate {
 
 export type PlayerStep =
   | {
-      /**
-       * "Сначала разомнёмся?" — the first screen of a session that opens with a warm-up. Replaces
-       * the warm-up's block intro: one tap starts it, the other jumps to `skipToIndex`, the first
-       * step after the warm-up block.
-       */
-      kind: 'warmup_gate';
-      blockId: string;
-      skipToIndex: number;
-    }
-  | {
       kind: 'block_intro';
       blockId: string;
       blockIndex: number;
