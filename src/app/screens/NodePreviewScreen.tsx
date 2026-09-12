@@ -26,7 +26,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { courseTitle, findCourse } from '@/content/catalogue';
 import { startSession } from '@/lib/api/sessions';
-import { estimateCalories, estimateDuration } from '@/lib/training/estimate';
+import { estimateCalories, estimateDuration, workoutVolume } from '@/lib/training/estimate';
 import { prescribeWorkout } from '@/lib/training/prescribe';
 import { recommendDifficulty } from '@/lib/training/session';
 import type {
@@ -119,12 +119,15 @@ export default function NodePreviewScreen() {
         streakDays,
       };
       const prescribed = prescribeWorkout(workout, opts);
+      const volume = workoutVolume(prescribed);
       return {
         choice: c,
         prescribed,
         durationSec: estimateDuration(prescribed).totalSec,
         points: prescribed.points,
         calories: estimateCalories(prescribed, ctx.weightKg),
+        reps: volume.reps,
+        workSec: volume.workSec,
       };
     });
   }, [workout, ctx, engineState.scale, deload, repeat, streakDays]);
