@@ -273,6 +273,7 @@ describe('daily logs / benchmarks', () => {
         steps: '8200',
         points: 35,
         note: null,
+        proof_path: 'storage:proofs/steps/u/2026-09-02.jpg',
         updated_at: 't',
       }),
     ).toEqual({
@@ -281,8 +282,23 @@ describe('daily logs / benchmarks', () => {
       steps: 8200,
       points: 35,
       note: null,
+      proofPath: 'storage:proofs/steps/u/2026-09-02.jpg',
       updatedAt: 't',
     });
+  });
+
+  it('reads a row from a project that has not run 0012 yet', () => {
+    // The column simply is not selected there; the day has no screenshot rather than no row.
+    expect(
+      dailyLogFromDb({
+        user_id: 'u',
+        local_date: '2026-09-02',
+        steps: 1,
+        points: 0,
+        note: null,
+        updated_at: 't',
+      }).proofPath,
+    ).toBeNull();
   });
 
   it('groups benchmarks by key, most recent first', () => {

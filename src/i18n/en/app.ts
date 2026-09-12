@@ -546,6 +546,11 @@ export const app = {
   stepsWhyTitle: 'Why type them in?',
   stepsWhyBody:
     'A web app can’t read your phone’s pedometer. Open Health on iPhone, or Google Fit / your phone’s fitness app, find today’s steps and copy the number here. Once a day, in the evening, is enough — the day counts from {goal} steps.',
+  stepsProofAdd: 'Add a screenshot',
+  stepsProofHint: 'Your step counter — the coach sees where the number came from',
+  stepsProofAttached: 'Screenshot attached',
+  stepsProofOpen: 'Open the screenshot',
+  stepsProofError: 'The screenshot could not be uploaded',
   stepsHistoryTitle: 'Last 14 days',
   stepsNotLogged: 'Not logged',
   stepsEdit: 'Edit',

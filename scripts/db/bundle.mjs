@@ -29,6 +29,7 @@ const FILES = [
   ['0008_course_builder.sql', 'courses and days authored in the admin panel, and publishing'],
   ['0010_public_course_pages.sql', 'anonymous reads of a published course, so it gets a page'],
   ['0011_marathon.sql', 'marathons: daily tasks, proof, teams and the weekly board'],
+  ['0012_step_proofs.sql', 'a screenshot of the step counter, filed against the day'],
 ];
 
 /**

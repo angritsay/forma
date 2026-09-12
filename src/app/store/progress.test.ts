@@ -119,6 +119,7 @@ describe('selectStreak', () => {
         steps: 7500,
         points: 30,
         note: null,
+        proofPath: null,
         updatedAt: '',
       },
     };

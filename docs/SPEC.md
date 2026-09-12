@@ -370,7 +370,10 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
 8. **Stats**: weekly workouts/minutes/points chart, streak calendar, steps chart, personal records,
    achievements.
 9. **Leaderboard**: tabs week / all-time, course filter, top-100 with own row pinned.
-10. **Steps**: log today's steps (manual input; explain why), history, goal 7000.
+10. **Steps**: log today's steps (manual input; explain why), history, goal 7000. A day may also
+    carry a screenshot of the athlete's own step counter — attached the moment it is picked, held
+    in the private `proofs` bucket, visible to the athlete and the coach and nobody else. It is
+    evidence, not arithmetic: points still come from the number.
 11. **Profile**: name, avatar seed, units, equipment/weights, retake tests, sign
     out; admin link if admin.
 12. **Admin**: purchases list (search by email, filter status), activate / refund, add purchase.

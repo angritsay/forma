@@ -26,7 +26,15 @@ function session(partial: Partial<WorkoutSessionRow> & { localDate: string }): W
 }
 
 function log(localDate: string, steps: number, points = 0): DailyLogRow {
-  return { userId: 'u', localDate, steps, points, note: null, updatedAt: `${localDate}T20:00:00Z` };
+  return {
+    userId: 'u',
+    localDate,
+    steps,
+    points,
+    note: null,
+    proofPath: null,
+    updatedAt: `${localDate}T20:00:00Z`,
+  };
 }
 
 // 2026-09-02 is a Wednesday; the ISO week starts on 2026-08-31.

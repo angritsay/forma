@@ -20,6 +20,7 @@ export const common = {
   save: 'Save',
   done: 'Done',
   close: 'Close',
+  remove: 'Remove',
   skip: 'Skip',
   start: 'Start',
   openApp: 'Open the app',

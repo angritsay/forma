@@ -2,6 +2,11 @@
  * Steps (docs/SPEC.md §10 flow 10): log today's steps by hand (with the reason why), the goal
  * ring and points preview, and the last 14 days with an edit sheet. Saving upserts the daily
  * log, pushes it into the progress store and reports what it did to the streak.
+ *
+ * A day may also carry a screenshot of the athlete's own step counter. It is attached the moment
+ * it is picked rather than waiting for Save — an upload is slow enough that batching it behind a
+ * button would mean staring at a spinner, and it is its own fact about the day, not an edit to the
+ * number. Points are unaffected either way: nothing reads the picture.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -12,14 +17,17 @@ import { Sheet } from '@/components/ui/Sheet';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { formatDate, formatNumber, plural } from '@/i18n/index';
-import { upsertDailyLog } from '@/lib/api/dailyLogs';
+import { STEP_PROOFS_BUCKET, stepProofPath, upsertDailyLog } from '@/lib/api/dailyLogs';
 import { isAppError } from '@/lib/api/errors';
+import { deleteMedia, uploadMedia } from '@/lib/api/storage';
+import { downscaleImage, extensionFor } from '@/lib/util/image';
 import { STEPS_GOAL } from '@/lib/training/constants';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { historyDays, parseSteps, stepsToGoal, streakFeedback } from '@/app/features/steps/model';
 import { StepsEditor } from '@/app/features/steps/StepsEditor';
 import { StepsHistory } from '@/app/features/steps/StepsHistory';
+import { StepsProof } from '@/app/features/steps/StepsProof';
 import {
   selectStreak,
   useProgress,
@@ -27,6 +35,64 @@ import {
   useStepsToday,
   useTodayIso,
 } from '@/app/store/progress';
+import { useSession } from '@/app/store/session';
+
+/**
+ * Attach or replace a day's screenshot, storing it against the day straight away.
+ *
+ * Shared by today's field and the edit sheet, because "add a screenshot" means the same thing on
+ * a day three days ago as it does on this one. The picture is shrunk first: a phone screenshot is
+ * two to four megabytes of PNG, and the coach needs to read a number off it (see lib/util/image).
+ */
+function useStepsProof(localDate: string | null, userId: string | undefined) {
+  const { t } = useT();
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+
+  const write = async (proofPath: string | null) => {
+    if (!localDate) return;
+    const steps = useProgress.getState().dailyLogs[localDate]?.steps ?? 0;
+    const row = await upsertDailyLog(localDate, steps, undefined, proofPath);
+    useProgress.getState().putDailyLog(row);
+  };
+
+  const attach = async (file: File) => {
+    if (!localDate || !userId) return;
+    setBusy(true);
+    try {
+      const blob = await downscaleImage(file);
+      const path = stepProofPath(userId, localDate, extensionFor(blob));
+      await write(await uploadMedia(STEP_PROOFS_BUCKET, path, blob));
+    } catch (e) {
+      toast.show({
+        kind: 'error',
+        title:
+          isAppError(e) && e.code === 'network'
+            ? t('common.errorOffline')
+            : t('app.stepsProofError'),
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async () => {
+    if (!localDate) return;
+    const current = useProgress.getState().dailyLogs[localDate]?.proofPath ?? null;
+    setBusy(true);
+    try {
+      await write(null);
+      // Best effort: the row no longer points at it, so a file left behind is invisible, not a leak.
+      if (current) await deleteMedia(current).catch(() => undefined);
+    } catch {
+      toast.show({ kind: 'error', title: t('app.stepsProofError') });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return { busy, attach, remove };
+}
 
 /**
  * Why steps are entered by hand. The explanation is the longest single string in the app, and it
@@ -59,16 +125,19 @@ function WhyManualCard() {
 interface EditSheetProps {
   date: string | null;
   initialSteps: number | null;
+  proofPath: string | null;
+  userId: string | undefined;
   onClose: () => void;
   onSaved: () => void;
 }
 
-/** Edit the steps of a past day. */
-function EditSheet({ date, initialSteps, onClose, onSaved }: EditSheetProps) {
+/** Edit the steps of a past day, and its screenshot. */
+function EditSheet({ date, initialSteps, proofPath, userId, onClose, onSaved }: EditSheetProps) {
   const { t, locale } = useT();
   const toast = useToast();
   const [text, setText] = useState('');
   const [saving, setSaving] = useState(false);
+  const proof = useStepsProof(date, userId);
 
   useEffect(() => {
     if (date) setText(initialSteps !== null && initialSteps > 0 ? String(initialSteps) : '');
@@ -109,15 +178,24 @@ function EditSheet({ date, initialSteps, onClose, onSaved }: EditSheetProps) {
         </Button>
       }
     >
-      <div className="py-4">
+      <div className="flex flex-col gap-4 py-4">
         {date ? (
-          <StepsEditor
-            text={text}
-            onText={setText}
-            goal={STEPS_GOAL}
-            label={t('app.stepsEditTitle', { date: formatDate(locale, date, 'long') })}
-            disabled={saving}
-          />
+          <>
+            <StepsEditor
+              text={text}
+              onText={setText}
+              goal={STEPS_GOAL}
+              label={t('app.stepsEditTitle', { date: formatDate(locale, date, 'long') })}
+              disabled={saving}
+            />
+            <StepsProof
+              value={proofPath}
+              onPick={proof.attach}
+              onRemove={() => void proof.remove()}
+              disabled={saving}
+              busy={proof.busy}
+            />
+          </>
         ) : null}
       </div>
     </Sheet>
@@ -134,6 +212,9 @@ export default function StepsScreen() {
   const error = useProgress((s) => s.error);
   const logs = useProgress((s) => s.dailyLogs);
   const stepsToday = useStepsToday();
+  const userId = useSession((s) => s.user?.id);
+  const proofToday = useProgress((s) => s.dailyLogs[today]?.proofPath ?? null);
+  const proof = useStepsProof(today, userId);
   const [text, setText] = useState('');
   const [touched, setTouched] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -241,7 +322,7 @@ export default function StepsScreen() {
           <h2 className="eyebrow">
             {t('app.stepsTodayLabel')} · {formatDate(locale, today)}
           </h2>
-          <div className="border-t border-border pt-4">
+          <div className="flex flex-col gap-4 border-t border-border pt-4">
             <StepsEditor
               text={text}
               onText={(v) => {
@@ -251,6 +332,13 @@ export default function StepsScreen() {
               goal={STEPS_GOAL}
               label={t('app.stepsInputLabel')}
               disabled={saving}
+            />
+            <StepsProof
+              value={proofToday}
+              onPick={proof.attach}
+              onRemove={() => void proof.remove()}
+              disabled={saving}
+              busy={proof.busy}
             />
           </div>
         </section>
@@ -284,6 +372,8 @@ export default function StepsScreen() {
       <EditSheet
         date={editDate}
         initialSteps={editDate ? (logs[editDate]?.steps ?? null) : null}
+        proofPath={editDate ? (logs[editDate]?.proofPath ?? null) : null}
+        userId={userId}
         onClose={() => setEditDate(null)}
         onSaved={() => setEditDate(null)}
       />

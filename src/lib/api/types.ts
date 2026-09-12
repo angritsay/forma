@@ -208,6 +208,11 @@ export interface DailyLogRow {
   /** Recomputed server-side from steps (see daily_logs_set_points trigger). */
   points: number;
   note: string | null;
+  /**
+   * `storage:proofs/steps/<user_id>/<local_date>.<ext>` — the athlete's screenshot of their own
+   * step counter, in a private bucket. Never a URL; the app mints a signed one to show it.
+   */
+  proofPath: string | null;
   updatedAt: string;
 }
 
