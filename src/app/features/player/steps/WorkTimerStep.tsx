@@ -1,12 +1,12 @@
 import { useCallback, useRef } from 'react';
-import { Chip } from '@/components/ui/Chip';
 import { useT } from '@/app/hooks/useT';
 import type { PlayerResult } from '@/app/store/activeWorkout';
 import type { BlockFormat } from '@/content/schema';
 import { BigClock } from '../BigClock';
-import { loadLabel, setLabel, unitLabel, type WorkStep } from '../model';
+import { exerciseName, loadLabel, setLabel, unitLabel, type WorkStep } from '../model';
 import type { Cue } from '../sound';
 import { useCountdownCues, useNextHandler, useStepClock } from '../useStepClock';
+import { StepHeading } from './StepHeading';
 
 export interface WorkTimerStepProps {
   step: WorkStep;
@@ -34,7 +34,7 @@ export function WorkTimerStep({
   onNext,
   registerNext,
 }: WorkTimerStepProps) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const duration = Math.max(1, step.durationSec ?? step.target);
   const recorded = useRef(false);
   const clock = useStepClock(!paused, duration);
@@ -69,33 +69,33 @@ export function WorkTimerStep({
 
   const isHold = step.item.unit === 'seconds';
   /*
-   * One short line under the digits, never the coach's note: this sits in the footer over the clip,
-   * and a sentence there would push the transport off a small screen. The note is below the fold.
+   * How many, and with what — one line, not two chips.
+   *
+   * A hold has no count worth printing: the number to watch is the one counting down, and
+   * «Держим» underneath it said what the clock was already saying.
    */
-  const caption = isEmom
-    ? t('training.emomMinuteHint', { n: step.target })
-    : isHold
-      ? t('app.playerHold')
-      : t('app.playerWork');
+  const facts = [
+    isHold
+      ? undefined
+      : `${step.target} ${unitLabel(t, step.item.unit)}${step.item.perSide ? ` · ${t('training.perSide')}` : ''}`,
+    load,
+  ].filter(Boolean) as string[];
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col items-center gap-3 text-center">
-        <span className="eyebrow">{setLabel(t, format, step.set, step.totalSets)}</span>
+    <div className="flex flex-col gap-4">
+      <StepHeading
+        eyebrow={step.totalSets > 1 ? setLabel(t, format, step.set, step.totalSets) : undefined}
+        title={exerciseName(step.exerciseId, locale)}
+      />
+      <div className="flex flex-col items-center gap-1.5">
         <BigClock
           seconds={clock.remainingSec}
           tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'accent' : 'default'}
-          caption={caption}
+          {...(isEmom ? { caption: t('training.emomMinuteHint', { n: step.target }) } : {})}
         />
-        <div className="flex flex-wrap justify-center gap-2">
-          {!isHold ? (
-            <Chip tone="accent">
-              {`${step.target} ${unitLabel(t, step.item.unit)}`}
-              {step.item.perSide ? ` · ${t('training.perSide')}` : ''}
-            </Chip>
-          ) : null}
-          {load ? <Chip>{load}</Chip> : null}
-        </div>
+        {facts.length > 0 ? (
+          <span className="text-[13px] text-paper/70">{facts.join(' · ')}</span>
+        ) : null}
       </div>
     </div>
   );

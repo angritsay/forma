@@ -276,6 +276,22 @@ gets nothing. Two rules keep that true:
 - **Nobody signs in as the coach's address but the coach.** Rotating the admin address means
   editing `public.admins` (§4), not editing anything in Auth.
 
+#### How long a sign-in lasts
+
+Signing in should last months, not one launch. Two things decide it, and only one of them is in
+this dashboard:
+
+- **Dashboard → Authentication → Sessions.** Leave _Time-box user sessions_ and _Inactivity
+  timeout_ **unset** (the default). Set either one and everybody is asked for an emailed code
+  again that often — which is the whole experience this section exists to avoid. The access token
+  expiring hourly is normal and invisible: the app refreshes it in the background.
+- **Where the session is stored.** Supabase keeps it in `localStorage`, and a Telegram Mini App
+  webview is not a browser tab — the client clears that storage whenever it likes, which on iOS is
+  close enough to every launch. So inside Telegram the app mirrors the session into Telegram's own
+  per-user **CloudStorage**, which survives the webview being cleared, the app being killed and a
+  reinstall (`src/lib/auth/sessionStorage.ts`). Nothing to configure; it needs Telegram 6.9+ and
+  falls back to `localStorage` on the open web and in older clients.
+
 ### 3.2 Email template — this step is mandatory, and SMTP now comes first
 
 **Supabase no longer lets a project edit its email templates until custom SMTP is configured.**

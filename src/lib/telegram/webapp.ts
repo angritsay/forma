@@ -32,6 +32,22 @@ export interface TelegramWebApp {
     notificationOccurred(type: 'error' | 'success' | 'warning'): void;
     selectionChanged(): void;
   };
+  /**
+   * Per-user storage held by Telegram's servers rather than by the webview (Bot API 6.9+).
+   *
+   * It is the only thing in a Mini App that reliably survives the app being closed: the webview's
+   * own localStorage is cleared whenever the client decides to, which on iOS is often every
+   * launch — and that is what was making the app ask for an email code every single time.
+   * See src/lib/auth/sessionStorage.ts.
+   *
+   * Limits: 1024 keys; a key up to 128 characters; a value up to 4096.
+   */
+  readonly CloudStorage?: {
+    setItem(key: string, value: string, cb?: (err: string | null, ok?: boolean) => void): void;
+    getItem(key: string, cb: (err: string | null, value?: string) => void): void;
+    removeItem(key: string, cb?: (err: string | null, ok?: boolean) => void): void;
+    getKeys(cb: (err: string | null, keys?: string[]) => void): void;
+  };
   ready(): void;
   expand(): void;
   close(): void;
