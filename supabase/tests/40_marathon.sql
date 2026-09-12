@@ -335,6 +335,9 @@ do $$ begin
     'a voided proof is not something I did';
   -- The solo task was never mine: it is not even counted in the day's total.
   assert (select tasks_total from public.marathon_my_points(pg_temp.m()) where day_index = 5) = 0;
+  -- Nor is the morning message: ticking «Доброе утро» is not a task, and not ticking it is not a
+  -- day missed.
+  assert (select tasks_total from public.marathon_my_points(pg_temp.m()) where day_index = 4) = 0;
   assert (select count(*) from public.marathon_my_points(pg_temp.m())) = 9, 'day 1 through today';
   raise notice 'OK my points, day by day';
 end $$;

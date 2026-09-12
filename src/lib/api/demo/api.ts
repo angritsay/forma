@@ -1464,8 +1464,9 @@ export async function getMarathonMyPoints(marathonId: string): Promise<MarathonD
 
     const out: MarathonDayPoints[] = [];
     for (let day = today; day >= 1; day -= 1) {
+      // Only the tasks that score: an info-only message is not something you can miss.
       const dayTasks = db.marathonTasks
-        .filter((t) => t.marathonId === marathonId && t.dayIndex === day)
+        .filter((t) => t.marathonId === marathonId && t.dayIndex === day && t.rule !== 'none')
         .filter((t) => appliesTo(t.audience, kind));
       const points = dayTasks.reduce((sum, task) => {
         const done = counted.filter(

@@ -1086,11 +1086,14 @@ begin
     from public.marathon_members mem where mem.id = v_me
   ),
   -- The tasks set to my entry, per day.
+  -- Only the tasks that score. The morning message is set to everyone and worth nothing, and
+  -- counting it would tell someone they had missed 1 of 3 for not ticking «Доброе утро».
   my_tasks as (
     select t.*
     from public.marathon_tasks t, mine
     where t.marathon_id = p_marathon_id
       and t.day_index <= v_today
+      and t.rule <> 'none'
       and (t.audience = 'all' or (t.audience = 'teams' and mine.entry_kind = 'team')
            or (t.audience = 'solo' and mine.entry_kind = 'solo'))
   ),
@@ -1135,7 +1138,6 @@ begin
            (select n from entry_size) as member_count,
            (select count(*) from counted c where c.task_id = t.id)::int as done_n
     from my_tasks t
-    where t.rule <> 'none'
   ),
   day_points as (
     select pt.day_index,
