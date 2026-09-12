@@ -358,7 +358,10 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    name and its one number — a countdown for timed work, an adjustable rep count with "Done" for
    reps. Nothing else: no elapsed clock, no sound control, no step counter, no next-up line. Back:
    the coach's words as tabs (technique + breathing, cues + mistakes, contraindications + muscles),
-   reached by swiping up or the "How to do it" handle — never by scrolling over the clip. A session
+   reached by swiping up or the "How to do it" handle — never by scrolling over the clip, and
+   pulled back down only from the top of the text so scrolling up through it does not close it.
+   Sideways on the front walks the workout: right to left is the next movement, left to right the
+   one before, both meaning exactly what the → and ← keys mean. A session
    that opens with a warm-up starts inside it, with no gate and no intro; skipping the warm-up,
    skipping or restarting a step, stepping back and ending the session all live behind Pause.
    Leaving asks for confirmation; an unfinished session persists locally and resumes **where it
