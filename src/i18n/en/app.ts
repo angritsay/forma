@@ -196,6 +196,7 @@ export const app = {
   homeResumeEyebrow: 'Workout in progress',
   homeResumeFinishedEyebrow: 'Unsaved result',
   homeResumeFallback: 'Your workout',
+  homeResumeAt: 'Stopped at: {name}',
   homeResumeCta: 'Resume',
   homeResumeSave: 'Finish & save',
   homeTodayEyebrow: 'Today',

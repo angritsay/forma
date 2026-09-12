@@ -7,6 +7,13 @@
  * The elapsed clock is timestamp-based: `elapsedMs` accumulates finished spans and `activeSince`
  * marks the start of the running span; `tick()` only re-derives `elapsedSec` from them.
  * A rehydrated session always comes back paused (time away from the app does not count).
+ *
+ * **The current step's own clock is derived from that same pair**, as `elapsedNow() -
+ * stepStartedMs`, rather than kept inside the step component. It used to live in a ref there, which
+ * meant it died with the component: walk out of a plank at twenty seconds left, come back, and the
+ * plank started again at a minute — and a twelve-minute AMRAP reopened at twelve minutes. Deriving
+ * it here gets resume, pausing and reload correctness for free, because the session clock already
+ * had all three, and makes it impossible for the two clocks to disagree about how long a pause was.
  */
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
@@ -53,6 +60,11 @@ export interface ActiveWorkoutState {
   elapsedMs: number;
   /** `Date.now()` when the current running span began; null while paused (never persisted). */
   activeSince: number | null;
+  /**
+   * Session time on the clock when the current step began (persisted). The step's own elapsed is
+   * the distance from here to now, so leaving the app mid-step and coming back resumes it.
+   */
+  stepStartedMs: number;
 
   begin: (input: BeginInput) => void;
   next: () => void;
@@ -63,6 +75,8 @@ export interface ActiveWorkoutState {
   setPaused: (paused: boolean) => void;
   /** Re-derive `elapsedSec` from the timestamps (call on an interval while playing). */
   tick: () => void;
+  /** Start the current step over: its clock back to zero, the session clock untouched. */
+  restartStep: () => void;
   /** Stop the clock and mark the session finished (results stay until saved). */
   finish: () => void;
   /** Drop the session and its results entirely. */
@@ -74,12 +88,22 @@ interface PersistedSlice {
   stepIndex: number;
   results: PlayerResult[];
   elapsedMs: number;
+  stepStartedMs: number;
   finishedAt: string | null;
 }
 
 const EMPTY: Omit<
   ActiveWorkoutState,
-  'begin' | 'next' | 'prev' | 'goTo' | 'recordResult' | 'setPaused' | 'tick' | 'finish' | 'abandon'
+  | 'begin'
+  | 'next'
+  | 'prev'
+  | 'goTo'
+  | 'recordResult'
+  | 'setPaused'
+  | 'tick'
+  | 'restartStep'
+  | 'finish'
+  | 'abandon'
 > = {
   session: null,
   steps: [],
@@ -90,10 +114,21 @@ const EMPTY: Omit<
   finishedAt: null,
   elapsedMs: 0,
   activeSince: null,
+  stepStartedMs: 0,
 };
 
-function elapsedNow(s: Pick<ActiveWorkoutState, 'elapsedMs' | 'activeSince'>): number {
+export function elapsedNow(s: Pick<ActiveWorkoutState, 'elapsedMs' | 'activeSince'>): number {
   return s.elapsedMs + (s.activeSince === null ? 0 : Math.max(0, Date.now() - s.activeSince));
+}
+
+/**
+ * Milliseconds spent on the step the athlete is on. Frozen while paused, because the session clock
+ * it is measured against is frozen too — which is the whole reason it lives here.
+ */
+export function stepElapsedNow(
+  s: Pick<ActiveWorkoutState, 'elapsedMs' | 'activeSince' | 'stepStartedMs'>,
+): number {
+  return Math.max(0, elapsedNow(s) - s.stepStartedMs);
 }
 
 function clampIndex(index: number, steps: readonly PlayerStep[]): number {
@@ -129,6 +164,12 @@ function fromPersisted(raw: unknown): typeof EMPTY {
     return { ...EMPTY };
   }
   const elapsedMs = typeof p.elapsedMs === 'number' && p.elapsedMs > 0 ? p.elapsedMs : 0;
+  // Clamped into the session clock: a value from a future version, or a hand-edited one, must not
+  // leave the step running backwards or already over.
+  const stepStartedMs =
+    typeof p.stepStartedMs === 'number' && p.stepStartedMs > 0
+      ? Math.min(p.stepStartedMs, elapsedMs)
+      : 0;
   return {
     session: p.session,
     steps,
@@ -139,6 +180,7 @@ function fromPersisted(raw: unknown): typeof EMPTY {
     paused: true,
     finishedAt: typeof p.finishedAt === 'string' ? p.finishedAt : null,
     activeSince: null,
+    stepStartedMs,
   };
 }
 
@@ -159,22 +201,28 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState>()(
           paused: false,
           finishedAt: null,
           activeSince: Date.now(),
+          stepStartedMs: 0,
         });
       },
 
+      /*
+       * Every move between steps restarts the step clock, because arriving at a movement is when
+       * its own countdown starts. Only `setPaused` and a reload leave it where it was — which is
+       * exactly the difference between "next" and "I'll be back in a minute".
+       */
       next: () => {
         const s = get();
-        set({ stepIndex: clampIndex(s.stepIndex + 1, s.steps) });
+        set({ stepIndex: clampIndex(s.stepIndex + 1, s.steps), stepStartedMs: elapsedNow(s) });
       },
 
       prev: () => {
         const s = get();
-        set({ stepIndex: clampIndex(s.stepIndex - 1, s.steps) });
+        set({ stepIndex: clampIndex(s.stepIndex - 1, s.steps), stepStartedMs: elapsedNow(s) });
       },
 
       goTo: (index) => {
         const s = get();
-        set({ stepIndex: clampIndex(index, s.steps) });
+        set({ stepIndex: clampIndex(index, s.steps), stepStartedMs: elapsedNow(s) });
       },
 
       recordResult: (result) => {
@@ -214,6 +262,12 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState>()(
         if (elapsedSec !== s.elapsedSec) set({ elapsedSec });
       },
 
+      restartStep: () => {
+        const s = get();
+        if (!s.session || s.finishedAt) return;
+        set({ stepStartedMs: elapsedNow(s) });
+      },
+
       finish: () => {
         const s = get();
         if (!s.session) return;
@@ -240,6 +294,7 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState>()(
         results: s.results,
         // Fold the running span so a reload never loses time, without persisting `activeSince`.
         elapsedMs: elapsedNow(s),
+        stepStartedMs: s.stepStartedMs,
         finishedAt: s.finishedAt,
       }),
       merge: (persisted, current) => ({ ...current, ...fromPersisted(persisted) }),

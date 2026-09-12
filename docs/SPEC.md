@@ -361,7 +361,10 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    reached by swiping up or the "How to do it" handle — never by scrolling over the clip. A session
    that opens with a warm-up starts inside it, with no gate and no intro; skipping the warm-up,
    skipping or restarting a step, stepping back and ending the session all live behind Pause.
-   Leaving asks for confirmation; an unfinished session persists locally and can be resumed.
+   Leaving asks for confirmation; an unfinished session persists locally and resumes **where it
+   stopped** — same step, same countdown. The step's clock is derived from the session clock
+   (`stepStartedMs` in the store), so pausing, walking out and closing the app all freeze it the
+   same way, and Home offers a **Продолжить** strip naming the movement it will pick up on.
 7. **Summary + feedback**: time, points, calories, completion; RPE slider 1–10 with descriptors;
    feeling chips (great / ok / hard / pain); notes; "Save" → adaptation message ("next time +5%").
 8. **Stats**: weekly workouts/minutes/points chart, streak calendar, steps chart, personal records,

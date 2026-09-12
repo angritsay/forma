@@ -195,6 +195,7 @@ export const app = {
   homeResumeEyebrow: 'Тренировка не закончена',
   homeResumeFinishedEyebrow: 'Результат не сохранён',
   homeResumeFallback: 'Твоя тренировка',
+  homeResumeAt: 'Остановились на: {name}',
   homeResumeCta: 'Продолжить',
   homeResumeSave: 'Завершить и сохранить',
   homeTodayEyebrow: 'Сегодня',
