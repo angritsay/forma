@@ -42,7 +42,6 @@ export function stepWeightSec(step: PlayerStep): number {
       const cap = Math.max(0, num(step.capSec));
       return Math.min(cap > 0 ? cap : est, est);
     }
-    case 'warmup_gate':
     case 'block_intro':
     case 'rest':
     case 'done':
@@ -81,7 +80,6 @@ export function stepCompletion(step: PlayerStep, result: ExerciseResult | undefi
       if (result.timeSec === undefined || cap <= 0) return 0;
       return clamp(num(result.timeSec) / cap, 0, 1) * 0.5;
     }
-    case 'warmup_gate':
     case 'block_intro':
     case 'rest':
     case 'done':

@@ -1,6 +1,6 @@
 /**
  * Profile (docs/SPEC.md §10 flow 11): avatar, name, email, fitness index, equipment and
- * limitations editors, the coach's bookable hour, player sounds, sign out, version,
+ * limitations editors, the coach's bookable hour, sign out, version,
  * and the admin entry point.
  * "Retake tests" seeds the onboarding draft from the profile so the wizard resumes at the tests.
  *
@@ -23,7 +23,6 @@ import type { ProfilePatch } from '@/lib/api/types';
 import type { Limitation } from '@/lib/training/types';
 import { useT } from '@/app/hooks/useT';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
-import { useSoundStore } from '@/app/features/player/sound';
 import { EquipmentSheet } from '@/app/features/profile/EquipmentSheet';
 import { FitnessCard } from '@/app/features/profile/FitnessCard';
 import {
@@ -38,7 +37,6 @@ import {
 } from '@/app/features/profile/model';
 import { LimitationsSheet } from '@/app/features/profile/LimitationsSheet';
 import { ProfileHeader } from '@/app/features/profile/ProfileHeader';
-import { Switch } from '@/app/features/profile/Switch';
 import { APP_VERSION, BUILD_MODE } from '@/app/features/profile/version';
 import { Section } from '@/app/features/stats/Section';
 import { saveDraft } from '@/app/screens/onboarding/draft';
@@ -71,8 +69,6 @@ export default function ProfileScreen() {
   const user = useSession((s) => s.user);
   const subscription = useSession((s) => s.subscription);
   const admin = useIsAdmin();
-  const muted = useSoundStore((s) => s.muted);
-  const setMuted = useSoundStore((s) => s.setMuted);
   const [busy, setBusy] = useState<Busy>(null);
   const [sheet, setSheet] = useState<SheetName>(null);
   const [signOutOpen, setSignOutOpen] = useState(false);
@@ -237,26 +233,6 @@ export default function ProfileScreen() {
                       subtitle={limitationsSummary(tr, tp)}
                       disabled={!tp}
                       onClick={() => setSheet('limitations')}
-                    />
-                  </li>
-                </ul>
-              </div>
-            </Section>
-
-            <Section title={t('app.profileSettingsSection')}>
-              <div className="border-t border-border">
-                <ul className="divide-y divide-border">
-                  <li>
-                    <ListRow
-                      title={t('app.profileSound')}
-                      subtitle={t('app.profileSoundHint')}
-                      trailing={
-                        <Switch
-                          checked={!muted}
-                          onChange={(on) => setMuted(!on)}
-                          label={t('app.profileSound')}
-                        />
-                      }
                     />
                   </li>
                 </ul>

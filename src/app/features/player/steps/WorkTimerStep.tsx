@@ -72,10 +72,12 @@ export function WorkTimerStep({
    * How many, and with what — one line, not two chips.
    *
    * A hold has no count worth printing: the number to watch is the one counting down, and
-   * «Держим» underneath it said what the clock was already saying.
+   * «Держим» underneath it said what the clock was already saying. An EMOM minute has the same
+   * problem one step further on — its caption already reads «Сделай 8 повторений и отдыхай до
+   * конца минуты», so printing «8 повт.» under it is the instruction twice, in smaller type.
    */
   const facts = [
-    isHold
+    isHold || isEmom
       ? undefined
       : `${step.target} ${unitLabel(t, step.item.unit)}${step.item.perSide ? ` · ${t('training.perSide')}` : ''}`,
     load,

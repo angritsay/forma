@@ -1,11 +1,21 @@
 /**
- * Node preview (docs/SPEC.md §10 flow 5): the course art, the workout's name as the one big line,
- * the description, the difficulty chooser with estimates and the recommendation, the concrete
- * plan, and "Start workout" which opens a session and hands it to the player.
+ * Node preview (docs/SPEC.md §10 flow 5): the picture, the workout's name, and «Начать».
+ *
+ * It used to open as a wall: the art, the focus, the description, three fact chips, a difficulty
+ * chooser with estimates and a paragraph of reasoning, a grid of movement stills, and the whole
+ * plan block by block — all of it unrolled before anyone had decided to train. That is a lot of
+ * reading to do while standing on a mat.
+ *
+ * So the screen now answers one question — *what is today, and shall we go* — with a picture, a
+ * name and one button. Everything else is real and still here, folded behind «Что внутри» for the
+ * person who wants to check the plan before starting; most days nobody opens it.
+ *
+ * Pressing Начать does not lead to another preview. It asks the one question that changes what
+ * happens next — how hard today should be — and the answer starts the session on the spot, landing
+ * the athlete in the warm-up with the first clip already playing.
  */
 import { useMemo, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router';
-import ExerciseFigure from '@/components/anim/ExerciseFigure';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -15,7 +25,6 @@ import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { courseTitle, findCourse } from '@/content/catalogue';
-import { formatNumber } from '@/i18n/index';
 import { startSession } from '@/lib/api/sessions';
 import { estimateCalories, estimateDuration } from '@/lib/training/estimate';
 import { prescribeWorkout } from '@/lib/training/prescribe';
@@ -33,12 +42,13 @@ import { useT } from '@/app/hooks/useT';
 import { courseLandingHref } from '@/app/features/courses/courseMeta';
 import { LinkButton } from '@/app/features/courses/LinkButton';
 import { DisplayTitle } from '@/app/features/home/DisplayTitle';
-import { DifficultyChooser, type DifficultyOption } from '@/app/features/path/DifficultyChooser';
+import { DifficultySheet, type DifficultyOption } from '@/app/features/path/DifficultySheet';
 import { FactChips } from '@/app/features/path/FactChips';
 import { nodeStatus } from '@/app/features/path/nodeState';
 import { DIFFICULTY_CHOICES, workoutSignatureExercise } from '@/app/features/path/plan';
 import { PlanBlocks } from '@/app/features/path/PlanBlocks';
 import { useTrainingContext } from '@/app/features/path/useTrainingContext';
+import { WorkoutHero } from '@/app/features/path/WorkoutHero';
 import { WorkoutStrip } from '@/app/features/path/WorkoutStrip';
 import { useActiveWorkoutStore } from '@/app/store/activeWorkout';
 import {
@@ -76,9 +86,10 @@ export default function NodePreviewScreen() {
   const streak = useStreak();
   const stepsYesterday = useStepsYesterday();
   const activeSession = useActiveWorkoutStore((s) => s.session);
-  const [choice, setChoice] = useState<DifficultyChoice | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [replaceOpen, setReplaceOpen] = useState(false);
+  const [chooserOpen, setChooserOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [pending, setPending] = useState<DifficultyChoice | null>(null);
+  const [replaceFor, setReplaceFor] = useState<DifficultyChoice | null>(null);
   // "Now" is fixed per mount so the recommendation does not flicker between renders.
   const nowIso = useMemo(() => new Date().toISOString(), []);
 
@@ -117,9 +128,6 @@ export default function NodePreviewScreen() {
       };
     });
   }, [workout, ctx, engineState.scale, deload, repeat, streakDays]);
-
-  const selected: DifficultyChoice = choice ?? recommendation?.choice ?? 'normal';
-  const plan = plans?.find((p) => p.choice === selected) ?? null;
 
   if (!course || !node) {
     return (
@@ -175,8 +183,6 @@ export default function NodePreviewScreen() {
         <div className="flex flex-col gap-4 py-2" aria-hidden="true">
           <Skeleton rounded="card" className="-mx-5 aspect-[4/3] lg:-mx-8" />
           <Skeleton lines={3} />
-          <Skeleton rounded="card" className="h-40" />
-          <Skeleton rounded="card" className="h-40" />
         </div>
       </Screen>
     );
@@ -185,11 +191,14 @@ export default function NodePreviewScreen() {
   const locked = nodeStatus(nodeIndex, course.nodes, row) === 'locked';
   const exercise = workoutSignatureExercise(workout);
   const profile = ctx.profile;
+  // The recommended plan is what the folded-away detail describes; it is also the likely choice.
+  const shown = plans.find((p) => p.choice === recommendation.choice) ?? plans[0] ?? null;
 
-  const start = async () => {
+  const start = async (choice: DifficultyChoice) => {
+    const plan = plans.find((p) => p.choice === choice);
     if (!plan || locked) return;
-    setReplaceOpen(false);
-    setBusy(true);
+    setReplaceFor(null);
+    setPending(choice);
     try {
       const state = await useProgress.getState().ensureCourseState(course.id);
       // The stored scale wins if it changed since the estimates were computed.
@@ -223,29 +232,30 @@ export default function NodePreviewScreen() {
         prescribed,
         startedAt,
       });
+      setChooserOpen(false);
       navigate('/play');
     } catch {
       toast.show({ kind: 'error', title: t('app.nodeStartError') });
     } finally {
-      setBusy(false);
+      setPending(null);
     }
   };
 
   // Beginning a session replaces the persisted one, so an unsaved workout must be confirmed away.
-  const onStartPress = () => {
-    if (activeSession) setReplaceOpen(true);
-    else void start();
+  const onPick = (choice: DifficultyChoice) => {
+    if (activeSession) setReplaceFor(choice);
+    else void start(choice);
   };
 
   const isTest = node.kind === 'test';
   const isBenchmark = node.kind === 'benchmark';
 
-  // The selected plan's facts: how long, how many points, how many kcal.
-  const facts = plan
+  // The recommended plan's facts: how long, how many points, how many kcal.
+  const facts = shown
     ? [
-        t('app.nodeDuration', { min: Math.max(1, Math.round(plan.durationSec / 60)) }),
-        t('app.nodePoints', { n: plan.points }),
-        t('app.nodeKcal', { n: plan.calories }),
+        t('app.nodeDuration', { min: Math.max(1, Math.round(shown.durationSec / 60)) }),
+        t('app.nodePoints', { n: shown.points }),
+        t('app.nodeKcal', { n: shown.calories }),
       ]
     : [];
 
@@ -262,17 +272,11 @@ export default function NodePreviewScreen() {
             {locked ? (
               <p className="text-center text-sm text-muted">{t('app.nodeLocked')}</p>
             ) : null}
-            {/*
-             * One button, full width. It shared the row with a «Позже» that led where the back arrow
-             * and the tab bar already lead, and 112px for that left «ПОЗ…» while the one thing this
-             * screen exists for read «НАЧАТЬ ТРЕНИ…». A truncated primary action is not a trade.
-             */}
             <Button
               size="lg"
               fullWidth
-              loading={busy}
-              disabled={locked || !plan}
-              onClick={onStartPress}
+              disabled={locked || plans.length === 0}
+              onClick={() => setChooserOpen(true)}
               iconRight={<Glyph size={14}>→</Glyph>}
             >
               {t('app.nodeStart')}
@@ -282,26 +286,16 @@ export default function NodePreviewScreen() {
       >
         <div className="flex flex-col gap-6 pb-2">
           {/*
-           * The course art, full-bleed and square-shouldered: the programme colour with the
-           * workout's signature figure drawn on it in the ink the colour wants, and the day's
-           * stamps in the corner as dark plates.
+           * The picture, full-bleed and square-shouldered: a frame from the coach's own clip where
+           * the movement has been filmed, the drawn figure on the programme colour where it has
+           * not, and the day's stamps in the corner as dark plates.
            */}
           <div className="hero-art relative -mx-5 flex aspect-[4/3] items-center justify-center overflow-hidden lg:-mx-8 lg:aspect-auto lg:h-[360px]">
-            <div className="h-full max-h-full">
-              {/*
-               * The course's own tile, not a transparent one. `ExerciseFigure` derives its ink from
-               * whatever tile it is given, and a transparent tile reads as dark — which drew a white
-               * figure on the yellow cover. The block behind is already this colour, so passing it
-               * changes nothing but the line, which goes to the black the brandbook asks for.
-               */}
-              <ExerciseFigure
-                animation={exercise?.animation ?? 'air_squat'}
-                variant="hero"
-                tile={course.tile}
-                className="h-full w-auto"
-                label={exercise ? l(exercise.name) : undefined}
-              />
-            </div>
+            <WorkoutHero
+              exercise={exercise}
+              tile={course.tile}
+              label={exercise ? l(exercise.name) : undefined}
+            />
             {isTest || isBenchmark || deload || repeat ? (
               <div className="absolute top-3 right-3 flex flex-wrap justify-end gap-1.5">
                 {isTest ? <Badge tone="on-art">{t('app.nodeTestBadge')}</Badge> : null}
@@ -312,90 +306,107 @@ export default function NodePreviewScreen() {
             ) : null}
           </div>
 
+          {/*
+           * The name, the programme and the day. Three lines, and the button is already in view
+           * under them — that is the whole screen for anyone who came here to train.
+           */}
           <div>
-            {/*
-             * The formula, in the programme colour — the one kicker the colour is allowed. It is
-             * a sentence, and a Cyrillic sentence in tracked capitals wraps on a 390px screen
-             * (src/i18n/eyebrow.test.ts guards this), so it takes the sentence-case kicker slot.
-             */}
-            <span className="eyebrow-sentence text-course">{t('app.nodeFormulaKicker')}</span>
-            <DisplayTitle as="h2" text={l(workout.name)} className="mt-2.5 text-6xl" />
+            <DisplayTitle as="h2" text={l(workout.name)} className="text-6xl" />
             <p className="eyebrow mt-3.5">
               {l(courseTitle(course))} ·{' '}
               {t('app.homeTodayWeek', { week: node.week, day: node.day })}
             </p>
-            <p className="mt-4 text-[15px] font-medium">{l(workout.focus)}</p>
-            <p className="mt-2 text-[15px] leading-relaxed text-muted">{l(workout.description)}</p>
             <FactChips items={facts} className="mt-5" />
           </div>
 
-          {isTest || isBenchmark ? (
-            <section className="flex flex-col gap-2 border-t border-border pt-4">
-              <h3 className="eyebrow">
-                {isTest ? t('app.nodeTestTitle') : t('app.nodeBenchmarkTitle')}
-              </h3>
-              <p className="text-sm text-muted">
-                {isTest ? t('app.nodeTestBody') : t('app.nodeBenchmarkBody')}
-              </p>
-            </section>
-          ) : null}
-
-          {deload ? (
-            <p className="flex gap-2 text-sm text-muted">
-              <Glyph size={12} className="mt-1 shrink-0 text-muted-2">
-                //
-              </Glyph>
-              <span>{t('app.nodeDeloadNote')}</span>
-            </p>
-          ) : null}
-          {repeat ? (
-            <p className="flex gap-2 text-sm text-muted">
-              <Glyph size={12} className="mt-1 shrink-0 text-muted-2">
-                //
-              </Glyph>
-              <span>{t('app.nodeRepeatNote')}</span>
-            </p>
-          ) : null}
-
-          <section className="flex flex-col gap-3 border-t border-border pt-4">
-            <div className="flex items-baseline justify-between gap-3">
-              <h3 className="eyebrow">{t('app.nodeDifficultyTitle')}</h3>
-              <span className="tabular text-xs text-muted-2">
-                {t('app.nodeEstimatedFor', { scale: formatNumber(locale, engineState.scale, 2) })}
-              </span>
-            </div>
-            <DifficultyChooser
-              options={plans}
-              value={selected}
-              onChange={setChoice}
-              recommended={recommendation}
-            />
-          </section>
-
           {/*
-           * The movements as pictures, before the plan as a list. «Что я сейчас буду делать» is
-           * answered by shapes in one look; the numbered list below is for checking the detail.
+           * Everything that used to be unrolled down the page, behind one line.
+           *
+           * It is a disclosure rather than a second screen because none of it is a decision: it is
+           * what someone checks when they are curious, and what they never open twice.
            */}
-          {plan ? <WorkoutStrip prescribed={plan.prescribed} /> : null}
+          <section className="border-t border-border">
+            <button
+              type="button"
+              onClick={() => setDetailsOpen((o) => !o)}
+              aria-expanded={detailsOpen}
+              className="flex w-full items-center justify-between gap-3 py-4 text-left transition-colors duration-150 ease-(--ease-out) hover:text-text"
+            >
+              <span className="eyebrow">{t('app.nodeWhatsInside')}</span>
+              <Glyph size={14} className="text-muted-2">
+                {detailsOpen ? '−' : '+'}
+              </Glyph>
+            </button>
 
-          {plan ? (
-            <section className="flex flex-col gap-4 border-t border-border pt-4">
-              <h3 className="eyebrow">{t('app.nodePlanTitle')}</h3>
-              <PlanBlocks prescribed={plan.prescribed} />
-            </section>
-          ) : null}
+            {detailsOpen ? (
+              <div className="flex flex-col gap-6 pb-2">
+                <div>
+                  <p className="text-[15px] font-medium">{l(workout.focus)}</p>
+                  <p className="mt-2 text-[15px] leading-relaxed text-muted">
+                    {l(workout.description)}
+                  </p>
+                </div>
+
+                {isTest || isBenchmark ? (
+                  <section className="flex flex-col gap-2 border-t border-border pt-4">
+                    <h3 className="eyebrow">
+                      {isTest ? t('app.nodeTestTitle') : t('app.nodeBenchmarkTitle')}
+                    </h3>
+                    <p className="text-sm text-muted">
+                      {isTest ? t('app.nodeTestBody') : t('app.nodeBenchmarkBody')}
+                    </p>
+                  </section>
+                ) : null}
+
+                {deload ? (
+                  <p className="flex gap-2 text-sm text-muted">
+                    <Glyph size={12} className="mt-1 shrink-0 text-muted-2">
+                      //
+                    </Glyph>
+                    <span>{t('app.nodeDeloadNote')}</span>
+                  </p>
+                ) : null}
+                {repeat ? (
+                  <p className="flex gap-2 text-sm text-muted">
+                    <Glyph size={12} className="mt-1 shrink-0 text-muted-2">
+                      //
+                    </Glyph>
+                    <span>{t('app.nodeRepeatNote')}</span>
+                  </p>
+                ) : null}
+
+                {shown ? <WorkoutStrip prescribed={shown.prescribed} /> : null}
+
+                {shown ? (
+                  <section className="flex flex-col gap-4 border-t border-border pt-4">
+                    <h3 className="eyebrow">{t('app.nodePlanTitle')}</h3>
+                    <PlanBlocks prescribed={shown.prescribed} />
+                  </section>
+                ) : null}
+              </div>
+            ) : null}
+          </section>
         </div>
 
+        <DifficultySheet
+          open={chooserOpen && replaceFor === null}
+          onClose={() => setChooserOpen(false)}
+          options={plans}
+          recommended={recommendation}
+          pending={pending}
+          onPick={onPick}
+        />
+
         <Modal
-          open={replaceOpen}
-          onClose={() => setReplaceOpen(false)}
+          open={replaceFor !== null}
+          onClose={() => setReplaceFor(null)}
           title={t('app.nodeReplaceTitle')}
           description={t('app.nodeReplaceBody')}
           confirmLabel={t('app.nodeStart')}
           cancelLabel={t('common.cancel')}
           danger
-          loading={busy}
-          onConfirm={() => void start()}
+          loading={pending !== null}
+          onConfirm={() => replaceFor && void start(replaceFor)}
         />
       </Screen>
     </div>

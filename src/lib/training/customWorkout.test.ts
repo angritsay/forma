@@ -63,9 +63,12 @@ describe('buildPrescribedFromCustom', () => {
     expect(p.points).toBeLessThanOrEqual(72);
   });
 
-  it('opens with the warm-up gate when the first section is a warm-up', () => {
-    const steps = buildPlayerSteps(buildPrescribedFromCustom('cw_test', structure));
-    expect(steps[0]?.kind).toBe('warmup_gate');
+  it('opens inside the warm-up when the first section is a warm-up', () => {
+    const prescribed = buildPrescribedFromCustom('cw_test', structure);
+    const steps = buildPlayerSteps(prescribed);
+    // No gate, no intro — the first step is already the first movement of the warm-up.
+    expect(steps[0]?.kind).toBe('work');
+    expect('blockId' in steps[0]! ? steps[0]!.blockId : null).toBe(prescribed.blocks[0]?.blockId);
     expect(steps[steps.length - 1]?.kind).toBe('done');
   });
 

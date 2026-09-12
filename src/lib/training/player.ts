@@ -8,7 +8,7 @@
  * out to be the movement itself rather than a talk about it, so the demonstration now runs through
  * the work — and an introduction with nothing left to introduce is one more tap between the athlete
  * and their workout. What it carried is still on screen: a rest previews the exercise that follows
- * it, and the technique, muscles and cautions sit behind «Подробнее» on the work step itself.
+ * it, and the technique, cues and cautions are on the back of the card (CardBack.tsx).
  */
 import { FORMAT_DEFAULT_WORK_REST, TABATA_DEFAULT_ROUNDS, TRANSITION_SEC } from './constants';
 import type { PlayerStep, PrescribedBlock, PrescribedItem, PrescribedWorkout } from './types';
@@ -64,13 +64,18 @@ export function amrapExpectedRounds(block: PrescribedBlock): number {
 
 export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
   const steps: PlayerStep[] = [];
-  // A session that opens with a warm-up starts on the gate ("Сначала разомнёмся?") instead of
-  // the warm-up's block intro; `skipToIndex` is filled in once the warm-up's steps are known.
-  const gateFor = p.blocks[0]?.type === 'warmup' ? p.blocks[0] : undefined;
-  if (gateFor) steps.push({ kind: 'warmup_gate', blockId: gateFor.blockId, skipToIndex: 0 });
+  /*
+   * A session that opens with a warm-up opens *in* the warm-up — on its first movement.
+   *
+   * There used to be a gate here ("Сначала разомнёмся?") and, before that, a block intro. Both
+   * were a screen asking permission to begin something the athlete has already begun: they pressed
+   * Start. Skipping the warm-up is still possible at any moment (the pause overlay offers it), so
+   * nothing is lost by not asking up front — `warmupSkipIndex` below is what that offer uses.
+   */
+  const openingWarmup = p.blocks[0]?.type === 'warmup' ? p.blocks[0] : undefined;
 
   p.blocks.forEach((block, blockIndex) => {
-    if (block !== gateFor) {
+    if (block !== openingWarmup) {
       const intro: Extract<PlayerStep, { kind: 'block_intro' }> = {
         kind: 'block_intro',
         blockId: block.blockId,
@@ -177,14 +182,23 @@ export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
   });
 
   steps.push({ kind: 'done' });
-
-  // Skipping the warm-up lands on the first step that is not part of it (a block intro or done).
-  const gate = steps[0];
-  if (gate?.kind === 'warmup_gate') {
-    const after = steps.findIndex(
-      (s, i) => i > 0 && (s.kind === 'done' || !('blockId' in s) || s.blockId !== gate.blockId),
-    );
-    gate.skipToIndex = after < 0 ? steps.length - 1 : after;
-  }
   return steps;
+}
+
+/**
+ * Where "skip the warm-up" lands: the first step that is not part of the opening warm-up block,
+ * or null when this session has no warm-up to skip.
+ *
+ * It is computed from the steps rather than stored on one, because the offer is made at any
+ * moment during the warm-up now, not once at a gate that the athlete had to answer before
+ * starting.
+ */
+export function warmupSkipIndex(steps: readonly PlayerStep[], p: PrescribedWorkout): number | null {
+  const warmup = p.blocks[0]?.type === 'warmup' ? p.blocks[0] : undefined;
+  if (!warmup) return null;
+  const after = steps.findIndex(
+    (s) => s.kind === 'done' || !('blockId' in s) || s.blockId !== warmup.blockId,
+  );
+  // Every step belongs to the warm-up, so there is nothing on the other side of it to skip to.
+  return after < 0 ? null : after;
 }

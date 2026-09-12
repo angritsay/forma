@@ -216,7 +216,9 @@ describe('model helpers', () => {
       completed: false,
       skipped: true,
     });
-    expect(skippedResult(steps[0]!, 0)).toBeNull();
+    // Steps that carry no score of their own produce nothing to record.
+    const introIndex = steps.findIndex((s) => s.kind === 'block_intro');
+    expect(skippedResult(steps[introIndex]!, introIndex)).toBeNull();
     const restIndex = steps.findIndex((s) => s.kind === 'rest');
     expect(skippedResult(steps[restIndex]!, restIndex)).toBeNull();
   });

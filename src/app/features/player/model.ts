@@ -184,7 +184,6 @@ export function sectionLabel(t: Translate, section: BlockSection): string {
 
 /** The section the current step belongs to; a block intro carries its own type. */
 export function sectionOfStep(step: PlayerStep, p: PrescribedWorkout): BlockSection {
-  if (step.kind === 'warmup_gate') return 'warmup';
   if (step.kind === 'block_intro') return blockSection(step.type);
   if (step.kind === 'done') {
     const last = p.blocks[p.blocks.length - 1];
@@ -276,8 +275,6 @@ export function stepTitle(
   prescribed: PrescribedWorkout,
 ): string {
   switch (step.kind) {
-    case 'warmup_gate':
-      return t('app.playerSectionWarmup');
     case 'block_intro':
       return step.title ? step.title[locale] : blockTypeLabel(t, step.type);
     case 'work':
@@ -305,7 +302,6 @@ export function stepAnimation(step: PlayerStep, prescribed: PrescribedWorkout): 
     case 'rest':
       exerciseId = step.nextExerciseId ?? first(step.blockId);
       break;
-    case 'warmup_gate':
     case 'block_intro':
     case 'amrap':
     case 'fortime':
@@ -332,7 +328,6 @@ export function skippedResult(step: PlayerStep, stepIndex: number): PlayerResult
     case 'amrap':
     case 'fortime':
       return { stepIndex, blockId: step.blockId, completed: false, skipped: true };
-    case 'warmup_gate':
     case 'block_intro':
     case 'rest':
     case 'done':
@@ -345,28 +340,4 @@ export const COUNT_MAX = 999;
 export function clampCount(n: number, max = COUNT_MAX): number {
   if (!Number.isFinite(n)) return 0;
   return Math.max(0, Math.min(max, Math.round(n)));
-}
-
-/**
- * The name of what comes after this step, or undefined when there is nothing worth naming.
- *
- * Rest already says what it is resting *for*, so a step whose successor is a rest looks one
- * further on: «Дальше: отдых» tells an athlete nothing they cannot see from the countdown that is
- * about to fill the screen. The end of the session is not announced either — the last set should
- * feel like a set, not like a countdown to a screen.
- */
-export function nextStepTitle(
-  t: Translate,
-  locale: Locale,
-  steps: readonly PlayerStep[],
-  index: number,
-  prescribed: PrescribedWorkout,
-): string | undefined {
-  for (let i = index + 1; i < steps.length; i += 1) {
-    const step = steps[i];
-    if (!step || step.kind === 'done') return undefined;
-    if (step.kind === 'rest' || step.kind === 'block_intro') continue;
-    return stepTitle(t, locale, step, prescribed);
-  }
-  return undefined;
 }
