@@ -9,12 +9,26 @@
  * The turn is a real rotation rather than a cross-fade because the athlete has to know the clip did
  * not go anywhere. Under `prefers-reduced-motion` it becomes an instant swap, which says the same
  * thing without the movement.
+ *
+ * Which face is showing is decided by `visibility`, not by `backface-visibility` — see the note on
+ * the faces below for why the obvious way does not survive contact with iOS.
  */
 import { clsx } from 'clsx';
 import { useRef, type ReactNode } from 'react';
 
 /** Vertical travel (px) that counts as a deliberate turn rather than a tap that wandered. */
 const SWIPE_PX = 48;
+
+/**
+ * One face of the card. The delay classes are added per face; 250ms is half of `duration-500`
+ * below, which is the moment the card is edge-on.
+ */
+const FACE = clsx(
+  'absolute inset-0',
+  // `duration-0` so the switch happens exactly on the delay rather than a frame or two after it.
+  'transition-[visibility] duration-0 motion-reduce:delay-0',
+  '[backface-visibility:hidden] [-webkit-backface-visibility:hidden]',
+);
 
 export interface FlipCardProps {
   flipped: boolean;
@@ -55,25 +69,45 @@ export function FlipCard({ flipped, onFlip, front, back }: FlipCardProps) {
     >
       <div
         className={clsx(
-          'relative size-full transition-transform duration-500 ease-(--ease-out) [transform-style:preserve-3d]',
+          'relative size-full transition-transform duration-500 ease-(--ease-out)',
+          '[transform-style:preserve-3d] [-webkit-transform-style:preserve-3d]',
           'motion-reduce:transition-none',
           flipped && '[transform:rotateY(180deg)]',
         )}
       >
         {/*
-         * Both faces are laid on top of each other and hidden from behind, so only the one facing
-         * the viewer is ever painted. `inert` on the far side keeps it out of the tab order and
-         * away from a screen reader while it is turned away.
+         * Both faces are laid on top of each other, and the one turned away is switched off — not
+         * merely hidden from behind.
+         *
+         * `backface-visibility` is what ought to do this, and on iOS it did not: the whole front
+         * face showed through the back, mirrored, with the clock and the movement's name reading
+         * backwards at the bottom of the technique. WebKit flattens a 3D scene when a descendant
+         * establishes its own compositing context, and the front carries a `backdrop-filter` on the
+         * glass panel; flattened, the property means nothing and both faces paint.
+         *
+         * So the far face is genuinely made `visibility: hidden`, on a delay of half the turn — it
+         * disappears as the card passes edge-on, where nothing is visible anyway, and comes back
+         * with no delay at all so the face turning towards you is never late. The prefixed
+         * properties stay for the browsers where they do work: this is belt and braces, not a
+         * replacement.
+         *
+         * `inert` on the far side is belt and braces here too — `visibility: hidden` already takes
+         * an element out of the tab order and the accessibility tree — but it costs one attribute
+         * and it says the intent out loud.
          */}
         <div
-          className="absolute inset-0 [backface-visibility:hidden]"
-          {...(flipped ? { inert: '' as unknown as boolean } : {})}
+          className={clsx(FACE, flipped ? 'invisible delay-[250ms]' : 'visible delay-0')}
+          inert={flipped}
         >
           {front}
         </div>
         <div
-          className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)]"
-          {...(flipped ? {} : { inert: '' as unknown as boolean })}
+          className={clsx(
+            FACE,
+            '[transform:rotateY(180deg)]',
+            flipped ? 'visible delay-0' : 'invisible delay-[250ms]',
+          )}
+          inert={!flipped}
         >
           {back}
         </div>
