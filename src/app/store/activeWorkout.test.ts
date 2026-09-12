@@ -24,8 +24,13 @@ function memoryStorage(): Storage {
 const storage = memoryStorage();
 vi.stubGlobal('localStorage', storage);
 
-const { ACTIVE_WORKOUT_STORAGE_KEY, activeWorkoutPath, hasActiveWorkout, useActiveWorkoutStore } =
-  await import('./activeWorkout');
+const {
+  ACTIVE_WORKOUT_STORAGE_KEY,
+  activeWorkoutPath,
+  hasActiveWorkout,
+  stepElapsedNow,
+  useActiveWorkoutStore,
+} = await import('./activeWorkout');
 
 const prescribed = prescribeWorkout(
   FULL_WORKOUT,
@@ -180,6 +185,87 @@ describe('activeWorkout store', () => {
     expect(s.paused).toBe(true);
     expect(s.activeSince).toBeNull();
     expect(s.elapsedSec).toBe(12);
+  });
+
+  /*
+   * The step's own clock. It used to live in a ref inside the player's clock hook, which meant it
+   * died with the component: leaving a plank with twenty seconds left and coming back restarted it
+   * at a minute, and a twelve-minute AMRAP reopened at twelve minutes. It is derived from the
+   * session clock now, so pausing, leaving and reloading all behave the same way.
+   */
+  describe('the current step resumes where it stopped', () => {
+    const at = (sec: number) => vi.setSystemTime(new Date(T0.getTime() + sec * 1000));
+    const st = () => useActiveWorkoutStore.getState();
+
+    it('counts from the moment the step began, not from the start of the session', () => {
+      begin();
+      at(30);
+      st().next();
+      at(50);
+      expect(st().elapsedSec).toBe(0); // not ticked yet
+      expect(Math.round(stepElapsedNow(st()) / 1000)).toBe(20);
+    });
+
+    it('freezes while paused and carries on from the same second', () => {
+      begin();
+      at(40);
+      st().setPaused(true);
+      expect(Math.round(stepElapsedNow(st()) / 1000)).toBe(40);
+      // Four minutes away from the app change nothing.
+      at(280);
+      expect(Math.round(stepElapsedNow(st()) / 1000)).toBe(40);
+      st().setPaused(false);
+      at(290);
+      expect(Math.round(stepElapsedNow(st()) / 1000)).toBe(50);
+    });
+
+    it('survives a reload mid-step', async () => {
+      begin();
+      at(20);
+      st().next();
+      at(45); // 25 seconds into the second step
+      st().setPaused(true);
+      const raw = storage.getItem(ACTIVE_WORKOUT_STORAGE_KEY)!;
+      const persisted = JSON.parse(raw) as { state: Record<string, unknown> };
+      expect(persisted.state).toHaveProperty('stepStartedMs');
+
+      useActiveWorkoutStore.setState({ session: null, steps: [], stepIndex: 0, paused: true });
+      storage.setItem(ACTIVE_WORKOUT_STORAGE_KEY, raw);
+      // A day later, on a different device clock.
+      at(86_400);
+      await useActiveWorkoutStore.persist.rehydrate();
+
+      expect(st().stepIndex).toBe(1);
+      expect(Math.round(stepElapsedNow(st()) / 1000)).toBe(25);
+      expect(st().paused).toBe(true);
+    });
+
+    it('starts the step over on restartStep, and only that step', () => {
+      begin();
+      at(60);
+      st().next();
+      at(100);
+      expect(Math.round(stepElapsedNow(st()) / 1000)).toBe(40);
+      st().restartStep();
+      expect(Math.round(stepElapsedNow(st()) / 1000)).toBe(0);
+      st().tick();
+      expect(st().elapsedSec).toBe(100); // the session clock is untouched
+    });
+
+    it('refuses a persisted origin that is ahead of the session clock', async () => {
+      begin();
+      at(30);
+      st().setPaused(true);
+      const persisted = JSON.parse(storage.getItem(ACTIVE_WORKOUT_STORAGE_KEY)!) as {
+        state: Record<string, unknown>;
+      };
+      persisted.state.stepStartedMs = 999_999_999;
+      useActiveWorkoutStore.setState({ session: null, steps: [], stepIndex: 0, paused: true });
+      storage.setItem(ACTIVE_WORKOUT_STORAGE_KEY, JSON.stringify(persisted));
+      await useActiveWorkoutStore.persist.rehydrate();
+      // Clamped into the session, so the step reads as just-started rather than as negative time.
+      expect(stepElapsedNow(st())).toBe(0);
+    });
   });
 
   it('ignores malformed persisted state', async () => {

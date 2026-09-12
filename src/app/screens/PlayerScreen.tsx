@@ -263,6 +263,8 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
   const recordResult = useActiveWorkoutStore((s) => s.recordResult);
   const setPaused = useActiveWorkoutStore((s) => s.setPaused);
   const tick = useActiveWorkoutStore((s) => s.tick);
+  const restartStep = useActiveWorkoutStore((s) => s.restartStep);
+  const stepStartedMs = useActiveWorkoutStore((s) => s.stepStartedMs);
   const finish = useActiveWorkoutStore((s) => s.finish);
 
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -270,7 +272,6 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
   const [flipped, setFlipped] = useState(false);
   // How tall the glass panel is right now; the clip is sized against it. See ArtLayer.
   const [glassHeight, setGlassHeight] = useState(0);
-  const [restartNonce, setRestartNonce] = useState(0);
   const nextHandler = useRef<(() => void) | null>(null);
   const registerNext = useCallback((fn: (() => void) | null) => {
     nextHandler.current = fn;
@@ -373,9 +374,7 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
     }
     next();
   };
-  const restartStep = () => {
-    setRestartNonce((n) => n + 1);
-  };
+
   const endWorkout = () => {
     setEndOpen(false);
     finish();
@@ -425,7 +424,12 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
             <PlayerFooter onHeight={setGlassHeight}>
               {step ? (
                 <StepView
-                  key={`${stepIndex}:${restartNonce}`}
+                  /*
+                   * Keyed on when the step began, not on an index alone: restarting a step is the
+                   * store moving that instant, and the component has to come back with it so a
+                   * half-dialled rep count goes too.
+                   */
+                  key={`${stepIndex}:${stepStartedMs}`}
                   step={step}
                   index={stepIndex}
                   session={session}

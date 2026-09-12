@@ -1,9 +1,17 @@
 /**
- * Drift-free per-step clock. Elapsed time is derived from timestamps (accumulated finished spans
- * + the running span), so throttled background tabs and long pauses never skew it. Mount one per
- * step (key the component by step index) — there is no reset, only `running`.
+ * Drift-free per-step clock, read from the session store rather than kept here.
+ *
+ * Elapsed time is derived from timestamps — the session's accumulated spans, less the point the
+ * step began — so throttled background tabs and long pauses never skew it, and, crucially, neither
+ * does leaving. It used to live in a ref in this hook, which meant it died whenever the component
+ * did: walking out of a plank with twenty seconds left and coming back restarted it at a minute,
+ * and a twelve-minute AMRAP reopened at twelve minutes. The store persists, so now it does not.
+ *
+ * This hook therefore owns no time of its own. All it does is re-render often enough for the digits
+ * to change, and stop when there is nothing counting.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { stepElapsedNow, useActiveWorkoutStore } from '@/app/store/activeWorkout';
 import type { Cue } from './sound';
 
 export interface StepClock {
@@ -16,21 +24,35 @@ export interface StepClock {
   done: boolean;
 }
 
+/** Every 100ms, so a whole second never lands visibly late. */
+const TICK_MS = 100;
+
 export function useStepClock(running: boolean, durationSec?: number): StepClock {
-  const span = useRef({ baseMs: 0, since: null as number | null });
-  const [elapsedMs, setElapsedMs] = useState(0);
+  const read = useCallback(() => stepElapsedNow(useActiveWorkoutStore.getState()), []);
+  const [elapsedMs, setElapsedMs] = useState(read);
   const durationMs = durationSec === undefined ? undefined : Math.max(0, durationSec) * 1000;
   const done = durationMs !== undefined && elapsedMs >= durationMs;
   const active = running && !done;
 
+  /*
+   * The step may have been restarted, or moved on, without this component unmounting — the store's
+   * `stepStartedMs` is what says so, and reading it back immediately keeps the digits honest even
+   * while the clock is standing still.
+   */
+  const startedMs = useActiveWorkoutStore((s) => s.stepStartedMs);
+  const lastStart = useRef(startedMs);
   useEffect(() => {
-    if (!active) return;
-    const s = span.current;
-    s.since = Date.now();
-    const read = () => s.baseMs + (s.since === null ? 0 : Math.max(0, Date.now() - s.since));
+    if (lastStart.current === startedMs) return;
+    lastStart.current = startedMs;
+    setElapsedMs(read());
+  }, [startedMs, read]);
+
+  useEffect(() => {
     const tick = () => setElapsedMs(read());
     tick();
-    const interval = window.setInterval(tick, 100);
+    if (!active) return;
+    const interval = window.setInterval(tick, TICK_MS);
+    // The moment of zero deserves its own wake-up: an interval alone can be up to TICK_MS late.
     let endTimer: number | undefined;
     if (durationMs !== undefined) {
       const left = durationMs - read();
@@ -41,11 +63,9 @@ export function useStepClock(running: boolean, durationSec?: number): StepClock 
       window.clearInterval(interval);
       if (endTimer !== undefined) window.clearTimeout(endTimer);
       document.removeEventListener('visibilitychange', tick);
-      s.baseMs = read();
-      s.since = null;
-      setElapsedMs(s.baseMs);
+      tick();
     };
-  }, [active, durationMs]);
+  }, [active, durationMs, read]);
 
   const remainingMs = durationMs === undefined ? 0 : Math.max(0, durationMs - elapsedMs);
   return {
