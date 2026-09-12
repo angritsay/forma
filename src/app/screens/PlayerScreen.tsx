@@ -18,7 +18,7 @@
  * State lives in `useActiveWorkoutStore` (persisted), so leaving keeps the session resumable.
  * Keyboard: Space = pause, → next, ← previous, Esc = turn the card back over.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import ExerciseFigure from '@/components/anim/ExerciseFigure';
 import { Button } from '@/components/ui/Button';
@@ -93,8 +93,17 @@ interface ArtLayerProps {
 }
 
 /**
- * The demonstration, filling the card: video where the movement was filmed, the drawn figure on
- * the programme colour where it was not.
+ * The demonstration: video where the movement was filmed, the drawn figure where it was not.
+ *
+ * **It is contained, never cropped.** It used to fill the card with `object-cover`, and on a real
+ * clip that was the whole feature defeating itself: the coach films in landscape, in a garden, and
+ * a landscape frame cropped to a phone-shaped hole keeps a vertical strip through the middle — the
+ * squat happens off-screen and the video is worth nothing. Whatever the clip's shape, all of it is
+ * on screen now, with the app's own ground either side of it.
+ *
+ * **It ends above the glass.** The panel at the bottom reports its height and the clip is given the
+ * room above it, so the movement is never half under the words. The clip still runs a little way
+ * behind the glass — that is what gives the glass something to be glass over.
  *
  * It starts by itself the moment the step changes — that is what `key={videoUrl}` and the effect
  * below are for — because the athlete arriving at a movement wants to see it, not press play on
@@ -121,28 +130,43 @@ function ArtLayer({ animation, playing, videoUrl }: ArtLayerProps) {
    */
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden bg-bg" aria-hidden="true">
-      {videoUrl ? (
-        <video
-          key={videoUrl}
-          ref={video}
-          src={videoUrl}
-          className="size-full object-cover"
-          playsInline
-          muted
-          loop
-          autoPlay
-          preload="metadata"
-        />
-      ) : animation ? (
-        <div className="flex size-full items-center justify-center p-8">
-          <ExerciseFigure
-            animation={animation}
-            variant="hero"
-            playing={playing}
-            tile={TRANSPARENT_TILE}
+      {/*
+       * The stage: everything above the glass, less a finger's width that slips under it.
+       *
+       * The panel's measured height is what this is subtracted by, so a step with a stepper and a
+       * button leaves the clip correspondingly less room and the movement still ends above the
+       * words. The 40px of overlap does two things at once: it puts real picture behind the top of
+       * the panel, which is the only thing that makes frosted glass read as glass, and — because a
+       * portrait clip is fitted by height here — it widens the frame by the same token, closing the
+       * thin bars at the sides almost completely.
+       */}
+      <div
+        className="absolute inset-x-0 top-0"
+        style={{ bottom: 'max(0px, calc(var(--player-glass-h, 0px) - 40px))' }}
+      >
+        {videoUrl ? (
+          <video
+            key={videoUrl}
+            ref={video}
+            src={videoUrl}
+            className="size-full object-contain"
+            playsInline
+            muted
+            loop
+            autoPlay
+            preload="metadata"
           />
-        </div>
-      ) : null}
+        ) : animation ? (
+          <div className="flex size-full items-center justify-center p-8">
+            <ExerciseFigure
+              animation={animation}
+              variant="hero"
+              playing={playing}
+              tile={TRANSPARENT_TILE}
+            />
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -244,6 +268,8 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [endOpen, setEndOpen] = useState(false);
   const [flipped, setFlipped] = useState(false);
+  // How tall the glass panel is right now; the clip is sized against it. See ArtLayer.
+  const [glassHeight, setGlassHeight] = useState(0);
   const [restartNonce, setRestartNonce] = useState(0);
   const nextHandler = useRef<(() => void) | null>(null);
   const registerNext = useCallback((fn: (() => void) | null) => {
@@ -384,7 +410,11 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
         flipped={flipped}
         onFlip={setFlipped}
         front={
-          <div className="relative size-full overflow-hidden" onPointerDownCapture={unlock}>
+          <div
+            className="relative size-full overflow-hidden"
+            style={{ '--player-glass-h': `${glassHeight}px` } as CSSProperties}
+            onPointerDownCapture={unlock}
+          >
             <ArtLayer animation={animation} playing={!paused} videoUrl={videoUrl} />
             <PlayerHeader
               progress={steps.length > 1 ? stepIndex / (steps.length - 1) : 0}
@@ -392,7 +422,7 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
               onBack={() => setLeaveOpen(true)}
               onTogglePause={togglePause}
             />
-            <PlayerFooter>
+            <PlayerFooter onHeight={setGlassHeight}>
               {step ? (
                 <StepView
                   key={`${stepIndex}:${restartNonce}`}

@@ -13,7 +13,7 @@
  * that is words lives on the back of the card (CardBack.tsx).
  */
 import { clsx } from 'clsx';
-import { type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Glyph, Icon } from '@/components/ui/Icon';
 import { IconButton } from '@/components/ui/IconButton';
@@ -49,7 +49,7 @@ export function PlayerHeader({ progress, paused, onBack, onTogglePause }: Player
       {/* Its own layer, so it can run past the bar and fade out over the frame. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-[calc(100%+40px)] bg-linear-to-b from-ink/85 via-ink/55 to-transparent"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[calc(100%+24px)] bg-linear-to-b from-ink/55 via-ink/20 to-transparent"
       />
       {/*
        * How far through the session, as a 2px rule along the very top edge.
@@ -88,22 +88,51 @@ export function PlayerHeader({ progress, paused, onBack, onTogglePause }: Player
 
 export interface PlayerFooterProps {
   children: ReactNode;
+  /** Publishes the panel's height so the clip can be given the room above it. */
+  onHeight?: (px: number) => void;
 }
 
 /**
  * The bottom edge of the card: the movement, its number, and the one control that moves it on.
  *
- * Pinned to the bottom of the card rather than to a scrolling page — there is no scrolling page
- * any more. The gradient behind it stays solid for its lower half and then fades a long way up,
- * because the movement's name is the biggest thing here and the figure's legs used to run straight
- * through the letters. The ground under words has to be a ground.
+ * It is a pane of frosted glass, not a scrim. It used to be a gradient that went solid a long way
+ * up the frame, and on a real clip — a man in a garden under a grey sky — that read as the video
+ * being switched off halfway down rather than as a panel laid over it. Glass says the clip is still
+ * there and something is sitting on top of it: a hairline along the top edge, a little of the app's
+ * own ground, and a heavy blur of whatever is behind.
+ *
+ * It also reports its height, because the clip is sized to end above it (see ArtLayer) — and that
+ * height changes with the step: a rep count with a stepper and a button is twice a countdown.
  */
-export function PlayerFooter({ children }: PlayerFooterProps) {
+export function PlayerFooter({ children, onHeight }: PlayerFooterProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !onHeight) return;
+    const report = () => onHeight(el.getBoundingClientRect().height);
+    report();
+    // Every step renders its own footer, and a value can also change inside one (a stepper that
+    // grows a line): measure the box rather than guessing from the step's kind.
+    const ro = new ResizeObserver(report);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [onHeight]);
+
   return (
-    <div className="absolute inset-x-0 bottom-0 z-30">
+    <div ref={ref} className="absolute inset-x-0 bottom-0 z-30">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[calc(100%+96px)] bg-linear-to-t from-bg from-55% via-bg/90 via-80% to-transparent"
+        /*
+         * Thinnest at the top, where the clip is still showing through, and heaviest at the bottom,
+         * where the numbers are. That gradient is also what hides the clip's own bottom edge inside
+         * the panel — with a flat tint it read as a seam across the glass.
+         */
+        className="pointer-events-none absolute inset-0 border-t border-paper/15 bg-linear-to-b from-bg/35 via-bg/65 to-bg/80 backdrop-blur-xl"
+      />
+      {/* A short fade above the glass so its top edge is a line rather than a cut. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-full h-16 bg-linear-to-t from-bg/45 to-transparent"
       />
       {/*
        * Capped at the card's own height and scrollable inside that cap. Almost every step's footer
