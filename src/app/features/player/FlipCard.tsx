@@ -6,6 +6,10 @@
  * half over the demonstration — they are two faces of the same object, and getting from one to the
  * other is a turn: swipe up, or use the corner control.
  *
+ * Sideways on the front walks the workout: right to left is the next movement, left to right the
+ * one before. It is the gesture every photo app has taught everybody, and it is why the two
+ * chevrons that used to sit either side of Pause are not missed.
+ *
  * The turn is a real rotation rather than a cross-fade because the athlete has to know the clip did
  * not go anywhere. Under `prefers-reduced-motion` it becomes an instant swap, which says the same
  * thing without the movement.
@@ -16,8 +20,47 @@
 import { clsx } from 'clsx';
 import { useRef, type ReactNode } from 'react';
 
-/** Vertical travel (px) that counts as a deliberate turn rather than a tap that wandered. */
+/** Travel (px) that counts as a deliberate swipe rather than a tap that wandered. */
 const SWIPE_PX = 48;
+/** Sideways travel needed to change movement — longer, because it is the costlier mistake. */
+const SWIPE_X_PX = 64;
+
+export type Swipe = 'up' | 'down' | 'left' | 'right' | null;
+
+/**
+ * Which way a touch went, or null when it did not go far enough to mean anything.
+ *
+ * The dominant axis wins outright: a drag that is mostly sideways is never a turn and a drag that
+ * is mostly up is never a change of movement, so a finger that wobbles cannot do two things at
+ * once. Each axis keeps its own threshold.
+ */
+export function swipeOf(dx: number, dy: number): Swipe {
+  if (Math.abs(dx) > Math.abs(dy)) {
+    if (Math.abs(dx) < SWIPE_X_PX) return null;
+    return dx < 0 ? 'left' : 'right';
+  }
+  if (Math.abs(dy) < SWIPE_PX) return null;
+  return dy < 0 ? 'up' : 'down';
+}
+
+/** Track one touch and report the swipe it turned out to be. */
+function useSwipe(onSwipe: (swipe: Exclude<Swipe, null>, target: EventTarget | null) => void) {
+  const start = useRef<{ x: number; y: number } | null>(null);
+  return {
+    onTouchStart: (e: React.TouchEvent) => {
+      const t = e.touches[0];
+      start.current = t ? { x: t.clientX, y: t.clientY } : null;
+    },
+    onTouchEnd: (e: React.TouchEvent) => {
+      const from = start.current;
+      start.current = null;
+      const t = e.changedTouches[0];
+      if (!from || !t) return;
+      const swipe = swipeOf(t.clientX - from.x, t.clientY - from.y);
+      if (swipe) onSwipe(swipe, e.target);
+    },
+  };
+}
 
 /**
  * One face of the card. The delay classes are added per face; 250ms is half of `duration-500`
@@ -35,38 +78,47 @@ export interface FlipCardProps {
   onFlip: (flipped: boolean) => void;
   front: ReactNode;
   back: ReactNode;
+  /** Swiped right to left on the front: on to the next movement. */
+  onSwipeNext?: () => void;
+  /** Swiped left to right on the front: back to the one before. */
+  onSwipePrev?: () => void;
 }
 
-export function FlipCard({ flipped, onFlip, front, back }: FlipCardProps) {
-  const startY = useRef<number | null>(null);
-  const startX = useRef<number | null>(null);
+export function FlipCard({
+  flipped,
+  onFlip,
+  front,
+  back,
+  onSwipeNext,
+  onSwipePrev,
+}: FlipCardProps) {
+  /*
+   * The front reads all four directions: up turns the card over, and sideways walks the workout.
+   * Down does nothing here — there is nothing above the front to pull down from.
+   */
+  const frontSwipe = useSwipe((swipe) => {
+    if (swipe === 'up') onFlip(true);
+    else if (swipe === 'left') onSwipeNext?.();
+    else if (swipe === 'right') onSwipePrev?.();
+  });
 
-  const onTouchStart = (e: React.TouchEvent) => {
-    startY.current = e.touches[0]?.clientY ?? null;
-    startX.current = e.touches[0]?.clientX ?? null;
-  };
-
-  const onTouchEnd = (e: React.TouchEvent) => {
-    const y0 = startY.current;
-    const x0 = startX.current;
-    startY.current = null;
-    startX.current = null;
-    const touch = e.changedTouches[0];
-    if (y0 === null || x0 === null || !touch) return;
-    const dy = touch.clientY - y0;
-    const dx = touch.clientX - x0;
-    // A mostly-sideways drag is not a turn; it is someone steadying the phone.
-    if (Math.abs(dy) < SWIPE_PX || Math.abs(dx) > Math.abs(dy)) return;
-    if (dy < 0) onFlip(true);
-    else onFlip(false);
-  };
+  /*
+   * The back reads one: pull down to turn it back over, and only from the top of the text.
+   *
+   * The gestures used to live on the wrapper both faces share, which meant scrolling *up* through
+   * the technique — a finger moving down — read as a pull and flipped the card back to the video
+   * mid-sentence. Asking the scroller where it is fixes that without taking the gesture away: at
+   * the top there is nothing left to scroll, so a downward drag can only mean "put this away".
+   */
+  const backSwipe = useSwipe((swipe, target) => {
+    if (swipe !== 'down') return;
+    const scroller = (target as HTMLElement | null)?.closest('[data-card-scroll]');
+    if (scroller && scroller.scrollTop > 0) return;
+    onFlip(false);
+  });
 
   return (
-    <div
-      className="size-full [perspective:1600px]"
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
-    >
+    <div className="size-full [perspective:1600px]">
       <div
         className={clsx(
           'relative size-full transition-transform duration-500 ease-(--ease-out)',
@@ -98,6 +150,7 @@ export function FlipCard({ flipped, onFlip, front, back }: FlipCardProps) {
         <div
           className={clsx(FACE, flipped ? 'invisible delay-[250ms]' : 'visible delay-0')}
           inert={flipped}
+          {...frontSwipe}
         >
           {front}
         </div>
@@ -108,6 +161,7 @@ export function FlipCard({ flipped, onFlip, front, back }: FlipCardProps) {
             flipped ? 'visible delay-0' : 'invisible delay-[250ms]',
           )}
           inert={!flipped}
+          {...backSwipe}
         >
           {back}
         </div>
