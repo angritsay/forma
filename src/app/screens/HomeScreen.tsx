@@ -1,8 +1,14 @@
 /**
- * Home (docs/SPEC.md §10 flow 3): the photograph of today's session with the wordmark over it,
- * the streak, weekly stats, the coach's bookable hour, and the owned / locked course rows.
+ * Home (docs/SPEC.md §10 flow 3): the deck of everything the athlete is in — a card per course,
+ * per marathon, per course not yet bought — and under it the streak, the week's numbers, the
+ * coach's bookable hour and whatever he has assigned by hand.
+ *
+ * The screen used to open on one photograph: today's session of the single course Home was
+ * following, with the other courses as ruled rows further down and the marathon as a strip between
+ * them. Three things a person might be doing, drawn at three different sizes. The deck makes them
+ * peers and lets the athlete choose by swiping, which is the gesture the shape already implies.
  */
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
@@ -16,18 +22,17 @@ import { useToast } from '@/components/ui/Toast';
 import { STEPS_GOAL } from '@/lib/training/constants';
 import { useT } from '@/app/hooks/useT';
 import { AssignedWorkoutsCard } from '@/app/features/customWorkout/AssignedWorkoutsCard';
-import { MarathonCard } from '@/app/features/marathon/MarathonCard';
 import { BookCard } from '@/app/features/home/BookCard';
-import { CourseMiniCard, CourseRow } from '@/app/features/home/CourseRow';
+import { buildDeck } from '@/app/features/home/deck';
+import { HomeDeck } from '@/app/features/home/HomeDeck';
 import { dayPart, GREETING_KEY, greetingName } from '@/app/features/home/greeting';
 import { ResumeCard } from '@/app/features/home/ResumeCard';
 import { StatsGrid } from '@/app/features/home/StatsGrid';
 import { StreakCard } from '@/app/features/home/StreakCard';
-import { TodayCard } from '@/app/features/home/TodayCard';
-import { useTodayModel } from '@/app/features/home/useTodayModel';
-import { courseProgress } from '@/app/features/path/nodeState';
+import { useMarathonDay, useMyMarathons } from '@/app/features/marathon/useMarathon';
 import { useCatalogue } from '@/app/store/catalogue';
 import {
+  useActiveCourseId,
   useProgress,
   useProgressLoader,
   useStepsWeek,
@@ -40,30 +45,23 @@ import { BOOKING } from '@content/site/booking';
 
 function HomeSkeleton() {
   /*
-   * The skeleton mirrors the real rhythm: the full-bleed photograph, the button under it, the
-   * three facts on a rule, then the rows. Square corners, because nothing it stands in for is
+   * The skeleton mirrors the real rhythm: the full-bleed card the height of the deck, the pager
+   * under it, then the ruled sections. Square corners, because nothing it stands in for is
    * rounded any more.
    */
   return (
     <div className="flex flex-col" aria-hidden="true">
       <Skeleton
         rounded="control"
-        className="-mx-5 h-[52dvh] max-h-[640px] min-h-[420px] lg:-mx-8"
+        className="-mx-5 h-[74dvh] max-h-[760px] min-h-[520px] lg:-mx-8"
       />
-      <Skeleton rounded="control" className="mt-5 h-14" />
-      <div className="mt-5 grid grid-cols-3 gap-3 border-t border-border pt-4">
-        <Skeleton rounded="control" className="h-12" />
-        <Skeleton rounded="control" className="h-12" />
-        <Skeleton rounded="control" className="h-12" />
+      <div className="mt-4 flex justify-center gap-2">
+        <Skeleton rounded="control" className="h-0.5 w-7" />
+        <Skeleton rounded="control" className="h-0.5 w-7" />
       </div>
       <Skeleton rounded="control" className="mt-6 h-32" />
     </div>
   );
-}
-
-/** "01–04" for a list of four — the range marker set opposite an index heading. */
-function indexRange(count: number): string {
-  return count > 1 ? `01–${String(count).padStart(2, '0')}` : '01';
 }
 
 export default function HomeScreen() {
@@ -78,12 +76,15 @@ export default function HomeScreen() {
   const loading = useProgress((s) => s.loading);
   const error = useProgress((s) => s.error);
   const courseStates = useProgress((s) => s.courseStates);
+  const activeCourseId = useActiveCourseId();
   const streak = useStreak();
   const week = useWeekStats();
   const steps = useStepsWeek();
   const totalPoints = useTotalPoints();
-  const today = useTodayModel();
   const courses = useCatalogue((s) => s.courses);
+  // A marathon that fails to load leaves the deck to the courses; it never blocks the screen.
+  const { data: marathons, marathon } = useMyMarathons();
+  const { data: todayTasks } = useMarathonDay(marathon, marathon?.dayIndex ?? 0);
 
   const name = greetingName(profile?.displayName, user?.email ?? '');
   const greeting = t(GREETING_KEY[dayPart(new Date().getHours())], { name });
@@ -98,16 +99,31 @@ export default function HomeScreen() {
     }
   }, [toast, t]);
 
-  const owned = courses.filter((c) => entitlements.includes(c.id));
-  const locked = courses.filter((c) => !entitlements.includes(c.id));
+  const entries = useMemo(
+    () => buildDeck({ courses, entitlements, states: courseStates, marathons, activeCourseId }),
+    [courses, entitlements, courseStates, marathons, activeCourseId],
+  );
 
   /*
-   * The app's two controls — refresh and profile — ride in the top-right corner of the photograph
-   * as ink plates, next to the wordmark on the left; there is no bar. The greeting moved from the
-   * bar into the headline block as its kicker, so the person is still addressed by name.
+   * Today's open tasks, for the marathon card's one line. A task with no rule is an announcement
+   * rather than something to do, and `mine` means the proof is already sent.
+   */
+  const openTasks = useMemo(() => {
+    if (!marathon || todayTasks.length === 0) return undefined;
+    const left = todayTasks.filter((item) => item.task.rule !== 'none' && !item.mine).length;
+    return { [marathon.id]: left };
+  }, [marathon, todayTasks]);
+
+  /*
+   * The app's two controls — refresh and profile — ride in the top-right corner of the deck as ink
+   * plates, next to the wordmark on the left; there is no bar. They sit over the deck rather than
+   * inside a card, so swiping does not move them.
    */
   const chrome = (
     <>
+      <Logo className="text-[15px]" />
+      <span className="min-w-0 flex-1" />
+      <span className="eyebrow truncate text-paper/70">{greeting}</span>
       <IconButton
         label={t('app.homeRefresh')}
         icon={loading ? <Spinner size={16} /> : 'refresh'}
@@ -140,7 +156,13 @@ export default function HomeScreen() {
         <div className="flex items-center gap-3 py-4">
           <Logo className="text-[15px]" />
           <span className="flex-1" />
-          {chrome}
+          <IconButton
+            label={t('app.homeRefresh')}
+            icon={loading ? <Spinner size={16} /> : 'refresh'}
+            size="sm"
+            disabled={loading}
+            onClick={() => void refresh()}
+          />
         </div>
         <EmptyState
           title={t('app.homeErrorTitle')}
@@ -155,49 +177,53 @@ export default function HomeScreen() {
         />
       </>
     );
+  } else if (entries.length === 0) {
+    /* Nothing owned and nothing on sale — the catalogue has not loaded, or it is empty. */
+    body = (
+      <>
+        <div className="flex items-center gap-3 py-4">
+          <Logo className="text-[15px]" />
+          <span className="flex-1" />
+          <IconButton
+            label={t('app.homeRefresh')}
+            icon={loading ? <Spinner size={16} /> : 'refresh'}
+            size="sm"
+            disabled={loading}
+            onClick={() => void refresh()}
+          />
+        </div>
+        <EmptyState
+          title={t('app.homeTodayNoCourseTitle')}
+          description={t('app.homeTodayNoCourseBody')}
+          action={
+            <Button size="lg" onClick={() => navigate('/courses')}>
+              {t('app.homeTodayNoCourseCta')}
+            </Button>
+          }
+        />
+      </>
+    );
   } else {
     /*
-     * No gap on the stack: every section below draws its own top hairline and owns the space
-     * above it, so a container gap would double the rhythm and break the ruled column the page
-     * is built on. The photograph is the one exception — it bleeds and carries no rule.
+     * No gap on the stack: every section below the deck draws its own top hairline and owns the
+     * space above it, so a container gap would double the rhythm and break the ruled column the
+     * page is built on.
      */
     body = (
       <div className="flex flex-col">
-        <TodayCard
-          model={today}
-          eyebrow={greeting}
+        <HomeDeck
+          entries={entries}
+          openTasks={openTasks}
           chrome={chrome}
-          onStart={(courseId, nodeId) => navigate(`/courses/${courseId}/nodes/${nodeId}`)}
-          onOpenPath={(courseId) => navigate(`/courses/${courseId}`)}
-          onLogSteps={() => navigate('/steps')}
-          onPickCourse={() => navigate('/courses')}
+          onOpenCourse={(courseId) => navigate(`/courses/${courseId}`)}
+          onStartNode={(courseId, nodeId) => navigate(`/courses/${courseId}/nodes/${nodeId}`)}
+          onOpenMarathon={() => navigate('/marathon')}
         />
         <ResumeCard onResume={(path) => navigate(path)} />
         <StreakCard streak={streak} stepsGoal={STEPS_GOAL} onLogSteps={() => navigate('/steps')} />
         <StatsGrid week={week} steps={steps} totalPoints={totalPoints} stepsGoal={STEPS_GOAL} />
-        <MarathonCard onOpen={() => navigate('/marathon')} />
         <AssignedWorkoutsCard onOpen={(id) => navigate(`/assigned/${id}`)} />
         {BOOKING.enabled ? <BookCard onOpen={() => navigate('/book')} /> : null}
-        {owned.length > 0 ? (
-          <CourseRow title={t('app.homeYourCourses')} index={indexRange(owned.length)}>
-            {owned.map((course, i) => (
-              <CourseMiniCard
-                key={course.id}
-                course={course}
-                n={i + 1}
-                pct={courseProgress(course.nodes, courseStates[course.id]).pct}
-                onOpen={() => navigate(`/courses/${course.id}`)}
-              />
-            ))}
-          </CourseRow>
-        ) : null}
-        {locked.length > 0 ? (
-          <CourseRow title={t('app.homeMoreCourses')} index={indexRange(locked.length)}>
-            {locked.map((course, i) => (
-              <CourseMiniCard key={course.id} course={course} n={i + 1} locked />
-            ))}
-          </CourseRow>
-        ) : null}
       </div>
     );
   }

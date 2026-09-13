@@ -342,11 +342,19 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    limitations → self-tests (max push-ups with knee option, air squats in 60s with in-app timer,
    plank hold with timer) → time per session → goal → result screen (fitness index, level,
    what it means) → home.
-3. **Home**: greeting, streak card (days, at-risk state, rest-day steps CTA), "Today" card = next
-   node of the active course (or "pick a course"), quick stats (steps this week chart, kcal, minutes,
-   points), owned courses row, locked courses row with "Get course" CTA linking to landing.
-4. **Course path**: vertical winding path grouped by week; node states done/current/locked; rest
-   nodes; test/benchmark nodes; header with progress %, leaderboard button.
+3. **Home**: a **deck** of full-height cards swiped sideways — one per owned course, one per
+   running marathon, one per course not yet bought — each with its cover (a photograph where one is
+   vendored, else the programme colour), its name, how far in you are as a figure over a rule, and
+   one button: start today's session, open today's marathon task, or go to the sales page. The
+   wordmark, the greeting and the two controls sit over the deck and do not move when it is swiped;
+   a row of 2px rules under it is the pager. Below the deck: the resume strip, the streak card
+   (days, at-risk state, rest-day steps CTA), quick stats (steps this week chart, kcal, minutes,
+   points), the coach's assigned workouts and his bookable hour.
+4. **Course path**: the days as a winding column of square stops — four columns, wave order, the
+   day's name set in the space each stop leaves beside it — grouped under a banner per week in the
+   programme colour. A finished day is filled in that colour and ticked, today is filled in paper,
+   an open day is outlined, a locked one is dimmed; rest and milestone days open a sheet. Header
+   with progress %, days done and the load multiplier, plus the leaderboard button.
 5. **Node preview**: the picture (a still from the movement's clip, else the drawn figure), the
    workout's name, the programme and day, three facts, and "Start". Everything else — focus,
    description, the movement grid, the plan block by block — is folded behind "What's inside".

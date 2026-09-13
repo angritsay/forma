@@ -551,6 +551,19 @@ body {
 }
 
 /*
+ * The home deck's scroller. Swiping between cards is the whole gesture, and on a desktop browser
+ * the scrollbar it would otherwise draw sits across the bottom of a full-height photograph — so it
+ * is hidden, and the pager rules under the deck are what say how many cards there are.
+ */
+.deck-scroller {
+  scrollbar-width: none;
+}
+
+.deck-scroller::-webkit-scrollbar {
+  display: none;
+}
+
+/*
  * Vertical kicker running down the edge of a photograph. `writing-mode` rather than a rotate
  * transform: a rotated box keeps its unrotated footprint in layout and overlapped the header
  * above it, whereas this one occupies the column it actually draws in.
