@@ -1,0 +1,1 @@
+const o={name:{ru:"Сергей Титов",en:"Sergey Titov"},role:{ru:"Тренер по общей физической подготовке и кроссфиту",en:"Strength, conditioning and CrossFit coach"},photo:"/coach/sergey.jpg"};export{o as C};

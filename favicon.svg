@@ -1,0 +1,13 @@
+<!--
+  The app mark: the wordmark's wide F on a black square. Second brandbook — the identity is
+  black and white, the shape is the sharp rectangle (no radius), and the full stop that used to
+  end "FORMA." is gone with the blue it was drawn in.
+
+  The F is the anchor letter of the wordmark, stretched ×1.22 as it is in the lockup, so the
+  favicon and the header are recognisably one letterform. Light ink on the dark ground: #f6f6f7
+  on #0f0f11 is 17.7:1, which is what holds it together at 16px in a tab strip.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" fill="#0f0f11"/>
+  <path d="M16 48V16h32v7H25v7h20v7H25v11z" fill="#f6f6f7"/>
+</svg>
