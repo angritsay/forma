@@ -1244,7 +1244,7 @@ export const COURSE_START: CourseInput = {
   avgSessionMin: 18,
   tile: '#f2f52d', // --tile-1 — programme colour: beginners
   price: { rub: 2990, usd: 29 },
-  paymentUrl: { ru: 'https://payform.ru/i0cx6aS/' },
+  paymentUrl: { ru: 'https://payform.ru/jfcyh1M/' },
   workouts: WORKOUTS.map(withCues),
   nodes: NODES,
   faq: [
