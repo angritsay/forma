@@ -667,8 +667,26 @@ every private message gets the same greeting with an inline button that launches
      MINI_APP_URL=https://forma-app.co/app/
    ```
 
-   `TELEGRAM_GREETING` and `TELEGRAM_BUTTON_TEXT` override the Russian copy baked into
-   `index.ts`; leave them unset to use it.
+   Everything the greeting is made of can be overridden without touching the code; leave any of
+   them unset to use what is baked into `index.ts`.
+
+   | Secret                      | Default                               | What it is                     |
+   | --------------------------- | ------------------------------------- | ------------------------------ |
+   | `TELEGRAM_GREETING`         | three lines ending «Что открыть?»     | The caption under the picture  |
+   | `TELEGRAM_PHOTO_URL`        | `https://forma-app.co/og/default.png` | The picture itself             |
+   | `TELEGRAM_BUTTON_TEXT`      | «Тренироваться»                       | The button that opens the app  |
+   | `TELEGRAM_SITE_BUTTON_TEXT` | «Что за курс»                         | The button that opens the site |
+   | `TELEGRAM_SITE_URL`         | `https://forma-app.co/courses/start/` | Where that button goes         |
+
+   **The picture is fetched by Telegram's own servers, not by this function**, so it has to be a
+   public URL that answers with an image. The default is the OG card the deploy generates, which
+   means it exists as soon as the site has deployed once. Set `TELEGRAM_SITE_BUTTON_TEXT=` (empty)
+   to drop the second button and leave one.
+
+   A photo Telegram refuses — moved, slow, never generated — is not a silent failure: the function
+   logs it and sends the same words and the same buttons as a plain message. So a broken picture
+   costs the picture and nothing else. Tap **Start** after changing any of this: a greeting that
+   arrives without the image is the log line to go and read.
 
 4. **Point Telegram at it**, once, by opening this URL in a browser:
 

@@ -41,20 +41,43 @@ export interface BotReply {
   text: string;
   /** Label on the button that opens the Mini App. */
   buttonText: string;
+  /** Label on the button that opens the course page on the site, or '' for no such button. */
+  siteButtonText: string;
+  /** Picture above the greeting, or '' to send the greeting as plain text. */
+  photoUrl: string;
 }
 
 export interface BotCopy {
   greeting: string;
   buttonText: string;
+  siteButtonText: string;
+  photoUrl: string;
 }
 
+/**
+ * The first thing anyone sees of Forma.
+ *
+ * Three lines and a question. It says what the thing is, what is inside it, and then asks — the
+ * answer is the two buttons under it, because the two people who tap **Start** want different
+ * things: one has already paid and wants to train, the other is still deciding and wants to read.
+ * Sending them both to the same place serves neither.
+ *
+ * No Markdown anywhere in here. Telegram would need every «.», «-» and «(» escaped, and a caption
+ * that fails to parse is a caption nobody sees.
+ */
 export const DEFAULT_COPY: BotCopy = {
   greeting:
     'Форма — домашний кроссфит с Сергеем Титовым.\n\n' +
-    'Тренировки идут прямо здесь, в Telegram: видео, счётчик и серия дней.\n\n' +
-    'Нажми кнопку ниже, чтобы открыть приложение.',
-  buttonText: 'Открыть Форму',
+    'Двадцать тренировок по 15–20 минут, видео на каждое движение, счётчик серии. ' +
+    'Нагрузка подстраивается под тебя.\n\n' +
+    'Что открыть?',
+  buttonText: 'Тренироваться',
+  siteButtonText: 'Что за курс',
+  photoUrl: 'https://forma-app.co/og/default.png',
 };
+
+/** Where the site explains the course to someone who has not bought it yet. */
+const DEFAULT_SITE_URL = 'https://forma-app.co/courses/start/';
 
 /**
  * The reply an update deserves, or null for the updates that are not a person writing to the bot.
@@ -68,22 +91,55 @@ export function replyFor(update: TelegramUpdate, copy: BotCopy = DEFAULT_COPY): 
   if (typeof chatId !== 'number') return null;
   if (message?.chat?.type !== 'private') return null;
   if (typeof message.text !== 'string' || message.text.trim() === '') return null;
-  return { chatId, text: copy.greeting, buttonText: copy.buttonText };
+  return {
+    chatId,
+    text: copy.greeting,
+    buttonText: copy.buttonText,
+    siteButtonText: copy.siteButtonText,
+    photoUrl: copy.photoUrl,
+  };
 }
 
 /**
- * The `sendMessage` payload for a reply.
+ * The buttons under the greeting, one per row so neither is the small one.
  *
- * An inline `web_app` button rather than a reply-keyboard one: it sits under the greeting where it
- * was sent, so it is still there after the person scrolls, and it does not replace the keyboard.
+ * Inline rather than a reply keyboard: they stay under the message where they were sent, so they
+ * are still there after the person scrolls, and they do not take over the keyboard. The second row
+ * is dropped when there is no label for it — a bot with an empty button is worse than a bot with
+ * one button.
  */
-export function sendMessageBody(reply: BotReply, appUrl: string): Record<string, unknown> {
+export function keyboard(reply: BotReply, appUrl: string, siteUrl: string) {
+  const rows: { text: string; web_app?: { url: string }; url?: string }[][] = [
+    [{ text: reply.buttonText, web_app: { url: appUrl } }],
+  ];
+  if (reply.siteButtonText && siteUrl) rows.push([{ text: reply.siteButtonText, url: siteUrl }]);
+  return { inline_keyboard: rows };
+}
+
+/** The `sendMessage` payload: the greeting as text, for when there is no picture to send. */
+export function sendMessageBody(
+  reply: BotReply,
+  appUrl: string,
+  siteUrl: string = DEFAULT_SITE_URL,
+): Record<string, unknown> {
   return {
     chat_id: reply.chatId,
     text: reply.text,
-    reply_markup: {
-      inline_keyboard: [[{ text: reply.buttonText, web_app: { url: appUrl } }]],
-    },
+    reply_markup: keyboard(reply, appUrl, siteUrl),
+  };
+}
+
+/** The `sendPhoto` payload: the same greeting as the caption, under the picture. */
+export function sendPhotoBody(
+  reply: BotReply,
+  appUrl: string,
+  siteUrl: string = DEFAULT_SITE_URL,
+): Record<string, unknown> {
+  return {
+    chat_id: reply.chatId,
+    photo: reply.photoUrl,
+    caption: reply.text,
+    reply_markup: keyboard(reply, appUrl, siteUrl),
   };
 }
 
@@ -121,19 +177,46 @@ export async function handleRequest(req: Request): Promise<Response> {
     return reply(400, 'unreadable body');
   }
 
-  const copy = {
+  const copy: BotCopy = {
     greeting: Deno.env.get('TELEGRAM_GREETING') ?? DEFAULT_COPY.greeting,
     buttonText: Deno.env.get('TELEGRAM_BUTTON_TEXT') ?? DEFAULT_COPY.buttonText,
+    siteButtonText: Deno.env.get('TELEGRAM_SITE_BUTTON_TEXT') ?? DEFAULT_COPY.siteButtonText,
+    photoUrl: Deno.env.get('TELEGRAM_PHOTO_URL') ?? DEFAULT_COPY.photoUrl,
   };
   const answer = replyFor(update, copy);
   if (!answer) return reply(200, 'ignored');
 
   const appUrl = Deno.env.get('MINI_APP_URL') ?? DEFAULT_APP_URL;
-  const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(sendMessageBody(answer, appUrl)),
-  });
+  const siteUrl = Deno.env.get('TELEGRAM_SITE_URL') ?? DEFAULT_SITE_URL;
+
+  const call = (method: string, body: Record<string, unknown>) =>
+    fetch(`https://api.telegram.org/bot${token}/${method}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+  /*
+   * The picture first, the words alone if the picture will not go.
+   *
+   * Telegram fetches the photo by URL from its own servers, so it can refuse for reasons that have
+   * nothing to do with this function: the file moved, the deploy that generates it has not run, the
+   * host is slow. None of those are a reason for someone who tapped **Start** to get silence, and
+   * the greeting is the whole point — so a refused photo falls through to the same text, same
+   * buttons, no picture.
+   */
+  let res = answer.photoUrl
+    ? await call('sendPhoto', sendPhotoBody(answer, appUrl, siteUrl))
+    : await call('sendMessage', sendMessageBody(answer, appUrl, siteUrl));
+
+  if (!res.ok && answer.photoUrl) {
+    console.error(
+      'telegram-bot: sendPhoto failed, falling back to text',
+      res.status,
+      await res.text(),
+    );
+    res = await call('sendMessage', sendMessageBody(answer, appUrl, siteUrl));
+  }
   if (!res.ok) {
     // Logged, not retried: a message Telegram refused once it will refuse again.
     console.error('telegram-bot: sendMessage failed', res.status, await res.text());
