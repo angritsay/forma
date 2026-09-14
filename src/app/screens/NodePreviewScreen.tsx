@@ -289,16 +289,12 @@ export default function NodePreviewScreen() {
       >
         <div className="flex flex-col gap-6 pb-2">
           {/*
-           * The picture, full-bleed and square-shouldered: a frame from the coach's own clip where
-           * the movement has been filmed, the drawn figure on the programme colour where it has
-           * not, and the day's stamps in the corner as dark plates.
+           * The picture, full-bleed and square-shouldered: a frame from the coach's own clip, the
+           * programme colour on its own where the movement has no frame yet, and the day's stamps
+           * in the corner as dark plates.
            */}
           <div className="hero-art relative -mx-5 flex aspect-[4/3] items-center justify-center overflow-hidden lg:-mx-8 lg:aspect-auto lg:h-[360px]">
-            <WorkoutHero
-              exercise={exercise}
-              tile={course.tile}
-              label={exercise ? l(exercise.name) : undefined}
-            />
+            <WorkoutHero exercise={exercise} />
             {isTest || isBenchmark || deload || repeat ? (
               <div className="absolute top-3 right-3 flex flex-wrap justify-end gap-1.5">
                 {isTest ? <Badge tone="on-art">{t('app.nodeTestBadge')}</Badge> : null}

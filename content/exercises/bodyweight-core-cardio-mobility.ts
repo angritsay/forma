@@ -1,7 +1,7 @@
 /**
  * Exercise library, file B: bodyweight core, conditioning (locomotion / jumps) and mobility
- * (warm-up and cool-down). Ids, animation ids, units, equipment and levels are referenced by
- * courses and animations — keep them stable. Copy is shown in the workout player and on the
+ * (warm-up and cool-down). Ids, units, equipment and levels are referenced by
+ * courses and by the clips — keep them stable. Copy is shown in the workout player and on the
  * public /exercises/<slug>/ pages.
  */
 import type { ExerciseInput } from '@/content/schema';
@@ -60,7 +60,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 3.0,
     loadable: false,
     scaling: { harder: 'side_plank' },
-    animation: 'plank',
     tags: ['core', 'benchmark'],
     isTest: true,
   },
@@ -113,7 +112,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 3.0,
     loadable: false,
     scaling: { easier: 'plank' },
-    animation: 'side_plank',
     tags: ['core', 'unilateral'],
   },
   {
@@ -171,7 +169,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 3.5,
     loadable: false,
     scaling: { easier: 'dead_bug', harder: 'v_up' },
-    animation: 'hollow_hold',
     tags: ['core'],
   },
   {
@@ -224,7 +221,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 3.5,
     loadable: false,
     scaling: {},
-    animation: 'superman',
     tags: ['core', 'warmup'],
   },
   {
@@ -284,7 +280,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     loadable: false,
     // The coach's own rule: sit-ups are not for diastasis — do dead bugs instead.
     scaling: { easier: 'dead_bug', harder: 'v_up' },
-    animation: 'sit_up',
     video: { ru: 'storage:videos/shared/sit_up.ru.mp4' },
     tags: ['core'],
   },
@@ -347,7 +342,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 6.0,
     loadable: false,
     scaling: { easier: 'sit_up' },
-    animation: 'v_up',
     tags: ['core', 'explosive'],
   },
   {
@@ -406,7 +400,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 3.8,
     loadable: false,
     scaling: { easier: 'dead_bug', harder: 'hanging_knee_raise' },
-    animation: 'leg_raise',
     tags: ['core'],
   },
   {
@@ -462,7 +455,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 3.0,
     loadable: false,
     scaling: { harder: 'leg_raise' },
-    animation: 'dead_bug',
     video: { ru: 'storage:videos/shared/dead_bug.ru.mp4' },
     tags: ['core', 'warmup'],
   },
@@ -522,7 +514,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 3.0,
     loadable: false,
     scaling: {},
-    animation: 'bird_dog',
     tags: ['core', 'warmup', 'unilateral'],
   },
   {
@@ -578,7 +569,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 4.0,
     loadable: false,
     scaling: { easier: 'dead_bug' },
-    animation: 'russian_twist',
     video: { ru: 'storage:videos/shared/russian_twist.ru.mp4' },
     tags: ['core'],
   },
@@ -631,7 +621,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 4.0,
     loadable: false,
     scaling: { easier: 'dead_bug' },
-    animation: 'flutter_kick',
     tags: ['core', 'cardio'],
   },
   {
@@ -687,7 +676,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 8.0,
     loadable: false,
     scaling: { easier: 'high_knees' },
-    animation: 'mountain_climber',
     video: { ru: 'storage:videos/shared/mountain_climber.ru.mp4' },
     tags: ['cardio', 'core'],
   },
@@ -743,7 +731,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 7.0,
     loadable: false,
     scaling: { easier: 'plank' },
-    animation: 'bear_crawl',
     tags: ['cardio', 'core', 'upper'],
   },
   {
@@ -798,7 +785,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 8.0,
     loadable: false,
     scaling: { easier: 'jog_in_place', harder: 'mountain_climber' },
-    animation: 'high_knees',
     tags: ['cardio', 'warmup', 'lower'],
   },
   {
@@ -854,7 +840,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 7.0,
     loadable: false,
     scaling: { easier: 'jog_in_place', harder: 'skater' },
-    animation: 'jumping_jack',
     tags: ['cardio', 'warmup'],
   },
   {
@@ -910,7 +895,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 8.0,
     loadable: false,
     scaling: { easier: 'lateral_lunge' },
-    animation: 'skater',
     tags: ['cardio', 'explosive', 'lower', 'unilateral'],
   },
   {
@@ -961,7 +945,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 6.0,
     loadable: false,
     scaling: { harder: 'high_knees' },
-    animation: 'jog_in_place',
     tags: ['cardio', 'warmup'],
   },
   {
@@ -1012,7 +995,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 2.5,
     loadable: false,
     scaling: {},
-    animation: 'arm_circles',
     tags: ['warmup', 'mobility', 'upper'],
   },
   {
@@ -1067,7 +1049,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 2.8,
     loadable: false,
     scaling: {},
-    animation: 'leg_swing',
     tags: ['warmup', 'mobility', 'lower', 'unilateral'],
   },
   {
@@ -1122,7 +1103,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 2.3,
     loadable: false,
     scaling: {},
-    animation: 'cat_cow',
     tags: ['warmup', 'cooldown', 'mobility'],
   },
   {
@@ -1176,7 +1156,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 2.3,
     loadable: false,
     scaling: {},
-    animation: 'hip_flexor_stretch',
     tags: ['cooldown', 'mobility', 'lower', 'unilateral'],
   },
   {
@@ -1230,7 +1209,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 2.3,
     loadable: false,
     scaling: {},
-    animation: 'hamstring_stretch',
     tags: ['cooldown', 'mobility', 'lower', 'unilateral'],
   },
   {
@@ -1281,7 +1259,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 2.3,
     loadable: false,
     scaling: {},
-    animation: 'child_pose',
     tags: ['cooldown', 'mobility'],
   },
   {
@@ -1344,7 +1321,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 3.0,
     loadable: false,
     scaling: {},
-    animation: 'worlds_greatest_stretch',
     tags: ['warmup', 'mobility', 'unilateral'],
   },
   {
@@ -1399,7 +1375,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 2.8,
     loadable: false,
     scaling: {},
-    animation: 'squat_hold',
     tags: ['warmup', 'mobility', 'lower'],
   },
   /* --- Joint mobility: the coach's warm-up, top to bottom ---------------------------------- */
@@ -1447,7 +1422,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 2.0,
     loadable: false,
     scaling: {},
-    animation: 'neck_circles',
     tags: ['warmup', 'mobility', 'upper'],
   },
   {
@@ -1491,7 +1465,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 2.3,
     loadable: false,
     scaling: {},
-    animation: 'elbow_wrist_circles',
     tags: ['warmup', 'mobility', 'upper'],
   },
   {
@@ -1540,7 +1513,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 2.5,
     loadable: false,
     scaling: {},
-    animation: 'side_bend',
     tags: ['warmup', 'mobility', 'core'],
   },
   {
@@ -1589,7 +1561,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 2.3,
     loadable: false,
     scaling: {},
-    animation: 'hip_circles',
     tags: ['warmup', 'mobility', 'lower'],
   },
   {
@@ -1635,7 +1606,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 2.3,
     loadable: false,
     scaling: {},
-    animation: 'knee_circles',
     tags: ['warmup', 'mobility', 'lower'],
   },
   {
@@ -1681,7 +1651,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 2.0,
     loadable: false,
     scaling: {},
-    animation: 'ankle_circles',
     tags: ['warmup', 'mobility', 'lower'],
   },
   {
@@ -1730,7 +1699,6 @@ export const EXERCISES_B: ExerciseInput[] = [
     met: 2.3,
     loadable: false,
     scaling: {},
-    animation: 'quad_stretch',
     tags: ['cooldown', 'mobility', 'lower'],
   },
 ];

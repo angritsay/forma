@@ -8,7 +8,7 @@
  * a reference list of exercises actually is. The tile takes the programme colour of the course
  * the exercise belongs to, and `courseTileStyle()` sets the ink the figure is drawn in to match.
  */
-import ExerciseFigure from '@/components/anim/ExerciseFigure';
+import ExerciseStill from '@/components/media/ExerciseStill';
 import type { Exercise, Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { equipmentNames, exerciseTile, levelName, patternName } from '@/lib/seo/exercises';
@@ -32,7 +32,7 @@ const CHIP =
   style={courseTileStyle(exerciseTile(ex))}
 >
   <div class="hero-art flex size-[72px] shrink-0 items-center justify-center overflow-hidden">
-    <ExerciseFigure animation={ex.animation} variant="thumb" label={name} />
+    <ExerciseStill exerciseId={ex.id} />
   </div>
   <div class="min-w-0">
     <span class="eyebrow">{patternName(ex.pattern, locale)}</span>

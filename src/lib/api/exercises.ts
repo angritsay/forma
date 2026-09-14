@@ -31,7 +31,6 @@ interface DbExercise {
   level: number | null;
   unit: ExerciseCatalogRow['unit'];
   seconds_per_rep: number | string | null;
-  animation: string | null;
   video_ru: string | null;
   video_en: string | null;
   image: string | null;
@@ -78,7 +77,6 @@ function fromDb(r: DbExercise): ExerciseCatalogRow {
     level: r.level,
     unit: r.unit,
     secondsPerRep: num(r.seconds_per_rep),
-    animation: r.animation,
     videoRu: r.video_ru,
     videoEn: r.video_en,
     image: r.image,

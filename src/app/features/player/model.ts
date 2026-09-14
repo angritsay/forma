@@ -291,8 +291,11 @@ export function stepTitle(
   }
 }
 
-/** Animation id shown behind a step (the exercise, or the first exercise of a block). */
-export function stepAnimation(step: PlayerStep, prescribed: PrescribedWorkout): string | undefined {
+/** The movement a step is about: the exercise itself, or the first exercise of its block. */
+export function stepExerciseId(
+  step: PlayerStep,
+  prescribed: PrescribedWorkout,
+): string | undefined {
   const first = (blockId: string) => findBlock(prescribed, blockId)?.items[0]?.exerciseId;
   let exerciseId: string | undefined;
   switch (step.kind) {
@@ -311,7 +314,7 @@ export function stepAnimation(step: PlayerStep, prescribed: PrescribedWorkout): 
       exerciseId = prescribed.blocks[0]?.items[0]?.exerciseId;
       break;
   }
-  return exerciseId ? findExercise(exerciseId)?.animation : undefined;
+  return exerciseId;
 }
 
 /** Result for a step the athlete chose to skip (null for steps without a result). */

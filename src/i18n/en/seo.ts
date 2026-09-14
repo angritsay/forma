@@ -23,10 +23,10 @@ export const seo = {
   // Exercises hub
   exercisesHubTitle: 'Home CrossFit exercises: technique library',
   exercisesHubDescription:
-    'Home CrossFit exercises with animations, step-by-step technique, common mistakes and easier or harder versions. Pick movements for your gear and level.',
+    'Home CrossFit exercises on video, with step-by-step technique, common mistakes and easier or harder versions. Pick movements for your gear and level.',
   exercisesHubH1: 'Home CrossFit exercises',
   exercisesHubIntro:
-    'These are the home CrossFit exercises used in the Forma courses: bodyweight movements and work with dumbbells, a kettlebell, bands, a jump rope and a pull-up bar. Every entry has an animation, step-by-step technique, coaching cues, common mistakes and an easier or harder version, so you can build a session for your level.',
+    'These are the home CrossFit exercises used in the Forma courses: bodyweight movements and work with dumbbells, a kettlebell, bands, a jump rope and a pull-up bar. Every entry has a video, step-by-step technique, coaching cues, common mistakes and an easier or harder version, so you can build a session for your level.',
   exercisesHubEmpty: 'The library is being filled — exercises will appear here soon.',
   exercisesHubPatternsNav: 'Movement patterns',
   exerciseWordOne: 'exercise',
@@ -38,7 +38,7 @@ export const seo = {
   exerciseTitleMedium: '{name}: technique and mistakes',
   exerciseTitleShort: '{name}: technique',
   exerciseDescriptionCta:
-    'Animation, step-by-step technique, cues and scaling options in the Forma library.',
+    'Video, step-by-step technique, cues and scaling options in the Forma library.',
   exerciseFacts: 'Quick facts',
   factMuscles: 'Muscles',
   factPattern: 'Movement pattern',

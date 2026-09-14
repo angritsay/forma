@@ -5,7 +5,7 @@
  *   'https://…'                              → unchanged
  *   undefined                                → undefined
  */
-import { isConfigured, supabase } from './client';
+import { isConfigured, projectUrl, supabase } from './client';
 import { demo } from './demo/load';
 import { guard } from './internal';
 import { parseStorageRef } from './mappers';
@@ -67,7 +67,12 @@ export const PRIVATE_BUCKET = 'videos';
 export function publicMediaUrl(ref: string): string {
   const parsed = parseStorageRef(ref);
   if (!parsed) return ref;
-  return supabase().storage.from(parsed.bucket).getPublicUrl(parsed.path).data.publicUrl;
+  // Built by hand rather than through `supabase().storage`: this runs during the static build as
+  // well as in the browser, and there a Supabase client would be an auth store and a refresh timer
+  // created to concatenate a string. The address is the one Storage documents and never varies.
+  const base = projectUrl();
+  if (!base) return ref;
+  return `${base}/storage/v1/object/public/${parsed.bucket}/${parsed.path}`;
 }
 
 /**
@@ -76,12 +81,10 @@ export function publicMediaUrl(ref: string): string {
  * `images/exercises/<id>.jpg` in the public bucket, written by scripts/media/upload-videos.mjs
  * next to the clip it came from. Derived rather than stored on the exercise: the path is already
  * deterministic, and making it a content field would mean editing every exercise file each time a
- * batch of clips is uploaded — for a value that can only ever be this one string. The caller shows
- * the drawn figure when the image does not load, which is also what happens before any clip for
- * that movement exists.
+ * batch of clips is uploaded — for a value that can only ever be this one string.
  *
  * Empty when Supabase is not configured (the demo, a build with no backend): there is no bucket to
- * point at, and the figure is the whole answer.
+ * point at, and nothing is drawn — see `ExerciseStill`.
  */
 export function exerciseStillUrl(exerciseId: string): string | undefined {
   if (!isConfigured() || isDemo()) return undefined;

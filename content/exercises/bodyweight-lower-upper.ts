@@ -1,6 +1,6 @@
 /**
  * Exercise library, file A: bodyweight lower-body, pushing, plyometrics and full-body warm-ups.
- * Ids, animation ids, units, equipment and levels are referenced by courses and animations —
+ * Ids, units, equipment and levels are referenced by courses and by the clips —
  * keep them stable. Copy is shown in the workout player and on public /exercises/<slug>/ pages.
  */
 import type { ExerciseInput } from '@/content/schema';
@@ -57,7 +57,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 5.0,
     loadable: false,
     scaling: { harder: 'jump_squat' },
-    animation: 'air_squat',
     video: { ru: 'storage:videos/shared/air_squat.ru.mp4' },
     tags: ['lower', 'benchmark'],
     isTest: true,
@@ -112,7 +111,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 8.0,
     loadable: false,
     scaling: { easier: 'air_squat', harder: 'tuck_jump' },
-    animation: 'jump_squat',
     tags: ['lower', 'explosive', 'cardio'],
   },
   {
@@ -170,7 +168,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 3.0,
     loadable: false,
     scaling: {},
-    animation: 'wall_sit',
     tags: ['lower'],
   },
   {
@@ -232,7 +229,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 3.8,
     loadable: false,
     scaling: { harder: 'single_leg_glute_bridge' },
-    animation: 'glute_bridge',
     video: { ru: 'storage:videos/shared/glute_bridge.ru.mp4' },
     tags: ['lower', 'warmup'],
   },
@@ -286,7 +282,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 3.8,
     loadable: false,
     scaling: { easier: 'glute_bridge' },
-    animation: 'single_leg_glute_bridge',
     tags: ['lower', 'unilateral'],
   },
   {
@@ -342,7 +337,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 5.0,
     loadable: false,
     scaling: { harder: 'jumping_lunge' },
-    animation: 'reverse_lunge',
     video: { ru: 'storage:videos/shared/reverse_lunge.ru.mp4' },
     tags: ['lower', 'unilateral'],
   },
@@ -399,7 +393,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 8.0,
     loadable: false,
     scaling: { easier: 'reverse_lunge' },
-    animation: 'jumping_lunge',
     tags: ['lower', 'explosive', 'cardio', 'unilateral'],
   },
   {
@@ -458,7 +451,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 4.5,
     loadable: false,
     scaling: { easier: 'reverse_lunge' },
-    animation: 'lateral_lunge',
     tags: ['lower', 'unilateral', 'mobility'],
   },
   {
@@ -514,7 +506,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 5.5,
     loadable: false,
     scaling: {},
-    animation: 'step_up',
     video: { ru: 'storage:videos/shared/step_up.ru.mp4' },
     tags: ['lower', 'unilateral'],
   },
@@ -574,7 +565,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 3.8,
     loadable: false,
     scaling: { easier: 'glute_bridge' },
-    animation: 'single_leg_rdl',
     tags: ['lower', 'unilateral'],
   },
   {
@@ -631,7 +621,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 4.5,
     loadable: false,
     scaling: { easier: 'knee_push_up', harder: 'diamond_push_up' },
-    animation: 'push_up',
     video: { ru: 'storage:videos/shared/push_up.ru.mp4' },
     tags: ['upper', 'push', 'benchmark'],
     isTest: true,
@@ -689,7 +678,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 3.8,
     loadable: false,
     scaling: { easier: 'incline_push_up', harder: 'push_up' },
-    animation: 'knee_push_up',
     video: { ru: 'storage:videos/shared/knee_push_up.ru.mp4' },
     tags: ['upper', 'push', 'benchmark'],
     isTest: true,
@@ -744,7 +732,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 3.5,
     loadable: false,
     scaling: { harder: 'knee_push_up' },
-    animation: 'incline_push_up',
     tags: ['upper', 'push'],
   },
   {
@@ -797,7 +784,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 4.5,
     loadable: false,
     scaling: { easier: 'push_up' },
-    animation: 'diamond_push_up',
     tags: ['upper', 'push'],
   },
   {
@@ -853,7 +839,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 4.5,
     loadable: false,
     scaling: { easier: 'push_up' },
-    animation: 'pike_push_up',
     tags: ['upper', 'push'],
   },
   {
@@ -909,7 +894,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 4.0,
     loadable: false,
     scaling: { easier: 'incline_push_up' },
-    animation: 'chair_dip',
     video: { ru: 'storage:videos/shared/chair_dip.ru.mp4' },
     tags: ['upper', 'push'],
   },
@@ -966,7 +950,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 4.0,
     loadable: false,
     scaling: { easier: 'plank' },
-    animation: 'plank_shoulder_tap',
     tags: ['core', 'upper'],
   },
   {
@@ -1019,7 +1002,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 5.5,
     loadable: false,
     scaling: { easier: 'plank' },
-    animation: 'up_down_plank',
     tags: ['core', 'upper', 'cardio'],
   },
   {
@@ -1083,7 +1065,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 9.0,
     loadable: false,
     scaling: { easier: 'half_burpee' },
-    animation: 'burpee',
     tags: ['cardio', 'explosive', 'benchmark'],
     isTest: true,
   },
@@ -1137,7 +1118,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 7.0,
     loadable: false,
     scaling: { harder: 'burpee' },
-    animation: 'half_burpee',
     tags: ['cardio'],
   },
   {
@@ -1190,7 +1170,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 7.5,
     loadable: false,
     scaling: { easier: 'air_squat' },
-    animation: 'broad_jump',
     tags: ['lower', 'explosive'],
   },
   {
@@ -1249,7 +1228,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 8.5,
     loadable: false,
     scaling: { easier: 'jump_squat' },
-    animation: 'tuck_jump',
     tags: ['lower', 'explosive', 'cardio'],
   },
   {
@@ -1302,7 +1280,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 3.0,
     loadable: false,
     scaling: {},
-    animation: 'squat_to_stand',
     tags: ['warmup', 'mobility', 'lower'],
   },
   {
@@ -1358,7 +1335,6 @@ export const EXERCISES_A: ExerciseInput[] = [
     met: 3.8,
     loadable: false,
     scaling: {},
-    animation: 'inchworm',
     video: { ru: 'storage:videos/shared/inchworm.ru.mp4' },
     tags: ['warmup', 'mobility'],
   },

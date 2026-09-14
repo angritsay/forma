@@ -240,8 +240,8 @@ export function termsDocument(): LegalDocument {
             en: 'User — an individual who has ordered a course or signed in to the app.',
           },
           {
-            ru: 'Курс — цифровая тренировочная программа: последовательность тренировок, тестов и дней отдыха с описаниями, анимациями и, при наличии, видео, доступная в приложении.',
-            en: 'Course — a digital training program: a sequence of workouts, tests and rest days with descriptions, animations and, where available, videos, delivered in the app.',
+            ru: 'Курс — цифровая тренировочная программа: последовательность тренировок, тестов и дней отдыха с описаниями и видео, доступная в приложении.',
+            en: 'Course — a digital training program: a sequence of workouts, tests and rest days with descriptions and videos, delivered in the app.',
           },
           {
             ru: 'Приложение — веб-приложение по адресу /app/, в котором проходят тренировки.',
@@ -340,8 +340,8 @@ export function termsDocument(): LegalDocument {
             en: 'Sharing access (email and sign-in codes) with others or using one account for several people.',
           },
           {
-            ru: 'Копировать, записывать, публиковать или перепродавать материалы Курса: тексты, анимации, видео, программы.',
-            en: 'Copying, recording, publishing or reselling Course materials: texts, animations, videos, programs.',
+            ru: 'Копировать, записывать, публиковать или перепродавать материалы Курса: тексты, видео, программы.',
+            en: 'Copying, recording, publishing or reselling Course materials: texts, videos, programs.',
           },
           {
             ru: 'Обходить технические ограничения Приложения или мешать его работе.',

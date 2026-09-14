@@ -4,7 +4,7 @@
  * inside a workout, coach, FAQ, final CTA. JSON-LD: WebSite, Organization, FAQPage, ItemList.
  */
 import Landing from '@/layouts/Landing.astro';
-import ExerciseFigure from '@/components/anim/ExerciseFigure';
+import ExerciseStill from '@/components/media/ExerciseStill';
 import BeforeAfter from '@/components/landing/BeforeAfter.astro';
 import Button from '@/components/landing/Button.astro';
 import CoachCard from '@/components/landing/CoachCard.astro';
@@ -125,7 +125,7 @@ const jsonLd = [
     primary={{ label: t(locale, 'landing.heroCtaCourses'), href: href(locale, '/courses/') }}
     secondary={{ label: t(locale, 'landing.heroCtaApp'), href: appHref() }}
     chips={chips}
-    figure={{ animation: 'burpee', label: t(locale, 'landing.heroFigureAlt') }}
+    figure={{ exerciseId: 'burpee' }}
     photo={heroPhoto}
     tileTop={t(locale, 'landing.heroTileTop')}
     tileBottom={t(locale, 'landing.heroTileBottom')}
@@ -360,13 +360,7 @@ const jsonLd = [
               <span class="numeral text-text">1/3</span>
             </div>
             <div class="hero-art flex aspect-square items-center justify-center">
-              <ExerciseFigure
-                animation={explainTile.exercise.animation}
-                variant="card"
-                playing={false}
-                tile={demoCourse?.tile}
-                label={l(explainTile.exercise.name, locale)}
-              />
+              <ExerciseStill exerciseId={explainTile.exercise.id} />
             </div>
             <div class="border-t border-border p-5">
               <p class="font-display text-sm">{l(explainTile.exercise.name, locale)}</p>
@@ -384,13 +378,7 @@ const jsonLd = [
               <span class="numeral text-text">2/3</span>
             </div>
             <div class="hero-art relative flex aspect-square items-center justify-center">
-              <ExerciseFigure
-                client:visible
-                animation={workTile.exercise.animation}
-                variant="card"
-                tile={demoCourse?.tile}
-                label={l(workTile.exercise.name, locale)}
-              />
+              <ExerciseStill exerciseId={workTile.exercise.id} />
               <span class="numeral tabular absolute right-4 bottom-4 bg-ink/85 px-3 py-1.5 text-sm text-paper">
                 {itemTargetLabel(locale, workTile.item)}
               </span>

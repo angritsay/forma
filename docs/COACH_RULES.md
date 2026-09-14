@@ -155,6 +155,6 @@ Tracked on the review page and in the PR; update here when he answers.
 
 - Keep the end-of-course retest, or drop it too?
 - Glute bridge: film it, or allow the existing clip by someone else?
-- His three warm-up videos — send them to replace the animations.
+- His three warm-up videos — send them; the warm-up has no picture until they arrive.
 - Toe reaches shown as sit-ups; 100 sit-ups (his workout 7) in week 3; workout 22 as two rounds;
   "4 minutes of squats" as its own short day; rope as optional equipment.

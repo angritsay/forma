@@ -6,16 +6,13 @@
  * about to do*. A row of names answers it by making you read eight of them; a row of shapes
  * answers it at a glance, and a still from the coach's own clip answers it as "this, with him".
  *
- * So each tile prefers the still and falls back to the drawn figure. The still is found by
- * convention rather than written into the content files (`images/exercises/<id>.jpg` in the public
- * bucket — see scripts/media/upload-videos.mjs), which means a clip uploaded tomorrow shows up here
- * with no code or content change; until then the figure carries it, and that is not a degraded
- * state — it is the same blueprint style the whole app is drawn in.
+ * The still is found by convention rather than written into the content files
+ * (`images/exercises/<id>.jpg` in the public bucket — see scripts/media/upload-videos.mjs), which
+ * means a clip uploaded tomorrow shows up here with no code or content change; until then the tile
+ * is the flat surface with the name under it.
  */
-import { useState } from 'react';
-import ExerciseFigure from '@/components/anim/ExerciseFigure';
+import { ExerciseStill } from '@/components/media/ExerciseStill';
 import { findExercise } from '@/content/catalogue';
-import { exerciseStillUrl } from '@/lib/api/storage';
 import type { PrescribedWorkout } from '@/lib/training/types';
 import { useT } from '@/app/hooks/useT';
 
@@ -34,8 +31,6 @@ function Tile({ exerciseId }: { exerciseId: string }) {
   const { l } = useT();
   const exercise = findExercise(exerciseId);
   const name = exercise ? l(exercise.shortName ?? exercise.name) : exerciseId;
-  const [stillFailed, setStillFailed] = useState(false);
-  const still = stillFailed ? undefined : exerciseStillUrl(exerciseId);
 
   return (
     <li className="flex min-w-0 flex-col gap-1.5">
@@ -45,25 +40,7 @@ function Tile({ exerciseId }: { exerciseId: string }) {
        * something precisely because it is spent once per screen.
        */}
       <div className="relative aspect-square overflow-hidden bg-surface-2 text-text">
-        {still ? (
-          <img
-            src={still}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            className="size-full object-cover"
-            // No still for this movement yet — the drawn figure is the fallback, and a broken
-            // image icon is not.
-            onError={() => setStillFailed(true)}
-          />
-        ) : exercise ? (
-          <ExerciseFigure
-            animation={exercise.animation}
-            variant="thumb"
-            playing={false}
-            className="size-full"
-          />
-        ) : null}
+        <ExerciseStill exerciseId={exerciseId} />
       </div>
       <span className="truncate text-xs text-muted" title={name}>
         {name}

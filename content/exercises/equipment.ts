@@ -1,7 +1,7 @@
 /**
  * Exercise library, file C: light home equipment — pull-up bar, resistance bands, jump rope,
- * dumbbells and kettlebell. Ids, animation ids, units, equipment and levels are referenced by
- * courses and animations — keep them stable. Copy is shown in the workout player and on the
+ * dumbbells and kettlebell. Ids, units, equipment and levels are referenced by
+ * courses and by the clips — keep them stable. Copy is shown in the workout player and on the
  * public /exercises/<slug>/ pages.
  */
 import type { ExerciseInput } from '@/content/schema';
@@ -64,7 +64,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 8.0,
     loadable: false,
     scaling: { easier: 'negative_pull_up' },
-    animation: 'pull_up',
     tags: ['upper', 'pull', 'benchmark'],
   },
   {
@@ -120,7 +119,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 6.0,
     loadable: false,
     scaling: { easier: 'dead_hang', harder: 'pull_up' },
-    animation: 'negative_pull_up',
     tags: ['upper', 'pull'],
   },
   {
@@ -172,7 +170,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 3.0,
     loadable: false,
     scaling: { harder: 'negative_pull_up' },
-    animation: 'dead_hang',
     tags: ['upper', 'pull', 'cooldown'],
   },
   {
@@ -228,7 +225,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 5.0,
     loadable: false,
     scaling: { easier: 'leg_raise' },
-    animation: 'hanging_knee_raise',
     tags: ['core', 'upper'],
   },
   {
@@ -284,7 +280,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 3.8,
     loadable: false,
     scaling: {},
-    animation: 'band_row',
     tags: ['upper', 'pull'],
   },
   {
@@ -343,7 +338,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 3.0,
     loadable: false,
     scaling: {},
-    animation: 'band_pull_apart',
     tags: ['upper', 'pull', 'warmup', 'mobility'],
   },
   {
@@ -400,7 +394,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 11.0,
     loadable: false,
     scaling: { easier: 'jumping_jack', harder: 'double_under' },
-    animation: 'single_under',
     tags: ['cardio', 'warmup'],
   },
   {
@@ -459,7 +452,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 12.0,
     loadable: false,
     scaling: { easier: 'single_under' },
-    animation: 'double_under',
     tags: ['cardio', 'explosive', 'benchmark'],
   },
   {
@@ -516,7 +508,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 6.0,
     loadable: true,
     scaling: { easier: 'air_squat', harder: 'db_front_squat' },
-    animation: 'goblet_squat',
     tags: ['lower'],
   },
   {
@@ -572,7 +563,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 6.0,
     loadable: true,
     scaling: { easier: 'db_goblet_squat', harder: 'db_thruster' },
-    animation: 'db_front_squat',
     tags: ['lower'],
   },
   {
@@ -631,7 +621,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 8.0,
     loadable: true,
     scaling: { easier: 'db_front_squat' },
-    animation: 'db_thruster',
     tags: ['lower', 'upper', 'push', 'cardio'],
   },
   {
@@ -687,7 +676,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 6.0,
     loadable: true,
     scaling: { easier: 'glute_bridge', harder: 'db_rdl' },
-    animation: 'bell_deadlift',
     tags: ['lower'],
   },
   {
@@ -743,7 +731,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 5.0,
     loadable: true,
     scaling: { easier: 'db_deadlift' },
-    animation: 'db_rdl',
     tags: ['lower'],
   },
   {
@@ -796,7 +783,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 5.0,
     loadable: true,
     scaling: { harder: 'db_renegade_row' },
-    animation: 'db_row',
     tags: ['upper', 'pull', 'unilateral'],
   },
   {
@@ -852,7 +838,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 5.0,
     loadable: true,
     scaling: { easier: 'pike_push_up', harder: 'db_push_press' },
-    animation: 'overhead_press',
     tags: ['upper', 'push'],
   },
   {
@@ -905,7 +890,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 6.0,
     loadable: true,
     scaling: { easier: 'db_shoulder_press', harder: 'db_thruster' },
-    animation: 'db_push_press',
     tags: ['upper', 'push', 'explosive'],
   },
   {
@@ -965,7 +949,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 8.0,
     loadable: true,
     scaling: { easier: 'db_clean' },
-    animation: 'bell_snatch',
     tags: ['explosive', 'cardio', 'unilateral'],
   },
   {
@@ -1024,7 +1007,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 7.0,
     loadable: true,
     scaling: { easier: 'db_deadlift', harder: 'db_snatch' },
-    animation: 'bell_clean',
     tags: ['explosive', 'lower', 'upper'],
   },
   {
@@ -1083,7 +1065,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 6.0,
     loadable: true,
     scaling: { easier: 'reverse_lunge' },
-    animation: 'bell_lunge',
     tags: ['lower', 'unilateral'],
   },
   {
@@ -1136,7 +1117,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 5.0,
     loadable: true,
     scaling: { easier: 'push_up' },
-    animation: 'db_floor_press',
     tags: ['upper', 'push'],
   },
   {
@@ -1192,7 +1172,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 6.0,
     loadable: true,
     scaling: { easier: 'db_row' },
-    animation: 'renegade_row',
     tags: ['upper', 'pull', 'core', 'unilateral'],
   },
   {
@@ -1244,7 +1223,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 5.0,
     loadable: true,
     scaling: { harder: 'kb_suitcase_carry' },
-    animation: 'farmer_carry',
     tags: ['carry', 'core', 'upper'],
   },
   {
@@ -1301,7 +1279,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 10.0,
     loadable: true,
     scaling: { easier: 'burpee' },
-    animation: 'devil_press',
     tags: ['cardio', 'explosive', 'benchmark'],
   },
   {
@@ -1355,7 +1332,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 9.8,
     loadable: true,
     scaling: { easier: 'kb_deadlift', harder: 'kb_snatch' },
-    animation: 'kb_swing',
     tags: ['lower', 'explosive', 'cardio', 'benchmark'],
   },
   {
@@ -1411,7 +1387,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 6.0,
     loadable: true,
     scaling: { easier: 'air_squat', harder: 'kb_lunge' },
-    animation: 'goblet_squat',
     tags: ['lower'],
   },
   {
@@ -1464,7 +1439,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 6.0,
     loadable: true,
     scaling: { easier: 'glute_bridge', harder: 'kb_swing' },
-    animation: 'bell_deadlift',
     tags: ['lower'],
   },
   {
@@ -1524,7 +1498,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 7.0,
     loadable: true,
     scaling: { easier: 'kb_swing', harder: 'kb_snatch' },
-    animation: 'bell_clean',
     tags: ['explosive', 'unilateral', 'lower', 'upper'],
   },
   {
@@ -1577,7 +1550,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 5.0,
     loadable: true,
     scaling: { easier: 'pike_push_up' },
-    animation: 'overhead_press',
     tags: ['upper', 'push', 'unilateral'],
   },
   {
@@ -1634,7 +1606,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 9.8,
     loadable: true,
     scaling: { easier: 'kb_swing' },
-    animation: 'bell_snatch',
     tags: ['explosive', 'cardio', 'unilateral', 'benchmark'],
   },
   {
@@ -1690,7 +1661,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 3.0,
     loadable: true,
     scaling: { easier: 'arm_circles', harder: 'kb_turkish_get_up' },
-    animation: 'kb_halo',
     tags: ['warmup', 'mobility', 'upper'],
   },
   {
@@ -1747,7 +1717,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 6.0,
     loadable: true,
     scaling: { easier: 'kb_halo' },
-    animation: 'turkish_get_up',
     tags: ['core', 'upper', 'mobility', 'unilateral'],
   },
   {
@@ -1800,7 +1769,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 7.0,
     loadable: true,
     scaling: { easier: 'kb_deadlift' },
-    animation: 'sumo_high_pull',
     tags: ['lower', 'upper', 'explosive', 'cardio'],
   },
   {
@@ -1855,7 +1823,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 5.0,
     loadable: true,
     scaling: { easier: 'farmer_carry' },
-    animation: 'suitcase_carry',
     tags: ['carry', 'core', 'unilateral'],
   },
   {
@@ -1914,7 +1881,6 @@ export const EXERCISES_C: ExerciseInput[] = [
     met: 6.0,
     loadable: true,
     scaling: { easier: 'reverse_lunge' },
-    animation: 'bell_lunge',
     tags: ['lower', 'unilateral', 'core'],
   },
 ];

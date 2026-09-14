@@ -44,7 +44,6 @@ export const landing = {
     'Courses for home training, with or without equipment. Lifetime access, video for every exercise, and a load that grows with you.',
   heroCtaCourses: 'Choose a course',
   heroCtaApp: 'Open app',
-  heroFigureAlt: 'Animated athlete doing a burpee',
   heroTileTop: 'Adaptive load',
   heroTileBottom: 'Explain → move → rest',
   chipCourses: '{n} {word}',
