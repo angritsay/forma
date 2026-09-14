@@ -1,0 +1,280 @@
+<title>Что осталось снять</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Onest:wght@400;500;600;700&display=swap">
+<style>
+/* Forma's own palette. Not a generic dark theme — these are the product's tokens, so the page
+   looks like the thing it is about. Single accent: the beginner programme's yellow. */
+:root{
+  --bg:#0f0f11; --s1:#17171a; --s2:#1f1f24; --s3:#2a2a30;
+  --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.20);
+  --tx:#f6f6f7; --mu:#b9b9c0; --mu2:#8e8e98;
+  --acc:#f2f52d; --ink:#0f0f11; --warn:#ff6b6b; --ok:#7ddc8a;
+  --dsp:'Unbounded',system-ui,sans-serif; --sans:'Onest',system-ui,-apple-system,sans-serif;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;line-height:1.5}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px;padding-block:0}
+h1,h2,h3{font-family:var(--dsp);font-weight:800;text-transform:uppercase;letter-spacing:-.015em;
+  line-height:1.1;margin:0;text-wrap:balance}
+a{color:var(--acc)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.eb{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--mu2)}
+.num{font-family:var(--dsp);font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+
+/* ── the slate ──────────────────────────────────────────────────────────── */
+header{border-bottom:1px solid var(--line);padding-block:clamp(28px,7vw,56px) clamp(22px,5vw,36px)}
+.mark{display:flex;align-items:center;gap:10px;margin-bottom:clamp(20px,5vw,34px)}
+.mark i{font-style:normal;font-family:var(--dsp);font-weight:800;font-size:13px;
+  text-transform:uppercase;letter-spacing:.04em}
+.mark i s{text-decoration:none;font-weight:400}
+.mark span{font-size:11px;color:var(--mu2);letter-spacing:.14em;text-transform:uppercase}
+h1{font-size:clamp(30px,8.5vw,62px)}
+.lede{margin:clamp(14px,3vw,20px) 0 0;font-size:clamp(15px,2.6vw,17px);color:var(--mu);max-width:58ch}
+.figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line);margin-top:clamp(24px,5vw,38px)}
+.fig{background:var(--bg);padding:18px 16px}
+.fig b{display:block;font-family:var(--dsp);font-weight:600;font-size:clamp(28px,7vw,40px);
+  line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.fig b.hot{color:var(--warn)}
+.fig b.on{color:var(--acc)}
+.fig span{display:block;margin-top:9px;font-size:12px;color:var(--mu2);line-height:1.4}
+
+/* ── controls ───────────────────────────────────────────────────────────── */
+.bar{position:sticky;top:0;z-index:20;background:rgba(15,15,17,.93);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);padding-block:12px}
+.bar .in{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+input[type=search]{flex:1;min-width:160px;height:40px;padding:0 13px;background:var(--s2);
+  border:1px solid var(--line);color:var(--tx);font:inherit;font-size:14px;border-radius:0}
+input[type=search]::placeholder{color:var(--mu2)}
+.chip{height:34px;padding:0 13px;border:1px solid var(--line2);font-size:12px;font-weight:600;
+  white-space:nowrap;color:var(--mu);border-radius:999px;transition:all .15s var(--ease)}
+.chip[aria-pressed=true]{background:var(--acc);border-color:var(--acc);color:var(--ink)}
+.prog{margin-left:auto;font-size:12px;color:var(--mu2);white-space:nowrap}
+.prog b{color:var(--acc);font-family:var(--dsp);font-weight:600;font-variant-numeric:tabular-nums}
+
+/* ── tiers ──────────────────────────────────────────────────────────────── */
+section{padding-block:clamp(30px,6vw,52px);border-bottom:1px solid var(--line)}
+.th{display:flex;gap:16px;align-items:baseline}
+.th .n{font-family:var(--dsp);font-weight:600;font-size:13px;color:var(--acc);flex:none;
+  font-variant-numeric:tabular-nums}
+.th h2{font-size:clamp(17px,4vw,24px);flex:1;min-width:0}
+.th .c{font-family:var(--dsp);font-weight:600;font-size:13px;color:var(--mu2);flex:none;
+  font-variant-numeric:tabular-nums}
+.why{margin:12px 0 0;padding-left:29px;font-size:14.5px;color:var(--mu);max-width:74ch;line-height:1.55}
+section[data-hot] .th .n{color:var(--warn)}
+
+ul.rows{list-style:none;margin:22px 0 0;padding:0;border-top:1px solid var(--line)}
+li.row{display:grid;grid-template-columns:auto 1fr auto;gap:8px 14px;align-items:start;
+  padding:13px 0;border-bottom:1px solid var(--line);transition:opacity .2s var(--ease)}
+li.row[data-done]{opacity:.34}
+.tick{width:23px;height:23px;flex:none;border:1px solid var(--line2);display:grid;place-items:center;
+  margin-top:1px;font-size:12px;color:transparent;transition:all .15s var(--ease)}
+li.row[data-done] .tick{background:var(--acc);border-color:var(--acc);color:var(--ink)}
+.tick:hover{border-color:var(--tx)}
+.nm{min-width:0}
+.nm b{display:block;font-size:15.5px;font-weight:600;line-height:1.3}
+li.row[data-done] .nm b{text-decoration:line-through}
+.nm code{display:block;margin-top:3px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:11.5px;color:var(--mu2)}
+.use{grid-column:2/4;font-size:13px;color:var(--mu);line-height:1.45}
+.use em{font-style:normal;color:var(--mu2)}
+.cnt{font-family:var(--dsp);font-weight:600;font-size:13px;color:var(--mu2);
+  font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+@media(min-width:720px){
+  li.row{grid-template-columns:auto 1.1fr 1.5fr auto;align-items:center}
+  .use{grid-column:auto}
+}
+
+/* ── photography ────────────────────────────────────────────────────────── */
+.pcard{border:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:9px}
+.pcard[data-hot]{border-color:rgba(255,107,107,.45)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:14px;margin-top:22px}
+.pcard .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.pcard h3{font-size:16px}
+.pcard .st{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--warn);white-space:nowrap}
+.pcard p{margin:0;font-size:13.5px;color:var(--mu);line-height:1.5}
+.pcard .wh{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--mu2);
+  overflow-wrap:anywhere}
+
+/* ── how to ─────────────────────────────────────────────────────────────── */
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line);margin-top:22px}
+.how div{background:var(--bg);padding:17px}
+.how b{display:block;font-family:var(--dsp);font-weight:600;font-size:12px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--acc);margin-bottom:8px}
+.how p{margin:0;font-size:13.5px;color:var(--mu);line-height:1.55}
+.how code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--tx)}
+footer{padding-block:34px 56px;font-size:12.5px;color:var(--mu2);line-height:1.6}
+.empty{padding:34px 0;color:var(--mu2);font-size:14px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<header><div class="wrap">
+  <div class="mark"><i><s>FOR</s>MA</i><span>Съёмочный лист</span></div>
+  <h1>Что осталось снять</h1>
+  <p class="lede">Посчитано по коду, не на глаз: каждая строка — движение из библиотеки, у которого
+    нет поля <code style="font-family:ui-monospace,monospace;font-size:.92em">video</code>. Порядок
+    не по количеству, а по тому, кто видит дыру: сначала то, что встречает каждый новый человек,
+    потом то, что достаёт до единственного продающегося курса, и только потом закрытые курсы.</p>
+  <div class="figs" id="figs"></div>
+</div></header>
+
+<div class="bar"><div class="wrap in">
+  <input type="search" id="q" placeholder="Найти движение" aria-label="Найти движение">
+  <button class="chip" id="hideDone" aria-pressed="false">Скрыть снятое</button>
+  <span class="prog" id="prog"></span>
+</div></div>
+
+<main class="wrap" id="tiers"></main>
+
+<section class="wrap" style="border-bottom:1px solid var(--line)">
+  <div class="th"><span class="n">05</span><h2>Не ролики</h2><span class="c" id="pcount"></span></div>
+  <p class="why">Фотографии, монтаж для входа и одно место, где ассет некуда положить, пока не
+    поправлена схема.</p>
+  <div class="pgrid" id="photo"></div>
+</section>
+
+<section class="wrap" style="border:0">
+  <div class="th"><span class="n">06</span><h2>Как загрузить</h2></div>
+  <div class="how">
+    <div><b>Ролик</b><p>Назвать файл строго по id движения — <code>burpee.mp4</code>. Приложение
+      ищет клип по имени, поэтому переименовывать ничего не надо.</p></div>
+    <div><b>Положить</b><p>В <code>media/clips</code>, затем <code>npm run media:upload</code>.
+      Скрипт кладёт ролик в закрытый бакет и режет из него кадр в открытый.</p></div>
+    <div><b>Требования</b><p>Всё в <code>docs/VIDEO.md</code>. Без звуковой дорожки — ролики
+      всё равно играют беззвучно и в цикле.</p></div>
+    <div><b>Что уже есть</b><p>26 из 90 движений сняты, и это ровно набор новичка: 12 рабочих
+      движений, 9 в разминку, 5 в заминку.</p></div>
+  </div>
+</section>
+
+<footer class="wrap">
+  <p>Отмеченное здесь сохраняется и переживает перезагрузку — можно вести список прямо со съёмки.
+    Страница построена из репозитория: 90 движений, 26 сняты, 64 нет.</p>
+</footer>
+<script>
+const D = {"unfilmed": [{"id": "plank", "ru": "Планка", "en": "Plank", "filmed": false, "level": 1, "pattern": "core_anti_extension", "equipment": ["none"], "unit": "seconds", "courses": ["engine", "dumbbells", "kettlebell", "athlete"], "items": 10, "tier": "assessment", "coursesRu": ["Форма своим весом", "Форма с гантелями", "Форма с гирей", "Форма атлета"]}, {"id": "jog_in_place", "ru": "Бег на месте", "en": "Jog in place", "filmed": false, "level": 1, "pattern": "locomotion", "equipment": ["none"], "unit": "seconds", "courses": ["engine", "dumbbells", "kettlebell", "athlete"], "items": 35, "tier": "start-substitute", "coursesRu": ["Форма своим весом", "Форма с гантелями", "Форма с гирей", "Форма атлета"]}, {"id": "high_knees", "ru": "Бег с высоким подниманием колен", "en": "High knees", "filmed": false, "level": 1, "pattern": "locomotion", "equipment": ["none"], "unit": "seconds", "courses": ["engine", "dumbbells", "athlete"], "items": 12, "tier": "start-substitute", "coursesRu": ["Форма своим весом", "Форма с гантелями", "Форма атлета"]}, {"id": "jump_squat", "ru": "Приседания с выпрыгиванием", "en": "Jump squat", "filmed": false, "level": 2, "pattern": "jump", "equipment": ["none"], "unit": "reps", "courses": ["engine", "athlete"], "items": 6, "tier": "start-substitute", "coursesRu": ["Форма своим весом", "Форма атлета"]}, {"id": "leg_raise", "ru": "Подъём ног лёжа", "en": "Lying leg raise", "filmed": false, "level": 2, "pattern": "core_flexion", "equipment": ["none"], "unit": "reps", "courses": ["engine", "dumbbells", "kettlebell"], "items": 5, "tier": "start-substitute", "coursesRu": ["Форма своим весом", "Форма с гантелями", "Форма с гирей"]}, {"id": "v_up", "ru": "Складка", "en": "V-up", "filmed": false, "level": 3, "pattern": "core_flexion", "equipment": ["none"], "unit": "reps", "courses": ["engine", "dumbbells", "athlete"], "items": 5, "tier": "start-substitute", "coursesRu": ["Форма своим весом", "Форма с гантелями", "Форма атлета"]}, {"id": "jumping_lunge", "ru": "Выпады с прыжком", "en": "Jumping lunge", "filmed": false, "level": 3, "pattern": "jump", "equipment": ["none"], "unit": "reps", "courses": ["athlete"], "items": 4, "tier": "start-substitute", "coursesRu": ["Форма атлета"]}, {"id": "hanging_knee_raise", "ru": "Подъём коленей в висе", "en": "Hanging knee raise", "filmed": false, "level": 2, "pattern": "core_flexion", "equipment": ["pullup_bar"], "unit": "reps", "courses": ["athlete"], "items": 4, "tier": "start-substitute", "coursesRu": ["Форма атлета"]}, {"id": "diamond_push_up", "ru": "Узкие отжимания", "en": "Diamond push-up", "filmed": false, "level": 3, "pattern": "push_horizontal", "equipment": ["none"], "unit": "reps", "courses": ["engine", "kettlebell", "athlete"], "items": 4, "tier": "start-substitute", "coursesRu": ["Форма своим весом", "Форма с гирей", "Форма атлета"]}, {"id": "single_leg_glute_bridge", "ru": "Ягодичный мостик на одной ноге", "en": "Single-leg glute bridge", "filmed": false, "level": 2, "pattern": "hinge", "equipment": ["none"], "unit": "reps", "courses": ["engine"], "items": 2, "tier": "start-substitute", "coursesRu": ["Форма своим весом"]}, {"id": "incline_push_up", "ru": "Отжимания от опоры", "en": "Incline push-up", "filmed": false, "level": 1, "pattern": "push_horizontal", "equipment": ["chair"], "unit": "reps", "courses": ["engine"], "items": 1, "tier": "start-substitute", "coursesRu": ["Форма своим весом"]}, {"id": "tuck_jump", "ru": "Прыжок с подтягиванием коленей", "en": "Tuck jump", "filmed": false, "level": 3, "pattern": "jump", "equipment": ["none"], "unit": "reps", "courses": [], "items": 0, "tier": "start-substitute", "coursesRu": []}, {"id": "burpee", "ru": "Бёрпи", "en": "Burpee", "filmed": false, "level": 2, "pattern": "full_body", "equipment": ["none"], "unit": "reps", "courses": ["engine", "dumbbells", "kettlebell", "athlete"], "items": 30, "tier": "closed-course", "coursesRu": ["Форма своим весом", "Форма с гантелями", "Форма с гирей", "Форма атлета"]}, {"id": "worlds_greatest_stretch", "ru": "Выпад с ротацией", "en": "World's greatest stretch", "filmed": false, "level": 1, "pattern": "mobility", "equipment": ["none"], "unit": "reps", "courses": ["engine", "dumbbells", "kettlebell", "athlete"], "items": 24, "tier": "closed-course", "coursesRu": ["Форма своим весом", "Форма с гантелями", "Форма с гирей", "Форма атлета"]}, {"id": "jumping_jack", "ru": "Джампинг-джек", "en": "Jumping jacks", "filmed": false, "level": 1, "pattern": "jump", "equipment": ["none"], "unit": "reps", "courses": ["engine", "dumbbells", "kettlebell"], "items": 20, "tier": "closed-course", "coursesRu": ["Форма своим весом", "Форма с гантелями", "Форма с гирей"]}, {"id": "single_under", "ru": "Прыжки на скакалке", "en": "Single-unders", "filmed": false, "level": 1, "pattern": "jump", "equipment": ["jump_rope"], "unit": "reps", "courses": ["engine", "athlete"], "items": 16, "tier": "closed-course", "coursesRu": ["Форма своим весом", "Форма атлета"]}, {"id": "kb_swing", "ru": "Махи гирей", "en": "Kettlebell swing", "filmed": false, "level": 2, "pattern": "hinge", "equipment": ["kettlebell"], "unit": "reps", "courses": ["kettlebell"], "items": 15, "tier": "closed-course", "coursesRu": ["Форма с гирей"]}, {"id": "squat_hold", "ru": "Удержание в приседе", "en": "Bottom squat hold", "filmed": false, "level": 1, "pattern": "mobility", "equipment": ["none"], "unit": "seconds", "courses": ["engine", "dumbbells", "kettlebell", "athlete"], "items": 14, "tier": "closed-course", "coursesRu": ["Форма своим весом", "Форма с гантелями", "Форма с гирей", "Форма атлета"]}, {"id": "hollow_hold", "ru": "Лодочка (hollow hold)", "en": "Hollow hold", "filmed": false, "level": 2, "pattern": "core_flexion", "equipment": ["none"], "unit": "seconds", "courses": ["engine", "dumbbells", "kettlebell", "athlete"], "items": 13, "tier": "closed-course", "coursesRu": ["Форма своим весом", "Форма с гантелями", "Форма с гирей", "Форма атлета"]}, {"id": "side_plank", "ru": "Боковая планка", "en": "Side plank", "filmed": false, "level": 2, "pattern": "core_anti_extension", "equipment": ["none"], "unit": "seconds", "courses": ["engine", "dumbbells", "kettlebell"], "items": 12, "tier": "closed-course", "coursesRu": ["Форма своим весом", "Форма с гантелями", "Форма с гирей"]}, {"id": "kb_halo", "ru": "Гало с гирей", "en": "Kettlebell halo", "filmed": false, "level": 1, "pattern": "mobility", "equipment": ["kettlebell"], "unit": "reps", "courses": ["kettlebell"], "items": 12, "tier": "closed-course", "coursesRu": ["Форма с гирей"]}, {"id": "double_under", "ru": "Двойные прыжки на скакалке", "en": "Double-unders", "filmed": false, "level": 3, "pattern": "jump", "equipment": ["jump_rope"], "unit": "reps", "courses": ["athlete"], "items": 12, "tier": "closed-course", "coursesRu": ["Форма атлета"]}, {"id": "pull_up", "ru": "Подтягивания", "en": "Pull-up", "filmed": false, "level": 3, "pattern": "pull_vertical", "equipment": ["pullup_bar"], "unit": "reps", "courses": ["athlete"], "items": 9, "tier": "closed-course", "coursesRu": ["Форма атлета"]}, {"id": "db_deadlift", "ru": "Становая тяга с гантелями", "en": "Dumbbell deadlift", "filmed": false, "level": 1, "pattern": "hinge", "equipment": ["dumbbells"], "unit": "reps", "courses": ["dumbbells", "athlete"], "items": 9, "tier": "closed-course", "coursesRu": ["Форма с гантелями", "Форма атлета"]}, {"id": "db_thruster", "ru": "Трастер с гантелями", "en": "Dumbbell thruster", "filmed": false, "level": 2, "pattern": "full_body", "equipment": ["dumbbells"], "unit": "reps", "courses": ["dumbbells", "athlete"], "items": 9, "tier": "closed-course", "coursesRu": ["Форма с гантелями", "Форма атлета"]}, {"id": "bird_dog", "ru": "Бёрд-дог", "en": "Bird dog", "filmed": false, "level": 1, "pattern": "core_anti_extension", "equipment": ["none"], "unit": "reps", "courses": ["engine", "dumbbells", "kettlebell", "athlete"], "items": 8, "tier": "closed-course", "coursesRu": ["Форма своим весом", "Форма с гантелями", "Форма с гирей", "Форма атлета"]}, {"id": "kb_goblet_squat", "ru": "Гоблет-присед с гирей", "en": "Kettlebell goblet squat", "filmed": false, "level": 1, "pattern": "squat", "equipment": ["kettlebell"], "unit": "reps", "courses": ["kettlebell"], "items": 8, "tier": "closed-course", "coursesRu": ["Форма с гирей"]}, {"id": "db_front_squat", "ru": "Фронтальный присед с гантелями", "en": "Dumbbell front squat", "filmed": false, "level": 2, "pattern": "squat", "equipment": ["dumbbells"], "unit": "reps", "courses": ["dumbbells", "athlete"], "items": 8, "tier": "closed-course", "coursesRu": ["Форма с гантелями", "Форма атлета"]}, {"id": "db_push_press", "ru": "Швунг с гантелями", "en": "Dumbbell push press", "filmed": false, "level": 2, "pattern": "push_vertical", "equipment": ["dumbbells"], "unit": "reps", "courses": ["dumbbells", "athlete"], "items": 8, "tier": "closed-course", "coursesRu": ["Форма с гантелями", "Форма атлета"]}, {"id": "db_goblet_squat", "ru": "Гоблет-присед с гантелью", "en": "Goblet squat", "filmed": false, "level": 1, "pattern": "squat", "equipment": ["dumbbells"], "unit": "reps", "courses": ["dumbbells", "athlete"], "items": 6, "tier": "closed-course", "coursesRu": ["Форма с гантелями", "Форма атлета"]}, {"id": "db_devil_press", "ru": "Дьявольский жим", "en": "Devil press", "filmed": false, "level": 3, "pattern": "full_body", "equipment": ["dumbbells"], "unit": "reps", "courses": ["dumbbells", "athlete"], "items": 6, "tier": "closed-course", "coursesRu": ["Форма с гантелями", "Форма атлета"]}, {"id": "db_rdl", "ru": "Румынская тяга с гантелями", "en": "Dumbbell Romanian deadlift", "filmed": false, "level": 2, "pattern": "hinge", "equipment": ["dumbbells"], "unit": "reps", "courses": ["dumbbells", "athlete"], "items": 6, "tier": "closed-course", "coursesRu": ["Форма с гантелями", "Форма атлета"]}, {"id": "db_snatch", "ru": "Рывок гантели", "en": "Dumbbell snatch", "filmed": false, "level": 3, "pattern": "olympic", "equipment": ["dumbbells"], "unit": "reps", "courses": ["dumbbells", "athlete"], "items": 6, "tier": "closed-course", "coursesRu": ["Форма с гантелями", "Форма атлета"]}, {"id": "db_clean", "ru": "Взятие гантелей на грудь", "en": "Dumbbell clean", "filmed": false, "level": 2, "pattern": "olympic", "equipment": ["dumbbells"], "unit": "reps", "courses": ["dumbbells"], "items": 5, "tier": "closed-course", "coursesRu": ["Форма с гантелями"]}, {"id": "kb_press", "ru": "Жим гири стоя", "en": "Kettlebell press", "filmed": false, "level": 2, "pattern": "push_vertical", "equipment": ["kettlebell"], "unit": "reps", "courses": ["kettlebell"], "items": 5, "tier": "closed-course", "coursesRu": ["Форма с гирей"]}, {"id": "plank_shoulder_tap", "ru": "Касания плеч в планке", "en": "Plank shoulder taps", "filmed": false, "level": 2, "pattern": "core_anti_extension", "equipment": ["none"], "unit": "reps", "courses": ["engine", "dumbbells", "kettlebell"], "items": 5, "tier": "closed-course", "coursesRu": ["Форма своим весом", "Форма с гантелями", "Форма с гирей"]}, {"id": "kb_turkish_get_up", "ru": "Турецкий подъём", "en": "Turkish get-up", "filmed": false, "level": 3, "pattern": "full_body", "equipment": ["kettlebell"], "unit": "reps", "courses": ["kettlebell"], "items": 5, "tier": "closed-course", "coursesRu": ["Форма с гирей"]}, {"id": "pike_push_up", "ru": "Отжимания уголком", "en": "Pike push-up", "filmed": false, "level": 2, "pattern": "push_vertical", "equipment": ["none"], "unit": "reps", "courses": ["engine", "athlete"], "items": 4, "tier": "closed-course", "coursesRu": ["Форма своим весом", "Форма атлета"]}, {"id": "farmer_carry", "ru": "Прогулка фермера", "en": "Farmer carry", "filmed": false, "level": 1, "pattern": "carry", "equipment": ["dumbbells", "kettlebell"], "unit": "seconds", "courses": ["dumbbells", "kettlebell", "athlete"], "items": 4, "tier": "closed-course", "coursesRu": ["Форма с гантелями", "Форма с гирей", "Форма атлета"]}, {"id": "single_leg_rdl", "ru": "Румынская тяга на одной ноге", "en": "Single-leg Romanian deadlift", "filmed": false, "level": 2, "pattern": "hinge", "equipment": ["none"], "unit": "reps", "courses": ["engine", "athlete"], "items": 4, "tier": "closed-course", "coursesRu": ["Форма своим весом", "Форма атлета"]}, {"id": "superman", "ru": "Супермен", "en": "Superman", "filmed": false, "level": 1, "pattern": "core_anti_extension", "equipment": ["none"], "unit": "reps", "courses": ["engine", "kettlebell"], "items": 4, "tier": "closed-course", "coursesRu": ["Форма своим весом", "Форма с гирей"]}, {"id": "db_renegade_row", "ru": "Тяга ренегата", "en": "Renegade row", "filmed": false, "level": 3, "pattern": "pull_horizontal", "equipment": ["dumbbells"], "unit": "reps", "courses": ["dumbbells", "athlete"], "items": 4, "tier": "closed-course", "coursesRu": ["Форма с гантелями", "Форма атлета"]}, {"id": "kb_clean", "ru": "Взятие гири на грудь", "en": "Kettlebell clean", "filmed": false, "level": 2, "pattern": "olympic", "equipment": ["kettlebell"], "unit": "reps", "courses": ["kettlebell"], "items": 3, "tier": "closed-course", "coursesRu": ["Форма с гирей"]}, {"id": "dead_hang", "ru": "Вис на перекладине", "en": "Dead hang", "filmed": false, "level": 1, "pattern": "pull_vertical", "equipment": ["pullup_bar"], "unit": "seconds", "courses": ["athlete"], "items": 3, "tier": "closed-course", "coursesRu": ["Форма атлета"]}, {"id": "bear_crawl", "ru": "Медвежья походка", "en": "Bear crawl", "filmed": false, "level": 2, "pattern": "locomotion", "equipment": ["none"], "unit": "seconds", "courses": ["engine", "dumbbells", "athlete"], "items": 3, "tier": "closed-course", "coursesRu": ["Форма своим весом", "Форма с гантелями", "Форма атлета"]}, {"id": "flutter_kick", "ru": "Ножницы", "en": "Flutter kicks", "filmed": false, "level": 2, "pattern": "core_flexion", "equipment": ["none"], "unit": "seconds", "courses": ["engine", "athlete"], "items": 3, "tier": "closed-course", "coursesRu": ["Форма своим весом", "Форма атлета"]}, {"id": "kb_lunge", "ru": "Обратные выпады с гирей у груди", "en": "Kettlebell front-rack reverse lunge", "filmed": false, "level": 2, "pattern": "lunge", "equipment": ["kettlebell"], "unit": "reps", "courses": ["kettlebell"], "items": 3, "tier": "closed-course", "coursesRu": ["Форма с гирей"]}, {"id": "kb_suitcase_carry", "ru": "Прогулка с гирей в одной руке", "en": "Suitcase carry", "filmed": false, "level": 1, "pattern": "carry", "equipment": ["kettlebell"], "unit": "seconds", "courses": ["kettlebell"], "items": 3, "tier": "closed-course", "coursesRu": ["Форма с гирей"]}, {"id": "kb_deadlift", "ru": "Становая тяга с гирей", "en": "Kettlebell deadlift", "filmed": false, "level": 1, "pattern": "hinge", "equipment": ["kettlebell"], "unit": "reps", "courses": ["kettlebell"], "items": 3, "tier": "closed-course", "coursesRu": ["Форма с гирей"]}, {"id": "db_floor_press", "ru": "Жим гантелей лёжа с пола", "en": "Dumbbell floor press", "filmed": false, "level": 1, "pattern": "push_horizontal", "equipment": ["dumbbells"], "unit": "reps", "courses": ["dumbbells"], "items": 2, "tier": "closed-course", "coursesRu": ["Форма с гантелями"]}, {"id": "db_shoulder_press", "ru": "Жим гантелей стоя", "en": "Dumbbell shoulder press", "filmed": false, "level": 1, "pattern": "push_vertical", "equipment": ["dumbbells"], "unit": "reps", "courses": ["dumbbells"], "items": 2, "tier": "closed-course", "coursesRu": ["Форма с гантелями"]}, {"id": "skater", "ru": "Конькобежец", "en": "Skater jumps", "filmed": false, "level": 2, "pattern": "jump", "equipment": ["none"], "unit": "reps", "courses": ["engine"], "items": 2, "tier": "closed-course", "coursesRu": ["Форма своим весом"]}, {"id": "negative_pull_up", "ru": "Негативные подтягивания", "en": "Negative pull-up", "filmed": false, "level": 2, "pattern": "pull_vertical", "equipment": ["pullup_bar"], "unit": "reps", "courses": ["athlete"], "items": 2, "tier": "closed-course", "coursesRu": ["Форма атлета"]}, {"id": "db_lunge", "ru": "Обратные выпады с гантелями", "en": "Dumbbell reverse lunge", "filmed": false, "level": 2, "pattern": "lunge", "equipment": ["dumbbells"], "unit": "reps", "courses": ["dumbbells"], "items": 2, "tier": "closed-course", "coursesRu": ["Форма с гантелями"]}, {"id": "db_row", "ru": "Тяга гантели в наклоне", "en": "Dumbbell bent-over row", "filmed": false, "level": 1, "pattern": "pull_horizontal", "equipment": ["dumbbells"], "unit": "reps", "courses": ["dumbbells"], "items": 2, "tier": "closed-course", "coursesRu": ["Форма с гантелями"]}, {"id": "kb_sumo_high_pull", "ru": "Тяга сумо к подбородку", "en": "Sumo deadlift high pull", "filmed": false, "level": 2, "pattern": "hinge", "equipment": ["kettlebell"], "unit": "reps", "courses": ["kettlebell"], "items": 2, "tier": "closed-course", "coursesRu": ["Форма с гирей"]}, {"id": "lateral_lunge", "ru": "Боковые выпады", "en": "Lateral lunge", "filmed": false, "level": 2, "pattern": "lunge", "equipment": ["none"], "unit": "reps", "courses": ["engine"], "items": 1, "tier": "closed-course", "coursesRu": ["Форма своим весом"]}, {"id": "kb_snatch", "ru": "Рывок гири", "en": "Kettlebell snatch", "filmed": false, "level": 3, "pattern": "olympic", "equipment": ["kettlebell"], "unit": "reps", "courses": ["kettlebell"], "items": 1, "tier": "closed-course", "coursesRu": ["Форма с гирей"]}, {"id": "wall_sit", "ru": "Стульчик у стены", "en": "Wall sit", "filmed": false, "level": 1, "pattern": "squat", "equipment": ["none"], "unit": "seconds", "courses": ["engine"], "items": 1, "tier": "closed-course", "coursesRu": ["Форма своим весом"]}, {"id": "up_down_plank", "ru": "Планка вверх-вниз", "en": "Up-down plank", "filmed": false, "level": 2, "pattern": "push_horizontal", "equipment": ["none"], "unit": "reps", "courses": [], "items": 0, "tier": "library-only", "coursesRu": []}, {"id": "half_burpee", "ru": "Полубёрпи", "en": "Half burpee", "filmed": false, "level": 1, "pattern": "full_body", "equipment": ["none"], "unit": "reps", "courses": [], "items": 0, "tier": "library-only", "coursesRu": []}, {"id": "broad_jump", "ru": "Прыжок в длину с места", "en": "Broad jump", "filmed": false, "level": 2, "pattern": "jump", "equipment": ["none"], "unit": "reps", "courses": [], "items": 0, "tier": "library-only", "coursesRu": []}, {"id": "band_pull_apart", "ru": "Разведение резинки", "en": "Band pull-apart", "filmed": false, "level": 1, "pattern": "pull_horizontal", "equipment": ["bands"], "unit": "reps", "courses": [], "items": 0, "tier": "library-only", "coursesRu": []}, {"id": "band_row", "ru": "Тяга резинки к поясу", "en": "Band row", "filmed": false, "level": 1, "pattern": "pull_horizontal", "equipment": ["bands"], "unit": "reps", "courses": [], "items": 0, "tier": "library-only", "coursesRu": []}], "photo": [{"id": "auth_film", "kind": "Видео", "ru": "Монтаж для экрана входа", "what": "Ч/б, зациклённый, без звуковой дорожки, H.264 MP4, до ~5 МБ.", "where": "content/site/media.ts → AUTH_FILM.src", "state": "Пусто", "blocks": "Экран входа показывает вместо него фотографию тренера — тот же кадр, что и на главной.", "tier": "launch"}, {"id": "plank_clip", "kind": "Ролик", "ru": "Планка", "what": "Пятое движение самотеста при онбординге.", "where": "content/site/assessment.ts", "state": "Не снято", "blocks": "Каждый новый пользователь на пятом движении видит пустое место вместо показа. Остальные четыре сняты.", "tier": "launch"}, {"id": "covers", "kind": "Схема", "ru": "Обложки курсов — их негде хранить", "what": "Вертикальные 1200×1600, по одной на курс.", "where": "src/content/schema.ts → CourseSchema", "state": "Поля нет", "blocks": "У курса в схеме вообще нет поля под фотографию — только цвет плитки. Сначала правка схемы, потом съёмка. Сейчас все пять карточек заливаются плоским цветом.", "tier": "launch"}, {"id": "home_frames", "kind": "Фото", "ru": "Кадры для главной", "what": "8–12 вертикальных.", "where": "src/lib/media/photos.ts → homeToday", "state": "Один файл на всё", "blocks": "homeToday и auth указывают на один и тот же public/coach/sergey-hero.jpg — на главной и на входе каждый день одна фотография.", "tier": "launch"}, {"id": "stock", "kind": "Фото", "ru": "Шесть мест держатся на чужом стоке", "what": "landingHero, coach, coursePath, exercise, stats, profile.", "where": "src/lib/media/photos.ts", "state": "Unsplash", "blocks": "Шесть из восьми записей в реестре указывают на images.unsplash.com. Папки public/photos/ не существует, хотя скрипт для выкачки есть.", "tier": "site"}, {"id": "game_cover", "kind": "Фото", "ru": "Обложка игры", "what": "Вертикальная.", "where": "ProgramDeck → GAME_TILE", "state": "Нет", "blocks": "Карточка игры всегда плоско-оранжевая.", "tier": "site"}], "tiers": [{"key": "assessment", "n": "01", "ru": "Это видит каждый новый пользователь", "why": "Самотест при онбординге — пять движений. Четыре сняты, одного нет. Это единственный ассет, который стоит между новым человеком и полным первым экраном."}, {"key": "start-substitute", "n": "02", "ru": "Достаёт до курса, который продаётся", "why": "Ни одно из них не написано в «Форме с нуля» напрямую — движок подставляет их сам, когда человек жмёт «Посложнее» или когда нужен вариант полегче. Третий уровень в приложении это тир по индексу онбординга, а не заработанный, поэтому сильный новичок попадает сюда в первый же день."}, {"key": "closed-course", "n": "03", "ru": "Нужно для курсов, которые ещё не продаются", "why": "Четыре курса написаны целиком и стоят с published: false. Пока они закрыты, эти ролики никто не увидит — но без них курсы нельзя открыть."}, {"key": "library-only", "n": "04", "ru": "Не используется ни одним курсом", "why": "Движения есть в библиотеке и у каждого есть своя страница на сайте, но ни один курс их не программирует. Снимать в последнюю очередь или не снимать вовсе."}], "total": 90, "filmed": 26};
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const done = new Set();
+let db = null, hideDone = false, q = '';
+
+const plural = (n, a, b, c) => {
+  const m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return a;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return b;
+  return c;
+};
+
+/* The three figures are the argument of the page, so they are computed, never typed. */
+function figures() {
+  const u = D.unfilmed;
+  const byTier = (k) => u.filter((r) => r.tier === k).length;
+  const rows = [
+    { v: u.length, l: 'движений без ролика из ' + D.total + ' в библиотеке' },
+    { v: byTier('assessment'), l: 'видит каждый новый пользователь', cls: 'hot' },
+    { v: byTier('start-substitute'), l: 'достаёт до курса, который продаётся', cls: 'hot' },
+    { v: D.filmed, l: 'уже снято', cls: 'on' },
+  ];
+  $('#figs').innerHTML = rows.map((r) =>
+    `<div class="fig"><b class="${r.cls || ''}">${r.v}</b><span>${esc(r.l)}</span></div>`).join('');
+}
+
+function useLine(r) {
+  const n = r.items;
+  const courses = r.courses.length
+    ? esc(r.coursesRu.join(' · ')) + ' <em>— ' + n + ' ' +
+      plural(n, 'подход', 'подхода', 'подходов') + '</em>'
+    : '<em>Ни один курс не использует</em>';
+  /* The reason a movement sits in tier 01 is the self-test, not the courses that also use it —
+     say so on the row, or the tier and the line contradict each other. */
+  return r.tier === 'assessment' ? '<b>Самотест при онбординге</b> · ' + courses : courses;
+}
+
+function render() {
+  const term = q.trim().toLowerCase();
+  const match = (r) =>
+    (!hideDone || !done.has(r.id)) &&
+    (!term || r.ru.toLowerCase().includes(term) || r.id.includes(term) ||
+      (r.en || '').toLowerCase().includes(term));
+
+  const out = [];
+  for (const t of D.tiers) {
+    const all = D.unfilmed.filter((r) => r.tier === t.key);
+    const rows = all.filter(match);
+    if (!rows.length && term) continue;
+    const left = all.filter((r) => !done.has(r.id)).length;
+    out.push(`<section${t.key === 'assessment' || t.key === 'start-substitute' ? ' data-hot' : ''}>
+      <div class="th"><span class="n">${t.n}</span><h2>${esc(t.ru)}</h2>
+        <span class="c">${left} / ${all.length}</span></div>
+      <p class="why">${esc(t.why)}</p>
+      <ul class="rows">${rows.map((r) => `
+        <li class="row" ${done.has(r.id) ? 'data-done' : ''} data-id="${esc(r.id)}">
+          <button class="tick" role="checkbox" aria-checked="${done.has(r.id)}"
+            aria-label="Снято: ${esc(r.ru)}">✓</button>
+          <span class="nm"><b>${esc(r.ru)}</b><code>${esc(r.id)}.mp4</code></span>
+          <span class="use">${useLine(r)}</span>
+          <span class="cnt">ур. ${r.level}</span>
+        </li>`).join('')}</ul>
+      ${rows.length ? '' : '<p class="empty">Всё снято.</p>'}
+    </section>`);
+  }
+  $('#tiers').innerHTML = out.join('') ||
+    '<section><p class="empty">Ничего не найдено.</p></section>';
+
+  const n = D.unfilmed.filter((r) => done.has(r.id)).length;
+  $('#prog').innerHTML = `Снято <b>${n}</b> из ${D.unfilmed.length}`;
+}
+
+function photo() {
+  $('#photo').innerHTML = D.photo.map((p) => `
+    <div class="pcard" ${p.tier === 'launch' ? 'data-hot' : ''}>
+      <div class="top"><h3>${esc(p.ru)}</h3><span class="st">${esc(p.state)}</span></div>
+      <p>${esc(p.what)}</p>
+      <p>${esc(p.blocks)}</p>
+      <p class="wh">${esc(p.where)}</p>
+    </div>`).join('');
+  $('#pcount').textContent = D.photo.length;
+}
+
+/* Ticking off is the one thing this page remembers. It is a tracker, so the state lives in `db`
+   rather than in the document: one small write per movement instead of republishing 64 rows, and
+   it can be read back later to answer "what is left". */
+async function connect() {
+  db = await window.claude?.use?.('db');
+  if (!db) return;                       // no viewer, no grant: the page still works, read-only
+  try {
+    db.collection('shot').onSnapshot((docs) => {
+      done.clear();
+      for (const d of docs) if (d.data?.done) done.add(d.id);
+      render();
+    });
+  } catch { /* the list still renders; ticking just will not persist */ }
+}
+
+$('#tiers').addEventListener('click', (e) => {
+  const btn = e.target.closest('.tick');
+  if (!btn) return;
+  const id = btn.closest('.row')?.dataset.id;
+  if (!id) return;
+  const next = !done.has(id);
+  // Optimistic: the tick answers immediately and the snapshot confirms it.
+  next ? done.add(id) : done.delete(id);
+  render();
+  db?.doc('shot/' + id).set({ done: next, at: new Date().toISOString() }).catch(() => {});
+});
+
+$('#q').addEventListener('input', (e) => { q = e.target.value; render(); });
+$('#hideDone').addEventListener('click', (e) => {
+  hideDone = !hideDone;
+  e.currentTarget.setAttribute('aria-pressed', String(hideDone));
+  render();
+});
+
+figures(); photo(); render(); connect();
+</script>
