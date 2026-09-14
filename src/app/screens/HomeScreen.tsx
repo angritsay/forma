@@ -6,10 +6,14 @@
  * bookable hour. Six sections, each a different size, none of them the answer to the only question
  * anybody opens this screen with: what am I doing today.
  *
- * So the deck moved to the programmes tab and the numbers to the reports tab, and what is left is
- * that answer. The greeting names the athlete, today's session is one full card, the tasks are a
- * ruled list that is usually one line long, and one button offers the coach himself — for the
- * people whose answer to "what am I doing today" is «покажи мне, как».
+ * So the deck moved to the programmes tab and the numbers to «Ты», and what is left is that
+ * answer — for the course *and* for the game. The greeting names the athlete, today's session is
+ * one full card, the game is one row under it (blurred for somebody not playing, because a
+ * spoiler is a truer invitation than an advertisement), and one button offers the coach himself,
+ * for the people whose answer to "what am I doing today" is «покажи мне, как».
+ *
+ * The steps row went to «Ты» with the rest of the numbers. Home answers what to do now; how far
+ * you walked is how you are doing.
  *
  * The profile is here too, as the avatar in the top-right corner, because it left the tab bar
  * (BottomNav) to make room for the game. A photograph of your own face is the one control on a
@@ -26,26 +30,21 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { courseTitle } from '@/content/catalogue';
-import { formatNumber } from '@/i18n/index';
-import { STEPS_GOAL } from '@/lib/training/constants';
 import { courseTileVars } from '@/lib/ui/tile';
 import { PHOTOS } from '@/lib/media/photos';
 import { useT } from '@/app/hooks/useT';
 import { AssignedWorkoutsCard } from '@/app/features/customWorkout/AssignedWorkoutsCard';
 import { buildDeck } from '@/app/features/programs/deck';
 import { DeckCard } from '@/app/features/programs/DeckCard';
+import { GameToday } from '@/app/features/home/GameToday';
 import { dayPart, GREETING_KEY, greetingName } from '@/app/features/home/greeting';
 import { ResumeCard } from '@/app/features/home/ResumeCard';
 import { TodayTasks, type TodayTask } from '@/app/features/home/TodayTasks';
+import { useMarathonDay, useMyMarathons } from '@/app/features/marathon/useMarathon';
 import { assessmentPending, profileToDraft } from '@/app/features/profile/model';
 import { saveDraft } from '@/app/screens/onboarding/draft';
 import { useCatalogue } from '@/app/store/catalogue';
-import {
-  useActiveCourseId,
-  useProgress,
-  useProgressLoader,
-  useStepsToday,
-} from '@/app/store/progress';
+import { useActiveCourseId, useProgress, useProgressLoader } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
 import { BOOKING } from '@content/site/booking';
 
@@ -72,8 +71,13 @@ export default function HomeScreen() {
   const error = useProgress((s) => s.error);
   const courseStates = useProgress((s) => s.courseStates);
   const activeCourseId = useActiveCourseId();
-  const stepsToday = useStepsToday();
   const courses = useCatalogue((s) => s.courses);
+  /*
+   * The game, from the server. Home shows the row whether or not there is one to show: with a
+   * marathon it carries today's task, without one it carries the same row blurred.
+   */
+  const { marathon } = useMyMarathons();
+  const { data: gameTasks } = useMarathonDay(marathon, marathon?.dayIndex ?? 0);
 
   const name = greetingName(profile?.displayName, user?.email ?? '');
   const greeting = t(GREETING_KEY[dayPart(new Date().getHours())], { name });
@@ -126,21 +130,8 @@ export default function HomeScreen() {
         onOpen: takeAssessment,
       });
     }
-    items.push({
-      key: 'steps',
-      label: t('app.homeTaskSteps'),
-      hint:
-        stepsToday > 0
-          ? t('app.homeTodayStepsProgress', {
-              steps: formatNumber(locale, stepsToday),
-              goal: formatNumber(locale, STEPS_GOAL),
-            })
-          : undefined,
-      done: stepsToday >= STEPS_GOAL,
-      onOpen: () => navigate('/steps'),
-    });
     return items;
-  }, [profile, stepsToday, locale, t, navigate, takeAssessment]);
+  }, [profile, t, takeAssessment]);
 
   const header = (
     <div className="flex items-center gap-3 pt-5">
@@ -246,6 +237,7 @@ export default function HomeScreen() {
             {t('app.homeCoachNow')}
           </Button>
         ) : null}
+        <GameToday marathon={marathon} tasks={gameTasks} onOpen={() => navigate('/marathon')} />
         <TodayTasks items={tasks} />
         <AssignedWorkoutsCard onOpen={(id) => navigate(`/assigned/${id}`)} />
       </div>

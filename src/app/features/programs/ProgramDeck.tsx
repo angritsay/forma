@@ -19,14 +19,11 @@ import { courseTitle } from '@/content/catalogue';
 import { formatNumber, plural } from '@/i18n/index';
 import { courseLandingHref, subscribeHref } from '@/app/features/courses/courseMeta';
 import { PHOTOS, type Photo } from '@/lib/media/photos';
-import { courseTileVars } from '@/lib/ui/tile';
+import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
 import { useT } from '@/app/hooks/useT';
 import { DeckCard } from './DeckCard';
 import type { DeckEntry } from './deck';
 import type { GameAccess } from '@/app/features/marathon/gameAccess';
-
-/** Marathon orange — a marathon has no course tile of its own, and the deck's rule needs one. */
-const MARATHON_TILE = '#f08a3c';
 
 /**
  * Which photograph a course card gets.
@@ -129,7 +126,7 @@ export function ProgramDeck({
               <div key={entry.key} className="w-full shrink-0 snap-center">
                 <DeckCard
                   priority={priority}
-                  style={courseTileVars(MARATHON_TILE)}
+                  style={courseTileVars(GAME_TILE)}
                   eyebrow={`${t('app.homeDeckMarathon')} · ${t('app.marathonDayOf', {
                     n: formatNumber(locale, day),
                     total: formatNumber(locale, marathon.days),

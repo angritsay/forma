@@ -56,6 +56,8 @@ import { WorkRepsStep } from '@/app/features/player/steps/WorkRepsStep';
 import { WorkTimerStep } from '@/app/features/player/steps/WorkTimerStep';
 import { haptic, setClosingConfirmation } from '@/lib/telegram/webapp';
 import { warmupSkipIndex } from '@/lib/training/player';
+import { TapToPause } from '@/app/features/player/TapToPause';
+import { WarmupSkip } from '@/app/features/player/WarmupSkip';
 import { exerciseStillUrl } from '@/lib/api/storage';
 import { courseTileVars } from '@/lib/ui/tile';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
@@ -396,6 +398,10 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
    * The session no longer asks "shall we warm up?" before it starts — it just starts warming up —
    * so the way out of the warm-up has to be available the whole way through it rather than once,
    * at a gate, before anyone has seen what the warm-up is.
+   *
+   * It is offered twice over: as a chip on the panel that fades after a few seconds (WarmupSkip),
+   * for the athlete who warmed up an hour ago and is deciding right now, and in the pause overlay
+   * for the whole warm-up, for whoever comes looking after the chip has gone.
    */
   const skipWarmupTo = warmupSkipIndex(steps, prescribed);
   const inWarmup =
@@ -425,6 +431,8 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
             onPointerDownCapture={unlock}
           >
             <ArtLayer exerciseId={exerciseId} playing={!paused} videoUrl={videoUrl} />
+            {/* The picture is the pause button; the panel below it is not. */}
+            {step && step.kind !== 'done' && !paused ? <TapToPause onTap={togglePause} /> : null}
             <PlayerHeader
               progress={steps.length > 1 ? stepIndex / (steps.length - 1) : 0}
               paused={paused}
@@ -448,6 +456,14 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
                   onRecord={recordResult}
                   onNext={next}
                   registerNext={registerNext}
+                />
+              ) : null}
+              {inWarmup !== null ? (
+                <WarmupSkip
+                  onSkip={() => {
+                    setPaused(false);
+                    goTo(inWarmup);
+                  }}
                 />
               ) : null}
               {step && step.kind !== 'done' ? (

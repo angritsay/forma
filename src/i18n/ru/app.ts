@@ -6,7 +6,7 @@ export const app = {
   tabHome: 'Сегодня',
   tabPrograms: 'Программы',
   tabGame: 'Игра',
-  tabReports: 'Прогресс',
+  tabReports: 'Ты',
   navMain: 'Основная навигация',
   navLocaleRu: 'RU',
   navLocaleEn: 'EN',
@@ -197,6 +197,9 @@ export const app = {
   homeTodayNoCourseBody: 'Выбери программу — и первая тренировка появится здесь.',
   homeTodayNoCourseCta: 'Смотреть программы',
   homeCoachNow: 'Заниматься с тренером сейчас',
+  // The game, on Home. Somebody not playing sees the same row with the task blurred out.
+  homeGameSpoiler: 'Игра идёт без тебя',
+  homeGameSpoilerTask: 'Задание дня',
   homeTasksTitle: 'Сегодня ещё',
   homeTaskSteps: 'Напиши, сколько прошёл сегодня',
   homeTaskAssess: 'Адаптировать тренировки под себя',
@@ -221,7 +224,7 @@ export const app = {
   homeDeckCourse: 'Курс',
   homeDeckMarathon: 'Игра',
   homeDeckMarathonBody: 'Задание каждый день, таблица за неделю',
-  homeDeckMarathonLead: 'Задание каждый день. Кто наберёт больше всех за неделю — час с Сергеем.',
+  homeDeckMarathonLead: 'Задание каждый день. Кто наберёт больше всех за неделю — час с тренером.',
   homeDeckGameLocked: 'Входит в подписку',
   homeDeckGameTrial: 'Пробная неделя с курсом — осталось {n}',
   homeDeckGameTrialDayOne: '1 день',
@@ -465,7 +468,7 @@ export const app = {
   summaryNoResultsBody: 'Эта тренировка не была завершена на этом устройстве, поэтому итогов нет.',
 
   // Статистика
-  statsTitle: 'Прогресс',
+  statsTitle: 'Ты',
   statsPosterLabel: 'Твой прогресс',
   statsStreakDays: '{days} подряд',
   statsStreakBest: 'Лучшая серия — {n}',
@@ -1004,7 +1007,7 @@ export const app = {
   marathonFinishedBody: 'Таблица остаётся — можно посмотреть, чем всё кончилось.',
   marathonEmptyTitle: 'Ты пока не в игре',
   marathonEmptyBody:
-    'Игра — это задание каждый день и таблица за неделю. Победитель недели получает час с Сергеем.',
+    'Игра — это задание каждый день и таблица за неделю. Победитель недели получает час с тренером.',
   marathonNoTasksToday: 'Сегодня заданий нет',
   marathonNoTasksTodayBody: 'Отдыхаем. Завтра утром будет новое.',
   marathonErrorTitle: 'Не удалось загрузить игру',
@@ -1012,7 +1015,7 @@ export const app = {
   marathonTrialTitle: 'Пробная неделя',
   marathonTrialBody: 'Игра открыта вместе с курсом. Осталось {n} — дальше по подписке.',
   marathonLockedBody:
-    'Задание каждый день, доказательство и таблица за неделю. Кто наберёт больше всех — час с Сергеем.',
+    'Задание каждый день, доказательство и таблица за неделю. Кто наберёт больше всех — час с тренером.',
   // One task
   marathonDeadline: 'До {time}',
   marathonDeadlinePassed: 'Время вышло',
@@ -1041,7 +1044,7 @@ export const app = {
   marathonBoardEmpty: 'Пока никто не набрал баллов',
   marathonBoardYou: 'Ты',
   marathonBoardPoints: '{n}',
-  marathonBoardWinner: 'Час с Сергеем',
+  marathonBoardWinner: 'Час с тренером',
   // My points
   marathonPointsDone: '{done} из {total}',
   marathonPointsTeamTook: 'Команда: {n}',

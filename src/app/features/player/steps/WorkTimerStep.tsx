@@ -1,4 +1,6 @@
 import { useCallback, useRef } from 'react';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { formatClock } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
 import type { PlayerResult } from '@/app/store/activeWorkout';
 import type { BlockFormat } from '@/content/schema';
@@ -95,6 +97,28 @@ export function WorkTimerStep({
           tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'accent' : 'default'}
           {...(isEmom ? { caption: t('training.emomMinuteHint', { n: step.target }) } : {})}
         />
+        {/*
+         * How far through this movement, as a length.
+         *
+         * The digits say how long is left and nothing says how long that is *of* — a minute-long
+         * hold and a twenty-second one both read «0:12» halfway through, and they are not the same
+         * feeling at all. The line is the answer, with the elapsed and the whole under it.
+         *
+         * White, not the programme colour: a clock is not one of the places colour may land here
+         * (see BigClock), and the line is part of the clock.
+         */}
+        <div className="mt-1 flex w-full max-w-[240px] flex-col gap-1.5">
+          <ProgressBar
+            value={clock.elapsedSec / duration}
+            size="sm"
+            tone="primary"
+            label={exerciseName(step.exerciseId, locale)}
+          />
+          <div className="tabular flex justify-between text-[12px] text-paper/60">
+            <span>{formatClock(Math.min(duration, clock.elapsedSec))}</span>
+            <span>{formatClock(duration)}</span>
+          </div>
+        </div>
         {facts.length > 0 ? (
           <span className="text-[13px] text-paper/70">{facts.join(' · ')}</span>
         ) : null}

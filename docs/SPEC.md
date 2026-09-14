@@ -117,7 +117,7 @@ public/                     # favicon.svg, icons, manifest
   split; headings sit low against their column; photographs bleed past the page gutter. Large
   radii survive where a card is genuinely a discrete object (24px cards, 20px tiles, 16px inputs),
   but buttons and chips are near-square (4px) with capitalised, tracked labels — no pills. Bottom
-  tab bar in the app (Сегодня / Программы / Игра / Прогресс — the profile is the avatar in the
+  tab bar in the app (Сегодня / Программы / Игра / Ты — the profile is the avatar in the
   top-right of Home, not a tab), generous spacing, 1px borders
   (`--border`).
 - The accent is a dosage rule, not just a colour: `#9ECBFF` marks the primary button, the
@@ -360,10 +360,18 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    numbers feed the index, the other two are written to `benchmarks`.
 3. **Home**: today, and nothing else. The greeting names the athlete and the avatar beside it opens
    the profile; the resume strip if a session was left unfinished; today's session as one
-   full-width cover card (photograph or the programme colour, the day's name, one button); one
-   button offering an hour with the coach; and today's tasks as a ruled list — logging today's
-   steps, the assessment when it was postponed — followed by whatever the coach has assigned by
-   hand. The deck of programmes moved to the «Программы» tab and the figures to «Отчёты».
+   full-width cover card (photograph or the programme colour, the day's name, one button); **the
+   game as one ruled row** under it; one button offering an hour with the coach; then any task
+   still owed — the assessment when it was postponed — and whatever the coach has assigned by
+   hand. The deck of programmes moved to the «Программы» tab and the figures to «Ты».
+
+   The game row is the same row in both states, and it is the only thing on Home that takes a
+   colour — the game's orange (`GAME_TILE`, src/lib/ui/tile.ts), because colour here says which
+   part of the product something belongs to. In a game it shows the day as a ring and names the
+   first task still owed; not in one it shows the same row with the task blurred, which is a
+   truer invitation than an advertisement. Logging steps is **not** on Home: it is a number the
+   athlete owes today, and it belongs with the rest of how they are doing, on «Ты».
+
 4. **Course path**: the days as a winding column of square stops — four columns, wave order, the
    day's name set in the space each stop leaves beside it — grouped under a banner per week in the
    programme colour. A finished day is filled in that colour and ticked, today is filled in paper,
@@ -388,19 +396,27 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    pulled back down only from the top of the text so scrolling up through it does not close it.
    Sideways on the front walks the workout: right to left is the next movement, left to right the
    one before, both meaning exactly what the → and ← keys mean. A session
-   that opens with a warm-up starts inside it, with no gate and no intro; skipping the warm-up,
-   skipping or restarting a step, stepping back and ending the session all live behind Pause.
+   that opens with a warm-up starts inside it, with no gate and no intro. **Tapping the picture
+   pauses** — the picture only, never the panel, and a press that travels or is held is left to
+   the swipe handlers. «Пропустить разминку» is offered twice: as a chip on the panel that fades
+   out after about six seconds, and, for the whole warm-up, behind Pause, where skipping or
+   restarting a step, stepping back and ending the session also live. Timed work carries a line
+   under the countdown showing how far through the movement it is, with the elapsed and the whole
+   under it — white, because the clock is not one of the places colour may land.
    Leaving asks for confirmation; an unfinished session persists locally and resumes **where it
    stopped** — same step, same countdown. The step's clock is derived from the session clock
    (`stepStartedMs` in the store), so pausing, walking out and closing the app all freeze it the
    same way, and Home offers a **Продолжить** strip naming the movement it will pick up on.
 7. **Summary + feedback**: the time on the crosshair plate, then calories and completion; RPE slider 1–10 with descriptors;
    feeling chips (great / ok / hard / pain); notes; "Save" → adaptation message ("next time +5%").
-8. **Progress** («Прогресс», the fourth tab): a poster, and then two sections. The poster is the
-   paper surface running past both gutters — the wordmark and the level in one row, the streak as
-   one very large numeral with what it counts under it, and workouts / minutes / kcal on a ruled
-   line — built so that a screenshot of it is already a story. Under it: the achievements (earned
-   in the grid, the rest in a row swiped sideways) and the top of this week's table. Everything
+8. **«Ты»** (the fourth tab): a poster, and then the sections. The tab is not called «Прогресс»,
+   because it is not a report — it is a picture of the athlete. The poster is the paper surface
+   running past both gutters — the wordmark and the level in one row, the streak as one very large
+   numeral with what it counts under it, and workouts / minutes / kcal on a ruled line — built so
+   that a screenshot of it is already a story. Under it: **today's steps as one row with a ring**,
+   the one number still owed on a tab otherwise made of finished things; then the achievements
+   (earned in the grid, the rest in a row swiped sideways) and the top of this week's table.
+   Everything
    else — the week's load, points by week, the streak calendar, steps, personal records, the level
    card — is behind «Подробности», collapsed: a chart answers a question nobody arrives with.
 9. **Leaderboard**: tabs week / all-time, course filter, top-100 with own row pinned.

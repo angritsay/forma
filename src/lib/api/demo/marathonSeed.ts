@@ -175,7 +175,7 @@ export function seedMarathon(email: string, today = toLocalDateIso()): DemoMarat
     // The demo marathon runs on the viewer's own clock, so "today" is today wherever they are.
     timezone: guessTimezone(),
     dueTime: '22:00:00',
-    prize: 'Час с Сергеем один на один',
+    prize: 'Час с тренером один на один',
     createdAt,
     updatedAt: createdAt,
   };

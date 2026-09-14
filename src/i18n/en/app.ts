@@ -8,7 +8,7 @@ export const app = {
   tabHome: 'Today',
   tabPrograms: 'Programmes',
   tabGame: 'Game',
-  tabReports: 'Progress',
+  tabReports: 'You',
   navMain: 'Main navigation',
   navLocaleRu: 'RU',
   navLocaleEn: 'EN',
@@ -198,6 +198,9 @@ export const app = {
   homeTodayNoCourseBody: 'Choose a program and your first workout will appear here.',
   homeTodayNoCourseCta: 'Browse programmes',
   homeCoachNow: 'Train with the coach now',
+  // The game, on Home. Somebody not playing sees the same row with the task blurred out.
+  homeGameSpoiler: 'The game is on',
+  homeGameSpoilerTask: 'Today’s task',
   homeTasksTitle: 'Still today',
   homeTaskSteps: 'Log how far you walked today',
   homeTaskAssess: 'Fit the training to you',
@@ -222,7 +225,8 @@ export const app = {
   homeDeckCourse: 'Course',
   homeDeckMarathon: 'Game',
   homeDeckMarathonBody: 'A task every day, a board every week',
-  homeDeckMarathonLead: 'A task every day. Whoever scores most in a week gets an hour with Sergey.',
+  homeDeckMarathonLead:
+    'A task every day. Whoever scores most in a week gets an hour with the coach.',
   homeDeckGameLocked: 'Part of the subscription',
   homeDeckGameTrial: 'Free week with the course — {n} left',
   homeDeckGameTrialDayOne: '1 day',
@@ -465,7 +469,7 @@ export const app = {
   summaryNoResultsBody: 'This workout wasn’t finished on this device, so there is nothing to show.',
 
   // Stats
-  statsTitle: 'Progress',
+  statsTitle: 'You',
   statsPosterLabel: 'Your progress',
   statsStreakDays: '{days} in a row',
   statsStreakBest: 'Best run — {n}',
@@ -1006,7 +1010,7 @@ export const app = {
   marathonFinishedBody: 'The board stays up — you can still see how it ended.',
   marathonEmptyTitle: 'You are not in a game',
   marathonEmptyBody:
-    'The game is a task every day and a board every week. Whoever wins the week gets an hour with Sergey.',
+    'The game is a task every day and a board every week. Whoever wins the week gets an hour with the coach.',
   marathonNoTasksToday: 'Nothing set for today',
   marathonNoTasksTodayBody: 'A rest day. There will be a new one in the morning.',
   marathonErrorTitle: 'Could not load the game',
@@ -1015,7 +1019,7 @@ export const app = {
   marathonTrialBody:
     'The game is open with your course. {n} left — after that it needs a subscription.',
   marathonLockedBody:
-    'A task every day, proof, and a board every week. Whoever scores most gets an hour with Sergey.',
+    'A task every day, proof, and a board every week. Whoever scores most gets an hour with the coach.',
   // One task
   marathonDeadline: 'Until {time}',
   marathonDeadlinePassed: 'The day has closed',
@@ -1044,7 +1048,7 @@ export const app = {
   marathonBoardEmpty: 'Nobody has scored yet',
   marathonBoardYou: 'You',
   marathonBoardPoints: '{n}',
-  marathonBoardWinner: 'An hour with Sergey',
+  marathonBoardWinner: 'An hour with the coach',
   // My points
   marathonPointsDone: '{done} of {total}',
   marathonPointsTeamTook: 'Team: {n}',

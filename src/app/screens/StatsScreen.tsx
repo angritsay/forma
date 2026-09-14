@@ -46,9 +46,11 @@ import { Section } from '@/app/features/stats/Section';
 import { LevelCard, TotalsRow } from '@/app/features/stats/StatsCards';
 import { PointsChart, StepsChart, WeeklyChart } from '@/app/features/stats/StatsCharts';
 import { StreakCalendar } from '@/app/features/stats/StreakCalendar';
+import { StepsRow } from '@/app/features/stats/StepsRow';
 import {
   useProgress,
   useProgressLoader,
+  useStepsToday,
   useStreak,
   useTodayIso,
   useTotalPoints,
@@ -88,6 +90,7 @@ export default function StatsScreen() {
   const weeks = useMemo(() => pointsByWeek(sessions, logs, today), [sessions, logs, today]);
   const calendar = useMemo(() => streakCalendar(sessions, logs, today), [sessions, logs, today]);
   const steps = useMemo(() => stepsHistory(logs, today), [logs, today]);
+  const stepsToday = useStepsToday();
   const records = useMemo(() => personalRecords(benchmarks, locale), [benchmarks, locale]);
   const stats = useMemo(
     () =>
@@ -158,6 +161,11 @@ export default function StatsScreen() {
             onLogSteps={() => navigate('/steps')}
           />
         ) : null}
+        {/*
+         * The one number still owed today. It used to live on Home, but Home answers "what do I
+         * do now" — how far you walked belongs with the rest of how you are doing.
+         */}
+        <StepsRow steps={stepsToday} goal={STEPS_GOAL} onOpen={() => navigate('/steps')} />
         <Section
           title={t('app.statsAchievementsTitle')}
           aside={t('app.statsAchievementsCount', { done: unlocked, total: achievements.length })}
