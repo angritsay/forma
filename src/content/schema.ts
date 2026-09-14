@@ -125,6 +125,22 @@ export const ExerciseSchema = z
       easier: z.string().regex(idRegex).optional(),
       harder: z.string().regex(idRegex).optional(),
     }),
+    /**
+     * What a standard person at each course level comfortably does — reps, or seconds for a hold.
+     *
+     * Comfortable, never a maximum: the whole adaptation is anchored on comfort, because a
+     * programme built from maxima comes out too hard. Authored here once per exercise rather than
+     * inferred from a workout's number, which would make the reference flap about with the coach's
+     * intent for each particular session. **Expert anchor** unless a norm is cited in
+     * docs/TRAINING_SCIENCE.md.
+     */
+    comfortRef: z.record(z.coerce.number().int(), z.number().positive()).optional(),
+    /**
+     * Reps of this movement per rep of its pattern's reference movement, for the same person.
+     * Used to carry an estimate across to a movement the athlete has never done. Default 1.
+     * The one value with a citation is the knee push-up at 0.6 of a full push-up (Ebben 2011).
+     */
+    relativeDifficulty: z.number().positive().optional(),
     video: OptionalL10nSchema.optional(),
     tags: z.array(z.string()).default([]),
     isTest: z.boolean().optional(),
@@ -173,9 +189,38 @@ export const WorkoutItemSchema = z
     perSide: z.boolean().optional(),
     note: L10nSchema.optional(),
     restAfterSec: z.number().int().nonnegative().optional(),
+    /**
+     * The coach's own range for this movement in this piece — the «Тренер: 10-20» he already writes
+     * in the note, as data. These are HARD limits on everything the adaptation computes.
+     *
+     * Without them the model walks away from the programme: the worked example that proved it
+     * asked a strong athlete for 50 dead bugs against an authored 30 and a written ceiling of 40.
+     * An adaptive engine that can leave the coach's range is not adapting his programme, it is
+     * writing its own.
+     */
+    min: z.number().int().positive().optional(),
+    max: z.number().int().positive().optional(),
   })
   .superRefine((it, ctx) => {
     const n = [it.reps, it.seconds, it.meters, it.calories].filter((v) => v !== undefined).length;
+    const authored = it.reps ?? it.seconds ?? it.meters ?? it.calories;
+    if (it.min !== undefined && it.max !== undefined && it.min > it.max) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: `${it.exerciseId}: min above max` });
+    }
+    // The authored number is what an average person gets, so it must sit inside the coach's own
+    // range. One outside it is a typo in one of the two, and worth stopping the build for.
+    if (authored !== undefined && it.min !== undefined && authored < it.min) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `${it.exerciseId}: authored ${authored} is below the coach's min ${it.min}`,
+      });
+    }
+    if (authored !== undefined && it.max !== undefined && authored > it.max) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `${it.exerciseId}: authored ${authored} is above the coach's max ${it.max}`,
+      });
+    }
     if (n !== 1) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -184,6 +229,32 @@ export const WorkoutItemSchema = z
     }
   });
 export type WorkoutItem = z.infer<typeof WorkoutItemSchema>;
+
+/**
+ * One lever, and how far it moves each way.
+ *
+ * `easier` / `harder` are multipliers on whatever the lever governs, except `swap`, where the move
+ * is to a different movement entirely (`Exercise.scaling.easier` / `.harder`).
+ */
+export const AdaptLeverSchema = z.enum([
+  'reps',
+  'rounds',
+  'rest',
+  'window',
+  'interval',
+  'swap',
+  'none',
+]);
+export type AdaptLever = z.infer<typeof AdaptLeverSchema>;
+
+export const AdaptStepSchema = z.object({
+  lever: AdaptLeverSchema,
+  /** Multiplier at «полегче». Below 1 for volume levers, above 1 for rest. */
+  easier: z.number().positive().optional(),
+  /** Multiplier at «посложнее». */
+  harder: z.number().positive().optional(),
+});
+export type AdaptStep = z.infer<typeof AdaptStepSchema>;
 
 export const BlockSchema = z
   .object({
@@ -204,6 +275,18 @@ export const BlockSchema = z
     restBetweenRoundsSec: z.number().int().nonnegative().optional(),
     items: z.array(WorkoutItemSchema).min(1),
     scalable: z.boolean().default(true),
+    /**
+     * What makes THIS piece easier or harder, in the order the engine should reach for it.
+     *
+     * Reps are not always the right lever, and the twenty workouts of «Старт» prove it: workout 3
+     * starts a pair every two minutes, so the honest lever is the rest between pairs; workout 6 is
+     * an AMRAP, so it is the window; workout 19 is the benchmark the whole course is measured
+     * against, so it is nothing at all. Adding reps to all three would be wrong in two of them.
+     *
+     * Omitted, a sensible default for the format applies (`DEFAULT_ADAPT` in the engine), so the
+     * courses already written need no hand-tuning — tuning is for where the coach wants it.
+     */
+    adapt: z.array(AdaptStepSchema).optional(),
   })
   .superRefine((b, ctx) => {
     const need = (cond: boolean, msg: string) => {
