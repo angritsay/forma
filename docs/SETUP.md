@@ -423,6 +423,26 @@ Set **Sender email** to an address on your own domain (e.g. `hello@forma-app.co`
 **Sender name** to `Forma`. Add SPF, DKIM and DMARC records at your DNS provider; without them
 Gmail and Mail.ru will junk the codes.
 
+#### When the code does not arrive
+
+The sign-in screen already tells the two halves apart, and it is worth reading the exact words:
+
+| On screen                                                  | What it means                                                                                                                                                                                                                                                                                                                           |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| «Не получилось отправить письмо с кодом»                   | Supabase took the request and its **mailer refused**. Custom SMTP is either not set up at all — the built-in sender is development-only and will not deliver to most addresses — or its host, port, app password or sender address is wrong, or the sending domain is unverified. Nothing to do with the template, spam filters or DNS. |
+| «Слишком много запросов»                                   | The per-hour limit. Raise it under Authentication → Rate Limits (3.4).                                                                                                                                                                                                                                                                  |
+| Nothing at all, and no letter                              | The letter left and was filtered. That is SPF / DKIM / DMARC.                                                                                                                                                                                                                                                                           |
+| A letter arrives carrying a **link** instead of six digits | The template was never pasted (3.2), or only into _Magic Link_ and not _Confirm signup_.                                                                                                                                                                                                                                                |
+
+**Supabase's own words about a refused send are in Dashboard → Logs → Auth.** That is the fastest
+way to tell "no SMTP configured" from "wrong app password", and it costs nothing to look.
+
+To reproduce it from outside the app, run the **Check backend** workflow
+(`.github/workflows/probe-backend.yml`) from the Actions tab. It reads the project's auth settings,
+and with **send** ticked it asks Supabase for a real code and prints the failure verbatim. The
+address comes from a repository **secret** named `PROBE_EMAIL`, never from a form field: this
+repository is public, and a workflow input would publish that address in the run log forever.
+
 ---
 
 ## 4. Make the coach an admin
