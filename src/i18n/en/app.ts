@@ -112,8 +112,18 @@ export const app = {
     'You’ll count how many reps of {n} movements you do in {min} minutes. No maximums — a calm pace.',
   onbAssessNow: 'Now',
   onbAssessLater: 'Not now',
+  onbAssessWarnTitle: 'Don’t squeeze out a maximum',
+  onbAssessWarnBody:
+    'This is a setup, not an exam. Work at a calm pace and stop when the technique starts to go — not when the strength does.',
+  onbAssessWarnBody2:
+    'Push to failure today and the app will decide you are stronger than you are, and the programme for the next weeks will be too heavy. An honest calm number is training you can actually do.',
+  onbAssessWarnCta: 'Got it, let’s start',
   onbAssessInstruction:
     'Count how many you do in the time — at a calm pace, with no discomfort, without squeezing out more than you need to.',
+  onbAssessInstructionHold:
+    'Hold while your back stays flat and press Stop when it starts to sag. Not to the limit — the time is recorded for you.',
+  onbAssessStop: 'Stop',
+  onbAssessHoldLabel: 'Seconds held',
   onbAssessOnKnees: 'On knees',
   onbAssessCountLabel: 'Reps done',
   onbAssessDoneTitle: 'Written down',

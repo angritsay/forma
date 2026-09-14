@@ -349,12 +349,15 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    limitations → **the assessment** → time per session → goal → result screen (fitness index,
    level, what it means) → home.
    The assessment is one question — «Хочешь адаптировать тренировки под себя?», with what it costs
-   in one line under it — and two answers. «Сейчас» runs five movements of one minute each
+   in one line under it — and two answers. «Сейчас» first shows the one instruction everything here
+   depends on — do not squeeze out a maximum, because a number forced out today is a programme that
+   is too heavy for the weeks after it — and then runs five movements of one minute each
    (`content/site/assessment.ts`) as a full-screen surface over the wizard: the clip, the movement's
    name, the instruction, then the clock alone, ticking the last three seconds and closing on a long
-   horn, then the field for the count. «Не сейчас» postpones the whole thing; it comes back as a
-   task on the home screen, and the fitness index imputes what it is missing (docs/TRAINING_SCIENCE
-   §2). Two of the five counts feed the index, the other three are written to `benchmarks`.
+   horn, then the field for the number. The plank is the one hold: «Стоп» ends it and the screen
+   times it. «Не сейчас» postpones the whole thing; it comes back as a task on the home screen, and
+   the fitness index imputes what it is missing (docs/TRAINING_SCIENCE §2). Three of the five
+   numbers feed the index, the other two are written to `benchmarks`.
 3. **Home**: today, and nothing else. The greeting names the athlete and the avatar beside it opens
    the profile; the resume strip if a session was left unfinished; today's session as one
    full-width cover card (photograph or the programme colour, the day's name, one button); one

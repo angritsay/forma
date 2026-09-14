@@ -15,6 +15,12 @@
  * rest of the profile (docs/TRAINING_SCIENCE.md §2), so a postponed assessment costs precision,
  * not the programme.
  *
+ * Between «Сейчас» and the first movement there is one more screen, and it is the most important
+ * one here: it says not to squeeze out a maximum, and it says why in the athlete's own interest —
+ * a number forced out today is a programme that is too heavy for the next six weeks. That warning
+ * cannot ride along with the movement: beside a running clock and a demonstration nobody reads a
+ * paragraph, and this is the instruction everything the assessment produces depends on.
+ *
  * This step draws its own controls. Every other step of the wizard sits on the shared
  * «Продолжить» footer; here the two answers *are* the step, and a third button under them saying
  * "continue" would be a third answer.
@@ -29,9 +35,12 @@ import { assessmentDone } from './draft';
 import type { StepProps } from './types';
 import { ASSESSMENT_MOVES, ASSESSMENT_TOTAL_MIN } from '@content/site/assessment';
 
+/** offer → the warning → the movements. */
+type Phase = 'offer' | 'warning' | 'running';
+
 export function StepAssess({ draft, update, next }: StepProps) {
   const { t, l } = useT();
-  const [running, setRunning] = useState(false);
+  const [phase, setPhase] = useState<Phase>('offer');
   const done = assessmentDone(draft);
 
   const setCount = (exerciseId: string, reps: number) =>
@@ -45,21 +54,40 @@ export function StepAssess({ draft, update, next }: StepProps) {
 
   const restart = () => {
     update({ assess: { ...draft.assess, later: false, counts: {} } });
-    setRunning(true);
+    setPhase('warning');
   };
 
-  if (running) {
+  if (phase === 'running') {
     return (
       <AssessmentRunner
         onKnees={draft.assess.onKnees}
         onCount={setCount}
         onKneesChange={(onKnees) => update({ assess: { ...draft.assess, onKnees } })}
         onDone={() => {
-          setRunning(false);
+          setPhase('offer');
           next();
         }}
-        onCancel={() => setRunning(false)}
+        onCancel={() => setPhase('offer')}
       />
+    );
+  }
+
+  if (phase === 'warning') {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageTitle title={t('app.onbAssessWarnTitle')} subtitle={t('app.onbAssessWarnBody')} />
+        <p className="hairline pt-5 text-[15px] leading-relaxed text-muted">
+          {t('app.onbAssessWarnBody2')}
+        </p>
+        <div className="flex flex-col gap-2">
+          <Button size="lg" fullWidth onClick={() => setPhase('running')}>
+            {t('app.onbAssessWarnCta')}
+          </Button>
+          <Button variant="ghost" fullWidth onClick={() => setPhase('offer')}>
+            {t('common.back')}
+          </Button>
+        </div>
+      </div>
     );
   }
 
@@ -111,7 +139,7 @@ export function StepAssess({ draft, update, next }: StepProps) {
         })}
       />
       <div className="flex flex-col gap-2">
-        <Button size="lg" fullWidth onClick={() => setRunning(true)}>
+        <Button size="lg" fullWidth onClick={() => setPhase('warning')}>
           {t('app.onbAssessNow')}
         </Button>
         <Button

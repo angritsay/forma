@@ -8,8 +8,10 @@
  *
  * Three moments per movement, and each shows only what that moment needs:
  *   ready  — the clip, the movement's name, the one instruction, and «Начать».
- *   work   — the clip and the count-down. Nothing else at all.
- *   count  — the clip, and the field for the number the athlete just remembered.
+ *   work   — the clip and the count-down. Nothing else at all — except on a hold, which the
+ *            athlete has to be able to end: there «Стоп» is the second thing on the screen, and it
+ *            is what times the hold for them.
+ *   count  — the clip, and the field for the number, pre-filled on a hold.
  *
  * The last three seconds are ticked and the end is a long low horn (`sound.ts`), because the eyes
  * are on the floor at that point and the screen cannot be the thing that says "stop". The audio
@@ -91,8 +93,16 @@ export function AssessmentRunner({
     timer.restart();
   };
 
+  /** A hold ends when the back does: the screen records how far into the window that was. */
+  const stopHold = () => {
+    setReps(String(Math.max(0, (move?.seconds ?? 0) - timer.remainingSec)));
+    timer.pause();
+    playCue('horn');
+    setPhase('count');
+  };
+
   const accept = () => {
-    const value = parseIntField(reps, REPS_MAX);
+    const value = parseIntField(reps, maxAnswer);
     if (value === undefined) return;
     onCount(move.exerciseId, value);
     if (index + 1 >= ASSESSMENT_MOVES.length) {
@@ -106,6 +116,9 @@ export function AssessmentRunner({
   };
 
   const name = l(exercise.name);
+  const hold = move.metric === 'seconds';
+  /* A count has no ceiling worth naming; a hold cannot outlast the window that timed it. */
+  const maxAnswer = hold ? move.seconds : REPS_MAX;
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-bg pt-[var(--safe-top)] pb-[calc(var(--safe-bottom)+16px)]">
@@ -146,7 +159,9 @@ export function AssessmentRunner({
       <div className="flex flex-col gap-4 px-5 pt-5">
         {phase === 'ready' ? (
           <>
-            <p className="text-[15px] leading-snug text-muted">{t('app.onbAssessInstruction')}</p>
+            <p className="text-[15px] leading-snug text-muted">
+              {hold ? t('app.onbAssessInstructionHold') : t('app.onbAssessInstruction')}
+            </p>
             {move.kneeOption ? (
               <label className="flex items-center gap-3 text-[15px]">
                 <input
@@ -170,9 +185,16 @@ export function AssessmentRunner({
         ) : null}
 
         {phase === 'work' ? (
-          <div aria-live="off" className="numeral tabular text-center text-7xl leading-none">
-            {formatClock(timer.remainingSec)}
-          </div>
+          <>
+            <div aria-live="off" className="numeral tabular text-center text-7xl leading-none">
+              {formatClock(timer.remainingSec)}
+            </div>
+            {hold ? (
+              <Button variant="secondary" size="lg" fullWidth onClick={stopHold}>
+                {t('app.onbAssessStop')}
+              </Button>
+            ) : null}
+          </>
         ) : null}
 
         {phase === 'count' ? (
@@ -181,8 +203,8 @@ export function AssessmentRunner({
               type="number"
               inputMode="numeric"
               min={0}
-              max={REPS_MAX}
-              aria-label={t('app.onbAssessCountLabel')}
+              max={maxAnswer}
+              aria-label={hold ? t('app.onbAssessHoldLabel') : t('app.onbAssessCountLabel')}
               placeholder="0"
               autoFocus
               className="text-center text-2xl"
@@ -192,7 +214,7 @@ export function AssessmentRunner({
             <Button
               size="lg"
               fullWidth
-              disabled={parseIntField(reps, REPS_MAX) === undefined}
+              disabled={parseIntField(reps, maxAnswer) === undefined}
               onClick={accept}
             >
               {index + 1 >= ASSESSMENT_MOVES.length ? t('common.done') : t('common.continue')}

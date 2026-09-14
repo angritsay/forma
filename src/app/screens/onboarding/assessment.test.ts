@@ -24,6 +24,7 @@ describe('onboarding assessment', () => {
     expect(new Set(ids).size).toBe(ids.length);
     for (const move of ASSESSMENT_MOVES) {
       expect(move.seconds).toBeGreaterThan(0);
+      expect(['reps', 'seconds']).toContain(move.metric);
       // A count is either an engine input or a personal record; a count that is neither is data
       // collected from someone and then thrown away.
       expect(Boolean(move.maps) !== Boolean(move.benchmarkKey)).toBe(true);

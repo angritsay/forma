@@ -267,13 +267,19 @@ export function draftToTrainingProfile(d: OnboardingDraft): UserTrainingProfile 
    * index does not read (`maps` unset) is a personal record instead — see assessmentBenchmarks.
    */
   for (const move of ASSESSMENT_MOVES) {
-    const reps = d.assess.counts[move.exerciseId];
-    if (reps === undefined || !move.maps) continue;
-    if (move.maps === 'pushups') {
-      profile.tests.pushups = reps;
-      profile.tests.pushupsOnKnees = d.assess.onKnees;
-    } else {
-      profile.tests.squats60s = reps;
+    const measured = d.assess.counts[move.exerciseId];
+    if (measured === undefined || !move.maps) continue;
+    switch (move.maps) {
+      case 'pushups':
+        profile.tests.pushups = measured;
+        profile.tests.pushupsOnKnees = d.assess.onKnees;
+        break;
+      case 'squats60s':
+        profile.tests.squats60s = measured;
+        break;
+      case 'plankSec':
+        profile.tests.plankSec = measured;
+        break;
     }
   }
   if (equipment.includes('dumbbells') && d.dumbbellKg.length > 0) {

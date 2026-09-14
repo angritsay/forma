@@ -53,7 +53,7 @@ function completeDraft(): OnboardingDraft {
         push_up: 12,
         sit_up: 20,
         reverse_lunge: 24,
-        glute_bridge: 35,
+        plank: 45,
       },
     },
     timePerSessionMin: 30,
@@ -120,12 +120,11 @@ describe('onboarding draft', () => {
 
   it('splits the assessment into engine inputs and personal records', () => {
     const p = draftToTrainingProfile(completeDraft());
-    // The two the fitness index reads land in `tests`; the other three are benchmarks.
-    expect(p?.tests).toEqual({ pushups: 12, pushupsOnKnees: true, squats60s: 30 });
+    // The three the fitness index reads land in `tests`; the other two are benchmarks.
+    expect(p?.tests).toEqual({ pushups: 12, pushupsOnKnees: true, squats60s: 30, plankSec: 45 });
     expect(assessmentBenchmarks(completeDraft())).toEqual({
       situps_60s: 20,
       lunges_60s: 24,
-      glute_bridge_60s: 35,
     });
     expect(assessmentBenchmarks(emptyDraft())).toEqual({});
   });
@@ -144,7 +143,7 @@ describe('onboarding draft', () => {
       equipment: ['dumbbells', 'mat'],
       timePerSessionMin: 30,
       goal: 'general',
-      tests: { pushups: 12, pushupsOnKnees: true, squats60s: 30 },
+      tests: { pushups: 12, pushupsOnKnees: true, squats60s: 30, plankSec: 45 },
     });
   });
 
