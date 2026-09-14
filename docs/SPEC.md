@@ -115,9 +115,13 @@ public/                     # favicon.svg, icons, manifest
 - Look: near-black ground throughout, structured by hairline rules and editorial numerals rather
   than by a card around every object. Composition is asymmetric — a 7/5 grid, not a balanced
   split; headings sit low against their column; photographs bleed past the page gutter. Large
-  radii survive where a card is genuinely a discrete object (24px cards, 20px tiles, 16px inputs),
-  but buttons and chips are near-square (4px) with capitalised, tracked labels — no pills. Bottom
-  tab bar in the app (Сегодня / Программы / Игра / Ты — the profile is the avatar in the
+  radii where an object is genuinely discrete (24px cards, 20px tiles) and 12px on everything
+  interactive — buttons, inputs and chips alike, with capitalised, tracked labels and no pills.
+  This paragraph described that scale while the tokens were all 0; both now agree, and the one
+  change of mind is the buttons, which used to be held at a near-square 4px. Chrome that has
+  content moving under it — the tab bar, a screen header, a sheet, a modal, the player — is
+  frosted glass (`design/CHANGELOG.md` §8); everything else is a solid surface. Bottom
+  tab bar in the app (Сегодня / Программы / Челлендж / Прогресс — the profile is the avatar in the
   top-right of Home, not a tab), generous spacing, 1px borders
   (`--border`).
 - The accent is a dosage rule, not just a colour: `#9ECBFF` marks the primary button, the
@@ -361,16 +365,17 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
 3. **Home**: today, and nothing else. The greeting names the athlete and the avatar beside it opens
    the profile; the resume strip if a session was left unfinished; today's session as one
    full-width cover card (photograph or the programme colour, the day's name, one button); **the
-   game as one ruled row** under it; one button offering an hour with the coach; then any task
+   challenge as one ruled row** under it; one button offering an hour with the coach; then any task
    still owed — the assessment when it was postponed — and whatever the coach has assigned by
-   hand. The deck of programmes moved to the «Программы» tab and the figures to «Ты».
+   hand. The deck of programmes moved to the «Программы» tab and the figures to «Прогресс».
 
-   The game row is the same row in both states, and it is the only thing on Home that takes a
-   colour — the game's orange (`GAME_TILE`, src/lib/ui/tile.ts), because colour here says which
-   part of the product something belongs to. In a game it shows the day as a ring and names the
-   first task still owed; not in one it shows the same row with the task blurred, which is a
-   truer invitation than an advertisement. Logging steps is **not** on Home: it is a number the
-   athlete owes today, and it belongs with the rest of how they are doing, on «Ты».
+   The challenge row is the same row in both states, and it is the only thing on Home that takes
+   a colour — the challenge's orange (`GAME_TILE`, src/lib/ui/tile.ts; the identifier keeps the old
+   word, the product does not), because colour here says which part of the product something
+   belongs to. In the challenge it shows the day as a ring and names the first task still owed;
+   outside it, the same row with the task blurred, which is a truer invitation than an
+   advertisement. Logging steps is **not** on Home: it is a number the athlete owes today, and it
+   belongs with the rest of how they are doing, on «Прогресс».
 
 4. **Course path**: the days as a winding column of square stops — four columns, wave order, the
    day's name set in the space each stop leaves beside it — grouped under a banner per week in the
@@ -385,7 +390,7 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    **minutes** as a large numeral, over a bar of the work it prescribes, with the reps and kcal
    under it. The recommended one is a filled row (paper on ink) rather than a badged one, and the
    reason is stated under all three. Picking one starts the session immediately — there is no second
-   preview and no confirm button. **No points anywhere in training**: points are the game's
+   preview and no confirm button. **No points anywhere in training**: points are the challenge's
    currency (§10 flow 12), and a workout is time you spend, not a score you earn.
 6. **Player**: one card the size of the screen, with two sides. Front: the clip (or the drawn
    figure), auto-playing, with a back arrow and pause at the top and, at the bottom, the movement's
@@ -409,8 +414,12 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    same way, and Home offers a **Продолжить** strip naming the movement it will pick up on.
 7. **Summary + feedback**: the time on the crosshair plate, then calories and completion; RPE slider 1–10 with descriptors;
    feeling chips (great / ok / hard / pain); notes; "Save" → adaptation message ("next time +5%").
-8. **«Ты»** (the fourth tab): a poster, and then the sections. The tab is not called «Прогресс»,
-   because it is not a report — it is a picture of the athlete. The poster is the paper surface
+8. **«Прогресс»** (the fourth tab): a poster, and then the sections. This paragraph used to argue
+   the opposite — that the tab must be «Ты», because it is not a report but a picture of the
+   athlete — and the owner has overruled it: «Ты» on a tab reads as a label for a person rather
+   than for a place to go, and «Прогресс» is what someone is actually looking for when they tap
+   it. The screen itself does not change, and the argument still holds for what is _on_ it: the
+   poster is the paper surface
    running past both gutters — the wordmark and the level in one row, the streak as one very large
    numeral with what it counts under it, and workouts / minutes / kcal on a ruled line — built so
    that a screenshot of it is already a story. Under it: **today's steps as one row with a ring**,

@@ -53,6 +53,21 @@
   --paper: #ffffff;
   --paper-2: #f2f2f0;
   --ink: #0f0f11;
+  /*
+   * The same three colours again as bare `r, g, b` triplets, for the glass utilities below.
+   *
+   * A custom property holding `#0f0f11` cannot be given an alpha — `rgba(var(--bg), 0.35)` is not
+   * valid CSS and simply drops the declaration. `rgb(from var(--bg) r g b / 0.35)` would do it, but
+   * relative colour syntax is too new for the Android WebView a Telegram Mini App runs inside, and
+   * the failure there is silent. A triplet plus legacy `rgba()` works everywhere and has since
+   * forever, so the duplication is the price of the glass rendering at all.
+   *
+   * Keep these in step with the hexes above them. `--paper-rgb` is what hairlines on glass are
+   * drawn in, which is why it flips to ink under the paper theme rather than staying white.
+   */
+  --bg-rgb: 15, 15, 17;
+  --surface-rgb: 23, 23, 26;
+  --paper-rgb: 255, 255, 255;
   --border-ink: rgba(15, 15, 17, 0.14);
   --border-ink-strong: rgba(15, 15, 17, 0.25);
   /*
@@ -91,14 +106,27 @@
   --tile-fg: #0f0f11;
   --tile-fg-dark: #f6f6f7;
   /*
-   * Radii: one shape, the sharp rectangle. Every radius token is 0 so the ~200 `rounded-*`
-   * utilities in the tree square off at once. `--r-pill` survives for the single legitimate
-   * circle — the play button laid over a video — and nothing else may use it.
+   * Radii: a concentric scale. This reverses the rule that stood here — «одна форма, острый
+   * прямоугольник», every token 0 — and the reversal is the owner's, made deliberately after
+   * seeing the player's frosted panel: the system is to read as glass and soft corners, with the
+   * typography left exactly as it is. `design/CHANGELOG.md` §8 carries the reasoning; the brandbook
+   * (`design/tokens/effects.css`, `design/README.md`) is amended to match, so the two cannot drift.
+   *
+   * The numbers are not new. The system's first version already had this scale — cards 24, tiles
+   * 20, fields 16, small 12 — and it was zeroed wholesale when the interface went editorial. Cards
+   * and tiles come back at their original values; the one departure is that buttons and chips round
+   * too, at 12, where the old system kept them at a near-sharp 4. That was asked for.
+   *
+   * The scale is concentric: an inner radius is its outer radius minus the padding between them, so
+   * a 12px control inside a 24px card with 12px of padding sits right. Keep that arithmetic when
+   * adding a value, or nested rounding starts to look accidental.
+   *
+   * `--r-pill` is still only for the play button laid over a video; nothing else may use it.
    */
-  --r-card: 0px;
-  --r-tile: 0px;
-  --r-inner: 0px;
-  --r-control: 0px;
+  --r-card: 24px;
+  --r-tile: 20px;
+  --r-inner: 12px;
+  --r-control: 12px;
   --r-pill: 999px;
   /* Shadows are almost gone; paper polaroids get a soft one, dark cards get none. */
   --shadow-card: none;
@@ -153,6 +181,14 @@
   --tile-4: #e9e9e6;
   --tile-5: #dededa;
   --tile-fg-dark: var(--ink);
+  /*
+   * Glass on paper. Without these three a sheet opened on the profile would keep blurring the
+   * white screen behind it into a near-black gradient — the material would be right and the colour
+   * would be from the other theme.
+   */
+  --bg-rgb: 255, 255, 255;
+  --surface-rgb: 242, 242, 240;
+  --paper-rgb: 15, 15, 17;
   --shadow-soft: 0 8px 30px rgba(15, 15, 17, 0.1);
   color-scheme: light;
   background: var(--bg);
@@ -500,6 +536,144 @@ body {
     left: 0;
     border-bottom: var(--plate-stroke) solid var(--plate-color);
     border-left: var(--plate-stroke) solid var(--plate-color);
+  }
+
+  /*
+   * Glass — the frosted chrome, and the one material in the system besides paper and photography.
+   *
+   * It began as one hand-rolled line on the player's panel, which is the surface that convinced the
+   * owner to spend it more widely. This is that line promoted to a definition, so the surface she
+   * liked *is* the token rather than a copy of it.
+   *
+   * THE RULE THAT DECIDES WHERE IT MAY GO: glass needs something to be glass over. `backdrop-filter`
+   * blurs what is painted behind an element, so a blurred bar over a flat #0f0f11 ground renders as
+   * a very slightly different flat dark bar — all the cost of a compositing layer, none of the
+   * effect. Four surfaces qualify, because content genuinely passes beneath them: the tab bar
+   * (`fixed`), a screen header (`sticky`), and a sheet or modal (the dimmed screen behind it). The
+   * player is the fifth, and it has video. Everything else takes a solid surface and a radius.
+   *
+   * The band is a GRADIENT, not a flat alpha, and that is load-bearing rather than decorative. A
+   * flat 85% panel was tried here before and rejected for a real reason — recorded in Screen.tsx —
+   * because running text scrolling beneath it still read through the title. The gradient is sheer at
+   * the edge the content arrives from and near-opaque where the labels sit, so the material shows
+   * without anything reading through the words.
+   *
+   * `--glass-tint` picks which colour is being made translucent: the page ground for chrome laid
+   * over a screen, the raised surface for a panel that is its own object. Both flip with the paper
+   * theme, so a sheet opened on the profile frosts white.
+   *
+   * One hazard, and it has already cost this codebase a bug: `backdrop-filter` establishes a
+   * compositing context. WebKit flattens a 3D scene when a descendant does that, which is how the
+   * player's technique card lost `backface-visibility` and showed its front face through its back,
+   * mirrored (see FlipCard.tsx). Adding glass inside a 3D transform, or above a `position: fixed`
+   * child, is worth checking on a real iPhone rather than assuming.
+   */
+  .glass,
+  .glass-bar,
+  .glass-bar-top,
+  .glass-tile {
+    background: linear-gradient(
+      var(--glass-angle, 180deg),
+      rgba(var(--glass-tint, var(--bg-rgb)), var(--glass-from)) 0%,
+      rgba(var(--glass-tint, var(--bg-rgb)), var(--glass-via)) var(--glass-mid, 55%),
+      rgba(var(--glass-tint, var(--bg-rgb)), var(--glass-to)) 100%
+    );
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    backdrop-filter: blur(20px) saturate(140%);
+  }
+
+  /* A panel that is its own object: a sheet, a modal. Tinted from the raised surface. */
+  .glass {
+    --glass-tint: var(--surface-rgb);
+    --glass-from: 0.74;
+    --glass-via: 0.84;
+    --glass-to: 0.9;
+  }
+
+  /*
+   * Chrome laid over a screen. `.glass-bar` is the bottom bar — sheer along its top edge, where the
+   * list arrives from, opaque by the time it reaches the labels. `.glass-bar-top` is the same
+   * material turned over for a header, and each carries its hairline on the edge that faces the
+   * content, so the component does not have to remember to add one.
+   */
+  /*
+   * The band reaches its dense end early — 38% of the way across rather than 55% — because a bar is
+   * shallow and its labels sit almost immediately past the sheer edge. Tuned against the worst real
+   * case in the app: the leaderboard on «Прогресс», where a scrolled row of names and point totals
+   * passes under the tab bar. At a later midpoint those names stayed legible enough to read as
+   * noise behind «ПРОГРАММЫ»; the material still shows, the words underneath no longer compete.
+   */
+  .glass-bar,
+  .glass-bar-top {
+    --glass-from: 0.38;
+    --glass-via: 0.9;
+    --glass-to: 0.96;
+    --glass-mid: 38%;
+  }
+  .glass-bar {
+    border-top: 1px solid rgba(var(--paper-rgb), 0.14);
+  }
+  .glass-bar-top {
+    --glass-angle: 0deg;
+    border-bottom: 1px solid rgba(var(--paper-rgb), 0.14);
+  }
+
+  /*
+   * A band with something worth seeing behind it. The tab bar is dense because it carries 10px
+   * tracked capitals over whatever list happens to be scrolling; the player's panel has the
+   * opposite job — the clip continues behind the numbers and is meant to. These are the alphas the
+   * player's hand-rolled line used before it became a token, kept because that surface is the one
+   * the owner picked out, and it should not have been quietly darkened on the way into the system.
+   */
+  .glass-sheer {
+    --glass-from: 0.35;
+    --glass-via: 0.65;
+    --glass-to: 0.8;
+    --glass-mid: 50%;
+  }
+
+  /* A badge or a stamp laid on artwork: lighter, because there is a picture worth seeing under it. */
+  .glass-tile {
+    --glass-from: 0.3;
+    --glass-via: 0.4;
+    --glass-to: 0.48;
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    backdrop-filter: blur(12px) saturate(140%);
+  }
+
+  /*
+   * Two ways glass must stop being glass, and in both the answer is the same: a fully opaque panel.
+   *
+   * Never a half-transparent unblurred one — that is the single genuinely broken-looking outcome,
+   * where the words of the screen below sit legibly inside the bar. `--glass-solid` resolves to the
+   * same colour the gradient was tinted from, so nothing shifts hue on the way.
+   */
+  .glass,
+  .glass-bar,
+  .glass-bar-top,
+  .glass-tile {
+    --glass-solid: rgb(var(--glass-tint, var(--bg-rgb)));
+  }
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass,
+    .glass-bar,
+    .glass-bar-top,
+    .glass-tile {
+      background: var(--glass-solid);
+    }
+  }
+
+  /* A real accessibility setting, and cheap to honour. */
+  @media (prefers-reduced-transparency: reduce) {
+    .glass,
+    .glass-bar,
+    .glass-bar-top,
+    .glass-tile {
+      background: var(--glass-solid);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
   }
 }
 

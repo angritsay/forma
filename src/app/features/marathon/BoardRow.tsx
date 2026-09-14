@@ -1,5 +1,5 @@
 /**
- * One entry of the game's weekly board, shared by the board screen and the game's own day screen —
+ * One entry of the challenge's weekly board, shared by the board screen and the challenge's own day screen —
  * the short table under today's tasks is the same rows as the full one, and a race with two
  * different-looking tables is two races.
  *

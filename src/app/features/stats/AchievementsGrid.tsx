@@ -17,7 +17,7 @@ function AchievementTile({ item, n }: { item: AchievementStatus; n: number }) {
   return (
     <div
       className={clsx(
-        'flex h-full flex-col gap-3 border p-4',
+        'flex h-full flex-col gap-3 rounded-tile border p-4',
         item.unlocked ? 'border-border-strong' : 'border-border',
       )}
       aria-label={`${l(item.title)} — ${
@@ -28,7 +28,12 @@ function AchievementTile({ item, n }: { item: AchievementStatus; n: number }) {
         <span
           aria-hidden="true"
           className={clsx(
-            'numeral flex h-8 min-w-8 items-center justify-center px-1.5 text-sm',
+            /*
+             * `--r-inner`, not `--r-tile`: this numeral sits inside the tile's own 16px padding,
+             * and a concentric inner radius is the outer one minus that padding. Matching the
+             * tile's 20px here would read as a bubble rather than as a stamp.
+             */
+            'numeral flex h-8 min-w-8 items-center justify-center rounded-inner px-1.5 text-sm',
             item.unlocked
               ? 'bg-primary text-on-primary'
               : 'border border-border-strong text-muted-2',

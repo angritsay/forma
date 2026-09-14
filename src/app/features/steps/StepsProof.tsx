@@ -80,7 +80,7 @@ export function StepsProof({ value, onPick, onRemove, disabled, busy }: StepsPro
             type="button"
             onClick={() => setOpen(true)}
             disabled={!url}
-            className="size-14 shrink-0 overflow-hidden bg-surface-2 disabled:cursor-default"
+            className="size-14 shrink-0 overflow-hidden rounded-inner bg-surface-2 disabled:cursor-default"
             aria-label={t('app.stepsProofOpen')}
           >
             {url ? (

@@ -31,9 +31,18 @@ export function Screen({
   return (
     <div className={clsx('flex min-h-dvh flex-col', className)}>
       {header ? (
-        // Opaque for the same reason as the footer: at 85% the content scrolling under the bar
-        // still reads through it, and a blur only turns that into a smear behind the title.
-        <div className="sticky top-0 z-20 bg-bg pt-[var(--safe-top)]">{header}</div>
+        /*
+         * Glass, and this reverses what stood here — «opaque, because at 85% the content scrolling
+         * under the bar still reads through it». That objection was right about a flat 85% panel,
+         * and it is the reason `.glass-bar-top` is a gradient instead: sheer along the bottom edge,
+         * where the page arrives from, and near-opaque by the time it reaches the title. The words
+         * sit on the solid end of the band, so nothing reads through them and only the material
+         * shows. The footer below keeps the old treatment, for a reason given there.
+         *
+         * The header is `sticky`, so content passes beneath it and there is something real to
+         * blur — which is the whole condition for glass being worth its compositing layer.
+         */
+        <div className="glass-bar-top sticky top-0 z-20 pt-[var(--safe-top)]">{header}</div>
       ) : (
         <div className="h-[var(--safe-top)]" />
       )}

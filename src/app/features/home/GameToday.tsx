@@ -1,7 +1,7 @@
 /**
- * The game, on the home screen, as one row.
+ * The challenge, on the home screen, as one row.
  *
- * Home used to never mention the game at all: it was reachable only from its own tab, which meant
+ * Home used to never mention the challenge at all: it was reachable only from its own tab, which meant
  * somebody in a thirty-day game had to remember to go and look for today's task, and somebody not
  * in one had no way of learning it existed. Both are the same bug — the screen that answers "what
  * am I doing today" was answering it only for the course.
@@ -13,10 +13,10 @@
  * than an advertisement, because it is true: there really is a task today, and they really are
  * not seeing it.
  *
- * The ring counts the days of the game, not any kind of score. Points belong to the game itself,
+ * The ring counts the days of the challenge, not any kind of score. Points belong to the challenge itself,
  * where they are the whole point; the honest figure here is how far in this is.
  *
- * It wears the game's colour and nothing else on Home does, because in this product colour says
+ * It wears the challenge's colour and nothing else on Home does, because in this product colour says
  * which part of it you are in.
  */
 import { clsx } from 'clsx';
@@ -27,13 +27,13 @@ import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
 import { useT } from '@/app/hooks/useT';
 
 export interface GameTodayProps {
-  /** The game I am in, or null when I am not in one. */
+  /** The challenge I am in, or null when I am not in one. */
   marathon: MyMarathon | null;
   /**
-   * Whether the answer to "am I in a game" has arrived yet. Until it has there is nothing honest
+   * Whether the answer to "am I in the challenge" has arrived yet. Until it has there is nothing honest
    * to draw: `marathon` is null both for somebody who is not playing and for somebody whose
    * request is still in the air, and rendering the spoiler for the second one means the row
-   * blinks from «Игра идёт без тебя» to today's task a moment later.
+   * blinks from «Челлендж идёт без тебя» to today's task a moment later.
    */
   settled: boolean;
   /** Today's tasks, when they have loaded. */

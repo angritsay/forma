@@ -14,14 +14,14 @@ interface NavItem {
 /*
  * Four tabs, and the profile is not one of them.
  *
- * The bar holds the four things the app *is* — today, the programmes, the game, the numbers — and
+ * The bar holds the four things the app *is* — today, the programmes, the challenge, the numbers — and
  * a profile is none of them: it is opened a handful of times ever, and it was taking a quarter of
  * the width every day. It lives where a phone owner already looks for it, as the avatar in the top
- * right of the home screen (HomeScreen's `chrome`), and the seat it gave up went to the game,
+ * right of the home screen (HomeScreen's `chrome`), and the seat it gave up went to the challenge,
  * which used to be reachable only through a card on the home deck.
  *
  * «Курсы» is «Программы» here, and in the product generally: a course is one shape a programme
- * can take, and the tab holds them alongside the game.
+ * can take, and the tab holds them alongside the challenge.
  */
 const ITEMS: readonly NavItem[] = [
   { to: '/', labelKey: 'app.tabHome', icon: 'home', end: true },
@@ -62,7 +62,18 @@ export function BottomNav() {
       /* Hidden from `lg` up, where SideNav takes over; AppShell drops `--nav-inset` to match. */
       className={clsx(
         'fixed bottom-0 left-1/2 z-30 w-full max-w-[480px] -translate-x-1/2 lg:hidden',
-        'flex items-stretch border-t border-border bg-bg',
+        /*
+         * Glass, and the bar is where it works best: it is already `fixed`, so the screen genuinely
+         * scrolls underneath rather than stopping above it, and `--nav-inset` already reserves the
+         * room. `.glass-bar` brings its own hairline along the top edge, which is why the border
+         * utility that used to sit here is gone — the material owns its edge now.
+         *
+         * Its corners stay square on purpose, against the rounding going on everywhere else. This
+         * bar is edge-to-edge chrome touching three sides of a phone screen; a radius there reads
+         * as a mistake rather than as a panel, and it would cut the active rule short on the two
+         * outer tabs and nowhere else. Rounding is for surfaces that float.
+         */
+        'glass-bar flex items-stretch',
         'pl-[var(--safe-left)] pr-[var(--safe-right)]',
         'pb-[calc(var(--safe-bottom)+var(--demo-inset,0px))]',
       )}

@@ -3,14 +3,14 @@
  *
  * The deck was the home screen. It is the second tab now, and moving it there is what let both
  * screens say one thing each: Home answers «что у меня сегодня», this answers «во что я могу
- * пойти». A course is a card, the game is a card, a course that has not been bought is a card —
+ * пойти». A course is a card, the challenge is a card, a course that has not been bought is a card —
  * peers, in the gesture every phone has taught, with the kicker naming which kind each one is.
  *
  * A card carries as little as a card can: what it is, its name, one line of what it gives you, how
  * far in you are if you are in it, and one button. The day's own session is not on it — that is
  * Home's line, and repeating it here made the card a status board instead of a cover.
  *
- * A card is never the whole story: the tap-through is the course's own path or the game's own day,
+ * A card is never the whole story: the tap-through is the course's own path or the challenge's own day,
  * where the detail lives.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -56,7 +56,7 @@ export interface ProgramDeckProps {
    */
   openTasks?: Readonly<Record<string, number>>;
   /**
-   * Whether the game opens, and on what grounds. A locked card is still shown — a locked game is
+   * Whether the challenge opens, and on what grounds. A locked card is still shown — a locked game is
    * the clearest thing the subscription has to sell — but it explains itself and leads to the
    * subscribe page instead of into the day; a card open on the trial says how long is left.
    */

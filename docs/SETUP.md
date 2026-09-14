@@ -330,7 +330,11 @@ Dashboard → **Authentication → Providers → Email**:
 - **Confirm email**: off. The OTP itself proves ownership of the address; with double opt-in on,
   new users would receive a confirmation link instead of a code. If your dashboard version keeps
   it on, it still works as long as the _Confirm signup_ template also contains `{{ .Token }}`
-  (step 3.2).
+  (step 3.2). The app is built to survive that setting now: Supabase hands a brand-new address a
+  _signup_ token rather than an email OTP, and `verifyCode` (src/lib/api/auth.ts) retries a refused
+  code as one before calling it wrong — so the failure this used to cause, a letter with six correct
+  digits that the sign-in screen rejects, no longer happens. Off is still the setting to prefer: the
+  retry is a safety net, not a licence to skip this line.
 - **Secure email change**: on (default).
 - **Email OTP length**: 6 (default). The app's code field is six digits.
 - **Email OTP expiration**: `600` seconds (10 minutes). The email copy promises 10 minutes; keep
@@ -443,6 +447,26 @@ address proves nothing, because that address is on the team and would have recei
 no SMTP configured at all. Then check Dashboard → **Logs → Auth** for the send: a refusal appears
 there, and it is the only place the app can never show you, because Supabase answers the app with
 a 200 either way.
+
+#### When the code does not arrive
+
+The sign-in screen already tells the two halves apart, and it is worth reading the exact words:
+
+| On screen                                                  | What it means                                                                                                                                                                                                                                                                                                                           |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| «Не получилось отправить письмо с кодом»                   | Supabase took the request and its **mailer refused**. Custom SMTP is either not set up at all — the built-in sender is development-only and will not deliver to most addresses — or its host, port, app password or sender address is wrong, or the sending domain is unverified. Nothing to do with the template, spam filters or DNS. |
+| «Слишком много запросов»                                   | The per-hour limit. Raise it under Authentication → Rate Limits (3.4).                                                                                                                                                                                                                                                                  |
+| Nothing at all, and no letter                              | The letter left and was filtered. That is SPF / DKIM / DMARC.                                                                                                                                                                                                                                                                           |
+| A letter arrives carrying a **link** instead of six digits | The template was never pasted (3.2), or only into _Magic Link_ and not _Confirm signup_.                                                                                                                                                                                                                                                |
+
+**Supabase's own words about a refused send are in Dashboard → Logs → Auth.** That is the fastest
+way to tell "no SMTP configured" from "wrong app password", and it costs nothing to look.
+
+To reproduce it from outside the app, run the **Check backend** workflow
+(`.github/workflows/probe-backend.yml`) from the Actions tab. It reads the project's auth settings,
+and with **send** ticked it asks Supabase for a real code and prints the failure verbatim. The
+address comes from a repository **secret** named `PROBE_EMAIL`, never from a form field: this
+repository is public, and a workflow input would publish that address in the run log forever.
 
 ---
 

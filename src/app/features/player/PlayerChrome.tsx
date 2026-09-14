@@ -123,11 +123,18 @@ export function PlayerFooter({ children, onHeight }: PlayerFooterProps) {
       <div
         aria-hidden="true"
         /*
-         * Thinnest at the top, where the clip is still showing through, and heaviest at the bottom,
-         * where the numbers are. That gradient is also what hides the clip's own bottom edge inside
-         * the panel — with a flat tint it read as a seam across the glass.
+         * This panel is where the material came from — the owner saw it and asked for the system to
+         * read this way — so it is now the token rather than a copy of it. `.glass-bar` is that same
+         * line, generalised: thinnest at the top, where the clip is still showing through, heaviest
+         * at the bottom, where the numbers are, and a `--paper` hairline along the top edge. The
+         * gradient is also what hides the clip's own bottom edge inside the panel; with a flat tint
+         * it read as a seam across the glass.
+         *
+         * `.glass-sheer` restores this panel's own alphas. The shared bar had to be made denser for
+         * the tab bar, whose 10px labels sit over whatever list is scrolling underneath; here the
+         * clip carrying on behind the numbers is the point, so the surface keeps the weight it had.
          */
-        className="pointer-events-none absolute inset-0 border-t border-paper/15 bg-linear-to-b from-bg/35 via-bg/65 to-bg/80 backdrop-blur-xl"
+        className="glass-bar glass-sheer pointer-events-none absolute inset-0"
       />
       {/* A short fade above the glass so its top edge is a line rather than a cut. */}
       <div

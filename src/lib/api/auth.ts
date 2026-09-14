@@ -136,7 +136,26 @@ export async function demoPendingCode(): Promise<string | null> {
   return (await demo()).pendingCode();
 }
 
-/** Step 2: exchange the code for a session. */
+/**
+ * Step 2: exchange the code for a session.
+ *
+ * Two attempts, and the second one exists for a real configuration rather than as a guess.
+ *
+ * The code normally arrives as an email OTP, which verifies as `type: 'email'`. But Supabase issues
+ * a *signup* token instead when the project has "Confirm email" switched on and the address is
+ * brand new — and docs/SETUP.md §3.1 explicitly allows a project to be left that way, as long as
+ * the Confirm-signup template carries {{ .Token }}. Under that setting the athlete gets a letter,
+ * reads six digits off it, types them in, and is told the code is wrong. Nothing on their side can
+ * fix that, and nothing on the screen says why.
+ *
+ * So a rejected token is retried once as `type: 'signup'` before the code is called wrong. The
+ * retry is deliberately narrow — only when the first failure was the token being refused. A rate
+ * limit must not be retried (it would spend the quota it is complaining about) and a 5xx from the
+ * mail provider has nothing to do with the token, so both surface immediately, as before.
+ *
+ * When both attempts fail the FIRST error is the one thrown: it describes the flow this app
+ * actually asks for, and its reason is already `invalid_code`.
+ */
 export async function verifyCode(email: string, token: string): Promise<void> {
   if (isDemo()) return (await demo()).verifyCode(email, token);
   const clean = normalizeEmail(email);
@@ -145,7 +164,13 @@ export async function verifyCode(email: string, token: string): Promise<void> {
     throw new AuthError('validation', 'Invalid code', { reason: 'invalid_code' });
   }
   const { error } = await supabase().auth.verifyOtp({ email: clean, token: code, type: 'email' });
-  if (error) throw toAuthError(error);
+  if (!error) return;
+
+  const first = toAuthError(error);
+  if (first.reason !== 'invalid_code') throw first;
+
+  const retry = await supabase().auth.verifyOtp({ email: clean, token: code, type: 'signup' });
+  if (retry.error) throw first;
 }
 
 export async function signOut(): Promise<void> {

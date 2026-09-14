@@ -64,7 +64,12 @@ export function SegmentedControl<T extends string>({
       role="radiogroup"
       aria-label={label}
       className={clsx(
-        'inline-flex rounded-control border border-border-strong',
+        /*
+         * `overflow-hidden` is load-bearing now that the radius is not 0: the selected segment is a
+         * filled rectangle drawn inside this box, and the first and last one would otherwise paint
+         * square corners over the rounded border and undo it.
+         */
+        'inline-flex overflow-hidden rounded-control border border-border-strong',
         fullWidth && 'flex w-full',
         className,
       )}
