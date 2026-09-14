@@ -33,7 +33,15 @@ export interface DeckCardProps {
   /** Kicker over the headline: what kind of thing this is and where you are in it. */
   eyebrow: ReactNode;
   title: string;
-  /** One quiet line under the headline — today's session, today's task. */
+  /**
+   * What this thing *is*, in one line — a course is a programme by weeks, a game is a task a day.
+   *
+   * It exists because of the first thing anybody said about the home screen: «заходишь, и ничего
+   * непонятно». The card can say where you are in something only once you already know what that
+   * something is, so the explanation comes first and the state after it.
+   */
+  lead?: ReactNode;
+  /** One quiet line under that — today's session, today's task. */
   subtitle?: ReactNode;
   /** Completed share, 0..100. Omitted on a card with nothing to complete. */
   pct?: number;
@@ -65,6 +73,7 @@ export function DeckCard({
   photo,
   eyebrow,
   title,
+  lead,
   subtitle,
   pct,
   progressLabel,
@@ -147,7 +156,8 @@ export function DeckCard({
          */}
         <span className="eyebrow block truncate text-current opacity-70">{eyebrow}</span>
         <DisplayTitle text={title} className="mt-2 text-5xl lg:text-6xl" />
-        {subtitle ? <p className="mt-2.5 text-[13px] text-current opacity-75">{subtitle}</p> : null}
+        {lead ? <p className="mt-3 max-w-[34ch] text-[15px] leading-snug">{lead}</p> : null}
+        {subtitle ? <p className="mt-1.5 text-[13px] text-current opacity-70">{subtitle}</p> : null}
 
         {share === undefined ? null : (
           <div className="mt-5">

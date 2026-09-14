@@ -8,6 +8,7 @@
  */
 import { clsx } from 'clsx';
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Screen } from '@/components/ui/Screen';
@@ -23,6 +24,7 @@ type WeekChoice = 'this' | 'last';
 
 export default function MarathonBoardScreen() {
   const { t, locale } = useT();
+  const navigate = useNavigate();
   const { marathon, status: marathonStatus } = useMyMarathons();
   const [choice, setChoice] = useState<WeekChoice>('this');
 
@@ -100,6 +102,17 @@ export default function MarathonBoardScreen() {
               ))}
             </ol>
           )}
+        </div>
+
+        {/*
+         * The breakdown of your own week lives one level below the board rather than beside the
+         * day: the day screen answers «what do I do now», the board «who is winning», and only
+         * then does «where did my points come from» become a question worth a screen.
+         */}
+        <div className="border-t border-border pt-5">
+          <Button variant="ghost" size="md" onClick={() => navigate('/marathon/points')}>
+            {t('app.marathonTabPoints')}
+          </Button>
         </div>
       </div>
     </Screen>

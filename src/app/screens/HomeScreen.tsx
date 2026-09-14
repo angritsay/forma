@@ -42,6 +42,7 @@ import {
 } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
 import { BOOKING } from '@content/site/booking';
+import { GAME_REQUIRES_SUBSCRIPTION } from '@content/site/plans';
 
 function HomeSkeleton() {
   /*
@@ -72,6 +73,7 @@ export default function HomeScreen() {
   const profile = useSession((s) => s.profile);
   const user = useSession((s) => s.user);
   const entitlements = useSession((s) => s.entitlements);
+  const subscription = useSession((s) => s.subscription);
   const status = useProgress((s) => s.status);
   const loading = useProgress((s) => s.loading);
   const error = useProgress((s) => s.error);
@@ -103,6 +105,9 @@ export default function HomeScreen() {
     () => buildDeck({ courses, entitlements, states: courseStates, marathons, activeCourseId }),
     [courses, entitlements, courseStates, marathons, activeCourseId],
   );
+
+  /* The game is part of the subscription (content/site/plans.ts), so a card can be locked. */
+  const gameLocked = GAME_REQUIRES_SUBSCRIPTION && subscription?.isLive !== true;
 
   /*
    * Today's open tasks, for the marathon card's one line. A task with no rule is an announcement
@@ -214,6 +219,7 @@ export default function HomeScreen() {
         <HomeDeck
           entries={entries}
           openTasks={openTasks}
+          gameLocked={gameLocked}
           chrome={chrome}
           onOpenCourse={(courseId) => navigate(`/courses/${courseId}`)}
           onStartNode={(courseId, nodeId) => navigate(`/courses/${courseId}/nodes/${nodeId}`)}
