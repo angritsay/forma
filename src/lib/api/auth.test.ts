@@ -1,11 +1,26 @@
-import { describe, expect, it } from 'vitest';
-import { AuthError, isValidCode, isValidEmail, normalizeEmail, toAuthError } from './auth';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  AuthError,
+  isValidCode,
+  isValidEmail,
+  normalizeEmail,
+  toAuthError,
+  verifyCode,
+} from './auth';
 import { isAppError } from './errors';
 
 /** Shape of an @supabase/auth-js AuthApiError without importing the SDK. */
 function authApiError(code: string, status: number, message = 'auth error') {
   return { __isAuthError: true, name: 'AuthApiError', message, status, code };
 }
+
+/*
+ * `verifyCode` is the one function here that talks to the network, so the client and the demo
+ * switch are stubbed. Nothing else in this file needs them — the rest is pure.
+ */
+const verifyOtp = vi.fn();
+vi.mock('./client', () => ({ supabase: () => ({ auth: { verifyOtp } }) }));
+vi.mock('./mode', () => ({ isDemo: () => false }));
 
 describe('auth helpers', () => {
   it('validates and normalizes emails', () => {
@@ -102,5 +117,61 @@ describe('toAuthError — a mail provider that refused the send', () => {
     });
     expect(e.code).toBe('network');
     expect(e.reason).toBeUndefined();
+  });
+});
+
+/*
+ * The project may have "Confirm email" left on (docs/SETUP.md §3.1 allows it). A brand-new address
+ * then gets a *signup* token rather than an email OTP, and the athlete — holding a letter with six
+ * correct digits in it — is told the code is wrong. This is the retry that stops that.
+ */
+describe('verifyCode — a signup token is still a code', () => {
+  const EMAIL = 'nastia@example.com';
+  const CODE = '123456';
+
+  beforeEach(() => {
+    verifyOtp.mockReset();
+  });
+
+  it('sends the code as an email OTP and asks nothing else when that works', async () => {
+    verifyOtp.mockResolvedValueOnce({ error: null });
+    await expect(verifyCode(EMAIL, CODE)).resolves.toBeUndefined();
+    expect(verifyOtp).toHaveBeenCalledTimes(1);
+    expect(verifyOtp).toHaveBeenCalledWith({ email: EMAIL, token: CODE, type: 'email' });
+  });
+
+  it('retries a refused token as a signup token, and signs the athlete in', async () => {
+    verifyOtp
+      .mockResolvedValueOnce({ error: authApiError('otp_expired', 403, 'Token has expired') })
+      .mockResolvedValueOnce({ error: null });
+    await expect(verifyCode(EMAIL, CODE)).resolves.toBeUndefined();
+    expect(verifyOtp).toHaveBeenCalledTimes(2);
+    expect(verifyOtp).toHaveBeenLastCalledWith({ email: EMAIL, token: CODE, type: 'signup' });
+  });
+
+  it('reports the first failure when the code is genuinely wrong', async () => {
+    const refused = { error: authApiError('otp_expired', 403, 'Token has expired') };
+    verifyOtp.mockResolvedValue(refused);
+    await expect(verifyCode(EMAIL, CODE)).rejects.toMatchObject({ reason: 'invalid_code' });
+    expect(verifyOtp).toHaveBeenCalledTimes(2);
+  });
+
+  it('never retries a rate limit — that would spend the quota it is complaining about', async () => {
+    verifyOtp.mockResolvedValueOnce({ error: authApiError('over_request_rate_limit', 429) });
+    await expect(verifyCode(EMAIL, CODE)).rejects.toMatchObject({ reason: 'rate_limited' });
+    expect(verifyOtp).toHaveBeenCalledTimes(1);
+  });
+
+  it('never retries a mail-provider failure — the token was never the problem', async () => {
+    verifyOtp.mockResolvedValueOnce({
+      error: authApiError('unexpected_failure', 500, 'Error sending confirmation email'),
+    });
+    await expect(verifyCode(EMAIL, CODE)).rejects.toMatchObject({ reason: 'email_send_failed' });
+    expect(verifyOtp).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects a code that is not six digits without asking the server at all', async () => {
+    await expect(verifyCode(EMAIL, '12345')).rejects.toMatchObject({ reason: 'invalid_code' });
+    expect(verifyOtp).not.toHaveBeenCalled();
   });
 });

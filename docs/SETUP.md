@@ -313,7 +313,11 @@ Dashboard → **Authentication → Providers → Email**:
 - **Confirm email**: off. The OTP itself proves ownership of the address; with double opt-in on,
   new users would receive a confirmation link instead of a code. If your dashboard version keeps
   it on, it still works as long as the _Confirm signup_ template also contains `{{ .Token }}`
-  (step 3.2).
+  (step 3.2). The app is built to survive that setting now: Supabase hands a brand-new address a
+  _signup_ token rather than an email OTP, and `verifyCode` (src/lib/api/auth.ts) retries a refused
+  code as one before calling it wrong — so the failure this used to cause, a letter with six correct
+  digits that the sign-in screen rejects, no longer happens. Off is still the setting to prefer: the
+  retry is a safety net, not a licence to skip this line.
 - **Secure email change**: on (default).
 - **Email OTP length**: 6 (default). The app's code field is six digits.
 - **Email OTP expiration**: `600` seconds (10 minutes). The email copy promises 10 minutes; keep
