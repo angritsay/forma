@@ -630,3 +630,60 @@ body {
   left: 0;
   right: 0;
 }
+
+/*
+ * Moving from one movement to the next.
+ *
+ * The player used to change exercises by replacement: the clip, the name and the number were one
+ * thing on one frame and a different thing on the next. Nothing was technically wrong with it and
+ * it read as a glitch — at arm's length, on a mat, a hard cut looks like the app losing its place
+ * rather than like the session advancing.
+ *
+ * So the step arrives. The panel's content lifts a few pixels into place while the picture behind
+ * it settles out of a slight scale — two different motions, because they are two different planes,
+ * and the picture is the slower of the two so the eye lands on the movement rather than on the
+ * words. Both are keyed on the step, so they replay on every change and never on a re-render.
+ *
+ * Short on purpose: 320ms and 420ms. A transition long enough to notice twice is long enough to
+ * be in the way of somebody counting reps.
+ */
+@keyframes player-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes player-art-in {
+  from {
+    opacity: 0;
+    transform: scale(1.035);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.player-step-in {
+  animation: player-step-in 0.32s var(--ease-out) both;
+}
+
+.player-art-in {
+  animation: player-art-in 0.42s var(--ease-out) both;
+}
+
+/*
+ * Somebody who asked their phone for less motion is asking for it here most of all: this animation
+ * plays on every movement of every session. The content still arrives, it just stops moving.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .player-step-in,
+  .player-art-in {
+    animation: none;
+  }
+}

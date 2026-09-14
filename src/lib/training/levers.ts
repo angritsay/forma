@@ -79,7 +79,13 @@ export interface BlockShape {
   durationSec?: number | undefined;
   restBetweenSetsSec?: number | undefined;
   restBetweenRoundsSec?: number | undefined;
-  /** Multiplier the `reps` lever contributes, for the caller to fold into each item's target. */
+  /**
+   * Multiplier the `reps` lever contributes, for the caller to fold into each item's target.
+   *
+   * Whoever wires this in: fold it into the target **before** prescribe.ts rounds a two-sided
+   * movement to an even number (`evenTarget`). A lunge count that comes out odd after the rounding
+   * gives one leg a rep the other never gets, which is the bug that rule exists to prevent.
+   */
   repsFactor: number;
   /** True when `swap` is in play, so the caller should look for a harder or easier movement. */
   swap: boolean;

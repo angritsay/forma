@@ -101,11 +101,17 @@ interface ArtLayerProps {
  * a movement whose clip has not been uploaded yet. Nothing is drawn: a diagram of a movement we
  * film is a worse picture of it, and a diagram of one we do not film is a promise we cannot keep.
  *
- * **It is contained, never cropped.** It used to fill the card with `object-cover`, and on a real
- * clip that was the whole feature defeating itself: the coach films in landscape, in a garden, and
- * a landscape frame cropped to a phone-shaped hole keeps a vertical strip through the middle — the
- * squat happens off-screen and the video is worth nothing. Whatever the clip's shape, all of it is
- * on screen now, with the app's own ground either side of it.
+ * **It is exactly as wide as the screen, and never cropped sideways.** Width is the fit dimension:
+ * the clip is scaled so it spans the frame edge to edge, and its height follows from its own
+ * aspect. That kills the bars down the sides a landscape clip used to sit between, and it keeps
+ * the reason those bars existed — `object-cover` cropped a landscape frame to a phone-shaped hole
+ * and left a vertical strip through the middle, with the squat happening off-screen. Nothing is
+ * ever cut horizontally, so the movement is always whole.
+ *
+ * A clip taller than the space it is given is clipped top and bottom instead, equally, because it
+ * is centred in that space — and the space is measured from the bottom of the frame, ending just
+ * under the glass. The picture therefore sits where the eye already is rather than floating in the
+ * middle of the phone with a gap above the words.
  *
  * **It ends above the glass.** The panel at the bottom reports its height and the clip is given the
  * room above it, so the movement is never half under the words. The clip still runs a little way
@@ -148,29 +154,40 @@ function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
        * thin bars at the sides almost completely.
        */}
       <div
-        className="absolute inset-x-0 top-0"
+        className="absolute inset-x-0 top-0 flex items-center justify-center overflow-hidden"
         style={{ bottom: 'max(0px, calc(var(--player-glass-h, 0px) - 40px))' }}
       >
-        {videoUrl ? (
-          <video
-            key={videoUrl}
-            ref={video}
-            src={videoUrl}
-            poster={still}
-            className="size-full object-contain"
-            playsInline
-            muted
-            loop
-            autoPlay
-            preload="metadata"
-          />
-        ) : (
-          <ExerciseStill
-            exerciseId={exerciseId}
-            className="size-full object-contain"
-            loading="eager"
-          />
-        )}
+        {
+          /*
+           * `w-full` with no height is the whole rule: the media is exactly the frame's width and
+           * its height comes from its own aspect. `shrink-0` stops the flex row squeezing a tall
+           * clip back down to fit — a clip taller than the box is meant to overflow and be clipped,
+           * not to shrink away from the edges it was told to reach.
+           *
+           * Keyed on the source so each new movement replays the settle rather than cutting to it.
+           */
+          videoUrl ? (
+            <video
+              key={videoUrl}
+              ref={video}
+              src={videoUrl}
+              poster={still}
+              className="player-art-in w-full shrink-0"
+              playsInline
+              muted
+              loop
+              autoPlay
+              preload="metadata"
+            />
+          ) : (
+            <ExerciseStill
+              key={exerciseId}
+              exerciseId={exerciseId}
+              className="player-art-in w-full shrink-0"
+              loading="eager"
+            />
+          )
+        }
       </div>
     </div>
   );
@@ -440,23 +457,29 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
               onTogglePause={togglePause}
             />
             <PlayerFooter onHeight={setGlassHeight}>
+              {/*
+               * The panel's content arrives with the step rather than replacing it. Keyed exactly
+               * as StepView is, so the motion belongs to the step and not to a re-render.
+               */}
               {step ? (
-                <StepView
-                  /*
-                   * Keyed on when the step began, not on an index alone: restarting a step is the
-                   * store moving that instant, and the component has to come back with it so a
-                   * half-dialled rep count goes too.
-                   */
-                  key={`${stepIndex}:${stepStartedMs}`}
-                  step={step}
-                  index={stepIndex}
-                  session={session}
-                  paused={paused}
-                  beep={sound.beep}
-                  onRecord={recordResult}
-                  onNext={next}
-                  registerNext={registerNext}
-                />
+                <div key={`anim-${stepIndex}:${stepStartedMs}`} className="player-step-in">
+                  <StepView
+                    /*
+                     * Keyed on when the step began, not on an index alone: restarting a step is the
+                     * store moving that instant, and the component has to come back with it so a
+                     * half-dialled rep count goes too.
+                     */
+                    key={`${stepIndex}:${stepStartedMs}`}
+                    step={step}
+                    index={stepIndex}
+                    session={session}
+                    paused={paused}
+                    beep={sound.beep}
+                    onRecord={recordResult}
+                    onNext={next}
+                    registerNext={registerNext}
+                  />
+                </div>
               ) : null}
               {inWarmup !== null ? (
                 <WarmupSkip

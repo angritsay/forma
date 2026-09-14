@@ -35,6 +35,7 @@ import {
   MIN_SETS_EASIER,
   MIN_WINDOW_SEC,
   ON_HANDS_ID_PATTERN,
+  TWO_SIDED_ID_PATTERN,
   OVERHEAD_ID_PATTERN,
   SEC_PER_CALORIE,
   SETS_ADD_AT,
@@ -75,6 +76,17 @@ export function isOnHands(exercise: Exercise): boolean {
     ON_HANDS_ID_PATTERN.test(exercise.id) ||
     exercise.tags.includes('on_hands')
   );
+}
+
+/**
+ * Done one side at a time — a lunge, a step-up, a skater, a single-arm press.
+ *
+ * The content library's `unilateral` tag is the primary source; the id pattern catches a movement
+ * added later without it. Nothing here reads `perSide`: that is a property of how a *workout*
+ * asks for the movement, not of the movement itself.
+ */
+export function isTwoSided(exercise: Exercise): boolean {
+  return exercise.tags.includes('unilateral') || TWO_SIDED_ID_PATTERN.test(exercise.id);
 }
 
 /** Isometric hold (timed, static). */
@@ -278,6 +290,28 @@ function givenUnit(item: WorkoutItem): { unit: ExerciseUnit; value: number } {
   if (item.seconds !== undefined) return { unit: 'seconds', value: item.seconds };
   if (item.meters !== undefined) return { unit: 'meters', value: item.meters };
   return { unit: 'calories', value: item.calories ?? 1 };
+}
+
+/**
+ * A two-sided movement counted as a total must come out even.
+ *
+ * Lunges, step-ups, skaters, bird dogs and single-arm work alternate sides, and the number the
+ * athlete is given is the total across both. An odd total means one side gets a rep the other
+ * does not — eleven lunges is six left and five right — and repeated three sets a session, three
+ * sessions a week, that is a limp the programme built in.
+ *
+ * The authored numbers are almost all even because whoever wrote them counted in pairs. The
+ * engine is what breaks it: an authored 20 at a beginner's scale of 0.65 rounds to 13. So the
+ * rule lives here, where the scaling happens, and it holds at every scale and every difficulty.
+ *
+ * It rounds to the nearest even number and never below two, so the movement survives at the
+ * smallest scale with one rep a side rather than disappearing.
+ *
+ * An item marked `perSide` is exempt: its number is already per side, the athlete does it twice,
+ * and the total is even whatever the number is. Forcing that one even would double the work.
+ */
+export function evenTarget(value: number): number {
+  return Math.max(2, Math.round(value / 2) * 2);
 }
 
 export function scaleTarget(unit: ExerciseUnit, value: number, scale: number): number {
@@ -522,6 +556,13 @@ export function prescribeWorkout(
         target = Math.min(target, HYPERTENSION_MAX_HOLD_SEC);
       }
       const perSide = item.perSide === true;
+      /*
+       * Two-sided and counted as a total: make it even so both sides get the same work. `perSide`
+       * items are already per side and are left alone — see `evenTarget`.
+       */
+      if (unit === 'reps' && !perSide && exercise && isTwoSided(exercise)) {
+        target = evenTarget(target);
+      }
       const loadLabel = exercise ? effectiveLoadLabel(exercise, item.load, limitations) : item.load;
       const loadKg =
         exercise && exercise.loadable && loadLabel
