@@ -39,7 +39,7 @@ function Tile({ exerciseId }: { exerciseId: string }) {
        * art above them that is supposed to be the course — the programme's colour is worth
        * something precisely because it is spent once per screen.
        */}
-      <div className="relative aspect-square overflow-hidden bg-surface-2 text-text">
+      <div className="relative aspect-square overflow-hidden rounded-inner bg-surface-2 text-text">
         <ExerciseStill exerciseId={exerciseId} />
       </div>
       <span className="truncate text-xs text-muted" title={name}>

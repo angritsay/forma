@@ -109,7 +109,7 @@ export default function AdminCoursesScreen() {
                  */}
                 <span
                   aria-hidden="true"
-                  className="hero-art size-10 shrink-0"
+                  className="hero-art size-10 shrink-0 rounded-inner"
                   style={courseTileVars(c.tile)}
                 />
                 <span className="flex min-w-0 flex-1 flex-col">

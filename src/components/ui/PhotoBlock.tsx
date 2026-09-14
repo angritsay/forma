@@ -41,9 +41,13 @@ const RATIO: Record<NonNullable<PhotoBlockProps['ratio']>, string> = {
  * A photograph the brand's way: monochrome, grained, with a protection gradient under whatever
  * text sits on it.
  *
- * The frame is square-cornered on purpose. A photograph is the one thing in the system that runs
- * to the edge of its column — rounding it turns it back into a card, which is what the previous
- * design did and why the app read as a feed of tiles.
+ * The frame stays square-cornered even now that the radius tokens are back on, and this is the line
+ * the whole sweep was drawn against: **a picture that runs to the edge of its column is square; a
+ * picture contained inside something else is a tile and rounds with it.** This component is the
+ * first kind — rounding it turns it back into a card, which is what the previous design did and why
+ * the app read as a feed of tiles. The landing hero and the covers that bleed past the page gutter
+ * follow the same rule. A movement's still inside a card, a course cover in a grid and a 72px
+ * thumbnail beside a line of text are the second kind, and take `--r-tile` or `--r-inner`.
  */
 export function PhotoBlock({
   photo,

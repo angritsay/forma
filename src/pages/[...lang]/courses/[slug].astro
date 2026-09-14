@@ -173,7 +173,7 @@ const jsonLd = [
 
       <!-- The cover: the programme colour, the signature figure in black ink, the name stamped. -->
       <div
-        class="hero-art relative mx-auto flex aspect-[4/5] w-full max-w-md items-center justify-center overflow-hidden md:max-w-none"
+        class="hero-art relative mx-auto flex aspect-[4/5] w-full max-w-md items-center justify-center overflow-hidden rounded-tile md:max-w-none"
       >
         {signature && <ExerciseStill exerciseId={signature.id} loading="eager" />}
         {
@@ -289,7 +289,7 @@ const jsonLd = [
   >
     <div class="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]" style={tileVars}>
       <!-- The order ticket: the programme colour with black ink, price as the numeral. -->
-      <div class="hero-art flex flex-col justify-between p-6 md:p-8">
+      <div class="hero-art flex flex-col justify-between rounded-card p-6 md:p-8">
         <div>
           <p class="eyebrow text-current opacity-70">
             {levelLabel(locale, course.level)}

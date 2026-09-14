@@ -69,7 +69,12 @@ export function PathNode({ node, status, n, column, onPress, buttonRef }: PathNo
         aria-current={status === 'current' ? 'step' : undefined}
         style={{ gridColumn: `${column} / ${column + 1}` }}
         className={clsx(
-          'flex aspect-square w-full max-w-16 items-center justify-center justify-self-center border-2',
+          /*
+           * `--r-inner` on a 64px square, not `--r-tile`. A node is one step on the path and is
+           * tapped like a control; at this size the tile radius eats a quarter of each side and
+           * turns the square into a lozenge, with the day's numeral sitting inside it.
+           */
+          'flex aspect-square w-full max-w-16 items-center justify-center justify-self-center rounded-inner border-2',
           'transition-transform duration-150 ease-(--ease-out) active:scale-[0.96]',
           status === 'done' && 'hero-art border-course',
           status === 'current' && 'border-paper bg-paper text-ink',
