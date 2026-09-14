@@ -54,6 +54,7 @@ export const app = {
   authErrorRateLimited: 'Too many requests. Wait a minute and try again.',
   authErrorInvalidCode: 'The code is wrong or has expired. Request a new one.',
   authErrorNetwork: 'No connection. Check the internet and try again.',
+  authErrorEmailSend: 'We couldn’t send the code email. Try again in a couple of minutes.',
   authErrorSignupDisabled: 'Sign-ups are closed right now. Contact the coach.',
   authErrorGeneric: 'Couldn’t sign in. Please try again.',
 

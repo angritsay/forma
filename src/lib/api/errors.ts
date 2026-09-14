@@ -153,9 +153,21 @@ function fromPostgrest(e: PostgrestLike): AppError {
 
 function fromAuth(e: AuthLike): AppError {
   const opts = { cause: e, status: e.status };
+  /*
+   * `AuthRetryableFetchError` does not mean "no connection". supabase-js throws it both when the
+   * request never left the browser (status 0) *and* for every 5xx the server answers with —
+   * including the 500 Supabase returns when it could not send the sign-in email, which is what a
+   * broken SMTP configuration looks like from here.
+   *
+   * Treating the whole class as a network failure told a person whose mail provider was
+   * misconfigured to «проверь интернет», which is both wrong and the most expensive kind of wrong:
+   * it sends whoever is debugging to the one place the problem is not. So only a reply that never
+   * arrived counts as network; a server that answered is the server's problem.
+   */
+  const answered = typeof e.status === 'number' && e.status > 0;
   if (
-    e.name === 'AuthRetryableFetchError' ||
-    (e.status === undefined && NETWORK_MESSAGE.test(e.message))
+    (e.name === 'AuthRetryableFetchError' && !answered) ||
+    (!answered && NETWORK_MESSAGE.test(e.message))
   ) {
     return new AppError('network', e.message, opts);
   }

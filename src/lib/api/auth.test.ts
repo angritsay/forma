@@ -66,3 +66,41 @@ describe('toAuthError', () => {
     expect(unknown.message).toBe('boom');
   });
 });
+
+describe('toAuthError — a mail provider that refused the send', () => {
+  it('is told apart from every other server error', () => {
+    // Supabase answers 500 `unexpected_failure` when SMTP rejected it: a wrong password, an
+    // unverified sending domain, a provider over quota. The athlete can do nothing about it, and
+    // the owner has to be able to recognise it from a screenshot.
+    const e = toAuthError({
+      __isAuthError: true,
+      name: 'AuthRetryableFetchError',
+      status: 500,
+      code: 'unexpected_failure',
+      message: 'Error sending magic link email',
+    });
+    expect(e.reason).toBe('email_send_failed');
+    expect(e.code).not.toBe('network');
+  });
+
+  it('leaves a plain server error alone', () => {
+    const e = toAuthError({
+      __isAuthError: true,
+      name: 'AuthRetryableFetchError',
+      status: 500,
+      message: 'boom',
+    });
+    expect(e.reason).toBeUndefined();
+  });
+
+  it('still reads a dead connection as network', () => {
+    const e = toAuthError({
+      __isAuthError: true,
+      name: 'AuthRetryableFetchError',
+      status: 0,
+      message: 'Failed to fetch',
+    });
+    expect(e.code).toBe('network');
+    expect(e.reason).toBeUndefined();
+  });
+});

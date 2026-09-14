@@ -89,6 +89,23 @@ describe('toAppError — Auth', () => {
 
   it('maps fetch failures to network and keeps the status', () => {
     expect(toAppError(auth({ name: 'AuthRetryableFetchError', status: 0 })).code).toBe('network');
+  });
+
+  it('does not call a server error a network error', () => {
+    /*
+     * supabase-js throws AuthRetryableFetchError for every 5xx too, including the 500 Supabase
+     * answers with when it could not send the sign-in email. Reading that as "no connection" told
+     * a person with a broken SMTP setup to check their internet — wrong, and wrong in the one
+     * direction that costs the most, because it points whoever is debugging away from the cause.
+     */
+    const smtp = auth({
+      name: 'AuthRetryableFetchError',
+      status: 500,
+      message: 'Error sending magic link email',
+    });
+    expect(toAppError(smtp).code).not.toBe('network');
+    expect(toAppError(smtp).code).toBe('unknown');
+    expect(toAppError(auth({ name: 'AuthRetryableFetchError', status: 503 })).code).toBe('unknown');
     expect(toAppError(auth({ message: 'fetch failed' })).code).toBe('network');
     expect(toAppError(auth({ status: 404 })).code).toBe('not_found');
     expect(toAppError(auth({ status: 500 })).code).toBe('unknown');

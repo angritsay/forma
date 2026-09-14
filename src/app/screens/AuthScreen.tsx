@@ -42,6 +42,8 @@ function authErrorKey(e: AuthError): TKey {
       return 'app.authErrorInvalidCode';
     case 'signup_disabled':
       return 'app.authErrorSignupDisabled';
+    case 'email_send_failed':
+      return 'app.authErrorEmailSend';
     case undefined:
       break;
   }
