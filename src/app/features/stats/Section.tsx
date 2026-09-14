@@ -17,8 +17,8 @@ export interface SectionProps {
 export function Section({ title, aside, children }: SectionProps) {
   return (
     <section className="flex flex-col">
-      <div className="flex items-baseline justify-between gap-3 border-t border-border pt-5 pb-2">
-        <h2 className="font-display text-xl">{title}</h2>
+      <div className="flex items-baseline justify-between gap-3 border-t border-border pt-8 pb-4">
+        <h2 className="font-display text-lg">{title}</h2>
         {aside ? <span className="eyebrow">{aside}</span> : null}
       </div>
       {children}

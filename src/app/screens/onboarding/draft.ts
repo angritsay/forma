@@ -4,6 +4,7 @@
  */
 import { z } from 'zod';
 import { EQUIPMENT, type Equipment, type Locale } from '@/content/schema';
+import { ASSESSMENT_MOVES } from '@content/site/assessment';
 import type {
   ActivityLevel,
   AgeBand,
@@ -24,9 +25,7 @@ export const STEP_IDS = [
   'experience',
   'equipment',
   'limitations',
-  'testPushups',
-  'testSquats',
-  'testPlank',
+  'assess',
   'time',
   'goal',
   'result',
@@ -79,19 +78,21 @@ export const NAME_MAX = 40;
 export const WEIGHT_MIN_KG = 30;
 export const WEIGHT_MAX_KG = 250;
 export const REPS_MAX = 500;
-export const PLANK_MAX_SEC = 3600;
 
-const TestsSchema = z.object({
-  pushups: z.number().int().min(0).max(REPS_MAX).optional(),
-  pushupsOnKnees: z.boolean().optional(),
-  squats60s: z.number().int().min(0).max(REPS_MAX).optional(),
-  plankSec: z.number().int().min(0).max(PLANK_MAX_SEC).optional(),
-});
-
-const SkippedSchema = z.object({
-  pushups: z.boolean().optional(),
-  squats: z.boolean().optional(),
-  plank: z.boolean().optional(),
+/**
+ * What the assessment produced.
+ *
+ * `counts` is keyed by exercise id, not by the field of the training profile it ends up in: the
+ * screen counts movements, and which of them the fitness index happens to read
+ * (`content/site/assessment.ts`) is the engine's business, resolved once in
+ * `draftToTrainingProfile`. Editing the list of movements therefore cannot orphan an answer.
+ */
+const AssessSchema = z.object({
+  /** «Не сейчас»: the whole thing is postponed and waits as a task on the home screen. */
+  later: z.boolean().default(false),
+  counts: z.record(z.string(), z.number().int().min(0).max(REPS_MAX)).default({}),
+  /** Push-ups were done on the knees (the index scores the two modalities differently). */
+  onKnees: z.boolean().default(false),
 });
 
 export const DraftSchema = z.object({
@@ -114,8 +115,7 @@ export const DraftSchema = z.object({
   limitations: z.array(z.enum(LIMITATIONS)).default([]),
   /** Explicit "nothing to protect" answer (distinct from "not answered yet"). */
   limitationsNone: z.boolean().default(false),
-  tests: TestsSchema.default({}),
-  skipped: SkippedSchema.default({}),
+  assess: AssessSchema.default({}),
   timePerSessionMin: z
     .union([z.literal(15), z.literal(20), z.literal(30), z.literal(45), z.literal(60)])
     .optional(),
@@ -123,7 +123,7 @@ export const DraftSchema = z.object({
 });
 
 export type OnboardingDraft = z.infer<typeof DraftSchema>;
-export type TestKey = keyof z.infer<typeof SkippedSchema>;
+export type AssessDraft = z.infer<typeof AssessSchema>;
 
 export function emptyDraft(): OnboardingDraft {
   return DraftSchema.parse({});
@@ -194,12 +194,8 @@ export function isStepComplete(d: OnboardingDraft, step: StepId): boolean {
       return true;
     case 'limitations':
       return d.limitationsNone || d.limitations.length > 0;
-    case 'testPushups':
-      return d.skipped.pushups === true || d.tests.pushups !== undefined;
-    case 'testSquats':
-      return d.skipped.squats === true || d.tests.squats60s !== undefined;
-    case 'testPlank':
-      return d.skipped.plank === true || d.tests.plankSec !== undefined;
+    case 'assess':
+      return d.assess.later || assessmentDone(d);
     case 'time':
       return d.timePerSessionMin !== undefined;
     case 'goal':
@@ -215,13 +211,29 @@ export function firstIncompleteStep(d: OnboardingDraft): number {
   return i === -1 ? STEP_IDS.length - 1 : i;
 }
 
-/** True when the user skipped every self-test. */
-export function allTestsSkipped(d: OnboardingDraft): boolean {
-  return (
-    d.tests.pushups === undefined &&
-    d.tests.squats60s === undefined &&
-    d.tests.plankSec === undefined
-  );
+/** Every movement of the assessment has a number against it. */
+export function assessmentDone(d: OnboardingDraft): boolean {
+  return ASSESSMENT_MOVES.every((m) => d.assess.counts[m.exerciseId] !== undefined);
+}
+
+/** True when the assessment produced nothing — postponed, or not reached yet. */
+export function assessmentEmpty(d: OnboardingDraft): boolean {
+  return ASSESSMENT_MOVES.every((m) => d.assess.counts[m.exerciseId] === undefined);
+}
+
+/**
+ * The counts that are personal records rather than engine inputs, as `key → reps`.
+ *
+ * The wizard writes these to `benchmarks` when it saves, which is what makes the assessment a
+ * baseline the same five movements can be measured against again rather than a one-off form.
+ */
+export function assessmentBenchmarks(d: OnboardingDraft): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const move of ASSESSMENT_MOVES) {
+    const reps = d.assess.counts[move.exerciseId];
+    if (move.benchmarkKey && reps !== undefined) out[move.benchmarkKey] = reps;
+  }
+  return out;
 }
 
 /** Build the engine profile; null while required answers are missing. */
@@ -250,12 +262,26 @@ export function draftToTrainingProfile(d: OnboardingDraft): UserTrainingProfile 
     goal: d.goal,
   };
   if (d.weightKg !== undefined) profile.weightKg = d.weightKg;
-  if (d.tests.pushups !== undefined) {
-    profile.tests.pushups = d.tests.pushups;
-    profile.tests.pushupsOnKnees = d.tests.pushupsOnKnees === true;
+  /*
+   * The assessment's counts become the engine's self-tests here, and only here. A movement the
+   * index does not read (`maps` unset) is a personal record instead — see assessmentBenchmarks.
+   */
+  for (const move of ASSESSMENT_MOVES) {
+    const measured = d.assess.counts[move.exerciseId];
+    if (measured === undefined || !move.maps) continue;
+    switch (move.maps) {
+      case 'pushups':
+        profile.tests.pushups = measured;
+        profile.tests.pushupsOnKnees = d.assess.onKnees;
+        break;
+      case 'squats60s':
+        profile.tests.squats60s = measured;
+        break;
+      case 'plankSec':
+        profile.tests.plankSec = measured;
+        break;
+    }
   }
-  if (d.tests.squats60s !== undefined) profile.tests.squats60s = d.tests.squats60s;
-  if (d.tests.plankSec !== undefined) profile.tests.plankSec = d.tests.plankSec;
   if (equipment.includes('dumbbells') && d.dumbbellKg.length > 0) {
     profile.dumbbellKg = sortAsc(d.dumbbellKg);
   }
@@ -293,7 +319,7 @@ export function parseWeightField(text: string): WeightField {
  */
 export function resumeStepIndex(param: string | null | undefined): number | null {
   if (!param) return null;
-  if (param === 'tests') return STEP_IDS.indexOf('testPushups');
+  if (param === 'tests') return STEP_IDS.indexOf('assess');
   const i = (STEP_IDS as readonly string[]).indexOf(param);
   return i >= 0 ? i : null;
 }

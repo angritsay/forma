@@ -3,6 +3,7 @@ export const common = {
   brand: 'Forma',
   tagline: 'Кроссфит дома. Под тебя.',
   minutesShort: '{n} мин',
+  minutesUnit: 'мин',
   hoursShort: '{n} ч',
   kcal: 'ккал',
   points: 'очков',

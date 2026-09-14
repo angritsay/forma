@@ -20,7 +20,7 @@ export interface EmptyStateProps {
  */
 export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
   return (
-    <div className={clsx('flex flex-col items-start gap-3 px-5 py-10 text-left', className)}>
+    <div className={clsx('flex flex-col items-start gap-4 py-12 text-left', className)}>
       {icon ? <Icon name={icon} size={16} className="text-muted-2" /> : null}
       <h3 className="font-display text-2xl text-balance">{title}</h3>
       {description ? <p className="max-w-[36ch] text-[15px] text-muted">{description}</p> : null}

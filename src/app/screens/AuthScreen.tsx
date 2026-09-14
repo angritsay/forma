@@ -1,21 +1,35 @@
 /**
- * Auth (docs/SPEC.md §10 flow 1): email → 6-digit code → session.
- * Step 1: brand, tagline, email, "Send code". Step 2: code boxes, confirm, resend (60 s), change email.
+ * Sign-in (docs/SPEC.md §10 flow 1): the montage, the word, the field.
+ *
+ * The screen used to sell: a photograph, the lockup, a display-sized tagline, a heading, a lead
+ * paragraph, a labelled field and a hint about the spam folder. Eight things to read before typing
+ * an address. It is the first screen of a product whose whole argument is "look at the training",
+ * so it now argues by showing it — the coach's black-and-white montage runs full-bleed and loops,
+ * and the interface over it is one word and one field.
+ *
+ * The word arrives first. «FORMA» fades up over the film, holds, and fades out; the form fades in
+ * behind it. That is the entire introduction, it costs about two seconds, and any tap skips it —
+ * as does `prefers-reduced-motion`, where the wordmark simply never appears and the form is there
+ * from the first frame.
+ *
+ * After that there is nothing to read at all: the mark at a small size, a field, a button. No
+ * heading, no lead, no label above the field (the placeholder is the label — this field asks for
+ * the one thing it could possibly ask for), no spam hint. What is left is what a sign-in cannot do
+ * without: the error when the address or the code is wrong, the resend, and the way back to the
+ * address you mistyped.
  */
-import { useCallback, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { CodeInput } from '@/components/ui/CodeInput';
 import { Input } from '@/components/ui/Input';
 import { Logo } from '@/components/ui/Logo';
-import { PageTitle } from '@/components/ui/PageTitle';
-import { PhotoBlock } from '@/components/ui/PhotoBlock';
-import { Screen } from '@/components/ui/Screen';
-import { useToast } from '@/components/ui/Toast';
-import { PHOTOS } from '@/lib/media/photos';
 import { useT } from '@/app/hooks/useT';
 import { useCountdown } from '@/app/hooks/useTimer';
+import { useMediaUrl } from '@/app/features/player/useMediaUrl';
 import { useSession } from '@/app/store/session';
+import { PHOTOS, photoSrc } from '@/lib/media/photos';
+import { withBase } from '@/lib/util/paths';
 import {
   AuthError,
   demoPendingCode,
@@ -25,12 +39,19 @@ import {
   toAuthError,
   verifyCode,
 } from '@/lib/api/auth';
+import { AUTH_FILM } from '@content/site/media';
 import type { TKey } from '@/i18n/index';
 
 const RESEND_SEC = 60;
 const CODE_LENGTH = 6;
 
+/** How long the wordmark holds before it goes, and how long each fade takes. */
+const INTRO_HOLD_MS = 1400;
+const INTRO_FADE_MS = 700;
+
 type Step = 'email' | 'code';
+/** enter → hold → fade → done. `done` is where a reduced-motion visitor starts. */
+type Intro = 'enter' | 'hold' | 'fade' | 'done';
 
 function authErrorKey(e: AuthError): TKey {
   switch (e.reason) {
@@ -61,10 +82,52 @@ function authErrorKey(e: AuthError): TKey {
   }
 }
 
+function prefersReducedMotion(): boolean {
+  if (typeof window === 'undefined' || !window.matchMedia) return false;
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+/**
+ * The film, or the still that stands in for it until it is cut (`content/site/media.ts`).
+ *
+ * It is fixed rather than absolute so it stays put while the on-screen keyboard pushes the form
+ * around, and it is `object-cover` because a backdrop may be cropped — unlike a movement clip,
+ * which may not. Two layers go over it: the brand's grain, and a gradient dark enough at both ends
+ * that white type and a white button hold their contrast over any frame of any montage.
+ */
+function Backdrop({ src, poster }: { src?: string; poster?: string }) {
+  const url = useMediaUrl(src);
+  return (
+    <div className="fixed inset-0 -z-10 overflow-hidden bg-ink" aria-hidden="true">
+      {url ? (
+        <video
+          key={url}
+          src={url}
+          poster={poster}
+          className="photo-mono size-full object-cover"
+          playsInline
+          muted
+          loop
+          autoPlay
+          preload="metadata"
+        />
+      ) : (
+        <img
+          src={poster ?? photoSrc(PHOTOS.auth)}
+          alt=""
+          className="photo-mono size-full object-cover"
+          decoding="async"
+        />
+      )}
+      <div className="photo-grain" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,15,17,0.55),rgba(15,15,17,0.35)_38%,rgba(15,15,17,0.92))]" />
+    </div>
+  );
+}
+
 export default function AuthScreen() {
   const { t } = useT();
   const navigate = useNavigate();
-  const toast = useToast();
   const [step, setStep] = useState<Step>('email');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -72,11 +135,30 @@ export default function AuthScreen() {
   const [error, setError] = useState<AuthError | null>(null);
   /** Demo mode only: the code the local backend just issued (there is no inbox to check). */
   const [demoCode, setDemoCode] = useState<string | null>(null);
+  const [intro, setIntro] = useState<Intro>('enter');
   const countdown = useCountdown(RESEND_SEC);
 
-  const errorText = error ? t(authErrorKey(error)) : undefined;
+  // Reduced motion gets no title card at all: a word that appears and leaves is the animation.
+  useEffect(() => {
+    if (prefersReducedMotion()) setIntro('done');
+  }, []);
 
-  const send = async (resend: boolean) => {
+  useEffect(() => {
+    if (intro === 'done') return;
+    const next: Record<Exclude<Intro, 'done'>, { to: Intro; ms: number }> = {
+      enter: { to: 'hold', ms: 40 },
+      hold: { to: 'fade', ms: INTRO_HOLD_MS },
+      fade: { to: 'done', ms: INTRO_FADE_MS },
+    };
+    const { to, ms } = next[intro];
+    const id = setTimeout(() => setIntro(to), ms);
+    return () => clearTimeout(id);
+  }, [intro]);
+
+  const errorText = error ? t(authErrorKey(error)) : undefined;
+  const introOver = intro === 'done';
+
+  const send = async () => {
     setError(null);
     if (!isValidEmail(email)) {
       setError(new AuthError('validation', 'Invalid email', { reason: 'invalid_email' }));
@@ -89,7 +171,6 @@ export default function AuthScreen() {
       setCode('');
       setStep('code');
       countdown.restart();
-      if (resend) toast.show({ kind: 'success', title: t('app.authResent') });
     } catch (e) {
       setError(toAuthError(e));
     } finally {
@@ -119,7 +200,7 @@ export default function AuthScreen() {
 
   const onSubmitEmail = (e: FormEvent) => {
     e.preventDefault();
-    void send(false);
+    void send();
   };
 
   const onSubmitCode = (e: FormEvent) => {
@@ -136,38 +217,44 @@ export default function AuthScreen() {
   };
 
   return (
-    <Screen>
-      <div className="flex flex-col gap-6 py-4">
-        {/*
-         * The first screen anyone sees, so it is the brand's own argument: a photograph of someone
-         * training, running past both gutters, with the lockup and the tagline over it. The
-         * tagline is the screen's one display line, set the brand's way — the claim at 800, the
-         * promise at 200 — and it is a paragraph, not a heading: the heading of this page is
-         * «Вход», below the fold of the picture.
-         */}
-        <div className="-mx-5 lg:mx-0">
-          <PhotoBlock photo={PHOTOS.auth} alt="" ratio="landscape" priority>
-            <Logo lockup className="text-[22px] text-paper" />
-            <p className="display mt-4 text-5xl text-paper lg:text-6xl">
-              {t('app.authHeroHeavy')} <span className="t-thin">{t('app.authHeroThin')}</span>
-            </p>
-          </PhotoBlock>
+    <main
+      className="relative flex min-h-dvh flex-col justify-end px-6 pt-[var(--safe-top)] pb-[calc(var(--safe-bottom)+var(--nav-inset,0px)+28px)] text-paper"
+      onPointerDown={introOver ? undefined : () => setIntro('done')}
+    >
+      <Backdrop src={AUTH_FILM.src || undefined} poster={withBasePoster(AUTH_FILM.poster)} />
+
+      {/*
+       * The title card. It covers the form rather than pushing it: the form is already mounted and
+       * already has focus, so a visitor who starts typing through the introduction loses nothing.
+       */}
+      {introOver ? null : (
+        <div
+          className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center transition-opacity ease-(--ease-out)"
+          style={{ opacity: intro === 'hold' ? 1 : 0, transitionDuration: `${INTRO_FADE_MS}ms` }}
+        >
+          <Logo className="text-[clamp(44px,17vw,96px)]" />
         </div>
+      )}
+
+      <div
+        className="flex flex-col items-center gap-10 transition-opacity ease-(--ease-out)"
+        style={{ opacity: introOver ? 1 : 0, transitionDuration: `${INTRO_FADE_MS}ms` }}
+      >
+        <Logo className="text-[15px]" />
 
         {step === 'email' ? (
-          <form onSubmit={onSubmitEmail} className="flex flex-col gap-5" noValidate>
-            <PageTitle size="md" title={t('app.authTitle')} subtitle={t('app.authLead')} />
+          <form onSubmit={onSubmitEmail} className="flex w-full flex-col gap-4" noValidate>
             <Input
               type="email"
               name="email"
-              label={t('app.authEmailLabel')}
+              aria-label={t('app.authEmailLabel')}
               placeholder={t('app.authEmailPlaceholder')}
               autoComplete="email"
               inputMode="email"
               autoCapitalize="none"
               spellCheck={false}
-              autoFocus
               required
+              className="text-center"
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
@@ -180,20 +267,12 @@ export default function AuthScreen() {
             </Button>
           </form>
         ) : (
-          <form onSubmit={onSubmitCode} className="flex flex-col gap-5" noValidate>
-            <PageTitle
-              size="md"
-              title={t('app.authCodeTitle')}
-              subtitle={t('app.authCodeLead', { email: normalizeEmail(email) })}
-            />
+          <form onSubmit={onSubmitCode} className="flex w-full flex-col gap-4" noValidate>
             {demoCode ? (
-              /* A warning is a coloured word behind a hairline, never a tinted block. */
-              <div className="border border-border-strong px-4 py-3">
-                <p className="text-base font-semibold text-warning">
-                  {t('app.demoAuthCode', { code: demoCode })}
-                </p>
-                <p className="mt-1 text-sm text-muted">{t('app.demoAuthCodeHint')}</p>
-              </div>
+              /* Demo mode has no inbox, so the code it just issued is said on the screen. */
+              <p className="text-center text-sm font-semibold text-warning">
+                {t('app.demoAuthCode', { code: demoCode })}
+              </p>
             ) : null}
             <CodeInput
               length={CODE_LENGTH}
@@ -205,11 +284,11 @@ export default function AuthScreen() {
               onComplete={(v) => void verify(v)}
               disabled={busy}
               error={Boolean(error)}
-              autoFocus
+              autoFocus={introOver}
               label={t('app.authCodeLabel')}
             />
             {errorText ? (
-              <p role="alert" className="text-sm text-danger">
+              <p role="alert" className="text-center text-sm text-danger">
                 {errorText}
               </p>
             ) : null}
@@ -222,26 +301,39 @@ export default function AuthScreen() {
             >
               {t('app.authConfirm')}
             </Button>
-            <div className="flex flex-col items-start gap-1">
-              <Button
-                variant="ghost"
+            {/*
+             * The two ways out of a code that never arrived, set as quiet type rather than as two
+             * more buttons: the address it went to is the label of the one that goes back to it.
+             */}
+            <div className="flex items-center justify-center gap-4 pt-1 text-[13px] text-paper/70">
+              <button
+                type="button"
+                onClick={changeEmail}
+                aria-label={t('app.authChangeEmail')}
+                className="tap-target-y truncate underline underline-offset-4"
+              >
+                {normalizeEmail(email)}
+              </button>
+              <button
+                type="button"
                 disabled={!countdown.done || busy}
-                onClick={() => void send(true)}
+                onClick={() => void send()}
+                className="tap-target-y shrink-0 underline underline-offset-4 disabled:no-underline disabled:opacity-60"
               >
                 {countdown.done
                   ? t('app.authResend')
                   : t('app.authResendIn', { s: countdown.remainingSec })}
-              </Button>
-              <Button variant="ghost" size="sm" onClick={changeEmail}>
-                {t('app.authChangeEmail')}
-              </Button>
-              {demoCode ? null : (
-                <p className="mt-2 text-sm text-muted-2">{t('app.authSpamHint')}</p>
-              )}
+              </button>
             </div>
           </form>
         )}
       </div>
-    </Screen>
+    </main>
   );
+}
+
+/** A poster lives in `public/`, so it carries the site's base path; an empty one stays undefined. */
+function withBasePoster(poster: string | undefined): string | undefined {
+  if (!poster) return undefined;
+  return /^https?:\/\//i.test(poster) ? poster : withBase(poster);
 }

@@ -338,7 +338,7 @@ body {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0;
-    line-height: 1.2;
+    line-height: 1.28;
     /*
      * `body` sets `overflow-wrap: break-word` so a long URL can never widen the viewport. At
      * display sizes that rule snaps words mid-syllable — a 320px screen rendered the hero as
@@ -362,7 +362,7 @@ body {
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: -0.01em;
-    line-height: 1.05;
+    line-height: 1.16;
     hyphens: auto;
   }
 

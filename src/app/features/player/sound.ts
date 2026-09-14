@@ -8,7 +8,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 export const SOUND_STORAGE_KEY = 'forma.sound';
 
-export type Cue = 'tick' | 'go' | 'round' | 'end';
+export type Cue = 'tick' | 'go' | 'round' | 'end' | 'horn';
 
 interface SoundState {
   muted: boolean;
@@ -76,6 +76,16 @@ const CUES: Record<Cue, readonly { hz: number; ms: number }[]> = {
     { hz: 880, ms: 120 },
     { hz: 1175, ms: 240 },
   ],
+  /*
+   * The end of a measured effort, and the one cue that is allowed to be loud.
+   *
+   * `end` marks the end of a step inside a workout, where a bright two-note figure is right: the
+   * next thing starts in a moment. The assessment's window closes on a number the athlete has to
+   * remember, and it closes with their eyes on the floor — so this one is a single long low tone,
+   * the gym's own sound, rather than a chime that could be mistaken for the 3-2-1 ticks leading
+   * into it.
+   */
+  horn: [{ hz: 392, ms: 900 }],
 };
 
 /** Play a cue unless muted or audio is unavailable. Never throws. */

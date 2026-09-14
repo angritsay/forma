@@ -11,11 +11,12 @@ interface NavItem {
   end?: boolean;
 }
 
+/** The same four destinations as the tab bar, in the same order; the profile is the avatar. */
 const ITEMS: readonly NavItem[] = [
   { to: '/', labelKey: 'app.tabHome', end: true },
-  { to: '/courses', labelKey: 'app.tabCourses' },
-  { to: '/stats', labelKey: 'app.tabStats' },
-  { to: '/profile', labelKey: 'app.tabProfile' },
+  { to: '/courses', labelKey: 'app.tabPrograms' },
+  { to: '/marathon', labelKey: 'app.tabGame' },
+  { to: '/stats', labelKey: 'app.tabReports' },
 ];
 
 /** Admin destinations, appended for admins only — the same links the profile screen exposes. */

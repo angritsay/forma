@@ -2,7 +2,7 @@ import { clsx } from 'clsx';
 import { Glyph, Icon } from '@/components/ui/Icon';
 import { formatDate } from '@/i18n/index';
 import type { StreakInfo } from '@/lib/training/types';
-import { weekdayLabel } from '@/app/features/home/StatsGrid';
+import { weekdayLabel } from '@/lib/util/dates';
 import { useT } from '@/app/hooks/useT';
 import type { CalendarKind, CalendarWeek } from './model';
 

@@ -14,6 +14,16 @@ import type { CSSProperties } from 'react';
 const INK_ON_LIGHT = '#0f0f11';
 const INK_ON_DARK = '#f6f6f7';
 
+/**
+ * The game's own colour.
+ *
+ * Colour in this product says which part of it you are in — a course wears the programme colour
+ * content gives it, and the game wears orange everywhere it appears: the deck card, the row on
+ * Home, the ring beside today's task. A marathon has no course tile of its own to read it from,
+ * so this is where it lives, once.
+ */
+export const GAME_TILE = '#f08a3c';
+
 /** Relative luminance per WCAG; 0 is black, 1 is white. */
 export function luminance(hex: string): number {
   const h = hex.replace('#', '');

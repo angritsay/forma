@@ -166,7 +166,6 @@ function SavedView({
         {alreadySaved ? <p className="text-sm text-muted">{t('app.summaryAlreadySaved')}</p> : null}
         <SummaryStats
           durationSec={summary.durationSec}
-          points={summary.points}
           calories={summary.calories}
           completion={summary.completion}
         />
@@ -354,7 +353,6 @@ function LocalSummary({
         />
         <SummaryStats
           durationSec={preview.durationSec}
-          points={preview.points}
           calories={preview.calories}
           completion={preview.completion}
         />

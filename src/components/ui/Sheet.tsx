@@ -64,7 +64,7 @@ export function Sheet({ open, onClose, title, children, footer, label, className
         )}
       >
         <div className="mx-auto mt-3 h-0.5 w-10 shrink-0 bg-border-strong" aria-hidden="true" />
-        <div className="flex items-center justify-between gap-3 px-5 pt-3 pb-2">
+        <div className="flex items-center justify-between gap-3 px-6 pt-4 pb-3">
           {title ? (
             <h2 id={titleId} className="font-display text-lg">
               {title}
@@ -80,9 +80,9 @@ export function Sheet({ open, onClose, title, children, footer, label, className
             onClick={onClose}
           />
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">{children}</div>
         {footer ? (
-          <div className="shrink-0 border-t border-border px-5 pt-4 pb-[calc(var(--safe-bottom)+16px)]">
+          <div className="shrink-0 border-t border-border px-6 pt-5 pb-[calc(var(--safe-bottom)+16px)]">
             {footer}
           </div>
         ) : (

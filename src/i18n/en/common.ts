@@ -3,6 +3,7 @@ export const common = {
   brand: 'Forma',
   tagline: 'Home CrossFit that adapts to you.',
   minutesShort: '{n} min',
+  minutesUnit: 'min',
   hoursShort: '{n} h',
   kcal: 'kcal',
   points: 'points',

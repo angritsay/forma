@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { BarChart, type BarDatum } from '@/components/ui/BarChart';
 import { Glyph } from '@/components/ui/Icon';
 import { formatDate, formatNumber, plural } from '@/i18n/index';
-import { weekdayLabel } from '@/app/features/home/StatsGrid';
+import { weekdayLabel } from '@/lib/util/dates';
 import { useT } from '@/app/hooks/useT';
 import {
   dayMonthLabel,

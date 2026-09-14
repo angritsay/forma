@@ -5,12 +5,10 @@
  * leaderboard*, steps*, profile*, admin*.
  */
 export const app = {
-  tabHome: 'Home',
-  tabCourses: 'Courses',
-  tabStats: 'Stats',
-  tabProfile: 'Profile',
-
-  // Shell
+  tabHome: 'Today',
+  tabPrograms: 'Programmes',
+  tabGame: 'Game',
+  tabReports: 'You',
   navMain: 'Main navigation',
   navLocaleRu: 'RU',
   navLocaleEn: 'EN',
@@ -35,20 +33,14 @@ export const app = {
   errorScreenMissingBody: 'Head back to the home screen.',
 
   // Auth
-  authTitle: 'Sign in',
-  authLead: 'Enter your email — we’ll send a one-time code. No password needed.',
   authEmailLabel: 'Email',
   authEmailPlaceholder: 'name@example.com',
   authSendCode: 'Send code',
-  authCodeTitle: 'Check your inbox',
-  authCodeLead: 'We sent a 6-digit code to {email}. It’s valid for a few minutes.',
   authCodeLabel: 'Code from the email',
   authConfirm: 'Confirm',
   authResend: 'Send the code again',
   authResendIn: 'Send again in {s} s',
-  authResent: 'New code sent',
   authChangeEmail: 'Change email',
-  authSpamHint: 'No email? Check the spam folder.',
   authSignOut: 'Sign out',
   authErrorInvalidEmail: 'That doesn’t look like a valid email.',
   authErrorRateLimited: 'Too many requests. Wait a minute and try again.',
@@ -66,7 +58,7 @@ export const app = {
   onbNamePlaceholder: 'Your name',
   onbBasicsTitle: 'A bit about you',
   onbBasicsLead:
-    'Age and sex set the reference values for your tests. Weight makes the calorie estimate more accurate.',
+    'Age and sex set the reference values for the assessment. Weight makes the calorie estimate more accurate.',
   onbAgeLabel: 'Age',
   onbAge1824: '18–24',
   onbAge2534: '25–34',
@@ -114,33 +106,29 @@ export const app = {
   onbLimWrists: 'Wrists',
   onbLimHypertension: 'High blood pressure',
   onbLimPregnancy: 'Pregnancy',
-  onbTestsEyebrow: 'Self-test {n} of 3',
-  onbTestSkip: 'I’ll test later',
-  onbTestSkipped: 'skipped',
-  onbPushupsTitle: 'Max push-ups',
-  onbPushupsLead:
-    'As many as you can in one go with good form. Rest first; start the timer if you want a limit — 2 minutes is plenty.',
-  onbPushupsFull: 'Full push-ups',
-  onbPushupsKnees: 'On knees',
-  onbPushupsInput: 'Push-ups done',
-  onbTimerOptional: 'Optional timer',
-  onbTimerReady: 'Press Start when you’re ready',
-  onbTimerDone: 'Time!',
-  onbTimerPause: 'Pause',
-  onbTimerStop: 'Stop',
-  onbTimerReset: 'Reset',
-  onbSquatsTitle: 'Air squats in 60 seconds',
-  onbSquatsLead:
-    'Start the timer and squat at a steady pace: hips below the knees, heels down. Count your reps.',
-  onbSquatsCounting: 'Go — count your reps',
-  onbSquatsInput: 'Squats done',
-  onbSquatsInputHint: 'Or just type the number if you already know it.',
-  onbPlankTitle: 'Plank hold',
-  onbPlankLead:
-    'Forearm plank, body in one line. Press Start, hold as long as you can with good form, then press Stop.',
-  onbPlankHolding: 'Hold it — press Stop when you’re done',
-  onbPlankRecorded: 'Recorded: {s} s',
-  onbPlankInput: 'Seconds held',
+  onbTestSkipped: 'not measured',
+  onbAssessOfferTitle: 'Want the training fitted to you?',
+  onbAssessOfferLead:
+    'You’ll count how many reps of {n} movements you do in {min} minutes. No maximums — a calm pace.',
+  onbAssessNow: 'Now',
+  onbAssessLater: 'Not now',
+  onbAssessWarnTitle: 'Don’t squeeze out a maximum',
+  onbAssessWarnBody:
+    'This is a setup, not an exam. Work at a calm pace and stop when the technique starts to go — not when the strength does.',
+  onbAssessWarnBody2:
+    'Push to failure today and the app will decide you are stronger than you are, and the programme for the next weeks will be too heavy. An honest calm number is training you can actually do.',
+  onbAssessWarnCta: 'Got it, let’s start',
+  onbAssessInstruction:
+    'Count how many you do in the time — at a calm pace, with no discomfort, without squeezing out more than you need to.',
+  onbAssessInstructionHold:
+    'Hold while your back stays flat and press Stop when it starts to sag. Not to the limit — the time is recorded for you.',
+  onbAssessStop: 'Stop',
+  onbAssessHoldLabel: 'Seconds held',
+  onbAssessOnKnees: 'On knees',
+  onbAssessCountLabel: 'Reps done',
+  onbAssessDoneTitle: 'Written down',
+  onbAssessDoneLead: 'These numbers set your starting load.',
+  onbAssessRetake: 'Do it again',
   onbTimeTitle: 'How long per session?',
   onbTimeLead: 'We’ll fit the workouts into this window.',
   onbTime15Desc: 'Quick and dense',
@@ -208,9 +196,16 @@ export const app = {
   homeTodayLogSteps: 'Log steps',
   homeTodayNoCourseTitle: 'Pick a course',
   homeTodayNoCourseBody: 'Choose a program and your first workout will appear here.',
-  homeTodayNoCourseCta: 'Browse courses',
+  homeTodayNoCourseCta: 'Browse programmes',
+  homeCoachNow: 'Train with the coach now',
+  // The game, on Home. Somebody not playing sees the same row with the task blurred out.
+  homeGameSpoiler: 'The game is on',
+  homeGameSpoilerTask: 'Today’s task',
+  homeTasksTitle: 'Still today',
+  homeTaskSteps: 'Log how far you walked today',
+  homeTaskAssess: 'Fit the training to you',
+  homeTaskAssessHint: '5 movements, 10 minutes — at a calm pace',
   homeTodayCompletedTitle: 'Course completed',
-  homeTodayCompletedBody: 'Every node is done. Repeat a favorite workout or pick the next course.',
   homeTodayOpenPath: 'Open the path',
   homeStatsSteps: 'Steps this week',
   homeStatsGoal: 'goal',
@@ -225,13 +220,13 @@ export const app = {
   homeMoreCourses: 'More courses',
   homeCourseProgress: '{pct}% done',
   homeCourseLocked: 'Locked',
-  homeCourseGet: 'Get the course',
-  homeDeckLabel: 'Course and game',
+  homeCourseGet: 'Join',
+  homeDeckLabel: 'Programmes and game',
   homeDeckCourse: 'Course',
   homeDeckMarathon: 'Game',
   homeDeckMarathonBody: 'A task every day, a board every week',
-  homeDeckCourseLead: 'A programme by weeks. You walk the days, and the load adapts to you.',
-  homeDeckMarathonLead: 'A task every day. Whoever scores most in a week gets an hour with Sergey.',
+  homeDeckMarathonLead:
+    'A task every day. Whoever scores most in a week gets an hour with the coach.',
   homeDeckGameLocked: 'Part of the subscription',
   homeDeckGameTrial: 'Free week with the course — {n} left',
   homeDeckGameTrialDayOne: '1 day',
@@ -247,8 +242,6 @@ export const app = {
   homeRefreshError: 'Couldn’t refresh. Showing the last saved data.',
 
   // Courses
-  coursesTitle: 'Courses',
-  coursesLead: 'Every program adapts to your level and equipment.',
   coursesOwned: 'Yours',
   coursesLocked: 'Locked',
   coursesContinue: 'Continue · {pct}%',
@@ -438,7 +431,6 @@ export const app = {
   summaryEyebrow: 'Summary',
   summaryTitle: 'Workout complete',
   summaryTime: 'Time',
-  summaryPoints: 'Points',
   summaryCalories: 'Calories',
   summaryCompletion: 'Completed',
   summaryBlocks: 'By block',
@@ -477,9 +469,16 @@ export const app = {
   summaryNoResultsBody: 'This workout wasn’t finished on this device, so there is nothing to show.',
 
   // Stats
-  statsTitle: 'Stats',
+  statsTitle: 'You',
+  statsPosterLabel: 'Your progress',
+  statsStreakDays: '{days} in a row',
+  statsStreakBest: 'Best run — {n}',
+  statsDetailsShow: 'The whole record',
+  statsDetailsHide: 'Collapse',
+  statsWeekBoardTitle: 'Who’s ahead',
+  statsLevelTitle: 'Level',
+  statsAchievementsLocked: 'Not yet',
   statsLeaderboard: 'Leaderboard',
-  statsLogSteps: 'Log steps',
   statsRefresh: 'Refresh',
   statsRefreshError: 'Couldn’t refresh. Showing the last saved data.',
   statsErrorTitle: 'Couldn’t load your stats',
@@ -508,7 +507,7 @@ export const app = {
   statsStepsChartLabel: 'Steps per day over the last 14 days',
   statsStepsAtGoal: 'Goal hit {n} of {total} days',
   statsStepsGoal: 'goal {n}',
-  statsRecordsTitle: 'Personal records',
+  statsRecordsTitle: 'Records',
   statsRecordsEmpty:
     'No records yet. Test and benchmark workouts on your course path fill this list.',
   statsRecordAttemptsOne: '{n} attempt',
@@ -516,7 +515,7 @@ export const app = {
   statsRecordAttemptsMany: '{n} attempts',
   statsRecordFirst: 'vs first',
   statsUnitRounds: 'rounds',
-  statsAchievementsTitle: 'Achievements',
+  statsAchievementsTitle: 'Earned',
   statsAchievementsCount: '{done} of {total}',
   statsAchievementUnlocked: 'Unlocked',
   statsAchievementLocked: 'Locked',
@@ -593,7 +592,7 @@ export const app = {
   profileFitnessLevel: 'Level {n} · {name}',
   profileFitnessMissing: 'Finish the setup to get your fitness index and starting load.',
   profileFitnessSetup: 'Finish setup',
-  profileRetakeTests: 'Retake tests',
+  profileRetakeTests: 'Redo the assessment',
   profileTrainingSection: 'Training',
   profileEquipment: 'Equipment',
   profileEquipmentTitle: 'Your equipment',
@@ -722,7 +721,6 @@ export const app = {
   demoOpenBody:
     'Demo mode runs the whole app on made-up data stored in this browser. Nothing is sent anywhere and no Supabase project is needed.',
   demoAuthCode: 'Demo: code is {code}',
-  demoAuthCodeHint: 'No email is sent in the demo — type the code above.',
   demoSection: 'Demo mode',
   demoDataNote:
     'Made-up data in this browser: two open courses, invented names on the leaderboard, step history for the past two weeks.',
@@ -976,9 +974,6 @@ export const app = {
   dayImage: 'Day image',
   dayImageHint: "Shown on the day's screen",
   // Sign-in hero: the tagline split at the weight change — 800 for the claim, 200 for the promise.
-  authHeroHeavy: 'Home CrossFit',
-  authHeroThin: 'that adapts to you.',
-  // Home: the ruled facts under today's session and the index of the days after it.
   homeUpNext: 'Next in the course',
   homeUpNextDay: 'Day {n}',
   homeTodayStatDay: 'Day of {total}',
@@ -1015,7 +1010,7 @@ export const app = {
   marathonFinishedBody: 'The board stays up — you can still see how it ended.',
   marathonEmptyTitle: 'You are not in a game',
   marathonEmptyBody:
-    'The game is a task every day and a board every week. Whoever wins the week gets an hour with Sergey.',
+    'The game is a task every day and a board every week. Whoever wins the week gets an hour with the coach.',
   marathonNoTasksToday: 'Nothing set for today',
   marathonNoTasksTodayBody: 'A rest day. There will be a new one in the morning.',
   marathonErrorTitle: 'Could not load the game',
@@ -1024,7 +1019,7 @@ export const app = {
   marathonTrialBody:
     'The game is open with your course. {n} left — after that it needs a subscription.',
   marathonLockedBody:
-    'A task every day, proof, and a board every week. Whoever scores most gets an hour with Sergey.',
+    'A task every day, proof, and a board every week. Whoever scores most gets an hour with the coach.',
   // One task
   marathonDeadline: 'Until {time}',
   marathonDeadlinePassed: 'The day has closed',
@@ -1053,7 +1048,7 @@ export const app = {
   marathonBoardEmpty: 'Nobody has scored yet',
   marathonBoardYou: 'You',
   marathonBoardPoints: '{n}',
-  marathonBoardWinner: 'An hour with Sergey',
+  marathonBoardWinner: 'An hour with the coach',
   // My points
   marathonPointsDone: '{done} of {total}',
   marathonPointsTeamTook: 'Team: {n}',

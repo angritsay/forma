@@ -104,7 +104,7 @@ export default function ProfileScreen() {
    * and a heading that changes with the visitor is no name for the screen.
    */
   const header = (
-    <div className="flex h-14 items-center justify-between gap-3 px-5">
+    <div className="flex h-14 items-center justify-between gap-3 px-6">
       <Logo className="text-[15px]" />
       <h1 className="eyebrow">{t('app.profileTitle')}</h1>
     </div>

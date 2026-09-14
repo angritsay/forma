@@ -38,7 +38,7 @@ calories.
 
 | Component  | Weight | Input                        | Scoring                                                |
 | ---------- | -----: | ---------------------------- | ------------------------------------------------------ |
-| pushups    |    30% | max consecutive push-ups     | CSEP/ACSM norms, age & sex (below)                     |
+| pushups    |    30% | push-ups in 60 s             | CSEP/ACSM norms, age & sex (below)                     |
 | squats     |    25% | air squats in 60 s           | expert anchors, age-shifted (below)                    |
 | plank      |    20% | plank hold, seconds          | expert anchors informed by averages                    |
 | activity   |    15% | self-reported activity level | sedentary 10 · light 40 · moderate 70 · active 100     |
@@ -47,6 +47,24 @@ calories.
 The weights are a design choice: the two movement tests that best predict what the courses ask for
 (upper-body push endurance and lower-body endurance) dominate; trunk endurance follows; self-reported
 inputs are kept light because they are the least reliable.
+
+**Where the numbers come from now.** The onboarding no longer runs three separate tests. It asks one
+question — «хочешь адаптировать тренировки под себя?» — and, if the answer is yes, runs five
+movements of one minute each at a _comfortable_ pace (`content/site/assessment.ts`), because the
+coach's own first rule is that day one carries no maximum efforts (docs/COACH_RULES.md). Two of the
+five land in the table above, the other three are stored as personal records.
+
+That changes what the push-up input means, and the change is deliberate: it is now reps in 60 s
+rather than reps to failure. For anyone the beginner course is written for the two numbers are the
+same — technical failure arrives well inside the minute — and for a stronger athlete the clock
+truncates the count, which lowers the starting load. Under-reporting is the safe direction, and it
+is the one the coach asks for. The scoring tables are unchanged.
+
+The plank is no longer asked for at onboarding at all: a plank is measured in seconds rather than
+counts, and a _maximum_ hold is exactly the kind of effort the rule above rules out. Its component
+is imputed from the rest by the mechanism in §2.4, which is what that mechanism is for. The scoring
+curve stays documented below because the engine still scores a plank wherever one is measured — a
+benchmark node inside a course, a retest.
 
 ### 2.1 Push-ups — CSEP / ACSM norms
 
@@ -92,7 +110,8 @@ is intentionally not sex- or age-normalized because the evidence base is thin.
 
 ### 2.4 Missing tests, index cap, level, initial scale
 
-- A skipped test is excluded from the weighted mean (the other weights are renormalized) and its
+- A missing test (the assessment was postponed, or it does not measure that component at all) is
+  excluded from the weighted mean (the other weights are renormalized) and its
   `components` value is imputed from the mean; the skipped components are listed in `missing`.
 - When **no** self-test was done the index is **capped at 60**: activity and experience are
   self-reported and must not place someone in level 3 on their own.

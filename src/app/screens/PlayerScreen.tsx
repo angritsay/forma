@@ -46,7 +46,7 @@ import {
   stepVideoRef,
   workoutSections,
 } from '@/app/features/player/model';
-import { useSound } from '@/app/features/player/sound';
+import { useSound, type Cue } from '@/app/features/player/sound';
 import { AmrapStep } from '@/app/features/player/steps/AmrapStep';
 import { BlockIntroStep } from '@/app/features/player/steps/BlockIntroStep';
 import { FortimeStep } from '@/app/features/player/steps/FortimeStep';
@@ -56,6 +56,8 @@ import { WorkRepsStep } from '@/app/features/player/steps/WorkRepsStep';
 import { WorkTimerStep } from '@/app/features/player/steps/WorkTimerStep';
 import { haptic, setClosingConfirmation } from '@/lib/telegram/webapp';
 import { warmupSkipIndex } from '@/lib/training/player';
+import { TapToPause } from '@/app/features/player/TapToPause';
+import { WarmupSkip } from '@/app/features/player/WarmupSkip';
 import { exerciseStillUrl } from '@/lib/api/storage';
 import { courseTileVars } from '@/lib/ui/tile';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
@@ -79,7 +81,7 @@ function NoSession() {
       <EmptyState
         title={t('app.playerNoSessionTitle')}
         description={t('app.playerNoSessionBody')}
-        action={<Button onClick={() => navigate('/courses')}>{t('app.tabCourses')}</Button>}
+        action={<Button onClick={() => navigate('/courses')}>{t('app.tabPrograms')}</Button>}
       />
     </Screen>
   );
@@ -179,7 +181,7 @@ interface StepViewProps {
   index: number;
   session: ActiveSession;
   paused: boolean;
-  beep: (cue: 'tick' | 'go' | 'round' | 'end') => void;
+  beep: (cue: Cue) => void;
   onRecord: (result: PlayerResult) => void;
   onNext: () => void;
   registerNext: (fn: (() => void) | null) => void;
@@ -396,6 +398,10 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
    * The session no longer asks "shall we warm up?" before it starts — it just starts warming up —
    * so the way out of the warm-up has to be available the whole way through it rather than once,
    * at a gate, before anyone has seen what the warm-up is.
+   *
+   * It is offered twice over: as a chip on the panel that fades after a few seconds (WarmupSkip),
+   * for the athlete who warmed up an hour ago and is deciding right now, and in the pause overlay
+   * for the whole warm-up, for whoever comes looking after the chip has gone.
    */
   const skipWarmupTo = warmupSkipIndex(steps, prescribed);
   const inWarmup =
@@ -425,6 +431,8 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
             onPointerDownCapture={unlock}
           >
             <ArtLayer exerciseId={exerciseId} playing={!paused} videoUrl={videoUrl} />
+            {/* The picture is the pause button; the panel below it is not. */}
+            {step && step.kind !== 'done' && !paused ? <TapToPause onTap={togglePause} /> : null}
             <PlayerHeader
               progress={steps.length > 1 ? stepIndex / (steps.length - 1) : 0}
               paused={paused}
@@ -450,6 +458,14 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
                   registerNext={registerNext}
                 />
               ) : null}
+              {inWarmup !== null ? (
+                <WarmupSkip
+                  onSkip={() => {
+                    setPaused(false);
+                    goTo(inWarmup);
+                  }}
+                />
+              ) : null}
               {step && step.kind !== 'done' ? (
                 <FlipHandle onFlip={() => setFlipped(true)} label={t('app.playerHowTo')} />
               ) : null}
@@ -473,7 +489,7 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
             {/* `data-card-scroll`: FlipCard asks this element whether a downward drag is a pull
                 to close or the athlete scrolling back up through the technique. */}
             <div data-card-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-              <div className="mx-auto flex w-full max-w-[560px] flex-col gap-5 px-5 pt-5 pb-[calc(var(--safe-bottom)+32px+var(--demo-inset,0px))]">
+              <div className="mx-auto flex w-full max-w-[560px] flex-col gap-5 px-6 pt-5 pb-[calc(var(--safe-bottom)+32px+var(--demo-inset,0px))]">
                 {step ? (
                   <SectionStepper
                     sections={workoutSections(prescribed)}

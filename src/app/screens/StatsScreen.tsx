@@ -1,13 +1,27 @@
 /**
- * Stats (docs/SPEC.md §10 flow 8): athlete level, this week's load, points per week, the streak
- * calendar, the steps history, personal records, achievements and all-time totals. Everything
- * derives from the progress store, so the screen shares one data load with Home.
+ * Progress (docs/SPEC.md §10 flow 8) — the fourth tab, «Прогресс».
+ *
+ * The screen is built around one question — is this going anywhere — and the answer is four
+ * things, in this order: the streak, what has been earned, who is ahead this week, and then, only
+ * for whoever asks for it, the whole record.
+ *
+ * It used to be a dashboard: a level card, two crosslinks, and then seven charts and lists at the
+ * same size, every one of them true and none of them the reason anybody opens this tab. What makes
+ * a progress screen worth returning to is the thing Duolingo and Headspace both do and neither
+ * dresses up as analytics — one number, big, that means "you have kept this up", and something
+ * beside it that is worth showing to somebody. So the top of the screen is a poster
+ * (ProgressPoster) and the charts are behind «Подробности», where they belong: a chart answers a
+ * question you already had, and nobody arrives here with it.
+ *
+ * The achievements show what has been earned, with the rest in a row swiped sideways
+ * (AchievementsGrid) — twelve tiles of which ten are grey is a list of what you have not done.
+ *
+ * Everything derives from the progress store, so the screen shares one data load with Home.
  */
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Glyph } from '@/components/ui/Icon';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
@@ -15,6 +29,9 @@ import { STEPS_GOAL } from '@/lib/training/constants';
 import { evaluateAchievements, levelForPoints } from '@/lib/training/levels';
 import { useT } from '@/app/hooks/useT';
 import { AchievementsGrid } from '@/app/features/stats/AchievementsGrid';
+import { ProgressPoster } from '@/app/features/stats/ProgressPoster';
+import { StreakCard } from '@/app/features/stats/StreakCard';
+import { WeekBoard } from '@/app/features/leaderboard/WeekBoard';
 import {
   personalRecords,
   pointsByWeek,
@@ -29,9 +46,11 @@ import { Section } from '@/app/features/stats/Section';
 import { LevelCard, TotalsRow } from '@/app/features/stats/StatsCards';
 import { PointsChart, StepsChart, WeeklyChart } from '@/app/features/stats/StatsCharts';
 import { StreakCalendar } from '@/app/features/stats/StreakCalendar';
+import { StepsRow } from '@/app/features/stats/StepsRow';
 import {
   useProgress,
   useProgressLoader,
+  useStepsToday,
   useStreak,
   useTodayIso,
   useTotalPoints,
@@ -39,7 +58,7 @@ import {
 
 function StatsSkeleton() {
   return (
-    <div className="flex flex-col gap-6 py-5" aria-hidden="true">
+    <div className="flex flex-col gap-7 py-6" aria-hidden="true">
       <Skeleton rounded="control" className="h-24" />
       <Skeleton rounded="control" className="h-44" />
       <Skeleton rounded="control" className="h-44" />
@@ -48,34 +67,12 @@ function StatsSkeleton() {
   );
 }
 
-/**
- * The two places the screen leads to — the steps log and the leaderboard — as a ruled pair of
- * text links with an arrow, in place of the two pictograms the header used to carry. Each cell is
- * a full-width button so the whole rule is the target.
- */
-function Crosslinks({ items }: { items: readonly { label: string; onClick: () => void }[] }) {
-  return (
-    <nav className="grid grid-cols-2 divide-x divide-border border-y border-border">
-      {items.map((item) => (
-        <button
-          key={item.label}
-          type="button"
-          onClick={item.onClick}
-          className="control-label flex h-12 items-center justify-between gap-3 pr-4 text-left text-[12px] text-text transition-colors duration-150 ease-(--ease-out) hover:bg-surface-2 active:bg-surface-3 [&:not(:first-child)]:pl-4"
-        >
-          <span className="truncate">{item.label}</span>
-          <Glyph size={14}>→</Glyph>
-        </button>
-      ))}
-    </nav>
-  );
-}
-
 export default function StatsScreen() {
   useProgressLoader();
   const { t, locale } = useT();
   const navigate = useNavigate();
   const toast = useToast();
+  const [details, setDetails] = useState(false);
   const status = useProgress((s) => s.status);
   const loading = useProgress((s) => s.loading);
   const error = useProgress((s) => s.error);
@@ -93,6 +90,7 @@ export default function StatsScreen() {
   const weeks = useMemo(() => pointsByWeek(sessions, logs, today), [sessions, logs, today]);
   const calendar = useMemo(() => streakCalendar(sessions, logs, today), [sessions, logs, today]);
   const steps = useMemo(() => stepsHistory(logs, today), [logs, today]);
+  const stepsToday = useStepsToday();
   const records = useMemo(() => personalRecords(benchmarks, locale), [benchmarks, locale]);
   const stats = useMemo(
     () =>
@@ -116,7 +114,7 @@ export default function StatsScreen() {
    * its place while a reload is in flight.
    */
   const header = (
-    <div className="flex h-14 items-center gap-2 border-b border-border px-5">
+    <div className="flex h-14 items-center gap-2 border-b border-border px-6">
       <h1 className="font-display min-w-0 flex-1 truncate text-base">{t('app.statsTitle')}</h1>
       <Button
         variant="ghost"
@@ -147,34 +145,75 @@ export default function StatsScreen() {
     );
   } else {
     body = (
-      <div className="flex flex-col gap-2 pt-5">
-        <LevelCard points={totalPoints} level={level} />
-        <Crosslinks
-          items={[
-            { label: t('app.statsLogSteps'), onClick: () => navigate('/steps') },
-            { label: t('app.statsLeaderboard'), onClick: () => navigate('/leaderboard') },
-          ]}
+      <div className="flex flex-col gap-4">
+        <ProgressPoster
+          streak={streak}
+          level={level}
+          workouts={stats.workouts}
+          minutes={stats.totalMinutes}
+          calories={calories}
         />
-        <Section title={t('app.statsWeekTitle')}>
-          <WeeklyChart days={week} />
-        </Section>
-        <div className="flex flex-col gap-6 border-t border-border pt-5">
-          <PointsChart weeks={weeks} />
-          <StreakCalendar weeks={calendar} streak={streak} />
-          <StepsChart points={steps} goal={STEPS_GOAL} />
-        </div>
-        <Section title={t('app.statsRecordsTitle')}>
-          <RecordsList records={records} />
-        </Section>
+        {/* The day is still open and nothing is logged: the one line that can save the streak. */}
+        {streak.atRisk ? (
+          <StreakCard
+            streak={streak}
+            stepsGoal={STEPS_GOAL}
+            onLogSteps={() => navigate('/steps')}
+          />
+        ) : null}
+        {/*
+         * The one number still owed today. It used to live on Home, but Home answers "what do I
+         * do now" — how far you walked belongs with the rest of how you are doing.
+         */}
+        <StepsRow steps={stepsToday} goal={STEPS_GOAL} onOpen={() => navigate('/steps')} />
         <Section
           title={t('app.statsAchievementsTitle')}
           aside={t('app.statsAchievementsCount', { done: unlocked, total: achievements.length })}
         >
           <AchievementsGrid items={achievements} />
         </Section>
-        <Section title={t('app.statsTotalsTitle')}>
-          <TotalsRow workouts={stats.workouts} minutes={stats.totalMinutes} calories={calories} />
+        <Section title={t('app.statsWeekBoardTitle')}>
+          <WeekBoard onOpenFull={() => navigate('/leaderboard')} />
         </Section>
+
+        {/*
+         * The whole record, behind one tap. Not a second screen: it is the same data the tab has
+         * always carried, and somebody who wants the calendar wants it here rather than after a
+         * navigation. Collapsed by default, because a chart is an answer to a question nobody
+         * arrives with.
+         */}
+        <div className="mt-2 border-t border-border pt-5">
+          <Button variant="ghost" size="sm" onClick={() => setDetails((v) => !v)}>
+            {details ? t('app.statsDetailsHide') : t('app.statsDetailsShow')}
+          </Button>
+        </div>
+        {details ? (
+          <div className="flex flex-col gap-4">
+            <Section title={t('app.statsWeekTitle')}>
+              <WeeklyChart days={week} />
+            </Section>
+            <Section title={t('app.statsStepsTitle')}>
+              <StepsChart points={steps} goal={STEPS_GOAL} />
+            </Section>
+            <div className="flex flex-col gap-7 border-t border-border pt-7">
+              <PointsChart weeks={weeks} />
+              <StreakCalendar weeks={calendar} streak={streak} />
+            </div>
+            <Section title={t('app.statsRecordsTitle')}>
+              <RecordsList records={records} />
+            </Section>
+            <Section title={t('app.statsTotalsTitle')}>
+              <TotalsRow
+                workouts={stats.workouts}
+                minutes={stats.totalMinutes}
+                calories={calories}
+              />
+            </Section>
+            <Section title={t('app.statsLevelTitle')}>
+              <LevelCard points={totalPoints} level={level} />
+            </Section>
+          </div>
+        ) : null}
       </div>
     );
   }

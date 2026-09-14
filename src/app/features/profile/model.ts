@@ -11,8 +11,25 @@ import type { Translator } from '@/app/hooks/useT';
 import { DraftSchema, STEP_IDS, type OnboardingDraft } from '@/app/screens/onboarding/draft';
 import { EQUIPMENT_LABEL, LIMITATION_LABEL } from '@/app/screens/onboarding/labels';
 
-/** Index of the first self-test step of the onboarding wizard. */
-export const TESTS_STEP_INDEX: number = STEP_IDS.indexOf('testPushups');
+/** Index of the assessment step of the onboarding wizard. */
+export const TESTS_STEP_INDEX: number = STEP_IDS.indexOf('assess');
+
+/**
+ * The assessment has never been done: the profile carries neither of the two counts the fitness
+ * index reads from it.
+ *
+ * This is what «Не сейчас» leaves behind. The onboarding draft is cleared the moment the profile
+ * is saved, so the postponement cannot be remembered there — and it does not need to be: the
+ * absence of the numbers *is* the state, and it stays true across devices and reinstalls. Home
+ * turns it into today's second task.
+ */
+export function assessmentPending(
+  profile: Pick<Profile, 'trainingProfile'> | null | undefined,
+): boolean {
+  const tp = profile?.trainingProfile;
+  if (!tp) return false;
+  return tp.tests.pushups === undefined && tp.tests.squats60s === undefined;
+}
 
 /** 16 hex characters from the platform RNG (Math.random when crypto is unavailable). */
 export function newAvatarSeed(): string {
@@ -149,8 +166,7 @@ export function profileToDraft(profile: Profile, locale: Locale): OnboardingDraf
     kettlebellKg: tp.kettlebellKg ?? [],
     limitations: tp.limitations,
     limitationsNone: tp.limitations.length === 0,
-    tests: {},
-    skipped: {},
+    assess: {},
     timePerSessionMin: tp.timePerSessionMin,
     goal: tp.goal,
   });

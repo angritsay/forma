@@ -14,11 +14,19 @@
  * match, so a third less work still came out at thirteen minutes and thirty-one kcal. Three
  * identical-looking rows are not a choice, they are a coin toss with extra steps. What moves is the
  * *work* — «Полегче» is ninety squats where «Посложнее» is a hundred and forty — so that is what
- * each row says, over a bar drawn to the same scale for all three. The difference is now visible
- * before it is read.
+ * each row says, over a bar drawn to the same scale for all three.
+ *
+ * **The minutes lead, and there are no points.** A course is time you are about to spend, and that
+ * is the number somebody standing on a mat is deciding about: «восемнадцать минут» is an answer,
+ * «140 очков» is a score for something that has not happened yet. Points belong to the game, where
+ * they are the whole point; a workout is not a thing you win.
+ *
+ * **The recommended row is filled, not badged.** White on ink among two outlined rows: the eye
+ * lands on it before a word is read, and tapping the obvious one is the right move on the day you
+ * have no opinion — which is most days. The other two are still one tap away, at the same size,
+ * because the recommendation is advice and not a gate.
  */
 import { clsx } from 'clsx';
-import { Badge } from '@/components/ui/Badge';
 import { Glyph } from '@/components/ui/Icon';
 import { Sheet } from '@/components/ui/Sheet';
 import { Spinner } from '@/components/ui/Spinner';
@@ -27,11 +35,10 @@ import { useT } from '@/app/hooks/useT';
 import type { DifficultyChoice, Recommendation } from '@/lib/training/types';
 import { DIFFICULTY_LABEL } from './plan';
 
-/** One difficulty and what choosing it asks for: how much work, how long, what it is worth. */
+/** One difficulty and what choosing it asks for: how much work, and how long it takes. */
 export interface DifficultyOption {
   choice: DifficultyChoice;
   durationSec: number;
-  points: number;
   calories: number;
   /** Repetitions prescribed across the session; 0 for a workout made only of timed work. */
   reps: number;
@@ -74,8 +81,8 @@ export function DifficultySheet({
 
   return (
     <Sheet open={open} onClose={onClose} title={t('app.nodeDifficultyTitle')}>
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-col">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2.5">
           {options.map((o) => {
             const isRecommended = o.choice === recommended.choice;
             const starting = pending === o.choice;
@@ -86,43 +93,48 @@ export function DifficultySheet({
                 disabled={busy}
                 onClick={() => onPick(o.choice)}
                 className={clsx(
-                  'flex w-full items-center gap-3.5 border-t border-border py-4 text-left first:border-t-0',
-                  'transition-colors duration-150 ease-(--ease-out) hover:bg-surface-2 active:bg-surface-3',
+                  'flex w-full items-center gap-5 px-4 py-5 text-left',
+                  'transition-colors duration-150 ease-(--ease-out)',
+                  isRecommended
+                    ? 'bg-primary text-on-primary'
+                    : 'border border-border hover:bg-surface-2 active:bg-surface-3',
                   busy && !starting && 'opacity-40',
                 )}
               >
-                <span className="flex min-w-0 flex-1 flex-col gap-2">
-                  <span className="flex flex-wrap items-center gap-2">
-                    <span className="text-[17px] font-semibold">
-                      {t(DIFFICULTY_LABEL[o.choice])}
-                    </span>
-                    {isRecommended ? (
-                      <Badge tone="neutral" size="sm">
-                        {t('training.recommended')}
-                      </Badge>
-                    ) : null}
+                {/* The minutes, at the size of the decision they are. */}
+                <span className="flex shrink-0 flex-col items-center">
+                  <span className="numeral tabular text-4xl leading-none">
+                    {Math.max(1, Math.round(o.durationSec / 60))}
                   </span>
+                  <span className="eyebrow mt-1.5 text-current opacity-60">
+                    {t('common.minutesUnit')}
+                  </span>
+                </span>
+
+                <span className="flex min-w-0 flex-1 flex-col gap-2.5">
+                  <span className="font-display text-[17px]">{t(DIFFICULTY_LABEL[o.choice])}</span>
 
                   {/*
-                   * How much work, as a length. The recommended row is the one in the programme
-                   * colour; the others are the same bar in the quiet grey, so the eye compares
-                   * lengths instead of colours.
+                   * How much work, as a length, drawn to the same scale on all three rows: two
+                   * choices that really are close draw as two bars that really are close.
                    */}
-                  <span aria-hidden="true" className="block h-[3px] w-full bg-surface-3">
+                  <span
+                    aria-hidden="true"
+                    className={clsx(
+                      'block h-[3px] w-full',
+                      isRecommended ? 'bg-on-primary/25' : 'bg-surface-3',
+                    )}
+                  >
                     <span
                       className={clsx(
                         'block h-full transition-[width] duration-300 ease-(--ease-out)',
-                        // White, not the programme colour: a Sheet is portalled to <body>, so the
-                        // `--course-tile` scope on the screen below does not reach it and
-                        // `bg-course` would fall back to a near-black neutral on a near-black row.
-                        isRecommended ? 'bg-primary' : 'bg-muted-2',
+                        isRecommended ? 'bg-on-primary' : 'bg-muted-2',
                       )}
                       style={{ width: `${Math.round(share(o) * 100)}%` }}
                     />
                   </span>
 
-                  <span className="tabular text-xs text-muted">
-                    {/* Reps first: it is the number that actually moves between the three. */}
+                  <span className="tabular text-xs text-current opacity-70">
                     {o.reps > 0
                       ? plural(locale, o.reps, {
                           one: t('app.nodeRepsOne', { n: formatNumber(locale, o.reps) }),
@@ -132,8 +144,7 @@ export function DifficultySheet({
                       : t('app.nodeWorkMin', {
                           min: Math.max(1, Math.round(o.workSec / 60)),
                         })}{' '}
-                    · {t('app.nodeDuration', { min: Math.max(1, Math.round(o.durationSec / 60)) })}{' '}
-                    · {t('app.nodePoints', { n: o.points })}
+                    · {t('app.nodeKcal', { n: o.calories })}
                   </span>
                 </span>
 
@@ -141,7 +152,7 @@ export function DifficultySheet({
                 {starting ? (
                   <Spinner size={16} />
                 ) : (
-                  <Glyph size={16} className="shrink-0 text-muted-2">
+                  <Glyph size={16} className="shrink-0 opacity-60">
                     →
                   </Glyph>
                 )}

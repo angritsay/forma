@@ -1,9 +1,14 @@
 /**
- * Marathon — Today.
+ * The game (the third tab): today's task, and who is winning the week.
  *
- * The whole screen is one question: what is set for today, and have I done it. The board and the
- * points history are one tap away rather than on this screen, because at 7am on a mat the answer
- * to "where am I in the table" is never what gets someone moving.
+ * It was reachable only through a card on the home deck, which made the format look like an
+ * accessory to the course. It is a tab of its own now, and it holds the two halves of a game in
+ * the order they are asked for: what is set for today and whether it is sent, then the short
+ * table of the week under it — five rows, the full board one tap further.
+ *
+ * The table is short on purpose. At 7am on a mat the answer to "where am I in the standings" is
+ * never what gets someone moving, so the day comes first; but a race nobody can see the score of
+ * is not a race, and a link to it was not enough to make it one.
  */
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -19,10 +24,12 @@ import { uploadMedia } from '@/lib/api/storage';
 import type { MyMarathon, ProofInput } from '@/lib/api/types';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
+import { BoardRow } from '@/app/features/marathon/BoardRow';
 import { TaskCard } from '@/app/features/marathon/TaskCard';
 import {
   useMarathonDay,
   useMarathonRoster,
+  useMarathonScores,
   useMyMarathons,
 } from '@/app/features/marathon/useMarathon';
 import { LinkButton } from '@/app/features/courses/LinkButton';
@@ -30,6 +37,9 @@ import { subscribeHref } from '@/app/features/courses/courseMeta';
 import { useSession } from '@/app/store/session';
 import { gameAccess } from '@/app/features/marathon/gameAccess';
 import { GAME_REQUIRES_SUBSCRIPTION } from '@content/site/plans';
+
+/** How much of the week's table the day screen shows. */
+const BOARD_ROWS = 5;
 
 function DaySkeleton() {
   return (
@@ -51,6 +61,7 @@ export default function MarathonScreen() {
   const dayIndex = marathon?.dayIndex ?? 0;
   const { data: tasks, status, reload } = useMarathonDay(marathon, dayIndex);
   const { data: roster } = useMarathonRoster(marathon?.id ?? null);
+  const { data: scores } = useMarathonScores(marathon?.id ?? null, marathon?.week ?? null);
   const [sending, setSending] = useState(false);
 
   /** The people I am scored with, by member id — everyone on my team but me. */
@@ -168,6 +179,8 @@ export default function MarathonScreen() {
   }
 
   const closed = marathon.status === 'finished';
+  /* The top of this week's table; a week nobody has scored in yet shows as empty, not as zeros. */
+  const topScores = scores.filter((row) => row.points > 0).slice(0, BOARD_ROWS);
 
   return (
     <Screen header={header}>
@@ -222,20 +235,31 @@ export default function MarathonScreen() {
         )}
 
         {/*
-         * One way out of this screen, not two. The whole game is «what is set for today, have I
-         * done it, and who is winning the week» — «Мои баллы» is the breakdown of an answer the
-         * board already gives, so it moved to the board, one level deeper.
+         * The week, as far as the top of it. One way on from here, not two: «Мои баллы» is the
+         * breakdown of an answer this table already gives, so it lives on the full board.
          */}
-        <div className="border-t border-border pt-5">
+        <section className="border-t border-border pt-5">
+          <h2 className="eyebrow">{t('app.marathonWeekThis')}</h2>
+          {topScores.length > 0 ? (
+            <ol className="mt-2 flex flex-col">
+              {topScores.map((row) => (
+                <li key={row.entryId}>
+                  <BoardRow row={row} />
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="mt-2 text-[13px] text-muted">{t('app.marathonBoardEmpty')}</p>
+          )}
           <Button
-            variant="secondary"
-            size="md"
-            fullWidth
+            variant="ghost"
+            size="sm"
+            className="mt-3"
             onClick={() => navigate('/marathon/board')}
           >
             {t('app.marathonTabBoard')}
           </Button>
-        </div>
+        </section>
       </div>
     </Screen>
   );

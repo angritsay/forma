@@ -124,7 +124,6 @@ export default function NodePreviewScreen() {
         choice: c,
         prescribed,
         durationSec: estimateDuration(prescribed).totalSec,
-        points: prescribed.points,
         calories: estimateCalories(prescribed, ctx.weightKg),
         reps: volume.reps,
         workSec: volume.workSec,
@@ -137,7 +136,7 @@ export default function NodePreviewScreen() {
       <Screen header={<TopBar back="/courses" />}>
         <EmptyState
           title={t('app.nodeNotFound')}
-          action={<Button onClick={() => navigate('/courses')}>{t('app.tabCourses')}</Button>}
+          action={<Button onClick={() => navigate('/courses')}>{t('app.tabPrograms')}</Button>}
         />
       </Screen>
     );
@@ -184,7 +183,7 @@ export default function NodePreviewScreen() {
     return (
       <Screen header={header}>
         <div className="flex flex-col gap-4 py-2" aria-hidden="true">
-          <Skeleton rounded="card" className="-mx-5 aspect-[4/3] lg:-mx-8" />
+          <Skeleton rounded="card" className="-mx-6 aspect-[4/3] lg:-mx-10" />
           <Skeleton lines={3} />
         </div>
       </Screen>
@@ -253,11 +252,13 @@ export default function NodePreviewScreen() {
   const isTest = node.kind === 'test';
   const isBenchmark = node.kind === 'benchmark';
 
-  // The recommended plan's facts: how long, how many points, how many kcal.
+  /*
+   * The recommended plan's facts: how long, and what it costs. No points — a course is time you
+   * are about to spend, and a score for a workout nobody has done yet is not a fact about it.
+   */
   const facts = shown
     ? [
         t('app.nodeDuration', { min: Math.max(1, Math.round(shown.durationSec / 60)) }),
-        t('app.nodePoints', { n: shown.points }),
         t('app.nodeKcal', { n: shown.calories }),
       ]
     : [];
@@ -293,7 +294,7 @@ export default function NodePreviewScreen() {
            * programme colour on its own where the movement has no frame yet, and the day's stamps
            * in the corner as dark plates.
            */}
-          <div className="hero-art relative -mx-5 flex aspect-[4/3] items-center justify-center overflow-hidden lg:-mx-8 lg:aspect-auto lg:h-[360px]">
+          <div className="hero-art relative -mx-6 flex aspect-[4/3] items-center justify-center overflow-hidden lg:-mx-10 lg:aspect-auto lg:h-[360px]">
             <WorkoutHero exercise={exercise} />
             {isTest || isBenchmark || deload || repeat ? (
               <div className="absolute top-3 right-3 flex flex-wrap justify-end gap-1.5">
@@ -310,7 +311,7 @@ export default function NodePreviewScreen() {
            * under them — that is the whole screen for anyone who came here to train.
            */}
           <div>
-            <DisplayTitle as="h2" text={l(workout.name)} className="text-6xl" />
+            <DisplayTitle as="h2" text={l(workout.name)} className="text-5xl" />
             <p className="eyebrow mt-3.5">
               {l(courseTitle(course))} ·{' '}
               {t('app.homeTodayWeek', { week: node.week, day: node.day })}

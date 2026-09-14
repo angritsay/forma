@@ -1,61 +1,120 @@
 /**
- * Courses catalogue: every course as a card — owned ones continue into the path, locked ones
- * link to the landing course page where access is bought.
+ * Programmes (the second tab): one full-height card per thing there is to be in, swiped sideways.
+ *
+ * It used to be a catalogue — a page title, a lead, and five tiles in a grid, each with its own
+ * heading, kicker, tagline and row of facts. That is a shop, and this is not a shop: there is one
+ * course to walk («Форма с нуля»), a game running beside it, and the rest is what has not been
+ * bought yet. A grid of five 320px tiles says "compare these"; a deck says "this is the one, and
+ * there is another behind it".
+ *
+ * So the deck that used to open the home screen lives here (`features/programs/ProgramDeck`), with
+ * the game as a card of its own, and Home keeps only today. The kicker on each card says which
+ * kind it is — «Курс» or «Игра» — and everything else is the picture, the name, one line and the
+ * button.
  */
+import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
-import { PageTitle } from '@/components/ui/PageTitle';
+import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useT } from '@/app/hooks/useT';
-import { CourseTile } from '@/app/features/courses/CourseTile';
-import { courseProgress } from '@/app/features/path/nodeState';
+import { buildDeck } from '@/app/features/programs/deck';
+import { ProgramDeck } from '@/app/features/programs/ProgramDeck';
+import { gameAccess } from '@/app/features/marathon/gameAccess';
+import { useMarathonDay, useMyMarathons } from '@/app/features/marathon/useMarathon';
 import { useCatalogue } from '@/app/store/catalogue';
-import { useProgress, useProgressLoader } from '@/app/store/progress';
+import { useActiveCourseId, useProgress, useProgressLoader } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
+import { GAME_REQUIRES_SUBSCRIPTION } from '@content/site/plans';
+
+function DeckSkeleton() {
+  return (
+    <div className="flex flex-col" aria-hidden="true">
+      <Skeleton rounded="control" className="-mx-6 h-[78dvh] min-h-[520px] lg:-mx-10" />
+      <div className="mt-4 flex justify-center gap-2">
+        <Skeleton rounded="control" className="h-0.5 w-7" />
+        <Skeleton rounded="control" className="h-0.5 w-7" />
+      </div>
+    </div>
+  );
+}
 
 export default function CoursesScreen() {
   useProgressLoader();
   const { t } = useT();
   const navigate = useNavigate();
   const entitlements = useSession((s) => s.entitlements);
+  const subscription = useSession((s) => s.subscription);
+  const newestPurchaseAt = useSession((s) => s.newestPurchaseAt);
   const status = useProgress((s) => s.status);
   const courseStates = useProgress((s) => s.courseStates);
-
+  const activeCourseId = useActiveCourseId();
   const courses = useCatalogue((s) => s.courses);
-  const owned = courses.filter((c) => entitlements.includes(c.id));
-  const locked = courses.filter((c) => !entitlements.includes(c.id));
-  // Without the course states an owned, half-finished course would read "Start the course".
-  const pending = status === 'idle' || status === 'loading';
+  // A game that fails to load leaves the deck to the courses; it never blocks the tab.
+  const { data: marathons, marathon } = useMyMarathons();
+  const { data: todayTasks } = useMarathonDay(marathon, marathon?.dayIndex ?? 0);
+
+  const entries = useMemo(
+    () => buildDeck({ courses, entitlements, states: courseStates, marathons, activeCourseId }),
+    [courses, entitlements, courseStates, marathons, activeCourseId],
+  );
+
+  const access = gameAccess({
+    subscriptionLive: subscription?.isLive === true,
+    newestPurchaseAt,
+    now: Date.now(),
+    gated: GAME_REQUIRES_SUBSCRIPTION,
+  });
+
+  /* Today's open tasks, for the game card's one line: a rank moves nobody, an unfinished task does. */
+  const openTasks = useMemo(() => {
+    if (!marathon || todayTasks.length === 0) return undefined;
+    const left = todayTasks.filter((item) => item.task.rule !== 'none' && !item.mine).length;
+    return { [marathon.id]: left };
+  }, [marathon, todayTasks]);
+
+  const refresh = useCallback(async () => {
+    await Promise.allSettled([
+      useProgress.getState().refresh(),
+      useSession.getState().refreshEntitlements(),
+    ]);
+  }, []);
+
+  if (status === 'idle' || status === 'loading') {
+    return (
+      <Screen>
+        <DeckSkeleton />
+      </Screen>
+    );
+  }
+
+  if (entries.length === 0) {
+    return (
+      <Screen>
+        <EmptyState
+          title={t('app.homeTodayNoCourseTitle')}
+          description={t('app.homeTodayNoCourseBody')}
+          action={
+            <Button size="lg" onClick={() => void refresh()}>
+              {t('common.retry')}
+            </Button>
+          }
+        />
+      </Screen>
+    );
+  }
 
   return (
     <Screen>
-      <div className="flex flex-col gap-6 py-5">
-        <PageTitle display title={t('app.coursesTitle')} subtitle={t('app.coursesLead')} />
-        {/*
-          Owned courses come first and the numerals follow that order rather than the content's,
-          because the number is a position in this list. Two columns from `lg`: five courses in
-          one column on a desktop is a lot of scrolling for a catalogue whose whole job is
-          comparison.
-        */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
-          {pending
-            ? courses.map((course) => <Skeleton key={course.id} rounded="card" className="h-80" />)
-            : [...owned, ...locked].map((course, i) => {
-                const isOwned = entitlements.includes(course.id);
-                const state = courseStates[course.id];
-                return (
-                  <CourseTile
-                    key={course.id}
-                    course={course}
-                    owned={isOwned}
-                    n={i + 1}
-                    progress={state ? courseProgress(course.nodes, state) : null}
-                    onOpen={() => navigate(`/courses/${course.id}`)}
-                  />
-                );
-              })}
-        </div>
-      </div>
+      <ProgramDeck
+        entries={entries}
+        openTasks={openTasks}
+        gameAccess={access}
+        onOpenCourse={(courseId) => navigate(`/courses/${courseId}`)}
+        onStartNode={(courseId, nodeId) => navigate(`/courses/${courseId}/nodes/${nodeId}`)}
+        onOpenMarathon={() => navigate('/marathon')}
+      />
     </Screen>
   );
 }

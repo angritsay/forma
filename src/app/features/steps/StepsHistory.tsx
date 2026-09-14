@@ -2,7 +2,7 @@ import { clsx } from 'clsx';
 import { Glyph } from '@/components/ui/Icon';
 import { ListRow } from '@/components/ui/ListRow';
 import { formatDate, formatNumber } from '@/i18n/index';
-import { weekdayLabel } from '@/app/features/home/StatsGrid';
+import { weekdayLabel } from '@/lib/util/dates';
 import { useT } from '@/app/hooks/useT';
 import type { HistoryDay } from './model';
 

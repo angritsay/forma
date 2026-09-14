@@ -20,10 +20,11 @@ export interface PageTitleProps {
 }
 
 /*
- * The display steps of the type scale (global.css): 20 / 24 / 28px. Unbounded in capitals is
- * wide, so these are deliberately modest — shorten the headline rather than shrink the type.
+ * The display steps of the type scale (global.css): 18 / 20 / 24px. Unbounded in capitals is wide
+ * and dense — a Russian heading in caps at 28px fills a 390px screen on its own, and the screen
+ * around it then has nowhere to breathe. Shorten the headline rather than grow the type back.
  */
-const SIZE = { md: 'text-3xl', lg: 'text-4xl', xl: 'text-5xl' } as const;
+const SIZE = { md: 'text-2xl', lg: 'text-3xl', xl: 'text-4xl' } as const;
 
 /** Heading for the top of a screen: optional kicker, the title in the display face, optional subtitle. */
 export function PageTitle({
@@ -39,7 +40,7 @@ export function PageTitle({
   return (
     <div
       className={clsx(
-        'flex flex-col gap-2',
+        'flex flex-col gap-3',
         align === 'center' && 'items-center text-center',
         className,
       )}
@@ -48,7 +49,9 @@ export function PageTitle({
       <Tag className={clsx(display ? 'display' : 'font-display', 'text-balance', SIZE[size])}>
         {title}
       </Tag>
-      {subtitle ? <p className="max-w-[40ch] text-[15px] text-muted">{subtitle}</p> : null}
+      {subtitle ? (
+        <p className="max-w-[40ch] text-[15px] leading-relaxed text-muted">{subtitle}</p>
+      ) : null}
     </div>
   );
 }
