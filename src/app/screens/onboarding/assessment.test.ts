@@ -19,6 +19,23 @@ describe('onboarding assessment', () => {
     }
   });
 
+  /*
+   * The alternative has to be a real movement with a real clip, because it is shown in place of
+   * the named one. Ticking «с колен» used to change only how the number was scored, leaving the
+   * full push-up playing over the words «с колен» — the app demonstrating one thing and asking
+   * for another, in the minute that sets the next eight weeks.
+   */
+  it('shows a real, filmed movement when an easier variant is offered', () => {
+    for (const move of ASSESSMENT_MOVES) {
+      if (!move.kneeExerciseId) continue;
+      const alt = EXERCISE_BY_ID.get(move.kneeExerciseId);
+      expect(alt, `unknown alternative: ${move.kneeExerciseId}`).toBeDefined();
+      expect(alt!.id).not.toBe(move.exerciseId);
+      // Every new user runs this, so an unfilmed alternative is a blank screen for all of them.
+      expect(alt!.video, `${move.kneeExerciseId} has no clip`).toBeTruthy();
+    }
+  });
+
   it('measures every movement, and each one exactly once', () => {
     const ids = ASSESSMENT_MOVES.map((m) => m.exerciseId);
     expect(new Set(ids).size).toBe(ids.length);
