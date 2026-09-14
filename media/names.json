@@ -1,0 +1,85 @@
+[
+  { "file": "Классические приседания", "exerciseId": "air_squat" },
+  { "file": "Классические отжимания", "exerciseId": "push_up" },
+  { "file": "Отжимания с колен", "exerciseId": "knee_push_up" },
+  { "file": "Обратные отжимания легкий вариант", "exerciseId": "chair_dip" },
+  {
+    "file": "Обратные отжимания сложный вариант",
+    "exerciseId": "",
+    "note": "harder take of chair_dip — one clip per exercise, so this is the alternate"
+  },
+  { "file": "Выпады назад", "exerciseId": "reverse_lunge" },
+  { "file": "Зашагивания на поверхность", "exerciseId": "step_up" },
+  { "file": "Ягодичный мост", "exerciseId": "glute_bridge" },
+  { "file": "Разгибание в приседе", "exerciseId": "squat_to_stand" },
+  { "file": "Ситап ", "exerciseId": "sit_up" },
+  { "file": "Мертвый жук ", "exerciseId": "dead_bug" },
+  { "file": "Русский твист", "exerciseId": "russian_twist" },
+  { "file": "Скалолаз", "exerciseId": "mountain_climber" },
+
+  { "file": "Корова кошка", "exerciseId": "cat_cow" },
+  { "file": "Поза ребенка ", "exerciseId": "child_pose" },
+  { "file": "Растяжка задней поверхности бедра", "exerciseId": "hamstring_stretch" },
+  { "file": "Растяжка передней поверхности бедра правая ", "exerciseId": "quad_stretch" },
+  {
+    "file": "Растяжка передней поверхности бедра левая ",
+    "exerciseId": "",
+    "note": "other side of quad_stretch"
+  },
+
+  { "file": "Вращение головой", "exerciseId": "neck_circles" },
+  { "file": "Вращение головой влево", "exerciseId": "", "note": "other direction of neck_circles" },
+  { "file": "Вращение руками вперед", "exerciseId": "arm_circles" },
+  { "file": "Вращение назад", "exerciseId": "", "note": "other direction of arm_circles" },
+  {
+    "file": "Вращение левой рукой",
+    "exerciseId": "",
+    "note": "one arm — alternate of arm_circles"
+  },
+  {
+    "file": "Вращение правой рукой",
+    "exerciseId": "",
+    "note": "one arm — alternate of arm_circles"
+  },
+  { "file": "Вращение в кистях", "exerciseId": "elbow_wrist_circles" },
+  { "file": "Наклоны через сторону", "exerciseId": "side_bend" },
+  { "file": "Вращение в тзб суставе", "exerciseId": "hip_circles" },
+  {
+    "file": "Вращение бедра правое",
+    "exerciseId": "",
+    "note": "one side — alternate of hip_circles"
+  },
+  {
+    "file": "Вращение бедра левое",
+    "exerciseId": "",
+    "note": "one side — alternate of hip_circles"
+  },
+  { "file": "Отведение ноги правая", "exerciseId": "leg_swing" },
+  { "file": "Отведение ноги левая ", "exerciseId": "", "note": "other side of leg_swing" },
+  { "file": "Сгибание разгибание колена", "exerciseId": "knee_circles" },
+  { "file": "Перекат с носка на пятку ", "exerciseId": "ankle_circles" },
+
+  {
+    "file": "Наклоны головой",
+    "exerciseId": "",
+    "note": "NEW — neck tilts; the library has only neck_circles"
+  },
+  {
+    "file": "Круговые движения плечом",
+    "exerciseId": "",
+    "note": "NEW — shoulder circles; the library has only arm_circles"
+  },
+  {
+    "file": "Вращение руками на координацию",
+    "exerciseId": "",
+    "note": "NEW — one arm forward, one back"
+  },
+  { "file": "Пронация и супинация плеча", "exerciseId": "", "note": "NEW — shoulder rotation" },
+  { "file": "Наклоны вперед ", "exerciseId": "", "note": "NEW — standing forward fold" },
+  { "file": "Мельница ", "exerciseId": "", "note": "NEW — windmill" },
+  { "file": "Голубь на правую ногу", "exerciseId": "", "note": "NEW — pigeon pose" },
+  { "file": "Голубь на левую ногу", "exerciseId": "", "note": "NEW — pigeon pose, other side" },
+  { "file": "Касание пяточки", "exerciseId": "", "note": "NEW — heel touches, a core movement" },
+  { "file": "Сгибание на бицепс", "exerciseId": "", "note": "NEW — biceps curl, needs a weight" },
+  { "file": "Подьемы на носок", "exerciseId": "", "note": "NEW — calf raise" }
+]
