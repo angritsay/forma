@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_COPY, replyFor, sendMessageBody } from './update';
+import { DEFAULT_COPY, replyFor, sendMessageBody } from './index';
 
 const privateMessage = (text: string) => ({
   message: { chat: { id: 42, type: 'private' }, text },
