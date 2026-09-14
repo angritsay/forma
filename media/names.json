@@ -172,13 +172,13 @@
   },
   {
     "file": "Голубь на правую ногу",
-    "exerciseId": "",
-    "note": "NEW — pigeon pose"
+    "exerciseId": "hip_flexor_stretch",
+    "note": "the coach's pigeon is the hip flexor stretch of the cool-down"
   },
   {
     "file": "Голубь на левую ногу",
     "exerciseId": "",
-    "note": "NEW — pigeon pose, other side"
+    "note": "other side of hip_flexor_stretch"
   },
   {
     "file": "Касание пяточки",

@@ -1108,47 +1108,61 @@ export const EXERCISES_B: ExerciseInput[] = [
   {
     id: 'hip_flexor_stretch',
     slug: { ru: 'rastyazhka-sgibateley-bedra', en: 'hip-flexor-stretch' },
+    // The coach films and calls this «голубь», and the movement on the clip is the pigeon, not the
+    // kneeling lunge this entry used to describe. The name stays — it is what the cool-down of
+    // every course lists, and the slug is a live URL — but the technique is the technique on the
+    // video: the front shin across, the back leg long, and the stretch in the back hip.
     name: { ru: 'Растяжка сгибателей бедра', en: 'Hip flexor stretch' },
     shortName: { ru: 'Сгибатели бедра', en: 'Hip flexor stretch' },
     description: {
-      ru: 'Растяжка сгибателей бедра в выпаде на колене раскрывает переднюю поверхность бедра и подвздошно-поясничную мышцу — они укорачиваются от сидения и от бега, скалолаза и подъёмов ног. Свободные сгибатели бедра — это ровная поясница в приседе и полное разгибание таза в тягах и прыжках. Делай в заминке на каждую сторону; время в задании указано на одну сторону.',
-      en: 'The kneeling hip flexor stretch opens the front of the hip and the iliopsoas — muscles that shorten from sitting and from running, mountain climbers and leg raises. Free hip flexors mean a neutral lower back in the squat and full hip extension in hinges and jumps. Do it in the cool-down on each side; the time in the workout is per side.',
+      ru: 'Поза голубя раскрывает таз сразу с двух сторон: заднюю ногу тянет по передней поверхности бедра и подвздошно-поясничной, переднюю — по ягодичной и грушевидной. Эти мышцы укорачиваются от сидения и от бега, скалолаза и подъёмов ног, а свободный таз — это ровная поясница в приседе и полное разгибание в тягах и прыжках. Делай в заминке на каждую сторону; время в задании указано на одну сторону.',
+      en: 'The pigeon opens the hip from both sides at once: the back leg is stretched across the front of the hip and the iliopsoas, the front leg across the glute and piriformis. These shorten from sitting and from running, mountain climbers and leg raises, and a free hip means a neutral lower back in the squat and full extension in hinges and jumps. Do it in the cool-down on each side; the time in the workout is per side.',
     },
     howTo: [
       {
-        ru: 'Встань на правое колено, левую стопу поставь впереди так, чтобы левое колено было над пяткой. Под колено можно подложить коврик или полотенце.',
-        en: 'Kneel on your right knee with your left foot in front so the left knee is over the heel. Put a mat or a folded towel under the knee if you like.',
+        ru: 'Из упора на четвереньках занеси правое колено вперёд к правой кисти, а голень положи поперёд под корпусом — чем ближе голень к параллели с краем коврика, тем сильнее тянет.',
+        en: 'From all fours bring your right knee forward to your right hand and lay the shin across under your body — the closer the shin is to parallel with the edge of the mat, the stronger the stretch.',
       },
       {
-        ru: 'Сожми правую ягодицу и подкрути таз (копчик вниз) — растяжение должно появиться в передней части правого бедра.',
-        en: 'Squeeze your right glute and tuck the pelvis (tailbone down) — you should feel the stretch at the front of the right hip.',
+        ru: 'Левую ногу вытяни прямо назад, колено и подъём стопы на полу, бедро смотрит в пол — не заваливайся на левый бок.',
+        en: 'Extend your left leg straight back, knee and instep on the floor, the thigh facing down — do not let yourself roll onto the left side.',
       },
       {
-        ru: 'Мягко подай таз вперёд, не прогибая поясницу; корпус вертикальный, при желании подними правую руку вверх.',
-        en: 'Gently shift your hips forward without arching the lower back; keep the trunk upright and, if you like, reach the right arm overhead.',
+        ru: 'Выровняй таз: обе тазовые кости смотрят вперёд. Если правая ягодица висит в воздухе — подложи под неё подушку или сложенное полотенце.',
+        en: 'Square the hips: both hip bones facing forward. If your right glute hangs in the air, put a cushion or a folded towel under it.',
       },
       {
-        ru: 'Держи заданное время, спокойно дыша, затем поменяй сторону.',
-        en: 'Hold for the prescribed time, breathing calmly, then switch sides.',
+        ru: 'Останься на прямых руках или опустись на предплечья и держи заданное время, спокойно дыша, затем поменяй сторону.',
+        en: 'Stay on straight arms or come down onto your forearms, hold for the prescribed time breathing calmly, then switch sides.',
       },
     ],
     cues: [
-      { ru: 'Таз подкручен', en: 'Tuck the pelvis' },
-      { ru: 'Ягодица сжата', en: 'Squeeze the back glute' },
-      { ru: 'Корпус вертикально', en: 'Stay upright' },
+      {
+        ru: 'Задняя нога прямо назад, бедро в пол',
+        en: 'Back leg straight behind, thigh facing down',
+      },
+      { ru: 'Таз ровно, обе кости вперёд', en: 'Hips square, both hip bones forward' },
+      { ru: 'Есть опора под ягодицей, если висит', en: 'Support under the glute if it hangs' },
     ],
     mistakes: [
       {
-        ru: 'Прогиб в пояснице вместо растяжения бедра',
-        en: 'Arching the lower back instead of stretching the hip',
+        ru: 'Завал на бок — тянется бок, а не бедро',
+        en: 'Rolling onto one side, so the side stretches instead of the hip',
       },
-      { ru: 'Переднее колено уходит далеко за носок', en: 'Front knee pushed far past the toes' },
+      {
+        ru: 'Заднее колено уходит в сторону, а не назад',
+        en: 'The back knee drifting out to the side instead of straight behind',
+      },
+      {
+        ru: 'Боль в переднем колене — голень занесена слишком круто',
+        en: 'Pain in the front knee: the shin is turned in too sharply',
+      },
     ],
     breathing: {
       ru: 'Медленный вдох, длинный выдох — с каждым выдохом чуть глубже.',
       en: 'Slow inhale, long exhale — sink a little deeper with each exhale.',
     },
-    muscles: ['hip_flexors', 'quads'],
+    muscles: ['hip_flexors', 'quads', 'glutes'],
     pattern: 'mobility',
     equipment: ['none'],
     level: 1,
