@@ -4,6 +4,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@200;400;600;800&family=Onest:wght@400;500;600;700&display=swap">
 <style>
 :root{
+  --accent:#ffffff;   /* what this screen is about; set per screen */
   --bg:#0f0f11; --surface:#17171a; --surface-2:#1f1f24; --surface-3:#2a2a30;
   --border:rgba(255,255,255,.10); --border-strong:rgba(255,255,255,.18);
   --text:#f6f6f7; --muted:#b9b9c0; --muted-2:#93939d;
@@ -70,7 +71,7 @@ button:active{transform:scale(.97)}
   color:var(--muted-2);margin:18px 0 6px}
 .index a{display:block;padding:5px 0;font-size:13px;color:var(--muted);text-decoration:none}
 .index a:hover{color:var(--text)}
-.index a[aria-current]{color:var(--course);font-weight:600}
+.index a[aria-current]{color:var(--text);font-weight:600}
 .pick{position:fixed;left:0;right:0;bottom:0;z-index:90;height:30px;display:flex;align-items:center;
   justify-content:center;gap:8px;background:#000;color:var(--muted-2);font-size:10px;font-weight:700;
   letter-spacing:.18em;text-transform:uppercase}
@@ -93,7 +94,7 @@ button:active{transform:scale(.97)}
 .tabs button{flex:1;min-height:58px;display:flex;flex-direction:column;align-items:center;
   justify-content:center;gap:5px;position:relative;color:var(--muted-2)}
 .tabs button[aria-current]{color:var(--text)}
-.tabs .dot{position:absolute;top:8px;width:5px;height:5px;border-radius:50%;background:var(--course);
+.tabs .dot{position:absolute;top:8px;width:5px;height:5px;border-radius:50%;background:var(--accent);
   opacity:0;transform:scale(.4);transition:all .3s var(--spring)}
 .tabs button[aria-current] .dot{opacity:1;transform:scale(1)}
 .tabs .lbl{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
@@ -112,7 +113,7 @@ button:active{transform:scale(.97)}
   border:1px solid var(--border-strong);font-size:12px;font-weight:600;letter-spacing:.04em;
   white-space:nowrap;border-radius:999px}
 .chip.solid{background:var(--paper);color:var(--ink);border-color:var(--paper)}
-.chip.course{background:var(--course);color:var(--on-course);border-color:var(--course)}
+.chip.course{background:var(--accent);color:var(--on-course);border-color:var(--accent)}
 
 /* ── photography, the emotional surface ──────────────────────────────────── */
 .photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
@@ -128,7 +129,7 @@ button:active{transform:scale(.97)}
 .ring svg{transform:rotate(-90deg)}
 .ring circle{fill:none;stroke-linecap:butt}
 .ring .trk{stroke:rgba(255,255,255,.14)}
-.ring .val{stroke:var(--course);transition:stroke-dashoffset 1.1s var(--ease)}
+.ring .val{stroke:var(--accent);transition:stroke-dashoffset 1.1s var(--ease)}
 .ring .mid{position:absolute;display:flex;flex-direction:column;align-items:center;line-height:1}
 .halo{position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--paper);
   animation:halo 2.4s var(--ease) infinite}
@@ -171,7 +172,7 @@ button:active{transform:scale(.97)}
 .pager{display:flex;justify-content:center;gap:7px;padding-top:16px}
 .pager i{display:block;width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.22);
   transition:all .3s var(--spring)}
-.pager i[data-on]{background:var(--course);transform:scale(1.35)}
+.pager i[data-on]{background:var(--accent);transform:scale(1.35)}
 .deck{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
 .deck::-webkit-scrollbar{display:none}
 .deck>div{flex:none;width:100%;scroll-snap-align:center}
@@ -189,14 +190,14 @@ button:active{transform:scale(.97)}
 .rows .h{display:block;margin-top:3px;font-size:13px;color:var(--muted-2)}
 
 /* ── path ────────────────────────────────────────────────────────────────── */
-.pathhead{background:var(--course);color:var(--on-course);padding:20px 24px 26px}
+.pathhead{background:var(--accent);color:var(--on-course);padding:20px 24px 26px}
 .figs{display:flex;border-bottom:1px solid var(--border)}
 .figs>*{flex:1;padding:20px 12px 20px 24px;border-left:1px solid var(--border);display:flex;
   flex-direction:column;gap:8px;text-align:left}
 .figs>*:first-child{border-left:0}
 .figs .v{font-family:var(--font-display);font-weight:600;font-size:26px;
   font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.weekband{background:var(--course);color:var(--on-course);display:flex;align-items:baseline;
+.weekband{background:var(--accent);color:var(--on-course);display:flex;align-items:baseline;
   justify-content:space-between;padding:11px 24px;margin:0 -24px}
 .stops{position:relative;display:flex;flex-direction:column;gap:20px;margin-top:24px}
 .stop{display:grid;grid-template-columns:repeat(4,1fr);align-items:center;gap:12px}
@@ -207,7 +208,7 @@ button:active{transform:scale(.97)}
 .stop[data-s=open] .tile{border-color:var(--border-strong);color:var(--text);opacity:1}
 .stop[data-s=current] .tile{border-color:var(--paper);background:var(--paper);color:var(--ink);
   opacity:1;font-size:22px}
-.stop[data-s=done] .tile{background:var(--course);border-color:var(--course);color:var(--on-course);
+.stop[data-s=done] .tile{background:var(--accent);border-color:var(--accent);color:var(--on-course);
   opacity:1}
 .stop .name{font-size:15px;font-weight:600;line-height:1.3}
 .stop .meta{display:block;margin-top:5px;font-size:12.5px;color:var(--muted-2);line-height:1.35}
@@ -239,7 +240,7 @@ button:active{transform:scale(.97)}
 .phead{position:absolute;inset:0 0 auto;z-index:3;
   background:linear-gradient(180deg,rgba(15,15,17,.6),rgba(15,15,17,.15) 65%,transparent)}
 .prog{height:3px;background:rgba(255,255,255,.14)}
-.prog i{display:block;height:100%;background:var(--course);transition:width .6s var(--ease)}
+.prog i{display:block;height:100%;background:var(--accent);transition:width .6s var(--ease)}
 .prow{display:flex;align-items:center;height:58px;padding:0 14px}
 .iconbtn{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
   background:rgba(15,15,17,.5);border:1px solid rgba(255,255,255,.25);color:#fff;
@@ -248,6 +249,7 @@ button:active{transform:scale(.97)}
 .pcenter[data-ink] .eyebrow{color:rgba(15,15,17,.6)!important}
 .pcenter[data-ink] .ring .trk{stroke:rgba(15,15,17,.18)}
 .pcenter[data-ink] .ring .val{stroke:var(--ink)!important}
+.pcenter[data-ink] .display{color:var(--on-course)}
 .pcenter{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;
   justify-content:center;gap:22px;padding:0 24px;text-align:center;pointer-events:none}
 .pbottom{position:absolute;inset:auto 0 0;z-index:3;padding:0 24px 30px;display:flex;
@@ -274,7 +276,7 @@ button:active{transform:scale(.97)}
 .howto{padding:22px 24px 34px;margin:0;list-style:none}
 .howto li{display:flex;gap:16px;padding:15px 0;border-top:1px solid var(--border);font-size:15px;
   line-height:1.5}
-.howto li b{font-family:var(--font-display);font-weight:600;color:var(--course);flex:none}
+.howto li b{font-family:var(--font-display);font-weight:600;color:var(--accent);flex:none}
 
 /* ── the celebration ─────────────────────────────────────────────────────── */
 .done{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;
@@ -297,7 +299,7 @@ button:active{transform:scale(.97)}
   font-family:var(--font-display);font-weight:600;font-size:14px;color:var(--muted-2);
   border:1px solid var(--border)}
 .board .r[data-top] .rk{color:var(--text);border-color:var(--border-strong)}
-.board .r[data-me] .rk{background:var(--course);color:var(--on-course);border-color:var(--course)}
+.board .r[data-me] .rk{background:var(--accent);color:var(--on-course);border-color:var(--accent)}
 .board .nm{flex:1;min-width:0;font-family:var(--font-display);font-weight:600;font-size:15px;
   text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .board .pt{font-family:var(--font-display);font-weight:600;font-variant-numeric:tabular-nums;
@@ -319,7 +321,7 @@ button:active{transform:scale(.97)}
 .week7{display:flex;gap:7px}
 .week7 i{flex:1;aspect-ratio:1;border-radius:50%;border:1px solid var(--border-strong);
   display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--muted-2)}
-.week7 i[data-on]{background:var(--course);border-color:var(--course);color:var(--on-course)}
+.week7 i[data-on]{background:var(--accent);border-color:var(--accent);color:var(--on-course)}
 .badges{display:flex;gap:14px;overflow-x:auto;scrollbar-width:none;margin:0 -24px;padding:0 24px 4px}
 .badges::-webkit-scrollbar{display:none}
 .badge{flex:none;width:104px;display:flex;flex-direction:column;align-items:center;gap:10px;
@@ -327,7 +329,7 @@ button:active{transform:scale(.97)}
 .badge .rr{width:84px;height:84px;border-radius:50%;border:2px solid var(--border);display:grid;
   place-items:center;font-family:var(--font-display);font-weight:600;font-size:24px;
   color:var(--muted-2)}
-.badge[data-on] .rr{border-color:var(--course);background:var(--course);color:var(--on-course)}
+.badge[data-on] .rr{border-color:var(--accent);background:var(--accent);color:var(--on-course)}
 .badge .bt{font-size:12px;line-height:1.3;color:var(--muted)}
 .badge[data-on] .bt{color:var(--text);font-weight:600}
 
@@ -543,7 +545,7 @@ S.path=()=>{
             ${s==='current'?'<span class="halo"></span>':''}</button>
           <div style="grid-column:${col>2?`1/${col}`:`${col+1}/5`};${col>2?'text-align:right':''}">
             <span class="name">${t}</span>
-            <span class="meta">${s==='current'?'<b style="color:var(--course)">Сегодня</b> · ':''}${m}</span></div>
+            <span class="meta">${s==='current'?'<b style="color:var(--on-course)">Сегодня</b> · ':''}${m}</span></div>
         </div>`).join('')}</div>
     </div></div>${tabbar('path')}</div>`;
 };
@@ -657,7 +659,7 @@ S['player-timer']=()=>{
         <span class="ring" style="width:200px;height:200px"><svg width="200" height="200" aria-hidden="true">
           <circle class="trk" cx="100" cy="100" r="${r}" stroke-width="7"/>
           <circle class="val" cx="100" cy="100" r="${r}" stroke-width="7" stroke-dasharray="${circ}"
-            stroke-dashoffset="${circ*0.37}" data-circ="${circ}" style="stroke:var(--course);transition:stroke-dashoffset 1s linear"/>
+            stroke-dashoffset="${circ*0.37}" data-circ="${circ}" style="stroke:var(--accent);transition:stroke-dashoffset 1s linear"/>
         </svg><span class="mid"><span class="num n-big" id="pclock">0:38</span>
           <span class="eyebrow" style="margin-top:8px;color:rgba(246,246,247,.6)">осталось</span></span></span>
       </div>`,
@@ -707,7 +709,7 @@ S.game=()=>`<div class="screen"><div class="scroll"><div class="pad" style="padd
   <header>
     <span class="eyebrow rise">Спринт формы</span>
     <div class="rise" style="--i:1;display:flex;align-items:center;gap:20px;margin-top:16px">
-      ${ring(92,5,0.13,'<span class="num" style="font-size:30px" data-count="4">0</span>','var(--game)')}
+      ${ring(92,5,0.13,'<span class="num" style="font-size:30px" data-count="4">0</span>')}
       <div><h1 class="display" style="font-size:30px;margin:0">День 4<br><span class="thin">из 30</span></h1></div>
     </div>
     <div class="muted rise" style="--i:2;display:flex;gap:16px;font-size:13.5px;margin-top:16px">
@@ -732,7 +734,7 @@ S.game=()=>`<div class="screen"><div class="scroll"><div class="pad" style="padd
   </section>
   <section class="rise" style="--i:4;border-top:1px solid var(--border);padding-top:22px">
     <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px">
-      <h2 class="eyebrow" style="margin:0">Эта неделя</h2>
+      <h2 class="eyebrow" style="margin:0">Кто впереди</h2>
       <span class="chip course" style="height:28px;font-size:11px">Приз: час с тренером</span></div>
     <div class="board">
       ${[['01','Ты и Марек','340',1,1],['02','Катя и Дима','305',1,0],['03','Лиза','280',1,0],
@@ -740,7 +742,7 @@ S.game=()=>`<div class="screen"><div class="scroll"><div class="pad" style="padd
         `<div class="r" ${top?'data-top':''} ${me?'data-me':''}><span class="rk">${r}</span>
            <span class="nm">${n}</span><span class="pt">${p}</span></div>`).join('')}
     </div>
-    <button class="btn ghost" style="justify-content:flex-start;margin-top:8px" data-toast="Полная таблица">Вся таблица →</button>
+    <button class="btn ghost" style="justify-content:flex-start;margin-top:8px" data-toast="Полная таблица">Вся таблица недели →</button>
   </section>
 </div></div>${tabbar('game')}</div>`;
 
@@ -758,7 +760,7 @@ S.you=()=>`<div class="screen"><div class="scroll">
   <div class="pad" style="padding:26px 24px 38px;display:flex;flex-direction:column;gap:30px">
     <section class="rise" style="display:flex;align-items:center;gap:18px">
       ${ring(64,4,1,'<span class="num" style="font-size:22px">2</span>')}
-      <div style="flex:1"><div class="eyebrow">Заморозки</div>
+      <div style="flex:1"><div class="eyebrow">Заморозка</div>
         <p class="muted" style="margin:7px 0 0;font-size:14px;line-height:1.45">
           Пропустишь день — серия не сгорит. Одна возвращается раз в неделю.</p></div>
     </section>
@@ -771,7 +773,7 @@ S.you=()=>`<div class="screen"><div class="scroll">
     </section>
     <section class="rise" style="--i:2;border-top:1px solid var(--border);padding-top:24px">
       <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px">
-        <h2 class="eyebrow" style="margin:0">Вехи</h2><span class="eyebrow">3 из 12</span></div>
+        <h2 class="eyebrow" style="margin:0">Взято</h2><span class="eyebrow">3 из 12</span></div>
       <div class="badges">
         ${[['01','Первый шаг',1],['02','Неделя',1],['03','Сотня',1],['04','Месяц',0],['05','Полсотни',0],['06','Марафонец',0]]
           .map(([n,t,on])=>`<div class="badge" ${on?'data-on':''}><span class="rr">${on?'✓':n}</span><span class="bt">${t}</span></div>`).join('')}
@@ -783,7 +785,7 @@ S.you=()=>`<div class="screen"><div class="scroll">
         .map(([r,n,p,top,me])=>`<div class="r" ${top?'data-top':''} ${me?'data-me':''}>
           <span class="rk">${r}</span><span class="nm">${n}</span><span class="pt">${p}</span></div>`).join('')}</div>
     </section>
-    <button class="btn ghost" style="justify-content:flex-start" data-toast="Графики, календарь и рекорды">Подробности →</button>
+    <button class="btn ghost" style="justify-content:flex-start" data-toast="Графики, календарь и рекорды">Остальные цифры →</button>
   </div></div>${tabbar('you')}</div>`;
 
 S.profile=()=>`<div class="screen"><div class="paper">
@@ -805,6 +807,8 @@ S.profile=()=>`<div class="screen"><div class="paper">
 function go(id){
   timers.forEach(t=>{clearInterval(t);clearTimeout(t)}); timers=[];
   if(!S[id]) id='home-game';
+  const ACCENT={"auth": "var(--paper)", "home-game": "var(--paper)", "home-nogame": "var(--paper)", "home-nocourse": "var(--paper)", "programs": "var(--paper)", "path": "var(--course)", "difficulty": "var(--course)", "player-warmup": "var(--course)", "player-timer": "var(--course)", "player-reps": "var(--course)", "player-back": "var(--course)", "done": "var(--course)", "game": "var(--game)", "you": "var(--paper)", "profile": "var(--paper)"};
+  $('#device').style.setProperty('--accent', ACCENT[id] || 'var(--paper)');
   $('#device').innerHTML=S[id]();
   document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
   document.querySelectorAll('[data-toast]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();toast(b.dataset.toast)}));
@@ -812,6 +816,8 @@ function go(id){
     a.dataset.id===id?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
   document.querySelectorAll('.diff .bar i').forEach(i=>requestAnimationFrame(()=>i.style.width=i.dataset.w+'%'));
   animate();
+  after(1300,()=>document.querySelectorAll('.rise,.pop,.sweep')
+    .forEach(el=>el.classList.remove('rise','pop','sweep')));
   $('#sheet').removeAttribute('data-open');
   const nm=$('#pickName');
   if(nm) for(const [,items] of SCREENS){const f=items.find(x=>x[0]===id); if(f) nm.textContent=f[1];}
