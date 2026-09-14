@@ -69,10 +69,20 @@ export function FortimeStep({
     else beep('round');
   };
 
-  useNextHandler(registerNext, () => {
-    if (phase === 'running') finish();
-    else onNext();
-  });
+  /*
+   * A swipe is navigation, not a claim that the work was done.
+   *
+   * This used to call `finish()` while the piece was still running, which records
+   * `completed: true` — so one swipe past a for-time block bought full credit for a block nobody
+   * had done, and a session swiped end to end came out at 100%. That number is not cosmetic: it
+   * sets the course scale, forces the next difficulty recommendation and pays the points.
+   *
+   * A set of reps keeps its old behaviour, because there the count is on screen and adjustable —
+   * swiping accepts a number the athlete can see. A for-time piece shows no number to accept, so
+   * finishing it stays on «Готово», where somebody says so deliberately. Swiping on now leaves
+   * the step unrecorded, which scores as not done — the honest reading of walking away from it.
+   */
+  useNextHandler(registerNext, onNext);
 
   const remaining = cap !== undefined ? cap - clock.elapsedSec : undefined;
 
