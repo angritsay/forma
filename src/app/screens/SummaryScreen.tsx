@@ -34,14 +34,27 @@ import {
   shareText,
   testResults,
 } from '@/app/features/player/summaryModel';
+import { nodeEarnsStars, starsEarned, starsForSession, workDone } from '@/lib/training/stars';
 import { useT } from '@/app/hooks/useT';
+
+/**
+ * Whether this day is graded at all: a test, a benchmark and a coach's own workout are not.
+ *
+ * A workout built by hand belongs to no course path, so `findCourse` answers nothing for it and
+ * the day quietly earns no stars — which is right: there is no node to come back to and better.
+ */
+function graded(courseId: string, nodeId: string): boolean {
+  const course = findCourse(courseId);
+  const node = course ? findNode(course, nodeId) : undefined;
+  return node !== undefined && nodeEarnsStars(node.kind);
+}
 import {
   useActiveWorkoutStore,
   type ActiveSession,
   type PlayerResult,
 } from '@/app/store/activeWorkout';
 import { useSession } from '@/app/store/session';
-import { findCourse } from '@/content/catalogue';
+import { findCourse, findNode } from '@/content/catalogue';
 import { isAppError } from '@/lib/api/errors';
 import { getSession } from '@/lib/api/sessions';
 import type { WorkoutSessionRow } from '@/lib/api/types';
@@ -124,6 +137,8 @@ interface SavedViewProps {
   adjustment?: SaveOutcome['adjustment'];
   unlocked?: AchievementStatus[];
   alreadySaved?: boolean;
+  /** Stars earned, or null on a day that earns none. */
+  stars?: number | null;
 }
 
 function SavedView({
@@ -135,6 +150,7 @@ function SavedView({
   adjustment,
   unlocked = [],
   alreadySaved,
+  stars,
 }: SavedViewProps) {
   const { t } = useT();
   const navigate = useNavigate();
@@ -168,6 +184,7 @@ function SavedView({
           durationSec={summary.durationSec}
           calories={summary.calories}
           completion={summary.completion}
+          stars={stars}
         />
         {adjustment ? <AdaptationCard adjustment={adjustment} /> : null}
         <AchievementList items={unlocked} />
@@ -236,6 +253,17 @@ function LocalSummary({
     [prescribed, steps, results, locale],
   );
   const benchmark = useMemo(() => benchmarkResult(steps, results), [steps, results]);
+  /*
+   * Stars for the session just finished. A day that earns none — a test, a benchmark, a workout
+   * the coach built by hand and so has no node — is null, and the plate simply does not draw them.
+   */
+  const stars = useMemo(
+    () =>
+      graded(session.courseId, session.nodeId)
+        ? starsEarned(prescribed.choice, workDone(prescribed, results))
+        : null,
+    [session.courseId, session.nodeId, prescribed, results],
+  );
 
   // Baseline for "what did this session unlock"; a failure only hides the achievements card.
   useEffect(() => {
@@ -355,6 +383,7 @@ function LocalSummary({
           durationSec={preview.durationSec}
           calories={preview.calories}
           completion={preview.completion}
+          stars={stars}
         />
         <BlockList blocks={blocks} />
         <TestResultList tests={tests} />
@@ -488,6 +517,7 @@ function RemoteSummary({ sessionId }: { sessionId: string }) {
       nodeName={names.node}
       courseId={row.courseId}
       alreadySaved
+      stars={graded(row.courseId, row.nodeId) ? starsForSession(row) : null}
     />
   );
 }
