@@ -30,7 +30,6 @@ import { TopBar } from '@/app/components/TopBar';
 import { CardBack } from '@/app/features/player/CardBack';
 import { FlipCard } from '@/app/features/player/FlipCard';
 import {
-  FlipHandle,
   PausedOverlay,
   PlayerFooter,
   PlayerHeader,
@@ -56,8 +55,8 @@ import { WorkRepsStep } from '@/app/features/player/steps/WorkRepsStep';
 import { WorkTimerStep } from '@/app/features/player/steps/WorkTimerStep';
 import { haptic, setClosingConfirmation } from '@/lib/telegram/webapp';
 import { warmupSkipIndex } from '@/lib/training/player';
+import { SkipRow } from '@/app/features/player/SkipRow';
 import { TapToPause } from '@/app/features/player/TapToPause';
-import { WarmupSkip } from '@/app/features/player/WarmupSkip';
 import { exerciseStillUrl } from '@/lib/api/storage';
 import { courseTileVars } from '@/lib/ui/tile';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
@@ -416,9 +415,9 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
    * so the way out of the warm-up has to be available the whole way through it rather than once,
    * at a gate, before anyone has seen what the warm-up is.
    *
-   * It is offered twice over: as a chip on the panel that fades after a few seconds (WarmupSkip),
-   * for the athlete who warmed up an hour ago and is deciding right now, and in the pause overlay
-   * for the whole warm-up, for whoever comes looking after the chip has gone.
+   * It is offered twice over: on the panel, in the quiet row with «Как делать» (SkipRow), and in
+   * the pause overlay. Neither fades — a control that has quietly gone is the app deciding it
+   * knows better than the person who warmed up an hour ago.
    */
   const skipWarmupTo = warmupSkipIndex(steps, prescribed);
   const inWarmup =
@@ -481,16 +480,25 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
                   />
                 </div>
               ) : null}
-              {inWarmup !== null ? (
-                <WarmupSkip
-                  onSkip={() => {
-                    setPaused(false);
-                    goTo(inWarmup);
-                  }}
-                />
-              ) : null}
               {step && step.kind !== 'done' ? (
-                <FlipHandle onFlip={() => setFlipped(true)} label={t('app.playerHowTo')} />
+                <SkipRow
+                  onSkipWarmup={
+                    inWarmup !== null
+                      ? () => {
+                          setPaused(false);
+                          goTo(inWarmup);
+                        }
+                      : null
+                  }
+                  /*
+                   * Every step but the last is skippable, the cool-down included — the owner asked
+                   * for that by name. `docs/COACH_RULES.md` says of the cool-down «Never skipped»;
+                   * this is her call over his rule, and it is recorded in the PR rather than
+                   * quietly resolved here.
+                   */
+                  onSkipStep={skipStep}
+                  onFlip={() => setFlipped(true)}
+                />
               ) : null}
             </PlayerFooter>
           </div>
