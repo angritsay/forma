@@ -72,9 +72,16 @@ if (!existsSync(namesPath)) {
  * The names are typed by hand on a phone, so they arrive with a trailing space, «ё» written as
  * «е», and a capital where the map has none. Matching on a normalised key rather than the literal
  * string is what keeps a re-shoot named «Ягодичный мост .mov» from being reported as unknown.
+ *
+ * NFC FIRST, AND THAT IS THE WHOLE TRICK. macOS hands filenames over decomposed: «й» arrives as
+ * «и» plus a combining breve, «ё» as «е» plus a diaeresis. The class below keeps only а-я, so the
+ * combining mark became a space and «головой» keyed as «головои » — which matches nothing. Every
+ * one of the thirteen clips this skipped on the owner's Mac had a «й» in its name, and none of the
+ * ones it matched did.
  */
 const key = (s) =>
   s
+    .normalize('NFC')
     .toLowerCase()
     .replace(/ё/g, 'е')
     .replace(/[^a-zа-я0-9]+/gi, ' ')
