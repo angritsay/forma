@@ -421,6 +421,9 @@ export const app = {
   playerStay: 'Keep going',
   playerPrevStep: 'Previous step',
   playerSkipStep: 'Skip this step',
+  // The star row is one image to a screen reader, never three separate marks.
+  pathStars: '{n} of 3 stars',
+  pathStarsNone: 'No stars yet',
   playerRestartStep: 'Restart this step',
   playerEndWorkout: 'End workout',
   playerEndTitle: 'End the workout now?',

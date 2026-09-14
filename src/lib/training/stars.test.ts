@@ -67,39 +67,32 @@ function allDoneExcept(blockId: string, choice: DifficultyChoice = 'normal'): Ex
   return allDone(choice).filter((r) => r.blockId !== blockId);
 }
 
-const blocks = SESSION.blocks.map((b) => ({ id: b.id, type: b.type }));
-
 describe('what fills a star', () => {
   it('is the main work, and nothing else', () => {
-    const steps = stepsOf();
-    expect(workDone(steps, allDone(), blocks)).toBe(1);
+    expect(workDone(prescribed(), allDone())).toBe(1);
   });
 
   it('is untouched by skipping the warm-up or the cool-down', () => {
     // The point of the whole design: preparation is free to skip, the work is not. On a real
     // beginner session those two blocks are most of the clock, so counting them would make the
     // skip controls a trap.
-    const steps = stepsOf();
-    expect(workDone(steps, allDoneExcept('wu'), blocks)).toBe(1);
-    expect(workDone(steps, allDoneExcept('cd'), blocks)).toBe(1);
+    expect(workDone(prescribed(), allDoneExcept('wu'))).toBe(1);
+    expect(workDone(prescribed(), allDoneExcept('cd'))).toBe(1);
     expect(
       workDone(
-        steps,
+        prescribed(),
         allDone().filter((r) => r.blockId === 'main'),
-        blocks,
       ),
     ).toBe(1);
   });
 
   it('falls when the main work is skipped', () => {
-    const steps = stepsOf();
-    expect(workDone(steps, allDoneExcept('main'), blocks)).toBe(0);
+    expect(workDone(prescribed(), allDoneExcept('main'))).toBe(0);
   });
 
   it('is a share when only some of the main work was done', () => {
-    const steps = stepsOf();
     const half = allDone().filter((r, i) => r.blockId !== 'main' || i % 2 === 0);
-    const w = workDone(steps, half, blocks);
+    const w = workDone(prescribed(), half);
     expect(w).toBeGreaterThan(0);
     expect(w).toBeLessThan(1);
   });
@@ -110,7 +103,7 @@ describe('what fills a star', () => {
     const steps = stepsOf();
     const results = allDoneExcept('wu');
     expect(computeCompletion(steps, results)).toBeLessThan(1);
-    expect(workDone(steps, results, blocks)).toBe(1);
+    expect(workDone(prescribed(), results)).toBe(1);
   });
 });
 

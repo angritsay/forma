@@ -18,6 +18,8 @@ import { PATH_COLUMNS, PathNode } from './PathNode';
 export interface PathViewProps {
   course: Course;
   state: PathState | null | undefined;
+  /** Best stars per node id, from `starsByNode`; absent while the sessions are still loading. */
+  stars?: Readonly<Record<string, number>>;
   onNodePress: (node: CourseNode, index: number, status: NodeStatus) => void;
 }
 
@@ -34,7 +36,7 @@ export function pathColumn(index: number): number {
   return WAVE[((index % WAVE.length) + WAVE.length) % WAVE.length] ?? 1;
 }
 
-export function PathView({ course, state, onNodePress }: PathViewProps) {
+export function PathView({ course, state, stars, onNodePress }: PathViewProps) {
   const { t } = useT();
   const currentRef = useRef<HTMLButtonElement | null>(null);
 
@@ -85,6 +87,7 @@ export function PathView({ course, state, onNodePress }: PathViewProps) {
                     status={status}
                     n={index + 1}
                     column={pathColumn(index)}
+                    stars={stars?.[node.id]}
                     onPress={() => onNodePress(node, index, status)}
                     buttonRef={
                       status === 'current'

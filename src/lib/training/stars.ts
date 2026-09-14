@@ -24,9 +24,10 @@
  * exam; those nodes carry no stars at all.
  */
 import { blockSection } from '@/app/features/player/model';
-import type { Block, NodeKind } from '@/content/schema';
+import type { NodeKind } from '@/content/schema';
+import { buildPlayerSteps } from './player';
 import { stepCompletion, stepWeightSec } from './session';
-import type { DifficultyChoice, ExerciseResult, PlayerStep } from './types';
+import type { DifficultyChoice, ExerciseResult, PrescribedWorkout } from './types';
 import { clamp, num, round2 } from './util';
 
 /** Three, and the interface draws three whatever the choice put up. */
@@ -60,12 +61,12 @@ export function nodeEarnsStars(kind: NodeKind): boolean {
  * rather than pretend to a precision the session does not have.
  */
 export function workDone(
-  steps: readonly PlayerStep[],
+  prescribed: PrescribedWorkout,
   results: readonly ExerciseResult[],
-  blocks: readonly Pick<Block, 'id' | 'type'>[],
 ): number {
+  const steps = buildPlayerSteps(prescribed);
   const mainBlocks = new Set(
-    blocks.filter((b) => blockSection(b.type) === 'main').map((b) => b.id),
+    prescribed.blocks.filter((b) => blockSection(b.type) === 'main').map((b) => b.blockId),
   );
   const byIndex = new Map<number, ExerciseResult>();
   for (const r of results) byIndex.set(r.stepIndex, r);
@@ -92,6 +93,26 @@ export function workDone(
  */
 export function starsEarned(choice: DifficultyChoice, work: number): number {
   return round2(STARS_ON_OFFER[choice] * clamp(num(work), 0, 1));
+}
+
+/**
+ * What one finished session was worth, from the row the database already keeps.
+ *
+ * `prescribed` and `results` are both stored as jsonb on `workout_sessions`, so this needs no
+ * migration and no new column — the star is a second reading of rows that already exist, which
+ * also means it appears on sessions people did before it shipped.
+ *
+ * Null when the row cannot answer: an unfinished session, or one stored before the prescription
+ * was kept. A missing star is honest; a guessed one is not.
+ */
+export function starsForSession(row: {
+  difficulty?: DifficultyChoice | null;
+  prescribed?: PrescribedWorkout | null;
+  results?: ExerciseResult[] | null;
+  completedAt?: string | null;
+}): number | null {
+  if (!row.completedAt || !row.prescribed) return null;
+  return starsEarned(row.difficulty ?? 'normal', workDone(row.prescribed, row.results ?? []));
 }
 
 /** One attempt at a node, reduced to what a star is computed from. */

@@ -1,5 +1,6 @@
 import { clsx } from 'clsx';
 import { Glyph } from '@/components/ui/Icon';
+import { Stars } from '@/components/ui/Stars';
 import type { CourseNode } from '@/content/schema';
 import type { TKey } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
@@ -30,6 +31,8 @@ export interface PathNodeProps {
   n: number;
   /** Which of the four columns this stop stands in, 1..4. */
   column: number;
+  /** Best stars ever earned here, 0..3; undefined on a day that cannot earn any. */
+  stars?: number;
   onPress: () => void;
   buttonRef?: (el: HTMLButtonElement | null) => void;
 }
@@ -44,7 +47,7 @@ export interface PathNodeProps {
  * locked one is outlined and dimmed. No circles and no rounding: the stop is a square, like every
  * other object in the product.
  */
-export function PathNode({ node, status, n, column, onPress, buttonRef }: PathNodeProps) {
+export function PathNode({ node, status, n, column, stars, onPress, buttonRef }: PathNodeProps) {
   const { t, l } = useT();
   const title = l(node.title);
   const kindKey = KIND_LABEL[node.kind];
@@ -106,6 +109,19 @@ export function PathNode({ node, status, n, column, onPress, buttonRef }: PathNo
           >
             {meta}
           </span>
+        ) : null}
+        {/*
+         * Under the name, not on the tile: the tile is 64px and already carries the day's number
+         * or its tick, and three stars crammed into it would read as decoration on a control. A
+         * day nobody has done yet shows nothing — an empty row of three would promise a grade to
+         * somebody who has not sat down yet.
+         */}
+        {stars !== undefined && stars > 0 ? (
+          <Stars
+            value={stars}
+            className={clsx('mt-1', labelBefore && 'justify-end')}
+            label={t('app.pathStars', { n: Math.round(stars * 10) / 10 })}
+          />
         ) : null}
       </span>
     </li>
