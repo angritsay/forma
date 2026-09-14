@@ -653,8 +653,11 @@ every private message gets the same greeting with an inline button that launches
    repository, which is public — it is a Supabase secret and nothing else. If it is ever pasted
    somewhere it should not be, `/revoke` in BotFather issues a new one.
 2. **Deploy the function.** Dashboard → **Edge Functions** → **Deploy a new function** → name it
-   `telegram-bot`, paste `index.ts` and `update.ts`, and turn **Verify JWT** off (Telegram does not
-   carry one). With the CLI it is `supabase functions deploy telegram-bot --no-verify-jwt`.
+   `telegram-bot`, paste `index.ts`, and turn **Verify JWT** off (Telegram does not carry one). With
+   the CLI it is `supabase functions deploy telegram-bot --no-verify-jwt`. The function is one file
+   on purpose: the dashboard editor deploys what is pasted into it, and a second file that is easy
+   to forget fails the build with «Module not found». `deno bundle` reporting «Bundled 1 module» is
+   the proof there is nothing else to paste.
 3. **The secrets.** Dashboard → **Edge Functions** → **Secrets**, or the CLI:
 
    ```sh
@@ -665,7 +668,7 @@ every private message gets the same greeting with an inline button that launches
    ```
 
    `TELEGRAM_GREETING` and `TELEGRAM_BUTTON_TEXT` override the Russian copy baked into
-   `update.ts`; leave them unset to use it.
+   `index.ts`; leave them unset to use it.
 
 4. **Point Telegram at it**, once, by opening this URL in a browser:
 
