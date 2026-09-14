@@ -14,6 +14,7 @@ import { useT } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
 import { computeFitnessIndex } from '@/lib/training/assessment';
 import {
+  assessmentBenchmarks,
   clearDraft,
   draftToTrainingProfile,
   firstIncompleteStep,
@@ -24,9 +25,10 @@ import {
   STEP_IDS,
   type OnboardingDraft,
   type StepId,
-  type TestKey,
 } from './draft';
+import { recordBenchmark } from '@/lib/api/benchmarks';
 import { StepActivity } from './StepActivity';
+import { StepAssess } from './StepAssess';
 import { StepBasics } from './StepBasics';
 import { StepEquipment } from './StepEquipment';
 import { StepExperience } from './StepExperience';
@@ -34,17 +36,8 @@ import { StepGoal } from './StepGoal';
 import { StepLimitations } from './StepLimitations';
 import { StepName } from './StepName';
 import { StepResult } from './StepResult';
-import { StepTestPlank } from './StepTestPlank';
-import { StepTestPushups } from './StepTestPushups';
-import { StepTestSquats } from './StepTestSquats';
 import { StepTime } from './StepTime';
 import type { StepProps } from './types';
-
-const SKIPPABLE: Partial<Record<StepId, TestKey>> = {
-  testPushups: 'pushups',
-  testSquats: 'squats',
-  testPlank: 'plank',
-};
 
 const STEP_COMPONENT: Record<StepId, (props: StepProps) => React.ReactElement | null> = {
   name: StepName,
@@ -53,13 +46,19 @@ const STEP_COMPONENT: Record<StepId, (props: StepProps) => React.ReactElement | 
   experience: StepExperience,
   equipment: StepEquipment,
   limitations: StepLimitations,
-  testPushups: StepTestPushups,
-  testSquats: StepTestSquats,
-  testPlank: StepTestPlank,
+  assess: StepAssess,
   time: StepTime,
   goal: StepGoal,
   result: StepResult,
 };
+
+/**
+ * Steps that carry their own controls, so the shared footer stands down.
+ *
+ * The assessment's two answers are the step (see StepAssess); a «Продолжить» under them would be a
+ * third answer to a question that has two.
+ */
+const OWN_CONTROLS: ReadonlySet<StepId> = new Set<StepId>(['assess']);
 
 /**
  * Draft the wizard opens with: the persisted one, seeded with the profile's locale/name.
@@ -126,22 +125,6 @@ export default function OnboardingScreen() {
 
   const back = () => goTo(stepIndex - 1);
 
-  const skipTest = () => {
-    const key = SKIPPABLE[step];
-    if (!key) return;
-    const tests = { ...draft.tests };
-    if (key === 'pushups') tests.pushups = undefined;
-    if (key === 'squats') tests.squats60s = undefined;
-    if (key === 'plank') tests.plankSec = undefined;
-    setDraft((d) => ({
-      ...d,
-      tests,
-      skipped: { ...d.skipped, [key]: true },
-      step: Math.min(total - 1, d.step + 1),
-    }));
-    window.scrollTo({ top: 0 });
-  };
-
   const finish = async () => {
     const trainingProfile = draftToTrainingProfile(draft);
     const displayName = (draft.displayName ?? '').trim();
@@ -159,6 +142,17 @@ export default function OnboardingScreen() {
         fitnessLevel: assessment.level,
         onboardedAt,
       });
+      /*
+       * The two movements the fitness index does not read are personal records, so they are kept
+       * where records live rather than dropped: the same five movements are what a later
+       * assessment is compared against. A record that fails to save must not cost the profile that
+       * has already been written, so this is settled, not awaited-or-thrown.
+       */
+      await Promise.allSettled(
+        Object.entries(assessmentBenchmarks(draft)).map(([key, reps]) =>
+          recordBenchmark(key, reps, 'reps'),
+        ),
+      );
       clearDraft();
       navigate('/', { replace: true });
     } catch {
@@ -170,7 +164,7 @@ export default function OnboardingScreen() {
 
   const StepView = STEP_COMPONENT[step];
   const stepProps = useMemo<StepProps>(() => ({ draft, update, next }), [draft, update, next]);
-  const skipKey = SKIPPABLE[step];
+  const ownControls = OWN_CONTROLS.has(step);
 
   return (
     <Screen
@@ -203,33 +197,30 @@ export default function OnboardingScreen() {
         </div>
       }
       footer={
-        <div className="flex flex-col gap-2">
-          {isLast ? (
-            <Button
-              size="lg"
-              fullWidth
-              loading={saving}
-              disabled={!canContinue}
-              onClick={() => void finish()}
-            >
-              {t('app.onbResultStart')}
-            </Button>
-          ) : (
-            <Button size="lg" fullWidth disabled={!canContinue} onClick={next}>
-              {t('common.continue')}
-            </Button>
-          )}
-          {skipKey ? (
-            <Button variant="ghost" fullWidth onClick={skipTest}>
-              {t('app.onbTestSkip')}
-            </Button>
-          ) : null}
-          {stepIndex === 0 ? (
-            <Button variant="ghost" fullWidth onClick={() => void signOut()}>
-              {t('app.authSignOut')}
-            </Button>
-          ) : null}
-        </div>
+        ownControls ? undefined : (
+          <div className="flex flex-col gap-2">
+            {isLast ? (
+              <Button
+                size="lg"
+                fullWidth
+                loading={saving}
+                disabled={!canContinue}
+                onClick={() => void finish()}
+              >
+                {t('app.onbResultStart')}
+              </Button>
+            ) : (
+              <Button size="lg" fullWidth disabled={!canContinue} onClick={next}>
+                {t('common.continue')}
+              </Button>
+            )}
+            {stepIndex === 0 ? (
+              <Button variant="ghost" fullWidth onClick={() => void signOut()}>
+                {t('app.authSignOut')}
+              </Button>
+            ) : null}
+          </div>
+        )
       }
     >
       <div className="py-4">

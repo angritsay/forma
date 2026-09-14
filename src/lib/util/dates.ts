@@ -1,4 +1,19 @@
 /** Date helpers. "Local date" = YYYY-MM-DD in the user's timezone; used for streaks and steps. */
+import type { Locale } from '@/content/schema';
+
+/**
+ * Short weekday label ("Mon" / "пн") for a local date; noon avoids timezone drift.
+ *
+ * It used to live next to the home screen's week figures, which is where it was first needed. The
+ * figures moved to the reports tab and the helper stayed behind, imported by three charts out of a
+ * component nothing rendered any more — so it is here, with the rest of the date arithmetic.
+ */
+export function weekdayLabel(locale: Locale, isoDate: string): string {
+  const d = new Date(`${isoDate}T12:00:00`);
+  return new Intl.DateTimeFormat(locale === 'ru' ? 'ru-RU' : 'en-US', { weekday: 'short' })
+    .format(d)
+    .replace(/\.$/, '');
+}
 
 export function toLocalDateIso(d: Date = new Date()): string {
   const y = d.getFullYear();

@@ -1,16 +1,19 @@
 /**
- * The home screen's deck: everything the athlete is in, one card each, swiped sideways.
+ * The programmes: everything there is to be in, one full-height card each, swiped sideways.
  *
- * The home screen used to open on one photograph — today's session of the one course Home was
- * following — with the other courses and the marathon further down as ruled rows. That put the
- * three things a person might actually be doing at three different altitudes: a hero, a list item
- * and a strip. The deck makes them peers: a course is a card, a marathon is a card, a course that
- * has not been bought is a card, and moving between them is the gesture every phone has taught.
+ * The deck was the home screen. It is the second tab now, and moving it there is what let both
+ * screens say one thing each: Home answers «что у меня сегодня», this answers «во что я могу
+ * пойти». A course is a card, the game is a card, a course that has not been bought is a card —
+ * peers, in the gesture every phone has taught, with the kicker naming which kind each one is.
  *
- * A card is never the whole story, only its cover: the tap-through is the course's own path or the
- * marathon's own day, where the detail lives.
+ * A card carries as little as a card can: what it is, its name, one line of what it gives you, how
+ * far in you are if you are in it, and one button. The day's own session is not on it — that is
+ * Home's line, and repeating it here made the card a status board instead of a cover.
+ *
+ * A card is never the whole story: the tap-through is the course's own path or the game's own day,
+ * where the detail lives.
  */
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { clsx } from 'clsx';
 import { courseTitle } from '@/content/catalogue';
 import { formatNumber, plural } from '@/i18n/index';
@@ -47,7 +50,7 @@ function photoAt(i: number): Photo {
   return DECK_PHOTOS[i % DECK_PHOTOS.length]!;
 }
 
-export interface HomeDeckProps {
+export interface ProgramDeckProps {
   entries: readonly DeckEntry[];
   /**
    * How many of today's tasks are still open, by marathon id. Absent while the day is loading —
@@ -61,22 +64,19 @@ export interface HomeDeckProps {
    * subscribe page instead of into the day; a card open on the trial says how long is left.
    */
   gameAccess?: GameAccess;
-  /** The wordmark and the app's controls, laid over the top of whichever card is showing. */
-  chrome?: ReactNode;
   onOpenCourse: (courseId: string) => void;
   onStartNode: (courseId: string, nodeId: string) => void;
   onOpenMarathon: () => void;
 }
 
-export function HomeDeck({
+export function ProgramDeck({
   entries,
   openTasks,
   gameAccess,
-  chrome,
   onOpenCourse,
   onStartNode,
   onOpenMarathon,
-}: HomeDeckProps) {
+}: ProgramDeckProps) {
   const { t, l, locale } = useT();
   const scroller = useRef<HTMLDivElement | null>(null);
   const [active, setActive] = useState(0);
@@ -111,21 +111,10 @@ export function HomeDeck({
       className="relative -mx-5 -mt-[var(--safe-top)] lg:-mx-8"
       aria-label={t('app.homeDeckLabel')}
     >
-      {/*
-       * Over every card, never inside one: the controls do not move when the deck is swiped.
-       *
-       * It carries its own scrim because the covers underneath are not all dark — a marathon's is
-       * orange — and the wordmark is white on every one of them. The gradient is on this row
-       * rather than on the cards so it does not have to be repeated, or reasoned about, per card.
-       */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center gap-3 bg-[linear-gradient(180deg,rgba(15,15,17,0.7),transparent)] px-5 pt-[calc(var(--safe-top)+14px)] pb-7 text-paper lg:px-8">
-        <span className="pointer-events-auto contents">{chrome}</span>
-      </div>
-
       <div
         ref={scroller}
         onScroll={onScroll}
-        className="deck-scroller flex h-[74dvh] max-h-[760px] min-h-[520px] snap-x snap-mandatory overflow-x-auto overscroll-x-contain"
+        className="deck-scroller flex h-[78dvh] max-h-[820px] min-h-[520px] snap-x snap-mandatory overflow-x-auto overscroll-x-contain"
       >
         {entries.map((entry, i) => {
           const photo = photoAt(i);
@@ -225,8 +214,7 @@ export function HomeDeck({
                     : `${t('app.homeDeckCourse')} · ${t('app.pathCompleted')}`
                 }
                 title={title}
-                lead={t('app.homeDeckCourseLead')}
-                subtitle={next ? l(next.title) : t('app.homeTodayCompletedBody')}
+                lead={l(course.tagline)}
                 pct={progress.pct}
                 progressLabel={t('app.homeDeckProgressLabel')}
                 progressMeta={`${progress.done}/${progress.total}`}

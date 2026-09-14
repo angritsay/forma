@@ -22,7 +22,7 @@ import type { Photo } from '@/lib/media/photos';
 import { isPlaceholder, photoSrc } from '@/lib/media/photos';
 import { externalLinkProps } from '@/app/hooks/useExternalLink';
 import { LinkButton } from '@/app/features/courses/LinkButton';
-import { DisplayTitle } from './DisplayTitle';
+import { DisplayTitle } from '@/app/features/home/DisplayTitle';
 
 export interface DeckCardProps {
   /**

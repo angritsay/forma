@@ -11,7 +11,13 @@ export interface StreakCardProps {
   onLogSteps: () => void;
 }
 
-/** "N days", today's state and a steps CTA while the day is still open. */
+/**
+ * "N days", today's state and a steps CTA while the day is still open.
+ *
+ * It opens the reports tab. It used to sit in the middle of the home screen, between the deck and
+ * the week's figures, which is the one place it could not do its job: the number people come back
+ * for was competing with today's session for the same glance.
+ */
 export function StreakCard({ streak, stepsGoal, onLogSteps }: StreakCardProps) {
   const { t, locale } = useT();
   const active = streak.current > 0;
@@ -33,10 +39,7 @@ export function StreakCard({ streak, stepsGoal, onLogSteps }: StreakCardProps) {
      * is gone: the count is the fact, the word under it says what it counts, and a picture of fire
      * next to a figure was the kind of decoration the brandbook takes off every row.
      */
-    <section
-      className="mt-6 flex items-start gap-4 border-t border-border pt-5"
-      aria-label={t('app.homeStreakTitle')}
-    >
+    <section className="flex items-start gap-4 pt-5" aria-label={t('app.homeStreakTitle')}>
       <span className="numeral tabular shrink-0 text-5xl leading-none">{streak.current}</span>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">

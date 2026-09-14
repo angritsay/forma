@@ -1,13 +1,23 @@
 /**
- * Stats (docs/SPEC.md §10 flow 8): athlete level, this week's load, points per week, the streak
- * calendar, the steps history, personal records, achievements and all-time totals. Everything
- * derives from the progress store, so the screen shares one data load with Home.
+ * Reports (docs/SPEC.md §10 flow 8) — the fourth tab, «Отчёты».
+ *
+ * It answers, in this order: how many days in a row, how many steps, what has been earned, how
+ * much has been done, and who is winning the week. That order is the change: the screen used to
+ * open on the athlete's level and two crosslinks, and the streak — the one number people actually
+ * come back for — was on the home screen, where it competed with today's session.
+ *
+ * The achievements no longer show twelve tiles of which ten are grey: what is earned keeps the
+ * grid, the rest is a row swiped sideways (AchievementsGrid). The week's table is on the screen
+ * rather than behind a link (WeekBoard), short, with the full hundred one tap further.
+ *
+ * Everything below that is the record of the work — the week's load, points by week, the streak
+ * calendar, steps, personal bests. Everything derives from the progress store, so the screen
+ * shares one data load with Home.
  */
 import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Glyph } from '@/components/ui/Icon';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
@@ -15,6 +25,8 @@ import { STEPS_GOAL } from '@/lib/training/constants';
 import { evaluateAchievements, levelForPoints } from '@/lib/training/levels';
 import { useT } from '@/app/hooks/useT';
 import { AchievementsGrid } from '@/app/features/stats/AchievementsGrid';
+import { StreakCard } from '@/app/features/stats/StreakCard';
+import { WeekBoard } from '@/app/features/leaderboard/WeekBoard';
 import {
   personalRecords,
   pointsByWeek,
@@ -45,29 +57,6 @@ function StatsSkeleton() {
       <Skeleton rounded="control" className="h-44" />
       <Skeleton rounded="control" className="h-52" />
     </div>
-  );
-}
-
-/**
- * The two places the screen leads to — the steps log and the leaderboard — as a ruled pair of
- * text links with an arrow, in place of the two pictograms the header used to carry. Each cell is
- * a full-width button so the whole rule is the target.
- */
-function Crosslinks({ items }: { items: readonly { label: string; onClick: () => void }[] }) {
-  return (
-    <nav className="grid grid-cols-2 divide-x divide-border border-y border-border">
-      {items.map((item) => (
-        <button
-          key={item.label}
-          type="button"
-          onClick={item.onClick}
-          className="control-label flex h-12 items-center justify-between gap-3 pr-4 text-left text-[12px] text-text transition-colors duration-150 ease-(--ease-out) hover:bg-surface-2 active:bg-surface-3 [&:not(:first-child)]:pl-4"
-        >
-          <span className="truncate">{item.label}</span>
-          <Glyph size={14}>→</Glyph>
-        </button>
-      ))}
-    </nav>
   );
 }
 
@@ -147,24 +136,10 @@ export default function StatsScreen() {
     );
   } else {
     body = (
-      <div className="flex flex-col gap-2 pt-5">
-        <LevelCard points={totalPoints} level={level} />
-        <Crosslinks
-          items={[
-            { label: t('app.statsLogSteps'), onClick: () => navigate('/steps') },
-            { label: t('app.statsLeaderboard'), onClick: () => navigate('/leaderboard') },
-          ]}
-        />
-        <Section title={t('app.statsWeekTitle')}>
-          <WeeklyChart days={week} />
-        </Section>
-        <div className="flex flex-col gap-6 border-t border-border pt-5">
-          <PointsChart weeks={weeks} />
-          <StreakCalendar weeks={calendar} streak={streak} />
+      <div className="flex flex-col gap-2">
+        <StreakCard streak={streak} stepsGoal={STEPS_GOAL} onLogSteps={() => navigate('/steps')} />
+        <Section title={t('app.statsStepsTitle')}>
           <StepsChart points={steps} goal={STEPS_GOAL} />
-        </div>
-        <Section title={t('app.statsRecordsTitle')}>
-          <RecordsList records={records} />
         </Section>
         <Section
           title={t('app.statsAchievementsTitle')}
@@ -174,6 +149,22 @@ export default function StatsScreen() {
         </Section>
         <Section title={t('app.statsTotalsTitle')}>
           <TotalsRow workouts={stats.workouts} minutes={stats.totalMinutes} calories={calories} />
+        </Section>
+        <Section title={t('app.statsWeekBoardTitle')}>
+          <WeekBoard onOpenFull={() => navigate('/leaderboard')} />
+        </Section>
+        <Section title={t('app.statsWeekTitle')}>
+          <WeeklyChart days={week} />
+        </Section>
+        <div className="flex flex-col gap-6 border-t border-border pt-5">
+          <PointsChart weeks={weeks} />
+          <StreakCalendar weeks={calendar} streak={streak} />
+        </div>
+        <Section title={t('app.statsRecordsTitle')}>
+          <RecordsList records={records} />
+        </Section>
+        <Section title={t('app.statsLevelTitle')}>
+          <LevelCard points={totalPoints} level={level} />
         </Section>
       </div>
     );

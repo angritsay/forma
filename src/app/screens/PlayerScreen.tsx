@@ -46,7 +46,7 @@ import {
   stepVideoRef,
   workoutSections,
 } from '@/app/features/player/model';
-import { useSound } from '@/app/features/player/sound';
+import { useSound, type Cue } from '@/app/features/player/sound';
 import { AmrapStep } from '@/app/features/player/steps/AmrapStep';
 import { BlockIntroStep } from '@/app/features/player/steps/BlockIntroStep';
 import { FortimeStep } from '@/app/features/player/steps/FortimeStep';
@@ -79,7 +79,7 @@ function NoSession() {
       <EmptyState
         title={t('app.playerNoSessionTitle')}
         description={t('app.playerNoSessionBody')}
-        action={<Button onClick={() => navigate('/courses')}>{t('app.tabCourses')}</Button>}
+        action={<Button onClick={() => navigate('/courses')}>{t('app.tabPrograms')}</Button>}
       />
     </Screen>
   );
@@ -179,7 +179,7 @@ interface StepViewProps {
   index: number;
   session: ActiveSession;
   paused: boolean;
-  beep: (cue: 'tick' | 'go' | 'round' | 'end') => void;
+  beep: (cue: Cue) => void;
   onRecord: (result: PlayerResult) => void;
   onNext: () => void;
   registerNext: (fn: (() => void) | null) => void;

@@ -137,7 +137,7 @@ export default function NodePreviewScreen() {
       <Screen header={<TopBar back="/courses" />}>
         <EmptyState
           title={t('app.nodeNotFound')}
-          action={<Button onClick={() => navigate('/courses')}>{t('app.tabCourses')}</Button>}
+          action={<Button onClick={() => navigate('/courses')}>{t('app.tabPrograms')}</Button>}
         />
       </Screen>
     );

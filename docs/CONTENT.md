@@ -59,7 +59,9 @@ See `docs/SEO.md` for the full conveyor.
 ## Site config (`content/site/*.ts`)
 
 `brand.ts` (name, contacts, socials, OG image), `coach.ts` (profile shown on /about and in JSON-LD),
-`links.ts` (support links), `faq.ts` (landing FAQ), `pricing.ts` (currency display, refund window).
+`links.ts` (support links), `faq.ts` (landing FAQ), `pricing.ts` (currency display, refund window),
+`booking.ts` (the coach's bookable hour), `plans.ts` (the subscription), `media.ts` (the montage
+behind the sign-in screen) and `assessment.ts` (the five movements the onboarding measures).
 Fill these in before launch (`docs/SETUP.md` has the checklist).
 
 ## Pictures of a movement

@@ -24,6 +24,7 @@ visible to customers until replaced.
 | Prices                           | `content/courses/<course>.ts` → `price`          | `{ rub, usd }` per course                                                  |
 | Payment links                    | `content/courses/<course>.ts` → `paymentUrl`     | `{ ru, en }`, optional; see §7                                             |
 | Intro / exercise videos          | `content/courses/*.ts`, `content/exercises/*.ts` | `storage:videos/…` refs; see §5                                            |
+| Sign-in montage                  | `content/site/media.ts` → `AUTH_FILM.src`        | Looping B&W cut, no audio track; empty = the coach's photograph instead    |
 | Supabase URL + anon key          | `.env` (local) and GitHub repo variables         | §6                                                                         |
 | Site URL + base path             | `.env` and GitHub repo variables                 | §6                                                                         |
 | Coach admin email                | `public.admins` table                            | §4                                                                         |

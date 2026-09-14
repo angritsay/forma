@@ -82,12 +82,12 @@ describe('withEquipment / withLimitations', () => {
 });
 
 describe('profileToDraft', () => {
-  it('builds a draft that resumes at the first self-test with everything else complete', () => {
+  it('builds a draft that resumes at the assessment with everything else complete', () => {
     const draft = profileToDraft(PROFILE, 'en');
     expect(draft).not.toBeNull();
     expect(draft!.step).toBe(TESTS_STEP_INDEX);
     expect(firstIncompleteStep(draft!)).toBe(TESTS_STEP_INDEX);
-    expect(isStepComplete(draft!, 'testPushups')).toBe(false);
+    expect(isStepComplete(draft!, 'assess')).toBe(false);
     expect(draft).toMatchObject({
       locale: 'en',
       displayName: 'Ann',
@@ -98,7 +98,7 @@ describe('profileToDraft', () => {
       limitationsNone: false,
       timePerSessionMin: 30,
       goal: 'fat_loss',
-      tests: {},
+      assess: { later: false, counts: {}, onKnees: false },
     });
   });
 

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
-  allTestsSkipped,
+  assessmentBenchmarks,
+  assessmentDone,
+  assessmentEmpty,
   clearDraft,
   draftToTrainingProfile,
   emptyDraft,
@@ -43,8 +45,17 @@ function completeDraft(): OnboardingDraft {
     dumbbellKg: [8, 4],
     kettlebellKg: [16],
     limitations: ['knees'],
-    tests: { pushups: 12, pushupsOnKnees: true, squats60s: 30, plankSec: 45 },
-    skipped: {},
+    assess: {
+      later: false,
+      onKnees: true,
+      counts: {
+        air_squat: 30,
+        push_up: 12,
+        sit_up: 20,
+        reverse_lunge: 24,
+        glute_bridge: 35,
+      },
+    },
     timePerSessionMin: 30,
     goal: 'general',
   };
@@ -56,7 +67,7 @@ describe('onboarding draft', () => {
     expect(d.step).toBe(0);
     expect(STEP_IDS.filter((s) => isStepComplete(d, s))).toEqual(['equipment']);
     expect(firstIncompleteStep(d)).toBe(0);
-    expect(allTestsSkipped(d)).toBe(true);
+    expect(assessmentEmpty(d)).toBe(true);
   });
 
   it('round-trips through storage and clears', () => {
@@ -94,13 +105,29 @@ describe('onboarding draft', () => {
     expect(isStepComplete({ ...d, limitations: ['wrists'] }, 'limitations')).toBe(true);
   });
 
-  it('treats a self-test as complete when answered or skipped', () => {
+  it('completes the assessment step when every movement is counted, or it is postponed', () => {
     const d = emptyDraft();
-    expect(isStepComplete(d, 'testPushups')).toBe(false);
-    expect(isStepComplete({ ...d, skipped: { pushups: true } }, 'testPushups')).toBe(true);
-    expect(isStepComplete({ ...d, tests: { pushups: 0 } }, 'testPushups')).toBe(true);
-    expect(isStepComplete({ ...d, tests: { squats60s: 25 } }, 'testSquats')).toBe(true);
-    expect(isStepComplete({ ...d, skipped: { plank: true } }, 'testPlank')).toBe(true);
+    expect(isStepComplete(d, 'assess')).toBe(false);
+    expect(assessmentDone(d)).toBe(false);
+    // One movement short is not an answer: the engine reads the set, not the first of it.
+    const partial = { ...d, assess: { ...d.assess, counts: { air_squat: 30 } } };
+    expect(isStepComplete(partial, 'assess')).toBe(false);
+    expect(isStepComplete({ ...d, assess: { ...d.assess, later: true } }, 'assess')).toBe(true);
+    expect(isStepComplete(completeDraft(), 'assess')).toBe(true);
+    expect(assessmentDone(completeDraft())).toBe(true);
+    expect(assessmentEmpty(completeDraft())).toBe(false);
+  });
+
+  it('splits the assessment into engine inputs and personal records', () => {
+    const p = draftToTrainingProfile(completeDraft());
+    // The two the fitness index reads land in `tests`; the other three are benchmarks.
+    expect(p?.tests).toEqual({ pushups: 12, pushupsOnKnees: true, squats60s: 30 });
+    expect(assessmentBenchmarks(completeDraft())).toEqual({
+      situps_60s: 20,
+      lunges_60s: 24,
+      glute_bridge_60s: 35,
+    });
+    expect(assessmentBenchmarks(emptyDraft())).toEqual({});
   });
 
   it('builds the engine profile only when required answers exist', () => {
@@ -117,7 +144,7 @@ describe('onboarding draft', () => {
       equipment: ['dumbbells', 'mat'],
       timePerSessionMin: 30,
       goal: 'general',
-      tests: { pushups: 12, pushupsOnKnees: true, squats60s: 30, plankSec: 45 },
+      tests: { pushups: 12, pushupsOnKnees: true, squats60s: 30 },
     });
   });
 
@@ -130,12 +157,13 @@ describe('onboarding draft', () => {
     expect(none?.dumbbellKg).toBeUndefined();
   });
 
-  it('honours "no limitations" and skipped tests in the profile', () => {
+  it('honours "no limitations" and a postponed assessment in the profile', () => {
+    const base = completeDraft();
     const p = draftToTrainingProfile({
-      ...completeDraft(),
+      ...base,
       limitations: ['knees'],
       limitationsNone: true,
-      tests: { pushupsOnKnees: true },
+      assess: { ...base.assess, later: true, counts: {} },
     });
     expect(p?.limitations).toEqual([]);
     expect(p?.tests).toEqual({});
@@ -184,8 +212,8 @@ describe('parseWeightField', () => {
 });
 
 describe('resumeStepIndex', () => {
-  it('maps "tests" to the first self-test and step ids to their index', () => {
-    expect(resumeStepIndex('tests')).toBe(STEP_IDS.indexOf('testPushups'));
+  it('maps "tests" to the assessment step and step ids to their index', () => {
+    expect(resumeStepIndex('tests')).toBe(STEP_IDS.indexOf('assess'));
     expect(resumeStepIndex('goal')).toBe(STEP_IDS.indexOf('goal'));
     expect(resumeStepIndex('name')).toBe(0);
   });

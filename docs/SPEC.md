@@ -117,7 +117,8 @@ public/                     # favicon.svg, icons, manifest
   split; headings sit low against their column; photographs bleed past the page gutter. Large
   radii survive where a card is genuinely a discrete object (24px cards, 20px tiles, 16px inputs),
   but buttons and chips are near-square (4px) with capitalised, tracked labels — no pills. Bottom
-  tab bar in the app (Home / Courses / Stats / Profile), generous spacing, 1px borders
+  tab bar in the app (Главная / Программы / Игра / Отчёты — the profile is the avatar in the
+  top-right of Home, not a tab), generous spacing, 1px borders
   (`--border`).
 - The accent is a dosage rule, not just a colour: `#9ECBFF` marks the primary button, the
   wordmark's full stop, a rule, a kicker, "you are here". Never a large fill. Large areas are
@@ -320,7 +321,8 @@ Landing (Astro, static, RU default / EN under `/en/`):
 /sitemap.xml  /robots.txt  /llms.txt  /rss.xml  /<indexnow-key>.txt  /manifest.webmanifest  /404
 ```
 
-App (HashRouter under `/app/#/`): `/auth`, `/onboarding`, `/` (home), `/courses`, `/courses/:id`,
+App (HashRouter under `/app/#/`): `/auth`, `/onboarding`, `/` (home), `/courses` (the
+«Программы» tab), `/courses/:id`,
 `/courses/:id/nodes/:nodeId` (preview + difficulty), `/play` (active session), `/summary/:sessionId`,
 `/stats`, `/leaderboard`, `/steps`, `/profile`, `/book` (one-to-one session with the coach), `/admin`
 (purchases and subscriptions).
@@ -336,21 +338,29 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
 
 ## 10. App flows (must match exactly)
 
-1. **Auth**: email field → "Send code" → 6-digit code field (paste-friendly, resend timer 60s) →
-   session. Errors localized.
+1. **Auth**: the coach's black-and-white montage full-bleed and looping
+   (`content/site/media.ts`; the coach's photograph stands in until it is cut), the wordmark fading
+   up and away over it, and then the form: email field → "Send code" → 6-digit code field
+   (paste-friendly, resend timer 60s) → session. No heading, no lead, no field label, no spam hint —
+   the errors, the resend and the way back to the address are all that stand with the two fields.
+   `prefers-reduced-motion` and any tap skip the title card. Errors localized.
 2. **Onboarding** (first login, resumable): name → basics (age band, sex optional,
    weight optional) → activity level → experience → equipment (+ dumbbell/kettlebell weights) →
-   limitations → self-tests (max push-ups with knee option, air squats in 60s with in-app timer,
-   plank hold with timer) → time per session → goal → result screen (fitness index, level,
-   what it means) → home.
-3. **Home**: a **deck** of full-height cards swiped sideways — one per owned course, one per
-   running marathon, one per course not yet bought — each with its cover (a photograph where one is
-   vendored, else the programme colour), its name, how far in you are as a figure over a rule, and
-   one button: start today's session, open today's marathon task, or go to the sales page. The
-   wordmark, the greeting and the two controls sit over the deck and do not move when it is swiped;
-   a row of 2px rules under it is the pager. Below the deck: the resume strip, the streak card
-   (days, at-risk state, rest-day steps CTA), quick stats (steps this week chart, kcal, minutes,
-   points), the coach's assigned workouts and his bookable hour.
+   limitations → **the assessment** → time per session → goal → result screen (fitness index,
+   level, what it means) → home.
+   The assessment is one question — «Хочешь адаптировать тренировки под себя?», with what it costs
+   in one line under it — and two answers. «Сейчас» runs five movements of one minute each
+   (`content/site/assessment.ts`) as a full-screen surface over the wizard: the clip, the movement's
+   name, the instruction, then the clock alone, ticking the last three seconds and closing on a long
+   horn, then the field for the count. «Не сейчас» postpones the whole thing; it comes back as a
+   task on the home screen, and the fitness index imputes what it is missing (docs/TRAINING_SCIENCE
+   §2). Two of the five counts feed the index, the other three are written to `benchmarks`.
+3. **Home**: today, and nothing else. The greeting names the athlete and the avatar beside it opens
+   the profile; the resume strip if a session was left unfinished; today's session as one
+   full-width cover card (photograph or the programme colour, the day's name, one button); one
+   button offering an hour with the coach; and today's tasks as a ruled list — logging today's
+   steps, the assessment when it was postponed — followed by whatever the coach has assigned by
+   hand. The deck of programmes moved to the «Программы» tab and the figures to «Отчёты».
 4. **Course path**: the days as a winding column of square stops — four columns, wave order, the
    day's name set in the space each stop leaves beside it — grouped under a banner per week in the
    programme colour. A finished day is filled in that colour and ticked, today is filled in paper,
@@ -379,15 +389,17 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    same way, and Home offers a **Продолжить** strip naming the movement it will pick up on.
 7. **Summary + feedback**: time, points, calories, completion; RPE slider 1–10 with descriptors;
    feeling chips (great / ok / hard / pain); notes; "Save" → adaptation message ("next time +5%").
-8. **Stats**: weekly workouts/minutes/points chart, streak calendar, steps chart, personal records,
-   achievements.
+8. **Reports** («Отчёты», the fourth tab): the streak first (days, at-risk state, steps CTA), the
+   steps chart, the achievements — earned ones in the grid, the rest in a row swiped sideways — the
+   all-time totals, and the top of this week's leaderboard with the full table one tap away. Under
+   those: the week's load, points by week, the streak calendar, personal records and the level.
 9. **Leaderboard**: tabs week / all-time, course filter, top-100 with own row pinned.
 10. **Steps**: log today's steps (manual input; explain why), history, goal 7000. A day may also
     carry a screenshot of the athlete's own step counter — attached the moment it is picked, held
     in the private `proofs` bucket, visible to the athlete and the coach and nobody else. It is
     evidence, not arithmetic: points still come from the number.
-11. **Profile**: name, avatar seed, units, equipment/weights, retake tests, sign
-    out; admin link if admin.
+11. **Profile** (reached from the avatar on Home, not from the tab bar): name, avatar seed, units,
+    equipment/weights, retake the assessment, sign out; admin link if admin.
 12. **Admin**: purchases list (search by email, filter status), activate / refund, add purchase.
 
 ## 11. SEO conveyor (docs/SEO.md is the runbook)
