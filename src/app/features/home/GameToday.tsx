@@ -29,14 +29,22 @@ import { useT } from '@/app/hooks/useT';
 export interface GameTodayProps {
   /** The game I am in, or null when I am not in one. */
   marathon: MyMarathon | null;
+  /**
+   * Whether the answer to "am I in a game" has arrived yet. Until it has there is nothing honest
+   * to draw: `marathon` is null both for somebody who is not playing and for somebody whose
+   * request is still in the air, and rendering the spoiler for the second one means the row
+   * blinks from «Игра идёт без тебя» to today's task a moment later.
+   */
+  settled: boolean;
   /** Today's tasks, when they have loaded. */
   tasks: readonly MarathonTodayTask[];
   onOpen: () => void;
 }
 
-export function GameToday({ marathon, tasks, onOpen }: GameTodayProps) {
+export function GameToday({ marathon, settled, tasks, onOpen }: GameTodayProps) {
   const { t } = useT();
   const playing = marathon !== null;
+  if (!settled) return null;
 
   /*
    * The one task worth naming is the first still owed; when they are all in, the row says that

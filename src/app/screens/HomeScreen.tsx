@@ -76,7 +76,7 @@ export default function HomeScreen() {
    * The game, from the server. Home shows the row whether or not there is one to show: with a
    * marathon it carries today's task, without one it carries the same row blurred.
    */
-  const { marathon } = useMyMarathons();
+  const { marathon, status: gameStatus } = useMyMarathons();
   const { data: gameTasks } = useMarathonDay(marathon, marathon?.dayIndex ?? 0);
 
   const name = greetingName(profile?.displayName, user?.email ?? '');
@@ -237,7 +237,12 @@ export default function HomeScreen() {
             {t('app.homeCoachNow')}
           </Button>
         ) : null}
-        <GameToday marathon={marathon} tasks={gameTasks} onOpen={() => navigate('/marathon')} />
+        <GameToday
+          marathon={marathon}
+          settled={gameStatus !== 'loading'}
+          tasks={gameTasks}
+          onOpen={() => navigate('/marathon')}
+        />
         <TodayTasks items={tasks} />
         <AssignedWorkoutsCard onOpen={(id) => navigate(`/assigned/${id}`)} />
       </div>
