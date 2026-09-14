@@ -40,6 +40,8 @@ export const app = {
   authResend: 'Отправить код ещё раз',
   authResendIn: 'Отправить ещё раз через {s} с',
   authChangeEmail: 'Изменить почту',
+  // Shown only after a second request has also come up empty — see AuthScreen.
+  authNoMail: 'Код не пришёл? Проверь «Спам» и «Промоакции» — письмо приходит с {from}.',
   authSignOut: 'Выйти',
   authErrorInvalidEmail: 'Похоже, в адресе ошибка. Проверь почту.',
   authErrorRateLimited: 'Слишком много запросов. Подожди минуту и попробуй снова.',

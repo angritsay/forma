@@ -28,6 +28,7 @@ import { useT } from '@/app/hooks/useT';
 import { useCountdown } from '@/app/hooks/useTimer';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
 import { useSession } from '@/app/store/session';
+import { BRAND } from '@content/site/brand';
 import { PHOTOS, photoSrc } from '@/lib/media/photos';
 import { withBase } from '@/lib/util/paths';
 import {
@@ -135,6 +136,8 @@ export default function AuthScreen() {
   const [error, setError] = useState<AuthError | null>(null);
   /** Demo mode only: the code the local backend just issued (there is no inbox to check). */
   const [demoCode, setDemoCode] = useState<string | null>(null);
+  /** How many codes have been asked for this visit; the second one changes what the screen says. */
+  const [sends, setSends] = useState(0);
   const [intro, setIntro] = useState<Intro>('enter');
   const countdown = useCountdown(RESEND_SEC);
 
@@ -170,6 +173,7 @@ export default function AuthScreen() {
       setDemoCode(await demoPendingCode());
       setCode('');
       setStep('code');
+      setSends((n) => n + 1);
       countdown.restart();
     } catch (e) {
       setError(toAuthError(e));
@@ -213,6 +217,8 @@ export default function AuthScreen() {
     setCode('');
     setError(null);
     setDemoCode(null);
+    // A new address starts a new count: the hint is about this inbox, not the last one.
+    setSends(0);
     countdown.reset();
   };
 
@@ -301,6 +307,22 @@ export default function AuthScreen() {
             >
               {t('app.authConfirm')}
             </Button>
+            {/*
+             * Asked twice and still nothing.
+             *
+             * A sign-in code is the one message in this product that cannot be resent by a human,
+             * and the app is told nothing when it fails: Supabase answers 200 whether the message
+             * left or not (docs/SETUP.md §3), so by the time somebody is on their second request
+             * the most useful thing the screen can do is name the two folders the message is
+             * actually in and the address it came from.
+             *
+             * Second request, not the first: on the first, waiting is still the right advice.
+             */}
+            {sends >= 2 ? (
+              <p className="pt-1 text-center text-[13px] leading-relaxed text-paper/60">
+                {t('app.authNoMail', { from: BRAND.contactEmail })}
+              </p>
+            ) : null}
             {/*
              * The two ways out of a code that never arrived, set as quiet type rather than as two
              * more buttons: the address it went to is the label of the one that goes back to it.
