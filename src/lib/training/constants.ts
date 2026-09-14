@@ -419,3 +419,25 @@ export const COMFORT_SESSION_MAX_DOWN = 0.25;
  * the small end of its usual 2-10% because it fires on inference rather than on a measurement.
  */
 export const TWO_FOR_TWO_GAIN = 0.04;
+
+/* ---------------------------------------------------------------------------------------------
+ * Levers (levers.ts)
+ * ------------------------------------------------------------------------------------------- */
+
+/** One honest round beats skipping the session, so rounds never fall below this. */
+export const LEVER_ROUNDS_MIN = 1;
+
+/** A rest that exists never rounds away to nothing. */
+export const LEVER_REST_FLOOR_SEC = 5;
+
+/** An every-N-minutes piece stops being one below this. */
+export const LEVER_INTERVAL_FLOOR_SEC = 60;
+
+/**
+ * How much the mode's move is damped for an athlete already far from average.
+ *
+ * The ratio has already done most of the work for them; letting the mode compound on top produces
+ * a «посложнее» the strong cannot finish and a «полегче» with nothing in it for the weak. At 1.0 an
+ * athlete at twice average feels roughly half the mode's nominal move. **Expert anchor.**
+ */
+export const LEVER_RCENTRE = 1;

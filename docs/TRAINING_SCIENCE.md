@@ -493,3 +493,138 @@ takes weeks (Lally et al. 2010), and a 7-day streak is the first milestone worth
   Journal of Sports Medicine_ 52(21), 2018.
 - Lally P et al. How are habits formed: modelling habit formation in the real world. _European
   Journal of Social Psychology_ 40(6), 2010.
+
+---
+
+## 12. Comfort, and the levers (`comfort.ts`, `levers.ts`)
+
+This section describes the per-movement model. It runs alongside the course `scale` of §2 and §7.3
+rather than replacing it: an exercise with no comfort recorded falls through to the old path, which
+is what makes it safe to ship in pieces.
+
+### 12.1 Why comfort and not a maximum
+
+The obvious model stores repetitions to failure and prescribes a fraction of it. It was the first
+draft, and it was rejected for a practical reason: to fill it in you must ask people to max out, and
+a programme built from maxima comes out too hard. The stored quantity is instead the one a person
+can answer without a stopwatch and a grudge — **what they comfortably do** — and the three modes are
+arithmetic on top of it:
+
+| Mode      | Target         | ≈ reps in reserve |
+| --------- | -------------- | ----------------- |
+| полегче   | comfort        | 4–5               |
+| нормально | comfort + 20 % | 2–3               |
+| посложнее | comfort + 40 % | 1–2               |
+
+The 20 % step lands in the range the RIR literature identifies as productive without training to
+failure (Zourdos et al. 2016; Helms et al. 2016). `COMFORT_MODE` expresses these relative to
+«нормально», because «нормально» is what the coach authors: **0.83 / 1.00 / 1.17**.
+
+Nothing in this model ever asks for a maximal effort. An earlier draft inserted a "last set, as many
+as you can" probe every fourth session to break the censoring of §12.4; it was removed because it
+contradicted the rule it existed to serve.
+
+### 12.2 One number per movement, not per course
+
+`comfortFor(exerciseId, map, level, lookup)` reads down a hierarchy:
+
+```
+the exercise's own observations  →  its movement pattern  →  the reference athlete
+```
+
+A pattern-level fallback is shrunk toward average by `COMFORT_SHRINK.samePattern` (0.7) and a
+cross-pattern one by `crossPattern` (0.4) — **expert anchors**. A plank is an anti-extension hold and
+a sit-up is trunk flexion; three minutes of one earns some confidence about the other and nowhere
+near all of it. Borrowed ratios are clamped to 0.5–1.8 and observed ones to 0.4–2.5, and each
+contributing movement is weighted by its own observation count, so one hesitant early reading never
+outvotes a movement done eight times.
+
+`Exercise.comfortRef` holds what a standard person at each course level comfortably does. It is
+authored **once per exercise**, never inferred from a workout's number: sit-ups are authored at 8 in
+workout 3 of «Старт» and 10 in workout 6 because the coach intends different things in a for-time
+triplet and in an eight-minute AMRAP, and reading a reference off each made the standard beginner's
+comfort flap between 11 and 18.
+
+### 12.3 The invariant
+
+```
+ratio  = comfort(user, exercise) / comfortRef(exercise, courseLevel)
+target = clamp( round(authored × ratio × COMFORT_MODE[choice]), item.min, item.max )
+```
+
+**At ratio 1 the coach's number comes back untouched.** His programme is honoured exactly for the
+person he wrote it for and bends only for people who differ from that person. There is a test for it
+and it should never be allowed to fail.
+
+`WorkoutItem.min` / `.max` are the coach's own range — the «Тренер: 10–20» he already writes in the
+note, as data — and they are **hard**. Unbounded, the model walks away from the programme: the worked
+example that proved it asked a strong athlete for 50 dead bugs against an authored 30 and a written
+ceiling of 40. The content schema additionally refuses an authored number outside its own range,
+because one of the two is then a typo.
+
+### 12.4 Learning without asking anything
+
+The rep stepper opens **on the target**, so the path of least resistance is to tap «Готово» and a
+target of 12 comes back as 12. That is a **right-censored observation**: it says comfort ≥ 12 and
+nothing more, and a model that reads it as comfort = 12 ratchets everyone down to its first guess.
+
+| What came back     | Meaning                   | What moves                               |
+| ------------------ | ------------------------- | ---------------------------------------- |
+| fewer than asked   | comfort is **below** this | pulled to what happened                  |
+| more than asked    | comfort is **above** this | exponential update                       |
+| a real measurement | uncensored                | exponential update                       |
+| exactly as asked   | a lower bound only        | **nothing**, except the two-for-two rule |
+
+```
+observed = achieved / COMFORT_MODE[choice]
+α        = clamp(1 / (observations + 2), 0.05, 0.35)
+comfort ← comfort + α × (observed − comfort)
+```
+
+**The step clamp is deliberately asymmetric**: `COMFORT_SESSION_MAX_UP` 10 %,
+`COMFORT_SESSION_MAX_DOWN` 25 %. Up follows the 2–10 % band of the ACSM Position Stand (2009). Down
+is larger because the two errors do not cost the same — prescribing too little slows progress,
+prescribing too much makes people fail, and people who fail a workout do not come back to it. A
+symmetric clamp was the first version: an athlete asked for 12 who managed 7 would have been asked
+for 11 next time, then 10, then 9, failing four sessions on the way to a number the engine already
+had the evidence for.
+
+Hitting the target exactly feeds `twoForTwo` instead: two consecutive sessions at target with
+session RPE ≤ 6 raise comfort by `TWO_FOR_TWO_GAIN` (4 %). This is the standard coaching answer to
+exactly this censoring problem (Haff & Triplett, _Essentials_ — the two-for-two rule): when you
+cannot see past the target, use repetition of the target as the evidence.
+
+Session RPE and feeling stay the global term they already were in §7.3. They may lower every comfort
+a session touched and may never raise one — a painful session must not earn an increase.
+
+### 12.5 The lever is a property of the piece, not of the engine
+
+Reps are not always the right thing to move, and the twenty sessions of «Старт» make it plain:
+
+| Workout | Shape                          | Honest lever                              |
+| ------- | ------------------------------ | ----------------------------------------- |
+| 1, 2    | EMOM, a movement each minute   | reps — in an EMOM the reps _are_ the rest |
+| 3       | three pairs, start every 2 min | the rest between pairs                    |
+| 4       | max glute bridges in 5 min     | the window                                |
+| 5       | three rounds, 10-minute cap    | the number of rounds                      |
+| 6       | AMRAP 8                        | the window                                |
+| 17      | buy-in every 3 minutes         | the interval                              |
+| 19      | the inchworm ladder            | **nothing** — it is the benchmark         |
+
+So `Block.adapt` declares, in order, which levers move and by how much, authored by the person who
+wrote the piece. `DEFAULT_ADAPT` gives every format the honest answer for its shape, so courses
+already written need no hand-tuning.
+
+`rest` is the one lever that **grows** to make a session easier. It still does not move by default —
+the finding of §3.1 stands, and rest that rises as volume falls cancels its own effect — but a block
+may declare it, which is exactly the case where it is the honest lever.
+
+`swap` changes the movement rather than the number, through `Exercise.scaling.easier` / `.harder`.
+It exists because of a case the worked example produced: for someone comfortable with 12 full
+push-ups, all three modes of workout 3 pin knee push-ups at the coach's ceiling of 15 and become
+indistinguishable. The right coaching answer there is not a bigger number but a harder movement.
+
+`temper(ratio, factor)` damps the mode's move for an athlete already far from average
+(`LEVER_RCENTRE`, **expert anchor**). The ratio has already done most of the adjusting; letting the
+mode compound on top produces a «посложнее» the strong cannot finish and a «полегче» with nothing in
+it for the weak.

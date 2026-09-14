@@ -230,6 +230,32 @@ export const WorkoutItemSchema = z
   });
 export type WorkoutItem = z.infer<typeof WorkoutItemSchema>;
 
+/**
+ * One lever, and how far it moves each way.
+ *
+ * `easier` / `harder` are multipliers on whatever the lever governs, except `swap`, where the move
+ * is to a different movement entirely (`Exercise.scaling.easier` / `.harder`).
+ */
+export const AdaptLeverSchema = z.enum([
+  'reps',
+  'rounds',
+  'rest',
+  'window',
+  'interval',
+  'swap',
+  'none',
+]);
+export type AdaptLever = z.infer<typeof AdaptLeverSchema>;
+
+export const AdaptStepSchema = z.object({
+  lever: AdaptLeverSchema,
+  /** Multiplier at «полегче». Below 1 for volume levers, above 1 for rest. */
+  easier: z.number().positive().optional(),
+  /** Multiplier at «посложнее». */
+  harder: z.number().positive().optional(),
+});
+export type AdaptStep = z.infer<typeof AdaptStepSchema>;
+
 export const BlockSchema = z
   .object({
     id: z.string().regex(idRegex),
@@ -249,6 +275,18 @@ export const BlockSchema = z
     restBetweenRoundsSec: z.number().int().nonnegative().optional(),
     items: z.array(WorkoutItemSchema).min(1),
     scalable: z.boolean().default(true),
+    /**
+     * What makes THIS piece easier or harder, in the order the engine should reach for it.
+     *
+     * Reps are not always the right lever, and the twenty workouts of «Старт» prove it: workout 3
+     * starts a pair every two minutes, so the honest lever is the rest between pairs; workout 6 is
+     * an AMRAP, so it is the window; workout 19 is the benchmark the whole course is measured
+     * against, so it is nothing at all. Adding reps to all three would be wrong in two of them.
+     *
+     * Omitted, a sensible default for the format applies (`DEFAULT_ADAPT` in the engine), so the
+     * courses already written need no hand-tuning — tuning is for where the coach wants it.
+     */
+    adapt: z.array(AdaptStepSchema).optional(),
   })
   .superRefine((b, ctx) => {
     const need = (cond: boolean, msg: string) => {
