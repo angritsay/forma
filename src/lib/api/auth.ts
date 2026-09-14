@@ -10,7 +10,13 @@ import { demo } from './demo/load';
 import { AppError, toAppError, type AppErrorCode } from './errors';
 import { isDemo } from './mode';
 
-export type AuthReason = 'invalid_email' | 'rate_limited' | 'invalid_code' | 'signup_disabled';
+export type AuthReason =
+  | 'invalid_email'
+  | 'rate_limited'
+  | 'invalid_code'
+  | 'signup_disabled'
+  /** The server accepted the request and then could not send the letter — an SMTP problem. */
+  | 'email_send_failed';
 
 export class AuthError extends AppError {
   readonly reason: AuthReason | undefined;
@@ -74,6 +80,20 @@ function reasonFrom(cause: unknown): AuthReason | undefined {
     default:
       break;
   }
+  /*
+   * Supabase answers 500 `unexpected_failure` when the mail provider refused the send — a wrong
+   * SMTP password, an unverified sending domain, a provider over its quota. It is worth telling
+   * apart from every other server error: it is the one the athlete can do nothing about, and the
+   * one the owner has to be able to recognise from a screenshot.
+   */
+  const saysSending = typeof message === 'string' && /send|smtp|mail/i.test(message);
+  if (
+    saysSending &&
+    (code === 'unexpected_failure' || (typeof status === 'number' && status >= 500))
+  ) {
+    return 'email_send_failed';
+  }
+
   if (status === 429) return 'rate_limited';
   if (status === 403 && typeof message === 'string' && /token|otp|expired|invalid/i.test(message)) {
     return 'invalid_code';
