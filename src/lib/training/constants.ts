@@ -354,3 +354,68 @@ export const OVERHEAD_ID_PATTERN = /overhead|snatch|thruster|press|jerk/;
 
 /** Id fragments of isometric holds (hypertension: capped at HYPERTENSION_MAX_HOLD_SEC). */
 export const ISOMETRIC_ID_PATTERN = /plank|hold|wall_sit|hollow|bridge|l_sit|superman|isometric/;
+
+/* ---------------------------------------------------------------------------------------------
+ * Comfort — the per-movement model (comfort.ts)
+ * ------------------------------------------------------------------------------------------- */
+
+/**
+ * The three modes, as multipliers on what this athlete comfortably does.
+ *
+ * «Полегче» is exactly their comfortable number — not less. Someone who chooses the easy option is
+ * not asking to be undertrained, they are asking not to be punished today, and the honest answer to
+ * that is the work they already know they can do.
+ *
+ * «Нормально» is a fifth more. That step lands around two to three repetitions in reserve, which is
+ * where the RIR literature puts the useful training range (Zourdos et al. 2016; Helms et al. 2016)
+ * and it is what the owner described unprompted: comfortable ten, normal twelve, harder fifteen.
+ *
+ * The numbers below are relative to «нормально», because that is what the coach authors.
+ */
+export const COMFORT_MODE: Readonly<Record<DifficultyChoice, number>> = {
+  easier: 0.83,
+  normal: 1,
+  harder: 1.17,
+};
+
+/** Comfort ÷ the standard person's comfort, clamped. Beyond this the athlete is on another course. */
+export const COMFORT_RATIO_MIN = 0.4;
+export const COMFORT_RATIO_MAX = 2.5;
+
+/**
+ * A ratio the athlete has never demonstrated for *this* movement is held closer to average than one
+ * they have. **Expert anchor** — there is no published coefficient for "how much does a good plank
+ * tell you about sit-ups", and the cost of being wrong is asymmetric, so these are timid.
+ */
+export const COMFORT_SHRINK = { samePattern: 0.7, crossPattern: 0.4 } as const;
+export const COMFORT_INFERRED_MIN = 0.5;
+export const COMFORT_INFERRED_MAX = 1.8;
+
+/**
+ * Learning rate bounds for `α = 1/(observations + 2)`. The floor keeps a long-established estimate
+ * from freezing when a body actually changes; the ceiling keeps one loud session from rewriting it.
+ */
+export const COMFORT_ALPHA_MIN = 0.05;
+export const COMFORT_ALPHA_MAX = 0.35;
+
+/**
+ * How far one session may move a comfort — and it is DELIBERATELY NOT SYMMETRIC.
+ *
+ * Up is the 2-10% band of the ACSM Position Stand (2009) for progressing load, at the generous end
+ * because this is an estimate moving rather than a prescription, and capped because the athlete
+ * trains at home with nobody watching.
+ *
+ * Down is two and a half times that, because the two errors do not cost the same. Prescribing too
+ * little slows someone's progress; prescribing too much makes them fail, and people who fail a
+ * workout do not come back to it. A symmetric clamp was the first version and it was wrong: an
+ * athlete asked for 12 who managed 7 would have been asked for 11 next time, then 10, then 9 —
+ * failing four sessions in a row on the way to a number the engine already had the evidence for.
+ */
+export const COMFORT_SESSION_MAX_UP = 0.1;
+export const COMFORT_SESSION_MAX_DOWN = 0.25;
+
+/**
+ * What hitting the target twice in a row, easily, is worth. Baechle & Earle's two-for-two rule, at
+ * the small end of its usual 2-10% because it fires on inference rather than on a measurement.
+ */
+export const TWO_FOR_TWO_GAIN = 0.04;
