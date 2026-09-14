@@ -109,6 +109,8 @@ const POSTER_WIDTH = 640;
 
 const manifest = [];
 const unknown = [];
+/** Which filename already claimed each id, so a second one is reported rather than overwriting. */
+const takenBy = new Map();
 let encoded = 0;
 
 for (const file of clips) {
@@ -118,6 +120,18 @@ for (const file of clips) {
     unknown.push({ name, note: noteByName.get(key(name)) });
     continue;
   }
+  /*
+   * One movement can have two names — «Червячок» is what the coach says and «Гусеница» is what
+   * the library called it — so the map points both at one id. Only the first file wins; the
+   * second would otherwise silently overwrite the first's mp4 and still be a duplicate entry
+   * that upload-videos.mjs refuses.
+   */
+  const taken = takenBy.get(id);
+  if (taken) {
+    console.log(`  skipped  ${name} — ${taken} is already the clip for ${id}`);
+    continue;
+  }
+  takenBy.set(id, name);
 
   const src = join(srcDir, file);
   const out = join(outDir, `${id}.mp4`);

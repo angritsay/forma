@@ -1284,11 +1284,14 @@ export const EXERCISES_A: ExerciseInput[] = [
   },
   {
     id: 'inchworm',
+    // The slug stays `gusenitsa`: the page is live at that address and a rename would 404 it.
+    // The other name is in the first line of the description instead, so the word is still on the
+    // page for anyone searching it — the guides use it too.
     slug: { ru: 'gusenitsa', en: 'inchworm' },
-    name: { ru: 'Гусеница', en: 'Inchworm' },
-    shortName: { ru: 'Гусеница', en: 'Inchworm' },
+    name: { ru: 'Червячок', en: 'Inchworm' },
+    shortName: { ru: 'Червячок', en: 'Inchworm' },
     description: {
-      ru: 'Гусеница — разминочное движение на всё тело: наклон, «шаги» ладонями вперёд до планки и обратные шаги стопами к рукам. Оно разогревает плечи, пресс и заднюю поверхность бедра и готовит запястья к отжиманиям и бёрпи. Отличный первый пункт разминки перед любой тренировкой без оборудования.',
+      ru: 'Червячок, он же гусеница, — разминочное движение на всё тело: наклон, «шаги» ладонями вперёд до планки и обратные шаги стопами к рукам. Оно разогревает плечи, пресс и заднюю поверхность бедра и готовит запястья к отжиманиям и бёрпи. Отличный первый пункт разминки перед любой тренировкой без оборудования.',
       en: 'The inchworm is a whole-body warm-up: fold forward, walk your hands out to a plank and walk your feet back to your hands. It warms the shoulders, core and hamstrings and gets your wrists ready for push-ups and burpees. A great opener for any equipment-free session.',
     },
     howTo: [
