@@ -85,6 +85,26 @@ const names = JSON.parse(readFileSync(namesPath, 'utf8'));
 const idByName = new Map(names.map((n) => [key(n.file), n.exerciseId]));
 const noteByName = new Map(names.map((n) => [key(n.file), n.note ?? '']));
 
+/**
+ * The id for a filename, allowing for a parenthetical.
+ *
+ * A movement with two names gets filmed as «Червячок (гусеница).mov» — the second name written in
+ * so whoever opens the folder knows it is the same thing. The whole string matches nothing, so
+ * after the exact key we try what is outside the brackets and then what is inside: either half
+ * alone is a name the map knows.
+ */
+function idFor(name) {
+  const exact = idByName.get(key(name));
+  if (exact) return exact;
+  const inside = /\(([^)]*)\)/.exec(name)?.[1];
+  const outside = name.replace(/\([^)]*\)/g, ' ');
+  for (const part of [outside, inside]) {
+    const id = part ? idByName.get(key(part)) : undefined;
+    if (id) return id;
+  }
+  return undefined;
+}
+
 const clips = readdirSync(srcDir)
   .filter((f) => /\.(mov|mp4|m4v)$/i.test(f))
   .sort();
@@ -109,15 +129,29 @@ const POSTER_WIDTH = 640;
 
 const manifest = [];
 const unknown = [];
+/** Which filename already claimed each id, so a second one is reported rather than overwriting. */
+const takenBy = new Map();
 let encoded = 0;
 
 for (const file of clips) {
   const name = basename(file, extname(file));
-  const id = idByName.get(key(name));
+  const id = idFor(name);
   if (!id) {
     unknown.push({ name, note: noteByName.get(key(name)) });
     continue;
   }
+  /*
+   * One movement can have two names — «Червячок» is what the coach says and «Гусеница» is what
+   * the library called it — so the map points both at one id. Only the first file wins; the
+   * second would otherwise silently overwrite the first's mp4 and still be a duplicate entry
+   * that upload-videos.mjs refuses.
+   */
+  const taken = takenBy.get(id);
+  if (taken) {
+    console.log(`  skipped  ${name} — ${taken} is already the clip for ${id}`);
+    continue;
+  }
+  takenBy.set(id, name);
 
   const src = join(srcDir, file);
   const out = join(outDir, `${id}.mp4`);
