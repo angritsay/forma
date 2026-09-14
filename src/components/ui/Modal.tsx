@@ -23,9 +23,10 @@ export interface ModalProps {
 /**
  * Centered confirm dialog. Esc/backdrop close; focus trapped; initial focus on Cancel.
  *
- * The panel is a sharp --surface-2 rectangle behind a strong hairline, with no shadow — on a
- * dimmed ground the edge is enough. It arrives as a fade with a small upward shift, 150ms on the
- * brand's ease-out; nothing scales or bounces.
+ * The panel is frosted glass at `--r-card` behind a strong hairline, with no shadow — on a dimmed
+ * ground the edge is enough, and the screen showing faintly through is what says the dialog is laid
+ * over the page rather than replacing it. It arrives as a fade with a small upward shift, 150ms on
+ * the brand's ease-out; nothing scales or bounces.
  */
 export function Modal({
   open,
@@ -75,7 +76,7 @@ export function Modal({
         aria-describedby={description ? descId : undefined}
         tabIndex={-1}
         className={clsx(
-          'relative w-full max-w-[400px] rounded-card border border-border-strong bg-surface-2 p-6 outline-none',
+          'glass relative w-full max-w-[400px] rounded-card border border-border-strong p-6 outline-none',
           'transition-[opacity,transform] duration-150 ease-(--ease-out)',
           shown ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0',
           className,

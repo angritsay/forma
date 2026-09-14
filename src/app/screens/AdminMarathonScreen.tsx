@@ -415,7 +415,7 @@ function Settings({
         />
       </div>
       {/*
-       * Switching a running marathon here really does change the game: solo stops consulting teams
+       * Switching a running marathon here really does change the challenge: solo stops consulting teams
        * anywhere, so the pairs stop scoring together from the next board onwards. The hint says so
        * rather than leaving it to be discovered on Monday.
        */}

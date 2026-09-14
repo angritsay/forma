@@ -18,7 +18,7 @@
  *
  * **The minutes lead, and there are no points.** A course is time you are about to spend, and that
  * is the number somebody standing on a mat is deciding about: «восемнадцать минут» is an answer,
- * «140 очков» is a score for something that has not happened yet. Points belong to the game, where
+ * «140 очков» is a score for something that has not happened yet. Points belong to the challenge, where
  * they are the whole point; a workout is not a thing you win.
  *
  * **The recommended row is filled, not badged.** White on ink among two outlined rows: the eye

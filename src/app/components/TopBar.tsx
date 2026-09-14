@@ -42,11 +42,14 @@ export function TopBar({ title, back, right, align = 'left', className }: TopBar
   const reserveLeft = Boolean(back) || align === 'center';
   return (
     /*
-     * The hairline under the bar is what separates chrome from page now that neither is a distinct
-     * surface — the header is the same black as everything under it, and without a rule the title
-     * and the screen's first heading run into each other while scrolling.
+     * No hairline of its own any more. It used to carry one because chrome and page were the same
+     * black and the title ran into the screen's first heading while scrolling; now the header slot
+     * in `Screen` is `.glass-bar-top`, which draws that rule as part of the material and is also
+     * the thing that separates the two surfaces. Every `<TopBar>` in the tree is passed to
+     * `Screen`'s `header` prop, so the line has not gone anywhere — it moved up one level, and
+     * keeping it here as well would double it.
      */
-    <header className={clsx('flex h-14 items-center gap-2 border-b border-border px-3', className)}>
+    <header className={clsx('flex h-14 items-center gap-2 px-3', className)}>
       {reserveLeft ? (
         <div className="flex min-w-11 shrink-0 items-center">
           {back ? (

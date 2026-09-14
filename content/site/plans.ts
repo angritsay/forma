@@ -86,7 +86,7 @@ export const PLAN_INCLUDES: readonly L10n[] = [
     en: 'Load adapts to you after every workout',
   },
   { ru: 'Новые курсы — сразу, без доплат', en: 'New courses as they appear, at no extra cost' },
-  { ru: 'Статистика, шаги, таблица лидеров', en: 'Stats, steps and the leaderboard' },
+  { ru: 'Прогресс, шаги, таблица лидеров', en: 'Progress, steps and the leaderboard' },
 ];
 
 /**
@@ -103,15 +103,15 @@ export const PLAN_INCLUDES: readonly L10n[] = [
 export const PLANS_ENABLED = true;
 
 /**
- * The game belongs to the subscription, not to everyone.
+ * The challenge belongs to the subscription, not to everyone.
  *
  * Its prize is an hour of the coach's time every week — the same hour `booking.ts` sells for
  * 3 500 ₽. Given away, the format costs more the better it does, and the coach is the one paying.
- * Behind the subscription it does the opposite: a course runs out after four weeks and a game
+ * Behind the subscription it does the opposite: a course runs out after four weeks and a challenge
  * never does, so it is the reason to still be paying next month.
  *
  * It follows `PLANS_ENABLED` rather than being its own switch, because a subscription that is not
- * on sale cannot be required. While plans are off the game is simply open — which is also what the
+ * on sale cannot be required. While plans are off the challenge is simply open — which is also what the
  * coach needs in order to run it with people he added by hand.
  */
 export const GAME_REQUIRES_SUBSCRIPTION = PLANS_ENABLED;

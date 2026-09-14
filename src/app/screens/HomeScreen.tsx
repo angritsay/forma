@@ -1,22 +1,22 @@
 /**
  * Home (docs/SPEC.md §10 flow 3): today's session, today's tasks, and the coach.
  *
- * It used to be the whole product on one page — a swipeable deck of every course and the game, and
+ * It used to be the whole product on one page — a swipeable deck of every course and the challenge, and
  * under it the resume strip, the streak, the week's figures, the coach's assigned workouts and his
  * bookable hour. Six sections, each a different size, none of them the answer to the only question
  * anybody opens this screen with: what am I doing today.
  *
- * So the deck moved to the programmes tab and the numbers to «Ты», and what is left is that
- * answer — for the course *and* for the game. The greeting names the athlete, today's session is
- * one full card, the game is one row under it (blurred for somebody not playing, because a
+ * So the deck moved to the programmes tab and the numbers to «Прогресс», and what is left is that
+ * answer — for the course *and* for the challenge. The greeting names the athlete, today's session is
+ * one full card, the challenge is one row under it (blurred for somebody not playing, because a
  * spoiler is a truer invitation than an advertisement), and one button offers the coach himself,
  * for the people whose answer to "what am I doing today" is «покажи мне, как».
  *
- * The steps row went to «Ты» with the rest of the numbers. Home answers what to do now; how far
+ * The steps row went to «Прогресс» with the rest of the numbers. Home answers what to do now; how far
  * you walked is how you are doing.
  *
  * The profile is here too, as the avatar in the top-right corner, because it left the tab bar
- * (BottomNav) to make room for the game. A photograph of your own face is the one control on a
+ * (BottomNav) to make room for the challenge. A photograph of your own face is the one control on a
  * phone nobody has ever had to look for.
  */
 import { useCallback, useMemo } from 'react';
@@ -73,7 +73,7 @@ export default function HomeScreen() {
   const activeCourseId = useActiveCourseId();
   const courses = useCatalogue((s) => s.courses);
   /*
-   * The game, from the server. Home shows the row whether or not there is one to show: with a
+   * The challenge, from the server. Home shows the row whether or not there is one to show: with a
    * marathon it carries today's task, without one it carries the same row blurred.
    */
   const { marathon, status: gameStatus } = useMyMarathons();
