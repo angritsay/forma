@@ -151,7 +151,7 @@ export const landing = {
   coachCredentials: 'Образование и сертификаты',
   coachMore: 'Подробнее о тренере',
   coachBook: 'Записаться на занятие',
-  coachBookHint: '{duration} мин онлайн · {price} · в приложении',
+  coachBookHint: 'Полчаса или час онлайн · от {price} · в приложении',
 
   // Главная: FAQ + CTA
   faqEyebrow: 'Вопросы',

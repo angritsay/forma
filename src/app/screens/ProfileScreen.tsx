@@ -43,7 +43,7 @@ import { saveDraft } from '@/app/screens/onboarding/draft';
 import { useSession } from '@/app/store/session';
 import { subscribeHref } from '@/app/features/courses/courseMeta';
 import { subscriptionSubtitle, subscriptionTitle } from '@/app/features/profile/subscription';
-import { BOOKING } from '@content/site/booking';
+import { BOOKING, bookingFromPrice } from '@content/site/booking';
 import { PLANS_ENABLED } from '@content/site/plans';
 import { formatPrice } from '@content/site/pricing';
 
@@ -207,8 +207,7 @@ export default function ProfileScreen() {
                   <ListRow
                     title={t('app.profileBook')}
                     subtitle={t('app.profileBookHint', {
-                      duration: BOOKING.durationMin,
-                      price: formatPrice(locale, BOOKING.price),
+                      price: formatPrice(locale, bookingFromPrice()),
                     })}
                     onClick={() => navigate('/book')}
                   />
