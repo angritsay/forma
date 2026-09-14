@@ -20,9 +20,11 @@ export interface SheetProps {
 /**
  * Bottom sheet: backdrop + Esc close, focus trap, body scroll lock, safe-area padding.
  *
- * Square-shouldered — the rounded top that marked a sheet in the previous design is gone with
- * every other radius — so what says "sheet" is the strong hairline along its top edge and the
- * short grab bar under it. It slides up over 280ms on the brand's ease-out and casts no shadow.
+ * Glass, with its shoulders back. The rounded top that marks a sheet was taken away when every
+ * radius went to 0 and is restored here at `--r-card`; the panel itself is frosted rather than
+ * solid, which is what the dimmed screen showing faintly through it is for. The strong hairline
+ * along the top edge and the short grab bar under it stay — they said "sheet" while nothing else
+ * did. It slides up over 280ms on the brand's ease-out and casts no shadow.
  */
 export function Sheet({ open, onClose, title, children, footer, label, className }: SheetProps) {
   const labels = useKitLabels();
@@ -57,7 +59,7 @@ export function Sheet({ open, onClose, title, children, footer, label, className
         aria-label={title ? undefined : label}
         tabIndex={-1}
         className={clsx(
-          'relative flex max-h-[92dvh] w-full max-w-[480px] flex-col border-t border-border-strong bg-surface',
+          'glass relative flex max-h-[92dvh] w-full max-w-[480px] flex-col rounded-t-card border-t border-border-strong',
           'outline-none transition-transform duration-280 ease-(--ease-out)',
           shown ? 'translate-y-0' : 'translate-y-full',
           className,
