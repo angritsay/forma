@@ -3,13 +3,13 @@
  *
  * It used to be a catalogue — a page title, a lead, and five tiles in a grid, each with its own
  * heading, kicker, tagline and row of facts. That is a shop, and this is not a shop: there is one
- * course to walk («Форма с нуля»), a game running beside it, and the rest is what has not been
+ * course to walk («Форма с нуля»), the challenge running beside it, and the rest is what has not been
  * bought yet. A grid of five 320px tiles says "compare these"; a deck says "this is the one, and
  * there is another behind it".
  *
  * So the deck that used to open the home screen lives here (`features/programs/ProgramDeck`), with
- * the game as a card of its own, and Home keeps only today. The kicker on each card says which
- * kind it is — «Курс» or «Игра» — and everything else is the picture, the name, one line and the
+ * the challenge as a card of its own, and Home keeps only today. The kicker on each card says which
+ * kind it is — «Курс» or «Челлендж» — and everything else is the picture, the name, one line and the
  * button.
  */
 import { useCallback, useMemo } from 'react';
@@ -51,7 +51,7 @@ export default function CoursesScreen() {
   const courseStates = useProgress((s) => s.courseStates);
   const activeCourseId = useActiveCourseId();
   const courses = useCatalogue((s) => s.courses);
-  // A game that fails to load leaves the deck to the courses; it never blocks the tab.
+  // The challenge that fails to load leaves the deck to the courses; it never blocks the tab.
   const { data: marathons, marathon } = useMyMarathons();
   const { data: todayTasks } = useMarathonDay(marathon, marathon?.dayIndex ?? 0);
 
@@ -67,7 +67,7 @@ export default function CoursesScreen() {
     gated: GAME_REQUIRES_SUBSCRIPTION,
   });
 
-  /* Today's open tasks, for the game card's one line: a rank moves nobody, an unfinished task does. */
+  /* Today's open tasks, for the challenge card's one line: a rank moves nobody, an unfinished task does. */
   const openTasks = useMemo(() => {
     if (!marathon || todayTasks.length === 0) return undefined;
     const left = todayTasks.filter((item) => item.task.rule !== 'none' && !item.mine).length;

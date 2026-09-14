@@ -5,8 +5,8 @@
 export const app = {
   tabHome: 'Сегодня',
   tabPrograms: 'Программы',
-  tabGame: 'Игра',
-  tabReports: 'Ты',
+  tabGame: 'Челлендж',
+  tabReports: 'Прогресс',
   navMain: 'Основная навигация',
   navLocaleRu: 'RU',
   navLocaleEn: 'EN',
@@ -197,8 +197,8 @@ export const app = {
   homeTodayNoCourseBody: 'Выбери программу — и первая тренировка появится здесь.',
   homeTodayNoCourseCta: 'Смотреть программы',
   homeCoachNow: 'Заниматься с тренером сейчас',
-  // The game, on Home. Somebody not playing sees the same row with the task blurred out.
-  homeGameSpoiler: 'Игра идёт без тебя',
+  // The challenge, on Home. Somebody not in it sees the same row with the task blurred out.
+  homeGameSpoiler: 'Челлендж идёт без тебя',
   homeGameSpoilerTask: 'Задание дня',
   homeTasksTitle: 'Сегодня ещё',
   homeTaskSteps: 'Напиши, сколько прошёл сегодня',
@@ -220,9 +220,9 @@ export const app = {
   homeCourseProgress: '{pct}% пройдено',
   homeCourseLocked: 'Закрыт',
   homeCourseGet: 'Прийти',
-  homeDeckLabel: 'Программы и игра',
+  homeDeckLabel: 'Программы и челлендж',
   homeDeckCourse: 'Курс',
-  homeDeckMarathon: 'Игра',
+  homeDeckMarathon: 'Челлендж',
   homeDeckMarathonBody: 'Задание каждый день, таблица за неделю',
   homeDeckMarathonLead: 'Задание каждый день. Кто наберёт больше всех за неделю — час с тренером.',
   homeDeckGameLocked: 'Входит в подписку',
@@ -467,8 +467,8 @@ export const app = {
   summaryNoResultsTitle: 'Результаты недоступны',
   summaryNoResultsBody: 'Эта тренировка не была завершена на этом устройстве, поэтому итогов нет.',
 
-  // Статистика
-  statsTitle: 'Ты',
+  // Прогресс
+  statsTitle: 'Прогресс',
   statsPosterLabel: 'Твой прогресс',
   statsStreakDays: '{days} подряд',
   statsStreakBest: 'Лучшая серия — {n}',
@@ -987,7 +987,7 @@ export const app = {
 
   // --- Marathon -------------------------------------------------------------
   // The second format: daily tasks, proof, a partner you are scored with, a weekly board.
-  marathonTitle: 'Игра',
+  marathonTitle: 'Челлендж',
   marathonTabToday: 'Сегодня',
   marathonTabBoard: 'Таблица',
   marathonTabPoints: 'Мои баллы',
@@ -997,23 +997,23 @@ export const app = {
   marathonWeekLast: 'Прошлая неделя',
   marathonPrize: 'Приз недели',
   marathonWithPartner: 'Напарник: {name}',
-  marathonSolo: 'Играешь один',
-  marathonHomeCta: 'Открыть игру',
+  marathonSolo: 'Идёшь один',
+  marathonHomeCta: 'Открыть челлендж',
   marathonHomeTasksLeft: 'Осталось заданий: {n}',
   marathonHomeAllDone: 'На сегодня всё',
-  marathonNotStarted: 'Игра ещё не началась',
+  marathonNotStarted: 'Челлендж ещё не начался',
   marathonNotStartedBody: 'Задания появятся утром первого дня.',
-  marathonFinished: 'Игра закончена',
+  marathonFinished: 'Челлендж закончен',
   marathonFinishedBody: 'Таблица остаётся — можно посмотреть, чем всё кончилось.',
-  marathonEmptyTitle: 'Ты пока не в игре',
+  marathonEmptyTitle: 'Ты пока не в челлендже',
   marathonEmptyBody:
-    'Игра — это задание каждый день и таблица за неделю. Победитель недели получает час с тренером.',
+    'Челлендж — это задание каждый день и таблица за неделю. Победитель недели получает час с тренером.',
   marathonNoTasksToday: 'Сегодня заданий нет',
   marathonNoTasksTodayBody: 'Отдыхаем. Завтра утром будет новое.',
-  marathonErrorTitle: 'Не удалось загрузить игру',
-  marathonLockedTitle: 'Игра входит в подписку',
+  marathonErrorTitle: 'Не удалось загрузить челлендж',
+  marathonLockedTitle: 'Челлендж входит в подписку',
   marathonTrialTitle: 'Пробная неделя',
-  marathonTrialBody: 'Игра открыта вместе с курсом. Осталось {n} — дальше по подписке.',
+  marathonTrialBody: 'Челлендж открыт вместе с курсом. Осталось {n} — дальше по подписке.',
   marathonLockedBody:
     'Задание каждый день, доказательство и таблица за неделю. Кто наберёт больше всех — час с тренером.',
   // One task
@@ -1064,7 +1064,7 @@ export const app = {
   mAdminStarts: 'Старт',
   mAdminDays: 'Дней',
   mAdminTeamSize: 'Размер команды',
-  mAdminTeamSizeHint: 'Как считаются очки: пара делит задание на двоих или каждый играет за себя',
+  mAdminTeamSizeHint: 'Как считаются очки: пара делит задание на двоих или каждый идёт за себя',
   mAdminRuleSoloScores: 'Очки за выполнение',
   mAdminTeamSizeSolo: 'Каждый сам за себя',
   mAdminTeamSizePair: 'Пары',
@@ -1123,7 +1123,7 @@ export const app = {
   mAdminVisibilityTeam: 'Команда и тренер',
   mAdminVisibilityCoach: 'Только тренер',
   mAdminDueTime: 'Дедлайн',
-  mAdminDueDefault: 'Как у игры',
+  mAdminDueDefault: 'Как у челленджа',
   mAdminLateCounts: 'Засчитывать после дедлайна',
   mAdminSave: 'Сохранить',
   mAdminDelete: 'Удалить',
@@ -1142,7 +1142,7 @@ export const app = {
   mAdminRemoved: 'Убран',
   mAdminPeopleEmpty: 'Пока никого',
   mAdminPeopleEmptyBody:
-    'Добавь участников по почте — они увидят игру, когда войдут с этим адресом.',
+    'Добавь участников по почте — они увидят челлендж, когда войдут с этим адресом.',
   mAdminAddError: 'Не удалось добавить',
   // Proofs
   mAdminProofsEmpty: 'Отчётов пока нет',

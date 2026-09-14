@@ -7,8 +7,8 @@
 export const app = {
   tabHome: 'Today',
   tabPrograms: 'Programmes',
-  tabGame: 'Game',
-  tabReports: 'You',
+  tabGame: 'Challenge',
+  tabReports: 'Progress',
   navMain: 'Main navigation',
   navLocaleRu: 'RU',
   navLocaleEn: 'EN',
@@ -198,8 +198,8 @@ export const app = {
   homeTodayNoCourseBody: 'Choose a program and your first workout will appear here.',
   homeTodayNoCourseCta: 'Browse programmes',
   homeCoachNow: 'Train with the coach now',
-  // The game, on Home. Somebody not playing sees the same row with the task blurred out.
-  homeGameSpoiler: 'The game is on',
+  // The challenge, on Home. Somebody not in it sees the same row with the task blurred out.
+  homeGameSpoiler: 'The challenge is on',
   homeGameSpoilerTask: 'Today’s task',
   homeTasksTitle: 'Still today',
   homeTaskSteps: 'Log how far you walked today',
@@ -221,9 +221,9 @@ export const app = {
   homeCourseProgress: '{pct}% done',
   homeCourseLocked: 'Locked',
   homeCourseGet: 'Join',
-  homeDeckLabel: 'Programmes and game',
+  homeDeckLabel: 'Programmes and challenge',
   homeDeckCourse: 'Course',
-  homeDeckMarathon: 'Game',
+  homeDeckMarathon: 'Challenge',
   homeDeckMarathonBody: 'A task every day, a board every week',
   homeDeckMarathonLead:
     'A task every day. Whoever scores most in a week gets an hour with the coach.',
@@ -468,8 +468,8 @@ export const app = {
   summaryNoResultsTitle: 'Results unavailable',
   summaryNoResultsBody: 'This workout wasn’t finished on this device, so there is nothing to show.',
 
-  // Stats
-  statsTitle: 'You',
+  // Progress
+  statsTitle: 'Progress',
   statsPosterLabel: 'Your progress',
   statsStreakDays: '{days} in a row',
   statsStreakBest: 'Best run — {n}',
@@ -990,7 +990,7 @@ export const app = {
 
   // --- Marathon -------------------------------------------------------------
   // The second format: daily tasks, proof, a partner you are scored with, a weekly board.
-  marathonTitle: 'Game',
+  marathonTitle: 'Challenge',
   marathonTabToday: 'Today',
   marathonTabBoard: 'Board',
   marathonTabPoints: 'My points',
@@ -1000,24 +1000,24 @@ export const app = {
   marathonWeekLast: 'Last week',
   marathonPrize: "This week's prize",
   marathonWithPartner: 'Partner: {name}',
-  marathonSolo: 'Playing solo',
-  marathonHomeCta: 'Open the game',
+  marathonSolo: 'On your own',
+  marathonHomeCta: 'Open the challenge',
   marathonHomeTasksLeft: '{n} left today',
   marathonHomeAllDone: 'Done for today',
-  marathonNotStarted: 'The game has not started',
+  marathonNotStarted: 'The challenge has not started',
   marathonNotStartedBody: 'The first tasks arrive on the morning of day one.',
-  marathonFinished: 'The game is over',
+  marathonFinished: 'The challenge is over',
   marathonFinishedBody: 'The board stays up — you can still see how it ended.',
-  marathonEmptyTitle: 'You are not in a game',
+  marathonEmptyTitle: 'You are not in the challenge',
   marathonEmptyBody:
-    'The game is a task every day and a board every week. Whoever wins the week gets an hour with the coach.',
+    'The challenge is a task every day and a board every week. Whoever wins the week gets an hour with the coach.',
   marathonNoTasksToday: 'Nothing set for today',
   marathonNoTasksTodayBody: 'A rest day. There will be a new one in the morning.',
-  marathonErrorTitle: 'Could not load the game',
-  marathonLockedTitle: 'The game is part of the subscription',
+  marathonErrorTitle: 'Could not load the challenge',
+  marathonLockedTitle: 'The challenge is part of the subscription',
   marathonTrialTitle: 'Your free week',
   marathonTrialBody:
-    'The game is open with your course. {n} left — after that it needs a subscription.',
+    'The challenge is open with your course. {n} left — after that it needs a subscription.',
   marathonLockedBody:
     'A task every day, proof, and a board every week. Whoever scores most gets an hour with the coach.',
   // One task
@@ -1069,7 +1069,7 @@ export const app = {
   mAdminDays: 'Days',
   mAdminTeamSize: 'Team size',
   mAdminTeamSizeHint:
-    'How points are counted: a pair shares a task, or everyone plays for themselves',
+    'How points are counted: a pair shares a task, or everyone counts for themselves',
   mAdminRuleSoloScores: 'Scores when done',
   mAdminTeamSizeSolo: 'Everyone on their own',
   mAdminTeamSizePair: 'Pairs',
@@ -1128,7 +1128,7 @@ export const app = {
   mAdminVisibilityTeam: 'The team and the coach',
   mAdminVisibilityCoach: 'The coach only',
   mAdminDueTime: 'Deadline',
-  mAdminDueDefault: "The game's",
+  mAdminDueDefault: "The challenge's",
   mAdminLateCounts: 'Count proof sent after the deadline',
   mAdminSave: 'Save',
   mAdminDelete: 'Delete',
@@ -1147,7 +1147,7 @@ export const app = {
   mAdminRemoved: 'Removed',
   mAdminPeopleEmpty: 'Nobody yet',
   mAdminPeopleEmptyBody:
-    'Add people by email — the game appears for them when they sign in with that address.',
+    'Add people by email — the challenge appears for them when they sign in with that address.',
   mAdminAddError: 'Could not add',
   // Proofs
   mAdminProofsEmpty: 'No proof yet',

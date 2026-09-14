@@ -34,7 +34,7 @@ export interface DeckCardProps {
   eyebrow: ReactNode;
   title: string;
   /**
-   * What this thing *is*, in one line — a course is a programme by weeks, a game is a task a day.
+   * What this thing *is*, in one line — a course is a programme by weeks, the challenge is a task a day.
    *
    * It exists because of the first thing anybody said about the home screen: «заходишь, и ничего
    * непонятно». The card can say where you are in something only once you already know what that

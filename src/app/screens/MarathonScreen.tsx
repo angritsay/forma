@@ -1,8 +1,8 @@
 /**
- * The game (the third tab): today's task, and who is winning the week.
+ * The challenge (the third tab): today's task, and who is winning the week.
  *
  * It was reachable only through a card on the home deck, which made the format look like an
- * accessory to the course. It is a tab of its own now, and it holds the two halves of a game in
+ * accessory to the course. It is a tab of its own now, and it holds the two halves of the challenge in
  * the order they are asked for: what is set for today and whether it is sent, then the short
  * table of the week under it — five rows, the full board one tap further.
  *
@@ -110,9 +110,9 @@ export default function MarathonScreen() {
   const header = <TopBar title={t('app.marathonTitle')} />;
 
   /*
-   * The game is part of the subscription (content/site/plans.ts). The screen says so plainly and
+   * The challenge is part of the subscription (content/site/plans.ts). The screen says so plainly and
    * offers the subscription rather than pretending the format does not exist — somebody who got
-   * here tapped a card that told them what the game is, and the answer to "can I play" is a price,
+   * here tapped a card that told them what the challenge is, and the answer to "can I play" is a price,
    * not a locked door.
    */
   const access = gameAccess({

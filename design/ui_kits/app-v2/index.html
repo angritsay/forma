@@ -399,12 +399,12 @@ const TODAY={title:'Ягодичный мост',sub:'5 минут, цель 100
 
 const SCREENS=[
   ['Вход',[['auth','Экран входа']]],
-  ['Главная',[['home-game','В игре'],['home-nogame','Не в игре — спойлер'],['home-nocourse','Без курса']]],
+  ['Главная',[['home-game','В челлендже'],['home-nogame','Не в челлендже — спойлер'],['home-nocourse','Без курса']]],
   ['Программы',[['programs','Карусель']]],
   ['Курс',[['path','Путь по дням'],['difficulty','Насколько тяжело']]],
   ['Тренировка',[['player-warmup','Разминка'],['player-timer','Время'],['player-reps','Повторы'],['player-back','Техника'],['done','Готово!']]],
-  ['Игра',[['game','Задание и таблица']]],
-  ['Ты',[['you','Серия, цель, вехи']]],
+  ['Челлендж',[['game','Задание и таблица']]],
+  ['Прогресс',[['you','Серия, цель, вехи']]],
   ['Профиль',[['profile','Профиль']]],
 ];
 const TAB_OF={'home-game':0,'home-nogame':0,'home-nocourse':0,'programs':1,'path':1,'difficulty':1,'game':2,'you':3};
@@ -446,8 +446,8 @@ function animate(){
 const TABS=[
   ['Сегодня','M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z','home-game'],
   ['Программы','M4 5h6v6H4zM14 5h6v6h-6zM4 15h6v6H4zM14 15h6v6h-6z','programs'],
-  ['Игра','M7 4h10v3a5 5 0 0 1-10 0zM9 14h6v6H9zM7 20h10','game'],
-  ['Ты','M12 3a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM4 21a8 8 0 0 1 16 0','you'],
+  ['Челлендж','M7 4h10v3a5 5 0 0 1-10 0zM9 14h6v6H9zM7 20h10','game'],
+  ['Прогресс','M12 3a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM4 21a8 8 0 0 1 16 0','you'],
 ];
 const tabbar=id=>`<nav class="tabs">${TABS.map(([l,d,to],i)=>
   `<button data-go="${to}" ${TAB_OF[id]===i?'aria-current="page"':''}><span class="dot"></span>
@@ -508,7 +508,7 @@ S['home-game']=()=>homeBody(`${todayCover}
   <button class="gamerow sweep" data-go="game" style="--i:1;flex:none">
     ${ring('min(52px,13vw,7.6cqh)',6,0.13,'<span class="num" style="font-size:14px">4</span>','var(--game)')}
     <span style="flex:1;min-width:0">
-      <span class="eyebrow" style="color:var(--game);display:block">Игра · день 4 из 30</span>
+      <span class="eyebrow" style="color:var(--game);display:block">Челлендж · день 4 из 30</span>
       <span style="display:block;font-size:16px;font-weight:600;margin-top:3px">Планка на максимум</span></span>
     <span class="glyph muted2">›</span></button>
   <div class="sweep" style="--i:2;flex:none">${coachBtn}</div>`);
@@ -518,7 +518,7 @@ S['home-nogame']=()=>homeBody(`${todayCover}
   <button class="gamerow sweep" data-go="game" style="--i:1;flex:none">
     ${ring('min(52px,13vw,7.6cqh)',6,0,'<span class="glyph" style="font-size:16px;color:var(--game)">?</span>','var(--game)')}
     <span style="flex:1;min-width:0">
-      <span class="eyebrow" style="color:var(--game);display:block">Игра идёт без тебя</span>
+      <span class="eyebrow" style="color:var(--game);display:block">Челлендж идёт без тебя</span>
       <span class="blur" style="display:block;font-size:16px;font-weight:600;margin-top:3px">Планка на максимум</span></span>
     <span class="glyph muted2">›</span></button>
   <div class="sweep" style="--i:2;flex:none">${coachBtn}</div>`);
@@ -541,7 +541,7 @@ S.programs=()=>{
     <div class="deck" id="deck">
       <div>${cover({photo:IMG.hero,eyebrow:'Курс · неделя 1 из 4',title:'Форма <span class="thin">с нуля</span>',
         lead:'Коротко, по кругу, без оборудования.',chips:['4 недели','18 мин','11% пройдено'],cta:'Продолжить',go:'path',h:'100%'})}</div>
-      <div>${cover({tile:'var(--game)',eyebrow:'Игра · день 4 из 30',title:'Спринт <span class="thin">формы</span>',
+      <div>${cover({tile:'var(--game)',eyebrow:'Челлендж · день 4 из 30',title:'Спринт <span class="thin">формы</span>',
         lead:'Задание каждый день. Кто наберёт больше всех за неделю — час с тренером.',
         chips:['30 дней','в паре'],cta:'Задание дня',go:'game',h:'100%'})}</div>
       <div>${cover({tile:'var(--surface-2)',eyebrow:'Курс · закрыт',title:'Форма <span class="thin">с гантелями</span>',
@@ -784,7 +784,7 @@ S.game=()=>`<div class="screen"><div class="fit pad" style="padding:var(--v2) 24
 /*
  * «Ты» is the screenshot screen: one number the size of a poster, and under it the three
  * mechanics that make anybody come back — the week you are halfway through, the badges you have
- * not taken yet, and the one number you owe today. The week's table lives on «Игра», where the
+ * not taken yet, and the one number you owe today. The week's table lives on «Челлендж», where the
  * points are; it was here too, and two copies of the same board is one board too many.
  */
 S.you=()=>`<div class="screen">

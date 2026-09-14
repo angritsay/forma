@@ -14,14 +14,14 @@ interface NavItem {
 /*
  * Four tabs, and the profile is not one of them.
  *
- * The bar holds the four things the app *is* — today, the programmes, the game, the numbers — and
+ * The bar holds the four things the app *is* — today, the programmes, the challenge, the numbers — and
  * a profile is none of them: it is opened a handful of times ever, and it was taking a quarter of
  * the width every day. It lives where a phone owner already looks for it, as the avatar in the top
- * right of the home screen (HomeScreen's `chrome`), and the seat it gave up went to the game,
+ * right of the home screen (HomeScreen's `chrome`), and the seat it gave up went to the challenge,
  * which used to be reachable only through a card on the home deck.
  *
  * «Курсы» is «Программы» here, and in the product generally: a course is one shape a programme
- * can take, and the tab holds them alongside the game.
+ * can take, and the tab holds them alongside the challenge.
  */
 const ITEMS: readonly NavItem[] = [
   { to: '/', labelKey: 'app.tabHome', icon: 'home', end: true },
