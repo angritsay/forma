@@ -31,7 +31,7 @@ import { GAME_REQUIRES_SUBSCRIPTION } from '@content/site/plans';
 function DeckSkeleton() {
   return (
     <div className="flex flex-col" aria-hidden="true">
-      <Skeleton rounded="control" className="-mx-5 h-[78dvh] min-h-[520px] lg:-mx-8" />
+      <Skeleton rounded="control" className="-mx-6 h-[78dvh] min-h-[520px] lg:-mx-10" />
       <div className="mt-4 flex justify-center gap-2">
         <Skeleton rounded="control" className="h-0.5 w-7" />
         <Skeleton rounded="control" className="h-0.5 w-7" />

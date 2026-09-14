@@ -127,7 +127,7 @@ export default function LeaderboardScreen() {
         <div
           role="radiogroup"
           aria-label={t('app.leaderboardFilterLabel')}
-          className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1"
+          className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-1"
         >
           <Chip
             role="radio"

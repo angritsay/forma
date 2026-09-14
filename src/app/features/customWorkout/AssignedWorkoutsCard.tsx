@@ -60,11 +60,6 @@ export function AssignedWorkoutsCard({ onOpen }: AssignedWorkoutsCardProps) {
                 ) : null}
               </span>
             </span>
-            {w.points ? (
-              <span className="numeral tabular shrink-0 text-sm text-muted">
-                {t('app.nodePoints', { n: w.points })}
-              </span>
-            ) : null}
             <Glyph size={16} className="shrink-0 text-muted-2">
               ›
             </Glyph>

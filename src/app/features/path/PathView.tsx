@@ -66,7 +66,7 @@ export function PathView({ course, state, onNodePress }: PathViewProps) {
              * horizontal thing in a screen of stops, which is what makes the weeks readable as
              * chapters rather than as more of the same column.
              */}
-            <div className="hero-art -mx-5 flex items-baseline justify-between gap-3 px-5 py-3 lg:-mx-8 lg:px-8">
+            <div className="hero-art -mx-6 flex items-baseline justify-between gap-3 px-6 py-3 lg:-mx-10 lg:px-10">
               <div className="flex items-baseline gap-2">
                 <h2 className="eyebrow text-current">{t('app.pathWeek', { n: g.week })}</h2>
                 {g.deload ? <Badge tone="neutral">{t('training.deloadBadge')}</Badge> : null}

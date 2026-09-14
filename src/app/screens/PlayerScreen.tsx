@@ -473,7 +473,7 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
             {/* `data-card-scroll`: FlipCard asks this element whether a downward drag is a pull
                 to close or the athlete scrolling back up through the technique. */}
             <div data-card-scroll className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-              <div className="mx-auto flex w-full max-w-[560px] flex-col gap-5 px-5 pt-5 pb-[calc(var(--safe-bottom)+32px+var(--demo-inset,0px))]">
+              <div className="mx-auto flex w-full max-w-[560px] flex-col gap-5 px-6 pt-5 pb-[calc(var(--safe-bottom)+32px+var(--demo-inset,0px))]">
                 {step ? (
                   <SectionStepper
                     sections={workoutSections(prescribed)}

@@ -447,7 +447,7 @@ export default function AdminScreen() {
         <div
           role="radiogroup"
           aria-label={t('app.adminFilterLabel')}
-          className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1"
+          className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-1"
         >
           {subscriptions
             ? SUB_STATUS_FILTERS.map((f) => (

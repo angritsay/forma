@@ -51,9 +51,9 @@ import { BOOKING } from '@content/site/booking';
 
 function HomeSkeleton() {
   return (
-    <div className="flex flex-col gap-5 pt-4" aria-hidden="true">
+    <div className="flex flex-col gap-7 pt-5" aria-hidden="true">
       <Skeleton rounded="control" className="h-9 w-2/3" />
-      <Skeleton rounded="control" className="-mx-5 h-[58dvh] min-h-[420px] lg:-mx-8" />
+      <Skeleton rounded="control" className="-mx-6 h-[58dvh] min-h-[420px] lg:-mx-10" />
       <Skeleton rounded="control" className="h-24" />
     </div>
   );
@@ -143,10 +143,8 @@ export default function HomeScreen() {
   }, [profile, stepsToday, locale, t, navigate, takeAssessment]);
 
   const header = (
-    <div className="flex items-start gap-3 pt-4">
-      <h1 className="font-display min-w-0 flex-1 text-[26px] leading-[1.18] tracking-[-0.02em]">
-        {greeting}
-      </h1>
+    <div className="flex items-center gap-3 pt-5">
+      <h1 className="font-display min-w-0 flex-1 text-lg">{greeting}</h1>
       <IconButton
         label={t('app.homeRefresh')}
         icon={loading ? <Spinner size={16} /> : 'refresh'}
@@ -193,10 +191,10 @@ export default function HomeScreen() {
       next !== null &&
       (next.kind === 'workout' || next.kind === 'test' || next.kind === 'benchmark');
     body = (
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-7">
         <ResumeCard onResume={(path) => navigate(path)} />
         {course ? (
-          <div className="-mx-5 h-[58dvh] max-h-[620px] min-h-[420px] lg:-mx-8">
+          <div className="-mx-6 h-[58dvh] max-h-[620px] min-h-[420px] lg:-mx-10">
             <DeckCard
               photo={PHOTOS.homeToday}
               priority
@@ -256,7 +254,7 @@ export default function HomeScreen() {
 
   return (
     <Screen>
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-7">
         {header}
         {body}
       </div>

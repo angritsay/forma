@@ -39,8 +39,8 @@ export function Screen({
       )}
       <main
         className={clsx(
-          'flex-1 pb-[calc(var(--nav-inset,0px)+var(--safe-bottom)+24px)]',
-          padded && 'px-5 lg:px-8',
+          'flex-1 pb-[calc(var(--nav-inset,0px)+var(--safe-bottom)+32px)]',
+          padded && 'px-6 lg:px-10',
           contentClassName,
         )}
       >
@@ -56,7 +56,7 @@ export function Screen({
        * itself.
        */}
       {footer ? (
-        <div className="sticky bottom-[var(--nav-inset,0px)] z-20 bg-bg px-5 pt-4 pb-[calc(var(--safe-bottom)+16px)]">
+        <div className="sticky bottom-[var(--nav-inset,0px)] z-20 bg-bg px-6 pt-5 pb-[calc(var(--safe-bottom)+16px)]">
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-x-0 bottom-full h-6 bg-linear-to-t from-bg to-transparent"

@@ -39,8 +39,8 @@ export function StreakCard({ streak, stepsGoal, onLogSteps }: StreakCardProps) {
      * is gone: the count is the fact, the word under it says what it counts, and a picture of fire
      * next to a figure was the kind of decoration the brandbook takes off every row.
      */
-    <section className="flex items-start gap-4 pt-5" aria-label={t('app.homeStreakTitle')}>
-      <span className="numeral tabular shrink-0 text-5xl leading-none">{streak.current}</span>
+    <section className="flex items-start gap-5 pt-6" aria-label={t('app.homeStreakTitle')}>
+      <span className="numeral tabular shrink-0 text-4xl leading-none">{streak.current}</span>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="eyebrow">{word}</span>

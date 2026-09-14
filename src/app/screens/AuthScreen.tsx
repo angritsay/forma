@@ -218,7 +218,7 @@ export default function AuthScreen() {
 
   return (
     <main
-      className="relative flex min-h-dvh flex-col justify-end px-5 pt-[var(--safe-top)] pb-[calc(var(--safe-bottom)+var(--nav-inset,0px)+28px)] text-paper"
+      className="relative flex min-h-dvh flex-col justify-end px-6 pt-[var(--safe-top)] pb-[calc(var(--safe-bottom)+var(--nav-inset,0px)+28px)] text-paper"
       onPointerDown={introOver ? undefined : () => setIntro('done')}
     >
       <Backdrop src={AUTH_FILM.src || undefined} poster={withBasePoster(AUTH_FILM.poster)} />
@@ -237,13 +237,13 @@ export default function AuthScreen() {
       )}
 
       <div
-        className="flex flex-col items-center gap-8 transition-opacity ease-(--ease-out)"
+        className="flex flex-col items-center gap-10 transition-opacity ease-(--ease-out)"
         style={{ opacity: introOver ? 1 : 0, transitionDuration: `${INTRO_FADE_MS}ms` }}
       >
         <Logo className="text-[15px]" />
 
         {step === 'email' ? (
-          <form onSubmit={onSubmitEmail} className="flex w-full flex-col gap-3" noValidate>
+          <form onSubmit={onSubmitEmail} className="flex w-full flex-col gap-4" noValidate>
             <Input
               type="email"
               name="email"
@@ -267,7 +267,7 @@ export default function AuthScreen() {
             </Button>
           </form>
         ) : (
-          <form onSubmit={onSubmitCode} className="flex w-full flex-col gap-3" noValidate>
+          <form onSubmit={onSubmitCode} className="flex w-full flex-col gap-4" noValidate>
             {demoCode ? (
               /* Demo mode has no inbox, so the code it just issued is said on the screen. */
               <p className="text-center text-sm font-semibold text-warning">

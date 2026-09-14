@@ -117,7 +117,7 @@ public/                     # favicon.svg, icons, manifest
   split; headings sit low against their column; photographs bleed past the page gutter. Large
   radii survive where a card is genuinely a discrete object (24px cards, 20px tiles, 16px inputs),
   but buttons and chips are near-square (4px) with capitalised, tracked labels — no pills. Bottom
-  tab bar in the app (Главная / Программы / Игра / Отчёты — the profile is the avatar in the
+  tab bar in the app (Сегодня / Программы / Игра / Прогресс — the profile is the avatar in the
   top-right of Home, not a tab), generous spacing, 1px borders
   (`--border`).
 - The accent is a dosage rule, not just a colour: `#9ECBFF` marks the primary button, the
@@ -370,11 +370,15 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    an open day is outlined, a locked one is dimmed; rest and milestone days open a sheet. Header
    with progress %, days done and the load multiplier, plus the leaderboard button.
 5. **Node preview**: the picture (a still from the movement's clip, else the drawn figure), the
-   workout's name, the programme and day, three facts, and "Start". Everything else — focus,
+   workout's name, the programme and day, two facts — how long it takes and what it costs — and
+   "Start". Everything else — focus,
    description, the movement grid, the plan block by block — is folded behind "What's inside".
-   Pressing Start opens the difficulty sheet (Easier / As usual / Harder, each with its estimated
-   duration, points and kcal; the recommended one badged with the reason); picking one starts the
-   session immediately — there is no second preview and no confirm button.
+   Pressing Start opens the difficulty sheet: Easier / As usual / Harder, each led by its estimated
+   **minutes** as a large numeral, over a bar of the work it prescribes, with the reps and kcal
+   under it. The recommended one is a filled row (paper on ink) rather than a badged one, and the
+   reason is stated under all three. Picking one starts the session immediately — there is no second
+   preview and no confirm button. **No points anywhere in training**: points are the game's
+   currency (§10 flow 12), and a workout is time you spend, not a score you earn.
 6. **Player**: one card the size of the screen, with two sides. Front: the clip (or the drawn
    figure), auto-playing, with a back arrow and pause at the top and, at the bottom, the movement's
    name and its one number — a countdown for timed work, an adjustable rep count with "Done" for
@@ -390,12 +394,15 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    stopped** — same step, same countdown. The step's clock is derived from the session clock
    (`stepStartedMs` in the store), so pausing, walking out and closing the app all freeze it the
    same way, and Home offers a **Продолжить** strip naming the movement it will pick up on.
-7. **Summary + feedback**: time, points, calories, completion; RPE slider 1–10 with descriptors;
+7. **Summary + feedback**: the time on the crosshair plate, then calories and completion; RPE slider 1–10 with descriptors;
    feeling chips (great / ok / hard / pain); notes; "Save" → adaptation message ("next time +5%").
-8. **Reports** («Отчёты», the fourth tab): the streak first (days, at-risk state, steps CTA), the
-   steps chart, the achievements — earned ones in the grid, the rest in a row swiped sideways — the
-   all-time totals, and the top of this week's leaderboard with the full table one tap away. Under
-   those: the week's load, points by week, the streak calendar, personal records and the level.
+8. **Progress** («Прогресс», the fourth tab): a poster, and then two sections. The poster is the
+   paper surface running past both gutters — the wordmark and the level in one row, the streak as
+   one very large numeral with what it counts under it, and workouts / minutes / kcal on a ruled
+   line — built so that a screenshot of it is already a story. Under it: the achievements (earned
+   in the grid, the rest in a row swiped sideways) and the top of this week's table. Everything
+   else — the week's load, points by week, the streak calendar, steps, personal records, the level
+   card — is behind «Подробности», collapsed: a chart answers a question nobody arrives with.
 9. **Leaderboard**: tabs week / all-time, course filter, top-100 with own row pinned.
 10. **Steps**: log today's steps (manual input; explain why), history, goal 7000. A day may also
     carry a screenshot of the athlete's own step counter — attached the moment it is picked, held

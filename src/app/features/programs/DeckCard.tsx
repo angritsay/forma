@@ -148,22 +148,22 @@ export function DeckCard({
         />
       ) : null}
 
-      <div className="pointer-events-none relative z-10 flex flex-col px-5 pb-7 lg:px-8">
+      <div className="pointer-events-none relative z-10 flex flex-col px-6 pb-9 lg:px-10">
         {/*
          * Everything in this block takes `currentColor`, never a literal: on a photograph the
          * article is paper on ink, and on a colour cover it is the tile's own ink — black on
          * yellow. A `text-paper/70` here would be white on yellow.
          */}
         <span className="eyebrow block truncate text-current opacity-70">{eyebrow}</span>
-        <DisplayTitle text={title} className="mt-2 text-5xl lg:text-6xl" />
-        {lead ? <p className="mt-3 max-w-[34ch] text-[15px] leading-snug">{lead}</p> : null}
-        {subtitle ? <p className="mt-1.5 text-[13px] text-current opacity-70">{subtitle}</p> : null}
+        <DisplayTitle text={title} className="mt-3 text-4xl lg:text-5xl" />
+        {lead ? <p className="mt-4 max-w-[34ch] text-[15px] leading-relaxed">{lead}</p> : null}
+        {subtitle ? <p className="mt-2 text-[13px] text-current opacity-70">{subtitle}</p> : null}
 
         {share === undefined ? null : (
-          <div className="mt-5">
+          <div className="mt-7">
             <div className="flex items-baseline justify-between gap-3">
               <span className="flex items-baseline gap-2">
-                <span className="numeral tabular text-4xl leading-none">{share}%</span>
+                <span className="numeral tabular text-3xl leading-none">{share}%</span>
                 {progressLabel ? (
                   <span className="eyebrow text-current opacity-70">{progressLabel}</span>
                 ) : null}
@@ -197,14 +197,14 @@ export function DeckCard({
 
         {ctaHref ? (
           /* No arrow on this one: it does not go forward into the work, it leaves for the web. */
-          <LinkButton href={ctaHref} fullWidth size="lg" className="pointer-events-auto mt-5">
+          <LinkButton href={ctaHref} fullWidth size="lg" className="pointer-events-auto mt-7">
             {ctaLabel}
           </LinkButton>
         ) : (
           <Button
             fullWidth
             size="lg"
-            className="pointer-events-auto mt-5"
+            className="pointer-events-auto mt-7"
             onClick={onCta}
             iconRight={<Glyph size={14}>→</Glyph>}
           >

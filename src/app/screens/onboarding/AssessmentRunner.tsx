@@ -126,7 +126,7 @@ export function AssessmentRunner({
        * Where you are, as the numeral pair the whole product counts with. It is the only thing on
        * the screen that is not the movement, the clock or the way on.
        */}
-      <div className="flex items-center gap-3 px-5 pt-3">
+      <div className="flex items-center gap-3 px-6 pt-4">
         <span className="font-display min-w-0 flex-1 truncate text-base">{name}</span>
         <span className="numeral tabular shrink-0 text-sm">
           <span className="text-text">{String(index + 1).padStart(2, '0')}</span>
@@ -135,7 +135,7 @@ export function AssessmentRunner({
       </div>
 
       {/* The clip, contained: the coach films in landscape and a crop hides the movement. */}
-      <div className="relative mt-3 min-h-0 flex-1">
+      <div className="relative mt-5 min-h-0 flex-1">
         {videoUrl ? (
           <video
             key={videoUrl}
@@ -156,7 +156,7 @@ export function AssessmentRunner({
         )}
       </div>
 
-      <div className="flex flex-col gap-4 px-5 pt-5">
+      <div className="flex flex-col gap-5 px-6 pt-6">
         {phase === 'ready' ? (
           <>
             <p className="text-[15px] leading-snug text-muted">

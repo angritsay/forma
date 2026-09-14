@@ -93,7 +93,7 @@ export function AchievementsGrid({ items }: { items: readonly AchievementStatus[
       {locked.length > 0 ? (
         <section className="flex flex-col gap-2">
           <h3 className="eyebrow text-muted-2">{t('app.statsAchievementsLocked')}</h3>
-          <ul className="deck-scroller -mx-5 flex gap-3 overflow-x-auto px-5 lg:-mx-8 lg:px-8">
+          <ul className="deck-scroller -mx-6 flex gap-3 overflow-x-auto px-6 lg:-mx-10 lg:px-10">
             {locked.map(({ item, n }) => (
               <li key={item.id} className="w-[46%] max-w-[220px] shrink-0">
                 <AchievementTile item={item} n={n} />

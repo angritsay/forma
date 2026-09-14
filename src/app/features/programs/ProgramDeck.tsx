@@ -108,7 +108,7 @@ export function ProgramDeck({
 
   return (
     <section
-      className="relative -mx-5 -mt-[var(--safe-top)] lg:-mx-8"
+      className="relative -mx-6 -mt-[var(--safe-top)] lg:-mx-10"
       aria-label={t('app.homeDeckLabel')}
     >
       <div
@@ -242,7 +242,7 @@ export function ProgramDeck({
        * that can only be swiped cannot be used with a keyboard.
        */}
       {entries.length > 1 ? (
-        <div className="flex justify-center gap-2 pt-4">
+        <div className="flex justify-center gap-2 pt-5">
           {entries.map((entry, i) => (
             <button
               key={entry.key}

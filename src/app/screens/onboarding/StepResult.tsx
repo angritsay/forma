@@ -46,7 +46,7 @@ export function StepResult({ draft }: StepProps) {
         label={t('app.onbResultEyebrow')}
         valueText={`${assessment.index} / 100`}
       >
-        <span className="display text-7xl">{assessment.index}</span>
+        <span className="display text-6xl">{assessment.index}</span>
         <span className="eyebrow mt-1">{t('app.onbIndexOutOf')}</span>
       </RingProgress>
       <p className="hairline pt-5 text-[15px] leading-relaxed">

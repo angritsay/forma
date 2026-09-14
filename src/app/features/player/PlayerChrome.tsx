@@ -140,7 +140,7 @@ export function PlayerFooter({ children, onHeight }: PlayerFooterProps) {
        * save button — and in a card that is clipped rather than scrolled, anything taller than the
        * viewport would lose its top edge off the screen with no way to reach it.
        */}
-      <div className="relative mx-auto max-h-dvh w-full max-w-[560px] overflow-y-auto overscroll-contain px-5 pt-6 pb-[calc(var(--safe-bottom)+16px+var(--demo-inset,0px))]">
+      <div className="relative mx-auto max-h-dvh w-full max-w-[560px] overflow-y-auto overscroll-contain px-6 pt-6 pb-[calc(var(--safe-bottom)+16px+var(--demo-inset,0px))]">
         {children}
       </div>
     </div>

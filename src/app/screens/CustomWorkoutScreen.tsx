@@ -114,10 +114,8 @@ export default function CustomWorkoutScreen() {
   const structure = w.structure as CustomWorkoutStructure | undefined;
   const playable = isPlayableStructure(structure);
   const minutes = w.estSec ? Math.max(1, Math.round(w.estSec / 60)) : null;
-  const facts = [
-    ...(minutes ? [t('app.nodeDuration', { min: minutes })] : []),
-    ...(w.points ? [t('app.nodePoints', { n: w.points })] : []),
-  ];
+  // How long it takes. Points are the game's currency and are not shown anywhere in training.
+  const facts = minutes ? [t('app.nodeDuration', { min: minutes })] : [];
 
   /*
    * Each part of the workout as a numbered ruled section: 01 and its name as the kicker, the
@@ -183,7 +181,7 @@ export default function CustomWorkoutScreen() {
       <div className="flex flex-col gap-6 py-4">
         <div>
           <span className="eyebrow">{t('app.customWorkoutFromCoach')}</span>
-          <DisplayTitle as="h2" text={w.title} className="mt-2.5 text-6xl" />
+          <DisplayTitle as="h2" text={w.title} className="mt-3 text-5xl" />
           {w.description ? (
             <p className="mt-4 text-[15px] leading-relaxed text-muted">{w.description}</p>
           ) : null}

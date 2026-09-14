@@ -26,15 +26,15 @@ export function TodayTasks({ items }: { items: readonly TodayTask[] }) {
   const { t } = useT();
   if (items.length === 0) return null;
   return (
-    <section className="border-t border-border pt-5">
+    <section className="border-t border-border pt-7">
       <h2 className="eyebrow">{t('app.homeTasksTitle')}</h2>
-      <ul className="mt-3 flex flex-col border-b border-border">
+      <ul className="mt-4 flex flex-col border-b border-border">
         {items.map((item, i) => (
           <li key={item.key} className="border-t border-border">
             <button
               type="button"
               onClick={item.onOpen}
-              className="flex w-full items-center gap-3 py-3.5 text-left transition-colors duration-150 ease-(--ease-out) hover:bg-surface-2"
+              className="flex w-full items-center gap-4 py-4.5 text-left transition-colors duration-150 ease-(--ease-out) hover:bg-surface-2"
             >
               <span className="numeral w-8 shrink-0 text-sm text-muted-2">
                 {String(i + 1).padStart(2, '0')}

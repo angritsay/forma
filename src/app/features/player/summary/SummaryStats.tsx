@@ -8,32 +8,37 @@ import type { BlockCompletion, BenchmarkView, TestResultView } from '../summaryM
 
 export interface SummaryStatsProps {
   durationSec: number;
-  points: number;
   calories: number;
   /** 0..1 */
   completion: number;
 }
 
 /**
- * The four headline numbers of a session. The points are the one key fact, so they get the
- * crosshair plate — ticks in the programme colour, when the screen is inside a course — and the
- * other three sit on one ruled line under it. No icons: the word under each figure says what it is.
+ * The headline numbers of a session: the time on the crosshair plate, and what it cost under it.
+ *
+ * The plate used to carry the points. A workout is not a thing you win — it is time you gave to
+ * this, and the honest headline of a finished session is how much of it there was. Points are the
+ * game's currency and they stay there; here they would be a score for having trained, which is the
+ * kind of number that makes people optimise the number.
  */
-export function SummaryStats({ durationSec, points, calories, completion }: SummaryStatsProps) {
+export function SummaryStats({ durationSec, calories, completion }: SummaryStatsProps) {
   const { t } = useT();
   return (
     <div className="flex flex-col gap-5">
-      <div className="plate-target px-5 py-6">
+      <div className="plate-target px-6 py-6">
         <span className="plate-ticks" />
-        <span className="eyebrow">{t('app.summaryPoints')}</span>
-        <div className="mt-2 flex items-baseline gap-2">
-          <span className="numeral tabular text-7xl leading-none">{points}</span>
-          <span className="text-sm text-muted">{t('common.pointsShort')}</span>
+        <span className="eyebrow">{t('app.summaryTime')}</span>
+        <div className="mt-2">
+          <span className="numeral tabular text-6xl leading-none">{formatClock(durationSec)}</span>
         </div>
       </div>
-      <div className="grid grid-cols-3 divide-x divide-border border-t border-border">
-        <StatTile label={t('app.summaryTime')} value={formatClock(durationSec)} className="pl-0" />
-        <StatTile label={t('app.summaryCalories')} value={calories} unit={t('common.kcal')} />
+      <div className="grid grid-cols-2 divide-x divide-border border-t border-border">
+        <StatTile
+          label={t('app.summaryCalories')}
+          value={calories}
+          unit={t('common.kcal')}
+          className="pl-0"
+        />
         <StatTile
           label={t('app.summaryCompletion')}
           value={Math.round(completion * 100)}

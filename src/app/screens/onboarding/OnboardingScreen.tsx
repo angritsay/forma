@@ -223,7 +223,7 @@ export default function OnboardingScreen() {
         )
       }
     >
-      <div className="py-4">
+      <div className="py-7">
         <StepView {...stepProps} />
       </div>
     </Screen>

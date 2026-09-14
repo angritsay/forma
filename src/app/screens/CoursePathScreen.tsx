@@ -234,7 +234,7 @@ export default function CoursePathScreen() {
          * the specification as a kicker, then the weeks as a strip of rules. There is no bar; the
          * back control is a kicker in the block's top-left corner and the leaderboard sits opposite.
          */}
-        <header className="hero-art -mx-5 -mt-[var(--safe-top)] px-5 pt-[calc(var(--safe-top)+14px)] pb-6 lg:-mx-8 lg:px-8">
+        <header className="hero-art -mx-6 -mt-[var(--safe-top)] px-6 pt-[calc(var(--safe-top)+14px)] pb-6 lg:-mx-10 lg:px-10">
           <div className="flex items-baseline justify-between gap-3">
             <button
               type="button"
@@ -255,7 +255,7 @@ export default function CoursePathScreen() {
             </button>
           </div>
           <div className="mt-8">
-            <DisplayTitle text={l(courseTitle(course))} className="text-6xl lg:text-7xl" />
+            <DisplayTitle text={l(courseTitle(course))} className="text-5xl lg:text-6xl" />
             {/*
              * The tagline is set to be read, not looked at: Onest, sentence case.
              *
@@ -281,8 +281,8 @@ export default function CoursePathScreen() {
          * Where you are, in three figures on one ruled line. The third is a button: the load
          * multiplier opens the sheet that explains how the course adapts.
          */}
-        <div className="-mx-5 grid grid-cols-3 divide-x divide-border border-b border-border bg-bg lg:-mx-8">
-          <div className="px-5 py-4 lg:px-8">
+        <div className="-mx-6 grid grid-cols-3 divide-x divide-border border-b border-border bg-bg lg:-mx-10">
+          <div className="px-6 py-4 lg:px-10">
             <div className="numeral tabular text-2xl leading-none">{progress.pct}%</div>
             <div className="eyebrow mt-2">{t('app.pathStatDone')}</div>
           </div>
