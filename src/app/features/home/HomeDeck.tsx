@@ -14,7 +14,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { clsx } from 'clsx';
 import { courseTitle } from '@/content/catalogue';
 import { formatNumber } from '@/i18n/index';
-import { courseLandingHref } from '@/app/features/courses/courseMeta';
+import { courseLandingHref, subscribeHref } from '@/app/features/courses/courseMeta';
 import { PHOTOS, type Photo } from '@/lib/media/photos';
 import { courseTileVars } from '@/lib/ui/tile';
 import { useT } from '@/app/hooks/useT';
@@ -54,6 +54,12 @@ export interface HomeDeckProps {
    * board position: a rank does not get anyone off the sofa and an unfinished task does.
    */
   openTasks?: Readonly<Record<string, number>>;
+  /**
+   * True when the game is behind a subscription this athlete does not have. The card is still
+   * shown — a locked game is the clearest thing the subscription has to sell — but it explains
+   * itself and leads to the subscribe page instead of into the day.
+   */
+  gameLocked?: boolean;
   /** The wordmark and the app's controls, laid over the top of whichever card is showing. */
   chrome?: ReactNode;
   onOpenCourse: (courseId: string) => void;
@@ -64,6 +70,7 @@ export interface HomeDeckProps {
 export function HomeDeck({
   entries,
   openTasks,
+  gameLocked = false,
   chrome,
   onOpenCourse,
   onStartNode,
@@ -136,19 +143,30 @@ export function HomeDeck({
                     total: formatNumber(locale, marathon.days),
                   })}`}
                   title={marathon.title}
+                  lead={t('app.homeDeckMarathonLead')}
                   subtitle={
-                    left === undefined
-                      ? t('app.homeDeckMarathonBody')
-                      : left > 0
-                        ? t('app.marathonHomeTasksLeft', { n: formatNumber(locale, left) })
-                        : t('app.marathonHomeAllDone')
+                    gameLocked
+                      ? t('app.homeDeckGameLocked')
+                      : left === undefined
+                        ? t('app.homeDeckMarathonBody')
+                        : left > 0
+                          ? t('app.marathonHomeTasksLeft', { n: formatNumber(locale, left) })
+                          : t('app.marathonHomeAllDone')
                   }
                   pct={progress.pct}
                   progressLabel={t('app.homeDeckProgressLabel')}
                   progressMeta={`${progress.done}/${progress.total}`}
-                  ctaLabel={t('app.homeDeckMarathonCta')}
-                  onCta={onOpenMarathon}
-                  onOpen={onOpenMarathon}
+                  {...(gameLocked
+                    ? {
+                        dimmed: true,
+                        ctaLabel: t('app.homeDeckGameLockedCta'),
+                        ctaHref: subscribeHref(locale),
+                      }
+                    : {
+                        ctaLabel: t('app.homeDeckMarathonCta'),
+                        onCta: onOpenMarathon,
+                        onOpen: onOpenMarathon,
+                      })}
                   openLabel={marathon.title}
                 />
               </div>
@@ -166,7 +184,7 @@ export function HomeDeck({
                   style={courseTileVars(course.tile)}
                   eyebrow={`${t('app.homeDeckCourse')} · ${t('app.homeCourseLocked')}`}
                   title={title}
-                  subtitle={l(course.tagline)}
+                  lead={l(course.tagline)}
                   ctaLabel={t('app.homeCourseGet')}
                   ctaHref={courseLandingHref(locale, course)}
                   openLabel={`${title} — ${t('app.homeCourseGet')}`}
@@ -196,6 +214,7 @@ export function HomeDeck({
                     : `${t('app.homeDeckCourse')} · ${t('app.pathCompleted')}`
                 }
                 title={title}
+                lead={t('app.homeDeckCourseLead')}
                 subtitle={next ? l(next.title) : t('app.homeTodayCompletedBody')}
                 pct={progress.pct}
                 progressLabel={t('app.homeDeckProgressLabel')}

@@ -19,9 +19,10 @@ on:
   workflow_dispatch:
     inputs:
       email:
+        # No default on purpose: this repository is public, and a default here is a personal
+        # address published in the source. Type the test user's address when running the workflow.
         description: 'An existing user to test as'
         required: true
-        default: 'anastacia8988@gmail.com'
       object:
         description: 'Object to sign inside the videos bucket'
         required: false

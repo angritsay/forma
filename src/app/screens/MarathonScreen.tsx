@@ -25,6 +25,10 @@ import {
   useMarathonRoster,
   useMyMarathons,
 } from '@/app/features/marathon/useMarathon';
+import { LinkButton } from '@/app/features/courses/LinkButton';
+import { subscribeHref } from '@/app/features/courses/courseMeta';
+import { useSession } from '@/app/store/session';
+import { GAME_REQUIRES_SUBSCRIPTION } from '@content/site/plans';
 
 function DaySkeleton() {
   return (
@@ -37,7 +41,8 @@ function DaySkeleton() {
 }
 
 export default function MarathonScreen() {
-  const { t } = useT();
+  const { t, locale } = useT();
+  const subscription = useSession((s) => s.subscription);
   const navigate = useNavigate();
   const toast = useToast();
   const { marathon, status: marathonStatus, error, reload: reloadMarathon } = useMyMarathons();
@@ -90,6 +95,29 @@ export default function MarathonScreen() {
   );
 
   const header = <TopBar title={t('app.marathonTitle')} />;
+
+  /*
+   * The game is part of the subscription (content/site/plans.ts). The screen says so plainly and
+   * offers the subscription rather than pretending the format does not exist — somebody who got
+   * here tapped a card that told them what the game is, and the answer to "can I play" is a price,
+   * not a locked door.
+   */
+  if (GAME_REQUIRES_SUBSCRIPTION && subscription?.isLive !== true) {
+    return (
+      <Screen header={header}>
+        <EmptyState
+          icon="info"
+          title={t('app.marathonLockedTitle')}
+          description={t('app.marathonLockedBody')}
+          action={
+            <LinkButton href={subscribeHref(locale)} size="lg">
+              {t('app.homeDeckGameLockedCta')}
+            </LinkButton>
+          }
+        />
+      </Screen>
+    );
+  }
 
   if (marathonStatus === 'loading') {
     return (
@@ -164,12 +192,19 @@ export default function MarathonScreen() {
           </div>
         )}
 
-        <div className="flex gap-3 border-t border-border pt-5">
-          <Button variant="secondary" size="md" onClick={() => navigate('/marathon/board')}>
+        {/*
+         * One way out of this screen, not two. The whole game is «what is set for today, have I
+         * done it, and who is winning the week» — «Мои баллы» is the breakdown of an answer the
+         * board already gives, so it moved to the board, one level deeper.
+         */}
+        <div className="border-t border-border pt-5">
+          <Button
+            variant="secondary"
+            size="md"
+            fullWidth
+            onClick={() => navigate('/marathon/board')}
+          >
             {t('app.marathonTabBoard')}
-          </Button>
-          <Button variant="ghost" size="md" onClick={() => navigate('/marathon/points')}>
-            {t('app.marathonTabPoints')}
           </Button>
         </div>
       </div>
