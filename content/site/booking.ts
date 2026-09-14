@@ -62,7 +62,7 @@ const HALF: BookingOption = {
       en: 'Your questions about the programme you are on',
     },
   ],
-  paymentUrl: {},
+  paymentUrl: { ru: 'https://payform.ru/9jcyga8/' },
 };
 
 const HOUR: BookingOption = {
@@ -84,7 +84,7 @@ const HOUR: BookingOption = {
       en: 'Your questions — a plan for the next weeks',
     },
   ],
-  paymentUrl: { ru: 'https://payform.ru/jncx6bM/' },
+  paymentUrl: { ru: 'https://payform.ru/cpcygbP/' },
 };
 
 export const BOOKING = {

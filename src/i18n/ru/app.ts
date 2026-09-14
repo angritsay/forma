@@ -231,6 +231,10 @@ export const app = {
   homeDeckCourseLead: 'Программа по неделям. Идёшь по дням, нагрузка подстраивается под тебя.',
   homeDeckMarathonLead: 'Задание каждый день. Кто наберёт больше всех за неделю — час с Сергеем.',
   homeDeckGameLocked: 'Входит в подписку',
+  homeDeckGameTrial: 'Пробная неделя с курсом — осталось {n}',
+  homeDeckGameTrialDayOne: '1 день',
+  homeDeckGameTrialDayFew: '{n} дня',
+  homeDeckGameTrialDayMany: '{n} дней',
   homeDeckGameLockedCta: 'Оформить подписку',
   homeDeckMarathonCta: 'Задание на сегодня',
   homeDeckStart: 'Начать тренировку',
@@ -1013,6 +1017,8 @@ export const app = {
   marathonNoTasksTodayBody: 'Отдыхаем. Завтра утром будет новое.',
   marathonErrorTitle: 'Не удалось загрузить игру',
   marathonLockedTitle: 'Игра входит в подписку',
+  marathonTrialTitle: 'Пробная неделя',
+  marathonTrialBody: 'Игра открыта вместе с курсом. Осталось {n} — дальше по подписке.',
   marathonLockedBody:
     'Задание каждый день, доказательство и таблица за неделю. Кто наберёт больше всех — час с Сергеем.',
   // One task

@@ -42,6 +42,7 @@ import {
 } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
 import { BOOKING } from '@content/site/booking';
+import { gameAccess } from '@/app/features/marathon/gameAccess';
 import { GAME_REQUIRES_SUBSCRIPTION } from '@content/site/plans';
 
 function HomeSkeleton() {
@@ -74,6 +75,7 @@ export default function HomeScreen() {
   const user = useSession((s) => s.user);
   const entitlements = useSession((s) => s.entitlements);
   const subscription = useSession((s) => s.subscription);
+  const newestPurchaseAt = useSession((s) => s.newestPurchaseAt);
   const status = useProgress((s) => s.status);
   const loading = useProgress((s) => s.loading);
   const error = useProgress((s) => s.error);
@@ -106,8 +108,16 @@ export default function HomeScreen() {
     [courses, entitlements, courseStates, marathons, activeCourseId],
   );
 
-  /* The game is part of the subscription (content/site/plans.ts), so a card can be locked. */
-  const gameLocked = GAME_REQUIRES_SUBSCRIPTION && subscription?.isLive !== true;
+  /*
+   * The game is part of the subscription (content/site/plans.ts) — except for the week a course
+   * buys, which is the subscription's own advertisement (features/marathon/gameAccess.ts).
+   */
+  const access = gameAccess({
+    subscriptionLive: subscription?.isLive === true,
+    newestPurchaseAt,
+    now: Date.now(),
+    gated: GAME_REQUIRES_SUBSCRIPTION,
+  });
 
   /*
    * Today's open tasks, for the marathon card's one line. A task with no rule is an announcement
@@ -219,7 +229,7 @@ export default function HomeScreen() {
         <HomeDeck
           entries={entries}
           openTasks={openTasks}
-          gameLocked={gameLocked}
+          gameAccess={access}
           chrome={chrome}
           onOpenCourse={(courseId) => navigate(`/courses/${courseId}`)}
           onStartNode={(courseId, nodeId) => navigate(`/courses/${courseId}/nodes/${nodeId}`)}
