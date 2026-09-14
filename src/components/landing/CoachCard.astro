@@ -36,7 +36,7 @@ const bookHint = t(locale, 'landing.coachBookHint', {
   <div class="relative w-40 md:w-full">
     {
       COACH.photo ? (
-        <div class="relative aspect-[4/5] overflow-hidden bg-surface">
+        <div class="relative aspect-[4/5] overflow-hidden rounded-tile bg-surface">
           <img
             src={withBase(COACH.photo)}
             alt={name}
@@ -48,7 +48,10 @@ const bookHint = t(locale, 'landing.coachBookHint', {
           <div class="photo-grain" aria-hidden="true" />
         </div>
       ) : (
-        <div class="hero-art flex aspect-[4/5] items-center justify-center" aria-hidden="true">
+        <div
+          class="hero-art flex aspect-[4/5] items-center justify-center rounded-tile"
+          aria-hidden="true"
+        >
           <span class="display text-6xl">{initial}</span>
         </div>
       )

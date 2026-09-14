@@ -214,7 +214,7 @@ export function CourseMetaEditor({ course, onPatch }: CourseMetaEditorProps) {
          * be read in, not just a swatch.
          */}
         <div
-          className="hero-art flex min-h-24 items-end p-4"
+          className="hero-art flex min-h-24 items-end rounded-tile p-4"
           style={courseTileVars(course.tile)}
           aria-hidden="true"
         >
@@ -241,8 +241,8 @@ export function CourseMetaEditor({ course, onPatch }: CourseMetaEditorProps) {
                   // A swatch is a square of course art; the chosen one is outlined in the interface
                   // white and carries a tick in the tile's own ink.
                   on
-                    ? 'hero-art flex size-11 items-center justify-center outline-2 outline-offset-2 outline-primary'
-                    : 'hero-art size-11 border border-border-strong transition-opacity duration-150 ease-(--ease-out) hover:opacity-85'
+                    ? 'hero-art flex size-11 items-center justify-center rounded-inner outline-2 outline-offset-2 outline-primary'
+                    : 'hero-art size-11 rounded-inner border border-border-strong transition-opacity duration-150 ease-(--ease-out) hover:opacity-85'
                 }
               >
                 {on ? <Glyph size={14}>✓</Glyph> : null}
