@@ -1279,6 +1279,7 @@ export const EXERCISES_A: ExerciseInput[] = [
     secondsPerRep: 5.0,
     met: 3.0,
     loadable: false,
+    video: { ru: 'storage:videos/shared/squat_to_stand.ru.mp4' },
     scaling: {},
     tags: ['warmup', 'mobility', 'lower'],
   },
