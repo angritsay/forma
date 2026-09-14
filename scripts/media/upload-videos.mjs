@@ -92,26 +92,33 @@ for (const clip of ready) {
   if (dryRun) {
     console.log(`  would upload  ${clip.file}  →  videos/${path}`);
     uploaded++;
-    continue;
-  }
-  const { error } = await client.storage
-    .from('videos')
-    .upload(path, readFileSync(file), { contentType: 'video/mp4', upsert: true });
-  if (error) {
-    console.error(`  FAILED   ${path}: ${error.message}`);
-    failed++;
   } else {
-    console.log(`  ok       videos/${path}`);
-    uploaded++;
+    const { error } = await client.storage
+      .from('videos')
+      .upload(path, readFileSync(file), { contentType: 'video/mp4', upsert: true });
+    if (error) {
+      console.error(`  FAILED   ${path}: ${error.message}`);
+      failed++;
+    } else {
+      console.log(`  ok       videos/${path}`);
+      uploaded++;
+    }
   }
 
   /*
    * The still, into the public bucket. Language-independent — it is a picture of a body, not of
    * any words — so there is one per exercise however many languages the clip has.
+   *
+   * A dry run reports it too. It used to `continue` past this block, which made the rehearsal
+   * quietly silent about exactly the half that is easiest to get wrong — and since the drawn
+   * figure was removed, a missing still is a blank tile in the app rather than a fallback.
    */
   const posterFile = join(posterDir, `${clip.key}.jpg`);
-  if (!existsSync(posterFile)) continue;
   const posterPath = `exercises/${clip.exerciseId}.jpg`;
+  if (!existsSync(posterFile)) {
+    console.error(`  no still ${clip.exerciseId}: ${posterFile} is not there`);
+    continue;
+  }
   if (dryRun) {
     console.log(`  would upload  ${clip.key}.jpg  →  images/${posterPath}`);
     posters++;
@@ -121,7 +128,7 @@ for (const clip of ready) {
     .from('images')
     .upload(posterPath, readFileSync(posterFile), { contentType: 'image/jpeg', upsert: true });
   if (still.error) {
-    // Not fatal: the clip is up, and without a still the app shows the drawn figure.
+    // Not fatal: the clip itself is up, and the player falls back to it with no poster frame.
     console.error(`  no still ${posterPath}: ${still.error.message}`);
   } else {
     console.log(`  ok       images/${posterPath}`);

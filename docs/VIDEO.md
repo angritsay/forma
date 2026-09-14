@@ -44,7 +44,34 @@ Two things decide how many frames are useful, and neither is obvious:
   single row are each _smaller_ than eight. A 6×2 grid stays under that ceiling: twelve frames at
   full tile size.
 
-## Pipeline
+## Pipeline A — a folder of clips named after the movements
+
+This is the short one, and the one to use for anything shot deliberately from now on. Each movement
+is filmed once and the file is named after it («Ягодичный мост.mov»), so there is nothing to
+identify: `media/names.json` says which exercise id each Russian name means, and that file is the
+only thing to edit.
+
+```bash
+# 1. Encode, cut a still from each clip and write the manifest. Idempotent: an mp4 that is already
+#    there is left alone, so a re-shoot of two movements costs two encodes, not forty-four.
+npm run media:prepare-named -- ~/Downloads/Упражнения
+
+# A clip whose name has no id in media/names.json is listed and skipped, never guessed — the wrong
+# clip on the right exercise is worse than no clip. Fill in the id and run it again.
+
+# 2. Write `video:` onto the matched exercises, the same step as below.
+npm run media:apply -- --manifest media/clips/manifest.json
+
+# 3. Upload. Service role key, never the anon key, never committed.
+SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… \
+  node scripts/media/upload-videos.mjs --dir media/clips --manifest media/clips/manifest.json
+```
+
+Add `--dry-run` to step 3 to see which clips and which stills would go where, and upload nothing.
+Both halves are reported: a movement with a clip but no still is a blank tile in the app, because
+there is no drawn figure behind it any more.
+
+## Pipeline B — the Telegram export
 
 All of these run **from inside the repository**, after `npm install`.
 
