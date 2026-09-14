@@ -9,7 +9,7 @@
 import type { Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { appHref, withBase } from '@/lib/util/paths';
-import { BOOKING } from '@content/site/booking';
+import { BOOKING, bookingFromPrice } from '@content/site/booking';
 import { COACH } from '@content/site/coach';
 import { formatPrice } from '@content/site/pricing';
 import Button from './Button.astro';
@@ -26,8 +26,7 @@ const role = l(COACH.role, locale);
 const bio = l(COACH.bio, locale);
 const initial = name.trim().charAt(0).toUpperCase();
 const bookHint = t(locale, 'landing.coachBookHint', {
-  duration: BOOKING.durationMin,
-  price: formatPrice(locale, BOOKING.price),
+  price: formatPrice(locale, bookingFromPrice()),
 });
 ---
 

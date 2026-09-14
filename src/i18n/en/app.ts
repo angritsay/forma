@@ -603,7 +603,7 @@ export const app = {
   profileAdminHint: 'Purchases and access',
   profileCoachSection: 'Coach',
   profileBook: 'One-to-one with the coach',
-  profileBookHint: '{duration} min online · {price}',
+  profileBookHint: 'Online · from {price}',
   profileSubscriptionSection: 'Subscription',
   profileSubscriptionNone: 'All courses by subscription',
   profileSubscriptionNoneHint: 'from {price} a month',
@@ -616,7 +616,7 @@ export const app = {
 
   // Home: the coach's hour
   homeBookTitle: 'One-to-one with the coach',
-  homeBookText: '{duration} min with {name} over video · {price}',
+  homeBookText: 'Half an hour or an hour over video · from {price}',
 
   // Book a session
   bookTitle: 'Forma. One-to-One',
@@ -625,7 +625,7 @@ export const app = {
   bookDurationLabel: 'Length',
   bookDuration: '{n} min',
   bookPriceLabel: 'Price',
-  bookIncludes: 'What the hour covers',
+  bookChoose: 'Choose a length',
   bookHow: 'How it works',
   bookStep1: 'Pay by card on the payment page',
   bookStep2: 'Pick a time in the calendar right after paying',

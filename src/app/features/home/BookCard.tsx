@@ -4,7 +4,7 @@ import { Glyph } from '@/components/ui/Icon';
 import { l } from '@/i18n/index';
 import { withBase } from '@/lib/util/paths';
 import { useT } from '@/app/hooks/useT';
-import { BOOKING } from '@content/site/booking';
+import { bookingFromPrice } from '@content/site/booking';
 import { COACH } from '@content/site/coach';
 import { formatPrice } from '@content/site/pricing';
 
@@ -43,11 +43,7 @@ export function BookCard({ onOpen }: BookCardProps) {
           {t('app.homeBookTitle')}
         </span>
         <span className="mt-1 block text-sm text-muted">
-          {t('app.homeBookText', {
-            name,
-            duration: BOOKING.durationMin,
-            price: formatPrice(locale, BOOKING.price),
-          })}
+          {t('app.homeBookText', { price: formatPrice(locale, bookingFromPrice()) })}
         </span>
       </span>
       <Glyph size={16} className="shrink-0 text-muted-2">

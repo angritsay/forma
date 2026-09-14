@@ -602,7 +602,7 @@ export const app = {
   profileAdminHint: 'Покупки и доступы',
   profileCoachSection: 'Тренер',
   profileBook: 'Занятие с тренером',
-  profileBookHint: '{duration} мин онлайн · {price}',
+  profileBookHint: 'Онлайн · от {price}',
   profileSubscriptionSection: 'Подписка',
   profileSubscriptionNone: 'Все курсы по подписке',
   profileSubscriptionNoneHint: 'от {price} в месяц',
@@ -615,7 +615,7 @@ export const app = {
 
   // Home: the coach's hour
   homeBookTitle: 'Занятие с тренером один на один',
-  homeBookText: '{duration} мин с тренером по видеосвязи · {price}',
+  homeBookText: 'Полчаса или час по видеосвязи · от {price}',
 
   // Book a session
   bookTitle: 'Форма один на один',
@@ -624,7 +624,7 @@ export const app = {
   bookDurationLabel: 'Длительность',
   bookDuration: '{n} мин',
   bookPriceLabel: 'Стоимость',
-  bookIncludes: 'Что входит в час',
+  bookChoose: 'Выбери формат',
   bookHow: 'Как это работает',
   bookStep1: 'Оплата картой на странице оплаты',
   bookStep2: 'Выбор времени в календаре сразу после оплаты',

@@ -5,7 +5,7 @@
 import type { FaqItem } from '@/content/schema';
 import { BRAND } from './brand';
 import { LINKS } from './links';
-import { BOOKING } from './booking';
+import { BOOKING, bookingFromPrice } from './booking';
 import { formatPrice, PRICING } from './pricing';
 
 const supportEmail = LINKS.supportEmail || BRAND.contactEmail;
@@ -20,8 +20,8 @@ export const FAQ: FaqItem[] = [
             en: 'Can I train with the coach one-to-one?',
           },
           a: {
-            ru: `Да. В приложении есть занятие один на один: ${BOOKING.durationMin} минут по видеосвязи за ${formatPrice('ru', BOOKING.price)} — разбор техники, корректировка программы, ответы на вопросы. Курсы при этом не требуют участия тренера: программа адаптируется сама.`,
-            en: `Yes. The app offers a one-to-one session: ${BOOKING.durationMin} minutes over video for ${formatPrice('en', BOOKING.price)} — technique review, program adjustments, your questions. The courses themselves need no coach involvement: the program adapts on its own.`,
+            ru: `Да. В приложении есть занятие один на один по видеосвязи — полчаса или час, от ${formatPrice('ru', bookingFromPrice())}: разбор техники, корректировка программы, ответы на вопросы. Курсы при этом не требуют участия тренера: программа адаптируется сама.`,
+            en: `Yes. The app offers a one-to-one session over video — half an hour or an hour, from ${formatPrice('en', bookingFromPrice())}: technique review, program adjustments, your questions. The courses themselves need no coach involvement: the program adapts on its own.`,
           },
         },
       ]

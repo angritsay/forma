@@ -1,8 +1,13 @@
 /**
- * Book a one-to-one session with the coach (docs/SPEC.md §9, `/book`): who he is, what the hour
- * is, the price, and one action. With a payment link configured the button hands the signed-in
- * email to the payment page (the landing order form's rule: https only, email appended); without
- * one it opens a message to the coach — a session is agreed with a person, not lost in a form.
+ * Book a one-to-one session with the coach (docs/SPEC.md §9, `/book`): who he is, the two lengths
+ * he sells, and one action per length. With a payment link configured the button hands the
+ * signed-in email to the payment page (the landing order form's rule: https only, email appended);
+ * without one it opens a message to the coach — a session is agreed with a person, not lost in a
+ * form, and a length whose product does not exist yet can still be offered that way.
+ *
+ * This is the only screen where the two lengths stand side by side. Everywhere else the offer is
+ * mentioned in passing and quotes «от {the cheaper price}», because a passing mention that names
+ * one of two prices is picking for the reader.
  */
 import { useState } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
@@ -20,7 +25,7 @@ import { LinkButton } from '@/app/features/courses/LinkButton';
 import { splitName } from '@/app/features/profile/model';
 import { useT } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
-import { BOOKING } from '@content/site/booking';
+import { BOOKING, type BookingOption } from '@content/site/booking';
 import { BRAND } from '@content/site/brand';
 import { COACH } from '@content/site/coach';
 import { LINKS } from '@content/site/links';
@@ -41,10 +46,8 @@ export default function BookScreen() {
   const [redirecting, setRedirecting] = useState(false);
 
   const email = profile?.email || user?.email || '';
-  const price = formatPrice(locale, BOOKING.price);
   const name = l(COACH.name, locale);
   const { heavy, thin } = splitName(name);
-  const payment = paymentTarget(BOOKING.paymentUrl[locale] ?? BOOKING.paymentUrl.ru);
   const schedule = paymentTarget(BOOKING.scheduleUrl);
   const steps = [
     t('app.bookStep1'),
@@ -52,7 +55,7 @@ export default function BookScreen() {
     t('app.bookStep3', { email: email || t('app.bookStep3Fallback') }),
   ];
 
-  const pay = () => {
+  const pay = (payment: ReturnType<typeof paymentTarget>) => {
     if (!payment) return;
     // A demo account never reaches a real payment page.
     if (isDemo()) {
@@ -102,44 +105,28 @@ export default function BookScreen() {
           <p className="max-w-[40ch] text-[15px] leading-relaxed text-muted">{t('app.bookLead')}</p>
         </section>
 
-        {/* The facts, ruled: format and duration as hairline rows, the price on the crosshair plate. */}
-        <dl className="flex flex-col">
-          <div className="flex items-center justify-between gap-3 border-t border-border py-3">
-            <dt className="eyebrow">{t('app.bookFormatLabel')}</dt>
-            <dd className="text-right text-[15px] font-medium">{l(BOOKING.format, locale)}</dd>
-          </div>
-          <div className="flex items-center justify-between gap-3 border-y border-border py-3">
-            <dt className="eyebrow">{t('app.bookDurationLabel')}</dt>
-            <dd className="numeral tabular text-right text-[15px]">
-              {t('app.bookDuration', { n: BOOKING.durationMin })}
-            </dd>
-          </div>
-          {/*
-            One key fact per screen gets the plate: the price. No course is in scope here, so the
-            ticks fall back to white — the plate says "this is the number" without a colour.
-          */}
-          <div className="plate-target mt-4 flex items-baseline justify-between gap-3 px-4 py-4">
-            <span className="plate-ticks" aria-hidden="true" />
-            <dt className="eyebrow">{t('app.bookPriceLabel')}</dt>
-            <dd className="display tabular text-right text-4xl">{price}</dd>
-          </div>
+        {/* The one fact both lengths share, on its own rule. */}
+        <dl className="flex items-center justify-between gap-3 border-y border-border py-3">
+          <dt className="eyebrow">{t('app.bookFormatLabel')}</dt>
+          <dd className="text-right text-[15px] font-medium">{l(BOOKING.format, locale)}</dd>
         </dl>
 
-        <section className="flex flex-col gap-3">
-          <h3 className="eyebrow">{t('app.bookIncludes')}</h3>
-          <ul className="flex flex-col border-t border-border">
-            {BOOKING.includes.map((item) => (
-              <li
-                key={item.en}
-                className="flex items-start gap-3 border-t border-border py-2.5 text-[15px] first:border-t-0 first:pt-3"
-              >
-                <Glyph size={14} className="mt-1 text-muted">
-                  ✓
-                </Glyph>
-                <span>{l(item, locale)}</span>
-              </li>
-            ))}
-          </ul>
+        {/*
+         * The two lengths as two blocks, cheapest first. Each carries its own price, its own list
+         * of what fits in it, and its own button — a shared button with a length picker above it
+         * would make the person choose twice and read the price of the thing they did not pick.
+         */}
+        <section className="flex flex-col gap-8">
+          <h3 className="eyebrow">{t('app.bookChoose')}</h3>
+          {BOOKING.options.map((option) => (
+            <Option
+              key={option.id}
+              option={option}
+              redirecting={redirecting}
+              onPay={pay}
+              contactHref={contactHref(l(option.name, locale))}
+            />
+          ))}
         </section>
 
         <section className="flex flex-col gap-3">
@@ -157,18 +144,6 @@ export default function BookScreen() {
         </section>
 
         <div className="flex flex-col gap-3">
-          {payment ? (
-            <Button size="lg" fullWidth loading={redirecting} onClick={pay}>
-              {t('app.bookPay', { price })}
-            </Button>
-          ) : (
-            <>
-              <LinkButton href={contactHref(t('app.bookTitle'))} size="lg" fullWidth external>
-                {t('app.bookContact')}
-              </LinkButton>
-              <p className="text-sm text-muted">{t('app.bookContactHint')}</p>
-            </>
-          )}
           {schedule ? (
             <LinkButton href={schedule.href} variant="secondary" size="lg" fullWidth external>
               {t('app.bookPickTime')}
@@ -178,5 +153,73 @@ export default function BookScreen() {
         </div>
       </div>
     </Screen>
+  );
+}
+
+/**
+ * One length, as a block: its name, its price on the crosshair plate, what fits in it, and the
+ * one action.
+ *
+ * The plate is the screen's device for "this is the number", and here there are two of them —
+ * which is the point: the person is comparing, and a price that is not set the same way as the
+ * other is a price that is being argued for rather than stated.
+ */
+function Option({
+  option,
+  redirecting,
+  onPay,
+  contactHref,
+}: {
+  option: BookingOption;
+  redirecting: boolean;
+  onPay: (payment: ReturnType<typeof paymentTarget>) => void;
+  contactHref: string;
+}) {
+  const { t, locale } = useT();
+  const price = formatPrice(locale, option.price);
+  const payment = paymentTarget(option.paymentUrl[locale] ?? option.paymentUrl.ru);
+
+  return (
+    <article className="flex flex-col gap-4">
+      <div className="flex items-baseline justify-between gap-3 border-t border-border pt-4">
+        <h4 className="font-display text-lg leading-[1.24]">{l(option.name, locale)}</h4>
+        <span className="numeral tabular shrink-0 text-sm text-muted">
+          {t('app.bookDuration', { n: option.durationMin })}
+        </span>
+      </div>
+
+      <div className="plate-target flex items-baseline justify-between gap-3 px-4 py-4">
+        <span className="plate-ticks" aria-hidden="true" />
+        <span className="eyebrow">{t('app.bookPriceLabel')}</span>
+        <span className="display tabular text-right text-4xl">{price}</span>
+      </div>
+
+      <ul className="flex flex-col border-t border-border">
+        {option.includes.map((item) => (
+          <li
+            key={item.en}
+            className="flex items-start gap-3 border-t border-border py-2.5 text-[15px] first:border-t-0 first:pt-3"
+          >
+            <Glyph size={14} className="mt-1 text-muted">
+              ✓
+            </Glyph>
+            <span>{l(item, locale)}</span>
+          </li>
+        ))}
+      </ul>
+
+      {payment ? (
+        <Button size="lg" fullWidth loading={redirecting} onClick={() => onPay(payment)}>
+          {t('app.bookPay', { price })}
+        </Button>
+      ) : (
+        <>
+          <LinkButton href={contactHref} size="lg" fullWidth external>
+            {t('app.bookContact')}
+          </LinkButton>
+          <p className="text-sm text-muted">{t('app.bookContactHint')}</p>
+        </>
+      )}
+    </article>
   );
 }
