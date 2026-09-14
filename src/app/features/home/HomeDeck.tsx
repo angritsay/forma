@@ -13,13 +13,14 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { clsx } from 'clsx';
 import { courseTitle } from '@/content/catalogue';
-import { formatNumber } from '@/i18n/index';
+import { formatNumber, plural } from '@/i18n/index';
 import { courseLandingHref, subscribeHref } from '@/app/features/courses/courseMeta';
 import { PHOTOS, type Photo } from '@/lib/media/photos';
 import { courseTileVars } from '@/lib/ui/tile';
 import { useT } from '@/app/hooks/useT';
 import { DeckCard } from './DeckCard';
 import type { DeckEntry } from './deck';
+import type { GameAccess } from '@/app/features/marathon/gameAccess';
 
 /** Marathon orange — a marathon has no course tile of its own, and the deck's rule needs one. */
 const MARATHON_TILE = '#f08a3c';
@@ -55,11 +56,11 @@ export interface HomeDeckProps {
    */
   openTasks?: Readonly<Record<string, number>>;
   /**
-   * True when the game is behind a subscription this athlete does not have. The card is still
-   * shown — a locked game is the clearest thing the subscription has to sell — but it explains
-   * itself and leads to the subscribe page instead of into the day.
+   * Whether the game opens, and on what grounds. A locked card is still shown — a locked game is
+   * the clearest thing the subscription has to sell — but it explains itself and leads to the
+   * subscribe page instead of into the day; a card open on the trial says how long is left.
    */
-  gameLocked?: boolean;
+  gameAccess?: GameAccess;
   /** The wordmark and the app's controls, laid over the top of whichever card is showing. */
   chrome?: ReactNode;
   onOpenCourse: (courseId: string) => void;
@@ -70,7 +71,7 @@ export interface HomeDeckProps {
 export function HomeDeck({
   entries,
   openTasks,
-  gameLocked = false,
+  gameAccess,
   chrome,
   onOpenCourse,
   onStartNode,
@@ -133,6 +134,8 @@ export function HomeDeck({
             const { marathon, progress } = entry;
             const day = Math.max(1, marathon.dayIndex);
             const left = openTasks?.[marathon.id];
+            const locked = gameAccess?.allowed === false;
+            const trialLeft = gameAccess?.allowed ? gameAccess.trialDaysLeft : undefined;
             return (
               <div key={entry.key} className="w-full shrink-0 snap-center">
                 <DeckCard
@@ -145,18 +148,26 @@ export function HomeDeck({
                   title={marathon.title}
                   lead={t('app.homeDeckMarathonLead')}
                   subtitle={
-                    gameLocked
+                    locked
                       ? t('app.homeDeckGameLocked')
-                      : left === undefined
-                        ? t('app.homeDeckMarathonBody')
-                        : left > 0
-                          ? t('app.marathonHomeTasksLeft', { n: formatNumber(locale, left) })
-                          : t('app.marathonHomeAllDone')
+                      : trialLeft !== undefined
+                        ? t('app.homeDeckGameTrial', {
+                            n: plural(locale, trialLeft, {
+                              one: t('app.homeDeckGameTrialDayOne'),
+                              few: t('app.homeDeckGameTrialDayFew', { n: trialLeft }),
+                              many: t('app.homeDeckGameTrialDayMany', { n: trialLeft }),
+                            }),
+                          })
+                        : left === undefined
+                          ? t('app.homeDeckMarathonBody')
+                          : left > 0
+                            ? t('app.marathonHomeTasksLeft', { n: formatNumber(locale, left) })
+                            : t('app.marathonHomeAllDone')
                   }
                   pct={progress.pct}
                   progressLabel={t('app.homeDeckProgressLabel')}
                   progressMeta={`${progress.done}/${progress.total}`}
-                  {...(gameLocked
+                  {...(locked
                     ? {
                         dimmed: true,
                         ctaLabel: t('app.homeDeckGameLockedCta'),

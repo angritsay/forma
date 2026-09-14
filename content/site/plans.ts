@@ -6,9 +6,18 @@
  * are sold side by side — the course as the entry step, the subscription as the way to stay.
  *
  * `paymentUrl` follows the course rule (docs/SETUP.md §7.1): an absolute https link per locale
- * pointing at the seller's Prodamus subscription product; the visitor's email is appended as
- * `?email=`. The webhook (docs/SETUP.md §7.4) matches a payment to a plan by its amount, so keep
- * these prices identical to the amounts configured on the payment side.
+ * pointing at a Prodamus product with the price locked on its side; the visitor's email is
+ * appended as `?email=` and nothing else, because a price carried in a URL is a price the payer
+ * can edit.
+ *
+ * Both are one-off products rather than recurring ones: Prodamus bills recurrently only through
+ * its club system, which is a separate paid connection and is not in place. So a payment opens a
+ * period and then stops — the monthly plan's own copy says so, and the day the club system is
+ * connected only these two links change.
+ *
+ * The webhook (docs/SETUP.md §7.4) matches a payment to a plan **by its amount**, so these prices,
+ * the amounts configured in Prodamus, and the PLAN_MONTHLY_RUB / PLAN_ANNUAL_RUB secrets must all
+ * agree. When they drift, payments arrive and silently open nothing.
  */
 import type { L10n, PaymentUrl } from '@/content/schema';
 import type { SubscriptionPlan } from '@/lib/api/types';
@@ -29,22 +38,33 @@ export interface Plan {
 export const PLANS: readonly Plan[] = [
   {
     id: 'monthly',
-    name: { ru: 'Форма на месяц', en: 'Forma. Monthly' },
+    /*
+     * «Доступ на 30 дней», not «подписка»: Prodamus only bills recurrently through its club
+     * system, which has to be applied for and paid for separately and is not connected yet. Until
+     * it is, this is a one-off payment that opens thirty days and then stops — and the note says
+     * so, because a person who believed they were subscribed and then lost access is a refund and
+     * a bad review, not a churned customer.
+     */
+    name: { ru: 'Доступ на 30 дней', en: '30 days of access' },
     price: { rub: 1990, usd: 19 },
     period: 'month',
-    note: { ru: 'Отмена в любой момент', en: 'Cancel any time' },
-    paymentUrl: {},
+    note: {
+      ru: 'Автосписания пока нет — продлевается вручную',
+      en: 'No auto-renewal yet — renewed by hand',
+    },
+    paymentUrl: { ru: 'https://payform.ru/lvcyfuk/' },
   },
   {
     id: 'annual',
-    name: { ru: 'Форма на год', en: 'Forma. Annual' },
-    price: { rub: 9990, usd: 99 },
+    name: { ru: 'Доступ на год', en: 'A year of access' },
+    price: { rub: 7990, usd: 79 },
     period: 'year',
+    /* 7 990 / 1 990 ≈ 4: the year costs what four months would, and runs twelve. */
     note: {
-      ru: '≈ 833 ₽ в месяц — семь месяцев бесплатно',
-      en: '≈ $8 a month — seven months free',
+      ru: '≈ 666 ₽ в месяц — цена четырёх месяцев за двенадцать',
+      en: '≈ $6.60 a month — four months’ price for twelve',
     },
-    paymentUrl: {},
+    paymentUrl: { ru: 'https://payform.ru/74cyg8P/' },
   },
 ];
 
@@ -72,17 +92,15 @@ export const PLAN_INCLUDES: readonly L10n[] = [
 /**
  * Is the subscription on sale at all: hides the page, the cards and the app entry points.
  *
- * Off at launch. Only the beginner course is being sold, so a subscription would be 1 990 ₽ a
- * month for access to one 2 990 ₽ course — which makes the subscription look poor value and the
- * course look expensive, and both of those cost more than the subscription would earn. Turn it
- * back on when there is a second course to subscribe to, and fill in the two `paymentUrl` fields
- * above at the same time.
+ * On, with both payment links filled in. It was off while only the beginner course was for sale:
+ * a subscription that covers one 2 990 ₽ course made the subscription look poor value and the
+ * course look expensive at the same time.
  *
  * `false` removes the /subscribe/ page from the build and the sitemap (src/lib/seo/pages.ts),
  * the plan card from the course page, the banner from the landing, and the subscription rows
  * from Profile and Admin. Nothing else needs editing.
  */
-export const PLANS_ENABLED = false;
+export const PLANS_ENABLED = true;
 
 /**
  * The game belongs to the subscription, not to everyone.

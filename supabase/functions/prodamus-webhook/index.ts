@@ -20,7 +20,7 @@ import { parseForm, planForAmount, readPayment, sign, signatureMatches } from '.
 
 const PRICES = {
   monthly: Number(Deno.env.get('PLAN_MONTHLY_RUB') ?? '1990'),
-  annual: Number(Deno.env.get('PLAN_ANNUAL_RUB') ?? '9990'),
+  annual: Number(Deno.env.get('PLAN_ANNUAL_RUB') ?? '7990'),
 };
 
 function reply(status: number, body: string): Response {

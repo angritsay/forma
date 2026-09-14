@@ -14,6 +14,7 @@ import {
 } from '@/lib/api/auth';
 import { getProfile, updateProfile, type Profile, type ProfilePatch } from '@/lib/api/profiles';
 import { listEntitlements } from '@/lib/api/entitlements';
+import { newestActivation } from '@/app/features/marathon/gameAccess';
 import { getMySubscription } from '@/lib/api/subscriptions';
 import type { Subscription } from '@/lib/api/types';
 import { clearDraft } from '@/app/screens/onboarding/draft';
@@ -34,6 +35,12 @@ export interface SessionState {
   profile: Profile | null;
   /** Ids of courses the user owns (active purchases). */
   entitlements: string[];
+  /**
+   * When the newest owned course was activated, ISO — the clock the game's free week runs on
+   * (src/app/features/marathon/gameAccess.ts). Kept here rather than recomputed per screen
+   * because `entitlements` throws the dates away and both screens that gate the game need them.
+   */
+  newestPurchaseAt: string | null;
   /** The user's subscription, or null when they never subscribed; access itself is in `entitlements`. */
   subscription: Subscription | null;
   /** Last error from boot / profile load; RouteGuards show a retry state when profile is null. */
@@ -68,6 +75,7 @@ const SIGNED_OUT = {
   user: null,
   profile: null,
   entitlements: [] as string[],
+  newestPurchaseAt: null as string | null,
   subscription: null as Subscription | null,
 };
 
@@ -94,9 +102,19 @@ export const useSession = create<SessionState>((set, get) => {
       const profile = profileRes.status === 'fulfilled' ? profileRes.value : null;
       const entitlements =
         entRes.status === 'fulfilled' ? entRes.value.map((e) => e.courseId) : get().entitlements;
+      const newestPurchaseAt =
+        entRes.status === 'fulfilled' ? newestActivation(entRes.value) : get().newestPurchaseAt;
       const subscription = subRes.status === 'fulfilled' ? subRes.value : get().subscription;
       const error = profileRes.status === 'rejected' ? toAuthError(profileRes.reason) : undefined;
-      set({ status: 'signed_in', user, profile, entitlements, subscription, error });
+      set({
+        status: 'signed_in',
+        user,
+        profile,
+        entitlements,
+        newestPurchaseAt,
+        subscription,
+        error,
+      });
       if (profile) useLocale.getState().setLocale(profile.locale);
     })().finally(() => {
       if (inflight?.promise === promise) inflight = null;
@@ -174,7 +192,7 @@ export const useSession = create<SessionState>((set, get) => {
     refreshEntitlements: async () => {
       const [rows, subscription] = await Promise.all([listEntitlements(), getMySubscription()]);
       const entitlements = rows.map((r) => r.courseId);
-      set({ entitlements, subscription });
+      set({ entitlements, newestPurchaseAt: newestActivation(rows), subscription });
       return entitlements;
     },
 

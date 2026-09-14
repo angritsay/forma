@@ -13,7 +13,7 @@ import { PageTitle } from '@/components/ui/PageTitle';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
-import { formatNumber } from '@/i18n/index';
+import { formatNumber, plural } from '@/i18n/index';
 import { PROOFS_BUCKET, proofMediaPath, sendProof } from '@/lib/api/marathon';
 import { uploadMedia } from '@/lib/api/storage';
 import type { MyMarathon, ProofInput } from '@/lib/api/types';
@@ -28,6 +28,7 @@ import {
 import { LinkButton } from '@/app/features/courses/LinkButton';
 import { subscribeHref } from '@/app/features/courses/courseMeta';
 import { useSession } from '@/app/store/session';
+import { gameAccess } from '@/app/features/marathon/gameAccess';
 import { GAME_REQUIRES_SUBSCRIPTION } from '@content/site/plans';
 
 function DaySkeleton() {
@@ -43,6 +44,7 @@ function DaySkeleton() {
 export default function MarathonScreen() {
   const { t, locale } = useT();
   const subscription = useSession((s) => s.subscription);
+  const newestPurchaseAt = useSession((s) => s.newestPurchaseAt);
   const navigate = useNavigate();
   const toast = useToast();
   const { marathon, status: marathonStatus, error, reload: reloadMarathon } = useMyMarathons();
@@ -102,7 +104,14 @@ export default function MarathonScreen() {
    * here tapped a card that told them what the game is, and the answer to "can I play" is a price,
    * not a locked door.
    */
-  if (GAME_REQUIRES_SUBSCRIPTION && subscription?.isLive !== true) {
+  const access = gameAccess({
+    subscriptionLive: subscription?.isLive === true,
+    newestPurchaseAt,
+    now: Date.now(),
+    gated: GAME_REQUIRES_SUBSCRIPTION,
+  });
+
+  if (!access.allowed) {
     return (
       <Screen header={header}>
         <EmptyState
@@ -164,6 +173,26 @@ export default function MarathonScreen() {
     <Screen header={header}>
       <div className="flex flex-col gap-5 pb-4">
         <MarathonHead marathon={marathon} partners={[...teammateNames.values()]} />
+
+        {/*
+         * The week a course bought says so, and says how much of it is left. A trial nobody is
+         * told about converts nothing: the whole point is that on the seventh day the person
+         * already knows what they are about to lose.
+         */}
+        {access.allowed && access.trialDaysLeft !== undefined ? (
+          <section className="border-l-2 border-course pl-4">
+            <span className="eyebrow text-course">{t('app.marathonTrialTitle')}</span>
+            <p className="mt-1 text-[15px]">
+              {t('app.marathonTrialBody', {
+                n: plural(locale, access.trialDaysLeft, {
+                  one: t('app.homeDeckGameTrialDayOne'),
+                  few: t('app.homeDeckGameTrialDayFew', { n: access.trialDaysLeft }),
+                  many: t('app.homeDeckGameTrialDayMany', { n: access.trialDaysLeft }),
+                }),
+              })}
+            </p>
+          </section>
+        ) : null}
 
         {dayIndex < 1 ? (
           <EmptyState

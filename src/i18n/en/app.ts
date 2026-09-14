@@ -232,6 +232,10 @@ export const app = {
   homeDeckCourseLead: 'A programme by weeks. You walk the days, and the load adapts to you.',
   homeDeckMarathonLead: 'A task every day. Whoever scores most in a week gets an hour with Sergey.',
   homeDeckGameLocked: 'Part of the subscription',
+  homeDeckGameTrial: 'Free week with the course — {n} left',
+  homeDeckGameTrialDayOne: '1 day',
+  homeDeckGameTrialDayFew: '{n} days',
+  homeDeckGameTrialDayMany: '{n} days',
   homeDeckGameLockedCta: 'Subscribe',
   homeDeckMarathonCta: 'Today’s task',
   homeDeckStart: 'Start the workout',
@@ -1015,6 +1019,9 @@ export const app = {
   marathonNoTasksTodayBody: 'A rest day. There will be a new one in the morning.',
   marathonErrorTitle: 'Could not load the game',
   marathonLockedTitle: 'The game is part of the subscription',
+  marathonTrialTitle: 'Your free week',
+  marathonTrialBody:
+    'The game is open with your course. {n} left — after that it needs a subscription.',
   marathonLockedBody:
     'A task every day, proof, and a board every week. Whoever scores most gets an hour with Sergey.',
   // One task
