@@ -14,7 +14,7 @@ unless the spec is provably wrong — in that case fix the spec in the same chan
   redirect to an external payment link configured per course.
 - **Web app** (`/app/`): the user enters the email, receives a one-time code by email, confirms it,
   and gets the fitness app: all courses (owned / locked), a Duolingo-style path per course, a
-  leaderboard, streaks, adaptive difficulty, a workout player with exercise animations/videos,
+  leaderboard, streaks, adaptive difficulty, a workout player with the coach's clip of each movement,
   progress statistics. Russian throughout — copy, descriptions and videos.
 - **Backend**: Supabase (Postgres + Auth email OTP + Storage). Frontend is fully static and is
   deployed to GitHub Pages by GitHub Actions.
@@ -69,7 +69,7 @@ src/
   layouts/                  # Base.astro (html shell, SeoHead, fonts), Landing.astro (nav/footer)
   components/seo/           # SeoHead.astro, JsonLd.astro, Analytics.astro
   components/landing/       # landing sections (Astro)
-  components/anim/          # Figure rig (SVG) + poses per exercise (used by app AND landing)
+  components/media/         # ExerciseStill: one frame of a movement's clip (used by app AND landing)
   components/ui/            # React UI kit used by the app (Button, Card, Chip, Sheet, ...)
   app/                      # React SPA: main.tsx, router.tsx, store/, screens/, hooks/
   pages/                    # Astro routes (see §9)
@@ -145,9 +145,11 @@ public/                     # favicon.svg, icons, manifest
   components). **The current photographs are placeholders** — see `src/lib/media/photos.ts`: they
   are remote Unsplash URLs rather than vendored files, and the pictures themselves are wrong for a
   product about training at home.
-- The animated SVG figure (`components/anim`) is the second illustration system, drawn in
-  `--tile-fg` on a flat course tile. It carries a course's identity wherever a photograph does not
-  exist: catalogue rows, path nodes, OG cards.
+- A still from the coach's clip (`components/media/ExerciseStill`) is the second illustration
+  system: `images/exercises/<id>.jpg` in the public bucket, drawn on the flat course tile. It
+  carries a course's identity wherever a photograph does not exist — catalogue rows, the top of a
+  workout, the movement grid. Where a movement has no clip the tile is left flat; nothing is drawn
+  to stand in for footage that has not been shot.
 
 ## 6. Content model (contract: `src/content/schema.ts`)
 
@@ -159,8 +161,7 @@ recognizable latin term), `name`, `description` (2–4 sentences), `howTo[]` (�
 (≥2), `mistakes[]` (≥1), `breathing?`, `muscles[]`, `pattern`, `equipment[]` (`['none']` for
 bodyweight), `level 1|2|3`, `unit` (`reps|seconds|meters|calories`), `secondsPerRep` (required for
 reps), `met` (metabolic equivalent), `loadable`, `scaling {easier?, harder?}` (exercise ids),
-`animation` (id of a pose set in `components/anim/poses`), `video? {ru?, en?}` (URL or
-`storage:<bucket>/<path>`), `tags[]`, `isTest?`.
+`video? {ru?, en?}` (URL or `storage:<bucket>/<path>`), `tags[]`, `isTest?`.
 
 **Workout** — `id`, `name`, `focus`, `description`, `blocks[]`, `basePoints` (60–250), `tags[]`.
 **Block** — `id`, `type` (`warmup|skill|strength|metcon|core|cooldown|test`), `format`
@@ -310,7 +311,7 @@ Landing (Astro, static, RU default / EN under `/en/`):
 /courses/                  courses hub
 /courses/<slug>/           course page + order form (5 pages per locale)
 /exercises/                exercise library hub (programmatic)
-/exercises/<slug>/         exercise page: animation, how-to, cues, mistakes, scaling, related
+/exercises/<slug>/         exercise page: still, how-to, cues, mistakes, scaling, related
 /guides/                   guides hub (clusters)
 /guides/<slug>/            SEO article (content collection)
 /subscribe/               every course by subscription (monthly / annual), plan choice + order form

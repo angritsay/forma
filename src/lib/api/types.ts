@@ -275,11 +275,6 @@ export interface ExerciseCatalogRow {
   level: number | null;
   unit: 'reps' | 'seconds' | 'meters' | 'calories';
   secondsPerRep: number | null;
-  /**
-   * The drawn pose set (src/components/anim/poses) — code, so it is null for anything written in
-   * the admin panel. Such an exercise leads with its video or still instead.
-   */
-  animation: string | null;
   videoRu: string | null;
   videoEn: string | null;
   image: string | null;

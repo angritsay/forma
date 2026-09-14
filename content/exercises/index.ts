@@ -1,6 +1,6 @@
 /**
  * Exercise library. Group files export arrays; this index concatenates them.
- * Keep ids stable: they are referenced by courses, animations, SEO pages and user data.
+ * Keep ids stable: they are referenced by courses, clips, SEO pages and user data.
  */
 import type { ExerciseInput } from '@/content/schema';
 import { EXERCISES_A } from '@content/exercises/bodyweight-lower-upper';

@@ -7,7 +7,7 @@
 import type { InferGetStaticPropsType } from 'astro';
 import { getCollection } from 'astro:content';
 import Landing from '@/layouts/Landing.astro';
-import ExerciseFigure from '@/components/anim/ExerciseFigure';
+import ExerciseStill from '@/components/media/ExerciseStill';
 import Breadcrumbs from '@/components/landing/Breadcrumbs.astro';
 import Button from '@/components/landing/Button.astro';
 import Faq from '@/components/landing/Faq.astro';
@@ -175,17 +175,7 @@ const jsonLd = [
       <div
         class="hero-art relative mx-auto flex aspect-[4/5] w-full max-w-md items-center justify-center overflow-hidden md:max-w-none"
       >
-        {
-          signature && (
-            <ExerciseFigure
-              client:visible
-              animation={signature.animation}
-              variant="hero"
-              tile={course.tile}
-              label={l(signature.name, locale)}
-            />
-          )
-        }
+        {signature && <ExerciseStill exerciseId={signature.id} loading="eager" />}
         {
           signature && (
             <span class="absolute bottom-5 left-5 inline-flex h-6 items-center bg-ink/85 px-2.5 text-[11px] font-semibold tracking-[0.12em] text-paper uppercase">

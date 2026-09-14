@@ -4,7 +4,7 @@
  * The player is **one card**, the size of the screen, and it has two sides.
  *
  * Its front is the coach's clip — one full viewport of it, playing by itself the moment the step
- * arrives, or the drawn figure where a movement has no footage. Over it: a way out and a way to
+ * arrives. Over it: a way out and a way to
  * stop at the top, and at the bottom the movement's name and the one number that matters, «10
  * повторов» or a countdown. Nothing else is on it. No elapsed clock, no sound control, no step
  * counter, no preview of the next movement — an athlete mid-set should not have to read anything
@@ -20,7 +20,7 @@
  */
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Navigate, useNavigate } from 'react-router';
-import ExerciseFigure from '@/components/anim/ExerciseFigure';
+import { ExerciseStill } from '@/components/media/ExerciseStill';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { IconButton } from '@/components/ui/IconButton';
@@ -41,7 +41,7 @@ import {
   isTestBlock,
   sectionOfStep,
   skippedResult,
-  stepAnimation,
+  stepExerciseId,
   stepTitle,
   stepVideoRef,
   workoutSections,
@@ -56,6 +56,7 @@ import { WorkRepsStep } from '@/app/features/player/steps/WorkRepsStep';
 import { WorkTimerStep } from '@/app/features/player/steps/WorkTimerStep';
 import { haptic, setClosingConfirmation } from '@/lib/telegram/webapp';
 import { warmupSkipIndex } from '@/lib/training/player';
+import { exerciseStillUrl } from '@/lib/api/storage';
 import { courseTileVars } from '@/lib/ui/tile';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
 import { useWakeLock } from '@/app/features/player/useWakeLock';
@@ -68,8 +69,6 @@ import {
 import { findCourse } from '@/content/catalogue';
 import type { PlayerStep } from '@/lib/training/types';
 
-/** No tile of its own: the figure is drawn straight onto the player's ground. */
-const TRANSPARENT_TILE = 'transparent';
 const ELAPSED_TICK_MS = 500;
 
 function NoSession() {
@@ -87,13 +86,18 @@ function NoSession() {
 }
 
 interface ArtLayerProps {
-  animation: string | undefined;
+  exerciseId: string | undefined;
   playing: boolean;
   videoUrl: string | undefined;
 }
 
 /**
- * The demonstration: video where the movement was filmed, the drawn figure where it was not.
+ * The demonstration: the coach's own clip of the movement.
+ *
+ * A still from that same clip is the poster, so the frame the athlete arrives on is the movement
+ * rather than a black rectangle while the signed URL is fetched — and it is the whole picture for
+ * a movement whose clip has not been uploaded yet. Nothing is drawn: a diagram of a movement we
+ * film is a worse picture of it, and a diagram of one we do not film is a promise we cannot keep.
  *
  * **It is contained, never cropped.** It used to fill the card with `object-cover`, and on a real
  * clip that was the whole feature defeating itself: the coach films in landscape, in a garden, and
@@ -111,8 +115,9 @@ interface ArtLayerProps {
  * (scripts/media/prepare-videos.mjs), so there is nothing to mute. `muted` is still set on the
  * element — without it a browser refuses to autoplay, audio track or no.
  */
-function ArtLayer({ animation, playing, videoUrl }: ArtLayerProps) {
+function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
   const video = useRef<HTMLVideoElement>(null);
+  const still = exerciseId ? exerciseStillUrl(exerciseId) : undefined;
   useEffect(() => {
     const el = video.current;
     if (!el) return;
@@ -149,6 +154,7 @@ function ArtLayer({ animation, playing, videoUrl }: ArtLayerProps) {
             key={videoUrl}
             ref={video}
             src={videoUrl}
+            poster={still}
             className="size-full object-contain"
             playsInline
             muted
@@ -156,16 +162,13 @@ function ArtLayer({ animation, playing, videoUrl }: ArtLayerProps) {
             autoPlay
             preload="metadata"
           />
-        ) : animation ? (
-          <div className="flex size-full items-center justify-center p-8">
-            <ExerciseFigure
-              animation={animation}
-              variant="hero"
-              playing={playing}
-              tile={TRANSPARENT_TILE}
-            />
-          </div>
-        ) : null}
+        ) : (
+          <ExerciseStill
+            exerciseId={exerciseId}
+            className="size-full object-contain"
+            loading="eager"
+          />
+        )}
       </div>
     </div>
   );
@@ -284,7 +287,7 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
   // The programme colour for the art, the phase kicker and the progress bar — and the ink to match.
   const courseVars = courseTileVars(findCourse(session.courseId)?.tile);
 
-  const animation = step ? stepAnimation(step, prescribed) : undefined;
+  const exerciseId = step ? stepExerciseId(step, prescribed) : undefined;
   const videoUrl = useMediaUrl(stepVideoRef(step, locale));
 
   /*
@@ -421,7 +424,7 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
             style={{ '--player-glass-h': `${glassHeight}px` } as CSSProperties}
             onPointerDownCapture={unlock}
           >
-            <ArtLayer animation={animation} playing={!paused} videoUrl={videoUrl} />
+            <ArtLayer exerciseId={exerciseId} playing={!paused} videoUrl={videoUrl} />
             <PlayerHeader
               progress={steps.length > 1 ? stepIndex / (steps.length - 1) : 0}
               paused={paused}

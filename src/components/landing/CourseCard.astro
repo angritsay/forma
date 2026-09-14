@@ -10,7 +10,7 @@
  * colour's own badge tone — the one badge allowed to take colour, because it names the
  * programme — and the number in the corner is the card's numeral, not a decoration.
  */
-import ExerciseFigure from '@/components/anim/ExerciseFigure';
+import ExerciseStill from '@/components/media/ExerciseStill';
 import type { Course, Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { courseTileStyle } from '@/lib/ui/tile';
@@ -61,17 +61,7 @@ const price = isFree(course.price, locale)
       aria-hidden="true"
       tabindex="-1"
     >
-      {
-        signature ? (
-          <ExerciseFigure
-            animation={signature.animation}
-            variant="card"
-            playing={false}
-            tile={course.tile}
-            label={l(signature.name, locale)}
-          />
-        ) : null
-      }
+      {signature ? <ExerciseStill exerciseId={signature.id} /> : null}
     </a>
     {
       n !== undefined && (

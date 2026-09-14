@@ -15,6 +15,18 @@ export function isConfigured(): boolean {
   return Boolean(url && anonKey && /^https?:\/\//.test(url));
 }
 
+/**
+ * The project URL on its own, with no client behind it.
+ *
+ * An object in a public bucket has a stable address that is pure string work, and the static site
+ * builds those addresses at build time — where instantiating a Supabase client would mean creating
+ * a browser-shaped object (auth storage, refresh timers) to compute a string. Empty when the env
+ * is absent.
+ */
+export function projectUrl(): string {
+  return isConfigured() ? url!.replace(/\/+$/, '') : '';
+}
+
 export function supabase(): SupabaseClient {
   if (!client) {
     if (!isConfigured()) {

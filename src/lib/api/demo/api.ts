@@ -740,7 +740,7 @@ export async function addPurchase(email: string, courseId: string, note?: string
 
 /**
  * There is no private bucket in demo mode, so a `storage:` reference resolves to nothing and the
- * player falls back to the built-in exercise animations. Absolute URLs still play.
+ * player shows the movement's still instead. Absolute URLs still play.
  */
 export async function resolveMediaUrl(ref: string | undefined): Promise<string | undefined> {
   if (!ref) return undefined;
@@ -780,7 +780,6 @@ function compiledExerciseRows(): ExerciseCatalogRow[] {
     level: e.level,
     unit: e.unit,
     secondsPerRep: e.secondsPerRep ?? null,
-    animation: e.animation,
     videoRu: e.video?.ru ?? null,
     videoEn: e.video?.en ?? null,
     image: null,
@@ -845,7 +844,6 @@ function draftToRow(draft: ExerciseDraft, base?: ExerciseCatalogRow): ExerciseCa
     level: draft.level ?? base?.level ?? 1,
     unit: draft.unit ?? base?.unit ?? 'reps',
     secondsPerRep: draft.secondsPerRep ?? base?.secondsPerRep ?? null,
-    animation: base?.animation ?? null,
     videoRu: draft.videoRu ?? base?.videoRu ?? null,
     videoEn: draft.videoEn ?? base?.videoEn ?? null,
     image: draft.image ?? base?.image ?? null,

@@ -15,13 +15,11 @@ The app and the landing pick the string for the active language; videos follow t
 
 One object per exercise (`ExerciseInput` from `src/content/schema.ts`). Key fields:
 
-- `id` — stable snake_case; referenced by courses, animations, SEO pages and user data. Never rename.
+- `id` — stable snake_case; referenced by courses, clips, SEO pages and user data. Never rename.
 - `unit` — `reps` (needs `secondsPerRep`), `seconds`, `meters`, `calories`.
 - `met` — metabolic equivalent for calorie estimates (Compendium of Physical Activities).
 - `scaling.easier` / `scaling.harder` — ids used by the adaptive engine for substitutions
   (beginners, limitations, missing equipment).
-- `animation` — id of a pose set in `src/components/anim/poses`. Several exercises can share one
-  animation (e.g. `db_goblet_squat` and `kb_goblet_squat` share `goblet_squat`).
 - `video` — optional per-language URL. Public URLs (YouTube, Kinescope, CDN) are shown on the public
   exercise pages and in the app. Private files in Supabase Storage use `storage:videos/<course>/<file>`
   and are resolved to signed URLs in the app only (see `docs/SETUP.md`).
@@ -64,8 +62,11 @@ See `docs/SEO.md` for the full conveyor.
 `links.ts` (support links), `faq.ts` (landing FAQ), `pricing.ts` (currency display, refund window).
 Fill these in before launch (`docs/SETUP.md` has the checklist).
 
-## Animations (`src/components/anim/poses/<id>.ts`)
+## Pictures of a movement
 
-A pose set is keyframes of joint angles for the SVG athlete rig. `src/components/anim/README.md`
-documents the joint conventions and the preview workflow (renders PNG frames with resvg so you can
-check a movement without running the app).
+There is one, and it is the coach on video. An exercise's clip lives in the private `videos` bucket
+and a still cut from that same clip in the public `images` bucket, both named after the exercise id
+(`docs/VIDEO.md`). The app plays the clip in the player and draws the still everywhere else; where
+neither exists there is a flat tile with the movement's name beside it, and nothing is drawn to
+stand in for footage that has not been shot. An exercise with no clip is an exercise to film, not
+one to illustrate.

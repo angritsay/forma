@@ -31,7 +31,6 @@ export function makeExercise(o: ExerciseOverrides): Exercise {
     met: o.met ?? 6,
     loadable: o.loadable ?? false,
     scaling: o.scaling ?? {},
-    animation: o.animation ?? o.id,
     tags: o.tags ?? [],
     ...(o.isTest !== undefined ? { isTest: o.isTest } : {}),
     ...(o.video !== undefined ? { video: o.video } : {}),

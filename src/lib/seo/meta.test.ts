@@ -43,7 +43,6 @@ const fixture: Exercise = ExerciseSchema.parse({
   met: 5,
   loadable: false,
   scaling: { harder: 'jump_squat' },
-  animation: 'air_squat',
   tags: [],
 });
 
@@ -85,7 +84,7 @@ describe('description helpers', () => {
   });
 
   it('produces 120–160 chars from long, medium and short prose', () => {
-    const cta = 'Animation, step-by-step technique, cues and scaling options in the Forma library.';
+    const cta = 'Video, step-by-step technique, cues and scaling options in the Forma library.';
     const long =
       'The base movement for the whole lower body: quads, glutes and the core all work together. ' +
       'Forma courses use it in warm-ups, strength blocks and metcons because it teaches you to sit down and stand up under load. ' +
@@ -117,7 +116,7 @@ describe('description helpers', () => {
   });
 
   it('never invents text: a tiny source yields the source plus the CTA, under the maximum', () => {
-    const cta = 'Animation, step-by-step technique, cues and scaling options in the Forma library.';
+    const cta = 'Video, step-by-step technique, cues and scaling options in the Forma library.';
     const tiny = 'Short text about squats.';
     expect(buildDescription(tiny, cta)).toBe(`${tiny} ${cta}`);
     expect(charLength(buildDescription(tiny, cta))).toBeLessThanOrEqual(DESCRIPTION_MAX);

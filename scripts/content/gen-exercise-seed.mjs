@@ -72,7 +72,6 @@ const rows = [...EXERCISES]
       num(e.level),
       lit(e.unit),
       num(e.secondsPerRep ?? null),
-      lit(e.animation),
       lit(e.video?.ru ?? null),
       lit(e.video?.en ?? null),
       arr(e.tags ?? []),
@@ -97,7 +96,7 @@ ${rule}
 
 insert into public.exercises (
   id, name_ru, name_en, short_name_ru, description_ru, primary_muscle, muscles, pattern,
-  equipment, level, unit, seconds_per_rep, animation, video_ru, video_en, tags, is_test, sort_order
+  equipment, level, unit, seconds_per_rep, video_ru, video_en, tags, is_test, sort_order
 ) values
 ${rows.join(',\n')}
 on conflict (id) do update set
@@ -112,7 +111,6 @@ on conflict (id) do update set
   level = excluded.level,
   unit = excluded.unit,
   seconds_per_rep = excluded.seconds_per_rep,
-  animation = excluded.animation,
   is_test = excluded.is_test,
   sort_order = excluded.sort_order,
   updated_at = now()

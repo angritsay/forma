@@ -9,7 +9,7 @@ import Breadcrumbs from '@/components/seo/Breadcrumbs.astro';
 import CourseLinkCard from '@/components/seo/CourseLinkCard.astro';
 import FaqAccordion from '@/components/seo/FaqAccordion.astro';
 import ExerciseCard from '@/components/exercises/ExerciseCard.astro';
-import ExerciseFigure from '@/components/anim/ExerciseFigure';
+import ExerciseStill from '@/components/media/ExerciseStill';
 import { EXERCISES, coursesUsingExercise, getExercise } from '@/content/registry';
 import { LOCALES, type Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
@@ -168,13 +168,7 @@ const jsonLd = [
       </div>
       <div class="mx-auto w-full max-w-sm md:max-w-none">
         <div class="hero-art aspect-square w-full overflow-hidden">
-          <ExerciseFigure
-            client:visible
-            animation={ex.animation}
-            variant="hero"
-            tile={tile}
-            label={name}
-          />
+          <ExerciseStill exerciseId={ex.id} loading="eager" />
         </div>
       </div>
     </section>

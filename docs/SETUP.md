@@ -908,7 +908,7 @@ success state (no payment redirect), and the order then appears in the admin lis
 activate it and watch the course unlock.
 
 Two things are deliberately missing: private-bucket videos (a `storage:` reference resolves to
-nothing and the player falls back to the built-in animations), and any kind of email.
+nothing and the player shows the movement's still instead), and any kind of email.
 
 ### 10.4 Resetting and leaving
 

@@ -10,8 +10,8 @@
  *
  * Content is imported straight from the TypeScript sources through scripts/seo/ts-loader.mjs;
  * if that fails (older Node) the script falls back to a regex scan of content/ (names only).
- * The exercise/course figure comes from src/components/anim/render.ts (figureSvgString) when the
- * animation area has shipped it, else from src/components/anim/figures.json, else it is omitted.
+ * The tile is a flat square of the programme colour. It used to carry a drawn stick figure; the
+ * movements are filmed now, and a drawing of a movement we have on video is a worse picture of it.
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { register } from 'node:module';
@@ -44,27 +44,7 @@ const COLORS = {
   text: '#F6F6F7',
   muted: '#B9B9C0',
   muted2: '#93939D',
-  /** Ink for a figure or label on a *light* tile (a programme colour). */
-  inkOnLight: '#0F0F11',
-  /** Ink on a *dark* tile (a neutral surface). */
-  inkOnDark: '#F6F6F7',
 };
-
-/**
- * Black ink on a programme colour, light ink on a neutral surface — the same rule as
- * `tileInk()` in src/lib/ui/tile.ts, repeated here because this script must not import from src
- * at module load (the TypeScript loader is registered later).
- * @param {string} hex
- */
-function inkOn(hex) {
-  const h = hex.replace('#', '');
-  const ch = (/** @type {number} */ i) => {
-    const c = parseInt(h.slice(i, i + 2), 16) / 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  };
-  const lum = 0.2126 * ch(0) + 0.7152 * ch(2) + 0.0722 * ch(4);
-  return lum > 0.35 ? COLORS.inkOnLight : COLORS.inkOnDark;
-}
 
 // Node prints an ExperimentalWarning for type stripping; keep every other warning.
 process.removeAllListeners('warning');
@@ -156,36 +136,6 @@ async function loadLabels() {
     }
   }
   return labels;
-}
-
-/**
- * Returns a function (animationId) → standalone SVG string | null.
- */
-async function loadFigureRenderer() {
-  try {
-    const mod = await import('../../src/components/anim/render.ts');
-    if (typeof mod.figureSvgString === 'function') {
-      log('[og] figure renderer: src/components/anim/render.ts');
-      return (/** @type {string} */ id) => {
-        try {
-          return mod.figureSvgString(id, 0.35, { size: 320, background: false });
-        } catch {
-          return null;
-        }
-      };
-    }
-  } catch (err) {
-    log(`[og] figure renderer unavailable (${errMessage(err).split('\n')[0]})`);
-  }
-  const json = join(ROOT, 'src', 'components', 'anim', 'figures.json');
-  if (existsSync(json)) {
-    /** @type {Record<string, string>} */
-    const map = JSON.parse(readFileSync(json, 'utf8'));
-    log('[og] figure renderer: src/components/anim/figures.json');
-    return (/** @type {string} */ id) => map[id] ?? null;
-  }
-  log('[og] no figure renderer found — cards are rendered without the athlete figure');
-  return () => null;
 }
 
 /** @param {unknown} err */
@@ -371,22 +321,7 @@ function fitText(text, sizes, maxWidth, maxLines, family) {
 }
 
 /**
- * Turn a standalone SVG string into a nested <svg> placed inside the tile.
- * @param {string} svg
- * @param {number} x
- * @param {number} y
- * @param {number} size
- */
-function embedFigure(svg, x, y, size) {
-  const open = svg.match(/<svg\b[^>]*>/i);
-  if (!open) return '';
-  const vb = open[0].match(/viewBox="([^"]+)"/i)?.[1] ?? '0 0 200 200';
-  const inner = svg.slice(open.index + open[0].length).replace(/<\/svg>\s*$/i, '');
-  return `<svg x="${x}" y="${y}" width="${size}" height="${size}" viewBox="${vb}">${inner}</svg>`;
-}
-
-/**
- * @param {{ eyebrow: string, title: string, subtitle: string, tile: string, figureSvg: string | null, brand: string, host: string, big?: boolean }} c
+ * @param {{ eyebrow: string, title: string, subtitle: string, tile: string, brand: string, host: string, big?: boolean }} c
  */
 function template(c) {
   const margin = 80;
@@ -456,16 +391,9 @@ function template(c) {
     <text x="${(margin + fWidth).toFixed(1)}" y="${wmY}" font-weight="800" letter-spacing="${wmTracking}">OR</text>
     <text x="${(margin + fWidth + orWidth).toFixed(1)}" y="${wmY}" font-weight="200" letter-spacing="${wmTracking}">MA</text>
   </g>`;
-  // `color` on the group is what the embedded figure's `currentColor` resolves against: embedFigure
-  // strips the figure's own <svg> wrapper, and the attribute that carried the ink goes with it.
-  // Black on a programme colour, light on a neutral surface — decided from the tile itself.
-  const figure = c.figureSvg
-    ? `<g color="${inkOn(c.tile)}">${embedFigure(c.figureSvg, tile.x + 50, tile.y + 50, tile.size - 100)}</g>`
-    : '';
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
   <rect width="${WIDTH}" height="${HEIGHT}" fill="${COLORS.bg}"/>
   <rect x="${tile.x}" y="${tile.y}" width="${tile.size}" height="${tile.size}" fill="${c.tile}"/>
-  ${figure}
   ${c.eyebrow ? `<text x="${margin}" y="${eyebrowY}" font-family="Onest" font-size="20" letter-spacing="3.6" fill="${COLORS.muted}">${esc(c.eyebrow.toUpperCase())}</text>` : ''}
   <text font-family="Unbounded" font-weight="600" font-size="${title.size}" fill="${COLORS.text}">${titleTspans}</text>
   <text font-family="Onest" font-size="${subtitle.size}" fill="${COLORS.muted}">${subtitleTspans}</text>${wordmark}
@@ -499,10 +427,9 @@ function firstSentence(text) {
  * @param {string} host
  */
 function buildJobs(content, labels, host) {
-  /** @type {{ file: string, kind: string, card: Parameters<typeof template>[0] & { animation?: string } }[]} */
+  /** @type {{ file: string, kind: string, card: Parameters<typeof template>[0] }[]} */
   const jobs = [];
   const brand = labels.ru.brand ?? 'Forma';
-  const exerciseById = new Map(content.exercises.map((e) => [e.id, e]));
   /*
    * Only courses on sale get a card: a card is an invitation to a page, and a course held back
    * has none. The tile map below still walks every course, so an exercise that only appears in a
@@ -510,15 +437,12 @@ function buildJobs(content, labels, host) {
    */
   const liveCourses = content.courses.filter((c) => c.published !== false);
   const courseTileForExercise = new Map();
-  const courseFigure = new Map();
   for (const course of content.courses) {
     for (const w of course.workouts ?? []) {
       for (const b of w.blocks ?? []) {
         for (const it of b.items ?? []) {
           if (!courseTileForExercise.has(it.exerciseId))
             courseTileForExercise.set(it.exerciseId, course.tile);
-          if (!courseFigure.has(course.id))
-            courseFigure.set(course.id, exerciseById.get(it.exerciseId)?.animation);
         }
       }
     }
@@ -532,23 +456,21 @@ function buildJobs(content, labels, host) {
       title: brand,
       subtitle: LOCALES.map((loc) => labels[loc].tagline).join(' '),
       tile: BRAND_TILE,
-      figureSvg: null,
       brand,
       host,
       big: true,
-      animation: 'burpee',
     },
   });
 
   for (const locale of LOCALES) {
     const L = labels[locale];
     const hubs = [
-      ['home', brand, L.tagline, 'air_squat'],
-      ['courses', L.coursesHubTitle ?? '', L.coursesHubDescription ?? '', 'db_thruster'],
-      ['exercises', L.exercisesHubH1 ?? '', L.exercisesHubDescription ?? '', 'burpee'],
-      ['guides', L.guidesHubH1 ?? '', L.guidesHubDescription ?? '', 'kb_swing'],
+      ['home', brand, L.tagline],
+      ['courses', L.coursesHubTitle ?? '', L.coursesHubDescription ?? ''],
+      ['exercises', L.exercisesHubH1 ?? '', L.exercisesHubDescription ?? ''],
+      ['guides', L.guidesHubH1 ?? '', L.guidesHubDescription ?? ''],
     ];
-    for (const [id, title, subtitle, animation] of hubs) {
+    for (const [id, title, subtitle] of hubs) {
       jobs.push({
         file: `hub-${id}-${locale}.png`,
         kind: 'hub',
@@ -557,10 +479,8 @@ function buildJobs(content, labels, host) {
           title,
           subtitle,
           tile: BRAND_TILE,
-          figureSvg: null,
           brand,
           host,
-          animation,
         },
       });
     }
@@ -573,10 +493,8 @@ function buildJobs(content, labels, host) {
           title: pick(course.name, locale),
           subtitle: pick(course.tagline, locale),
           tile: typeof course.tile === 'string' ? course.tile : BRAND_TILE,
-          figureSvg: null,
           brand,
           host,
-          animation: courseFigure.get(course.id),
         },
       });
     }
@@ -589,10 +507,8 @@ function buildJobs(content, labels, host) {
           title: pick(ex.name, locale),
           subtitle: firstSentence(pick(ex.description, locale)),
           tile: courseTileForExercise.get(ex.id) ?? BRAND_TILE,
-          figureSvg: null,
           brand,
           host,
-          animation: ex.animation,
         },
       });
     }
@@ -609,7 +525,6 @@ function buildJobs(content, labels, host) {
     if (!clusterIndex.has(cluster)) clusterIndex.set(cluster, clusterIndex.size);
     const clusterTitle = L[`cluster_${cluster}_title`] ?? cluster;
     const key = String(g.data.translationKey ?? g.slug);
-    const related = Array.isArray(g.data.relatedExercises) ? g.data.relatedExercises : [];
     jobs.push({
       file: `guide-${key}-${g.locale}.png`,
       kind: 'guide',
@@ -618,10 +533,8 @@ function buildJobs(content, labels, host) {
         title: String(g.data.h1 ?? g.data.title ?? ''),
         subtitle: String(g.data.description ?? ''),
         tile: TILES[clusterIndex.get(cluster) % TILES.length],
-        figureSvg: null,
         brand,
         host,
-        animation: exerciseById.get(String(related[0] ?? ''))?.animation,
       },
     });
   }
@@ -655,11 +568,7 @@ async function main() {
   } catch {
     host = '';
   }
-  const [content, labels, figureOf] = await Promise.all([
-    loadContent(),
-    loadLabels(),
-    loadFigureRenderer(),
-  ]);
+  const [content, labels] = await Promise.all([loadContent(), loadLabels()]);
   log(
     `[og] content: ${content.exercises.length} exercises, ${content.courses.length} courses (${content.source})`,
   );
@@ -671,11 +580,8 @@ async function main() {
   jobs = jobs.slice(0, limit);
 
   let written = 0;
-  let figures = 0;
   for (const job of jobs) {
-    const figureSvg = job.card.animation ? figureOf(job.card.animation) : null;
-    if (figureSvg) figures++;
-    const svg = template({ ...job.card, figureSvg });
+    const svg = template(job.card);
     try {
       const png = new Resvg(svg, { font, fitTo: { mode: 'width', value: WIDTH } }).render().asPng();
       writeFileSync(join(OUT_DIR, job.file), png);
@@ -699,7 +605,7 @@ async function main() {
   }
   const secs = ((Date.now() - started) / 1000).toFixed(1);
   log(
-    `[og] wrote ${written}/${jobs.length} images (${figures} with a figure) to public/og in ${secs}s` +
+    `[og] wrote ${written}/${jobs.length} images to public/og in ${secs}s` +
       (pruned ? `, removed ${pruned} stale` : ''),
   );
 }

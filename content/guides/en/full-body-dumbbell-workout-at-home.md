@@ -71,7 +71,7 @@ If you have lower-back or shoulder problems or high blood pressure, talk to a do
 
 ## Full body dumbbell workout at home: the session
 
-The session takes 35 to 40 minutes. Every one of the dumbbell exercises at home listed here lives in the Forma library with an animation and technique cues.
+The session takes 35 to 40 minutes. Every one of the dumbbell exercises at home listed here lives in the Forma library on video, with technique cues.
 
 ### Warm-up, two rounds
 

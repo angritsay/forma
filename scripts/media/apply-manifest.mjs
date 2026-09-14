@@ -9,9 +9,9 @@
  *   { key: 'IMG_0909', exerciseId: 'db_front_squat' }
  *     → video: { ru: 'storage:videos/shared/db_front_squat.ru.mp4' }
  *
- * The field is inserted directly after `animation:`, which every exercise has, so the edit lands
- * in a predictable place and the diff stays readable. Exercises already carrying a `video:` are
- * rewritten in place rather than duplicated.
+ * The field is inserted directly after `loadable:`, which every exercise has and which is always
+ * one line, so the edit lands in a predictable place and the diff stays readable. Exercises already
+ * carrying a `video:` are rewritten in place rather than duplicated.
  *
  * `--check` reports what would change and exits non-zero if anything would — for CI, so a
  * manifest that drifts from the content files is caught rather than silently ignored.
@@ -53,14 +53,14 @@ for (const file of files) {
   let after = before;
 
   for (const [exerciseId, ref] of wanted) {
-    // Anchor on the id, then act on the `animation:` line inside that same object literal.
+    // Anchor on the id, then act on the `loadable:` line inside that same object literal.
     const idAt = after.indexOf(`id: '${exerciseId}',`);
     if (idAt === -1) continue;
     seen.add(exerciseId);
 
-    const animAt = after.indexOf('animation:', idAt);
+    const animAt = after.indexOf('loadable:', idAt);
     if (animAt === -1) {
-      console.error(`  ${exerciseId}: no animation: line found — skipped`);
+      console.error(`  ${exerciseId}: no loadable: line found — skipped`);
       continue;
     }
     const lineEnd = after.indexOf('\n', animAt);

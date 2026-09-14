@@ -125,8 +125,6 @@ export const ExerciseSchema = z
       easier: z.string().regex(idRegex).optional(),
       harder: z.string().regex(idRegex).optional(),
     }),
-    /** Id of the pose set in src/components/anim/poses. */
-    animation: z.string().regex(idRegex),
     video: OptionalL10nSchema.optional(),
     tags: z.array(z.string()).default([]),
     isTest: z.boolean().optional(),

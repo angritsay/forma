@@ -73,7 +73,7 @@ Do not cut the warm-up or the cool-down. Three minutes at the start is not lost 
 
 ## Four 20-minute workouts
 
-Every exercise is in the Forma library with an animation and technique cues. Pick the session by the goal of the day and rotate them through the week.
+Every exercise is in the Forma library on video, with technique cues. Pick the session by the goal of the day and rotate them through the week.
 
 ### Workout A. Full body, AMRAP 14 minutes
 

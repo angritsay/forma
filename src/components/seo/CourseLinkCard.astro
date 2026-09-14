@@ -6,7 +6,7 @@
  * A hairline row, not a box: a 72px tile in the programme colour, the name in the display face,
  * and the facts as small outlined chips.
  */
-import ExerciseFigure from '@/components/anim/ExerciseFigure';
+import ExerciseStill from '@/components/media/ExerciseStill';
 import { courseExercises } from '@/content/registry';
 import type { Course, Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
@@ -41,7 +41,7 @@ const chips = [
     class="hero-art flex size-[72px] shrink-0 items-center justify-center overflow-hidden"
     aria-hidden={signature ? undefined : 'true'}
   >
-    {signature && <ExerciseFigure animation={signature.animation} variant="thumb" label={name} />}
+    {signature && <ExerciseStill exerciseId={signature.id} />}
   </div>
   <div class="min-w-0">
     <span class="eyebrow">{t(locale, 'seo.ogCourse')}</span>

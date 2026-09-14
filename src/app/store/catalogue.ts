@@ -29,9 +29,7 @@ export interface CatalogueState {
  * A database exercise, in the compiled library's shape.
  *
  * Several fields exist only to satisfy `Exercise` and are read by almost nothing; the ones that
- * matter are the name, the unit, the per-rep estimate and the media. `animation` is the interesting
- * one — it names a pose set defined in code, so an exercise written in the admin panel has none and
- * the player falls back to its video, which is how a yoga pose should be taught anyway.
+ * matter are the name, the unit, the per-rep estimate and the media.
  */
 export function exerciseFromRow(r: ExerciseCatalogRow): Exercise {
   const name = { ru: r.nameRu, en: r.nameEn ?? r.nameRu };
@@ -62,7 +60,6 @@ export function exerciseFromRow(r: ExerciseCatalogRow): Exercise {
     met: 3,
     loadable: false,
     scaling: {},
-    animation: r.animation ?? '',
     ...(r.videoRu || r.videoEn
       ? {
           video: {

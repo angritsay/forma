@@ -10,10 +10,10 @@
  * is not touched; the split falls at the first comma, or after the first two words when there
  * is none, and `thin` overrides it where a page knows better.
  *
- * `photo` wins when it is set; the animated figure stays as the fallback so the hero still
- * renders before a usable photograph exists.
+ * `photo` wins when it is set; a frame from the named movement's clip stands in, so the hero
+ * still renders before a usable photograph exists.
  */
-import ExerciseFigure from '@/components/anim/ExerciseFigure';
+import ExerciseStill from '@/components/media/ExerciseStill';
 import Button from './Button.astro';
 import FeatureChip from './FeatureChip.astro';
 
@@ -25,7 +25,8 @@ interface Props {
   primary: { label: string; href: string };
   secondary: { label: string; href: string };
   chips: string[];
-  figure: { animation: string; label: string };
+  /** Movement whose still stands in for the photograph. */
+  figure: { exerciseId: string };
   /** The coach, photographed. Takes precedence over `figure`. */
   photo?: { src: string; alt: string };
   tileTop: string;
@@ -102,12 +103,7 @@ const [heavy, light] = splitHeadline(title, Astro.props.thin);
             <div class="photo-scrim" aria-hidden="true" />
           </>
         ) : (
-          <ExerciseFigure
-            client:visible
-            animation={figure.animation}
-            variant="hero"
-            label={figure.label}
-          />
+          <ExerciseStill exerciseId={figure.exerciseId} loading="eager" />
         )
       }
     </div>

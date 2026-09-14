@@ -1,11 +1,14 @@
 # Sergey's exercise videos
 
-The app was always built to play real video and fall back to the SVG figure when there is none.
-`PlayerScreen` renders a `<video>` whenever `exercise.video[locale]` resolves, and the drawn figure
-only when it does not. That code is finished and has been since the app was built.
+The app plays the coach's own clip of a movement and nothing else. `PlayerScreen` renders a
+`<video>` whenever `exercise.video[locale]` resolves, with a still from the same clip as its poster;
+where a movement has not been filmed there is the still alone, and where there is no still either,
+the flat tile. There used to be a drawn stick figure in that place. It is gone: a drawing of a
+movement we film is a worse picture of it, and a drawing of one we do not film is a promise the app
+cannot keep.
 
-What is missing is the content: **none of the 83 exercises has a `video` set**, so the fallback runs
-every time. That is why the app still shows animations.
+So a movement that is used by a course and has no clip is a gap in the course, and the review page
+(`npm run content:review`) marks it «не снято».
 
 ## What the export actually contains
 

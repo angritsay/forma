@@ -1,4 +1,4 @@
-import ExerciseFigure from '@/components/anim/ExerciseFigure';
+import { ExerciseStill } from '@/components/media/ExerciseStill';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
@@ -34,11 +34,12 @@ export interface CourseTileProps {
 }
 
 /**
- * One course in the catalogue, the design system's CourseCard: a band in the programme colour
- * with the course's figure drawn on it in the ink that colour wants, a dark stamp in its corner
- * saying whether you have it, then the name in the display face, the specification in muted
- * text, a 4px progress rule and the action. A 1px hairline frames the whole card; no shadow, no
- * radius, and the tile is the only thing on the screen that is not black or white.
+ * One course in the catalogue, the design system's CourseCard: a band carrying a frame from the
+ * course's signature movement — the programme colour underneath it, and on its own where no frame
+ * has been uploaded yet — a dark stamp in its corner saying whether you have it, then the name in
+ * the display face, the specification in muted text, a 4px progress rule and the action. A 1px
+ * hairline frames the whole card; no shadow, no radius, and the tile is the only thing on the
+ * screen that is not black or white.
  */
 export function CourseTile({ course, owned, progress, n, onOpen }: CourseTileProps) {
   const tr = useT();
@@ -57,12 +58,10 @@ export function CourseTile({ course, owned, progress, n, onOpen }: CourseTilePro
       className="flex flex-col border border-border bg-surface"
       style={courseTileVars(course.tile)}
     >
-      <div className="hero-art relative flex h-36 items-center justify-center">
-        <ExerciseFigure
-          animation={exercise?.animation ?? 'air_squat'}
-          variant="thumb"
-          className="size-24"
-          label={exercise ? l(exercise.name) : undefined}
+      <div className="hero-art relative flex h-36 items-center justify-center overflow-hidden">
+        <ExerciseStill
+          exerciseId={exercise?.id}
+          className="absolute inset-0 size-full object-cover"
         />
         <Badge tone="on-art" className="absolute top-3 right-3">
           {owned ? t('app.coursesOwned') : t('app.coursesLocked')}
