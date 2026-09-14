@@ -15,7 +15,7 @@ export const BRAND = {
   /** Twitter/X handle without @, or empty. */
   twitter: '',
   /** Public contact email shown on the site (fill in). */
-  contactEmail: 'hello@example.com',
+  contactEmail: 'hello@forma-app.co',
   /** Telegram channel/community URL (fill in). */
   telegram: '',
   /** Instagram / YouTube URLs (optional). */
