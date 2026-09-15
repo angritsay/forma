@@ -2,28 +2,45 @@
 /**
  * Accordion FAQ built on <details>; works without JS and is keyboard accessible. Hairline rows;
  * the toggle is a + glyph that turns into × when the answer is open — punctuation, not an icon.
+ *
+ * Two columns from `md`, and they are two real stacks rather than a grid. In one column on a
+ * laptop each question was a short line with its + a thousand pixels away on the other side of a
+ * 1150px row, and eight of them made a tall strip of mostly empty page. A CSS grid would halve the
+ * height but tie the columns together — a grid row is as tall as its tallest cell, so opening an
+ * answer on the left would push a row down on the right for no reason the reader can see. Two
+ * <div>s of <details> open independently, which is how an accordion is supposed to behave.
+ *
+ * The split is by position, so the order reads down the left column and then down the right. The
+ * left takes the extra one when the count is odd: the first questions are the ones most people
+ * came with.
  */
 interface Props {
   items: { q: string; a: string }[];
 }
 const { items } = Astro.props;
+const half = Math.ceil(items.length / 2);
+const columns = [items.slice(0, half), items.slice(half)].filter((col) => col.length > 0);
 ---
 
-<div class="divide-y divide-border border-t border-border">
+<div class="md:grid md:grid-cols-2 md:gap-x-10 md:border-t md:border-border">
   {
-    items.map((it) => (
-      <details class="group py-5">
-        <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold [&::-webkit-details-marker]:hidden">
-          <span>{it.q}</span>
-          <span
-            class="glyph flex size-8 shrink-0 items-center justify-center text-lg text-muted transition-transform duration-150 ease-(--ease-out) group-open:rotate-45"
-            aria-hidden="true"
-          >
-            +
-          </span>
-        </summary>
-        <p class="mt-3 max-w-3xl leading-relaxed text-muted">{it.a}</p>
-      </details>
+    columns.map((col) => (
+      <div class="divide-y divide-border border-t border-border md:border-t-0">
+        {col.map((it) => (
+          <details class="group py-5">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold [&::-webkit-details-marker]:hidden">
+              <span>{it.q}</span>
+              <span
+                class="glyph flex size-8 shrink-0 items-center justify-center text-lg text-muted transition-transform duration-150 ease-(--ease-out) group-open:rotate-45"
+                aria-hidden="true"
+              >
+                +
+              </span>
+            </summary>
+            <p class="mt-3 max-w-3xl leading-relaxed text-muted">{it.a}</p>
+          </details>
+        ))}
+      </div>
     ))
   }
 </div>

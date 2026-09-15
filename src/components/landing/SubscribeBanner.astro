@@ -33,7 +33,7 @@ const annual = PLAN_BY_ID.get('annual');
         <ul class="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted">
           {PLAN_INCLUDES.map((x, i) => (
             <li class="flex items-baseline gap-3">
-              <span class="numeral text-xs text-muted-2" aria-hidden="true">
+              <span class="numeral tabular w-5 shrink-0 text-xs text-muted-2" aria-hidden="true">
                 {String(i + 1).padStart(2, '0')}
               </span>
               {l(x, locale)}
