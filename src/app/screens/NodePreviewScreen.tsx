@@ -183,7 +183,7 @@ export default function NodePreviewScreen() {
     return (
       <Screen header={header}>
         <div className="flex flex-col gap-4 py-2" aria-hidden="true">
-          <Skeleton rounded="card" className="-mx-6 aspect-[4/3] lg:-mx-10" />
+          <Skeleton rounded="card" className="-mx-6 aspect-[4/3] md:-mx-10" />
           <Skeleton lines={3} />
         </div>
       </Screen>
@@ -294,7 +294,7 @@ export default function NodePreviewScreen() {
            * programme colour on its own where the movement has no frame yet, and the day's stamps
            * in the corner as dark plates.
            */}
-          <div className="hero-art relative -mx-6 flex aspect-[4/3] items-center justify-center overflow-hidden lg:-mx-10 lg:aspect-auto lg:h-[360px]">
+          <div className="hero-art relative -mx-6 flex aspect-[4/3] items-center justify-center overflow-hidden md:-mx-10 lg:aspect-auto lg:h-[360px]">
             <WorkoutHero exercise={exercise} />
             {isTest || isBenchmark || deload || repeat ? (
               <div className="absolute top-3 right-3 flex flex-wrap justify-end gap-1.5">

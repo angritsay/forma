@@ -63,7 +63,7 @@ export function GameCover({ marathon, partners = [] }: GameCoverProps) {
   return (
     <header
       className={clsx(
-        'hero-art relative -mx-6 -mt-[var(--safe-top)] px-6 pb-7 lg:-mx-10 lg:px-10',
+        'hero-art relative -mx-6 -mt-[var(--safe-top)] px-6 pb-7 md:-mx-10 md:px-10',
         'pt-[calc(var(--safe-top)+20px)]',
       )}
     >

@@ -180,7 +180,7 @@ export default function HomeScreen() {
            * this is what absorbs a task row appearing or the coach button being switched off —
            * and `min-h-0` is what lets a flex child shrink below its content at all.
            */
-          <div className="-mx-6 flex min-h-0 flex-1 overflow-hidden lg:-mx-10">
+          <div className="-mx-6 flex min-h-0 flex-1 overflow-hidden md:-mx-10">
             <DeckCard
               photo={PHOTOS.homeToday}
               priority
