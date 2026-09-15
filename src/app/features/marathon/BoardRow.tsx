@@ -28,9 +28,12 @@ export function BoardRow({ row }: { row: MarathonScoreRow }) {
     <div
       className={clsx(
         'flex items-center gap-3 border-t py-4',
-        // Your own row is the one marked row: a 2px rule down its left edge, same device as the
-        // course leaderboard, so the two boards read as one family.
-        row.isMine ? 'border-t-border border-l-2 border-l-primary pl-3' : 'border-t-border',
+        // Your own row is the one marked row: a 2px rule down its left edge, the same device the
+        // course leaderboard uses. The rule is the challenge's colour rather than white, because
+        // these screens set `--course-tile` to the challenge's orange and «you are here» is one of
+        // the three things the brandbook lets that colour mark. The course board keeps its white:
+        // different screen, different programme, and neither borrows the other's colour.
+        row.isMine ? 'border-t-border border-l-2 border-l-course pl-3' : 'border-t-border',
       )}
       aria-current={row.isMine ? 'true' : undefined}
     >
@@ -49,9 +52,13 @@ export function BoardRow({ row }: { row: MarathonScoreRow }) {
         ) : null}
         {row.isMine ? <span className="sr-only">{t('app.marathonBoardYou')}</span> : null}
       </span>
-      {/* The prize belongs to the top row, and saying so on the row is what makes it a race. */}
+      {/*
+       * The prize belongs to the top row, and saying so on the row is what makes it a race — so it
+       * is the one label here worth the colour. Orange on the near-black ground measures 7.66:1,
+       * which carries this 10px label with room.
+       */}
       {row.rank === 1 ? (
-        <span className="control-label shrink-0 text-[10px] text-muted-2">
+        <span className="control-label text-course shrink-0 text-[10px]">
           {t('app.marathonBoardWinner')}
         </span>
       ) : null}

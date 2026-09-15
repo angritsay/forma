@@ -988,6 +988,10 @@ export const app = {
   // --- Marathon -------------------------------------------------------------
   // The second format: daily tasks, proof, a partner you are scored with, a weekly board.
   marathonTitle: 'Челлендж',
+  // The cover's big line before there is a day to count: what the format is, in one line.
+  // No dash in it on purpose — the line sets in capitals across two lines of a 390px screen, and
+  // an em-dash that lands first on the second line reads as a stray mark rather than as pause.
+  marathonCoverPitch: 'Задание на каждый день',
   marathonTabToday: 'Сегодня',
   marathonTabBoard: 'Таблица',
   marathonTabPoints: 'Мои баллы',

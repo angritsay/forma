@@ -5,6 +5,10 @@
  * how many points my *entry* took. In a pair those come apart — I did both tasks and we scored
  * nothing because my partner did not — and that gap is the whole tension of the format. Showing
  * one total would hide exactly the thing a person needs to see to go and message their partner.
+ *
+ * A screen of the challenge, so it wears the challenge's colour — and this is the screen the
+ * brandbook's narrowest colour rule was written for: «номер текущего дня берёт цвет, остальные
+ * остаются серыми». Today's numeral is orange in a column of grey ones, and nothing else here is.
  */
 import { clsx } from 'clsx';
 import { useMemo } from 'react';
@@ -13,6 +17,7 @@ import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { formatNumber } from '@/i18n/index';
 import type { MarathonDayPoints } from '@/lib/api/types';
+import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { useMarathonMyPoints, useMyMarathons } from '@/app/features/marathon/useMarathon';
@@ -59,33 +64,35 @@ export default function MarathonPointsScreen() {
   }
 
   return (
-    <Screen header={header}>
-      <div className="flex flex-col gap-8 py-2">
-        {weeks.map(([week, weekDays]) => {
-          const total = weekDays.reduce((sum, d) => sum + d.points, 0);
-          return (
-            <section key={week} className="flex flex-col">
-              <header className="flex items-baseline justify-between gap-3 pb-2">
-                <h2 className="control-label text-[10px] text-muted-2">
-                  {t('app.marathonWeek', { n: formatNumber(locale, week) })}
-                </h2>
-                <span className="numeral tabular text-[13px] text-muted">
-                  {t('app.marathonPointsTotalWeek')} {formatNumber(locale, total)}
-                </span>
-              </header>
-              {weekDays.map((day) => (
-                <DayRow
-                  key={day.dayIndex}
-                  day={day}
-                  locale={locale}
-                  isToday={day.dayIndex === marathon.dayIndex}
-                />
-              ))}
-            </section>
-          );
-        })}
-      </div>
-    </Screen>
+    <div style={courseTileVars(GAME_TILE)}>
+      <Screen header={header}>
+        <div className="flex flex-col gap-8 py-2">
+          {weeks.map(([week, weekDays]) => {
+            const total = weekDays.reduce((sum, d) => sum + d.points, 0);
+            return (
+              <section key={week} className="flex flex-col">
+                <header className="flex items-baseline justify-between gap-3 pb-2">
+                  <h2 className="control-label text-[10px] text-muted-2">
+                    {t('app.marathonWeek', { n: formatNumber(locale, week) })}
+                  </h2>
+                  <span className="numeral tabular text-[13px] text-muted">
+                    {t('app.marathonPointsTotalWeek')} {formatNumber(locale, total)}
+                  </span>
+                </header>
+                {weekDays.map((day) => (
+                  <DayRow
+                    key={day.dayIndex}
+                    day={day}
+                    locale={locale}
+                    isToday={day.dayIndex === marathon.dayIndex}
+                  />
+                ))}
+              </section>
+            );
+          })}
+        </div>
+      </Screen>
+    </div>
   );
 }
 
@@ -104,8 +111,17 @@ function DayRow({
   const missed = !isToday && day.tasksTotal > 0 && day.tasksDone === 0;
   return (
     <div className="flex items-center gap-3 border-t border-border py-3">
-      {/* The numeral is the day. Repeating it as «День 10» next to it says nothing twice. */}
-      <span className="numeral tabular w-8 shrink-0 text-base text-muted-2">
+      {/*
+       * The numeral is the day. Repeating it as «День 10» next to it says nothing twice — and
+       * today's is the one that takes the challenge's colour, which is exactly the use the
+       * brandbook reserves for a number: one orange figure says where in the column you are.
+       */}
+      <span
+        className={clsx(
+          'numeral tabular w-8 shrink-0 text-base',
+          isToday ? 'text-course' : 'text-muted-2',
+        )}
+      >
         {String(day.dayIndex).padStart(2, '0')}
       </span>
       <span

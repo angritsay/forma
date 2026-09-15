@@ -9,22 +9,31 @@
  * The table is short on purpose. At 7am on a mat the answer to "where am I in the standings" is
  * never what gets someone moving, so the day comes first; but a race nobody can see the score of
  * is not a race, and a link to it was not enough to make it one.
+ *
+ * The screen is orange, and the orange is the brandbook's own rule rather than a departure from it:
+ * «один экран — один цвет, и он приходит от программы». The challenge's programme colour is
+ * `GAME_TILE` — it has painted the deck card and the row on Home since the format shipped — and
+ * this, the format's own screen, was the one place it never reached. `--course-tile` is set once
+ * around the whole screen, so the cover, the trial rule, the points still on the table and the row
+ * that is yours on the board all read the same variable. It paints a cover, a progress strip and
+ * numerals; the buttons stay black and white, because the rule says «НЕ кнопки».
  */
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
+import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { PageTitle } from '@/components/ui/PageTitle';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
-import { formatNumber, plural } from '@/i18n/index';
+import { plural } from '@/i18n/index';
 import { PROOFS_BUCKET, proofMediaPath, sendProof } from '@/lib/api/marathon';
 import { uploadMedia } from '@/lib/api/storage';
 import type { MyMarathon, ProofInput } from '@/lib/api/types';
-import { TopBar } from '@/app/components/TopBar';
+import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
 import { useT } from '@/app/hooks/useT';
 import { BoardRow } from '@/app/features/marathon/BoardRow';
+import { GameCover } from '@/app/features/marathon/GameCover';
 import { TaskCard } from '@/app/features/marathon/TaskCard';
 import {
   useMarathonDay,
@@ -107,7 +116,20 @@ export default function MarathonScreen() {
     [marathon, send, t, toast],
   );
 
-  const header = <TopBar title={t('app.marathonTitle')} />;
+  /*
+   * Every state of this screen is the same page: the cover, then whatever there is to say under it.
+   * There is no top bar — the cover *is* the header, the way a course's is, and the tab bar already
+   * names the screen. `--course-tile` sits on the outer element so the block and everything under
+   * it take the challenge's colour from one place.
+   */
+  const page = (cover: MyMarathon | null, body: ReactNode, partners?: string[]) => (
+    <div style={courseTileVars(GAME_TILE)}>
+      <Screen>
+        <GameCover marathon={cover} partners={partners} />
+        {body}
+      </Screen>
+    </div>
+  );
 
   /*
    * The challenge is part of the subscription (content/site/plans.ts). The screen says so plainly and
@@ -123,58 +145,51 @@ export default function MarathonScreen() {
   });
 
   if (!access.allowed) {
-    return (
-      <Screen header={header}>
-        <EmptyState
-          icon="info"
-          title={t('app.marathonLockedTitle')}
-          description={t('app.marathonLockedBody')}
-          action={
-            <LinkButton href={subscribeHref(locale)} size="lg">
-              {t('app.homeDeckGameLockedCta')}
-            </LinkButton>
-          }
-        />
-      </Screen>
+    return page(
+      null,
+      <EmptyState
+        icon="info"
+        title={t('app.marathonLockedTitle')}
+        description={t('app.marathonLockedBody')}
+        action={
+          <LinkButton href={subscribeHref(locale)} size="lg">
+            {t('app.homeDeckGameLockedCta')}
+          </LinkButton>
+        }
+      />,
     );
   }
 
   if (marathonStatus === 'loading') {
-    return (
-      <Screen header={header}>
-        <DaySkeleton />
-      </Screen>
-    );
+    return page(null, <DaySkeleton />);
   }
 
   if (marathonStatus === 'error') {
-    return (
-      <Screen header={header}>
-        <EmptyState
-          title={t('app.marathonErrorTitle')}
-          description={
-            error?.code === 'network' ? t('common.errorOffline') : t('common.errorGeneric')
-          }
-          action={
-            <Button size="lg" onClick={reloadMarathon}>
-              {t('common.retry')}
-            </Button>
-          }
-        />
-      </Screen>
+    return page(
+      null,
+      <EmptyState
+        title={t('app.marathonErrorTitle')}
+        description={
+          error?.code === 'network' ? t('common.errorOffline') : t('common.errorGeneric')
+        }
+        action={
+          <Button size="lg" onClick={reloadMarathon}>
+            {t('common.retry')}
+          </Button>
+        }
+      />,
     );
   }
 
   if (!marathon) {
-    return (
-      <Screen header={header}>
-        <EmptyState
-          icon="info"
-          title={t('app.marathonEmptyTitle')}
-          description={t('app.marathonEmptyBody')}
-          action={<Button onClick={() => navigate('/')}>{t('app.tabHome')}</Button>}
-        />
-      </Screen>
+    return page(
+      null,
+      <EmptyState
+        icon="info"
+        title={t('app.marathonEmptyTitle')}
+        description={t('app.marathonEmptyBody')}
+        action={<Button onClick={() => navigate('/')}>{t('app.tabHome')}</Button>}
+      />,
     );
   }
 
@@ -182,125 +197,87 @@ export default function MarathonScreen() {
   /* The top of this week's table; a week nobody has scored in yet shows as empty, not as zeros. */
   const topScores = scores.filter((row) => row.points > 0).slice(0, BOARD_ROWS);
 
-  return (
-    <Screen header={header}>
-      <div className="flex flex-col gap-5 pb-4">
-        <MarathonHead marathon={marathon} partners={[...teammateNames.values()]} />
-
-        {/*
-         * The week a course bought says so, and says how much of it is left. A trial nobody is
-         * told about converts nothing: the whole point is that on the seventh day the person
-         * already knows what they are about to lose.
-         */}
-        {access.allowed && access.trialDaysLeft !== undefined ? (
-          <section className="border-l-2 border-course pl-4">
-            <span className="eyebrow text-course">{t('app.marathonTrialTitle')}</span>
-            <p className="mt-1 text-[15px]">
-              {t('app.marathonTrialBody', {
-                n: plural(locale, access.trialDaysLeft, {
-                  one: t('app.homeDeckGameTrialDayOne'),
-                  few: t('app.homeDeckGameTrialDayFew', { n: access.trialDaysLeft }),
-                  many: t('app.homeDeckGameTrialDayMany', { n: access.trialDaysLeft }),
-                }),
-              })}
-            </p>
-          </section>
-        ) : null}
-
-        {dayIndex < 1 ? (
-          <EmptyState
-            title={t('app.marathonNotStarted')}
-            description={t('app.marathonNotStartedBody')}
-          />
-        ) : status === 'loading' ? (
-          <DaySkeleton />
-        ) : tasks.length === 0 ? (
-          <EmptyState
-            title={t('app.marathonNoTasksToday')}
-            description={t('app.marathonNoTasksTodayBody')}
-          />
-        ) : (
-          <div className="flex flex-col" aria-busy={sending}>
-            {tasks.map((item) => (
-              <TaskCard
-                key={item.task.id}
-                item={item}
-                teammateNames={teammateNames}
-                closed={closed}
-                onSend={(proof) => send(item.task.id, proof)}
-                onSendMedia={(file) => sendMedia(item.task.id, file)}
-              />
-            ))}
-          </div>
-        )}
-
-        {/*
-         * The week, as far as the top of it. One way on from here, not two: «Мои баллы» is the
-         * breakdown of an answer this table already gives, so it lives on the full board.
-         */}
-        <section className="border-t border-border pt-5">
-          <h2 className="eyebrow">{t('app.marathonWeekThis')}</h2>
-          {topScores.length > 0 ? (
-            <ol className="mt-2 flex flex-col">
-              {topScores.map((row) => (
-                <li key={row.entryId}>
-                  <BoardRow row={row} />
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <p className="mt-2 text-[13px] text-muted">{t('app.marathonBoardEmpty')}</p>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-3"
-            onClick={() => navigate('/marathon/board')}
-          >
-            {t('app.marathonTabBoard')}
-          </Button>
+  return page(
+    marathon,
+    <div className="flex flex-col gap-5 pt-6 pb-4">
+      {/*
+       * The week a course bought says so, and says how much of it is left. A trial nobody is
+       * told about converts nothing: the whole point is that on the seventh day the person
+       * already knows what they are about to lose.
+       *
+       * The rule and the kicker are `border-course` / `text-course`, which is to say the
+       * challenge's orange — they always were, and until the screen set `--course-tile` they fell
+       * back to a neutral grey and nobody could see what they were for.
+       */}
+      {access.allowed && access.trialDaysLeft !== undefined ? (
+        <section className="border-l-2 border-course pl-4">
+          <span className="eyebrow text-course">{t('app.marathonTrialTitle')}</span>
+          <p className="mt-1 text-[15px]">
+            {t('app.marathonTrialBody', {
+              n: plural(locale, access.trialDaysLeft, {
+                one: t('app.homeDeckGameTrialDayOne'),
+                few: t('app.homeDeckGameTrialDayFew', { n: access.trialDaysLeft }),
+                many: t('app.homeDeckGameTrialDayMany', { n: access.trialDaysLeft }),
+              }),
+            })}
+          </p>
         </section>
-      </div>
-    </Screen>
-  );
-}
-
-/**
- * The head of the screen: which day it is, who you are scored with, and what the week is for.
- *
- * The day number is the big figure rather than the marathon's name — the name does not change and
- * the day does, and a format whose whole point is "every morning there is something" should lead
- * with the morning.
- */
-function MarathonHead({ marathon, partners }: { marathon: MyMarathon; partners: string[] }) {
-  const { t, locale } = useT();
-  /*
-   * Who you are scored with, by name. The team's own name is the wrong thing to say here — a pair
-   * is usually called «Ты и Марек», and «В паре с Ты и Марек» is nonsense. The roster has the
-   * people; the team name is on the board, where the team is the racer.
-   */
-  const partner = partners.length > 0 ? partners.join(', ') : marathon.teamName;
-  return (
-    <header className="flex flex-col gap-2 pt-2">
-      <PageTitle
-        eyebrow={marathon.title}
-        title={t('app.marathonDayOf', {
-          n: formatNumber(locale, Math.max(marathon.dayIndex, 1)),
-          total: formatNumber(locale, marathon.days),
-        })}
-      />
-      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[13px] text-muted">
-        <span>{t('app.marathonWeek', { n: formatNumber(locale, marathon.week) })}</span>
-        <span>
-          {partner ? t('app.marathonWithPartner', { name: partner }) : t('app.marathonSolo')}
-        </span>
-      </div>
-      {marathon.prize ? (
-        <p className="text-[13px] text-muted-2">
-          <span className="control-label text-[10px]">{t('app.marathonPrize')}</span>{' '}
-          {marathon.prize}
-        </p>
       ) : null}
-    </header>
+
+      {dayIndex < 1 ? (
+        <EmptyState
+          title={t('app.marathonNotStarted')}
+          description={t('app.marathonNotStartedBody')}
+        />
+      ) : status === 'loading' ? (
+        <DaySkeleton />
+      ) : tasks.length === 0 ? (
+        <EmptyState
+          title={t('app.marathonNoTasksToday')}
+          description={t('app.marathonNoTasksTodayBody')}
+        />
+      ) : (
+        <div className="flex flex-col" aria-busy={sending}>
+          {tasks.map((item) => (
+            <TaskCard
+              key={item.task.id}
+              item={item}
+              teammateNames={teammateNames}
+              closed={closed}
+              onSend={(proof) => send(item.task.id, proof)}
+              onSendMedia={(file) => sendMedia(item.task.id, file)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/*
+       * The week, as far as the top of it. One way on from here, not two: «Мои баллы» is the
+       * breakdown of an answer this table already gives, so it lives on the full board.
+       */}
+      <section className="border-t border-border pt-5">
+        <h2 className="eyebrow text-course">{t('app.marathonWeekThis')}</h2>
+        {topScores.length > 0 ? (
+          <ol className="mt-2 flex flex-col">
+            {topScores.map((row) => (
+              <li key={row.entryId}>
+                <BoardRow row={row} />
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="mt-2 text-[13px] text-muted">{t('app.marathonBoardEmpty')}</p>
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mt-3"
+          onClick={() => navigate('/marathon/board')}
+        >
+          {t('app.marathonTabBoard')}
+        </Button>
+      </section>
+    </div>,
+    [...teammateNames.values()],
   );
 }
