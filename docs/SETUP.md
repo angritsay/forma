@@ -100,7 +100,7 @@ Dashboard → **SQL Editor** → **New query**, paste each file in this order an
    `content/exercises` (see §2.1)
 8. `supabase/migrations/0008_course_builder.sql` — `admin_courses` and `admin_course_days`,
    the public `images` bucket, and `admin_publish_course()` (see §2.2)
-9. `supabase/migrations/0009_course_import.sql` — generated: the five courses written as files,
+9. `supabase/migrations/0009_course_import.sql` — generated: every course written as a file,
    as rows the admin panel can edit (see §2.3). Optional, and safe to skip.
 10. `supabase/migrations/0010_public_course_pages.sql` — lets the static site read a published
     course so it can have a landing page (see §2.4)
@@ -169,7 +169,7 @@ place, so people who already bought it keep their entitlement and their scoring.
 
 ### 2.3 The compiled courses, as editable rows (`0009_course_import.sql`)
 
-The five courses live in `content/courses/*.ts`. To be able to open one in the admin panel and
+The courses live in `content/courses/*.ts`. To be able to open one in the admin panel and
 change a set count or the order of two days, they also have to exist as `admin_courses` +
 `admin_course_days` + `custom_workouts` rows:
 

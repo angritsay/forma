@@ -4,11 +4,12 @@
  *
  *   node scripts/db/split-import.mjs
  *
- * The import is 660 KB because it carries every word of five courses — descriptions, FAQ, the
- * lot. That is too big to paste into a browser text area, which leaves "import a file", and the
- * dashboard's file import is not somewhere you want to send someone who just wants their courses
- * back. Five pastes of about 130 KB each, named after the course they carry, need no explaining:
- * open, copy, run, next. The same size as setup-all.sql, which is already pasted this way.
+ * The import is hundreds of kilobytes because it carries every word of every course —
+ * descriptions, FAQ, the lot. That is too big to paste into a browser text area, which leaves
+ * "import a file", and the dashboard's file import is not somewhere you want to send someone who
+ * just wants their courses back. One paste of about 130 KB per course, named after the course it
+ * carries, needs no explaining: open, copy, run, next. The same size as setup-all.sql, which is
+ * already pasted this way.
  *
  * Splitting is safe here and would not be in general: the generated file has no dollar-quoted
  * bodies, and every statement ends with a `;` at the end of a line, so statement boundaries can
@@ -94,7 +95,7 @@ starts.forEach((s, n) => {
 writeFileSync(
   join(DEST, 'README.md'),
   [
-    '# The five courses, in paste-sized pieces',
+    `# The ${written.length} courses, in paste-sized pieces`,
     '',
     `Generated from \`${SRC}\` by \`node scripts/db/split-import.mjs\`. Do not edit these by hand.`,
     '',

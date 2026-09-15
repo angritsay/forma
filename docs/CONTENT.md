@@ -36,7 +36,9 @@ A course is a list of unique `workouts` plus an ordered list of `nodes` (the Duo
 - Author numbers for a level-2 athlete at scale 1.0 (level-1 courses: for a beginner). The engine
   multiplies volume by the user's scale (0.5–1.5) and the chosen difficulty.
 - `price`, `paymentUrl` and `tile` are owner-editable. `tile` is the course's flat art colour;
-  use one of `--tile-1…5` from `src/styles/global.css` (the five courses take the five tiles).
+  use one of `--tile-1…5` from `src/styles/global.css`. `--tile-1…3` are programme colours and
+  belong to a programme, not a course; a course outside one takes a neutral surface, `--tile-4`
+  or `--tile-5`, and several courses may share one.
 
 Adding a course: create the file, add it to `content/courses/index.ts`, run `npm run test`.
 

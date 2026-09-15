@@ -8,8 +8,8 @@ describe('content registry', () => {
     expect(issues, report).toEqual([]);
   });
 
-  it('ships the full catalog (5 courses, 40+ exercises)', () => {
-    expect(COURSES.length).toBe(5);
+  it('ships the full catalog (6 courses, 40+ exercises)', () => {
+    expect(COURSES.length).toBe(6);
     expect(EXERCISES.length).toBeGreaterThanOrEqual(40);
   });
 

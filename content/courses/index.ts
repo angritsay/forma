@@ -7,6 +7,7 @@ import { COURSE_ENGINE } from './engine';
 import { COURSE_DUMBBELLS } from './dumbbells';
 import { COURSE_KETTLEBELL } from './kettlebell';
 import { COURSE_ATHLETE } from './athlete';
+import { COURSE_TEMPO } from './tempo';
 
 export const COURSES: CourseInput[] = [
   COURSE_START,
@@ -14,4 +15,5 @@ export const COURSES: CourseInput[] = [
   COURSE_DUMBBELLS,
   COURSE_KETTLEBELL,
   COURSE_ATHLETE,
+  COURSE_TEMPO,
 ];

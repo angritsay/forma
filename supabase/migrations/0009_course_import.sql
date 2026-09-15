@@ -25,8 +25,8 @@ insert into public.admin_courses (
   equipment, tile, price_rub, price_usd, content
 ) values (
   'start', 'draft', 1, 1, 4, 5, 18,
-  '{"none","mat","chair"}'::text[], '#1a2634', 2990, 29,
-  '{"slug":{"ru":"start-krossfit-doma-bez-oborudovaniya","en":"start-home-crossfit-basics"},"name":{"ru":"Форма с нуля: кроссфит дома без оборудования","en":"Forma. Start: home CrossFit basics"},"tagline":{"ru":"Четыре недели по программе тренера для новичков: коротко, по кругу, без оборудования.","en":"Four weeks of the coach’s own beginner programme: short, in rounds, no equipment."},"description":{"ru":"Программа для тех, кто начинает с нуля или возвращается после долгого перерыва. Двадцать коротких тренировок за двадцать дней — те самые, по которым тренер ведёт новичков: отжимания с колен, приседания, ситапы, выпады, зашагивания и червячки. Пять раз в неделю по 15–20 минут вместе с разминкой и заминкой, нагрузка подстраивается под тебя.","en":"A programme for complete beginners and anyone coming back after a long break. Twenty short sessions over twenty days — the same ones the coach runs his beginners through: knee push-ups, squats, sit-ups, lunges, step-ups and inchworms. Five times a week, 15–20 minutes each including warm-up and cool-down, and the load adapts to you."},"longDescription":[{"ru":"«Форма с нуля» — это программа для новичков, которую тренер ведёт в своей группе, перенесённая в приложение без изменений в сути: те же 20 тренировок, тот же порядок, те же слова. Цель первых недель — проработать большие группы мышц и включить тебя в процесс, а не выжать до предела. Каждую тренировку тренер показывает сам: на каждое движение есть его видео.","en":"Start is the beginner programme the coach runs with his own group, moved into the app without changing what matters: the same 20 sessions, the same order, the same words. The aim of the first weeks is to work the big muscle groups and get you into the process, not to wring you out. The coach demonstrates every session himself: every movement has his video."},{"ru":"Первые тренировки — работа по таймеру: каждую минуту новое движение, потом простые круги с минутой отдыха. Дальше форматы кроссфита по одному: три круга на время, AMRAP, EMOM, старт раз в 2–3 минуты, лесенки и длинный комплекс на время. Пять тренировок в неделю, два дня — отдых с целью 10000 шагов: мышцы восстанавливаются лучше, когда ты двигаешься, а не лежишь.","en":"The first sessions are work by the timer — a new movement every minute — then simple rounds with a minute of rest. The CrossFit formats arrive one at a time: three rounds for time, AMRAP, EMOM, starts every 2–3 minutes, ladders and a long chipper for time. Five sessions a week, two rest days with a 10,000-step goal — muscles recover better when you move than when you lie still."},{"ru":"Тренировки короткие — 15–20 минут вместе с разминкой и заминкой, самая длинная около 23. Сама работа — 5–15 минут, как у тренера; разминка — суставная гимнастика сверху вниз, без бега — и растяжка в конце в это время не входят. Из инвентаря нужны коврик и устойчивый стул: от него ты будешь отжиматься и на него зашагивать. Приложение считает, сколько повторений тебе делать сегодня, по результатам прошлой тренировки — было тяжело, легко или в самый раз. Тяжёлые упражнения заменяются простыми: ситапы — «мёртвым жуком», прыжки — шагом.","en":"Sessions are short — 15–20 minutes including warm-up and cool-down, the longest around 23. The work itself is 5–15 minutes, as the coach runs it; the warm-up — top-to-bottom joint mobility, no running — and the stretch at the end are not counted in that. You need a mat and a sturdy chair: you will do dips off it and step-ups onto it. The app works out how many reps you should do today from how your last session went — too hard, too easy or just right. Hard movements swap for simple ones: sit-ups for dead bugs, jumps for steps."},{"ru":"Первый день — это первая тренировка, а не тест на максимум: тренер считает, что первое занятие не должно тебя уничтожить. Стартовую нагрузку задаёт анкета при первом входе. Внутри программы у тренера свои точки отсчёта: лесенка червячков в предпоследней тренировке, к которой вернёшься через месяц-два, и финальные три круга, где сравнишь ощущения с самой первой тренировкой.","en":"Day one is the first workout, not a max-effort test: the coach believes the first session must not destroy you. Your starting load comes from the onboarding on first login. Inside the programme the coach has his own reference points: an inchworm ladder in the penultimate session that you come back to in a month or two, and a final three rounds where you compare how it feels with your very first workout."}],"forWhom":[{"ru":"Ты начинаешь с нуля или возвращаешься после долгого перерыва — год и больше.","en":"You are starting from zero or coming back after a long break — a year or more."},{"ru":"Хочешь тренироваться по программе живого тренера, а не по подборке упражнений из интернета.","en":"You want a real coach’s programme, not a list of exercises off the internet."},{"ru":"Нет инвентаря и места: только коврик, стул и два квадратных метра.","en":"You have no gear and little space: a mat, a chair and two square metres."},{"ru":"Есть 15–20 минут пять раз в неделю и желание не бросить через две.","en":"You can find 15–20 minutes five times a week and want to still be going in week three."}],"outcomes":[{"ru":"Уверенная техника базовых движений: присед, отжимание с колен, ситап, выпад, зашагивание.","en":"Confident technique in the base movements: squat, knee push-up, sit-up, lunge, step-up."},{"ru":"Все форматы кроссфита в лёгких дозах — и лесенка червячков, к которой ты вернёшься, чтобы увидеть прогресс.","en":"Every CrossFit format in gentle doses — and an inchworm ladder you will come back to and see the difference."},{"ru":"Привычка тренироваться пять раз в неделю и ходить в дни отдыха.","en":"A habit of training five times a week and walking on rest days."},{"ru":"Знакомство со всеми форматами кроссфита: круги, «на время», AMRAP, EMOM, лесенки, длинный комплекс.","en":"A working knowledge of every CrossFit format: rounds, for-time, AMRAP, EMOM, ladders, the chipper."},{"ru":"Твои личные цифры: точки отсчёта тренера — лесенка червячков и финальные три круга против самой первой тренировки.","en":"Your own numbers: the coach’s reference points — the inchworm ladder and the final three rounds against your very first workout."},{"ru":"Готовность перейти к курсу «Форма своим весом» или к тренировкам с гантелями.","en":"Readiness to move on to Forma Bodyweight or to dumbbell training."}],"faq":[{"q":{"ru":"Что нужно из оборудования?","en":"What equipment do I need?"},"a":{"ru":"Коврик и устойчивый стул без колёсиков — от него ты будешь делать обратные отжимания и на него зашагивать. Если стула нет, зашагивай на ступеньку, а обратные отжимания замени на отжимания от подоконника. Скакалка — по желанию: везде, где она есть, можно делать джампинг-джеки.","en":"A mat and a sturdy chair without wheels — you will do dips off it and step-ups onto it. No chair? Use a stair step for step-ups and a windowsill for the dips. A jump rope is optional: wherever it appears, jumping jacks do the same job."}},{"q":{"ru":"Я совсем не в форме. Точно получится?","en":"I am completely out of shape. Will I cope?"},"a":{"ru":"Курс написан именно для этого. Тренер советует новичкам начинать с минимальных цифр — и приложение делает это за тебя: после анкеты при первом входе оно уменьшает количество повторений, а после каждой тренировки спрашивает, как было, и корректирует следующую. Если тяжело — выбирай режим «Полегче»: это не поражение, а часть плана. Ситапы можно всегда заменить «мёртвым жуком».","en":"That is exactly who this course is for. The coach tells beginners to start at the minimum — and the app does it for you: after the onboarding on first login it lowers the rep counts, then asks how each session felt and adjusts the next one. If it is hard, pick \"Easier\" — that is not failure, it is part of the plan. Sit-ups can always become dead bugs."}},{"q":{"ru":"Сколько времени занимает тренировка?","en":"How long is a session?"},"a":{"ru":"В среднем около 18 минут вместе с разминкой и заминкой — по 5 минут на суставную гимнастику и растяжку и 5–15 минут работы. Самые короткие — первые тренировки по таймеру, около 14–15 минут; самые длинные — чиппер и два длинных круга, около 22–23 минут. Перед стартом приложение показывает расчётное время для каждого режима сложности.","en":"About 18 minutes on average including warm-up and cool-down — 5 minutes each of joint mobility and stretching plus 5–15 minutes of work. The shortest are the first timer sessions at around 14–15 minutes; the longest are the chipper and the two long rounds at around 22–23. Before you start, the app shows the estimated time for each difficulty option."}},{"q":{"ru":"Пропустил тренировку — что делать?","en":"I missed a session — what now?"},"a":{"ru":"Ничего страшного: сделай её на следующий день и сдвинь остальные. Не пытайся нагнать две за один день — у новичков это заканчивается крепатурой и пропуском ещё одной недели. Если совсем нет сил или времени, у тренера есть альтернатива на любой день: 10 000 шагов.","en":"No drama: do it the next day and shift the rest. Do not try to squeeze two into one day — for beginners that ends in soreness and another week off. And if there is no energy or time at all, the coach has an alternative for any day: 10,000 steps."}},{"q":{"ru":"У меня диастаз. Можно ли делать ситапы?","en":"I have diastasis. Can I do sit-ups?"},"a":{"ru":"Тренер не рекомендует ситапы, русский твист и тягу к носкам при диастазе. Везде, где они есть, делай «мёртвого жука» — в два раза больше повторений. В приложении это написано прямо в упражнении, а при ограничении «беременность» замена происходит автоматически.","en":"The coach advises against sit-ups, Russian twists and toe reaches with diastasis. Wherever they appear, do dead bugs — twice the reps. The app says so right on the exercise, and with the \"pregnancy\" limitation set the swap happens automatically."}},{"q":{"ru":"Мышцы болят после тренировки. Это нормально?","en":"My muscles are sore. Is that normal?"},"a":{"ru":"Лёгкая боль на второй день после новой нагрузки — норма, особенно в первые две недели. Помогают прогулка, вода и сон. Если боль острая, в суставе или не проходит три дня — отдохни и при необходимости покажись врачу. В отзыве о тренировке отметь «Боль»: приложение снизит нагрузку.","en":"Mild soreness a day or two after a new load is normal, especially in the first two weeks. Walking, water and sleep help. If the pain is sharp, in a joint, or lasts more than three days, rest and see a professional if needed. Mark \"Pain\" in the session feedback: the app will reduce the load."}}]}'::jsonb
+  '{"none","mat","chair"}'::text[], '#f2f52d', 2990, 29,
+  '{"slug":{"ru":"start-krossfit-doma-bez-oborudovaniya","en":"start-home-crossfit-basics"},"name":{"ru":"Форма с нуля: кроссфит дома без оборудования","en":"Forma. Start: home CrossFit basics"},"tagline":{"ru":"Четыре недели по программе тренера для новичков: коротко, по кругу, без оборудования.","en":"Four weeks of the coach’s own beginner programme: short, in rounds, no equipment."},"description":{"ru":"Программа для тех, кто начинает с нуля или возвращается после долгого перерыва. Двадцать коротких тренировок за двадцать дней — те самые, по которым тренер ведёт новичков: отжимания с колен, приседания, ситапы, выпады, зашагивания и червячки. Пять раз в неделю по 15–20 минут вместе с разминкой и заминкой, нагрузка подстраивается под тебя.","en":"A programme for complete beginners and anyone coming back after a long break. Twenty short sessions over twenty days — the same ones the coach runs his beginners through: knee push-ups, squats, sit-ups, lunges, step-ups and inchworms. Five times a week, 15–20 minutes each including warm-up and cool-down, and the load adapts to you."},"longDescription":[{"ru":"«Форма с нуля» — это программа для новичков, которую тренер ведёт в своей группе, перенесённая в приложение без изменений в сути: те же 20 тренировок, тот же порядок, те же слова. Цель первых недель — проработать большие группы мышц и включить тебя в процесс, а не выжать до предела. Каждую тренировку тренер показывает сам: на каждое движение есть его видео.","en":"Start is the beginner programme the coach runs with his own group, moved into the app without changing what matters: the same 20 sessions, the same order, the same words. The aim of the first weeks is to work the big muscle groups and get you into the process, not to wring you out. The coach demonstrates every session himself: every movement has his video."},{"ru":"Первые тренировки — работа по таймеру: каждую минуту новое движение, потом простые круги с минутой отдыха. Дальше форматы кроссфита по одному: три круга на время, AMRAP, EMOM, старт раз в 2–3 минуты, лесенки и длинный комплекс на время. Пять тренировок в неделю, два дня — отдых с целью 10000 шагов: мышцы восстанавливаются лучше, когда ты двигаешься, а не лежишь.","en":"The first sessions are work by the timer — a new movement every minute — then simple rounds with a minute of rest. The CrossFit formats arrive one at a time: three rounds for time, AMRAP, EMOM, starts every 2–3 minutes, ladders and a long chipper for time. Five sessions a week, two rest days with a 10,000-step goal — muscles recover better when you move than when you lie still."},{"ru":"Тренировки короткие — 15–20 минут вместе с разминкой и заминкой, самая длинная около 23. Сама работа — 5–15 минут, как у тренера; разминка — суставная гимнастика сверху вниз, без бега — и растяжка в конце в это время не входят. Из инвентаря нужны коврик и устойчивый стул: от него ты будешь отжиматься и на него зашагивать. Приложение считает, сколько повторений тебе делать сегодня, по результатам прошлой тренировки — было тяжело, легко или в самый раз. Тяжёлые упражнения заменяются простыми: ситапы — «мёртвым жуком», прыжки — шагом.","en":"Sessions are short — 15–20 minutes including warm-up and cool-down, the longest around 23. The work itself is 5–15 minutes, as the coach runs it; the warm-up — top-to-bottom joint mobility, no running — and the stretch at the end are not counted in that. You need a mat and a sturdy chair: you will do dips off it and step-ups onto it. The app works out how many reps you should do today from how your last session went — too hard, too easy or just right. Hard movements swap for simple ones: sit-ups for dead bugs, jumps for steps."},{"ru":"Первый день — это первая тренировка, а не тест на максимум: тренер считает, что первое занятие не должно тебя уничтожить. Стартовую нагрузку задаёт анкета при первом входе. Внутри программы у тренера свои точки отсчёта: лесенка червячков в предпоследней тренировке, к которой вернёшься через месяц-два, и финальные три круга, где сравнишь ощущения с самой первой тренировкой.","en":"Day one is the first workout, not a max-effort test: the coach believes the first session must not destroy you. Your starting load comes from the onboarding on first login. Inside the programme the coach has his own reference points: an inchworm ladder in the penultimate session that you come back to in a month or two, and a final three rounds where you compare how it feels with your very first workout."}],"forWhom":[{"ru":"Ты начинаешь с нуля или возвращаешься после долгого перерыва — год и больше.","en":"You are starting from zero or coming back after a long break — a year or more."},{"ru":"Хочешь тренироваться по программе живого тренера, а не по подборке упражнений из интернета.","en":"You want a real coach’s programme, not a list of exercises off the internet."},{"ru":"Нет инвентаря и места: только коврик, стул и два квадратных метра.","en":"You have no gear and little space: a mat, a chair and two square metres."},{"ru":"Есть 15–20 минут пять раз в неделю и желание не бросить через две.","en":"You can find 15–20 minutes five times a week and want to still be going in week three."}],"outcomes":[{"ru":"Уверенная техника базовых движений: присед, отжимание с колен, ситап, выпад, зашагивание.","en":"Confident technique in the base movements: squat, knee push-up, sit-up, lunge, step-up."},{"ru":"Все форматы кроссфита в лёгких дозах — и лесенка червячков, к которой ты вернёшься, чтобы увидеть прогресс.","en":"Every CrossFit format in gentle doses — and an inchworm ladder you will come back to and see the difference."},{"ru":"Привычка тренироваться пять раз в неделю и ходить в дни отдыха.","en":"A habit of training five times a week and walking on rest days."},{"ru":"Знакомство со всеми форматами кроссфита: круги, «на время», AMRAP, EMOM, лесенки, длинный комплекс.","en":"A working knowledge of every CrossFit format: rounds, for-time, AMRAP, EMOM, ladders, the chipper."},{"ru":"Твои личные цифры: точки отсчёта тренера — лесенка червячков и финальные три круга против самой первой тренировки.","en":"Your own numbers: the coach’s reference points — the inchworm ladder and the final three rounds against your very first workout."},{"ru":"Готовность перейти к курсу «Форма своим весом» или к тренировкам с гантелями.","en":"Readiness to move on to Forma Bodyweight or to dumbbell training."}],"faq":[{"q":{"ru":"Что нужно из оборудования?","en":"What equipment do I need?"},"a":{"ru":"Коврик и устойчивый стул без колёсиков — от него ты будешь делать обратные отжимания и на него зашагивать. Если стула нет, зашагивай на ступеньку, а обратные отжимания замени на отжимания от подоконника. Скакалка — по желанию: везде, где она есть, можно делать джампинг-джеки.","en":"A mat and a sturdy chair without wheels — you will do dips off it and step-ups onto it. No chair? Use a stair step for step-ups and a windowsill for the dips. A jump rope is optional: wherever it appears, jumping jacks do the same job."}},{"q":{"ru":"Я совсем не в форме. Точно получится?","en":"I am completely out of shape. Will I cope?"},"a":{"ru":"Курс написан именно для этого. Тренер советует новичкам начинать с минимальных цифр — и приложение делает это за тебя: после анкеты при первом входе оно уменьшает количество повторений, а после каждой тренировки спрашивает, как было, и корректирует следующую. Если тяжело — выбирай режим «Полегче»: это не поражение, а часть плана. Ситапы можно всегда заменить «мёртвым жуком».","en":"That is exactly who this course is for. The coach tells beginners to start at the minimum — and the app does it for you: after the onboarding on first login it lowers the rep counts, then asks how each session felt and adjusts the next one. If it is hard, pick \"Easier\" — that is not failure, it is part of the plan. Sit-ups can always become dead bugs."}},{"q":{"ru":"Сколько времени занимает тренировка?","en":"How long is a session?"},"a":{"ru":"В среднем около 18 минут вместе с разминкой и заминкой — по 5 минут на суставную гимнастику и растяжку и 5–15 минут работы. Самые короткие — первые тренировки по таймеру, около 14–15 минут; самые длинные — чиппер и два длинных круга, около 22–23 минут. Перед стартом приложение показывает расчётное время для каждого режима сложности.","en":"About 18 minutes on average including warm-up and cool-down — 5 minutes each of joint mobility and stretching plus 5–15 minutes of work. The shortest are the first timer sessions at around 14–15 minutes; the longest are the chipper and the two long rounds at around 22–23. Before you start, the app shows the estimated time for each difficulty option."}},{"q":{"ru":"Пропустил тренировку — что делать?","en":"I missed a session — what now?"},"a":{"ru":"Ничего страшного: сделай её на следующий день и сдвинь остальные. Не пытайся нагнать две за один день — у новичков это заканчивается крепатурой и пропуском ещё одной недели. Если совсем нет сил или времени, у тренера есть альтернатива на любой день: 10 000 шагов.","en":"No drama: do it the next day and shift the rest. Do not try to squeeze two into one day — for beginners that ends in soreness and another week off. And if there is no energy or time at all, the coach has an alternative for any day: 10,000 steps."}},{"q":{"ru":"У меня диастаз. Можно ли делать ситапы?","en":"I have diastasis. Can I do sit-ups?"},"a":{"ru":"Тренер не рекомендует ситапы, русский твист и тягу к носкам при диастазе. Везде, где они есть, делай «мёртвого жука» — в два раза больше повторений. В приложении это написано прямо в упражнении, а при ограничении «беременность» замена происходит автоматически.","en":"The coach advises against sit-ups, Russian twists and toe reaches with diastasis. Wherever they appear, do dead bugs — twice the reps. The app says so right on the exercise, and with the \"pregnancy\" limitation set the swap happens automatically."}},{"q":{"ru":"Мышцы болят после тренировки. Это нормально?","en":"My muscles are sore. Is that normal?"},"a":{"ru":"Лёгкая боль на второй день после новой нагрузки — норма, особенно в первые две недели. Помогают прогулка, вода и сон. Если боль острая, в суставе или не проходит три дня — отдохни и при необходимости покажись врачу. В отзыве о тренировке отметь «Боль»: приложение снизит нагрузку.","en":"Mild soreness a day or two after a new load is normal, especially in the first two weeks. Walking, water and sleep help. If the pain is sharp, in a joint, or lasts more than three days, rest and see a professional if needed. Mark \"Pain\" in the session feedback: the app will reduce the load."}}],"paymentUrl":{"ru":"https://payform.ru/jfcyh1M/"}}'::jsonb
 )
 on conflict (slug_id) do update set
   sort_order = excluded.sort_order,
@@ -63,7 +63,7 @@ on conflict (short_id) do update set
 
 insert into public.custom_workouts (short_id, title, description, structure, points)
 values ('start_w_s03_pairs', 'Три пары: верх, ноги, пресс', 'Тренировка 3. Три пары упражнений, старт каждой пары раз в 2 минуты: сделал круг — до конца двух минут отдыхаешь, потом минута отдыха и следующая пара. Пара 1 — обратные отжимания и отжимания с колен, пара 2 — приседания и выпады назад, пара 3 — ситапы и «мёртвый жук». По одному кругу на каждую пару.',
-  '{"sections":[{"kind":"warmup","blockType":"warmup","format":"circuit","sets":1,"setsField":"sets","title":"Разминка: суставная гимнастика","titleEn":"Warm-up: joint mobility","description":"Обязательно перед каждой тренировкой. Идём сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы. Спокойный темп, амплитуда растёт постепенно, без рывков. Разминка не входит в тренировку — это подготовка.","descriptionEn":"Mandatory before every session. Top to bottom: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles. Easy pace, the range grows gradually, no jerks. The warm-up is not part of the workout — it is preparation.","scalable":false,"blockId":"wu_mobility","items":[{"exerciseId":"neck_circles","unit":"seconds","target":20,"restAfterSec":0,"note":"Полукруги спереди, назад не запрокидываем","noteEn":"Half-circles across the front, no dropping back"},{"exerciseId":"arm_circles","unit":"seconds","target":20,"restAfterSec":0,"note":"Половину вперёд, половину назад","noteEn":"Half forward, half backward"},{"exerciseId":"elbow_wrist_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"side_bend","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"hip_circles","unit":"seconds","target":20,"restAfterSec":0,"note":"В обе стороны","noteEn":"Both directions"},{"exerciseId":"leg_swing","unit":"reps","target":6,"perSide":true,"restAfterSec":0},{"exerciseId":"knee_circles","unit":"seconds","target":20,"restAfterSec":0,"note":"Круги маленькие, пятки на полу","noteEn":"Small circles, heels down"},{"exerciseId":"ankle_circles","unit":"seconds","target":15,"perSide":true,"restAfterSec":0},{"exerciseId":"squat_to_stand","unit":"reps","target":5,"restAfterSec":0,"note":"Медленно, до комфортной глубины","noteEn":"Slowly, to a comfortable depth"}]},{"kind":"main","blockType":"metcon","format":"fortime","sets":1,"setsField":"sets","durationSec":540,"title":"Три пары","titleEn":"Three pairs","description":"По одному кругу на каждую пару, между парами — минута отдыха. Не торопись: техника важнее скорости.","descriptionEn":"One round per pair, a minute of rest between pairs. Do not rush: technique beats speed.","scalable":true,"blockId":"s03_main","items":[{"exerciseId":"chair_dip","unit":"reps","target":15,"restAfterSec":0,"note":"Тренер: 10–20","noteEn":"The coach: 10–20"},{"exerciseId":"knee_push_up","unit":"reps","target":13,"restAfterSec":60,"note":"Тренер: 10–15","noteEn":"The coach: 10–15"},{"exerciseId":"air_squat","unit":"reps","target":15,"restAfterSec":0,"note":"Тренер: 10–20","noteEn":"The coach: 10–20"},{"exerciseId":"reverse_lunge","unit":"reps","target":15,"restAfterSec":60,"note":"Тренер: 10–20 в сумме на две ноги","noteEn":"The coach: 10–20 total for both legs"},{"exerciseId":"sit_up","unit":"reps","target":8,"restAfterSec":0,"note":"Тренер: 5–10. При диастазе — «жук»","noteEn":"The coach: 5–10. With diastasis, dead bugs"},{"exerciseId":"dead_bug","unit":"reps","target":30,"restAfterSec":0,"note":"Тренер: 20–40, суммарно","noteEn":"The coach: 20–40 total"}]},{"kind":"cooldown","blockType":"cooldown","format":"sets","sets":1,"setsField":"sets","title":"Заминка и растяжка","titleEn":"Cool-down and stretch","description":"Не пропускаем. Дыши медленно, тяни до приятного натяжения, не через боль. Потом потрать 2–3 минуты и отметь в приложении, как было: усилие, что далось легко, что оказалось тяжёлым, было ли что-то, что вызвало дискомфорт. Через несколько недель ты увидишь по этим записям, насколько легче стало тренироваться.","descriptionEn":"Do not skip it. Breathe slowly, stretch to a pleasant pull, never into pain. Then take 2–3 minutes and record in the app how it went: the effort, what felt easy, what turned out hard, anything that caused discomfort. In a few weeks these notes will show you how much easier training has become.","scalable":false,"blockId":"cd_stretch","items":[{"exerciseId":"cat_cow","unit":"reps","target":6,"restAfterSec":0},{"exerciseId":"quad_stretch","unit":"seconds","target":30,"perSide":true,"restAfterSec":0},{"exerciseId":"hamstring_stretch","unit":"seconds","target":25,"perSide":true,"restAfterSec":0},{"exerciseId":"hip_flexor_stretch","unit":"seconds","target":20,"perSide":true,"restAfterSec":0},{"exerciseId":"child_pose","unit":"seconds","target":45,"restAfterSec":0}]}]}'::jsonb, 100)
+  '{"sections":[{"kind":"warmup","blockType":"warmup","format":"circuit","sets":1,"setsField":"sets","title":"Разминка: суставная гимнастика","titleEn":"Warm-up: joint mobility","description":"Обязательно перед каждой тренировкой. Идём сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы. Спокойный темп, амплитуда растёт постепенно, без рывков. Разминка не входит в тренировку — это подготовка.","descriptionEn":"Mandatory before every session. Top to bottom: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles. Easy pace, the range grows gradually, no jerks. The warm-up is not part of the workout — it is preparation.","scalable":false,"blockId":"wu_mobility","items":[{"exerciseId":"neck_circles","unit":"seconds","target":20,"restAfterSec":0,"note":"Полукруги спереди, назад не запрокидываем","noteEn":"Half-circles across the front, no dropping back"},{"exerciseId":"arm_circles","unit":"seconds","target":20,"restAfterSec":0,"note":"Половину вперёд, половину назад","noteEn":"Half forward, half backward"},{"exerciseId":"elbow_wrist_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"side_bend","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"hip_circles","unit":"seconds","target":20,"restAfterSec":0,"note":"В обе стороны","noteEn":"Both directions"},{"exerciseId":"leg_swing","unit":"reps","target":6,"perSide":true,"restAfterSec":0},{"exerciseId":"knee_circles","unit":"seconds","target":20,"restAfterSec":0,"note":"Круги маленькие, пятки на полу","noteEn":"Small circles, heels down"},{"exerciseId":"ankle_circles","unit":"seconds","target":15,"perSide":true,"restAfterSec":0},{"exerciseId":"squat_to_stand","unit":"reps","target":5,"restAfterSec":0,"note":"Медленно, до комфортной глубины","noteEn":"Slowly, to a comfortable depth"}]},{"kind":"main","blockType":"metcon","format":"fortime","sets":1,"setsField":"sets","durationSec":540,"title":"Три пары","titleEn":"Three pairs","description":"По одному кругу на каждую пару, между парами — минута отдыха. Не торопись: техника важнее скорости.","descriptionEn":"One round per pair, a minute of rest between pairs. Do not rush: technique beats speed.","scalable":true,"blockId":"s03_main","items":[{"exerciseId":"chair_dip","unit":"reps","target":15,"restAfterSec":0,"note":"Тренер: 10–20","noteEn":"The coach: 10–20"},{"exerciseId":"knee_push_up","unit":"reps","target":13,"restAfterSec":60,"note":"Тренер: 10–15","noteEn":"The coach: 10–15"},{"exerciseId":"air_squat","unit":"reps","target":15,"restAfterSec":0,"note":"Тренер: 10–20","noteEn":"The coach: 10–20"},{"exerciseId":"reverse_lunge","unit":"reps","target":16,"restAfterSec":60,"note":"Тренер: 10–20 в сумме на две ноги","noteEn":"The coach: 10–20 total for both legs"},{"exerciseId":"sit_up","unit":"reps","target":8,"restAfterSec":0,"note":"Тренер: 5–10. При диастазе — «жук»","noteEn":"The coach: 5–10. With diastasis, dead bugs"},{"exerciseId":"dead_bug","unit":"reps","target":30,"restAfterSec":0,"note":"Тренер: 20–40, суммарно","noteEn":"The coach: 20–40 total"}]},{"kind":"cooldown","blockType":"cooldown","format":"sets","sets":1,"setsField":"sets","title":"Заминка и растяжка","titleEn":"Cool-down and stretch","description":"Не пропускаем. Дыши медленно, тяни до приятного натяжения, не через боль. Потом потрать 2–3 минуты и отметь в приложении, как было: усилие, что далось легко, что оказалось тяжёлым, было ли что-то, что вызвало дискомфорт. Через несколько недель ты увидишь по этим записям, насколько легче стало тренироваться.","descriptionEn":"Do not skip it. Breathe slowly, stretch to a pleasant pull, never into pain. Then take 2–3 minutes and record in the app how it went: the effort, what felt easy, what turned out hard, anything that caused discomfort. In a few weeks these notes will show you how much easier training has become.","scalable":false,"blockId":"cd_stretch","items":[{"exerciseId":"cat_cow","unit":"reps","target":6,"restAfterSec":0},{"exerciseId":"quad_stretch","unit":"seconds","target":30,"perSide":true,"restAfterSec":0},{"exerciseId":"hamstring_stretch","unit":"seconds","target":25,"perSide":true,"restAfterSec":0},{"exerciseId":"hip_flexor_stretch","unit":"seconds","target":20,"perSide":true,"restAfterSec":0},{"exerciseId":"child_pose","unit":"seconds","target":45,"restAfterSec":0}]}]}'::jsonb, 100)
 on conflict (short_id) do update set
   title = excluded.title,
   description = excluded.description,
@@ -783,7 +783,7 @@ insert into public.admin_courses (
   equipment, tile, price_rub, price_usd, content
 ) values (
   'engine', 'draft', 2, 2, 6, 4, 30,
-  '{"none","mat","chair","jump_rope"}'::text[], '#20293c', 3990, 39,
+  '{"none","mat","chair","jump_rope"}'::text[], '#1f1f24', 3990, 39,
   '{"slug":{"ru":"svoim-vesom-sila-i-vynoslivost","en":"bodyweight-engine"},"name":{"ru":"Форма своим весом: сила и выносливость","en":"Forma. Bodyweight: strength and conditioning"},"tagline":{"ru":"Шесть недель силы и выносливости на собственном весе — четыре тренировки в неделю, без инвентаря.","en":"Six weeks of bodyweight strength and conditioning — four sessions a week, no gear."},"description":{"ru":"Программа для тех, кто уже знает, что такое присед и отжимание, и хочет двигаться дальше: силовые дни, AMRAP и EMOM, табата, чипперы и два бенчмарка. Всё дома, без оборудования.","en":"For people who already know their way around a squat and a push-up and want the next step: strength days, AMRAPs and EMOMs, Tabata, chippers and two benchmarks. All at home, no equipment."},"longDescription":[{"ru":"Курс построен как настоящий кроссфит-цикл, только без штанги и зала. Каждая неделя — четыре разных дня: присед и жим, тяга и кор, «двигатель» (интервалы на выносливость) и чиппер на всё тело. Паттерны движений повторяются из недели в неделю, а объём и сложность растут: обычный присед превращается в прыжковый, отжимания — в узкие, планка — в лодочку.","en":"The course is built like a real CrossFit cycle, just without a barbell or a gym. Every week has four different days: squat and push, hinge and core, an \"engine\" day (conditioning intervals) and a full-body chipper. The movement patterns repeat from week to week while volume and complexity grow: the air squat becomes a jump squat, push-ups become diamond push-ups, the plank becomes a hollow hold."},{"ru":"Ты начинаешь с теста — отжимания за две минуты, приседания за минуту, планка на время, бёрпи за минуту. По его результатам приложение подбирает стартовый объём, а после каждой тренировки уточняет его по твоей оценке усилия. Четвёртая неделя — разгрузочная: объём падает примерно на треть, чтобы тело усвоило нагрузку. В конце третьей недели — 100 бёрпи на время, в конце шестой — 20-минутный AMRAP в духе «Синди» и повторный тест, чтобы увидеть прогресс в цифрах.","en":"You start with a test — push-ups in two minutes, squats in one, a max plank hold and burpees in a minute. The app uses it to set your starting volume, then fine-tunes it after every session from your effort rating. Week four is a deload: volume drops by about a third so your body can absorb the work. Week three ends with 100 burpees for time, week six with a 20-minute Cindy-style AMRAP and a retest, so you see your progress in numbers."},{"ru":"Из оборудования нужны только устойчивый стул для зашагиваний и коврик. Скакалка — по желанию: если её нет, приложение заменит прыжки на скакалке джампинг-джеками.","en":"All you need is a sturdy chair for step-ups and a mat. A jump rope is optional: if you do not have one, the app swaps rope jumps for jumping jacks."}],"forWhom":[{"ru":"Ты уже тренировался: отжимаешься от пола 8–10 раз подряд и стоишь в планке минуту.","en":"You have trained before: you can do 8–10 full push-ups in a row and hold a plank for a minute."},{"ru":"Ты прошёл курс «Форма с нуля» и хочешь следующий уровень.","en":"You finished the Start course and want the next level."},{"ru":"Ты хочешь тренироваться дома без инвентаря, но с настоящей структурой: силовые дни, интервалы, бенчмарки.","en":"You want to train at home without gear but with real structure: strength days, intervals, benchmarks."},{"ru":"У тебя есть 25–35 минут четыре раза в неделю.","en":"You have 25–35 minutes four times a week."}],"outcomes":[{"ru":"Больше отжиманий, приседаний и бёрпи в тестах — ты сравнишь первую и шестую неделю.","en":"More push-ups, squats and burpees in the tests — you compare week one with week six."},{"ru":"Освоишь прыжковые приседания, узкие отжимания, лодочку и складку.","en":"You learn jump squats, diamond push-ups, the hollow hold and V-ups."},{"ru":"Пройдёшь два бенчмарка: 100 бёрпи на время и 20-минутный AMRAP в духе «Синди».","en":"You complete two benchmarks: 100 burpees for time and a 20-minute Cindy-style AMRAP."},{"ru":"Научишься работать в форматах AMRAP, EMOM, табата и чиппер и распределять силы.","en":"You get comfortable with AMRAP, EMOM, Tabata and chipper formats and learn to pace them."},{"ru":"Привыкнешь к четырём тренировкам в неделю без перегруза — с днями отдыха и разгрузочной неделей.","en":"You settle into four sessions a week without burning out — with rest days and a deload week built in."}],"faq":[{"q":{"ru":"Что нужно из оборудования?","en":"What equipment do I need?"},"a":{"ru":"Коврик и устойчивый стул — для зашагиваний и для отжиманий от опоры в лёгкий день. Скакалка по желанию: если её нет, приложение автоматически заменит прыжки на скакалке джампинг-джеками, и программа от этого не изменится.","en":"A mat and a sturdy chair — for step-ups and for incline push-ups on the easy day. A jump rope is optional: without one the app automatically swaps rope jumps for jumping jacks and the program stays the same."}},{"q":{"ru":"Мне подойдёт этот курс или лучше начать с «Формы с нуля»?","en":"Is this course right for me, or should I begin with Forma Start?"},"a":{"ru":"Ориентир такой: 8–10 отжиманий от пола подряд, минута планки и 15–20 приседаний без одышки. Если это про тебя — заходи. Если пока нет, пройди «Форма с нуля»: там те же паттерны движений, но без прыжков и с отжиманиями с колен, а через четыре недели вернёшься сюда.","en":"A rule of thumb: 8–10 full push-ups in a row, a one-minute plank and 15–20 squats without getting winded. If that is you, jump in. If not yet, do Forma Start first: same movement patterns, no jumps and knee push-ups, and you come back here in four weeks."}},{"q":{"ru":"Сколько времени занимает тренировка?","en":"How long is a session?"},"a":{"ru":"В среднем около 30 минут вместе с разминкой и заминкой: силовые дни — 27–37 минут, «двигатель» — 24–30, чипперы, бенчмарки и лёгкий день — 20–30. Перед стартом приложение показывает расчётную длительность именно для твоего объёма.","en":"About 30 minutes on average including warm-up and cool-down: strength days run 27–37 minutes, engine days 24–30, chippers, benchmarks and the easy day 20–30. Before you start, the app shows the estimated duration for your own volume."}},{"q":{"ru":"Пропустил тренировку — что делать?","en":"I missed a session — what now?"},"a":{"ru":"Ничего страшного: путь не сбрасывается, просто продолжай со следующего узла, когда сможешь. Не пытайся сделать две тренировки в один день, чтобы «догнать», — лучше сдвинуть неделю. Если пауза была больше двух недель, выбери «Полегче» в первых двух тренировках после перерыва.","en":"No problem: the path does not reset, just continue from the next node when you can. Do not try to double up to \"catch up\" — shifting the week is better. If the break was longer than two weeks, pick \"Easier\" for the first two sessions back."}},{"q":{"ru":"Как приложение подстраивает нагрузку?","en":"How does the app adapt the load?"},"a":{"ru":"Стартовый объём считается по тесту первого дня. После каждой тренировки ты оцениваешь усилие по шкале от 1 до 10 и самочувствие — и приложение чуть поднимает или снижает число повторений на следующий раз. Перед каждой тренировкой можно выбрать «Полегче», «Как обычно» или «Сложнее»; рекомендацию приложение даёт по последним тренировкам и по тому, сколько ты отдыхал. В четвёртую неделю объём снижается автоматически.","en":"Your starting volume comes from the day-one test. After every session you rate the effort from 1 to 10 and how you felt, and the app nudges the reps up or down for next time. Before each session you can pick Easier, As usual or Harder; the app recommends one based on your recent sessions and how much you have rested. In week four the volume drops automatically."}},{"q":{"ru":"Болят мышцы после тренировки — это нормально?","en":"My muscles are sore after training — is that normal?"},"a":{"ru":"Тянущая боль в мышцах через день-два после нагрузки — норма, особенно в первые две недели и после прыжков. Помогают прогулка, сон и следующая лёгкая тренировка. А вот резкая боль в суставе или пояснице, или та, что усиливается во время движения, — сигнал остановиться. Отметь «Боль» в отчёте после тренировки: приложение снизит нагрузку, а если не проходит несколько дней — покажись врачу.","en":"A dull ache a day or two after a session is normal, especially in the first two weeks and after jumps. A walk, sleep and the next easy session help. Sharp pain in a joint or the lower back, or pain that gets worse as you move, is a signal to stop. Mark \"Pain\" in the post-workout feedback — the app reduces the load — and if it lasts several days, see a doctor."}}]}'::jsonb
 )
 on conflict (slug_id) do update set
@@ -1767,7 +1767,7 @@ insert into public.admin_courses (
   equipment, tile, price_rub, price_usd, content
 ) values (
   'dumbbells', 'draft', 3, 2, 6, 4, 35,
-  '{"dumbbells","none","mat"}'::text[], '#16202b', 3990, 39,
+  '{"dumbbells","none","mat"}'::text[], '#2a2a30', 3990, 39,
   '{"slug":{"ru":"ganteli-doma-sila-i-relef","en":"dumbbell-builder"},"name":{"ru":"Форма с гантелями: сила и рельеф","en":"Forma. Dumbbells: strength and definition"},"tagline":{"ru":"Шесть недель силовых тренировок с парой гантелей — присед, тяга, жим и трастеры, четыре дня в неделю.","en":"Six weeks of strength training with a pair of dumbbells — squats, deadlifts, presses and thrusters, four days a week."},"description":{"ru":"Силовая программа для дома с гантелями: два силовых дня в неделю, день выносливости с рывком и взятием на грудь и день комплексов. Разгрузочная неделя, два бенчмарка — «DT» и 21-15-9 трастеров с бёрпи — и один и тот же тест в начале и в конце.","en":"A home strength program with dumbbells: two strength days a week, a conditioning day built around snatches and cleans, and a complex day. A deload week, two benchmarks — DT and 21-15-9 thrusters with burpees — and the same test at the start and the end."},"longDescription":[{"ru":"Пара гантелей — это почти целый зал. С ними можно приседать, тянуть с пола, жать стоя и лёжа, делать выпады, взятия и рывки. Курс построен вокруг шести базовых движений — гоблет- и фронтальный присед, становая и румынская тяга, тяга в наклоне, жим и швунг, — и каждую неделю они становятся чуть тяжелее или объёмнее: три подхода превращаются в четыре, средний вес — в тяжёлый, жим стоя — в швунг, а присед и жим — в трастер.","en":"A pair of dumbbells is very nearly a whole gym. You can squat, lift from the floor, press standing and lying, lunge, clean and snatch with them. The course is built around six base movements — goblet and front squats, deadlifts and Romanian deadlifts, bent-over rows, presses and push presses — and every week they get a little heavier or bigger: three sets become four, medium weight becomes heavy, the standing press becomes a push press, and squat plus press becomes a thruster."},{"ru":"Неделя выглядит так: день приседа и жима, день тяги и спины — оба с блоком на кор, — день «двигателя» с EMOM, AMRAP или табатой и день комплексов, где гантели не выпускают из рук несколько движений подряд. Между тренировками — дни отдыха с целью 7000 шагов. Четвёртая неделя разгрузочная: объём падает примерно на треть, и именно после неё сила обычно делает скачок.","en":"A week looks like this: a squat & press day, a hinge & pull day — both with a core block — an engine day with an EMOM, AMRAP or Tabata, and a complex day where the dumbbells stay in your hands through several movements in a row. Between sessions are rest days with a 7,000-step goal. Week four is a deload: volume drops by about a third, and that is usually when strength jumps."},{"ru":"Веса в программе обозначены как лёгкий, средний и тяжёлый — приложение само сопоставляет их с гантелями, которые ты указал в профиле. Количество повторений подбирается по входному тесту и корректируется после каждой тренировки по твоей оценке усилия. Если какое-то движение пока не по силам — рывок или тяга ренегата, — приложение подставит вариант проще.","en":"Loads in the program are labelled light, medium and heavy — the app maps them to the dumbbells you listed in your profile. Rep counts come from the baseline test and are adjusted after every session from your effort rating. If a movement is not there yet — the snatch or the renegade row — the app substitutes an easier variant."},{"ru":"Два бенчмарка держат курс в тонусе: в третью неделю — «DT» с гантелями, пять кругов становой, взятий и швунгов на время; в шестую — 21-15-9 трастеров и бёрпи. А в самом начале и в самом конце — один и тот же тест: отжимания, приседания, планка и бёрпи. Так ты увидишь прогресс не в ощущениях, а в цифрах.","en":"Two benchmarks keep the course honest: in week three, dumbbell DT — five rounds of deadlifts, cleans and push presses for time; in week six, 21-15-9 thrusters and burpees. And at the very start and the very end, the same test: push-ups, squats, plank and burpees. That way you see your progress in numbers, not just in feelings."}],"forWhom":[{"ru":"У тебя есть пара гантелей (лучше две пары или разборные) и коврик.","en":"You own a pair of dumbbells (two pairs or adjustables are better) and a mat."},{"ru":"Ты уже отжимаешься 8–10 раз подряд и держишь планку минуту — или прошёл курс «Форма с нуля».","en":"You can already do 8–10 push-ups in a row and hold a plank for a minute — or you finished Forma Start."},{"ru":"Хочешь стать сильнее и подтянуть рельеф, а не только сбросить вес.","en":"You want to get stronger and build definition, not just lose weight."},{"ru":"Тебе нравится структура: подходы, веса, прогрессия и понятные бенчмарки.","en":"You like structure: sets, weights, progression and clear benchmarks."},{"ru":"Есть 30–40 минут четыре раза в неделю.","en":"You have 30–40 minutes four times a week."}],"outcomes":[{"ru":"Уверенная техника шести базовых движений с гантелями: присед, становая, румынская тяга, тяга в наклоне, жим, швунг.","en":"Confident technique in six base dumbbell movements: squat, deadlift, Romanian deadlift, row, press, push press."},{"ru":"Освоишь взятие на грудь, рывок гантели и трастер — движения, из которых состоят кроссфит-комплексы.","en":"You learn the dumbbell clean, snatch and thruster — the movements CrossFit workouts are built from."},{"ru":"Рабочие веса вырастут: от средних гантелей в первую неделю к тяжёлым в пятую.","en":"Your working weights go up: from medium dumbbells in week one to heavy ones in week five."},{"ru":"Два бенчмарка с результатом на время: «DT» с гантелями и 21-15-9.","en":"Two benchmarks with a time to beat: dumbbell DT and 21-15-9."},{"ru":"Больше отжиманий, приседаний и бёрпи в повторном тесте — сравнишь с первой неделей.","en":"More push-ups, squats and burpees in the retest — you compare with week one."},{"ru":"Привычка к четырём тренировкам в неделю с отдыхом и разгрузкой, без перегруза.","en":"A habit of four sessions a week with rest days and a deload — without burning out."}],"faq":[{"q":{"ru":"Какие гантели нужны?","en":"What dumbbells do I need?"},"a":{"ru":"Минимум — одна пара. Идеально — две пары или разборные гантели: лёгкая для трастеров, рывков и AMRAP и тяжёлая для становой, тяги и приседа. Ориентир для «лёгкой»: ты можешь чисто выжать её над головой 15 раз подряд; для «тяжёлой»: 8 становых тяг даются с усилием. Если пара одна, все три метки нагрузки будут указывать на неё — регулируй темпом и паузами, а в быстрых движениях бери одну гантель вместо двух.","en":"One pair at minimum. Ideally two pairs or adjustable dumbbells: a light one for thrusters, snatches and AMRAPs and a heavy one for deadlifts, rows and squats. Rule of thumb for ''light'': you can press it overhead cleanly 15 times in a row; for ''heavy'': 8 deadlifts take real effort. If you own a single pair, all three load labels will point to it — adjust with tempo and pauses, and use one dumbbell instead of two in the fast movements."}},{"q":{"ru":"Мне подойдёт этот курс или лучше начать с «Формы с нуля»?","en":"Is this course right for me, or should I begin with Forma Start?"},"a":{"ru":"Ориентир: 8–10 отжиманий от пола подряд, минута планки и 15 приседаний с гантелью у груди без одышки. Если это про тебя — заходи. Если пока нет, пройди «Форма с нуля» или «Форма своим весом»: там те же паттерны движения без веса, а через месяц-полтора гантели дадутся легче и безопаснее.","en":"Rule of thumb: 8–10 full push-ups in a row, a one-minute plank and 15 goblet squats without getting winded. If that is you, jump in. If not yet, do Forma Start or Forma Bodyweight first: the same movement patterns without load, and in a month or so the dumbbells will come easier and safer."}},{"q":{"ru":"Сколько времени занимает тренировка?","en":"How long is a session?"},"a":{"ru":"Силовые дни — 30–40 минут вместе с разминкой и заминкой, «двигатель» — около 25, комплексы — около 30, бенчмарки — 18–20 минут: они короткие, но самые тяжёлые в курсе. В среднем выходит чуть больше получаса. Перед стартом приложение показывает расчётное время для каждого из трёх режимов сложности.","en":"Strength days run 30–40 minutes including warm-up and cool-down, engine days about 25, complexes about 30, and the benchmarks 18–20 minutes: short, but the hardest sessions of the course. The average lands a little over half an hour. Before you start, the app shows the estimated time for each of the three difficulty options."}},{"q":{"ru":"Пропустил тренировку — что делать?","en":"I missed a session — what now?"},"a":{"ru":"Просто продолжай со следующего узла, когда сможешь: путь не сбрасывается. Не ставь два силовых дня подряд, чтобы «догнать», — лучше сдвинь неделю. После паузы дольше двух недель выбери «Полегче» в первых двух тренировках и возвращайся к прежним весам постепенно.","en":"Just continue from the next node when you can: the path does not reset. Do not stack two strength days back to back to ''catch up'' — shift the week instead. After a break longer than two weeks, pick ''Easier'' for the first two sessions and ease back into your old weights gradually."}},{"q":{"ru":"Как приложение подбирает нагрузку и вес?","en":"How does the app pick the load and the weight?"},"a":{"ru":"Количество повторений считается по входному тесту, а после каждой тренировки ты оцениваешь усилие от 1 до 10 и самочувствие — приложение чуть поднимает или снижает объём в следующий раз. Метки «лёгкий», «средний» и «тяжёлый» приложение сопоставляет с гантелями из твоего профиля: самая лёгкая, средняя, самая тяжёлая. В разгрузочную неделю объём снижается автоматически, а перед каждой тренировкой можно выбрать «Полегче», «Как обычно» или «Сложнее».","en":"Rep counts come from the baseline test, and after every session you rate the effort from 1 to 10 and how you felt — the app nudges the volume up or down next time. The labels ''light'', ''medium'' and ''heavy'' are mapped to the dumbbells in your profile: the lightest, the middle one, the heaviest. In the deload week volume drops automatically, and before every session you can choose Easier, As usual or Harder."}},{"q":{"ru":"После становой тянет поясницу. Это нормально?","en":"My lower back feels it after deadlifts. Is that normal?"},"a":{"ru":"Лёгкая усталость в мышцах вдоль позвоночника на следующий день — норма: они тоже работали. Острая боль, прострел или боль, которая усиливается при наклоне, — нет. В этом случае отметь «Боль» в отчёте после тренировки: приложение снизит нагрузку. Проверь технику: гантели близко к голеням, спина прямая, движение начинается с таза, а не с поясницы. Если поясница беспокоит регулярно, укажи это в ограничениях профиля — приложение заменит тяжёлые наклоны более безопасными вариантами — и покажись врачу.","en":"Mild fatigue in the muscles along the spine the next day is normal: they worked too. Sharp pain, a sudden twinge or pain that gets worse as you bend is not. In that case mark ''Pain'' in the post-workout feedback: the app reduces the load. Check your technique: dumbbells close to the shins, back flat, the movement starts from the hips, not the lower back. If your lower back bothers you regularly, add it to the limitations in your profile — the app swaps heavy hinges for safer variants — and see a doctor."}}]}'::jsonb
 )
 on conflict (slug_id) do update set
@@ -2751,7 +2751,7 @@ insert into public.admin_courses (
   equipment, tile, price_rub, price_usd, content
 ) values (
   'kettlebell', 'draft', 4, 2, 6, 3, 32,
-  '{"kettlebell","none","mat"}'::text[], '#232f42', 3990, 39,
+  '{"kettlebell","none","mat"}'::text[], '#1f1f24', 3990, 39,
   '{"slug":{"ru":"girya-sila-i-metabolizm","en":"kettlebell-power"},"name":{"ru":"Форма с гирей: сила и метаболизм","en":"Forma. Kettlebell: strength and metabolism"},"tagline":{"ru":"Шесть недель с одной гирей: от становой тяги до рывка, три тренировки в неделю.","en":"Six weeks with a single kettlebell: from the deadlift to the snatch, three sessions a week."},"description":{"ru":"Курс вокруг гиревого маха и всего, что из него вырастает: взятие, жим, рывок, турецкий подъём и переноски. Силовые дни, EMOM и лестницы махов, разгрузочная неделя и бенчмарк «100 махов + 50 приседаний» в финале. Дома, с одной гирей.","en":"A course built around the kettlebell swing and everything that grows out of it: the clean, the press, the snatch, the Turkish get-up and carries. Strength days, swing EMOMs and ladders, a deload week and the \"100 swings + 50 squats\" benchmark at the end. At home, with one bell."},"longDescription":[{"ru":"Гиря — самый честный домашний снаряд: один кусок железа, а нагрузку из него можно вытащить любую. Каждая неделя курса — три разных дня. «Присед и жим»: гоблет-присед, жим стоя, выпады с гирей у груди и отжимания. «Школа маха»: здесь живёт главная линия курса — становая тяга, потом мах, из маха взятие на грудь, из взятия жим, а на пятой неделе — рывок; на каждом таком дне есть блок турецкого подъёма и переноски. И «Метаболизм»: EMOM махов, лестница 10–25–10 на время и длинный AMRAP.","en":"A kettlebell is the most honest piece of home equipment: one lump of iron, and you can get any kind of load out of it. Every week of the course has three different days. \"Squat & press\": goblet squats, standing press, front-rack lunges and push-ups. \"Swing school\", where the main thread of the course lives — the deadlift, then the swing, the clean out of the swing, the press out of the clean, and in week five the snatch; every one of these days also has a Turkish get-up block and carries. And \"Metabolic\": swing EMOMs, a 10–25–10 ladder for time and a long AMRAP."},{"ru":"Ты начинаешь с теста без гири — отжимания за две минуты, приседания за минуту, планка на время, бёрпи за минуту. По нему приложение подбирает стартовый объём, а после каждой тренировки уточняет его по твоей оценке усилия. Вес гири ты не считаешь сам: в программе стоят метки «лёгкая», «средняя», «тяжёлая», и приложение подставляет твои гири. Четвёртая неделя — разгрузочная: объём падает примерно на треть, техника остаётся. В шестой — последний силовой день, бенчмарк «100 махов + 50 гоблет-приседаний» на время и повторный тест.","en":"You start with a bodyweight test — push-ups in two minutes, squats in one, a max plank hold and burpees in a minute. The app uses it to set your starting volume, then fine-tunes it after every session from your effort rating. You never have to calculate the bell weight yourself: the program uses \"light\", \"medium\" and \"heavy\" labels and the app maps them to the bells you own. Week four is a deload: volume drops by about a third, the technique work stays. Week six holds the last strength day, the \"100 swings + 50 goblet squats\" benchmark for time and the retest."},{"ru":"Из инвентаря нужна одна гиря и коврик. Ориентир по весу: мужчинам с опытом тренировок — 16 кг, без опыта — 12; женщинам — 8–12 кг. Если гирь несколько, приложение само выберет полегче для жима и рывка и потяжелее для тяги и переносок. Вторая гиря не нужна: прогулка фермера в курсе делается с одной, со сменой руки.","en":"All you need is one kettlebell and a mat. A weight guideline: men with some training experience — 16 kg, without it — 12 kg; women — 8–12 kg. If you own several bells, the app picks a lighter one for the press and the snatch and a heavier one for deadlifts and carries. You do not need a second bell: the farmer carry in this course is done with one, switching hands."}],"forWhom":[{"ru":"Ты уже тренировался: отжимаешься от пола 8–10 раз подряд и стоишь в планке минуту.","en":"You have trained before: you can do 8–10 full push-ups in a row and hold a plank for a minute."},{"ru":"У тебя есть гиря (или ты готов её купить) и ты хочешь уметь с ней всё, а не только махать.","en":"You own a kettlebell (or are ready to buy one) and want to be able to do everything with it, not just swing."},{"ru":"Тебе нужны сила и выносливость одновременно — за 30–35 минут три раза в неделю.","en":"You want strength and conditioning at the same time — in 30–35 minutes, three times a week."},{"ru":"Ты прошёл «Форма с нуля» или «Форма своим весом» и хочешь добавить к собственному весу железо.","en":"You finished Forma Start or Forma Bodyweight and want to add iron to bodyweight."}],"outcomes":[{"ru":"Чистый мах гирей: наклон от бёдер, прямая спина, гиря летит от таза, а не от рук.","en":"A clean kettlebell swing: hinge from the hips, flat back, the bell driven by the hips rather than the arms."},{"ru":"Освоишь взятие на грудь, жим стоя, рывок и турецкий подъём — весь базовый гиревой набор.","en":"You learn the clean, the standing press, the snatch and the Turkish get-up — the whole basic kettlebell toolkit."},{"ru":"Пройдёшь бенчмарк «100 махов + 50 гоблет-приседаний» и запишешь время, которое будешь бить дальше.","en":"You complete the \"100 swings + 50 goblet squats\" benchmark and record a time to beat next cycle."},{"ru":"Больше отжиманий, приседаний, планки и бёрпи в повторном тесте — ты сравнишь первую и шестую неделю.","en":"More push-ups, squats, plank time and burpees in the retest — you compare week one with week six."},{"ru":"Сильный хват и устойчивый кор за счёт переносок, турецкого подъёма и планок.","en":"A strong grip and a stable core from carries, get-ups and planks."}],"faq":[{"q":{"ru":"Какая гиря нужна? Одна или две?","en":"What kettlebell do I need? One or two?"},"a":{"ru":"Одной достаточно — весь курс построен под одну гирю, а прогулка фермера делается со сменой руки. Ориентир по весу: мужчинам с опытом тренировок — 16 кг, без опыта — 12; женщинам — 8–12 кг. Если гирь несколько, укажи их в профиле: приложение подставит полегче туда, где в программе стоит «лёгкая» (жим, рывок, турецкий подъём в первые недели), и потяжелее туда, где «тяжёлая» (становая тяга, переноски). Ещё нужен коврик.","en":"One is enough — the whole course is built around a single bell, and the farmer carry is done switching hands. A weight guideline: men with some training experience — 16 kg, without it — 12 kg; women — 8–12 kg. If you own several, list them in your profile: the app uses a lighter one where the program says \"light\" (press, snatch, the get-up in the first weeks) and a heavier one where it says \"heavy\" (deadlifts, carries). You also need a mat."}},{"q":{"ru":"Я никогда не занимался с гирей. Мне подойдёт?","en":"I have never trained with a kettlebell. Is this for me?"},"a":{"ru":"Да, если у тебя есть общая база: 8–10 отжиманий от пола подряд, минута планки, 15–20 приседаний без одышки. Гиревая техника здесь строится с нуля: первые две недели — только тяга, мах и разбор турецкого подъёма, взятие появляется на второй неделе, жим из взятия на третьей, рывок на пятой. Если базы пока нет, пройди сначала «Форма с нуля» — четыре недели без инвентаря, и возвращайся.","en":"Yes, if you have a general base: 8–10 full push-ups in a row, a one-minute plank, 15–20 squats without getting winded. Kettlebell technique is built from scratch here: the first two weeks are only the deadlift, the swing and the get-up steps; the clean appears in week two, the press out of the clean in week three, the snatch in week five. If the base is not there yet, do Forma Start first — four weeks with no equipment — and come back."}},{"q":{"ru":"Сколько времени занимает тренировка?","en":"How long is a session?"},"a":{"ru":"Около получаса вместе с разминкой и заминкой: силовые дни и «Школа маха» — 27–38 минут, метаболические дни — 21–29, «Лёгкий поток» — около 20, бенчмарк — около 18: он короткий, но самый тяжёлый в курсе. Три тренировки в неделю; в последней неделе добавляется короткий технический день перед повторным тестом. Перед стартом приложение показывает расчётную длительность именно для твоего объёма.","en":"About half an hour including warm-up and cool-down: strength days and Swing school run 27–38 minutes, metabolic days 21–29, Easy flow about 20, and the benchmark about 18 — short, but the hardest session of the course. Three sessions a week; the final week adds a short technique day before the retest. Before you start, the app shows the estimated duration for your own volume."}},{"q":{"ru":"Пропустил тренировку — что делать?","en":"I missed a session — what now?"},"a":{"ru":"Ничего страшного: путь не сбрасывается, просто продолжай со следующего узла, когда сможешь. Не делай две тренировки в один день, чтобы «догнать», — лучше сдвинуть неделю. Если пауза была больше двух недель, выбери «Полегче» в первых двух тренировках после перерыва и возьми гирю полегче на махах: хват и ладони отвыкают быстрее, чем ноги.","en":"No problem: the path does not reset, just continue from the next node when you can. Do not double up to \"catch up\" — shifting the week is better. If the break was longer than two weeks, pick \"Easier\" for the first two sessions back and use a lighter bell on the swings: your grip and palms lose the habit faster than your legs do."}},{"q":{"ru":"После махов болит поясница. Это нормально?","en":"My lower back hurts after swings. Is that normal?"},"a":{"ru":"Тянущая усталость в ягодицах и задней поверхности бедра через день после махов — норма. Боль именно в пояснице — нет: чаще всего это значит, что наклон идёт спиной, а не бёдрами, или гиря опускается слишком низко к коленям. Вернись к становой тяге с гирей и махам с лёгкой гирей, следи, чтобы гиря проходила высоко «в пах», а наверху сжимай ягодицы. Отметь «Боль» в отчёте после тренировки — приложение снизит нагрузку. Если боль резкая, отдаёт в ногу или не проходит несколько дней — покажись врачу.","en":"Dull fatigue in the glutes and hamstrings the day after swings is normal. Pain in the lower back itself is not: most often it means you are bending with your back instead of your hips, or letting the bell drop too low toward the knees. Go back to kettlebell deadlifts and swings with a light bell, keep the bell passing high into the groin and squeeze your glutes at the top. Mark \"Pain\" in the post-workout feedback — the app reduces the load. If the pain is sharp, radiates into a leg or lasts several days, see a doctor."}},{"q":{"ru":"Как приложение подстраивает нагрузку?","en":"How does the app adapt the load?"},"a":{"ru":"Стартовый объём считается по тесту первого дня. После каждой тренировки ты оцениваешь усилие по шкале от 1 до 10 и самочувствие — и приложение чуть поднимает или снижает число повторений на следующий раз. Перед каждой тренировкой можно выбрать «Полегче», «Как обычно» или «Сложнее»; рекомендацию приложение даёт по последним тренировкам и по тому, сколько ты отдыхал. Вес гири оно выбирает из тех, что ты указал в профиле, по меткам «лёгкая / средняя / тяжёлая». В четвёртую неделю объём снижается автоматически, а если ты отметил проблемы с поясницей или плечами, тяжёлые махи и жимы заменяются на более щадящие варианты.","en":"Your starting volume comes from the day-one test. After every session you rate the effort from 1 to 10 and how you felt, and the app nudges the reps up or down for next time. Before each session you can pick Easier, As usual or Harder; the app recommends one based on your recent sessions and how much you have rested. It picks the bell from the ones in your profile using the \"light / medium / heavy\" labels. In week four the volume drops automatically, and if you flagged lower-back or shoulder issues, heavy swings and presses are swapped for gentler variants."}}]}'::jsonb
 )
 on conflict (slug_id) do update set
@@ -3610,7 +3610,7 @@ insert into public.admin_courses (
   equipment, tile, price_rub, price_usd, content
 ) values (
   'athlete', 'draft', 5, 3, 8, 4, 40,
-  '{"dumbbells","pullup_bar","jump_rope","none","mat"}'::text[], '#1c2532', 4990, 49,
+  '{"dumbbells","pullup_bar","jump_rope","none","mat"}'::text[], '#2a2a30', 4990, 49,
   '{"slug":{"ru":"atlet-prodvinutyj-domashnij-krossfit","en":"home-athlete"},"name":{"ru":"Форма атлета: продвинутый домашний кроссфит","en":"Forma. Athlete: advanced home CrossFit"},"tagline":{"ru":"Восемь недель продвинутого кроссфита дома: подтягивания, двойные прыжки, дьявольский жим, длинные AMRAP — и «Мёрф» в финале.","en":"Eight weeks of advanced CrossFit at home: pull-ups, double-unders, devil presses, long AMRAPs — and Murph at the end."},"description":{"ru":"Курс для тех, кто уже тренируется и хочет большего: четыре дня в неделю, гантели, турник и скакалка. Два силовых дня — присед и жим, тяга и подтягивания, — день «двигателя» с EMOM, AMRAP и табатой и день чипперов. Разгрузка в четвёртую неделю с «Синди» на 20 минут в её конце и половина «Мёрфа» в восьмую.","en":"For those who already train and want more: four days a week, dumbbells, a pull-up bar and a jump rope. Two strength days — squat & push, pull & hinge — an engine day with EMOMs, AMRAPs and Tabata, and a chipper day. A deload in week four with a 20-minute Cindy at its end, and Half Murph in week eight."},"longDescription":[{"ru":"Это третий уровень: курс для тех, кто отжимается двадцать пять раз подряд, держит планку две минуты и хотя бы раз висел на турнике с мыслью «а если подтянуться?». Восемь недель построены вокруг трёх навыков, которых нет в младших курсах: строгие подтягивания, двойные прыжки на скакалке и дьявольский жим. Каждый идёт по своей лестнице — негативные подтягивания превращаются в строгие по четыре, потом по шесть; синглы на скакалке — в серии двойных; бёрпи — в бёрпи с гантелями и махом над головой.","en":"This is level three: a course for someone who does twenty-five push-ups in a row, holds a plank for two minutes and has hung from a bar at least once thinking \"what if I pulled?\". Eight weeks are built around three skills the earlier courses do not have: strict pull-ups, double-unders and the devil press. Each climbs its own ladder — negative pull-ups become strict sets of four, then six; single-unders become sets of doubles; burpees become burpees with dumbbells and a swing overhead."},{"ru":"Неделя — четыре тренировки. День приседа и жима: фронтальный присед и швунг с тяжёлой парой, прыжковые выпады, отжимания, короткий AMRAP и кор. День тяги и подтягиваний: подтягивания в паре с подъёмами коленей в висе, становая и румынская тяга, тяга ренегата, прогулка фермера. День «двигателя»: EMOM-куплеты, AMRAP 15, табата, EMOM 16 из четырёх движений. И шестой день — чипперы и репетиции «Мёрфа». Между ними дни отдыха с целью 7000 шагов: в этом курсе они важны не меньше тренировок.","en":"A week is four sessions. Squat & push day: front squats and push presses with the heavy pair, jumping lunges, push-ups, a short AMRAP and core. Pull & hinge day: pull-ups paired with hanging knee raises, deadlifts and Romanian deadlifts, renegade rows, the farmer carry. Engine day: EMOM couplets, AMRAP 15, Tabata, a four-movement EMOM 16. And day six — chippers and Murph rehearsals. Between them, rest days with a 7,000-step goal: in this course they matter as much as the sessions."},{"ru":"Объём растёт волнами: недели 1–2 — база, 3 — тяжелее, 4 — разгрузка на треть с «Синди» в конце, 5–7 — пик: пять подходов, тяжёлая пара, EMOM 16 и репетиции «Мёрфа» на 5 и 8 кругов. Восьмая неделя лёгкая: техника, половина «Мёрфа» и тот же тест, что в первый день. Приложение подбирает повторения по входному тесту и твоей оценке усилия после каждой тренировки, а веса — по гантелям из профиля. Если движение пока недоступно — двойные без скакалки или подтягивания без турника, — оно подставит вариант проще.","en":"Volume rises in waves: weeks 1–2 are the base, week 3 is heavier, week 4 is a one-third deload with Cindy at its end, weeks 5–7 are the peak: five sets, the heavy pair, EMOM 16 and Murph rehearsals of 5 and 8 rounds. Week eight is light: technique, Half Murph and the same test as on day one. The app sets rep counts from the baseline test and your effort rating after every session, and weights from the dumbbells in your profile. If a movement is not available yet — double-unders without a rope or pull-ups without a bar — it substitutes an easier variant."},{"ru":"Два бенчмарка держат курс в тонусе. «Синди» — 20 минут AMRAP из 5 подтягиваний, 10 отжиманий и 15 приседаний — в конце четвёртой недели. Половина «Мёрфа» — бег, 50 подтягиваний, 100 отжиманий, 150 приседаний, бег, лимит 40 минут — в восьмую. К ней ты подойдёшь через три репетиции, зная свою разбивку и свой темп. А входной и повторный тест покажут, сколько отжиманий, приседаний и бёрпи прибавилось за два месяца.","en":"Two benchmarks keep the course honest. Cindy — a 20-minute AMRAP of 5 pull-ups, 10 push-ups and 15 squats — at the end of week four. Half Murph — run, 50 pull-ups, 100 push-ups, 150 squats, run, 40-minute cap — in week eight. You arrive at it after three rehearsals, knowing your partitioning and your pace. And the baseline and final tests show how many push-ups, squats and burpees two months added."}],"forWhom":[{"ru":"У тебя есть пара гантелей (лучше две пары или разборные), турник и скакалка.","en":"You own a pair of dumbbells (two pairs or adjustables are better), a pull-up bar and a jump rope."},{"ru":"Ты отжимаешься 20–25 раз подряд, держишь планку две минуты и висишь на турнике хотя бы 30 секунд — или прошёл «Форма своим весом» или «Форма с гантелями».","en":"You do 20–25 push-ups in a row, hold a plank for two minutes and can hang from the bar for at least 30 seconds — or you finished Forma Bodyweight or Forma Dumbbells."},{"ru":"Хочешь первое строгое подтягивание — или десятое — и серии двойных на скакалке.","en":"You want your first strict pull-up — or your tenth — and sets of double-unders."},{"ru":"Тебе нужен вызов с понятной целью: «Синди» и «Мёрф» на время.","en":"You want a challenge with a clear goal: Cindy and Murph on the clock."},{"ru":"Есть 35–45 минут четыре раза в неделю и готовность отдыхать в дни отдыха.","en":"You have 35–45 minutes four times a week and the discipline to rest on rest days."}],"outcomes":[{"ru":"Строгие подтягивания: от негативных к подходам по шесть — тридцать подтягиваний за тренировку к седьмой неделе.","en":"Strict pull-ups: from negatives to sets of six — thirty pull-ups in a session by week seven."},{"ru":"Двойные прыжки на скакалке сериями по 20–40 внутри метконов.","en":"Double-unders in sets of 20–40 inside metcons."},{"ru":"Дьявольский жим, рывок гантели, трастер и тяга ренегата — в силовых блоках и в EMOM.","en":"The devil press, dumbbell snatch, thruster and renegade row — in strength blocks and in EMOMs."},{"ru":"Результат в «Синди» (круги за 20 минут) и в половине «Мёрфа» (время при лимите 40 минут).","en":"A Cindy score (rounds in 20 minutes) and a Half Murph time (40-minute cap)."},{"ru":"Умение держать темп в длинных AMRAP и чипперах и разбивать большие числа на выполнимые серии.","en":"The skill of pacing long AMRAPs and chippers and breaking big numbers into doable sets."},{"ru":"Больше отжиманий, приседаний и бёрпи в повторном тесте — и привычка к четырём тренировкам в неделю с разгрузкой.","en":"More push-ups, squats and burpees in the retest — and a habit of four sessions a week with a built-in deload."}],"faq":[{"q":{"ru":"Какое оборудование нужно и можно ли без чего-то обойтись?","en":"What equipment do I need, and can I skip any of it?"},"a":{"ru":"Три вещи: пара гантелей (идеально две пары — лёгкая для рывков, трастеров и дьявольского жима, тяжёлая для приседа, становой и тяги), турник в дверном проёме или на стене и скакалка. Без турника курс теряет главное — подтягивания, — поэтому он обязателен. Без скакалки приложение заменит двойные прыжки на джампинг-джеки, но двойные — навык, который стоит освоить, а скакалка стоит недорого.","en":"Three things: a pair of dumbbells (ideally two pairs — a light one for snatches, thrusters and devil presses, a heavy one for squats, deadlifts and rows), a doorway or wall-mounted pull-up bar, and a jump rope. Without a bar the course loses its centrepiece — pull-ups — so it is mandatory. Without a rope the app swaps double-unders for jumping jacks, but doubles are a skill worth learning, and a rope costs very little."}},{"q":{"ru":"У меня нет ни одного строгого подтягивания. Мне рано?","en":"I don''t have a single strict pull-up yet. Is it too early?"},"a":{"ru":"Нет, если ты можешь висеть на турнике 30 секунд и медленно опускаться из верхней точки. Первые две недели курса — только негативные подтягивания, и именно так большинство людей получают первое строгое. С третьей недели в подходах появляются строгие, а рядом с каждым таким упражнением написано, как заменить: два строгих и два негативных, или негативные с прыжком в метконах. Если и вис пока даётся тяжело, начни с «Форма с гантелями» или «Форма своим весом» — там есть тяги и планки, которые готовят спину.","en":"Not if you can hang from the bar for 30 seconds and lower yourself slowly from the top. The first two weeks are negatives only, and that is how most people get their first strict rep. From week three strict reps appear in the sets, and every such exercise says how to scale: two strict plus two negatives, or jumping negatives in the metcons. If even the hang is hard for now, start with Forma Dumbbells or Forma Bodyweight — the rows and planks there prepare your back."}},{"q":{"ru":"Сколько длится тренировка?","en":"How long is a session?"},"a":{"ru":"В среднем 35–40 минут с разминкой и заминкой. Силовые дни — 40–48 минут (в пиковые недели ближе к 48), «двигатель» — около 30, чипперы и репетиции «Мёрфа» — 20–30. Два исключения — бенчмарки: «Синди» с разминкой занимает около 30 минут, половина «Мёрфа» — от 35 минут до часа, в зависимости от того, как ты разобьёшь повторения. Перед стартом приложение показывает расчётное время для каждого из трёх режимов сложности.","en":"Between 35 and 40 minutes on average with warm-up and cool-down. Strength days run 40–48 minutes (closer to 48 in the peak weeks), engine days about 30, chippers and Murph rehearsals 20–30. The two exceptions are the benchmarks: Cindy takes about 30 minutes with the warm-up, Half Murph anywhere from 35 minutes to an hour depending on how you partition the reps. Before you start, the app shows the estimated time for each of the three difficulty options."}},{"q":{"ru":"Пропустил тренировку или целую неделю — что делать?","en":"I missed a session or a whole week — what now?"},"a":{"ru":"Одну тренировку — просто продолжай со следующего узла: путь не сбрасывается. Не ставь два силовых дня подряд, чтобы «догнать», — сдвинь неделю. После паузы дольше двух недель выбери «Полегче» в первых двух тренировках. Если выпала неделя перед «Мёрфом», сделай сначала репетицию — четверть «Мёрфа», — а бенчмарк через три-четыре дня после неё.","en":"One session — just continue from the next node: the path does not reset. Do not stack two strength days back to back to ''catch up'' — shift the week. After a break longer than two weeks, pick ''Easier'' for the first two sessions. If the missing week was the one before Murph, do a rehearsal first — Quarter Murph — and the benchmark three or four days later."}},{"q":{"ru":"Как приложение подбирает нагрузку?","en":"How does the app pick the load?"},"a":{"ru":"Повторения считаются по входному тесту, а после каждой тренировки ты оцениваешь усилие от 1 до 10 и самочувствие — объём в следующий раз чуть растёт или снижается. Метки «лёгкий», «средний» и «тяжёлый» приложение сопоставляет с гантелями из твоего профиля. В разгрузочную неделю объём падает автоматически примерно на треть, а перед каждой тренировкой можно выбрать «Полегче», «Как обычно» или «Сложнее». Двойные без скакалки и подтягивания без турника приложение заменит само, а вариант «нет строгих — негативные» ты выбираешь сам по подсказке рядом с упражнением.","en":"Rep counts come from the baseline test, and after every session you rate the effort from 1 to 10 and how you felt — the volume nudges up or down next time. The labels ''light'', ''medium'' and ''heavy'' are mapped to the dumbbells in your profile. In the deload week volume drops by about a third automatically, and before every session you can choose Easier, As usual or Harder. Double-unders without a rope and pull-ups without a bar are substituted by the app; the ''no strict reps — do negatives'' option you choose yourself from the hint next to the exercise."}},{"q":{"ru":"Болят ладони и предплечья от турника. Это нормально?","en":"My palms and forearms hurt from the bar. Is that normal?"},"a":{"ru":"Усталость предплечий и мозоли в первые недели — норма: хват догоняет спину. Что помогает: не сжимать перекладину сильнее, чем нужно, спиливать огрубевшую кожу пемзой, чтобы мозоли не рвались, и не висеть лишнего вне плана. Острая боль в локте или плече — другое дело: отметь «Боль» в отчёте после тренировки, приложение снизит нагрузку, а подтягивания замени тягой гантели в наклоне до конца недели. Если боль держится больше недели — к врачу.","en":"Forearm fatigue and calluses in the first weeks are normal: your grip is catching up with your back. What helps: do not squeeze the bar harder than necessary, file down thick skin with a pumice stone so calluses do not tear, and do not hang extra outside the plan. Sharp pain in the elbow or shoulder is different: mark ''Pain'' in the post-workout feedback, the app reduces the load, and swap pull-ups for bent-over rows for the rest of the week. Pain that lasts more than a week means see a doctor."}}]}'::jsonb
 )
 on conflict (slug_id) do update set
@@ -4840,6 +4840,1264 @@ insert into public.admin_course_days (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w8d6_retest', 8, 6, 'test', (select id from public.custom_workouts where short_id = 'athlete_w_test'),
   '{"title":{"ru":"Повторный тест","en":"Retest"},"subtitle":{"ru":"Те же 4 теста · сравни с первой неделей","en":"Same 4 tests · compare with week 1"},"body":[]}'::jsonb, false, null, 54
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+-- ---------------------------------------------------------------------------
+-- tempo — Форма в темпе: плотность и контроль своим весом
+-- 14 workouts, 56 days
+-- ---------------------------------------------------------------------------
+insert into public.admin_courses (
+  slug_id, status, sort_order, level, weeks, sessions_per_week, avg_session_min,
+  equipment, tile, price_rub, price_usd, content
+) values (
+  'tempo', 'draft', 6, 3, 8, 4, 25,
+  '{"none","mat","chair","jump_rope"}'::text[], '#2a2a30', 4990, 49,
+  '{"slug":{"ru":"v-tempe-plotnost-i-kontrol","en":"bodyweight-tempo"},"name":{"ru":"Форма в темпе: плотность и контроль своим весом","en":"Forma. Tempo: bodyweight density and control"},"tagline":{"ru":"Восемь недель для тех, кто уже уверенно двигается: тот же объём работы, всё меньше отдыха между подходами. Без инвентаря.","en":"Eight weeks for people who already move well: the same amount of work, less and less rest between sets. No gear."},"description":{"ru":"Курс про плотность: лестницы EMOM, работа на время против лимита, круги без пауз между ними и силовые дни, где отдых между подходами сокращается с 90 секунд до минуты. Дома, без оборудования — коврик, стул и скакалка по желанию.","en":"A course about density: EMOM ladders, work for time against a cap, rounds with no pause between them, and strength days where the rest between sets shrinks from ninety seconds to one minute. At home, no equipment — a mat, a chair and a jump rope if you have one."},"longDescription":[{"ru":"Это следующий шаг после «Формы своим весом» для тех, кто не собирается покупать железо. Штанги, гантелей и турника здесь нет — и курс не делает вид, что они не нужны. Без перекладины своим весом невозможно тренировать тягу, поэтому предмет курса другой: плотность и позиция. Сколько работы ты успеваешь сделать за единицу времени и насколько чисто держится техника, когда времени на восстановление всё меньше.","en":"This is the next step after Forma Bodyweight for people who are not going to buy iron. There is no barbell, no dumbbell and no pull-up bar here — and the course does not pretend they are unnecessary. Without a bar you cannot train pulling with bodyweight alone, so the subject is a different one: density and position. How much work you get done per unit of time, and how cleanly your form holds as the recovery between efforts shrinks."},{"ru":"Механизм у курса один и он виден с первого дня: силовой день повторяется каждую неделю с теми же движениями и повторами, а отдых между подходами падает с 90 секунд до 75, а потом до 60. Всё остальное построено вокруг него — лестницы, где каждую минуту число растёт, пока движение не сменится; «крышка» — длинный список на время против лимита, который не обязательно закрывать; и круги на время, между которыми не заложено ни секунды отдыха.","en":"The course has one mechanism and it is visible from day one: the strength day repeats every week with the same movements and the same reps, while the rest between sets drops from 90 seconds to 75 and then to 60. Everything else is built around it — ladders where the number climbs every minute until the movement changes; the cap, a long list for time against a ceiling you are not obliged to close; and rounds for time with not one second of rest scheduled between them."},{"ru":"Первая тренировка курса и последняя — одна и та же: пять кругов на время, которые не меняются ни от твоего уровня, ни от выбора «полегче / посложнее». Ты проходишь их четыре раза — на первой, третьей, шестой и восьмой неделе — и видишь ровно одну цифру, время, которая говорит всё. Пятая неделя разгрузочная: объём падает примерно на треть, чтобы тело усвоило первые четыре.","en":"The first session of the course and the last are the same one: five rounds for time that do not change with your level or with Easier and Harder. You meet them four times — in weeks 1, 3, 6 and 8 — and you get exactly one number, the clock, which says everything. Week five is a deload: volume drops by about a third so your body can absorb the first four."}],"forWhom":[{"ru":"Ты прошёл «Форму своим весом» или тренируешься сам и уверенно держишь 20 отжиманий подряд и 2 минуты планки.","en":"You finished Forma Bodyweight or train on your own, and you comfortably hold 20 push-ups in a row and a two-minute plank."},{"ru":"Ты не хочешь покупать инвентарь и не готов вешать турник — но тебе уже мало обычного домашнего комплекса.","en":"You do not want to buy gear and you are not going to mount a pull-up bar — but an ordinary home routine is no longer enough."},{"ru":"Тебе интересна работа на время: EMOM, лимиты, круги — и то, как держать ровный темп, когда тяжело.","en":"You are interested in working against the clock: EMOMs, caps, rounds — and in holding an even pace when it gets hard."},{"ru":"У тебя есть 25–30 минут четыре раза в неделю.","en":"You have 25–30 minutes four times a week."}],"outcomes":[{"ru":"Пройдёшь одни и те же пять кругов четыре раза за курс и увидишь, на сколько минут сдвинулось время.","en":"You run the same five rounds four times over the course and see how many minutes the clock moved."},{"ru":"Будешь делать тот же объём силовой работы с отдыхом на треть короче, чем в первую неделю.","en":"You do the same volume of strength work on a third less rest than in week one."},{"ru":"Освоишь прыжковые выпады, узкие отжимания, отжимания уголком, складку и прыжок с коленями к груди.","en":"You learn jumping lunges, diamond push-ups, pike push-ups, V-ups and tuck jumps."},{"ru":"Научишься раскладывать силы на длинной работе: EMOM-лестницу, чиппер с лимитом и пять кругов без пауз.","en":"You learn to pace long work: an EMOM ladder, a chipper against a cap, and five rounds with no pauses."},{"ru":"Подтянешь одностороннюю работу — выпады, тягу и мостик на одной ноге, боковую планку.","en":"You build up your single-side work — lunges, single-leg RDLs and bridges, side planks."}],"faq":[{"q":{"ru":"Что нужно из оборудования?","en":"What equipment do I need?"},"a":{"ru":"Коврик и устойчивый стул без колёсиков — для отжиманий от опоры в лёгкий день. Скакалка по желанию: если её нет, приложение само заменит двойные прыжки на джампинг-джеки. Турник не нужен и нигде не используется.","en":"A mat and a sturdy chair without wheels — for the dips on the easy day. A jump rope is optional: without one the app swaps double-unders for jumping jacks. No pull-up bar is needed and none is used."}},{"q":{"ru":"Чем этот курс отличается от «Формы своим весом»?","en":"How is this different from Forma Bodyweight?"},"a":{"ru":"Тот курс про то, чтобы научиться делать больше. Этот — про то, чтобы делать столько же за меньшее время. Силовой день здесь повторяется неизменным, а сокращается отдых между подходами: 90 секунд, потом 75, потом 60. Форматы тоже другие: лестницы EMOM, работа против лимита, круги без пауз между ними. И курс длиннее — восемь недель вместо шести.","en":"That course is about learning to do more. This one is about doing the same amount in less time. The strength day repeats unchanged here while the rest between sets shrinks: 90 seconds, then 75, then 60. The formats are different too: EMOM ladders, work against a cap, rounds with no pause between them. And it is longer — eight weeks instead of six."}},{"q":{"ru":"Мне подойдёт этот курс?","en":"Is this course right for me?"},"a":{"ru":"Ориентир: 20 отжиманий от пола подряд, 2 минуты планки, 40 приседаний без остановки и знакомство с бёрпи. Если это про тебя — заходи. Если пока нет, пройди «Форму своим весом»: там те же паттерны, но с бо́льшим отдыхом и без прыжковых выпадов.","en":"A rule of thumb: 20 full push-ups in a row, a two-minute plank, 40 unbroken squats and some familiarity with burpees. If that is you, come in. If not yet, do Forma Bodyweight first: same patterns, more rest and no jumping lunges."}},{"q":{"ru":"Сколько времени занимает тренировка?","en":"How long is a session?"},"a":{"ru":"Около 25–30 минут вместе с разминкой и заминкой. Разминка — суставная гимнастика, пять минут, она обязательна и не считается тренировкой. Перед стартом приложение показывает расчётную длительность именно для твоего объёма.","en":"About 25–30 minutes including warm-up and cool-down. The warm-up is joint mobility, five minutes, mandatory and not counted as training. Before you start, the app shows the estimated duration for your own volume."}},{"q":{"ru":"Что делать, если не укладываюсь в лимит?","en":"What if I do not make the cap?"},"a":{"ru":"Ничего. «Крышка» на то и крышка: лимит стоит выше, чем возьмёт большинство, и закрывать его не обязательно. Не успел — доделай остаток в своём темпе, если хочешь, и запиши в отчёте, где тебя остановило время. Через две недели тот же список пойдёт быстрее — это и есть смысл курса.","en":"Nothing. That is what a cap is: the ceiling sits above what most people reach, and closing it is not required. If time runs out, finish the rest at your own pace if you want to, and note in the feedback where the clock stopped you. In two weeks the same list goes faster — that is the point of the course."}},{"q":{"ru":"Как приложение подстраивает нагрузку?","en":"How does the app adapt the load?"},"a":{"ru":"Стартовый объём считается по онбордингу. После каждой тренировки ты оцениваешь усилие и самочувствие, и приложение чуть двигает повторы на следующий раз. Перед тренировкой можно выбрать «Полегче», «Как обычно» или «Сложнее» — это меняет объём, число подходов и окна форматов, но не трогает отдых между подходами: отдых на этом курсе задан программой и меняется только по неделям. Пять кругов не меняются никогда.","en":"Your starting volume comes from onboarding. After every session you rate the effort and how you felt, and the app nudges the reps for next time. Before a session you can pick Easier, As usual or Harder — that moves the volume, the set count and the format windows, but never the rest between sets: on this course the rest is set by the programme and changes only by week. The five rounds never change at all."}}]}'::jsonb
+)
+on conflict (slug_id) do update set
+  sort_order = excluded.sort_order,
+  level = excluded.level,
+  weeks = excluded.weeks,
+  sessions_per_week = excluded.sessions_per_week,
+  avg_session_min = excluded.avg_session_min,
+  equipment = excluded.equipment,
+  tile = excluded.tile,
+  price_rub = excluded.price_rub,
+  price_usd = excluded.price_usd,
+  content = excluded.content,
+  updated_at = now();
+
+insert into public.custom_workouts (short_id, title, description, structure, points)
+values ('tempo_w_gate', 'Пять кругов', 'Пять кругов на время: 8 бёрпи, 15 приседаний, 10 отжиманий, 15 подъёмов корпуса. Без отдыха между кругами — отдых ты выбираешь сам, и в этом весь смысл замера. Лимит 15 минут. Это единственная тренировка курса, которая никогда не меняется: ни от твоего уровня, ни от выбора «полегче / посложнее». Ты увидишь её четыре раза — на первой, третьей, шестой и восьмой неделе — и каждый раз сравнишь время с прошлым.
+
+ПРИМЕЧАНИЕ ‼️ 11 минут — отличный результат. 🎯 цель уложиться в 15.',
+  '{"sections":[{"kind":"warmup","blockType":"warmup","format":"circuit","sets":1,"setsField":"sets","title":"Разминка: суставная гимнастика","titleEn":"Warm-up: joint mobility","description":"Обязательно перед каждой тренировкой, и на этом курсе особенно: работа плотная, суставы должны быть готовы заранее. Сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы. Спокойный темп, амплитуда растёт постепенно. Разминка не входит в тренировку — это подготовка.","descriptionEn":"Mandatory before every session, and on this course especially: the work is dense, so the joints have to be ready in advance. Top to bottom: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles. Easy pace, the range grows gradually. The warm-up is not part of the workout — it is preparation.","scalable":false,"blockId":"gate_warmup","items":[{"exerciseId":"neck_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"arm_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"elbow_wrist_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"side_bend","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"hip_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"leg_swing","unit":"reps","target":6,"perSide":true,"restAfterSec":0},{"exerciseId":"knee_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"ankle_circles","unit":"seconds","target":15,"perSide":true,"restAfterSec":0},{"exerciseId":"squat_to_stand","unit":"reps","target":5,"restAfterSec":0}]},{"kind":"main","blockType":"metcon","format":"fortime","sets":5,"setsField":"sets","durationSec":900,"restBetweenRoundsSec":0,"title":"5 кругов на время","titleEn":"5 rounds for time","description":"Между кругами не останавливаемся специально — переходим к следующему движению. Не успеваешь в 15 минут — записывай, сколько успел: в следующий раз сравнишь по кругам.","descriptionEn":"Do not stop between rounds on purpose — move to the next movement. Not done inside 15 minutes? Log how far you got: next time you compare by rounds.","scalable":false,"blockId":"gate_main","items":[{"exerciseId":"burpee","unit":"reps","target":8,"restAfterSec":0},{"exerciseId":"air_squat","unit":"reps","target":15,"restAfterSec":0},{"exerciseId":"push_up","unit":"reps","target":10,"restAfterSec":0},{"exerciseId":"sit_up","unit":"reps","target":15,"restAfterSec":0}]},{"kind":"cooldown","blockType":"cooldown","format":"sets","sets":1,"setsField":"sets","title":"Заминка и растяжка","titleEn":"Cool-down and stretch","description":"Дыши медленно, тяни до приятного натяжения, не через боль. Потом отметь в приложении, как было: усилие, что далось легко, что оказалось тяжёлым. На этом курсе записи важнее обычного — отдых между подходами сокращается каждые две недели, и по ним ты увидишь, успевает ли тело за этим.","descriptionEn":"Breathe slowly, stretch to a pleasant pull, never into pain. Then record in the app how it went: the effort, what felt easy, what turned out hard. On this course those notes matter more than usual — the rest between sets shrinks every two weeks, and they are how you see whether your body is keeping up.","scalable":false,"blockId":"gate_cooldown","items":[{"exerciseId":"cat_cow","unit":"reps","target":6,"restAfterSec":0},{"exerciseId":"quad_stretch","unit":"seconds","target":30,"perSide":true,"restAfterSec":0},{"exerciseId":"hamstring_stretch","unit":"seconds","target":25,"perSide":true,"restAfterSec":0},{"exerciseId":"hip_flexor_stretch","unit":"seconds","target":20,"perSide":true,"restAfterSec":0},{"exerciseId":"child_pose","unit":"seconds","target":45,"restAfterSec":0}]}]}'::jsonb, 130)
+on conflict (short_id) do update set
+  title = excluded.title,
+  description = excluded.description,
+  structure = excluded.structure,
+  points = excluded.points,
+  updated_at = now();
+
+insert into public.custom_workouts (short_id, title, description, structure, points)
+values ('tempo_w_strength_a', 'Сила без паузы A', 'Три подхода из четырёх движений: выпады назад, отжимания, румынская тяга на одной ноге, лодочка. Внутри подхода отдых 20 секунд, между подходами — 90. Эти 90 секунд — единственное, что будет меняться за курс: через две недели их станет 75, ещё через две — 60. Движения и повторы останутся, а времени между ними будет меньше. Поэтому здесь не нужно спешить: техника сейчас, плотность потом.
+
+ПРИМЕЧАНИЕ ‼️ Если к третьему подходу техника ломается — бери «полегче» на следующей тренировке. 🎯 цель — три ровных подхода.',
+  '{"sections":[{"kind":"warmup","blockType":"warmup","format":"circuit","sets":1,"setsField":"sets","title":"Разминка: суставная гимнастика","titleEn":"Warm-up: joint mobility","description":"Обязательно перед каждой тренировкой, и на этом курсе особенно: работа плотная, суставы должны быть готовы заранее. Сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы. Спокойный темп, амплитуда растёт постепенно. Разминка не входит в тренировку — это подготовка.","descriptionEn":"Mandatory before every session, and on this course especially: the work is dense, so the joints have to be ready in advance. Top to bottom: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles. Easy pace, the range grows gradually. The warm-up is not part of the workout — it is preparation.","scalable":false,"blockId":"sa_warmup","items":[{"exerciseId":"neck_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"arm_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"elbow_wrist_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"side_bend","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"hip_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"leg_swing","unit":"reps","target":6,"perSide":true,"restAfterSec":0},{"exerciseId":"knee_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"ankle_circles","unit":"seconds","target":15,"perSide":true,"restAfterSec":0},{"exerciseId":"squat_to_stand","unit":"reps","target":5,"restAfterSec":0}]},{"kind":"main","blockType":"strength","format":"sets","sets":3,"setsField":"sets","restBetweenSetsSec":90,"title":"3 подхода · отдых 90 с","titleEn":"3 sets · 90 s rest","description":"Внутри подхода отдых 20 секунд, между подходами полторы минуты. Считай их — они будут короче.","descriptionEn":"Twenty seconds of rest inside the set, a minute and a half between sets. Count them — they will get shorter.","scalable":true,"blockId":"sa_main","items":[{"exerciseId":"reverse_lunge","unit":"reps","target":14,"restAfterSec":20,"note":"Считаем в сумме на две ноги. Шаг назад, колено мягко к полу","noteEn":"Counted as the total for both legs. Step back, knee softly to the floor"},{"exerciseId":"push_up","unit":"reps","target":10,"restAfterSec":20,"note":"Корпус одной линией, локти вдоль тела, грудь до пола","noteEn":"Body in one line, elbows close, chest to the floor"},{"exerciseId":"single_leg_rdl","unit":"reps","target":6,"perSide":true,"restAfterSec":20,"note":"Таз назад, спина ровная, опорное колено чуть мягкое. Медленно — это про контроль","noteEn":"Hips back, back flat, the standing knee soft. Slowly — this one is about control"},{"exerciseId":"hollow_hold","unit":"seconds","target":25,"restAfterSec":0,"note":"Поясница прижата к полу. Не держится — согни колени и подними руки","noteEn":"Lower back pressed into the floor. Losing it? Bend the knees and raise the arms"}]},{"kind":"cooldown","blockType":"cooldown","format":"sets","sets":1,"setsField":"sets","title":"Заминка и растяжка","titleEn":"Cool-down and stretch","description":"Дыши медленно, тяни до приятного натяжения, не через боль. Потом отметь в приложении, как было: усилие, что далось легко, что оказалось тяжёлым. На этом курсе записи важнее обычного — отдых между подходами сокращается каждые две недели, и по ним ты увидишь, успевает ли тело за этим.","descriptionEn":"Breathe slowly, stretch to a pleasant pull, never into pain. Then record in the app how it went: the effort, what felt easy, what turned out hard. On this course those notes matter more than usual — the rest between sets shrinks every two weeks, and they are how you see whether your body is keeping up.","scalable":false,"blockId":"sa_cooldown","items":[{"exerciseId":"cat_cow","unit":"reps","target":6,"restAfterSec":0},{"exerciseId":"quad_stretch","unit":"seconds","target":30,"perSide":true,"restAfterSec":0},{"exerciseId":"hamstring_stretch","unit":"seconds","target":25,"perSide":true,"restAfterSec":0},{"exerciseId":"hip_flexor_stretch","unit":"seconds","target":20,"perSide":true,"restAfterSec":0},{"exerciseId":"child_pose","unit":"seconds","target":45,"restAfterSec":0}]}]}'::jsonb, 110)
+on conflict (short_id) do update set
+  title = excluded.title,
+  description = excluded.description,
+  structure = excluded.structure,
+  points = excluded.points,
+  updated_at = now();
+
+insert into public.custom_workouts (short_id, title, description, structure, points)
+values ('tempo_w_strength_b', 'Сила без паузы B', 'Те же четыре места в подходе, движения сложнее: прыжковые выпады вместо шаговых, узкие отжимания вместо обычных, ягодичный мостик на одной ноге, боковая планка. Отдых между подходами — 75 секунд вместо 90.
+
+ПРИМЕЧАНИЕ ‼️ Прыжковый выпад считается в сумме на две ноги. Не идёт прыжок — делай шаговый выпад, но не сокращай повторы. 🎯 цель — три подхода без добора отдыха.',
+  '{"sections":[{"kind":"warmup","blockType":"warmup","format":"circuit","sets":1,"setsField":"sets","title":"Разминка: суставная гимнастика","titleEn":"Warm-up: joint mobility","description":"Обязательно перед каждой тренировкой, и на этом курсе особенно: работа плотная, суставы должны быть готовы заранее. Сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы. Спокойный темп, амплитуда растёт постепенно. Разминка не входит в тренировку — это подготовка.","descriptionEn":"Mandatory before every session, and on this course especially: the work is dense, so the joints have to be ready in advance. Top to bottom: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles. Easy pace, the range grows gradually. The warm-up is not part of the workout — it is preparation.","scalable":false,"blockId":"sb_warmup","items":[{"exerciseId":"neck_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"arm_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"elbow_wrist_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"side_bend","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"hip_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"leg_swing","unit":"reps","target":6,"perSide":true,"restAfterSec":0},{"exerciseId":"knee_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"ankle_circles","unit":"seconds","target":15,"perSide":true,"restAfterSec":0},{"exerciseId":"squat_to_stand","unit":"reps","target":5,"restAfterSec":0}]},{"kind":"main","blockType":"strength","format":"sets","sets":3,"setsField":"sets","restBetweenSetsSec":75,"title":"3 подхода · отдых 75 с","titleEn":"3 sets · 75 s rest","description":"Отдых между подходами короче на 15 секунд, чем в первые две недели. Всё остальное на месте.","descriptionEn":"Fifteen seconds less rest between sets than in the first two weeks. Everything else stays.","scalable":true,"blockId":"sb_main","items":[{"exerciseId":"jumping_lunge","unit":"reps","target":14,"restAfterSec":20,"note":"Считаем в сумме на две ноги. Корпус вертикально, смена ног в воздухе","noteEn":"Counted as the total for both legs. Trunk vertical, swap legs in the air"},{"exerciseId":"diamond_push_up","unit":"reps","target":8,"restAfterSec":20,"note":"Кисти ромбом под грудью, локти строго назад. Тяжело — разведи кисти шире","noteEn":"Hands in a diamond under the chest, elbows straight back. Too hard? Widen the hands"},{"exerciseId":"single_leg_glute_bridge","unit":"reps","target":8,"perSide":true,"restAfterSec":20,"note":"Таз поднимаем ягодицей, а не поясницей. Наверху пауза на счёт","noteEn":"Lift with the glute, not the lower back. Pause at the top for a count"},{"exerciseId":"side_plank","unit":"seconds","target":25,"perSide":true,"restAfterSec":0,"note":"Таз высоко, плечо строго над локтем","noteEn":"Hips high, shoulder directly over the elbow"}]},{"kind":"cooldown","blockType":"cooldown","format":"sets","sets":1,"setsField":"sets","title":"Заминка и растяжка","titleEn":"Cool-down and stretch","description":"Дыши медленно, тяни до приятного натяжения, не через боль. Потом отметь в приложении, как было: усилие, что далось легко, что оказалось тяжёлым. На этом курсе записи важнее обычного — отдых между подходами сокращается каждые две недели, и по ним ты увидишь, успевает ли тело за этим.","descriptionEn":"Breathe slowly, stretch to a pleasant pull, never into pain. Then record in the app how it went: the effort, what felt easy, what turned out hard. On this course those notes matter more than usual — the rest between sets shrinks every two weeks, and they are how you see whether your body is keeping up.","scalable":false,"blockId":"sb_cooldown","items":[{"exerciseId":"cat_cow","unit":"reps","target":6,"restAfterSec":0},{"exerciseId":"quad_stretch","unit":"seconds","target":30,"perSide":true,"restAfterSec":0},{"exerciseId":"hamstring_stretch","unit":"seconds","target":25,"perSide":true,"restAfterSec":0},{"exerciseId":"hip_flexor_stretch","unit":"seconds","target":20,"perSide":true,"restAfterSec":0},{"exerciseId":"child_pose","unit":"seconds","target":45,"restAfterSec":0}]}]}'::jsonb, 115)
+on conflict (short_id) do update set
+  title = excluded.title,
+  description = excluded.description,
+  structure = excluded.structure,
+  points = excluded.points,
+  updated_at = now();
+
+insert into public.custom_workouts (short_id, title, description, structure, points)
+values ('tempo_w_strength_c', 'Сила без паузы C', 'Финальный вариант: прыжковые выпады, отжимания уголком, румынская тяга на одной ноге, складка. Отдых внутри подхода 15 секунд, между подходами — минута. Это на треть меньше, чем на первой неделе, при том же объёме работы. Если ты дошёл сюда и держишь технику — курс сделал ровно то, для чего он есть.
+
+ПРИМЕЧАНИЕ ‼️ Минуты не хватает — досчитай до 75 и не вини себя, но запиши это. 🎯 цель — три подхода ровно по минуте.',
+  '{"sections":[{"kind":"warmup","blockType":"warmup","format":"circuit","sets":1,"setsField":"sets","title":"Разминка: суставная гимнастика","titleEn":"Warm-up: joint mobility","description":"Обязательно перед каждой тренировкой, и на этом курсе особенно: работа плотная, суставы должны быть готовы заранее. Сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы. Спокойный темп, амплитуда растёт постепенно. Разминка не входит в тренировку — это подготовка.","descriptionEn":"Mandatory before every session, and on this course especially: the work is dense, so the joints have to be ready in advance. Top to bottom: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles. Easy pace, the range grows gradually. The warm-up is not part of the workout — it is preparation.","scalable":false,"blockId":"sc_warmup","items":[{"exerciseId":"neck_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"arm_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"elbow_wrist_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"side_bend","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"hip_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"leg_swing","unit":"reps","target":6,"perSide":true,"restAfterSec":0},{"exerciseId":"knee_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"ankle_circles","unit":"seconds","target":15,"perSide":true,"restAfterSec":0},{"exerciseId":"squat_to_stand","unit":"reps","target":5,"restAfterSec":0}]},{"kind":"main","blockType":"strength","format":"sets","sets":3,"setsField":"sets","restBetweenSetsSec":60,"title":"3 подхода · отдых 60 с","titleEn":"3 sets · 60 s rest","description":"Отдых внутри подхода 15 секунд, между подходами минута. Плотность, ради которой был весь курс.","descriptionEn":"Fifteen seconds inside the set, a minute between sets. The density the whole course was for.","scalable":true,"blockId":"sc_main","items":[{"exerciseId":"jumping_lunge","unit":"reps","target":16,"restAfterSec":15,"note":"Считаем в сумме на две ноги. Корпус вертикально, смена ног в воздухе","noteEn":"Counted as the total for both legs. Trunk vertical, swap legs in the air"},{"exerciseId":"pike_push_up","unit":"reps","target":8,"restAfterSec":15,"note":"Таз высоко, макушка к полу между кистями, локти назад","noteEn":"Hips high, crown of the head to the floor between the hands, elbows back"},{"exerciseId":"single_leg_rdl","unit":"reps","target":8,"perSide":true,"restAfterSec":15,"note":"Таз назад, спина ровная, опорное колено чуть мягкое. Медленно — это про контроль","noteEn":"Hips back, back flat, the standing knee soft. Slowly — this one is about control"},{"exerciseId":"v_up","unit":"reps","target":12,"restAfterSec":0,"note":"Складываемся одновременно руками и ногами, не тянем себя за шею","noteEn":"Fold arms and legs together, do not pull on your neck"}]},{"kind":"cooldown","blockType":"cooldown","format":"sets","sets":1,"setsField":"sets","title":"Заминка и растяжка","titleEn":"Cool-down and stretch","description":"Дыши медленно, тяни до приятного натяжения, не через боль. Потом отметь в приложении, как было: усилие, что далось легко, что оказалось тяжёлым. На этом курсе записи важнее обычного — отдых между подходами сокращается каждые две недели, и по ним ты увидишь, успевает ли тело за этим.","descriptionEn":"Breathe slowly, stretch to a pleasant pull, never into pain. Then record in the app how it went: the effort, what felt easy, what turned out hard. On this course those notes matter more than usual — the rest between sets shrinks every two weeks, and they are how you see whether your body is keeping up.","scalable":false,"blockId":"sc_cooldown","items":[{"exerciseId":"cat_cow","unit":"reps","target":6,"restAfterSec":0},{"exerciseId":"quad_stretch","unit":"seconds","target":30,"perSide":true,"restAfterSec":0},{"exerciseId":"hamstring_stretch","unit":"seconds","target":25,"perSide":true,"restAfterSec":0},{"exerciseId":"hip_flexor_stretch","unit":"seconds","target":20,"perSide":true,"restAfterSec":0},{"exerciseId":"child_pose","unit":"seconds","target":45,"restAfterSec":0}]}]}'::jsonb, 120)
+on conflict (short_id) do update set
+  title = excluded.title,
+  description = excluded.description,
+  structure = excluded.structure,
+  points = excluded.points,
+  updated_at = now();
+
+insert into public.custom_workouts (short_id, title, description, structure, points)
+values ('tempo_w_ladder_a', 'Лестница A', 'Пятнадцать минут, каждую минуту одно задание. Число растёт, пока движение не сменится: приседания, скалолаз, отжимания, конькобежец, бёрпи. Сделал — остаток минуты твой. Не успел в минуту — это сигнал, что верх лестницы уже близко: доделай и иди дальше, но запиши, на какой минуте это случилось.
+
+ПРИМЕЧАНИЕ ‼️ Если работа занимает больше 45 секунд, в следующем движении начинай с нижней ступени. 🎯 цель — дойти до бёрпи, не выпав из минуты.',
+  '{"sections":[{"kind":"warmup","blockType":"warmup","format":"circuit","sets":1,"setsField":"sets","title":"Разминка: суставная гимнастика","titleEn":"Warm-up: joint mobility","description":"Обязательно перед каждой тренировкой, и на этом курсе особенно: работа плотная, суставы должны быть готовы заранее. Сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы. Спокойный темп, амплитуда растёт постепенно. Разминка не входит в тренировку — это подготовка.","descriptionEn":"Mandatory before every session, and on this course especially: the work is dense, so the joints have to be ready in advance. Top to bottom: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles. Easy pace, the range grows gradually. The warm-up is not part of the workout — it is preparation.","scalable":false,"blockId":"la_warmup","items":[{"exerciseId":"neck_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"arm_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"elbow_wrist_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"side_bend","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"hip_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"leg_swing","unit":"reps","target":6,"perSide":true,"restAfterSec":0},{"exerciseId":"knee_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"ankle_circles","unit":"seconds","target":15,"perSide":true,"restAfterSec":0},{"exerciseId":"squat_to_stand","unit":"reps","target":5,"restAfterSec":0}]},{"kind":"main","blockType":"metcon","format":"emom","sets":15,"setsField":"rounds","title":"EMOM 15 · лестница","titleEn":"EMOM 15 · ladder","description":"Каждую минуту новое задание из списка, сверху вниз. Остаток минуты — отдых.","descriptionEn":"A new task from the list every minute, top to bottom. The rest of the minute is rest.","scalable":true,"blockId":"la_emom","items":[{"exerciseId":"air_squat","unit":"reps","target":8,"restAfterSec":0,"note":"Пятки на полу, колени в стороны, наверху выпрямляемся полностью","noteEn":"Heels down, knees out, full extension at the top"},{"exerciseId":"air_squat","unit":"reps","target":10,"restAfterSec":0,"note":"Пятки на полу, колени в стороны, наверху выпрямляемся полностью","noteEn":"Heels down, knees out, full extension at the top"},{"exerciseId":"air_squat","unit":"reps","target":12,"restAfterSec":0,"note":"Пятки на полу, колени в стороны, наверху выпрямляемся полностью","noteEn":"Heels down, knees out, full extension at the top"},{"exerciseId":"air_squat","unit":"reps","target":14,"restAfterSec":0,"note":"Пятки на полу, колени в стороны, наверху выпрямляемся полностью","noteEn":"Heels down, knees out, full extension at the top"},{"exerciseId":"mountain_climber","unit":"reps","target":20,"restAfterSec":0,"note":"Плечи над кистями, таз не задираем. Каждое колено — повтор","noteEn":"Shoulders over the wrists, hips not piked. Every knee drive is a rep"},{"exerciseId":"mountain_climber","unit":"reps","target":24,"restAfterSec":0,"note":"Плечи над кистями, таз не задираем. Каждое колено — повтор","noteEn":"Shoulders over the wrists, hips not piked. Every knee drive is a rep"},{"exerciseId":"mountain_climber","unit":"reps","target":28,"restAfterSec":0,"note":"Плечи над кистями, таз не задираем. Каждое колено — повтор","noteEn":"Shoulders over the wrists, hips not piked. Every knee drive is a rep"},{"exerciseId":"mountain_climber","unit":"reps","target":32,"restAfterSec":0,"note":"Плечи над кистями, таз не задираем. Каждое колено — повтор","noteEn":"Shoulders over the wrists, hips not piked. Every knee drive is a rep"},{"exerciseId":"push_up","unit":"reps","target":6,"restAfterSec":0,"note":"Корпус одной линией, локти вдоль тела, грудь до пола","noteEn":"Body in one line, elbows close, chest to the floor"},{"exerciseId":"push_up","unit":"reps","target":8,"restAfterSec":0,"note":"Корпус одной линией, локти вдоль тела, грудь до пола","noteEn":"Body in one line, elbows close, chest to the floor"},{"exerciseId":"push_up","unit":"reps","target":10,"restAfterSec":0,"note":"Корпус одной линией, локти вдоль тела, грудь до пола","noteEn":"Body in one line, elbows close, chest to the floor"},{"exerciseId":"push_up","unit":"reps","target":12,"restAfterSec":0,"note":"Корпус одной линией, локти вдоль тела, грудь до пола","noteEn":"Body in one line, elbows close, chest to the floor"},{"exerciseId":"skater","unit":"reps","target":16,"restAfterSec":0,"note":"Считаем в сумме. Прыжок в сторону, приземление на одну ногу с паузой","noteEn":"Counted as the total. Jump sideways, land on one leg and pause"},{"exerciseId":"skater","unit":"reps","target":20,"restAfterSec":0,"note":"Считаем в сумме. Прыжок в сторону, приземление на одну ногу с паузой","noteEn":"Counted as the total. Jump sideways, land on one leg and pause"},{"exerciseId":"skater","unit":"reps","target":24,"restAfterSec":0,"note":"Считаем в сумме. Прыжок в сторону, приземление на одну ногу с паузой","noteEn":"Counted as the total. Jump sideways, land on one leg and pause"},{"exerciseId":"skater","unit":"reps","target":28,"restAfterSec":0,"note":"Считаем в сумме. Прыжок в сторону, приземление на одну ногу с паузой","noteEn":"Counted as the total. Jump sideways, land on one leg and pause"},{"exerciseId":"burpee","unit":"reps","target":5,"restAfterSec":0,"note":"Грудь до пола, наверху полное выпрямление. Темп — такой, который держится до конца","noteEn":"Chest to the floor, full extension at the top. A pace you can hold to the end"},{"exerciseId":"burpee","unit":"reps","target":6,"restAfterSec":0,"note":"Грудь до пола, наверху полное выпрямление. Темп — такой, который держится до конца","noteEn":"Chest to the floor, full extension at the top. A pace you can hold to the end"},{"exerciseId":"burpee","unit":"reps","target":7,"restAfterSec":0,"note":"Грудь до пола, наверху полное выпрямление. Темп — такой, который держится до конца","noteEn":"Chest to the floor, full extension at the top. A pace you can hold to the end"}]},{"kind":"cooldown","blockType":"cooldown","format":"sets","sets":1,"setsField":"sets","title":"Заминка и растяжка","titleEn":"Cool-down and stretch","description":"Дыши медленно, тяни до приятного натяжения, не через боль. Потом отметь в приложении, как было: усилие, что далось легко, что оказалось тяжёлым. На этом курсе записи важнее обычного — отдых между подходами сокращается каждые две недели, и по ним ты увидишь, успевает ли тело за этим.","descriptionEn":"Breathe slowly, stretch to a pleasant pull, never into pain. Then record in the app how it went: the effort, what felt easy, what turned out hard. On this course those notes matter more than usual — the rest between sets shrinks every two weeks, and they are how you see whether your body is keeping up.","scalable":false,"blockId":"la_cooldown","items":[{"exerciseId":"cat_cow","unit":"reps","target":6,"restAfterSec":0},{"exerciseId":"quad_stretch","unit":"seconds","target":30,"perSide":true,"restAfterSec":0},{"exerciseId":"hamstring_stretch","unit":"seconds","target":25,"perSide":true,"restAfterSec":0},{"exerciseId":"hip_flexor_stretch","unit":"seconds","target":20,"perSide":true,"restAfterSec":0},{"exerciseId":"child_pose","unit":"seconds","target":45,"restAfterSec":0}]}]}'::jsonb, 115)
+on conflict (short_id) do update set
+  title = excluded.title,
+  description = excluded.description,
+  structure = excluded.structure,
+  points = excluded.points,
+  updated_at = now();
+
+insert into public.custom_workouts (short_id, title, description, structure, points)
+values ('tempo_w_ladder_b', 'Лестница B', 'Пятнадцать минут по той же схеме, движения сложнее: прыжковый присед, планка с подъёмом на руки, отжимания уголком, конькобежец, бёрпи. Планка с подъёмом — самое медленное движение лестницы, ступени в ней короткие не случайно.
+
+ПРИМЕЧАНИЕ ‼️ Плечи горят раньше ног — это нормально и так задумано. 🎯 цель — не пропустить ни одной минуты.',
+  '{"sections":[{"kind":"warmup","blockType":"warmup","format":"circuit","sets":1,"setsField":"sets","title":"Разминка: суставная гимнастика","titleEn":"Warm-up: joint mobility","description":"Обязательно перед каждой тренировкой, и на этом курсе особенно: работа плотная, суставы должны быть готовы заранее. Сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы. Спокойный темп, амплитуда растёт постепенно. Разминка не входит в тренировку — это подготовка.","descriptionEn":"Mandatory before every session, and on this course especially: the work is dense, so the joints have to be ready in advance. Top to bottom: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles. Easy pace, the range grows gradually. The warm-up is not part of the workout — it is preparation.","scalable":false,"blockId":"lb_warmup","items":[{"exerciseId":"neck_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"arm_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"elbow_wrist_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"side_bend","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"hip_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"leg_swing","unit":"reps","target":6,"perSide":true,"restAfterSec":0},{"exerciseId":"knee_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"ankle_circles","unit":"seconds","target":15,"perSide":true,"restAfterSec":0},{"exerciseId":"squat_to_stand","unit":"reps","target":5,"restAfterSec":0}]},{"kind":"main","blockType":"metcon","format":"emom","sets":15,"setsField":"rounds","title":"EMOM 15 · лестница","titleEn":"EMOM 15 · ladder","description":"Каждую минуту новое задание из списка, сверху вниз. Остаток минуты — отдых.","descriptionEn":"A new task from the list every minute, top to bottom. The rest of the minute is rest.","scalable":true,"blockId":"lb_emom","items":[{"exerciseId":"jump_squat","unit":"reps","target":8,"restAfterSec":0,"note":"Приземляемся мягко через носок в пятку, колено не заваливаем внутрь","noteEn":"Land softly, toe to heel, do not let the knee cave in"},{"exerciseId":"jump_squat","unit":"reps","target":10,"restAfterSec":0,"note":"Приземляемся мягко через носок в пятку, колено не заваливаем внутрь","noteEn":"Land softly, toe to heel, do not let the knee cave in"},{"exerciseId":"jump_squat","unit":"reps","target":12,"restAfterSec":0,"note":"Приземляемся мягко через носок в пятку, колено не заваливаем внутрь","noteEn":"Land softly, toe to heel, do not let the knee cave in"},{"exerciseId":"jump_squat","unit":"reps","target":14,"restAfterSec":0,"note":"Приземляемся мягко через носок в пятку, колено не заваливаем внутрь","noteEn":"Land softly, toe to heel, do not let the knee cave in"},{"exerciseId":"up_down_plank","unit":"reps","target":5,"restAfterSec":0,"note":"Таз не раскачиваем: опускаемся и встаём, как будто на голове стакан","noteEn":"Do not let the hips swing: go down and up as if balancing a glass on your head"},{"exerciseId":"up_down_plank","unit":"reps","target":6,"restAfterSec":0,"note":"Таз не раскачиваем: опускаемся и встаём, как будто на голове стакан","noteEn":"Do not let the hips swing: go down and up as if balancing a glass on your head"},{"exerciseId":"up_down_plank","unit":"reps","target":7,"restAfterSec":0,"note":"Таз не раскачиваем: опускаемся и встаём, как будто на голове стакан","noteEn":"Do not let the hips swing: go down and up as if balancing a glass on your head"},{"exerciseId":"up_down_plank","unit":"reps","target":8,"restAfterSec":0,"note":"Таз не раскачиваем: опускаемся и встаём, как будто на голове стакан","noteEn":"Do not let the hips swing: go down and up as if balancing a glass on your head"},{"exerciseId":"pike_push_up","unit":"reps","target":6,"restAfterSec":0,"note":"Таз высоко, макушка к полу между кистями, локти назад","noteEn":"Hips high, crown of the head to the floor between the hands, elbows back"},{"exerciseId":"pike_push_up","unit":"reps","target":7,"restAfterSec":0,"note":"Таз высоко, макушка к полу между кистями, локти назад","noteEn":"Hips high, crown of the head to the floor between the hands, elbows back"},{"exerciseId":"pike_push_up","unit":"reps","target":8,"restAfterSec":0,"note":"Таз высоко, макушка к полу между кистями, локти назад","noteEn":"Hips high, crown of the head to the floor between the hands, elbows back"},{"exerciseId":"pike_push_up","unit":"reps","target":9,"restAfterSec":0,"note":"Таз высоко, макушка к полу между кистями, локти назад","noteEn":"Hips high, crown of the head to the floor between the hands, elbows back"},{"exerciseId":"skater","unit":"reps","target":18,"restAfterSec":0,"note":"Считаем в сумме. Прыжок в сторону, приземление на одну ногу с паузой","noteEn":"Counted as the total. Jump sideways, land on one leg and pause"},{"exerciseId":"skater","unit":"reps","target":22,"restAfterSec":0,"note":"Считаем в сумме. Прыжок в сторону, приземление на одну ногу с паузой","noteEn":"Counted as the total. Jump sideways, land on one leg and pause"},{"exerciseId":"skater","unit":"reps","target":26,"restAfterSec":0,"note":"Считаем в сумме. Прыжок в сторону, приземление на одну ногу с паузой","noteEn":"Counted as the total. Jump sideways, land on one leg and pause"},{"exerciseId":"skater","unit":"reps","target":28,"restAfterSec":0,"note":"Считаем в сумме. Прыжок в сторону, приземление на одну ногу с паузой","noteEn":"Counted as the total. Jump sideways, land on one leg and pause"},{"exerciseId":"burpee","unit":"reps","target":5,"restAfterSec":0,"note":"Грудь до пола, наверху полное выпрямление. Темп — такой, который держится до конца","noteEn":"Chest to the floor, full extension at the top. A pace you can hold to the end"},{"exerciseId":"burpee","unit":"reps","target":6,"restAfterSec":0,"note":"Грудь до пола, наверху полное выпрямление. Темп — такой, который держится до конца","noteEn":"Chest to the floor, full extension at the top. A pace you can hold to the end"},{"exerciseId":"burpee","unit":"reps","target":7,"restAfterSec":0,"note":"Грудь до пола, наверху полное выпрямление. Темп — такой, который держится до конца","noteEn":"Chest to the floor, full extension at the top. A pace you can hold to the end"}]},{"kind":"cooldown","blockType":"cooldown","format":"sets","sets":1,"setsField":"sets","title":"Заминка и растяжка","titleEn":"Cool-down and stretch","description":"Дыши медленно, тяни до приятного натяжения, не через боль. Потом отметь в приложении, как было: усилие, что далось легко, что оказалось тяжёлым. На этом курсе записи важнее обычного — отдых между подходами сокращается каждые две недели, и по ним ты увидишь, успевает ли тело за этим.","descriptionEn":"Breathe slowly, stretch to a pleasant pull, never into pain. Then record in the app how it went: the effort, what felt easy, what turned out hard. On this course those notes matter more than usual — the rest between sets shrinks every two weeks, and they are how you see whether your body is keeping up.","scalable":false,"blockId":"lb_cooldown","items":[{"exerciseId":"cat_cow","unit":"reps","target":6,"restAfterSec":0},{"exerciseId":"quad_stretch","unit":"seconds","target":30,"perSide":true,"restAfterSec":0},{"exerciseId":"hamstring_stretch","unit":"seconds","target":25,"perSide":true,"restAfterSec":0},{"exerciseId":"hip_flexor_stretch","unit":"seconds","target":20,"perSide":true,"restAfterSec":0},{"exerciseId":"child_pose","unit":"seconds","target":45,"restAfterSec":0}]}]}'::jsonb, 120)
+on conflict (short_id) do update set
+  title = excluded.title,
+  description = excluded.description,
+  structure = excluded.structure,
+  points = excluded.points,
+  updated_at = now();
+
+insert into public.custom_workouts (short_id, title, description, structure, points)
+values ('tempo_w_ladder_c', 'Лестница C', 'Последний вариант: прыжковые выпады, складка, узкие отжимания, прыжок с коленями к груди, бёрпи. Все пять — те, которых не было в начале курса. Если ты проходишь эту пятнадцатиминутку целиком, ты в той форме, ради которой был курс.
+
+ПРИМЕЧАНИЕ ‼️ Прыжок с коленями к груди — тихий. Стало шумно — закончи ступень раньше. 🎯 цель — пятнадцать минут без пропусков.',
+  '{"sections":[{"kind":"warmup","blockType":"warmup","format":"circuit","sets":1,"setsField":"sets","title":"Разминка: суставная гимнастика","titleEn":"Warm-up: joint mobility","description":"Обязательно перед каждой тренировкой, и на этом курсе особенно: работа плотная, суставы должны быть готовы заранее. Сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы. Спокойный темп, амплитуда растёт постепенно. Разминка не входит в тренировку — это подготовка.","descriptionEn":"Mandatory before every session, and on this course especially: the work is dense, so the joints have to be ready in advance. Top to bottom: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles. Easy pace, the range grows gradually. The warm-up is not part of the workout — it is preparation.","scalable":false,"blockId":"lc_warmup","items":[{"exerciseId":"neck_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"arm_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"elbow_wrist_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"side_bend","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"hip_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"leg_swing","unit":"reps","target":6,"perSide":true,"restAfterSec":0},{"exerciseId":"knee_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"ankle_circles","unit":"seconds","target":15,"perSide":true,"restAfterSec":0},{"exerciseId":"squat_to_stand","unit":"reps","target":5,"restAfterSec":0}]},{"kind":"main","blockType":"metcon","format":"emom","sets":15,"setsField":"rounds","title":"EMOM 15 · лестница","titleEn":"EMOM 15 · ladder","description":"Каждую минуту новое задание из списка, сверху вниз. Остаток минуты — отдых.","descriptionEn":"A new task from the list every minute, top to bottom. The rest of the minute is rest.","scalable":true,"blockId":"lc_emom","items":[{"exerciseId":"jumping_lunge","unit":"reps","target":10,"restAfterSec":0,"note":"Считаем в сумме на две ноги. Корпус вертикально, смена ног в воздухе","noteEn":"Counted as the total for both legs. Trunk vertical, swap legs in the air"},{"exerciseId":"jumping_lunge","unit":"reps","target":12,"restAfterSec":0,"note":"Считаем в сумме на две ноги. Корпус вертикально, смена ног в воздухе","noteEn":"Counted as the total for both legs. Trunk vertical, swap legs in the air"},{"exerciseId":"jumping_lunge","unit":"reps","target":14,"restAfterSec":0,"note":"Считаем в сумме на две ноги. Корпус вертикально, смена ног в воздухе","noteEn":"Counted as the total for both legs. Trunk vertical, swap legs in the air"},{"exerciseId":"jumping_lunge","unit":"reps","target":16,"restAfterSec":0,"note":"Считаем в сумме на две ноги. Корпус вертикально, смена ног в воздухе","noteEn":"Counted as the total for both legs. Trunk vertical, swap legs in the air"},{"exerciseId":"v_up","unit":"reps","target":8,"restAfterSec":0,"note":"Складываемся одновременно руками и ногами, не тянем себя за шею","noteEn":"Fold arms and legs together, do not pull on your neck"},{"exerciseId":"v_up","unit":"reps","target":10,"restAfterSec":0,"note":"Складываемся одновременно руками и ногами, не тянем себя за шею","noteEn":"Fold arms and legs together, do not pull on your neck"},{"exerciseId":"v_up","unit":"reps","target":12,"restAfterSec":0,"note":"Складываемся одновременно руками и ногами, не тянем себя за шею","noteEn":"Fold arms and legs together, do not pull on your neck"},{"exerciseId":"v_up","unit":"reps","target":13,"restAfterSec":0,"note":"Складываемся одновременно руками и ногами, не тянем себя за шею","noteEn":"Fold arms and legs together, do not pull on your neck"},{"exerciseId":"diamond_push_up","unit":"reps","target":5,"restAfterSec":0,"note":"Кисти ромбом под грудью, локти строго назад. Тяжело — разведи кисти шире","noteEn":"Hands in a diamond under the chest, elbows straight back. Too hard? Widen the hands"},{"exerciseId":"diamond_push_up","unit":"reps","target":6,"restAfterSec":0,"note":"Кисти ромбом под грудью, локти строго назад. Тяжело — разведи кисти шире","noteEn":"Hands in a diamond under the chest, elbows straight back. Too hard? Widen the hands"},{"exerciseId":"diamond_push_up","unit":"reps","target":7,"restAfterSec":0,"note":"Кисти ромбом под грудью, локти строго назад. Тяжело — разведи кисти шире","noteEn":"Hands in a diamond under the chest, elbows straight back. Too hard? Widen the hands"},{"exerciseId":"diamond_push_up","unit":"reps","target":8,"restAfterSec":0,"note":"Кисти ромбом под грудью, локти строго назад. Тяжело — разведи кисти шире","noteEn":"Hands in a diamond under the chest, elbows straight back. Too hard? Widen the hands"},{"exerciseId":"tuck_jump","unit":"reps","target":8,"restAfterSec":0,"note":"Колени к груди, приземление тихое. Стало шумно — останови подход","noteEn":"Knees to the chest, a quiet landing. Gone noisy? End the set"},{"exerciseId":"tuck_jump","unit":"reps","target":10,"restAfterSec":0,"note":"Колени к груди, приземление тихое. Стало шумно — останови подход","noteEn":"Knees to the chest, a quiet landing. Gone noisy? End the set"},{"exerciseId":"tuck_jump","unit":"reps","target":12,"restAfterSec":0,"note":"Колени к груди, приземление тихое. Стало шумно — останови подход","noteEn":"Knees to the chest, a quiet landing. Gone noisy? End the set"},{"exerciseId":"tuck_jump","unit":"reps","target":14,"restAfterSec":0,"note":"Колени к груди, приземление тихое. Стало шумно — останови подход","noteEn":"Knees to the chest, a quiet landing. Gone noisy? End the set"},{"exerciseId":"burpee","unit":"reps","target":5,"restAfterSec":0,"note":"Грудь до пола, наверху полное выпрямление. Темп — такой, который держится до конца","noteEn":"Chest to the floor, full extension at the top. A pace you can hold to the end"},{"exerciseId":"burpee","unit":"reps","target":6,"restAfterSec":0,"note":"Грудь до пола, наверху полное выпрямление. Темп — такой, который держится до конца","noteEn":"Chest to the floor, full extension at the top. A pace you can hold to the end"},{"exerciseId":"burpee","unit":"reps","target":7,"restAfterSec":0,"note":"Грудь до пола, наверху полное выпрямление. Темп — такой, который держится до конца","noteEn":"Chest to the floor, full extension at the top. A pace you can hold to the end"}]},{"kind":"cooldown","blockType":"cooldown","format":"sets","sets":1,"setsField":"sets","title":"Заминка и растяжка","titleEn":"Cool-down and stretch","description":"Дыши медленно, тяни до приятного натяжения, не через боль. Потом отметь в приложении, как было: усилие, что далось легко, что оказалось тяжёлым. На этом курсе записи важнее обычного — отдых между подходами сокращается каждые две недели, и по ним ты увидишь, успевает ли тело за этим.","descriptionEn":"Breathe slowly, stretch to a pleasant pull, never into pain. Then record in the app how it went: the effort, what felt easy, what turned out hard. On this course those notes matter more than usual — the rest between sets shrinks every two weeks, and they are how you see whether your body is keeping up.","scalable":false,"blockId":"lc_cooldown","items":[{"exerciseId":"cat_cow","unit":"reps","target":6,"restAfterSec":0},{"exerciseId":"quad_stretch","unit":"seconds","target":30,"perSide":true,"restAfterSec":0},{"exerciseId":"hamstring_stretch","unit":"seconds","target":25,"perSide":true,"restAfterSec":0},{"exerciseId":"hip_flexor_stretch","unit":"seconds","target":20,"perSide":true,"restAfterSec":0},{"exerciseId":"child_pose","unit":"seconds","target":45,"restAfterSec":0}]}]}'::jsonb, 125)
+on conflict (short_id) do update set
+  title = excluded.title,
+  description = excluded.description,
+  structure = excluded.structure,
+  points = excluded.points,
+  updated_at = now();
+
+insert into public.custom_workouts (short_id, title, description, structure, points)
+values ('tempo_w_cap_a', 'Крышка A', 'Один проход сверху вниз на время, лимит 16 минут: 40 бёрпи, 80 приседаний, 50 отжиманий, 60 подъёмов корпуса, 100 скалолазов. Разбивай как хочешь — по 10, по 20, как удержишь темп. Закрывать не обязательно: не успел в 16 минут — доделай остаток в своём темпе, если хочешь, и запиши, где тебя остановил лимит.
+
+ПРИМЕЧАНИЕ ‼️ Начинать с бёрпи по 20 — самая частая ошибка. 🎯 цель — уложиться в 16 минут.',
+  '{"sections":[{"kind":"warmup","blockType":"warmup","format":"circuit","sets":1,"setsField":"sets","title":"Разминка: суставная гимнастика","titleEn":"Warm-up: joint mobility","description":"Обязательно перед каждой тренировкой, и на этом курсе особенно: работа плотная, суставы должны быть готовы заранее. Сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы. Спокойный темп, амплитуда растёт постепенно. Разминка не входит в тренировку — это подготовка.","descriptionEn":"Mandatory before every session, and on this course especially: the work is dense, so the joints have to be ready in advance. Top to bottom: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles. Easy pace, the range grows gradually. The warm-up is not part of the workout — it is preparation.","scalable":false,"blockId":"ca_warmup","items":[{"exerciseId":"neck_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"arm_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"elbow_wrist_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"side_bend","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"hip_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"leg_swing","unit":"reps","target":6,"perSide":true,"restAfterSec":0},{"exerciseId":"knee_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"ankle_circles","unit":"seconds","target":15,"perSide":true,"restAfterSec":0},{"exerciseId":"squat_to_stand","unit":"reps","target":5,"restAfterSec":0}]},{"kind":"main","blockType":"metcon","format":"fortime","sets":1,"setsField":"sets","durationSec":960,"title":"На время · лимит 16 мин","titleEn":"For time · 16-min cap","description":"Сверху вниз, по одному движению за раз. Следующее начинается, когда закончилось предыдущее.","descriptionEn":"Top to bottom, one movement at a time. The next starts when the last one is done.","scalable":true,"blockId":"ca_main","items":[{"exerciseId":"burpee","unit":"reps","target":40,"restAfterSec":0,"note":"Грудь до пола, наверху полное выпрямление. Темп — такой, который держится до конца","noteEn":"Chest to the floor, full extension at the top. A pace you can hold to the end"},{"exerciseId":"air_squat","unit":"reps","target":80,"restAfterSec":0,"note":"Пятки на полу, колени в стороны, наверху выпрямляемся полностью","noteEn":"Heels down, knees out, full extension at the top"},{"exerciseId":"push_up","unit":"reps","target":50,"restAfterSec":0,"note":"Корпус одной линией, локти вдоль тела, грудь до пола","noteEn":"Body in one line, elbows close, chest to the floor"},{"exerciseId":"sit_up","unit":"reps","target":60,"restAfterSec":0,"note":"Поднимаемся животом, стопы прижаты","noteEn":"Lift with the abdominals, feet pressed down"},{"exerciseId":"mountain_climber","unit":"reps","target":100,"restAfterSec":0,"note":"Плечи над кистями, таз не задираем. Каждое колено — повтор","noteEn":"Shoulders over the wrists, hips not piked. Every knee drive is a rep"}]},{"kind":"cooldown","blockType":"cooldown","format":"sets","sets":1,"setsField":"sets","title":"Заминка и растяжка","titleEn":"Cool-down and stretch","description":"Дыши медленно, тяни до приятного натяжения, не через боль. Потом отметь в приложении, как было: усилие, что далось легко, что оказалось тяжёлым. На этом курсе записи важнее обычного — отдых между подходами сокращается каждые две недели, и по ним ты увидишь, успевает ли тело за этим.","descriptionEn":"Breathe slowly, stretch to a pleasant pull, never into pain. Then record in the app how it went: the effort, what felt easy, what turned out hard. On this course those notes matter more than usual — the rest between sets shrinks every two weeks, and they are how you see whether your body is keeping up.","scalable":false,"blockId":"ca_cooldown","items":[{"exerciseId":"cat_cow","unit":"reps","target":6,"restAfterSec":0},{"exerciseId":"quad_stretch","unit":"seconds","target":30,"perSide":true,"restAfterSec":0},{"exerciseId":"hamstring_stretch","unit":"seconds","target":25,"perSide":true,"restAfterSec":0},{"exerciseId":"hip_flexor_stretch","unit":"seconds","target":20,"perSide":true,"restAfterSec":0},{"exerciseId":"child_pose","unit":"seconds","target":45,"restAfterSec":0}]}]}'::jsonb, 120)
+on conflict (short_id) do update set
+  title = excluded.title,
+  description = excluded.description,
+  structure = excluded.structure,
+  points = excluded.points,
+  updated_at = now();
+
+insert into public.custom_workouts (short_id, title, description, structure, points)
+values ('tempo_w_cap_b', 'Крышка B', 'Тот же формат и тот же лимит, список злее: 45 бёрпи, 70 прыжковых приседаний, 60 отжиманий от стула, 60 складок, 100 конькобежцев. Прыжковый присед в середине — место, где ломается темп: раздели его на пятёрки заранее, а не когда станет тяжело.
+
+ПРИМЕЧАНИЕ ‼️ Стул для отжиманий — без колёсиков и к стене. 🎯 цель — уложиться в 16 минут.',
+  '{"sections":[{"kind":"warmup","blockType":"warmup","format":"circuit","sets":1,"setsField":"sets","title":"Разминка: суставная гимнастика","titleEn":"Warm-up: joint mobility","description":"Обязательно перед каждой тренировкой, и на этом курсе особенно: работа плотная, суставы должны быть готовы заранее. Сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы. Спокойный темп, амплитуда растёт постепенно. Разминка не входит в тренировку — это подготовка.","descriptionEn":"Mandatory before every session, and on this course especially: the work is dense, so the joints have to be ready in advance. Top to bottom: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles. Easy pace, the range grows gradually. The warm-up is not part of the workout — it is preparation.","scalable":false,"blockId":"cb_warmup","items":[{"exerciseId":"neck_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"arm_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"elbow_wrist_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"side_bend","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"hip_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"leg_swing","unit":"reps","target":6,"perSide":true,"restAfterSec":0},{"exerciseId":"knee_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"ankle_circles","unit":"seconds","target":15,"perSide":true,"restAfterSec":0},{"exerciseId":"squat_to_stand","unit":"reps","target":5,"restAfterSec":0}]},{"kind":"main","blockType":"metcon","format":"fortime","sets":1,"setsField":"sets","durationSec":960,"title":"На время · лимит 16 мин","titleEn":"For time · 16-min cap","description":"Сверху вниз, по одному движению за раз. Разбивай на части заранее, а не по факту усталости.","descriptionEn":"Top to bottom, one movement at a time. Plan the breaks in advance, not when the fatigue decides for you.","scalable":true,"blockId":"cb_main","items":[{"exerciseId":"burpee","unit":"reps","target":45,"restAfterSec":0,"note":"Грудь до пола, наверху полное выпрямление. Темп — такой, который держится до конца","noteEn":"Chest to the floor, full extension at the top. A pace you can hold to the end"},{"exerciseId":"jump_squat","unit":"reps","target":70,"restAfterSec":0,"note":"Приземляемся мягко через носок в пятку, колено не заваливаем внутрь","noteEn":"Land softly, toe to heel, do not let the knee cave in"},{"exerciseId":"chair_dip","unit":"reps","target":60,"restAfterSec":0,"note":"Стул без колёсиков, к стене. Плечи вниз от ушей, опускайся до комфортной глубины","noteEn":"A chair without wheels, against the wall. Shoulders down, lower to a comfortable depth"},{"exerciseId":"v_up","unit":"reps","target":60,"restAfterSec":0,"note":"Складываемся одновременно руками и ногами, не тянем себя за шею","noteEn":"Fold arms and legs together, do not pull on your neck"},{"exerciseId":"skater","unit":"reps","target":100,"restAfterSec":0,"note":"Считаем в сумме. Прыжок в сторону, приземление на одну ногу с паузой","noteEn":"Counted as the total. Jump sideways, land on one leg and pause"}]},{"kind":"cooldown","blockType":"cooldown","format":"sets","sets":1,"setsField":"sets","title":"Заминка и растяжка","titleEn":"Cool-down and stretch","description":"Дыши медленно, тяни до приятного натяжения, не через боль. Потом отметь в приложении, как было: усилие, что далось легко, что оказалось тяжёлым. На этом курсе записи важнее обычного — отдых между подходами сокращается каждые две недели, и по ним ты увидишь, успевает ли тело за этим.","descriptionEn":"Breathe slowly, stretch to a pleasant pull, never into pain. Then record in the app how it went: the effort, what felt easy, what turned out hard. On this course those notes matter more than usual — the rest between sets shrinks every two weeks, and they are how you see whether your body is keeping up.","scalable":false,"blockId":"cb_cooldown","items":[{"exerciseId":"cat_cow","unit":"reps","target":6,"restAfterSec":0},{"exerciseId":"quad_stretch","unit":"seconds","target":30,"perSide":true,"restAfterSec":0},{"exerciseId":"hamstring_stretch","unit":"seconds","target":25,"perSide":true,"restAfterSec":0},{"exerciseId":"hip_flexor_stretch","unit":"seconds","target":20,"perSide":true,"restAfterSec":0},{"exerciseId":"child_pose","unit":"seconds","target":45,"restAfterSec":0}]}]}'::jsonb, 125)
+on conflict (short_id) do update set
+  title = excluded.title,
+  description = excluded.description,
+  structure = excluded.structure,
+  points = excluded.points,
+  updated_at = now();
+
+insert into public.custom_workouts (short_id, title, description, structure, points)
+values ('tempo_w_cap_c', 'Крышка C', 'Финальная «крышка»: 50 бёрпи, 80 прыжков с коленями к груди, 60 узких отжиманий, 70 складок, 120 двойных прыжков на скакалке. Нет скакалки — приложение поставит джампинг-джеки, и это честная замена по времени.
+
+ПРИМЕЧАНИЕ ‼️ Это самый длинный список курса, и лимит тот же. Закрыть его — не обязательство, а хороший день. 🎯 цель — дойти до скакалки к двенадцатой минуте.',
+  '{"sections":[{"kind":"warmup","blockType":"warmup","format":"circuit","sets":1,"setsField":"sets","title":"Разминка: суставная гимнастика","titleEn":"Warm-up: joint mobility","description":"Обязательно перед каждой тренировкой, и на этом курсе особенно: работа плотная, суставы должны быть готовы заранее. Сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы. Спокойный темп, амплитуда растёт постепенно. Разминка не входит в тренировку — это подготовка.","descriptionEn":"Mandatory before every session, and on this course especially: the work is dense, so the joints have to be ready in advance. Top to bottom: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles. Easy pace, the range grows gradually. The warm-up is not part of the workout — it is preparation.","scalable":false,"blockId":"cc_warmup","items":[{"exerciseId":"neck_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"arm_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"elbow_wrist_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"side_bend","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"hip_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"leg_swing","unit":"reps","target":6,"perSide":true,"restAfterSec":0},{"exerciseId":"knee_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"ankle_circles","unit":"seconds","target":15,"perSide":true,"restAfterSec":0},{"exerciseId":"squat_to_stand","unit":"reps","target":5,"restAfterSec":0}]},{"kind":"main","blockType":"metcon","format":"fortime","sets":1,"setsField":"sets","durationSec":960,"title":"На время · лимит 16 мин","titleEn":"For time · 16-min cap","description":"Сверху вниз, по одному движению за раз. Последним идёт самое быстрое — оставь на него силы.","descriptionEn":"Top to bottom, one movement at a time. The fastest one comes last — leave something for it.","scalable":true,"blockId":"cc_main","items":[{"exerciseId":"burpee","unit":"reps","target":50,"restAfterSec":0,"note":"Грудь до пола, наверху полное выпрямление. Темп — такой, который держится до конца","noteEn":"Chest to the floor, full extension at the top. A pace you can hold to the end"},{"exerciseId":"tuck_jump","unit":"reps","target":80,"restAfterSec":0,"note":"Колени к груди, приземление тихое. Стало шумно — останови подход","noteEn":"Knees to the chest, a quiet landing. Gone noisy? End the set"},{"exerciseId":"diamond_push_up","unit":"reps","target":60,"restAfterSec":0,"note":"Кисти ромбом под грудью, локти строго назад. Тяжело — разведи кисти шире","noteEn":"Hands in a diamond under the chest, elbows straight back. Too hard? Widen the hands"},{"exerciseId":"v_up","unit":"reps","target":70,"restAfterSec":0,"note":"Складываемся одновременно руками и ногами, не тянем себя за шею","noteEn":"Fold arms and legs together, do not pull on your neck"},{"exerciseId":"double_under","unit":"reps","target":120,"restAfterSec":0,"note":"Прыжок чуть выше обычного, кисти у бёдер. Нет скакалки — приложение заменит на джампинг-джеки","noteEn":"Jump slightly higher than usual, hands by the hips. No rope — the app swaps in jumping jacks"}]},{"kind":"cooldown","blockType":"cooldown","format":"sets","sets":1,"setsField":"sets","title":"Заминка и растяжка","titleEn":"Cool-down and stretch","description":"Дыши медленно, тяни до приятного натяжения, не через боль. Потом отметь в приложении, как было: усилие, что далось легко, что оказалось тяжёлым. На этом курсе записи важнее обычного — отдых между подходами сокращается каждые две недели, и по ним ты увидишь, успевает ли тело за этим.","descriptionEn":"Breathe slowly, stretch to a pleasant pull, never into pain. Then record in the app how it went: the effort, what felt easy, what turned out hard. On this course those notes matter more than usual — the rest between sets shrinks every two weeks, and they are how you see whether your body is keeping up.","scalable":false,"blockId":"cc_cooldown","items":[{"exerciseId":"cat_cow","unit":"reps","target":6,"restAfterSec":0},{"exerciseId":"quad_stretch","unit":"seconds","target":30,"perSide":true,"restAfterSec":0},{"exerciseId":"hamstring_stretch","unit":"seconds","target":25,"perSide":true,"restAfterSec":0},{"exerciseId":"hip_flexor_stretch","unit":"seconds","target":20,"perSide":true,"restAfterSec":0},{"exerciseId":"child_pose","unit":"seconds","target":45,"restAfterSec":0}]}]}'::jsonb, 130)
+on conflict (short_id) do update set
+  title = excluded.title,
+  description = excluded.description,
+  structure = excluded.structure,
+  points = excluded.points,
+  updated_at = now();
+
+insert into public.custom_workouts (short_id, title, description, structure, points)
+values ('tempo_w_rounds_a', 'Круги без отдыха A', 'Пять кругов на время, и между кругами не заложено ничего: закончил подъёмы корпуса — начинай приседания следующего круга. Отдых здесь существует только как твоё решение, и в этом вся тренировка: ровный темп, который держится пять кругов, быстрее рывка и паузы.
+
+ПРИМЕЧАНИЕ ‼️ Первый круг должен ощущаться слишком лёгким. Если нет — ты стартовал слишком быстро. 🎯 цель — пятый круг не медленнее первого больше чем на 30 секунд.',
+  '{"sections":[{"kind":"warmup","blockType":"warmup","format":"circuit","sets":1,"setsField":"sets","title":"Разминка: суставная гимнастика","titleEn":"Warm-up: joint mobility","description":"Обязательно перед каждой тренировкой, и на этом курсе особенно: работа плотная, суставы должны быть готовы заранее. Сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы. Спокойный темп, амплитуда растёт постепенно. Разминка не входит в тренировку — это подготовка.","descriptionEn":"Mandatory before every session, and on this course especially: the work is dense, so the joints have to be ready in advance. Top to bottom: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles. Easy pace, the range grows gradually. The warm-up is not part of the workout — it is preparation.","scalable":false,"blockId":"ra_warmup","items":[{"exerciseId":"neck_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"arm_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"elbow_wrist_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"side_bend","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"hip_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"leg_swing","unit":"reps","target":6,"perSide":true,"restAfterSec":0},{"exerciseId":"knee_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"ankle_circles","unit":"seconds","target":15,"perSide":true,"restAfterSec":0},{"exerciseId":"squat_to_stand","unit":"reps","target":5,"restAfterSec":0}]},{"kind":"main","blockType":"metcon","format":"fortime","sets":5,"setsField":"sets","durationSec":1080,"restBetweenRoundsSec":0,"title":"5 кругов на время · лимит 18 мин","titleEn":"5 rounds for time · 18-min cap","description":"Между кругами ничего не заложено. Паузу берёшь сам и сам за неё платишь временем.","descriptionEn":"Nothing is scheduled between the rounds. You take the pause yourself, and you pay for it on the clock.","scalable":true,"blockId":"ra_main","items":[{"exerciseId":"air_squat","unit":"reps","target":20,"restAfterSec":0,"note":"Пятки на полу, колени в стороны, наверху выпрямляемся полностью","noteEn":"Heels down, knees out, full extension at the top"},{"exerciseId":"push_up","unit":"reps","target":12,"restAfterSec":0,"note":"Корпус одной линией, локти вдоль тела, грудь до пола","noteEn":"Body in one line, elbows close, chest to the floor"},{"exerciseId":"sit_up","unit":"reps","target":20,"restAfterSec":0,"note":"Поднимаемся животом, стопы прижаты","noteEn":"Lift with the abdominals, feet pressed down"},{"exerciseId":"mountain_climber","unit":"reps","target":30,"restAfterSec":0,"note":"Плечи над кистями, таз не задираем. Каждое колено — повтор","noteEn":"Shoulders over the wrists, hips not piked. Every knee drive is a rep"}]},{"kind":"cooldown","blockType":"cooldown","format":"sets","sets":1,"setsField":"sets","title":"Заминка и растяжка","titleEn":"Cool-down and stretch","description":"Дыши медленно, тяни до приятного натяжения, не через боль. Потом отметь в приложении, как было: усилие, что далось легко, что оказалось тяжёлым. На этом курсе записи важнее обычного — отдых между подходами сокращается каждые две недели, и по ним ты увидишь, успевает ли тело за этим.","descriptionEn":"Breathe slowly, stretch to a pleasant pull, never into pain. Then record in the app how it went: the effort, what felt easy, what turned out hard. On this course those notes matter more than usual — the rest between sets shrinks every two weeks, and they are how you see whether your body is keeping up.","scalable":false,"blockId":"ra_cooldown","items":[{"exerciseId":"cat_cow","unit":"reps","target":6,"restAfterSec":0},{"exerciseId":"quad_stretch","unit":"seconds","target":30,"perSide":true,"restAfterSec":0},{"exerciseId":"hamstring_stretch","unit":"seconds","target":25,"perSide":true,"restAfterSec":0},{"exerciseId":"hip_flexor_stretch","unit":"seconds","target":20,"perSide":true,"restAfterSec":0},{"exerciseId":"child_pose","unit":"seconds","target":45,"restAfterSec":0}]}]}'::jsonb, 120)
+on conflict (short_id) do update set
+  title = excluded.title,
+  description = excluded.description,
+  structure = excluded.structure,
+  points = excluded.points,
+  updated_at = now();
+
+insert into public.custom_workouts (short_id, title, description, structure, points)
+values ('tempo_w_rounds_b', 'Круги без отдыха B', 'Пять кругов, движения сложнее: прыжковые приседания, отжимания от стула, складки, конькобежец. Прыжок стоит первым в круге специально — на усталости ноги теряют технику раньше рук, и лучше встречать это на свежую голову в начале круга.
+
+ПРИМЕЧАНИЕ ‼️ Если колено начинает заваливаться внутрь — заканчивай подход и иди дальше. 🎯 цель — пять кругов ровным темпом.',
+  '{"sections":[{"kind":"warmup","blockType":"warmup","format":"circuit","sets":1,"setsField":"sets","title":"Разминка: суставная гимнастика","titleEn":"Warm-up: joint mobility","description":"Обязательно перед каждой тренировкой, и на этом курсе особенно: работа плотная, суставы должны быть готовы заранее. Сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы. Спокойный темп, амплитуда растёт постепенно. Разминка не входит в тренировку — это подготовка.","descriptionEn":"Mandatory before every session, and on this course especially: the work is dense, so the joints have to be ready in advance. Top to bottom: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles. Easy pace, the range grows gradually. The warm-up is not part of the workout — it is preparation.","scalable":false,"blockId":"rb_warmup","items":[{"exerciseId":"neck_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"arm_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"elbow_wrist_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"side_bend","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"hip_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"leg_swing","unit":"reps","target":6,"perSide":true,"restAfterSec":0},{"exerciseId":"knee_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"ankle_circles","unit":"seconds","target":15,"perSide":true,"restAfterSec":0},{"exerciseId":"squat_to_stand","unit":"reps","target":5,"restAfterSec":0}]},{"kind":"main","blockType":"metcon","format":"fortime","sets":5,"setsField":"sets","durationSec":1080,"restBetweenRoundsSec":0,"title":"5 кругов на время · лимит 18 мин","titleEn":"5 rounds for time · 18-min cap","description":"Между кругами ничего не заложено. Считай круги вслух — на четвёртом это помогает.","descriptionEn":"Nothing is scheduled between the rounds. Count them out loud — by the fourth it helps.","scalable":true,"blockId":"rb_main","items":[{"exerciseId":"jump_squat","unit":"reps","target":20,"restAfterSec":0,"note":"Приземляемся мягко через носок в пятку, колено не заваливаем внутрь","noteEn":"Land softly, toe to heel, do not let the knee cave in"},{"exerciseId":"chair_dip","unit":"reps","target":15,"restAfterSec":0,"note":"Стул без колёсиков, к стене. Плечи вниз от ушей, опускайся до комфортной глубины","noteEn":"A chair without wheels, against the wall. Shoulders down, lower to a comfortable depth"},{"exerciseId":"v_up","unit":"reps","target":15,"restAfterSec":0,"note":"Складываемся одновременно руками и ногами, не тянем себя за шею","noteEn":"Fold arms and legs together, do not pull on your neck"},{"exerciseId":"skater","unit":"reps","target":30,"restAfterSec":0,"note":"Считаем в сумме. Прыжок в сторону, приземление на одну ногу с паузой","noteEn":"Counted as the total. Jump sideways, land on one leg and pause"}]},{"kind":"cooldown","blockType":"cooldown","format":"sets","sets":1,"setsField":"sets","title":"Заминка и растяжка","titleEn":"Cool-down and stretch","description":"Дыши медленно, тяни до приятного натяжения, не через боль. Потом отметь в приложении, как было: усилие, что далось легко, что оказалось тяжёлым. На этом курсе записи важнее обычного — отдых между подходами сокращается каждые две недели, и по ним ты увидишь, успевает ли тело за этим.","descriptionEn":"Breathe slowly, stretch to a pleasant pull, never into pain. Then record in the app how it went: the effort, what felt easy, what turned out hard. On this course those notes matter more than usual — the rest between sets shrinks every two weeks, and they are how you see whether your body is keeping up.","scalable":false,"blockId":"rb_cooldown","items":[{"exerciseId":"cat_cow","unit":"reps","target":6,"restAfterSec":0},{"exerciseId":"quad_stretch","unit":"seconds","target":30,"perSide":true,"restAfterSec":0},{"exerciseId":"hamstring_stretch","unit":"seconds","target":25,"perSide":true,"restAfterSec":0},{"exerciseId":"hip_flexor_stretch","unit":"seconds","target":20,"perSide":true,"restAfterSec":0},{"exerciseId":"child_pose","unit":"seconds","target":45,"restAfterSec":0}]}]}'::jsonb, 125)
+on conflict (short_id) do update set
+  title = excluded.title,
+  description = excluded.description,
+  structure = excluded.structure,
+  points = excluded.points,
+  updated_at = now();
+
+insert into public.custom_workouts (short_id, title, description, structure, points)
+values ('tempo_w_rounds_c', 'Круги без отдыха C', 'Пять кругов из движений, которых не было на первой неделе: прыжковые выпады, узкие отжимания, складки, бёрпи. Бёрпи в конце круга — это место, где решается, ровный у тебя темп или нет.
+
+ПРИМЕЧАНИЕ ‼️ Прыжковый выпад считается в сумме на две ноги. 🎯 цель — не остановиться перед бёрпи ни в одном круге.',
+  '{"sections":[{"kind":"warmup","blockType":"warmup","format":"circuit","sets":1,"setsField":"sets","title":"Разминка: суставная гимнастика","titleEn":"Warm-up: joint mobility","description":"Обязательно перед каждой тренировкой, и на этом курсе особенно: работа плотная, суставы должны быть готовы заранее. Сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы. Спокойный темп, амплитуда растёт постепенно. Разминка не входит в тренировку — это подготовка.","descriptionEn":"Mandatory before every session, and on this course especially: the work is dense, so the joints have to be ready in advance. Top to bottom: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles. Easy pace, the range grows gradually. The warm-up is not part of the workout — it is preparation.","scalable":false,"blockId":"rc_warmup","items":[{"exerciseId":"neck_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"arm_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"elbow_wrist_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"side_bend","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"hip_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"leg_swing","unit":"reps","target":6,"perSide":true,"restAfterSec":0},{"exerciseId":"knee_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"ankle_circles","unit":"seconds","target":15,"perSide":true,"restAfterSec":0},{"exerciseId":"squat_to_stand","unit":"reps","target":5,"restAfterSec":0}]},{"kind":"main","blockType":"metcon","format":"fortime","sets":5,"setsField":"sets","durationSec":1080,"restBetweenRoundsSec":0,"title":"5 кругов на время · лимит 18 мин","titleEn":"5 rounds for time · 18-min cap","description":"Между кругами ничего не заложено. Последний круг — единственное место, где можно ускориться.","descriptionEn":"Nothing is scheduled between the rounds. The last one is the only place to speed up.","scalable":true,"blockId":"rc_main","items":[{"exerciseId":"jumping_lunge","unit":"reps","target":24,"restAfterSec":0,"note":"Считаем в сумме на две ноги. Корпус вертикально, смена ног в воздухе","noteEn":"Counted as the total for both legs. Trunk vertical, swap legs in the air"},{"exerciseId":"diamond_push_up","unit":"reps","target":12,"restAfterSec":0,"note":"Кисти ромбом под грудью, локти строго назад. Тяжело — разведи кисти шире","noteEn":"Hands in a diamond under the chest, elbows straight back. Too hard? Widen the hands"},{"exerciseId":"v_up","unit":"reps","target":18,"restAfterSec":0,"note":"Складываемся одновременно руками и ногами, не тянем себя за шею","noteEn":"Fold arms and legs together, do not pull on your neck"},{"exerciseId":"burpee","unit":"reps","target":8,"restAfterSec":0,"note":"Грудь до пола, наверху полное выпрямление. Темп — такой, который держится до конца","noteEn":"Chest to the floor, full extension at the top. A pace you can hold to the end"}]},{"kind":"cooldown","blockType":"cooldown","format":"sets","sets":1,"setsField":"sets","title":"Заминка и растяжка","titleEn":"Cool-down and stretch","description":"Дыши медленно, тяни до приятного натяжения, не через боль. Потом отметь в приложении, как было: усилие, что далось легко, что оказалось тяжёлым. На этом курсе записи важнее обычного — отдых между подходами сокращается каждые две недели, и по ним ты увидишь, успевает ли тело за этим.","descriptionEn":"Breathe slowly, stretch to a pleasant pull, never into pain. Then record in the app how it went: the effort, what felt easy, what turned out hard. On this course those notes matter more than usual — the rest between sets shrinks every two weeks, and they are how you see whether your body is keeping up.","scalable":false,"blockId":"rc_cooldown","items":[{"exerciseId":"cat_cow","unit":"reps","target":6,"restAfterSec":0},{"exerciseId":"quad_stretch","unit":"seconds","target":30,"perSide":true,"restAfterSec":0},{"exerciseId":"hamstring_stretch","unit":"seconds","target":25,"perSide":true,"restAfterSec":0},{"exerciseId":"hip_flexor_stretch","unit":"seconds","target":20,"perSide":true,"restAfterSec":0},{"exerciseId":"child_pose","unit":"seconds","target":45,"restAfterSec":0}]}]}'::jsonb, 130)
+on conflict (short_id) do update set
+  title = excluded.title,
+  description = excluded.description,
+  structure = excluded.structure,
+  points = excluded.points,
+  updated_at = now();
+
+insert into public.custom_workouts (short_id, title, description, structure, points)
+values ('tempo_w_flow', 'Лёгкий день', 'День, когда тело догоняет нагрузку. Три круга спокойной работы на позицию — присед, медвежья походка, ягодичный мостик на одной ноге, удержание в приседе, — потом кор и длинная растяжка. Пульс не должен подниматься: если в конце круга сбито дыхание, ты делаешь этот день неправильно.
+
+ПРИМЕЧАНИЕ ‼️ Каждое повторение — как показательное: полная амплитуда, пауза в крайней точке. 🎯 цель — уйти с тренировки свежее, чем пришёл.',
+  '{"sections":[{"kind":"warmup","blockType":"warmup","format":"circuit","sets":1,"setsField":"sets","title":"Разминка: суставная гимнастика","titleEn":"Warm-up: joint mobility","description":"Обязательно перед каждой тренировкой, и на этом курсе особенно: работа плотная, суставы должны быть готовы заранее. Сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы. Спокойный темп, амплитуда растёт постепенно. Разминка не входит в тренировку — это подготовка.","descriptionEn":"Mandatory before every session, and on this course especially: the work is dense, so the joints have to be ready in advance. Top to bottom: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles. Easy pace, the range grows gradually. The warm-up is not part of the workout — it is preparation.","scalable":false,"blockId":"fl_warmup","items":[{"exerciseId":"neck_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"arm_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"elbow_wrist_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"side_bend","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"hip_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"leg_swing","unit":"reps","target":6,"perSide":true,"restAfterSec":0},{"exerciseId":"knee_circles","unit":"seconds","target":20,"restAfterSec":0},{"exerciseId":"ankle_circles","unit":"seconds","target":15,"perSide":true,"restAfterSec":0},{"exerciseId":"squat_to_stand","unit":"reps","target":5,"restAfterSec":0}]},{"kind":"main","blockType":"skill","format":"circuit","sets":3,"setsField":"sets","restBetweenRoundsSec":60,"title":"Техника · 3 круга","titleEn":"Technique · 3 rounds","description":"Три круга в темпе разговора. Полная амплитуда, пауза в крайней точке, без спешки.","descriptionEn":"Three rounds at a talking pace. Full range, a pause at the end point, no rush.","scalable":false,"blockId":"fl_skill","items":[{"exerciseId":"air_squat","unit":"reps","target":12,"restAfterSec":0,"note":"Пятки на полу, колени в стороны, наверху выпрямляемся полностью","noteEn":"Heels down, knees out, full extension at the top"},{"exerciseId":"bear_crawl","unit":"seconds","target":25,"restAfterSec":0,"note":"Колени в сантиметре от пола, таз низко","noteEn":"Knees a centimetre off the floor, hips low"},{"exerciseId":"single_leg_glute_bridge","unit":"reps","target":8,"perSide":true,"restAfterSec":0,"note":"Таз поднимаем ягодицей, а не поясницей. Наверху пауза на счёт","noteEn":"Lift with the glute, not the lower back. Pause at the top for a count"},{"exerciseId":"squat_hold","unit":"seconds","target":25,"restAfterSec":0}]},{"kind":"main","blockType":"core","format":"circuit","sets":2,"setsField":"sets","restBetweenRoundsSec":45,"title":"Кор","titleEn":"Core","scalable":false,"blockId":"fl_core","items":[{"exerciseId":"hollow_hold","unit":"seconds","target":25,"restAfterSec":0,"note":"Поясница прижата к полу. Не держится — согни колени и подними руки","noteEn":"Lower back pressed into the floor. Losing it? Bend the knees and raise the arms"},{"exerciseId":"side_plank","unit":"seconds","target":20,"perSide":true,"restAfterSec":0,"note":"Таз высоко, плечо строго над локтем","noteEn":"Hips high, shoulder directly over the elbow"},{"exerciseId":"superman","unit":"reps","target":10,"restAfterSec":0,"note":"Поднимаем грудь и бёдра, шея — продолжение позвоночника","noteEn":"Lift chest and thighs, neck in line with the spine"}]},{"kind":"cooldown","blockType":"cooldown","format":"sets","sets":1,"setsField":"sets","title":"Заминка и растяжка","titleEn":"Cool-down and stretch","description":"Дыши медленно, тяни до приятного натяжения, не через боль. Потом отметь в приложении, как было: усилие, что далось легко, что оказалось тяжёлым. На этом курсе записи важнее обычного — отдых между подходами сокращается каждые две недели, и по ним ты увидишь, успевает ли тело за этим.","descriptionEn":"Breathe slowly, stretch to a pleasant pull, never into pain. Then record in the app how it went: the effort, what felt easy, what turned out hard. On this course those notes matter more than usual — the rest between sets shrinks every two weeks, and they are how you see whether your body is keeping up.","scalable":false,"blockId":"fl_cooldown","items":[{"exerciseId":"cat_cow","unit":"reps","target":8,"restAfterSec":0},{"exerciseId":"hip_flexor_stretch","unit":"seconds","target":45,"perSide":true,"restAfterSec":0},{"exerciseId":"hamstring_stretch","unit":"seconds","target":45,"perSide":true,"restAfterSec":0},{"exerciseId":"quad_stretch","unit":"seconds","target":30,"perSide":true,"restAfterSec":0},{"exerciseId":"child_pose","unit":"seconds","target":60,"restAfterSec":0}]}]}'::jsonb, 90)
+on conflict (short_id) do update set
+  title = excluded.title,
+  description = excluded.description,
+  structure = excluded.structure,
+  points = excluded.points,
+  updated_at = now();
+
+-- days
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w1d1_gate', 1, 1, 'benchmark', (select id from public.custom_workouts where short_id = 'tempo_w_gate'),
+  '{"title":{"ru":"Пять кругов","en":"Five rounds"},"subtitle":{"ru":"Замер · с этого начинается отсчёт","en":"Measurement · the clock starts here"},"body":[]}'::jsonb, false, null, 0
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w1d2_rest', 1, 2, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Крепатура после прыжков — норма. Прогулка разгонит кровь быстрее, чем диван.","en":"Soreness after jumping days is normal. A walk gets the blood moving faster than the couch."},"body":[]}'::jsonb, false, 8000, 1
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w1d3_strength', 1, 3, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_strength_a'),
+  '{"title":{"ru":"Сила без паузы","en":"Strength without a pause"},"subtitle":{"ru":"3 подхода · отдых 90 с","en":"3 sets · 90 s rest"},"body":[]}'::jsonb, false, null, 2
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w1d4_ladder', 1, 4, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_ladder_a'),
+  '{"title":{"ru":"Лестница","en":"The ladder"},"subtitle":{"ru":"EMOM 15 · ступени растут","en":"EMOM 15 · the rungs climb"},"body":[]}'::jsonb, false, null, 3
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w1d5_rest', 1, 5, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"8000 шагов и лёгкая растяжка. На этом курсе отдых — часть программы, а не пауза в ней.","en":"8,000 steps and light stretching. On this course rest is part of the programme, not a gap in it."},"body":[]}'::jsonb, false, 8000, 4
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w1d6_cap', 1, 6, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_cap_a'),
+  '{"title":{"ru":"Крышка","en":"The cap"},"subtitle":{"ru":"На время · лимит 16 мин","en":"For time · 16-min cap"},"body":[]}'::jsonb, false, null, 5
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w1d7_rest', 1, 7, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Прогулка 40–60 минут и сон 7–8 часов. Плотная работа требует восстановления, а не ещё одной тренировки.","en":"A 40–60 minute walk and seven to eight hours of sleep. Dense work needs recovery, not another session."},"body":[]}'::jsonb, false, 8000, 6
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w2d1_strength', 2, 1, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_strength_a'),
+  '{"title":{"ru":"Сила без паузы","en":"Strength without a pause"},"subtitle":{"ru":"3 подхода · отдых 90 с","en":"3 sets · 90 s rest"},"body":[]}'::jsonb, false, null, 7
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w2d2_rest', 2, 2, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"8000 шагов и лёгкая растяжка. На этом курсе отдых — часть программы, а не пауза в ней.","en":"8,000 steps and light stretching. On this course rest is part of the programme, not a gap in it."},"body":[]}'::jsonb, false, 8000, 8
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w2d3_ladder', 2, 3, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_ladder_a'),
+  '{"title":{"ru":"Лестница","en":"The ladder"},"subtitle":{"ru":"EMOM 15 · ступени растут","en":"EMOM 15 · the rungs climb"},"body":[]}'::jsonb, false, null, 9
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w2d4_cap', 2, 4, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_cap_a'),
+  '{"title":{"ru":"Крышка","en":"The cap"},"subtitle":{"ru":"На время · лимит 16 мин","en":"For time · 16-min cap"},"body":[]}'::jsonb, false, null, 10
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w2d5_rest', 2, 5, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Крепатура после прыжков — норма. Прогулка разгонит кровь быстрее, чем диван.","en":"Soreness after jumping days is normal. A walk gets the blood moving faster than the couch."},"body":[]}'::jsonb, false, 8000, 11
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w2d6_rounds', 2, 6, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_rounds_a'),
+  '{"title":{"ru":"Круги без отдыха","en":"Rounds without a break"},"subtitle":{"ru":"5 кругов · без пауз между ними","en":"5 rounds · no pause between them"},"body":[]}'::jsonb, false, null, 12
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w2d7_rest', 2, 7, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Прогулка 40–60 минут и сон 7–8 часов. Плотная работа требует восстановления, а не ещё одной тренировки.","en":"A 40–60 minute walk and seven to eight hours of sleep. Dense work needs recovery, not another session."},"body":[]}'::jsonb, false, 8000, 13
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w3d1_strength', 3, 1, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_strength_b'),
+  '{"title":{"ru":"Сила без паузы","en":"Strength without a pause"},"subtitle":{"ru":"3 подхода · отдых 75 с","en":"3 sets · 75 s rest"},"body":[]}'::jsonb, false, null, 14
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w3d2_rest', 3, 2, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"8000 шагов и лёгкая растяжка. На этом курсе отдых — часть программы, а не пауза в ней.","en":"8,000 steps and light stretching. On this course rest is part of the programme, not a gap in it."},"body":[]}'::jsonb, false, 8000, 15
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w3d3_ladder', 3, 3, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_ladder_b'),
+  '{"title":{"ru":"Лестница","en":"The ladder"},"subtitle":{"ru":"EMOM 15 · ступени растут","en":"EMOM 15 · the rungs climb"},"body":[]}'::jsonb, false, null, 16
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w3d4_cap', 3, 4, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_cap_b'),
+  '{"title":{"ru":"Крышка","en":"The cap"},"subtitle":{"ru":"На время · лимит 16 мин","en":"For time · 16-min cap"},"body":[]}'::jsonb, false, null, 17
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w3d5_rest', 3, 5, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Завтра замер: шаги, вода, ранний сон. Никакой «дополнительной» работы сегодня.","en":"The measurement is tomorrow: steps, water, an early night. No \"extra\" work today."},"body":[]}'::jsonb, false, 8000, 18
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w3d6_gate', 3, 6, 'benchmark', (select id from public.custom_workouts where short_id = 'tempo_w_gate'),
+  '{"title":{"ru":"Пять кругов","en":"Five rounds"},"subtitle":{"ru":"Замер · сравни с первой неделей","en":"Measurement · compare with week one"},"body":[]}'::jsonb, false, null, 19
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w3d7_rest', 3, 7, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Прогулка 40–60 минут и сон 7–8 часов. Плотная работа требует восстановления, а не ещё одной тренировки.","en":"A 40–60 minute walk and seven to eight hours of sleep. Dense work needs recovery, not another session."},"body":[]}'::jsonb, false, 8000, 20
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w4d1_strength', 4, 1, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_strength_b'),
+  '{"title":{"ru":"Сила без паузы","en":"Strength without a pause"},"subtitle":{"ru":"3 подхода · отдых 75 с","en":"3 sets · 75 s rest"},"body":[]}'::jsonb, false, null, 21
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w4d2_rest', 4, 2, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"8000 шагов и лёгкая растяжка. На этом курсе отдых — часть программы, а не пауза в ней.","en":"8,000 steps and light stretching. On this course rest is part of the programme, not a gap in it."},"body":[]}'::jsonb, false, 8000, 22
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w4d3_ladder', 4, 3, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_ladder_b'),
+  '{"title":{"ru":"Лестница","en":"The ladder"},"subtitle":{"ru":"EMOM 15 · ступени растут","en":"EMOM 15 · the rungs climb"},"body":[]}'::jsonb, false, null, 23
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w4d4_cap', 4, 4, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_cap_b'),
+  '{"title":{"ru":"Крышка","en":"The cap"},"subtitle":{"ru":"На время · лимит 16 мин","en":"For time · 16-min cap"},"body":[]}'::jsonb, false, null, 24
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w4d5_rest', 4, 5, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Крепатура после прыжков — норма. Прогулка разгонит кровь быстрее, чем диван.","en":"Soreness after jumping days is normal. A walk gets the blood moving faster than the couch."},"body":[]}'::jsonb, false, 8000, 25
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w4d6_rounds', 4, 6, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_rounds_b'),
+  '{"title":{"ru":"Круги без отдыха","en":"Rounds without a break"},"subtitle":{"ru":"5 кругов · без пауз между ними","en":"5 rounds · no pause between them"},"body":[]}'::jsonb, false, null, 26
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w4d7_rest', 4, 7, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Прогулка 40–60 минут и сон 7–8 часов. Плотная работа требует восстановления, а не ещё одной тренировки.","en":"A 40–60 minute walk and seven to eight hours of sleep. Dense work needs recovery, not another session."},"body":[]}'::jsonb, false, 8000, 27
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w5d1_strength', 5, 1, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_strength_b'),
+  '{"title":{"ru":"Сила без паузы","en":"Strength without a pause"},"subtitle":{"ru":"Разгрузка · объём −35 %","en":"Deload · volume −35%"},"body":[]}'::jsonb, true, null, 28
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w5d2_rest', 5, 2, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Разгрузочная неделя: гуляй, спи, ешь нормально. Тело догоняет четыре недели плотной работы.","en":"Deload week: walk, sleep, eat properly. Your body is catching up with four dense weeks."},"body":[]}'::jsonb, false, 8000, 29
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w5d3_flow', 5, 3, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_flow'),
+  '{"title":{"ru":"Лёгкий день","en":"Easy day"},"subtitle":{"ru":"Техника и растяжка","en":"Technique and stretching"},"body":[]}'::jsonb, false, null, 30
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w5d4_ladder', 5, 4, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_ladder_b'),
+  '{"title":{"ru":"Лестница","en":"The ladder"},"subtitle":{"ru":"Разгрузка · объём −35 %","en":"Deload · volume −35%"},"body":[]}'::jsonb, true, null, 31
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w5d5_rest', 5, 5, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Разгрузочная неделя: гуляй, спи, ешь нормально. Тело догоняет четыре недели плотной работы.","en":"Deload week: walk, sleep, eat properly. Your body is catching up with four dense weeks."},"body":[]}'::jsonb, false, 8000, 32
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w5d6_rounds', 5, 6, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_rounds_b'),
+  '{"title":{"ru":"Круги без отдыха","en":"Rounds without a break"},"subtitle":{"ru":"Разгрузка · объём −35 %","en":"Deload · volume −35%"},"body":[]}'::jsonb, true, null, 33
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w5d7_rest', 5, 7, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Разгрузочная неделя: гуляй, спи, ешь нормально. Тело догоняет четыре недели плотной работы.","en":"Deload week: walk, sleep, eat properly. Your body is catching up with four dense weeks."},"body":[]}'::jsonb, false, 8000, 34
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w6d1_strength', 6, 1, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_strength_c'),
+  '{"title":{"ru":"Сила без паузы","en":"Strength without a pause"},"subtitle":{"ru":"3 подхода · отдых 60 с","en":"3 sets · 60 s rest"},"body":[]}'::jsonb, false, null, 35
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w6d2_rest', 6, 2, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"8000 шагов и лёгкая растяжка. На этом курсе отдых — часть программы, а не пауза в ней.","en":"8,000 steps and light stretching. On this course rest is part of the programme, not a gap in it."},"body":[]}'::jsonb, false, 8000, 36
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w6d3_ladder', 6, 3, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_ladder_c'),
+  '{"title":{"ru":"Лестница","en":"The ladder"},"subtitle":{"ru":"EMOM 15 · ступени растут","en":"EMOM 15 · the rungs climb"},"body":[]}'::jsonb, false, null, 37
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w6d4_cap', 6, 4, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_cap_c'),
+  '{"title":{"ru":"Крышка","en":"The cap"},"subtitle":{"ru":"На время · лимит 16 мин","en":"For time · 16-min cap"},"body":[]}'::jsonb, false, null, 38
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w6d5_rest', 6, 5, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Завтра замер: шаги, вода, ранний сон. Никакой «дополнительной» работы сегодня.","en":"The measurement is tomorrow: steps, water, an early night. No \"extra\" work today."},"body":[]}'::jsonb, false, 8000, 39
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w6d6_gate', 6, 6, 'benchmark', (select id from public.custom_workouts where short_id = 'tempo_w_gate'),
+  '{"title":{"ru":"Пять кругов","en":"Five rounds"},"subtitle":{"ru":"Замер · третий раз, тот же список","en":"Measurement · third time, same list"},"body":[]}'::jsonb, false, null, 40
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w6d7_rest', 6, 7, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Прогулка 40–60 минут и сон 7–8 часов. Плотная работа требует восстановления, а не ещё одной тренировки.","en":"A 40–60 minute walk and seven to eight hours of sleep. Dense work needs recovery, not another session."},"body":[]}'::jsonb, false, 8000, 41
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w7d1_strength', 7, 1, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_strength_c'),
+  '{"title":{"ru":"Сила без паузы","en":"Strength without a pause"},"subtitle":{"ru":"3 подхода · отдых 60 с","en":"3 sets · 60 s rest"},"body":[]}'::jsonb, false, null, 42
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w7d2_rest', 7, 2, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Крепатура после прыжков — норма. Прогулка разгонит кровь быстрее, чем диван.","en":"Soreness after jumping days is normal. A walk gets the blood moving faster than the couch."},"body":[]}'::jsonb, false, 8000, 43
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w7d3_ladder', 7, 3, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_ladder_c'),
+  '{"title":{"ru":"Лестница","en":"The ladder"},"subtitle":{"ru":"EMOM 15 · ступени растут","en":"EMOM 15 · the rungs climb"},"body":[]}'::jsonb, false, null, 44
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w7d4_cap', 7, 4, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_cap_c'),
+  '{"title":{"ru":"Крышка","en":"The cap"},"subtitle":{"ru":"На время · лимит 16 мин","en":"For time · 16-min cap"},"body":[]}'::jsonb, false, null, 45
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w7d5_rest', 7, 5, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"8000 шагов и лёгкая растяжка. На этом курсе отдых — часть программы, а не пауза в ней.","en":"8,000 steps and light stretching. On this course rest is part of the programme, not a gap in it."},"body":[]}'::jsonb, false, 8000, 46
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w7d6_rounds', 7, 6, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_rounds_c'),
+  '{"title":{"ru":"Круги без отдыха","en":"Rounds without a break"},"subtitle":{"ru":"5 кругов · без пауз между ними","en":"5 rounds · no pause between them"},"body":[]}'::jsonb, false, null, 47
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w7d7_rest', 7, 7, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Пройди 8000 шагов и отметь их в приложении — день зачтётся в серию.","en":"Walk 8,000 steps and log them in the app — the day counts toward your streak."},"body":[]}'::jsonb, false, 8000, 48
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w8d1_strength', 8, 1, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_strength_c'),
+  '{"title":{"ru":"Сила без паузы","en":"Strength without a pause"},"subtitle":{"ru":"3 подхода · отдых 60 с","en":"3 sets · 60 s rest"},"body":[]}'::jsonb, false, null, 49
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w8d2_rest', 8, 2, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"8000 шагов и лёгкая растяжка. На этом курсе отдых — часть программы, а не пауза в ней.","en":"8,000 steps and light stretching. On this course rest is part of the programme, not a gap in it."},"body":[]}'::jsonb, false, 8000, 50
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w8d3_rounds', 8, 3, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_rounds_c'),
+  '{"title":{"ru":"Круги без отдыха","en":"Rounds without a break"},"subtitle":{"ru":"5 кругов · без пауз между ними","en":"5 rounds · no pause between them"},"body":[]}'::jsonb, false, null, 51
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w8d4_flow', 8, 4, 'workout', (select id from public.custom_workouts where short_id = 'tempo_w_flow'),
+  '{"title":{"ru":"Лёгкий день","en":"Easy day"},"subtitle":{"ru":"Техника и растяжка","en":"Technique and stretching"},"body":[]}'::jsonb, false, null, 52
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w8d5_rest', 8, 5, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Прогулка 40–60 минут и сон 7–8 часов. Плотная работа требует восстановления, а не ещё одной тренировки.","en":"A 40–60 minute walk and seven to eight hours of sleep. Dense work needs recovery, not another session."},"body":[]}'::jsonb, false, 8000, 53
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w8d6_rest', 8, 6, 'rest', null,
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Завтра замер: шаги, вода, ранний сон. Никакой «дополнительной» работы сегодня.","en":"The measurement is tomorrow: steps, water, an early night. No \"extra\" work today."},"body":[]}'::jsonb, false, 8000, 54
+)
+on conflict (course_id, node_id) do update set
+  week = excluded.week,
+  day = excluded.day,
+  kind = excluded.kind,
+  custom_workout_id = excluded.custom_workout_id,
+  content = excluded.content,
+  deload = excluded.deload,
+  steps_goal = excluded.steps_goal,
+  sort_order = excluded.sort_order,
+  updated_at = now();
+
+insert into public.admin_course_days (
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  sort_order
+) values (
+  (select id from public.admin_courses where slug_id = 'tempo'),
+  'w8d7_gate', 8, 7, 'benchmark', (select id from public.custom_workouts where short_id = 'tempo_w_gate'),
+  '{"title":{"ru":"Пять кругов","en":"Five rounds"},"subtitle":{"ru":"Замер · те же пять кругов, восемь недель спустя","en":"Measurement · the same five rounds, eight weeks on"},"body":[]}'::jsonb, false, null, 55
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
