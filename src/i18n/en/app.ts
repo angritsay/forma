@@ -988,6 +988,8 @@ export const app = {
   // --- Marathon -------------------------------------------------------------
   // The second format: daily tasks, proof, a partner you are scored with, a weekly board.
   marathonTitle: 'Challenge',
+  // The cover's big line before there is a day to count: what the format is, in one line.
+  marathonCoverPitch: 'A task for every day',
   marathonTabToday: 'Today',
   marathonTabBoard: 'Board',
   marathonTabPoints: 'My points',

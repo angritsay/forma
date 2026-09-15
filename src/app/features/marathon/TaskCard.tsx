@@ -79,7 +79,19 @@ export function TaskCard({ item, teammateNames, closed, onSend, onSendMedia }: T
       <div className="flex items-baseline justify-between gap-3">
         <span className="control-label text-[10px] text-muted-2">{ruleLabel}</span>
         {task.rule !== 'none' ? (
-          <span className="numeral tabular shrink-0 text-[13px] text-muted">
+          /*
+           * The figure takes the challenge's colour while the points are still on the table, and
+           * goes grey once the proof is in. That is the brandbook's «цвет красит номера» spent on
+           * the one number that is a decision: an orange 12 is what is left to win today. It has to
+           * stay off the finished card for a second reason — a done card is dimmed to 60%, and the
+           * orange would drop to 3.43:1 there, under the 4.5 it clears at full strength (7.66).
+           */
+          <span
+            className={clsx(
+              'numeral tabular shrink-0 text-[13px]',
+              done ? 'text-muted' : 'text-course',
+            )}
+          >
             {t('app.marathonPointsN', { n: formatNumber(locale, task.points) })}
           </span>
         ) : null}
