@@ -108,8 +108,17 @@ public/                     # favicon.svg, icons, manifest
   the top, with `AdminNav` as a second column inside `/admin`. This reverses the rule that stood
   here («centered max-width 480px app frame on large screens»), and the reversal is the owner's:
   she builds courses from a laptop, and a 480px strip in the middle of one is a phone stranded in a
-  grey field. Content is capped at 760px for reading screens and 1280px for the admin, and a sheet
-  becomes a centred dialog at the same breakpoint. Landing is responsive 360px → 1440px.
+  grey field. Content is capped at 760px for reading screens, 1040px for the two screens that split
+  in two (profile, challenge) and 1280px for the admin; a sheet becomes a centred dialog at the same
+  breakpoint. Landing is responsive 360px → 1440px.
+- `AdminNav` is the one component that waits for `lg` (1024) instead. Its rail is 264px, which is a
+  third of a tablet: at `md` it left the purchases 504px — less than a phone gives them — so a
+  tablet takes the phone's route into the admin and spends the whole width on the work.
+- Which screens re-lay out rather than stretch, from `md`: Today (workout left, the rest right),
+  Programmes (tickets two across), the challenge (day left, week's board right), the profile
+  (identity left, settings right), the player (clip left, counter and «дальше» right), the course
+  day in the admin (list of days left, editor right), and the progress details (figures two across).
+  Everything else keeps one column and gains air.
 - The type scale does not change with the screen (`design/` calls it «мобайл-первая, 390px»). What
   grows on a wide screen is the gutter, the column count and the air between sections.
 - Dates: store ISO strings; "today" is computed in the user's local timezone for streaks/steps;
