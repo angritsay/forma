@@ -410,6 +410,29 @@ app password at myaccount.google.com/apppasswords, then `smtp.gmail.com:465` wit
 and your address as both username and sender. Roughly 500 emails a day, which is ample to launch
 on, and it costs nothing. Swapping to a provider later is a five-minute settings change.
 
+**Already on Google Workspace?** Then this is the shortest path there is, and it is a proper
+domain sender rather than a stopgap. Google sets the MX records and hands you the SPF line when the
+domain is added to the account, so the work is three things it does _not_ do for you:
+
+1. **DKIM is off until you switch it on**, and this is the one people miss for years. Admin console →
+   Apps → Google Workspace → Gmail → **Authenticate email** → pick the domain → generate the record
+   → publish the TXT → come back and press **Start authentication**. Publishing the record without
+   pressing the button leaves DKIM off; `mail.ru` and `yandex.ru` are the two that notice.
+2. **SPF must stay a single record.** Google's is `v=spf1 include:_spf.google.com ~all`. If the
+   domain already has an SPF record, merge `include:_spf.google.com` into it — two SPF records do
+   not mean "one of them wins", they fail the check outright.
+3. **DMARC**, as everywhere: `_dmarc.<domain>` TXT, `v=DMARC1; p=none; rua=mailto:<address>`.
+
+Then `smtp.gmail.com:465` with an app password (2-Step Verification has to be on for app passwords
+to exist at all, and a Workspace admin can disable them org-wide under Security → Access and data
+control — you are your own admin). The **username is the account the app password belongs to**, and
+the **sender may be an alias** of it — an alias costs no seat, but it has to be confirmed under
+Gmail → Settings → Accounts → "Send mail as", or Google rewrites the From header to the
+authenticated address and the code arrives from the wrong person. Workspace allows on the order of
+2,000 messages a day; check the figure for your own plan.
+
+The foreign-address restriction described below does not apply to Google.
+
 **With a domain** (worth having anyway — it also moves the site off github.io):
 
 | Provider                | Good for                                  | Notes                                                                 |
