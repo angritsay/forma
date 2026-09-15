@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
 import { Sheet } from '@/components/ui/Sheet';
-import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import {
   assignCustomWorkout,
@@ -32,6 +31,7 @@ import type { CustomWorkoutStructure } from '@/lib/training/customWorkout';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { BootScreen } from '@/app/components/BootScreen';
+import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { WorkoutEditor } from '@/app/features/admin/workoutBuilder/WorkoutEditor';
 
@@ -156,9 +156,7 @@ export default function AdminWorkoutsScreen() {
       }
     >
       {loading ? (
-        <div className="flex justify-center py-10">
-          <Spinner />
-        </div>
+        <LoadingBlock />
       ) : rows.length === 0 ? (
         <EmptyState title={t('app.builderEmptyTitle')} description={t('app.builderEmptyBody')} />
       ) : (

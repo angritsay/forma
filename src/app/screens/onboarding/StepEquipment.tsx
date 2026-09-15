@@ -26,6 +26,7 @@ export function StepEquipment({ draft, update }: StepProps) {
       <PageTitle title={t('app.onbEquipmentTitle')} subtitle={t('app.onbEquipmentLead')} />
       <ChipGroup<Equipment>
         multiple
+        variant="tile"
         label={t('app.onbEquipmentTitle')}
         values={draft.equipment}
         onToggle={toggleEquipment}

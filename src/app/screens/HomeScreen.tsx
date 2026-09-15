@@ -1,5 +1,6 @@
 /**
- * Home (docs/SPEC.md §10 flow 3): today's session, today's tasks, and the coach.
+ * Home (docs/SPEC.md §10 flow 3): today's session, today's tasks, and the coach — on one screen,
+ * without a scroll.
  *
  * It used to be the whole product on one page — a swipeable deck of every course and the challenge, and
  * under it the resume strip, the streak, the week's figures, the coach's assigned workouts and his
@@ -15,19 +16,27 @@
  * The steps row went to «Прогресс» with the rest of the numbers. Home answers what to do now; how far
  * you walked is how you are doing.
  *
- * The profile is here too, as the avatar in the top-right corner, because it left the tab bar
- * (BottomNav) to make room for the challenge. A photograph of your own face is the one control on a
- * phone nobody has ever had to look for.
+ * **Nothing scrolls.** The owner's line was «страница „Сегодня“ не должна скролиться вообще, то
+ * есть вся информация должна быть структурирована таким образом, чтобы без скролла было всё
+ * прекрасно сразу видно», and it changed the layout rather than the type size. The screen is a
+ * column the exact height of the viewport: everything except today's card has the height its
+ * content needs, and the card takes whatever is left (`min-h-0 flex-1`). Add a task row and the
+ * card gives up the room; take it away and the card grows back. A fixed `58dvh` cover could not do
+ * that — it was the reason the fold landed in the middle of the challenge row.
+ *
+ * The challenge sits directly under the card, not at the foot of the screen: «„челлендж идёт без
+ * тебя“ — это очень стильно, но оно настолько внизу, что этого не видно».
+ *
+ * The account left. The streak, the level, the avatar and «Обновить» are on «Прогресс» now
+ * (`features/stats/AccountRow`) — they answer «как у меня дела», and this screen answers «что у
+ * меня сегодня». Giving up that row is most of what made the rest fit.
  */
 import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
-import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { IconButton } from '@/components/ui/IconButton';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { courseTitle } from '@/content/catalogue';
 import { courseTileVars } from '@/lib/ui/tile';
@@ -50,10 +59,10 @@ import { BOOKING } from '@content/site/booking';
 
 function HomeSkeleton() {
   return (
-    <div className="flex flex-col gap-7 pt-5" aria-hidden="true">
-      <Skeleton rounded="control" className="h-9 w-2/3" />
-      <Skeleton rounded="control" className="-mx-6 h-[58dvh] min-h-[420px] lg:-mx-10" />
-      <Skeleton rounded="control" className="h-24" />
+    <div className="flex min-h-0 flex-1 flex-col gap-4" aria-hidden="true">
+      <Skeleton rounded="card" className="min-h-0 flex-1" />
+      <Skeleton rounded="control" className="h-16 shrink-0" />
+      <Skeleton rounded="control" className="h-12 shrink-0" />
     </div>
   );
 }
@@ -133,29 +142,10 @@ export default function HomeScreen() {
     return items;
   }, [profile, t, takeAssessment]);
 
+  /* The greeting, in the same header slot the other three tabs put their title in. */
   const header = (
-    <div className="flex items-center gap-3 pt-5">
-      <h1 className="font-display min-w-0 flex-1 text-lg">{greeting}</h1>
-      <IconButton
-        label={t('app.homeRefresh')}
-        icon={loading ? <Spinner size={16} /> : 'refresh'}
-        variant="ghost"
-        size="sm"
-        disabled={loading}
-        onClick={() => void refresh()}
-      />
-      <button
-        type="button"
-        aria-label={t('app.homeProfile')}
-        onClick={() => navigate('/profile')}
-        className="tap-target shrink-0 rounded-control"
-      >
-        <Avatar
-          seed={profile?.avatarSeed ?? user?.id ?? ''}
-          name={profile?.displayName ?? user?.email}
-          size={36}
-        />
-      </button>
+    <div className="flex h-14 items-center gap-2 px-6">
+      <h1 className="font-display min-w-0 flex-1 truncate text-base">{greeting}</h1>
     </div>
   );
 
@@ -182,10 +172,15 @@ export default function HomeScreen() {
       next !== null &&
       (next.kind === 'workout' || next.kind === 'test' || next.kind === 'benchmark');
     body = (
-      <div className="flex flex-col gap-7">
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
         <ResumeCard onResume={(path) => navigate(path)} />
         {course ? (
-          <div className="-mx-6 h-[58dvh] max-h-[620px] min-h-[420px] lg:-mx-10">
+          /*
+           * The one flexible element on the screen. Everything else is as tall as its content, so
+           * this is what absorbs a task row appearing or the coach button being switched off —
+           * and `min-h-0` is what lets a flex child shrink below its content at all.
+           */
+          <div className="-mx-6 flex min-h-0 flex-1 overflow-hidden md:-mx-10">
             <DeckCard
               photo={PHOTOS.homeToday}
               priority
@@ -228,15 +223,10 @@ export default function HomeScreen() {
           />
         )}
         {/*
-         * The coach, as one button rather than as a card about him: an hour with Сергей is the one
-         * product that uses his time, and the reason it sits under today's session is that the
-         * moment somebody wants it is the moment they are looking at what they have to do.
+         * The challenge, immediately under today's card. It used to sit below the coach button and
+         * the task list, which on a phone put it under the fold — and «Челлендж идёт без тебя» is
+         * an invitation that only works if it is seen.
          */}
-        {BOOKING.enabled ? (
-          <Button variant="secondary" size="lg" fullWidth onClick={() => navigate('/book')}>
-            {t('app.homeCoachNow')}
-          </Button>
-        ) : null}
         <GameToday
           marathon={marathon}
           settled={gameStatus !== 'loading'}
@@ -245,16 +235,34 @@ export default function HomeScreen() {
         />
         <TodayTasks items={tasks} />
         <AssignedWorkoutsCard onOpen={(id) => navigate(`/assigned/${id}`)} />
+        {/*
+         * The coach, as one button rather than as a card about him: an hour with Сергей is the one
+         * product that uses his time. It is last because it is the alternative to the screen, not
+         * a part of it — everything above answers «что у меня сегодня», and this answers «покажи
+         * мне, как» for the people the answer above did not reach.
+         */}
+        {BOOKING.enabled ? (
+          <Button variant="secondary" size="lg" fullWidth onClick={() => navigate('/book')}>
+            {t('app.homeCoachNow')}
+          </Button>
+        ) : null}
       </div>
     );
   }
 
   return (
-    <Screen>
-      <div className="flex flex-col gap-7">
-        {header}
-        {body}
-      </div>
+    /*
+     * `overflow-hidden` with the tab-bar inset as the only bottom padding, and the column inside
+     * grows with `flex-1` rather than `h-full`. That distinction is the whole layout: `main` gets
+     * its height from `flex-1` on a `min-h-dvh` parent, which is not a definite height, so a
+     * percentage resolved against nothing and the column stopped at its content — 524px inside a
+     * 787px box, with the card squeezed to 174px and a third of the screen left empty under it.
+     */
+    <Screen
+      header={header}
+      contentClassName="flex min-h-0 flex-col overflow-hidden pb-[calc(var(--nav-inset,0px)+var(--safe-bottom)+12px)]"
+    >
+      {body}
     </Screen>
   );
 }

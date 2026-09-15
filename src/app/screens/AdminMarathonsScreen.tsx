@@ -15,13 +15,13 @@ import { Input } from '@/components/ui/Input';
 import { Screen } from '@/components/ui/Screen';
 import { Select } from '@/components/ui/Select';
 import { Sheet } from '@/components/ui/Sheet';
-import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { formatNumber } from '@/i18n/index';
 import { createMarathon, listMarathons } from '@/lib/api/marathonAdmin';
 import type { MarathonRow, MarathonStatus } from '@/lib/api/types';
 import { toLocalDateIso } from '@/lib/util/dates';
 import { BootScreen } from '@/app/components/BootScreen';
+import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
@@ -100,9 +100,7 @@ export default function AdminMarathonsScreen() {
     >
       <div className="flex flex-col py-2">
         {loading ? (
-          <div className="flex justify-center py-12">
-            <Spinner />
-          </div>
+          <LoadingBlock />
         ) : rows.length === 0 ? (
           <EmptyState title={t('app.mAdminEmpty')} description={t('app.mAdminEmptyBody')} />
         ) : (

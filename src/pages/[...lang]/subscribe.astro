@@ -112,7 +112,7 @@ const jsonLd = [
           {
             PLAN_INCLUDES.map((x, i) => (
               <li class="flex items-baseline gap-4 border-b border-border py-3">
-                <span class="numeral text-xs text-muted-2" aria-hidden="true">
+                <span class="numeral tabular w-5 shrink-0 text-xs text-muted-2" aria-hidden="true">
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <span>{l(x, locale)}</span>
@@ -120,7 +120,10 @@ const jsonLd = [
             ))
           }
         </ul>
-        <!-- Plan cards: outlined, the price as the numeral, «выгоднее» as an inverse badge. -->
+        <!-- Plan cards: outlined, the price as the numeral, «выгоднее» as an inverse badge. The
+             badge is `shrink-0` — it is a fixed label, not text that can give way. Without it, in
+             the two-up grid at 1024 flex took the missing width out of the badge rather than out
+             of the plan's name, and «Выгоднее» lost its tail. -->
         <div class="mt-8 grid gap-4 sm:grid-cols-2">
           {
             planOptions.map((p) => (
@@ -133,7 +136,7 @@ const jsonLd = [
                 <p class="flex items-baseline justify-between gap-3">
                   <span class="font-display text-sm">{p.name}</span>
                   {p.badge && (
-                    <span class="inline-flex h-6 items-center bg-primary px-2.5 text-[11px] font-semibold tracking-[0.12em] text-on-primary uppercase">
+                    <span class="inline-flex h-6 shrink-0 items-center bg-primary px-2.5 text-[11px] font-semibold tracking-[0.12em] text-on-primary uppercase">
                       {p.badge}
                     </span>
                   )}
@@ -211,14 +214,14 @@ const jsonLd = [
     <div class="grid gap-x-10 md:grid-cols-2">
       <div class="border-t border-border pt-5">
         <p class="flex items-baseline gap-4">
-          <span class="numeral text-sm text-muted" aria-hidden="true">01</span>
+          <span class="numeral tabular w-5 shrink-0 text-sm text-muted" aria-hidden="true">01</span>
           <span class="eyebrow">{t(locale, 'landing.navCourses')}</span>
         </p>
         <p class="mt-4 leading-relaxed text-muted">{t(locale, 'landing.subscribeVsCourse')}</p>
       </div>
       <div class="mt-6 border-t border-border pt-5 md:mt-0">
         <p class="flex items-baseline gap-4">
-          <span class="numeral text-sm text-muted" aria-hidden="true">02</span>
+          <span class="numeral tabular w-5 shrink-0 text-sm text-muted" aria-hidden="true">02</span>
           <span class="eyebrow">{t(locale, 'landing.navSubscribe')}</span>
         </p>
         <p class="mt-4 leading-relaxed text-muted">{t(locale, 'landing.subscribeVsPlan')}</p>

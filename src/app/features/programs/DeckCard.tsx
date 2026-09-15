@@ -1,6 +1,11 @@
 /**
- * One card of the home deck: a cover the height of the screen with everything the card is about
- * standing in its bottom third.
+ * Today's card on Home: a cover filling whatever height the screen has left, with everything the
+ * card is about standing in its bottom third.
+ *
+ * It is the only card of its kind left. The «Программы» tab used to draw its whole deck with this
+ * component and now draws tickets instead (`CourseTicket`), which is why the type here could come
+ * down a step: this is no longer one of five covers competing for attention, it is the one object
+ * on a screen that does not scroll, and at 36px the title was taking room the challenge row needed.
  *
  * The shape is the one every training app opens on — a picture, a name, how far in you are, and
  * one button — and the reason it is worth copying is that it answers "what am I doing today" in a
@@ -92,7 +97,13 @@ export function DeckCard({
   return (
     <article
       className={clsx(
-        'relative flex h-full w-full flex-col justify-end overflow-hidden',
+        /*
+         * `flex-1`, not `h-full`. Home gives this card whatever height the column has left, and
+         * that height comes from `flex-1` on a `min-h-dvh` ancestor — not a definite height, so a
+         * percentage resolved against nothing and the card collapsed to its own content with the
+         * photograph filling only the top half of the space it had been given.
+         */
+        'relative flex min-h-0 w-full flex-1 flex-col justify-end overflow-hidden',
         art ? 'bg-ink text-paper' : 'hero-art',
       )}
       style={style}
@@ -148,19 +159,19 @@ export function DeckCard({
         />
       ) : null}
 
-      <div className="pointer-events-none relative z-10 flex flex-col px-6 pb-9 lg:px-10">
+      <div className="pointer-events-none relative z-10 flex flex-col px-6 pb-6 md:px-10">
         {/*
          * Everything in this block takes `currentColor`, never a literal: on a photograph the
          * article is paper on ink, and on a colour cover it is the tile's own ink — black on
          * yellow. A `text-paper/70` here would be white on yellow.
          */}
         <span className="eyebrow block truncate text-current opacity-70">{eyebrow}</span>
-        <DisplayTitle text={title} className="mt-3 text-4xl lg:text-5xl" />
-        {lead ? <p className="mt-4 max-w-[34ch] text-[15px] leading-relaxed">{lead}</p> : null}
-        {subtitle ? <p className="mt-2 text-[13px] text-current opacity-70">{subtitle}</p> : null}
+        <DisplayTitle text={title} className="mt-2 text-3xl lg:text-4xl" />
+        {lead ? <p className="mt-2 max-w-[34ch] text-[14px] leading-snug">{lead}</p> : null}
+        {subtitle ? <p className="mt-1.5 text-[13px] text-current opacity-70">{subtitle}</p> : null}
 
         {share === undefined ? null : (
-          <div className="mt-7">
+          <div className="mt-5">
             <div className="flex items-baseline justify-between gap-3">
               <span className="flex items-baseline gap-2">
                 <span className="numeral tabular text-3xl leading-none">{share}%</span>
@@ -197,14 +208,14 @@ export function DeckCard({
 
         {ctaHref ? (
           /* No arrow on this one: it does not go forward into the work, it leaves for the web. */
-          <LinkButton href={ctaHref} fullWidth size="lg" className="pointer-events-auto mt-7">
+          <LinkButton href={ctaHref} fullWidth size="lg" className="pointer-events-auto mt-5">
             {ctaLabel}
           </LinkButton>
         ) : (
           <Button
             fullWidth
             size="lg"
-            className="pointer-events-auto mt-7"
+            className="pointer-events-auto mt-5"
             onClick={onCta}
             iconRight={<Glyph size={14}>→</Glyph>}
           >

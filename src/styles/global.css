@@ -9,7 +9,7 @@
  * the profile and marketing backdrops are white "paper". There is no coloured UI accent any more
  * — the primary button is a white fill with black text — and the only colour anywhere is the
  * colour of the *programme* someone is training in: beginners #f2f52d, yoga #a8c8ff, marathon
- * #f08a3c. One screen, one colour; it paints the course cover, the progress and the day number,
+ * #ff7a1a. One screen, one colour; it paints the course cover, the progress and the day number,
  * and never a button. Text on a programme colour is always black.
  *
  * Every radius is 0. The one circle in the system is the play button over a video.
@@ -73,18 +73,18 @@
   /*
    * Programme colours — the only colour in the system, and it comes from the course, never from
    * the interface. Black ink on all three clears AA with room: 16.30 on yellow, 11.28 on blue,
-   * 7.66 on orange. As text on the dark ground they clear it too (same ratios), which is what
+   * 7.34 on orange. As text on the dark ground they clear it too (same ratios), which is what
    * lets a day number or a kicker take the course colour.
    *
    * The `-ink` variants are the same hues darkened for use as text on paper, each ≥ 5.3:1.
    */
   --course-beginners: #f2f52d;
   --course-yoga: #a8c8ff;
-  --course-marathon: #f08a3c;
+  --course-marathon: #ff7a1a;
   --on-course: #0f0f11;
   --course-beginners-ink: #6c7005;
   --course-yoga-ink: #2f5f9e;
-  --course-marathon-ink: #a4530a;
+  --course-marathon-ink: #ab5211;
   --success: #7ce0b0;
   --warning: #ffd166;
   --danger: #ff6b6b;
@@ -471,6 +471,84 @@ body {
   }
   .wordmark-thin {
     font-weight: 200;
+  }
+
+  /*
+   * The wordmark waiting: a wave of weight running left to right through the letters.
+   *
+   * This is the product's loading indicator, and it exists because the alternative was a turning
+   * circle — the one shape the brandbook forbids, kept only because nothing else was drawn. The
+   * mark's whole idea is already a weight contrast in one word (FOR 800, MA 200); Unbounded is a
+   * variable font, so that contrast can be made to *move*, and a thing that reads as the logo
+   * thinking is worth more than a spinner that reads as any website at all.
+   *
+   * Each letter runs 200 → 800 → 200 and starts a little after the one to its left, so what the
+   * eye follows is a single crest travelling across the word, not five letters blinking. The wave
+   * is slower than a spinner on purpose: a spinner races to look busy, and this is a brand mark.
+   *
+   * Each letter is a one-cell grid holding the letter twice: the visible copy, which inherits the
+   * animated weight, and a hidden copy pinned at 800 that reserves the column. A variable weight
+   * changes a glyph's advance width, so without the second copy every letter would shove its
+   * neighbours sideways as the crest passed under it and the word would squirm rather than
+   * breathe. `LogoLoader` (src/components/ui/LogoLoader.tsx) draws that structure; these rules are
+   * what it draws with, and they are here rather than in the component so the pre-hydration
+   * loading screen in `src/pages/app/index.astro` can use the same markup with no JavaScript.
+   */
+  @keyframes wordmark-wave {
+    0%,
+    100% {
+      font-variation-settings: 'wght' 200;
+    }
+    50% {
+      font-variation-settings: 'wght' 800;
+    }
+  }
+  /* After `.wordmark-f` on purpose: equal specificity, so this display wins on the F as well. */
+  .wordmark-wave > * {
+    display: inline-grid;
+    animation: wordmark-wave var(--wave-duration, 2s) ease-in-out infinite;
+  }
+  .wordmark-wave > * > * {
+    grid-area: 1 / 1;
+  }
+  .wordmark-wave > * > [data-reserve] {
+    visibility: hidden;
+    font-variation-settings: 'wght' 800;
+  }
+  /*
+   * The letters are spaced exactly one fifth of the cycle apart, which is what makes this one
+   * crest travelling across the word rather than five letters pulsing nearly together — the first
+   * attempt used a flat 0.1s and the whole mark simply thinned and thickened as a block.
+   *
+   * The delays are negative so every letter is already mid-wave on the first frame, and they run
+   * from -4/5 up to 0 so the letter that peaks first is the leftmost: the crest moves the way the
+   * word is read. They are written against the same custom property as the duration, so retiming
+   * the wave stays one number.
+   */
+  .wordmark-wave > *:nth-child(1) {
+    animation-delay: calc(var(--wave-duration, 2s) * -0.8);
+  }
+  .wordmark-wave > *:nth-child(2) {
+    animation-delay: calc(var(--wave-duration, 2s) * -0.6);
+  }
+  .wordmark-wave > *:nth-child(3) {
+    animation-delay: calc(var(--wave-duration, 2s) * -0.4);
+  }
+  .wordmark-wave > *:nth-child(4) {
+    animation-delay: calc(var(--wave-duration, 2s) * -0.2);
+  }
+  .wordmark-wave > *:nth-child(5) {
+    animation-delay: 0s;
+  }
+  /*
+   * Reduced motion gets the mark at rest — FOR heavy, MA light, exactly as it is drawn everywhere
+   * else — and no movement at all. The screen it sits on still announces itself through the
+   * `role="status"` on the mark, so nothing is lost but the animation.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    .wordmark-wave > * {
+      animation: none;
+    }
   }
 
   /*

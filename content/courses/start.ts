@@ -1247,6 +1247,18 @@ export const COURSE_START: CourseInput = {
   sessionsPerWeek: 5,
   avgSessionMin: 18,
   tile: '#f2f52d', // --tile-1 — programme colour: beginners
+  /*
+   * The owner's artwork: the coach walking out of the pool, monochrome, with «ФОРМА С НУЛЯ» drawn
+   * across it in the programme yellow above. Vendored under `public/` rather than uploaded to the
+   * `images` bucket because it is 217 KB of art that belongs to a course file in this repository —
+   * a landing page built once should not have to reach a bucket for it, and `public/coach/` and
+   * `public/results/` already hold the site's other owned pictures.
+   *
+   * 4:3, so it survives both crops it is put through: the ticket's 2:1 band keeps the middle two
+   * thirds and the landing card's 16:10 keeps five sixths, and the lettering sits inside both.
+   * Because the art carries the name, `CourseTicket` stops printing the title over it.
+   */
+  cover: '/covers/start.jpg',
   price: { rub: 2990, usd: 29 },
   paymentUrl: { ru: 'https://payform.ru/jfcyh1M/' },
   workouts: WORKOUTS.map(withCues),

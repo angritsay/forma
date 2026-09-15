@@ -11,6 +11,7 @@
  * programme — and the number in the corner is the card's numeral, not a decoration.
  */
 import ExerciseStill from '@/components/media/ExerciseStill';
+import { publicMediaUrl } from '@/lib/api/storage';
 import type { Course, Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { courseTileStyle } from '@/lib/ui/tile';
@@ -38,6 +39,14 @@ interface Props {
 const { course, locale, headingLevel: Heading = 'h3', n } = Astro.props;
 const url = courseHref(locale, course);
 const signature = signatureExercise(course);
+/*
+ * The course's own cover art beats the signature movement's still. The still is a stand-in — one
+ * frame of one exercise, standing for a whole course — and it was the best the card could do
+ * before a course could carry a picture of its own. Unlike in the app, the name stays printed
+ * here: this card sits in a grid of courses a stranger is choosing between, and the heading is
+ * also the link and the h2/h3 the page's outline is built from.
+ */
+const cover = course.cover ? publicMediaUrl(course.cover) : undefined;
 const equipment = courseEquipmentForDisplay(course);
 const price = isFree(course.price, locale)
   ? t(locale, 'landing.priceFree')
@@ -61,7 +70,13 @@ const price = isFree(course.price, locale)
       aria-hidden="true"
       tabindex="-1"
     >
-      {signature ? <ExerciseStill exerciseId={signature.id} /> : null}
+      {
+        cover ? (
+          <img src={cover} alt="" loading="lazy" decoding="async" class="size-full object-cover" />
+        ) : signature ? (
+          <ExerciseStill exerciseId={signature.id} />
+        ) : null
+      }
     </a>
     {
       n !== undefined && (

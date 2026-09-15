@@ -116,8 +116,6 @@ export const app = {
   onbAssessWarnTitle: 'Не выжимай максимум',
   onbAssessWarnBody:
     'Это не экзамен, а настройка. Работай в спокойном темпе и останавливайся, когда техника начинает портиться, — а не когда закончились силы.',
-  onbAssessWarnBody2:
-    'Если выложиться сегодня до отказа, приложение решит, что ты сильнее, чем есть, и программа на ближайшие недели будет слишком тяжёлой. Честное спокойное число — это тренировки, которые ты сможешь делать.',
   onbAssessWarnCta: 'Понятно, начнём',
   onbAssessInstruction:
     'Посчитай, сколько раз ты выполнишь за это время — в спокойном ритме, без дискомфорта, не пытаясь выдавить из себя больше, чем нужно.',
@@ -198,7 +196,7 @@ export const app = {
   homeTodayNoCourseTitle: 'Выбери курс',
   homeTodayNoCourseBody: 'Выбери программу — и первая тренировка появится здесь.',
   homeTodayNoCourseCta: 'Смотреть программы',
-  homeCoachNow: 'Заниматься с тренером сейчас',
+  homeCoachNow: 'Заниматься с тренером',
   // The challenge, on Home. Somebody not in it sees the same row with the task blurred out.
   homeGameSpoiler: 'Челлендж идёт без тебя',
   homeGameSpoilerTask: 'Задание дня',
@@ -236,7 +234,6 @@ export const app = {
   homeDeckMarathonCta: 'Задание на сегодня',
   homeDeckStart: 'Начать тренировку',
   homeDeckProgressLabel: 'пройдено',
-  homeDeckGoTo: 'Карточка {n}',
   homeErrorTitle: 'Не удалось загрузить прогресс',
   homeErrorBody: 'Проверь соединение и попробуй ещё раз.',
   homeRefreshError: 'Не удалось обновить. Показываем последние сохранённые данные.',
@@ -915,7 +912,7 @@ export const app = {
   courseEquipment: 'Оборудование',
   courseTile: 'Плашка курса',
   courseTileHint:
-    'Единственный цвет на экране курса. Цвета программ: новичкам #f2f52d, йога #a8c8ff, марафон #f08a3c. Другому курсу — одна из двух нейтральных поверхностей: #1f1f24 или #2a2a30.',
+    'Единственный цвет на экране курса. Цвета программ: новичкам #f2f52d, йога #a8c8ff, марафон #ff7a1a. Другому курсу — одна из двух нейтральных поверхностей: #1f1f24 или #2a2a30.',
   courseCover: 'Обложка',
   courseCoverHint: 'Показывается на странице курса и в каталоге',
   courseIntroVideo: 'Вступительное видео',
@@ -993,6 +990,10 @@ export const app = {
   // --- Marathon -------------------------------------------------------------
   // The second format: daily tasks, proof, a partner you are scored with, a weekly board.
   marathonTitle: 'Челлендж',
+  // The cover's big line before there is a day to count: what the format is, in one line.
+  // No dash in it on purpose — the line sets in capitals across two lines of a 390px screen, and
+  // an em-dash that lands first on the second line reads as a stray mark rather than as pause.
+  marathonCoverPitch: 'Задание на каждый день',
   marathonTabToday: 'Сегодня',
   marathonTabBoard: 'Таблица',
   marathonTabPoints: 'Мои баллы',

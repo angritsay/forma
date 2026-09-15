@@ -21,8 +21,19 @@ const INK_ON_DARK = '#f6f6f7';
  * content gives it, and the challenge wears orange everywhere it appears: the deck card, the row on
  * Home, the ring beside today's task. A marathon has no course tile of its own to read it from,
  * so this is where it lives, once.
+ *
+ * It must stay in step with `--course-marathon` in global.css, which is the same hex for the CSS
+ * side of the same idea.
+ *
+ * **This value sits close to a cliff.** Its luminance is 0.353 against the 0.35 in
+ * {@link isLightTile} — three thousandths. Above the line the challenge's cover is black type on
+ * orange; below it the cover flips to white type on a darker orange, which is a different screen,
+ * not a different shade. The orange it replaced had 0.020 of margin, so this is the tighter of the
+ * two, deliberately: the owner picked this hue from a rendered comparison of eight, with the flip
+ * shown. Anyone nudging it toward red should check the luminance first and expect the flip, and
+ * anyone changing the 0.35 should know it moves this screen.
  */
-export const GAME_TILE = '#f08a3c';
+export const GAME_TILE = '#ff7a1a';
 
 /** Relative luminance per WCAG; 0 is black, 1 is white. */
 export function luminance(hex: string): number {

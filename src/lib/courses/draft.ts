@@ -390,6 +390,14 @@ export function draftToCourse(
     sessionsPerWeek: draft.sessionsPerWeek,
     avgSessionMin: draft.avgSessionMin,
     tile: draft.tile,
+    /*
+     * The cover the admin panel has been able to upload since the builder shipped, and which every
+     * published course quietly dropped right here: `MediaField` wrote the reference onto the draft
+     * and nothing carried it across into the Course. An empty string is not a cover — clearing the
+     * field removes it, so the programme colour takes back over instead of an <img> pointing at
+     * nothing.
+     */
+    ...(draft.content.coverImage ? { cover: draft.content.coverImage } : {}),
     price: { rub: draft.priceRub, usd: draft.priceUsd },
     ...(draft.content.paymentUrl && (draft.content.paymentUrl.ru || draft.content.paymentUrl.en)
       ? { paymentUrl: draft.content.paymentUrl }

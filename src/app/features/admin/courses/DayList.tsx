@@ -5,6 +5,7 @@
  * untitled day), because the publish tab lists problems in `CourseSchema`'s words and this is
  * where they can actually be fixed.
  */
+import { clsx } from 'clsx';
 import { Badge } from '@/components/ui/Badge';
 import { Glyph } from '@/components/ui/Icon';
 import type { AdminCourseDayRow, CourseDayKind, CustomWorkoutSummary } from '@/lib/api/types';
@@ -24,9 +25,14 @@ export interface DayListProps {
   days: readonly AdminCourseDayRow[];
   workouts: readonly CustomWorkoutSummary[];
   onOpen: (day: AdminCourseDayRow) => void;
+  /**
+   * The day open in the editor beside this list, from `md` up. On a phone there is no such thing —
+   * opening a day replaces the list — so it is absent there and no row is ever marked.
+   */
+  openId?: string | undefined;
 }
 
-export function DayList({ days, workouts, onOpen }: DayListProps) {
+export function DayList({ days, workouts, onOpen, openId }: DayListProps) {
   const { t } = useT();
   const byId = new Map(workouts.map((w) => [w.id, w]));
 
@@ -51,12 +57,23 @@ export function DayList({ days, workouts, onOpen }: DayListProps) {
                 const workout = d.customWorkoutId ? byId.get(d.customWorkoutId) : undefined;
                 const needsWorkout = TRAINING_KINDS.includes(d.kind) && !workout;
                 const title = d.content.title?.ru?.trim();
+                const open = d.id === openId;
                 return (
                   <li key={d.id}>
                     <button
                       type="button"
                       onClick={() => onOpen(d)}
-                      className="flex w-full items-center gap-3 border-t border-border py-3.5 text-left transition-colors duration-150 ease-(--ease-out) hover:bg-surface-2 active:bg-surface-3"
+                      aria-current={open ? 'true' : undefined}
+                      className={clsx(
+                        'flex w-full items-center gap-3 border-t border-border py-3.5 pr-3 text-left',
+                        'transition-colors duration-150 ease-(--ease-out) hover:bg-surface-2 active:bg-surface-3',
+                        /*
+                         * Which day the editor is showing, said in a rule down the left edge —
+                         * the same device the tab bar uses for the tab you are on. A fill would
+                         * have to be a colour, and no day in an editor is the current day.
+                         */
+                        open ? 'border-l-2 border-l-paper bg-surface-2 pl-2.5' : 'pl-4',
+                      )}
                     >
                       {/*
                        * The day number is the row's numeral — 01, 02 — and stays grey here: the

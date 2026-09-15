@@ -14,6 +14,7 @@ import { enableDemo, isDemo } from '@/lib/api/mode';
 import { initTelegram, waitForTelegram } from '@/lib/telegram/webapp';
 import { AppProviders } from './components/AppProviders';
 import { AppFrame } from './components/AppShell';
+import { BootScreen } from './components/BootScreen';
 import { AppRoutes } from './router';
 import NotConfiguredScreen from './screens/NotConfiguredScreen';
 
@@ -41,7 +42,18 @@ export default function App() {
     };
   }, [ready]);
 
-  if (!ready) return <AppFrame />;
+  /*
+   * Waiting on Telegram's SDK, which is a request to telegram.org. This used to render an empty
+   * frame — a second black screen, straight after the one the island's fallback just handed over,
+   * and the only wait in the app with nothing in it. `BootScreen` is what the rest of the boot
+   * shows, and this is part of the same boot.
+   */
+  if (!ready)
+    return (
+      <AppFrame>
+        <BootScreen />
+      </AppFrame>
+    );
 
   if (!isConfigured() && !demo) {
     const openDemo = () => {

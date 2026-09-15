@@ -102,8 +102,25 @@ public/                     # favicon.svg, icons, manifest
   from content (`course.tile`) and is applied via the `--course-tile` CSS variable.
 - Accessibility: interactive elements are `<button>`/`<a>`, images have `alt`, overlays close on
   Esc, focus visible, color contrast ≥ 4.5:1 for text on dark surfaces.
-- Mobile-first. The app is designed for a phone (390px) and must be usable up to desktop
-  (centered max-width 480px app frame on large screens). Landing is responsive 360px → 1440px.
+- Mobile-first, with one breakpoint. The app is designed for a phone (390px), and that is what it
+  is **below `md` (768)**: a 480px column with the bottom tab bar. **From `md` up it uses the
+  screen** — the frame releases its cap, the tab bar hides and `TopNav` takes over as a row across
+  the top, with `AdminNav` as a second column inside `/admin`. This reverses the rule that stood
+  here («centered max-width 480px app frame on large screens»), and the reversal is the owner's:
+  she builds courses from a laptop, and a 480px strip in the middle of one is a phone stranded in a
+  grey field. Content is capped at 760px for reading screens, 1040px for the two screens that split
+  in two (profile, challenge) and 1280px for the admin; a sheet becomes a centred dialog at the same
+  breakpoint. Landing is responsive 360px → 1440px.
+- `AdminNav` is the one component that waits for `lg` (1024) instead. Its rail is 264px, which is a
+  third of a tablet: at `md` it left the purchases 504px — less than a phone gives them — so a
+  tablet takes the phone's route into the admin and spends the whole width on the work.
+- Which screens re-lay out rather than stretch, from `md`: Today (workout left, the rest right),
+  Programmes (tickets two across), the challenge (day left, week's board right), the profile
+  (identity left, settings right), the player (clip left, counter and «дальше» right), the course
+  day in the admin (list of days left, editor right), and the progress details (figures two across).
+  Everything else keeps one column and gains air.
+- The type scale does not change with the screen (`design/` calls it «мобайл-первая, 390px»). What
+  grows on a wide screen is the gutter, the column count and the air between sections.
 - Dates: store ISO strings; "today" is computed in the user's local timezone for streaks/steps;
   server timestamps are `timestamptz`.
 - Errors: never crash to a blank screen; show a localized error state with retry.

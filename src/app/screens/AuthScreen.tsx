@@ -222,9 +222,22 @@ export default function AuthScreen() {
     countdown.reset();
   };
 
+  /*
+   * `isolate` on the <main> below is what lets the backdrop be seen at all.
+   *
+   * `Backdrop` is `fixed inset-0 -z-10`, and `main` is `position: relative` with `z-index: auto` —
+   * which is not a stacking context. So the backdrop was stacked against the *root* one, and a
+   * negative z-index there paints behind the canvas background, which `html` and `body` both set
+   * to `--ink`. The film ran, the poster loaded, and a black rectangle was drawn over both. It went
+   * unnoticed because the only thing ever behind it was an Unsplash URL the session that wrote this
+   * screen could not reach either.
+   *
+   * Isolating makes `-z-10` mean "behind this screen" rather than "behind the page", which is what
+   * it was always meant to say, and leaves every other layer's order untouched.
+   */
   return (
     <main
-      className="relative flex min-h-dvh flex-col justify-end px-6 pt-[var(--safe-top)] pb-[calc(var(--safe-bottom)+var(--nav-inset,0px)+28px)] text-paper"
+      className="relative isolate flex min-h-dvh flex-col justify-end px-6 pt-[var(--safe-top)] pb-[calc(var(--safe-bottom)+var(--nav-inset,0px)+28px)] text-paper"
       onPointerDown={introOver ? undefined : () => setIntro('done')}
     >
       <Backdrop src={AUTH_FILM.src || undefined} poster={withBasePoster(AUTH_FILM.poster)} />

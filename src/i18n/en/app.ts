@@ -117,8 +117,6 @@ export const app = {
   onbAssessWarnTitle: 'Don’t squeeze out a maximum',
   onbAssessWarnBody:
     'This is a setup, not an exam. Work at a calm pace and stop when the technique starts to go — not when the strength does.',
-  onbAssessWarnBody2:
-    'Push to failure today and the app will decide you are stronger than you are, and the programme for the next weeks will be too heavy. An honest calm number is training you can actually do.',
   onbAssessWarnCta: 'Got it, let’s start',
   onbAssessInstruction:
     'Count how many you do in the time — at a calm pace, with no discomfort, without squeezing out more than you need to.',
@@ -199,7 +197,7 @@ export const app = {
   homeTodayNoCourseTitle: 'Pick a course',
   homeTodayNoCourseBody: 'Choose a program and your first workout will appear here.',
   homeTodayNoCourseCta: 'Browse programmes',
-  homeCoachNow: 'Train with the coach now',
+  homeCoachNow: 'Train with the coach',
   // The challenge, on Home. Somebody not in it sees the same row with the task blurred out.
   homeGameSpoiler: 'The challenge is on',
   homeGameSpoilerTask: 'Today’s task',
@@ -238,7 +236,6 @@ export const app = {
   homeDeckMarathonCta: 'Today’s task',
   homeDeckStart: 'Start the workout',
   homeDeckProgressLabel: 'done',
-  homeDeckGoTo: 'Card {n}',
   homeErrorTitle: 'Couldn’t load your progress',
   homeErrorBody: 'Check the connection and try again.',
   homeRefreshError: 'Couldn’t refresh. Showing the last saved data.',
@@ -918,7 +915,7 @@ export const app = {
   courseEquipment: 'Equipment',
   courseTile: 'Course tile',
   courseTileHint:
-    'The one colour on the course screen. Programme colours: beginners #f2f52d, yoga #a8c8ff, marathon #f08a3c. Any other course takes one of the two neutral surfaces: #1f1f24 or #2a2a30.',
+    'The one colour on the course screen. Programme colours: beginners #f2f52d, yoga #a8c8ff, marathon #ff7a1a. Any other course takes one of the two neutral surfaces: #1f1f24 or #2a2a30.',
   courseCover: 'Cover image',
   courseCoverHint: 'Shown on the course page and in the catalogue',
   courseIntroVideo: 'Intro video',
@@ -996,6 +993,8 @@ export const app = {
   // --- Marathon -------------------------------------------------------------
   // The second format: daily tasks, proof, a partner you are scored with, a weekly board.
   marathonTitle: 'Challenge',
+  // The cover's big line before there is a day to count: what the format is, in one line.
+  marathonCoverPitch: 'A task for every day',
   marathonTabToday: 'Today',
   marathonTabBoard: 'Board',
   marathonTabPoints: 'My points',

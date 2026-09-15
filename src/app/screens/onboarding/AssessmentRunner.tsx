@@ -143,13 +143,30 @@ export function AssessmentRunner({
         </span>
       </div>
 
-      {/* The clip, contained: the coach films in landscape and a crop hides the movement. */}
-      <div className="relative mt-5 min-h-0 flex-1">
+      {/*
+       * The clip, edge to edge.
+       *
+       * It used to be `size-full object-contain`, which fits the clip inside the stage on whichever
+       * side runs out first — and on a phone that is the height, so a vertical clip sat in a
+       * letterbox with a black bar down each side and the movement shrank into the middle.
+       *
+       * `w-full h-auto` reverses which side wins: the clip is as wide as the screen, and its height
+       * is whatever its own shape gives. Nothing is cropped, which matters more here than it looks.
+       * The first fix tried was `object-cover`, and the player's own notes one screen over record
+       * why that was reverted the last time: some movements are filmed in landscape, and a
+       * landscape frame cropped into a phone-shaped hole keeps a vertical strip through the middle
+       * — the squat happens off-screen and the clip is worth nothing.
+       *
+       * `max-h-full` is the floor under all of it: a clip taller than the stage is fitted to the
+       * height instead, because a movement that runs off the bottom of the screen is worse than
+       * one with room at its sides.
+       */}
+      <div className="relative mt-5 flex min-h-0 flex-1 items-center overflow-hidden">
         {videoUrl ? (
           <video
             key={videoUrl}
             src={videoUrl}
-            className="size-full object-contain"
+            className="h-auto max-h-full w-full object-contain"
             playsInline
             muted
             loop
@@ -159,7 +176,7 @@ export function AssessmentRunner({
         ) : (
           <ExerciseStill
             exerciseId={move.exerciseId}
-            className="size-full object-contain"
+            className="h-auto max-h-full w-full object-contain"
             loading="eager"
           />
         )}

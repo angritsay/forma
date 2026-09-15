@@ -75,6 +75,11 @@ function AchievementTile({ item, n }: { item: AchievementStatus; n: number }) {
  *
  * The locked row is a plain horizontal scroller rather than a component with a state machine: it
  * has no "current" card, nothing snaps, and a keyboard reaches every tile by tabbing through it.
+ *
+ * The earned grid takes three columns at `md` and four at `lg`. Two is the right number on a phone
+ * and the wrong one on a laptop, where it leaves a tile 370px wide holding a numeral and two short
+ * lines. The locked row stops sizing itself as a share of the viewport at the same point — 46% of
+ * 1280px is not a card, it is a billboard — and takes the fixed width it already caps at.
  */
 export function AchievementsGrid({ items }: { items: readonly AchievementStatus[] }) {
   const { t } = useT();
@@ -86,7 +91,7 @@ export function AchievementsGrid({ items }: { items: readonly AchievementStatus[
   return (
     <div className="flex flex-col gap-4">
       {unlocked.length > 0 ? (
-        <ul className="grid grid-cols-2 gap-3">
+        <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
           {unlocked.map(({ item, n }) => (
             <li key={item.id}>
               <AchievementTile item={item} n={n} />
@@ -98,9 +103,9 @@ export function AchievementsGrid({ items }: { items: readonly AchievementStatus[
       {locked.length > 0 ? (
         <section className="flex flex-col gap-2">
           <h3 className="eyebrow text-muted-2">{t('app.statsAchievementsLocked')}</h3>
-          <ul className="deck-scroller -mx-6 flex gap-3 overflow-x-auto px-6 lg:-mx-10 lg:px-10">
+          <ul className="deck-scroller -mx-6 flex gap-3 overflow-x-auto px-6 md:-mx-10 md:px-10">
             {locked.map(({ item, n }) => (
-              <li key={item.id} className="w-[46%] max-w-[220px] shrink-0">
+              <li key={item.id} className="w-[46%] max-w-[220px] shrink-0 md:w-[220px]">
                 <AchievementTile item={item} n={n} />
               </li>
             ))}

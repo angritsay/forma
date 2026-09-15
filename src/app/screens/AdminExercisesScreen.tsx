@@ -16,7 +16,6 @@ import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
-import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import {
   createExercise,
@@ -33,6 +32,7 @@ import { useDebounced } from '@/app/features/admin/useDebounced';
 import { useCatalogue } from '@/app/store/catalogue';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { ExerciseEditor } from '@/app/features/admin/exercises/ExerciseEditor';
+import { LoadingBlock } from '@/app/components/LoadingBlock';
 
 type Filter = 'all' | 'custom' | 'video';
 type EditTarget = ExerciseCatalogRow | 'new' | null;
@@ -167,9 +167,7 @@ export default function AdminExercisesScreen() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-10">
-          <Spinner />
-        </div>
+        <LoadingBlock />
       ) : filtered.length === 0 ? (
         <EmptyState title={t('app.exNoMatches')} />
       ) : (

@@ -49,7 +49,7 @@ export function Screen({
       <main
         className={clsx(
           'flex-1 pb-[calc(var(--nav-inset,0px)+var(--safe-bottom)+32px)]',
-          padded && 'px-6 lg:px-10',
+          padded && 'px-6 md:px-10',
           contentClassName,
         )}
       >
@@ -64,13 +64,25 @@ export function Screen({
        * soften the edge between content and chrome, but it cannot be the background of the control
        * itself.
        */}
+      {/*
+       * Its side padding matches the content above it. The two used to disagree — the content took
+       * `lg:px-10` and this band only ever `px-6` — so on a wide screen the primary button stood on
+       * a different vertical from every word above it.
+       */}
       {footer ? (
-        <div className="sticky bottom-[var(--nav-inset,0px)] z-20 bg-bg px-6 pt-5 pb-[calc(var(--safe-bottom)+16px)]">
+        <div className="sticky bottom-[var(--nav-inset,0px)] z-20 bg-bg px-6 pt-5 pb-[calc(var(--safe-bottom)+16px)] md:px-10">
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-x-0 bottom-full h-6 bg-linear-to-t from-bg to-transparent"
           />
-          {footer}
+          {/*
+           * The action stops stretching at `md`. A primary button is full-width on a phone because
+           * the thumb is imprecise and the screen is narrow; at 1280px the same rule produced a
+           * «+ Новое упражнение» 935px wide floating over the list it belongs to, which reads as a
+           * banner rather than as a control. 420px is the width the button has on the largest phone
+           * the product supports, so it is the same object, not a new one.
+           */}
+          <div className="md:max-w-[420px]">{footer}</div>
         </div>
       ) : null}
     </div>

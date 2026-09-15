@@ -4,7 +4,23 @@
  */
 import Base from '@/layouts/Base.astro';
 import App from '@/app/main';
+import { t } from '@/i18n';
 import { withBase } from '@/lib/util/paths';
+
+/*
+ * «FORMA», letter by letter, for the loading screen below. Each letter is drawn twice — the
+ * visible copy takes the animated weight, the `data-reserve` copy is pinned at 800 and holds the
+ * column open — which is the structure `.wordmark-wave` in global.css expects and the same one
+ * `LogoLoader` builds in React. Spelled out here rather than imported because this has to be HTML
+ * in the document, not a component that needs the bundle it is covering for.
+ */
+const LETTERS = [
+  { char: 'F', cls: 'wordmark-f' },
+  { char: 'O', cls: undefined },
+  { char: 'R', cls: undefined },
+  { char: 'M', cls: 'wordmark-thin' },
+  { char: 'A', cls: 'wordmark-thin' },
+];
 ---
 
 <Base locale="ru" bodyClass="app-body">
@@ -37,5 +53,44 @@ import { withBase } from '@/lib/util/paths';
       })();
     </script>
   </Fragment>
-  <App client:only="react" />
+  {
+    /*
+     * The loading screen nobody had written: the one before the app exists.
+     *
+     * The island is `client:only`, so until the bundle has arrived, parsed and mounted, this
+     * document has a `<body>` and nothing in it — a black rectangle, for as long as the network
+     * takes. Every other wait in the product is covered (`BootScreen` for the session and the
+     * lazy routes, a skeleton on every screen that fetches), and this, the longest one and the
+     * first thing anybody sees, was covered by nothing.
+     *
+     * Astro swaps the `fallback` slot out for the component the moment it hydrates, so this is
+     * markup the app never has to clean up. It deliberately uses no JavaScript and no images: it
+     * is standing in for the JavaScript, and the wordmark is a font the page is already loading.
+     * Same layout and the same growth with the viewport as `BootScreen`, which is what replaces
+     * it a moment later — the handover should be invisible.
+     */
+  }
+  <App client:only="react">
+    <div slot="fallback" class="flex min-h-dvh flex-col justify-center">
+      <div
+        class="mx-auto flex w-full max-w-[480px] flex-col gap-4 px-5.5 md:max-w-[720px] md:gap-5 md:px-10"
+      >
+        <span
+          role="status"
+          aria-label={t('ru', 'common.loading')}
+          class="wordmark wordmark-wave inline-flex items-baseline text-4xl md:text-6xl lg:text-7xl"
+        >
+          {
+            LETTERS.map(({ char, cls }) => (
+              <span class={cls} aria-hidden="true">
+                <span data-reserve="">{char}</span>
+                <span>{char}</span>
+              </span>
+            ))
+          }
+        </span>
+        <span class="eyebrow-sentence">{t('ru', 'common.tagline')}</span>
+      </div>
+    </div>
+  </App>
 </Base>

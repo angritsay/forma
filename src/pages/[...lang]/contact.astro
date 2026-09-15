@@ -83,7 +83,7 @@ const jsonLd = breadcrumbLd([
           [t(locale, 'landing.contactBefore1'), t(locale, 'landing.contactBefore2')].map(
             (line, i) => (
               <li class="flex items-baseline gap-4 py-3">
-                <span class="numeral text-xs text-muted-2" aria-hidden="true">
+                <span class="numeral tabular w-5 shrink-0 text-xs text-muted-2" aria-hidden="true">
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 {line}
@@ -92,7 +92,9 @@ const jsonLd = breadcrumbLd([
           )
         }
         <li class="flex items-baseline gap-4 py-3">
-          <span class="numeral text-xs text-muted-2" aria-hidden="true">03</span>
+          <span class="numeral tabular w-5 shrink-0 text-xs text-muted-2" aria-hidden="true"
+            >03</span
+          >
           <a
             href={href(locale, '/refund/')}
             class="underline decoration-border-strong underline-offset-4 hover:text-text"

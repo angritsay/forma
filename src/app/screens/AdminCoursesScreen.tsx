@@ -15,12 +15,12 @@ import { Glyph } from '@/components/ui/Icon';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
-import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { createAdminCourse, listAdminCourses } from '@/lib/api/courseBuilder';
 import type { AdminCourseRow } from '@/lib/api/types';
 import { courseTileVars } from '@/lib/ui/tile';
 import { BootScreen } from '@/app/components/BootScreen';
+import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
@@ -85,9 +85,7 @@ export default function AdminCoursesScreen() {
       }
     >
       {loading ? (
-        <div className="flex justify-center py-10">
-          <Spinner />
-        </div>
+        <LoadingBlock />
       ) : rows.length === 0 ? (
         <EmptyState title={t('app.courseEmptyTitle')} description={t('app.courseEmptyBody')} />
       ) : (

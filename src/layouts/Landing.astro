@@ -116,7 +116,14 @@ const primaryLink =
         <Logo lockup label={BRAND.name} class="max-md:hidden" />
       </a>
 
-      <ul class="hidden items-center gap-7 md:flex">
+      <!--
+        The links appear at `lg`, not at `md`, and the reason is measured rather than tidy. At 820px
+        — an iPad in portrait — the row was five links at `gap-7`, the full lockup and the app
+        button in 780px of usable width: «О тренере» broke onto a second line and the button landed
+        on top of it. Everything below 1024 gets the menu button instead, which is what that width
+        has room for.
+      -->
+      <ul class="hidden items-center gap-7 lg:flex">
         {
           navLinks.map((x) => (
             <li>
@@ -137,7 +144,7 @@ const primaryLink =
           {t(locale, 'landing.navApp')}
         </a>
 
-        <details class="group md:hidden" data-mobile-nav>
+        <details class="group lg:hidden" data-mobile-nav>
           <!--
             A word, not a hamburger: the brand has almost no icons, and «Меню» says what three
             lines only imply. The open state shows a × glyph, which is punctuation, not a picture.

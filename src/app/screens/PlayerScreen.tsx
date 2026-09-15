@@ -100,17 +100,15 @@ interface ArtLayerProps {
  * a movement whose clip has not been uploaded yet. Nothing is drawn: a diagram of a movement we
  * film is a worse picture of it, and a diagram of one we do not film is a promise we cannot keep.
  *
- * **It is exactly as wide as the screen, and never cropped sideways.** Width is the fit dimension:
- * the clip is scaled so it spans the frame edge to edge, and its height follows from its own
- * aspect. That kills the bars down the sides a landscape clip used to sit between, and it keeps
- * the reason those bars existed — `object-cover` cropped a landscape frame to a phone-shaped hole
- * and left a vertical strip through the middle, with the squat happening off-screen. Nothing is
- * ever cut horizontally, so the movement is always whole.
- *
- * A clip taller than the space it is given is clipped top and bottom instead, equally, because it
- * is centred in that space — and the space is measured from the bottom of the frame, ending just
- * under the glass. The picture therefore sits where the eye already is rather than floating in the
- * middle of the phone with a gap above the words.
+ * **It is never cropped, and it is as wide as the screen.** Those are two rules, and they used to
+ * be in conflict. Cropping is out for a reason worth keeping written down: `object-cover` was tried
+ * and reverted, because the coach films in landscape, in a garden, and a landscape frame cropped to
+ * a phone-shaped hole keeps a vertical strip through the middle — the squat happens off-screen and
+ * the video is worth nothing. But `size-full object-contain` fits on whichever side runs out first,
+ * which on a phone is the height, so a vertical clip came out in a letterbox with a black bar down
+ * each side. `w-full h-auto max-h-full` settles it: the clip is as wide as the screen and as tall
+ * as its own shape makes it, falling back to fitting by height only when it would otherwise run off
+ * the bottom. No bar at the sides in the ordinary case, and no crop in any case.
  *
  * **It ends above the glass.** The panel at the bottom reports its height and the clip is given the
  * room above it, so the movement is never half under the words. The clip still runs a little way
@@ -147,46 +145,61 @@ function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
        *
        * The panel's measured height is what this is subtracted by, so a step with a stepper and a
        * button leaves the clip correspondingly less room and the movement still ends above the
-       * words. The 40px of overlap does two things at once: it puts real picture behind the top of
-       * the panel, which is the only thing that makes frosted glass read as glass, and — because a
-       * portrait clip is fitted by height here — it widens the frame by the same token, closing the
-       * thin bars at the sides almost completely.
+       * words. The 40px of overlap puts real picture behind the top of the panel, which is the only
+       * thing that makes frosted glass read as glass. It used to earn its keep twice over, by
+       * widening a height-fitted portrait clip enough to close the thin bars at its sides «almost
+       * completely» — that is no longer its job: the clip takes the full width outright now, and
+       * «almost» was never good enough for a hairline of black down both edges of a movement.
        */}
       <div
-        className="absolute inset-x-0 top-0 flex items-center justify-center overflow-hidden"
-        style={{ bottom: 'max(0px, calc(var(--player-glass-h, 0px) - 40px))' }}
+        /*
+         * Centred, because a clip that is only as tall as its own shape no longer fills the stage
+         * on its own — the leftover room is split above and below it rather than left at the foot.
+         *
+         * From `md` the panel is a column on the right (`PlayerFooter`), so the stage gives up
+         * width instead of height: `right` is the panel's 380px less the same 40px of overlap that
+         * puts real picture behind the glass, and the measured height stops applying.
+         */
+        /*
+         * The bottom inset is a class, not an inline style. It used to be inline, and inline wins
+         * over a utility for the same property — so `md:bottom-0` could never take effect and the
+         * stage would have kept reserving room for a panel that is no longer underneath it.
+         */
+        className="absolute inset-x-0 top-0 bottom-[max(0px,calc(var(--player-glass-h,0px)-40px))] flex items-center md:right-85 md:bottom-0"
       >
-        {
-          /*
-           * `w-full` with no height is the whole rule: the media is exactly the frame's width and
-           * its height comes from its own aspect. `shrink-0` stops the flex row squeezing a tall
-           * clip back down to fit — a clip taller than the box is meant to overflow and be clipped,
-           * not to shrink away from the edges it was told to reach.
-           *
-           * Keyed on the source so each new movement replays the settle rather than cutting to it.
-           */
-          videoUrl ? (
-            <video
-              key={videoUrl}
-              ref={video}
-              src={videoUrl}
-              poster={still}
-              className="player-art-in w-full shrink-0"
-              playsInline
-              muted
-              loop
-              autoPlay
-              preload="metadata"
-            />
-          ) : (
-            <ExerciseStill
-              key={exerciseId}
-              exerciseId={exerciseId}
-              className="player-art-in w-full shrink-0"
-              loading="eager"
-            />
-          )
-        }
+        {/*
+         * `player-art-in` is the arrival: the next movement's picture settles in over 0.42s rather
+         * than replacing the last one on the spot, keyed on the source so every step replays it.
+         *
+         * This branch and main reached the framing above by different routes and met here. The
+         * other one fitted by width alone and let a clip taller than the stage overflow and be
+         * clipped top and bottom; this one fits by width and falls back to height, so such a clip
+         * is shown whole with room above and below it instead. Main's rule wins because the
+         * desktop column on this same element was written against it — `md:right-85` takes width
+         * away from the stage, which only works if the picture is allowed to fit by height. The
+         * transition is orthogonal to that argument, so it is kept.
+         */}
+        {videoUrl ? (
+          <video
+            key={videoUrl}
+            ref={video}
+            src={videoUrl}
+            poster={still}
+            className="player-art-in h-auto max-h-full w-full object-contain"
+            playsInline
+            muted
+            loop
+            autoPlay
+            preload="metadata"
+          />
+        ) : (
+          <ExerciseStill
+            key={exerciseId}
+            exerciseId={exerciseId}
+            className="player-art-in h-auto max-h-full w-full object-contain"
+            loading="eager"
+          />
+        )}
       </div>
     </div>
   );

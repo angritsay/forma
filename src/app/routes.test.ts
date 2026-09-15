@@ -1,10 +1,14 @@
 /**
  * Every destination the app links to must be a route the router actually declares.
  *
- * This exists because it did not: the course builder shipped with its screens written, its side-nav
+ * This exists because it did not: the course builder shipped with its screens written, its nav
  * entries added and its `<Route>` elements missing, so clicking "Конструктор курсов" fell through
  * to the catch-all and landed on the home screen. Nothing failed — not the type check, not the
  * build, not a unit test — because a `to=` string and a `path=` string never have to agree.
+ *
+ * There are three nav tables now, not two: the tab bar on a phone, the row across the top from
+ * `md` up, and the admin's own rail beside its screens. All three are checked, and the list below
+ * is the thing to extend when a fourth appears.
  *
  * Both sides are read out of the source rather than imported, because the router is JSX and the
  * nav tables are module-private. That is coarse, but it is exactly the coupling that broke.
@@ -48,11 +52,16 @@ describe('navigation targets', () => {
     // Guards the regexes above: a refactor that renames or reformats these files should fail here
     // loudly rather than quietly asserting nothing.
     expect(routes.length).toBeGreaterThan(10);
-    expect(navTargets('components/SideNav.tsx').length).toBeGreaterThan(4);
+    expect(navTargets('components/TopNav.tsx').length).toBeGreaterThan(2);
+    expect(navTargets('components/AdminNav.tsx').length).toBeGreaterThan(4);
     expect(navTargets('components/BottomNav.tsx').length).toBeGreaterThan(2);
   });
 
-  for (const file of ['components/SideNav.tsx', 'components/BottomNav.tsx']) {
+  for (const file of [
+    'components/TopNav.tsx',
+    'components/AdminNav.tsx',
+    'components/BottomNav.tsx',
+  ]) {
     it(`every destination in ${file} is a declared route`, () => {
       for (const to of navTargets(file)) {
         expect(

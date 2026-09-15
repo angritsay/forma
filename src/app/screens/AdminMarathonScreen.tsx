@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Screen } from '@/components/ui/Screen';
 import { Select } from '@/components/ui/Select';
-import { Spinner } from '@/components/ui/Spinner';
 import { Tabs, tabPanelId } from '@/components/ui/Tabs';
 import { Textarea } from '@/components/ui/Textarea';
 import { useToast } from '@/components/ui/Toast';
@@ -50,6 +49,7 @@ import type {
   MarathonTeamRow,
 } from '@/lib/api/types';
 import { BootScreen } from '@/app/components/BootScreen';
+import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
@@ -151,9 +151,7 @@ export default function AdminMarathonScreen() {
   if (loading || !marathon) {
     return (
       <Screen header={<TopBar back title={t('app.mAdminTitle')} />}>
-        <div className="flex justify-center py-12">
-          <Spinner />
-        </div>
+        <LoadingBlock />
       </Screen>
     );
   }

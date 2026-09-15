@@ -428,6 +428,29 @@ app password at myaccount.google.com/apppasswords, then `smtp.gmail.com:465` wit
 and your address as both username and sender. Roughly 500 emails a day, which is ample to launch
 on, and it costs nothing. Swapping to a provider later is a five-minute settings change.
 
+**Already on Google Workspace?** Then this is the shortest path there is, and it is a proper
+domain sender rather than a stopgap. Google sets the MX records and hands you the SPF line when the
+domain is added to the account, so the work is three things it does _not_ do for you:
+
+1. **DKIM is off until you switch it on**, and this is the one people miss for years. Admin console →
+   Apps → Google Workspace → Gmail → **Authenticate email** → pick the domain → generate the record
+   → publish the TXT → come back and press **Start authentication**. Publishing the record without
+   pressing the button leaves DKIM off; `mail.ru` and `yandex.ru` are the two that notice.
+2. **SPF must stay a single record.** Google's is `v=spf1 include:_spf.google.com ~all`. If the
+   domain already has an SPF record, merge `include:_spf.google.com` into it — two SPF records do
+   not mean "one of them wins", they fail the check outright.
+3. **DMARC**, as everywhere: `_dmarc.<domain>` TXT, `v=DMARC1; p=none; rua=mailto:<address>`.
+
+Then `smtp.gmail.com:465` with an app password (2-Step Verification has to be on for app passwords
+to exist at all, and a Workspace admin can disable them org-wide under Security → Access and data
+control — you are your own admin). The **username is the account the app password belongs to**, and
+the **sender may be an alias** of it — an alias costs no seat, but it has to be confirmed under
+Gmail → Settings → Accounts → "Send mail as", or Google rewrites the From header to the
+authenticated address and the code arrives from the wrong person. Workspace allows on the order of
+2,000 messages a day; check the figure for your own plan.
+
+The foreign-address restriction described below does not apply to Google.
+
 **With a domain** (worth having anyway — it also moves the site off github.io):
 
 | Provider                | Good for                                  | Notes                                                                 |
@@ -439,7 +462,65 @@ on, and it costs nothing. Swapping to a provider later is a five-minute settings
 
 Set **Sender email** to an address on your own domain (e.g. `hello@forma-app.co`) and
 **Sender name** to `Forma`. Add SPF, DKIM and DMARC records at your DNS provider; without them
-Gmail and Mail.ru will junk the codes.
+Gmail and Mail.ru will junk the codes. The DKIM and SPF records come from whichever provider you
+picked; **DMARC is usually not offered and has to be added by hand** — `_dmarc.<domain>` as a TXT
+record holding `v=DMARC1; p=none; rua=mailto:<your address>`. `p=none` only watches and blocks
+nothing; tighten it once mail is flowing.
+
+**A trap specific to the two Russian providers above.** Yandex and Mail.ru restrict SMTP
+authentication from foreign addresses, and Supabase sends from its own infrastructure abroad — a
+project in Frankfurt, as §1 recommends. The symptom is an authentication refusal in
+Dashboard → Logs → Auth even though the same credentials work from a mail client at home, or
+delivery that quietly collapses. The two are chosen here for inboxing at `mail.ru` and `yandex.ru`,
+which is worth trying for a Russian audience, but try it before believing it.
+
+If it refuses: keep the domain and the DNS records, which are provider-independent, and point the
+SMTP settings at Resend or Postmark instead. Only host, username and password change — five minutes,
+and none of the DNS work is wasted. They reach Russian inboxes less reliably than a domestic sender
+does, which is the trade, and still incomparably better than a mailer that refuses to send at all.
+
+#### Keeping the code out of spam
+
+Authentication (SPF, DKIM, DMARC, above) is the entry ticket, not the whole answer, and DKIM is the
+one that decides it: without it `mail.ru` and `yandex.ru` junk a code more or less by default. What
+follows assumes those three are in place.
+
+**The template is already built for this, so do not "improve" it.** `supabase/templates/otp.html` is
+6.8 KB with **no images and exactly one link**, and that link points at the same domain the mail is
+sent from. A logo, a banner, a second link or a tracking pixel each cost inbox placement and buy
+nothing — the letter exists to carry six digits. There is also no plain-text alternative, and none
+is possible: the dashboard has no field for one (see the note in 3.2). That applies to every sender
+equally, so it is not worth chasing.
+
+**Register the domain with the postmasters.** This is the instrument almost nobody sets up, and for
+a Russian audience it is the one that matters:
+
+| Where                   | What it shows                                                             |
+| ----------------------- | ------------------------------------------------------------------------- |
+| `postmaster.mail.ru`    | your domain's spam rate and delivery at Mail.ru, Inbox.ru, List.ru, Bk.ru |
+| `postmaster.yandex.ru`  | the same for Yandex mail                                                  |
+| `postmaster.google.com` | the same for Gmail, plus your domain reputation as Google rates it        |
+
+All three are free and take minutes: each asks for one TXT record you add beside the DKIM one. Until
+they exist you learn about a deliverability problem from a customer who did not get in, which is the
+most expensive way to learn it.
+
+**Know, rather than hope: a transactional sender logs every message.** This is the real argument for
+Resend or Postmark, and it has nothing to do with the foreign-address trap above. Sending through
+Google Workspace SMTP gives **no per-message visibility at all**: when somebody writes "the code
+never came", there is nothing to look at — no delivery status, no bounce, no complaint, not even
+proof the message left. A transactional provider gives every message a verdict (delivered, bounced,
+marked as spam) and keeps it searchable by address.
+
+That points at a split rather than a choice, because the two senders do different jobs:
+
+- **Google Workspace** holds the mailbox. `hello@forma-app.co` is published on the site as the
+  support address and is named in the legal pages, so it has to receive mail regardless.
+- **Resend or Postmark** sends the codes: built for transactional mail, free tier enough to launch
+  on (check the current figure), and it answers "where is my code" in one search.
+
+Swapping later is three fields in Supabase — but a sending domain builds reputation from its first
+message, so doing it once is cheaper than doing it twice.
 
 **How to know it worked.** Send a code to an address that has never been near this project — a
 friend's, a throwaway — from a device that is not yours. A code arriving at the owner's own

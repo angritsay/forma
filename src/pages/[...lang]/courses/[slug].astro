@@ -205,7 +205,10 @@ const jsonLd = [
             {
               course.forWhom.map((x, i) => (
                 <li class="flex items-baseline gap-4 py-2.5">
-                  <span class="numeral text-xs text-muted-2" aria-hidden="true">
+                  <span
+                    class="numeral tabular w-5 shrink-0 text-xs text-muted-2"
+                    aria-hidden="true"
+                  >
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <span>{l(x, locale)}</span>

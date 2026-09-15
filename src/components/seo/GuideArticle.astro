@@ -158,7 +158,10 @@ const jsonLd = [
               <ol class="mt-3 text-sm">
                 {toc.map((h, i) => (
                   <li class="flex items-baseline gap-3 border-b border-border py-2">
-                    <span class="numeral text-xs text-muted-2" aria-hidden="true">
+                    <span
+                      class="numeral tabular w-5 shrink-0 text-xs text-muted-2"
+                      aria-hidden="true"
+                    >
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <a class="text-muted hover:text-text" href={`#${h.slug}`}>
@@ -189,7 +192,10 @@ const jsonLd = [
               <ol class="mt-3 text-sm">
                 {toc.map((h, i) => (
                   <li class="flex items-baseline gap-3 border-b border-border py-2">
-                    <span class="numeral text-xs text-muted-2" aria-hidden="true">
+                    <span
+                      class="numeral tabular w-5 shrink-0 text-xs text-muted-2"
+                      aria-hidden="true"
+                    >
                       {String(i + 1).padStart(2, '0')}
                     </span>
                     <a class="text-muted hover:text-text" href={`#${h.slug}`}>
