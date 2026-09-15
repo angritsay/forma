@@ -910,7 +910,7 @@ export const app = {
   courseEquipment: 'Equipment',
   courseTile: 'Course tile',
   courseTileHint:
-    'The one colour on the course screen. Programme colours: beginners #f2f52d, yoga #a8c8ff, marathon #f08a3c. Any other course takes one of the two neutral surfaces: #1f1f24 or #2a2a30.',
+    'The one colour on the course screen. Programme colours: beginners #f2f52d, yoga #a8c8ff, marathon #ff7a1a. Any other course takes one of the two neutral surfaces: #1f1f24 or #2a2a30.',
   courseCover: 'Cover image',
   courseCoverHint: 'Shown on the course page and in the catalogue',
   courseIntroVideo: 'Intro video',

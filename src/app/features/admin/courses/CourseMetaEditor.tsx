@@ -31,7 +31,7 @@ import { MediaField } from '@/app/features/admin/media/MediaField';
  * programme. The tile is the one colour on the screen while the course is open, so this row is
  * the only place in the admin where colour is chosen at all.
  */
-const TILES = ['#f2f52d', '#a8c8ff', '#f08a3c', '#1f1f24', '#2a2a30'] as const;
+const TILES = ['#f2f52d', '#a8c8ff', '#ff7a1a', '#1f1f24', '#2a2a30'] as const;
 
 /** The same shape `CourseSchema` accepts for `tile` (src/content/schema.ts) — six hex digits. */
 const HEX_RE = /^#[0-9a-f]{6}$/i;

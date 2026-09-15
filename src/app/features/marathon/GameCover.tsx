@@ -16,7 +16,7 @@
  * board rows further down read the same variable.
  *
  * Every text on the orange is the tile's black ink at full strength or at 80%, which measures
- * 7.66:1 and 5.56:1 — the ink may not go below 75% here, and light text on the orange (2.50:1)
+ * 7.34:1 and 5.47:1 — the ink may not go below 75% here, and light text on the orange (2.61:1)
  * is never allowed at all.
  */
 import { clsx } from 'clsx';
