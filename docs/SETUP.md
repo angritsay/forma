@@ -461,6 +461,49 @@ SMTP settings at Resend or Postmark instead. Only host, username and password ch
 and none of the DNS work is wasted. They reach Russian inboxes less reliably than a domestic sender
 does, which is the trade, and still incomparably better than a mailer that refuses to send at all.
 
+#### Keeping the code out of spam
+
+Authentication (SPF, DKIM, DMARC, above) is the entry ticket, not the whole answer, and DKIM is the
+one that decides it: without it `mail.ru` and `yandex.ru` junk a code more or less by default. What
+follows assumes those three are in place.
+
+**The template is already built for this, so do not "improve" it.** `supabase/templates/otp.html` is
+6.8 KB with **no images and exactly one link**, and that link points at the same domain the mail is
+sent from. A logo, a banner, a second link or a tracking pixel each cost inbox placement and buy
+nothing — the letter exists to carry six digits. There is also no plain-text alternative, and none
+is possible: the dashboard has no field for one (see the note in 3.2). That applies to every sender
+equally, so it is not worth chasing.
+
+**Register the domain with the postmasters.** This is the instrument almost nobody sets up, and for
+a Russian audience it is the one that matters:
+
+| Where                   | What it shows                                                             |
+| ----------------------- | ------------------------------------------------------------------------- |
+| `postmaster.mail.ru`    | your domain's spam rate and delivery at Mail.ru, Inbox.ru, List.ru, Bk.ru |
+| `postmaster.yandex.ru`  | the same for Yandex mail                                                  |
+| `postmaster.google.com` | the same for Gmail, plus your domain reputation as Google rates it        |
+
+All three are free and take minutes: each asks for one TXT record you add beside the DKIM one. Until
+they exist you learn about a deliverability problem from a customer who did not get in, which is the
+most expensive way to learn it.
+
+**Know, rather than hope: a transactional sender logs every message.** This is the real argument for
+Resend or Postmark, and it has nothing to do with the foreign-address trap above. Sending through
+Google Workspace SMTP gives **no per-message visibility at all**: when somebody writes "the code
+never came", there is nothing to look at — no delivery status, no bounce, no complaint, not even
+proof the message left. A transactional provider gives every message a verdict (delivered, bounced,
+marked as spam) and keeps it searchable by address.
+
+That points at a split rather than a choice, because the two senders do different jobs:
+
+- **Google Workspace** holds the mailbox. `hello@forma-app.co` is published on the site as the
+  support address and is named in the legal pages, so it has to receive mail regardless.
+- **Resend or Postmark** sends the codes: built for transactional mail, free tier enough to launch
+  on (check the current figure), and it answers "where is my code" in one search.
+
+Swapping later is three fields in Supabase — but a sending domain builds reputation from its first
+message, so doing it once is cheaper than doing it twice.
+
 #### When the code does not arrive
 
 The sign-in screen already tells the two halves apart, and it is worth reading the exact words:
