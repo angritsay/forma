@@ -1,0 +1,1 @@
+import{j as l}from"./jsx-runtime.D_zvdyIk.js";function p({items:r,className:e}){return r.length===0?null:l.jsx("ul",{className:e?`flex flex-wrap gap-2.5 ${e}`:"flex flex-wrap gap-2.5",children:r.map(t=>l.jsx("li",{className:"control-label border border-border-strong px-3.5 py-2.5 text-[11px] text-text",children:t},t))})}export{p as F};

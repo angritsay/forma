@@ -1,0 +1,87 @@
+# Forma
+
+> Home CrossFit that adapts to you. / Кроссфит дома. Под тебя.
+
+Forma is a coach-made set of home CrossFit-style courses: five programs with and without equipment. The web app adapts reps, rest and load to your level after every session; access is lifetime after purchase.
+
+Forma — курсы кроссфита для дома от тренера: пять программ с оборудованием и без. Веб-приложение подстраивает повторы, отдых и нагрузку под уровень после каждой тренировки; доступ после покупки бессрочный.
+
+# English
+
+## Courses
+- [Forma. Start: home CrossFit basics](https://forma-app.co/en/courses/start-home-crossfit-basics/): Four weeks of the coach’s own beginner programme: short, in rounds, no equipment.
+- [Home CrossFit courses](https://forma-app.co/en/courses/): Five home CrossFit-style courses with and without equipment. Pick one, sign in with your email and the app adapts every workout to you.
+
+## Guides
+- [20-Minute Home Workout: Four No-Equipment Sessions](https://forma-app.co/en/guides/20-minute-home-workouts/): A 20-minute home workout with no equipment: four sessions — AMRAP, EMOM, a strength circuit and Tabata — mapped minute by minute. Pick one and start today.
+- [AMRAP, EMOM, For Time and Tabata Explained](https://forma-app.co/en/guides/crossfit-workout-formats-amrap-emom-tabata/): AMRAP, EMOM, For Time and Tabata explained: what each format fixes, how to score and pace it at home. A coach's breakdown with four sample workouts to try.
+- [CrossFit at Home After 40: How to Start Safely](https://forma-app.co/en/guides/crossfit-at-home-after-40/): CrossFit at home after 40: what changes, how to start safely, how much to train and rest, and how to protect knees and back. A coach's plan — read and begin.
+- [CrossFit at Home for Beginners: How to Start](https://forma-app.co/en/guides/crossfit-at-home-for-beginners/): CrossFit at home for beginners: how to start with no equipment, a complete first workout, the common mistakes and a four-week plan. Read it and start today.
+- [CrossFit for Fat Loss at Home: What Actually Works](https://forma-app.co/en/guides/crossfit-for-fat-loss/): CrossFit for fat loss at home: how many sessions a week, which formats burn the most, why steps and food matter. A coach's two-month plan you can start today.
+- [CrossFit Without Equipment: Home Workouts](https://forma-app.co/en/guides/crossfit-without-equipment/): CrossFit without equipment: which bodyweight exercises to build on, a 10-minute AMRAP for a small flat, the common mistakes and how to progress. Try it today.
+- [Full Body Dumbbell Workout at Home: A Coach's Plan](https://forma-app.co/en/guides/full-body-dumbbell-workout-at-home/): A full body dumbbell workout at home: which exercises to pick, how to pick the weight, sets, reps and rest, and how to progress. Read the plan and start today.
+- [Home CrossFit Equipment: What to Buy](https://forma-app.co/en/guides/home-crossfit-equipment-guide/): Home CrossFit equipment: what to buy first, what to skip, which dumbbells and kettlebell to pick and what each course needs. A coach's guide — read and decide.
+- [How Many Times a Week Should You Work Out at Home?](https://forma-app.co/en/guides/how-many-times-a-week-to-work-out-at-home/): How many times a week should you work out at home? A coach's answer by level, ready 3-, 4- and 5-day schedules and the rule for adding days. Pick your week.
+- [How to Do a Burpee: Technique and Mistakes](https://forma-app.co/en/guides/how-to-do-a-burpee/): How to do a burpee with clean technique: six steps, easier variants and the mistakes that hurt your back. A coach's guide with a 10-minute workout to try.
+- [How to Stay Consistent With Workouts](https://forma-app.co/en/guides/how-to-stay-consistent-with-workouts/): How to stay consistent with workouts at home: the minimum-session rule, streaks, points and achievements in Forma, and what to do after a missed day. Try it.
+- [Kettlebell Workouts at Home for Beginners](https://forma-app.co/en/guides/kettlebell-workouts-at-home-for-beginners/): Kettlebell workouts at home for beginners: which bell to buy, five moves to learn first, a sample session and a progression. A coach's plan to start today.
+- [Push-Up Progression for Beginners](https://forma-app.co/en/guides/push-up-progression/): A push-up progression for beginners: five steps from incline push-ups to full reps, form cues, a weekly plan and the mistakes that stall you. Start today.
+- [Rest Days: Recovery, 7000 Steps and Why They Matter](https://forma-app.co/en/guides/rest-days-recovery-7000-steps/): Rest days, recovery, 7000 steps: why the body adapts between workouts, what to do on a day off and how a walk keeps your streak alive. Read and plan your week.
+- [RPE Scale: How Hard Should a Workout Be?](https://forma-app.co/en/guides/rpe-scale-how-hard-should-workouts-be/): RPE scale: how hard should a workout be, what the numbers 1–10 mean and how the app adjusts your volume from one rating. A coach's guide to read and try.
+- [Warm-Up Before a Home Workout: The 7-Minute Routine](https://forma-app.co/en/guides/warm-up-before-a-home-workout/): Warm up before a home workout the right way: a 7-minute routine from the exercise library, what to prep before squats, push-ups and jumps. Read and try it.
+- [Home CrossFit guides](https://forma-app.co/en/guides/): Coach-written guides on home CrossFit: where to start, AMRAP and EMOM formats, dumbbell and kettlebell workouts, recovery and motivation. Pick a topic and read.
+
+## Exercise library
+- [Home CrossFit exercises](https://forma-app.co/en/exercises/): Every exercise used in the courses, with technique, mistakes and scaling.
+
+## About
+- [Forma](https://forma-app.co/en/): Home CrossFit that adapts to you.
+- [About the coach](https://forma-app.co/en/about/)
+- [Contact](https://forma-app.co/en/contact/)
+
+## Optional
+- [Privacy policy](https://forma-app.co/en/privacy/)
+- [Terms of service](https://forma-app.co/en/terms/)
+- [Refund policy](https://forma-app.co/en/refund/)
+
+# Русский
+
+## Курсы
+- [Форма с нуля: кроссфит дома без оборудования](https://forma-app.co/courses/start-krossfit-doma-bez-oborudovaniya/): Четыре недели по программе тренера для новичков: коротко, по кругу, без оборудования.
+- [Курсы кроссфита для дома](https://forma-app.co/courses/): Пять курсов кроссфита для дома — с оборудованием и без. Выбери программу, войди по email, и приложение подстроит каждую тренировку под тебя.
+
+## Гайды
+- [AMRAP, EMOM, For Time, табата: что это и как выбрать](https://forma-app.co/guides/amrap-emom-for-time-tabata/): AMRAP, EMOM, For Time, табата — что это, чем форматы отличаются, как считать результат и подбирать нагрузку дома. Разбор тренера с примерами: читай и пробуй.
+- [RPE: как подобрать нагрузку на тренировке дома](https://forma-app.co/guides/rpe-kak-podobrat-nagruzku/): Шкала RPE: как подобрать нагрузку дома по ощущениям, что значат цифры от 1 до 10 и как приложение меняет объём по твоей оценке. Разбор тренера — читай и пробуй.
+- [Дни отдыха: восстановление, 7000 шагов и прогресс](https://forma-app.co/guides/dni-otdyha-i-7000-shagov/): Дни отдыха, восстановление, 7000 шагов: зачем телу пауза между тренировками, что делать в выходной и как прогулка идёт в серию. Читай и планируй неделю.
+- [Как делать бёрпи: техника, ошибки, прогрессия](https://forma-app.co/guides/kak-delat-berpi/): Как делать бёрпи правильно: техника по шагам, облегчённые варианты и ошибки, которые бьют по пояснице. Разбор тренера и тренировка на 10 минут — пробуй.
+- [Как научиться отжиматься с нуля: прогрессия](https://forma-app.co/guides/kak-nauchitsya-otzhimatsya/): Как научиться отжиматься с нуля: пять ступеней от отжиманий от опоры до полного отжимания, техника, план на неделю и ошибки. Разбор тренера — начни сегодня.
+- [Как не бросить тренировки: серии и минимум дня](https://forma-app.co/guides/kak-ne-brosit-trenirovki/): Как не бросить тренировки дома: правило минимальной тренировки, серии дней, очки и достижения в Forma, что делать после пропуска. Советы тренера — попробуй.
+- [Кроссфит без оборудования: тренировки дома](https://forma-app.co/guides/crossfit-bez-oborudovaniya/): Кроссфит без оборудования: какие упражнения с собственным весом брать за основу, пример AMRAP на 10 минут, ошибки и как усложнять нагрузку. Попробуй сегодня.
+- [Кроссфит для похудения дома: что реально работает](https://forma-app.co/guides/crossfit-dlya-pohudeniya/): Кроссфит для похудения дома: сколько тренировок в неделю, какие форматы тратят больше и при чём тут шаги и еда. План тренера на два месяца — читай и начинай.
+- [Кроссфит дома для начинающих: с чего начать](https://forma-app.co/guides/crossfit-doma-dlya-nachinayushchih/): Кроссфит дома для начинающих: как начать без оборудования, пример первой тренировки, типичные ошибки и план на четыре недели. Читай и начинай сегодня.
+- [Кроссфит после 40: как начать дома без травм](https://forma-app.co/guides/crossfit-posle-40/): Кроссфит после 40: что меняется в теле, как начать дома без травм, сколько тренироваться и отдыхать, как беречь колени и спину. План тренера — читай и начинай.
+- [Оборудование для кроссфита дома: что купить](https://forma-app.co/guides/oborudovanie-dlya-crossfita-doma/): Оборудование для кроссфита дома: с чего начать, какие гантели и гирю выбрать, что нужно для каждого курса и без чего обойтись. Разбор тренера — читай и решай.
+- [Разминка перед тренировкой дома за 7 минут](https://forma-app.co/guides/razminka-pered-trenirovkoy-doma/): Разминка перед тренировкой дома: готовый план на 7 минут из упражнений библиотеки, что разминать перед приседом, жимом и прыжками. Читай и пробуй.
+- [Сколько раз в неделю тренироваться дома](https://forma-app.co/guides/skolko-raz-v-nedelyu-trenirovatsya-doma/): Сколько раз в неделю тренироваться дома, чтобы был результат без перегрузки: ответ по уровням, схемы на 3, 4 и 5 дней и как добавлять дни. Выбери свою неделю.
+- [Тренировка 20 минут дома: 4 комплекса](https://forma-app.co/guides/trenirovka-20-minut-doma/): Тренировка 20 минут дома без оборудования: четыре готовых комплекса — AMRAP, EMOM, силовой круг и табата — с раскладкой по минутам. Выбирай и начинай.
+- [Тренировка с гантелями дома: программа на всё тело](https://forma-app.co/guides/trenirovka-s-gantelyami-doma/): Тренировка с гантелями дома на всё тело: какие упражнения взять, как выбрать вес, сколько подходов делать и как прогрессировать. План тренера — читай и начинай.
+- [Тренировки с гирей дома для начинающих](https://forma-app.co/guides/trenirovki-s-girey-doma/): Тренировки с гирей дома для начинающих: какую гирю выбрать, пять базовых движений, схема недели и готовая тренировка. Разбор тренера — читай и начинай.
+- [Гайды по кроссфиту дома](https://forma-app.co/guides/): Статьи тренера о кроссфите дома: с чего начать, форматы AMRAP и EMOM, тренировки с гантелями и гирей, восстановление и мотивация. Выбирай тему и читай.
+
+## Библиотека упражнений
+- [Упражнения для кроссфита дома](https://forma-app.co/exercises/): Все упражнения из курсов: техника, ошибки, варианты проще и сложнее.
+
+## О проекте
+- [Forma](https://forma-app.co/): Кроссфит дома. Под тебя.
+- [О тренере](https://forma-app.co/about/)
+- [Контакты](https://forma-app.co/contact/)
+
+## Дополнительно
+- [Политика конфиденциальности](https://forma-app.co/privacy/)
+- [Пользовательское соглашение](https://forma-app.co/terms/)
+- [Возврат](https://forma-app.co/refund/)
+
+## Feeds
+- [Sitemap (XML)](https://forma-app.co/sitemap.xml)
+- [Guides feed (RSS)](https://forma-app.co/rss.xml)
