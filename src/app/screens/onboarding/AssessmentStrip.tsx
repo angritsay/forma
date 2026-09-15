@@ -28,7 +28,7 @@ import { ASSESSMENT_MOVES } from '@content/site/assessment';
 export function AssessmentStrip() {
   const { t, l } = useT();
   return (
-    <ul className="-mx-6 flex gap-px bg-border lg:-mx-10" aria-label={t('app.onbAssessOfferTitle')}>
+    <ul className="-mx-6 flex gap-px bg-border md:-mx-10" aria-label={t('app.onbAssessOfferTitle')}>
       {ASSESSMENT_MOVES.map((move, i) => {
         const exercise = EXERCISE_BY_ID.get(move.exerciseId);
         return (

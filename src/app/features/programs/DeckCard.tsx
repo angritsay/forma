@@ -159,7 +159,7 @@ export function DeckCard({
         />
       ) : null}
 
-      <div className="pointer-events-none relative z-10 flex flex-col px-6 pb-6 lg:px-10">
+      <div className="pointer-events-none relative z-10 flex flex-col px-6 pb-6 md:px-10">
         {/*
          * Everything in this block takes `currentColor`, never a literal: on a photograph the
          * article is paper on ink, and on a colour cover it is the tile's own ink — black on

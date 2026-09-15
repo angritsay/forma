@@ -59,9 +59,11 @@ export function BottomNav() {
   return (
     <nav
       aria-label={t('app.navMain')}
-      /* Hidden from `lg` up, where SideNav takes over; AppShell drops `--nav-inset` to match. */
+      /* Hidden from `md` up, where TopNav takes over; AppShell drops `--nav-inset` to match.
+         `md`, not `lg`: between the two the app used to be a 480px phone column stranded in the
+         middle of a tablet, with this bar clipped to the column's own edges. */
       className={clsx(
-        'fixed bottom-0 left-1/2 z-30 w-full max-w-[480px] -translate-x-1/2 lg:hidden',
+        'fixed bottom-0 left-1/2 z-30 w-full max-w-[480px] -translate-x-1/2 md:hidden',
         /*
          * Glass, and the bar is where it works best: it is already `fixed`, so the screen genuinely
          * scrolls underneath rather than stopping above it, and `--nav-inset` already reserves the

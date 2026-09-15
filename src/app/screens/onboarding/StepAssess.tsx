@@ -89,7 +89,7 @@ export function StepAssess({ draft, update, next }: StepProps) {
          * ordinary pace is the instruction; the sentence under it only names what the picture
          * already shows.
          */}
-        <div className="-mx-6 aspect-3/2 overflow-hidden bg-surface-2 lg:-mx-10">
+        <div className="-mx-6 aspect-3/2 overflow-hidden bg-surface-2 md:-mx-10">
           <ExerciseStill
             exerciseId={ASSESSMENT_MOVES[0]?.exerciseId}
             className="size-full object-cover"

@@ -398,10 +398,10 @@ export default function AdminScreen() {
         {/*
          * The coach's authoring tools as a numbered index — 01 / 02 / 03, hairlines, a › at the
          * end of each row — rather than three framed buttons with pictures on them. Hidden from
-         * `lg` up, where SideNav lists the same three and repeating them is just clutter in the
-         * screen she works in all day.
+         * `md` up, where `AdminNav` stands beside the screen and lists the same destinations;
+         * repeating them inside the screen she works in all day is just clutter.
          */}
-        <nav aria-label={t('app.adminTitle')} className="flex flex-col lg:hidden">
+        <nav aria-label={t('app.adminTitle')} className="flex flex-col md:hidden">
           {TOOLS.map((tool, i) => (
             <button
               key={tool.to}

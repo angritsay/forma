@@ -53,7 +53,7 @@ export function AccountRow({
   return (
     <section
       data-theme="paper"
-      className="-mx-6 flex items-center gap-4 bg-bg px-6 py-5 text-text lg:-mx-10 lg:px-10"
+      className="-mx-6 flex items-center gap-4 bg-bg px-6 py-5 text-text md:-mx-10 md:px-10"
       aria-label={t('app.statsPosterLabel')}
     >
       <button
