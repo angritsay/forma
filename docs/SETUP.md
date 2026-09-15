@@ -421,7 +421,22 @@ on, and it costs nothing. Swapping to a provider later is a five-minute settings
 
 Set **Sender email** to an address on your own domain (e.g. `hello@forma-app.co`) and
 **Sender name** to `Forma`. Add SPF, DKIM and DMARC records at your DNS provider; without them
-Gmail and Mail.ru will junk the codes.
+Gmail and Mail.ru will junk the codes. The DKIM and SPF records come from whichever provider you
+picked; **DMARC is usually not offered and has to be added by hand** — `_dmarc.<domain>` as a TXT
+record holding `v=DMARC1; p=none; rua=mailto:<your address>`. `p=none` only watches and blocks
+nothing; tighten it once mail is flowing.
+
+**A trap specific to the two Russian providers above.** Yandex and Mail.ru restrict SMTP
+authentication from foreign addresses, and Supabase sends from its own infrastructure abroad — a
+project in Frankfurt, as §1 recommends. The symptom is an authentication refusal in
+Dashboard → Logs → Auth even though the same credentials work from a mail client at home, or
+delivery that quietly collapses. The two are chosen here for inboxing at `mail.ru` and `yandex.ru`,
+which is worth trying for a Russian audience, but try it before believing it.
+
+If it refuses: keep the domain and the DNS records, which are provider-independent, and point the
+SMTP settings at Resend or Postmark instead. Only host, username and password change — five minutes,
+and none of the DNS work is wasted. They reach Russian inboxes less reliably than a domestic sender
+does, which is the trade, and still incomparably better than a mailer that refuses to send at all.
 
 #### When the code does not arrive
 
