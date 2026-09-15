@@ -63,41 +63,53 @@ export function GameCover({ marathon, partners = [] }: GameCoverProps) {
   return (
     <header
       className={clsx(
-        'hero-art -mx-6 -mt-[var(--safe-top)] px-6 pb-7 lg:-mx-10 lg:px-10',
+        'hero-art relative -mx-6 -mt-[var(--safe-top)] px-6 pb-7 lg:-mx-10 lg:px-10',
         'pt-[calc(var(--safe-top)+20px)]',
       )}
     >
-      <span className="eyebrow block text-current">
-        {marathon ? marathon.title : t('app.marathonTitle')}
-      </span>
-      <DisplayTitle
-        text={
-          marathon
-            ? t('app.marathonDayOf', {
-                n: formatNumber(locale, day),
-                total: formatNumber(locale, marathon.days),
-              })
-            : t('app.marathonCoverPitch')
-        }
-        className="mt-5 text-5xl lg:text-6xl"
-      />
-      {marathon ? (
-        <>
-          <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[13px] opacity-80">
-            <span>{t('app.marathonWeek', { n: formatNumber(locale, marathon.week) })}</span>
-            <span>
-              {partner ? t('app.marathonWithPartner', { name: partner }) : t('app.marathonSolo')}
-            </span>
-          </div>
-          <DayStrip day={day} days={marathon.days} />
-          {marathon.prize ? (
-            <p className="mt-5 text-[13px] opacity-80">
-              <span className="control-label text-[10px]">{t('app.marathonPrize')}</span>{' '}
-              {marathon.prize}
-            </p>
-          ) : null}
-        </>
-      ) : null}
+      {/*
+       * Grain over the colour, the way every other colour cover in the product is drawn
+       * (`DeckCard`, `CourseTicket`): «фото — монохром + зерно», and a flat fill this size —
+       * roughly half a phone screen — is the one place the texture is doing real work rather than
+       * decorating. It is an overlay element rather than an `::after` on the header, because a
+       * pseudo-element would paint above the day numeral instead of under it.
+       */}
+      <div className="photo-grain" aria-hidden="true" />
+      {/* Everything the cover says sits in its own stacking context, so the grain stays under it:
+          an absolutely positioned sibling paints above static ones whatever the DOM order. */}
+      <div className="relative">
+        <span className="eyebrow block text-current">
+          {marathon ? marathon.title : t('app.marathonTitle')}
+        </span>
+        <DisplayTitle
+          text={
+            marathon
+              ? t('app.marathonDayOf', {
+                  n: formatNumber(locale, day),
+                  total: formatNumber(locale, marathon.days),
+                })
+              : t('app.marathonCoverPitch')
+          }
+          className="mt-5 text-5xl lg:text-6xl"
+        />
+        {marathon ? (
+          <>
+            <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[13px] opacity-80">
+              <span>{t('app.marathonWeek', { n: formatNumber(locale, marathon.week) })}</span>
+              <span>
+                {partner ? t('app.marathonWithPartner', { name: partner }) : t('app.marathonSolo')}
+              </span>
+            </div>
+            <DayStrip day={day} days={marathon.days} />
+            {marathon.prize ? (
+              <p className="mt-5 text-[13px] opacity-80">
+                <span className="control-label text-[10px]">{t('app.marathonPrize')}</span>{' '}
+                {marathon.prize}
+              </p>
+            ) : null}
+          </>
+        ) : null}
+      </div>
     </header>
   );
 }
