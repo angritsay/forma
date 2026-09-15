@@ -153,10 +153,20 @@ function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
        * «almost» was never good enough for a hairline of black down both edges of a movement.
        */}
       <div
-        /* Centred, because a clip that is only as tall as its own shape no longer fills the stage
-           on its own — the leftover room is split above and below it rather than left at the foot. */
-        className="absolute inset-x-0 top-0 flex items-center"
-        style={{ bottom: 'max(0px, calc(var(--player-glass-h, 0px) - 40px))' }}
+        /*
+         * Centred, because a clip that is only as tall as its own shape no longer fills the stage
+         * on its own — the leftover room is split above and below it rather than left at the foot.
+         *
+         * From `md` the panel is a column on the right (`PlayerFooter`), so the stage gives up
+         * width instead of height: `right` is the panel's 380px less the same 40px of overlap that
+         * puts real picture behind the glass, and the measured height stops applying.
+         */
+        /*
+         * The bottom inset is a class, not an inline style. It used to be inline, and inline wins
+         * over a utility for the same property — so `md:bottom-0` could never take effect and the
+         * stage would have kept reserving room for a panel that is no longer underneath it.
+         */
+        className="absolute inset-x-0 top-0 bottom-[max(0px,calc(var(--player-glass-h,0px)-40px))] flex items-center md:right-85 md:bottom-0"
       >
         {videoUrl ? (
           <video

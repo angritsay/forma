@@ -103,6 +103,17 @@ export interface PlayerFooterProps {
  *
  * It also reports its height, because the clip is sized to end above it (see ArtLayer) — and that
  * height changes with the step: a rep count with a stepper and a button is twice a countdown.
+ *
+ * **From `md` it is a column down the right-hand side instead of a band across the bottom.** The
+ * owner's choice for training from a laptop: «видео крупно, счётчик сбоку». The reason it works is
+ * the same one that makes it a band on a phone — the panel goes where the screen has room to spare.
+ * A phone is tall and has it at the foot; a laptop is wide and has it at the side, and a band
+ * across 1440px would be a strip of numbers a metre from the movement they belong to.
+ *
+ * Three things follow. The glass turns ninety degrees (`--glass-angle`), so it is sheer where the
+ * clip meets it and dense where the numbers sit — the whole point of the gradient, now on the
+ * other axis. The fade above it becomes a fade to its left. And the measured height stops mattering:
+ * the column is a fixed width, so `ArtLayer` insets by that instead.
  */
 export function PlayerFooter({ children, onHeight }: PlayerFooterProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -119,7 +130,10 @@ export function PlayerFooter({ children, onHeight }: PlayerFooterProps) {
   }, [onHeight]);
 
   return (
-    <div ref={ref} className="absolute inset-x-0 bottom-0 z-30">
+    <div
+      ref={ref}
+      className="absolute inset-x-0 bottom-0 z-30 md:inset-y-0 md:right-0 md:left-auto md:w-95"
+    >
       <div
         aria-hidden="true"
         /*
@@ -134,12 +148,13 @@ export function PlayerFooter({ children, onHeight }: PlayerFooterProps) {
          * the tab bar, whose 10px labels sit over whatever list is scrolling underneath; here the
          * clip carrying on behind the numbers is the point, so the surface keeps the weight it had.
          */
-        className="glass-bar glass-sheer pointer-events-none absolute inset-0"
+        className="glass-bar glass-sheer pointer-events-none absolute inset-0 md:[--glass-angle:90deg]"
       />
-      {/* A short fade above the glass so its top edge is a line rather than a cut. */}
+      {/* A short fade above the glass so its edge is a line rather than a cut — to its left from
+          `md`, where the panel stands beside the clip rather than under it. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-full h-16 bg-linear-to-t from-bg/45 to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-full h-16 bg-linear-to-t from-bg/45 to-transparent md:inset-x-auto md:inset-y-0 md:right-full md:h-auto md:w-16 md:bg-linear-to-l"
       />
       {/*
        * Capped at the card's own height and scrollable inside that cap. Almost every step's footer
@@ -147,7 +162,7 @@ export function PlayerFooter({ children, onHeight }: PlayerFooterProps) {
        * save button — and in a card that is clipped rather than scrolled, anything taller than the
        * viewport would lose its top edge off the screen with no way to reach it.
        */}
-      <div className="relative mx-auto max-h-dvh w-full max-w-[560px] overflow-y-auto overscroll-contain px-6 pt-6 pb-[calc(var(--safe-bottom)+16px+var(--demo-inset,0px))]">
+      <div className="relative mx-auto max-h-dvh w-full max-w-[560px] overflow-y-auto overscroll-contain px-6 pt-6 pb-[calc(var(--safe-bottom)+16px+var(--demo-inset,0px))] md:flex md:h-full md:max-h-none md:flex-col md:justify-center md:px-8">
         {children}
       </div>
     </div>
