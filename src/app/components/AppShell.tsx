@@ -52,15 +52,24 @@ const NAV_INSET = '56px';
  * stretching it across 1400px sends the eye on a journey it has no reason to take. `wide` is the
  * admin, where the content is tabular and the owner compares rows and edits a workout side by
  * side — there, width is the entire point.
+ *
+ * `split` is for a screen that divides itself in two on `md` — the profile, whose identity stands
+ * beside its settings. Reading width is the wrong cap for those: 760px minus a 320px side column
+ * and the gap between them leaves the rows about 400px, and «Все курсы по подписке» came back as
+ * «Все курсы п…». The extra 280px is the side column, not extra measure: the reading half of the
+ * screen ends up roughly where `default` would have put it.
  */
 const CONTENT_WIDTH = {
   default: 'md:max-w-[760px]',
+  split: 'md:max-w-[1040px]',
   wide: 'md:max-w-[1280px]',
 } as const;
 
 /** Routes whose content is data-dense enough to want the wide column. */
 function widthFor(pathname: string): keyof typeof CONTENT_WIDTH {
-  return pathname.startsWith('/admin') ? 'wide' : 'default';
+  if (pathname.startsWith('/admin')) return 'wide';
+  if (pathname === '/profile') return 'split';
+  return 'default';
 }
 
 /**
