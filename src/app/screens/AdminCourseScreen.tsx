@@ -7,6 +7,7 @@
  * against and lists what is still missing, so "why can't I publish?" is answered on the screen
  * rather than by a Postgres error.
  */
+import { clsx } from 'clsx';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, useParams } from 'react-router';
 import { Badge } from '@/components/ui/Badge';
@@ -277,34 +278,6 @@ export default function AdminCourseScreen() {
     );
   }
 
-  // --- one day ----------------------------------------------------------------
-  if (openDay) {
-    const workout = workouts.find((w) => w.id === openDay.customWorkoutId) ?? null;
-    return (
-      <Screen
-        header={
-          <TopBar
-            back={() => {
-              daySave.flush();
-              setOpenDayId(null);
-            }}
-            title={openDay.content.title?.ru || openDay.nodeId}
-          />
-        }
-      >
-        <DayEditor
-          courseSlugId={course.slugId}
-          day={openDay}
-          workout={workout}
-          onPatch={(patch) => patchDay(openDay.id, patch)}
-          onBuildNewWorkout={() => setWorkoutFor({ dayId: openDay.id, existing: null })}
-          onEditWorkout={(workoutId) => void openWorkoutEditor(openDay.id, workoutId)}
-          onDelete={() => void removeDay(openDay.id)}
-        />
-      </Screen>
-    );
-  }
-
   // --- the course -------------------------------------------------------------
   const issues = assembled?.issues ?? [];
   const published = course.status === 'published';
@@ -355,11 +328,59 @@ export default function AdminCourseScreen() {
         days.length === 0 ? (
           <EmptyState title={t('app.dayEmptyTitle')} description={t('app.dayEmptyBody')} />
         ) : (
-          <DayList
-            days={days}
-            workouts={workouts}
-            onOpen={(d: AdminCourseDayRow) => setOpenDayId(d.id)}
-          />
+          /*
+           * Two columns from `md`, one screen at a time below it.
+           *
+           * The editor used to be a second screen: opening a day replaced the list, and going back
+           * to see where you were in the programme cost the day you were editing. On a phone that
+           * is the only shape available and it stays. On a laptop — which is where the owner said
+           * she wants to build a course — the list is 320px of the 1280 the admin already has, so
+           * keeping it costs nothing and the week you are writing stays in front of you.
+           *
+           * One `DayEditor`, not two: it autosaves (`useAutosave`), and a second mounted instance
+           * would be a second saver racing the first. Which column shows is CSS.
+           */
+          <div className="md:flex md:items-start md:gap-6">
+            <div className={clsx('md:w-80 md:shrink-0', openDay && 'max-md:hidden')}>
+              <DayList
+                days={days}
+                workouts={workouts}
+                openId={openDay?.id}
+                onOpen={(d: AdminCourseDayRow) => {
+                  daySave.flush();
+                  setOpenDayId(d.id);
+                }}
+              />
+            </div>
+            {openDay ? (
+              <div className="min-w-0 flex-1 md:border-l md:border-border md:pl-6">
+                {/* The way back to the list, on a phone only: from `md` the list never left. */}
+                <div className="md:hidden">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="-ml-3"
+                    icon={<Glyph size={14}>←</Glyph>}
+                    onClick={() => {
+                      daySave.flush();
+                      setOpenDayId(null);
+                    }}
+                  >
+                    {t('app.courseTabDays')}
+                  </Button>
+                </div>
+                <DayEditor
+                  courseSlugId={course.slugId}
+                  day={openDay}
+                  workout={workouts.find((w) => w.id === openDay.customWorkoutId) ?? null}
+                  onPatch={(patch) => patchDay(openDay.id, patch)}
+                  onBuildNewWorkout={() => setWorkoutFor({ dayId: openDay.id, existing: null })}
+                  onEditWorkout={(workoutId) => void openWorkoutEditor(openDay.id, workoutId)}
+                  onDelete={() => void removeDay(openDay.id)}
+                />
+              </div>
+            ) : null}
+          </div>
         )
       ) : null}
 
