@@ -51,6 +51,7 @@ import { ResumeCard } from '@/app/features/home/ResumeCard';
 import { TodayTasks, type TodayTask } from '@/app/features/home/TodayTasks';
 import { useMarathonDay, useMyMarathons } from '@/app/features/marathon/useMarathon';
 import { assessmentPending, profileToDraft } from '@/app/features/profile/model';
+import { activeWorkoutPath, useActiveWorkoutStore } from '@/app/store/activeWorkout';
 import { saveDraft } from '@/app/screens/onboarding/draft';
 import { useCatalogue } from '@/app/store/catalogue';
 import { useActiveCourseId, useProgress, useProgressLoader } from '@/app/store/progress';
@@ -65,6 +66,30 @@ function HomeSkeleton() {
       <Skeleton rounded="control" className="h-12 shrink-0" />
     </div>
   );
+}
+
+/**
+ * What the middle of Home leads with.
+ *
+ * The screen has two independent sources for "is there anything to train today", and they can
+ * disagree: the resume strip reads the **player store**, which is persisted in this browser, and
+ * the course card reads the **deck**, which is built from the entitlements the server returns. A
+ * session outlives its entitlement whenever the two part company — demo data reset under a live
+ * session, a purchase refunded, an entitlement list that came back empty — and then the screen
+ * said both «ТРЕНИРОВКА НЕ ЗАКОНЧЕНА … ПРОДОЛЖИТЬ» and «ВЫБЕРИ КУРС — и первая тренировка
+ * появится здесь», one above the other. The owner caught it: «Это противоречие».
+ *
+ * It is a contradiction because the second sentence is false in the presence of the first. An
+ * unfinished workout *is* today's training, whatever the entitlement list currently says, and the
+ * athlete's own half-finished session is the last thing to argue with.
+ *
+ * So the invitation to pick a course is only ever shown when there is genuinely nothing: no course
+ * and nothing left running. Deciding it here rather than in the JSX is what makes the two
+ * impossible to render together — a `&&` in a template can be undone by anyone adding a branch.
+ */
+export function homeLead(hasCourse: boolean, hasResume: boolean): 'course' | 'resume' | 'choose' {
+  if (hasCourse) return 'course';
+  return hasResume ? 'resume' : 'choose';
 }
 
 export default function HomeScreen() {
@@ -106,6 +131,15 @@ export default function HomeScreen() {
    * follows" is decided in exactly one place (`features/programs/deck.ts`) — Home just takes the
    * first owned course off the front of it.
    */
+  /*
+   * Whether the resume strip below will render anything. `ResumeCard` decides this for itself and
+   * returns null, which is no use to a screen that has to avoid contradicting it — so the same
+   * helper is read here. A string or null, never a fresh object, so the selector is stable.
+   */
+  const resumePath = useActiveWorkoutStore((s) =>
+    activeWorkoutPath({ session: s.session, finishedAt: s.finishedAt }),
+  );
+
   const today = useMemo(() => {
     const entries = buildDeck({
       courses,
@@ -167,6 +201,7 @@ export default function HomeScreen() {
   } else {
     const course = today?.kind === 'course' ? today : null;
     const next = course?.next ?? null;
+    const lead = homeLead(course !== null, resumePath !== null);
     /* A rest day or a milestone is read and ticked on the path; only a workout is "started". */
     const startable =
       next !== null &&
@@ -174,7 +209,7 @@ export default function HomeScreen() {
     body = (
       <div className="flex min-h-0 flex-1 flex-col gap-4">
         <ResumeCard onResume={(path) => navigate(path)} />
-        {course ? (
+        {lead === 'course' && course ? (
           /*
            * The one flexible element on the screen. Everything else is as tall as its content, so
            * this is what absorbs a task row appearing or the coach button being switched off —
@@ -211,7 +246,7 @@ export default function HomeScreen() {
               openLabel={l(courseTitle(course.course))}
             />
           </div>
-        ) : (
+        ) : lead === 'choose' ? (
           <EmptyState
             title={t('app.homeTodayNoCourseTitle')}
             description={t('app.homeTodayNoCourseBody')}
@@ -221,7 +256,7 @@ export default function HomeScreen() {
               </Button>
             }
           />
-        )}
+        ) : null}
         {/*
          * The challenge, immediately under today's card. It used to sit below the coach button and
          * the task list, which on a phone put it under the fold — and «Челлендж идёт без тебя» is
