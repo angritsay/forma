@@ -101,11 +101,15 @@ interface ArtLayerProps {
  * a movement whose clip has not been uploaded yet. Nothing is drawn: a diagram of a movement we
  * film is a worse picture of it, and a diagram of one we do not film is a promise we cannot keep.
  *
- * **It is contained, never cropped.** It used to fill the card with `object-cover`, and on a real
- * clip that was the whole feature defeating itself: the coach films in landscape, in a garden, and
- * a landscape frame cropped to a phone-shaped hole keeps a vertical strip through the middle — the
- * squat happens off-screen and the video is worth nothing. Whatever the clip's shape, all of it is
- * on screen now, with the app's own ground either side of it.
+ * **It is never cropped, and it is as wide as the screen.** Those are two rules, and they used to
+ * be in conflict. Cropping is out for a reason worth keeping written down: `object-cover` was tried
+ * and reverted, because the coach films in landscape, in a garden, and a landscape frame cropped to
+ * a phone-shaped hole keeps a vertical strip through the middle — the squat happens off-screen and
+ * the video is worth nothing. But `size-full object-contain` fits on whichever side runs out first,
+ * which on a phone is the height, so a vertical clip came out in a letterbox with a black bar down
+ * each side. `w-full h-auto max-h-full` settles it: the clip is as wide as the screen and as tall
+ * as its own shape makes it, falling back to fitting by height only when it would otherwise run off
+ * the bottom. No bar at the sides in the ordinary case, and no crop in any case.
  *
  * **It ends above the glass.** The panel at the bottom reports its height and the clip is given the
  * room above it, so the movement is never half under the words. The clip still runs a little way
@@ -142,13 +146,16 @@ function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
        *
        * The panel's measured height is what this is subtracted by, so a step with a stepper and a
        * button leaves the clip correspondingly less room and the movement still ends above the
-       * words. The 40px of overlap does two things at once: it puts real picture behind the top of
-       * the panel, which is the only thing that makes frosted glass read as glass, and — because a
-       * portrait clip is fitted by height here — it widens the frame by the same token, closing the
-       * thin bars at the sides almost completely.
+       * words. The 40px of overlap puts real picture behind the top of the panel, which is the only
+       * thing that makes frosted glass read as glass. It used to earn its keep twice over, by
+       * widening a height-fitted portrait clip enough to close the thin bars at its sides «almost
+       * completely» — that is no longer its job: the clip takes the full width outright now, and
+       * «almost» was never good enough for a hairline of black down both edges of a movement.
        */}
       <div
-        className="absolute inset-x-0 top-0"
+        /* Centred, because a clip that is only as tall as its own shape no longer fills the stage
+           on its own — the leftover room is split above and below it rather than left at the foot. */
+        className="absolute inset-x-0 top-0 flex items-center"
         style={{ bottom: 'max(0px, calc(var(--player-glass-h, 0px) - 40px))' }}
       >
         {videoUrl ? (
@@ -157,7 +164,7 @@ function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
             ref={video}
             src={videoUrl}
             poster={still}
-            className="size-full object-contain"
+            className="h-auto max-h-full w-full object-contain"
             playsInline
             muted
             loop
@@ -167,7 +174,7 @@ function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
         ) : (
           <ExerciseStill
             exerciseId={exerciseId}
-            className="size-full object-contain"
+            className="h-auto max-h-full w-full object-contain"
             loading="eager"
           />
         )}
