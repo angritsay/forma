@@ -3,12 +3,19 @@
  *
  * The front is the coach's clip with the movement's numbers on it. The back is everything that is
  * words. They are not a page you scroll through — scrolling down a video is how the text ends up
- * half over the demonstration — they are two faces of the same object, and getting from one to the
- * other is a turn: swipe up, or use the corner control.
+ * half over the demonstration — they are two faces of the same object.
  *
- * Sideways on the front walks the workout: right to left is the next movement, left to right the
- * one before. It is the gesture every photo app has taught everybody, and it is why the two
- * chevrons that used to sit either side of Pause are not missed.
+ * **The axes are the owner's, and they are the ones a feed of short video has taught everybody:**
+ * «представь, что все упражнения это лента тик тока, которую листает пользователь».
+ *
+ *   - **up** — the next movement, **down** — the one before. Vertical is the workout's own axis
+ *     now, because that is the axis a person's thumb already walks a column of clips along.
+ *   - **right to left** — the words. It arrives from the side, the way a detail panel does
+ *     everywhere else, and left to right puts it away again.
+ *
+ * This is an exchange of the two axes, not an addition: up used to turn the card over and sideways
+ * used to walk the workout. Both were defensible and the swap is deliberate, so the thresholds
+ * swapped with them — see them below.
  *
  * The turn is a real rotation rather than a cross-fade because the athlete has to know the clip did
  * not go anywhere. Under `prefers-reduced-motion` it becomes an instant swap, which says the same
@@ -20,10 +27,17 @@
 import { clsx } from 'clsx';
 import { useRef, type ReactNode } from 'react';
 
-/** Travel (px) that counts as a deliberate swipe rather than a tap that wandered. */
+/**
+ * Travel (px) that counts as a deliberate swipe rather than a tap that wandered.
+ *
+ * The longer one guards the costlier mistake, and which mistake that is moved with the axes.
+ * Changing movement mid-set loses the athlete's place and is now the vertical gesture, so 64px is
+ * vertical; opening the words costs a glance and a swipe back, so 48px is sideways. The numbers
+ * did not change, they changed sides.
+ */
 const SWIPE_PX = 48;
-/** Sideways travel needed to change movement — longer, because it is the costlier mistake. */
-const SWIPE_X_PX = 64;
+/** Vertical travel needed to change movement — longer, because it is the costlier mistake. */
+const SWIPE_Y_PX = 64;
 
 export type Swipe = 'up' | 'down' | 'left' | 'right' | null;
 
@@ -36,10 +50,10 @@ export type Swipe = 'up' | 'down' | 'left' | 'right' | null;
  */
 export function swipeOf(dx: number, dy: number): Swipe {
   if (Math.abs(dx) > Math.abs(dy)) {
-    if (Math.abs(dx) < SWIPE_X_PX) return null;
+    if (Math.abs(dx) < SWIPE_PX) return null;
     return dx < 0 ? 'left' : 'right';
   }
-  if (Math.abs(dy) < SWIPE_PX) return null;
+  if (Math.abs(dy) < SWIPE_Y_PX) return null;
   return dy < 0 ? 'up' : 'down';
 }
 
@@ -78,9 +92,9 @@ export interface FlipCardProps {
   onFlip: (flipped: boolean) => void;
   front: ReactNode;
   back: ReactNode;
-  /** Swiped right to left on the front: on to the next movement. */
+  /** Swiped up on the front: on to the next movement. */
   onSwipeNext?: () => void;
-  /** Swiped left to right on the front: back to the one before. */
+  /** Swiped down on the front: back to the one before. */
   onSwipePrev?: () => void;
 }
 
@@ -93,28 +107,28 @@ export function FlipCard({
   onSwipePrev,
 }: FlipCardProps) {
   /*
-   * The front reads all four directions: up turns the card over, and sideways walks the workout.
-   * Down does nothing here — there is nothing above the front to pull down from.
+   * The front reads three directions. Left to right is deliberately unbound: the card has nothing
+   * to its left to come back from, and a gesture that does nothing is better than one that undoes
+   * something.
    */
   const frontSwipe = useSwipe((swipe) => {
-    if (swipe === 'up') onFlip(true);
-    else if (swipe === 'left') onSwipeNext?.();
-    else if (swipe === 'right') onSwipePrev?.();
+    if (swipe === 'up') onSwipeNext?.();
+    else if (swipe === 'down') onSwipePrev?.();
+    else if (swipe === 'left') onFlip(true);
   });
 
   /*
-   * The back reads one: pull down to turn it back over, and only from the top of the text.
+   * The back reads one direction, and it is the mirror of the one that opened it: left to right
+   * puts the words away.
    *
-   * The gestures used to live on the wrapper both faces share, which meant scrolling *up* through
-   * the technique — a finger moving down — read as a pull and flipped the card back to the video
-   * mid-sentence. Asking the scroller where it is fixes that without taking the gesture away: at
-   * the top there is nothing left to scroll, so a downward drag can only mean "put this away".
+   * Pulling *down* used to be the way out, and it cannot be any more — down is the previous
+   * movement now, and the back is a column of text a finger moves down through constantly. That
+   * also retires the scroll-position check this had to carry: the technique scrolls vertically and
+   * nothing scrolls it sideways, so a rightward drag is unambiguous wherever it starts, and there
+   * is no longer a way for reading to be mistaken for a gesture.
    */
-  const backSwipe = useSwipe((swipe, target) => {
-    if (swipe !== 'down') return;
-    const scroller = (target as HTMLElement | null)?.closest('[data-card-scroll]');
-    if (scroller && scroller.scrollTop > 0) return;
-    onFlip(false);
+  const backSwipe = useSwipe((swipe) => {
+    if (swipe === 'right') onFlip(false);
   });
 
   return (
