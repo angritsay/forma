@@ -939,3 +939,44 @@ body {
     animation: none;
   }
 }
+
+/*
+ * The navigation's own motion.
+ *
+ * The bar used to change on a tap and not move: four separate rules blinking on and off, an icon
+ * whose stroke got a quarter-pixel heavier, and a colour transition on the word. Everything below
+ * is spent on making the four tabs read as one object with a moving part, and none of it is spent
+ * on colour — the brandbook keeps colour for the programmes, so the chrome has only motion and
+ * material to be alive with.
+ */
+@keyframes nav-icon-in {
+  from {
+    transform: translateY(1.5px) scale(0.9);
+  }
+  60% {
+    transform: translateY(-1px) scale(1.04);
+  }
+  to {
+    transform: none;
+  }
+}
+
+/*
+ * The icon of the tab you just landed on: down, past, and settled. The overshoot is small — 4% —
+ * because this plays on every tab change and a bar that bounces is a bar that gets tiring by the
+ * third day.
+ */
+.nav-icon-in {
+  animation: nav-icon-in 0.28s var(--ease-out) both;
+}
+
+/*
+ * Somebody who asked their phone for less motion is asking for it in the chrome most of all: this
+ * is the one component they touch on every screen. The mark still moves to the right tab, it just
+ * arrives there instead of travelling, and the icon stops springing.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .nav-icon-in {
+    animation: none;
+  }
+}
