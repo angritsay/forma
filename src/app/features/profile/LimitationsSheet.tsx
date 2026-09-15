@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Chip } from '@/components/ui/Chip';
 import { Sheet } from '@/components/ui/Sheet';
 import type { Limitation } from '@/lib/training/types';
 import { useT } from '@/app/hooks/useT';
 import { LIMITATIONS, toggleIn } from '@/app/screens/onboarding/draft';
+import { OptionTile } from '@/app/screens/onboarding/OptionTile';
 import { LIMITATION_LABEL } from '@/app/screens/onboarding/labels';
 
 export interface LimitationsSheetProps {
@@ -48,34 +48,28 @@ export function LimitationsSheet({
     >
       <div className="flex flex-col gap-5 py-2">
         <p className="text-[15px] text-muted">{t('app.profileLimitationsLead')}</p>
-        <div
-          role="group"
-          aria-label={t('app.profileLimitationsTitle')}
-          className="flex flex-wrap gap-2"
-        >
-          <Chip
-            role="checkbox"
-            aria-checked={none}
-            selected={none}
-            icon="check"
-            onClick={() => setSelected([])}
-          >
+        {/* The same question the onboarding step asks, so it is the same shape — see
+            StepLimitations for why «Ничего» sits above the rest rather than among them. */}
+        <div className="flex flex-col gap-4">
+          <OptionTile wide role="checkbox" selected={none} onClick={() => setSelected([])}>
             {t('app.onbLimNone')}
-          </Chip>
-          {LIMITATIONS.map((item) => {
-            const on = selected.includes(item);
-            return (
-              <Chip
+          </OptionTile>
+          <div
+            role="group"
+            aria-label={t('app.profileLimitationsTitle')}
+            className="flex flex-wrap items-stretch gap-2"
+          >
+            {LIMITATIONS.map((item) => (
+              <OptionTile
                 key={item}
                 role="checkbox"
-                aria-checked={on}
-                selected={on}
+                selected={selected.includes(item)}
                 onClick={() => setSelected((list) => toggleIn(list, item))}
               >
                 {t(LIMITATION_LABEL[item])}
-              </Chip>
-            );
-          })}
+              </OptionTile>
+            ))}
+          </div>
         </div>
       </div>
     </Sheet>

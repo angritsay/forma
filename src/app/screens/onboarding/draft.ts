@@ -71,8 +71,26 @@ export const GOALS = [
 export const SESSION_TIMES = [15, 20, 30, 45, 60] as const satisfies readonly SessionTime[];
 /** Dumbbell / kettlebell weight chips, kg. */
 export const WEIGHT_OPTIONS_KG = [2, 4, 6, 8, 10, 12, 16, 20, 24] as const;
-/** Equipment the user can tick ("none" is implied by an empty selection). */
-export const SELECTABLE_EQUIPMENT: readonly Equipment[] = EQUIPMENT.filter((e) => e !== 'none');
+/**
+ * Equipment the user can tick ("none" is implied by an empty selection), in the order it is asked.
+ *
+ * The order is written here rather than taken from `EQUIPMENT` in src/content/schema.ts, because
+ * that array is also the display order of the public course filter and of two admin selects — one
+ * list cannot be sorted for three different readers. Here it is sorted for the person answering:
+ * what nearly everyone already owns first, what belongs to someone who already trains last. The
+ * two things the beginners' course actually needs — a mat and a chair — come first, so the most
+ * common answer is the shortest reach.
+ */
+export const SELECTABLE_EQUIPMENT: readonly Equipment[] = [
+  'mat',
+  'chair',
+  'box',
+  'dumbbells',
+  'kettlebell',
+  'bands',
+  'jump_rope',
+  'pullup_bar',
+];
 
 export const NAME_MAX = 40;
 export const WEIGHT_MIN_KG = 30;

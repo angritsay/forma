@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { EQUIPMENT } from '@/content/schema';
 import {
   assessmentBenchmarks,
   assessmentDone,
@@ -10,6 +11,7 @@ import {
   isStepComplete,
   loadDraft,
   ONBOARDING_DRAFT_KEY,
+  SELECTABLE_EQUIPMENT,
   parseIntField,
   parseWeightField,
   resumeStepIndex,
@@ -60,6 +62,30 @@ function completeDraft(): OnboardingDraft {
     goal: 'general',
   };
 }
+
+/*
+ * The picker's order is written by hand (draft.ts) because the schema's order serves the public
+ * course filter and two admin selects instead. Hand-written means it can fall behind: add an
+ * `Equipment` id to the schema, forget this list, and the option silently never appears in
+ * onboarding — nothing throws and no other test notices.
+ */
+describe('SELECTABLE_EQUIPMENT', () => {
+  it('offers every piece of equipment except the absence of it', () => {
+    expect([...SELECTABLE_EQUIPMENT].sort()).toEqual(
+      EQUIPMENT.filter((e) => e !== 'none')
+        .slice()
+        .sort(),
+    );
+  });
+
+  it('asks first for the two things the beginners course actually needs', () => {
+    expect(SELECTABLE_EQUIPMENT.slice(0, 2)).toEqual(['mat', 'chair']);
+  });
+
+  it('names each option once', () => {
+    expect(new Set(SELECTABLE_EQUIPMENT).size).toBe(SELECTABLE_EQUIPMENT.length);
+  });
+});
 
 describe('onboarding draft', () => {
   it('starts at step 0 with only the equipment step satisfied', () => {

@@ -16,12 +16,17 @@ export interface OptionListProps<T extends string | number> {
 }
 
 /**
- * Single-select list (radio semantics), set as ruled rows.
+ * Single-select list (radio semantics), set as plates.
  *
- * Each option is a hairline row, not a card: the box only grouped a label with its description,
- * and a rule does that with less ink. The chosen row says so with a ✓ glyph in the trailing
- * column — the brand's tick, in type — where the previous design put a filled circle. The rows
- * are 56px and taller, so the whole line is the hit area.
+ * These were hairline rows: a rule above each option and a ✓ in the trailing column. As a way to
+ * group a label with its description that was right, and as a way to say "press one of these" it
+ * was not — a rule is a divider, and dividers are not controls. The rest of the onboarding now
+ * answers its questions with plates (`OptionTile`), so these become plates too; four steps
+ * reading one way and three another is worse than either.
+ *
+ * They stay one per row rather than sharing a row the way the short answers do, because each
+ * carries a second line of description — two of those side by side would be a paragraph split
+ * down the middle.
  */
 export function OptionList<T extends string | number>({
   options,
@@ -30,7 +35,7 @@ export function OptionList<T extends string | number>({
   label,
 }: OptionListProps<T>) {
   return (
-    <div role="radiogroup" aria-label={label} className="flex flex-col border-b border-border">
+    <div role="radiogroup" aria-label={label} className="flex flex-col gap-2">
       {options.map((o) => {
         const selected = o.value === value;
         return (
@@ -41,15 +46,27 @@ export function OptionList<T extends string | number>({
             aria-checked={selected}
             onClick={() => onChange(o.value)}
             className={clsx(
-              'flex w-full items-center gap-4 border-t py-4 text-left',
-              'transition-[border-color,transform] duration-150 ease-(--ease-out) active:scale-[0.99]',
-              selected ? 'border-border-strong' : 'border-border',
+              'flex w-full items-center gap-4 rounded-control border px-4 py-3.5 text-left',
+              'transition-[background-color,color,border-color,transform] duration-150 ease-(--ease-out)',
+              'active:scale-[0.99]',
+              selected
+                ? 'border-primary bg-primary text-on-primary'
+                : 'border-border bg-surface-2 text-text hover:bg-surface-3',
             )}
           >
             <span className="min-w-0 flex-1">
               <span className="block text-[15px] font-semibold">{o.label}</span>
               {o.description ? (
-                <span className="mt-0.5 block text-[13px] text-muted">{o.description}</span>
+                <span
+                  className={clsx(
+                    'mt-0.5 block text-[13px]',
+                    // On the white fill the muted grey would fall under AA, so the description
+                    // takes the plate's own ink at reduced opacity instead of a fixed colour.
+                    selected ? 'text-on-primary/70' : 'text-muted',
+                  )}
+                >
+                  {o.description}
+                </span>
               ) : null}
             </span>
             <span className="flex w-5 shrink-0 justify-end" aria-hidden="true">
