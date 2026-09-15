@@ -224,59 +224,75 @@ export default function MarathonScreen() {
         </section>
       ) : null}
 
-      {dayIndex < 1 ? (
-        <EmptyState
-          title={t('app.marathonNotStarted')}
-          description={t('app.marathonNotStartedBody')}
-        />
-      ) : status === 'loading' ? (
-        <DaySkeleton />
-      ) : tasks.length === 0 ? (
-        <EmptyState
-          title={t('app.marathonNoTasksToday')}
-          description={t('app.marathonNoTasksTodayBody')}
-        />
-      ) : (
-        <div className="flex flex-col" aria-busy={sending}>
-          {tasks.map((item) => (
-            <TaskCard
-              key={item.task.id}
-              item={item}
-              teammateNames={teammateNames}
-              closed={closed}
-              onSend={(proof) => send(item.task.id, proof)}
-              onSendMedia={(file) => sendMedia(item.task.id, file)}
-            />
-          ))}
-        </div>
-      )}
-
       {/*
-       * The week, as far as the top of it. One way on from here, not two: «Мои баллы» is the
-       * breakdown of an answer this table already gives, so it lives on the full board.
+       * The day and the week, side by side from `md`.
+       *
+       * On a phone they are stacked because only one of them can be on screen at a time, and the
+       * day has to be the one: at 7am the standings are not what gets anyone off the sofa. A
+       * laptop has room for both, and then the order stops being a ranking — the board beside the
+       * task is the race made visible while the task is being done, which is the whole argument
+       * for having a board at all.
        */}
-      <section className="border-t border-border pt-5">
-        <h2 className="eyebrow text-course">{t('app.marathonWeekThis')}</h2>
-        {topScores.length > 0 ? (
-          <ol className="mt-2 flex flex-col">
-            {topScores.map((row) => (
-              <li key={row.entryId}>
-                <BoardRow row={row} />
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <p className="mt-2 text-[13px] text-muted">{t('app.marathonBoardEmpty')}</p>
-        )}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="mt-3"
-          onClick={() => navigate('/marathon/board')}
-        >
-          {t('app.marathonTabBoard')}
-        </Button>
-      </section>
+      <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
+        <div className="min-w-0 flex-1">
+          {dayIndex < 1 ? (
+            <EmptyState
+              title={t('app.marathonNotStarted')}
+              description={t('app.marathonNotStartedBody')}
+            />
+          ) : status === 'loading' ? (
+            <DaySkeleton />
+          ) : tasks.length === 0 ? (
+            <EmptyState
+              title={t('app.marathonNoTasksToday')}
+              description={t('app.marathonNoTasksTodayBody')}
+            />
+          ) : (
+            <div className="flex flex-col" aria-busy={sending}>
+              {tasks.map((item) => (
+                <TaskCard
+                  key={item.task.id}
+                  item={item}
+                  teammateNames={teammateNames}
+                  closed={closed}
+                  onSend={(proof) => send(item.task.id, proof)}
+                  onSendMedia={(file) => sendMedia(item.task.id, file)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/*
+         * The week, as far as the top of it. One way on from here, not two: «Мои баллы» is the
+         * breakdown of an answer this table already gives, so it lives on the full board.
+         *
+         * The rule that separates it from the day turns with the layout: a line above it when it
+         * is underneath, a line down its left when it is beside.
+         */}
+        <section className="border-t border-border pt-5 md:w-80 md:shrink-0 md:border-t-0 md:border-l md:pt-0 md:pl-6">
+          <h2 className="eyebrow text-course">{t('app.marathonWeekThis')}</h2>
+          {topScores.length > 0 ? (
+            <ol className="mt-2 flex flex-col">
+              {topScores.map((row) => (
+                <li key={row.entryId}>
+                  <BoardRow row={row} />
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="mt-2 text-[13px] text-muted">{t('app.marathonBoardEmpty')}</p>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-3"
+            onClick={() => navigate('/marathon/board')}
+          >
+            {t('app.marathonTabBoard')}
+          </Button>
+        </section>
+      </div>
     </div>,
     [...teammateNames.values()],
   );

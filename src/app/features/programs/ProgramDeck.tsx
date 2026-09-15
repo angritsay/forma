@@ -86,8 +86,17 @@ export function ProgramDeck({
        * A column, not a scroller: the pager and its gesture went with the covers. There is nothing
        * left to page through — the screen scrolls the way every other screen in the app does, and
        * the next ticket showing at the bottom edge is what says there is one.
+       *
+       * Two across from `md`. A ticket is a fixed object, not a block of text: stretched to 680px
+       * it becomes a banner with a cover band 340px tall, and the tab's question — «во что я могу
+       * пойти» — is answered by seeing the choices at once rather than by seeing one of them
+       * larger. At 760px each ticket lands near 360px, which is the width it has on a phone, so
+       * the object itself does not change, only how many of them fit.
+       *
+       * `items-start`: a grid row stretches its cells to the tallest by default, and a ticket with
+       * no progress stub would grow a band of empty paper to match one that has it.
        */}
-      <ul className="flex flex-col gap-4">
+      <ul className="flex flex-col gap-4 md:grid md:grid-cols-2 md:items-start">
         {entries.map((entry, i) => {
           const photo = photoAt(i);
           const priority = i === 0;
