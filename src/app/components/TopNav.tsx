@@ -1,5 +1,6 @@
 import { clsx } from 'clsx';
-import { NavLink, useNavigate } from 'react-router';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router';
 import { Avatar } from '@/components/ui/Avatar';
 import { Logo } from '@/components/ui/Logo';
 import { useT } from '@/app/hooks/useT';
@@ -21,20 +22,35 @@ const ITEMS: readonly NavItem[] = [
   { to: '/stats', labelKey: 'app.tabReports' },
 ];
 
-function NavWord({ item }: { item: NavItem }) {
+function NavWord({
+  item,
+  innerRef,
+}: {
+  item: NavItem;
+  innerRef: (el: HTMLElement | null) => void;
+}) {
   const { t } = useT();
   return (
     <NavLink
+      ref={innerRef}
       to={item.to}
       end={item.end}
       className={({ isActive }) =>
         clsx(
-          'flex h-16 items-center transition-colors duration-150 ease-(--ease-out)',
-          // The same two voices as the tab bar: the place you are in is the one word set in the
-          // display face, everything else is a small tracked label that brightens under a pointer.
-          isActive
-            ? 'font-display text-base text-text'
-            : 'control-label text-[11px] text-muted-2 hover:text-text',
+          /*
+           * One voice for all of them, and the mark below says which you are in.
+           *
+           * The current destination used to be set large in the display face while the rest stayed
+           * small tracked capitals, which read well in a still screenshot and badly in use: a word
+           * growing from 11px to 16px in another family is a different width, so the whole row
+           * reflowed on every navigation and the three words you did not choose moved out from
+           * under the pointer. The tab bar had already answered this for itself — «hierarchy is
+           * the rule and the ink now, not the size» — and this is that same answer, which is also
+           * what lets the mark below travel instead of jumping.
+           */
+          'control-label flex h-16 items-center text-[11px]',
+          'transition-colors duration-150 ease-(--ease-out)',
+          isActive ? 'text-text' : 'text-muted-2 hover:text-text',
         )
       }
     >
@@ -71,6 +87,45 @@ export function TopNav() {
   const admin = useIsAdmin();
   const profile = useSession((s) => s.profile);
   const user = useSession((s) => s.user);
+  const { pathname } = useLocation();
+
+  /*
+   * The mark under the current destination, and the one thing here that has to be measured.
+   *
+   * The tab bar gets this for free — four equal columns, so the mark is a quarter wide and travels
+   * in quarters. These words are «Сегодня» and «Челлендж» and «Админка», so the mark has to ask
+   * each one how wide it is. `useLayoutEffect` rather than `useEffect` so it is placed in the same
+   * frame the route changed in, and never seen at the old width for a paint.
+   *
+   * A `ResizeObserver` on the row keeps it honest afterwards: the admin word appears once
+   * `useIsAdmin` resolves, and the fonts land a moment after first paint — both move the words
+   * under a mark that would otherwise stay where it was.
+   */
+  const row = useRef<HTMLDivElement>(null);
+  const words = useRef(new Map<string, HTMLElement>());
+  const [mark, setMark] = useState<{ left: number; width: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const place = () => {
+      const box = row.current;
+      const el = [...words.current.entries()].find(([to]) =>
+        to === '/' ? pathname === '/' : pathname === to || pathname.startsWith(`${to}/`),
+      )?.[1];
+      if (!box || !el) return setMark(null);
+      setMark({ left: el.offsetLeft, width: el.offsetWidth });
+    };
+    place();
+    const box = row.current;
+    if (!box || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(place);
+    ro.observe(box);
+    return () => ro.disconnect();
+  }, [pathname, admin]);
+
+  const register = (to: string) => (el: HTMLElement | null) => {
+    if (el) words.current.set(to, el);
+    else words.current.delete(to);
+  };
 
   return (
     <nav
@@ -79,17 +134,38 @@ export function TopNav() {
     >
       <div className="mx-auto flex w-full max-w-[1280px] items-center gap-8 px-6 md:px-10">
         <Logo className="shrink-0 text-lg" />
-        <div className="flex min-w-0 flex-1 items-center gap-7">
+        <div ref={row} className="relative flex min-w-0 flex-1 items-center gap-7">
           {ITEMS.map((item) => (
-            <NavWord key={item.to} item={item} />
+            <NavWord key={item.to} item={item} innerRef={register(item.to)} />
           ))}
-          {admin ? <NavWord item={{ to: '/admin', labelKey: 'app.adminTitle' }} /> : null}
+          {admin ? (
+            <NavWord
+              item={{ to: '/admin', labelKey: 'app.adminTitle' }}
+              innerRef={register('/admin')}
+            />
+          ) : null}
+          {/*
+           * The same 2px rule the tab bar uses, on the bar's own bottom edge rather than beside
+           * it. It travels for the same reason it travels down there: one mark moving between five
+           * words says they are five seats of one object, where five marks blinking would say five
+           * unrelated things happened.
+           */}
+          <span
+            aria-hidden="true"
+            className={clsx(
+              'pointer-events-none absolute bottom-0 left-0 h-[2px] bg-primary',
+              'transition-[transform,width,opacity] duration-280 ease-(--ease-out)',
+              'motion-reduce:transition-none',
+              mark ? 'opacity-100' : 'opacity-0',
+            )}
+            style={{ width: mark?.width ?? 0, transform: `translateX(${mark?.left ?? 0}px)` }}
+          />
         </div>
         <button
           type="button"
           aria-label={t('app.homeProfile')}
           onClick={() => navigate('/profile')}
-          className="tap-target shrink-0 rounded-control"
+          className="tap-target shrink-0 rounded-control transition-opacity duration-150 ease-(--ease-out) hover:opacity-80"
         >
           <Avatar
             seed={profile?.avatarSeed ?? user?.id ?? ''}
