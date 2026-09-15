@@ -1,27 +1,29 @@
 /**
- * The programmes: everything there is to be in, one full-height card each, swiped sideways.
+ * The programmes: everything there is to be in, one ticket each, stacked down the screen.
  *
- * The deck was the home screen. It is the second tab now, and moving it there is what let both
- * screens say one thing each: Home answers «что у меня сегодня», this answers «во что я могу
- * пойти». A course is a card, the challenge is a card, a course that has not been bought is a card —
- * peers, in the gesture every phone has taught, with the kicker naming which kind each one is.
+ * The deck was the home screen, and then it was this tab as a sideways swipe of full-height
+ * covers. Both of those made the same mistake in the same place: a screen whose whole job is «во
+ * что я могу пойти» showed one thing at a time, at the size of a magazine cover, and you had to
+ * discover by gesture that there was anything else. The owner put it plainly — «она сейчас
+ * занимает весь экран, а хотелось бы, чтобы это выглядело как билетик в курс».
  *
- * A card carries as little as a card can: what it is, its name, one line of what it gives you, how
- * far in you are if you are in it, and one button. The day's own session is not on it — that is
- * Home's line, and repeating it here made the card a status board instead of a cover.
+ * So they are tickets now (`CourseTicket`), in a column, each with its progress at the top. One
+ * fits a phone screen whole with the next one beginning under it, and that beginning is the thing
+ * the swipe was failing to say: there is more than one. Nothing about the content changed — what it is, its
+ * name, one line of what it gives you, how far in you are, one button. The full-bleed cover is
+ * still the right shape on Home, where a single card answers «что у меня сегодня» and owns the
+ * screen, and that is why `DeckCard` is still there and unchanged.
  *
- * A card is never the whole story: the tap-through is the course's own path or the challenge's own day,
- * where the detail lives.
+ * A ticket is never the whole story: the tap-through is the course's own path or the challenge's
+ * own day, where the detail lives.
  */
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { clsx } from 'clsx';
 import { courseTitle } from '@/content/catalogue';
 import { formatNumber, plural } from '@/i18n/index';
 import { courseLandingHref, subscribeHref } from '@/app/features/courses/courseMeta';
 import { PHOTOS, type Photo } from '@/lib/media/photos';
 import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
 import { useT } from '@/app/hooks/useT';
-import { DeckCard } from './DeckCard';
+import { CourseTicket } from './CourseTicket';
 import type { DeckEntry } from './deck';
 import type { GameAccess } from '@/app/features/marathon/gameAccess';
 
@@ -31,7 +33,7 @@ import type { GameAccess } from '@/app/features/marathon/gameAccess';
  * The coach's own frame leads, because the first card is the one an athlete sees every morning.
  * The rest rotate through what the library has, by position rather than by id, so two cards next
  * to each other are never the same picture — and while those are still un-vendored stock URLs,
- * <DeckCard> ignores them and paints the course's colour instead.
+ * <CourseTicket> ignores them and paints the course's colour instead.
  *
  * A marathon is never given one: it has no photograph of its own, and orange is its cover.
  */
@@ -75,44 +77,17 @@ export function ProgramDeck({
   onOpenMarathon,
 }: ProgramDeckProps) {
   const { t, l, locale } = useT();
-  const scroller = useRef<HTMLDivElement | null>(null);
-  const [active, setActive] = useState(0);
-
-  /*
-   * Which card is showing, from the scroll position rather than from a gesture handler: the same
-   * answer whether it was swiped, flung, tabbed into or scrolled with a trackpad.
-   */
-  const onScroll = useCallback(() => {
-    const el = scroller.current;
-    if (!el || el.clientWidth === 0) return;
-    setActive(Math.round(el.scrollLeft / el.clientWidth));
-  }, []);
-
-  // A deck that shrinks under the finger (a course bought, a marathon ended) must not leave the
-  // pager pointing at a card that is gone.
-  useEffect(() => {
-    setActive((i) => Math.min(i, Math.max(0, entries.length - 1)));
-  }, [entries.length]);
-
-  const goTo = (i: number) => {
-    const el = scroller.current;
-    if (!el) return;
-    el.scrollTo({ left: i * el.clientWidth, behavior: 'smooth' });
-    setActive(i);
-  };
 
   if (entries.length === 0) return null;
 
   return (
-    <section
-      className="relative -mx-6 -mt-[var(--safe-top)] lg:-mx-10"
-      aria-label={t('app.homeDeckLabel')}
-    >
-      <div
-        ref={scroller}
-        onScroll={onScroll}
-        className="deck-scroller flex h-[78dvh] max-h-[820px] min-h-[520px] snap-x snap-mandatory overflow-x-auto overscroll-x-contain"
-      >
+    <section aria-label={t('app.homeDeckLabel')}>
+      {/*
+       * A column, not a scroller: the pager and its gesture went with the covers. There is nothing
+       * left to page through — the screen scrolls the way every other screen in the app does, and
+       * the next ticket showing at the bottom edge is what says there is one.
+       */}
+      <ul className="flex flex-col gap-4">
         {entries.map((entry, i) => {
           const photo = photoAt(i);
           const priority = i === 0;
@@ -123,8 +98,8 @@ export function ProgramDeck({
             const locked = gameAccess?.allowed === false;
             const trialLeft = gameAccess?.allowed ? gameAccess.trialDaysLeft : undefined;
             return (
-              <div key={entry.key} className="w-full shrink-0 snap-center">
-                <DeckCard
+              <li key={entry.key}>
+                <CourseTicket
                   priority={priority}
                   style={courseTileVars(GAME_TILE)}
                   eyebrow={`${t('app.homeDeckMarathon')} · ${t('app.marathonDayOf', {
@@ -166,15 +141,15 @@ export function ProgramDeck({
                       })}
                   openLabel={marathon.title}
                 />
-              </div>
+              </li>
             );
           }
           if (entry.kind === 'locked') {
             const { course } = entry;
             const title = l(courseTitle(course));
             return (
-              <div key={entry.key} className="w-full shrink-0 snap-center">
-                <DeckCard
+              <li key={entry.key}>
+                <CourseTicket
                   photo={photo}
                   priority={priority}
                   dimmed
@@ -186,7 +161,7 @@ export function ProgramDeck({
                   ctaHref={courseLandingHref(locale, course)}
                   openLabel={`${title} — ${t('app.homeCourseGet')}`}
                 />
-              </div>
+              </li>
             );
           }
 
@@ -200,8 +175,8 @@ export function ProgramDeck({
             next !== null &&
             (next.kind === 'workout' || next.kind === 'test' || next.kind === 'benchmark');
           return (
-            <div key={entry.key} className="w-full shrink-0 snap-center">
-              <DeckCard
+            <li key={entry.key}>
+              <CourseTicket
                 photo={photo}
                 priority={priority}
                 style={courseTileVars(course.tile)}
@@ -228,37 +203,10 @@ export function ProgramDeck({
                 onOpen={() => onOpenCourse(course.id)}
                 openLabel={title}
               />
-            </div>
+            </li>
           );
         })}
-      </div>
-
-      {/*
-       * The pager. Dots are circles and this brand has none, so the cards are counted in rules —
-       * the same 2px marks the course screen uses for its weeks. They are buttons, because a deck
-       * that can only be swiped cannot be used with a keyboard.
-       */}
-      {entries.length > 1 ? (
-        <div className="flex justify-center gap-2 pt-5">
-          {entries.map((entry, i) => (
-            <button
-              key={entry.key}
-              type="button"
-              onClick={() => goTo(i)}
-              aria-label={t('app.homeDeckGoTo', { n: i + 1 })}
-              aria-current={i === active ? 'true' : undefined}
-              className="tap-target-y px-1"
-            >
-              <span
-                className={clsx(
-                  'block h-0.5 w-7 transition-colors duration-150 ease-(--ease-out)',
-                  i === active ? 'bg-text' : 'bg-border-strong',
-                )}
-              />
-            </button>
-          ))}
-        </div>
-      ) : null}
+      </ul>
     </section>
   );
 }

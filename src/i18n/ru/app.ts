@@ -234,7 +234,6 @@ export const app = {
   homeDeckMarathonCta: 'Задание на сегодня',
   homeDeckStart: 'Начать тренировку',
   homeDeckProgressLabel: 'пройдено',
-  homeDeckGoTo: 'Карточка {n}',
   homeErrorTitle: 'Не удалось загрузить прогресс',
   homeErrorBody: 'Проверь соединение и попробуй ещё раз.',
   homeRefreshError: 'Не удалось обновить. Показываем последние сохранённые данные.',

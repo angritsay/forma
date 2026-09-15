@@ -1,16 +1,16 @@
 /**
- * Programmes (the second tab): one full-height card per thing there is to be in, swiped sideways.
+ * Programmes (the second tab): one ticket per thing there is to be in, down the screen.
  *
- * It used to be a catalogue — a page title, a lead, and five tiles in a grid, each with its own
+ * It was a catalogue first — a page title, a lead, and five tiles in a grid, each with its own
  * heading, kicker, tagline and row of facts. That is a shop, and this is not a shop: there is one
- * course to walk («Форма с нуля»), the challenge running beside it, and the rest is what has not been
- * bought yet. A grid of five 320px tiles says "compare these"; a deck says "this is the one, and
- * there is another behind it".
+ * course to walk («Форма с нуля»), the challenge running beside it, and the rest is what has not
+ * been bought yet.
  *
- * So the deck that used to open the home screen lives here (`features/programs/ProgramDeck`), with
- * the challenge as a card of its own, and Home keeps only today. The kicker on each card says which
- * kind it is — «Курс» or «Челлендж» — and everything else is the picture, the name, one line and the
- * button.
+ * Then it was a sideways deck of full-height covers, and that overcorrected: a screen that answers
+ * «во что я могу пойти» showed exactly one answer at a time and left you to find the others by
+ * swiping. Tickets are the middle of it — bounded, two to a phone screen, each carrying what it is,
+ * its name, one line, how far in you are, and one button. Home keeps the full-bleed cover, because
+ * Home has one card and a whole screen to give it.
  */
 import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { buildDeck } from '@/app/features/programs/deck';
 import { ProgramDeck } from '@/app/features/programs/ProgramDeck';
@@ -30,12 +31,9 @@ import { GAME_REQUIRES_SUBSCRIPTION } from '@content/site/plans';
 
 function DeckSkeleton() {
   return (
-    <div className="flex flex-col" aria-hidden="true">
-      <Skeleton rounded="control" className="-mx-6 h-[78dvh] min-h-[520px] lg:-mx-10" />
-      <div className="mt-4 flex justify-center gap-2">
-        <Skeleton rounded="control" className="h-0.5 w-7" />
-        <Skeleton rounded="control" className="h-0.5 w-7" />
-      </div>
+    <div className="flex flex-col gap-4" aria-hidden="true">
+      <Skeleton rounded="card" className="h-[420px]" />
+      <Skeleton rounded="card" className="h-[420px]" />
     </div>
   );
 }
@@ -81,9 +79,13 @@ export default function CoursesScreen() {
     ]);
   }, []);
 
+  /* The tab says its own name, the way «Челлендж» and «Прогресс» already do — asked for, and the
+     one thing this screen was missing when the four tabs were put side by side. */
+  const header = <TopBar title={t('app.tabPrograms')} />;
+
   if (status === 'idle' || status === 'loading') {
     return (
-      <Screen>
+      <Screen header={header}>
         <DeckSkeleton />
       </Screen>
     );
@@ -91,7 +93,7 @@ export default function CoursesScreen() {
 
   if (entries.length === 0) {
     return (
-      <Screen>
+      <Screen header={header}>
         <EmptyState
           title={t('app.homeTodayNoCourseTitle')}
           description={t('app.homeTodayNoCourseBody')}
@@ -106,7 +108,7 @@ export default function CoursesScreen() {
   }
 
   return (
-    <Screen>
+    <Screen header={header}>
       <ProgramDeck
         entries={entries}
         openTasks={openTasks}
