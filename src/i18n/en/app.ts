@@ -115,8 +115,6 @@ export const app = {
   onbAssessWarnTitle: 'Don’t squeeze out a maximum',
   onbAssessWarnBody:
     'This is a setup, not an exam. Work at a calm pace and stop when the technique starts to go — not when the strength does.',
-  onbAssessWarnBody2:
-    'Push to failure today and the app will decide you are stronger than you are, and the programme for the next weeks will be too heavy. An honest calm number is training you can actually do.',
   onbAssessWarnCta: 'Got it, let’s start',
   onbAssessInstruction:
     'Count how many you do in the time — at a calm pace, with no discomfort, without squeezing out more than you need to.',
