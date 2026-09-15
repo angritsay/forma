@@ -168,27 +168,44 @@ export default function ProfileScreen() {
   return (
     <Paper>
       <Screen header={header}>
-        <div className="flex flex-col gap-8 pt-6">
-          <ProfileHeader
-            seed={profile.avatarSeed || profile.id}
-            name={profile.displayName ?? ''}
-            email={email}
-            since={since}
-            busy={busy === 'avatar' || busy === 'name' ? busy : null}
-            onNewAvatar={() => void save({ avatarSeed: newAvatarSeed() }, 'avatar')}
-            onSaveName={(name) => save({ displayName: name }, 'name')}
-          />
-          <FitnessCard
-            fitness={fitness}
-            onRetake={retakeTests}
-            onSetup={() => navigate('/onboarding')}
-          />
+        {/*
+         * Two columns from `md`: who you are on the left, what you have set on the right.
+         *
+         * In one column on a laptop the settings start a screen and a half below the avatar, and
+         * everything above them — the name, the email, the fitness index — is read once and then
+         * scrolled past forever. Side by side, the identity stays in view while the rows are used,
+         * which is what identity is for. The left column is sticky for the same reason.
+         *
+         * Below `md` it is the stack it has always been, in the same order.
+         *
+         * The side column is 320px and does not shrink on a tablet. 256px was tried, to leave the
+         * settings more room at 768 — and «Пройти адаптацию заново» is 254px of tracked capitals,
+         * which does not fit a 256px button with 32px of padding on each side. 320 is the narrowest
+         * this column can be and still hold its own action.
+         */}
+        <div className="flex flex-col gap-8 pt-6 md:flex-row md:items-start md:gap-8 lg:gap-10">
+          <div className="flex flex-col gap-8 md:sticky md:top-[calc(var(--safe-top)+80px)] md:w-80 md:shrink-0">
+            <ProfileHeader
+              seed={profile.avatarSeed || profile.id}
+              name={profile.displayName ?? ''}
+              email={email}
+              since={since}
+              busy={busy === 'avatar' || busy === 'name' ? busy : null}
+              onNewAvatar={() => void save({ avatarSeed: newAvatarSeed() }, 'avatar')}
+              onSaveName={(name) => save({ displayName: name }, 'name')}
+            />
+            <FitnessCard
+              fitness={fitness}
+              onRetake={retakeTests}
+              onSetup={() => navigate('/onboarding')}
+            />
+          </div>
 
           {/*
             Settings are hairline rows and words. The row icons that used to lead each one are
             gone: the title says what the row is, and the subtitle says what it is set to.
           */}
-          <div className="flex flex-col gap-2">
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
             {PLANS_ENABLED ? (
               <Section title={t('app.profileSubscriptionSection')}>
                 <div className="border-t border-border">
@@ -286,11 +303,16 @@ export default function ProfileScreen() {
                 </ul>
               </div>
             </Section>
-          </div>
 
-          <p className="text-[11px] text-muted-2">
-            {t('app.profileVersion', { version: APP_VERSION, mode: BUILD_MODE })}
-          </p>
+            {/*
+              The build line ends the settings column, not the row. As a third flex item it became
+              a column of its own on `md`, stole width from the rows next to it and then stood
+              alone in the empty half of the screen.
+            */}
+            <p className="pt-2 text-[11px] text-muted-2">
+              {t('app.profileVersion', { version: APP_VERSION, mode: BUILD_MODE })}
+            </p>
+          </div>
         </div>
 
         {tp ? (
