@@ -185,15 +185,23 @@ export default function StatsScreen() {
             {details ? t('app.statsDetailsHide') : t('app.statsDetailsShow')}
           </Button>
         </div>
+        {/*
+         * Opened, this is seven figures deep — the longest stack in the app, and on a laptop the
+         * last of them sits four screens below the button that opened it. Two across from `md`,
+         * because each one is a small self-contained figure read on its own; the calendar keeps
+         * the full width, as a year of squares in half a column is a different, worse object.
+         *
+         * `items-start`, or the grid would stretch a three-row list to the height of a chart.
+         */}
         {details ? (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 md:grid md:grid-cols-2 md:items-start md:gap-x-8">
             <Section title={t('app.statsWeekTitle')}>
               <WeeklyChart days={week} />
             </Section>
             <Section title={t('app.statsStepsTitle')}>
               <StepsChart points={steps} goal={STEPS_GOAL} />
             </Section>
-            <div className="flex flex-col gap-7 border-t border-border pt-7">
+            <div className="flex flex-col gap-7 border-t border-border pt-7 md:col-span-2">
               <PointsChart weeks={weeks} />
               <StreakCalendar weeks={calendar} streak={streak} />
             </div>
