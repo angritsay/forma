@@ -51,8 +51,19 @@ function splitHeadline(text: string, thin?: string): [string, string] {
 const [heavy, light] = splitHeadline(title, Astro.props.thin);
 ---
 
+<!--
+  `overflow-x-clip`, and it is load-bearing rather than tidy. The photograph below bleeds past the
+  gutter with a negative right margin, which is the point of it — but the bleed only has somewhere
+  to go once the viewport is wider than `max-w-6xl` (1152px) and the centred container has slack at
+  its sides. Between 768 and 1152 — every tablet, and a small laptop — there was no slack, so the
+  40px of photograph hung off the right edge of the document and the whole page could be scrolled
+  sideways: 1044px of scroll width in a 1024px window, measured.
+
+  `clip` rather than `hidden`: `overflow: hidden` would make this a scroll container, and a scroll
+  container between the sticky header and the page is how sticky silently stops working.
+-->
 <section
-  class="mx-auto grid max-w-6xl items-end gap-12 px-5 pt-10 pb-16 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:gap-14 md:pt-20 md:pb-28"
+  class="mx-auto grid max-w-6xl items-end gap-12 overflow-x-clip px-5 pt-10 pb-16 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:gap-14 md:pt-20 md:pb-28"
 >
   <div class="relative z-10">
     <p class="eyebrow">{tileTop}</p>
