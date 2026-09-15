@@ -196,7 +196,7 @@ export const app = {
   homeTodayNoCourseTitle: 'Выбери курс',
   homeTodayNoCourseBody: 'Выбери программу — и первая тренировка появится здесь.',
   homeTodayNoCourseCta: 'Смотреть программы',
-  homeCoachNow: 'Заниматься с тренером сейчас',
+  homeCoachNow: 'Заниматься с тренером',
   // The challenge, on Home. Somebody not in it sees the same row with the task blurred out.
   homeGameSpoiler: 'Челлендж идёт без тебя',
   homeGameSpoilerTask: 'Задание дня',
