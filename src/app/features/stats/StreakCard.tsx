@@ -1,7 +1,7 @@
 import { clsx } from 'clsx';
 import { Badge } from '@/components/ui/Badge';
 import { Chip } from '@/components/ui/Chip';
-import { formatNumber, plural } from '@/i18n/index';
+import { formatNumber } from '@/i18n/index';
 import type { StreakInfo } from '@/lib/training/types';
 import { useT } from '@/app/hooks/useT';
 
@@ -12,20 +12,20 @@ export interface StreakCardProps {
 }
 
 /**
- * "N days", today's state and a steps CTA while the day is still open.
+ * The warning that today's streak is still unclaimed, and the one tap that saves it.
  *
- * It opens the reports tab. It used to sit in the middle of the home screen, between the deck and
- * the week's figures, which is the one place it could not do its job: the number people come back
- * for was competing with today's session for the same glance.
+ * It used to open by repeating the count. It cannot any more: `AccountRow` sits directly above it
+ * now and says «3 дня подряд», so leading with a 36px «3» put the same number on the screen twice
+ * within two hundred pixels. What is left is the part only this block has — what happens today if
+ * nothing is logged, and the way to log it.
+ *
+ * It shows only while the day is open and at risk (`StatsScreen`), so it is the exception on the
+ * tab rather than a permanent row, which is also why it may lead with a sentence where everything
+ * around it leads with a figure.
  */
 export function StreakCard({ streak, stepsGoal, onLogSteps }: StreakCardProps) {
   const { t, locale } = useT();
   const active = streak.current > 0;
-  const word = plural(locale, streak.current, {
-    one: t('app.homeStreakDayOne'),
-    few: t('app.homeStreakDayFew'),
-    many: t('app.homeStreakDayMany'),
-  });
   const goal = formatNumber(locale, stepsGoal);
   const subtitle = streak.todayDone
     ? t('app.homeStreakTodayDone')
@@ -34,29 +34,19 @@ export function StreakCard({ streak, stepsGoal, onLogSteps }: StreakCardProps) {
       : t('app.homeStreakEmpty', { steps: goal });
 
   return (
-    /*
-     * The streak led by its number and nothing else. The flame that used to sit beside the label
-     * is gone: the count is the fact, the word under it says what it counts, and a picture of fire
-     * next to a figure was the kind of decoration the brandbook takes off every row.
-     */
-    <section className="flex items-start gap-5 pt-6" aria-label={t('app.homeStreakTitle')}>
-      <span className="numeral tabular shrink-0 text-4xl leading-none">{streak.current}</span>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="eyebrow">{word}</span>
-          {streak.longest > streak.current ? (
-            <Badge tone="neutral">{t('app.homeStreakBest', { n: streak.longest })}</Badge>
-          ) : null}
-        </div>
-        <p className={clsx('mt-2 text-sm', streak.atRisk ? 'text-warning' : 'text-muted')}>
-          {subtitle}
-        </p>
-        {!streak.todayDone ? (
-          <Chip size="sm" className="mt-3" onClick={onLogSteps}>
-            {t('app.homeStreakLogSteps')}
-          </Chip>
-        ) : null}
-      </div>
+    <section className="flex flex-col pt-5" aria-label={t('app.homeStreakTitle')}>
+      <p className={clsx('text-sm', streak.atRisk ? 'text-warning' : 'text-muted')}>{subtitle}</p>
+      {/* The best run, when it is behind you — the one number the row above does not carry. */}
+      {streak.longest > streak.current ? (
+        <span className="mt-2 self-start">
+          <Badge tone="neutral">{t('app.homeStreakBest', { n: streak.longest })}</Badge>
+        </span>
+      ) : null}
+      {!streak.todayDone ? (
+        <Chip size="sm" className="mt-3 self-start" onClick={onLogSteps}>
+          {t('app.homeStreakLogSteps')}
+        </Chip>
+      ) : null}
     </section>
   );
 }

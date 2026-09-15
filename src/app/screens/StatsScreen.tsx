@@ -6,12 +6,14 @@
  * for whoever asks for it, the whole record.
  *
  * It used to be a dashboard: a level card, two crosslinks, and then seven charts and lists at the
- * same size, every one of them true and none of them the reason anybody opens this tab. What makes
- * a progress screen worth returning to is the thing Duolingo and Headspace both do and neither
- * dresses up as analytics — one number, big, that means "you have kept this up", and something
- * beside it that is worth showing to somebody. So the top of the screen is a poster
- * (ProgressPoster) and the charts are behind «Подробности», where they belong: a chart answers a
- * question you already had, and nobody arrives here with it.
+ * same size, every one of them true and none of them the reason anybody opens this tab. The charts
+ * went behind «Подробности», where they belong: a chart answers a question you already had, and
+ * nobody arrives here with it.
+ *
+ * The top is the account — the streak, the level, the avatar and «Обновить» (`AccountRow`). Those
+ * last two came off Home, which is what let Home stop scrolling, and they brought the first two
+ * with them: a streak and a level are answers to «как у меня дела», not to «что у меня сегодня».
+ * That replaced the full-bleed paper poster with the 104px streak numeral, at the owner's request.
  *
  * The achievements show what has been earned, with the rest in a row swiped sideways
  * (AchievementsGrid) — twelve tiles of which ten are grey is a list of what you have not done.
@@ -28,8 +30,8 @@ import { useToast } from '@/components/ui/Toast';
 import { STEPS_GOAL } from '@/lib/training/constants';
 import { evaluateAchievements, levelForPoints } from '@/lib/training/levels';
 import { useT } from '@/app/hooks/useT';
+import { AccountRow } from '@/app/features/stats/AccountRow';
 import { AchievementsGrid } from '@/app/features/stats/AchievementsGrid';
-import { ProgressPoster } from '@/app/features/stats/ProgressPoster';
 import { StreakCard } from '@/app/features/stats/StreakCard';
 import { WeekBoard } from '@/app/features/leaderboard/WeekBoard';
 import {
@@ -47,6 +49,7 @@ import { LevelCard, TotalsRow } from '@/app/features/stats/StatsCards';
 import { PointsChart, StepsChart, WeeklyChart } from '@/app/features/stats/StatsCharts';
 import { StreakCalendar } from '@/app/features/stats/StreakCalendar';
 import { StepsRow } from '@/app/features/stats/StepsRow';
+import { useSession } from '@/app/store/session';
 import {
   useProgress,
   useProgressLoader,
@@ -81,6 +84,8 @@ export default function StatsScreen() {
   const benchmarks = useProgress((s) => s.benchmarks);
   const totals = useProgress((s) => s.totals);
   const courseStates = useProgress((s) => s.courseStates);
+  const profile = useSession((st) => st.profile);
+  const user = useSession((st) => st.user);
   const today = useTodayIso();
   const totalPoints = useTotalPoints();
   const streak = useStreak();
@@ -109,22 +114,13 @@ export default function StatsScreen() {
   }, [toast, t]);
 
   /*
-   * The title and one word: «Обновить». A circular arrow is neither a glyph nor a physical
-   * object, so the refresh control is its label, set as a small ghost button; the spinner takes
-   * its place while a reload is in flight.
+   * The title alone. «Обновить» used to sit beside it and now belongs to `AccountRow` below,
+   * together with the avatar — both are the person's controls rather than the screen's, and they
+   * read as a pair only when they are next to each other.
    */
   const header = (
-    <div className="flex h-14 items-center gap-2 border-b border-border px-6">
+    <div className="flex h-14 items-center gap-2 px-6">
       <h1 className="font-display min-w-0 flex-1 truncate text-base">{t('app.statsTitle')}</h1>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="-mr-4.5"
-        loading={loading}
-        onClick={() => void refresh()}
-      >
-        {t('app.statsRefresh')}
-      </Button>
     </div>
   );
 
@@ -146,12 +142,14 @@ export default function StatsScreen() {
   } else {
     body = (
       <div className="flex flex-col gap-4">
-        <ProgressPoster
+        <AccountRow
           streak={streak}
           level={level}
-          workouts={stats.workouts}
-          minutes={stats.totalMinutes}
-          calories={calories}
+          avatarSeed={profile?.avatarSeed ?? user?.id ?? ''}
+          displayName={profile?.displayName ?? user?.email}
+          loading={loading}
+          onOpenProfile={() => navigate('/profile')}
+          onRefresh={() => void refresh()}
         />
         {/* The day is still open and nothing is logged: the one line that can save the streak. */}
         {streak.atRisk ? (
