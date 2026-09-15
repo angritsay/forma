@@ -114,15 +114,14 @@ export default function StatsScreen() {
   }, [toast, t]);
 
   /*
-   * The title alone. «Обновить» used to sit beside it and now belongs to `AccountRow` below,
-   * together with the avatar — both are the person's controls rather than the screen's, and they
-   * read as a pair only when they are next to each other.
+   * No title bar. The lit tab already says «Прогресс», and repeating it cost 57px of a 761px
+   * phone. Removed at the owner's request, with «Программы» in the same pass; «Челлендж» never
+   * had one, because its cover is the header.
+   *
+   * «Обновить» is not lost with it — it moved to `AccountRow` below when the account row arrived
+   * from Home, and it belongs there anyway, beside the avatar: both are the person's controls
+   * rather than the screen's.
    */
-  const header = (
-    <div className="flex h-14 items-center gap-2 px-6">
-      <h1 className="font-display min-w-0 flex-1 truncate text-base">{t('app.statsTitle')}</h1>
-    </div>
-  );
 
   let body: React.ReactNode;
   if (status === 'loading' || status === 'idle') {
@@ -224,5 +223,5 @@ export default function StatsScreen() {
     );
   }
 
-  return <Screen header={header}>{body}</Screen>;
+  return <Screen contentClassName="pt-4">{body}</Screen>;
 }
