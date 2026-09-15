@@ -11,9 +11,10 @@
  * they did not come here to read.
  *
  * Its back is every word the coach wrote: how the movement goes, what he keeps correcting, who
- * should not do it. You get there by turning the card over — a swipe up, or the handle under the
- * transport — and never by scrolling, because scrolling a video is how text ends up half on top of
- * the demonstration.
+ * should not do it. You get there by turning the card over — a swipe from right to left, or the
+ * handle under the transport — and never by scrolling, because scrolling a video is how text ends
+ * up half on top of the demonstration. Up and down walk the workout instead, the way a feed of
+ * short video does; see {@link FlipCard} for why the two axes are that way round.
  *
  * State lives in `useActiveWorkoutStore` (persisted), so leaving keeps the session resumable.
  * Keyboard: Space = pause, → next, ← previous, Esc = turn the card back over.
@@ -36,6 +37,7 @@ import {
   SectionStepper,
 } from '@/app/features/player/PlayerChrome';
 import {
+  clipFit,
   findBlock,
   isTestBlock,
   sectionOfStep,
@@ -100,15 +102,27 @@ interface ArtLayerProps {
  * a movement whose clip has not been uploaded yet. Nothing is drawn: a diagram of a movement we
  * film is a worse picture of it, and a diagram of one we do not film is a promise we cannot keep.
  *
- * **It is never cropped, and it is as wide as the screen.** Those are two rules, and they used to
- * be in conflict. Cropping is out for a reason worth keeping written down: `object-cover` was tried
- * and reverted, because the coach films in landscape, in a garden, and a landscape frame cropped to
- * a phone-shaped hole keeps a vertical strip through the middle — the squat happens off-screen and
- * the video is worth nothing. But `size-full object-contain` fits on whichever side runs out first,
- * which on a phone is the height, so a vertical clip came out in a letterbox with a black bar down
- * each side. `w-full h-auto max-h-full` settles it: the clip is as wide as the screen and as tall
- * as its own shape makes it, falling back to fitting by height only when it would otherwise run off
- * the bottom. No bar at the sides in the ordinary case, and no crop in any case.
+ * **The fit is decided per clip, from the clip's own shape, and the clip always fills the width.**
+ * This is the third answer to the same question and the first one true for both kinds of footage
+ * the coach shoots.
+ *
+ * `object-cover` was tried once as a blanket rule and reverted, for a reason worth keeping written
+ * down: he films some movements in landscape, in a garden, and a landscape frame cropped to a
+ * phone-shaped hole keeps a vertical strip through the middle — the squat happens off-screen and
+ * the video is worth nothing. The replacement, `w-full h-auto max-h-full object-contain`, was
+ * documented here as «as wide as the screen … no bar at the sides in the ordinary case». It was
+ * not: `max-h-full` wins whenever the clip is taller than the stage, and the owner sent a
+ * screenshot of a portrait squat painted 239px wide between two 76px bars of black.
+ *
+ * Both rules were right about their own footage and wrong about the other's, because one
+ * `object-fit` cannot serve two aspect ratios. So the element measures itself — `loadedmetadata`
+ * gives `videoWidth`/`videoHeight` — and {@link clipFit} picks the fit that fills the width for
+ * that shape in that box. The stage below is sized so the ordinary 9:16 clip fills it under
+ * `contain`, uncropped; `cover` is the safety net for footage taller than the stage, where the
+ * alternative is bars.
+ *
+ * Until the metadata arrives the fit is `contain`, because that is the one that can never destroy
+ * a frame, and a poster that flashes letterboxed for 100ms costs nothing.
  *
  * **It ends above the glass.** The panel at the bottom reports its height and the clip is given the
  * room above it, so the movement is never half under the words. The clip still runs a little way
@@ -122,13 +136,43 @@ interface ArtLayerProps {
  */
 function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
   const video = useRef<HTMLVideoElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
   const still = exerciseId ? exerciseStillUrl(exerciseId) : undefined;
+  /** `cover` once the clip is known to be taller than its stage; `contain` until then. */
+  const [fill, setFill] = useState(false);
   useEffect(() => {
     const el = video.current;
     if (!el) return;
     if (playing) void el.play().catch(() => undefined);
     else el.pause();
   }, [playing, videoUrl]);
+
+  /*
+   * Compare the clip's shape with the stage's and pick the fit.
+   *
+   * Read on `loadedmetadata`, and also straight away: a clip that was already in the cache can
+   * have fired that event before this effect subscribed, and `readyState >= HAVE_METADATA` is how
+   * you catch the one you missed. The stage is measured rather than assumed because it is not the
+   * same box on a phone and on a laptop — from `md` the panel moves to the right and takes width
+   * instead of height, which flips which way a given clip is over-tall.
+   */
+  useEffect(() => {
+    const el = video.current;
+    const box = stage.current;
+    if (!el || !box) return;
+    const decide = () => {
+      const r = box.getBoundingClientRect();
+      if (!el.videoWidth || !el.videoHeight || !r.width || !r.height) return;
+      setFill(clipFit(el.videoWidth, el.videoHeight, r.width, r.height) === 'cover');
+    };
+    if (el.readyState >= 1) decide();
+    el.addEventListener('loadedmetadata', decide);
+    window.addEventListener('resize', decide);
+    return () => {
+      el.removeEventListener('loadedmetadata', decide);
+      window.removeEventListener('resize', decide);
+    };
+  }, [videoUrl]);
 
   /*
    * The ground is the app's own near-black, not the programme colour, even behind the drawn figure.
@@ -141,15 +185,26 @@ function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden bg-bg" aria-hidden="true">
       {/*
-       * The stage: everything above the glass, less a finger's width that slips under it.
+       * The stage: everything above the glass, less a good deal that slips under it.
        *
        * The panel's measured height is what this is subtracted by, so a step with a stepper and a
-       * button leaves the clip correspondingly less room and the movement still ends above the
-       * words. The 40px of overlap puts real picture behind the top of the panel, which is the only
-       * thing that makes frosted glass read as glass. It used to earn its keep twice over, by
-       * widening a height-fitted portrait clip enough to close the thin bars at its sides «almost
-       * completely» — that is no longer its job: the clip takes the full width outright now, and
-       * «almost» was never good enough for a hairline of black down both edges of a movement.
+       * button leaves the clip correspondingly less room.
+       *
+       * The overlap is 120px, and that number is the fix for the black bars. A 9:16 clip in a
+       * 390px-wide stage wants to be 693px tall. At the old 40px the stage was 424px, so `contain`
+       * fitted it by height and painted 239px of picture between two 76px bars — the screenshot
+       * that started this. At 120px the stage is about 700px and the same `contain` fits by width
+       * instead: 390 across, no bars, nothing cropped.
+       *
+       * Filling that width by cropping was the other way to do it and it costs too much: `cover`
+       * in a 424px stage throws away 39% of the frame's height, which on a standing movement is
+       * the head and the feet. Better to let the foot of the clip run behind the glass, where the
+       * panel is at its sheerest, than to cut it off. The overlap also puts real picture behind
+       * the panel, which is the only thing that makes frosted glass read as glass — it now earns
+       * that keep several times over.
+       *
+       * `TapToPause` keeps the old 40px deliberately: it decides what counts as tapping the
+       * picture, and the part of the picture behind the panel belongs to the panel's buttons.
        */}
       <div
         /*
@@ -165,19 +220,20 @@ function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
          * over a utility for the same property — so `md:bottom-0` could never take effect and the
          * stage would have kept reserving room for a panel that is no longer underneath it.
          */
-        className="absolute inset-x-0 top-0 bottom-[max(0px,calc(var(--player-glass-h,0px)-40px))] flex items-center md:right-85 md:bottom-0"
+        ref={stage}
+        className="absolute inset-x-0 top-0 bottom-[max(0px,calc(var(--player-glass-h,0px)-120px))] flex items-center md:right-85 md:bottom-0"
       >
         {/*
          * `player-art-in` is the arrival: the next movement's picture settles in over 0.42s rather
          * than replacing the last one on the spot, keyed on the source so every step replays it.
          *
-         * This branch and main reached the framing above by different routes and met here. The
-         * other one fitted by width alone and let a clip taller than the stage overflow and be
-         * clipped top and bottom; this one fits by width and falls back to height, so such a clip
-         * is shown whole with room above and below it instead. Main's rule wins because the
-         * desktop column on this same element was written against it — `md:right-85` takes width
-         * away from the stage, which only works if the picture is allowed to fit by height. The
-         * transition is orthogonal to that argument, so it is kept.
+         * This element carried an open question — whether a clip taller than the stage should
+         * overflow and be clipped, or fit by height and be letterboxed. {@link clipFit} settles it
+         * by asking which stage it is in: on a phone such a clip is covered, because the
+         * alternative is bars down both sides of a movement; on the wide stage this same element
+         * takes from `md` (`md:right-85`), it is contained, because a laptop has room to letterbox
+         * and covering there would crop half the movement away. Both readings were right about
+         * their own screen.
          */}
         {videoUrl ? (
           <video
@@ -185,7 +241,9 @@ function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
             ref={video}
             src={videoUrl}
             poster={still}
-            className="player-art-in h-auto max-h-full w-full object-contain"
+            className={`player-art-in ${
+              fill ? 'size-full object-cover' : 'h-auto max-h-full w-full object-contain'
+            }`}
             playsInline
             muted
             loop
@@ -447,8 +505,8 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
         flipped={flipped}
         onFlip={setFlipped}
         /*
-         * Sideways on the front is the same thing the → and ← keys already mean: "next" runs the
-         * step's own finishing action where it has one — a set of ten is recorded as ten, not
+         * Up and down on the front are the same thing the → and ← keys already mean: "next" runs
+         * the step's own finishing action where it has one — a set of ten is recorded as ten, not
          * abandoned — and only falls back to plain navigation where it does not.
          */
         onSwipeNext={doNext}

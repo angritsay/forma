@@ -344,3 +344,41 @@ export function clampCount(n: number, max = COUNT_MAX): number {
   if (!Number.isFinite(n)) return 0;
   return Math.max(0, Math.min(max, Math.round(n)));
 }
+
+/**
+ * How the coach's clip should sit in the stage it was given: filling it, or fitted inside it.
+ *
+ * `contain` is the default and the only one that never destroys a frame, so the question is only
+ * ever when to depart from it. The answer is: when the stage is a phone's and `contain` would
+ * leave black down both sides of the movement.
+ *
+ * Both halves of that matter.
+ *
+ *   - **A clip taller than its stage** is what `contain` handles badly: it fits by height and
+ *     paints a narrow column between two bars. The owner sent a screenshot of exactly that, a
+ *     portrait squat 239px wide inside 390px. `cover` fills the width instead, and the overflow is
+ *     cropped off the top and the bottom.
+ *   - **Only on a portrait stage.** From `md` the panel moves to the right and the stage becomes
+ *     wide (about 1100×900), and there the same clip covered would be 1100 across and 1955 tall —
+ *     half the movement cropped away to fill a width nobody was short of. A laptop has room to
+ *     letterbox, so on any stage wider than it is tall the answer is always `contain`.
+ *
+ * The stage on a phone is sized (PlayerScreen) so that the ordinary 9:16 clip already fills the
+ * width under `contain`, uncropped. This is the safety net for footage taller than that.
+ *
+ * Getting either half backwards is silent — every clip still renders, just the wrong one gets
+ * cropped — which is why this is a function with a test rather than a `?:` in a className.
+ *
+ * Degenerate inputs answer `contain`: it cannot destroy a frame, and a zero here means the
+ * metadata has not arrived yet rather than that the clip is a point.
+ */
+export function clipFit(
+  videoW: number,
+  videoH: number,
+  boxW: number,
+  boxH: number,
+): 'cover' | 'contain' {
+  if (videoW <= 0 || videoH <= 0 || boxW <= 0 || boxH <= 0) return 'contain';
+  if (boxW >= boxH) return 'contain';
+  return videoW / videoH < boxW / boxH ? 'cover' : 'contain';
+}

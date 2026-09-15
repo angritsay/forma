@@ -10,8 +10,9 @@
  * panel, because the panel is where the decisions are: a finger that misses «Готово» by a few
  * pixels must not silently pause the session instead.
  *
- * **A swipe is not a tap.** The front of the card already means three things sideways and up —
- * next, previous, technique — so this listens for a press that stays put and ends quickly, and
+ * **A swipe is not a tap.** The front of the card already means three things up, down and
+ * sideways — next, previous, technique — so this listens for a press that stays put and ends
+ * quickly, and
  * lets anything else through to {@link FlipCard} untouched. It never calls `preventDefault` or
  * stops propagation: the gesture handlers above it see every event they would have seen.
  */
