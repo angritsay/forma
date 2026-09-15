@@ -16,10 +16,16 @@
  * not the programme.
  *
  * Between «Сейчас» and the first movement there is one more screen, and it is the most important
- * one here: it says not to squeeze out a maximum, and it says why in the athlete's own interest —
- * a number forced out today is a programme that is too heavy for the next six weeks. That warning
- * cannot ride along with the movement: beside a running clock and a demonstration nobody reads a
- * paragraph, and this is the instruction everything the assessment produces depends on.
+ * one here: it says not to squeeze out a maximum. It used to say it twice — a lead, and then a
+ * second paragraph explaining that a number forced out today makes the next six weeks too heavy.
+ * The owner cut that: «тут просто нужно сказать, что не выжимаем максимум… конец. Не нужно
+ * bloat-нода текста». She is right, and the reason she is right is that the second paragraph was
+ * arguing with a reader who had already agreed. What replaces it is the picture — a still of the
+ * first movement, which shows the ordinary pace the words are asking for.
+ *
+ * The warning still cannot ride along with the movement: beside a running clock and a
+ * demonstration nobody reads anything, and this is the instruction everything the assessment
+ * produces depends on.
  *
  * This step draws its own controls. Every other step of the wizard sits on the shared
  * «Продолжить» footer; here the two answers *are* the step, and a third button under them saying
@@ -27,10 +33,12 @@
  */
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
+import { ExerciseStill } from '@/components/media/ExerciseStill';
 import { PageTitle } from '@/components/ui/PageTitle';
 import { EXERCISE_BY_ID } from '@/content/registry';
 import { useT } from '@/app/hooks/useT';
 import { AssessmentRunner } from './AssessmentRunner';
+import { AssessmentStrip } from './AssessmentStrip';
 import { assessmentDone } from './draft';
 import type { StepProps } from './types';
 import { ASSESSMENT_MOVES, ASSESSMENT_TOTAL_MIN } from '@content/site/assessment';
@@ -75,10 +83,20 @@ export function StepAssess({ draft, update, next }: StepProps) {
   if (phase === 'warning') {
     return (
       <div className="flex flex-col gap-6">
+        {/*
+         * The first movement, full width, before a word is read — the owner's note on this screen
+         * was that it is text and nothing else. A still of somebody doing an air squat at an
+         * ordinary pace is the instruction; the sentence under it only names what the picture
+         * already shows.
+         */}
+        <div className="-mx-6 aspect-3/2 overflow-hidden bg-surface-2 lg:-mx-10">
+          <ExerciseStill
+            exerciseId={ASSESSMENT_MOVES[0]?.exerciseId}
+            className="size-full object-cover"
+            loading="eager"
+          />
+        </div>
         <PageTitle title={t('app.onbAssessWarnTitle')} subtitle={t('app.onbAssessWarnBody')} />
-        <p className="hairline pt-5 text-[15px] leading-relaxed text-muted">
-          {t('app.onbAssessWarnBody2')}
-        </p>
         <div className="flex flex-col gap-2">
           <Button size="lg" fullWidth onClick={() => setPhase('running')}>
             {t('app.onbAssessWarnCta')}
@@ -131,6 +149,9 @@ export function StepAssess({ draft, update, next }: StepProps) {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Which five, and in what order — the line under the title says «5 упражнений», and this
+          is the only place the athlete can find out what that means before agreeing to it. */}
+      <AssessmentStrip />
       <PageTitle
         title={t('app.onbAssessOfferTitle')}
         subtitle={t('app.onbAssessOfferLead', {
