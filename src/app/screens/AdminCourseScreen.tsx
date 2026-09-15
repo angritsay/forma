@@ -16,7 +16,6 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Glyph } from '@/components/ui/Icon';
 import { Screen } from '@/components/ui/Screen';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
-import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import {
   createCourseDay,
@@ -44,6 +43,7 @@ import type {
 import { draftToCourse } from '@/lib/courses/draft';
 import type { CustomWorkoutStructure } from '@/lib/training/customWorkout';
 import { BootScreen } from '@/app/components/BootScreen';
+import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
@@ -128,9 +128,7 @@ export default function AdminCourseScreen() {
   if (loading || !bundle) {
     return (
       <Screen header={<TopBar back="/admin/courses" />}>
-        <div className="flex justify-center py-10">
-          <Spinner />
-        </div>
+        <LoadingBlock />
       </Screen>
     );
   }

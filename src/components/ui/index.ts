@@ -27,6 +27,7 @@ export { Input, type InputProps } from './Input';
 export { KitProvider, useKitLabels, type KitLabels } from './KitContext';
 export { ListRow, type ListRowProps } from './ListRow';
 export { Logo, type LogoProps } from './Logo';
+export { LogoLoader, type LogoLoaderProps } from './LogoLoader';
 export { Modal, type ModalProps } from './Modal';
 export { PageTitle, type PageTitleProps } from './PageTitle';
 export { ProgressBar, type ProgressBarProps, type ProgressTone } from './ProgressBar';
