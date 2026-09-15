@@ -23,6 +23,7 @@ export function StepBasics({ draft, update }: StepProps) {
       <section className="flex flex-col gap-3">
         <h2 className="eyebrow">{t('app.onbAgeLabel')}</h2>
         <ChipGroup<AgeBand>
+          variant="tile"
           label={t('app.onbAgeLabel')}
           values={draft.ageBand ? [draft.ageBand] : []}
           onToggle={(ageBand) => update({ ageBand })}
@@ -32,6 +33,7 @@ export function StepBasics({ draft, update }: StepProps) {
       <section className="flex flex-col gap-3">
         <h2 className="eyebrow">{t('app.onbSexLabel')}</h2>
         <ChipGroup<Sex>
+          variant="tile"
           label={t('app.onbSexLabel')}
           values={draft.sex ? [draft.sex] : []}
           onToggle={(sex) => update({ sex })}

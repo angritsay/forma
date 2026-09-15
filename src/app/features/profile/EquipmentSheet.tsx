@@ -58,6 +58,7 @@ export function EquipmentSheet({ open, profile, busy, onClose, onSave }: Equipme
         <p className="text-[15px] text-muted">{t('app.profileEquipmentLead')}</p>
         <ChipGroup<Equipment>
           multiple
+          variant="tile"
           label={t('app.profileEquipmentTitle')}
           values={equipment}
           onToggle={(item) => setEquipment((list) => toggleIn(list, item))}
