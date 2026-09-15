@@ -236,7 +236,6 @@ export const app = {
   homeDeckMarathonCta: 'Today’s task',
   homeDeckStart: 'Start the workout',
   homeDeckProgressLabel: 'done',
-  homeDeckGoTo: 'Card {n}',
   homeErrorTitle: 'Couldn’t load your progress',
   homeErrorBody: 'Check the connection and try again.',
   homeRefreshError: 'Couldn’t refresh. Showing the last saved data.',
