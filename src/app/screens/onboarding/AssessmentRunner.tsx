@@ -63,8 +63,17 @@ export function AssessmentRunner({
   const [reps, setReps] = useState('');
   const move = ASSESSMENT_MOVES[index];
   const timer = useCountdown(move?.seconds ?? 0);
-  const videoUrl = useMediaUrl(exerciseVideoRef(move?.exerciseId, locale));
-  const exercise = move ? EXERCISE_BY_ID.get(move.exerciseId) : undefined;
+  /*
+   * Show the movement being done, not the movement the entry is named after.
+   *
+   * Ticking «с колен» used to change how the number was scored and nothing else: the screen kept
+   * playing the full push-up clip under the full push-up's name while asking for knee push-ups.
+   * In the one minute that decides the next eight weeks of programming, the demonstration has to
+   * be of the thing the athlete is actually doing.
+   */
+  const shownId = move ? (onKnees && move.kneeExerciseId) || move.exerciseId : undefined;
+  const videoUrl = useMediaUrl(exerciseVideoRef(shownId, locale));
+  const exercise = shownId ? EXERCISE_BY_ID.get(shownId) : undefined;
   const ticked = useRef<number | null>(null);
 
   useWakeLock(phase === 'work');
@@ -179,7 +188,7 @@ export function AssessmentRunner({
             <p className="text-[15px] leading-snug text-muted">
               {hold ? t('app.onbAssessInstructionHold') : t('app.onbAssessInstruction')}
             </p>
-            {move.kneeOption ? (
+            {move.kneeExerciseId ? (
               <label className="flex items-center gap-3 text-[15px]">
                 <input
                   type="checkbox"

@@ -3,7 +3,7 @@
  * three numbers that say where you are, and the days as a ruled list grouped by week. Rest days
  * and milestones open a sheet; workout nodes go to the preview.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { clsx } from 'clsx';
 import { Badge } from '@/components/ui/Badge';
@@ -41,6 +41,7 @@ import { ScaleSheet } from '@/app/features/path/ScaleSheet';
 import {
   startingScale,
   useCourseStateRow,
+  starsByNode,
   useProgress,
   useProgressLoader,
   useStepsToday,
@@ -107,6 +108,12 @@ export default function CoursePathScreen() {
   const loading = useProgress((s) => s.loading);
   const setActiveCourse = useProgress((s) => s.setActiveCourse);
   const row = useCourseStateRow(course?.id);
+  /*
+   * Best stars per day, recomputed from the session rows the store already holds. Derived rather
+   * than stored, so it needs no column and shows on days done before the rule existed.
+   */
+  const sessions = useProgress((s) => s.recentSessions);
+  const stars = useMemo(() => (course ? starsByNode(sessions, course.id) : {}), [sessions, course]);
   const stepsToday = useStepsToday();
   const [sheetNode, setSheetNode] = useState<CourseNode | null>(null);
   const [scaleOpen, setScaleOpen] = useState(false);
@@ -217,7 +224,7 @@ export default function CoursePathScreen() {
       />
     );
   } else {
-    body = <PathView course={course} state={row} onNodePress={onNodePress} />;
+    body = <PathView course={course} state={row} stars={stars} onNodePress={onNodePress} />;
   }
 
   return (

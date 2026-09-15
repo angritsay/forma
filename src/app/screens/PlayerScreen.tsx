@@ -30,7 +30,6 @@ import { TopBar } from '@/app/components/TopBar';
 import { CardBack } from '@/app/features/player/CardBack';
 import { FlipCard } from '@/app/features/player/FlipCard';
 import {
-  FlipHandle,
   PausedOverlay,
   PlayerFooter,
   PlayerHeader,
@@ -56,8 +55,8 @@ import { WorkRepsStep } from '@/app/features/player/steps/WorkRepsStep';
 import { WorkTimerStep } from '@/app/features/player/steps/WorkTimerStep';
 import { haptic, setClosingConfirmation } from '@/lib/telegram/webapp';
 import { warmupSkipIndex } from '@/lib/training/player';
+import { SkipRow } from '@/app/features/player/SkipRow';
 import { TapToPause } from '@/app/features/player/TapToPause';
-import { WarmupSkip } from '@/app/features/player/WarmupSkip';
 import { exerciseStillUrl } from '@/lib/api/storage';
 import { courseTileVars } from '@/lib/ui/tile';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
@@ -168,13 +167,25 @@ function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
          */
         className="absolute inset-x-0 top-0 bottom-[max(0px,calc(var(--player-glass-h,0px)-40px))] flex items-center md:right-85 md:bottom-0"
       >
+        {/*
+         * `player-art-in` is the arrival: the next movement's picture settles in over 0.42s rather
+         * than replacing the last one on the spot, keyed on the source so every step replays it.
+         *
+         * This branch and main reached the framing above by different routes and met here. The
+         * other one fitted by width alone and let a clip taller than the stage overflow and be
+         * clipped top and bottom; this one fits by width and falls back to height, so such a clip
+         * is shown whole with room above and below it instead. Main's rule wins because the
+         * desktop column on this same element was written against it — `md:right-85` takes width
+         * away from the stage, which only works if the picture is allowed to fit by height. The
+         * transition is orthogonal to that argument, so it is kept.
+         */}
         {videoUrl ? (
           <video
             key={videoUrl}
             ref={video}
             src={videoUrl}
             poster={still}
-            className="h-auto max-h-full w-full object-contain"
+            className="player-art-in h-auto max-h-full w-full object-contain"
             playsInline
             muted
             loop
@@ -183,8 +194,9 @@ function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
           />
         ) : (
           <ExerciseStill
+            key={exerciseId}
             exerciseId={exerciseId}
-            className="h-auto max-h-full w-full object-contain"
+            className="player-art-in h-auto max-h-full w-full object-contain"
             loading="eager"
           />
         )}
@@ -416,9 +428,9 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
    * so the way out of the warm-up has to be available the whole way through it rather than once,
    * at a gate, before anyone has seen what the warm-up is.
    *
-   * It is offered twice over: as a chip on the panel that fades after a few seconds (WarmupSkip),
-   * for the athlete who warmed up an hour ago and is deciding right now, and in the pause overlay
-   * for the whole warm-up, for whoever comes looking after the chip has gone.
+   * It is offered twice over: on the panel, in the quiet row with «Как делать» (SkipRow), and in
+   * the pause overlay. Neither fades — a control that has quietly gone is the app deciding it
+   * knows better than the person who warmed up an hour ago.
    */
   const skipWarmupTo = warmupSkipIndex(steps, prescribed);
   const inWarmup =
@@ -457,34 +469,49 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
               onTogglePause={togglePause}
             />
             <PlayerFooter onHeight={setGlassHeight}>
+              {/*
+               * The panel's content arrives with the step rather than replacing it. Keyed exactly
+               * as StepView is, so the motion belongs to the step and not to a re-render.
+               */}
               {step ? (
-                <StepView
-                  /*
-                   * Keyed on when the step began, not on an index alone: restarting a step is the
-                   * store moving that instant, and the component has to come back with it so a
-                   * half-dialled rep count goes too.
-                   */
-                  key={`${stepIndex}:${stepStartedMs}`}
-                  step={step}
-                  index={stepIndex}
-                  session={session}
-                  paused={paused}
-                  beep={sound.beep}
-                  onRecord={recordResult}
-                  onNext={next}
-                  registerNext={registerNext}
-                />
-              ) : null}
-              {inWarmup !== null ? (
-                <WarmupSkip
-                  onSkip={() => {
-                    setPaused(false);
-                    goTo(inWarmup);
-                  }}
-                />
+                <div key={`anim-${stepIndex}:${stepStartedMs}`} className="player-step-in">
+                  <StepView
+                    /*
+                     * Keyed on when the step began, not on an index alone: restarting a step is the
+                     * store moving that instant, and the component has to come back with it so a
+                     * half-dialled rep count goes too.
+                     */
+                    key={`${stepIndex}:${stepStartedMs}`}
+                    step={step}
+                    index={stepIndex}
+                    session={session}
+                    paused={paused}
+                    beep={sound.beep}
+                    onRecord={recordResult}
+                    onNext={next}
+                    registerNext={registerNext}
+                  />
+                </div>
               ) : null}
               {step && step.kind !== 'done' ? (
-                <FlipHandle onFlip={() => setFlipped(true)} label={t('app.playerHowTo')} />
+                <SkipRow
+                  onSkipWarmup={
+                    inWarmup !== null
+                      ? () => {
+                          setPaused(false);
+                          goTo(inWarmup);
+                        }
+                      : null
+                  }
+                  /*
+                   * Every step but the last is skippable, the cool-down included — the owner asked
+                   * for that by name. `docs/COACH_RULES.md` says of the cool-down «Never skipped»;
+                   * this is her call over his rule, and it is recorded in the PR rather than
+                   * quietly resolved here.
+                   */
+                  onSkipStep={skipStep}
+                  onFlip={() => setFlipped(true)}
+                />
               ) : null}
             </PlayerFooter>
           </div>

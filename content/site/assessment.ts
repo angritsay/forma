@@ -46,10 +46,15 @@ export interface AssessmentMove {
   /** Personal-record key for a movement the fitness index does not read. */
   benchmarkKey?: string;
   /**
-   * Offer «с колен». Push-ups only: the index scores full and knee push-ups against different
-   * tables, so which one was done is part of the answer rather than a detail.
+   * Offer «с колен», and the movement to show when it is taken.
+   *
+   * Push-ups only: the index scores full and knee push-ups against different tables, so which one
+   * was done is part of the answer rather than a detail. It carries the id rather than a flag
+   * because the screen has to show the movement the athlete is actually doing — a clip of full
+   * push-ups over the words «отжимания с колен» is the app asking for one thing and demonstrating
+   * another, in the one minute where getting the number right decides the next eight weeks.
    */
-  kneeOption?: boolean;
+  kneeExerciseId?: string;
 }
 
 /** One minute per movement. */
@@ -65,7 +70,7 @@ export const ASSESSMENT_MOVES: readonly AssessmentMove[] = [
     seconds: ASSESSMENT_WORK_SEC,
     metric: 'reps',
     maps: 'pushups',
-    kneeOption: true,
+    kneeExerciseId: 'knee_push_up',
   },
   {
     exerciseId: 'sit_up',

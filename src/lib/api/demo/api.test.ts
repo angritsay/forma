@@ -191,7 +191,7 @@ describe('demo backend — the tester journey', () => {
     const days = (Date.parse(live!.expiresAt!) - Date.now()) / 86_400_000;
     expect(days).toBeGreaterThan(29);
     expect(days).toBeLessThan(31);
-    expect((await demo.listEntitlements()).length).toBe(5);
+    expect((await demo.listEntitlements()).length).toBe(6);
     // A form submission never downgrades a live subscription.
     await demo.createSubscriptionOrder({ email: EMAIL, plan: 'annual' });
     expect((await demo.getMySubscription())?.plan).toBe('monthly');
@@ -200,7 +200,7 @@ describe('demo backend — the tester journey', () => {
     await demo.setSubscription({ email: EMAIL, plan: 'monthly', status: 'cancelled' });
     const cancelled = await demo.getMySubscription();
     expect(cancelled).toMatchObject({ status: 'cancelled', isLive: true });
-    expect((await demo.listEntitlements()).length).toBe(5);
+    expect((await demo.listEntitlements()).length).toBe(6);
 
     // The admin list shows the seeded rows plus this one, filterable by status and email.
     const all = await demo.listSubscriptions();

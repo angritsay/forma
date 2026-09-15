@@ -26,6 +26,7 @@ import type {
   WorkoutSessionRow,
 } from '@/lib/api/types';
 import { computeFitnessIndex, initialScale } from '@/lib/training/assessment';
+import { starsForSession } from '@/lib/training/stars';
 import { computeStreak } from '@/lib/training/streak';
 import type { CourseState, SessionSummary, StreakInfo } from '@/lib/training/types';
 import { addDays, toLocalDateIso } from '@/lib/util/dates';
@@ -190,6 +191,28 @@ export function engineCourseState(
     history,
     completedNodeIds: row?.completedNodeIds ?? [],
   };
+}
+
+/**
+ * Best stars per node of a course, over every session the client has.
+ *
+ * Derived, never stored: `prescribed` and `results` already live on each row, so a star appears on
+ * a session somebody did before the rule existed. The horizon is the horizon of `recentSessions` —
+ * a node whose only attempt is older than that shows no star rather than a wrong one, which is why
+ * `starsForSession` returns null instead of guessing from the scalar completion.
+ */
+export function starsByNode(
+  sessions: readonly WorkoutSessionRow[],
+  courseId: string,
+): Record<string, number> {
+  const best: Record<string, number> = {};
+  for (const row of sessions) {
+    if (row.courseId !== courseId) continue;
+    const stars = starsForSession(row);
+    if (stars === null) continue;
+    best[row.nodeId] = Math.max(best[row.nodeId] ?? 0, stars);
+  }
+  return best;
 }
 
 export function selectStreak(

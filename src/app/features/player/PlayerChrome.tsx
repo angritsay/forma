@@ -169,31 +169,6 @@ export function PlayerFooter({ children, onHeight }: PlayerFooterProps) {
   );
 }
 
-export interface FlipHandleProps {
-  onFlip: () => void;
-  label: string;
-}
-
-/**
- * The one thing on the front that is not the set: a small handle saying the card has another side.
- *
- * It sits under the transport rather than beside the movement's name, so the eye meets it after
- * the number rather than instead of it, and it says what it does — «Как делать» — rather than
- * being a chevron someone has to guess at.
- */
-export function FlipHandle({ onFlip, label }: FlipHandleProps) {
-  return (
-    <button
-      type="button"
-      onClick={onFlip}
-      className="control-label tap-target-y mx-auto mt-3 flex items-center justify-center gap-1.5 text-[11px] text-paper/60 transition-colors duration-150 ease-(--ease-out) hover:text-paper"
-    >
-      {label}
-      <Glyph size={12}>⟲</Glyph>
-    </button>
-  );
-}
-
 export interface SectionStepperProps {
   sections: BlockSection[];
   current: BlockSection;

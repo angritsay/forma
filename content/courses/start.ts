@@ -346,8 +346,12 @@ const WORKOUTS: WorkoutInput[] = [
           },
           { exerciseId: 'air_squat', reps: 15, note: l('Тренер: 10–20', 'The coach: 10–20') },
           {
+            /*
+             * 16, not 15: his own note says the count is the total across both legs, and an odd
+             * total is one extra rep on whichever leg goes first. Still inside the 10–20 he wrote.
+             */
             exerciseId: 'reverse_lunge',
-            reps: 15,
+            reps: 16,
             restAfterSec: 60,
             note: l('Тренер: 10–20 в сумме на две ноги', 'The coach: 10–20 total for both legs'),
           },

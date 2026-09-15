@@ -5,6 +5,7 @@ import {
   FULL_WORKOUT,
   fx,
   item,
+  makeExercise,
   profile,
   workout,
 } from './fixtures.test-helpers';
@@ -525,5 +526,91 @@ describe('estimates and points', () => {
       0,
     );
     expect(plain.note).toEqual({ ru: 'Локти.', en: 'Elbows.' });
+  });
+});
+
+/*
+ * A movement done one side at a time is counted as a total across both sides, so an odd total
+ * gives one side a rep the other never gets. The authored numbers are even because whoever wrote
+ * them counted in pairs; the engine is what breaks it, by multiplying them by a scale.
+ */
+describe('two-sided movements come out even', () => {
+  const lunge = makeExercise({
+    id: 'reverse_lunge',
+    pattern: 'lunge',
+    tags: ['lower', 'unilateral'],
+    secondsPerRep: 2,
+  });
+  const squat = makeExercise({ id: 'air_squat', pattern: 'squat', secondsPerRep: 2 });
+  const lookup: (id: string) => ReturnType<typeof makeExercise> | undefined = (id) =>
+    id === lunge.id ? lunge : id === squat.id ? squat : undefined;
+
+  const target = (exerciseId: string, reps: number, scale: number, perSide = false) =>
+    prescribeWorkout(
+      workout({
+        id: 'w',
+        blocks: [
+          block({
+            id: 'b',
+            format: 'sets',
+            sets: 1,
+            items: [item(exerciseId, { reps, ...(perSide ? { perSide: true } : {}) })],
+          }),
+        ],
+      }),
+      base({ scale }),
+      lookup,
+    ).blocks[0]!.items[0]!.target;
+
+  it('rounds an odd scaled total up or down to the nearest even number', () => {
+    // 20 × 0.65 = 13 → 14; 20 × 0.55 = 11 → 12; 20 × 1.15 = 23 → 24.
+    expect(target('reverse_lunge', 20, 0.65) % 2).toBe(0);
+    expect(target('reverse_lunge', 20, 0.55) % 2).toBe(0);
+    expect(target('reverse_lunge', 20, 1.15) % 2).toBe(0);
+  });
+
+  it('is even at every scale the engine can produce', () => {
+    for (let scale = 0.3; scale <= 2.0001; scale += 0.05) {
+      for (const authored of [8, 10, 12, 15, 16, 20, 24, 30, 40]) {
+        const t = target('reverse_lunge', authored, Number(scale.toFixed(2)));
+        expect(t % 2, `authored ${authored} at scale ${scale.toFixed(2)} gave ${t}`).toBe(0);
+      }
+    }
+  });
+
+  it('never rounds the movement away entirely', () => {
+    expect(target('reverse_lunge', 2, 0.3)).toBeGreaterThanOrEqual(2);
+  });
+
+  it('leaves a two-sided movement alone when it is already counted per side', () => {
+    // The number is per side and the athlete does it twice, so the total is even whatever it is.
+    // Forcing this one even would silently double a third of the work.
+    expect(target('reverse_lunge', 5, 1, true)).toBe(5);
+    expect(target('reverse_lunge', 7, 1, true)).toBe(7);
+  });
+
+  it('leaves a two-legged movement alone', () => {
+    expect(target('air_squat', 15, 1)).toBe(15);
+    expect(target('air_squat', 20, 0.65)).toBe(13);
+  });
+
+  it('recognises a two-sided movement by its id when the tag is missing', () => {
+    const untagged = makeExercise({ id: 'single_leg_rdl', pattern: 'hinge', secondsPerRep: 3 });
+    const t = prescribeWorkout(
+      workout({
+        id: 'w',
+        blocks: [
+          block({
+            id: 'b',
+            format: 'sets',
+            sets: 1,
+            items: [item('single_leg_rdl', { reps: 20 })],
+          }),
+        ],
+      }),
+      base({ scale: 0.65 }),
+      (id) => (id === untagged.id ? untagged : undefined),
+    ).blocks[0]!.items[0]!.target;
+    expect(t % 2).toBe(0);
   });
 });

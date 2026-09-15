@@ -19,5 +19,14 @@ media/telegram/
 # Local preview root: `serve/forma -> dist` so a static server reproduces the /forma/ base path.
 serve/
 
+# Throwaway probes.
+#
+# Working out what the engine actually does to a number is faster with a real test than by
+# reading four files, so these get written, run and deleted. One of them outlived its author
+# long enough to be committed by a `git add -A` and took CI down on `prettier --check`, which is
+# a silly way to lose a cycle. Nothing matching these is ever part of the product.
+**/__probe/
+**/zz_*.test.ts
+
 # Course review pages rendered by `npm run content:review`
 review/

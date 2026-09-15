@@ -1400,7 +1400,8 @@ insert into public.courses (id, sort_order) values
   ('engine', 2),
   ('dumbbells', 3),
   ('kettlebell', 4),
-  ('athlete', 5)
+  ('athlete', 5),
+  ('tempo', 6)
 on conflict (id) do update set sort_order = excluded.sort_order;
 
 insert into public.workouts (course_id, id, base_points) values
@@ -1486,7 +1487,21 @@ insert into public.workouts (course_id, id, base_points) values
   ('athlete', 'w_squat_push_a', 110),
   ('athlete', 'w_squat_push_b', 120),
   ('athlete', 'w_squat_push_c', 120),
-  ('athlete', 'w_test', 80)
+  ('athlete', 'w_test', 80),
+  ('tempo', 'w_cap_a', 120),
+  ('tempo', 'w_cap_b', 125),
+  ('tempo', 'w_cap_c', 130),
+  ('tempo', 'w_flow', 90),
+  ('tempo', 'w_gate', 130),
+  ('tempo', 'w_ladder_a', 115),
+  ('tempo', 'w_ladder_b', 120),
+  ('tempo', 'w_ladder_c', 125),
+  ('tempo', 'w_rounds_a', 120),
+  ('tempo', 'w_rounds_b', 125),
+  ('tempo', 'w_rounds_c', 130),
+  ('tempo', 'w_strength_a', 110),
+  ('tempo', 'w_strength_b', 115),
+  ('tempo', 'w_strength_c', 120)
 on conflict (course_id, id) do update set base_points = excluded.base_points;
 
 -- Rows content no longer defines (workouts first: they reference courses).
@@ -1573,9 +1588,23 @@ delete from public.workouts where (course_id, id) not in (
   ('athlete', 'w_squat_push_a'),
   ('athlete', 'w_squat_push_b'),
   ('athlete', 'w_squat_push_c'),
-  ('athlete', 'w_test')
+  ('athlete', 'w_test'),
+  ('tempo', 'w_cap_a'),
+  ('tempo', 'w_cap_b'),
+  ('tempo', 'w_cap_c'),
+  ('tempo', 'w_flow'),
+  ('tempo', 'w_gate'),
+  ('tempo', 'w_ladder_a'),
+  ('tempo', 'w_ladder_b'),
+  ('tempo', 'w_ladder_c'),
+  ('tempo', 'w_rounds_a'),
+  ('tempo', 'w_rounds_b'),
+  ('tempo', 'w_rounds_c'),
+  ('tempo', 'w_strength_a'),
+  ('tempo', 'w_strength_b'),
+  ('tempo', 'w_strength_c')
 );
-delete from public.courses where id not in ('start', 'engine', 'dumbbells', 'kettlebell', 'athlete');
+delete from public.courses where id not in ('start', 'engine', 'dumbbells', 'kettlebell', 'athlete', 'tempo');
 
 -- =============================================================================
 -- 0005_subscriptions.sql — monthly / annual subscriptions and the entitlements union

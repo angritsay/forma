@@ -100,7 +100,7 @@ Dashboard → **SQL Editor** → **New query**, paste each file in this order an
    `content/exercises` (see §2.1)
 8. `supabase/migrations/0008_course_builder.sql` — `admin_courses` and `admin_course_days`,
    the public `images` bucket, and `admin_publish_course()` (see §2.2)
-9. `supabase/migrations/0009_course_import.sql` — generated: the five courses written as files,
+9. `supabase/migrations/0009_course_import.sql` — generated: every course written as a file,
    as rows the admin panel can edit (see §2.3). Optional, and safe to skip.
 10. `supabase/migrations/0010_public_course_pages.sql` — lets the static site read a published
     course so it can have a landing page (see §2.4)
@@ -169,7 +169,7 @@ place, so people who already bought it keep their entitlement and their scoring.
 
 ### 2.3 The compiled courses, as editable rows (`0009_course_import.sql`)
 
-The five courses live in `content/courses/*.ts`. To be able to open one in the admin panel and
+The courses live in `content/courses/*.ts`. To be able to open one in the admin panel and
 change a set count or the order of two days, they also have to exist as `admin_courses` +
 `admin_course_days` + `custom_workouts` rows:
 
@@ -305,6 +305,23 @@ rebuild the database for each run.
 
 The app signs in with a **6-digit code** sent by email — no passwords, no magic links.
 
+> ### Do §3.5 (custom SMTP) first. Nothing else in this section works without it.
+>
+> Without custom SMTP, **Supabase refuses to deliver to any address that is not a member of the
+> project's organization**, and caps the built-in sender at **2 messages per hour** with no
+> delivery guarantee at all. It is documented as non-production, best-effort only.
+>
+> That failure is silent and it is the worst kind. The API answers 200, `signInWithOtp` resolves,
+> the app moves the athlete to the code field — and the message was never sent. The owner tests
+> with their own address, which _is_ on the team, sees the code arrive, and concludes sign-in
+> works. Every other person in the world sees a code field and an empty inbox.
+>
+> So the order is 3.5 → 3.2 → 3.1 → 3.3 → 3.4, and the acceptance test is **a code delivered to
+> an address that has never been near this Supabase project** — not to yours.
+>
+> Sources: [Send emails with custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp),
+> [Changes to the default email provider](https://github.com/orgs/supabase/discussions/29370).
+
 ### 3.1 Provider
 
 Dashboard → **Authentication → Providers → Email**:
@@ -395,13 +412,14 @@ Dashboard → **Authentication → URL Configuration**:
 
 Dashboard → **Authentication → Rate Limits**:
 
-- The built-in email sender allows only a handful of emails per hour and is meant for
-  development. **Set up custom SMTP before launch** (3.5); with custom SMTP raise "emails per
-  hour" to something like 100–300.
+- The built-in email sender allows **2 messages per hour**, only to organization members, and is
+  meant for development. Custom SMTP (3.5) is not a launch task, it is a prerequisite; with it
+  configured, raise "emails per hour" to something like 100–300. Supabase starts a newly
+  configured sender at 30 per hour to protect its reputation, so raise it deliberately.
 - Keep "OTP requests per 5 minutes" and "token verifications" at their defaults; the app enforces
   a 60-second resend timer on top.
 
-### 3.5 Custom SMTP — required before 3.2, not just before launch
+### 3.5 Custom SMTP — do this first, before anything else in §3
 
 Dashboard → **Project Settings → Authentication → SMTP Settings** → enable custom SMTP.
 
@@ -503,6 +521,13 @@ That points at a split rather than a choice, because the two senders do differen
 
 Swapping later is three fields in Supabase — but a sending domain builds reputation from its first
 message, so doing it once is cheaper than doing it twice.
+
+**How to know it worked.** Send a code to an address that has never been near this project — a
+friend's, a throwaway — from a device that is not yours. A code arriving at the owner's own
+address proves nothing, because that address is on the team and would have received it even with
+no SMTP configured at all. Then check Dashboard → **Logs → Auth** for the send: a refusal appears
+there, and it is the only place the app can never show you, because Supabase answers the app with
+a 200 either way.
 
 #### When the code does not arrive
 

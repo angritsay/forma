@@ -1,4 +1,4 @@
-# The five courses, in paste-sized pieces
+# The 6 courses, in paste-sized pieces
 
 Generated from `supabase/migrations/0009_course_import.sql` by `node scripts/db/split-import.mjs`. Do not edit these by hand.
 
@@ -11,6 +11,7 @@ a course's days reference its course row.
 3. `3-dumbbells.sql`
 4. `4-kettlebell.sql`
 5. `5-athlete.sql`
+6. `6-tempo.sql`
 
 Every part is idempotent: re-running one updates its rows in place and changes nothing else.
 

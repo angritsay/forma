@@ -41,6 +41,8 @@ export const app = {
   authResend: 'Send the code again',
   authResendIn: 'Send again in {s} s',
   authChangeEmail: 'Change email',
+  // Shown only after a second request has also come up empty — see AuthScreen.
+  authNoMail: 'No code? Check Spam and Promotions — the message comes from {from}.',
   authSignOut: 'Sign out',
   authErrorInvalidEmail: 'That doesn’t look like a valid email.',
   authErrorRateLimited: 'Too many requests. Wait a minute and try again.',
@@ -416,6 +418,9 @@ export const app = {
   playerStay: 'Keep going',
   playerPrevStep: 'Previous step',
   playerSkipStep: 'Skip this step',
+  // The star row is one image to a screen reader, never three separate marks.
+  pathStars: '{n} of 3 stars',
+  pathStarsNone: 'No stars yet',
   playerRestartStep: 'Restart this step',
   playerEndWorkout: 'End workout',
   playerEndTitle: 'End the workout now?',

@@ -40,6 +40,8 @@ export const app = {
   authResend: 'Отправить код ещё раз',
   authResendIn: 'Отправить ещё раз через {s} с',
   authChangeEmail: 'Изменить почту',
+  // Shown only after a second request has also come up empty — see AuthScreen.
+  authNoMail: 'Код не пришёл? Проверь «Спам» и «Промоакции» — письмо приходит с {from}.',
   authSignOut: 'Выйти',
   authErrorInvalidEmail: 'Похоже, в адресе ошибка. Проверь почту.',
   authErrorRateLimited: 'Слишком много запросов. Подожди минуту и попробуй снова.',
@@ -413,6 +415,9 @@ export const app = {
   playerStay: 'Остаться',
   playerPrevStep: 'Предыдущий шаг',
   playerSkipStep: 'Пропустить шаг',
+  // The star row is one image to a screen reader, never three separate marks.
+  pathStars: '{n} из 3 звёзд',
+  pathStarsNone: 'Звёзды ещё не заработаны',
   playerRestartStep: 'Начать шаг заново',
   playerEndWorkout: 'Завершить тренировку',
   playerEndTitle: 'Завершить тренировку сейчас?',

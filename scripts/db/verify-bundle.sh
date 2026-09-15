@@ -135,7 +135,7 @@ if [ -z "$whole" ] || [ "$whole" != "$split" ]; then
   echo "split: FAIL — the parts do not load the same rows as $IMPORT"
   echo "  whole: ${whole:-<empty>}"; echo "  split: ${split:-<empty>}"; exit 1
 fi
-echo "split: PASS (5 parts load exactly what the single import does)"
+echo "split: PASS ($(ls supabase/course-import/[0-9]*.sql | wc -l | tr -d ' ') parts load exactly what the single import does)"
 
 # The suites seed their own admin and assert there is exactly one, so the row the bundle inserted
 # has to go first. A fixture collision, not a defect.

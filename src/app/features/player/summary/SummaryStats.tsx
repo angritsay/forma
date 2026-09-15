@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { StatTile } from '@/components/ui/StatTile';
+import { Stars } from '@/components/ui/Stars';
 import { useT } from '@/app/hooks/useT';
 import { formatClock, plural } from '@/i18n/index';
 import { unitLabel } from '../model';
@@ -11,6 +12,11 @@ export interface SummaryStatsProps {
   calories: number;
   /** 0..1 */
   completion: number;
+  /**
+   * Stars earned, 0..3. Null on a day that earns none — a test, a benchmark, a coach's workout —
+   * and undefined when the session cannot be read for them.
+   */
+  stars?: number | null;
 }
 
 /**
@@ -21,7 +27,7 @@ export interface SummaryStatsProps {
  * game's currency and they stay there; here they would be a score for having trained, which is the
  * kind of number that makes people optimise the number.
  */
-export function SummaryStats({ durationSec, calories, completion }: SummaryStatsProps) {
+export function SummaryStats({ durationSec, calories, completion, stars }: SummaryStatsProps) {
   const { t } = useT();
   return (
     <div className="flex flex-col gap-5">
@@ -31,6 +37,20 @@ export function SummaryStats({ durationSec, calories, completion }: SummaryStats
         <div className="mt-2">
           <span className="numeral tabular text-6xl leading-none">{formatClock(durationSec)}</span>
         </div>
+        {/*
+         * On the plate with the time, because the two answer the same question — what this
+         * session was worth — and because the star is the reason to come back to this day. A
+         * session that earns none (a test, a benchmark) shows nothing rather than three empty
+         * marks, which would read as a grade of zero on something that is not graded.
+         */}
+        {stars !== null && stars !== undefined ? (
+          <Stars
+            value={stars}
+            size={16}
+            className="mt-4"
+            label={t('app.pathStars', { n: Math.round(stars * 10) / 10 })}
+          />
+        ) : null}
       </div>
       <div className="grid grid-cols-2 divide-x divide-border border-t border-border">
         <StatTile

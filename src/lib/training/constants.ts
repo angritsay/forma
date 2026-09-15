@@ -355,6 +355,16 @@ export const OVERHEAD_ID_PATTERN = /overhead|snatch|thruster|press|jerk/;
 /** Id fragments of isometric holds (hypertension: capped at HYPERTENSION_MAX_HOLD_SEC). */
 export const ISOMETRIC_ID_PATTERN = /plank|hold|wall_sit|hollow|bridge|l_sit|superman|isometric/;
 
+/**
+ * Id fragments of movements done one side at a time.
+ *
+ * The content library's `unilateral` tag is the primary source and carries 23 movements; this
+ * catches the ones whose id already says it, so a movement added later without the tag still
+ * gets an even rep count (see `isTwoSided` and `evenTarget` in prescribe.ts).
+ */
+export const TWO_SIDED_ID_PATTERN =
+  /single_leg|single_arm|lunge|step_up|skater|bird_dog|suitcase|turkish|_per_side/;
+
 /* ---------------------------------------------------------------------------------------------
  * Comfort — the per-movement model (comfort.ts)
  * ------------------------------------------------------------------------------------------- */
