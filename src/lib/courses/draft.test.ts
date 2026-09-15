@@ -161,6 +161,25 @@ describe('draftToCourse', () => {
     expect(course.name).toEqual({ ru: 'Йога с нуля', en: 'Йога с нуля' });
   });
 
+  it('carries the cover the admin panel uploaded, and omits it when there is none', () => {
+    // The field existed on the draft and in the database from the day the builder shipped; this
+    // function dropped it, so no published course ever had one. Both halves are asserted, because
+    // the bug that would replace the old one is an empty string reaching an <img src>.
+    const withCover = completeDraft();
+    withCover.content.coverImage = 'storage:images/courses/yoga_start/cover.jpg';
+    expect(draftToCourse(withCover, fourDays(), [workout('y_flow_a')]).course.cover).toBe(
+      'storage:images/courses/yoga_start/cover.jpg',
+    );
+
+    const cleared = completeDraft();
+    cleared.content.coverImage = null;
+    expect(draftToCourse(cleared, fourDays(), [workout('y_flow_a')]).course.cover).toBeUndefined();
+
+    const never = completeDraft();
+    delete never.content.coverImage;
+    expect(draftToCourse(never, fourDays(), [workout('y_flow_a')]).course.cover).toBeUndefined();
+  });
+
   it('defaults the URL slug to a kebab-cased id', () => {
     const draft = completeDraft();
     delete draft.content.slug;

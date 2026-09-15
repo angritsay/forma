@@ -426,6 +426,21 @@ export const CourseSchema = z.object({
    * a programme colour, light on a surface — so content never has to say which it is.
    */
   tile: z.string().regex(hexRegex),
+  /*
+   * The course's own cover art, as a media reference — `storage:images/courses/<id>/cover.jpg`, an
+   * absolute https URL, or a path under `public/`. The same three shapes every other media field
+   * in the product accepts (`src/lib/api/storage.ts`), and `publicMediaUrl()` resolves all three.
+   *
+   * Optional, and the fallback is not a placeholder: a course with no cover takes its programme
+   * colour, which is the brandbook's first rule and how the marathon reads orange and «Форма с
+   * нуля» yellow. A missing cover is a deliberate state, not a hole.
+   *
+   * The art is expected to carry the course's name — drawn, not typeset — which is why
+   * `CourseTicket` stops printing the title once a cover is set. That rule lives on the ticket
+   * rather than here: on Home the same picture sits under the *day's* name, and a day's name is
+   * never written on a course's cover.
+   */
+  cover: z.string().optional(),
   price: z.object({ rub: z.number().nonnegative(), usd: z.number().nonnegative() }),
   paymentUrl: PaymentUrlSchema.optional(),
   introVideo: OptionalL10nSchema.optional(),
