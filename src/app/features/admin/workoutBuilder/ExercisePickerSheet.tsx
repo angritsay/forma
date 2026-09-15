@@ -5,10 +5,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { Glyph } from '@/components/ui/Icon';
 import { Input } from '@/components/ui/Input';
 import { Sheet } from '@/components/ui/Sheet';
-import { Spinner } from '@/components/ui/Spinner';
 import { listExerciseCatalog } from '@/lib/api/exercises';
 import type { ExerciseCatalogRow } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
+import { LoadingBlock } from '@/app/components/LoadingBlock';
 
 export interface ExercisePickerSheetProps {
   open: boolean;
@@ -69,9 +69,7 @@ export function ExercisePickerSheet({ open, onClose, onPick }: ExercisePickerShe
           onChange={(e) => setQuery(e.target.value)}
         />
         {loading ? (
-          <div className="flex justify-center py-8">
-            <Spinner />
-          </div>
+          <LoadingBlock />
         ) : (
           /* Hairline rows; the `+` on the right is the whole row's verb, so it stays quiet. */
           <ul className="flex max-h-[55dvh] flex-col overflow-y-auto">
