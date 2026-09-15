@@ -84,7 +84,7 @@ export function TaskCard({ item, teammateNames, closed, onSend, onSendMedia }: T
            * goes grey once the proof is in. That is the brandbook's «цвет красит номера» spent on
            * the one number that is a decision: an orange 12 is what is left to win today. It has to
            * stay off the finished card for a second reason — a done card is dimmed to 60%, and the
-           * orange would drop to 3.43:1 there, under the 4.5 it clears at full strength (7.66).
+           * orange would drop to 3.29:1 there, under the 4.5 it clears at full strength (7.34).
            */
           <span
             className={clsx(

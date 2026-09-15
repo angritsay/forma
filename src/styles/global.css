@@ -9,7 +9,7 @@
  * the profile and marketing backdrops are white "paper". There is no coloured UI accent any more
  * — the primary button is a white fill with black text — and the only colour anywhere is the
  * colour of the *programme* someone is training in: beginners #f2f52d, yoga #a8c8ff, marathon
- * #f08a3c. One screen, one colour; it paints the course cover, the progress and the day number,
+ * #ff7a1a. One screen, one colour; it paints the course cover, the progress and the day number,
  * and never a button. Text on a programme colour is always black.
  *
  * Every radius is 0. The one circle in the system is the play button over a video.
@@ -73,18 +73,18 @@
   /*
    * Programme colours — the only colour in the system, and it comes from the course, never from
    * the interface. Black ink on all three clears AA with room: 16.30 on yellow, 11.28 on blue,
-   * 7.66 on orange. As text on the dark ground they clear it too (same ratios), which is what
+   * 7.34 on orange. As text on the dark ground they clear it too (same ratios), which is what
    * lets a day number or a kicker take the course colour.
    *
    * The `-ink` variants are the same hues darkened for use as text on paper, each ≥ 5.3:1.
    */
   --course-beginners: #f2f52d;
   --course-yoga: #a8c8ff;
-  --course-marathon: #f08a3c;
+  --course-marathon: #ff7a1a;
   --on-course: #0f0f11;
   --course-beginners-ink: #6c7005;
   --course-yoga-ink: #2f5f9e;
-  --course-marathon-ink: #a4530a;
+  --course-marathon-ink: #ab5211;
   --success: #7ce0b0;
   --warning: #ffd166;
   --danger: #ff6b6b;

@@ -418,7 +418,7 @@ export const CourseSchema = z.object({
    * the cover, the progress and the number of the current day, and never a button.
    *
    * It is a *programme* colour, not a course's own hue: beginners #f2f52d, yoga #a8c8ff, marathon
-   * #f08a3c (--course-* in src/styles/global.css). A course that belongs to none of those
+   * #ff7a1a (--course-* in src/styles/global.css). A course that belongs to none of those
    * programmes takes a neutral surface (--tile-4 #1f1f24 or --tile-5 #2a2a30) and the interface
    * around it stays black and white, which is the design: one screen, one colour, or none.
    *

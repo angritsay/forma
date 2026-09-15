@@ -50,7 +50,7 @@ export function BoardRow({ row }: { row: MarathonScoreRow }) {
         {/*
          * The prize belongs to the top row, and saying so on the row is what makes it a race — so
          * it is the one label here worth the colour. Orange on the near-black ground measures
-         * 7.66:1, which carries this 10px label with room.
+         * 7.34:1, which carries this 10px label with room.
          *
          * It sits under the name rather than beside it. Beside, it was `shrink-0` next to a name
          * that truncates, so it took its 110px whole and the name gave up whatever was left: in
