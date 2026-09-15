@@ -29,6 +29,7 @@ import type { ReactNode } from 'react';
 import { clsx } from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { Glyph } from '@/components/ui/Icon';
+import { publicMediaUrl } from '@/lib/api/storage';
 import type { Photo } from '@/lib/media/photos';
 import { isPlaceholder, photoSrc } from '@/lib/media/photos';
 import { externalLinkProps } from '@/app/hooks/useExternalLink';
@@ -36,6 +37,13 @@ import { LinkButton } from '@/app/features/courses/LinkButton';
 import { DisplayTitle } from '@/app/features/home/DisplayTitle';
 
 export interface CourseTicketProps {
+  /**
+   * The course's own cover art, as a media reference (`Course['cover']`). It beats `photo`: a
+   * picture drawn for this course is never worse than a library photograph standing in for it.
+   *
+   * It also takes the title with it — see the cover band below.
+   */
+  cover?: string;
   /** Cover photograph; a stock placeholder counts as none and the colour takes over. */
   photo?: Photo;
   /** Kicker: what kind of thing this is and where you are in it. */
@@ -68,6 +76,7 @@ export interface CourseTicketProps {
 }
 
 export function CourseTicket({
+  cover,
   photo,
   eyebrow,
   title,
@@ -86,7 +95,13 @@ export function CourseTicket({
   style,
 }: CourseTicketProps) {
   const share = pct === undefined ? undefined : Math.max(0, Math.min(100, Math.round(pct)));
-  const art = photo && !isPlaceholder(photo);
+  /*
+   * Three states, in order of preference: the course's own cover, a library photograph, the
+   * programme colour. `publicMediaUrl` takes all three reference shapes and hands back the last
+   * two unchanged, so an https URL or a path under `public/` needs no special case here.
+   */
+  const coverSrc = cover ? publicMediaUrl(cover) : undefined;
+  const art = !coverSrc && photo && !isPlaceholder(photo);
   return (
     <article
       className="relative flex flex-col overflow-hidden rounded-card border border-border bg-surface"
@@ -118,23 +133,44 @@ export function CourseTicket({
       <div
         className={clsx(
           'pointer-events-none relative aspect-2/1 w-full overflow-hidden',
-          art ? 'bg-ink' : 'hero-art',
+          coverSrc || art ? 'bg-ink' : 'hero-art',
         )}
       >
-        {art ? (
+        {coverSrc ? (
+          /*
+           * The course's own cover, and the one picture here that is not treated as a photograph:
+           * no `.photo-mono`, no grain. Those two turn a colour snapshot into the product's
+           * monochrome; artwork drawn for this course already is what it is, and desaturating it
+           * would strip the programme colour out of the one place the brandbook wants it.
+           */
           <img
-            src={photoSrc(photo)}
+            src={coverSrc}
             alt=""
-            width={photo.width}
-            height={photo.height}
             loading={priority ? 'eager' : 'lazy'}
             fetchPriority={priority ? 'high' : 'auto'}
             decoding="async"
-            className={clsx('photo-mono size-full object-cover', dimmed && 'opacity-40')}
+            className={clsx('size-full object-cover', dimmed && 'opacity-40')}
           />
+        ) : art ? (
+          <>
+            <img
+              src={photoSrc(photo)}
+              alt=""
+              width={photo.width}
+              height={photo.height}
+              loading={priority ? 'eager' : 'lazy'}
+              fetchPriority={priority ? 'high' : 'auto'}
+              decoding="async"
+              className={clsx('photo-mono size-full object-cover', dimmed && 'opacity-40')}
+            />
+            <div className="photo-grain" aria-hidden="true" />
+          </>
+        ) : (
+          <div className="photo-grain" aria-hidden="true" />
+        )}
+        {!coverSrc && !art && dimmed ? (
+          <div className="absolute inset-0 bg-ink/45" aria-hidden="true" />
         ) : null}
-        <div className="photo-grain" aria-hidden="true" />
-        {!art && dimmed ? <div className="absolute inset-0 bg-ink/45" aria-hidden="true" /> : null}
       </div>
 
       <div className="pointer-events-none relative z-10 flex flex-col px-5 pt-4 pb-5">
@@ -178,8 +214,26 @@ export function CourseTicket({
         )}
 
         <span className="eyebrow block truncate text-muted-2">{eyebrow}</span>
-        <DisplayTitle text={title} className="mt-2 text-2xl" />
-        {lead ? <p className="mt-2 text-[14px] leading-snug text-muted">{lead}</p> : null}
+        {/*
+         * With a cover, the name is on the picture and printing it again underneath is the same
+         * word twice — the owner's note on the first cover that arrived: «нужно название с
+         * карточки убрать, потому что оно будет на картинке».
+         *
+         * It is hidden, not deleted. The cover is decorative (`alt=""`), so the visible title was
+         * the only thing naming this ticket to a screen reader, and dropping it outright would
+         * leave a card announced as «Курс · Неделя 1 · День 1» and a button. `sr-only` keeps the
+         * name in the accessibility tree and out of the layout.
+         */}
+        {coverSrc ? (
+          <span className="sr-only">{title}</span>
+        ) : (
+          <DisplayTitle text={title} className="mt-2 text-2xl" />
+        )}
+        {lead ? (
+          <p className={clsx('text-[14px] leading-snug text-muted', coverSrc ? 'mt-3' : 'mt-2')}>
+            {lead}
+          </p>
+        ) : null}
         {subtitle ? <p className="mt-1.5 text-[13px] text-muted-2">{subtitle}</p> : null}
 
         {ctaHref ? (

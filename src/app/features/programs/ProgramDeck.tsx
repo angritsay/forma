@@ -159,6 +159,7 @@ export function ProgramDeck({
             return (
               <li key={entry.key}>
                 <CourseTicket
+                  cover={course.cover}
                   photo={photo}
                   priority={priority}
                   dimmed
@@ -186,6 +187,7 @@ export function ProgramDeck({
           return (
             <li key={entry.key}>
               <CourseTicket
+                cover={course.cover}
                 photo={photo}
                 priority={priority}
                 style={courseTileVars(course.tile)}
