@@ -47,7 +47,7 @@ describe('the loading wordmark', () => {
       const rule = new RegExp(
         `\\.wordmark-wave > \\*:nth-child\\(${n}\\)\\s*\\{\\s*animation-delay:\\s*([^;]+);`,
       ).exec(css);
-      return rule?.[1].trim();
+      return rule?.[1]?.trim();
     });
     // One rule per letter — a letter with no rule inherits 0s and lands on top of the fifth.
     expect(delays.every(Boolean)).toBe(true);
