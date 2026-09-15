@@ -127,12 +127,24 @@ export function CourseTicket({
         />
       ) : null}
 
-      {/* The cover: a band, not a wall. 2:1 is wide enough to read as a picture and short enough
-          that the ticket's own words are the larger half of it — at 16:10 the picture won, and the
-          object read as a card with a caption rather than as a ticket. */}
+      {/*
+       * The cover: 4:3.
+       *
+       * It was 2:1, chosen so «the ticket's own words are the larger half of it — at 16:10 the
+       * picture won». The owner has asked for the opposite and given a number: a course card was
+       * filling about 40% of a phone and should fill about 60%. On a 390px screen the ticket is
+       * 342px wide, so 2:1 gave the cover 171px and a locked ticket — no progress stub, no tear —
+       * came to 47% of the 761px the tab bar leaves. 4:3 gives the cover 257px and the same ticket
+       * about 60%.
+       *
+       * The old rule is not wrong, it was answering a different question: this cover is about to
+       * carry the course's name as artwork rather than as type (see `cover` in CourseSchema), and
+       * a picture that has to hold a name needs the room. Where there is no cover the same box is
+       * the programme colour, which reads as a bigger colour field rather than as a bigger photo.
+       */}
       <div
         className={clsx(
-          'pointer-events-none relative aspect-2/1 w-full overflow-hidden',
+          'pointer-events-none relative aspect-4/3 w-full overflow-hidden',
           coverSrc || art ? 'bg-ink' : 'hero-art',
         )}
       >

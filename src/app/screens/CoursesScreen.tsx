@@ -18,7 +18,6 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { buildDeck } from '@/app/features/programs/deck';
 import { ProgramDeck } from '@/app/features/programs/ProgramDeck';
@@ -79,13 +78,19 @@ export default function CoursesScreen() {
     ]);
   }, []);
 
-  /* The tab says its own name, the way «Челлендж» and «Прогресс» already do — asked for, and the
-     one thing this screen was missing when the four tabs were put side by side. */
-  const header = <TopBar title={t('app.tabPrograms')} />;
+  /*
+   * No title bar. The tab that is lit at the bottom already says «Программы», and a screen that
+   * repeats it spends 57px of a 761px phone saying a word the reader just tapped. That reverses
+   * the note that stood here — «the tab says its own name … the one thing this screen was missing»
+   * — at the owner's request, together with the same removal on «Прогресс».
+   *
+   * The content takes the space back rather than sliding up under the status bar: `pt-4` is the
+   * air the bar used to provide, which is what keeps the first ticket off the top edge.
+   */
 
   if (status === 'idle' || status === 'loading') {
     return (
-      <Screen header={header}>
+      <Screen contentClassName="pt-4">
         <DeckSkeleton />
       </Screen>
     );
@@ -93,7 +98,7 @@ export default function CoursesScreen() {
 
   if (entries.length === 0) {
     return (
-      <Screen header={header}>
+      <Screen contentClassName="pt-4">
         <EmptyState
           title={t('app.homeTodayNoCourseTitle')}
           description={t('app.homeTodayNoCourseBody')}
@@ -108,7 +113,7 @@ export default function CoursesScreen() {
   }
 
   return (
-    <Screen header={header}>
+    <Screen contentClassName="pt-4">
       <ProgramDeck
         entries={entries}
         openTasks={openTasks}
