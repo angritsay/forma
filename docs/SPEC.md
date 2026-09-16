@@ -373,17 +373,29 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
 2. **Onboarding** (first login, resumable): name → basics (age band, sex optional,
    weight optional) → activity level → experience → equipment (+ dumbbell/kettlebell weights) →
    limitations → **the assessment** → time per session → goal → result screen (fitness index,
-   level, what it means) → home.
-   The assessment is one question — «Хочешь адаптировать тренировки под себя?», with what it costs
-   in one line under it — and two answers. «Сейчас» first shows the one instruction everything here
-   depends on — do not squeeze out a maximum, because a number forced out today is a programme that
-   is too heavy for the weeks after it — and then runs five movements of one minute each
-   (`content/site/assessment.ts`) as a full-screen surface over the wizard: the clip, the movement's
-   name, the instruction, then the clock alone, ticking the last three seconds and closing on a long
-   horn, then the field for the number. The plank is the one hold: «Стоп» ends it and the screen
-   times it. «Не сейчас» postpones the whole thing; it comes back as a task on the home screen, and
-   the fitness index imputes what it is missing (docs/TRAINING_SCIENCE §2). Three of the five
-   numbers feed the index, the other two are written to `benchmarks`.
+   level) → home.
+   **Each step is one question and its answers, and nothing else** (design/CHANGELOG.md §10): the
+   question in the display face — «ЧТО есть дома?», «СКОЛЬКО минут на тренировку?» — and under it
+   plates (`OptionTile`), pills or big numerals. No lead under the question, no kicker over a group
+   whose plates already say what they are, no description under an answer; where an answer needed
+   its description («Новичок · меньше года») the description became the answer («Меньше года»).
+   Minutes are five plates of one numeral each. A picked plate inverts and a check lands on it on
+   the spring (`.pop-in`). The header is one row: back, the progress rule, «01/10». The result is
+   the index as one huge numeral — «54» at 800, «из 100» at 200 — with the level as a pill under it
+   and «Начать тренироваться» in the footer; the ring, the paragraph on what the level means and
+   the list of components are gone.
+   The assessment is one question — «Подстроить тренировки под тебя?», with what it costs as two
+   pills under it («5 упражнений», «10 мин») — and two answers. «Сейчас» first shows the one
+   instruction everything here depends on, in the owner's own words and nothing more («Максимум не
+   выжимаем» over a still of the first movement), and then runs five movements of one minute each
+   (`content/site/assessment.ts`) as a full-screen surface over the wizard drawn like the player:
+   the clip full-bleed, the movement's name in the display face on a pane of glass at the foot, one
+   short line and «Начать»; then the clock inside a ring that drains with it, ticking the last
+   three seconds and closing on a long horn; then the one field for the number. The plank is the one
+   hold: «Стоп» ends it and the screen times it. «Не сейчас» postpones the whole thing; it comes
+   back as a task on the home screen, and the fitness index imputes what it is missing
+   (docs/TRAINING_SCIENCE §2). Three of the five numbers feed the index, the other two are written
+   to `benchmarks`.
 3. **Home**: today, and nothing else. The greeting names the athlete and the avatar beside it opens
    the profile; the resume strip if a session was left unfinished; today's session as one
    full-width cover card; **the challenge as one ruled row** under it; one button offering an hour

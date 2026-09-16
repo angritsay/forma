@@ -1,5 +1,6 @@
 import { clsx } from 'clsx';
 import type { ReactNode } from 'react';
+import { Glyph } from '@/components/ui/Icon';
 
 export interface OptionTileProps {
   selected: boolean;
@@ -8,6 +9,12 @@ export interface OptionTileProps {
   role: 'checkbox' | 'radio';
   /** Full-width row of its own, instead of sharing a row with the other answers. */
   wide?: boolean;
+  /**
+   * Draw the check that lands when the plate is picked. Off for a plate whose whole content is
+   * one big numeral (the minutes), where the inversion is already the mark and a circle beside a
+   * 28px figure would fight it.
+   */
+  mark?: boolean;
   children: ReactNode;
 }
 
@@ -31,8 +38,21 @@ export interface OptionTileProps {
  * Selected is the white fill with black text — the one inversion the system uses for "this is the
  * thing that acts", the same as the primary button and the recommended row in the player's
  * difficulty sheet. It is the only fill in the group, so the chosen answer is found first.
+ *
+ * **Picking one looks like something.** A check in a circle lands on the plate on the spring
+ * (`.pop-in`, design/CHANGELOG.md §10: «сделанное выглядит сделанным») — the same mark a delivered
+ * challenge task gets. On the white plate the circle is ink with a paper check, the plate's own
+ * inversion inverted back, so it reads on the fill it sits on. It is keyed on nothing and mounts
+ * only while selected, so it pops once per pick and not on every re-render.
  */
-export function OptionTile({ selected, onClick, role, wide = false, children }: OptionTileProps) {
+export function OptionTile({
+  selected,
+  onClick,
+  role,
+  wide = false,
+  mark = true,
+  children,
+}: OptionTileProps) {
   return (
     <button
       type="button"
@@ -40,7 +60,7 @@ export function OptionTile({ selected, onClick, role, wide = false, children }: 
       aria-checked={selected}
       onClick={onClick}
       className={clsx(
-        'flex min-h-12 items-center rounded-control border px-3.5 py-2.5 text-left',
+        'flex min-h-12 items-center gap-3 rounded-control border px-3.5 py-2.5 text-left',
         'text-[13px] font-semibold tracking-[0.04em] uppercase',
         'transition-[background-color,color,border-color,transform] duration-150 ease-(--ease-out)',
         'active:scale-[0.99]',
@@ -55,7 +75,15 @@ export function OptionTile({ selected, onClick, role, wide = false, children }: 
           : 'border-border bg-surface-2 text-text hover:bg-surface-3',
       )}
     >
-      {children}
+      <span className="min-w-0 flex-1">{children}</span>
+      {mark && selected ? (
+        <span
+          aria-hidden="true"
+          className="pop-in flex size-5 shrink-0 items-center justify-center rounded-pill bg-on-primary text-primary"
+        >
+          <Glyph size={11}>✓</Glyph>
+        </span>
+      ) : null}
     </button>
   );
 }

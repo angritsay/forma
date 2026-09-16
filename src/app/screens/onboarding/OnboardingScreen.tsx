@@ -1,7 +1,13 @@
 /**
- * Onboarding wizard (docs/SPEC.md §10 flow 2). Progress bar + back in the header, one step per
- * screen, draft persisted in sessionStorage (`forma.onboarding`) so a reload resumes.
+ * Onboarding wizard (docs/SPEC.md §10 flow 2). Back, the progress rule and «01/10» in the header,
+ * one step per screen, draft persisted in sessionStorage (`forma.onboarding`) so a reload resumes.
  * The result step saves the profile and sends the user home.
+ *
+ * Each step is one question in the display face and its answers as plates, pills or numerals, and
+ * nothing else — the owner's prototype (`design/ui_kits/app-v2`) is the measure, and
+ * design/CHANGELOG.md §10 records why the leads, kickers and descriptions went. The footer keeps
+ * the one primary button; «Выйти» on the first step is the way out for a wrong account and stays
+ * as quiet type.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
@@ -170,30 +176,29 @@ export default function OnboardingScreen() {
     <Screen
       header={
         /*
-         * The step counter is set as a numeral pair — 03/12 — rather than as small grey text, and
-         * the progress rule sits under the whole bar instead of competing with it for width. On a
-         * twelve-step form the number is the thing you look for, so it is the thing that is legible.
+         * One row: the way back, the rule, the numeral pair. It used to say where you are twice —
+         * «ШАГ 2 ИЗ 10» as a kicker and «02/10» as numerals, with a second rule under the whole
+         * bar — and the kicker was the words for what the rule and the pair already draw. The
+         * sentence survives as the rule's accessible name. The rule is filled to the step being
+         * answered, not the steps behind it, so it and «01/10» say the same thing from the first
+         * screen. White, because no course is in scope during onboarding.
          */
-        <div>
-          <div className="flex h-14 items-center gap-3 px-3">
-            <div className="flex w-11 shrink-0 items-center">
-              {stepIndex > 0 ? (
-                <IconButton label={t('common.back')} icon="back" variant="ghost" onClick={back} />
-              ) : null}
-            </div>
-            <span className="eyebrow flex-1">
-              {t('app.onbStepOf', { n: stepIndex + 1, total })}
-            </span>
-            <span className="numeral tabular shrink-0 text-right text-sm">
-              <span className="text-text">{String(stepIndex + 1).padStart(2, '0')}</span>
-              <span className="text-muted-2">/{String(total).padStart(2, '0')}</span>
-            </span>
+        <div className="flex h-14 items-center gap-4 px-3">
+          <div className="flex w-11 shrink-0 items-center">
+            {stepIndex > 0 ? (
+              <IconButton label={t('common.back')} icon="back" variant="ghost" onClick={back} />
+            ) : null}
           </div>
-          {/* The brandbook's 4px rule; white, because no course is in scope during onboarding. */}
           <ProgressBar
-            value={stepIndex / (total - 1)}
+            value={(stepIndex + 1) / total}
+            tone="primary"
             label={t('app.onbStepOf', { n: stepIndex + 1, total })}
+            className="flex-1"
           />
+          <span className="numeral tabular shrink-0 pr-1 text-right text-sm">
+            <span className="text-text">{String(stepIndex + 1).padStart(2, '0')}</span>
+            <span className="text-muted-2">/{String(total).padStart(2, '0')}</span>
+          </span>
         </div>
       }
       footer={

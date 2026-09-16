@@ -1,11 +1,12 @@
-import { PageTitle } from '@/components/ui/PageTitle';
 import { useT } from '@/app/hooks/useT';
 import type { Limitation } from '@/lib/training/types';
 import { LIMITATIONS, toggleIn } from './draft';
 import { LIMITATION_LABEL } from './labels';
 import { OptionTile } from './OptionTile';
+import { Question } from './Question';
 import type { StepProps } from './types';
 
+/** «Что беречь?» and the plates; «Заменим упражнения, которые нагружают эти зоны» went with the leads. */
 export function StepLimitations({ draft, update }: StepProps) {
   const { t } = useT();
   const toggle = (item: Limitation) =>
@@ -14,7 +15,7 @@ export function StepLimitations({ draft, update }: StepProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageTitle title={t('app.onbLimitationsTitle')} subtitle={t('app.onbLimitationsLead')} />
+      <Question text={t('app.onbLimitationsTitle')} />
       <div className="flex flex-col gap-4">
         {/*
          * «Ничего, всё в порядке» is not one of the answers, it is the absence of all of them — so
