@@ -7,11 +7,13 @@
  * down a step: this is no longer one of five covers competing for attention, it is the one object
  * on a screen that does not scroll, and at 36px the title was taking room the challenge row needed.
  *
- * The shape is the one every training app opens on — a picture, a name, how far in you are, and
- * one button — and the reason it is worth copying is that it answers "what am I doing today" in a
- * single glance and one tap. What is not copied is how it is drawn: no rounded corners, no
- * gradient button, no progress ring. A ring is a circle and this brand has no circles; the share
- * is a numeral over a 2px rule, which is how progress is written everywhere else in the product.
+ * **What stands on the picture is the owner's prototype's** (`design/ui_kits/app-v2`, «Сегодня»):
+ * the kicker, the workout's name as the one display line, two pills — how long and how much —
+ * and «Начать →». Four things, and one of them is the button. The line naming the course went,
+ * because with one course owned it named the only thing it could be; the screen puts it back as a
+ * fifth line only when there is genuinely a second course this could have been (see Home). The
+ * share of the course and its rule are gone too: how far in you are is the ticket's fact and the
+ * path's, and Home answers a different question — what am I doing today.
  *
  * The cover is a photograph when there is a real one to show, and the programme colour when there
  * is not. That is not a placeholder: the brandbook's first rule is that the colour paints the
@@ -39,21 +41,13 @@ export interface DeckCardProps {
   eyebrow: ReactNode;
   title: string;
   /**
-   * What this thing *is*, in one line — a course is a programme by weeks, the challenge is a task a day.
-   *
-   * It exists because of the first thing anybody said about the home screen: «заходишь, и ничего
-   * непонятно». The card can say where you are in something only once you already know what that
-   * something is, so the explanation comes first and the state after it.
+   * One line under the name, only when the name alone is ambiguous — which course this day
+   * belongs to, when more than one is owned. Left out otherwise: it said what the athlete already
+   * knew.
    */
   lead?: ReactNode;
-  /** One quiet line under that — today's session, today's task. */
-  subtitle?: ReactNode;
-  /** Completed share, 0..100. Omitted on a card with nothing to complete. */
-  pct?: number;
-  /** The word under the figure, e.g. "пройдено". */
-  progressLabel?: ReactNode;
-  /** Set opposite the figure: "12/20", "день 5 из 30". */
-  progressMeta?: ReactNode;
+  /** The session's facts — «18 мин», «110 повторов» — as pills between the name and the button. */
+  pills?: readonly string[];
   ctaLabel: ReactNode;
   /** In-app action. Ignored when `ctaHref` is set. */
   onCta?: () => void;
@@ -79,10 +73,7 @@ export function DeckCard({
   eyebrow,
   title,
   lead,
-  subtitle,
-  pct,
-  progressLabel,
-  progressMeta,
+  pills,
   ctaLabel,
   onCta,
   ctaHref,
@@ -92,7 +83,6 @@ export function DeckCard({
   dimmed = false,
   style,
 }: DeckCardProps) {
-  const share = pct === undefined ? undefined : Math.max(0, Math.min(100, Math.round(pct)));
   const art = photo && !isPlaceholder(photo);
   return (
     <article
@@ -168,43 +158,28 @@ export function DeckCard({
         <span className="eyebrow block truncate text-current opacity-70">{eyebrow}</span>
         <DisplayTitle text={title} className="mt-2 text-3xl lg:text-4xl" />
         {lead ? <p className="mt-2 max-w-[34ch] text-[14px] leading-snug">{lead}</p> : null}
-        {subtitle ? <p className="mt-1.5 text-[13px] text-current opacity-70">{subtitle}</p> : null}
 
-        {share === undefined ? null : (
-          <div className="mt-5">
-            <div className="flex items-baseline justify-between gap-3">
-              <span className="flex items-baseline gap-2">
-                <span className="numeral tabular text-3xl leading-none">{share}%</span>
-                {progressLabel ? (
-                  <span className="eyebrow text-current opacity-70">{progressLabel}</span>
-                ) : null}
-              </span>
-              {progressMeta ? (
-                <span className="numeral tabular text-xs text-current opacity-70">
-                  {progressMeta}
-                </span>
-              ) : null}
-            </div>
-            {/*
-             * The rule is drawn here rather than with <ProgressBar> because neither of the
-             * control's colours survives this card: its track (--surface-3, a near-black) vanishes
-             * on a photograph, and its fill is the programme colour, which is the very thing a
-             * colour cover is already painted in. So the track is the card's own ink at low alpha,
-             * and the fill is the programme colour on a photograph and the ink on a colour cover.
-             */}
-            <div className="mt-2.5 h-0.5 w-full bg-current/25">
-              <div
-                className={clsx('h-full', art ? 'bg-course' : 'bg-current')}
-                style={{ width: `${share}%` }}
-                role="progressbar"
-                aria-label={title}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={share}
-              />
-            </div>
-          </div>
-        )}
+        {pills && pills.length > 0 ? (
+          /*
+           * The facts as pills, in the card's own ink. `Pill`'s tones are drawn for the dark
+           * ground — a muted hairline and muted words — and neither survives a photograph or a
+           * yellow tile; so this is the same shape (`components/ui/Pill.tsx`: 28px, tracked
+           * capitals, fully rounded) with its colour taken from `currentColor` like everything
+           * else on the cover. Not `Chip`: nothing here is pressed.
+           */
+          <ul className="mt-4 flex flex-wrap gap-2" aria-label={title}>
+            {pills.map((p) => (
+              <li
+                key={p}
+                className="control-label inline-flex h-7 max-w-full min-w-0 items-center rounded-pill border border-current/40 px-3 text-[10px] text-current"
+              >
+                {/* Like `Pill`: it gives way and ellipsises rather than pushing the card's own
+                    gutter out, on the day a workout's count runs to five figures. */}
+                <span className="truncate">{p}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
 
         {ctaHref ? (
           /* No arrow on this one: it does not go forward into the work, it leaves for the web. */

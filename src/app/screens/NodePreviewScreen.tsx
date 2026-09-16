@@ -24,26 +24,25 @@ import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
+import { Pill } from '@/components/ui/Pill';
 import { courseTitle, findCourse } from '@/content/catalogue';
 import { startSession } from '@/lib/api/sessions';
-import { estimateCalories, estimateDuration, workoutVolume } from '@/lib/training/estimate';
 import { prescribeWorkout } from '@/lib/training/prescribe';
 import { recommendDifficulty } from '@/lib/training/session';
-import type {
-  DifficultyChoice,
-  PrescribeOptions,
-  PrescribedWorkout,
-  Recommendation,
-} from '@/lib/training/types';
+import type { DifficultyChoice, Recommendation } from '@/lib/training/types';
 import { courseTileVars } from '@/lib/ui/tile';
 import { toLocalDateIso } from '@/lib/util/dates';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { courseLandingHref } from '@/app/features/courses/courseMeta';
 import { LinkButton } from '@/app/features/courses/LinkButton';
+import {
+  estimateSession,
+  sessionPills,
+  type SessionEstimate,
+} from '@/app/features/courses/sessionEstimate';
 import { DisplayTitle } from '@/app/features/home/DisplayTitle';
-import { DifficultySheet, type DifficultyOption } from '@/app/features/path/DifficultySheet';
-import { FactChips } from '@/app/features/path/FactChips';
+import { DifficultySheet } from '@/app/features/path/DifficultySheet';
 import { nodeStatus } from '@/app/features/path/nodeState';
 import { DIFFICULTY_CHOICES, workoutSignatureExercise } from '@/app/features/path/plan';
 import { PlanBlocks } from '@/app/features/path/PlanBlocks';
@@ -61,9 +60,8 @@ import {
 } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
 
-interface Plan extends DifficultyOption {
-  prescribed: PrescribedWorkout;
-}
+/** One difficulty's plan and its estimate — what the sheet offers as a row, what the pills state. */
+type Plan = SessionEstimate;
 
 export default function NodePreviewScreen() {
   useProgressLoader();
@@ -105,30 +103,25 @@ export default function NodePreviewScreen() {
     [ctx.profile, engineState, nowIso, stepsYesterday],
   );
 
+  /*
+   * The three plans, through the one estimator Home's card also reads (`sessionEstimate`), so
+   * the «18 мин · 110 повторов» somebody saw on Home is the «Как обычно» row here to the digit.
+   */
   const plans = useMemo<Plan[] | null>(() => {
     if (!workout || !ctx.profile) return null;
     const profile = ctx.profile;
-    return DIFFICULTY_CHOICES.map((c) => {
-      const opts: PrescribeOptions = {
+    return DIFFICULTY_CHOICES.map((c) =>
+      estimateSession(workout, {
         profile,
         scale: engineState.scale,
         choice: c,
         level: ctx.level,
+        ...(ctx.weightKg !== undefined ? { weightKg: ctx.weightKg } : {}),
         deload,
         repeat,
         streakDays,
-      };
-      const prescribed = prescribeWorkout(workout, opts);
-      const volume = workoutVolume(prescribed);
-      return {
-        choice: c,
-        prescribed,
-        durationSec: estimateDuration(prescribed).totalSec,
-        calories: estimateCalories(prescribed, ctx.weightKg),
-        reps: volume.reps,
-        workSec: volume.workSec,
-      };
-    });
+      }),
+    );
   }, [workout, ctx, engineState.scale, deload, repeat, streakDays]);
 
   if (!course || !node) {
@@ -253,15 +246,13 @@ export default function NodePreviewScreen() {
   const isBenchmark = node.kind === 'benchmark';
 
   /*
-   * The recommended plan's facts: how long, and what it costs. No points — a course is time you
+   * The recommended plan's facts as pills: how long, how much, what it costs — the same two Home
+   * shows, plus the calories, which this screen has the room for. No points: a course is time you
    * are about to spend, and a score for a workout nobody has done yet is not a fact about it.
+   * Pills, not the outlined-capitals chips that stood here: a fact that is not a control is a
+   * pill (`design/CHANGELOG.md` §10), and the 12px radius is for what is pressed.
    */
-  const facts = shown
-    ? [
-        t('app.nodeDuration', { min: Math.max(1, Math.round(shown.durationSec / 60)) }),
-        t('app.nodeKcal', { n: shown.calories }),
-      ]
-    : [];
+  const facts = shown ? sessionPills({ t, l, locale }, shown, { calories: true }) : [];
 
   return (
     /*
@@ -316,7 +307,15 @@ export default function NodePreviewScreen() {
               {l(courseTitle(course))} ·{' '}
               {t('app.homeTodayWeek', { week: node.week, day: node.day })}
             </p>
-            <FactChips items={facts} className="mt-5" />
+            {facts.length > 0 ? (
+              <ul className="mt-5 flex flex-wrap gap-2" aria-label={l(workout.name)}>
+                {facts.map((x) => (
+                  <li key={x} className="flex min-w-0">
+                    <Pill>{x}</Pill>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
 
           {/*
