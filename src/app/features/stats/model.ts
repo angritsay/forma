@@ -58,6 +58,43 @@ export function weekLoad(sessions: readonly WorkoutSessionRow[], todayIso: strin
   return days;
 }
 
+export interface WeekDay {
+  date: string;
+  /** A workout was finished or the steps goal was reached — the same rule the streak counts by. */
+  active: boolean;
+  today: boolean;
+  future: boolean;
+}
+
+/**
+ * Monday → Sunday of the current ISO week as seven days, each either active or not.
+ *
+ * This is the figure behind «Цель недели» on «Прогресс»: seven circles, a check on every active
+ * day. It counts by the streak's own rule — a workout *or* the steps goal makes a day — because the
+ * two figures sit on one screen and would otherwise disagree about the same Tuesday.
+ */
+export function weekActiveDays(
+  sessions: readonly WorkoutSessionRow[],
+  logs: DailyLogMap,
+  todayIso: string,
+  stepsGoal = STEPS_GOAL,
+): WeekDay[] {
+  const activity = new Map(buildDayActivity(sessions, logs).map((d) => [d.date, d]));
+  const from = weekStart(todayIso);
+  const days: WeekDay[] = [];
+  for (let i = 0; i < 7; i++) {
+    const date = addDays(from, i);
+    const day = activity.get(date);
+    days.push({
+      date,
+      active: Boolean(day && (day.workoutDone || day.steps >= stepsGoal)),
+      today: date === todayIso,
+      future: date > todayIso,
+    });
+  }
+  return days;
+}
+
 /* ---------------------------------------------------------------------------------------------
  * Points per week
  * ------------------------------------------------------------------------------------------- */

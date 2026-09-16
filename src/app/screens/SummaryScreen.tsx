@@ -5,26 +5,35 @@
  * device until the save succeeds), else the stored row from the API (already-saved sessions).
  * Saving completes the row, adapts the course scale, records benchmarks, then shows the
  * adaptation message and freshly unlocked achievements.
+ *
+ * Drawn as the owner's prototype draws this moment (`design/ui_kits/app-v2`, «Готово!»): the word
+ * at the size of the screen, one warm line computed from the real streak, three numerals, «К пути
+ * →» and «Как зашло?». What went was the kicker-and-subtitle stack, the crosshair plate holding
+ * the clock, the two stat tiles and the sentence «Эти итоги уже сохранены» — the first three are
+ * the poster now, and the last was a caption about the app's own bookkeeping on the one screen
+ * that should be about the person. The per-block, per-test and benchmark record moved behind
+ * «Подробности», the way «Прогресс» keeps its charts: it is the answer to a question nobody
+ * arrives with.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { PageTitle } from '@/components/ui/PageTitle';
+import { Glyph } from '@/components/ui/Icon';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
+import { formatNumber } from '@/i18n/index';
 import { TopBar } from '@/app/components/TopBar';
-import { DisplayText } from '@/app/features/home/DisplayTitle';
 import { publishSessionResult } from '@/app/features/player/progress';
 import { buildSummary, createSummarySaver, type SaveOutcome } from '@/app/features/player/save';
 import { loadUserStats } from '@/app/features/player/stats';
+import { DonePoster, type DoneFigure } from '@/app/features/player/summary/DonePoster';
 import { FeedbackForm, type FeedbackValue } from '@/app/features/player/summary/FeedbackForm';
 import { AchievementList, AdaptationCard } from '@/app/features/player/summary/SavedCards';
 import {
   BenchmarkCard,
   BlockList,
-  SummaryStats,
   TestResultList,
 } from '@/app/features/player/summary/SummaryStats';
 import {
@@ -32,8 +41,11 @@ import {
   blockCompletions,
   courseNames,
   shareText,
+  streakLine,
   testResults,
+  totalReps,
 } from '@/app/features/player/summaryModel';
+import { useProgress, useProgressLoader, useStreak } from '@/app/store/progress';
 import { nodeEarnsStars, starsEarned, starsForSession, workDone } from '@/lib/training/stars';
 import { useT } from '@/app/hooks/useT';
 
@@ -75,6 +87,8 @@ interface SavedState {
   unlocked: AchievementStatus[];
   workoutName: string;
   courseId: string;
+  /** Repetitions counted on the device before the results were dropped; null on a day with none. */
+  reps: number | null;
 }
 
 function newlyUnlocked(before: UserStats | null, after: UserStats): AchievementStatus[] {
@@ -85,6 +99,51 @@ function newlyUnlocked(before: UserStats | null, after: UserStats): AchievementS
       .map((a) => a.id),
   );
   return evaluateAchievements(after).filter((a) => a.unlocked && !was.has(a.id));
+}
+
+/**
+ * The streak to congratulate on, **with today counted**, or null when nothing true can be said.
+ *
+ * `enabled` is false for a session being re-read from the server: today's streak is a fact about
+ * today, and printing «четвёртый день подряд» under a workout from last month would be a warm
+ * sentence about the wrong day. While the progress store is still loading there is likewise no
+ * number, and the line is simply absent rather than starting at «первый день» and jumping.
+ */
+function useStreakDays(enabled: boolean): number | null {
+  useProgressLoader();
+  const status = useProgress((s) => s.status);
+  const streak = useStreak();
+  if (!enabled || status !== 'ready') return null;
+  // A second workout on a day already counted must not advance the number twice.
+  return streak.todayDone ? streak.current : streak.current + 1;
+}
+
+/**
+ * The three numerals under «Готово!» — minutes, repetitions, calories, as the prototype sets them.
+ *
+ * A session with no rep-counted work at all (a plank test, a mobility day) has no repetitions to
+ * report, and «0 ПОВТОРОВ» for having held a plank is worse than saying nothing; that slot carries
+ * how much of the plan was done instead. A stored session read back from the server has no step
+ * results on this device at all, and takes the same substitution.
+ */
+function doneFigures(
+  t: ReturnType<typeof useT>['t'],
+  locale: ReturnType<typeof useT>['locale'],
+  session: { durationSec: number; calories: number; completion: number; reps: number | null },
+): DoneFigure[] {
+  return [
+    {
+      value: formatNumber(locale, Math.round(session.durationSec / 60)),
+      label: t('app.summaryMinutes'),
+    },
+    session.reps !== null
+      ? { value: formatNumber(locale, session.reps), label: t('app.summaryReps') }
+      : {
+          value: `${Math.round(session.completion * 100)}%`,
+          label: t('app.summaryCompletion'),
+        },
+    { value: formatNumber(locale, session.calories), label: t('app.summaryKcal') },
+  ];
 }
 
 async function shareOrCopy(text: string): Promise<'shared' | 'copied' | 'failed'> {
@@ -104,13 +163,14 @@ async function shareOrCopy(text: string): Promise<'shared' | 'copied' | 'failed'
   }
 }
 
+/** The quiet second line under «К пути →», where the prototype puts «Как зашло?» on this screen. */
 function ShareButton({ text }: { text: string }) {
   const { t } = useT();
   const toast = useToast();
   return (
     <Button
-      variant="secondary"
-      size="lg"
+      variant="ghost"
+      size="sm"
       fullWidth
       onClick={() => {
         void shareOrCopy(text).then((r) => {
@@ -136,9 +196,15 @@ interface SavedViewProps {
   courseId: string;
   adjustment?: SaveOutcome['adjustment'];
   unlocked?: AchievementStatus[];
-  alreadySaved?: boolean;
+  /**
+   * False for a session re-read from the server: today's streak says nothing about an old workout,
+   * so that view gets no warm line.
+   */
+  fresh?: boolean;
   /** Stars earned, or null on a day that earns none. */
   stars?: number | null;
+  /** Repetitions done, or null when the session had no rep-counted work / is being re-read. */
+  reps?: number | null;
 }
 
 function SavedView({
@@ -149,19 +215,22 @@ function SavedView({
   courseId,
   adjustment,
   unlocked = [],
-  alreadySaved,
+  fresh,
   stars,
+  reps = null,
 }: SavedViewProps) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const navigate = useNavigate();
+  const days = useStreakDays(fresh === true);
   return (
     <Screen
       header={<TopBar title={t('app.summaryEyebrow')} />}
       footer={
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1">
           <Button
             size="lg"
             fullWidth
+            iconRight={<Glyph size={14}>→</Glyph>}
             onClick={() => navigate(courseId === 'custom' ? '/' : `/courses/${courseId}`)}
           >
             {t('app.summaryBackToCourse')}
@@ -170,24 +239,25 @@ function SavedView({
         </div>
       }
     >
-      {/* The programme colour, for the plate's ticks and the block bars; a custom workout has none. */}
-      <div className="flex flex-col gap-6 py-4" style={courseTileVars(findCourse(courseId)?.tile)}>
-        <PageTitle
-          display
-          size="xl"
-          eyebrow={adjustment ? t('app.summarySavedTitle') : t('app.summaryTitle')}
-          title={<DisplayText text={workoutName} />}
-          subtitle={`${courseName} · ${nodeName}`}
-        />
-        {alreadySaved ? <p className="text-sm text-muted">{t('app.summaryAlreadySaved')}</p> : null}
-        <SummaryStats
-          durationSec={summary.durationSec}
-          calories={summary.calories}
-          completion={summary.completion}
+      {/* The programme colour, for the block bars and the achievement rings; a custom workout has none. */}
+      <div className="flex flex-col gap-8 pb-4" style={courseTileVars(findCourse(courseId)?.tile)}>
+        <DonePoster
+          eyebrow={`${nodeName} · ${courseName}`}
+          line={days !== null ? streakLine(t, days) : null}
           stars={stars}
+          figures={doneFigures(t, locale, {
+            durationSec: summary.durationSec,
+            calories: summary.calories,
+            completion: summary.completion,
+            reps,
+          })}
         />
-        {adjustment ? <AdaptationCard adjustment={adjustment} /> : null}
+        {/*
+         * The two things this screen exists to hand over, in the order they earn attention: what
+         * was unlocked by finishing, and how the next session changed because of this one.
+         */}
         <AchievementList items={unlocked} />
+        {adjustment ? <AdaptationCard adjustment={adjustment} /> : null}
       </div>
     </Screen>
   );
@@ -221,6 +291,7 @@ function LocalSummary({
   const abandon = useActiveWorkoutStore((s) => s.abandon);
 
   const [feedback, setFeedback] = useState<FeedbackValue>({ rpe: 5, feeling: null, note: '' });
+  const [details, setDetails] = useState(false);
   const [status, setStatus] = useState<SaveStatus>('idle');
   const [errorText, setErrorText] = useState<string | null>(null);
   const [before, setBefore] = useState<UserStats | null>(null);
@@ -253,6 +324,13 @@ function LocalSummary({
     [prescribed, steps, results, locale],
   );
   const benchmark = useMemo(() => benchmarkResult(steps, results), [steps, results]);
+  const reps = useMemo(() => totalReps(steps, results), [steps, results]);
+  /*
+   * The session is finished, so today counts — whether or not the save has landed yet. The store
+   * has not been told about it at this point (the save is what tells it), which is exactly what
+   * `useStreakDays` adds the day for.
+   */
+  const days = useStreakDays(true);
   /*
    * Stars for the session just finished. A day that earns none — a test, a benchmark, a workout
    * the coach built by hand and so has no node — is null, and the plate simply does not draw them.
@@ -305,7 +383,7 @@ function LocalSummary({
       } catch {
         /* Stats are decorative here; the save itself succeeded. */
       }
-      onSaved({ outcome, unlocked, workoutName: names.workout, courseId: session.courseId });
+      onSaved({ outcome, unlocked, workoutName: names.workout, courseId: session.courseId, reps });
       abandon();
       publishSessionResult(outcome);
       toast.show({ kind: 'success', title: t('app.summarySavedTitle') });
@@ -331,6 +409,7 @@ function LocalSummary({
     toast,
     t,
     names.workout,
+    reps,
   ]);
 
   const locked = status !== 'idle';
@@ -369,26 +448,54 @@ function LocalSummary({
       }
     >
       <div
-        className="flex flex-col gap-6 py-2"
+        className="flex flex-col gap-8 pb-2"
         style={courseTileVars(findCourse(session.courseId)?.tile)}
       >
-        <PageTitle
-          display
-          size="xl"
-          eyebrow={t('app.summaryTitle')}
-          title={<DisplayText text={names.workout} />}
-          subtitle={`${names.course} · ${names.node}`}
-        />
-        <SummaryStats
-          durationSec={preview.durationSec}
-          calories={preview.calories}
-          completion={preview.completion}
+        <DonePoster
+          eyebrow={`${names.node} · ${names.course}`}
+          line={days !== null ? streakLine(t, days) : null}
           stars={stars}
+          figures={doneFigures(t, locale, {
+            durationSec: preview.durationSec,
+            calories: preview.calories,
+            completion: preview.completion,
+            reps,
+          })}
         />
-        <BlockList blocks={blocks} />
-        <TestResultList tests={tests} />
-        <BenchmarkCard result={benchmark} />
+        {/*
+         * «Как зашло?» is open, not folded behind its own name the way the prototype leaves it.
+         * The prototype's is a link because there it is optional; here the feeling is what the
+         * course adapts on and the save will not go without it, so hiding the one required step
+         * behind a tap would be a screen that refuses to explain why its button is dead. What the
+         * prototype's restraint buys is spent instead on everything under it, which folds away.
+         */}
         <FeedbackForm value={feedback} onChange={setFeedback} disabled={locked} />
+
+        {/*
+         * The per-block, per-test and benchmark record. Collapsed, like «Подробности» on
+         * «Прогресс»: it is a true account of the session, and nobody finishing a workout wants it
+         * first. Mounted only when opened, so the bars animate on the way in rather than having
+         * quietly run behind a closed panel.
+         */}
+        <div className="flex flex-col gap-6">
+          <div className="border-t border-border pt-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="-ml-4.5"
+              onClick={() => setDetails((v) => !v)}
+            >
+              {details ? t('app.summaryDetailsHide') : t('app.summaryDetailsShow')}
+            </Button>
+          </div>
+          {details ? (
+            <>
+              <BlockList blocks={blocks} />
+              <TestResultList tests={tests} />
+              <BenchmarkCard result={benchmark} />
+            </>
+          ) : null}
+        </div>
       </div>
     </Screen>
   );
@@ -516,7 +623,6 @@ function RemoteSummary({ sessionId }: { sessionId: string }) {
       courseName={names.course}
       nodeName={names.node}
       courseId={row.courseId}
-      alreadySaved
       stars={graded(row.courseId, row.nodeId) ? starsForSession(row) : null}
     />
   );
@@ -552,6 +658,8 @@ export default function SummaryScreen() {
         courseId={saved.courseId}
         adjustment={saved.outcome.adjustment}
         unlocked={saved.unlocked}
+        reps={saved.reps}
+        fresh
       />
     );
   }

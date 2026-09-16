@@ -127,6 +127,69 @@ export function benchmarkRecord(view: BenchmarkView): { value: number; unit: str
 }
 
 /**
+ * Repetitions actually done, summed over the whole session — the middle figure of «Готово!».
+ *
+ * Only steps counted in reps: a rep-mode work step contributes what was achieved (or its target
+ * when the step was completed without a count being entered), an AMRAP contributes its rounds
+ * times the reps of one round plus the extra reps, a For-time its rounds times the reps of one
+ * round when finished. Timed holds, test measurements in seconds and rests are not repetitions
+ * and add nothing; a skipped step adds nothing.
+ *
+ * Null when the session has no rep-counted work at all (a plank test, a stretching day), so the
+ * screen can put a different figure in that slot rather than print a zero for having planked.
+ */
+export function totalReps(
+  steps: readonly PlayerStep[],
+  results: readonly ExerciseResult[],
+): number | null {
+  const byIndex = new Map<number, ExerciseResult>();
+  for (const r of results) byIndex.set(r.stepIndex, r);
+  let counted = false;
+  let total = 0;
+  steps.forEach((step, i) => {
+    const r = byIndex.get(i);
+    if (step.kind === 'work') {
+      if (step.mode !== 'reps' || step.item.unit !== 'reps') return;
+      counted = true;
+      if (!r || r.skipped || !r.completed) return;
+      total += r.achieved ?? step.target;
+      return;
+    }
+    if (step.kind === 'amrap' || step.kind === 'fortime') {
+      const perRound = step.items.reduce((n, it) => n + (it.unit === 'reps' ? it.target : 0), 0);
+      if (perRound === 0) return;
+      counted = true;
+      if (!r || r.skipped) return;
+      if (step.kind === 'amrap') total += (r.rounds ?? 0) * perRound + (r.extraReps ?? 0);
+      else if (r.completed) total += step.rounds * perRound;
+    }
+  });
+  return counted ? Math.round(total) : null;
+}
+
+/**
+ * The one warm line under «Готово!»: which day in a row this is.
+ *
+ * The prototype's line is «Четвёртый день подряд. Так и растёт форма.» — a word for the ordinal,
+ * not a figure, because at this size a figure would compete with the three under it. Words are
+ * kept for the second to the tenth day; from the eleventh the line falls back to «11-й день
+ * подряд», which is still one line and still true. `days` is the streak *with today counted*: the
+ * caller decides whether this session has made today count yet.
+ *
+ * Nothing here guesses: with no streak to report (the store not loaded, or the number 0) the
+ * caller passes nothing and no line is drawn.
+ */
+export function streakLine(t: Translate, days: number): string | null {
+  if (!Number.isFinite(days) || days < 1) return null;
+  if (days === 1) return t('app.summaryStreakOne');
+  const ordinals = t('app.summaryOrdinals').split('|');
+  const word = ordinals[days - 2];
+  return word
+    ? t('app.summaryStreakWord', { ordinal: word })
+    : t('app.summaryStreakNum', { n: days });
+}
+
+/**
  * The engine takes the real duration from `startedAt → completedAt`; a session paused overnight
  * would count the night. Handing it the active elapsed time keeps duration honest.
  */

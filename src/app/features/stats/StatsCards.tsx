@@ -1,6 +1,5 @@
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
-import { StatTile } from '@/components/ui/StatTile';
 import { formatNumber } from '@/i18n/index';
 import { levelForPoints } from '@/lib/training/levels';
 import type { LevelInfo } from '@/lib/training/types';
@@ -44,31 +43,5 @@ export function LevelCard({ points, level }: LevelCardProps) {
           : t('app.statsLevelMax')}
       </p>
     </section>
-  );
-}
-
-export interface TotalsRowProps {
-  workouts: number;
-  minutes: number;
-  calories: number;
-}
-
-/** All-time workouts, minutes and calories: three numerals over their kickers, ruled off from each other. */
-export function TotalsRow({ workouts, minutes, calories }: TotalsRowProps) {
-  const { t, locale } = useT();
-  return (
-    <div className="grid grid-cols-3 divide-x divide-border">
-      <StatTile
-        label={t('app.statsTotalWorkouts')}
-        value={formatNumber(locale, workouts)}
-        className="pl-0"
-      />
-      <StatTile label={t('app.statsTotalMinutes')} value={formatNumber(locale, minutes)} />
-      <StatTile
-        label={t('app.statsTotalKcal')}
-        value={formatNumber(locale, calories)}
-        className="pr-0"
-      />
-    </div>
   );
 }

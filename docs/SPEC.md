@@ -356,7 +356,10 @@ App (HashRouter under `/app/#/`): `/auth`, `/onboarding`, `/` (home), `/courses`
 Products: a **course** is bought once and kept forever (`purchases`); a **subscription**
 (`subscriptions`, monthly or annual) lists every course through `my_entitlements` while its paid
 period runs, and is activated by the coach or by the Prodamus webhook; an **hour with the coach**
-(`content/site/booking.ts`) is the only product that uses his time.
+(`content/site/booking.ts`) is the only product that uses his time. `/book` is drawn as the price:
+the coach's photograph and his name, one line about what the session is, the format as a pill, and
+then each length as one display-size figure — its price — over what it includes and one button.
+No labelled rows and no numbered «how it works» list: the three buttons are the three steps.
 
 The same `/app/` build runs inside Telegram as a Mini App (`src/lib/telegram/webapp.ts`): the SDK
 is loaded only when Telegram opened the page, Telegram's back button follows the route, and links
@@ -459,24 +462,44 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    stopped** — same step, same countdown. The step's clock is derived from the session clock
    (`stepStartedMs` in the store), so pausing, walking out and closing the app all freeze it the
    same way, and Home offers a **Продолжить** strip naming the movement it will pick up on.
-7. **Summary + feedback**: the time on the crosshair plate, then calories and completion; RPE slider 1–10 with descriptors;
-   feeling chips (great / ok / hard / pain); notes; "Save" → adaptation message ("next time +5%").
+7. **Summary + feedback**: «Готово!» at the size of the screen, under a kicker naming the day and
+   the programme; **one warm line computed from the real streak** and never invented — «Четвёртый
+   день подряд. Так и растёт форма.», the ordinal in words to the tenth day and «11-й день» after
+   it, and no line at all when there is no streak to report or the session is being re-read from
+   the server; the stars; then three numerals on a rule — minutes, repetitions, kcal, with how much
+   of the plan was done standing in for repetitions on a day that counts none. «Как зашло?» under
+   it: RPE as **one row of ten circles** filled up to the choice, with the Borg descriptor under
+   them, feeling chips (great / ok / hard / pain) and a note. «Save» → the achievements just
+   unlocked, the adaptation message («next time +5%»), «К пути →» and «Поделиться». The whole
+   session block by block, the test results and the benchmark are behind «Подробности».
 8. **«Прогресс»** (the fourth tab): a poster, and then the sections. This paragraph used to argue
    the opposite — that the tab must be «Ты», because it is not a report but a picture of the
    athlete — and the owner has overruled it: «Ты» on a tab reads as a label for a person rather
    than for a place to go, and «Прогресс» is what someone is actually looking for when they tap
    it. The screen itself does not change, and the argument still holds for what is _on_ it: the
    poster is the paper surface
-   running past both gutters — the wordmark and the level in one row, the streak as one very large
-   numeral with what it counts under it, and workouts / minutes / kcal on a ruled line — built so
-   that a screenshot of it is already a story. Under it: **today's steps as one row with a ring**,
-   the one number still owed on a tab otherwise made of finished things; then the achievements
-   (earned in the grid, the rest in a row swiped sideways) and the top of this week's table.
-   Everything
+   running past both gutters — the wordmark and the level in one row, the avatar (to the profile)
+   and «Обновить» beside them, the streak as one very large numeral with what it counts under it,
+   and workouts / minutes / kcal on a ruled line — built so that a screenshot of it is already a
+   story. A streak at risk is a pill beside «дней подряд», not a paragraph. Then, on the dark
+   ground: **«Цель недели» as seven circles**, Monday to Sunday, a ✓ on every day that counted and
+   the weekday's letter on the rest, scored against the course's own `sessionsPerWeek`; **«Взято»
+   as a row of big circles** swiped sideways, earned ones white with a ✓ and the rest a hairline
+   ring filling with their progress; **today's steps as one row with a ring**, the one number still
+   owed on a tab otherwise made of finished things; and the top of this week's table. Everything
    else — the week's load, points by week, the streak calendar, steps, personal records, the level
-   card — is behind «Подробности», collapsed: a chart answers a question nobody arrives with.
-9. **Leaderboard**: tabs week / all-time, course filter, top-100 with own row pinned.
-10. **Steps**: log today's steps (manual input; explain why), history, goal 7000. A day may also
+   card — is behind «Подробности», collapsed (two columns from `md`): a chart answers a question
+   nobody arrives with.
+9. **Leaderboard**: tabs week / all-time, course filter, top-100 with own row pinned. A rank is a
+   **circle**, drawn exactly as the challenge's `BoardRow` draws it — the leader filled, your own
+   row a white ring, the podium a stronger hairline — but filled in white, never the challenge's
+   orange: this table belongs to no programme. No avatar on the row (a rank is a circle and a
+   person is a circle; two per row read as a pair of controls) and no «оч.» after the points.
+10. **Steps**: one big numeral inside the goal ring — the number being typed is the figure — with
+    the goal as a pill under it that turns white and carries the points the moment it is crossed,
+    and the quick adds as chips. The last fourteen days are **two rows of seven circles**, a ✓ where
+    the goal was reached and the weekday's letter where it was not, the day of the month under each;
+    every circle opens the edit sheet. Goal 7000. A day may also
     carry a screenshot of the athlete's own step counter — attached the moment it is picked, held
     in the private `proofs` bucket, visible to the athlete and the coach and nobody else. It is
     evidence, not arithmetic: points still come from the number.

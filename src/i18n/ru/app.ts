@@ -390,10 +390,22 @@ export const app = {
 
   // Итоги
   summaryEyebrow: 'Итоги',
-  summaryTitle: 'Тренировка завершена',
-  summaryTime: 'Время',
-  summaryCalories: 'Калории',
+  // The prototype's «Готово!»: one word the size of the screen, then one warm line about the
+  // streak, then three figures. The ordinal is a word up to the tenth day — a figure that size
+  // would fight the three under it — and «11-й день» after that.
+  summaryDone: 'Готово!',
+  summaryStreakOne: 'Первый день. Начало положено.',
+  summaryStreakWord: '{ordinal} день подряд. Так и растёт форма.',
+  summaryStreakNum: '{n}-й день подряд. Так и растёт форма.',
+  summaryOrdinals: 'Второй|Третий|Четвёртый|Пятый|Шестой|Седьмой|Восьмой|Девятый|Десятый',
+  summaryMinutes: 'Минут',
+  summaryReps: 'Повторов',
+  summaryKcal: 'Ккал',
+  // The third figure's stand-in on a day with no rep-counted work (a plank test, растяжка).
   summaryCompletion: 'Выполнено',
+  // The fold over the per-block, per-test and benchmark record, as on «Прогресс».
+  summaryDetailsShow: 'Подробности',
+  summaryDetailsHide: 'Свернуть',
   summaryBlocks: 'По блокам',
   summarySkipped: 'пропущено',
   summaryTests: 'Результаты теста',
@@ -403,10 +415,9 @@ export const app = {
   summaryRoundsMany: '{n} кругов',
   summaryExtraReps: '+{n} повт.',
   summaryPartial: 'частично',
-  summaryFeedbackTitle: 'Как прошло?',
+  // The one link under the button; it opens the RPE row and the note.
+  summaryFeedbackTitle: 'Как зашло?',
   summaryRpeLabel: 'Нагрузка (RPE)',
-  summaryRpeMin: 'очень легко',
-  summaryRpeMax: 'предел',
   summaryFeelingLabel: 'Самочувствие',
   summaryNoteLabel: 'Заметка (необязательно)',
   summaryNotePlaceholder: 'Что стоит запомнить: сон, боль, что не пошло…',
@@ -419,15 +430,14 @@ export const app = {
   summaryVolumeSame: 'Объём без изменений',
   summarySafetyTitle: 'Береги себя',
   summaryAchievementsTitle: 'Новые достижения',
-  summaryBackToCourse: 'К курсу',
-  summaryShare: 'Поделиться результатом',
+  summaryBackToCourse: 'К пути',
+  summaryShare: 'Поделиться',
   summaryShareCopied: 'Скопировано в буфер обмена',
   summaryShareText:
     '{workout}: {time}, {points} очков, {kcal} ккал, выполнено {completion}% — Forma',
   summaryNotFoundTitle: 'Тренировка не найдена',
   summaryNotFoundBody: 'Не нашли эту тренировку. Возможно, она сохранена с другого устройства.',
   summaryLoadErrorTitle: 'Не удалось загрузить итоги',
-  summaryAlreadySaved: 'Эти итоги уже сохранены.',
   summaryNoResultsTitle: 'Результаты недоступны',
   summaryNoResultsBody: 'Эта тренировка не была завершена на этом устройстве, поэтому итогов нет.',
 
@@ -435,12 +445,18 @@ export const app = {
   statsTitle: 'Прогресс',
   statsPosterLabel: 'Твой прогресс',
   statsStreakDays: '{days} подряд',
-  statsStreakBest: 'Лучшая серия — {n}',
+  // The pill beside «дней подряд» while the day is open and nothing is logged yet.
+  statsTodayNotCounted: 'Сегодня не засчитано',
   statsDetailsShow: 'Подробности',
   statsDetailsHide: 'Свернуть',
+  // Over the seven circles: with a course, its sessions per week are the goal; without one the
+  // same row is simply the week.
+  statsWeekGoal: 'Цель недели',
+  statsWeekDayDone: '{date} — засчитан',
+  statsWeekDayEmpty: '{date} — пусто',
+  statsWeekDayAhead: '{date} — впереди',
   statsWeekBoardTitle: 'Кто впереди',
   statsLevelTitle: 'Уровень',
-  statsAchievementsLocked: 'Ещё не взято',
   statsLeaderboard: 'Рейтинг',
   statsRefresh: 'Обновить',
   statsRefreshError: 'Не удалось обновить. Показываем последние сохранённые данные.',
@@ -481,7 +497,6 @@ export const app = {
   statsAchievementsCount: '{done} из {total}',
   statsAchievementUnlocked: 'Открыто',
   statsAchievementLocked: 'Закрыто',
-  statsTotalsTitle: 'Всего',
   statsTotalWorkouts: 'Тренировок',
   statsTotalMinutes: 'Минут',
   statsTotalKcal: 'ккал',
@@ -495,7 +510,6 @@ export const app = {
   leaderboardGlobal: 'Общий',
   leaderboardRankLabel: 'Место {n}',
   leaderboardYou: 'Это ты',
-  leaderboardPoints: '{n} оч.',
   leaderboardEmptyTitle: 'Очков пока нет',
   leaderboardEmptyWeek: 'Стань первым на этой неделе: заверши тренировку или запиши шаги.',
   leaderboardEmptyAll: 'Здесь пока никто не набрал очков. Твоя первая тренировка откроет таблицу.',
@@ -512,14 +526,12 @@ export const app = {
 
   // Шаги
   stepsTitle: 'Шаги',
-  stepsTodayLabel: 'Сегодня',
   stepsInputLabel: 'Шаги за сегодня',
   stepsRingLabel: 'Прогресс к цели по шагам',
-  stepsOfGoal: 'из {goal}',
+  // The goal as a pill under the ring; at the goal the pill turns white and carries the points.
+  stepsGoalPill: 'Цель {goal}',
   stepsAddLabel: 'Добавить {n} шагов',
-  stepsGoalReached: 'Цель достигнута',
   stepsPointsPreview: '+{n} оч.',
-  stepsPointsBelow: 'До цели ещё {n} шагов — очки начинаются с неё.',
   stepsInvalid: 'Введи целое число от 0 до {max}.',
   stepsWhyTitle: 'Почему вручную?',
   stepsWhyBody:
@@ -530,6 +542,9 @@ export const app = {
   stepsProofOpen: 'Открыть скриншот',
   stepsProofError: 'Не получилось загрузить скриншот',
   stepsHistoryTitle: 'Последние 14 дней',
+  // What one circle of the history says to a screen reader: the day, then its count or that
+  // nothing was logged, then that a tap edits it.
+  stepsHistoryDay: '{date}: {steps} шагов',
   stepsNotLogged: 'Не записано',
   stepsEdit: 'Изменить',
   stepsEditTitle: 'Шаги за {date}',
@@ -580,16 +595,7 @@ export const app = {
   // Book a session
   bookTitle: 'Форма один на один',
   bookLead: 'Час про твои тренировки: техника, программа под твою цель, твои вопросы.',
-  bookFormatLabel: 'Формат',
-  bookDurationLabel: 'Длительность',
   bookDuration: '{n} мин',
-  bookPriceLabel: 'Стоимость',
-  bookChoose: 'Выбери формат',
-  bookHow: 'Как это работает',
-  bookStep1: 'Оплата картой на странице оплаты',
-  bookStep2: 'Выбор времени в календаре сразу после оплаты',
-  bookStep3: 'Ссылка на звонок придёт на {email}',
-  bookStep3Fallback: 'твою почту',
   bookPay: 'Оплатить {price}',
   bookPickTime: 'Выбрать время',
   bookContact: 'Написать тренеру',
