@@ -1,44 +1,42 @@
 /**
- * The onboarding assessment: five movements, one minute each, about ten minutes in all.
+ * The onboarding assessment: five movements, a number for each, about three minutes in all.
  *
- * The coach's first rule about day one is «никаких максимумов» (docs/COACH_RULES.md): no max
- * push-up test, no max squats, no five-minute plank. The onboarding used to ask for exactly those
- * three, one screen each, each screen a heading, a lead, a timer and a number field — and all three
- * were max efforts on a body that has not trained yet.
+ * The coach's first rule about day one is «никаких максимумов» (docs/COACH_RULES.md). That rule
+ * survived two rounds of this screen. The first asked for max push-ups, max squats and a max plank,
+ * one screen each — three max efforts on a body that has not trained yet. The second replaced them
+ * with a minute per movement at a comfortable pace, which was gentler but still a performance: a
+ * ring draining on screen, a horn at zero, a wake lock, and a person on a mat being timed.
  *
- * So it is one set now, and the instruction is the opposite of a test: do what you do in a minute at
- * a pace that is comfortable, and stop when the technique goes. A screen before the first movement
- * says why in the athlete's own interest — a number squeezed out today is a programme that is too
- * heavy tomorrow — because this is the one instruction the whole thing depends on, and an
- * instruction that arrives beside a running clock is an instruction nobody reads.
+ * The owner cut the last of it: «убери таймер в онбординге совсем. Нам нужно просто чтобы он
+ * лайтово прошли и поделились примерно сколько раз они могут сделать не умирая». So nothing is
+ * timed and nothing is performed. Each movement is its clip, its name, and one question — roughly
+ * how many of these can you do without going to failure — and the answer is whatever the athlete
+ * says it is.
  *
- * The minute is a cap, not a target. A beginner reaches the end of what they can do inside it, so
- * their number is the same number a max-effort protocol would have produced, without asking for a
- * max effort; a stronger athlete is cut off by the clock and is under-reported, which lowers the
- * starting load — the safe direction, and the one the coach asks for.
+ * **What that does to the fitness index, honestly.** Three of the five feed it
+ * (docs/TRAINING_SCIENCE.md §2); the other two are personal records under `benchmarkKey`. Two of
+ * the three get *closer* to what their tables expect: `pushups` is documented as max consecutive
+ * push-ups and the minute was only ever a proxy for it, and `PLANK_ANCHORS` run to 180 seconds
+ * while the minute capped every answer at 60 — a strong plank could not be reported at all. The
+ * third, `squats60s`, is the one that loosens: its anchors were built for reps in sixty seconds
+ * and now read a self-reported comfortable set, which for most people runs a little higher. The
+ * field keeps its name because renaming it would migrate stored profiles for no reader's benefit,
+ * and the loosening is written down here rather than left to be discovered. Task #41 — the coach's
+ * own ranges as data — is where the tables stop being borrowed and this stops mattering.
  *
- * Three of the five feed the fitness index (docs/TRAINING_SCIENCE.md §2) through `maps`; the air
- * squat is its own protocol exactly (reps in 60 s). The other two are recorded as personal records
- * under `benchmarkKey`, so nothing here is asked for and then thrown away — they show up in the
- * records list and are the baseline the same five movements are re-measured against later.
- *
- * The plank is the one measured in seconds rather than counts (`metric`), so it is the one movement
- * that can end before the clock does: the athlete stops when the back stops being straight and the
- * screen records how long that took. Its window is the same minute as everything else, which caps
- * the component it feeds — that cap is the point, not a rounding error, since the alternative is
- * the maximum hold the rule above rules out.
+ * A self-reported number is also the honest shape of the question. The minute never measured
+ * anything the athlete did not choose either: they set the pace and stopped when the technique
+ * went. All that is gone is the clock watching them do it.
  *
  * Editing this list: every `exerciseId` must exist in `content/exercises/` (a test enforces it),
- * every `benchmarkKey` must match `[a-z0-9_]{2,60}`, and the order is the order they are performed.
+ * every `benchmarkKey` must match `[a-z0-9_]{2,60}`, and the order is the order they are asked.
  */
 export interface AssessmentMove {
   /** Exercise id from the library — its clip, its name and its how-to are shown. */
   exerciseId: string;
-  /** The work window, seconds. */
-  seconds: number;
   /**
-   * What the athlete reports. `reps` is a count made during the window; `seconds` is a hold, which
-   * the athlete ends themselves and the screen times for them.
+   * What the athlete reports: a count of repetitions, or a hold in seconds. Both are estimates
+   * they give, not measurements the screen takes.
    */
   metric: 'reps' | 'seconds';
   /** Which field of the training profile's `tests` the number becomes. */
@@ -57,32 +55,29 @@ export interface AssessmentMove {
   kneeExerciseId?: string;
 }
 
-/** One minute per movement. */
-export const ASSESSMENT_WORK_SEC = 60;
-
-/** Roughly how long the whole thing takes, including reading each movement and resting after it. */
-export const ASSESSMENT_TOTAL_MIN = 10;
+/**
+ * Roughly how long it takes to watch five clips and answer five questions. Nothing is performed on
+ * the screen, so this is reading time, not training time.
+ */
+export const ASSESSMENT_TOTAL_MIN = 3;
 
 export const ASSESSMENT_MOVES: readonly AssessmentMove[] = [
-  { exerciseId: 'air_squat', seconds: ASSESSMENT_WORK_SEC, metric: 'reps', maps: 'squats60s' },
+  { exerciseId: 'air_squat', metric: 'reps', maps: 'squats60s' },
   {
     exerciseId: 'push_up',
-    seconds: ASSESSMENT_WORK_SEC,
     metric: 'reps',
     maps: 'pushups',
     kneeExerciseId: 'knee_push_up',
   },
   {
     exerciseId: 'sit_up',
-    seconds: ASSESSMENT_WORK_SEC,
     metric: 'reps',
     benchmarkKey: 'situps_60s',
   },
   {
     exerciseId: 'reverse_lunge',
-    seconds: ASSESSMENT_WORK_SEC,
     metric: 'reps',
     benchmarkKey: 'lunges_60s',
   },
-  { exerciseId: 'plank', seconds: ASSESSMENT_WORK_SEC, metric: 'seconds', maps: 'plankSec' },
+  { exerciseId: 'plank', metric: 'seconds', maps: 'plankSec' },
 ];

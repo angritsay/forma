@@ -5,6 +5,7 @@
  */
 import { useCallback, useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router';
+import { clsx } from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -20,6 +21,7 @@ import { useToast } from '@/components/ui/Toast';
 import { plural, type TKey } from '@/i18n/index';
 import {
   addPurchase,
+  listPeople,
   listPurchases,
   listSubscriptions,
   setPurchaseStatus,
@@ -27,6 +29,7 @@ import {
 } from '@/lib/api/admin';
 import { isAppError, toAppError, type AppError } from '@/lib/api/errors';
 import type {
+  PersonRow,
   PurchaseRow,
   PurchaseStatus,
   SubscriptionPlan,
@@ -50,6 +53,7 @@ import {
   type SubStatusFilter,
 } from '@/app/features/admin/model';
 import { PurchaseList, STATUS_LABEL } from '@/app/features/admin/PurchaseList';
+import { PeopleList } from '@/app/features/admin/PeopleList';
 import { useDebounced } from '@/app/features/admin/useDebounced';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 
@@ -60,7 +64,7 @@ interface PendingAction {
   status: PurchaseStatus;
 }
 
-type Tab = 'purchases' | 'subscriptions';
+type Tab = 'purchases' | 'subscriptions' | 'people';
 
 interface PendingSubAction {
   row: SubscriptionRow;
@@ -127,6 +131,42 @@ export default function AdminScreen() {
   const [subAddError, setSubAddError] = useState<string | null>(null);
   const subscriptions = tab === 'subscriptions';
 
+  /*
+   * The people list. Separate state rather than a third branch of the purchases one: it answers a
+   * different question (who exists) from a different source, and folding them together is how a
+   * screen ends up showing one list's empty state over the other list's rows.
+   *
+   * `grantTo` is the address a sheet was opened with. It is cleared when the sheet closes so that
+   * the next «Добавить вручную» from the toolbar starts empty — the manual path still has to work
+   * for somebody who has never signed in.
+   */
+  const [people, setPeople] = useState<PersonRow[]>([]);
+  const [peopleStatus, setPeopleStatus] = useState<ListStatus>('loading');
+  const [peopleError, setPeopleError] = useState<AppError | null>(null);
+  const [grantTo, setGrantTo] = useState<string>('');
+  const isPeople = tab === 'people';
+
+  useEffect(() => {
+    if (admin !== true || !isPeople) return;
+    let alive = true;
+    setPeopleStatus('loading');
+    setPeopleError(null);
+    listPeople(debouncedSearch)
+      .then((data) => {
+        if (!alive) return;
+        setPeople(data);
+        setPeopleStatus('ready');
+      })
+      .catch((e: unknown) => {
+        if (!alive) return;
+        setPeopleError(toAppError(e));
+        setPeopleStatus('error');
+      });
+    return () => {
+      alive = false;
+    };
+  }, [admin, isPeople, debouncedSearch, tick]);
+
   useEffect(() => {
     if (admin !== true || !subscriptions) return;
     let alive = true;
@@ -149,7 +189,7 @@ export default function AdminScreen() {
   }, [admin, subscriptions, subFilter, debouncedSearch, tick]);
 
   useEffect(() => {
-    if (admin !== true) return;
+    if (admin !== true || isPeople) return;
     let alive = true;
     setStatus('loading');
     setError(null);
@@ -167,7 +207,7 @@ export default function AdminScreen() {
     return () => {
       alive = false;
     };
-  }, [admin, filter, debouncedSearch, tick]);
+  }, [admin, isPeople, filter, debouncedSearch, tick]);
 
   const reload = useCallback(() => setTick((n) => n + 1), []);
 
@@ -305,20 +345,64 @@ export default function AdminScreen() {
   }
   if (admin === false) return <Navigate to="/profile" replace />;
 
-  const countWord = subscriptions
-    ? plural(locale, subRows.length, {
-        one: t('app.adminSubCountOne', { n: subRows.length }),
-        few: t('app.adminSubCountFew', { n: subRows.length }),
-        many: t('app.adminSubCountMany', { n: subRows.length }),
+  const countWord = isPeople
+    ? plural(locale, people.length, {
+        one: t('app.adminPeopleCountOne', { n: people.length }),
+        few: t('app.adminPeopleCountFew', { n: people.length }),
+        many: t('app.adminPeopleCountMany', { n: people.length }),
       })
-    : plural(locale, rows.length, {
-        one: t('app.adminCountOne', { n: rows.length }),
-        few: t('app.adminCountFew', { n: rows.length }),
-        many: t('app.adminCountMany', { n: rows.length }),
-      });
+    : subscriptions
+      ? plural(locale, subRows.length, {
+          one: t('app.adminSubCountOne', { n: subRows.length }),
+          few: t('app.adminSubCountFew', { n: subRows.length }),
+          many: t('app.adminSubCountMany', { n: subRows.length }),
+        })
+      : plural(locale, rows.length, {
+          one: t('app.adminCountOne', { n: rows.length }),
+          few: t('app.adminCountFew', { n: rows.length }),
+          many: t('app.adminCountMany', { n: rows.length }),
+        });
 
   let body: React.ReactNode;
-  if (subscriptions) {
+  if (isPeople) {
+    if (peopleStatus === 'loading') {
+      body = <ListSkeleton />;
+    } else if (peopleStatus === 'error') {
+      body = (
+        <EmptyState
+          title={t('app.adminErrorTitle')}
+          description={errorText(peopleError)}
+          action={
+            <Button size="lg" onClick={reload}>
+              {t('common.retry')}
+            </Button>
+          }
+        />
+      );
+    } else if (people.length === 0) {
+      body = (
+        <EmptyState title={t('app.adminPeopleEmpty')} description={t('app.adminPeopleEmptyBody')} />
+      );
+    } else {
+      body = (
+        <PeopleList
+          rows={people}
+          onGrantCourse={(row) => {
+            setGrantTo(row.email);
+            setAddOpen(true);
+          }}
+          {...(PLANS_ENABLED
+            ? {
+                onGrantSubscription: (row: PersonRow) => {
+                  setGrantTo(row.email);
+                  setSubAddOpen(true);
+                },
+              }
+            : {})}
+        />
+      );
+    }
+  } else if (subscriptions) {
     if (subStatus === 'loading') {
       body = <ListSkeleton />;
     } else if (subStatus === 'error') {
@@ -375,23 +459,31 @@ export default function AdminScreen() {
   return (
     <Screen
       header={header}
+      /*
+       * No sticky button on «Люди»: there the action belongs to a row — «дать этому человеку» —
+       * and a screen-wide «+ Добавить покупку» under a list of people is asking the coach to pick
+       * somebody twice. The manual path, for granting to an address that has never signed in, is
+       * still on the other two tabs, where it is the only way in.
+       */
       footer={
-        <Button
-          size="lg"
-          fullWidth
-          icon={<Glyph size={16}>+</Glyph>}
-          onClick={() => {
-            if (subscriptions) {
-              setSubAddError(null);
-              setSubAddOpen(true);
-            } else {
-              setAddError(null);
-              setAddOpen(true);
-            }
-          }}
-        >
-          {subscriptions ? t('app.adminSubAdd') : t('app.adminAdd')}
-        </Button>
+        isPeople ? undefined : (
+          <Button
+            size="lg"
+            fullWidth
+            icon={<Glyph size={16}>+</Glyph>}
+            onClick={() => {
+              if (subscriptions) {
+                setSubAddError(null);
+                setSubAddOpen(true);
+              } else {
+                setAddError(null);
+                setAddOpen(true);
+              }
+            }}
+          >
+            {subscriptions ? t('app.adminSubAdd') : t('app.adminAdd')}
+          </Button>
+        )
       }
     >
       <div className="flex flex-col gap-4 py-2">
@@ -430,6 +522,7 @@ export default function AdminScreen() {
             options={[
               { value: 'purchases', label: t('app.adminTabPurchases') },
               { value: 'subscriptions', label: t('app.adminTabSubscriptions') },
+              { value: 'people', label: t('app.adminTabPeople') },
             ]}
           />
         ) : null}
@@ -444,10 +537,12 @@ export default function AdminScreen() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        {/* No status chips on «Люди»: a person has no status to filter by, and leaving the
+            purchases' row under the people list offered a filter that changed nothing. */}
         <div
           role="radiogroup"
           aria-label={t('app.adminFilterLabel')}
-          className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-1"
+          className={clsx('-mx-6 flex gap-2 overflow-x-auto px-6 pb-1', isPeople && 'hidden')}
         >
           {subscriptions
             ? SUB_STATUS_FILTERS.map((f) => (
@@ -475,9 +570,13 @@ export default function AdminScreen() {
         </div>
         <div className="flex items-baseline justify-between gap-3 border-t border-border pt-5 pb-1">
           <h2 className="font-display text-xl">
-            {subscriptions ? t('app.adminSubscriptions') : t('app.adminPurchases')}
+            {isPeople
+              ? t('app.adminTabPeople')
+              : subscriptions
+                ? t('app.adminSubscriptions')
+                : t('app.adminPurchases')}
           </h2>
-          {(subscriptions ? subStatus : status) === 'ready' ? (
+          {(isPeople ? peopleStatus : subscriptions ? subStatus : status) === 'ready' ? (
             <span className="eyebrow tabular">{countWord}</span>
           ) : null}
         </div>
@@ -511,9 +610,13 @@ export default function AdminScreen() {
       />
       <AddPurchaseSheet
         open={addOpen}
+        prefillEmail={grantTo}
         busy={adding}
         error={addError}
-        onClose={() => setAddOpen(false)}
+        onClose={() => {
+          setAddOpen(false);
+          setGrantTo('');
+        }}
         onSubmit={(email, courseId, note) => void add(email, courseId, note)}
       />
       <Modal
@@ -547,9 +650,13 @@ export default function AdminScreen() {
       />
       <AddSubscriptionSheet
         open={subAddOpen}
+        prefillEmail={grantTo}
         busy={subAdding}
         error={subAddError}
-        onClose={() => setSubAddOpen(false)}
+        onClose={() => {
+          setSubAddOpen(false);
+          setGrantTo('');
+        }}
         onSubmit={(email, plan, until, note) => void addSubscription(email, plan, until, note)}
       />
     </Screen>

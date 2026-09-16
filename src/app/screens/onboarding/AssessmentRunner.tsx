@@ -26,29 +26,25 @@
  * context is unlocked by the tap on «Начать» — browsers give sound to a gesture and to nothing
  * else — and the wake lock keeps the phone from dimming mid-minute.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { IconButton } from '@/components/ui/IconButton';
 import { Input } from '@/components/ui/Input';
-import { RingProgress } from '@/components/ui/RingProgress';
-import { formatClock } from '@/i18n/index';
 import { EXERCISE_BY_ID } from '@/content/registry';
 import { DisplayTitle } from '@/app/features/home/DisplayTitle';
 import { exerciseVideoRef } from '@/app/features/player/model';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
-import { playCue, unlockAudio } from '@/app/features/player/sound';
-import { useWakeLock } from '@/app/features/player/useWakeLock';
 import { ExerciseStill } from '@/components/media/ExerciseStill';
 import { useT } from '@/app/hooks/useT';
-import { useCountdown } from '@/app/hooks/useTimer';
 import { parseIntField, REPS_MAX } from './draft';
 import { ASSESSMENT_MOVES } from '@content/site/assessment';
 
-/** The last N seconds are ticked. */
-const TICK_FROM_SEC = 3;
-
-type Phase = 'ready' | 'work' | 'count';
+/**
+ * The ceiling on a hold, in seconds. Not a window any more — nothing is timed — just the largest
+ * answer worth accepting, a little past the 180 seconds where `PLANK_ANCHORS` already reads 100.
+ */
+const HOLD_MAX = 600;
 
 export interface AssessmentRunnerProps {
   /** Whether the push-ups are done on the knees; the index scores the two differently. */
@@ -117,11 +113,8 @@ export function AssessmentRunner({
 }: AssessmentRunnerProps) {
   const { t, l, locale } = useT();
   const [index, setIndex] = useState(0);
-  const [phase, setPhase] = useState<Phase>('ready');
   const [reps, setReps] = useState('');
   const move = ASSESSMENT_MOVES[index];
-  const total = move?.seconds ?? 0;
-  const timer = useCountdown(total);
   /*
    * Show the movement being done, not the movement the entry is named after.
    *
@@ -133,41 +126,8 @@ export function AssessmentRunner({
   const shownId = move ? (onKnees && move.kneeExerciseId) || move.exerciseId : undefined;
   const videoUrl = useMediaUrl(exerciseVideoRef(shownId, locale));
   const exercise = shownId ? EXERCISE_BY_ID.get(shownId) : undefined;
-  const ticked = useRef<number | null>(null);
-
-  useWakeLock(phase === 'work');
-
-  // 3, 2, 1 — once per second, however often the clock is polled.
-  useEffect(() => {
-    if (phase !== 'work') return;
-    const left = timer.remainingSec;
-    if (ticked.current === left) return;
-    ticked.current = left;
-    if (left > 0 && left <= TICK_FROM_SEC) playCue('tick');
-  }, [phase, timer.remainingSec]);
-
-  useEffect(() => {
-    if (phase !== 'work' || !timer.done) return;
-    playCue('horn');
-    setPhase('count');
-  }, [phase, timer.done]);
 
   if (!move || !exercise) return null;
-
-  const start = () => {
-    unlockAudio();
-    ticked.current = null;
-    setPhase('work');
-    timer.restart();
-  };
-
-  /** A hold ends when the back does: the screen records how far into the window that was. */
-  const stopHold = () => {
-    setReps(String(Math.max(0, total - timer.remainingSec)));
-    timer.pause();
-    playCue('horn');
-    setPhase('count');
-  };
 
   const accept = () => {
     const value = parseIntField(reps, maxAnswer);
@@ -179,14 +139,11 @@ export function AssessmentRunner({
     }
     setIndex(index + 1);
     setReps('');
-    setPhase('ready');
-    timer.reset();
   };
 
   const name = l(exercise.name);
   const hold = move.metric === 'seconds';
-  /* A count has no ceiling worth naming; a hold cannot outlast the window that timed it. */
-  const maxAnswer = hold ? move.seconds : REPS_MAX;
+  const maxAnswer = hold ? HOLD_MAX : REPS_MAX;
   const last = index + 1 >= ASSESSMENT_MOVES.length;
 
   return (
@@ -200,7 +157,7 @@ export function AssessmentRunner({
        */}
       <header className="relative z-10 flex h-14 items-center justify-between px-3 pt-[var(--safe-top)]">
         <div className="w-11">
-          {index === 0 && phase === 'ready' ? (
+          {index === 0 ? (
             <IconButton label={t('common.back')} icon="back" variant="on-art" onClick={onCancel} />
           ) : null}
         </div>
@@ -225,85 +182,55 @@ export function AssessmentRunner({
         <div className="relative mx-auto flex w-full max-w-[560px] flex-col items-center gap-5 px-6 pt-6 pb-[calc(var(--safe-bottom)+16px+var(--demo-inset,0px))] text-center">
           <DisplayTitle as="h2" text={name} className="text-3xl text-paper" />
 
-          {phase === 'ready' ? (
-            <>
-              {/* One line, not the paragraph that stood here: the screen before this one has
-                  already said not to squeeze out a maximum, and beside a clip nobody reads more. */}
-              <p className="text-[14px] text-paper/70">
-                {hold ? t('app.onbAssessInstructionHold') : t('app.onbAssessInstruction')}
-              </p>
-              {move.kneeExerciseId ? (
-                /* «С колен» is a choice, so it is a chip that selects rather than a checkbox that
-                   labels: the same control the rest of the app uses to pick a variant. */
-                <Chip
-                  role="checkbox"
-                  aria-checked={onKnees}
-                  selected={onKnees}
-                  tone="on-art"
-                  onClick={() => onKneesChange(!onKnees)}
-                >
-                  {t('app.onbAssessOnKnees')}
-                </Chip>
-              ) : null}
-              <Button size="lg" fullWidth onClick={start}>
-                {t('common.start')}
-              </Button>
-            </>
+          {/* One line, not the paragraph that stood here: the screen before this one has already
+              said not to squeeze out a maximum, and beside a clip nobody reads more. */}
+          <p className="text-[14px] text-paper/70">
+            {hold ? t('app.onbAssessInstructionHold') : t('app.onbAssessInstruction')}
+          </p>
+
+          {move.kneeExerciseId ? (
+            /* «С колен» is a choice, so it is a chip that selects rather than a checkbox that
+               labels: the same control the rest of the app uses to pick a variant. */
+            <Chip
+              role="checkbox"
+              aria-checked={onKnees}
+              selected={onKnees}
+              tone="on-art"
+              onClick={() => onKneesChange(!onKnees)}
+            >
+              {t('app.onbAssessOnKnees')}
+            </Chip>
           ) : null}
 
-          {phase === 'work' ? (
-            <>
-              {/*
-               * The ring drains with the minute, white because no course is in scope, with the
-               * clock inside it — the prototype's timer («0:37» in a ring over the clip). The ring
-               * is what makes «0:12» mean something: a minute-long window and a twenty-second one
-               * read the same in digits and nothing alike as an arc.
-               */}
-              <RingProgress
-                value={total > 0 ? timer.remainingSec / total : 0}
-                size={200}
-                stroke={6}
-                tone="primary"
-                label={name}
-                valueText={formatClock(timer.remainingSec)}
-              >
-                <span aria-live="off" className="numeral tabular text-[52px] leading-none">
-                  {formatClock(timer.remainingSec)}
-                </span>
-              </RingProgress>
-              {hold ? (
-                <Button size="lg" fullWidth onClick={stopHold}>
-                  {t('app.onbAssessStop')}
-                </Button>
-              ) : null}
-            </>
-          ) : null}
-
-          {phase === 'count' ? (
-            <>
-              <Input
-                type="number"
-                inputMode="numeric"
-                min={0}
-                max={maxAnswer}
-                aria-label={hold ? t('app.onbAssessHoldLabel') : t('app.onbAssessCountLabel')}
-                placeholder="0"
-                autoFocus
-                className="numeral text-center text-3xl"
-                wrapperClassName="w-full"
-                value={reps}
-                onChange={(e) => setReps(e.target.value)}
-              />
-              <Button
-                size="lg"
-                fullWidth
-                disabled={parseIntField(reps, maxAnswer) === undefined}
-                onClick={accept}
-              >
-                {last ? t('common.done') : t('common.continue')}
-              </Button>
-            </>
-          ) : null}
+          {/*
+           * The answer, and the whole of the screen's business with the athlete. There is no phase
+           * before this one any more: no «Начать», no ring draining, no horn. They watch the clip,
+           * they say roughly how many they could do without going to failure, they move on.
+           *
+           * `key` on the field so the number does not follow them into the next movement — without
+           * it React keeps the same input mounted across a change of `index` and the value with it.
+           */}
+          <Input
+            key={move.exerciseId}
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={maxAnswer}
+            aria-label={hold ? t('app.onbAssessHoldLabel') : t('app.onbAssessCountLabel')}
+            placeholder="0"
+            className="numeral text-center text-3xl"
+            wrapperClassName="w-full"
+            value={reps}
+            onChange={(e) => setReps(e.target.value)}
+          />
+          <Button
+            size="lg"
+            fullWidth
+            disabled={parseIntField(reps, maxAnswer) === undefined}
+            onClick={accept}
+          >
+            {last ? t('common.done') : t('common.continue')}
+          </Button>
         </div>
       </div>
     </div>

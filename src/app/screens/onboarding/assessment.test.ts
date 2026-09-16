@@ -40,7 +40,6 @@ describe('onboarding assessment', () => {
     const ids = ASSESSMENT_MOVES.map((m) => m.exerciseId);
     expect(new Set(ids).size).toBe(ids.length);
     for (const move of ASSESSMENT_MOVES) {
-      expect(move.seconds).toBeGreaterThan(0);
       expect(['reps', 'seconds']).toContain(move.metric);
       // A count is either an engine input or a personal record; a count that is neither is data
       // collected from someone and then thrown away.
@@ -54,10 +53,11 @@ describe('onboarding assessment', () => {
     expect(new Set(mapped).size).toBe(mapped.length);
   });
 
-  it('fits the ten minutes it promises', () => {
-    const work = ASSESSMENT_MOVES.reduce((sum, m) => sum + m.seconds, 0);
-    // Work plus reading each movement and catching your breath after it; the promise is the whole
-    // sitting, so the working half of it has to leave room for the rest.
-    expect(work).toBeLessThanOrEqual(ASSESSMENT_TOTAL_MIN * 60 * 0.7);
+  it('stays a short sitting, because nothing in it is performed on the clock', () => {
+    // The screen asks five questions over five clips; the promise on the offer screen is how long
+    // that takes to read and answer. There is no work window to add up any more — «убери таймер в
+    // онбординге совсем» — so what is guarded is that the promise stays small enough to be true.
+    expect(ASSESSMENT_TOTAL_MIN).toBeLessThanOrEqual(5);
+    expect(ASSESSMENT_TOTAL_MIN).toBeGreaterThan(0);
   });
 });

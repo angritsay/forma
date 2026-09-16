@@ -101,6 +101,7 @@ import type {
   Profile,
   ProfilePatch,
   PurchaseFilter,
+  PersonRow,
   PurchaseRow,
   PurchaseStatus,
   StartSessionInput,
@@ -682,6 +683,46 @@ export async function listPurchases(filter: PurchaseFilter = {}): Promise<Purcha
       .sort((a, b) => b.created_at.localeCompare(a.created_at))
       .slice(0, 500)
       .map(purchaseFromDb);
+  });
+}
+
+/**
+ * Everybody with a profile in the browser's demo database. In demo mode that is the one account
+ * signed in here plus whatever the seed created — a short list, which is the honest thing for it
+ * to be: the demo store is one browser, not a customer base.
+ */
+export async function listPeople(search = '', limit = 500): Promise<PersonRow[]> {
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    const term = search.trim().toLowerCase();
+    const live = (email: string) =>
+      db.subscriptions.some(
+        (x) =>
+          x.email.toLowerCase() === email.toLowerCase() &&
+          (x.status === 'active' || x.status === 'cancelled') &&
+          x.expires_at !== null &&
+          x.expires_at > nowIso(),
+      );
+    return db.profiles
+      .filter(
+        (p) =>
+          !term ||
+          p.email.toLowerCase().includes(term) ||
+          (p.display_name ?? '').toLowerCase().includes(term),
+      )
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .slice(0, limit)
+      .map((p) => ({
+        email: p.email,
+        displayName: p.display_name,
+        createdAt: p.created_at,
+        onboardedAt: p.onboarded_at,
+        courses: db.purchases.filter(
+          (x) => x.email.toLowerCase() === p.email.toLowerCase() && x.status === 'active',
+        ).length,
+        subscribed: live(p.email),
+      }));
   });
 }
 

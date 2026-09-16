@@ -392,17 +392,28 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    and «Начать тренироваться» in the footer; the ring, the paragraph on what the level means and
    the list of components are gone.
    The assessment is one question — «Подстроить тренировки под тебя?», with what it costs as two
-   pills under it («5 упражнений», «10 мин») — and two answers. «Сейчас» first shows the one
+   pills under it («5 упражнений», «3 мин») — and two answers. «Сейчас» first shows the one
    instruction everything here depends on, in the owner's own words and nothing more («Максимум не
-   выжимаем» over a still of the first movement), and then runs five movements of one minute each
+   выжимаем» over a still of the first movement), and then asks about five movements
    (`content/site/assessment.ts`) as a full-screen surface over the wizard drawn like the player:
    the clip full-bleed, the movement's name in the display face on a pane of glass at the foot, one
-   short line and «Начать»; then the clock inside a ring that drains with it, ticking the last
-   three seconds and closing on a long horn; then the one field for the number. The plank is the one
-   hold: «Стоп» ends it and the screen times it. «Не сейчас» postpones the whole thing; it comes
-   back as a task on the home screen, and the fitness index imputes what it is missing
+   short line and one field. **Nothing is timed and nothing is performed on the screen** — «убери
+   таймер в онбординге совсем… просто чтобы они лайтово прошли и поделились примерно сколько раз
+   они могут сделать не умирая». The clock, the draining ring, the horn, the wake lock and the
+   «Начать»/«Стоп» phases are gone; the athlete watches the clip and says roughly how many they
+   could do without going to failure. «Не сейчас» postpones the whole thing; it comes back as a
+   task on the home screen, and the fitness index imputes what it is missing
    (docs/TRAINING_SCIENCE §2). Three of the five numbers feed the index, the other two are written
    to `benchmarks`.
+
+   What that does to the index is written down in `content/site/assessment.ts` rather than left to
+   be found: two of the three components get closer to what their tables expect (`pushups` is
+   defined as max consecutive and the minute was a proxy; `PLANK_ANCHORS` run to 180 s and the
+   minute capped every answer at 60), and `squats60s` loosens — its anchors were built for reps in
+   sixty seconds and now read a self-reported comfortable set. The field keeps its name because
+   renaming it migrates stored profiles for no reader's benefit. Task #41, the coach's own ranges as
+   data, is where the borrowed tables stop mattering.
+
 3. **Home**: today, and nothing else. The greeting names the athlete and the avatar beside it opens
    the profile; **one** full-width cover card — today's session, or the unfinished one when there is
    one; **the club as one ruled row** under it; one button offering an hour
@@ -535,7 +546,14 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
     equipment/weights, what to protect, retake the assessment (its value is the fitness index),
     the coach's hour, admin if admin, sign out (its value is the account's email). No section
     headings, no subtitles: «минимум текста».
-12. **Admin**: purchases list (search by email, filter status), activate / refund, add purchase.
+12. **Admin**: three tabs. **Покупки** — the ledger (search by email, filter status), activate /
+    refund, add by hand. **Подписки** — the same for plans. **Люди** — everybody who has confirmed a
+    sign-in code (`admin_people()`, admin-only), newest first, with what they already hold and one
+    button each to give a course or a subscription. That tab exists so a grant is a choice rather
+    than an address typed from memory: `admin_add_purchase` accepts any well-formed address on
+    purpose — a pre-sale grant to somebody who has not signed up yet is a real case — so a typo
+    cannot be caught there and is designed out here instead. The manual path stays on the other two
+    tabs, where it is the only way in.
 
 ## 11. SEO conveyor (docs/SEO.md is the runbook)
 
