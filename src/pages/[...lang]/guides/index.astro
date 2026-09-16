@@ -1,7 +1,14 @@
 ---
 /**
- * Guides hub: /guides/ and /en/guides/. Cluster sections with cards; JSON-LD CollectionPage
+ * Guides hub: /guides/ and /en/guides/. Cluster sections with rows; JSON-LD CollectionPage
  * (ItemList) + BreadcrumbList. Cluster headings link to the cluster hub pages.
+ *
+ * The frame is the owner's prototype's (design/CHANGELOG.md §10): the count of guides as the one
+ * display-size figure, the intro kept to a single muted measure (it is the hub's prose for
+ * search), the clusters as a row of chips, and each cluster as a numbered heading over rows of
+ * title + reading time. The paragraph under every cluster heading went — it is the cluster
+ * page's own intro and is read there — and the row's count moved into the heading itself, where
+ * the exercises hub already keeps it.
  */
 import { getCollection } from 'astro:content';
 import Landing from '@/layouts/Landing.astro';
@@ -49,12 +56,11 @@ const jsonLd = [
   }),
   breadcrumbJsonLd(crumbs),
 ];
-const countLabel = (n: number) =>
-  `${n} ${plural(locale, n, {
-    one: t(locale, 'seo.guideWordOne'),
-    few: t(locale, 'seo.guideWordFew'),
-    many: t(locale, 'seo.guideWordMany'),
-  })}`;
+const countWord = plural(locale, list.length, {
+  one: t(locale, 'seo.guideWordOne'),
+  few: t(locale, 'seo.guideWordFew'),
+  many: t(locale, 'seo.guideWordMany'),
+});
 ---
 
 <Landing
@@ -67,12 +73,19 @@ const countLabel = (n: number) =>
 >
   <div class="mx-auto max-w-6xl px-5 pb-16 pt-8 md:pt-12">
     <Breadcrumbs locale={locale} items={crumbs} />
-    <header class="mt-6 max-w-3xl">
-      <h1 class="display text-4xl md:text-6xl">{t(locale, 'seo.guidesHubH1')}</h1>
-      <p class="mt-5 text-lg leading-relaxed text-muted">{t(locale, 'seo.guidesHubIntro')}</p>
+    <header class="mt-8 md:flex md:items-end md:justify-between md:gap-10">
+      <div class="max-w-2xl md:order-1">
+        <h1 class="display text-3xl md:text-5xl">{t(locale, 'seo.guidesHubH1')}</h1>
+        <p class="mt-4 max-w-xl text-[15px] leading-relaxed text-muted">
+          {t(locale, 'seo.guidesHubIntro')}
+        </p>
+      </div>
       {
         list.length > 0 && (
-          <p class="tabular mt-3 text-sm text-muted-2">{countLabel(list.length)}</p>
+          <p class="mt-8 flex items-baseline gap-3 md:order-2 md:mt-0 md:shrink-0 md:flex-col md:items-end md:gap-1">
+            <span class="display tabular text-7xl leading-none md:text-8xl">{list.length}</span>
+            <span class="eyebrow">{countWord}</span>
+          </p>
         )
       }
     </header>
@@ -84,14 +97,14 @@ const countLabel = (n: number) =>
         </p>
       ) : (
         <Fragment>
-          {/* Cluster anchors as chips; the count is a plain tabular figure, not a box. */}
-          <nav aria-label={t(locale, 'seo.guidesAll')} class="mt-8">
+          {/* Cluster anchors as chips — pressed, so 12px, not pills. */}
+          <nav aria-label={t(locale, 'seo.guidesAll')} class="mt-10">
             <ul class="flex flex-wrap gap-2">
               {groups.map((g) => (
                 <li>
                   <a
                     href={`#cluster-${g.cluster}`}
-                    class="tap-target-y inline-flex h-8.5 items-center gap-2 border border-border bg-surface-3 px-3 text-[12px] font-semibold tracking-[0.06em] text-muted uppercase transition-colors duration-150 hover:border-border-strong hover:text-text"
+                    class="tap-target-y control-label inline-flex h-9 items-center gap-2 rounded-control border border-border px-3 text-[11px] text-muted transition-colors duration-150 hover:border-border-strong hover:text-text"
                   >
                     {t(locale, `seo.cluster_${g.cluster}_title` as const)}
                     <span class="tabular text-muted-2">{g.items.length}</span>
@@ -106,37 +119,29 @@ const countLabel = (n: number) =>
               class="mt-14 scroll-mt-24"
               aria-labelledby={`cluster-${g.cluster}-title`}
             >
-              <div class="flex flex-wrap items-end justify-between gap-3">
-                <div class="max-w-2xl">
-                  <h2
-                    id={`cluster-${g.cluster}-title`}
-                    class="font-display flex items-baseline gap-4 text-xl md:text-2xl"
-                  >
-                    <span
-                      class="numeral tabular w-5 shrink-0 text-sm text-muted"
-                      aria-hidden="true"
-                    >
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                    <a class="hover:underline" href={href(locale, clusterPath(g.cluster))}>
-                      {t(locale, `seo.cluster_${g.cluster}_title` as const)}
-                    </a>
-                  </h2>
-                  <p class="mt-3 text-sm leading-relaxed text-muted">
-                    {t(locale, `seo.cluster_${g.cluster}_description` as const)}
-                  </p>
-                </div>
+              {/* The heading is the link to the cluster page; the → beside the count says so. */}
+              <h2
+                id={`cluster-${g.cluster}-title`}
+                class="display flex items-baseline gap-4 text-xl md:text-2xl"
+              >
+                <span class="numeral tabular shrink-0 text-sm text-muted" aria-hidden="true">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
                 <a
-                  class="control-label tabular inline-flex min-h-11 items-center gap-2 text-[12px] text-muted hover:text-text"
+                  class="group flex min-w-0 flex-1 items-baseline gap-4 hover:underline"
                   href={href(locale, clusterPath(g.cluster))}
                 >
-                  {countLabel(g.items.length)}
-                  <span class="glyph" aria-hidden="true">
-                    →
+                  <span>{t(locale, `seo.cluster_${g.cluster}_title` as const)}</span>
+                  <span
+                    class="numeral tabular ml-auto flex shrink-0 items-baseline gap-2 text-sm text-muted-2 group-hover:text-text"
+                    aria-hidden="true"
+                  >
+                    {g.items.length}
+                    <span class="glyph">→</span>
                   </span>
                 </a>
-              </div>
-              <ul class="mt-6 grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
+              </h2>
+              <ul class="mt-5 grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
                 {g.items.map((guide) => (
                   <li>
                     <GuideCard guide={guide} locale={locale} showCluster={false} />

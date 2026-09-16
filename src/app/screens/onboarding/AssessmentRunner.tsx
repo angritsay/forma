@@ -1,17 +1,25 @@
 /**
- * The assessment itself: one movement at a time, and on the screen almost nothing.
+ * The assessment itself: one movement at a time, drawn the way the player draws a step.
  *
  * It runs as a full-screen surface over the wizard rather than inside it. The wizard's chrome — a
  * back arrow, a step counter, a progress rule, a «Продолжить» button — is right for a form and
  * wrong for a minute of work: what is needed here is the movement and the clock, and everything
  * else is something to look at instead of the floor.
  *
- * Three moments per movement, and each shows only what that moment needs:
- *   ready  — the clip, the movement's name, the one instruction, and «Начать».
- *   work   — the clip and the count-down. Nothing else at all — except on a hold, which the
- *            athlete has to be able to end: there «Стоп» is the second thing on the screen, and it
- *            is what times the hold for them.
- *   count  — the clip, and the field for the number, pre-filled on a hold.
+ * The owner called the player the one good screen, so this reads like it: the clip full-bleed
+ * behind everything, a pane of glass along the foot (`.glass-bar`, the player's own material), and
+ * on the glass the movement's name in the display face and one thing under it. Three moments per
+ * movement, and each shows only what that moment needs:
+ *   ready  — the name, one short line, and «Начать».
+ *   work   — the name and the clock inside a ring that drains with it. Nothing else at all —
+ *            except on a hold, which the athlete has to be able to end: there «Стоп» is the second
+ *            thing on the screen, and it is what times the hold for them.
+ *   count  — the name and the field for the number, pre-filled on a hold.
+ *
+ * The clip is fitted the player's way (`clipFit`): as wide as the stage, `cover` only when its
+ * own shape is taller than the stage on a phone. `object-cover` as a blanket rule was reverted
+ * once — a landscape clip cropped to a phone-shaped hole keeps a strip through the middle and
+ * loses the movement — and `contain` alone painted a portrait squat between two bars of black.
  *
  * The last three seconds are ticked and the end is a long low horn (`sound.ts`), because the eyes
  * are on the floor at that point and the screen cannot be the thing that says "stop". The audio
@@ -20,10 +28,14 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
+import { Chip } from '@/components/ui/Chip';
+import { IconButton } from '@/components/ui/IconButton';
 import { Input } from '@/components/ui/Input';
+import { RingProgress } from '@/components/ui/RingProgress';
 import { formatClock } from '@/i18n/index';
 import { EXERCISE_BY_ID } from '@/content/registry';
-import { exerciseVideoRef } from '@/app/features/player/model';
+import { DisplayTitle } from '@/app/features/home/DisplayTitle';
+import { clipFit, exerciseVideoRef } from '@/app/features/player/model';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
 import { playCue, unlockAudio } from '@/app/features/player/sound';
 import { useWakeLock } from '@/app/features/player/useWakeLock';
@@ -50,6 +62,68 @@ export interface AssessmentRunnerProps {
   onCancel: () => void;
 }
 
+/**
+ * The picture behind everything: the clip, or the still while there is no clip.
+ *
+ * The stage is the whole screen, and the clip is fitted to it per its own shape — see the file
+ * comment and the player's `ArtLayer`, which this repeats in miniature rather than imports,
+ * because that layer is sized against the player's measured panel and this one is not.
+ */
+function Art({ exerciseId, videoUrl }: { exerciseId: string | undefined; videoUrl?: string }) {
+  const video = useRef<HTMLVideoElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
+  const [fill, setFill] = useState(false);
+
+  useEffect(() => {
+    const el = video.current;
+    const box = stage.current;
+    if (!el || !box) return;
+    const decide = () => {
+      const r = box.getBoundingClientRect();
+      if (!el.videoWidth || !el.videoHeight || !r.width || !r.height) return;
+      setFill(clipFit(el.videoWidth, el.videoHeight, r.width, r.height) === 'cover');
+    };
+    if (el.readyState >= 1) decide();
+    el.addEventListener('loadedmetadata', decide);
+    window.addEventListener('resize', decide);
+    return () => {
+      el.removeEventListener('loadedmetadata', decide);
+      window.removeEventListener('resize', decide);
+    };
+  }, [videoUrl]);
+
+  return (
+    <div
+      ref={stage}
+      className="pointer-events-none absolute inset-0 flex items-center overflow-hidden bg-bg"
+      aria-hidden="true"
+    >
+      {videoUrl ? (
+        <video
+          key={videoUrl}
+          ref={video}
+          src={videoUrl}
+          className={fill ? 'size-full object-cover' : 'h-auto max-h-full w-full object-contain'}
+          playsInline
+          muted
+          loop
+          autoPlay
+          preload="metadata"
+        />
+      ) : (
+        <ExerciseStill
+          key={exerciseId}
+          exerciseId={exerciseId}
+          className="h-auto max-h-full w-full object-contain"
+          loading="eager"
+        />
+      )}
+      {/* The header's plate: a short fade from the top so the way out and the count read on any frame. */}
+      <div className="absolute inset-x-0 top-0 h-28 bg-linear-to-b from-ink/55 to-transparent" />
+    </div>
+  );
+}
+
 export function AssessmentRunner({
   onKnees,
   onCount,
@@ -62,7 +136,8 @@ export function AssessmentRunner({
   const [phase, setPhase] = useState<Phase>('ready');
   const [reps, setReps] = useState('');
   const move = ASSESSMENT_MOVES[index];
-  const timer = useCountdown(move?.seconds ?? 0);
+  const total = move?.seconds ?? 0;
+  const timer = useCountdown(total);
   /*
    * Show the movement being done, not the movement the entry is named after.
    *
@@ -104,7 +179,7 @@ export function AssessmentRunner({
 
   /** A hold ends when the back does: the screen records how far into the window that was. */
   const stopHold = () => {
-    setReps(String(Math.max(0, (move?.seconds ?? 0) - timer.remainingSec)));
+    setReps(String(Math.max(0, total - timer.remainingSec)));
     timer.pause();
     playCue('horn');
     setPhase('count');
@@ -128,125 +203,124 @@ export function AssessmentRunner({
   const hold = move.metric === 'seconds';
   /* A count has no ceiling worth naming; a hold cannot outlast the window that timed it. */
   const maxAnswer = hold ? move.seconds : REPS_MAX;
+  const last = index + 1 >= ASSESSMENT_MOVES.length;
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-bg pt-[var(--safe-top)] pb-[calc(var(--safe-bottom)+16px)]">
+    <div className="fixed inset-0 z-40 flex flex-col bg-bg text-paper">
+      <Art exerciseId={shownId} videoUrl={videoUrl} />
+
       {/*
-       * Where you are, as the numeral pair the whole product counts with. It is the only thing on
-       * the screen that is not the movement, the clock or the way on.
+       * The top edge: the way out, and where you are as the numeral pair the whole product counts
+       * with. The way out is offered only before the first movement has started; once a minute has
+       * been counted, leaving would throw it away, and the wizard is one tap on from the last one.
        */}
-      <div className="flex items-center gap-3 px-6 pt-4">
-        <span className="font-display min-w-0 flex-1 truncate text-base">{name}</span>
-        <span className="numeral tabular shrink-0 text-sm">
-          <span className="text-text">{String(index + 1).padStart(2, '0')}</span>
-          <span className="text-muted-2">/{String(ASSESSMENT_MOVES.length).padStart(2, '0')}</span>
+      <header className="relative z-10 flex h-14 items-center justify-between px-3 pt-[var(--safe-top)]">
+        <div className="w-11">
+          {index === 0 && phase === 'ready' ? (
+            <IconButton label={t('common.back')} icon="back" variant="on-art" onClick={onCancel} />
+          ) : null}
+        </div>
+        <span className="numeral tabular pr-2 text-sm">
+          <span className="text-paper">{String(index + 1).padStart(2, '0')}</span>
+          <span className="text-paper/55">/{String(ASSESSMENT_MOVES.length).padStart(2, '0')}</span>
         </span>
-      </div>
+      </header>
 
-      {/*
-       * The clip, edge to edge.
-       *
-       * It used to be `size-full object-contain`, which fits the clip inside the stage on whichever
-       * side runs out first — and on a phone that is the height, so a vertical clip sat in a
-       * letterbox with a black bar down each side and the movement shrank into the middle.
-       *
-       * `w-full h-auto` reverses which side wins: the clip is as wide as the screen, and its height
-       * is whatever its own shape gives. Nothing is cropped, which matters more here than it looks.
-       * The first fix tried was `object-cover`, and the player's own notes one screen over record
-       * why that was reverted the last time: some movements are filmed in landscape, and a
-       * landscape frame cropped into a phone-shaped hole keeps a vertical strip through the middle
-       * — the squat happens off-screen and the clip is worth nothing.
-       *
-       * `max-h-full` is the floor under all of it: a clip taller than the stage is fitted to the
-       * height instead, because a movement that runs off the bottom of the screen is worse than
-       * one with room at its sides.
-       */}
-      <div className="relative mt-5 flex min-h-0 flex-1 items-center overflow-hidden">
-        {videoUrl ? (
-          <video
-            key={videoUrl}
-            src={videoUrl}
-            className="h-auto max-h-full w-full object-contain"
-            playsInline
-            muted
-            loop
-            autoPlay
-            preload="metadata"
-          />
-        ) : (
-          <ExerciseStill
-            exerciseId={move.exerciseId}
-            className="h-auto max-h-full w-full object-contain"
-            loading="eager"
-          />
-        )}
-      </div>
+      <div className="flex-1" />
 
-      <div className="flex flex-col gap-5 px-6 pt-6">
-        {phase === 'ready' ? (
-          <>
-            <p className="text-[15px] leading-snug text-muted">
-              {hold ? t('app.onbAssessInstructionHold') : t('app.onbAssessInstruction')}
-            </p>
-            {move.kneeExerciseId ? (
-              <label className="flex items-center gap-3 text-[15px]">
-                <input
-                  type="checkbox"
-                  checked={onKnees}
-                  onChange={(e) => onKneesChange(e.target.checked)}
-                  className="size-5 accent-primary"
-                />
-                {t('app.onbAssessOnKnees')}
-              </label>
-            ) : null}
-            <Button size="lg" fullWidth onClick={start}>
-              {t('common.start')}
-            </Button>
-            {index === 0 ? (
-              <Button variant="ghost" fullWidth onClick={onCancel}>
-                {t('common.back')}
+      {/* The glass at the foot — the player's panel, with the player's alphas. */}
+      <div className="relative z-10">
+        <div
+          aria-hidden="true"
+          className="glass-bar glass-sheer pointer-events-none absolute inset-0"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-full h-16 bg-linear-to-t from-bg/45 to-transparent"
+        />
+        <div className="relative mx-auto flex w-full max-w-[560px] flex-col items-center gap-5 px-6 pt-6 pb-[calc(var(--safe-bottom)+16px+var(--demo-inset,0px))] text-center">
+          <DisplayTitle as="h2" text={name} className="text-3xl text-paper" />
+
+          {phase === 'ready' ? (
+            <>
+              {/* One line, not the paragraph that stood here: the screen before this one has
+                  already said not to squeeze out a maximum, and beside a clip nobody reads more. */}
+              <p className="text-[14px] text-paper/70">
+                {hold ? t('app.onbAssessInstructionHold') : t('app.onbAssessInstruction')}
+              </p>
+              {move.kneeExerciseId ? (
+                /* «С колен» is a choice, so it is a chip that selects rather than a checkbox that
+                   labels: the same control the rest of the app uses to pick a variant. */
+                <Chip
+                  role="checkbox"
+                  aria-checked={onKnees}
+                  selected={onKnees}
+                  tone="on-art"
+                  onClick={() => onKneesChange(!onKnees)}
+                >
+                  {t('app.onbAssessOnKnees')}
+                </Chip>
+              ) : null}
+              <Button size="lg" fullWidth onClick={start}>
+                {t('common.start')}
               </Button>
-            ) : null}
-          </>
-        ) : null}
+            </>
+          ) : null}
 
-        {phase === 'work' ? (
-          <>
-            <div aria-live="off" className="numeral tabular text-center text-7xl leading-none">
-              {formatClock(timer.remainingSec)}
-            </div>
-            {hold ? (
-              <Button variant="secondary" size="lg" fullWidth onClick={stopHold}>
-                {t('app.onbAssessStop')}
+          {phase === 'work' ? (
+            <>
+              {/*
+               * The ring drains with the minute, white because no course is in scope, with the
+               * clock inside it — the prototype's timer («0:37» in a ring over the clip). The ring
+               * is what makes «0:12» mean something: a minute-long window and a twenty-second one
+               * read the same in digits and nothing alike as an arc.
+               */}
+              <RingProgress
+                value={total > 0 ? timer.remainingSec / total : 0}
+                size={200}
+                stroke={6}
+                tone="primary"
+                label={name}
+                valueText={formatClock(timer.remainingSec)}
+              >
+                <span aria-live="off" className="numeral tabular text-[52px] leading-none">
+                  {formatClock(timer.remainingSec)}
+                </span>
+              </RingProgress>
+              {hold ? (
+                <Button size="lg" fullWidth onClick={stopHold}>
+                  {t('app.onbAssessStop')}
+                </Button>
+              ) : null}
+            </>
+          ) : null}
+
+          {phase === 'count' ? (
+            <>
+              <Input
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={maxAnswer}
+                aria-label={hold ? t('app.onbAssessHoldLabel') : t('app.onbAssessCountLabel')}
+                placeholder="0"
+                autoFocus
+                className="numeral text-center text-3xl"
+                wrapperClassName="w-full"
+                value={reps}
+                onChange={(e) => setReps(e.target.value)}
+              />
+              <Button
+                size="lg"
+                fullWidth
+                disabled={parseIntField(reps, maxAnswer) === undefined}
+                onClick={accept}
+              >
+                {last ? t('common.done') : t('common.continue')}
               </Button>
-            ) : null}
-          </>
-        ) : null}
-
-        {phase === 'count' ? (
-          <>
-            <Input
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={maxAnswer}
-              aria-label={hold ? t('app.onbAssessHoldLabel') : t('app.onbAssessCountLabel')}
-              placeholder="0"
-              autoFocus
-              className="text-center text-2xl"
-              value={reps}
-              onChange={(e) => setReps(e.target.value)}
-            />
-            <Button
-              size="lg"
-              fullWidth
-              disabled={parseIntField(reps, maxAnswer) === undefined}
-              onClick={accept}
-            >
-              {index + 1 >= ASSESSMENT_MOVES.length ? t('common.done') : t('common.continue')}
-            </Button>
-          </>
-        ) : null}
+            </>
+          ) : null}
+        </div>
       </div>
     </div>
   );

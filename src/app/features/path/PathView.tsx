@@ -1,6 +1,7 @@
 /**
- * The course as a path: the days wind down the screen as square stops, grouped under a banner per
- * week, with today filled in white so it is found without reading anything.
+ * The course as a path: the days wind down the screen as circles, grouped under a band per week
+ * in the programme colour («НЕДЕЛЯ 1 · 3/7»), with today filled in white so it is found without
+ * reading anything — the owner's prototype (`design/ui_kits/app-v2`, «Путь по дням»).
  *
  * It was a ruled index — one row per day, thirty identical lines — which is the right shape for a
  * table of contents and the wrong one for a course somebody is walking through. A path says two
@@ -64,20 +65,22 @@ export function PathView({ course, state, stars, onNodePress }: PathViewProps) {
         return (
           <section key={g.week}>
             {/*
-             * The week's banner: the programme colour, bleeding past both gutters. It is the one
-             * horizontal thing in a screen of stops, which is what makes the weeks readable as
-             * chapters rather than as more of the same column.
+             * The week's band: the programme colour, bleeding past both gutters, the week on the
+             * left and its score on the right — «НЕДЕЛЯ 1 · 3/7», plain figures, no zero-padding,
+             * as the prototype writes it. It is the one horizontal thing in a screen of stops,
+             * which is what makes the weeks readable as chapters rather than as more of the same
+             * column.
              */}
             <div className="hero-art -mx-6 flex items-baseline justify-between gap-3 px-6 py-3 md:-mx-10 md:px-10">
               <div className="flex items-baseline gap-2">
                 <h2 className="eyebrow text-current">{t('app.pathWeek', { n: g.week })}</h2>
                 {g.deload ? <Badge tone="neutral">{t('training.deloadBadge')}</Badge> : null}
               </div>
-              <span className="numeral tabular text-xs text-current opacity-70">
-                {String(done).padStart(2, '0')}/{String(g.nodes.length).padStart(2, '0')}
+              <span className="numeral tabular text-[13px] text-current">
+                {done}/{g.nodes.length}
               </span>
             </div>
-            <ul className="mt-5 flex flex-col gap-4">
+            <ul className="mt-6 flex flex-col gap-5">
               {g.nodes.map(({ node, index }) => {
                 const status = statuses[index] ?? 'locked';
                 return (

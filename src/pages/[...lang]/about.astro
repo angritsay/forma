@@ -1,16 +1,33 @@
 ---
-/** About the coach: profile from config, principles, the science in short. JSON-LD: Person. */
+/**
+ * About the coach: profile from config, principles, the science in short. JSON-LD: Person.
+ *
+ * Drawn in the owner's prototype's language (design/CHANGELOG.md §10, «Профиль»): a person is a
+ * circle, so the portrait is round beside the name; the name carries the brand's device on its
+ * own — the first name at 800, the surname at 200; under it one line, his role. Then three
+ * figures the way the prototype sets «24 тренировок · 312 минут · 4 180 ккал»: since when he
+ * coaches, how many hours, since when he has been in sport — set larger than the words under them.
+ * The bio and the checkable credential list stay below, because this page sells his courses
+ * under his name and a figure without its source is a boast. `CoachCard` still draws the home
+ * page's compact version; this page stopped sharing it because its frame is now a different
+ * shape, not a bigger one.
+ *
+ * The three figures restate credentials from content/site/coach.ts. If his profile changes, both
+ * change: the list is the record and the figures are its poster, and a poster that disagrees
+ * with the record is worse than no poster.
+ */
 import Landing from '@/layouts/Landing.astro';
 import Breadcrumbs from '@/components/landing/Breadcrumbs.astro';
 import Button from '@/components/landing/Button.astro';
-import CoachCard from '@/components/landing/CoachCard.astro';
 import Cta from '@/components/landing/Cta.astro';
-import Section from '@/components/landing/Section.astro';
 import { breadcrumbLd, personLd } from '@/components/landing/jsonld';
 import type { Locale } from '@/content/schema';
-import { t } from '@/i18n/index';
+import { formatNumber, l, t } from '@/i18n/index';
 import { canonicalUrl } from '@/lib/seo/urls';
-import { appHref, href, localeStaticPaths } from '@/lib/util/paths';
+import { appHref, href, localeStaticPaths, withBase } from '@/lib/util/paths';
+import { BOOKING, bookingFromPrice } from '@content/site/booking';
+import { COACH } from '@content/site/coach';
+import { formatPrice } from '@content/site/pricing';
 
 export function getStaticPaths() {
   return localeStaticPaths();
@@ -20,6 +37,21 @@ const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';
 const site = (Astro.site?.toString() ?? 'http://localhost:4321').replace(/\/$/, '');
 const title = t(locale, 'landing.aboutTitle');
 const description = t(locale, 'landing.aboutDescription');
+
+const name = l(COACH.name, locale);
+const [heavy, ...thinParts] = name.trim().split(/\s+/);
+const thin = thinParts.join(' ');
+const role = l(COACH.role, locale);
+const bio = l(COACH.bio, locale);
+const bookHint = t(locale, 'landing.coachBookHint', {
+  price: formatPrice(locale, bookingFromPrice()),
+});
+
+const figures = [
+  { value: '2015', label: t(locale, 'landing.aboutFigureSince') },
+  { value: `${formatNumber(locale, 10000)}+`, label: t(locale, 'landing.aboutFigureHours') },
+  { value: '2010', label: t(locale, 'landing.aboutFigureSport') },
+];
 
 const principles = [
   {
@@ -43,10 +75,11 @@ const jsonLd = [
     { name: title, url: canonicalUrl(site, locale, '/about/') },
   ]),
 ];
+const H2 = 'display text-lg md:text-xl';
 ---
 
 <Landing locale={locale} title={title} description={description} sitePath="/about/" jsonLd={jsonLd}>
-  <div class="mx-auto max-w-6xl px-5 pt-8 md:pt-12">
+  <div class="mx-auto max-w-6xl px-5 pt-8 pb-4 md:pt-12">
     <Breadcrumbs
       ariaLabel={t(locale, 'landing.breadcrumbHome')}
       items={[
@@ -54,45 +87,156 @@ const jsonLd = [
         { label: title },
       ]}
     />
-    <div class="mt-6">
-      <CoachCard locale={locale} variant="full" />
-    </div>
-  </div>
 
-  <Section
-    id="principles"
-    title={t(locale, 'landing.aboutPhilosophyTitle')}
-    class="!py-12 md:!py-16"
-  >
-    <!-- Three hairline columns with numerals — the same shape as the landing's Steps. -->
-    <ol class="grid gap-x-8 gap-y-2 md:grid-cols-3">
+    <!-- The identity: a circle, the name, one line. -->
+    <header class="mt-8 flex items-center gap-5 md:gap-8">
       {
-        principles.map((p, i) => (
-          <li class="flex flex-col gap-4 border-t border-border pt-5 pb-2">
-            <span class="numeral text-2xl text-text" aria-hidden="true">
-              {String(i + 1).padStart(2, '0')}
-            </span>
-            <h3 class="font-display text-lg">{p.title}</h3>
-            <p class="leading-relaxed text-muted">{p.text}</p>
-          </li>
+        COACH.photo ? (
+          <span class="relative size-24 shrink-0 overflow-hidden rounded-pill bg-surface md:size-32">
+            <img
+              src={withBase(COACH.photo)}
+              alt={name}
+              width="128"
+              height="128"
+              loading="eager"
+              decoding="async"
+              class="photo-mono absolute inset-0 size-full object-cover"
+            />
+            <span class="photo-grain rounded-pill" aria-hidden="true" />
+          </span>
+        ) : (
+          <span
+            class="display flex size-24 shrink-0 items-center justify-center rounded-pill bg-paper text-4xl text-ink md:size-32"
+            aria-hidden="true"
+          >
+            {heavy?.charAt(0)}
+          </span>
+        )
+      }
+      <div class="min-w-0">
+        <h1 class="display text-3xl text-balance md:text-5xl">
+          {heavy}
+          {thin && <span class="t-thin"> {thin}</span>}
+        </h1>
+        <p class="mt-2 text-[15px] leading-snug text-muted">{role}</p>
+      </div>
+    </header>
+
+    <!--
+      Three figures, larger than the words that name them. Three across the page from `sm`; on a
+      phone one under another with the word opposite, because «10 000+» at display size will not
+      share a 390px line with two other numbers — it broke across two lines in the third of the
+      row it had, and a figure that wraps is not a figure any more.
+
+      `dt` before `dd` in the markup, the order the spec asks for, and `flex-row-reverse` /
+      `flex-col-reverse` to put the number first to the eye. Writing `dd` first would have been
+      one class shorter and invalid.
+    -->
+    <dl class="mt-10 grid border-t border-border sm:grid-cols-3">
+      {
+        figures.map((f, i) => (
+          <div
+            class:list={[
+              'flex flex-row-reverse items-baseline justify-between gap-4 border-b border-border py-4',
+              'sm:flex-col-reverse sm:justify-start sm:gap-2 sm:border-b-0 sm:py-5 sm:pr-4',
+              i > 0 && 'sm:border-l sm:border-border sm:pl-4 md:pl-6',
+            ]}
+          >
+            <dt class="eyebrow">{f.label}</dt>
+            <dd class="display tabular text-3xl leading-none sm:text-3xl md:text-4xl lg:text-5xl">
+              {f.value}
+            </dd>
+          </div>
         ))
       }
-    </ol>
-  </Section>
+    </dl>
 
-  <Section id="science" title={t(locale, 'landing.aboutScienceTitle')} class="!py-12 md:!py-16">
-    <div class="max-w-3xl">
-      <p class="text-lg leading-relaxed text-muted">
-        {t(locale, 'landing.aboutScienceText')}
-      </p>
-      <div class="mt-8">
-        <Button href={href(locale, '/guides/')} variant="secondary">
+    <div class="mt-10 grid gap-10 md:grid-cols-12 md:gap-8">
+      <div class="md:col-span-7">
+        {bio && <p class="max-w-2xl text-[15px] leading-relaxed text-muted md:text-base">{bio}</p>}
+        {
+          (COACH.links.length > 0 || BOOKING.enabled) && (
+            <div class="mt-7 flex flex-wrap items-center gap-x-4 gap-y-3">
+              {BOOKING.enabled && (
+                <Button href={appHref('#/book')}>{t(locale, 'landing.coachBook')}</Button>
+              )}
+              {COACH.links.map((x) => (
+                <a
+                  href={x.url}
+                  rel="me noopener"
+                  class="control-label inline-flex h-12 items-center rounded-control border border-border-strong px-5 text-[12px] text-muted transition-colors duration-150 hover:bg-surface-2 hover:text-text"
+                >
+                  {x.label}
+                </a>
+              ))}
+              {BOOKING.enabled && <span class="text-sm text-muted">{bookHint}</span>}
+            </div>
+          )
+        }
+      </div>
+      {
+        COACH.credentials.length > 0 && (
+          <section aria-labelledby="credentials-title" class="md:col-span-5">
+            <h2 id="credentials-title" class={H2}>
+              {t(locale, 'landing.coachCredentials')}
+            </h2>
+            {/*
+              The numeral is a fixed-width column, and both halves of that matter. Without
+              `shrink-0` flex shrank the numeral itself to make room for a long credential, and
+              the first one — a university, a faculty and a year — broke «01» across two lines.
+              Without `tabular` the six numerals were six slightly different widths.
+            */}
+            <ol class="mt-4 flex flex-col divide-y divide-border border-t border-border text-sm text-muted">
+              {COACH.credentials.map((c, i) => (
+                <li class="flex items-baseline gap-4 py-2.5">
+                  <span
+                    class="numeral tabular w-5 shrink-0 text-xs text-muted-2"
+                    aria-hidden="true"
+                  >
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <span class="min-w-0">{l(c, locale)}</span>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )
+      }
+    </div>
+
+    <section id="principles" aria-labelledby="principles-title" class="mt-16">
+      <h2 id="principles-title" class={H2}>{t(locale, 'landing.aboutPhilosophyTitle')}</h2>
+      <!-- Three hairline columns with numerals — the same shape as the landing's Steps. -->
+      <ol class="mt-5 grid gap-x-8 md:grid-cols-3">
+        {
+          principles.map((p, i) => (
+            <li class="flex flex-col gap-3 border-t border-border pt-5 pb-4">
+              <span class="numeral text-2xl text-text" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <h3 class="font-display text-base">{p.title}</h3>
+              <p class="text-[15px] leading-relaxed text-muted">{p.text}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section id="science" aria-labelledby="science-title" class="mt-12">
+      <h2 id="science-title" class={H2}>{t(locale, 'landing.aboutScienceTitle')}</h2>
+      <div
+        class="mt-5 border-t border-border pt-5 md:flex md:items-end md:justify-between md:gap-8"
+      >
+        <p class="max-w-2xl text-[15px] leading-relaxed text-muted md:text-base">
+          {t(locale, 'landing.aboutScienceText')}
+        </p>
+        <Button href={href(locale, '/guides/')} variant="secondary" class="mt-6 shrink-0 md:mt-0">
           {t(locale, 'landing.aboutScienceLink')}
           <span class="glyph" aria-hidden="true">→</span>
         </Button>
       </div>
-    </div>
-  </Section>
+    </section>
+  </div>
 
   <Cta
     title={t(locale, 'landing.ctaTitle')}

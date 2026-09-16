@@ -1,9 +1,9 @@
 import { clsx } from 'clsx';
 import { Glyph } from '@/components/ui/Icon';
-import { ListRow } from '@/components/ui/ListRow';
 import { formatDate, formatNumber } from '@/i18n/index';
 import { weekdayLabel } from '@/lib/util/dates';
 import { useT } from '@/app/hooks/useT';
+import { dayOfMonthLabel } from '@/app/features/stats/model';
 import type { HistoryDay } from './model';
 
 export interface StepsHistoryProps {
@@ -13,55 +13,59 @@ export interface StepsHistoryProps {
 }
 
 /**
- * The previous 14 days as hairline rows; every row opens the edit sheet.
+ * The previous fourteen days as two rows of seven circles; every circle opens the edit sheet.
  *
- * The weekday leads the row as a kicker, the count trails it as a numeral with a tick when the
- * goal was met, and the row's own `›` says it opens. The green weekday tile and the pencil are
- * gone: a list of days is a list of figures, and the only thing that varies is whether the figure
- * is there.
+ * It was a list of fourteen rows — weekday, date, «+30 оч.» or «Не записано», the count, a
+ * chevron — five pieces of type per day for a fact that has two states. The owner's prototype
+ * draws a week as circles with a check on the days that counted, and a fortnight is two of those:
+ * a white circle with a check where the goal was reached, a hairline with the weekday's letter
+ * where it was not, a fainter hairline where nothing was logged at all, and the day of the month
+ * under each so a circle can be found and tapped. The count itself is the circle's accessible
+ * name and its `title`; on the screen the shape is the answer.
+ *
+ * Oldest first, left to right, so the row reads like the calendar it is.
  */
 export function StepsHistory({ days, goal, onEdit }: StepsHistoryProps) {
   const { t, locale } = useT();
+  const ordered = [...days].reverse();
   return (
-    <div className="border-t border-border">
-      <ul className="divide-y divide-border">
-        {days.map((d) => {
-          const atGoal = d.logged && d.steps >= goal;
-          return (
-            <li key={d.date}>
-              <ListRow
-                onClick={() => onEdit(d.date)}
-                leading={
-                  <span className="eyebrow w-8 text-[10px]">{weekdayLabel(locale, d.date)}</span>
-                }
-                title={formatDate(locale, d.date)}
-                subtitle={
-                  d.logged ? t('app.stepsPointsPreview', { n: d.points }) : t('app.stepsNotLogged')
-                }
-                trailing={
-                  <>
-                    {atGoal ? (
-                      <Glyph size={12} className="text-text">
-                        ✓
-                      </Glyph>
-                    ) : null}
-                    <span
-                      className={clsx(
-                        'numeral tabular text-[15px]',
-                        d.logged ? 'text-text' : 'text-muted-2',
-                      )}
-                    >
-                      {d.logged ? formatNumber(locale, d.steps) : '—'}
-                    </span>
-                    <span className="sr-only">{t('app.stepsEdit')}</span>
-                    <Glyph size={16}>›</Glyph>
-                  </>
-                }
-              />
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+    <ul className="grid grid-cols-7 gap-x-2 gap-y-5" aria-label={t('app.stepsHistoryTitle')}>
+      {ordered.map((d) => {
+        const atGoal = d.logged && d.steps >= goal;
+        const date = formatDate(locale, d.date);
+        const name = d.logged
+          ? t('app.stepsHistoryDay', { date, steps: formatNumber(locale, d.steps) })
+          : `${date}: ${t('app.stepsNotLogged')}`;
+        return (
+          <li key={d.date} className="flex flex-col items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => onEdit(d.date)}
+              aria-label={`${name}. ${t('app.stepsEdit')}`}
+              title={name}
+              className={clsx(
+                'flex size-11 items-center justify-center rounded-pill border transition-[transform,opacity] duration-150 ease-(--ease-out) hover:opacity-85 active:scale-[0.96]',
+                atGoal
+                  ? 'border-transparent bg-paper text-ink'
+                  : d.logged
+                    ? 'border-border-strong text-muted'
+                    : 'border-border text-muted-2',
+              )}
+            >
+              {atGoal ? (
+                <Glyph size={14}>✓</Glyph>
+              ) : (
+                <span className="font-display text-[12px] leading-none" aria-hidden="true">
+                  {weekdayLabel(locale, d.date).slice(0, 1)}
+                </span>
+              )}
+            </button>
+            <span className="numeral tabular text-[10px] text-muted-2" aria-hidden="true">
+              {dayOfMonthLabel(d.date)}
+            </span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

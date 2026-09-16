@@ -19,6 +19,7 @@ import {
   streakCalendar,
   totalCalories,
   userStatsFromProgress,
+  weekActiveDays,
   weekLoad,
 } from './model';
 
@@ -144,6 +145,28 @@ describe('streakCalendar', () => {
     ]);
     expect(current.cells[3]?.today).toBe(true);
     expect(current.cells[1]?.steps).toBe(9000);
+  });
+});
+
+describe('weekActiveDays', () => {
+  it('marks a day active for a workout or for the steps goal, by the streak’s rule', () => {
+    const days = weekActiveDays(
+      [session('2026-09-01'), session('2026-08-30')],
+      logs([log('2026-09-02', 7200), log('2026-08-31', 3000)]),
+      TODAY,
+    );
+    expect(days.map((d) => d.date)).toEqual([
+      '2026-08-31',
+      '2026-09-01',
+      '2026-09-02',
+      '2026-09-03',
+      '2026-09-04',
+      '2026-09-05',
+      '2026-09-06',
+    ]);
+    expect(days.map((d) => d.active)).toEqual([false, true, true, false, false, false, false]);
+    expect(days[3]).toMatchObject({ today: true, future: false });
+    expect(days[4]?.future).toBe(true);
   });
 });
 

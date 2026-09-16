@@ -1,7 +1,8 @@
 ---
 /**
  * FAQ accordion built on <details> (keyboard accessible, no JS). Pair with `faqJsonLd(items)`.
- * Hairline rows; the toggle is a + glyph that turns into × when the answer is open.
+ * Hairline rows; the toggle is a + glyph that turns into × when the answer is open. The heading
+ * is the same display line every section of a library page opens with.
  */
 interface Props {
   title: string;
@@ -15,14 +16,14 @@ const { title, items, id = 'faq', class: className = '' } = Astro.props;
 
 {
   items.length > 0 && (
-    <section aria-labelledby={`${id}-title`} class:list={['mt-16', className]}>
-      <h2 id={`${id}-title`} class="font-display text-xl md:text-2xl">
+    <section aria-labelledby={`${id}-title`} class:list={['mt-14', className]}>
+      <h2 id={`${id}-title`} class="display text-lg md:text-xl">
         {title}
       </h2>
-      <div class="mt-6 divide-y divide-border border-t border-border">
+      <div class="mt-5 divide-y divide-border border-t border-border">
         {items.map((it) => (
           <details class="group py-4">
-            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold [&::-webkit-details-marker]:hidden">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-[15px] font-semibold [&::-webkit-details-marker]:hidden">
               <span>{it.q}</span>
               <span
                 aria-hidden="true"
@@ -31,7 +32,7 @@ const { title, items, id = 'faq', class: className = '' } = Astro.props;
                 +
               </span>
             </summary>
-            <p class="mt-3 max-w-3xl leading-relaxed text-muted">{it.a}</p>
+            <p class="mt-3 max-w-3xl text-[15px] leading-relaxed text-muted">{it.a}</p>
           </details>
         ))}
       </div>

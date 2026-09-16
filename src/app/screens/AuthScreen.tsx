@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/Button';
 import { CodeInput } from '@/components/ui/CodeInput';
 import { Input } from '@/components/ui/Input';
 import { Logo } from '@/components/ui/Logo';
+import { Pill } from '@/components/ui/Pill';
 import { useT } from '@/app/hooks/useT';
 import { useCountdown } from '@/app/hooks/useTimer';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
@@ -288,10 +289,11 @@ export default function AuthScreen() {
         ) : (
           <form onSubmit={onSubmitCode} className="flex w-full flex-col gap-4" noValidate>
             {demoCode ? (
-              /* Demo mode has no inbox, so the code it just issued is said on the screen. */
-              <p className="text-center text-sm font-semibold text-warning">
+              /* Demo mode has no inbox, so the code it just issued is said on the screen — as a
+                 pill, because it is a fact and not a control (design/CHANGELOG.md §10). */
+              <Pill tone="paper" className="self-center">
                 {t('app.demoAuthCode', { code: demoCode })}
-              </p>
+              </Pill>
             ) : null}
             <CodeInput
               length={CODE_LENGTH}
@@ -307,7 +309,8 @@ export default function AuthScreen() {
               label={t('app.authCodeLabel')}
             />
             {errorText ? (
-              <p role="alert" className="text-center text-sm text-danger">
+              /* One line (the strings are written to fit one), in the field's own error size. */
+              <p role="alert" className="truncate text-center text-[13px] text-danger">
                 {errorText}
               </p>
             ) : null}

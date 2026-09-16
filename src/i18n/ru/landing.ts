@@ -131,8 +131,8 @@ export const landing = {
   pathWeekdays: 'П,В,С,Ч,П,С,В',
   pathNodeDone: 'Сделано',
   pathNodeCurrent: 'Следующая',
+  pathNodeOpen: 'Открыто',
   pathNodeLocked: 'Закрыто',
-  pathProgress: 'Прогресс',
 
   // Главная: внутри тренировки
   insideEyebrow: 'Внутри тренировки',
@@ -311,7 +311,10 @@ export const landing = {
   aboutScienceText:
     'Программы опираются на рекомендации ACSM и ВОЗ по физической активности, принцип прогрессивной перегрузки, авторегуляцию по шкале RPE и данные о пользе 7 000 шагов в день.',
   aboutScienceLink: 'Читать гайды',
-  aboutLinksTitle: 'Ссылки',
+  // The three figures under the coach's name; they restate credentials in content/site/coach.ts.
+  aboutFigureSince: 'тренирует с',
+  aboutFigureHours: 'часов занятий',
+  aboutFigureSport: 'в спорте с',
 
   // Контакты
   contactTitle: 'Контакты',

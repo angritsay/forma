@@ -66,31 +66,27 @@ const LETTERS = [
      * Astro swaps the `fallback` slot out for the component the moment it hydrates, so this is
      * markup the app never has to clean up. It deliberately uses no JavaScript and no images: it
      * is standing in for the JavaScript, and the wordmark is a font the page is already loading.
-     * Same layout and the same growth with the viewport as `BootScreen`, which is what replaces
-     * it a moment later — the handover should be invisible.
+     * Same layout and the same clamp as `BootScreen`, which is what replaces it a moment later —
+     * the handover should be invisible, and it is only invisible while the two agree. Change one
+     * and change the other.
      */
   }
   <App client:only="react">
-    <div slot="fallback" class="flex min-h-dvh flex-col justify-center">
-      <div
-        class="mx-auto flex w-full max-w-[480px] flex-col gap-4 px-5.5 md:max-w-[720px] md:gap-5 md:px-10"
+    <div slot="fallback" class="flex min-h-dvh items-center justify-center px-6">
+      <span
+        role="status"
+        aria-label={t('ru', 'common.loading')}
+        class="wordmark wordmark-wave inline-flex items-baseline text-[clamp(44px,16vw,96px)]"
       >
-        <span
-          role="status"
-          aria-label={t('ru', 'common.loading')}
-          class="wordmark wordmark-wave inline-flex items-baseline text-4xl md:text-6xl lg:text-7xl"
-        >
-          {
-            LETTERS.map(({ char, cls }) => (
-              <span class={cls} aria-hidden="true">
-                <span data-reserve="">{char}</span>
-                <span>{char}</span>
-              </span>
-            ))
-          }
-        </span>
-        <span class="eyebrow-sentence">{t('ru', 'common.tagline')}</span>
-      </div>
+        {
+          LETTERS.map(({ char, cls }) => (
+            <span class={cls} aria-hidden="true">
+              <span data-reserve="">{char}</span>
+              <span>{char}</span>
+            </span>
+          ))
+        }
+      </span>
     </div>
   </App>
 </Base>

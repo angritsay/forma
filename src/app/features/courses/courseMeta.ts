@@ -5,6 +5,7 @@ import { plural } from '@/i18n/index';
 import { href } from '@/lib/util/paths';
 import type { Translator } from '@/app/hooks/useT';
 import { workoutSignatureExercise } from '@/app/features/path/plan';
+import { EQUIPMENT_LABEL } from '@/app/screens/onboarding/labels';
 
 /** The exercise whose figure represents the course: from its first real workout. */
 export function courseSignatureExercise(course: Course): Exercise | undefined {
@@ -55,4 +56,24 @@ export function perWeekLabel(tr: Translator, n: number): string {
     few: tr.t('app.coursesPerWeekFew', { n }),
     many: tr.t('app.coursesPerWeekMany', { n }),
   });
+}
+
+/**
+ * The course in three pills — «4 недели», «18 мин», «без оборудования» — the way the owner's
+ * prototype (`design/ui_kits/app-v2`, «Программы») states a programme instead of describing it.
+ *
+ * The three are the tagline's facts without the tagline: how long the course runs, how long a
+ * session takes, what it needs. Gear is the real list where there is one, capped at two so a
+ * course that wants a bar, a rope and a box does not grow a fourth line of pills; a bodyweight
+ * course says so in one word, because «без оборудования» is the fact that sells it.
+ */
+export function coursePills(tr: Translator, course: Course): string[] {
+  const gear = courseEquipmentForDisplay(course)
+    .slice(0, 2)
+    .map((e) => tr.t(EQUIPMENT_LABEL[e]));
+  return [
+    weeksLabel(tr, course.weeks),
+    `${course.avgSessionMin} ${tr.t('common.minutesUnit')}`,
+    ...gear,
+  ];
 }

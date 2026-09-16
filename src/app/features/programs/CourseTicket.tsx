@@ -13,22 +13,31 @@
  * it. The full-bleed cover was deliberately square-cornered because it belonged to the photographs
  * that run past the gutter; it has left that category.
  *
+ * **Its words are the prototype's** (`design/ui_kits/app-v2`, «Программы»): the object stayed a
+ * ticket — that is the owner's later decision — but what is printed on it is now figures. The
+ * prototype's cover carries a kicker, the name, and three pills («4 недели», «18 мин», «11%
+ * пройдено»); the tagline paragraph that stood here — «Четыре недели по программе тренера для
+ * новичков: коротко, по кругу, без оборудования.» — said the same three facts in twenty words,
+ * and the word «пройдено» beside the percentage said what the percentage already was.
+ *
  * The parts are in the order a ticket has them:
  *
  *   - the **cover**, a band rather than a wall: the photograph, or the programme's colour where
  *     there is no photograph of its own — the brandbook's first rule, and what paints the marathon
  *     orange and «Форма с нуля» yellow;
- *   - the **stub**, carrying how far along you are. It is at the top because that is what was
- *     asked for, and the ticket metaphor agrees: the stub is the part with your seat number on it;
+ *   - the **stub**, carrying how far along you are as one figure: «11% · 3/28» over its rule. It
+ *     is at the top because that is what was asked for, and the ticket metaphor agrees: the stub
+ *     is the part with your seat number on it;
  *   - the **tear**, a dashed rule, which is the one line that makes the object read as a ticket
  *     rather than as another card;
- *   - the **identity** — what kind of thing it is, its name, one line of what it gives you;
+ *   - the **identity** — what kind of thing it is, its name, and the facts as pills;
  *   - the **action**.
  */
 import type { ReactNode } from 'react';
 import { clsx } from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { Glyph } from '@/components/ui/Icon';
+import { Pill } from '@/components/ui/Pill';
 import { publicMediaUrl } from '@/lib/api/storage';
 import type { Photo } from '@/lib/media/photos';
 import { isPlaceholder, photoSrc } from '@/lib/media/photos';
@@ -49,14 +58,16 @@ export interface CourseTicketProps {
   /** Kicker: what kind of thing this is and where you are in it. */
   eyebrow: ReactNode;
   title: string;
-  /** What this thing is, in one line. */
-  lead?: ReactNode;
-  /** One quiet line under it — today's task, why it is locked. */
+  /** The programme's facts — «4 недели», «18 мин», «без оборудования» — as pills under the name. */
+  pills?: readonly string[];
+  /**
+   * One quiet line of *state*, where there is state worth a line: why the challenge is locked,
+   * how long the trial has left, how many of today's tasks are still open. Never a description.
+   */
   subtitle?: ReactNode;
   /** Completed share, 0..100. Omitted on a ticket with nothing to complete. */
   pct?: number;
-  progressLabel?: ReactNode;
-  /** Set opposite the figure: «12/20». */
+  /** Set beside the figure: «3/28». */
   progressMeta?: ReactNode;
   ctaLabel: ReactNode;
   onCta?: () => void;
@@ -80,10 +91,9 @@ export function CourseTicket({
   photo,
   eyebrow,
   title,
-  lead,
+  pills,
   subtitle,
   pct,
-  progressLabel,
   progressMeta,
   ctaLabel,
   onCta,
@@ -186,18 +196,17 @@ export function CourseTicket({
       </div>
 
       <div className="pointer-events-none relative z-10 flex flex-col px-5 pt-4 pb-5">
-        {/* The stub: where you are, above everything else — asked for, and where a stub belongs. */}
+        {/*
+         * The stub: where you are, as one figure — «11% · 3/28» — over its rule. The word
+         * «пройдено» that used to follow the percentage is gone: a percentage on a course ticket
+         * is the share done, and saying so is the label repeating the object.
+         */}
         {share === undefined ? null : (
           <div className="pb-4">
-            <div className="flex items-baseline justify-between gap-3">
-              <span className="flex items-baseline gap-2">
-                <span className="numeral tabular text-2xl leading-none text-text">{share}%</span>
-                {progressLabel ? (
-                  <span className="eyebrow text-muted-2">{progressLabel}</span>
-                ) : null}
-              </span>
+            <div className="flex items-baseline gap-2">
+              <span className="numeral tabular text-2xl leading-none text-text">{share}%</span>
               {progressMeta ? (
-                <span className="numeral tabular text-xs text-muted-2">{progressMeta}</span>
+                <span className="numeral tabular text-sm text-muted-2">· {progressMeta}</span>
               ) : null}
             </div>
             {/* Not <ProgressBar>: its fill is the programme colour, which is exactly what this
@@ -241,12 +250,16 @@ export function CourseTicket({
         ) : (
           <DisplayTitle text={title} className="mt-2 text-2xl" />
         )}
-        {lead ? (
-          <p className={clsx('text-[14px] leading-snug text-muted', coverSrc ? 'mt-3' : 'mt-2')}>
-            {lead}
-          </p>
+        {pills && pills.length > 0 ? (
+          <ul className="mt-3 flex flex-wrap gap-2" aria-label={title}>
+            {pills.map((p) => (
+              <li key={p} className="flex min-w-0">
+                <Pill>{p}</Pill>
+              </li>
+            ))}
+          </ul>
         ) : null}
-        {subtitle ? <p className="mt-1.5 text-[13px] text-muted-2">{subtitle}</p> : null}
+        {subtitle ? <p className="mt-3 text-[13px] text-muted-2">{subtitle}</p> : null}
 
         {ctaHref ? (
           /* No arrow: it does not go forward into the work, it leaves for the web. */

@@ -1,7 +1,13 @@
 /**
- * Steps (docs/SPEC.md §10 flow 10): log today's steps by hand (with the reason why), the goal
- * ring and points preview, and the last 14 days with an edit sheet. Saving upserts the daily
- * log, pushes it into the progress store and reports what it did to the streak.
+ * Steps (docs/SPEC.md §10 flow 10): log today's steps by hand (with the reason why), and the
+ * last 14 days with an edit sheet. Saving upserts the daily log, pushes it into the progress
+ * store and reports what it did to the streak.
+ *
+ * Drawn in the language of the owner's prototype: one big numeral inside a ring, the goal as a
+ * pill, the history as circles. What went was every sentence — the kicker with the date, «До цели
+ * ещё 2 720 шагов — очки начинаются с неё», the fourteen rows of «Не записано» — because the ring
+ * already shows how far, the pill already names the goal, and a circle with a check already says
+ * the day counted.
  *
  * A day may also carry a screenshot of the athlete's own step counter. It is attached the moment
  * it is picked rather than waiting for Save — an upload is slow enough that batching it behind a
@@ -316,39 +322,36 @@ export default function StepsScreen() {
       />
     );
   } else {
-    body = (
-      <div className="flex flex-col gap-6 py-2">
-        <section className="flex flex-col gap-4">
-          <h2 className="eyebrow">
-            {t('app.stepsTodayLabel')} · {formatDate(locale, today)}
-          </h2>
-          <div className="flex flex-col gap-4 border-t border-border pt-4">
-            <StepsEditor
-              text={text}
-              onText={(v) => {
-                setTouched(true);
-                setText(v);
-              }}
-              goal={STEPS_GOAL}
-              label={t('app.stepsInputLabel')}
-              disabled={saving}
-            />
-            <StepsProof
-              value={proofToday}
-              onPick={proof.attach}
-              onRemove={() => void proof.remove()}
-              disabled={saving}
-              busy={proof.busy}
-            />
-          </div>
-        </section>
-        <WhyManualCard />
-        <section className="flex flex-col gap-3">
-          <h2 className="eyebrow">{t('app.stepsHistoryTitle')}</h2>
+    body =
+      (
+        /*
+         * No kickers. «Сегодня · 16 сент.» over the ring and «Последние 14 дней» over the circles
+         * were headings for figures that already say what they are: the ring holds the number
+         * being typed now, and the circles carry their dates. The one line of prose the screen
+         * keeps — why the number is typed in — stays folded behind its question.
+         */
+        <div className="flex flex-col gap-6 py-2">
+          <StepsEditor
+            text={text}
+            onText={(v) => {
+              setTouched(true);
+              setText(v);
+            }}
+            goal={STEPS_GOAL}
+            label={t('app.stepsInputLabel')}
+            disabled={saving}
+          />
+          <StepsProof
+            value={proofToday}
+            onPick={proof.attach}
+            onRemove={() => void proof.remove()}
+            disabled={saving}
+            busy={proof.busy}
+          />
+          <WhyManualCard />
           <StepsHistory days={history} goal={STEPS_GOAL} onEdit={setEditDate} />
-        </section>
-      </div>
-    );
+        </div>
+      );
   }
 
   return (

@@ -1,11 +1,18 @@
-import { PageTitle } from '@/components/ui/PageTitle';
 import { useT } from '@/app/hooks/useT';
 import type { Equipment } from '@/content/schema';
 import { ChipGroup } from './ChipGroup';
 import { SELECTABLE_EQUIPMENT, WEIGHT_OPTIONS_KG, toggleIn } from './draft';
 import { EQUIPMENT_LABEL } from './labels';
+import { Question } from './Question';
 import type { StepProps } from './types';
 
+/**
+ * «Что есть дома?» and the plates. The lead («Отметь всё… если ничего нет — тоже отлично») went;
+ * an unticked screen is already the answer «ничего».
+ *
+ * The two kickers that stay — «Гантели, кг» / «Гири, кг» — are the exception §10 allows: a row
+ * of «2 4 6 8» does not say which of the two weights it is, and both rows can be on screen at once.
+ */
 export function StepEquipment({ draft, update }: StepProps) {
   const { t } = useT();
   const hasDumbbells = draft.equipment.includes('dumbbells');
@@ -23,7 +30,7 @@ export function StepEquipment({ draft, update }: StepProps) {
 
   return (
     <div className="flex flex-col gap-7">
-      <PageTitle title={t('app.onbEquipmentTitle')} subtitle={t('app.onbEquipmentLead')} />
+      <Question text={t('app.onbEquipmentTitle')} />
       <ChipGroup<Equipment>
         multiple
         variant="tile"

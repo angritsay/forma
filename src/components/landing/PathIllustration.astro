@@ -1,15 +1,18 @@
 ---
 /**
  * The course path drawn with CSS/SVG from real course nodes (first six).
- * Illustrative state: first node done, second up next, the rest locked.
+ * Illustrative state: first node done, second up next, the third open, the rest locked.
  *
- * Nodes are circles, and there are no kind icons: a node shows the number of its day, the done
- * one a ✓ glyph. They were squares; the owner's prototype (`design/ui_kits/app-v2`, «Путь») draws
- * a day as a circle — filled in the programme colour once it is done, white for the one that is
- * next, outlined for the rest — and CHANGELOG §10 makes that the rule: a rank is a circle, and
- * the colour paints progress. So the programme colour, set with `courseTileStyle()` on the root,
- * paints the progress fill and the done day; the current day is the white fill; the locked ones
- * are a hairline.
+ * Drawn the way the owner's prototype draws the path (design/ui_kits/app-v2, «Путь»;
+ * design/CHANGELOG.md §10): a banner in the programme colour naming the week and counting the
+ * days «1/6»; the days as circles — done is filled in the colour and ticked, today is filled in
+ * paper with its number, an open day is outlined, a locked one dimmed — each with its name and one
+ * muted line beside it. The squares, the progress bar and the «Прогресс · 17%» kicker it replaces
+ * said the same in a smaller voice; the colour used to paint the bar and one numeral, and now it
+ * paints the banner and the done stops, which is the prototype's «обложка и прогресс».
+ *
+ * Without a course in scope there is no programme colour, and the banner and the done stop fall
+ * back to paper on ink — the same fallback `.hero-art` makes for a tile without a course.
  */
 import type { CourseNode, Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
@@ -44,40 +47,39 @@ const path = positions
   .join(' ');
 const height = (positions[shown.length - 1]?.y ?? 40) + 40;
 
-type State = 'done' | 'current' | 'locked';
+type State = 'done' | 'current' | 'open' | 'locked';
 function stateOf(i: number): State {
-  return i === 0 ? 'done' : i === 1 ? 'current' : 'locked';
+  return i === 0 ? 'done' : i === 1 ? 'current' : i === 2 ? 'open' : 'locked';
 }
+const fill = tile ? 'bg-course text-on-course' : 'bg-paper text-ink';
 const stateCls: Record<State, string> = {
-  done: 'bg-course text-on-course',
-  current: 'bg-primary text-on-primary',
-  locked: 'border border-border-strong bg-transparent text-muted',
+  done: fill,
+  current: 'bg-paper text-ink',
+  open: 'border border-border-strong text-text',
+  locked: 'border border-border text-muted-2',
 };
 const stateLabel: Record<State, string> = {
   done: t(locale, 'landing.pathNodeDone'),
   current: t(locale, 'landing.pathNodeCurrent'),
+  open: t(locale, 'landing.pathNodeOpen'),
   locked: t(locale, 'landing.pathNodeLocked'),
 };
-const doneShare = shown.length ? Math.round((1 / shown.length) * 100) : 0;
+const week = shown[0]?.week ?? 1;
+const done = shown.filter((_, i) => stateOf(i) === 'done').length;
 ---
 
 <div style={tile ? courseTileStyle(tile) : undefined}>
-  <div class="px-4 pt-3 pb-4">
-    <div class="flex items-baseline justify-between gap-2">
-      <span class="font-display text-sm">{courseName}</span>
-      <span class="eyebrow text-[10px]">{t(locale, 'landing.pathProgress')} · {doneShare}%</span>
-    </div>
-    <!-- 4px, square; the fill is the programme colour, or white when no course is in scope. -->
-    <div class="mt-3 h-1 w-full overflow-hidden bg-surface-3" aria-hidden="true">
-      <div
-        class="h-full"
-        style={`width:${doneShare}%;background:var(--course-tile, var(--primary))`}
-      >
-      </div>
-    </div>
+  <!-- The week's banner: the one large field the colour is allowed, as in the prototype. -->
+  <div class:list={['flex items-baseline justify-between gap-3 px-4 py-3', fill]}>
+    <span class="eyebrow text-[10px] text-current">
+      {t(locale, 'landing.courseWeek', { n: week })}
+    </span>
+    <span class="numeral tabular text-sm" aria-label={courseName}>
+      {done}/{shown.length}
+    </span>
   </div>
 
-  <div class="relative mx-auto w-[240px]" style={`height:${height}px`}>
+  <div class="relative mx-auto mt-2 w-[240px]" style={`height:${height}px`}>
     <svg
       class="absolute inset-0"
       viewBox={`0 0 240 ${height}`}
@@ -102,7 +104,7 @@ const doneShare = shown.length ? Math.round((1 / shown.length) * 100) : 0;
           const labelLeft = pos.x > 120;
           return (
             <li
-              class="absolute flex items-center gap-2"
+              class="absolute flex items-center gap-2.5"
               style={`top:${pos.y - 22}px; ${labelLeft ? `right:${240 - pos.x - 22}px; flex-direction:row-reverse;` : `left:${pos.x - 22}px;`}`}
             >
               <span
@@ -121,15 +123,9 @@ const doneShare = shown.length ? Math.round((1 / shown.length) * 100) : 0;
                 class={`flex max-w-[120px] flex-col ${labelLeft ? 'items-end text-right' : ''}`}
               >
                 <span class="text-[12px] leading-tight font-semibold">{l(node.title, locale)}</span>
-                {/* The kind only where it is not a workout: «Тренировка 3 / Тренировка» was a
-                    caption repeating the name above it — the label CHANGELOG §10 sends away.
-                    A rest day and a test still earn their second line: they are the exception on
-                    a path otherwise made of workouts. */}
-                {node.kind !== 'workout' && (
-                  <span class="text-[10px] leading-tight text-muted">
-                    {nodeKindLabel(locale, node)}
-                  </span>
-                )}
+                <span class="text-[10px] leading-tight text-muted">
+                  {nodeKindLabel(locale, node)}
+                </span>
               </span>
             </li>
           );

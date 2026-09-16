@@ -1,14 +1,24 @@
 ---
 /**
- * Exercise row: static first-frame figure on the course tile, name, level and equipment chips.
- * Used by the /exercises/ hub and "related exercises" blocks.
+ * Exercise row: a still from the movement's clip on the course tile, the name, and its facts as
+ * pills. Used by the /exercises/ hub, the scaling and "related exercises" blocks and the guides.
  *
  * A ruled row rather than a bordered card. These appear thirty at a time on the encyclopedia hub,
  * and thirty bordered boxes is a wall — hairlines let the column read as an index, which is what
  * a reference list of exercises actually is. The tile takes the programme colour of the course
- * the exercise belongs to, and `courseTileStyle()` sets the ink the figure is drawn in to match.
+ * the exercise belongs to, and `courseTileStyle()` sets the ink drawn on it to match.
+ *
+ * Drawn in the owner's prototype's language (design/CHANGELOG.md §10): the picture, the name,
+ * and the level and equipment as pills — facts that are read, not pressed. The pattern kicker
+ * over the name is off by default, because the row almost always sits under a heading that
+ * already says the pattern; a related-exercises list, where the pattern is news, turns it on.
+ *
+ * Top-aligned, not centred. A grid row is as tall as its tallest cell, and a movement with three
+ * pills makes its neighbours' pictures and names float in the middle of the space it took. Names
+ * on one line across the row is what makes a page of these read as an index.
  */
 import ExerciseStill from '@/components/media/ExerciseStill';
+import Pill from '@/components/landing/Pill.astro';
 import type { Exercise, Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { equipmentNames, exerciseTile, levelName, patternName } from '@/lib/seo/exercises';
@@ -18,39 +28,34 @@ import { href } from '@/lib/util/paths';
 interface Props {
   exercise: Exercise;
   locale: Locale;
+  /** Set the movement pattern over the name — only where the list around it does not say it. */
+  showPattern?: boolean;
 }
 
-const { exercise: ex, locale } = Astro.props;
+const { exercise: ex, locale, showPattern = false } = Astro.props;
 const name = l(ex.name, locale);
-const CHIP =
-  'inline-flex h-7 items-center rounded-control border px-2.5 text-[11px] font-semibold uppercase tracking-[0.06em]';
 ---
 
 <a
   href={href(locale, `/exercises/${ex.slug[locale]}/`)}
-  class="flex h-full gap-4 border-t border-border py-4 transition-colors duration-150 hover:border-border-strong"
+  class="group flex h-full items-start gap-4 border-t border-border py-4 transition-colors duration-150 hover:border-border-strong"
   style={courseTileStyle(exerciseTile(ex))}
 >
-  <div
-    class="hero-art flex size-[72px] shrink-0 items-center justify-center overflow-hidden rounded-inner"
-  >
-    <ExerciseStill exerciseId={ex.id} />
+  <!-- Monochrome like every photograph on the site; the tile shows through where no still exists. -->
+  <div class="hero-art relative size-[72px] shrink-0 overflow-hidden rounded-inner">
+    <ExerciseStill exerciseId={ex.id} className="photo-mono size-full object-cover" />
   </div>
   <div class="min-w-0">
-    <span class="eyebrow">{patternName(ex.pattern, locale)}</span>
-    <h3 class="font-display mt-1 text-[15px]">{name}</h3>
+    {showPattern && <span class="eyebrow">{patternName(ex.pattern, locale)}</span>}
+    <h3 class="font-display text-[15px] leading-snug group-hover:underline">{name}</h3>
     <ul class="mt-2 flex flex-wrap gap-1.5">
-      <li class={`${CHIP} border-border text-muted`}>{levelName(ex.level, locale)}</li>
-      {
-        equipmentNames(ex, locale).map((eq) => (
-          <li class={`${CHIP} border-border text-muted`}>{eq}</li>
-        ))
-      }
+      <Pill as="li">{levelName(ex.level, locale)}</Pill>
+      {equipmentNames(ex, locale).map((eq) => <Pill as="li">{eq}</Pill>)}
       {
         ex.isTest && (
-          <li class={`${CHIP} border-border-strong text-text`}>
+          <Pill as="li" class="border-text text-text">
             {t(locale, 'seo.exerciseTestBadge')}
-          </li>
+          </Pill>
         )
       }
     </ul>

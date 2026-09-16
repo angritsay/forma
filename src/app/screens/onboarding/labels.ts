@@ -5,10 +5,8 @@ import type {
   ActivityLevel,
   AgeBand,
   Experience,
-  FitnessComponent,
   Goal,
   Limitation,
-  SessionTime,
   Sex,
 } from '@/lib/training/types';
 
@@ -34,25 +32,16 @@ export const ACTIVITY_LABEL: Record<ActivityLevel, TKey> = {
   active: 'app.onbActivityActive',
 };
 
-export const ACTIVITY_DESC: Record<ActivityLevel, TKey> = {
-  sedentary: 'app.onbActivitySedentaryDesc',
-  light: 'app.onbActivityLightDesc',
-  moderate: 'app.onbActivityModerateDesc',
-  active: 'app.onbActivityActiveDesc',
-};
-
+/*
+ * The answers are the facts now — «Меньше года», «1–3 года» — so there is no second line to map.
+ * Each answer used to be a level name («Новичок») with the years under it as a description; the
+ * description was the answer, and the name was a label for it (design/CHANGELOG.md §10).
+ */
 export const EXPERIENCE_LABEL: Record<Experience, TKey> = {
   none: 'app.onbExpNone',
   beginner: 'app.onbExpBeginner',
   intermediate: 'app.onbExpIntermediate',
   advanced: 'app.onbExpAdvanced',
-};
-
-export const EXPERIENCE_DESC: Record<Experience, TKey> = {
-  none: 'app.onbExpNoneDesc',
-  beginner: 'app.onbExpBeginnerDesc',
-  intermediate: 'app.onbExpIntermediateDesc',
-  advanced: 'app.onbExpAdvancedDesc',
 };
 
 export const EQUIPMENT_LABEL: Record<Equipment, TKey> = {
@@ -84,38 +73,8 @@ export const GOAL_LABEL: Record<Goal, TKey> = {
   muscle: 'app.onbGoalMuscle',
 };
 
-export const GOAL_DESC: Record<Goal, TKey> = {
-  fat_loss: 'app.onbGoalFatLossDesc',
-  strength: 'app.onbGoalStrengthDesc',
-  endurance: 'app.onbGoalEnduranceDesc',
-  general: 'app.onbGoalGeneralDesc',
-  muscle: 'app.onbGoalMuscleDesc',
-};
-
-export const SESSION_TIME_DESC: Record<SessionTime, TKey> = {
-  15: 'app.onbTime15Desc',
-  20: 'app.onbTime20Desc',
-  30: 'app.onbTime30Desc',
-  45: 'app.onbTime45Desc',
-  60: 'app.onbTime60Desc',
-};
-
-export const COMPONENT_LABEL: Record<FitnessComponent, TKey> = {
-  pushups: 'app.onbCompPushups',
-  squats: 'app.onbCompSquats',
-  plank: 'app.onbCompPlank',
-  activity: 'app.onbCompActivity',
-  experience: 'app.onbCompExperience',
-};
-
 export const LEVEL_LABEL: Record<Level, TKey> = {
   1: 'common.level_1',
   2: 'common.level_2',
   3: 'common.level_3',
-};
-
-export const LEVEL_MEANING: Record<Level, TKey> = {
-  1: 'app.onbResultMeaning1',
-  2: 'app.onbResultMeaning2',
-  3: 'app.onbResultMeaning3',
 };
