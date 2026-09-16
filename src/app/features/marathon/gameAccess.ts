@@ -1,12 +1,12 @@
 /**
- * Who may play the challenge. Pure; unit-tested.
+ * Who may join the club. Pure; unit-tested.
  *
- * The challenge belongs to the subscription (content/site/plans.ts) — its prize is an hour of the
+ * The club belongs to the subscription (content/site/plans.ts) — its prize is an hour of the
  * coach's time every week, and given away it costs more the better it does. But the person who
  * just bought a course is exactly the person the subscription is for, and telling them about a
  * format they cannot enter is a worse advertisement than letting them into it.
  *
- * So a course buys a week of the challenge. It is the cheapest advertising the product has: the athlete
+ * So a course buys a week of the club. It is the cheapest advertising the product has: the athlete
  * is already training, lands in the board, sees real people, and on the seventh day is told what it
  * costs to stay.
  *
@@ -16,7 +16,7 @@
  * to, and a refunded course takes its trial with it.
  */
 
-/** How long a course opens the challenge for. */
+/** How long a course opens the club for. */
 export const GAME_TRIAL_DAYS = 7;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -37,7 +37,7 @@ export type GameAccess =
   | { allowed: false; reason: 'locked' };
 
 /**
- * Whether the challenge opens, and on what grounds.
+ * Whether the club opens, and on what grounds.
  *
  * The grounds matter to the caller: a card entered on the trial says how long is left, and one
  * entered on a subscription says nothing at all, because there is nothing to count down to.

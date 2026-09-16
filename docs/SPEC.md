@@ -109,13 +109,13 @@ public/                     # favicon.svg, icons, manifest
   here («centered max-width 480px app frame on large screens»), and the reversal is the owner's:
   she builds courses from a laptop, and a 480px strip in the middle of one is a phone stranded in a
   grey field. Content is capped at 760px for reading screens, 1040px for the two screens that split
-  in two (profile, challenge) and 1280px for the admin; a sheet becomes a centred dialog at the same
+  in two (profile, club) and 1280px for the admin; a sheet becomes a centred dialog at the same
   breakpoint. Landing is responsive 360px → 1440px.
 - `AdminNav` is the one component that waits for `lg` (1024) instead. Its rail is 264px, which is a
   third of a tablet: at `md` it left the purchases 504px — less than a phone gives them — so a
   tablet takes the phone's route into the admin and spends the whole width on the work.
 - Which screens re-lay out rather than stretch, from `md`: Today (workout left, the rest right),
-  Programmes (tickets two across), the challenge (day left, week's board right), the profile
+  Programmes (tickets two across), the club (day left, week's board right), the profile
   (identity left, settings right), the player (clip left, counter and «дальше» right), the course
   day in the admin (list of days left, editor right), and the progress details (figures two across).
   Everything else keeps one column and gains air.
@@ -141,7 +141,7 @@ public/                     # favicon.svg, icons, manifest
   the tokens were all 0; both now agree, and the one change of mind is the buttons, which used to
   be held at a near-square 4px. Chrome that has content moving under it — the tab bar, a screen
   header, a sheet, a modal, the player — is frosted glass (`design/CHANGELOG.md` §8); everything
-  else is a solid surface. The app's tab bar (Сегодня / Программы / Челлендж / Прогресс — the
+  else is a solid surface. The app's tab bar (Сегодня / Программы / Клуб / Прогресс — the
   profile is the avatar on «Прогресс» and in the top row from `md`, not a tab) is a capsule of
   glass floating over the bottom of the screen with one highlight that slides between the four
   seats, and a screen arrives the way the highlight went (`screenMotion`). Generous spacing, 1px
@@ -401,7 +401,7 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    to `benchmarks`.
 3. **Home**: today, and nothing else. The greeting names the athlete and the avatar beside it opens
    the profile; the resume strip if a session was left unfinished; today's session as one
-   full-width cover card; **the challenge as one ruled row** under it; one button offering an hour
+   full-width cover card; **the club as one ruled row** under it; one button offering an hour
    with the coach; then any task
    still owed — the assessment when it was postponed — and whatever the coach has assigned by
    hand. The deck of programmes moved to the «Программы» tab and the figures to «Прогресс».
@@ -414,13 +414,24 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    both screens read (`features/courses/sessionEstimate.ts`), so the figure on Home is the figure
    on the sheet and never a rounding away from it. Nothing on Home scrolls at 390×844.
 
-   The challenge row is the same row in both states, and it is the only thing on Home that takes
-   a colour — the challenge's orange (`GAME_TILE`, src/lib/ui/tile.ts; the identifier keeps the old
+   The club row is the same row in both states, and it is the only thing on Home that takes
+   a colour — the club's orange (`GAME_TILE`, src/lib/ui/tile.ts; the identifier keeps the old
    word, the product does not), because colour here says which part of the product something
-   belongs to. In the challenge it shows the day as a ring and names the first task still owed;
+   belongs to. In the club it shows the day as a ring and names the first task still owed;
    outside it, the same row with the task blurred, which is a truer invitation than an
    advertisement. Logging steps is **not** on Home: it is a number the athlete owes today, and it
    belongs with the rest of how they are doing, on «Прогресс».
+
+   **The name.** The format is the «Клуб маленьких шагов» — «Клуб» where a label has one slot (the
+   tab, the top row, the deck card), the full name where there is room (the screen's own head, the
+   invitation, the locked and trial copy). It was the «Челлендж» until the owner renamed it: a
+   challenge promises a test, and the people this is for are coming back after a break, for whom a
+   test is a reason not to start; a club promises belonging, which is what the format actually
+   gives — a partner, a board with names, a day everybody is having at once. The prize is still
+   real and still an hour with the coach, but it is the last clause of the invitation rather than
+   its point, because a club whose first sentence is about winning is a competition in a club's
+   name. Code and database keep `marathon*` throughout: renaming them buys the reader nothing and
+   costs a migration. `src/i18n/*/app.ts` is the one place that reconciles the two.
 
 4. **Course path**: the days as a winding column of circles — four columns, wave order, the day's
    name and one short line set in the space each stop leaves beside it, its stars under the name —
@@ -439,7 +450,7 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    **minutes** as a large numeral, over a bar of the work it prescribes, with the reps and kcal
    under it. The recommended one is a filled row (paper on ink) rather than a badged one, and the
    reason is stated under all three. Picking one starts the session immediately — there is no second
-   preview and no confirm button. **No points anywhere in training**: points are the challenge's
+   preview and no confirm button. **No points anywhere in training**: points are the club's
    currency (§10 flow 12), and a workout is time you spend, not a score you earn.
 6. **Player**: one card the size of the screen, with two sides. Front: the clip (or the drawn
    figure), auto-playing, with a back arrow and pause at the top and, at the bottom, the movement's
@@ -491,8 +502,8 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    card — is behind «Подробности», collapsed (two columns from `md`): a chart answers a question
    nobody arrives with.
 9. **Leaderboard**: tabs week / all-time, course filter, top-100 with own row pinned. A rank is a
-   **circle**, drawn exactly as the challenge's `BoardRow` draws it — the leader filled, your own
-   row a white ring, the podium a stronger hairline — but filled in white, never the challenge's
+   **circle**, drawn exactly as the club's `BoardRow` draws it — the leader filled, your own
+   row a white ring, the podium a stronger hairline — but filled in white, never the club's
    orange: this table belongs to no programme. No avatar on the row (a rank is a circle and a
    person is a circle; two per row read as a pair of controls) and no «оч.» after the points.
 10. **Steps**: one big numeral inside the goal ring — the number being typed is the figure — with

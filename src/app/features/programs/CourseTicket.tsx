@@ -61,7 +61,7 @@ export interface CourseTicketProps {
   /** The programme's facts — «4 недели», «18 мин», «без оборудования» — as pills under the name. */
   pills?: readonly string[];
   /**
-   * One quiet line of *state*, where there is state worth a line: why the challenge is locked,
+   * One quiet line of *state*, where there is state worth a line: why the club is locked,
    * how long the trial has left, how many of today's tasks are still open. Never a description.
    */
   subtitle?: ReactNode;

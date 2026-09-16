@@ -93,7 +93,7 @@ export function TopNav() {
    * The mark under the current destination, and the one thing here that has to be measured.
    *
    * The tab bar gets this for free — four equal columns, so the mark is a quarter wide and travels
-   * in quarters. These words are «Сегодня» and «Челлендж» and «Админка», so the mark has to ask
+   * in quarters. These words are «Сегодня» and «Программы» and «Админка», so the mark has to ask
    * each one how wide it is. `useLayoutEffect` rather than `useEffect` so it is placed in the same
    * frame the route changed in, and never seen at the old width for a paint.
    *

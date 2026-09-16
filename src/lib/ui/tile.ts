@@ -15,10 +15,10 @@ const INK_ON_LIGHT = '#0f0f11';
 const INK_ON_DARK = '#f6f6f7';
 
 /**
- * The challenge's own colour.
+ * The club's own colour.
  *
  * Colour in this product says which part of it you are in — a course wears the programme colour
- * content gives it, and the challenge wears orange everywhere it appears: the deck card, the row on
+ * content gives it, and the club wears orange everywhere it appears: the deck card, the row on
  * Home, the ring beside today's task. A marathon has no course tile of its own to read it from,
  * so this is where it lives, once.
  *
@@ -26,7 +26,7 @@ const INK_ON_DARK = '#f6f6f7';
  * side of the same idea.
  *
  * **This value sits close to a cliff.** Its luminance is 0.353 against the 0.35 in
- * {@link isLightTile} — three thousandths. Above the line the challenge's cover is black type on
+ * {@link isLightTile} — three thousandths. Above the line the club's cover is black type on
  * orange; below it the cover flips to white type on a darker orange, which is a different screen,
  * not a different shade. The orange it replaced had 0.020 of margin, so this is the tighter of the
  * two, deliberately: the owner picked this hue from a rendered comparison of eight, with the flip

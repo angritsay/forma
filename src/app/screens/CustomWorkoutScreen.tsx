@@ -114,7 +114,7 @@ export default function CustomWorkoutScreen() {
   const structure = w.structure as CustomWorkoutStructure | undefined;
   const playable = isPlayableStructure(structure);
   const minutes = w.estSec ? Math.max(1, Math.round(w.estSec / 60)) : null;
-  // How long it takes. Points are the challenge's currency and are not shown anywhere in training.
+  // How long it takes. Points are the club's currency and are not shown anywhere in training.
   const facts = minutes ? [t('app.nodeDuration', { min: minutes })] : [];
 
   /*

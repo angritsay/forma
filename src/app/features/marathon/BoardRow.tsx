@@ -1,10 +1,10 @@
 /**
- * One entry of the challenge's weekly board, shared by the board screen and the challenge's own
+ * One entry of the club's weekly board, shared by the board screen and the club's own
  * day screen — the short table under today's tasks is the same rows as the full one, and a race
  * with two different-looking tables is two races.
  *
  * The rank is a circle, the way the owner's prototype draws it: the leader's filled in the
- * challenge's colour, the rest outlined, so the top of the table is found before a single number
+ * club's colour, the rest outlined, so the top of the table is found before a single number
  * is read. It used to be a bare numeral with «ЧАС С ТРЕНЕРОМ» printed under the leader's name; the
  * prize is one pill above the table now, said once for the whole race rather than on one row.
  */

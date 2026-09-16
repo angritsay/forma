@@ -1,5 +1,5 @@
 /**
- * The head of the challenge's screen: the day as a ring, and one line saying which day it is.
+ * The head of the club's screen: the day as a ring, and one line saying which day it is.
  *
  * It replaces a cover — the programme colour bleeding past the gutters with the title, the day, the
  * week, the partner, a strip of fourteen rules and the prize, all set on it. The owner's verdict on
@@ -8,8 +8,8 @@
  * whole head one figure and one line. Everything the cover said is still said, by something
  * smaller: the ring *is* the strip of days, the pill on the board *is* the prize.
  *
- * The ring is `RingProgress` with the challenge's colour, which the screen sets around itself
- * (`courseTileVars(GAME_TILE)`) — the same ring the home screen's challenge row draws, at the size
+ * The ring is `RingProgress` with the club's colour, which the screen sets around itself
+ * (`courseTileVars(GAME_TILE)`) — the same ring the home screen's club row draws, at the size
  * of a head rather than a row, so the two read as the same object at two distances.
  */
 import { Glyph } from '@/components/ui/Icon';
@@ -19,9 +19,9 @@ import type { MyMarathon } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
 
 export interface GameHeadProps {
-  /** The challenge I am in, or null — locked, not joined, still loading, failed. */
+  /** The club I am in, or null — locked, not joined, still loading, failed. */
   marathon: MyMarathon | null;
-  /** The people I am scored with, by name; empty in a solo challenge. */
+  /** The people I am scored with, by name; empty in a solo club. */
   partners?: readonly string[];
 }
 
@@ -55,7 +55,7 @@ export function GameHead({ marathon, partners = [] }: GameHeadProps) {
         {marathon ? (
           <span className="numeral tabular text-[26px] leading-none">{dayText}</span>
         ) : (
-          /* No challenge to count: the same «?» the home screen shows somebody not playing. */
+          /* No club to count: the same «?» the home screen shows somebody not playing. */
           <Glyph size={18} className="text-course">
             ?
           </Glyph>

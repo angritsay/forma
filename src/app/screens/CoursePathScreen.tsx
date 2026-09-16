@@ -236,7 +236,7 @@ export default function CoursePathScreen() {
         </header>
 
         {/*
-         * Where you are, as the challenge's head draws it (`features/marathon/GameHead`): a ring
+         * Where you are, as the club's head draws it (`features/marathon/GameHead`): a ring
          * with the share inside and one display line beside it — «ДЕНЬ 4 из 28», 800 + 200. It
          * stands on the dark ground rather than on the coloured head so the ring can be drawn in
          * the programme colour, which is where §10 puts the colour: on the figure, not the field.
@@ -251,7 +251,7 @@ export default function CoursePathScreen() {
             valueText={t('app.pathProgress', { done: progress.done, total: progress.total })}
           >
             {/*
-             * One figure in the ring, the way the challenge's head has it: «0%» on one line, not
+             * One figure in the ring, the way the club's head has it: «0%» on one line, not
              * a numeral with «%» stacked under it as a kicker. The sign belongs to the number, and
              * a second line inside a 72px circle is a label repeating what is above it.
              */}

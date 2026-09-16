@@ -11,7 +11,7 @@
  *
  * The estimate is for the *normal* choice unless told otherwise, because that is the row the
  * sheet recommends most days and the one figure a card can honestly show for a decision not yet
- * made. Points are not here on purpose: they are the challenge's currency, and a workout is time
+ * made. Points are not here on purpose: they are the club's currency, and a workout is time
  * spent, not a score.
  */
 import type { Level, Workout } from '@/content/schema';

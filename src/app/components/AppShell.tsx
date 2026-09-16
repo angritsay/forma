@@ -78,7 +78,7 @@ function MotionOutlet() {
  * side — there, width is the entire point.
  *
  * `split` is for a screen that divides itself in two on `md`: the profile, whose identity stands
- * beside its settings, and the challenge, whose day stands beside the week's board. Reading width
+ * beside its settings, and the club, whose day stands beside the week's board. Reading width
  * is the wrong cap for those — 760px minus a 320px side column and the gap between them leaves the
  * main half about 400px, which truncated «Все курсы по подписке» on one screen and squeezed the
  * board's leading row to «А…» on the other. The extra 280px is the side column, not extra measure:

@@ -49,7 +49,7 @@ export interface PathNodeProps {
  *
  * It was a square, on the rule that «this brand has no circles». `design/CHANGELOG.md` §10
  * reversed that rule from the prototype: a person or a rank is a circle, and a day on a path is
- * a stop you stand on — the same object as the ranks on the challenge's board. The square was
+ * a stop you stand on — the same object as the ranks on the club's board. The square was
  * also the last square-shouldered control left after §8 restored the radii.
  */
 export function PathNode({ node, status, n, column, stars, onPress, buttonRef }: PathNodeProps) {

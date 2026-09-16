@@ -3,7 +3,7 @@
  *
  * It was a catalogue first — a page title, a lead, and five tiles in a grid, each with its own
  * heading, kicker, tagline and row of facts. That is a shop, and this is not a shop: there is one
- * course to walk («Форма с нуля»), the challenge running beside it, and the rest is what has not
+ * course to walk («Форма с нуля»), the club running beside it, and the rest is what has not
  * been bought yet.
  *
  * Then it was a sideways deck of full-height covers, and that overcorrected: a screen that answers
@@ -48,7 +48,7 @@ export default function CoursesScreen() {
   const courseStates = useProgress((s) => s.courseStates);
   const activeCourseId = useActiveCourseId();
   const courses = useCatalogue((s) => s.courses);
-  // The challenge that fails to load leaves the deck to the courses; it never blocks the tab.
+  // The club that fails to load leaves the deck to the courses; it never blocks the tab.
   const { data: marathons, marathon } = useMyMarathons();
   const { data: todayTasks } = useMarathonDay(marathon, marathon?.dayIndex ?? 0);
 
@@ -64,7 +64,7 @@ export default function CoursesScreen() {
     gated: GAME_REQUIRES_SUBSCRIPTION,
   });
 
-  /* Today's open tasks, for the challenge card's one line: a rank moves nobody, an unfinished task does. */
+  /* Today's open tasks, for the club card's one line: a rank moves nobody, an unfinished task does. */
   const openTasks = useMemo(() => {
     if (!marathon || todayTasks.length === 0) return undefined;
     const left = todayTasks.filter((item) => item.task.rule !== 'none' && !item.mine).length;

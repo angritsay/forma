@@ -1,5 +1,5 @@
 /**
- * The challenge's colour, guarded.
+ * The club's colour, guarded.
  *
  * Two promises are made about `GAME_TILE` in prose — that the cover keeps black type, and that the
  * CSS token and the TypeScript constant are the same colour. Prose does not fail a build, and both
@@ -19,7 +19,7 @@ function contrast(a: string, b: string): number {
 const GROUND = '#0f0f11';
 
 describe('GAME_TILE', () => {
-  it('stays light enough to keep black type on the challenge cover', () => {
+  it('stays light enough to keep black type on the club cover', () => {
     // The cliff. Below 0.35 `tileInk` returns the light ink and the cover becomes a dark panel with
     // white type — a different screen, and never something to discover from a screenshot.
     expect(isLightTile(GAME_TILE)).toBe(true);
@@ -36,7 +36,7 @@ describe('GAME_TILE', () => {
 
   it('is the same colour as --course-marathon in global.css', () => {
     // The coupling test. The constant paints React, the token paints CSS, and nothing but this
-    // links them: a colour changed in one file and not the other splits the challenge in half —
+    // links them: a colour changed in one file and not the other splits the club in half —
     // an orange cover above an orange-of-a-different-orange progress strip.
     const css = readFileSync(new URL('../../styles/global.css', import.meta.url), 'utf8');
     const token = /--course-marathon:\s*(#[0-9a-fA-F]{6})\s*;/.exec(css)?.[1];

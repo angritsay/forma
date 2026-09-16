@@ -6,7 +6,7 @@
  * nothing because my partner did not — and that gap is the whole tension of the format. Showing
  * one total would hide exactly the thing a person needs to see to go and message their partner.
  *
- * A screen of the challenge, so it wears the challenge's colour — and this is the screen the
+ * A screen of the club, so it wears the club's colour — and this is the screen the
  * brandbook's narrowest colour rule was written for: «номер текущего дня берёт цвет, остальные
  * остаются серыми». Today's numeral is orange in a column of grey ones, and nothing else here is.
  */
@@ -113,7 +113,7 @@ function DayRow({
     <div className="flex items-center gap-3 border-t border-border py-3">
       {/*
        * The numeral is the day. Repeating it as «День 10» next to it says nothing twice — and
-       * today's is the one that takes the challenge's colour, which is exactly the use the
+       * today's is the one that takes the club's colour, which is exactly the use the
        * brandbook reserves for a number: one orange figure says where in the column you are.
        */}
       <span
