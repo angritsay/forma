@@ -463,7 +463,12 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    preview and no confirm button. **No points anywhere in training**: points are the club's
    currency (§10 flow 12), and a workout is time you spend, not a score you earn.
 6. **Player**: one card the size of the screen, with two sides. Front: the clip (or the drawn
-   figure), auto-playing, with a back arrow and pause at the top and, at the bottom, the movement's
+   figure), auto-playing, **as wide as the screen** — `w-full h-auto` on a phone, with the stage
+   cropping whatever the frame's own height runs past, so no shape of clip can put a bar down the
+   side; contained and letterboxed from `md`, where filling the width would crop half a movement
+   away. This is geometry, not a measurement of the clip: it used to read `videoWidth`/`videoHeight`
+   and choose, and the choice could fail to arrive, which is exactly how black bars reached the
+   owner's phone. With a back arrow and pause at the top and, at the bottom, the movement's
    name and its one number — a countdown for timed work, an adjustable rep count with "Done" for
    reps. Nothing else: no elapsed clock, no sound control, no step counter, no next-up line. Back:
    the coach's words as tabs (technique + breathing, cues + mistakes, contraindications + muscles),
