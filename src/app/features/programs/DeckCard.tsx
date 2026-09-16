@@ -114,20 +114,44 @@ export function DeckCard({
             )}
           />
           {/*
-           * One gradient does both jobs: dark at the top so the wordmark and the controls laid
-           * over the deck keep their contrast, near-black at the bottom so the headline, the
-           * figure and the button read as one block rather than as text floating on a picture.
+           * «Убери затемнение на курсе» — and this is as far as it goes without the photograph
+           * paying for it.
+           *
+           * What went: the 0.6 veil across the top and the 0.5 across the middle. Those were the
+           * ones that dimmed the picture people actually look at, and nothing has needed them
+           * since the deck lost the wordmark and the controls that used to sit up there. The top
+           * third of the photograph is now untouched, and the picture reads all the way down
+           * instead of going black behind the button.
+           *
+           * What stayed, and why: a ramp into the card's own ink under the words. On a 390×844
+           * phone Home leaves this card 290px and its four things — kicker, name, two pills,
+           * button — need about 210 of them, so the words and the picture share the same space.
+           * Taking the ramp out as well was built and measured: the photograph collapses to an
+           * 80px strip across the coach's waist, which loses the picture in order to save it.
+           * The ramp starts where the kicker starts — a third of the way down — and reaches the
+           * ink only at the very foot, so what it covers is the part of the frame the type is
+           * standing on, not the frame.
+           *
+           * The stops are measured, not guessed. Sampling the composited pixels behind the type on
+           * a 390px phone: the kicker's ground went 157 → 120 and the name's 149 → 128, so white on
+           * them goes 2.71 → 4.42 and 2.99 → 3.94. The words came out *more* legible than the veil
+           * that was there to make them legible — because the old ramp put its weight at the top of
+           * the frame, where nothing was reading, instead of under the line that was.
            */}
           <div
-            className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,15,17,0.6),transparent_28%,rgba(15,15,17,0.5)_58%,rgba(15,15,17,0.97))]"
+            className="absolute inset-0 bg-[linear-gradient(180deg,transparent_14%,rgba(15,15,17,0.42)_38%,rgba(15,15,17,0.74)_70%,rgba(15,15,17,0.95))]"
             aria-hidden="true"
           />
+          <div className="photo-grain" aria-hidden="true" />
         </>
-      ) : null}
-      {/* Grain goes over either cover: a flat colour wants the texture as much as a photo does. */}
-      <div className="photo-grain" aria-hidden="true" />
-      {/* A colour cover has no image to fade, so what is not owned is veiled instead. */}
-      {!art && dimmed ? <div className="absolute inset-0 bg-ink/45" aria-hidden="true" /> : null}
+      ) : (
+        <>
+          {/* Grain goes over a colour cover too: a flat colour wants the texture as much. */}
+          <div className="photo-grain" aria-hidden="true" />
+          {/* A colour cover has no image to fade, so what is not owned is veiled instead. */}
+          {dimmed ? <div className="absolute inset-0 bg-ink/45" aria-hidden="true" /> : null}
+        </>
+      )}
 
       {/*
        * The picture opens the thing; the button starts it. They are two targets, so the whole card
