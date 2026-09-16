@@ -208,17 +208,22 @@ const jsonLd = [
             <Pill tone="course" size="md">{sessionsLabel(locale, course.sessionsPerWeek)}</Pill>
           </li>
           <li class="flex max-w-full">
-            <Pill tone="course" size="md">{t(locale, 'landing.avgSession', { n: course.avgSessionMin })}</Pill
+            <Pill tone="course" size="md"
+              >{t(locale, 'landing.avgSession', { n: course.avgSessionMin })}</Pill
             >
           </li>
           {
             equipment.map((e) => (
               <li class="flex max-w-full">
-                <Pill tone="course" size="md">{equipmentLabel(locale, e)}</Pill>
+                <Pill tone="course" size="md">
+                  {equipmentLabel(locale, e)}
+                </Pill>
               </li>
             ))
           }
-          <li class="flex max-w-full"><Pill size="md">{t(locale, 'landing.courseLifetimeNote')}</Pill></li>
+          <li class="flex max-w-full">
+            <Pill size="md">{t(locale, 'landing.courseLifetimeNote')}</Pill>
+          </li>
         </ul>
         <!-- The price is the figure of this screen; one button beside it. -->
         <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
@@ -334,7 +339,9 @@ const jsonLd = [
             {
               equipment.map((e) => (
                 <li class="flex max-w-full">
-                  <Pill tone="course" size="md">{equipmentLabel(locale, e)}</Pill>
+                  <Pill tone="course" size="md">
+                    {equipmentLabel(locale, e)}
+                  </Pill>
                 </li>
               ))
             }
