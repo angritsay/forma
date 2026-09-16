@@ -41,7 +41,7 @@ export interface OptionTileProps {
  *
  * **Picking one looks like something.** A check in a circle lands on the plate on the spring
  * (`.pop-in`, design/CHANGELOG.md §10: «сделанное выглядит сделанным») — the same mark a delivered
- * challenge task gets. On the white plate the circle is ink with a paper check, the plate's own
+ * club task gets. On the white plate the circle is ink with a paper check, the plate's own
  * inversion inverted back, so it reads on the fill it sits on. It is keyed on nothing and mounts
  * only while selected, so it pops once per pick and not on every re-render.
  */

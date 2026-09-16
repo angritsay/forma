@@ -6,7 +6,7 @@
  * quietly undo that by making an early leader unbeatable and telling anyone who joined late that
  * they are already out of it.
  *
- * It is a screen of the challenge, so it carries the challenge's colour: `--course-tile` is set at
+ * It is a screen of the club, so it carries the club's colour: `--course-tile` is set at
  * the root and lands on the prize's pill and on the leader's filled circle — the two things the
  * colour marks on the day screen's own table. Your own row is a white ring, not the colour. The
  * week switch stays black and white; it is a control.

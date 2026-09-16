@@ -155,8 +155,8 @@ export default function StatsScreen() {
         {/*
          * The three mechanics that bring anybody back, in the prototype's order: the week you are
          * halfway through, the badges you have not taken yet, and the one number you owe today.
-         * Then the week's table, which the prototype leaves to the challenge — but this table is
-         * everyone's, not the challenge's, and it has no other home on a phone.
+         * Then the week's table, which the prototype leaves to the club — but this table is
+         * everyone's, not the club's, and it has no other home on a phone.
          */}
         <div className="flex flex-col gap-8 pt-7">
           <WeekDots days={weekDays} goal={weekGoal} />

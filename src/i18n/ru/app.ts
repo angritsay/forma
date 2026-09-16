@@ -5,7 +5,10 @@
 export const app = {
   tabHome: 'Сегодня',
   tabPrograms: 'Программы',
-  tabGame: 'Челлендж',
+  // «Клуб», а не «Клуб маленьких шагов»: подпись вкладки — один из четырёх слотов на 390px, и
+  // имя в три слова туда не встаёт. Полное имя стоит там, где есть место — на шапке экрана и в
+  // текстах приглашения (marathonTitle и ниже); короткое — во вкладке и в верхней строке.
+  tabGame: 'Клуб',
   tabReports: 'Прогресс',
   navMain: 'Основная навигация',
   navLocaleRu: 'RU',
@@ -155,8 +158,10 @@ export const app = {
   homeTodayNoCourseBody: 'И первая тренировка появится здесь — уже сегодня.',
   homeTodayNoCourseCta: 'Смотреть программы',
   homeCoachNow: 'Заниматься с тренером',
-  // The challenge, on Home. Somebody not in it sees the same row with the task blurred out.
-  homeGameSpoiler: 'Челлендж идёт без тебя',
+  // The club, on Home. Somebody not in it sees the same row with the task blurred out.
+  // «Собирается», not «идёт»: a club meets, a challenge runs. The needle is the same — it is
+  // happening today and they are not in it — but it is an invitation rather than a race pulling away.
+  homeGameSpoiler: 'Клуб собирается без тебя',
   homeGameSpoilerTask: 'Задание дня',
   homeTasksTitle: 'Сегодня ещё',
   homeTaskSteps: 'Напиши, сколько прошёл сегодня',
@@ -178,10 +183,10 @@ export const app = {
   homeCourseProgress: '{pct}% пройдено',
   homeCourseLocked: 'Закрыт',
   homeCourseGet: 'Прийти',
-  homeDeckLabel: 'Программы и челлендж',
+  homeDeckLabel: 'Программы и клуб',
   homeDeckCourse: 'Курс',
-  homeDeckMarathon: 'Челлендж',
-  homeDeckMarathonBody: 'Задание каждый день, таблица за неделю',
+  homeDeckMarathon: 'Клуб',
+  homeDeckMarathonBody: 'Маленький шаг каждый день, таблица за неделю',
   homeDeckGameLocked: 'Входит в подписку',
   homeDeckGameTrial: 'Пробная неделя с курсом — осталось {n}',
   homeDeckGameTrialDayOne: '1 день',
@@ -951,11 +956,22 @@ export const app = {
 
   // --- Marathon -------------------------------------------------------------
   // The second format: daily tasks, proof, a partner you are scored with, a weekly board.
-  marathonTitle: 'Челлендж',
+  //
+  // It is «Клуб маленьких шагов» to the reader and `marathon*` in the code and the database. Three
+  // names for one thing would be a tax, so this is the one place that reconciles them: the keys
+  // stay `marathon*` because renaming them buys the reader nothing and costs a migration, and the
+  // words below are the only ones anybody sees.
+  //
+  // The name was the owner's, and it is the right one: «челлендж» promised a test, and the people
+  // this is for are coming back after a break — a test is a reason not to start. A club promises
+  // belonging, which is what the format actually delivers: a partner, a board with names, a day
+  // everyone is having at once. Where the two disagree is the prize, so the prize stopped being
+  // the pitch and became a fact of the week (see marathonEmptyBody, marathonLockedBody).
+  marathonTitle: 'Клуб маленьких шагов',
   // The cover's big line before there is a day to count: what the format is, in one line.
   // No dash in it on purpose — the line sets in capitals across two lines of a 390px screen, and
   // an em-dash that lands first on the second line reads as a stray mark rather than as pause.
-  marathonCoverPitch: 'Задание на каждый день',
+  marathonCoverPitch: 'Один маленький шаг в день',
   marathonTabToday: 'Сегодня',
   marathonTabBoard: 'Таблица',
   marathonTabPoints: 'Мои баллы',
@@ -963,6 +979,11 @@ export const app = {
   // The same line in two weights on the challenge's head: «ДЕНЬ 10» heavy, «из 14» light.
   marathonDayN: 'День {n}',
   marathonOfTotal: 'из {total}',
+  // «Задания», not «шаги», although the club is the «Клуб маленьких шагов»: «шаги» is already
+  // the step counter in this product — one of the club's own tasks is literally «Шаги», and a
+  // head reading «ШАГИ ДНЯ 0/3» above it asks the reader to hold two meanings of one word. The
+  // name's metaphor lives in the taglines (marathonCoverPitch, the invitations); the unit
+  // inside the screen stays the plain word for the thing you do.
   marathonTasksToday: 'Задания дня',
   marathonWeek: 'Неделя {n}',
   marathonWeekThis: 'Эта неделя',
@@ -973,26 +994,30 @@ export const app = {
   marathonBoardAll: 'Вся таблица',
   marathonWithPartner: 'Напарник: {name}',
   marathonSolo: 'Идёшь один',
-  marathonHomeCta: 'Открыть челлендж',
+  marathonHomeCta: 'Открыть клуб',
   marathonHomeTasksLeft: 'Осталось заданий: {n}',
   marathonHomeAllDone: 'На сегодня всё',
-  marathonNotStarted: 'Челлендж ещё не начался',
+  // A round of the club has a start and an end; the club itself does not. So these two lines are
+  // about the round, and «клуб» is not the thing that begins or finishes.
+  marathonNotStarted: 'Клуб ещё не собрался',
   marathonNotStartedBody: 'Задания появятся утром первого дня.',
-  marathonFinished: 'Челлендж закончен',
+  marathonFinished: 'Этот круг закончен',
   marathonFinishedBody: 'Таблица остаётся — можно посмотреть, чем всё кончилось.',
-  marathonEmptyTitle: 'Ты пока не в челлендже',
+  marathonEmptyTitle: 'Ты пока не в клубе',
+  // The invitation. The prize is still here and still true — it moved to the end, because a club
+  // whose first sentence is about winning is a competition wearing a club's name.
   marathonEmptyBody:
-    'Челлендж — это задание каждый день и таблица за неделю. Победитель недели получает час с тренером.',
+    'Клуб маленьких шагов — это один небольшой шаг каждый день и общая таблица за неделю. Идёшь не один: у тебя есть напарник. У недели есть приз — час с тренером.',
   marathonNoTasksToday: 'Сегодня заданий нет',
   marathonNoTasksTodayBody: 'Отдыхаем. Завтра утром будет новое.',
-  marathonErrorTitle: 'Не удалось загрузить челлендж',
-  marathonLockedTitle: 'Челлендж входит в подписку',
+  marathonErrorTitle: 'Не удалось загрузить клуб',
+  marathonLockedTitle: 'Клуб маленьких шагов входит в подписку',
   marathonTrialTitle: 'Пробная неделя',
-  marathonTrialBody: 'Челлендж открыт вместе с курсом. Осталось {n} — дальше по подписке.',
+  marathonTrialBody: 'Клуб открыт вместе с курсом. Осталось {n} — дальше по подписке.',
   // The pill on the day screen: «Пробная неделя · осталось 7 дней →», leading to the subscription.
   marathonTrialLeft: 'осталось {n}',
   marathonLockedBody:
-    'Задание каждый день, доказательство и таблица за неделю. Кто наберёт больше всех — час с тренером.',
+    'Небольшой шаг каждый день, отметка о том, что сделал, и общая таблица за неделю. Напарник видит твои шаги, ты — его. У недели есть приз — час с тренером.',
   // One task
   marathonDeadline: 'До {time}',
   marathonDeadlinePassed: 'Время вышло',
@@ -1100,7 +1125,7 @@ export const app = {
   mAdminVisibilityTeam: 'Команда и тренер',
   mAdminVisibilityCoach: 'Только тренер',
   mAdminDueTime: 'Дедлайн',
-  mAdminDueDefault: 'Как у челленджа',
+  mAdminDueDefault: 'Как у клуба',
   mAdminLateCounts: 'Засчитывать после дедлайна',
   mAdminSave: 'Сохранить',
   mAdminDelete: 'Удалить',
@@ -1119,7 +1144,7 @@ export const app = {
   mAdminRemoved: 'Убран',
   mAdminPeopleEmpty: 'Пока никого',
   mAdminPeopleEmptyBody:
-    'Добавь участников по почте — они увидят челлендж, когда войдут с этим адресом.',
+    'Добавь участников по почте — они увидят клуб, когда войдут с этим адресом.',
   mAdminAddError: 'Не удалось добавить',
   // Proofs
   mAdminProofsEmpty: 'Отчётов пока нет',

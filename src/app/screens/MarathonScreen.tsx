@@ -1,8 +1,8 @@
 /**
- * The challenge (the third tab): today's tasks, and who is winning the week.
+ * The club (the third tab): today's tasks, and who is winning the week.
  *
  * It was reachable only through a card on the home deck, which made the format look like an
- * accessory to the course. It is a tab of its own now, and it holds the two halves of the challenge in
+ * accessory to the course. It is a tab of its own now, and it holds the two halves of the club in
  * the order they are asked for: what is set for today and whether it is sent, then the short
  * table of the week under it — five rows, the full board one tap further.
  *
@@ -18,7 +18,7 @@
  * line under it — the same facts, said by smaller things.
  *
  * The colour is still the brandbook's own rule: «один экран — один цвет, и он приходит от
- * программы». The challenge's is `GAME_TILE`; `--course-tile` is set once around the whole screen,
+ * программы». The club's is `GAME_TILE`; `--course-tile` is set once around the whole screen,
  * so the ring, the pills, the leader's circle and the trial's link all read the same variable. It
  * paints figures and pills, never a button and never a field of it.
  */
@@ -126,7 +126,7 @@ export default function MarathonScreen() {
   /*
    * Every state of this screen is the same page: the head, then whatever there is to say under it.
    * There is no top bar — the head names the screen, and the tab bar already does. `--course-tile`
-   * sits on the outer element so the ring and everything under it take the challenge's colour
+   * sits on the outer element so the ring and everything under it take the club's colour
    * from one place.
    */
   const page = (head: MyMarathon | null, body: ReactNode, partners?: string[]) => (
@@ -139,9 +139,9 @@ export default function MarathonScreen() {
   );
 
   /*
-   * The challenge is part of the subscription (content/site/plans.ts). The screen says so plainly and
+   * The club is part of the subscription (content/site/plans.ts). The screen says so plainly and
    * offers the subscription rather than pretending the format does not exist — somebody who got
-   * here tapped a card that told them what the challenge is, and the answer to "can I play" is a price,
+   * here tapped a card that told them what the club is, and the answer to "can I play" is a price,
    * not a locked door.
    */
   const access = gameAccess({
@@ -212,7 +212,7 @@ export default function MarathonScreen() {
        * The week a course bought, as a pill that leads to the subscription. A trial nobody is told
        * about converts nothing: on the seventh day the person should already know what they are
        * about to lose — and one pill says it as well as the paragraph it replaced, in the colour
-       * that marks the rest of the challenge's own facts.
+       * that marks the rest of the club's own facts.
        */}
       {access.trialDaysLeft !== undefined ? (
         <a

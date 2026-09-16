@@ -36,9 +36,9 @@ export interface SessionState {
   /** Ids of courses the user owns (active purchases). */
   entitlements: string[];
   /**
-   * When the newest owned course was activated, ISO — the clock the challenge's free week runs on
+   * When the newest owned course was activated, ISO — the clock the club's free week runs on
    * (src/app/features/marathon/gameAccess.ts). Kept here rather than recomputed per screen
-   * because `entitlements` throws the dates away and both screens that gate the challenge need them.
+   * because `entitlements` throws the dates away and both screens that gate the club need them.
    */
   newestPurchaseAt: string | null;
   /** The user's subscription, or null when they never subscribed; access itself is in `entitlements`. */

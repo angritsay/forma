@@ -20,6 +20,8 @@ const REQUIRED = [
   'clock',
   'bolt',
   'trophy',
+  // The club's tab wears this one (src/app/components/BottomNav.tsx).
+  'people',
   'chevron',
   'plus',
   'minus',

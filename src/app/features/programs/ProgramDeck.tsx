@@ -15,7 +15,7 @@
  * full-bleed cover is still the right shape on Home, where a single card answers «что у меня
  * сегодня» and owns the screen, and that is why `DeckCard` is still there.
  *
- * A ticket is never the whole story: the tap-through is the course's own path or the challenge's
+ * A ticket is never the whole story: the tap-through is the course's own path or the club's
  * own day, where the detail lives.
  */
 import { courseTitle } from '@/content/catalogue';
@@ -59,7 +59,7 @@ export interface ProgramDeckProps {
    */
   openTasks?: Readonly<Record<string, number>>;
   /**
-   * Whether the challenge opens, and on what grounds. A locked card is still shown — a locked game is
+   * Whether the club opens, and on what grounds. A locked card is still shown — a locked game is
    * the clearest thing the subscription has to sell — but it explains itself and leads to the
    * subscribe page instead of into the day; a card open on the trial says how long is left.
    */
@@ -118,7 +118,7 @@ export function ProgramDeck({
                     total: formatNumber(locale, marathon.days),
                   })}`}
                   title={marathon.title}
-                  /* Its one fact as a pill: how long the challenge runs. */
+                  /* Its one fact as a pill: how long the club runs. */
                   pills={[
                     plural(locale, marathon.days, {
                       one: t('app.homeDeckGameTrialDayOne'),

@@ -29,6 +29,7 @@ export const ICON_NAMES = [
   'clock',
   'bolt',
   'trophy',
+  'people',
   'chevron',
   'plus',
   'minus',
@@ -87,6 +88,16 @@ export const ICONS: Record<IconName, IconDef> = {
   bolt: { d: 'M13 2L4.5 13.5H11l-1 8.5 8.5-11.5H13z' },
   trophy: {
     d: 'M7 4h10v5a5 5 0 0 1-10 0zM7 6H4.5a2.5 2.5 0 0 0 2.5 4M17 6h2.5a2.5 2.5 0 0 1-2.5 4M12 14v3M8 21h8M10 17h4v4h-4z',
+  },
+  /*
+   * Two people, for the club's tab. It used to wear `trophy`, which was right when the format
+   * was the «Челлендж» and wrong the moment it became the «Клуб маленьких шагов»: an icon is a
+   * label, and a cup over the word «КЛУБ» puts the prize back in the place the copy just took
+   * it out of (design/CHANGELOG.md §11). Drawn in `profile`'s language — the same head circle
+   * and shoulder arc — with a second, smaller figure behind it, so the two read as one family.
+   */
+  people: {
+    d: 'M9 12.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M2.5 20a6.5 6.5 0 0 1 13 0M17 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6M16.5 14.4a6 6 0 0 1 5 5.6',
   },
   chevron: { glyph: '›' },
   plus: { glyph: '+' },

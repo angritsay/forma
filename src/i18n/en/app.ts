@@ -7,7 +7,9 @@
 export const app = {
   tabHome: 'Today',
   tabPrograms: 'Programmes',
-  tabGame: 'Challenge',
+  // «Club», not «Small Steps Club»: a tab label is one of four slots on a 390px screen and a
+  // three-word name does not fit. The full name goes where there is room — see marathonTitle.
+  tabGame: 'Club',
   tabReports: 'Progress',
   navMain: 'Main navigation',
   navLocaleRu: 'RU',
@@ -155,8 +157,10 @@ export const app = {
   homeTodayNoCourseBody: 'And your first workout appears here — today.',
   homeTodayNoCourseCta: 'Browse programmes',
   homeCoachNow: 'Train with the coach',
-  // The challenge, on Home. Somebody not in it sees the same row with the task blurred out.
-  homeGameSpoiler: 'The challenge is on',
+  // The club, on Home. Somebody not in it sees the same row with the task blurred out.
+  // «Meeting», not «running»: a club meets, a challenge runs. Same needle — it is happening
+  // today and they are not in it — but an invitation rather than a race pulling away.
+  homeGameSpoiler: 'The club is meeting without you',
   homeGameSpoilerTask: 'Today’s task',
   homeTasksTitle: 'Still today',
   homeTaskSteps: 'Log how far you walked today',
@@ -178,10 +182,10 @@ export const app = {
   homeCourseProgress: '{pct}% done',
   homeCourseLocked: 'Locked',
   homeCourseGet: 'Join',
-  homeDeckLabel: 'Programmes and challenge',
+  homeDeckLabel: 'Programmes and club',
   homeDeckCourse: 'Course',
-  homeDeckMarathon: 'Challenge',
-  homeDeckMarathonBody: 'A task every day, a board every week',
+  homeDeckMarathon: 'Club',
+  homeDeckMarathonBody: 'A small step every day, a board every week',
   homeDeckGameLocked: 'Part of the subscription',
   homeDeckGameTrial: 'Free week with the course — {n} left',
   homeDeckGameTrialDayOne: '1 day',
@@ -947,15 +951,29 @@ export const app = {
 
   // --- Marathon -------------------------------------------------------------
   // The second format: daily tasks, proof, a partner you are scored with, a weekly board.
-  marathonTitle: 'Challenge',
+  //
+  // It is the «Small Steps Club» to the reader and `marathon*` in the code and the database.
+  // Three names for one thing would be a tax, so this is the one place that reconciles them: the
+  // keys stay `marathon*` because renaming them buys the reader nothing and costs a migration,
+  // and the words below are the only ones anybody sees.
+  //
+  // «Challenge» promised a test, and the people this is for are coming back after a break — a
+  // test is a reason not to start. A club promises belonging, which is what the format actually
+  // delivers: a partner, a board with names, a day everyone is having at once. Where the two
+  // disagree is the prize, so the prize stopped being the pitch and became a fact of the week.
+  marathonTitle: 'Small Steps Club',
   // The cover's big line before there is a day to count: what the format is, in one line.
-  marathonCoverPitch: 'A task for every day',
+  marathonCoverPitch: 'One small step a day',
   marathonTabToday: 'Today',
   marathonTabBoard: 'Board',
   marathonTabPoints: 'My points',
   marathonDayOf: 'Day {n} of {total}',
   marathonDayN: 'Day {n}',
   marathonOfTotal: 'of {total}',
+  // «Tasks», not «steps», although the club is the Small Steps Club: «steps» is already the step
+  // counter here — one of the club's own tasks is literally «Шаги» — and a head reading «TODAY'S
+  // STEPS 0/3» above it asks the reader to hold two meanings of one word. The name's metaphor
+  // lives in the taglines; the unit inside the screen stays the plain word.
   marathonTasksToday: "Today's tasks",
   marathonWeek: 'Week {n}',
   marathonWeekThis: 'This week',
@@ -965,26 +983,29 @@ export const app = {
   marathonBoardAll: 'Full board',
   marathonWithPartner: 'Partner: {name}',
   marathonSolo: 'On your own',
-  marathonHomeCta: 'Open the challenge',
+  marathonHomeCta: 'Open the club',
   marathonHomeTasksLeft: '{n} left today',
   marathonHomeAllDone: 'Done for today',
-  marathonNotStarted: 'The challenge has not started',
+  // A round of the club starts and ends; the club itself does not.
+  marathonNotStarted: 'The club has not met yet',
   marathonNotStartedBody: 'The first tasks arrive on the morning of day one.',
-  marathonFinished: 'The challenge is over',
+  marathonFinished: 'This round is over',
   marathonFinishedBody: 'The board stays up — you can still see how it ended.',
-  marathonEmptyTitle: 'You are not in the challenge',
+  marathonEmptyTitle: 'You are not in the club yet',
+  // The invitation. The prize is still here and still true — it moved to the end, because a club
+  // whose first sentence is about winning is a competition wearing a club's name.
   marathonEmptyBody:
-    'The challenge is a task every day and a board every week. Whoever wins the week gets an hour with the coach.',
+    'The Small Steps Club is one small step every day and a board you share for the week. You are not on your own: you have a partner. The week has a prize — an hour with the coach.',
   marathonNoTasksToday: 'Nothing set for today',
   marathonNoTasksTodayBody: 'A rest day. There will be a new one in the morning.',
-  marathonErrorTitle: 'Could not load the challenge',
-  marathonLockedTitle: 'The challenge is part of the subscription',
+  marathonErrorTitle: 'Could not load the club',
+  marathonLockedTitle: 'The Small Steps Club is part of the subscription',
   marathonTrialTitle: 'Your free week',
   marathonTrialBody:
-    'The challenge is open with your course. {n} left — after that it needs a subscription.',
+    'The club is open with your course. {n} left — after that it needs a subscription.',
   marathonTrialLeft: '{n} left',
   marathonLockedBody:
-    'A task every day, proof, and a board every week. Whoever scores most gets an hour with the coach.',
+    'A small step every day, a mark that you did it, and a board you share for the week. Your partner sees your steps and you see theirs. The week has a prize — an hour with the coach.',
   // One task
   marathonDeadline: 'Until {time}',
   marathonDeadlinePassed: 'The day has closed',
@@ -1092,7 +1113,7 @@ export const app = {
   mAdminVisibilityTeam: 'The team and the coach',
   mAdminVisibilityCoach: 'The coach only',
   mAdminDueTime: 'Deadline',
-  mAdminDueDefault: "The challenge's",
+  mAdminDueDefault: "The club's",
   mAdminLateCounts: 'Count proof sent after the deadline',
   mAdminSave: 'Save',
   mAdminDelete: 'Delete',
@@ -1111,7 +1132,7 @@ export const app = {
   mAdminRemoved: 'Removed',
   mAdminPeopleEmpty: 'Nobody yet',
   mAdminPeopleEmptyBody:
-    'Add people by email — the challenge appears for them when they sign in with that address.',
+    'Add people by email — the club appears for them when they sign in with that address.',
   mAdminAddError: 'Could not add',
   // Proofs
   mAdminProofsEmpty: 'No proof yet',

@@ -5,7 +5,7 @@
  * It is the only card of its kind left. The «Программы» tab used to draw its whole deck with this
  * component and now draws tickets instead (`CourseTicket`), which is why the type here could come
  * down a step: this is no longer one of five covers competing for attention, it is the one object
- * on a screen that does not scroll, and at 36px the title was taking room the challenge row needed.
+ * on a screen that does not scroll, and at 36px the title was taking room the club row needed.
  *
  * **What stands on the picture is the owner's prototype's** (`design/ui_kits/app-v2`, «Сегодня»):
  * the kicker, the workout's name as the one display line, two pills — how long and how much —

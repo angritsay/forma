@@ -113,7 +113,7 @@ export function TaskCard({ item, teammateNames, closed, onSend, onSendMedia }: T
           </span>
         ) : task.rule !== 'none' ? (
           /*
-           * What is still on the table, in the challenge's colour — the brandbook's «цвет красит
+           * What is still on the table, in the club's colour — the brandbook's «цвет красит
            * номера» spent on the one number that is a decision.
            */
           <Pill tone="course">{points}</Pill>

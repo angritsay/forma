@@ -2,14 +2,14 @@
  * Home (docs/SPEC.md §10 flow 3): today's session, today's tasks, and the coach — on one screen,
  * without a scroll.
  *
- * It used to be the whole product on one page — a swipeable deck of every course and the challenge, and
+ * It used to be the whole product on one page — a swipeable deck of every course and the club, and
  * under it the resume strip, the streak, the week's figures, the coach's assigned workouts and his
  * bookable hour. Six sections, each a different size, none of them the answer to the only question
  * anybody opens this screen with: what am I doing today.
  *
  * So the deck moved to the programmes tab and the numbers to «Прогресс», and what is left is that
- * answer — for the course *and* for the challenge. The greeting names the athlete, today's session is
- * one full card, the challenge is one row under it (blurred for somebody not playing, because a
+ * answer — for the course *and* for the club. The greeting names the athlete, today's session is
+ * one full card, the club is one row under it (blurred for somebody not playing, because a
  * spoiler is a truer invitation than an advertisement), and one button offers the coach himself,
  * for the people whose answer to "what am I doing today" is «покажи мне, как».
  *
@@ -22,10 +22,11 @@
  * column the exact height of the viewport: everything except today's card has the height its
  * content needs, and the card takes whatever is left (`min-h-0 flex-1`). Add a task row and the
  * card gives up the room; take it away and the card grows back. A fixed `58dvh` cover could not do
- * that — it was the reason the fold landed in the middle of the challenge row.
+ * that — it was the reason the fold landed in the middle of the club row.
  *
- * The challenge sits directly under the card, not at the foot of the screen: «„челлендж идёт без
- * тебя“ — это очень стильно, но оно настолько внизу, что этого не видно».
+ * The club row sits directly under the card, not at the foot of the screen: «„челлендж идёт без
+ * тебя“ — это очень стильно, но оно настолько внизу, что этого не видно». (It was called
+ * the challenge when she said that; it is the «Клуб маленьких шагов» now — see i18n `marathonTitle`.)
  *
  * The account left. The streak, the level, the avatar and «Обновить» are on «Прогресс» now
  * (`features/stats/AccountRow`) — they answer «как у меня дела», and this screen answers «что у
@@ -116,7 +117,7 @@ export default function HomeScreen() {
   const activeCourseId = useActiveCourseId();
   const courses = useCatalogue((s) => s.courses);
   /*
-   * The challenge, from the server. Home shows the row whether or not there is one to show: with a
+   * The club, from the server. Home shows the row whether or not there is one to show: with a
    * marathon it carries today's task, without one it carries the same row blurred.
    */
   const { marathon, status: gameStatus } = useMyMarathons();
@@ -311,7 +312,7 @@ export default function HomeScreen() {
           </section>
         ) : null}
         {/*
-         * The challenge, immediately under today's card. It used to sit below the coach button and
+         * The club, immediately under today's card. It used to sit below the coach button and
          * the task list, which on a phone put it under the fold — and «Челлендж идёт без тебя» is
          * an invitation that only works if it is seen.
          */}
