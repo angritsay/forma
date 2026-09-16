@@ -16,6 +16,10 @@ export interface LogoLoaderProps {
  * borrowed from every other website. `Spinner` stays for the places a 16px indicator has to sit
  * inside a button or a row, where a wordmark cannot be read.
  *
+ * Two things move, and they are one animation so they cannot fall out of step: the weight, and the
+ * light. The owner asked for the second — «чтобы лого переливалось медленно и зацикленно» — so a
+ * letter at rest is thin and a step dimmer, and the letter under the crest is heavy and white.
+ *
  * Each letter is drawn twice. The visible copy takes the animated weight; the hidden copy is
  * pinned at 800 and reserves the column, because a variable weight changes a glyph's advance
  * width and the letters would otherwise shove each other sideways as the crest passed. The

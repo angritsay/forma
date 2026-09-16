@@ -1,29 +1,30 @@
 import { LogoLoader } from '@/components/ui/LogoLoader';
-import { useT } from '@/app/hooks/useT';
 
 /**
- * Full-height brand splash shown while the session boots or a lazy screen loads.
+ * The loading screen: the mark in the middle of the screen, and nothing else.
  *
- * The mark itself is the indicator — «FORMA» with a wave of weight running through it — with the
- * tagline as a kicker under it, set left in the content column like every other screen rather
- * than centred like a launch card. It replaced a turning circle, which was the one shape the
- * brandbook forbids and was only ever there because nothing else had been drawn; the mark also
- * carries the "loading" status for screen readers, which is why the kicker is the tagline and not
- * the word "loading" a second time.
+ * It used to be the mark set left in the content column with the tagline as a kicker under it —
+ * the same measure every other screen uses, so that the boot read as a page whose content had not
+ * arrived. The owner asked for the opposite: «переделай экран загрузки чтобы лого переливалось
+ * медленно и зацикленно по центру и больше ничего не было». A launch screen is not a page missing
+ * its content; it is the product's name while the product is on its way, and a sentence underneath
+ * gives somebody something to read at the one moment they cannot act on it.
  *
- * It grows with the viewport. On a phone the column is the phone's; from `md` up the whole screen
- * is the app's, and a 36px wordmark alone in the middle of a 1440px window reads as a page that
- * failed rather than one that is coming.
+ * So: centred on both axes, the tagline gone, and the mark slowed to a 4.2s loop in which the
+ * light travels across it with the weight (`.wordmark-wave`).
+ *
+ * The size is a clamp rather than a breakpoint ladder, for the same reason the column used to grow:
+ * a 36px wordmark alone in the middle of a 1440px window reads as a page that failed rather than
+ * one that is coming. It is the same clamp the sign-in title card uses, so the two brand moments
+ * are the same object at the same size.
+ *
+ * `src/pages/app/index.astro` draws this exact layout in plain HTML for the wait before the bundle
+ * exists. The two must stay identical — the handover between them should be invisible.
  */
 export function BootScreen() {
-  const { t } = useT();
   return (
-    <div className="flex min-h-dvh flex-col justify-center">
-      <div className="mx-auto flex w-full max-w-[480px] flex-col gap-4 px-5.5 md:max-w-[720px] md:gap-5 md:px-10">
-        <LogoLoader className="text-4xl md:text-6xl lg:text-7xl" />
-        {/* A sentence, not a label: the sentence-case kicker, so it is not shouted in caps. */}
-        <span className="eyebrow-sentence">{t('common.tagline')}</span>
-      </div>
+    <div className="flex min-h-dvh items-center justify-center px-6">
+      <LogoLoader className="text-[clamp(44px,16vw,96px)]" />
     </div>
   );
 }
