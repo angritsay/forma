@@ -588,12 +588,8 @@ export const app = {
   profileNameLabel: 'Имя',
   profileNoName: 'Имя не задано',
   profileEmail: 'Почта',
-  profileFitnessEyebrow: 'Индекс формы',
-  profileFitnessLevel: 'Уровень {n} · {name}',
-  profileFitnessMissing: 'Заверши настройку — и получишь индекс формы и стартовую нагрузку.',
   profileFitnessSetup: 'Завершить настройку',
   profileRetakeTests: 'Пройти адаптацию заново',
-  profileTrainingSection: 'Тренировки',
   profileEquipment: 'Инвентарь',
   profileEquipmentTitle: 'Твой инвентарь',
   profileEquipmentLead: 'Отметь, что есть дома, — тренировки подстроятся.',
@@ -602,14 +598,11 @@ export const app = {
   profileLimitationsTitle: 'Что беречь',
   profileLimitationsLead: 'Заменим упражнения, которые нагружают эти зоны.',
   profileLimitationsNone: 'Ничего',
-  profileAccountSection: 'Аккаунт',
   profileAdmin: 'Админка',
-  profileAdminHint: 'Покупки и доступы',
-  profileCoachSection: 'Тренер',
   profileBook: 'Занятие с тренером',
-  profileBookHint: 'Онлайн · от {price}',
+  // The value on the profile's row: the price alone, so the row's own name has room to be read.
+  profileBookFrom: 'от {price}',
   profileSubscriptionSection: 'Подписка',
-  profileSubscriptionNone: 'Все курсы по подписке',
   profileSubscriptionNoneHint: 'от {price} в месяц',
   profileSubscriptionLive: '{plan} · до {date}',
   profileSubscriptionCancelled: 'Отменена · доступ до {date}',
@@ -722,15 +715,11 @@ export const app = {
     'В демо-режиме приложение работает целиком, на выдуманных данных внутри этого браузера. Ничего никуда не отправляется, Supabase не нужен.',
   demoAuthCode: 'Демо: код {code}',
   demoSection: 'Демо-режим',
-  demoDataNote:
-    'Выдуманные данные в этом браузере: два открытых курса, придуманные имена в рейтинге, шаги за прошлые две недели.',
   demoReset: 'Сбросить демо-данные',
-  demoResetHint: 'Начать заново с чистого демо-аккаунта',
   demoResetTitle: 'Сбросить демо-данные?',
   demoResetBody:
     'Демо-профиль, прогресс и покупки в этом браузере удалятся, и ты выйдешь из аккаунта. Никуда эти данные и не уходили.',
   demoLeave: 'Выйти из демо',
-  demoLeaveHint: 'Вернуться к экрану настройки',
   demoLeaveTitle: 'Выйти из демо?',
   demoLeaveBody:
     'Приложение вернётся к экрану настройки. Демо-данные останутся в браузере — включишь демо снова, и всё будет на месте.',
@@ -982,6 +971,11 @@ export const app = {
   nodeLater: 'Позже',
   // Profile on paper: the kicker under the name, the "of 100" tail of the index numeral.
   profileSince: 'В форме с {date}',
+  // The one line under the name: «с августа · 24 тренировки».
+  profileSinceShort: 'с {date}',
+  profileTrainedOne: '{n} тренировка',
+  profileTrainedFew: '{n} тренировки',
+  profileTrainedMany: '{n} тренировок',
   profileFitnessOf: 'из 100',
   // Admin: the exercise row's "has a video" stamp, and the course tile field's format error.
   exHasVideo: 'видео',
@@ -998,10 +992,17 @@ export const app = {
   marathonTabBoard: 'Таблица',
   marathonTabPoints: 'Мои баллы',
   marathonDayOf: 'День {n} из {total}',
+  // The same line in two weights on the challenge's head: «ДЕНЬ 10» heavy, «из 14» light.
+  marathonDayN: 'День {n}',
+  marathonOfTotal: 'из {total}',
+  marathonTasksToday: 'Задания дня',
   marathonWeek: 'Неделя {n}',
   marathonWeekThis: 'Эта неделя',
   marathonWeekLast: 'Прошлая неделя',
   marathonPrize: 'Приз недели',
+  // On the pill above the board, where «недели» is already said by the week's own kicker.
+  marathonPrizeShort: 'Приз',
+  marathonBoardAll: 'Вся таблица',
   marathonWithPartner: 'Напарник: {name}',
   marathonSolo: 'Идёшь один',
   marathonHomeCta: 'Открыть челлендж',
@@ -1020,12 +1021,17 @@ export const app = {
   marathonLockedTitle: 'Челлендж входит в подписку',
   marathonTrialTitle: 'Пробная неделя',
   marathonTrialBody: 'Челлендж открыт вместе с курсом. Осталось {n} — дальше по подписке.',
+  // The pill on the day screen: «Пробная неделя · осталось 7 дней →», leading to the subscription.
+  marathonTrialLeft: 'осталось {n}',
   marathonLockedBody:
     'Задание каждый день, доказательство и таблица за неделю. Кто наберёт больше всех — час с тренером.',
   // One task
   marathonDeadline: 'До {time}',
   marathonDeadlinePassed: 'Время вышло',
-  marathonPointsN: '{n} б.',
+  // The pill on a task: what it is worth, said in full.
+  marathonPointsOne: '{n} балл',
+  marathonPointsFew: '{n} балла',
+  marathonPointsMany: '{n} баллов',
   marathonRuleAllMembers: 'Только если сделают оба',
   marathonRulePerMember: 'Каждому за себя',
   marathonRuleCapped: 'На команду не больше {n}',
@@ -1038,8 +1044,6 @@ export const app = {
   marathonProofPhoto: 'Прикрепить фото',
   marathonProofPhotoAgain: 'Заменить фото',
   marathonProofPhotoSent: 'Фото отправлено',
-  marathonProofSend: 'Отправить',
-  marathonProofTarget: 'Цель: {n} {unit}',
   marathonProofVoided: 'Не засчитано: {reason}',
   marathonProofCoachOnly: 'Видит только тренер',
   marathonPartnerDone: '{name} сделал',
@@ -1050,7 +1054,6 @@ export const app = {
   marathonBoardEmpty: 'Пока никто не набрал баллов',
   marathonBoardYou: 'Ты',
   marathonBoardPoints: '{n}',
-  marathonBoardWinner: 'Час с тренером',
   // My points
   marathonPointsDone: '{done} из {total}',
   marathonPointsTeamTook: 'Команда: {n}',

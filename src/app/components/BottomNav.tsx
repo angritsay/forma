@@ -17,9 +17,9 @@ interface NavItem {
  *
  * The bar holds the four things the app *is* — today, the programmes, the challenge, the numbers — and
  * a profile is none of them: it is opened a handful of times ever, and it was taking a quarter of
- * the width every day. It lives where a phone owner already looks for it, as the avatar in the top
- * right of the home screen (HomeScreen's `chrome`), and the seat it gave up went to the challenge,
- * which used to be reachable only through a card on the home deck.
+ * the width every day. It lives where a phone owner already looks for it, as the avatar on
+ * «Прогресс» (`AccountRow`) and in the top row from `md`, and the seat it gave up went to the
+ * challenge, which used to be reachable only through a card on the home deck.
  *
  * «Курсы» is «Программы» here, and in the product generally: a course is one shape a programme
  * can take, and the tab holds them alongside the challenge.
@@ -34,14 +34,14 @@ const ITEMS: readonly NavItem[] = [
 /**
  * Which tab a path belongs to, or -1 for a screen that is in none of them.
  *
- * `NavLink` decides this per link and keeps the answer to itself, which is no use to a mark that
- * has to know *where* to travel. So the rule is written once here, and it is the same rule
+ * `NavLink` decides this per link and keeps the answer to itself, which is no use to a highlight
+ * that has to know *where* to travel. So the rule is written once here, and it is the same rule
  * `NavLink` uses: an exact match for the root, a path-segment prefix for the rest — `/courses/start`
  * is inside «Программы», and `/coursesomething` is not, which is the whole reason the `/` is in the
  * prefix rather than a bare `startsWith`.
  *
  * -1 is a real answer, not a failure: `/profile`, `/book` and `/steps` all show this bar and belong
- * to no tab, and the mark hides rather than pointing at one of them.
+ * to no tab, and the highlight fades out rather than pointing at one of them.
  */
 export function activeTabIndex(pathname: string): number {
   return ITEMS.findIndex((item) =>
@@ -50,45 +50,37 @@ export function activeTabIndex(pathname: string): number {
 }
 
 /**
- * The tab bar: four equal columns, a mark over a word, and one rule that travels to the tab you
- * are on.
+ * The tab bar: a capsule of glass floating over the bottom of the screen, with one highlight
+ * that slides to the seat you chose.
  *
- * It was set in type alone — four words pushed to the left edge, the current one large in the
- * display face and the rest as small tracked capitals. On its own terms that worked, but on a
- * screen that is already mostly words it read as one more line of them: nothing said these four
- * were a set, nothing said they were the same kind of thing as each other, and nothing said any
- * of them could be tapped at all.
+ * It was a band across the bottom edge — a hairline, four columns, a 2px rule over the current
+ * one — and the owner's verdict on it was «ощущается как по андроидовке … смотри в сторону iOS».
+ * The difference between the two is not the icons or the words, which are the same, but what kind
+ * of object the bar is. A band is part of the screen's edge: it ends where the screen ends and
+ * moves when the screen does. A capsule is a thing laid *on* the screen — inset from its sides
+ * and its bottom, rounded on every corner, casting a shadow — and the screen carries on underneath
+ * it, which is what makes the glass worth having: there is content on every side of it to blur,
+ * not just along one edge.
  *
- * So it spends the one convention every phone owner already knows, and spends it carefully:
- *   - four equal columns, because equal width is what says "pick one of these";
- *   - a mark over each word, because a shape is recognised before a word is read;
- *   - a 2px rule along the top of the current column — the same device the player's section
- *     stepper uses for the part you are in.
+ * Three moving parts, all in the spirit of the prototype in `design/ui_kits/app-v2`:
  *
- * **The rule is one element that moves, not four that blink**, and that is the difference between
- * a bar that changes and a bar that answers. Four separate rules switching on and off say four
- * unrelated things happened; one rule sliding from the third column to the fourth says these are
- * four seats of one object and you moved between them. It costs a transform and nothing else: the
- * columns are equal, so the mark is a quarter wide and travels in quarters — nothing is measured,
- * so there is nothing to fall out of step on a resize or a font swap.
+ *   - **The highlight is one element that slides, not four that blink.** A lighter capsule inside
+ *     the capsule, a quarter of the row wide, that travels by `translateX(n × 100%)` of its own
+ *     width. Equal columns are what make that exact without measuring anything: a resize or a
+ *     font swap cannot put it out of step. It travels on the spring easing, with a small overshoot
+ *     — the one place the chrome is allowed to bounce, because a highlight settling into a seat
+ *     is the gesture the whole bar exists to make.
+ *   - **The icon you land on settles** (`.nav-icon-in`): down, past, and into place.
+ *   - **The press lands on the contents**, scaled a little under the thumb — never on the link,
+ *     so the 52px target does not shrink at the moment a finger is inside it.
  *
- * Two more things answer the touch, because a bar that only recolours feels like a picture of a
- * bar. The icon of the tab you land on settles into place (`.nav-icon-in`), and the column takes
- * the press with a small scale — on the contents, never on the link, so the 56px target does not
- * shrink under the thumb that is inside it. In Telegram the tap also ticks.
- *
- * All three are motion and material, and none of them is colour. That is not restraint for its own
- * sake: the brandbook keeps colour for the programmes, so chrome has exactly these two registers to
- * be alive in.
- *
- * The rule is white, not the programme colour. Outside a course screen `--course-tile` is unset
- * and the token falls back to `--tile-4`, which is a dark neutral: the rule came out near-black on
- * a near-black bar and could not be seen at all. White is also the honest choice here — the bar is
- * the app's chrome, and the brandbook keeps colour for the programmes themselves.
+ * All of it is motion and material, none of it colour: the brandbook keeps colour for the
+ * programmes, so chrome has only these two registers to be alive in. In Telegram a tap also ticks.
  *
  * The type stays quiet: 10px tracked capitals on every tab, the current one in full white and the
- * others in the second grey. Hierarchy is the rule and the ink now, not the size, so the bar reads
- * as chrome instead of competing with the screen above it.
+ * others in the second grey. Hierarchy is the highlight and the ink, not the size.
+ *
+ * Hidden from `md` up, where `TopNav` takes over; `AppShell` drops `--nav-inset` to match.
  */
 export function BottomNav() {
   const { t } = useT();
@@ -98,48 +90,37 @@ export function BottomNav() {
   return (
     <nav
       aria-label={t('app.navMain')}
-      /* Hidden from `md` up, where TopNav takes over; AppShell drops `--nav-inset` to match.
-         `md`, not `lg`: between the two the app used to be a 480px phone column stranded in the
-         middle of a tablet, with this bar clipped to the column's own edges. */
       className={clsx(
-        'fixed bottom-0 left-1/2 z-30 w-full max-w-[480px] -translate-x-1/2 md:hidden',
         /*
-         * Glass, and the bar is where it works best: it is already `fixed`, so the screen genuinely
-         * scrolls underneath rather than stopping above it, and `--nav-inset` already reserves the
-         * room. `.glass-bar` brings its own hairline along the top edge, which is why the border
-         * utility that used to sit here is gone — the material owns its edge now.
-         *
-         * Its corners stay square on purpose, against the rounding going on everywhere else. This
-         * bar is edge-to-edge chrome touching three sides of a phone screen; a radius there reads
-         * as a mistake rather than as a panel, and it would cut the active rule short on the two
-         * outer tabs and nowhere else. Rounding is for surfaces that float.
+         * Inset 16px from each side and 12px from the bottom, over the safe area and, in demo, the
+         * demo strip — so the capsule floats above both rather than sitting on either. The width
+         * is the phone column minus the two insets; on a tablet in portrait it stops at 448px,
+         * because a capsule the width of an iPad is a band again.
          */
-        'glass-bar block',
-        'pl-[var(--safe-left)] pr-[var(--safe-right)]',
-        'pb-[calc(var(--safe-bottom)+var(--demo-inset,0px))]',
+        'fixed left-1/2 z-30 w-[calc(100%-32px)] max-w-[448px] -translate-x-1/2 md:hidden',
+        'bottom-[calc(var(--safe-bottom)+var(--demo-inset,0px)+12px)]',
+        /*
+         * `.glass-float`, the material for a floating object: an even tint rather than the bars'
+         * gradient (a gradient is for an edge that content arrives from; a capsule has content on
+         * every side), a heavier blur, a hairline ring that follows the radius and a shadow. Full
+         * rounding, because this is the object the pill radius exists for now — see the token.
+         */
+        'glass-float rounded-pill',
       )}
     >
-      {/* The row is its own element so the mark is positioned against the four columns rather than
-          against the bar's padding box, which carries the safe area and the demo strip. */}
-      <div className="relative flex items-stretch">
-        {/*
-         * The travelling rule. It sits on the bar's own hairline rather than beside it, so the
-         * current tab reads as a tab pulled forward rather than as a word that changed colour.
-         *
-         * Width and travel are both quarters of this row, which is what makes it exact without
-         * measuring: the mark over tab *n* is `translateX(n × 100%)` of its own width. A fifth tab
-         * would need this one divisor changed and nothing else.
-         */}
+      {/* The row is its own element so the highlight is positioned against the four seats, inside
+          the capsule's 6px padding. */}
+      <div className="relative flex h-16 items-stretch p-1.5">
         <span
           aria-hidden="true"
           className={clsx(
-            'pointer-events-none absolute top-[-1px] left-0 h-[2px] bg-primary',
-            'transition-[transform,opacity] duration-280 ease-(--ease-out)',
+            'pointer-events-none absolute inset-y-1.5 left-1.5 rounded-pill bg-paper/12',
+            'transition-[transform,opacity] duration-420 ease-(--ease-spring)',
             'motion-reduce:transition-none',
             active < 0 && 'opacity-0',
           )}
           style={{
-            width: `${100 / ITEMS.length}%`,
+            width: `calc((100% - 12px) / ${ITEMS.length})`,
             transform: `translateX(${Math.max(0, active) * 100}%)`,
           }}
         />
@@ -158,26 +139,18 @@ export function BottomNav() {
               onClick={() => haptic('light')}
               className={({ isActive }) =>
                 clsx(
-                  /*
-                   * The 56px row lives on the links, so the bar's own padding (safe area, demo
-                   * strip) adds to it instead of eating into it — and every tab is a 56px target.
-                   */
-                  'relative flex min-h-14 flex-1 flex-col items-center justify-center',
+                  'relative z-10 flex flex-1 flex-col items-center justify-center rounded-pill',
                   'transition-colors duration-150 ease-(--ease-out)',
                   isActive ? 'text-text' : 'text-muted-2 hover:text-muted',
                 )
               }
             >
               {({ isActive }) => (
-                /*
-                 * The press lands on the contents, not on the link: scaling the link would shrink
-                 * the tap target at the exact moment a thumb is inside it.
-                 */
                 <span
                   className={clsx(
-                    'flex flex-col items-center gap-1',
+                    'flex flex-col items-center gap-0.5',
                     'transition-transform duration-120 ease-(--ease-out)',
-                    'active:scale-[0.92]',
+                    'active:scale-[0.9]',
                     'motion-reduce:transition-none motion-reduce:active:scale-100',
                   )}
                 >
@@ -187,7 +160,7 @@ export function BottomNav() {
                    * whose state did not change.
                    */}
                   <span key={isActive ? 'on' : 'off'} className={isActive ? 'nav-icon-in' : ''}>
-                    <Icon name={item.icon} size={20} strokeWidth={isActive ? 2.25 : 2} />
+                    <Icon name={item.icon} size={22} strokeWidth={isActive ? 2.25 : 1.9} />
                   </span>
                   <span className="control-label text-[10px] whitespace-nowrap">{label}</span>
                 </span>

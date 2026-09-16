@@ -1,8 +1,12 @@
 /**
- * One entry of the challenge's weekly board, shared by the board screen and the challenge's own day screen —
- * the short table under today's tasks is the same rows as the full one, and a race with two
- * different-looking tables is two races.
+ * One entry of the challenge's weekly board, shared by the board screen and the challenge's own
+ * day screen — the short table under today's tasks is the same rows as the full one, and a race
+ * with two different-looking tables is two races.
  *
+ * The rank is a circle, the way the owner's prototype draws it: the leader's filled in the
+ * challenge's colour, the rest outlined, so the top of the table is found before a single number
+ * is read. It used to be a bare numeral with «ЧАС С ТРЕНЕРОМ» printed under the leader's name; the
+ * prize is one pill above the table now, said once for the whole race rather than on one row.
  */
 import { clsx } from 'clsx';
 import { formatNumber } from '@/i18n/index';
@@ -24,51 +28,39 @@ export function BoardRow({ row }: { row: MarathonScoreRow }) {
     row.entryKind === 'team' &&
     row.members.length > 1 &&
     !row.members.every((name) => row.title.includes(name));
+  const leader = row.rank === 1;
   return (
     <div
-      className={clsx(
-        'flex items-center gap-3 border-t py-4',
-        // Your own row is the one marked row: a 2px rule down its left edge, the same device the
-        // course leaderboard uses. The rule is the challenge's colour rather than white, because
-        // these screens set `--course-tile` to the challenge's orange and «you are here» is one of
-        // the three things the brandbook lets that colour mark. The course board keeps its white:
-        // different screen, different programme, and neither borrows the other's colour.
-        row.isMine ? 'border-t-border border-l-2 border-l-course pl-3' : 'border-t-border',
-      )}
+      className="flex items-center gap-4 border-t border-border py-3.5"
       aria-current={row.isMine ? 'true' : undefined}
     >
+      {/*
+       * Your own row is told apart by its circle: a white ring instead of the hairline, the same
+       * «you are here» the tab bar's highlight gives a tab. Never the colour — that is the leader's,
+       * and on the one week both are you the fill wins.
+       */}
       <span
         className={clsx(
-          'numeral tabular flex w-8 shrink-0 items-center justify-center text-base',
-          row.rank <= 3 ? 'text-text' : 'text-muted-2',
+          'numeral tabular flex size-11 shrink-0 items-center justify-center rounded-pill border text-[13px]',
+          leader
+            ? 'border-transparent bg-course text-on-course'
+            : row.isMine
+              ? 'border-text text-text'
+              : row.rank <= 3
+                ? 'border-border-strong text-text'
+                : 'border-border text-muted-2',
         )}
       >
         {String(row.rank).padStart(2, '0')}
       </span>
       <span className="min-w-0 flex-1">
         <span className="font-display block truncate text-[15px] leading-[1.24]">{row.title}</span>
-        {/*
-         * The prize belongs to the top row, and saying so on the row is what makes it a race — so
-         * it is the one label here worth the colour. Orange on the near-black ground measures
-         * 7.34:1, which carries this 10px label with room.
-         *
-         * It sits under the name rather than beside it. Beside, it was `shrink-0` next to a name
-         * that truncates, so it took its 110px whole and the name gave up whatever was left: in
-         * the challenge's side column «Аня и Дима» came out as «А…», and even on a phone the name
-         * had 134px to live in and cleared that one by eight. A label about the row should never
-         * be the reason the row cannot say whose it is.
-         */}
-        {row.rank === 1 ? (
-          <span className="control-label text-course mt-0.5 block text-[10px]">
-            {t('app.marathonBoardWinner')}
-          </span>
-        ) : null}
         {showMembers ? (
           <span className="block truncate text-[13px] text-muted-2">{row.members.join(', ')}</span>
         ) : null}
         {row.isMine ? <span className="sr-only">{t('app.marathonBoardYou')}</span> : null}
       </span>
-      <span className="numeral tabular shrink-0 text-[15px]">
+      <span className="numeral tabular shrink-0 text-[17px]">
         {formatNumber(locale, row.points)}
       </span>
     </div>

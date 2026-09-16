@@ -165,7 +165,7 @@ export function TopNav() {
           type="button"
           aria-label={t('app.homeProfile')}
           onClick={() => navigate('/profile')}
-          className="tap-target shrink-0 rounded-control transition-opacity duration-150 ease-(--ease-out) hover:opacity-80"
+          className="tap-target shrink-0 rounded-pill transition-opacity duration-150 ease-(--ease-out) hover:opacity-80"
         >
           <Avatar
             seed={profile?.avatarSeed ?? user?.id ?? ''}

@@ -60,7 +60,7 @@ export function AccountRow({
         type="button"
         onClick={onOpenProfile}
         aria-label={t('app.homeProfile')}
-        className="tap-target shrink-0 rounded-control"
+        className="tap-target shrink-0 rounded-pill"
       >
         <Avatar seed={avatarSeed} name={displayName} size={44} />
       </button>

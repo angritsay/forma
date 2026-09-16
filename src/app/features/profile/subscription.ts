@@ -1,15 +1,12 @@
-/** Profile row copy for the subscription: the plan as the title, the state and date underneath. */
+/**
+ * The subscription's state in one line, for the value of the profile's row: the price when there
+ * is none, the plan and its date when there is.
+ */
 import { formatDate } from '@/i18n/index';
 import type { Subscription } from '@/lib/api/types';
 import type { Translator } from '@/app/hooks/useT';
 import { PLAN_BY_ID } from '@content/site/plans';
 import { formatPrice } from '@content/site/pricing';
-
-export function subscriptionTitle(tr: Translator, sub: Subscription | null): string {
-  const { t } = tr;
-  if (!sub) return t('app.profileSubscriptionNone');
-  return sub.plan === 'annual' ? t('app.planAnnual') : t('app.planMonthly');
-}
 
 export function subscriptionSubtitle(tr: Translator, sub: Subscription | null): string {
   const { t, locale } = tr;
