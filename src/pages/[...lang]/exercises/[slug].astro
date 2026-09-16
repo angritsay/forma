@@ -99,22 +99,39 @@ const embed = video ? videoEmbed(video) : null;
  * counted, how fast. Each pill carries its kicker for a screen reader (`aria-label` on the item),
  * so «Средний» is announced as «Уровень: Средний» while the eye gets the word alone.
  */
-const facts: { label: string; value: string; tone: 'course' | 'neutral' }[] = [
+interface Fact {
+  label: string;
+  value: string;
+  tone: 'course' | 'neutral';
+}
+/*
+ * The mapped groups are built first, as plain consts, and only then spread into the list.
+ *
+ * That is not a style preference. An inline `...xs.map((x) => ({ … }))` inside this array literal
+ * makes the Astro compiler give up on the frontmatter's `interface Props` and fall back to
+ * inferring the component's props from `getStaticPaths` — at which point `Props` is genuinely
+ * unused and `astro check` fails the build with ts(6196) pointing at the interface, forty lines
+ * away from the construct that actually caused it. Bisected against `main`, which has no such
+ * spread. Keep the two steps separate.
+ */
+const equipmentFacts: Fact[] = equipmentNames(ex, locale).map((value) => ({
+  label: t(locale, 'seo.factEquipment'),
+  value,
+  tone: 'neutral',
+}));
+const muscleFacts: Fact[] = ex.muscles.map((m) => ({
+  label: t(locale, 'seo.factMuscles'),
+  value: muscleName(m, locale),
+  tone: 'neutral',
+}));
+const facts: Fact[] = [
   {
     label: t(locale, 'seo.factLevel'),
     value: levelName(ex.level, locale),
     tone: coloured ? 'course' : 'neutral',
   },
-  ...equipmentNames(ex, locale).map((value) => ({
-    label: t(locale, 'seo.factEquipment'),
-    value,
-    tone: 'neutral' as const,
-  })),
-  ...ex.muscles.map((m) => ({
-    label: t(locale, 'seo.factMuscles'),
-    value: muscleName(m, locale),
-    tone: 'neutral' as const,
-  })),
+  ...equipmentFacts,
+  ...muscleFacts,
   { label: t(locale, 'seo.factUnit'), value: unitName(ex.unit, locale), tone: 'neutral' },
 ];
 if (ex.secondsPerRep) {
