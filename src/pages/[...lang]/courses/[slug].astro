@@ -1,8 +1,12 @@
 ---
 /**
- * Course page: hero, description, for whom / outcomes, equipment, program overview, sample
- * workout, how the app adapts, order form, FAQ, related guides and exercises.
- * JSON-LD: Course, BreadcrumbList, FAQPage.
+ * Course page: the course as a ticket (cover, kicker, name, pills, the price as the figure, one
+ * button), its figures, about / for whom / outcomes, program overview, sample workout, how the app
+ * adapts, order form, FAQ, related guides and exercises. JSON-LD: Course, BreadcrumbList, FAQPage.
+ *
+ * Drawn in the owner's prototype's language (design/CHANGELOG.md §10): the headings and the
+ * coach's text stay — they are what this page ranks on — but the page shows one paragraph of him
+ * and opens the rest on request, and every fact that was a sentence is a pill or a numeral.
  */
 import type { InferGetStaticPropsType } from 'astro';
 import { getCollection } from 'astro:content';
@@ -11,29 +15,32 @@ import ExerciseStill from '@/components/media/ExerciseStill';
 import Breadcrumbs from '@/components/landing/Breadcrumbs.astro';
 import Button from '@/components/landing/Button.astro';
 import Faq from '@/components/landing/Faq.astro';
-import FeatureChip from '@/components/landing/FeatureChip.astro';
 import OrderForm from '@/components/landing/OrderForm';
+import Pill from '@/components/landing/Pill.astro';
 import ProgramOverview from '@/components/landing/ProgramOverview.astro';
 import Section from '@/components/landing/Section.astro';
+import Stat from '@/components/landing/Stat.astro';
 import WorkoutPlan from '@/components/landing/WorkoutPlan.astro';
 import {
   courseEquipmentForDisplay,
   coursePath,
+  courseWorkoutCount,
   equipmentLabel,
   exerciseHref,
-  isBodyweightCourse,
   levelLabel,
   metaDescription,
   sampleWorkout,
   sessionsLabel,
   signatureExercise,
   weeksLabel,
+  workoutsCountLabel,
 } from '@/components/landing/courseHelpers';
 import { breadcrumbLd, courseLd, faqLd } from '@/components/landing/jsonld';
 import { courseExercises } from '@/content/registry';
 import { SITE_COURSES } from '@/content/published';
 import { DEFAULT_LOCALE, LOCALES, type Locale } from '@/content/schema';
-import { l, t } from '@/i18n/index';
+import { l, plural, t } from '@/i18n/index';
+import { publicMediaUrl } from '@/lib/api/storage';
 import { canonicalUrl } from '@/lib/seo/urls';
 import { courseTileStyle } from '@/lib/ui/tile';
 import { absoluteUrl, appHref, href } from '@/lib/util/paths';
@@ -70,14 +77,33 @@ const url = canonicalUrl(site, locale, coursePath(locale, course));
 const image = absoluteUrl(site, BRAND.ogImage);
 
 const signature = signatureExercise(course);
+/*
+ * The course's own cover art beats the signature movement's still — the same rule as the ticket
+ * (`CourseCard`) and the app. This page used to draw the still on the flat programme colour even
+ * when the course had art, so the same course wore two covers on two pages.
+ */
+const cover = course.cover ? publicMediaUrl(course.cover) : undefined;
 const workout = sampleWorkout(course);
 const exercises = courseExercises(course);
 const equipment = courseEquipmentForDisplay(course);
+const workouts = courseWorkoutCount(course);
 
 const price = isFree(course.price, locale)
   ? t(locale, 'landing.priceFree')
   : formatPrice(locale, course.price);
 const paymentUrl = course.paymentUrl?.[locale] || course.paymentUrl?.ru || course.paymentUrl?.en;
+
+/* The figures under the ticket: the number is the object, the word under it the unit. */
+const weeksWord = plural(locale, course.weeks, {
+  one: t(locale, 'landing.weekWordOne'),
+  few: t(locale, 'landing.weekWordFew'),
+  many: t(locale, 'landing.weekWordMany'),
+});
+const workoutsWord = plural(locale, workouts, {
+  one: t(locale, 'landing.workoutWordOne'),
+  few: t(locale, 'landing.workoutWordFew'),
+  many: t(locale, 'landing.workoutWordMany'),
+});
 
 const guides = (
   await getCollection(
@@ -91,6 +117,8 @@ const supportEmail = LINKS.supportEmail || BRAND.contactEmail;
 const supportTelegram = LINKS.supportTelegram || BRAND.telegram;
 // One screen, one colour: the course's programme colour is set once on every block that shows it.
 const tileVars = courseTileStyle(course.tile);
+
+const [firstParagraph, ...moreParagraphs] = course.longDescription;
 
 const jsonLd = [
   courseLd(site, locale, course, { url, image }),
@@ -111,7 +139,7 @@ const jsonLd = [
   localizedPaths={localizedPaths}
   jsonLd={jsonLd}
 >
-  <div class="mx-auto max-w-6xl px-5 pt-8 md:pt-12">
+  <div class="mx-auto max-w-6xl px-5 pt-8 md:pt-12" style={tileVars}>
     <Breadcrumbs
       ariaLabel={t(locale, 'landing.breadcrumbHome')}
       items={[
@@ -121,46 +149,95 @@ const jsonLd = [
       ]}
     />
 
+    <!--
+      The ticket, opened up to a page. On the phone the cover comes first — the same object the
+      app's «Программы» tab shows, at the same 4:3 — and the words follow; from `md` the words take
+      the 7 of a 7/5 grid and the cover stands beside them.
+    -->
     <section
-      class="mt-6 grid items-end gap-8 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:gap-14"
-      style={tileVars}
+      class="mt-6 grid gap-8 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:items-end md:gap-14"
     >
-      <div>
+      <div
+        class:list={[
+          'relative aspect-4/3 w-full overflow-hidden rounded-card md:order-2',
+          cover ? 'bg-ink' : 'hero-art',
+        ]}
+      >
+        {
+          cover ? (
+            <img
+              src={cover}
+              alt=""
+              width="1600"
+              height="1200"
+              loading="eager"
+              fetchpriority="high"
+              decoding="async"
+              class="absolute inset-0 size-full object-cover"
+            />
+          ) : (
+            <div class="absolute inset-0 flex items-center justify-center">
+              {signature && <ExerciseStill exerciseId={signature.id} loading="eager" />}
+              {signature && (
+                <span class="absolute bottom-4 left-4 flex">
+                  <Pill tone="ink" size="sm">
+                    {l(signature.name, locale)}
+                  </Pill>
+                </span>
+              )}
+            </div>
+          )
+        }
+      </div>
+
+      <div class="md:order-1">
         <p class="eyebrow">
-          {levelLabel(locale, course.level)} · {weeksLabel(locale, course.weeks)}
+          {t(locale, 'landing.cardKicker')} · {levelLabel(locale, course.level)}
         </p>
         <h1 class="display mt-4 text-[clamp(1.625rem,6vw,2.5rem)] text-balance">
           {name}
         </h1>
-        <p class="mt-5 max-w-xl text-lg leading-relaxed text-muted">
+        <p class="mt-4 max-w-xl text-base leading-relaxed text-muted md:text-lg">
           {l(course.tagline, locale)}
         </p>
-        <ul class="mt-6 flex flex-wrap gap-2">
-          <li><FeatureChip>{weeksLabel(locale, course.weeks)}</FeatureChip></li>
-          <li><FeatureChip>{sessionsLabel(locale, course.sessionsPerWeek)}</FeatureChip></li>
-          <li>
-            <FeatureChip>{t(locale, 'landing.avgSession', { n: course.avgSessionMin })}</FeatureChip
+        <ul class="mt-5 flex flex-wrap gap-2">
+          <li class="flex max-w-full">
+            <Pill tone="course" size="md">{weeksLabel(locale, course.weeks)}</Pill>
+          </li>
+          <li class="flex max-w-full">
+            <Pill tone="course" size="md">{sessionsLabel(locale, course.sessionsPerWeek)}</Pill>
+          </li>
+          <li class="flex max-w-full">
+            <Pill tone="course" size="md"
+              >{t(locale, 'landing.avgSession', { n: course.avgSessionMin })}</Pill
             >
           </li>
           {
             equipment.map((e) => (
-              <li>
-                <FeatureChip>{equipmentLabel(locale, e)}</FeatureChip>
+              <li class="flex max-w-full">
+                <Pill tone="course" size="md">
+                  {equipmentLabel(locale, e)}
+                </Pill>
               </li>
             ))
           }
+          <li class="flex max-w-full">
+            <Pill size="md">{t(locale, 'landing.courseLifetimeNote')}</Pill>
+          </li>
         </ul>
-        <div class="mt-8 flex flex-wrap items-center gap-5">
-          <span class="numeral tabular text-4xl">{price}</span>
-          <Button href="#order" size="lg">{t(locale, 'landing.courseCtaOrder')}</Button>
+        <!-- The price is the figure of this screen; one button beside it. -->
+        <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
+          <span class="numeral tabular text-5xl leading-none">{price}</span>
+          <Button href="#order" size="lg" class="w-full sm:w-auto">
+            {t(locale, 'landing.courseCtaOrder')}
+          </Button>
         </div>
-        <p class="mt-3 text-sm text-muted">{t(locale, 'landing.courseLifetimeNote')}</p>
         {
           PLANS_ENABLED && monthlyPlan && (
-            <p class="mt-2 text-sm">
+            <p class="mt-4 text-sm">
               <a
                 href={href(locale, '/subscribe/')}
-                class="underline decoration-border-strong underline-offset-4 hover:decoration-text"
+                class="text-muted underline decoration-border-strong underline-offset-4 hover:text-text hover:decoration-text"
               >
                 {t(locale, 'landing.courseOrSubscribe', {
                   price: formatPrice(locale, monthlyPlan.price),
@@ -170,30 +247,50 @@ const jsonLd = [
           )
         }
       </div>
-
-      <!-- The cover: the programme colour, the signature figure in black ink, the name stamped. -->
-      <div
-        class="hero-art relative mx-auto flex aspect-[4/5] w-full max-w-md items-center justify-center overflow-hidden rounded-tile md:max-w-none"
-      >
-        {signature && <ExerciseStill exerciseId={signature.id} loading="eager" />}
-        {
-          signature && (
-            <span class="absolute bottom-5 left-5 inline-flex h-6 items-center bg-ink/85 px-2.5 text-[11px] font-semibold tracking-[0.12em] text-paper uppercase">
-              {l(signature.name, locale)}
-            </span>
-          )
-        }
-        <span class="numeral absolute top-4 left-5 text-sm text-tile-fg" aria-hidden="true">
-          {String(course.weeks).padStart(2, '0')}
-        </span>
-      </div>
     </section>
+
+    <!-- The course in three figures, in its colour: the number bigger than the word. -->
+    <div class="mt-12 grid grid-cols-3 gap-6 border-t border-border pt-8 md:mt-16 md:gap-10">
+      <Stat tone="course" value={String(course.weeks)} label={weeksWord} />
+      <Stat tone="course" value={String(workouts)} label={workoutsWord} />
+      <Stat
+        tone="course"
+        value={`~${course.avgSessionMin}`}
+        label={t(locale, 'common.minutesUnit')}
+      />
+    </div>
   </div>
 
   <Section id="about" title={t(locale, 'landing.courseAboutTitle')} class="!py-12 md:!py-16">
-    <div class="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-      <div class="flex flex-col gap-4 text-lg leading-relaxed text-muted">
-        {course.longDescription.map((p) => <p>{l(p, locale)}</p>)}
+    <div class="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]" style={tileVars}>
+      <!--
+        The coach's text, one paragraph showing. The other three are his too and stay on the page —
+        this is the copy the page is found by — but they open on request instead of standing four
+        deep between the ticket and the programme. A `<details>` keeps them in the HTML and out of
+        the way; the toggle is the FAQ's + glyph.
+      -->
+      <div class="text-base leading-relaxed text-muted md:text-lg">
+        {firstParagraph && <p>{l(firstParagraph, locale)}</p>}
+        {
+          moreParagraphs.length > 0 && (
+            <details class="group mt-4">
+              <summary class="control-label flex cursor-pointer list-none items-center gap-2 text-[12px] text-text [&::-webkit-details-marker]:hidden">
+                {t(locale, 'landing.courseMoreAbout')}
+                <span
+                  class="glyph text-lg transition-transform duration-150 ease-(--ease-out) group-open:rotate-45"
+                  aria-hidden="true"
+                >
+                  +
+                </span>
+              </summary>
+              <div class="mt-4 flex flex-col gap-4">
+                {moreParagraphs.map((p) => (
+                  <p>{l(p, locale)}</p>
+                ))}
+              </div>
+            </details>
+          )
+        }
       </div>
       <!-- Three hairline blocks, not three boxes: a kicker, then the list. -->
       <div class="flex flex-col gap-8">
@@ -201,7 +298,7 @@ const jsonLd = [
           <h3 class="eyebrow">
             {t(locale, 'landing.courseForWhomTitle')}
           </h3>
-          <ul class="mt-4 flex flex-col divide-y divide-border">
+          <ul class="mt-4 flex flex-col divide-y divide-border text-sm">
             {
               course.forWhom.map((x, i) => (
                 <li class="flex items-baseline gap-4 py-2.5">
@@ -221,11 +318,11 @@ const jsonLd = [
           <h3 class="eyebrow">
             {t(locale, 'landing.courseOutcomesTitle')}
           </h3>
-          <ul class="mt-4 flex flex-col divide-y divide-border">
+          <ul class="mt-4 flex flex-col divide-y divide-border text-sm">
             {
               course.outcomes.map((x) => (
                 <li class="flex items-baseline gap-4 py-2.5">
-                  <span class="glyph text-sm text-text" aria-hidden="true">
+                  <span class="glyph shrink-0 text-sm text-course" aria-hidden="true">
                     ✓
                   </span>
                   <span>{l(x, locale)}</span>
@@ -238,19 +335,17 @@ const jsonLd = [
           <h3 class="eyebrow">
             {t(locale, 'landing.courseEquipmentTitle')}
           </h3>
-          {
-            isBodyweightCourse(course) ? (
-              <p class="mt-4 text-muted">{t(locale, 'landing.courseEquipmentNone')}</p>
-            ) : (
-              <ul class="mt-4 flex flex-wrap gap-2">
-                {equipment.map((e) => (
-                  <li>
-                    <FeatureChip tone="outline">{equipmentLabel(locale, e)}</FeatureChip>
-                  </li>
-                ))}
-              </ul>
-            )
-          }
+          <ul class="mt-4 flex flex-wrap gap-2">
+            {
+              equipment.map((e) => (
+                <li class="flex max-w-full">
+                  <Pill tone="course" size="md">
+                    {equipmentLabel(locale, e)}
+                  </Pill>
+                </li>
+              ))
+            }
+          </ul>
         </div>
       </div>
     </div>
@@ -262,7 +357,9 @@ const jsonLd = [
     intro={t(locale, 'landing.courseProgramIntro')}
     class="!py-12 md:!py-16"
   >
-    <ProgramOverview locale={locale} course={course} />
+    <div style={tileVars}>
+      <ProgramOverview locale={locale} course={course} />
+    </div>
   </Section>
 
   {
@@ -273,11 +370,25 @@ const jsonLd = [
         intro={t(locale, 'landing.courseSampleIntro')}
         class="!py-12 md:!py-16"
       >
-        <div class="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+        <div class="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]" style={tileVars}>
           <WorkoutPlan locale={locale} workout={workout} />
           <div class="border-t border-border pt-5">
             <h3 class="font-display text-xl">{t(locale, 'landing.courseAdaptTitle')}</h3>
-            <p class="mt-4 leading-relaxed text-muted">{t(locale, 'landing.courseAdaptText')}</p>
+            <p class="mt-3 text-sm leading-relaxed text-muted md:text-base">
+              {t(locale, 'landing.courseAdaptText')}
+            </p>
+            {/* The three numbers of that paragraph, as pills. */}
+            <ul class="mt-4 flex flex-wrap gap-2">
+              <li class="flex max-w-full">
+                <Pill size="md">{t(locale, 'landing.courseAdaptEasy')}</Pill>
+              </li>
+              <li class="flex max-w-full">
+                <Pill size="md">{t(locale, 'landing.courseAdaptHard')}</Pill>
+              </li>
+              <li class="flex max-w-full">
+                <Pill size="md">{t(locale, 'landing.courseAdaptDeload')}</Pill>
+              </li>
+            </ul>
           </div>
         </div>
       </Section>
@@ -291,21 +402,40 @@ const jsonLd = [
     class="scroll-mt-16 !py-12 md:!py-16"
   >
     <div class="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]" style={tileVars}>
-      <!-- The order ticket: the programme colour with black ink, price as the numeral. -->
+      <!-- The order ticket: the programme colour with black ink, the price as the figure. -->
       <div class="hero-art flex flex-col justify-between rounded-card p-6 md:p-8">
         <div>
           <p class="eyebrow text-current opacity-70">
-            {levelLabel(locale, course.level)}
+            {t(locale, 'landing.cardKicker')} · {levelLabel(locale, course.level)}
           </p>
-          <p class="display mt-3 text-3xl md:text-4xl">{name}</p>
-          <p class="mt-3 opacity-80">{l(course.tagline, locale)}</p>
+          <p class="display mt-3 text-2xl md:text-3xl">{name}</p>
+          <ul class="mt-4 flex flex-wrap gap-2">
+            <li class="flex max-w-full">
+              <span
+                class="control-label inline-flex h-7 items-center rounded-pill border border-current/40 px-3 text-[10px]"
+              >
+                {weeksLabel(locale, course.weeks)}
+              </span>
+            </li>
+            <li class="flex max-w-full">
+              <span
+                class="control-label inline-flex h-7 items-center rounded-pill border border-current/40 px-3 text-[10px]"
+              >
+                {workoutsCountLabel(locale, workouts)}
+              </span>
+            </li>
+            <li class="flex max-w-full">
+              <span
+                class="control-label inline-flex h-7 items-center rounded-pill border border-current/40 px-3 text-[10px]"
+              >
+                {t(locale, 'landing.courseLifetimeNote')}
+              </span>
+            </li>
+          </ul>
         </div>
-        <div class="mt-8 flex items-end justify-between gap-4">
-          <span class="numeral tabular text-4xl">{price}</span>
-          <span class="text-sm opacity-80">{weeksLabel(locale, course.weeks)}</span>
-        </div>
+        <p class="numeral tabular mt-10 text-5xl leading-none md:text-6xl">{price}</p>
       </div>
-      <div class="border border-border bg-surface p-6 md:p-8">
+      <div class="rounded-card border border-border bg-surface p-6 md:p-8">
         <OrderForm
           client:load
           courseId={course.id}
@@ -354,15 +484,24 @@ const jsonLd = [
           {guides.length > 0 && (
             <div>
               <h2 class="font-display text-2xl">{t(locale, 'landing.courseGuidesTitle')}</h2>
+              {/*
+                Titles only. Every guide's description opened by restating its own title in longer
+                words — sixteen of them made a third of this page a wall of text that said the same
+                thing twice and lived on the guide's own page anyway. The link and its anchor text
+                are what the internal-linking rule (docs/SPEC.md §11) asks for, and both stay; the
+                arrow says the row is a door.
+              */}
               <ul class="mt-5 flex flex-col">
                 {guides.map((g) => (
                   <li>
                     <a
                       href={href(locale, `/guides/${g.id.slice(locale.length + 1)}/`)}
-                      class="group block border-t border-border py-4 transition-colors duration-150 hover:border-border-strong"
+                      class="group flex items-baseline justify-between gap-4 border-t border-border py-3.5 transition-colors duration-150 hover:border-border-strong"
                     >
-                      <span class="font-semibold group-hover:underline">{g.data.h1}</span>
-                      <span class="mt-1 block text-sm text-muted">{g.data.description}</span>
+                      <span class="text-sm font-semibold group-hover:underline">{g.data.h1}</span>
+                      <span class="glyph shrink-0 text-muted" aria-hidden="true">
+                        →
+                      </span>
                     </a>
                   </li>
                 ))}
@@ -372,12 +511,13 @@ const jsonLd = [
           {exercises.length > 0 && (
             <div>
               <h2 class="font-display text-2xl">{t(locale, 'landing.courseExercisesTitle')}</h2>
+              {/* Links, so they stay on the control radius: these are pressed, not read. */}
               <ul class="mt-5 flex flex-wrap gap-2">
                 {exercises.map((ex) => (
                   <li>
                     <a
                       href={exerciseHref(locale, ex)}
-                      class="inline-flex min-h-11 items-center border border-border bg-surface-3 px-4 text-sm transition-colors duration-150 hover:border-border-strong"
+                      class="inline-flex min-h-11 items-center rounded-control border border-border bg-surface-3 px-4 text-sm transition-colors duration-150 hover:border-border-strong"
                     >
                       {l(ex.name, locale)}
                     </a>

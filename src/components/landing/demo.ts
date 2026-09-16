@@ -6,7 +6,7 @@
  */
 import { COURSE_BY_ID, EXERCISE_BY_ID } from '@/content/registry';
 import type { Course, Locale } from '@/content/schema';
-import { formatDuration, l, t } from '@/i18n/index';
+import { formatNumber, l, plural, t } from '@/i18n/index';
 import {
   adaptScale,
   estimateDuration,
@@ -133,18 +133,28 @@ export function buildDemo(locale: Locale, course?: Course): DifficultyDemoProps 
       level: 2,
     });
     const duration = estimateDuration(p);
+    const points = estimatePoints(workout, choice);
+    const n = formatNumber(locale, points);
     return {
       choice,
       label: choiceLabel(locale, choice),
-      duration: formatDuration(locale, duration.totalSec),
-      points: estimatePoints(workout, choice),
+      // Whole minutes: the row shows the figure alone, with the unit under it.
+      durationMin: Math.max(1, Math.round(duration.totalSec / 60)),
+      points,
+      pointsLabel: plural(locale, points, {
+        one: t(locale, 'landing.adaptPointsOne', { n }),
+        few: t(locale, 'landing.adaptPointsFew', { n }),
+        many: t(locale, 'landing.adaptPointsMany', { n }),
+      }),
       blocks: toDemoBlocks(locale, p.blocks),
     };
   });
 
   const rec = recommendDifficulty(state, DEMO_PROFILE, nowIso);
 
+  // The scenarios all start from the «as usual» version, so its points are computed once.
   const normal = choices.find((x) => x.choice === 'normal') ?? choices[0]!;
+
   const scenarios: DemoScenario[] = SCENARIOS.map((s) => {
     const summary: SessionSummary = {
       courseId: c.id,
@@ -181,9 +191,7 @@ export function buildDemo(locale: Locale, course?: Course): DifficultyDemoProps 
     recommendedReason: l(rec.reason, locale),
     scenarios,
     labels: {
-      duration: t(locale, 'landing.adaptDuration'),
-      points: t(locale, 'landing.adaptPoints'),
-      pointsShort: t(locale, 'common.pointsShort'),
+      minutes: t(locale, 'common.minutesUnit'),
       recommended: t(locale, 'landing.adaptRecommended'),
       planTitle: t(locale, 'landing.adaptPlanTitle'),
       rpeTitle: t(locale, 'landing.adaptRpeTitle'),

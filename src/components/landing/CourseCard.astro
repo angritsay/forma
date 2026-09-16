@@ -1,14 +1,24 @@
 ---
 /**
- * Course card for the home grid and the courses hub: the course tile carrying the signature
- * exercise figure (static render), then name, tagline, metric chips, price and a link.
+ * A course on the site, as the same ticket it is in the app (`src/app/features/programs/CourseTicket`).
  *
- * The one place on the landing where a course has to read as a discrete, buyable object, so it
- * keeps a 1px frame — and nothing else: no radius, no shadow. The cover is the programme colour
- * set through `courseTileStyle()`, which also sets the ink the figure and the stamps on it are
- * drawn in, so a yellow cover never carries white text. The level is stamped in the programme
- * colour's own badge tone — the one badge allowed to take colour, because it names the
- * programme — and the number in the corner is the card's numeral, not a decoration.
+ * The owner's brief for the site was that a course should look like the same object here and in
+ * the app: the cover, «4 недели · 18 мин · без оборудования» as pills, the price as the figure, one
+ * button. This card used to be its own thing — a square-cornered frame, the tagline as a paragraph,
+ * eight capitalised chips, a stamped level badge and an index numeral in the corner — and a person
+ * who came from the site into the app met the course twice, drawn two ways.
+ *
+ * So the parts are the ticket's, in the ticket's order: the **cover** (the course's own art, or the
+ * signature movement's still on the programme colour when there is none), the **kicker** saying
+ * what kind of thing this is and for whom, the **name**, the **facts** as pills in the programme
+ * colour, the **price** and the **action**. Two departures from the app, both for the same reason:
+ * the name stays printed under a cover that already carries it, because on the site the heading is
+ * the link and the h2/h3 the page's outline is built from; and the facts are pills rather than the
+ * app's one line of lead, because a stranger choosing a course compares facts.
+ *
+ * `wide` lays the ticket sideways from `md` — cover left, words right — for a page with one course
+ * on it: a 4:3 cover the full width of a 1152px container is 860px of picture and a page that
+ * scrolls a screen before it reaches a price.
  */
 import ExerciseStill from '@/components/media/ExerciseStill';
 import { publicMediaUrl } from '@/lib/api/storage';
@@ -16,7 +26,7 @@ import type { Course, Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { courseTileStyle } from '@/lib/ui/tile';
 import { formatPrice, isFree } from '@content/site/pricing';
-import FeatureChip from './FeatureChip.astro';
+import Pill from './Pill.astro';
 import {
   courseEquipmentForDisplay,
   courseHref,
@@ -32,102 +42,107 @@ interface Props {
   locale: Locale;
   /** Heading level inside the card. */
   headingLevel?: 'h2' | 'h3';
-  /** 1-based position in the grid, drawn as the card's numeral. */
-  n?: number;
+  /** Cover beside the words from `md`, for a grid with one course in it. */
+  wide?: boolean;
 }
 
-const { course, locale, headingLevel: Heading = 'h3', n } = Astro.props;
+const { course, locale, headingLevel: Heading = 'h3', wide = false } = Astro.props;
 const url = courseHref(locale, course);
 const signature = signatureExercise(course);
 /*
  * The course's own cover art beats the signature movement's still. The still is a stand-in — one
  * frame of one exercise, standing for a whole course — and it was the best the card could do
- * before a course could carry a picture of its own. Unlike in the app, the name stays printed
- * here: this card sits in a grid of courses a stranger is choosing between, and the heading is
- * also the link and the h2/h3 the page's outline is built from.
+ * before a course could carry a picture of its own. The art is not treated as a photograph (no
+ * `.photo-mono`, no grain): it is already the product's monochrome with the programme colour drawn
+ * on, and desaturating it would strip the colour out of the one place the brandbook wants it.
  */
 const cover = course.cover ? publicMediaUrl(course.cover) : undefined;
 const equipment = courseEquipmentForDisplay(course);
 const price = isFree(course.price, locale)
   ? t(locale, 'landing.priceFree')
   : formatPrice(locale, course.price);
+const facts = [
+  weeksLabel(locale, course.weeks),
+  sessionsLabel(locale, course.sessionsPerWeek),
+  t(locale, 'landing.avgSession', { n: course.avgSessionMin }),
+  ...equipment.map((e) => equipmentLabel(locale, e)),
+];
 ---
 
 <article
-  class="group flex h-full flex-col overflow-hidden border border-border transition-colors duration-150 hover:border-border-strong"
+  class:list={[
+    'group flex h-full flex-col overflow-hidden rounded-card border border-border bg-surface transition-colors duration-150 hover:border-border-strong',
+    wide && 'md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,4fr)]',
+  ]}
   style={courseTileStyle(course.tile)}
   data-course-card
   data-equipment={course.equipment.join(' ')}
   data-level={course.level}
 >
-  <div class="relative">
-    <!-- Decorative duplicate of the title link below: hidden from AT and from the tab order so the
-         card exposes one link per destination instead of three. The level badge stays outside it
-         so it is still announced. -->
-    <a
-      href={url}
-      class="hero-art relative flex aspect-[16/10] items-center justify-center overflow-hidden rounded-tile"
-      aria-hidden="true"
-      tabindex="-1"
-    >
-      {
-        cover ? (
-          <img src={cover} alt="" loading="lazy" decoding="async" class="size-full object-cover" />
-        ) : signature ? (
-          <ExerciseStill exerciseId={signature.id} />
-        ) : null
-      }
-    </a>
+  <!--
+    The cover, 4:3 — the ticket's ratio, chosen there so the art carries the name. A decorative
+    duplicate of the heading's link below: hidden from AT and from the tab order so the card
+    exposes one link per destination instead of three.
+  -->
+  <a
+    href={url}
+    class:list={[
+      'relative block aspect-4/3 overflow-hidden',
+      cover ? 'bg-ink' : 'hero-art',
+      wide && 'md:aspect-auto md:h-full md:min-h-80',
+    ]}
+    aria-hidden="true"
+    tabindex="-1"
+  >
     {
-      n !== undefined && (
-        <span class="numeral absolute top-4 left-5 text-sm text-tile-fg">
-          {String(n).padStart(2, '0')}
-        </span>
-      )
+      cover ? (
+        <img
+          src={cover}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          class="absolute inset-0 size-full object-cover"
+        />
+      ) : signature ? (
+        <div class="absolute inset-0 flex items-center justify-center">
+          <ExerciseStill exerciseId={signature.id} />
+        </div>
+      ) : null
     }
-    <span
-      class="absolute right-4 bottom-4 inline-flex h-6 items-center bg-ink/85 px-2.5 text-[11px] font-semibold tracking-[0.12em] text-paper uppercase"
-    >
-      {levelLabel(locale, course.level)}
-    </span>
-  </div>
+  </a>
 
-  <div class="flex flex-1 flex-col gap-3 p-6">
-    <Heading class="font-display text-xl">
+  <div
+    class:list={['flex flex-1 flex-col px-5 pt-4 pb-5 md:p-6', wide && 'md:justify-center md:p-8']}
+  >
+    <p class="eyebrow truncate">
+      {t(locale, 'landing.cardKicker')} · {levelLabel(locale, course.level)}
+    </p>
+    <Heading class="font-display mt-2 text-lg leading-snug text-balance">
       <a href={url} class="hover:underline">{l(course.name, locale)}</a>
     </Heading>
-    <p class="text-sm leading-relaxed text-muted">{l(course.tagline, locale)}</p>
-    <ul class="mt-1 flex flex-wrap gap-1.5">
-      <li>
-        <FeatureChip tone="outline" size="sm">{weeksLabel(locale, course.weeks)}</FeatureChip>
-      </li>
-      <li>
-        <FeatureChip tone="outline" size="sm"
-          >{sessionsLabel(locale, course.sessionsPerWeek)}</FeatureChip
-        >
-      </li>
-      <li>
-        <FeatureChip tone="outline" size="sm"
-          >{t(locale, 'landing.avgSession', { n: course.avgSessionMin })}</FeatureChip
-        >
-      </li>
+    <ul class="mt-4 flex flex-wrap gap-1.5">
       {
-        equipment.map((e) => (
-          <li>
-            <FeatureChip tone="outline" size="sm">
-              {equipmentLabel(locale, e)}
-            </FeatureChip>
+        facts.map((f) => (
+          <li class="flex max-w-full">
+            <Pill tone="course" size="sm">
+              {f}
+            </Pill>
           </li>
         ))
       }
     </ul>
-    <!-- `mt-auto` pins the price row to the bottom so cards of unequal height line their prices
-         up; the hairline above it gets its air from `pt-4`, not from a second margin. -->
-    <div class="mt-auto flex items-center justify-between gap-3 border-t border-border pt-4">
-      <span class="numeral tabular text-xl">{price}</span>
+    <!--
+      `mt-auto` pins the price row to the bottom so tickets of unequal height line their prices up.
+      Both the price and the button are `shrink-0` and the row wraps: neither is text that can give
+      way — the price is the ticket's figure and the button is a control — so when they do not fit
+      side by side the button drops to its own line. It had to: in the sideways ticket at 768 the
+      words sit in 4fr of a 728px grid, which left «2 990 ₽» 54px and rendered it «2 99…».
+    -->
+    <div class="mt-auto flex flex-wrap items-center justify-between gap-x-4 gap-y-4 pt-6">
+      <span class="numeral tabular shrink-0 text-3xl whitespace-nowrap">{price}</span>
       <a
         href={url}
-        class="control-label inline-flex h-10 items-center rounded-control bg-primary px-4.5 text-[12px] text-on-primary transition-opacity duration-150 group-hover:opacity-85"
+        class="control-label inline-flex h-12 shrink-0 items-center rounded-control bg-primary px-6 text-[12px] text-on-primary transition-opacity duration-150 group-hover:opacity-85"
       >
         {t(locale, 'landing.cardView')}
       </a>

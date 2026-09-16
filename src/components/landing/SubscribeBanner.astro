@@ -1,8 +1,14 @@
 ---
 /**
- * One band that sells the subscription next to the courses: the price, what it covers, a link.
- * Framed by a hairline above and below rather than boxed, with the included items as a
- * hairline-separated list — no bullets, no dots.
+ * One band that sells the subscription next to the courses: the two prices as figures, what it
+ * covers, a link. Framed by a hairline above and below rather than boxed.
+ *
+ * The prices are the point of the band and are set as figures (`Stat`), not as a sentence with a
+ * number in it; the annual plan's own note («≈ 666 ₽ в месяц …») is the one quiet line, because
+ * it is the argument for the year. What is included stays a list — those four lines are content
+ * (`PLAN_INCLUDES`) and each is a sentence, which is too long for a pill and would truncate at a
+ * phone's width — but ticked, not numbered: the numeral said "step 1, step 2" about things that
+ * are not steps.
  */
 import type { Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
@@ -10,6 +16,7 @@ import { href } from '@/lib/util/paths';
 import { PLAN_BY_ID, PLAN_INCLUDES, PLANS_ENABLED } from '@content/site/plans';
 import { formatPrice } from '@content/site/pricing';
 import Button from './Button.astro';
+import Stat from './Stat.astro';
 
 interface Props {
   locale: Locale;
@@ -23,33 +30,38 @@ const annual = PLAN_BY_ID.get('annual');
 {
   PLANS_ENABLED && monthly && annual && (
     <div
-      class={`grid gap-8 border-y border-border py-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-end md:py-10 ${extra}`}
+      class={`grid gap-8 border-y border-border py-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-end md:gap-14 md:py-10 ${extra}`}
     >
       <div>
         <p class="eyebrow">{t(locale, 'landing.subscribeEyebrow')}</p>
         <h3 class="font-display mt-3 text-2xl text-balance md:text-3xl">
           {t(locale, 'landing.subscribeTitle')}
         </h3>
-        <ul class="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted">
-          {PLAN_INCLUDES.map((x, i) => (
+        <ul class="mt-5 flex flex-col gap-2 text-sm text-muted">
+          {PLAN_INCLUDES.map((x) => (
             <li class="flex items-baseline gap-3">
-              <span class="numeral tabular w-5 shrink-0 text-xs text-muted-2" aria-hidden="true">
-                {String(i + 1).padStart(2, '0')}
+              <span class="glyph shrink-0 text-xs text-text" aria-hidden="true">
+                ✓
               </span>
               {l(x, locale)}
             </li>
           ))}
         </ul>
       </div>
-      <div class="flex flex-col items-start gap-3 md:items-end md:text-right">
-        <p class="tabular">
-          <span class="numeral text-3xl">{formatPrice(locale, monthly.price)}</span>
-          <span class="text-sm text-muted"> {t(locale, 'landing.subscribePerMonth')}</span>
-        </p>
-        <p class="text-sm text-muted">
-          {formatPrice(locale, annual.price)} {t(locale, 'landing.subscribePerYear')} ·{' '}
-          {l(annual.note, locale)}
-        </p>
+      <div class="flex flex-col items-start gap-5 md:items-end">
+        <div class="flex flex-wrap gap-x-8 gap-y-4 md:justify-end">
+          <Stat
+            size="md"
+            value={formatPrice(locale, monthly.price)}
+            label={t(locale, 'landing.subscribePerMonth')}
+          />
+          <Stat
+            size="md"
+            value={formatPrice(locale, annual.price)}
+            label={t(locale, 'landing.subscribePerYear')}
+          />
+        </div>
+        <p class="text-xs text-muted md:text-right">{l(annual.note, locale)}</p>
         <Button href={href(locale, '/subscribe/')}>
           {t(locale, 'landing.navSubscribe')}{' '}
           <span class="glyph" aria-hidden="true">

@@ -57,7 +57,12 @@ const headerCls = [narrow ? 'max-w-2xl' : '', align === 'center' ? 'mx-auto text
       >
         {title}
       </Tag>
-      {intro && <p class="mt-5 text-lg leading-relaxed text-muted">{intro}</p>}
+      {/* One or two sentences at body size: the section's figures do the rest of the talking. */}
+      {
+        intro && (
+          <p class="mt-4 max-w-xl text-base leading-relaxed text-muted md:text-lg">{intro}</p>
+        )
+      }
     </header>
     {
       n !== undefined && (
