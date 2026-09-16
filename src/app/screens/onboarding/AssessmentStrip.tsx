@@ -4,7 +4,7 @@
  * Both screens that lead into the assessment were words alone — the offer («Хочешь адаптировать
  * тренировки под себя?») and the warning before the first movement — and the owner said so about
  * each of them. This is what they were missing: «нужно будет сказать, сколько раз ты выполнишь
- * 5 упражнений за 10 минут» is an abstraction until you see which five.
+ * 5 упражнений за 3 минуты» is an abstraction until you see which five.
  *
  * Nothing new was shot for it. Every frame is the coach's own still for that movement, the same one
  * the runner shows a second later and the same one the library uses everywhere else

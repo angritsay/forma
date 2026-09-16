@@ -96,6 +96,24 @@ export interface Subscription {
 }
 
 /** A row of `subscriptions` as the admin sees it. */
+/**
+ * One person the admin can grant something to: everybody who has confirmed a sign-in code.
+ *
+ * `courses` and `subscribed` count only what is *live* — a refunded purchase and an expired
+ * subscription are both "nothing" here, because the list exists to answer "does this person
+ * already have it" and history answers that wrong.
+ */
+export interface PersonRow {
+  email: string;
+  displayName: string | null;
+  createdAt: string;
+  /** Null until they finish the onboarding wizard. */
+  onboardedAt: string | null;
+  /** Active purchases. */
+  courses: number;
+  subscribed: boolean;
+}
+
 export interface SubscriptionRow {
   id: string;
   email: string;

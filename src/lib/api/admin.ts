@@ -13,6 +13,7 @@ import {
 } from './mappers';
 import { isDemo } from './mode';
 import type {
+  PersonRow,
   PurchaseFilter,
   PurchaseRow,
   PurchaseStatus,
@@ -125,5 +126,41 @@ export async function setSubscription(change: SubscriptionChange): Promise<strin
         p_note: change.note?.trim() || null,
       }),
     );
+  });
+}
+
+/** The shape `admin_people()` returns; snake_case, straight from Postgres. */
+interface DbPerson {
+  email: string;
+  display_name: string | null;
+  created_at: string;
+  onboarded_at: string | null;
+  courses: number;
+  subscribed: boolean;
+}
+
+/**
+ * Everybody who has confirmed a sign-in code, newest first, optionally filtered by a substring of
+ * the address or the name.
+ *
+ * This exists so a grant is a choice from a list rather than an address typed from memory.
+ * `admin_add_purchase` accepts any well-formed address on purpose — a pre-sale grant to somebody
+ * who has not signed up yet is a real thing the coach does — so a typo cannot be caught there and
+ * has to be designed out here instead.
+ */
+export async function listPeople(search = '', limit = 500): Promise<PersonRow[]> {
+  if (isDemo()) return (await demo()).listPeople(search, limit);
+  return guard(async () => {
+    const rows = unwrap<DbPerson[]>(
+      await supabase().rpc('admin_people', { p_search: search.trim() || null, p_limit: limit }),
+    );
+    return rows.map((r) => ({
+      email: r.email,
+      displayName: r.display_name,
+      createdAt: r.created_at,
+      onboardedAt: r.onboarded_at,
+      courses: Number(r.courses) || 0,
+      subscribed: r.subscribed === true,
+    }));
   });
 }

@@ -9,6 +9,12 @@ import { ChipGroup } from '@/app/screens/onboarding/ChipGroup';
 
 export interface AddPurchaseSheetProps {
   open: boolean;
+  /**
+   * The address to start from, when the sheet was opened from the people list. Empty means the
+   * coach is typing one — a grant to somebody who has not signed up yet is a real case, so the
+   * field stays a field.
+   */
+  prefillEmail?: string;
   busy: boolean;
   /** Server-side validation message to show under the email field. */
   error: string | null;
@@ -17,7 +23,14 @@ export interface AddPurchaseSheetProps {
 }
 
 /** Grant a course to an email by hand (bank transfer, gift, support case). */
-export function AddPurchaseSheet({ open, busy, error, onClose, onSubmit }: AddPurchaseSheetProps) {
+export function AddPurchaseSheet({
+  open,
+  prefillEmail,
+  busy,
+  error,
+  onClose,
+  onSubmit,
+}: AddPurchaseSheetProps) {
   const { t, l } = useT();
   const courses = useCatalogue((s) => s.courses);
   const [email, setEmail] = useState('');
@@ -27,11 +40,11 @@ export function AddPurchaseSheet({ open, busy, error, onClose, onSubmit }: AddPu
 
   useEffect(() => {
     if (!open) return;
-    setEmail('');
+    setEmail(prefillEmail ?? '');
     setCourseId(null);
     setNote('');
     setTouched(false);
-  }, [open]);
+  }, [open, prefillEmail]);
 
   const emailOk = isValidEmail(email);
   const canSubmit = emailOk && courseId !== null;

@@ -7,7 +7,7 @@
  * and they asked for them as a form: the wizard's «Продолжить» waiting under a number field.
  *
  * What is asked now is a choice, in the athlete's own words: fit the training to you? What saying
- * yes costs is two pills under it — five movements, ten minutes — not a sentence; a fact that is
+ * yes costs is two pills under it — five movements, three minutes — not a sentence; a fact that is
  * not a control is a pill (design/CHANGELOG.md §10). «Сейчас» opens the runner; «Не сейчас»
  * postpones the whole thing, and it comes back as a task on the home screen rather than as
  * something lost.

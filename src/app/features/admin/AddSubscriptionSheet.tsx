@@ -9,6 +9,12 @@ import { ChipGroup } from '@/app/screens/onboarding/ChipGroup';
 
 export interface AddSubscriptionSheetProps {
   open: boolean;
+  /**
+   * The address to start from, when the sheet was opened from the people list. Empty means the
+   * coach is typing one — a grant to somebody who has not signed up yet is a real case, so the
+   * field stays a field.
+   */
+  prefillEmail?: string;
   busy: boolean;
   /** Server-side validation message to show under the email field. */
   error: string | null;
@@ -19,6 +25,7 @@ export interface AddSubscriptionSheetProps {
 /** Grant every course for a period by hand (bank transfer, gift, support case). */
 export function AddSubscriptionSheet({
   open,
+  prefillEmail,
   busy,
   error,
   onClose,
@@ -33,12 +40,12 @@ export function AddSubscriptionSheet({
 
   useEffect(() => {
     if (!open) return;
-    setEmail('');
+    setEmail(prefillEmail ?? '');
     setPlan('monthly');
     setUntil('');
     setNote('');
     setTouched(false);
-  }, [open]);
+  }, [open, prefillEmail]);
 
   const emailOk = isValidEmail(email);
   // A date typed by hand; the end of that day in the coach's own time zone.
