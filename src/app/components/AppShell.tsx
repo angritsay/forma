@@ -1,9 +1,10 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { useEffect, useRef, type CSSProperties, type ReactNode } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { isDemo } from '@/lib/api/mode';
 import { AdminNav } from './AdminNav';
 import { BottomNav } from './BottomNav';
 import { DemoBadge, DEMO_BADGE_HEIGHT } from './DemoBadge';
+import { SCREEN_MOTION_CLASS, screenMotion } from './screenMotion';
 import { TopNav } from './TopNav';
 
 /**
@@ -40,10 +41,33 @@ export function AppFrame({ children }: { children?: ReactNode }) {
 }
 
 /*
- * The tab bar's height without the safe area: it is a 56px strip on the bottom edge now, not a
- * floating island with a margin under it. <Screen> adds `--safe-bottom` on top of this itself.
+ * The room the tab bar takes without the safe area: a 64px capsule floating 12px above the bottom
+ * edge, and 12px more so the last line of a screen ends above the capsule rather than under its
+ * top edge. <Screen> adds `--safe-bottom` on top of this itself.
  */
-const NAV_INSET = '56px';
+const NAV_INSET = '88px';
+
+/**
+ * The outlet, with the screen arriving the way the tab bar's highlight went.
+ *
+ * Keyed on the path, so each screen is a fresh element and the entrance replays on every
+ * navigation and never on a re-render. The last path is kept in a ref and written after the
+ * render, which is what lets the render of the *new* path still see the old one and decide the
+ * direction from it — see `screenMotion`.
+ */
+function MotionOutlet() {
+  const { pathname } = useLocation();
+  const last = useRef<string | null>(null);
+  const motion = screenMotion(last.current, pathname);
+  useEffect(() => {
+    last.current = pathname;
+  }, [pathname]);
+  return (
+    <div key={pathname} className={SCREEN_MOTION_CLASS[motion]}>
+      <Outlet />
+    </div>
+  );
+}
 
 /**
  * How wide the content column runs from `md` up.
@@ -136,7 +160,7 @@ export function AppShell() {
         {admin ? <AdminNav /> : null}
         <div className="min-w-0 flex-1">
           <div className={`mx-auto w-full ${width}`}>
-            <Outlet />
+            <MotionOutlet />
           </div>
         </div>
       </div>

@@ -1,18 +1,27 @@
 /**
- * One task of the day: what to do, what it is worth, the proof control, and — the part that makes
- * this format different from a checklist — where the person you are scored with has got to.
+ * One task of the day: its name, what it is worth, the one control that delivers it, and — the
+ * part that makes this format different from a checklist — where the person you are scored with
+ * has got to.
  *
- * The order on the card is the order of the athlete's attention: the task, then whether it is done,
- * then the partner. Points and the rule sit on one quiet line at the top, because knowing a task is
- * worth 12 and only counts if both deliver changes whether you nudge your partner — but it is not
- * what you came to read.
+ * The card used to open with a line of rule («Только если сделают оба»), then the title as a
+ * heading, the body, a target line, a labelled field, a button and a badge — seven pieces of type
+ * for one task. The owner's prototype (`design/ui_kits/app-v2`, «Челлендж») does it with three:
+ * the task's name in the display face, a pill saying what it is worth, and a field with «Готово»
+ * beside it. That is the order of the athlete's attention, and it is what this draws. The rule is
+ * still here for the one case where it changes what you do — a pair task that scores only when
+ * both deliver — and the target has moved into the field it is the target for.
+ *
+ * A delivered task does not disappear and does not turn grey: it gets a check in a white circle,
+ * landing on the spring, and steps back a little. Finishing something should look like something.
  */
 import { clsx } from 'clsx';
 import { useRef, useState } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { Glyph } from '@/components/ui/Icon';
 import { Input } from '@/components/ui/Input';
-import { formatNumber } from '@/i18n/index';
+import { Pill } from '@/components/ui/Pill';
+import { formatNumber, plural } from '@/i18n/index';
 import type { MarathonTodayTask, ProofInput } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
 
@@ -56,57 +65,58 @@ export function TaskCard({ item, teammateNames, closed, onSend, onSendMedia }: T
   };
 
   /*
-   * The rule, said in words rather than as a name. «Только если сделают оба» is the sentence that
-   * makes someone message their partner; `all_members` is a column value.
+   * The rule, only where it changes what you do. «Только если сделают оба» is the sentence that
+   * makes someone message their partner; a cap is a ceiling worth knowing. «Каждому за себя» is
+   * the default and says nothing, and «Без баллов» is already said by the missing pill.
    */
-  const ruleLabel = (() => {
-    if (task.rule === 'none') return t('app.marathonRuleNone');
-    if (task.rule === 'capped') {
-      return t('app.marathonRuleCapped', { n: formatNumber(locale, task.cap ?? 0) });
-    }
-    if (task.rule === 'all_members' && entrySize > 1) return t('app.marathonRuleAllMembers');
-    return t('app.marathonRulePerMember');
-  })();
+  const rule =
+    task.rule === 'all_members' && entrySize > 1 && !done
+      ? t('app.marathonRuleAllMembers')
+      : task.rule === 'capped'
+        ? t('app.marathonRuleCapped', { n: formatNumber(locale, task.cap ?? 0) })
+        : null;
+
+  const points = plural(locale, task.points, {
+    one: t('app.marathonPointsOne', { n: formatNumber(locale, task.points) }),
+    few: t('app.marathonPointsFew', { n: formatNumber(locale, task.points) }),
+    many: t('app.marathonPointsMany', { n: formatNumber(locale, task.points) }),
+  });
 
   return (
     <article
       className={clsx(
-        'flex flex-col gap-3 border-t border-border py-5',
+        'flex flex-col gap-4 border-t border-border py-5',
         // A finished task steps back rather than disappearing: the day should still read as a day.
-        done && 'opacity-60',
+        done && 'opacity-70',
       )}
     >
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="control-label text-[10px] text-muted-2">{ruleLabel}</span>
-        {task.rule !== 'none' ? (
+      <div className="flex items-start gap-4">
+        <div className="min-w-0 flex-1">
+          <h3 className="display text-[24px] leading-[1.08] text-balance">{task.title}</h3>
+          {task.body ? (
+            <p className="mt-2 text-[14px] leading-snug text-muted">{task.body}</p>
+          ) : null}
+          {rule ? <p className="eyebrow mt-2 text-[10px]">{rule}</p> : null}
+        </div>
+        {done ? (
           /*
-           * The figure takes the challenge's colour while the points are still on the table, and
-           * goes grey once the proof is in. That is the brandbook's «цвет красит номера» spent on
-           * the one number that is a decision: an orange 12 is what is left to win today. It has to
-           * stay off the finished card for a second reason — a done card is dimmed to 60%, and the
-           * orange would drop to 3.29:1 there, under the 4.5 it clears at full strength (7.34).
+           * The check, landing. Keyed on nothing: the card is rendered done from the moment the
+           * proof is in, so the circle mounts exactly once — when the day loads finished, or when
+           * the proof arrives — and pops both times.
            */
           <span
-            className={clsx(
-              'numeral tabular shrink-0 text-[13px]',
-              done ? 'text-muted' : 'text-course',
-            )}
+            className="pop-in flex size-10 shrink-0 items-center justify-center rounded-pill bg-paper text-ink"
+            role="img"
+            aria-label={t('app.marathonProofSent')}
           >
-            {t('app.marathonPointsN', { n: formatNumber(locale, task.points) })}
+            <Glyph size={16}>✓</Glyph>
           </span>
-        ) : null}
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <h3 className="font-display text-xl leading-[1.12] text-balance">{task.title}</h3>
-        {task.body ? <p className="text-[15px] leading-[1.5] text-muted">{task.body}</p> : null}
-        {task.targetNum !== null && task.unit ? (
-          <p className="numeral text-[13px] text-muted-2">
-            {t('app.marathonProofTarget', {
-              n: formatNumber(locale, task.targetNum),
-              unit: task.unit,
-            })}
-          </p>
+        ) : task.rule !== 'none' ? (
+          /*
+           * What is still on the table, in the challenge's colour — the brandbook's «цвет красит
+           * номера» spent on the one number that is a decision.
+           */
+          <Pill tone="course">{points}</Pill>
         ) : null}
       </div>
 
@@ -153,7 +163,11 @@ interface ProofControlProps {
   onSendMedia: (file: File) => Promise<void>;
 }
 
-/** The control is whatever the task asks for: a button, a sentence, a number, a photo. */
+/**
+ * The control is whatever the task asks for: a button, a sentence, a number, a photo — and once
+ * the proof is in, nothing, because the check on the card is the state. The one exception is a
+ * photo, which can be replaced: the coach may not have seen the first one yet.
+ */
 function ProofControl({
   item,
   busy,
@@ -165,7 +179,7 @@ function ProofControl({
   onSend,
   onSendMedia,
 }: ProofControlProps) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const fileRef = useRef<HTMLInputElement>(null);
   const { task, mine } = item;
   const done = Boolean(mine && !mine.voidedAt);
@@ -173,29 +187,40 @@ function ProofControl({
 
   if (locked) return null;
 
+  /* The day is over and this was not sent: the control stays, with the one honest line beside it. */
+  const late =
+    closed && !done ? (
+      <span className="text-[13px] text-muted-2">{t('app.marathonDeadlinePassed')}</span>
+    ) : null;
+
   if (task.proofKind === 'done') {
+    if (done) return null;
     return (
       <div className="flex items-center gap-3">
         <Button
           size="md"
-          variant={done ? 'secondary' : 'primary'}
           loading={busy}
-          disabled={done}
           onClick={() => void onSend({})}
+          iconRight={<Glyph size={14}>✓</Glyph>}
         >
-          {done ? t('app.marathonProofSent') : t('app.marathonProofDone')}
+          {t('app.marathonProofDone')}
         </Button>
-        {closed && !done ? (
-          <span className="text-[13px] text-muted-2">{t('app.marathonDeadlinePassed')}</span>
-        ) : null}
+        {late}
       </div>
     );
   }
 
   if (task.proofKind === 'number') {
+    if (done) return null;
+    /*
+     * The target is the field's placeholder — it is what the number is measured against — and the
+     * unit is the field's trailing word, so the placeholder is the bare figure: «10 000 | шагов»,
+     * not «Цель: 10 000 шагов | шагов».
+     */
+    const placeholder = task.targetNum !== null ? formatNumber(locale, task.targetNum) : '';
     return (
       <form
-        className="flex items-end gap-3"
+        className="flex flex-col gap-2"
         onSubmit={(e) => {
           e.preventDefault();
           const n = Number(value);
@@ -203,22 +228,35 @@ function ProofControl({
           void onSend({ valueNum: n });
         }}
       >
-        <Input
-          label={t('app.marathonProofNumberLabel')}
-          inputMode="numeric"
-          value={value}
-          trailing={task.unit ? <span className="text-[13px] text-muted">{task.unit}</span> : null}
-          onChange={(e) => onValue(e.target.value)}
-          wrapperClassName="flex-1"
-        />
-        <Button type="submit" size="md" loading={busy} disabled={value.trim() === ''}>
-          {t('app.marathonProofSend')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Input
+            aria-label={t('app.marathonProofNumberLabel')}
+            placeholder={placeholder}
+            inputMode="numeric"
+            value={value}
+            trailing={
+              task.unit ? <span className="text-[13px] text-muted">{task.unit}</span> : null
+            }
+            onChange={(e) => onValue(e.target.value)}
+            wrapperClassName="min-w-0 flex-1"
+          />
+          <Button
+            type="submit"
+            size="md"
+            loading={busy}
+            disabled={value.trim() === ''}
+            iconRight={<Glyph size={14}>✓</Glyph>}
+          >
+            {t('common.done')}
+          </Button>
+        </div>
+        {late}
       </form>
     );
   }
 
   if (task.proofKind === 'text') {
+    if (done) return null;
     return (
       <form
         className="flex flex-col gap-2"
@@ -228,19 +266,25 @@ function ProofControl({
           void onSend({ valueText: text.trim() });
         }}
       >
-        <Input
-          label={t('app.marathonProofTextLabel')}
-          value={text}
-          onChange={(e) => onText(e.target.value)}
-        />
-        <div className="flex items-center gap-3">
-          <Button type="submit" size="md" loading={busy} disabled={!text.trim()}>
-            {t('app.marathonProofSend')}
+        <div className="flex items-center gap-2">
+          <Input
+            aria-label={t('app.marathonProofTextLabel')}
+            placeholder={t('app.marathonProofTextLabel')}
+            value={text}
+            onChange={(e) => onText(e.target.value)}
+            wrapperClassName="min-w-0 flex-1"
+          />
+          <Button
+            type="submit"
+            size="md"
+            loading={busy}
+            disabled={!text.trim()}
+            iconRight={<Glyph size={14}>✓</Glyph>}
+          >
+            {t('common.done')}
           </Button>
-          {done ? (
-            <span className="text-[13px] text-muted-2">{t('app.marathonProofSent')}</span>
-          ) : null}
         </div>
+        {late}
       </form>
     );
   }
@@ -270,9 +314,7 @@ function ProofControl({
         >
           {done ? t('app.marathonProofPhotoAgain') : t('app.marathonProofPhoto')}
         </Button>
-        {done ? (
-          <span className="text-[13px] text-muted-2">{t('app.marathonProofPhotoSent')}</span>
-        ) : null}
+        {late}
       </div>
       <span className="text-[13px] text-muted-2">{t('app.marathonProofCoachOnly')}</span>
     </div>

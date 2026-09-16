@@ -54,8 +54,12 @@ export function initials(name?: string | null): string {
 }
 
 /**
- * A square with the initials set in the display face. No picture, no colour: a list of people
+ * A circle with the initials set in the display face. No picture, no colour: a list of people
  * varies by surface and outline only, and the type does the identifying.
+ *
+ * A circle, not the 12px control square it was: the owner's prototype (`design/ui_kits/app-v2`)
+ * draws every person round — on Home, in the profile — and a person is not a control. One
+ * component, so the avatar is the same object at 32px in the top row and at 80px on the profile.
  */
 export function Avatar({ seed, name, size = 40, className }: AvatarProps) {
   const tile = TILES[tileIndex(seed)]!;
@@ -68,7 +72,7 @@ export function Avatar({ seed, name, size = 40, className }: AvatarProps) {
       aria-label={label || undefined}
       aria-hidden={label ? undefined : true}
       className={clsx(
-        'font-display inline-flex shrink-0 select-none items-center justify-center rounded-control text-text',
+        'font-display inline-flex shrink-0 select-none items-center justify-center rounded-pill text-text',
         tile.outline && 'border border-border-strong',
         className,
       )}

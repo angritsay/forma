@@ -1,5 +1,5 @@
 /**
- * The challenge (the third tab): today's task, and who is winning the week.
+ * The challenge (the third tab): today's tasks, and who is winning the week.
  *
  * It was reachable only through a card on the home deck, which made the format look like an
  * accessory to the course. It is a tab of its own now, and it holds the two halves of the challenge in
@@ -10,30 +10,37 @@
  * never what gets someone moving, so the day comes first; but a race nobody can see the score of
  * is not a race, and a link to it was not enough to make it one.
  *
- * The screen is orange, and the orange is the brandbook's own rule rather than a departure from it:
- * «один экран — один цвет, и он приходит от программы». The challenge's programme colour is
- * `GAME_TILE` — it has painted the deck card and the row on Home since the format shipped — and
- * this, the format's own screen, was the one place it never reached. `--course-tile` is set once
- * around the whole screen, so the cover, the trial rule, the points still on the table and the row
- * that is yours on the board all read the same variable. It paints a cover, a progress strip and
- * numerals; the buttons stay black and white, because the rule says «НЕ кнопки».
+ * **The screen is drawn in the language of the owner's prototype** (`design/ui_kits/app-v2`,
+ * «Челлендж»), after she called the previous version «вообще мимо»: the day as a ring with the
+ * number in it, one display line, each task as its name and a pill of points, one control per
+ * task, and a board of circled ranks with the prize as a pill above it. What went was a cover in
+ * the programme colour, a paragraph about the trial, a rule label over every task and a target
+ * line under it — the same facts, said by smaller things.
+ *
+ * The colour is still the brandbook's own rule: «один экран — один цвет, и он приходит от
+ * программы». The challenge's is `GAME_TILE`; `--course-tile` is set once around the whole screen,
+ * so the ring, the pills, the leader's circle and the trial's link all read the same variable. It
+ * paints figures and pills, never a button and never a field of it.
  */
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Glyph } from '@/components/ui/Icon';
+import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
-import { plural } from '@/i18n/index';
+import { formatNumber, plural } from '@/i18n/index';
 import { PROOFS_BUCKET, proofMediaPath, sendProof } from '@/lib/api/marathon';
 import { uploadMedia } from '@/lib/api/storage';
 import type { MyMarathon, ProofInput } from '@/lib/api/types';
 import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
+import { externalLinkProps } from '@/app/hooks/useExternalLink';
 import { useT } from '@/app/hooks/useT';
 import { BoardRow } from '@/app/features/marathon/BoardRow';
-import { GameCover } from '@/app/features/marathon/GameCover';
+import { GameHead } from '@/app/features/marathon/GameHead';
 import { TaskCard } from '@/app/features/marathon/TaskCard';
 import {
   useMarathonDay,
@@ -117,15 +124,15 @@ export default function MarathonScreen() {
   );
 
   /*
-   * Every state of this screen is the same page: the cover, then whatever there is to say under it.
-   * There is no top bar — the cover *is* the header, the way a course's is, and the tab bar already
-   * names the screen. `--course-tile` sits on the outer element so the block and everything under
-   * it take the challenge's colour from one place.
+   * Every state of this screen is the same page: the head, then whatever there is to say under it.
+   * There is no top bar — the head names the screen, and the tab bar already does. `--course-tile`
+   * sits on the outer element so the ring and everything under it take the challenge's colour
+   * from one place.
    */
-  const page = (cover: MyMarathon | null, body: ReactNode, partners?: string[]) => (
+  const page = (head: MyMarathon | null, body: ReactNode, partners?: string[]) => (
     <div style={courseTileVars(GAME_TILE)}>
-      <Screen>
-        <GameCover marathon={cover} partners={partners} />
+      <Screen contentClassName="pt-5">
+        <GameHead marathon={head} partners={partners} />
         {body}
       </Screen>
     </div>
@@ -196,32 +203,32 @@ export default function MarathonScreen() {
   const closed = marathon.status === 'finished';
   /* The top of this week's table; a week nobody has scored in yet shows as empty, not as zeros. */
   const topScores = scores.filter((row) => row.points > 0).slice(0, BOARD_ROWS);
+  const delivered = tasks.filter((item) => item.mine !== null && !item.mine.voidedAt).length;
 
   return page(
     marathon,
-    <div className="flex flex-col gap-5 pt-6 pb-4">
+    <div className="flex flex-col gap-6 pt-5 pb-4">
       {/*
-       * The week a course bought says so, and says how much of it is left. A trial nobody is
-       * told about converts nothing: the whole point is that on the seventh day the person
-       * already knows what they are about to lose.
-       *
-       * The rule and the kicker are `border-course` / `text-course`, which is to say the
-       * challenge's orange — they always were, and until the screen set `--course-tile` they fell
-       * back to a neutral grey and nobody could see what they were for.
+       * The week a course bought, as a pill that leads to the subscription. A trial nobody is told
+       * about converts nothing: on the seventh day the person should already know what they are
+       * about to lose — and one pill says it as well as the paragraph it replaced, in the colour
+       * that marks the rest of the challenge's own facts.
        */}
-      {access.allowed && access.trialDaysLeft !== undefined ? (
-        <section className="border-l-2 border-course pl-4">
-          <span className="eyebrow text-course">{t('app.marathonTrialTitle')}</span>
-          <p className="mt-1 text-[15px]">
-            {t('app.marathonTrialBody', {
-              n: plural(locale, access.trialDaysLeft, {
-                one: t('app.homeDeckGameTrialDayOne'),
-                few: t('app.homeDeckGameTrialDayFew', { n: access.trialDaysLeft }),
-                many: t('app.homeDeckGameTrialDayMany', { n: access.trialDaysLeft }),
-              }),
-            })}
-          </p>
-        </section>
+      {access.trialDaysLeft !== undefined ? (
+        <a
+          {...externalLinkProps(subscribeHref(locale))}
+          className="control-label inline-flex h-8 items-center gap-2 self-start rounded-pill border border-course/60 px-3.5 text-[10px] text-course transition-opacity duration-150 ease-(--ease-out) hover:opacity-80"
+        >
+          {t('app.marathonTrialTitle')} ·{' '}
+          {t('app.marathonTrialLeft', {
+            n: plural(locale, access.trialDaysLeft, {
+              one: t('app.homeDeckGameTrialDayOne'),
+              few: t('app.homeDeckGameTrialDayFew', { n: access.trialDaysLeft }),
+              many: t('app.homeDeckGameTrialDayMany', { n: access.trialDaysLeft }),
+            }),
+          })}
+          <Glyph size={12}>→</Glyph>
+        </a>
       ) : null}
 
       {/*
@@ -233,8 +240,18 @@ export default function MarathonScreen() {
        * task is the race made visible while the task is being done, which is the whole argument
        * for having a board at all.
        */}
-      <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
-        <div className="min-w-0 flex-1">
+      <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-8">
+        <section className="min-w-0 flex-1">
+          {/* The kicker and, opposite it, how much of today is in: «1/3» is a score, and a
+              score is what this format runs on. */}
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="eyebrow">{t('app.marathonTasksToday')}</h2>
+            {tasks.length > 0 ? (
+              <span className="numeral tabular text-[13px] text-muted-2">
+                {formatNumber(locale, delivered)}/{formatNumber(locale, tasks.length)}
+              </span>
+            ) : null}
+          </div>
           {dayIndex < 1 ? (
             <EmptyState
               title={t('app.marathonNotStarted')}
@@ -248,7 +265,7 @@ export default function MarathonScreen() {
               description={t('app.marathonNoTasksTodayBody')}
             />
           ) : (
-            <div className="flex flex-col" aria-busy={sending}>
+            <div className="mt-2 flex flex-col" aria-busy={sending}>
               {tasks.map((item) => (
                 <TaskCard
                   key={item.task.id}
@@ -261,19 +278,29 @@ export default function MarathonScreen() {
               ))}
             </div>
           )}
-        </div>
+        </section>
 
         {/*
          * The week, as far as the top of it. One way on from here, not two: «Мои баллы» is the
          * breakdown of an answer this table already gives, so it lives on the full board.
          *
-         * The rule that separates it from the day turns with the layout: a line above it when it
-         * is underneath, a line down its left when it is beside.
+         * The prize sits beside the week's number as the one filled pill on the screen — it is
+         * what the table is for, and the leader's filled circle under it is drawn in the same
+         * colour for the same reason.
          */}
-        <section className="border-t border-border pt-5 md:w-80 md:shrink-0 md:border-t-0 md:border-l md:pt-0 md:pl-6">
-          <h2 className="eyebrow text-course">{t('app.marathonWeekThis')}</h2>
+        <section className="md:w-80 md:shrink-0">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="eyebrow shrink-0">
+              {t('app.marathonWeek', { n: formatNumber(locale, marathon.week) })}
+            </h2>
+            {marathon.prize ? (
+              <Pill tone="course-fill">
+                {t('app.marathonPrizeShort')} · {marathon.prize}
+              </Pill>
+            ) : null}
+          </div>
           {topScores.length > 0 ? (
-            <ol className="mt-2 flex flex-col">
+            <ol className="mt-3 flex flex-col">
               {topScores.map((row) => (
                 <li key={row.entryId}>
                   <BoardRow row={row} />
@@ -281,15 +308,16 @@ export default function MarathonScreen() {
               ))}
             </ol>
           ) : (
-            <p className="mt-2 text-[13px] text-muted">{t('app.marathonBoardEmpty')}</p>
+            <p className="mt-3 text-[13px] text-muted">{t('app.marathonBoardEmpty')}</p>
           )}
           <Button
             variant="ghost"
             size="sm"
-            className="mt-3"
+            className="mt-2 -ml-4.5"
             onClick={() => navigate('/marathon/board')}
+            iconRight={<Glyph size={12}>→</Glyph>}
           >
-            {t('app.marathonTabBoard')}
+            {t('app.marathonBoardAll')}
           </Button>
         </section>
       </div>

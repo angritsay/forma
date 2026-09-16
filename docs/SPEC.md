@@ -133,14 +133,19 @@ public/                     # favicon.svg, icons, manifest
   than by a card around every object. Composition is asymmetric — a 7/5 grid, not a balanced
   split; headings sit low against their column; photographs bleed past the page gutter. Large
   radii where an object is genuinely discrete (24px cards, 20px tiles) and 12px on everything
-  interactive — buttons, inputs and chips alike, with capitalised, tracked labels and no pills.
-  This paragraph described that scale while the tokens were all 0; both now agree, and the one
-  change of mind is the buttons, which used to be held at a near-square 4px. Chrome that has
-  content moving under it — the tab bar, a screen header, a sheet, a modal, the player — is
-  frosted glass (`design/CHANGELOG.md` §8); everything else is a solid surface. Bottom
-  tab bar in the app (Сегодня / Программы / Челлендж / Прогресс — the profile is the avatar in the
-  top-right of Home, not a tab), generous spacing, 1px borders
-  (`--border`).
+  interactive — buttons, inputs and chips alike, with capitalised, tracked labels. A _fact_ that
+  is not a control — «12 баллов», the prize, a trial's days left — is a fully rounded pill
+  (`Pill`), and a person or a rank is a circle (`Avatar`, the board's numerals): the owner's
+  prototype (`design/ui_kits/app-v2`) draws them so, and `design/CHANGELOG.md` §10 records the
+  reversal of the earlier «no pills, no circles» rule. This paragraph described that scale while
+  the tokens were all 0; both now agree, and the one change of mind is the buttons, which used to
+  be held at a near-square 4px. Chrome that has content moving under it — the tab bar, a screen
+  header, a sheet, a modal, the player — is frosted glass (`design/CHANGELOG.md` §8); everything
+  else is a solid surface. The app's tab bar (Сегодня / Программы / Челлендж / Прогресс — the
+  profile is the avatar on «Прогресс» and in the top row from `md`, not a tab) is a capsule of
+  glass floating over the bottom of the screen with one highlight that slides between the four
+  seats, and a screen arrives the way the highlight went (`screenMotion`). Generous spacing, 1px
+  borders (`--border`).
 - The accent is a dosage rule, not just a colour: `#9ECBFF` marks the primary button, the
   wordmark's full stop, a rule, a kicker, "you are here". Never a large fill. Large areas are
   shades of black and full-bleed monochrome photography.
@@ -451,8 +456,12 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
     carry a screenshot of the athlete's own step counter — attached the moment it is picked, held
     in the private `proofs` bucket, visible to the athlete and the coach and nobody else. It is
     evidence, not arithmetic: points still come from the number.
-11. **Profile** (reached from the avatar on Home, not from the tab bar): name, avatar seed, units,
-    equipment/weights, retake the assessment, sign out; admin link if admin.
+11. **Profile** (reached from the avatar on «Прогресс» and from the top row on a laptop, not from
+    the tab bar), on paper: the avatar (tap for a new one), the name (tap to edit), one line —
+    since when and how many workouts — and then rows with their values on the right: subscription,
+    equipment/weights, what to protect, retake the assessment (its value is the fitness index),
+    the coach's hour, admin if admin, sign out (its value is the account's email). No section
+    headings, no subtitles: «минимум текста».
 12. **Admin**: purchases list (search by email, filter status), activate / refund, add purchase.
 
 ## 11. SEO conveyor (docs/SEO.md is the runbook)

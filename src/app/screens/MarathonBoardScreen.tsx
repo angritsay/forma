@@ -7,8 +7,9 @@
  * they are already out of it.
  *
  * It is a screen of the challenge, so it carries the challenge's colour: `--course-tile` is set at
- * the root and lands on the prize — the kicker over it, and the label on whoever is holding it —
- * and on the rule down your own row. The week switch stays black and white; it is a control.
+ * the root and lands on the prize's pill and on the leader's filled circle — the two things the
+ * colour marks on the day screen's own table. Your own row is a white ring, not the colour. The
+ * week switch stays black and white; it is a control.
  */
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -16,6 +17,7 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { Pill } from '@/components/ui/Pill';
 import { Tabs, tabPanelId } from '@/components/ui/Tabs';
 import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
 import { TopBar } from '@/app/components/TopBar';
@@ -72,14 +74,14 @@ export default function MarathonBoardScreen() {
             ]}
           />
 
-          {/* The prize is what the table is for, so its kicker is where the colour lands here. */}
+          {/* The prize is what the table is for: the one filled pill, the same one the day screen
+              draws above its five rows, so the two tables read as one race. */}
           {marathon.prize ? (
-            <p className="border-t border-border pt-4 text-[13px] text-muted">
-              <span className="control-label text-course text-[10px]">
-                {t('app.marathonPrize')}
-              </span>{' '}
-              {marathon.prize}
-            </p>
+            <div className="flex">
+              <Pill tone="course-fill">
+                {t('app.marathonPrizeShort')} · {marathon.prize}
+              </Pill>
+            </div>
           ) : null}
 
           <div role="tabpanel" id={tabPanelId(choice)} aria-labelledby={`tab-${choice}`}>

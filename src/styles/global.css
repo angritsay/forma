@@ -121,7 +121,12 @@
    * a 12px control inside a 24px card with 12px of padding sits right. Keep that arithmetic when
    * adding a value, or nested rounding starts to look accidental.
    *
-   * `--r-pill` is still only for the play button laid over a video; nothing else may use it.
+   * `--r-pill` used to be for the play button over a video and nothing else. The owner's own
+   * prototype (`design/ui_kits/app-v2`) sets small facts — «18 мин», «20 баллов», the prize — as
+   * pills, ranks and finished things as circles, and the tab bar as a floating capsule; that is
+   * the reference now (`design/CHANGELOG.md` §10), so the pill is a shape a fact or a piece of
+   * chrome may take. Controls that are pressed stay on `--r-control`: a pill button and a pill
+   * fact would be the same shape for two different things.
    */
   --r-card: 24px;
   --r-tile: 20px;
@@ -145,8 +150,14 @@
   /* Kickers are tracked wide (.18em); control labels a little less (.16em) so they fit their box. */
   --tracking-kicker: 0.18em;
   --tracking-label: 0.16em;
-  /* Calm fades and shifts, never bounce. */
+  /*
+   * Calm fades and shifts for content. The spring is for the chrome's moving parts alone — the tab
+   * bar's highlight settling into a seat, a check landing on a finished task — and its overshoot
+   * is small on purpose. It comes from the owner's prototype (`design/ui_kits/app-v2`), whose
+   * motion pass is the reference for how this product answers a touch.
+   */
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --dur-fast: 150ms;
   --dur-med: 280ms;
   color-scheme: dark;
@@ -720,6 +731,23 @@ body {
   }
 
   /*
+   * A floating object: the tab bar's capsule. An even tint rather than a gradient — a gradient is
+   * for a band with one edge that content arrives from, and a capsule has content on every side.
+   * The blur and saturation are heavier than the bars', so what passes underneath reads as light
+   * and colour rather than as words; the ring is an inset shadow so it follows the radius exactly;
+   * and it casts a shadow, because a thing that floats is a thing that casts one.
+   */
+  .glass-float {
+    --glass-tint: var(--surface-rgb);
+    background: rgba(var(--glass-tint), 0.7);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    backdrop-filter: blur(28px) saturate(180%);
+    box-shadow:
+      inset 0 0 0 1px rgba(var(--paper-rgb), 0.12),
+      0 10px 30px rgba(0, 0, 0, 0.45);
+  }
+
+  /*
    * Two ways glass must stop being glass, and in both the answer is the same: a fully opaque panel.
    *
    * Never a half-transparent unblurred one — that is the single genuinely broken-looking outcome,
@@ -729,7 +757,8 @@ body {
   .glass,
   .glass-bar,
   .glass-bar-top,
-  .glass-tile {
+  .glass-tile,
+  .glass-float {
     --glass-solid: rgb(var(--glass-tint, var(--bg-rgb)));
   }
 
@@ -737,7 +766,8 @@ body {
     .glass,
     .glass-bar,
     .glass-bar-top,
-    .glass-tile {
+    .glass-tile,
+    .glass-float {
       background: var(--glass-solid);
     }
   }
@@ -747,7 +777,8 @@ body {
     .glass,
     .glass-bar,
     .glass-bar-top,
-    .glass-tile {
+    .glass-tile,
+    .glass-float {
       background: var(--glass-solid);
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
@@ -951,10 +982,10 @@ body {
  */
 @keyframes nav-icon-in {
   from {
-    transform: translateY(1.5px) scale(0.9);
+    transform: translateY(2px) scale(0.86);
   }
-  60% {
-    transform: translateY(-1px) scale(1.04);
+  55% {
+    transform: translateY(-1.5px) scale(1.08);
   }
   to {
     transform: none;
@@ -962,21 +993,99 @@ body {
 }
 
 /*
- * The icon of the tab you just landed on: down, past, and settled. The overshoot is small — 4% —
+ * The icon of the tab you just landed on: down, past, and settled. The overshoot is small — 8% —
  * because this plays on every tab change and a bar that bounces is a bar that gets tiring by the
  * third day.
  */
 .nav-icon-in {
-  animation: nav-icon-in 0.28s var(--ease-out) both;
+  animation: nav-icon-in 0.34s var(--ease-spring) both;
+}
+
+/*
+ * A screen arriving. Three directions, decided by `screenMotion` from where the last screen was:
+ * from the right and from the left when the tab bar's highlight went that way (or a screen was
+ * pushed into / come back from), and rising into place when there is no direction to agree with.
+ * 14px, not a full slide: the screen is not a card being dealt, it is the same surface catching up
+ * with the chrome. Short, because it plays on every navigation.
+ */
+@keyframes screen-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes screen-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes screen-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.screen-in-right {
+  animation: screen-in-right 0.3s var(--ease-out) both;
+}
+
+.screen-in-left {
+  animation: screen-in-left 0.3s var(--ease-out) both;
+}
+
+.screen-in-up {
+  animation: screen-in-up 0.26s var(--ease-out) both;
+}
+
+/*
+ * Something landing: a check on a finished task, a figure that has just been earned. Scales in
+ * past its size and settles, on the spring. The prototype's `popin`, at the same numbers.
+ */
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  60% {
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.pop-in {
+  animation: pop-in 0.42s var(--ease-spring) both;
 }
 
 /*
  * Somebody who asked their phone for less motion is asking for it in the chrome most of all: this
- * is the one component they touch on every screen. The mark still moves to the right tab, it just
- * arrives there instead of travelling, and the icon stops springing.
+ * is the one component they touch on every screen. The highlight still moves to the right tab, it
+ * just arrives there instead of travelling; the icon stops springing; screens appear in place.
  */
 @media (prefers-reduced-motion: reduce) {
-  .nav-icon-in {
+  .nav-icon-in,
+  .screen-in-right,
+  .screen-in-left,
+  .screen-in-up,
+  .pop-in {
     animation: none;
   }
 }
