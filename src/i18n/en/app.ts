@@ -431,10 +431,22 @@ export const app = {
 
   // Summary
   summaryEyebrow: 'Summary',
-  summaryTitle: 'Workout complete',
-  summaryTime: 'Time',
-  summaryCalories: 'Calories',
+  // The prototype's «Готово!»: one word the size of the screen, then one warm line about the
+  // streak, then three figures. The ordinal is a word up to the tenth day — a figure that size
+  // would fight the three under it — and «Day 11» after that.
+  summaryDone: 'Done!',
+  summaryStreakOne: 'Day one. The start is in.',
+  summaryStreakWord: '{ordinal} day in a row. That’s how form grows.',
+  summaryStreakNum: 'Day {n} in a row. That’s how form grows.',
+  summaryOrdinals: 'Second|Third|Fourth|Fifth|Sixth|Seventh|Eighth|Ninth|Tenth',
+  summaryMinutes: 'Minutes',
+  summaryReps: 'Reps',
+  summaryKcal: 'Kcal',
+  // The third figure's stand-in on a day with no rep-counted work (a plank test, a mobility day).
   summaryCompletion: 'Completed',
+  // The fold over the per-block, per-test and benchmark record, as on Progress.
+  summaryDetailsShow: 'The whole session',
+  summaryDetailsHide: 'Collapse',
   summaryBlocks: 'By block',
   summarySkipped: 'skipped',
   summaryTests: 'Test results',
@@ -444,10 +456,9 @@ export const app = {
   summaryRoundsMany: '{n} rounds',
   summaryExtraReps: '+{n} reps',
   summaryPartial: 'partial',
-  summaryFeedbackTitle: 'How was it?',
+  // The one link under the button; it opens the RPE row and the note.
+  summaryFeedbackTitle: 'How did it go?',
   summaryRpeLabel: 'Effort (RPE)',
-  summaryRpeMin: 'very easy',
-  summaryRpeMax: 'maximal',
   summaryFeelingLabel: 'How do you feel?',
   summaryNoteLabel: 'Note (optional)',
   summaryNotePlaceholder: 'Anything worth remembering: sleep, pain, what felt off…',
@@ -459,14 +470,13 @@ export const app = {
   summaryVolumeSame: 'Same volume',
   summarySafetyTitle: 'Take care',
   summaryAchievementsTitle: 'New achievements',
-  summaryBackToCourse: 'Back to course',
-  summaryShare: 'Share result',
+  summaryBackToCourse: 'To the path',
+  summaryShare: 'Share',
   summaryShareCopied: 'Copied to clipboard',
   summaryShareText: '{workout}: {time}, {points} pts, {kcal} kcal, {completion}% done — Forma',
   summaryNotFoundTitle: 'Session not found',
   summaryNotFoundBody: 'We couldn’t find this workout. It may have been saved from another device.',
   summaryLoadErrorTitle: 'Couldn’t load the results',
-  summaryAlreadySaved: 'These results are already saved.',
   summaryNoResultsTitle: 'Results unavailable',
   summaryNoResultsBody: 'This workout wasn’t finished on this device, so there is nothing to show.',
 
@@ -474,12 +484,18 @@ export const app = {
   statsTitle: 'Progress',
   statsPosterLabel: 'Your progress',
   statsStreakDays: '{days} in a row',
-  statsStreakBest: 'Best run — {n}',
+  // The pill beside «days in a row» while the day is open and nothing is logged yet.
+  statsTodayNotCounted: 'Today not counted yet',
   statsDetailsShow: 'The whole record',
   statsDetailsHide: 'Collapse',
+  // Over the seven circles: with a course, its sessions per week are the goal; without one the
+  // same row is simply the week.
+  statsWeekGoal: 'Week goal',
+  statsWeekDayDone: '{date} — counted',
+  statsWeekDayEmpty: '{date} — nothing',
+  statsWeekDayAhead: '{date} — ahead',
   statsWeekBoardTitle: 'Who’s ahead',
   statsLevelTitle: 'Level',
-  statsAchievementsLocked: 'Not yet',
   statsLeaderboard: 'Leaderboard',
   statsRefresh: 'Refresh',
   statsRefreshError: 'Couldn’t refresh. Showing the last saved data.',
@@ -521,7 +537,6 @@ export const app = {
   statsAchievementsCount: '{done} of {total}',
   statsAchievementUnlocked: 'Unlocked',
   statsAchievementLocked: 'Locked',
-  statsTotalsTitle: 'All time',
   statsTotalWorkouts: 'Workouts',
   statsTotalMinutes: 'Minutes',
   statsTotalKcal: 'kcal',
@@ -535,7 +550,6 @@ export const app = {
   leaderboardGlobal: 'Everyone',
   leaderboardRankLabel: 'Rank {n}',
   leaderboardYou: 'You',
-  leaderboardPoints: '{n} pts',
   leaderboardEmptyTitle: 'No points yet',
   leaderboardEmptyWeek: 'Be the first this week: finish a workout or log your steps.',
   leaderboardEmptyAll: 'Nobody has scored here yet. Your first workout opens the table.',
@@ -552,14 +566,12 @@ export const app = {
 
   // Steps
   stepsTitle: 'Steps',
-  stepsTodayLabel: 'Today',
   stepsInputLabel: 'Steps today',
   stepsRingLabel: 'Progress to the steps goal',
-  stepsOfGoal: 'of {goal}',
+  // The goal as a pill under the ring; at the goal the pill turns white and carries the points.
+  stepsGoalPill: 'Goal {goal}',
   stepsAddLabel: 'Add {n} steps',
-  stepsGoalReached: 'Goal reached',
   stepsPointsPreview: '+{n} pts',
-  stepsPointsBelow: '{n} more steps to the goal — that’s where the points start.',
   stepsInvalid: 'Enter a whole number from 0 to {max}.',
   stepsWhyTitle: 'Why type them in?',
   stepsWhyBody:
@@ -570,6 +582,9 @@ export const app = {
   stepsProofOpen: 'Open the screenshot',
   stepsProofError: 'The screenshot could not be uploaded',
   stepsHistoryTitle: 'Last 14 days',
+  // What one circle of the history says to a screen reader: the day, then its count or that
+  // nothing was logged, then that a tap edits it.
+  stepsHistoryDay: '{date}: {steps} steps',
   stepsNotLogged: 'Not logged',
   stepsEdit: 'Edit',
   stepsEditTitle: 'Steps for {date}',
@@ -619,16 +634,7 @@ export const app = {
   // Book a session
   bookTitle: 'Forma. One-to-One',
   bookLead: 'An hour on your training: technique, the program under your goal, your questions.',
-  bookFormatLabel: 'Format',
-  bookDurationLabel: 'Length',
   bookDuration: '{n} min',
-  bookPriceLabel: 'Price',
-  bookChoose: 'Choose a length',
-  bookHow: 'How it works',
-  bookStep1: 'Pay by card on the payment page',
-  bookStep2: 'Pick a time in the calendar right after paying',
-  bookStep3: 'The call link arrives at {email}',
-  bookStep3Fallback: 'your email',
   bookPay: 'Pay {price}',
   bookPickTime: 'Pick a time',
   bookContact: 'Message the coach',

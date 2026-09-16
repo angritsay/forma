@@ -18,7 +18,9 @@ import {
   benchmarkResult,
   blockCompletions,
   elapsedStartedAt,
+  streakLine,
   testResults,
+  totalReps,
 } from './summaryModel';
 
 const t = (key: TKey, params?: TParams) => translate('en', key, params);
@@ -70,6 +72,79 @@ describe('blockCompletions', () => {
     expect(metcon.skipped).toBe(false);
     // Only one block has any results, so the engine's weighted total is lower, never higher.
     expect(computeCompletion(steps, results)).toBeLessThanOrEqual(metcon.completion);
+  });
+});
+
+describe('totalReps', () => {
+  it('sums rep-mode work and AMRAP rounds, ignores timed work, skips and rests', () => {
+    const w = workout({
+      id: 'w_reps',
+      blocks: [
+        block({
+          id: 'warm',
+          type: 'warmup',
+          format: 'sets',
+          sets: 1,
+          scalable: false,
+          items: [item('air_squat', { reps: 10 }), item('plank', { seconds: 30 })],
+        }),
+        block({
+          id: 'metcon',
+          type: 'metcon',
+          format: 'amrap',
+          sets: 1,
+          durationSec: 300,
+          items: [item('burpee', { reps: 5 }), item('air_squat', { reps: 10 })],
+        }),
+      ],
+    });
+    const p = prescribeWorkout(w, opts, fixtureLookup);
+    const s = buildPlayerSteps(p);
+    const squat = s.findIndex((x) => x.kind === 'work' && x.exerciseId === 'air_squat');
+    const plank = s.findIndex((x) => x.kind === 'work' && x.exerciseId === 'plank');
+    const amrap = s.findIndex((x) => x.kind === 'amrap');
+    const results: PlayerResult[] = [
+      { stepIndex: squat, blockId: 'warm', exerciseId: 'air_squat', completed: true, achieved: 12 },
+      { stepIndex: plank, blockId: 'warm', exerciseId: 'plank', completed: true, achieved: 30 },
+      { stepIndex: amrap, blockId: 'metcon', completed: true, rounds: 3, extraReps: 4 },
+    ];
+    // 12 squats + 3 rounds × (5 + 10) + 4 extra; the plank's seconds are not reps.
+    expect(totalReps(s, results)).toBe(12 + 45 + 4);
+    // A completed rep step without a count entered is taken at its target.
+    expect(
+      totalReps(s, [
+        { stepIndex: squat, blockId: 'warm', exerciseId: 'air_squat', completed: true },
+      ]),
+    ).toBe(s[squat]!.kind === 'work' ? s[squat]!.target : -1);
+    expect(totalReps(s, [])).toBe(0);
+  });
+
+  it('is null when nothing in the session is counted in reps', () => {
+    const w = workout({
+      id: 'w_hold',
+      blocks: [
+        block({
+          id: 'core',
+          type: 'strength',
+          format: 'sets',
+          sets: 1,
+          scalable: false,
+          items: [item('plank', { seconds: 60 })],
+        }),
+      ],
+    });
+    const s = buildPlayerSteps(prescribeWorkout(w, opts, fixtureLookup));
+    expect(totalReps(s, [])).toBeNull();
+  });
+});
+
+describe('streakLine', () => {
+  it('says the day in words up to the tenth, in figures after, nothing for no streak', () => {
+    expect(streakLine(t, 0)).toBeNull();
+    expect(streakLine(t, 1)).toBe(t('app.summaryStreakOne'));
+    expect(streakLine(t, 4)).toBe(t('app.summaryStreakWord', { ordinal: 'Fourth' }));
+    expect(streakLine(t, 10)).toBe(t('app.summaryStreakWord', { ordinal: 'Tenth' }));
+    expect(streakLine(t, 11)).toBe(t('app.summaryStreakNum', { n: 11 }));
   });
 });
 

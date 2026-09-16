@@ -8,11 +8,20 @@
  * This is the only screen where the two lengths stand side by side. Everywhere else the offer is
  * mentioned in passing and quotes «от {the cheaper price}», because a passing mention that names
  * one of two prices is picking for the reader.
+ *
+ * Redrawn in the owner's prototype language: the coach's photograph, one line about what the hour
+ * is, and then each length as its price — one display numeral — with one button under it. What
+ * went was the labelled rows and the numbered list: «ФОРМАТ / Онлайн, по видеосвязи» is a fact,
+ * so it is a pill; «КАК ЭТО РАБОТАЕТ / 01 Оплата картой / 02 Выбор времени / 03 Ссылка придёт на
+ * почту» was a description of the three buttons that are already on the screen, in three times the
+ * words. The price left the crosshair plate and became the figure itself — the plate was a frame
+ * around a number that needs no frame at this size.
  */
 import { useState } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Glyph } from '@/components/ui/Icon';
+import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
 import { useToast } from '@/components/ui/Toast';
 import { l } from '@/i18n/index';
@@ -49,11 +58,6 @@ export default function BookScreen() {
   const name = l(COACH.name, locale);
   const { heavy, thin } = splitName(name);
   const schedule = paymentTarget(BOOKING.scheduleUrl);
-  const steps = [
-    t('app.bookStep1'),
-    t('app.bookStep2'),
-    t('app.bookStep3', { email: email || t('app.bookStep3Fallback') }),
-  ];
 
   const pay = (payment: ReturnType<typeof paymentTarget>) => {
     if (!payment) return;
@@ -71,16 +75,19 @@ export default function BookScreen() {
 
   return (
     <Screen header={<TopBar back title={t('app.bookTitle')} />}>
-      <div className="flex flex-col gap-6 pt-5">
+      <div className="flex flex-col gap-8 pt-5">
         {/*
-          The coach as the screen's one display line — first name at 800, surname at 200 — under
-          his role as the kicker, with the monochrome portrait beside it. The lead reads on after.
+          The coach, as a photograph and one display line — first name at 800, surname at 200 —
+          under his role as the kicker. The portrait is the largest the source allows (it is
+          240x240 in `content/site/coach.ts`): a person is what is being bought here, and at 72px
+          he was a thumbnail beside his own name. Then the one line about what the session is, and
+          the one fact both lengths share as a pill.
         */}
-        <section className="flex flex-col gap-4">
-          <div className="flex items-start justify-between gap-4">
+        <section className="flex flex-col gap-5">
+          <div className="flex items-end gap-5">
             <div className="flex min-w-0 flex-1 flex-col gap-2">
               <span className="eyebrow">{l(COACH.role, locale)}</span>
-              <h2 className="display text-5xl text-balance">
+              <h2 className="display text-[clamp(30px,9vw,44px)] leading-[1.02] text-balance">
                 {heavy}
                 {thin ? (
                   <>
@@ -94,30 +101,24 @@ export default function BookScreen() {
               <img
                 src={withBase(COACH.photo)}
                 alt={name}
-                width={72}
-                height={72}
-                className="photo-mono size-18 shrink-0 object-cover"
+                width={120}
+                height={120}
+                className="photo-mono size-30 shrink-0 rounded-pill object-cover"
               />
             ) : (
-              <Avatar seed={name} name={name} size={72} />
+              <Avatar seed={name} name={name} size={120} />
             )}
           </div>
           <p className="max-w-[40ch] text-[15px] leading-relaxed text-muted">{t('app.bookLead')}</p>
+          <Pill className="self-start">{l(BOOKING.format, locale)}</Pill>
         </section>
-
-        {/* The one fact both lengths share, on its own rule. */}
-        <dl className="flex items-center justify-between gap-3 border-y border-border py-3">
-          <dt className="eyebrow">{t('app.bookFormatLabel')}</dt>
-          <dd className="text-right text-[15px] font-medium">{l(BOOKING.format, locale)}</dd>
-        </dl>
 
         {/*
          * The two lengths as two blocks, cheapest first. Each carries its own price, its own list
          * of what fits in it, and its own button — a shared button with a length picker above it
          * would make the person choose twice and read the price of the thing they did not pick.
          */}
-        <section className="flex flex-col gap-8">
-          <h3 className="eyebrow">{t('app.bookChoose')}</h3>
+        <section className="flex flex-col gap-9">
           {BOOKING.options.map((option) => (
             <Option
               key={option.id}
@@ -129,21 +130,7 @@ export default function BookScreen() {
           ))}
         </section>
 
-        <section className="flex flex-col gap-3">
-          <h3 className="eyebrow">{t('app.bookHow')}</h3>
-          <ol className="flex flex-col gap-3 border-t border-border pt-4">
-            {steps.map((step, i) => (
-              <li key={step} className="flex items-start gap-3 text-[15px]">
-                <span className="numeral tabular w-7 shrink-0 pt-0.5 text-sm text-muted-2">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <span>{step}</span>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 border-t border-border pt-5">
           {schedule ? (
             <LinkButton href={schedule.href} variant="secondary" size="lg" fullWidth external>
               {t('app.bookPickTime')}
@@ -157,12 +144,17 @@ export default function BookScreen() {
 }
 
 /**
- * One length, as a block: its name, its price on the crosshair plate, what fits in it, and the
+ * One length, as a block: its name and duration, its price as the figure, what fits in it, and the
  * one action.
  *
- * The plate is the screen's device for "this is the number", and here there are two of them —
- * which is the point: the person is comparing, and a price that is not set the same way as the
- * other is a price that is being argued for rather than stated.
+ * The price is set at display size because it is what the person came to find out, and the two are
+ * set identically — the person is comparing, and a price that is set differently from the other is
+ * a price being argued for rather than stated. The duration became a pill: it is a fact about the
+ * session and not a control, which is the whole of that distinction (`components/ui/Pill.tsx`).
+ *
+ * What fits in the length stays a list rather than becoming pills. These are the promises the
+ * money buys — «Корректировка программы под цель, оборудование и ограничения» is fifty characters
+ * and a pill would ellipsise it, which on a paid screen means hiding what is being sold.
  */
 function Option({
   option,
@@ -181,18 +173,14 @@ function Option({
 
   return (
     <article className="flex flex-col gap-4">
-      <div className="flex items-baseline justify-between gap-3 border-t border-border pt-4">
-        <h4 className="font-display text-lg leading-[1.24]">{l(option.name, locale)}</h4>
-        <span className="numeral tabular shrink-0 text-sm text-muted">
-          {t('app.bookDuration', { n: option.durationMin })}
-        </span>
+      <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
+        <h4 className="font-display min-w-0 truncate text-lg leading-[1.24]">
+          {l(option.name, locale)}
+        </h4>
+        <Pill>{t('app.bookDuration', { n: option.durationMin })}</Pill>
       </div>
 
-      <div className="plate-target flex items-baseline justify-between gap-3 px-4 py-4">
-        <span className="plate-ticks" aria-hidden="true" />
-        <span className="eyebrow">{t('app.bookPriceLabel')}</span>
-        <span className="display tabular text-right text-4xl">{price}</span>
-      </div>
+      <p className="display tabular text-[clamp(34px,11vw,48px)] leading-none">{price}</p>
 
       <ul className="flex flex-col border-t border-border">
         {option.includes.map((item) => (
