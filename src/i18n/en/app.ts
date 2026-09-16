@@ -595,6 +595,7 @@ export const app = {
   // Book a session
   bookTitle: 'Forma. One-to-One',
   bookLead: 'An hour on your training: technique, the program under your goal, your questions.',
+  bookLengthLabel: 'Session length',
   bookDuration: '{n} min',
   bookPay: 'Pay {price}',
   bookPickTime: 'Pick a time',

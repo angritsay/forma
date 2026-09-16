@@ -57,6 +57,11 @@ const guides = loadGuides(ROOT);
 const clusters = loadGuideClusters(ROOT);
 
 const issues = [...auditContentIndex(index), ...auditGuides(guides, index, clusters)];
+// What actually has a page, of what is written. Only the filmed exercises and the courses on sale
+// are built, so these two are the numbers to compare a sitemap against — see `published` in
+// `loadContentIndex`.
+const filmed = [...index.exercises.values()].filter((e) => e.published).length;
+const live = [...index.courses.values()].filter((c) => c.published).length;
 
 const distDir = resolve(ROOT, args.dist);
 let distChecked = false;
@@ -74,7 +79,7 @@ if (args.json) {
   ).join(', ');
   console.log('SEO audit');
   console.log(
-    `  exercises: ${index.exercises.size}  courses: ${index.courses.size}  guides: ${perLocale}`,
+    `  exercises: ${filmed}/${index.exercises.size} filmed  courses: ${live}/${index.courses.size} on sale  guides: ${perLocale}`,
   );
   console.log(
     distChecked

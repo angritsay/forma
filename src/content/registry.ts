@@ -40,7 +40,38 @@ function validate<T>(
 const exercisesResult = validate(ExerciseSchema, RAW_EXERCISES as unknown[], 'exercises');
 const coursesResult = validate(CourseSchema, RAW_COURSES as unknown[], 'courses');
 
+/**
+ * Every exercise in `content/`, filmed or not.
+ *
+ * This is the set to look an id up in and the set courses are validated against: a movement with no
+ * clip yet is still prescribed by the unpublished courses, still needed by the fixtures and the
+ * demo backend, and still the coach's to film. For anything a customer sees — the library, a page,
+ * a sitemap entry, a link — use {@link FILMED_EXERCISES}.
+ */
 export const EXERCISES: readonly Exercise[] = exercisesResult.items;
+
+/**
+ * The exercises the coach has actually filmed.
+ *
+ * «С сайта и отовсюду убери упражнения у которых нет видео». The library was written ahead of the
+ * camera: 90 movements described, 26 of them shot. The other 64 were pages promising to show you
+ * how, with a drawing where the demonstration should be — which is the one thing a exercise page
+ * exists to do, so the page was failing at its only job and doing it ninety times over for Google.
+ *
+ * The entries stay in `content/`. They are not wrong, they are early, and deleting them would throw
+ * away the copy the coach will need the week he films them — at which point adding `video` to an
+ * entry is the whole of putting it back. This is the same shape as {@link LIVE_COURSES}: one
+ * predicate at the boundary, so what the public sees is a flag in content rather than a hunt
+ * through the templates.
+ *
+ * Nothing on sale loses anything. «Форма с нуля», the one published course, prescribes 26
+ * movements and every one of them is filmed; the courses that use the unfilmed ones are all
+ * `published: false` and have been since the owner put the other five aside.
+ */
+export const FILMED_EXERCISES: readonly Exercise[] = EXERCISES.filter((e) => e.video);
+
+/** Whether an exercise has a clip — the one test {@link FILMED_EXERCISES} is built from. */
+export const isFilmed = (id: string): boolean => Boolean(EXERCISE_BY_ID.get(id)?.video);
 
 /**
  * Every course in `content/`, on sale or not.
@@ -90,8 +121,12 @@ export function getNode(course: Course, nodeId: string): CourseNode {
   return n;
 }
 
+/**
+ * An exercise by its public slug — filmed ones only, because the only caller is the public page and
+ * an unfilmed slug has no page to find. Looking one up by id is {@link getExercise}, which sees all.
+ */
 export function findExerciseBySlug(locale: Locale, slug: string): Exercise | undefined {
-  return EXERCISES.find((e) => e.slug[locale] === slug);
+  return FILMED_EXERCISES.find((e) => e.slug[locale] === slug);
 }
 
 export function findCourseBySlug(locale: Locale, slug: string): Course | undefined {

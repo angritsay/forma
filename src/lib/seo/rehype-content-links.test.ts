@@ -19,7 +19,12 @@ beforeAll(() => {
   mkdirSync(join(root, 'content', 'guides', 'en'), { recursive: true });
   writeFileSync(
     join(root, 'content', 'exercises', 'a.ts'),
-    `export const EXERCISES_A = [{ id: 'air_squat', slug: { ru: 'prisedaniya', en: 'air-squat' }, name: { ru: 'Приседания', en: 'Air squat' } }];`,
+    /*
+     * Two movements: one the coach has filmed and one he has not. `video` is what gives an exercise
+     * a public page (`src/content/registry.ts`, FILMED_EXERCISES), so `jump_squat` here stands for
+     * the two thirds of the library that is written but not shot.
+     */
+    `export const EXERCISES_A = [{ id: 'air_squat', slug: { ru: 'prisedaniya', en: 'air-squat' }, name: { ru: 'Приседания', en: 'Air squat' }, video: { ru: 'storage:videos/shared/air_squat.ru.mp4' } }, { id: 'jump_squat', slug: { ru: 'prisedaniya-s-vyprygivaniem', en: 'jump-squat' }, name: { ru: 'Прыжковые приседания', en: 'Jump squat' } }];`,
   );
   writeFileSync(
     join(root, 'content', 'courses', 'start.ts'),
@@ -106,5 +111,30 @@ describe('rehypeContentLinks', () => {
     });
     expect(warn).toHaveBeenCalled();
     warn.mockRestore();
+  });
+});
+
+/*
+ * «С сайта и отовсюду убери упражнения у которых нет видео». An unfilmed movement has no page, so
+ * a guide that names one must keep the sentence and lose the link — the same treatment a course
+ * held back from sale already gets. The alternative is a link to a 404 in the middle of an article
+ * Google is meant to rank.
+ */
+describe('unfilmed exercises', () => {
+  const run = rehypeContentLinks({ root });
+  const file = { path: join(root, 'content', 'guides', 'ru', 'formaty.md') };
+
+  it('unwraps a link to a movement with no clip, keeping its words', () => {
+    const t = tree(a('exercise:jump_squat', 'прыжковые приседания'));
+    run(t, file);
+    const kids = t.children![0]!.children ?? [];
+    expect(kids.some((n) => n.tagName === 'a')).toBe(false);
+    expect(kids.map((n) => n.value ?? '').join('')).toContain('прыжковые приседания');
+  });
+
+  it('still links a movement that has one', () => {
+    const t = tree(a('exercise:air_squat', 'приседания'));
+    run(t, file);
+    expect(t.children![0]!.children![0]!.properties?.href).toBe('/exercises/prisedaniya/');
   });
 });

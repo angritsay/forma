@@ -13,7 +13,7 @@ import {
   type MovementPattern,
   type MuscleGroup,
 } from '@/content/schema';
-import { EXERCISE_BY_ID, EXERCISES, coursesUsingExercise } from '@/content/registry';
+import { EXERCISE_BY_ID, FILMED_EXERCISES, coursesUsingExercise } from '@/content/registry';
 import { l, t } from '@/i18n/index';
 
 /** The default course tile (--tile-1), used when an exercise is not (yet) part of any course. */
@@ -45,10 +45,17 @@ export function sortExercises(list: readonly Exercise[], locale: Locale): Exerci
   );
 }
 
-/** Exercises grouped by movement pattern in MOVEMENT_PATTERNS order; empty groups are skipped. */
+/**
+ * Exercises grouped by movement pattern in MOVEMENT_PATTERNS order; empty groups are skipped.
+ *
+ * The default list is the filmed one, like everywhere else in this module: every function here
+ * feeds a public page, and a public page may only name a movement that has one
+ * (`content/registry.ts`, FILMED_EXERCISES). A caller that genuinely wants the whole library — the
+ * admin, a fixture — passes it in.
+ */
 export function exercisesByPattern(
   locale: Locale,
-  list: readonly Exercise[] = EXERCISES,
+  list: readonly Exercise[] = FILMED_EXERCISES,
 ): { pattern: MovementPattern; items: Exercise[] }[] {
   const out: { pattern: MovementPattern; items: Exercise[] }[] = [];
   for (const pattern of MOVEMENT_PATTERNS) {
@@ -71,10 +78,23 @@ export function exerciseTile(ex: Exercise): string {
   return course ? course.tile : DEFAULT_TILE;
 }
 
+/**
+ * The easier and harder versions, *as links*.
+ *
+ * Unfilmed neighbours are dropped rather than returned, because this is what draws «Проще» and
+ * «Сложнее» on the public page and those are anchors. `air_squat`'s harder version is `jump_squat`,
+ * which has no clip and therefore no page; returning it would have printed a link to a 404 on the
+ * one page in the library people actually reach. The app's own scaling does not come through here —
+ * it reads `ex.scaling` directly and still sees everything.
+ */
 export function scalingExercises(ex: Exercise): { easier?: Exercise; harder?: Exercise } {
+  const linkable = (id: string | undefined): Exercise | undefined => {
+    const e = id ? EXERCISE_BY_ID.get(id) : undefined;
+    return e?.video ? e : undefined;
+  };
   return {
-    easier: ex.scaling.easier ? EXERCISE_BY_ID.get(ex.scaling.easier) : undefined,
-    harder: ex.scaling.harder ? EXERCISE_BY_ID.get(ex.scaling.harder) : undefined,
+    easier: linkable(ex.scaling.easier),
+    harder: linkable(ex.scaling.harder),
   };
 }
 
@@ -87,7 +107,7 @@ export function relatedExercises(
   locale: Locale,
   min = 3,
   max = 6,
-  list: readonly Exercise[] = EXERCISES,
+  list: readonly Exercise[] = FILMED_EXERCISES,
 ): Exercise[] {
   const others = list.filter((e) => e.id !== ex.id);
   const picked: Exercise[] = [];

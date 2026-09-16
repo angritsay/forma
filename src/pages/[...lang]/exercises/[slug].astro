@@ -24,7 +24,7 @@ import FaqAccordion from '@/components/seo/FaqAccordion.astro';
 import ExerciseCard from '@/components/exercises/ExerciseCard.astro';
 import ExerciseStill from '@/components/media/ExerciseStill';
 import Pill from '@/components/landing/Pill.astro';
-import { EXERCISES, coursesUsingExercise, getExercise } from '@/content/registry';
+import { FILMED_EXERCISES, coursesUsingExercise, getExercise } from '@/content/registry';
 import { LOCALES, type Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import {
@@ -53,7 +53,7 @@ import { absoluteUrl, href } from '@/lib/util/paths';
 import Button from '@/components/landing/Button.astro';
 
 export function getStaticPaths() {
-  return EXERCISES.flatMap((ex) =>
+  return FILMED_EXERCISES.flatMap((ex) =>
     LOCALES.map((locale) => ({
       params: { lang: locale === 'ru' ? undefined : locale, slug: ex.slug[locale] },
       props: { id: ex.id, locale },
