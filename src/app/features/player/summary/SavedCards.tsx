@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/Badge';
 import { Glyph } from '@/components/ui/Icon';
 import { useT } from '@/app/hooks/useT';
+import { BadgeCircle } from '@/app/features/stats/Badges';
 import type { AchievementStatus, ScaleAdjustment } from '@/lib/training/types';
 
 /** The adaptation message after saving ("next time +5%"), plus the safety note on pain. */
@@ -45,34 +46,31 @@ export function AdaptationCard({ adjustment }: { adjustment: ScaleAdjustment }) 
 }
 
 /**
- * Freshly unlocked achievements as a numbered ruled list. The emoji that used to sit in a framed
- * square before each one is not drawn — the interface has no emoji — and the number takes its
- * place, the way every list in the brand is numbered.
+ * Freshly unlocked achievements, as the same white circle with a ✓ that «Прогресс» puts them on.
+ *
+ * It was a numbered ruled list — «01 ПЕРВЫЙ ШАГ» over «Заверши первую тренировку.» — which is the
+ * description of a thing you have not got yet, printed at the moment you get it. An achievement
+ * should look the same the instant it is taken and afterwards on the shelf, so this is
+ * `BadgeCircle` from `features/stats/Badges`, landing on the spring one after another. The
+ * description is still its accessible name and its `title`; on the screen the circle is the news.
+ *
+ * `n` is the position the achievement holds in the whole set, which is what the shelf numbers its
+ * locked ones by — an unlocked circle never draws it, but passing anything else would make the
+ * two components disagree about what the number means.
  */
 export function AchievementList({ items }: { items: readonly AchievementStatus[] }) {
-  const { t, l } = useT();
+  const { t } = useT();
   if (items.length === 0) return null;
   return (
-    <section className="flex flex-col gap-3 border-t border-border pt-5">
+    <section className="flex flex-col gap-4 border-t border-border pt-5">
       <div className="flex items-baseline justify-between gap-3">
         <span className="eyebrow">{t('app.summaryAchievementsTitle')}</span>
         <span className="numeral text-sm text-muted">{String(items.length).padStart(2, '0')}</span>
       </div>
-      <ul className="flex flex-col">
+      <ul className="flex flex-wrap gap-3">
         {items.map((a, i) => (
-          <li
-            key={a.id}
-            className={`flex items-center gap-3.5 py-3 ${i > 0 ? 'border-t border-border' : ''}`}
-          >
-            <span className="numeral tabular w-6 shrink-0 text-sm text-muted">
-              {String(i + 1).padStart(2, '0')}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="font-display block truncate text-[15px] leading-[1.24]">
-                {l(a.title)}
-              </span>
-              <span className="block text-sm text-muted">{l(a.description)}</span>
-            </span>
+          <li key={a.id}>
+            <BadgeCircle item={a} n={i + 1} delay={i * 45} />
           </li>
         ))}
       </ul>
