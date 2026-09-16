@@ -496,6 +496,9 @@ body {
    * Each letter runs 200 → 800 → 200 and starts a little after the one to its left, so what the
    * eye follows is a single crest travelling across the word, not five letters blinking. The wave
    * is slower than a spinner on purpose: a spinner races to look busy, and this is a brand mark.
+   * The owner asked for it slower still, and for the mark to catch the light while it waits —
+   * «чтобы лого переливалось медленно и зацикленно» — so the cycle is 4.2s rather than 2s and the
+   * same crest now carries a brightness with it.
    *
    * Each letter is a one-cell grid holding the letter twice: the visible copy, which inherits the
    * animated weight, and a hidden copy pinned at 800 that reserves the column. A variable weight
@@ -505,19 +508,38 @@ body {
    * what it draws with, and they are here rather than in the component so the pre-hydration
    * loading screen in `src/pages/app/index.astro` can use the same markup with no JavaScript.
    */
+  /*
+   * Weight and light in one keyframe, so they cannot drift apart: a letter at rest is thin and a
+   * step dimmer, a letter at the crest is heavy and pure white. That is what «переливается» is
+   * here — the word does not glow, it catches the light and lets it go, five times per pass.
+   *
+   * The light is animated as the letters' own `color`, not as a gradient clipped to the text. A
+   * clipped gradient was tried first and looked better in theory — one smooth band sliding across
+   * the whole word rather than five letters brightening in turn — but it silently dropped the F:
+   * `.wordmark-f` carries `transform: scaleX(1.22)`, and a transformed descendant is painted
+   * outside the parent's `background-clip: text`, so the mark rendered as «ORMA» with a letter's
+   * worth of empty space in front of it. The stretch on the F is the mark; the technique is not.
+   *
+   * The crest is `--text` rather than `--paper`. On the dark ground the two are a hair apart and
+   * either would do; on the paper theme `--paper` is the ground itself, so a crest drawn in it
+   * would be a letter going invisible instead of a letter catching the light. Both ends of the
+   * cycle are tokens that mean "ink" on whatever this is sitting on.
+   */
   @keyframes wordmark-wave {
     0%,
     100% {
       font-variation-settings: 'wght' 200;
+      color: var(--muted-2);
     }
     50% {
       font-variation-settings: 'wght' 800;
+      color: var(--text);
     }
   }
   /* After `.wordmark-f` on purpose: equal specificity, so this display wins on the F as well. */
   .wordmark-wave > * {
     display: inline-grid;
-    animation: wordmark-wave var(--wave-duration, 2s) ease-in-out infinite;
+    animation: wordmark-wave var(--wave-duration, 4.2s) ease-in-out infinite;
   }
   .wordmark-wave > * > * {
     grid-area: 1 / 1;
@@ -537,16 +559,16 @@ body {
    * the wave stays one number.
    */
   .wordmark-wave > *:nth-child(1) {
-    animation-delay: calc(var(--wave-duration, 2s) * -0.8);
+    animation-delay: calc(var(--wave-duration, 4.2s) * -0.8);
   }
   .wordmark-wave > *:nth-child(2) {
-    animation-delay: calc(var(--wave-duration, 2s) * -0.6);
+    animation-delay: calc(var(--wave-duration, 4.2s) * -0.6);
   }
   .wordmark-wave > *:nth-child(3) {
-    animation-delay: calc(var(--wave-duration, 2s) * -0.4);
+    animation-delay: calc(var(--wave-duration, 4.2s) * -0.4);
   }
   .wordmark-wave > *:nth-child(4) {
-    animation-delay: calc(var(--wave-duration, 2s) * -0.2);
+    animation-delay: calc(var(--wave-duration, 4.2s) * -0.2);
   }
   .wordmark-wave > *:nth-child(5) {
     animation-delay: 0s;
