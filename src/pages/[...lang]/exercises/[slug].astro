@@ -3,6 +3,19 @@
  * Programmatic exercise page: /exercises/<slug>/ (RU) and /en/exercises/<slug>/.
  * Everything on the page comes from the exercise entry and the registry — nothing is invented.
  * JSON-LD: HowTo (steps), BreadcrumbList, VideoObject (public video only), FAQPage.
+ *
+ * The frame is the owner's prototype's (design/CHANGELOG.md §10; the «Техника» side of the
+ * player card, which is the one screen she called good): the still full-bleed, the movement's
+ * name as the display line, its facts as pills — level, equipment, muscles, what is counted and
+ * the tempo — and the technique as «01 / 02 / 03» down a ruled column, the numerals in the
+ * programme colour. The «Коротко» grid of kicker-over-value went into the pills (the heading
+ * stays for a screen reader, so the facts are still a named group); the pattern kicker over the
+ * name stayed, because it is the one thing the pills do not say.
+ *
+ * The name is never laid over the still. The prototype does that on its covers, but a still is
+ * fetched at view time and may not exist yet — and white capitals over a flat yellow tile is
+ * exactly what that failure would look like. Picture above, words below, on the page's own
+ * ground, and nothing can go wrong with the contrast.
  */
 import Landing from '@/layouts/Landing.astro';
 import Breadcrumbs from '@/components/seo/Breadcrumbs.astro';
@@ -10,6 +23,7 @@ import CourseLinkCard from '@/components/seo/CourseLinkCard.astro';
 import FaqAccordion from '@/components/seo/FaqAccordion.astro';
 import ExerciseCard from '@/components/exercises/ExerciseCard.astro';
 import ExerciseStill from '@/components/media/ExerciseStill';
+import Pill from '@/components/landing/Pill.astro';
 import { EXERCISES, coursesUsingExercise, getExercise } from '@/content/registry';
 import { LOCALES, type Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
@@ -34,7 +48,7 @@ import {
 } from '@/lib/seo/jsonld';
 import { exerciseDescription, exerciseTitle, ogImagePath } from '@/lib/seo/meta';
 import { canonicalUrl, siteOrigin } from '@/lib/seo/urls';
-import { courseTileStyle } from '@/lib/ui/tile';
+import { courseTileStyle, isLightTile } from '@/lib/ui/tile';
 import { absoluteUrl, href } from '@/lib/util/paths';
 import Button from '@/components/landing/Button.astro';
 
@@ -64,6 +78,13 @@ const description = exerciseDescription(ex, locale);
 const image = ogImagePath('exercise', ex.id, locale);
 const imageUrl = absoluteUrl(site, image);
 const tile = exerciseTile(ex);
+/*
+ * The programme colour may paint numerals and pills — but only when there is one. A movement
+ * that belongs to no course sits on the neutral dark tile, and `text-course` there is the ground
+ * itself: the step numbers would vanish. Those pages keep the numerals grey.
+ */
+const coloured = isLightTile(tile);
+const numeralCls = coloured ? 'text-course' : 'text-muted';
 
 const courses = coursesUsingExercise(ex.id);
 const primary = courses[0];
@@ -73,20 +94,34 @@ const faq = exerciseFaq(ex, locale);
 const video = publicVideoUrl(ex, locale);
 const embed = video ? videoEmbed(video) : null;
 
-const facts: { label: string; value: string }[] = [
+/*
+ * The facts, in the order a reader asks them: how hard, with what, what it works, how it is
+ * counted, how fast. Each pill carries its kicker for a screen reader (`aria-label` on the item),
+ * so «Средний» is announced as «Уровень: Средний» while the eye gets the word alone.
+ */
+const facts: { label: string; value: string; tone: 'course' | 'neutral' }[] = [
   {
-    label: t(locale, 'seo.factMuscles'),
-    value: ex.muscles.map((m) => muscleName(m, locale)).join(', '),
+    label: t(locale, 'seo.factLevel'),
+    value: levelName(ex.level, locale),
+    tone: coloured ? 'course' : 'neutral',
   },
-  { label: t(locale, 'seo.factPattern'), value: patternName(ex.pattern, locale) },
-  { label: t(locale, 'seo.factEquipment'), value: equipmentNames(ex, locale).join(', ') },
-  { label: t(locale, 'seo.factLevel'), value: levelName(ex.level, locale) },
-  { label: t(locale, 'seo.factUnit'), value: unitName(ex.unit, locale) },
+  ...equipmentNames(ex, locale).map((value) => ({
+    label: t(locale, 'seo.factEquipment'),
+    value,
+    tone: 'neutral' as const,
+  })),
+  ...ex.muscles.map((m) => ({
+    label: t(locale, 'seo.factMuscles'),
+    value: muscleName(m, locale),
+    tone: 'neutral' as const,
+  })),
+  { label: t(locale, 'seo.factUnit'), value: unitName(ex.unit, locale), tone: 'neutral' },
 ];
 if (ex.secondsPerRep) {
   facts.push({
     label: t(locale, 'seo.factTempo'),
     value: t(locale, 'seo.tempoPerRep', { n: ex.secondsPerRep }),
+    tone: 'neutral',
   });
 }
 
@@ -115,6 +150,8 @@ const jsonLd = [
     : null,
   faqJsonLd(faq),
 ].filter((x): x is NonNullable<typeof x> => x !== null);
+
+const H2 = 'display text-lg md:text-xl';
 ---
 
 <Landing
@@ -126,84 +163,69 @@ const jsonLd = [
   image={image}
   jsonLd={jsonLd}
 >
-  <div class="mx-auto max-w-6xl px-5 pb-16 pt-8 md:pt-12">
+  <!-- The course tile variable sits on the whole page, so the numerals, the pills and the tile
+       all read the same one. -->
+  <div class="mx-auto max-w-6xl px-5 pb-16 pt-8 md:pt-12" style={courseTileStyle(tile)}>
     <Breadcrumbs locale={locale} items={crumbs} />
 
-    <!-- The tile takes the colour of the course the exercise belongs to; `courseTileStyle()` sets
-         the ink for the figure to match. -->
-    <section
-      class="mt-6 grid items-start gap-8 md:grid-cols-[minmax(0,1fr)_minmax(260px,400px)]"
-      style={courseTileStyle(tile)}
-    >
-      <div>
-        <p class="eyebrow flex flex-wrap items-center gap-3">
+    <!--
+      The still runs edge to edge on a phone (`-mx-5` undoes the page gutter) and takes the wide
+      column of a 7/5 grid from `md`, where the name sits low against the picture's bottom edge.
+      It is monochrome and grained like every photograph on the site; the flat tile shows through
+      where no still exists, which is the brand's answer for footage not yet shot.
+    -->
+    <section class="mt-6 md:grid md:grid-cols-12 md:items-end md:gap-8">
+      <div
+        class="hero-art relative -mx-5 aspect-[4/3] overflow-hidden md:col-span-7 md:mx-0 md:aspect-[5/4] md:rounded-tile"
+      >
+        <ExerciseStill
+          exerciseId={ex.id}
+          loading="eager"
+          className="photo-mono absolute inset-0 size-full object-cover"
+        />
+        <div class="photo-grain" aria-hidden="true"></div>
+      </div>
+      <div class="mt-6 md:col-span-5 md:mt-0">
+        <p class="eyebrow flex flex-wrap items-center gap-x-3 gap-y-1">
           <span>{patternName(ex.pattern, locale)}</span>
-          {
-            ex.isTest && (
-              <span class="inline-flex h-6 items-center border border-border-strong px-2.5 text-[11px] tracking-[0.12em] text-text">
-                {t(locale, 'seo.exerciseTestBadge')}
-              </span>
-            )
-          }
+          {ex.isTest && <span class="text-text">{t(locale, 'seo.exerciseTestBadge')}</span>}
         </p>
-        <h1 class="display mt-4 text-4xl md:text-6xl">{name}</h1>
-        <p class="mt-5 max-w-2xl text-lg leading-relaxed text-muted">{l(ex.description, locale)}</p>
-        <ul class="mt-6 flex flex-wrap gap-2">
-          <li
-            class="inline-flex h-8.5 items-center border border-border bg-surface-3 px-3 text-[12px] font-semibold tracking-[0.06em] text-text uppercase"
-          >
-            {levelName(ex.level, locale)}
-          </li>
+        <h1 class="display mt-3 text-4xl md:text-5xl">{name}</h1>
+        <h2 id="facts-title" class="sr-only">{t(locale, 'seo.exerciseFacts')}</h2>
+        <ul aria-labelledby="facts-title" class="mt-5 flex flex-wrap gap-1.5">
           {
-            equipmentNames(ex, locale).map((eq) => (
-              <li class="inline-flex h-8.5 items-center border border-border bg-surface-3 px-3 text-[12px] font-semibold tracking-[0.06em] text-text uppercase">
-                {eq}
-              </li>
+            facts.map((f) => (
+              <Pill as="li" tone={f.tone} aria-label={`${f.label}: ${f.value}`}>
+                {f.value}
+              </Pill>
             ))
           }
         </ul>
-        <div class="mt-8 flex flex-wrap gap-3">
-          <Button href={ctaHref} size="lg">{ctaButton}</Button>
-        </div>
-      </div>
-      <div class="mx-auto w-full max-w-sm md:max-w-none">
-        <div class="hero-art aspect-square w-full overflow-hidden rounded-tile">
-          <ExerciseStill exerciseId={ex.id} loading="eager" />
+        <div class="mt-7">
+          <Button href={ctaHref} size="lg" class="w-full sm:w-auto">{ctaButton}</Button>
         </div>
       </div>
     </section>
 
-    <section aria-labelledby="facts-title" class="mt-14">
-      <h2 id="facts-title" class="font-display text-xl md:text-2xl">
-        {t(locale, 'seo.exerciseFacts')}
-      </h2>
-      <!-- Facts as a ruled grid: a kicker over a value, no boxes. -->
-      <dl class="mt-6 grid grid-cols-2 gap-x-8 sm:grid-cols-3">
-        {
-          facts.map((f) => (
-            <div class="border-t border-border py-4">
-              <dt class="eyebrow">{f.label}</dt>
-              <dd class="mt-2 font-semibold">{f.value}</dd>
-            </div>
-          ))
-        }
-      </dl>
-    </section>
+    <p class="mt-10 max-w-2xl text-[15px] leading-relaxed text-muted md:text-base">
+      {l(ex.description, locale)}
+    </p>
 
-    <div class="mt-14 grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+    <div class="mt-12 grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
       <section aria-labelledby="howto-title">
-        <h2 id="howto-title" class="font-display text-xl md:text-2xl">
-          {t(locale, 'seo.exerciseHowTo')}
-        </h2>
-        <!-- Steps as numbered hairline rows — the numeral in the margin, the instruction beside. -->
-        <ol class="mt-6 divide-y divide-border border-t border-border">
+        <h2 id="howto-title" class={H2}>{t(locale, 'seo.exerciseHowTo')}</h2>
+        <!-- «01 — Встань прямо» down a ruled column: the shape of the player's technique side. -->
+        <ol class="mt-5 divide-y divide-border border-t border-border">
           {
             ex.howTo.map((step, i) => (
-              <li class="flex gap-5 py-4">
-                <span class="numeral shrink-0 text-sm text-muted" aria-hidden="true">
+              <li class="flex gap-4 py-4">
+                <span
+                  class={`numeral tabular w-7 shrink-0 text-base ${numeralCls}`}
+                  aria-hidden="true"
+                >
                   {String(i + 1).padStart(2, '0')}
                 </span>
-                <p class="leading-relaxed">{l(step, locale)}</p>
+                <p class="text-[15px] leading-relaxed">{l(step, locale)}</p>
               </li>
             ))
           }
@@ -212,13 +234,11 @@ const jsonLd = [
 
       <div class="space-y-10">
         <section aria-labelledby="cues-title">
-          <h2 id="cues-title" class="font-display text-xl md:text-2xl">
-            {t(locale, 'seo.exerciseCues')}
-          </h2>
-          <ul class="mt-6 divide-y divide-border border-t border-border">
+          <h2 id="cues-title" class={H2}>{t(locale, 'seo.exerciseCues')}</h2>
+          <ul class="mt-5 divide-y divide-border border-t border-border">
             {
               ex.cues.map((c) => (
-                <li class="flex items-baseline gap-3 py-3">
+                <li class="flex items-baseline gap-3 py-3 text-[15px]">
                   <span aria-hidden="true" class="glyph text-sm text-text">
                     ✓
                   </span>
@@ -229,13 +249,11 @@ const jsonLd = [
           </ul>
         </section>
         <section aria-labelledby="mistakes-title">
-          <h2 id="mistakes-title" class="font-display text-xl md:text-2xl">
-            {t(locale, 'seo.exerciseMistakes')}
-          </h2>
-          <ul class="mt-6 divide-y divide-border border-t border-border">
+          <h2 id="mistakes-title" class={H2}>{t(locale, 'seo.exerciseMistakes')}</h2>
+          <ul class="mt-5 divide-y divide-border border-t border-border">
             {
               ex.mistakes.map((m) => (
-                <li class="flex items-baseline gap-3 py-3">
+                <li class="flex items-baseline gap-3 py-3 text-[15px]">
                   <span aria-hidden="true" class="glyph text-sm text-danger">
                     ×
                   </span>
@@ -248,10 +266,10 @@ const jsonLd = [
         {
           ex.breathing && (
             <section aria-labelledby="breathing-title">
-              <h2 id="breathing-title" class="font-display text-xl md:text-2xl">
+              <h2 id="breathing-title" class={H2}>
                 {t(locale, 'seo.exerciseBreathing')}
               </h2>
-              <p class="mt-6 border-t border-border pt-4 leading-relaxed text-muted">
+              <p class="mt-5 border-t border-border pt-4 text-[15px] leading-relaxed text-muted">
                 {l(ex.breathing, locale)}
               </p>
             </section>
@@ -262,19 +280,21 @@ const jsonLd = [
 
     {
       (easier || harder) && (
-        <section aria-labelledby="scaling-title" class="mt-16">
-          <h2 id="scaling-title" class="font-display text-xl md:text-2xl">
+        <section aria-labelledby="scaling-title" class="mt-14">
+          <h2 id="scaling-title" class={H2}>
             {t(locale, 'seo.exerciseScaling')}
           </h2>
-          <ul class="mt-6 grid gap-x-8 gap-y-4 sm:grid-cols-2">
+          <ul class="mt-5 grid gap-x-8 sm:grid-cols-2">
             {[
               { label: t(locale, 'seo.exerciseEasier'), item: easier },
               { label: t(locale, 'seo.exerciseHarder'), item: harder },
             ]
               .filter((x) => x.item)
               .map((x) => (
-                <li>
-                  <span class="mb-2 block eyebrow">{x.label}</span>
+                <li class="relative">
+                  {/* The direction as a pill in the top-right corner, over the hairline. */}
+                  <Pill class="absolute top-4 right-0 hidden sm:inline-flex">{x.label}</Pill>
+                  <span class="eyebrow mb-1 block sm:hidden">{x.label}</span>
                   <ExerciseCard exercise={x.item!} locale={locale} />
                 </li>
               ))}
@@ -285,11 +305,11 @@ const jsonLd = [
 
     {
       video && embed && (
-        <section aria-labelledby="video-title" class="mt-16">
-          <h2 id="video-title" class="font-display text-xl md:text-2xl">
+        <section aria-labelledby="video-title" class="mt-14">
+          <h2 id="video-title" class={H2}>
             {t(locale, 'seo.exerciseVideo')}
           </h2>
-          <div class="mt-6 aspect-video overflow-hidden border border-border bg-surface">
+          <div class="mt-5 aspect-video overflow-hidden rounded-tile border border-border bg-surface">
             {embed.kind === 'file' ? (
               <video controls preload="metadata" class="h-full w-full" src={embed.contentUrl}>
                 <p class="p-4 text-muted">{t(locale, 'seo.exerciseVideoUnsupported')}</p>
@@ -312,11 +332,11 @@ const jsonLd = [
 
     {
       courses.length > 0 && (
-        <section aria-labelledby="courses-title" class="mt-16">
-          <h2 id="courses-title" class="font-display text-xl md:text-2xl">
+        <section aria-labelledby="courses-title" class="mt-14">
+          <h2 id="courses-title" class={H2}>
             {t(locale, 'seo.exerciseUsedIn')}
           </h2>
-          <ul class="mt-6 grid gap-x-8 md:grid-cols-2">
+          <ul class="mt-5 grid gap-x-8 md:grid-cols-2">
             {courses.map((c) => (
               <li>
                 <CourseLinkCard course={c} locale={locale} />
@@ -329,14 +349,14 @@ const jsonLd = [
 
     {
       related.length > 0 && (
-        <section aria-labelledby="related-title" class="mt-16">
-          <h2 id="related-title" class="font-display text-xl md:text-2xl">
+        <section aria-labelledby="related-title" class="mt-14">
+          <h2 id="related-title" class={H2}>
             {t(locale, 'seo.exerciseRelated')}
           </h2>
-          <ul class="mt-6 grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
+          <ul class="mt-5 grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
             {related.map((r) => (
               <li>
-                <ExerciseCard exercise={r} locale={locale} />
+                <ExerciseCard exercise={r} locale={locale} showPattern />
               </li>
             ))}
           </ul>
@@ -348,13 +368,15 @@ const jsonLd = [
 
     <!-- The closing call, set over a hairline like the landing's own CTA — no box, no glow. -->
     <section
-      class="mt-16 border-t border-border pt-10 md:flex md:items-end md:justify-between md:gap-8"
+      class="mt-14 border-t border-border pt-10 md:flex md:items-end md:justify-between md:gap-8"
     >
       <div>
-        <h2 class="font-display text-2xl md:text-3xl">{t(locale, 'seo.exerciseCtaTitle')}</h2>
-        <p class="mt-4 max-w-xl leading-relaxed text-muted">{ctaText}</p>
+        <h2 class="display text-2xl md:text-3xl">{t(locale, 'seo.exerciseCtaTitle')}</h2>
+        <p class="mt-4 max-w-xl text-[15px] leading-relaxed text-muted">{ctaText}</p>
       </div>
-      <Button href={ctaHref} size="lg" class="mt-6 shrink-0 md:mt-0">{ctaButton}</Button>
+      <Button href={ctaHref} size="lg" class="mt-6 w-full shrink-0 sm:w-auto md:mt-0">
+        {ctaButton}
+      </Button>
     </section>
   </div>
 </Landing>

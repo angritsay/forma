@@ -2,6 +2,14 @@
 /**
  * Exercise library hub: /exercises/ and /en/exercises/. Grouped by movement pattern with anchor
  * navigation; JSON-LD CollectionPage (with ItemList) + BreadcrumbList.
+ *
+ * The frame is the owner's prototype's (design/CHANGELOG.md §10): the count of movements as the
+ * one display-size figure, set larger than the word beside it; the intro kept to a single muted
+ * measure because it is the hub's prose for search, not a paragraph for the eye; the patterns as
+ * a row of chips (they are pressed, so they stay on the control radius); and each pattern as a
+ * numbered heading over rows of still + name + pills. The count line under the heading, the
+ * kicker inside every row and the boxed count in every chip went — the figure says the first,
+ * the heading says the second, and a count belongs beside the name, not in a box.
  */
 import Landing from '@/layouts/Landing.astro';
 import Breadcrumbs from '@/components/seo/Breadcrumbs.astro';
@@ -27,11 +35,11 @@ const title = t(locale, 'seo.exercisesHubTitle');
 const description = t(locale, 'seo.exercisesHubDescription');
 const groups = exercisesByPattern(locale);
 const count = EXERCISES.length;
-const countLabel = `${count} ${plural(locale, count, {
+const countWord = plural(locale, count, {
   one: t(locale, 'seo.exerciseWordOne'),
   few: t(locale, 'seo.exerciseWordFew'),
   many: t(locale, 'seo.exerciseWordMany'),
-})}`;
+});
 
 const crumbs = [
   { name: t(locale, 'seo.home'), url: canonicalUrl(site, locale, '/'), href: href(locale, '/') },
@@ -65,10 +73,28 @@ const jsonLd = [
 >
   <div class="mx-auto max-w-6xl px-5 pb-16 pt-8 md:pt-12">
     <Breadcrumbs locale={locale} items={crumbs} />
-    <header class="mt-6 max-w-3xl">
-      <h1 class="display text-4xl md:text-6xl">{t(locale, 'seo.exercisesHubH1')}</h1>
-      <p class="mt-5 text-lg leading-relaxed text-muted">{t(locale, 'seo.exercisesHubIntro')}</p>
-      {count > 0 && <p class="tabular mt-3 text-sm text-muted-2">{countLabel}</p>}
+
+    <!--
+      The figure and the heading share one row from `md`: «90 упражнений» on the right at display
+      size, the H1 on the left. On a phone they stack in reading order — the name of the page,
+      then the number that sizes it — because the H1 has to come first for anything reading the
+      document rather than looking at it.
+    -->
+    <header class="mt-8 md:flex md:items-end md:justify-between md:gap-10">
+      <div class="max-w-2xl md:order-1">
+        <h1 class="display text-3xl md:text-5xl">{t(locale, 'seo.exercisesHubH1')}</h1>
+        <p class="mt-4 max-w-xl text-[15px] leading-relaxed text-muted">
+          {t(locale, 'seo.exercisesHubIntro')}
+        </p>
+      </div>
+      {
+        count > 0 && (
+          <p class="mt-8 flex items-baseline gap-3 md:order-2 md:mt-0 md:shrink-0 md:flex-col md:items-end md:gap-1">
+            <span class="display tabular text-7xl leading-none md:text-8xl">{count}</span>
+            <span class="eyebrow">{countWord}</span>
+          </p>
+        )
+      }
     </header>
 
     {
@@ -78,14 +104,15 @@ const jsonLd = [
         </p>
       ) : (
         <Fragment>
-          {/* Pattern anchors as chips; the count is a plain tabular figure, not a box. */}
-          <nav aria-label={t(locale, 'seo.exercisesHubPatternsNav')} class="mt-8">
+          {/* Pattern anchors as chips — pressed, so 12px, not pills. The count rides along as a
+              plain tabular figure. */}
+          <nav aria-label={t(locale, 'seo.exercisesHubPatternsNav')} class="mt-10">
             <ul class="flex flex-wrap gap-2">
               {groups.map((g) => (
                 <li>
                   <a
                     href={`#pattern-${g.pattern}`}
-                    class="tap-target-y inline-flex h-8.5 items-center gap-2 border border-border bg-surface-3 px-3 text-[12px] font-semibold tracking-[0.06em] text-muted uppercase transition-colors duration-150 hover:border-border-strong hover:text-text"
+                    class="tap-target-y control-label inline-flex h-9 items-center gap-2 rounded-control border border-border px-3 text-[11px] text-muted transition-colors duration-150 hover:border-border-strong hover:text-text"
                   >
                     {patternName(g.pattern, locale)}
                     <span class="tabular text-muted-2">{g.items.length}</span>
@@ -102,14 +129,17 @@ const jsonLd = [
             >
               <h2
                 id={`pattern-${g.pattern}-title`}
-                class="font-display flex items-baseline gap-4 text-xl md:text-2xl"
+                class="display flex items-baseline gap-4 text-xl md:text-2xl"
               >
-                <span class="numeral tabular w-5 shrink-0 text-sm text-muted" aria-hidden="true">
+                <span class="numeral tabular shrink-0 text-sm text-muted" aria-hidden="true">
                   {String(i + 1).padStart(2, '0')}
                 </span>
-                {patternName(g.pattern, locale)}
+                <span>{patternName(g.pattern, locale)}</span>
+                <span class="numeral tabular ml-auto text-sm text-muted-2" aria-hidden="true">
+                  {g.items.length}
+                </span>
               </h2>
-              <ul class="mt-6 grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
+              <ul class="mt-5 grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
                 {g.items.map((ex) => (
                   <li>
                     <ExerciseCard exercise={ex} locale={locale} />

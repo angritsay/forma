@@ -1,0 +1,48 @@
+---
+/**
+ * A fact as a pill — the Astro twin of src/components/ui/Pill.tsx, kept in step by hand.
+ *
+ * Separate file rather than hydrating the React one: every pill on the site is static text, and
+ * shipping React to draw «Средний» in a rounded border would undo the point of a static build.
+ * The rule it carries is the owner's prototype's (design/CHANGELOG.md §10): what is *read* — a
+ * level, a muscle, a reading time — is a fully rounded pill; what is *pressed* stays on the 12px
+ * control radius. So this never wraps a link.
+ *
+ * `course` is the programme colour on the border and the words, `course-fill` the colour as a
+ * fill with the tile's ink, `paper` white on ink for a pill laid on a dark figure. The caller is
+ * responsible for not asking for `course` on a neutral dark tile, where the colour is the ground.
+ *
+ * The height is a minimum, not a fixed 28px, and the words wrap rather than truncate. The longest
+ * equipment name in the library — «Тумба или устойчивая ступенька» — is nine pixels wider than an
+ * exercise row's text column on a 390px phone, and a pill that reads «Тумба или устойчивая сту…»
+ * is a fact the reader cannot use. Two lines in the pill costs ten pixels of row height and says
+ * the whole thing.
+ */
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends HTMLAttributes<'span'> {
+  tone?: 'neutral' | 'course' | 'course-fill' | 'paper';
+  /** `li` inside a list of facts, `span` (default) inline. */
+  as?: 'span' | 'li';
+}
+
+const TONE = {
+  neutral: 'border-border-strong text-muted',
+  course: 'border-course/60 text-course',
+  'course-fill': 'border-transparent bg-course text-on-course',
+  paper: 'border-transparent bg-paper text-ink',
+} as const;
+
+const { tone = 'neutral', as: Tag = 'span', class: className = '', ...rest } = Astro.props;
+---
+
+<Tag
+  class:list={[
+    'control-label inline-flex max-w-full min-h-7 min-w-0 items-center gap-1.5 rounded-pill border px-3 py-1 text-[10px] leading-[1.3]',
+    TONE[tone],
+    className,
+  ]}
+  {...rest}
+>
+  <slot />
+</Tag>

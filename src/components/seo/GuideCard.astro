@@ -1,13 +1,19 @@
 ---
 /**
- * Guide card for hubs and "read next" lists: cluster eyebrow, title, description, reading time,
- * publish date.
+ * Guide row for hubs and "read next" lists: the title, and under it the reading time as a pill
+ * beside the date.
  *
  * A hairline row rather than a boxed card — a hub lists a dozen of these and a dozen boxes is a
  * wall. The title stays in Onest: guide titles are search phrases, often forty characters and
  * more, and Unbounded in capitals would set one across four lines of a three-column grid. The
  * display face is for the words a reader can take in at a glance.
+ *
+ * The description under the title went (design/CHANGELOG.md §10, «минимум текста»): three
+ * clamped lines of lede on every row turned the hub into a page of paragraphs, and the title of
+ * a guide already is its promise. The reading time is the one fact a reader weighs before
+ * opening, so it is the one thing set as a figure.
  */
+import Pill from '@/components/landing/Pill.astro';
 import type { Locale } from '@/content/schema';
 import { formatDate, t } from '@/i18n/index';
 import { guideLocale, guidePath, guideReadingTime, type GuideLike } from '@/lib/seo/guides';
@@ -27,17 +33,16 @@ const clusterTitle = t(locale, `seo.cluster_${guide.data.cluster}_title` as cons
 
 <a
   href={href(locale, guidePath(guide))}
-  class="group flex h-full flex-col border-t border-border py-5 transition-colors duration-150 hover:border-border-strong"
+  class="group flex h-full flex-col border-t border-border py-4 transition-colors duration-150 hover:border-border-strong"
 >
-  {showCluster && <span class="eyebrow">{clusterTitle}</span>}
-  <span class="mt-2 text-[15px] leading-snug font-semibold group-hover:underline"
+  {showCluster && <span class="eyebrow mb-2">{clusterTitle}</span>}
+  <span class="text-[15px] leading-snug font-semibold group-hover:underline"
     >{guide.data.title}</span
   >
-  <span class="mt-2 line-clamp-3 text-sm leading-relaxed text-muted">{guide.data.description}</span>
-  <span class="tabular mt-auto flex gap-3 pt-4 text-xs text-muted-2">
-    <span>{t(locale, 'seo.readingTime', { n: minutes })}</span>
-    <time datetime={guide.data.publishedAt}
-      >{formatDate(locale, guide.data.publishedAt, 'long')}</time
-    >
+  <span class="mt-auto flex items-center gap-3 pt-3">
+    <Pill>{t(locale, 'seo.readingTime', { n: minutes })}</Pill>
+    <time class="tabular text-xs text-muted-2" datetime={guide.data.publishedAt}>
+      {formatDate(locale, guide.data.publishedAt, 'long')}
+    </time>
   </span>
 </a>

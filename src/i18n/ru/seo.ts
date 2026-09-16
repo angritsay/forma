@@ -89,7 +89,6 @@ export const seo = {
   guideWordFew: 'гайда',
   guideWordMany: 'гайдов',
   clusterHubTitle: '{cluster}: гайды по кроссфиту дома',
-  clusterHubIntro: '{count} в этой теме. Сначала новые.',
   cluster_beginners_title: 'Для начинающих',
   cluster_beginners_description:
     'С чего начать кроссфит дома: первые тренировки, техника базовых движений, как выбрать нагрузку и не сорваться в первые недели. Гайды тренера Forma.',
@@ -128,7 +127,6 @@ export const seo = {
   readingTime: '{n} мин чтения',
   published: 'Опубликовано',
   updated: 'Обновлено',
-  byAuthor: 'Автор: {name}',
   tocTitle: 'В статье',
   relatedExercises: 'Упражнения из статьи',
   relatedCourses: 'Курсы по теме',
