@@ -3,10 +3,14 @@
  * Compact course row for "used in courses" / "courses on this topic" lists on SEO pages.
  * The landing area has its own richer CourseCard; this one only needs registry data.
  *
- * A hairline row, not a box: a 72px tile in the programme colour, the name in the display face,
- * and the facts as small outlined chips.
+ * A hairline row, not a box: a 72px tile in the programme colour with the course's signature
+ * still, the name in the display face, and the facts as pills — level, weeks, sessions a week,
+ * minutes, gear. The «Курс» kicker and the tagline under the name went (design/CHANGELOG.md
+ * §10): the row always sits under a heading that says these are courses, and a tagline is a
+ * subtitle under a row, which is the first kind of line the prototype does without.
  */
 import ExerciseStill from '@/components/media/ExerciseStill';
+import Pill from '@/components/landing/Pill.astro';
 import { courseExercises } from '@/content/registry';
 import type { Course, Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
@@ -23,7 +27,7 @@ const { course, locale } = Astro.props;
 const name = l(course.name, locale);
 const signature = courseExercises(course)[0];
 const gear = course.equipment.filter((eq) => eq !== 'none').map((eq) => equipmentName(eq, locale));
-const chips = [
+const facts = [
   levelName(course.level, locale),
   t(locale, 'seo.weeksShort', { n: course.weeks }),
   t(locale, 'seo.perWeek', { n: course.sessionsPerWeek }),
@@ -34,27 +38,23 @@ const chips = [
 
 <a
   href={href(locale, `/courses/${course.slug[locale]}/`)}
-  class="flex h-full gap-4 border-t border-border py-4 transition-colors duration-150 hover:border-border-strong"
+  class="group flex h-full items-start gap-4 border-t border-border py-4 transition-colors duration-150 hover:border-border-strong"
   style={courseTileStyle(course.tile)}
 >
   <div
-    class="hero-art flex size-[72px] shrink-0 items-center justify-center overflow-hidden rounded-inner"
+    class="hero-art relative size-[72px] shrink-0 overflow-hidden rounded-inner"
     aria-hidden={signature ? undefined : 'true'}
   >
-    {signature && <ExerciseStill exerciseId={signature.id} />}
+    {
+      signature && (
+        <ExerciseStill exerciseId={signature.id} className="photo-mono size-full object-cover" />
+      )
+    }
   </div>
   <div class="min-w-0">
-    <span class="eyebrow">{t(locale, 'seo.ogCourse')}</span>
-    <span class="font-display mt-1 block text-[15px]">{name}</span>
-    <span class="mt-1 line-clamp-2 block text-sm text-muted">{l(course.tagline, locale)}</span>
-    <ul class="mt-3 flex flex-wrap gap-1.5">
-      {
-        chips.map((c) => (
-          <li class="inline-flex h-7 items-center rounded-control border border-border px-2.5 text-[11px] font-semibold tracking-[0.06em] text-muted uppercase">
-            {c}
-          </li>
-        ))
-      }
+    <span class="font-display block text-[15px] leading-snug group-hover:underline">{name}</span>
+    <ul class="mt-2 flex flex-wrap gap-1.5">
+      {facts.map((c) => <Pill as="li">{c}</Pill>)}
     </ul>
   </div>
 </a>

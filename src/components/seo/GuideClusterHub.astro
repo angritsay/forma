@@ -2,6 +2,12 @@
 /**
  * Cluster hub page body: /guides/<cluster>/. Rendered by pages/[...lang]/guides/[slug].astro
  * for clusters that have at least one published guide in the locale.
+ *
+ * The frame is the owner's prototype's (design/CHANGELOG.md §10): the display title, the
+ * cluster's one paragraph — it is the page's prose for search and stays — and the count of
+ * guides as the display-size figure opposite, larger than the word under it. The «Гайды» kicker
+ * over the title went (the breadcrumb already says it) and so did the «3 гайда в этой теме.
+ * Сначала новые.» line: the figure says the first half, and the order needs no announcing.
  */
 import Landing from '@/layouts/Landing.astro';
 import Breadcrumbs from '@/components/seo/Breadcrumbs.astro';
@@ -41,11 +47,11 @@ const localizedPaths: Partial<Record<Locale, string>> = {};
 for (const loc of LOCALES)
   if (clustersWithGuides(all, loc).includes(cluster)) localizedPaths[loc] = sitePath;
 
-const countLabel = `${list.length} ${plural(locale, list.length, {
+const countWord = plural(locale, list.length, {
   one: t(locale, 'seo.guideWordOne'),
   few: t(locale, 'seo.guideWordFew'),
   many: t(locale, 'seo.guideWordMany'),
-})}`;
+});
 
 const crumbs = [
   { name: t(locale, 'seo.home'), url: canonicalUrl(site, locale, '/'), href: href(locale, '/') },
@@ -84,12 +90,16 @@ const jsonLd = [
 >
   <div class="mx-auto max-w-6xl px-5 pb-16 pt-8 md:pt-12">
     <Breadcrumbs locale={locale} items={crumbs} />
-    <header class="mt-6 max-w-3xl">
-      <p class="eyebrow">{t(locale, 'seo.guides')}</p>
-      <h1 class="display mt-4 text-4xl md:text-6xl">{clusterTitle}</h1>
-      <p class="mt-5 text-lg leading-relaxed text-muted">{description}</p>
-      <p class="tabular mt-3 text-sm text-muted-2">
-        {t(locale, 'seo.clusterHubIntro', { count: countLabel })}
+    <header class="mt-8 md:flex md:items-end md:justify-between md:gap-10">
+      <div class="max-w-2xl md:order-1">
+        <h1 class="display text-3xl md:text-5xl">{clusterTitle}</h1>
+        <p class="mt-4 max-w-xl text-[15px] leading-relaxed text-muted">{description}</p>
+      </div>
+      <p
+        class="mt-8 flex items-baseline gap-3 md:order-2 md:mt-0 md:shrink-0 md:flex-col md:items-end md:gap-1"
+      >
+        <span class="display tabular text-7xl leading-none md:text-8xl">{list.length}</span>
+        <span class="eyebrow">{countWord}</span>
       </p>
     </header>
     <ul class="mt-10 grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">

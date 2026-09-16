@@ -2,9 +2,12 @@
 /**
  * Renders a bilingual legal document (legal.ts) with a table of contents.
  *
- * The contents are a numbered hairline list, not a boxed panel, and the sections carry the same
- * numerals so a reader can find their way back.
+ * A quiet reading frame: the date of the last change as a pill (a fact, not a control), the
+ * title as the display line, the description under it, then the contents as a numbered hairline
+ * list — not a boxed panel — and the sections carrying the same numerals so a reader can find
+ * their way back. Nothing here is louder than the text it frames.
  */
+import Pill from '@/components/landing/Pill.astro';
 import type { Locale } from '@/content/schema';
 import { formatDate, l, t } from '@/i18n/index';
 import type { LegalDocument } from './legal';
@@ -21,11 +24,9 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
 ---
 
 <article class="mx-auto max-w-3xl px-5 py-12 md:py-20">
-  <p class="eyebrow-sentence">
-    {t(locale, 'landing.legalUpdated', { date: formatDate(locale, updatedAt, 'long') })}
-  </p>
-  <h1 class="display mt-4 text-3xl text-balance md:text-5xl">{title}</h1>
-  {intro && <p class="mt-5 text-lg leading-relaxed text-muted">{intro}</p>}
+  <Pill>{t(locale, 'landing.legalUpdated', { date: formatDate(locale, updatedAt, 'long') })}</Pill>
+  <h1 class="display mt-5 text-3xl text-balance md:text-5xl">{title}</h1>
+  {intro && <p class="mt-5 text-[15px] leading-relaxed text-muted md:text-base">{intro}</p>}
 
   <nav aria-label={t(locale, 'landing.legalContents')} class="mt-10 border-t border-border pt-5">
     <p class="eyebrow">{t(locale, 'landing.legalContents')}</p>
@@ -49,24 +50,24 @@ const num = (i: number) => String(i + 1).padStart(2, '0');
     {
       doc.sections.map((s, i) => (
         <section id={s.id} class="scroll-mt-24 border-t border-border pt-6">
-          <h2 class="font-display flex items-baseline gap-4 text-lg">
-            <span class="numeral tabular w-5 shrink-0 text-sm text-muted" aria-hidden="true">
+          <h2 class="display flex items-baseline gap-4 text-base md:text-lg">
+            <span class="numeral tabular w-6 shrink-0 text-sm text-muted" aria-hidden="true">
               {num(i)}
             </span>
             {l(s.heading, locale)}
           </h2>
           {s.paragraphs?.map((p) => (
-            <p class="mt-4 leading-relaxed text-muted">{l(p, locale)}</p>
+            <p class="mt-4 text-[15px] leading-relaxed text-muted">{l(p, locale)}</p>
           ))}
           {s.bullets && (
-            <ul class="mt-4 list-disc space-y-2 pl-5 leading-relaxed text-muted marker:text-muted-2">
+            <ul class="mt-4 list-disc space-y-2 pl-5 text-[15px] leading-relaxed text-muted marker:text-muted-2">
               {s.bullets.map((b) => (
                 <li>{l(b, locale)}</li>
               ))}
             </ul>
           )}
           {s.after?.map((p) => (
-            <p class="mt-4 leading-relaxed text-muted">{l(p, locale)}</p>
+            <p class="mt-4 text-[15px] leading-relaxed text-muted">{l(p, locale)}</p>
           ))}
         </section>
       ))

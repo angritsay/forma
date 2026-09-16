@@ -90,7 +90,6 @@ export const seo = {
   guideWordFew: 'guides',
   guideWordMany: 'guides',
   clusterHubTitle: '{cluster}: home CrossFit guides',
-  clusterHubIntro: '{count} in this topic. Newest first.',
   cluster_beginners_title: 'For beginners',
   cluster_beginners_description:
     'Where to start home CrossFit: first workouts, technique of the basic movements, how to pick the load and get through the first weeks. Guides by the Forma coach.',
@@ -129,7 +128,6 @@ export const seo = {
   readingTime: '{n} min read',
   published: 'Published',
   updated: 'Updated',
-  byAuthor: 'By {name}',
   tocTitle: 'In this article',
   relatedExercises: 'Exercises from this article',
   relatedCourses: 'Courses on this topic',

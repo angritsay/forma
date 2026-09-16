@@ -124,8 +124,8 @@ export const landing = {
   pathWeekdays: 'M,T,W,T,F,S,S',
   pathNodeDone: 'Done',
   pathNodeCurrent: 'Up next',
+  pathNodeOpen: 'Open',
   pathNodeLocked: 'Locked',
-  pathProgress: 'Progress',
 
   // Home: inside a workout
   insideEyebrow: 'Inside a workout',
@@ -293,7 +293,10 @@ export const landing = {
   aboutScienceText:
     'The programs draw on ACSM and WHO physical-activity guidelines, progressive overload, RPE-based autoregulation and the evidence behind 7,000 daily steps.',
   aboutScienceLink: 'Read the guides',
-  aboutLinksTitle: 'Links',
+  // The three figures under the coach's name; they restate credentials in content/site/coach.ts.
+  aboutFigureSince: 'coaching since',
+  aboutFigureHours: 'hours coached',
+  aboutFigureSport: 'in sport since',
 
   // Contact
   contactTitle: 'Contact',
