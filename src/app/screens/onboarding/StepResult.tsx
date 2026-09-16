@@ -1,91 +1,77 @@
 import { clsx } from 'clsx';
 import { useMemo } from 'react';
-import { PageTitle } from '@/components/ui/PageTitle';
-import { ProgressBar } from '@/components/ui/ProgressBar';
-import { RingProgress } from '@/components/ui/RingProgress';
+import { Pill } from '@/components/ui/Pill';
+import { formatNumber } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
 import { computeFitnessIndex } from '@/lib/training/assessment';
-import type { FitnessComponent } from '@/lib/training/types';
 import { draftToTrainingProfile } from './draft';
-import { COMPONENT_LABEL, LEVEL_LABEL, LEVEL_MEANING } from './labels';
+import { LEVEL_LABEL } from './labels';
 import type { StepProps } from './types';
 
-const COMPONENT_ORDER: readonly FitnessComponent[] = [
-  'pushups',
-  'squats',
-  'plank',
-  'activity',
-  'experience',
-];
-
 /**
- * The result: the index as the screen's one big number inside the kit's ring, what the level
- * means as a paragraph under a hairline, and the five components as a numbered, ruled list with
- * a 4px bar each. No course is in scope yet, so the ring and the bars are white.
+ * The result: the index as the one huge numeral, the level as a pill, and the footer's button.
+ *
+ * It used to be a kicker, a heading («Уровень 2: Средний»), the index inside a ring, a paragraph
+ * on what the level means, and a numbered list of five components with a bar each — a report. The
+ * owner's prototype (`design/ui_kits/app-v2`, «Прогресс») shows the same kind of fact as «12 /
+ * ДНЕЙ ПОДРЯД»: a figure the height of four lines, one line under it, nothing else. So the index is
+ * set that way — «54» at 800 with «из 100» at 200 on the same baseline, the brand's device — and
+ * the level is the one pill under it. The paragraph and the components are gone: the number is
+ * what the person came for, and the programme it produces is the explanation of it.
+ *
+ * Centred in the screen's height, like the prototype's «ГОТОВО!»: a short screen sitting at the
+ * top of a tall one reads as unfinished.
  */
 export function StepResult({ draft }: StepProps) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const profile = useMemo(() => draftToTrainingProfile(draft), [draft]);
   const assessment = useMemo(() => (profile ? computeFitnessIndex(profile) : null), [profile]);
 
   if (!assessment) return null;
 
-  const missing = new Set(assessment.missing ?? []);
-  const levelName = t(LEVEL_LABEL[assessment.level]);
+  const index = formatNumber(locale, assessment.index);
+  const level = t('app.onbResultLevel', {
+    n: formatNumber(locale, assessment.level),
+    name: t(LEVEL_LABEL[assessment.level]),
+  });
 
   return (
-    <div className="flex flex-col gap-8">
-      <PageTitle
-        eyebrow={t('app.onbResultEyebrow')}
-        title={t('app.onbResultLevel', { n: assessment.level, name: levelName })}
-      />
-      <RingProgress
-        value={assessment.index / 100}
-        size={180}
-        stroke={8}
-        label={t('app.onbResultEyebrow')}
-        valueText={`${assessment.index} / 100`}
+    <div className="flex min-h-[60dvh] flex-col justify-center gap-5">
+      <p
+        className="display flex items-baseline gap-3 leading-none"
+        aria-label={`${t('app.onbResultEyebrow')}: ${index} ${t('app.onbIndexOutOf')}`}
       >
-        <span className="display text-6xl">{assessment.index}</span>
-        <span className="eyebrow mt-1">{t('app.onbIndexOutOf')}</span>
-      </RingProgress>
-      <p className="hairline pt-5 text-[15px] leading-relaxed">
-        {t(LEVEL_MEANING[assessment.level])}
+        {/*
+         * 128px for the ninety-nine indices that are two digits, 84px for the hundredth.
+         *
+         * The first draft set every index at 128px on the reasoning that three digits are 250px
+         * of the 342px column; the screenshot of an index of 100 showed that was wrong by the
+         * width of «из 100» — the pair wrapped, «100» breaking after «10» and the light half
+         * after «из». Measured at 390px, three digits and the unit only clear the right margin
+         * from 84px down; 88 and 96 still push the unit into the gutter. The index is clamped to
+         * 0..100 (`computeFitnessIndex`), so this is the one value that needs it.
+         *
+         * By digit count, not by container width: the count is the only thing that varies, and a
+         * `clamp()` on a figure this size would move it on every phone for the sake of one value.
+         * `whitespace-nowrap` on both halves so a narrower phone breaks the line rather than a
+         * number.
+         */}
+        <span
+          className={clsx(
+            'tabular whitespace-nowrap',
+            index.length > 2 ? 'text-[84px]' : 'text-[128px]',
+          )}
+          aria-hidden="true"
+        >
+          {index}
+        </span>
+        <span className="t-thin whitespace-nowrap text-[32px]" aria-hidden="true">
+          {t('app.onbIndexOutOf')}
+        </span>
       </p>
-      <section className="flex flex-col gap-3">
-        <h2 className="eyebrow">{t('app.onbResultComponents')}</h2>
-        <ul className="flex flex-col border-b border-border">
-          {COMPONENT_ORDER.map((c, i) => {
-            const value = assessment.components[c];
-            const imputed = missing.has(c);
-            return (
-              <li
-                key={c}
-                className="grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 border-t border-border py-3"
-              >
-                <span className="numeral text-sm text-muted-2">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <span className={clsx('text-sm', imputed && 'text-muted')}>
-                  {t(COMPONENT_LABEL[c])}
-                  {imputed ? ` · ${t('app.onbTestSkipped')}` : ''}
-                </span>
-                <span className="numeral tabular text-sm">{value}</span>
-                {/*
-                 * A skipped test is scored from the rest, so its bar is drawn at half strength:
-                 * the same white, honestly fainter.
-                 */}
-                <ProgressBar
-                  value={value / 100}
-                  tone="primary"
-                  label={t(COMPONENT_LABEL[c])}
-                  className={clsx('col-span-2 col-start-2', imputed && 'opacity-50')}
-                />
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+      <Pill tone="paper" className="self-start">
+        {level}
+      </Pill>
     </div>
   );
 }

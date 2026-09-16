@@ -1,9 +1,10 @@
 import { Input } from '@/components/ui/Input';
-import { PageTitle } from '@/components/ui/PageTitle';
 import { useT } from '@/app/hooks/useT';
 import { NAME_MAX } from './draft';
+import { Question } from './Question';
 import type { StepProps } from './types';
 
+/** The question and the field. «Это имя будет видно в рейтинге» went: a name is a name. */
 export function StepName({ draft, update, next }: StepProps) {
   const { t } = useT();
   return (
@@ -14,12 +15,13 @@ export function StepName({ draft, update, next }: StepProps) {
         if ((draft.displayName ?? '').trim()) next();
       }}
     >
-      <PageTitle title={t('app.onbNameTitle')} subtitle={t('app.onbNameLead')} />
+      <Question text={t('app.onbNameTitle')} />
       <Input
         name="displayName"
         autoComplete="given-name"
         autoFocus
         maxLength={NAME_MAX}
+        aria-label={t('app.onbNameTitle')}
         placeholder={t('app.onbNamePlaceholder')}
         value={draft.displayName ?? ''}
         onChange={(e) => update({ displayName: e.target.value.slice(0, NAME_MAX) })}
