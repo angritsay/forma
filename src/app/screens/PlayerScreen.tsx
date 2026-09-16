@@ -37,7 +37,6 @@ import {
   SectionStepper,
 } from '@/app/features/player/PlayerChrome';
 import {
-  clipFit,
   findBlock,
   isTestBlock,
   sectionOfStep,
@@ -115,14 +114,26 @@ interface ArtLayerProps {
  * screenshot of a portrait squat painted 239px wide between two 76px bars of black.
  *
  * Both rules were right about their own footage and wrong about the other's, because one
- * `object-fit` cannot serve two aspect ratios. So the element measures itself — `loadedmetadata`
- * gives `videoWidth`/`videoHeight` — and {@link clipFit} picks the fit that fills the width for
- * that shape in that box. The stage below is sized so the ordinary 9:16 clip fills it under
- * `contain`, uncropped; `cover` is the safety net for footage taller than the stage, where the
- * alternative is bars.
+ * **The clip is as wide as the screen, always, and that is geometry rather than a decision.**
+ * `w-full h-auto` sets the width to the stage's and lets the height follow the clip's own shape;
+ * the stage hides what runs past it. A clip taller than the stage is therefore cropped evenly top
+ * and bottom — the same result `object-cover` gives — and a shorter one sits centred with space
+ * above and below. Neither case can put a bar down the side, because nothing is ever fitted by
+ * height.
  *
- * Until the metadata arrives the fit is `contain`, because that is the one that can never destroy
- * a frame, and a poster that flashes letterboxed for 100ms costs nothing.
+ * It used to read the clip's `videoWidth`/`videoHeight` on `loadedmetadata` and choose `cover` or
+ * `contain` from the two shapes. The arithmetic was right and the reading was not: the owner's
+ * phone showed «ЗАМИНКА И РАСТЯЖКА» with 37pt of black down both sides. Measuring her screenshot
+ * gave the reason — the stage was 402×740 and the clip was drawn 329×740, fitted by height, which
+ * is what `contain` does when the decision never arrived. The coach's clips are about 9:20 (0.44),
+ * taller than the 9:16 the sizing below was written for, so every one of them depended on that
+ * decision landing. It only has to fail once — a metadata event that fired before the listener,
+ * a stage measured while the panel below still reported zero height — and the fallback is the
+ * bars. Geometry has no such moment.
+ *
+ * From `md` the stage is wider than it is tall and the same rule would crop half a movement away
+ * to fill a width nobody was short of, so there the clip is contained instead — `md:h-full
+ * md:w-auto`, letterboxed, which a laptop has the room for.
  *
  * **It ends above the glass.** The panel at the bottom reports its height and the clip is given the
  * room above it, so the movement is never half under the words. The clip still runs a little way
@@ -134,45 +145,28 @@ interface ArtLayerProps {
  * (scripts/media/prepare-videos.mjs), so there is nothing to mute. `muted` is still set on the
  * element — without it a browser refuses to autoplay, audio track or no.
  */
+/**
+ * How a movement is drawn, clip or still, in one string.
+ *
+ * Phone: `w-full h-auto` — the width is the stage's, the height follows the frame's own shape, and
+ * the stage crops whatever runs past. Laptop (`md`, where the stage is wider than it is tall):
+ * `h-full w-auto`, contained, because filling that width would crop half the movement away.
+ *
+ * Both halves are pure CSS. Nothing here reads the clip's dimensions, so there is no moment at
+ * which the answer can be missing — which is the bug this replaced.
+ */
+const ART = 'w-full h-auto md:h-full md:w-auto md:max-h-full md:max-w-full object-contain';
+
 function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
   const video = useRef<HTMLVideoElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const still = exerciseId ? exerciseStillUrl(exerciseId) : undefined;
-  /** `cover` once the clip is known to be taller than its stage; `contain` until then. */
-  const [fill, setFill] = useState(false);
   useEffect(() => {
     const el = video.current;
     if (!el) return;
     if (playing) void el.play().catch(() => undefined);
     else el.pause();
   }, [playing, videoUrl]);
-
-  /*
-   * Compare the clip's shape with the stage's and pick the fit.
-   *
-   * Read on `loadedmetadata`, and also straight away: a clip that was already in the cache can
-   * have fired that event before this effect subscribed, and `readyState >= HAVE_METADATA` is how
-   * you catch the one you missed. The stage is measured rather than assumed because it is not the
-   * same box on a phone and on a laptop — from `md` the panel moves to the right and takes width
-   * instead of height, which flips which way a given clip is over-tall.
-   */
-  useEffect(() => {
-    const el = video.current;
-    const box = stage.current;
-    if (!el || !box) return;
-    const decide = () => {
-      const r = box.getBoundingClientRect();
-      if (!el.videoWidth || !el.videoHeight || !r.width || !r.height) return;
-      setFill(clipFit(el.videoWidth, el.videoHeight, r.width, r.height) === 'cover');
-    };
-    if (el.readyState >= 1) decide();
-    el.addEventListener('loadedmetadata', decide);
-    window.addEventListener('resize', decide);
-    return () => {
-      el.removeEventListener('loadedmetadata', decide);
-      window.removeEventListener('resize', decide);
-    };
-  }, [videoUrl]);
 
   /*
    * The ground is the app's own near-black, not the programme colour, even behind the drawn figure.
@@ -220,20 +214,22 @@ function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
          * over a utility for the same property — so `md:bottom-0` could never take effect and the
          * stage would have kept reserving room for a panel that is no longer underneath it.
          */
+        /*
+         * `overflow-hidden` on the stage itself, not only on the layer around it. The clip is now
+         * as wide as the stage and as tall as its own shape asks, so a 9:20 clip is taller than
+         * the stage and has to be cropped by something. The layer outside runs the whole screen,
+         * so clipping there would let the frame bleed up over the header.
+         */
         ref={stage}
-        className="absolute inset-x-0 top-0 bottom-[max(0px,calc(var(--player-glass-h,0px)-120px))] flex items-center md:right-85 md:bottom-0"
+        className="absolute inset-x-0 top-0 bottom-[max(0px,calc(var(--player-glass-h,0px)-120px))] flex items-center overflow-hidden md:right-85 md:bottom-0"
       >
         {/*
          * `player-art-in` is the arrival: the next movement's picture settles in over 0.42s rather
          * than replacing the last one on the spot, keyed on the source so every step replays it.
          *
-         * This element carried an open question — whether a clip taller than the stage should
-         * overflow and be clipped, or fit by height and be letterboxed. {@link clipFit} settles it
-         * by asking which stage it is in: on a phone such a clip is covered, because the
-         * alternative is bars down both sides of a movement; on the wide stage this same element
-         * takes from `md` (`md:right-85`), it is contained, because a laptop has room to letterbox
-         * and covering there would crop half the movement away. Both readings were right about
-         * their own screen.
+         * `ART` is the one rule both the clip and the still obey — full width on a phone, contained
+         * on a laptop. See the note at the top of this file for why it is geometry and not a
+         * measurement.
          */}
         {videoUrl ? (
           <video
@@ -241,9 +237,7 @@ function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
             ref={video}
             src={videoUrl}
             poster={still}
-            className={`player-art-in ${
-              fill ? 'size-full object-cover' : 'h-auto max-h-full w-full object-contain'
-            }`}
+            className={`player-art-in ${ART}`}
             playsInline
             muted
             loop
@@ -254,7 +248,7 @@ function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
           <ExerciseStill
             key={exerciseId}
             exerciseId={exerciseId}
-            className="player-art-in h-auto max-h-full w-full object-contain"
+            className={`player-art-in ${ART}`}
             loading="eager"
           />
         )}

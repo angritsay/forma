@@ -16,10 +16,10 @@
  *            thing on the screen, and it is what times the hold for them.
  *   count  — the name and the field for the number, pre-filled on a hold.
  *
- * The clip is fitted the player's way (`clipFit`): as wide as the stage, `cover` only when its
- * own shape is taller than the stage on a phone. `object-cover` as a blanket rule was reverted
- * once — a landscape clip cropped to a phone-shaped hole keeps a strip through the middle and
- * loses the movement — and `contain` alone painted a portrait squat between two bars of black.
+ * The clip is drawn the player's way (`ART` below, and the note in `screens/PlayerScreen.tsx`):
+ * as wide as the stage on a phone, with the stage cropping whatever the frame's own height runs
+ * past, and contained on a laptop. It is geometry rather than a measurement, so there is no moment
+ * at which the answer is missing and the frame falls back to bars down both sides.
  *
  * The last three seconds are ticked and the end is a long low horn (`sound.ts`), because the eyes
  * are on the floor at that point and the screen cannot be the thing that says "stop". The audio
@@ -35,7 +35,7 @@ import { RingProgress } from '@/components/ui/RingProgress';
 import { formatClock } from '@/i18n/index';
 import { EXERCISE_BY_ID } from '@/content/registry';
 import { DisplayTitle } from '@/app/features/home/DisplayTitle';
-import { clipFit, exerciseVideoRef } from '@/app/features/player/model';
+import { exerciseVideoRef } from '@/app/features/player/model';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
 import { playCue, unlockAudio } from '@/app/features/player/sound';
 import { useWakeLock } from '@/app/features/player/useWakeLock';
@@ -69,28 +69,17 @@ export interface AssessmentRunnerProps {
  * comment and the player's `ArtLayer`, which this repeats in miniature rather than imports,
  * because that layer is sized against the player's measured panel and this one is not.
  */
+/**
+ * The same one rule the player draws its movement by (`screens/PlayerScreen.tsx`, `ART`): full
+ * width on a phone with the stage cropping the overflow, contained on a laptop. It used to measure
+ * the clip and choose between `cover` and `contain`, and the choice could simply not arrive — see
+ * the note in the player for the screenshot that proved it.
+ */
+const ART = 'w-full h-auto md:h-full md:w-auto md:max-h-full md:max-w-full object-contain';
+
 function Art({ exerciseId, videoUrl }: { exerciseId: string | undefined; videoUrl?: string }) {
   const video = useRef<HTMLVideoElement>(null);
   const stage = useRef<HTMLDivElement>(null);
-  const [fill, setFill] = useState(false);
-
-  useEffect(() => {
-    const el = video.current;
-    const box = stage.current;
-    if (!el || !box) return;
-    const decide = () => {
-      const r = box.getBoundingClientRect();
-      if (!el.videoWidth || !el.videoHeight || !r.width || !r.height) return;
-      setFill(clipFit(el.videoWidth, el.videoHeight, r.width, r.height) === 'cover');
-    };
-    if (el.readyState >= 1) decide();
-    el.addEventListener('loadedmetadata', decide);
-    window.addEventListener('resize', decide);
-    return () => {
-      el.removeEventListener('loadedmetadata', decide);
-      window.removeEventListener('resize', decide);
-    };
-  }, [videoUrl]);
 
   return (
     <div
@@ -103,7 +92,7 @@ function Art({ exerciseId, videoUrl }: { exerciseId: string | undefined; videoUr
           key={videoUrl}
           ref={video}
           src={videoUrl}
-          className={fill ? 'size-full object-cover' : 'h-auto max-h-full w-full object-contain'}
+          className={ART}
           playsInline
           muted
           loop
@@ -111,12 +100,7 @@ function Art({ exerciseId, videoUrl }: { exerciseId: string | undefined; videoUr
           preload="metadata"
         />
       ) : (
-        <ExerciseStill
-          key={exerciseId}
-          exerciseId={exerciseId}
-          className="h-auto max-h-full w-full object-contain"
-          loading="eager"
-        />
+        <ExerciseStill key={exerciseId} exerciseId={exerciseId} className={ART} loading="eager" />
       )}
       {/* The header's plate: a short fade from the top so the way out and the count read on any frame. */}
       <div className="absolute inset-x-0 top-0 h-28 bg-linear-to-b from-ink/55 to-transparent" />
