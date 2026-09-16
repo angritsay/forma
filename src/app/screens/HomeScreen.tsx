@@ -35,6 +35,7 @@ import { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Glyph } from '@/components/ui/Icon';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
@@ -42,19 +43,27 @@ import { courseTitle } from '@/content/catalogue';
 import { courseTileVars } from '@/lib/ui/tile';
 import { PHOTOS } from '@/lib/media/photos';
 import { useT } from '@/app/hooks/useT';
+import { estimateSession, sessionPills } from '@/app/features/courses/sessionEstimate';
 import { AssignedWorkoutsCard } from '@/app/features/customWorkout/AssignedWorkoutsCard';
 import { buildDeck } from '@/app/features/programs/deck';
 import { DeckCard } from '@/app/features/programs/DeckCard';
+import { DisplayTitle } from '@/app/features/home/DisplayTitle';
 import { GameToday } from '@/app/features/home/GameToday';
 import { dayPart, GREETING_KEY, greetingName } from '@/app/features/home/greeting';
 import { ResumeCard } from '@/app/features/home/ResumeCard';
 import { TodayTasks, type TodayTask } from '@/app/features/home/TodayTasks';
 import { useMarathonDay, useMyMarathons } from '@/app/features/marathon/useMarathon';
+import { useTrainingContext } from '@/app/features/path/useTrainingContext';
 import { assessmentPending, profileToDraft } from '@/app/features/profile/model';
 import { activeWorkoutPath, useActiveWorkoutStore } from '@/app/store/activeWorkout';
 import { saveDraft } from '@/app/screens/onboarding/draft';
 import { useCatalogue } from '@/app/store/catalogue';
-import { useActiveCourseId, useProgress, useProgressLoader } from '@/app/store/progress';
+import {
+  useActiveCourseId,
+  useEngineCourseState,
+  useProgress,
+  useProgressLoader,
+} from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
 import { BOOKING } from '@content/site/booking';
 
@@ -140,7 +149,7 @@ export default function HomeScreen() {
     activeWorkoutPath({ session: s.session, finishedAt: s.finishedAt }),
   );
 
-  const today = useMemo(() => {
+  const { today, ownedCount } = useMemo(() => {
     const entries = buildDeck({
       courses,
       entitlements,
@@ -148,8 +157,33 @@ export default function HomeScreen() {
       marathons: [],
       activeCourseId,
     });
-    return entries.find((e) => e.kind === 'course') ?? null;
+    const owned = entries.filter((e) => e.kind === 'course');
+    return { today: owned[0] ?? null, ownedCount: owned.length };
   }, [courses, entitlements, courseStates, activeCourseId]);
+
+  /*
+   * The two pills on the card — «18 мин», «110 повторов» — are the session as the difficulty
+   * sheet will offer it at «Как обычно»: the same prescription, the same estimate, so the number
+   * on Home is the number the athlete is about to see on the sheet and not a rounding away from
+   * it. Null when there is nothing to prescribe yet: no course, a rest day, a profile still
+   * missing — and then the card simply shows no pills rather than a guess.
+   */
+  const ctx = useTrainingContext();
+  const engineState = useEngineCourseState(today?.course.id ?? '');
+  const pills = useMemo(() => {
+    const next = today?.next ?? null;
+    const workout =
+      today && next?.workoutId ? today.course.workouts.find((w) => w.id === next.workoutId) : null;
+    if (!workout || !ctx.profile || !next) return undefined;
+    const est = estimateSession(workout, {
+      profile: ctx.profile,
+      scale: engineState.scale,
+      level: ctx.level,
+      ...(ctx.weightKg !== undefined ? { weightKg: ctx.weightKg } : {}),
+      deload: next.deload === true,
+    });
+    return sessionPills({ t, l, locale }, est);
+  }, [today, ctx, engineState.scale, t, l, locale]);
 
   /*
    * The assessment postponed at sign-up («Не сейчас») comes back here, and it goes back into the
@@ -229,7 +263,13 @@ export default function HomeScreen() {
                   : `${t('app.homeTodayEyebrow')} · ${t('app.pathCompleted')}`
               }
               title={next ? l(next.title) : l(courseTitle(course.course))}
-              lead={l(courseTitle(course.course))}
+              /*
+               * Which course this is — only when there is a second one it could have been. With
+               * one course owned the line named the only thing it could name, and the owner's
+               * measure is «минимум текста»; the picture's accessible name still says it.
+               */
+              lead={ownedCount > 1 && next ? l(courseTitle(course.course)) : undefined}
+              pills={pills}
               ctaLabel={
                 next === null
                   ? t('app.homeTodayOpenPath')
@@ -247,15 +287,28 @@ export default function HomeScreen() {
             />
           </div>
         ) : lead === 'choose' ? (
-          <EmptyState
-            title={t('app.homeTodayNoCourseTitle')}
-            description={t('app.homeTodayNoCourseBody')}
-            action={
-              <Button size="lg" onClick={() => navigate('/courses')}>
-                {t('app.homeTodayNoCourseCta')}
-              </Button>
-            }
-          />
+          /*
+           * No course yet: the prototype's «ВЫБЕРИ программу» — one display line in the brand's
+           * two weights, one sentence, one button — standing in the middle of the room the card
+           * would have taken. Not `EmptyState`: that sets a heading in the 600 face over a
+           * paragraph, which is a message about something missing, and this is the first thing
+           * the screen asks of a new athlete.
+           */
+          <section className="flex min-h-0 flex-1 flex-col justify-center gap-4">
+            <DisplayTitle as="h2" text={t('app.homeTodayNoCourseTitle')} className="text-3xl" />
+            <p className="max-w-[28ch] text-base leading-snug text-muted">
+              {t('app.homeTodayNoCourseBody')}
+            </p>
+            <Button
+              size="lg"
+              fullWidth
+              className="mt-2 md:max-w-[420px]"
+              onClick={() => navigate('/courses')}
+              iconRight={<Glyph size={14}>→</Glyph>}
+            >
+              {t('app.homeTodayNoCourseCta')}
+            </Button>
+          </section>
         ) : null}
         {/*
          * The challenge, immediately under today's card. It used to sit below the coach button and

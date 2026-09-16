@@ -386,10 +386,18 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    numbers feed the index, the other two are written to `benchmarks`.
 3. **Home**: today, and nothing else. The greeting names the athlete and the avatar beside it opens
    the profile; the resume strip if a session was left unfinished; today's session as one
-   full-width cover card (photograph or the programme colour, the day's name, one button); **the
-   challenge as one ruled row** under it; one button offering an hour with the coach; then any task
+   full-width cover card; **the challenge as one ruled row** under it; one button offering an hour
+   with the coach; then any task
    still owed — the assessment when it was postponed — and whatever the coach has assigned by
    hand. The deck of programmes moved to the «Программы» tab and the figures to «Прогресс».
+
+   The card is the prototype's: the photograph (or the programme colour), the kicker, the day's
+   name as the one display line, the session's two facts as pills — «18 мин», «110 повторов» — and
+   «Начать →». Four things, one of them the button; the name of the course appears as a fifth line
+   only when a second course is owned and the day's name alone could belong to either. The pills
+   are the prescription the difficulty sheet will offer at «Как обычно», through the one estimator
+   both screens read (`features/courses/sessionEstimate.ts`), so the figure on Home is the figure
+   on the sheet and never a rounding away from it. Nothing on Home scrolls at 390×844.
 
    The challenge row is the same row in both states, and it is the only thing on Home that takes
    a colour — the challenge's orange (`GAME_TILE`, src/lib/ui/tile.ts; the identifier keeps the old
@@ -399,14 +407,18 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    advertisement. Logging steps is **not** on Home: it is a number the athlete owes today, and it
    belongs with the rest of how they are doing, on «Прогресс».
 
-4. **Course path**: the days as a winding column of square stops — four columns, wave order, the
-   day's name set in the space each stop leaves beside it — grouped under a banner per week in the
-   programme colour. A finished day is filled in that colour and ticked, today is filled in paper,
-   an open day is outlined, a locked one is dimmed; rest and milestone days open a sheet. Header
-   with progress %, days done and the load multiplier, plus the leaderboard button.
+4. **Course path**: the days as a winding column of circles — four columns, wave order, the day's
+   name and one short line set in the space each stop leaves beside it, its stars under the name —
+   grouped under a band per week in the programme colour («НЕДЕЛЯ 1 · 3/7»). A finished day is
+   filled in that colour and ticked, today is filled in paper and lands on the spring, an open day
+   is outlined, a locked one is dimmed; rest and milestone days open a sheet. The head is the
+   course's name on a band of its colour, then a ring with the share inside and one display line
+   beside it — «ДЕНЬ 4 из 28», 800 + 200 — then three figures on one ruled line: days done, minutes
+   trained, the load multiplier (a button, opening the sheet that explains it). The leaderboard is
+   a kicker opposite the way back.
 5. **Node preview**: the picture (a still from the movement's clip, else the drawn figure), the
-   workout's name, the programme and day, two facts — how long it takes and what it costs — and
-   "Start". Everything else — focus,
+   workout's name, the programme and day, and three pills — how long, how much work, what it
+   costs. Everything else — focus,
    description, the movement grid, the plan block by block — is folded behind "What's inside".
    Pressing Start opens the difficulty sheet: Easier / As usual / Harder, each led by its estimated
    **minutes** as a large numeral, over a bar of the work it prescribes, with the reps and kcal

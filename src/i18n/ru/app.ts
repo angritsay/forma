@@ -189,12 +189,12 @@ export const app = {
   homeResumeSave: 'Завершить и сохранить',
   homeTodayEyebrow: 'Сегодня',
   homeTodayWeek: 'Неделя {week} · День {day}',
-  homeTodayStart: 'Начать',
   homeTodayOpen: 'Открыть',
   homeTodayStepsProgress: '{steps} из {goal} шагов',
   homeTodayLogSteps: 'Записать шаги',
-  homeTodayNoCourseTitle: 'Выбери курс',
-  homeTodayNoCourseBody: 'Выбери программу — и первая тренировка появится здесь.',
+  // The prototype's «ВЫБЕРИ программу»: the first word heavy, the rest light (DisplayTitle).
+  homeTodayNoCourseTitle: 'Выбери программу',
+  homeTodayNoCourseBody: 'И первая тренировка появится здесь — уже сегодня.',
   homeTodayNoCourseCta: 'Смотреть программы',
   homeCoachNow: 'Заниматься с тренером',
   // The challenge, on Home. Somebody not in it sees the same row with the task blurred out.
@@ -224,7 +224,6 @@ export const app = {
   homeDeckCourse: 'Курс',
   homeDeckMarathon: 'Челлендж',
   homeDeckMarathonBody: 'Задание каждый день, таблица за неделю',
-  homeDeckMarathonLead: 'Задание каждый день. Кто наберёт больше всех за неделю — час с тренером.',
   homeDeckGameLocked: 'Входит в подписку',
   homeDeckGameTrial: 'Пробная неделя с курсом — осталось {n}',
   homeDeckGameTrialDayOne: '1 день',
@@ -232,8 +231,9 @@ export const app = {
   homeDeckGameTrialDayMany: '{n} дней',
   homeDeckGameLockedCta: 'Оформить подписку',
   homeDeckMarathonCta: 'Задание на сегодня',
-  homeDeckStart: 'Начать тренировку',
-  homeDeckProgressLabel: 'пройдено',
+  // One word each, as the prototype's buttons have it: «Начать →», «Продолжить →».
+  homeDeckStart: 'Начать',
+  homeDeckContinue: 'Продолжить',
   homeErrorTitle: 'Не удалось загрузить прогресс',
   homeErrorBody: 'Проверь соединение и попробуй ещё раз.',
   homeRefreshError: 'Не удалось обновить. Показываем последние сохранённые данные.',
@@ -263,9 +263,12 @@ export const app = {
   pathProgress: '{done} из {total}',
   // Кикеры под цифрами в шапке курса. Держи их в одно слово: они набраны капсом с трекингом
   // .14em и стоят в колонке шириной в треть экрана — два слова уже переносятся.
-  pathStatDone: 'Пройдено',
   pathStatDays: 'Дней',
+  pathStatMinutes: 'Минут',
   pathStatLoad: 'Нагрузка',
+  // The head's one line beside the ring, in two weights: «ДЕНЬ 4» heavy, «из 28» light.
+  pathDayN: 'День {n}',
+  pathOfTotal: 'из {total}',
   pathLeaderboard: 'Рейтинг',
   pathScaleBadge: 'Твоя нагрузка ×{scale}',
   pathScaleTitle: 'Как подстраивается нагрузка',
@@ -317,7 +320,8 @@ export const app = {
     'Фиксированный комплекс на время. Запусти таймер, сделай всю работу как можно быстрее с чистой техникой и запиши результат. Повтори его позже — и увидишь прогресс в секундах.',
   nodeDeloadNote: 'Разгрузочная неделя: объём ×0,65, отдых длиннее. Очки — как обычно.',
   nodeRepeatNote: 'Эта тренировка уже выполнена. За повтор начисляется 50% очков.',
-  nodeDifficultyTitle: 'Выбери сложность',
+  // Set through DisplayText: «НАСКОЛЬКО тяжело сегодня?» — the prototype's own line.
+  nodeDifficultyTitle: 'Насколько тяжело сегодня?',
   nodeDuration: '~{min} мин',
   nodeRepsOne: '{n} повтор',
   nodeRepsFew: '{n} повтора',

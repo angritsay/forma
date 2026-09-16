@@ -1,40 +1,40 @@
 /**
- * Course path (docs/SPEC.md §10 flow 4): a header in the programme colour, the week strip, the
- * three numbers that say where you are, and the days as a ruled list grouped by week. Rest days
- * and milestones open a sheet; workout nodes go to the preview.
+ * Course path (docs/SPEC.md §10 flow 4): the course's name on a band of its colour, the ring and
+ * one line saying which day this is, three figures, and the days as a zigzag of circles under a
+ * band per week. Rest days and milestones open a sheet; workout nodes go to the preview.
+ *
+ * **Drawn in the owner's prototype's language** (`design/ui_kits/app-v2`, «Путь по дням»), after
+ * her verdict on the app — «МИНИМУМ текста, максимум визуала и дофамина». What went from the
+ * head: the tagline paragraph, the «4 недели · 3 раза в неделю» kicker and the strip of eight
+ * ruled week numbers — three lines that described the course to somebody already walking it.
+ * What replaced them says the same in figures: the percentage is inside a ring, the day is one
+ * display line in two weights («ДЕНЬ 4 из 28»), and the weeks are the bands the days sit under.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { clsx } from 'clsx';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Glyph } from '@/components/ui/Icon';
+import { RingProgress } from '@/components/ui/RingProgress';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { courseTitle, findCourse } from '@/content/catalogue';
-import type { Course, CourseNode } from '@/content/schema';
+import type { CourseNode } from '@/content/schema';
 import { formatNumber } from '@/i18n/index';
 import { courseTileVars } from '@/lib/ui/tile';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
-import {
-  courseLandingHref,
-  perWeekLabel,
-  subscribeHref,
-  weeksLabel,
-} from '@/app/features/courses/courseMeta';
+import { courseLandingHref, subscribeHref } from '@/app/features/courses/courseMeta';
 import { LinkButton } from '@/app/features/courses/LinkButton';
 import { PLANS_ENABLED } from '@content/site/plans';
-import { DisplayTitle } from '@/app/features/home/DisplayTitle';
+import { DisplayText, DisplayTitle } from '@/app/features/home/DisplayTitle';
 import { NodeSheet } from '@/app/features/path/NodeSheet';
 import {
   courseProgress,
-  groupNodesByWeek,
+  currentNodeIndex,
   nodeStatus,
   type NodeStatus,
-  type PathState,
 } from '@/app/features/path/nodeState';
 import { PathView } from '@/app/features/path/PathView';
 import { ScaleSheet } from '@/app/features/path/ScaleSheet';
@@ -48,57 +48,10 @@ import {
 } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
 
-/**
- * The weeks as a strip of 2px rules, the way the design system's course screen draws them: a
- * finished week is ruled in full ink and ticked, the week in progress is ruled in full ink, the
- * weeks ahead are ruled faintly. Numbers rather than the word "week" so eight weeks still fit on
- * a 390px screen; the accessible name spells it out.
- */
-function WeekStrip({ course, state }: { course: Course; state: PathState | null | undefined }) {
-  const { t } = useT();
-  const groups = groupNodesByWeek(course);
-  const currentIndex = course.nodes.findIndex(
-    (_, i) => nodeStatus(i, course.nodes, state) === 'current',
-  );
-  const currentWeek = currentIndex >= 0 ? course.nodes[currentIndex]?.week : undefined;
-  return (
-    <ol className="flex gap-2.5" aria-label={t('app.pathStatDays')}>
-      {groups.map((g) => {
-        const done = g.nodes.every(
-          ({ index }) => nodeStatus(index, course.nodes, state) === 'done',
-        );
-        const active = g.week === currentWeek;
-        const on = done || active;
-        return (
-          <li
-            key={g.week}
-            aria-label={`${t('app.pathWeek', { n: g.week })}${done ? ` — ${t('app.pathNodeDone')}` : ''}`}
-            aria-current={active ? 'step' : undefined}
-            className={clsx(
-              'flex flex-1 items-baseline gap-1.5 border-t-2 pt-2',
-              on ? 'border-current' : 'border-current/25',
-            )}
-          >
-            <span className={clsx('numeral text-xs', on ? 'text-current' : 'opacity-45')}>
-              {String(g.week).padStart(2, '0')}
-            </span>
-            {done ? (
-              <Glyph size={11} className="text-current">
-                ✓
-              </Glyph>
-            ) : null}
-          </li>
-        );
-      })}
-    </ol>
-  );
-}
-
 export default function CoursePathScreen() {
   useProgressLoader();
   const { id = '' } = useParams();
-  const tr = useT();
-  const { t, l, locale } = tr;
+  const { t, l, locale } = useT();
   const navigate = useNavigate();
   const toast = useToast();
   const course = findCourse(id);
@@ -114,6 +67,18 @@ export default function CoursePathScreen() {
    */
   const sessions = useProgress((s) => s.recentSessions);
   const stars = useMemo(() => (course ? starsByNode(sessions, course.id) : {}), [sessions, course]);
+  /*
+   * Minutes trained on this course, from the same rows — the prototype's second figure. Its
+   * horizon is the horizon of `recentSessions` (60 rows), which is past the length of any course
+   * in the catalogue; a session older than that is not counted rather than guessed at.
+   */
+  const minutes = useMemo(() => {
+    if (!course) return 0;
+    const sec = sessions
+      .filter((s) => s.courseId === course.id && s.completedAt)
+      .reduce((n, s) => n + (s.durationSec ?? 0), 0);
+    return Math.round(sec / 60);
+  }, [sessions, course]);
   const stepsToday = useStepsToday();
   const [sheetNode, setSheetNode] = useState<CourseNode | null>(null);
   const [scaleOpen, setScaleOpen] = useState(false);
@@ -163,6 +128,9 @@ export default function CoursePathScreen() {
 
   const progress = courseProgress(course.nodes, row);
   const finished = progress.total > 0 && progress.done >= progress.total;
+  /* The day being lived, 1-based: the next stop on the path, whatever the count of finished ones. */
+  const todayIndex = currentNodeIndex(course.nodes, row);
+  const dayN = todayIndex >= 0 ? todayIndex + 1 : progress.total;
   const scale = row?.scale ?? startingScale(profile);
   const sheetIndex = sheetNode ? course.nodes.findIndex((n) => n.id === sheetNode.id) : -1;
   const sheetStatus: NodeStatus =
@@ -227,19 +195,22 @@ export default function CoursePathScreen() {
     body = <PathView course={course} state={row} stars={stars} onNodePress={onNodePress} />;
   }
 
+  const dayText = formatNumber(locale, dayN);
+  const totalText = formatNumber(locale, progress.total);
+
   return (
     /*
-     * `--course-tile` is set once, around the whole screen: the header is painted in it, and
-     * further down the current day's number, the ticks and its rule read the same variable. One
-     * screen, one colour — and this is the screen it belongs to.
+     * `--course-tile` is set once, around the whole screen: the head is painted in it, and
+     * further down the ring, the week bands, the finished circles and today's «Сегодня» read the
+     * same variable. One screen, one colour — and this is the screen it belongs to.
      */
     <div style={courseTileVars(course.tile)}>
       <Screen>
         {/*
-         * The header block is the programme colour with ink text, bleeding past the gutters and up
-         * under the status bar: the course's name as the one big line, its tagline light under it,
-         * the specification as a kicker, then the weeks as a strip of rules. There is no bar; the
-         * back control is a kicker in the block's top-left corner and the leaderboard sits opposite.
+         * The head is the programme colour with ink text, bleeding past the gutters and up under
+         * the status bar, and it carries two things: the way out and the way to the board on one
+         * line, and the course's name as the one big line. There is no bar; the back control is a
+         * kicker in the block's top-left corner and the leaderboard sits opposite.
          */}
         <header className="hero-art -mx-6 -mt-[var(--safe-top)] px-6 pt-[calc(var(--safe-top)+14px)] pb-6 md:-mx-10 md:px-10">
           <div className="flex items-baseline justify-between gap-3">
@@ -261,43 +232,59 @@ export default function CoursePathScreen() {
               <Glyph size={12}>›</Glyph>
             </button>
           </div>
-          <div className="mt-8">
-            <DisplayTitle text={l(courseTitle(course))} className="text-5xl lg:text-6xl" />
-            {/*
-             * The tagline is set to be read, not looked at: Onest, sentence case.
-             *
-             * It was `.display t-thin`, which forces capitals — and a tagline is a sentence, not a
-             * label. «ЧЕТЫРЕ НЕДЕЛИ ПО ПРОГРАММЕ ТРЕНЕРА ДЛЯ НОВИЧКОВ: КОРОТКО, ПО КРУГУ, БЕЗ
-             * ОБОРУДОВАНИЯ.» ran four lines of Cyrillic capitals under the title, where the word
-             * shapes are near-identical rectangles and nothing can be skimmed. The brandbook puts
-             * capitals on kickers and on the one big line; the thin weight is the device for
-             * *that* line, not a way to set running copy.
-             */}
-            <p className="mt-2 max-w-[34ch] text-base leading-snug opacity-80">
-              {l(course.tagline)}
-            </p>
-            <p className="eyebrow mt-4 text-current opacity-60">
-              {weeksLabel(tr, course.weeks)} · {perWeekLabel(tr, course.sessionsPerWeek)}
-            </p>
-          </div>
-          <div className="mt-7">
-            <WeekStrip course={course} state={row} />
-          </div>
+          <DisplayTitle text={l(courseTitle(course))} className="mt-6 text-4xl lg:text-5xl" />
         </header>
+
         {/*
-         * Where you are, in three figures on one ruled line. The third is a button: the load
-         * multiplier opens the sheet that explains how the course adapts.
+         * Where you are, as the challenge's head draws it (`features/marathon/GameHead`): a ring
+         * with the share inside and one display line beside it — «ДЕНЬ 4 из 28», 800 + 200. It
+         * stands on the dark ground rather than on the coloured head so the ring can be drawn in
+         * the programme colour, which is where §10 puts the colour: on the figure, not the field.
+         * When the course is finished the line says so, in the same two weights.
          */}
-        <div className="-mx-6 grid grid-cols-3 divide-x divide-border border-b border-border bg-bg md:-mx-10">
+        <div className="flex items-center gap-5 pt-6">
+          <RingProgress
+            value={progress.total > 0 ? progress.done / progress.total : 0}
+            size={84}
+            stroke={6}
+            label={t('app.pathProgressLabel')}
+            valueText={t('app.pathProgress', { done: progress.done, total: progress.total })}
+          >
+            {/*
+             * One figure in the ring, the way the challenge's head has it: «0%» on one line, not
+             * a numeral with «%» stacked under it as a kicker. The sign belongs to the number, and
+             * a second line inside a 72px circle is a label repeating what is above it.
+             */}
+            <span className="numeral tabular text-[19px] leading-none">{progress.pct}%</span>
+          </RingProgress>
+          <h2 className="display min-w-0 flex-1 text-[26px] leading-[1.08] text-balance">
+            {finished ? (
+              <DisplayText text={t('app.pathCompleted')} />
+            ) : (
+              <>
+                {t('app.pathDayN', { n: dayText })}{' '}
+                <span className="t-thin">{t('app.pathOfTotal', { total: totalText })}</span>
+              </>
+            )}
+          </h2>
+        </div>
+
+        {/*
+         * Three figures on one ruled line: days done, minutes trained, the load. The third is a
+         * button — the multiplier opens the sheet that explains how the course adapts.
+         */}
+        <div className="-mx-6 mt-6 grid grid-cols-3 divide-x divide-border border-y border-border bg-bg md:-mx-10">
           <div className="px-6 py-4 md:px-10">
-            <div className="numeral tabular text-2xl leading-none">{progress.pct}%</div>
-            <div className="eyebrow mt-2">{t('app.pathStatDone')}</div>
+            <div className="numeral tabular text-2xl leading-none">
+              {progress.done}/{progress.total}
+            </div>
+            <div className="eyebrow mt-2">{t('app.pathStatDays')}</div>
           </div>
           <div className="px-4 py-4">
             <div className="numeral tabular text-2xl leading-none">
-              {String(progress.done).padStart(2, '0')}/{String(progress.total).padStart(2, '0')}
+              {formatNumber(locale, minutes)}
             </div>
-            <div className="eyebrow mt-2">{t('app.pathStatDays')}</div>
+            <div className="eyebrow mt-2">{t('app.pathStatMinutes')}</div>
           </div>
           <button
             type="button"
@@ -314,13 +301,6 @@ export default function CoursePathScreen() {
             </div>
           </button>
         </div>
-        {finished ? (
-          <div className="pt-5">
-            <Badge tone="success" size="md">
-              {t('app.pathCompleted')}
-            </Badge>
-          </div>
-        ) : null}
         <div className="pt-6">{body}</div>
         <NodeSheet
           node={sheetNode}

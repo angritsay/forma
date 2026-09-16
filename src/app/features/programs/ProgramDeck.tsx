@@ -9,17 +9,18 @@
  *
  * So they are tickets now (`CourseTicket`), in a column, each with its progress at the top. One
  * fits a phone screen whole with the next one beginning under it, and that beginning is the thing
- * the swipe was failing to say: there is more than one. Nothing about the content changed — what it is, its
- * name, one line of what it gives you, how far in you are, one button. The full-bleed cover is
- * still the right shape on Home, where a single card answers «что у меня сегодня» and owns the
- * screen, and that is why `DeckCard` is still there and unchanged.
+ * the swipe was failing to say: there is more than one. What a ticket says is what the owner's
+ * prototype says on its covers — what it is, its name, the facts as pills («4 недели», «18 мин»,
+ * «без оборудования»), how far in you are, one button — and no longer the tagline sentence. The
+ * full-bleed cover is still the right shape on Home, where a single card answers «что у меня
+ * сегодня» and owns the screen, and that is why `DeckCard` is still there.
  *
  * A ticket is never the whole story: the tap-through is the course's own path or the challenge's
  * own day, where the detail lives.
  */
 import { courseTitle } from '@/content/catalogue';
 import { formatNumber, plural } from '@/i18n/index';
-import { courseLandingHref, subscribeHref } from '@/app/features/courses/courseMeta';
+import { coursePills, courseLandingHref, subscribeHref } from '@/app/features/courses/courseMeta';
 import { PHOTOS, type Photo } from '@/lib/media/photos';
 import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
 import { useT } from '@/app/hooks/useT';
@@ -76,7 +77,8 @@ export function ProgramDeck({
   onStartNode,
   onOpenMarathon,
 }: ProgramDeckProps) {
-  const { t, l, locale } = useT();
+  const tr = useT();
+  const { t, l, locale } = tr;
 
   if (entries.length === 0) return null;
 
@@ -116,7 +118,14 @@ export function ProgramDeck({
                     total: formatNumber(locale, marathon.days),
                   })}`}
                   title={marathon.title}
-                  lead={t('app.homeDeckMarathonLead')}
+                  /* Its one fact as a pill: how long the challenge runs. */
+                  pills={[
+                    plural(locale, marathon.days, {
+                      one: t('app.homeDeckGameTrialDayOne'),
+                      few: t('app.homeDeckGameTrialDayFew', { n: marathon.days }),
+                      many: t('app.homeDeckGameTrialDayMany', { n: marathon.days }),
+                    }),
+                  ]}
                   subtitle={
                     locked
                       ? t('app.homeDeckGameLocked')
@@ -135,7 +144,6 @@ export function ProgramDeck({
                             : t('app.marathonHomeAllDone')
                   }
                   pct={progress.pct}
-                  progressLabel={t('app.homeDeckProgressLabel')}
                   progressMeta={`${progress.done}/${progress.total}`}
                   {...(locked
                     ? {
@@ -166,7 +174,7 @@ export function ProgramDeck({
                   style={courseTileVars(course.tile)}
                   eyebrow={`${t('app.homeDeckCourse')} · ${t('app.homeCourseLocked')}`}
                   title={title}
-                  lead={l(course.tagline)}
+                  pills={coursePills(tr, course)}
                   ctaLabel={t('app.homeCourseGet')}
                   ctaHref={courseLandingHref(locale, course)}
                   openLabel={`${title} — ${t('app.homeCourseGet')}`}
@@ -197,15 +205,17 @@ export function ProgramDeck({
                     : `${t('app.homeDeckCourse')} · ${t('app.pathCompleted')}`
                 }
                 title={title}
-                lead={l(course.tagline)}
+                pills={coursePills(tr, course)}
                 pct={progress.pct}
-                progressLabel={t('app.homeDeckProgressLabel')}
                 progressMeta={`${progress.done}/${progress.total}`}
+                /* «Начать» on a course not yet begun, «Продолжить» once a day is behind you. */
                 ctaLabel={
                   next === null
                     ? t('app.homeTodayOpenPath')
                     : startable
-                      ? t('app.homeDeckStart')
+                      ? progress.done > 0
+                        ? t('app.homeDeckContinue')
+                        : t('app.homeDeckStart')
                       : t('app.homeTodayOpen')
                 }
                 onCta={() =>

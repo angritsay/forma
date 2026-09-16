@@ -25,14 +25,20 @@
  * lands on it before a word is read, and tapping the obvious one is the right move on the day you
  * have no opinion — which is most days. The other two are still one tap away, at the same size,
  * because the recommendation is advice and not a gate.
+ *
+ * The sheet is the owner's prototype's «Насколько тяжело сегодня?» almost line for line, and the
+ * title is set in its two weights — «НАСКОЛЬКО тяжело сегодня?» — because it is the one question
+ * the screen asks. The prototype's line under the title («Выбери — и разминка начнётся сразу»)
+ * is left out: the arrow on each row already says the row starts the session.
  */
 import { clsx } from 'clsx';
 import { Glyph } from '@/components/ui/Icon';
 import { Sheet } from '@/components/ui/Sheet';
 import { Spinner } from '@/components/ui/Spinner';
-import { formatNumber, plural } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
 import type { DifficultyChoice, Recommendation } from '@/lib/training/types';
+import { workLabel } from '@/app/features/courses/sessionEstimate';
+import { DisplayText } from '@/app/features/home/DisplayTitle';
 import { DIFFICULTY_LABEL } from './plan';
 
 /** One difficulty and what choosing it asks for: how much work, and how long it takes. */
@@ -64,7 +70,8 @@ export function DifficultySheet({
   pending,
   onPick,
 }: DifficultySheetProps) {
-  const { t, l, locale } = useT();
+  const tr = useT();
+  const { t, l } = tr;
   const busy = pending !== null;
 
   /*
@@ -80,7 +87,11 @@ export function DifficultySheet({
   const share = (o: DifficultyOption) => amount(o) / heaviest;
 
   return (
-    <Sheet open={open} onClose={onClose} title={t('app.nodeDifficultyTitle')}>
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title={<DisplayText text={t('app.nodeDifficultyTitle')} />}
+    >
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2.5">
           {options.map((o) => {
@@ -118,16 +129,17 @@ export function DifficultySheet({
                    * How much work, as a length, drawn to the same scale on all three rows: two
                    * choices that really are close draw as two bars that really are close.
                    */}
+                  {/* Rounded ends, like the prototype's bar: it is a figure, and figures here are pills and rings. */}
                   <span
                     aria-hidden="true"
                     className={clsx(
-                      'block h-[3px] w-full',
+                      'block h-1 w-full overflow-hidden rounded-pill',
                       isRecommended ? 'bg-on-primary/25' : 'bg-surface-3',
                     )}
                   >
                     <span
                       className={clsx(
-                        'block h-full transition-[width] duration-300 ease-(--ease-out)',
+                        'block h-full rounded-pill transition-[width] duration-300 ease-(--ease-out)',
                         isRecommended ? 'bg-on-primary' : 'bg-muted-2',
                       )}
                       style={{ width: `${Math.round(share(o) * 100)}%` }}
@@ -135,16 +147,7 @@ export function DifficultySheet({
                   </span>
 
                   <span className="tabular text-xs text-current opacity-70">
-                    {o.reps > 0
-                      ? plural(locale, o.reps, {
-                          one: t('app.nodeRepsOne', { n: formatNumber(locale, o.reps) }),
-                          few: t('app.nodeRepsFew', { n: formatNumber(locale, o.reps) }),
-                          many: t('app.nodeRepsMany', { n: formatNumber(locale, o.reps) }),
-                        })
-                      : t('app.nodeWorkMin', {
-                          min: Math.max(1, Math.round(o.workSec / 60)),
-                        })}{' '}
-                    · {t('app.nodeKcal', { n: o.calories })}
+                    {workLabel(tr, o)} · {t('app.nodeKcal', { n: o.calories })}
                   </span>
                 </span>
 
