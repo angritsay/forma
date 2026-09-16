@@ -40,7 +40,7 @@ import { Glyph } from '@/components/ui/Icon';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
-import { courseTitle } from '@/content/catalogue';
+import { courseTitle, findCourse } from '@/content/catalogue';
 import { courseTileVars } from '@/lib/ui/tile';
 import { PHOTOS } from '@/lib/media/photos';
 import { useT } from '@/app/hooks/useT';
@@ -51,7 +51,7 @@ import { DeckCard } from '@/app/features/programs/DeckCard';
 import { DisplayTitle } from '@/app/features/home/DisplayTitle';
 import { GameToday } from '@/app/features/home/GameToday';
 import { dayPart, GREETING_KEY, greetingName } from '@/app/features/home/greeting';
-import { ResumeCard } from '@/app/features/home/ResumeCard';
+import { resumeCard } from '@/app/features/home/resumeModel';
 import { TodayTasks, type TodayTask } from '@/app/features/home/TodayTasks';
 import { useMarathonDay, useMyMarathons } from '@/app/features/marathon/useMarathon';
 import { useTrainingContext } from '@/app/features/path/useTrainingContext';
@@ -96,10 +96,17 @@ function HomeSkeleton() {
  * So the invitation to pick a course is only ever shown when there is genuinely nothing: no course
  * and nothing left running. Deciding it here rather than in the JSX is what makes the two
  * impossible to render together — a `&&` in a template can be undone by anyone adding a branch.
+ *
+ * An unfinished session now outranks the course as well, not just the invitation. It used to sit
+ * beside it: a «ПРОДОЛЖИТЬ» strip above the card, and «НАЧАТЬ» on the card below. The owner's
+ * verdict was the same shape as the first one — «не может быть такого состояния что и продолжить
+ * тренировку и начать курс. На главном экране всегда должна быть только одна кнопка тренировки» —
+ * and for the same reason: two workout buttons at once do not say which one is today. The one that
+ * is already running wins, because it is the one the athlete actually started.
  */
 export function homeLead(hasCourse: boolean, hasResume: boolean): 'course' | 'resume' | 'choose' {
-  if (hasCourse) return 'course';
-  return hasResume ? 'resume' : 'choose';
+  if (hasResume) return 'resume';
+  return hasCourse ? 'course' : 'choose';
 }
 
 export default function HomeScreen() {
@@ -149,6 +156,37 @@ export default function HomeScreen() {
   const resumePath = useActiveWorkoutStore((s) =>
     activeWorkoutPath({ session: s.session, finishedAt: s.finishedAt }),
   );
+
+  /*
+   * The same store read as one object, for the card's words. Selected field by field rather than
+   * as a derived object: zustand compares the selector's result by identity, and `resumeCard(...)`
+   * built inside a selector is a fresh object on every store touch, which re-renders Home on every
+   * tick of the player's clock.
+   */
+  const resumeSession = useActiveWorkoutStore((s) => s.session);
+  const resumeFinishedAt = useActiveWorkoutStore((s) => s.finishedAt);
+  const resumeSteps = useActiveWorkoutStore((s) => s.steps);
+  const resumeStepIndex = useActiveWorkoutStore((s) => s.stepIndex);
+  const resume = useMemo(
+    () =>
+      resumeCard(
+        {
+          session: resumeSession,
+          finishedAt: resumeFinishedAt,
+          steps: resumeSteps,
+          stepIndex: resumeStepIndex,
+        },
+        t,
+        locale,
+      ),
+    [resumeSession, resumeFinishedAt, resumeSteps, resumeStepIndex, t, locale],
+  );
+  /* The course and workout the unfinished session belongs to — for its name and its colour. */
+  const resumeCourse = resume ? (findCourse(resume.courseId) ?? null) : null;
+  const resumeWorkout =
+    resumeCourse && resumeSession
+      ? (resumeCourse.workouts.find((w) => w.id === resumeSession.workoutId) ?? null)
+      : null;
 
   const { today, ownedCount } = useMemo(() => {
     const entries = buildDeck({
@@ -243,8 +281,38 @@ export default function HomeScreen() {
       (next.kind === 'workout' || next.kind === 'test' || next.kind === 'benchmark');
     body = (
       <div className="flex min-h-0 flex-1 flex-col gap-4">
-        <ResumeCard onResume={(path) => navigate(path)} />
-        {lead === 'course' && course ? (
+        {lead === 'resume' && resume ? (
+          /*
+           * The unfinished session, in today's card rather than in a strip above it — one card,
+           * one workout button (see `homeLead` and `features/home/resumeModel`). Same photograph
+           * and same shape as the course's own card, because it is the same slot answering the
+           * same question; only the words and where the button goes are different.
+           *
+           * No pills: «13 мин · 116 повторов» is the prescription of *today's* session, and the
+           * one being resumed may be another day's. A number that might be about something else
+           * is worse than no number.
+           */
+          <div className="-mx-6 flex min-h-0 flex-1 overflow-hidden md:-mx-10">
+            <DeckCard
+              photo={PHOTOS.homeToday}
+              priority
+              {...(resumeCourse ? { style: courseTileVars(resumeCourse.tile) } : {})}
+              eyebrow={t(resume.eyebrowKey)}
+              title={resumeWorkout ? l(resumeWorkout.name) : t('app.homeResumeFallback')}
+              lead={
+                resume.stoppedOn
+                  ? t('app.homeResumeAt', { name: resume.stoppedOn })
+                  : resumeCourse
+                    ? l(courseTitle(resumeCourse))
+                    : undefined
+              }
+              ctaLabel={t(resume.ctaKey)}
+              onCta={() => navigate(resume.path)}
+              onOpen={() => navigate(`/courses/${resume.courseId}`)}
+              {...(resumeCourse ? { openLabel: l(courseTitle(resumeCourse)) } : {})}
+            />
+          </div>
+        ) : lead === 'course' && course ? (
           /*
            * The one flexible element on the screen. Everything else is as tall as its content, so
            * this is what absorbs a task row appearing or the coach button being switched off —

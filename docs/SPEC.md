@@ -337,8 +337,8 @@ Landing (Astro, static, RU default / EN under `/en/`):
 /                          home
 /courses/                  courses hub
 /courses/<slug>/           course page + order form (5 pages per locale)
-/exercises/                exercise library hub (programmatic)
-/exercises/<slug>/         exercise page: still, how-to, cues, mistakes, scaling, related
+/exercises/                exercise library hub (programmatic; filmed movements only)
+/exercises/<slug>/         exercise page: clip, how-to, cues, mistakes, scaling, related
 /guides/                   guides hub (clusters)
 /guides/<slug>/            SEO article (content collection)
 /subscribe/               every course by subscription (monthly / annual), plan choice + order form
@@ -358,8 +358,12 @@ Products: a **course** is bought once and kept forever (`purchases`); a **subscr
 period runs, and is activated by the coach or by the Prodamus webhook; an **hour with the coach**
 (`content/site/booking.ts`) is the only product that uses his time. `/book` is drawn as the price:
 the coach's photograph and his name, one line about what the session is, the format as a pill, and
-then each length as one display-size figure — its price — over what it includes and one button.
-No labelled rows and no numbered «how it works» list: the three buttons are the three steps.
+then the lengths as a switch — the two durations on one line — over a single block: the chosen
+length's name, its price as one display-size figure, what it includes, and one button. The two used
+to be stacked as two blocks; on a phone the second started below the fold, so the comparison the
+stacking was for never happened, and «переключение по продолжительности сессии» is both the
+comparison and one screen's worth of screen. No labelled rows and no numbered «how it works» list:
+the buttons are the steps.
 
 The same `/app/` build runs inside Telegram as a Mini App (`src/lib/telegram/webapp.ts`): the SDK
 is loaded only when Telegram opened the page, Telegram's back button follows the route, and links
@@ -400,8 +404,8 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    (docs/TRAINING_SCIENCE §2). Three of the five numbers feed the index, the other two are written
    to `benchmarks`.
 3. **Home**: today, and nothing else. The greeting names the athlete and the avatar beside it opens
-   the profile; the resume strip if a session was left unfinished; today's session as one
-   full-width cover card; **the club as one ruled row** under it; one button offering an hour
+   the profile; **one** full-width cover card — today's session, or the unfinished one when there is
+   one; **the club as one ruled row** under it; one button offering an hour
    with the coach; then any task
    still owed — the assessment when it was postponed — and whatever the coach has assigned by
    hand. The deck of programmes moved to the «Программы» tab and the figures to «Прогресс».
@@ -421,6 +425,12 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    outside it, the same row with the task blurred, which is a truer invitation than an
    advertisement. Logging steps is **not** on Home: it is a number the athlete owes today, and it
    belongs with the rest of how they are doing, on «Прогресс».
+
+   **One workout button.** The card is the only place Home offers a workout, and it offers exactly
+   one. An unfinished session used to be a «ПРОДОЛЖИТЬ» strip above the card, with «НАЧАТЬ» on the
+   card below it — «не может быть такого состояния что и продолжить тренировку и начать курс». The
+   session already running wins the card (`homeLead`, `features/home/resumeModel.ts`): same
+   photograph, same shape, the unfinished workout's words, and the one button goes back into it.
 
    **The name.** The format is the «Клуб маленьких шагов» — «Клуб» where a label has one slot (the
    tab, the top row, the deck card), the full name where there is room (the screen's own head, the
@@ -534,6 +544,16 @@ sitemap/robots/llms → internal linking → hubs → IndexNow.
 - Programmatic families: exercises (from the library), courses, guides (Markdown collection with
   clusters), hubs per cluster. Internal links: every article links to ≥3 related pages; exercise
   pages link to courses using them.
+- **Only filmed movements get a page.** The library was written ahead of the camera — 90 movements
+  described, 26 shot — and an exercise page with no clip on it is a page failing at its only job,
+  ninety times over. `FILMED_EXERCISES` (`src/content/registry.ts`) is the boundary and it works
+  exactly like `LIVE_COURSES`: the entries stay in `content/`, and adding `video` to one is the whole
+  of putting its page back. The hub, the pages, the sitemap, the «Проще»/«Сложнее» links, the related
+  lists and the guides' `exercise:` links all read it. A guide that names an unfilmed movement keeps
+  its sentence and loses the link, and `seo:audit` prints one note per such reference — that list is
+  the filming queue. Nothing on sale is affected: «Форма с нуля» prescribes 26 movements and every
+  one is filmed (guarded by `src/content/filmed.test.ts`); the courses that use the rest are all
+  `published: false`.
 - `scripts/seo/audit.mjs`: title/description lengths, duplicates, hreflang pairs, broken internal
   links, minimum word count for guides (≥800 words), every exercise/course has both locales, sitemap
   coverage. Fails CI on errors.

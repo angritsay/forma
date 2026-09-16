@@ -5,9 +5,10 @@
  * without one it opens a message to the coach — a session is agreed with a person, not lost in a
  * form, and a length whose product does not exist yet can still be offered that way.
  *
- * This is the only screen where the two lengths stand side by side. Everywhere else the offer is
+ * This is the only screen where the two lengths are offered at all. Everywhere else the offer is
  * mentioned in passing and quotes «от {the cheaper price}», because a passing mention that names
- * one of two prices is picking for the reader.
+ * one of two prices is picking for the reader. Here they are a switch — one line holding both
+ * durations — over a single block of price, promises and button.
  *
  * Redrawn in the owner's prototype language: the coach's photograph, one line about what the hour
  * is, and then each length as its price — one display numeral — with one button under it. What
@@ -23,6 +24,7 @@ import { Button } from '@/components/ui/Button';
 import { Glyph } from '@/components/ui/Icon';
 import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useToast } from '@/components/ui/Toast';
 import { l } from '@/i18n/index';
 import { isDemo } from '@/lib/api/mode';
@@ -53,6 +55,14 @@ export default function BookScreen() {
   const profile = useSession((s) => s.profile);
   const user = useSession((s) => s.user);
   const [redirecting, setRedirecting] = useState(false);
+
+  /*
+   * Which length is showing. The first option leads because `content/site/booking.ts` orders them
+   * cheapest first, and the cheaper one is the lower step in: somebody who wants the hour will
+   * still find it, somebody unsure of the whole idea is looking for the half.
+   */
+  const [pick, setPick] = useState<BookingOption['id']>(BOOKING.options[0]?.id ?? 'half');
+  const option = BOOKING.options.find((o) => o.id === pick) ?? BOOKING.options[0];
 
   const email = profile?.email || user?.email || '';
   const name = l(COACH.name, locale);
@@ -114,20 +124,42 @@ export default function BookScreen() {
         </section>
 
         {/*
-         * The two lengths as two blocks, cheapest first. Each carries its own price, its own list
-         * of what fits in it, and its own button — a shared button with a length picker above it
-         * would make the person choose twice and read the price of the thing they did not pick.
+         * The lengths as a switch over one block, not as two blocks stacked.
+         *
+         * They used to stand one under the other, each with its own price, its own list and its own
+         * button, on the argument that a picker makes the person choose twice. The owner's verdict
+         * overrules it: «нужно сделать не разные карточки а переключение по продолжительности
+         * сессии. Чтобы проще и компактнее было». She is right about the shape — the two blocks are
+         * the same four things twice, and on a 390px phone the second one starts below the fold, so
+         * «two prices side by side» was never what the screen actually showed. A switch puts the
+         * two durations on one line, which is the comparison, and leaves one price, one list and
+         * one button under it.
+         *
+         * The segment is the duration, because that is what is being chosen. The price follows it
+         * and is not on the switch: a switch whose cells carry prices is asking to be read as the
+         * cheaper and the dearer rather than as the shorter and the longer.
          */}
-        <section className="flex flex-col gap-9">
-          {BOOKING.options.map((option) => (
+        <section className="flex flex-col gap-6">
+          {BOOKING.options.length > 1 ? (
+            <SegmentedControl
+              fullWidth
+              label={t('app.bookLengthLabel')}
+              value={pick}
+              onChange={setPick}
+              options={BOOKING.options.map((o) => ({
+                value: o.id,
+                label: t('app.bookDuration', { n: o.durationMin }),
+              }))}
+            />
+          ) : null}
+          {option ? (
             <Option
-              key={option.id}
               option={option}
               redirecting={redirecting}
               onPay={pay}
               contactHref={contactHref(l(option.name, locale))}
             />
-          ))}
+          ) : null}
         </section>
 
         <div className="flex flex-col gap-3 border-t border-border pt-5">
@@ -147,10 +179,9 @@ export default function BookScreen() {
  * One length, as a block: its name and duration, its price as the figure, what fits in it, and the
  * one action.
  *
- * The price is set at display size because it is what the person came to find out, and the two are
- * set identically — the person is comparing, and a price that is set differently from the other is
- * a price being argued for rather than stated. The duration became a pill: it is a fact about the
- * session and not a control, which is the whole of that distinction (`components/ui/Pill.tsx`).
+ * The price is set at display size because it is what the person came to find out. The duration is
+ * no longer repeated as a pill beside the name: it is on the switch above, and a screen that says
+ * «30 мин» twice within forty pixels is the kind of repetition the whole redraw was against.
  *
  * What fits in the length stays a list rather than becoming pills. These are the promises the
  * money buys — «Корректировка программы под цель, оборудование и ограничения» is fifty characters
@@ -173,11 +204,10 @@ function Option({
 
   return (
     <article className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
+      <div className="border-t border-border pt-4">
         <h4 className="font-display min-w-0 truncate text-lg leading-[1.24]">
           {l(option.name, locale)}
         </h4>
-        <Pill>{t('app.bookDuration', { n: option.durationMin })}</Pill>
       </div>
 
       <p className="display tabular text-[clamp(34px,11vw,48px)] leading-none">{price}</p>

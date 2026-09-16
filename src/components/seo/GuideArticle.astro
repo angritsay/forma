@@ -64,9 +64,15 @@ const clusterTitle = t(locale, `seo.cluster_${d.cluster}_title` as const);
 const authorName = l(COACH.name, locale);
 const updated = d.updatedAt !== d.publishedAt;
 
+/*
+ * Related movements, filmed ones only. These render as cards with links, and an unfilmed movement
+ * has no page for the card to open (`src/content/registry.ts`, FILMED_EXERCISES) — a guide about
+ * kettlebells can legitimately name six of them and have none of them shot yet. The frontmatter is
+ * not wrong and is not edited: the day the coach films one, its card comes back on its own.
+ */
 const relatedExercises = d.relatedExercises
   .map((id) => EXERCISE_BY_ID.get(id))
-  .filter((x): x is Exercise => x !== undefined);
+  .filter((x): x is Exercise => x !== undefined && x.video !== undefined);
 const relatedCourses = d.relatedCourses
   .map((id) => COURSE_BY_ID.get(id))
   .filter((x): x is Course => x !== undefined);

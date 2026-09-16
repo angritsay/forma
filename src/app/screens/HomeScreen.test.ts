@@ -15,10 +15,12 @@ describe('homeLead', () => {
     expect(homeLead(true, false)).toBe('course');
   });
 
-  it('still leads with the course when a session is also running', () => {
-    // Both are true and neither contradicts the other: the strip is an interruption to deal with,
-    // the card is what comes after it.
-    expect(homeLead(true, true)).toBe('course');
+  it('leads with the unfinished session even when a course is owned', () => {
+    // «На главном экране всегда должна быть только одна кнопка тренировки». The two used to be
+    // rendered together — a «ПРОДОЛЖИТЬ» strip over a «НАЧАТЬ» card — and then the screen offered
+    // two workouts without saying which one was today. The one already running wins.
+    expect(homeLead(true, true)).toBe('resume');
+    expect(homeLead(true, true)).not.toBe('course');
   });
 
   it('never offers to pick a course while a workout is unfinished', () => {

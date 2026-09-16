@@ -5,7 +5,7 @@
  */
 import type { Locale } from '@/content/schema';
 import { LOCALES } from '@/content/schema';
-import { EXERCISES } from '@/content/registry';
+import { FILMED_EXERCISES } from '@/content/registry';
 import { SITE_COURSES } from '@/content/published';
 import { l, t } from '@/i18n/index';
 import { localePath } from '@/lib/util/paths';
@@ -194,7 +194,9 @@ export function buildPages(guides: readonly GuideLike[]): SeoPage[] {
     }
   }
 
-  for (const ex of EXERCISES) {
+  // Filmed only: this list is the sitemap, the internal-link graph and the audit's idea of what
+  // exists, and an unfilmed movement has no page for any of them to point at.
+  for (const ex of FILMED_EXERCISES) {
     const alternates: Partial<Record<Locale, string>> = {};
     for (const loc of LOCALES) alternates[loc] = `/exercises/${ex.slug[loc]}/`;
     for (const locale of LOCALES) {

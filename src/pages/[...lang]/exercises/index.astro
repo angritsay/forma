@@ -10,11 +10,15 @@
  * numbered heading over rows of still + name + pills. The count line under the heading, the
  * kicker inside every row and the boxed count in every chip went — the figure says the first,
  * the heading says the second, and a count belongs beside the name, not in a box.
+ *
+ * The count is `FILMED_EXERCISES`, not the whole library: this hub lists movements the coach has
+ * actually filmed, because a page with no clip on it has nothing to show (docs/SPEC.md §11). The
+ * figure grows on its own the week he films more.
  */
 import Landing from '@/layouts/Landing.astro';
 import Breadcrumbs from '@/components/seo/Breadcrumbs.astro';
 import ExerciseCard from '@/components/exercises/ExerciseCard.astro';
-import { EXERCISES } from '@/content/registry';
+import { FILMED_EXERCISES } from '@/content/registry';
 import type { Locale } from '@/content/schema';
 import { l, plural, t } from '@/i18n/index';
 import { exercisesByPattern, patternName } from '@/lib/seo/exercises';
@@ -34,7 +38,7 @@ const url = canonicalUrl(site, locale, sitePath);
 const title = t(locale, 'seo.exercisesHubTitle');
 const description = t(locale, 'seo.exercisesHubDescription');
 const groups = exercisesByPattern(locale);
-const count = EXERCISES.length;
+const count = FILMED_EXERCISES.length;
 const countWord = plural(locale, count, {
   one: t(locale, 'seo.exerciseWordOne'),
   few: t(locale, 'seo.exerciseWordFew'),
@@ -75,7 +79,7 @@ const jsonLd = [
     <Breadcrumbs locale={locale} items={crumbs} />
 
     <!--
-      The figure and the heading share one row from `md`: «90 упражнений» on the right at display
+      The figure and the heading share one row from `md`: «26 упражнений» on the right at display
       size, the H1 on the left. On a phone they stack in reading order — the name of the page,
       then the number that sizes it — because the H1 has to come first for anything reading the
       document rather than looking at it.

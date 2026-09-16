@@ -600,6 +600,7 @@ export const app = {
   // Book a session
   bookTitle: 'Форма один на один',
   bookLead: 'Час про твои тренировки: техника, программа под твою цель, твои вопросы.',
+  bookLengthLabel: 'Длительность сессии',
   bookDuration: '{n} мин',
   bookPay: 'Оплатить {price}',
   bookPickTime: 'Выбрать время',

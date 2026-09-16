@@ -753,14 +753,25 @@ export function loadContentIndex(root) {
         for (const obj of collectObjectsWithId(value)) {
           if (!obj.slug || typeof obj.slug !== 'object') continue; // workouts / blocks / nodes
           const id = /** @type {string} */ (obj.id);
-          // `published: false` takes a course off sale: it keeps its content and its id, but it has
-          // no page, so a link to it must not be written as one. Anything else counts as on sale.
+          /*
+           * `published` here means "has a public page", and each kind answers it its own way.
+           *
+           * A course: `published: false` takes it off sale — it keeps its content and its id, but
+           * it has no page, so a link to it must not be written as one.
+           *
+           * An exercise: whether the coach has filmed it. The library was written ahead of the
+           * camera and most of it has no clip yet, and a page that exists to show you the movement
+           * with no movement on it is not a page (`src/content/registry.ts`, FILMED_EXERCISES).
+           * Either way the answer flows into `resolveContentLink`, which keeps a guide's sentence
+           * and drops the link rather than failing the build.
+           */
+          const published = label === 'exercise' ? obj.video != null : obj.published !== false;
           const entry = {
             id,
             slug: pickL10n(obj.slug),
             name: pickL10n(obj.name),
             file,
-            published: obj.published !== false,
+            published,
           };
           const prev = map.get(id);
           if (prev) {
@@ -1125,11 +1136,25 @@ export function auditGuides(guides, index, clusters = DEFAULT_GUIDE_CLUSTERS) {
           const r = resolveContentLink(`${kind}:${id}`, locale, ctx);
           if (!r || 'error' in r)
             push('error', `${field} "${id}": ${r && 'error' in r ? r.error : 'invalid id'}`);
-          // `related*` becomes a card with a link. Pointing one at a course that is not on sale
-          // would render a card to a page that was never built, so it is an error here rather
-          // than something the template has to remember to filter.
+          /*
+           * `related*` becomes a card with a link, and a target with no page has no card to be.
+           *
+           * For a course that is an error: the five held-back courses are a deliberate, temporary
+           * state the owner controls, and a guide pointing at one is a link she meant to have.
+           *
+           * For an exercise it is a note. Most of the library is not filmed yet — a guide about
+           * kettlebells names six movements and none of them are shot — so the frontmatter is not
+           * wrong, it is ahead of the camera, and failing the build over it would mean editing
+           * every guide twice: once to take the movement out and once to put it back. The template
+           * drops the card (`GuideArticle.astro`), and this line is how many will reappear.
+           */
           else if ('unpublished' in r)
-            push('error', `${field} "${id}": that course is not published (no page to link to)`);
+            push(
+              kind === 'exercise' ? 'info' : 'error',
+              kind === 'exercise'
+                ? `${field} "${id}": not filmed yet, so no card is drawn for it`
+                : `${field} "${id}": that course is not published (no page to link to)`,
+            );
         }
       }
       const cta =
