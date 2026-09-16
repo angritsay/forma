@@ -999,6 +999,36 @@ account itself is not usable as an identity — check
 
 ---
 
+## 9.1 A test week for the club («Клуб маленьких шагов»)
+
+`supabase/seed-club-week.sql` writes one seven-day club with seventeen tasks, so the format can be
+played with real accounts without typing a week into the admin panel first. Paste it into the SQL
+editor (Supabase → SQL Editor → New query) and run it.
+
+It owns exactly one row — the marathon whose slug is `klub_test` — and rewrites that row and its
+tasks every time it runs. Any other marathon is untouched, including a real one running at the same
+time. Editing a line in the file and re-running is the intended way to change the plan.
+
+Day 1 is the day you run it. To rehearse a week already in progress, change `current_date` to
+`current_date - 3` at the top and re-run: today becomes day 4, with three days behind it.
+
+The testers are **not** in the file. It ends with a commented block to fill in with two real
+addresses and run separately — the repository is public, and an email committed to it is published
+forever. A member can be added before they have ever signed in; the club finds them by the address
+they sign in with, exactly as a course purchase does.
+
+Deleting the whole thing, tasks, people and proof included:
+
+```sql
+delete from public.marathons where slug = 'klub_test';
+```
+
+Verified against a throwaway Postgres 16 with every migration applied: the script runs clean, runs
+twice without duplicating anything, and leaves `marathon_day_index()` answering day 1 with three
+tasks due.
+
+---
+
 ## 10. Demo mode (try the app before provisioning anything)
 
 Demo mode replaces the Supabase backend with a **browser-local** one: the same API surface, the
