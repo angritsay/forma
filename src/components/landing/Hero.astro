@@ -1,21 +1,31 @@
 ---
 /**
- * Home hero: the one big line, two CTAs, the fact chips and a full-bleed monochrome photograph.
+ * Home hero: the one big line, one line under it, the facts as pills, one button — over a
+ * full-bleed monochrome photograph.
  *
- * The composition is editorial rather than centred: a 7/5 grid instead of a balanced split, the
- * columns aligned on their baselines rather than their middles, the photograph running past the
- * page gutter with a vertical kicker down its outer margin, and one "crosshair" plate cut into
- * its corner for the brand's formula. The headline is the brand's main typographic device — two
- * weights in one line, 800 and 200: «КРОССФИТ ДОМА, который подстраивается под тебя». The copy
- * is not touched; the split falls at the first comma, or after the first two words when there
- * is none, and `thin` overrides it where a page knows better.
+ * On the phone this is the owner's prototype's «Программы» screen (`design/ui_kits/app-v2`): the
+ * photograph *is* the screen, the type sits low on it over a scrim, and the facts that used to be
+ * a paragraph («Пожизненный доступ, видео к каждому упражнению, нагрузка растёт вместе с тобой»)
+ * are a row of pills. Her rule for this round was «МИНИМУМ текста, максимум визуала»; a hero that
+ * gave the photograph the bottom half of the first screen and three lines of body copy the top was
+ * the old ratio.
  *
- * `photo` wins when it is set; a frame from the named movement's clip stands in, so the hero
- * still renders before a usable photograph exists.
+ * From `md` the composition returns to the editorial 7/5 grid the landing already had: columns
+ * aligned on their baselines, the photograph running past the page gutter with a vertical kicker
+ * down its outer margin. That layout works and was not the complaint; what changed on it is the
+ * same as on the phone — one line of copy, pills instead of chips, the plate with the brand's
+ * formula gone (the «Внутри тренировки» section says it as its headline).
+ *
+ * The headline is the brand's main typographic device — two weights in one line, 800 and 200:
+ * «КРОССФИТ ДОМА, который подстраивается под тебя». The copy is not touched; the split falls at
+ * the first comma, or after the first two words when there is none, and `thin` overrides it.
+ *
+ * `photo` wins when it is set; a frame from the named movement's clip stands in, so the hero still
+ * renders before a usable photograph exists.
  */
 import ExerciseStill from '@/components/media/ExerciseStill';
 import Button from './Button.astro';
-import FeatureChip from './FeatureChip.astro';
+import Pill from './Pill.astro';
 
 interface Props {
   title: string;
@@ -23,18 +33,19 @@ interface Props {
   thin?: string;
   subtitle: string;
   primary: { label: string; href: string };
-  secondary: { label: string; href: string };
+  /** Shown from `md` only: the phone gets one button, and the app is one tap away in the menu. */
+  secondary?: { label: string; href: string };
+  /** Facts, as pills. */
   chips: string[];
   /** Movement whose still stands in for the photograph. */
   figure: { exerciseId: string };
   /** The coach, photographed. Takes precedence over `figure`. */
   photo?: { src: string; alt: string };
+  /** The kicker over the headline and down the photograph's edge. */
   tileTop: string;
-  tileBottom: string;
 }
 
-const { title, subtitle, primary, secondary, chips, figure, photo, tileTop, tileBottom } =
-  Astro.props;
+const { title, subtitle, primary, secondary, chips, figure, photo, tileTop } = Astro.props;
 
 /** Where the heavy half of the headline ends: at the first comma, else after two words. */
 function splitHeadline(text: string, thin?: string): [string, string] {
@@ -52,55 +63,67 @@ const [heavy, light] = splitHeadline(title, Astro.props.thin);
 ---
 
 <!--
-  `overflow-x-clip`, and it is load-bearing rather than tidy. The photograph below bleeds past the
-  gutter with a negative right margin, which is the point of it — but the bleed only has somewhere
-  to go once the viewport is wider than `max-w-6xl` (1152px) and the centred container has slack at
-  its sides. Between 768 and 1152 — every tablet, and a small laptop — there was no slack, so the
-  40px of photograph hung off the right edge of the document and the whole page could be scrolled
-  sideways: 1044px of scroll width in a 1024px window, measured.
+  `isolate` + the photograph at `-z-10`: on the phone the picture is absolutely positioned behind
+  the type inside this section's own stacking context, so it can never slide under the page or over
+  the glass header. `overflow-x-clip` is load-bearing (not `hidden`, which would make this a scroll
+  container and stop the sticky header): from `md` the photograph bleeds past the gutter with a
+  negative right margin, and between 768 and 1152 there is no slack beside the container for it to
+  bleed into — 1044px of scroll width in a 1024px window, measured, before the clip.
 
-  `clip` rather than `hidden`: `overflow: hidden` would make this a scroll container, and a scroll
-  container between the sticky header and the page is how sticky silently stops working.
+  `min-h-[86svh]` on the phone: the first screen is the photograph with the type at its foot, and
+  the 14% left over is the top of the next section showing — the hint that there is one.
 -->
 <section
-  class="mx-auto grid max-w-6xl items-end gap-12 overflow-x-clip px-5 pt-10 pb-16 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:gap-14 md:pt-20 md:pb-28"
+  class="relative isolate mx-auto flex min-h-[86svh] max-w-6xl flex-col justify-end overflow-x-clip px-5 pt-10 pb-12 md:grid md:min-h-0 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:items-end md:gap-14 md:pt-20 md:pb-28"
 >
   <div class="relative z-10">
     <p class="eyebrow">{tileTop}</p>
-    <h1 class="display mt-6 max-w-[16ch] text-[clamp(1.75rem,6.5vw,2.75rem)]">
+    <h1 class="display mt-5 max-w-[16ch] text-[clamp(1.75rem,7vw,2.75rem)]">
       {heavy}{light && <span class="t-thin">{light}</span>}
     </h1>
-    <p class="mt-7 max-w-xl text-lg leading-relaxed text-muted">{subtitle}</p>
-    <div class="mt-10 flex flex-wrap items-center gap-4">
-      <Button href={primary.href} size="lg">{primary.label}</Button>
-      <Button href={secondary.href} variant="secondary" size="lg">{secondary.label}</Button>
-    </div>
-    <ul class="mt-10 flex flex-wrap gap-2 border-t border-border pt-5">
+    <p class="mt-5 max-w-xl text-base leading-relaxed text-muted md:text-lg">{subtitle}</p>
+    <ul class="mt-6 flex flex-wrap gap-2">
       {
         chips.map((c) => (
-          <li>
-            <FeatureChip tone="outline">{c}</FeatureChip>
+          <li class="flex max-w-full">
+            <Pill>{c}</Pill>
           </li>
         ))
       }
     </ul>
+    <div class="mt-8 flex flex-wrap items-center gap-3">
+      <Button href={primary.href} size="lg" class="w-full sm:w-auto">{primary.label}</Button>
+      {
+        secondary && (
+          <Button href={secondary.href} variant="secondary" size="lg" class="max-md:hidden">
+            {secondary.label}
+          </Button>
+        )
+      }
+    </div>
   </div>
 
   <!--
-    `-mr-5` on the phone, `md:-mr-10` above it: the photograph runs past the page gutter. Square
-    corners, monochrome, grain — a photograph is the one element in this system allowed to reach
-    the edge of the page, and rounding it would turn it straight back into a tile.
+    The photograph. Absolute and full-bleed on the phone; a 4:5 frame in the second column from
+    `md`, with `-mr-10` running it past the gutter. Square corners, monochrome, grain — a photograph
+    is the one element in this system allowed to reach the edge of the page, and rounding it would
+    turn it straight back into a tile.
   -->
-  <div class="relative -mr-5 md:-mr-10">
+  <div class="absolute inset-0 -z-10 md:relative md:inset-auto md:z-0 md:-mr-10">
     <div
       class:list={[
-        'relative flex aspect-[4/5] w-full items-center justify-center overflow-hidden',
+        'relative h-full w-full overflow-hidden md:aspect-[4/5] md:h-auto',
         photo ? 'bg-surface' : 'hero-art',
       ]}
     >
       {
         photo ? (
           <>
+            {/*
+              `object-[35%_30%]` on the phone: the frame is 3:4 and the screen behind the type is
+              taller than that, so the sides are cropped — and the coach stands a third of the way
+              in from the left, which a centred crop would cut through.
+            */}
             <img
               src={photo.src}
               alt={photo.alt}
@@ -108,26 +131,29 @@ const [heavy, light] = splitHeadline(title, Astro.props.thin);
               height="1125"
               fetchpriority="high"
               decoding="async"
-              class="photo-mono absolute inset-0 size-full object-cover"
+              class="photo-mono absolute inset-0 size-full object-cover object-[35%_30%] md:object-center"
             />
             <div class="photo-grain" aria-hidden="true" />
             <div class="photo-scrim" aria-hidden="true" />
+            {/*
+              A second, page-coloured scrim for the phone only, where the type stands on the
+              picture: `.photo-scrim` is drawn for a caption in the bottom third, and a headline,
+              a paragraph, a row of pills and a button need the bottom half to be nearly ground.
+            */}
+            <div
+              class="absolute inset-0 bg-linear-to-t from-bg via-bg/80 via-45% to-transparent md:hidden"
+              aria-hidden="true"
+            />
           </>
         ) : (
-          <ExerciseStill exerciseId={figure.exerciseId} loading="eager" />
+          <div class="absolute inset-0 flex items-center justify-center">
+            <ExerciseStill exerciseId={figure.exerciseId} loading="eager" />
+          </div>
         )
       }
     </div>
     <span class="eyebrow kicker-vertical absolute top-1 -left-5 hidden md:block" aria-hidden="true">
       {tileTop}
     </span>
-    <!--
-      The one crosshair plate on this screen. No course is in scope on the home page, so the
-      ticks fall back to white; on a course page the same plate would take the programme colour.
-    -->
-    <div class="plate-target absolute bottom-6 -left-3 max-w-[16rem] px-5 py-4 md:-left-10">
-      <span class="plate-ticks"></span>
-      <p class="font-display text-[13px] leading-snug">{tileBottom}</p>
-    </div>
   </div>
 </section>

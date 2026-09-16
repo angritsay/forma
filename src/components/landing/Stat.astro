@@ -1,0 +1,42 @@
+---
+/**
+ * A figure and its word: «4» over «недели», «~18» over «мин», «7 000» over «шагов».
+ *
+ * The number is bigger than the word — the rule the owner's prototype (`design/ui_kits/app-v2`,
+ * «Сложность»: «15 / мин», «18 / мин») applies wherever a screen has a key figure, and the reason
+ * this exists as its own component rather than as a paragraph with a bold number in it. A fact the
+ * page used to spell out in a sentence («четыре недели по пять тренировок примерно по 18 минут»)
+ * is three of these in a row, and the sentence is gone.
+ *
+ * Unbounded at the display weight, tabular so a row of them aligns on the digits. `course` puts the
+ * programme colour on the digits — the brandbook's «цвет красит номера» — for the strip under a
+ * course's own headline; the default is white, for a figure that belongs to the product rather than
+ * to one programme.
+ */
+interface Props {
+  value: string;
+  label: string;
+  tone?: 'default' | 'course';
+  /** `lg` is the strip under a headline; `md` a figure inside a band that has a headline already. */
+  size?: 'md' | 'lg';
+  class?: string;
+}
+const { value, label, tone = 'default', size = 'lg', class: extra = '' } = Astro.props;
+const sizes = {
+  lg: 'text-[2.5rem] md:text-5xl',
+  md: 'text-3xl md:text-4xl',
+};
+---
+
+<div class={`flex min-w-0 flex-col ${extra}`}>
+  <span
+    class:list={[
+      'numeral tabular leading-none',
+      sizes[size],
+      tone === 'course' ? 'text-course' : 'text-text',
+    ]}>{value}</span
+  >
+  <!-- The word wraps rather than truncates: three of these share a phone's width, and «тренировок»
+       at 320px did not fit on one line. A clipped unit is worse than a unit on two lines. -->
+  <span class="eyebrow mt-2">{label}</span>
+</div>

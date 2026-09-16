@@ -1,15 +1,26 @@
 ---
 /**
- * Weeks accordion listing every node of a course: the day's numeral, its title and its kind.
+ * Weeks accordion listing every day of a course.
  *
- * No kind icons. A day on the path is told apart by its number and the word after it —
- * «День 3 · Отдых» — which is what the icon row was trying to say with five little pictures.
- * Rows are hairlines, the toggle is a + glyph that turns into × when the week is open, and the
- * deload week is stamped with an outlined badge rather than a filled one.
+ * A week's row is its name and its facts as pills — «5 тренировок», «2 дня отдыха», «Разгрузка» —
+ * which is what the «5 · 2» figure it used to show was trying to say without saying it. A day's
+ * row is a circle with its number and its title, one line: the owner's prototype (`design/ui_kits/
+ * app-v2`, «Путь») draws a day as a numbered circle and a title, and the second line («День 3 ·
+ * Тренировка · …») repeated the number, then said «тренировка» about a row in a list of
+ * trainings. The kind is shown only where it is not a workout — rest and its step goal, a test —
+ * and as a pill, because it is a fact about the day and not a control.
+ *
+ * Rows are hairlines, the toggle is a + glyph that turns into × when the week is open.
  */
 import type { Course, Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
-import { groupNodesByWeek, nodeKindLabel } from './courseHelpers';
+import {
+  groupNodesByWeek,
+  nodeKindLabel,
+  restDaysLabel,
+  workoutsCountLabel,
+} from './courseHelpers';
+import Pill from './Pill.astro';
 
 interface Props {
   locale: Locale;
@@ -21,62 +32,66 @@ const weeks = groupNodesByWeek(course);
 
 <div class="divide-y divide-border border-t border-border">
   {
-    weeks.map((w, i) => (
-      <details class="group py-4" open={i === 0}>
-        <summary class="flex cursor-pointer list-none items-center justify-between gap-4 [&::-webkit-details-marker]:hidden">
-          <span class="flex flex-wrap items-center gap-3">
-            <span class="font-display text-base">
-              {t(locale, 'landing.courseWeek', { n: w.week })}
-            </span>
-            {w.deload && (
-              <span class="inline-flex h-6 items-center rounded-control border border-border-strong px-2.5 text-[11px] font-semibold tracking-[0.12em] text-warning uppercase">
-                {t(locale, 'landing.courseDeload')}
+    weeks.map((w, i) => {
+      const workouts = w.nodes.filter((n) => n.kind !== 'rest').length;
+      const rest = w.nodes.filter((n) => n.kind === 'rest').length;
+      return (
+        <details class="group py-4" open={i === 0}>
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-4 [&::-webkit-details-marker]:hidden">
+            <span class="flex min-w-0 flex-wrap items-center gap-2">
+              <span class="font-display mr-1 text-base">
+                {t(locale, 'landing.courseWeek', { n: w.week })}
               </span>
-            )}
-          </span>
-          <span class="flex items-center gap-4 text-sm text-muted">
-            <span class="tabular hidden sm:inline">
-              {w.nodes.filter((n) => n.kind !== 'rest').length} ·{' '}
-              {w.nodes.filter((n) => n.kind === 'rest').length}
+              <Pill tone="course" size="sm">
+                {workoutsCountLabel(locale, workouts)}
+              </Pill>
+              {rest > 0 && <Pill size="sm">{restDaysLabel(locale, rest)}</Pill>}
+              {w.deload && <Pill size="sm">{t(locale, 'landing.courseDeload')}</Pill>}
             </span>
             <span
-              class="glyph flex size-8 items-center justify-center text-lg text-text transition-transform duration-150 ease-(--ease-out) group-open:rotate-45"
+              class="glyph flex size-8 shrink-0 items-center justify-center text-lg text-text transition-transform duration-150 ease-(--ease-out) group-open:rotate-45"
               aria-hidden="true"
             >
               +
             </span>
-          </span>
-        </summary>
-        <ol class="mt-3 flex flex-col divide-y divide-border">
-          {w.nodes.map((n) => (
-            <li class="flex items-baseline gap-4 py-2.5">
-              <span
-                class:list={[
-                  'numeral w-8 shrink-0 text-sm',
-                  n.kind === 'rest' ? 'text-muted-2' : 'text-text',
-                ]}
-                aria-hidden="true"
-              >
-                {String(n.day).padStart(2, '0')}
-              </span>
-              <span class="flex min-w-0 flex-1 flex-col">
+          </summary>
+          <ol class="mt-3 flex flex-col divide-y divide-border">
+            {w.nodes.map((n) => (
+              <li class="flex items-center gap-4 py-2.5">
+                {/* The day as a circle: a rank is a circle (CHANGELOG §10). Rest days are outlined
+                    quietly; a working day gets the stronger hairline. */}
                 <span
                   class:list={[
-                    'truncate text-sm font-medium',
+                    'numeral tabular flex size-8 shrink-0 items-center justify-center rounded-pill border text-xs',
+                    n.kind === 'rest'
+                      ? 'border-border text-muted-2'
+                      : 'border-border-strong text-text',
+                  ]}
+                  aria-hidden="true"
+                >
+                  {String(n.day).padStart(2, '0')}
+                </span>
+                <span
+                  class:list={[
+                    'min-w-0 flex-1 truncate text-sm font-medium',
                     n.kind === 'rest' ? 'text-muted' : 'text-text',
                   ]}
                 >
                   {l(n.title, locale)}
                 </span>
-                <span class="text-xs text-muted">
-                  {t(locale, 'landing.courseDay', { n: n.day })} · {nodeKindLabel(locale, n)}
-                  {n.subtitle ? ` · ${l(n.subtitle, locale)}` : ''}
-                </span>
-              </span>
-            </li>
-          ))}
-        </ol>
-      </details>
-    ))
+                {/* The pill is capped so the day's name never loses out to it: `flex-1` gives the
+                    title a basis of 0, so at 390px the pill's content width took the row and
+                    «Отдых и прогулка» became «Отдых и прогу…». The pill truncates first now. */}
+                {n.kind !== 'workout' && (
+                  <Pill size="sm" class="max-w-[45%]">
+                    {nodeKindLabel(locale, n)}
+                  </Pill>
+                )}
+              </li>
+            ))}
+          </ol>
+        </details>
+      );
+    })
   }
 </div>

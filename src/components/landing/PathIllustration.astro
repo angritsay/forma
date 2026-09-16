@@ -3,11 +3,13 @@
  * The course path drawn with CSS/SVG from real course nodes (first six).
  * Illustrative state: first node done, second up next, the rest locked.
  *
- * Nodes are square, and there are no kind icons: a node shows the number of its day, the done
- * one a ✓ glyph. The one colour on the illustration is the programme colour of the course, set
- * with `courseTileStyle()` on the root — it paints the progress fill and the number of the
- * current day, and nothing else. The current node is otherwise the white fill; the done one is
- * outlined; the locked ones are a quiet surface.
+ * Nodes are circles, and there are no kind icons: a node shows the number of its day, the done
+ * one a ✓ glyph. They were squares; the owner's prototype (`design/ui_kits/app-v2`, «Путь») draws
+ * a day as a circle — filled in the programme colour once it is done, white for the one that is
+ * next, outlined for the rest — and CHANGELOG §10 makes that the rule: a rank is a circle, and
+ * the colour paints progress. So the programme colour, set with `courseTileStyle()` on the root,
+ * paints the progress fill and the done day; the current day is the white fill; the locked ones
+ * are a hairline.
  */
 import type { CourseNode, Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
@@ -47,9 +49,9 @@ function stateOf(i: number): State {
   return i === 0 ? 'done' : i === 1 ? 'current' : 'locked';
 }
 const stateCls: Record<State, string> = {
-  done: 'border border-border-strong bg-surface-2 text-text',
+  done: 'bg-course text-on-course',
   current: 'bg-primary text-on-primary',
-  locked: 'border border-border bg-surface text-muted-2',
+  locked: 'border border-border-strong bg-transparent text-muted',
 };
 const stateLabel: Record<State, string> = {
   done: t(locale, 'landing.pathNodeDone'),
@@ -104,7 +106,7 @@ const doneShare = shown.length ? Math.round((1 / shown.length) * 100) : 0;
               style={`top:${pos.y - 22}px; ${labelLeft ? `right:${240 - pos.x - 22}px; flex-direction:row-reverse;` : `left:${pos.x - 22}px;`}`}
             >
               <span
-                class={`numeral flex size-11 shrink-0 items-center justify-center text-sm ${stateCls[state]}`}
+                class={`numeral flex size-11 shrink-0 items-center justify-center rounded-pill text-sm ${stateCls[state]}`}
                 title={stateLabel[state]}
               >
                 {state === 'done' ? (
@@ -119,9 +121,15 @@ const doneShare = shown.length ? Math.round((1 / shown.length) * 100) : 0;
                 class={`flex max-w-[120px] flex-col ${labelLeft ? 'items-end text-right' : ''}`}
               >
                 <span class="text-[12px] leading-tight font-semibold">{l(node.title, locale)}</span>
-                <span class="text-[10px] leading-tight text-muted">
-                  {nodeKindLabel(locale, node)}
-                </span>
+                {/* The kind only where it is not a workout: «Тренировка 3 / Тренировка» was a
+                    caption repeating the name above it — the label CHANGELOG §10 sends away.
+                    A rest day and a test still earn their second line: they are the exception on
+                    a path otherwise made of workouts. */}
+                {node.kind !== 'workout' && (
+                  <span class="text-[10px] leading-tight text-muted">
+                    {nodeKindLabel(locale, node)}
+                  </span>
+                )}
               </span>
             </li>
           );

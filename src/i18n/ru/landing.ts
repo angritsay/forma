@@ -29,6 +29,13 @@ export const landing = {
   workoutWordOne: 'тренировка',
   workoutWordFew: 'тренировки',
   workoutWordMany: 'тренировок',
+  // A block's own count, on the pill that names its format: «1 раунд», «3 раунда», «5 раундов».
+  roundWordOne: 'раунд',
+  roundWordFew: 'раунда',
+  roundWordMany: 'раундов',
+  setWordOne: 'подход',
+  setWordFew: 'подхода',
+  setWordMany: 'подходов',
   sessionsPerWeek: '{n} {word} в неделю',
   avgSession: '~{n} мин',
   priceFree: 'Бесплатно',
@@ -40,29 +47,26 @@ export const landing = {
 
   // Главная: hero
   heroTitle: 'Кроссфит дома, который подстраивается под тебя',
-  heroSubtitle:
-    'Курсы для дома — с оборудованием и без. Пожизненный доступ, видео к каждому упражнению, нагрузка растёт вместе с тобой.',
+  // One line under the headline; the facts it used to carry are the pills below it.
+  heroSubtitle: 'Курсы для дома, с оборудованием и без — нагрузка подстраивается под тебя.',
   heroCtaCourses: 'Выбрать курс',
   heroCtaApp: 'Открыть приложение',
   heroTileTop: 'Адаптивная нагрузка',
-  heroTileBottom: 'Объяснили → сделали → отдохнули',
   chipCourses: '{n} {word}',
   chipLifetime: 'Пожизненный доступ',
   chipAdaptive: 'Подстраивается под тебя',
   chipHome: 'Дома, с оборудованием и без',
+  chipVideo: 'Видео к каждому упражнению',
 
   // Главная: как это работает
   howEyebrow: 'Как это работает',
   howTitle: 'Три шага до первой тренировки',
   howStep1Title: 'Выбери курс',
-  howStep1Text:
-    'Пять программ: от первых тренировок без оборудования до гирь и турника. Каждая идёт по неделям, с тестом в начале и в конце.',
+  howStep1Text: 'Программа тренера по неделям: тест в начале и в конце.',
   howStep2Title: 'Оставь e-mail',
-  howStep2Text:
-    'Никаких паролей. Ты указываешь почту на странице курса, тренер подтверждает доступ — и курс закреплён за тобой навсегда.',
+  howStep2Text: 'Без паролей: почта на странице курса — и курс закреплён за тобой навсегда.',
   howStep3Title: 'Войди по коду и тренируйся',
-  howStep3Text:
-    'Открой приложение, введи код из письма — и вперёд: путь по неделям, таймер, подсказки по технике и нагрузка, которая подстраивается под тебя.',
+  howStep3Text: 'Код из письма — и вперёд: путь по неделям, таймер, подсказки по технике.',
 
   // Главная: курсы
   resultsEyebrow: 'Результаты',
@@ -73,24 +77,26 @@ export const landing = {
   coursesEyebrow: 'Курсы',
   coursesTitle: 'Выбери свою программу',
   coursesIntro:
-    'Каждый курс — программа по неделям: тест в начале, дни отдыха, разгрузочные недели. Купил один раз — доступ навсегда.',
+    'Программа по неделям с тестом, отдыхом и разгрузкой. Купил один раз — доступ навсегда.',
   coursesAll: 'Все курсы',
   cardView: 'Открыть курс',
+  /* The ticket's kicker: what kind of thing this is («Курс · Начальный»), as in the app. */
+  cardKicker: 'Курс',
 
   // Главная: адаптивная нагрузка
   adaptEyebrow: 'Адаптивная нагрузка',
   adaptTitle: 'У каждой тренировки три версии. Приложение подскажет, какая твоя',
   adaptIntro:
-    'Перед стартом выбираешь: легче, как обычно или тяжелее. После тренировки оцениваешь усилие по шкале от 1 до 10 — и следующая подстроится под тебя.',
+    'Перед стартом выбираешь: полегче, как обычно или посложнее. После — одна оценка усилия, и следующая подстроится.',
   adaptWorkoutLabel: 'Тренировка из курса «{course}»: {workout}',
-  adaptDuration: 'Время',
-  adaptPoints: 'Очки',
   adaptRecommended: 'Рекомендуем',
   adaptPlanTitle: 'Твой план',
-  adaptSets: '{n} × ',
+  // «72 очка» under the minutes of a difficulty row; the engine's real figure for this workout.
+  adaptPointsOne: '{n} очко',
+  adaptPointsFew: '{n} очка',
+  adaptPointsMany: '{n} очков',
   adaptRpeTitle: 'После тренировки — одна оценка',
-  adaptRpeIntro:
-    'Насколько тяжело было по шкале Борга от 1 до 10? От ответа зависит нагрузка на следующей тренировке.',
+  adaptRpeIntro: 'Насколько тяжело было по шкале от 1 до 10? От ответа зависит следующая нагрузка.',
   adaptRpeEasy: 'Легко · RPE 5',
   adaptRpeOk: 'В самый раз · RPE 7',
   adaptRpeHard: 'Слишком тяжело · RPE 9',
@@ -98,26 +104,29 @@ export const landing = {
   adaptNextTime: 'В следующий раз',
   adaptScaleNow: 'Коэффициент нагрузки: {scale}',
   adaptHowTitle: 'Правила, по которым это считается',
-  adaptHow1: 'Объём: легче ×0,85, тяжелее ×1,15; отдых — наоборот.',
-  adaptHow2: 'Очки: легче ×0,8, тяжелее ×1,25. Серия от 7 дней даёт +10 %, от 30 дней — +20 %.',
-  adaptHow3: 'Разгрузочные недели: объём ×0,65, чтобы тело восстановилось.',
+  /*
+   * The engine's constants (src/lib/training) as pills, not as three sentences: each is one fact,
+   * and a fact that is not a control is a pill (design/CHANGELOG.md §10).
+   */
+  adaptRuleEasier: 'Полегче · объём ×0,85',
+  adaptRuleHarder: 'Посложнее · объём ×1,15',
+  adaptRulePoints: 'Очки ×0,8 / ×1,25',
+  adaptRuleStreak7: 'Серия 7 дней · +10 %',
+  adaptRuleStreak30: 'Серия 30 дней · +20 %',
+  adaptRuleDeload: 'Разгрузка · объём ×0,65',
 
   // Главная: путь и мотивация
   pathEyebrow: 'Путь и мотивация',
   pathTitle: 'Каждая неделя — как уровень в игре',
-  pathIntro:
-    'Курс — это путь: тренировки, тесты и дни отдыха идут по порядку, и ты всегда видишь, где находишься.',
+  pathIntro: 'Тренировки, тесты и дни отдыха идут по порядку — ты всегда видишь, где находишься.',
   pathStreakTitle: 'Серия',
-  pathStreakText:
-    'День засчитывается, если ты потренировался или прошёл норму шагов. Сегодняшний день не ломает серию, пока не закончился.',
+  pathStreakText: 'День засчитан, если ты потренировался или прошёл норму шагов.',
   pathStreakBonus: '+10 % с 7-го дня',
   pathStepsTitle: '7 000 шагов в день отдыха',
-  pathStepsText:
-    'В дни без тренировок цель — 7 000 шагов. Записал шаги — получил очки и сохранил серию.',
+  pathStepsText: 'Записал шаги — получил очки и сохранил серию.',
   pathStepsGoal: 'цель',
   pathBoardTitle: 'Таблица лидеров',
-  pathBoardText:
-    'Очки за тренировки и шаги идут в общий рейтинг: за неделю и за всё время. Только имя и аватар, без e-mail.',
+  pathBoardText: 'Очки за тренировки и шаги — в общий рейтинг за неделю и за всё время.',
   pathYou: 'ты',
   pathWeekdays: 'П,В,С,Ч,П,С,В',
   pathNodeDone: 'Сделано',
@@ -128,19 +137,15 @@ export const landing = {
   // Главная: внутри тренировки
   insideEyebrow: 'Внутри тренировки',
   insideTitle: 'Объяснили, показали, засекли',
-  insideIntro:
-    'Плеер ведёт тебя по каждому упражнению: что это, как двигаться, сколько по времени или повторам — и отдых.',
+  insideIntro: 'Плеер ведёт по каждому упражнению: что это, как двигаться, сколько — и отдых.',
   insideStep1Title: 'Объяснение',
-  insideStep1Text:
-    'Название, ключевые подсказки по технике и типичные ошибки — перед каждым упражнением.',
+  insideStep1Text: 'Подсказки по технике и типичные ошибки перед каждым упражнением.',
   insideStep2Title: 'Анимация',
-  insideStep2Text:
-    'Фигурка показывает движение в темпе. Если у упражнения есть видео — оно тоже здесь.',
+  insideStep2Text: 'Фигурка показывает движение в темпе; где есть видео — оно здесь.',
   insideStep3Title: 'Таймер или повторы',
-  insideStep3Text:
-    'Секунды отсчитываются сами, повторы отмечаешь кнопкой «Готово». Вес показан, если упражнение с гантелью или гирей.',
+  insideStep3Text: 'Секунды идут сами, повторы отмечаешь кнопкой «Готово».',
   insideStep4Title: 'Отдых',
-  insideStep4Text: 'Обратный отсчёт до следующего упражнения. Можно пропустить, если готов раньше.',
+  insideStep4Text: 'Обратный отсчёт до следующего упражнения — можно пропустить.',
   insideTimerLabel: 'Таймер',
   insideRepsLabel: 'Повторы',
   insideRestLabel: 'Отдых',
@@ -165,8 +170,7 @@ export const landing = {
   coursesHubDescription:
     'Пять курсов кроссфита для дома: без оборудования, с гантелями, гирей и турником. Пожизненный доступ, адаптивная нагрузка, видео к упражнениям.',
   coursesHubH1: 'Курсы',
-  coursesHubIntro:
-    'Выбери по оборудованию и уровню. Каждый курс — программа по неделям с тестом в начале и в конце, доступ навсегда.',
+  coursesHubIntro: 'Программа по неделям с тестом в начале и в конце. Доступ навсегда.',
   filterEquipment: 'Оборудование',
   filterLevel: 'Уровень',
   filterAll: 'Все',
@@ -191,22 +195,33 @@ export const landing = {
   courseSampleIntro: 'Первая тренировка курса — как в приложении, до подстройки под твой уровень.',
   courseAdaptTitle: 'Как приложение подстраивается',
   courseAdaptText:
-    'Перед каждой тренировкой ты выбираешь: легче, как обычно или тяжелее — приложение подсказывает, что выбрать. После — оцениваешь усилие от 1 до 10, и следующая нагрузка меняется: +5 %, когда было легко, −5 %, когда слишком тяжело. Разгрузочные недели встроены в программу.',
+    'Перед тренировкой выбираешь: полегче, как обычно или посложнее. После — оценка усилия от 1 до 10, и следующая нагрузка меняется.',
+  // The three numbers of that paragraph, as pills.
+  courseAdaptEasy: '+5 % когда легко',
+  courseAdaptHard: '−5 % когда тяжело',
+  courseAdaptDeload: 'Разгрузка встроена',
+  /* «О курсе» shows one paragraph; the rest of the coach's text opens under this. */
+  courseMoreAbout: 'Подробнее о курсе',
+  // «2 дня отдыха» on a week's row of the programme.
+  restDayOne: 'день отдыха',
+  restDayFew: 'дня отдыха',
+  restDayMany: 'дней отдыха',
   courseFaqTitle: 'Вопросы о курсе',
   courseGuidesTitle: 'Гайды по теме',
   courseExercisesTitle: 'Упражнения курса',
   courseOrderTitle: 'Получить доступ к курсу',
-  courseOrderIntro:
-    'Оставь e-mail — тренер подтвердит доступ, и курс появится в приложении под этой почтой.',
+  courseOrderIntro: 'Оставь e-mail — тренер подтвердит доступ, и курс появится в приложении.',
   courseLifetimeNote: 'Одна оплата, доступ навсегда',
   courseOrSubscribe: 'Или все курсы по подписке — от {price} в месяц',
   nodeWorkout: 'Тренировка',
-  nodeRest: 'Отдых · {steps} шагов',
+  // The steps alone: every rest day on every course is titled «Отдых и прогулка», and the pill
+  // beside that title said «Отдых» a second time — and pushed the title itself into an ellipsis.
+  nodeRest: '{steps} шагов',
   nodeTest: 'Тест',
   nodeBenchmark: 'Бенчмарк',
   nodeMilestone: 'Веха',
-  blockRounds: '{n} раундов',
-  blockSets: '{n} подходов',
+  blockRounds: '{n} {word}',
+  blockSets: '{n} {word}',
   blockMinutes: '{n} мин',
   blockTabata: '{work} с работа / {rest} с отдых × {n}',
   breadcrumbHome: 'Главная',
@@ -246,7 +261,7 @@ export const landing = {
     'Все курсы Forma в одной подписке: пять домашних кроссфит-программ, нагрузка под тебя, новые курсы включены. Помесячно или на год.',
   subscribeEyebrow: 'Подписка',
   subscribeLead:
-    'Один курс — это старт. Подписка — это как продолжать: все программы, следующая уже готова, когда заканчивается эта, а нагрузка по-прежнему твоя.',
+    'Один курс — это старт. Подписка — все программы, и следующая уже готова, когда заканчивается эта.',
   subscribeIncludes: 'Что входит',
   subscribePlanLabel: 'Тариф',
   subscribePerMonth: '/ месяц',
@@ -254,7 +269,7 @@ export const landing = {
   subscribeBestValue: 'Выгоднее',
   subscribeOrderTitle: 'Оформить подписку',
   subscribeOrderIntro:
-    'Оставь e-mail, оплати на следующей странице — и курсы откроются в приложении под этой почтой, как только пройдёт платёж.',
+    'Оставь e-mail и оплати на следующей странице — курсы откроются в приложении под этой почтой.',
   subscribeNote:
     'Продлевается автоматически · отмена в любой момент · доступ до конца оплаченного периода',
   subscribeSuccessText:

@@ -1,7 +1,12 @@
 ---
 /**
- * Landing home: hero, how it works, courses, adaptive-load demo, path & motivation,
+ * Landing home: hero, how it works, the course as a ticket, adaptive-load demo, path & motivation,
  * inside a workout, coach, FAQ, final CTA. JSON-LD: WebSite, Organization, FAQPage, ItemList.
+ *
+ * Drawn in the owner's prototype's language (design/CHANGELOG.md §10): every `<h1>`/`<h2>` and the
+ * copy that carries the keywords stays, because the page is the site's front door for search; what
+ * changed is the ratio of words to figures around them. Each section keeps one or two sentences,
+ * and the facts those sentences used to carry are pills, big numerals, rings and circles.
  */
 import Landing from '@/layouts/Landing.astro';
 import ExerciseStill from '@/components/media/ExerciseStill';
@@ -13,10 +18,11 @@ import SubscribeBanner from '@/components/landing/SubscribeBanner.astro';
 import Cta from '@/components/landing/Cta.astro';
 import DifficultyDemo from '@/components/landing/DifficultyDemo';
 import Faq from '@/components/landing/Faq.astro';
-import FeatureChip from '@/components/landing/FeatureChip.astro';
 import Hero from '@/components/landing/Hero.astro';
 import PathIllustration from '@/components/landing/PathIllustration.astro';
 import PhoneFrame from '@/components/landing/PhoneFrame.astro';
+import Pill from '@/components/landing/Pill.astro';
+import Ring from '@/components/landing/Ring.astro';
 import Section from '@/components/landing/Section.astro';
 import Steps from '@/components/landing/Steps.astro';
 import { buildDemo, DEMO_COURSE_ID } from '@/components/landing/demo';
@@ -80,11 +86,16 @@ const explainTile = insideItems[0];
 const workTile = insideItems[1] ?? insideItems[0];
 const restSec = insideItems.find((x) => x.restSec > 0)?.restSec ?? 0;
 
+/*
+ * The hero's pills. «1 курс» is a fact that argues against itself, so the count only appears once
+ * there is more than one course on sale.
+ */
 const chips = [
-  SITE_COURSES.length > 0 ? coursesCountLabel(locale, SITE_COURSES.length) : '',
+  SITE_COURSES.length > 1 ? coursesCountLabel(locale, SITE_COURSES.length) : '',
   t(locale, 'landing.chipLifetime'),
   t(locale, 'landing.chipAdaptive'),
   t(locale, 'landing.chipHome'),
+  t(locale, 'landing.chipVideo'),
 ].filter(Boolean);
 
 const weekdays = t(locale, 'landing.pathWeekdays').split(',');
@@ -102,6 +113,16 @@ const boardRows = [
   { w: '100%', you: false },
   { w: '78%', you: true },
   { w: '61%', you: false },
+];
+
+// The engine's constants, as pills under the demo.
+const adaptRules = [
+  t(locale, 'landing.adaptRuleEasier'),
+  t(locale, 'landing.adaptRuleHarder'),
+  t(locale, 'landing.adaptRulePoints'),
+  t(locale, 'landing.adaptRuleStreak7'),
+  t(locale, 'landing.adaptRuleStreak30'),
+  t(locale, 'landing.adaptRuleDeload'),
 ];
 
 const jsonLd = [
@@ -128,7 +149,6 @@ const jsonLd = [
     figure={{ exerciseId: 'burpee' }}
     photo={heroPhoto}
     tileTop={t(locale, 'landing.heroTileTop')}
-    tileBottom={t(locale, 'landing.heroTileBottom')}
   />
 
   <Section
@@ -153,16 +173,27 @@ const jsonLd = [
     title={t(locale, 'landing.coursesTitle')}
     intro={t(locale, 'landing.coursesIntro')}
   >
-    <ul class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <!--
+      One course on sale lays its ticket sideways across the page; two or more stand in a grid.
+      The grid never asks for more columns than it has tickets — a lone 4:3 cover in one of three
+      columns is a postcard on an empty table.
+    -->
+    <ul
+      class:list={[
+        'grid gap-5',
+        SITE_COURSES.length >= 2 && 'sm:grid-cols-2',
+        SITE_COURSES.length >= 3 && 'lg:grid-cols-3',
+      ]}
+    >
       {
-        SITE_COURSES.map((c, i) => (
+        SITE_COURSES.map((c) => (
           <li>
-            <CourseCard course={c} locale={locale} n={i + 1} />
+            <CourseCard course={c} locale={locale} wide={SITE_COURSES.length === 1} />
           </li>
         ))
       }
     </ul>
-    <div class="mt-8">
+    <div class="mt-6">
       <Button href={href(locale, '/courses/')} variant="secondary">
         {t(locale, 'landing.coursesAll')}
         <span class="glyph" aria-hidden="true">→</span>
@@ -180,22 +211,16 @@ const jsonLd = [
         intro={t(locale, 'landing.adaptIntro')}
       >
         <DifficultyDemo client:visible {...demo} />
-        <div class="mt-10 border-t border-border pt-5">
+        {/* The rules behind the demo: six facts, six pills. */}
+        <div class="mt-8 border-t border-border pt-5">
           <h3 class="eyebrow-sentence">{t(locale, 'landing.adaptHowTitle')}</h3>
-          <ol class="mt-4 grid gap-x-8 text-sm leading-relaxed md:grid-cols-3">
-            {[
-              t(locale, 'landing.adaptHow1'),
-              t(locale, 'landing.adaptHow2'),
-              t(locale, 'landing.adaptHow3'),
-            ].map((rule, i) => (
-              <li class="flex items-baseline gap-4 border-t border-border py-4">
-                <span class="numeral tabular w-5 shrink-0 text-sm text-muted" aria-hidden="true">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <span>{rule}</span>
+          <ul class="mt-4 flex flex-wrap gap-2">
+            {adaptRules.map((rule) => (
+              <li class="flex max-w-full">
+                <Pill>{rule}</Pill>
               </li>
             ))}
-          </ol>
+          </ul>
         </div>
       </Section>
     )
@@ -222,96 +247,81 @@ const jsonLd = [
         )
       }
       <!--
-        Three facts as hairline columns rather than three cards. No icon on the streak — the
-        row of days is the picture — and the visitor's row on the board is the one white bar.
+        Three facts as hairline columns, each led by its figure: the week as a row of circles, the
+        steps goal inside a ring, the board as three circles and three bars. One title and one
+        sentence under each. A day and a person are circles (CHANGELOG §10); «ты» is a pill.
       -->
       <div class="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-3">
         <article class="flex flex-col gap-4 border-t border-border py-6">
-          <div class="flex items-center justify-between gap-3">
-            <span class="numeral tabular w-5 shrink-0 text-sm text-muted" aria-hidden="true"
-              >01</span
-            >
-            <FeatureChip tone="accent" size="sm">{t(locale, 'landing.pathStreakBonus')}</FeatureChip
-            >
+          <!--
+            `flex-wrap` and the week `shrink-0`: seven 36px circles are 288px of a 350px phone
+            column, so the bonus pill beside them had 50px and «+10 % с 7-го дня» lost its tail.
+            The week is a fixed object and the pill is what gives way — onto its own line.
+          -->
+          <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-3">
+            <ul class="flex shrink-0 gap-1.5" aria-hidden="true">
+              {
+                weekdays.map((d, i) => (
+                  <li
+                    class={`numeral flex size-9 items-center justify-center rounded-pill text-[11px] ${
+                      i < 3
+                        ? 'bg-primary text-on-primary'
+                        : i === 3
+                          ? 'border border-primary text-text'
+                          : 'border border-border-strong text-muted-2'
+                    }`}
+                  >
+                    {d}
+                  </li>
+                ))
+              }
+            </ul>
+            <Pill size="sm">{t(locale, 'landing.pathStreakBonus')}</Pill>
           </div>
-          <ul class="flex gap-1.5" aria-hidden="true">
-            {
-              weekdays.map((d, i) => (
-                <li
-                  class={`numeral flex size-8 items-center justify-center text-[11px] ${
-                    i < 3
-                      ? 'bg-primary text-on-primary'
-                      : i === 3
-                        ? 'border border-primary text-text'
-                        : 'border border-border text-muted-2'
-                  }`}
-                >
-                  {d}
-                </li>
-              ))
-            }
-          </ul>
           <h3 class="font-display text-base">{t(locale, 'landing.pathStreakTitle')}</h3>
           <p class="text-sm leading-relaxed text-muted">{t(locale, 'landing.pathStreakText')}</p>
         </article>
 
         <article class="flex flex-col gap-4 border-t border-border py-6">
-          <span class="numeral tabular w-5 shrink-0 text-sm text-muted" aria-hidden="true">02</span>
           <div class="flex items-center gap-4">
-            <!-- Ring: square (butt) caps, white stroke — the day's goal, not a course. -->
-            <svg width="72" height="72" viewBox="0 0 72 72" aria-hidden="true" class="shrink-0">
-              <circle
-                cx="36"
-                cy="36"
-                r="30"
-                fill="none"
-                stroke="currentColor"
-                class="text-surface-3"
-                stroke-width="6"></circle>
-              <circle
-                cx="36"
-                cy="36"
-                r="30"
-                fill="none"
-                stroke="currentColor"
-                class="text-primary"
-                stroke-width="6"
-                stroke-linecap="butt"
-                stroke-dasharray="188.5"
-                stroke-dashoffset="75"
-                transform="rotate(-90 36 36)"></circle>
-            </svg>
-            <div>
-              <p class="numeral tabular text-3xl">{formatNumber(locale, 7000)}</p>
-              <p class="mt-1 text-xs text-muted">
-                {t(locale, 'common.steps')} · {t(locale, 'landing.pathStepsGoal')}
-              </p>
-            </div>
+            <!-- The day's goal, not a course: no programme colour is in scope, so the ring is white. -->
+            <Ring value={0.6} size={88} stroke={6}>
+              <span class="numeral tabular text-lg leading-none">{formatNumber(locale, 7000)}</span>
+            </Ring>
+            <Pill size="sm">{t(locale, 'common.steps')} · {t(locale, 'landing.pathStepsGoal')}</Pill
+            >
           </div>
           <h3 class="font-display text-base">{t(locale, 'landing.pathStepsTitle')}</h3>
           <p class="text-sm leading-relaxed text-muted">{t(locale, 'landing.pathStepsText')}</p>
         </article>
 
         <article class="flex flex-col gap-4 border-t border-border py-6">
-          <span class="numeral tabular w-5 shrink-0 text-sm text-muted" aria-hidden="true">03</span>
-          <ol class="flex flex-col gap-2" aria-hidden="true">
+          <ol class="flex flex-col gap-2.5" aria-hidden="true">
             {
               boardRows.map((row, i) => (
-                <li class="flex items-center gap-2 text-xs">
-                  <span class="numeral w-4 text-right text-muted">{i + 1}</span>
+                <li class="flex items-center gap-3 text-xs">
                   <span
-                    class={`size-6 shrink-0 ${row.you ? 'bg-surface-3' : 'border border-border bg-surface-2'}`}
+                    class={`numeral flex size-7 shrink-0 items-center justify-center rounded-pill text-[11px] ${
+                      i === 0
+                        ? 'bg-primary text-on-primary'
+                        : 'border border-border-strong text-muted'
+                    }`}
+                  >
+                    {i + 1}
+                  </span>
+                  <span
+                    class={`size-7 shrink-0 rounded-pill ${row.you ? 'bg-surface-3' : 'border border-border bg-surface-2'}`}
                   />
-                  <span class="h-1 flex-1 overflow-hidden bg-surface-3">
+                  <span class="h-1 flex-1 overflow-hidden rounded-pill bg-surface-3">
                     <span
                       class={`block h-full ${row.you ? 'bg-primary' : 'bg-border-strong'}`}
                       style={`width:${row.w}`}
                     />
                   </span>
                   {row.you && (
-                    <span class="inline-flex h-5 items-center bg-primary px-1.5 text-[10px] font-semibold tracking-[0.12em] text-on-primary uppercase">
+                    <Pill tone="paper" size="sm">
                       {t(locale, 'landing.pathYou')}
-                    </span>
+                    </Pill>
                   )}
                 </li>
               ))
@@ -354,84 +364,83 @@ const jsonLd = [
     />
     {
       explainTile && workTile && (
-        /* The player's three beats, on the demo course's colour. One screen, one colour. */
-        <div class="mt-8 grid gap-4 md:grid-cols-3" style={demoTile}>
-          <div class="overflow-hidden border border-border bg-surface">
-            <div class="eyebrow flex items-center justify-between px-5 py-3">
-              <span>{t(locale, 'landing.insideStep1Title')}</span>
-              <span class="numeral text-text">1/3</span>
+        /*
+         * The player's three beats, on the demo course's colour. One screen, one colour. The
+         * tile's head is a pill and a numeral; its foot is the movement's name and one cue.
+         *
+         * On the phone the three lie in a snap strip that is swiped, not a stack that is scrolled:
+         * three square pictures one under another were 1 480px — a fifth of the page — to say one
+         * thing, and the owner's prototype (`design/ui_kits/app-v2`, «Программы») shows a set of
+         * peers as a carousel. The strip bleeds into both gutters so the next tile shows at the
+         * edge, which is what says it is swipeable. From `md` it is the three-column grid again.
+         */
+        <div
+          class="mt-8 -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-1 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0 [&>*]:w-[78%] [&>*]:shrink-0 [&>*]:snap-start md:[&>*]:w-auto"
+          style={demoTile}
+        >
+          <div class="overflow-hidden rounded-tile border border-border bg-surface">
+            <div class="flex items-center justify-between px-4 py-3">
+              <Pill size="sm">{t(locale, 'landing.insideStep1Title')}</Pill>
+              <span class="numeral tabular text-sm text-muted">1/3</span>
             </div>
             <div class="hero-art flex aspect-square items-center justify-center">
               <ExerciseStill exerciseId={explainTile.exercise.id} />
             </div>
-            <div class="border-t border-border p-5">
+            <div class="border-t border-border p-4">
               <p class="font-display text-sm">{l(explainTile.exercise.name, locale)}</p>
-              <p class="mt-2 text-sm text-muted">{l(explainTile.exercise.cues[0]!, locale)}</p>
+              <p class="mt-1.5 line-clamp-2 text-xs text-muted">
+                {l(explainTile.exercise.cues[0]!, locale)}
+              </p>
             </div>
           </div>
 
-          <div class="overflow-hidden border border-border bg-surface">
-            <div class="eyebrow flex items-center justify-between px-5 py-3">
-              <span>
+          <div class="overflow-hidden rounded-tile border border-border bg-surface">
+            <div class="flex items-center justify-between px-4 py-3">
+              <Pill size="sm">
                 {workTile.item.seconds !== undefined
                   ? t(locale, 'landing.insideTimerLabel')
                   : t(locale, 'landing.insideRepsLabel')}
-              </span>
-              <span class="numeral text-text">2/3</span>
+              </Pill>
+              <span class="numeral tabular text-sm text-muted">2/3</span>
             </div>
             <div class="hero-art relative flex aspect-square items-center justify-center">
               <ExerciseStill exerciseId={workTile.exercise.id} />
-              <span class="numeral tabular absolute right-4 bottom-4 bg-ink/85 px-3 py-1.5 text-sm text-paper">
-                {itemTargetLabel(locale, workTile.item)}
+              {/* The dose, as the player stamps it: a pill in ink on the picture. */}
+              <span class="absolute right-4 bottom-4 flex max-w-[calc(100%-2rem)]">
+                <Pill tone="ink" size="sm">
+                  {itemTargetLabel(locale, workTile.item)}
+                </Pill>
               </span>
             </div>
-            <div class="border-t border-border p-5">
+            <div class="border-t border-border p-4">
               <p class="font-display text-sm">{l(workTile.exercise.name, locale)}</p>
-              <p class="mt-2 text-sm text-muted">
+              <p class="mt-1.5 line-clamp-2 text-xs text-muted">
                 {l(workTile.exercise.cues[1] ?? workTile.exercise.cues[0]!, locale)}
               </p>
             </div>
           </div>
 
-          <div class="overflow-hidden border border-border bg-surface">
-            <div class="eyebrow flex items-center justify-between px-5 py-3">
-              <span>{t(locale, 'landing.insideRestLabel')}</span>
-              <span class="numeral text-text">3/3</span>
+          <div class="overflow-hidden rounded-tile border border-border bg-surface">
+            <div class="flex items-center justify-between px-4 py-3">
+              <Pill size="sm">{t(locale, 'landing.insideRestLabel')}</Pill>
+              <span class="numeral tabular text-sm text-muted">3/3</span>
             </div>
-            <div class="relative flex aspect-square flex-col items-center justify-center bg-surface-2">
+            <div class="flex aspect-square items-center justify-center bg-surface-2">
               {/* Rest ring: the stroke is the course colour, the same as the app's progress. */}
-              <svg width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="52"
-                  fill="none"
-                  stroke="currentColor"
-                  class="text-surface-3"
-                  stroke-width="6"
-                />
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="52"
-                  fill="none"
-                  stroke="var(--course-tile, var(--primary))"
-                  stroke-width="6"
-                  stroke-linecap="butt"
-                  stroke-dasharray="326.7"
-                  stroke-dashoffset="110"
-                  transform="rotate(-90 60 60)"
-                />
-              </svg>
-              {restSec > 0 && (
-                <p class="numeral tabular absolute text-2xl">
-                  {restSec} {t(locale, 'training.seconds')}
-                </p>
-              )}
+              <Ring value={0.66} size={128} stroke={6}>
+                {restSec > 0 && (
+                  <>
+                    <span class="numeral tabular text-3xl leading-none">{restSec}</span>
+                    <span class="eyebrow mt-1.5">{t(locale, 'training.seconds')}</span>
+                  </>
+                )}
+              </Ring>
             </div>
-            <div class="border-t border-border p-5">
+            <div class="border-t border-border p-4">
               <p class="font-display text-sm">{t(locale, 'training.rest')}</p>
-              <p class="mt-2 text-sm text-muted">{t(locale, 'landing.insideStep4Text')}</p>
+              <p class="mt-1.5 line-clamp-2 text-xs text-muted">
+                {t(locale, 'landing.insideStep4Text')}
+              </p>
             </div>
           </div>
         </div>

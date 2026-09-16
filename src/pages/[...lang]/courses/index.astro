@@ -67,7 +67,7 @@ const jsonLd = [
       ]}
     />
     <h1 class="display mt-6 text-5xl md:text-6xl">{t(locale, 'landing.coursesHubH1')}</h1>
-    <p class="mt-5 max-w-2xl text-lg leading-relaxed text-muted">
+    <p class="mt-4 max-w-xl text-base leading-relaxed text-muted md:text-lg">
       {t(locale, 'landing.coursesHubIntro')}
     </p>
 
@@ -126,15 +126,28 @@ const jsonLd = [
       </div>
     </div>
 
+    <!--
+      The tickets. One course on sale lies sideways across the page; the grid never asks for more
+      columns than it has tickets (see the home page's course section for why).
+    -->
     <ul
       id="courses"
-      class="mt-8 grid scroll-mt-24 gap-5 sm:grid-cols-2 lg:grid-cols-3"
+      class:list={[
+        'mt-8 grid scroll-mt-24 gap-5',
+        SITE_COURSES.length >= 2 && 'sm:grid-cols-2',
+        SITE_COURSES.length >= 3 && 'lg:grid-cols-3',
+      ]}
       aria-label={t(locale, 'landing.filterResultsLabel')}
     >
       {
         SITE_COURSES.map((c) => (
           <li data-course-item data-equipment={c.equipment.join(' ')} data-level={c.level}>
-            <CourseCard course={c} locale={locale} headingLevel="h2" />
+            <CourseCard
+              course={c}
+              locale={locale}
+              headingLevel="h2"
+              wide={SITE_COURSES.length === 1}
+            />
           </li>
         ))
       }

@@ -29,6 +29,13 @@ export const landing = {
   workoutWordOne: 'workout',
   workoutWordFew: 'workouts',
   workoutWordMany: 'workouts',
+  // A block's own count, on the pill that names its format: «1 round», «3 rounds».
+  roundWordOne: 'round',
+  roundWordFew: 'rounds',
+  roundWordMany: 'rounds',
+  setWordOne: 'set',
+  setWordFew: 'sets',
+  setWordMany: 'sets',
   sessionsPerWeek: '{n} {word} a week',
   avgSession: '~{n} min',
   priceFree: 'Free',
@@ -40,29 +47,26 @@ export const landing = {
 
   // Home: hero
   heroTitle: 'Home CrossFit that adapts to you',
-  heroSubtitle:
-    'Courses for home training, with or without equipment. Lifetime access, video for every exercise, and a load that grows with you.',
+  // One line under the headline; the facts it used to carry are the pills below it.
+  heroSubtitle: 'Courses for home training, with or without equipment — the load adapts to you.',
   heroCtaCourses: 'Choose a course',
   heroCtaApp: 'Open app',
   heroTileTop: 'Adaptive load',
-  heroTileBottom: 'Explain → move → rest',
   chipCourses: '{n} {word}',
   chipLifetime: 'Lifetime access',
   chipAdaptive: 'Adapts to you',
   chipHome: 'At home, with or without equipment',
+  chipVideo: 'Video for every exercise',
 
   // Home: how it works
   howEyebrow: 'How it works',
   howTitle: 'Three steps to your first workout',
   howStep1Title: 'Pick a course',
-  howStep1Text:
-    'Five programs, from your first bodyweight sessions to kettlebells and the pull-up bar. Each runs week by week, with a test at the start and at the end.',
+  howStep1Text: 'The coach’s week-by-week program, with a test at the start and the end.',
   howStep2Title: 'Enter your email',
-  howStep2Text:
-    'No passwords. Leave your email on the course page, the coach confirms access, and the course is yours for good.',
+  howStep2Text: 'No passwords: your email on the course page, and the course is yours for good.',
   howStep3Title: 'Log in with a code and train',
-  howStep3Text:
-    'Open the app, enter the code from the email, and go: a week-by-week path, a timer, technique cues and a load that adapts to you.',
+  howStep3Text: 'Enter the code from the email and go: the path, the timer, technique cues.',
 
   // Home: courses
   resultsEyebrow: 'Results',
@@ -76,24 +80,26 @@ export const landing = {
   coursesEyebrow: 'Courses',
   coursesTitle: 'Pick your program',
   coursesIntro:
-    'Each course is a week-by-week program with a baseline test, rest days and deload weeks. Buy once, keep forever.',
+    'A week-by-week program with a test, rest days and a deload. Buy once, keep forever.',
   coursesAll: 'All courses',
   cardView: 'View course',
+  /* The ticket's kicker: what kind of thing this is («Course · Beginner»), as in the app. */
+  cardKicker: 'Course',
 
   // Home: adaptive load demo
   adaptEyebrow: 'Adaptive load',
   adaptTitle: 'Every workout comes in three versions. The app tells you which one is yours',
   adaptIntro:
-    'Before you start, choose Easier, As usual or Harder. Afterwards, rate the effort on a 1–10 scale, and the next workout adjusts.',
+    'Before you start, choose Easier, As usual or Harder. Afterwards, one effort rating, and the next workout adjusts.',
   adaptWorkoutLabel: 'Workout from the {course} course: {workout}',
-  adaptDuration: 'Duration',
-  adaptPoints: 'Points',
   adaptRecommended: 'Recommended',
   adaptPlanTitle: 'Your plan',
-  adaptSets: '{n} × ',
+  // «72 points» under the minutes of a difficulty row; the engine's real figure for this workout.
+  adaptPointsOne: '{n} point',
+  adaptPointsFew: '{n} points',
+  adaptPointsMany: '{n} points',
   adaptRpeTitle: 'After the workout, one rating',
-  adaptRpeIntro:
-    'How hard was it on the Borg 1–10 scale? Your answer sets the load for the next session.',
+  adaptRpeIntro: 'How hard was it on a 1–10 scale? Your answer sets the next load.',
   adaptRpeEasy: 'Easy · RPE 5',
   adaptRpeOk: 'Just right · RPE 7',
   adaptRpeHard: 'Too hard · RPE 9',
@@ -101,25 +107,26 @@ export const landing = {
   adaptNextTime: 'Next time',
   adaptScaleNow: 'Load scale: {scale}',
   adaptHowTitle: 'The rules behind it',
-  adaptHow1: 'Volume: Easier ×0.85, Harder ×1.15; rest goes the other way.',
-  adaptHow2: 'Points: Easier ×0.8, Harder ×1.25. A 7-day streak adds +10 %, a 30-day streak +20 %.',
-  adaptHow3: 'Deload weeks: volume ×0.65 so your body can recover.',
+  /* The engine's constants as pills, not as three sentences — see the Russian file. */
+  adaptRuleEasier: 'Easier · volume ×0.85',
+  adaptRuleHarder: 'Harder · volume ×1.15',
+  adaptRulePoints: 'Points ×0.8 / ×1.25',
+  adaptRuleStreak7: '7-day streak · +10 %',
+  adaptRuleStreak30: '30-day streak · +20 %',
+  adaptRuleDeload: 'Deload · volume ×0.65',
 
   // Home: path & motivation
   pathEyebrow: 'Path & motivation',
   pathTitle: 'Every week feels like a level in a game',
-  pathIntro:
-    'A course is a path: workouts, tests and rest days come in order, and you always see where you are.',
+  pathIntro: 'Workouts, tests and rest days come in order — you always see where you are.',
   pathStreakTitle: 'Streak',
-  pathStreakText:
-    'A day counts when you finish a workout or hit your steps goal. Today never breaks your streak until it is over.',
+  pathStreakText: 'A day counts when you finish a workout or hit your steps goal.',
   pathStreakBonus: '+10 % from day 7',
   pathStepsTitle: '7,000 steps on rest days',
-  pathStepsText: 'On rest days the goal is 7,000 steps. Log them, earn points and keep the streak.',
+  pathStepsText: 'Log your steps, earn points and keep the streak.',
   pathStepsGoal: 'goal',
   pathBoardTitle: 'Leaderboard',
-  pathBoardText:
-    'Points from workouts and steps go into a leaderboard: this week and all time. Just a name and an avatar, never your email.',
+  pathBoardText: 'Points from workouts and steps go into one leaderboard: this week and all time.',
   pathYou: 'you',
   pathWeekdays: 'M,T,W,T,F,S,S',
   pathNodeDone: 'Done',
@@ -130,18 +137,15 @@ export const landing = {
   // Home: inside a workout
   insideEyebrow: 'Inside a workout',
   insideTitle: 'Explain, show, time it',
-  insideIntro:
-    'The player walks you through every exercise: what it is, how it moves, how long or how many, then rest.',
+  insideIntro: 'The player walks you through every exercise: what, how, how much — then rest.',
   insideStep1Title: 'Explain',
-  insideStep1Text: 'The name, key technique cues and common mistakes before every exercise.',
+  insideStep1Text: 'Technique cues and common mistakes before every exercise.',
   insideStep2Title: 'Animate',
-  insideStep2Text:
-    'The figure shows the movement at tempo. If the exercise has a video, it is right here.',
+  insideStep2Text: 'The figure shows the movement at tempo; where there is a video, it is here.',
   insideStep3Title: 'Timer or reps',
-  insideStep3Text:
-    'Seconds count down on their own; you tick off reps with Done. The weight shows when the move uses a dumbbell or kettlebell.',
+  insideStep3Text: 'Seconds count down on their own; you tick off reps with Done.',
   insideStep4Title: 'Rest',
-  insideStep4Text: 'A countdown to the next exercise. Skip it if you are ready sooner.',
+  insideStep4Text: 'A countdown to the next exercise — skip it if you are ready.',
   insideTimerLabel: 'Timer',
   insideRepsLabel: 'Reps',
   insideRestLabel: 'Rest',
@@ -166,8 +170,7 @@ export const landing = {
   coursesHubDescription:
     'Five home CrossFit courses: bodyweight, dumbbells, kettlebell and pull-up bar. Lifetime access, adaptive load, video for every exercise.',
   coursesHubH1: 'Courses',
-  coursesHubIntro:
-    'Filter by equipment and level. Each course is a week-by-week program with a test at the start and the end, and lifetime access.',
+  coursesHubIntro: 'A week-by-week program with a test at the start and the end. Lifetime access.',
   filterEquipment: 'Equipment',
   filterLevel: 'Level',
   filterAll: 'All',
@@ -193,22 +196,33 @@ export const landing = {
     'The first workout of the course, as in the app, before it is scaled to your level.',
   courseAdaptTitle: 'How the app adapts',
   courseAdaptText:
-    'Before every workout you choose Easier, As usual or Harder, and the app suggests which. Afterwards you rate the effort from 1 to 10 and the next load shifts: +5 % when it was easy, −5 % when it was too hard. Deload weeks are built into the program.',
+    'Before a workout you choose Easier, As usual or Harder. Afterwards you rate the effort from 1 to 10 and the next load shifts.',
+  // The three numbers of that paragraph, as pills.
+  courseAdaptEasy: '+5 % when easy',
+  courseAdaptHard: '−5 % when too hard',
+  courseAdaptDeload: 'Deload built in',
+  /* «About the course» shows one paragraph; the rest of the coach's text opens under this. */
+  courseMoreAbout: 'More about the course',
+  // «2 rest days» on a week's row of the program.
+  restDayOne: 'rest day',
+  restDayFew: 'rest days',
+  restDayMany: 'rest days',
   courseFaqTitle: 'Course FAQ',
   courseGuidesTitle: 'Related guides',
   courseExercisesTitle: 'Exercises in this course',
   courseOrderTitle: 'Get access to the course',
   courseOrderIntro:
-    'Leave your email — the coach confirms access and the course appears in the app under this email.',
+    'Leave your email — the coach confirms access and the course appears in the app.',
   courseLifetimeNote: 'One payment, access forever',
   courseOrSubscribe: 'Or every course by subscription — from {price} a month',
   nodeWorkout: 'Workout',
-  nodeRest: 'Rest · {steps} steps',
+  // The steps alone: every rest day is titled «Rest & walk» already (see the Russian file).
+  nodeRest: '{steps} steps',
   nodeTest: 'Test',
   nodeBenchmark: 'Benchmark',
   nodeMilestone: 'Milestone',
-  blockRounds: '{n} rounds',
-  blockSets: '{n} sets',
+  blockRounds: '{n} {word}',
+  blockSets: '{n} {word}',
   blockMinutes: '{n} min',
   blockTabata: '{work}s on / {rest}s off × {n}',
   breadcrumbHome: 'Home',
@@ -244,7 +258,7 @@ export const landing = {
     'Every Forma course in one subscription: five home CrossFit programs, load that adapts to you, new courses included. Monthly or annual.',
   subscribeEyebrow: 'Subscription',
   subscribeLead:
-    'One course is a start. A subscription is how you keep training: every program, the next one ready when this one ends, and the load still yours.',
+    'One course is a start. A subscription is every program, with the next one ready when this one ends.',
   subscribeIncludes: 'What you get',
   subscribePlanLabel: 'Plan',
   subscribePerMonth: '/ month',
@@ -252,7 +266,7 @@ export const landing = {
   subscribeBestValue: 'Best value',
   subscribeOrderTitle: 'Subscribe',
   subscribeOrderIntro:
-    'Leave your email, pay on the next page, and the courses open in the app under this email as soon as the payment lands.',
+    'Leave your email and pay on the next page — the courses open in the app under this email.',
   subscribeNote: 'Renews automatically · cancel any time · access stays until the paid period ends',
   subscribeSuccessText:
     'We have recorded a {course} subscription for {email}. Once the payment lands, open the app and sign in with this email.',

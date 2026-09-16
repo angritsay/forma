@@ -88,6 +88,31 @@ export function sessionsLabel(locale: Locale, n: number): string {
   return t(locale, 'landing.sessionsPerWeek', { n, word });
 }
 
+/** «20 тренировок» — a count of working days, for a course's figures and a week's row. */
+export function workoutsCountLabel(locale: Locale, n: number): string {
+  const word = plural(locale, n, {
+    one: t(locale, 'landing.workoutWordOne'),
+    few: t(locale, 'landing.workoutWordFew'),
+    many: t(locale, 'landing.workoutWordMany'),
+  });
+  return `${n} ${word}`;
+}
+
+/** «2 дня отдыха» on a week's row. */
+export function restDaysLabel(locale: Locale, n: number): string {
+  const word = plural(locale, n, {
+    one: t(locale, 'landing.restDayOne'),
+    few: t(locale, 'landing.restDayFew'),
+    many: t(locale, 'landing.restDayMany'),
+  });
+  return `${n} ${word}`;
+}
+
+/** Working days of a course — every node that is not a rest day. */
+export function courseWorkoutCount(course: Course): number {
+  return course.nodes.filter((n) => n.kind !== 'rest').length;
+}
+
 export function coursesCountLabel(locale: Locale, n: number): string {
   const word = plural(locale, n, {
     one: t(locale, 'landing.courseWordOne'),
@@ -145,14 +170,29 @@ export function groupNodesByWeek(course: Course): WeekGroup[] {
   return groups.sort((a, b) => a.week - b.week);
 }
 
-/** Human label for a block's format and volume: "3 rounds", "AMRAP · 12 min", "20s on / 10s off × 8". */
+/**
+ * Human label for a block's format and volume: "3 rounds", "AMRAP · 12 min", "20s on / 10s off × 8".
+ *
+ * Rounds and sets are pluralised. They used to be `'{n} раундов'` flat, which read «Круговая ·
+ * 1 раундов» on every single-round block — invisible while the string was a grey caption, and not
+ * invisible at all once it became a pill with capitals on it.
+ */
 export function blockMetaLabel(locale: Locale, block: Block): string {
   const format = t(locale, `training.format_${block.format}`);
+  const countLabel = (key: 'landing.blockSets' | 'landing.blockRounds', n: number): string => {
+    const stem = key === 'landing.blockSets' ? 'set' : 'round';
+    const word = plural(locale, n, {
+      one: t(locale, `landing.${stem}WordOne`),
+      few: t(locale, `landing.${stem}WordFew`),
+      many: t(locale, `landing.${stem}WordMany`),
+    });
+    return t(locale, key, { n, word });
+  };
   switch (block.format) {
     case 'sets':
-      return `${format} · ${t(locale, 'landing.blockSets', { n: block.sets ?? 1 })}`;
+      return `${format} · ${countLabel('landing.blockSets', block.sets ?? 1)}`;
     case 'circuit':
-      return `${format} · ${t(locale, 'landing.blockRounds', { n: block.sets ?? 1 })}`;
+      return `${format} · ${countLabel('landing.blockRounds', block.sets ?? 1)}`;
     case 'amrap':
     case 'fortime':
       return `${format} · ${t(locale, 'landing.blockMinutes', {
