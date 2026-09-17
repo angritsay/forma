@@ -63,8 +63,17 @@ describe('replyFor', () => {
 });
 
 describe('the greeting itself', () => {
-  it('ends on the question the buttons answer', () => {
-    expect(DEFAULT_COPY.greeting.trimEnd().endsWith('Что открыть?')).toBe(true);
+  /*
+   * The greeting used to end on «Что открыть?» and this test pinned that. The question went when
+   * the greeting stopped describing one course and started naming all three things the product
+   * sells, which is what the app's own three tabs are. What is worth pinning now is the naming:
+   * a greeting that omits one of them sends somebody into an app with a tab they were not told
+   * about, and the club is the one most likely to be forgotten, because it is the newest.
+   */
+  it('names all three things the product sells', () => {
+    for (const thing of ['Курсы', 'Клуб маленьких шагов', 'один на один']) {
+      expect(DEFAULT_COPY.greeting).toContain(thing);
+    }
   });
 
   it('fits in a caption, which is shorter than a message', () => {
