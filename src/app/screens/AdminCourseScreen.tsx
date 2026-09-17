@@ -108,7 +108,6 @@ export default function AdminCourseScreen() {
         kind: d.kind,
         workoutShortId: d.customWorkoutId ? (byId.get(d.customWorkoutId)?.shortId ?? null) : null,
         deload: d.deload,
-        stepsGoal: d.stepsGoal,
         sortOrder: d.sortOrder,
         content: d.content,
       })),

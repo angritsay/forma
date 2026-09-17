@@ -1,6 +1,7 @@
 -- =============================================================================
 -- Smoke tests for the Forma schema: triggers, RLS, RPCs, leaderboard, storage policies.
--- Requires supabase/tests/00_shim.sql + the four migrations (see 00_shim.sql header).
+-- Requires supabase/tests/00_shim.sql + 0001-0004, and then 0015, which removed steps: the
+-- leaderboard and totals assertions below are written for a world without step points.
 -- Runs as a superuser and impersonates anon / authenticated users the way PostgREST does.
 -- =============================================================================
 \set ON_ERROR_STOP on
@@ -158,11 +159,6 @@ begin
   exception when insufficient_privilege then null;
   end;
   begin
-    perform public.steps_points(9000);
-    raise exception 'anon steps_points should fail';
-  exception when insufficient_privilege then null;
-  end;
-  begin
     perform public.admin_add_purchase('x@example.com', 'start');
     raise exception 'anon admin rpc should fail';
   exception when insufficient_privilege then null;
@@ -211,11 +207,6 @@ do $$ begin
   exception when insufficient_privilege then null;
   end;
   -- helper functions are not part of the API surface
-  begin
-    perform public.steps_points(9000);
-    raise exception 'should have failed';
-  exception when insufficient_privilege then null;
-  end;
   begin
     perform public.normalize_email('ann@example.com');
     raise exception 'should have failed';
@@ -349,61 +340,6 @@ do $$ begin
     assert sqlstate = '42501', 'RLS insert check, got ' || sqlstate;
   end;
   raise notice 'OK profiles RLS + column grants';
-end $$;
-
--- daily_logs points trigger + write window ----------------------------------------
-do $$ begin
-  insert into public.daily_logs (user_id, local_date, steps, points) values
-    ('00000000-0000-0000-0000-00000000000a', current_date - 6, 6999, 999),
-    ('00000000-0000-0000-0000-00000000000a', current_date - 5, 7000, 0),
-    ('00000000-0000-0000-0000-00000000000a', current_date - 4, 8000, 0),
-    ('00000000-0000-0000-0000-00000000000a', current_date - 3, 8999, 0),
-    ('00000000-0000-0000-0000-00000000000a', current_date - 2, 13000, 0),
-    ('00000000-0000-0000-0000-00000000000a', current_date - 1, 40000, 0);
-  assert (select points from public.daily_logs where local_date = current_date - 6) = 0, '6999 → 0';
-  assert (select points from public.daily_logs where local_date = current_date - 5) = 30, '7000 → 30';
-  assert (select points from public.daily_logs where local_date = current_date - 4) = 35, '8000 → 35';
-  assert (select points from public.daily_logs where local_date = current_date - 3) = 35, '8999 → 35';
-  assert (select points from public.daily_logs where local_date = current_date - 2) = 60, '13000 → 60';
-  assert (select points from public.daily_logs where local_date = current_date - 1) = 60, '40000 → cap 60';
-  -- upsert path keeps trigger
-  insert into public.daily_logs (user_id, local_date, steps, points)
-    values ('00000000-0000-0000-0000-00000000000a', current_date - 6, 9000, 999)
-    on conflict (user_id, local_date) do update set steps = excluded.steps, points = excluded.points;
-  assert (select points from public.daily_logs where local_date = current_date - 6) = 40, 'upsert recomputed';
-  begin
-    insert into public.daily_logs (user_id, local_date, steps) values ('00000000-0000-0000-0000-00000000000b', current_date, 100);
-    raise exception 'should have failed';
-  exception when others then assert sqlstate = '42501', 'cannot log for another user';
-  end;
-  begin
-    insert into public.daily_logs (user_id, local_date, steps) values ('00000000-0000-0000-0000-00000000000a', current_date, 100001);
-    raise exception 'should have failed';
-  exception when check_violation then null;
-  end;
-  -- write window: no backfilling older than a week, no filling the future
-  begin
-    insert into public.daily_logs (user_id, local_date, steps) values ('00000000-0000-0000-0000-00000000000a', current_date - 8, 20000);
-    raise exception 'should have failed';
-  exception when others then assert sqlstate = '42501', 'backfill blocked, got ' || sqlstate;
-  end;
-  begin
-    insert into public.daily_logs (user_id, local_date, steps) values ('00000000-0000-0000-0000-00000000000a', current_date + 2, 20000);
-    raise exception 'should have failed';
-  exception when others then assert sqlstate = '42501', 'future log blocked, got ' || sqlstate;
-  end;
-  -- tomorrow is allowed (time zones ahead of the server)
-  insert into public.daily_logs (user_id, local_date, steps) values ('00000000-0000-0000-0000-00000000000a', current_date + 1, 1000);
-  delete from public.daily_logs where local_date = current_date + 1;
-  -- and an existing row cannot be moved out of the window either
-  begin
-    update public.daily_logs set local_date = current_date - 30 where local_date = current_date - 1;
-    raise exception 'should have failed';
-  exception when others then
-    assert sqlstate = '42501', 'moving a log out of the window blocked, got ' || sqlstate;
-  end;
-  assert (select count(*) from public.daily_logs) = 6, 'six step days';
-  raise notice 'OK daily_logs';
 end $$;
 
 -- course state, sessions, benchmarks -----------------------------------------------
@@ -545,20 +481,18 @@ do $$ declare r record; n int; begin
   select * into r from public.get_my_totals();
   assert r.workouts = 2, 'two completed workouts, got ' || r.workouts;
   assert r.minutes = 15, 'minutes = 900/60, got ' || r.minutes;
-  -- daily points: 40+30+35+35+60+60 = 260 ; sessions 120+80 = 200
-  assert r.points = 460, 'totals points, got ' || r.points;
+  -- sessions only: 120 + 80. Step points used to add 260 on top of this; steps are gone (0015).
+  assert r.points = 200, 'totals points, got ' || r.points;
 
-  -- global all-time: ann 460, is_me
+  -- global all-time: ann 200, is_me
   select count(*) into n from public.get_leaderboard('all');
   assert n >= 1;
   select * into r from public.get_leaderboard('all') where is_me;
-  assert r.points = 460 and r.rank = 1 and r.display_name = 'Annie', 'all-time global row';
-  -- course filter excludes step points
+  assert r.points = 200 and r.rank = 1 and r.display_name = 'Annie', 'all-time global row';
   select * into r from public.get_leaderboard('all', 'start') where is_me;
   assert r.points = 120, 'course-only points, got ' || r.points;
   select * into r from public.get_leaderboard('all', 'engine') where is_me;
   assert r.points = 80;
-  -- week: sessions completed now are in this week; daily logs partially
   select * into r from public.get_leaderboard('week') where is_me;
   assert r.points >= 200, 'week includes this-week sessions';
   -- no emails anywhere in the output
@@ -603,7 +537,6 @@ do $$ declare r record; v_err text; begin
   end;
   -- bob sees none of ann's data
   assert (select count(*) from public.workout_sessions) = 0;
-  assert (select count(*) from public.daily_logs) = 0;
   assert (select count(*) from public.benchmarks) = 0;
   assert (select count(*) from public.user_course_state) = 0;
   assert (select count(*) from public.profiles) = 1;

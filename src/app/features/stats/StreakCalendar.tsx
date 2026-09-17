@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import { Glyph, Icon } from '@/components/ui/Icon';
+import { Glyph } from '@/components/ui/Icon';
 import { formatDate } from '@/i18n/index';
 import type { StreakInfo } from '@/lib/training/types';
 import { weekdayLabel } from '@/lib/util/dates';
@@ -12,25 +12,26 @@ export interface StreakCalendarProps {
 }
 
 /*
- * Four kinds of day in black and white. A workout day is the white square with a tick; a
- * steps-goal day is a raised surface with the footprints mark (steps are a physical thing a glyph
- * cannot say, so the one small icon stays); an empty day is the base surface; a day still ahead is
- * an outline. Today is told apart by its ring, whatever kind it is. No green: a calendar that
- * colours one kind of day makes that kind look like the point of the exercise.
+ * Three kinds of day in black and white. A workout day is the white square with a tick; an empty
+ * day is the base surface; a day still ahead is an outline. Today is told apart by its ring,
+ * whatever kind it is. No green: a calendar that colours one kind of day makes that kind look like
+ * the point of the exercise.
+ *
+ * There was a fourth — a steps-goal day, a raised surface with the footprints mark, for a day
+ * carried by walking rather than training. It went with the step feature, and the calendar is
+ * easier to read for it: a square is either a training day or it is not.
  */
 const KIND_CLASS: Record<CalendarKind, string> = {
   workout: 'bg-primary text-on-primary',
-  steps: 'bg-surface-3 text-text',
   empty: 'bg-surface-2 text-muted-2',
   future: 'border border-border text-muted-2',
 };
 
-/** Five weeks of days: workout day, steps-goal day, empty or still ahead; today is ringed. */
+/** Five weeks of days: workout day, empty or still ahead; today is ringed. */
 export function StreakCalendar({ weeks, streak }: StreakCalendarProps) {
   const { t, locale } = useT();
   const KIND_LABEL: Record<CalendarKind, string> = {
     workout: t('app.statsCalendarWorkout'),
-    steps: t('app.statsCalendarSteps'),
     empty: t('app.statsCalendarEmpty'),
     future: t('app.statsCalendarFuture'),
   };
@@ -67,13 +68,12 @@ export function StreakCalendar({ weeks, streak }: StreakCalendarProps) {
               )}
             >
               {c.kind === 'workout' ? <Glyph size={14}>✓</Glyph> : null}
-              {c.kind === 'steps' ? <Icon name="steps" size={14} /> : null}
             </li>
           )),
         )}
       </ul>
       <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
-        {(['workout', 'steps', 'empty'] as const).map((kind) => (
+        {(['workout', 'empty'] as const).map((kind) => (
           <li key={kind} className="flex items-center gap-1.5">
             <span aria-hidden="true" className={clsx('inline-block size-3', KIND_CLASS[kind])} />
             {KIND_LABEL[kind]}

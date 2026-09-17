@@ -262,12 +262,18 @@ export interface ExerciseResult {
   loadKg?: number;
 }
 
+/**
+ * What happened on one local day, as far as the streak is concerned.
+ *
+ * It used to carry `steps` and `stepsGoal` too, and a day counted when *either* a workout was
+ * finished or the step goal was reached. Steps are gone — a Mini App cannot read a phone's step
+ * counter, so the figure was hand-typed — and with them that second way of keeping a streak alive.
+ * A day is a training day now, which makes the streak harder and makes it mean one thing.
+ */
 export interface DayActivity {
   /** Local date YYYY-MM-DD. */
   date: string;
   workoutDone: boolean;
-  steps: number;
-  stepsGoal?: number;
 }
 
 export interface StreakInfo {
@@ -292,12 +298,6 @@ export interface LevelInfo {
 export interface Recommendation {
   choice: DifficultyChoice;
   reason: L10n;
-}
-
-/** Extra context for `recommendDifficulty` that is not part of the course state. */
-export interface RecommendationContext {
-  /** Steps logged for the previous local day (a heavy walking day suggests an easier session). */
-  stepsYesterday?: number;
 }
 
 /** Options for `summarizeSession`. Timestamps are ISO strings; the engine never reads the clock. */
@@ -329,7 +329,6 @@ export interface UserStats {
   points: number;
   streakCurrent: number;
   streakLongest: number;
-  stepsDaysAtGoal: number;
   benchmarksDone: number;
   coursesCompleted: number;
   totalMinutes: number;

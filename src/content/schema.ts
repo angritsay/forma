@@ -339,7 +339,6 @@ export const CourseNodeSchema = z
     title: L10nSchema,
     subtitle: L10nSchema.optional(),
     deload: z.boolean().optional(),
-    stepsGoal: z.number().int().positive().optional(),
   })
   .superRefine((n, ctx) => {
     if (['workout', 'test', 'benchmark'].includes(n.kind) && !n.workoutId) {

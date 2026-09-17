@@ -912,7 +912,6 @@ function rest(week: number, day: number, subtitle: L10n): NodeInput {
     week,
     day,
     kind: 'rest',
-    stepsGoal: 8000,
     title: REST_TITLE,
     subtitle,
   };

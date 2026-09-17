@@ -1,6 +1,10 @@
 /**
- * Progress store: per-course adaptive state, recent workout sessions, daily step logs,
- * benchmarks and all-time totals of the signed-in user (docs/SPEC.md §8, ui-home brief).
+ * Progress store: per-course adaptive state, recent workout sessions, benchmarks and all-time
+ * totals of the signed-in user (docs/SPEC.md §8, ui-home brief).
+ *
+ * It also held ninety days of `daily_logs` — one row per day with the steps typed in for it — and
+ * five hooks that read them. Steps are gone: nothing in a Mini App can read a phone's step
+ * counter, so the number was only ever hand-typed, and nobody keeps the same tally in two apps.
  *
  * `load()` fetches everything once per user and refreshes stale data in the background;
  * `refresh()` forces a reload. Pure selectors live next to the store so screens and tests share
@@ -14,30 +18,20 @@ import { create } from 'zustand';
 import { findCourse, hasCourse } from '@/content/catalogue';
 import { listBenchmarks } from '@/lib/api/benchmarks';
 import { listCourseStates, upsertCourseState as apiUpsertCourseState } from '@/lib/api/courseState';
-import { listDailyLogs } from '@/lib/api/dailyLogs';
 import { toAppError, type AppError } from '@/lib/api/errors';
 import { listRecentSessions } from '@/lib/api/sessions';
 import { getMyTotals } from '@/lib/api/stats';
-import type {
-  BenchmarkSeries,
-  CourseStateRow,
-  DailyLogRow,
-  MyTotals,
-  WorkoutSessionRow,
-} from '@/lib/api/types';
+import type { BenchmarkSeries, CourseStateRow, MyTotals, WorkoutSessionRow } from '@/lib/api/types';
 import { computeFitnessIndex, initialScale } from '@/lib/training/assessment';
 import { starsForSession } from '@/lib/training/stars';
 import { computeStreak } from '@/lib/training/streak';
 import type { CourseState, SessionSummary, StreakInfo } from '@/lib/training/types';
-import { addDays, toLocalDateIso } from '@/lib/util/dates';
+import { toLocalDateIso } from '@/lib/util/dates';
 import {
   buildDayActivity,
   isCompletedSession,
-  stepsWeek,
   totalPoints,
   weekStats,
-  type DailyLogMap,
-  type StepsDay,
   type WeekStats,
 } from '@/app/features/home/stats';
 import { completeNodePatch } from '@/app/features/path/nodeState';
@@ -46,8 +40,6 @@ import { useSession, type Profile } from './session';
 export const ACTIVE_COURSE_KEY = 'forma.activeCourse';
 /** Completed sessions kept in memory (newest first). */
 export const RECENT_SESSIONS_LIMIT = 60;
-/** Days of step logs kept in memory (today included). */
-export const DAILY_LOG_DAYS = 90;
 /**
  * `load()` refreshes in the background when the data is older than this. Short on purpose:
  * every screen mount after a workout (summary → home) picks up the saved session and state.
@@ -67,8 +59,6 @@ export interface ProgressState {
   loadedAt?: number;
   courseStates: Record<string, CourseStateRow>;
   recentSessions: WorkoutSessionRow[];
-  /** Keyed by local date (YYYY-MM-DD). */
-  dailyLogs: Record<string, DailyLogRow>;
   benchmarks: BenchmarkSeries[];
   totals: MyTotals | null;
   /** Preferred course id (persisted); resolve it with `resolveActiveCourseId`. */
@@ -80,7 +70,6 @@ export interface ProgressState {
   refresh: () => Promise<void>;
   reset: () => void;
   putCourseState: (row: CourseStateRow) => void;
-  putDailyLog: (row: DailyLogRow) => void;
   putSession: (row: WorkoutSessionRow) => void;
   /** Existing course state, or a fresh row with the profile's starting scale. */
   ensureCourseState: (courseId: string) => Promise<CourseStateRow>;
@@ -215,12 +204,8 @@ export function starsByNode(
   return best;
 }
 
-export function selectStreak(
-  sessions: readonly WorkoutSessionRow[],
-  logs: DailyLogMap,
-  todayIso: string,
-): StreakInfo {
-  return computeStreak(buildDayActivity(sessions, logs), todayIso);
+export function selectStreak(sessions: readonly WorkoutSessionRow[], todayIso: string): StreakInfo {
+  return computeStreak(buildDayActivity(sessions), todayIso);
 }
 
 function keyBy<T>(rows: readonly T[], key: (row: T) => string): Record<string, T> {
@@ -241,7 +226,6 @@ const EMPTY_DATA = {
   loadedAt: undefined,
   courseStates: {} as Record<string, CourseStateRow>,
   recentSessions: [] as WorkoutSessionRow[],
-  dailyLogs: {} as Record<string, DailyLogRow>,
   benchmarks: [] as BenchmarkSeries[],
   totals: null as MyTotals | null,
 };
@@ -265,12 +249,9 @@ export const useProgress = create<ProgressState>((set, get) => {
 
   async function fetchAll(userId: string, blocking: boolean): Promise<void> {
     set((s) => ({ loading: true, status: blocking ? 'loading' : s.status, error: undefined }));
-    const today = toLocalDateIso();
-    const from = addDays(today, -(DAILY_LOG_DAYS - 1));
-    const [states, sessions, logs, benchmarks, totals] = await Promise.allSettled([
+    const [states, sessions, benchmarks, totals] = await Promise.allSettled([
       listCourseStates(),
       listRecentSessions(RECENT_SESSIONS_LIMIT),
-      listDailyLogs(from, today),
       listBenchmarks(),
       getMyTotals(),
     ]);
@@ -286,10 +267,9 @@ export const useProgress = create<ProgressState>((set, get) => {
     };
     if (states.status === 'fulfilled') next.courseStates = keyBy(states.value, (r) => r.courseId);
     if (sessions.status === 'fulfilled') next.recentSessions = sessions.value;
-    if (logs.status === 'fulfilled') next.dailyLogs = keyBy(logs.value, (r) => r.localDate);
     if (benchmarks.status === 'fulfilled') next.benchmarks = benchmarks.value;
     if (totals.status === 'fulfilled') next.totals = totals.value;
-    const failed = [states, sessions, logs].find(isRejected);
+    const failed = [states, sessions].find(isRejected);
     if (failed) {
       next.error = toAppError(failed.reason);
       next.status = prev.status === 'ready' ? 'ready' : 'error';
@@ -342,8 +322,6 @@ export const useProgress = create<ProgressState>((set, get) => {
 
     putCourseState: (row) =>
       set((s) => ({ courseStates: { ...s.courseStates, [row.courseId]: row } })),
-
-    putDailyLog: (row) => set((s) => ({ dailyLogs: { ...s.dailyLogs, [row.localDate]: row } })),
 
     putSession: (row) =>
       set((s) => {
@@ -421,38 +399,19 @@ export function useEngineCourseState(courseId: string): CourseState {
 
 export function useStreak(): StreakInfo {
   const sessions = useProgress((s) => s.recentSessions);
-  const logs = useProgress((s) => s.dailyLogs);
   const today = useTodayIso();
-  return useMemo(() => selectStreak(sessions, logs, today), [sessions, logs, today]);
+  return useMemo(() => selectStreak(sessions, today), [sessions, today]);
 }
 
 export function useWeekStats(): WeekStats {
   const sessions = useProgress((s) => s.recentSessions);
-  const logs = useProgress((s) => s.dailyLogs);
   const today = useTodayIso();
-  return useMemo(() => weekStats(sessions, logs, today), [sessions, logs, today]);
-}
-
-export function useStepsWeek(): StepsDay[] {
-  const logs = useProgress((s) => s.dailyLogs);
-  const today = useTodayIso();
-  return useMemo(() => stepsWeek(logs, today), [logs, today]);
-}
-
-export function useStepsToday(): number {
-  const today = useTodayIso();
-  return useProgress((s) => s.dailyLogs[today]?.steps ?? 0);
-}
-
-export function useStepsYesterday(): number {
-  const yesterday = addDays(useTodayIso(), -1);
-  return useProgress((s) => s.dailyLogs[yesterday]?.steps ?? 0);
+  return useMemo(() => weekStats(sessions, today), [sessions, today]);
 }
 
 /** All-time points: the server total when available, else the sum of the loaded rows. */
 export function useTotalPoints(): number {
   const totals = useProgress((s) => s.totals);
   const sessions = useProgress((s) => s.recentSessions);
-  const logs = useProgress((s) => s.dailyLogs);
-  return useMemo(() => totals?.points ?? totalPoints(sessions, logs), [totals, sessions, logs]);
+  return useMemo(() => totals?.points ?? totalPoints(sessions), [totals, sessions]);
 }

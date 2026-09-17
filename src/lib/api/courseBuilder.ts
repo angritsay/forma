@@ -50,7 +50,6 @@ interface DbDay {
   custom_workout_id: string | null;
   content: unknown;
   deload: boolean;
-  steps_goal: number | null;
   sort_order: number;
 }
 
@@ -89,7 +88,6 @@ function dayFromDb(r: DbDay): AdminCourseDayRow {
     customWorkoutId: r.custom_workout_id,
     content: parseDayContent(r.content),
     deload: r.deload,
-    stepsGoal: r.steps_goal,
     sortOrder: r.sort_order,
   };
 }
@@ -128,7 +126,6 @@ export function dayPatchToDb(patch: AdminCourseDayPatch): Record<string, unknown
   if (patch.customWorkoutId !== undefined) db.custom_workout_id = patch.customWorkoutId;
   if (patch.content !== undefined) db.content = patch.content;
   if (patch.deload !== undefined) db.deload = patch.deload;
-  if (patch.stepsGoal !== undefined) db.steps_goal = patch.stepsGoal;
   if (patch.sortOrder !== undefined) db.sort_order = patch.sortOrder;
   return db;
 }

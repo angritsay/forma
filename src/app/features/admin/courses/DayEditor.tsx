@@ -56,7 +56,6 @@ export function DayEditor({
   const [picking, setPicking] = useState(false);
   const [week, setWeek] = useState(String(day.week));
   const [dayNo, setDayNo] = useState(String(day.day));
-  const [steps, setSteps] = useState(String(day.stepsGoal ?? 8000));
 
   const content = day.content;
   const isTraining = TRAINING_KINDS.includes(day.kind);
@@ -162,23 +161,6 @@ export function DayEditor({
             </div>
           )}
         </div>
-      ) : null}
-
-      {day.kind === 'rest' ? (
-        <Input
-          label={t('app.dayStepsGoal')}
-          hint={t('app.dayStepsGoalHint')}
-          type="number"
-          inputMode="numeric"
-          min={1000}
-          max={50000}
-          step={500}
-          value={steps}
-          onChange={(e) => setSteps(e.target.value)}
-          onBlur={() =>
-            onPatch({ stepsGoal: Math.max(1000, Math.min(50000, Number(steps) || 8000)) })
-          }
-        />
       ) : null}
 
       {isTraining ? (

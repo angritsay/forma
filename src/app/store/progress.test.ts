@@ -111,20 +111,14 @@ describe('sessionToSummary / engineCourseState', () => {
 });
 
 describe('selectStreak', () => {
-  it('counts workout days and step-goal days', () => {
-    const logs = {
-      '2026-08-31': {
-        userId: 'u',
-        localDate: '2026-08-31',
-        steps: 7500,
-        points: 30,
-        note: null,
-        proofPath: null,
-        updatedAt: '',
-      },
-    };
-    const streak = selectStreak([session({})], logs, '2026-09-02');
-    expect(streak.current).toBe(2);
+  /*
+   * It used to count a step-goal day beside a workout day, and the fixture carried a `daily_logs`
+   * row to prove it. Steps are gone; only the session is left, and the streak is one day long and
+   * at risk because today has nothing in it.
+   */
+  it('counts workout days, and flags today as at risk', () => {
+    const streak = selectStreak([session({})], '2026-09-02');
+    expect(streak.current).toBe(1);
     expect(streak.atRisk).toBe(true);
   });
 });

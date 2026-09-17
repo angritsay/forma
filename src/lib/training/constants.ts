@@ -163,13 +163,15 @@ export const FORMAT_DEFAULT_WORK_REST: Readonly<
 };
 
 /* ---------------------------------------------------------------------------------------------
- * Steps and levels
+ * Levels
+ *
+ * Four step constants used to stand here — a daily goal of 7 000 and what a day at that goal was
+ * worth in points. They went with the whole step feature. A Mini App cannot read a phone's step
+ * counter: Apple Health is a native iOS framework with no browser access, and Google Fit's REST
+ * API stopped taking new applications in 2024 and shuts down at the end of 2026. So the number
+ * could only ever be typed in by hand, and nobody keeps the same tally in two apps. Points now
+ * come from training alone.
  * ------------------------------------------------------------------------------------------- */
-
-export const STEPS_GOAL = 7000;
-export const STEPS_POINTS_AT_GOAL = 30;
-export const STEPS_POINTS_PER_EXTRA_1000 = 5;
-export const STEPS_POINTS_MAX = 60;
 
 /** Cumulative points needed for each level (index 0 = level 1). */
 export const LEVEL_THRESHOLDS: readonly number[] = [
@@ -207,8 +209,6 @@ export const RECOMMENDATION = {
   harderMinHours: 48,
   /** Less than this many hours since the last session → "easier". */
   easierMaxHours: 24,
-  /** Yesterday's steps at or above this → "easier" (heavy walking day). */
-  heavyStepsYesterday: 15000,
   /** "harder" needs the last N sessions to be easy and complete. */
   easySessionsForHarder: 2,
 } as const;

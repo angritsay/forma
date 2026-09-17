@@ -174,12 +174,12 @@ for (const course of COURSES) {
       ? `(select id from public.custom_workouts where short_id = ${q(`${course.id}_${node.workoutId}`)})`
       : 'null';
     push('insert into public.admin_course_days (');
-    push('  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,');
+    push('  course_id, node_id, week, day, kind, custom_workout_id, content, deload,');
     push('  sort_order');
     push(') values (');
     push(`  (select id from public.admin_courses where slug_id = ${q(course.id)}),`);
     push(`  ${q(node.id)}, ${node.week}, ${node.day}, ${q(node.kind)}, ${workoutRef},`);
-    push(`  ${j(dayContent)}, ${node.deload === true}, ${node.stepsGoal ?? 'null'}, ${i}`);
+    push(`  ${j(dayContent)}, ${node.deload === true}, ${i}`);
     push(')');
     push('on conflict (course_id, node_id) do update set');
     push('  week = excluded.week,');
@@ -188,7 +188,6 @@ for (const course of COURSES) {
     push('  custom_workout_id = excluded.custom_workout_id,');
     push('  content = excluded.content,');
     push('  deload = excluded.deload,');
-    push('  steps_goal = excluded.steps_goal,');
     push('  sort_order = excluded.sort_order,');
     push('  updated_at = now();');
     push();

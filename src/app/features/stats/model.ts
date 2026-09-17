@@ -1,26 +1,23 @@
 /**
  * Pure aggregations for the Stats screen: this week's load per day, points per week, the streak
- * calendar, the steps history, personal records and the `UserStats` the achievement engine
- * expects. Everything reads the progress store's rows; dates are local YYYY-MM-DD strings and
- * "today" is passed in so the module stays testable in node.
+ * calendar, personal records and the `UserStats` the achievement engine expects. Everything reads
+ * the progress store's rows; dates are local YYYY-MM-DD strings and "today" is passed in so the
+ * module stays testable in node.
+ *
+ * `stepsHistory()` used to live here too, and every function below used to take the day's step
+ * logs as a second argument. Steps are gone — nothing in a Mini App can read a phone's step
+ * counter — so a day is a training day or it is nothing.
  */
 import { allCourses, findCourse, findExercise } from '@/content/catalogue';
 import type { Locale } from '@/content/schema';
 import type { BenchmarkSeries, CourseStateRow, MyTotals, WorkoutSessionRow } from '@/lib/api/types';
-import { STEPS_GOAL } from '@/lib/training/constants';
 import { computeStreak } from '@/lib/training/streak';
 import type { UserStats } from '@/lib/training/types';
 import { addDays, daysBetween, weekStart } from '@/lib/util/dates';
-import {
-  buildDayActivity,
-  isCompletedSession,
-  totalPoints,
-  type DailyLogMap,
-} from '@/app/features/home/stats';
+import { buildDayActivity, isCompletedSession, totalPoints } from '@/app/features/home/stats';
 
 export const POINTS_WEEKS = 8;
 export const CALENDAR_WEEKS = 5;
-export const STEPS_HISTORY_DAYS = 14;
 
 /* ---------------------------------------------------------------------------------------------
  * This week
@@ -60,7 +57,7 @@ export function weekLoad(sessions: readonly WorkoutSessionRow[], todayIso: strin
 
 export interface WeekDay {
   date: string;
-  /** A workout was finished or the steps goal was reached — the same rule the streak counts by. */
+  /** A workout was finished — the same rule the streak counts by. */
   active: boolean;
   today: boolean;
   future: boolean;
@@ -70,16 +67,14 @@ export interface WeekDay {
  * Monday → Sunday of the current ISO week as seven days, each either active or not.
  *
  * This is the figure behind «Цель недели» on «Прогресс»: seven circles, a check on every active
- * day. It counts by the streak's own rule — a workout *or* the steps goal makes a day — because the
- * two figures sit on one screen and would otherwise disagree about the same Tuesday.
+ * day. It counts by the streak's own rule — a finished workout makes a day — because the two
+ * figures sit on one screen and would otherwise disagree about the same Tuesday.
  */
 export function weekActiveDays(
   sessions: readonly WorkoutSessionRow[],
-  logs: DailyLogMap,
   todayIso: string,
-  stepsGoal = STEPS_GOAL,
 ): WeekDay[] {
-  const activity = new Map(buildDayActivity(sessions, logs).map((d) => [d.date, d]));
+  const activity = new Map(buildDayActivity(sessions).map((d) => [d.date, d]));
   const from = weekStart(todayIso);
   const days: WeekDay[] = [];
   for (let i = 0; i < 7; i++) {
@@ -87,7 +82,7 @@ export function weekActiveDays(
     const day = activity.get(date);
     days.push({
       date,
-      active: Boolean(day && (day.workoutDone || day.steps >= stepsGoal)),
+      active: Boolean(day?.workoutDone),
       today: date === todayIso,
       future: date > todayIso,
     });
@@ -104,7 +99,6 @@ export interface WeekPoints {
   from: string;
   /** Sunday of the week. */
   to: string;
-  /** Workout points + steps points. */
   points: number;
   current: boolean;
 }
@@ -112,7 +106,6 @@ export interface WeekPoints {
 /** The last `weeks` ISO weeks (oldest first, current week last) with the points earned in each. */
 export function pointsByWeek(
   sessions: readonly WorkoutSessionRow[],
-  logs: DailyLogMap,
   todayIso: string,
   weeks = POINTS_WEEKS,
 ): WeekPoints[] {
@@ -132,10 +125,6 @@ export function pointsByWeek(
     const week = bucket(s.localDate);
     if (week) week.points += s.points;
   }
-  for (const log of Object.values(logs)) {
-    const week = bucket(log.localDate);
-    if (week) week.points += log.points;
-  }
   return out;
 }
 
@@ -143,13 +132,12 @@ export function pointsByWeek(
  * Streak calendar
  * ------------------------------------------------------------------------------------------- */
 
-export type CalendarKind = 'workout' | 'steps' | 'empty' | 'future';
+export type CalendarKind = 'workout' | 'empty' | 'future';
 
 export interface CalendarCell {
   date: string;
   kind: CalendarKind;
   today: boolean;
-  steps: number;
 }
 
 export interface CalendarWeek {
@@ -159,16 +147,15 @@ export interface CalendarWeek {
 
 /**
  * The last `weeks` ISO weeks as rows of seven cells (oldest week first). A day is a workout day
- * when a session was completed, a steps day when the goal was reached, otherwise empty.
+ * when a session was completed, otherwise empty. There used to be a third kind, `steps`, drawn in
+ * its own colour for a day carried by walking alone; it went with the step feature.
  */
 export function streakCalendar(
   sessions: readonly WorkoutSessionRow[],
-  logs: DailyLogMap,
   todayIso: string,
   weeks = CALENDAR_WEEKS,
-  stepsGoal = STEPS_GOAL,
 ): CalendarWeek[] {
-  const activity = new Map(buildDayActivity(sessions, logs).map((d) => [d.date, d]));
+  const activity = new Map(buildDayActivity(sessions).map((d) => [d.date, d]));
   const currentFrom = weekStart(todayIso);
   const out: CalendarWeek[] = [];
   for (let w = weeks - 1; w >= 0; w--) {
@@ -180,34 +167,9 @@ export function streakCalendar(
       let kind: CalendarKind = 'empty';
       if (date > todayIso) kind = 'future';
       else if (day?.workoutDone) kind = 'workout';
-      else if (day && day.steps >= stepsGoal) kind = 'steps';
-      cells.push({ date, kind, today: date === todayIso, steps: day?.steps ?? 0 });
+      cells.push({ date, kind, today: date === todayIso });
     }
     out.push({ from, cells });
-  }
-  return out;
-}
-
-/* ---------------------------------------------------------------------------------------------
- * Steps history
- * ------------------------------------------------------------------------------------------- */
-
-export interface StepsPoint {
-  date: string;
-  steps: number;
-  today: boolean;
-}
-
-/** The last `days` days (oldest first, today last) with the logged steps, 0 when nothing logged. */
-export function stepsHistory(
-  logs: DailyLogMap,
-  todayIso: string,
-  days = STEPS_HISTORY_DAYS,
-): StepsPoint[] {
-  const out: StepsPoint[] = [];
-  for (let i = days - 1; i >= 0; i--) {
-    const date = addDays(todayIso, -i);
-    out.push({ date, steps: logs[date]?.steps ?? 0, today: date === todayIso });
   }
   return out;
 }
@@ -289,7 +251,6 @@ export function recordImproved(record: PersonalRecord): boolean | null {
 export interface ProgressSnapshot {
   totals: MyTotals | null;
   sessions: readonly WorkoutSessionRow[];
-  logs: DailyLogMap;
   benchmarks: readonly BenchmarkSeries[];
   courseStates: Readonly<Record<string, CourseStateRow>>;
   todayIso: string;
@@ -314,18 +275,17 @@ export function totalCalories(sessions: readonly WorkoutSessionRow[]): number {
 
 /**
  * `UserStats` for `evaluateAchievements` from the progress store. Server totals win when
- * loaded; the streak and steps counters come from the rows in memory (last 90 days of logs).
+ * loaded; the streak comes from the sessions in memory.
  */
 export function userStatsFromProgress(p: ProgressSnapshot): UserStats {
   const completed = p.sessions.filter(isCompletedSession);
-  const streak = computeStreak(buildDayActivity(p.sessions, p.logs), p.todayIso);
+  const streak = computeStreak(buildDayActivity(p.sessions), p.todayIso);
   const seconds = completed.reduce((n, s) => n + (s.durationSec ?? 0), 0);
   return {
     workouts: p.totals?.workouts ?? completed.length,
-    points: p.totals?.points ?? totalPoints(p.sessions, p.logs),
+    points: p.totals?.points ?? totalPoints(p.sessions),
     streakCurrent: streak.current,
     streakLongest: streak.longest,
-    stepsDaysAtGoal: Object.values(p.logs).filter((l) => l.steps >= STEPS_GOAL).length,
     benchmarksDone: p.benchmarks.reduce((n, s) => n + s.history.length, 0),
     coursesCompleted: Object.values(p.courseStates).filter(isCourseCompleted).length,
     totalMinutes: p.totals?.minutes ?? Math.round(seconds / 60),

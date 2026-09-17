@@ -12,7 +12,6 @@
  * Pure by construction: every entry point takes the storage it works on, so the unit tests run in
  * node against an in-memory storage.
  */
-import { stepsPoints } from '@/lib/training/streak';
 import { addDays, toLocalDateIso, weekStart } from '@/lib/util/dates';
 import { AppError } from '../errors';
 import { toNumberOr } from '../mappers';
@@ -20,7 +19,6 @@ import type {
   DbBenchmark,
   DbCoachBooking,
   DbCourseState,
-  DbDailyLog,
   DbLeaderboardRow,
   DbProfile,
   DbPurchase,
@@ -90,8 +88,6 @@ export interface DemoRival {
   /** Workout points earned "this week", per course id. */
   weekByCourse: Record<string, number>;
   /** Step points; counted only on the global board, like `get_leaderboard` does. */
-  allStepPoints: number;
-  weekStepPoints: number;
 }
 
 /** A `coach_bookings` row as the demo holds it: the view's columns plus the email it is filed under. */
@@ -111,7 +107,6 @@ export interface DemoDb {
   coachBookings: DemoCoachBooking[];
   courseStates: DbCourseState[];
   sessions: DbWorkoutSession[];
-  dailyLogs: DbDailyLog[];
   benchmarks: DbBenchmark[];
   rivals: DemoRival[];
   /*
@@ -155,29 +150,6 @@ export const EMPTY_AUTH: DemoAuthState = {
 /** Courses the demo account owns. The other three stay locked so "get access" is testable. */
 export const DEMO_ENTITLED_COURSES: readonly string[] = ['start', 'engine'];
 
-/**
- * Seeded step history: [days ago, steps]. Invented numbers, mixing days above the 7 000 goal
- * (they count for the streak) with quieter days, so the streak card, the steps chart and the
- * calendar all have something to show. Today is deliberately left empty — logging it is part of
- * the walkthrough.
- */
-const SEED_STEPS: readonly (readonly [number, number])[] = [
-  [1, 9240],
-  [2, 8130],
-  [3, 7460],
-  [4, 3180],
-  [5, 10420],
-  [6, 7910],
-  [7, 5240],
-  [8, 8680],
-  [9, 9930],
-  [10, 6120],
-  [11, 7350],
-  [12, 11040],
-  [13, 4870],
-  [14, 7020],
-];
-
 /** Invented athletes for the leaderboard. Names and points exist only inside the demo store. */
 const SEED_RIVALS: readonly DemoRival[] = [
   {
@@ -186,8 +158,6 @@ const SEED_RIVALS: readonly DemoRival[] = [
     avatarSeed: 'anya-k',
     allByCourse: { start: 1840, engine: 2260 },
     weekByCourse: { start: 180, engine: 420 },
-    allStepPoints: 1320,
-    weekStepPoints: 150,
   },
   {
     userId: 'demo-rival-02',
@@ -195,8 +165,6 @@ const SEED_RIVALS: readonly DemoRival[] = [
     avatarSeed: 'marek',
     allByCourse: { engine: 3100, athlete: 980 },
     weekByCourse: { engine: 360, athlete: 120 },
-    allStepPoints: 940,
-    weekStepPoints: 90,
   },
   {
     userId: 'demo-rival-03',
@@ -204,8 +172,6 @@ const SEED_RIVALS: readonly DemoRival[] = [
     avatarSeed: 'dinara',
     allByCourse: { start: 2400, dumbbells: 1450 },
     weekByCourse: { start: 240, dumbbells: 300 },
-    allStepPoints: 1610,
-    weekStepPoints: 210,
   },
   {
     userId: 'demo-rival-04',
@@ -213,8 +179,6 @@ const SEED_RIVALS: readonly DemoRival[] = [
     avatarSeed: 'pavel-s',
     allByCourse: { kettlebell: 2780 },
     weekByCourse: { kettlebell: 480 },
-    allStepPoints: 720,
-    weekStepPoints: 60,
   },
   {
     userId: 'demo-rival-05',
@@ -222,8 +186,6 @@ const SEED_RIVALS: readonly DemoRival[] = [
     avatarSeed: 'lena',
     allByCourse: { start: 1120, engine: 640 },
     weekByCourse: { start: 120, engine: 60 },
-    allStepPoints: 1880,
-    weekStepPoints: 240,
   },
   {
     userId: 'demo-rival-06',
@@ -231,8 +193,6 @@ const SEED_RIVALS: readonly DemoRival[] = [
     avatarSeed: 'ivan',
     allByCourse: { dumbbells: 3420, athlete: 1560 },
     weekByCourse: { dumbbells: 300, athlete: 180 },
-    allStepPoints: 460,
-    weekStepPoints: 30,
   },
   {
     userId: 'demo-rival-07',
@@ -240,8 +200,6 @@ const SEED_RIVALS: readonly DemoRival[] = [
     avatarSeed: 'nastya',
     allByCourse: { start: 860 },
     weekByCourse: { start: 300 },
-    allStepPoints: 2140,
-    weekStepPoints: 270,
   },
   {
     userId: 'demo-rival-08',
@@ -249,8 +207,6 @@ const SEED_RIVALS: readonly DemoRival[] = [
     avatarSeed: 'timur',
     allByCourse: { engine: 1980, kettlebell: 1240 },
     weekByCourse: { engine: 240, kettlebell: 60 },
-    allStepPoints: 1040,
-    weekStepPoints: 120,
   },
   {
     userId: 'demo-rival-09',
@@ -258,8 +214,6 @@ const SEED_RIVALS: readonly DemoRival[] = [
     avatarSeed: 'olga',
     allByCourse: { start: 520, engine: 380 },
     weekByCourse: { start: 60, engine: 120 },
-    allStepPoints: 1450,
-    weekStepPoints: 180,
   },
   {
     userId: 'demo-rival-10',
@@ -267,8 +221,6 @@ const SEED_RIVALS: readonly DemoRival[] = [
     avatarSeed: 'roma',
     allByCourse: { athlete: 4260 },
     weekByCourse: { athlete: 540 },
-    allStepPoints: 380,
-    weekStepPoints: 30,
   },
   {
     userId: 'demo-rival-11',
@@ -276,8 +228,6 @@ const SEED_RIVALS: readonly DemoRival[] = [
     avatarSeed: 'kirill',
     allByCourse: { dumbbells: 1680, kettlebell: 900 },
     weekByCourse: { dumbbells: 120, kettlebell: 240 },
-    allStepPoints: 1180,
-    weekStepPoints: 60,
   },
   {
     userId: 'demo-rival-12',
@@ -285,8 +235,6 @@ const SEED_RIVALS: readonly DemoRival[] = [
     avatarSeed: 'dasha',
     allByCourse: { start: 1340, engine: 1520 },
     weekByCourse: { start: 360, engine: 180 },
-    allStepPoints: 1760,
-    weekStepPoints: 210,
   },
 ];
 
@@ -343,7 +291,6 @@ export function emptyDb(): DemoDb {
     coachBookings: [],
     courseStates: [],
     sessions: [],
-    dailyLogs: [],
     benchmarks: [],
     rivals: SEED_RIVALS.map((r) => ({ ...r })),
     exercises: [],
@@ -389,7 +336,6 @@ export function readDb(storage: StorageLike = defaultStorage()): DemoDb {
       coachBookings: asRows<DemoCoachBooking>(parsed.coachBookings),
       courseStates: asRows<DbCourseState>(parsed.courseStates),
       sessions: asRows<DbWorkoutSession>(parsed.sessions),
-      dailyLogs: asRows<DbDailyLog>(parsed.dailyLogs),
       benchmarks: asRows<DbBenchmark>(parsed.benchmarks),
       rivals: rivals.length > 0 ? rivals : SEED_RIVALS.map((r) => ({ ...r })),
       exercises: asRows<ExerciseCatalogRow>(parsed.exercises),
@@ -471,19 +417,6 @@ export function clearDemoStore(storage: StorageLike = defaultStorage()): void {
 }
 
 // --- seeding ----------------------------------------------------------------
-
-function seedDailyLogs(userId: string, today: string): DbDailyLog[] {
-  const updatedAt = nowIso();
-  return SEED_STEPS.map(([daysAgo, steps]) => ({
-    user_id: userId,
-    local_date: addDays(today, -daysAgo),
-    steps,
-    // Same formula the daily_logs_set_points trigger applies server-side.
-    points: stepsPoints(steps),
-    note: null,
-    updated_at: updatedAt,
-  }));
-}
 
 function seedSubscriptions(createdAt: string): DbSubscriptionRow[] {
   const base = Date.parse(createdAt);
@@ -580,7 +513,6 @@ export function seedUser(db: DemoDb, email: string, today = toLocalDateIso()): D
     updated_at: createdAt,
   };
   db.profiles.push(profile);
-  db.dailyLogs.push(...seedDailyLogs(userId, today));
   if (!db.coachBookings.some((b) => b.email === email)) {
     db.coachBookings.push(seedCoachBooking(email, today));
   }
@@ -694,7 +626,6 @@ export function currentDemoUser(storage: StorageLike = defaultStorage()): DemoUs
 // --- derived reads ----------------------------------------------------------
 
 const MAX_SESSION_POINTS = 375;
-const MAX_STEP_POINTS = 60;
 
 function clamp(value: number, max: number): number {
   return Math.min(Math.max(value, 0), max);
@@ -711,10 +642,6 @@ export function demoTotals(db: DemoDb, userId: string): DbTotals {
     workouts += 1;
     seconds += toNumberOr(s.duration_sec, 0);
   }
-  for (const d of db.dailyLogs) {
-    if (d.user_id !== userId) continue;
-    points += toNumberOr(d.points, 0);
-  }
   return { points, workouts, minutes: Math.floor(seconds / 60) };
 }
 
@@ -725,8 +652,7 @@ function rivalPoints(
 ): number {
   const byCourse = period === 'week' ? rival.weekByCourse : rival.allByCourse;
   if (courseId !== undefined) return byCourse[courseId] ?? 0;
-  const workouts = Object.values(byCourse).reduce((sum, n) => sum + n, 0);
-  return workouts + (period === 'week' ? rival.weekStepPoints : rival.allStepPoints);
+  return Object.values(byCourse).reduce((sum, n) => sum + n, 0);
 }
 
 function myPoints(
@@ -743,13 +669,6 @@ function myPoints(
     if (courseId !== undefined && s.course_id !== courseId) continue;
     if (period === 'week' && s.local_date < from) continue;
     points += clamp(toNumberOr(s.points, 0), MAX_SESSION_POINTS);
-  }
-  if (courseId === undefined) {
-    for (const d of db.dailyLogs) {
-      if (d.user_id !== userId) continue;
-      if (period === 'week' && d.local_date < from) continue;
-      points += clamp(toNumberOr(d.points, 0), MAX_STEP_POINTS);
-    }
   }
   return points;
 }

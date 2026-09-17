@@ -2,7 +2,7 @@
  * App copy. Owned by the app area; keep keys in sync with ru/app.ts.
  * Prefixes: tab* / nav* (shell), kit* (UI kit labels), error* (error states), auth* (sign-in),
  * onb* (onboarding). Screen agents add home*, courses*, path*, node*, player*, summary*, stats*,
- * leaderboard*, steps*, profile*, admin*.
+ * leaderboard*, profile*, admin*.
  */
 export const app = {
   // «Club», not «Small Steps Club»: a tab label is one of four slots on a 390px screen and a
@@ -105,10 +105,9 @@ export const app = {
   homeGreetingNight: 'Still up, {name}?',
   homeStreakTitle: 'Streak',
   homeStreakTodayDone: 'Today counts. Keep it going tomorrow.',
-  homeStreakAtRisk: 'Log a workout or {steps} steps today to keep it.',
-  homeStreakEmpty: 'Finish a workout or hit {steps} steps to start a streak.',
+  homeStreakAtRisk: 'Train today to keep it.',
+  homeStreakEmpty: 'Finish a workout to start a streak.',
   homeStreakBest: 'Best: {n}',
-  homeStreakLogSteps: 'Log steps',
   homeResumeEyebrow: 'Workout in progress',
   homeResumeFinishedEyebrow: 'Unsaved result',
   homeResumeCta: 'Resume',
@@ -116,15 +115,10 @@ export const app = {
   homeTodayEyebrow: 'Today',
   homeTodayWeek: 'Week {week} · Day {day}',
   homeTodayOpen: 'Open',
-  homeTodayStepsProgress: '{steps} of {goal} steps',
-  homeTodayLogSteps: 'Log steps',
   homeTodayNoCourseTitle: 'Pick a programme',
   homeTodayNoCourseBody: 'And your first workout appears here — today.',
-  homeTaskSteps: 'Log how far you walked today',
   homeTodayCompletedTitle: 'Course completed',
   homeTodayOpenPath: 'Open the path',
-  homeStatsSteps: 'Steps this week',
-  homeStatsGoal: 'goal',
   homeStatsKcal: 'kcal this week',
   homeStatsMinutes: 'Minutes this week',
   homeStatsPoints: 'Points',
@@ -190,12 +184,9 @@ export const app = {
   pathNodeOpen: 'Available',
   pathNodeLocked: 'Locked',
   pathRestTitle: 'Rest day',
-  pathRestGoal: 'Goal: {goal} steps',
-  pathRestToday: 'Today: {steps} steps',
-  pathRestDoneHint: 'Goal reached — you can close the day.',
-  pathRestNeedMore: '{n} more steps to reach the goal.',
-  pathRestLogSteps: 'Log steps',
+  pathRestDoneHint: 'Rest is part of the plan. Nothing to do — just close the day.',
   pathRestMarkDone: 'Mark rest day done',
+  pathRestMarked: 'Rest day done',
   pathRestSkip: 'Skip rest day',
   pathRestCompleted: 'Rest day done',
   pathRestSkipped: 'Rest day skipped',
@@ -398,7 +389,6 @@ export const app = {
   statsCalendarCurrent: 'Now {n}',
   statsCalendarBest: 'Best {n}',
   statsCalendarWorkout: 'Workout',
-  statsCalendarSteps: 'Steps goal',
   statsCalendarEmpty: 'Nothing logged',
   statsCalendarFuture: 'Ahead',
   statsCalendarToday: 'today',
@@ -416,7 +406,7 @@ export const app = {
   leaderboardRankLabel: 'Rank {n}',
   leaderboardYou: 'You',
   leaderboardEmptyTitle: 'No points yet',
-  leaderboardEmptyWeek: 'Be the first this week: finish a workout or log your steps.',
+  leaderboardEmptyWeek: 'Be the first this week: finish a workout.',
   leaderboardEmptyAll: 'Nobody has scored here yet. Your first workout opens the table.',
   leaderboardErrorTitle: 'Couldn’t load the leaderboard',
   leaderboardHowTitle: 'How points work',
@@ -424,44 +414,8 @@ export const app = {
     'Every workout has a base value of 60–250 pts. Easier ×{easier}, As usual ×{normal}, Harder ×{harder} — and the result scales with the share of the plan you completed.',
   leaderboardHowRepeat: 'Repeating a workout you already finished gives {pct}% of its points.',
   leaderboardHowStreak: 'Streak bonus: +{pct7}% from 7 days in a row, +{pct30}% from 30.',
-  leaderboardHowSteps:
-    'Steps count in the overall table: {atGoal} pts at {goal} steps, +{extra} for every extra 1,000, up to {max}.',
   leaderboardHowWeek:
     'The weekly table resets every Monday (UTC). A course table counts only that course’s workouts.',
-
-  // Steps
-  stepsTitle: 'Steps',
-  stepsInputLabel: 'Steps today',
-  stepsRingLabel: 'Progress to the steps goal',
-  // The goal as a pill under the ring; at the goal the pill turns white and carries the points.
-  stepsGoalPill: 'Goal {goal}',
-  stepsAddLabel: 'Add {n} steps',
-  stepsPointsPreview: '+{n} pts',
-  stepsInvalid: 'Enter a whole number from 0 to {max}.',
-  stepsWhyTitle: 'Why type them in?',
-  stepsWhyBody:
-    'A web app can’t read your phone’s pedometer. Open Health on iPhone, or Google Fit / your phone’s fitness app, find today’s steps and copy the number here. Once a day, in the evening, is enough — the day counts from {goal} steps.',
-  stepsProofAdd: 'Add a screenshot',
-  stepsProofHint: 'Your step counter — the coach sees where the number came from',
-  stepsProofAttached: 'Screenshot attached',
-  stepsProofOpen: 'Open the screenshot',
-  stepsProofError: 'The screenshot could not be uploaded',
-  stepsHistoryTitle: 'Last 14 days',
-  // What one circle of the history says to a screen reader: the day, then its count or that
-  // nothing was logged, then that a tap edits it.
-  stepsHistoryDay: '{date}: {steps} steps',
-  stepsNotLogged: 'Not logged',
-  stepsEdit: 'Edit',
-  stepsEditTitle: 'Steps for {date}',
-  stepsSaved: 'Saved',
-  stepsStreakKept: 'Streak kept!',
-  stepsStreakStarted: 'Streak started!',
-  stepsDayOne: '{n} day in a row',
-  stepsDayFew: '{n} days in a row',
-  stepsDayMany: '{n} days in a row',
-  stepsBelowGoal: '{n} more steps and the day counts.',
-  stepsSaveError: 'Couldn’t save the steps. Check the connection and try again.',
-  stepsErrorTitle: 'Couldn’t load your steps',
 
   // Profile
   profileTitle: 'Profile',
@@ -823,8 +777,6 @@ export const app = {
   daySearchWorkout: 'Search by title',
   dayBuildWorkout: 'Build a new one',
   dayChangeWorkout: 'Replace',
-  dayStepsGoal: 'Steps goal',
-  dayStepsGoalHint: 'How many steps count for a rest day',
   dayDeload: 'Deload week',
   dayImage: 'Day image',
   dayImageHint: "Shown on the day's screen",

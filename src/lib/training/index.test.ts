@@ -15,13 +15,11 @@ describe('training engine public API', () => {
       'summarizeSession',
       'adaptScale',
       'computeStreak',
-      'stepsPoints',
       'levelForPoints',
       'evaluateAchievements',
     ] as const;
     for (const name of fns) expect(typeof engine[name], name).toBe('function');
     expect(Array.isArray(engine.ACHIEVEMENTS)).toBe(true);
-    expect(engine.STEPS_GOAL).toBe(7000);
     expect(engine.LEVEL_THRESHOLDS).toHaveLength(10);
   });
 

@@ -10,7 +10,6 @@ export * from './profiles';
 export * from './entitlements';
 export * from './courseState';
 export * from './sessions';
-export * from './dailyLogs';
 export * from './benchmarks';
 export * from './leaderboard';
 export * from './stats';

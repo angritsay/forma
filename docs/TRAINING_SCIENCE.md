@@ -27,10 +27,15 @@ calories.
 4. **Safety first.** Limitations (knees, lower back, shoulders, wrists, hypertension, pregnancy)
    change what is prescribed, not only how much; pain always reduces load and surfaces a "see a
    professional" note.
-5. **Movement every day counts.** A streak day is a completed workout **or** ≥ 7 000 steps —
-   the step count where mortality risk drops most steeply in cohort studies (Paluch et al. 2021,
-   JAMA Network Open; Paluch et al. 2022, Lancet Public Health) — echoing the WHO 2020 guidance
-   that "every move counts".
+5. **A streak day is a training day.** It used to be a completed workout **or** ≥ 7 000 steps, on
+   the cohort evidence that 7 000 is where mortality risk drops most steeply (Paluch et al. 2021,
+   JAMA Network Open; Paluch et al. 2022, Lancet Public Health). The evidence still holds; what
+   failed was the measurement. A Mini App cannot read a phone's step counter — Apple HealthKit has
+   no browser API, Google Fit's REST API is closed to new applicants and shuts down at the end of
+   2026, Health Connect is on-device Android — so the figure was typed in by hand, and the owner's
+   rule is that a number you keep in two apps is a number you keep in neither. Steps were removed
+   from the product (§8, `docs/SPEC.md` §11.10). The WHO 2020 «every move counts» guidance still
+   argues for the rest days and the walks in every course; it is simply no longer scored.
 
 ## 2. Fitness index, level and initial scale (`assessment.ts`)
 
@@ -401,8 +406,9 @@ and the RIR mapping follows Zourdos et al. (2016): RPE 10 = 0 RIR, 9 = 1, 8 = 2,
 
 1. Pregnancy → `easier`.
 2. No history → `normal` ("first session").
-3. `easier` when the last session had pain, RPE ≥ 9, completion < 0.8, was < 24 h ago, or
-   yesterday's steps ≥ 15 000 (heavy leg day, **expert anchor**).
+3. `easier` when the last session had pain, RPE ≥ 9, completion < 0.8, or was < 24 h ago. (A fifth
+   clause — yesterday's steps ≥ 15 000, a heavy leg day — went with the step feature: there is no
+   step count to read.)
 4. `harder` when the last two sessions had RPE ≤ 6, completion ≥ 0.95 and **no pain**, and ≥ 48 h
    passed — the 48–72 h between sessions for the same muscle groups recommended for novices in the
    ACSM Position Stand (2009). Pain anywhere in that window blocks the upgrade: principle 4 above
@@ -415,21 +421,21 @@ counts as "≥ 48 h of rest".
 
 Each recommendation carries a one-sentence bilingual reason.
 
-## 8. Streaks and steps (`streak.ts`)
+## 8. Streaks (`streak.ts`)
 
-A day is active when a workout was completed or logged steps reached the goal (7 000 by default,
-per-day override for rest nodes; a missing or non-positive override falls back to the default, so a
-zero goal can never turn an empty day into an active one). The current streak counts back from today when today is active,
-otherwise from yesterday with `atRisk = true` — today never breaks a streak until it ends. `longest`
-is computed over the whole history; input may be unsorted, sparse and contain duplicates.
+A day is active when a workout was completed. The current streak counts back from today when today
+is active, otherwise from yesterday with `atRisk = true` — today never breaks a streak until it
+ends. `longest` is computed over the whole history; input may be unsorted, sparse and contain
+duplicates.
 
-Steps points: 0 below goal, 30 at goal, +5 per full extra 1 000, capped at 60 (so a walking day is
-worth roughly a quarter to a half of a workout, never more). The 7 000-step goal comes from the
-CARDIA analysis (Paluch et al. 2021): ≥ 7 000 steps/day was associated with 50–70% lower all-cause
-mortality than < 7 000, with benefits flattening above ~10 000; the 2022 meta-analysis (Paluch et
-al., Lancet Public Health) places the plateau at ~6 000–8 000 steps for adults over 60 and
-~8 000–10 000 below. WHO (2020) recommends 150–300 min of moderate activity per week; a 7 000-step
-day is a realistic daily slice of that for a home-training audience.
+**What this section used to hold.** A day was also active at ≥ 7 000 steps (per-day override for
+rest nodes), and `stepsPoints()` paid 30 at the goal, +5 per full extra 1 000, capped at 60 — about
+a quarter to a half of a workout. The 7 000 came from the CARDIA analysis (Paluch et al. 2021),
+where ≥ 7 000 steps/day was associated with 50–70% lower all-cause mortality, flattening above
+~10 000. None of that was wrong; it was simply unmeasurable from a WebView, so the number had to be
+typed in by hand and the feature was removed (§1.5). Keep the citations: they are the argument for
+the walks the courses prescribe, and they are what to re-read if Forma ever ships a native app that
+_can_ read HealthKit or Health Connect.
 
 ## 9. Points, levels, achievements (`levels.ts`)
 
@@ -443,36 +449,36 @@ training for level 10. Titles (RU/EN): Новичок/Rookie, Стажёр/Train
 Боец/Competitor, Ветеран/Veteran, Мастер/Master, Элита/Elite, Чемпион/Champion, Титан/Titan,
 Легенда/Legend.
 
-Thirteen achievements: first workout; 5 / 25 / 100 workouts; 3 / 7 / 30-day streak; 10 days at the
-steps goal; first benchmark; course completed; 1 000 / 10 000 points; 600 minutes trained. Each
+Twelve achievements: first workout; 5 / 25 / 100 workouts; 3 / 7 / 30-day streak; first benchmark;
+course completed; 1 000 / 10 000 points; 600 minutes trained. (A thirteenth, «10 days at the steps
+goal», went with the step feature.) Each
 reports `unlocked` and a 0–1 `progress`. The streak tiers are modest on purpose — habit formation
 takes weeks (Lally et al. 2010), and a 7-day streak is the first milestone worth celebrating.
 
 ## 10. Constants reference (`constants.ts`)
 
-| Constant                                                                  | Value                      | Kind                       |
-| ------------------------------------------------------------------------- | -------------------------- | -------------------------- |
-| `CHOICE_VOLUME` / `CHOICE_SETS_DELTA` / `CHOICE_WINDOW` / `CHOICE_POINTS` | see §3.1                   | expert anchor              |
-| `REPEAT_POINTS`                                                           | 0.5                        | design                     |
-| `STREAK_BONUS`                                                            | ≥ 30 d +20%, ≥ 7 d +10%    | design                     |
-| `DELOAD_VOLUME` / `DELOAD_REST`                                           | 0.65 / 1.2                 | Bell et al. 2022           |
-| `SCALE_MIN..MAX`, `SCALE_INITIAL_MIN..MAX`, `EFFECTIVE_SCALE_MIN..MAX`    | 0.5–1.5, 0.6–1.3, 0.3–2    | design                     |
-| `SETS_ADD_AT` / `SETS_REMOVE_AT` / `MIN_SETS_AFTER_REMOVE`                | 1.3 / 0.7 / 2              | expert anchor              |
-| `MIN_SECONDS_TARGET`                                                      | 10 s                       | expert anchor              |
-| `TRANSITION_SEC` / `BLOCK_INTRO_SEC`                                      | 8 s / 20 s                 | expert anchor              |
-| `REST_MET` / `DEFAULT_MET` / `DEFAULT_WEIGHT_KG`                          | 1.5 / 5 / 70               | Compendium                 |
-| `METERS_PER_SEC` / `SEC_PER_CALORIE` / `DEFAULT_SECONDS_PER_REP`          | 1.5 m/s / 4 s / 3 s        | expert anchor              |
-| `AMRAP_WORK_SHARE` / `FORTIME_PACE_FACTOR`                                | 0.7 / 1.15                 | expert anchor              |
-| `TABATA_DEFAULT_ROUNDS` / `FORMAT_DEFAULT_WORK_REST`                      | 8; 20/10 s, 30/30 s        | expert anchor              |
-| `STEPS_GOAL`, `STEPS_POINTS_*`                                            | 7 000; 30 / +5 / 60        | Paluch 2021; design        |
-| `LEVEL_THRESHOLDS`, `LEVEL_TIER`                                          | §9; 35 / 66                | design                     |
-| `ADAPTATION`                                                              | §7.3                       | ACSM 2009; Zourdos 2016    |
-| `RECOMMENDATION`                                                          | 48 h / 24 h / 15 000 steps | ACSM 2009; expert anchor   |
-| `FITNESS_WEIGHTS`, `NO_TEST_INDEX_CAP`, `KNEE_PUSHUP_FACTOR`              | §2; 60; 0.6                | design; expert anchor      |
-| `PUSHUP_NORMS`, `AGE_BAND_NORM_BANDS`                                     | §2.1                       | CSEP / ACSM                |
-| `SQUAT_ANCHORS`, `SQUAT_AGE_SHIFT_PER_BAND`, `PLANK_ANCHORS`              | §2.2–2.3                   | expert anchor              |
-| `ACTIVITY_SCORE`, `EXPERIENCE_SCORE`                                      | §2                         | design                     |
-| `HYPERTENSION_MAX_HOLD_SEC`, `*_RISKY_IDS`, `*_ID_PATTERN`                | §3.6                       | ACSM / ACOG; expert anchor |
+| Constant                                                                  | Value                   | Kind                       |
+| ------------------------------------------------------------------------- | ----------------------- | -------------------------- |
+| `CHOICE_VOLUME` / `CHOICE_SETS_DELTA` / `CHOICE_WINDOW` / `CHOICE_POINTS` | see §3.1                | expert anchor              |
+| `REPEAT_POINTS`                                                           | 0.5                     | design                     |
+| `STREAK_BONUS`                                                            | ≥ 30 d +20%, ≥ 7 d +10% | design                     |
+| `DELOAD_VOLUME` / `DELOAD_REST`                                           | 0.65 / 1.2              | Bell et al. 2022           |
+| `SCALE_MIN..MAX`, `SCALE_INITIAL_MIN..MAX`, `EFFECTIVE_SCALE_MIN..MAX`    | 0.5–1.5, 0.6–1.3, 0.3–2 | design                     |
+| `SETS_ADD_AT` / `SETS_REMOVE_AT` / `MIN_SETS_AFTER_REMOVE`                | 1.3 / 0.7 / 2           | expert anchor              |
+| `MIN_SECONDS_TARGET`                                                      | 10 s                    | expert anchor              |
+| `TRANSITION_SEC` / `BLOCK_INTRO_SEC`                                      | 8 s / 20 s              | expert anchor              |
+| `REST_MET` / `DEFAULT_MET` / `DEFAULT_WEIGHT_KG`                          | 1.5 / 5 / 70            | Compendium                 |
+| `METERS_PER_SEC` / `SEC_PER_CALORIE` / `DEFAULT_SECONDS_PER_REP`          | 1.5 m/s / 4 s / 3 s     | expert anchor              |
+| `AMRAP_WORK_SHARE` / `FORTIME_PACE_FACTOR`                                | 0.7 / 1.15              | expert anchor              |
+| `TABATA_DEFAULT_ROUNDS` / `FORMAT_DEFAULT_WORK_REST`                      | 8; 20/10 s, 30/30 s     | expert anchor              |
+| `LEVEL_THRESHOLDS`, `LEVEL_TIER`                                          | §9; 35 / 66             | design                     |
+| `ADAPTATION`                                                              | §7.3                    | ACSM 2009; Zourdos 2016    |
+| `RECOMMENDATION`                                                          | 48 h / 24 h             | ACSM 2009; expert anchor   |
+| `FITNESS_WEIGHTS`, `NO_TEST_INDEX_CAP`, `KNEE_PUSHUP_FACTOR`              | §2; 60; 0.6             | design; expert anchor      |
+| `PUSHUP_NORMS`, `AGE_BAND_NORM_BANDS`                                     | §2.1                    | CSEP / ACSM                |
+| `SQUAT_ANCHORS`, `SQUAT_AGE_SHIFT_PER_BAND`, `PLANK_ANCHORS`              | §2.2–2.3                | expert anchor              |
+| `ACTIVITY_SCORE`, `EXPERIENCE_SCORE`                                      | §2                      | design                     |
+| `HYPERTENSION_MAX_HOLD_SEC`, `*_RISKY_IDS`, `*_ID_PATTERN`                | §3.6                    | ACSM / ACOG; expert anchor |
 
 ## Sources
 

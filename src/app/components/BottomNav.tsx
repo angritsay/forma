@@ -73,7 +73,7 @@ export function tabItems(admin: boolean): readonly NavItem[] {
  * row, so an index of 3 in a three-seat bar does not mean "the admin tab", it means one seat past
  * the end. Asking the caller which bar it is keeps the index and the geometry from ever disagreeing.
  *
- * -1 is a real answer, not a failure: `/leaderboard`, `/steps` and the player's summary all show
+ * -1 is a real answer, not a failure: `/leaderboard` and the player's summary both show
  * this bar and belong to no seat, and the highlight fades out rather than pointing at one of them.
  */
 export function activeTabIndex(pathname: string, admin = false): number {

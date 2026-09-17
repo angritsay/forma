@@ -8,7 +8,6 @@ const stats = (o: Partial<UserStats> = {}): UserStats => ({
   points: 0,
   streakCurrent: 0,
   streakLongest: 0,
-  stepsDaysAtGoal: 0,
   benchmarksDone: 0,
   coursesCompleted: 0,
   totalMinutes: 0,
@@ -70,9 +69,7 @@ describe('achievements', () => {
   });
 
   it('reports progress and unlocks at the documented thresholds', () => {
-    const r = evaluateAchievements(
-      stats({ workouts: 5, points: 500, streakLongest: 7, stepsDaysAtGoal: 4 }),
-    );
+    const r = evaluateAchievements(stats({ workouts: 5, points: 500, streakLongest: 7 }));
     const byId = Object.fromEntries(r.map((a) => [a.id, a]));
     expect(byId.first_workout?.unlocked).toBe(true);
     expect(byId.workouts_5?.unlocked).toBe(true);
@@ -81,7 +78,6 @@ describe('achievements', () => {
     expect(byId.streak_7?.unlocked).toBe(true);
     expect(byId.streak_30?.progress).toBeCloseTo(7 / 30);
     expect(byId.points_1000?.progress).toBe(0.5);
-    expect(byId.steps_10_days?.progress).toBe(0.4);
     expect(byId.first_benchmark?.unlocked).toBe(false);
   });
 
@@ -92,7 +88,6 @@ describe('achievements', () => {
         points: 10000,
         streakCurrent: 30,
         streakLongest: 30,
-        stepsDaysAtGoal: 10,
         benchmarksDone: 1,
         coursesCompleted: 1,
         totalMinutes: 600,

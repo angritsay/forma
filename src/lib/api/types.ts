@@ -217,23 +217,6 @@ export interface CompleteSessionInput {
   completedAt: string;
 }
 
-// --- daily logs (steps) -----------------------------------------------------
-
-export interface DailyLogRow {
-  userId: string;
-  localDate: string;
-  steps: number;
-  /** Recomputed server-side from steps (see daily_logs_set_points trigger). */
-  points: number;
-  note: string | null;
-  /**
-   * `storage:proofs/steps/<user_id>/<local_date>.<ext>` — the athlete's screenshot of their own
-   * step counter, in a private bucket. Never a URL; the app mints a signed one to show it.
-   */
-  proofPath: string | null;
-  updatedAt: string;
-}
-
 // --- benchmarks -------------------------------------------------------------
 
 export interface BenchmarkRow {
@@ -404,22 +387,13 @@ export interface AdminCourseDayRow {
   customWorkoutId: string | null;
   content: CourseDayContent;
   deload: boolean;
-  stepsGoal: number | null;
   sortOrder: number;
 }
 
 export type AdminCourseDayPatch = Partial<
   Pick<
     AdminCourseDayRow,
-    | 'nodeId'
-    | 'week'
-    | 'day'
-    | 'kind'
-    | 'customWorkoutId'
-    | 'content'
-    | 'deload'
-    | 'stepsGoal'
-    | 'sortOrder'
+    'nodeId' | 'week' | 'day' | 'kind' | 'customWorkoutId' | 'content' | 'deload' | 'sortOrder'
   >
 >;
 

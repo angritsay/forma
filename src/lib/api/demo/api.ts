@@ -6,8 +6,6 @@
  * difference beyond the demo badge.
  */
 import { COURSES, EXERCISES } from '@/content/registry';
-import { stepsPoints } from '@/lib/training/streak';
-import { addDays, toLocalDateIso } from '@/lib/util/dates';
 import { downscaleImage, toDataUrl, type DownscaleOptions } from '@/lib/util/image';
 import { AppError } from '../errors';
 import type {
@@ -68,7 +66,6 @@ import {
   completeSessionToDb,
   courseStateFromDb,
   courseStatePatchToDb,
-  dailyLogFromDb,
   entitlementFromDb,
   groupBenchmarks,
   leaderboardRowFromDb,
@@ -83,7 +80,6 @@ import {
   totalsFromDb,
   type DbBenchmark,
   type DbCourseState,
-  type DbDailyLog,
   type DbPurchase,
   type DbSubscriptionRow,
   type DbWorkoutSession,
@@ -95,7 +91,6 @@ import type {
   CompleteSessionInput,
   CourseStatePatch,
   CourseStateRow,
-  DailyLogRow,
   Entitlement,
   LeaderboardPeriod,
   LeaderboardRow,
@@ -144,8 +139,6 @@ function liveSubscription(db: DemoDb, email: string): DbSubscriptionRow | null {
   const row = db.subscriptions.find((x) => x.email === email);
   return row && subscriptionLive(row.status as SubscriptionStatus, row.expires_at) ? row : null;
 }
-const MAX_STEPS = 100_000;
-const STEPS_EDIT_DAYS_BACK = 7;
 const BENCHMARK_KEY_RE = /^[a-z0-9_]{2,60}$/;
 
 function requireDemoUser(): DemoUser {
@@ -510,67 +503,6 @@ export async function getWorkoutSession(id: string): Promise<WorkoutSessionRow> 
     const row = readDb().sessions.find((s) => s.id === id && s.user_id === user.id);
     if (!row) throw new AppError('not_found', 'not_found');
     return sessionFromDb(row);
-  });
-}
-
-// --- daily logs -------------------------------------------------------------
-
-export async function upsertDailyLog(
-  localDate: string,
-  steps: number,
-  note?: string | null,
-  proofPath?: string | null,
-): Promise<DailyLogRow> {
-  return run(() => {
-    assertLocalDate(localDate, 'local_date');
-    const today = toLocalDateIso();
-    if (localDate < addDays(today, -(STEPS_EDIT_DAYS_BACK + 1)) || localDate > addDays(today, 2)) {
-      throw new AppError('validation', 'local_date_out_of_range');
-    }
-    if (!Number.isInteger(steps) || steps < 0 || steps > MAX_STEPS) {
-      throw new AppError('validation', 'invalid_steps');
-    }
-    const user = requireDemoUser();
-    return mutateDb((db) => {
-      let row = db.dailyLogs.find((d) => d.user_id === user.id && d.local_date === localDate);
-      if (!row) {
-        row = {
-          user_id: user.id,
-          local_date: localDate,
-          steps: 0,
-          points: 0,
-          note: null,
-          updated_at: nowIso(),
-        } satisfies DbDailyLog;
-        db.dailyLogs.push(row);
-      }
-      row.steps = steps;
-      // Same recomputation the daily_logs_points trigger does server-side.
-      row.points = stepsPoints(steps);
-      if (note !== undefined) row.note = note === null ? null : note.trim() || null;
-      // Undefined keeps the screenshot; null takes it off. Correcting the number must not lose it.
-      if (proofPath !== undefined) row.proof_path = proofPath || null;
-      row.updated_at = nowIso();
-      return dailyLogFromDb(row);
-    });
-  });
-}
-
-export async function listDailyLogs(
-  fromLocalDate: string,
-  toLocalDate: string,
-): Promise<DailyLogRow[]> {
-  return run(() => {
-    assertLocalDate(fromLocalDate, 'from');
-    assertLocalDate(toLocalDate, 'to');
-    const user = requireDemoUser();
-    return readDb()
-      .dailyLogs.filter(
-        (d) =>
-          d.user_id === user.id && d.local_date >= fromLocalDate && d.local_date <= toLocalDate,
-      )
-      .sort((a, b) => a.local_date.localeCompare(b.local_date))
-      .map(dailyLogFromDb);
   });
 }
 
@@ -1234,7 +1166,6 @@ export async function createCourseDay(
       customWorkoutId: patch.customWorkoutId ?? null,
       content: patch.content ?? { body: [] },
       deload: patch.deload ?? false,
-      stepsGoal: patch.stepsGoal ?? null,
       sortOrder:
         patch.sortOrder ?? db.adminCourseDays.filter((d) => d.courseId === courseId).length,
     };
