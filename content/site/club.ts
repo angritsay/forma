@@ -60,7 +60,8 @@ export interface ClubPhoto {
   src: string;
   /**
    * CSS `object-position` for the crop. The row's cells are tall and narrow, so a square file is
-   * shown through a slice of itself and this is which slice.
+   * shown through a slice of itself and this is which slice. Computed by `panelFocus()`; see the
+   * note there before writing one by hand.
    */
   focus?: string;
   /** What is in this frame, per locale. Absent → the image is labelled by the row instead. */
@@ -97,6 +98,75 @@ export function publishableClubPhotos(): readonly ClubPhoto[] {
 /** How many frames the row draws. Three, as the mockup does. */
 export const CLUB_PITCH_PHOTO_COUNT = 3;
 
+/**
+ * How wide one cell of the row is, divided by how tall it is.
+ *
+ * It follows from `CLUB_PITCH_ROW_ASPECT` and the 6px gaps: a row `W` wide is `W · 348/343` tall
+ * and holds three cells of `(W − 12)/3`. Measured off the rendered row rather than trusted to that
+ * arithmetic — at a 390px viewport the cells come out 115.3 × 363.2 and at 402px 119.3 × 375.4,
+ * 0.3175 and 0.3178, near enough the same at every width because both terms scale with it. Both
+ * constants live here so a change to the row's shape is made next to the crops it invalidates.
+ *
+ * A square file shown through a cell this shape keeps its **whole height** and about **32% of its
+ * width**. Everything below is about choosing which 32%.
+ */
+export const CLUB_PITCH_CELL_RATIO = 0.3177;
+
+/** The row's own box, as the mockup draws it: `aspect-[343/348]` across all three cells. */
+export const CLUB_PITCH_ROW_ASPECT = '343/348';
+
+/**
+ * `object-position`'s horizontal percentage for a square file, so that `center` — the subject's
+ * own middle, as a fraction of the **file's** width — lands in the middle of the visible slice.
+ *
+ * **This is the arithmetic the old fixed `74%` got wrong, and it is worth stating once.** A
+ * percentage in `object-position` does not name the middle of the crop; it aligns the point `p` of
+ * the image with the point `p` of the box. On a square file in a cell `ratio` wide that selects
+ * the slice `[p·(1 − ratio), p·(1 − ratio) + ratio]`, whose middle is `p·(1 − ratio) + ratio/2`.
+ * So `74%` centred the crop on 0.664 of the file — eight points to the left of every subject in
+ * the row, which is why one frame came out on a hip and the next on an elbow.
+ *
+ * Inverting that: `p = (center − ratio/2) / (1 − ratio)`, clamped, because a slice cannot hang
+ * off the edge of its file.
+ */
+export function panelFocus(center: number, ratio: number = CLUB_PITCH_CELL_RATIO): number {
+  const p = (center - ratio / 2) / (1 - ratio);
+  return Math.min(1, Math.max(0, p));
+}
+
+/** `panelFocus` as the CSS value the row sets, e.g. «84.2% 50%». Vertically the file is uncropped. */
+export function panelFocusCss(center: number, ratio: number = CLUB_PITCH_CELL_RATIO): string {
+  return `${(panelFocus(center, ratio) * 100).toFixed(1)}% 50%`;
+}
+
+/**
+ * The middle of the right-hand panel of a two-panel composite, when nobody has measured the
+ * particular file: half of the right half.
+ */
+const COMPOSITE_PANEL_CENTER = 0.75;
+
+/**
+ * Where the person actually stands inside the right-hand panel of each composite, as a fraction of
+ * the whole file's width. Measured on the files with a per-cent ruler, not chosen by eye — the
+ * subject's outermost edge on each side, then the middle of the two:
+ *
+ * | file | left edge | right edge | centre | subject's own width |
+ * | --- | --- | --- | --- | --- |
+ * | result-01 | 0.605 | 0.860 | **0.733** | 0.255 |
+ * | result-02 | 0.605 | 0.915 | **0.760** | 0.310 |
+ * | result-03 | 0.625 | 0.890 | **0.758** | 0.265 |
+ *
+ * The slice is 0.318 of the file wide, so all three fit inside it once they are centred — r02 only
+ * just, with about half a per cent of air at each elbow. That is the constraint on this row: the
+ * cell cannot be made much narrower without cutting somebody's arm off, and it is why r02 still
+ * reads a size larger than its neighbours. Re-measure if a file is replaced.
+ */
+const COMPOSITE_SUBJECT_CENTER: Readonly<Record<string, number>> = {
+  r01: 0.733,
+  r02: 0.76,
+  r03: 0.758,
+};
+
 /** Whose photographs the row ended up with — the label on the row is chosen from this. */
 export type ClubPhotoSource = 'members' | 'coachClients';
 
@@ -107,6 +177,11 @@ export type ClubPhotoSource = 'members' | 'coachClients';
  * each from three different people, because the alternative is a hero-sized hole on the screen that
  * asks for money. Those files are before/after composites — two panels joined side by side — so a
  * tall narrow cell is focused on the right-hand panel rather than on the seam down the middle.
+ *
+ * **Each file gets its own focus**, computed from where that person actually stands inside her
+ * panel (`COMPOSITE_SUBJECT_CENTER`) by `panelFocus`. One number for all three put a different
+ * part of a different body in each cell, which is what three unrelated snapshots look like next to
+ * a drawing of a triptych.
  *
  * Their `compositeAlt` describes the pair, left to right, and a single panel is not the pair, so it
  * is deliberately **not** reused as this image's alt: an inaccurate description is a lie told to
@@ -123,9 +198,11 @@ export function clubPitchPhotos(): { photos: readonly ClubPhoto[]; source: ClubP
     .map((r) => ({
       id: r.id,
       src: r.composite ?? r.after ?? '',
-      /* 74%: the middle of the right-hand panel of a two-panel composite. A whole file (a separate
+      /* A composite is cropped to the person in its right-hand panel; a whole file (a separate
          `after` shot) is centred as usual. */
-      focus: r.composite ? '74% 50%' : '50% 50%',
+      focus: r.composite
+        ? panelFocusCss(COMPOSITE_SUBJECT_CENTER[r.id] ?? COMPOSITE_PANEL_CENTER)
+        : '50% 50%',
       consent: r.consent,
     }))
     .filter((p) => p.src !== '');

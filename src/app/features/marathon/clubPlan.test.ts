@@ -8,7 +8,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { CLUB_PLAN_ID, PLAN_BY_ID, planMonthlyPrice } from '@content/site/plans';
-import { clubPitchPhotos } from '@content/site/club';
+import { CLUB_PITCH_CELL_RATIO, clubPitchPhotos, panelFocus } from '@content/site/club';
 import { clubChargeLabel, clubJoinHref, clubMonthlyLabel, clubPlan } from './clubPlan';
 
 describe('the club price', () => {
@@ -69,5 +69,34 @@ describe('the photographs on the selling screen', () => {
     // While the row falls back to the coach's own clients the label has to say so — «Результаты
     // участников» over those photographs, beside a price, claims the club produced them.
     expect(['members', 'coachClients']).toContain(source);
+  });
+
+  /**
+   * The crop maths, because the old fixed «74%» read like a crop centre and was not one: it put
+   * the middle of the slice at 0.664 of the file, eight points left of everybody in the row.
+   */
+  it('puts the middle of the slice on the subject, not the percentage', () => {
+    const r = CLUB_PITCH_CELL_RATIO;
+    for (const center of [0.5, 0.733, 0.76, 0.758]) {
+      const p = panelFocus(center);
+      // The slice `object-position: p%` actually selects, and where its middle lands.
+      const left = p * (1 - r);
+      expect(left + r / 2).toBeCloseTo(center, 6);
+      expect(left).toBeGreaterThanOrEqual(0);
+      expect(left + r).toBeLessThanOrEqual(1 + 1e-9);
+    }
+  });
+
+  it('never asks for a slice that hangs off the file', () => {
+    expect(panelFocus(0.99)).toBe(1);
+    expect(panelFocus(0.01)).toBe(0);
+  });
+
+  it('gives each composite its own crop', () => {
+    const { photos } = clubPitchPhotos();
+    const focuses = photos.map((p) => p.focus);
+    for (const f of focuses) expect(f).toMatch(/^\d+(\.\d+)?% 50%$/);
+    // Three people standing in three different places: one number for all three is the bug.
+    expect(new Set(focuses).size).toBe(focuses.length);
   });
 });

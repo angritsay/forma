@@ -1023,8 +1023,6 @@ export const app = {
 
   // --- Club (stream 4) --------------------------------------------------------
   marathonPrizeDefault: 'An hour with the coach who made Forma',
-  marathonPitchNoRound:
-    'The coach puts each round together himself — he adds the members and makes the pairs. The moment a new one starts, the tasks appear here.',
   marathonJoinCta: 'Join for {price} / mo',
   // --- Onboarding: five questions + the test after two workouts ---------------
   // The wizard's questions. The first word is set at 800 and the rest at 200 (DisplayTitle),
@@ -1115,4 +1113,8 @@ export const app = {
   clubLeadPost: ': ten minutes on foot, twenty squats, a glass of water before coffee.',
   clubLeadWeek: 'Points add up over the week, and whoever is top of the board gets {prize}.',
   clubChargeNote: 'One payment: {price} for a year of access. The club and every Forma course.',
+  // --- Club, for somebody who is already in it (stream: club-pitch-states) ----
+  clubMemberTitle: 'You are in the club',
+  clubMemberNote:
+    'The coach puts each round together himself — he adds the members and makes the pairs. The moment a new one starts, the tasks appear here.',
 } as const;
