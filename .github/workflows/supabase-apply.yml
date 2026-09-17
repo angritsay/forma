@@ -1,0 +1,199 @@
+# Apply a Supabase change from GitHub, instead of from the dashboard.
+#
+# The owner works from a phone. The dashboard tasks this replaces — pasting a migration into the
+# SQL editor, pasting an email template into two places, deploying an edge function — are all
+# "find the right screen, paste the right thing", which is exactly what is hard on a phone and
+# exactly what a machine does without getting it wrong.
+#
+# Everything here is driven from files already in this repository. **No input carries content.**
+# The task is a choice and the migration is a filename; the SQL and the templates are read from
+# the checkout. That is deliberate and it is the safety property that matters: this repository is
+# public, a `workflow_dispatch` input is printed on the run page forever, and an input that could
+# carry SQL would be an input that could carry an email address or a key.
+#
+# Setup — one secret, once:
+#
+#   Settings → Secrets and variables → Actions → New repository secret
+#     Name:  SUPABASE_ACCESS_TOKEN
+#     Value: a personal access token from https://supabase.com/dashboard/account/tokens
+#
+# `vars.PUBLIC_SUPABASE_URL` is already set (probe-backend.yml uses it) and the project ref is
+# derived from it, so there is nothing else to fill in.
+#
+# What this does NOT do, and cannot:
+#   • DNS (SPF/DKIM/DMARC) — that is the domain's registrar, not Supabase.
+#   • Prodamus — a commercial account, and confirming a locked price is a human judgement.
+#   • Uploading `site/auth.mp4` — the file does not exist in this repository.
+name: Supabase apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: 'What to apply'
+        required: true
+        type: choice
+        options:
+          - migration
+          - club-seed
+          - email-templates
+          - deploy-bot
+      migration_file:
+        description: 'Only for "migration": a filename in supabase/migrations/'
+        required: false
+        default: '0013_admin_people.sql'
+        type: string
+
+# The token is a project-wide credential. One run at a time, and never from a fork.
+concurrency: supabase-apply
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve the project and check the token is present
+        env:
+          SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TOKEN:-}" ]; then
+            echo "::error::SUPABASE_ACCESS_TOKEN is not set. Settings → Secrets and variables → Actions → New repository secret. Get the value from https://supabase.com/dashboard/account/tokens"
+            exit 1
+          fi
+          if [ -z "${SUPABASE_URL:-}" ]; then
+            echo "::error::PUBLIC_SUPABASE_URL is not set (Settings → Secrets and variables → Actions → Variables)."
+            exit 1
+          fi
+          # https://<ref>.supabase.co  →  <ref>
+          REF=$(printf '%s' "$SUPABASE_URL" | sed -E 's#^https?://##; s#\..*$##')
+          if [ -z "$REF" ]; then
+            echo "::error::Could not read a project ref out of PUBLIC_SUPABASE_URL."
+            exit 1
+          fi
+          echo "PROJECT_REF=$REF" >> "$GITHUB_ENV"
+          echo "Project: $REF"
+
+      # ---------------------------------------------------------------------
+      # SQL. The statement comes from a file in the repository; the input only
+      # chooses which file, and is rejected unless it is a plain basename that
+      # exists under supabase/migrations/.
+      # ---------------------------------------------------------------------
+      - name: Run a migration
+        if: ${{ inputs.task == 'migration' }}
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          FILE: ${{ inputs.migration_file }}
+        run: |
+          set -euo pipefail
+          case "$FILE" in
+            */*|..*|'') echo "::error::migration_file must be a bare filename."; exit 1 ;;
+          esac
+          PATHNAME="supabase/migrations/$FILE"
+          if [ ! -f "$PATHNAME" ]; then
+            echo "::error::$PATHNAME does not exist. Files available:"; ls supabase/migrations/
+            exit 1
+          fi
+          echo "Applying $PATHNAME"
+          # The SQL is sent as a JSON string built by jq, so quoting inside the file cannot break out.
+          jq -Rs '{query: .}' < "$PATHNAME" > /tmp/body.json
+          code=$(curl -sS -o /tmp/out.json -w '%{http_code}' \
+            -X POST "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H 'Content-Type: application/json' \
+            --data-binary @/tmp/body.json)
+          # The response body is not printed. A query result can contain real rows, and this run
+          # page is public forever.
+          if [ "$code" -ge 300 ]; then
+            echo "::error::Supabase returned HTTP $code. The message follows; it is the API's own error text, not row data."
+            jq -r '.message // .error // "(no message)"' < /tmp/out.json || true
+            exit 1
+          fi
+          echo "HTTP $code — applied."
+
+      - name: Seed the club's test week
+        if: ${{ inputs.task == 'club-seed' }}
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -euo pipefail
+          # Idempotent by construction: it rewrites the `klub_test` marathon and nothing else.
+          # The tester block at the bottom of the file is commented out and stays that way — it
+          # takes real email addresses and this repository is public.
+          jq -Rs '{query: .}' < supabase/seed-club-week.sql > /tmp/body.json
+          code=$(curl -sS -o /tmp/out.json -w '%{http_code}' \
+            -X POST "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H 'Content-Type: application/json' \
+            --data-binary @/tmp/body.json)
+          if [ "$code" -ge 300 ]; then
+            echo "::error::Supabase returned HTTP $code."
+            jq -r '.message // .error // "(no message)"' < /tmp/out.json || true
+            exit 1
+          fi
+          echo "HTTP $code — the test week is in."
+
+      # ---------------------------------------------------------------------
+      # The sign-in email, into BOTH templates. Supabase sends the one-time code
+      # through Magic Link, and through Confirm signup for a brand-new user, so a
+      # template pasted into only one of them leaves half the users with a link
+      # they cannot type into the code boxes (docs/SETUP.md §3.2).
+      # ---------------------------------------------------------------------
+      - name: Put the sign-in template into both slots
+        if: ${{ inputs.task == 'email-templates' }}
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -euo pipefail
+          # The subject deliberately does NOT carry {{ .Token }}: a code in a subject line ends up
+          # in notification previews and in logs (docs/SETUP.md §3.2).
+          jq -n \
+            --rawfile body supabase/templates/otp.html \
+            --arg subject 'Код для входа в Forma' \
+            '{
+               mailer_subjects_magic_link: $subject,
+               mailer_templates_magic_link_content: $body,
+               mailer_subjects_confirmation: $subject,
+               mailer_templates_confirmation_content: $body
+             }' > /tmp/body.json
+          code=$(curl -sS -o /tmp/out.json -w '%{http_code}' \
+            -X PATCH "https://api.supabase.com/v1/projects/$PROJECT_REF/config/auth" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H 'Content-Type: application/json' \
+            --data-binary @/tmp/body.json)
+          if [ "$code" -ge 300 ]; then
+            echo "::error::Supabase returned HTTP $code."
+            jq -r '.message // .error // "(no message)"' < /tmp/out.json || true
+            exit 1
+          fi
+          echo "HTTP $code — Magic Link and Confirm signup both carry the code template now."
+          echo "This does not fix deliverability. SPF, DKIM and DMARC are DNS and are still outstanding (docs/SETUP.md §3.5.1)."
+
+      # ---------------------------------------------------------------------
+      # The bot. Deploying is all this does; the token it needs at runtime is a
+      # Supabase secret and is set below only if it has been given to GitHub.
+      # Telegram still has to be pointed at the function once, by hand, because
+      # setWebhook needs the bot token and that is not ours to hold.
+      # ---------------------------------------------------------------------
+      - name: Deploy the Telegram bot
+        if: ${{ inputs.task == 'deploy-bot' }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
+        run: |
+          set -euo pipefail
+          curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz \
+            | tar -xz -C /tmp
+          /tmp/supabase functions deploy telegram-bot --project-ref "$PROJECT_REF" --no-verify-jwt
+          if [ -n "${BOT_TOKEN:-}" ]; then
+            /tmp/supabase secrets set --project-ref "$PROJECT_REF" \
+              TELEGRAM_BOT_TOKEN="$BOT_TOKEN" \
+              ${WEBHOOK_SECRET:+TELEGRAM_WEBHOOK_SECRET="$WEBHOOK_SECRET"} >/dev/null
+            echo "Function deployed and its secrets set."
+          else
+            echo "::warning::Deployed, but TELEGRAM_BOT_TOKEN is not a GitHub secret, so the function has no token and will stay silent. Add it as a repository secret and run this again."
+          fi
+          echo "Still to do once, by hand: point Telegram at the function with setWebhook (docs/SETUP.md §7.6)."
