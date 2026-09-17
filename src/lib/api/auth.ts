@@ -11,9 +11,21 @@ import { AppError, toAppError, type AppErrorCode } from './errors';
 import { isDemo } from './mode';
 
 export type AuthReason =
+  /** The field was left empty. */
+  | 'email_empty'
+  /** There is no `@` at all — usually a phone number, a Telegram handle, or a half-typed address. */
+  | 'email_no_at'
+  /** Well-formed apart from the domain, which is one or two characters off a common one. */
+  | 'email_typo'
+  /** Shaped wrong in some other way, or refused by the server as a bad address. */
   | 'invalid_email'
   | 'rate_limited'
+  /** The six digits were refused. */
   | 'invalid_code'
+  /** The six digits were refused and the code is older than the OTP lifetime. */
+  | 'code_expired'
+  /** Several codes in a row were refused; asking for a fresh one is the way out. */
+  | 'too_many_attempts'
   | 'signup_disabled'
   /** The server accepted the request and then could not send the letter — an SMTP problem. */
   | 'email_send_failed';
@@ -51,6 +63,129 @@ export function isValidCode(token: string): boolean {
   return /^\d{6}$/.test(token);
 }
 
+/**
+ * How long a code stays good, in seconds — Email OTP expiration in docs/SETUP.md §3.1.
+ *
+ * Kept here because the screen needs it, not because the app enforces it: only Supabase decides
+ * whether a token is still valid. Change the dashboard setting and change this line with it, or the
+ * screen starts calling a live code expired.
+ */
+export const OTP_TTL_SEC = 600;
+
+/**
+ * The domains a Russian audience actually types, and the ones a slip lands next to.
+ *
+ * Only used to *suggest*. A typo is never a reason to refuse an address: people own mailboxes on
+ * domains nobody has heard of, and a validator that knows better than its user is the worst kind.
+ */
+const COMMON_DOMAINS = [
+  'gmail.com',
+  'yandex.ru',
+  'ya.ru',
+  'mail.ru',
+  'bk.ru',
+  'inbox.ru',
+  'list.ru',
+  'internet.ru',
+  'icloud.com',
+  'me.com',
+  'outlook.com',
+  'hotmail.com',
+  'live.com',
+  'rambler.ru',
+  'proton.me',
+  'protonmail.com',
+  'yahoo.com',
+] as const;
+
+/**
+ * Levenshtein distance, bounded: anything past `max` stops early and answers `max + 1`.
+ *
+ * One row of the edit matrix, updated in place: `row[j]` is the distance between the first `i`
+ * characters of `a` and the first `j` of `b`. The cell the in-place write is about to destroy is
+ * carried in `diagonal`, and the cell to the left in `left`, so each step reads the array once.
+ */
+function editDistance(a: string, b: string, max: number): number {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  const row: number[] = [];
+  for (let j = 0; j <= b.length; j++) row.push(j);
+  for (let i = 1; i <= a.length; i++) {
+    let diagonal = i - 1;
+    let left = i;
+    let best = i;
+    for (let j = 1; j <= b.length; j++) {
+      const above = row[j] ?? j;
+      const cost = a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1;
+      const value = Math.min(above + 1, left + 1, diagonal + cost);
+      diagonal = above;
+      left = value;
+      row[j] = value;
+      if (value < best) best = value;
+    }
+    // No later row can beat this row's best cell, so passing `max` here is final.
+    if (best > max) return max + 1;
+  }
+  return row[b.length] ?? max + 1;
+}
+
+/**
+ * The common domain an address was probably aiming at, or null when it looks deliberate.
+ *
+ * The tolerance is tied to length so a short domain cannot absorb a whole syllable: `ya.ru` only
+ * matches at one edit, `gmail.com` at two. An exact match answers null — there is nothing to fix.
+ */
+export function suggestEmailDomain(email: string): string | null {
+  const at = normalizeEmail(email).lastIndexOf('@');
+  if (at < 0) return null;
+  const domain = normalizeEmail(email).slice(at + 1);
+  if (!domain) return null;
+  let best: { domain: string; distance: number } | null = null;
+  for (const candidate of COMMON_DOMAINS) {
+    if (candidate === domain) return null;
+    /*
+     * The first character has to match. Without it a five-character domain is one edit away from
+     * half the alphabet — `ma.ru` came out as "did you mean ya.ru?" — and the cost of being wrong
+     * is a line under the field telling somebody their own mailbox is a typo. Slips land on the
+     * letters people reach for at speed, not on the one they started the word with.
+     */
+    if (candidate.charAt(0) !== domain.charAt(0)) continue;
+    // Two edits only once there is enough domain for two edits to still leave a resemblance —
+    // and the shorter of the pair decides, so `ma.ru` is not "did you mean mail.ru?".
+    const max = Math.min(candidate.length, domain.length) <= 6 ? 1 : 2;
+    const distance = editDistance(domain, candidate, max);
+    if (distance > max) continue;
+    if (!best || distance < best.distance) best = { domain: candidate, distance };
+  }
+  return best ? best.domain : null;
+}
+
+/** What is wrong with what was typed, precise enough for the screen to say it. */
+export type EmailCheck =
+  | { ok: true; email: string }
+  | { ok: false; reason: 'email_empty' | 'email_no_at' | 'invalid_email' }
+  | { ok: false; reason: 'email_typo'; suggestion: string };
+
+/**
+ * Read an address the way a person would: empty, missing the `@`, shaped wrong, or a slipped
+ * domain. `isValidEmail` still answers the yes/no question; this answers "and say why".
+ */
+export function checkEmail(raw: string): EmailCheck {
+  const email = normalizeEmail(raw);
+  if (!email) return { ok: false, reason: 'email_empty' };
+  if (!email.includes('@')) return { ok: false, reason: 'email_no_at' };
+  if (!isValidEmail(email)) return { ok: false, reason: 'invalid_email' };
+  const suggestion = suggestEmailDomain(email);
+  if (suggestion) return { ok: false, reason: 'email_typo', suggestion };
+  return { ok: true, email };
+}
+
+/** The local part with a different domain — what the typo hint offers to put in the field. */
+export function withDomain(email: string, domain: string): string {
+  const clean = normalizeEmail(email);
+  const at = clean.lastIndexOf('@');
+  return at < 0 ? `${clean}@${domain}` : `${clean.slice(0, at)}@${domain}`;
+}
+
 interface AuthApiLike {
   code?: unknown;
   status?: unknown;
@@ -62,6 +197,14 @@ function reasonFrom(cause: unknown): AuthReason | undefined {
   if (typeof cause !== 'object' || cause === null) return undefined;
   const { code, status, message } = cause as AuthApiLike;
   switch (code) {
+    /*
+     * `otp_expired` does NOT mean expired. Supabase returns it for "Token has expired or is
+     * invalid" — the same code for six digits that were mistyped and for six digits that have been
+     * sitting in an inbox all day. So it maps to the same reason as any other refusal, and the
+     * screen tells the two apart by the clock instead: it knows when it asked for the code, and
+     * `OTP_TTL_SEC` is how long one lives. Reading expiry off this code would call a mistyped
+     * digit "expired" and send people to ask for a letter they already have.
+     */
     case 'otp_expired':
     case 'otp_disabled':
     case 'invalid_credentials':
@@ -118,7 +261,9 @@ export async function requestCode(email: string): Promise<void> {
   if (isDemo()) return (await demo()).requestCode(email);
   const clean = normalizeEmail(email);
   if (!isValidEmail(clean)) {
-    throw new AuthError('validation', 'Invalid email', { reason: 'invalid_email' });
+    const check = checkEmail(clean);
+    const reason = check.ok ? 'invalid_email' : check.reason;
+    throw new AuthError('validation', 'Invalid email', { reason });
   }
   const { error } = await supabase().auth.signInWithOtp({
     email: clean,

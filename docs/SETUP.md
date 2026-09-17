@@ -16,21 +16,24 @@ Want to see the product before provisioning anything? Build the site, open `/app
 Values only the owner knows. The site builds without them, but the placeholders below are
 visible to customers until replaced.
 
-| What                             | Where                                            | Notes                                                                      |
-| -------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------- |
-| Contact email, Telegram, socials | `content/site/brand.ts`                          | `contactEmail`, `telegram`, `instagram`, `youtube`, `twitter`              |
-| Coach name, bio, credentials     | `content/site/coach.ts`                          | Leave `credentials` empty rather than inventing any                        |
-| Support links                    | `content/site/links.ts`                          | `supportTelegram`, `supportEmail` (used when a course has no `paymentUrl`) |
-| Prices                           | `content/courses/<course>.ts` → `price`          | `{ rub, usd }` per course                                                  |
-| Payment links                    | `content/courses/<course>.ts` → `paymentUrl`     | `{ ru, en }`, optional; see §7                                             |
-| Intro / exercise videos          | `content/courses/*.ts`, `content/exercises/*.ts` | `storage:videos/…` refs; see §5                                            |
-| Sign-in montage                  | `content/site/media.ts` → `AUTH_FILM.src`        | Looping B&W cut, no audio track; empty = the coach's photograph instead    |
-| Supabase URL + anon key          | `.env` (local) and GitHub repo variables         | §6                                                                         |
-| Site URL + base path             | `.env` and GitHub repo variables                 | §6                                                                         |
-| Coach admin email                | `public.admins` table                            | §4                                                                         |
-| Email sender (SMTP)              | Dashboard → Project Settings → Authentication    | §3                                                                         |
-| Analytics / verification ids     | `.env` / repo variables (`PUBLIC_*`)             | Optional; rendered only when set                                           |
-| IndexNow key                     | GitHub repo secret `INDEXNOW_KEY`                | Optional; see docs/SEO.md                                                  |
+| What                               | Where                                              | Notes                                                                                                                                                                                                      |
+| ---------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Contact email, Telegram, socials   | `content/site/brand.ts`                            | `contactEmail`, `telegram`, `instagram`, `youtube`, `twitter`                                                                                                                                              |
+| Coach name, bio, credentials       | `content/site/coach.ts`                            | Leave `credentials` empty rather than inventing any                                                                                                                                                        |
+| Support links                      | `content/site/links.ts`                            | `supportTelegram`, `supportEmail` (used when a course has no `paymentUrl`)                                                                                                                                 |
+| Prices                             | `content/courses/<course>.ts` → `price`            | `{ rub, usd }` per course                                                                                                                                                                                  |
+| Payment links                      | `content/courses/<course>.ts` → `paymentUrl`       | `{ ru, en }`, optional; see §7                                                                                                                                                                             |
+| Intro / exercise videos            | `content/courses/*.ts`, `content/exercises/*.ts`   | `storage:videos/…` refs; see §5                                                                                                                                                                            |
+| Sign-in montage                    | Storage: bucket `images`, path `site/auth.mp4`     | The reference in `content/site/media.ts` already points here. Until the file is uploaded to that exact path the sign-in screen shows the poster still — which is a working screen, not a broken one. §5    |
+| Sign-in email templates            | Dashboard → Authentication → Email Templates       | **Outstanding.** Paste `supabase/templates/otp.html` into **both** Magic Link and Confirm signup. Only the owner can: it is a dashboard action. §3.2                                                       |
+| SPF, DKIM and DMARC for the domain | DNS host for `forma-app.co`                        | **Outstanding.** Without them the codes are filtered. §3.5.1 has the records                                                                                                                               |
+| Supabase URL + anon key            | `.env` (local) and GitHub repo variables           | §6                                                                                                                                                                                                         |
+| Site URL + base path               | `.env` and GitHub repo variables                   | §6                                                                                                                                                                                                         |
+| Coach admin email                  | `public.admins` table                              | §4                                                                                                                                                                                                         |
+| The bot's answer to `/start`       | Dashboard → Edge Functions + one `setWebhook` call | The handler is written and tested (`supabase/functions/telegram-bot`). It is silent until the function is deployed, its secrets are set and Telegram is pointed at it — all three are dashboard work. §7.6 |
+| Email sender (SMTP)                | Dashboard → Project Settings → Authentication      | §3                                                                                                                                                                                                         |
+| Analytics / verification ids       | `.env` / repo variables (`PUBLIC_*`)               | Optional; rendered only when set                                                                                                                                                                           |
+| IndexNow key                       | GitHub repo secret `INDEXNOW_KEY`                  | Optional; see docs/SEO.md                                                                                                                                                                                  |
 
 ---
 
@@ -479,18 +482,147 @@ SMTP settings at Resend or Postmark instead. Only host, username and password ch
 and none of the DNS work is wasted. They reach Russian inboxes less reliably than a domestic sender
 does, which is the trade, and still incomparably better than a mailer that refuses to send at all.
 
+#### 3.5.1 DNS for `forma-app.co` — the three records, in order
+
+This is the part nobody has done yet, and it is the part that decides whether a sign-in code lands
+in the inbox. Do it once, in this order, at whichever DNS host the domain's nameservers point at
+(`dig NS forma-app.co +short` says which). Nothing below is reversible-by-accident: every step is a
+TXT record you can delete again.
+
+**Step 0 — pick the sender first.** Two of the three records are generated by the company that
+sends the mail, so choosing the provider is step zero, not a later optimisation. The
+recommendation above still stands: **Google Workspace holds the mailbox, Resend or Postmark sends
+the codes**. Everything below is written for "the codes are sent by `<provider>` and the From
+address is `hello@forma-app.co`".
+
+**Step 1 — SPF. One record, and only ever one.**
+
+| Field | Value                                  |
+| ----- | -------------------------------------- |
+| Name  | `@` (some panels want `forma-app.co.`) |
+| Type  | `TXT`                                  |
+| Value | `v=spf1 include:<SENDER> ~all`         |
+| TTL   | whatever the panel defaults to         |
+
+`<SENDER>` is the one **gap that the provider decides**. What to expect:
+
+| Sender                  | `include:` to use | Where the authoritative value is printed          |
+| ----------------------- | ----------------- | ------------------------------------------------- |
+| Google Workspace        | `_spf.google.com` | Admin console → Apps → Gmail → Authenticate email |
+| Postmark                | `spf.mtasv.net`   | Postmark → Sender Signatures → the domain → DNS   |
+| Resend                  | `amazonses.com`   | Resend → Domains → the domain (it prints the set) |
+| Yandex 360 for Business | `_spf.yandex.net` | Yandex 360 admin → Domains → DNS records          |
+| Mail.ru for business    | `_spf.mail.ru`    | Mail.ru admin → Domain → DNS                      |
+
+**The dashboard wins over this table.** These are what each provider publishes today; they change
+them, and the panel prints the current one beside a Verify button. Copy from there and use this
+column only to recognise a value that looks wrong.
+
+Two traps, both of which silently fail rather than error:
+
+- **Two `v=spf1` records at the same name do not mean "one of them passes".** They are a permanent
+  error and every checker treats the domain as unauthenticated. If the domain already has an SPF
+  record — Google Workspace adds one when the domain is set up — merge the new `include:` into the
+  existing record instead of adding a second: `v=spf1 include:_spf.google.com include:spf.mtasv.net ~all`.
+- **Postmark and Resend send from their own bounce domain**, so their SPF work lands on a
+  subdomain (`pm-bounces.forma-app.co`, `send.forma-app.co`) as a CNAME rather than on the root TXT.
+  Publish exactly the records their panel lists, including those CNAMEs — SPF checks the envelope
+  sender, which is that subdomain, not the address a person sees.
+
+**Step 2 — DKIM. The record cannot be written here, and this is the one that actually matters.**
+
+DKIM is a public key, and the private half lives with the sender, so the exact name and value are
+generated per domain and **have to be copied out of the provider's panel**. This is a deliberate
+gap, not an omission. Where the button is:
+
+| Sender           | Where                                                                                                            | Selector you will see            |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| Google Workspace | Admin console → Apps → Google Workspace → Gmail → **Authenticate email** → pick the domain → Generate new record | `google._domainkey`              |
+| Postmark         | Sender Signatures → the domain → **DKIM**                                                                        | a dated selector, `…._domainkey` |
+| Resend           | Domains → the domain → the record list                                                                           | `resend._domainkey`              |
+| Yandex 360       | Admin → Domains → **DKIM**                                                                                       | `mail._domainkey`                |
+
+Two things decide whether this works, and both are settings rather than records:
+
+- **Generating the record is not switching DKIM on.** Google in particular publishes the key and
+  then waits for you to press **Start authentication**; until you do, nothing is signed. This is
+  the single most-missed step in the whole section.
+- **The signature has to be aligned.** The letter's From is `hello@forma-app.co`, so the DKIM
+  signature must carry `d=forma-app.co`. If the provider signs with its own domain — which is what
+  it does until you verify the domain with it — DMARC fails on alignment even though SPF and DKIM
+  both "pass". Verifying the domain inside the provider is what flips it.
+
+**Step 3 — DMARC. This one is exact and derivable, so here it is in full.**
+
+| Field | Value                                                                    |
+| ----- | ------------------------------------------------------------------------ |
+| Name  | `_dmarc` (i.e. `_dmarc.forma-app.co`)                                    |
+| Type  | `TXT`                                                                    |
+| Value | `v=DMARC1; p=none; rua=mailto:dmarc@forma-app.co; adkim=r; aspf=r; fo=1` |
+
+`dmarc@forma-app.co` has to be a real mailbox or an alias that lands in one, or the reports go
+nowhere. An alias onto the Workspace mailbox is enough and costs no seat.
+
+`p=none` watches and blocks nothing, which is the right setting on day one — a stricter policy
+published before DKIM is aligned junks your own mail. The sequence after that, and there is no
+rush: two weeks on `p=none` reading the reports → `p=quarantine` once every report shows both SPF
+and DKIM aligned → `p=reject` only if you ever need it. **Do not skip ahead.**
+
+**Step 4 — check it, from outside.**
+
+```bash
+dig +short TXT forma-app.co            # exactly ONE line starting v=spf1
+dig +short TXT _dmarc.forma-app.co     # the DMARC line above
+dig +short TXT google._domainkey.forma-app.co   # or whichever selector your sender uses
+```
+
+Then send a code to a Gmail address that has never been near this project, open the message,
+**Show original**, and read the three lines at the top: SPF, DKIM and DMARC must all say `PASS`,
+and the DKIM line must say `d=forma-app.co`. A `PASS` with the provider's domain in `d=` is step 2
+unfinished. Propagation is minutes to a few hours; a failure five minutes after publishing means
+nothing yet.
+
+**Step 5 — register with the postmasters** (the table in the next section). Each wants one more
+TXT record beside the DKIM one, and they are how you find out about a deliverability problem
+before a customer does.
+
 #### Keeping the code out of spam
 
-Authentication (SPF, DKIM, DMARC, above) is the entry ticket, not the whole answer, and DKIM is the
-one that decides it: without it `mail.ru` and `yandex.ru` junk a code more or less by default. What
-follows assumes those three are in place.
+Authentication (SPF, DKIM, DMARC — 3.5.1) is the entry ticket, not the whole answer, and DKIM is
+the one that decides it: without it `mail.ru` and `yandex.ru` junk a code more or less by default.
+What follows assumes those three are in place.
 
-**The template is already built for this, so do not "improve" it.** `supabase/templates/otp.html` is
-6.8 KB with **no images and exactly one link**, and that link points at the same domain the mail is
-sent from. A logo, a banner, a second link or a tracking pixel each cost inbox placement and buy
-nothing — the letter exists to carry six digits. There is also no plain-text alternative, and none
-is possible: the dashboard has no field for one (see the note in 3.2). That applies to every sender
-equally, so it is not worth chasing.
+**The template has been audited against the usual filter triggers and it passes. Do not
+"improve" it.** What was checked in `supabase/templates/otp.html`, so that a future edit knows what
+it would be undoing:
+
+| Trigger                             | Status in the template                                                                                                                                            |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Images, logos, tracking pixels      | **None.** No `<img>` at all; the wordmark is type.                                                                                                                |
+| Number of links                     | **One**, in the footer.                                                                                                                                           |
+| Visible link text vs. its `href`    | **Identical** — both are `{{ .SiteURL }}`. A mismatch is the strongest template-level spam signal there is.                                                       |
+| A bare link with no words around it | No: the link sits under "Письмо отправлено на …" and is the last thing in the letter.                                                                             |
+| Image-only content                  | No: every word is live text.                                                                                                                                      |
+| `List-Unsubscribe`                  | **Absent, and it must stay absent.** It belongs on marketing mail. On a sign-in code it invites somebody to unsubscribe from their own logins.                    |
+| The code in the subject line        | No — 3.2 says to keep `{{ .Token }}` out of the subject, and it is out.                                                                                           |
+| Plain-text alternative              | **Missing, and not fixable from here** — the dashboard has no field for a text part (3.2). `supabase/templates/otp.txt` is kept for a provider that asks for one. |
+
+Two settings at the sending provider can undo all of that, and both are on by default in some
+plans:
+
+- **Open tracking** inserts a 1×1 tracking pixel — an image, in a letter that has none.
+- **Click tracking** rewrites the one link to point at the provider's own domain, which breaks the
+  match between what the link says and where it goes.
+
+Turn both **off** for the stream that carries the codes (Postmark: use the **Transactional**
+message stream and leave tracking unticked; Resend: the domain's tracking toggles).
+
+One thing in the template is a deliberate trade rather than a clean win, and it is the owner's
+call: the hidden preheader carries the code (`Код для входа: {{ .Token }}`) so the six digits are
+readable from the inbox list without opening the letter. That is convenient, and it is the same
+exposure — a lock-screen notification — that 3.2 gives as the reason for keeping the code out of
+the subject. Replace it with a line that does not contain `{{ .Token }}` if that trade is not
+wanted.
 
 **Register the domain with the postmasters.** This is the instrument almost nobody sets up, and for
 a Russian audience it is the one that matters:
