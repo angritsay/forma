@@ -1,10 +1,11 @@
 /**
  * Coach bookings: the one-to-one sessions the signed-in person has with the coach.
  *
- * Read-only from the app. Bookings are made in Calendly and written server-side by the ingestion
- * path (supabase/functions/calendly-webhook/), with the service role; `coach_bookings` has no
- * write policy for a signed-in user, not even for their own rows, so there is nothing here to
- * write with. The view `my_coach_bookings` is already filtered to the caller by
+ * Read-only from the app. Bookings are made in a scheduler — a free Google Calendar appointment
+ * schedule, read by supabase/functions/google-calendar-sync/ — and written server-side with the
+ * service role; `coach_bookings` has no write policy for a signed-in user, not even for their own
+ * rows, so there is nothing here to write with. The view `my_coach_bookings` is already filtered
+ * to the caller by
  * `current_email()` — the `status`/`starts_at` filters below are about what is worth showing, not
  * about who may see it.
  *
