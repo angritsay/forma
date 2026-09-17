@@ -594,31 +594,33 @@ body {
    * loading screen in `src/pages/app/index.astro` can use the same markup with no JavaScript.
    */
   /*
-   * Weight and light in one keyframe, so they cannot drift apart: a letter at rest is thin and a
-   * step dimmer, a letter at the crest is heavy and pure white. That is what «переливается» is
-   * here — the word does not glow, it catches the light and lets it go, five times per pass.
+   * **Weight, and only weight.** The owner's instruction on seeing it run: «не меняй прозрачность
+   * и цвет, только толщину».
    *
-   * The light is animated as the letters' own `color`, not as a gradient clipped to the text. A
-   * clipped gradient was tried first and looked better in theory — one smooth band sliding across
-   * the whole word rather than five letters brightening in turn — but it silently dropped the F:
-   * `.wordmark-f` carries `transform: scaleX(1.22)`, and a transformed descendant is painted
-   * outside the parent's `background-clip: text`, so the mark rendered as «ORMA» with a letter's
-   * worth of empty space in front of it. The stretch on the F is the mark; the technique is not.
+   * The wave used to carry the letters' `color` from `--muted-2` up to `--text` alongside the
+   * weight, so the crest was heavy *and* bright and the letters at rest were thin *and* dimmer.
+   * On a real screen that read as five letters of five different greys — the mark looked
+   * half-loaded rather than alive, which is the opposite of what a launch screen is for. The ink
+   * is now one value throughout and the only thing that moves is the axis the wordmark is already
+   * built on: FOR at 800, MA at 200, the contrast that *is* the mark, set in motion.
    *
-   * The crest is `--text` rather than `--paper`. On the dark ground the two are a hair apart and
-   * either would do; on the paper theme `--paper` is the ground itself, so a crest drawn in it
-   * would be a letter going invisible instead of a letter catching the light. Both ends of the
-   * cycle are tokens that mean "ink" on whatever this is sitting on.
+   * `--text` for every letter, not `--muted-2`: a mark alone on the screen is the product's name,
+   * and a name is not drawn in the colour of secondary text. It is a token that means "ink" on
+   * whatever this is sitting on, so the paper theme gets it right without a second rule.
+   *
+   * Two techniques already ruled out, kept here so they are not tried again. A gradient clipped to
+   * the text silently dropped the F — `.wordmark-f` carries `transform: scaleX(1.22)`, and a
+   * transformed descendant paints outside the parent's `background-clip: text`, so the mark
+   * rendered as «ORMA» with a letter's worth of gap in front. And `opacity` is not a substitute
+   * for the colour that just went: it is the other half of what she asked to stand still.
    */
   @keyframes wordmark-wave {
     0%,
     100% {
       font-variation-settings: 'wght' 200;
-      color: var(--muted-2);
     }
     50% {
       font-variation-settings: 'wght' 800;
-      color: var(--text);
     }
   }
   /* After `.wordmark-f` on purpose: equal specificity, so this display wins on the F as well. */
