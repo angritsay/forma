@@ -1040,11 +1040,6 @@ export const app = {
   // wording and he is sold as both from here on; a round may still name something else for itself
   // (`marathons.prize`), and then the row wins.
   marathonPrizeDefault: 'Час с тренером и создателем Forma',
-  // Already paying, just not in a running round. The coach forms the pairs by hand, so there is
-  // nothing to press — and quoting a subscription to somebody who pays for it reads as a product
-  // that does not know who it is talking to.
-  marathonPitchNoRound:
-    'Круг собирает тренер: он добавляет участников и разбивает на пары сам. Как только начнётся новый, задания появятся здесь.',
   // The join button. `{price}` comes from PLANS (content/site/plans.ts) and the link goes to the
   // /subscribe/ page — never to a payment URL with an amount in it, which on a static site is an
   // amount the payer can edit (docs/SETUP.md §7.1).
@@ -1157,4 +1152,11 @@ export const app = {
   // actually happens — one charge, once. Quoting only the month for an annual product is how
   // chargebacks get written.
   clubChargeNote: 'Оплата одна: {price} за год доступа. Клуб и все курсы Forma.',
+  // --- Club, for somebody who is already in it (stream: club-pitch-states) ----
+  // Where the join pill stands on the selling screen. They pay, so there is nothing to sell and
+  // nothing to press: the coach builds each round by hand. The note is the sentence that used to
+  // be four lines of grey body copy in the button's place (marathonPitchNoRound, now gone).
+  clubMemberTitle: 'Ты в клубе',
+  clubMemberNote:
+    'Круг собирает тренер: он добавляет участников и разбивает на пары сам. Как только начнётся новый, задания появятся здесь.',
 } as const;

@@ -1,5 +1,10 @@
 /**
- * The club as somebody outside it sees it — built to the owner's mockup, which is the measure.
+ * The club when there is no round to show — built to the owner's mockup, which is the measure.
+ *
+ * **Two people arrive here and only one of them was drawn.** Somebody outside the club gets the
+ * screen the owner sent: the hero, the join pill, her two paragraphs. Somebody who already pays —
+ * which is everybody who has ever bought the annual plan, because the club is inside it — gets the
+ * same screen with `ClubMember` in the pill's place. See that component for why it is not a pill.
  *
  * She sent a 375×812 render and said «Сделай под него», so this is that picture: a small muted
  * label, a row of three tight monochrome crops running nearly the full width, the club's name
@@ -42,13 +47,13 @@ import { withBase } from '@/lib/util/paths';
 import { externalLinkProps } from '@/app/hooks/useExternalLink';
 import { clubChargeLabel, clubJoinHref, clubMonthlyLabel } from '@/app/features/marathon/clubPlan';
 import { clubPrizeMidSentence } from '@/app/features/marathon/prize';
-import { clubPitchPhotos } from '@content/site/club';
+import { CLUB_PITCH_ROW_ASPECT, clubPitchPhotos } from '@content/site/club';
 
 export interface ClubPitchProps {
   /**
    * The club is behind the subscription for this person. False when they already pay (or are on
    * the course's trial week) and are simply not in a running round — then there is nothing to
-   * sell, and the screen says who does the adding instead of quoting them a price they have paid.
+   * sell, and the screen stands them in the club instead of quoting them a price they have paid.
    */
   locked: boolean;
 }
@@ -82,7 +87,13 @@ function Hero() {
              * not the pair — reusing that text here would describe a picture that is not on the
              * screen to the one reader who cannot check. A `CLUB_PHOTOS` entry brings its own alt.
              */}
-            <ul aria-label={rowLabel} className="flex aspect-[343/348] gap-1.5">
+            <ul
+              aria-label={rowLabel}
+              className="flex gap-1.5"
+              /* The row's shape comes from the same constant the crops are computed against
+                 (`content/site/club.ts`), so a change to one is a change to both. */
+              style={{ aspectRatio: CLUB_PITCH_ROW_ASPECT }}
+            >
               {photos.map((photo) => (
                 <li
                   key={photo.id}
@@ -168,18 +179,40 @@ function Lead() {
 }
 
 export function ClubPitch({ locked }: ClubPitchProps) {
-  const { t } = useT();
   return (
     <div className="flex flex-col gap-7 pb-2">
       <Hero />
-      {locked ? (
-        <ClubJoin />
-      ) : (
-        <p className="max-w-[36ch] px-3 text-[14px] leading-snug text-muted">
-          {t('app.marathonPitchNoRound')}
-        </p>
-      )}
+      {locked ? <ClubJoin /> : <ClubMember />}
       <Lead />
+    </div>
+  );
+}
+
+/**
+ * The same screen for somebody who already pays, and it is the common case rather than the edge.
+ *
+ * The club is bundled into the annual plan (`content/site/plans.ts`), so **every existing customer
+ * who opens this tab lands here** and the selling screen is the one almost nobody sees. What stood
+ * in this slot was four lines of grey body copy where the button is — the selling screen with its
+ * point removed, which is how a product tells a paying customer it was not built for them.
+ *
+ * So the slot keeps the pill's footprint and stops being a pill: same `-mx-2`, same `h-13`, same
+ * second line underneath. It is outlined in the club's colour instead of filled with it, and that
+ * difference is the whole message — a filled bar is something you press, and there is nothing here
+ * to press. The coach forms each round by hand, so no button could put anyone in one.
+ *
+ * Nothing on it is invented. There is no start date, no countdown and no number of participants,
+ * because the app holds none of the three: outside a round there is exactly one true thing to say
+ * about this person's standing, and the line under it says who starts the next one.
+ */
+export function ClubMember() {
+  const { t } = useT();
+  return (
+    <div className="-mx-2 flex flex-col gap-2.5">
+      <p className="flex h-13 items-center justify-center rounded-tile border border-course/55 px-6 text-center text-[15px] font-semibold text-course">
+        {t('app.clubMemberTitle')}
+      </p>
+      <p className="px-5 text-[13px] leading-snug text-muted-2">{t('app.clubMemberNote')}</p>
     </div>
   );
 }
