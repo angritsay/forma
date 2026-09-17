@@ -24,9 +24,15 @@
  * choosing the time is `BOOKING.scheduleUrl`, which is still empty, so the step after payment says
  * outright that the coach sets the time in a message. The day that URL is filled the same block
  * becomes the slot page and nothing else on the screen moves.
+ *
+ * Above all of it, when there is one, stands the session the person has already booked — «вот
+ * ссылка на вход, через столько то начнется, дата, время». It comes first because for the one
+ * person in a hundred who has it, it is the only thing on this tab that is not an advertisement:
+ * the 30/60 switch is asking them to buy something they have already bought. Everything below is
+ * unchanged, because they may well want another one.
  */
 import { clsx } from 'clsx';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Glyph } from '@/components/ui/Icon';
@@ -34,14 +40,17 @@ import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useToast } from '@/components/ui/Toast';
-import { l } from '@/i18n/index';
+import { l, plural, type Locale } from '@/i18n/index';
+import { getMyUpcomingBooking } from '@/lib/api/coachBookings';
+import type { CoachBooking } from '@/lib/api/types';
+import { describeCountdown, deviceTimeZone, type Countdown } from '@/lib/coach/booking';
 import { isDemo } from '@/lib/api/mode';
 import { withBase } from '@/lib/util/paths';
 import { openExternal } from '@/lib/telegram/webapp';
 import { paymentTarget, withEmail } from '@/lib/util/payment';
 import { LinkButton } from '@/app/features/courses/LinkButton';
 import { splitName } from '@/app/features/profile/model';
-import { useT } from '@/app/hooks/useT';
+import { useT, type Translator } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
 import { BOOKING, type BookingOption } from '@content/site/booking';
 import { BRAND } from '@content/site/brand';
@@ -68,6 +77,41 @@ export default function BookScreen() {
    * money from a line of small print into the thing the screen is now asking for.
    */
   const [sent, setSent] = useState(false);
+
+  /*
+   * The session already booked, and the clock the card reads from.
+   *
+   * `null` is the answer for almost everybody and is not an error state: nothing is booked, the
+   * card is not drawn, and the screen is what it always was. A failed request lands in the same
+   * place on purpose — a network blip must not put an error where a person's session would be,
+   * and it must certainly not stop the offer below from rendering.
+   *
+   * `now` ticks only while a booking exists. Half a minute is the coarsest interval that still
+   * turns «через 1 минуту» over before it becomes a lie, and the card is the only thing on the
+   * screen that goes stale by sitting still.
+   */
+  const [booking, setBooking] = useState<CoachBooking | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    let alive = true;
+    getMyUpcomingBooking()
+      .then((b) => {
+        if (alive) setBooking(b);
+      })
+      .catch(() => {
+        /* Nothing booked and could-not-ask look the same here, deliberately. */
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!booking) return;
+    const id = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, [booking]);
 
   /*
    * Which length is showing. The first option leads because `content/site/booking.ts` orders them
@@ -111,6 +155,8 @@ export default function BookScreen() {
   return (
     <Screen contentClassName="pt-4">
       <div className="flex flex-col gap-9">
+        {booking ? <UpcomingSession booking={booking} now={now} /> : null}
+
         {/*
           The coach, as a photograph and one display line — first name at 800, surname at 200.
           Above it, in sentence case rather than as a kicker, the line the whole offer rests on:
@@ -298,6 +344,151 @@ export default function BookScreen() {
         </section>
       </div>
     </Screen>
+  );
+}
+
+/*
+ * --- the session already booked ---------------------------------------------------------------
+ *
+ * Three rules this card is written around, and all three are about what is *missing* rather than
+ * about what is shown.
+ *
+ * 1. The times are stored in UTC and shown in the **device's** zone. `booking.timezone` is the zone
+ *    the person booked *in* — Calendly records it — and it is only the fallback for a browser that
+ *    will not name its own. Somebody who booked from a laptop abroad and opens the Mini App at home
+ *    wants their kitchen clock, not the one in the hotel.
+ * 2. **The join link is often absent.** A Google Calendar booking carries no cancel or reschedule
+ *    URL at all (supabase/functions/google-calendar-sync/sync.ts never sets one), and a session with
+ *    a physical location carries an address instead of a link. Every control here is drawn from the
+ *    field that would make it work, so a missing field removes the control rather than disabling it.
+ * 3. **Nothing is booked, for almost everybody**, and that is not an empty state to design — the
+ *    card simply is not rendered. `BookScreen` holds that: `booking === null` draws nothing.
+ */
+
+/** `Intl` throws on a zone name it does not know; the device's own zone is the fallback. */
+function formatIn(
+  locale: Locale,
+  ms: number,
+  options: Intl.DateTimeFormatOptions,
+  timeZone: string | undefined,
+): string {
+  const tag = locale === 'ru' ? 'ru-RU' : 'en-GB';
+  try {
+    return new Intl.DateTimeFormat(tag, { ...options, timeZone }).format(ms);
+  } catch {
+    return new Intl.DateTimeFormat(tag, options).format(ms);
+  }
+}
+
+/* h23 so a Russian clock reads «9:00» and never «9:00 AM»; `numeric` so it is not «09:00». */
+const CLOCK: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit', hourCycle: 'h23' };
+
+/**
+ * The countdown, said out loud.
+ *
+ * `describeCountdown` returns `{ kind: 'tomorrow', hour: 9, minute: 0 }` and refuses to build the
+ * sentence itself, which is what lets the Russian be Russian: three plural forms for минуты, часы
+ * and дни, and a «завтра в 9:00» that is a calendar fact rather than an arithmetic one.
+ */
+function countdownLine(countdown: Countdown, { t, locale }: Translator): string {
+  switch (countdown.kind) {
+    case 'live':
+      return t('app.bookLive');
+    case 'minutes':
+      return plural(locale, countdown.minutes, {
+        one: t('app.bookInMinutesOne', { n: countdown.minutes }),
+        few: t('app.bookInMinutesFew', { n: countdown.minutes }),
+        many: t('app.bookInMinutesMany', { n: countdown.minutes }),
+      });
+    case 'hours':
+      return plural(locale, countdown.hours, {
+        one: t('app.bookInHoursOne', { n: countdown.hours }),
+        few: t('app.bookInHoursFew', { n: countdown.hours }),
+        many: t('app.bookInHoursMany', { n: countdown.hours }),
+      });
+    case 'tomorrow':
+      // Built from the shape rather than from the instant: these two numbers are already the
+      // wall-clock reading in the zone the day boundary was decided in.
+      return t('app.bookTomorrowAt', {
+        time: `${countdown.hour}:${String(countdown.minute).padStart(2, '0')}`,
+      });
+    case 'later':
+      return plural(locale, countdown.days, {
+        one: t('app.bookInDaysOne', { n: countdown.days }),
+        few: t('app.bookInDaysFew', { n: countdown.days }),
+        many: t('app.bookInDaysMany', { n: countdown.days }),
+      });
+    default:
+      return '';
+  }
+}
+
+/**
+ * The booked session, as the owner listed it: «вот ссылка на вход, через столько то начнется,
+ * дата, время» — in that order of loudness, the countdown as the figure and the date under it.
+ *
+ * No glass and no photograph: a hairline card on the flat ground, so the buttons in it are
+ * rectangles at `--r-control` and not pills (design/CHANGELOG.md §13).
+ */
+function UpcomingSession({ booking, now }: { booking: CoachBooking; now: number }) {
+  const tr = useT();
+  const { t, locale } = tr;
+  const zone = deviceTimeZone() ?? booking.timezone ?? undefined;
+  const countdown = describeCountdown(booking.startsAt, booking.endsAt, now, zone);
+
+  // The session ended while the tab sat open. The fetch will not run again until the screen is
+  // remounted, so the tick is what takes the card away.
+  if (countdown.kind === 'past') return null;
+
+  const starts = Date.parse(booking.startsAt);
+  const ends = Date.parse(booking.endsAt);
+  const when = t('app.bookWhen', {
+    date: formatIn(locale, starts, { day: 'numeric', month: 'long' }, zone),
+    from: formatIn(locale, starts, CLOCK, zone),
+    to: formatIn(locale, ends, CLOCK, zone),
+    dur: t('app.bookDuration', { n: booking.durationMinutes }),
+  });
+
+  return (
+    <section className="flex flex-col gap-4 rounded-card border border-border-strong p-5">
+      <div className="flex flex-col gap-2">
+        <span className="eyebrow">{t('app.bookUpcoming')}</span>
+        {/* 1.2, as the lockup above: «идёт сейчас» and «через 2 часа» both drop a descender. */}
+        <p className="display text-[clamp(26px,7.5vw,34px)] leading-[1.2] text-balance">
+          {countdownLine(countdown, tr)}
+        </p>
+        <p className="tabular text-[13px] leading-snug text-muted">{when}</p>
+      </div>
+
+      {booking.joinUrl ? (
+        <LinkButton href={booking.joinUrl} size="lg" fullWidth external>
+          {t('app.bookJoin')}
+        </LinkButton>
+      ) : booking.locationText ? (
+        <p className="text-[15px] leading-snug">
+          {t('app.bookPlace', { place: booking.locationText })}
+        </p>
+      ) : (
+        <p className="text-[13px] leading-snug text-muted-2">{t('app.bookNoLink')}</p>
+      )}
+
+      {/* Both of these are Calendly's; a Google Calendar booking has neither, and then there is no
+          row at all. `-ml-4.5` pulls the first ghost label back onto the card's own left edge. */}
+      {booking.rescheduleUrl || booking.cancelUrl ? (
+        <div className="-mb-2 -ml-4.5 flex flex-wrap items-center">
+          {booking.rescheduleUrl ? (
+            <LinkButton href={booking.rescheduleUrl} variant="ghost" size="sm" external>
+              {t('app.bookMove')}
+            </LinkButton>
+          ) : null}
+          {booking.cancelUrl ? (
+            <LinkButton href={booking.cancelUrl} variant="ghost" size="sm" external>
+              {t('app.bookCancel')}
+            </LinkButton>
+          ) : null}
+        </div>
+      ) : null}
+    </section>
   );
 }
 
