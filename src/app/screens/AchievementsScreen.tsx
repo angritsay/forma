@@ -29,7 +29,6 @@ export default function AchievementsScreen() {
   const { t, locale } = useT();
   const status = useProgress((s) => s.status);
   const sessions = useProgress((s) => s.recentSessions);
-  const logs = useProgress((s) => s.dailyLogs);
   const benchmarks = useProgress((s) => s.benchmarks);
   const totals = useProgress((s) => s.totals);
   const courseStates = useProgress((s) => s.courseStates);
@@ -41,13 +40,12 @@ export default function AchievementsScreen() {
         userStatsFromProgress({
           totals,
           sessions,
-          logs,
           benchmarks,
           courseStates,
           todayIso: today,
         }),
       ),
-    [totals, sessions, logs, benchmarks, courseStates, today],
+    [totals, sessions, benchmarks, courseStates, today],
   );
   const unlocked = achievements.filter((a) => a.unlocked).length;
 

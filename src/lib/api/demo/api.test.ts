@@ -73,7 +73,7 @@ beforeEach(() => {
 });
 
 describe('demo backend — the tester journey', () => {
-  it('signs in, onboards, trains, logs steps and buys a locked course', async () => {
+  it('signs in, onboards, trains and buys a locked course', async () => {
     // 1. Nothing until the code is verified.
     expect(await demo.getProfile()).toBeNull();
     await signIn();
@@ -128,16 +128,11 @@ describe('demo backend — the tester journey', () => {
     await demo.upsertCourseState('start', { currentNodeIndex: 1, completedNodeIds: ['w1d1'] });
     expect((await demo.getCourseState('start'))?.completedNodeIds).toEqual(['w1d1']);
 
-    // 6. Steps: seeded history plus today's manual entry.
-    const seeded = await demo.listDailyLogs('2000-01-01', today);
-    expect(seeded.length).toBeGreaterThanOrEqual(7);
-    const logged = await demo.upsertDailyLog(today, 9000);
-    expect(logged.points).toBeGreaterThan(0);
-
+    // 6. Totals come from the session alone now that steps are gone.
     const totals = await demo.getMyTotals();
     expect(totals.workouts).toBe(1);
     expect(totals.minutes).toBe(21);
-    expect(totals.points).toBeGreaterThan(120);
+    expect(totals.points).toBe(120);
 
     // 7. Leaderboard: seeded athletes plus this browser's own row.
     const board = await demo.getLeaderboard('all');
@@ -237,10 +232,6 @@ describe('demo backend — the tester journey', () => {
     await expect(demo.upsertCourseState('Bad Id', {})).rejects.toMatchObject({
       code: 'validation',
       message: 'invalid_course',
-    });
-    await expect(demo.upsertDailyLog(toLocalDateIso(), -1)).rejects.toMatchObject({
-      code: 'validation',
-      message: 'invalid_steps',
     });
     await expect(demo.createOrder({ email: 'nope', courseId: 'start' })).rejects.toMatchObject({
       code: 'validation',

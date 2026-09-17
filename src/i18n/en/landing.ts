@@ -216,8 +216,8 @@ export const landing = {
   courseLifetimeNote: 'One payment, access forever',
   courseOrSubscribe: 'Or every course by subscription — from {price} a month',
   nodeWorkout: 'Workout',
-  // The steps alone: every rest day is titled «Rest & walk» already (see the Russian file).
-  nodeRest: '{steps} steps',
+  // It said «7,000 steps» while the app counted steps (see the Russian file).
+  nodeRest: 'Walk',
   nodeTest: 'Test',
   nodeBenchmark: 'Benchmark',
   nodeMilestone: 'Milestone',

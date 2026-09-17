@@ -20,7 +20,6 @@ import type {
   CompleteSessionInput,
   CourseStatePatch,
   CourseStateRow,
-  DailyLogRow,
   Entitlement,
   LeaderboardRow,
   MyTotals,
@@ -162,17 +161,6 @@ export interface DbWorkoutSessionComplete {
   duration_sec: number;
   calories: number;
   completed_at: string;
-}
-
-export interface DbDailyLog {
-  user_id: string;
-  local_date: string;
-  steps: Num;
-  points: Num;
-  note: string | null;
-  /** Added by 0012; a project on the older schema simply sends no column. */
-  proof_path?: string | null;
-  updated_at: string;
 }
 
 export interface DbBenchmark {
@@ -408,20 +396,6 @@ export function completeSessionToDb(patch: CompleteSessionInput): DbWorkoutSessi
     duration_sec: patch.durationSec,
     calories: patch.calories,
     completed_at: patch.completedAt,
-  };
-}
-
-// --- daily logs -------------------------------------------------------------
-
-export function dailyLogFromDb(r: DbDailyLog): DailyLogRow {
-  return {
-    userId: r.user_id,
-    localDate: r.local_date,
-    steps: toNumberOr(r.steps, 0),
-    points: toNumberOr(r.points, 0),
-    note: r.note ?? null,
-    proofPath: r.proof_path ?? null,
-    updatedAt: r.updated_at,
   };
 }
 

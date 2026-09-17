@@ -4,7 +4,6 @@ import type {
   BenchmarkRow,
   BenchmarkSeries,
   CourseStateRow,
-  DailyLogRow,
   WorkoutSessionRow,
 } from '@/lib/api/types';
 import {
@@ -15,7 +14,6 @@ import {
   pointsByWeek,
   recordImproved,
   recordLabel,
-  stepsHistory,
   streakCalendar,
   totalCalories,
   userStatsFromProgress,
@@ -47,22 +45,6 @@ function session(localDate: string, extra: Partial<WorkoutSessionRow> = {}): Wor
     localDate,
     ...extra,
   };
-}
-
-function log(localDate: string, steps: number, points = 0): DailyLogRow {
-  return {
-    userId: 'u1',
-    localDate,
-    steps,
-    points,
-    note: null,
-    proofPath: null,
-    updatedAt: `${localDate}T20:00:00Z`,
-  };
-}
-
-function logs(rows: DailyLogRow[]): Record<string, DailyLogRow> {
-  return Object.fromEntries(rows.map((r) => [r.localDate, r]));
 }
 
 function bench(key: string, value: number, unit: string, recordedAt: string): BenchmarkRow {
@@ -103,33 +85,28 @@ describe('weekLoad', () => {
 });
 
 describe('pointsByWeek', () => {
-  it('buckets workout and steps points into the last 8 ISO weeks, oldest first', () => {
+  it('buckets workout points into the last 8 ISO weeks, oldest first', () => {
     const weeks = pointsByWeek(
       [
         session('2026-09-01', { points: 120 }),
         session('2026-08-25', { points: 80 }),
         session('2026-07-13', { points: 999 }), // 8 weeks ago: outside the window
       ],
-      logs([log('2026-09-03', 8000, 35), log('2026-08-24', 7000, 30)]),
       TODAY,
     );
     expect(weeks).toHaveLength(8);
     expect(weeks[0]?.from).toBe('2026-07-13');
     expect(weeks[7]).toMatchObject({ from: '2026-08-31', to: '2026-09-06', current: true });
-    expect(weeks[7]?.points).toBe(155);
-    expect(weeks[6]?.points).toBe(110);
+    expect(weeks[7]?.points).toBe(120);
+    expect(weeks[6]?.points).toBe(80);
     expect(weeks[0]?.points).toBe(999);
     expect(weeks.filter((w) => w.current)).toHaveLength(1);
   });
 });
 
 describe('streakCalendar', () => {
-  it('marks workout, steps, empty and future days across 5 weeks', () => {
-    const weeks = streakCalendar(
-      [session('2026-09-01')],
-      logs([log('2026-09-02', 7200), log('2026-08-31', 3000), log('2026-09-01', 9000)]),
-      TODAY,
-    );
+  it('marks workout, empty and future days across 5 weeks', () => {
+    const weeks = streakCalendar([session('2026-09-01')], TODAY);
     expect(weeks).toHaveLength(5);
     expect(weeks[0]?.from).toBe('2026-08-03');
     const current = weeks[4]!;
@@ -137,24 +114,19 @@ describe('streakCalendar', () => {
     expect(current.cells.map((c) => c.kind)).toEqual([
       'empty',
       'workout',
-      'steps',
+      'empty',
       'empty',
       'future',
       'future',
       'future',
     ]);
     expect(current.cells[3]?.today).toBe(true);
-    expect(current.cells[1]?.steps).toBe(9000);
   });
 });
 
 describe('weekActiveDays', () => {
-  it('marks a day active for a workout or for the steps goal, by the streak’s rule', () => {
-    const days = weekActiveDays(
-      [session('2026-09-01'), session('2026-08-30')],
-      logs([log('2026-09-02', 7200), log('2026-08-31', 3000)]),
-      TODAY,
-    );
+  it('marks a day active for a finished workout, by the streak’s rule', () => {
+    const days = weekActiveDays([session('2026-09-01'), session('2026-08-30')], TODAY);
     expect(days.map((d) => d.date)).toEqual([
       '2026-08-31',
       '2026-09-01',
@@ -164,19 +136,9 @@ describe('weekActiveDays', () => {
       '2026-09-05',
       '2026-09-06',
     ]);
-    expect(days.map((d) => d.active)).toEqual([false, true, true, false, false, false, false]);
+    expect(days.map((d) => d.active)).toEqual([false, true, false, false, false, false, false]);
     expect(days[3]).toMatchObject({ today: true, future: false });
     expect(days[4]?.future).toBe(true);
-  });
-});
-
-describe('stepsHistory', () => {
-  it('returns 14 days ending today with zeros for missing logs', () => {
-    const points = stepsHistory(logs([log(TODAY, 5000), log('2026-08-21', 100)]), TODAY);
-    expect(points).toHaveLength(14);
-    expect(points[0]).toEqual({ date: '2026-08-21', steps: 100, today: false });
-    expect(points[13]).toEqual({ date: TODAY, steps: 5000, today: true });
-    expect(points[5]?.steps).toBe(0);
   });
 });
 
@@ -236,7 +198,7 @@ describe('userStatsFromProgress', () => {
   const course = COURSES[0]!;
   const scoredNodes = course.nodes.filter((n) => n.kind !== 'rest' && n.kind !== 'milestone');
 
-  it('prefers server totals and derives streak, steps days, benchmarks and courses', () => {
+  it('prefers server totals and derives streak, benchmarks and courses', () => {
     const state: CourseStateRow = {
       userId: 'u1',
       courseId: course.id,
@@ -248,7 +210,6 @@ describe('userStatsFromProgress', () => {
     const stats = userStatsFromProgress({
       totals: { points: 4321, workouts: 40, minutes: 900 },
       sessions: [session('2026-09-03'), session('2026-09-02')],
-      logs: logs([log('2026-09-01', 7000), log('2026-08-20', 8000), log('2026-08-19', 100)]),
       benchmarks: [
         {
           key: 'x',
@@ -265,9 +226,8 @@ describe('userStatsFromProgress', () => {
     expect(stats).toEqual({
       workouts: 40,
       points: 4321,
-      streakCurrent: 3,
-      streakLongest: 3,
-      stepsDaysAtGoal: 2,
+      streakCurrent: 2,
+      streakLongest: 2,
       benchmarksDone: 2,
       coursesCompleted: 1,
       totalMinutes: 900,
@@ -279,13 +239,12 @@ describe('userStatsFromProgress', () => {
     const stats = userStatsFromProgress({
       totals: null,
       sessions: [session('2026-09-03', { points: 90, durationSec: 1500 })],
-      logs: logs([log('2026-09-02', 8000, 35)]),
       benchmarks: [],
       courseStates: {},
       todayIso: TODAY,
     });
     expect(stats.workouts).toBe(1);
-    expect(stats.points).toBe(125);
+    expect(stats.points).toBe(90);
     expect(stats.totalMinutes).toBe(25);
     expect(totalCalories([session('2026-09-03'), session('2026-09-02', { calories: null })])).toBe(
       150,

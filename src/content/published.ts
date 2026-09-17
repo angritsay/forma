@@ -46,7 +46,6 @@ interface DbDay {
   kind: string;
   content: unknown;
   deload: boolean;
-  steps_goal: number | null;
   sort_order: number;
 }
 
@@ -110,7 +109,6 @@ async function load(): Promise<Course[]> {
           kind: d.kind as Course['nodes'][number]['kind'],
           workoutShortId: null,
           deload: d.deload,
-          stepsGoal: d.steps_goal,
           sortOrder: d.sort_order,
           content: parseDayContent(d.content),
         })),

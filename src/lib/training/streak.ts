@@ -1,26 +1,17 @@
 /**
- * Streaks and step points. Dates are local YYYY-MM-DD strings; "today" is passed in.
+ * Streaks. Dates are local YYYY-MM-DD strings; "today" is passed in.
  * Rules: docs/TRAINING_SCIENCE.md §8.
+ *
+ * This file also held `stepsPoints()` — 30 points at a 7 000-step day, +5 per extra thousand. It
+ * is gone with the step feature, and so is the second half of the streak rule: a day used to count
+ * when a workout was finished **or** the step goal was reached. Only training keeps a streak now.
  */
 import { addDays, daysBetween } from '@/lib/util/dates';
-import {
-  STEPS_GOAL,
-  STEPS_POINTS_AT_GOAL,
-  STEPS_POINTS_MAX,
-  STEPS_POINTS_PER_EXTRA_1000,
-} from './constants';
 import type { DayActivity, StreakInfo } from './types';
-import { num } from './util';
 
-/** The day's step goal, falling back to STEPS_GOAL for a missing or non-positive one. */
-function goalOf(goal: number | undefined): number {
-  const g = num(goal, STEPS_GOAL);
-  return g > 0 ? g : STEPS_GOAL;
-}
-
-/** A day is active when a workout was completed or the steps goal was reached. */
+/** A day is active when a workout was completed. */
 export function isActiveDay(day: DayActivity): boolean {
-  return day.workoutDone === true || num(day.steps) >= goalOf(day.stepsGoal);
+  return day.workoutDone === true;
 }
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -64,13 +55,4 @@ export function computeStreak(days: readonly DayActivity[], todayIso: string): S
     atRisk: !todayDone && current > 0,
     ...(lastActiveDate !== undefined ? { lastActiveDate } : {}),
   };
-}
-
-/** 0 below the goal, 30 at the goal, +5 per full extra 1 000 steps, capped at 60. */
-export function stepsPoints(steps: number, goal: number = STEPS_GOAL): number {
-  const s = Math.max(0, num(steps));
-  const g = goalOf(goal);
-  if (s < g) return 0;
-  const extra = Math.floor((s - g) / 1000);
-  return Math.min(STEPS_POINTS_MAX, STEPS_POINTS_AT_GOAL + extra * STEPS_POINTS_PER_EXTRA_1000);
 }

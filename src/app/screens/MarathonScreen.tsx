@@ -150,7 +150,7 @@ export default function MarathonScreen() {
     async (taskId: string, file: File) => {
       if (!marathon) return;
       /*
-       * Shrunk first, exactly as a step proof is (`StepsScreen`, `lib/util/image`). This path used
+       * Shrunk first, through `lib/util/image`. This path used
        * to upload whatever the picker handed it: a 3MB phone photograph over mobile data to prove
        * a task the coach reads in two seconds, and in demo mode that same 3MB base64'd into
        * `localStorage` beside the rest of the demo database. `downscaleImage` degrades rather than

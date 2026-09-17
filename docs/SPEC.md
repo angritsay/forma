@@ -121,7 +121,7 @@ public/                     # favicon.svg, icons, manifest
   Everything else keeps one column and gains air.
 - The type scale does not change with the screen (`design/` calls it «мобайл-первая, 390px»). What
   grows on a wide screen is the gutter, the column count and the air between sections.
-- Dates: store ISO strings; "today" is computed in the user's local timezone for streaks/steps;
+- Dates: store ISO strings; "today" is computed in the user's local timezone for streaks;
   server timestamps are `timestamptz`.
 - Errors: never crash to a blank screen; show a localized error state with retry.
 
@@ -219,7 +219,7 @@ cooldown are not scaled).
 **WorkoutItem** — `exerciseId`, exactly one of `reps|seconds|meters|calories`, `load?`
 (`light|medium|heavy`), `perSide?`, `note?`, `restAfterSec?`.
 **CourseNode** — `id`, `week`, `day`, `kind` (`workout|rest|test|benchmark|milestone`),
-`workoutId?` (required for workout/test/benchmark), `title`, `subtitle?`, `deload?`, `stepsGoal?`
+`workoutId?` (required for workout/test/benchmark), `title`, `subtitle?`, `deload?`
 (rest nodes, default 7000).
 **Course** — `id`, `order`, `slug: L10n`, `name`, `tagline`, `description`, `longDescription[]`,
 `forWhom[]`, `outcomes[]`, `equipment[]`, `level`, `weeks`, `sessionsPerWeek`, `avgSessionMin`,
@@ -236,14 +236,14 @@ starting load) and end; rest nodes between consecutive workout days; week 4 (and
 
 Pure TypeScript, no I/O, fully unit-tested, documented in `docs/TRAINING_SCIENCE.md` with the
 sources behind each rule (ACSM guidelines, progressive overload, RPE/RIR autoregulation, deloads,
-MET-based energy expenditure, WHO physical activity guidance, 7000-steps evidence).
+MET-based energy expenditure, WHO physical activity guidance).
 
 Public API (types in `types.ts`):
 
 ```ts
 computeFitnessIndex(profile: UserTrainingProfile): { index: number /*0..100*/; level: 1|2|3; components: Record<string, number> }
 initialScale(index: number): number              // maps 0..100 → 0.6..1.3 (volume multiplier)
-recommendDifficulty(state: CourseState, profile: UserTrainingProfile, nowIso: string, context?: RecommendationContext /* stepsYesterday */): { choice: DifficultyChoice; reason: L10n }
+recommendDifficulty(state: CourseState, profile: UserTrainingProfile, nowIso: string): { choice: DifficultyChoice; reason: L10n }
 prescribeWorkout(workout: Workout, opts: PrescribeOptions, lookup?: ExerciseLookup): PrescribedWorkout   // concrete reps/seconds/loads, substitutions, rest
 estimateDuration(p: PrescribedWorkout): DurationEstimate                        // seconds, per block
 estimatePoints(workout: Workout, choice: DifficultyChoice, opts?: { repeat?: boolean; streakDays?: number }): number
@@ -253,7 +253,6 @@ warmupSkipIndex(steps: readonly PlayerStep[], p: PrescribedWorkout): number | nu
 summarizeSession(p: PrescribedWorkout, results: ExerciseResult[], feedback: SessionFeedback, opts): SessionSummary
 adaptScale(state: CourseState, summary: SessionSummary): { scale: number; delta: number; reason: L10n }
 computeStreak(days: DayActivity[], todayIso: string): StreakInfo
-stepsPoints(steps: number, goal?: number): number
 levelForPoints(points: number): LevelInfo
 ```
 
@@ -267,8 +266,7 @@ Rules (defaults; constants live in `constants.ts`):
   feeling `pain` → −0.10 and a "see a professional / reduce load" note. Scale clamped to 0.5..1.5.
 - Recommendation before a workout: `harder` if the last two sessions had RPE ≤6, completion ≥0.95
   and no pain, and ≥48h passed since the last session; `easier` if the last session reported pain or
-  RPE ≥9, or completion <0.8, or <24h since the last session, or yesterday's steps ≥ 15 000 (heavy
-  day); otherwise `normal`. History is ordered chronologically (instants, not strings).
+  RPE ≥9, or completion <0.8, or <24h since the last session; otherwise `normal`. History is ordered chronologically (instants, not strings).
 - Deload nodes: volume ×0.65, rest ×1.2, points as normal.
 - Duration: reps × `secondsPerRep` (× scale), seconds as given, plus rest, plus 8s transition per
   item, plus 20s per block intro; AMRAP/EMOM/Tabata durations are fixed by format; For-time uses the
@@ -283,9 +281,8 @@ Rules (defaults; constants live in `constants.ts`):
   steps); `harder` choice at level 3 may use `scaling.harder` for bodyweight items, never inside a
   non-scalable block (warm-up, cool-down) or a `test` block — a benchmark must stay the same
   movement. A substitute measured in another unit keeps the work time, not the number.
-- Streak: a day counts if a workout session was completed **or** logged steps ≥ goal (7000). The
-  current day does not break the streak until it ends (`atRisk` flag when nothing logged yet).
-- Steps points: 30 at goal, +5 per extra 1000 (cap 60), 0 below goal.
+- Streak: a day counts if a workout session was completed. The current day does not break the
+  streak until it ends (`atRisk` flag when nothing logged yet).
 - Fitness index: weighted components — push-ups (30%), squats/60s (25%), plank (20%), activity
   (15%), experience (10%), using age/sex-normalized reference tables documented in
   TRAINING_SCIENCE.md; level 1 <35, level 2 35–65, level 3 >65.
@@ -315,8 +312,6 @@ Tables (all with RLS enabled):
   `scale numeric`, `prescribed jsonb`, `results jsonb`, `rpe int`, `feeling text`, `completion
 numeric`, `points int`, `duration_sec int`, `calories int`, `started_at`, `completed_at`,
   `local_date date`). Own rows.
-- `daily_logs` (`user_id`, `local_date date`, `steps int`, `points int`, `note text`, `updated_at`),
-  pk `(user_id, local_date)`. Own rows.
 - `benchmarks` (`user_id`, `key text`, `value numeric`, `unit text`, `recorded_at`) — personal
   records from test nodes. Own rows.
 - Leaderboard: security-definer function `get_leaderboard(p_period text /*week|all*/, p_course_id
@@ -381,7 +376,7 @@ was ever linked or bookmarked broke:
 /achievements              the catalogue of achievements, from the 🏅 in the header of «Курсы»
 /marathon  /marathon/board «Клуб»
 /book                      «Тренер» — one-to-one session with the coach
-/leaderboard  /steps
+/leaderboard
 /assigned/:id  /shared/:token
 /admin  /admin/workouts  /admin/exercises  /admin/courses[/:id]  /admin/marathons[/:id]
 ```
@@ -631,14 +626,21 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    row a white ring, the podium a stronger hairline — but filled in white, never the club's
    orange: this table belongs to no programme. No avatar on the row (a rank is a circle and a
    person is a circle; two per row read as a pair of controls) and no «оч.» after the points.
-10. **Steps**: one big numeral inside the goal ring — the number being typed is the figure — with
-    the goal as a pill under it that turns white and carries the points the moment it is crossed,
-    and the quick adds as chips. The last fourteen days are **two rows of seven circles**, a ✓ where
-    the goal was reached and the weekday's letter where it was not, the day of the month under each;
-    every circle opens the edit sheet. Goal 7000. A day may also
-    carry a screenshot of the athlete's own step counter — attached the moment it is picked, held
-    in the private `proofs` bucket, visible to the athlete and the coach and nobody else. It is
-    evidence, not arithmetic: points still come from the number.
+10. **Steps are gone, and the reason is worth keeping.** There was a «Шаги» screen: a number typed
+    in by hand into a goal ring, fourteen days of circles behind it, an optional screenshot of the
+    phone's own step counter as evidence, and points that fed the streak and the leaderboard. The
+    owner's rule ended it — «он либо стекается либо его нет вообще, потому что пользователь не
+    будет заниматься трекингом одних и тех же шагов в разных приложениях» — and it cannot sync:
+    Apple HealthKit has no browser API at all, Google Fit's REST API closed to new applicants in
+    2024 and shuts down at the end of 2026, and Health Connect is an on-device Android API. A Mini
+    App is a WebView; there is no route to the number that does not go through a native app.
+
+    What went with it: the screen and its route, the manual entry and the screenshot, step points,
+    the `steps_10_days` achievement, the rest day's step goal, the «heavy walking day» rule in
+    `recommendDifficulty`, the calendar's steps-day cell, the club's «Шаги» task, and `daily_logs`
+    (migration `0015_drop_steps.sql`). A day now counts for the streak when a workout was finished,
+    and points come from training alone. **Do not reinstate any of it without a native app.**
+
 11. **The account** — a **sheet**, opened by the person glyph beside the name in the head of
     «Курсы» and by the same glyph in the top row from `md`. Not a screen and not a tab: «Профиль и
     все ачивки убирай».

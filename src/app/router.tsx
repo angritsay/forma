@@ -101,7 +101,6 @@ export function AppRoutes() {
                */}
               <Route path="/achievements" element={<LazyScreen name="AchievementsScreen" />} />
               <Route path="/leaderboard" element={<LazyScreen name="LeaderboardScreen" />} />
-              <Route path="/steps" element={<LazyScreen name="StepsScreen" />} />
               <Route path="/marathon" element={<LazyScreen name="MarathonScreen" />} />
               <Route path="/marathon/board" element={<LazyScreen name="MarathonBoardScreen" />} />
               <Route path="/book" element={<LazyScreen name="BookScreen" />} />

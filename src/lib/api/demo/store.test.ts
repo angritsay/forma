@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { stepsPoints } from '@/lib/training/streak';
 import { weekStart } from '@/lib/util/dates';
 import { isAppError } from '../errors';
 import { profileFromDb, toNumberOr, type DbWorkoutSession } from '../mappers';
@@ -91,19 +90,6 @@ describe('demo store — seeding', () => {
     expect(db.benchmarks).toHaveLength(0);
   });
 
-  it('seeds step history for the previous days but never for today', () => {
-    const db = emptyDb();
-    const profile = seedUser(db, EMAIL, TODAY);
-    const mine = db.dailyLogs.filter((d) => d.user_id === profile.id);
-    expect(mine.length).toBeGreaterThanOrEqual(7);
-    expect(mine.every((d) => d.local_date < TODAY)).toBe(true);
-    // Points follow the same formula as the daily_logs_points trigger.
-    for (const log of mine) expect(log.points).toBe(stepsPoints(toNumberOr(log.steps, 0)));
-    // A mix: some days clear the 7 000 goal (they feed the streak), some do not.
-    expect(mine.some((d) => toNumberOr(d.points, 0) > 0)).toBe(true);
-    expect(mine.some((d) => toNumberOr(d.points, 0) === 0)).toBe(true);
-  });
-
   it('seeds other people’s purchases so the admin screen has something to act on', () => {
     const db = emptyDb();
     seedUser(db, EMAIL, TODAY);
@@ -129,7 +115,6 @@ describe('demo store — persistence', () => {
     expect(back.version).toBe(DEMO_SCHEMA_VERSION);
     expect(back.profiles.map((p) => p.email)).toEqual([EMAIL]);
     expect(back.purchases.length).toBe(db.purchases.length);
-    expect(back.dailyLogs.length).toBe(db.dailyLogs.length);
   });
 
   it('discards a database written by another schema version', () => {
@@ -175,7 +160,6 @@ describe('demo store — persistence', () => {
     const wiped = readDb(storage);
     expect(wiped.profiles).toHaveLength(0);
     expect(wiped.purchases).toHaveLength(0);
-    expect(wiped.dailyLogs).toHaveLength(0);
     expect(currentDemoUser(storage)).toBeNull();
     expect(pendingDemoCode(storage)).toBeNull();
   });
@@ -288,7 +272,7 @@ describe('demo store — leaderboard', () => {
 });
 
 describe('demo store — totals', () => {
-  it('sums workout points, step points, sessions and minutes', () => {
+  it('sums workout points, sessions and minutes', () => {
     const { storage, userId } = signedIn();
     mutateDb((db) => {
       db.sessions.push(session(userId, TODAY, 200));
@@ -296,14 +280,10 @@ describe('demo store — totals', () => {
       db.sessions.push({ ...session(userId, TODAY, 999, 'engine'), completed_at: null });
     }, storage);
 
-    const db = readDb(storage);
-    const seededStepPoints = db.dailyLogs
-      .filter((d) => d.user_id === userId)
-      .reduce((sum, d) => sum + toNumberOr(d.points, 0), 0);
-    const totals = demoTotals(db, userId);
+    const totals = demoTotals(readDb(storage), userId);
     expect(totals.workouts).toBe(1);
     expect(totals.minutes).toBe(20);
-    expect(totals.points).toBe(200 + seededStepPoints);
+    expect(totals.points).toBe(200);
   });
 });
 

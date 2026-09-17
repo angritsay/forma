@@ -21,7 +21,6 @@ export const SCREEN_NAMES = [
   // Its module arrives on another branch; until then the router renders the "not available" state.
   'AssessmentScreen',
   'LeaderboardScreen',
-  'StepsScreen',
   'MarathonScreen',
   'MarathonBoardScreen',
   'BookScreen',

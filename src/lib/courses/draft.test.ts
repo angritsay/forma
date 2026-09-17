@@ -53,7 +53,6 @@ const day = (
   kind: 'workout',
   workoutShortId: 'y_flow_a',
   deload: false,
-  stepsGoal: null,
   sortOrder,
   content: { title: { ru: `День ${sortOrder + 1}` }, body: [] },
   ...over,
@@ -91,7 +90,7 @@ function completeDraft(): CourseDraft {
 
 const fourDays = (): CourseDayDraft[] => [
   day('d1', 0),
-  day('d2', 1, { kind: 'rest', workoutShortId: null, stepsGoal: 8000 }),
+  day('d2', 1, { kind: 'rest', workoutShortId: null }),
   day('d3', 2),
   day('d4', 3, { kind: 'test' }),
 ];
@@ -149,10 +148,9 @@ describe('draftToCourse', () => {
     expect(course.nodes.map((n) => n.id)).toEqual(['d1', 'd2', 'd3', 'd4']);
   });
 
-  it('carries rest-day fields onto the node', () => {
+  it('carries a rest day onto the node without a workout', () => {
     const { course } = draftToCourse(completeDraft(), fourDays(), [workout('y_flow_a')]);
     const rest = course.nodes.find((n) => n.kind === 'rest')!;
-    expect(rest.stepsGoal).toBe(8000);
     expect(rest.workoutId).toBeUndefined();
   });
 

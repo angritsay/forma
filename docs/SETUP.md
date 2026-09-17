@@ -110,8 +110,12 @@ Dashboard → **SQL Editor** → **New query**, paste each file in this order an
 11. `supabase/migrations/0011_marathon.sql` — the marathon format: daily tasks, proof, pairs or
     everyone-for-themselves, the private `proofs` bucket and the weekly board (see §2.5)
 12. `supabase/migrations/0012_step_proofs.sql` — a screenshot of the step counter, filed against
-    the day (see §2.6)
-13. `supabase/seed.sql` — nothing runs by default; open it, uncomment the `insert into
+    the day. **Superseded by 0015**; run it anyway so the chain applies in order on a fresh project
+13. `supabase/migrations/0013_admin_people.sql` — the admin's people screen
+14. `supabase/migrations/0014_coach_bookings.sql` — the booked session shown on «Тренер» (see §7.7)
+15. `supabase/migrations/0015_drop_steps.sql` — **removes steps from the product** (see §2.6).
+    ⚠️ It drops `daily_logs` and everything in it, and that cannot be undone
+16. `supabase/seed.sql` — nothing runs by default; open it, uncomment the `insert into
 public.admins` line with the coach's email (see §4)
 
 Each run must end with "Success. No rows returned". If a statement fails, fix the cause and
@@ -243,64 +247,76 @@ wins. It shares nothing with the course builder, so it is its own set of tables.
 - **`proofs` is a private bucket** (photo and video proof): the athlete who sent it and the coach,
   nobody else — not even a teammate, who sees only that the proof exists.
 
-### 2.6 Step screenshots (`0012_step_proofs.sql`)
+### 2.6 Steps are gone (`0015_drop_steps.sql`)
 
-Steps are typed in by hand — no phone health API is reachable from a Mini App — which makes them
-the one number in the product that is purely the athlete's word. A day may now carry a screenshot
-of their own step counter alongside it, in `daily_logs.proof_path`.
+There was a «Шаги» screen, and `0012_step_proofs.sql` let a day carry a screenshot of the phone's
+step counter beside the number. Both are removed.
 
-- **It is evidence, not arithmetic.** Points still come from `steps` through the same trigger, and
-  nothing reads the image. A screenshot is something a coach can glance at, not something to verify.
-- **One object per day**, at `steps/<user_id>/<local_date>.<ext>` in the private `proofs` bucket, so
-  a second screenshot of the same day replaces the first instead of leaving an orphan. The storage
-  policy reads that `<user_id>` folder to decide who may touch it, which is why the shape matters.
-- **The athlete owns it and the coach can see it.** Nobody else can, not even another athlete who
-  knows the path — `supabase/tests/50_step_proofs.sql` is that assertion.
-- The bucket is declared here as well as in 0011, with `on conflict do nothing`, so step proofs do
-  not depend on the marathon migration having been run.
-- The app shrinks the picture before it goes up (`src/lib/util/image.ts`): a phone screenshot is two
-  to four megabytes of PNG, and the coach needs to read a number off it.
+**Why.** The owner's rule: «Он либо стекается либо его нет вообще. Потому что пользователь не будет
+заниматься трекингом одних и тех же шагов в разных приложениях.» And it cannot sync — Forma is a
+Telegram Mini App, which is a WebView:
+
+- **Apple Health** is read through HealthKit, a native iOS framework. There is no browser API. The
+  only route is a native app.
+- **Google Fit's REST API** stopped accepting new developer registrations on 1 May 2024 and shuts
+  down at the end of 2026. It cannot even be applied for.
+- **Health Connect**, its replacement, reads on-device data from a native Android app.
+- **The Google Health API** (the former Fitbit Web API) is a cloud API for Fitbit and Pixel Watch
+  accounts. It is not the phone's Health app, and a person without one of those devices has nothing
+  in it.
+
+So the figure could only ever be typed in by hand, which is what the screen did, and which is the
+arrangement the rule rejects.
+
+**What 0015 does.** Rewrites `get_leaderboard()` and `get_my_totals()` to count workout points only;
+drops the four `proofs: steps own …` storage policies and `owns_step_proof_path()`; drops
+`daily_logs`, `daily_logs_set_points()` and `steps_points()`; drops `admin_course_days.steps_goal`.
+The `proofs` bucket itself stays — the club's own proof lives in it under `marathon/…`.
+
+⚠️ **It destroys data.** Every logged day goes with the table. On a project that has not launched
+that is test data; take a backup first if it is not. Objects already uploaded under
+`steps/<user_id>/…` are not deleted (SQL cannot remove Storage objects) — after this they are simply
+unreachable and can be cleared from the Storage screen.
 
 ### Verifying the migrations locally
 
 `supabase/tests/` runs the whole schema against a plain Postgres 16 — no Supabase needed. See the
 header of `supabase/tests/00_shim.sql` for the exact commands; the short version is: create a
 throwaway database, apply `00_shim.sql` and then every file in `supabase/migrations/` in order,
-then run `10_smoke.sql`, `20_subscriptions.sql`, `30_course_builder.sql`, `40_marathon.sql`
-and `50_step_proofs.sql`.
+then run `10_smoke.sql`, `20_subscriptions.sql`, `30_course_builder.sql`, `40_marathon.sql`,
+`60_coach_bookings.sql` and `61_google_calendar_bookings.sql`. (`50_step_proofs.sql` is gone with
+the step feature — §2.6.)
 Each ends with a "PASSED" line. The test files are **not** idempotent — they insert fixtures — so
 rebuild the database for each run.
 
 ### What the migrations create
 
-| Object                                                              | Purpose                                                                       |
-| ------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `profiles`                                                          | One row per auth user (trigger `on_auth_user_created`); own row read/write    |
-| `current_email()`                                                   | The caller's **verified** email (auth.users, confirmed + not banned)          |
-| `admins` + `is_admin()`                                             | Coach emails; gate for admin RPCs and video uploads                           |
-| `purchases`                                                         | `email ↔ course_id`, status `pending / active / refunded` (admin-only read)   |
-| `courses`, `workouts`                                               | Generated catalogue (§2.1): the id allowlist and the points ceilings          |
-| `create_order()` + `order_throttle`                                 | Anonymous RPC used by the landing order form (validates, throttles, upserts)  |
-| `my_entitlements`                                                   | View: active courses of the signed-in user (`course_id`, `activated_at`)      |
-| `has_entitlement(course_id)`                                        | Does the caller own this course? (sessions, video access; admins own all)     |
-| `admin_set_purchase_status()`, `admin_add_purchase()`               | Admin RPCs behind the `/app/#/admin` screen                                   |
-| `user_course_state`, `workout_sessions`, `daily_logs`, `benchmarks` | Training data, own rows only                                                  |
-| `workout_sessions_guard` trigger                                    | Server timestamps, date window, per-workout points ceiling, 4 sessions/day    |
-| `steps_points()` + trigger                                          | Recomputes step points server-side so the leaderboard cannot be gamed         |
-| `get_leaderboard()`                                                 | Top 100 + own row; never returns emails                                       |
-| `get_my_totals()`                                                   | Points / workouts / minutes for the home screen                               |
-| `exercises`                                                         | The exercise library in the database; seeded from content, extendable by hand |
-| `custom_workouts`, `assigned_workouts`                              | Coach-built workouts and the emails they are granted to                       |
-| `admin_courses`, `admin_course_days`                                | Courses composed in the admin panel (§2.2); days point at `custom_workouts`   |
-| `admin_publish_course()`, `admin_unpublish_course()`                | The only non-migration writers of `courses` / `workouts` (§2.2)               |
-| `images` bucket                                                     | Public: course covers, day pictures, exercise stills (`videos` stays private) |
-| Storage bucket `videos` (private)                                   | Read requires an active purchase of the course in the path, or `shared/`      |
-| `marathons`, `marathon_teams`, `marathon_members`                   | A marathon run, its pairs (none when `team_size = 1`), and who plays (§2.5)   |
-| `marathon_tasks`, `marathon_submissions`, `marathon_adjustments`    | The daily plan, the proof sent against it, and the coach's manual ±points     |
-| `daily_logs.proof_path`                                             | A screenshot of the day's step counter, in the private `proofs` bucket (§2.6) |
-| `marathon_scores()`, `marathon_my_points()`                         | The weekly board and one athlete's days; points are derived, never stored     |
-| `my_marathons()`, `marathon_roster()`                               | What the app opens the format with; the roster returns names, never emails    |
-| Storage bucket `proofs` (private)                                   | Photo and video proof: its author and the coach only, never a teammate        |
+| Object                                                           | Purpose                                                                       |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `profiles`                                                       | One row per auth user (trigger `on_auth_user_created`); own row read/write    |
+| `current_email()`                                                | The caller's **verified** email (auth.users, confirmed + not banned)          |
+| `admins` + `is_admin()`                                          | Coach emails; gate for admin RPCs and video uploads                           |
+| `purchases`                                                      | `email ↔ course_id`, status `pending / active / refunded` (admin-only read)   |
+| `courses`, `workouts`                                            | Generated catalogue (§2.1): the id allowlist and the points ceilings          |
+| `create_order()` + `order_throttle`                              | Anonymous RPC used by the landing order form (validates, throttles, upserts)  |
+| `my_entitlements`                                                | View: active courses of the signed-in user (`course_id`, `activated_at`)      |
+| `has_entitlement(course_id)`                                     | Does the caller own this course? (sessions, video access; admins own all)     |
+| `admin_set_purchase_status()`, `admin_add_purchase()`            | Admin RPCs behind the `/app/#/admin` screen                                   |
+| `user_course_state`, `workout_sessions`, `benchmarks`            | Training data, own rows only                                                  |
+| `workout_sessions_guard` trigger                                 | Server timestamps, date window, per-workout points ceiling, 4 sessions/day    |
+| `get_leaderboard()`                                              | Top 100 + own row; never returns emails                                       |
+| `get_my_totals()`                                                | Points / workouts / minutes for the home screen                               |
+| `exercises`                                                      | The exercise library in the database; seeded from content, extendable by hand |
+| `custom_workouts`, `assigned_workouts`                           | Coach-built workouts and the emails they are granted to                       |
+| `admin_courses`, `admin_course_days`                             | Courses composed in the admin panel (§2.2); days point at `custom_workouts`   |
+| `admin_publish_course()`, `admin_unpublish_course()`             | The only non-migration writers of `courses` / `workouts` (§2.2)               |
+| `images` bucket                                                  | Public: course covers, day pictures, exercise stills (`videos` stays private) |
+| Storage bucket `videos` (private)                                | Read requires an active purchase of the course in the path, or `shared/`      |
+| `marathons`, `marathon_teams`, `marathon_members`                | A marathon run, its pairs (none when `team_size = 1`), and who plays (§2.5)   |
+| `marathon_tasks`, `marathon_submissions`, `marathon_adjustments` | The daily plan, the proof sent against it, and the coach's manual ±points     |
+| `marathon_scores()`, `marathon_my_points()`                      | The weekly board and one athlete's days; points are derived, never stored     |
+| `my_marathons()`, `marathon_roster()`                            | What the app opens the format with; the roster returns names, never emails    |
+| Storage bucket `proofs` (private)                                | Photo and video proof: its author and the coach only, never a teammate        |
 
 ---
 
@@ -1395,16 +1411,15 @@ the same address restores that account; a different address starts a fresh one.
 
 Invented data, generated in `src/lib/api/demo/store.ts` and never shown anywhere else:
 
-| Seeded               | Value                                                                                                |
-| -------------------- | ---------------------------------------------------------------------------------------------------- |
-| Entitlements         | `start` and `engine` active; `dumbbells`, `kettlebell`, `athlete` locked                             |
-| Training profile     | none — the onboarding wizard is part of the walkthrough                                              |
-| Workout history      | empty — the first workout really is the first                                                        |
-| Steps (`daily_logs`) | the previous 14 days, mixing days above and below the 7 000 goal (streak, charts, calendar)          |
-| Benchmarks           | empty; the self-tests and test nodes fill them                                                       |
-| Leaderboard          | 12 invented athletes with plausible points, plus your own row computed from your real local sessions |
-| Purchases            | four `@example.com` orders (pending / active / refunded) so the admin flows have something to act on |
-| Admin                | the demo account is always the coach, so `/admin` is reachable                                       |
+| Seeded           | Value                                                                                                |
+| ---------------- | ---------------------------------------------------------------------------------------------------- |
+| Entitlements     | `start` and `engine` active; `dumbbells`, `kettlebell`, `athlete` locked                             |
+| Training profile | none — the onboarding wizard is part of the walkthrough                                              |
+| Workout history  | empty — the first workout really is the first                                                        |
+| Benchmarks       | empty; the self-tests and test nodes fill them                                                       |
+| Leaderboard      | 12 invented athletes with plausible points, plus your own row computed from your real local sessions |
+| Purchases        | four `@example.com` orders (pending / active / refunded) so the admin flows have something to act on |
+| Admin            | the demo account is always the coach, so `/admin` is reachable                                       |
 
 The landing order form also works: in demo mode it records the order locally and shows the
 success state (no payment redirect), and the order then appears in the admin list where you can

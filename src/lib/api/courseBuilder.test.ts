@@ -69,7 +69,6 @@ describe('dayPatchToDb', () => {
         customWorkoutId: 'uuid-1',
         content,
         deload: true,
-        stepsGoal: 8000,
         sortOrder: 4,
       }),
     ).toEqual({
@@ -80,7 +79,6 @@ describe('dayPatchToDb', () => {
       custom_workout_id: 'uuid-1',
       content,
       deload: true,
-      steps_goal: 8000,
       sort_order: 4,
     });
   });

@@ -62,10 +62,6 @@ export const RECOMMEND_REASON = {
     ru: 'С прошлой тренировки прошло меньше суток — дай телу восстановиться.',
     en: 'Less than 24 hours since your last session — give your body time to recover.',
   },
-  heavySteps: {
-    ru: 'Вчера было больше 15 000 шагов — ноги уже поработали.',
-    en: 'You walked over 15,000 steps yesterday — your legs already did their share.',
-  },
   pain: {
     ru: 'В прошлый раз была боль — сегодня бережный режим.',
     en: 'You reported pain last time — go gentle today.',
@@ -133,13 +129,6 @@ export const ACHIEVEMENT_COPY = {
   streak_30: {
     title: { ru: 'Месяц дисциплины', en: 'Thirty strong' },
     description: { ru: 'Держи серию 30 дней подряд.', en: 'Keep a 30-day streak.' },
-  },
-  steps_10_days: {
-    title: { ru: 'Ходок', en: 'Walker' },
-    description: {
-      ru: 'Выполни цель по шагам в 10 разных дней.',
-      en: 'Hit your steps goal on 10 different days.',
-    },
   },
   first_benchmark: {
     title: { ru: 'Точка отсчёта', en: 'Baseline' },

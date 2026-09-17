@@ -214,9 +214,10 @@ export const landing = {
   courseLifetimeNote: 'Одна оплата, доступ навсегда',
   courseOrSubscribe: 'Или все курсы по подписке — от {price} в месяц',
   nodeWorkout: 'Тренировка',
-  // The steps alone: every rest day on every course is titled «Отдых и прогулка», and the pill
-  // beside that title said «Отдых» a second time — and pushed the title itself into an ellipsis.
-  nodeRest: '{steps} шагов',
+  // It said «7 000 шагов» while the app counted steps, which kept the pill from repeating the
+  // «Отдых» already in every rest day's own title. Steps are gone, so the pill is a walk — which
+  // is what the day is, and what its title says it is («Отдых и прогулка»).
+  nodeRest: 'Прогулка',
   nodeTest: 'Тест',
   nodeBenchmark: 'Бенчмарк',
   nodeMilestone: 'Веха',

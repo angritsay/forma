@@ -1,28 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { computeStreak, isActiveDay, stepsPoints } from './streak';
+import { computeStreak, isActiveDay } from './streak';
 import type { DayActivity } from './types';
 
 const day = (date: string, o: Partial<DayActivity> = {}): DayActivity => ({
   date,
   workoutDone: false,
-  steps: 0,
   ...o,
 });
 const w = (date: string) => day(date, { workoutDone: true });
 
 describe('isActiveDay', () => {
-  it('counts a workout or reaching the steps goal', () => {
+  /*
+   * There used to be a second way to make a day count — reaching the step goal — and four cases
+   * here pinned it, including the fallback when a course set no goal of its own. Steps are gone,
+   * and the rule is the shorter one now: a day is a day you trained.
+   */
+  it('counts a finished workout and nothing else', () => {
     expect(isActiveDay(w('2026-09-01'))).toBe(true);
-    expect(isActiveDay(day('2026-09-01', { steps: 7000 }))).toBe(true);
-    expect(isActiveDay(day('2026-09-01', { steps: 6999 }))).toBe(false);
-    expect(isActiveDay(day('2026-09-01', { steps: 5000, stepsGoal: 5000 }))).toBe(true);
-    expect(isActiveDay(day('2026-09-01', { steps: 9000, stepsGoal: 10000 }))).toBe(false);
-  });
-
-  it('falls back to the default goal when the given goal is not a positive number', () => {
-    expect(isActiveDay(day('2026-09-01', { steps: 0, stepsGoal: 0 }))).toBe(false);
-    expect(isActiveDay(day('2026-09-01', { steps: 7000, stepsGoal: 0 }))).toBe(true);
-    expect(isActiveDay(day('2026-09-01', { steps: 0, stepsGoal: Number.NaN }))).toBe(false);
+    expect(isActiveDay(day('2026-09-01'))).toBe(false);
   });
 });
 
@@ -63,11 +58,11 @@ describe('computeStreak', () => {
 
   it('handles unsorted, sparse and duplicate input', () => {
     const days = [
-      day('2026-09-02', { steps: 8000 }),
+      w('2026-09-02'),
       w('2026-08-31'),
-      day('2026-09-01', { steps: 100 }),
+      day('2026-09-01'),
       w('2026-09-01'),
-      day('2026-08-20', { steps: 7000 }),
+      day('2026-08-20'),
       w('2026-08-31'),
     ];
     const s = computeStreak(days, '2026-09-02');
@@ -87,12 +82,7 @@ describe('computeStreak', () => {
   });
 
   it('ignores inactive rows, future dates and malformed dates', () => {
-    const days = [
-      w('2026-09-03'),
-      w('2026-09-02'),
-      day('2026-09-01', { steps: 200 }),
-      w('not-a-date'),
-    ];
+    const days = [w('2026-09-03'), w('2026-09-02'), day('2026-09-01'), w('not-a-date')];
     const s = computeStreak(days, '2026-09-02');
     expect(s.current).toBe(1);
     expect(s.longest).toBe(1);
@@ -102,27 +92,5 @@ describe('computeStreak', () => {
   it('crosses month and year boundaries', () => {
     const s = computeStreak([w('2025-12-30'), w('2025-12-31'), w('2026-01-01')], '2026-01-01');
     expect(s.current).toBe(3);
-  });
-});
-
-describe('stepsPoints', () => {
-  it('is 0 below the goal, 30 at the goal, +5 per extra 1 000, capped at 60', () => {
-    expect(stepsPoints(0)).toBe(0);
-    expect(stepsPoints(6999)).toBe(0);
-    expect(stepsPoints(7000)).toBe(30);
-    expect(stepsPoints(7999)).toBe(30);
-    expect(stepsPoints(8000)).toBe(35);
-    expect(stepsPoints(12999)).toBe(55);
-    expect(stepsPoints(13000)).toBe(60);
-    expect(stepsPoints(30000)).toBe(60);
-  });
-
-  it('respects a custom goal and guards bad input', () => {
-    expect(stepsPoints(9999, 10000)).toBe(0);
-    expect(stepsPoints(10000, 10000)).toBe(30);
-    expect(stepsPoints(11000, 10000)).toBe(35);
-    expect(stepsPoints(-5)).toBe(0);
-    expect(stepsPoints(Number.NaN)).toBe(0);
-    expect(stepsPoints(7000, 0)).toBe(30);
   });
 });

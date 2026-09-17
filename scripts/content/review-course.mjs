@@ -477,7 +477,6 @@ const nodes = course.nodes.map((n, index) => ({
   workoutId: n.workoutId,
   title: n.title,
   subtitle: n.subtitle,
-  stepsGoal: n.stepsGoal,
 }));
 
 const sessionNodes = nodes.filter((n) => n.workoutId);
@@ -1271,7 +1270,6 @@ const page = html`<title>${course.name.ru}</title>
           day: 'День',
           week: 'Неделя',
           rest: 'Отдых',
-          steps: 'шагов',
           test: 'Тест',
           retest: 'Повторный тест',
           benchmark: 'Контрольная',
@@ -1342,7 +1340,6 @@ const page = html`<title>${course.name.ru}</title>
           day: 'Day',
           week: 'Week',
           rest: 'Rest',
-          steps: 'steps',
           test: 'Test',
           retest: 'Retest',
           benchmark: 'Benchmark',
@@ -1514,10 +1511,6 @@ const page = html`<title>${course.name.ru}</title>
                 day +
                 '</small></span><span class="s">' +
                 esc(L(node.subtitle)) +
-                '</span><span class="m num">' +
-                (node.stepsGoal ?? 7000).toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-GB') +
-                ' ' +
-                t('steps') +
                 '</span></div>';
               continue;
             }

@@ -14,11 +14,8 @@ import type {
   Workout,
   WorkoutItem,
 } from '@/content/schema';
-import { formatNumber, plural, t } from '@/i18n/index';
+import { plural, t } from '@/i18n/index';
 import { href } from '@/lib/util/paths';
-
-/** Default steps goal for rest nodes (docs/SPEC.md §6). */
-export const DEFAULT_STEPS_GOAL = 7000;
 
 /** Site path (no base, no locale) of a course page. */
 export function coursePath(locale: Locale, course: Course): string {
@@ -138,9 +135,7 @@ export function nodeKindLabel(locale: Locale, node: CourseNode): string {
     case 'workout':
       return t(locale, 'landing.nodeWorkout');
     case 'rest':
-      return t(locale, 'landing.nodeRest', {
-        steps: formatNumber(locale, node.stepsGoal ?? DEFAULT_STEPS_GOAL),
-      });
+      return t(locale, 'landing.nodeRest');
     case 'test':
       return t(locale, 'landing.nodeTest');
     case 'benchmark':

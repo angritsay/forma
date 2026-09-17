@@ -78,12 +78,8 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     (s) => Math.max(num(s.streakCurrent), num(s.streakLongest)) >= 30,
     (s) => ratio(Math.max(num(s.streakCurrent), num(s.streakLongest)), 30),
   ),
-  define(
-    'steps_10_days',
-    '🚶',
-    (s) => num(s.stepsDaysAtGoal) >= 10,
-    (s) => ratio(s.stepsDaysAtGoal, 10),
-  ),
+  // `steps_10_days` («Десять дней по 7 000 шагов», 🚶) stood here. It went with the step feature:
+  // an achievement for a figure nothing can measure any more. Twelve remain.
   define(
     'first_benchmark',
     '📏',

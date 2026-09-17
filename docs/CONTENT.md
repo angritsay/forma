@@ -28,7 +28,7 @@ One object per exercise (`ExerciseInput` from `src/content/schema.ts`). Key fiel
 
 A course is a list of unique `workouts` plus an ordered list of `nodes` (the Duolingo-style path).
 
-- Nodes reference workouts by id; `kind` is `workout`, `rest` (steps goal), `test` (baseline/retest),
+- Nodes reference workouts by id; `kind` is `workout`, `rest`, `test` (baseline/retest),
   `benchmark` (classic timed workout) or `milestone`.
 - Nodes must be ordered by `week`/`day`; the first and last node are tests.
 - Blocks use formats `sets`, `circuit`, `amrap`, `emom`, `fortime`, `tabata`, `interval`.

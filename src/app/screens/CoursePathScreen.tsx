@@ -44,7 +44,6 @@ import {
   starsByNode,
   useProgress,
   useProgressLoader,
-  useStepsToday,
 } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
 
@@ -79,7 +78,6 @@ export default function CoursePathScreen() {
       .reduce((n, s) => n + (s.durationSec ?? 0), 0);
     return Math.round(sec / 60);
   }, [sessions, course]);
-  const stepsToday = useStepsToday();
   const [sheetNode, setSheetNode] = useState<CourseNode | null>(null);
   const [scaleOpen, setScaleOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -306,10 +304,8 @@ export default function CoursePathScreen() {
         <NodeSheet
           node={sheetNode}
           status={sheetStatus}
-          stepsToday={stepsToday}
           busy={busy}
           onClose={() => setSheetNode(null)}
-          onLogSteps={() => navigate('/steps')}
           onComplete={(skip) => void completeSheetNode(skip)}
         />
         <ScaleSheet open={scaleOpen} scale={scale} onClose={() => setScaleOpen(false)} />

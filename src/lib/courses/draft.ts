@@ -108,7 +108,6 @@ export interface CourseDayDraft {
   /** The custom workout's *short id* — the id a session is recorded against. */
   workoutShortId: string | null;
   deload: boolean;
-  stepsGoal: number | null;
   sortOrder: number;
   content: CourseDayContent;
 }
@@ -334,7 +333,6 @@ function nodeFromDay(day: CourseDayDraft): CourseNode {
       ? { subtitle: l10n(day.content.subtitle, '') }
       : {}),
     ...(day.deload ? { deload: true } : {}),
-    ...(day.stepsGoal ? { stepsGoal: day.stepsGoal } : {}),
   };
 }
 

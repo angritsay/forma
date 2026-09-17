@@ -6,13 +6,12 @@
  * reused rather than redrawn. That calendar is the only part of that tab that answered a question
  * an athlete actually arrives with: is the streak real, and did yesterday count.
  *
- * It also carries the one button that keeps a streak alive on a day with no workout in it —
- * «Записать шаги» — because the streak's own rule is a workout *or* the steps goal, and `/steps`
- * lost its other way in when the tab did.
+ * It used to carry a button as well — «Записать шаги», the other way to keep a streak alive on a
+ * day with no workout in it. There is no other way now: steps are gone, because nothing in a Mini
+ * App can read a phone's step counter and a hand-typed tally is a tally nobody keeps twice. The
+ * sheet is the calendar and nothing else, which is what it was for.
  */
 import { useMemo } from 'react';
-import { useNavigate } from 'react-router';
-import { Button } from '@/components/ui/Button';
 import { Sheet } from '@/components/ui/Sheet';
 import { useT } from '@/app/hooks/useT';
 import { useProgress, useStreak, useTodayIso } from '@/app/store/progress';
@@ -26,28 +25,14 @@ export interface StreakSheetProps {
 
 export function StreakSheet({ open, onClose }: StreakSheetProps) {
   const { t } = useT();
-  const navigate = useNavigate();
   const sessions = useProgress((s) => s.recentSessions);
-  const logs = useProgress((s) => s.dailyLogs);
   const today = useTodayIso();
   const streak = useStreak();
-  const weeks = useMemo(() => streakCalendar(sessions, logs, today), [sessions, logs, today]);
+  const weeks = useMemo(() => streakCalendar(sessions, today), [sessions, today]);
 
   return (
     <Sheet open={open} onClose={onClose} title={t('app.homeStreakTitle')}>
       <StreakCalendar weeks={weeks} streak={streak} />
-      <Button
-        variant="secondary"
-        size="lg"
-        fullWidth
-        className="mt-5"
-        onClick={() => {
-          onClose();
-          navigate('/steps');
-        }}
-      >
-        {t('app.homeStreakLogSteps')}
-      </Button>
     </Sheet>
   );
 }

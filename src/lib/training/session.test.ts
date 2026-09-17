@@ -464,19 +464,18 @@ describe('recommendDifficulty', () => {
     ).toMatch(/pain/i);
   });
 
-  it('is "easier" when less than 24 h passed or after a 15 000-step day', () => {
+  /*
+   * A second clause used to hang off this test — «or after a 15 000-step day», which read
+   * yesterday's step count and asked for an easier session. Steps are gone, so is the rule, and
+   * what is left is the one that reads the clock.
+   */
+  it('is "easier" when less than 24 h passed', () => {
     const soon = recommendDifficulty(hist(easy('2026-09-05T00:00:00.000Z')), p, now);
     expect(soon.choice).toBe('easier');
     expect(soon.reason.en).toMatch(/24 hours/);
-    const walked = recommendDifficulty(hist(easy('2026-09-02T10:00:00.000Z')), p, now, {
-      stepsYesterday: 15000,
-    });
-    expect(walked.choice).toBe('easier');
-    expect(walked.reason.en).toMatch(/15,000/);
-    expect(
-      recommendDifficulty(hist(easy('2026-09-02T10:00:00.000Z')), p, now, { stepsYesterday: 14999 })
-        .choice,
-    ).toBe('normal');
+    expect(recommendDifficulty(hist(easy('2026-09-02T10:00:00.000Z')), p, now).choice).toBe(
+      'normal',
+    );
   });
 
   it('is "normal" between 24 and 48 h even when the last sessions were easy', () => {

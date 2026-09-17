@@ -64,7 +64,6 @@ import {
   useEngineCourseState,
   useProgress,
   useProgressLoader,
-  useStepsYesterday,
   useStreak,
 } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
@@ -91,7 +90,6 @@ export default function NodePreviewScreen() {
   const engineState = useEngineCourseState(course?.id ?? '');
   const ctx = useTrainingContext();
   const streak = useStreak();
-  const stepsYesterday = useStepsYesterday();
   const activeSession = useActiveWorkoutStore((s) => s.session);
   const [chooserOpen, setChooserOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -105,11 +103,8 @@ export default function NodePreviewScreen() {
   const streakDays = streak.current;
 
   const recommendation = useMemo<Recommendation | null>(
-    () =>
-      ctx.profile
-        ? recommendDifficulty(engineState, ctx.profile, nowIso, { stepsYesterday })
-        : null,
-    [ctx.profile, engineState, nowIso, stepsYesterday],
+    () => (ctx.profile ? recommendDifficulty(engineState, ctx.profile, nowIso) : null),
+    [ctx.profile, engineState, nowIso],
   );
 
   /*

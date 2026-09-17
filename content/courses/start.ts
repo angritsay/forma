@@ -1041,7 +1041,6 @@ function restNode(week: number, day: number, subtitle: L10n): NodeInput {
     week,
     day,
     kind: 'rest',
-    stepsGoal: 10000,
     title: l('Отдых и прогулка', 'Rest & walk'),
     subtitle,
   };

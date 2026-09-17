@@ -13,7 +13,6 @@ import type {
   PlayerStep,
   PrescribedWorkout,
   Recommendation,
-  RecommendationContext,
   ScaleAdjustment,
   SessionFeedback,
   SessionSummary,
@@ -215,11 +214,18 @@ function isEasyAndComplete(s: SessionSummary): boolean {
   );
 }
 
+/*
+ * One rule used to live here that no longer can: «вчера было больше 15 000 шагов — ноги уже
+ * поработали». It read yesterday's step count, and there is no longer a step count to read — the
+ * number was typed in by hand, and hand-typed input is gone with the rest of the step feature.
+ *
+ * Nothing replaces it. The remaining five rules all read the athlete's own report of the last
+ * session, which is the better signal anyway: it is about this training, not about a walk.
+ */
 export function recommendDifficulty(
   state: CourseState,
   profile: UserTrainingProfile,
   nowIso: string,
-  context: RecommendationContext = {},
 ): Recommendation {
   if (profile.limitations?.includes('pregnancy'))
     return { choice: 'easier', reason: RECOMMEND_REASON.pregnancy };
@@ -229,7 +235,6 @@ export function recommendDifficulty(
   if (!last) return { choice: 'normal', reason: RECOMMEND_REASON.firstSession };
 
   const hours = hoursSince(last.completedAt, nowIso);
-  const stepsYesterday = num(context.stepsYesterday);
 
   if (last.feeling === 'pain') return { choice: 'easier', reason: RECOMMEND_REASON.pain };
   if (num(last.rpe) >= ADAPTATION.hardRpe)
@@ -238,8 +243,6 @@ export function recommendDifficulty(
     return { choice: 'easier', reason: RECOMMEND_REASON.lowCompletion };
   if (Number.isFinite(hours) && hours < RECOMMENDATION.easierMaxHours)
     return { choice: 'easier', reason: RECOMMEND_REASON.tooSoon };
-  if (stepsYesterday >= RECOMMENDATION.heavyStepsYesterday)
-    return { choice: 'easier', reason: RECOMMEND_REASON.heavySteps };
 
   const recent = history.slice(-RECOMMENDATION.easySessionsForHarder);
   if (

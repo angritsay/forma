@@ -126,7 +126,7 @@ export const PLAN_INCLUDES: readonly L10n[] = [
     en: 'Load adapts to you after every workout',
   },
   { ru: 'Новые курсы — сразу, без доплат', en: 'New courses as they appear, at no extra cost' },
-  { ru: 'Прогресс, шаги, таблица лидеров', en: 'Progress, steps and the leaderboard' },
+  { ru: 'Прогресс, достижения, таблица лидеров', en: 'Progress, achievements and the leaderboard' },
 ];
 
 /**
