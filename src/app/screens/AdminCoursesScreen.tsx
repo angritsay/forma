@@ -51,7 +51,7 @@ export default function AdminCoursesScreen() {
   }, [admin, refresh]);
 
   if (admin === null) return <BootScreen />;
-  if (admin === false) return <Navigate to="/profile" replace />;
+  if (admin === false) return <Navigate to="/" replace />;
 
   const idError = newId !== '' && !COURSE_ID_RE.test(newId) ? t('app.courseIdInvalid') : undefined;
 

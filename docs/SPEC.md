@@ -108,8 +108,8 @@ public/                     # favicon.svg, icons, manifest
   the top, with `AdminNav` as a second column inside `/admin`. This reverses the rule that stood
   here («centered max-width 480px app frame on large screens»), and the reversal is the owner's:
   she builds courses from a laptop, and a 480px strip in the middle of one is a phone stranded in a
-  grey field. Content is capped at 760px for reading screens, 1040px for the two screens that split
-  in two (profile, club) and 1280px for the admin; a sheet becomes a centred dialog at the same
+  grey field. Content is capped at 760px for reading screens, 1040px for the screen that splits
+  in two (the club) and 1280px for the admin; a sheet becomes a centred dialog at the same
   breakpoint. Landing is responsive 360px → 1440px.
 - `AdminNav` is the one component that waits for `lg` (1024) instead. Its rail is 264px, which is a
   third of a tablet: at `md` it left the purchases 504px — less than a phone gives them — so a
@@ -141,10 +141,12 @@ public/                     # favicon.svg, icons, manifest
   the tokens were all 0; both now agree, and the one change of mind is the buttons, which used to
   be held at a near-square 4px. Chrome that has content moving under it — the tab bar, a screen
   header, a sheet, a modal, the player — is frosted glass (`design/CHANGELOG.md` §8); everything
-  else is a solid surface. The app's tab bar (Сегодня / Программы / Клуб / Прогресс — the
-  profile is the avatar on «Прогресс» and in the top row from `md`, not a tab) is a capsule of
-  glass floating over the bottom of the screen with one highlight that slides between the four
-  seats, and a screen arrives the way the highlight went (`screenMotion`). Generous spacing, 1px
+  else is a solid surface. The app's tab bar (Курсы / Клуб / Тренер, plus Админка as a fourth seat
+  for whoever has the panel — the profile is a sheet behind the avatar, not a tab) is a capsule of
+  glass floating over the bottom of the screen with one highlight that slides between the seats.
+  The highlight is a share of however many seats the bar has, never a hard-coded quarter, because
+  the same bar is three seats for most people and four for an admin. A screen arrives the way the
+  highlight went (`screenMotion`). Generous spacing, 1px
   borders (`--border`).
 - The accent is a dosage rule, not just a colour: `#9ECBFF` marks the primary button, the
   wordmark's full stop, a rule, a kicker, "you are here". Never a large fill. Large areas are
@@ -347,11 +349,28 @@ Landing (Astro, static, RU default / EN under `/en/`):
 /sitemap.xml  /robots.txt  /llms.txt  /rss.xml  /<indexnow-key>.txt  /manifest.webmanifest  /404
 ```
 
-App (HashRouter under `/app/#/`): `/auth`, `/onboarding`, `/` (home), `/courses` (the
-«Программы» tab), `/courses/:id`,
-`/courses/:id/nodes/:nodeId` (preview + difficulty), `/play` (active session), `/summary/:sessionId`,
-`/stats`, `/leaderboard`, `/steps`, `/profile`, `/book` (one-to-one session with the coach), `/admin`
-(purchases and subscriptions).
+App (HashRouter under `/app/#/`). **Three tabs — «Курсы», «Клуб», «Тренер» — and «Админка» as a
+fourth seat for whoever has the panel.** The words changed and the paths did not, so nothing that
+was ever linked or bookmarked broke:
+
+```
+/auth  /onboarding
+/                          «Курсы» — the main screen: progress across every course there is
+/courses                   → redirect to `/` (the path this screen had while it was the second tab)
+/courses/:id               the course's path
+/courses/:id/nodes/:nodeId preview + difficulty
+/play                      active session          /summary/:sessionId
+/achievements              the catalogue of achievements, from the 🏅 in the header of «Курсы»
+/assessment                the physical test, asked for after a couple of workouts
+/marathon  /marathon/board «Клуб»
+/book                      «Тренер» — one-to-one session with the coach
+/leaderboard  /steps
+/assigned/:id  /shared/:token
+/admin  /admin/workouts  /admin/exercises  /admin/courses[/:id]  /admin/marathons[/:id]
+```
+
+Gone with the four-tab shell: `/` as «Сегодня», `/stats` («Прогресс»), `/profile` (a sheet behind
+the avatar now) and `/marathon/points` («Мои баллы»).
 
 Products: a **course** is bought once and kept forever (`purchases`); a **subscription**
 (`subscriptions`, monthly or annual) lists every course through `my_entitlements` while its paid
@@ -414,34 +433,32 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    renaming it migrates stored profiles for no reader's benefit. Task #41, the coach's own ranges as
    data, is where the borrowed tables stop mattering.
 
-3. **Home**: today, and nothing else. The greeting names the athlete and the avatar beside it opens
-   the profile; **one** full-width cover card — today's session, or the unfinished one when there is
-   one; **the club as one ruled row** under it; one button offering an hour
-   with the coach; then any task
-   still owed — the assessment when it was postponed — and whatever the coach has assigned by
-   hand. The deck of programmes moved to the «Программы» tab and the figures to «Прогресс».
+3. **«Курсы»** (the first tab, and the screen the app opens on): «Курсы это прогресс по всем
+   курсам которые есть». A progress screen that happens to list courses, not a catalogue. It
+   replaced «Сегодня» and absorbed the «Программы» tab, which were two screens answering one
+   question between them.
 
-   The card is the prototype's: the photograph (or the programme colour), the kicker, the day's
-   name as the one display line, the session's two facts as pills — «18 мин», «110 повторов» — and
-   «Начать →». Four things, one of them the button; the name of the course appears as a fifth line
-   only when a second course is owned and the day's name alone could belong to either. The pills
-   are the prescription the difficulty sheet will offer at «Как обычно», through the one estimator
-   both screens read (`features/courses/sessionEstimate.ts`), so the figure on Home is the figure
-   on the sheet and never a rounding away from it. Nothing on Home scrolls at 390×844.
+   At the top, small: the greeting, the avatar, and the **streak 🔥 and the achievements 🏅 as two
+   entry points** («Профиль и все ачивки убирай. Они должны быть на главном экране в виде маленьких
+   энтри поинтов»). They are controls the height of a chip, side by side — not tiles and not a
+   section. The avatar opens the **account sheet** (flow 11), the streak opens its calendar as a
+   sheet, and the achievements open their **catalogue** (flow 8).
 
-   The club row is the same row in both states, and it is the only thing on Home that takes
-   a colour — the club's orange (`GAME_TILE`, src/lib/ui/tile.ts; the identifier keeps the old
-   word, the product does not), because colour here says which part of the product something
-   belongs to. In the club it shows the day as a ring and names the first task still owed;
-   outside it, the same row with the task blurred, which is a truer invitation than an
-   advertisement. Logging steps is **not** on Home: it is a number the athlete owes today, and it
-   belongs with the rest of how they are doing, on «Прогресс».
+   Then the courses, one card each, in the shape the owner drew: the **photograph**, the **share
+   completed as one large figure** over its **progress bar**, and **one button**. The figure is the
+   prototype's `.display` device — the number larger than the word — because on a progress screen
+   the number is the content. A course the athlete does not own shows **«Подробнее»** and leaves
+   for that course's page on the site; it used to say «Прийти» or «Курс закрыт», neither of which
+   says what happens next. The button is only ever offered where there is a page behind it
+   (`LIVE_COURSES`), and a course that is neither owned nor on sale is not listed at all.
 
-   **One workout button.** The card is the only place Home offers a workout, and it offers exactly
-   one. An unfinished session used to be a «ПРОДОЛЖИТЬ» strip above the card, with «НАЧАТЬ» on the
-   card below it — «не может быть такого состояния что и продолжить тренировку и начать курс». The
-   session already running wins the card (`homeLead`, `features/home/resumeModel.ts`): same
-   photograph, same shape, the unfinished workout's words, and the one button goes back into it.
+   **One workout button.** «Не может быть такого состояния что и продолжить тренировку и начать
+   курс. На главном экране всегда должна быть только одна кнопка тренировки.» When a session is
+   open, `resumeCard()` (`features/home/resumeModel.ts`) says so, the course it belongs to carries
+   the resume button, and every other course offers its path instead of a start. One module decides
+   it; the screen never re-derives it.
+
+   The club is not on this screen at all any more — it is its own tab.
 
    **The name.** The format is the «Клуб маленьких шагов» — «Клуб» where a label has one slot (the
    tab, the top row, the deck card), the full name where there is room (the screen's own head, the
@@ -509,24 +526,21 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    them, feeling chips (great / ok / hard / pain) and a note. «Save» → the achievements just
    unlocked, the adaptation message («next time +5%»), «К пути →» and «Поделиться». The whole
    session block by block, the test results and the benchmark are behind «Подробности».
-8. **«Прогресс»** (the fourth tab): a poster, and then the sections. This paragraph used to argue
-   the opposite — that the tab must be «Ты», because it is not a report but a picture of the
-   athlete — and the owner has overruled it: «Ты» on a tab reads as a label for a person rather
-   than for a place to go, and «Прогресс» is what someone is actually looking for when they tap
-   it. The screen itself does not change, and the argument still holds for what is _on_ it: the
-   poster is the paper surface
-   running past both gutters — the wordmark and the level in one row, the avatar (to the profile)
-   and «Обновить» beside them, the streak as one very large numeral with what it counts under it,
-   and workouts / minutes / kcal on a ruled line — built so that a screenshot of it is already a
-   story. A streak at risk is a pill beside «дней подряд», not a paragraph. Then, on the dark
-   ground: **«Цель недели» as seven circles**, Monday to Sunday, a ✓ on every day that counted and
-   the weekday's letter on the rest, scored against the course's own `sessionsPerWeek`; **«Взято»
-   as a row of big circles** swiped sideways, earned ones white with a ✓ and the rest a hairline
-   ring filling with their progress; **today's steps as one row with a ring**, the one number still
-   owed on a tab otherwise made of finished things; and the top of this week's table. Everything
-   else — the week's load, points by week, the streak calendar, steps, personal records, the level
-   card — is behind «Подробности», collapsed (two columns from `md`): a chart answers a question
-   nobody arrives with.
+8. **«Достижения»** (`/achievements`, from the 🏅 in the header of «Курсы»): every achievement the
+   product has, **including the ones not yet earned, each with the rule that earns it**. That rule
+   is the reason the screen exists — «Достижения открывают каталог достижений» — and a grid of grey
+   circles with no rule attached is what it replaces. One row each: the figure on the left (white
+   with a ✓ when it is taken, a hairline ring filling with its progress when it is not, the same
+   figure «Готово!» draws the moment one is earned), the name, and the rule under it. The count
+   sits in the header, because it is the one number the catalogue is about.
+
+   This is what is left of **«Прогресс»**, which was the fourth tab and is gone with it. The streak
+   went to the header of «Курсы» and its calendar to the sheet behind it; the achievements became
+   this screen; the week's table is the club's own (flow 6) and the full leaderboard is flow 9. The
+   charts, the personal records and the level card had no reader: «МИНИМУМ текста, максимум
+   визуала» does not survive six figures stacked behind a «Подробности» nobody opened. The level
+   is in the account sheet, where it is one line and a rule for reaching the next one.
+
 9. **Leaderboard**: tabs week / all-time, course filter, top-100 with own row pinned. A rank is a
    **circle**, drawn exactly as the club's `BoardRow` draws it — the leader filled, your own
    row a white ring, the podium a stronger hairline — but filled in white, never the club's
@@ -540,12 +554,18 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
     carry a screenshot of the athlete's own step counter — attached the moment it is picked, held
     in the private `proofs` bucket, visible to the athlete and the coach and nobody else. It is
     evidence, not arithmetic: points still come from the number.
-11. **Profile** (reached from the avatar on «Прогресс» and from the top row on a laptop, not from
-    the tab bar), on paper: the avatar (tap for a new one), the name (tap to edit), one line —
-    since when and how many workouts — and then rows with their values on the right: subscription,
-    equipment/weights, what to protect, retake the assessment (its value is the fitness index),
-    the coach's hour, admin if admin, sign out (its value is the account's email). No section
-    headings, no subtitles: «минимум текста».
+11. **The account** — a **sheet**, opened by the avatar in the header of «Курсы» and by the same
+    avatar in the top row from `md`. Not a screen and not a tab: «Профиль и все ачивки убирай».
+    Five things and no navigation — the avatar, the name with the address the sign-out will leave,
+    the level, **one line saying how to reach the next one**, and «Выйти» behind a confirmation.
+    The 417-line profile screen it replaces was a settings page nobody opened twice.
+
+    What that screen also carried and this does not: the inventory and the limitations sheets, the
+    subscription row, «Пройти тесты заново», the link to the coach's hour and the link to the
+    admin. The last two are tabs now. **The first three have no home in the app at present and the
+    owner has to say where they should go** — the likeliest answer is the assessment flow, which is
+    being rebuilt to run after the second workout rather than during onboarding.
+
 12. **Admin**: three tabs. **Покупки** — the ledger (search by email, filter status), activate /
     refund, add by hand. **Подписки** — the same for plans. **Люди** — everybody who has confirmed a
     sign-in code (`admin_people()`, admin-only), newest first, with what they already hold and one

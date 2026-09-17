@@ -1,0 +1,127 @@
+/**
+ * The account, as a sheet behind the avatar — what is left of «Профиль».
+ *
+ * «Профиль и все ачивки убирай.» The screen was 417 lines and a tab seat before that: an avatar,
+ * a name, a line, and a list of settings rows with their values on the right. Almost none of it
+ * was opened twice. What an athlete actually comes to an account for is to check who they are
+ * signed in as, see what level they are, and — once ever — sign out; everything else on that
+ * screen was either a thing they set at sign-up or a link to somewhere else in the app.
+ *
+ * So it is five things and no navigation: the avatar, the name, the level, one line saying how to
+ * reach the next one, and the way out. It opens from the avatar in the header of «Курсы» and from
+ * the same avatar in the top row from `md` — one object, two places it is reachable from, and
+ * never a screen, because an account is something you glance at and close.
+ *
+ * The sheet is the kit's own (`components/ui/Sheet`): a sheet on a phone, a dialog from `md`.
+ */
+import { useState } from 'react';
+import { Avatar } from '@/components/ui/Avatar';
+import { Button } from '@/components/ui/Button';
+import { Modal } from '@/components/ui/Modal';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { Sheet } from '@/components/ui/Sheet';
+import { formatNumber } from '@/i18n/index';
+import { levelForPoints } from '@/lib/training/levels';
+import { useT } from '@/app/hooks/useT';
+import { useTotalPoints } from '@/app/store/progress';
+import { useSession } from '@/app/store/session';
+
+export interface ProfileSheetProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
+  const { t, l, locale } = useT();
+  const profile = useSession((s) => s.profile);
+  const user = useSession((s) => s.user);
+  const points = useTotalPoints();
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const level = levelForPoints(points);
+  const next = level.nextAt === null ? null : levelForPoints(level.nextAt);
+  const remaining = level.nextAt === null ? 0 : Math.max(0, level.nextAt - points);
+  const name = profile?.displayName ?? '';
+  const email = profile?.email || user?.email || '';
+
+  const signOut = async () => {
+    setBusy(true);
+    try {
+      await useSession.getState().signOut();
+    } finally {
+      setBusy(false);
+      setConfirm(false);
+    }
+  };
+
+  return (
+    <>
+      <Sheet open={open} onClose={onClose} title={t('app.profileTitle')}>
+        <div className="flex flex-col gap-6 pb-2">
+          {/* Who you are: the figure, the name, and the address that «Выйти» will leave. */}
+          <div className="flex items-center gap-4">
+            <Avatar
+              seed={profile?.avatarSeed || profile?.id || ''}
+              name={name || email}
+              size={56}
+            />
+            <div className="flex min-w-0 flex-col gap-0.5">
+              {name ? <p className="font-display truncate text-base">{name}</p> : null}
+              {email ? <p className="truncate text-[13px] text-muted-2">{email}</p> : null}
+            </div>
+          </div>
+
+          {/*
+           * The level, and the one line that says how to get the next one. That line is the reason
+           * the level is here at all: a rank with no rule attached is a badge, and the athlete has
+           * no way to act on it. The rule is points, and points are workouts and steps.
+           */}
+          <div className="flex flex-col gap-2 border-t border-border pt-5">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="eyebrow">{t('app.statsLevelEyebrow', { n: level.level })}</span>
+              <span className="numeral tabular shrink-0 text-sm">
+                {t('app.statsPointsValue', { n: formatNumber(locale, points) })}
+              </span>
+            </div>
+            <h3 className="display text-2xl">{l(level.title)}</h3>
+            <ProgressBar
+              value={level.progress}
+              tone="primary"
+              label={t('app.statsLevelProgress')}
+            />
+            <p className="text-[13px] text-muted">
+              {next
+                ? t('app.statsLevelNext', {
+                    n: formatNumber(locale, remaining),
+                    title: l(next.title),
+                  })
+                : t('app.statsLevelMax')}
+            </p>
+          </div>
+
+          <Button
+            variant="ghost"
+            size="lg"
+            fullWidth
+            className="text-danger"
+            onClick={() => setConfirm(true)}
+          >
+            {t('app.profileSignOut')}
+          </Button>
+        </div>
+      </Sheet>
+      <Modal
+        open={confirm}
+        onClose={() => setConfirm(false)}
+        title={t('app.profileSignOutTitle')}
+        description={t('app.profileSignOutBody')}
+        confirmLabel={t('app.profileSignOut')}
+        cancelLabel={t('common.cancel')}
+        danger
+        loading={busy}
+        onConfirm={() => void signOut()}
+      />
+    </>
+  );
+}

@@ -312,7 +312,7 @@ export default function AdminScreen() {
 
   const header = (
     <TopBar
-      back="/profile"
+      back="/"
       title={t('app.adminTitle')}
       right={
         /*
@@ -343,7 +343,7 @@ export default function AdminScreen() {
       </Screen>
     );
   }
-  if (admin === false) return <Navigate to="/profile" replace />;
+  if (admin === false) return <Navigate to="/" replace />;
 
   const countWord = isPeople
     ? plural(locale, people.length, {

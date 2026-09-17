@@ -5,12 +5,13 @@
  * leaderboard*, steps*, profile*, admin*.
  */
 export const app = {
-  tabHome: 'Today',
-  tabPrograms: 'Programmes',
+  // Kept only for MarathonScreen.tsx, which another branch is editing right now: its "back to the
+  // main screen" button reads this key. The value is already the new one — the main screen is
+  // «Курсы» — and the key itself should collapse into tabCourses once that branch lands.
+  tabHome: 'Courses',
   // «Club», not «Small Steps Club»: a tab label is one of four slots on a 390px screen and a
   // three-word name does not fit. The full name goes where there is room — see marathonTitle.
   tabGame: 'Club',
-  tabReports: 'Progress',
   navMain: 'Main navigation',
   navLocaleRu: 'RU',
   navLocaleEn: 'EN',
@@ -131,12 +132,7 @@ export const app = {
   homeGreetingAfternoon: 'Good afternoon, {name}',
   homeGreetingEvening: 'Good evening, {name}',
   homeGreetingNight: 'Still up, {name}?',
-  homeRefresh: 'Refresh',
-  homeProfile: 'Profile',
   homeStreakTitle: 'Streak',
-  homeStreakDayOne: 'day',
-  homeStreakDayFew: 'days',
-  homeStreakDayMany: 'days',
   homeStreakTodayDone: 'Today counts. Keep it going tomorrow.',
   homeStreakAtRisk: 'Log a workout or {steps} steps today to keep it.',
   homeStreakEmpty: 'Finish a workout or hit {steps} steps to start a streak.',
@@ -144,8 +140,6 @@ export const app = {
   homeStreakLogSteps: 'Log steps',
   homeResumeEyebrow: 'Workout in progress',
   homeResumeFinishedEyebrow: 'Unsaved result',
-  homeResumeFallback: 'Your workout',
-  homeResumeAt: 'Stopped at: {name}',
   homeResumeCta: 'Resume',
   homeResumeSave: 'Finish & save',
   homeTodayEyebrow: 'Today',
@@ -155,17 +149,7 @@ export const app = {
   homeTodayLogSteps: 'Log steps',
   homeTodayNoCourseTitle: 'Pick a programme',
   homeTodayNoCourseBody: 'And your first workout appears here — today.',
-  homeTodayNoCourseCta: 'Browse programmes',
-  homeCoachNow: 'Train with the coach',
-  // The club, on Home. Somebody not in it sees the same row with the task blurred out.
-  // «Meeting», not «running»: a club meets, a challenge runs. Same needle — it is happening
-  // today and they are not in it — but an invitation rather than a race pulling away.
-  homeGameSpoiler: 'The club is meeting without you',
-  homeGameSpoilerTask: 'Today’s task',
-  homeTasksTitle: 'Still today',
   homeTaskSteps: 'Log how far you walked today',
-  homeTaskAssess: 'Fit the training to you',
-  homeTaskAssessHint: '5 movements, 3 minutes — just answer',
   homeTodayCompletedTitle: 'Course completed',
   homeTodayOpenPath: 'Open the path',
   homeStatsSteps: 'Steps this week',
@@ -174,30 +158,19 @@ export const app = {
   homeStatsMinutes: 'Minutes this week',
   homeStatsPoints: 'Points',
   homeStatsPointsHint: 'all time',
-  homeWorkoutWordOne: 'workout',
-  homeWorkoutWordFew: 'workouts',
-  homeWorkoutWordMany: 'workouts',
   homeYourCourses: 'Your courses',
   homeMoreCourses: 'More courses',
   homeCourseProgress: '{pct}% done',
-  homeCourseLocked: 'Locked',
-  homeCourseGet: 'Join',
-  homeDeckLabel: 'Programmes and club',
-  homeDeckCourse: 'Course',
-  homeDeckMarathon: 'Club',
-  homeDeckMarathonBody: 'A small step every day, a board every week',
   homeDeckGameLocked: 'Part of the subscription',
   homeDeckGameTrial: 'Free week with the course — {n} left',
   homeDeckGameTrialDayOne: '1 day',
   homeDeckGameTrialDayFew: '{n} days',
   homeDeckGameTrialDayMany: '{n} days',
   homeDeckGameLockedCta: 'Subscribe',
-  homeDeckMarathonCta: 'Today’s task',
   homeDeckStart: 'Start',
   homeDeckContinue: 'Continue',
   homeErrorTitle: 'Couldn’t load your progress',
   homeErrorBody: 'Check the connection and try again.',
-  homeRefreshError: 'Couldn’t refresh. Showing the last saved data.',
 
   // Courses
   coursesOwned: 'Yours',
@@ -443,37 +416,13 @@ export const app = {
 
   // Progress
   statsTitle: 'Progress',
-  statsPosterLabel: 'Your progress',
-  statsStreakDays: '{days} in a row',
-  // The pill beside «days in a row» while the day is open and nothing is logged yet.
-  statsTodayNotCounted: 'Today not counted yet',
-  statsDetailsShow: 'The whole record',
-  statsDetailsHide: 'Collapse',
-  // Over the seven circles: with a course, its sessions per week are the goal; without one the
-  // same row is simply the week.
-  statsWeekGoal: 'Week goal',
-  statsWeekDayDone: '{date} — counted',
-  statsWeekDayEmpty: '{date} — nothing',
-  statsWeekDayAhead: '{date} — ahead',
   statsWeekBoardTitle: 'Who’s ahead',
-  statsLevelTitle: 'Level',
   statsLeaderboard: 'Leaderboard',
-  statsRefresh: 'Refresh',
-  statsRefreshError: 'Couldn’t refresh. Showing the last saved data.',
-  statsErrorTitle: 'Couldn’t load your stats',
-  statsErrorBody: 'Check the connection and try again.',
   statsLevelEyebrow: 'Level {n}',
   statsPointsValue: '{n} pts',
   statsLevelProgress: 'Progress to the next level',
   statsLevelNext: '{n} pts to {title}',
   statsLevelMax: 'Top level. Nothing above it — keep it there.',
-  statsWeekTitle: 'This week',
-  statsWeekMinutes: 'Minutes of training',
-  statsWeekWorkoutsRow: 'Workouts by day',
-  statsWeekDayLabel: '{date}: {n} workouts, {min} min',
-  statsWeekChartLabel: 'Training minutes per day this week',
-  statsPointsTitle: 'Points, last 8 weeks',
-  statsPointsChartLabel: 'Points per week over the last 8 weeks',
   statsCalendarTitle: 'Streak calendar',
   statsCalendarCurrent: 'Now {n}',
   statsCalendarBest: 'Best {n}',
@@ -482,25 +431,9 @@ export const app = {
   statsCalendarEmpty: 'Nothing logged',
   statsCalendarFuture: 'Ahead',
   statsCalendarToday: 'today',
-  statsStepsTitle: 'Steps, last 14 days',
-  statsStepsChartLabel: 'Steps per day over the last 14 days',
-  statsStepsAtGoal: 'Goal hit {n} of {total} days',
-  statsStepsGoal: 'goal {n}',
-  statsRecordsTitle: 'Records',
-  statsRecordsEmpty:
-    'No records yet. Test and benchmark workouts on your course path fill this list.',
-  statsRecordAttemptsOne: '{n} attempt',
-  statsRecordAttemptsFew: '{n} attempts',
-  statsRecordAttemptsMany: '{n} attempts',
-  statsRecordFirst: 'vs first',
-  statsUnitRounds: 'rounds',
-  statsAchievementsTitle: 'Earned',
   statsAchievementsCount: '{done} of {total}',
   statsAchievementUnlocked: 'Unlocked',
   statsAchievementLocked: 'Locked',
-  statsTotalWorkouts: 'Workouts',
-  statsTotalMinutes: 'Minutes',
-  statsTotalKcal: 'kcal',
 
   // Leaderboard
   leaderboardTitle: 'Leaderboard',
@@ -561,25 +494,9 @@ export const app = {
 
   // Profile
   profileTitle: 'Profile',
-  profileNewAvatar: 'New avatar',
-  profileEditName: 'Edit name',
-  profileNameLabel: 'Name',
-  profileNoName: 'No name yet',
-  profileEmail: 'Email',
-  profileFitnessSetup: 'Finish setup',
-  profileRetakeTests: 'Redo the assessment',
-  profileEquipment: 'Equipment',
-  profileEquipmentTitle: 'Your equipment',
-  profileEquipmentLead: 'Tick what you have at home — workouts adapt to it.',
   profileWeightsKg: '{list} kg',
   profileLimitations: 'Go easy on',
-  profileLimitationsTitle: 'What to go easy on',
-  profileLimitationsLead: 'We swap the exercises that load these areas.',
   profileLimitationsNone: 'Nothing',
-  profileAdmin: 'Admin',
-  profileBook: 'One-to-one with the coach',
-  profileBookFrom: 'from {price}',
-  profileSubscriptionSection: 'Subscription',
   profileSubscriptionNoneHint: 'from {price} a month',
   profileSubscriptionLive: '{plan} · until {date}',
   profileSubscriptionCancelled: 'Cancelled · access until {date}',
@@ -607,9 +524,6 @@ export const app = {
   profileSignOutTitle: 'Sign out?',
   profileSignOutBody:
     'Your progress stays in your account. Sign in again with a code from your email.',
-  profileSaved: 'Saved',
-  profileSaveError: 'Couldn’t save. Check the connection and try again.',
-  profileVersion: 'Forma {version} · {mode}',
 
   // Admin
   adminTitle: 'Admin',
@@ -952,13 +866,6 @@ export const app = {
   homeTodayStatTime: 'Time',
   // Node preview: the formula kicker and the secondary action of the two-button row.
   nodeLater: 'Later',
-  // Profile on paper: the kicker under the name, the "of 100" tail of the index numeral.
-  profileSince: 'In shape since {date}',
-  profileSinceShort: 'since {date}',
-  profileTrainedOne: '{n} workout',
-  profileTrainedFew: '{n} workouts',
-  profileTrainedMany: '{n} workouts',
-  profileFitnessOf: 'of 100',
   // Admin: the exercise row's "has a video" stamp, and the course tile field's format error.
   exHasVideo: 'video',
   courseTileInvalid: 'A colour is six hex digits, e.g. #1f1f24',
@@ -1159,4 +1066,12 @@ export const app = {
   mAdminBonusPoints: 'Points (a minus is allowed)',
   mAdminBonusReason: 'What for',
   mAdminBonusAdd: 'Add',
+
+  // --- Stream 2: three tabs, «Курсы» as the main screen -----------------------
+  tabCourses: 'Courses',
+  tabCoach: 'Coach',
+  coursesMore: 'Learn more',
+  achievementsTitle: 'Achievements',
+  achievementsLead: 'Everything there is to earn, and how.',
+  achievementsEmpty: 'Nothing to show yet.',
 } as const;

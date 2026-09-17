@@ -5,24 +5,25 @@
  * The router looks them up here by name. Modules are discovered with Vite's `import.meta.glob`
  * so a screen that has not landed yet does not break the type check or the build — the router
  * renders a localized "not available" state for it instead. To pin a screen explicitly, replace
- * its lookup with `lazy(() => import('./HomeScreen'))`.
+ * its lookup with `lazy(() => import('./CoursesScreen'))`.
  */
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
 
 export const SCREEN_NAMES = [
-  'HomeScreen',
+  // «Курсы», the main screen: the index route renders it.
   'CoursesScreen',
+  'AchievementsScreen',
   'CoursePathScreen',
   'NodePreviewScreen',
   'PlayerScreen',
   'SummaryScreen',
-  'StatsScreen',
+  // The physical test, now asked for after a couple of workouts rather than during onboarding.
+  // Its module arrives on another branch; until then the router renders the "not available" state.
+  'AssessmentScreen',
   'LeaderboardScreen',
   'StepsScreen',
   'MarathonScreen',
   'MarathonBoardScreen',
-  'MarathonPointsScreen',
-  'ProfileScreen',
   'BookScreen',
   'AdminScreen',
   'AdminWorkoutsScreen',

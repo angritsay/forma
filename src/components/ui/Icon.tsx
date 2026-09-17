@@ -30,6 +30,7 @@ export const ICON_NAMES = [
   'bolt',
   'trophy',
   'people',
+  'coach',
   'chevron',
   'plus',
   'minus',
@@ -99,6 +100,17 @@ export const ICONS: Record<IconName, IconDef> = {
   people: {
     d: 'M9 12.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M2.5 20a6.5 6.5 0 0 1 13 0M17 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6M16.5 14.4a6 6 0 0 1 5 5.6',
   },
+  /*
+   * A whistle, for the coach's tab.
+   *
+   * The obvious mark for «Тренер» is a person, and the set already has three of those — `profile`,
+   * `user`, `people` — so a fourth would be the club's icon with one figure taken away, which is
+   * the opposite of what the tab means. A whistle is the object only a coach holds: it says the
+   * person on the other side of the hour is running it, not training beside you. Drawn in the same
+   * language as the rest — a body, a nozzle and the lanyard's hook, three strokes, no curves the
+   * others do not already use.
+   */
+  coach: { d: 'M6 9h7v6H6a3 3 0 0 1 0-6zM13 10.5l6-2.5v8l-6-2.5M9 9V6h4' },
   chevron: { glyph: '›' },
   plus: { glyph: '+' },
   minus: { glyph: '−' },
