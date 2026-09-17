@@ -46,15 +46,18 @@ export const app = {
   // Shown only after a second request has also come up empty — see AuthScreen.
   authNoMail: 'No code? Check Spam and Promotions — the message comes from {from}.',
   authSignOut: 'Sign out',
-  // One line each: an error stands alone under a field or a code, and a second sentence telling
-  // the person what to do next is what the resend and the address link already are.
-  authErrorInvalidEmail: 'Check the address',
-  authErrorRateLimited: 'Too many requests — wait a minute',
-  authErrorInvalidCode: 'Wrong or expired code',
-  authErrorNetwork: 'No connection',
-  authErrorEmailSend: 'The email didn’t go out — try again in a couple of minutes',
-  authErrorSignupDisabled: 'Sign-ups are closed — contact the coach',
-  authErrorGeneric: 'Couldn’t sign in',
+  // Every one of these names what happened and what to do about it. "Check the address" named
+  // neither, and it was the same three words whether the field was empty, missing the "@" or a
+  // slipped domain — so the reasons are split (src/lib/api/auth.ts AuthReason), one line each.
+  authErrorInvalidEmail:
+    'That is not a usable address. A domain has to follow the “@” — gmail.com, say.',
+  authErrorRateLimited: 'Too many requests. Wait a minute and press again.',
+  authErrorInvalidCode: 'That code did not work. Check the six digits against the latest email.',
+  authErrorNetwork: 'No connection. Check the network and press again.',
+  authErrorEmailSend:
+    'The email did not go out. Wait a couple of minutes and ask for a code again.',
+  authErrorSignupDisabled: 'Sign-ups are closed. Write to {from}.',
+  authErrorGeneric: 'Could not sign in. Try again in a minute.',
 
   // Onboarding
   // One question per step, set as the display line; the answers are the only other words. The
@@ -1172,4 +1175,14 @@ export const app = {
   bookNextContact:
     'There is no slot page yet: pay and message the coach — he sets the time himself, even {n} minutes before the start.',
   bookPaidNote: 'The payment page opened in your browser. Once it is paid, come back for a time.',
+
+  // --- Stream 3: sign-in, the bot, the emailed code -------------------------
+  // Sign-in errors that used to share one generic line. Each says what happened first and what to
+  // do second; the typo line is the error itself and it is tappable — pressing it fixes the field.
+  authErrorEmailEmpty: 'Type your email — the code goes there.',
+  authErrorEmailNoAt: 'There is no “@” in that. A whole address looks like name@gmail.com',
+  authErrorEmailTypo: 'Typo in the domain? Tap to make it {suggestion}',
+  authErrorCodeExpired: 'A code lasts 10 minutes and this one is past it. Ask for a new one.',
+  authErrorTooManyAttempts:
+    'Three codes in a row did not work. Ask for a new one and type the digits from the latest email.',
 } as const;

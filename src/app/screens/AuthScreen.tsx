@@ -18,7 +18,7 @@
  * without: the error when the address or the code is wrong, the resend, and the way back to the
  * address you mistyped.
  */
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { CodeInput } from '@/components/ui/CodeInput';
@@ -34,18 +34,23 @@ import { PHOTOS, photoSrc } from '@/lib/media/photos';
 import { withBase } from '@/lib/util/paths';
 import {
   AuthError,
+  type AuthReason,
+  OTP_TTL_SEC,
+  checkEmail,
   demoPendingCode,
-  isValidEmail,
   normalizeEmail,
   requestCode,
   toAuthError,
   verifyCode,
+  withDomain,
 } from '@/lib/api/auth';
 import { AUTH_FILM } from '@content/site/media';
-import type { TKey } from '@/i18n/index';
+import type { TKey, TParams } from '@/i18n/index';
 
 const RESEND_SEC = 60;
 const CODE_LENGTH = 6;
+/** After this many refused codes the screen stops repeating itself and points at the resend. */
+const WRONG_CODES_BEFORE_RESEND = 3;
 
 /** How long the wordmark holds before it goes, and how long each fade takes. */
 const INTRO_HOLD_MS = 1400;
@@ -55,14 +60,31 @@ type Step = 'email' | 'code';
 /** enter → hold → fade → done. `done` is where a reduced-motion visitor starts. */
 type Intro = 'enter' | 'hold' | 'fade' | 'done';
 
+/**
+ * One line per thing that can actually go wrong.
+ *
+ * It used to be four reasons and a catch-all, so an empty field, a missing «@» and a slipped
+ * domain all came out as «Проверь адрес» — true, and no help at all. The reasons are split in
+ * src/lib/api/auth.ts; this is the map from one to its sentence.
+ */
 function authErrorKey(e: AuthError): TKey {
   switch (e.reason) {
+    case 'email_empty':
+      return 'app.authErrorEmailEmpty';
+    case 'email_no_at':
+      return 'app.authErrorEmailNoAt';
+    case 'email_typo':
+      return 'app.authErrorEmailTypo';
     case 'invalid_email':
       return 'app.authErrorInvalidEmail';
     case 'rate_limited':
       return 'app.authErrorRateLimited';
     case 'invalid_code':
       return 'app.authErrorInvalidCode';
+    case 'code_expired':
+      return 'app.authErrorCodeExpired';
+    case 'too_many_attempts':
+      return 'app.authErrorTooManyAttempts';
     case 'signup_disabled':
       return 'app.authErrorSignupDisabled';
     case 'email_send_failed':
@@ -84,6 +106,31 @@ function authErrorKey(e: AuthError): TKey {
   }
 }
 
+/**
+ * Turn "the code was refused" into the three different things it can mean.
+ *
+ * Supabase cannot help here: it answers `otp_expired` — "Token has expired **or is invalid**" —
+ * for a mistyped digit just as readily as for a code that has gone stale, so believing the code
+ * would tell somebody to ask for a new letter when the one in their hand is fine. The screen has
+ * what the server does not: it knows the minute it asked for this code, and `OTP_TTL_SEC` is how
+ * long one lives (docs/SETUP.md §3.1). Past that, it is expired. Inside it, it is wrong — and
+ * wrong for the third time in a row is its own sentence, because repeating "check the six digits"
+ * to somebody who has now checked them three times is the app's failure rather than theirs.
+ *
+ * Everything that is not a refused code (no connection, a rate limit, a mailer that would not
+ * send) passes through untouched.
+ */
+function sharpenCodeError(e: AuthError, sentAt: number, wrongSoFar: number): AuthError {
+  if (e.reason !== 'invalid_code') return e;
+  const expired = sentAt > 0 && Date.now() - sentAt > OTP_TTL_SEC * 1000;
+  const reason = expired
+    ? 'code_expired'
+    : wrongSoFar >= WRONG_CODES_BEFORE_RESEND
+      ? 'too_many_attempts'
+      : 'invalid_code';
+  return new AuthError(e.code, e.message, { cause: e.cause, status: e.status, reason });
+}
+
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined' || !window.matchMedia) return false;
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -96,12 +143,33 @@ function prefersReducedMotion(): boolean {
  * around, and it is `object-cover` because a backdrop may be cropped — unlike a movement clip,
  * which may not. Two layers go over it: the brand's grain, and a gradient dark enough at both ends
  * that white type and a white button hold their contrast over any frame of any montage.
+ *
+ * **Why the film does not run, measured rather than guessed.** Chromium on a demo build at
+ * 390×844: no `<video>` element is in the DOM at all and the poster is what is on screen. The
+ * autoplay policy is satisfied (`muted` + `playsInline` + `autoPlay`, which is what the policy
+ * asks for), the poster resolves and decodes, and nothing fails in the network log. The film is
+ * `storage:images/site/auth.mp4` — an object in the Supabase public bucket, deliberately *not*
+ * committed, and demo mode has no bucket, so `resolveMediaUrl` answers `undefined` and the still
+ * renders. Against a real project the same reference resolves to a public URL, and if the file has
+ * never been uploaded that URL 404s: Chromium then reports `MEDIA_ELEMENT_ERROR: Format error` and
+ * keeps painting the poster (verified separately). So the screen is a still either way, and the
+ * cause is a missing asset, not this code.
+ *
+ * What is added here is the last unguarded case. A `<video>` that has failed stays in the tree
+ * showing its poster on Chrome, but not on every WebView — some Android ones draw a grey plate
+ * with a play glyph over it, which is exactly the "broken element" this screen must never show. An
+ * `onError` swaps it for the same still, so a refused, missing or unplayable film degrades to the
+ * picture rather than to a control nobody can press.
  */
 function Backdrop({ src, poster }: { src?: string; poster?: string }) {
   const url = useMediaUrl(src);
+  const [filmFailed, setFilmFailed] = useState(false);
+  // A new reference deserves a new chance; only this film has been ruled out.
+  useEffect(() => setFilmFailed(false), [url]);
+  const still = poster ?? photoSrc(PHOTOS.auth);
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden bg-ink" aria-hidden="true">
-      {url ? (
+      {url && !filmFailed ? (
         <video
           key={url}
           src={url}
@@ -112,14 +180,10 @@ function Backdrop({ src, poster }: { src?: string; poster?: string }) {
           loop
           autoPlay
           preload="metadata"
+          onError={() => setFilmFailed(true)}
         />
       ) : (
-        <img
-          src={poster ?? photoSrc(PHOTOS.auth)}
-          alt=""
-          className="photo-mono size-full object-cover"
-          decoding="async"
-        />
+        <img src={still} alt="" className="photo-mono size-full object-cover" decoding="async" />
       )}
       <div className="photo-grain" />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,15,17,0.55),rgba(15,15,17,0.35)_38%,rgba(15,15,17,0.92))]" />
@@ -141,6 +205,20 @@ export default function AuthScreen() {
   const [sends, setSends] = useState(0);
   const [intro, setIntro] = useState<Intro>('enter');
   const countdown = useCountdown(RESEND_SEC);
+  /** The common domain the typed address is one or two characters away from, while it stands. */
+  const [suggestion, setSuggestion] = useState<string | null>(null);
+  /*
+   * The address whose typo hint has already been shown once.
+   *
+   * A domain guess is a guess: people do own mailboxes on domains that look like a slip of
+   * `gmail.com`. So the first press shows the hint and holds the request; pressing again with the
+   * same address sends it unchanged. The hint helps and never blocks.
+   */
+  const typoShownFor = useRef<string | null>(null);
+  /** When the code in the athlete's inbox was issued — the only way to tell expired from wrong. */
+  const codeSentAt = useRef(0);
+  /** Refused codes since the last send, so the third one can stop repeating the same sentence. */
+  const wrongCodes = useRef(0);
 
   // Reduced motion gets no title card at all: a word that appears and leaves is the animation.
   useEffect(() => {
@@ -159,22 +237,74 @@ export default function AuthScreen() {
     return () => clearTimeout(id);
   }, [intro]);
 
-  const errorText = error ? t(authErrorKey(error)) : undefined;
+  const fail = (reason: AuthReason) =>
+    setError(new AuthError('validation', 'Invalid email', { reason }));
+
+  /** Take the suggested domain: fix the field, clear the error, and leave the send to them. */
+  const applySuggestion = () => {
+    if (!suggestion) return;
+    setEmail(withDomain(email, suggestion));
+    setSuggestion(null);
+    setError(null);
+    typoShownFor.current = null;
+  };
+
+  const errorParams: TParams | undefined = error
+    ? error.reason === 'email_typo' && suggestion
+      ? { suggestion }
+      : error.reason === 'signup_disabled'
+        ? { from: BRAND.contactEmail }
+        : undefined
+    : undefined;
+  const errorText = error ? t(authErrorKey(error), errorParams) : undefined;
+  /*
+   * The typo line is the fix. It is the error text under the field and it is also the button that
+   * puts the suggested domain in — one tap instead of finding the slipped character by hand.
+   */
+  const emailError: ReactNode =
+    error?.reason === 'email_typo' && suggestion ? (
+      <button
+        type="button"
+        onClick={applySuggestion}
+        className="text-left underline underline-offset-2"
+      >
+        {errorText}
+      </button>
+    ) : (
+      errorText
+    );
   const introOver = intro === 'done';
 
   const send = async () => {
     setError(null);
-    if (!isValidEmail(email)) {
-      setError(new AuthError('validation', 'Invalid email', { reason: 'invalid_email' }));
-      return;
+    const clean = normalizeEmail(email);
+    const check = checkEmail(clean);
+    if (!check.ok) {
+      if (check.reason === 'email_typo') {
+        // Shown once; a second press with the same address goes through as typed.
+        if (typoShownFor.current !== clean) {
+          typoShownFor.current = clean;
+          setSuggestion(check.suggestion);
+          fail('email_typo');
+          return;
+        }
+      } else {
+        setSuggestion(null);
+        fail(check.reason);
+        return;
+      }
     }
+    // Past the checks: nothing left to suggest about an address that is on its way.
+    setSuggestion(null);
     setBusy(true);
     try {
-      await requestCode(email);
+      await requestCode(clean);
       setDemoCode(await demoPendingCode());
       setCode('');
       setStep('code');
       setSends((n) => n + 1);
+      codeSentAt.current = Date.now();
+      wrongCodes.current = 0;
       countdown.restart();
     } catch (e) {
       setError(toAuthError(e));
@@ -194,7 +324,9 @@ export default function AuthScreen() {
         const profile = useSession.getState().profile;
         navigate(profile?.onboardedAt ? '/' : '/onboarding', { replace: true });
       } catch (e) {
-        setError(toAuthError(e));
+        const failure = toAuthError(e);
+        if (failure.reason === 'invalid_code') wrongCodes.current += 1;
+        setError(sharpenCodeError(failure, codeSentAt.current, wrongCodes.current));
         setCode('');
       } finally {
         setBusy(false);
@@ -218,6 +350,9 @@ export default function AuthScreen() {
     setCode('');
     setError(null);
     setDemoCode(null);
+    setSuggestion(null);
+    typoShownFor.current = null;
+    wrongCodes.current = 0;
     // A new address starts a new count: the hint is about this inbox, not the last one.
     setSends(0);
     countdown.reset();
@@ -279,10 +414,16 @@ export default function AuthScreen() {
               onChange={(e) => {
                 setEmail(e.target.value);
                 if (error) setError(null);
+                if (suggestion) setSuggestion(null);
               }}
-              error={errorText}
+              error={emailError}
             />
-            <Button type="submit" size="lg" fullWidth loading={busy} disabled={email.trim() === ''}>
+            {/*
+             * The button is live on an empty field on purpose. Disabled, it said nothing at all —
+             * you pressed a grey rectangle and the screen did not react, which reads as broken.
+             * Pressed empty it now says what to type and where the code goes.
+             */}
+            <Button type="submit" size="lg" fullWidth loading={busy}>
               {t('app.authSendCode')}
             </Button>
           </form>
@@ -309,8 +450,16 @@ export default function AuthScreen() {
               label={t('app.authCodeLabel')}
             />
             {errorText ? (
-              /* One line (the strings are written to fit one), in the field's own error size. */
-              <p role="alert" className="truncate text-center text-[13px] text-danger">
+              /*
+               * It wraps. It used to `truncate`, which was right while every line was three words
+               * and wrong the moment they started saying what to do about it — «Код живёт 10
+               * минут, этот уже истёк. Запроси новый.» clipped at 390px is «Код живёт 10 мину…»,
+               * which is the generic message again with extra steps.
+               */
+              <p
+                role="alert"
+                className="text-center text-[13px] leading-snug text-balance text-danger"
+              >
                 {errorText}
               </p>
             ) : null}
