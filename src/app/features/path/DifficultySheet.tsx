@@ -104,7 +104,10 @@ export function DifficultySheet({
                 disabled={busy}
                 onClick={() => onPick(o.choice)}
                 className={clsx(
-                  'flex w-full items-center gap-5 px-4 py-5 text-left',
+                  /* Three controls on the sheet's flat ground, so the corner is `--r-control` and
+                     not a square edge — `design/CHANGELOG.md` §13. The rows were drawn before the
+                     rule existed and were the last square-shouldered control in this flow. */
+                  'flex w-full items-center gap-5 rounded-control px-4 py-5 text-left',
                   'transition-colors duration-150 ease-(--ease-out)',
                   isRecommended
                     ? 'bg-primary text-on-primary'

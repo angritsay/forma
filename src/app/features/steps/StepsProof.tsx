@@ -96,7 +96,10 @@ export function StepsProof({ value, onPick, onRemove, disabled, busy }: StepsPro
             type="button"
             onClick={onRemove}
             disabled={disabled || busy}
-            className="control-label tap-target-y shrink-0 text-[11px] text-muted transition-colors duration-150 ease-(--ease-out) hover:text-text disabled:opacity-40"
+            /* 11px was `.control-label` at tracked capitals, where the extra set width had to come
+               out of the size. Sentence case sets about a quarter narrower, so «Убрать» takes the
+               13px every other small control in the product reads at now. */
+            className="control-label tap-target-y shrink-0 text-[13px] text-muted transition-colors duration-150 ease-(--ease-out) hover:text-text disabled:opacity-40"
           >
             {t('common.remove')}
           </button>

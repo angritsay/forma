@@ -357,15 +357,24 @@ export default function StepsScreen() {
   return (
     <Screen
       header={<TopBar back title={t('app.stepsTitle')} />}
+      /*
+       * The band only exists once there is something in it to save.
+       *
+       * It used to stand on every visit with the button dead in it, and a sticky footer is not
+       * free: it is ~92px of the phone held permanently over the foot of the page, and this page
+       * is 982px long in an 844px window. Measured at 390×844 on arrival, it covered the first row
+       * of the fortnight by 13px and the second by 59 — you landed on «Шаги» and the two weeks of
+       * circles, which are the only thing on the screen you came to *read*, were half under a
+       * control you could not press. Scrolling revealed them, which is why it survived this long.
+       *
+       * So the screen is a fortnight until the number is touched and an editor afterwards: type a
+       * digit or tap a quick-add and the band arrives with a live button in it. Nothing is hidden
+       * behind a gesture — `dirty` is exactly the condition under which the old button did
+       * anything at all.
+       */
       footer={
-        status === 'ready' ? (
-          <Button
-            size="lg"
-            fullWidth
-            loading={saving}
-            disabled={!dirty}
-            onClick={() => void save()}
-          >
+        status === 'ready' && dirty ? (
+          <Button size="lg" fullWidth loading={saving} onClick={() => void save()}>
             {t('common.save')}
           </Button>
         ) : undefined
