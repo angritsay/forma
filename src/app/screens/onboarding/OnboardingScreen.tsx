@@ -46,6 +46,25 @@ import { StepName } from './StepName';
 import { StepSex } from './StepSex';
 import type { StepProps } from './types';
 
+/**
+ * The header is the top of the page here, not chrome over a list — so it is the page's own ground
+ * rather than glass.
+ *
+ * `Screen` puts `.glass-bar-top` on every header it draws, and that material earns its compositing
+ * layer where something scrolls beneath it. Nothing does here: measured at 390×844, every one of
+ * the five steps reports `scrollHeight` 844 against `clientHeight` 844 — the bottom half of each
+ * step is empty. A 20px `backdrop-filter` over a ground that never moves is the whole cost of the
+ * layer for none of the effect, and the gradient it draws is the page colour at 38–96% over the
+ * page colour, which is the page colour. The hairline is `.glass-bar-top`'s `border-bottom` and is
+ * not part of the material, so it stays and the row still has an edge.
+ *
+ * Written as an override on the container rather than as a prop because `src/components/ui` is
+ * another stream's this week; `Screen` should grow `headerGlass={false}` beside its existing
+ * `headerRule`, and then this constant and its twin in `screens/AssessmentScreen.tsx` both go.
+ */
+const FLAT_HEADER =
+  '[&>.glass-bar-top]:bg-none [&>.glass-bar-top]:bg-bg [&>.glass-bar-top]:backdrop-filter-none';
+
 const STEP_COMPONENT: Record<StepId, (props: StepProps) => React.ReactElement | null> = {
   name: StepName,
   age: StepAge,
@@ -152,6 +171,7 @@ export default function OnboardingScreen() {
 
   return (
     <Screen
+      className={FLAT_HEADER}
       header={
         /*
          * One row: the way back, the rule, the numeral pair. It used to say where you are twice —
