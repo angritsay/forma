@@ -308,7 +308,7 @@ export default function CoursesScreen() {
      * site's own habit («photographs bleed past the page gutter», docs/SPEC.md §5) arriving in the
      * app. From `md` the screen's normal 40px gutter takes over for both.
      */
-    <Screen header={header} padded={false} contentClassName="px-4 md:px-10">
+    <Screen header={header} headerRule={false} padded={false} contentClassName="px-4 md:px-10">
       {body}
       <ProfileSheet open={account} onClose={() => setAccount(false)} />
     </Screen>

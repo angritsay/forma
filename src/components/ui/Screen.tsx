@@ -4,6 +4,15 @@ import type { ReactNode } from 'react';
 export interface ScreenProps {
   /** Sticky header (usually <TopBar>). */
   header?: ReactNode;
+  /**
+   * Drop the hairline along the header's bottom edge.
+   *
+   * The rule is `.glass-bar-top`'s and it earns its place on a screen whose header is chrome over
+   * a list — it marks the edge the content disappears under. On «Курсы» the header is not chrome:
+   * it is the top of the page, a greeting and two small controls, and the owner's mockup draws no
+   * line under it. A rule there separates her name from her courses, which are not two things.
+   */
+  headerRule?: boolean;
   /** Sticky footer above the bottom nav (primary action). */
   footer?: ReactNode;
   /** Horizontal padding on the content. Default true. */
@@ -22,6 +31,7 @@ export interface ScreenProps {
  */
 export function Screen({
   header,
+  headerRule = true,
   footer,
   padded = true,
   children,
@@ -42,7 +52,14 @@ export function Screen({
          * The header is `sticky`, so content passes beneath it and there is something real to
          * blur — which is the whole condition for glass being worth its compositing layer.
          */
-        <div className="glass-bar-top sticky top-0 z-20 pt-[var(--safe-top)]">{header}</div>
+        <div
+          className={clsx(
+            'glass-bar-top sticky top-0 z-20 pt-[var(--safe-top)]',
+            !headerRule && 'glass-bar-plain',
+          )}
+        >
+          {header}
+        </div>
       ) : (
         <div className="h-[var(--safe-top)]" />
       )}
