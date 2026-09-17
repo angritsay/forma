@@ -60,9 +60,11 @@ import {
   buildPrescribedFromCustom,
   type CustomWorkoutStructure,
 } from '@/lib/training/customWorkout';
+import { pickUpcoming } from '@/lib/coach/booking';
 import { assertLocalDate, COURSE_ID_RE, EMAIL_RE, guard } from '../internal';
 import {
   benchmarkFromDb,
+  coachBookingFromDb,
   completeSessionToDb,
   courseStateFromDb,
   courseStatePatchToDb,
@@ -89,6 +91,7 @@ import {
 import type {
   BenchmarkRow,
   BenchmarkSeries,
+  CoachBooking,
   CompleteSessionInput,
   CourseStatePatch,
   CourseStateRow,
@@ -262,6 +265,27 @@ export async function createSubscriptionOrder(input: SubscriptionOrderInput): Pr
       return row.id;
     });
   });
+}
+
+// --- coach bookings ---------------------------------------------------------
+
+/**
+ * The demo account's sessions with the coach. Filed by email exactly as the table is, and
+ * filtered by email here, so the demo backend reproduces what the RLS policy does rather than
+ * handing back whatever is in the store.
+ */
+export async function getMyCoachBookings(): Promise<CoachBooking[]> {
+  return run(() => {
+    const user = requireDemoUser();
+    return readDb()
+      .coachBookings.filter((b) => b.email === user.email)
+      .map(coachBookingFromDb)
+      .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+  });
+}
+
+export async function getMyUpcomingBooking(): Promise<CoachBooking | null> {
+  return pickUpcoming(await getMyCoachBookings());
 }
 
 export async function listSubscriptions(

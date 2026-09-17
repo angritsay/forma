@@ -16,6 +16,7 @@ export * from './leaderboard';
 export * from './stats';
 export * from './orders';
 export * from './subscriptions';
+export * from './coachBookings';
 export * from './admin';
 export * from './exercises';
 export * from './customWorkouts';
