@@ -57,10 +57,23 @@ export interface BotCopy {
 /**
  * The first thing anyone sees of Forma.
  *
- * Three lines and a question. It says what the thing is, what is inside it, and then asks — the
- * answer is the two buttons under it, because the two people who tap **Start** want different
- * things: one has already paid and wants to train, the other is still deciding and wants to read.
- * Sending them both to the same place serves neither.
+ * It names the three things the product actually is, one short line each, in the order of what
+ * they cost: a course you buy once, a club you subscribe to, an hour of the coach's own time.
+ * That order is also the order of commitment, so somebody skimming stops at the first line that
+ * describes them.
+ *
+ * The three lines match the app's three tabs on purpose — «Курсы · Клуб · Тренер». A greeting that
+ * promises a shape the app does not have is a greeting that has to be re-learned on arrival, and
+ * this one used to do exactly that: it described a single course and nothing else, because it was
+ * written before the club and the one-to-one sessions existed.
+ *
+ * The numbers are the course's own (`content/courses/start.ts`: four weeks, five sessions a week,
+ * a video on every movement). Do not round them up here — this is the one place where a claim is
+ * made to somebody who has not paid yet.
+ *
+ * Two buttons, because the two people who tap **Start** want different things: one is ready to
+ * open the app, the other is still deciding and wants to read. Sending both to the same place
+ * serves neither.
  *
  * No Markdown anywhere in here. Telegram would need every «.», «-» and «(» escaped, and a caption
  * that fails to parse is a caption nobody sees.
@@ -68,16 +81,26 @@ export interface BotCopy {
 export const DEFAULT_COPY: BotCopy = {
   greeting:
     'Форма — домашний кроссфит с Сергеем Титовым.\n\n' +
-    'Двадцать тренировок по 15–20 минут, видео на каждое движение, счётчик серии. ' +
+    'Курсы. Двадцать тренировок по 15–20 минут, видео на каждое движение. ' +
     'Нагрузка подстраивается под тебя.\n\n' +
-    'Что открыть?',
-  buttonText: 'Тренироваться',
-  siteButtonText: 'Что за курс',
+    'Клуб маленьких шагов. Одно небольшое задание в день, напарник и общая таблица за неделю. ' +
+    'Тому, кто наверху, достаётся час с тренером.\n\n' +
+    'Тренировка один на один. Разбор техники и план на следующие недели — с Сергеем, ' +
+    'онлайн, по видеосвязи.',
+  buttonText: 'Открыть приложение',
+  siteButtonText: 'Почитать на сайте',
   photoUrl: 'https://forma-app.co/og/default.png',
 };
 
-/** Where the site explains the course to someone who has not bought it yet. */
-const DEFAULT_SITE_URL = 'https://forma-app.co/courses/start/';
+/**
+ * Where the site explains Forma to somebody who has not bought anything yet.
+ *
+ * The home page rather than the beginner course's page, which is where this pointed while the
+ * greeting described one course. The greeting now names the club and the one-to-one sessions too,
+ * and a «Почитать на сайте» that lands on a single course page answers a third of what was just
+ * promised. `TELEGRAM_SITE_URL` overrides it without a deploy.
+ */
+const DEFAULT_SITE_URL = 'https://forma-app.co/';
 
 /**
  * The reply an update deserves, or null for the updates that are not a person writing to the bot.
