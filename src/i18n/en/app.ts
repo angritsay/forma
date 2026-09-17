@@ -64,34 +64,19 @@ export const app = {
   // One question per step, set as the display line; the answers are the only other words. The
   // leads that used to restate each question were cut per design/CHANGELOG.md §10.
   onbStepOf: 'Step {n} of {total}',
-  onbOptional: 'optional',
-  onbNameTitle: 'What should we call you?',
-  onbNamePlaceholder: 'Your name',
-  onbBasicsTitle: 'A bit about you',
-  onbAgeLabel: 'Age',
+  onbNameTitle: 'Your name',
+  onbNamePlaceholder: 'Name',
   onbAge1824: '18–24',
   onbAge2534: '25–34',
   onbAge3544: '35–44',
   onbAge4554: '45–54',
   onbAge5564: '55–64',
   onbAge65: '65+',
-  onbSexLabel: 'Sex',
   onbSexMale: 'Male',
   onbSexFemale: 'Female',
   onbSexNa: 'Prefer not to say',
-  onbWeightLabel: 'Weight, kg',
-  onbWeightRange: 'Enter a weight between {min} and {max} kg.',
-  onbActivityTitle: 'How active are your weekdays?',
-  onbActivitySedentary: 'Mostly sitting',
-  onbActivityLight: 'Lightly active',
-  onbActivityModerate: 'Moderately active',
-  onbActivityActive: 'Very active',
-  onbExperienceTitle: 'How long have you trained?',
-  onbExpNone: 'Not yet',
-  onbExpBeginner: 'Under a year',
-  onbExpIntermediate: '1–3 years',
-  onbExpAdvanced: 'Over 3 years',
-  onbEquipmentTitle: 'What do you have at home?',
+  // Equipment is no longer asked in the wizard; these two labels stay for the profile's
+  // equipment sheet.
   onbDumbbellWeights: 'Dumbbells, kg',
   onbKettlebellWeights: 'Kettlebells, kg',
   onbLimitationsTitle: 'What should we go easy on?',
@@ -104,8 +89,6 @@ export const app = {
   onbLimPregnancy: 'Pregnancy',
   onbAssessOfferTitle: 'Fit the training to you?',
   onbAssessMoves: '{n} movements',
-  onbAssessNow: 'Now',
-  onbAssessLater: 'Not now',
   // The owner's words for this screen: «не выжимаем максимум… конец».
   onbAssessWarnTitle: 'No maxing out',
   onbAssessWarnCta: 'Let’s start',
@@ -117,17 +100,6 @@ export const app = {
   onbAssessCountLabel: 'Reps',
   onbAssessDoneTitle: 'Written down',
   onbAssessRetake: 'Do it again',
-  onbTimeTitle: 'How many minutes per session?',
-  onbGoalTitle: 'What’s your main goal?',
-  onbGoalFatLoss: 'Lose fat',
-  onbGoalStrength: 'Get stronger',
-  onbGoalEndurance: 'Build endurance',
-  onbGoalGeneral: 'Stay in shape',
-  onbGoalMuscle: 'Build muscle',
-  onbResultEyebrow: 'Your fitness index',
-  onbResultLevel: 'Level {n} · {name}',
-  onbIndexOutOf: 'out of 100',
-  onbResultStart: 'Start training',
   onbSaveError: 'Couldn’t save your profile. Check the connection and try again.',
 
   // Home
@@ -1069,6 +1041,35 @@ export const app = {
   mAdminBonusReason: 'What for',
   mAdminBonusAdd: 'Add',
 
+  // --- Onboarding: five questions + the test after two workouts ---------------
+  // The wizard's questions. The first word is set at 800 and the rest at 200 (DisplayTitle),
+  // so in each one the first word is the one that should carry.
+  onbAgeTitle: 'How old are you?',
+  onbSexTitle: 'Your sex',
+  onbLevelTitle: 'Fitness level',
+  // Ten slider labels, low end first. They change on every notch: a bare figure is a scale
+  // only the app knows about.
+  onbLevel01: 'Haven’t trained in a long time',
+  onbLevel02: 'Just getting started',
+  onbLevel03: 'I move a little',
+  onbLevel04: 'I move, but not regularly',
+  onbLevel05: 'I train now and then',
+  onbLevel06: 'Once a week',
+  onbLevel07: 'Two or three sessions a week',
+  onbLevel08: 'I train regularly',
+  onbLevel09: 'I train almost every day',
+  onbLevel10: 'I have trained for years',
+  // «Next», not «Continue»: you continue something you interrupted, you go forward through a form.
+  onbNext: 'Next',
+  onbFinish: 'Start training',
+  // The banner offering the self-test, after the second completed workout. The hint repeats
+  // homeTaskAssessHint; its figures match ASSESSMENT_MOVES and ASSESSMENT_TOTAL_MIN in
+  // content/site/assessment.ts.
+  assessBannerTitle: 'Fit the training to you',
+  assessBannerHint: '5 movements, 3 minutes — just answer',
+  assessBannerCta: 'Take it',
+  assessBannerLater: 'Not now',
+  assessNoProfile: 'Finish the questions first',
   // --- coach tab --------------------------------------------------------------
   bookLeadTimePill: 'Book up to {n} minutes before',
   bookCredentials: 'Credentials',

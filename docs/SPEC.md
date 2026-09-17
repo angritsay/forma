@@ -411,34 +411,66 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    (paste-friendly, resend timer 60s) → session. No heading, no lead, no field label, no spam hint —
    the errors, the resend and the way back to the address are all that stand with the two fields.
    `prefers-reduced-motion` and any tap skip the title card. Errors localized.
-2. **Onboarding** (first login, resumable): name → basics (age band, sex optional,
-   weight optional) → activity level → experience → equipment (+ dumbbell/kettlebell weights) →
-   limitations → **the assessment** → time per session → goal → result screen (fitness index,
-   level) → home.
+2. **Onboarding** (first login, resumable): **five questions and nothing else** — name → age band
+   → sex → limitations → level → home. The owner's instruction: «В первую очередь нужно убрать всё
+   лишнее в онбординге и особенно оттуда убрать тестирование. Мы тестирование через пару
+   тренировок будем спрашивать.» So the minutes per session, the goal, the activity level, the
+   experience, the equipment, the optional weight field, the self-test and the «60 — средний»
+   result screen are all gone from the wizard. `STEP_IDS` in `src/app/screens/onboarding/draft.ts`
+   is the list, and the header's counter is drawn from its length — so «01/05» follows the code.
+
    **Each step is one question and its answers, and nothing else** (design/CHANGELOG.md §10): the
-   question in the display face — «ЧТО есть дома?», «СКОЛЬКО минут на тренировку?» — and under it
-   plates (`OptionTile`), pills or big numerals. No lead under the question, no kicker over a group
-   whose plates already say what they are, no description under an answer; where an answer needed
-   its description («Новичок · меньше года») the description became the answer («Меньше года»).
-   Minutes are five plates of one numeral each. A picked plate inverts and a check lands on it on
-   the spring (`.pop-in`). The header is one row: back, the progress rule, «01/10». The result is
-   the index as one huge numeral — «54» at 800, «из 100» at 200 — with the level as a pill under it
-   and «Начать тренироваться» in the footer; the ring, the paragraph on what the level means and
-   the list of components are gone.
-   The assessment is one question — «Подстроить тренировки под тебя?», with what it costs as two
-   pills under it («5 упражнений», «3 мин») — and two answers. «Сейчас» first shows the one
-   instruction everything here depends on, in the owner's own words and nothing more («Максимум не
-   выжимаем» over a still of the first movement), and then asks about five movements
-   (`content/site/assessment.ts`) as a full-screen surface over the wizard drawn like the player:
-   the clip full-bleed, the movement's name in the display face on a pane of glass at the foot, one
-   short line and one field. **Nothing is timed and nothing is performed on the screen** — «убери
-   таймер в онбординге совсем… просто чтобы они лайтово прошли и поделились примерно сколько раз
-   они могут сделать не умирая». The clock, the draining ring, the horn, the wake lock and the
-   «Начать»/«Стоп» phases are gone; the athlete watches the clip and says roughly how many they
-   could do without going to failure. «Не сейчас» postpones the whole thing; it comes back as a
-   task on the home screen, and the fitness index imputes what it is missing
-   (docs/TRAINING_SCIENCE §2). Three of the five numbers feed the index, the other two are written
-   to `benchmarks`.
+   question in the display face — «ТВОЁ имя», «СКОЛЬКО тебе лет?», «ЧТО беречь?» — and under it
+   plates (`OptionTile`), a field, or the slider. No lead under the question, no kicker over a
+   group whose plates already say what they are, no description under an answer. A picked plate
+   inverts and a check lands on it on the spring (`.pop-in`). **Questions do not hyphenate**:
+   `.display` turns `hyphens: auto` on for the landing's hero, and the wizard opts back out
+   (`Question.tsx`) — «ОГРАНИ- / ЧЕНИЯ» reads as an accident on a form somebody is filling in. The
+   primary button is **«Далее»**, not «Продолжить»; on the last step it says «Начать тренироваться».
+
+   The header is one row and the three things in it are aligned, which they were not: the row sits
+   on the content's own 24px gutter, the back chevron is pulled out by exactly its own padding so
+   the mark lands on that gutter, the «01/05» pair ends on it, and `h-14` with `items-center` puts
+   the 4px rule on the same centre line as the numerals.
+
+   **The level question is a 1–10 slider with the answer in words under it.** It replaces the two
+   plate questions that used to ask the same thing from opposite sides («Насколько активны твои
+   будни?» and «Сколько уже тренируешься?»). The figure is set the brand's way — the value at 800
+   against «/10» at 200 — and under the track a sentence that changes on every notch, «Давно не
+   тренировался» at 1 through «Тренируюсь много лет» at 10 (`LEVEL_SLIDER_LABEL`,
+   `screens/onboarding/labels.ts`). A bare number is never the answer; the slider carries the
+   sentence as `aria-valuetext` as well.
+
+   **What the saved profile claims.** `draftToTrainingProfile` derives `activityLevel` and
+   `experience` from the slider — that is the fact the slider asks for — and leaves
+   `timePerSessionMin` and `goal` unset (both optional on `UserTrainingProfile`; nothing in the
+   engine reads either). `equipment` is `['none']`, which is what an unticked equipment step always
+   produced and the conservative reading of silence: `prescribe` treats `none` and `mat` as always
+   available and scales anything heavier down, and the profile's equipment sheet is where the
+   answer is corrected. **No fitness index is computed or stored by the wizard** — five answers and
+   no measurement is not a result. Every reader of the index already copes with its absence by
+   recomputing from the training profile, which for a profile with no self-tests is capped
+   (`NO_TEST_INDEX_CAP`, docs/TRAINING_SCIENCE.md §2).
+
+   **The assessment is a screen of its own, offered after the second completed workout.** Route
+   `/assessment`. The rule is `shouldOfferAssessment` (`src/app/features/assessment/model.ts`):
+   two or more completed sessions, not already taken — the counts in the training profile _are_ the
+   record of that, so it survives a reinstall — and not dismissed on this device. The offer is
+   `AssessmentBanner`, which reads the rule itself and renders nothing until it holds, so mounting
+   it is one line. Its register is a calibration's, not an exam's: «Подстроить тренировки под
+   тебя» over «5 упражнений, 3 минуты — просто ответить».
+
+   The screen opens as a modal — a «×», not a back chevron — and never back into the wizard. It
+   shows which five movements (`AssessmentStrip`, the coach's own stills), then the one instruction
+   everything here depends on, in the owner's words and nothing more («Максимум не выжимаем»), then
+   the movements one at a time as a full-screen surface drawn like the player: the clip full-bleed
+   and filling the width by geometry, the movement's name in the display face on a pane of glass at
+   the foot, one short line and one field. **Nothing is timed and nothing is performed on the
+   screen** — «убери таймер в онбординге совсем… просто чтобы они лайтово прошли и поделились
+   примерно сколько раз они могут сделать не умирая». The athlete watches the clip and says roughly
+   how many they could do without going to failure. Three of the five numbers feed the fitness
+   index — which is computed and stored _here_, because here something was measured — and the other
+   two are written to `benchmarks`.
 
    What that does to the index is written down in `content/site/assessment.ts` rather than left to
    be found: two of the three components get closer to what their tables expect (`pushups` is
