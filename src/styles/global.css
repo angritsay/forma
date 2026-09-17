@@ -73,7 +73,7 @@
   /*
    * Programme colours — the only colour in the system, and it comes from the course, never from
    * the interface. Black ink on all three clears AA with room: 14.74 on cyan, 11.28 on blue,
-   * 7.34 on orange. As text on the dark ground they clear it too (same ratios), which is what
+   * 9.24 on orange. As text on the dark ground they clear it too (same ratios), which is what
    * lets a day number or a kicker take the course colour.
    *
    * The `-ink` variants are the same hues darkened for use as text on paper, each ≥ 5.3:1.
@@ -85,7 +85,7 @@
    */
   --course-beginners: #9feff7;
   --course-yoga: #a8c8ff;
-  --course-marathon: #ff7a1a;
+  --course-marathon: #f8a050;
   --on-course: #0f0f11;
   --course-beginners-ink: #1b6c74;
   --course-yoga-ink: #2f5f9e;

@@ -1040,18 +1040,6 @@ export const app = {
   // wording and he is sold as both from here on; a round may still name something else for itself
   // (`marathons.prize`), and then the row wins.
   marathonPrizeDefault: 'Час с тренером и создателем Forma',
-  // The selling screen: what the week is, in three lines. Each one is a property of the format —
-  // nothing here is a result, a statistic or a promise about anybody's body.
-  marathonPitchTaskTitle: 'Задание каждый день',
-  marathonPitchTaskBody: 'Одно небольшое. Отметил, что сделал, — получил баллы.',
-  marathonPitchPartnerTitle: 'Напарник',
-  marathonPitchPartnerBody:
-    'Он видит твои отметки, ты — его. Часть заданий засчитывается, только если сделали оба.',
-  marathonPitchBoardTitle: 'Таблица недели',
-  marathonPitchBoardBody: 'Неделя — это гонка. В понедельник все начинают заново.',
-  // The section the owner asked for. It renders from content/site/club.ts and stays away entirely
-  // while that list is empty: an invented review is the one thing this product does not ship.
-  marathonPitchResults: 'Результаты участников',
   // Already paying, just not in a running round. The coach forms the pairs by hand, so there is
   // nothing to press — and quoting a subscription to somebody who pays for it reads as a product
   // that does not know who it is talking to.
@@ -1061,7 +1049,6 @@ export const app = {
   // /subscribe/ page — never to a payment URL with an amount in it, which on a static site is an
   // amount the payer can edit (docs/SETUP.md §7.1).
   marathonJoinCta: 'Вступить за {price} / мес',
-  marathonJoinNote: 'Подписка Forma: клуб и все курсы. Продлевается вручную.',
   // --- Онбординг: пять вопросов + тест после двух тренировок ------------------
   // Вопросы анкеты. Первое слово набирается 800-м, остальное 200-м (DisplayTitle),
   // поэтому в каждом заголовке первое слово — то, которое должно звучать громче.
@@ -1139,4 +1126,35 @@ export const app = {
   homeGreetAfternoon: 'Добрый день',
   homeGreetEvening: 'Добрый вечер',
   homeGreetNight: 'Не спится?',
+  // --- Club pitch (stream: club-pitch-redesign) -------------------------------
+  // The selling screen rebuilt to the owner's own mockup. Everything here is sentence case: no
+  // uppercase label appears anywhere on either of the two screens she sent.
+  //
+  // The label over the photo row is chosen by whose photographs are in it (content/site/club.ts).
+  // «Результаты участников» is her wording and is true only of club members; while the row falls
+  // back to the coach's consented before/after clients it says whose they are, because that label
+  // beside a price would otherwise claim the club produced those results.
+  clubPhotosMembers: 'Результаты участников',
+  clubPhotosClients: 'Результаты учеников Сергея',
+  // Read out in place of the individual frames, which go out unlabelled: their source describes
+  // the before/after pair and each frame here is one panel of it, not the pair.
+  clubPhotosMembersRow: 'Фотографии участников клуба, опубликованы с их согласия',
+  clubPhotosClientsRow: 'Фотографии учеников Сергея, опубликованы с их согласия',
+  // «Клуб маленьких шагов» on three lines, 200 / 800 / 200 — the middle one in the club's colour.
+  // Split into three keys because the device is typographic, not linguistic: a translation may put
+  // the heavy word somewhere else in the line. Together they must read as marathonTitle.
+  clubNameLead: 'Клуб',
+  clubNameAccent: 'маленьких',
+  clubNameTail: 'шагов',
+  // The owner's copy, verbatim. The middle piece is the phrase she set in orange.
+  clubLeadPre: 'Большие планы не выдерживают рабочую неделю, поэтому ',
+  clubLeadAccent: 'здесь одно маленькое задание в день',
+  clubLeadPost: ': 10 минут пешком, 20 приседаний, стакан воды до кофе.',
+  // `{prize}` is app.marathonPrizeDefault lowered into the sentence (prize.ts), so the board, the
+  // member's tab and this screen cannot drift into three different promises.
+  clubLeadWeek: 'За неделю набираешь баллы, а тому, кто наверху таблицы, достаётся {prize}.',
+  // Under the join pill. «666 ₽ / мес» is the year divided by twelve and this is the payment that
+  // actually happens — one charge, once. Quoting only the month for an annual product is how
+  // chargebacks get written.
+  clubChargeNote: 'Оплата одна: {price} за год доступа. Клуб и все курсы Forma.',
 } as const;
