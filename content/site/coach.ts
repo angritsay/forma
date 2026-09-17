@@ -14,11 +14,58 @@
  */
 import type { L10n } from '@/content/schema';
 
+/**
+ * A credential, named, so a figure below can point at the one it restates.
+ *
+ * Identity is the link: `CoachFigure.of` holds the very same object, so the booking screen can
+ * lift a credential into a figure and drop it from the list without matching strings or indexes.
+ */
+const ED: L10n = {
+  ru: 'Волгоградский государственный социально-педагогический университет, физическая культура — учитель физической культуры (2016)',
+  en: 'Volgograd State Socio-Pedagogical University, physical education — physical education teacher (2016)',
+};
+const SINCE_2015: L10n = { ru: 'Тренерская работа с 2015 года', en: 'Coaching since 2015' };
+const HOURS: L10n = {
+  ru: 'Более 10 000 часов персональных занятий',
+  en: 'More than 10,000 hours of personal training sessions',
+};
+const RANK_ORIENTEERING: L10n = {
+  ru: 'Первый взрослый разряд по спортивному ориентированию (2014)',
+  en: 'First adult rank in orienteering (2014)',
+};
+const RANK_ATHLETICS: L10n = {
+  ru: 'Второй взрослый разряд по лёгкой атлетике (2016)',
+  en: 'Second adult rank in track and field (2016)',
+};
+const IN_SPORT_2010: L10n = { ru: 'В спорте с 2010 года', en: 'In sport since 2010' };
+
+/** A credential that is a number, set as the number. `of` is the credential it restates. */
+export interface CoachFigure {
+  /** The figure itself, already formatted — it is read, not computed against. */
+  value: string;
+  /** The kicker under it. Short: it sits in an `.eyebrow`. */
+  label: L10n;
+  /** The credential this is the same fact as, by object identity. */
+  of: L10n;
+}
+
 export const COACH = {
   name: { ru: 'Сергей Титов', en: 'Sergey Titov' } satisfies L10n,
   role: {
     ru: 'Тренер по общей физической подготовке и кроссфиту',
     en: 'Strength, conditioning and CrossFit coach',
+  } satisfies L10n,
+  /**
+   * How he is introduced inside the product, as against on profi.ru.
+   *
+   * The one line here that is not from the profile, and deliberately: it is the owner's own
+   * framing — «тренировка с основателем и тренером формы» — and it is the half that makes an hour
+   * with him different from an hour with any coach. It lives here so the booking tab and the
+   * club's prize say it the same way rather than each inventing a phrasing.
+   */
+  formaRole: {
+    ru: 'Основатель и тренер Forma',
+    en: 'Founder and coach of Forma',
   } satisfies L10n,
   bio: {
     ru: 'Тренирует с 2015 года: лёгкая атлетика, спортивное ориентирование, кроссфит. Ведёт общую и специальную физическую подготовку — сила и выносливость, мышцы кора, осанка, работа с опорно-двигательным аппаратом, коррекция веса. Домашние программы Forma собраны из той же логики нагрузки, что и его персональные занятия.',
@@ -26,25 +73,29 @@ export const COACH = {
   } satisfies L10n,
   /** Facts from the profile. Each one is checkable — no rounded-up years, no invented titles. */
   credentials: [
+    ED,
+    SINCE_2015,
+    HOURS,
+    RANK_ORIENTEERING,
+    RANK_ATHLETICS,
+    IN_SPORT_2010,
+  ] as readonly L10n[],
+  /**
+   * The two credentials that are numbers, set as numbers.
+   *
+   * Nothing new is claimed: each figure is the credential in `of`, with its number pulled out and
+   * the rest of the sentence left as the label. «Более 10 000» becomes «10 000+» and that is the
+   * whole transformation. A surface that shows the figures (the booking tab) drops the credentials
+   * they came from out of its list, so the same fact is never on screen twice.
+   */
+  figures: [
     {
-      ru: 'Волгоградский государственный социально-педагогический университет, физическая культура — учитель физической культуры (2016)',
-      en: 'Volgograd State Socio-Pedagogical University, physical education — physical education teacher (2016)',
+      value: '10 000+',
+      label: { ru: 'персональных часов', en: 'one-to-one hours' },
+      of: HOURS,
     },
-    { ru: 'Тренерская работа с 2015 года', en: 'Coaching since 2015' },
-    {
-      ru: 'Более 10 000 часов персональных занятий',
-      en: 'More than 10,000 hours of personal training sessions',
-    },
-    {
-      ru: 'Первый взрослый разряд по спортивному ориентированию (2014)',
-      en: 'First adult rank in orienteering (2014)',
-    },
-    {
-      ru: 'Второй взрослый разряд по лёгкой атлетике (2016)',
-      en: 'Second adult rank in track and field (2016)',
-    },
-    { ru: 'В спорте с 2010 года', en: 'In sport since 2010' },
-  ] as L10n[],
+    { value: '2015', label: { ru: 'тренирует с', en: 'coaching since' }, of: SINCE_2015 },
+  ] as readonly CoachFigure[],
   /**
    * Photo path under /public (optional; the card falls back to a monogram tile without it).
    * This is his own profi.ru portrait, cropped square by salience so the crop keeps his headroom.

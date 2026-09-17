@@ -46,15 +46,16 @@ export const app = {
   // Shown only after a second request has also come up empty — see AuthScreen.
   authNoMail: 'Код не пришёл? Проверь «Спам» и «Промоакции» — письмо приходит с {from}.',
   authSignOut: 'Выйти',
-  // One line each: an error stands alone under a field or a code, and a second sentence telling
-  // the person what to do next is what the resend and the address link already are.
-  authErrorInvalidEmail: 'Проверь адрес',
-  authErrorRateLimited: 'Слишком много запросов — подожди минуту',
-  authErrorInvalidCode: 'Код неверный или устарел',
-  authErrorNetwork: 'Нет соединения',
-  authErrorEmailSend: 'Письмо не ушло — попробуй через пару минут',
-  authErrorSignupDisabled: 'Регистрация закрыта — напиши тренеру',
-  authErrorGeneric: 'Не получилось войти',
+  // Every one of these names what happened and what to do about it. «Проверь адрес» named neither,
+  // and it was the same four words whether the field was empty, missing the «@» or a slipped
+  // domain — so the reasons are split (src/lib/api/auth.ts AuthReason) and each has its own line.
+  authErrorInvalidEmail: 'Адрес не похож на почтовый. После «@» нужен домен — например gmail.com',
+  authErrorRateLimited: 'Слишком много запросов. Подожди минуту и нажми ещё раз.',
+  authErrorInvalidCode: 'Код не подошёл. Сверь шесть цифр с последним письмом.',
+  authErrorNetwork: 'Нет связи. Проверь интернет и нажми ещё раз.',
+  authErrorEmailSend: 'Письмо не ушло. Подожди пару минут и запроси код заново.',
+  authErrorSignupDisabled: 'Регистрация закрыта. Напиши на {from}.',
+  authErrorGeneric: 'Не получилось войти. Попробуй ещё раз через минуту.',
 
   // Onboarding
   // One question per step, set as the display line; the answers are the only other words. The
@@ -574,7 +575,6 @@ export const app = {
 
   // Book a session
   bookTitle: 'Форма один на один',
-  bookLead: 'Час про твои тренировки: техника, программа под твою цель, твои вопросы.',
   bookLengthLabel: 'Длительность сессии',
   bookDuration: '{n} мин',
   bookPay: 'Оплатить {price}',
@@ -1176,4 +1176,28 @@ export const app = {
   assessBannerCta: 'Пройти',
   assessBannerLater: 'Не сейчас',
   assessNoProfile: 'Сначала закончи анкету',
+  // --- coach tab --------------------------------------------------------------
+  bookLeadTimePill: 'Можно за {n} минут до начала',
+  bookCredentials: 'Регалии',
+  bookOutcomes: 'Что это даёт',
+  bookIncludes: 'Что входит',
+  bookAdds: 'Сверх {n} минут',
+  bookIncludesPrev: 'Всё из {n} минут',
+  bookPriceDelta: '+{price} к {n} минутам',
+  bookNext: 'Дальше',
+  bookNextSchedule:
+    'Оплати — и выбери слот на его странице. Ближайший может быть уже через {n} минут.',
+  bookNextContact:
+    'Страницы со слотами пока нет: оплати и напиши тренеру — время он поставит сам, хоть за {n} минут до начала.',
+  bookPaidNote: 'Оплата открылась в браузере. Как оплатишь — возвращайся сюда за временем.',
+
+  // --- Stream 3: sign-in, the bot, the emailed code -------------------------
+  // Sign-in errors that used to share one generic line. Each says what happened first and what to
+  // do second; the typo line is the error itself and it is tappable — pressing it fixes the field.
+  authErrorEmailEmpty: 'Введи почту — на неё придёт код.',
+  authErrorEmailNoAt: 'В адресе нет «@». Целиком это выглядит так: name@gmail.com',
+  authErrorEmailTypo: 'Опечатка в домене? Нажми, чтобы исправить на {suggestion}',
+  authErrorCodeExpired: 'Код живёт 10 минут, этот уже истёк. Запроси новый.',
+  authErrorTooManyAttempts:
+    'Код не подошёл три раза. Запроси новый и введи цифры из последнего письма.',
 } as const;
