@@ -87,19 +87,25 @@ export const CLUB_PLAN_ID: SubscriptionPlan = 'annual';
  * «666 ₽ / мес» as arithmetic on the year's price, never as a second number.
  *
  * The owner settled the club's price as «666 в месяц это доступ на год разделенный на двенадцать
- * месяцев»: one annual charge, quoted per month because that is the figure that means something to
- * a reader. 7 990 / 12 = 665.83, which `formatPrice` renders as «666 ₽» — her figure, derived.
+ * месяцев», and corrected the arithmetic herself — «Только 7990 а не 7992». So the year's price is
+ * the number, 7 990 ₽, and 666 is `Math.round(7990 / 12)` = round(665.83): one annual charge,
+ * quoted per month because that is the figure that means something to a reader.
  *
  * It is derived rather than written down for the reason `bookingFromPrice()` is: the charged
  * amount is the one that has to agree with Prodamus and with the PLAN_ANNUAL_RUB secret (the
  * webhook matches a payment to a plan **by its amount**, docs/SETUP.md §7.4), and a hand-typed
  * monthly twin would drift away from it silently — with the drifted number on the button.
  *
+ * Rounded here rather than left to the formatter, so the figure is a price and not a formatting
+ * accident: `formatPrice` happens to drop the fraction today, and a locale that did not would put
+ * «665,83 ₽» on a button the owner wrote as «666 ₽». The two roubles are why the screen prints the
+ * year's real price directly under the pill.
+ *
  * A monthly plan is returned unchanged: its price already is per month.
  */
 export function planMonthlyPrice(plan: Plan): CoursePrice {
   if (plan.period === 'month') return plan.price;
-  return { rub: plan.price.rub / 12, usd: plan.price.usd / 12 };
+  return { rub: Math.round(plan.price.rub / 12), usd: Math.round(plan.price.usd / 12) };
 }
 
 export const PLAN_BY_ID: ReadonlyMap<SubscriptionPlan, Plan> = new Map(PLANS.map((p) => [p.id, p]));

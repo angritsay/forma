@@ -9,10 +9,10 @@
  * `CLUB_PLAN_ID` in `content/site/plans.ts` carries the reasoning for it being that plan and not a
  * new 7 992 ₽ twin beside it.
  *
- * The monthly figure is never typed anywhere: `planMonthlyPrice()` divides the year by twelve and
- * `formatPrice` rounds it, so the number on the button is arithmetic on the number that is charged.
- * Change the plan's price and the button follows it. The screen states the charge itself under the
- * button — quoting a month for a year's single payment is how chargebacks are made.
+ * The monthly figure is never typed anywhere: `planMonthlyPrice()` is `Math.round(7990 / 12)`, so
+ * the number on the button is arithmetic on the number that is charged. Change the plan's price and
+ * the button follows it. The screen states the charge itself under the button — quoting a month for
+ * a year's single payment is how chargebacks are made.
  *
  * ## The link
  *

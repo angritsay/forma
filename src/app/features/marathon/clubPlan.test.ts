@@ -13,11 +13,13 @@ import { clubChargeLabel, clubJoinHref, clubMonthlyLabel, clubPlan } from './clu
 
 describe('the club price', () => {
   it('is the annual plan, divided by twelve', () => {
-    // The owner: «666 в месяц это доступ на год разделенный на двенадцать месяцев». 7 990 / 12 =
-    // 665.83, which rounds to her figure — so there is one product, not a 7 992 ₽ twin beside it.
+    // The owner: «666 в месяц это доступ на год разделенный на двенадцать месяцев», and «Только
+    // 7990 а не 7992». The year is the price; the month is round(7990 / 12) = 666. So there is one
+    // product, not a second one at 666 × 12 beside it.
     const plan = clubPlan();
     expect(plan?.id).toBe(CLUB_PLAN_ID);
     expect(plan?.period).toBe('year');
+    expect(planMonthlyPrice(plan!).rub).toBe(Math.round(plan!.price.rub / 12));
     expect(clubMonthlyLabel('ru')).toContain('666');
   });
 
