@@ -1,25 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import { EQUIPMENT } from '@/content/schema';
 import {
-  assessmentBenchmarks,
-  assessmentDone,
-  assessmentEmpty,
   clearDraft,
   draftToTrainingProfile,
   emptyDraft,
   firstIncompleteStep,
+  isDraftComplete,
   isStepComplete,
+  LEVEL_ACTIVITY,
+  LEVEL_EXPERIENCE,
+  LEVEL_MAX,
+  LEVEL_MIN,
   loadDraft,
   ONBOARDING_DRAFT_KEY,
-  SELECTABLE_EQUIPMENT,
-  parseIntField,
-  parseWeightField,
   resumeStepIndex,
   saveDraft,
+  SELECTABLE_EQUIPMENT,
   STEP_IDS,
   toggleIn,
-  WEIGHT_MAX_KG,
-  WEIGHT_MIN_KG,
   type OnboardingDraft,
 } from './draft';
 
@@ -40,34 +38,27 @@ function completeDraft(): OnboardingDraft {
     displayName: 'Аня',
     ageBand: '25-34',
     sex: 'female',
-    weightKg: 62,
-    activityLevel: 'light',
-    experience: 'beginner',
-    equipment: ['dumbbells', 'mat'],
-    dumbbellKg: [8, 4],
-    kettlebellKg: [16],
     limitations: ['knees'],
-    assess: {
-      later: false,
-      onKnees: true,
-      counts: {
-        air_squat: 30,
-        push_up: 12,
-        sit_up: 20,
-        reverse_lunge: 24,
-        plank: 45,
-      },
-    },
-    timePerSessionMin: 30,
-    goal: 'general',
+    level: 6,
   };
 }
 
 /*
+ * The owner asked for five questions and nothing else, and «01/05» in the header is drawn from
+ * this array rather than written down — so a sixth step added later would change the counter
+ * silently, and this is what says no.
+ */
+describe('STEP_IDS', () => {
+  it('is five questions, in the order the owner asked for them', () => {
+    expect(STEP_IDS).toEqual(['name', 'age', 'sex', 'limitations', 'level']);
+  });
+});
+
+/*
  * The picker's order is written by hand (draft.ts) because the schema's order serves the public
  * course filter and two admin selects instead. Hand-written means it can fall behind: add an
- * `Equipment` id to the schema, forget this list, and the option silently never appears in
- * onboarding — nothing throws and no other test notices.
+ * `Equipment` id to the schema, forget this list, and the option silently never appears in the
+ * profile's equipment sheet — nothing throws and no other test notices.
  */
 describe('SELECTABLE_EQUIPMENT', () => {
   it('offers every piece of equipment except the absence of it', () => {
@@ -77,176 +68,127 @@ describe('SELECTABLE_EQUIPMENT', () => {
         .sort(),
     );
   });
-
-  it('asks first for the two things the beginners course actually needs', () => {
-    expect(SELECTABLE_EQUIPMENT.slice(0, 2)).toEqual(['mat', 'chair']);
-  });
-
-  it('names each option once', () => {
-    expect(new Set(SELECTABLE_EQUIPMENT).size).toBe(SELECTABLE_EQUIPMENT.length);
-  });
 });
 
-describe('onboarding draft', () => {
-  it('starts at step 0 with only the equipment step satisfied', () => {
-    const d = emptyDraft();
-    expect(d.step).toBe(0);
-    expect(STEP_IDS.filter((s) => isStepComplete(d, s))).toEqual(['equipment']);
-    expect(firstIncompleteStep(d)).toBe(0);
-    expect(assessmentEmpty(d)).toBe(true);
+describe('draft persistence', () => {
+  it('round-trips through storage and ignores corrupt data', () => {
+    const s = memoryStorage();
+    saveDraft(completeDraft(), s);
+    expect(loadDraft(s)).toEqual(completeDraft());
+    s.raw.set(ONBOARDING_DRAFT_KEY, '{not json');
+    expect(loadDraft(s)).toEqual(emptyDraft());
+    s.raw.set(ONBOARDING_DRAFT_KEY, JSON.stringify({ level: 99 }));
+    expect(loadDraft(s)).toEqual(emptyDraft());
+    clearDraft(s);
+    expect(s.raw.size).toBe(0);
   });
 
-  it('round-trips through storage and clears', () => {
-    const storage = memoryStorage();
-    const d = { ...completeDraft(), step: 5 };
-    saveDraft(d, storage);
-    expect(storage.raw.has(ONBOARDING_DRAFT_KEY)).toBe(true);
-    expect(loadDraft(storage)).toEqual(d);
-    clearDraft(storage);
-    expect(loadDraft(storage)).toEqual(emptyDraft());
-  });
-
-  it('falls back to an empty draft on corrupted or out-of-range data', () => {
-    const storage = memoryStorage();
-    storage.setItem(ONBOARDING_DRAFT_KEY, '{not json');
-    expect(loadDraft(storage)).toEqual(emptyDraft());
-    storage.setItem(ONBOARDING_DRAFT_KEY, JSON.stringify({ step: 99, ageBand: '12-17' }));
-    expect(loadDraft(storage)).toEqual(emptyDraft());
+  it('survives storage being unavailable', () => {
+    expect(() => saveDraft(completeDraft(), null)).not.toThrow();
     expect(loadDraft(null)).toEqual(emptyDraft());
   });
-
-  it('walks the wizard step by step', () => {
-    const d = emptyDraft();
-    expect(firstIncompleteStep(d)).toBe(STEP_IDS.indexOf('name'));
-    expect(firstIncompleteStep({ ...d, displayName: '  ' })).toBe(STEP_IDS.indexOf('name'));
-    expect(firstIncompleteStep({ ...d, displayName: 'Настя' })).toBe(STEP_IDS.indexOf('basics'));
-    expect(firstIncompleteStep(completeDraft())).toBe(STEP_IDS.indexOf('result'));
-    expect(isStepComplete(completeDraft(), 'result')).toBe(true);
-  });
-
-  it('requires an explicit answer on limitations', () => {
-    const d = emptyDraft();
-    expect(isStepComplete(d, 'limitations')).toBe(false);
-    expect(isStepComplete({ ...d, limitationsNone: true }, 'limitations')).toBe(true);
-    expect(isStepComplete({ ...d, limitations: ['wrists'] }, 'limitations')).toBe(true);
-  });
-
-  it('completes the assessment step when every movement is counted, or it is postponed', () => {
-    const d = emptyDraft();
-    expect(isStepComplete(d, 'assess')).toBe(false);
-    expect(assessmentDone(d)).toBe(false);
-    // One movement short is not an answer: the engine reads the set, not the first of it.
-    const partial = { ...d, assess: { ...d.assess, counts: { air_squat: 30 } } };
-    expect(isStepComplete(partial, 'assess')).toBe(false);
-    expect(isStepComplete({ ...d, assess: { ...d.assess, later: true } }, 'assess')).toBe(true);
-    expect(isStepComplete(completeDraft(), 'assess')).toBe(true);
-    expect(assessmentDone(completeDraft())).toBe(true);
-    expect(assessmentEmpty(completeDraft())).toBe(false);
-  });
-
-  it('splits the assessment into engine inputs and personal records', () => {
-    const p = draftToTrainingProfile(completeDraft());
-    // The three the fitness index reads land in `tests`; the other two are benchmarks.
-    expect(p?.tests).toEqual({ pushups: 12, pushupsOnKnees: true, squats60s: 30, plankSec: 45 });
-    expect(assessmentBenchmarks(completeDraft())).toEqual({
-      situps_60s: 20,
-      lunges_60s: 24,
-    });
-    expect(assessmentBenchmarks(emptyDraft())).toEqual({});
-  });
-
-  it('builds the engine profile only when required answers exist', () => {
-    expect(draftToTrainingProfile(emptyDraft())).toBeNull();
-    expect(draftToTrainingProfile({ ...completeDraft(), goal: undefined })).toBeNull();
-    const p = draftToTrainingProfile(completeDraft());
-    expect(p).toMatchObject({
-      ageBand: '25-34',
-      sex: 'female',
-      weightKg: 62,
-      activityLevel: 'light',
-      experience: 'beginner',
-      limitations: ['knees'],
-      equipment: ['dumbbells', 'mat'],
-      timePerSessionMin: 30,
-      goal: 'general',
-      tests: { pushups: 12, pushupsOnKnees: true, squats60s: 30, plankSec: 45 },
-    });
-  });
-
-  it('sorts weights and drops them for unselected equipment', () => {
-    const p = draftToTrainingProfile(completeDraft());
-    expect(p?.dumbbellKg).toEqual([4, 8]);
-    expect(p?.kettlebellKg).toBeUndefined();
-    const none = draftToTrainingProfile({ ...completeDraft(), equipment: [], dumbbellKg: [8] });
-    expect(none?.equipment).toEqual(['none']);
-    expect(none?.dumbbellKg).toBeUndefined();
-  });
-
-  it('honours "no limitations" and a postponed assessment in the profile', () => {
-    const base = completeDraft();
-    const p = draftToTrainingProfile({
-      ...base,
-      limitations: ['knees'],
-      limitationsNone: true,
-      assess: { ...base.assess, later: true, counts: {} },
-    });
-    expect(p?.limitations).toEqual([]);
-    expect(p?.tests).toEqual({});
-    expect(p?.weightKg).toBe(62);
-  });
-
-  it('parses numeric fields defensively', () => {
-    expect(parseIntField('', 100)).toBeUndefined();
-    expect(parseIntField('abc', 100)).toBeUndefined();
-    expect(parseIntField('-3', 100)).toBeUndefined();
-    expect(parseIntField('12.9', 100)).toBe(12);
-    expect(parseIntField('999', 100)).toBe(100);
-  });
-
-  it('toggles values immutably', () => {
-    const list = ['a', 'b'];
-    expect(toggleIn(list, 'c')).toEqual(['a', 'b', 'c']);
-    expect(toggleIn(list, 'a')).toEqual(['b']);
-    expect(list).toEqual(['a', 'b']);
-  });
 });
 
-describe('parseWeightField', () => {
-  it('accepts a weight inside the range, comma decimals included', () => {
-    expect(parseWeightField('70')).toEqual({ weightKg: 70, invalid: false });
-    expect(parseWeightField(' 62,5 ')).toEqual({ weightKg: 62.5, invalid: false });
-    expect(parseWeightField('80.44')).toEqual({ weightKg: 80.4, invalid: false });
+describe('isStepComplete / firstIncompleteStep', () => {
+  it('requires an answer to every one of the five', () => {
+    const d = emptyDraft();
+    expect(STEP_IDS.filter((s) => isStepComplete(d, s))).toEqual([]);
+    expect(firstIncompleteStep(d)).toBe(0);
+    expect(isDraftComplete(d)).toBe(false);
   });
 
-  it('treats an empty field as "not answered", never as an error', () => {
-    expect(parseWeightField('')).toEqual({ invalid: false });
-    expect(parseWeightField('   ')).toEqual({ invalid: false });
+  it('accepts «ничего, всё в порядке» as an answer about limitations', () => {
+    const d = { ...emptyDraft(), limitationsNone: true };
+    expect(isStepComplete(d, 'limitations')).toBe(true);
+    expect(isStepComplete({ ...emptyDraft(), limitations: ['wrists'] }, 'limitations')).toBe(true);
   });
 
-  it('reports out-of-range and non-numeric input without storing a weight', () => {
-    expect(parseWeightField('7')).toEqual({ invalid: true });
-    expect(parseWeightField(String(WEIGHT_MIN_KG - 1))).toEqual({ invalid: true });
-    expect(parseWeightField(String(WEIGHT_MAX_KG + 1))).toEqual({ invalid: true });
-    expect(parseWeightField('abc')).toEqual({ invalid: true });
+  it('rejects a blank name and stops at the last step when everything is answered', () => {
+    expect(isStepComplete({ ...completeDraft(), displayName: '   ' }, 'name')).toBe(false);
+    expect(isDraftComplete(completeDraft())).toBe(true);
+    expect(firstIncompleteStep(completeDraft())).toBe(STEP_IDS.length - 1);
   });
 
-  it('keeps the range bounds themselves valid', () => {
-    expect(parseWeightField(String(WEIGHT_MIN_KG)).weightKg).toBe(WEIGHT_MIN_KG);
-    expect(parseWeightField(String(WEIGHT_MAX_KG)).weightKg).toBe(WEIGHT_MAX_KG);
+  it('walks forward one unanswered question at a time', () => {
+    const d = completeDraft();
+    expect(firstIncompleteStep({ ...d, ageBand: undefined })).toBe(STEP_IDS.indexOf('age'));
+    expect(firstIncompleteStep({ ...d, sex: undefined })).toBe(STEP_IDS.indexOf('sex'));
+    expect(firstIncompleteStep({ ...d, level: undefined })).toBe(STEP_IDS.indexOf('level'));
   });
 });
 
 describe('resumeStepIndex', () => {
-  it('maps "tests" to the assessment step and step ids to their index', () => {
-    expect(resumeStepIndex('tests')).toBe(STEP_IDS.indexOf('assess'));
-    expect(resumeStepIndex('goal')).toBe(STEP_IDS.indexOf('goal'));
-    expect(resumeStepIndex('name')).toBe(0);
+  it('resolves a step id and nothing else', () => {
+    expect(resumeStepIndex('level')).toBe(STEP_IDS.indexOf('level'));
+    expect(resumeStepIndex(null)).toBeNull();
+    expect(resumeStepIndex('')).toBeNull();
+    // The self-test left the wizard; an old «?step=tests» link resumes where the athlete was.
+    expect(resumeStepIndex('tests')).toBeNull();
+    expect(resumeStepIndex('nope')).toBeNull();
+  });
+});
+
+describe('draftToTrainingProfile', () => {
+  it('is null while a required answer is missing', () => {
+    expect(draftToTrainingProfile(emptyDraft())).toBeNull();
+    expect(draftToTrainingProfile({ ...completeDraft(), level: undefined })).toBeNull();
   });
 
-  it('ignores a missing or unknown parameter', () => {
-    expect(resumeStepIndex(null)).toBeNull();
-    expect(resumeStepIndex(undefined)).toBeNull();
-    expect(resumeStepIndex('')).toBeNull();
-    expect(resumeStepIndex('nope')).toBeNull();
+  /*
+   * The point of the whole change: three of the engine's fields are answered, two are derived from
+   * the slider, and the ones nobody was asked about are absent rather than invented.
+   */
+  it('builds a profile that claims only what was asked', () => {
+    const p = draftToTrainingProfile(completeDraft());
+    expect(p).not.toBeNull();
+    expect(p!.ageBand).toBe('25-34');
+    expect(p!.sex).toBe('female');
+    expect(p!.limitations).toEqual(['knees']);
+    expect(p!.tests).toEqual({});
+    expect(p!.equipment).toEqual(['none']);
+    expect(p!.timePerSessionMin).toBeUndefined();
+    expect(p!.goal).toBeUndefined();
+  });
+
+  it('reads the activity level and the experience off the slider', () => {
+    const at = (level: number) => draftToTrainingProfile({ ...completeDraft(), level })!;
+    expect(at(LEVEL_MIN).activityLevel).toBe('sedentary');
+    expect(at(LEVEL_MIN).experience).toBe('none');
+    expect(at(LEVEL_MAX).activityLevel).toBe('active');
+    expect(at(LEVEL_MAX).experience).toBe('advanced');
+  });
+
+  it('clears the limitations when «ничего» was the answer', () => {
+    const p = draftToTrainingProfile({
+      ...completeDraft(),
+      limitations: ['knees'],
+      limitationsNone: true,
+    })!;
+    expect(p.limitations).toEqual([]);
+  });
+});
+
+/* Ten notches, ten answers: an unmapped notch would silently fall back to «не тренируюсь». */
+describe('level mapping', () => {
+  it('covers every notch of the slider and never goes backwards', () => {
+    expect(LEVEL_ACTIVITY).toHaveLength(LEVEL_MAX - LEVEL_MIN + 1);
+    expect(LEVEL_EXPERIENCE).toHaveLength(LEVEL_MAX - LEVEL_MIN + 1);
+    const activityRank = ['sedentary', 'light', 'moderate', 'active'];
+    const experienceRank = ['none', 'beginner', 'intermediate', 'advanced'];
+    for (let i = 1; i < LEVEL_ACTIVITY.length; i++) {
+      expect(activityRank.indexOf(LEVEL_ACTIVITY[i]!)).toBeGreaterThanOrEqual(
+        activityRank.indexOf(LEVEL_ACTIVITY[i - 1]!),
+      );
+      expect(experienceRank.indexOf(LEVEL_EXPERIENCE[i]!)).toBeGreaterThanOrEqual(
+        experienceRank.indexOf(LEVEL_EXPERIENCE[i - 1]!),
+      );
+    }
+  });
+});
+
+describe('toggleIn', () => {
+  it('adds what is missing and removes what is there', () => {
+    expect(toggleIn(['a'], 'b')).toEqual(['a', 'b']);
+    expect(toggleIn(['a', 'b'], 'a')).toEqual(['b']);
   });
 });

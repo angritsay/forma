@@ -1,10 +1,11 @@
 /**
  * The assessment itself: one movement at a time, drawn the way the player draws a step.
  *
- * It runs as a full-screen surface over the wizard rather than inside it. The wizard's chrome — a
- * back arrow, a step counter, a progress rule, a «Продолжить» button — is right for a form and
- * wrong for a minute of work: what is needed here is the movement and the clock, and everything
- * else is something to look at instead of the floor.
+ * It runs as a full-screen surface over whatever opened it (`/assessment`, the screen; it used to
+ * be the onboarding wizard, which is where the chrome argument was first made). A back arrow, a
+ * step counter, a progress rule and a «Продолжить» button are right for a form and wrong for a
+ * minute of work: what is needed here is the movement, and everything else is something to look
+ * at instead of the floor.
  *
  * The owner called the player the one good screen, so this reads like it: the clip full-bleed
  * behind everything, a pane of glass along the foot (`.glass-bar`, the player's own material), and
@@ -37,14 +38,8 @@ import { exerciseVideoRef } from '@/app/features/player/model';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
 import { ExerciseStill } from '@/components/media/ExerciseStill';
 import { useT } from '@/app/hooks/useT';
-import { parseIntField, REPS_MAX } from './draft';
+import { HOLD_MAX, parseIntField, REPS_MAX } from './model';
 import { ASSESSMENT_MOVES } from '@content/site/assessment';
-
-/**
- * The ceiling on a hold, in seconds. Not a window any more — nothing is timed — just the largest
- * answer worth accepting, a little past the 180 seconds where `PLANK_ANCHORS` already reads 100.
- */
-const HOLD_MAX = 600;
 
 export interface AssessmentRunnerProps {
   /** Whether the push-ups are done on the knees; the index scores the two differently. */

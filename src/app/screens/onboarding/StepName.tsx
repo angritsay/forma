@@ -4,7 +4,12 @@ import { NAME_MAX } from './draft';
 import { Question } from './Question';
 import type { StepProps } from './types';
 
-/** The question and the field. «Это имя будет видно в рейтинге» went: a name is a name. */
+/**
+ * The question and the field. «Это имя будет видно в рейтинге» went: a name is a name.
+ *
+ * «ТВОЁ имя» rather than «Как тебя называть?» — the designer's note, and the shorter line is also
+ * the one the display device is built for: the first word heavy, the rest light.
+ */
 export function StepName({ draft, update, next }: StepProps) {
   const { t } = useT();
   return (
