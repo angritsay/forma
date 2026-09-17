@@ -18,6 +18,7 @@ import { AppError } from '../errors';
 import { toNumberOr } from '../mappers';
 import type {
   DbBenchmark,
+  DbCoachBooking,
   DbCourseState,
   DbDailyLog,
   DbLeaderboardRow,
@@ -54,7 +55,7 @@ export interface StorageLike {
 export const DEMO_DB_KEY = 'forma.demo.db';
 export const DEMO_AUTH_KEY = 'forma.demo.auth';
 /** Bumped when the row shapes change; a stored database of another version is discarded. */
-export const DEMO_SCHEMA_VERSION = 5;
+export const DEMO_SCHEMA_VERSION = 6;
 
 /** In-memory storage used when `localStorage` is unavailable (SSR, tests, private mode). */
 export function memoryStorage(): StorageLike {
@@ -93,11 +94,21 @@ export interface DemoRival {
   weekStepPoints: number;
 }
 
+/** A `coach_bookings` row as the demo holds it: the view's columns plus the email it is filed under. */
+export interface DemoCoachBooking extends DbCoachBooking {
+  email: string;
+}
+
 export interface DemoDb {
   version: number;
   profiles: DbProfile[];
   purchases: DbPurchase[];
   subscriptions: DbSubscriptionRow[];
+  /*
+   * Bookings carry the email the row is filed under, exactly as the table does, so the demo
+   * backend has to do the same "only my own" filtering the RLS policy does in Postgres.
+   */
+  coachBookings: DemoCoachBooking[];
   courseStates: DbCourseState[];
   sessions: DbWorkoutSession[];
   dailyLogs: DbDailyLog[];
@@ -329,6 +340,7 @@ export function emptyDb(): DemoDb {
     profiles: [],
     purchases: [],
     subscriptions: [],
+    coachBookings: [],
     courseStates: [],
     sessions: [],
     dailyLogs: [],
@@ -374,6 +386,7 @@ export function readDb(storage: StorageLike = defaultStorage()): DemoDb {
       profiles: asRows<DbProfile>(parsed.profiles),
       purchases: asRows<DbPurchase>(parsed.purchases),
       subscriptions: asRows<DbSubscriptionRow>(parsed.subscriptions),
+      coachBookings: asRows<DemoCoachBooking>(parsed.coachBookings),
       courseStates: asRows<DbCourseState>(parsed.courseStates),
       sessions: asRows<DbWorkoutSession>(parsed.sessions),
       dailyLogs: asRows<DbDailyLog>(parsed.dailyLogs),
@@ -491,6 +504,33 @@ function seedSubscriptions(createdAt: string): DbSubscriptionRow[] {
   }));
 }
 
+/**
+ * The demo session with the coach: tomorrow at 09:00 in whatever zone this browser is in.
+ *
+ * Tomorrow morning is deliberate — it is the case the countdown is easiest to get wrong
+ * («завтра в 9:00», not «через 14 часов»), so the demo build shows the interesting branch rather
+ * than a trivial one. The join link points at example.com: it is a placeholder, and a link that
+ * looked like a real Zoom room would be an invitation to click it.
+ */
+function seedCoachBooking(email: string, today: string): DemoCoachBooking {
+  const startsAt = new Date(`${addDays(today, 1)}T09:00:00`);
+  const endsAt = new Date(startsAt.getTime() + 60 * 60_000);
+  return {
+    id: demoId('booking'),
+    email,
+    starts_at: startsAt.toISOString(),
+    ends_at: endsAt.toISOString(),
+    timezone: null,
+    join_url: 'https://example.com/j/forma-demo',
+    location_kind: 'zoom_conference',
+    location_text: null,
+    cancel_url: 'https://example.com/cancellations/forma-demo',
+    reschedule_url: 'https://example.com/reschedulings/forma-demo',
+    status: 'active',
+    event_name: 'Персональная тренировка',
+  };
+}
+
 function seedPurchases(email: string, createdAt: string): DbPurchase[] {
   const own: DbPurchase[] = DEMO_ENTITLED_COURSES.map((courseId) => ({
     id: demoId('pur'),
@@ -541,6 +581,9 @@ export function seedUser(db: DemoDb, email: string, today = toLocalDateIso()): D
   };
   db.profiles.push(profile);
   db.dailyLogs.push(...seedDailyLogs(userId, today));
+  if (!db.coachBookings.some((b) => b.email === email)) {
+    db.coachBookings.push(seedCoachBooking(email, today));
+  }
   const knownSubs = new Set(db.subscriptions.map((x) => x.email));
   for (const sub of seedSubscriptions(createdAt)) {
     if (knownSubs.has(sub.email)) continue;

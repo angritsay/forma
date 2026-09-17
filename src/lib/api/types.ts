@@ -692,3 +692,32 @@ export interface ExerciseDraft {
   tags?: string[];
   isTest?: boolean;
 }
+
+// --- Coach bookings ---------------------------------------------------------
+
+/** A booking is never deleted: a cancelled session stays visible as cancelled. */
+export type CoachBookingStatus = 'active' | 'cancelled';
+
+/**
+ * One session booked with the coach, as the person's own screen sees it (view `my_coach_bookings`).
+ *
+ * `joinUrl` is present only for a conferencing location (Zoom, Meet, Teams…); a physical or phone
+ * session carries `locationText` instead. Both can be null when the booking has no location yet —
+ * a conference link is created asynchronously, so a booking made seconds ago may arrive without one.
+ */
+export interface CoachBooking {
+  id: string;
+  startsAt: string;
+  endsAt: string;
+  /** Derived from the two timestamps: the 30 or 60 the person picked. */
+  durationMinutes: number;
+  /** The IANA zone the person booked in. The screen shows the device's zone; this is the fallback. */
+  timezone: string | null;
+  joinUrl: string | null;
+  locationKind: string | null;
+  locationText: string | null;
+  cancelUrl: string | null;
+  rescheduleUrl: string | null;
+  status: CoachBookingStatus;
+  eventName: string | null;
+}

@@ -11,9 +11,12 @@ import type {
   PrescribedWorkout,
   UserTrainingProfile,
 } from '@/lib/training/types';
+import { durationMinutes } from '@/lib/coach/booking';
 import type {
   BenchmarkRow,
   BenchmarkSeries,
+  CoachBooking,
+  CoachBookingStatus,
   CompleteSessionInput,
   CourseStatePatch,
   CourseStateRow,
@@ -483,4 +486,41 @@ export function parseStorageRef(ref: string): { bucket: string; path: string } |
   const path = m[2]?.replace(/^\/+/, '');
   if (!bucket || !path) return null;
   return { bucket, path };
+}
+
+// --- coach bookings ---------------------------------------------------------
+
+export interface DbCoachBooking {
+  id: string;
+  starts_at: string;
+  ends_at: string;
+  timezone: string | null;
+  join_url: string | null;
+  location_kind: string | null;
+  location_text: string | null;
+  cancel_url: string | null;
+  reschedule_url: string | null;
+  status: string;
+  event_name: string | null;
+}
+
+function asCoachBookingStatus(v: string): CoachBookingStatus {
+  return v === 'cancelled' ? 'cancelled' : 'active';
+}
+
+export function coachBookingFromDb(r: DbCoachBooking): CoachBooking {
+  return {
+    id: r.id,
+    startsAt: r.starts_at,
+    endsAt: r.ends_at,
+    durationMinutes: durationMinutes(r.starts_at, r.ends_at),
+    timezone: r.timezone ?? null,
+    joinUrl: r.join_url ?? null,
+    locationKind: r.location_kind ?? null,
+    locationText: r.location_text ?? null,
+    cancelUrl: r.cancel_url ?? null,
+    rescheduleUrl: r.reschedule_url ?? null,
+    status: asCoachBookingStatus(r.status),
+    eventName: r.event_name ?? null,
+  };
 }
