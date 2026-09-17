@@ -594,7 +594,6 @@ export const app = {
 
   // Book a session
   bookTitle: 'Forma. One-to-One',
-  bookLead: 'An hour on your training: technique, the program under your goal, your questions.',
   bookLengthLabel: 'Session length',
   bookDuration: '{n} min',
   bookPay: 'Pay {price}',
@@ -1159,4 +1158,18 @@ export const app = {
   mAdminBonusPoints: 'Points (a minus is allowed)',
   mAdminBonusReason: 'What for',
   mAdminBonusAdd: 'Add',
+
+  // --- coach tab --------------------------------------------------------------
+  bookLeadTimePill: 'Book up to {n} minutes before',
+  bookCredentials: 'Credentials',
+  bookOutcomes: 'What it gives',
+  bookIncludes: 'What is included',
+  bookAdds: 'On top of {n} min',
+  bookIncludesPrev: 'Everything in {n} min',
+  bookPriceDelta: '+{price} over {n} min',
+  bookNext: 'Next',
+  bookNextSchedule: 'Pay, then pick a slot on his page. The next one may be {n} minutes away.',
+  bookNextContact:
+    'There is no slot page yet: pay and message the coach — he sets the time himself, even {n} minutes before the start.',
+  bookPaidNote: 'The payment page opened in your browser. Once it is paid, come back for a time.',
 } as const;
