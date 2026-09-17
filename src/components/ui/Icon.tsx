@@ -46,6 +46,8 @@ export const ICON_NAMES = [
   'refresh',
   'mail',
   'user',
+  'person',
+  'rosette',
 ] as const;
 
 export type IconName = (typeof ICON_NAMES)[number];
@@ -135,6 +137,32 @@ export const ICONS: Record<IconName, IconDef> = {
   refresh: { d: 'M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5' },
   mail: { d: 'M3 6h18v12H3zM3 7l9 6 9-6' },
   user: { d: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0' },
+  /*
+   * The account, as the owner's mockup draws it: a small circle over a wide, separate oval. It is
+   * not `profile`/`user` at another size — those are a head over an *open* shoulder arc, which is
+   * a figure seen from the front, and at the 16px this is used at the arc's two square ends read
+   * as horns. Two closed shapes with a gap between them survive the size, which is the only test
+   * an icon this small has to pass.
+   *
+   * It is the profile entry point on «Курсы» and in the top row, where the avatar circle used to
+   * be: the mockup has no avatar, and a generated monogram was a picture of nobody anyway.
+   */
+  person: {
+    d: 'M15.6 8a3.6 3.6 0 1 1-7.2 0 3.6 3.6 0 1 1 7.2 0M19 18.2a7 3.8 0 1 1-14 0 7 3.8 0 1 1 14 0',
+  },
+  /*
+   * A rosette, for the achievements circle beside the streak.
+   *
+   * It replaces `trophy` there. A cup is the prize at the end of something; the achievements
+   * catalogue is thirteen marks you collect along the way, which is what a medal on a ribbon says
+   * and a cup does not. Drawn as the mockup draws it — a hexagon, a dot at its centre, and two
+   * ribbon legs with a notch between them — in the same one-stroke square-capped language as the
+   * rest of this file. The hexagon is flat-topped so its silhouette is not a circle at 15px, which
+   * is the size it is actually used at.
+   */
+  rosette: {
+    d: 'M18 10l-3-5.2H9L6 10l3 5.2h6zM13.6 10a1.6 1.6 0 1 1-3.2 0 1.6 1.6 0 1 1 3.2 0M9 15.2V21l3-2.4 3 2.4v-5.8',
+  },
 };
 
 export interface GlyphProps extends HTMLAttributes<HTMLSpanElement> {

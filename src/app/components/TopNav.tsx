@@ -1,12 +1,11 @@
 import { clsx } from 'clsx';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router';
-import { Avatar } from '@/components/ui/Avatar';
+import { Icon } from '@/components/ui/Icon';
 import { Logo } from '@/components/ui/Logo';
 import { useT } from '@/app/hooks/useT';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { ProfileSheet } from '@/app/features/profile/ProfileSheet';
-import { useSession } from '@/app/store/session';
 import { activeTabIndex, tabItems, type NavItem } from './BottomNav';
 
 /*
@@ -46,10 +45,16 @@ function NavWord({
          * under the pointer. The tab bar had already answered this for itself — «hierarchy is
          * the rule and the ink now, not the size» — and this is that same answer, which is also
          * what lets the mark below travel instead of jumping.
+         *
+         * **Sentence case, 15px, in the text face**, which is the second answer the tab bar took
+         * from the owner's mockup. The capitals went with the capsule down there; a top row that
+         * still shouted «КУРСЫ» while the phone said «Курсы» would be the same product speaking
+         * two dialects at two widths. The row is not a segmented control — a capsule across the
+         * top of a 1280px page is a control the size of a banner — so the mark below stays.
          */
-        'control-label flex h-16 items-center text-[11px]',
+        'flex h-16 items-center text-[15px] font-medium',
         'transition-colors duration-150 ease-(--ease-out)',
-        active ? 'text-text' : 'text-muted-2 hover:text-text',
+        active ? 'text-text' : 'text-muted hover:text-text',
       )}
     >
       {t(item.labelKey)}
@@ -62,8 +67,8 @@ function NavWord({
  *
  * It replaces the left rail (`SideNav`), and the choice was the owner's — a top row is what the
  * site's own header is (`layouts/Landing.astro`), so the app and the site read as one product
- * instead of two. It is typographic like the tab bar: no icons, no accent edge, the current
- * destination simply set large.
+ * instead of two. It is typographic like the tab bar: no icons, no accent edge, the same four
+ * sentence-case words, and a 2px mark that travels under the one you are in.
  *
  * **It starts at `md`, not `lg`, and that is the point of the whole component.** The app used to be
  * a 480px phone column until 1024px, so every tablet — an iPad in portrait is 820 — showed a phone
@@ -90,8 +95,6 @@ export function TopNav() {
    * screen an admin opened.
    */
   const items = useMemo(() => tabItems(admin), [admin]);
-  const profile = useSession((s) => s.profile);
-  const user = useSession((s) => s.user);
   const { pathname } = useLocation();
   const active = activeTabIndex(pathname, admin);
   const [sheet, setSheet] = useState(false);
@@ -169,19 +172,22 @@ export function TopNav() {
             style={{ width: mark?.width ?? 0, transform: `translateX(${mark?.left ?? 0}px)` }}
           />
         </div>
-        {/* The same avatar and the same sheet as the header of «Курсы»: there is no profile screen
-            to navigate to any more, and an account is a small thing you look at, not a place. */}
+        {/*
+         * The same mark and the same sheet as the header of «Курсы»: there is no profile screen to
+         * navigate to any more, and an account is a small thing you look at, not a place.
+         *
+         * It was the avatar — a monogram on a generated colour — and the mockup has no avatar
+         * anywhere. That is the right call and not only a stylistic one: nobody in this product
+         * uploads a picture, so the circle was a coloured initial standing in for a photograph
+         * that does not exist. An outline person says «твой аккаунт» without pretending to be one.
+         */}
         <button
           type="button"
           aria-label={t('app.profileTitle')}
           onClick={() => setSheet(true)}
-          className="tap-target shrink-0 rounded-pill transition-opacity duration-150 ease-(--ease-out) hover:opacity-80"
+          className="tap-target flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-2 text-text transition-colors duration-150 ease-(--ease-out) hover:bg-surface-3"
         >
-          <Avatar
-            seed={profile?.avatarSeed ?? user?.id ?? ''}
-            name={profile?.displayName ?? user?.email}
-            size={32}
-          />
+          <Icon name="person" size={18} strokeWidth={1.7} />
         </button>
       </div>
       <ProfileSheet open={sheet} onClose={() => setSheet(false)} />

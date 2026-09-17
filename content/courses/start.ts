@@ -1246,7 +1246,22 @@ export const COURSE_START: CourseInput = {
   weeks: 4,
   sessionsPerWeek: 5,
   avgSessionMin: 18,
-  tile: '#f2f52d', // --tile-1 — programme colour: beginners
+  /*
+   * The programme's colour, and it is cyan now rather than the brand yellow.
+   *
+   * The owner's mockup of «Курсы» gives this course `#9FEFF7` and «Forma с гантелями» `#E0F89A`,
+   * and on that screen the colour is *type* — the card's rule, its figure, its name and its button
+   * — laid on a photograph. Yellow at `#f2f52d` is the most saturated thing in the system and was
+   * drawn to be a fill; as type over a grey picture it fizzes.
+   *
+   * **This hex is the single source of truth for the programme's colour everywhere**, so the
+   * change reaches the site too: the landing's course card, the course's own page, the exercise
+   * cards tagged to it and the SEO link cards all stop being brand yellow. Its luminance is 0.758
+   * against the 0.35 in `isLightTile()`, so black ink on it is unchanged — the hue moves, the
+   * treatment does not. The owner asked for the mockup, not for the landing; if she wants the site
+   * kept yellow, that is a second colour for one programme and it needs a field of its own.
+   */
+  tile: '#9FEFF7', // programme colour: beginners — the mockup's cyan
   /*
    * The owner's artwork: the coach walking out of the pool, monochrome, with «ФОРМА С НУЛЯ» drawn
    * across it in the programme yellow above. Vendored under `public/` rather than uploaded to the

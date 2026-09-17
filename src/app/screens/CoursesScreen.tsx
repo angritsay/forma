@@ -23,7 +23,6 @@
  */
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Glyph } from '@/components/ui/Icon';
@@ -31,16 +30,14 @@ import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { courseTitle } from '@/content/catalogue';
 import { LIVE_COURSES } from '@/content/registry';
-import { formatNumber } from '@/i18n/index';
 import { PHOTOS, type Photo } from '@/lib/media/photos';
 import { evaluateAchievements } from '@/lib/training/levels';
-import { courseTileVars } from '@/lib/ui/tile';
 import { useT } from '@/app/hooks/useT';
 import { CourseCard } from '@/app/features/courses/CourseCard';
-import { courseLandingHref } from '@/app/features/courses/courseMeta';
+import { courseAccentVars, courseLandingHref } from '@/app/features/courses/courseMeta';
 import { buildDeck } from '@/app/features/courses/deck';
-import { HeadEntries } from '@/app/features/courses/HeadEntries';
-import { dayPart, GREETING_KEY, greetingName } from '@/app/features/home/greeting';
+import { CoursesHead } from '@/app/features/courses/CoursesHead';
+import { greetingName } from '@/app/features/home/greeting';
 import { resumeCard } from '@/app/features/home/resumeModel';
 import { ProfileSheet } from '@/app/features/profile/ProfileSheet';
 import { userStatsFromProgress } from '@/app/features/stats/model';
@@ -105,7 +102,6 @@ export default function CoursesScreen() {
   const today = useTodayIso();
 
   const name = greetingName(profile?.displayName, user?.email ?? '');
-  const greeting = t(GREETING_KEY[dayPart(new Date().getHours())], { name });
 
   /*
    * The player store, field by field rather than as a derived object: zustand compares a
@@ -163,27 +159,6 @@ export default function CoursesScreen() {
     ]);
   }, []);
 
-  /* The greeting and the account, in the slot every tab puts its title in. */
-  const header = (
-    <div className="flex h-14 items-center gap-3 px-6 md:px-10">
-      <h1 className="font-display min-w-0 flex-1 truncate text-base">{greeting}</h1>
-      {/* Hidden from `md`: the top row carries the same avatar opening the same sheet, and two of
-          them on one screen is one account in two places. */}
-      <button
-        type="button"
-        aria-label={t('app.profileTitle')}
-        onClick={() => setAccount(true)}
-        className="tap-target shrink-0 rounded-pill transition-opacity duration-150 ease-(--ease-out) hover:opacity-80 md:hidden"
-      >
-        <Avatar
-          seed={profile?.avatarSeed ?? user?.id ?? ''}
-          name={profile?.displayName ?? user?.email}
-          size={32}
-        />
-      </button>
-    </div>
-  );
-
   let body: React.ReactNode;
   if (status === 'idle' || status === 'loading') {
     body = <CoursesSkeleton />;
@@ -240,7 +215,7 @@ export default function CoursesScreen() {
          * of them larger. `items-start`, or the grid would stretch a card with no figure on it to
          * the height of one that has it.
          */}
-        <ul className="flex flex-col gap-4 md:grid md:grid-cols-2 md:items-start">
+        <ul className="flex flex-col gap-6 md:grid md:grid-cols-2 md:items-start">
           {entries.map((entry, i) => {
             const photo = DECK_PHOTOS[i % DECK_PHOTOS.length]!;
             const priority = i === 0;
@@ -251,11 +226,10 @@ export default function CoursesScreen() {
               return (
                 <li key={entry.key}>
                   <CourseCard
-                    cover={course.cover}
                     photo={photo}
                     priority={priority}
                     dimmed
-                    style={courseTileVars(course.tile)}
+                    style={courseAccentVars(course.tile)}
                     title={title}
                     /* «Подробнее», and it leaves for the course's own page. It used to say
                        «Прийти» or «Курс закрыт» — neither of which says what happens next. */
@@ -279,23 +253,11 @@ export default function CoursesScreen() {
             return (
               <li key={entry.key}>
                 <CourseCard
-                  cover={course.cover}
                   photo={photo}
                   priority={priority}
-                  style={courseTileVars(course.tile)}
+                  style={courseAccentVars(course.tile)}
                   title={title}
                   pct={progress.pct}
-                  progressMeta={`${formatNumber(locale, progress.done)}/${formatNumber(
-                    locale,
-                    progress.total,
-                  )}`}
-                  subtitle={
-                    resuming
-                      ? t(resume.eyebrowKey)
-                      : next
-                        ? t('app.homeTodayWeek', { week: next.week, day: next.day })
-                        : t('app.pathCompleted')
-                  }
                   ctaLabel={
                     resuming
                       ? t(resume.ctaKey)
@@ -323,12 +285,31 @@ export default function CoursesScreen() {
     );
   }
 
+  /*
+   * The head is the screen's header slot, and it is two lines tall now rather than one: the
+   * greeting over the name, with the account, the streak and the achievements beside them. The
+   * streak and the achievements used to stand in the content under the header; the mockup puts
+   * them in it, which is what makes the first card the first thing on the screen.
+   */
+  const header = (
+    <CoursesHead
+      name={name}
+      streak={streak.current}
+      unlocked={unlocked}
+      total={achievements.length}
+      onAccount={() => setAccount(true)}
+    />
+  );
+
   return (
-    <Screen header={header} contentClassName="pt-2">
-      <div className="flex flex-col gap-5">
-        <HeadEntries streak={streak.current} unlocked={unlocked} total={achievements.length} />
-        {body}
-      </div>
+    /*
+     * `padded={false}`, because the cards do not sit on the text gutter. The mockup runs the
+     * photographs wider than the words above them — 16px against the head's 24px — which is the
+     * site's own habit («photographs bleed past the page gutter», docs/SPEC.md §5) arriving in the
+     * app. From `md` the screen's normal 40px gutter takes over for both.
+     */
+    <Screen header={header} padded={false} contentClassName="px-4 md:px-10">
+      {body}
       <ProfileSheet open={account} onClose={() => setAccount(false)} />
     </Screen>
   );

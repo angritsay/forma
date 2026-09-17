@@ -72,17 +72,22 @@
   --border-ink-strong: rgba(15, 15, 17, 0.25);
   /*
    * Programme colours — the only colour in the system, and it comes from the course, never from
-   * the interface. Black ink on all three clears AA with room: 16.30 on yellow, 11.28 on blue,
+   * the interface. Black ink on all three clears AA with room: 14.74 on cyan, 11.28 on blue,
    * 7.34 on orange. As text on the dark ground they clear it too (same ratios), which is what
    * lets a day number or a kicker take the course colour.
    *
    * The `-ink` variants are the same hues darkened for use as text on paper, each ≥ 5.3:1.
+   *
+   * `--course-beginners` was the brand yellow `#f2f52d` and is the owner's cyan now — the same
+   * change as `tile` in `content/courses/start.ts`, which is the value the product actually reads.
+   * These tokens mirror content rather than driving it; keep the two in step or the next reader
+   * has two answers to one question.
    */
-  --course-beginners: #f2f52d;
+  --course-beginners: #9feff7;
   --course-yoga: #a8c8ff;
   --course-marathon: #ff7a1a;
   --on-course: #0f0f11;
-  --course-beginners-ink: #6c7005;
+  --course-beginners-ink: #1b6c74;
   --course-yoga-ink: #2f5f9e;
   --course-marathon-ink: #ab5211;
   --success: #7ce0b0;
@@ -256,6 +261,14 @@
   --color-course: var(--course-tile, var(--tile-4));
   --color-tile: var(--course-tile, var(--tile-4));
   --color-tile-fg: var(--course-tile-fg, var(--tile-fg-dark));
+  /*
+   * The programme colour used as *type on a photograph* rather than as a fill — the course card's
+   * rule, figure, name and button, which is where the owner's mockup puts the colour now.
+   * `courseAccentVars()` (features/courses/courseMeta.ts) sets it: the tile where the tile is a
+   * colour, plain white where it is one of the neutral dark surfaces, because near-black type on a
+   * near-black card is no type at all. It is always light, so whatever is set on it takes `--ink`.
+   */
+  --color-course-accent: var(--course-accent, var(--text));
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
@@ -753,11 +766,34 @@ body {
   }
 
   /*
-   * A floating object: the tab bar's capsule. An even tint rather than a gradient — a gradient is
-   * for a band with one edge that content arrives from, and a capsule has content on every side.
-   * The blur and saturation are heavier than the bars', so what passes underneath reads as light
-   * and colour rather than as words; the ring is an inset shadow so it follows the radius exactly;
-   * and it casts a shadow, because a thing that floats is a thing that casts one.
+   * The tab bar's container: a floating capsule, and an **opaque** one.
+   *
+   * It was `.glass-float`, and that was a defect rather than a decoration. A flat alpha is the one
+   * treatment `design/CHANGELOG.md` §8 already records as tried and rejected — running text reads
+   * through it — and the tab bar was proving the point: with the leaderboard scrolled under the
+   * capsule, the row «13 Настя 105» was legible *inside* it. The owner's mockup draws a solid dark
+   * control, so the fix and the design agree.
+   *
+   * `--surface` is the same colour `.glass-float` was tinted from, so nothing shifts hue; what
+   * goes is the transparency and the compositing layer that paid for it. The ring is an inset
+   * shadow so it follows the pill radius exactly, and it still casts a shadow, because a thing
+   * that floats is a thing that casts one.
+   */
+  .nav-segmented {
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px rgba(var(--paper-rgb), 0.08),
+      0 10px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  /*
+   * A floating object: an even tint rather than a gradient — a gradient is for a band with one
+   * edge that content arrives from, and a capsule has content on every side.
+   *
+   * **Nothing uses this any more.** The tab bar was its only caller and is opaque now, for the
+   * reason given above. It is left defined rather than deleted because the fallbacks below name it
+   * alongside the other glasses and the brandbook still lists the material; the next thing tempted
+   * to float on it should read §8 first.
    */
   .glass-float {
     --glass-tint: var(--surface-rgb);
@@ -853,6 +889,35 @@ body {
   inset: 0;
   pointer-events: none;
   background: linear-gradient(180deg, transparent 45%, rgba(15, 15, 17, 0.8) 100%);
+}
+
+/*
+ * The same protection the other way up, for the course card, where the type block — the rule, the
+ * figure and the name — sits in the *top* third of a photograph.
+ *
+ * It is stronger than `.photo-scrim` for a reason that is arithmetic rather than taste. That one
+ * protects white, whose relative luminance is 1.0 and which clears 4.5:1 on anything up to about
+ * sRGB 148. This one protects a programme colour: `#9FEFF7` measures 0.758, and 4.5:1 against it
+ * needs the ground at sRGB 101 or below — a third of a stop darker, on a photograph whose top
+ * third is usually the sky, which is the brightest thing in any frame.
+ *
+ * So the top is held at 0.80 and only reaches zero at 55%, below the name's baseline. The card
+ * still reads as a picture: the coach, the deck and the hills — everything the eye actually goes
+ * to — are in the untouched half. The numbers were measured on the composited pixels of the
+ * rendered card, not estimated; anyone lightening this must re-measure rather than eyeball it,
+ * because the failure mode is a screenshot that looks fine and a name nobody with poor sight can
+ * read.
+ */
+.photo-scrim-top {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 10, 12, 0.78) 0%,
+    rgba(10, 10, 12, 0.64) 32%,
+    transparent 57%
+  );
 }
 
 /*

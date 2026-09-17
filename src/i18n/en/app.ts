@@ -1102,4 +1102,13 @@ export const app = {
   profileEquipmentLead: 'Tick what you have at home — workouts adapt to it.',
   profileSaved: 'Saved',
   profileSaveError: 'Couldn’t save. Check the connection and try again.',
+
+  // --- Stream: «Курсы» and the tab bar, to the owner's mockup ------------------
+  // The mockup sets the greeting on two lines — «Доброе утро» over the name, large. Same four
+  // times of day as homeGreeting*, without the {name} slot: the name is its own line in its own
+  // face, so there is nothing left to interpolate it into.
+  homeGreetMorning: 'Good morning',
+  homeGreetAfternoon: 'Good afternoon',
+  homeGreetEvening: 'Good evening',
+  homeGreetNight: 'Still up?',
 } as const;

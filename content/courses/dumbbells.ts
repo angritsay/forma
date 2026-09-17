@@ -1596,7 +1596,17 @@ export const COURSE_DUMBBELLS: CourseInput = {
   weeks: 6,
   sessionsPerWeek: 4,
   avgSessionMin: 35,
-  tile: '#2a2a30', // --tile-5 — neutral; no programme colour yet
+  /*
+   * The programme's colour, and this course has one for the first time — it was `--tile-5`, a
+   * neutral dark surface standing in for a decision nobody had made.
+   *
+   * The owner's mockup of «Курсы» makes it lime: it is the second card on that screen and it sits
+   * under the cyan of «Forma с нуля», so the pair has to be told apart at a glance. Luminance
+   * 0.853, well clear of the 0.35 in `isLightTile()`, so the ink on it is black — which it was not
+   * before, the neutral surface having taken light ink. That flip is the point: a course with a
+   * colour is a light tile with black type on it, everywhere in the product.
+   */
+  tile: '#E0F89A', // programme colour: dumbbells — the mockup's lime
   price: { rub: 3990, usd: 39 },
   workouts: [
     W_TEST,

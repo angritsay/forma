@@ -1,53 +1,60 @@
 /**
- * One course on «Курсы»: the photograph, how far through it you are as one big figure over its
- * bar, and one button.
+ * One course on «Курсы»: the photograph, how far through it you are, and one button.
  *
- * Four things, and that is the whole card — it is what the owner drew. The ticket it replaces
- * (`CourseTicket`) carried nine: a cover, a stub, a dashed tear, a kicker, the name, three pills of
- * facts, a line of state and the button. Every one of them was defensible on its own and together
- * they made a screen you read instead of a screen you scan, which is the opposite of what a
- * progress screen is for. «Курсы это прогресс по всем курсам которые есть»: the figure is the
- * content, the rest is what the figure is about.
+ * **The photograph is the card.** That is the owner's mockup and it is the third reduction of this
+ * object. It was a ticket with nine parts (`CourseTicket`); then a 16:9 cover band over a panel of
+ * text with a full-width button under it; now there is no panel at all — a rule, a figure, a name
+ * and a pill button, all laid on the picture. The panel was the last piece of furniture left: it
+ * cost a third of the card's height to say three short things, and a card that is a picture with
+ * its figure on it is read at a glance, which is the whole job of a progress screen.
  *
- * **The figure is set the prototype's way** (`design/ui_kits/app-v2`, the `.n-big`/`.display`
- * device): the number larger than the word, so «68%» is read across the room and the course's name
- * sits under it at the size a name needs. A percentage on a course card is the share completed and
- * the word «пройдено» beside it only says what the number already said.
+ * The anatomy, top to bottom, exactly as the mockup draws it:
  *
- * A course the athlete does **not** own has no figure — nought per cent is not a fact about
- * somebody who has not started, it is a fact about somebody who is failing — so it shows the
- * cover held back, the name, and «Подробнее», which leaves for the course's own page on the site.
- * It used to say «Прийти» or «Курс закрыт»: the designer's note was that neither means anything,
- * and she is right — one is an invitation to nowhere and the other is a sign on a locked door.
- * The button is only ever offered when there is a page behind it (`LIVE_COURSES`); the screen
- * decides that, because the boundary belongs to the content and not to a card.
+ *   - a hairline progress rule across the top, inset from both edges: the course's colour up to
+ *     the percentage, near-black for the remainder;
+ *   - the percentage under it, very large, in the course's colour;
+ *   - the course's name under that, small and regular, in the same colour;
+ *   - a pill button in the course's colour at the bottom right, dark sentence-case text, with a
+ *     dark circle at its right end holding a white arrow — inside the pill, not beside it.
+ *
+ * **Colour carries the programme, on type rather than on fills.** The card used to be painted in
+ * `--course-tile`: a yellow cover band, a yellow progress fill. Here the tile colours the *type*
+ * and the photograph stays a photograph. That is what lets two courses sit on one screen and be
+ * told apart without either of them shouting.
+ *
+ * Which also means the type has to survive the picture under it. A cyan name on a hazy grey
+ * photograph is the exact combination that fails WCAG, so the art carries `.photo-scrim-top` —
+ * a gradient sized to the block of type, heavy where the figure is and gone by the middle of the
+ * card. The ratios are measured on the composited pixels, not estimated; see the class in
+ * global.css for the numbers this scrim was tuned to.
+ *
+ * **A photograph, never lettered artwork.** `Course['cover']` is not read here any more. The one
+ * cover the catalogue has, `/covers/start.jpg`, carries «ФОРМА // С НУЛЯ» in baked-in yellow
+ * lettering, and a lettered cover under a cyan course name is two titles fighting for the same
+ * card. The cover still leads the course's page on the site, where it is the only title there is.
+ *
+ * A course the athlete does **not** own has no figure and no rule — nought per cent is not a fact
+ * about somebody who has not started, it is a fact about somebody who is failing — so it shows the
+ * picture held back, the name, and «Подробнее», which leaves for the course's own page. The button
+ * is only ever offered when there is a page behind it (`LIVE_COURSES`); the screen decides that,
+ * because the boundary belongs to the content and not to a card.
  */
 import type { ReactNode } from 'react';
 import { clsx } from 'clsx';
-import { Button } from '@/components/ui/Button';
 import { Glyph } from '@/components/ui/Icon';
-import { publicMediaUrl } from '@/lib/api/storage';
 import type { Photo } from '@/lib/media/photos';
 import { isPlaceholder, photoSrc } from '@/lib/media/photos';
 import { externalLinkProps } from '@/app/hooks/useExternalLink';
-import { LinkButton } from '@/app/features/courses/LinkButton';
-import { DisplayTitle } from '@/app/features/home/DisplayTitle';
 
 export interface CourseCardProps {
   /**
-   * The course's own cover art (`Course['cover']`). It beats `photo`: a picture drawn for this
-   * course is never worse than a library photograph standing in for it.
+   * The card's picture. A stock placeholder counts as none — those are still un-vendored CDN URLs
+   * — and the card falls back to a plain dark ground, which the accent type reads on just as well.
    */
-  cover?: string;
-  /** Cover photograph; a stock placeholder counts as none and the programme colour takes over. */
   photo?: Photo;
   title: string;
   /** Completed share, 0..100. Left out on a course that has not been started or is not owned. */
   pct?: number;
-  /** Beside the figure, small: «3/28». */
-  progressMeta?: ReactNode;
-  /** One line of state where there is one — the day waiting, why the course is not open yet. */
-  subtitle?: ReactNode;
   ctaLabel: ReactNode;
   onCta?: () => void;
   /**
@@ -59,19 +66,16 @@ export interface CourseCardProps {
   onOpen?: () => void;
   openLabel?: string;
   priority?: boolean;
-  /** Not owned: the cover is held back so the courses being walked lead. */
+  /** Not owned: the picture is held back so the courses being walked lead. */
   dimmed?: boolean;
-  /** `--course-tile` and its ink, from courseTileVars(). */
+  /** `--course-tile`, its ink and `--course-accent`, from courseAccentVars(). */
   style?: React.CSSProperties;
 }
 
 export function CourseCard({
-  cover,
   photo,
   title,
   pct,
-  progressMeta,
-  subtitle,
   ctaLabel,
   onCta,
   ctaHref,
@@ -82,16 +86,16 @@ export function CourseCard({
   style,
 }: CourseCardProps) {
   const share = pct === undefined ? undefined : Math.max(0, Math.min(100, Math.round(pct)));
-  /*
-   * Three states, in order of preference: the course's own cover, a library photograph, the
-   * programme colour. `publicMediaUrl` takes all three reference shapes and hands back the last
-   * two unchanged, so an https URL or a path under `public/` needs no special case here.
-   */
-  const coverSrc = cover ? publicMediaUrl(cover) : undefined;
-  const art = !coverSrc && photo && !isPlaceholder(photo);
+  const art = photo && !isPlaceholder(photo);
   return (
     <article
-      className="relative flex flex-col overflow-hidden rounded-card border border-border bg-surface"
+      /*
+       * Very nearly square — the mockup's card is 347×345 on a 375 column — so two of them fill a
+       * phone with the second one's top edge showing, which is the deck saying there is more below
+       * without a pager under it. `isolate` so the stacking here is the card's own: the open
+       * target sits under the type and over the picture.
+       */
+      className="relative isolate aspect-[347/345] overflow-hidden rounded-tile bg-surface"
       style={style}
     >
       {/*
@@ -99,6 +103,26 @@ export function CourseCard({
        * one giant button with a button inside it. That is invalid HTML, and on a phone it means
        * every near-miss of the button opens something else.
        */}
+      {art ? (
+        <img
+          src={photoSrc(photo)}
+          alt=""
+          width={photo.width}
+          height={photo.height}
+          loading={priority ? 'eager' : 'lazy'}
+          fetchPriority={priority ? 'high' : 'auto'}
+          decoding="async"
+          className={clsx(
+            'photo-mono absolute inset-0 size-full object-cover',
+            dimmed && 'opacity-40',
+          )}
+        />
+      ) : null}
+      <div className="photo-grain absolute inset-0" aria-hidden="true" />
+      {/* The contrast guarantee. It is over the grain and under everything else, and it is what
+          makes the accent type legal on a picture that has a white sky in it. */}
+      <div className="photo-scrim-top absolute inset-0" aria-hidden="true" />
+
       {ctaHref ? (
         <a
           {...externalLinkProps(ctaHref)}
@@ -114,69 +138,25 @@ export function CourseCard({
         />
       ) : null}
 
-      {/* 16:9. The card below it is three short lines now rather than nine, so the cover can be a
-          band again: at 4:3 a phone showed one course and the top of the next one's picture, which
-          is the mistake the full-height cover made before it, one size down. */}
-      <div
-        className={clsx(
-          'pointer-events-none relative aspect-video w-full overflow-hidden',
-          coverSrc || art ? 'bg-ink' : 'hero-art',
-        )}
-      >
-        {coverSrc ? (
-          /* Artwork drawn for this course, and the one picture here not treated as a photograph:
-             no `.photo-mono`, no grain. Desaturating it would strip the programme colour out of
-             the one place the brandbook wants it. */
-          <img
-            src={coverSrc}
-            alt=""
-            loading={priority ? 'eager' : 'lazy'}
-            fetchPriority={priority ? 'high' : 'auto'}
-            decoding="async"
-            className={clsx('size-full object-cover', dimmed && 'opacity-40')}
-          />
-        ) : art ? (
-          <>
-            <img
-              src={photoSrc(photo)}
-              alt=""
-              width={photo.width}
-              height={photo.height}
-              loading={priority ? 'eager' : 'lazy'}
-              fetchPriority={priority ? 'high' : 'auto'}
-              decoding="async"
-              className={clsx('photo-mono size-full object-cover', dimmed && 'opacity-40')}
-            />
-            <div className="photo-grain" aria-hidden="true" />
-          </>
-        ) : (
-          <div className="photo-grain" aria-hidden="true" />
-        )}
-        {!coverSrc && !art && dimmed ? (
-          <div className="absolute inset-0 bg-ink/45" aria-hidden="true" />
-        ) : null}
-      </div>
-
-      <div className="pointer-events-none relative z-10 flex flex-col px-5 pt-4 pb-5">
+      {/* 24px of inset all round, which is the app's gutter and, measured off the mockup, the
+          card's own. `pointer-events-none` so the whole picture stays one open target and only
+          the button takes a press back. */}
+      <div className="pointer-events-none relative z-10 flex h-full flex-col p-6">
         {share === undefined ? null : (
-          <div className="pb-4">
-            <div className="flex items-baseline gap-2">
-              {/* The number at display size and the per-cent sign a third of it: one figure, set
-                  the way the prototype sets a figure that is the point of the screen. */}
-              <span className="numeral tabular text-6xl leading-[0.85] text-text">
-                {share}
-                <span className="text-2xl">%</span>
-              </span>
-              {progressMeta ? (
-                <span className="numeral tabular text-sm text-muted-2">· {progressMeta}</span>
-              ) : null}
-            </div>
-            {/* Not <ProgressBar>: its fill is the programme colour, which is what this card's
-                cover is already painted in, and the two would read as one bar cut in half. The
-                track is the card's own hairline; the fill is the programme colour. */}
-            <div className="mt-3 h-0.5 w-full bg-border-strong">
+          <>
+            {/*
+             * The rule, at the very top of the card rather than under the figure: it is the thing
+             * the eye lands on, and the figure is what it means.
+             *
+             * The mockup draws the unfilled remainder near-black, which works there because its
+             * photograph is a light haze. Ours is not: the scrim that makes the accent type legal
+             * is heaviest exactly where this rule sits, so a black track disappears into it — and
+             * on a course with no photograph yet it disappears completely, leaving a progress bar
+             * with no bar. 18% white is the same quiet second colour on both grounds.
+             */}
+            <div className="h-[2px] w-full bg-paper/18">
               <div
-                className="h-full bg-course"
+                className="h-full bg-course-accent"
                 style={{ width: `${share}%` }}
                 role="progressbar"
                 aria-label={title}
@@ -185,39 +165,56 @@ export function CourseCard({
                 aria-valuenow={share}
               />
             </div>
-          </div>
+            {/* The figure, set the prototype's way — the number larger than the word — and in the
+                course's colour, which is the whole of the mockup's colour system. `.tabular` so a
+                percentage does not jitter as it climbs; the display face at 800, because
+                `.display` would also uppercase it and there is nothing here to uppercase. */}
+            <p className="font-display tabular mt-4 text-[42px] leading-none font-extrabold tracking-[-0.02em] text-course-accent">
+              {share}%
+            </p>
+          </>
         )}
 
-        {/*
-         * With a cover, the name is on the picture and printing it again underneath is the same
-         * word twice — the owner's note on the first cover that arrived: «нужно название с
-         * карточки убрать, потому что оно будет на картинке». It is hidden, not deleted: the cover
-         * is decorative (`alt=""`), so the visible title is the only thing naming this card to a
-         * screen reader.
-         */}
-        {coverSrc ? (
-          <span className="sr-only">{title}</span>
-        ) : (
-          <DisplayTitle as="h2" text={title} className="text-2xl" />
-        )}
-        {subtitle ? <p className="mt-2 text-[13px] text-muted-2">{subtitle}</p> : null}
+        {/* The name sits under the figure where there is one, and at the top of the card where
+            there is not — a locked course has no figure to stand under, and an unnamed picture is
+            a card about nothing. */}
+        <p
+          className={clsx(
+            'text-[15px] leading-tight text-course-accent',
+            share === undefined ? null : 'mt-2',
+          )}
+        >
+          {title}
+        </p>
 
-        {ctaHref ? (
-          /* No arrow: it does not go forward into the work, it leaves for the web. */
-          <LinkButton href={ctaHref} fullWidth size="lg" className="pointer-events-auto mt-4">
-            {ctaLabel}
-          </LinkButton>
-        ) : (
-          <Button
-            fullWidth
-            size="lg"
-            className="pointer-events-auto mt-4"
-            onClick={onCta}
-            iconRight={<Glyph size={14}>→</Glyph>}
-          >
-            {ctaLabel}
-          </Button>
-        )}
+        <div className="mt-auto flex justify-end">
+          {ctaHref ? (
+            /* No arrow: it does not go forward into the work, it leaves for the web. */
+            <a
+              {...externalLinkProps(ctaHref)}
+              className="pointer-events-auto inline-flex items-center rounded-pill bg-course-accent px-6 py-3 text-[15px] leading-none font-medium text-ink transition-opacity duration-150 ease-(--ease-out) hover:opacity-90"
+            >
+              {ctaLabel}
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={onCta}
+              className="pointer-events-auto inline-flex items-center gap-3 rounded-pill bg-course-accent py-1 pr-1 pl-6 text-[15px] leading-none font-medium text-ink transition-transform duration-120 ease-(--ease-out) active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
+            >
+              {ctaLabel}
+              {/* The arrow's circle sits *inside* the pill, at its right end — the mockup's one
+                  piece of ornament, and the thing that makes the button read as "onward" rather
+                  than as a label. Dark on the course colour, so the arrow is white in it. */}
+              <span
+                aria-hidden="true"
+                className="flex size-8 items-center justify-center rounded-full bg-ink text-paper"
+              >
+                <Glyph size={13}>→</Glyph>
+              </span>
+            </button>
+          )}
+        </div>
       </div>
     </article>
   );
