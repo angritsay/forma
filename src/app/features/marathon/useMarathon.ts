@@ -4,18 +4,21 @@
  * A person is in at most one running marathon at a time in practice, so the hooks here resolve to
  * a single one rather than making every screen pick. If that ever stops being true the list is
  * still there — `marathons` holds all of them and `marathon` is simply the first.
+ *
+ * There is no hook for `marathon_my_points` any more: «Мои баллы» was the only reader, the club's
+ * tab is «только задание и лидерборд», and the screen is deleted. The RPC and the API call stay
+ * where they are — the coach's own tools may yet want the breakdown — but nothing in the app
+ * subscribes to it.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { toAppError, type AppError } from '@/lib/api/errors';
 import {
   getMarathonDay,
-  getMarathonMyPoints,
   getMarathonRoster,
   getMarathonScores,
   listMyMarathons,
 } from '@/lib/api/marathon';
 import type {
-  MarathonDayPoints,
   MarathonRosterRow,
   MarathonScoreRow,
   MarathonTodayTask,
@@ -94,14 +97,6 @@ export function useMarathonScores(
     () => (marathonId ? getMarathonScores(marathonId, week ?? undefined) : Promise.resolve([])),
     [],
     [marathonId, week],
-  );
-}
-
-export function useMarathonMyPoints(marathonId: string | null): Loaded<MarathonDayPoints[]> {
-  return useLoader<MarathonDayPoints[]>(
-    () => (marathonId ? getMarathonMyPoints(marathonId) : Promise.resolve([])),
-    [],
-    [marathonId],
   );
 }
 

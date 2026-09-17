@@ -42,7 +42,7 @@ values (
   2,          -- пара: задание «на двоих» засчитывается, только если сделали оба
   'Europe/Moscow',
   '22:00',
-  'Час с тренером'
+  'Час с тренером и создателем Forma'
 )
 on conflict (slug) do update set
   title       = excluded.title,

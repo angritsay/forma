@@ -554,6 +554,49 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
     purpose — a pre-sale grant to somebody who has not signed up yet is a real case — so a typo
     cannot be caught there and is designed out here instead. The manual path stays on the other two
     tabs, where it is the only way in.
+13. **«Клуб»** (the tab): **the day's task and the week's leaderboard, and nothing else.** The
+    owner's instruction is one sentence — «Там должно быть только задание и лидерборд» — and it is
+    a subtraction: the screen had accumulated sections and these two survive. The head is the day
+    as a ring with one display line beside it; then «Задания дня» with «1/3» opposite the kicker
+    and one `TaskCard` per task; then the week — the prize as the one filled pill, five rows of
+    circled ranks under it, the full table one tap further (`/marathon/board`, this week and last).
+    From `md` the two sit side by side: on a phone the day has to win, on a laptop the board beside
+    the task is the race made visible while the task is being done.
+
+    **«Мои баллы» is deleted** — screen, route and copy. A running total the member cannot act on
+    is a number for its own sake, and the table above it already answers the only question it was
+    asked. `marathon_my_points` stays in the database for the coach's own use; nothing in the app
+    reads it.
+
+    **«Задания дня», never «Шаги дня».** «Шаги» is the step counter in this product — one of the
+    club's own tasks is literally «Шаги» — and the collision confused the owner once already. The
+    name's metaphor lives in the taglines; the unit inside the screen is the plain word.
+
+    **The prize is «час с тренером и создателем Forma».** He is sold as both, everywhere, from
+    here on. The words live once, in `app.marathonPrizeDefault`; `marathons.prize` overrides them
+    for a round that is played for something else, and is empty in almost every round.
+
+    **The tab's second state is a screen, not a closed door.** Somebody who is not in the club used
+    to get an empty state and nothing to do about it. They now get what the owner drew: the prize,
+    what the week is in three lines, **«Результаты участников»**, and one button — «Вступить за
+    N ₽ / мес». Two rules bind that screen:
+
+    - «Результаты участников» **renders from data and is absent while there is none**
+      (`content/site/club.ts`, empty; `publishableClubResults()` requires a recorded consent date).
+      No placeholder testimonial, not even an obviously fake one: the rule against invented reviews
+      applies hardest on the screen that asks for money, and a placeholder is a sentence that gets
+      forgotten and shipped. The empty section returns nothing at all rather than a heading over a
+      gap. The before/after photographs in `content/site/results.ts` are **not** eligible here:
+      those are Sergey's one-to-one clients, and printing them under «Результаты участников» beside
+      a price would say the club produced them.
+    - **N comes from `PLANS`** (`content/site/plans.ts`, the monthly plan) and the button goes to
+      `/subscribe/`. Never a payment URL with an amount in it — the site is static and public, and
+      `&price=…` in a query string is a price the payer can edit (docs/SETUP.md §7.1). Whether the
+      club stays part of the subscription or becomes its own cheaper product is an open decision;
+      either way the figure is read from `PLANS` and written down once.
+
+    Somebody who already pays and is simply not in a running round gets the same screen without the
+    price: the coach forms the rounds and the pairs by hand, so there is nothing for them to press.
 
 ## 11. SEO conveyor (docs/SEO.md is the runbook)
 

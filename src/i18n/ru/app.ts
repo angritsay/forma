@@ -983,15 +983,13 @@ export const app = {
   // this is for are coming back after a break — a test is a reason not to start. A club promises
   // belonging, which is what the format actually delivers: a partner, a board with names, a day
   // everyone is having at once. Where the two disagree is the prize, so the prize stopped being
-  // the pitch and became a fact of the week (see marathonEmptyBody, marathonLockedBody).
+  // the pitch and became a fact of the week (see the Club block at the end of this file).
   marathonTitle: 'Клуб маленьких шагов',
   // The cover's big line before there is a day to count: what the format is, in one line.
   // No dash in it on purpose — the line sets in capitals across two lines of a 390px screen, and
   // an em-dash that lands first on the second line reads as a stray mark rather than as pause.
   marathonCoverPitch: 'Один маленький шаг в день',
-  marathonTabToday: 'Сегодня',
   marathonTabBoard: 'Таблица',
-  marathonTabPoints: 'Мои баллы',
   marathonDayOf: 'День {n} из {total}',
   // The same line in two weights on the challenge's head: «ДЕНЬ 10» heavy, «из 14» light.
   marathonDayN: 'День {n}',
@@ -1005,7 +1003,6 @@ export const app = {
   marathonWeek: 'Неделя {n}',
   marathonWeekThis: 'Эта неделя',
   marathonWeekLast: 'Прошлая неделя',
-  marathonPrize: 'Приз недели',
   // On the pill above the board, where «недели» is already said by the week's own kicker.
   marathonPrizeShort: 'Приз',
   marathonBoardAll: 'Вся таблица',
@@ -1020,21 +1017,13 @@ export const app = {
   marathonNotStartedBody: 'Задания появятся утром первого дня.',
   marathonFinished: 'Этот круг закончен',
   marathonFinishedBody: 'Таблица остаётся — можно посмотреть, чем всё кончилось.',
-  marathonEmptyTitle: 'Ты пока не в клубе',
-  // The invitation. The prize is still here and still true — it moved to the end, because a club
-  // whose first sentence is about winning is a competition wearing a club's name.
-  marathonEmptyBody:
-    'Клуб маленьких шагов — это один небольшой шаг каждый день и общая таблица за неделю. Идёшь не один: у тебя есть напарник. У недели есть приз — час с тренером.',
   marathonNoTasksToday: 'Сегодня заданий нет',
   marathonNoTasksTodayBody: 'Отдыхаем. Завтра утром будет новое.',
   marathonErrorTitle: 'Не удалось загрузить клуб',
-  marathonLockedTitle: 'Клуб маленьких шагов входит в подписку',
   marathonTrialTitle: 'Пробная неделя',
   marathonTrialBody: 'Клуб открыт вместе с курсом. Осталось {n} — дальше по подписке.',
   // The pill on the day screen: «Пробная неделя · осталось 7 дней →», leading to the subscription.
   marathonTrialLeft: 'осталось {n}',
-  marathonLockedBody:
-    'Небольшой шаг каждый день, отметка о том, что сделал, и общая таблица за неделю. Напарник видит твои шаги, ты — его. У недели есть приз — час с тренером.',
   // One task
   marathonDeadline: 'До {time}',
   marathonDeadlinePassed: 'Время вышло',
@@ -1064,11 +1053,6 @@ export const app = {
   marathonBoardEmpty: 'Пока никто не набрал баллов',
   marathonBoardYou: 'Ты',
   marathonBoardPoints: '{n}',
-  // My points
-  marathonPointsDone: '{done} из {total}',
-  marathonPointsTeamTook: 'Команда: {n}',
-  marathonPointsNothing: 'Ничего',
-  marathonPointsTotalWeek: 'За неделю',
 
   // --- Marathon admin --------------------------------------------------------
   mAdminTitle: 'Марафоны',
@@ -1174,4 +1158,36 @@ export const app = {
   mAdminBonusPoints: 'Баллы (можно минус)',
   mAdminBonusReason: 'За что',
   mAdminBonusAdd: 'Начислить',
+
+  // --- Club (stream 4) --------------------------------------------------------
+  // The tab is «только задание и лидерборд», and this is everything the two states of it say
+  // that the block above does not.
+  //
+  // The standing prize, said once so the member's board, the full board and the selling screen
+  // cannot drift into three different promises. «Тренер и создатель Forma» is the owner's own
+  // wording and he is sold as both from here on; a round may still name something else for itself
+  // (`marathons.prize`), and then the row wins.
+  marathonPrizeDefault: 'Час с тренером и создателем Forma',
+  // The selling screen: what the week is, in three lines. Each one is a property of the format —
+  // nothing here is a result, a statistic or a promise about anybody's body.
+  marathonPitchTaskTitle: 'Задание каждый день',
+  marathonPitchTaskBody: 'Одно небольшое. Отметил, что сделал, — получил баллы.',
+  marathonPitchPartnerTitle: 'Напарник',
+  marathonPitchPartnerBody:
+    'Он видит твои отметки, ты — его. Часть заданий засчитывается, только если сделали оба.',
+  marathonPitchBoardTitle: 'Таблица недели',
+  marathonPitchBoardBody: 'Неделя — это гонка. В понедельник все начинают заново.',
+  // The section the owner asked for. It renders from content/site/club.ts and stays away entirely
+  // while that list is empty: an invented review is the one thing this product does not ship.
+  marathonPitchResults: 'Результаты участников',
+  // Already paying, just not in a running round. The coach forms the pairs by hand, so there is
+  // nothing to press — and quoting a subscription to somebody who pays for it reads as a product
+  // that does not know who it is talking to.
+  marathonPitchNoRound:
+    'Круг собирает тренер: он добавляет участников и разбивает на пары сам. Как только начнётся новый, задания появятся здесь.',
+  // The join button. `{price}` comes from PLANS (content/site/plans.ts) and the link goes to the
+  // /subscribe/ page — never to a payment URL with an amount in it, which on a static site is an
+  // amount the payer can edit (docs/SETUP.md §7.1).
+  marathonJoinCta: 'Вступить за {price} / мес',
+  marathonJoinNote: 'Подписка Forma: клуб и все курсы. Продлевается вручную.',
 } as const;

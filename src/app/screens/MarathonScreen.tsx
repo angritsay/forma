@@ -1,5 +1,11 @@
 /**
- * The club (the third tab): today's tasks, and who is winning the week.
+ * The club (the second tab): today's tasks, and who is winning the week. **Those two and nothing
+ * else** — «Там должно быть только задание и лидерборд», which is the owner reading a screen that
+ * had accumulated sections and naming the two that survive.
+ *
+ * What went with that sentence was «Мои баллы»: a total the member cannot act on, one tap below a
+ * table that already answers the only question a total is asked. The screen it lived on is deleted
+ * and so is its route.
  *
  * It was reachable only through a card on the home deck, which made the format look like an
  * accessory to the course. It is a tab of its own now, and it holds the two halves of the club in
@@ -9,6 +15,11 @@
  * The table is short on purpose. At 7am on a mat the answer to "where am I in the standings" is
  * never what gets someone moving, so the day comes first; but a race nobody can see the score of
  * is not a race, and a link to it was not enough to make it one.
+ *
+ * **The tab has a second state, and it is a screen rather than a closed door.** Somebody who is
+ * not in the club used to get an empty state and an icon. They now get what the owner drew:
+ * what the week is, what it is played for, the results of the people who have played it, and one
+ * button with the price on it (`ClubPitch`).
  *
  * **The screen is drawn in the language of the owner's prototype** (`design/ui_kits/app-v2`,
  * «Челлендж»), after she called the previous version «вообще мимо»: the day as a ring with the
@@ -28,7 +39,6 @@ import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Glyph } from '@/components/ui/Icon';
-import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
@@ -40,7 +50,10 @@ import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
 import { externalLinkProps } from '@/app/hooks/useExternalLink';
 import { useT } from '@/app/hooks/useT';
 import { BoardRow } from '@/app/features/marathon/BoardRow';
+import { ClubJoin, ClubPitch } from '@/app/features/marathon/ClubPitch';
 import { GameHead } from '@/app/features/marathon/GameHead';
+import { PrizePill } from '@/app/features/marathon/PrizePill';
+import { clubPrize } from '@/app/features/marathon/prize';
 import { TaskCard } from '@/app/features/marathon/TaskCard';
 import {
   useMarathonDay,
@@ -48,7 +61,6 @@ import {
   useMarathonScores,
   useMyMarathons,
 } from '@/app/features/marathon/useMarathon';
-import { LinkButton } from '@/app/features/courses/LinkButton';
 import { subscribeHref } from '@/app/features/courses/courseMeta';
 import { useSession } from '@/app/store/session';
 import { gameAccess } from '@/app/features/marathon/gameAccess';
@@ -68,7 +80,8 @@ function DaySkeleton() {
 }
 
 export default function MarathonScreen() {
-  const { t, locale } = useT();
+  const tr = useT();
+  const { t, locale } = tr;
   const subscription = useSession((s) => s.subscription);
   const newestPurchaseAt = useSession((s) => s.newestPurchaseAt);
   const navigate = useNavigate();
@@ -129,9 +142,14 @@ export default function MarathonScreen() {
    * sits on the outer element so the ring and everything under it take the club's colour
    * from one place.
    */
-  const page = (head: MyMarathon | null, body: ReactNode, partners?: string[]) => (
+  const page = (
+    head: MyMarathon | null,
+    body: ReactNode,
+    partners?: string[],
+    footer?: ReactNode,
+  ) => (
     <div style={courseTileVars(GAME_TILE)}>
-      <Screen contentClassName="pt-5">
+      <Screen contentClassName="pt-5" footer={footer}>
         <GameHead marathon={head} partners={partners} />
         {body}
       </Screen>
@@ -141,7 +159,7 @@ export default function MarathonScreen() {
   /*
    * The club is part of the subscription (content/site/plans.ts). The screen says so plainly and
    * offers the subscription rather than pretending the format does not exist — somebody who got
-   * here tapped a card that told them what the club is, and the answer to "can I play" is a price,
+   * here tapped a tab that told them what the club is, and the answer to "can I play" is a price,
    * not a locked door.
    */
   const access = gameAccess({
@@ -152,19 +170,7 @@ export default function MarathonScreen() {
   });
 
   if (!access.allowed) {
-    return page(
-      null,
-      <EmptyState
-        icon="info"
-        title={t('app.marathonLockedTitle')}
-        description={t('app.marathonLockedBody')}
-        action={
-          <LinkButton href={subscribeHref(locale)} size="lg">
-            {t('app.homeDeckGameLockedCta')}
-          </LinkButton>
-        }
-      />,
-    );
+    return page(null, <ClubPitch locked />, undefined, <ClubJoin locked />);
   }
 
   if (marathonStatus === 'loading') {
@@ -188,16 +194,14 @@ export default function MarathonScreen() {
     );
   }
 
+  /*
+   * Paid for, or on the course's trial week, and not in a running round: the coach forms the
+   * teams by hand, so there is no button that would put them in one. Same screen, without the
+   * price — quoting a subscription to somebody who is already paying for it is the kind of thing
+   * that makes a product look like it does not know who it is talking to.
+   */
   if (!marathon) {
-    return page(
-      null,
-      <EmptyState
-        icon="info"
-        title={t('app.marathonEmptyTitle')}
-        description={t('app.marathonEmptyBody')}
-        action={<Button onClick={() => navigate('/')}>{t('app.tabHome')}</Button>}
-      />,
-    );
+    return page(null, <ClubPitch locked={false} />);
   }
 
   const closed = marathon.status === 'finished';
@@ -288,16 +292,20 @@ export default function MarathonScreen() {
          * what the table is for, and the leader's filled circle under it is drawn in the same
          * colour for the same reason.
          */}
-        <section className="md:w-80 md:shrink-0">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="eyebrow shrink-0">
+        {/* 384px rather than 320: the prize is the widest thing in this column and at 320 the pill
+            ellipsised «…СОЗДАТЕЛЕМ FO…» on a laptop while fitting whole on a phone. */}
+        <section className="md:w-96 md:shrink-0">
+          {/*
+           * The kicker and the prize are stacked, not opposite each other. They shared a line
+           * while the prize was two words; «час с тренером и создателем Forma» is eleven, and on a
+           * 390px screen the pill did what it is built to do and ellipsised the prize away — a
+           * truncated prize is worse than none, because it is the sentence the table exists for.
+           */}
+          <div className="flex flex-col items-start gap-2">
+            <h2 className="eyebrow">
               {t('app.marathonWeek', { n: formatNumber(locale, marathon.week) })}
             </h2>
-            {marathon.prize ? (
-              <Pill tone="course-fill">
-                {t('app.marathonPrizeShort')} · {marathon.prize}
-              </Pill>
-            ) : null}
+            <PrizePill>{clubPrize(tr, marathon.prize)}</PrizePill>
           </div>
           {topScores.length > 0 ? (
             <ol className="mt-3 flex flex-col">
