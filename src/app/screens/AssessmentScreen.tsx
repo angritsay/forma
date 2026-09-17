@@ -56,6 +56,15 @@ import { Question } from './onboarding/Question';
 
 type Phase = 'intro' | 'running' | 'done';
 
+/**
+ * The «×» row is the top of the page, so it is the page's ground rather than glass — the same
+ * reasoning, and the same measurement, as the wizard's header (`onboarding/OnboardingScreen.tsx`,
+ * where the note lives). Neither the intro nor the summary is taller than 390×844, so `Screen`'s
+ * `.glass-bar-top` would blur a ground that never moves. The hairline it carries stays.
+ */
+const FLAT_HEADER =
+  '[&>.glass-bar-top]:bg-none [&>.glass-bar-top]:bg-bg [&>.glass-bar-top]:backdrop-filter-none';
+
 export default function AssessmentScreen() {
   const { t, l, locale } = useT();
   const navigate = useNavigate();
@@ -126,7 +135,7 @@ export default function AssessmentScreen() {
   if (!trainingProfile) {
     /* Reachable only by typing the URL before onboarding has saved anything. */
     return (
-      <Screen header={header}>
+      <Screen className={FLAT_HEADER} header={header}>
         <EmptyState icon="info" title={t('app.assessNoProfile')} />
       </Screen>
     );
@@ -135,6 +144,7 @@ export default function AssessmentScreen() {
   if (phase === 'done') {
     return (
       <Screen
+        className={FLAT_HEADER}
         header={header}
         footer={
           <div className="flex flex-col gap-2">
@@ -182,6 +192,7 @@ export default function AssessmentScreen() {
 
   return (
     <Screen
+      className={FLAT_HEADER}
       header={header}
       footer={
         <div className="flex flex-col gap-2">

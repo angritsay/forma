@@ -9,8 +9,13 @@ import { DisplayTitle } from '@/app/features/home/DisplayTitle';
  * asked: the first word at 800, the rest at 200, and then the answers. So the lead is gone, and
  * the question takes the brand's device instead of a subtitle.
  *
- * 28px rather than the 30px `PageTitle` used: Unbounded capitals are wide, and a two-word question
- * has to fit in two lines of a 342px column with the answers still above the fold.
+ * 28px rather than the 30px `PageTitle` used. The original reason was that Unbounded capitals are
+ * wide; the capitals have since gone (PR #93) and the size stays anyway, because the constraint
+ * that actually binds is the column: every question has to fit two lines of 342px with its answers
+ * still above the fold. Measured at 390×844 on the built stylesheet — «Сколько тебе лет?» and
+ * «Уровень формы» set on one line, «Максимум не выжимаем» on two, and the longest of them leaves
+ * the first plate at y=143. 28px is also exactly `text-5xl`, so it is a step on the scale rather
+ * than a number of its own; it is written out only because the leading below has to travel with it.
  *
  * **`hyphens-none`, and it is not a detail.** `.display` (src/styles/global.css) turns on
  * `hyphens: auto` for the landing's hero, where a 320px screen would otherwise snap a long Russian

@@ -29,8 +29,8 @@ export interface OptionTileProps {
  * Two things follow from that and both are load-bearing:
  *
  *  - **the label wraps.** `Chip` carries `whitespace-nowrap`, so «Тумба или устойчивая ступенька» —
- *    thirty characters of tracked capitals — claimed more than half a row on its own and broke the
- *    grid into rags. A plate is allowed two lines.
+ *    thirty characters — claimed more than half a row on its own and broke the grid into rags. A
+ *    plate is allowed two lines.
  *  - **no `tap-target-y`.** A chip is 34px and needs the pseudo-element that lifts its hit area to
  *    44px; a plate is 48px and already past it, and the same pseudo-element inside a grid would
  *    overlap its neighbours.
@@ -44,6 +44,17 @@ export interface OptionTileProps {
  * club task gets. On the white plate the circle is ink with a paper check, the plate's own
  * inversion inverted back, so it reads on the fill it sits on. It is keyed on nothing and mounts
  * only while selected, so it pops once per pick and not on every re-render.
+ *
+ * **The label is sentence case, and this file is why the rule needed a second pass.** The case came
+ * off `.display`, `.font-display`, `.eyebrow` and `.control-label` at the root (PR #93), and it
+ * could not reach a `uppercase tracking-[0.04em]` written into a component's own class list — so
+ * the wizard shipped with «ПОВЫШЕННОЕ ДАВЛЕНИЕ» shouting under a «Что беречь?» that no longer did.
+ * 13 → 15px with the tracking back to 0, and the plate does not move: sentence case sets about a
+ * quarter narrower, so two more points of type fit the same 48px box. Measured at 390×844 on the
+ * built stylesheet, the widths come out within a few pixels of the capitals they replace
+ * («Повышенное давление» 221 → 218) and the rows pack exactly as before — so this buys legibility
+ * rather than density. An audit note predicted «Что беречь?» would fall from four rows to three;
+ * it does not, and 14px would be the size to try if the packing ever has to change.
  */
 export function OptionTile({
   selected,
@@ -61,7 +72,7 @@ export function OptionTile({
       onClick={onClick}
       className={clsx(
         'flex min-h-12 items-center gap-3 rounded-control border px-3.5 py-2.5 text-left',
-        'text-[13px] font-semibold tracking-[0.04em] uppercase',
+        'text-[15px] font-semibold',
         'transition-[background-color,color,border-color,transform] duration-150 ease-(--ease-out)',
         'active:scale-[0.99]',
         /*
