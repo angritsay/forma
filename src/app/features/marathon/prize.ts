@@ -17,3 +17,18 @@ export function clubPrize(tr: Translator, prize: string | null | undefined): str
   const named = prize?.trim();
   return named ? named : tr.t('app.marathonPrizeDefault');
 }
+
+/**
+ * The same prize, dropped into the middle of a sentence.
+ *
+ * The selling screen's second paragraph ends «…достаётся час с тренером и создателем Forma», which
+ * is the standing prize in lower case. Writing those words out again there would be the third copy
+ * of a promise this file exists to keep at one, and the two would drift the first time the prize
+ * changed — so the one string is lowered by its first character instead. `toLocaleLowerCase` so
+ * that a locale with its own casing rules keeps them; the rest of the string is untouched, which
+ * leaves «Forma» alone.
+ */
+export function clubPrizeMidSentence(tr: Translator, prize?: string | null): string {
+  const text = clubPrize(tr, prize);
+  return text.charAt(0).toLocaleLowerCase(tr.locale) + text.slice(1);
+}
