@@ -69,7 +69,7 @@ export default function AdminWorkoutsScreen() {
   }, [admin, refresh]);
 
   if (admin === null) return <BootScreen />;
-  if (admin === false) return <Navigate to="/profile" replace />;
+  if (admin === false) return <Navigate to="/" replace />;
 
   const startEdit = async (id: string) => {
     try {

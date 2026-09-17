@@ -81,7 +81,7 @@ function NoSession() {
       <EmptyState
         title={t('app.playerNoSessionTitle')}
         description={t('app.playerNoSessionBody')}
-        action={<Button onClick={() => navigate('/courses')}>{t('app.tabPrograms')}</Button>}
+        action={<Button onClick={() => navigate('/')}>{t('app.tabCourses')}</Button>}
       />
     </Screen>
   );

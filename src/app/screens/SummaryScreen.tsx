@@ -570,7 +570,7 @@ function RemoteSummary({ sessionId }: { sessionId: string }) {
           }
           action={
             notFound ? (
-              <Button onClick={() => navigate('/')}>{t('app.tabHome')}</Button>
+              <Button onClick={() => navigate('/')}>{t('app.tabCourses')}</Button>
             ) : (
               <Button onClick={load}>{t('common.retry')}</Button>
             )

@@ -62,7 +62,7 @@ export default function AdminMarathonsScreen() {
   }, [admin, refresh]);
 
   if (admin === null) return <BootScreen />;
-  if (admin === false) return <Navigate to="/profile" replace />;
+  if (admin === false) return <Navigate to="/" replace />;
 
   const slugError =
     slug !== '' && !MARATHON_SLUG_RE.test(slug) ? t('app.mAdminSlugInvalid') : undefined;

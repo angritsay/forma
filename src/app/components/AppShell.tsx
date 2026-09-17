@@ -77,15 +77,14 @@ function MotionOutlet() {
  * admin, where the content is tabular and the owner compares rows and edits a workout side by
  * side — there, width is the entire point.
  *
- * `split` is for a screen that divides itself in two on `md`: the profile, whose identity stands
- * beside its settings, and the club, whose day stands beside the week's board. Reading width
- * is the wrong cap for those — 760px minus a 320px side column and the gap between them leaves the
- * main half about 400px, which truncated «Все курсы по подписке» on one screen and squeezed the
- * board's leading row to «А…» on the other. The extra 280px is the side column, not extra measure:
- * the reading half of the screen ends up roughly where `default` would have put it.
+ * `split` is for a screen that divides itself in two on `md`: the club, whose day stands beside
+ * the week's board. Reading width is the wrong cap for it — 760px minus a 320px side column and
+ * the gap between them leaves the main half about 400px, which squeezed the board's leading row to
+ * «А…». The extra 280px is the side column, not extra measure: the reading half of the screen ends
+ * up roughly where `default` would have put it. (The profile was the other one; it is a sheet now,
+ * and a sheet has its own width.)
  *
- * 320px is the side column on both, and it means the same thing in both: the narrowest a column
- * can be and still hold what is in it.
+ * 320px is the side column, and it means the narrowest a column can be and still hold what is in it.
  */
 const CONTENT_WIDTH = {
   default: 'md:max-w-[760px]',
@@ -96,7 +95,7 @@ const CONTENT_WIDTH = {
 /** Routes whose content is data-dense enough to want the wide column. */
 function widthFor(pathname: string): keyof typeof CONTENT_WIDTH {
   if (pathname.startsWith('/admin')) return 'wide';
-  if (pathname === '/profile' || pathname === '/marathon') return 'split';
+  if (pathname === '/marathon') return 'split';
   return 'default';
 }
 

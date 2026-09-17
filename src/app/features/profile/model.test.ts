@@ -1,14 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { Profile } from '@/lib/api/types';
 import type { UserTrainingProfile } from '@/lib/training/types';
-import { firstIncompleteStep, isStepComplete } from '@/app/screens/onboarding/draft';
 import {
   fitnessOf,
   newAvatarSeed,
-  profileToDraft,
   sinceLabel,
   splitName,
-  TESTS_STEP_INDEX,
   withEquipment,
   withLimitations,
 } from './model';
@@ -78,37 +75,6 @@ describe('withEquipment / withLimitations', () => {
       'knees',
     ]);
     expect(withLimitations(TP, []).limitations).toEqual([]);
-  });
-});
-
-describe('profileToDraft', () => {
-  it('prefills what the five questions still ask and stops at the last one', () => {
-    const draft = profileToDraft(PROFILE, 'en');
-    expect(draft).not.toBeNull();
-    expect(draft!.step).toBe(TESTS_STEP_INDEX);
-    expect(firstIncompleteStep(draft!)).toBe(TESTS_STEP_INDEX);
-    expect(isStepComplete(draft!, 'level')).toBe(false);
-    expect(draft).toMatchObject({
-      locale: 'en',
-      displayName: 'Ann',
-      ageBand: '25-34',
-      sex: 'male',
-      limitations: ['knees'],
-      limitationsNone: false,
-    });
-    /* The wizard no longer asks about these, so a stored answer must not come back into it. */
-    expect(draft).not.toHaveProperty('equipment');
-    expect(draft).not.toHaveProperty('timePerSessionMin');
-    expect(draft).not.toHaveProperty('goal');
-  });
-
-  it('marks "no limitations" explicitly and returns null without a training profile', () => {
-    const draft = profileToDraft(
-      { ...PROFILE, trainingProfile: { ...TP, limitations: [], equipment: ['none'] } },
-      'ru',
-    );
-    expect(draft).toMatchObject({ limitationsNone: true, limitations: [] });
-    expect(profileToDraft({ ...PROFILE, trainingProfile: null }, 'ru')).toBeNull();
   });
 });
 

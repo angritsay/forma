@@ -3,13 +3,14 @@
  * Обращение к пользователю — на «ты», без машинного перевода.
  */
 export const app = {
-  tabHome: 'Сегодня',
-  tabPrograms: 'Программы',
+  // Осталось только ради MarathonScreen.tsx, который сейчас редактирует другая ветка: его кнопка
+  // «назад на главный экран» читает этот ключ. Значение уже новое — главный экран это «Курсы», —
+  // а сам ключ надо схлопнуть в tabCourses, как только та ветка приземлится.
+  tabHome: 'Курсы',
   // «Клуб», а не «Клуб маленьких шагов»: подпись вкладки — один из четырёх слотов на 390px, и
   // имя в три слова туда не встаёт. Полное имя стоит там, где есть место — на шапке экрана и в
   // текстах приглашения (marathonTitle и ниже); короткое — во вкладке и в верхней строке.
   tabGame: 'Клуб',
-  tabReports: 'Прогресс',
   navMain: 'Основная навигация',
   navLocaleRu: 'RU',
   navLocaleEn: 'EN',
@@ -105,12 +106,7 @@ export const app = {
   homeGreetingAfternoon: 'Добрый день, {name}',
   homeGreetingEvening: 'Добрый вечер, {name}',
   homeGreetingNight: 'Не спится, {name}?',
-  homeRefresh: 'Обновить',
-  homeProfile: 'Профиль',
   homeStreakTitle: 'Серия',
-  homeStreakDayOne: 'день',
-  homeStreakDayFew: 'дня',
-  homeStreakDayMany: 'дней',
   homeStreakTodayDone: 'Сегодня засчитано. Продолжай завтра.',
   homeStreakAtRisk: 'Чтобы не потерять серию, сделай сегодня тренировку или пройди {steps} шагов.',
   homeStreakEmpty: 'Заверши тренировку или пройди {steps} шагов — и серия начнётся.',
@@ -118,8 +114,6 @@ export const app = {
   homeStreakLogSteps: 'Записать шаги',
   homeResumeEyebrow: 'Тренировка не закончена',
   homeResumeFinishedEyebrow: 'Результат не сохранён',
-  homeResumeFallback: 'Твоя тренировка',
-  homeResumeAt: 'Остановились на: {name}',
   homeResumeCta: 'Продолжить',
   homeResumeSave: 'Завершить и сохранить',
   homeTodayEyebrow: 'Сегодня',
@@ -130,19 +124,7 @@ export const app = {
   // The prototype's «ВЫБЕРИ программу»: the first word heavy, the rest light (DisplayTitle).
   homeTodayNoCourseTitle: 'Выбери программу',
   homeTodayNoCourseBody: 'И первая тренировка появится здесь — уже сегодня.',
-  homeTodayNoCourseCta: 'Смотреть программы',
-  homeCoachNow: 'Заниматься с тренером',
-  // The club, on Home. Somebody not in it sees the same row with the task blurred out.
-  // «Собирается», not «идёт»: a club meets, a challenge runs. The needle is the same — it is
-  // happening today and they are not in it — but it is an invitation rather than a race pulling away.
-  homeGameSpoiler: 'Клуб собирается без тебя',
-  homeGameSpoilerTask: 'Задание дня',
-  homeTasksTitle: 'Сегодня ещё',
   homeTaskSteps: 'Напиши, сколько прошёл сегодня',
-  homeTaskAssess: 'Адаптировать тренировки под себя',
-  // Five clips and five estimates; nothing is performed on the clock, so the promise is how
-  // long it takes to read and answer (ASSESSMENT_TOTAL_MIN in content/site/assessment.ts).
-  homeTaskAssessHint: '5 упражнений, 3 минуты — просто ответить',
   homeTodayCompletedTitle: 'Курс пройден',
   homeTodayOpenPath: 'Открыть путь',
   homeStatsSteps: 'Шаги за неделю',
@@ -151,31 +133,20 @@ export const app = {
   homeStatsMinutes: 'Минут за неделю',
   homeStatsPoints: 'Очки',
   homeStatsPointsHint: 'за всё время',
-  homeWorkoutWordOne: 'тренировка',
-  homeWorkoutWordFew: 'тренировки',
-  homeWorkoutWordMany: 'тренировок',
   homeYourCourses: 'Твои курсы',
   homeMoreCourses: 'Ещё курсы',
   homeCourseProgress: '{pct}% пройдено',
-  homeCourseLocked: 'Закрыт',
-  homeCourseGet: 'Прийти',
-  homeDeckLabel: 'Программы и клуб',
-  homeDeckCourse: 'Курс',
-  homeDeckMarathon: 'Клуб',
-  homeDeckMarathonBody: 'Маленький шаг каждый день, таблица за неделю',
   homeDeckGameLocked: 'Входит в подписку',
   homeDeckGameTrial: 'Пробная неделя с курсом — осталось {n}',
   homeDeckGameTrialDayOne: '1 день',
   homeDeckGameTrialDayFew: '{n} дня',
   homeDeckGameTrialDayMany: '{n} дней',
   homeDeckGameLockedCta: 'Оформить подписку',
-  homeDeckMarathonCta: 'Задание на сегодня',
   // One word each, as the prototype's buttons have it: «Начать →», «Продолжить →».
   homeDeckStart: 'Начать',
   homeDeckContinue: 'Продолжить',
   homeErrorTitle: 'Не удалось загрузить прогресс',
   homeErrorBody: 'Проверь соединение и попробуй ещё раз.',
-  homeRefreshError: 'Не удалось обновить. Показываем последние сохранённые данные.',
 
   // Курсы
   coursesOwned: 'Твои',
@@ -424,37 +395,13 @@ export const app = {
 
   // Прогресс
   statsTitle: 'Прогресс',
-  statsPosterLabel: 'Твой прогресс',
-  statsStreakDays: '{days} подряд',
-  // The pill beside «дней подряд» while the day is open and nothing is logged yet.
-  statsTodayNotCounted: 'Сегодня не засчитано',
-  statsDetailsShow: 'Подробности',
-  statsDetailsHide: 'Свернуть',
-  // Over the seven circles: with a course, its sessions per week are the goal; without one the
-  // same row is simply the week.
-  statsWeekGoal: 'Цель недели',
-  statsWeekDayDone: '{date} — засчитан',
-  statsWeekDayEmpty: '{date} — пусто',
-  statsWeekDayAhead: '{date} — впереди',
   statsWeekBoardTitle: 'Кто впереди',
-  statsLevelTitle: 'Уровень',
   statsLeaderboard: 'Рейтинг',
-  statsRefresh: 'Обновить',
-  statsRefreshError: 'Не удалось обновить. Показываем последние сохранённые данные.',
-  statsErrorTitle: 'Не удалось загрузить статистику',
-  statsErrorBody: 'Проверь соединение и попробуй ещё раз.',
   statsLevelEyebrow: 'Уровень {n}',
   statsPointsValue: '{n} оч.',
   statsLevelProgress: 'Прогресс до следующего уровня',
   statsLevelNext: 'До уровня «{title}» — {n} оч.',
   statsLevelMax: 'Максимальный уровень. Выше некуда — держи планку.',
-  statsWeekTitle: 'Эта неделя',
-  statsWeekMinutes: 'Минуты тренировок',
-  statsWeekWorkoutsRow: 'Тренировки по дням',
-  statsWeekDayLabel: '{date}: тренировок — {n}, {min} мин',
-  statsWeekChartLabel: 'Минуты тренировок по дням этой недели',
-  statsPointsTitle: 'Очки за 8 недель',
-  statsPointsChartLabel: 'Очки по неделям за последние 8 недель',
   statsCalendarTitle: 'Календарь серии',
   statsCalendarCurrent: 'Сейчас {n}',
   statsCalendarBest: 'Рекорд {n}',
@@ -463,24 +410,9 @@ export const app = {
   statsCalendarEmpty: 'Ничего не записано',
   statsCalendarFuture: 'Впереди',
   statsCalendarToday: 'сегодня',
-  statsStepsTitle: 'Шаги за 14 дней',
-  statsStepsChartLabel: 'Шаги по дням за последние 14 дней',
-  statsStepsAtGoal: 'Цель выполнена {n} из {total} дней',
-  statsStepsGoal: 'цель {n}',
-  statsRecordsTitle: 'Рекорды',
-  statsRecordsEmpty: 'Рекордов пока нет. Их заполняют тесты и бенчмарки на пути курса.',
-  statsRecordAttemptsOne: '{n} попытка',
-  statsRecordAttemptsFew: '{n} попытки',
-  statsRecordAttemptsMany: '{n} попыток',
-  statsRecordFirst: 'к первой',
-  statsUnitRounds: 'кругов',
-  statsAchievementsTitle: 'Взято',
   statsAchievementsCount: '{done} из {total}',
   statsAchievementUnlocked: 'Открыто',
   statsAchievementLocked: 'Закрыто',
-  statsTotalWorkouts: 'Тренировок',
-  statsTotalMinutes: 'Минут',
-  statsTotalKcal: 'ккал',
 
   // Рейтинг
   leaderboardTitle: 'Рейтинг',
@@ -541,26 +473,9 @@ export const app = {
 
   // Профиль
   profileTitle: 'Профиль',
-  profileNewAvatar: 'Новый аватар',
-  profileEditName: 'Изменить имя',
-  profileNameLabel: 'Имя',
-  profileNoName: 'Имя не задано',
-  profileEmail: 'Почта',
-  profileFitnessSetup: 'Завершить настройку',
-  profileRetakeTests: 'Пройти адаптацию заново',
-  profileEquipment: 'Инвентарь',
-  profileEquipmentTitle: 'Твой инвентарь',
-  profileEquipmentLead: 'Отметь, что есть дома, — тренировки подстроятся.',
   profileWeightsKg: '{list} кг',
   profileLimitations: 'Что беречь',
-  profileLimitationsTitle: 'Что беречь',
-  profileLimitationsLead: 'Заменим упражнения, которые нагружают эти зоны.',
   profileLimitationsNone: 'Ничего',
-  profileAdmin: 'Админка',
-  profileBook: 'Занятие с тренером',
-  // The value on the profile's row: the price alone, so the row's own name has room to be read.
-  profileBookFrom: 'от {price}',
-  profileSubscriptionSection: 'Подписка',
   profileSubscriptionNoneHint: 'от {price} в месяц',
   profileSubscriptionLive: '{plan} · до {date}',
   profileSubscriptionCancelled: 'Отменена · доступ до {date}',
@@ -585,9 +500,6 @@ export const app = {
   profileSignOut: 'Выйти',
   profileSignOutTitle: 'Выйти из аккаунта?',
   profileSignOutBody: 'Прогресс останется в аккаунте. Чтобы вернуться, войди по коду из письма.',
-  profileSaved: 'Сохранено',
-  profileSaveError: 'Не удалось сохранить. Проверь соединение и попробуй снова.',
-  profileVersion: 'Forma {version} · {mode}',
 
   // Админка
   adminTitle: 'Админка',
@@ -931,14 +843,6 @@ export const app = {
   homeTodayStatTime: 'Времени',
   // Node preview: the formula kicker and the secondary action of the two-button row.
   nodeLater: 'Позже',
-  // Profile on paper: the kicker under the name, the "of 100" tail of the index numeral.
-  profileSince: 'В форме с {date}',
-  // The one line under the name: «с августа · 24 тренировки».
-  profileSinceShort: 'с {date}',
-  profileTrainedOne: '{n} тренировка',
-  profileTrainedFew: '{n} тренировки',
-  profileTrainedMany: '{n} тренировок',
-  profileFitnessOf: 'из 100',
   // Admin: the exercise row's "has a video" stamp, and the course tile field's format error.
   exHasVideo: 'видео',
   courseTileInvalid: 'Цвет — шесть шестнадцатеричных знаков, например #1f1f24',
@@ -1200,4 +1104,19 @@ export const app = {
   authErrorCodeExpired: 'Код живёт 10 минут, этот уже истёк. Запроси новый.',
   authErrorTooManyAttempts:
     'Код не подошёл три раза. Запроси новый и введи цифры из последнего письма.',
+
+  // --- Stream 2: три вкладки и «Курсы» как главный экран ----------------------
+  tabCourses: 'Курсы',
+  tabCoach: 'Тренер',
+  coursesMore: 'Подробнее',
+  achievementsTitle: 'Достижения',
+  achievementsLead: 'Всё, что можно взять, и как.',
+  achievementsEmpty: 'Пока нечего показать.',
+  // Инвентарь остался единственной настройкой профиля: вопрос про него убрали из онбординга, а
+  // экран профиля удалён — без этой строки человек с гантелями тренировался бы без них всегда.
+  profileEquipment: 'Инвентарь',
+  profileEquipmentTitle: 'Твой инвентарь',
+  profileEquipmentLead: 'Отметь, что есть дома, — тренировки подстроятся.',
+  profileSaved: 'Сохранено',
+  profileSaveError: 'Не удалось сохранить. Проверь соединение и попробуй снова.',
 } as const;

@@ -8,24 +8,28 @@ import { screenMotion } from './screenMotion';
  */
 describe('screenMotion', () => {
   it('follows the tab bar between its seats', () => {
-    expect(screenMotion('/', '/courses')).toBe('right');
-    expect(screenMotion('/courses', '/stats')).toBe('right');
-    expect(screenMotion('/stats', '/marathon')).toBe('left');
+    expect(screenMotion('/', '/marathon')).toBe('right');
+    expect(screenMotion('/marathon', '/book')).toBe('right');
+    expect(screenMotion('/book', '/marathon')).toBe('left');
     expect(screenMotion('/marathon', '/')).toBe('left');
+    // The admin's fourth seat is the rightmost of them, and it moves like one.
+    expect(screenMotion('/book', '/admin')).toBe('right');
+    expect(screenMotion('/admin', '/')).toBe('left');
   });
 
   it('pushes deeper from the right and comes back from the left', () => {
-    expect(screenMotion('/courses', '/courses/start')).toBe('right');
+    // «Курсы» owns `/courses/*`, so both of these are one seat and the depth decides.
+    expect(screenMotion('/', '/courses/start')).toBe('right');
     expect(screenMotion('/courses/start', '/courses/start/nodes/w1d1')).toBe('right');
     expect(screenMotion('/courses/start/nodes/w1d1', '/courses/start')).toBe('left');
     expect(screenMotion('/marathon/board', '/marathon')).toBe('left');
   });
 
-  it('treats a screen outside the tabs by depth, so the profile is a push from Home', () => {
-    expect(screenMotion('/', '/profile')).toBe('right');
-    expect(screenMotion('/profile', '/')).toBe('left');
-    // From «Прогресс», which is as deep as the profile: no direction to borrow, so it rises.
-    expect(screenMotion('/stats', '/profile')).toBe('up');
+  it('treats a screen outside the tabs by depth', () => {
+    expect(screenMotion('/', '/steps')).toBe('right');
+    expect(screenMotion('/steps', '/')).toBe('left');
+    // Two screens at the same depth in no seat: no direction to borrow, so it rises.
+    expect(screenMotion('/steps', '/leaderboard')).toBe('up');
   });
 
   it('rises when a screen is replaced by one at the same depth in the same tab', () => {
@@ -34,6 +38,6 @@ describe('screenMotion', () => {
 
   it('does not move the first screen, or a screen replaced by itself', () => {
     expect(screenMotion(null, '/')).toBe('none');
-    expect(screenMotion('/stats', '/stats')).toBe('none');
+    expect(screenMotion('/marathon', '/marathon')).toBe('none');
   });
 });

@@ -1,7 +1,7 @@
 /**
  * Which way a screen arrives, decided from where the last one was.
  *
- * The tab bar's highlight slides sideways between four seats, and a screen that then simply
+ * The tab bar's highlight slides sideways between its seats, and a screen that then simply
  * appeared would contradict it: the chrome said "you moved right", the content said "something
  * was replaced". So the content moves the same way the highlight did — in from the right when the
  * tab you chose is to the right of the one you left, in from the left when it is to the left.
@@ -24,8 +24,13 @@ function depth(pathname: string): number {
 
 export function screenMotion(from: string | null, to: string): ScreenMotion {
   if (from === null || from === to) return 'none';
-  const a = activeTabIndex(from);
-  const b = activeTabIndex(to);
+  /*
+   * Asked as an admin, always: the extra seat only changes the answer for `/admin`, and an admin
+   * is the only person who ever lands there. Reading `useIsAdmin` here would make a pure function
+   * depend on a hook to decide which way a screen slides.
+   */
+  const a = activeTabIndex(from, true);
+  const b = activeTabIndex(to, true);
   if (a >= 0 && b >= 0 && a !== b) return b > a ? 'right' : 'left';
   const da = depth(from);
   const db = depth(to);
