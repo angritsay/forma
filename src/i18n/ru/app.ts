@@ -1159,4 +1159,33 @@ export const app = {
   clubMemberTitle: 'Ты в клубе',
   clubMemberNote:
     'Круг собирает тренер: он добавляет участников и разбивает на пары сам. Как только начнётся новый, задания появятся здесь.',
+  // --- Coach: the session already booked (stream: coach-sentence) -------------
+  // `src/lib/coach/booking.ts` returns a shape and never a string, deliberately, so the Russian
+  // lives here. The shape exists for the day boundary: тренировка завтра в 9:00 — это «завтра в
+  // 9:00», а не «через 14 часов», хотя четырнадцать часов — ровно столько до неё и есть.
+  //
+  // Строчная буква в начале — не опечатка. Над строкой стоит `bookUpcoming`, и вместе они
+  // читаются одной фразой: «Ближайшая тренировка — завтра в 9:00».
+  bookUpcoming: 'Ближайшая тренировка',
+  bookLive: 'идёт сейчас',
+  bookInMinutesOne: 'через {n} минуту',
+  bookInMinutesFew: 'через {n} минуты',
+  bookInMinutesMany: 'через {n} минут',
+  bookInHoursOne: 'через {n} час',
+  bookInHoursFew: 'через {n} часа',
+  bookInHoursMany: 'через {n} часов',
+  bookTomorrowAt: 'завтра в {time}',
+  bookInDaysOne: 'через {n} день',
+  bookInDaysFew: 'через {n} дня',
+  bookInDaysMany: 'через {n} дней',
+  // Дата и часы — в поясе устройства, а не в том, в котором бронировали.
+  bookWhen: '{date} · {from} – {to} · {dur}',
+  bookJoin: 'Войти в тренировку',
+  // Занятие в зале: адрес вместо ссылки, и кнопки здесь нет — нажимать нечего.
+  bookPlace: 'Место: {place}',
+  // Ссылка на конференцию создаётся не мгновенно, а у брони из Google Календаря её может не быть
+  // вовсе. Пустая кнопка была бы хуже честной строки.
+  bookNoLink: 'Ссылки на вход пока нет.',
+  bookMove: 'Перенести',
+  bookCancel: 'Отменить',
 } as const;

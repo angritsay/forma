@@ -1117,4 +1117,34 @@ export const app = {
   clubMemberTitle: 'You are in the club',
   clubMemberNote:
     'The coach puts each round together himself — he adds the members and makes the pairs. The moment a new one starts, the tasks appear here.',
+  // --- Coach: the session already booked (stream: coach-sentence) -------------
+  // `src/lib/coach/booking.ts` returns a shape and never a string, so the wording lives here. The
+  // shape exists for the day boundary: a session tomorrow at 09:00 is «tomorrow at 9:00», not «in
+  // 14 hours», even though fourteen hours is exactly how far away it is.
+  //
+  // The lower-case first letter is deliberate: `bookUpcoming` stands above it and the two read as
+  // one phrase — «Your next session — tomorrow at 9:00».
+  bookUpcoming: 'Your next session',
+  bookLive: 'happening now',
+  bookInMinutesOne: 'in {n} minute',
+  bookInMinutesFew: 'in {n} minutes',
+  bookInMinutesMany: 'in {n} minutes',
+  bookInHoursOne: 'in {n} hour',
+  bookInHoursFew: 'in {n} hours',
+  bookInHoursMany: 'in {n} hours',
+  bookTomorrowAt: 'tomorrow at {time}',
+  bookInDaysOne: 'in {n} day',
+  bookInDaysFew: 'in {n} days',
+  bookInDaysMany: 'in {n} days',
+  // Date and clock in the device's zone, not the one the session was booked in.
+  bookWhen: '{date} · {from} – {to} · {dur}',
+  bookJoin: 'Join the session',
+  // A session with a physical location carries an address instead of a link, and no button —
+  // there is nothing to press.
+  bookPlace: 'Where: {place}',
+  // A conference link is created asynchronously, and a Google Calendar booking may never have
+  // one. An honest line beats a dead button.
+  bookNoLink: 'No join link yet.',
+  bookMove: 'Reschedule',
+  bookCancel: 'Cancel',
 } as const;
