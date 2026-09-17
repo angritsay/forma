@@ -1,5 +1,13 @@
 /**
- * The onboarding assessment: five movements, a number for each, about three minutes in all.
+ * The assessment: five movements, a number for each, about three minutes in all.
+ *
+ * **It is no longer part of signing up.** It was the seventh step of the onboarding wizard until
+ * the owner moved it out: «особенно оттуда убрать тестирование. Мы тестирование через пару
+ * тренировок будем спрашивать». It is now its own screen (`/assessment`), offered by a banner
+ * after the second completed workout (`src/app/features/assessment`). Nothing about the five
+ * movements changed with the move; what changed is that the person answering has trained twice
+ * with the coach's cues before they are asked, which is the difference between an estimate and a
+ * guess.
  *
  * The coach's first rule about day one is «никаких максимумов» (docs/COACH_RULES.md). That rule
  * survived two rounds of this screen. The first asked for max push-ups, max squats and a max plank,

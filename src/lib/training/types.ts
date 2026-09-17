@@ -54,8 +54,18 @@ export interface UserTrainingProfile {
   dumbbellKg?: number[];
   /** Available kettlebell weights (kg), ascending. */
   kettlebellKg?: number[];
-  timePerSessionMin: SessionTime;
-  goal: Goal;
+  /**
+   * How long the athlete wants a session to take, and what they are training for.
+   *
+   * Both are optional, and both are usually absent: the onboarding wizard is five questions now
+   * («убрать все лишнее в онбординге») and neither of these is one of them. Nothing in the engine
+   * reads either field — `prescribeWorkout` scales by the course's own state and the athlete's
+   * difficulty choice — so an absent value costs a screen a line of text at most. They stay on the
+   * type because stored profiles carry them and because the coach may yet ask for them somewhere
+   * that is not the athlete's first minute in the app.
+   */
+  timePerSessionMin?: SessionTime;
+  goal?: Goal;
 }
 
 export type FitnessComponent = 'pushups' | 'squats' | 'plank' | 'activity' | 'experience';

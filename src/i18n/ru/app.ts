@@ -60,34 +60,19 @@ export const app = {
   // One question per step, set as the display line; the answers are the only other words. The
   // leads that used to restate each question were cut per design/CHANGELOG.md §10.
   onbStepOf: 'Шаг {n} из {total}',
-  onbOptional: 'необязательно',
-  onbNameTitle: 'Как тебя называть?',
-  onbNamePlaceholder: 'Твоё имя',
-  onbBasicsTitle: 'Немного о тебе',
-  onbAgeLabel: 'Возраст',
+  onbNameTitle: 'Твоё имя',
+  onbNamePlaceholder: 'Имя',
   onbAge1824: '18–24',
   onbAge2534: '25–34',
   onbAge3544: '35–44',
   onbAge4554: '45–54',
   onbAge5564: '55–64',
   onbAge65: '65+',
-  onbSexLabel: 'Пол',
   onbSexMale: 'Мужской',
   onbSexFemale: 'Женский',
   onbSexNa: 'Не хочу указывать',
-  onbWeightLabel: 'Вес, кг',
-  onbWeightRange: 'Укажи вес от {min} до {max} кг.',
-  onbActivityTitle: 'Насколько активны твои будни?',
-  onbActivitySedentary: 'В основном сижу',
-  onbActivityLight: 'Немного двигаюсь',
-  onbActivityModerate: 'Довольно активно',
-  onbActivityActive: 'Очень активно',
-  onbExperienceTitle: 'Сколько уже тренируешься?',
-  onbExpNone: 'Пока нет',
-  onbExpBeginner: 'Меньше года',
-  onbExpIntermediate: '1–3 года',
-  onbExpAdvanced: 'Больше 3 лет',
-  onbEquipmentTitle: 'Что есть дома?',
+  // Оборудование в анкете больше не спрашиваем — эти две подписи остались для листа
+  // оборудования в профиле.
   onbDumbbellWeights: 'Гантели, кг',
   onbKettlebellWeights: 'Гири, кг',
   onbLimitationsTitle: 'Что беречь?',
@@ -100,8 +85,6 @@ export const app = {
   onbLimPregnancy: 'Беременность',
   onbAssessOfferTitle: 'Подстроить тренировки под тебя?',
   onbAssessMoves: '{n} упражнений',
-  onbAssessNow: 'Сейчас',
-  onbAssessLater: 'Не сейчас',
   // The owner's words for this screen: «не выжимаем максимум… конец».
   onbAssessWarnTitle: 'Максимум не выжимаем',
   onbAssessWarnCta: 'Начнём',
@@ -114,17 +97,6 @@ export const app = {
   onbAssessCountLabel: 'Раз',
   onbAssessDoneTitle: 'Записал',
   onbAssessRetake: 'Пройти заново',
-  onbTimeTitle: 'Сколько минут на тренировку?',
-  onbGoalTitle: 'Главная цель?',
-  onbGoalFatLoss: 'Сбросить жир',
-  onbGoalStrength: 'Стать сильнее',
-  onbGoalEndurance: 'Прокачать выносливость',
-  onbGoalGeneral: 'Держать форму',
-  onbGoalMuscle: 'Набрать мышцы',
-  onbResultEyebrow: 'Твой индекс формы',
-  onbResultLevel: 'Уровень {n} · {name}',
-  onbIndexOutOf: 'из 100',
-  onbResultStart: 'Начать тренироваться',
   onbSaveError: 'Не удалось сохранить профиль. Проверь соединение и попробуй снова.',
 
   // Главная
@@ -1174,4 +1146,34 @@ export const app = {
   mAdminBonusPoints: 'Баллы (можно минус)',
   mAdminBonusReason: 'За что',
   mAdminBonusAdd: 'Начислить',
+
+  // --- Онбординг: пять вопросов + тест после двух тренировок ------------------
+  // Вопросы анкеты. Первое слово набирается 800-м, остальное 200-м (DisplayTitle),
+  // поэтому в каждом заголовке первое слово — то, которое должно звучать громче.
+  onbAgeTitle: 'Сколько тебе лет?',
+  onbSexTitle: 'Твой пол',
+  onbLevelTitle: 'Уровень формы',
+  // Десять подписей ползунка, снизу вверх. Меняются на каждом делении: цифра без слов —
+  // это шкала, о которой знает только приложение.
+  onbLevel01: 'Давно не тренировался',
+  onbLevel02: 'Только начинаю',
+  onbLevel03: 'Иногда двигаюсь',
+  onbLevel04: 'Двигаюсь, но без системы',
+  onbLevel05: 'Тренируюсь время от времени',
+  onbLevel06: 'Раз в неделю',
+  onbLevel07: 'Две-три тренировки в неделю',
+  onbLevel08: 'Тренируюсь регулярно',
+  onbLevel09: 'Тренируюсь почти каждый день',
+  onbLevel10: 'Тренируюсь много лет',
+  // «Далее», а не «Продолжить»: продолжают то, что прервали, а по анкете идут вперёд.
+  onbNext: 'Далее',
+  onbFinish: 'Начать тренироваться',
+  // Баннер с предложением пройти тест — после второй завершённой тренировки.
+  // Текст подсказки повторяет homeTaskAssessHint: цифры совпадают с ASSESSMENT_MOVES и
+  // ASSESSMENT_TOTAL_MIN в content/site/assessment.ts.
+  assessBannerTitle: 'Подстроить тренировки под тебя',
+  assessBannerHint: '5 упражнений, 3 минуты — просто ответить',
+  assessBannerCta: 'Пройти',
+  assessBannerLater: 'Не сейчас',
+  assessNoProfile: 'Сначала закончи анкету',
 } as const;

@@ -82,24 +82,24 @@ describe('withEquipment / withLimitations', () => {
 });
 
 describe('profileToDraft', () => {
-  it('builds a draft that resumes at the assessment with everything else complete', () => {
+  it('prefills what the five questions still ask and stops at the last one', () => {
     const draft = profileToDraft(PROFILE, 'en');
     expect(draft).not.toBeNull();
     expect(draft!.step).toBe(TESTS_STEP_INDEX);
     expect(firstIncompleteStep(draft!)).toBe(TESTS_STEP_INDEX);
-    expect(isStepComplete(draft!, 'assess')).toBe(false);
+    expect(isStepComplete(draft!, 'level')).toBe(false);
     expect(draft).toMatchObject({
       locale: 'en',
       displayName: 'Ann',
       ageBand: '25-34',
-      equipment: ['dumbbells', 'jump_rope'],
-      dumbbellKg: [4, 8],
+      sex: 'male',
       limitations: ['knees'],
       limitationsNone: false,
-      timePerSessionMin: 30,
-      goal: 'fat_loss',
-      assess: { later: false, counts: {}, onKnees: false },
     });
+    /* The wizard no longer asks about these, so a stored answer must not come back into it. */
+    expect(draft).not.toHaveProperty('equipment');
+    expect(draft).not.toHaveProperty('timePerSessionMin');
+    expect(draft).not.toHaveProperty('goal');
   });
 
   it('marks "no limitations" explicitly and returns null without a training profile', () => {
@@ -107,7 +107,7 @@ describe('profileToDraft', () => {
       { ...PROFILE, trainingProfile: { ...TP, limitations: [], equipment: ['none'] } },
       'ru',
     );
-    expect(draft).toMatchObject({ limitationsNone: true, equipment: [] });
+    expect(draft).toMatchObject({ limitationsNone: true, limitations: [] });
     expect(profileToDraft({ ...PROFILE, trainingProfile: null }, 'ru')).toBeNull();
   });
 });

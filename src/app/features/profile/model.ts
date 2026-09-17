@@ -11,8 +11,16 @@ import type { Translator } from '@/app/hooks/useT';
 import { DraftSchema, STEP_IDS, type OnboardingDraft } from '@/app/screens/onboarding/draft';
 import { EQUIPMENT_LABEL, LIMITATION_LABEL } from '@/app/screens/onboarding/labels';
 
-/** Index of the assessment step of the onboarding wizard. */
-export const TESTS_STEP_INDEX: number = STEP_IDS.indexOf('assess');
+/**
+ * Step the wizard resumes at when something offers to redo the athlete's answers.
+ *
+ * It used to be the index of the assessment step. The assessment is no longer in the wizard — it
+ * is `/assessment`, offered after the second workout (`src/app/features/assessment`) — so there is
+ * no test step to return to, and what is left is the last question. The name is kept because two
+ * screens this stream does not own still import it; both of them are being rewritten this week,
+ * and whoever lands last should delete this and `profileToDraft` with it.
+ */
+export const TESTS_STEP_INDEX: number = STEP_IDS.length - 1;
 
 /**
  * The assessment has never been done: the profile carries neither of the two counts the fitness
@@ -145,9 +153,13 @@ export function splitName(name: string): { heavy: string; thin: string } {
 }
 
 /**
- * Onboarding draft that resumes at the self-tests: every other answer comes from the profile,
- * the tests are cleared so the wizard's "first incomplete step" is the push-up test. Null when
- * the profile has no training data (the wizard then starts from scratch).
+ * Onboarding draft prefilled from the stored profile, for the entry points that send the athlete
+ * back through the wizard. Null when the profile has no training data (the wizard then starts
+ * from scratch).
+ *
+ * The wizard is five questions now, and the equipment, the minutes, the goal and the self-test
+ * are not among them — the extra fields are simply dropped by `DraftSchema`. The level slider has
+ * no answer to restore, so the draft stops there, which is the one question worth revisiting.
  */
 export function profileToDraft(profile: Profile, locale: Locale): OnboardingDraft | null {
   const tp = profile.trainingProfile;
@@ -158,17 +170,8 @@ export function profileToDraft(profile: Profile, locale: Locale): OnboardingDraf
     displayName: profile.displayName ?? undefined,
     ageBand: tp.ageBand,
     sex: tp.sex,
-    weightKg: tp.weightKg,
-    activityLevel: tp.activityLevel,
-    experience: tp.experience,
-    equipment: tp.equipment.filter((e) => e !== 'none'),
-    dumbbellKg: tp.dumbbellKg ?? [],
-    kettlebellKg: tp.kettlebellKg ?? [],
     limitations: tp.limitations,
     limitationsNone: tp.limitations.length === 0,
-    assess: {},
-    timePerSessionMin: tp.timePerSessionMin,
-    goal: tp.goal,
   });
   return parsed.success ? parsed.data : null;
 }
