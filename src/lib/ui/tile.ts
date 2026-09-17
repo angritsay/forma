@@ -25,15 +25,18 @@ const INK_ON_DARK = '#f6f6f7';
  * It must stay in step with `--course-marathon` in global.css, which is the same hex for the CSS
  * side of the same idea.
  *
- * **This value sits close to a cliff.** Its luminance is 0.353 against the 0.35 in
- * {@link isLightTile} — three thousandths. Above the line the club's cover is black type on
- * orange; below it the cover flips to white type on a darker orange, which is a different screen,
- * not a different shade. The orange it replaced had 0.020 of margin, so this is the tighter of the
- * two, deliberately: the owner picked this hue from a rendered comparison of eight, with the flip
- * shown. Anyone nudging it toward red should check the luminance first and expect the flip, and
- * anyone changing the 0.35 should know it moves this screen.
+ * **This value used to sit on a cliff, and no longer does.** The orange before it, `#ff7a1a`, had a
+ * luminance of 0.353 against the 0.35 in {@link isLightTile} — three thousandths, one careless
+ * character from flipping the club's cover from black type on orange to white type on a darker
+ * orange, which is a different screen rather than a different shade. The owner's mockup samples to
+ * `#F8A050`, whose luminance is 0.457: **0.107 of margin**, thirty-five times the old one. The
+ * change moves the colour away from the cliff, not toward it, and black ink on it clears 9.2:1.
+ *
+ * The cliff is still there, so anyone nudging this hue toward red should check the luminance first
+ * and expect the flip, and anyone changing the 0.35 should know it moves this screen. `tile.test.ts`
+ * holds both promises — the ink and the CSS token — so neither can be broken quietly.
  */
-export const GAME_TILE = '#ff7a1a';
+export const GAME_TILE = '#f8a050';
 
 /** Relative luminance per WCAG; 0 is black, 1 is white. */
 export function luminance(hex: string): number {

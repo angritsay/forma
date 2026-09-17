@@ -17,9 +17,10 @@
  * is not a race, and a link to it was not enough to make it one.
  *
  * **The tab has a second state, and it is a screen rather than a closed door.** Somebody who is
- * not in the club used to get an empty state and an icon. They now get what the owner drew:
- * what the week is, what it is played for, the results of the people who have played it, and one
- * button with the price on it (`ClubPitch`).
+ * not in the club used to get an empty state and an icon. They now get the screen the owner drew
+ * and sent as a picture — a row of photographs with the club's name across it, one orange pill
+ * with the price on it, and her two paragraphs (`ClubPitch`). It is built without the head and
+ * without a sticky footer, because neither is in the drawing.
  *
  * **The screen is drawn in the language of the owner's prototype** (`design/ui_kits/app-v2`,
  * «Челлендж»), after she called the previous version «вообще мимо»: the day as a ring with the
@@ -50,7 +51,7 @@ import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
 import { externalLinkProps } from '@/app/hooks/useExternalLink';
 import { useT } from '@/app/hooks/useT';
 import { BoardRow } from '@/app/features/marathon/BoardRow';
-import { ClubJoin, ClubPitch } from '@/app/features/marathon/ClubPitch';
+import { ClubPitch } from '@/app/features/marathon/ClubPitch';
 import { GameHead } from '@/app/features/marathon/GameHead';
 import { PrizePill } from '@/app/features/marathon/PrizePill';
 import { clubPrize } from '@/app/features/marathon/prize';
@@ -156,6 +157,13 @@ export default function MarathonScreen() {
     </div>
   );
 
+  /* The tab's other face: no head, no footer, the photographs starting near the top of the page. */
+  const pitch = (body: ReactNode) => (
+    <div style={courseTileVars(GAME_TILE)}>
+      <Screen contentClassName="pt-3">{body}</Screen>
+    </div>
+  );
+
   /*
    * The club is part of the subscription (content/site/plans.ts). The screen says so plainly and
    * offers the subscription rather than pretending the format does not exist — somebody who got
@@ -169,8 +177,14 @@ export default function MarathonScreen() {
     gated: GAME_REQUIRES_SUBSCRIPTION,
   });
 
+  /*
+   * The selling screen is the owner's mockup end to end, so it has no head and no sticky footer:
+   * the club's name is set over the photographs and the join pill sits in the flow under them. A
+   * ring counting a club this person is not in would be the one thing on the screen with nothing
+   * to count, and a sticky CTA would cover the copy that explains what is being bought.
+   */
   if (!access.allowed) {
-    return page(null, <ClubPitch locked />, undefined, <ClubJoin locked />);
+    return pitch(<ClubPitch locked />);
   }
 
   if (marathonStatus === 'loading') {
@@ -201,7 +215,7 @@ export default function MarathonScreen() {
    * that makes a product look like it does not know who it is talking to.
    */
   if (!marathon) {
-    return page(null, <ClubPitch locked={false} />);
+    return pitch(<ClubPitch locked={false} />);
   }
 
   const closed = marathon.status === 'finished';

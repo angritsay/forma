@@ -1,0 +1,71 @@
+/**
+ * The club's price and the photographs under it, guarded.
+ *
+ * Three promises are made in prose around this screen and prose does not fail a build: that the
+ * «666 ₽ / мес» on the button is arithmetic on the year's price rather than a second literal, that
+ * the link the button opens never carries an amount, and that nothing reaches the row of
+ * photographs without a recorded consent date.
+ */
+import { describe, expect, it } from 'vitest';
+import { CLUB_PLAN_ID, PLAN_BY_ID, planMonthlyPrice } from '@content/site/plans';
+import { clubPitchPhotos } from '@content/site/club';
+import { clubChargeLabel, clubJoinHref, clubMonthlyLabel, clubPlan } from './clubPlan';
+
+describe('the club price', () => {
+  it('is the annual plan, divided by twelve', () => {
+    // The owner: «666 в месяц это доступ на год разделенный на двенадцать месяцев». 7 990 / 12 =
+    // 665.83, which rounds to her figure — so there is one product, not a 7 992 ₽ twin beside it.
+    const plan = clubPlan();
+    expect(plan?.id).toBe(CLUB_PLAN_ID);
+    expect(plan?.period).toBe('year');
+    expect(clubMonthlyLabel('ru')).toContain('666');
+  });
+
+  it('says what is actually charged', () => {
+    // The button quotes a month; this is the single payment behind it, and the screen prints it
+    // directly under the pill.
+    const plan = PLAN_BY_ID.get(CLUB_PLAN_ID)!;
+    expect(clubChargeLabel('ru')).toBe(
+      new Intl.NumberFormat('ru-RU', {
+        style: 'currency',
+        currency: 'RUB',
+        maximumFractionDigits: 0,
+      }).format(plan.price.rub),
+    );
+  });
+
+  it('leaves a monthly plan alone', () => {
+    const monthly = PLAN_BY_ID.get('monthly')!;
+    expect(planMonthlyPrice(monthly)).toEqual(monthly.price);
+  });
+});
+
+describe('the join link', () => {
+  it('never carries an amount', () => {
+    // docs/SETUP.md §7.1: the site is static and public, so a price in a query string is a price
+    // the payer can edit. The email is the only thing this app appends.
+    const href = clubJoinHref('ru', 'someone@example.com', false);
+    const url = new URL(href, 'https://forma-app.co');
+    for (const key of url.searchParams.keys()) {
+      expect(key).toMatch(/^(email|customer_email)$/);
+    }
+    expect(href).not.toMatch(/price|sum|amount|order_sum/i);
+  });
+
+  it('keeps a demo account away from a real payment page', () => {
+    expect(clubJoinHref('ru', 'demo@example.com', true)).not.toMatch(/^https?:/);
+  });
+});
+
+describe('the photographs on the selling screen', () => {
+  it('publishes nothing without a recorded consent date', () => {
+    const { photos, source } = clubPitchPhotos();
+    for (const p of photos) {
+      expect(p.consent, `club photo ${p.id} has no consent date`).toBeTruthy();
+      expect(p.src.length).toBeGreaterThan(0);
+    }
+    // While the row falls back to the coach's own clients the label has to say so — «Результаты
+    // участников» over those photographs, beside a price, claims the club produced them.
+    expect(['members', 'coachClients']).toContain(source);
+  });
+});

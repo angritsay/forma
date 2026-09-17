@@ -643,27 +643,46 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
     here on. The words live once, in `app.marathonPrizeDefault`; `marathons.prize` overrides them
     for a round that is played for something else, and is empty in almost every round.
 
-    **The tab's second state is a screen, not a closed door.** Somebody who is not in the club used
-    to get an empty state and nothing to do about it. They now get what the owner drew: the prize,
-    what the week is in three lines, **«Результаты участников»**, and one button — «Вступить за
-    N ₽ / мес». Two rules bind that screen:
+    **The tab's second state is a screen, not a closed door, and the owner drew it.** She sent a
+    375×812 render and said «Сделай под него», so `ClubPitch` is that picture: a small muted label,
+    a row of three tight monochrome crops running nearly the full width, the club's name composited
+    over the bottom of them on three lines («Клуб» 200 · «маленьких» 800 in the club's colour ·
+    «шагов» 200), one orange pill — «Вступить за 666 ₽ / мес» — and her two paragraphs with one
+    phrase in orange. No head, no sticky footer and no explanatory rows: none of them is in the
+    drawing. The type is **sentence case throughout**; no tracked capital label appears on it.
 
-    - «Результаты участников» **renders from data and is absent while there is none**
-      (`content/site/club.ts`, empty; `publishableClubResults()` requires a recorded consent date).
-      No placeholder testimonial, not even an obviously fake one: the rule against invented reviews
-      applies hardest on the screen that asks for money, and a placeholder is a sentence that gets
-      forgotten and shipped. The empty section returns nothing at all rather than a heading over a
-      gap. The before/after photographs in `content/site/results.ts` are **not** eligible here:
-      those are Sergey's one-to-one clients, and printing them under «Результаты участников» beside
-      a price would say the club produced them.
-    - **N comes from `PLANS`** (`content/site/plans.ts`, the monthly plan) and the button goes to
-      `/subscribe/`. Never a payment URL with an amount in it — the site is static and public, and
-      `&price=…` in a query string is a price the payer can edit (docs/SETUP.md §7.1). Whether the
-      club stays part of the subscription or becomes its own cheaper product is an open decision;
-      either way the figure is read from `PLANS` and written down once.
+    Three rules bind that screen:
+
+    - **The photo row renders from data and the label follows the data.** `CLUB_PHOTOS` in
+      `content/site/club.ts` is the club's own photographs and is empty; while it is, the row falls
+      back to the consented before/after files in `content/site/results.ts` and the label reads
+      **«Результаты учеников Сергея»**, not «Результаты участников». Those are Sergey's one-to-one
+      clients, and the owner's own label over them beside a price would say the club produced them.
+      «Результаты участников» appears by itself the day a club member is photographed and consents.
+      The frames are cropped to one panel and go out unlabelled, with one true sentence on the row,
+      because their source's alt text describes the pair and a panel is not the pair.
+    - **No invented member, quote, percentage or duration.** `CLUB_RESULTS` is empty and stays
+      empty until somebody real is quoted with a recorded consent date. The rule against invented
+      reviews applies hardest on the screen that asks for money, and a placeholder — even an
+      obviously fake one — is a sentence that gets forgotten and shipped.
+    - **The figure is read from `PLANS` and never typed on the button.** The owner settled it as
+      «666 в месяц это доступ на год разделенный на двенадцать месяцев», so the club is sold with
+      the **existing annual plan**: `planMonthlyPrice()` divides 7 990 ₽ by twelve and the button
+      shows the result. There is no second 7 992 ₽ product — it would sell the same year twice and
+      break the webhook's match-by-amount. Under the pill, one line says what is actually charged,
+      because a button quoting a month for an annual payment is a chargeback. The link is the
+      plan's Prodamus product with the signed-in email appended and nothing else, falling back to
+      `/subscribe/` when there is no usable link and always for a demo account. Never a payment URL
+      with an amount in it — the site is static and public, and `&price=…` in a query string is a
+      price the payer can edit (docs/SETUP.md §7.1).
 
     Somebody who already pays and is simply not in a running round gets the same screen without the
     price: the coach forms the rounds and the pairs by hand, so there is nothing for them to press.
+
+    **The club's colour is `#F8A050`** (`GAME_TILE`, `--course-marathon`), sampled from the mockup.
+    It replaced `#ff7a1a`, which sat three thousandths above the black/white ink cliff in
+    `isLightTile`; the new one has 0.107 of margin, so the cover, the ring and the prize pill keep
+    black ink with room. `src/lib/ui/tile.test.ts` holds both promises.
 
 ## 11. SEO conveyor (docs/SEO.md is the runbook)
 

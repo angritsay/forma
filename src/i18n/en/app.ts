@@ -1023,18 +1023,9 @@ export const app = {
 
   // --- Club (stream 4) --------------------------------------------------------
   marathonPrizeDefault: 'An hour with the coach who made Forma',
-  marathonPitchTaskTitle: 'A task every day',
-  marathonPitchTaskBody: 'One small one. Mark it done and it scores.',
-  marathonPitchPartnerTitle: 'A partner',
-  marathonPitchPartnerBody:
-    'They see your marks and you see theirs. Some tasks only count when both of you deliver.',
-  marathonPitchBoardTitle: "The week's board",
-  marathonPitchBoardBody: 'The week is the race. On Monday everyone starts again.',
-  marathonPitchResults: 'What members did',
   marathonPitchNoRound:
     'The coach puts each round together himself — he adds the members and makes the pairs. The moment a new one starts, the tasks appear here.',
   marathonJoinCta: 'Join for {price} / mo',
-  marathonJoinNote: 'The Forma subscription: the club and every course. Renewed by hand.',
   // --- Onboarding: five questions + the test after two workouts ---------------
   // The wizard's questions. The first word is set at 800 and the rest at 200 (DisplayTitle),
   // so in each one the first word is the one that should carry.
@@ -1102,4 +1093,17 @@ export const app = {
   profileEquipmentLead: 'Tick what you have at home — workouts adapt to it.',
   profileSaved: 'Saved',
   profileSaveError: 'Couldn’t save. Check the connection and try again.',
+  // --- Club pitch (stream: club-pitch-redesign) -------------------------------
+  clubPhotosMembers: 'What members did',
+  clubPhotosClients: 'Results of Sergey’s own clients',
+  clubPhotosMembersRow: 'Photographs of club members, published with their permission',
+  clubPhotosClientsRow: 'Photographs of Sergey’s clients, published with their permission',
+  clubNameLead: 'Small',
+  clubNameAccent: 'Steps',
+  clubNameTail: 'Club',
+  clubLeadPre: 'Big plans do not survive a working week, so ',
+  clubLeadAccent: 'here it is one small task a day',
+  clubLeadPost: ': ten minutes on foot, twenty squats, a glass of water before coffee.',
+  clubLeadWeek: 'Points add up over the week, and whoever is top of the board gets {prize}.',
+  clubChargeNote: 'One payment: {price} for a year of access. The club and every Forma course.',
 } as const;
