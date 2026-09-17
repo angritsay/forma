@@ -20,6 +20,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Tabs, tabPanelId } from '@/components/ui/Tabs';
@@ -27,7 +28,6 @@ import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { BoardRow } from '@/app/features/marathon/BoardRow';
-import { PrizePill } from '@/app/features/marathon/PrizePill';
 import { clubPrize } from '@/app/features/marathon/prize';
 import { useMarathonScores, useMyMarathons } from '@/app/features/marathon/useMarathon';
 
@@ -81,9 +81,12 @@ export default function MarathonBoardScreen() {
           />
 
           {/* The prize is what the table is for: the one filled pill, the same one the day screen
-              draws above its five rows, so the two tables read as one race. */}
+              draws above its five rows, so the two tables read as one race. `flex` rather than a
+              bare child so the pill hugs its words instead of being stretched by the column. */}
           <div className="flex">
-            <PrizePill>{clubPrize(tr, marathon.prize)}</PrizePill>
+            <Pill tone="course-fill">
+              {t('app.marathonPrizeShort')} · {clubPrize(tr, marathon.prize)}
+            </Pill>
           </div>
 
           <div role="tabpanel" id={tabPanelId(choice)} aria-labelledby={`tab-${choice}`}>

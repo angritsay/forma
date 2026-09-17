@@ -62,9 +62,10 @@ export function GameHead({ marathon, partners = [] }: GameHeadProps) {
         )}
       </RingProgress>
       <div className="min-w-0 flex-1">
-        {/* Two lines allowed, not one: «Спринт формы · Напарник: Марек» is 31 tracked capitals,
-            which is more than a phone leaves beside a 72px ring, and the ring is taller than the
-            two lines together. */}
+        {/* Two lines allowed, not one. The ring and its gap take 88px, so this line gets 239px of a
+            375px screen — and «Спринт Формы · Напарник: Марек» now lands in one line box there,
+            which it could not do as tracked capitals. A longer club name or a second partner still
+            takes the second line, and the ring is taller than both of them together. */}
         <p className="eyebrow line-clamp-2">
           {marathon ? marathon.title : t('app.marathonTitle')}
           {who ? ` · ${who}` : ''}

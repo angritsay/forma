@@ -347,12 +347,27 @@ function PartnerLine({ done, entrySize, teammatesDone, teammateNames, rule }: Pa
   const others = entrySize - 1;
   const firstName = [...teammateNames.values()][0] ?? '';
 
+  /*
+   * `self-start` on the stamp, and it is the same bug `Badge`'s own `shrink-0` note describes from
+   * the other side. The card is a `flex flex-col`, so its cross axis is the width and a child with
+   * no alignment is stretched to it: «Команда ждёт тебя» is 152px of words and was drawn in a
+   * 327px outlined box running the full width of a 375px screen, which reads as a banner rather
+   * than a stamp. A badge hugs its word wherever it is put.
+   */
   if (done && teammatesDone.length >= others) {
-    return <Badge tone="success">{t('app.marathonPartnerBoth')}</Badge>;
+    return (
+      <Badge tone="success" className="self-start">
+        {t('app.marathonPartnerBoth')}
+      </Badge>
+    );
   }
   if (!done && teammatesDone.length >= others) {
     // The one that should sting a little: they delivered, the team is on you.
-    return <Badge tone="warning">{t('app.marathonTeamWaitingYou')}</Badge>;
+    return (
+      <Badge tone="warning" className="self-start">
+        {t('app.marathonTeamWaitingYou')}
+      </Badge>
+    );
   }
   if (done) {
     const waitingFor =
