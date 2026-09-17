@@ -1,5 +1,5 @@
 /**
- * The catalogue of achievements, behind the 🏅 in the header of «Курсы».
+ * The catalogue of achievements, behind the rosette in the header of «Курсы».
  *
  * «Достижения открывают каталог достижений.» The word is «каталог»: every achievement the product
  * has, including — especially — the ones not yet taken, each with the rule that earns it. That

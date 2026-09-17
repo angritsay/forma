@@ -53,6 +53,7 @@ import { PROOFS_BUCKET, proofMediaPath, sendProof } from '@/lib/api/marathon';
 import { uploadMedia } from '@/lib/api/storage';
 import type { MyMarathon, ProofInput } from '@/lib/api/types';
 import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
+import { downscaleImage, extensionFor } from '@/lib/util/image';
 import { externalLinkProps } from '@/app/hooks/useExternalLink';
 import { useT } from '@/app/hooks/useT';
 import { BoardGap, BoardRow } from '@/app/features/marathon/BoardRow';
@@ -148,10 +149,25 @@ export default function MarathonScreen() {
   const sendMedia = useCallback(
     async (taskId: string, file: File) => {
       if (!marathon) return;
-      const ext = file.name.split('.').pop() ?? 'jpg';
-      const path = proofMediaPath(marathon.id, marathon.memberId, taskId, ext);
+      /*
+       * Shrunk first, exactly as a step proof is (`StepsScreen`, `lib/util/image`). This path used
+       * to upload whatever the picker handed it: a 3MB phone photograph over mobile data to prove
+       * a task the coach reads in two seconds, and in demo mode that same 3MB base64'd into
+       * `localStorage` beside the rest of the demo database. `downscaleImage` degrades rather than
+       * fails — a decoder that will not open the file returns it untouched — so the upload still
+       * happens either way.
+       *
+       * The extension comes from the blob first and from `file.name` only as the fallback, because
+       * after a re-encode the name is a lie: a picked `.png` leaves here as JPEG bytes, and the
+       * object was being stored as `.png`. `extensionFor` knows the five types a re-encode can
+       * produce; anything else keeps whatever the picked file called itself, and `proofMediaPath`
+       * strips it to `[a-z0-9]`.
+       */
       try {
-        const ref = await uploadMedia(PROOFS_BUCKET, path, file);
+        const blob = await downscaleImage(file);
+        const ext = extensionFor(blob, file.name.split('.').pop() || 'jpg');
+        const path = proofMediaPath(marathon.id, marathon.memberId, taskId, ext);
+        const ref = await uploadMedia(PROOFS_BUCKET, path, blob);
         await send(taskId, { mediaPath: ref });
       } catch {
         toast.show({ kind: 'error', title: t('common.errorGeneric') });
