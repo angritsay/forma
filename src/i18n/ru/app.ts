@@ -603,7 +603,6 @@ export const app = {
 
   // Book a session
   bookTitle: 'Форма один на один',
-  bookLead: 'Час про твои тренировки: техника, программа под твою цель, твои вопросы.',
   bookLengthLabel: 'Длительность сессии',
   bookDuration: '{n} мин',
   bookPay: 'Оплатить {price}',
@@ -1175,6 +1174,21 @@ export const app = {
   mAdminBonusPoints: 'Баллы (можно минус)',
   mAdminBonusReason: 'За что',
   mAdminBonusAdd: 'Начислить',
+
+  // --- coach tab --------------------------------------------------------------
+  bookLeadTimePill: 'Можно за {n} минут до начала',
+  bookCredentials: 'Регалии',
+  bookOutcomes: 'Что это даёт',
+  bookIncludes: 'Что входит',
+  bookAdds: 'Сверх {n} минут',
+  bookIncludesPrev: 'Всё из {n} минут',
+  bookPriceDelta: '+{price} к {n} минутам',
+  bookNext: 'Дальше',
+  bookNextSchedule:
+    'Оплати — и выбери слот на его странице. Ближайший может быть уже через {n} минут.',
+  bookNextContact:
+    'Страницы со слотами пока нет: оплати и напиши тренеру — время он поставит сам, хоть за {n} минут до начала.',
+  bookPaidNote: 'Оплата открылась в браузере. Как оплатишь — возвращайся сюда за временем.',
 
   // --- Stream 3: sign-in, the bot, the emailed code -------------------------
   // Sign-in errors that used to share one generic line. Each says what happened first and what to
