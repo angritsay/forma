@@ -743,6 +743,24 @@ body {
   }
 
   /*
+   * The same material without its hairline, for a header that is the top of the page rather than
+   * chrome over a list. «Курсы» is the case: a greeting, a name and two small controls, with the
+   * owner's mockup drawing no line under them — a rule there separates her name from her courses,
+   * which are not two things.
+   *
+   * A paired-class variant rather than a `border-b-0` utility on the element, and that is not a
+   * matter of taste: against this stylesheet's own build, three divs measured
+   * `border-bottom-width` as `.glass-bar-top` → 1px, `.glass-bar-top.glass-bar-plain` → **0px**,
+   * `.glass-bar-top.border-b-0` → **1px**. The utility is emitted and reads correctly in the
+   * markup and it loses, because the rule above is a `border-bottom` *shorthand* in
+   * `@layer components` and the layer order decides it. Two classes in the same layer, declared
+   * after it, cannot lose — and a rule that silently does nothing is worse than no rule at all.
+   */
+  .glass-bar-top.glass-bar-plain {
+    border-bottom: 0;
+  }
+
+  /*
    * A band with something worth seeing behind it. The tab bar is dense because it carries 10px
    * tracked capitals over whatever list happens to be scrolling; the player's panel has the
    * opposite job — the clip continues behind the numbers and is meant to. These are the alphas the
