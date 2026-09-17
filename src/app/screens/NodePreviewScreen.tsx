@@ -10,11 +10,20 @@
  * name and one button. Everything else is real and still here, folded behind «Что внутри» for the
  * person who wants to check the plan before starting; most days nobody opens it.
  *
+ * The picture is the *surface* of that answer and not an illustration above it. This is the screen
+ * the owner photographed when she said «используется старый стиль»: a flat field of the programme
+ * colour with a black panel of type under it. Her two mockups rule that colour lands on type and
+ * never on a fill, and that a photograph carries what is written on it with no panel beneath — so
+ * the field became the still, the title took the programme colour, and the kicker and the three
+ * facts came up onto the picture with it. See the hero block below for how the contrast on it is
+ * held, and `features/courses/CourseCard.tsx` for where this construction was first built.
+ *
  * Pressing Начать does not lead to another preview. It asks the one question that changes what
  * happens next — how hard today should be — and the answer starts the session on the spot, landing
  * the athlete in the warm-up with the first clip already playing.
  */
 import { useMemo, useState } from 'react';
+import { clsx } from 'clsx';
 import { Navigate, useNavigate, useParams } from 'react-router';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -27,14 +36,14 @@ import { useToast } from '@/components/ui/Toast';
 import { Pill } from '@/components/ui/Pill';
 import { courseTitle, findCourse } from '@/content/catalogue';
 import { startSession } from '@/lib/api/sessions';
+import { exerciseStillUrl } from '@/lib/api/storage';
 import { prescribeWorkout } from '@/lib/training/prescribe';
 import { recommendDifficulty } from '@/lib/training/session';
 import type { DifficultyChoice, Recommendation } from '@/lib/training/types';
-import { courseTileVars } from '@/lib/ui/tile';
 import { toLocalDateIso } from '@/lib/util/dates';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
-import { courseLandingHref } from '@/app/features/courses/courseMeta';
+import { courseAccentVars, courseLandingHref } from '@/app/features/courses/courseMeta';
 import { LinkButton } from '@/app/features/courses/LinkButton';
 import {
   estimateSession,
@@ -176,7 +185,7 @@ export default function NodePreviewScreen() {
     return (
       <Screen header={header}>
         <div className="flex flex-col gap-4 py-2" aria-hidden="true">
-          <Skeleton rounded="card" className="-mx-6 aspect-[4/3] md:-mx-10" />
+          <Skeleton className="-mx-6 min-h-[56svh] md:-mx-10 md:min-h-[440px]" />
           <Skeleton lines={3} />
         </div>
       </Screen>
@@ -185,6 +194,12 @@ export default function NodePreviewScreen() {
 
   const locked = nodeStatus(nodeIndex, course.nodes, row) === 'locked';
   const exercise = workoutSignatureExercise(workout);
+  /*
+   * Whether there is a photograph for this movement at all — the same question `ExerciseStill`
+   * answers by drawing nothing. The hero only reserves a picture's worth of height, and only lays
+   * the scrim that protects type on a picture, when there is a picture to protect it from.
+   */
+  const still = exercise ? exerciseStillUrl(exercise.id) !== undefined : false;
   const profile = ctx.profile;
   // The recommended plan is what the folded-away detail describes; it is also the likely choice.
   const shown = plans.find((p) => p.choice === recommendation.choice) ?? plans[0] ?? null;
@@ -256,10 +271,13 @@ export default function NodePreviewScreen() {
 
   return (
     /*
-     * `--course-tile` scopes the screen so the art block, the formula kicker and the progress the
-     * plan may draw all read the one colour.
+     * `--course-tile` scopes the screen so the progress the plan may draw reads the one colour,
+     * and `--course-accent` is that colour *as type on a photograph* — the tile where the tile is
+     * a colour, plain white where the course has none, so a near-black tile can never set
+     * near-black type on the picture. Both come from `courseAccentVars()`, which is the «Курсы»
+     * card's own answer to the same question.
      */
-    <div style={courseTileVars(course.tile)}>
+    <div style={courseAccentVars(course.tile)}>
       <Screen
         header={header}
         footer={
@@ -281,12 +299,36 @@ export default function NodePreviewScreen() {
       >
         <div className="flex flex-col gap-6 pb-2">
           {/*
-           * The picture, full-bleed and square-shouldered: a frame from the coach's own clip, the
-           * programme colour on its own where the movement has no frame yet, and the day's stamps
-           * in the corner as dark plates.
+           * **The photograph is the surface, and the day's name lies on it.**
+           *
+           * This block used to be a flat field of the programme colour — 580px of `#9FEFF7` on a
+           * 390px screen — with the title, the kicker and the facts stacked on a black panel
+           * under it. That is the screen the owner photographed when she said «используется
+           * старый стиль», and the two mockups answer it with one rule each: colour goes on the
+           * type and never on a fill, and the picture is the surface with no panel beneath it.
+           * The «Курсы» card (features/courses/CourseCard.tsx) is where that language was first
+           * built; this is the same construction turned the other way up, because a card's figure
+           * sits at its top and a screen's title sits at the foot of its picture.
+           *
+           * So: the still fills the block, the title takes `--course-accent` — the programme
+           * colour where the course has one, plain white where it does not — and the kicker and
+           * the three facts sit on the picture with it.
+           *
+           * Where there is no frame for the movement yet the ground is `--surface`, not the
+           * programme colour. Cyan type on a cyan field is nothing at all, and the accent reads on
+           * a dark ground exactly as the card's does.
            */}
-          <div className="hero-art relative -mx-6 flex aspect-[4/3] items-center justify-center overflow-hidden md:-mx-10 lg:aspect-auto lg:h-[360px]">
+          <div
+            className={clsx(
+              'relative -mx-6 flex flex-col justify-end overflow-hidden bg-surface md:-mx-10',
+              /* Only a block that holds a picture reserves the height for one. A movement with no
+                 frame yet keeps the type and nothing above it, rather than 250px of empty grain
+                 standing in for a photograph that does not exist. */
+              still && 'min-h-[56svh] md:min-h-[440px]',
+            )}
+          >
             <WorkoutHero exercise={exercise} />
+            <div className="photo-grain" aria-hidden="true" />
             {isTest || isBenchmark || deload || repeat ? (
               <div className="absolute top-3 right-3 flex flex-wrap justify-end gap-1.5">
                 {isTest ? <Badge tone="on-art">{t('app.nodeTestBadge')}</Badge> : null}
@@ -295,27 +337,78 @@ export default function NodePreviewScreen() {
                 {repeat ? <Badge tone="on-art">{t('training.repeatPoints')}</Badge> : null}
               </div>
             ) : null}
-          </div>
 
-          {/*
-           * The name, the programme and the day. Three lines, and the button is already in view
-           * under them — that is the whole screen for anyone who came here to train.
-           */}
-          <div>
-            <DisplayTitle as="h2" text={l(workout.name)} className="text-5xl" />
-            <p className="eyebrow mt-3.5">
-              {l(courseTitle(course))} ·{' '}
-              {t('app.homeTodayWeek', { week: node.week, day: node.day })}
-            </p>
-            {facts.length > 0 ? (
-              <ul className="mt-5 flex flex-wrap gap-2" aria-label={l(workout.name)}>
-                {facts.map((x) => (
-                  <li key={x} className="flex min-w-0">
-                    <Pill>{x}</Pill>
-                  </li>
-                ))}
-              </ul>
+            {/*
+             * The fade, 128px of it, and then the type's own ground beneath.
+             *
+             * **The scrim is anchored to the type and not to the picture**, which is the one thing
+             * worth copying out of this block. `.photo-scrim-top` on the «Курсы» card can state
+             * its stops as percentages of the card because a card is a fixed shape holding a
+             * figure of fixed length. A workout's name is not: «Жим» is one line and «Отжимания,
+             * приседания, «жук»» is three, so a percentage scrim that measured 8:1 on the short
+             * name would leave the long one on the bright half of the frame. Giving the type block
+             * its own ground and putting the fade directly above it makes the worst pixel the same
+             * pixel whatever the name does.
+             *
+             * The numbers are measured on the composited pixels, not chosen: the type here is a
+             * programme colour, and `#9FEFF7` at 0.758 relative luminance needs the ground at
+             * sRGB 101 or below for 4.5:1, where white would clear it at 148. 0.82 over a frame
+             * that is pure white composites to sRGB 54, and the title measures 9.3:1 there; every
+             * line below it sits on more. A fifth of the picture still comes through the type's
+             * ground, so it is a scrim and not the panel the mockups took away.
+             *
+             * Re-measure rather than eyeball if the alphas, the title's size or the stills change.
+             */}
+            {still ? (
+              <div
+                aria-hidden="true"
+                className="pointer-events-none relative h-32"
+                style={{
+                  background:
+                    'linear-gradient(180deg, rgba(10,10,12,0) 0%, rgba(10,10,12,0.28) 46%, rgba(10,10,12,0.62) 74%, rgba(10,10,12,0.82) 100%)',
+                }}
+              />
             ) : null}
+
+            {/*
+             * The name, the programme and the day, and the facts — all on the picture. The button
+             * is already in view under them; that is the whole screen for anyone who came here to
+             * train.
+             */}
+            <div
+              className="relative px-6 pb-7 md:px-10"
+              style={
+                still
+                  ? {
+                      background:
+                        'linear-gradient(180deg, rgba(10,10,12,0.82) 0%, rgba(10,10,12,0.96) 100%)',
+                    }
+                  : undefined
+              }
+            >
+              <DisplayTitle
+                as="h2"
+                text={l(workout.name)}
+                className="text-6xl text-course-accent"
+              />
+              <p className="eyebrow mt-3.5 text-paper/75">
+                {l(courseTitle(course))} ·{' '}
+                {t('app.homeTodayWeek', { week: node.week, day: node.day })}
+              </p>
+              {facts.length > 0 ? (
+                <ul className="mt-5 flex flex-wrap gap-2" aria-label={l(workout.name)}>
+                  {facts.map((x) => (
+                    <li key={x} className="flex min-w-0">
+                      {/* A fact is a pill on any ground (`Pill`'s own note). On a photograph it
+                          takes white ink and a white hairline rather than the grey pair, which is
+                          the `on-art` treatment the design system already uses for a plate laid
+                          on a picture — never a lightened capsule of frosted glass. */}
+                      <Pill className="border-paper/45 text-paper">{x}</Pill>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
           </div>
 
           {/*

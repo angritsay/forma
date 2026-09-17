@@ -46,6 +46,12 @@ export function DonePoster({ eyebrow, line, stars, figures }: DonePosterProps) {
        * The word. It lands on the spring — this is the one moment in the app where a thing
        * arriving *is* the content. `text-balance` is not wanted here: it is one word, and the
        * clamp keeps it on one line from 320px up to the desktop column.
+       *
+       * `leading-[0.95]` is below `.display`'s own 1.2 and stays there deliberately, the way the
+       * club's lockup sits at 1.12. 1.2 is the floor for a *block* of the display face, where any
+       * string may arrive and a у or a р from one line has to clear the Ё of the next; this is one
+       * line, the clamp keeps it one line, and «Готово!» and «Done!» have no descender between
+       * them. If this ever holds more than a single known word the number goes back to 1.2.
        */}
       <h1 className="display pop-in mt-3 text-[clamp(56px,17vw,88px)] leading-[0.95]">
         {t('app.summaryDone')}
@@ -62,12 +68,20 @@ export function DonePoster({ eyebrow, line, stars, figures }: DonePosterProps) {
         />
       ) : null}
 
-      {/* Three figures on a rule, set the way the prototype sets them: numeral over kicker. */}
+      {/*
+       * Three figures on a rule, set the way the prototype sets them: numeral over kicker.
+       *
+       * The kicker used to be forced down to 10px, which was `.eyebrow` at tracked capitals
+       * needing a third more width than it had: «ПОВТОРОВ» at .18em set ~95px into a column that
+       * is 116px wide at 320px, and 11px would have burst it. Sentence case sets about a quarter
+       * narrower, so the class's own 13px fits — «Повторов» measures ~57px — and the label in the
+       * one place it is smallest is finally at the size the rest of the product reads at.
+       */}
       <div className="mt-8 grid w-full grid-cols-3 divide-x divide-border border-t border-border pt-5">
         {figures.map((f) => (
           <div key={f.label} className="px-2">
             <span className="display tabular block text-[28px] leading-none">{f.value}</span>
-            <span className="eyebrow mt-2 block truncate text-[10px]">{f.label}</span>
+            <span className="eyebrow mt-2 block truncate">{f.label}</span>
           </div>
         ))}
       </div>

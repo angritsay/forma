@@ -9,6 +9,7 @@ import { useParams } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Glyph } from '@/components/ui/Icon';
+import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { findExercise } from '@/content/catalogue';
@@ -26,7 +27,6 @@ import type { TKey } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
 import { useCustomWorkoutStart } from '@/app/features/customWorkout/useCustomWorkoutStart';
 import { DisplayTitle } from '@/app/features/home/DisplayTitle';
-import { FactChips } from '@/app/features/path/FactChips';
 
 const SECTION_KEY: Record<CustomSectionKind, TKey> = {
   warmup: 'app.playerSectionWarmup',
@@ -185,7 +185,21 @@ export default function CustomWorkoutScreen() {
           {w.description ? (
             <p className="mt-4 text-[15px] leading-relaxed text-muted">{w.description}</p>
           ) : null}
-          <FactChips items={facts} className="mt-5" />
+          {/*
+           * How long it takes, as a pill. It was a `FactChips` row — a hairline box of tracked
+           * capitals with a square corner — and that object has no place left: a fact that is not
+           * a control is a pill (`design/CHANGELOG.md` §10), which is what the workout preview
+           * already states its three facts with. Same component, same shape, one language.
+           */}
+          {facts.length > 0 ? (
+            <ul className="mt-5 flex flex-wrap gap-2" aria-label={w.title}>
+              {facts.map((x) => (
+                <li key={x} className="flex min-w-0">
+                  <Pill>{x}</Pill>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
         {playable ? (
           <div className="flex flex-col gap-5">{structure!.sections.map(sectionSummary)}</div>
