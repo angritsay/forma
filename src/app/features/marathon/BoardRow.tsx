@@ -7,18 +7,28 @@
  * club's colour, the rest outlined, so the top of the table is found before a single number
  * is read. It used to be a bare numeral with «ЧАС С ТРЕНЕРОМ» printed under the leader's name; the
  * prize is one pill above the table now, said once for the whole race rather than on one row.
+ *
+ * The place in the circle comes from `standings.ts` rather than from the row: the two backends
+ * rank ties differently, and «где ты» has to be the same number in both. A row that has not scored
+ * gets a dash — zero points is not a place, and «00» in the circle would claim it is.
  */
 import { clsx } from 'clsx';
-import { formatNumber } from '@/i18n/index';
+import { formatNumber, plural } from '@/i18n/index';
 import type { MarathonScoreRow } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
+
+export interface BoardRowProps {
+  row: MarathonScoreRow;
+  /** The place to draw, from `weekStandings`. `null` for an entry on nothing. */
+  rank: number | null;
+}
 
 /**
  * The pair is the unit, so the team's name is the line and the two people are the
  * quiet line under it — on a board where a pair wins together, "Ваня и Витя" is the racer and
  * «Ваня, Витя» is the detail.
  */
-export function BoardRow({ row }: { row: MarathonScoreRow }) {
+export function BoardRow({ row, rank }: BoardRowProps) {
   const { t, locale } = useT();
   /*
    * The members go under the name — unless the name already contains them. A pair is very often
@@ -28,7 +38,24 @@ export function BoardRow({ row }: { row: MarathonScoreRow }) {
     row.entryKind === 'team' &&
     row.members.length > 1 &&
     !row.members.every((name) => row.title.includes(name));
-  const leader = row.rank === 1;
+  const leader = rank === 1;
+  /*
+   * The «Ты» tag, by the same rule and for the same reason as the members line: a pair named «Ты и
+   * Марек» has already said it, and «Ты и Марек · Ты» is the row stuttering. Matched as a whole
+   * word, so a team called «Тыквы» keeps its tag.
+   *
+   * Except on the week you are leading. Then the circle is filled in the club's colour and the
+   * white ring that marks your row everywhere else is gone — and that is the one row the tag has
+   * to survive on, because a leader's row is never drawn a second time lower down.
+   */
+  const you = t('app.marathonBoardYou');
+  const showYou =
+    row.isMine &&
+    (leader ||
+      !row.title
+        .toLocaleLowerCase(locale)
+        .split(/[^\p{L}\p{N}]+/u)
+        .includes(you.toLocaleLowerCase(locale)));
   return (
     <div
       className="flex items-center gap-4 border-t border-border py-3.5"
@@ -46,22 +73,64 @@ export function BoardRow({ row }: { row: MarathonScoreRow }) {
             ? 'border-transparent bg-course text-on-course'
             : row.isMine
               ? 'border-text text-text'
-              : row.rank <= 3
+              : rank !== null && rank <= 3
                 ? 'border-border-strong text-text'
                 : 'border-border text-muted-2',
         )}
       >
-        {String(row.rank).padStart(2, '0')}
+        {rank === null ? '—' : String(rank).padStart(2, '0')}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="font-display block truncate text-[15px] leading-[1.24]">{row.title}</span>
+        {/*
+         * «Ты» is a visible tag now, not an `sr-only` one. The white ring told you which row was
+         * yours as long as the row was somewhere in the middle of the table; on the week you are
+         * leading, the club's fill wins the circle and the ring is gone — and that is exactly the
+         * week the screen must not stop saying so, because the leader's row is the one place the
+         * member's own row is not drawn a second time underneath.
+         */}
+        <span className="flex min-w-0 items-baseline gap-2">
+          <span className="font-display truncate text-[15px] leading-[1.24]">{row.title}</span>
+          {showYou ? <span className="shrink-0 text-[13px] text-muted-2">{you}</span> : null}
+        </span>
         {showMembers ? (
           <span className="block truncate text-[13px] text-muted-2">{row.members.join(', ')}</span>
         ) : null}
-        {row.isMine ? <span className="sr-only">{t('app.marathonBoardYou')}</span> : null}
       </span>
       <span className="numeral tabular shrink-0 text-[17px]">
         {formatNumber(locale, row.points)}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * The break between the top of the table and your own row.
+ *
+ * It has to read as *a table with places missing from it*, and the obvious candidate — a row of
+ * dots — reads as a spinner instead, which is the one thing it must not do on a screen that also
+ * has a loading state. So the dots are stacked vertically where the rank circle would be, the way a
+ * printed table of results elides its middle, and the words beside them count what was left out.
+ * The geometry is the row's own (`size-11` column, `gap-4`, the hairline on top) so the dots land
+ * dead centre under the circles above them.
+ */
+export function BoardGap({ hidden }: { hidden: number }) {
+  const { t, locale } = useT();
+  return (
+    <div className="flex items-center gap-4 border-t border-border py-2">
+      <span
+        className="flex size-11 shrink-0 flex-col items-center justify-center gap-[3px]"
+        aria-hidden="true"
+      >
+        <span className="size-[3px] rounded-pill bg-border-strong" />
+        <span className="size-[3px] rounded-pill bg-border-strong" />
+        <span className="size-[3px] rounded-pill bg-border-strong" />
+      </span>
+      <span className="text-[13px] text-muted-2">
+        {plural(locale, hidden, {
+          one: t('app.marathonBoardGapOne', { n: formatNumber(locale, hidden) }),
+          few: t('app.marathonBoardGapFew', { n: formatNumber(locale, hidden) }),
+          many: t('app.marathonBoardGapMany', { n: formatNumber(locale, hidden) }),
+        })}
       </span>
     </div>
   );

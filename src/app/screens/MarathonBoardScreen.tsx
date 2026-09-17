@@ -11,11 +11,15 @@
  * colour marks on the day screen's own table. Your own row is a white ring, not the colour. The
  * week switch stays black and white; it is a control.
  *
- * It is the tab's overflow and nothing more. The standings are on the tab itself now, five rows of
- * them, because «только задание и лидерборд» means the leaderboard is *on* the screen rather than
- * a tap away from it; this is where the whole week and the week before it live, for the one person
- * in ten who wants to read the full table. Nothing else hangs off it — «Мои баллы» used to, and
- * the screen it led to is gone.
+ * It is the tab's overflow and nothing more. The standings are on the tab itself now — the top
+ * three and the member's own row — because «только задание и лидерборд» means the leaderboard is
+ * *on* the screen rather than a tap away from it; this is where the whole week and the week before
+ * it live, for the one person in ten who wants to read the full table. Nothing else hangs off it —
+ * «Мои баллы» used to, and the screen it led to is gone.
+ *
+ * The places come from `standings.ts`, the same function the tab's short table uses, so the two
+ * tables cannot disagree about who is second. They could before: `marathon_scores()` breaks ties
+ * inside its window function and hands back 2 and 3 where the demo's scorer shares a place.
  */
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -29,6 +33,7 @@ import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { BoardRow } from '@/app/features/marathon/BoardRow';
 import { clubPrize } from '@/app/features/marathon/prize';
+import { rankWeek } from '@/app/features/marathon/standings';
 import { useMarathonScores, useMyMarathons } from '@/app/features/marathon/useMarathon';
 
 type WeekChoice = 'this' | 'last';
@@ -109,9 +114,9 @@ export default function MarathonBoardScreen() {
               <EmptyState title={t('app.marathonBoardEmpty')} />
             ) : (
               <ol className="flex flex-col">
-                {rows.map((row) => (
+                {rankWeek(rows).map(({ row, rank }) => (
                   <li key={row.entryId}>
-                    <BoardRow row={row} />
+                    <BoardRow row={row} rank={rank} />
                   </li>
                 ))}
               </ol>

@@ -1188,4 +1188,14 @@ export const app = {
   bookNoLink: 'Ссылки на вход пока нет.',
   bookMove: 'Перенести',
   bookCancel: 'Отменить',
+  // --- Club: the week's board, top three and where you are (stream: club-board) ---
+  // The break between the top of the table and your own row, counted in rows left out.
+  marathonBoardGapOne: 'ещё {n} место',
+  marathonBoardGapFew: 'ещё {n} места',
+  marathonBoardGapMany: 'ещё {n} мест',
+  // Ноль — не место. У того, кто ещё ничего не набрал, места в таблице нет, и «0 место» —
+  // не предложение ни на одном языке.
+  marathonBoardYouUnscored: 'Ты ещё без баллов на этой неделе',
+  // И это не то же самое: строки в таблице недели у человека пока просто нет.
+  marathonBoardYouMissing: 'Тебя пока нет в таблице этой недели',
 } as const;

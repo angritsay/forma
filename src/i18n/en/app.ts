@@ -1147,4 +1147,10 @@ export const app = {
   bookNoLink: 'No join link yet.',
   bookMove: 'Reschedule',
   bookCancel: 'Cancel',
+  // --- Club: the week's board, top three and where you are (stream: club-board) ---
+  marathonBoardGapOne: '{n} more place',
+  marathonBoardGapFew: '{n} more places',
+  marathonBoardGapMany: '{n} more places',
+  marathonBoardYouUnscored: "You haven't scored this week yet",
+  marathonBoardYouMissing: "You're not in this week's table yet",
 } as const;
