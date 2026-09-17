@@ -10,7 +10,11 @@
  * It was reachable only through a card on the home deck, which made the format look like an
  * accessory to the course. It is a tab of its own now, and it holds the two halves of the club in
  * the order they are asked for: what is set for today and whether it is sent, then the short
- * table of the week under it — five rows, the full board one tap further.
+ * table of the week under it — «топ 3 и где ты», the full board one tap further.
+ *
+ * The short table is three rows and then the member's own, which is the owner's own instruction:
+ * «рейтинг этой недели (топ 3 и где ты)». It stood at five rows and no "you" for a while, and that
+ * is a board that tells four people something and everybody else nothing.
  *
  * The table is short on purpose. At 7am on a mat the answer to "where am I in the standings" is
  * never what gets someone moving, so the day comes first; but a race nobody can see the score of
@@ -51,10 +55,11 @@ import type { MyMarathon, ProofInput } from '@/lib/api/types';
 import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
 import { externalLinkProps } from '@/app/hooks/useExternalLink';
 import { useT } from '@/app/hooks/useT';
-import { BoardRow } from '@/app/features/marathon/BoardRow';
+import { BoardGap, BoardRow } from '@/app/features/marathon/BoardRow';
 import { ClubPitch } from '@/app/features/marathon/ClubPitch';
 import { GameHead } from '@/app/features/marathon/GameHead';
 import { clubPrize } from '@/app/features/marathon/prize';
+import { weekStandings } from '@/app/features/marathon/standings';
 import { TaskCard } from '@/app/features/marathon/TaskCard';
 import {
   useMarathonDay,
@@ -66,9 +71,6 @@ import { subscribeHref } from '@/app/features/courses/courseMeta';
 import { useSession } from '@/app/store/session';
 import { gameAccess } from '@/app/features/marathon/gameAccess';
 import { GAME_REQUIRES_SUBSCRIPTION } from '@content/site/plans';
-
-/** How much of the week's table the day screen shows. */
-const BOARD_ROWS = 5;
 
 function DaySkeleton() {
   return (
@@ -91,7 +93,10 @@ export default function MarathonScreen() {
   const dayIndex = marathon?.dayIndex ?? 0;
   const { data: tasks, status, reload } = useMarathonDay(marathon, dayIndex);
   const { data: roster } = useMarathonRoster(marathon?.id ?? null);
-  const { data: scores } = useMarathonScores(marathon?.id ?? null, marathon?.week ?? null);
+  const { data: scores, reload: reloadScores } = useMarathonScores(
+    marathon?.id ?? null,
+    marathon?.week ?? null,
+  );
   const [sending, setSending] = useState(false);
 
   /** The people I am scored with, by member id — everyone on my team but me. */
@@ -106,6 +111,17 @@ export default function MarathonScreen() {
     return map;
   }, [roster, marathon?.teamId, marathon?.memberId]);
 
+  /*
+   * «Топ 3 и где ты». The arithmetic is in `standings.ts` and unit-tested there — ties, an empty
+   * week, a member with no row and a member on nothing are all cases this screen would otherwise
+   * be the only place to get wrong, and the wrong answer («0 место», or a place counted over the
+   * three rows on screen instead of over the week) is not one a screenshot catches.
+   */
+  const standings = useMemo(
+    () => weekStandings(scores, marathon?.memberId ?? null),
+    [scores, marathon?.memberId],
+  );
+
   const send = useCallback(
     async (taskId: string, proof: Omit<ProofInput, 'taskId' | 'memberId'>) => {
       if (!marathon) return;
@@ -113,13 +129,20 @@ export default function MarathonScreen() {
       try {
         await sendProof({ ...proof, taskId, memberId: marathon.memberId });
         reload();
+        /*
+         * And the board with it. Proof is counted the moment it is sent (0011_marathon.sql), so the
+         * points are already different — leaving the table alone until the tab is next mounted made
+         * the card tick and the standings sit still, which on a screen whose second half is now
+         * «где ты» reads as the score not counting.
+         */
+        reloadScores();
       } catch {
         toast.show({ kind: 'error', title: t('common.errorGeneric') });
       } finally {
         setSending(false);
       }
     },
-    [marathon, reload, t, toast],
+    [marathon, reload, reloadScores, t, toast],
   );
 
   const sendMedia = useCallback(
@@ -219,8 +242,6 @@ export default function MarathonScreen() {
   }
 
   const closed = marathon.status === 'finished';
-  /* The top of this week's table; a week nobody has scored in yet shows as empty, not as zeros. */
-  const topScores = scores.filter((row) => row.points > 0).slice(0, BOARD_ROWS);
   const delivered = tasks.filter((item) => item.mine !== null && !item.mine.voidedAt).length;
 
   return page(
@@ -332,17 +353,55 @@ export default function MarathonScreen() {
               {t('app.marathonPrizeShort')} · {clubPrize(tr, marathon.prize)}
             </Pill>
           </div>
-          {topScores.length > 0 ? (
+          {/*
+           * «Топ 3 и где ты» — three rows, then the member's own, which is the shape a standings
+           * table has had since long before there were screens. Five rows used to stand here and
+           * they answered only the first half: in sixth place you opened the club and read four
+           * names you already knew and nothing whatsoever about your own week.
+           *
+           * The row is pulled down only when it is not already one of the three; up there the
+           * «Ты» tag on the row marks it instead, because the same pair printed twice in nine
+           * rows of table is the reader wondering whether the board is broken.
+           */}
+          {standings.top.length > 0 ? (
             <ol className="mt-3 flex flex-col">
-              {topScores.map((row) => (
+              {standings.top.map(({ row, rank }) => (
                 <li key={row.entryId}>
-                  <BoardRow row={row} />
+                  <BoardRow row={row} rank={rank} />
                 </li>
               ))}
+              {standings.mine ? (
+                <>
+                  {standings.skipped > 0 ? (
+                    <li>
+                      <BoardGap hidden={standings.skipped} />
+                    </li>
+                  ) : null}
+                  <li>
+                    <BoardRow row={standings.mine.row} rank={standings.mine.rank} />
+                  </li>
+                </>
+              ) : null}
             </ol>
           ) : (
             <p className="mt-3 text-[13px] text-muted">{t('app.marathonBoardEmpty')}</p>
           )}
+
+          {/*
+           * The two answers to «где ты» that are not a number. Zero points is not a place — the
+           * pulled row already draws a dash where the place would be, and this says why. A member
+           * with no row at all is a different thing again: the coach has them in the club, the
+           * week's table simply has not been built around them yet.
+           *
+           * Both only when there is a table to be outside of. On a week nobody has scored in,
+           * «Пока никто не набрал баллов» has already said it, and «Ты ещё без баллов» under it is
+           * the screen telling the same person the same thing twice.
+           */}
+          {standings.top.length === 0 ? null : standings.place.kind === 'unscored' ? (
+            <p className="mt-3 text-[13px] text-muted">{t('app.marathonBoardYouUnscored')}</p>
+          ) : standings.place.kind === 'missing' ? (
+            <p className="mt-3 text-[13px] text-muted">{t('app.marathonBoardYouMissing')}</p>
+          ) : null}
           <Button
             variant="ghost"
             size="sm"
