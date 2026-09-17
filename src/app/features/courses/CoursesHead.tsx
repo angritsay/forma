@@ -9,8 +9,8 @@
  *   - **The greeting is two lines.** «Доброе утро» small and regular, the name under it large in
  *     the display face. It used to be one line — «Доброе утро, Настя» — truncated into a 14px
  *     slot beside an avatar, which is a label; two lines is a greeting. The name is set in the
- *     display face at 800 but *not* through `.display`, which uppercases: «НАСТЯ» is being
- *     shouted at, and the mockup writes «Настя».
+ *     display face at 800 — through `.font-display` with the weight raised, since `.display`
+ *     also carries its own tracking and line height and this lockup wants neither.
  *   - **The avatar is gone**, and an outline person glyph beside the name opens the account in its
  *     place. Nobody in this product uploads a picture, so the circle was a generated monogram
  *     standing in for a photograph that does not exist.
@@ -66,10 +66,10 @@ export function CoursesHead({ name, streak, unlocked, total, onAccount }: Course
           {t(GREET_KEY[dayPart(new Date().getHours())])}
         </p>
         <div className="mt-1 flex items-center gap-2">
-          {/* `.font-display` uppercases — it is the heading treatment, not the family — so
-              `normal-case` takes that back off. The mockup writes «Настя», not «НАСТЯ»: a name is
-              the one word in the product nobody should be shouted at with. */}
-          <h1 className="font-display min-w-0 truncate text-[26px] leading-tight font-extrabold tracking-[-0.02em] normal-case">
+          {/* `.font-display` is sentence case now, so the `normal-case` that used to undo its
+              capitals is gone. The weight override stays: `.font-display` is the 600 heading
+              treatment and the mockup sets the name in the big line's 800. */}
+          <h1 className="font-display min-w-0 truncate text-[26px] leading-tight font-extrabold tracking-[-0.02em]">
             {name}
           </h1>
           <button

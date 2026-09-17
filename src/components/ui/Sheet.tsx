@@ -90,7 +90,9 @@ export function Sheet({ open, onClose, title, children, footer, label, className
         />
         <div className="flex items-center justify-between gap-3 px-6 pt-4 pb-3">
           {title ? (
-            <h2 id={titleId} className="font-display text-lg">
+            /* 19px, up from `text-lg`'s 18. `.font-display` is sentence case now and sets about a
+               quarter narrower, so the title gains a point and the header row does not move. */
+            <h2 id={titleId} className="font-display text-[19px]">
               {title}
             </h2>
           ) : (

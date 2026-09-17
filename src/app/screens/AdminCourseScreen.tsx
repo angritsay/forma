@@ -388,14 +388,22 @@ export default function AdminCourseScreen() {
            * The verdict is a ruled line, not a tinted callout: the semantic colour sits on the
            * words alone, and the things still missing follow as a numbered list — 01, 02 — in
            * `CourseSchema`'s own wording, each on its own hairline.
+           *
+           * Body text in the quiet register, not `.eyebrow`. These lines used to be
+           * `.eyebrow-sentence`, a class that existed only because a sentence could not be set in
+           * the kicker's capitals. `.eyebrow` is sentence case now and that opt-out is gone — and
+           * the right home for a sentence turns out not to be the kicker either, but plain small
+           * text. A kicker marks a section; a verdict is read.
            */}
           {issues.length === 0 ? (
-            <p className="eyebrow-sentence border-y border-border py-3 text-success">
+            <p className="border-y border-border py-3 text-[13px] leading-[1.3] text-success">
               {t('app.coursePublishReady')}
             </p>
           ) : (
             <div className="flex flex-col border-t border-border">
-              <p className="eyebrow-sentence py-3 text-warning">{t('app.coursePublishBlocked')}</p>
+              <p className="py-3 text-[13px] leading-[1.3] text-warning">
+                {t('app.coursePublishBlocked')}
+              </p>
               <ul className="flex flex-col">
                 {issues.map((issue, i) => (
                   <li

@@ -178,9 +178,11 @@ const jsonLd = [
 <style>
   /*
    * The kit's Chip as a scoped style (the chips are plain <a> links so filtering works without
-   * JS): 34px, capitals at 12px tracked .06em, --surface-3 behind a hairline. The selected filter
-   * is the white fill with black text — the same inversion the primary button uses, and the only
-   * fill in the row. The visual box is 34px; the pseudo-element grows the hit area to 44px.
+   * JS): 34px, sentence case at 14px, --surface-3 behind a hairline. The selected filter is the
+   * white fill with black text — the same inversion the primary button uses, and the only fill in
+   * the row. The visual box is 34px; the pseudo-element grows the hit area to 44px.
+   *
+   * Sizes and tracking track `src/components/ui/Chip.tsx` by hand; when that one moves, move this.
    */
   .filter-chip {
     position: relative;
@@ -190,10 +192,9 @@ const jsonLd = [
     padding: 0 0.75rem;
     border: 1px solid var(--border);
     background: var(--surface-3);
-    font-size: 0.75rem;
+    font-size: 0.875rem;
     font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    letter-spacing: 0.01em;
     white-space: nowrap;
     color: var(--muted);
     transition:

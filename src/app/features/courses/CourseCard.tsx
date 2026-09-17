@@ -167,8 +167,9 @@ export function CourseCard({
             </div>
             {/* The figure, set the prototype's way — the number larger than the word — and in the
                 course's colour, which is the whole of the mockup's colour system. `.tabular` so a
-                percentage does not jitter as it climbs; the display face at 800, because
-                `.display` would also uppercase it and there is nothing here to uppercase. */}
+                percentage does not jitter as it climbs; the display face at 800 through
+                `.font-display` with the weight raised, because `.display` brings a tracking and a
+                line height that a one-line figure of digits does not want. */}
             <p className="font-display tabular mt-4 text-[42px] leading-none font-extrabold tracking-[-0.02em] text-course-accent">
               {share}%
             </p>

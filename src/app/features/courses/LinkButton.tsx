@@ -7,7 +7,7 @@
  */
 import { clsx } from 'clsx';
 import type { ReactNode } from 'react';
-import type { ButtonSize, ButtonVariant } from '@/components/ui/Button';
+import type { ButtonShape, ButtonSize, ButtonVariant } from '@/components/ui/Button';
 import { externalLinkProps } from '@/app/hooks/useExternalLink';
 
 /*
@@ -22,11 +22,17 @@ const VARIANT: Record<ButtonVariant, string> = {
   danger: 'bg-transparent text-danger border border-border-strong hover:bg-surface-2',
 };
 
-/* 40 / 48 / 56 tall with a 12–13px capitals label, as Button. */
+/* 40 / 48 / 56 tall with a 14–15px sentence-case label, as Button — keep the two tables equal. */
 const SIZE: Record<ButtonSize, string> = {
-  sm: 'tap-target-y h-10 px-4.5 text-[12px]',
-  md: 'h-12 px-6.5 text-[13px]',
-  lg: 'h-14 px-8 text-[13px]',
+  sm: 'tap-target-y h-10 px-4.5 text-[14px]',
+  md: 'h-12 px-6.5 text-[15px]',
+  lg: 'h-14 px-8 text-[15px]',
+};
+
+/* The photograph-or-ground rule, as Button. Its `SHAPE` table carries the reasoning. */
+const SHAPE: Record<ButtonShape, string> = {
+  control: 'rounded-control',
+  pill: 'rounded-pill',
 };
 
 export interface LinkButtonProps {
@@ -34,6 +40,8 @@ export interface LinkButtonProps {
   children: ReactNode;
   variant?: ButtonVariant;
   size?: ButtonSize;
+  /** `pill` for a link-button laid on a photograph; the default sits on a flat ground. */
+  shape?: ButtonShape;
   fullWidth?: boolean;
   icon?: ReactNode;
   /** Open in a new tab (a calendar, a payment page the user comes back from). */
@@ -46,6 +54,7 @@ export function LinkButton({
   children,
   variant = 'primary',
   size = 'md',
+  shape = 'control',
   fullWidth,
   icon,
   external,
@@ -57,8 +66,9 @@ export function LinkButton({
       target={external ? '_blank' : undefined}
       rel={external ? 'noopener' : undefined}
       className={clsx(
-        'control-label inline-flex select-none items-center justify-center gap-2 rounded-control',
+        'control-label inline-flex select-none items-center justify-center gap-2',
         'transition-[background-color,color,opacity,transform] duration-150 ease-(--ease-out) active:scale-[0.98]',
+        SHAPE[shape],
         VARIANT[variant],
         SIZE[size],
         fullWidth && 'w-full',

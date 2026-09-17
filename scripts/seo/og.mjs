@@ -329,11 +329,18 @@ function template(c) {
   const tile = { x: 720, y: 105, size: 420, r: 0 };
   const textWidth = tile.x - margin - 56;
   /*
-   * The headline is Unbounded in capitals, so it is measured and drawn uppercased. Unbounded is
-   * wide — a Russian title takes half again the width it took in Manrope — hence the smaller
-   * size ladder: the fit picks the largest step that still wraps within three lines.
+   * The headline is Unbounded, drawn exactly as the title is written — sentence case, and no
+   * `toUpperCase()`. That call was here for as long as `.font-display` uppercased; the owner
+   * retired capitals across the whole product, and a share card that still shouts is the
+   * product's own preview disagreeing with the page behind it.
+   *
+   * Unbounded is wide — a Russian title takes half again the width it took in Manrope — hence
+   * the modest size ladder: the fit picks the largest step that still wraps within three lines.
+   * Sentence case sets about a quarter narrower, so the same string now reaches a larger step on
+   * the ladder. That is the trade, not a regression: the ladder is unchanged and the measurement
+   * decides, so a title that needed 32px in capitals gets 40 and still fits the same box.
    */
-  const titleText = c.title.toUpperCase();
+  const titleText = c.title;
   const title = fitText(
     titleText,
     c.big ? [96, 80] : [52, 46, 40, 36, 32],
@@ -341,8 +348,21 @@ function template(c) {
     c.big ? 1 : 3,
     DISPLAY,
   );
-  // Capitals have no descenders except the tails of Д, Ц and Щ; 1.08 clears Й's breve below them.
-  const titleLineHeight = title.size * 1.08;
+  /*
+   * 1.08 → 1.2, and this one is a collision rather than a preference. 1.08 was drawn for
+   * capitals, which have no descenders but the tails of Д, Ц and Щ, and it cleared Й's breve
+   * above them with a little to spare. Add lowercase and Unbounded SemiBold's Cyrillic ink runs
+   * -0.181em (у) to +0.987em (Ё) — 1.168em — so at 1.08 a у would be drawn inside the line below
+   * it. 1.2 restores about the margin the capitals had. The subtitle's budget is measured down
+   * from where the title ends, so it follows this number on its own.
+   */
+  const titleLineHeight = title.size * 1.2;
+  /*
+   * The kicker sits on one line at 20px. It is drawn as written and tracked 0.2 — the SVG
+   * equivalent of `.eyebrow`'s 0.01em — where it used to be uppercased and tracked 3.6 (0.18em).
+   * Both went together: wide tracking is what makes a row of capitals scannable and what pulls
+   * lowercase apart.
+   */
   const eyebrowY = 150;
   let y = c.eyebrow ? 216 : 190;
   const titleTspans = title.lines
@@ -394,7 +414,7 @@ function template(c) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
   <rect width="${WIDTH}" height="${HEIGHT}" fill="${COLORS.bg}"/>
   <rect x="${tile.x}" y="${tile.y}" width="${tile.size}" height="${tile.size}" fill="${c.tile}"/>
-  ${c.eyebrow ? `<text x="${margin}" y="${eyebrowY}" font-family="Onest" font-size="20" letter-spacing="3.6" fill="${COLORS.muted}">${esc(c.eyebrow.toUpperCase())}</text>` : ''}
+  ${c.eyebrow ? `<text x="${margin}" y="${eyebrowY}" font-family="Onest" font-size="20" letter-spacing="0.2" fill="${COLORS.muted}">${esc(c.eyebrow)}</text>` : ''}
   <text font-family="Unbounded" font-weight="600" font-size="${title.size}" fill="${COLORS.text}">${titleTspans}</text>
   <text font-family="Onest" font-size="${subtitle.size}" fill="${COLORS.muted}">${subtitleTspans}</text>${wordmark}
   <text x="${(margin + wordmarkWidth + 26).toFixed(1)}" y="${wmY}" font-family="Onest" font-size="20" fill="${COLORS.muted2}">${esc(c.host)}</text>

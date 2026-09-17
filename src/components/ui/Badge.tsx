@@ -21,7 +21,9 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 /*
- * A badge is a stamp: a state on a card, a count on a row. 24px, capitals at 11px tracked .12em.
+ * A badge is a stamp: a state on a card, a count on a row. 24px, sentence case at 12px. It was
+ * capitals at 11px tracked .12em, and it leaves them with the rest of the product — a stamp that
+ * shouts beside a chip that does not is exactly the half-migration the owner ruled against.
  * Neutral is an outline; `inverse` is the white fill for the one genuine "this one"; `course` is
  * the only tone that takes colour — the programme colour, with black text — for a stamp that
  * names the programme itself. Success, warning and danger keep the colour on the text and stay
@@ -44,8 +46,8 @@ const TONE: Record<BadgeTone, string> = {
 
 /* `sm` is the design system's badge; `md` is a touch roomier for a stamp that stands alone. */
 const SIZE = {
-  sm: 'h-6 px-2.5 text-[11px]',
-  md: 'h-7 px-3 text-[11px]',
+  sm: 'h-6 px-2.5 text-[12px]',
+  md: 'h-7 px-3 text-[12px]',
 } as const;
 
 export function Badge({
@@ -59,7 +61,19 @@ export function Badge({
   return (
     <span
       className={clsx(
-        'inline-flex items-center gap-1 whitespace-nowrap rounded-control border font-semibold uppercase tracking-[0.12em]',
+        /*
+         * `shrink-0` is a bug fix, not a tidy-up. `design/CHANGELOG.md` §9 already rules that a
+         * label does not give up its width to the text beside it — «ярлык не сжимается вместо
+         * текста» — and `Badge` was the one stamp that never got the class. In the admin's
+         * purchase row the status badge sits opposite a truncating email under `justify-between`,
+         * so flexbox took the missing width out of the badge: «Активна» measured 59px of text in
+         * a 49px box and was drawn cut off at the row's edge.
+         *
+         * Sentence case did not cause it and in fact relieved it — the same word sets 49px where
+         * the tracked capitals set 62 — which is only why it took a screenshot to notice. The
+         * text beside a stamp truncates; the stamp keeps its word.
+         */
+        'inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-control border font-semibold tracking-[0.01em]',
         SIZE[size],
         TONE[tone],
         className,

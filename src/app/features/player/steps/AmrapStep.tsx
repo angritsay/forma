@@ -99,7 +99,12 @@ export function AmrapStep({
               decreaseLabel={t('app.playerDecrease')}
               increaseLabel={t('app.playerIncrease')}
             />
-            <span className="eyebrow-sentence text-center">{t('app.playerAmrapPartial')}</span>
+            {/* A hint, not a kicker: 13px muted at regular weight. `.eyebrow` is the same size and
+                colour at 600, and it is reserved for the two or three words that mark a section —
+                this is a sentence telling you what the stepper under it counts. */}
+            <span className="text-center text-[13px] leading-[1.3] text-muted">
+              {t('app.playerAmrapPartial')}
+            </span>
             <Stepper
               value={extraReps}
               onChange={setExtraReps}

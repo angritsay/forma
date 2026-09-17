@@ -26,7 +26,7 @@ export function DemoBadge() {
          * The word is the badge: a warning tone stays on the text and never becomes a tinted
          * block — the same rule the kit's Badge follows, at a size that fits a 26px strip.
          */}
-        <span className="control-label text-[10px] text-warning">{t('app.demoBadgeLabel')}</span>
+        <span className="control-label text-[12px] text-warning">{t('app.demoBadgeLabel')}</span>
         <span className="truncate">{t('app.demoBadge')}</span>
       </p>
     </aside>

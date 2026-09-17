@@ -18,8 +18,10 @@ export interface ChipProps extends Omit<HTMLAttributes<HTMLElement>, 'onClick'> 
 }
 
 /*
- * A chip is a small fact or a filter: 34px, capitals at 12px, tracked a little (.06em — less
- * than a button label, because a chip is read as a word, not scanned as a control). Inactive
+ * A chip is a small fact or a filter: 34px, sentence case at 14px. It used to be capitals at 12px
+ * tracked .06em; the case went with the rest of the product and the tracking went with the case,
+ * which bought the two points of size — a tracked-caps «107 повторов» and a sentence-case one are
+ * within a few pixels of each other. Inactive
  * chips sit on --surface-3 behind a hairline; the selected one is the white fill with black text,
  * the same inversion the primary button uses, and it is the only fill in the row so the eye
  * finds it first.
@@ -41,8 +43,8 @@ const TONE: Record<ChipTone, string> = {
 
 /* `md` is the design system's chip; `sm` is the same chip a step down for metrics inside a card. */
 const SIZE: Record<ChipSize, string> = {
-  sm: 'h-7 px-2.5 text-[11px] gap-1',
-  md: 'h-8.5 px-3 text-[12px] gap-1.5',
+  sm: 'h-7 px-2.5 text-[13px] gap-1',
+  md: 'h-8.5 px-3 text-[14px] gap-1.5',
 };
 
 export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
@@ -61,7 +63,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
 ) {
   const iconNode = typeof icon === 'string' ? <Icon name={icon as IconName} size={12} /> : icon;
   const classes = clsx(
-    'inline-flex shrink-0 items-center whitespace-nowrap rounded-control border font-semibold uppercase tracking-[0.06em]',
+    'inline-flex shrink-0 items-center whitespace-nowrap rounded-control border font-semibold tracking-[0.01em]',
     SIZE[size],
     selected ? 'border-primary bg-primary text-on-primary' : TONE[tone],
     // Interactive chips are 28/34px tall by design; `tap-target-y` (global.css) lifts the hit area

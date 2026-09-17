@@ -132,21 +132,26 @@ public/                     # favicon.svg, icons, manifest
 - Look: near-black ground throughout, structured by hairline rules and editorial numerals rather
   than by a card around every object. Composition is asymmetric — a 7/5 grid, not a balanced
   split; headings sit low against their column; photographs bleed past the page gutter. Large
-  radii where an object is genuinely discrete (24px cards, 20px tiles) and 12px on everything
-  interactive — buttons, inputs and chips alike, with capitalised, tracked labels. A _fact_ that
-  is not a control — «12 баллов», the prize, a trial's days left — is a fully rounded pill
-  (`Pill`), and a person or a rank is a circle (`Avatar`, the board's numerals): the owner's
-  prototype (`design/ui_kits/app-v2`) draws them so, and `design/CHANGELOG.md` §10 records the
-  reversal of the earlier «no pills, no circles» rule. This paragraph described that scale while
-  the tokens were all 0; both now agree, and the one change of mind is the buttons, which used to
-  be held at a near-square 4px. Chrome that has content moving under it — a screen header, a
+  radii where an object is genuinely discrete (24px cards, 20px tiles) and 16px on everything
+  interactive — buttons, inputs and chips alike, with **sentence-case labels** (`design/CHANGELOG.md`
+  §13.1: the capitals came off the whole product, app and site, and the tracking came off with
+  them). A _fact_ that is not a control — «12 баллов», the prize, a trial's days left — is a fully
+  rounded pill (`Pill`), and a person or a rank is a circle (`Avatar`, the board's numerals): the
+  owner's prototype (`design/ui_kits/app-v2`) draws them so, and `design/CHANGELOG.md` §10 records
+  the reversal of the earlier «no pills, no circles» rule. **A button may be a pill too, and the
+  ground decides which** (§13.2): a control laid on a photograph is a pill, a control on a flat
+  ground is a rounded rectangle at `--r-control`. That replaces §10's pressed-versus-read line,
+  which the owner's two mockups broke by disagreeing — «Продолжить» on the course photograph is a
+  full pill and «Вступить за 666 ₽ / мес» on the page ground is a 16px rectangle, and both get
+  pressed. `Button`/`LinkButton` carry it as `shape="pill"`. Chrome that has content moving under it — a screen header, a
   sheet, a modal, the player — is frosted glass (`design/CHANGELOG.md` §8); everything else is a
   solid surface. **The app's tab bar (Курсы / Клуб / Тренер, plus Админка as a fourth seat for
   whoever has the panel — the profile is a sheet behind a person glyph, not a tab) is an iOS
   segmented control**: one opaque dark capsule floating over the bottom of the screen, inset from
   both sides, holding equal segments of sentence-case words with a lighter capsule on the current
-  one. No icons and no capitals — that is the owner's mockup, and it is the one place the
-  interface's tracked-caps control voice does not reach. It is **opaque rather than glass** for a
+  one. No icons — that is the owner's mockup. (Its sentence case is no longer a departure: §13.1
+  took the capitals off every control in the product, and this bar simply got there first.) It is
+  **opaque rather than glass** for a
   reason §8 already gives: a flat alpha lets running text read through it, and with the
   leaderboard scrolled underneath, the row «13 Настя 105» was legible inside the capsule. The
   lighter capsule is a share of however many seats the bar has, never a hard-coded quarter,
@@ -162,7 +167,7 @@ public/                     # favicon.svg, icons, manifest
   `--muted-2 #93939D`, `--primary #FFFFFF` (on-primary `#0B0B0D`), `--accent #9ECBFF`,
   `--accent-2 #C9D6FF` (periwinkle), `--success #7CE0B0`, `--warning #FFD166`, `--danger #FF6B6B`,
   course tiles `--tile-1…5` with `--tile-fg #DCE9FA` as their ink, radii `--r-card 24px`,
-  `--r-tile 20px`, `--r-inner 16px`, `--r-control 4px`.
+  `--r-tile 20px`, `--r-inner 12px`, `--r-control 16px`, `--r-pill 999px`.
 - Typography: display = Manrope variable 600 (`font-display`; 800 for the wordmark), body/UI =
   Onest variable (`font-sans`). Both are chosen for Cyrillic first: an earlier pair drew и, п and
   т as composite glyphs pointing at the Latin u, n and m outlines, so every Russian heading
@@ -170,11 +175,18 @@ public/                     # favicon.svg, icons, manifest
   taste: Й reaches 0.926em above the baseline and у drops to -0.240em in Manrope, so lines collide
   below 1.166em. Numbers in timers use `font-sans` with tabular figures — both faces expose
   `tnum`.
-- Kickers (`.eyebrow`) are uppercase at 0.14em tracking, per the brandbook. This is a deliberate
-  trade, and it reverses an earlier rule in this spec: Cyrillic capitals are near-uniform
-  rectangles, so a Russian label in caps loses its word silhouette and roughly doubles its set
-  width. It is affordable for short labels only — use `.eyebrow-sentence` for anything longer.
-  `src/i18n/eyebrow.test.ts` fails the build on a string over 22 characters inside an `.eyebrow`.
+- Kickers (`.eyebrow`) are **13px sentence case at 0.01em**, `--muted`. They used to be 11px
+  capitals at 0.18em, and the note this spec carried against that — Cyrillic capitals are
+  near-uniform rectangles, so a Russian label in caps loses its word silhouette and roughly
+  doubles its set width — is the argument the owner has now applied to the whole product
+  (`design/CHANGELOG.md` §13.1). The escape hatch it prescribed, `.eyebrow-sentence`, is deleted:
+  `.eyebrow` is that class now, to the pixel, and two names for one treatment is how a product
+  ends up with two of everything.
+  A kicker is still a **label, not a sentence** — two or three words. `src/i18n/eyebrow.test.ts`
+  fails the build on a string over 29 characters inside an `.eyebrow`, which is the same ~210px
+  budget as before, re-measured against the face that renders now (7.03px per character at 13px
+  sentence case, where capitals at 11px/.18em averaged 9.5px). A string too long to be a kicker is
+  not a kicker: set it as body text at the same size and colour, one step lighter.
 - Photography is the main visual surface: full-bleed, monochrome, grained, white text over a
   protection gradient (`.photo-mono` / `.photo-grain` / `.photo-scrim`, and the two `PhotoBlock`
   components). **The current photographs are placeholders** — see `src/lib/media/photos.ts`: they

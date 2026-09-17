@@ -18,7 +18,7 @@ import { useT } from '@/app/hooks/useT';
 export function PrizePill({ children }: { children: ReactNode }) {
   const { t } = useT();
   return (
-    <span className="control-label inline-flex max-w-full min-h-7 items-center rounded-pill bg-course px-3 py-1.5 text-[10px] leading-[1.5] text-on-course">
+    <span className="control-label inline-flex max-w-full min-h-8 items-center rounded-pill bg-course px-3 py-1.5 text-[13px] leading-[1.5] text-on-course">
       {t('app.marathonPrizeShort')} · {children}
     </span>
   );

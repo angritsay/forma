@@ -48,9 +48,7 @@ export function Logo({ lockup = false, label = 'Forma', className, ...rest }: Lo
       <span className="glyph text-[0.55em] text-muted-2" aria-hidden="true">
         //
       </span>
-      <span className="text-[0.68em] font-semibold uppercase tracking-[0.1em] text-muted">
-        Сергей Титов
-      </span>
+      <span className="text-[0.68em] font-semibold tracking-[0.01em] text-muted">Сергей Титов</span>
     </span>
   );
 }

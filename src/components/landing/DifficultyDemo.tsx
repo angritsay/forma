@@ -105,7 +105,7 @@ export default function DifficultyDemo({
         {/* Two lines rather than one clipped one: «Тренировка из курса «Форма с нуля: кроссфит
             дома без оборудования»: Отжимания…» is a sentence carrying a course name, and at 390px
             `truncate` cut it inside a word. */}
-        <p className="eyebrow-sentence line-clamp-2">{workoutLabel}</p>
+        <p className="eyebrow line-clamp-2">{workoutLabel}</p>
 
         <div className="mt-5 flex flex-col gap-2" role="group" aria-label={labels.planTitle}>
           {choices.map((c) => {
@@ -126,17 +126,17 @@ export default function DifficultyDemo({
                 <span className="flex flex-col items-center">
                   <span className="numeral tabular text-4xl leading-none">{c.durationMin}</span>
                   <span
-                    className={`control-label mt-1 text-[10px] ${active ? 'text-on-primary/70' : 'text-muted'}`}
+                    className={`control-label mt-1 text-[13px] ${active ? 'text-on-primary/70' : 'text-muted'}`}
                   >
                     {labels.minutes}
                   </span>
                 </span>
                 <span className="min-w-0">
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="font-display text-sm uppercase">{c.label}</span>
+                    <span className="font-display text-sm">{c.label}</span>
                     {isRec && (
                       <span
-                        className={`control-label inline-flex h-6 items-center rounded-pill border px-2.5 text-[10px] ${
+                        className={`control-label inline-flex h-8 items-center rounded-pill border px-2.5 text-[13px] ${
                           active
                             ? 'border-on-primary/40 text-on-primary'
                             : 'border-border-strong text-muted'
@@ -200,7 +200,7 @@ export default function DifficultyDemo({
               <li key={b.id} className="border-t border-border pt-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-semibold">{b.title}</span>
-                  <span className="control-label inline-flex h-6 items-center rounded-pill border border-border-strong px-2.5 text-[10px] text-muted">
+                  <span className="control-label inline-flex h-8 items-center rounded-pill border border-border-strong px-2.5 text-[13px] text-muted">
                     {b.meta}
                   </span>
                 </div>

@@ -21,5 +21,7 @@ import { DisplayTitle } from '@/app/features/home/DisplayTitle';
  * still the last resort, so nothing can widen the column.
  */
 export function Question({ text }: { text: string }) {
-  return <DisplayTitle as="h1" text={text} className="hyphens-none text-[28px] leading-[1.08]" />;
+  // 1.08 → 1.2: every question wraps to two lines and 1.08 was drawn for capitals, which have
+  // no descenders. The measurement is in global.css's type-scale comment.
+  return <DisplayTitle as="h1" text={text} className="hyphens-none text-[28px] leading-[1.2]" />;
 }

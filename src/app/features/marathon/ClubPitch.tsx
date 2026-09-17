@@ -13,10 +13,12 @@
  * replaces was written from a description of the same drawing and had a prize pill, three
  * explanatory rows and a sticky footer — the same facts, arranged as a brochure.
  *
- * Three departures from the rest of the app, and they are the point of the redesign rather than
- * mistakes to correct back: the type is **mixed case**, not the tracked capitals of `.eyebrow` and
- * `.control-label`; the **colour is on the type and on the one button**, not on a field; and the
- * **photograph is the surface** — there is no panel under it for the words to sit on.
+ * Three departures from the rest of the app when this screen was written, and they are the point
+ * of the redesign rather than mistakes to correct back: the type is **mixed case**; the **colour
+ * is on the type and on the one button**, not on a field; and the **photograph is the surface** —
+ * there is no panel under it for the words to sit on. The first of the three is no longer a
+ * departure: `.eyebrow` and `.control-label` dropped their capitals product-wide, so this screen
+ * stopped opting out and simply uses them.
  *
  * ## The photographs and the label over them
  *
@@ -75,8 +77,9 @@ function Hero() {
 
   return (
     <section className="flex flex-col gap-4">
-      {/* Sentence case, not a tracked kicker: no uppercase label appears anywhere in the mockup. */}
-      {photos.length > 0 ? <p className="eyebrow-sentence px-3">{label}</p> : null}
+      {/* Plain `.eyebrow`: the kicker is sentence case product-wide now, so the opt-out this line
+          used to carry (`.eyebrow-sentence`) has nothing left to opt out of. */}
+      {photos.length > 0 ? <p className="eyebrow px-3">{label}</p> : null}
 
       <div className="relative -mx-2">
         {photos.length > 0 ? (
@@ -137,12 +140,17 @@ function Hero() {
         ) : null}
 
         {/*
-         * «Клуб» 200 · «маленьких» 800 in the club's colour · «шагов» 200. `.display` is uppercase
-         * by default and the mockup is not, hence `normal-case`.
+         * «Клуб» 200 · «маленьких» 800 in the club's colour · «шагов» 200. This used to carry
+         * `normal-case` to undo `.display`'s capitals; `.display` is sentence case now, so the
+         * opt-out is gone and the class alone says what the mockup says.
+         *
+         * `leading-[1.12]` is kept and is deliberate: none of «Клуб», «маленьких», «шагов» has a
+         * descender, so this lockup can sit tighter than `.display`'s own 1.2 — which has to hold
+         * for any string, including the у that sets the floor.
          */}
         <h1
           className={clsx(
-            'display normal-case text-[clamp(32px,10.2vw,44px)] leading-[1.12]',
+            'display text-[clamp(32px,10.2vw,44px)] leading-[1.12]',
             photos.length > 0
               ? 'absolute inset-x-0 bottom-[-6px] pl-5'
               : 'px-3 pt-2 pb-1 text-balance',
