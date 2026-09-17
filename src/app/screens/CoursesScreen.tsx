@@ -167,11 +167,13 @@ export default function CoursesScreen() {
   const header = (
     <div className="flex h-14 items-center gap-3 px-6 md:px-10">
       <h1 className="font-display min-w-0 flex-1 truncate text-base">{greeting}</h1>
+      {/* Hidden from `md`: the top row carries the same avatar opening the same sheet, and two of
+          them on one screen is one account in two places. */}
       <button
         type="button"
         aria-label={t('app.profileTitle')}
         onClick={() => setAccount(true)}
-        className="tap-target shrink-0 rounded-pill transition-opacity duration-150 ease-(--ease-out) hover:opacity-80"
+        className="tap-target shrink-0 rounded-pill transition-opacity duration-150 ease-(--ease-out) hover:opacity-80 md:hidden"
       >
         <Avatar
           seed={profile?.avatarSeed ?? user?.id ?? ''}

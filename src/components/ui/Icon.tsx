@@ -101,16 +101,19 @@ export const ICONS: Record<IconName, IconDef> = {
     d: 'M9 12.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M2.5 20a6.5 6.5 0 0 1 13 0M17 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6M16.5 14.4a6 6 0 0 1 5 5.6',
   },
   /*
-   * A whistle, for the coach's tab.
+   * A stopwatch, for the coach's tab.
    *
    * The obvious mark for «Тренер» is a person, and the set already has three of those — `profile`,
-   * `user`, `people` — so a fourth would be the club's icon with one figure taken away, which is
-   * the opposite of what the tab means. A whistle is the object only a coach holds: it says the
-   * person on the other side of the hour is running it, not training beside you. Drawn in the same
-   * language as the rest — a body, a nozzle and the lanyard's hook, three strokes, no curves the
-   * others do not already use.
+   * `user`, `people` — so a fourth would be the club's icon with a figure taken away, which is the
+   * opposite of what the tab means. A whistle was drawn first and failed the only test that
+   * matters: at 22px, in this square-capped one-stroke language, a whistle's body and nozzle read
+   * as a camera. A stopwatch survives the size — it is a circle, a crown and a hand — and it is
+   * the other object only the person running the session holds.
+   *
+   * It is not `clock` at a different size: the crown and the winder are the whole difference
+   * between a time of day and a length of time, and a length of time is what the tab sells.
    */
-  coach: { d: 'M6 9h7v6H6a3 3 0 0 1 0-6zM13 10.5l6-2.5v8l-6-2.5M9 9V6h4' },
+  coach: { d: 'M12 21a8 8 0 1 0 0-16 8 8 0 0 0 0 16M12 13V9.5M9.5 2.5h5M18.6 6.4l1.6-1.6' },
   chevron: { glyph: '›' },
   plus: { glyph: '+' },
   minus: { glyph: '−' },

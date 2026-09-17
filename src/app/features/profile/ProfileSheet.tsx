@@ -167,14 +167,10 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
             </li>
           </ul>
 
-          <Button
-            variant="ghost"
-            size="lg"
-            fullWidth
-            className="text-danger"
-            onClick={() => setConfirm(true)}
-          >
-            {t('app.profileSignOut')}
+          {/* The red is on the label, not on the button: `ghost` sets its own text colour and a
+              `text-danger` beside it is a coin toss on which utility the stylesheet emits last. */}
+          <Button variant="ghost" size="lg" fullWidth onClick={() => setConfirm(true)}>
+            <span className="text-danger">{t('app.profileSignOut')}</span>
           </Button>
         </div>
       </Sheet>
