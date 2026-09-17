@@ -36,6 +36,7 @@ on:
         options:
           - migration
           - club-seed
+          - club-join
           - email-templates
           - deploy-bot
       migration_file:
@@ -134,6 +135,99 @@ jobs:
             exit 1
           fi
           echo "HTTP $code — the test week is in."
+          echo "Next: run this workflow again with task = club-join, to put yourself in it."
+
+      # ---------------------------------------------------------------------
+      # The one thing in this file that takes a value rather than a filename —
+      # and it takes it from a SECRET, never from an input.
+      #
+      # An address is personal data and a `workflow_dispatch` input is printed on
+      # the run page of a public repository forever. A secret is masked in the
+      # log, so the statement built from it can be built in the runner and still
+      # never appear anywhere. The seed file therefore stays free of emails, which
+      # is what `supabase/seed-club-week.sql` §4 promises.
+      # ---------------------------------------------------------------------
+      - name: Put the testers in the club's test week
+        if: ${{ inputs.task == 'club-join' }}
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          # CLUB_TESTER_EMAILS if it exists, otherwise the address the backend probe
+          # already uses — so this works with no new secret to create on a phone.
+          EMAILS: ${{ secrets.CLUB_TESTER_EMAILS || secrets.PROBE_EMAIL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${EMAILS:-}" ]; then
+            echo "::error::Neither CLUB_TESTER_EMAILS nor PROBE_EMAIL is set. Settings → Secrets and variables → Actions → New repository secret, name CLUB_TESTER_EMAILS, value your sign-in address (several are allowed, separated by commas)."
+            exit 1
+          fi
+          # One or more addresses, separated by commas, semicolons or whitespace, turned
+          # into a SQL VALUES list with every quote doubled. Written to a file rather than
+          # inlined so no shell quoting stands between the secret and the statement.
+          cat > /tmp/emails.jq <<'JQ'
+          split("[,;\\s]+"; "")
+          | map(select(length > 0))
+          | unique
+          | map("('" + gsub("'"; "''") + "')")
+          | join(", ")
+          JQ
+          VALUES=$(printf '%s' "$EMAILS" | jq -Rrs -f /tmp/emails.jq)
+          if [ -z "$VALUES" ]; then
+            echo "::error::The secret held no address."
+            exit 1
+          fi
+          # The statement itself. `display_name` is left null on purpose: the board then
+          # shows the name from the person's own profile, which is the name they chose.
+          cat > /tmp/join.sql <<SQL
+          do \$\$ begin
+            if not exists (select 1 from public.marathons where slug = 'klub_test') then
+              raise exception 'no klub_test marathon — run this workflow with task = club-seed first';
+            end if;
+          end \$\$;
+
+          with club as (select id from public.marathons where slug = 'klub_test'),
+               team as (
+                 insert into public.marathon_teams (marathon_id, name)
+                 select id, 'Пара 1' from club
+                 -- do update, not do nothing: a conflicting do nothing returns no row and
+                 -- the insert below would then quietly add nobody.
+                 on conflict (marathon_id, name) do update set name = excluded.name
+                 returning id
+               )
+          insert into public.marathon_members (marathon_id, email, team_id)
+          select club.id, v.email::citext, team.id
+          from club, team, (values $VALUES) as v (email)
+          on conflict (marathon_id, email) do update set
+            team_id = excluded.team_id,
+            status  = 'active';
+
+          do \$\$
+          declare n int;
+          begin
+            select count(*) into n
+            from public.marathon_members mm
+            join public.marathons m on m.id = mm.marathon_id
+            where m.slug = 'klub_test'
+              and mm.status = 'active'
+              and mm.email not like 'klub-test-%@example.test';
+            if n = 0 then
+              raise exception 'nobody was added to the club';
+            end if;
+            raise notice 'real members in the club: %', n;
+          end \$\$;
+          SQL
+          jq -Rs '{query: .}' < /tmp/join.sql > /tmp/body.json
+          code=$(curl -sS -o /tmp/out.json -w '%{http_code}' \
+            -X POST "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H 'Content-Type: application/json' \
+            --data-binary @/tmp/body.json)
+          # Neither the statement nor the response is printed: both carry the address.
+          if [ "$code" -ge 300 ]; then
+            echo "::error::Supabase returned HTTP $code. The message follows; it is the API's own error text."
+            jq -r '.message // .error // "(no message)"' < /tmp/out.json || true
+            exit 1
+          fi
+          echo "HTTP $code — in the club, in «Пара 1». Open the app: the Клуб tab should show today's task and the week's table."
 
       # ---------------------------------------------------------------------
       # The sign-in email, into BOTH templates. Supabase sends the one-time code

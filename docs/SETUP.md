@@ -1119,6 +1119,40 @@ history.
 
 ---
 
+## 7.8 Applying things from GitHub instead of the dashboard
+
+`.github/workflows/supabase-apply.yml` does the dashboard chores from a phone. **Actions → Supabase
+apply → Run workflow**, pick a task:
+
+| Task              | What it does                                                                              |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| `migration`       | Runs one file from `supabase/migrations/`. The second input is its bare filename.         |
+| `club-seed`       | Runs `supabase/seed-club-week.sql` — the club's test week and its invented cohort (§9.1). |
+| `club-join`       | Puts the real testers in that week, reading their addresses from a secret.                |
+| `email-templates` | Puts `supabase/templates/otp.html` into **both** Magic Link and Confirm signup (§3.2).    |
+| `deploy-bot`      | Deploys the `telegram-bot` function and sets its secrets (§7.6).                          |
+
+One secret makes it work: **`SUPABASE_ACCESS_TOKEN`** (Settings → Secrets and variables → Actions),
+a personal access token from <https://supabase.com/dashboard/account/tokens>. The project ref is
+derived from the `PUBLIC_SUPABASE_URL` variable, which is already set.
+
+Two rules this file is built around, and they are the reason it is safe to have in a public
+repository:
+
+- **No input carries content.** The task is a choice and the migration is a filename checked against
+  `supabase/migrations/`. A `workflow_dispatch` input is printed on the run page forever, so an input
+  that could carry SQL is an input that could carry an email address or a key.
+- **No response body is printed.** A query result can contain real rows.
+
+`club-join` is the only task that takes a value, and it takes it from a secret:
+`CLUB_TESTER_EMAILS`, falling back to `PROBE_EMAIL`. Secrets are masked in the log, so the statement
+is built in the runner and never appears anywhere.
+
+What it cannot do: DNS (SPF/DKIM/DMARC live at the registrar), anything on Prodamus, and uploading
+video, which is not in this repository.
+
+---
+
 ## 8. Security notes
 
 - **The anon key is public by design.** It only identifies the project; every table has Row
@@ -1260,21 +1294,51 @@ account itself is not usable as an identity — check
 
 ## 9.1 A test week for the club («Клуб маленьких шагов»)
 
-`supabase/seed-club-week.sql` writes one seven-day club with seventeen tasks, so the format can be
-played with real accounts without typing a week into the admin panel first. Paste it into the SQL
-editor (Supabase → SQL Editor → New query) and run it.
+`supabase/seed-club-week.sql` writes one seven-day club with nineteen tasks, four pairs and seven
+invented members, so the club's tab can be looked at without typing a week into the admin panel
+first. Run it with **Actions → Supabase apply → task = `club-seed`** (§7.8), or paste it into the
+SQL editor (Supabase → SQL Editor → New query).
 
-It owns exactly one row — the marathon whose slug is `klub_test` — and rewrites that row and its
-tasks every time it runs. Any other marathon is untouched, including a real one running at the same
-time. Editing a line in the file and re-running is the intended way to change the plan.
+It owns exactly one row — the marathon whose slug is `klub_test` — and rewrites that row, its tasks
+and its test cohort every time it runs. Any other marathon is untouched, including a real one
+running at the same time. Editing a line in the file and re-running is the intended way to change
+the plan.
 
-Day 1 is the day you run it. To rehearse a week already in progress, change `current_date` to
-`current_date - 3` at the top and re-run: today becomes day 4, with three days behind it.
+**Today is day 3.** `starts_on` is `current_date - 2`, so the week already has a past — which is the
+point, because the club's screen is half task and half standings and a table of zeroes tells you
+nothing about the second half. Change the offset at the top to land on a different day.
 
-The testers are **not** in the file. It ends with a commented block to fill in with two real
-addresses and run separately — the repository is public, and an email committed to it is published
-forever. A member can be added before they have ever signed in; the club finds them by the address
-they sign in with, exactly as a course purchase does.
+### The invented cohort, and why it is not a fabricated result
+
+Section 3 of the file inserts seven people who do not exist, at `@example.test` addresses (`.test`
+is reserved by RFC 6761 and can never be delivered to), and the proof they have "already sent". They
+exist so the board has rows. They live only inside `klub_test`, a round called «Тестовая неделя»
+that only its own members can read, and they never appear on a public surface — which is what keeps
+this test data rather than the invented results `docs/SPEC.md` §3 forbids.
+
+Two honest consequences, both written into the file:
+
+- Every task in this week has `late_counts = true`. Without it, proof sent after the day's deadline
+  scores zero — correct for a real club, a trap in one being demonstrated at eleven at night, where
+  the card gives no hint that the tap was too late. (That missing hint is a real gap in the app, not
+  something this seed fixes.)
+- `media` proof is not invented. A photograph cannot be faked into the bucket, so day 5's «Фото
+  тарелки» scores nothing for anybody.
+
+### Putting the real people in
+
+Real addresses are **not** in the file and will not be: the repository is public, and an email
+committed to it is published forever. Run **Actions → Supabase apply → task = `club-join`** instead.
+It reads the address from the `CLUB_TESTER_EMAILS` repository secret — falling back to `PROBE_EMAIL`,
+so there is usually no new secret to create — builds the statement inside the runner, and prints
+neither the statement nor the response. Several addresses may be given, separated by commas.
+
+Everyone it adds goes into «Пара 1», beside the invented partner. `team_size` is 2, so that pair's
+`all_members` tasks stay unscored until the real member delivers hers too — which is the pair
+mechanic on screen, and the reason the board moves the moment she taps «сделал».
+
+A member can be added before they have ever signed in; the club finds them by the address they sign
+in with, exactly as a course purchase does.
 
 Deleting the whole thing, tasks, people and proof included:
 
@@ -1283,8 +1347,9 @@ delete from public.marathons where slug = 'klub_test';
 ```
 
 Verified against a throwaway Postgres 16 with every migration applied: the script runs clean, runs
-twice without duplicating anything, and leaves `marathon_day_index()` answering day 1 with three
-tasks due.
+twice without duplicating anything (19 tasks, 4 teams, 8 members, 40 proofs either way), and the
+week-1 board reads 34 / 33 / 21 / 16 with the real member's pair fourth — rising to third the moment
+she sends day 3's two tasks.
 
 ---
 
