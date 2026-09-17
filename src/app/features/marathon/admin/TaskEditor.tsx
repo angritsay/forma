@@ -179,10 +179,17 @@ export function TaskEditor({
       onClose={onClose}
       title={dayLabel}
       footer={
+        /*
+         * `flex-1` on «Сохранить», not `fullWidth`. `w-full` asks for the whole row and flexbox
+         * then takes the shortfall out of the button beside it, so «Удалить» was drawn as «Уд…» —
+         * the same class of bug as `Badge`'s missing `shrink-0`, and the labels growing 13 → 15px
+         * with sentence case is what pushed it over. The primary now grows into whatever is left
+         * and the ghost keeps its word.
+         */
         <div className="flex gap-3">
           <Button
             size="lg"
-            fullWidth
+            className="flex-1"
             loading={busy}
             disabled={Boolean(error)}
             onClick={() => void save()}
@@ -193,6 +200,7 @@ export function TaskEditor({
             <Button
               size="lg"
               variant="ghost"
+              className="shrink-0"
               onClick={() => {
                 void onDelete().then(onClose);
               }}
@@ -423,7 +431,11 @@ function Recipients({ teams, members, solo, value, onChange }: RecipientsProps) 
             className="size-5 accent-primary"
           />
           <span className="min-w-0 flex-1 truncate">{team.name}</span>
-          <span className="control-label text-[10px] text-muted-2">{t('app.mAdminTeam')}</span>
+          {/* 10px → 12px, with the weekday strip in `DayPlan`: 10 was the floor for a tracked
+              capital, and these two are the last labels in the club still set for them. */}
+          <span className="control-label shrink-0 text-[12px] text-muted-2">
+            {t('app.mAdminTeam')}
+          </span>
         </label>
       ))}
 
@@ -447,7 +459,7 @@ function Recipients({ teams, members, solo, value, onChange }: RecipientsProps) 
                 {member.displayName?.trim() || member.email}
               </span>
               {covered ? (
-                <span className="control-label text-[10px] text-muted-2">
+                <span className="control-label shrink-0 text-[12px] text-muted-2">
                   {t('app.mAdminSendViaTeam')}
                 </span>
               ) : null}

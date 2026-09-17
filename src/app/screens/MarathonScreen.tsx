@@ -40,6 +40,7 @@ import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Glyph } from '@/components/ui/Icon';
+import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
@@ -53,7 +54,6 @@ import { useT } from '@/app/hooks/useT';
 import { BoardRow } from '@/app/features/marathon/BoardRow';
 import { ClubPitch } from '@/app/features/marathon/ClubPitch';
 import { GameHead } from '@/app/features/marathon/GameHead';
-import { PrizePill } from '@/app/features/marathon/PrizePill';
 import { clubPrize } from '@/app/features/marathon/prize';
 import { TaskCard } from '@/app/features/marathon/TaskCard';
 import {
@@ -306,20 +306,31 @@ export default function MarathonScreen() {
          * what the table is for, and the leader's filled circle under it is drawn in the same
          * colour for the same reason.
          */}
-        {/* 384px rather than 320: the prize is the widest thing in this column and at 320 the pill
-            ellipsised «…СОЗДАТЕЛЕМ FO…» on a laptop while fitting whole on a phone. */}
+        {/* 384px rather than 320, and it is a proportion rather than a fix now: the prize is still
+            the widest thing in this column, but sentence case brought it to 304px, so 320 would
+            hold it with 16px to spare. A column half again as wide as the pill keeps the table
+            from reading as a narrow sidebar beside the day. */}
         <section className="md:w-96 md:shrink-0">
           {/*
            * The kicker and the prize are stacked, not opposite each other. They shared a line
-           * while the prize was two words; «час с тренером и создателем Forma» is eleven, and on a
-           * 390px screen the pill did what it is built to do and ellipsised the prize away — a
-           * truncated prize is worse than none, because it is the sentence the table exists for.
+           * while the prize was two words; «Час с тренером и создателем Forma» is eleven, and side
+           * by side there is no width at which both survive on a phone.
            */}
           <div className="flex flex-col items-start gap-2">
             <h2 className="eyebrow">
               {t('app.marathonWeek', { n: formatNumber(locale, marathon.week) })}
             </h2>
-            <PrizePill>{clubPrize(tr, marathon.prize)}</PrizePill>
+            {/*
+             * The prize is the one filled pill on the screen — what the table is for. It is the
+             * shared `Pill` again: it used to need a wrapping twin (`PrizePill`), because at 10px
+             * tracked capitals the string measured 313px against a 327px column at 375 and
+             * ellipsised to «…СОЗДАТЕЛЕМ FO…» there. Sentence case at 13px measures 304px in the
+             * same 327, so the exception had nothing left to protect and is gone. A prize the
+             * coach types longer than the standing one will ellipsise, like every other pill.
+             */}
+            <Pill tone="course-fill">
+              {t('app.marathonPrizeShort')} · {clubPrize(tr, marathon.prize)}
+            </Pill>
           </div>
           {topScores.length > 0 ? (
             <ol className="mt-3 flex flex-col">

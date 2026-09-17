@@ -135,9 +135,12 @@ export function DayPlan({
       </div>
 
       <div>
+        {/* 10px → 12px. Ten was the floor a tracked capital could be read at; «пн вт ср» in
+            sentence case at that size is the smallest type in the product by three pixels. 12 is
+            `Badge`'s size, which is the kit's smallest step now. */}
         <div className="grid grid-cols-7 gap-1 pb-1.5">
           {weekdays.map((name) => (
-            <span key={name} className="control-label text-center text-[10px] text-muted-2">
+            <span key={name} className="control-label text-center text-[12px] text-muted-2">
               {name}
             </span>
           ))}
