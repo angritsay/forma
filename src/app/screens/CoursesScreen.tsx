@@ -33,6 +33,7 @@ import { LIVE_COURSES } from '@/content/registry';
 import { PHOTOS, type Photo } from '@/lib/media/photos';
 import { evaluateAchievements } from '@/lib/training/levels';
 import { useT } from '@/app/hooks/useT';
+import { AssessmentBanner } from '@/app/features/assessment/AssessmentBanner';
 import { CourseCard } from '@/app/features/courses/CourseCard';
 import { courseAccentVars, courseLandingHref } from '@/app/features/courses/courseMeta';
 import { buildDeck } from '@/app/features/courses/deck';
@@ -198,6 +199,20 @@ export default function CoursesScreen() {
       !entries.some((e) => e.kind === 'course' && e.course.id === resume.courseId);
     body = (
       <div className="flex flex-col gap-4">
+        {/*
+         * The offer to take the self-test, after the second completed workout.
+         *
+         * One line, because the banner decides for itself whether it exists — it reads the profile
+         * and the totals, asks `shouldOfferAssessment`, and renders nothing until the rule holds.
+         * It belongs here rather than on «Клуб» or «Тренер» because this is the screen somebody
+         * lands on after finishing a workout, which is the moment the offer is about.
+         *
+         * Above the cards deliberately: below them it is under the fold on a phone, and an offer
+         * nobody scrolls to is an offer that does not exist — which is what it has been. The test
+         * left onboarding in an earlier pass and nothing mounted this afterwards, so `/assessment`
+         * was reachable only by typing the URL.
+         */}
+        <AssessmentBanner />
         {orphanResume && resume ? (
           <Button
             size="lg"
