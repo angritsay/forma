@@ -1,11 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   AuthError,
+  checkEmail,
   isValidCode,
   isValidEmail,
   normalizeEmail,
+  suggestEmailDomain,
   toAuthError,
   verifyCode,
+  withDomain,
 } from './auth';
 import { isAppError } from './errors';
 
@@ -35,6 +38,80 @@ describe('auth helpers', () => {
     expect(isValidCode('123456')).toBe(true);
     expect(isValidCode('12345')).toBe(false);
     expect(isValidCode('12345a')).toBe(false);
+  });
+});
+
+/*
+ * The sign-in screen used to answer every bad address with «Проверь адрес». These are the reasons
+ * that replaced it — each one has its own sentence on screen, so each one has to be told apart
+ * here.
+ */
+describe('checkEmail — why the address was refused', () => {
+  it('names an empty field rather than calling it invalid', () => {
+    expect(checkEmail('')).toEqual({ ok: false, reason: 'email_empty' });
+    expect(checkEmail('   ')).toEqual({ ok: false, reason: 'email_empty' });
+  });
+
+  it('names a missing @, which is what a phone number or a handle looks like', () => {
+    expect(checkEmail('nastia')).toEqual({ ok: false, reason: 'email_no_at' });
+    expect(checkEmail('+79991234567')).toEqual({ ok: false, reason: 'email_no_at' });
+  });
+
+  it('falls back to the shape complaint for everything else', () => {
+    expect(checkEmail('nastia@')).toEqual({ ok: false, reason: 'invalid_email' });
+    expect(checkEmail('nastia@gmail')).toEqual({ ok: false, reason: 'invalid_email' });
+    expect(checkEmail('nas tia@gmail.com')).toEqual({ ok: false, reason: 'invalid_email' });
+  });
+
+  it('passes a good address through, normalized', () => {
+    expect(checkEmail('  Nastia@Gmail.com ')).toEqual({ ok: true, email: 'nastia@gmail.com' });
+  });
+
+  it('flags a slipped domain and says which one it meant', () => {
+    expect(checkEmail('nastia@gmial.com')).toEqual({
+      ok: false,
+      reason: 'email_typo',
+      suggestion: 'gmail.com',
+    });
+  });
+});
+
+describe('suggestEmailDomain', () => {
+  it('catches the usual slips', () => {
+    expect(suggestEmailDomain('a@gmial.com')).toBe('gmail.com');
+    expect(suggestEmailDomain('a@gmail.co')).toBe('gmail.com');
+    expect(suggestEmailDomain('a@yandex.ry')).toBe('yandex.ru');
+    expect(suggestEmailDomain('a@mial.ru')).toBe('mail.ru');
+    expect(suggestEmailDomain('a@iclod.com')).toBe('icloud.com');
+  });
+
+  it('says nothing about a domain that is already right', () => {
+    expect(suggestEmailDomain('a@gmail.com')).toBeNull();
+    expect(suggestEmailDomain('a@ya.ru')).toBeNull();
+  });
+
+  /*
+   * The important half. A wrong guess here puts a sentence under the field telling somebody their
+   * own mailbox is a typo, so the tolerance is tied to the domain's length: a short domain cannot
+   * absorb a whole syllable.
+   */
+  it('leaves domains nobody has heard of alone', () => {
+    expect(suggestEmailDomain('a@forma-app.co')).toBeNull();
+    expect(suggestEmailDomain('a@sobaka.net')).toBeNull();
+    expect(suggestEmailDomain('a@vk.com')).toBeNull();
+    expect(suggestEmailDomain('a@ma.ru')).toBeNull();
+  });
+
+  it('has nothing to say about a string with no domain in it', () => {
+    expect(suggestEmailDomain('nastia')).toBeNull();
+    expect(suggestEmailDomain('nastia@')).toBeNull();
+  });
+});
+
+describe('withDomain', () => {
+  it('swaps the domain and keeps the person', () => {
+    expect(withDomain('Nastia@gmial.com', 'gmail.com')).toBe('nastia@gmail.com');
+    expect(withDomain('nastia+forma@gmial.com', 'gmail.com')).toBe('nastia+forma@gmail.com');
   });
 });
 

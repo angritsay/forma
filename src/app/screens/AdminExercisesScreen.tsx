@@ -79,7 +79,7 @@ export default function AdminExercisesScreen() {
   }, [rows, search, filter]);
 
   if (admin === null) return <BootScreen />;
-  if (admin === false) return <Navigate to="/profile" replace />;
+  if (admin === false) return <Navigate to="/" replace />;
 
   const onSave = async (draft: ExerciseDraft) => {
     setSaving(true);

@@ -1,14 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { Profile } from '@/lib/api/types';
 import type { UserTrainingProfile } from '@/lib/training/types';
-import { firstIncompleteStep, isStepComplete } from '@/app/screens/onboarding/draft';
 import {
   fitnessOf,
   newAvatarSeed,
-  profileToDraft,
   sinceLabel,
   splitName,
-  TESTS_STEP_INDEX,
   withEquipment,
   withLimitations,
 } from './model';
@@ -78,37 +75,6 @@ describe('withEquipment / withLimitations', () => {
       'knees',
     ]);
     expect(withLimitations(TP, []).limitations).toEqual([]);
-  });
-});
-
-describe('profileToDraft', () => {
-  it('builds a draft that resumes at the assessment with everything else complete', () => {
-    const draft = profileToDraft(PROFILE, 'en');
-    expect(draft).not.toBeNull();
-    expect(draft!.step).toBe(TESTS_STEP_INDEX);
-    expect(firstIncompleteStep(draft!)).toBe(TESTS_STEP_INDEX);
-    expect(isStepComplete(draft!, 'assess')).toBe(false);
-    expect(draft).toMatchObject({
-      locale: 'en',
-      displayName: 'Ann',
-      ageBand: '25-34',
-      equipment: ['dumbbells', 'jump_rope'],
-      dumbbellKg: [4, 8],
-      limitations: ['knees'],
-      limitationsNone: false,
-      timePerSessionMin: 30,
-      goal: 'fat_loss',
-      assess: { later: false, counts: {}, onKnees: false },
-    });
-  });
-
-  it('marks "no limitations" explicitly and returns null without a training profile', () => {
-    const draft = profileToDraft(
-      { ...PROFILE, trainingProfile: { ...TP, limitations: [], equipment: ['none'] } },
-      'ru',
-    );
-    expect(draft).toMatchObject({ limitationsNone: true, equipment: [] });
-    expect(profileToDraft({ ...PROFILE, trainingProfile: null }, 'ru')).toBeNull();
   });
 });
 

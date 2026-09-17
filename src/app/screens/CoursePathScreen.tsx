@@ -96,7 +96,7 @@ export default function CoursePathScreen() {
       <Screen header={<TopBar back="/courses" />}>
         <EmptyState
           title={t('app.pathNotFound')}
-          action={<Button onClick={() => navigate('/courses')}>{t('app.tabPrograms')}</Button>}
+          action={<Button onClick={() => navigate('/')}>{t('app.tabCourses')}</Button>}
         />
       </Screen>
     );
@@ -221,7 +221,7 @@ export default function CoursePathScreen() {
               className="eyebrow tap-target-y inline-flex items-center gap-1.5 text-current"
             >
               <Glyph size={12}>←</Glyph>
-              {t('app.tabPrograms')}
+              {t('app.tabCourses')}
             </button>
             <button
               type="button"

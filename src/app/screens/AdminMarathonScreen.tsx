@@ -147,7 +147,7 @@ export default function AdminMarathonScreen() {
   );
 
   if (admin === null) return <BootScreen />;
-  if (admin === false) return <Navigate to="/profile" replace />;
+  if (admin === false) return <Navigate to="/" replace />;
   if (loading || !marathon) {
     return (
       <Screen header={<TopBar back title={t('app.mAdminTitle')} />}>

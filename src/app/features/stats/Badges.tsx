@@ -91,3 +91,73 @@ export function Badges({ items }: { items: readonly AchievementStatus[] }) {
     </ul>
   );
 }
+
+/**
+ * The same achievement as a row, for the catalogue.
+ *
+ * The shelf above shows a circle and a name and keeps the rule in a `title` attribute, which is
+ * the right trade for a row you swipe past — and the wrong one for the screen the owner asked for:
+ * «Достижения открывают каталог достижений». A catalogue of grey circles with no rule attached is
+ * a list of things you have not done and no way to do them. So here the rule is the row: the
+ * figure on the left, what it is called, and what earns it, printed.
+ *
+ * It is the same figure at half the size: white with a tick when it is taken, the hairline ring
+ * filling as the athlete gets closer when it is not. One achievement, one appearance.
+ */
+function AchievementRow({ item, n }: { item: AchievementStatus; n: number }) {
+  const { t, l } = useT();
+  const ROW = 48;
+  return (
+    <li className="flex items-center gap-4 border-t border-border py-4">
+      {item.unlocked ? (
+        <span
+          aria-hidden="true"
+          className="flex shrink-0 items-center justify-center rounded-pill bg-paper text-ink"
+          style={{ width: ROW, height: ROW }}
+        >
+          <Glyph size={18}>✓</Glyph>
+        </span>
+      ) : (
+        <RingProgress
+          value={item.progress}
+          size={ROW}
+          stroke={2}
+          tone="primary"
+          className="shrink-0"
+        >
+          <span className="numeral tabular text-[12px] text-muted-2">
+            {String(n).padStart(2, '0')}
+          </span>
+        </RingProgress>
+      )}
+      <div className="flex min-w-0 flex-col gap-1">
+        <span
+          className={clsx('font-display text-[15px] leading-snug', !item.unlocked && 'text-muted')}
+        >
+          {l(item.title)}
+        </span>
+        {/* The rule, and the reason this screen exists. */}
+        <span className="text-[13px] leading-snug text-muted-2">{l(item.description)}</span>
+      </div>
+      <span className="sr-only">
+        {item.unlocked ? t('app.statsAchievementUnlocked') : t('app.statsAchievementLocked')}
+      </span>
+    </li>
+  );
+}
+
+/** Every achievement there is, taken first, each with the rule that earns it. */
+export function AchievementList({ items }: { items: readonly AchievementStatus[] }) {
+  const numbered = items.map((item, i) => ({ item, n: i + 1 }));
+  const ordered = [
+    ...numbered.filter(({ item }) => item.unlocked),
+    ...numbered.filter(({ item }) => !item.unlocked),
+  ];
+  return (
+    <ul className="flex flex-col border-b border-border">
+      {ordered.map(({ item, n }) => (
+        <AchievementRow key={item.id} item={item} n={n} />
+      ))}
+    </ul>
+  );
+}

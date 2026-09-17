@@ -1,18 +1,17 @@
 /**
- * Pure helpers for the Profile screen: avatar seeds, the fitness summary, training-profile
- * patches for the equipment / limitations editors, human-readable summaries and the onboarding
- * draft that lets the athlete retake the self-tests with everything else prefilled.
+ * Pure helpers for the account sheet: avatar seeds, the fitness summary, training-profile patches
+ * for the equipment editor and human-readable summaries.
+ *
+ * The onboarding draft that resumed the wizard at the self-tests («Пройти тесты заново») is gone
+ * with the profile screen and the wizard's assessment step: the test is a modal shown after a
+ * couple of workouts now (`/assessment`), so there is no step to resume at.
  */
 import type { Equipment, Level, Locale } from '@/content/schema';
 import type { Profile } from '@/lib/api/types';
 import { computeFitnessIndex } from '@/lib/training/assessment';
 import type { Limitation, UserTrainingProfile } from '@/lib/training/types';
 import type { Translator } from '@/app/hooks/useT';
-import { DraftSchema, STEP_IDS, type OnboardingDraft } from '@/app/screens/onboarding/draft';
 import { EQUIPMENT_LABEL, LIMITATION_LABEL } from '@/app/screens/onboarding/labels';
-
-/** Index of the assessment step of the onboarding wizard. */
-export const TESTS_STEP_INDEX: number = STEP_IDS.indexOf('assess');
 
 /**
  * The assessment has never been done: the profile carries neither of the two counts the fitness
@@ -142,33 +141,4 @@ export function splitName(name: string): { heavy: string; thin: string } {
   const space = trimmed.indexOf(' ');
   if (space < 0) return { heavy: trimmed, thin: '' };
   return { heavy: trimmed.slice(0, space), thin: trimmed.slice(space + 1).trim() };
-}
-
-/**
- * Onboarding draft that resumes at the self-tests: every other answer comes from the profile,
- * the tests are cleared so the wizard's "first incomplete step" is the push-up test. Null when
- * the profile has no training data (the wizard then starts from scratch).
- */
-export function profileToDraft(profile: Profile, locale: Locale): OnboardingDraft | null {
-  const tp = profile.trainingProfile;
-  if (!tp) return null;
-  const parsed = DraftSchema.safeParse({
-    step: TESTS_STEP_INDEX,
-    locale,
-    displayName: profile.displayName ?? undefined,
-    ageBand: tp.ageBand,
-    sex: tp.sex,
-    weightKg: tp.weightKg,
-    activityLevel: tp.activityLevel,
-    experience: tp.experience,
-    equipment: tp.equipment.filter((e) => e !== 'none'),
-    dumbbellKg: tp.dumbbellKg ?? [],
-    kettlebellKg: tp.kettlebellKg ?? [],
-    limitations: tp.limitations,
-    limitationsNone: tp.limitations.length === 0,
-    assess: {},
-    timePerSessionMin: tp.timePerSessionMin,
-    goal: tp.goal,
-  });
-  return parsed.success ? parsed.data : null;
 }

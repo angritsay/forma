@@ -5,12 +5,9 @@
  * leaderboard*, steps*, profile*, admin*.
  */
 export const app = {
-  tabHome: 'Today',
-  tabPrograms: 'Programmes',
   // «Club», not «Small Steps Club»: a tab label is one of four slots on a 390px screen and a
   // three-word name does not fit. The full name goes where there is room — see marathonTitle.
   tabGame: 'Club',
-  tabReports: 'Progress',
   navMain: 'Main navigation',
   navLocaleRu: 'RU',
   navLocaleEn: 'EN',
@@ -46,48 +43,36 @@ export const app = {
   // Shown only after a second request has also come up empty — see AuthScreen.
   authNoMail: 'No code? Check Spam and Promotions — the message comes from {from}.',
   authSignOut: 'Sign out',
-  // One line each: an error stands alone under a field or a code, and a second sentence telling
-  // the person what to do next is what the resend and the address link already are.
-  authErrorInvalidEmail: 'Check the address',
-  authErrorRateLimited: 'Too many requests — wait a minute',
-  authErrorInvalidCode: 'Wrong or expired code',
-  authErrorNetwork: 'No connection',
-  authErrorEmailSend: 'The email didn’t go out — try again in a couple of minutes',
-  authErrorSignupDisabled: 'Sign-ups are closed — contact the coach',
-  authErrorGeneric: 'Couldn’t sign in',
+  // Every one of these names what happened and what to do about it. "Check the address" named
+  // neither, and it was the same three words whether the field was empty, missing the "@" or a
+  // slipped domain — so the reasons are split (src/lib/api/auth.ts AuthReason), one line each.
+  authErrorInvalidEmail:
+    'That is not a usable address. A domain has to follow the “@” — gmail.com, say.',
+  authErrorRateLimited: 'Too many requests. Wait a minute and press again.',
+  authErrorInvalidCode: 'That code did not work. Check the six digits against the latest email.',
+  authErrorNetwork: 'No connection. Check the network and press again.',
+  authErrorEmailSend:
+    'The email did not go out. Wait a couple of minutes and ask for a code again.',
+  authErrorSignupDisabled: 'Sign-ups are closed. Write to {from}.',
+  authErrorGeneric: 'Could not sign in. Try again in a minute.',
 
   // Onboarding
   // One question per step, set as the display line; the answers are the only other words. The
   // leads that used to restate each question were cut per design/CHANGELOG.md §10.
   onbStepOf: 'Step {n} of {total}',
-  onbOptional: 'optional',
-  onbNameTitle: 'What should we call you?',
-  onbNamePlaceholder: 'Your name',
-  onbBasicsTitle: 'A bit about you',
-  onbAgeLabel: 'Age',
+  onbNameTitle: 'Your name',
+  onbNamePlaceholder: 'Name',
   onbAge1824: '18–24',
   onbAge2534: '25–34',
   onbAge3544: '35–44',
   onbAge4554: '45–54',
   onbAge5564: '55–64',
   onbAge65: '65+',
-  onbSexLabel: 'Sex',
   onbSexMale: 'Male',
   onbSexFemale: 'Female',
   onbSexNa: 'Prefer not to say',
-  onbWeightLabel: 'Weight, kg',
-  onbWeightRange: 'Enter a weight between {min} and {max} kg.',
-  onbActivityTitle: 'How active are your weekdays?',
-  onbActivitySedentary: 'Mostly sitting',
-  onbActivityLight: 'Lightly active',
-  onbActivityModerate: 'Moderately active',
-  onbActivityActive: 'Very active',
-  onbExperienceTitle: 'How long have you trained?',
-  onbExpNone: 'Not yet',
-  onbExpBeginner: 'Under a year',
-  onbExpIntermediate: '1–3 years',
-  onbExpAdvanced: 'Over 3 years',
-  onbEquipmentTitle: 'What do you have at home?',
+  // Equipment is no longer asked in the wizard; these two labels stay for the profile's
+  // equipment sheet.
   onbDumbbellWeights: 'Dumbbells, kg',
   onbKettlebellWeights: 'Kettlebells, kg',
   onbLimitationsTitle: 'What should we go easy on?',
@@ -100,8 +85,6 @@ export const app = {
   onbLimPregnancy: 'Pregnancy',
   onbAssessOfferTitle: 'Fit the training to you?',
   onbAssessMoves: '{n} movements',
-  onbAssessNow: 'Now',
-  onbAssessLater: 'Not now',
   // The owner's words for this screen: «не выжимаем максимум… конец».
   onbAssessWarnTitle: 'No maxing out',
   onbAssessWarnCta: 'Let’s start',
@@ -113,17 +96,6 @@ export const app = {
   onbAssessCountLabel: 'Reps',
   onbAssessDoneTitle: 'Written down',
   onbAssessRetake: 'Do it again',
-  onbTimeTitle: 'How many minutes per session?',
-  onbGoalTitle: 'What’s your main goal?',
-  onbGoalFatLoss: 'Lose fat',
-  onbGoalStrength: 'Get stronger',
-  onbGoalEndurance: 'Build endurance',
-  onbGoalGeneral: 'Stay in shape',
-  onbGoalMuscle: 'Build muscle',
-  onbResultEyebrow: 'Your fitness index',
-  onbResultLevel: 'Level {n} · {name}',
-  onbIndexOutOf: 'out of 100',
-  onbResultStart: 'Start training',
   onbSaveError: 'Couldn’t save your profile. Check the connection and try again.',
 
   // Home
@@ -131,12 +103,7 @@ export const app = {
   homeGreetingAfternoon: 'Good afternoon, {name}',
   homeGreetingEvening: 'Good evening, {name}',
   homeGreetingNight: 'Still up, {name}?',
-  homeRefresh: 'Refresh',
-  homeProfile: 'Profile',
   homeStreakTitle: 'Streak',
-  homeStreakDayOne: 'day',
-  homeStreakDayFew: 'days',
-  homeStreakDayMany: 'days',
   homeStreakTodayDone: 'Today counts. Keep it going tomorrow.',
   homeStreakAtRisk: 'Log a workout or {steps} steps today to keep it.',
   homeStreakEmpty: 'Finish a workout or hit {steps} steps to start a streak.',
@@ -144,8 +111,6 @@ export const app = {
   homeStreakLogSteps: 'Log steps',
   homeResumeEyebrow: 'Workout in progress',
   homeResumeFinishedEyebrow: 'Unsaved result',
-  homeResumeFallback: 'Your workout',
-  homeResumeAt: 'Stopped at: {name}',
   homeResumeCta: 'Resume',
   homeResumeSave: 'Finish & save',
   homeTodayEyebrow: 'Today',
@@ -155,17 +120,7 @@ export const app = {
   homeTodayLogSteps: 'Log steps',
   homeTodayNoCourseTitle: 'Pick a programme',
   homeTodayNoCourseBody: 'And your first workout appears here — today.',
-  homeTodayNoCourseCta: 'Browse programmes',
-  homeCoachNow: 'Train with the coach',
-  // The club, on Home. Somebody not in it sees the same row with the task blurred out.
-  // «Meeting», not «running»: a club meets, a challenge runs. Same needle — it is happening
-  // today and they are not in it — but an invitation rather than a race pulling away.
-  homeGameSpoiler: 'The club is meeting without you',
-  homeGameSpoilerTask: 'Today’s task',
-  homeTasksTitle: 'Still today',
   homeTaskSteps: 'Log how far you walked today',
-  homeTaskAssess: 'Fit the training to you',
-  homeTaskAssessHint: '5 movements, 3 minutes — just answer',
   homeTodayCompletedTitle: 'Course completed',
   homeTodayOpenPath: 'Open the path',
   homeStatsSteps: 'Steps this week',
@@ -174,30 +129,19 @@ export const app = {
   homeStatsMinutes: 'Minutes this week',
   homeStatsPoints: 'Points',
   homeStatsPointsHint: 'all time',
-  homeWorkoutWordOne: 'workout',
-  homeWorkoutWordFew: 'workouts',
-  homeWorkoutWordMany: 'workouts',
   homeYourCourses: 'Your courses',
   homeMoreCourses: 'More courses',
   homeCourseProgress: '{pct}% done',
-  homeCourseLocked: 'Locked',
-  homeCourseGet: 'Join',
-  homeDeckLabel: 'Programmes and club',
-  homeDeckCourse: 'Course',
-  homeDeckMarathon: 'Club',
-  homeDeckMarathonBody: 'A small step every day, a board every week',
   homeDeckGameLocked: 'Part of the subscription',
   homeDeckGameTrial: 'Free week with the course — {n} left',
   homeDeckGameTrialDayOne: '1 day',
   homeDeckGameTrialDayFew: '{n} days',
   homeDeckGameTrialDayMany: '{n} days',
   homeDeckGameLockedCta: 'Subscribe',
-  homeDeckMarathonCta: 'Today’s task',
   homeDeckStart: 'Start',
   homeDeckContinue: 'Continue',
   homeErrorTitle: 'Couldn’t load your progress',
   homeErrorBody: 'Check the connection and try again.',
-  homeRefreshError: 'Couldn’t refresh. Showing the last saved data.',
 
   // Courses
   coursesOwned: 'Yours',
@@ -443,37 +387,13 @@ export const app = {
 
   // Progress
   statsTitle: 'Progress',
-  statsPosterLabel: 'Your progress',
-  statsStreakDays: '{days} in a row',
-  // The pill beside «days in a row» while the day is open and nothing is logged yet.
-  statsTodayNotCounted: 'Today not counted yet',
-  statsDetailsShow: 'The whole record',
-  statsDetailsHide: 'Collapse',
-  // Over the seven circles: with a course, its sessions per week are the goal; without one the
-  // same row is simply the week.
-  statsWeekGoal: 'Week goal',
-  statsWeekDayDone: '{date} — counted',
-  statsWeekDayEmpty: '{date} — nothing',
-  statsWeekDayAhead: '{date} — ahead',
   statsWeekBoardTitle: 'Who’s ahead',
-  statsLevelTitle: 'Level',
   statsLeaderboard: 'Leaderboard',
-  statsRefresh: 'Refresh',
-  statsRefreshError: 'Couldn’t refresh. Showing the last saved data.',
-  statsErrorTitle: 'Couldn’t load your stats',
-  statsErrorBody: 'Check the connection and try again.',
   statsLevelEyebrow: 'Level {n}',
   statsPointsValue: '{n} pts',
   statsLevelProgress: 'Progress to the next level',
   statsLevelNext: '{n} pts to {title}',
   statsLevelMax: 'Top level. Nothing above it — keep it there.',
-  statsWeekTitle: 'This week',
-  statsWeekMinutes: 'Minutes of training',
-  statsWeekWorkoutsRow: 'Workouts by day',
-  statsWeekDayLabel: '{date}: {n} workouts, {min} min',
-  statsWeekChartLabel: 'Training minutes per day this week',
-  statsPointsTitle: 'Points, last 8 weeks',
-  statsPointsChartLabel: 'Points per week over the last 8 weeks',
   statsCalendarTitle: 'Streak calendar',
   statsCalendarCurrent: 'Now {n}',
   statsCalendarBest: 'Best {n}',
@@ -482,25 +402,9 @@ export const app = {
   statsCalendarEmpty: 'Nothing logged',
   statsCalendarFuture: 'Ahead',
   statsCalendarToday: 'today',
-  statsStepsTitle: 'Steps, last 14 days',
-  statsStepsChartLabel: 'Steps per day over the last 14 days',
-  statsStepsAtGoal: 'Goal hit {n} of {total} days',
-  statsStepsGoal: 'goal {n}',
-  statsRecordsTitle: 'Records',
-  statsRecordsEmpty:
-    'No records yet. Test and benchmark workouts on your course path fill this list.',
-  statsRecordAttemptsOne: '{n} attempt',
-  statsRecordAttemptsFew: '{n} attempts',
-  statsRecordAttemptsMany: '{n} attempts',
-  statsRecordFirst: 'vs first',
-  statsUnitRounds: 'rounds',
-  statsAchievementsTitle: 'Earned',
   statsAchievementsCount: '{done} of {total}',
   statsAchievementUnlocked: 'Unlocked',
   statsAchievementLocked: 'Locked',
-  statsTotalWorkouts: 'Workouts',
-  statsTotalMinutes: 'Minutes',
-  statsTotalKcal: 'kcal',
 
   // Leaderboard
   leaderboardTitle: 'Leaderboard',
@@ -561,25 +465,9 @@ export const app = {
 
   // Profile
   profileTitle: 'Profile',
-  profileNewAvatar: 'New avatar',
-  profileEditName: 'Edit name',
-  profileNameLabel: 'Name',
-  profileNoName: 'No name yet',
-  profileEmail: 'Email',
-  profileFitnessSetup: 'Finish setup',
-  profileRetakeTests: 'Redo the assessment',
-  profileEquipment: 'Equipment',
-  profileEquipmentTitle: 'Your equipment',
-  profileEquipmentLead: 'Tick what you have at home — workouts adapt to it.',
   profileWeightsKg: '{list} kg',
   profileLimitations: 'Go easy on',
-  profileLimitationsTitle: 'What to go easy on',
-  profileLimitationsLead: 'We swap the exercises that load these areas.',
   profileLimitationsNone: 'Nothing',
-  profileAdmin: 'Admin',
-  profileBook: 'One-to-one with the coach',
-  profileBookFrom: 'from {price}',
-  profileSubscriptionSection: 'Subscription',
   profileSubscriptionNoneHint: 'from {price} a month',
   profileSubscriptionLive: '{plan} · until {date}',
   profileSubscriptionCancelled: 'Cancelled · access until {date}',
@@ -594,7 +482,6 @@ export const app = {
 
   // Book a session
   bookTitle: 'Forma. One-to-One',
-  bookLead: 'An hour on your training: technique, the program under your goal, your questions.',
   bookLengthLabel: 'Session length',
   bookDuration: '{n} min',
   bookPay: 'Pay {price}',
@@ -607,9 +494,6 @@ export const app = {
   profileSignOutTitle: 'Sign out?',
   profileSignOutBody:
     'Your progress stays in your account. Sign in again with a code from your email.',
-  profileSaved: 'Saved',
-  profileSaveError: 'Couldn’t save. Check the connection and try again.',
-  profileVersion: 'Forma {version} · {mode}',
 
   // Admin
   adminTitle: 'Admin',
@@ -952,13 +836,6 @@ export const app = {
   homeTodayStatTime: 'Time',
   // Node preview: the formula kicker and the secondary action of the two-button row.
   nodeLater: 'Later',
-  // Profile on paper: the kicker under the name, the "of 100" tail of the index numeral.
-  profileSince: 'In shape since {date}',
-  profileSinceShort: 'since {date}',
-  profileTrainedOne: '{n} workout',
-  profileTrainedFew: '{n} workouts',
-  profileTrainedMany: '{n} workouts',
-  profileFitnessOf: 'of 100',
   // Admin: the exercise row's "has a video" stamp, and the course tile field's format error.
   exHasVideo: 'video',
   courseTileInvalid: 'A colour is six hex digits, e.g. #1f1f24',
@@ -1158,4 +1035,71 @@ export const app = {
     'The coach puts each round together himself — he adds the members and makes the pairs. The moment a new one starts, the tasks appear here.',
   marathonJoinCta: 'Join for {price} / mo',
   marathonJoinNote: 'The Forma subscription: the club and every course. Renewed by hand.',
+  // --- Onboarding: five questions + the test after two workouts ---------------
+  // The wizard's questions. The first word is set at 800 and the rest at 200 (DisplayTitle),
+  // so in each one the first word is the one that should carry.
+  onbAgeTitle: 'How old are you?',
+  onbSexTitle: 'Your sex',
+  onbLevelTitle: 'Fitness level',
+  // Ten slider labels, low end first. They change on every notch: a bare figure is a scale
+  // only the app knows about.
+  onbLevel01: 'Haven’t trained in a long time',
+  onbLevel02: 'Just getting started',
+  onbLevel03: 'I move a little',
+  onbLevel04: 'I move, but not regularly',
+  onbLevel05: 'I train now and then',
+  onbLevel06: 'Once a week',
+  onbLevel07: 'Two or three sessions a week',
+  onbLevel08: 'I train regularly',
+  onbLevel09: 'I train almost every day',
+  onbLevel10: 'I have trained for years',
+  // «Next», not «Continue»: you continue something you interrupted, you go forward through a form.
+  onbNext: 'Next',
+  onbFinish: 'Start training',
+  // The banner offering the self-test, after the second completed workout. The hint repeats
+  // homeTaskAssessHint; its figures match ASSESSMENT_MOVES and ASSESSMENT_TOTAL_MIN in
+  // content/site/assessment.ts.
+  assessBannerTitle: 'Fit the training to you',
+  assessBannerHint: '5 movements, 3 minutes — just answer',
+  assessBannerCta: 'Take it',
+  assessBannerLater: 'Not now',
+  assessNoProfile: 'Finish the questions first',
+  // --- coach tab --------------------------------------------------------------
+  bookLeadTimePill: 'Book up to {n} minutes before',
+  bookCredentials: 'Credentials',
+  bookOutcomes: 'What it gives',
+  bookIncludes: 'What is included',
+  bookAdds: 'On top of {n} min',
+  bookIncludesPrev: 'Everything in {n} min',
+  bookPriceDelta: '+{price} over {n} min',
+  bookNext: 'Next',
+  bookNextSchedule: 'Pay, then pick a slot on his page. The next one may be {n} minutes away.',
+  bookNextContact:
+    'There is no slot page yet: pay and message the coach — he sets the time himself, even {n} minutes before the start.',
+  bookPaidNote: 'The payment page opened in your browser. Once it is paid, come back for a time.',
+
+  // --- Stream 3: sign-in, the bot, the emailed code -------------------------
+  // Sign-in errors that used to share one generic line. Each says what happened first and what to
+  // do second; the typo line is the error itself and it is tappable — pressing it fixes the field.
+  authErrorEmailEmpty: 'Type your email — the code goes there.',
+  authErrorEmailNoAt: 'There is no “@” in that. A whole address looks like name@gmail.com',
+  authErrorEmailTypo: 'Typo in the domain? Tap to make it {suggestion}',
+  authErrorCodeExpired: 'A code lasts 10 minutes and this one is past it. Ask for a new one.',
+  authErrorTooManyAttempts:
+    'Three codes in a row did not work. Ask for a new one and type the digits from the latest email.',
+
+  // --- Stream 2: three tabs, «Курсы» as the main screen -----------------------
+  tabCourses: 'Courses',
+  tabCoach: 'Coach',
+  coursesMore: 'Learn more',
+  achievementsTitle: 'Achievements',
+  achievementsLead: 'Everything there is to earn, and how.',
+  achievementsEmpty: 'Nothing to show yet.',
+  // Equipment is the one profile setting left: the onboarding question went and the profile screen
+  // with it — without this row somebody who owns dumbbells would train without them forever.
+  profileEquipment: 'Equipment',
+  profileEquipmentTitle: 'Your equipment',
+  profileEquipmentLead: 'Tick what you have at home — workouts adapt to it.',
+  profileSaved: 'Saved',
+  profileSaveError: 'Couldn’t save. Check the connection and try again.',
 } as const;

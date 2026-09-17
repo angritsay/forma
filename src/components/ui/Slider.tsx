@@ -15,6 +15,17 @@ export interface SliderProps {
   maxLabel?: ReactNode;
   disabled?: boolean;
   className?: string;
+  /**
+   * Accessible name, for a slider whose question is asked by a heading above it rather than by
+   * `label` — passing `label` also draws the value row, which a screen that sets the figure
+   * itself does not want.
+   */
+  ariaLabel?: string;
+  /**
+   * What the current value means in words (`aria-valuetext`). Without it a screen reader hears a
+   * bare "7", which is exactly what a sighted person must not be shown either.
+   */
+  valueText?: string;
 }
 
 export function Slider({
@@ -29,23 +40,26 @@ export function Slider({
   maxLabel,
   disabled,
   className,
+  ariaLabel,
+  valueText,
 }: SliderProps) {
   const id = useId();
   const pct = max > min ? ((value - min) / (max - min)) * 100 : 0;
   return (
     <div className={clsx('flex flex-col gap-3', className)}>
-      {(label || descriptor) && (
+      {/*
+       * The label and the value travel together: the row exists to name the control and show
+       * where it stands. `descriptor` alone used to bring it too, which drew the raw number a
+       * second time under a screen that had already set the figure itself.
+       */}
+      {label ? (
         <div className="flex items-baseline justify-between gap-3">
-          {label ? (
-            <label htmlFor={id} className="text-[13px] font-semibold text-muted">
-              {label}
-            </label>
-          ) : (
-            <span />
-          )}
+          <label htmlFor={id} className="text-[13px] font-semibold text-muted">
+            {label}
+          </label>
           <span className="numeral text-3xl">{value}</span>
         </div>
-      )}
+      ) : null}
       <input
         id={id}
         type="range"
@@ -54,6 +68,8 @@ export function Slider({
         step={step}
         value={value}
         disabled={disabled}
+        aria-label={ariaLabel}
+        aria-valuetext={valueText}
         onChange={(e) => onChange(Number(e.target.value))}
         style={{ '--slider-pct': `${pct}%` } as React.CSSProperties}
         /*

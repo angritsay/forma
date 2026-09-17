@@ -3,7 +3,7 @@ import { isRootRoute } from './useTelegramBack';
 
 describe('isRootRoute', () => {
   it('treats the tabs and the entry flows as starting points', () => {
-    for (const path of ['/', '/courses', '/stats', '/profile', '/auth', '/onboarding']) {
+    for (const path of ['/', '/marathon', '/book', '/admin', '/auth', '/onboarding']) {
       expect(isRootRoute(path)).toBe(true);
     }
     // Onboarding is a wizard with its own steps and its own back control.
@@ -18,8 +18,9 @@ describe('isRootRoute', () => {
       '/summary/abc',
       '/leaderboard',
       '/steps',
-      '/book',
-      '/admin',
+      '/achievements',
+      '/marathon/board',
+      '/admin/courses',
     ]) {
       expect(isRootRoute(path)).toBe(false);
     }

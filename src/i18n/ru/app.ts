@@ -3,13 +3,10 @@
  * Обращение к пользователю — на «ты», без машинного перевода.
  */
 export const app = {
-  tabHome: 'Сегодня',
-  tabPrograms: 'Программы',
   // «Клуб», а не «Клуб маленьких шагов»: подпись вкладки — один из четырёх слотов на 390px, и
   // имя в три слова туда не встаёт. Полное имя стоит там, где есть место — на шапке экрана и в
   // текстах приглашения (marathonTitle и ниже); короткое — во вкладке и в верхней строке.
   tabGame: 'Клуб',
-  tabReports: 'Прогресс',
   navMain: 'Основная навигация',
   navLocaleRu: 'RU',
   navLocaleEn: 'EN',
@@ -46,48 +43,34 @@ export const app = {
   // Shown only after a second request has also come up empty — see AuthScreen.
   authNoMail: 'Код не пришёл? Проверь «Спам» и «Промоакции» — письмо приходит с {from}.',
   authSignOut: 'Выйти',
-  // One line each: an error stands alone under a field or a code, and a second sentence telling
-  // the person what to do next is what the resend and the address link already are.
-  authErrorInvalidEmail: 'Проверь адрес',
-  authErrorRateLimited: 'Слишком много запросов — подожди минуту',
-  authErrorInvalidCode: 'Код неверный или устарел',
-  authErrorNetwork: 'Нет соединения',
-  authErrorEmailSend: 'Письмо не ушло — попробуй через пару минут',
-  authErrorSignupDisabled: 'Регистрация закрыта — напиши тренеру',
-  authErrorGeneric: 'Не получилось войти',
+  // Every one of these names what happened and what to do about it. «Проверь адрес» named neither,
+  // and it was the same four words whether the field was empty, missing the «@» or a slipped
+  // domain — so the reasons are split (src/lib/api/auth.ts AuthReason) and each has its own line.
+  authErrorInvalidEmail: 'Адрес не похож на почтовый. После «@» нужен домен — например gmail.com',
+  authErrorRateLimited: 'Слишком много запросов. Подожди минуту и нажми ещё раз.',
+  authErrorInvalidCode: 'Код не подошёл. Сверь шесть цифр с последним письмом.',
+  authErrorNetwork: 'Нет связи. Проверь интернет и нажми ещё раз.',
+  authErrorEmailSend: 'Письмо не ушло. Подожди пару минут и запроси код заново.',
+  authErrorSignupDisabled: 'Регистрация закрыта. Напиши на {from}.',
+  authErrorGeneric: 'Не получилось войти. Попробуй ещё раз через минуту.',
 
   // Onboarding
   // One question per step, set as the display line; the answers are the only other words. The
   // leads that used to restate each question were cut per design/CHANGELOG.md §10.
   onbStepOf: 'Шаг {n} из {total}',
-  onbOptional: 'необязательно',
-  onbNameTitle: 'Как тебя называть?',
-  onbNamePlaceholder: 'Твоё имя',
-  onbBasicsTitle: 'Немного о тебе',
-  onbAgeLabel: 'Возраст',
+  onbNameTitle: 'Твоё имя',
+  onbNamePlaceholder: 'Имя',
   onbAge1824: '18–24',
   onbAge2534: '25–34',
   onbAge3544: '35–44',
   onbAge4554: '45–54',
   onbAge5564: '55–64',
   onbAge65: '65+',
-  onbSexLabel: 'Пол',
   onbSexMale: 'Мужской',
   onbSexFemale: 'Женский',
   onbSexNa: 'Не хочу указывать',
-  onbWeightLabel: 'Вес, кг',
-  onbWeightRange: 'Укажи вес от {min} до {max} кг.',
-  onbActivityTitle: 'Насколько активны твои будни?',
-  onbActivitySedentary: 'В основном сижу',
-  onbActivityLight: 'Немного двигаюсь',
-  onbActivityModerate: 'Довольно активно',
-  onbActivityActive: 'Очень активно',
-  onbExperienceTitle: 'Сколько уже тренируешься?',
-  onbExpNone: 'Пока нет',
-  onbExpBeginner: 'Меньше года',
-  onbExpIntermediate: '1–3 года',
-  onbExpAdvanced: 'Больше 3 лет',
-  onbEquipmentTitle: 'Что есть дома?',
+  // Оборудование в анкете больше не спрашиваем — эти две подписи остались для листа
+  // оборудования в профиле.
   onbDumbbellWeights: 'Гантели, кг',
   onbKettlebellWeights: 'Гири, кг',
   onbLimitationsTitle: 'Что беречь?',
@@ -100,8 +83,6 @@ export const app = {
   onbLimPregnancy: 'Беременность',
   onbAssessOfferTitle: 'Подстроить тренировки под тебя?',
   onbAssessMoves: '{n} упражнений',
-  onbAssessNow: 'Сейчас',
-  onbAssessLater: 'Не сейчас',
   // The owner's words for this screen: «не выжимаем максимум… конец».
   onbAssessWarnTitle: 'Максимум не выжимаем',
   onbAssessWarnCta: 'Начнём',
@@ -114,17 +95,6 @@ export const app = {
   onbAssessCountLabel: 'Раз',
   onbAssessDoneTitle: 'Записал',
   onbAssessRetake: 'Пройти заново',
-  onbTimeTitle: 'Сколько минут на тренировку?',
-  onbGoalTitle: 'Главная цель?',
-  onbGoalFatLoss: 'Сбросить жир',
-  onbGoalStrength: 'Стать сильнее',
-  onbGoalEndurance: 'Прокачать выносливость',
-  onbGoalGeneral: 'Держать форму',
-  onbGoalMuscle: 'Набрать мышцы',
-  onbResultEyebrow: 'Твой индекс формы',
-  onbResultLevel: 'Уровень {n} · {name}',
-  onbIndexOutOf: 'из 100',
-  onbResultStart: 'Начать тренироваться',
   onbSaveError: 'Не удалось сохранить профиль. Проверь соединение и попробуй снова.',
 
   // Главная
@@ -132,12 +102,7 @@ export const app = {
   homeGreetingAfternoon: 'Добрый день, {name}',
   homeGreetingEvening: 'Добрый вечер, {name}',
   homeGreetingNight: 'Не спится, {name}?',
-  homeRefresh: 'Обновить',
-  homeProfile: 'Профиль',
   homeStreakTitle: 'Серия',
-  homeStreakDayOne: 'день',
-  homeStreakDayFew: 'дня',
-  homeStreakDayMany: 'дней',
   homeStreakTodayDone: 'Сегодня засчитано. Продолжай завтра.',
   homeStreakAtRisk: 'Чтобы не потерять серию, сделай сегодня тренировку или пройди {steps} шагов.',
   homeStreakEmpty: 'Заверши тренировку или пройди {steps} шагов — и серия начнётся.',
@@ -145,8 +110,6 @@ export const app = {
   homeStreakLogSteps: 'Записать шаги',
   homeResumeEyebrow: 'Тренировка не закончена',
   homeResumeFinishedEyebrow: 'Результат не сохранён',
-  homeResumeFallback: 'Твоя тренировка',
-  homeResumeAt: 'Остановились на: {name}',
   homeResumeCta: 'Продолжить',
   homeResumeSave: 'Завершить и сохранить',
   homeTodayEyebrow: 'Сегодня',
@@ -157,19 +120,7 @@ export const app = {
   // The prototype's «ВЫБЕРИ программу»: the first word heavy, the rest light (DisplayTitle).
   homeTodayNoCourseTitle: 'Выбери программу',
   homeTodayNoCourseBody: 'И первая тренировка появится здесь — уже сегодня.',
-  homeTodayNoCourseCta: 'Смотреть программы',
-  homeCoachNow: 'Заниматься с тренером',
-  // The club, on Home. Somebody not in it sees the same row with the task blurred out.
-  // «Собирается», not «идёт»: a club meets, a challenge runs. The needle is the same — it is
-  // happening today and they are not in it — but it is an invitation rather than a race pulling away.
-  homeGameSpoiler: 'Клуб собирается без тебя',
-  homeGameSpoilerTask: 'Задание дня',
-  homeTasksTitle: 'Сегодня ещё',
   homeTaskSteps: 'Напиши, сколько прошёл сегодня',
-  homeTaskAssess: 'Адаптировать тренировки под себя',
-  // Five clips and five estimates; nothing is performed on the clock, so the promise is how
-  // long it takes to read and answer (ASSESSMENT_TOTAL_MIN in content/site/assessment.ts).
-  homeTaskAssessHint: '5 упражнений, 3 минуты — просто ответить',
   homeTodayCompletedTitle: 'Курс пройден',
   homeTodayOpenPath: 'Открыть путь',
   homeStatsSteps: 'Шаги за неделю',
@@ -178,31 +129,20 @@ export const app = {
   homeStatsMinutes: 'Минут за неделю',
   homeStatsPoints: 'Очки',
   homeStatsPointsHint: 'за всё время',
-  homeWorkoutWordOne: 'тренировка',
-  homeWorkoutWordFew: 'тренировки',
-  homeWorkoutWordMany: 'тренировок',
   homeYourCourses: 'Твои курсы',
   homeMoreCourses: 'Ещё курсы',
   homeCourseProgress: '{pct}% пройдено',
-  homeCourseLocked: 'Закрыт',
-  homeCourseGet: 'Прийти',
-  homeDeckLabel: 'Программы и клуб',
-  homeDeckCourse: 'Курс',
-  homeDeckMarathon: 'Клуб',
-  homeDeckMarathonBody: 'Маленький шаг каждый день, таблица за неделю',
   homeDeckGameLocked: 'Входит в подписку',
   homeDeckGameTrial: 'Пробная неделя с курсом — осталось {n}',
   homeDeckGameTrialDayOne: '1 день',
   homeDeckGameTrialDayFew: '{n} дня',
   homeDeckGameTrialDayMany: '{n} дней',
   homeDeckGameLockedCta: 'Оформить подписку',
-  homeDeckMarathonCta: 'Задание на сегодня',
   // One word each, as the prototype's buttons have it: «Начать →», «Продолжить →».
   homeDeckStart: 'Начать',
   homeDeckContinue: 'Продолжить',
   homeErrorTitle: 'Не удалось загрузить прогресс',
   homeErrorBody: 'Проверь соединение и попробуй ещё раз.',
-  homeRefreshError: 'Не удалось обновить. Показываем последние сохранённые данные.',
 
   // Курсы
   coursesOwned: 'Твои',
@@ -451,37 +391,13 @@ export const app = {
 
   // Прогресс
   statsTitle: 'Прогресс',
-  statsPosterLabel: 'Твой прогресс',
-  statsStreakDays: '{days} подряд',
-  // The pill beside «дней подряд» while the day is open and nothing is logged yet.
-  statsTodayNotCounted: 'Сегодня не засчитано',
-  statsDetailsShow: 'Подробности',
-  statsDetailsHide: 'Свернуть',
-  // Over the seven circles: with a course, its sessions per week are the goal; without one the
-  // same row is simply the week.
-  statsWeekGoal: 'Цель недели',
-  statsWeekDayDone: '{date} — засчитан',
-  statsWeekDayEmpty: '{date} — пусто',
-  statsWeekDayAhead: '{date} — впереди',
   statsWeekBoardTitle: 'Кто впереди',
-  statsLevelTitle: 'Уровень',
   statsLeaderboard: 'Рейтинг',
-  statsRefresh: 'Обновить',
-  statsRefreshError: 'Не удалось обновить. Показываем последние сохранённые данные.',
-  statsErrorTitle: 'Не удалось загрузить статистику',
-  statsErrorBody: 'Проверь соединение и попробуй ещё раз.',
   statsLevelEyebrow: 'Уровень {n}',
   statsPointsValue: '{n} оч.',
   statsLevelProgress: 'Прогресс до следующего уровня',
   statsLevelNext: 'До уровня «{title}» — {n} оч.',
   statsLevelMax: 'Максимальный уровень. Выше некуда — держи планку.',
-  statsWeekTitle: 'Эта неделя',
-  statsWeekMinutes: 'Минуты тренировок',
-  statsWeekWorkoutsRow: 'Тренировки по дням',
-  statsWeekDayLabel: '{date}: тренировок — {n}, {min} мин',
-  statsWeekChartLabel: 'Минуты тренировок по дням этой недели',
-  statsPointsTitle: 'Очки за 8 недель',
-  statsPointsChartLabel: 'Очки по неделям за последние 8 недель',
   statsCalendarTitle: 'Календарь серии',
   statsCalendarCurrent: 'Сейчас {n}',
   statsCalendarBest: 'Рекорд {n}',
@@ -490,24 +406,9 @@ export const app = {
   statsCalendarEmpty: 'Ничего не записано',
   statsCalendarFuture: 'Впереди',
   statsCalendarToday: 'сегодня',
-  statsStepsTitle: 'Шаги за 14 дней',
-  statsStepsChartLabel: 'Шаги по дням за последние 14 дней',
-  statsStepsAtGoal: 'Цель выполнена {n} из {total} дней',
-  statsStepsGoal: 'цель {n}',
-  statsRecordsTitle: 'Рекорды',
-  statsRecordsEmpty: 'Рекордов пока нет. Их заполняют тесты и бенчмарки на пути курса.',
-  statsRecordAttemptsOne: '{n} попытка',
-  statsRecordAttemptsFew: '{n} попытки',
-  statsRecordAttemptsMany: '{n} попыток',
-  statsRecordFirst: 'к первой',
-  statsUnitRounds: 'кругов',
-  statsAchievementsTitle: 'Взято',
   statsAchievementsCount: '{done} из {total}',
   statsAchievementUnlocked: 'Открыто',
   statsAchievementLocked: 'Закрыто',
-  statsTotalWorkouts: 'Тренировок',
-  statsTotalMinutes: 'Минут',
-  statsTotalKcal: 'ккал',
 
   // Рейтинг
   leaderboardTitle: 'Рейтинг',
@@ -568,26 +469,9 @@ export const app = {
 
   // Профиль
   profileTitle: 'Профиль',
-  profileNewAvatar: 'Новый аватар',
-  profileEditName: 'Изменить имя',
-  profileNameLabel: 'Имя',
-  profileNoName: 'Имя не задано',
-  profileEmail: 'Почта',
-  profileFitnessSetup: 'Завершить настройку',
-  profileRetakeTests: 'Пройти адаптацию заново',
-  profileEquipment: 'Инвентарь',
-  profileEquipmentTitle: 'Твой инвентарь',
-  profileEquipmentLead: 'Отметь, что есть дома, — тренировки подстроятся.',
   profileWeightsKg: '{list} кг',
   profileLimitations: 'Что беречь',
-  profileLimitationsTitle: 'Что беречь',
-  profileLimitationsLead: 'Заменим упражнения, которые нагружают эти зоны.',
   profileLimitationsNone: 'Ничего',
-  profileAdmin: 'Админка',
-  profileBook: 'Занятие с тренером',
-  // The value on the profile's row: the price alone, so the row's own name has room to be read.
-  profileBookFrom: 'от {price}',
-  profileSubscriptionSection: 'Подписка',
   profileSubscriptionNoneHint: 'от {price} в месяц',
   profileSubscriptionLive: '{plan} · до {date}',
   profileSubscriptionCancelled: 'Отменена · доступ до {date}',
@@ -602,7 +486,6 @@ export const app = {
 
   // Book a session
   bookTitle: 'Форма один на один',
-  bookLead: 'Час про твои тренировки: техника, программа под твою цель, твои вопросы.',
   bookLengthLabel: 'Длительность сессии',
   bookDuration: '{n} мин',
   bookPay: 'Оплатить {price}',
@@ -613,9 +496,6 @@ export const app = {
   profileSignOut: 'Выйти',
   profileSignOutTitle: 'Выйти из аккаунта?',
   profileSignOutBody: 'Прогресс останется в аккаунте. Чтобы вернуться, войди по коду из письма.',
-  profileSaved: 'Сохранено',
-  profileSaveError: 'Не удалось сохранить. Проверь соединение и попробуй снова.',
-  profileVersion: 'Forma {version} · {mode}',
 
   // Админка
   adminTitle: 'Админка',
@@ -959,14 +839,6 @@ export const app = {
   homeTodayStatTime: 'Времени',
   // Node preview: the formula kicker and the secondary action of the two-button row.
   nodeLater: 'Позже',
-  // Profile on paper: the kicker under the name, the "of 100" tail of the index numeral.
-  profileSince: 'В форме с {date}',
-  // The one line under the name: «с августа · 24 тренировки».
-  profileSinceShort: 'с {date}',
-  profileTrainedOne: '{n} тренировка',
-  profileTrainedFew: '{n} тренировки',
-  profileTrainedMany: '{n} тренировок',
-  profileFitnessOf: 'из 100',
   // Admin: the exercise row's "has a video" stamp, and the course tile field's format error.
   exHasVideo: 'видео',
   courseTileInvalid: 'Цвет — шесть шестнадцатеричных знаков, например #1f1f24',
@@ -1190,4 +1062,72 @@ export const app = {
   // amount the payer can edit (docs/SETUP.md §7.1).
   marathonJoinCta: 'Вступить за {price} / мес',
   marathonJoinNote: 'Подписка Forma: клуб и все курсы. Продлевается вручную.',
+  // --- Онбординг: пять вопросов + тест после двух тренировок ------------------
+  // Вопросы анкеты. Первое слово набирается 800-м, остальное 200-м (DisplayTitle),
+  // поэтому в каждом заголовке первое слово — то, которое должно звучать громче.
+  onbAgeTitle: 'Сколько тебе лет?',
+  onbSexTitle: 'Твой пол',
+  onbLevelTitle: 'Уровень формы',
+  // Десять подписей ползунка, снизу вверх. Меняются на каждом делении: цифра без слов —
+  // это шкала, о которой знает только приложение.
+  onbLevel01: 'Давно не тренировался',
+  onbLevel02: 'Только начинаю',
+  onbLevel03: 'Иногда двигаюсь',
+  onbLevel04: 'Двигаюсь, но без системы',
+  onbLevel05: 'Тренируюсь время от времени',
+  onbLevel06: 'Раз в неделю',
+  onbLevel07: 'Две-три тренировки в неделю',
+  onbLevel08: 'Тренируюсь регулярно',
+  onbLevel09: 'Тренируюсь почти каждый день',
+  onbLevel10: 'Тренируюсь много лет',
+  // «Далее», а не «Продолжить»: продолжают то, что прервали, а по анкете идут вперёд.
+  onbNext: 'Далее',
+  onbFinish: 'Начать тренироваться',
+  // Баннер с предложением пройти тест — после второй завершённой тренировки.
+  // Текст подсказки повторяет homeTaskAssessHint: цифры совпадают с ASSESSMENT_MOVES и
+  // ASSESSMENT_TOTAL_MIN в content/site/assessment.ts.
+  assessBannerTitle: 'Подстроить тренировки под тебя',
+  assessBannerHint: '5 упражнений, 3 минуты — просто ответить',
+  assessBannerCta: 'Пройти',
+  assessBannerLater: 'Не сейчас',
+  assessNoProfile: 'Сначала закончи анкету',
+  // --- coach tab --------------------------------------------------------------
+  bookLeadTimePill: 'Можно за {n} минут до начала',
+  bookCredentials: 'Регалии',
+  bookOutcomes: 'Что это даёт',
+  bookIncludes: 'Что входит',
+  bookAdds: 'Сверх {n} минут',
+  bookIncludesPrev: 'Всё из {n} минут',
+  bookPriceDelta: '+{price} к {n} минутам',
+  bookNext: 'Дальше',
+  bookNextSchedule:
+    'Оплати — и выбери слот на его странице. Ближайший может быть уже через {n} минут.',
+  bookNextContact:
+    'Страницы со слотами пока нет: оплати и напиши тренеру — время он поставит сам, хоть за {n} минут до начала.',
+  bookPaidNote: 'Оплата открылась в браузере. Как оплатишь — возвращайся сюда за временем.',
+
+  // --- Stream 3: sign-in, the bot, the emailed code -------------------------
+  // Sign-in errors that used to share one generic line. Each says what happened first and what to
+  // do second; the typo line is the error itself and it is tappable — pressing it fixes the field.
+  authErrorEmailEmpty: 'Введи почту — на неё придёт код.',
+  authErrorEmailNoAt: 'В адресе нет «@». Целиком это выглядит так: name@gmail.com',
+  authErrorEmailTypo: 'Опечатка в домене? Нажми, чтобы исправить на {suggestion}',
+  authErrorCodeExpired: 'Код живёт 10 минут, этот уже истёк. Запроси новый.',
+  authErrorTooManyAttempts:
+    'Код не подошёл три раза. Запроси новый и введи цифры из последнего письма.',
+
+  // --- Stream 2: три вкладки и «Курсы» как главный экран ----------------------
+  tabCourses: 'Курсы',
+  tabCoach: 'Тренер',
+  coursesMore: 'Подробнее',
+  achievementsTitle: 'Достижения',
+  achievementsLead: 'Всё, что можно взять, и как.',
+  achievementsEmpty: 'Пока нечего показать.',
+  // Инвентарь остался единственной настройкой профиля: вопрос про него убрали из онбординга, а
+  // экран профиля удалён — без этой строки человек с гантелями тренировался бы без них всегда.
+  profileEquipment: 'Инвентарь',
+  profileEquipmentTitle: 'Твой инвентарь',
+  profileEquipmentLead: 'Отметь, что есть дома, — тренировки подстроятся.',
+  profileSaved: 'Сохранено',
+  profileSaveError: 'Не удалось сохранить. Проверь соединение и попробуй снова.',
 } as const;
