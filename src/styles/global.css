@@ -683,6 +683,47 @@ body {
   }
 
   /*
+   * An emoji, set so it stops dragging the row around.
+   *
+   * A colour emoji is drawn from a bitmap/COLR font with its own metrics. It does not share
+   * Onest's baseline, cap-height or side bearings, and left bare in a flex row it sits a pixel
+   * high, carries the inherited 1.5 line-height with it and shifts everything beside it. Four
+   * things fix that, and all four are load-bearing:
+   *
+   *   - `inline-flex` + centring + a fixed 1em square takes the glyph out of the baseline
+   *     entirely, so the row's height is decided by the type and not by the emoji.
+   *   - `line-height: 1`. The inherited 1.5 from `body` is what lifts it.
+   *   - `font-size: .78em`. Emoji fonts fill their em box; Onest's cap-height is ~0.72em, so an
+   *     emoji beside 15px text is matched optically by ~11px of ink, which is 15 × .78. Where the
+   *     emoji is a fill rather than a neighbour — inside an achievement circle — the caller sets
+   *     an explicit size and this default gets out of the way.
+   *   - The emoji font is named ahead of the fallbacks. Without it the Android WebView the Mini
+   *     App lives in resolves the glyph through the generic stack and can land on a different
+   *     design, or on a tofu box.
+   *
+   * Always `aria-hidden="true"` at the call site: every place that draws one already has a name,
+   * and emoji names are localized inconsistently — VoiceOver in Russian reads several of ours in
+   * English.
+   *
+   * Sparingly. The owner's own mockup spends exactly one emoji on the whole of «Курсы» — a colour
+   * 🔥 in the streak pill, and our monochrome rosette in the circle next to it. A foreign object
+   * that appears twenty times stops being foreign.
+   */
+  .emoji {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 1em;
+    height: 1em;
+    font-size: 0.78em;
+    line-height: 1;
+    font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  /*
    * The "crosshair" plate: a dark plate for one key fact, marked by 14×2px ticks in the
    * programme colour at all four corners and no other border. One per screen at most — it is
    * the loudest thing the colour is allowed to do outside the cover.

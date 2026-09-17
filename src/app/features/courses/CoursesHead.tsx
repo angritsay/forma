@@ -99,8 +99,14 @@ export function CoursesHead({ name, streak, unlocked, total, onAccount }: Course
            * outline `flame` this pill used to carry is gone and the rosette next door stays ours.
            * `aria-hidden`, because the button already has a name and a screen reader announcing
            * «огонь» before the figure says nothing the label has not said.
+           *
+           * `.emoji` is the shared setting (src/styles/global.css) — a fixed square, out of the
+           * baseline, with the colour-emoji font named ahead of the fallbacks so the Android
+           * WebView cannot resolve it to a tofu box. The explicit 15px is the drawn size the
+           * mockup has; inside a pill the emoji is a fill, not a neighbour, so the class's
+           * cap-height-matched default has nothing to match against.
            */}
-          <span aria-hidden="true" className="text-[15px] leading-none">
+          <span aria-hidden="true" className="emoji" style={{ fontSize: 15 }}>
             🔥
           </span>
           <span className="tabular text-[13px] leading-none font-medium">

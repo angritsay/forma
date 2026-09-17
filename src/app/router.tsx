@@ -96,7 +96,7 @@ export function AppRoutes() {
               <Route path="/shared/:token" element={<LazyScreen name="CustomWorkoutScreen" />} />
               <Route path="/summary/:sessionId" element={<LazyScreen name="SummaryScreen" />} />
               {/*
-               * The catalogue of achievements, behind the 🏅 entry point in the header of «Курсы»:
+               * The catalogue of achievements, behind the rosette entry point in the header of «Курсы»:
                * every achievement there is and the rule that earns it, taken or not.
                */}
               <Route path="/achievements" element={<LazyScreen name="AchievementsScreen" />} />

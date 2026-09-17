@@ -294,14 +294,28 @@ function ProofControl({
     );
   }
 
-  // media — the photo is private to the coach, and the card says so rather than leaving it to be
-  // discovered after the fact.
+  /*
+   * media — the photo is private to the coach, and the card says so rather than leaving it to be
+   * discovered after the fact.
+   *
+   * `image/*` only, and the video half is gone on purpose. `accept="image/*,video/*"` offered a
+   * clip the rest of the product cannot carry: nothing downscales it (this path uploads what it is
+   * handed), the demo backend base64s whatever it is given into `localStorage` — where one phone
+   * video is the whole quota — and the coach's review feed never plays it back, it prints «Фото
+   * отправлено» and stops. The button has always said «Прикрепить фото»; the picker now says the
+   * same thing. A file type the picker offers and the product cannot use is worse than one it never
+   * offered.
+   *
+   * `0011_marathon.sql` still describes `proof_kind = 'media'` as «a photo or a clip», and the
+   * bucket would take a clip today — reinstating video is a product decision plus a player in
+   * `ProofsFeed`, not a change to this attribute.
+   */
   return (
     <div className="flex flex-col gap-2">
       <input
         ref={fileRef}
         type="file"
-        accept="image/*,video/*"
+        accept="image/*"
         className="sr-only"
         onChange={(e) => {
           const file = e.target.files?.[0];

@@ -72,7 +72,19 @@ export function Tabs<T extends string>({
       aria-label={label}
       className={clsx(
         'flex',
-        fill ? 'border border-border-strong' : 'gap-5 border-b border-border',
+        /*
+         * The fill variant is the same frame `SegmentedControl` draws, and until now it was the
+         * square one: that control moved to `--r-control` when the radii were set and this one was
+         * not, so «Эта неделя / Прошлая неделя» on the club's board had hard corners two taps away
+         * from «30 мин / 60 мин» on Тренер, which is 16px. One object cannot have two corners.
+         *
+         * `overflow-hidden` is load-bearing, exactly as it is there: the selected cell is a filled
+         * rectangle drawn inside this box, and the first and last one would otherwise paint square
+         * corners over the rounded border and undo it.
+         */
+        fill
+          ? 'overflow-hidden rounded-control border border-border-strong'
+          : 'gap-5 border-b border-border',
         className,
       )}
     >

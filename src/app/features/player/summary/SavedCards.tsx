@@ -46,7 +46,9 @@ export function AdaptationCard({ adjustment }: { adjustment: ScaleAdjustment }) 
 }
 
 /**
- * Freshly unlocked achievements, as the same white circle with a ✓ that «Прогресс» puts them on.
+ * Freshly unlocked achievements, as the same white circle the catalogue puts them on — with the
+ * achievement's own emoji in it, which is exactly the instant that emoji is a reward rather than a
+ * decoration. Same `BadgeCircle`, so the figure cannot drift between the two screens.
  *
  * It was a numbered ruled list — «01 ПЕРВЫЙ ШАГ» over «Заверши первую тренировку.» — which is the
  * description of a thing you have not got yet, printed at the moment you get it. An achievement
