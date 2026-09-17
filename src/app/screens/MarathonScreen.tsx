@@ -235,7 +235,7 @@ export default function MarathonScreen() {
       {access.trialDaysLeft !== undefined ? (
         <a
           {...externalLinkProps(subscribeHref(locale))}
-          className="control-label inline-flex h-8 items-center gap-2 self-start rounded-pill border border-course/60 px-3.5 text-[10px] text-course transition-opacity duration-150 ease-(--ease-out) hover:opacity-80"
+          className="control-label inline-flex h-8 items-center gap-2 self-start rounded-pill border border-course/60 px-3.5 text-[13px] text-course transition-opacity duration-150 ease-(--ease-out) hover:opacity-80"
         >
           {t('app.marathonTrialTitle')} ·{' '}
           {t('app.marathonTrialLeft', {

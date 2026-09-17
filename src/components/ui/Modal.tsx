@@ -82,6 +82,9 @@ export function Modal({
           className,
         )}
       >
+        {/* Sentence case through `.font-display`; 24px stays. `text-balance` matters more now
+            than it did — a two-line question in mixed case breaks at a word, not at a wall of
+            capitals, so the balance is visible. */}
         <h2 id={titleId} className="font-display text-2xl text-balance">
           {title}
         </h2>

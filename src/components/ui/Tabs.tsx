@@ -94,7 +94,9 @@ export function Tabs<T extends string>({
             onClick={() => onChange(tab.id)}
             onKeyDown={onKeyDown(i)}
             className={clsx(
-              'control-label inline-flex items-center gap-2 text-[12px] transition-colors duration-150 ease-(--ease-out) disabled:opacity-40',
+              // 15px, up from 12: sentence case set the label free of its .16em tracking, and this
+              // is the same object as `SegmentedControl`'s cell, so the two sizes match.
+              'control-label inline-flex items-center gap-2 text-[15px] transition-colors duration-150 ease-(--ease-out) disabled:opacity-40',
               fill
                 ? clsx(
                     // 40px tall by design; `tap-target-y` (global.css) reaches the 44px minimum.

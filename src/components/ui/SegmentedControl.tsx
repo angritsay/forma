@@ -24,8 +24,18 @@ export interface SegmentedControlProps<T extends string> {
  * Radio-group styled as a switch; arrow keys move the selection.
  *
  * A hairline frame divided into cells by hairlines, with the chosen cell inverted — white fill,
- * black text — and the rest set in muted capitals. No inner padding and no sliding thumb: the
- * switch is drawn with lines and one inversion, the same way the chips and the tabs are.
+ * black text — and the rest set in muted sentence case. No inner padding and no sliding thumb:
+ * the switch is drawn with lines and one inversion, the same way the chips and the tabs are.
+ *
+ * **This is not the tab bar.** `BottomNav` builds its own segmented control — a pill container
+ * with a sliding capsule and one seat per tab — and the two are different objects that happen to
+ * share a name. Do not merge them: this one divides a box of options with rules, that one moves a
+ * highlight between seats, and a change that suits one breaks the other. This control is used by
+ * `BookScreen` (30 / 60 минут), `MarathonBoardScreen` (the week picker) and three admin screens.
+ *
+ * Contrast: the active cell is `--primary` with `--on-primary` on it — white and near-black,
+ * either way round — so the inversion clears AA by a distance. The 3.65:1 hazard the audit found
+ * belongs to the *tab bar's* lighter capsule, not here, and that bar already sets `--text` on it.
  */
 export function SegmentedControl<T extends string>({
   options,
@@ -94,7 +104,8 @@ export function SegmentedControl<T extends string>({
               'transition-colors duration-150 ease-(--ease-out)',
               // 32/40px tall by design; `tap-target-y` (global.css) reaches the 44px minimum.
               'tap-target-y disabled:opacity-40',
-              size === 'sm' ? 'h-8 px-3 text-[11px]' : 'h-10 px-4 text-[12px]',
+              // 14 / 15px, up from 11 / 12: sentence case set the labels free of their tracking.
+              size === 'sm' ? 'h-8 px-3 text-[14px]' : 'h-10 px-4 text-[15px]',
               fullWidth && 'flex-1',
               selected ? 'bg-primary text-on-primary' : 'bg-transparent text-muted hover:text-text',
             )}

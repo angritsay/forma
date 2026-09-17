@@ -71,7 +71,7 @@ const socials = [
 ].filter((s) => Boolean(s.url));
 
 const primaryLink =
-  'control-label inline-flex h-10 items-center rounded-control bg-primary px-4.5 text-[12px] text-on-primary transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-85 active:scale-[0.98]';
+  'control-label inline-flex h-10 items-center rounded-control bg-primary px-4.5 text-[14px] text-on-primary transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-85 active:scale-[0.98]';
 ---
 
 <Base locale={locale}>
@@ -83,7 +83,7 @@ const primaryLink =
 
   <a
     href="#main"
-    class="control-label sr-only z-50 rounded-control bg-primary px-5 text-[12px] text-on-primary focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:inline-flex focus:min-h-11 focus:items-center"
+    class="control-label sr-only z-50 rounded-control bg-primary px-5 text-[14px] text-on-primary focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:inline-flex focus:min-h-11 focus:items-center"
   >
     {t(locale, 'landing.skipToContent')}
   </a>
@@ -150,7 +150,7 @@ const primaryLink =
             lines only imply. The open state shows a × glyph, which is punctuation, not a picture.
           -->
           <summary
-            class="control-label flex h-10 min-w-11 cursor-pointer list-none items-center justify-center whitespace-nowrap rounded-control border border-border-strong px-3 text-[12px] text-text [&::-webkit-details-marker]:hidden"
+            class="control-label flex h-10 min-w-11 cursor-pointer list-none items-center justify-center whitespace-nowrap rounded-control border border-border-strong px-3 text-[14px] text-text [&::-webkit-details-marker]:hidden"
             aria-label={t(locale, 'landing.navMenu')}
             aria-expanded="false"
             aria-controls="mobile-nav-panel"
@@ -188,7 +188,7 @@ const primaryLink =
             </ul>
             <a
               href={appHref()}
-              class="control-label mt-4 flex h-12 items-center justify-center rounded-control bg-primary px-5 text-[13px] text-on-primary"
+              class="control-label mt-4 flex h-12 items-center justify-center rounded-control bg-primary px-5 text-[15px] text-on-primary"
             >
               {t(locale, 'landing.navApp')}
             </a>
@@ -215,7 +215,7 @@ const primaryLink =
         </p>
         <a
           href={appHref()}
-          class="control-label mt-6 inline-flex h-10 items-center rounded-control border border-border-strong bg-surface-2 px-4.5 text-[12px] transition-colors duration-150 hover:bg-surface-3"
+          class="control-label mt-6 inline-flex h-10 items-center rounded-control border border-border-strong bg-surface-2 px-4.5 text-[14px] transition-colors duration-150 hover:bg-surface-3"
         >
           {t(locale, 'common.openApp')}
         </a>

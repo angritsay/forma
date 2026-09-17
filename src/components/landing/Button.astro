@@ -5,9 +5,9 @@
  *
  * Black and white only: primary is a white fill with black text, secondary a raised surface
  * behind a strong hairline, ghost is text alone, danger an outline with red text. None of them
- * ever takes the programme colour. Heights 40 / 48 / 56; the label is capitals at 12–13px
- * tracked .16em (`.control-label`), which sets wide, so the padding does the work of making the
- * box read as a button. Hover drops to .85 opacity or lightens one surface; press is a 2% scale.
+ * ever takes the programme colour. Heights 40 / 48 / 56; the label is sentence case at 14–15px
+ * (`.control-label`), up from the 12–13px the tracked capitals forced. Hover drops to .85 opacity
+ * or lightens one surface; press is a 2% scale.
  * Renders <a> when `href` is set, otherwise <button>.
  */
 interface Props {
@@ -32,9 +32,9 @@ const base =
   'control-label inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-control transition-[background-color,color,opacity,transform] duration-150 ease-(--ease-out) active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
 // `sm` is under the 44px touch minimum on its own; `tap-target-y` grows its hit area, not its box.
 const sizes = {
-  sm: 'tap-target-y h-10 px-4.5 text-[12px]',
-  md: 'h-12 px-6.5 text-[13px]',
-  lg: 'h-14 px-8 text-[13px]',
+  sm: 'tap-target-y h-10 px-4.5 text-[14px]',
+  md: 'h-12 px-6.5 text-[15px]',
+  lg: 'h-14 px-8 text-[15px]',
 };
 const variants = {
   primary: 'bg-primary text-on-primary hover:opacity-85',

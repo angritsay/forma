@@ -86,7 +86,9 @@ export function TestStep({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col items-center gap-3 text-center">
-        <span className="eyebrow-sentence">{t('training.testHint')}</span>
+        {/* A hint, not a kicker — a sentence in the quiet register rather than a section mark.
+            See `.eyebrow` in global.css for the line the two sit either side of. */}
+        <span className="text-[13px] leading-[1.3] text-muted">{t('training.testHint')}</span>
 
         {phase === 'result' ? (
           <>

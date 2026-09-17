@@ -128,15 +128,31 @@
    *
    * `--r-pill` used to be for the play button over a video and nothing else. The owner's own
    * prototype (`design/ui_kits/app-v2`) sets small facts — «18 мин», «20 баллов», the prize — as
-   * pills, ranks and finished things as circles, and the tab bar as a floating capsule; that is
-   * the reference now (`design/CHANGELOG.md` §10), so the pill is a shape a fact or a piece of
-   * chrome may take. Controls that are pressed stay on `--r-control`: a pill button and a pill
-   * fact would be the same shape for two different things.
+   * pills, ranks and finished things as circles, and the tab bar as a capsule; that is the
+   * reference (`design/CHANGELOG.md` §10), so the pill is a shape a fact or a piece of chrome
+   * may take.
+   *
+   * **A button may take it too, and what decides is the ground, not the press.** §10 used to draw
+   * the line at purpose — pressed stays on `--r-control`, read may be a pill — and the owner's two
+   * mockups overruled that by disagreeing with each other: «Продолжить» lies on the course
+   * photograph and is a full pill, «Вступить за 666 ₽ / мес» sits on the page ground and is a
+   * rounded rectangle. Asked which, she answered «оставить оба», which is a rule and not a
+   * compromise (`design/CHANGELOG.md` §13):
+   *
+   *     A control laid on a photograph is a pill. A control on a flat ground is a rounded
+   *     rectangle at `--r-control`.
+   *
+   * A pill on a picture reads as an object set down on it; the same pill on the ground reads as a
+   * tag rather than a button, because there is no edge for it to be distinct from.
+   *
+   * `--r-control` moves 12 → 16 with that decision. The scale stays concentric — a 16px control
+   * inside a 24px card wants 8px of padding between them, where it wanted 12 — and `--r-inner`
+   * stays at 12 for a box nested one level deeper.
    */
   --r-card: 24px;
   --r-tile: 20px;
   --r-inner: 12px;
-  --r-control: 12px;
+  --r-control: 16px;
   --r-pill: 999px;
   /* Shadows are almost gone; paper polaroids get a soft one, dark cards get none. */
   --shadow-card: none;
@@ -144,17 +160,25 @@
   --shadow-paper: 0 12px 30px rgba(15, 15, 17, 0.18);
   --shadow-glow: none;
   /*
-   * Type. Unbounded for display — always uppercase, 800 for the big lines and 600 for headings,
-   * with the brand's main device being two weights in one line (800 + 200: «ПРИСЕД без боли»).
-   * Onest for everything that is read. Both are variable faces served from the package, not from
-   * Google Fonts: the app runs inside Telegram, where a third-party font request is one more
-   * thing to fail before the first screen paints.
+   * Type. Unbounded for display — 800 for the big lines and 600 for headings, with the brand's
+   * main device being two weights in one line (800 + 200: «Присед без боли»). Onest for everything
+   * that is read. Both are variable faces served from the package, not from Google Fonts: the app
+   * runs inside Telegram, where a third-party font request is one more thing to fail before the
+   * first screen paints.
+   *
+   * **The display face is set in sentence case, and so is every label.** It used to be capitals
+   * throughout, and the owner retired them across the whole product — «везде — и в приложении, и
+   * на сайте» — after her mockups came back in mixed case. The fonts did not change and the
+   * weights did not change; only the case did. `design/CHANGELOG.md` §13 carries the reasoning,
+   * and `.eyebrow` below carries the measurement that predicted it.
+   *
+   * The tracking tokens that went with the capitals (`--tracking-kicker` .18em,
+   * `--tracking-label` .16em) are gone with them. Wide tracking is what makes a row of capitals
+   * scannable; on lowercase it only pulls the word apart, so both utilities now sit at .01em,
+   * written inline because there is one value and nothing left to coordinate.
    */
   --font-sans: 'Onest Variable', 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Unbounded Variable', 'Unbounded', 'Onest Variable', system-ui, sans-serif;
-  /* Kickers are tracked wide (.18em); control labels a little less (.16em) so they fit their box. */
-  --tracking-kicker: 0.18em;
-  --tracking-label: 0.16em;
   /*
    * Calm fades and shifts for content. The spring is for the chrome's moving parts alone — the tab
    * bar's highlight settling into a seat, a check landing on a finished task — and its overshoot
@@ -284,8 +308,6 @@
   --shadow-soft: var(--shadow-soft);
   --shadow-paper: var(--shadow-paper);
   --shadow-glow: var(--shadow-glow);
-  --tracking-kicker: var(--tracking-kicker);
-  --tracking-label: var(--tracking-label);
 
   /*
    * Type scale.
@@ -295,14 +317,31 @@
    * appreciably longer than its English equivalent — that read as shouting, and the hero wrapped
    * onto five lines and broke mid-word.
    *
-   * The display face is Unbounded again, and Unbounded is wide: set in capitals, as the brand
-   * asks, a Russian word takes half again the width it took in Manrope. The display steps
-   * (3xl–7xl) come down to the design system's mobile scale — 40px is display-xl, 28px is
-   * display-l — and the reading steps (lg–2xl) stay where they were, because Onest did not
-   * change. The gain is taken as fewer, wider words per line, not as smaller type.
+   * The display face is Unbounded, and Unbounded is wide: a Russian word takes half again the
+   * width it took in Manrope. The display steps (3xl–7xl) come down to the design system's mobile
+   * scale — 40px is display-xl, 28px is display-l — and the reading steps (lg–2xl) stay where they
+   * were, because Onest did not change. The gain is taken as fewer, wider words per line, not as
+   * smaller type.
    *
-   * Line heights on the display steps are for capitals: no descenders except the tails of Д, Ц
-   * and Щ, so 1.05 clears the breve of Й on the line below. Body steps stay looser for reading.
+   * **The display steps' line heights live here and nowhere else, and that is load-bearing.** A
+   * Tailwind `text-*` utility carries its own paired line height, and a utility beats a rule in
+   * `@layer components` — so `.display`'s own `line-height` never reaches an element that also
+   * carries `text-5xl`, which is most of them. Measured in the browser on the built stylesheet:
+   * the workout preview's `<h2 class="display text-balance text-5xl">` computes to 28px / 30.24px,
+   * that is 1.08 — the step's number, not the class's. Changing the class alone would have moved
+   * nothing on screen.
+   *
+   * 3xl–7xl used to be 1.2 / 1.1 / 1.08 / 1.05 / 1.02, and every one of those was drawn for
+   * capitals: capitals have no descenders but the tails of Д, Ц and Щ, so 1.05 was enough to
+   * clear the breve of Й on the line below. Sentence case puts a descender on every other line.
+   * Measured over the Cyrillic alphabet in both cases against the shipped face, Unbounded
+   * ExtraBold's ink runs -0.182em (у) to +1.002em (Ё) — 1.184em of it — and SemiBold's 1.168em,
+   * so anything under 1.19 draws one line inside the one above. All five display steps go to 1.2,
+   * which is that floor plus the sliver of air the capitals used to have.
+   *
+   * The sizes do not move. Sentence case's gain is horizontal — about a quarter — and it is spent
+   * on the controls (`Button`, `Chip`, `Pill`, `SegmentedControl`), not on headlines that were
+   * already sized for Russian. Body steps (lg–2xl) are Onest and were always loose enough.
    */
   --text-lg: 1rem;
   --text-lg--line-height: 1.6;
@@ -313,13 +352,13 @@
   --text-3xl: 1.25rem;
   --text-3xl--line-height: 1.2;
   --text-4xl: 1.5rem;
-  --text-4xl--line-height: 1.1;
+  --text-4xl--line-height: 1.2;
   --text-5xl: 1.75rem;
-  --text-5xl--line-height: 1.08;
+  --text-5xl--line-height: 1.2;
   --text-6xl: 2.125rem;
-  --text-6xl--line-height: 1.05;
+  --text-6xl--line-height: 1.2;
   --text-7xl: 2.5rem;
-  --text-7xl--line-height: 1.02;
+  --text-7xl--line-height: 1.2;
 }
 
 html {
@@ -388,16 +427,25 @@ body {
  */
 @layer components {
   /*
-   * A heading in the display face: Unbounded, capitals, SemiBold. This is the *heading* weight —
-   * card titles, section heads, the numbers on a stat tile. The brand's big lines use `.display`
-   * below at 800, and the two are told apart on purpose: 800 capitals at 17px read as a headline
-   * in a news feed, and a card has to sit quietly next to the thing it belongs to.
+   * A heading in the display face: Unbounded SemiBold, sentence case. This is the *heading*
+   * weight — card titles, section heads, the numbers on a stat tile. The brand's big lines use
+   * `.display` below at 800, and the two are told apart on purpose: 800 at 17px reads as a
+   * headline in a news feed, and a card has to sit quietly next to the thing it belongs to.
+   *
+   * Sentence case, not capitals — see the token block above and `.eyebrow` below for why. The
+   * strings are already written this way in `src/i18n/**`, so the rule is the whole change: no
+   * caller passes a pre-uppercased word.
    */
   .font-display {
     font-family: var(--font-display);
     font-weight: 600;
-    text-transform: uppercase;
     letter-spacing: 0;
+    /*
+     * 1.28. Measured against the shipped face rather than chosen: over the Cyrillic alphabet in
+     * both cases, Unbounded SemiBold's ink runs from -0.181em (у) to +0.987em (Ё), so a line
+     * occupies 1.168em and anything below that collides. Capitals alone needed only 1.139em, so
+     * this number already had the headroom sentence case asks for and does not move.
+     */
     line-height: 1.28;
     /*
      * `body` sets `overflow-wrap: break-word` so a long URL can never widen the viewport. At
@@ -405,24 +453,43 @@ body {
      * "Кроссфи / т дома" and "подстраи / вается". Headings opt out and hyphenate instead: the
      * browser breaks at a real syllable boundary and shows the hyphen, using the patterns for
      * whatever <html lang> declares. `overflow-wrap: break-word` stays inherited from body as
-     * the last resort. Unbounded in capitals is the widest thing on the page, which makes this
-     * rule more load-bearing than it was, not less.
+     * the last resort. Unbounded is the widest face on the page in either case, which keeps this
+     * rule load-bearing even now that the headings set about a quarter narrower.
      */
     hyphens: auto;
   }
 
   /*
-   * The big line. 800, capitals, tracked a hair tight, set on a line-height drawn for capitals.
-   * The device that makes it the brand's is `.t-thin` on part of the line: «ПРИСЕД» at 800 and
-   * «без боли» at 200 — strength and lightness in one breath. Prefer that to a second colour,
-   * an outline or a blur echo, all of which the brandbook has retired.
+   * The big line. 800, sentence case, tracked a hair tight. The device that makes it the brand's
+   * is `.t-thin` on part of the line: «Присед» at 800 and «без боли» at 200 — strength and
+   * lightness in one breath. Prefer that to a second colour, an outline or a blur echo, all of
+   * which the brandbook has retired. The weight contrast is untouched by the case change; it was
+   * always the device, and the capitals were only ever the clothes it wore.
+   *
+   * **What sentence case does and does not buy in this face, because it surprises people.**
+   * Unbounded is geometric, and most Cyrillic lowercase letters repeat their capital's shape at
+   * x-height — о т ж и м н а я к с х в е are the same figure, smaller. So a Russian line here
+   * does *not* gain the distinct word silhouette Latin lowercase gives, and «отжимания, выпады»
+   * at weight 200 genuinely looks like small capitals on screen. That is the font, not a
+   * `text-transform` somebody forgot: check the computed style before "fixing" it.
+   *
+   * What it does buy is real and is the whole point: the tracking goes (a tracked line is letters
+   * in a row, an untracked one is a word), the first letter now differs in size from the rest, and
+   * б р у д ф put ascenders and descenders back into the line. The owner's mockups set «Настя»
+   * and «Клуб маленьких шагов» exactly this way, so what renders is what she drew.
    */
   .display {
     font-family: var(--font-display);
     font-weight: 800;
-    text-transform: uppercase;
     letter-spacing: -0.01em;
-    line-height: 1.16;
+    /*
+     * 1.16 → 1.2, and this one is a real collision rather than a taste adjustment. Unbounded
+     * ExtraBold's Cyrillic capitals span -0.150em (Д's tail) to +1.002em (Ё's diaeresis) = 1.152em,
+     * which is exactly what 1.16 was drawn to clear, with 0.008em to spare. Add the lowercase and
+     * the floor drops to -0.182em (у), so a line needs 1.184em and 1.16 overlaps the one above it.
+     * 1.2 restores about the same sliver of air the capitals had.
+     */
+    line-height: 1.2;
     hyphens: auto;
   }
 
@@ -431,30 +498,28 @@ body {
   }
 
   /*
-   * Section eyebrow / kicker — 11px, capitals, .18em tracking, per the brandbook.
+   * Section eyebrow / kicker — 13px, sentence case, .01em, --muted. It marks a section; it is
+   * the quietest thing on the screen and it stays that way.
    *
-   * Cyrillic capitals are near-uniform rectangles (П Н И Ш Ц Т Г Е Б В) with none of the
-   * distinguishing shapes Latin caps have, so uppercasing a Russian label erases its word
-   * silhouette, and wide tracking then pushes it to roughly twice the set width of the English
-   * original. The brandbook accepts that cost because the kicker is a label, not something to be
-   * read as language — its job is to mark a section, and at 11px in --muted it is the quietest
-   * thing on the screen.
+   * This class used to be 11px capitals at .18em, and the note it carried against itself is the
+   * reason the whole product is now in sentence case. It read: Cyrillic capitals are near-uniform
+   * rectangles (П Н И Ш Ц Т Г Е Б В) with none of the distinguishing shapes Latin caps have, so
+   * uppercasing a Russian label erases its word silhouette, and wide tracking then pushes it to
+   * roughly twice the set width of the English original. The brandbook accepted that cost for
+   * short labels and prescribed an escape hatch, `.eyebrow-sentence`, for the rest.
    *
-   * The cost is only affordable while kickers stay SHORT. Keep them to two or three words
-   * ("НЕДЕЛЯ 2", "СЕГОДНЯ · 12 МИНУТ"). A sentence-length kicker in Cyrillic caps is unreadable
-   * and will also wrap to two lines on a 390px screen — use `.eyebrow-sentence` for those.
+   * The owner's mockups came back with no capitals anywhere, and she then chose sentence case for
+   * the whole product. So the escape hatch is the rule: this class *is* what `.eyebrow-sentence`
+   * was, to the pixel, and that class is gone rather than kept as a synonym — two names for one
+   * treatment is how a product ends up with two of everything.
+   *
+   * 11px → 13px is not a separate decision. Sentence case sets roughly a quarter narrower than
+   * tracked capitals, so a bigger label fits the same box: a 22-character kicker was ~210px at
+   * 11px/.18em and is ~150px at 13px/.01em. Kickers still stay SHORT — two or three words,
+   * «Неделя 2», «Сегодня · 12 минут» — because a kicker that reads as a sentence is a paragraph
+   * wearing a label's colour. `src/i18n/eyebrow.test.ts` holds that line.
    */
   .eyebrow {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: var(--tracking-kicker);
-    line-height: 1.3;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  /* The long-label escape hatch: same slot in the hierarchy, no caps, no tracking. */
-  .eyebrow-sentence {
     font-size: 0.8125rem;
     font-weight: 600;
     letter-spacing: 0.01em;
@@ -463,13 +528,15 @@ body {
   }
 
   /*
-   * Control label — capitals, Bold, tracked .16em, on buttons and chips. A little tighter than
-   * a kicker because a control label sits inside a box and must not push its own width out.
+   * Control label — SemiBold at .01em, on buttons, chips, pills and segments. It used to be Bold
+   * capitals tracked .16em. Two things went with the capitals: the tracking, which only pulls
+   * lowercase apart, and one step of weight, because 700 was propping up letterforms that caps
+   * had flattened and lowercase does not need. No `text-transform` and no size here — the size
+   * belongs to the control, and every one of them went *up* when the case came down.
    */
   .control-label {
-    font-weight: 700;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.01em;
   }
 
   /*
@@ -478,6 +545,11 @@ body {
    * dot is gone with the blue. The `<Logo>` component (src/components/ui/Logo.tsx, Logo.astro)
    * draws the spans; these classes are what it draws with, and `.wordmark` on its own is the
    * plain fallback for anywhere that still sets the word as one string.
+   *
+   * **This is the one `text-transform: uppercase` the product keeps, and it is not type.** FORMA
+   * is a logotype — a drawn constant with a stretched F and two weights — not a word set in the
+   * display face, so the sentence-case rule that emptied `.display`, `.font-display`, `.eyebrow`,
+   * `.control-label` and `.glyph` does not reach it. Lowercasing it would be redrawing the mark.
    */
   .wordmark {
     font-family: var(--font-display);
@@ -606,7 +678,6 @@ body {
     font-family: var(--font-display);
     font-weight: 600;
     line-height: 1;
-    text-transform: uppercase;
     display: inline-flex;
     flex: none;
   }

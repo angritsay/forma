@@ -10,7 +10,7 @@ export function FactChips({ items, className }: { items: readonly string[]; clas
       {items.map((x) => (
         <li
           key={x}
-          className="control-label border border-border-strong px-3.5 py-2.5 text-[11px] text-text"
+          className="control-label border border-border-strong px-3.5 py-2.5 text-[14px] text-text"
         >
           {x}
         </li>

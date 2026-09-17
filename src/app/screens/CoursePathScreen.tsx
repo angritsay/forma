@@ -257,7 +257,8 @@ export default function CoursePathScreen() {
              */}
             <span className="numeral tabular text-[19px] leading-none">{progress.pct}%</span>
           </RingProgress>
-          <h2 className="display min-w-0 flex-1 text-[26px] leading-[1.08] text-balance">
+          {/* 1.08 → 1.2: a course name wraps, and 1.08 was drawn for capitals. global.css. */}
+          <h2 className="display min-w-0 flex-1 text-[26px] leading-[1.2] text-balance">
             {finished ? (
               <DisplayText text={t('app.pathCompleted')} />
             ) : (

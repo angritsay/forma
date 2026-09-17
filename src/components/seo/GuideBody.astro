@@ -68,16 +68,20 @@ const { class: className = '' } = Astro.props;
     color: var(--text);
   }
   /*
-   * Section heads in the display face: Unbounded SemiBold, capitals, no italics (the brandbook
-   * has none). Capitals set wide, so the size stays modest and the browser is allowed to
+   * Section heads in the display face: Unbounded SemiBold, sentence case, no italics (the
+   * brandbook has none). This restates `.font-display` by hand because the guide body styles
+   * markup generated from Markdown — keep the two in step. The browser is still allowed to
    * hyphenate at a real syllable boundary rather than snap a long word mid-letter.
+   *
+   * Line height 1.2 → 1.28, the same number `.font-display` carries: once lowercase is in play,
+   * Unbounded SemiBold's Cyrillic ink runs -0.181em (у) to +0.987em (Ё), so a line occupies
+   * 1.168em. Capitals alone needed 1.139em and never came near 1.2.
    */
   .guide-body :global(h2) {
     font-family: var(--font-display);
     font-weight: 600;
-    text-transform: uppercase;
     letter-spacing: 0;
-    line-height: 1.2;
+    line-height: 1.28;
     font-size: 1.25rem;
     hyphens: auto;
     margin: 3rem 0 1rem;

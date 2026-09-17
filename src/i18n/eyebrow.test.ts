@@ -1,14 +1,23 @@
 /**
- * Guards the constraint that the uppercase kicker carries.
+ * Guards the one constraint a kicker still carries: it has to be a label, not a sentence.
  *
- * `.eyebrow` (src/styles/global.css) sets its label in capitals at 0.18em tracking. That works on
- * a section marker and fails on a sentence: Cyrillic capitals are near-uniform rectangles, so
- * uppercasing a Russian phrase erases its word silhouette, and the tracking then pushes it to
- * roughly twice the set width of the sentence-case original — on a 390px screen a long one wraps
- * to two lines of shouting. The brandbook accepts that cost for short labels only.
+ * This test was written for a different reason. `.eyebrow` used to set its label in capitals at
+ * 0.18em, and the caps were the danger: Cyrillic capitals are near-uniform rectangles, so
+ * uppercasing a Russian phrase erased its word silhouette and the tracking pushed it to roughly
+ * twice its sentence-case width — a long one wrapped to two lines of shouting on a 390px screen.
+ * The escape hatch was a second class, `.eyebrow-sentence`.
  *
- * So: every i18n string rendered inside an `.eyebrow` must be short. Anything longer belongs in
- * `.eyebrow-sentence`, which occupies the same slot in the hierarchy without the caps.
+ * The owner has since put the whole product in sentence case, `.eyebrow` *is* what the escape
+ * hatch was, and the second class is gone. So the typographic emergency is over — and the rule
+ * outlives it, because the reason a kicker is short was never only the caps. It marks a section.
+ * At 13px in `--muted` it is the quietest thing on the screen, and a quiet paragraph is not a
+ * label, it is small print. Keeping the ceiling is what stops the kicker from becoming a place to
+ * put a sentence that did not fit anywhere else.
+ *
+ * What the ceiling no longer does is send anything to a second class, because there is not one.
+ * A string too long to be a kicker is not a kicker: set it as body text at the same 13px in
+ * `--muted` and let the weight — 400 rather than `.eyebrow`'s 600 — say it is read and not
+ * scanned. Four lines moved that way when this class merged.
  *
  * The test reads the source rather than a hand-maintained list, so adding a long label to an
  * eyebrow fails here rather than in review — or, worse, silently on someone's phone.
@@ -20,12 +29,20 @@ import { dict as en } from './en/index';
 import { dict as ru } from './ru/index';
 
 /**
- * Measured against the rendered face: at 11px with 0.18em tracking, Onest's Cyrillic capitals
- * average ~9.5px of advance, so 22 characters is ~210px — a little over half of a 390px screen,
- * which is the most a kicker should take before it stops reading as a label. The brandbook's
- * wider tracking (.18em, up from .14em) makes this ceiling tighter, not looser.
+ * 29 characters — the same budget as before, re-measured against the face that renders now.
+ *
+ * The budget itself has not moved and is the actual rule: **about 210px, a little over half of a
+ * 390px screen, is the most a kicker may take before it stops reading as a label.** What changed
+ * is what 210px buys. At 11px in capitals tracked 0.18em, Onest's Cyrillic averaged ~9.5px of
+ * advance and 210px was 22 characters. At 13px sentence case it averages 7.03px — measured
+ * against `scripts/seo/fonts/Onest-Regular.ttf`, summing `hmtx` advances over a Russian sample —
+ * and 210px is 29.
+ *
+ * The number is derived rather than tuned, and the check is worth having at either value:
+ * «Образование и сертификаты» is a three-word kicker and sets 181px, «Правила, по которым это
+ * считается» is a sentence with a comma in it and sets 224px. 29 is where those two fall apart.
  */
-const MAX_KICKER_CHARS = 22;
+const MAX_KICKER_CHARS = 29;
 
 const SRC = join(process.cwd(), 'src');
 
@@ -43,8 +60,9 @@ function sourceFiles(dir: string): string[] {
  * ignores anything indirect, so it under-reports rather than producing false failures.
  */
 function eyebrowKeys(): Set<string> {
-  // `\beyebrow\b` alone also matches inside `eyebrow-sentence`, because a hyphen is a word
-  // boundary — and that class is precisely the opt-out this rule is about. Hence the lookahead.
+  // The `(?!-)` lookahead outlived `.eyebrow-sentence`, the hyphenated opt-out it was written to
+  // exclude. It stays: a hyphen is a word boundary, so `\beyebrow\b` would silently swallow any
+  // future `eyebrow-*` variant into this rule rather than leaving it to its own.
   const pattern =
     /(?:class|className)=(?:"|\{["'`])[^"'`]*\beyebrow\b(?!-)[^"'`]*(?:"|["'`]\})[^>]*>\s*\{?\s*t\(\s*(?:locale,\s*)?'([a-zA-Z0-9_.]+)'/g;
   const keys = new Set<string>();
@@ -61,7 +79,7 @@ function lookup(dict: unknown, key: string): string | undefined {
   return table?.[name];
 }
 
-describe('uppercase kickers', () => {
+describe('kickers', () => {
   const keys = [...eyebrowKeys()].sort();
 
   it('finds the eyebrow labels in the source', () => {
@@ -72,7 +90,7 @@ describe('uppercase kickers', () => {
   it.each([
     ['ru', ru],
     ['en', en],
-  ])('are short enough to read in caps (%s)', (locale, dict) => {
+  ])('are short enough to read as a label (%s)', (locale, dict) => {
     const tooLong = keys
       .map((key) => [key, lookup(dict, key)] as const)
       .filter((pair): pair is readonly [string, string] => typeof pair[1] === 'string')
@@ -81,8 +99,8 @@ describe('uppercase kickers', () => {
 
     expect(
       tooLong,
-      `These are set in capitals at 0.14em tracking and are too long to read that way.\n` +
-        `Use "eyebrow-sentence" instead, or shorten the label:\n  ${tooLong.join('\n  ')}`,
+      `A kicker marks a section; these read as sentences.\n` +
+        `Shorten them to two or three words, or set them as body text instead:\n  ${tooLong.join('\n  ')}`,
     ).toEqual([]);
   });
 });

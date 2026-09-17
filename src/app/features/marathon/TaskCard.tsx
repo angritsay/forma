@@ -92,11 +92,16 @@ export function TaskCard({ item, teammateNames, closed, onSend, onSendMedia }: T
     >
       <div className="flex items-start gap-4">
         <div className="min-w-0 flex-1">
-          <h3 className="display text-[24px] leading-[1.08] text-balance">{task.title}</h3>
+          {/* 1.08 → 1.2: the old number was drawn for capitals, and a task title is arbitrary text
+              that can wrap. See the type-scale comment in global.css for the measurement. */}
+          <h3 className="display text-[24px] leading-[1.2] text-balance">{task.title}</h3>
           {task.body ? (
             <p className="mt-2 text-[14px] leading-snug text-muted">{task.body}</p>
           ) : null}
-          {rule ? <p className="eyebrow mt-2 text-[10px]">{rule}</p> : null}
+          {/* Plain `.eyebrow`: it is 13px sentence case now, and the `text-[10px]` that used to hold
+              it under the tracked capitals would leave this rule the one unreadable line on the
+              card. */}
+          {rule ? <p className="eyebrow mt-2">{rule}</p> : null}
         </div>
         {done ? (
           /*

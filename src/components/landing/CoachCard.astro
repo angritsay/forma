@@ -73,7 +73,7 @@ const bookHint = t(locale, 'landing.coachBookHint', {
     {
       COACH.credentials.length > 0 && (
         <div class="mt-6 border-t border-border pt-5">
-          <p class="eyebrow-sentence">{t(locale, 'landing.coachCredentials')}</p>
+          <p class="eyebrow">{t(locale, 'landing.coachCredentials')}</p>
           {/*
             The numeral is a fixed-width column, and both halves of that matter. Without
             `shrink-0` flex shrank the numeral itself to make room for a long credential, and the
@@ -102,7 +102,7 @@ const bookHint = t(locale, 'landing.coachBookHint', {
               <a
                 href={x.url}
                 rel="me noopener"
-                class="control-label inline-flex h-10 items-center rounded-control border border-border-strong px-4 text-[12px] text-muted transition-colors duration-150 hover:bg-surface-2 hover:text-text"
+                class="control-label inline-flex h-10 items-center rounded-control border border-border-strong px-4 text-[14px] text-muted transition-colors duration-150 hover:bg-surface-2 hover:text-text"
               >
                 {x.label}
               </a>
@@ -129,7 +129,7 @@ const bookHint = t(locale, 'landing.coachBookHint', {
       moreHref && (
         <a
           href={moreHref}
-          class="control-label mt-6 inline-flex min-h-11 items-center gap-2 text-[12px] text-text hover:opacity-85"
+          class="control-label mt-6 inline-flex min-h-11 items-center gap-2 text-[14px] text-text hover:opacity-85"
         >
           {t(locale, 'landing.coachMore')}
           <span class="glyph" aria-hidden="true">

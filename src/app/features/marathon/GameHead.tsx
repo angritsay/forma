@@ -70,7 +70,8 @@ export function GameHead({ marathon, partners = [] }: GameHeadProps) {
           {who ? ` · ${who}` : ''}
         </p>
         {/* «ДЕНЬ 10» at 800 and «из 14» at 200 — the brand's device, on the one line here. */}
-        <h1 className="display mt-1 text-[26px] leading-[1.08] text-balance">
+        {/* 1.08 → 1.2, the sentence-case floor: see the type-scale comment in global.css. */}
+        <h1 className="display mt-1 text-[26px] leading-[1.2] text-balance">
           {marathon ? (
             <>
               {t('app.marathonDayN', { n: dayText })}{' '}
