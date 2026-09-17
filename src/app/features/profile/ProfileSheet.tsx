@@ -12,19 +12,35 @@
  * the same avatar in the top row from `md` — one object, two places it is reachable from, and
  * never a screen, because an account is something you glance at and close.
  *
- * The sheet is the kit's own (`components/ui/Sheet`): a sheet on a phone, a dialog from `md`.
+ * **And the inventory, which is a sixth thing and is here on purpose.** The question «что есть
+ * дома» left onboarding with the rest of it, so a new profile carries `['none']` for everybody.
+ * That is the safe direction — `prescribe.ts` substitutes down the `scaling.easier` chain for
+ * anything the athlete has not got — but it is only safe if there is somewhere to say otherwise,
+ * and this was that somewhere. Without the row, somebody who owns a pair of dumbbells trains
+ * without them forever and the prescription is permanently conservative.
+ *
+ * The sheet is the kit's own (`components/ui/Sheet`): a sheet on a phone, a dialog from `md`. When
+ * the inventory opens, this one closes: two sheets stacked are two focus traps arguing, and the
+ * way back from the inventory is this sheet reopening.
  */
 import { useState } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
+import { Glyph } from '@/components/ui/Icon';
+import { ListRow } from '@/components/ui/ListRow';
 import { Modal } from '@/components/ui/Modal';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Sheet } from '@/components/ui/Sheet';
+import { useToast } from '@/components/ui/Toast';
+import type { Equipment } from '@/content/schema';
 import { formatNumber } from '@/i18n/index';
+import { isAppError } from '@/lib/api/errors';
 import { levelForPoints } from '@/lib/training/levels';
 import { useT } from '@/app/hooks/useT';
 import { useTotalPoints } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
+import { EquipmentSheet } from './EquipmentSheet';
+import { equipmentSummary, withEquipment } from './model';
 
 export interface ProfileSheetProps {
   open: boolean;
@@ -32,18 +48,49 @@ export interface ProfileSheetProps {
 }
 
 export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
-  const { t, l, locale } = useT();
+  const tr = useT();
+  const { t, l, locale } = tr;
+  const toast = useToast();
   const profile = useSession((s) => s.profile);
   const user = useSession((s) => s.user);
   const points = useTotalPoints();
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [gear, setGear] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const tp = profile?.trainingProfile ?? null;
 
   const level = levelForPoints(points);
   const next = level.nextAt === null ? null : levelForPoints(level.nextAt);
   const remaining = level.nextAt === null ? 0 : Math.max(0, level.nextAt - points);
   const name = profile?.displayName ?? '';
   const email = profile?.email || user?.email || '';
+
+  const saveEquipment = async (
+    equipment: Equipment[],
+    dumbbellKg: number[],
+    kettlebellKg: number[],
+  ) => {
+    if (!tp) return;
+    setSaving(true);
+    try {
+      await useSession
+        .getState()
+        .saveProfile({ trainingProfile: withEquipment(tp, equipment, dumbbellKg, kettlebellKg) });
+      toast.show({ kind: 'success', title: t('app.profileSaved') });
+      setGear(false);
+    } catch (e) {
+      toast.show({
+        kind: 'error',
+        title:
+          isAppError(e) && e.code === 'network'
+            ? t('common.errorOffline')
+            : t('app.profileSaveError'),
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const signOut = async () => {
     setBusy(true);
@@ -57,7 +104,7 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
 
   return (
     <>
-      <Sheet open={open} onClose={onClose} title={t('app.profileTitle')}>
+      <Sheet open={open && !gear} onClose={onClose} title={t('app.profileTitle')}>
         <div className="flex flex-col gap-6 pb-2">
           {/* Who you are: the figure, the name, and the address that «Выйти» will leave. */}
           <div className="flex items-center gap-4">
@@ -100,6 +147,26 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
             </p>
           </div>
 
+          {/* The one setting: what is at home. Its value is the row's second line, the way a
+              phone's own settings are read. */}
+          <ul className="-mx-6 border-y border-border md:-mx-8">
+            <li>
+              <ListRow
+                title={t('app.profileEquipment')}
+                disabled={!tp}
+                onClick={() => setGear(true)}
+                trailing={
+                  <>
+                    <span className="max-w-[44vw] truncate text-[15px] text-muted md:max-w-[220px]">
+                      {equipmentSummary(tr, tp)}
+                    </span>
+                    <Glyph size={16}>›</Glyph>
+                  </>
+                }
+              />
+            </li>
+          </ul>
+
           <Button
             variant="ghost"
             size="lg"
@@ -111,6 +178,15 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
           </Button>
         </div>
       </Sheet>
+      {tp ? (
+        <EquipmentSheet
+          open={gear}
+          profile={tp}
+          busy={saving}
+          onClose={() => setGear(false)}
+          onSave={(eq, d, k) => void saveEquipment(eq, d, k)}
+        />
+      ) : null}
       <Modal
         open={confirm}
         onClose={() => setConfirm(false)}

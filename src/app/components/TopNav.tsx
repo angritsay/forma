@@ -121,7 +121,9 @@ export function TopNav() {
       /* Only when it actually moved: a `ResizeObserver` fires for reasons that are not a move, and
          a fresh object with the same two numbers in it is still a re-render. */
       const next = { left: el.offsetLeft, width: el.offsetWidth };
-      setMark((prev) => (prev && prev.left === next.left && prev.width === next.width ? prev : next));
+      setMark((prev) =>
+        prev && prev.left === next.left && prev.width === next.width ? prev : next,
+      );
     };
     place();
     const box = row.current;

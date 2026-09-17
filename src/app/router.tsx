@@ -6,6 +6,8 @@
  * fourth seat for whoever has the panel. The paths kept the names they were built with: the words
  * on the bar changed, the URLs did not, so nothing that was ever linked or bookmarked broke.
  *
+ * `/assessment` joins auth and onboarding outside the shell — see the route for why.
+ *
  * Inside a Telegram Mini App the same routes also drive Telegram's own back button.
  */
 import { Suspense } from 'react';
@@ -56,6 +58,20 @@ export function AppRoutes() {
           </Route>
           <Route element={<RequireAuth />}>
             <Route path="/onboarding/*" element={<OnboardingScreen />} />
+            {/*
+             * The physical test, which used to be the last step of onboarding and is asked for
+             * after a couple of workouts now. It is **here** rather than in the tabbed section
+             * below, and that is load-bearing: a screen inside <AppShell> arrives on a transform
+             * (`screen-in-*`), a transformed ancestor is a containing block, and the runner's
+             * `position: fixed` panel then measures itself against that box instead of the
+             * viewport — it lands at the top of the page with the tab bar drawn over it. Beside
+             * onboarding it is full-screen, which is what a test asked for mid-session has to be.
+             *
+             * Its module lands on another branch; until it does, `getScreen` returns null and the
+             * route renders the localized "not available" state rather than breaking the build,
+             * which is exactly what the registry's glob is for.
+             */}
+            <Route path="/assessment" element={<LazyScreen name="AssessmentScreen" />} />
           </Route>
         </Route>
         <Route element={<RequireAuth />}>
@@ -84,13 +100,6 @@ export function AppRoutes() {
                * every achievement there is and the rule that earns it, taken or not.
                */}
               <Route path="/achievements" element={<LazyScreen name="AchievementsScreen" />} />
-              {/*
-               * The physical test, which used to be the last step of onboarding and is now asked
-               * for after a couple of workouts. Its module lands on another branch; until it does,
-               * `getScreen` returns null here and the route renders the localized "not available"
-               * state rather than breaking the build — which is what the registry's glob is for.
-               */}
-              <Route path="/assessment" element={<LazyScreen name="AssessmentScreen" />} />
               <Route path="/leaderboard" element={<LazyScreen name="LeaderboardScreen" />} />
               <Route path="/steps" element={<LazyScreen name="StepsScreen" />} />
               <Route path="/marathon" element={<LazyScreen name="MarathonScreen" />} />

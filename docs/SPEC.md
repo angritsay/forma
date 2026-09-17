@@ -354,14 +354,13 @@ fourth seat for whoever has the panel.** The words changed and the paths did not
 was ever linked or bookmarked broke:
 
 ```
-/auth  /onboarding
+/auth  /onboarding  /assessment   (outside the tabbed shell — the test is full-screen)
 /                          «Курсы» — the main screen: progress across every course there is
 /courses                   → redirect to `/` (the path this screen had while it was the second tab)
 /courses/:id               the course's path
 /courses/:id/nodes/:nodeId preview + difficulty
 /play                      active session          /summary/:sessionId
 /achievements              the catalogue of achievements, from the 🏅 in the header of «Курсы»
-/assessment                the physical test, asked for after a couple of workouts
 /marathon  /marathon/board «Клуб»
 /book                      «Тренер» — one-to-one session with the coach
 /leaderboard  /steps
@@ -375,14 +374,30 @@ the avatar now) and `/marathon/points` («Мои баллы»).
 Products: a **course** is bought once and kept forever (`purchases`); a **subscription**
 (`subscriptions`, monthly or annual) lists every course through `my_entitlements` while its paid
 period runs, and is activated by the coach or by the Prodamus webhook; an **hour with the coach**
-(`content/site/booking.ts`) is the only product that uses his time. `/book` is drawn as the price:
-the coach's photograph and his name, one line about what the session is, the format as a pill, and
-then the lengths as a switch — the two durations on one line — over a single block: the chosen
-length's name, its price as one display-size figure, what it includes, and one button. The two used
-to be stacked as two blocks; on a phone the second started below the fold, so the comparison the
-stacking was for never happened, and «переключение по продолжительности сессии» is both the
-comparison and one screen's worth of screen. No labelled rows and no numbered «how it works» list:
-the buttons are the steps.
+(`content/site/booking.ts`) is the only product that uses his time.
+
+`/book` is the **«Тренер»** tab, and it carries four things in this order. **Who he is**: his
+photograph, his name as one display line, and above it «Основатель и тренер Forma»
+(`COACH.formaRole`) — the founder half is what makes an hour with him different from an hour with a
+coach. Then the format and «можно за 15 минут до начала» (`BOOKING.leadTimeMin`) as pills.
+**His regalia**: `COACH.credentials`, six checkable facts off his profi.ru profile, of which the two
+that are numbers are lifted into figures by `COACH.figures` and dropped from the list below, so no
+fact appears twice. **What it gives**: `BOOKING.outcomes`, three numbered lines, each a restatement
+of a promise the offer already makes — nothing about anybody's results. **The price**: the lengths
+as a switch (the two durations on one line, defaulting to the cheaper), over one block with the
+chosen length's price as a display figure and one button. The two used to be stacked as two blocks;
+on a phone the second started below the fold, so the comparison the stacking was for never happened.
+
+On the longer length the block shows the **delta and only the delta** — «Всё из 30 минут» once, then
+`option.adds` and the price difference — because the owner's brief is «обязательно посветить что
+тренировка за 60 минут даст по сравнению с 30», and a second list containing the first makes the
+reader do the diffing. `HOUR.includes` is still the whole list for any other surface; it is composed
+from the half's promises plus `adds`, so the two cannot drift.
+
+After the button comes the step the offer used to be missing. With `BOOKING.scheduleUrl` set it is
+the slot page («оплатил → выбрал время»); with it empty — today's state — it says outright that the
+coach sets the time in a message, rather than ending the screen on a paid button. Opening payment
+from the screen sharpens that block instead of leaving the person to find it.
 
 The same `/app/` build runs inside Telegram as a Mini App (`src/lib/telegram/webapp.ts`): the SDK
 is loaded only when Telegram opened the page, Telegram's back button follows the route, and links
