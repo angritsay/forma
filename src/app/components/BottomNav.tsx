@@ -1,7 +1,6 @@
 import { clsx } from 'clsx';
 import { useMemo } from 'react';
 import { NavLink, useLocation } from 'react-router';
-import { Icon, type IconName } from '@/components/ui/Icon';
 import { haptic } from '@/lib/telegram/webapp';
 import { useT } from '@/app/hooks/useT';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
@@ -10,7 +9,6 @@ import type { TKey } from '@/i18n/index';
 export interface NavItem {
   to: string;
   labelKey: TKey;
-  icon: IconName;
   /** Match the path exactly rather than as a prefix — the root seat, which would swallow the rest. */
   end?: boolean;
   /**
@@ -46,16 +44,15 @@ const TABS: readonly NavItem[] = [
   {
     to: '/',
     labelKey: 'app.tabCourses',
-    icon: 'courses',
     end: true,
     owns: ['/courses', '/achievements'],
   },
-  { to: '/marathon', labelKey: 'app.tabGame', icon: 'people' },
-  { to: '/book', labelKey: 'app.tabCoach', icon: 'coach' },
+  { to: '/marathon', labelKey: 'app.tabGame' },
+  { to: '/book', labelKey: 'app.tabCoach' },
 ];
 
 /** The fourth seat. Appended, never inserted: the three the product is keep their order. */
-const ADMIN_TAB: NavItem = { to: '/admin', labelKey: 'app.adminTitle', icon: 'settings' };
+const ADMIN_TAB: NavItem = { to: '/admin', labelKey: 'app.adminTitle' };
 
 /** The seats this bar actually has — three, or four for somebody with the panel. */
 export function tabItems(admin: boolean): readonly NavItem[] {
@@ -87,38 +84,46 @@ export function activeTabIndex(pathname: string, admin = false): number {
 }
 
 /**
- * The tab bar: a capsule of glass floating over the bottom of the screen, with one highlight
+ * The tab bar: an iOS segmented control floating over the bottom of the screen, with one capsule
  * that slides to the seat you chose.
  *
- * It was a band across the bottom edge — a hairline, four columns, a 2px rule over the current
- * one — and the owner's verdict on it was «ощущается как по андроидовке … смотри в сторону iOS».
- * The difference between the two is not the icons or the words, which are the same, but what kind
- * of object the bar is. A band is part of the screen's edge: it ends where the screen ends and
- * moves when the screen does. A capsule is a thing laid *on* the screen — inset from its sides
- * and its bottom, rounded on every corner, casting a shadow — and the screen carries on underneath
- * it, which is what makes the glass worth having: there is content on every side of it to blur,
- * not just along one edge.
+ * This is the owner's own mockup, sent with «Обрати внимание на дизайн который я скинула. Сделай
+ * под него», and it is the second reduction of this bar. It was a band across the bottom edge
+ * («ощущается как по андроидовке … смотри в сторону iOS»), then a floating glass capsule with an
+ * icon and a tracked-caps label per seat; the mockup keeps the floating capsule and throws out
+ * everything inside it. No icons and no capitals — three plain words, «Курсы · Клуб · Тренер»,
+ * with the current one wearing a lighter capsule. What is left is a *segmented control*: the seats
+ * are one object you switch between, not four separate places you launch.
  *
- * Three moving parts, all in the spirit of the prototype in `design/ui_kits/app-v2`:
+ * Two of the three things dropped were carrying real weight and are worth naming, so nobody puts
+ * them back by accident. The **icons** were a second name for each seat in a language nobody had
+ * to learn — but a stopwatch over the word «Тренер» only repeats the word, and the set had to
+ * invent a mark for «Админка» that means nothing at all. The **tracked capitals** were the app's
+ * control voice everywhere; the mockup sets every control on both screens in sentence case, which
+ * is the departure that makes the redesign read as iOS rather than as a brandbook.
+ *
+ * What survives is what the bar actually does:
  *
  *   - **The highlight is one element that slides, not three that blink.** A lighter capsule inside
- *     the capsule, one seat wide, that travels by `translateX(n × 100%)` of its own width. Equal
+ *     the container, one seat wide, that travels by `translateX(n × 100%)` of its own width. Equal
  *     columns are what make that exact without measuring anything: a resize or a font swap cannot
  *     put it out of step. Its width is a share of `items.length` and not of a hard-coded four,
  *     because the bar has three seats for most people and four for an admin, and a highlight that
  *     assumed four would sit a third short of every seat on everybody else's phone. It travels on
- *     the spring easing, with a small overshoot
- *     — the one place the chrome is allowed to bounce, because a highlight settling into a seat
- *     is the gesture the whole bar exists to make.
- *   - **The icon you land on settles** (`.nav-icon-in`): down, past, and into place.
- *   - **The press lands on the contents**, scaled a little under the thumb — never on the link,
- *     so the 52px target does not shrink at the moment a finger is inside it.
+ *     the spring easing, with a small overshoot — the one place the chrome is allowed to bounce,
+ *     because a highlight settling into a seat is the gesture the whole bar exists to make.
+ *   - **The press lands on the word**, scaled a little under the thumb — never on the link, so the
+ *     44px target does not shrink at the moment a finger is inside it.
+ *   - **In Telegram a tap ticks.**
  *
  * All of it is motion and material, none of it colour: the brandbook keeps colour for the
- * programmes, so chrome has only these two registers to be alive in. In Telegram a tap also ticks.
+ * programmes, so chrome has only these two registers to be alive in.
  *
- * The type stays quiet: 10px tracked capitals on every tab, the current one in full white and the
- * others in the second grey. Hierarchy is the highlight and the ink, not the size.
+ * The container is inset far more than a tab bar usually is — the mockup puts it at 292 of 375,
+ * about 78% of the column — which is what makes it read as a control laid on the screen rather
+ * than as chrome fixed to its bottom edge. The one accommodation for the admin's fourth seat is
+ * that it is a *minimum* inset rather than a fixed one: «Админка» is a longer word than any of
+ * the three and a fourth segment of the mockup's width does not hold it.
  *
  * Hidden from `md` up, where `TopNav` takes over; `AppShell` drops `--nav-inset` to match.
  */
@@ -140,35 +145,51 @@ export function BottomNav() {
       aria-label={t('app.navMain')}
       className={clsx(
         /*
-         * Inset 16px from each side and 12px from the bottom, over the safe area and, in demo, the
-         * demo strip — so the capsule floats above both rather than sitting on either. The width
-         * is the phone column minus the two insets; on a tablet in portrait it stops at 448px,
-         * because a capsule the width of an iPad is a band again.
+         * Inset from each side and 12px from the bottom, over the safe area and, in demo, the demo
+         * strip — so the control floats above both rather than sitting on either. On a tablet in
+         * portrait it stops at 360px, because a segmented control the width of an iPad is a band
+         * again.
+         *
+         * The inset is the mockup's 44px for three seats and 16px for four. This is the one place
+         * the admin's seat changes the bar's geometry rather than just its arithmetic: four
+         * segments of 304px leave «Админка» 76px, and the word does not fit in it. It is still one
+         * segment per seat and one capsule one segment wide — only the row it divides is wider.
          */
-        'fixed left-1/2 z-30 w-[calc(100%-32px)] max-w-[448px] -translate-x-1/2 md:hidden',
+        'fixed left-1/2 z-30 -translate-x-1/2 md:hidden',
+        items.length > 3
+          ? 'w-[calc(100%-32px)] max-w-[448px]'
+          : 'w-[calc(100%-88px)] max-w-[360px]',
         'bottom-[calc(var(--safe-bottom)+var(--demo-inset,0px)+12px)]',
         /*
-         * `.glass-float`, the material for a floating object: an even tint rather than the bars'
-         * gradient (a gradient is for an edge that content arrives from; a capsule has content on
-         * every side), a heavier blur, a hairline ring that follows the radius and a shadow. Full
-         * rounding, because this is the object the pill radius exists for now — see the token.
+         * `.nav-segmented`: an opaque dark capsule with a hairline ring and a shadow. It was
+         * `.glass-float`, and the glass was not a flourish this bar could keep — a flat alpha lets
+         * running text read through, which `design/CHANGELOG.md` §8 already records as tried and
+         * rejected, and with the leaderboard scrolled underneath the row «13 Настя 105» was
+         * legible inside the capsule. The mockup draws a solid control; so does this.
+         *
+         * Full rounding, because this is the object the pill radius exists for now — see the token.
          */
-        'glass-float rounded-pill',
+        'nav-segmented rounded-pill',
       )}
     >
-      {/* The row is its own element so the highlight is positioned against the seats themselves,
-          inside the capsule's 6px padding. */}
-      <div className="relative flex h-16 items-stretch p-1.5">
+      {/* The row is its own element so the capsule is positioned against the seats themselves,
+          inside the container's 4px padding. */}
+      <div className="relative flex h-11 items-stretch p-1">
         <span
           aria-hidden="true"
           className={clsx(
-            'pointer-events-none absolute inset-y-1.5 left-1.5 rounded-pill bg-paper/12',
+            /* The mockup's capsule sits at about rgb(88); 28% white over `--surface` (23, 23, 26)
+               lands on exactly that, and it stays proportionate on any ground because it is an
+               alpha rather than a hex. The current seat's word is `--text` on it and nothing else:
+               `--muted` measures 3.7:1 there, under the 4.5 docs/SPEC.md §4 sets, where `--text`
+               measures 6.6. The grey is for the words on the container, which is far darker. */
+            'pointer-events-none absolute inset-y-1 left-1 rounded-pill bg-paper/28',
             'transition-[transform,opacity] duration-420 ease-(--ease-spring)',
             'motion-reduce:transition-none',
             active < 0 && 'opacity-0',
           )}
           style={{
-            width: `calc((100% - 12px) / ${items.length})`,
+            width: `calc((100% - 8px) / ${items.length})`,
             transform: `translateX(${Math.max(0, active) * 100}%)`,
           }}
         />
@@ -176,9 +197,9 @@ export function BottomNav() {
         {items.map((item, i) => {
           const label = t(item.labelKey);
           /*
-           * The ink and the highlight take the same answer, from `activeTabIndex` and not from
+           * The ink and the capsule take the same answer, from `activeTabIndex` and not from
            * `NavLink`'s own match. They used to disagree wherever a seat owns a screen that is not
-           * under its own path: inside a course the highlight sat on «Курсы» — `/` owns
+           * under its own path: inside a course the capsule sat on «Курсы» — `/` owns
            * `/courses/*` — while the word under it stayed grey, because `end` makes `NavLink`
            * match `/` and nothing else. One rule, one lit seat.
            */
@@ -188,34 +209,31 @@ export function BottomNav() {
               key={item.to}
               to={item.to}
               end={item.end}
-              aria-label={label}
               /* Every tap ticks, including one on the tab already open: the tick acknowledges the
                  touch, and a touch that landed correctly still deserves an answer. A no-op outside
                  Telegram, where there is no haptic engine to ask. */
               onClick={() => haptic('light')}
               className={clsx(
-                'relative z-10 flex flex-1 flex-col items-center justify-center rounded-pill',
+                /* `.tap-target-y` because the row is 36px tall inside a 44px container and the
+                   mockup's proportions are what make it a segmented control: the hit area grows
+                   with a pseudo-element instead of the box. */
+                'tap-target-y relative z-10 flex min-w-0 flex-1 items-center justify-center rounded-pill',
                 'transition-colors duration-150 ease-(--ease-out)',
-                isActive ? 'text-text' : 'text-muted-2 hover:text-muted',
+                isActive ? 'text-text' : 'text-muted hover:text-text',
               )}
             >
               <span
                 className={clsx(
-                  'flex flex-col items-center gap-0.5',
+                  /* Sentence case and the text face — the mockup's departure from the tracked
+                     capitals this bar used to set. Medium rather than regular so the word holds
+                     its own against the capsule under it without changing size. */
+                  'truncate px-1 text-[14px] leading-none font-medium',
                   'transition-transform duration-120 ease-(--ease-out)',
-                  'active:scale-[0.9]',
+                  'active:scale-[0.92]',
                   'motion-reduce:transition-none motion-reduce:active:scale-100',
                 )}
               >
-                {/*
-                 * Keyed on the tab's own state, so React remounts this span when the tab becomes
-                 * current and the settle replays — and does nothing at all on the tabs whose
-                 * state did not change.
-                 */}
-                <span key={isActive ? 'on' : 'off'} className={isActive ? 'nav-icon-in' : ''}>
-                  <Icon name={item.icon} size={22} strokeWidth={isActive ? 2.25 : 1.9} />
-                </span>
-                <span className="control-label text-[10px] whitespace-nowrap">{label}</span>
+                {label}
               </span>
             </NavLink>
           );

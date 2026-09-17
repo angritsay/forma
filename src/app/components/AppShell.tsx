@@ -41,11 +41,16 @@ export function AppFrame({ children }: { children?: ReactNode }) {
 }
 
 /*
- * The room the tab bar takes without the safe area: a 64px capsule floating 12px above the bottom
- * edge, and 12px more so the last line of a screen ends above the capsule rather than under its
- * top edge. <Screen> adds `--safe-bottom` on top of this itself.
+ * The room the tab bar takes without the safe area: a 44px segmented control floating 12px above
+ * the bottom edge, and 12px more so the last line of a screen ends above the control rather than
+ * under its top edge. <Screen> adds `--safe-bottom` on top of this itself.
+ *
+ * This number is a measurement of a component in another file, which is why it has been wrong
+ * before: it was 88 while the bar was a 64px icon capsule, and stayed 88 for a while after the
+ * capsule became this control. Twenty surplus pixels under every tabbed screen is not a crash, so
+ * nothing catches it — if the bar's height changes again, change it here in the same commit.
  */
-const NAV_INSET = '88px';
+const NAV_INSET = '68px';
 
 /**
  * The outlet, with the screen arriving the way the tab bar's highlight went.

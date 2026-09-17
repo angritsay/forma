@@ -1117,6 +1117,15 @@ export const app = {
   profileEquipmentLead: 'Отметь, что есть дома, — тренировки подстроятся.',
   profileSaved: 'Сохранено',
   profileSaveError: 'Не удалось сохранить. Проверь соединение и попробуй снова.',
+
+  // --- Stream: «Курсы» и таб-бар по макету владелицы --------------------------
+  // В макете приветствие стоит в две строки: «Доброе утро» сверху, имя под ним крупно. Это те же
+  // четыре времени суток, что и у homeGreeting*, но без подстановки {name}: имя печатается
+  // отдельной строкой и своим шрифтом, поэтому склеивать его с приветствием больше нечем.
+  homeGreetMorning: 'Доброе утро',
+  homeGreetAfternoon: 'Добрый день',
+  homeGreetEvening: 'Добрый вечер',
+  homeGreetNight: 'Не спится?',
   // --- Club pitch (stream: club-pitch-redesign) -------------------------------
   // The selling screen rebuilt to the owner's own mockup. Everything here is sentence case: no
   // uppercase label appears anywhere on either of the two screens she sent.

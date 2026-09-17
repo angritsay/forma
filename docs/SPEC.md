@@ -139,15 +139,21 @@ public/                     # favicon.svg, icons, manifest
   prototype (`design/ui_kits/app-v2`) draws them so, and `design/CHANGELOG.md` §10 records the
   reversal of the earlier «no pills, no circles» rule. This paragraph described that scale while
   the tokens were all 0; both now agree, and the one change of mind is the buttons, which used to
-  be held at a near-square 4px. Chrome that has content moving under it — the tab bar, a screen
-  header, a sheet, a modal, the player — is frosted glass (`design/CHANGELOG.md` §8); everything
-  else is a solid surface. The app's tab bar (Курсы / Клуб / Тренер, plus Админка as a fourth seat
-  for whoever has the panel — the profile is a sheet behind the avatar, not a tab) is a capsule of
-  glass floating over the bottom of the screen with one highlight that slides between the seats.
-  The highlight is a share of however many seats the bar has, never a hard-coded quarter, because
-  the same bar is three seats for most people and four for an admin. A screen arrives the way the
-  highlight went (`screenMotion`). Generous spacing, 1px
-  borders (`--border`).
+  be held at a near-square 4px. Chrome that has content moving under it — a screen header, a
+  sheet, a modal, the player — is frosted glass (`design/CHANGELOG.md` §8); everything else is a
+  solid surface. **The app's tab bar (Курсы / Клуб / Тренер, plus Админка as a fourth seat for
+  whoever has the panel — the profile is a sheet behind a person glyph, not a tab) is an iOS
+  segmented control**: one opaque dark capsule floating over the bottom of the screen, inset from
+  both sides, holding equal segments of sentence-case words with a lighter capsule on the current
+  one. No icons and no capitals — that is the owner's mockup, and it is the one place the
+  interface's tracked-caps control voice does not reach. It is **opaque rather than glass** for a
+  reason §8 already gives: a flat alpha lets running text read through it, and with the
+  leaderboard scrolled underneath, the row «13 Настя 105» was legible inside the capsule. The
+  lighter capsule is a share of however many seats the bar has, never a hard-coded quarter,
+  because the same bar is three seats for most people and four for an admin; the current seat's
+  word is `--text` on it and never `--muted`, which measures 3.6:1 there against the 4.5 §4 sets.
+  A screen arrives the way the capsule went (`screenMotion`). Generous spacing, 1px borders
+  (`--border`).
 - The accent is a dosage rule, not just a colour: `#9ECBFF` marks the primary button, the
   wordmark's full stop, a rule, a kicker, "you are here". Never a large fill. Large areas are
   shades of black and full-bleed monochrome photography.
@@ -485,19 +491,39 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    replaced «Сегодня» and absorbed the «Программы» tab, which were two screens answering one
    question between them.
 
-   At the top, small: the greeting, the avatar, and the **streak 🔥 and the achievements 🏅 as two
-   entry points** («Профиль и все ачивки убирай. Они должны быть на главном экране в виде маленьких
-   энтри поинтов»). They are controls the height of a chip, side by side — not tiles and not a
-   section. The avatar opens the **account sheet** (flow 11), the streak opens its calendar as a
-   sheet, and the achievements open their **catalogue** (flow 8).
+   **The head** is two lines on the left and two controls on the right («Профиль и все ачивки
+   убирай. Они должны быть на главном экране в виде маленьких энтри поинтов»). Left: the greeting
+   small and regular over the athlete's **name**, large in the display face, with a small outline
+   **person glyph** beside it that opens the **account sheet** (flow 11). There is no avatar — the
+   product has no uploaded pictures, so the circle was a generated monogram standing in for a
+   photograph that does not exist. Right, on a dark grey fill: the **streak as a pill** holding 🔥
+   and the figure, which opens its calendar as a sheet, and the **achievements as a circle**
+   holding a monochrome rosette, which opens their **catalogue** (flow 8). That 🔥 is the only
+   emoji in the app; every other mark is drawn in `Icon.tsx`.
 
-   Then the courses, one card each, in the shape the owner drew: the **photograph**, the **share
-   completed as one large figure** over its **progress bar**, and **one button**. The figure is the
-   prototype's `.display` device — the number larger than the word — because on a progress screen
-   the number is the content. A course the athlete does not own shows **«Подробнее»** and leaves
-   for that course's page on the site; it used to say «Прийти» or «Курс закрыт», neither of which
-   says what happens next. The button is only ever offered where there is a page behind it
-   (`LIVE_COURSES`), and a course that is neither owned nor on sale is not listed at all.
+   Then the courses, one card each, in the shape the owner drew — **the photograph _is_ the card**,
+   nearly square, with no panel under it. On it: a hairline **progress rule** across the top, the
+   **share completed as one large figure** under it, the course's **name**, and **one pill button**
+   at the bottom right with a dark circle at its right end holding the arrow. The rule, the figure,
+   the name and the button all take the course's colour; the picture stays a photograph. The figure
+   is the prototype's device — the number larger than the word — because on a progress screen the
+   number is the content.
+
+   **Colour on type needs a scrim, and the scrim is measured.** A programme colour is far less
+   luminous than white (`#9FEFF7` is 0.758), so 4.5:1 against it needs the ground at sRGB 101 or
+   below; `.photo-scrim-top` is tuned to that and re-measured on the composited pixels whenever it
+   changes, never eyeballed. A course whose tile is one of the neutral dark surfaces takes plain
+   white for its type instead (`courseAccentVars()`), because near-black type on a near-black card
+   is no type at all.
+
+   **A photograph, never lettered artwork.** The card does not read `course.cover`: the one cover
+   in the catalogue has «ФОРМА // С НУЛЯ» baked into it, and a lettered cover under a coloured
+   course name is two titles fighting. The cover still leads the course's page on the site.
+
+   A course the athlete does not own shows **«Подробнее»** and leaves for that course's page on the
+   site; it used to say «Прийти» or «Курс закрыт», neither of which says what happens next. The
+   button is only ever offered where there is a page behind it (`LIVE_COURSES`), and a course that
+   is neither owned nor on sale is not listed at all.
 
    **One workout button.** «Не может быть такого состояния что и продолжить тренировку и начать
    курс. На главном экране всегда должна быть только одна кнопка тренировки.» When a session is
@@ -601,8 +627,9 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
     carry a screenshot of the athlete's own step counter — attached the moment it is picked, held
     in the private `proofs` bucket, visible to the athlete and the coach and nobody else. It is
     evidence, not arithmetic: points still come from the number.
-11. **The account** — a **sheet**, opened by the avatar in the header of «Курсы» and by the same
-    avatar in the top row from `md`. Not a screen and not a tab: «Профиль и все ачивки убирай».
+11. **The account** — a **sheet**, opened by the person glyph beside the name in the head of
+    «Курсы» and by the same glyph in the top row from `md`. Not a screen and not a tab: «Профиль и
+    все ачивки убирай».
     Five things and no navigation — the avatar, the name with the address the sign-out will leave,
     the level, **one line saying how to reach the next one**, and «Выйти» behind a confirmation.
     The 417-line profile screen it replaces was a settings page nobody opened twice.
