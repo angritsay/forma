@@ -5,10 +5,6 @@
  * leaderboard*, steps*, profile*, admin*.
  */
 export const app = {
-  // Kept only for MarathonScreen.tsx, which another branch is editing right now: its "back to the
-  // main screen" button reads this key. The value is already the new one — the main screen is
-  // «Курсы» — and the key itself should collapse into tabCourses once that branch lands.
-  tabHome: 'Courses',
   // «Club», not «Small Steps Club»: a tab label is one of four slots on a 390px screen and a
   // three-word name does not fit. The full name goes where there is room — see marathonTitle.
   tabGame: 'Club',
@@ -859,9 +855,7 @@ export const app = {
   marathonTitle: 'Small Steps Club',
   // The cover's big line before there is a day to count: what the format is, in one line.
   marathonCoverPitch: 'One small step a day',
-  marathonTabToday: 'Today',
   marathonTabBoard: 'Board',
-  marathonTabPoints: 'My points',
   marathonDayOf: 'Day {n} of {total}',
   marathonDayN: 'Day {n}',
   marathonOfTotal: 'of {total}',
@@ -873,7 +867,6 @@ export const app = {
   marathonWeek: 'Week {n}',
   marathonWeekThis: 'This week',
   marathonWeekLast: 'Last week',
-  marathonPrize: "This week's prize",
   marathonPrizeShort: 'Prize',
   marathonBoardAll: 'Full board',
   marathonWithPartner: 'Partner: {name}',
@@ -886,21 +879,13 @@ export const app = {
   marathonNotStartedBody: 'The first tasks arrive on the morning of day one.',
   marathonFinished: 'This round is over',
   marathonFinishedBody: 'The board stays up — you can still see how it ended.',
-  marathonEmptyTitle: 'You are not in the club yet',
-  // The invitation. The prize is still here and still true — it moved to the end, because a club
-  // whose first sentence is about winning is a competition wearing a club's name.
-  marathonEmptyBody:
-    'The Small Steps Club is one small step every day and a board you share for the week. You are not on your own: you have a partner. The week has a prize — an hour with the coach.',
   marathonNoTasksToday: 'Nothing set for today',
   marathonNoTasksTodayBody: 'A rest day. There will be a new one in the morning.',
   marathonErrorTitle: 'Could not load the club',
-  marathonLockedTitle: 'The Small Steps Club is part of the subscription',
   marathonTrialTitle: 'Your free week',
   marathonTrialBody:
     'The club is open with your course. {n} left — after that it needs a subscription.',
   marathonTrialLeft: '{n} left',
-  marathonLockedBody:
-    'A small step every day, a mark that you did it, and a board you share for the week. Your partner sees your steps and you see theirs. The week has a prize — an hour with the coach.',
   // One task
   marathonDeadline: 'Until {time}',
   marathonDeadlinePassed: 'The day has closed',
@@ -929,11 +914,6 @@ export const app = {
   marathonBoardEmpty: 'Nobody has scored yet',
   marathonBoardYou: 'You',
   marathonBoardPoints: '{n}',
-  // My points
-  marathonPointsDone: '{done} of {total}',
-  marathonPointsTeamTook: 'Team: {n}',
-  marathonPointsNothing: 'Nothing',
-  marathonPointsTotalWeek: 'This week',
 
   // --- Marathon admin --------------------------------------------------------
   mAdminTitle: 'Marathons',
@@ -1041,6 +1021,20 @@ export const app = {
   mAdminBonusReason: 'What for',
   mAdminBonusAdd: 'Add',
 
+  // --- Club (stream 4) --------------------------------------------------------
+  marathonPrizeDefault: 'An hour with the coach who made Forma',
+  marathonPitchTaskTitle: 'A task every day',
+  marathonPitchTaskBody: 'One small one. Mark it done and it scores.',
+  marathonPitchPartnerTitle: 'A partner',
+  marathonPitchPartnerBody:
+    'They see your marks and you see theirs. Some tasks only count when both of you deliver.',
+  marathonPitchBoardTitle: "The week's board",
+  marathonPitchBoardBody: 'The week is the race. On Monday everyone starts again.',
+  marathonPitchResults: 'What members did',
+  marathonPitchNoRound:
+    'The coach puts each round together himself — he adds the members and makes the pairs. The moment a new one starts, the tasks appear here.',
+  marathonJoinCta: 'Join for {price} / mo',
+  marathonJoinNote: 'The Forma subscription: the club and every course. Renewed by hand.',
   // --- Onboarding: five questions + the test after two workouts ---------------
   // The wizard's questions. The first word is set at 800 and the rest at 200 (DisplayTitle),
   // so in each one the first word is the one that should carry.

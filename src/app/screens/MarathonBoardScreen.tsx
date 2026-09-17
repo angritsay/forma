@@ -10,26 +10,32 @@
  * the root and lands on the prize's pill and on the leader's filled circle — the two things the
  * colour marks on the day screen's own table. Your own row is a white ring, not the colour. The
  * week switch stays black and white; it is a control.
+ *
+ * It is the tab's overflow and nothing more. The standings are on the tab itself now, five rows of
+ * them, because «только задание и лидерборд» means the leaderboard is *on* the screen rather than
+ * a tap away from it; this is where the whole week and the week before it live, for the one person
+ * in ten who wants to read the full table. Nothing else hangs off it — «Мои баллы» used to, and
+ * the screen it led to is gone.
  */
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { Pill } from '@/components/ui/Pill';
 import { Tabs, tabPanelId } from '@/components/ui/Tabs';
 import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { BoardRow } from '@/app/features/marathon/BoardRow';
+import { PrizePill } from '@/app/features/marathon/PrizePill';
+import { clubPrize } from '@/app/features/marathon/prize';
 import { useMarathonScores, useMyMarathons } from '@/app/features/marathon/useMarathon';
 
 type WeekChoice = 'this' | 'last';
 
 export default function MarathonBoardScreen() {
-  const { t } = useT();
-  const navigate = useNavigate();
+  const tr = useT();
+  const { t } = tr;
   const { marathon, status: marathonStatus } = useMyMarathons();
   const [choice, setChoice] = useState<WeekChoice>('this');
 
@@ -76,13 +82,9 @@ export default function MarathonBoardScreen() {
 
           {/* The prize is what the table is for: the one filled pill, the same one the day screen
               draws above its five rows, so the two tables read as one race. */}
-          {marathon.prize ? (
-            <div className="flex">
-              <Pill tone="course-fill">
-                {t('app.marathonPrizeShort')} · {marathon.prize}
-              </Pill>
-            </div>
-          ) : null}
+          <div className="flex">
+            <PrizePill>{clubPrize(tr, marathon.prize)}</PrizePill>
+          </div>
 
           <div role="tabpanel" id={tabPanelId(choice)} aria-labelledby={`tab-${choice}`}>
             {status === 'loading' ? (
@@ -111,17 +113,6 @@ export default function MarathonBoardScreen() {
                 ))}
               </ol>
             )}
-          </div>
-
-          {/*
-           * The breakdown of your own week lives one level below the board rather than beside the
-           * day: the day screen answers «what do I do now», the board «who is winning», and only
-           * then does «where did my points come from» become a question worth a screen.
-           */}
-          <div className="border-t border-border pt-5">
-            <Button variant="ghost" size="md" onClick={() => navigate('/marathon/points')}>
-              {t('app.marathonTabPoints')}
-            </Button>
           </div>
         </div>
       </Screen>
