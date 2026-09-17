@@ -992,6 +992,133 @@ once Telegram proves to be a real channel.
 
 ---
 
+## 7.7 The booked session, on the Тренер screen (Google Calendar)
+
+`coach_bookings` (`0014_coach_bookings.sql`) is the app's copy of the sessions people booked with
+the coach: when it starts, how long until it starts, and where to join. It is filled by ingestion
+running with the service role — **a signed-in person can never write a booking, not even their
+own** — and read through `my_coach_bookings`, which shows each person only their own.
+
+There are two ingestion paths in the repository. `supabase/functions/calendly-webhook/` needs
+Calendly **Standard** (~$10/seat/month: the free plan has no webhooks, no post-booking redirect and
+one active event type). `supabase/functions/google-calendar-sync/` needs nothing but a Google
+account, and is the one in use.
+
+### What Google gives and what it does not
+
+- **An appointment schedule is free** on a personal Google account. The catch is that a free
+  account gets **exactly one booking page**; automated reminders to the person who booked,
+  collecting payment, verified bookings and putting the schedule on a secondary calendar are paid
+  Workspace features. One page is enough here — one page can offer more than one duration — but it
+  does mean **bookings land on the coach's own primary calendar**, next to the rest of his life.
+  That is what `GOOGLE_BOOKING_TITLE` below is for.
+- **Google cannot call us when somebody books.** There are no webhooks on an appointment schedule,
+  and Google's push channels need a verified HTTPS domain and renewal every few days. So the sync
+  **polls**, every `POLL_INTERVAL_MINUTES` (5, in `sync.ts`). The cost of that is staleness in one
+  direction only: a session cancelled just after a poll **can still be shown for up to five
+  minutes**. A new booking has the same delay before it appears.
+- **Google has no cancel or reschedule link in its API.** The booker's own links are in the
+  invitation mail Google sends them, and nowhere else. So a Google booking has no «Отменить»
+  button in the app; a Calendly one would.
+
+### The coach does this, once
+
+1. **Make the booking page.** Google Calendar → **Создать** → **Расписание встреч**. Give it a
+   title that says what it is and that nothing else on his calendar will ever be called — for
+   example `Персональная тренировка`. Set the length, the hours he is free, and turn on
+   **Google Meet** as the location so every booking gets a join link.
+2. **Copy the link** (open the schedule on the grid → **Копировать ссылку**) and send it to the
+   owner. It goes into `scheduleUrl` in `content/site/booking.ts` (§7.3).
+3. **Share the calendar with the robot.** Once the owner sends him an address ending in
+   `.iam.gserviceaccount.com`: Google Calendar → settings of **his own** calendar → **Доступ для
+   отдельных пользователей и групп** → **Добавить пользователей** → paste that address →
+   permission **«Просмотр всех сведений о мероприятии»** → **Отправить**. It is the only
+   permission the sync needs; it cannot change or delete anything.
+
+   The robot now reads that whole calendar, so if there is anything on it he would rather the sync
+   never looked at, the answer is a title filter (step 4 below), not a different permission.
+
+### The owner does this, once
+
+4. **Make the robot.** [console.cloud.google.com](https://console.cloud.google.com) → create a
+   project → **APIs & Services → Library** → **Google Calendar API** → **Enable**. Then
+   **IAM & Admin → Service Accounts → Create service account** → any name → **Done**. Open it →
+   **Keys → Add key → Create new key → JSON**. A file downloads. It holds the private key, it is
+   the only copy, and it must never be mailed, pasted into a chat, or committed — this repository
+   is public.
+
+   Send the coach the service account's address (`…@….iam.gserviceaccount.com`) so he can do
+   step 3. That address is not a secret.
+
+5. **Deploy the function.** Dashboard → **Edge Functions** → deploy `google-calendar-sync` with
+   **Verify JWT off**, or `supabase functions deploy google-calendar-sync --no-verify-jwt`. Unlike
+   `telegram-bot` this one is three files (`index.ts`, `auth.ts`, `sync.ts`), so deploy it with the
+   CLI rather than by pasting into the dashboard editor.
+
+6. **Set the secrets.** Dashboard → **Edge Functions → Secrets**, or:
+
+   ```sh
+   supabase secrets set \
+     GOOGLE_SYNC_TOKEN=$(openssl rand -hex 24) \
+     GOOGLE_CALENDAR_ID=<the coach's gmail address> \
+     GOOGLE_SA_CLIENT_EMAIL=<…@….iam.gserviceaccount.com> \
+     GOOGLE_SA_PRIVATE_KEY="$(jq -r .private_key ~/Downloads/<the json file>)" \
+     GOOGLE_BOOKING_TITLE='Персональная тренировка'
+   ```
+
+   | Secret                   | Required | What it is                                                    |
+   | ------------------------ | -------- | ------------------------------------------------------------- |
+   | `GOOGLE_SYNC_TOKEN`      | yes      | Long random string; whoever knows it can trigger a poll       |
+   | `GOOGLE_CALENDAR_ID`     | yes      | The calendar to read — the coach's own address                |
+   | `GOOGLE_SA_CLIENT_EMAIL` | yes      | The service account's address                                 |
+   | `GOOGLE_SA_PRIVATE_KEY`  | yes      | `private_key` out of the JSON key file, `-----BEGIN…` and all |
+   | `GOOGLE_BOOKING_TITLE`   | no       | Only events whose title contains this are bookings            |
+   | `GOOGLE_COACH_EMAILS`    | no       | Further addresses that are the coach, comma-separated         |
+
+   **Set `GOOGLE_BOOKING_TITLE`.** Without it, any event on that calendar with exactly one outside
+   guest is read as a booking, and the coach's lunch with a friend becomes a session in somebody's
+   app. With it, only events titled after the appointment schedule are ingested.
+
+   The private key is a Supabase secret and only ever a Supabase secret. If it is ever pasted
+   somewhere it should not be, delete that key in the Cloud console and add a new one; the old one
+   stops working immediately. **Without all four required secrets the function returns 503 and
+   writes nothing** — it never pretends to have synced.
+
+7. **Schedule the poll.** Dashboard → **Integrations → Cron** → **Create job**, every 5 minutes,
+   type **Supabase Edge Function**, `google-calendar-sync`, method POST, and add the header
+   `x-sync-token: <GOOGLE_SYNC_TOKEN>`. In SQL it is the same thing:
+
+   ```sql
+   select cron.schedule('google-calendar-sync', '*/5 * * * *', $$
+     select net.http_post(
+       url    := 'https://<project-ref>.functions.supabase.co/google-calendar-sync',
+       headers:= jsonb_build_object('x-sync-token', '<GOOGLE_SYNC_TOKEN>')
+     );
+   $$);
+   ```
+
+   Anything that can make a POST every five minutes does: a scheduled GitHub Actions job with the
+   token in repository secrets works too. **The token goes in a secret, never in a
+   `workflow_dispatch` input** — an input is typed in the open and kept in the run's log.
+
+8. **Book a test slot** from the coach's link with an address you can sign in with, wait five
+   minutes, and read the function logs. A line like `scanned=12 booked=1 cancelled=0 vanished=0
+ignored=11 failed=0 interval=5m` is a working sync. `ignored=12 booked=0` means nothing matched
+   — usually `GOOGLE_BOOKING_TITLE` and the appointment schedule's title disagree. `403 bad token`
+   means the Cron header and the secret disagree. Nothing in those logs says who booked, by
+   design; to find one booking, look it up by its `external_id` (`gcal:<event id>`).
+
+### If the coach ever cancels by deleting the event
+
+Both ways are handled. A cancelled event comes back from Google with `status: 'cancelled'` and is
+marked cancelled here. An event that has been deleted long enough to disappear from the calendar
+entirely is caught by the second rule: after a poll that read the whole window successfully,
+anything the app still holds as active inside that window and did not see is cancelled too. The
+row is never deleted — the person needs to see that the session is gone, and the coach needs the
+history.
+
+---
+
 ## 8. Security notes
 
 - **The anon key is public by design.** It only identifies the project; every table has Row
