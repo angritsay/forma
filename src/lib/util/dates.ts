@@ -1,4 +1,4 @@
-/** Date helpers. "Local date" = YYYY-MM-DD in the user's timezone; used for streaks and steps. */
+/** Date helpers. "Local date" = YYYY-MM-DD in the user's timezone; the unit the training count uses. */
 import type { Locale } from '@/content/schema';
 
 /**

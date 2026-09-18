@@ -14,7 +14,7 @@ import {
   pointsByWeek,
   recordImproved,
   recordLabel,
-  streakCalendar,
+  trainingCalendar,
   totalCalories,
   userStatsFromProgress,
   weekActiveDays,
@@ -104,9 +104,9 @@ describe('pointsByWeek', () => {
   });
 });
 
-describe('streakCalendar', () => {
+describe('trainingCalendar', () => {
   it('marks workout, empty and future days across 5 weeks', () => {
-    const weeks = streakCalendar([session('2026-09-01')], TODAY);
+    const weeks = trainingCalendar([session('2026-09-01')], TODAY);
     expect(weeks).toHaveLength(5);
     expect(weeks[0]?.from).toBe('2026-08-03');
     const current = weeks[4]!;
@@ -125,7 +125,7 @@ describe('streakCalendar', () => {
 });
 
 describe('weekActiveDays', () => {
-  it('marks a day active for a finished workout, by the streak’s rule', () => {
+  it('marks a day active for a finished workout, the same rule the count uses', () => {
     const days = weekActiveDays([session('2026-09-01'), session('2026-08-30')], TODAY);
     expect(days.map((d) => d.date)).toEqual([
       '2026-08-31',
@@ -198,7 +198,7 @@ describe('userStatsFromProgress', () => {
   const course = COURSES[0]!;
   const scoredNodes = course.nodes.filter((n) => n.kind !== 'rest' && n.kind !== 'milestone');
 
-  it('prefers server totals and derives streak, benchmarks and courses', () => {
+  it('prefers server totals and derives the week figures, benchmarks and courses', () => {
     const state: CourseStateRow = {
       userId: 'u1',
       courseId: course.id,
@@ -226,8 +226,8 @@ describe('userStatsFromProgress', () => {
     expect(stats).toEqual({
       workouts: 40,
       points: 4321,
-      streakCurrent: 2,
-      streakLongest: 2,
+      bestWeek: 2,
+      activeWeeks: 1,
       benchmarksDone: 2,
       coursesCompleted: 1,
       totalMinutes: 900,

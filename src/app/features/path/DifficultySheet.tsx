@@ -29,7 +29,7 @@
  *     handed the tile instead;
  *   • **each choice wears an emoji** — «вот тут можно добавить эмодзи». 🌿 / 👟 / 🔥 read at a
  *     glance and on both grounds, and they are the one thing on the row that needs no reading at
- *     all. They are not the streak's 🔥 in any sense the eye can confuse: different screen,
+ *     all. They are not the count pill's 💪 in any sense the eye can confuse: different screen,
  *     different size, different neighbours;
  *   • the calories went. «~31 ккал» barely moved between the three (31 / 31 / 34), so it was a
  *     third figure that decided nothing — and the reps beside it are the one that does.

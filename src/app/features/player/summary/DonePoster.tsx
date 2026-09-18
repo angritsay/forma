@@ -9,8 +9,8 @@
  * shrink to the kicker above, «Готово!» is the line, and everything the session cost is three
  * numerals on a rule.
  *
- * The warm line under the word is computed, never written: it is the streak with today counted,
- * and when there is no streak to report — the store is not loaded, or this is an old session being
+ * The warm line under the word is computed, never written: it is which workout this is, counting
+ * the one just finished, and when there is nothing to report — the store is not loaded, or this is an old session being
  * re-read — the caller passes nothing and the line is simply absent. A congratulation that invents
  * a number is the one thing this screen must not do.
  *

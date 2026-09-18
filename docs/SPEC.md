@@ -14,7 +14,7 @@ unless the spec is provably wrong — in that case fix the spec in the same chan
   redirect to an external payment link configured per course.
 - **Web app** (`/app/`): the user enters the email, receives a one-time code by email, confirms it,
   and gets the fitness app: all courses (owned / locked), a Duolingo-style path per course, a
-  leaderboard, streaks, adaptive difficulty, a workout player with the coach's clip of each movement,
+  leaderboard, a workout count, adaptive difficulty, a workout player with the coach's clip of each movement,
   progress statistics. Russian throughout — copy, descriptions and videos.
 - **Backend**: Supabase (Postgres + Auth email OTP + Storage). Frontend is fully static and is
   deployed to GitHub Pages by GitHub Actions.
@@ -121,7 +121,7 @@ public/                     # favicon.svg, icons, manifest
   Everything else keeps one column and gains air.
 - The type scale does not change with the screen (`design/` calls it «мобайл-первая, 390px»). What
   grows on a wide screen is the gutter, the column count and the air between sections.
-- Dates: store ISO strings; "today" is computed in the user's local timezone for streaks;
+- Dates: store ISO strings; "today" is computed in the user's local timezone for the training count;
   server timestamps are `timestamptz`.
 - Errors: never crash to a blank screen; show a localized error state with retry.
 
@@ -246,13 +246,13 @@ initialScale(index: number): number              // maps 0..100 → 0.6..1.3 (vo
 recommendDifficulty(state: CourseState, profile: UserTrainingProfile, nowIso: string): { choice: DifficultyChoice; reason: L10n }
 prescribeWorkout(workout: Workout, opts: PrescribeOptions, lookup?: ExerciseLookup): PrescribedWorkout   // concrete reps/seconds/loads, substitutions, rest
 estimateDuration(p: PrescribedWorkout): DurationEstimate                        // seconds, per block
-estimatePoints(workout: Workout, choice: DifficultyChoice, opts?: { repeat?: boolean; streakDays?: number }): number
+estimatePoints(workout: Workout, choice: DifficultyChoice, opts?: { repeat?: boolean }): number
 estimateCalories(p: PrescribedWorkout, weightKg?: number, lookup?: ExerciseLookup): number
 buildPlayerSteps(p: PrescribedWorkout): PlayerStep[]                            // block_intro → work → rest … → done
 warmupSkipIndex(steps: readonly PlayerStep[], p: PrescribedWorkout): number | null  // where "skip the warm-up" lands
 summarizeSession(p: PrescribedWorkout, results: ExerciseResult[], feedback: SessionFeedback, opts): SessionSummary
 adaptScale(state: CourseState, summary: SessionSummary): { scale: number; delta: number; reason: L10n }
-computeStreak(days: DayActivity[], todayIso: string): StreakInfo
+countTraining(days: DayActivity[], todayIso: string): TrainingCount   // total, thisWeek, bestWeek, activeWeeks
 levelForPoints(points: number): LevelInfo
 ```
 
@@ -260,7 +260,8 @@ Rules (defaults; constants live in `constants.ts`):
 
 - Difficulty choice multipliers: easier ×0.85 volume / ×1.15 rest, normal ×1.0, harder ×1.15 volume
   / ×0.9 rest. Points factor: easier 0.8, normal 1.0, harder 1.25. Repeating a completed node yields
-  50% points. Streak bonus: +10% at ≥7 days, +20% at ≥30 days.
+  50% points. **No streak bonus** — it was +10% at ≥7 consecutive days and +20% at ≥30, and a
+  course with two rest days a week could not be followed and earn it.
 - Adaptation after a session (Borg CR10 RPE + completion ratio): completion ≥0.95 and RPE ≤6 →
   scale +0.05; RPE 7–8 and completion ≥0.9 → +0.02; RPE ≥9 or completion <0.8 → −0.05;
   feeling `pain` → −0.10 and a "see a professional / reduce load" note. Scale clamped to 0.5..1.5.
@@ -281,8 +282,10 @@ Rules (defaults; constants live in `constants.ts`):
   steps); `harder` choice at level 3 may use `scaling.harder` for bodyweight items, never inside a
   non-scalable block (warm-up, cool-down) or a `test` block — a benchmark must stay the same
   movement. A substitute measured in another unit keeps the work time, not the number.
-- Streak: a day counts if a workout session was completed. The current day does not break the
-  streak until it ends (`atRisk` flag when nothing logged yet).
+- Training count: a day counts if a workout session was completed on it. `countTraining` returns
+  the total, the count since Monday, the best single week and how many weeks hold a workout.
+  Duplicates merge, future dates are ignored, and nothing decays — **gaps cost nothing**, which is
+  the whole difference from the streak this replaced.
 - Fitness index: weighted components — push-ups (30%), squats/60s (25%), plank (20%), activity
   (15%), experience (10%), using age/sex-normalized reference tables documented in
   TRAINING_SCIENCE.md; level 1 <35, level 2 35–65, level 3 >65.
@@ -503,10 +506,12 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    small and regular over the athlete's **name**, large in the display face, with a small outline
    **person glyph** beside it that opens the **account sheet** (flow 11). There is no avatar — the
    product has no uploaded pictures, so the circle was a generated monogram standing in for a
-   photograph that does not exist. Right, on a dark grey fill: the **streak as a pill** holding 🔥
-   and the figure, which opens its calendar as a sheet, and the **achievements as a circle**
-   holding a monochrome rosette, which opens their **catalogue** (flow 8). That 🔥 is the only
-   emoji in the app; every other mark is drawn in `Icon.tsx`.
+   photograph that does not exist. Right, on a dark grey fill: the **workout count as a pill**
+   holding 💪 and the figure, which opens the training calendar as a sheet, and the **achievements
+   as a circle** holding a monochrome rosette, which opens their **catalogue** (flow 8). That 💪 is
+   the only emoji in the app outside the achievements; every other mark is drawn in `Icon.tsx`. It
+   was 🔥 and a streak until the owner struck the mechanic — a flame is a thing that goes out,
+   which is the wrong promise for a tally that cannot.
 
    Then the courses, one card each, in the shape the owner drew — **the photograph _is_ the card**,
    nearly square, with no panel under it. On it: a hairline **progress rule** across the top, the
@@ -615,9 +620,9 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    (`stepStartedMs` in the store), so pausing, walking out and closing the app all freeze it the
    same way, and Home offers a **Продолжить** strip naming the movement it will pick up on.
 7. **Summary + feedback**: «Готово!» at the size of the screen, under a kicker naming the day and
-   the programme; **one warm line computed from the real streak** and never invented — «Четвёртый
-   день подряд. Так и растёт форма.», the ordinal in words to the tenth day and «11-й день» after
-   it, and no line at all when there is no streak to report or the session is being re-read from
+   the programme; **one warm line computed from the real count** and never invented — «Четвёртая
+   тренировка. Так и растёт форма.», the ordinal in words to the tenth and «Тренировка №11» after
+   it, and no line at all when there is nothing to report or the session is being re-read from
    the server; the stars; then three numerals on a rule — minutes, repetitions, kcal, with how much
    of the plan was done standing in for repetitions on a day that counts none. «Как зашло?» under
    it: RPE as **one row of ten circles** filled up to the choice, with the Borg descriptor under
@@ -632,8 +637,8 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    figure «Готово!» draws the moment one is earned), the name, and the rule under it. The count
    sits in the header, because it is the one number the catalogue is about.
 
-   This is what is left of **«Прогресс»**, which was the fourth tab and is gone with it. The streak
-   went to the header of «Курсы» and its calendar to the sheet behind it; the achievements became
+   This is what is left of **«Прогресс»**, which was the fourth tab and is gone with it. The count
+   went to the header of «Курсы» and the training calendar to the sheet behind it; the achievements became
    this screen; the week's table is the club's own (flow 6) and the full leaderboard is flow 9. The
    charts, the personal records and the level card had no reader: «МИНИМУМ текста, максимум
    визуала» does not survive six figures stacked behind a «Подробности» nobody opened. The level
@@ -646,7 +651,7 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    person is a circle; two per row read as a pair of controls) and no «оч.» after the points.
 10. **Steps are gone, and the reason is worth keeping.** There was a «Шаги» screen: a number typed
     in by hand into a goal ring, fourteen days of circles behind it, an optional screenshot of the
-    phone's own step counter as evidence, and points that fed the streak and the leaderboard. The
+    phone's own step counter as evidence, and points that fed the leaderboard. The
     owner's rule ended it — «он либо стекается либо его нет вообще, потому что пользователь не
     будет заниматься трекингом одних и тех же шагов в разных приложениях» — and it cannot sync:
     Apple HealthKit has no browser API at all, Google Fit's REST API closed to new applicants in
@@ -656,8 +661,8 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
     What went with it: the screen and its route, the manual entry and the screenshot, step points,
     the `steps_10_days` achievement, the rest day's step goal, the «heavy walking day» rule in
     `recommendDifficulty`, the calendar's steps-day cell, the club's «Шаги» task, and `daily_logs`
-    (migration `0015_drop_steps.sql`). A day now counts for the streak when a workout was finished,
-    and points come from training alone. **Do not reinstate any of it without a native app.**
+    (migration `0015_drop_steps.sql`). A day now counts when a workout was finished, and points come
+    from training alone. **Do not reinstate any of it without a native app.**
 
 11. **The account** — a **sheet**, opened by the person glyph beside the name in the head of
     «Курсы» and by the same glyph in the top row from `md`. Not a screen and not a tab: «Профиль и

@@ -102,8 +102,8 @@ export function privacyDocument(): LegalDocument {
             en: 'Name (display name) and avatar — you set them yourself in your profile; other participants see them on the leaderboard.',
           },
           {
-            ru: 'Данные тренировок: ответы опроса при первом входе (возрастная группа, пол и вес — по желанию, опыт, оборудование, ограничения), результаты тестов, выполненные тренировки, оценки усилия и самочувствия, шаги, очки и серии.',
-            en: 'Training data: your onboarding answers (age band, optional sex and weight, experience, equipment, limitations), test results, completed workouts, effort and feeling ratings, steps, points and streaks.',
+            ru: 'Данные тренировок: ответы опроса при первом входе (возрастная группа, пол и вес — по желанию, опыт, оборудование, ограничения), результаты тестов, выполненные тренировки, оценки усилия и самочувствия, очки.',
+            en: 'Training data: your onboarding answers (age band, optional sex and weight, experience, equipment, limitations), test results, completed workouts, effort and feeling ratings and points.',
           },
           {
             ru: 'Технические данные: время действий и данные сессии, необходимые для работы входа.',
@@ -128,8 +128,8 @@ export function privacyDocument(): LegalDocument {
             en: 'Load adaptation: test results and effort ratings set your level and adjust the next workout.',
           },
           {
-            ru: 'Прогресс, статистика, серии и таблица лидеров (в ней видны только имя, аватар и очки — никогда e-mail).',
-            en: 'Progress, statistics, streaks and the leaderboard (which shows only name, avatar and points — never your email).',
+            ru: 'Прогресс, статистика и таблица лидеров (в ней видны только имя, аватар и очки — никогда e-mail).',
+            en: 'Progress, statistics and the leaderboard (which shows only name, avatar and points — never your email).',
           },
           {
             ru: 'Поддержка, возвраты и выполнение требований закона.',

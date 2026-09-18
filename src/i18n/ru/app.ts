@@ -102,17 +102,17 @@ export const app = {
   homeGreetingAfternoon: 'Добрый день, {name}',
   homeGreetingEvening: 'Добрый вечер, {name}',
   homeGreetingNight: 'Не спится, {name}?',
-  homeStreakTitle: 'Серия',
-  homeStreakTodayDone: 'Сегодня засчитано. Продолжай завтра.',
-  homeStreakAtRisk: 'Чтобы не потерять серию, сделай сегодня тренировку.',
-  homeStreakEmpty: 'Заверши тренировку — и серия начнётся.',
-  homeStreakBest: 'Рекорд: {n}',
+  /*
+   * Пять ключей серии стояли здесь — «Серия», «Чтобы не потерять серию…», «Рекорд». Серии больше
+   * нет: курс Сергея — пять тренировочных дней в неделю, и человек, который делает ровно то, что
+   * написано, терял серию каждые выходные. Считаем тренировки; счётчик не обнуляется.
+   */
+  homeWorkoutsTitle: 'Тренировки',
   homeResumeEyebrow: 'Тренировка не закончена',
   homeResumeFinishedEyebrow: 'Результат не сохранён',
   homeResumeCta: 'Продолжить',
   homeResumeSave: 'Завершить и сохранить',
   homeTodayEyebrow: 'Сегодня',
-  homeTodayWeek: 'Неделя {week} · День {day}',
   homeTodayOpen: 'Открыть',
   // The prototype's «ВЫБЕРИ программу»: the first word heavy, the rest light (DisplayTitle).
   homeTodayNoCourseTitle: 'Выбери программу',
@@ -333,9 +333,9 @@ export const app = {
   // streak, then three figures. The ordinal is a word up to the tenth day — a figure that size
   // would fight the three under it — and «11-й день» after that.
   summaryDone: 'Готово!',
-  summaryStreakOne: 'Первый день. Начало положено.',
-  summaryStreakWord: '{ordinal} день подряд. Так и растёт форма.',
-  summaryStreakNum: '{n}-й день подряд. Так и растёт форма.',
+  summaryCountFirst: 'Первая. Начало положено.',
+  summaryCountWord: '{ordinal} тренировка. Так и растёт форма.',
+  summaryCountNum: 'Тренировка №{n}. Так и растёт форма.',
   summaryOrdinals: 'Второй|Третий|Четвёртый|Пятый|Шестой|Седьмой|Восьмой|Девятый|Десятый',
   summaryMinutes: 'Минут',
   summaryReps: 'Повторов',
@@ -389,9 +389,8 @@ export const app = {
   statsLevelProgress: 'Прогресс до следующего уровня',
   statsLevelNext: 'До уровня «{title}» — {n} оч.',
   statsLevelMax: 'Максимальный уровень. Выше некуда — держи планку.',
-  statsCalendarTitle: 'Календарь серии',
-  statsCalendarCurrent: 'Сейчас {n}',
-  statsCalendarBest: 'Рекорд {n}',
+  statsCalendarTotal: 'Всего {n}',
+  statsCalendarWeek: 'На этой неделе {n}',
   statsCalendarWorkout: 'Тренировка',
   statsCalendarEmpty: 'Ничего не записано',
   statsCalendarFuture: 'Впереди',
@@ -417,7 +416,6 @@ export const app = {
   leaderboardHowWorkout:
     'У каждой тренировки есть базовая стоимость — от 60 до 250 очков. Полегче — ×{easier}, как обычно — ×{normal}, посложнее — ×{harder}; итог умножается на долю выполненного плана.',
   leaderboardHowRepeat: 'Повтор уже пройденной тренировки приносит {pct}% очков.',
-  leaderboardHowStreak: 'Бонус за серию: +{pct7}% от 7 дней подряд, +{pct30}% от 30.',
   leaderboardHowWeek:
     'Недельный рейтинг обнуляется каждый понедельник (по UTC). В рейтинге курса считаются только его тренировки.',
 

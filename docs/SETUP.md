@@ -1213,7 +1213,9 @@ video, which is not in this repository.
 - **Points integrity**: step points are recomputed by a trigger. Workout points are computed by
   the client but clamped by `workout_sessions_guard` to that workout's own ceiling
   (`base_points` from §2.1 × difficulty × repeat × the maximum streak bonus), and hard-capped at
-  375 by a CHECK. The same trigger stamps `started_at` / `completed_at` from the server clock,
+  375 by a CHECK. The streak bonus is gone from the app, so that ceiling is now 20% looser than
+  anything the client can legitimately send — which is the safe direction for a clamp to be wrong
+  in, and not worth a migration to tighten. The same trigger stamps `started_at` / `completed_at` from the server clock,
   refuses a `local_date` more than a day from the server date, and allows at most 4 completed
   sessions per day; sessions can only be logged for a course the athlete owns.
 - **Step logs** can only be written for the last 7 days and up to tomorrow, so the weekly board

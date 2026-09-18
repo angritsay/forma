@@ -1,5 +1,5 @@
 /**
- * Pure aggregations over workout sessions for the home screen: streak input, ISO-week stats and
+ * Pure aggregations over workout sessions for the home screen: day activity, ISO-week stats and
  * all-time points. Dates are local YYYY-MM-DD strings.
  *
  * This module used to take a second argument everywhere — the map of `daily_logs`, one row per day

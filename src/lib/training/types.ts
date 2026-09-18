@@ -127,8 +127,6 @@ export interface PrescribeOptions {
   deload?: boolean;
   /** True when the node was already completed (points are halved). */
   repeat?: boolean;
-  /** Current streak length, for the points bonus. */
-  streakDays?: number;
 }
 
 export interface PrescribedItem {
@@ -276,12 +274,23 @@ export interface DayActivity {
   workoutDone: boolean;
 }
 
-export interface StreakInfo {
-  current: number;
-  longest: number;
+/**
+ * How much training has happened, the figure that replaced the streak.
+ *
+ * `StreakInfo` stood here — `current`, `longest`, `atRisk` — and went with the mechanic. A course
+ * of five training days a week can never hold a streak longer than five, so the number punished
+ * the plan for being a plan. See `consistency.ts` for the whole argument.
+ */
+export interface TrainingCount {
+  /** Days trained, ever. Only goes up. */
+  total: number;
+  /** Days trained since Monday — the figure a "three times a week" plan is read against. */
+  thisWeek: number;
+  /** The most days trained in any one week. */
+  bestWeek: number;
+  /** How many different weeks hold at least one workout. */
+  activeWeeks: number;
   todayDone: boolean;
-  /** True when today has nothing logged yet and the streak would break at midnight. */
-  atRisk: boolean;
   lastActiveDate?: string;
 }
 
@@ -327,8 +336,9 @@ export interface ScaleAdjustment {
 export interface UserStats {
   workouts: number;
   points: number;
-  streakCurrent: number;
-  streakLongest: number;
+  /** The most workouts in any one week, and how many weeks hold at least one. */
+  bestWeek: number;
+  activeWeeks: number;
   benchmarksDone: number;
   coursesCompleted: number;
   totalMinutes: number;

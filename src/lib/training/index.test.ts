@@ -14,7 +14,7 @@ describe('training engine public API', () => {
       'buildPlayerSteps',
       'summarizeSession',
       'adaptScale',
-      'computeStreak',
+      'countTraining',
       'levelForPoints',
       'evaluateAchievements',
     ] as const;

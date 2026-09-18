@@ -18,7 +18,7 @@ import {
   benchmarkResult,
   blockCompletions,
   elapsedStartedAt,
-  streakLine,
+  workoutCountLine,
   testResults,
   totalReps,
 } from './summaryModel';
@@ -138,13 +138,13 @@ describe('totalReps', () => {
   });
 });
 
-describe('streakLine', () => {
-  it('says the day in words up to the tenth, in figures after, nothing for no streak', () => {
-    expect(streakLine(t, 0)).toBeNull();
-    expect(streakLine(t, 1)).toBe(t('app.summaryStreakOne'));
-    expect(streakLine(t, 4)).toBe(t('app.summaryStreakWord', { ordinal: 'Fourth' }));
-    expect(streakLine(t, 10)).toBe(t('app.summaryStreakWord', { ordinal: 'Tenth' }));
-    expect(streakLine(t, 11)).toBe(t('app.summaryStreakNum', { n: 11 }));
+describe('workoutCountLine', () => {
+  it('says the ordinal in words up to the tenth, in figures after, nothing for none', () => {
+    expect(workoutCountLine(t, 0)).toBeNull();
+    expect(workoutCountLine(t, 1)).toBe(t('app.summaryCountFirst'));
+    expect(workoutCountLine(t, 4)).toBe(t('app.summaryCountWord', { ordinal: 'Fourth' }));
+    expect(workoutCountLine(t, 10)).toBe(t('app.summaryCountWord', { ordinal: 'Tenth' }));
+    expect(workoutCountLine(t, 11)).toBe(t('app.summaryCountNum', { n: 11 }));
   });
 });
 

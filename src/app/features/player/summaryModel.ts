@@ -168,25 +168,26 @@ export function totalReps(
 }
 
 /**
- * The one warm line under «Готово!»: which day in a row this is.
+ * The one warm line under «Готово!»: which workout this is.
  *
- * The prototype's line is «Четвёртый день подряд. Так и растёт форма.» — a word for the ordinal,
- * not a figure, because at this size a figure would compete with the three under it. Words are
- * kept for the second to the tenth day; from the eleventh the line falls back to «11-й день
- * подряд», which is still one line and still true. `days` is the streak *with today counted*: the
- * caller decides whether this session has made today count yet.
+ * It said «Четвёртый день подряд» and now says «Четвёртая тренировка», and that is the whole of
+ * the change: the ordinal is still a word rather than a figure — at this size a figure would
+ * compete with the three under it — words are still kept for the second to the tenth, and from the
+ * eleventh it falls back to «Тренировка №11», which is still one line and still true.
  *
- * Nothing here guesses: with no streak to report (the store not loaded, or the number 0) the
- * caller passes nothing and no line is drawn.
+ * What it counts is what changed. A day in a row is a claim about the calendar, and the calendar
+ * says this course has two rest days a week in it, so the line congratulated people for ignoring
+ * the plan and went quiet for everybody who followed it. A count of workouts can only go up.
+ *
+ * Nothing here guesses: with nothing to report (the store not loaded, or the number 0) the caller
+ * passes nothing and no line is drawn.
  */
-export function streakLine(t: Translate, days: number): string | null {
-  if (!Number.isFinite(days) || days < 1) return null;
-  if (days === 1) return t('app.summaryStreakOne');
+export function workoutCountLine(t: Translate, n: number): string | null {
+  if (!Number.isFinite(n) || n < 1) return null;
+  if (n === 1) return t('app.summaryCountFirst');
   const ordinals = t('app.summaryOrdinals').split('|');
-  const word = ordinals[days - 2];
-  return word
-    ? t('app.summaryStreakWord', { ordinal: word })
-    : t('app.summaryStreakNum', { n: days });
+  const word = ordinals[n - 2];
+  return word ? t('app.summaryCountWord', { ordinal: word }) : t('app.summaryCountNum', { n });
 }
 
 /**

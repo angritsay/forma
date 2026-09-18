@@ -103,17 +103,17 @@ export const app = {
   homeGreetingAfternoon: 'Good afternoon, {name}',
   homeGreetingEvening: 'Good evening, {name}',
   homeGreetingNight: 'Still up, {name}?',
-  homeStreakTitle: 'Streak',
-  homeStreakTodayDone: 'Today counts. Keep it going tomorrow.',
-  homeStreakAtRisk: 'Train today to keep it.',
-  homeStreakEmpty: 'Finish a workout to start a streak.',
-  homeStreakBest: 'Best: {n}',
+  /*
+   * Five streak keys stood here. The streak is gone: the course trains five days a week, so anyone
+   * following it lost their streak every weekend for doing as they were told. Workouts are counted
+   * instead, and a count does not reset.
+   */
+  homeWorkoutsTitle: 'Workouts',
   homeResumeEyebrow: 'Workout in progress',
   homeResumeFinishedEyebrow: 'Unsaved result',
   homeResumeCta: 'Resume',
   homeResumeSave: 'Finish & save',
   homeTodayEyebrow: 'Today',
-  homeTodayWeek: 'Week {week} · Day {day}',
   homeTodayOpen: 'Open',
   homeTodayNoCourseTitle: 'Pick a programme',
   homeTodayNoCourseBody: 'And your first workout appears here — today.',
@@ -331,9 +331,9 @@ export const app = {
   // streak, then three figures. The ordinal is a word up to the tenth day — a figure that size
   // would fight the three under it — and «Day 11» after that.
   summaryDone: 'Done!',
-  summaryStreakOne: 'Day one. The start is in.',
-  summaryStreakWord: '{ordinal} day in a row. That’s how form grows.',
-  summaryStreakNum: 'Day {n} in a row. That’s how form grows.',
+  summaryCountFirst: 'The first one. The start is in.',
+  summaryCountWord: '{ordinal} workout. That’s how form grows.',
+  summaryCountNum: 'Workout no. {n}. That’s how form grows.',
   summaryOrdinals: 'Second|Third|Fourth|Fifth|Sixth|Seventh|Eighth|Ninth|Tenth',
   summaryMinutes: 'Minutes',
   summaryReps: 'Reps',
@@ -385,9 +385,8 @@ export const app = {
   statsLevelProgress: 'Progress to the next level',
   statsLevelNext: '{n} pts to {title}',
   statsLevelMax: 'Top level. Nothing above it — keep it there.',
-  statsCalendarTitle: 'Streak calendar',
-  statsCalendarCurrent: 'Now {n}',
-  statsCalendarBest: 'Best {n}',
+  statsCalendarTotal: 'Total {n}',
+  statsCalendarWeek: 'This week {n}',
   statsCalendarWorkout: 'Workout',
   statsCalendarEmpty: 'Nothing logged',
   statsCalendarFuture: 'Ahead',
@@ -413,7 +412,6 @@ export const app = {
   leaderboardHowWorkout:
     'Every workout has a base value of 60–250 pts. Easier ×{easier}, As usual ×{normal}, Harder ×{harder} — and the result scales with the share of the plan you completed.',
   leaderboardHowRepeat: 'Repeating a workout you already finished gives {pct}% of its points.',
-  leaderboardHowStreak: 'Streak bonus: +{pct7}% from 7 days in a row, +{pct30}% from 30.',
   leaderboardHowWeek:
     'The weekly table resets every Monday (UTC). A course table counts only that course’s workouts.',
 
