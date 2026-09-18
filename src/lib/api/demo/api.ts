@@ -6,7 +6,7 @@
  * difference beyond the demo badge.
  */
 import { COURSES, EXERCISES } from '@/content/registry';
-import { downscaleImage, toDataUrl, type DownscaleOptions } from '@/lib/util/image';
+import { downscaleImage, isVideoFile, toDataUrl, type DownscaleOptions } from '@/lib/util/image';
 import { AppError } from '../errors';
 import type {
   AdminCourseBundle,
@@ -1246,8 +1246,21 @@ export async function listPublishedCourses(): Promise<AdminCourseBundle[]> {
  */
 const DEMO_IMAGE: DownscaleOptions = { maxPx: 640, quality: 0.6 };
 
+/**
+ * There is no bucket in demo mode, so a proof is stored as the bytes themselves — and that is
+ * exactly why **a clip is refused rather than inlined**.
+ *
+ * A photograph survives it: `DEMO_IMAGE` shrinks it to a size a `data:` URL can carry beside the
+ * rest of the demo database. One phone video is 25MB of base64 in a store whose whole budget is a
+ * few megabytes of `localStorage`, so inlining one does not fail on the video — it fails on the
+ * next write of anything at all, with the quota gone and the demo account broken.
+ *
+ * `demo_video_unsupported` surfaces as the card's ordinary upload error. The real backend takes
+ * clips; this is the demo saying what it cannot do, not the product refusing.
+ */
 export async function uploadMedia(bucket: string, _path: string, file: Blob): Promise<string> {
   if (bucket !== 'proofs') throw new AppError('forbidden', 'demo_read_only');
+  if (isVideoFile(file)) throw new AppError('forbidden', 'demo_video_unsupported');
   return toDataUrl(await downscaleImage(file, DEMO_IMAGE));
 }
 

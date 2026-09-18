@@ -860,6 +860,11 @@ export const app = {
   marathonProofPhoto: 'Прикрепить фото',
   marathonProofPhotoAgain: 'Заменить фото',
   marathonProofPhotoSent: 'Фото отправлено',
+  // Необязательное вложение на любом задании — отсюда «+», а не кнопка: задание доставляет другой
+  // контрол, а это доказательство к нему.
+  marathonProofAttach: 'Прикрепить фото или видео',
+  marathonProofAttachAgain: 'Заменить фото или видео',
+  marathonProofTooBig: 'Файл больше {n} МБ. Сними покороче — 10–15 секунд обычно хватает.',
   marathonProofVoided: 'Не засчитано: {reason}',
   marathonProofCoachOnly: 'Видит только тренер',
   // The board
@@ -962,6 +967,12 @@ export const app = {
   mAdminAddError: 'Не удалось добавить',
   // Proofs
   mAdminProofsEmpty: 'Отчётов пока нет',
+  // Пруф открывается по нажатию, а не грузится со всей лентой: месяц активного клуба — это сотни
+  // объектов в приватном бакете, и подписывать их все ради экрана, который никто не долистывает,
+  // значит сделать сотни запросов впустую.
+  mAdminProofOpen: 'Посмотреть фото',
+  mAdminProofOpenVideo: 'Посмотреть видео',
+  mAdminProofFailed: 'Не открылось — нажми ещё раз',
   mAdminProofsAll: 'Все дни',
   mAdminVoid: 'Не засчитать',
   mAdminVoidReason: 'Почему',

@@ -845,6 +845,12 @@ export const app = {
   marathonProofPhoto: 'Attach a photo',
   marathonProofPhotoAgain: 'Replace the photo',
   marathonProofPhotoSent: 'Photo sent',
+  // Optional on every task, hence the «+» rather than a button: another control delivers the task,
+  // this is the evidence for it.
+  marathonProofAttach: 'Attach a photo or a clip',
+  marathonProofAttachAgain: 'Replace the photo or clip',
+  marathonProofTooBig:
+    'That file is over {n} MB. Film a shorter one — 10–15 seconds is usually enough.',
   marathonProofVoided: 'Not counted: {reason}',
   marathonProofCoachOnly: 'Only the coach sees this',
   // The board
@@ -948,6 +954,11 @@ export const app = {
   mAdminAddError: 'Could not add',
   // Proofs
   mAdminProofsEmpty: 'No proof yet',
+  // Opened on tap rather than loaded with the whole feed: a busy month is hundreds of objects in
+  // a private bucket, and signing them all for a page nobody scrolls to the end of is waste.
+  mAdminProofOpen: 'See the photo',
+  mAdminProofOpenVideo: 'Watch the clip',
+  mAdminProofFailed: 'Did not open — tap again',
   mAdminProofsAll: 'Every day',
   mAdminVoid: 'Do not count',
   mAdminVoidReason: 'Why',

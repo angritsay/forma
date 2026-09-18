@@ -54,6 +54,31 @@ export async function downscaleImage(
   }
 }
 
+/**
+ * Is this a clip rather than a picture?
+ *
+ * Decided on the media type the picker reports, because that is what the browser knows before any
+ * decode is attempted. A file that reports nothing useful is treated as an image, which is the
+ * safe way round: `downscaleImage` refuses politely on anything it cannot open.
+ */
+export function isVideoFile(file: File | Blob): boolean {
+  return file.type.toLowerCase().startsWith('video/');
+}
+
+/**
+ * The biggest clip the club will take, in bytes.
+ *
+ * **A browser cannot re-encode video.** `downscaleImage` exists because a canvas can redraw a
+ * photograph at a tenth of the size; there is no equivalent for a clip that does not mean shipping
+ * a transcoder, so the only honest control is a limit — stated on the card before the pick, and
+ * enforced after it.
+ *
+ * 25 MB is roughly twenty seconds of 1080p from a modern phone, which is longer than any proof of
+ * «двадцать приседаний» needs to be, and it keeps a month of a busy club inside a storage plan
+ * rather than through it.
+ */
+export const MAX_VIDEO_BYTES = 25 * 1024 * 1024;
+
 /** The file extension to store a blob under, from its media type. */
 export function extensionFor(blob: Blob, fallback = 'jpg'): string {
   const type = blob.type.toLowerCase();
@@ -61,6 +86,10 @@ export function extensionFor(blob: Blob, fallback = 'jpg'): string {
   if (type === 'image/png') return 'png';
   if (type === 'image/webp') return 'webp';
   if (type === 'image/heic' || type === 'image/heif') return 'heic';
+  // The clip is stored as picked, so its extension is what tells `ProofMedia` to draw a player.
+  if (type === 'video/mp4') return 'mp4';
+  if (type === 'video/quicktime') return 'mov';
+  if (type === 'video/webm') return 'webm';
   return fallback;
 }
 
