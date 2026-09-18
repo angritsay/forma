@@ -101,28 +101,36 @@ export const LEVEL_TITLES: readonly L10n[] = [
   { ru: 'Легенда', en: 'Legend' },
 ];
 
+/*
+ * The rules, and the catalogue prints them as they are written here.
+ *
+ * They used to be twelve imperatives in a column — «Заверши первую тренировку», «Заверши 5
+ * тренировок», «Заверши 25 тренировок» — which reads as a list of orders from an app to a person
+ * who has not asked for any. The rule is the same; it is stated rather than commanded, and the
+ * number is the thing the eye should land on.
+ */
 export const ACHIEVEMENT_COPY = {
   first_workout: {
     title: { ru: 'Первый шаг', en: 'First step' },
-    description: { ru: 'Заверши первую тренировку.', en: 'Finish your first workout.' },
+    description: { ru: 'Одна тренировка — и он твой.', en: 'One workout and it is yours.' },
   },
   workouts_5: {
     title: { ru: 'В ритме', en: 'In the groove' },
-    description: { ru: 'Заверши 5 тренировок.', en: 'Finish 5 workouts.' },
+    description: { ru: 'Пять тренировок позади.', en: 'Five workouts done.' },
   },
   workouts_25: {
     title: { ru: 'Постоянство', en: 'Consistency' },
-    description: { ru: 'Заверши 25 тренировок.', en: 'Finish 25 workouts.' },
+    description: { ru: 'Двадцать пять тренировок.', en: 'Twenty-five workouts.' },
   },
   workouts_100: {
     title: { ru: 'Сотня', en: 'Century' },
-    description: { ru: 'Заверши 100 тренировок.', en: 'Finish 100 workouts.' },
+    description: { ru: 'Сто тренировок. Без комментариев.', en: 'A hundred workouts. No notes.' },
   },
   // These three used to ask for 3, 7 and 30 days in a row. See `levels.ts` for why they no longer
   // do: a course with two rest days a week cannot be followed and hold a seven-day streak.
   workouts_10: {
     title: { ru: 'Разгон', en: 'Warm start' },
-    description: { ru: 'Заверши 10 тренировок.', en: 'Finish 10 workouts.' },
+    description: { ru: 'Десять тренировок.', en: 'Ten workouts.' },
   },
   week_three: {
     title: { ru: 'Хорошая неделя', en: 'A good week' },
@@ -131,31 +139,31 @@ export const ACHIEVEMENT_COPY = {
   weeks_8: {
     title: { ru: 'Два месяца в деле', en: 'Two months in' },
     description: {
-      ru: 'Тренируйся на восьми разных неделях — подряд не обязательно.',
-      en: 'Train in eight different weeks — they need not run together.',
+      ru: 'Восемь недель с тренировками. Подряд — не обязательно.',
+      en: 'Eight weeks with a workout in them. They need not run together.',
     },
   },
   first_benchmark: {
     title: { ru: 'Точка отсчёта', en: 'Baseline' },
-    description: { ru: 'Пройди первый тест.', en: 'Complete your first benchmark test.' },
+    description: { ru: 'Первый тест пройден.', en: 'The first benchmark is behind you.' },
   },
   course_completed: {
     title: { ru: 'Финишер', en: 'Finisher' },
-    description: { ru: 'Пройди курс до конца.', en: 'Complete a course from start to finish.' },
+    description: { ru: 'Курс пройден до конца.', en: 'A course finished end to end.' },
   },
   points_1000: {
     title: { ru: 'Тысячник', en: 'Thousand' },
-    description: { ru: 'Набери 1 000 очков.', en: 'Earn 1,000 points.' },
+    description: { ru: 'Тысяча очков.', en: 'A thousand points.' },
   },
   points_10000: {
     title: { ru: 'Десять тысяч', en: 'Ten thousand' },
-    description: { ru: 'Набери 10 000 очков.', en: 'Earn 10,000 points.' },
+    description: { ru: 'Десять тысяч очков.', en: 'Ten thousand points.' },
   },
   minutes_600: {
     title: { ru: 'Десять часов', en: 'Ten hours' },
     description: {
-      ru: 'Проведи в тренировках 600 минут.',
-      en: 'Spend 600 minutes training.',
+      ru: 'Шестьсот минут тренировок — это десять часов.',
+      en: 'Six hundred minutes of training — ten hours of it.',
     },
   },
 } as const satisfies Record<string, { title: L10n; description: L10n }>;

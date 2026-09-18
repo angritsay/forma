@@ -126,7 +126,9 @@ export const PLAN_INCLUDES: readonly L10n[] = [
     en: 'Load adapts to you after every workout',
   },
   { ru: 'Новые курсы — сразу, без доплат', en: 'New courses as they appear, at no extra cost' },
-  { ru: 'Прогресс, достижения, таблица лидеров', en: 'Progress, achievements and the leaderboard' },
+  // «Прогресс» was the name of a tab, and that tab is gone; beside two feature names it read as
+  // a third one.
+  { ru: 'Достижения и таблица лидеров', en: 'Achievements and the leaderboard' },
 ];
 
 /**

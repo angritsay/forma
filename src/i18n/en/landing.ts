@@ -111,22 +111,18 @@ export const landing = {
   adaptRuleEasier: 'Easier · volume ×0.85',
   adaptRuleHarder: 'Harder · volume ×1.15',
   adaptRulePoints: 'Points ×0.8 / ×1.25',
-  adaptRuleStreak7: '7-day streak · +10 %',
-  adaptRuleStreak30: '30-day streak · +20 %',
+  // The two streak pills went with the streak itself: the course schedules rest days.
   adaptRuleDeload: 'Deload · volume ×0.65',
 
   // Home: path & motivation
   pathEyebrow: 'Path & motivation',
   pathTitle: 'Every week feels like a level in a game',
-  pathIntro: 'Workouts, tests and rest days come in order — you always see where you are.',
-  pathStreakTitle: 'Streak',
-  pathStreakText: 'A day counts when you finish a workout or hit your steps goal.',
-  pathStreakBonus: '+10 % from day 7',
-  pathStepsTitle: '7,000 steps on rest days',
-  pathStepsText: 'Log your steps, earn points and keep the streak.',
-  pathStepsGoal: 'goal',
+  pathIntro: 'Twenty workouts and the tests come in order — you always see where you are.',
+  // «Streak» and «7,000 steps on rest days» stood here. Neither is in the app any more.
+  pathCountTitle: 'Workout count',
+  pathCountText: 'Every workout counts. A week off resets nothing — the number only goes up.',
   pathBoardTitle: 'Leaderboard',
-  pathBoardText: 'Points from workouts and steps go into one leaderboard: this week and all time.',
+  pathBoardText: 'Points from your workouts go into one leaderboard: this week and all time.',
   pathYou: 'you',
   pathWeekdays: 'M,T,W,T,F,S,S',
   pathNodeDone: 'Done',
@@ -267,7 +263,9 @@ export const landing = {
   subscribeOrderTitle: 'Subscribe',
   subscribeOrderIntro:
     'Leave your email and pay on the next page — the courses open in the app under this email.',
-  subscribeNote: 'Renews automatically · cancel any time · access stays until the paid period ends',
+  // This line sits under the pay button and promised auto-renewal, which does not exist — see
+  // `content/site/plans.ts`. The plan card said the opposite two rows above it.
+  subscribeNote: 'One payment · access for the whole paid period · renew whenever you want',
   subscribeSuccessText:
     'We have recorded a {course} subscription for {email}. Once the payment lands, open the app and sign in with this email.',
   subscribeCourseHint: 'Prefer one course for good?',
@@ -277,15 +275,18 @@ export const landing = {
     'One course, paid once, yours forever. Right when you know what you want and where you will stop.',
   subscribeVsPlan:
     'Every course, paid monthly or yearly, while you train. Right when the goal is to keep going.',
-  subscribeFaq1Q: 'Can I cancel?',
+  subscribeFaq1Q: 'What if I want to stop?',
+  // There is nothing to cancel: nothing is ever charged unless you pay for a period.
   subscribeFaq1A:
-    'Yes, any time, from the payment service or by writing to us. The courses stay open until the end of the period you paid for.',
+    'Just do not renew. Money only moves when you pay, the courses stay open to the end of the period you paid for, and there is no cancellation to arrange.',
   subscribeFaq2Q: 'What happens when it ends?',
   subscribeFaq2A:
     'The courses close, your progress and stats stay. Subscribe again and you continue where you stopped.',
   subscribeFaq3Q: 'I already bought a course. Does it count?',
+  // It said «the other four». There are six courses and one is published: a number here promises
+  // programmes that are not on the site yet.
   subscribeFaq3A:
-    'A bought course is yours forever, subscription or not. The subscription adds the other four on top.',
+    'A bought course is yours forever, subscription or not. The subscription opens every other Forma course — and the ones still to come.',
   planMonthlyName: 'Monthly',
   planAnnualName: 'Annual',
 
@@ -302,7 +303,7 @@ export const landing = {
     'Technique before volume. Every exercise comes with cues and common mistakes, and every one has an easier version. Pain is a signal to reduce load, not to push through.',
   aboutPhilosophy3Title: 'Consistency',
   aboutPhilosophy3Text:
-    'Results come from weeks in a row, not one hard session. That is why the courses have streaks, rest days and deload weeks.',
+    'Results come from weeks in a row, not one hard session. That is why the app counts workouts rather than unbroken days, and the courses have deload weeks.',
   aboutScienceTitle: 'The science, briefly',
   aboutScienceText:
     'The programs draw on ACSM and WHO physical-activity guidelines, progressive overload and RPE-based autoregulation.',

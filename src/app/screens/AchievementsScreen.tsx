@@ -82,10 +82,9 @@ export default function AchievementsScreen() {
       {achievements.length === 0 ? (
         <EmptyState icon="trophy" title={t('app.achievementsEmpty')} />
       ) : (
-        <>
-          <p className="pb-2 text-[13px] text-muted">{t('app.achievementsLead')}</p>
-          <AchievementList items={achievements} />
-        </>
+        /* No lead over the list. «Всё, что можно взять, и как.» described what the rows under it
+           already are, and the count in the header is the one line this screen needs. */
+        <AchievementList items={achievements} />
       )}
     </Screen>
   );
