@@ -564,12 +564,30 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    workout's name, the programme and day, and three pills — how long, how much work, what it
    costs. Everything else — focus,
    description, the movement grid, the plan block by block — is folded behind "What's inside".
-   Pressing Start opens the difficulty sheet: Easier / As usual / Harder, each led by its estimated
-   **minutes** as a large numeral, over a bar of the work it prescribes, with the reps and kcal
-   under it. The recommended one is a filled row (paper on ink) rather than a badged one, and the
-   reason is stated under all three. Picking one starts the session immediately — there is no second
-   preview and no confirm button. **No points anywhere in training**: points are the club's
-   currency (§10 flow 12), and a workout is time you spend, not a score you earn.
+   Pressing Start opens the difficulty sheet: Easier / As usual / Harder, **each with its own
+   emoji** (🌿 / 👟 / 🔥), the estimated **minutes** as a large numeral, a bar of the work it
+   prescribes and the reps under it. The three sit on hairlines, not in boxes, and the recommended
+   one is marked the way the club's board marks its leader — its emoji in a circle filled with the
+   programme colour, its minutes and its bar in that colour — rather than by fencing the row in
+   paper. The reason is stated under all three. Picking one starts the session immediately: no
+   second preview, no confirm button. Calories are not on the rows (31 / 31 / 34 decided nothing).
+   **No points anywhere in training**: points are the club's currency (§10 flow 12), and a workout
+   is time you spend, not a score you earn.
+
+   **The minutes are the whole session and the reps are only the training.** «13 мин» is how long
+   you will be busy, warm-up and cool-down included, which is what the site promises («15–20 минут
+   вместе с разминкой и заминкой»). The rep count leaves both out — «не надо считать разминку и
+   заминку в плане тренировки и в количестве повторений», and it is also `docs/COACH_RULES.md`,
+   which marks both «Counted as training? No». On «Форма с нуля» workout 1 that is 87 / 96 / 144
+   instead of 110 / 119 / 167, and the difference between the three choices is what the figure is
+   for. `workoutVolume` is the one place that decides it.
+
+   **Nothing in the product auto-hyphenates.** `.display` and `.font-display` set
+   `hyphens: manual`. They were `auto`, and it broke this sheet's own title as «Насколько тяжело
+   се-/годня?» — the browser hyphenates to fill a line even when moving the whole word down reads
+   perfectly. A word wider than its line is a job for that heading's size, not for a hyphen in
+   every heading.
+
 6. **Player**: one card the size of the screen, with two sides. Front: the clip (or the drawn
    figure), auto-playing, **as wide as the screen** — `w-full h-auto` on a phone, with the stage
    cropping whatever the frame's own height runs past, so no shape of clip can put a bar down the

@@ -13,33 +13,67 @@
  * minutes and calories, and those barely move: easier drops a whole set but shortens the rest to
  * match, so a third less work still came out at thirteen minutes and thirty-one kcal. Three
  * identical-looking rows are not a choice, they are a coin toss with extra steps. What moves is the
- * *work* — «Полегче» is ninety squats where «Посложнее» is a hundred and forty — so that is what
- * each row says, over a bar drawn to the same scale for all three.
+ * *work* — measured on «Форма с нуля» workout 2, «Полегче» is 102 reps where «Посложнее» is 160 —
+ * so that is what each row says, over a bar drawn to the same scale for all three.
+ *
+ * **The skin is the app's current one, not app-v2's.** The owner's verdict on the previous version
+ * was «Старый стиль», and what made it old was three grey boxes with a hairline round them, a grey
+ * bar and a line of grey 12px type — no colour, no display face, no pills, on a screen next to
+ * tabs that now have all three. So:
+ *
+ *   • the boxes are gone. Rows sit on hairlines, the way every list in the app does now — the
+ *     club's board, the task card, the achievements;
+ *   • the bar and the recommended row's figures take the **programme colour**, which is the
+ *     brandbook's «один экран — один цвет, и он приходит от программы». The sheet portals to
+ *     `document.body`, so it cannot inherit `--course-tile` from the screen behind it and is
+ *     handed the tile instead;
+ *   • **each choice wears an emoji** — «вот тут можно добавить эмодзи». 🌿 / 👟 / 🔥 read at a
+ *     glance and on both grounds, and they are the one thing on the row that needs no reading at
+ *     all. They are not the streak's 🔥 in any sense the eye can confuse: different screen,
+ *     different size, different neighbours;
+ *   • the calories went. «~31 ккал» barely moved between the three (31 / 31 / 34), so it was a
+ *     third figure that decided nothing — and the reps beside it are the one that does.
  *
  * **The minutes lead, and there are no points.** A course is time you are about to spend, and that
  * is the number somebody standing on a mat is deciding about: «восемнадцать минут» is an answer,
  * «140 очков» is a score for something that has not happened yet. Points belong to the club, where
  * they are the whole point; a workout is not a thing you win.
  *
- * **The recommended row is filled, not badged.** White on ink among two outlined rows: the eye
- * lands on it before a word is read, and tapping the obvious one is the right move on the day you
- * have no opinion — which is most days. The other two are still one tap away, at the same size,
- * because the recommendation is advice and not a gate.
+ * **The minutes are the whole session and the reps are only the training**, which looks like an
+ * inconsistency and is the honest pair. «13 мин» is how long you will be busy, warm-up and
+ * cool-down included, and it is what the site promises («15–20 минут вместе с разминкой и
+ * заминкой»). «102 повтора» is the work, because the warm-up's ten squats are the same ten
+ * whatever you pick — «не надо считать разминку и заминку в плане тренировки и в количестве
+ * повторений» (`workoutVolume`).
  *
- * The sheet is the owner's prototype's «Насколько тяжело сегодня?» almost line for line, and the
- * title is set in its two weights — «НАСКОЛЬКО тяжело сегодня?» — because it is the one question
- * the screen asks. The prototype's line under the title («Выбери — и разминка начнётся сразу»)
- * is left out: the arrow on each row already says the row starts the session.
+ * **The recommended row is marked, not fenced.** Its emoji sits in a circle filled with the
+ * programme colour and its minutes are set in it, exactly the way the club's board marks its
+ * leader. The other two are one tap away, at the same size, because the recommendation is advice
+ * and not a gate.
  */
 import { clsx } from 'clsx';
 import { Glyph } from '@/components/ui/Icon';
 import { Sheet } from '@/components/ui/Sheet';
 import { Spinner } from '@/components/ui/Spinner';
 import { useT } from '@/app/hooks/useT';
+import { courseTileVars } from '@/lib/ui/tile';
 import type { DifficultyChoice, Recommendation } from '@/lib/training/types';
 import { workLabel } from '@/app/features/courses/sessionEstimate';
 import { DisplayText } from '@/app/features/home/DisplayTitle';
 import { DIFFICULTY_LABEL } from './plan';
+
+/**
+ * One glyph per choice, and they are doing the job the words do — «вот тут можно добавить эмодзи».
+ *
+ * 🌿 is lighter, 👟 is the ordinary day you just put your shoes on, 🔥 is more. All three carry
+ * their own colour, so they read on the dark ground and inside the filled circle alike, and none of
+ * them is a face — a face on a difficulty is a judgement about the person.
+ */
+const DIFFICULTY_EMOJI: Record<DifficultyChoice, string> = {
+  easier: '🌿',
+  normal: '👟',
+  harder: '🔥',
+};
 
 /** One difficulty and what choosing it asks for: how much work, and how long it takes. */
 export interface DifficultyOption {
@@ -55,6 +89,8 @@ export interface DifficultyOption {
 export interface DifficultySheetProps {
   open: boolean;
   onClose: () => void;
+  /** The programme's colour. The sheet portals out of the screen, so it cannot inherit it. */
+  tile?: string | undefined;
   options: readonly DifficultyOption[];
   recommended: Recommendation;
   /** The choice being started, while the session is being opened on the server. */
@@ -65,6 +101,7 @@ export interface DifficultySheetProps {
 export function DifficultySheet({
   open,
   onClose,
+  tile,
   options,
   recommended,
   pending,
@@ -92,8 +129,8 @@ export function DifficultySheet({
       onClose={onClose}
       title={<DisplayText text={t('app.nodeDifficultyTitle')} />}
     >
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-4" style={courseTileVars(tile)}>
+        <div className="flex flex-col">
           {options.map((o) => {
             const isRecommended = o.choice === recommended.choice;
             const starting = pending === o.choice;
@@ -104,61 +141,77 @@ export function DifficultySheet({
                 disabled={busy}
                 onClick={() => onPick(o.choice)}
                 className={clsx(
-                  /* Three controls on the sheet's flat ground, so the corner is `--r-control` and
-                     not a square edge — `design/CHANGELOG.md` §13. The rows were drawn before the
-                     rule existed and were the last square-shouldered control in this flow. */
-                  'flex w-full items-center gap-5 rounded-control px-4 py-5 text-left',
-                  'transition-colors duration-150 ease-(--ease-out)',
-                  isRecommended
-                    ? 'bg-primary text-on-primary'
-                    : 'border border-border hover:bg-surface-2 active:bg-surface-3',
+                  /* A hairline, not a box. Every list in the app reads this way now. */
+                  'flex w-full items-center gap-4 border-t border-border py-4 text-left first:border-t-0',
+                  'transition-opacity duration-150 ease-(--ease-out)',
                   busy && !starting && 'opacity-40',
                 )}
               >
-                {/* The minutes, at the size of the decision they are. */}
-                <span className="flex shrink-0 flex-col items-center">
-                  <span className="numeral tabular text-4xl leading-none">
-                    {Math.max(1, Math.round(o.durationSec / 60))}
-                  </span>
-                  <span className="eyebrow mt-1.5 text-current opacity-60">
-                    {t('common.minutesUnit')}
+                {/*
+                 * The emoji in a circle, and the circle is the club's `BoardRow` geometry exactly:
+                 * filled in the programme colour for the one being recommended, a hairline for the
+                 * other two. It is the whole of the recommendation — no badge, no second word.
+                 */}
+                <span
+                  aria-hidden="true"
+                  className={clsx(
+                    'flex size-12 shrink-0 items-center justify-center rounded-pill',
+                    isRecommended ? 'bg-course' : 'border border-border',
+                  )}
+                >
+                  {/* `.emoji` on the glyph, never on the circle: it sizes itself to 1em and the
+                      circle is a 48px plate, exactly as `Badges` and `CoursesHead` do it. */}
+                  <span className="emoji" style={{ fontSize: 22 }}>
+                    {DIFFICULTY_EMOJI[o.choice]}
                   </span>
                 </span>
 
-                <span className="flex min-w-0 flex-1 flex-col gap-2.5">
-                  <span className="font-display text-[17px]">{t(DIFFICULTY_LABEL[o.choice])}</span>
+                <span className="flex min-w-0 flex-1 flex-col gap-2">
+                  <span className="flex items-baseline justify-between gap-3">
+                    <span className="font-display text-[17px]">
+                      {t(DIFFICULTY_LABEL[o.choice])}
+                    </span>
+                    {/* The minutes, in the programme colour on the row being recommended. */}
+                    <span className="flex shrink-0 items-baseline gap-1">
+                      <span
+                        className={clsx(
+                          'numeral tabular text-2xl leading-none',
+                          isRecommended && 'text-course',
+                        )}
+                      >
+                        {Math.max(1, Math.round(o.durationSec / 60))}
+                      </span>
+                      <span className="eyebrow text-muted-2">{t('common.minutesUnit')}</span>
+                    </span>
+                  </span>
 
                   {/*
                    * How much work, as a length, drawn to the same scale on all three rows: two
-                   * choices that really are close draw as two bars that really are close.
+                   * choices that really are close draw as two bars that really are close. Rounded
+                   * ends, because a figure in this brand is a pill or a ring.
                    */}
-                  {/* Rounded ends, like the prototype's bar: it is a figure, and figures here are pills and rings. */}
                   <span
                     aria-hidden="true"
-                    className={clsx(
-                      'block h-1 w-full overflow-hidden rounded-pill',
-                      isRecommended ? 'bg-on-primary/25' : 'bg-surface-3',
-                    )}
+                    className="block h-1 w-full overflow-hidden rounded-pill bg-surface-3"
                   >
                     <span
                       className={clsx(
                         'block h-full rounded-pill transition-[width] duration-300 ease-(--ease-out)',
-                        isRecommended ? 'bg-on-primary' : 'bg-muted-2',
+                        isRecommended ? 'bg-course' : 'bg-muted-2',
                       )}
                       style={{ width: `${Math.round(share(o) * 100)}%` }}
                     />
                   </span>
 
-                  <span className="tabular text-xs text-current opacity-70">
-                    {workLabel(tr, o)} · {t('app.nodeKcal', { n: o.calories })}
-                  </span>
+                  {/* The work itself — warm-up and cool-down excluded (`workoutVolume`). */}
+                  <span className="tabular text-[13px] text-muted">{workLabel(tr, o)}</span>
                 </span>
 
                 {/* The arrow says this row *is* the start button; a spinner replaces it while it is. */}
                 {starting ? (
                   <Spinner size={16} />
                 ) : (
-                  <Glyph size={16} className="shrink-0 opacity-60">
+                  <Glyph size={16} className="shrink-0 text-muted-2">
                     →
                   </Glyph>
                 )}

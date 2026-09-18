@@ -274,6 +274,32 @@ describe('workoutVolume', () => {
     expect(v.workSec).toBeGreaterThan(0);
   });
 
+  /*
+   * «Не надо считать разминку и заминку в плане тренировки и в количестве повторений.» The fixture
+   * opens on a warm-up of ten squats and closes on a cool-down of ten glute bridges, and neither
+   * is training — `docs/COACH_RULES.md` marks both «Counted as training? No».
+   */
+  it('leaves the warm-up and the cool-down out of the count', () => {
+    const p = prescribeWorkout(FULL_WORKOUT, opts, fixtureLookup);
+    const withEnds = workoutVolume(p).reps;
+    const trainingOnly = workoutVolume({
+      ...p,
+      blocks: p.blocks.filter((b) => b.type !== 'warmup' && b.type !== 'cooldown'),
+    }).reps;
+    // Dropping them by hand changes nothing, because the function already did.
+    expect(withEnds).toBe(trainingOnly);
+
+    // And they really are reps that would otherwise land in the total.
+    const endsOnly = workoutVolume({
+      ...p,
+      // `workoutVolume` filters by type, so re-label them to prove the reps exist at all.
+      blocks: p.blocks
+        .filter((b) => b.type === 'warmup' || b.type === 'cooldown')
+        .map((b) => ({ ...b, type: 'strength' as const })),
+    }).reps;
+    expect(endsOnly).toBeGreaterThan(0);
+  });
+
   it('separates the three difficulties far more clearly than the clock does', () => {
     const at = (choice: 'easier' | 'normal' | 'harder') =>
       workoutVolume(prescribeWorkout(FULL_WORKOUT, { ...opts, choice }, fixtureLookup));
