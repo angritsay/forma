@@ -56,6 +56,7 @@ import type { MyMarathon, ProofInput } from '@/lib/api/types';
 import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
 import { downscaleImage, extensionFor, isVideoFile, MAX_VIDEO_BYTES } from '@/lib/util/image';
 import { useT } from '@/app/hooks/useT';
+import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { BoardGap, BoardRow } from '@/app/features/marathon/BoardRow';
 import { ClubPitch } from '@/app/features/marathon/ClubPitch';
 import { GameHead } from '@/app/features/marathon/GameHead';
@@ -218,8 +219,13 @@ export default function MarathonScreen() {
     return pitch(<ClubPitch locked />);
   }
 
+  /*
+   * The mark, not `page(null, …)`. That drew the whole screen with nothing in it — a «?» where the
+   * day number goes, the generic title, an empty card — and then swapped it for the real one a
+   * moment later, which is the jerk the owner reported.
+   */
   if (marathonStatus === 'loading') {
-    return page(null, <DaySkeleton />);
+    return <ScreenLoader />;
   }
 
   if (marathonStatus === 'error') {

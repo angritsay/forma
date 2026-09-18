@@ -30,6 +30,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { Tabs, tabPanelId } from '@/components/ui/Tabs';
 import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
 import { TopBar } from '@/app/components/TopBar';
+import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { useT } from '@/app/hooks/useT';
 import { BoardRow } from '@/app/features/marathon/BoardRow';
 import { clubPrize } from '@/app/features/marathon/prize';
@@ -57,11 +58,7 @@ export default function MarathonBoardScreen() {
   if (marathonStatus === 'loading' || !marathon) {
     return (
       <Screen header={header}>
-        <div className="flex flex-col gap-px py-4" aria-hidden="true">
-          {Array.from({ length: 5 }, (_, i) => (
-            <Skeleton key={i} rounded="control" className="h-16" />
-          ))}
-        </div>
+        <ScreenLoader />
       </Screen>
     );
   }

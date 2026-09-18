@@ -11,10 +11,10 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Glyph } from '@/components/ui/Icon';
 import { IconButton } from '@/components/ui/IconButton';
 import { Screen } from '@/components/ui/Screen';
-import { Skeleton } from '@/components/ui/Skeleton';
 import { Tabs, tabPanelId } from '@/components/ui/Tabs';
 import type { LeaderboardPeriod } from '@/lib/api/types';
 import { TopBar } from '@/app/components/TopBar';
+import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { useT } from '@/app/hooks/useT';
 import { LeaderboardList, LeaderboardRowView } from '@/app/features/leaderboard/LeaderboardList';
 import { resolveCourseParam, splitLeaderboard } from '@/app/features/leaderboard/model';
@@ -23,16 +23,6 @@ import { useLeaderboard } from '@/app/features/leaderboard/useLeaderboard';
 import { useCatalogue } from '@/app/store/catalogue';
 import { useSession } from '@/app/store/session';
 import { courseTitle } from '@/content/catalogue';
-
-function ListSkeleton() {
-  return (
-    <div className="flex flex-col gap-px" aria-hidden="true">
-      {Array.from({ length: 6 }, (_, i) => (
-        <Skeleton key={i} className="h-15" />
-      ))}
-    </div>
-  );
-}
 
 export default function LeaderboardScreen() {
   const { t, l } = useT();
@@ -76,7 +66,7 @@ export default function LeaderboardScreen() {
 
   let body: React.ReactNode;
   if (status === 'loading') {
-    body = <ListSkeleton />;
+    body = <ScreenLoader />;
   } else if (status === 'error') {
     body = (
       <EmptyState

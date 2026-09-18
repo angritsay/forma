@@ -31,7 +31,6 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Glyph } from '@/components/ui/Icon';
 import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
-import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { Pill } from '@/components/ui/Pill';
 import { courseTitle, findCourse } from '@/content/catalogue';
@@ -42,6 +41,7 @@ import { recommendDifficulty } from '@/lib/training/session';
 import type { DifficultyChoice, Recommendation } from '@/lib/training/types';
 import { toLocalDateIso } from '@/lib/util/dates';
 import { TopBar } from '@/app/components/TopBar';
+import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { useT } from '@/app/hooks/useT';
 import { courseAccentVars, courseLandingHref } from '@/app/features/courses/courseMeta';
 import { LinkButton } from '@/app/features/courses/LinkButton';
@@ -175,10 +175,7 @@ export default function NodePreviewScreen() {
   if (status === 'loading' || status === 'idle' || !plans || !recommendation) {
     return (
       <Screen header={header}>
-        <div className="flex flex-col gap-4 py-2" aria-hidden="true">
-          <Skeleton className="-mx-6 min-h-[56svh] md:-mx-10 md:min-h-[440px]" />
-          <Skeleton lines={3} />
-        </div>
+        <ScreenLoader />
       </Screen>
     );
   }
