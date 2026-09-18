@@ -9,7 +9,7 @@
  * screen and the «Программы» tab used to answer between them: what am I doing, and how far through
  * it am I. One card per course, and the card is the figure.
  *
- * At the top, small: the greeting, the avatar, and the streak and the achievements as two entry
+ * At the top, small: the greeting, the avatar, and the workout count and the achievements as two entry
  * points («Профиль и все ачивки убирай. Они должны быть на главном экране в виде маленьких энтри
  * поинтов»). The avatar opens the account as a sheet — what is left of the profile screen — and
  * the achievements open their catalogue. Neither is a section of this screen; both are one tap
@@ -48,7 +48,7 @@ import {
   useActiveCourseId,
   useProgress,
   useProgressLoader,
-  useStreak,
+  useTrainingCount,
   useTodayIso,
 } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
@@ -98,7 +98,7 @@ export default function CoursesScreen() {
   const totals = useProgress((s) => s.totals);
   const activeCourseId = useActiveCourseId();
   const courses = useCatalogue((s) => s.courses);
-  const streak = useStreak();
+  const training = useTrainingCount();
   const today = useTodayIso();
 
   const name = greetingName(profile?.displayName, user?.email ?? '');
@@ -300,14 +300,14 @@ export default function CoursesScreen() {
 
   /*
    * The head is the screen's header slot, and it is two lines tall now rather than one: the
-   * greeting over the name, with the account, the streak and the achievements beside them. The
-   * streak and the achievements used to stand in the content under the header; the mockup puts
+   * greeting over the name, with the account, the workout count and the achievements beside them.
+   * The count and the achievements used to stand in the content under the header; the mockup puts
    * them in it, which is what makes the first card the first thing on the screen.
    */
   const header = (
     <CoursesHead
       name={name}
-      streak={streak.current}
+      workouts={training.total}
       unlocked={unlocked}
       total={achievements.length}
       onAccount={() => setAccount(true)}

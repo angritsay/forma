@@ -20,10 +20,11 @@
  * two sections below say why. The tab also has a colour of its own now — `COACH_TILE`, on the two
  * pills and nowhere else.
  *
- * The hour's case for itself is the delta and only the delta. `HOUR.includes` contains the half's
- * two promises plus its own two, and printing all four again under «60» would make the reader do
- * the diffing; on 60 the screen says «всё из 30 минут» once and then the two lines that are new,
- * with the price difference beside them.
+ * Each length says what it is and what is in it, and nothing about the other one. It used to be
+ * built as a comparison — «+1 000 ₽ к 30 минутам» beside the price, «Всё из 30 минут», and a kicker
+ * «Сверх 30 минут» over the two lines the hour adds — and the owner struck the first two by name.
+ * The third could not stand alone, so the whole apparatus went and the hour simply prints its four
+ * lines. The switch is what compares them, which is what a switch is for.
  *
  * Booking «хоть за 15 минут» is honest about which half of it exists. Paying is a real link;
  * choosing the time is `BOOKING.scheduleUrl`, which is still empty, so the step after payment says
@@ -62,7 +63,7 @@ import { BOOKING, type BookingOption } from '@content/site/booking';
 import { BRAND } from '@content/site/brand';
 import { COACH } from '@content/site/coach';
 import { LINKS } from '@content/site/links';
-import { formatPrice, type CoursePrice } from '@content/site/pricing';
+import { formatPrice } from '@content/site/pricing';
 
 /** Where "message the coach" goes: Telegram if set, else mail. */
 function contactHref(subject: string): string {
@@ -127,8 +128,6 @@ export default function BookScreen() {
   const [pick, setPick] = useState<BookingOption['id']>(BOOKING.options[0]?.id ?? 'half');
   const index = BOOKING.options.findIndex((o) => o.id === pick);
   const option = BOOKING.options[index] ?? BOOKING.options[0];
-  /* The length this one is being compared against: the step below it on the switch. */
-  const previous = index > 0 ? BOOKING.options[index - 1] : undefined;
 
   const email = profile?.email || user?.email || '';
   const name = l(COACH.name, locale);
@@ -318,7 +317,6 @@ export default function BookScreen() {
             {option ? (
               <Option
                 option={option}
-                previous={previous}
                 payment={payment}
                 redirecting={redirecting}
                 onPay={pay}
@@ -529,22 +527,24 @@ function UpcomingSession({ booking, now }: { booking: CoachBooking; now: number 
 /**
  * One length, as a block: its price as the figure, what the money buys, and the one action.
  *
- * On the cheapest length that is simply its list. On any longer one it is the difference and only
- * the difference — one muted line saying everything below is included, then what this length adds,
- * with what it costs extra set beside the price. That is the owner's «обязательно посветить что
- * тренировка за 60 минут даст по сравнению с 30»: the comparison is the argument, and a second
- * list of four that happens to contain the first two makes the reader find it themselves.
+ * **It used to be a comparison and is not any more.** The hour showed the price gap beside the
+ * price («+1 000 ₽ к 30 минутам»), one muted «Всё из 30 минут», and then a kicker «Сверх 30 минут»
+ * over the two lines the hour adds. The owner struck the first two by name, and the third had
+ * nothing left to stand on — a list headed «what this adds» only means anything next to a statement
+ * of what it adds *to*.
+ *
+ * So each length now simply says what it is: the price, and everything in it. The hour's list is
+ * four lines instead of two, which is the honest answer to «что я получу за 3 500 ₽» and needs no
+ * arithmetic from the reader. The switch above is what lets the two be compared, and it always was.
  */
 function Option({
   option,
-  previous,
   payment,
   redirecting,
   onPay,
   contactHref,
 }: {
   option: BookingOption;
-  previous: BookingOption | undefined;
   payment: URL | null;
   redirecting: boolean;
   onPay: () => void;
@@ -552,51 +552,21 @@ function Option({
 }) {
   const { t, locale } = useT();
   const price = formatPrice(locale, option.price);
-  const adds = option.adds ?? [];
-  const delta = previous && adds.length > 0 ? previous : undefined;
-  const extra: CoursePrice | undefined = delta
-    ? { rub: option.price.rub - delta.price.rub, usd: option.price.usd - delta.price.usd }
-    : undefined;
-  const shown = delta ? adds : option.includes;
 
   return (
     <article className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <p className="display tabular text-[clamp(34px,11vw,48px)] leading-none">{price}</p>
-        {delta && extra ? (
-          <p className="text-sm text-muted">
-            {t('app.bookPriceDelta', {
-              price: formatPrice(locale, extra),
-              n: delta.durationMin,
-            })}
-          </p>
-        ) : null}
-      </div>
+      <p className="display tabular text-[clamp(34px,11vw,48px)] leading-none">{price}</p>
 
       <div className="flex flex-col gap-3">
-        {/*
-         * The shorter length is settled first and in one muted line, and only then does the
-         * kicker say that what follows is extra. The other order — «СВЕРХ 30 МИНУТ» and then
-         * «Всё из 30 минут» under it — reads as a contradiction for as long as it takes to work
-         * out that the second line is not part of the first.
-         */}
-        {delta ? (
-          <p className="flex items-center gap-3 text-[13px] text-muted-2">
-            <Glyph size={12}>✓</Glyph>
-            {t('app.bookIncludesPrev', { n: delta.durationMin })}
-          </p>
-        ) : null}
-        <span className="eyebrow">
-          {delta ? t('app.bookAdds', { n: delta.durationMin }) : t('app.bookIncludes')}
-        </span>
+        <span className="eyebrow">{t('app.bookIncludes')}</span>
         <ul className="flex flex-col border-t border-border">
-          {shown.map((item) => (
+          {option.includes.map((item) => (
             <li
               key={item.en}
               className="flex items-start gap-3 border-t border-border py-2.5 text-[15px] leading-snug first:border-t-0 first:pt-3"
             >
               <Glyph size={14} className="mt-1 text-muted">
-                {delta ? '+' : '✓'}
+                ✓
               </Glyph>
               <span>{l(item, locale)}</span>
             </li>

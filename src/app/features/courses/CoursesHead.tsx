@@ -14,9 +14,13 @@
  *   - **The avatar is gone**, and an outline person glyph beside the name opens the account in its
  *     place. Nobody in this product uploads a picture, so the circle was a generated monogram
  *     standing in for a photograph that does not exist.
- *   - **The streak and the achievements moved to the top right**, onto a dark grey fill, and they
- *     took their proper shapes: the streak is a **pill**, the achievements a **circle**
+ *   - **The count and the achievements moved to the top right**, onto a dark grey fill, and they
+ *     took their proper shapes: the count is a **pill**, the achievements a **circle**
  *     (`design/CHANGELOG.md` §10 — a fact is a pill, a rank is a circle).
+ *
+ * The pill held a streak — 🔥 and the number of days in a row — until the owner struck the whole
+ * mechanic: «стрик нам не подходит… человеку не надо каждый день так заниматься». It holds the
+ * number of workouts now. Same slot, same shape, same tap; a number that only goes up.
  *
  * The achievements circle holds only the rosette. It used to carry «5/13» and the mockup does not,
  * which is a real loss of a figure — so the count stays in the accessible name, where a screen
@@ -29,7 +33,7 @@ import { formatNumber } from '@/i18n/index';
 import type { TKey } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
 import { dayPart } from '@/app/features/home/greeting';
-import { StreakSheet } from '@/app/features/stats/StreakSheet';
+import { TrainingSheet } from '@/app/features/stats/TrainingSheet';
 
 /**
  * The greeting without the name in it — the mockup sets the name on its own line, so there is
@@ -46,7 +50,8 @@ const GREET_KEY: Record<ReturnType<typeof dayPart>, TKey> = {
 export interface CoursesHeadProps {
   /** First name, from the profile or the address — `greetingName()` decides it. */
   name: string;
-  streak: number;
+  /** Workouts finished, ever. */
+  workouts: number;
   /** Achievements taken and achievements there are — the catalogue's own figure. */
   unlocked: number;
   total: number;
@@ -54,7 +59,7 @@ export interface CoursesHeadProps {
   onAccount: () => void;
 }
 
-export function CoursesHead({ name, streak, unlocked, total, onAccount }: CoursesHeadProps) {
+export function CoursesHead({ name, workouts, unlocked, total, onAccount }: CoursesHeadProps) {
   const { t, locale } = useT();
   const navigate = useNavigate();
   const [calendar, setCalendar] = useState(false);
@@ -88,17 +93,17 @@ export function CoursesHead({ name, streak, unlocked, total, onAccount }: Course
       <div className="flex shrink-0 items-center gap-2 pt-1.5">
         <button
           type="button"
-          aria-label={`${t('app.homeStreakTitle')}: ${formatNumber(locale, streak)}`}
+          aria-label={`${t('app.homeWorkoutsTitle')}: ${formatNumber(locale, workouts)}`}
           onClick={() => setCalendar(true)}
           className="flex h-9 items-center gap-1.5 rounded-pill bg-surface-2 px-3 text-text transition-colors duration-150 ease-(--ease-out) hover:bg-surface-3"
         >
           {/*
-           * The one emoji in the product, and it is the owner's: her mockup sets a colour 🔥 in
+           * The one emoji in the product, and it is the owner's: her mockup sets a colour emoji in
            * this pill and a monochrome mark in the circle beside it. That asymmetry is deliberate
-           * — the streak is the number you come back for and it is allowed to be warm — so the
-           * outline `flame` this pill used to carry is gone and the rosette next door stays ours.
-           * `aria-hidden`, because the button already has a name and a screen reader announcing
-           * «огонь» before the figure says nothing the label has not said.
+           * — this is the number you come back for and it is allowed to be warm — so the outline
+           * icon this pill used to carry is gone and the rosette next door stays ours. It was 🔥
+           * for the streak; a flame is a thing that goes out, which is the wrong promise for a
+           * tally that cannot. `aria-hidden`, because the button already has a name.
            *
            * `.emoji` is the shared setting (src/styles/global.css) — a fixed square, out of the
            * baseline, with the colour-emoji font named ahead of the fallbacks so the Android
@@ -107,10 +112,10 @@ export function CoursesHead({ name, streak, unlocked, total, onAccount }: Course
            * cap-height-matched default has nothing to match against.
            */}
           <span aria-hidden="true" className="emoji" style={{ fontSize: 15 }}>
-            🔥
+            💪
           </span>
           <span className="tabular text-[13px] leading-none font-medium">
-            {formatNumber(locale, streak)}
+            {formatNumber(locale, workouts)}
           </span>
         </button>
         <button
@@ -125,7 +130,7 @@ export function CoursesHead({ name, streak, unlocked, total, onAccount }: Course
           <Icon name="rosette" size={17} strokeWidth={1.7} />
         </button>
       </div>
-      <StreakSheet open={calendar} onClose={() => setCalendar(false)} />
+      <TrainingSheet open={calendar} onClose={() => setCalendar(false)} />
     </div>
   );
 }

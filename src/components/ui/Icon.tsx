@@ -147,7 +147,7 @@ export const ICONS: Record<IconName, IconDef> = {
     d: 'M15.6 8a3.6 3.6 0 1 1-7.2 0 3.6 3.6 0 1 1 7.2 0M19 18.2a7 3.8 0 1 1-14 0 7 3.8 0 1 1 14 0',
   },
   /*
-   * A rosette, for the achievements circle beside the streak.
+   * A rosette, for the achievements circle beside the workout count.
    *
    * It replaces `trophy` there. A cup is the prize at the end of something; the achievements
    * catalogue is thirteen marks you collect along the way, which is what a medal on a ribbon says

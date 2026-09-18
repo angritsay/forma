@@ -24,8 +24,8 @@ import { getMyTotals } from '@/lib/api/stats';
 import type { BenchmarkSeries, CourseStateRow, MyTotals, WorkoutSessionRow } from '@/lib/api/types';
 import { computeFitnessIndex, initialScale } from '@/lib/training/assessment';
 import { starsForSession } from '@/lib/training/stars';
-import { computeStreak } from '@/lib/training/streak';
-import type { CourseState, SessionSummary, StreakInfo } from '@/lib/training/types';
+import { countTraining } from '@/lib/training/consistency';
+import type { CourseState, SessionSummary, TrainingCount } from '@/lib/training/types';
 import { toLocalDateIso } from '@/lib/util/dates';
 import {
   buildDayActivity,
@@ -204,8 +204,11 @@ export function starsByNode(
   return best;
 }
 
-export function selectStreak(sessions: readonly WorkoutSessionRow[], todayIso: string): StreakInfo {
-  return computeStreak(buildDayActivity(sessions), todayIso);
+export function selectTrainingCount(
+  sessions: readonly WorkoutSessionRow[],
+  todayIso: string,
+): TrainingCount {
+  return countTraining(buildDayActivity(sessions), todayIso);
 }
 
 function keyBy<T>(rows: readonly T[], key: (row: T) => string): Record<string, T> {
@@ -397,10 +400,10 @@ export function useEngineCourseState(courseId: string): CourseState {
   );
 }
 
-export function useStreak(): StreakInfo {
+export function useTrainingCount(): TrainingCount {
   const sessions = useProgress((s) => s.recentSessions);
   const today = useTodayIso();
-  return useMemo(() => selectStreak(sessions, today), [sessions, today]);
+  return useMemo(() => selectTrainingCount(sessions, today), [sessions, today]);
 }
 
 export function useWeekStats(): WeekStats {

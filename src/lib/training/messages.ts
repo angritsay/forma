@@ -118,17 +118,22 @@ export const ACHIEVEMENT_COPY = {
     title: { ru: 'Сотня', en: 'Century' },
     description: { ru: 'Заверши 100 тренировок.', en: 'Finish 100 workouts.' },
   },
-  streak_3: {
+  // These three used to ask for 3, 7 and 30 days in a row. See `levels.ts` for why they no longer
+  // do: a course with two rest days a week cannot be followed and hold a seven-day streak.
+  workouts_10: {
     title: { ru: 'Разгон', en: 'Warm start' },
-    description: { ru: 'Держи серию 3 дня подряд.', en: 'Keep a 3-day streak.' },
+    description: { ru: 'Заверши 10 тренировок.', en: 'Finish 10 workouts.' },
   },
-  streak_7: {
-    title: { ru: 'Неделя без пропусков', en: 'Seven straight' },
-    description: { ru: 'Держи серию 7 дней подряд.', en: 'Keep a 7-day streak.' },
+  week_three: {
+    title: { ru: 'Хорошая неделя', en: 'A good week' },
+    description: { ru: 'Три тренировки за одну неделю.', en: 'Three workouts in one week.' },
   },
-  streak_30: {
-    title: { ru: 'Месяц дисциплины', en: 'Thirty strong' },
-    description: { ru: 'Держи серию 30 дней подряд.', en: 'Keep a 30-day streak.' },
+  weeks_8: {
+    title: { ru: 'Два месяца в деле', en: 'Two months in' },
+    description: {
+      ru: 'Тренируйся на восьми разных неделях — подряд не обязательно.',
+      en: 'Train in eight different weeks — they need not run together.',
+    },
   },
   first_benchmark: {
     title: { ru: 'Точка отсчёта', en: 'Baseline' },

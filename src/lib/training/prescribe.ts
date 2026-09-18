@@ -623,7 +623,6 @@ export function prescribeWorkout(
     estimatedSec: sum(blocks.map((b) => b.estimatedSec)),
     points: estimatePoints(workout, choice, {
       ...(opts.repeat !== undefined ? { repeat: opts.repeat } : {}),
-      ...(opts.streakDays !== undefined ? { streakDays: opts.streakDays } : {}),
     }),
   };
 }

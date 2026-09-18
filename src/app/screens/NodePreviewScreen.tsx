@@ -64,7 +64,6 @@ import {
   useEngineCourseState,
   useProgress,
   useProgressLoader,
-  useStreak,
 } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
 
@@ -89,7 +88,6 @@ export default function NodePreviewScreen() {
   const row = useCourseStateRow(course?.id);
   const engineState = useEngineCourseState(course?.id ?? '');
   const ctx = useTrainingContext();
-  const streak = useStreak();
   const activeSession = useActiveWorkoutStore((s) => s.session);
   const [chooserOpen, setChooserOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -100,7 +98,6 @@ export default function NodePreviewScreen() {
 
   const repeat = row?.completedNodeIds.includes(nodeId) ?? false;
   const deload = node?.deload === true;
-  const streakDays = streak.current;
 
   const recommendation = useMemo<Recommendation | null>(
     () => (ctx.profile ? recommendDifficulty(engineState, ctx.profile, nowIso) : null),
@@ -123,10 +120,9 @@ export default function NodePreviewScreen() {
         ...(ctx.weightKg !== undefined ? { weightKg: ctx.weightKg } : {}),
         deload,
         repeat,
-        streakDays,
       }),
     );
-  }, [workout, ctx, engineState.scale, deload, repeat, streakDays]);
+  }, [workout, ctx, engineState.scale, deload, repeat]);
 
   if (!course || !node) {
     return (
@@ -217,7 +213,6 @@ export default function NodePreviewScreen() {
               level: ctx.level,
               deload,
               repeat,
-              streakDays: streak.current,
             });
       const startedAt = new Date().toISOString();
       const { id: sessionId } = await startSession({
@@ -386,9 +381,14 @@ export default function NodePreviewScreen() {
                 text={l(workout.name)}
                 className="text-6xl text-course-accent"
               />
+              {/*
+                Course and block, and the day is gone from it. It read «Форма с нуля · Неделя 1 ·
+                День 1» over a title that already says «Тренировка 1» — three numbers for one
+                position — and «День» was the more misleading of the two now that the path is the
+                coach's twenty sessions rather than a calendar of twenty-eight.
+              */}
               <p className="eyebrow mt-3.5 text-paper/75">
-                {l(courseTitle(course))} ·{' '}
-                {t('app.homeTodayWeek', { week: node.week, day: node.day })}
+                {l(courseTitle(course))} · {t('app.pathWeek', { n: node.week })}
               </p>
               {facts.length > 0 ? (
                 <ul className="mt-5 flex flex-wrap gap-2" aria-label={l(workout.name)}>

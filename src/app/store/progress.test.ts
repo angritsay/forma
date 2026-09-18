@@ -4,7 +4,7 @@ import type { CourseStateRow, WorkoutSessionRow } from '@/lib/api/types';
 import {
   engineCourseState,
   resolveActiveCourseId,
-  selectStreak,
+  selectTrainingCount,
   sessionToSummary,
   startingScale,
 } from './progress';
@@ -110,16 +110,18 @@ describe('sessionToSummary / engineCourseState', () => {
   });
 });
 
-describe('selectStreak', () => {
+describe('selectTrainingCount', () => {
   /*
-   * It used to count a step-goal day beside a workout day, and the fixture carried a `daily_logs`
-   * row to prove it. Steps are gone; only the session is left, and the streak is one day long and
-   * at risk because today has nothing in it.
+   * It used to be `selectStreak`, and this test used to assert that the streak was one day long
+   * and «at risk» because today had nothing in it. There is no such thing as at risk now: the
+   * session sits in last Tuesday and the count is one, today or any day after.
    */
-  it('counts workout days, and flags today as at risk', () => {
-    const streak = selectStreak([session({})], '2026-09-02');
-    expect(streak.current).toBe(1);
-    expect(streak.atRisk).toBe(true);
+  it('counts workout days and does not care that today is empty', () => {
+    const count = selectTrainingCount([session({})], '2026-09-02');
+    expect(count.total).toBe(1);
+    expect(count.todayDone).toBe(false);
+    // A month later the same row still counts for one; nothing decays.
+    expect(selectTrainingCount([session({})], '2026-10-02').total).toBe(1);
   });
 });
 

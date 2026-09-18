@@ -495,13 +495,11 @@ describe('estimates and points', () => {
     expect(p.blocks.map((b) => b.estimatedSec)).toEqual([81, 446, 620, 250, 53]);
     expect(p.estimatedSec).toBe(1450);
     expect(p.points).toBe(120);
+    // 120 base × 1.25 harder × 0.5 repeat = 75. It was 90 while a 30-day streak added a fifth.
     expect(
-      prescribeWorkout(
-        FULL_WORKOUT,
-        base({ choice: 'harder', repeat: true, streakDays: 30 }),
-        fixtureLookup,
-      ).points,
-    ).toBe(90);
+      prescribeWorkout(FULL_WORKOUT, base({ choice: 'harder', repeat: true }), fixtureLookup)
+        .points,
+    ).toBe(75);
   });
 
   it('survives an exercise that is missing from the lookup', () => {

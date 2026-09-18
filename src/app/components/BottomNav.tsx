@@ -30,7 +30,7 @@ export interface NavItem {
  * What went: «Сегодня», whose one question — what am I doing today — is the first thing «Курсы»
  * answers, and «Прогресс», which was a tab full of figures about a screen that no longer existed.
  * The profile had already given up its seat; its last five rows are a sheet behind the avatar on
- * «Курсы» now, and the streak and the achievements are two small entry points beside it.
+ * «Курсы» now, and the workout count and the achievements are two small entry points beside it.
  *
  * The three that are left are the three things the product *is*: the courses you are walking, the
  * club that meets every day, and the coach whose hour you can book. The admin's seat is not a

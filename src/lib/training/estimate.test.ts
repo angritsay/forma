@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_WEIGHT_KG, REST_MET } from './constants';
-import {
-  estimateCalories,
-  estimateDuration,
-  estimatePoints,
-  streakBonus,
-  workoutVolume,
-} from './estimate';
+import { estimateCalories, estimateDuration, estimatePoints, workoutVolume } from './estimate';
 import {
   block,
   fixtureLookup,
@@ -220,23 +214,21 @@ describe('estimateCalories', () => {
 });
 
 describe('estimatePoints', () => {
-  it('applies choice, repeat and streak multipliers', () => {
+  it('applies the choice and the repeat multiplier, and nothing else', () => {
     expect(estimatePoints(FULL_WORKOUT, 'normal')).toBe(120);
     expect(estimatePoints(FULL_WORKOUT, 'harder')).toBe(150);
     expect(estimatePoints(FULL_WORKOUT, 'easier')).toBe(96);
     expect(estimatePoints(FULL_WORKOUT, 'normal', { repeat: true })).toBe(60);
-    expect(estimatePoints(FULL_WORKOUT, 'normal', { streakDays: 7 })).toBe(132);
-    expect(estimatePoints(FULL_WORKOUT, 'normal', { streakDays: 30 })).toBe(144);
-    expect(estimatePoints(FULL_WORKOUT, 'harder', { repeat: true, streakDays: 30 })).toBe(90);
+    expect(estimatePoints(FULL_WORKOUT, 'harder', { repeat: true })).toBe(75);
   });
 
-  it('streak bonus tiers: 0 below 7, 10% at 7..29, 20% at 30+', () => {
-    expect(streakBonus(undefined)).toBe(0);
-    expect(streakBonus(6)).toBe(0);
-    expect(streakBonus(7)).toBe(0.1);
-    expect(streakBonus(29)).toBe(0.1);
-    expect(streakBonus(30)).toBe(0.2);
-    expect(streakBonus(365)).toBe(0.2);
+  it('cannot be raised by how many days in a row the athlete trained', () => {
+    // The streak bonus used to add up to a fifth here. It is gone, and the point of this test is
+    // that it stays gone: a course that schedules rest days must not price them as a loss.
+    const plain = estimatePoints(FULL_WORKOUT, 'normal');
+    for (const streakDays of [0, 7, 30, 365]) {
+      expect(estimatePoints(FULL_WORKOUT, 'normal', { streakDays } as never)).toBe(plain);
+    }
   });
 });
 

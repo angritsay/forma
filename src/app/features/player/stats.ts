@@ -8,11 +8,15 @@ import { listBenchmarks } from '@/lib/api/benchmarks';
 import { listCourseStates } from '@/lib/api/courseState';
 import { listSessionsBetween } from '@/lib/api/sessions';
 import { getMyTotals } from '@/lib/api/stats';
-import { computeStreak } from '@/lib/training/streak';
+import { countTraining } from '@/lib/training/consistency';
 import type { DayActivity, UserStats } from '@/lib/training/types';
 import { addDays, toLocalDateIso } from '@/lib/util/dates';
 
-/** Streak history window (days). Longer streaks are already reflected in `longest`. */
+/*
+ * How far back the day-by-day history is read, for the two achievements that are about weeks
+ * («Хорошая неделя», «Два месяца в деле»). Four months covers the eight weeks the longer one asks
+ * for with room to spare; the plain workout count comes from `getMyTotals()` and is not windowed.
+ */
 const HISTORY_DAYS = 120;
 
 export async function loadUserStats(today: string = toLocalDateIso()): Promise<UserStats> {
@@ -35,7 +39,7 @@ export async function loadUserStats(today: string = toLocalDateIso()): Promise<U
   };
   for (const s of sessions) if (s.completedAt) day(s.localDate).workoutDone = true;
 
-  const streak = computeStreak([...days.values()], today);
+  const training = countTraining([...days.values()], today);
   const coursesCompleted = states.filter((st) => {
     const course = findCourse(st.courseId);
     if (!course) return false;
@@ -48,8 +52,8 @@ export async function loadUserStats(today: string = toLocalDateIso()): Promise<U
   return {
     workouts: totals.workouts,
     points: totals.points,
-    streakCurrent: streak.current,
-    streakLongest: streak.longest,
+    bestWeek: training.bestWeek,
+    activeWeeks: training.activeWeeks,
     benchmarksDone: benchmarks.reduce((n, s) => n + s.history.length, 0),
     coursesCompleted,
     totalMinutes: totals.minutes,

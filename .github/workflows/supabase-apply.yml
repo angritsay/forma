@@ -272,28 +272,71 @@ jobs:
           echo "This does not fix deliverability. SPF, DKIM and DMARC are DNS and are still outstanding (docs/SETUP.md §3.5.1)."
 
       # ---------------------------------------------------------------------
-      # The bot. Deploying is all this does; the token it needs at runtime is a
-      # Supabase secret and is set below only if it has been given to GitHub.
-      # Telegram still has to be pointed at the function once, by hand, because
-      # setWebhook needs the bot token and that is not ours to hold.
+      # The bot: deploy it, give it its secrets, and point Telegram at it.
+      #
+      # **This step is the whole answer to "the Start button does nothing."**
+      # Tapping Start in a Telegram chat sends `/start` to Telegram, and
+      # Telegram delivers it to whatever URL `setWebhook` names. Until that call
+      # is made there is no URL, so the message goes nowhere and the bot is
+      # silent — which looks exactly like a broken button and is not one. The
+      # call used to be left for a human to make by hand from the docs; it is
+      # three secrets and a URL, so the runner makes it instead.
+      #
+      # Nothing here prints a token. `setWebhook` carries the bot token in its
+      # path, so the URL is built into a variable and curl is given `--silent`
+      # with an `-o` file; only Telegram's parsed answer is echoed, and
+      # `getWebhookInfo` below returns no credential at all. `set -x` is never
+      # switched on in this step for the same reason.
       # ---------------------------------------------------------------------
-      - name: Deploy the Telegram bot
+      - name: Deploy the Telegram bot and point Telegram at it
         if: ${{ inputs.task == 'deploy-bot' }}
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
+          MINI_APP_URL: ${{ vars.MINI_APP_URL }}
         run: |
           set -euo pipefail
           curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz \
             | tar -xz -C /tmp
           /tmp/supabase functions deploy telegram-bot --project-ref "$PROJECT_REF" --no-verify-jwt
-          if [ -n "${BOT_TOKEN:-}" ]; then
-            /tmp/supabase secrets set --project-ref "$PROJECT_REF" \
-              TELEGRAM_BOT_TOKEN="$BOT_TOKEN" \
-              ${WEBHOOK_SECRET:+TELEGRAM_WEBHOOK_SECRET="$WEBHOOK_SECRET"} >/dev/null
-            echo "Function deployed and its secrets set."
-          else
-            echo "::warning::Deployed, but TELEGRAM_BOT_TOKEN is not a GitHub secret, so the function has no token and will stay silent. Add it as a repository secret and run this again."
+
+          if [ -z "${BOT_TOKEN:-}" ]; then
+            echo "::error::Deployed, but TELEGRAM_BOT_TOKEN is not a GitHub secret, so the function has no token and Telegram has nowhere to deliver /start. Add it: Settings → Secrets and variables → Actions → New repository secret, name TELEGRAM_BOT_TOKEN, value the token BotFather gave you. Then run this task again."
+            exit 1
           fi
-          echo "Still to do once, by hand: point Telegram at the function with setWebhook (docs/SETUP.md §7.6)."
+
+          # The runtime secrets. MINI_APP_URL is optional — the function has a
+          # default — and is only set when the repository variable exists.
+          /tmp/supabase secrets set --project-ref "$PROJECT_REF" \
+            TELEGRAM_BOT_TOKEN="$BOT_TOKEN" \
+            ${WEBHOOK_SECRET:+TELEGRAM_WEBHOOK_SECRET="$WEBHOOK_SECRET"} \
+            ${MINI_APP_URL:+MINI_APP_URL="$MINI_APP_URL"} >/dev/null
+          echo "Function deployed and its secrets set."
+
+          if [ -z "${WEBHOOK_SECRET:-}" ]; then
+            echo "::warning::TELEGRAM_WEBHOOK_SECRET is not set, so the webhook will be unauthenticated — anyone who guesses the URL can post updates to it. Generate one (openssl rand -hex 32), add it as a repository secret, and run this again."
+          fi
+
+          HOOK_URL="https://$PROJECT_REF.functions.supabase.co/telegram-bot"
+          API="https://api.telegram.org/bot$BOT_TOKEN"
+
+          # drop_pending_updates: every /start sent while the bot was silent is
+          # queued at Telegram. Replaying weeks of them at the moment the hook
+          # goes live would mail a greeting to people who are long gone.
+          curl -sS -o /tmp/hook.json -X POST "$API/setWebhook" \
+            --data-urlencode "url=$HOOK_URL" \
+            --data-urlencode "drop_pending_updates=true" \
+            ${WEBHOOK_SECRET:+--data-urlencode "secret_token=$WEBHOOK_SECRET"}
+          if [ "$(jq -r '.ok' < /tmp/hook.json)" != "true" ]; then
+            echo "::error::setWebhook was refused: $(jq -r '.description // "(no description)"' < /tmp/hook.json)"
+            exit 1
+          fi
+          echo "Telegram now delivers /start to $HOOK_URL"
+
+          # Read it back, so the run says what Telegram itself believes rather
+          # than what we just asked for. None of these fields is a credential.
+          curl -sS -o /tmp/info.json "$API/getWebhookInfo"
+          jq -r '.result | "url: \(.url)\npending: \(.pending_update_count)\nlast error: \(.last_error_message // "none")"' < /tmp/info.json
+          echo
+          echo "Open the bot in Telegram and press Start. It should answer with the greeting and a button."

@@ -4,8 +4,9 @@
  * Level 1, 4 weeks, 5 sessions per week: the coach's own beginner programme, transcribed from
  * the 20 workouts he posted to his `‼️НОВИЧКИ‼️` channel (docs/COACH_SOURCE.md — each workout
  * below names the message it comes from). The app adds what the channel did not have: a
- * retest at the end so the numbers can be compared with the onboarding self-tests, warm-up /
- * cool-down blocks in the player, and rest days with a step goal in between. There is no
+ * retest at the end so the numbers can be compared with the onboarding self-tests and warm-up /
+ * cool-down blocks in the player. (It used to add rest days with a step goal between his sessions
+ * too; the path is his twenty workouts and nothing else now — see `NODES`.) There is no
  * max-effort test on day one: the coach's rule is that the first session must not destroy
  * anyone, and the onboarding already sets the starting load.
  *
@@ -1035,17 +1036,6 @@ const WORKOUTS: WorkoutInput[] = [
 /* Nodes (the path)                                                                          */
 /* ---------------------------------------------------------------------------------------- */
 
-function restNode(week: number, day: number, subtitle: L10n): NodeInput {
-  return {
-    id: `w${week}_d${day}_rest`,
-    week,
-    day,
-    kind: 'rest',
-    title: l('Отдых и прогулка', 'Rest & walk'),
-    subtitle,
-  };
-}
-
 function workoutNode(
   week: number,
   day: number,
@@ -1065,30 +1055,30 @@ function workoutNode(
   };
 }
 
-/** The coach's rest-day line under every workout: "👣 alternative — 10 000 steps". */
-const REST_STEPS = l(
-  '10000 шагов и сон — так растёт сила',
-  '10,000 steps and sleep — that is how strength grows',
-);
-const REST_SORENESS = l(
-  'Пройдись: лёгкое движение снимает крепатуру',
-  'Go for a walk: gentle movement eases soreness',
-);
-const REST_RECOVERY = l(
-  'Восстановление — часть тренировки, а не пауза в ней',
-  'Recovery is part of the training, not a break from it',
-);
-const REST_WEEKEND = l(
-  'Выходные: два дня прогулок, сна и нормальной еды',
-  'Weekend: two days of walks, sleep and proper food',
-);
-const REST_BEFORE_TEST = l(
-  'Завтра повторный тест. Пройдись, выспись, не переедай',
-  'Retest tomorrow. Walk, sleep well, do not overeat',
-);
-
+/*
+ * **The path is the twenty workouts and nothing else.**
+ *
+ * It used to hold eight more nodes — «Отдых и прогулка», one for every day of the week Sergey did
+ * not schedule a session on — so a four-week course was twenty-eight steps and a person opening it
+ * saw a calendar they had to keep up with. The owner ended that: «там сейчас не на каждый день в
+ * итоге должны быть тренировки, а просто путь тренировок, который написал Серёжа изначально».
+ *
+ * She is describing what the coach actually wrote. His programme is twenty sessions in four blocks
+ * of five; the rest days were added here, by us, to turn his list into a diary. They cost more than
+ * they gave: a node you cannot fail sitting between the ones you can, a tap to mark that you did
+ * nothing, and — since the step feature went — one of them still advising «10 000 шагов и сон»,
+ * which nothing in the app can see any more.
+ *
+ * Rest has not stopped mattering, and the course still says so where it belongs: in `outcomes` and
+ * in the coach's own description of how to space the sessions. It is simply not a step on a path.
+ *
+ * `day` is now the position of the session inside its block, 1…5, and no longer a day of the week.
+ * Two node ids moved with it — `w4_d5_s19` → `w4_d4_s19` and `w4_d7_s20` → `w4_d5_s20` — because
+ * the two benchmarks used to have rest days between them. Nobody who has not already finished the
+ * fourth week is affected, and the two would re-open as undone for anyone who has.
+ */
 const NODES: NodeInput[] = [
-  /* Week 1 — the coach's first session is deliberately the first session, no baseline test. */
+  /* Block 1 — the coach's first session is deliberately the first session, no baseline test. */
   workoutNode(1, 1, 1, 'w_s01_emom', l('По таймеру, 3 движения', 'By the timer, 3 movements')),
   workoutNode(1, 2, 2, 'w_s02_emom', l('По таймеру, 3 движения', 'By the timer, 3 movements')),
   workoutNode(
@@ -1100,10 +1090,8 @@ const NODES: NodeInput[] = [
   ),
   workoutNode(1, 4, 4, 'w_s04_bridges', l('Мосты 5 мин, цель 100', 'Bridges 5 min, target 100')),
   workoutNode(1, 5, 5, 'w_s05_three_rounds', l('3 круга на время', '3 rounds for time')),
-  restNode(1, 6, REST_SORENESS),
-  restNode(1, 7, REST_WEEKEND),
 
-  /* Week 2 */
+  /* Block 2 */
   workoutNode(2, 1, 6, 'w_s06_amrap8', l('AMRAP 8 мин', 'AMRAP 8 min')),
   workoutNode(2, 2, 7, 'w_s07_emom_ladder', l('EMOM 8, +2 во 2-м круге', 'EMOM 8, +2 in loop 2')),
   workoutNode(2, 3, 8, 'w_s08_two_rounds', l('2 круга, крышка 10 мин', '2 rounds, 10-min cap')),
@@ -1115,10 +1103,8 @@ const NODES: NodeInput[] = [
     l('2 круга на время, крышка 8', '2 rounds for time, cap 8'),
   ),
   workoutNode(2, 5, 10, 'w_s10_every_2min', l('4 круга раз в 2 минуты', '4 rounds every 2 min')),
-  restNode(2, 6, REST_STEPS),
-  restNode(2, 7, REST_WEEKEND),
 
-  /* Week 3 */
+  /* Block 3 */
   workoutNode(3, 1, 11, 'w_s11_emom8', l('EMOM 8 мин', 'EMOM 8 min')),
   workoutNode(3, 2, 12, 'w_s12_step_ladder', l('Лесенка вниз', 'Descending ladder')),
   workoutNode(
@@ -1130,26 +1116,22 @@ const NODES: NodeInput[] = [
   ),
   workoutNode(3, 4, 14, 'w_s14_double', l('Два круга: 20 и 40', 'Two rounds: 20 and 40')),
   workoutNode(3, 5, 15, 'w_s15_amrap8', l('AMRAP 8 мин', 'AMRAP 8 min')),
-  restNode(3, 6, REST_STEPS),
-  restNode(3, 7, REST_WEEKEND),
 
-  /* Week 4 — ends on the benchmark finale (day 20), the course's last node. */
+  /* Block 4 — ends on the benchmark finale (workout 20), the course's last node. */
   workoutNode(4, 1, 16, 'w_s16_chipper', l('Чиппер, крышка 13 мин', 'Chipper, 13-min cap')),
   workoutNode(4, 2, 17, 'w_s17_buyin', l('Входной билет + червячки', 'Buy-in + inchworms')),
   workoutNode(4, 3, 18, 'w_s18_intervals', l('Два интервала по 2 мин', 'Two 2-min intervals')),
-  restNode(4, 4, REST_RECOVERY),
   workoutNode(
     4,
-    5,
+    4,
     19,
     'w_s19_inchworm_ladder',
     l('Лесенка червячков — точка отсчёта', 'Inchworm ladder — a benchmark'),
     'benchmark',
   ),
-  restNode(4, 6, REST_BEFORE_TEST),
   workoutNode(
     4,
-    7,
+    5,
     20,
     'w_s20_finisher',
     l('3 круга — сравни с первой', '3 rounds — compare to workout 1'),
@@ -1171,12 +1153,12 @@ export const COURSE_START: CourseInput = {
   name: l('Форма с нуля: кроссфит дома без оборудования', 'Forma. Start: home CrossFit basics'),
   shortName: l('Форма с нуля', 'Forma. Start'),
   tagline: l(
-    'Четыре недели по программе тренера для новичков: коротко, по кругу, без оборудования.',
-    'Four weeks of the coach’s own beginner programme: short, in rounds, no equipment.',
+    'Двадцать тренировок по программе тренера для новичков: коротко, по кругу, без оборудования.',
+    'Twenty workouts from the coach’s own beginner programme: short, in rounds, no equipment.',
   ),
   description: l(
-    'Программа для тех, кто начинает с нуля или возвращается после долгого перерыва. Двадцать коротких тренировок за двадцать дней — те самые, по которым тренер ведёт новичков: отжимания с колен, приседания, ситапы, выпады, зашагивания и червячки. Пять раз в неделю по 15–20 минут вместе с разминкой и заминкой, нагрузка подстраивается под тебя.',
-    'A programme for complete beginners and anyone coming back after a long break. Twenty short sessions over twenty days — the same ones the coach runs his beginners through: knee push-ups, squats, sit-ups, lunges, step-ups and inchworms. Five times a week, 15–20 minutes each including warm-up and cool-down, and the load adapts to you.',
+    'Программа для тех, кто начинает с нуля или возвращается после долгого перерыва. Двадцать коротких тренировок — те самые, по которым тренер ведёт новичков: отжимания с колен, приседания, ситапы, выпады, зашагивания и червячки. По 15–20 минут вместе с разминкой и заминкой, в своём темпе, нагрузка подстраивается под тебя.',
+    'A programme for complete beginners and anyone coming back after a long break. Twenty short workouts — the same ones the coach runs his beginners through: knee push-ups, squats, sit-ups, lunges, step-ups and inchworms. 15–20 minutes each including warm-up and cool-down, at your own pace, and the load adapts to you.',
   ),
   longDescription: [
     l(
@@ -1184,8 +1166,8 @@ export const COURSE_START: CourseInput = {
       'Start is the beginner programme the coach runs with his own group, moved into the app without changing what matters: the same 20 sessions, the same order, the same words. The aim of the first weeks is to work the big muscle groups and get you into the process, not to wring you out. The coach demonstrates every session himself: every movement has his video.',
     ),
     l(
-      'Первые тренировки — работа по таймеру: каждую минуту новое движение, потом простые круги с минутой отдыха. Дальше форматы кроссфита по одному: три круга на время, AMRAP, EMOM, старт раз в 2–3 минуты, лесенки и длинный комплекс на время. Пять тренировок в неделю, два дня — отдых с целью 10000 шагов: мышцы восстанавливаются лучше, когда ты двигаешься, а не лежишь.',
-      'The first sessions are work by the timer — a new movement every minute — then simple rounds with a minute of rest. The CrossFit formats arrive one at a time: three rounds for time, AMRAP, EMOM, starts every 2–3 minutes, ladders and a long chipper for time. Five sessions a week, two rest days with a 10,000-step goal — muscles recover better when you move than when you lie still.',
+      'Первые тренировки — работа по таймеру: каждую минуту новое движение, потом простые круги с минутой отдыха. Дальше форматы кроссфита по одному: три круга на время, AMRAP, EMOM, старт раз в 2–3 минуты, лесенки и длинный комплекс на время. Двадцать тренировок, по пять в блоке. Тренер советует пять в неделю, но путь не привязан к календарю: между тренировками нужен отдых, а пропущенная неделя ничего не ломает — следующая ждёт на том же месте.',
+      'The first sessions are work by the timer — a new movement every minute — then simple rounds with a minute of rest. The CrossFit formats arrive one at a time: three rounds for time, AMRAP, EMOM, starts every 2–3 minutes, ladders and a long chipper for time. Twenty workouts in four blocks of five. The coach suggests five a week, but the path is not tied to a calendar: you need rest between sessions, and a week off breaks nothing — the next one waits where you left it.',
     ),
     l(
       'Тренировки короткие — 15–20 минут вместе с разминкой и заминкой, самая длинная около 23. Сама работа — 5–15 минут, как у тренера; разминка — суставная гимнастика сверху вниз, без бега — и растяжка в конце в это время не входят. Из инвентаря нужны коврик и устойчивый стул: от него ты будешь отжиматься и на него зашагивать. Приложение считает, сколько повторений тебе делать сегодня, по результатам прошлой тренировки — было тяжело, легко или в самый раз. Тяжёлые упражнения заменяются простыми: ситапы — «мёртвым жуком», прыжки — шагом.',
@@ -1224,8 +1206,8 @@ export const COURSE_START: CourseInput = {
       'Every CrossFit format in gentle doses — and an inchworm ladder you will come back to and see the difference.',
     ),
     l(
-      'Привычка тренироваться пять раз в неделю и ходить в дни отдыха.',
-      'A habit of training five times a week and walking on rest days.',
+      'Привычка возвращаться к тренировке — не раз в год по запалу, а через день-два, спокойно.',
+      'The habit of coming back — not once a year on a burst of enthusiasm, but every other day, calmly.',
     ),
     l(
       'Знакомство со всеми форматами кроссфита: круги, «на время», AMRAP, EMOM, лесенки, длинный комплекс.',

@@ -47,7 +47,6 @@ export interface SessionEstimateInput {
   deload?: boolean;
   /** Already done once: the prescription is the same, only the points differ. */
   repeat?: boolean;
-  streakDays?: number;
   /** Default «как обычно». */
   choice?: DifficultyChoice;
 }
@@ -61,7 +60,6 @@ export function estimateSession(workout: Workout, input: SessionEstimateInput): 
     level: input.level,
     ...(input.deload !== undefined ? { deload: input.deload } : {}),
     ...(input.repeat !== undefined ? { repeat: input.repeat } : {}),
-    ...(input.streakDays !== undefined ? { streakDays: input.streakDays } : {}),
   });
   const volume = workoutVolume(prescribed);
   const durationSec = estimateDuration(prescribed).totalSec;

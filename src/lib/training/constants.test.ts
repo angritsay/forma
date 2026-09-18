@@ -9,7 +9,6 @@ import {
   LEVEL_THRESHOLDS,
   LEVEL_TIER,
   PUSHUP_NORMS,
-  STREAK_BONUS,
 } from './constants';
 
 describe('constants', () => {
@@ -35,7 +34,6 @@ describe('constants', () => {
     expect(CHOICE_WINDOW.easier).toBeLessThan(CHOICE_WINDOW.normal);
     expect(CHOICE_WINDOW.harder).toBeGreaterThan(CHOICE_WINDOW.normal);
     expect(CHOICE_POINTS.easier).toBeLessThan(CHOICE_POINTS.harder);
-    expect(STREAK_BONUS[0]!.days).toBeGreaterThan(STREAK_BONUS[1]!.days);
   });
 
   it('the choice moves whole sets, so it can never be cancelled by a rest tweak', () => {

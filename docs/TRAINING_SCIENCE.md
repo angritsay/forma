@@ -27,15 +27,25 @@ calories.
 4. **Safety first.** Limitations (knees, lower back, shoulders, wrists, hypertension, pregnancy)
    change what is prescribed, not only how much; pain always reduces load and surfaces a "see a
    professional" note.
-5. **A streak day is a training day.** It used to be a completed workout **or** ≥ 7 000 steps, on
-   the cohort evidence that 7 000 is where mortality risk drops most steeply (Paluch et al. 2021,
-   JAMA Network Open; Paluch et al. 2022, Lancet Public Health). The evidence still holds; what
-   failed was the measurement. A Mini App cannot read a phone's step counter — Apple HealthKit has
-   no browser API, Google Fit's REST API is closed to new applicants and shuts down at the end of
-   2026, Health Connect is on-device Android — so the figure was typed in by hand, and the owner's
-   rule is that a number you keep in two apps is a number you keep in neither. Steps were removed
-   from the product (§8, `docs/SPEC.md` §11.10). The WHO 2020 «every move counts» guidance still
-   argues for the rest days and the walks in every course; it is simply no longer scored.
+5. **Consistency is counted, not chained.** There was a streak here, and before that a streak a
+   walk could keep alive at ≥ 7 000 steps, on the cohort evidence that 7 000 is where mortality
+   risk drops most steeply (Paluch et al. 2021, JAMA Network Open; Paluch et al. 2022, Lancet
+   Public Health). Both are gone and for different reasons.
+
+   Steps failed on **measurement**: a Mini App cannot read a phone's step counter — Apple HealthKit
+   has no browser API, Google Fit's REST API is closed to new applicants and shuts down at the end
+   of 2026, Health Connect is on-device Android — so the figure was typed in by hand, and the
+   owner's rule is that a number you keep in two apps is a number you keep in neither.
+
+   The streak failed on **the training itself**. Principle 3 above prescribes 48 hours of recovery
+   between hard sessions and the beginner course schedules five sessions a week; a metric that
+   breaks on the first day off was therefore at war with the programme it sat on top of, and the
+   athlete who followed the plan exactly saw it reset every weekend. It is replaced by
+   `countTraining()` (§8): workouts done, workouts this week, best week, weeks active. Every one of
+   those can only go up, and none of them is damaged by a rest day.
+
+   The WHO 2020 «every move counts» guidance still argues for the walks and the rest the courses
+   prescribe; it is simply no longer scored.
 
 ## 2. Fitness index, level and initial scale (`assessment.ts`)
 
@@ -421,27 +431,39 @@ counts as "≥ 48 h of rest".
 
 Each recommendation carries a one-sentence bilingual reason.
 
-## 8. Streaks (`streak.ts`)
+## 8. Counting the training (`consistency.ts`)
 
-A day is active when a workout was completed. The current streak counts back from today when today
-is active, otherwise from yesterday with `atRisk = true` — today never breaks a streak until it
-ends. `longest` is computed over the whole history; input may be unsorted, sparse and contain
-duplicates.
+A day is active when a workout was completed on it. `countTraining(days, todayIso)` returns
 
-**What this section used to hold.** A day was also active at ≥ 7 000 steps (per-day override for
-rest nodes), and `stepsPoints()` paid 30 at the goal, +5 per full extra 1 000, capped at 60 — about
-a quarter to a half of a workout. The 7 000 came from the CARDIA analysis (Paluch et al. 2021),
-where ≥ 7 000 steps/day was associated with 50–70% lower all-cause mortality, flattening above
-~10 000. None of that was wrong; it was simply unmeasurable from a WebView, so the number had to be
-typed in by hand and the feature was removed (§1.5). Keep the citations: they are the argument for
-the walks the courses prescribe, and they are what to re-read if Forma ever ships a native app that
-_can_ read HealthKit or Health Connect.
+| field         | meaning                                      |
+| ------------- | -------------------------------------------- |
+| `total`       | days trained, ever                           |
+| `thisWeek`    | days trained since Monday                    |
+| `bestWeek`    | the most days trained in any one ISO week    |
+| `activeWeeks` | how many ISO weeks hold at least one workout |
+| `todayDone`   | whether today is one of them                 |
+
+Input may be unsorted, sparse and contain duplicates; a date appearing twice is one day, and dates
+in the future are ignored so a fast clock cannot invent a workout. The unit is therefore **days
+trained**, not sessions saved — two workouts in one evening is one day here and two on the reports
+tab, because this figure answers "how often do you show up".
+
+**What this section used to hold: streaks.** `computeStreak()` returned `current`, `longest` and an
+`atRisk` flag, and a day was also active at ≥ 7 000 steps. Both are gone — §1.5 has the argument,
+and the short version is that a streak breaks on a rest day and this product prescribes rest days.
+
+Keep the step citations in §1.5: they are the argument for the walks the courses prescribe, and
+they are what to re-read if Forma ever ships a native app that _can_ read HealthKit or Health
+Connect.
 
 ## 9. Points, levels, achievements (`levels.ts`)
 
-`points = round(basePoints × CHOICE_POINTS × (repeat ? 0.5 : 1) × (1 + streakBonus))`, with a
-streak bonus of +10% at ≥ 7 days and +20% at ≥ 30 days. Repeats pay half so the leaderboard rewards
-progressing through a course over farming one node.
+`points = round(basePoints × CHOICE_POINTS × (repeat ? 0.5 : 1))`. Repeats pay half so the
+leaderboard rewards progressing through a course over farming one node.
+
+There was a fourth factor, `× (1 + streakBonus)` — +10% at ≥ 7 consecutive days, +20% at ≥ 30. It
+went with the streak (§8): a course that schedules two rest days a week cannot be followed and earn
+it at the same time, so the bonus priced obedience to the programme as a loss.
 
 Level thresholds (cumulative points): 0, 300, 800, 1 500, 2 500, 4 000, 6 000, 8 500, 12 000,
 16 000 — roughly 2–3 workouts for level 2, a full 6-week course for level 4, a year of consistent
@@ -449,11 +471,17 @@ training for level 10. Titles (RU/EN): Новичок/Rookie, Стажёр/Train
 Боец/Competitor, Ветеран/Veteran, Мастер/Master, Элита/Elite, Чемпион/Champion, Титан/Titan,
 Легенда/Legend.
 
-Twelve achievements: first workout; 5 / 25 / 100 workouts; 3 / 7 / 30-day streak; first benchmark;
-course completed; 1 000 / 10 000 points; 600 minutes trained. (A thirteenth, «10 days at the steps
-goal», went with the step feature.) Each
-reports `unlocked` and a 0–1 `progress`. The streak tiers are modest on purpose — habit formation
-takes weeks (Lally et al. 2010), and a 7-day streak is the first milestone worth celebrating.
+Twelve achievements: first workout; 5 / 10 / 25 / 100 workouts; three workouts in one week; eight
+active weeks; first benchmark; course completed; 1 000 / 10 000 points; 600 minutes trained. (A
+thirteenth, «10 days at the steps goal», went with the step feature.) Each reports `unlocked` and a
+0–1 `progress`.
+
+Three of them used to ask for 3, 7 and 30 **consecutive** days. The seven-day one was unreachable
+by anyone following a five-day-a-week course and the thirty-day one by anyone at all, so the tiers
+were not modest, they were impossible. What replaced them keeps the thing habit-formation research
+actually supports — repetition over weeks rather than an unbroken chain (Lally et al. 2010, where
+automaticity plateaus after ~66 days on average and missing a single day had no measurable effect
+on the curve) — and makes the gap between sessions free.
 
 ## 10. Constants reference (`constants.ts`)
 
@@ -461,7 +489,6 @@ takes weeks (Lally et al. 2010), and a 7-day streak is the first milestone worth
 | ------------------------------------------------------------------------- | ----------------------- | -------------------------- |
 | `CHOICE_VOLUME` / `CHOICE_SETS_DELTA` / `CHOICE_WINDOW` / `CHOICE_POINTS` | see §3.1                | expert anchor              |
 | `REPEAT_POINTS`                                                           | 0.5                     | design                     |
-| `STREAK_BONUS`                                                            | ≥ 30 d +20%, ≥ 7 d +10% | design                     |
 | `DELOAD_VOLUME` / `DELOAD_REST`                                           | 0.65 / 1.2              | Bell et al. 2022           |
 | `SCALE_MIN..MAX`, `SCALE_INITIAL_MIN..MAX`, `EFFECTIVE_SCALE_MIN..MAX`    | 0.5–1.5, 0.6–1.3, 0.3–2 | design                     |
 | `SETS_ADD_AT` / `SETS_REMOVE_AT` / `MIN_SETS_AFTER_REMOVE`                | 1.3 / 0.7 / 2           | expert anchor              |

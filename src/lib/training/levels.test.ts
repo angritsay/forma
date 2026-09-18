@@ -6,8 +6,8 @@ import type { UserStats } from './types';
 const stats = (o: Partial<UserStats> = {}): UserStats => ({
   workouts: 0,
   points: 0,
-  streakCurrent: 0,
-  streakLongest: 0,
+  bestWeek: 0,
+  activeWeeks: 0,
   benchmarksDone: 0,
   coursesCompleted: 0,
   totalMinutes: 0,
@@ -69,14 +69,18 @@ describe('achievements', () => {
   });
 
   it('reports progress and unlocks at the documented thresholds', () => {
-    const r = evaluateAchievements(stats({ workouts: 5, points: 500, streakLongest: 7 }));
+    const r = evaluateAchievements(
+      stats({ workouts: 5, points: 500, bestWeek: 3, activeWeeks: 2 }),
+    );
     const byId = Object.fromEntries(r.map((a) => [a.id, a]));
     expect(byId.first_workout?.unlocked).toBe(true);
     expect(byId.workouts_5?.unlocked).toBe(true);
+    expect(byId.workouts_10?.unlocked).toBe(false);
+    expect(byId.workouts_10?.progress).toBeCloseTo(0.5);
     expect(byId.workouts_25?.unlocked).toBe(false);
     expect(byId.workouts_25?.progress).toBeCloseTo(0.2);
-    expect(byId.streak_7?.unlocked).toBe(true);
-    expect(byId.streak_30?.progress).toBeCloseTo(7 / 30);
+    expect(byId.week_three?.unlocked).toBe(true);
+    expect(byId.weeks_8?.progress).toBeCloseTo(2 / 8);
     expect(byId.points_1000?.progress).toBe(0.5);
     expect(byId.first_benchmark?.unlocked).toBe(false);
   });
@@ -86,8 +90,8 @@ describe('achievements', () => {
       stats({
         workouts: 100,
         points: 10000,
-        streakCurrent: 30,
-        streakLongest: 30,
+        bestWeek: 3,
+        activeWeeks: 8,
         benchmarksDone: 1,
         coursesCompleted: 1,
         totalMinutes: 600,
@@ -96,8 +100,29 @@ describe('achievements', () => {
     expect(r.every((a) => a.unlocked && a.progress === 1)).toBe(true);
   });
 
-  it('uses the current streak as well as the longest one', () => {
-    const r = evaluateAchievements(stats({ streakCurrent: 3 }));
-    expect(r.find((a) => a.id === 'streak_3')?.unlocked).toBe(true);
+  it('has nothing that asks for consecutive days', () => {
+    /*
+     * The guard on the owner's instruction: a course with rest days in it must not carry an
+     * achievement that a rest day breaks.
+     *
+     * The rule matches the *demand* — «N дней подряд», «N days in a row» — and not the bare word
+     * «подряд», which «Два месяца в деле» uses to say the opposite: «подряд не обязательно». A
+     * regex that fails on a line promising the athlete they may rest is measuring the wrong thing.
+     */
+    for (const a of ACHIEVEMENTS) {
+      expect(a.id).not.toMatch(/streak/i);
+      const copy = `${a.description.ru} ${a.description.en}`;
+      expect(copy).not.toMatch(/дн\w*\s+подряд|days\s+in\s+a\s+row|streak/i);
+    }
+  });
+
+  it('counts a good week and a long habit without them touching', () => {
+    // Eight weeks spread over a year, one workout each: «Два месяца в деле» is earned.
+    expect(
+      evaluateAchievements(stats({ activeWeeks: 8 })).find((a) => a.id === 'weeks_8')?.unlocked,
+    ).toBe(true);
+    expect(
+      evaluateAchievements(stats({ bestWeek: 3 })).find((a) => a.id === 'week_three')?.unlocked,
+    ).toBe(true);
   });
 });

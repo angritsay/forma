@@ -83,11 +83,12 @@ export const CHOICE_POINTS: Readonly<Record<DifficultyChoice, number>> = {
 /** Repeating an already completed node yields this share of the points. */
 export const REPEAT_POINTS = 0.5;
 
-/** Streak bonus tiers, checked from the longest streak down (first match wins). */
-export const STREAK_BONUS: readonly { days: number; bonus: number }[] = [
-  { days: 30, bonus: 0.2 },
-  { days: 7, bonus: 0.1 },
-];
+/*
+ * `STREAK_BONUS` stood here — +10% at seven consecutive days, +20% at thirty — and went with the
+ * streak itself. It was a multiplier on training every single day, in a product whose own course
+ * schedules two rest days a week: the only way to earn it was to ignore the plan. Points are now
+ * the workout's own value times the difficulty chosen, halved on a repeat, and nothing else.
+ */
 
 /** Deload nodes: volume and rest multipliers (points stay as normal). */
 export const DELOAD_VOLUME = 0.65;

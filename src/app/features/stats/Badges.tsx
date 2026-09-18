@@ -30,7 +30,7 @@ const SIZE = 80;
  * with a numeral in each, which is a list of things you do not have with nothing to tell them
  * apart. The emoji is what makes «Сотня» and «Ходок» two different objects.
  *
- * It is the one place in the product besides the streak pill where an emoji earns its keep, and
+ * It is the one place in the product besides the count pill where an emoji earns its keep, and
  * the reason is that it cannot be drawn in our kit: an emoji renders in the system's colour font,
  * in nobody's brand colour, so it reads as a thing *earned* rather than as a metric. That is also
  * why the locked rows keep their numeral — the emoji then **is** the difference between "not yet"

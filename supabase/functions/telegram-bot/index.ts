@@ -70,7 +70,7 @@ export interface BotCopy {
  * this one used to do exactly that: it described a single course and nothing else, because it was
  * written before the club and the one-to-one sessions existed.
  *
- * The numbers are the course's own (`content/courses/start.ts`: four weeks, five sessions a week,
+ * The numbers are the course’s own (`content/courses/start.ts`: twenty workouts,
  * a video on every movement). Do not round them up here — this is the one place where a claim is
  * made to somebody who has not paid yet.
  *

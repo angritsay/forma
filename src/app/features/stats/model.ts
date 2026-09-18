@@ -1,5 +1,5 @@
 /**
- * Pure aggregations for the Stats screen: this week's load per day, points per week, the streak
+ * Pure aggregations for the Stats screen: this week's load per day, points per week, the training
  * calendar, personal records and the `UserStats` the achievement engine expects. Everything reads
  * the progress store's rows; dates are local YYYY-MM-DD strings and "today" is passed in so the
  * module stays testable in node.
@@ -11,7 +11,7 @@
 import { allCourses, findCourse, findExercise } from '@/content/catalogue';
 import type { Locale } from '@/content/schema';
 import type { BenchmarkSeries, CourseStateRow, MyTotals, WorkoutSessionRow } from '@/lib/api/types';
-import { computeStreak } from '@/lib/training/streak';
+import { countTraining } from '@/lib/training/consistency';
 import type { UserStats } from '@/lib/training/types';
 import { addDays, daysBetween, weekStart } from '@/lib/util/dates';
 import { buildDayActivity, isCompletedSession, totalPoints } from '@/app/features/home/stats';
@@ -57,7 +57,7 @@ export function weekLoad(sessions: readonly WorkoutSessionRow[], todayIso: strin
 
 export interface WeekDay {
   date: string;
-  /** A workout was finished — the same rule the streak counts by. */
+  /** A workout was finished — the same rule the training count counts by. */
   active: boolean;
   today: boolean;
   future: boolean;
@@ -67,8 +67,8 @@ export interface WeekDay {
  * Monday → Sunday of the current ISO week as seven days, each either active or not.
  *
  * This is the figure behind «Цель недели» on «Прогресс»: seven circles, a check on every active
- * day. It counts by the streak's own rule — a finished workout makes a day — because the two
- * figures sit on one screen and would otherwise disagree about the same Tuesday.
+ * day. It counts by the same rule as the training count — a finished workout makes a day — because
+ * the two figures sit on one screen and would otherwise disagree about the same Tuesday.
  */
 export function weekActiveDays(
   sessions: readonly WorkoutSessionRow[],
@@ -129,7 +129,7 @@ export function pointsByWeek(
 }
 
 /* ---------------------------------------------------------------------------------------------
- * Streak calendar
+ * Training calendar
  * ------------------------------------------------------------------------------------------- */
 
 export type CalendarKind = 'workout' | 'empty' | 'future';
@@ -150,7 +150,7 @@ export interface CalendarWeek {
  * when a session was completed, otherwise empty. There used to be a third kind, `steps`, drawn in
  * its own colour for a day carried by walking alone; it went with the step feature.
  */
-export function streakCalendar(
+export function trainingCalendar(
   sessions: readonly WorkoutSessionRow[],
   todayIso: string,
   weeks = CALENDAR_WEEKS,
@@ -275,17 +275,17 @@ export function totalCalories(sessions: readonly WorkoutSessionRow[]): number {
 
 /**
  * `UserStats` for `evaluateAchievements` from the progress store. Server totals win when
- * loaded; the streak comes from the sessions in memory.
+ * loaded; the per-week figures are counted off the sessions in memory.
  */
 export function userStatsFromProgress(p: ProgressSnapshot): UserStats {
   const completed = p.sessions.filter(isCompletedSession);
-  const streak = computeStreak(buildDayActivity(p.sessions), p.todayIso);
+  const training = countTraining(buildDayActivity(p.sessions), p.todayIso);
   const seconds = completed.reduce((n, s) => n + (s.durationSec ?? 0), 0);
   return {
     workouts: p.totals?.workouts ?? completed.length,
     points: p.totals?.points ?? totalPoints(p.sessions),
-    streakCurrent: streak.current,
-    streakLongest: streak.longest,
+    bestWeek: training.bestWeek,
+    activeWeeks: training.activeWeeks,
     benchmarksDone: p.benchmarks.reduce((n, s) => n + s.history.length, 0),
     coursesCompleted: Object.values(p.courseStates).filter(isCourseCompleted).length,
     totalMinutes: p.totals?.minutes ?? Math.round(seconds / 60),

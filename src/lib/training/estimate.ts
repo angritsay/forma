@@ -14,7 +14,6 @@ import {
   FORTIME_PACE_FACTOR,
   REPEAT_POINTS,
   REST_MET,
-  STREAK_BONUS,
   TABATA_DEFAULT_ROUNDS,
   TRANSITION_SEC,
 } from './constants';
@@ -239,24 +238,20 @@ export function workoutVolume(p: PrescribedWorkout): WorkoutVolume {
   return { reps: Math.round(reps), workSec: estimateDuration({ ...p, blocks }).workSec };
 }
 
-/** Streak bonus share for a streak length (first matching tier wins). */
-export function streakBonus(streakDays: number | undefined): number {
-  const days = num(streakDays);
-  for (const tier of STREAK_BONUS) if (days >= tier.days) return tier.bonus;
-  return 0;
-}
-
-/** Points for a full completion of a workout at the given choice. */
+/**
+ * Points for a full completion of a workout at the given choice.
+ *
+ * There was a third factor here, `streakBonus(opts.streakDays)` — up to a fifth more for training
+ * thirty days running. It is gone with the streak: a course that schedules two rest days a week
+ * cannot be followed and earn it at the same time, so the bonus was quietly paying people to
+ * ignore the plan. What is left is the workout's own value, what you chose to do with it, and half
+ * of that if you have done this one before.
+ */
 export function estimatePoints(
   workout: Workout,
   choice: DifficultyChoice,
-  opts: { repeat?: boolean; streakDays?: number } = {},
+  opts: { repeat?: boolean } = {},
 ): number {
   const base = num(workout.basePoints);
-  const value =
-    base *
-    CHOICE_POINTS[choice] *
-    (opts.repeat ? REPEAT_POINTS : 1) *
-    (1 + streakBonus(opts.streakDays));
-  return Math.round(value);
+  return Math.round(base * CHOICE_POINTS[choice] * (opts.repeat ? REPEAT_POINTS : 1));
 }

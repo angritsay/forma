@@ -7,7 +7,7 @@
  * adaptation message and freshly unlocked achievements.
  *
  * Drawn as the owner's prototype draws this moment (`design/ui_kits/app-v2`, «Готово!»): the word
- * at the size of the screen, one warm line computed from the real streak, three numerals, «К пути
+ * at the size of the screen, one warm line computed from the real count, three numerals, «К пути
  * →» and «Как зашло?». What went was the kicker-and-subtitle stack, the crosshair plate holding
  * the clock, the two stat tiles and the sentence «Эти итоги уже сохранены» — the first three are
  * the poster now, and the last was a caption about the app's own bookkeeping on the one screen
@@ -41,11 +41,11 @@ import {
   blockCompletions,
   courseNames,
   shareText,
-  streakLine,
+  workoutCountLine,
   testResults,
   totalReps,
 } from '@/app/features/player/summaryModel';
-import { useProgress, useProgressLoader, useStreak } from '@/app/store/progress';
+import { useProgress, useProgressLoader, useTrainingCount } from '@/app/store/progress';
 import { nodeEarnsStars, starsEarned, starsForSession, workDone } from '@/lib/training/stars';
 import { useT } from '@/app/hooks/useT';
 
@@ -102,20 +102,24 @@ function newlyUnlocked(before: UserStats | null, after: UserStats): AchievementS
 }
 
 /**
- * The streak to congratulate on, **with today counted**, or null when nothing true can be said.
+ * Which workout this is, **with the one just finished counted**, or null when nothing true can be
+ * said.
  *
- * `enabled` is false for a session being re-read from the server: today's streak is a fact about
- * today, and printing «четвёртый день подряд» under a workout from last month would be a warm
- * sentence about the wrong day. While the progress store is still loading there is likewise no
- * number, and the line is simply absent rather than starting at «первый день» and jumping.
+ * `enabled` is false for a session being re-read from the server: the count is a fact about now,
+ * and printing «четвёртая тренировка» under a workout from last month would be a warm sentence
+ * about the wrong day. While the progress store is still loading there is likewise no number, and
+ * the line is simply absent rather than starting at «первая» and jumping.
+ *
+ * The count is days trained rather than sessions saved (`countTraining`), so a second workout on a
+ * day already counted does not advance it twice — which is why `todayDone` is asked before adding
+ * the one in hand.
  */
-function useStreakDays(enabled: boolean): number | null {
+function useWorkoutNumber(enabled: boolean): number | null {
   useProgressLoader();
   const status = useProgress((s) => s.status);
-  const streak = useStreak();
+  const training = useTrainingCount();
   if (!enabled || status !== 'ready') return null;
-  // A second workout on a day already counted must not advance the number twice.
-  return streak.todayDone ? streak.current : streak.current + 1;
+  return training.todayDone ? training.total : training.total + 1;
 }
 
 /**
@@ -197,7 +201,7 @@ interface SavedViewProps {
   adjustment?: SaveOutcome['adjustment'];
   unlocked?: AchievementStatus[];
   /**
-   * False for a session re-read from the server: today's streak says nothing about an old workout,
+   * False for a session re-read from the server: today's count says nothing about an old workout,
    * so that view gets no warm line.
    */
   fresh?: boolean;
@@ -221,7 +225,7 @@ function SavedView({
 }: SavedViewProps) {
   const { t, locale } = useT();
   const navigate = useNavigate();
-  const days = useStreakDays(fresh === true);
+  const days = useWorkoutNumber(fresh === true);
   return (
     <Screen
       header={<TopBar title={t('app.summaryEyebrow')} />}
@@ -243,7 +247,7 @@ function SavedView({
       <div className="flex flex-col gap-8 pb-4" style={courseTileVars(findCourse(courseId)?.tile)}>
         <DonePoster
           eyebrow={`${nodeName} · ${courseName}`}
-          line={days !== null ? streakLine(t, days) : null}
+          line={days !== null ? workoutCountLine(t, days) : null}
           stars={stars}
           figures={doneFigures(t, locale, {
             durationSec: summary.durationSec,
@@ -328,9 +332,9 @@ function LocalSummary({
   /*
    * The session is finished, so today counts — whether or not the save has landed yet. The store
    * has not been told about it at this point (the save is what tells it), which is exactly what
-   * `useStreakDays` adds the day for.
+   * `useWorkoutNumber` adds the day for.
    */
-  const days = useStreakDays(true);
+  const days = useWorkoutNumber(true);
   /*
    * Stars for the session just finished. A day that earns none — a test, a benchmark, a workout
    * the coach built by hand and so has no node — is null, and the plate simply does not draw them.
@@ -453,7 +457,7 @@ function LocalSummary({
       >
         <DonePoster
           eyebrow={`${names.node} · ${names.course}`}
-          line={days !== null ? streakLine(t, days) : null}
+          line={days !== null ? workoutCountLine(t, days) : null}
           stars={stars}
           figures={doneFigures(t, locale, {
             durationSec: preview.durationSec,

@@ -1,14 +1,14 @@
 import { clsx } from 'clsx';
 import { Glyph } from '@/components/ui/Icon';
 import { formatDate } from '@/i18n/index';
-import type { StreakInfo } from '@/lib/training/types';
+import type { TrainingCount } from '@/lib/training/types';
 import { weekdayLabel } from '@/lib/util/dates';
 import { useT } from '@/app/hooks/useT';
 import type { CalendarKind, CalendarWeek } from './model';
 
-export interface StreakCalendarProps {
+export interface TrainingCalendarProps {
   weeks: readonly CalendarWeek[];
-  streak: StreakInfo;
+  count: TrainingCount;
 }
 
 /*
@@ -27,8 +27,15 @@ const KIND_CLASS: Record<CalendarKind, string> = {
   future: 'border border-border text-muted-2',
 };
 
-/** Five weeks of days: workout day, empty or still ahead; today is ringed. */
-export function StreakCalendar({ weeks, streak }: StreakCalendarProps) {
+/**
+ * Five weeks of days: workout day, empty or still ahead; today is ringed.
+ *
+ * The two figures beside the title used to be «Сейчас 3 · Лучшая 11» — the streak now and the
+ * streak at its best. Both are gone: a plan with rest days in it cannot hold a long streak, so the
+ * pair mostly reported how recently the athlete had done what they were told not to. «Всего» and
+ * «На этой неделе» answer the two questions that are actually being asked of this square of dots.
+ */
+export function TrainingCalendar({ weeks, count }: TrainingCalendarProps) {
   const { t, locale } = useT();
   const KIND_LABEL: Record<CalendarKind, string> = {
     workout: t('app.statsCalendarWorkout'),
@@ -39,13 +46,15 @@ export function StreakCalendar({ weeks, streak }: StreakCalendarProps) {
 
   return (
     <div className="flex flex-col gap-3 pb-2">
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="eyebrow">{t('app.statsCalendarTitle')}</span>
-        <span className="numeral tabular shrink-0 text-sm">
-          {t('app.statsCalendarCurrent', { n: streak.current })} ·{' '}
-          {t('app.statsCalendarBest', { n: streak.longest })}
-        </span>
-      </div>
+      {/*
+        The two figures alone on this row. «КАЛЕНДАРЬ СЕРИИ» stood to their left and had to go
+        twice over: the streak it named is gone, and the sheet around it is already titled
+        «Тренировки» — a kicker under a title, naming the same thing, is the heading said twice.
+      */}
+      <p className="numeral tabular text-sm">
+        {t('app.statsCalendarTotal', { n: count.total })} ·{' '}
+        {t('app.statsCalendarWeek', { n: count.thisWeek })}
+      </p>
       <div className="grid grid-cols-7 gap-1.5" aria-hidden="true">
         {headers.map((h, i) => (
           <span key={i} className="eyebrow text-center text-[10px]">

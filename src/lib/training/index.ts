@@ -8,7 +8,7 @@
  *   estimate.ts    — estimateDuration, estimateCalories, estimatePoints
  *   player.ts      — buildPlayerSteps
  *   session.ts     — summarizeSession, adaptScale, recommendDifficulty
- *   streak.ts      — computeStreak
+ *   consistency.ts — countTraining
  *   levels.ts      — levelForPoints, ACHIEVEMENTS, evaluateAchievements
  */
 export * from './types';
@@ -18,5 +18,5 @@ export * from './prescribe';
 export * from './estimate';
 export * from './player';
 export * from './session';
-export * from './streak';
+export * from './consistency';
 export * from './levels';
