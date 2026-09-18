@@ -16,7 +16,7 @@
  */
 import type { Level, Workout } from '@/content/schema';
 import { formatNumber, plural } from '@/i18n/index';
-import { estimateCalories, estimateDuration, workoutVolume } from '@/lib/training/estimate';
+import { estimateCalories, estimateTrainingDuration, workoutVolume } from '@/lib/training/estimate';
 import { prescribeWorkout } from '@/lib/training/prescribe';
 import type {
   DifficultyChoice,
@@ -29,7 +29,12 @@ export interface SessionEstimate {
   choice: DifficultyChoice;
   prescribed: PrescribedWorkout;
   durationSec: number;
-  /** Whole minutes, never below one: «0 мин» is not a session. */
+  /**
+   * Whole minutes of training, never below one: «0 мин» is not a session.
+   *
+   * The warm-up and the cool-down are not in it — `docs/COACH_RULES.md` does not count them as
+   * training, and neither does the repetition figure beside this one.
+   */
   minutes: number;
   /** Repetitions prescribed across the session; 0 for a workout made only of timed work. */
   reps: number;
@@ -62,7 +67,12 @@ export function estimateSession(workout: Workout, input: SessionEstimateInput): 
     ...(input.repeat !== undefined ? { repeat: input.repeat } : {}),
   });
   const volume = workoutVolume(prescribed);
-  const durationSec = estimateDuration(prescribed).totalSec;
+  /*
+   * Training only. The warm-up and the cool-down are roughly ten fixed minutes whichever row is
+   * picked, so counting them made «Полегче» and «Посложнее» read as 13 and 14 minutes for sixty
+   * per cent more work — three options that look the same next to repetitions that do not.
+   */
+  const durationSec = estimateTrainingDuration(prescribed).totalSec;
   return {
     choice,
     prescribed,

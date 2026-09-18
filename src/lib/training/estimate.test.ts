@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_WEIGHT_KG, REST_MET } from './constants';
-import { estimateCalories, estimateDuration, estimatePoints, workoutVolume } from './estimate';
+import {
+  estimateCalories,
+  estimateDuration,
+  estimatePoints,
+  estimateTrainingDuration,
+  workoutVolume,
+} from './estimate';
 import {
   block,
   fixtureLookup,
@@ -48,6 +54,11 @@ describe('estimateDuration', () => {
     expect(a.totalSec).toBe(620);
     expect(a.workSec).toBe(420);
     expect(a.restSec).toBe(180);
+    /*
+     * `rounds` on an EMOM is minutes, not cycles: ten minutes, the two movements alternating
+     * through them. This is the player's own rule (`buildPlayerSteps` indexes `items[(m - 1) % n]`)
+     * and the estimate has to be the same clock.
+     */
     const e = estimateDuration(
       one({ id: 'e', format: 'emom', rounds: 10, items: [item('burpee'), item('air_squat')] }),
     );
@@ -237,6 +248,41 @@ describe('estimatePoints', () => {
  * easier drops a whole set and shortens the rest to match, so the minutes and the calories come out
  * near enough identical and the screen offered three rows that looked the same. Reps do not lie.
  */
+describe('estimateTrainingDuration', () => {
+  /*
+   * «Ты продолжаешь считать разминку и заминку. Этого делать не нужно.» The repetitions had already
+   * dropped them; the minutes printed beside those repetitions had not, which is how the sheet came
+   * to offer «Полегче 13 мин · 84 повтора» against «Посложнее 14 мин · 136 повторов».
+   */
+  it('leaves the warm-up and the cool-down out of the clock', () => {
+    const p = prescribeWorkout(FULL_WORKOUT, opts, fixtureLookup);
+    const whole = estimateDuration(p).totalSec;
+    const training = estimateTrainingDuration(p).totalSec;
+    expect(training).toBeGreaterThan(0);
+    expect(training).toBeLessThan(whole);
+  });
+
+  it('is the one number that separates the three choices', () => {
+    /*
+     * The point of the change, stated as arithmetic. Whole-session minutes barely move between
+     * easier and harder, because the ten fixed minutes at either end dominate; training minutes
+     * move by more, and in the same direction the repetitions do.
+     */
+    const at = (choice: 'easier' | 'harder') =>
+      prescribeWorkout(FULL_WORKOUT, { ...opts, choice }, fixtureLookup);
+    const wholeSpread =
+      estimateDuration(at('harder')).totalSec - estimateDuration(at('easier')).totalSec;
+    const trainingSpread =
+      estimateTrainingDuration(at('harder')).totalSec -
+      estimateTrainingDuration(at('easier')).totalSec;
+    expect(trainingSpread).toBe(wholeSpread);
+    // The same gap, over a smaller total — which is what makes it visible at all.
+    expect(estimateTrainingDuration(at('easier')).totalSec).toBeLessThan(
+      estimateDuration(at('easier')).totalSec,
+    );
+  });
+});
+
 describe('workoutVolume', () => {
   it('counts every set of every rep-based item', () => {
     const p = one({ id: 's', format: 'sets', sets: 3, items: [item('air_squat', { reps: 10 })] });

@@ -102,6 +102,16 @@ export function blockSegments(
       break;
     }
     case 'emom': {
+      /*
+       * `sets` is the number of MINUTES, not the number of cycles, and the player is what settles
+       * it: `buildPlayerSteps` runs `for m in 1..sets` and picks `items[(m - 1) % n]`, so three
+       * minutes with three movements is one minute each and then the block is over.
+       *
+       * Worth leaving written down, because it is not the only reading of the word and I got it
+       * wrong: changing this to `sets × items` — «каждую минуту новое упражнение, три круга» —
+       * turned a 16-minute EMOM in the engine course into 64 and broke eleven content guards. An
+       * estimate that disagrees with the player is worse than a rough one; they are the same clock.
+       */
       const d = Math.max(1, num(block.sets, 1)) * 60;
       work.push({ sec: d * AMRAP_WORK_SHARE, met: averageMet(items, lookup) });
       restSec = d * (1 - AMRAP_WORK_SHARE);
@@ -156,6 +166,27 @@ export function estimateBlockDuration(block: PrescribedBlock): {
     workSec: Math.round(s.workSec),
     restSec: Math.round(s.restSec),
   };
+}
+
+/**
+ * How long the **training** takes: the same arithmetic with the warm-up and the cool-down left out.
+ *
+ * The owner, on a screenshot of the difficulty sheet: «Ты продолжаешь считать разминку и заминку.
+ * Этого делать не нужно.» `workoutVolume` already dropped them from the repetitions on her earlier
+ * instruction; the minutes beside those repetitions were still the whole session, which is how the
+ * sheet came to read «Полегче 13 мин · 84 повтора / Посложнее 14 мин · 136 повторов». Sixty per
+ * cent more work for one extra minute is not a choice anybody can make — the ten fixed minutes of
+ * mobility and stretching at either end were swamping the only number that moves.
+ *
+ * It is also the coach's own rule rather than a display preference: `docs/COACH_RULES.md` marks the
+ * warm-up and the cool-down «Counted as training? No».
+ *
+ * **What still counts every second, and must.** The player's clock — somebody standing on a mat is
+ * doing the warm-up and the timer has to agree — and `session.ts`, which totals what was actually
+ * completed. A plan says what the training is; a record says what happened.
+ */
+export function estimateTrainingDuration(p: PrescribedWorkout): DurationEstimate {
+  return estimateDuration({ ...p, blocks: p.blocks.filter(isTrainingBlock) });
 }
 
 /** Whole-workout duration with the work/rest split and a per-block breakdown. */

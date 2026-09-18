@@ -9,7 +9,7 @@ import type { Course, Locale } from '@/content/schema';
 import { formatNumber, l, plural, t } from '@/i18n/index';
 import {
   adaptScale,
-  estimateDuration,
+  estimateTrainingDuration,
   estimatePoints,
   prescribeWorkout,
   recommendDifficulty,
@@ -132,7 +132,10 @@ export function buildDemo(locale: Locale, course?: Course): DifficultyDemoProps 
       choice,
       level: 2,
     });
-    const duration = estimateDuration(p);
+    // Training only, the same rule the app's own difficulty sheet uses — the landing shows the
+    // identical three rows, and a page promising thirteen minutes for what the app then calls
+    // eight is the product disagreeing with its own advertisement.
+    const duration = estimateTrainingDuration(p);
     const points = estimatePoints(workout, choice);
     const n = formatNumber(locale, points);
     return {
