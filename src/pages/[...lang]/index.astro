@@ -37,7 +37,7 @@ import { COURSE_BY_ID, EXERCISE_BY_ID } from '@/content/registry';
 import { SITE_COURSES } from '@/content/published';
 import { publishableResults } from '@content/site/results';
 import type { Exercise, Locale, WorkoutItem } from '@/content/schema';
-import { formatNumber, l, t } from '@/i18n/index';
+import { l, t } from '@/i18n/index';
 import { PHOTOS, photoSrc } from '@/lib/media/photos';
 import { canonicalUrl } from '@/lib/seo/urls';
 import { courseTileStyle } from '@/lib/ui/tile';
@@ -120,8 +120,6 @@ const adaptRules = [
   t(locale, 'landing.adaptRuleEasier'),
   t(locale, 'landing.adaptRuleHarder'),
   t(locale, 'landing.adaptRulePoints'),
-  t(locale, 'landing.adaptRuleStreak7'),
-  t(locale, 'landing.adaptRuleStreak30'),
   t(locale, 'landing.adaptRuleDeload'),
 ];
 
@@ -252,16 +250,23 @@ const jsonLd = [
         )
       }
       <!--
-        Three facts as hairline columns, each led by its figure: the week as a row of circles, the
-        steps goal inside a ring, the board as three circles and three bars. One title and one
-        sentence under each. A day and a person are circles (CHANGELOG §10); «ты» is a pill.
+        Two facts as hairline columns, each led by its figure: the week as a row of circles, the
+        board as three circles and three bars. One title and one sentence under each. A day and a
+        person are circles (CHANGELOG §10); «ты» is a pill.
+
+        **There were three, and both of the ones that changed were advertising features the app no
+        longer has.** The first column was the streak — seven circles and a «+10 % с 7-го дня»
+        pill — and the streak is gone (a course with rest days in it cannot hold one). The second
+        was «7 000 шагов в день отдыха» inside a ring, and steps went with #104, because nothing
+        in a Mini App can read a phone's step counter. The week of circles is kept and re-labelled:
+        it is the training count, which is what the app actually shows now.
       -->
-      <div class="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-3">
+      <div class="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-1">
         <article class="flex flex-col gap-4 border-t border-border py-6">
           <!--
             `flex-wrap` and the week `shrink-0`: seven 36px circles are 288px of a 350px phone
-            column, so the bonus pill beside them had 50px and «+10 % с 7-го дня» lost its tail.
-            The week is a fixed object and the pill is what gives way — onto its own line.
+            column, so a pill beside them has 50px left. The week is a fixed object and the pill is
+            what gives way — onto its own line.
           -->
           <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-3">
             <ul class="flex shrink-0 gap-1.5" aria-hidden="true">
@@ -281,23 +286,9 @@ const jsonLd = [
                 ))
               }
             </ul>
-            <Pill size="sm">{t(locale, 'landing.pathStreakBonus')}</Pill>
           </div>
-          <h3 class="font-display text-base">{t(locale, 'landing.pathStreakTitle')}</h3>
-          <p class="text-sm leading-relaxed text-muted">{t(locale, 'landing.pathStreakText')}</p>
-        </article>
-
-        <article class="flex flex-col gap-4 border-t border-border py-6">
-          <div class="flex items-center gap-4">
-            <!-- The day's goal, not a course: no programme colour is in scope, so the ring is white. -->
-            <Ring value={0.6} size={88} stroke={6}>
-              <span class="numeral tabular text-lg leading-none">{formatNumber(locale, 7000)}</span>
-            </Ring>
-            <Pill size="sm">{t(locale, 'common.steps')} · {t(locale, 'landing.pathStepsGoal')}</Pill
-            >
-          </div>
-          <h3 class="font-display text-base">{t(locale, 'landing.pathStepsTitle')}</h3>
-          <p class="text-sm leading-relaxed text-muted">{t(locale, 'landing.pathStepsText')}</p>
+          <h3 class="font-display text-base">{t(locale, 'landing.pathCountTitle')}</h3>
+          <p class="text-sm leading-relaxed text-muted">{t(locale, 'landing.pathCountText')}</p>
         </article>
 
         <article class="flex flex-col gap-4 border-t border-border py-6">

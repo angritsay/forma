@@ -24,7 +24,6 @@
  * way back from the inventory is this sheet reopening.
  */
 import { useState } from 'react';
-import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Glyph } from '@/components/ui/Icon';
 import { ListRow } from '@/components/ui/ListRow';
@@ -106,23 +105,24 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
     <>
       <Sheet open={open && !gear} onClose={onClose} title={t('app.profileTitle')}>
         <div className="flex flex-col gap-6 pb-2">
-          {/* Who you are: the figure, the name, and the address that «Выйти» will leave. */}
-          <div className="flex items-center gap-4">
-            <Avatar
-              seed={profile?.avatarSeed || profile?.id || ''}
-              name={name || email}
-              size={56}
-            />
-            <div className="flex min-w-0 flex-col gap-0.5">
-              {name ? <p className="font-display truncate text-base">{name}</p> : null}
-              {email ? <p className="truncate text-[13px] text-muted-2">{email}</p> : null}
-            </div>
+          {/*
+           * Who you are: the name, and the address that «Выйти» will leave.
+           *
+           * There was a 56px monogram circle to the left of them — the first letter of the name on
+           * a generated colour. Nobody in this product uploads a picture, so it was a placeholder
+           * for a photograph that does not exist and never will, and the head of «Курсы» dropped
+           * the same circle for the same reason. What is left is the two lines that carry
+           * information, one size larger now that they are not sharing the row.
+           */}
+          <div className="flex min-w-0 flex-col gap-1">
+            {name ? <p className="display text-2xl">{name}</p> : null}
+            {email ? <p className="truncate text-[13px] text-muted-2">{email}</p> : null}
           </div>
 
           {/*
            * The level, and the one line that says how to get the next one. That line is the reason
            * the level is here at all: a rank with no rule attached is a badge, and the athlete has
-           * no way to act on it. The rule is points, and points are workouts and steps.
+           * no way to act on it. The rule is points, and points come from training.
            */}
           <div className="flex flex-col gap-2 border-t border-border pt-5">
             <div className="flex items-baseline justify-between gap-3">

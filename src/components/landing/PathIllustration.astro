@@ -1,11 +1,11 @@
 ---
 /**
- * The course path drawn with CSS/SVG from real course nodes (first six).
+ * The course path drawn with CSS/SVG from real course nodes (the first block of five).
  * Illustrative state: first node done, second up next, the third open, the rest locked.
  *
  * Drawn the way the owner's prototype draws the path (design/ui_kits/app-v2, «Путь»;
  * design/CHANGELOG.md §10): a banner in the programme colour naming the week and counting the
- * days «1/6»; the days as circles — done is filled in the colour and ticked, today is filled in
+ * sessions «1/5»; the sessions as circles — done is filled in the colour and ticked, today is filled in
  * paper with its number, an open day is outlined, a locked one dimmed — each with its name and one
  * muted line beside it. The squares, the progress bar and the «Прогресс · 17%» kicker it replaces
  * said the same in a smaller voice; the colour used to paint the bar and one numeral, and now it
@@ -28,14 +28,18 @@ interface Props {
 }
 const { locale, courseName, nodes, tile } = Astro.props;
 
-const shown = nodes.slice(0, 6);
+/*
+ * Five, because a block of the beginner course is five workouts. It was six, which drew a banner
+ * reading «Неделя 1» over a sixth stop belonging to week 2 — invisible while the path still had
+ * rest nodes padding each week to seven, and wrong the moment it stopped.
+ */
+const shown = nodes.slice(0, 5);
 const positions = [
   { x: 60, y: 40 },
   { x: 120, y: 110 },
   { x: 180, y: 180 },
   { x: 120, y: 250 },
   { x: 60, y: 320 },
-  { x: 120, y: 390 },
 ];
 const path = positions
   .slice(0, shown.length)

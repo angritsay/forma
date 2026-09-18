@@ -145,7 +145,8 @@ export const app = {
   coursesStart: 'Начать курс',
   coursesCompleted: 'Пройден — открыть путь',
   coursesGetAccess: 'Получить доступ',
-  coursesBoughtHint: 'Уже купил? Доступ появится, как только тренер активирует твою почту.',
+  coursesBoughtHint:
+    'Уже оплатил? Курс откроется, как только Сергей увидит оплату — обычно в тот же день.',
   coursesSubscribe: 'Подписка — все курсы',
   coursesSubscribeHint: 'от {price} в месяц · или купи этот курс навсегда',
   coursesBuyOne: 'Купить этот курс',
@@ -200,7 +201,7 @@ export const app = {
   pathSaveError: 'Не удалось сохранить. Проверь соединение и попробуй снова.',
   pathNotOwnedTitle: 'Этого курса у тебя пока нет',
   pathNotOwnedBody:
-    'Открой доступ на странице курса — он появится здесь после того, как тренер активирует твою почту.',
+    'Открой его на странице курса. После оплаты Сергей включит доступ на твою почту — обычно в тот же день.',
   pathNotOwnedCta: 'Страница курса',
   pathNotFound: 'Курс не найден',
   pathCompleted: 'Курс пройден!',
@@ -385,10 +386,12 @@ export const app = {
   statsWeekBoardTitle: 'Кто впереди',
   statsLeaderboard: 'Рейтинг',
   statsLevelEyebrow: 'Уровень {n}',
-  statsPointsValue: '{n} оч.',
-  statsLevelProgress: 'Прогресс до следующего уровня',
-  statsLevelNext: 'До уровня «{title}» — {n} оч.',
-  statsLevelMax: 'Максимальный уровень. Выше некуда — держи планку.',
+  statsPointsValue: '{n} очков',
+  statsLevelProgress: 'Сколько осталось до следующего уровня',
+  // «До «Стажёра»» would be the right case and the title comes from data, which cannot be
+  // declined. Putting the rank last lets it stay nominative and the line stay Russian.
+  statsLevelNext: 'Ещё {n} очков — и «{title}»',
+  statsLevelMax: 'Выше уровня нет. Дальше — просто тренируйся.',
   statsCalendarTotal: 'Всего {n}',
   statsCalendarWeek: 'На этой неделе {n}',
   statsCalendarWorkout: 'Тренировка',
@@ -396,8 +399,10 @@ export const app = {
   statsCalendarFuture: 'Впереди',
   statsCalendarToday: 'сегодня',
   statsAchievementsCount: '{done} из {total}',
-  statsAchievementUnlocked: 'Открыто',
-  statsAchievementLocked: 'Закрыто',
+  // Read out to a screen reader beside each figure, never drawn. «Открыто / Закрыто» sounded
+  // like a door; these say whether you have the thing.
+  statsAchievementUnlocked: 'Есть',
+  statsAchievementLocked: 'Пока нет',
 
   // Рейтинг
   leaderboardTitle: 'Рейтинг',
@@ -447,7 +452,7 @@ export const app = {
   bookDemoNote: 'В демо-режиме оплата отключена.',
   profileSignOut: 'Выйти',
   profileSignOutTitle: 'Выйти из аккаунта?',
-  profileSignOutBody: 'Прогресс останется в аккаунте. Чтобы вернуться, войди по коду из письма.',
+  profileSignOutBody: 'Всё сделанное останется на месте. Чтобы вернуться, введи код из письма.',
 
   // Админка
   adminTitle: 'Админка',
@@ -985,7 +990,9 @@ export const app = {
   // поэтому в каждом заголовке первое слово — то, которое должно звучать громче.
   onbAgeTitle: 'Сколько тебе лет?',
   onbSexTitle: 'Твой пол',
-  onbLevelTitle: 'Уровень формы',
+  // A question like the four before it. «Уровень формы» was a category name — the label on a
+  // field in a form — in the middle of a screen that otherwise talks.
+  onbLevelTitle: 'Как сейчас с тренировками?',
   // Десять подписей ползунка, снизу вверх. Меняются на каждом делении: цифра без слов —
   // это шкала, о которой знает только приложение.
   onbLevel01: 'Давно не тренировался',
@@ -1046,7 +1053,8 @@ export const app = {
   tabCoach: 'Тренер',
   coursesMore: 'Подробнее',
   achievementsTitle: 'Достижения',
-  achievementsLead: 'Всё, что можно взять, и как.',
+  // `achievementsLead` («Всё, что можно взять, и как.») stood here and said what the list under
+  // it plainly is. The count in the header is the only line this screen needs over the rules.
   achievementsEmpty: 'Пока нечего показать.',
   // Инвентарь остался единственной настройкой профиля: вопрос про него убрали из онбординга, а
   // экран профиля удалён — без этой строки человек с гантелями тренировался бы без них всегда.

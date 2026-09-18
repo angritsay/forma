@@ -144,7 +144,8 @@ export const app = {
   coursesStart: 'Start the course',
   coursesCompleted: 'Completed — open the path',
   coursesGetAccess: 'Get access',
-  coursesBoughtHint: 'Already bought? Access appears after the coach activates your email.',
+  coursesBoughtHint:
+    'Already paid? The course opens as soon as Sergey sees the payment — usually the same day.',
   coursesSubscribe: 'Subscribe — all courses',
   coursesSubscribeHint: 'from {price} a month · or buy this course for good',
   coursesBuyOne: 'Buy this course',
@@ -198,7 +199,7 @@ export const app = {
   pathSaveError: 'Couldn’t save. Check the connection and try again.',
   pathNotOwnedTitle: 'You don’t have this course yet',
   pathNotOwnedBody:
-    'Get access on the course page — it appears here after the coach activates your email.',
+    'Open it from the course page. After you pay, Sergey switches it on for your email — usually the same day.',
   pathNotOwnedCta: 'Course page',
   pathNotFound: 'Course not found',
   pathCompleted: 'Course completed!',
@@ -381,10 +382,10 @@ export const app = {
   statsWeekBoardTitle: 'Who’s ahead',
   statsLeaderboard: 'Leaderboard',
   statsLevelEyebrow: 'Level {n}',
-  statsPointsValue: '{n} pts',
-  statsLevelProgress: 'Progress to the next level',
-  statsLevelNext: '{n} pts to {title}',
-  statsLevelMax: 'Top level. Nothing above it — keep it there.',
+  statsPointsValue: '{n} points',
+  statsLevelProgress: 'How far to the next level',
+  statsLevelNext: '{n} more points and you are {title}',
+  statsLevelMax: 'No level above this one. Just keep training.',
   statsCalendarTotal: 'Total {n}',
   statsCalendarWeek: 'This week {n}',
   statsCalendarWorkout: 'Workout',
@@ -392,8 +393,9 @@ export const app = {
   statsCalendarFuture: 'Ahead',
   statsCalendarToday: 'today',
   statsAchievementsCount: '{done} of {total}',
-  statsAchievementUnlocked: 'Unlocked',
-  statsAchievementLocked: 'Locked',
+  // Read out to a screen reader beside each figure, never drawn.
+  statsAchievementUnlocked: 'Got it',
+  statsAchievementLocked: 'Not yet',
 
   // Leaderboard
   leaderboardTitle: 'Leaderboard',
@@ -964,7 +966,8 @@ export const app = {
   // so in each one the first word is the one that should carry.
   onbAgeTitle: 'How old are you?',
   onbSexTitle: 'Your sex',
-  onbLevelTitle: 'Fitness level',
+  // A question like the four before it, not the name of a form field.
+  onbLevelTitle: 'How is training going now?',
   // Ten slider labels, low end first. They change on every notch: a bare figure is a scale
   // only the app knows about.
   onbLevel01: 'Haven’t trained in a long time',
@@ -1024,7 +1027,7 @@ export const app = {
   tabCoach: 'Coach',
   coursesMore: 'Learn more',
   achievementsTitle: 'Achievements',
-  achievementsLead: 'Everything there is to earn, and how.',
+  // `achievementsLead` stood here and said what the list under it plainly is.
   achievementsEmpty: 'Nothing to show yet.',
   // Equipment is the one profile setting left: the onboarding question went and the profile screen
   // with it — without this row somebody who owns dumbbells would train without them forever.
