@@ -54,7 +54,7 @@ import { PROOFS_BUCKET, proofMediaPath, sendProof } from '@/lib/api/marathon';
 import { uploadMedia } from '@/lib/api/storage';
 import type { MyMarathon, ProofInput } from '@/lib/api/types';
 import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
-import { downscaleImage, extensionFor } from '@/lib/util/image';
+import { downscaleImage, extensionFor, isVideoFile, MAX_VIDEO_BYTES } from '@/lib/util/image';
 import { useT } from '@/app/hooks/useT';
 import { BoardGap, BoardRow } from '@/app/features/marathon/BoardRow';
 import { ClubPitch } from '@/app/features/marathon/ClubPitch';
@@ -130,28 +130,42 @@ export default function MarathonScreen() {
   );
 
   const sendMedia = useCallback(
-    async (taskId: string, file: File) => {
+    async (taskId: string, file: File, keep: Omit<ProofInput, 'taskId' | 'memberId'>) => {
       if (!marathon) return;
       /*
-       * Shrunk first, through `lib/util/image`. This path used
-       * to upload whatever the picker handed it: a 3MB phone photograph over mobile data to prove
-       * a task the coach reads in two seconds, and in demo mode that same 3MB base64'd into
-       * `localStorage` beside the rest of the demo database. `downscaleImage` degrades rather than
-       * fails — a decoder that will not open the file returns it untouched — so the upload still
-       * happens either way.
+       * A photograph is shrunk first, through `lib/util/image`. This path used to upload whatever
+       * the picker handed it: a 3MB phone photograph over mobile data to prove a task the coach
+       * reads in two seconds, and in demo mode that same 3MB base64'd into `localStorage` beside
+       * the rest of the demo database. `downscaleImage` degrades rather than fails — a decoder
+       * that will not open the file returns it untouched — so the upload still happens either way.
+       *
+       * **A clip is uploaded as picked**, because a browser has no way to re-encode one, and is
+       * refused above `MAX_VIDEO_BYTES` with a line saying what to do about it. Silently uploading
+       * 90MB over mobile data is not a kindness.
        *
        * The extension comes from the blob first and from `file.name` only as the fallback, because
        * after a re-encode the name is a lie: a picked `.png` leaves here as JPEG bytes, and the
-       * object was being stored as `.png`. `extensionFor` knows the five types a re-encode can
-       * produce; anything else keeps whatever the picked file called itself, and `proofMediaPath`
-       * strips it to `[a-z0-9]`.
+       * object was being stored as `.png`. `extensionFor` knows the types a re-encode can produce
+       * plus the three video types stored as picked; anything else keeps whatever the file called
+       * itself, and `proofMediaPath` strips it to `[a-z0-9]`.
+       *
+       * `keep` re-sends what the proof already said: `sendProof` upserts the whole row, so a photo
+       * attached to a number would otherwise erase the number.
        */
+      const video = isVideoFile(file);
+      if (video && file.size > MAX_VIDEO_BYTES) {
+        toast.show({
+          kind: 'error',
+          title: t('app.marathonProofTooBig', { n: Math.round(MAX_VIDEO_BYTES / (1024 * 1024)) }),
+        });
+        return;
+      }
       try {
-        const blob = await downscaleImage(file);
-        const ext = extensionFor(blob, file.name.split('.').pop() || 'jpg');
+        const blob = video ? file : await downscaleImage(file);
+        const ext = extensionFor(blob, file.name.split('.').pop() || (video ? 'mp4' : 'jpg'));
         const path = proofMediaPath(marathon.id, marathon.memberId, taskId, ext);
         const ref = await uploadMedia(PROOFS_BUCKET, path, blob);
-        await send(taskId, { mediaPath: ref });
+        await send(taskId, { ...keep, mediaPath: ref });
       } catch {
         toast.show({ kind: 'error', title: t('common.errorGeneric') });
       }
@@ -276,7 +290,7 @@ export default function MarathonScreen() {
                   item={item}
                   closed={closed}
                   onSend={(proof) => send(item.task.id, proof)}
-                  onSendMedia={(file) => sendMedia(item.task.id, file)}
+                  onSendMedia={(file, keep) => sendMedia(item.task.id, file, keep)}
                 />
               ))}
             </div>

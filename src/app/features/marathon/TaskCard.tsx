@@ -36,8 +36,14 @@ export interface TaskCardProps {
   /** The day has closed; proof can still be sent, but the card says it will not score. */
   closed: boolean;
   onSend: (proof: Omit<ProofInput, 'taskId' | 'memberId'>) => Promise<void>;
-  /** Uploads the file to the private `proofs` bucket and sends its path. */
-  onSendMedia: (file: File) => Promise<void>;
+  /**
+   * Uploads the file to the private `proofs` bucket and sends its path.
+   *
+   * `keep` is whatever the proof already carries. `sendProof` upserts the whole row, so attaching
+   * a photo to a task that was delivered with a number would otherwise null the number out — the
+   * attachment has to re-send the answer it is being attached to.
+   */
+  onSendMedia: (file: File, keep: Omit<ProofInput, 'taskId' | 'memberId'>) => Promise<void>;
 }
 
 export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
@@ -59,10 +65,17 @@ export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
     }
   };
 
+  /*
+   * Attaching re-sends whatever the proof already says, because the upsert writes the whole row:
+   * a photo added to «Прогулка полчаса · 34 мин» must not turn the 34 into null.
+   */
   const sendMedia = async (file: File) => {
     setBusy(true);
     try {
-      await onSendMedia(file);
+      await onSendMedia(file, {
+        ...(mine?.valueText != null ? { valueText: mine.valueText } : {}),
+        ...(mine?.valueNum != null ? { valueNum: mine.valueNum } : {}),
+      });
     } finally {
       setBusy(false);
     }
@@ -119,19 +132,17 @@ export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
         </p>
       ) : null}
 
-      {task.rule !== 'none' || task.proofKind !== 'done' ? (
-        <ProofControl
-          item={item}
-          busy={busy}
-          closed={closed}
-          text={text}
-          value={value}
-          onText={setText}
-          onValue={setValue}
-          onSend={send}
-          onSendMedia={sendMedia}
-        />
-      ) : null}
+      <ProofControl
+        item={item}
+        busy={busy}
+        closed={closed}
+        text={text}
+        value={value}
+        onText={setText}
+        onValue={setValue}
+        onSend={send}
+        onSendMedia={sendMedia}
+      />
     </article>
   );
 }
@@ -149,9 +160,19 @@ interface ProofControlProps {
 }
 
 /**
- * The control is whatever the task asks for: a button, a sentence, a number, a photo — and once
- * the proof is in, nothing, because the check on the card is the state. The one exception is a
- * photo, which can be replaced: the coach may not have seen the first one yet.
+ * The control is whatever the task asks for — a button, a sentence, a number — **and, on every one
+ * of them, somewhere to attach a photo or a clip.**
+ *
+ * That attachment used to exist only on a task the coach had typed as `media`, which made the
+ * club's own honesty system depend on him having guessed in advance which day someone might lie
+ * about. The owner's instruction is the other way round: «при клике на кнопку выполнить задание
+ * должна быть возможность прикрепить видео или фото доказательства». So the attach row is on
+ * every kind, it is optional on all of them, and it stays after the proof is sent — the tap on
+ * «Сделал» and the evidence for it are two different moments, and somebody filming a set will
+ * finish the set first.
+ *
+ * Only `media` keeps it as the primary control: there the attachment *is* the proof, and a task
+ * that scores nothing without a photo should not offer a button that pretends otherwise.
  */
 function ProofControl({
   item,
@@ -165,7 +186,6 @@ function ProofControl({
   onSendMedia,
 }: ProofControlProps) {
   const { t, locale } = useT();
-  const fileRef = useRef<HTMLInputElement>(null);
   const { task, mine } = item;
   const done = Boolean(mine && !mine.voidedAt);
   const locked = Boolean(mine?.voidedAt);
@@ -178,25 +198,36 @@ function ProofControl({
       <span className="text-[13px] text-muted-2">{t('app.marathonDeadlinePassed')}</span>
     ) : null;
 
+  /* The attachment, on every kind. `attach` is null only for `media`, which renders it as the
+     primary control below instead of repeating it. */
+  const attach =
+    task.proofKind === 'media' ? null : (
+      <AttachProof busy={busy} hasMedia={Boolean(mine?.mediaPath)} onPick={onSendMedia} />
+    );
+
   if (task.proofKind === 'done') {
-    if (done) return null;
     return (
-      <div className="flex items-center gap-3">
-        <Button
-          size="md"
-          loading={busy}
-          onClick={() => void onSend({})}
-          iconRight={<Glyph size={14}>✓</Glyph>}
-        >
-          {t('app.marathonProofDone')}
-        </Button>
-        {late}
+      <div className="flex flex-col gap-2">
+        {done ? null : (
+          <div className="flex items-center gap-3">
+            <Button
+              size="md"
+              loading={busy}
+              onClick={() => void onSend({})}
+              iconRight={<Glyph size={14}>✓</Glyph>}
+            >
+              {t('app.marathonProofDone')}
+            </Button>
+            {late}
+          </div>
+        )}
+        {attach}
       </div>
     );
   }
 
   if (task.proofKind === 'number') {
-    if (done) return null;
+    if (done) return attach;
     /*
      * The target is the field's placeholder — it is what the number is measured against — and the
      * unit is the field's trailing word, so the placeholder is the bare figure: «10 000 | шагов»,
@@ -236,12 +267,13 @@ function ProofControl({
           </Button>
         </div>
         {late}
+        {attach}
       </form>
     );
   }
 
   if (task.proofKind === 'text') {
-    if (done) return null;
+    if (done) return attach;
     return (
       <form
         className="flex flex-col gap-2"
@@ -270,52 +302,101 @@ function ProofControl({
           </Button>
         </div>
         {late}
+        {attach}
       </form>
     );
   }
 
   /*
-   * media — the photo is private to the coach, and the card says so rather than leaving it to be
-   * discovered after the fact.
-   *
-   * `image/*` only, and the video half is gone on purpose. `accept="image/*,video/*"` offered a
-   * clip the rest of the product cannot carry: nothing downscales it (this path uploads what it is
-   * handed), the demo backend base64s whatever it is given into `localStorage` — where one phone
-   * video is the whole quota — and the coach's review feed never plays it back, it prints «Фото
-   * отправлено» and stops. The button has always said «Прикрепить фото»; the picker now says the
-   * same thing. A file type the picker offers and the product cannot use is worse than one it never
-   * offered.
-   *
-   * `0011_marathon.sql` still describes `proof_kind = 'media'` as «a photo or a clip», and the
-   * bucket would take a clip today — reinstating video is a product decision plus a player in
-   * `ProofsFeed`, not a change to this attribute.
+   * media — the attachment is the proof, so it is the primary control and there is no «Сделал»
+   * beside it. The photo is private to the coach, and the card says so rather than leaving it to
+   * be discovered after the fact.
    */
   return (
     <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-3">
+        <AttachProof busy={busy} hasMedia={Boolean(mine?.mediaPath)} onPick={onSendMedia} primary />
+        {late}
+      </div>
+      <span className="text-[13px] text-muted-2">{t('app.marathonProofCoachOnly')}</span>
+    </div>
+  );
+}
+
+/**
+ * Pick a photo or a clip.
+ *
+ * **Video is back, and the three reasons it was removed are the three things fixed around it.**
+ * It came out because nothing shrank a clip, the demo backend base64'd whatever it was handed into
+ * `localStorage`, and the coach's feed never played it back — it printed «Фото отправлено» and
+ * stopped. The feed plays it now (`ProofMedia`), the demo store refuses to inline a clip, and the
+ * size cap below is the answer to the first: a browser cannot re-encode video, so the only honest
+ * control is a limit stated before the upload and enforced after the pick.
+ *
+ * `capture` is deliberately **not** set. It would send the phone straight to the camera, and half
+ * of these proofs are a shot taken twenty minutes ago — a picker that refuses the camera roll is a
+ * picker that loses them.
+ */
+function AttachProof({
+  busy,
+  hasMedia,
+  onPick,
+  primary = false,
+}: {
+  busy: boolean;
+  hasMedia: boolean;
+  onPick: (file: File) => void;
+  /** The attachment is the whole proof (a `media` task), not an optional extra. */
+  primary?: boolean;
+}) {
+  const { t } = useT();
+  const ref = useRef<HTMLInputElement>(null);
+  const label = primary
+    ? hasMedia
+      ? t('app.marathonProofPhotoAgain')
+      : t('app.marathonProofPhoto')
+    : hasMedia
+      ? t('app.marathonProofAttachAgain')
+      : t('app.marathonProofAttach');
+
+  return (
+    <>
       <input
-        ref={fileRef}
+        ref={ref}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         className="sr-only"
         onChange={(e) => {
           const file = e.target.files?.[0];
           // Clear the input so picking the same file twice still fires a change.
           e.target.value = '';
-          if (file) void onSendMedia(file);
+          if (file) onPick(file);
         }}
       />
-      <div className="flex items-center gap-3">
+      {primary ? (
         <Button
           size="md"
-          variant={done ? 'secondary' : 'primary'}
+          variant={hasMedia ? 'secondary' : 'primary'}
           loading={busy}
-          onClick={() => fileRef.current?.click()}
+          onClick={() => ref.current?.click()}
         >
-          {done ? t('app.marathonProofPhotoAgain') : t('app.marathonProofPhoto')}
+          {label}
         </Button>
-        {late}
-      </div>
-      <span className="text-[13px] text-muted-2">{t('app.marathonProofCoachOnly')}</span>
-    </div>
+      ) : (
+        /* Optional, so it is a ghost link under the control rather than a second button competing
+           with the one that actually delivers the task. */
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => ref.current?.click()}
+          className="flex items-center gap-2 self-start text-[13px] text-muted underline underline-offset-4 disabled:opacity-60"
+        >
+          <Glyph size={12} className="text-muted-2">
+            +
+          </Glyph>
+          {label}
+        </button>
+      )}
+    </>
   );
 }

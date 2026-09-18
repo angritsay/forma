@@ -18,6 +18,7 @@ import { Sheet } from '@/components/ui/Sheet';
 import { formatNumber } from '@/i18n/index';
 import type { MarathonMemberRow, MarathonProofRow } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
+import { ProofMedia } from './ProofMedia';
 
 export interface ProofsFeedProps {
   proofs: readonly MarathonProofRow[];
@@ -110,11 +111,12 @@ export function ProofsFeed({
                 {proof.valueText ? (
                   <span className="block text-[13px] text-text">{proof.valueText}</span>
                 ) : null}
-                {proof.mediaPath ? (
-                  <span className="block text-[13px] text-muted-2">
-                    {t('app.marathonProofPhotoSent')}
-                  </span>
-                ) : null}
+                {/*
+                  The proof, not a sentence about it. This printed «Фото отправлено» and nothing
+                  else, which made the void decision this feed exists for impossible: you cannot
+                  strike out evidence you have never looked at.
+                */}
+                {proof.mediaPath ? <ProofMedia mediaPath={proof.mediaPath} /> : null}
                 {proof.voidedAt && proof.voidReason ? (
                   <span className="block text-[13px] text-danger">
                     {t('app.marathonProofVoided', { reason: proof.voidReason })}
