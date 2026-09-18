@@ -55,44 +55,51 @@ export interface BotCopy {
 }
 
 /**
- * The first thing anyone sees of Forma.
+ * The first thing anyone sees of Forma, written by the owner and sent as she wrote it.
  *
- * It names the three things the product actually is, one short line each, in the order of what
- * they cost: a course you buy once, a club you subscribe to, an hour of the coach's own time.
- * That order is also the order of commitment, so somebody skimming stops at the first line that
- * describes them.
+ * It is the two of them saying hello and then naming the three tabs the app actually has —
+ * «Курсы · Клуб · Тренер» — in that order, with the one instruction that matters at the end. A
+ * greeting that promises a shape the app does not have is a greeting that has to be re-learned on
+ * arrival, and this one used to do exactly that.
  *
- * The club line says no partner, because the club has none: «каждый сам за себя». It used to
- * promise one, which is the worst kind of wrong in a greeting — a promise the first screen breaks.
+ * **HTML, not Markdown, and that is a deliberate reversal.** This comment used to say "no Markdown
+ * anywhere", for a good reason: MarkdownV2 needs every «.», «-» and «(» escaped, and a caption that
+ * fails to parse is a caption nobody sees. HTML has no such trap — only `&`, `<` and `>` are
+ * special, and nothing else in a sentence can break it. The owner's copy uses `<b>` and
+ * `<blockquote>`, both of which Telegram supports, so `parse_mode: 'HTML'` goes on both sends.
  *
- * The three lines match the app's three tabs on purpose — «Курсы · Клуб · Тренер». A greeting that
- * promises a shape the app does not have is a greeting that has to be re-learned on arrival, and
- * this one used to do exactly that: it described a single course and nothing else, because it was
- * written before the club and the one-to-one sessions existed.
+ * **The length is load-bearing.** A caption is capped at 1024 characters against a message's 4096,
+ * and going over does not truncate — `sendPhoto` fails outright and the bot falls back to text,
+ * silently dropping the photograph. The visible text here is 928 characters, which leaves under a
+ * hundred to spare, so `index.test.ts` measures it. Anything added must come out of something else.
  *
- * The numbers are the course’s own (`content/courses/start.ts`: twenty workouts,
- * a video on every movement). Do not round them up here — this is the one place where a claim is
- * made to somebody who has not paid yet.
- *
- * Two buttons, because the two people who tap **Start** want different things: one is ready to
- * open the app, the other is still deciding and wants to read. Sending both to the same place
- * serves neither.
- *
- * No Markdown anywhere in here. Telegram would need every «.», «-» and «(» escaped, and a caption
- * that fails to parse is a caption nobody sees.
+ * The claims are the product's own: one beginner course, a video on every movement, an hour with
+ * the coach for whoever is top on Sunday. This is the one place a promise is made to somebody who
+ * has not paid yet, so nothing here is rounded up.
  */
 export const DEFAULT_COPY: BotCopy = {
   greeting:
-    'Форма — домашний кроссфит с Сергеем Титовым.\n\n' +
-    'Курсы. Двадцать тренировок по 15–20 минут, видео на каждое движение. ' +
-    'Нагрузка подстраивается под тебя.\n\n' +
-    'Клуб маленьких шагов. Одно небольшое задание в день и общая таблица за неделю. ' +
-    'Тому, кто наверху, достаётся час с тренером.\n\n' +
-    'Тренировка один на один. Разбор техники и план на следующие недели — с Сергеем, ' +
-    'онлайн, по видеосвязи.',
+    'Привет. Это Сережа и Настя — создатели приложения <b>Forma</b> с тренировками, ' +
+    'которые не захочется бросить.\n\n' +
+    'Никакого зала. Всё что тебе нужно — это 15 минут и коврик.\n\n' +
+    'Внутри три раздела:\n\n' +
+    '🎬 <b>Курсы</b>\n' +
+    'Пока что только курс для новичков, но скоро добавим ещё. На каждое движение есть видео ' +
+    'и инструкции по выполнению. Попробуй во время тренировки свайп вниз чтобы перейти ' +
+    'к следующему упражнению, влево — чтобы узнать технику и ограничения.\n\n' +
+    '🏆 <b>Клуб маленьких шагов</b>\n' +
+    'Одно небольшое задание от тренера в день, чтобы постепенно изменить твои привычки. ' +
+    'Плюс общая таблица на неделю. Кто наверху в воскресенье, тот забирает час онлайн ' +
+    '1-1 с Сережей.\n\n' +
+    '📞 <b>Тренер</b>\n' +
+    'Это персональные тренировки и консультации с Сережей — тренером, экспертом по питанию ' +
+    'и создателем Forma. Можно проверить технику, собрать план на ближайшие недели ' +
+    'или обсудить диету.\n\n' +
+    '<blockquote>Проще всего — открыть приложение, войти и пройти первую тренировку. ' +
+    'Она короткая, остальное поймёшь по ходу.</blockquote>',
   buttonText: 'Открыть приложение',
   siteButtonText: 'Почитать на сайте',
-  photoUrl: 'https://forma-app.co/og/default.png',
+  photoUrl: 'https://forma-app.co/bot/welcome.jpg',
 };
 
 /**
@@ -151,6 +158,9 @@ export function sendMessageBody(
   return {
     chat_id: reply.chatId,
     text: reply.text,
+    // See DEFAULT_COPY: the greeting carries <b> and <blockquote>, and HTML is the one parse mode
+    // whose escaping rules a Russian sentence cannot trip over by accident.
+    parse_mode: 'HTML',
     reply_markup: keyboard(reply, appUrl, siteUrl),
   };
 }
@@ -165,6 +175,7 @@ export function sendPhotoBody(
     chat_id: reply.chatId,
     photo: reply.photoUrl,
     caption: reply.text,
+    parse_mode: 'HTML',
     reply_markup: keyboard(reply, appUrl, siteUrl),
   };
 }

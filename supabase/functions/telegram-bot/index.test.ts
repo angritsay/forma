@@ -71,13 +71,42 @@ describe('the greeting itself', () => {
    * about, and the club is the one most likely to be forgotten, because it is the newest.
    */
   it('names all three things the product sells', () => {
-    for (const thing of ['Курсы', 'Клуб маленьких шагов', 'один на один']) {
+    // «один на один» was in this list until the owner rewrote the greeting; the third section is
+    // called «Тренер» now, which is also what the tab is called.
+    for (const thing of ['Курсы', 'Клуб маленьких шагов', 'Тренер']) {
       expect(DEFAULT_COPY.greeting).toContain(thing);
     }
   });
 
-  it('fits in a caption, which is shorter than a message', () => {
-    expect(DEFAULT_COPY.greeting.length).toBeLessThanOrEqual(1024);
+  /**
+   * What Telegram counts is the text people see: the tags become entities and take no room. The
+   * raw string is the wrong measure now that there are tags in it — it over-counts, which would
+   * pass today and mislead whoever next tries to work out how much room is left.
+   */
+  const visible = () => DEFAULT_COPY.greeting.replace(/<\/?(b|i|u|s|code|pre|blockquote)>/g, '');
+
+  it('fits in a caption, which is a quarter of a message', () => {
+    // 1024 against a message's 4096. Going over does not truncate: `sendPhoto` fails outright and
+    // the bot falls back to text, so the photograph disappears and the message still looks fine.
+    expect(visible().length).toBeLessThanOrEqual(1024);
+    // Close enough to the ceiling that this test is the reason to check before adding a line.
+    expect(visible().length).toBeGreaterThan(800);
+  });
+
+  it('closes every tag it opens', () => {
+    const opened = [...DEFAULT_COPY.greeting.matchAll(/<(\w+)>/g)].map((m) => m[1]);
+    const closed = [...DEFAULT_COPY.greeting.matchAll(/<\/(\w+)>/g)].map((m) => m[1]);
+    // An unclosed tag is a rejected parse, and a rejected parse is a greeting nobody receives.
+    expect(opened.sort()).toEqual(closed.sort());
+  });
+
+  it('uses only the tags Telegram understands', () => {
+    // Telegram's HTML is a short list, and an unknown tag is a rejected message rather than a tag
+    // rendered literally. `<br>`, `<p>` and `<span>` are the usual ones to reach for; none is on it.
+    const allowed = new Set(['b', 'i', 'u', 's', 'a', 'code', 'pre', 'blockquote']);
+    for (const [, tag] of DEFAULT_COPY.greeting.matchAll(/<\/?(\w+)[^>]*>/g)) {
+      expect(allowed.has(tag!), `unexpected tag <${tag}>`).toBe(true);
+    }
   });
 
   it('carries no Markdown, because nothing sets parse_mode', () => {
@@ -108,6 +137,7 @@ describe('payloads', () => {
       chat_id: 42,
       photo: 'https://example.test/card.png',
       caption: 'Hi',
+      parse_mode: 'HTML',
       reply_markup: keyboard(reply, APP, SITE),
     });
   });
@@ -116,7 +146,12 @@ describe('payloads', () => {
     const reply = replyFor(privateMessage('/start'), COPY)!;
     const photo = sendPhotoBody(reply, APP, SITE);
     const text = sendMessageBody(reply, APP, SITE);
-    expect(text).toEqual({ chat_id: 42, text: 'Hi', reply_markup: keyboard(reply, APP, SITE) });
+    expect(text).toEqual({
+      chat_id: 42,
+      text: 'Hi',
+      parse_mode: 'HTML',
+      reply_markup: keyboard(reply, APP, SITE),
+    });
     // The fallback must lose the picture and nothing else.
     expect(text.reply_markup).toEqual(photo.reply_markup);
     expect(text.text).toEqual(photo.caption);
