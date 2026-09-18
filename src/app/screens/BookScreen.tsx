@@ -57,6 +57,7 @@ import { openExternal } from '@/lib/telegram/webapp';
 import { paymentTarget, withEmail } from '@/lib/util/payment';
 import { LinkButton } from '@/app/features/courses/LinkButton';
 import { splitName } from '@/app/features/profile/model';
+import { externalLinkProps } from '@/app/hooks/useExternalLink';
 import { useT, type Translator } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
 import { BOOKING, type BookingOption } from '@content/site/booking';
@@ -249,6 +250,31 @@ export default function BookScreen() {
                 </li>
               ))}
             </ul>
+            {/*
+             * Where to find him, under what he has behind him rather than next to the pills above.
+             * The pills say what the session is; these say where the person is, and the credentials
+             * are the block that question belongs to.
+             *
+             * `externalLinkProps` and not a bare `href`: inside Telegram a top-level navigation out
+             * of the Mini App either does nothing or replaces the app with a website the customer
+             * cannot get back from, so Telegram is asked to open the address outside instead. On the
+             * web the anchor behaves normally. Every link out of this app goes through that hook.
+             */}
+            {COACH.links.length > 0 ? (
+              <ul className="flex flex-wrap gap-2 pt-1">
+                {COACH.links.map((x) => (
+                  <li key={x.url}>
+                    <a
+                      {...externalLinkProps(x.url)}
+                      rel="me noopener noreferrer"
+                      className="control-label inline-flex h-10 items-center rounded-control border border-border-strong px-4 text-[13px] text-muted transition-colors duration-150 active:bg-surface-2"
+                    >
+                      {x.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </section>
 
           {/*
