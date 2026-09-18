@@ -134,7 +134,14 @@ export default function BookScreen() {
   const email = profile?.email || user?.email || '';
   const name = l(COACH.name, locale);
   const { heavy, thin } = splitName(name);
-  const schedule = paymentTarget(BOOKING.scheduleUrl);
+  /*
+   * The slot page for the length that is selected, falling back to the shared one.
+   *
+   * It reads from `option` rather than from `BOOKING` because a Google Calendar appointment
+   * schedule carries a single duration: half an hour and an hour are two pages. Reading the shared
+   * field alone would have sent somebody who paid for an hour to the half-hour's booking page.
+   */
+  const schedule = paymentTarget(option?.scheduleUrl || BOOKING.scheduleUrl);
   const lead = BOOKING.leadTimeMin;
   const payment = option ? paymentTarget(option.paymentUrl[locale] ?? option.paymentUrl.ru) : null;
   const contact = contactHref(option ? l(option.name, locale) : name);

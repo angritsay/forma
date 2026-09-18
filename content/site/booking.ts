@@ -14,7 +14,9 @@
  * signed-in email is appended as `?email=`, anything else is ignored. An option without a link
  * offers a message to the coach instead of a payment button, so the half-hour can be published
  * before its product exists. `scheduleUrl` is where the client picks a slot after paying (a Google
- * Calendar appointment page, a Telegram link); optional, and shared by both lengths.
+ * Calendar appointment page, a Telegram link); optional. It can be set per length, because a Google
+ * appointment schedule holds one duration and the two lengths are therefore two pages, and once on
+ * `BOOKING` as the fallback for a tool that asks the visitor to choose a length itself.
  */
 import type { L10n, PaymentUrl } from '@/content/schema';
 import type { CoursePrice } from './pricing';
@@ -40,6 +42,19 @@ export interface BookingOption {
    * docs/SETUP.md §7.1 and §7.3.
    */
   paymentUrl: PaymentUrl;
+  /**
+   * Slot page for **this length**, overriding `BOOKING.scheduleUrl`.
+   *
+   * It exists because of how the tool on the other end actually works: a Google Calendar
+   * appointment schedule carries **one duration**, set on the schedule itself. So half an hour and
+   * an hour are two separate schedules with two separate links, and one shared field cannot hold
+   * them — whichever link it held, the other length would send a client who had just paid to a page
+   * offering the duration they did not buy.
+   *
+   * Empty falls back to `BOOKING.scheduleUrl`, which stays right for a booking tool that does ask
+   * the visitor to choose a length on its own page.
+   */
+  scheduleUrl?: string;
 }
 
 /**
@@ -191,6 +206,10 @@ export const BOOKING = {
    * than ending on a paid button with nothing after it: pay, then write, and he sets the time.
    * Filled, the same screen offers the slot page as the step straight after payment and the
    * «хоть за {leadTimeMin} минут» promise stops depending on him being at his phone.
+   *
+   * **The fallback, not the usual answer.** With Google Calendar each length is its own appointment
+   * schedule with its own link, so those go on the options and this stays empty. Set this one only
+   * for a booking page that asks the visitor to pick the length itself.
    */
   scheduleUrl: '' as string,
 } as const;
