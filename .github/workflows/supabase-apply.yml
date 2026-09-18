@@ -39,6 +39,7 @@ on:
           - club-join
           - email-templates
           - deploy-bot
+          - secrets-check
       migration_file:
         description: 'Only for "migration": a filename in supabase/migrations/'
         required: false
@@ -314,8 +315,13 @@ jobs:
             ${MINI_APP_URL:+MINI_APP_URL="$MINI_APP_URL"} >/dev/null
           echo "Function deployed and its secrets set."
 
+          # Hard failure, not a warning. The function now refuses every delivery without this
+          # secret (fail closed), so deploying without it would leave a bot that answers nothing
+          # and says why only in a log nobody reads. Better to stop here, with the fix in the
+          # message.
           if [ -z "${WEBHOOK_SECRET:-}" ]; then
-            echo "::warning::TELEGRAM_WEBHOOK_SECRET is not set, so the webhook will be unauthenticated — anyone who guesses the URL can post updates to it. Generate one (openssl rand -hex 32), add it as a repository secret, and run this again."
+            echo "::error::TELEGRAM_WEBHOOK_SECRET is not set, and the bot function refuses every delivery without it. Generate one: openssl rand -hex 32 — then Settings → Secrets and variables → Actions → New repository secret, name TELEGRAM_WEBHOOK_SECRET, paste the value, and run this task again."
+            exit 1
           fi
 
           HOOK_URL="https://$PROJECT_REF.functions.supabase.co/telegram-bot"
@@ -333,6 +339,58 @@ jobs:
             exit 1
           fi
           echo "Telegram now delivers /start to $HOOK_URL"
+
+      # ---------------------------------------------------------------------
+      # secrets-check — which function secrets exist, and which are missing.
+      #
+      # Read-only, and it prints **names only**: `supabase secrets list` shows a
+      # digest rather than a value, and even that is discarded here. It exists
+      # because three edge functions now refuse every request when their secret
+      # is unset (fail closed), and the only way to find out used to be to send
+      # a real payment and watch it not arrive.
+      # ---------------------------------------------------------------------
+      - name: List which function secrets are set
+        if: ${{ inputs.task == 'secrets-check' }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -euo pipefail
+          curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz \
+            | tar -xz -C /tmp
+          /tmp/supabase secrets list --project-ref "$PROJECT_REF" \
+            | awk '{print $1}' | grep -E '^[A-Z_]+$' | sort > /tmp/have.txt
+
+          echo "Секреты, заданные в Supabase:"
+          sed 's/^/  · /' /tmp/have.txt
+
+          # What each function refuses to run without. Keep in step with the
+          # `Deno.env.get(...)` guards in supabase/functions/*/index.ts.
+          cat > /tmp/need.txt <<'NEEDED'
+          TELEGRAM_BOT_TOKEN|бот вообще не отвечает
+          TELEGRAM_WEBHOOK_SECRET|бот отклоняет все запросы (fail closed)
+          PRODAMUS_SECRET|оплаты не активируют подписку (fail closed)
+          WEBHOOK_TOKEN|оплаты не активируют подписку
+          NEEDED
+
+          missing=0
+          echo ""
+          while IFS='|' read -r name why; do
+            name=$(echo "$name" | xargs)
+            [ -z "$name" ] && continue
+            if grep -qx "$name" /tmp/have.txt; then
+              echo "✓ $name"
+            else
+              echo "::warning::$name не задан — $why"
+              missing=$((missing + 1))
+            fi
+          done < /tmp/need.txt
+
+          echo ""
+          if [ "$missing" -eq 0 ]; then
+            echo "Все секреты, которые нужны работающим функциям, на месте."
+          else
+            echo "Не задано: $missing. Задать: Supabase → Edge Functions → Secrets."
+          fi
 
           # Read it back, so the run says what Telegram itself believes rather
           # than what we just asked for. None of these fields is a credential.

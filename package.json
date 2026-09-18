@@ -15,6 +15,7 @@
     "test:watch": "vitest",
     "content:validate": "node scripts/content/validate.mjs",
     "content:review": "node scripts/content/review-course.mjs",
+    "legal:check": "node --experimental-strip-types scripts/legal-check.mjs",
     "seo:audit": "node scripts/seo/audit.mjs",
     "seo:indexnow": "node scripts/seo/indexnow.mjs",
     "seo:new-guide": "node scripts/seo/new-guide.mjs",

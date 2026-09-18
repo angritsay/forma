@@ -195,16 +195,26 @@ export async function handleRequest(req: Request): Promise<Response> {
     return reply(500, 'not configured');
   }
 
+  /*
+   * Fail closed, as calendly-webhook already does.
+   *
+   * This used to warn and carry on, which meant that a project missing the secret ran an
+   * unauthenticated endpoint: the function URL is not a credential — it appears in deploy logs,
+   * in `getWebhookInfo`, and in anything that ever proxied a request to it — so anyone holding it
+   * could post fabricated updates and have the coach's bot send messages to any chat id they
+   * named. That is a "works today, embarrassing later" configuration, and the only safe default
+   * for a door is shut.
+   *
+   * 503 rather than 403: nothing is wrong with the caller, the bot is not configured. Telegram
+   * retries on 5xx, so the queued /start messages survive until the secret is set.
+   */
   const secret = Deno.env.get('TELEGRAM_WEBHOOK_SECRET');
-  if (secret) {
-    if (req.headers.get('x-telegram-bot-api-secret-token') !== secret) {
-      return reply(403, 'bad secret');
-    }
-  } else {
-    // Without it the URL is the only thing standing between the bot and anyone who guesses it.
-    console.warn(
-      'telegram-bot: TELEGRAM_WEBHOOK_SECRET is not set; the webhook is unauthenticated',
-    );
+  if (!secret) {
+    console.error('telegram-bot: TELEGRAM_WEBHOOK_SECRET is not set; refusing every delivery');
+    return reply(503, 'not configured');
+  }
+  if (req.headers.get('x-telegram-bot-api-secret-token') !== secret) {
+    return reply(403, 'bad secret');
   }
 
   let update: TelegramUpdate;

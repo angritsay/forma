@@ -21,8 +21,13 @@ export const PRICING = {
    * (see /refund/ and docs/LEGAL.md).
    */
   refundMaxCompletedWorkouts: 3,
-  /** Shown as "Last updated" on /privacy/, /terms/ and /refund/ (ISO date). */
-  legalUpdatedAt: '2026-09-02',
+  /**
+   * Shown as «обновлено» on /privacy/, /terms/ and /refund/ — and, since migration 0018, the
+   * version stamped into every consent row. Bump it whenever the wording of any of the three
+   * changes: a log that names a version nobody can read any more proves nothing, and a person who
+   * agreed to the old text has not agreed to the new one.
+   */
+  legalUpdatedAt: '2026-09-18',
   /** Supabase project region, named in the privacy policy. Match the region chosen in Supabase. */
   dataRegion: 'eu' as 'eu' | 'us',
   /** Minimum age to use the service, stated in the terms and the privacy policy. */
