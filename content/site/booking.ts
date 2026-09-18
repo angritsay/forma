@@ -117,15 +117,24 @@ export const BOOKING = {
   options: [HALF, HOUR] as readonly BookingOption[],
   format: { ru: 'Онлайн, по видеосвязи', en: 'Online, over video' } satisfies L10n,
   /**
-   * What an hour with *him* gives, as against an hour with a coach.
+   * What an hour with him gives — **in his own voice, first person, short.**
    *
-   * **Rewritten on the owner's instruction**, and the instruction is worth keeping in front of
-   * whoever edits this next: «перепиши понятным языком, типо тренер может скорректировать технику
-   * выполнения для достижения максимального результата без травмы. Ну то есть реальные jtbd
-   * написать понятным языком». The old three lines were each a single compressed clause with a
-   * colon in it — the register of a specification, not of somebody explaining why they would pay.
-   * These are the same three facts said out loud, with the concrete detail that makes them mean
-   * something: not «разбор техники» but which mistake he is looking at.
+   * Two instructions from the owner, in order. First «перепиши понятным языком… реальные jtbd»,
+   * which turned three compressed clauses-with-a-colon into three jobs with a concrete detail
+   * each. Then, looking at the result on a phone: «эти тексты должны быть как от Серёжи и
+   * покороче и человеческим языком».
+   *
+   * She is right about both halves. The block sat directly under his photograph and his
+   * credentials and then talked about him in the third person — «он видит круглую спину» — which
+   * is a brochure describing a man who is standing right there. And at that length it was three
+   * paragraphs on a screen whose whole job is to make one decision. So: «я», and roughly half the
+   * words.
+   *
+   * **The voice is a constraint, not a decoration.** Everything here is now a sentence Sergey
+   * would have to be willing to say to a client, which rules out anything he could not deliver in
+   * a session — no promises about a body, no outcome after N weeks, nothing about what the courses
+   * cure. If a line cannot be said in the first person without becoming a boast or a medical
+   * claim, it does not belong in this array.
    *
    * Not one of them is a new claim. The first is `HALF_INCLUDES[0]`, the second `HOUR_ADDS[0]`
    * plus the conditioning work in `COACH.bio`, the third `HALF_INCLUDES[1]` and `HOUR_ADDS[1]`.
@@ -134,38 +143,29 @@ export const BOOKING = {
    * eventually hurts, which is the reason technique coaching exists and is said about training in
    * general — it is not a promise that a session prevents injury, and it is certainly not a claim
    * that any Forma programme is safe for a particular back. That distinction is the same one
-   * `content/site/coach.ts` draws in its header, and it is the one that has to hold: everything
-   * here is about what happens *in the session*, which is the only thing the product controls.
+   * `content/site/coach.ts` draws in its header, and it survives the move into the first person:
+   * «поправлю» is something he does in the session, «вылечу» would not be.
    */
   outcomes: [
     {
-      title: {
-        ru: 'Кто-то наконец смотрит, как ты делаешь',
-        en: 'Somebody finally watches you do it',
-      },
+      title: { ru: 'Смотрю, как ты двигаешься', en: 'I watch how you move' },
       body: {
-        ru: 'Ты показываешь упражнение, он видит круглую спину или колено, уходящее внутрь, и правит на месте. Кривая техника сначала забирает результат, а потом начинает болеть — и сам по видео в интернете ты этого не поймаешь.',
-        en: 'You do the movement, he sees the rounded back or the knee caving in, and fixes it on the spot. Bad technique takes your results first and starts to hurt later — and you will not catch it yourself from a video online.',
+        ru: 'Покажешь упражнение — увижу круглую спину или колено внутрь и поправлю сразу. Кривая техника сначала съедает результат, а потом начинает болеть.',
+        en: 'Show me the movement and I will see the rounded back or the knee caving in, and fix it there and then. Bad technique eats your results first and starts to hurt later.',
       },
     },
     {
-      title: {
-        ru: 'Нагрузку считают под тебя, а не под всех',
-        en: 'The load is worked out for you, not for everyone',
-      },
+      title: { ru: 'Считаю нагрузку под тебя', en: 'I work out the load for you' },
       body: {
-        ru: 'Не «делай двадцать приседаний», а сколько, как часто и с чем именно тебе — под твою цель, под то, что есть дома, и под то, что пока не получается или болит.',
-        en: 'Not "do twenty squats", but how many, how often and with what — for your goal, the kit you actually have at home, and whatever does not work or aches yet.',
+        ru: 'Не «двадцать приседаний всем», а сколько и с чем именно тебе — под цель, под то, что есть дома, и под то, что пока болит.',
+        en: 'Not "twenty squats for everyone", but how many and with what for you — your goal, the kit you have at home, and whatever still aches.',
       },
     },
     {
-      title: {
-        ru: 'Уходишь с ответом, что делать дальше',
-        en: 'You leave knowing what comes next',
-      },
+      title: { ru: 'Скажу, что делать дальше', en: 'I tell you what comes next' },
       body: {
-        ru: 'Вопросы, которые копились месяц, закрываются за один разговор, и дальше ты знаешь не только сегодняшнюю тренировку, а что добавить и когда прибавлять в ближайшие недели.',
-        en: 'A month of questions gets answered in one conversation, and you come away knowing more than today’s session: what to add and when to push in the weeks ahead.',
+        ru: 'Разберём всё, что накопилось, и ты уйдёшь с планом на ближайшие недели, а не с одной тренировкой.',
+        en: 'We go through everything that has piled up, and you leave with a plan for the coming weeks, not one workout.',
       },
     },
   ] as readonly BookingOutcome[],
