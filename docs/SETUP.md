@@ -16,24 +16,24 @@ Want to see the product before provisioning anything? Build the site, open `/app
 Values only the owner knows. The site builds without them, but the placeholders below are
 visible to customers until replaced.
 
-| What                               | Where                                              | Notes                                                                                                                                                                                                      |
-| ---------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Contact email, Telegram, socials   | `content/site/brand.ts`                            | `contactEmail`, `telegram`, `instagram`, `youtube`, `twitter`                                                                                                                                              |
-| Coach name, bio, credentials       | `content/site/coach.ts`                            | Leave `credentials` empty rather than inventing any                                                                                                                                                        |
-| Support links                      | `content/site/links.ts`                            | `supportTelegram`, `supportEmail` (used when a course has no `paymentUrl`)                                                                                                                                 |
-| Prices                             | `content/courses/<course>.ts` → `price`            | `{ rub, usd }` per course                                                                                                                                                                                  |
-| Payment links                      | `content/courses/<course>.ts` → `paymentUrl`       | `{ ru, en }`, optional; see §7                                                                                                                                                                             |
-| Intro / exercise videos            | `content/courses/*.ts`, `content/exercises/*.ts`   | `storage:videos/…` refs; see §5                                                                                                                                                                            |
-| Sign-in montage                    | Storage: bucket `images`, path `site/auth.mp4`     | The reference in `content/site/media.ts` already points here. Until the file is uploaded to that exact path the sign-in screen shows the poster still — which is a working screen, not a broken one. §5    |
-| Sign-in email templates            | Dashboard → Authentication → Email Templates       | **Outstanding.** Paste `supabase/templates/otp.html` into **both** Magic Link and Confirm signup. Only the owner can: it is a dashboard action. §3.2                                                       |
-| SPF, DKIM and DMARC for the domain | DNS host for `forma-app.co`                        | **Outstanding.** Without them the codes are filtered. §3.5.1 has the records                                                                                                                               |
-| Supabase URL + anon key            | `.env` (local) and GitHub repo variables           | §6                                                                                                                                                                                                         |
-| Site URL + base path               | `.env` and GitHub repo variables                   | §6                                                                                                                                                                                                         |
-| Coach admin email                  | `public.admins` table                              | §4                                                                                                                                                                                                         |
-| The bot's answer to `/start`       | Dashboard → Edge Functions + one `setWebhook` call | The handler is written and tested (`supabase/functions/telegram-bot`). It is silent until the function is deployed, its secrets are set and Telegram is pointed at it — all three are dashboard work. §7.6 |
-| Email sender (SMTP)                | Dashboard → Project Settings → Authentication      | §3                                                                                                                                                                                                         |
-| Analytics / verification ids       | `.env` / repo variables (`PUBLIC_*`)               | Optional; rendered only when set                                                                                                                                                                           |
-| IndexNow key                       | GitHub repo secret `INDEXNOW_KEY`                  | Optional; see docs/SEO.md                                                                                                                                                                                  |
+| What                               | Where                                            | Notes                                                                                                                                                                                                   |
+| ---------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Contact email, Telegram, socials   | `content/site/brand.ts`                          | `contactEmail`, `telegram`, `instagram`, `youtube`, `twitter`                                                                                                                                           |
+| Coach name, bio, credentials       | `content/site/coach.ts`                          | Leave `credentials` empty rather than inventing any                                                                                                                                                     |
+| Support links                      | `content/site/links.ts`                          | `supportTelegram`, `supportEmail` (used when a course has no `paymentUrl`)                                                                                                                              |
+| Prices                             | `content/courses/<course>.ts` → `price`          | `{ rub, usd }` per course                                                                                                                                                                               |
+| Payment links                      | `content/courses/<course>.ts` → `paymentUrl`     | `{ ru, en }`, optional; see §7                                                                                                                                                                          |
+| Intro / exercise videos            | `content/courses/*.ts`, `content/exercises/*.ts` | `storage:videos/…` refs; see §5                                                                                                                                                                         |
+| Sign-in montage                    | Storage: bucket `images`, path `site/auth.mp4`   | The reference in `content/site/media.ts` already points here. Until the file is uploaded to that exact path the sign-in screen shows the poster still — which is a working screen, not a broken one. §5 |
+| Sign-in email templates            | Dashboard → Authentication → Email Templates     | **Outstanding.** Paste `supabase/templates/otp.html` into **both** Magic Link and Confirm signup. Only the owner can: it is a dashboard action. §3.2                                                    |
+| SPF, DKIM and DMARC for the domain | DNS host for `forma-app.co`                      | **Outstanding.** Without them the codes are filtered. §3.5.1 has the records                                                                                                                            |
+| Supabase URL + anon key            | `.env` (local) and GitHub repo variables         | §6                                                                                                                                                                                                      |
+| Site URL + base path               | `.env` and GitHub repo variables                 | §6                                                                                                                                                                                                      |
+| Coach admin email                  | `public.admins` table                            | §4                                                                                                                                                                                                      |
+| The bot's answer to `/start`       | **Actions → Supabase apply → `deploy-bot`**      | One button. It deploys the function, sets its secrets and calls `setWebhook`, then reads the hook back and prints what Telegram believes. Needs the repository secret `TELEGRAM_BOT_TOKEN`. §7.6        |
+| Email sender (SMTP)                | Dashboard → Project Settings → Authentication    | §3                                                                                                                                                                                                      |
+| Analytics / verification ids       | `.env` / repo variables (`PUBLIC_*`)             | Optional; rendered only when set                                                                                                                                                                        |
+| IndexNow key                       | GitHub repo secret `INDEXNOW_KEY`                | Optional; see docs/SEO.md                                                                                                                                                                               |
 
 ---
 
@@ -931,12 +931,24 @@ every private message gets the same greeting with an inline button that launches
 1. **The token.** @BotFather → `/mybots` → the bot → **API Token**. It never goes in this
    repository, which is public — it is a Supabase secret and nothing else. If it is ever pasted
    somewhere it should not be, `/revoke` in BotFather issues a new one.
-2. **Deploy the function.** Dashboard → **Edge Functions** → **Deploy a new function** → name it
-   `telegram-bot`, paste `index.ts`, and turn **Verify JWT** off (Telegram does not carry one). With
-   the CLI it is `supabase functions deploy telegram-bot --no-verify-jwt`. The function is one file
-   on purpose: the dashboard editor deploys what is pasted into it, and a second file that is easy
-   to forget fails the build with «Module not found». `deno bundle` reporting «Bundled 1 module» is
-   the proof there is nothing else to paste.
+   Put it in **GitHub** as a repository secret — Settings → Secrets and variables → Actions → New
+   repository secret, name `TELEGRAM_BOT_TOKEN` — and the rest of this section is one button.
+
+2. **Press the button.** Actions → **Supabase apply** → Run workflow → task **`deploy-bot`**.
+
+   It deploys the function with Verify JWT off (Telegram carries no JWT), sets the runtime secrets
+   from the GitHub ones, calls `setWebhook`, and then reads the webhook back and prints Telegram's
+   own answer — the URL it will deliver to, how many updates are queued, and the last delivery
+   error if there is one. Nothing in the log contains the token.
+
+   Add `TELEGRAM_WEBHOOK_SECRET` (any value, e.g. `openssl rand -hex 32`) as a second repository
+   secret before running it. Without it the hook still works, but it is unauthenticated: anyone who
+   guesses the URL can post updates to it, and the run says so.
+
+   Steps 3 and 4 below are what that button does, kept for when it has to be done by hand — the
+   dashboard editor deploys a single pasted file, which is why this function is one file on purpose
+   (a second file that is easy to forget fails the build with «Module not found»).
+
 3. **The secrets.** Dashboard → **Edge Functions** → **Secrets**, or the CLI:
 
    ```sh
@@ -967,7 +979,8 @@ every private message gets the same greeting with an inline button that launches
    costs the picture and nothing else. Tap **Start** after changing any of this: a greeting that
    arrives without the image is the log line to go and read.
 
-4. **Point Telegram at it**, once, by opening this URL in a browser:
+4. **Point Telegram at it** — what `deploy-bot` does for you, and how to do it by hand: open this
+   URL in a browser, once.
 
    ```
    https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://<project>.functions.supabase.co/telegram-bot&secret_token=<TELEGRAM_WEBHOOK_SECRET>
@@ -975,6 +988,10 @@ every private message gets the same greeting with an inline button that launches
 
    `{"ok":true,"result":true}` means it is live. `…/getWebhookInfo` shows what Telegram thinks the
    webhook is, including the last delivery error, and `…/deleteWebhook` takes it off again.
+
+   **This is the step that makes the Start button do something.** Pressing Start sends `/start` to
+   Telegram; Telegram delivers it to the URL this call names, and to nothing otherwise. A bot whose
+   webhook was never set is not a broken button — it is a message with nowhere to go.
 
 The secret is what guards the door: Telegram echoes it back in `X-Telegram-Bot-Api-Secret-Token` on
 every delivery, so a request without it is not Telegram and gets a 403. Without the secret set the

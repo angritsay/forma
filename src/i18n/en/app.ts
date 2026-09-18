@@ -999,9 +999,12 @@ export const app = {
    * work — it tells you the list under it is what the price buys.
    */
   bookIncludes: 'What is included',
-  bookAdds: 'On top of {n} min',
-  bookIncludesPrev: 'Everything in {n} min',
-  bookPriceDelta: '+{price} over {n} min',
+  /*
+   * `bookAdds`, `bookIncludesPrev` and `bookPriceDelta` stood here. They were the coach tab's
+   * comparison between the half-hour and the hour; the owner struck the price delta and the
+   * «Сверх 30 минут» kicker, and the third line had nothing left to belong to. Each length prints
+   * its own full list now.
+   */
   bookNext: 'Next',
   bookNextSchedule: 'Pay, then pick a slot on his page. The next one may be {n} minutes away.',
   bookNextContact:

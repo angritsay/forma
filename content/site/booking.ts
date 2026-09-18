@@ -29,16 +29,6 @@ export interface BookingOption {
   /** What fits in this length. Kept per option: half an hour cannot hold three promises. */
   includes: readonly L10n[];
   /**
-   * What this length adds over the one before it in `options`, and nothing that is already there.
-   *
-   * The owner's instruction about this screen is «нужно обязательно посветить что тренировка за 60
-   * минут даст по сравнению с 30» — the comparison is the argument, so it is content rather than
-   * something the screen works out. Printing the longer option's full list again would make the
-   * reader diff two lists to find the two lines that differ; this is those two lines. Undefined on
-   * the cheapest option, which has nothing to be compared against.
-   */
-  adds?: readonly L10n[];
-  /**
    * Payment page per locale. Empty until it exists.
    *
    * It must be a link to a **product with the price locked on the processor's side** — on Prodamus,
@@ -84,10 +74,12 @@ const HALF_INCLUDES: readonly L10n[] = [
 ];
 
 /*
- * And what the extra half-hour buys on top of that — the hour's whole case for itself. Written
- * once, here: the hour's own `includes` is this list appended to the half's, so the two can never
- * drift into claiming different things, and the screen shows only this part when the switch moves
- * to 60.
+ * And what the extra half-hour buys on top of that. Written once, here, and appended to the half's
+ * list to make the hour's — so the two can never drift into claiming different things.
+ *
+ * The booking screen used to show *only* this part under «60», headed «Сверх 30 минут», with the
+ * price gap beside the price. The owner struck those texts, so the screen prints the hour's whole
+ * four-line list instead. This constant stays because it is still what composes that list.
  */
 const HOUR_ADDS: readonly L10n[] = [
   {
@@ -115,7 +107,6 @@ const HOUR: BookingOption = {
   durationMin: 60,
   price: { rub: 3500, usd: 39 },
   includes: [...HALF_INCLUDES, ...HOUR_ADDS],
-  adds: HOUR_ADDS,
   paymentUrl: { ru: 'https://payform.ru/cpcygbP/' },
 };
 
