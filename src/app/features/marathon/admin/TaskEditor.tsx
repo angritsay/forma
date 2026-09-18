@@ -25,11 +25,24 @@ import type {
   ProofKind,
   ProofVisibility,
 } from '@/lib/api/types';
+import { PUBLIC_BUCKET } from '@/lib/api/storage';
 import { useT } from '@/app/hooks/useT';
+import { MediaField } from '@/app/features/admin/media/MediaField';
+
+/**
+ * Ceiling on the task picture.
+ *
+ * It is one photograph off a phone, shown in a 16:9 band on a card — not a video and not a print
+ * asset. `MediaField`'s own default is 200MB, which is sized for the private `videos` bucket and
+ * would let a 40MB raw frame into a public bucket every member downloads on the tab's first paint.
+ */
+const MAX_TASK_IMAGE_BYTES = 8 * 1024 * 1024;
 
 export interface TaskDraft {
   title: string;
   body: string;
+  /** `storage:images/…` for the picture the club's card opens with, or '' for none. */
+  mediaUrl: string;
   proofKind: ProofKind;
   unit: string;
   targetNum: string;
@@ -45,6 +58,7 @@ export function emptyDraft(solo = false): TaskDraft {
   return {
     title: '',
     body: '',
+    mediaUrl: '',
     proofKind: 'done',
     unit: '',
     targetNum: '',
@@ -66,6 +80,7 @@ export function draftFrom(task: MarathonTaskRow): TaskDraft {
   return {
     title: task.title,
     body: task.body ?? '',
+    mediaUrl: task.mediaUrl ?? '',
     proofKind: task.proofKind,
     unit: task.unit ?? '',
     targetNum: task.targetNum === null ? '' : String(task.targetNum),
@@ -85,6 +100,7 @@ export function draftToPatch(draft: TaskDraft): MarathonTaskPatch {
   return {
     title: draft.title.trim(),
     body: draft.body.trim() || null,
+    mediaUrl: draft.mediaUrl.trim() || null,
     proofKind: draft.proofKind,
     unit: draft.proofKind === 'number' ? draft.unit.trim() || null : null,
     targetNum: draft.proofKind === 'number' ? number(draft.targetNum) : null,
@@ -149,11 +165,23 @@ export function TaskEditor({
   const [repeatUntil, setRepeatUntil] = useState('');
   const [busy, setBusy] = useState(false);
 
+  /*
+   * Where this task's picture is uploaded to.
+   *
+   * An existing task owns a stable path under its own id, so re-uploading replaces the file
+   * instead of leaving the old one orphaned in the bucket. A task that does not exist yet has no
+   * id to use, so it gets a fresh key **each time the sheet opens** — generating it once per mount
+   * would make the second new task overwrite the first one's image, since the sheet stays mounted
+   * between openings.
+   */
+  const [uploadKey, setUploadKey] = useState(() => crypto.randomUUID());
+
   useEffect(() => {
     if (!open) return;
     setDraft(task ? draftFrom(task) : emptyDraft(solo));
     setTargets(initialTargets);
     setRepeatUntil('');
+    setUploadKey(crypto.randomUUID());
   }, [open, task, initialTargets, solo]);
 
   const set = <K extends keyof TaskDraft>(key: K, value: TaskDraft[K]) =>
@@ -212,6 +240,21 @@ export function TaskEditor({
       }
     >
       <div className="flex flex-col gap-4 pb-2">
+        {/*
+         * First in the form because it is first on the card. The owner's order for the club's
+         * screen is picture, title, text, button, board, and a form that asked for them in a
+         * different order would be a second thing to hold in your head at 7am.
+         */}
+        <MediaField
+          label={t('app.mAdminTaskImage')}
+          hint={t('app.mAdminTaskImageHint')}
+          value={draft.mediaUrl || null}
+          onChange={(ref) => set('mediaUrl', ref ?? '')}
+          bucket={PUBLIC_BUCKET}
+          pathBase={`marathon/tasks/${task?.id ?? uploadKey}`}
+          accept="image/*"
+          maxBytes={MAX_TASK_IMAGE_BYTES}
+        />
         <Input
           label={t('app.mAdminTaskTitle')}
           value={draft.title}

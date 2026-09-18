@@ -922,6 +922,9 @@ export const app = {
   mAdminTaskEdit: 'Задание',
   mAdminTaskTitle: 'Что сделать',
   mAdminTaskBody: 'Подробности',
+  mAdminTaskImage: 'Картинка',
+  // The crop is stated before the pick, not discovered after it: the card draws a 16:9 band.
+  mAdminTaskImageHint: 'Горизонтальная — вертикальную обрежет сверху и снизу',
   mAdminTaskProof: 'Что прислать',
   mAdminProofDone: 'Отметку «сделал»',
   mAdminProofText: 'Текст',

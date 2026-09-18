@@ -30,6 +30,7 @@ import { Pill } from '@/components/ui/Pill';
 import { formatNumber, plural } from '@/i18n/index';
 import type { MarathonTodayTask, ProofInput } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
+import { useMediaUrl } from '@/app/features/player/useMediaUrl';
 
 export interface TaskCardProps {
   item: MarathonTodayTask;
@@ -81,6 +82,8 @@ export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
     }
   };
 
+  const media = useMediaUrl(task.mediaUrl ?? undefined);
+
   const points = plural(locale, task.points, {
     one: t('app.marathonPointsOne', { n: formatNumber(locale, task.points) }),
     few: t('app.marathonPointsFew', { n: formatNumber(locale, task.points) }),
@@ -95,6 +98,31 @@ export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
         done && 'opacity-70',
       )}
     >
+      {/*
+       * The coach's picture for this task, above everything else on the card.
+       *
+       * The owner's order for the screen, read off her mockups: «сверху у нас должна быть какая-то
+       * картинка, которую мы подгружаем из админки к каждому заданию. Дальше: заголовок к заданию,
+       * сам текст задания, кнопка… снизу лидерборд.» It belongs to the task and not to the screen,
+       * so it lives on the card — which is also what keeps it right on a day the coach writes two
+       * tasks instead of one.
+       *
+       * `aspect-[16/9]` rather than the file's own shape, so the box is reserved before the bytes
+       * arrive and the title and the button do not jump down the screen when the image lands. The
+       * cost is that a portrait photo is cropped to a landscape band, and the admin field says so.
+       *
+       * `alt=""` on purpose: the task is named in the heading directly underneath, and a screen
+       * reader describing a photograph of a plank before reading «Шестьдесят секунд в планке» is
+       * noise rather than information.
+       */}
+      {media ? (
+        <img
+          src={media}
+          alt=""
+          className="aspect-[16/9] w-full rounded-card bg-surface-2 object-cover"
+        />
+      ) : null}
+
       <div className="flex items-start gap-4">
         <div className="min-w-0 flex-1">
           {/* 1.08 → 1.2: the old number was drawn for capitals, and a task title is arbitrary text
