@@ -852,7 +852,7 @@ export const app = {
   marathonRulePerMember: 'Каждому за себя',
   marathonRuleCapped: 'На команду не больше {n}',
   marathonRuleNone: 'Без баллов',
-  marathonProofDone: 'Сделал',
+  marathonProofDone: 'Отметить выполнение',
   marathonProofUndo: 'Отменить',
   marathonProofSent: 'Отправлено',
   marathonProofTextLabel: 'Напиши, как прошло',

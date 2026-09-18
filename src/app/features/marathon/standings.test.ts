@@ -65,8 +65,14 @@ describe('weekStandings', () => {
     expect(s.top.map((r) => r.row.entryId)).toEqual(['a', 'b', 'c']);
     expect(s.mine?.row.entryId).toBe('e');
     expect(s.mine?.rank).toBe(5);
-    // One entry ('d') sits between the third row and mine, so the table shows a gap.
-    expect(s.skipped).toBe(1);
+    /*
+     * 'd' used to be counted as hidden and this expected `skipped: 1`. It is now drawn, as the
+     * neighbour one place above — so nothing is left out between the third row and the tail, and a
+     * gap here would be claiming otherwise.
+     */
+    expect(s.above?.row.entryId).toBe('d');
+    expect(s.below).toBeNull();
+    expect(s.skipped).toBe(0);
     expect(s.place).toEqual({ kind: 'ranked', rank: 5, points: 10, inTop: false });
   });
 
@@ -122,9 +128,108 @@ describe('weekStandings', () => {
     const rows = [row('a', 50), row('b', 0), row('c', 0), row('mine', 0, true)];
     expect(weekStandings(rows, ME).skipped).toBe(0);
 
-    // With five scored and mine fifth, one *place* is missing between the third row and mine.
-    const deep = [row('a', 50), row('b', 40), row('c', 30), row('d', 20), row('mine', 10, true)];
-    expect(weekStandings(deep, ME).skipped).toBe(1);
+    /*
+     * Five scored and mine fifth: fourth is drawn as the neighbour above, so nothing is hidden.
+     * Six scored and mine sixth is the first arrangement with a real gap — fifth is the neighbour,
+     * and fourth is the one place nobody sees.
+     */
+    const five = [row('a', 50), row('b', 40), row('c', 30), row('d', 20), row('mine', 10, true)];
+    expect(weekStandings(five, ME).skipped).toBe(0);
+
+    const six = [
+      row('a', 50),
+      row('b', 40),
+      row('c', 30),
+      row('d', 20),
+      row('e', 10),
+      row('mine', 5, true),
+    ];
+    const deep = weekStandings(six, ME);
+    expect(deep.above?.row.entryId).toBe('e');
+    expect(deep.skipped).toBe(1);
+  });
+
+  /*
+   * The owner's mockup ends the table on `… · 168 Маша · **169 Ты** · 170 Никита`, and the reason
+   * is what those two extra rows are for: at 169th the leader is a stranger, and the person one
+   * row up is the only opponent that week who is in reach.
+   */
+  describe('the neighbours around your row', () => {
+    it('draws the row above and the row below', () => {
+      const rows = [
+        row('a', 60),
+        row('b', 50),
+        row('c', 40),
+        row('d', 30),
+        row('above', 20),
+        row('mine', 15, true),
+        row('below', 10),
+        row('far', 5),
+      ];
+      const s = weekStandings(rows, ME);
+      expect(s.above?.row.entryId).toBe('above');
+      expect(s.below?.row.entryId).toBe('below');
+      // 'd' is the only ranked entry nobody sees.
+      expect(s.skipped).toBe(1);
+    });
+
+    it('never repeats a neighbour that is already in the top three', () => {
+      // Fourth place: the row above is the third, which is on screen already. The same name twice
+      // inside five rows reads as a broken table, so it is dropped rather than printed.
+      const rows = [row('a', 50), row('b', 40), row('c', 30), row('mine', 20, true), row('e', 10)];
+      const s = weekStandings(rows, ME);
+      expect(s.above).toBeNull();
+      expect(s.below?.row.entryId).toBe('e');
+      expect(s.skipped).toBe(0);
+    });
+
+    it('gives the last row of the week no neighbour below it', () => {
+      const rows = [row('a', 50), row('b', 40), row('c', 30), row('d', 20), row('mine', 10, true)];
+      const s = weekStandings(rows, ME);
+      expect(s.above?.row.entryId).toBe('d');
+      expect(s.below).toBeNull();
+    });
+
+    it('has none to offer when you are leading, because your row is not drawn twice', () => {
+      const rows = [row('mine', 50, true), row('b', 40), row('c', 30), row('d', 20)];
+      const s = weekStandings(rows, ME);
+      expect(s.mine).toBeNull();
+      expect(s.above).toBeNull();
+      expect(s.below).toBeNull();
+    });
+
+    it('steps by row and not by place, so a tie above you is still the row above you', () => {
+      /*
+       * `rank ± 1` would be wrong here and this is the case that shows it: four entries tied on 20
+       * are all rank 4, so the place above 4th is 1 — three rows further up than the row that is
+       * actually above. An index step gives the line the mockup draws.
+       */
+      const rows = [
+        row('a', 50),
+        row('b', 45),
+        row('c', 40),
+        row('t1', 20),
+        row('t2', 20),
+        row('mine', 20, true),
+        row('t4', 20),
+      ];
+      const s = weekStandings(rows, ME);
+      expect(s.mine?.rank).toBe(4);
+      expect(s.above?.row.entryId).toBe('t2');
+      expect(s.above?.rank).toBe(4);
+      expect(s.below?.row.entryId).toBe('t4');
+    });
+
+    it('gives an unscored member neighbours from the bottom of the list, not from the ranking', () => {
+      // Below the ranking nobody has a place, so the rows are the backend's own order. They are
+      // still the rows on either side of yours, which is what the tail is for.
+      const rows = [row('a', 50), row('b', 40), row('c', 30), row('z1', 0), row('mine', 0, true)];
+      const s = weekStandings(rows, ME);
+      expect(s.place).toEqual({ kind: 'unscored' });
+      expect(s.above?.row.entryId).toBe('z1');
+      expect(s.above?.rank).toBeNull();
+      expect(s.below).toBeNull();
+    });
   });
 
   it('says "not in the table" for a member with no row of their own', () => {
@@ -144,6 +249,8 @@ describe('weekStandings', () => {
     expect(weekStandings([], ME)).toEqual({
       top: [],
       mine: null,
+      above: null,
+      below: null,
       skipped: 0,
       place: { kind: 'missing' },
     });

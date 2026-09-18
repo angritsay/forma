@@ -93,7 +93,13 @@ export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
   return (
     <article
       className={clsx(
-        'flex flex-col gap-4 border-t border-border py-5',
+        /*
+         * The rule separates one task from the next, so the first card has none — and that only
+         * became visible when the head came off the screen. With «День 10 из 14» above it the line
+         * sat under a header and read as a divider; with nothing above it, it was the first pixel
+         * on the page, separating the task from the top of the phone.
+         */
+        'flex flex-col gap-4 border-t border-border py-5 first:border-t-0 first:pt-0',
         // A finished task steps back rather than disappearing: the day should still read as a day.
         done && 'opacity-70',
       )}
