@@ -837,7 +837,7 @@ export const app = {
   marathonRulePerMember: 'Each of you earns',
   marathonRuleCapped: 'Up to {n} for the team',
   marathonRuleNone: 'No points',
-  marathonProofDone: 'Done',
+  marathonProofDone: 'Mark as done',
   marathonProofUndo: 'Undo',
   marathonProofSent: 'Sent',
   marathonProofTextLabel: 'Say how it went',

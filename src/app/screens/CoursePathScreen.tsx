@@ -226,8 +226,11 @@ export default function CoursePathScreen() {
         </header>
 
         {/*
-         * Where you are, as the club's head draws it (`features/marathon/GameHead`): a ring
-         * with the share inside and one display line beside it — «ДЕНЬ 4 из 28», 800 + 200. It
+         * Where you are: a ring with the share inside and one display line beside it —
+         * «ДЕНЬ 4 из 28», 800 + 200. The club's screen used to open on the same figure; the owner
+         * took it off that tab («шапку с кольцом убери») because there the number reported a day
+         * nobody acts on. Here it is the programme's own progress, which is the thing being worked
+         * through, so it stays. It
          * stands on the dark ground rather than on the coloured head so the ring can be drawn in
          * the programme colour, which is where §10 puts the colour: on the figure, not the field.
          * When the course is finished the line says so, in the same two weights.

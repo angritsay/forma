@@ -56,7 +56,26 @@ export interface Standings {
   top: RankedRow[];
   /** The member's own row, when it is not already one of `top`. Null when there is nothing to add. */
   mine: RankedRow | null;
-  /** Ranked entries hidden between the last row of `top` and `mine`. 0 when nothing was left out. */
+  /**
+   * The rows immediately above and below `mine` — the half of «где ты» that a number cannot answer.
+   *
+   * The owner's mockup draws the tail as `… · 168 Маша · **169 Ты** · 170 Никита`, and it is right
+   * about which fact is useful: at 169th the leader's score is news about a stranger, while the
+   * person one row up is the only opponent that week who is actually in reach. A lone «169 Ты»
+   * under the top three states a position and gives nothing to do about it.
+   *
+   * Either is null when there is no such row: the member is first or last of the week, or the
+   * neighbour is already one of `top` and printing it twice inside five rows would read as a fault
+   * in the table rather than as a neighbour.
+   */
+  above: RankedRow | null;
+  below: RankedRow | null;
+  /**
+   * Ranked entries hidden between the last row of `top` and the first row drawn after the gap.
+   *
+   * That first row is `above` when there is one, so the count drops by one as the neighbour moves
+   * out of the gap and into the table. The two always have to add up to the same week.
+   */
   skipped: number;
   place: MyPlace;
 }
@@ -117,12 +136,37 @@ export function weekStandings(
       : null;
 
   /*
+   * The neighbours, taken off the ranking in reading order rather than by arithmetic on the place.
+   *
+   * Indexes and not `rank ± 1`, because a place is not a position: with three entries tied on
+   * second, the row above 169th may also be 169th, and the row above an unscored member has no
+   * place at all. What the mockup shows is the line above and the line below on the same table, and
+   * that is exactly what an index step gives.
+   *
+   * A neighbour already printed in `top` is dropped rather than repeated — the top three and the
+   * tail are one table, and the same name twice inside five rows reads as a bug.
+   */
+  const shown = new Set(top);
+  const at = mine === null ? -1 : ranked.indexOf(mine);
+  const neighbour = (i: number): RankedRow | null => {
+    const row = i < 0 ? undefined : ranked[i];
+    return row === undefined || shown.has(row) ? null : row;
+  };
+  const above = mine === null ? null : neighbour(at - 1);
+  const below = mine === null ? null : neighbour(at + 1);
+
+  /*
    * The gap stands for places skipped in the ranking, so it counts ranked entries and only those.
    * Below the ranking everybody is equally without a place and the order down there is the
    * backend's tie-break rather than a standing — «ещё 1 место» over a row that has no place would
    * be inventing one.
+   *
+   * It is measured to the first row actually drawn after it, which is the neighbour above when
+   * there is one. Measuring to `mine` while drawing `above` between them would count that
+   * neighbour as both hidden and visible.
    */
-  const cut = mine === null ? 0 : mine.rank === null ? scored.length : scored.indexOf(mine);
+  const first = above ?? mine;
+  const cut = first === null ? 0 : first.rank === null ? scored.length : scored.indexOf(first);
 
-  return { top, mine, skipped: Math.max(cut - top.length, 0), place };
+  return { top, mine, above, below, skipped: Math.max(cut - top.length, 0), place };
 }

@@ -12,13 +12,20 @@
  *   • «Ты ещё без баллов на этой неделе» and «Тебя пока нет в таблице» — the row draws a dash where
  *     the place would be, and the dash says it.
  *
- * Three things stayed beside those: the head (the day as a ring, which is the screen's name and its
- * clock), the prize pill — the table exists to be won and one short pill is what it is won for —
- * and the single link to the full table, which is the only way the board screen is reachable.
+ * **The head went the same way, later and on its own instruction: «шапку с кольцом убери».** It was
+ * the day as a ring with «День 10 из 14» beside it, and it was this tab's title in the idiom the
+ * other three use. Her mockups have no equivalent — the picture the coach attached to today's task
+ * is the first thing on the page — and the trade is the right one: the ring reported a number
+ * nobody acts on, directly above the one thing on the screen that is asking to be done today. The
+ * day is still named inside the round's own screens and on the full table.
+ *
+ * Two things stayed: the prize pill — the table exists to be won, and one short pill is what it is
+ * won for — and the single link to the full table, which is the only way the board screen is
+ * reachable.
  *
  * **Nobody has a partner.** «Никакого напарника в клубе быть не должно. Каждый сам за себя.» The
- * club is `team_size = 1`, so there is no roster to read here, no «Напарник: Марина» in the head,
- * and no line on the card about where somebody else has got to. Each member is their own row.
+ * club is `team_size = 1`, so there is no roster to read here and no line on the card about where
+ * somebody else has got to. Each member is their own row.
  *
  * The table is short on purpose. At 7am on a mat the answer to "where am I in the standings" is
  * never what gets someone moving, so the task comes first; but a race nobody can see the score of
@@ -27,18 +34,18 @@
  * **The tab has a second state, and it is a screen rather than a closed door.** Somebody who is
  * not in the club gets the screen the owner drew
  * and sent as a picture — a row of photographs with the club's name across it, one orange pill
- * with the price on it, and her two paragraphs (`ClubPitch`). It is built without the head and
- * without a sticky footer, because neither is in the drawing.
+ * with the price on it, and her two paragraphs (`ClubPitch`). It is built without a sticky footer,
+ * because there is none in the drawing.
  *
  * **The screen is drawn in the language of the owner's prototype** (`design/ui_kits/app-v2`,
- * «Челлендж»), after she called the previous version «вообще мимо»: the day as a ring with the
- * number in it, one display line, the task as its name and a pill of points, one control, and a
- * board of circled ranks with the prize as a pill above it.
+ * «Челлендж»), after she called the previous version «вообще мимо», and then to the order she gave
+ * off her Figma mockups: the coach's picture, the task's name, its text, the control that delivers
+ * it, and the board — which ends on your own row between its two neighbours.
  *
  * The colour is still the brandbook's own rule: «один экран — один цвет, и он приходит от
- * программы». The club's is `GAME_TILE`; `--course-tile` is set once around the whole screen,
- * so the ring, the pills and the leader's circle all read the same variable. It paints figures
- * and pills, never a button and never a field of it.
+ * программы». The club's is `GAME_TILE`; `--course-tile` is set once around the whole screen, so
+ * the pills and the leader's circle read the same variable. It paints figures and pills, never a
+ * button and never a field of it.
  */
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -52,14 +59,13 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { PROOFS_BUCKET, proofMediaPath, sendProof } from '@/lib/api/marathon';
 import { uploadMedia } from '@/lib/api/storage';
-import type { MyMarathon, ProofInput } from '@/lib/api/types';
+import type { ProofInput } from '@/lib/api/types';
 import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
 import { downscaleImage, extensionFor, isVideoFile, MAX_VIDEO_BYTES } from '@/lib/util/image';
 import { useT } from '@/app/hooks/useT';
 import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { BoardGap, BoardRow } from '@/app/features/marathon/BoardRow';
 import { ClubPitch } from '@/app/features/marathon/ClubPitch';
-import { GameHead } from '@/app/features/marathon/GameHead';
 import { clubPrize } from '@/app/features/marathon/prize';
 import { weekStandings } from '@/app/features/marathon/standings';
 import { TaskCard } from '@/app/features/marathon/TaskCard';
@@ -175,17 +181,21 @@ export default function MarathonScreen() {
   );
 
   /*
-   * Every state of this screen is the same page: the head, then whatever there is to say under it.
-   * There is no top bar — the head names the screen, and the tab bar already does. `--course-tile`
-   * sits on the outer element so the ring and everything under it take the club's colour
-   * from one place.
+   * Every state of this screen is the same page, and it now opens on its content.
+   *
+   * **The head is gone, on the owner's word: «шапку с кольцом убери».** It was the day as a ring
+   * with «День 10 из 14» beside it, and it was the screen's title in the same idiom as the other
+   * three tabs. Her mockups have no equivalent — the picture the coach attached is the first thing
+   * on the page — and she is right about the trade: the ring reported a number nobody acts on,
+   * directly above the one thing on the tab that is asking to be done today. The day is still in
+   * the round's own screens and in the full table.
+   *
+   * There is no top bar either; the tab bar names the screen. `--course-tile` stays on the outer
+   * element so the pills and the leader's circle take the club's colour from one place.
    */
-  const page = (head: MyMarathon | null, body: ReactNode) => (
+  const page = (body: ReactNode) => (
     <div style={courseTileVars(GAME_TILE)}>
-      <Screen contentClassName="pt-5">
-        <GameHead marathon={head} />
-        {body}
-      </Screen>
+      <Screen contentClassName="pt-5">{body}</Screen>
     </div>
   );
 
@@ -220,9 +230,9 @@ export default function MarathonScreen() {
   }
 
   /*
-   * The mark, not `page(null, …)`. That drew the whole screen with nothing in it — a «?» where the
-   * day number goes, the generic title, an empty card — and then swapped it for the real one a
-   * moment later, which is the jerk the owner reported.
+   * The mark, not a drawn-empty page. That rendered the whole screen with nothing in it — a «?»
+   * where the day number went, the generic title, an empty card — and then swapped it for the real
+   * one a moment later, which is the jerk the owner reported.
    */
   if (marathonStatus === 'loading') {
     return <ScreenLoader />;
@@ -230,7 +240,6 @@ export default function MarathonScreen() {
 
   if (marathonStatus === 'error') {
     return page(
-      null,
       <EmptyState
         title={t('app.marathonErrorTitle')}
         description={
@@ -258,7 +267,6 @@ export default function MarathonScreen() {
   const closed = marathon.status === 'finished';
 
   return page(
-    marathon,
     <div className="flex flex-col gap-6 pt-5 pb-4">
       {/*
        * The task and the table, side by side from `md`.
@@ -337,9 +345,26 @@ export default function MarathonScreen() {
                       <BoardGap hidden={standings.skipped} />
                     </li>
                   ) : null}
+                  {/*
+                   * The neighbour above, your row, the neighbour below — the tail the owner drew
+                   * («168 Маша · 169 Ты · 170 Никита»). At 169th the leader is news about a
+                   * stranger and the person one row up is the only opponent in reach, so the table
+                   * now ends with something to do rather than with a number. `standings.ts` drops
+                   * either neighbour that is already one of the three rows above.
+                   */}
+                  {standings.above ? (
+                    <li>
+                      <BoardRow row={standings.above.row} rank={standings.above.rank} />
+                    </li>
+                  ) : null}
                   <li>
                     <BoardRow row={standings.mine.row} rank={standings.mine.rank} />
                   </li>
+                  {standings.below ? (
+                    <li>
+                      <BoardRow row={standings.below.row} rank={standings.below.rank} />
+                    </li>
+                  ) : null}
                 </>
               ) : null}
             </ol>
