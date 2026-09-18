@@ -1013,8 +1013,12 @@ export const app = {
   assessNoProfile: 'Сначала закончи анкету',
   // --- coach tab --------------------------------------------------------------
   bookLeadTimePill: 'Можно за {n} минут до начала',
-  bookCredentials: 'Регалии',
-  bookOutcomes: 'Что это даёт',
+  /*
+   * `bookCredentials` («Регалии») and `bookOutcomes` («Что это даёт») stood over the two blocks
+   * below and are gone on the owner's instruction. Both were labels announcing what kind of thing
+   * the reader was about to read, over content that says so itself; `bookIncludes` below stays,
+   * because that one is doing work — it tells you the list under it is what the price buys.
+   */
   bookIncludes: 'Что входит',
   bookAdds: 'Сверх {n} минут',
   bookIncludesPrev: 'Всё из {n} минут',

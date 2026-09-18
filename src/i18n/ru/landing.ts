@@ -307,15 +307,17 @@ export const landing = {
     'Техника раньше объёма. У каждого упражнения есть подсказки, типичные ошибки и более простая версия. Боль — сигнал снизить нагрузку, а не терпеть.',
   aboutPhilosophy3Title: 'Регулярность',
   aboutPhilosophy3Text:
-    'Результат дают недели подряд, а не одна тяжёлая тренировка. Поэтому в курсах есть серии, дни отдыха с шагами и разгрузочные недели.',
+    'Результат дают недели подряд, а не одна тяжёлая тренировка. Поэтому в курсах есть серии, дни отдыха и разгрузочные недели.',
   aboutScienceTitle: 'Коротко о науке',
   aboutScienceText:
-    'Программы опираются на рекомендации ACSM и ВОЗ по физической активности, принцип прогрессивной перегрузки, авторегуляцию по шкале RPE и данные о пользе 7 000 шагов в день.',
+    'Программы опираются на рекомендации ACSM и ВОЗ по физической активности, принцип прогрессивной перегрузки и авторегуляцию по шкале RPE.',
   aboutScienceLink: 'Читать гайды',
-  // The three figures under the coach's name; they restate credentials in content/site/coach.ts.
-  aboutFigureSince: 'тренирует с',
-  aboutFigureHours: 'часов занятий',
-  aboutFigureSport: 'в спорте с',
+  /*
+   * The figures under the coach's name used to have their words here — `aboutFigureSince`,
+   * `aboutFigureHours`, `aboutFigureSport`. They are `COACH.figures[].label` now: the page was
+   * keeping a second copy of a list content already holds, and the copy drifted the moment a
+   * credential was struck from the record.
+   */
 
   // Контакты
   contactTitle: 'Контакты',
