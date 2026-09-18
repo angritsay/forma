@@ -34,11 +34,14 @@ import { useToast } from '@/components/ui/Toast';
 import type { Equipment } from '@/content/schema';
 import { formatNumber } from '@/i18n/index';
 import { isAppError } from '@/lib/api/errors';
+import type { ProfilePatch } from '@/lib/api/types';
 import { levelForPoints } from '@/lib/training/levels';
 import { useT } from '@/app/hooks/useT';
 import { useTotalPoints } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
+import { DataSheet } from './DataSheet';
 import { EquipmentSheet } from './EquipmentSheet';
+import { NameSheet } from './NameSheet';
 import { equipmentSummary, withEquipment } from './model';
 
 export interface ProfileSheetProps {
@@ -56,6 +59,8 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [gear, setGear] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [dataOpen, setDataOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const tp = profile?.trainingProfile ?? null;
 
@@ -65,19 +70,17 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
   const name = profile?.displayName ?? '';
   const email = profile?.email || user?.email || '';
 
-  const saveEquipment = async (
-    equipment: Equipment[],
-    dumbbellKg: number[],
-    kettlebellKg: number[],
-  ) => {
-    if (!tp) return;
+  /**
+   * One writer for both editable things, so the toast, the error mapping and the busy flag cannot
+   * drift apart between them. `done` closes the sheet that was open — only on success, because a
+   * sheet that closes on a failed save takes the edit with it.
+   */
+  const save = async (patch: ProfilePatch, done: () => void) => {
     setSaving(true);
     try {
-      await useSession
-        .getState()
-        .saveProfile({ trainingProfile: withEquipment(tp, equipment, dumbbellKg, kettlebellKg) });
+      await useSession.getState().saveProfile(patch);
       toast.show({ kind: 'success', title: t('app.profileSaved') });
-      setGear(false);
+      done();
     } catch (e) {
       toast.show({
         kind: 'error',
@@ -89,6 +92,13 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
     } finally {
       setSaving(false);
     }
+  };
+
+  const saveEquipment = (equipment: Equipment[], dumbbellKg: number[], kettlebellKg: number[]) => {
+    if (!tp) return;
+    void save({ trainingProfile: withEquipment(tp, equipment, dumbbellKg, kettlebellKg) }, () =>
+      setGear(false),
+    );
   };
 
   const signOut = async () => {
@@ -103,7 +113,13 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
 
   return (
     <>
-      <Sheet open={open && !gear} onClose={onClose} title={t('app.profileTitle')}>
+      {/* One sheet at a time: two stacked are two focus traps arguing, and the way back from
+          either of the small ones is this sheet reappearing underneath. */}
+      <Sheet
+        open={open && !gear && !renaming && !dataOpen}
+        onClose={onClose}
+        title={t('app.profileTitle')}
+      >
         <div className="flex flex-col gap-6 pb-2">
           {/*
            * Who you are: the name, and the address that «Выйти» will leave.
@@ -147,9 +163,29 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
             </p>
           </div>
 
-          {/* The one setting: what is at home. Its value is the row's second line, the way a
-              phone's own settings are read. */}
+          {/*
+           * Two settings now. The name is first because it is the one that is *shown to other
+           * people* — it is the row on the club board — and because until this row existed the
+           * privacy policy promised a correction the app could not perform (152-ФЗ ст. 14; see
+           * NameSheet).
+           *
+           * The values are the rows' trailing text, the way a phone's own settings are read.
+           */}
           <ul className="-mx-6 border-y border-border md:-mx-8">
+            <li>
+              <ListRow
+                title={t('app.profileName')}
+                onClick={() => setRenaming(true)}
+                trailing={
+                  <>
+                    <span className="max-w-[44vw] truncate text-[15px] text-muted md:max-w-[220px]">
+                      {name || t('app.profileNameEmpty')}
+                    </span>
+                    <Glyph size={16}>›</Glyph>
+                  </>
+                }
+              />
+            </li>
             <li>
               <ListRow
                 title={t('app.profileEquipment')}
@@ -165,6 +201,18 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
                 }
               />
             </li>
+            {/*
+             * And the row that makes the privacy policy's other two promises pressable: what is
+             * held, how to withdraw the health consent, how to ask for deletion. It carries no
+             * value on the right because it is a place to go rather than a setting with a state.
+             */}
+            <li>
+              <ListRow
+                title={t('app.dataRow')}
+                onClick={() => setDataOpen(true)}
+                trailing={<Glyph size={16}>›</Glyph>}
+              />
+            </li>
           </ul>
 
           {/* The red is on the label, not on the button: `ghost` sets its own text colour and a
@@ -174,13 +222,21 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
           </Button>
         </div>
       </Sheet>
+      <DataSheet open={dataOpen} email={email} onClose={() => setDataOpen(false)} />
+      <NameSheet
+        open={renaming}
+        name={name}
+        busy={saving}
+        onClose={() => setRenaming(false)}
+        onSave={(next) => void save({ displayName: next }, () => setRenaming(false))}
+      />
       {tp ? (
         <EquipmentSheet
           open={gear}
           profile={tp}
           busy={saving}
           onClose={() => setGear(false)}
-          onSave={(eq, d, k) => void saveEquipment(eq, d, k)}
+          onSave={saveEquipment}
         />
       ) : null}
       <Modal

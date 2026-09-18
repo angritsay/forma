@@ -39,6 +39,10 @@ function completeDraft(): OnboardingDraft {
     ageBand: '25-34',
     sex: 'female',
     limitations: ['knees'],
+    // A draft that names a limitation is complete only once the health consent is given with it:
+    // that is the rule `isStepComplete` now enforces, so the "everything answered" fixture has to
+    // carry it or it stops meaning what its name says.
+    healthConsent: true,
     level: 6,
   };
 }
@@ -100,7 +104,20 @@ describe('isStepComplete / firstIncompleteStep', () => {
   it('accepts «ничего, всё в порядке» as an answer about limitations', () => {
     const d = { ...emptyDraft(), limitationsNone: true };
     expect(isStepComplete(d, 'limitations')).toBe(true);
-    expect(isStepComplete({ ...emptyDraft(), limitations: ['wrists'] }, 'limitations')).toBe(true);
+  });
+
+  /*
+   * Naming a limitation is handing over data about health, which 152-ФЗ ст. 10 puts in a special
+   * category that needs its own consent — so the answer alone no longer opens «Далее». Answering
+   * «ничего» hands over nothing and is unaffected, which is the other half of the rule and the
+   * reason the checkbox is not simply always on screen.
+   */
+  it('holds «Далее» until a named limitation is consented to', () => {
+    const named = { ...emptyDraft(), limitations: ['wrists' as const] };
+    expect(isStepComplete(named, 'limitations')).toBe(false);
+    expect(isStepComplete({ ...named, healthConsent: true }, 'limitations')).toBe(true);
+    // And the consent on its own is not an answer: there is still nothing selected.
+    expect(isStepComplete({ ...emptyDraft(), healthConsent: true }, 'limitations')).toBe(false);
   });
 
   it('rejects a blank name and stops at the last step when everything is answered', () => {
