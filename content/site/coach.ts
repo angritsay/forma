@@ -131,7 +131,23 @@ export const COACH = {
    * version of *that* is the more valuable of the two to find.
    */
   heroPhoto: '/coach/sergey-hero.jpg' as string,
-  links: [{ label: 'profi.ru', url: 'https://profi.ru/profile/TitovSA5/' }] as {
+  /*
+   * Where he can be found, in his own words rather than ours.
+   *
+   * Both entries are labelled with the address itself — `profi.ru`, `@titovtrener` — and not with
+   * the platform's name. The handle says whose account it is, which «Instagram» does not, and it
+   * is the string he would give someone who asked.
+   *
+   * These are the only outbound links about him on the site, and `sameAs` in the Person JSON-LD is
+   * built from exactly this array, so anything added here is also a claim to a search engine that
+   * the account is his. The owner supplied the handle directly; it could not be verified from here
+   * because Instagram is unreachable from this environment, and a similarly-named trainer found by
+   * search would not have been proof of anything.
+   */
+  links: [
+    { label: 'profi.ru', url: 'https://profi.ru/profile/TitovSA5/' },
+    { label: '@titovtrener', url: 'https://www.instagram.com/titovtrener/' },
+  ] as {
     label: string;
     url: string;
   }[],
