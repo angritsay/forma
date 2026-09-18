@@ -793,7 +793,7 @@ export const app = {
   courseTileInvalid: 'A colour is six hex digits, e.g. #1f1f24',
 
   // --- Marathon -------------------------------------------------------------
-  // The second format: daily tasks, proof, a partner you are scored with, a weekly board.
+  // The second format: daily tasks, proof, a weekly board. Everyone races for themselves.
   //
   // It is the «Small Steps Club» to the reader and `marathon*` in the code and the database.
   // Three names for one thing would be a tax, so this is the one place that reconciles them: the
@@ -802,7 +802,7 @@ export const app = {
   //
   // «Challenge» promised a test, and the people this is for are coming back after a break — a
   // test is a reason not to start. A club promises belonging, which is what the format actually
-  // delivers: a partner, a board with names, a day everyone is having at once. Where the two
+  // delivers: a board with names, a day everyone is having at once. Where the two
   // disagree is the prize, so the prize stopped being the pitch and became a fact of the week.
   marathonTitle: 'Small Steps Club',
   // The cover's big line before there is a day to count: what the format is, in one line.
@@ -811,18 +811,11 @@ export const app = {
   marathonDayOf: 'Day {n} of {total}',
   marathonDayN: 'Day {n}',
   marathonOfTotal: 'of {total}',
-  // «Tasks», not «steps», although the club is the Small Steps Club: «steps» is already the step
-  // counter here — one of the club's own tasks is literally «Шаги» — and a head reading «TODAY'S
-  // STEPS 0/3» above it asks the reader to hold two meanings of one word. The name's metaphor
-  // lives in the taglines; the unit inside the screen stays the plain word.
-  marathonTasksToday: "Today's tasks",
-  marathonWeek: 'Week {n}',
+  // The full board's own switch; the club screen carries no week kicker (see the Russian file).
   marathonWeekThis: 'This week',
   marathonWeekLast: 'Last week',
   marathonPrizeShort: 'Prize',
   marathonBoardAll: 'Full board',
-  marathonWithPartner: 'Partner: {name}',
-  marathonSolo: 'On your own',
   marathonHomeCta: 'Open the club',
   marathonHomeTasksLeft: '{n} left today',
   marathonHomeAllDone: 'Done for today',
@@ -834,10 +827,6 @@ export const app = {
   marathonNoTasksToday: 'Nothing set for today',
   marathonNoTasksTodayBody: 'A rest day. There will be a new one in the morning.',
   marathonErrorTitle: 'Could not load the club',
-  marathonTrialTitle: 'Your free week',
-  marathonTrialBody:
-    'The club is open with your course. {n} left — after that it needs a subscription.',
-  marathonTrialLeft: '{n} left',
   // One task
   marathonDeadline: 'Until {time}',
   marathonDeadlinePassed: 'The day has closed',
@@ -858,10 +847,6 @@ export const app = {
   marathonProofPhotoSent: 'Photo sent',
   marathonProofVoided: 'Not counted: {reason}',
   marathonProofCoachOnly: 'Only the coach sees this',
-  marathonPartnerDone: '{name} is done',
-  marathonPartnerWaiting: 'Waiting on {name}',
-  marathonPartnerBoth: 'Both of you are done',
-  marathonTeamWaitingYou: 'Your team is waiting on you',
   // The board
   marathonBoardEmpty: 'Nobody has scored yet',
   marathonBoardYou: 'You',
@@ -1103,6 +1088,4 @@ export const app = {
   marathonBoardGapOne: '{n} more place',
   marathonBoardGapFew: '{n} more places',
   marathonBoardGapMany: '{n} more places',
-  marathonBoardYouUnscored: "You haven't scored this week yet",
-  marathonBoardYouMissing: "You're not in this week's table yet",
 } as const;

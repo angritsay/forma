@@ -62,6 +62,9 @@ export interface BotCopy {
  * That order is also the order of commitment, so somebody skimming stops at the first line that
  * describes them.
  *
+ * The club line says no partner, because the club has none: «каждый сам за себя». It used to
+ * promise one, which is the worst kind of wrong in a greeting — a promise the first screen breaks.
+ *
  * The three lines match the app's three tabs on purpose — «Курсы · Клуб · Тренер». A greeting that
  * promises a shape the app does not have is a greeting that has to be re-learned on arrival, and
  * this one used to do exactly that: it described a single course and nothing else, because it was
@@ -83,7 +86,7 @@ export const DEFAULT_COPY: BotCopy = {
     'Форма — домашний кроссфит с Сергеем Титовым.\n\n' +
     'Курсы. Двадцать тренировок по 15–20 минут, видео на каждое движение. ' +
     'Нагрузка подстраивается под тебя.\n\n' +
-    'Клуб маленьких шагов. Одно небольшое задание в день, напарник и общая таблица за неделю. ' +
+    'Клуб маленьких шагов. Одно небольшое задание в день и общая таблица за неделю. ' +
     'Тому, кто наверху, достаётся час с тренером.\n\n' +
     'Тренировка один на один. Разбор техники и план на следующие недели — с Сергеем, ' +
     'онлайн, по видеосвязи.',

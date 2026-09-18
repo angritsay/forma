@@ -1310,8 +1310,8 @@ account itself is not usable as an identity — check
 
 ## 9.1 A test week for the club («Клуб маленьких шагов»)
 
-`supabase/seed-club-week.sql` writes one seven-day club with nineteen tasks, four pairs and seven
-invented members, so the club's tab can be looked at without typing a week into the admin panel
+`supabase/seed-club-week.sql` writes one seven-day club — **one task a day**, no teams, and seven
+invented members — so the club's tab can be looked at without typing a week into the admin panel
 first. Run it with **Actions → Supabase apply → task = `club-seed`** (§7.8), or paste it into the
 SQL editor (Supabase → SQL Editor → New query).
 
@@ -1324,6 +1324,16 @@ the plan.
 point, because the club's screen is half task and half standings and a table of zeroes tells you
 nothing about the second half. Change the offset at the top to land on a different day.
 
+**Everyone races alone.** `team_size` is `1`, which is «каждый сам за себя»: no teams, no pairs, and
+no task that waits on somebody else. Every rule is `per_member`, because in a club of one-person
+entries it is the only rule that means anything. The seed also deletes any team left over from the
+paired version of this week — a solo marathon may not have them, and a member still pointing at one
+would keep the board drawing pairs.
+
+**One task a day, with a title and nothing else.** No `body` on any row: the name of the task is the
+task. Points run 8 to 15 — a harder day is worth more, which is what keeps the board from being
+seven-way ties.
+
 ### The invented cohort, and why it is not a fabricated result
 
 Section 3 of the file inserts seven people who do not exist, at `@example.test` addresses (`.test`
@@ -1332,6 +1342,10 @@ exist so the board has rows. They live only inside `klub_test`, a round called �
 that only its own members can read, and they never appear on a public surface — which is what keeps
 this test data rather than the invented results `docs/SPEC.md` §3 forbids.
 
+Who did which day is **written out** in the file rather than hashed. The hash that used to pick it
+was shorter and produced four-way ties at the top of a one-task-a-day week, which is a board that
+answers nothing.
+
 Two honest consequences, both written into the file:
 
 - Every task in this week has `late_counts = true`. Without it, proof sent after the day's deadline
@@ -1339,7 +1353,7 @@ Two honest consequences, both written into the file:
   the card gives no hint that the tap was too late. (That missing hint is a real gap in the app, not
   something this seed fixes.)
 - `media` proof is not invented. A photograph cannot be faked into the bucket, so day 5's «Фото
-  тарелки» scores nothing for anybody.
+  тарелки» scores nothing for anybody — the one day of the week where the board does not move.
 
 ### Putting the real people in
 
@@ -1349,9 +1363,10 @@ It reads the address from the `CLUB_TESTER_EMAILS` repository secret — falling
 so there is usually no new secret to create — builds the statement inside the runner, and prints
 neither the statement nor the response. Several addresses may be given, separated by commas.
 
-Everyone it adds goes into «Пара 1», beside the invented partner. `team_size` is 2, so that pair's
-`all_members` tasks stay unscored until the real member delivers hers too — which is the pair
-mechanic on screen, and the reason the board moves the moment she taps «сделал».
+Everyone it adds gets no team, because the club has none: each of them is their own row on the
+board. Addresses are lower-cased before they are de-duplicated — `marathon_members.email` is
+`citext`, so «Owner@…» and «owner@…» are one row, and letting both through makes Postgres refuse
+the whole statement.
 
 A member can be added before they have ever signed in; the club finds them by the address they sign
 in with, exactly as a course purchase does.
@@ -1362,10 +1377,10 @@ Deleting the whole thing, tasks, people and proof included:
 delete from public.marathons where slug = 'klub_test';
 ```
 
-Verified against a throwaway Postgres 16 with every migration applied: the script runs clean, runs
-twice without duplicating anything (19 tasks, 4 teams, 8 members, 40 proofs either way), and the
-week-1 board reads 34 / 33 / 21 / 16 with the real member's pair fourth — rising to third the moment
-she sends day 3's two tasks.
+Verified against a throwaway Postgres 16 with every migration applied: the script runs clean (7
+tasks, 7 invented members, 0 teams, 13 proofs for the three days elapsed), and the week-1 board
+reads 36 / 26 / 26 / 24 / 22 / 12 / 10 by name, with the real member last on 0 until she sends
+today's one task.
 
 ---
 
