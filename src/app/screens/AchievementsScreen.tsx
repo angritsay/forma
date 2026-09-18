@@ -15,11 +15,11 @@
 import { useMemo } from 'react';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Screen } from '@/components/ui/Screen';
-import { Skeleton } from '@/components/ui/Skeleton';
 import { formatNumber } from '@/i18n/index';
 import { evaluateAchievements } from '@/lib/training/levels';
 import { useT } from '@/app/hooks/useT';
 import { TopBar } from '@/app/components/TopBar';
+import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { AchievementList } from '@/app/features/stats/Badges';
 import { userStatsFromProgress } from '@/app/features/stats/model';
 import { useProgress, useProgressLoader, useTodayIso } from '@/app/store/progress';
@@ -68,11 +68,7 @@ export default function AchievementsScreen() {
   if (status === 'idle' || status === 'loading') {
     return (
       <Screen header={header} contentClassName="pt-4">
-        <div className="flex flex-col gap-3" aria-hidden="true">
-          <Skeleton rounded="control" className="h-16" />
-          <Skeleton rounded="control" className="h-16" />
-          <Skeleton rounded="control" className="h-16" />
-        </div>
+        <ScreenLoader />
       </Screen>
     );
   }

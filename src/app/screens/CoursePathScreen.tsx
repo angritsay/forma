@@ -17,13 +17,13 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Glyph } from '@/components/ui/Icon';
 import { RingProgress } from '@/components/ui/RingProgress';
 import { Screen } from '@/components/ui/Screen';
-import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { courseTitle, findCourse } from '@/content/catalogue';
 import type { CourseNode } from '@/content/schema';
 import { formatNumber } from '@/i18n/index';
 import { courseTileVars } from '@/lib/ui/tile';
 import { TopBar } from '@/app/components/TopBar';
+import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { useT } from '@/app/hooks/useT';
 import { courseLandingHref, subscribeHref } from '@/app/features/courses/courseMeta';
 import { LinkButton } from '@/app/features/courses/LinkButton';
@@ -168,15 +168,7 @@ export default function CoursePathScreen() {
 
   let body: React.ReactNode;
   if (status === 'loading' || status === 'idle') {
-    body = (
-      <div className="flex flex-col gap-3 py-2" aria-hidden="true">
-        <Skeleton rounded="control" className="h-3 w-24" />
-        <Skeleton rounded="control" className="h-14" />
-        <Skeleton rounded="control" className="h-14" />
-        <Skeleton rounded="control" className="h-14" />
-        <Skeleton rounded="control" className="h-14" />
-      </div>
-    );
+    body = <ScreenLoader />;
   } else if (status === 'error') {
     body = (
       <EmptyState

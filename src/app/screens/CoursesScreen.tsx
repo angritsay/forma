@@ -27,12 +27,12 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Glyph } from '@/components/ui/Icon';
 import { Screen } from '@/components/ui/Screen';
-import { Skeleton } from '@/components/ui/Skeleton';
 import { courseTitle } from '@/content/catalogue';
 import { LIVE_COURSES } from '@/content/registry';
 import { PHOTOS, type Photo } from '@/lib/media/photos';
 import { evaluateAchievements } from '@/lib/training/levels';
 import { useT } from '@/app/hooks/useT';
+import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { AssessmentBanner } from '@/app/features/assessment/AssessmentBanner';
 import { CourseCard } from '@/app/features/courses/CourseCard';
 import { courseAccentVars, courseLandingHref } from '@/app/features/courses/courseMeta';
@@ -71,15 +71,6 @@ const DECK_PHOTOS: readonly Photo[] = [
 
 /** The courses with a page on the site — the only ones a «Подробнее» can lead anywhere. */
 const HAS_PAGE = new Set(LIVE_COURSES.map((c) => c.id));
-
-function CoursesSkeleton() {
-  return (
-    <div className="flex flex-col gap-4" aria-hidden="true">
-      <Skeleton rounded="card" className="h-[360px]" />
-      <Skeleton rounded="card" className="h-[360px]" />
-    </div>
-  );
-}
 
 export default function CoursesScreen() {
   useProgressLoader();
@@ -160,7 +151,7 @@ export default function CoursesScreen() {
 
   let body: React.ReactNode;
   if (status === 'idle' || status === 'loading') {
-    body = <CoursesSkeleton />;
+    body = <ScreenLoader />;
   } else if (status === 'error') {
     body = (
       <EmptyState

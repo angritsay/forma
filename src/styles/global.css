@@ -1295,6 +1295,27 @@ body {
   }
 }
 
+/*
+ * The gentlest entrance there is: a thing appearing where it will stay.
+ *
+ * For `ScreenLoader`, which is not in the tree at all until its delay is up — so there is nothing
+ * to transition *from*, and a keyframe is the only way to soften the moment it arrives. No
+ * movement: the mark is centred on the page it is standing in for, and sliding it would suggest a
+ * direction the wait does not have.
+ */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fade-in 0.22s var(--ease-out) both;
+}
+
 .pop-in {
   animation: pop-in 0.42s var(--ease-spring) both;
 }
@@ -1309,6 +1330,7 @@ body {
   .screen-in-right,
   .screen-in-left,
   .screen-in-up,
+  .fade-in,
   .pop-in {
     animation: none;
   }
