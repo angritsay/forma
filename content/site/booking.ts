@@ -114,6 +114,7 @@ const HALF: BookingOption = {
   price: { rub: 2500, usd: 29 },
   includes: HALF_INCLUDES,
   paymentUrl: { ru: 'https://payform.ru/9jcyga8/' },
+  scheduleUrl: 'https://calendar.app.google/ExC4NWUTJQJT7JvP6',
 };
 
 const HOUR: BookingOption = {
@@ -123,6 +124,19 @@ const HOUR: BookingOption = {
   price: { rub: 3500, usd: 39 },
   includes: [...HALF_INCLUDES, ...HOUR_ADDS],
   paymentUrl: { ru: 'https://payform.ru/cpcygbP/' },
+  /*
+   * No slot page for the hour, deliberately, and it is not a gap waiting to be filled.
+   *
+   * A personal Google account carries one appointment schedule, and it is spent on the half-hour.
+   * The alternatives all cost something real: a single 60-minute schedule makes everyone booking
+   * thirty minutes block an hour of his day, and a 30-minute one booked twice depends on the two
+   * slots happening to be adjacent, which nothing guarantees — a client who paid for an hour could
+   * end up with two half-hours on opposite sides of an afternoon.
+   *
+   * So the hour keeps the honest fallback: pay, write, and he sets the time. It is the rarer and
+   * more considered purchase of the two, and someone spending 3 500 ₽ on a programme review is
+   * already going to be in a conversation with him. Fill this in if a second schedule ever exists.
+   */
 };
 
 export const BOOKING = {
