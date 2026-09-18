@@ -1,28 +1,32 @@
 -- =============================================================================
 -- Forma — «Клуб маленьких шагов»: one week of tasks, for testing.
 --
--- Run it in the Supabase SQL editor after the migrations (docs/SETUP.md §2).
--- It is idempotent: running it again rewrites the same week rather than adding a
--- second copy, so the plan can be edited here and re-applied as often as you like.
+-- Run it with **Actions → Supabase apply → task = `club-seed`**, or paste it into
+-- the Supabase SQL editor after the migrations (docs/SETUP.md §2). It is
+-- idempotent: running it again rewrites the same week rather than adding a second
+-- copy, so the plan can be edited here and re-applied as often as you like.
 --
 -- What it creates
 --   • one marathon, slug `klub_test`, seven days, started the day before yesterday
---   • nineteen tasks across those seven days
---   • four pairs, seven invented members and the proof they have already sent,
---     so the board has a board on it (section 3)
---   • no real people. The two humans are added by «club-join» in Actions, which
---     reads their address from a secret — see section 4.
+--   • **seven tasks — one a day**, and nothing else on any day
+--   • seven invented members and the proof they have already sent, so the board
+--     has rows on it (section 3)
+--   • no real people. They are added by «club-join» in Actions, which reads their
+--     address from a secret — see section 4.
 --
 -- It touches ONLY the row whose slug is `klub_test`. Any other marathon is left
 -- alone, including a real one running at the same time.
 --
--- The plan is written for the format the name promises: one small thing a day,
--- never a feat. Each day has at most one task that takes real effort; the rest are
--- a line to answer, a glass of water, a flight of stairs. The pair task
--- (`all_members`) is the one that scores properly, because it is the one that
--- makes two people pull each other through — that is the whole mechanism.
+-- TWO RULES THE OWNER SET, AND THEY SHAPE EVERYTHING BELOW:
 --
--- Points per day land between 8 and 18, so no single day can decide the week.
+--   «Никакого напарника в клубе быть не должно. Каждый сам за себя.»
+--     `team_size` is 1. There are no teams, no pairs and no task that waits on
+--     somebody else. Every rule is `per_member`, because in a club of one-person
+--     entries that is the only rule that means anything.
+--
+--   «Задание одно в день. Не надо доп текст писать.»
+--     One row per day, and a title with no `body`. The name of the task is the
+--     task. A paragraph explaining it is the thing she asked not to write.
 -- =============================================================================
 
 begin;
@@ -30,27 +34,25 @@ begin;
 -- -----------------------------------------------------------------------------
 -- 1) The club itself.
 --
+-- `team_size = 1` is the whole of «каждый сам за себя»: `marathon_is_solo()` reads
+-- it, and from there every function stops looking at `team_id` at all
+-- (0011_marathon.sql). A member with a team is refused outright in this mode, so
+-- section 3 and «club-join» both leave `team_id` null.
+--
 -- `starts_on` is **two days back**, so today is day 3 and the week already has a
--- past. That is deliberate and it is what makes the club's second half mean
--- anything: a round that starts today has nothing in the table but zeroes, and a
--- board of zeroes is indistinguishable from a board that is broken.
---
--- Day 3 rather than any other day because of what is on it — a line to answer, a
--- number to type and a task that only scores when both of the pair deliver. One
--- screen, three of the four kinds of proof.
---
--- Move it if you want a different day on screen: `current_date` starts the week
--- today, `current_date - 5` puts you on the pair's workout.
+-- past. That is deliberate: a round that starts today has nothing in the table
+-- but zeroes, and a board of zeroes is indistinguishable from a board that is
+-- broken. Move the offset for a different day on screen.
 -- -----------------------------------------------------------------------------
 insert into public.marathons (slug, title, description, status, starts_on, days, team_size, timezone, due_time, prize)
 values (
   'klub_test',
   'Клуб маленьких шагов',
-  'Тестовая неделя. Одно небольшое задание в день, напарник и общая таблица.',
+  'Тестовая неделя. Одно небольшое задание в день и общая таблица.',
   'active',
   current_date - 2,
   7,
-  2,          -- пара: задание «на двоих» засчитывается, только если сделали оба
+  1,          -- каждый сам за себя: ни пар, ни команд
   'Europe/Moscow',
   '22:00',
   'Час с тренером и создателем Forma'
@@ -66,115 +68,57 @@ on conflict (slug) do update set
   due_time    = excluded.due_time,
   prize       = excluded.prize;
 
+-- Teams from an earlier, paired version of this week. A solo marathon may not have
+-- them (`marathon_members_check_team`), and a member still pointing at one would
+-- keep the board drawing pairs. Deleting the team nulls the pointer
+-- (`on delete set null`), so nobody is dropped from the club.
+delete from public.marathon_teams
+where marathon_id = (select id from public.marathons where slug = 'klub_test');
+
 -- -----------------------------------------------------------------------------
--- 2) The week.
+-- 2) The week — one task a day, title only.
 --
 -- Tasks are replaced wholesale, not merged: the plan below is the whole truth, and
 -- editing a line here and re-running should not leave yesterday's version behind.
---
 -- Deleting a task deletes its proof too (`on delete cascade`), which is what you
--- want while testing and is worth knowing before you re-run this on a week people
--- have already played.
+-- want while testing and is worth knowing before re-running on a week people have
+-- already played.
+--
+-- No `body` on any row, on purpose. The card is the task's name, the pill saying
+-- what it is worth, and the one control that delivers it.
+--
+-- Points are not all equal: a harder day is worth more, and it is what keeps the
+-- board from being seven-way ties. They run 8 to 15, so no single day decides the
+-- week.
 --
 -- Columns worth knowing:
---   rule         all_members — the entry scores only if BOTH of the pair delivered
---                per_member  — everyone who delivered scores for themselves
---                capped      — per_member, but the pair's total stops at `cap`
---                none        — no points: a morning line, a rest day, a tip
+--   rule         per_member — you deliver, you score. The only rule used here.
+--                capped / all_members exist in the schema and are team rules; they
+--                have no meaning in a solo club.
+--                none — no points at all.
 --   proof_kind   done | text | number | media
 --   unit/target  the figure and what it is measured in (target is informational —
 --                "did you hit it" stays the coach's judgement, not arithmetic)
---   proof_visibility  team (the partner sees it) | coach (only the coach does)
---   due_time     overrides the club's 22:00 for this one task
+--   proof_visibility  team (others in your entry see it) | coach (only the coach)
 -- -----------------------------------------------------------------------------
 delete from public.marathon_tasks
 where marathon_id = (select id from public.marathons where slug = 'klub_test');
 
 insert into public.marathon_tasks
-  (marathon_id, day_index, sort_order, title, body, rule, points, cap,
-   proof_kind, unit, target_num, proof_visibility, due_time)
+  (marathon_id, day_index, sort_order, title, rule, points, proof_kind, unit, target_num, proof_visibility)
 select
   (select id from public.marathons where slug = 'klub_test'),
-  t.day_index, t.sort_order, t.title, t.body, t.rule, t.points, t.cap,
-  t.proof_kind, t.unit, t.target_num, t.proof_visibility, t.due_time
+  t.day_index, 0, t.title, 'per_member', t.points, t.proof_kind, t.unit, t.target_num, t.visibility
 from (values
-  -- ДЕНЬ 1 — начали. Ничего физического: первый день решает, вернёшься ли ты завтра.
-  (1, 0, 'Доброе утро',
-      'Первая неделя клуба. Ответь одним словом, с каким настроением начинаешь.',
-      'none', 0, null::int, 'text', null::text, null::numeric, 'team', null::time),
-  (1, 1, 'Десять минут на ногах',
-      'Прогулка, уборка, танцы на кухне — что угодно, лишь бы десять минут не сидя.',
-      'all_members', 10, null, 'done', null, null, 'team', null),
-  (1, 2, 'Стакан воды до кофе',
-      'Один стакан воды перед первой чашкой. Всё.',
-      'per_member', 3, null, 'done', null, null, 'team', null),
-
-  -- ДЕНЬ 2 — цифры. Два задания, которые измеряются, чтобы в таблице появились числа.
-  --
-  -- Здесь стояли «Шаги» — «считаем шаги за день, цель шесть тысяч». Задание убрано вместе со всей
-  -- функцией шагов: приложение не может прочитать шагомер телефона, значит число пришлось бы
-  -- переписывать руками из «Здоровья», а никто не ведёт один и тот же счёт в двух приложениях.
-  -- Прогулка осталась, но измеряется временем, а его человек и так знает.
-  (2, 0, 'Прогулка полчаса',
-      'Тридцать минут пешком, можно в два захода. Засчитываем время, а не расстояние.',
-      'per_member', 5, null, 'number', 'мин', 30, 'team', null),
-  (2, 1, 'Планка',
-      'Максимум за один подход. Записываем секунды — на этой неделе важно не сколько, а что померили.',
-      'per_member', 5, null, 'number', 'сек', null, 'team', null),
-  (2, 2, 'Лечь спать до полуночи',
-      'Один вечер. Сон — та же тренировка, только без усилий.',
-      'per_member', 3, null, 'done', null, null, 'team', null),
-
-  -- ДЕНЬ 3 — лестница. Первое задание с дедлайном до обеда: проверяет, что время работает.
-  (3, 0, 'Доброе утро',
-      'Третий день — тот самый, на котором обычно всё и заканчивается. Не сегодня.',
-      'none', 0, null, 'done', null, null, 'team', null),
-  (3, 1, 'Пешком по лестнице',
-      'Сегодня лифт не работает. Считаем подъёмы: до пяти в зачёт, дальше уже из спортивного интереса.',
-      'capped', 3, 15, 'number', 'этажей', null, 'team', null),
-  (3, 2, 'Двадцать приседаний до обеда',
-      'Можно за два подхода. Главное — до обеда, пока день не съел.',
-      'all_members', 8, null, 'done', null, null, 'team', '14:00'),
-
-  -- ДЕНЬ 4 — полегче. Не ноль: день без задания читается как «клуб про меня забыл».
-  (4, 0, 'День полегче',
-      'Сегодня ничего тяжёлого. Отдых — часть плана, а не пропуск.',
-      'none', 0, null, 'done', null, null, 'team', null),
-  (4, 1, 'Пятнадцать минут растяжки',
-      'Перед сном, без экрана. Спина и ноги.',
-      'per_member', 5, null, 'done', null, null, 'team', null),
-  (4, 2, 'Строчка напарнику',
-      'Напиши, что у тебя получилось за три дня. Одно предложение, без отчёта.',
-      'per_member', 3, null, 'text', null, null, 'team', null),
-
-  -- ДЕНЬ 5 — еда. Фото видит только тренер: это проверка приватности, и она важная.
-  (5, 0, 'Фото тарелки',
-      'Один обед, как есть. Без комментариев и без «сначала приготовлю что-то приличное».',
-      'per_member', 4, null, 'media', null, null, 'coach', null),
-  (5, 1, 'Отжимания',
-      'Сколько получится, за три подхода. С колен — тоже отжимания.',
-      'per_member', 6, null, 'number', 'раз', null, 'team', null),
-
-  -- ДЕНЬ 6 — вдвоём. Самое дорогое задание недели и единственное «настоящее».
-  (6, 0, 'Доброе утро',
-      'Предпоследний день. Сегодня то самое задание, ради которого нужен напарник.',
-      'none', 0, null, 'done', null, null, 'team', null),
-  (6, 1, 'Тренировка из курса',
-      'Любая из «Формы с нуля», восемнадцать минут. Засчитывается, только если сделали оба.',
-      'all_members', 12, null, 'done', null, null, 'team', null),
-  (6, 2, 'Без сладкого до вечера',
-      'До ужина. Вечером — как хочешь.',
-      'per_member', 4, null, 'done', null, null, 'team', null),
-
-  -- ДЕНЬ 7 — итог. Текстом: неделя заканчивается словами, а не цифрой.
-  (7, 0, 'Прогулка сорок минут',
-      'Без наушников, если получится. Вдвоём — если получится совсем хорошо.',
-      'all_members', 10, null, 'done', null, null, 'team', null),
-  (7, 1, 'Итог недели',
-      'Одной строкой: что из этих семи дней останется с тобой на следующей.',
-      'per_member', 3, null, 'text', null, null, 'team', null)
-) as t (day_index, sort_order, title, body, rule, points, cap,
-        proof_kind, unit, target_num, proof_visibility, due_time);
+  (1, 'Десять минут на ногах',   10, 'done',   null::text, null::numeric, 'team'),
+  (2, 'Прогулка полчаса',        14, 'number', 'мин',      30,            'team'),
+  (3, 'Двадцать приседаний',     12, 'done',   null,       null,          'team'),
+  (4, 'Пятнадцать минут растяжки', 8, 'done',  null,       null,          'team'),
+  -- Проверка приватности: фото видит только тренер, и никто больше.
+  (5, 'Фото тарелки',             8, 'media',  null,       null,          'coach'),
+  (6, 'Тренировка из курса',     15, 'done',   null,       null,          'team'),
+  (7, 'Итог недели одной строкой', 10, 'text', null,       null,          'team')
+) as t (day_index, title, points, proof_kind, unit, target_num, visibility);
 
 /*
  * Every task in THIS week forgives lateness, and a real club's would not.
@@ -187,10 +131,7 @@ from (values
  * simply late. Nothing on the card says so, which is a real gap and one worth
  * closing in the app rather than hiding here.
  *
- * Until then the test week says «late still counts» out loud, in one line, so
- * the deadline is still printed on the card (day 3 says «до 14:00») and the
- * points still land whenever the tester gets to it. Delete this statement to
- * rehearse the deadline for real.
+ * Delete this statement to rehearse the deadline for real.
  */
 update public.marathon_tasks
 set late_counts = true
@@ -199,13 +140,12 @@ where marathon_id = (select id from public.marathons where slug = 'klub_test');
 commit;
 
 -- =============================================================================
--- 3) The test cohort — four pairs, seven invented people, and what they have
---    already sent.
+-- 3) The test cohort — seven invented people, so the board has a board on it.
 --
--- WHY THIS EXISTS. The club's screen is two halves: today's task, and «топ 3 и
--- где ты». The second half cannot be looked at with one person in the round —
--- it renders «Пока никто не набрал баллов», which is correct and tells the
--- owner nothing about the screen she asked for. So the round gets a field.
+-- WHY THIS EXISTS. The club's screen is two halves: today's task, and the week's
+-- table. The second half cannot be looked at with one person in the round — it
+-- renders «Пока никто не набрал баллов», which is correct and tells the owner
+-- nothing about the screen she asked for. So the round gets a field.
 --
 -- THESE PEOPLE ARE NOT REAL AND MUST NEVER LEAVE `klub_test`. Their addresses
 -- are `@example.test` — `.test` is reserved by RFC 6761 and can never be
@@ -213,15 +153,12 @@ commit;
 -- here is anybody's personal data. The club they live in is a round called
 -- «Тестовая неделя» that only its own members can read.
 --
--- This is test data in a private test round. It is not, and must not become,
--- an invented result or an invented review on a public surface — `docs/SPEC.md`
+-- This is test data in a private test round. It is not, and must not become, an
+-- invented result or an invented review on a public surface — `docs/SPEC.md`
 -- forbids those and this does not touch them.
 --
--- The seventh pair slot is left open on purpose: «Пара 1» holds one invented
--- partner and waits for the real human, whom the «club-join» task in
--- `.github/workflows/supabase-apply.yml` adds from a GitHub secret (section 4).
--- That is the pair mechanic on screen: the `all_members` tasks of day 3 stay
--- unscored until she delivers hers, and the moment she does, «Пара 1» climbs.
+-- Nobody has a team, because the club has none. Each of them is their own entry
+-- on the board, exactly as the real member will be.
 -- =============================================================================
 
 begin;
@@ -237,32 +174,23 @@ begin;
  */
 set local request.jwt.claims = '{}';
 
--- The four pairs. `sort_order` only decides ties in the admin's list.
-insert into public.marathon_teams (marathon_id, name, sort_order)
-select m.id, v.name, v.sort_order
-from public.marathons m,
-     (values ('Пара 1', 1), ('Пара 2', 2), ('Пара 3', 3), ('Пара 4', 4)) as v (name, sort_order)
-where m.slug = 'klub_test'
-on conflict (marathon_id, name) do update set sort_order = excluded.sort_order;
-
 -- The people. `klub-test-N@example.test` is the key everything below joins on,
 -- so the number in the address is load-bearing — do not renumber casually.
-insert into public.marathon_members (marathon_id, email, team_id, display_name)
-select m.id, v.email::citext, t.id, v.display_name
+insert into public.marathon_members (marathon_id, email, display_name)
+select m.id, v.email::citext, v.display_name
 from public.marathons m
-join public.marathon_teams t on t.marathon_id = m.id
 join (values
-  ('klub-test-1@example.test', 'Марина',  'Пара 1'),
-  ('klub-test-2@example.test', 'Олег',    'Пара 2'),
-  ('klub-test-3@example.test', 'Даша',    'Пара 2'),
-  ('klub-test-4@example.test', 'Кирилл',  'Пара 3'),
-  ('klub-test-5@example.test', 'Лена',    'Пара 3'),
-  ('klub-test-6@example.test', 'Паша',    'Пара 4'),
-  ('klub-test-7@example.test', 'Рита',    'Пара 4')
-) as v (email, display_name, team_name) on v.team_name = t.name
+  ('klub-test-1@example.test', 'Марина'),
+  ('klub-test-2@example.test', 'Олег'),
+  ('klub-test-3@example.test', 'Даша'),
+  ('klub-test-4@example.test', 'Кирилл'),
+  ('klub-test-5@example.test', 'Лена'),
+  ('klub-test-6@example.test', 'Паша'),
+  ('klub-test-7@example.test', 'Рита')
+) as v (email, display_name) on true
 where m.slug = 'klub_test'
 on conflict (marathon_id, email) do update set
-  team_id      = excluded.team_id,
+  team_id      = null,
   display_name = excluded.display_name,
   status       = 'active';
 
@@ -279,10 +207,15 @@ on conflict (marathon_id, email) do update set
  * coach's proofs feed. It scores correctly because the week forgives lateness
  * (see the `late_counts` line above); it just does not pretend to a past.
  *
- * What is deliberately NOT invented: `media` proof. A photograph cannot be
- * faked into a bucket, and a row pointing at an object that is not there would
- * show the coach a broken picture. Day 5's «Фото тарелки» therefore scores
- * nothing for anybody, which is the honest answer.
+ * WHO DID WHICH DAY IS WRITTEN OUT, not hashed. A hash was shorter and produced
+ * four-way ties at the top of a one-task-a-day week, which is a board that
+ * answers nothing. These are chosen so the table has a clear leader, one honest
+ * tie for second, and a tail.
+ *
+ * What is deliberately NOT invented: `media` proof. A photograph cannot be faked
+ * into a bucket, and a row pointing at an object that is not there would show
+ * the coach a broken picture. Day 5's «Фото тарелки» therefore scores nothing
+ * for anybody — the one day of the week where the board does not move.
  */
 insert into public.marathon_submissions
   (task_id, member_id, marathon_id, day_index, value_text, value_num)
@@ -291,36 +224,28 @@ select
   mem.id,
   t.marathon_id,   -- overwritten by the guard from the task; passed to satisfy NOT NULL readers
   t.day_index,
+  case when t.proof_kind = 'text' then 'спокойно' end,
   case
-    when t.proof_kind = 'text'
-    then (array['бодро', 'спокойно', 'сонно', 'решительно'])[1 + ((c.n + t.day_index) % 4)]
-  end,
-  case
-    when t.proof_kind = 'number' then
-      case t.unit
-        when 'мин'    then   20 + ((c.n * 811 + t.day_index * 397) % 40)
-        when 'сек'    then   40 + ((c.n * 811 + t.day_index * 397) % 90)
-        when 'этажей' then    3 + ((c.n * 811 + t.day_index * 397) % 18)
-        when 'раз'    then    8 + ((c.n * 811 + t.day_index * 397) % 28)
-        else 1
-      end
+    when t.proof_kind = 'number' then 20 + ((c.n * 811 + t.day_index * 397) % 40)
   end
 from public.marathons m
 join public.marathon_tasks t on t.marathon_id = m.id
-/*
- * `diligence` is how many days in ten this person delivers, and the modulus
- * below is a fixed hash rather than `random()` so that re-running the seed
- * redraws the same week. Nobody is at ten: a board where everyone did
- * everything has nothing to read.
- */
-join (values (1, 9), (2, 8), (3, 7), (4, 6), (5, 5), (6, 4), (7, 6)) as c (n, diligence) on true
+join (values
+  (1, array[1, 2, 3, 4, 6, 7]),
+  (2, array[2, 3, 6, 7]),
+  (3, array[1, 3, 4, 7]),
+  (4, array[1, 2, 6]),
+  (5, array[3, 6]),
+  (6, array[1, 4, 7]),
+  (7, array[2, 3, 7])
+) as c (n, days) on true
 join public.marathon_members mem
   on mem.marathon_id = m.id
  and mem.email = ('klub-test-' || c.n || '@example.test')::citext
 where m.slug = 'klub_test'
   and t.day_index <= (current_date - m.starts_on) + 1   -- nothing from the future
   and t.proof_kind <> 'media'
-  and ((t.day_index * 31 + t.sort_order * 17 + c.n * 13) % 10) < c.diligence
+  and t.day_index = any (c.days)
 on conflict (task_id, member_id) do nothing;
 
 commit;
@@ -336,10 +261,8 @@ commit;
 -- `CLUB_TESTER_EMAILS` secret — falling back to `PROBE_EMAIL` — builds this same
 -- statement inside the runner, and never prints it. Nothing has to be typed.
 --
--- It puts everyone it is given into «Пара 1», beside the invented partner from
--- section 3. `team_size` is 2 above, so the `all_members` tasks of that pair
--- score only once both of them have delivered — which is the mechanic the whole
--- format runs on, and the thing worth watching on the board.
+-- It adds them with no team, because the club has none: everyone is their own
+-- entry on the board.
 -- =============================================================================
 
 -- =============================================================================
@@ -347,13 +270,13 @@ commit;
 -- =============================================================================
 --
 -- Что сейчас в плане:
---   select day_index, sort_order, title, rule, points, proof_kind
+--   select day_index, title, rule, points, proof_kind
 --   from public.marathon_tasks
 --   where marathon_id = (select id from public.marathons where slug = 'klub_test')
---   order by day_index, sort_order;
+--   order by day_index;
 --
 -- Сдвинуть неделю (например, чтобы сегодня стал четвёртым днём):
 --   update public.marathons set starts_on = current_date - 3 where slug = 'klub_test';
 --
--- Стереть тестовый клуб целиком — задания, участников, команды и отчёты:
+-- Стереть тестовый клуб целиком — задания, участников и отчёты:
 --   delete from public.marathons where slug = 'klub_test';

@@ -796,7 +796,7 @@ export const app = {
   courseTileInvalid: 'Цвет — шесть шестнадцатеричных знаков, например #1f1f24',
 
   // --- Marathon -------------------------------------------------------------
-  // The second format: daily tasks, proof, a partner you are scored with, a weekly board.
+  // The second format: daily tasks, proof, a weekly board. Everyone races for themselves.
   //
   // It is «Клуб маленьких шагов» to the reader and `marathon*` in the code and the database. Three
   // names for one thing would be a tax, so this is the one place that reconciles them: the keys
@@ -805,8 +805,8 @@ export const app = {
   //
   // The name was the owner's, and it is the right one: «челлендж» promised a test, and the people
   // this is for are coming back after a break — a test is a reason not to start. A club promises
-  // belonging, which is what the format actually delivers: a partner, a board with names, a day
-  // everyone is having at once. Where the two disagree is the prize, so the prize stopped being
+  // belonging, which is what the format actually delivers: a board with names, a day everyone is
+  // having at once. (It once delivered a partner too; «каждый сам за себя» ended that.) Where the two disagree is the prize, so the prize stopped being
   // the pitch and became a fact of the week (see the Club block at the end of this file).
   marathonTitle: 'Клуб маленьких шагов',
   // The cover's big line before there is a day to count: what the format is, in one line.
@@ -818,20 +818,13 @@ export const app = {
   // The same line in two weights on the challenge's head: «ДЕНЬ 10» heavy, «из 14» light.
   marathonDayN: 'День {n}',
   marathonOfTotal: 'из {total}',
-  // «Задания», not «шаги», although the club is the «Клуб маленьких шагов»: «шаги» is already
-  // the step counter in this product — one of the club's own tasks is literally «Шаги», and a
-  // head reading «ШАГИ ДНЯ 0/3» above it asks the reader to hold two meanings of one word. The
-  // name's metaphor lives in the taglines (marathonCoverPitch, the invitations); the unit
-  // inside the screen stays the plain word for the thing you do.
-  marathonTasksToday: 'Задания дня',
-  marathonWeek: 'Неделя {n}',
+  // The full board's own switch. The club screen has no week kicker any more — «Только задание,
+  // кнопка и лидерборд» — so «Эта неделя» is said here, on the screen that can show another one.
   marathonWeekThis: 'Эта неделя',
   marathonWeekLast: 'Прошлая неделя',
-  // On the pill above the board, where «недели» is already said by the week's own kicker.
+  // On the pill above the board: «Приз · Час с тренером».
   marathonPrizeShort: 'Приз',
   marathonBoardAll: 'Вся таблица',
-  marathonWithPartner: 'Напарник: {name}',
-  marathonSolo: 'Идёшь один',
   marathonHomeCta: 'Открыть клуб',
   marathonHomeTasksLeft: 'Осталось заданий: {n}',
   marathonHomeAllDone: 'На сегодня всё',
@@ -844,10 +837,7 @@ export const app = {
   marathonNoTasksToday: 'Сегодня заданий нет',
   marathonNoTasksTodayBody: 'Отдыхаем. Завтра утром будет новое.',
   marathonErrorTitle: 'Не удалось загрузить клуб',
-  marathonTrialTitle: 'Пробная неделя',
-  marathonTrialBody: 'Клуб открыт вместе с курсом. Осталось {n} — дальше по подписке.',
   // The pill on the day screen: «Пробная неделя · осталось 7 дней →», leading to the subscription.
-  marathonTrialLeft: 'осталось {n}',
   // One task
   marathonDeadline: 'До {time}',
   marathonDeadlinePassed: 'Время вышло',
@@ -869,10 +859,6 @@ export const app = {
   marathonProofPhotoSent: 'Фото отправлено',
   marathonProofVoided: 'Не засчитано: {reason}',
   marathonProofCoachOnly: 'Видит только тренер',
-  marathonPartnerDone: '{name} сделал',
-  marathonPartnerWaiting: 'Ждём {name}',
-  marathonPartnerBoth: 'Сделали оба',
-  marathonTeamWaitingYou: 'Команда ждёт тебя',
   // The board
   marathonBoardEmpty: 'Пока никто не набрал баллов',
   marathonBoardYou: 'Ты',
@@ -1147,7 +1133,5 @@ export const app = {
   marathonBoardGapMany: 'ещё {n} мест',
   // Ноль — не место. У того, кто ещё ничего не набрал, места в таблице нет, и «0 место» —
   // не предложение ни на одном языке.
-  marathonBoardYouUnscored: 'Ты ещё без баллов на этой неделе',
   // И это не то же самое: строки в таблице недели у человека пока просто нет.
-  marathonBoardYouMissing: 'Тебя пока нет в таблице этой недели',
 } as const;

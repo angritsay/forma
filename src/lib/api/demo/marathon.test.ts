@@ -1,9 +1,10 @@
 /**
  * The demo marathon, walked through the same functions the app calls.
  *
- * The seed is mid-flight on purpose — ten days played, a partner who is ahead today — so these
- * tests are really about the two things that are easy to get wrong once real data exists: that a
- * pair task waits for both people, and that sending proof moves the board the same moment.
+ * The seed is mid-flight on purpose — ten days played, three people already done with today — so
+ * these tests are really about what is easy to get wrong once real data exists: that a member
+ * races alone, that sending proof moves the board the same moment, and that a week is its own
+ * board.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type * as Latency from './latency';
@@ -53,7 +54,7 @@ beforeEach(() => {
 });
 
 describe('the demo marathon', () => {
-  it('puts the account in a running marathon, on a team, on day 10', async () => {
+  it('puts the account in a running marathon, alone, on day 10', async () => {
     await signIn();
     const [marathon, ...rest] = await demo.listMyMarathons();
     expect(rest).toHaveLength(0);
@@ -62,21 +63,27 @@ describe('the demo marathon', () => {
     expect(marathon?.dayIndex).toBe(10);
     expect(marathon?.week).toBe(2);
     expect(marathon?.totalWeeks).toBe(2);
-    expect(marathon?.teamName).toBe('Ты и Марек');
+    // Каждый сам за себя: no team, and `teamId` is what every scoring path checks.
+    expect(marathon?.teamName).toBeNull();
+    expect(marathon?.teamId).toBeNull();
   });
 
-  it('shows today waiting on me, with my partner already done', async () => {
+  it('shows exactly one task today, unsent, with no body on it', async () => {
     await signIn();
     const [marathon] = await demo.listMyMarathons();
     if (!marathon) throw new Error('no marathon');
     const today = await demo.getMarathonDay(marathon, marathon.dayIndex);
 
-    const pairTask = today.find((t) => t.task.title === 'Берпи');
-    expect(pairTask?.task.rule).toBe('all_members');
-    expect(pairTask?.mine).toBeNull();
-    // The sentence the Today screen exists to say: he has done it, the team is waiting on me.
-    expect(pairTask?.teammatesDone).toHaveLength(1);
-    expect(pairTask?.entrySize).toBe(2);
+    // «Задание одно в день. Не надо доп текст писать.»
+    expect(today).toHaveLength(1);
+    const task = today[0];
+    expect(task?.task.title).toBe('Пятьдесят берпи за день');
+    expect(task?.task.body).toBeNull();
+    expect(task?.task.rule).toBe('per_member');
+    expect(task?.mine).toBeNull();
+    // Alone: the entry is one person, so there is nobody to wait for.
+    expect(task?.entrySize).toBe(1);
+    expect(task?.teammatesDone).toHaveLength(0);
   });
 
   it('gives the roster names and no emails', async () => {
@@ -88,7 +95,7 @@ describe('the demo marathon', () => {
     expect(JSON.stringify(roster)).not.toContain('@');
   });
 
-  it('scores the pair task only once both have delivered', async () => {
+  it('scores my own proof the moment it is sent, and moves me up the board', async () => {
     await signIn();
     const [marathon] = await demo.listMyMarathons();
     if (!marathon) throw new Error('no marathon');
@@ -96,15 +103,15 @@ describe('the demo marathon', () => {
       demo.getMarathonScores(marathon.id).then((rows) => rows.find((r) => r.isMine));
 
     const before = await mine();
-    const today = await demo.getMarathonDay(marathon, marathon.dayIndex);
-    const pairTask = today.find((t) => t.task.title === 'Берпи');
-    if (!pairTask) throw new Error('no pair task');
+    const [task] = await demo.getMarathonDay(marathon, marathon.dayIndex);
+    if (!task) throw new Error('no task today');
 
-    await demo.sendProof({ taskId: pairTask.task.id, memberId: marathon.memberId });
+    await demo.sendProof({ taskId: task.task.id, memberId: marathon.memberId });
 
     const after = await mine();
-    // Марек was already done, so my proof is the one that completes it: the team takes all 12.
-    expect((after?.points ?? 0) - (before?.points ?? 0)).toBe(pairTask.task.points);
+    expect((after?.points ?? 0) - (before?.points ?? 0)).toBe(task.task.points);
+    // Fourth to a tie for second: the seed is built so today's task is worth a place.
+    expect(after?.rank).toBeLessThan(before?.rank ?? 99);
   });
 
   it('keeps last week on its own board', async () => {
@@ -113,15 +120,16 @@ describe('the demo marathon', () => {
     if (!marathon) throw new Error('no marathon');
     const week1 = await demo.getMarathonScores(marathon.id, 1);
     const week2 = await demo.getMarathonScores(marathon.id, 2);
-    expect(week1).toHaveLength(3);
-    expect(week2).toHaveLength(3);
+    // Six people, six entries: alone, everybody is their own row.
+    expect(week1).toHaveLength(6);
+    expect(week2).toHaveLength(6);
     expect(week1.map((r) => r.points)).not.toEqual(week2.map((r) => r.points));
     // Every entry is ranked and exactly one of them is mine.
     expect(week1.filter((r) => r.isMine)).toHaveLength(1);
     expect(week1[0]?.rank).toBe(1);
   });
 
-  it("tells my own days apart from my team's points", async () => {
+  it('tells my own days apart, including the one I missed', async () => {
     await signIn();
     const [marathon] = await demo.listMyMarathons();
     if (!marathon) throw new Error('no marathon');
@@ -129,8 +137,8 @@ describe('the demo marathon', () => {
     expect(days).toHaveLength(10);
     expect(days[0]?.dayIndex).toBe(10);
 
-    // Day 6 is the one I missed: my partner delivered, I did not, and an all_members task pays
-    // nothing unless both do — so the day shows a task I skipped and no points for it.
+    // Day 6 is the one I missed: everybody else delivered and I did not, so the day shows a task
+    // I skipped and no points for it.
     const day6 = days.find((d) => d.dayIndex === 6);
     expect(day6?.tasksTotal).toBe(1);
     expect(day6?.tasksDone).toBe(0);
@@ -146,20 +154,20 @@ describe('the demo marathon', () => {
     const before = await week1();
     const proofs = await demo.listMarathonProofs({ marathonId: marathon.id, dayIndex: 1 });
     const mineOnDay1 = proofs.find(
-      (p) => p.memberId === marathon.memberId && p.taskTitle === 'Зарядка 10 минут',
+      (p) => p.memberId === marathon.memberId && p.taskTitle === 'Зарядка десять минут',
     );
     if (!mineOnDay1) throw new Error('no proof to void');
 
     await demo.voidProof(mineOnDay1.id, 'не то фото');
     const after = await week1();
-    // The day-1 pair task is worth 10 and now has only one of us: the team loses all of it.
+    // Day 1 is worth 10, and a struck proof stops scoring at once.
     expect((before?.points ?? 0) - (after?.points ?? 0)).toBe(10);
 
     await demo.restoreProof(mineOnDay1.id);
     expect((await week1())?.points).toBe(before?.points);
   });
 
-  it("adds the coach's manual points to the whole team", async () => {
+  it("adds the coach's manual points to my own row", async () => {
     await signIn();
     const [marathon] = await demo.listMyMarathons();
     if (!marathon) throw new Error('no marathon');
@@ -171,7 +179,7 @@ describe('the demo marathon', () => {
       memberId: marathon.memberId,
       dayIndex: marathon.dayIndex,
       points: 7,
-      reason: 'вытащил напарника',
+      reason: 'разбор недели в чате',
     });
     expect((await mine())?.points).toBe((before?.points ?? 0) + 7);
   });

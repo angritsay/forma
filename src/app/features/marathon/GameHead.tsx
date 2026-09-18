@@ -2,11 +2,16 @@
  * The head of the club's screen: the day as a ring, and one line saying which day it is.
  *
  * It replaces a cover — the programme colour bleeding past the gutters with the title, the day, the
- * week, the partner, a strip of fourteen rules and the prize, all set on it. The owner's verdict on
+ * week, a strip of fourteen rules and the prize, all set on it. The owner's verdict on
  * that screen was «вообще мимо», and her own prototype (`design/ui_kits/app-v2`, «Челлендж»)
  * shows what she meant instead: the colour on a ring and a few pills, not on a field, and the
  * whole head one figure and one line. Everything the cover said is still said, by something
  * smaller: the ring *is* the strip of days, the pill on the board *is* the prize.
+ *
+ * The line beside the ring is the club's name, and only that. It used to carry who you were scored
+ * with — «Напарник: Марина», or «Идёшь один» when there was nobody. Both are gone with the pairs:
+ * «Никакого напарника в клубе быть не должно. Каждый сам за себя», and a screen that announces
+ * solitude to everybody on it is announcing the format's default as if it were news.
  *
  * The ring is `RingProgress` with the club's colour, which the screen sets around itself
  * (`courseTileVars(GAME_TILE)`) — the same ring the home screen's club row draws, at the size
@@ -21,23 +26,10 @@ import { useT } from '@/app/hooks/useT';
 export interface GameHeadProps {
   /** The club I am in, or null — locked, not joined, still loading, failed. */
   marathon: MyMarathon | null;
-  /** The people I am scored with, by name; empty in a solo club. */
-  partners?: readonly string[];
 }
 
-export function GameHead({ marathon, partners = [] }: GameHeadProps) {
+export function GameHead({ marathon }: GameHeadProps) {
   const { t, locale } = useT();
-  /*
-   * Who you are scored with, by name: a pair is usually called «Ты и Марек», so «Напарник: Ты и
-   * Марек» is nonsense and the roster has the people. The team name is the fallback, and the board
-   * is where the team is the racer.
-   */
-  const partner = partners.length > 0 ? partners.join(', ') : (marathon?.teamName ?? '');
-  const who = marathon
-    ? partner
-      ? t('app.marathonWithPartner', { name: partner })
-      : t('app.marathonSolo')
-    : null;
   const day = marathon ? Math.max(marathon.dayIndex, 1) : 0;
   const days = marathon?.days ?? 0;
   const dayText = formatNumber(locale, day);
@@ -63,13 +55,9 @@ export function GameHead({ marathon, partners = [] }: GameHeadProps) {
       </RingProgress>
       <div className="min-w-0 flex-1">
         {/* Two lines allowed, not one. The ring and its gap take 88px, so this line gets 239px of a
-            375px screen — and «Спринт Формы · Напарник: Марек» now lands in one line box there,
-            which it could not do as tracked capitals. A longer club name or a second partner still
+            375px screen, and «Клуб маленьких шагов» fits in one line box there. A longer club name
             takes the second line, and the ring is taller than both of them together. */}
-        <p className="eyebrow line-clamp-2">
-          {marathon ? marathon.title : t('app.marathonTitle')}
-          {who ? ` · ${who}` : ''}
-        </p>
+        <p className="eyebrow line-clamp-2">{marathon ? marathon.title : t('app.marathonTitle')}</p>
         {/* «ДЕНЬ 10» at 800 and «из 14» at 200 — the brand's device, on the one line here. */}
         {/* 1.08 → 1.2, the sentence-case floor: see the type-scale comment in global.css. */}
         <h1 className="display mt-1 text-[26px] leading-[1.2] text-balance">

@@ -163,9 +163,15 @@ jobs:
           # One or more addresses, separated by commas, semicolons or whitespace, turned
           # into a SQL VALUES list with every quote doubled. Written to a file rather than
           # inlined so no shell quoting stands between the secret and the statement.
+          #
+          # Lower-cased before `unique`, and that is not cosmetic: `marathon_members.email`
+          # is `citext`, so «Owner@…» and «owner@…» are the same row, but a case-sensitive
+          # `unique` lets both through and Postgres then refuses the whole statement with
+          # «ON CONFLICT DO UPDATE command cannot affect row a second time». Lowercasing is
+          # also what `normalize_email()` does to every address elsewhere in the schema.
           cat > /tmp/emails.jq <<'JQ'
           split("[,;\\s]+"; "")
-          | map(select(length > 0))
+          | map(ascii_downcase | select(length > 0))
           | unique
           | map("('" + gsub("'"; "''") + "')")
           | join(", ")
@@ -175,8 +181,16 @@ jobs:
             echo "::error::The secret held no address."
             exit 1
           fi
-          # The statement itself. `display_name` is left null on purpose: the board then
-          # shows the name from the person's own profile, which is the name they chose.
+          # The statement itself.
+          #
+          # No team: the club is «каждый сам за себя» (`team_size = 1`), and in that mode
+          # `marathon_members_check_team` refuses a member who points at one — this step
+          # used to create «Пара 1» and would now fail outright. `team_id` is nulled on the
+          # conflict path too, so a member left over from the paired version is un-paired
+          # rather than quietly kept.
+          #
+          # `display_name` is left null on purpose: the board then shows the name from the
+          # person's own profile, which is the name they chose.
           cat > /tmp/join.sql <<SQL
           do \$\$ begin
             if not exists (select 1 from public.marathons where slug = 'klub_test') then
@@ -184,20 +198,12 @@ jobs:
             end if;
           end \$\$;
 
-          with club as (select id from public.marathons where slug = 'klub_test'),
-               team as (
-                 insert into public.marathon_teams (marathon_id, name)
-                 select id, 'Пара 1' from club
-                 -- do update, not do nothing: a conflicting do nothing returns no row and
-                 -- the insert below would then quietly add nobody.
-                 on conflict (marathon_id, name) do update set name = excluded.name
-                 returning id
-               )
-          insert into public.marathon_members (marathon_id, email, team_id)
-          select club.id, v.email::citext, team.id
-          from club, team, (values $VALUES) as v (email)
+          insert into public.marathon_members (marathon_id, email)
+          select m.id, v.email::citext
+          from public.marathons m, (values $VALUES) as v (email)
+          where m.slug = 'klub_test'
           on conflict (marathon_id, email) do update set
-            team_id = excluded.team_id,
+            team_id = null,
             status  = 'active';
 
           do \$\$
@@ -227,7 +233,7 @@ jobs:
             jq -r '.message // .error // "(no message)"' < /tmp/out.json || true
             exit 1
           fi
-          echo "HTTP $code — in the club, in «Пара 1». Open the app: the Клуб tab should show today's task and the week's table."
+          echo "HTTP $code — in the club. Open the app: the Клуб tab should show today's task and the week's table."
 
       # ---------------------------------------------------------------------
       # The sign-in email, into BOTH templates. Supabase sends the one-time code

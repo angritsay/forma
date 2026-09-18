@@ -1,22 +1,28 @@
 /**
- * One task of the day: its name, what it is worth, the one control that delivers it, and — the
- * part that makes this format different from a checklist — where the person you are scored with
- * has got to.
+ * The task of the day: its name, what it is worth, and the one control that delivers it.
  *
- * The card used to open with a line of rule («Только если сделают оба»), then the title as a
- * heading, the body, a target line, a labelled field, a button and a badge — seven pieces of type
- * for one task. The owner's prototype (`design/ui_kits/app-v2`, «Челлендж») does it with three:
- * the task's name in the display face, a pill saying what it is worth, and a field with «Готово»
- * beside it. That is the order of the athlete's attention, and it is what this draws. The rule is
- * still here for the one case where it changes what you do — a pair task that scores only when
- * both deliver — and the target has moved into the field it is the target for.
+ * Three pieces of type, which is the owner's prototype (`design/ui_kits/app-v2`, «Челлендж») and
+ * the order of the athlete's attention: the name in the display face, a pill saying what it is
+ * worth, a control with «Готово» on it. The card once opened with a line of rule, then the title,
+ * the body, a target line, a labelled field, a button and a badge — seven pieces for one task.
+ *
+ * Two of those went with «Никакого напарника в клубе быть не должно. Каждый сам за себя»:
+ *
+ *   • **`PartnerLine`**, the sentence saying where the other half of the pair had got to
+ *     («Ждём Марину», «Команда ждёт тебя»). There is no pair to wait for.
+ *   • **the rule line** — «Только если сделают оба» and «На команду не больше N». Both are team
+ *     sentences, and in a club of one-person entries neither can be true. `all_members` and
+ *     `capped` still exist in the schema for a marathon that does run in teams; what they do not
+ *     have any more is a line on this card.
+ *
+ * The body is still drawn when the coach writes one, and the club's own week writes none — the
+ * name of the task is the task («Не надо доп текст писать»).
  *
  * A delivered task does not disappear and does not turn grey: it gets a check in a white circle,
  * landing on the spring, and steps back a little. Finishing something should look like something.
  */
 import { clsx } from 'clsx';
 import { useRef, useState } from 'react';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Glyph } from '@/components/ui/Icon';
 import { Input } from '@/components/ui/Input';
@@ -27,8 +33,6 @@ import { useT } from '@/app/hooks/useT';
 
 export interface TaskCardProps {
   item: MarathonTodayTask;
-  /** Names of the people I am scored with, by member id — for «Марек сделал». */
-  teammateNames: Map<string, string>;
   /** The day has closed; proof can still be sent, but the card says it will not score. */
   closed: boolean;
   onSend: (proof: Omit<ProofInput, 'taskId' | 'memberId'>) => Promise<void>;
@@ -36,9 +40,9 @@ export interface TaskCardProps {
   onSendMedia: (file: File) => Promise<void>;
 }
 
-export function TaskCard({ item, teammateNames, closed, onSend, onSendMedia }: TaskCardProps) {
+export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
   const { t, locale } = useT();
-  const { task, mine, teammatesDone, entrySize } = item;
+  const { task, mine } = item;
   const [text, setText] = useState(mine?.valueText ?? '');
   const [value, setValue] = useState(mine?.valueNum === null ? '' : String(mine?.valueNum ?? ''));
   const [busy, setBusy] = useState(false);
@@ -64,18 +68,6 @@ export function TaskCard({ item, teammateNames, closed, onSend, onSendMedia }: T
     }
   };
 
-  /*
-   * The rule, only where it changes what you do. «Только если сделают оба» is the sentence that
-   * makes someone message their partner; a cap is a ceiling worth knowing. «Каждому за себя» is
-   * the default and says nothing, and «Без баллов» is already said by the missing pill.
-   */
-  const rule =
-    task.rule === 'all_members' && entrySize > 1 && !done
-      ? t('app.marathonRuleAllMembers')
-      : task.rule === 'capped'
-        ? t('app.marathonRuleCapped', { n: formatNumber(locale, task.cap ?? 0) })
-        : null;
-
   const points = plural(locale, task.points, {
     one: t('app.marathonPointsOne', { n: formatNumber(locale, task.points) }),
     few: t('app.marathonPointsFew', { n: formatNumber(locale, task.points) }),
@@ -98,10 +90,6 @@ export function TaskCard({ item, teammateNames, closed, onSend, onSendMedia }: T
           {task.body ? (
             <p className="mt-2 text-[14px] leading-snug text-muted">{task.body}</p>
           ) : null}
-          {/* Plain `.eyebrow`: it is 13px sentence case now, and the `text-[10px]` that used to hold
-              it under the tracked capitals would leave this rule the one unreadable line on the
-              card. */}
-          {rule ? <p className="eyebrow mt-2">{rule}</p> : null}
         </div>
         {done ? (
           /*
@@ -144,14 +132,6 @@ export function TaskCard({ item, teammateNames, closed, onSend, onSendMedia }: T
           onSendMedia={sendMedia}
         />
       ) : null}
-
-      <PartnerLine
-        done={done}
-        entrySize={entrySize}
-        teammatesDone={teammatesDone}
-        teammateNames={teammateNames}
-        rule={task.rule}
-      />
     </article>
   );
 }
@@ -338,59 +318,4 @@ function ProofControl({
       <span className="text-[13px] text-muted-2">{t('app.marathonProofCoachOnly')}</span>
     </div>
   );
-}
-
-interface PartnerLineProps {
-  done: boolean;
-  entrySize: number;
-  teammatesDone: readonly string[];
-  teammateNames: Map<string, string>;
-  rule: MarathonTodayTask['task']['rule'];
-}
-
-/**
- * Where the pair stands, in one sentence.
- *
- * Only for a task the pair actually shares — on a `per_member` task your partner's state changes
- * nothing for you, and saying it anyway would be noise pretending to be pressure.
- */
-function PartnerLine({ done, entrySize, teammatesDone, teammateNames, rule }: PartnerLineProps) {
-  const { t } = useT();
-  if (entrySize < 2 || rule === 'none' || rule === 'per_member') return null;
-
-  const others = entrySize - 1;
-  const firstName = [...teammateNames.values()][0] ?? '';
-
-  /*
-   * `self-start` on the stamp, and it is the same bug `Badge`'s own `shrink-0` note describes from
-   * the other side. The card is a `flex flex-col`, so its cross axis is the width and a child with
-   * no alignment is stretched to it: «Команда ждёт тебя» is 152px of words and was drawn in a
-   * 327px outlined box running the full width of a 375px screen, which reads as a banner rather
-   * than a stamp. A badge hugs its word wherever it is put.
-   */
-  if (done && teammatesDone.length >= others) {
-    return (
-      <Badge tone="success" className="self-start">
-        {t('app.marathonPartnerBoth')}
-      </Badge>
-    );
-  }
-  if (!done && teammatesDone.length >= others) {
-    // The one that should sting a little: they delivered, the team is on you.
-    return (
-      <Badge tone="warning" className="self-start">
-        {t('app.marathonTeamWaitingYou')}
-      </Badge>
-    );
-  }
-  if (done) {
-    const waitingFor =
-      [...teammateNames.entries()].find(([id]) => !teammatesDone.includes(id))?.[1] ?? firstName;
-    return (
-      <span className="text-[13px] text-muted">
-        {t('app.marathonPartnerWaiting', { name: waitingFor })}
-      </span>
-    );
-  }
-  return null;
 }
