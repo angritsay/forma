@@ -16,6 +16,7 @@ import {
   getMarathonDay,
   getMarathonRoster,
   getMarathonScores,
+  joinClub,
   listMyMarathons,
 } from '@/lib/api/marathon';
 import type {
@@ -73,8 +74,38 @@ export interface MarathonState extends Loaded<MyMarathon[]> {
 }
 
 export function useMyMarathons(): MarathonState {
-  const loaded = useLoader<MyMarathon[]>(() => listMyMarathons(), [], []);
-  const active = loaded.data.find((m) => m.status === 'active') ?? loaded.data[0] ?? null;
+  /*
+   * Join the club before asking what the athlete is in, because for a subscriber those are one
+   * question. «Если ты в клубе то ты участвуешь» — the row in `marathon_members` is not something
+   * anyone should have to be added to by hand; opening the tab is the joining.
+   *
+   * **The failure is swallowed deliberately, and it is the only sensible behaviour here.** The RPC
+   * says "no" by returning null, never by throwing, so a throw means the call did not happen at
+   * all — an offline phone, or a build pointed at a database that has not had
+   * `0016_club_membership.sql` applied yet. Either way the people who are already members have to
+   * keep seeing their club, and failing the tab over a best-effort join would take it away from
+   * everybody in order to fix it for one person.
+   */
+  const loaded = useLoader<MyMarathon[]>(
+    async () => {
+      await joinClub().catch(() => null);
+      return listMyMarathons();
+    },
+    [],
+    [],
+  );
+  /*
+   * The club wins over any other running round.
+   *
+   * Two can be live at once — the club, and a closed cohort the coach is running by hand — and
+   * «the first active one» handed a member whichever started later. `my_marathons()` already sorts
+   * the club first, so this is belt and braces against a database that has not had 0016 applied.
+   */
+  const active =
+    loaded.data.find((m) => m.isClub && m.status === 'active') ??
+    loaded.data.find((m) => m.status === 'active') ??
+    loaded.data[0] ??
+    null;
   return { ...loaded, marathon: active };
 }
 

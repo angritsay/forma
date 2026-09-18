@@ -1378,6 +1378,43 @@ function marathonOr404(db: DemoDb, id: string): MarathonRow {
 const displayNameOf = (m: MarathonMemberRow): string =>
   (m.displayName ?? '').trim() || m.email.split('@')[0] || 'Участник';
 
+/**
+ * Self-join the club, the way `join_club()` does against a real database.
+ *
+ * The demo has no subscriptions to gate on and no paywall worth defending — the whole store is in
+ * this browser and the viewer can edit it. What it does mirror is the shape: idempotent, one row in
+ * `marathonMembers` or none, the club's id or null. That keeps the demo exercising the flow the app
+ * now depends on, instead of resting on the seed having put the viewer in by hand.
+ */
+export async function joinClub(): Promise<string | null> {
+  return run(() =>
+    mutateDb((db) => {
+      const user = requireDemoUser();
+      const club = db.marathons.find((m) => m.status === 'active');
+      if (!club) return null;
+      const mine = db.marathonMembers.find(
+        (m) => m.marathonId === club.id && m.email === user.email,
+      );
+      if (mine) {
+        if (mine.status === 'removed') mine.status = 'active';
+        return club.id;
+      }
+      db.marathonMembers.push({
+        id: demoId('mmember'),
+        marathonId: club.id,
+        email: user.email,
+        // Solo club: a member pointing at a team is exactly what the real schema's trigger refuses.
+        teamId: null,
+        displayName: null,
+        status: 'active',
+        note: null,
+        createdAt: nowIso(),
+      });
+      return club.id;
+    }),
+  );
+}
+
 export async function listMyMarathons(): Promise<MyMarathon[]> {
   return run(() => {
     const db = readDb();
@@ -1409,6 +1446,8 @@ export async function listMyMarathons(): Promise<MyMarathon[]> {
             memberId: mine.id,
             teamId,
             teamName: team?.name ?? null,
+            // The demo runs exactly one round and it stands in for the club.
+            isClub: true,
           },
         ];
       });

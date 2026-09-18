@@ -472,6 +472,13 @@ export interface MyMarathon {
   memberId: string;
   teamId: string | null;
   teamName: string | null;
+  /**
+   * The continuous club, as against a closed round the coach fills by hand.
+   *
+   * Two can be running at once, so the club tab picks by this rather than by "the first active
+   * one" — which handed a member a test round simply because it started later.
+   */
+  isClub: boolean;
 }
 
 /** A row of `marathon_teams`. */

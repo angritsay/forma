@@ -42,6 +42,7 @@ interface DbMyMarathon {
   member_id: string;
   team_id: string | null;
   team_name: string | null;
+  is_club?: boolean;
 }
 
 export interface DbMarathonTask {
@@ -135,12 +136,39 @@ function myMarathonFromDb(r: DbMyMarathon): MyMarathon {
     memberId: r.member_id,
     teamId: r.team_id,
     teamName: r.team_name,
+    // Optional on the wire: a database that has not had 0016 applied yet returns no such column,
+    // and the tab must keep working there — it simply falls back to picking by start date.
+    isClub: r.is_club === true,
   };
 }
 
 export const TASK_COLS = '*';
 
 // --- reads -------------------------------------------------------------------
+
+/**
+ * Put the signed-in athlete into the club, if what they pay for entitles them to be there.
+ *
+ * **Paying is the membership** — «Если ты в клубе то ты участвуешь. Если нет то нет.» Until this
+ * existed a subscriber opened the tab and got the sales screen with «Ты в клубе» written on it and
+ * nothing under it: `my_marathons()` looks for a row in `marathon_members`, and the only thing that
+ * wrote one was a workflow reading a list of addresses out of a repository secret. That is how a
+ * closed cohort is filled, and a club is not one.
+ *
+ * **The entitlement is checked in the database** (`club_access()`), never here. This call is a
+ * request rather than an instruction: an RPC that took the caller's word for it would be a paywall
+ * anybody signed in could step through by calling it. `null` comes back when there is no club
+ * running or no entitlement, and neither of those is an error.
+ *
+ * Idempotent, so it is safe to call on every open of the tab.
+ */
+export async function joinClub(): Promise<string | null> {
+  if (isDemo()) return (await demo()).joinClub();
+  return guard(async () => {
+    await requireUser();
+    return unwrap<string | null>(await supabase().rpc('join_club'));
+  });
+}
 
 /** Every marathon the signed-in athlete plays, newest first. Drafts are not theirs to see. */
 export async function listMyMarathons(): Promise<MyMarathon[]> {
