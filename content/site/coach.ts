@@ -29,15 +29,18 @@ const HOURS: L10n = {
   ru: 'Более 10 000 часов персональных занятий',
   en: 'More than 10,000 hours of personal training sessions',
 };
-const RANK_ORIENTEERING: L10n = {
-  ru: 'Первый взрослый разряд по спортивному ориентированию (2014)',
-  en: 'First adult rank in orienteering (2014)',
-};
-const RANK_ATHLETICS: L10n = {
-  ru: 'Второй взрослый разряд по лёгкой атлетике (2016)',
-  en: 'Second adult rank in track and field (2016)',
-};
-const IN_SPORT_2010: L10n = { ru: 'В спорте с 2010 года', en: 'In sport since 2010' };
+
+/*
+ * Three credentials used to stand here and no longer do — a first adult rank in orienteering
+ * (2014), a second in track and field (2016), and «В спорте с 2010 года».
+ *
+ * They went on the owner's instruction, and the instruction is right about who is reading. They are
+ * true and they are on his profile; they are also *his* sporting results, and this list exists to
+ * answer «почему я должен слушать этого человека про свою тренировку». A youth rank in a sport
+ * nobody buying a home-CrossFit course competes in does not answer that — it answers a different
+ * question, one the reader did not ask. What is left is the three facts that do: what he was
+ * taught, how long he has coached, and how much of it he has actually done.
+ */
 
 /** A credential that is a number, set as the number. `of` is the credential it restates. */
 export interface CoachFigure {
@@ -72,14 +75,7 @@ export const COACH = {
     en: 'Coaching since 2015, with a background in track and field, orienteering and CrossFit. Works on general and sport-specific conditioning — strength and endurance, core, posture, the musculoskeletal system and body composition. The Forma home programs are built on the same load logic as his personal sessions.',
   } satisfies L10n,
   /** Facts from the profile. Each one is checkable — no rounded-up years, no invented titles. */
-  credentials: [
-    ED,
-    SINCE_2015,
-    HOURS,
-    RANK_ORIENTEERING,
-    RANK_ATHLETICS,
-    IN_SPORT_2010,
-  ] as readonly L10n[],
+  credentials: [ED, SINCE_2015, HOURS] as readonly L10n[],
   /**
    * The two credentials that are numbers, set as numbers.
    *
@@ -87,6 +83,18 @@ export const COACH = {
    * the rest of the sentence left as the label. «Более 10 000» becomes «10 000+» and that is the
    * whole transformation. A surface that shows the figures (the booking tab) drops the credentials
    * they came from out of its list, so the same fact is never on screen twice.
+   *
+   * The years figure used to be the bare year, «2015 · тренирует с», and the owner replaced it:
+   * «Вместо тренирует с написать 10+ лет работы персональным тренером». She is reading it the way
+   * a buyer does — a year is a date to subtract from, a span is the answer you wanted — and the
+   * span is also the thing being sold, which is not the calendar but the practice behind it.
+   *
+   * **It is a floor, and that is why it is written rather than computed.** 2026 − 2015 is eleven,
+   * so «10+» is true today and stays true every year after: a floor claim can only become more
+   * conservative with time, never false. Computing it from `new Date()` would make a static build's
+   * output depend on the day it was built, for a number that moves once a year. Round it up to
+   * «15+» when that reads better; nothing checks it, and nothing can, because 2015 is the fact and
+   * this is its poster.
    */
   figures: [
     {
@@ -94,7 +102,11 @@ export const COACH = {
       label: { ru: 'персональных часов', en: 'one-to-one hours' },
       of: HOURS,
     },
-    { value: '2015', label: { ru: 'тренирует с', en: 'coaching since' }, of: SINCE_2015 },
+    {
+      value: '10+',
+      label: { ru: 'лет персональным тренером', en: 'years as a personal trainer' },
+      of: SINCE_2015,
+    },
   ] as readonly CoachFigure[],
   /**
    * Photo path under /public (optional; the card falls back to a monogram tile without it).

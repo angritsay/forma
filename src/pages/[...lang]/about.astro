@@ -22,7 +22,7 @@ import Button from '@/components/landing/Button.astro';
 import Cta from '@/components/landing/Cta.astro';
 import { breadcrumbLd, personLd } from '@/components/landing/jsonld';
 import type { Locale } from '@/content/schema';
-import { formatNumber, l, t } from '@/i18n/index';
+import { l, t } from '@/i18n/index';
 import { canonicalUrl } from '@/lib/seo/urls';
 import { appHref, href, localeStaticPaths, withBase } from '@/lib/util/paths';
 import { BOOKING, bookingFromPrice } from '@content/site/booking';
@@ -47,11 +47,16 @@ const bookHint = t(locale, 'landing.coachBookHint', {
   price: formatPrice(locale, bookingFromPrice()),
 });
 
-const figures = [
-  { value: '2015', label: t(locale, 'landing.aboutFigureSince') },
-  { value: `${formatNumber(locale, 10000)}+`, label: t(locale, 'landing.aboutFigureHours') },
-  { value: '2010', label: t(locale, 'landing.aboutFigureSport') },
-];
+/*
+ * The figures, read from `COACH.figures` rather than typed out again here.
+ *
+ * They used to be a second list on this page — «2015 · тренирует с», «10 000+ · часов занятий»,
+ * «2010 · в спорте с» — kept in step with the credential list by hand. It did not stay in step: the
+ * owner struck «В спорте с 2010 года» from the record, and the page went on postering it. The
+ * header above already states the rule this breaks — the list is the record and the figures are its
+ * poster — so the fix is for there to be one list. There are two figures now, not three.
+ */
+const figures = COACH.figures.map((f) => ({ value: f.value, label: l(f.label, locale) }));
 
 const principles = [
   {
@@ -123,16 +128,19 @@ const H2 = 'display text-lg md:text-xl';
     </header>
 
     <!--
-      Three figures, larger than the words that name them. Three across the page from `sm`; on a
-      phone one under another with the word opposite, because «10 000+» at display size will not
-      share a 390px line with two other numbers — it broke across two lines in the third of the
-      row it had, and a figure that wraps is not a figure any more.
+      The figures, larger than the words that name them. Side by side from `sm`; on a phone one
+      under another with the word opposite, because «10 000+» at display size will not share a
+      390px line with another number — it broke across two lines in the share of the row it had,
+      and a figure that wraps is not a figure any more.
+
+      The grid follows the list: `sm:grid-cols-2` because `COACH.figures` holds two. It was three,
+      and if a third is ever added this number is the one to move with it.
 
       `dt` before `dd` in the markup, the order the spec asks for, and `flex-row-reverse` /
       `flex-col-reverse` to put the number first to the eye. Writing `dd` first would have been
       one class shorter and invalid.
     -->
-    <dl class="mt-10 grid border-t border-border sm:grid-cols-3">
+    <dl class="mt-10 grid border-t border-border sm:grid-cols-2">
       {
         figures.map((f, i) => (
           <div

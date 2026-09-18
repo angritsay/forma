@@ -52,6 +52,21 @@ export interface BookingOption {
   paymentUrl: PaymentUrl;
 }
 
+/**
+ * One reason to book, written the way the person would say it to themselves.
+ *
+ * Two parts, because a job-to-be-done has two: the thing that happens (`title`) and what it
+ * actually looks like (`body`). One line trying to carry both is how the old version ended up as
+ * «Нагрузку ставит под тело, которое перед ним: цель, оборудование, ограничения» — accurate,
+ * compressed, and read by nobody.
+ */
+export interface BookingOutcome {
+  /** The job itself, as a short clause. Set at reading size, not as a kicker. */
+  title: L10n;
+  /** What it means in practice: one or two sentences in the words a person uses. */
+  body: L10n;
+}
+
 /*
  * Two promises, not three: half an hour holds a technique review and the questions that come out
  * of it. Rewriting the programme is the hour's job, and promising it here would sell a session
@@ -113,26 +128,56 @@ export const BOOKING = {
   /**
    * What an hour with *him* gives, as against an hour with a coach.
    *
-   * Three lines, and not one of them is a new claim: the first is `HALF_INCLUDES[0]` said as an
-   * outcome, the second is `HOUR_ADDS[0]` plus the conditioning work in `COACH.bio`, the third is
-   * the direction both lengths end with (`HALF_INCLUDES[1]`, `HOUR_ADDS[1]`). No numbers, no
-   * results, no promises about anybody's body — everything here is about what happens in the
-   * session, which is the only thing the product controls.
+   * **Rewritten on the owner's instruction**, and the instruction is worth keeping in front of
+   * whoever edits this next: «перепиши понятным языком, типо тренер может скорректировать технику
+   * выполнения для достижения максимального результата без травмы. Ну то есть реальные jtbd
+   * написать понятным языком». The old three lines were each a single compressed clause with a
+   * colon in it — the register of a specification, not of somebody explaining why they would pay.
+   * These are the same three facts said out loud, with the concrete detail that makes them mean
+   * something: not «разбор техники» but which mistake he is looking at.
+   *
+   * Not one of them is a new claim. The first is `HALF_INCLUDES[0]`, the second `HOUR_ADDS[0]`
+   * plus the conditioning work in `COACH.bio`, the third `HALF_INCLUDES[1]` and `HOUR_ADDS[1]`.
+   *
+   * **Where the line is on «без травмы».** The first outcome says bad technique costs results and
+   * eventually hurts, which is the reason technique coaching exists and is said about training in
+   * general — it is not a promise that a session prevents injury, and it is certainly not a claim
+   * that any Forma programme is safe for a particular back. That distinction is the same one
+   * `content/site/coach.ts` draws in its header, and it is the one that has to hold: everything
+   * here is about what happens *in the session*, which is the only thing the product controls.
    */
   outcomes: [
     {
-      ru: 'Технику смотрит человек: видит, как ты двигаешься, и правит на месте',
-      en: 'A person watches your technique: sees how you move and fixes it there and then',
+      title: {
+        ru: 'Кто-то наконец смотрит, как ты делаешь',
+        en: 'Somebody finally watches you do it',
+      },
+      body: {
+        ru: 'Ты показываешь упражнение, он видит круглую спину или колено, уходящее внутрь, и правит на месте. Кривая техника сначала забирает результат, а потом начинает болеть — и сам по видео в интернете ты этого не поймаешь.',
+        en: 'You do the movement, he sees the rounded back or the knee caving in, and fixes it on the spot. Bad technique takes your results first and starts to hurt later — and you will not catch it yourself from a video online.',
+      },
     },
     {
-      ru: 'Нагрузку ставит под тело, которое перед ним: цель, оборудование, ограничения',
-      en: 'Load set for the body in front of him: your goal, your equipment, your limits',
+      title: {
+        ru: 'Нагрузку считают под тебя, а не под всех',
+        en: 'The load is worked out for you, not for everyone',
+      },
+      body: {
+        ru: 'Не «делай двадцать приседаний», а сколько, как часто и с чем именно тебе — под твою цель, под то, что есть дома, и под то, что пока не получается или болит.',
+        en: 'Not "do twenty squats", but how many, how often and with what — for your goal, the kit you actually have at home, and whatever does not work or aches yet.',
+      },
     },
     {
-      ru: 'После занятия понятно, что делать в следующие недели',
-      en: 'You leave knowing what to do in the weeks after',
+      title: {
+        ru: 'Уходишь с ответом, что делать дальше',
+        en: 'You leave knowing what comes next',
+      },
+      body: {
+        ru: 'Вопросы, которые копились месяц, закрываются за один разговор, и дальше ты знаешь не только сегодняшнюю тренировку, а что добавить и когда прибавлять в ближайшие недели.',
+        en: 'A month of questions gets answered in one conversation, and you come away knowing more than today’s session: what to add and when to push in the weeks ahead.',
+      },
     },
-  ] as readonly L10n[],
+  ] as readonly BookingOutcome[],
   /**
    * How close to the start a session can still be taken, in minutes.
    *

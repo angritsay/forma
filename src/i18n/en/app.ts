@@ -992,8 +992,12 @@ export const app = {
   assessNoProfile: 'Finish the questions first',
   // --- coach tab --------------------------------------------------------------
   bookLeadTimePill: 'Book up to {n} minutes before',
-  bookCredentials: 'Credentials',
-  bookOutcomes: 'What it gives',
+  /*
+   * `bookCredentials` and `bookOutcomes` stood over the two blocks below and are gone on the
+   * owner's instruction. Both were labels announcing what kind of thing the reader was about to
+   * read, over content that says so itself; `bookIncludes` below stays, because that one is doing
+   * work — it tells you the list under it is what the price buys.
+   */
   bookIncludes: 'What is included',
   bookAdds: 'On top of {n} min',
   bookIncludesPrev: 'Everything in {n} min',

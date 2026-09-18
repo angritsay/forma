@@ -302,15 +302,17 @@ export const landing = {
     'Technique before volume. Every exercise comes with cues and common mistakes, and every one has an easier version. Pain is a signal to reduce load, not to push through.',
   aboutPhilosophy3Title: 'Consistency',
   aboutPhilosophy3Text:
-    'Results come from weeks in a row, not one hard session. That is why the courses have streaks, rest days with steps and deload weeks.',
+    'Results come from weeks in a row, not one hard session. That is why the courses have streaks, rest days and deload weeks.',
   aboutScienceTitle: 'The science, briefly',
   aboutScienceText:
-    'The programs draw on ACSM and WHO physical-activity guidelines, progressive overload, RPE-based autoregulation and the evidence behind 7,000 daily steps.',
+    'The programs draw on ACSM and WHO physical-activity guidelines, progressive overload and RPE-based autoregulation.',
   aboutScienceLink: 'Read the guides',
-  // The three figures under the coach's name; they restate credentials in content/site/coach.ts.
-  aboutFigureSince: 'coaching since',
-  aboutFigureHours: 'hours coached',
-  aboutFigureSport: 'in sport since',
+  /*
+   * The figures under the coach's name used to have their words here — `aboutFigureSince`,
+   * `aboutFigureHours`, `aboutFigureSport`. They are `COACH.figures[].label` now: the page was
+   * keeping a second copy of a list content already holds, and the copy drifted the moment a
+   * credential was struck from the record.
+   */
 
   // Contact
   contactTitle: 'Contact',

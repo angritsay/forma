@@ -38,6 +38,24 @@ const INK_ON_DARK = '#f6f6f7';
  */
 export const GAME_TILE = '#f8a050';
 
+/**
+ * The coach tab's own colour.
+ *
+ * Same idea as {@link GAME_TILE}, same reason it has to live somewhere: «Тренер» is a screen
+ * without a programme behind it, so there is no `course.tile` for it to read, and the brandbook's
+ * «один экран — один цвет» still applies to it. Cyan is the courses', orange is the club's; blue
+ * (`--course-yoga` in global.css, the third programme colour and the one nothing is using) is what
+ * is left, and the three tabs then read as three colours rather than as two and a grey one.
+ *
+ * It paints the two pills at the top of the tab and nothing else — which is the whole of the
+ * owner's «пилюли сделай цветными». Luminance 0.577, comfortably on the light side of the 0.35
+ * cliff in {@link isLightTile}, and as type on the app's dark ground it clears 11.2:1.
+ *
+ * A course *can* be given this same hex in the admin's tile picker, and if one ever is, the two
+ * never share a screen: a course wears it on the course screen, the coach wears it here.
+ */
+export const COACH_TILE = '#a8c8ff';
+
 /** Relative luminance per WCAG; 0 is black, 1 is white. */
 export function luminance(hex: string): number {
   const h = hex.replace('#', '');
