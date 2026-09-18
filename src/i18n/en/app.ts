@@ -19,6 +19,7 @@ export const app = {
 
   // Error states
   errorTitle: 'Something broke',
+  errorDetails: 'Error details',
   errorBody: 'The app hit an unexpected error. Reload the page — your progress is saved.',
   errorReload: 'Reload',
   errorTryAgain: 'Try again',
