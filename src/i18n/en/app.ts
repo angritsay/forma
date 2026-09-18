@@ -909,6 +909,8 @@ export const app = {
   mAdminTaskEdit: 'Task',
   mAdminTaskTitle: 'What to do',
   mAdminTaskBody: 'Details',
+  mAdminTaskImage: 'Picture',
+  mAdminTaskImageHint: 'Landscape — a portrait photo is cropped top and bottom',
   mAdminTaskProof: 'What to send back',
   mAdminProofDone: 'A "done" tap',
   mAdminProofText: 'Text',

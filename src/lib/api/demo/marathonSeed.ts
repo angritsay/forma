@@ -59,7 +59,27 @@ const SEED_TASKS: readonly SeedTask[] = [
   [7, 'Итог недели одной строкой', 10, { proofKind: 'text' }],
   [8, 'Зарядка десять минут', 10],
   [9, 'День без сахара', 12],
-  [10, 'Пятьдесят берпи за день', 15],
+  /*
+   * Today's task, and the only one in the seed carrying a picture and a paragraph.
+   *
+   * The club's card takes both from the coach (`media_url`, `body`), so the demo has to show at
+   * least one day where he wrote them — otherwise the layout the owner asked for («сверху
+   * картинка… дальше заголовок, сам текст задания, кнопка… снизу лидерборд») is visible only
+   * against a real backend. The other thirteen days stay bare, which is also true to how he writes:
+   * most mornings the name of the task is the task.
+   *
+   * A site-relative path rather than a `storage:` reference, because the demo has no bucket: the
+   * demo resolver hands the path straight back and `useMediaUrl` puts the base path on it.
+   */
+  [
+    10,
+    'Пятьдесят берпи за день',
+    15,
+    {
+      body: 'Можно разбить на подходы и раскидать по дню — пять по десять между делами считаются так же, как пятьдесят подряд. Важно, чтобы к вечеру их было пятьдесят.',
+      mediaUrl: '/coach/sergey-hero.jpg',
+    },
+  ],
   [11, 'Прогулка сорок минут', 10, { proofKind: 'number', unit: 'мин', targetNum: 40 }],
   [12, 'Пешком по лестнице', 12],
   [13, 'Любимая тренировка', 15],

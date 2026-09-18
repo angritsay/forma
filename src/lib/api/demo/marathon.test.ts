@@ -68,17 +68,27 @@ describe('the demo marathon', () => {
     expect(marathon?.teamId).toBeNull();
   });
 
-  it('shows exactly one task today, unsent, with no body on it', async () => {
+  it('shows exactly one task today, unsent, carrying the picture and the text the card draws', async () => {
     await signIn();
     const [marathon] = await demo.listMyMarathons();
     if (!marathon) throw new Error('no marathon');
     const today = await demo.getMarathonDay(marathon, marathon.dayIndex);
 
-    // «Задание одно в день. Не надо доп текст писать.»
+    // «Задание одно в день» — still one, and that half has not changed.
     expect(today).toHaveLength(1);
     const task = today[0];
     expect(task?.task.title).toBe('Пятьдесят берпи за день');
-    expect(task?.task.body).toBeNull();
+    /*
+     * This assertion used to read `toBeNull()`, under «Не надо доп текст писать».
+     *
+     * The owner reversed that when she specified the club's layout off her mockups: «сверху у нас
+     * должна быть какая-то картинка, которую мы подгружаем из админки к каждому заданию. Дальше:
+     * заголовок к заданию, сам текст задания, кнопка… снизу лидерборд.» Two of those five pieces
+     * come out of the task row, so the demo's today has to carry them or the layout cannot be seen
+     * without a backend — which is exactly what this test is here to keep true.
+     */
+    expect(task?.task.body).toBeTruthy();
+    expect(task?.task.mediaUrl).toBeTruthy();
     expect(task?.task.rule).toBe('per_member');
     expect(task?.mine).toBeNull();
     // Alone: the entry is one person, so there is nobody to wait for.
