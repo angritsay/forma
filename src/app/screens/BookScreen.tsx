@@ -41,6 +41,7 @@ import { clsx } from 'clsx';
 import { useEffect, useState } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { Glyph } from '@/components/ui/Icon';
 import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
@@ -323,11 +324,42 @@ export default function BookScreen() {
            * The segment is the duration, because that is what is being chosen. The price follows it
            * and is not on the switch: a switch whose cells carry prices is asking to be read as the
            * cheaper and the dearer rather than as the shorter and the longer.
+           *
+           * ## Why it sits on a card, and why the switch is small
+           *
+           * The owner: «этот блок нужно сделать внутри плашки а переключатель по времени сделать
+           * компактнее». Both halves are the same observation. The switch, the price, what is
+           * included and the button are one object — pick a length, see its price, buy it — and on
+           * flat ground they read as four unrelated things stacked between two essays. A surface
+           * under them says where the offer starts and stops.
+           *
+           * **Filled rather than outlined, and that is the distinction on this screen.** The two
+           * other cards here — the booked session at the top, and «Дальше» once payment has opened
+           * — are hairline boxes with no fill, and they are both *states*: something that is true
+           * right now and will not be true later. The offer is always there, so it gets the
+           * surface. `level={1}`, because `design/README.md` reads the levels as a stack
+           * (bg-0 → surface-1 → surface-2) rather than as emphasis, and this card sits directly on
+           * the background.
+           *
+           * The switch stops being `fullWidth` for the reason she circled: stretched across the
+           * column, «30 мин» floated in the middle of a cell twice as wide as the words, and two
+           * cells of mostly empty white are what made it read as the loudest control on the screen
+           * instead of a small choice before the price. Sized to its own labels it is a setting,
+           * which is what it is.
            */}
-          <section className="flex flex-col gap-6">
+          <Card level={1} className="flex flex-col gap-5">
             {BOOKING.options.length > 1 ? (
               <SegmentedControl
-                fullWidth
+                size="sm"
+                /*
+                 * `self-start` is not decoration. `SegmentedControl` is an `inline-flex` box, but
+                 * inside a flex column `align-items: stretch` still stretches it, and only the box
+                 * stretches — the cells stay the width of their own labels. Dropping `fullWidth`
+                 * without this drew the frame across the whole card with «30 мин | 60 мин» hugging
+                 * the left and half the box empty, which is worse than the stretched version it
+                 * replaced. Measured, not guessed: frame 300px, cells 73 + 74.
+                 */
+                className="self-start"
                 label={t('app.bookLengthLabel')}
                 value={pick}
                 onChange={(next) => {
@@ -349,7 +381,7 @@ export default function BookScreen() {
                 contactHref={contact}
               />
             ) : null}
-          </section>
+          </Card>
 
           {/*
            * The step after the money, which is the one the offer was missing.
