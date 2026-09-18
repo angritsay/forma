@@ -17,13 +17,13 @@ import { DisplayTitle } from '@/app/features/home/DisplayTitle';
  * the first plate at y=143. 28px is also exactly `text-5xl`, so it is a step on the scale rather
  * than a number of its own; it is written out only because the leading below has to travel with it.
  *
- * **`hyphens-none`, and it is not a detail.** `.display` (src/styles/global.css) turns on
- * `hyphens: auto` for the landing's hero, where a 320px screen would otherwise snap a long Russian
- * word mid-syllable. In the wizard the designer's note was the opposite one and it is right: a
- * question broken as «ОГРАНИ- / ЧЕНИЯ» reads as a typographic accident on a form somebody is
- * filling in. Every question here is short enough to wrap between words, so the wizard opts out
- * and lets the line break where the sentence does. `overflow-wrap: break-word` from `body` is
- * still the last resort, so nothing can widen the column.
+ * **`hyphens-none` is belt and braces now.** `.display` used to turn on `hyphens: auto`, and the
+ * wizard opted out because a question broken as «ограни- / чения» reads as a typographic accident
+ * on a form somebody is filling in. The owner then read that same accident on the difficulty sheet
+ * («се- / годня») and `.display` went to `hyphens: manual` for the whole product, so this class is
+ * no longer load-bearing — it is kept because the argument for it here is the strongest in the app
+ * and a future change of mind upstream should not silently reach a form. `overflow-wrap:
+ * break-word` from `body` is still the last resort, so nothing can widen the column.
  */
 export function Question({ text }: { text: string }) {
   // 1.08 → 1.2: every question wraps to two lines and 1.08 was drawn for capitals, which have

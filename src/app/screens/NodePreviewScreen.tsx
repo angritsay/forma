@@ -478,6 +478,7 @@ export default function NodePreviewScreen() {
         <DifficultySheet
           open={chooserOpen && replaceFor === null}
           onClose={() => setChooserOpen(false)}
+          tile={course.tile}
           options={plans}
           recommended={recommendation}
           pending={pending}

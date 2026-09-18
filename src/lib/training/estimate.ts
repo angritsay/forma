@@ -203,27 +203,40 @@ export function estimateCalories(
  * minutes, and the screen then offers three options that look identical. Reps do not lie — the
  * number of squats is the difference the athlete will feel.
  *
+ * **The warm-up and the cool-down do not count**, and that is the owner's instruction: «не надо
+ * считать разминку и заминку в плане тренировки и в количестве повторений». It is also the coach's
+ * own rule — `docs/COACH_RULES.md` marks both «Counted as training? No» — and it is what makes the
+ * figure mean anything here. Measured on «Форма с нуля», workout 2: the two of them are a flat 23
+ * reps whatever you pick, so counting them turned 102 / 108 / 160 into 125 / 131 / 183 and shrank
+ * the very difference this function exists to show.
+ *
  * Per-side items count twice: ten per leg is twenty. AMRAP counts one round, because how many
  * rounds you get is the athlete's answer rather than the plan's; its difficulty shows up in the
  * window instead, which is minutes.
  */
 export interface WorkoutVolume {
-  /** Repetitions prescribed across the whole session. */
+  /** Repetitions of training prescribed, warm-up and cool-down excluded. */
   reps: number;
-  /** Seconds of prescribed work — holds, timed rounds — with no rest in them. */
+  /** Seconds of prescribed training work — holds, timed rounds — with no rest in them. */
   workSec: number;
 }
 
+/** Is this block the training, rather than preparing for it or coming down from it? */
+export function isTrainingBlock(block: Pick<PrescribedBlock, 'type'>): boolean {
+  return block.type !== 'warmup' && block.type !== 'cooldown';
+}
+
 export function workoutVolume(p: PrescribedWorkout): WorkoutVolume {
+  const blocks = p.blocks.filter(isTrainingBlock);
   let reps = 0;
-  for (const block of p.blocks) {
+  for (const block of blocks) {
     const rounds = Math.max(1, num(block.sets, 1));
     for (const item of block.items) {
       if (item.unit !== 'reps') continue;
       reps += Math.max(0, num(item.target)) * rounds * (item.perSide ? 2 : 1);
     }
   }
-  return { reps: Math.round(reps), workSec: estimateDuration(p).workSec };
+  return { reps: Math.round(reps), workSec: estimateDuration({ ...p, blocks }).workSec };
 }
 
 /** Streak bonus share for a streak length (first matching tier wins). */

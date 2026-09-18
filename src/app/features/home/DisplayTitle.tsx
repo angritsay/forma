@@ -16,9 +16,9 @@ export interface DisplayTitleProps {
  * The one big line of a screen, set the brand's way: Unbounded 800 capitals for the first word
  * and 200 for the rest — «ПРИСЕД без боли». One per screen; a second competes with it.
  *
- * `hyphens: auto` comes with `.display`, so a long Russian word wraps at a syllable rather than
- * overflowing the 390px column; the `<span>` for the light half is inline so the two weights flow
- * as one sentence and wrap wherever the sentence does.
+ * `.display` sets `hyphens: manual`, so nothing here is ever broken with a hyphen; the `<span>`
+ * for the light half is inline so the two weights flow as one sentence and wrap wherever the
+ * sentence does.
  */
 export function DisplayTitle({ text, as: Tag = 'h1', className, id }: DisplayTitleProps) {
   const { head, tail } = splitDisplay(text);

@@ -448,15 +448,19 @@ body {
      */
     line-height: 1.28;
     /*
-     * `body` sets `overflow-wrap: break-word` so a long URL can never widen the viewport. At
-     * display sizes that rule snaps words mid-syllable — a 320px screen rendered the hero as
-     * "Кроссфи / т дома" and "подстраи / вается". Headings opt out and hyphenate instead: the
-     * browser breaks at a real syllable boundary and shows the hyphen, using the patterns for
-     * whatever <html lang> declares. `overflow-wrap: break-word` stays inherited from body as
-     * the last resort. Unbounded is the widest face on the page in either case, which keeps this
-     * rule load-bearing even now that the headings set about a quarter narrower.
+     * **Never auto-hyphenate.** This was `hyphens: auto` and the owner's verdict on what it did was
+     * one line: «проверь чтобы нигде не было таких переносов». What she was looking at was the
+     * difficulty sheet's «Насколько тяжело се-/годня?» — and that is what `auto` does, because the
+     * browser hyphenates to fill a line whenever a word does not fit the space left, even when
+     * moving the whole word down would have read perfectly.
+     *
+     * It was there for a real case: `body` sets `overflow-wrap: break-word` so a long URL can never
+     * widen the viewport, and at display sizes that rule snaps words mid-syllable — a 320px screen
+     * rendered the hero as "Кроссфи / т дома". `manual` brings that risk back for a single word
+     * wider than its line, which at the sizes the app actually sets is rare; when it does happen,
+     * the fix is the heading's own size, not a hyphen in every heading in the product.
      */
-    hyphens: auto;
+    hyphens: manual;
   }
 
   /*
@@ -490,7 +494,8 @@ body {
      * 1.2 restores about the same sliver of air the capitals had.
      */
     line-height: 1.2;
-    hyphens: auto;
+    /* `manual`, for the reason spelled out on `.font-display` above. */
+    hyphens: manual;
   }
 
   .t-thin {
