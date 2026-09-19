@@ -232,6 +232,19 @@ export const app = {
   unlockNoteManual:
     'The order was not recorded — you can still pay, but the coach opens access by hand. Usually the same day.',
   unlockNoPayment: 'Payment for this course is not connected yet. Write to us and we will open it.',
+  claimLink: 'Paid from another address?',
+  claimTitle: 'Payment from another address',
+  claimBody:
+    'If the payment came from an address other than the one you sign in with, enter the order number from the Prodamus receipt. We will find the payment and open access here.',
+  claimPlaceholder: 'Order number from the receipt',
+  claimCta: 'Find the payment',
+  claimOk: 'Found it. Access is open.',
+  claimLinked:
+    'The payment was found and the address is linked, but there is nothing to open yet. Write to us and we will sort it out.',
+  claimNotFound: 'No such number. Check it against the receipt — or it has already been claimed.',
+  claimEmailTaken:
+    'That address is already linked to another account. Write to us and we will sort it out.',
+  claimRateLimited: 'Too many tries. Please try again in an hour.',
   // Telling somebody the trial "was free" before they have used it describes an event that
   // never happened.
   pathTrialLeftBody: 'The first workout of this course is free — start there, then decide.',

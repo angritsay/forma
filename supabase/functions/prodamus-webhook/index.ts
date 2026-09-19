@@ -90,7 +90,36 @@ Deno.serve(async (req) => {
   );
   const paidAt = new Date().toISOString();
 
+  /*
+   * Write the payment down, whatever happens to it next.
+   *
+   * Until this existed, a notification that matched no order left one line in a log nobody reads
+   * and nothing else — and it matches no order more often than you would think, because the
+   * Prodamus short link drops the `?customer_email=` we append, so the address is whatever the
+   * payer typed into the form. Their work address, their spouse's, the one the browser filled in.
+   * The money arrived; the account it belongs to is simply not named in the notification.
+   *
+   * The row is what `claim_payment()` later hands to the right person against the order number
+   * from their receipt (migration 0020). So it is recorded first and separately from applying it:
+   * a failure to apply must not also lose the record of the payment.
+   */
+  const amount = Number.parseFloat(payment.sum ?? '');
   const plan = planForAmount(payment.sum, PRICES);
+  async function record(applied: boolean): Promise<void> {
+    const { error } = await supabase.rpc('record_payment', {
+      p_email: payment!.email,
+      p_amount: Number.isFinite(amount) ? amount : null,
+      p_provider_ref: payment!.ref || null,
+      p_paid_at: paidAt,
+      p_intent: plan ?? 'course',
+      p_applied: applied,
+    });
+    // Never fatal. The ledger is for support; the access is what the customer paid for, and a
+    // database without 0020 has no `record_payment` at all — which must not turn every payment
+    // into a 500 and an endless Prodamus retry.
+    if (error) console.warn('prodamus-webhook: record_payment failed', error.message);
+  }
+
   if (plan) {
     const { error } = await supabase.rpc('apply_subscription_payment', {
       p_email: payment.email,
@@ -100,8 +129,10 @@ Deno.serve(async (req) => {
     });
     if (error) {
       console.error('prodamus-webhook: apply_subscription_payment failed', error.message);
+      await record(false);
       return reply(500, 'could not apply the payment');
     }
+    await record(true);
     return reply(200, `ok: ${plan} for ${payment.email}`);
   }
 
@@ -124,13 +155,16 @@ Deno.serve(async (req) => {
   });
   if (error) {
     console.error('prodamus-webhook: apply_course_payment failed', error.message);
+    await record(false);
     return reply(500, 'could not apply the payment');
   }
   if (!activated) {
+    await record(false);
     console.warn(
-      `prodamus-webhook: ${payment.email} paid ${payment.sum ?? '?'} and no single pending order matches it; left for manual activation`,
+      `prodamus-webhook: ${payment.email} paid ${payment.sum ?? '?'} and no single pending order matches it; recorded as unclaimed (order ${payment.ref || 'without a number'})`,
     );
-    return reply(200, 'ignored: no single pending order for this address');
+    return reply(200, 'ignored: recorded, waiting to be claimed');
   }
+  await record(true);
   return reply(200, `ok: course activated for ${payment.email}`);
 });

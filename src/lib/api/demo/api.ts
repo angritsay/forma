@@ -588,6 +588,15 @@ export async function getMyTotals(): Promise<MyTotals> {
 
 // --- orders -----------------------------------------------------------------
 
+/**
+ * The demo twin of `claim_payment`. There is no Prodamus and no ledger here, so it answers
+ * `not_found` for everything: a demo that pretended a made-up order number had opened a paid
+ * subscription would be teaching the wrong thing about the one screen where money changes hands.
+ */
+export async function claimPayment(_orderRef: string): Promise<string> {
+  return run(() => 'not_found');
+}
+
 export async function createOrder(input: OrderInput): Promise<string> {
   return run(() => {
     const email = normalizeDemoEmail(input.email);
