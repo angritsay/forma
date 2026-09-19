@@ -420,7 +420,7 @@ jobs:
                 if [ "$name" = "WEBHOOK_TOKEN" ]; then
                   echo "::warning::WEBHOOK_TOKEN не задан — функция отклоняет любое уведомление с «bad token». Придумай его сама (например, openssl rand -hex 16) и впиши в Supabase → Project Settings → Edge Functions → Secrets; это же значение пойдёт в адрес уведомления в Prodamus."
                 else
-                  echo "::warning::PRODAMUS_SECRET не задан — функция отвечает 503 на всё (fail closed). Это секретный ключ из личного кабинета Prodamus, «Настройки» → «Интеграции»; впиши его в Supabase → Project Settings → Edge Functions → Secrets."
+                  echo "::warning::PRODAMUS_SECRET не задан — функция отвечает 503 на всё (fail closed). Это секретный ключ из настроек платёжной формы в личном кабинете Prodamus; впиши его в Supabase → Project Settings → Edge Functions → Secrets."
                 fi
               fi
             done
