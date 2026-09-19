@@ -36,6 +36,12 @@ export const app = {
   authEmailLabel: 'Email',
   authEmailPlaceholder: 'name@example.com',
   authSendCode: 'Send code',
+  // Informed consent: 152-ФЗ art. 9 wants the person to know what they are agreeing to before
+  // they hand anything over. Sign-in is one field and one button, and the policy lived on a site
+  // the Telegram Mini App never shows. One sentence under the button fixes that.
+  authLegal: 'By pressing the button you agree to the {privacy} and accept the {terms}.',
+  authLegalPrivacy: 'privacy policy',
+  authLegalTerms: 'terms',
   authCodeLabel: 'Code from the email',
   authConfirm: 'Confirm',
   authResend: 'Send the code again',
@@ -77,6 +83,12 @@ export const app = {
   onbDumbbellWeights: 'Dumbbells, kg',
   onbKettlebellWeights: 'Kettlebells, kg',
   onbLimitationsTitle: 'What should we go easy on?',
+  // Consent to processing health data. Shown only once something is picked: "nothing, I'm good"
+  // is the absence of such data, so there is nothing to ask permission for. 152-ФЗ art. 10 makes
+  // health a special category needing its own consent, which is why it stands next to the
+  // question rather than buried in the sign-in.
+  onbHealthConsent:
+    'I agree that the app stores these health notes and uses them to choose exercises. The coach sees them; other members never do. You can withdraw this in your profile.',
   onbLimNone: 'Nothing, I’m good',
   onbLimKnees: 'Knees',
   onbLimLowerBack: 'Lower back',
@@ -1069,8 +1081,38 @@ export const app = {
   // Equipment is the one profile setting left: the onboarding question went and the profile screen
   // with it — without this row somebody who owns dumbbells would train without them forever.
   profileEquipment: 'Equipment',
+  // The name is editable here, not only in onboarding: the privacy policy promises a correction
+  // "right in the app", and the right to have data rectified is written into 152-ФЗ art. 14. The
+  // note under the field says who sees the name — on the club board it is public.
+  profileName: 'Name',
+  profileNameEmpty: 'Not set',
+  profileNameTitle: 'Your name',
+  profileNameNote: 'Other club members see this name on the leaderboard. Change it any time.',
   profileEquipmentTitle: 'Your equipment',
   profileEquipmentLead: 'Tick what you have at home — workouts adapt to it.',
+  // "Data and consents" — the rights from the policy, as things you can press. Withdrawal
+  // (152-ФЗ art. 9 § 2) the app does itself; deleting an account is a letter to support, because
+  // purchases, club membership and proofs go with it and art. 21 allows 30 days to do it right.
+  dataRow: 'Data and consents',
+  dataTitle: 'Data and consents',
+  dataLead:
+    'The app stores your email, your name, your onboarding answers and what you did in your workouts. The email is for signing in; the rest sets the load and counts the points.',
+  dataHealthTitle: 'Health data',
+  dataHealthBody:
+    'You allowed the app to keep what you asked it to go easy on and to pick exercises accordingly. Withdraw it and those notes stop affecting training — workouts come without the substitutions.',
+  dataWithdraw: 'Withdraw consent',
+  dataWithdrawTitle: 'Withdraw consent?',
+  dataWithdrawConfirm:
+    'Exercises will stop adapting to your limitations. You can give consent again at any time, in onboarding.',
+  dataWithdrawDone: 'Consent withdrawn',
+  dataWithdrawError: 'That did not work. Check the connection and try again.',
+  dataDeleteTitle: 'Delete the account',
+  dataDeleteBody2:
+    'Deleting the account removes your workouts, your points and access to the courses you bought. Write to us — we answer and delete within 30 days.',
+  dataDeleteCta: 'Write about deletion',
+  dataDeleteSubject: 'Deleting a Forma account',
+  dataDeleteBody: 'Hello! Please delete my Forma account and data. Account email: {email}.',
+  dataPolicyLink: 'Privacy policy',
   profileSaved: 'Saved',
   profileSaveError: 'Couldn’t save. Check the connection and try again.',
 

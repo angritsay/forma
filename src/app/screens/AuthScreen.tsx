@@ -31,7 +31,7 @@ import { useMediaUrl } from '@/app/features/player/useMediaUrl';
 import { useSession } from '@/app/store/session';
 import { BRAND } from '@content/site/brand';
 import { PHOTOS, photoSrc } from '@/lib/media/photos';
-import { withBase } from '@/lib/util/paths';
+import { href, withBase } from '@/lib/util/paths';
 import {
   AuthError,
   type AuthReason,
@@ -131,6 +131,21 @@ function sharpenCodeError(e: AuthError, sentAt: number, wrongSoFar: number): Aut
   return new AuthError(e.code, e.message, { cause: e.cause, status: e.status, reason });
 }
 
+/**
+ * Put React nodes into a translated sentence at its `{name}` slots.
+ *
+ * The alternative would be three separate strings glued together in JSX, which reads fine in
+ * Russian and falls apart in any language that puts the clause in a different order — and the
+ * sentence this serves exists precisely so that a person can read it and understand what they are
+ * agreeing to. So the translator gets a whole sentence with two holes in it.
+ */
+function interpolate(template: string, nodes: Record<string, ReactNode>): ReactNode[] {
+  return template.split(/(\{\w+\})/).map((part, i) => {
+    const key = /^\{(\w+)\}$/.exec(part)?.[1];
+    return key && key in nodes ? nodes[key] : <span key={`t${i}`}>{part}</span>;
+  });
+}
+
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined' || !window.matchMedia) return false;
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -192,7 +207,7 @@ function Backdrop({ src, poster }: { src?: string; poster?: string }) {
 }
 
 export default function AuthScreen() {
-  const { t } = useT();
+  const { t, locale } = useT();
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>('email');
   const [email, setEmail] = useState('');
@@ -426,6 +441,42 @@ export default function AuthScreen() {
             <Button type="submit" size="lg" fullWidth loading={busy}>
               {t('app.authSendCode')}
             </Button>
+            {/*
+             * The one sentence this screen gained back, and why it is worth the pixels.
+             *
+             * An address typed here is personal data, and 152-ФЗ ст. 9 asks for the agreement to be
+             * informed: the person has to be told, before they give it, what they are agreeing to.
+             * Nothing on the way in said so. The sign-in is one field and one button by design, and
+             * the policy sat two taps away on a website the Telegram Mini App never shows.
+             *
+             * So: the smallest type on the screen, under the action rather than over it, naming the
+             * two documents as links instead of summarising them. This is agreement by a deliberate
+             * act — pressing the button — which is the ordinary form for ordinary data. The health
+             * questions later in onboarding ask separately and explicitly, because those are a
+             * special category under ст. 10 (see StepLimitations).
+             */}
+            <p className="text-center text-[12px] leading-snug text-paper/55">
+              {interpolate(t('app.authLegal'), {
+                privacy: (
+                  <a
+                    key="privacy"
+                    className="underline underline-offset-2"
+                    href={href(locale, '/privacy/')}
+                  >
+                    {t('app.authLegalPrivacy')}
+                  </a>
+                ),
+                terms: (
+                  <a
+                    key="terms"
+                    className="underline underline-offset-2"
+                    href={href(locale, '/terms/')}
+                  >
+                    {t('app.authLegalTerms')}
+                  </a>
+                ),
+              })}
+            </p>
           </form>
         ) : (
           <form onSubmit={onSubmitCode} className="flex w-full flex-col gap-4" noValidate>

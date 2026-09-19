@@ -5,6 +5,7 @@
  */
 import type { L10n } from '@/content/schema';
 import { BRAND } from '@content/site/brand';
+import { entityLines, entityName, hasLegalEntity } from '@content/site/legalEntity';
 import { LINKS } from '@content/site/links';
 import { PRICING } from '@content/site/pricing';
 
@@ -21,7 +22,16 @@ export interface LegalDocument {
   sections: LegalSection[];
 }
 
-const org = BRAND.organization;
+/*
+ * The operator, and why it is a function call rather than a constant.
+ *
+ * 152-ФЗ ст. 18.1 ч. 2 п. 2 wants the published policy to name the operator, and ЗоЗПП ст. 9 wants
+ * the offer to name the seller — and «Forma» is neither. It is a wordmark. Until the registration
+ * details are filled in (content/site/legalEntity.ts) these pages keep saying «Forma», which is
+ * what they said before; the moment they are filled in, every page that names the seller changes
+ * at once, because they all read this one value.
+ */
+const org = entityName() || BRAND.organization;
 const brand = BRAND.name;
 const email = LINKS.supportEmail || BRAND.contactEmail;
 const days = PRICING.refundDays;
@@ -72,20 +82,47 @@ function cookiesSection(): LegalSection {
   };
 }
 
+/**
+ * The seller's registration details, as a section — or nothing at all while they are unset.
+ *
+ * ЗоЗПП ст. 9 ч. 1 and п. 8 Правил продажи товаров дистанционным способом (ПП РФ № 2463) both ask
+ * for the same thing: before the contract is made, the buyer can read who they are contracting
+ * with, where that party is, and under which registration it trades. `hasLegalEntity()` is false
+ * until those are filled in, and an empty block would be a heading over nothing — so the section
+ * is absent rather than hollow, and `npm run legal:check` is what says it is still missing.
+ */
+function requisitesSection(id: string, heading: L10n): LegalSection | null {
+  if (!hasLegalEntity()) return null;
+  return {
+    id,
+    heading,
+    bullets: entityLines().map((line): L10n => ({
+      ru: `${line.label.ru}: ${line.value}`,
+      en: `${line.label.en}: ${line.value}`,
+    })),
+    after: [{ ru: `E-mail: ${email}.`, en: `Email: ${email}.` }],
+  };
+}
+
+/** Drops the sections that are not there, so a document can list one conditionally. */
+function sections(list: (LegalSection | null)[]): LegalSection[] {
+  return list.filter((s): s is LegalSection => s !== null);
+}
+
 export function privacyDocument(): LegalDocument {
   return {
-    sections: [
+    sections: sections([
       {
         id: 'general',
         heading: { ru: '1. Общие положения', en: '1. General' },
         paragraphs: [
           {
-            ru: `Эта политика описывает, какие персональные данные собирает ${org} (далее — «мы») на сайте ${brand} и в приложении ${brand}, зачем они нужны, где хранятся и какие у тебя есть права. Используя сайт или приложение, ты соглашаешься с этой политикой.`,
-            en: `This policy describes which personal data ${org} ("we") collects on the ${brand} website and in the ${brand} app, why it is needed, where it is stored and what rights you have. By using the site or the app you agree to this policy.`,
+            ru: `Это политика в отношении обработки персональных данных (152-ФЗ «О персональных данных», ст. 18.1). Она описывает, какие данные собирает оператор — ${org} (далее «мы») — на сайте и в приложении ${brand}, на каком основании, зачем, где они хранятся, сколько и какие у тебя есть права.`,
+            en: `This is the policy on the processing of personal data required by 152-ФЗ art. 18.1. It describes what the operator — ${org} ("we") — collects on the ${brand} site and in the ${brand} app, on what legal basis, why, where the data is kept, for how long, and what rights you have.`,
           },
           {
-            ru: `Сервис предназначен для лиц старше ${age} лет. Если тебе меньше — пользуйся им только с согласия родителя или опекуна.`,
-            en: `The service is intended for people aged ${age} and over. If you are younger, use it only with the consent of a parent or guardian.`,
+            ru: `Сервис предназначен для лиц старше ${age} лет. Мы не собираем данные детей сознательно; если ты родитель и считаешь, что ребёнок оставил у нас свои данные, напиши на ${email} — мы удалим их.`,
+            en: `The service is intended for people aged ${age} and over. We do not knowingly collect children's data; if you are a parent and believe your child left data with us, write to ${email} and we will delete it.`,
           },
         ],
       },
@@ -102,12 +139,54 @@ export function privacyDocument(): LegalDocument {
             en: 'Name (display name) and avatar — you set them yourself in your profile; other participants see them on the leaderboard.',
           },
           {
-            ru: 'Данные тренировок: ответы опроса при первом входе (возрастная группа, пол и вес — по желанию, опыт, оборудование, ограничения), результаты тестов, выполненные тренировки, оценки усилия и самочувствия, очки.',
-            en: 'Training data: your onboarding answers (age band, optional sex and weight, experience, equipment, limitations), test results, completed workouts, effort and feeling ratings and points.',
+            ru: 'Данные тренировок: ответы при первом входе (возрастная группа, пол, оборудование), результаты тестов, выполненные тренировки, оценки усилия и самочувствия, очки.',
+            en: 'Training data: your onboarding answers (age band, sex, equipment), test results, completed workouts, effort and feeling ratings and points.',
+          },
+          {
+            ru: 'Данные о здоровье — только те, которые ты отмечаешь сам в вопросе «что беречь»: колени, поясница, плечи, запястья, гипертония, беременность. Это специальная категория персональных данных (152-ФЗ ст. 10), и мы берём их отдельным согласием, которое приложение спрашивает прямо под этим вопросом. Без согласия отметки не сохраняются и тренировки идут без замен упражнений.',
+            en: 'Health data — only what you tick yourself in the "what should we go easy on" question: knees, lower back, shoulders, wrists, high blood pressure, pregnancy. This is a special category under 152-ФЗ art. 10, and it is taken on a separate consent that the app asks for directly under that question. Without it nothing is stored and workouts come without exercise substitutions.',
+          },
+          {
+            ru: 'Фотографии и видео, которые ты сам прикладываешь как подтверждение задания в клубе. Их видит только тренер.',
+            en: 'Photos and videos you attach yourself as proof of a club task. Only the coach sees them.',
           },
           {
             ru: 'Технические данные: время действий и данные сессии, необходимые для работы входа.',
             en: 'Technical data: timestamps of actions and the session data needed for sign-in to work.',
+          },
+        ],
+        after: [
+          {
+            ru: 'Мы не собираем паспортных данных, адресов, номеров карт и точной геолокации. Оплата проходит на стороне платёжного сервиса — реквизиты карты к нам не попадают вовсе.',
+            en: 'We collect no passport data, postal addresses, card numbers or precise location. Payment happens on the payment service’s side — card details never reach us at all.',
+          },
+        ],
+      },
+      {
+        id: 'basis',
+        heading: { ru: '2а. На каком основании', en: '2a. Legal basis' },
+        bullets: [
+          {
+            ru: 'Твоё согласие (152-ФЗ ст. 6 ч. 1 п. 1) — почта, имя, ответы онбординга. Согласие даётся действием: галочкой в форме заказа и нажатием кнопки при входе, рядом с ссылкой на эту политику.',
+            en: 'Your consent (152-ФЗ art. 6 § 1 cl. 1) — email, name, onboarding answers. Consent is given by a deliberate act: the checkbox on the order form and the button on the sign-in screen, next to a link to this policy.',
+          },
+          {
+            ru: 'Отдельное согласие на специальную категорию (ст. 10) — отметки о здоровье.',
+            en: 'A separate consent for the special category (art. 10) — the health notes.',
+          },
+          {
+            ru: 'Исполнение договора с тобой (ст. 6 ч. 1 п. 5) — всё, что нужно, чтобы открыть оплаченный курс и вести твой прогресс.',
+            en: 'Performance of our contract with you (art. 6 § 1 cl. 5) — everything needed to open a course you paid for and keep your progress.',
+          },
+          {
+            ru: 'Требования закона (ст. 6 ч. 1 п. 2) — записи об оплатах и возвратах, которые обязан хранить продавец.',
+            en: 'Legal obligations (art. 6 § 1 cl. 2) — the records of payments and refunds a seller must keep.',
+          },
+        ],
+        after: [
+          {
+            ru: 'Мы фиксируем каждое согласие: какая почта, на какой текст, какой его версии и когда. Это требование ст. 9 ч. 3 — доказывать согласие обязан оператор, а не ты.',
+            en: 'Every consent is logged: which address, to which text, which version of it, and when. That is art. 9 § 3 — proving consent is the operator’s duty, not yours.',
           },
         ],
       },
@@ -156,6 +235,10 @@ export function privacyDocument(): LegalDocument {
             en: 'The site itself is static and hosted on GitHub Pages; when you open it, the host sees the standard technical data of a request (IP address, browser), as with any website.',
           },
           {
+            ru: 'Это значит, что данные передаются за пределы России — трансграничная передача по ст. 12 152-ФЗ. Серверы Supabase находятся в Европейском союзе, серверы GitHub — в США; обе страны являются сторонами Конвенции Совета Европы о защите физических лиц при автоматизированной обработке персональных данных либо обеспечивают сопоставимую защиту. Мы называем это прямо, чтобы ты знал об этом до того, как оставишь адрес, а не после.',
+            en: 'This means data leaves Russia — a cross-border transfer under 152-ФЗ art. 12. Supabase servers are in the European Union and GitHub’s are in the United States. We say so plainly so that you know it before you leave an address rather than after.',
+          },
+          {
             ru: 'Доступ к данным защищён правилами на уровне строк: ты видишь только свои записи. Тренер видит список заявок (e-mail и курс), чтобы подтверждать доступ.',
             en: 'Access to data is protected by row-level rules: you see only your own records. The coach sees the list of orders (email and course) in order to confirm access.',
           },
@@ -170,6 +253,10 @@ export function privacyDocument(): LegalDocument {
             ru: 'Данные хранятся, пока у тебя есть аккаунт и доступ к курсам (доступ пожизненный), либо пока ты не попросишь их удалить. Записи о заявках и возвратах мы храним столько, сколько требует закон о бухгалтерском и налоговом учёте.',
             en: 'Data is kept while you have an account and course access (access is for life) or until you ask us to delete it. Records of orders and refunds are kept as long as accounting and tax law requires.',
           },
+          {
+            ru: 'Когда основание для обработки отпадает — ты отозвал согласие, попросил удалить аккаунт или цель достигнута — мы удаляем данные в течение 30 дней (152-ФЗ ст. 21). Удаление значит удаление: строки стираются из базы, файлы — из хранилища. Исключение одно: документы об оплатах, которые продавец обязан хранить по налоговому законодательству.',
+            en: 'When the basis for processing falls away — you withdraw consent, ask for the account to be deleted, or the purpose is met — we delete the data within 30 days (152-ФЗ art. 21). Deletion means deletion: rows go from the database and files from storage. One exception: the payment records a seller is required to keep under tax law.',
+          },
         ],
       },
       {
@@ -181,22 +268,30 @@ export function privacyDocument(): LegalDocument {
             en: 'Know which data about you is stored.',
           },
           {
-            ru: 'Исправить имя, аватар и данные профиля — прямо в приложении.',
-            en: 'Correct your name, avatar and profile data — directly in the app.',
+            ru: 'Исправить имя и настройки профиля — прямо в приложении, в разделе «Данные и согласия» и в строке «Имя». Всё остальное — по письму.',
+            en: 'Correct your name and profile settings — in the app itself, under "Data and consents" and the "Name" row. Anything else, by letter.',
           },
           {
-            ru: 'Удалить аккаунт и данные тренировок. Учти: вместе с ними удаляется и связь «почта — курс», то есть доступ к курсам.',
-            en: 'Delete your account and training data. Note that this also removes the email–course link, i.e. your course access.',
+            ru: 'Отозвать согласие на обработку данных о здоровье — кнопкой в приложении, там же. С этого момента отметки перестают влиять на тренировки.',
+            en: 'Withdraw the consent to process health data — with a button in the app, in the same place. From that moment the notes stop affecting your training.',
           },
           {
-            ru: 'Отозвать согласие на обработку — с этого момента мы прекращаем обработку, кроме случаев, когда обязаны хранить данные по закону.',
-            en: 'Withdraw consent — from that moment we stop processing, except where the law requires us to keep the data.',
+            ru: 'Удалить аккаунт и данные тренировок. Учти: вместе с ними удаляется и связь «почта — курс», то есть доступ к купленным курсам.',
+            en: 'Delete your account and training data. Note that this also removes the email–course link, i.e. access to the courses you bought.',
+          },
+          {
+            ru: 'Отозвать согласие целиком — это и есть просьба удалить аккаунт: мы прекращаем обработку и удаляем данные, кроме тех, что обязаны хранить по закону.',
+            en: 'Withdraw consent altogether — which is the same as asking for the account to be deleted: we stop processing and delete the data, save what the law requires us to keep.',
+          },
+          {
+            ru: 'Пожаловаться в Роскомнадзор или пойти в суд, если считаешь, что мы обрабатываем данные неправильно (152-ФЗ ст. 17).',
+            en: 'Complain to Роскомнадзор or go to court if you believe we process data improperly (152-ФЗ art. 17).',
           },
         ],
         after: [
           {
-            ru: `Чтобы воспользоваться правами, напиши на ${email} с почты, привязанной к аккаунту. Отвечаем в порядке очереди.`,
-            en: `To exercise these rights, write to ${email} from the email linked to your account. We answer in the order received.`,
+            ru: `Чтобы воспользоваться правами, напиши на ${email} с почты, привязанной к аккаунту, — это и есть подтверждение, что аккаунт твой. Отвечаем в течение 30 дней, обычно быстрее.`,
+            en: `To exercise these rights, write to ${email} from the email linked to your account — that is what confirms the account is yours. We answer within 30 days, usually sooner.`,
           },
         ],
       },
@@ -212,21 +307,22 @@ export function privacyDocument(): LegalDocument {
       },
       {
         id: 'contact',
-        heading: { ru: '8. Контакты', en: '8. Contact' },
+        heading: { ru: '8. Контакты оператора', en: '8. The operator' },
         paragraphs: [
           {
-            ru: `${org}, e-mail: ${email}.`,
-            en: `${org}, email: ${email}.`,
+            ru: `${org}, e-mail: ${email}. По любым вопросам об обработке данных пиши на этот адрес — он же адрес для отзыва согласия и для запроса на удаление.`,
+            en: `${org}, email: ${email}. Write to this address about anything to do with data — it is also the address for withdrawing consent and for deletion requests.`,
           },
         ],
       },
-    ],
+      requisitesSection('requisites', { ru: '9. Реквизиты', en: '9. Registration details' }),
+    ]),
   };
 }
 
 export function termsDocument(): LegalDocument {
   return {
-    sections: [
+    sections: sections([
       {
         id: 'definitions',
         heading: { ru: '1. Термины', en: '1. Definitions' },
@@ -248,8 +344,8 @@ export function termsDocument(): LegalDocument {
             en: 'App — the web application at /app/ where the training happens.',
           },
           {
-            ru: 'Подписка — доступ ко всем Курсам на оплаченный период (месяц или год) с автоматическим продлением, пока Пользователь его не отключит.',
-            en: 'Subscription — access to every Course for a paid period (a month or a year), renewing automatically until the User turns renewal off.',
+            ru: 'Подписка — доступ ко всем Курсам на оплаченный период: 30 дней или год. Автоматического списания нет: период заканчивается, и доступ закрывается, пока Пользователь не оплатит следующий сам.',
+            en: 'Subscription — access to every Course for a paid period: 30 days or a year. There is no automatic charge: the period ends and access closes until the User pays for the next one themselves.',
           },
         ],
       },
@@ -298,8 +394,8 @@ export function termsDocument(): LegalDocument {
             en: 'A purchased Course is available to the User with no time limit and no extra charge for as long as the App exists. Course updates (fixes, new descriptions, videos) are included.',
           },
           {
-            ru: 'Подписка открывает все Курсы на оплаченный период. Доступ прекращается в конце периода, если он не продлён. Отключение автопродления не прерывает уже оплаченный период. Прогресс и статистика Пользователя сохраняются и после окончания Подписки.',
-            en: "A Subscription opens every Course for the paid period. Access ends at the end of the period unless it is renewed. Turning renewal off does not cut the period already paid for. The User's progress and statistics are kept after the Subscription ends.",
+            ru: 'Подписка открывает все Курсы на оплаченный период. В конце периода доступ закрывается сам — отменять ничего не нужно и отписываться не от чего. Чтобы продолжить, Пользователь оплачивает следующий период. Прогресс и статистика сохраняются и после окончания Подписки, а Курсы, купленные отдельно, остаются открытыми.',
+            en: 'A Subscription opens every Course for the paid period. At the end of that period access closes by itself — there is nothing to cancel and nothing to unsubscribe from. To continue, the User pays for the next period. Progress and statistics are kept after the Subscription ends, and Courses bought separately stay open.',
           },
           {
             ru: `Если Исполнитель решит прекратить работу Приложения, он уведомит Пользователей по e-mail не менее чем за ${notice} дней.`,
@@ -316,8 +412,8 @@ export function termsDocument(): LegalDocument {
             en: 'Each Course and Subscription price is shown on its page in Russian roubles. Payment goes through an external payment service linked from that page; the receipt is issued by that service. If no payment link is connected, payment is arranged by email.',
           },
           {
-            ru: 'Подписка списывается автоматически в начале каждого периода по цене, действовавшей при оформлении. Об изменении цены Исполнитель уведомляет по e-mail не менее чем за 14 дней до следующего списания; Пользователь вправе отключить продление до этой даты.',
-            en: "A Subscription is charged automatically at the start of each period at the price in effect when it was taken out. The Provider gives at least 14 days' notice by email before a price change applies to the next charge; the User may turn renewal off before that date.",
+            ru: 'Подписка не списывается автоматически: каждый период Пользователь оплачивает сам, по цене, указанной на странице на момент оплаты. Мы не храним реквизиты карт и не можем списать деньги без нового действия Пользователя. Если автосписание когда-нибудь появится, оно будет отдельно включаемой опцией, а не изменением этих условий.',
+            en: 'A Subscription is not charged automatically: the User pays for each period themselves, at the price shown on the page at the time of payment. We do not store card details and cannot take money without a fresh action by the User. Should automatic renewal ever be introduced, it will be an option to switch on, not a change to these terms.',
           },
         ],
       },
@@ -354,8 +450,8 @@ export function termsDocument(): LegalDocument {
         ],
         after: [
           {
-            ru: 'При нарушении Исполнитель вправе прекратить доступ без возврата средств.',
-            en: 'In case of violation the Provider may terminate access without a refund.',
+            ru: 'При доказанном нарушении Исполнитель вправе ограничить или прекратить доступ и потребовать возмещения причинённых убытков. Условия, ухудшающие права потребителя по сравнению с законом, недействительны (ст. 16 Закона «О защите прав потребителей»), и это правило действует и здесь.',
+            en: 'In case of a proven violation the Provider may limit or terminate access and claim compensation for the damage actually caused. Terms that worsen a consumer’s statutory rights are void (ЗоЗПП art. 16), and that rule applies here too.',
           },
         ],
       },
@@ -381,6 +477,10 @@ export function termsDocument(): LegalDocument {
             ru: `Возврат возможен в течение ${days} дней после активации доступа, если выполнено меньше ${maxWorkouts} тренировок Курса. Подробности — в политике возврата на странице /refund/.`,
             en: `A refund is possible within ${days} days of activation if fewer than ${maxWorkouts} workouts of the Course are completed. Details are in the refund policy at /refund/.`,
           },
+          {
+            ru: 'Это наше правило, а не предел твоих прав. По ст. 32 Закона «О защите прав потребителей» ты можешь отказаться от услуги в любой момент, оплатив фактически понесённые нами расходы. Правило выше проще и в большинстве случаев выгоднее; если оно не подходит, напиши — будем считать по закону.',
+            en: 'That is our rule, not the limit of your rights. Under ЗоЗПП art. 32 you may withdraw from the service at any time, paying the costs we have actually incurred. The rule above is simpler and usually better for you; if it does not fit your case, write to us and we will apply the statute.',
+          },
         ],
       },
       {
@@ -404,17 +504,28 @@ export function termsDocument(): LegalDocument {
         ],
       },
       {
+        id: 'law',
+        heading: { ru: '12. Право и споры', en: '12. Governing law and disputes' },
+        paragraphs: [
+          {
+            ru: 'К этой оферте применяется право Российской Федерации. Сначала пишем друг другу: претензию мы рассматриваем в течение 10 дней. Если договориться не вышло, спор решается судом — и потребитель вправе выбрать суд по своему месту жительства или пребывания (ст. 17 Закона «О защите прав потребителей»); никакое условие этой оферты этого права не ограничивает.',
+            en: 'These terms are governed by the law of the Russian Federation. First we write to each other: we answer a claim within 10 days. If that does not settle it, the dispute goes to court — and a consumer may choose the court at their own place of residence (ЗоЗПП art. 17). Nothing in these terms limits that right.',
+          },
+        ],
+      },
+      {
         id: 'contact',
-        heading: { ru: '12. Контакты', en: '12. Contact' },
+        heading: { ru: '13. Контакты', en: '13. Contact' },
         paragraphs: [{ ru: `${org}, e-mail: ${email}.`, en: `${org}, email: ${email}.` }],
       },
-    ],
+      requisitesSection('requisites', { ru: '14. Реквизиты продавца', en: '14. Seller details' }),
+    ]),
   };
 }
 
 export function refundDocument(): LegalDocument {
   return {
-    sections: [
+    sections: sections([
       {
         id: 'conditions',
         heading: { ru: '1. Когда возможен возврат', en: '1. When a refund is possible' },
@@ -434,8 +545,8 @@ export function refundDocument(): LegalDocument {
         heading: { ru: '1а. Подписка', en: '1a. Subscription' },
         paragraphs: [
           {
-            ru: `Первый платёж по Подписке возвращается на тех же условиях: не больше ${days} дней с момента оплаты и меньше ${maxWorkouts} выполненных тренировок за этот период. Продления возврату не подлежат — вместо этого отключи автопродление: доступ останется до конца оплаченного периода, дальше списаний не будет.`,
-            en: `The first Subscription payment is refundable on the same terms: no more than ${days} days since the payment and fewer than ${maxWorkouts} workouts completed in that period. Renewals are not refunded — turn renewal off instead: access stays until the end of the paid period, and nothing is charged after it.`,
+            ru: `Оплата периода возвращается на тех же условиях: не больше ${days} дней с момента оплаты и меньше ${maxWorkouts} выполненных тренировок за этот период. Отменять подписку не нужно и отписываться не от чего: автосписания нет, период просто заканчивается.`,
+            en: `A payment for a period is refundable on the same terms: no more than ${days} days since the payment and fewer than ${maxWorkouts} workouts completed within it. There is no subscription to cancel and nothing to unsubscribe from: nothing is charged automatically, the period simply ends.`,
           },
         ],
       },
@@ -497,10 +608,21 @@ export function refundDocument(): LegalDocument {
         ],
       },
       {
+        id: 'statutory',
+        heading: { ru: '6. Права по закону', en: '6. Your statutory rights' },
+        paragraphs: [
+          {
+            ru: 'Правила выше — наши, и они проще закона. Помимо них у тебя есть права по Закону «О защите прав потребителей»: отказаться от услуги в любой момент, оплатив фактически понесённые нами расходы (ст. 32), и требовать возврата, если услуга оказана некачественно (ст. 29). Ничто на этой странице эти права не отменяет — такие условия были бы недействительны (ст. 16).',
+            en: 'The rules above are ours, and they are simpler than the statute. Beyond them you have rights under ЗоЗПП: to withdraw from the service at any time, paying the costs we actually incurred (art. 32), and to a refund where the service was not performed properly (art. 29). Nothing on this page removes them — such terms would be void (art. 16).',
+          },
+        ],
+      },
+      {
         id: 'contact',
-        heading: { ru: '6. Контакты', en: '6. Contact' },
+        heading: { ru: '7. Контакты', en: '7. Contact' },
         paragraphs: [{ ru: `${org}, e-mail: ${email}.`, en: `${org}, email: ${email}.` }],
       },
-    ],
+      requisitesSection('requisites', { ru: '8. Реквизиты продавца', en: '8. Seller details' }),
+    ]),
   };
 }

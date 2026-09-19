@@ -141,6 +141,16 @@ export const DraftSchema = z.object({
   limitations: z.array(z.enum(LIMITATIONS)).default([]),
   /** Explicit "nothing to protect" answer (distinct from "not answered yet"). */
   limitationsNone: z.boolean().default(false),
+  /**
+   * Agreement to hold what the limitations say.
+   *
+   * Гипертония and беременность are «состояние здоровья», which 152-ФЗ ст. 10 makes a special
+   * category: processing it is allowed on a consent given knowingly and separately from everything
+   * else. So it is its own answer rather than a clause folded into the sign-in — and
+   * `isStepComplete` only asks for it once a limitation has actually been picked, because «ничего,
+   * всё в порядке» collects no health data and so needs no permission to hold any.
+   */
+  healthConsent: z.boolean().default(false),
   /** 1..10 from the slider; undefined until the handle is touched. */
   level: z.number().int().min(LEVEL_MIN).max(LEVEL_MAX).optional(),
 });
@@ -211,7 +221,9 @@ export function isStepComplete(d: OnboardingDraft, step: StepId): boolean {
     case 'sex':
       return d.sex !== undefined;
     case 'limitations':
-      return d.limitationsNone || d.limitations.length > 0;
+      // Naming a limitation is handing over health data, so «Далее» waits for the consent as well
+      // as for the answer. «Ничего, всё в порядке» hands over nothing and waits for nothing.
+      return d.limitationsNone || (d.limitations.length > 0 && d.healthConsent);
     case 'level':
       return d.level !== undefined;
   }
