@@ -40,6 +40,7 @@ on:
           - email-templates
           - deploy-bot
           - secrets-check
+          - webhook-info
       migration_file:
         description: 'Only for "migration": a filename in supabase/migrations/'
         required: false
@@ -438,4 +439,75 @@ jobs:
             echo "Всё, что нужно работающим функциям, на месте."
           else
             echo "Не задано: $missing. Задать: Supabase → Project Settings → Edge Functions → Secrets."
+          fi
+
+      # ---------------------------------------------------------------------
+      # webhook-info — что об этом боте думает сам Telegram.
+      #
+      # Ничего не деплоит и ничего не перерегистрирует: именно поэтому он
+      # отдельно от `deploy-bot`, который вызывает setWebhook с
+      # drop_pending_updates=true и вместе с диагностикой стирает очередь —
+      # то есть улики.
+      #
+      # Отвечает на вопрос «почему бот молчит», который иначе не виден ниоткуда:
+      # `last_error_message` — это то, что Telegram получил, пытаясь доставить
+      # обновление. «Wrong response from the webhook: 403 Forbidden» здесь
+      # означает, что секрет, с которым Telegram стучится, и секрет, который
+      # ждёт функция, — разные.
+      #
+      # Токен бота живёт в пути запроса и в вывод не попадает; в ответе
+      # getWebhookInfo учётных данных нет вовсе.
+      # ---------------------------------------------------------------------
+      - name: Ask Telegram what it thinks of this bot
+        if: ${{ inputs.task == 'webhook-info' }}
+        env:
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        run: |
+          set -uo pipefail
+          if [ -z "${BOT_TOKEN:-}" ]; then
+            echo "::error::TELEGRAM_BOT_TOKEN не задан в секретах GitHub — спросить Telegram нечем."
+            exit 1
+          fi
+
+          if ! curl -sS -o /tmp/info.json "https://api.telegram.org/bot$BOT_TOKEN/getWebhookInfo"; then
+            echo "::error::Не удалось обратиться к Telegram."
+            exit 1
+          fi
+
+          if [ "$(jq -r '.ok' < /tmp/info.json)" != "true" ]; then
+            echo "::error::Telegram отказал: $(jq -r '.description // "без объяснения"' < /tmp/info.json). Обычно это значит, что TELEGRAM_BOT_TOKEN неверный или отозван."
+            exit 1
+          fi
+
+          url=$(jq -r '.result.url // ""' < /tmp/info.json)
+          pending=$(jq -r '.result.pending_update_count // 0' < /tmp/info.json)
+          err=$(jq -r '.result.last_error_message // ""' < /tmp/info.json)
+          when=$(jq -r '.result.last_error_date // 0' < /tmp/info.json)
+
+          if [ -z "$url" ]; then
+            echo "::error::Вебхук не зарегистрирован — Telegram никуда не доставляет сообщения. Запусти задачу deploy-bot."
+            exit 1
+          fi
+          echo "::notice::Вебхук зарегистрирован: $url"
+          echo "::notice::В очереди недоставленных обновлений: $pending"
+
+          if [ -n "$err" ]; then
+            echo "::warning::Последняя ошибка доставки ($(date -u -d "@$when" '+%Y-%m-%d %H:%M UTC')): $err"
+            case "$err" in
+              *403*)
+                echo "::warning::403 — функция отклонила запрос Telegram. Почти всегда это расхождение секретов: значение TELEGRAM_WEBHOOK_SECRET в GitHub и в Supabase должно совпадать. Приведи их к одному и запусти deploy-bot."
+                ;;
+              *404*|*"not found"*)
+                echo "::warning::Функция не найдена по этому адресу — её нужно задеплоить: задача deploy-bot."
+                ;;
+              *50[0-9]*)
+                echo "::warning::Функция упала при обработке. Смотри Supabase → Edge Functions → telegram-bot → Logs."
+                ;;
+            esac
+          else
+            echo "::notice::Ошибок доставки нет. Если бот всё равно молчит, причина внутри функции — Supabase → Edge Functions → telegram-bot → Logs."
+          fi
+
+          if [ "$pending" -gt 0 ]; then
+            echo "::warning::$pending обновлений лежит в очереди и не доставлено — Telegram не смог их отдать."
           fi
