@@ -113,7 +113,11 @@ Deno.serve(async (req) => {
    * exactly that case, and for the other ambiguous one (several pending orders); both end in a
    * 200 and a log line, with the purchase left for the coach to confirm by hand.
    */
-  const { data, error } = await supabase.rpc('apply_course_payment', {
+  // Named rather than destructured as `data`: the parsed body above already holds that name in
+  // this scope, and `let data` followed by `const { data }` is a SyntaxError — the module refuses
+  // to load at all, subscriptions included. Nothing in CI type-checks the edge functions, so it
+  // would have surfaced as "payments stopped working" and no other clue.
+  const { data: activated, error } = await supabase.rpc('apply_course_payment', {
     p_email: payment.email,
     p_provider_ref: payment.ref || null,
     p_paid_at: paidAt,
@@ -122,7 +126,7 @@ Deno.serve(async (req) => {
     console.error('prodamus-webhook: apply_course_payment failed', error.message);
     return reply(500, 'could not apply the payment');
   }
-  if (!data) {
+  if (!activated) {
     console.warn(
       `prodamus-webhook: ${payment.email} paid ${payment.sum ?? '?'} and no single pending order matches it; left for manual activation`,
     );
