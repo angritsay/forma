@@ -11,6 +11,9 @@ export const landing = {
   navContact: 'Contact',
   navMenu: 'Menu',
   skipToContent: 'Skip to content',
+  // Caption for the age mark in the footer: "18+" on its own is a number and says nothing to a
+  // screen reader.
+  footerAgeLabel: 'For adults',
   footerPrivacy: 'Privacy policy',
   footerTerms: 'Terms of service',
   footerRefund: 'Refund policy',

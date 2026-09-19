@@ -46,15 +46,26 @@ Deno.serve(async (req) => {
     return reply(400, 'unreadable body');
   }
 
+  /*
+   * Fail closed. This is the function that hands out paid access, and it used to fall back to the
+   * URL token alone when the signing secret was unset.
+   *
+   * A token in a query string is the weakest kind of credential there is: it sits in the Prodamus
+   * dashboard, in browser history if anyone ever opens the URL, and in the logs of every proxy the
+   * request crosses. On its own it is enough for a stranger to post `status=success` and
+   * `sum=7990` and give themselves a year of the subscription. The HMAC cannot be forged without
+   * the secret, so it is the check that actually matters — and a missing secret must stop the
+   * door, not open it.
+   */
   const secret = Deno.env.get('PRODAMUS_SECRET');
-  if (secret) {
-    const expected = await sign(data as Parameters<typeof sign>[0], secret);
-    if (!signatureMatches(expected, req.headers.get('sign') ?? req.headers.get('Sign'))) {
-      console.warn('prodamus-webhook: signature mismatch');
-      return reply(403, 'bad signature');
-    }
-  } else {
-    console.warn('prodamus-webhook: PRODAMUS_SECRET is not set; relying on the URL token only');
+  if (!secret) {
+    console.error('prodamus-webhook: PRODAMUS_SECRET is not set; refusing every delivery');
+    return reply(503, 'not configured');
+  }
+  const expected = await sign(data as Parameters<typeof sign>[0], secret);
+  if (!signatureMatches(expected, req.headers.get('sign') ?? req.headers.get('Sign'))) {
+    console.warn('prodamus-webhook: signature mismatch');
+    return reply(403, 'bad signature');
   }
 
   const payment = readPayment(data as Parameters<typeof readPayment>[0]);

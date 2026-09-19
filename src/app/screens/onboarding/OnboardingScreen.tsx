@@ -25,6 +25,7 @@ import { IconButton } from '@/components/ui/IconButton';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Screen } from '@/components/ui/Screen';
 import { useToast } from '@/components/ui/Toast';
+import { recordConsent } from '@/lib/api/consents';
 import { useT } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
 import {
@@ -157,6 +158,21 @@ export default function OnboardingScreen() {
         trainingProfile,
         onboardedAt,
       });
+      /*
+       * Write the consent down, after the profile it is about is safely stored.
+       *
+       * Awaited rather than fired and forgotten, so the row lands before the screen goes — but it
+       * cannot fail the flow: `recordConsent` swallows everything and answers null, because a log
+       * that could not be written is a bookkeeping problem and not a reason to refuse somebody
+       * the product they just signed up for. On a database without 0018 that is exactly what
+       * happens, every time, and onboarding carries on.
+       *
+       * Only when a limitation was actually given: the checkbox is only shown then, and a consent
+       * recorded for data nobody handed over would be a false record.
+       */
+      if (draft.healthConsent && draft.limitations.length > 0) {
+        await recordConsent(['health'], 'onboarding', draft.locale ?? locale);
+      }
       clearDraft();
       navigate('/', { replace: true });
     } catch {

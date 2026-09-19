@@ -18,8 +18,10 @@ import Logo from '@/components/landing/Logo.astro';
 import { t } from '@/i18n/index';
 import { href, appHref } from '@/lib/util/paths';
 import { BRAND } from '@content/site/brand';
+import { entityName } from '@content/site/legalEntity';
 import { LINKS } from '@content/site/links';
 import { PLANS_ENABLED } from '@content/site/plans';
+import { PRICING } from '@content/site/pricing';
 import type { Locale } from '@/content/schema';
 
 interface Props {
@@ -293,7 +295,24 @@ const primaryLink =
         <span class="inline-flex text-sm text-muted">
           <Logo lockup label={BRAND.name} />
         </span>
-        <span>© {year} {BRAND.organization}</span>
+        {
+          /*
+          The seller, when there is one to name, and the age mark.
+
+          `entityName()` is empty until content/site/legalEntity.ts is filled in, and then this
+          line stops saying «Forma» — a brand — and starts saying who is actually taking the money,
+          which is what ЗоЗПП ст. 9 is about. The requisites in full are on the offer page; this is
+          the footprint on every page.
+
+          «18+» is our own terms made visible: PRICING.minimumAge is 18 and the offer says so, and
+          a limit stated only inside a document nobody opens is not stated. It is not a claim about
+          436-ФЗ — this is not children's media — it is the product agreeing with itself.
+        */
+        }
+        <span class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span>© {year} {entityName() || BRAND.organization}</span>
+          <span aria-label={t(locale, 'landing.footerAgeLabel')}>{PRICING.minimumAge}+</span>
+        </span>
       </div>
     </div>
   </footer>
