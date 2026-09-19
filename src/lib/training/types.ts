@@ -49,6 +49,19 @@ export interface UserTrainingProfile {
   experience: Experience;
   tests: SelfTests;
   limitations: Limitation[];
+  /**
+   * What the athlete wrote under «Другое» on the limitations step, when none of the six plates
+   * held their answer — a neck, an ankle, an operation.
+   *
+   * **Nothing reads it but a person.** `prescribe` works from `limitations`, whose values each map
+   * to a substitution rule; this is free text, and no rule can be derived from it without guessing,
+   * so none is. The coach sees it and decides. The screen where it is collected says exactly that,
+   * so the promise made there and the behaviour here are the same promise.
+   *
+   * It is health data under 152-ФЗ ст. 10 exactly as the plates are, collected on the same screen
+   * under the same consent.
+   */
+  limitationsNote?: string;
   equipment: Equipment[];
   /** Available dumbbell weights (per dumbbell, kg), ascending. */
   dumbbellKg?: number[];

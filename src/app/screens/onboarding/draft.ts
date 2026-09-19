@@ -86,6 +86,15 @@ export const SELECTABLE_EQUIPMENT: readonly Equipment[] = [
 
 export const NAME_MAX = 40;
 
+/**
+ * How long the «Другое» note may be.
+ *
+ * Long enough for a sentence about a shoulder and an old operation, short enough that the field
+ * stays a field and does not become a place to write a medical history into a form nobody
+ * promised to read as one.
+ */
+export const LIMITATION_NOTE_MAX = 200;
+
 /** The level slider's ends. Ten notches, because ten is the scale the whole product asks on. */
 export const LEVEL_MIN = 1;
 export const LEVEL_MAX = 10;
@@ -151,6 +160,22 @@ export const DraftSchema = z.object({
    * всё в порядке» collects no health data and so needs no permission to hold any.
    */
   healthConsent: z.boolean().default(false),
+  /**
+   * «Другое» — whether the free-text answer is open, and what is written in it.
+   *
+   * The six plates are the limitations the engine knows how to work around, and the list is closed
+   * because each one maps to a substitution rule. A neck, an ankle, an old operation fit none of
+   * them, and a question that cannot hold the answer somebody has teaches them the app is not for
+   * them. So: a seventh plate that opens a field.
+   *
+   * **What it does and does not do.** The text is stored on the profile as `limitationsNote`, and
+   * the coach reads it. Nothing parses it and no exercise is substituted because of it. That is
+   * the honest boundary — a substitution triggered by guessing at free text would be worse than
+   * none — and the hint under the field says so on the screen, so nobody writes «болит шея» and
+   * then trains believing the workouts have changed.
+   */
+  limitationsOtherOn: z.boolean().default(false),
+  limitationsOther: z.string().max(LIMITATION_NOTE_MAX).default(''),
   /** 1..10 from the slider; undefined until the handle is touched. */
   level: z.number().int().min(LEVEL_MIN).max(LEVEL_MAX).optional(),
 });
@@ -211,6 +236,16 @@ export function isValidName(name: string | undefined): boolean {
   return n.length >= 1 && n.length <= NAME_MAX;
 }
 
+/** The free-text answer as it will be stored: trimmed, and empty when the plate is not open. */
+export function limitationNote(d: OnboardingDraft): string {
+  return d.limitationsOtherOn ? d.limitationsOther.trim() : '';
+}
+
+/** Something was said about health: a plate, a written note, or both. */
+function namesSomething(d: OnboardingDraft): boolean {
+  return d.limitations.length > 0 || limitationNote(d).length > 0;
+}
+
 /** Whether a step has everything it needs for «Далее». */
 export function isStepComplete(d: OnboardingDraft, step: StepId): boolean {
   switch (step) {
@@ -223,7 +258,10 @@ export function isStepComplete(d: OnboardingDraft, step: StepId): boolean {
     case 'limitations':
       // Naming a limitation is handing over health data, so «Далее» waits for the consent as well
       // as for the answer. «Ничего, всё в порядке» hands over nothing and waits for nothing.
-      return d.limitationsNone || (d.limitations.length > 0 && d.healthConsent);
+      //
+      // An open «Другое» with an empty field is not an answer — the plate was pressed and nothing
+      // was written — so it neither completes the step nor blocks a plate picked beside it.
+      return d.limitationsNone || (namesSomething(d) && d.healthConsent);
     case 'level':
       return d.level !== undefined;
   }
@@ -252,6 +290,9 @@ export function firstIncompleteStep(d: OnboardingDraft): number {
 export function draftToTrainingProfile(d: OnboardingDraft): UserTrainingProfile | null {
   if (!d.ageBand || !d.sex || d.level === undefined) return null;
   const i = Math.min(LEVEL_MAX, Math.max(LEVEL_MIN, d.level)) - 1;
+  // Absent rather than empty when nothing was written: the profile should not carry a key that
+  // says «this person told us about their health» with nothing behind it.
+  const note = d.limitationsNone ? '' : limitationNote(d);
   return {
     ageBand: d.ageBand,
     sex: d.sex,
@@ -259,6 +300,7 @@ export function draftToTrainingProfile(d: OnboardingDraft): UserTrainingProfile 
     experience: LEVEL_EXPERIENCE[i] ?? 'none',
     tests: {},
     limitations: d.limitationsNone ? [] : [...d.limitations],
+    ...(note ? { limitationsNote: note } : {}),
     equipment: ['none'],
   };
 }

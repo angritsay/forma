@@ -67,7 +67,7 @@ export const app = {
   // One question per step, set as the display line; the answers are the only other words. The
   // leads that used to restate each question were cut per design/CHANGELOG.md §10.
   onbStepOf: 'Step {n} of {total}',
-  onbNameTitle: 'Your name',
+  onbNameTitle: 'What should we call you?',
   onbNamePlaceholder: 'Name',
   onbAge1824: '18–24',
   onbAge2534: '25–34',
@@ -96,6 +96,9 @@ export const app = {
   onbLimWrists: 'Wrists',
   onbLimHypertension: 'High blood pressure',
   onbLimPregnancy: 'Pregnancy',
+  onbLimOther: 'Something else',
+  onbLimOtherPlaceholder: 'What should we protect? E.g. neck, ankle, shoulder surgery',
+  onbLimOtherHint: 'The coach reads this. Exercises are not chosen from it automatically.',
   onbAssessOfferTitle: 'Fit the training to you?',
   onbAssessMoves: '{n} movements',
   // The owner's words for this screen: «не выжимаем максимум… конец».
@@ -1017,18 +1020,18 @@ export const app = {
   onbSexTitle: 'Your sex',
   // A question like the four before it, not the name of a form field.
   onbLevelTitle: 'How is training going now?',
-  // Ten slider labels, low end first. They change on every notch: a bare figure is a scale
-  // only the app knows about.
-  onbLevel01: 'Haven’t trained in a long time',
-  onbLevel02: 'Just getting started',
-  onbLevel03: 'I move a little',
-  onbLevel04: 'I move, but not regularly',
+  // Ten states, low end first. The state is the answer; the numeral on the ruler only says where
+  // it sits on the range.
+  onbLevel01: 'I haven’t trained in years',
+  onbLevel02: 'I’m starting from zero',
+  onbLevel03: 'I walk sometimes, that’s it',
+  onbLevel04: 'I move, but with no system',
   onbLevel05: 'I train now and then',
-  onbLevel06: 'Once a week',
+  onbLevel06: 'I train once a week',
   onbLevel07: 'Two or three sessions a week',
-  onbLevel08: 'I train regularly',
-  onbLevel09: 'I train almost every day',
-  onbLevel10: 'I have trained for years',
+  onbLevel08: 'I train regularly, rarely miss',
+  onbLevel09: 'Years of training, almost every day',
+  onbLevel10: 'Two sessions a day, training for competition',
   // «Next», not «Continue»: you continue something you interrupted, you go forward through a form.
   onbNext: 'Next',
   onbFinish: 'Start training',

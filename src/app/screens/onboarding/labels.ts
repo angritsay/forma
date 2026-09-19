@@ -64,3 +64,30 @@ export const LIMITATION_LABEL: Record<Limitation, TKey> = {
   hypertension: 'app.onbLimHypertension',
   pregnancy: 'app.onbLimPregnancy',
 };
+
+/**
+ * A picture for each answer, so the row is scanned rather than read («добавь эмодзи в каждую
+ * плашку чтобы нагляднее было»).
+ *
+ * Emoji rather than drawn icons because the app already uses them for achievements, and because
+ * six new glyphs in the icon set would be six drawings to keep in step with a face they do not
+ * belong to. They sit here and not in the i18n strings so that a translator cannot lose one and so
+ * that the tile can give the picture its own slot.
+ *
+ * There is no emoji for a lower back, and the ones that look like one are arrows and signs. 🦴 is
+ * the closest true thing — the spine is what the answer is about. Blood pressure takes 🫀 for the
+ * same reason: the organ, not a gauge. Nothing here is a diagnosis and none of them is a warning
+ * sign; an answer about a body is not a hazard notice.
+ */
+export const LIMITATION_EMOJI: Record<Limitation, string> = {
+  knees: '🦵',
+  lower_back: '🦴',
+  shoulders: '💪',
+  wrists: '🤲',
+  hypertension: '🫀',
+  pregnancy: '🤰',
+};
+
+/** «Ничего, всё в порядке» and «Другое», which are not `Limitation`s but share the row. */
+export const LIMITATION_NONE_EMOJI = '👌';
+export const LIMITATION_OTHER_EMOJI = '✍️';

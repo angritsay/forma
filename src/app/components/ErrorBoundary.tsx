@@ -2,6 +2,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useT } from '@/app/hooks/useT';
+import { reloadOnceForStaleChunk } from './staleChunk';
 
 interface Props {
   children: ReactNode;
@@ -74,6 +75,15 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
     console.error('[forma] render error', error, info.componentStack);
+    /*
+     * The deploy error, handled rather than displayed. A screen this app loads on demand lives in
+     * a file whose name carries a content hash; ship a new build and the old name stops existing,
+     * so a tab that was open across the deploy — which inside Telegram is every tab, the webview
+     * outlives the session — fails on the first screen it had not visited yet. Nothing is wrong
+     * with the code or the build; the page simply needs fetching again, so it fetches itself
+     * again. Once per session, and only when that can be recorded: see staleChunk.ts.
+     */
+    reloadOnceForStaleChunk(error);
   }
 
   render(): ReactNode {

@@ -87,12 +87,26 @@ export function OptionTile({
       )}
     >
       <span className="min-w-0 flex-1">{children}</span>
-      {mark && selected ? (
-        <span
-          aria-hidden="true"
-          className="pop-in flex size-5 shrink-0 items-center justify-center rounded-pill bg-on-primary text-primary"
-        >
-          <Glyph size={11}>✓</Glyph>
+      {/*
+       * The mark's room is held open whether or not the mark is there.
+       *
+       * It used to mount on selection, and a plate is `flex-auto` — so picking «25–34» made it
+       * 32px wider, which pushed «35–44» off the end of the row and re-packed every plate below
+       * it. The answers moved under the finger that had just chosen one («не хорошо что пилюли
+       * перепрыгивают при выборе»), and on a six-answer question the whole grid changed shape.
+       *
+       * So the slot is always in the layout and only its contents come and go. `.pop-in` still
+       * rides on the check itself, so picking still looks like something; what it no longer does
+       * is move the other five answers. Plates that ask for no mark get no slot at all — nothing
+       * to reserve, and their row packs as it always did.
+       */}
+      {mark ? (
+        <span className="flex size-5 shrink-0 items-center justify-center" aria-hidden="true">
+          {selected ? (
+            <span className="pop-in flex size-5 items-center justify-center rounded-pill bg-on-primary text-primary">
+              <Glyph size={11}>✓</Glyph>
+            </span>
+          ) : null}
         </span>
       ) : null}
     </button>
