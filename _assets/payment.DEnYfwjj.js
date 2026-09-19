@@ -1,0 +1,1 @@
+function n(t){if(!t)return null;let r;try{r=new URL(t)}catch{return null}return r.protocol==="https:"?r:null}function a(t,r){const e=new URL(t.href);return e.searchParams.set("email",r),e.searchParams.set("customer_email",r),e.href}export{n as p,a as w};

@@ -1,0 +1,1 @@
+import"./dates.CdvaDUh5.js";import{c,i as e}from"./tile.MKVyxCsw.js";import{aE as o}from"./main.x7Fks-ZI.js";function n(r){const s=c(r);if(s)return{...s,"--course-accent":r&&e(r)?r:"var(--text)"}}function u(r){return o(r,"/subscribe/")}export{n as c,u as s};

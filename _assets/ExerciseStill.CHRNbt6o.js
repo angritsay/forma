@@ -1,0 +1,1 @@
+import{j as l}from"./jsx-runtime.D_zvdyIk.js";import{aD as s}from"./main.x7Fks-ZI.js";function c({exerciseId:r,className:i="size-full object-cover",loading:o="lazy"}){const t=r?s(r):void 0;return t?l.jsx("img",{src:t,alt:"",className:i,loading:o,decoding:"async"}):null}export{c as E};

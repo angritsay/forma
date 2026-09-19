@@ -1,0 +1,1 @@
+const d=/^[a-z0-9_]{2,40}$/;function w(n,e){return`w${n}d${e}`}function k(n){if(n.length===0)return{week:1,day:1};const e=n.reduce((t,a)=>a.week>t.week||a.week===t.week&&a.day>t.day?a:t);return e.day>=7?{week:e.week+1,day:1}:{week:e.week,day:e.day+1}}export{d as C,w as a,k as n};
