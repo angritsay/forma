@@ -339,6 +339,12 @@ jobs:
             exit 1
           fi
           echo "Telegram now delivers /start to $HOOK_URL"
+          # Read it back, so the run says what Telegram itself believes rather
+          # than what we just asked for. None of these fields is a credential.
+          curl -sS -o /tmp/info.json "$API/getWebhookInfo"
+          jq -r '.result | "url: \(.url)\npending: \(.pending_update_count)\nlast error: \(.last_error_message // "none")"' < /tmp/info.json
+          echo
+          echo "Open the bot in Telegram and press Start. It should answer with the greeting and a button."
 
       # ---------------------------------------------------------------------
       # secrets-check — which function secrets exist, and which are missing.
@@ -354,47 +360,49 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          set -euo pipefail
+          # Не `set -e`: каждая ошибка обрабатывается явно, а `grep`, ничего не
+          # нашедший, — это нормальный ответ «такого секрета нет», а не падение.
+          set -uo pipefail
           curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz \
             | tar -xz -C /tmp
-          /tmp/supabase secrets list --project-ref "$PROJECT_REF" \
-            | awk '{print $1}' | grep -E '^[A-Z_]+$' | sort > /tmp/have.txt
 
-          echo "Секреты, заданные в Supabase:"
+          if ! /tmp/supabase secrets list --project-ref "$PROJECT_REF" >/tmp/raw.txt 2>/tmp/err.txt; then
+            echo "::error::Не удалось прочитать список секретов. Обычно это значит, что SUPABASE_ACCESS_TOKEN просрочен или у него нет доступа к проекту."
+            sed 's/^/  /' /tmp/err.txt
+            exit 1
+          fi
+
+          # Имена, и только имена. Вторая колонка `secrets list` — дайджест значения;
+          # это не само значение, но и ему в публичном логе делать нечего. Разбор идёт
+          # по словам, а не по колонкам, чтобы смена формата таблицы ничего не ломала.
+          grep -oE '[A-Z][A-Z0-9_]{2,}' /tmp/raw.txt | grep -vxE 'NAME|DIGEST' | sort -u > /tmp/have.txt || true
+
+          echo "Секреты, заданные в Supabase ($(wc -l < /tmp/have.txt)):"
           sed 's/^/  · /' /tmp/have.txt
 
-          # What each function refuses to run without. Keep in step with the
-          # `Deno.env.get(...)` guards in supabase/functions/*/index.ts.
-          cat > /tmp/need.txt <<'NEEDED'
-          TELEGRAM_BOT_TOKEN|бот вообще не отвечает
-          TELEGRAM_WEBHOOK_SECRET|бот отклоняет все запросы (fail closed)
+          echo ""
+          echo "Что нужно функциям:"
+          missing=0
+          # Держать в согласии с проверками Deno.env.get(...) в supabase/functions/*/index.ts.
+          while IFS='|' read -r name why; do
+            if [ -n "$name" ]; then
+              if grep -qx -- "$name" /tmp/have.txt; then
+                echo "  ✓ $name"
+              else
+                echo "::warning::$name не задан — $why"
+                missing=$((missing + 1))
+              fi
+            fi
+          done <<'NEEDED'
+          TELEGRAM_BOT_TOKEN|бот не отвечает вовсе
+          TELEGRAM_WEBHOOK_SECRET|бот отклоняет все запросы Telegram (fail closed)
           PRODAMUS_SECRET|оплаты не активируют подписку (fail closed)
           WEBHOOK_TOKEN|оплаты не активируют подписку
           NEEDED
 
-          missing=0
-          echo ""
-          while IFS='|' read -r name why; do
-            name=$(echo "$name" | xargs)
-            [ -z "$name" ] && continue
-            if grep -qx "$name" /tmp/have.txt; then
-              echo "✓ $name"
-            else
-              echo "::warning::$name не задан — $why"
-              missing=$((missing + 1))
-            fi
-          done < /tmp/need.txt
-
           echo ""
           if [ "$missing" -eq 0 ]; then
-            echo "Все секреты, которые нужны работающим функциям, на месте."
+            echo "Всё, что нужно работающим функциям, на месте."
           else
-            echo "Не задано: $missing. Задать: Supabase → Edge Functions → Secrets."
+            echo "Не задано: $missing. Задать: Supabase → Project Settings → Edge Functions → Secrets."
           fi
-
-          # Read it back, so the run says what Telegram itself believes rather
-          # than what we just asked for. None of these fields is a credential.
-          curl -sS -o /tmp/info.json "$API/getWebhookInfo"
-          jq -r '.result | "url: \(.url)\npending: \(.pending_update_count)\nlast error: \(.last_error_message // "none")"' < /tmp/info.json
-          echo
-          echo "Open the bot in Telegram and press Start. It should answer with the greeting and a button."
