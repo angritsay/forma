@@ -868,7 +868,7 @@ the offer everywhere.
 
 ### 7.4 Subscription: two plans, one webhook
 
-`content/site/plans.ts` holds the two plans (monthly 1 990 ₽ / annual 9 990 ₽ by default) and
+`content/site/plans.ts` holds the two plans (monthly 1 990 ₽ / annual 7 990 ₽ by default) and
 their payment links, one per locale, pointing at the seller's Prodamus subscription products:
 
 ```ts
