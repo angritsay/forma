@@ -265,6 +265,10 @@ export function termsDocument(): LegalDocument {
             ru: 'Оферта считается принятой (акцепт) в момент, когда Пользователь оставил e-mail на странице Курса и оплатил его, а если Курс бесплатный — в момент заявки.',
             en: 'The offer is accepted when the User leaves an email on the Course page and pays for it, or, for a free Course, at the moment of the order.',
           },
+          {
+            ru: 'Первая тренировка каждого Курса доступна бесплатно и без оплаты — один раз. Это не услуга по настоящей оферте и не её часть: договор между Исполнителем и Пользователем возникает только при оплате Курса. Исполнитель вправе изменить или прекратить бесплатный доступ в любой момент, и на уже оплаченные Курсы это не влияет.',
+            en: 'The first workout of each Course is available free of charge, once. It is not a service under these terms and not a part of them: the contract between the Provider and the User arises only on payment for a Course. The Provider may change or withdraw the free access at any time, and doing so does not affect Courses already paid for.',
+          },
         ],
       },
       {
@@ -276,8 +280,8 @@ export function termsDocument(): LegalDocument {
             en: 'The User enters an email on the Course page. This email becomes the login for the App; no password is needed — sign-in uses a one-time code from an email.',
           },
           {
-            ru: 'После оплаты Исполнитель подтверждает доступ вручную и активирует Курс для указанного e-mail. Обычно это происходит в порядке очереди; о задержках Пользователь может спросить по адресу ниже.',
-            en: 'After payment the Provider confirms access manually and activates the Course for that email. This happens in the order received; the User may ask about delays at the address below.',
+            ru: 'После оплаты Курс открывается автоматически, на тот же e-mail, обычно в течение нескольких минут. Если по техническим причинам этого не произошло, доступ включает Исполнитель вручную — напиши по адресу ниже, и мы разберёмся.',
+            en: 'After payment the Course opens automatically, for the same email, usually within a few minutes. If for technical reasons it does not, the Provider grants access by hand — write to the address below and we will sort it out.',
           },
           {
             ru: 'Курс считается предоставленным в момент активации. С этого момента отсчитывается срок для возврата.',

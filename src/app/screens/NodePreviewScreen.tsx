@@ -44,7 +44,11 @@ import { TopBar } from '@/app/components/TopBar';
 import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { useT } from '@/app/hooks/useT';
 import { courseAccentVars } from '@/app/features/courses/courseMeta';
-import { hasCompletedIn, nodeAccess } from '@/app/features/courses/courseAccess';
+import {
+  firstTrainableNode,
+  hasCompletedIn,
+  nodeAccess,
+} from '@/app/features/courses/courseAccess';
 import { UnlockSheet } from '@/app/features/courses/UnlockSheet';
 import {
   estimateSession,
@@ -148,15 +152,37 @@ export default function NodePreviewScreen() {
    * почту, которую приложение и так знает. Теперь цена открывается здесь же.
    */
   if (nodeAccess({ owned, hasCompleted, course, node }) === 'paywalled') {
+    /*
+     * Два разных человека упираются в этот экран, и предлагать им одно и то же нельзя.
+     *
+     * Первый ещё не тратил пробу — он просто открыл день двадцатый, ссылкой или любопытством. Ему
+     * есть что дать бесплатно, и продавать ему сейчас значит брать деньги за то, что он не
+     * пробовал. Его ведут к первой тренировке.
+     *
+     * Второй свою тренировку сделал и знает, о чём речь. Ему — цена.
+     *
+     * Текст «Первая тренировка была бесплатной» до этой правки показывался обоим, и первому он
+     * сообщал о событии, которого не было.
+     */
+    const firstFree = !hasCompleted ? firstTrainableNode(course) : null;
     return (
       <Screen header={<TopBar back={`/courses/${course.id}`} title={l(courseTitle(course))} />}>
         <EmptyState
           title={t('app.pathNotOwnedTitle')}
-          description={t('app.pathNotOwnedBody')}
+          description={firstFree ? t('app.pathTrialLeftBody') : t('app.pathNotOwnedBody')}
           action={
-            <Button size="lg" onClick={() => setUnlockOpen(true)}>
-              {t('app.unlockTitle')}
-            </Button>
+            firstFree ? (
+              <Button
+                size="lg"
+                onClick={() => navigate(`/courses/${course.id}/nodes/${firstFree.id}`)}
+              >
+                {t('app.pathTrialLeftCta')}
+              </Button>
+            ) : (
+              <Button size="lg" onClick={() => setUnlockOpen(true)}>
+                {t('app.unlockTitle')}
+              </Button>
+            )
           }
         />
         <UnlockSheet open={unlockOpen} course={course} onClose={() => setUnlockOpen(false)} />

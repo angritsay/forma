@@ -146,7 +146,7 @@ export const app = {
   coursesCompleted: 'Completed — open the path',
   coursesGetAccess: 'Get access',
   coursesBoughtHint:
-    'Already paid? The course opens as soon as Sergey sees the payment — usually the same day.',
+    'Already paid? The course opens by itself, usually within a couple of minutes. If not, write to us.',
   coursesSubscribe: 'Subscribe — all courses',
   coursesSubscribeHint: 'from {price} a month · or buy this course for good',
   coursesBuyOne: 'Buy this course',
@@ -212,14 +212,18 @@ export const app = {
   unlockBody:
     'The first workout of “{course}” was free. The rest is the whole course: the workouts in order, adapted to your level. One payment, yours for good.',
   unlockCta: 'Go to payment',
-  unlockNote: 'The course opens for {email} — the address you signed in with.',
+  unlockNote:
+    'The course opens for {email} right after payment — usually within a couple of minutes.',
   unlockNoteManual:
     'The order was not recorded — you can still pay, but the coach opens access by hand. Usually the same day.',
   unlockNoPayment: 'Payment for this course is not connected yet. Write to us and we will open it.',
+  // Telling somebody the trial "was free" before they have used it describes an event that
+  // never happened.
+  pathTrialLeftBody: 'The first workout of this course is free — start there, then decide.',
+  pathTrialLeftCta: 'To the first workout',
   pathPaywalledToast: 'The rest comes with the subscription, or with the course',
   pathNotOwnedTitle: 'You don’t have this course yet',
-  pathNotOwnedBody:
-    'Open it from the course page. After you pay, Sergey switches it on for your email — usually the same day.',
+  pathNotOwnedBody: 'The first workout was free. The rest is the whole course, in one payment.',
   pathNotOwnedCta: 'Course page',
   pathNotFound: 'Course not found',
   pathCompleted: 'Course completed!',
