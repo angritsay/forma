@@ -1187,6 +1187,7 @@ apply → Run workflow**, pick a task:
 | `deploy-payments` | Deploys `prodamus-webhook`, checks its two secrets and probes the live address (§7.4).      |
 | `secrets-check`   | Read-only: which function secrets Supabase has, which are missing, which override the repo. |
 | `webhook-info`    | Read-only: what Telegram itself believes about the bot's webhook, and why delivery failed.  |
+| `payments-check`  | Read-only: how many payment notifications have arrived and whether the last one applied.    |
 
 One secret makes it work: **`SUPABASE_ACCESS_TOKEN`** (Settings → Secrets and variables → Actions),
 a personal access token from <https://supabase.com/dashboard/account/tokens>. The project ref is
