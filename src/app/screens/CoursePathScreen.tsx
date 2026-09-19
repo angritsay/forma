@@ -25,9 +25,6 @@ import { courseTileVars } from '@/lib/ui/tile';
 import { TopBar } from '@/app/components/TopBar';
 import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { useT } from '@/app/hooks/useT';
-import { courseLandingHref, subscribeHref } from '@/app/features/courses/courseMeta';
-import { LinkButton } from '@/app/features/courses/LinkButton';
-import { PLANS_ENABLED } from '@content/site/plans';
 import { DisplayText, DisplayTitle } from '@/app/features/home/DisplayTitle';
 import { NodeSheet } from '@/app/features/path/NodeSheet';
 import {
@@ -44,8 +41,11 @@ import {
   starsByNode,
   useProgress,
   useProgressLoader,
+  useTrainedCourseIds,
 } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
+import { courseAccess, hasCompletedIn, nodeAccess } from '@/app/features/courses/courseAccess';
+import { UnlockSheet } from '@/app/features/courses/UnlockSheet';
 
 export default function CoursePathScreen() {
   useProgressLoader();
@@ -82,12 +82,24 @@ export default function CoursePathScreen() {
   const [scaleOpen, setScaleOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  const trained = useTrainedCourseIds();
   const owned = course ? entitlements.includes(course.id) : false;
+  /*
+   * Что открыто. Сюда же ведёт и запертый узел: `nodeAccess` отвечает 'paywalled' там, где раньше
+   * весь экран подменялся заглушкой «Этого курса у тебя пока нет».
+   */
+  const access = courseAccess({
+    owned,
+    hasCompleted: course ? hasCompletedIn(trained, course.id) : false,
+  });
+  const [unlockOpen, setUnlockOpen] = useState(false);
 
   // The course the athlete opened becomes the one the Home screen follows.
   useEffect(() => {
-    if (course && owned) setActiveCourse(course.id);
-  }, [course, owned, setActiveCourse]);
+    // Курс, который пробуют, — тоже тот, которым человек сейчас занят: иначе «Сегодня» осталось бы
+    // пустым ровно у того, кто только что начал.
+    if (course && access !== 'spent') setActiveCourse(course.id);
+  }, [course, access, setActiveCourse]);
 
   if (!course) {
     return (
@@ -95,30 +107,6 @@ export default function CoursePathScreen() {
         <EmptyState
           title={t('app.pathNotFound')}
           action={<Button onClick={() => navigate('/')}>{t('app.tabCourses')}</Button>}
-        />
-      </Screen>
-    );
-  }
-
-  if (!owned) {
-    return (
-      <Screen header={<TopBar back="/courses" title={l(courseTitle(course))} />}>
-        <EmptyState
-          title={t('app.pathNotOwnedTitle')}
-          description={t('app.pathNotOwnedBody')}
-          action={
-            <div className="flex flex-col gap-2">
-              {PLANS_ENABLED ? (
-                <LinkButton href={subscribeHref(locale)}>{t('app.coursesSubscribe')}</LinkButton>
-              ) : null}
-              <LinkButton
-                href={courseLandingHref(locale, course)}
-                variant={PLANS_ENABLED ? 'secondary' : 'primary'}
-              >
-                {t('app.pathNotOwnedCta')}
-              </LinkButton>
-            </div>
-          }
         />
       </Screen>
     );
@@ -135,8 +123,18 @@ export default function CoursePathScreen() {
     sheetIndex >= 0 ? nodeStatus(sheetIndex, course.nodes, row) : 'locked';
 
   const onNodePress = (node: CourseNode, _index: number, nodeState: NodeStatus) => {
+    /*
+     * Два разных тупика, и вести из них надо в разные места. «Ещё не дошёл» — это подсказка про
+     * порядок; «за это не заплачено» — это цена, и показывать её тостом было бы издевательством.
+     * Порядок проверок именно такой: до дня двадцатого человек и так не дошёл, и говорить ему про
+     * оплату раньше, чем про порядок, значит продавать вместо того, чтобы объяснять.
+     */
     if (nodeState === 'locked') {
       toast.show({ kind: 'info', title: t('app.pathLockedToast') });
+      return;
+    }
+    if (nodeAccess({ owned, hasCompleted: access === 'spent', course, node }) === 'paywalled') {
+      setUnlockOpen(true);
       return;
     }
     if (node.kind === 'rest' || node.kind === 'milestone') {
@@ -304,6 +302,7 @@ export default function CoursePathScreen() {
           onComplete={(skip) => void completeSheetNode(skip)}
         />
         <ScaleSheet open={scaleOpen} scale={scale} onClose={() => setScaleOpen(false)} />
+        <UnlockSheet open={unlockOpen} course={course} onClose={() => setUnlockOpen(false)} />
       </Screen>
     </div>
   );

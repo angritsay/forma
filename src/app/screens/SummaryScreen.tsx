@@ -45,6 +45,7 @@ import {
   testResults,
   totalReps,
 } from '@/app/features/player/summaryModel';
+import { UnlockCard } from '@/app/features/courses/UnlockCard';
 import { useProgress, useProgressLoader, useTrainingCount } from '@/app/store/progress';
 import { nodeEarnsStars, starsEarned, starsForSession, workDone } from '@/lib/training/stars';
 import { useT } from '@/app/hooks/useT';
@@ -262,6 +263,17 @@ function SavedView({
          */}
         <AchievementList items={unlocked} />
         {adjustment ? <AdaptationCard adjustment={adjustment} /> : null}
+        {/*
+         * Момент, ради которого бесплатная тренировка и существует.
+         *
+         * Человек только что закончил — он знает, каково это, а не читает про это на странице. Всё
+         * остальное на экране про сделанное; эта карточка — единственное, что про дальше, и стоит
+         * последней, потому что сначала надо дать досмотреть свой результат.
+         *
+         * Показывается только тому, у кого курса нет: купившему предлагать купить — худший вид
+         * невнимательности, и именно так выглядит большинство встроенных продаж.
+         */}
+        <UnlockCard courseId={courseId} />
       </div>
     </Screen>
   );

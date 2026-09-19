@@ -68,6 +68,15 @@ export interface CourseCardProps {
   priority?: boolean;
   /** Not owned: the picture is held back so the courses being walked lead. */
   dimmed?: boolean;
+  /**
+   * Одна строка над названием — там, где у начатого курса стоит процент.
+   *
+   * Существует ради «Первая тренировка бесплатно»: обещание должно стоять на карточке, а не
+   * открываться после нажатия, иначе оно не работает вовсе. Набрана мелким капсом, как все
+   * надстрочные строки продукта, и не показывается вместе с процентом — у курса либо прогресс,
+   * либо приглашение, но не оба сразу.
+   */
+  eyebrow?: ReactNode;
   /** `--course-tile`, its ink and `--course-accent`, from courseAccentVars(). */
   style?: React.CSSProperties;
 }
@@ -76,6 +85,7 @@ export function CourseCard({
   photo,
   title,
   pct,
+  eyebrow,
   ctaLabel,
   onCta,
   ctaHref,
@@ -176,13 +186,17 @@ export function CourseCard({
           </>
         )}
 
+        {share === undefined && eyebrow ? (
+          <span className="eyebrow text-course-accent">{eyebrow}</span>
+        ) : null}
+
         {/* The name sits under the figure where there is one, and at the top of the card where
             there is not — a locked course has no figure to stand under, and an unnamed picture is
             a card about nothing. */}
         <p
           className={clsx(
             'text-[15px] leading-tight text-course-accent',
-            share === undefined ? null : 'mt-2',
+            share === undefined && !eyebrow ? null : 'mt-2',
           )}
         >
           {title}

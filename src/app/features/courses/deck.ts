@@ -29,7 +29,13 @@ export type DeckEntry =
       /** The day to open next, or null once the course is finished. */
       next: CourseNode | null;
     }
-  | { kind: 'locked'; key: string; course: Course };
+  /**
+   * Курс, который не куплен, но открыт для пробы: первая тренировка бесплатна (0019).
+   *
+   * Отдельный вид, а не `locked` с флагом, потому что карточка у него другая по смыслу: она ведёт
+   * внутрь приложения, а не на сайт, и обещает конкретную вещь вместо «Подробнее».
+   */
+  | { kind: 'preview'; key: string; course: Course; spent: boolean };
 
 export interface DeckInput {
   courses: readonly Course[];
@@ -38,6 +44,8 @@ export interface DeckInput {
   states: Readonly<Record<string, PathState | null | undefined>>;
   /** The course being followed; it leads the list when it is owned. */
   activeCourseId?: string | null;
+  /** Курсы, где проба уже потрачена (`my_trained_courses()`). */
+  trainedCourseIds?: readonly string[];
 }
 
 export function buildDeck({
@@ -45,6 +53,7 @@ export function buildDeck({
   entitlements,
   states,
   activeCourseId,
+  trainedCourseIds = [],
 }: DeckInput): DeckEntry[] {
   const owned = courses.filter((c) => entitlements.includes(c.id));
   const locked = courses.filter((c) => !entitlements.includes(c.id));
@@ -64,8 +73,19 @@ export function buildDeck({
     };
   });
 
+  /*
+   * Некупленные курсы больше не тупик: у каждого есть бесплатная первая тренировка, и карточка
+   * ведёт на путь курса, а не на сайт. `spent` отличает того, кто её уже сделал, — ему обещать
+   * «бесплатно» нельзя, и кнопка у него сразу про цену.
+   */
+  const spent = new Set(trainedCourseIds);
   for (const course of locked) {
-    entries.push({ kind: 'locked', key: `locked:${course.id}`, course });
+    entries.push({
+      kind: 'preview',
+      key: `preview:${course.id}`,
+      course,
+      spent: spent.has(course.id),
+    });
   }
 
   return entries;

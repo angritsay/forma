@@ -827,6 +827,16 @@ not here. The same rule covers `content/site/booking.ts`, where the coach's hour
 
 ### 7.2 Activating
 
+Since migration 0019 this is **automatic**: the Prodamus webhook calls `apply_course_payment()`,
+which finds the buyer's single `pending` purchase and switches it to `active`. The manual flow below
+is the fallback, and it is still needed for a payment that arrived without an order (a bank
+transfer, a gift) or for an address with several pending orders — in both cases the webhook logs the
+payment and changes nothing.
+
+Two secrets have to be set in Supabase for any of it to run: `WEBHOOK_TOKEN` and `PRODAMUS_SECRET`.
+Without them the function refuses every delivery, and course activation silently stays manual.
+Check with Actions → Supabase apply → `secrets-check`.
+
 When money arrives:
 
 1. Sign in to the app with the coach's admin email → **Profile → Admin** (`/app/#/admin`).

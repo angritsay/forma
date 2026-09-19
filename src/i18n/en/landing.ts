@@ -52,6 +52,8 @@ export const landing = {
   heroTitle: 'Home CrossFit that adapts to you',
   // One line under the headline; the facts it used to carry are the pills below it.
   heroSubtitle: 'Courses for home training, with or without equipment — the load adapts to you.',
+  // The home page’s main button: not “look” but “do”.
+  heroCtaFree: 'Train for free',
   heroCtaCourses: 'Choose a course',
   heroCtaApp: 'Open app',
   heroTileTop: 'Adaptive load',
@@ -190,9 +192,13 @@ export const landing = {
   courseWeek: 'Week {n}',
   courseDay: 'Day {n}',
   courseDeload: 'Deload',
-  courseSampleTitle: 'Sample workout',
+  // This block was a shop window. Now it is an invitation: the same workout, except it can be
+  // done rather than only read.
+  courseSampleTitle: 'The first workout is free',
   courseSampleIntro:
-    'The first workout of the course, as in the app, before it is scaled to your level.',
+    'Here it is in full — as in the app, before it is scaled to your level. You can do it right now, no card and no payment.',
+  courseSampleCta: 'Do it in the app',
+  courseFreeFirst: 'First workout free',
   courseAdaptTitle: 'How the app adapts',
   courseAdaptText:
     'Before a workout you choose Easier, As usual or Harder. Afterwards you rate the effort from 1 to 10 and the next load shifts.',

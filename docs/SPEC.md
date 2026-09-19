@@ -309,6 +309,20 @@ Tables (all with RLS enabled):
   course id, upserts pending). Users read their own via view `my_entitlements` (`course_id`,
   `activated_at`) filtered by `lower(email) = lower(auth.email())` and `status = 'active'`.
   Admins (`admins(email)` table + `is_admin()`) read/update all.
+- **Free first workout (0019).** `workout_sessions` accepts an insert for a course the caller does
+  not own while `can_try_course(course_id)` holds — that is, while they have no _completed_ session
+  in it. One free workout per course, spent by finishing it rather than by starting it. The client
+  is stricter than the policy: only the **first trainable node** is offered, because the database
+  does not know the order of nodes (`src/app/features/courses/courseAccess.ts`).
+  `my_trained_courses()` is how the app knows which trials are spent — `recentSessions` is a window
+  of twenty and cannot answer it.
+- **Course activation is automatic (0019).** `apply_course_payment(email, provider_ref, paid_at,
+course_id?)` is called by `prodamus-webhook` for any amount that is not a plan. It resolves the
+  course from the caller's single `pending` purchase rather than from the amount — short Prodamus
+  links drop query parameters, so the course id cannot travel with the payment — and answers null
+  when that is ambiguous, leaving the row for the coach. `purchases.provider_ref` makes a
+  re-delivered notification idempotent. `content/site/plans.test.ts` guards that no course price
+  equals a plan price, which would otherwise route a course payment to the subscription branch.
 - `user_course_state` (`user_id`, `course_id`, `scale numeric`, `current_node_index int`,
   `completed_node_ids text[]`, `updated_at`), pk `(user_id, course_id)`. Own rows.
 - `workout_sessions` (`id uuid`, `user_id`, `course_id`, `node_id`, `workout_id`, `difficulty text`,
@@ -386,6 +400,11 @@ was ever linked or bookmarked broke:
 
 Gone with the four-tab shell: `/` as «Сегодня», `/stats` («Прогресс»), `/profile` (a sheet behind
 the avatar now) and `/marathon/points` («Мои баллы»).
+
+**The first workout of every course is free** — once per course, and spent by finishing it. It is
+not part of the offer (terms §2): no contract exists until the course is paid for. The unlock lives
+where the person is, on the summary screen of that workout, and pays through the same
+`create_order()` → Prodamus path the site form uses; the purchase then activates itself.
 
 Products: a **course** is bought once and kept forever (`purchases`); a **subscription**
 (`subscriptions`, monthly or annual) lists every course through `my_entitlements` while its paid

@@ -35,7 +35,7 @@ import { useT } from '@/app/hooks/useT';
 import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { AssessmentBanner } from '@/app/features/assessment/AssessmentBanner';
 import { CourseCard } from '@/app/features/courses/CourseCard';
-import { courseAccentVars, courseLandingHref } from '@/app/features/courses/courseMeta';
+import { courseAccentVars } from '@/app/features/courses/courseMeta';
 import { buildDeck } from '@/app/features/courses/deck';
 import { CoursesHead } from '@/app/features/courses/CoursesHead';
 import { greetingName } from '@/app/features/home/greeting';
@@ -48,10 +48,12 @@ import {
   useActiveCourseId,
   useProgress,
   useProgressLoader,
+  useTrainedCourseIds,
   useTrainingCount,
   useTodayIso,
 } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
+import { formatPrice } from '@content/site/pricing';
 
 /**
  * Which photograph a course card gets when the course has no cover of its own.
@@ -80,6 +82,7 @@ export default function CoursesScreen() {
   const profile = useSession((s) => s.profile);
   const user = useSession((s) => s.user);
   const entitlements = useSession((s) => s.entitlements);
+  const trained = useTrainedCourseIds();
   const status = useProgress((s) => s.status);
   const loading = useProgress((s) => s.loading);
   const error = useProgress((s) => s.error);
@@ -135,11 +138,17 @@ export default function CoursesScreen() {
 
   const entries = useMemo(
     () =>
-      buildDeck({ courses, entitlements, states: courseStates, activeCourseId }).filter(
+      buildDeck({
+        courses,
+        entitlements,
+        states: courseStates,
+        activeCourseId,
+        trainedCourseIds: trained,
+      }).filter(
         // A course that is neither owned nor on sale has nothing to show and nowhere to lead.
-        (entry) => entry.kind !== 'locked' || HAS_PAGE.has(entry.course.id),
+        (entry) => entry.kind !== 'preview' || HAS_PAGE.has(entry.course.id),
       ),
-    [courses, entitlements, courseStates, activeCourseId],
+    [courses, entitlements, courseStates, activeCourseId, trained],
   );
 
   const refresh = useCallback(async () => {
@@ -226,20 +235,34 @@ export default function CoursesScreen() {
             const { course } = entry;
             const title = l(courseTitle(course));
 
-            if (entry.kind === 'locked') {
+            if (entry.kind === 'preview') {
+              /*
+               * Курс, которого у человека нет, — но он больше не тупик.
+               *
+               * Карточка была тусклой и вела «Подробнее» на сайт: приложение отправляло человека
+               * читать описание вместо того, чтобы дать попробовать. Теперь она ведёт на путь
+               * курса, где первая тренировка открыта, и не приглушена — приглушённость говорила
+               * «сюда нельзя», а сюда как раз можно.
+               *
+               * Потратившему пробу «бесплатно» не обещают: у него та же карточка, но подпись и
+               * кнопка сразу про цену.
+               */
               return (
                 <li key={entry.key}>
                   <CourseCard
                     photo={photo}
                     priority={priority}
-                    dimmed
                     style={courseAccentVars(course.tile)}
                     title={title}
-                    /* «Подробнее», and it leaves for the course's own page. It used to say
-                       «Прийти» or «Курс закрыт» — neither of which says what happens next. */
-                    ctaLabel={t('app.coursesMore')}
-                    ctaHref={courseLandingHref(locale, course)}
-                    openLabel={`${title} — ${t('app.coursesMore')}`}
+                    eyebrow={entry.spent ? undefined : t('app.coursesFreeBadge')}
+                    ctaLabel={
+                      entry.spent
+                        ? t('app.coursesUnlock', { price: formatPrice(locale, course.price) })
+                        : t('app.coursesTryFree')
+                    }
+                    onCta={() => navigate(`/courses/${course.id}`)}
+                    onOpen={() => navigate(`/courses/${course.id}`)}
+                    openLabel={`${title} — ${t('app.coursesTryFree')}`}
                   />
                 </li>
               );

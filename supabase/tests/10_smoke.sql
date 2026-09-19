@@ -362,12 +362,20 @@ do $$ declare v_sid uuid; v_err text; begin
   exception when check_violation then null;
   end;
 
-  -- session for a course ann does not own
+  -- Session for a course ann does not own.
+  --
+  -- Blocked outright until 0019; now the first one is the free workout, and what
+  -- is blocked is the *second*. The full rule lives in 80_free_first_workout.sql;
+  -- what this suite keeps is the pair of facts that used to be one.
+  assert public.can_try_course('kettlebell'), 'the first workout of an unowned course is free (0019)';
   begin
+    insert into public.workout_sessions (user_id, course_id, node_id, workout_id, local_date, completed_at)
+      values ('00000000-0000-0000-0000-00000000000a', 'kettlebell', 'n1', 'w_test', current_date, now());
+    assert not public.can_try_course('kettlebell'), 'and finishing it spends the trial';
     insert into public.workout_sessions (user_id, course_id, node_id, workout_id, local_date)
-      values ('00000000-0000-0000-0000-00000000000a', 'kettlebell', 'n1', 'w_test', current_date);
+      values ('00000000-0000-0000-0000-00000000000a', 'kettlebell', 'n2', 'w_test', current_date);
     raise exception 'should have failed';
-  exception when others then assert sqlstate = '42501', 'session without entitlement blocked, got ' || sqlstate;
+  exception when others then assert sqlstate = '42501', 'the second is blocked, got ' || sqlstate;
   end;
 
   -- started_at / completed_at always come from the server clock

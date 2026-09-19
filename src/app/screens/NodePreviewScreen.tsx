@@ -43,8 +43,13 @@ import { toLocalDateIso } from '@/lib/util/dates';
 import { TopBar } from '@/app/components/TopBar';
 import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { useT } from '@/app/hooks/useT';
-import { courseAccentVars, courseLandingHref } from '@/app/features/courses/courseMeta';
-import { LinkButton } from '@/app/features/courses/LinkButton';
+import { courseAccentVars } from '@/app/features/courses/courseMeta';
+import {
+  firstTrainableNode,
+  hasCompletedIn,
+  nodeAccess,
+} from '@/app/features/courses/courseAccess';
+import { UnlockSheet } from '@/app/features/courses/UnlockSheet';
 import {
   estimateSession,
   sessionPills,
@@ -64,6 +69,7 @@ import {
   useEngineCourseState,
   useProgress,
   useProgressLoader,
+  useTrainedCourseIds,
 } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
 
@@ -84,6 +90,10 @@ export default function NodePreviewScreen() {
     course && node?.workoutId ? course.workouts.find((w) => w.id === node.workoutId) : undefined;
 
   const entitlements = useSession((s) => s.entitlements);
+  const trained = useTrainedCourseIds();
+  const [unlockOpen, setUnlockOpen] = useState(false);
+  const owned = entitlements.includes(id ?? '');
+  const hasCompleted = hasCompletedIn(trained, id ?? '');
   const status = useProgress((s) => s.status);
   const row = useCourseStateRow(course?.id);
   const engineState = useEngineCourseState(course?.id ?? '');
@@ -134,18 +144,48 @@ export default function NodePreviewScreen() {
       </Screen>
     );
   }
-  if (!entitlements.includes(course.id)) {
+  /*
+   * Заперт оплатой — но не выпровожен на сайт.
+   *
+   * Раньше здесь стоял тупик со ссылкой на страницу курса: человек уходил из приложения ровно в тот
+   * момент, когда был к покупке ближе всего, и возвращался через форму, где надо заново вписать
+   * почту, которую приложение и так знает. Теперь цена открывается здесь же.
+   */
+  if (nodeAccess({ owned, hasCompleted, course, node }) === 'paywalled') {
+    /*
+     * Два разных человека упираются в этот экран, и предлагать им одно и то же нельзя.
+     *
+     * Первый ещё не тратил пробу — он просто открыл день двадцатый, ссылкой или любопытством. Ему
+     * есть что дать бесплатно, и продавать ему сейчас значит брать деньги за то, что он не
+     * пробовал. Его ведут к первой тренировке.
+     *
+     * Второй свою тренировку сделал и знает, о чём речь. Ему — цена.
+     *
+     * Текст «Первая тренировка была бесплатной» до этой правки показывался обоим, и первому он
+     * сообщал о событии, которого не было.
+     */
+    const firstFree = !hasCompleted ? firstTrainableNode(course) : null;
     return (
-      <Screen header={<TopBar back="/courses" title={l(courseTitle(course))} />}>
+      <Screen header={<TopBar back={`/courses/${course.id}`} title={l(courseTitle(course))} />}>
         <EmptyState
           title={t('app.pathNotOwnedTitle')}
-          description={t('app.pathNotOwnedBody')}
+          description={firstFree ? t('app.pathTrialLeftBody') : t('app.pathNotOwnedBody')}
           action={
-            <LinkButton href={courseLandingHref(locale, course)}>
-              {t('app.pathNotOwnedCta')}
-            </LinkButton>
+            firstFree ? (
+              <Button
+                size="lg"
+                onClick={() => navigate(`/courses/${course.id}/nodes/${firstFree.id}`)}
+              >
+                {t('app.pathTrialLeftCta')}
+              </Button>
+            ) : (
+              <Button size="lg" onClick={() => setUnlockOpen(true)}>
+                {t('app.unlockTitle')}
+              </Button>
+            )
           }
         />
+        <UnlockSheet open={unlockOpen} course={course} onClose={() => setUnlockOpen(false)} />
       </Screen>
     );
   }

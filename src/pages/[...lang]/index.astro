@@ -138,11 +138,20 @@ const jsonLd = [
 ---
 
 <Landing locale={locale} title={title} description={description} sitePath="/" jsonLd={jsonLd}>
+  {
+    /*
+    Первая кнопка ведёт в приложение, а не в каталог, и это не косметика.
+
+    «Выбрать курс» предлагала решать по описанию. Теперь первая тренировка бесплатна, и самое
+    сильное, что можно предложить с главной, — сделать её. Каталог остаётся второй кнопкой для тех,
+    кто пришёл сравнивать, а не пробовать.
+  */
+  }
   <Hero
     title={t(locale, 'landing.heroTitle')}
     subtitle={t(locale, 'landing.heroSubtitle')}
-    primary={{ label: t(locale, 'landing.heroCtaCourses'), href: href(locale, '/courses/') }}
-    secondary={{ label: t(locale, 'landing.heroCtaApp'), href: appHref() }}
+    primary={{ label: t(locale, 'landing.heroCtaFree'), href: appHref() }}
+    secondary={{ label: t(locale, 'landing.heroCtaCourses'), href: href(locale, '/courses/') }}
     chips={chips}
     figure={{ exerciseId: 'burpee' }}
     photo={heroPhoto}
