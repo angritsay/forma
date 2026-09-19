@@ -1,13 +1,16 @@
-import { DisplayTitle } from '@/app/features/home/DisplayTitle';
-
 /**
  * The one line a step is allowed: its question, in the display face.
  *
  * Every step used to open with a `PageTitle` — a heading at 600 and a lead under it that restated
- * the heading in a sentence («Какое оборудование есть?» / «Отметь всё, что есть дома»). The owner's
- * prototype (`design/ui_kits/app-v2`) asks its one question the way «НАСКОЛЬКО тяжело сегодня?» is
- * asked: the first word at 800, the rest at 200, and then the answers. So the lead is gone, and
- * the question takes the brand's device instead of a subtitle.
+ * the heading in a sentence («Какое оборудование есть?» / «Отметь всё, что есть дома»). The lead is
+ * gone; the question is the screen.
+ *
+ * **One weight, not two.** It was set with the brand's device — first word at 800, the rest at 200,
+ * as «ПРИСЕД без боли» is set — and the owner asked for the emphasis off («убери выделение в
+ * заголовке»). The device belongs to a line that makes a claim; a form asking «Сколько тебе лет?»
+ * makes none, and splitting it put the weight on «Сколько», which is not the word that matters. So
+ * the whole question sits at 200: the same light half the line already had, now all of it. That is
+ * also why `DisplayTitle` is no longer used here — it *is* the split.
  *
  * 28px rather than the 30px `PageTitle` used. The original reason was that Unbounded capitals are
  * wide; the capitals have since gone (PR #93) and the size stays anyway, because the constraint
@@ -28,5 +31,7 @@ import { DisplayTitle } from '@/app/features/home/DisplayTitle';
 export function Question({ text }: { text: string }) {
   // 1.08 → 1.2: every question wraps to two lines and 1.08 was drawn for capitals, which have
   // no descenders. The measurement is in global.css's type-scale comment.
-  return <DisplayTitle as="h1" text={text} className="hyphens-none text-[28px] leading-[1.2]" />;
+  return (
+    <h1 className="display t-thin hyphens-none text-[28px] leading-[1.2] text-balance">{text}</h1>
+  );
 }

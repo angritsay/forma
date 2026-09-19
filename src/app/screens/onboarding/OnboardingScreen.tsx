@@ -15,8 +15,8 @@
  * Each step is one question in the display face and its answers as plates, a field or a slider,
  * and nothing else — the owner's prototype (`design/ui_kits/app-v2`) is the measure, and
  * design/CHANGELOG.md §10 records why the leads, kickers and descriptions went. The footer keeps
- * the one primary button; «Выйти» on the first step is the way out for a wrong account and stays
- * as quiet type.
+ * the one primary button and nothing else; the way out for a wrong account is the icon in the
+ * header's left slot, on the first step.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
@@ -203,12 +203,27 @@ export default function OnboardingScreen() {
          * from the other edge — three different verticals in one row. Now the row takes the
          * content gutter, the back button is pulled out by exactly its own padding so the mark
          * lands on that gutter, and the numeral ends on it: the chevron, the rule's two ends and
-         * the pair all measure from the same two lines. `h-14` with `items-center` puts the 4px
-         * rule on the same centre line as the 14px numerals.
+         * the pair all measure from the same two lines. `h-14` with `items-center` puts the rule
+         * on the same centre line as the 14px numerals.
+         *
+         * The rule is `size="sm"` — 2px rather than 4. At 4px beside a 36px button and 14px
+         * numerals it read as a bar with a job of its own; halved, it is what it is meant to be,
+         * a measure of how far along you are, and the row quietens down around the numerals.
          */
         <div className="flex h-14 items-center gap-3 px-6">
           {/* 36px button, a 16px mark, so 10px of padding — and exactly 10px of negative margin
               back, which puts the mark on the 24px gutter the content below it uses. */}
+          {/*
+           * One slot, two jobs, and never both at once: the way back on every step after the
+           * first, the way out on the first — where there is nothing to go back to and the slot
+           * would otherwise stand empty.
+           *
+           * «Выйти» used to sit under «Далее» as quiet type, and the owner moved it here («убери
+           * кнопку выйти и поставь ее в левый верхний угол вместо стрелки назад, сделай иконку
+           * выхода»). It is the better place for it: signing out is not a step of the wizard, and
+           * a text button in the footer reads as one — the eye takes the two stacked buttons as
+           * «Далее» and its alternative, which sign-out is not.
+           */}
           <div className="-ml-2.5 flex w-9 shrink-0 items-center">
             {stepIndex > 0 ? (
               <IconButton
@@ -218,11 +233,20 @@ export default function OnboardingScreen() {
                 size="sm"
                 onClick={back}
               />
-            ) : null}
+            ) : (
+              <IconButton
+                label={t('app.authSignOut')}
+                icon="logout"
+                variant="ghost"
+                size="sm"
+                onClick={() => void signOut()}
+              />
+            )}
           </div>
           <ProgressBar
             value={(stepIndex + 1) / total}
             tone="primary"
+            size="sm"
             label={t('app.onbStepOf', { n: stepIndex + 1, total })}
             className="flex-1"
           />
@@ -233,7 +257,7 @@ export default function OnboardingScreen() {
         </div>
       }
       footer={
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col">
           {/*
            * «Далее», not «Продолжить» (the designer's note): a wizard moves forward through
            * questions, and «Продолжить» is what you press to resume something you stopped. The
@@ -254,11 +278,6 @@ export default function OnboardingScreen() {
               {t('app.onbNext')}
             </Button>
           )}
-          {stepIndex === 0 ? (
-            <Button variant="ghost" fullWidth onClick={() => void signOut()}>
-              {t('app.authSignOut')}
-            </Button>
-          ) : null}
         </div>
       }
     >

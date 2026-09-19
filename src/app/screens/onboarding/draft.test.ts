@@ -120,6 +120,49 @@ describe('isStepComplete / firstIncompleteStep', () => {
     expect(isStepComplete({ ...emptyDraft(), healthConsent: true }, 'limitations')).toBe(false);
   });
 
+  /*
+   * «Другое» is an answer like any plate — and an open field with nothing written in it is not
+   * one. The empty case is the one worth writing down: pressing the plate must not complete the
+   * step on its own, or somebody taps it, writes nothing, and hands the coach a blank note.
+   */
+  it('treats a written «Другое» as an answer and an empty one as nothing', () => {
+    const base = { ...emptyDraft(), healthConsent: true };
+    expect(isStepComplete({ ...base, limitationsOtherOn: true }, 'limitations')).toBe(false);
+    expect(
+      isStepComplete({ ...base, limitationsOtherOn: true, limitationsOther: '   ' }, 'limitations'),
+    ).toBe(false);
+    expect(
+      isStepComplete({ ...base, limitationsOtherOn: true, limitationsOther: 'шея' }, 'limitations'),
+    ).toBe(true);
+    // Written, then the plate closed again: the text is no longer being offered, so it is not an
+    // answer — and `limitationNote` agrees, which is what keeps it off the profile.
+    expect(
+      isStepComplete(
+        { ...base, limitationsOtherOn: false, limitationsOther: 'шея' },
+        'limitations',
+      ),
+    ).toBe(false);
+    // It needs the same consent a plate does, because it is the same kind of data.
+    expect(
+      isStepComplete(
+        { ...emptyDraft(), limitationsOtherOn: true, limitationsOther: 'шея' },
+        'limitations',
+      ),
+    ).toBe(false);
+  });
+
+  it('carries the written note onto the profile, and nothing when there is none', () => {
+    const d = { ...completeDraft(), limitationsOtherOn: true, limitationsOther: '  шея  ' };
+    expect(draftToTrainingProfile(d)!.limitationsNote).toBe('шея');
+    // The key is absent rather than empty: a profile should not say "told us about their health"
+    // with nothing behind it.
+    expect(draftToTrainingProfile(completeDraft())).not.toHaveProperty('limitationsNote');
+    // «Ничего, всё в порядке» wins over anything left in the field.
+    expect(draftToTrainingProfile({ ...d, limitationsNone: true })).not.toHaveProperty(
+      'limitationsNote',
+    );
+  });
+
   it('rejects a blank name and stops at the last step when everything is answered', () => {
     expect(isStepComplete({ ...completeDraft(), displayName: '   ' }, 'name')).toBe(false);
     expect(isDraftComplete(completeDraft())).toBe(true);
