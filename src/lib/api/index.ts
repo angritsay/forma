@@ -13,6 +13,7 @@ export * from './sessions';
 export * from './benchmarks';
 export * from './leaderboard';
 export * from './stats';
+export * from './claims';
 export * from './orders';
 export * from './subscriptions';
 export * from './coachBookings';

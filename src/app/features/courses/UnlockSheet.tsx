@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ClaimSheet } from '@/app/features/payments/ClaimSheet';
 import { Button } from '@/components/ui/Button';
 import { Sheet } from '@/components/ui/Sheet';
 import { useToast } from '@/components/ui/Toast';
@@ -46,6 +47,7 @@ export function UnlockSheet({ open, course, onClose }: UnlockSheetProps) {
   const user = useSession((s) => s.user);
   const [busy, setBusy] = useState(false);
   const [ordered, setOrdered] = useState<'idle' | 'ok' | 'failed'>('idle');
+  const [claiming, setClaiming] = useState(false);
 
   const email = (profile?.email || user?.email || '').trim().toLowerCase();
   const payment = paymentTarget(course?.paymentUrl?.[locale] ?? course?.paymentUrl?.ru);
@@ -97,7 +99,22 @@ export function UnlockSheet({ open, course, onClose }: UnlockSheetProps) {
         <p className="text-[13px] leading-snug text-muted-2">
           {ordered === 'failed' ? t('app.unlockNoteManual') : t('app.unlockNote', { email })}
         </p>
+
+        {/*
+         * Для того, кто уже заплатил и вернулся к тому же замку. Оплата ищется по почте, а почту
+         * плательщика задаёт не приложение (короткая ссылка Prodamus теряет `?customer_email=`),
+         * так что разойтись адреса могут у кого угодно — и без этой строчки человек с оплаченным
+         * курсом видит только предложение купить его ещё раз.
+         */}
+        <button
+          type="button"
+          onClick={() => setClaiming(true)}
+          className="self-start text-[13px] text-muted underline underline-offset-4"
+        >
+          {t('app.claimLink')}
+        </button>
       </div>
+      <ClaimSheet open={claiming} onClose={() => setClaiming(false)} />
     </Sheet>
   );
 }
