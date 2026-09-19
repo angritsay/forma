@@ -31,6 +31,7 @@ visible to customers until replaced.
 | Site URL + base path               | `.env` and GitHub repo variables                 | §6                                                                                                                                                                                                                                                                                         |
 | Coach admin email                  | `public.admins` table                            | §4                                                                                                                                                                                                                                                                                         |
 | The bot's answer to `/start`       | **Actions → Supabase apply → `deploy-bot`**      | One button. It deploys the function, sets its secrets and calls `setWebhook`, then reads the hook back and prints what Telegram believes. Needs the repository secret `TELEGRAM_BOT_TOKEN`. §7.6                                                                                           |
+| Payments reaching the app          | **Actions → Supabase apply → `deploy-payments`** | **Outstanding.** Two secrets in Supabase (`WEBHOOK_TOKEN`, `PRODAMUS_SECRET`), then this button, then the notification URL in Prodamus. Until all three are done the function refuses every notification and no payment activates anything. §7.4                                           |
 | Email sender (SMTP)                | Dashboard → Project Settings → Authentication    | §3                                                                                                                                                                                                                                                                                         |
 | Analytics / verification ids       | `.env` / repo variables (`PUBLIC_*`)             | Optional; rendered only when set                                                                                                                                                                                                                                                           |
 | IndexNow key                       | GitHub repo secret `INDEXNOW_KEY`                | Optional; see docs/SEO.md                                                                                                                                                                                                                                                                  |
@@ -883,16 +884,25 @@ period by hand) or automatically by the webhook below. A subscription lists ever
 **Webhook (`supabase/functions/prodamus-webhook`)** — activates and extends subscriptions from
 Prodamus notifications, so nobody has to press anything:
 
-1. `supabase functions deploy prodamus-webhook --no-verify-jwt`
-2. `supabase secrets set WEBHOOK_TOKEN=<long random string> PRODAMUS_SECRET=<secret key from the
-Prodamus form settings>` — the token guards the URL, the secret verifies the `Sign` header.
-   Without `PRODAMUS_SECRET` the function still works on the token alone and logs a warning.
-3. In Prodamus, set the notification URL to
+1. **Set the two secrets.** Supabase → Project Settings → Edge Functions → Secrets:
+   `WEBHOOK_TOKEN` = a long random string you invent (`openssl rand -hex 16`), `PRODAMUS_SECRET` =
+   the secret key from the Prodamus account. The token guards the URL; the secret verifies the
+   `Sign` header. **Both are required** — the function fails closed and refuses every delivery
+   while either is missing (503 without the secret, 403 without the token), because a query-string
+   token alone is enough for a stranger to post `status=success` and grant themselves a year.
+   They can also be repository secrets of the same names, and step 2 carries them over.
+2. **Deploy it.** Actions → Supabase apply → task `deploy-payments`. It deploys the function with
+   `--no-verify-jwt` (Prodamus carries no Supabase token, so the platform must not check for one),
+   carries over the two secrets if GitHub has them, reads the secret names back, and then POSTs to
+   the live address expecting 403 — which proves the function itself answered. The equivalent from
+   a terminal is `supabase functions deploy prodamus-webhook --no-verify-jwt`.
+3. In Prodamus → «Настройки» → «Уведомления», set the notification URL to
    `https://<project-ref>.functions.supabase.co/prodamus-webhook?token=<WEBHOOK_TOKEN>`.
-4. Make one real payment and read the function logs: `ok: monthly for …` means the signature
-   matched and `apply_subscription_payment()` ran. A `signature mismatch` line means the
-   preparation Prodamus uses differs from `verify.ts` — nothing was activated; compare the
-   posted fields with the code and adjust once, or run on the token alone meanwhile.
+4. Make one real payment and read Supabase → Edge Functions → `prodamus-webhook` → Logs:
+   `ok: monthly for …` means the signature matched and `apply_subscription_payment()` ran.
+   `signature mismatch` means the preparation Prodamus uses differs from `verify.ts` — nothing was
+   activated; compare the posted fields with the code. `bad token` means the URL in Prodamus and
+   `WEBHOOK_TOKEN` disagree. `not configured` means `PRODAMUS_SECRET` is unset.
 
 The plan is recognised by the amount (`PLAN_MONTHLY_RUB` / `PLAN_ANNUAL_RUB` secrets override the
 defaults), so keep the Prodamus prices equal to `plans.ts`. Any other amount — a course, a
@@ -1157,13 +1167,16 @@ history.
 `.github/workflows/supabase-apply.yml` does the dashboard chores from a phone. **Actions → Supabase
 apply → Run workflow**, pick a task:
 
-| Task              | What it does                                                                              |
-| ----------------- | ----------------------------------------------------------------------------------------- |
-| `migration`       | Runs one file from `supabase/migrations/`. The second input is its bare filename.         |
-| `club-seed`       | Runs `supabase/seed-club-week.sql` — the club's test week and its invented cohort (§9.1). |
-| `club-join`       | Puts the real testers in that week, reading their addresses from a secret.                |
-| `email-templates` | Puts `supabase/templates/otp.html` into **both** Magic Link and Confirm signup (§3.2).    |
-| `deploy-bot`      | Deploys the `telegram-bot` function and sets its secrets (§7.6).                          |
+| Task              | What it does                                                                                |
+| ----------------- | ------------------------------------------------------------------------------------------- |
+| `migration`       | Runs one file from `supabase/migrations/`. The second input is its bare filename.           |
+| `club-seed`       | Runs `supabase/seed-club-week.sql` — the club's test week and its invented cohort (§9.1).   |
+| `club-join`       | Puts the real testers in that week, reading their addresses from a secret.                  |
+| `email-templates` | Puts `supabase/templates/otp.html` into **both** Magic Link and Confirm signup (§3.2).      |
+| `deploy-bot`      | Deploys the `telegram-bot` function and sets its secrets (§7.6).                            |
+| `deploy-payments` | Deploys `prodamus-webhook`, checks its two secrets and probes the live address (§7.4).      |
+| `secrets-check`   | Read-only: which function secrets Supabase has, which are missing, which override the repo. |
+| `webhook-info`    | Read-only: what Telegram itself believes about the bot's webhook, and why delivery failed.  |
 
 One secret makes it work: **`SUPABASE_ACCESS_TOKEN`** (Settings → Secrets and variables → Actions),
 a personal access token from <https://supabase.com/dashboard/account/tokens>. The project ref is

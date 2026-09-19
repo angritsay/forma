@@ -39,6 +39,7 @@ on:
           - club-join
           - email-templates
           - deploy-bot
+          - deploy-payments
           - secrets-check
           - webhook-info
       migration_file:
@@ -346,6 +347,109 @@ jobs:
           jq -r '.result | "url: \(.url)\npending: \(.pending_update_count)\nlast error: \(.last_error_message // "none")"' < /tmp/info.json
           echo
           echo "Open the bot in Telegram and press Start. It should answer with the greeting and a button."
+
+      # ---------------------------------------------------------------------
+      # deploy-payments — выкладывает функцию, которая принимает уведомления
+      # Prodamus, и проверяет её живым запросом.
+      #
+      # Зачем отдельная задача. Функция `prodamus-webhook` лежит в репозитории с
+      # самого начала, но задеплоить её было нечем: `deploy-bot` выкладывает
+      # только telegram-bot, а `supabase functions deploy` из документации
+      # требует терминала с установленным CLI. Владелец работает с телефона.
+      # Пока функции нет по адресу, Prodamus стучится в 404 и оплата не
+      # активирует ничего — молча, потому что Prodamus про это никому не
+      # сообщает.
+      #
+      # Два секрета функция читает сама: WEBHOOK_TOKEN (он же в адресе
+      # уведомления) и PRODAMUS_SECRET (им подписан каждый запрос Prodamus).
+      # Их можно задать двумя путями, и шаг поддерживает оба: положить
+      # одноимённые секреты в GitHub — тогда шаг перенесёт их в Supabase, как
+      # `deploy-bot` переносит токен бота, — либо вписать прямо в Supabase →
+      # Project Settings → Edge Functions → Secrets. Что бы ни выбрали, шаг
+      # читает список имён обратно и говорит, чего не хватает.
+      #
+      # Ни одно значение не печатается. Адрес уведомления выводится с
+      # <WEBHOOK_TOKEN> вместо токена: лог публичного репозитория — не то
+      # место, где может лежать половина пропуска к выдаче платного доступа.
+      # ---------------------------------------------------------------------
+      - name: Deploy the payment webhook and check it answers
+        if: ${{ inputs.task == 'deploy-payments' }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          PRODAMUS_SECRET: ${{ secrets.PRODAMUS_SECRET }}
+          WEBHOOK_TOKEN: ${{ secrets.WEBHOOK_TOKEN }}
+        run: |
+          # Не `set -e`: каждая ошибка разбирается явно и объясняется словами,
+          # а `grep`, ничего не нашедший, — это ответ «такого секрета нет».
+          set -uo pipefail
+          curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz \
+            | tar -xz -C /tmp
+
+          # --no-verify-jwt обязателен: Prodamus — сторонний сервис, он не
+          # предъявляет токен Supabase. Без этого флага платформа отвечает 401
+          # раньше, чем запрос доходит до кода функции.
+          if ! /tmp/supabase functions deploy prodamus-webhook --project-ref "$PROJECT_REF" --no-verify-jwt; then
+            echo "::error::Не удалось выложить prodamus-webhook. Обычно это просроченный SUPABASE_ACCESS_TOKEN или нет доступа к проекту."
+            exit 1
+          fi
+          echo "::notice::Функция prodamus-webhook выложена."
+
+          # Секреты из GitHub, если они там есть. Пусто — не ошибка: значит,
+          # их задают в дашборде Supabase, и это проверяется ниже.
+          args=()
+          if [ -n "${PRODAMUS_SECRET:-}" ]; then args+=(PRODAMUS_SECRET="$PRODAMUS_SECRET"); fi
+          if [ -n "${WEBHOOK_TOKEN:-}" ]; then args+=(WEBHOOK_TOKEN="$WEBHOOK_TOKEN"); fi
+          if [ "${#args[@]}" -gt 0 ]; then
+            if /tmp/supabase secrets set --project-ref "$PROJECT_REF" "${args[@]}" >/dev/null 2>&1; then
+              echo "Секреты из GitHub перенесены в Supabase (${#args[@]} шт., значения не печатаются)."
+            else
+              echo "::error::Не удалось записать секреты в Supabase."
+              exit 1
+            fi
+          fi
+
+          # Читаем имена обратно — что бы их ни задало, GitHub или дашборд.
+          missing=0
+          if /tmp/supabase secrets list --project-ref "$PROJECT_REF" >/tmp/raw.txt 2>/dev/null; then
+            grep -oE '[A-Z][A-Z0-9_]{2,}' /tmp/raw.txt | grep -vxE 'NAME|DIGEST' | sort -u > /tmp/have.txt || true
+            for name in WEBHOOK_TOKEN PRODAMUS_SECRET; do
+              if grep -qx -- "$name" /tmp/have.txt; then
+                echo "  ✓ $name"
+              else
+                missing=$((missing + 1))
+                if [ "$name" = "WEBHOOK_TOKEN" ]; then
+                  echo "::warning::WEBHOOK_TOKEN не задан — функция отклоняет любое уведомление с «bad token». Придумай его сама (например, openssl rand -hex 16) и впиши в Supabase → Project Settings → Edge Functions → Secrets; это же значение пойдёт в адрес уведомления в Prodamus."
+                else
+                  echo "::warning::PRODAMUS_SECRET не задан — функция отвечает 503 на всё (fail closed). Это секретный ключ из личного кабинета Prodamus, «Настройки» → «Интеграции»; впиши его в Supabase → Project Settings → Edge Functions → Secrets."
+                fi
+              fi
+            done
+          else
+            echo "::warning::Список секретов прочитать не удалось — проверь их глазами в дашборде Supabase."
+          fi
+
+          # Живая проверка. POST без токена должен получить 403 «bad token»:
+          # это доказывает, что функция по адресу есть и отвечает сама, а не
+          # платформа вместо неё. Ничего не пишется и ничего не выдаётся.
+          URL="https://$PROJECT_REF.functions.supabase.co/prodamus-webhook"
+          code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$URL" --data 'probe=1' || echo 000)
+          case "$code" in
+            403) echo "::notice::Функция отвечает по адресу (403 на запрос без токена — так и должно быть)." ;;
+            401) echo "::error::401 — платформа требует токен Supabase раньше функции. Деплой прошёл без --no-verify-jwt; запусти задачу ещё раз." ; exit 1 ;;
+            404) echo "::error::404 — по адресу ничего нет. Деплой не доехал; запусти задачу ещё раз." ; exit 1 ;;
+            000) echo "::warning::Адрес не ответил вовсе — сеть или проект недоступен." ;;
+            *)   echo "::warning::Неожиданный ответ $code. Смотри Supabase → Edge Functions → prodamus-webhook → Logs." ;;
+          esac
+
+          echo ""
+          echo "Адрес для Prodamus («Настройки» → «Уведомления» → URL для оповещений):"
+          echo "  $URL?token=<WEBHOOK_TOKEN>"
+          echo "Вместо <WEBHOOK_TOKEN> подставь само значение секрета. Сюда оно не печатается — репозиторий публичный."
+          if [ "$missing" -gt 0 ]; then
+            echo ""
+            echo "::error::Не задано секретов: $missing. Пока их нет, оплаты не активируют доступ."
+            exit 1
+          fi
 
       # ---------------------------------------------------------------------
       # secrets-check — which function secrets exist, and which are missing.
