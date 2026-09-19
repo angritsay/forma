@@ -42,6 +42,7 @@ on:
           - deploy-payments
           - secrets-check
           - webhook-info
+          - payments-check
       migration_file:
         description: 'Only for "migration": a filename in supabase/migrations/'
         required: false
@@ -543,6 +544,70 @@ jobs:
             echo "Всё, что нужно работающим функциям, на месте."
           else
             echo "Не задано: $missing. Задать: Supabase → Project Settings → Edge Functions → Secrets."
+          fi
+
+      # ---------------------------------------------------------------------
+      # payments-check — дошло ли хоть одно уведомление об оплате.
+      #
+      # Ответ на это живёт в логах Edge Function, а владелец работает с
+      # телефона, где их не почитать. Поэтому счётчики — из журнала `payments`
+      # (миграция 0020), запросом, который лежит в репозитории.
+      #
+      # **Печатаются только числа.** Запрос в supabase/queries/payments-check.sql
+      # возвращает одну строку из счётчиков, сумм и дат: ни почты, ни номера
+      # заказа, ни идентификатора. Это то же правило, по которому `migration`
+      # не печатает тело ответа, — страница запуска публична и остаётся навсегда.
+      # ---------------------------------------------------------------------
+      - name: Count what has arrived from the payment provider
+        if: ${{ inputs.task == 'payments-check' }}
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -uo pipefail
+          QUERY=supabase/queries/payments-check.sql
+          jq -Rs '{query: .}' < "$QUERY" > /tmp/body.json
+          code=$(curl -sS -o /tmp/out.json -w '%{http_code}' \
+            -X POST "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H 'Content-Type: application/json' \
+            --data-binary @/tmp/body.json)
+          if [ "$code" -ge 300 ]; then
+            echo "::error::Supabase ответил HTTP $code. Дальше — его собственный текст ошибки, не данные."
+            jq -r '.message // .error // "(без сообщения)"' < /tmp/out.json || true
+            echo "Если написано, что нет таблицы payments — значит миграция 0020_payment_emails.sql ещё не применена."
+            exit 1
+          fi
+
+          get() { jq -r ".[0].$1 // \"\"" < /tmp/out.json; }
+          total=$(get payments_total)
+          day=$(get payments_24h)
+          unclaimed=$(get payments_unclaimed)
+          last_at=$(get last_paid_at_utc)
+          last_amount=$(get last_amount)
+          last_intent=$(get last_intent)
+          last_applied=$(get last_applied)
+          subs=$(get subscriptions_live)
+          pending=$(get orders_pending)
+          active=$(get purchases_active)
+          linked=$(get linked_payment_emails)
+
+          echo "Уведомлений об оплате записано всего: ${total:-?}, за сутки: ${day:-?}"
+          echo "Живых подписок: ${subs:-?} · оплаченных курсов: ${active:-?} · ожидающих заказов: ${pending:-?}"
+          echo "Привязанных платёжных адресов: ${linked:-?}"
+
+          if [ "${total:-0}" = "0" ]; then
+            echo "::warning::Ни одного уведомления не записано. Это значит одно из двух: Prodamus не звонил вовсе, либо звонил и был отвергнут на входе — с неверным токеном или несошедшейся подписью функция отвечает 403 и ничего не сохраняет. Что именно — видно в кабинете Prodamus: у каждого платежа есть статус отправки уведомления и ответ, который он получил."
+          else
+            echo ""
+            echo "Последнее уведомление: $last_at UTC, сумма ${last_amount:-?}, распознано как ${last_intent:-?}"
+            if [ "$last_applied" = "true" ]; then
+              echo "::notice::Оно привязалось к заказу и доступ выдан."
+            else
+              echo "::warning::Оно НЕ привязалось: на эту почту не нашлось ни подписки, ни единственного ожидающего заказа. Такой платёж забирается в приложении — «Оплатил(а) с другой почты?» и номер заказа из чека."
+            fi
+            if [ "${unclaimed:-0}" != "0" ]; then
+              echo "::warning::Платежей ждёт, пока их заберут: $unclaimed"
+            fi
           fi
 
       # ---------------------------------------------------------------------
