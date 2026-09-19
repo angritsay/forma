@@ -198,6 +198,25 @@ export const app = {
   pathMilestoneDone: 'Milestone reached',
   pathMilestoneMark: 'Mark as reached',
   pathSaveError: 'Couldn’t save. Check the connection and try again.',
+  // --- The first workout is free (0019) --------------------------------------
+  // The promise is short and checkable: one workout, no card. Anything longer goes unread, and
+  // anything vaguer ("try the course") promises more than is given.
+  coursesFreeBadge: 'First workout free',
+  coursesTryFree: 'Try it',
+  coursesUnlock: 'Unlock the course — {price}',
+  unlockCardEyebrow: 'That was the first workout',
+  unlockCardTitle: 'The rest of the course',
+  unlockCardBody:
+    'The workouts in order, each one fitted to your level by how this one went. One payment, yours for good.',
+  unlockTitle: 'Unlock the course',
+  unlockBody:
+    'The first workout of “{course}” was free. The rest is the whole course: the workouts in order, adapted to your level. One payment, yours for good.',
+  unlockCta: 'Go to payment',
+  unlockNote: 'The course opens for {email} — the address you signed in with.',
+  unlockNoteManual:
+    'The order was not recorded — you can still pay, but the coach opens access by hand. Usually the same day.',
+  unlockNoPayment: 'Payment for this course is not connected yet. Write to us and we will open it.',
+  pathPaywalledToast: 'The rest comes with the subscription, or with the course',
   pathNotOwnedTitle: 'You don’t have this course yet',
   pathNotOwnedBody:
     'Open it from the course page. After you pay, Sergey switches it on for your email — usually the same day.',

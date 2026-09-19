@@ -17,6 +17,30 @@ import type { CompleteSessionInput, StartSessionInput, WorkoutSessionRow } from 
 
 const TABLE = 'workout_sessions';
 
+/**
+ * Курсы, где есть хотя бы одна завершённая тренировка (RPC `my_trained_courses`, 0019).
+ *
+ * Отдельным вызовом, а не выводом из `listRecentSessions`, потому что там окно из двадцати
+ * последних записей: проба, сделанная месяц назад, из него выпадает, и экран предложил бы
+ * бесплатную тренировку там, где политика во вставке откажет.
+ *
+ * Пустой массив, когда ответить нельзя (база без 0019, обрыв связи). Это безопасное направление:
+ * курс выглядит непройденным, человек нажимает «Начать» и получает честную ошибку — вместо того
+ * чтобы курс молча выглядел закрытым для того, у кого проба цела.
+ */
+export async function listTrainedCourses(): Promise<string[]> {
+  if (isDemo()) return (await demo()).listTrainedCourses();
+  try {
+    return await guard(async () => {
+      await requireUser();
+      const rows = unwrap<string[]>(await supabase().rpc('my_trained_courses'));
+      return Array.isArray(rows) ? rows : [];
+    });
+  } catch {
+    return [];
+  }
+}
+
 /** Insert a started session and return its id (store it with the local player state). */
 export async function startSession(input: StartSessionInput): Promise<{ id: string }> {
   if (isDemo()) return (await demo()).startSession(input);

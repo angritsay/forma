@@ -409,6 +409,19 @@ export async function upsertCourseState(
 
 // --- workout sessions -------------------------------------------------------
 
+/** Курсы с хотя бы одной завершённой тренировкой — демо-двойник `my_trained_courses()`. */
+export async function listTrainedCourses(): Promise<string[]> {
+  return run(() => {
+    const user = requireDemoUser();
+    const db = readDb();
+    const ids = new Set<string>();
+    for (const s of db.sessions) {
+      if (s.user_id === user.id && s.completed_at) ids.add(s.course_id);
+    }
+    return [...ids];
+  });
+}
+
 export async function startSession(input: StartSessionInput): Promise<{ id: string }> {
   return run(() => {
     assertLocalDate(input.localDate, 'local_date');

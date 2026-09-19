@@ -34,7 +34,7 @@ describe('buildDeck', () => {
       states: {},
       activeCourseId: 'b',
     });
-    expect(deck.map((d) => d.key)).toEqual(['course:b', 'course:a', 'locked:c']);
+    expect(deck.map((d) => d.key)).toEqual(['course:b', 'course:a', 'preview:c']);
   });
 
   it('keeps the catalogue order when nothing is active', () => {
@@ -43,7 +43,7 @@ describe('buildDeck', () => {
       entitlements: ['a', 'b'],
       states: {},
     });
-    expect(deck.map((d) => d.key)).toEqual(['course:a', 'course:b', 'locked:c']);
+    expect(deck.map((d) => d.key)).toEqual(['course:a', 'course:b', 'preview:c']);
   });
 
   it('carries the course progress and the day to open next', () => {
@@ -69,5 +69,30 @@ describe('buildDeck', () => {
     if (entry?.kind !== 'course') throw new Error('expected a course card');
     expect(entry.next).toBeNull();
     expect(entry.progress.pct).toBe(100);
+  });
+
+  /*
+   * Курс, которого нет, больше не тупик: у него бесплатная первая тренировка, и карточка ведёт
+   * внутрь приложения. `spent` отличает того, кто её уже сделал, — ему «бесплатно» обещать нельзя.
+   */
+  it('marks an untried course as a preview and a tried one as spent', () => {
+    const deck = buildDeck({
+      courses: [a, b, c],
+      entitlements: [],
+      states: {},
+      trainedCourseIds: ['b'],
+    });
+    const preview = deck.filter((d) => d.kind === 'preview');
+    expect(preview).toHaveLength(3);
+    expect(preview.map((p) => (p.kind === 'preview' ? p.spent : null))).toEqual([
+      false,
+      true,
+      false,
+    ]);
+  });
+
+  it('says nothing is spent when the server list has not arrived', () => {
+    const deck = buildDeck({ courses: [a, b, c], entitlements: [], states: {} });
+    expect(deck.every((d) => d.kind === 'preview' && !d.spent)).toBe(true);
   });
 });

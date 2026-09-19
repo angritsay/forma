@@ -19,7 +19,7 @@ import { findCourse, hasCourse } from '@/content/catalogue';
 import { listBenchmarks } from '@/lib/api/benchmarks';
 import { listCourseStates, upsertCourseState as apiUpsertCourseState } from '@/lib/api/courseState';
 import { toAppError, type AppError } from '@/lib/api/errors';
-import { listRecentSessions } from '@/lib/api/sessions';
+import { listRecentSessions, listTrainedCourses } from '@/lib/api/sessions';
 import { getMyTotals } from '@/lib/api/stats';
 import type { BenchmarkSeries, CourseStateRow, MyTotals, WorkoutSessionRow } from '@/lib/api/types';
 import { computeFitnessIndex, initialScale } from '@/lib/training/assessment';
@@ -59,6 +59,8 @@ export interface ProgressState {
   loadedAt?: number;
   courseStates: Record<string, CourseStateRow>;
   recentSessions: WorkoutSessionRow[];
+  /** Курсы с хотя бы одной завершённой тренировкой — источник правды о потраченной пробе (0019). */
+  trainedCourseIds: string[];
   benchmarks: BenchmarkSeries[];
   totals: MyTotals | null;
   /** Preferred course id (persisted); resolve it with `resolveActiveCourseId`. */
@@ -229,6 +231,7 @@ const EMPTY_DATA = {
   loadedAt: undefined,
   courseStates: {} as Record<string, CourseStateRow>,
   recentSessions: [] as WorkoutSessionRow[],
+  trainedCourseIds: [] as string[],
   benchmarks: [] as BenchmarkSeries[],
   totals: null as MyTotals | null,
 };
@@ -252,11 +255,12 @@ export const useProgress = create<ProgressState>((set, get) => {
 
   async function fetchAll(userId: string, blocking: boolean): Promise<void> {
     set((s) => ({ loading: true, status: blocking ? 'loading' : s.status, error: undefined }));
-    const [states, sessions, benchmarks, totals] = await Promise.allSettled([
+    const [states, sessions, benchmarks, totals, trained] = await Promise.allSettled([
       listCourseStates(),
       listRecentSessions(RECENT_SESSIONS_LIMIT),
       listBenchmarks(),
       getMyTotals(),
+      listTrainedCourses(),
     ]);
     if (useSession.getState().user?.id !== userId) {
       set({ loading: false });
@@ -272,6 +276,13 @@ export const useProgress = create<ProgressState>((set, get) => {
     if (sessions.status === 'fulfilled') next.recentSessions = sessions.value;
     if (benchmarks.status === 'fulfilled') next.benchmarks = benchmarks.value;
     if (totals.status === 'fulfilled') next.totals = totals.value;
+    /*
+     * Курсы, где проба уже потрачена. Не входит в `failed` ниже намеренно: не ответивший на этот
+     * вопрос сервер не должен ронять загрузку прогресса, а пустой список — безопасное направление
+     * (курс выглядит непройденным, и отказ придёт честной ошибкой при старте, а не запертым
+     * экраном у того, у кого проба цела).
+     */
+    if (trained.status === 'fulfilled') next.trainedCourseIds = trained.value;
     const failed = [states, sessions].find(isRejected);
     if (failed) {
       next.error = toAppError(failed.reason);
@@ -384,6 +395,11 @@ export function useActiveCourseId(): string | null {
     () => resolveActiveCourseId(preferred, courseStates, owned),
     [preferred, courseStates, owned],
   );
+}
+
+/** Курсы, где проба уже потрачена (0019). */
+export function useTrainedCourseIds(): readonly string[] {
+  return useProgress((s) => s.trainedCourseIds);
 }
 
 export function useCourseStateRow(courseId: string | null | undefined): CourseStateRow | undefined {

@@ -12,8 +12,19 @@
  * idempotent per order id, so a notification delivered twice extends once.
  *
  * Which plan was paid is decided by the amount (PLAN_MONTHLY_RUB / PLAN_ANNUAL_RUB, defaulting to
- * the prices in content/site/plans.ts). Any other amount — a course, a session with the coach —
- * is acknowledged with 200 and left to the manual flow, so Prodamus stops retrying.
+ * the prices in content/site/plans.ts).
+ *
+ * **Anything that is not a plan is tried as a course** (0019). Not by amount: amounts collide
+ * between products and a Prodamus short link drops the query parameters it was given, so the
+ * course id cannot ride along with the payment. `apply_course_payment()` reads what the system
+ * already knows instead — the `pending` purchase that both the site form and the app's unlock
+ * sheet write through `create_order()` before sending anyone to pay. When that is ambiguous (no
+ * pending order, or several) it answers null and the row is left to the coach, because activating
+ * the wrong course silently is worse than activating the right one late.
+ *
+ * Order matters: the plan check runs first because it is an exact amount match, and a course
+ * priced at exactly a plan's price would otherwise be read as a subscription. `plans.test.ts`
+ * guards that the two price sets stay disjoint.
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { parseForm, planForAmount, readPayment, sign, signatureMatches } from './verify.ts';
@@ -61,23 +72,50 @@ Deno.serve(async (req) => {
   if (!payment) return reply(400, 'no customer_email');
   if (payment.status && payment.status !== 'success') return reply(200, 'ignored: not a success');
 
-  const plan = planForAmount(payment.sum, PRICES);
-  if (!plan) return reply(200, `ignored: amount ${payment.sum ?? '?'} is not a plan`);
-
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     { auth: { persistSession: false } },
   );
-  const { error } = await supabase.rpc('apply_subscription_payment', {
+  const paidAt = new Date().toISOString();
+
+  const plan = planForAmount(payment.sum, PRICES);
+  if (plan) {
+    const { error } = await supabase.rpc('apply_subscription_payment', {
+      p_email: payment.email,
+      p_plan: plan,
+      p_provider_ref: payment.ref || null,
+      p_paid_at: paidAt,
+    });
+    if (error) {
+      console.error('prodamus-webhook: apply_subscription_payment failed', error.message);
+      return reply(500, 'could not apply the payment');
+    }
+    return reply(200, `ok: ${plan} for ${payment.email}`);
+  }
+
+  /*
+   * Not a plan, so it is a course — or something we have no record of.
+   *
+   * A 500 here would be wrong twice over: Prodamus retries on 5xx, and there is nothing to retry
+   * when the cause is that a person paid without ever placing an order. The RPC answers null for
+   * exactly that case, and for the other ambiguous one (several pending orders); both end in a
+   * 200 and a log line, with the purchase left for the coach to confirm by hand.
+   */
+  const { data, error } = await supabase.rpc('apply_course_payment', {
     p_email: payment.email,
-    p_plan: plan,
     p_provider_ref: payment.ref || null,
-    p_paid_at: new Date().toISOString(),
+    p_paid_at: paidAt,
   });
   if (error) {
-    console.error('prodamus-webhook: apply_subscription_payment failed', error.message);
+    console.error('prodamus-webhook: apply_course_payment failed', error.message);
     return reply(500, 'could not apply the payment');
   }
-  return reply(200, `ok: ${plan} for ${payment.email}`);
+  if (!data) {
+    console.warn(
+      `prodamus-webhook: ${payment.email} paid ${payment.sum ?? '?'} and no single pending order matches it; left for manual activation`,
+    );
+    return reply(200, 'ignored: no single pending order for this address');
+  }
+  return reply(200, `ok: course activated for ${payment.email}`);
 });
