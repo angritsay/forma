@@ -243,6 +243,16 @@ export function estimateCalories(
  * Per-side items count twice: ten per leg is twenty. AMRAP counts one round, because how many
  * rounds you get is the athlete's answer rather than the plan's; its difficulty shows up in the
  * window instead, which is minutes.
+ *
+ * **And an EMOM is counted minute by minute, not item × sets.** In this engine `sets` on an EMOM
+ * block is the number of MINUTES, and the player spends each minute on one item —
+ * `buildPlayerSteps` runs `for m in 1..sets` and takes `items[(m - 1) % n]`. Multiplying every
+ * item by `sets`, as the general case does, therefore charges the athlete for work nobody asks
+ * them to do: «Форма с нуля», тренировка 1 is three minutes of 8 + 13 + 13 and it read as 102
+ * повтора — exactly three times the 34 the player counts out. The same mistake made the screen
+ * contradict itself, because the minutes beside the figure are taken from `estimateBlockDuration`,
+ * which has always read `sets` as minutes: «3 мин · 102 повтора» is not a hard workout, it is two
+ * functions disagreeing about one word.
  */
 export interface WorkoutVolume {
   /** Repetitions of training prescribed, warm-up and cool-down excluded. */
@@ -256,15 +266,27 @@ export function isTrainingBlock(block: Pick<PrescribedBlock, 'type'>): boolean {
   return block.type !== 'warmup' && block.type !== 'cooldown';
 }
 
+/** Repetitions of one item, per time it is performed; per-side counts both sides. */
+function itemReps(item: PrescribedBlock['items'][number]): number {
+  if (item.unit !== 'reps') return 0;
+  return Math.max(0, num(item.target)) * (item.perSide ? 2 : 1);
+}
+
 export function workoutVolume(p: PrescribedWorkout): WorkoutVolume {
   const blocks = p.blocks.filter(isTrainingBlock);
   let reps = 0;
   for (const block of blocks) {
-    const rounds = Math.max(1, num(block.sets, 1));
-    for (const item of block.items) {
-      if (item.unit !== 'reps') continue;
-      reps += Math.max(0, num(item.target)) * rounds * (item.perSide ? 2 : 1);
+    // The EMOM walks its minutes the way the player does; everything else repeats every item
+    // once per set.
+    if (block.format === 'emom') {
+      const n = block.items.length;
+      if (n === 0) continue;
+      const minutes = Math.max(1, num(block.sets, 1));
+      for (let m = 1; m <= minutes; m++) reps += itemReps(block.items[(m - 1) % n]!);
+      continue;
     }
+    const sets = Math.max(1, num(block.sets, 1));
+    for (const item of block.items) reps += itemReps(item) * sets;
   }
   return { reps: Math.round(reps), workSec: estimateDuration({ ...p, blocks }).workSec };
 }
