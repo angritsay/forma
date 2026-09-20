@@ -31,4 +31,4 @@
  * Пока `PLAN_MONTHLY_RUB=50` задан, оплата курса на 50 ₽ откроет подписку, а не
  * курс. Поэтому порядок именно такой, и поэтому секрет убирается сразу после.
  */
-export const TEST_PAYMENT_URL: string | null = 'https://payform.ru/itcBcRF/';
+export const TEST_PAYMENT_URL: string | null = null;
