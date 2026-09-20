@@ -27,6 +27,7 @@
  */
 import { CLUB_PLAN_ID, PLAN_BY_ID, planMonthlyPrice } from '@content/site/plans';
 import { formatPrice } from '@content/site/pricing';
+import { TEST_PAYMENT_URL } from '@content/site/testPayment';
 import type { Locale } from '@/i18n/index';
 import { paymentTarget, withEmail } from '@/lib/util/payment';
 import { subscribeHref } from '@/app/features/courses/courseMeta';
@@ -54,7 +55,10 @@ export function clubChargeLabel(locale: Locale): string | null {
  */
 export function clubJoinHref(locale: Locale, email: string, demo: boolean): string {
   const plan = clubPlan();
-  const target = demo ? null : paymentTarget(plan?.paymentUrl?.[locale] ?? plan?.paymentUrl?.ru);
+  // TEST_PAYMENT_URL — временная подмена; см. content/site/testPayment.ts.
+  const target = demo
+    ? null
+    : paymentTarget(TEST_PAYMENT_URL ?? plan?.paymentUrl?.[locale] ?? plan?.paymentUrl?.ru);
   if (!target) return subscribeHref(locale);
   return email ? withEmail(target, email) : target.href;
 }
