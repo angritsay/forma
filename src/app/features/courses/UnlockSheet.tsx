@@ -8,6 +8,7 @@ import type { Course } from '@/content/schema';
 import { isAppError } from '@/lib/api/errors';
 import { createOrder } from '@/lib/api/orders';
 import { formatPrice } from '@content/site/pricing';
+import { TEST_PAYMENT_URL } from '@content/site/testPayment';
 import { paymentTarget, withEmail } from '@/lib/util/payment';
 import { useT } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
@@ -50,7 +51,12 @@ export function UnlockSheet({ open, course, onClose }: UnlockSheetProps) {
   const [claiming, setClaiming] = useState(false);
 
   const email = (profile?.email || user?.email || '').trim().toLowerCase();
-  const payment = paymentTarget(course?.paymentUrl?.[locale] ?? course?.paymentUrl?.ru);
+  // TEST_PAYMENT_URL — временная подмена; см. content/site/testPayment.ts. Она стоит перед
+  // ссылкой курса намеренно: курс приходит из базы, и править его ссылку в админке пришлось бы
+  // отдельно, а снимать подмену надо одним движением.
+  const payment = paymentTarget(
+    TEST_PAYMENT_URL ?? course?.paymentUrl?.[locale] ?? course?.paymentUrl?.ru,
+  );
   const price = course ? formatPrice(locale, course.price) : '';
 
   if (!course) return null;

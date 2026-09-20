@@ -12,6 +12,7 @@ import { isDemo, isDemoEnv } from '@/lib/api/mode';
 import { createOrder } from '@/lib/api/orders';
 import { createSubscriptionOrder } from '@/lib/api/subscriptions';
 import type { SubscriptionPlan } from '@/lib/api/types';
+import { TEST_PAYMENT_URL } from '@content/site/testPayment';
 import { paymentTarget, withEmail } from '@/lib/util/payment';
 
 export interface OrderFormLabels {
@@ -153,7 +154,9 @@ export default function OrderForm({
   const configured = isConfigured() || demo;
   const [consentBefore, consentAfter] = labels.consent.split('{privacy}');
   // Only an https link is ever followed; see lib/util/payment.
-  const payment = paymentTarget(plan ? plan.paymentUrl : paymentUrl);
+  // TEST_PAYMENT_URL — временная подмена на тестовый товар; снимается одной строкой в
+  // content/site/testPayment.ts. В бою она null и выражение сводится к обычной ссылке.
+  const payment = paymentTarget(TEST_PAYMENT_URL ?? (plan ? plan.paymentUrl : paymentUrl));
   const productName = plan ? plan.name : courseName;
 
   // Validation errors must reach keyboard and screen-reader users: the message is announced by its
