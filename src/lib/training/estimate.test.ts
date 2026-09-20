@@ -15,6 +15,7 @@ import {
   profile,
   workout,
 } from './fixtures.test-helpers';
+import { allCourses } from '@/content/catalogue';
 import { buildPlayerSteps } from './player';
 import { prescribeWorkout } from './prescribe';
 import type { PrescribeOptions } from './types';
@@ -305,6 +306,43 @@ describe('workoutVolume', () => {
     expect(workoutVolume(perSide).reps).toBe(workoutVolume(plain).reps * 2);
   });
 
+  /*
+   * An EMOM's `sets` is its number of MINUTES, and the player spends each minute on one item:
+   * `buildPlayerSteps` runs `for m in 1..sets` over `items[(m - 1) % n]`. Counting it like a set
+   * scheme — every item once per set — charged the athlete three times over.
+   *
+   * It shipped, and the screen said so: «Форма с нуля», тренировка 1 is three minutes of 8 + 13 +
+   * 13 and its preview read «3 мин · 102 повтора». The minutes were right and the reps were three
+   * times the truth; the owner caught it by noticing the two could not both be true. Nothing here
+   * noticed, which is why this exists — and why the test below states the claim against the player
+   * itself rather than against a number written down.
+   */
+  it('walks an EMOM minute by minute instead of multiplying by its minutes', () => {
+    const p = one({
+      id: 'e',
+      format: 'emom',
+      rounds: 3,
+      items: [
+        item('knee_push_up', { reps: 8 }),
+        item('air_squat', { reps: 13 }),
+        item('dead_bug', { reps: 13 }),
+      ],
+    });
+    // Three minutes, one movement each: 8 + 13 + 13. Not 3 × 34.
+    expect(workoutVolume(p).reps).toBe(34);
+  });
+
+  it('gives a longer EMOM its extra minutes, wrapping round the items', () => {
+    const p = one({
+      id: 'e',
+      format: 'emom',
+      rounds: 5,
+      items: [item('air_squat', { reps: 10 }), item('knee_push_up', { reps: 6 })],
+    });
+    // Minutes 1, 3 and 5 are squats, 2 and 4 are push-ups: 30 + 12.
+    expect(workoutVolume(p).reps).toBe(42);
+  });
+
   it('ignores work measured in seconds, and reports it as seconds instead', () => {
     const p = one({ id: 'h', format: 'sets', sets: 3, items: [item('plank', { seconds: 20 })] });
     const v = workoutVolume(p);
@@ -348,5 +386,55 @@ describe('workoutVolume', () => {
     expect(normal).toBeLessThan(harder);
     // The whole point: the spread is something a bar can draw and a person can feel.
     expect(harder - easier).toBeGreaterThan(normal * 0.1);
+  });
+});
+
+/*
+ * The claim this suite could not make before, and the one that matters: the figure on the preview
+ * is the work the player will actually ask for.
+ *
+ * Every test above states it against a number written down here, which is exactly how the EMOM bug
+ * survived — both sides of the disagreement were fixtures, and neither was the player. This walks
+ * every workout of every shipped course and compares `workoutVolume` with the steps
+ * `buildPlayerSteps` produces for the same prescription. If they ever part again, whatever the
+ * format and whoever wrote the block, this is what says so.
+ *
+ * Counted by the item's unit rather than the step's mode: an EMOM step is a `timer` step (the
+ * minute is the clock) whose target is nonetheless a number of repetitions, and reading `mode`
+ * here would quietly drop exactly the format this test was written for.
+ */
+describe('the estimate and the player agree about every shipped workout', () => {
+  const courses = allCourses();
+
+  it('finds the courses at all', () => {
+    expect(courses.length).toBeGreaterThan(0);
+  });
+
+  it.each(courses.map((c) => [c.id, c] as const))('%s', (_id, course) => {
+    for (const w of course.workouts) {
+      const p = prescribeWorkout(w, { ...opts, level: course.level });
+      const training = new Set(
+        p.blocks.filter((b) => b.type !== 'warmup' && b.type !== 'cooldown').map((b) => b.blockId),
+      );
+      const reps = (it: { unit?: string; target?: number; perSide?: boolean }) =>
+        it.unit === 'reps' ? Math.max(0, it.target ?? 0) * (it.perSide ? 2 : 1) : 0;
+      const asked = buildPlayerSteps(p).reduce((n, step) => {
+        if (step.kind === 'done' || step.kind === 'rest') return n;
+        if (!training.has(step.blockId)) return n;
+        // A for-time or AMRAP block is one composite step holding its whole list: the athlete
+        // works down it at their own pace rather than being walked through it. AMRAP counts one
+        // round, for the reason the function's own comment gives.
+        if (step.kind === 'fortime') {
+          return n + step.rounds * step.items.reduce((t, it) => t + reps(it), 0);
+        }
+        if (step.kind === 'amrap') return n + step.items.reduce((t, it) => t + reps(it), 0);
+        if (step.kind !== 'work') return n;
+        return n + reps({ ...step.item, target: step.target ?? step.item.target });
+      }, 0);
+      expect({ workout: w.id, reps: workoutVolume(p).reps }).toEqual({
+        workout: w.id,
+        reps: asked,
+      });
+    }
   });
 });
