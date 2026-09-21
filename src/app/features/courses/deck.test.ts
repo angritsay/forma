@@ -73,9 +73,9 @@ describe('buildDeck', () => {
 
   /*
    * Курс, которого нет, больше не тупик: у него бесплатная первая тренировка, и карточка ведёт
-   * внутрь приложения. `spent` отличает того, кто её уже сделал, — ему «бесплатно» обещать нельзя.
+   * внутрь приложения. `tried` отличает того, кто её уже сделал, — ему «бесплатно» обещать нельзя.
    */
-  it('marks an untried course as a preview and a tried one as spent', () => {
+  it('marks an untried course as a preview and remembers who has already tried one', () => {
     const deck = buildDeck({
       courses: [a, b, c],
       entitlements: [],
@@ -84,15 +84,15 @@ describe('buildDeck', () => {
     });
     const preview = deck.filter((d) => d.kind === 'preview');
     expect(preview).toHaveLength(3);
-    expect(preview.map((p) => (p.kind === 'preview' ? p.spent : null))).toEqual([
+    expect(preview.map((p) => (p.kind === 'preview' ? p.tried : null))).toEqual([
       false,
       true,
       false,
     ]);
   });
 
-  it('says nothing is spent when the server list has not arrived', () => {
+  it('says nobody has tried anything when the server list has not arrived', () => {
     const deck = buildDeck({ courses: [a, b, c], entitlements: [], states: {} });
-    expect(deck.every((d) => d.kind === 'preview' && !d.spent)).toBe(true);
+    expect(deck.every((d) => d.kind === 'preview' && !d.tried)).toBe(true);
   });
 });

@@ -41,10 +41,9 @@ import {
   starsByNode,
   useProgress,
   useProgressLoader,
-  useTrainedCourseIds,
 } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
-import { courseAccess, hasCompletedIn, nodeAccess } from '@/app/features/courses/courseAccess';
+import { nodeAccess } from '@/app/features/courses/courseAccess';
 import { UnlockSheet } from '@/app/features/courses/UnlockSheet';
 
 export default function CoursePathScreen() {
@@ -82,24 +81,22 @@ export default function CoursePathScreen() {
   const [scaleOpen, setScaleOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const trained = useTrainedCourseIds();
   const owned = course ? entitlements.includes(course.id) : false;
   /*
-   * Что открыто. Сюда же ведёт и запертый узел: `nodeAccess` отвечает 'paywalled' там, где раньше
-   * весь экран подменялся заглушкой «Этого курса у тебя пока нет».
+   * Что открыто, решает `nodeAccess` на нажатии: он отвечает 'paywalled' там, где раньше весь
+   * экран подменялся заглушкой «Этого курса у тебя пока нет», и открывает шторку с ценой. Ему
+   * достаточно `owned` — проба больше не тратится (0022), поэтому спрашивать сервер о том,
+   * тренировался ли здесь человек, этому экрану не нужно вовсе.
    */
-  const access = courseAccess({
-    owned,
-    hasCompleted: course ? hasCompletedIn(trained, course.id) : false,
-  });
   const [unlockOpen, setUnlockOpen] = useState(false);
 
   // The course the athlete opened becomes the one the Home screen follows.
   useEffect(() => {
     // Курс, который пробуют, — тоже тот, которым человек сейчас занят: иначе «Сегодня» осталось бы
-    // пустым ровно у того, кто только что начал.
-    if (course && access !== 'spent') setActiveCourse(course.id);
-  }, [course, access, setActiveCourse]);
+    // пустым ровно у того, кто только что начал. Оговорки «кроме потративших пробу» здесь больше
+    // нет: проба не тратится (0022), и попробовавшему по-прежнему есть что открыть отсюда.
+    if (course) setActiveCourse(course.id);
+  }, [course, setActiveCourse]);
 
   if (!course) {
     return (
@@ -126,15 +123,21 @@ export default function CoursePathScreen() {
     /*
      * Два разных тупика, и вести из них надо в разные места. «Ещё не дошёл» — это подсказка про
      * порядок; «за это не заплачено» — это цена, и показывать её тостом было бы издевательством.
-     * Порядок проверок именно такой: до дня двадцатого человек и так не дошёл, и говорить ему про
-     * оплату раньше, чем про порядок, значит продавать вместо того, чтобы объяснять.
+     *
+     * **Порядок проверок перевернулся, и это правка 0022.** Раньше порядок стоял первым, на
+     * доводе «до дня двадцатого человек и так не дошёл, и говорить ему про оплату раньше, чем про
+     * порядок, значит продавать вместо того, чтобы объяснять». Владелец решила иначе: «до оплаты
+     * курса он может кликать, и мы будем его перенаправлять на пейволл, за исключением первой
+     * тренировки». Она права про то, кто нажимает: у некупившего курса нет никакого «дошёл» —
+     * ему открыта ровно одна тренировка, и «сначала пройди предыдущие» отвечает не на тот вопрос,
+     * который он задал. Для купившего порядок остался ровно там, где был.
      */
-    if (nodeState === 'locked') {
-      toast.show({ kind: 'info', title: t('app.pathLockedToast') });
+    if (nodeAccess({ owned, course, node }) === 'paywalled') {
+      setUnlockOpen(true);
       return;
     }
-    if (nodeAccess({ owned, hasCompleted: access === 'spent', course, node }) === 'paywalled') {
-      setUnlockOpen(true);
+    if (nodeState === 'locked') {
+      toast.show({ kind: 'info', title: t('app.pathLockedToast') });
       return;
     }
     if (node.kind === 'rest' || node.kind === 'milestone') {

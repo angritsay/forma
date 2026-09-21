@@ -244,8 +244,9 @@ export default function CoursesScreen() {
                * курса, где первая тренировка открыта, и не приглушена — приглушённость говорила
                * «сюда нельзя», а сюда как раз можно.
                *
-               * Потратившему пробу «бесплатно» не обещают: у него та же карточка, но подпись и
-               * кнопка сразу про цену.
+               * Уже пробовавшему «бесплатно» не обещают второй раз: у него та же карточка, но
+               * подпись и кнопка сразу про цену. Сама бесплатная тренировка при этом на месте —
+               * с 0022 её можно открыть с пути курса и пройти заново.
                */
               return (
                 <li key={entry.key}>
@@ -254,9 +255,9 @@ export default function CoursesScreen() {
                     priority={priority}
                     style={courseAccentVars(course.tile)}
                     title={title}
-                    eyebrow={entry.spent ? undefined : t('app.coursesFreeBadge')}
+                    eyebrow={entry.tried ? undefined : t('app.coursesFreeBadge')}
                     ctaLabel={
-                      entry.spent
+                      entry.tried
                         ? t('app.coursesUnlock', { price: formatPrice(locale, course.price) })
                         : t('app.coursesTryFree')
                     }
