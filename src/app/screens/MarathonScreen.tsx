@@ -66,6 +66,7 @@ import { useT } from '@/app/hooks/useT';
 import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { BoardGap, BoardRow } from '@/app/features/marathon/BoardRow';
 import { ClubPitch } from '@/app/features/marathon/ClubPitch';
+import { ClubStreak } from '@/app/features/marathon/ClubStreak';
 import { clubPrize } from '@/app/features/marathon/prize';
 import { weekStandings } from '@/app/features/marathon/standings';
 import { TaskCard } from '@/app/features/marathon/TaskCard';
@@ -192,10 +193,19 @@ export default function MarathonScreen() {
    *
    * There is no top bar either; the tab bar names the screen. `--course-tile` stays on the outer
    * element so the pills and the leader's circle take the club's colour from one place.
+   *
+   * **One thing did come back up there, and it is not a head.** The owner asked for the streak —
+   * «показывать, сколько дней подряд ты выполняешь упражнения» — «в том же месте, как у нас это
+   * сделано на курсах», which is the top right. It is one pill and it draws nothing when the
+   * streak is zero, so the objection that took the ring away does not apply to it: it reports a
+   * number the person made, rather than a number the calendar made.
    */
   const page = (body: ReactNode) => (
     <div style={courseTileVars(GAME_TILE)}>
-      <Screen contentClassName="pt-5">{body}</Screen>
+      <Screen contentClassName="pt-2">
+        <ClubStreak />
+        {body}
+      </Screen>
     </div>
   );
 

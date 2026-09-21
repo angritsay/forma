@@ -1223,6 +1223,15 @@ export const app = {
   // actually happens — one charge, once. Quoting only the month for an annual product is how
   // chargebacks get written.
   clubChargeNote: 'Оплата одна: {price} за год доступа. Клуб и все курсы Forma.',
+  // --- Club, the streak (stream: club-streak) --------------------------------
+  // «Сколько дней подряд ты выполняешь упражнения». Only the accessible name is a sentence — the
+  // pill itself is 🔥 and a number, because that is the whole of what it says.
+  //
+  // Three plural forms, because Russian has three and «1 день / 2 дня / 5 дней» is the difference
+  // between a product that speaks the language and one that was translated from English.
+  clubStreakOne: '{n} день подряд',
+  clubStreakFew: '{n} дня подряд',
+  clubStreakMany: '{n} дней подряд',
   // --- Club, for somebody who is already in it (stream: club-pitch-states) ----
   // Where the join pill stands on the selling screen. They pay, so there is nothing to sell and
   // nothing to press: the coach builds each round by hand. The note is the sentence that used to
