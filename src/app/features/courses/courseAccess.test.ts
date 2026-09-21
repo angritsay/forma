@@ -10,12 +10,12 @@ function course(nodes: CourseNode[]): Course {
 }
 
 describe('courseAccess', () => {
-  it('reads ownership first, and the trial only when there is none', () => {
+  it('reads ownership first, and whether the free workout was tried only when there is none', () => {
     expect(courseAccess({ owned: true, hasCompleted: false })).toBe('owned');
     // Owning it wins even once a workout is done — that is the whole point of owning it.
     expect(courseAccess({ owned: true, hasCompleted: true })).toBe('owned');
     expect(courseAccess({ owned: false, hasCompleted: false })).toBe('trial');
-    expect(courseAccess({ owned: false, hasCompleted: true })).toBe('spent');
+    expect(courseAccess({ owned: false, hasCompleted: true })).toBe('tried');
   });
 });
 
@@ -44,30 +44,42 @@ describe('nodeAccess', () => {
   const c = course([node('w1', 'workout'), node('w2', 'workout')]);
 
   it('opens everything for an owner', () => {
-    const owned = { owned: true, hasCompleted: true, course: c };
+    const owned = { owned: true, course: c };
     expect(nodeAccess({ ...owned, node: c.nodes[0]! })).toBe('open');
     expect(nodeAccess({ ...owned, node: c.nodes[1]! })).toBe('open');
   });
 
-  it('opens the first workout on the trial and nothing else', () => {
-    const trial = { owned: false, hasCompleted: false, course: c };
-    expect(nodeAccess({ ...trial, node: c.nodes[0]! })).toBe('open');
-    expect(nodeAccess({ ...trial, node: c.nodes[1]! })).toBe('paywalled');
-  });
-
-  it('closes the first workout once the trial is spent', () => {
-    const spent = { owned: false, hasCompleted: true, course: c };
-    expect(nodeAccess({ ...spent, node: c.nodes[0]! })).toBe('paywalled');
+  it('opens the first workout and nothing else', () => {
+    const free = { owned: false, course: c };
+    expect(nodeAccess({ ...free, node: c.nodes[0]! })).toBe('open');
+    expect(nodeAccess({ ...free, node: c.nodes[1]! })).toBe('paywalled');
   });
 
   /*
-   * Stricter than the database on purpose: `can_try_course()` would allow a session on any node,
-   * because the server does not know their order. Here only the first one is free, so nobody spends
-   * their single free workout on day twenty by opening a link.
+   * The whole of 0022. The rule used to close the free workout the moment it was finished, so the
+   * one thing the product gives away could be taken exactly once. Finishing it changes nothing
+   * here now, which is what «перепроходить первую тренировку и всегда в бесплатном режиме» means.
+   */
+  it('leaves the first workout open after it has been done', () => {
+    const c2 = course([node('r1', 'rest'), node('w1', 'workout'), node('w2', 'workout')]);
+    expect(nodeAccess({ owned: false, course: c2, node: c2.nodes[1]! })).toBe('open');
+    expect(nodeAccess({ owned: false, course: c2, node: c2.nodes[2]! })).toBe('paywalled');
+  });
+
+  /*
+   * Stricter than the database on purpose: `can_train_free_node()` lets the free workout be any
+   * node, because the server does not know their order. Here it is the first one, so nobody makes
+   * day twenty their free workout by opening a link.
    */
   it('is stricter than the policy it mirrors', () => {
-    const trial = { owned: false, hasCompleted: false, course: c };
-    expect(nodeAccess({ ...trial, node: c.nodes[1]! })).toBe('paywalled');
+    const free = { owned: false, course: c };
+    expect(nodeAccess({ ...free, node: c.nodes[1]! })).toBe('paywalled');
+  });
+
+  /* A course with nothing trainable in it paywalls everything rather than opening it. */
+  it('opens nothing when the course has no workout in it', () => {
+    const empty = course([node('r1', 'rest')]);
+    expect(nodeAccess({ owned: false, course: empty, node: empty.nodes[0]! })).toBe('paywalled');
   });
 });
 

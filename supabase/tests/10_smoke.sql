@@ -364,14 +364,16 @@ do $$ declare v_sid uuid; v_err text; begin
 
   -- Session for a course ann does not own.
   --
-  -- Blocked outright until 0019; now the first one is the free workout, and what
-  -- is blocked is the *second*. The full rule lives in 80_free_first_workout.sql;
-  -- what this suite keeps is the pair of facts that used to be one.
-  assert public.can_try_course('kettlebell'), 'the first workout of an unowned course is free (0019)';
+  -- Blocked outright until 0019; then one workout was free, once. Since 0022 the
+  -- free one is a *node* rather than a single go at it: the same node reopens
+  -- however often it is finished, and every other node stays shut. The full rule
+  -- lives in 80_free_first_workout.sql; what this suite keeps is that pair.
+  assert public.can_train_free_node('kettlebell', 'n1'), 'one workout of an unowned course is free (0019)';
   begin
     insert into public.workout_sessions (user_id, course_id, node_id, workout_id, local_date, completed_at)
       values ('00000000-0000-0000-0000-00000000000a', 'kettlebell', 'n1', 'w_test', current_date, now());
-    assert not public.can_try_course('kettlebell'), 'and finishing it spends the trial';
+    assert public.can_train_free_node('kettlebell', 'n1'), 'and finishing it does not close it (0022)';
+    assert not public.can_train_free_node('kettlebell', 'n2'), 'but the next node is not free';
     insert into public.workout_sessions (user_id, course_id, node_id, workout_id, local_date)
       values ('00000000-0000-0000-0000-00000000000a', 'kettlebell', 'n2', 'w_test', current_date);
     raise exception 'should have failed';

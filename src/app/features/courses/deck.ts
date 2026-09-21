@@ -30,12 +30,13 @@ export type DeckEntry =
       next: CourseNode | null;
     }
   /**
-   * Курс, который не куплен, но открыт для пробы: первая тренировка бесплатна (0019).
+   * Курс, который не куплен, но открыт для пробы: первая тренировка бесплатна (0019) и её можно
+   * повторять сколько угодно (0022).
    *
    * Отдельный вид, а не `locked` с флагом, потому что карточка у него другая по смыслу: она ведёт
    * внутрь приложения, а не на сайт, и обещает конкретную вещь вместо «Подробнее».
    */
-  | { kind: 'preview'; key: string; course: Course; spent: boolean };
+  | { kind: 'preview'; key: string; course: Course; tried: boolean };
 
 export interface DeckInput {
   courses: readonly Course[];
@@ -44,7 +45,7 @@ export interface DeckInput {
   states: Readonly<Record<string, PathState | null | undefined>>;
   /** The course being followed; it leads the list when it is owned. */
   activeCourseId?: string | null;
-  /** Курсы, где проба уже потрачена (`my_trained_courses()`). */
+  /** Курсы, где бесплатную тренировку уже делали (`my_trained_courses()`). */
   trainedCourseIds?: readonly string[];
 }
 
@@ -75,16 +76,18 @@ export function buildDeck({
 
   /*
    * Некупленные курсы больше не тупик: у каждого есть бесплатная первая тренировка, и карточка
-   * ведёт на путь курса, а не на сайт. `spent` отличает того, кто её уже сделал, — ему обещать
-   * «бесплатно» нельзя, и кнопка у него сразу про цену.
+   * ведёт на путь курса, а не на сайт. `tried` отличает того, кто её уже сделал: ему не обещают
+   * «попробовать бесплатно» второй раз, и кнопка у него сразу про цену. Поле называется «делал»,
+   * а не «потратил», и это не придирка к слову — с 0022 та тренировка никуда не девается, он
+   * может открыть её снова с пути курса.
    */
-  const spent = new Set(trainedCourseIds);
+  const tried = new Set(trainedCourseIds);
   for (const course of locked) {
     entries.push({
       kind: 'preview',
       key: `preview:${course.id}`,
       course,
-      spent: spent.has(course.id),
+      tried: tried.has(course.id),
     });
   }
 
