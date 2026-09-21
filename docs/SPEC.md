@@ -396,6 +396,7 @@ was ever linked or bookmarked broke:
 /leaderboard
 /assigned/:id  /shared/:token
 /admin  /admin/workouts  /admin/exercises  /admin/courses[/:id]  /admin/marathons[/:id]
+/admin/stats               «Аналитика» — воронка по когортам недели входа + прогресс людей
 ```
 
 Gone with the four-tab shell: `/` as «Сегодня», `/stats` («Прогресс»), `/profile` (a sheet behind

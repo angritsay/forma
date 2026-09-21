@@ -214,6 +214,19 @@ export function privacyDocument(): LegalDocument {
             ru: 'Поддержка, возвраты и выполнение требований закона.',
             en: 'Support, refunds and compliance with legal requirements.',
           },
+          /*
+           * Цель обработки, которую надо было назвать: тренер смотрит сводку по всем — сколько
+           * людей дошло до какого шага и кто давно не занимался, — чтобы понимать, что в
+           * приложении чинить. Ст. 18.1 требует перечислять цели, а не только данные, и молчать
+           * о той, ради которой сделан целый экран в админке, нельзя.
+           *
+           * Сказано и то, чего мы не делаем: внешней аналитики в приложении нет вовсе, и это
+           * проверяемо — счётчиков и SDK в нём не стоит.
+           */
+          {
+            ru: 'Понять, как работает приложение: сколько людей доходит до каждого шага и кто перестал заниматься. Эту сводку видит только тренер, внутри приложения, и она нужна, чтобы улучшать курсы и сам сервис. Никаких внешних систем аналитики мы не используем.',
+            en: 'To understand how the app works: how many people reach each step and who has stopped training. Only the coach sees this summary, inside the app, and it exists so that the courses and the service can be improved. We use no third-party analytics.',
+          },
         ],
         after: [
           {
