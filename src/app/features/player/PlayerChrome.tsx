@@ -13,7 +13,16 @@
  * that is words lives on the back of the card (CardBack.tsx).
  */
 import { clsx } from 'clsx';
-import { useEffect, useRef, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefCallback,
+} from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/Button';
 import { Glyph, Icon } from '@/components/ui/Icon';
 import { IconButton } from '@/components/ui/IconButton';
@@ -83,6 +92,100 @@ export function PlayerHeader({ progress, paused, onBack, onTogglePause }: Player
         </div>
       </div>
     </header>
+  );
+}
+
+/*
+ * --- the clock, and why it is not in the panel any more -----------------------------------------
+ *
+ * The owner: «будет замечательно, если ты разделишь вот этот нижний блок на две части: верхняя там
+ * какой-нибудь таймер, как у нас есть, а нижняя это уже про выполнение. Таким образом мы сможем
+ * центрировать, чтобы было видно технику выполнения упражнения.»
+ *
+ * Everything used to sit in one band at the foot: the movement's name, the countdown, the progress
+ * line, the controls. That band is tall — 235px measured on a timed step — and the clip was given
+ * the room above it, so the movement was drawn in the upper two thirds of the screen while the eye
+ * sat in the middle of the band. Splitting it puts the clock in a band of its own under the header
+ * and leaves «про выполнение» below, and the picture is then framed between two edges instead of
+ * pushed up off one.
+ *
+ * **It is a portal rather than a prop.** Every step owns its own clock — the countdown, its cues,
+ * the auto-advance at zero are all hooks inside `WorkTimerStep`, `RestStep`, `AmrapStep`,
+ * `FortimeStep` and `TestStep` — so handing the clock upward as a prop would mean lifting that
+ * state out of the component that runs it, or splitting each step into two components that share a
+ * clock. A step instead renders `<PlayerTimerSlot>` wherever it likes in its own tree, and the
+ * band is where those children land. The steps that have no clock (reps, a block's title card)
+ * render no slot, `:empty` matches, and the band disappears with `--player-top-h` going to zero.
+ */
+const TimerBandContext = createContext<HTMLElement | null>(null);
+
+export interface PlayerTimerBandProps {
+  /** Publishes the band's height so the clip can start below it. Zero while it is empty. */
+  onHeight?: (px: number) => void;
+  /** The rest of the card's front. It has to be inside, or no step could reach the band. */
+  children: ReactNode;
+}
+
+/**
+ * The band under the header that holds the running step's clock — and the provider that lets any
+ * step reach it.
+ *
+ * The two are one component because they have to be: the band's DOM node is what a step portals
+ * into, and a step is rendered inside the panel at the *foot* of the card, which is this band's
+ * sibling rather than its child. Wrapping the whole front is what puts the node in scope. The band
+ * itself is absolutely positioned, so being first among those children costs the layout nothing.
+ *
+ * It is the same material as the panel at the foot, turned the other way up: `.glass-bar-top` is
+ * dense where the numbers are and sheer where the clip arrives from, so the clip runs under its
+ * lower edge rather than stopping at a line.
+ *
+ * `empty:hidden` is what makes it free for a step without a clock — no band, no height, nothing to
+ * subtract. It works because the portal inserts real DOM children, so `:empty` is an honest test of
+ * whether this step put anything here.
+ */
+export function PlayerTimerBand({ onHeight, children }: PlayerTimerBandProps) {
+  const [node, setNode] = useState<HTMLElement | null>(null);
+  const ref: RefCallback<HTMLDivElement> = (el) => {
+    setNode(el);
+  };
+
+  useEffect(() => {
+    if (!node || !onHeight) return;
+    const report = () => onHeight(node.getBoundingClientRect().height);
+    report();
+    // The clock's own box changes inside one step — a caption appears, a progress line is added —
+    // so the box is measured rather than guessed at, exactly as the footer's is.
+    const ro = new ResizeObserver(report);
+    ro.observe(node);
+    return () => {
+      ro.disconnect();
+      onHeight(0);
+    };
+  }, [node, onHeight]);
+
+  return (
+    <TimerBandContext.Provider value={node}>
+      <div
+        ref={ref}
+        className="glass-bar-top glass-sheer pointer-events-none absolute inset-x-0 top-[calc(var(--safe-top)+56px)] z-20 px-6 pt-2 pb-4 text-paper empty:hidden md:right-95"
+      />
+      {children}
+    </TimerBandContext.Provider>
+  );
+}
+
+/**
+ * Puts its children in the band above, from anywhere inside the player's tree.
+ *
+ * Renders nothing at all before the band's node exists (the first paint) and nothing when there is
+ * no band, so a step can use it unconditionally.
+ */
+export function PlayerTimerSlot({ children }: { children: ReactNode }) {
+  const node = useContext(TimerBandContext);
+  if (!node) return null;
+  return createPortal(
+    <div className="pointer-events-auto mx-auto w-full max-w-[560px]">{children}</div>,
+    node,
   );
 }
 

@@ -1165,14 +1165,21 @@ body {
   }
 }
 
+/*
+ * `--art-lift` rides through both keyframes rather than being a separate transform on a wrapper.
+ * It has to: `animation-fill-mode: both` keeps the `to` frame applied for as long as the clip is
+ * on screen, so a `transform` declared anywhere else on the same element is overwritten the moment
+ * this animation lands — which is immediately, on every step. It defaults to 0 for any element
+ * that does not set it.
+ */
 @keyframes player-art-in {
   from {
     opacity: 0;
-    transform: scale(1.035);
+    transform: translateY(var(--art-lift, 0)) scale(1.035);
   }
   to {
     opacity: 1;
-    transform: none;
+    transform: translateY(var(--art-lift, 0));
   }
 }
 
@@ -1182,6 +1189,47 @@ body {
 
 .player-art-in {
   animation: player-art-in 0.42s var(--ease-out) both;
+}
+
+/*
+ * The clip, pulled up so the crop comes off the top of the frame instead of being split evenly.
+ *
+ * The owner: «обрежь верхние 20% видео, потому что сейчас упражнение не попадает в кадр целиком …
+ * видео все равно сверху нужно чуть подобрезать, потому что нижняя часть управления упражнением
+ * все равно будет больше, чем верхняя». The clip is as wide as the stage and as tall as its own
+ * shape asks (`ART` in PlayerScreen.tsx), and the stage centres it — so a clip taller than the
+ * stage already loses half its overflow off the top and half off the bottom. This is the rest of
+ * the way.
+ *
+ * **The number was measured, not derived.** A 9:20 ruler — the shape of the coach's own clips,
+ * banded and labelled every ten per cent — was put in the stage of a running timed step at 390×844
+ * and read off the rendered page. The stage is 125px from the top (under the clock's band) and
+ * runs to the foot of the screen, because the panel below is 118.5px, shorter than the 120px the
+ * stage is allowed to overlap it by: 719px tall. The ruler is 390 × 867, so centring alone hides
+ * (867 − 719) / 2 = 74px, which is 8.5% of it. 11.5% more of the clip's own height takes the
+ * hidden band to exactly 20.0%, which is the «верхние 20%» she asked for.
+ *
+ * The percentage is of the *element's* height, so it scales with the clip rather than the screen —
+ * which is what keeps it safe on the other kind of footage. A 16:9 clip at that width is 219px
+ * tall, so the same rule lifts it 25px, not 100.
+ *
+ * It is a bias, not a contract: a step with a taller panel has a shorter stage and crops a little
+ * more, a landscape clip is shorter than the stage and is not cropped at all — there this only
+ * nudges it up by a tenth of a small number. The one case it must not touch is `md`, where the clip is
+ * contained rather than filled and there is nothing to crop; it is zeroed there.
+ *
+ * This lives in CSS and the files are untouched, which is the owner's choice — «Именно кадр в
+ * Плеере». The same clip on a course preview or an exercise page is still the whole frame.
+ */
+.player-art-lift {
+  --art-lift: -11.5%;
+  transform: translateY(var(--art-lift));
+}
+
+@media (width >= 48rem) {
+  .player-art-lift {
+    --art-lift: 0px;
+  }
 }
 
 /*

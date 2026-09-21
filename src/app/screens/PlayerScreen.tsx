@@ -34,6 +34,7 @@ import {
   PausedOverlay,
   PlayerFooter,
   PlayerHeader,
+  PlayerTimerBand,
   SectionStepper,
 } from '@/app/features/player/PlayerChrome';
 import {
@@ -155,7 +156,8 @@ interface ArtLayerProps {
  * Both halves are pure CSS. Nothing here reads the clip's dimensions, so there is no moment at
  * which the answer can be missing — which is the bug this replaced.
  */
-const ART = 'w-full h-auto md:h-full md:w-auto md:max-h-full md:max-w-full object-contain';
+const ART =
+  'player-art-lift w-full h-auto md:h-full md:w-auto md:max-h-full md:max-w-full object-contain';
 
 function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
   const video = useRef<HTMLVideoElement>(null);
@@ -220,8 +222,13 @@ function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
          * the stage and has to be cropped by something. The layer outside runs the whole screen,
          * so clipping there would let the frame bleed up over the header.
          */
+        /*
+         * The top now belongs to the clock's band (`--player-top-h`), which is zero on the steps
+         * that have no clock. The clip starts under it rather than behind it — `PlayerTimerBand`
+         * is glass, and a movement half-read through frosted glass is not a demonstration.
+         */
         ref={stage}
-        className="absolute inset-x-0 top-0 bottom-[max(0px,calc(var(--player-glass-h,0px)-120px))] flex items-center overflow-hidden md:right-85 md:bottom-0"
+        className="absolute inset-x-0 top-[var(--player-top-h,0px)] bottom-[max(0px,calc(var(--player-glass-h,0px)-120px))] flex items-center overflow-hidden md:right-85 md:bottom-0"
       >
         {/*
          * `player-art-in` is the arrival: the next movement's picture settles in over 0.42s rather
@@ -358,6 +365,8 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
   const [flipped, setFlipped] = useState(false);
   // How tall the glass panel is right now; the clip is sized against it. See ArtLayer.
   const [glassHeight, setGlassHeight] = useState(0);
+  // And how tall the clock's band is — zero on a step that has no clock, which is most of them.
+  const [timerHeight, setTimerHeight] = useState(0);
   const nextHandler = useRef<(() => void) | null>(null);
   const registerNext = useCallback((fn: (() => void) | null) => {
     nextHandler.current = fn;
@@ -508,64 +517,71 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
         front={
           <div
             className="relative size-full overflow-hidden"
-            style={{ '--player-glass-h': `${glassHeight}px` } as CSSProperties}
+            style={
+              {
+                '--player-glass-h': `${glassHeight}px`,
+                '--player-top-h': `${timerHeight}px`,
+              } as CSSProperties
+            }
             onPointerDownCapture={unlock}
           >
-            <ArtLayer exerciseId={exerciseId} playing={!paused} videoUrl={videoUrl} />
-            {/* The picture is the pause button; the panel below it is not. */}
-            {step && step.kind !== 'done' && !paused ? <TapToPause onTap={togglePause} /> : null}
-            <PlayerHeader
-              progress={steps.length > 1 ? stepIndex / (steps.length - 1) : 0}
-              paused={paused}
-              onBack={() => setLeaveOpen(true)}
-              onTogglePause={togglePause}
-            />
-            <PlayerFooter onHeight={setGlassHeight}>
-              {/*
-               * The panel's content arrives with the step rather than replacing it. Keyed exactly
-               * as StepView is, so the motion belongs to the step and not to a re-render.
-               */}
-              {step ? (
-                <div key={`anim-${stepIndex}:${stepStartedMs}`} className="player-step-in">
-                  <StepView
+            <PlayerTimerBand onHeight={setTimerHeight}>
+              <ArtLayer exerciseId={exerciseId} playing={!paused} videoUrl={videoUrl} />
+              {/* The picture is the pause button; the panel below it is not. */}
+              {step && step.kind !== 'done' && !paused ? <TapToPause onTap={togglePause} /> : null}
+              <PlayerHeader
+                progress={steps.length > 1 ? stepIndex / (steps.length - 1) : 0}
+                paused={paused}
+                onBack={() => setLeaveOpen(true)}
+                onTogglePause={togglePause}
+              />
+              <PlayerFooter onHeight={setGlassHeight}>
+                {/*
+                 * The panel's content arrives with the step rather than replacing it. Keyed exactly
+                 * as StepView is, so the motion belongs to the step and not to a re-render.
+                 */}
+                {step ? (
+                  <div key={`anim-${stepIndex}:${stepStartedMs}`} className="player-step-in">
+                    <StepView
+                      /*
+                       * Keyed on when the step began, not on an index alone: restarting a step is the
+                       * store moving that instant, and the component has to come back with it so a
+                       * half-dialled rep count goes too.
+                       */
+                      key={`${stepIndex}:${stepStartedMs}`}
+                      step={step}
+                      index={stepIndex}
+                      session={session}
+                      paused={paused}
+                      beep={sound.beep}
+                      onRecord={recordResult}
+                      onNext={next}
+                      registerNext={registerNext}
+                    />
+                  </div>
+                ) : null}
+                {step && step.kind !== 'done' ? (
+                  <SkipRow
+                    onSkipWarmup={
+                      inWarmup !== null
+                        ? () => {
+                            setPaused(false);
+                            goTo(inWarmup);
+                          }
+                        : null
+                    }
                     /*
-                     * Keyed on when the step began, not on an index alone: restarting a step is the
-                     * store moving that instant, and the component has to come back with it so a
-                     * half-dialled rep count goes too.
+                     * Every step but the last is skippable, the cool-down included — the owner asked
+                     * for that by name. `docs/COACH_RULES.md` says of the cool-down «Never skipped»;
+                     * this is her call over his rule, and it is recorded in the PR rather than
+                     * quietly resolved here.
                      */
-                    key={`${stepIndex}:${stepStartedMs}`}
-                    step={step}
-                    index={stepIndex}
-                    session={session}
-                    paused={paused}
-                    beep={sound.beep}
-                    onRecord={recordResult}
-                    onNext={next}
-                    registerNext={registerNext}
+                    onSkipStep={skipStep}
+                    onFlip={() => setFlipped(true)}
                   />
-                </div>
-              ) : null}
-              {step && step.kind !== 'done' ? (
-                <SkipRow
-                  onSkipWarmup={
-                    inWarmup !== null
-                      ? () => {
-                          setPaused(false);
-                          goTo(inWarmup);
-                        }
-                      : null
-                  }
-                  /*
-                   * Every step but the last is skippable, the cool-down included — the owner asked
-                   * for that by name. `docs/COACH_RULES.md` says of the cool-down «Never skipped»;
-                   * this is her call over his rule, and it is recorded in the PR rather than
-                   * quietly resolved here.
-                   */
-                  onSkipStep={skipStep}
-                  onFlip={() => setFlipped(true)}
-                />
-              ) : null}
-            </PlayerFooter>
+                ) : null}
+              </PlayerFooter>
+            </PlayerTimerBand>
           </div>
         }
         back={
