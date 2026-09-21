@@ -7,6 +7,7 @@ import { useT } from '@/app/hooks/useT';
 import type { PlayerResult } from '@/app/store/activeWorkout';
 import { formatClock } from '@/i18n/index';
 import { BigClock } from '../BigClock';
+import { PlayerTimerSlot } from '../PlayerChrome';
 import type { FortimeStep as Step } from '../model';
 import type { Cue } from '../sound';
 import { useCountdownCues, useNextHandler, useStepClock } from '../useStepClock';
@@ -90,15 +91,21 @@ export function FortimeStep({
     <div className="flex flex-col gap-6">
       {phase === 'running' ? (
         <>
-          <BigClock
-            seconds={clock.elapsedSec}
-            label={t('training.format_fortime')}
-            tone={remaining !== undefined && remaining <= 30 ? 'warning' : 'default'}
-            caption={t('app.playerFortimeRound', {
-              n: Math.min(roundsDone + 1, step.rounds),
-              total: step.rounds,
-            })}
-          />
+          {/*
+           * Running: the clock counts up in the band. The cap, the row of rounds and the button
+           * stay below — they are what the athlete does, not what the athlete watches.
+           */}
+          <PlayerTimerSlot>
+            <BigClock
+              seconds={clock.elapsedSec}
+              label={t('training.format_fortime')}
+              tone={remaining !== undefined && remaining <= 30 ? 'warning' : 'default'}
+              caption={t('app.playerFortimeRound', {
+                n: Math.min(roundsDone + 1, step.rounds),
+                total: step.rounds,
+              })}
+            />
+          </PlayerTimerSlot>
           {cap !== undefined ? (
             <div className="flex justify-center">
               <Chip>{t('app.playerFortimeCap', { time: formatClock(cap) })}</Chip>

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { useT } from '@/app/hooks/useT';
 import type { PrescribedWorkout } from '@/lib/training/types';
 import { BigClock } from '../BigClock';
+import { PlayerTimerSlot } from '../PlayerChrome';
 import { findBlock, targetLabel, type RestStep as Step } from '../model';
 import type { Cue } from '../sound';
 import { useCountdownCues, useNextHandler, useStepClock } from '../useStepClock';
@@ -45,16 +46,19 @@ export function RestStep({ step, prescribed, paused, beep, onNext, registerNext 
     : undefined;
 
   return (
-    <div className="flex flex-col gap-4">
-      <BigClock
-        seconds={clock.remainingSec}
-        label={t('training.rest')}
-        tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'accent' : 'default'}
-        {...(nextItem ? { caption: targetLabel(t, nextItem) } : {})}
-      />
+    <>
+      {/* The countdown goes to the band under the header; «Дальше» is the whole of what is left. */}
+      <PlayerTimerSlot>
+        <BigClock
+          seconds={clock.remainingSec}
+          label={t('training.rest')}
+          tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'accent' : 'default'}
+          {...(nextItem ? { caption: targetLabel(t, nextItem) } : {})}
+        />
+      </PlayerTimerSlot>
       <Button size="lg" fullWidth onClick={advance}>
         {t('app.playerGo')}
       </Button>
-    </div>
+    </>
   );
 }

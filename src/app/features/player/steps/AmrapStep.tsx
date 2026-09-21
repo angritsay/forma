@@ -4,6 +4,7 @@ import { IconButton } from '@/components/ui/IconButton';
 import { useT } from '@/app/hooks/useT';
 import type { PlayerResult } from '@/app/store/activeWorkout';
 import { BigClock } from '../BigClock';
+import { PlayerTimerSlot } from '../PlayerChrome';
 import { Stepper } from '../Stepper';
 import { clampCount, type AmrapStep as Step } from '../model';
 import type { Cue } from '../sound';
@@ -60,12 +61,15 @@ export function AmrapStep({
     <div className="flex flex-col gap-6">
       {phase === 'running' ? (
         <>
-          <BigClock
-            seconds={clock.remainingSec}
-            label={t('training.format_amrap')}
-            tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'accent' : 'default'}
-            caption={`${t('training.amrapHint', { min: minutes })} · ${t('training.amrapExpected', { n: step.expectedRounds })}`}
-          />
+          {/* Running: the clock is up in the band, the round count and its two controls are here. */}
+          <PlayerTimerSlot>
+            <BigClock
+              seconds={clock.remainingSec}
+              label={t('training.format_amrap')}
+              tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'accent' : 'default'}
+              caption={`${t('training.amrapHint', { min: minutes })} · ${t('training.amrapExpected', { n: step.expectedRounds })}`}
+            />
+          </PlayerTimerSlot>
           {/* The round count on a rule, the two controls opposite it — no box. */}
           <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
             <div className="flex flex-col">

@@ -5,6 +5,7 @@ import { useT } from '@/app/hooks/useT';
 import type { PlayerResult } from '@/app/store/activeWorkout';
 import type { ExerciseUnit } from '@/content/schema';
 import { BigClock } from '../BigClock';
+import { PlayerTimerSlot } from '../PlayerChrome';
 import { Stepper } from '../Stepper';
 import { findExercise, unitLabel, type WorkStep } from '../model';
 import type { Cue } from '../sound';
@@ -108,11 +109,15 @@ export function TestStep({
             />
           </>
         ) : (
-          <BigClock
-            seconds={phase === 'ready' ? (windowSec ?? 0) : clock.remainingSec}
-            tone={phase === 'running' && clock.remainingSec <= 3 ? 'accent' : 'default'}
-            caption={step.item.note ? l(step.item.note) : undefined}
-          />
+          /* Before and during the test the clock is in the band; the result phase has no clock,
+             only the stepper the athlete types the number into. */
+          <PlayerTimerSlot>
+            <BigClock
+              seconds={phase === 'ready' ? (windowSec ?? 0) : clock.remainingSec}
+              tone={phase === 'running' && clock.remainingSec <= 3 ? 'accent' : 'default'}
+              caption={step.item.note ? l(step.item.note) : undefined}
+            />
+          </PlayerTimerSlot>
         )}
 
         <div className="flex flex-wrap justify-center gap-2">

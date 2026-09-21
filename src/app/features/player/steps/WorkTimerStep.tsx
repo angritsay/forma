@@ -5,6 +5,7 @@ import { useT } from '@/app/hooks/useT';
 import type { PlayerResult } from '@/app/store/activeWorkout';
 import type { BlockFormat } from '@/content/schema';
 import { BigClock } from '../BigClock';
+import { PlayerTimerSlot } from '../PlayerChrome';
 import { exerciseName, loadLabel, setLabel, unitLabel, type WorkStep } from '../model';
 import type { Cue } from '../sound';
 import { useCountdownCues, useNextHandler, useStepClock } from '../useStepClock';
@@ -86,43 +87,55 @@ export function WorkTimerStep({
   ].filter(Boolean) as string[];
 
   return (
-    <div className="flex flex-col gap-4">
-      <StepHeading
-        eyebrow={step.totalSets > 1 ? setLabel(t, format, step.set, step.totalSets) : undefined}
-        title={exerciseName(step.exerciseId, locale)}
-      />
-      <div className="flex flex-col items-center gap-1.5">
-        <BigClock
-          seconds={clock.remainingSec}
-          tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'accent' : 'default'}
-          {...(isEmom ? { caption: t('training.emomMinuteHint', { n: step.target }) } : {})}
-        />
-        {/*
-         * How far through this movement, as a length.
-         *
-         * The digits say how long is left and nothing says how long that is *of* — a minute-long
-         * hold and a twenty-second one both read «0:12» halfway through, and they are not the same
-         * feeling at all. The line is the answer, with the elapsed and the whole under it.
-         *
-         * White, not the programme colour: a clock is not one of the places colour may land here
-         * (see BigClock), and the line is part of the clock.
-         */}
-        <div className="mt-1 flex w-full max-w-[240px] flex-col gap-1.5">
-          <ProgressBar
-            value={clock.elapsedSec / duration}
-            size="sm"
-            tone="primary"
-            label={exerciseName(step.exerciseId, locale)}
+    <>
+      {/*
+       * The clock is written here and lands in the band under the header — see `PlayerTimerSlot`.
+       * It stays inside this component because everything that drives it is: `useStepClock`, the
+       * 3-2-1 cues, the auto-advance at zero. What is left below is «про выполнение»: which
+       * movement, which set, how many and with what.
+       */}
+      <PlayerTimerSlot>
+        <div className="flex flex-col items-center gap-1.5">
+          <BigClock
+            seconds={clock.remainingSec}
+            tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'accent' : 'default'}
+            {...(isEmom ? { caption: t('training.emomMinuteHint', { n: step.target }) } : {})}
           />
-          <div className="tabular flex justify-between text-[12px] text-paper/60">
-            <span>{formatClock(Math.min(duration, clock.elapsedSec))}</span>
-            <span>{formatClock(duration)}</span>
+          {/*
+           * How far through this movement, as a length.
+           *
+           * The digits say how long is left and nothing says how long that is *of* — a minute-long
+           * hold and a twenty-second one both read «0:12» halfway through, and they are not the
+           * same feeling at all. The line is the answer, with the elapsed and the whole under it.
+           * It travels with the clock, because it is part of the clock.
+           *
+           * White, not the programme colour: a clock is not one of the places colour may land here
+           * (see BigClock).
+           */}
+          <div className="mt-1 flex w-full max-w-[240px] flex-col gap-1.5">
+            <ProgressBar
+              value={clock.elapsedSec / duration}
+              size="sm"
+              tone="primary"
+              label={exerciseName(step.exerciseId, locale)}
+            />
+            <div className="tabular flex justify-between text-[12px] text-paper/60">
+              <span>{formatClock(Math.min(duration, clock.elapsedSec))}</span>
+              <span>{formatClock(duration)}</span>
+            </div>
           </div>
         </div>
+      </PlayerTimerSlot>
+
+      <div className="flex flex-col gap-2">
+        <StepHeading
+          eyebrow={step.totalSets > 1 ? setLabel(t, format, step.set, step.totalSets) : undefined}
+          title={exerciseName(step.exerciseId, locale)}
+        />
         {facts.length > 0 ? (
           <span className="text-[13px] text-paper/70">{facts.join(' · ')}</span>
         ) : null}
       </div>
-    </div>
+    </>
   );
 }
