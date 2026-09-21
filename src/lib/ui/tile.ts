@@ -47,9 +47,16 @@ export const GAME_TILE = '#f8a050';
  * (`--course-yoga` in global.css, the third programme colour and the one nothing is using) is what
  * is left, and the three tabs then read as three colours rather than as two and a grey one.
  *
- * It paints the two pills at the top of the tab and nothing else — which is the whole of the
- * owner's «пилюли сделай цветными». Luminance 0.577, comfortably on the light side of the 0.35
- * cliff in {@link isLightTile}, and as type on the app's dark ground it clears 11.2:1.
+ * It started on the two pills at the top of the tab and nothing else — the owner's «пилюли сделай
+ * цветными» — and her next brief for the screen extended it: «добавь цвета в элементы связанные с
+ * покупкой». So it now runs down the tab on the things that lead to paying (the pills, the numbered
+ * outcomes, the offer card's edge and tint, the price, the ticks, the pay button) and on nothing
+ * factual: his degree and his 10 000 hours stay monochrome, which is what keeps the blue readable
+ * as «this is the offer» rather than as decoration. `BookScreen.tsx` holds the rule in prose.
+ *
+ * Luminance 0.577, comfortably on the light side of the 0.35 cliff in {@link isLightTile}, and as
+ * type on the app's dark ground it clears 11.2:1. As a *fill* — which is what the pay button now
+ * is — it carries `--on-course`, the same near-black the club's orange bar carries.
  *
  * A course *can* be given this same hex in the admin's tile picker, and if one ever is, the two
  * never share a screen: a course wears it on the course screen, the coach wears it here.

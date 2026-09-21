@@ -2,7 +2,7 @@ import { clsx } from 'clsx';
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { Spinner } from './Spinner';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'course';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 export type ButtonShape = 'control' | 'pill';
 
@@ -27,12 +27,27 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 /*
- * Buttons are black and white, full stop. The primary is a white fill with black text — the
+ * Buttons are black and white almost everywhere. The primary is a white fill with black text — the
  * interface accent is white now, and `--primary` flips to ink on paper, so the same class is the
  * black button the profile screen wants. Secondary is a raised surface behind a strong hairline,
- * ghost is text alone, danger is an outline with red text. None of them ever takes the programme
- * colour: on a course screen the colour is on the cover, the progress and the day number, and
- * the button stays the one thing that is certainly a button.
+ * ghost is text alone, danger is an outline with red text. Inside a programme none of those four
+ * takes the programme colour: on a course screen the colour is on the cover, the progress and the
+ * day number, and the button stays the one thing that is certainly a button.
+ *
+ * `course` is the one exception, and it is not a new idea — the club's «Вступить за 666 ₽ / мес»
+ * has been a filled orange bar since that screen was drawn (`ClubPitch.tsx`), built by hand out of
+ * `bg-course` because there was no variant for it. There is now, for the one job that earns it:
+ * **the button that takes money on a screen that is selling.** On such a screen the white button is
+ * just another white button, and the tab's own colour is what says «вот это и есть покупка».
+ *
+ * The ink is `--on-course`, which is near-black and fixed — the same pairing the club's bar uses.
+ * That is safe only because every colour this fill is used with is a *light* tile: the programme
+ * colours and `COACH_TILE` all sit well above the 0.35 in `isLightTile()`. Paint this variant with
+ * a dark tile and the label disappears; `text-tile-fg` is the property that picks the ink by
+ * luminance, and a dark-tile button would have to use that instead.
+ *
+ * Do not reach for it anywhere else. A colour that marks the purchase stops marking anything the
+ * moment a second button on the screen wears it.
  *
  * Hover lightens by one surface or drops to .85 opacity; press is a 2% scale. Nothing bounces.
  */
@@ -41,6 +56,7 @@ const VARIANT: Record<ButtonVariant, string> = {
   secondary: 'bg-surface-2 text-text border border-border-strong hover:bg-surface-3',
   ghost: 'bg-transparent text-muted hover:text-text',
   danger: 'bg-transparent text-danger border border-border-strong hover:bg-surface-2',
+  course: 'bg-course text-on-course hover:opacity-90',
 };
 
 /*
