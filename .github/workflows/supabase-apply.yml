@@ -43,6 +43,7 @@ on:
           - secrets-check
           - webhook-info
           - payments-check
+          - reset-athlete
       migration_file:
         description: 'Only for "migration": a filename in supabase/migrations/'
         required: false
@@ -609,6 +610,118 @@ jobs:
               echo "::warning::Платежей ждёт, пока их заберут: $unclaimed"
             fi
           fi
+
+      # ---------------------------------------------------------------------
+      # reset-athlete — вернуть одного человека в состояние «только что вошёл».
+      #
+      # Тренеру надо проходить онбординг и курс заново, чтобы смотреть на них
+      # глазами покупателя. Руками в дашборде это пять таблиц и шанс промахнуться
+      # мимо строки, а промах здесь необратим.
+      #
+      # **Адрес — из секрета `RESET_EMAIL`, и только оттуда.** Не из input: он
+      # печатается на странице запуска публичного репозитория навсегда, а это
+      # персональные данные. Не из файла: адрес тренера в этот репозиторий не
+      # коммитится. Ровно то же правило и по той же причине, что у `club-join`.
+      #
+      # **Что стирается:** анкета онбординга, индекс формы, результаты самотеста,
+      # все выполненные тренировки и состояние курсов.
+      #
+      # **Что не трогается, и это решение владельца:** оплаты и подписки (иначе
+      # он потеряет доступ), участие в клубе с очками и пруфами (иначе он
+      # пропадёт из таблицы на глазах у других), брони, согласия — журнал
+      # согласий не должен уметь терять строки, в этом весь его смысл — и права
+      # администратора.
+      # ---------------------------------------------------------------------
+      - name: Reset one athlete to the state right after sign-in
+        if: ${{ inputs.task == 'reset-athlete' }}
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          EMAIL: ${{ secrets.RESET_EMAIL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${EMAIL:-}" ]; then
+            echo "::error::RESET_EMAIL не задан. Settings → Secrets and variables → Actions → New repository secret, имя RESET_EMAIL, значение — адрес того, кого сбрасываем. В input адрес вписывать нельзя: он останется на странице запуска навсегда."
+            exit 1
+          fi
+          # Одинарные кавычки удваиваются, адрес приводится к нижнему регистру —
+          # как это делает normalize_email() везде в схеме.
+          # Пробелы срезаются регуляркой, а не ltrimstr: тот снимает ровно один
+          # символ, и «  адрес » остался бы с пробелом внутри SQL-литерала. При
+          # вставке на телефоне пробел прилипает незаметно, и на этом проекте он
+          # уже один раз стоил трёх неудачных оплат.
+          LITERAL=$(printf '%s' "$EMAIL" | jq -Rr 'ascii_downcase | sub("^\\s+"; "") | sub("\\s+$"; "") | "'"'"'" + gsub("'"'"'"; "'"'"''"'"'") + "'"'"'"')
+          if [ "$LITERAL" = "''" ]; then
+            echo "::error::В секрете RESET_EMAIL одни пробелы."
+            exit 1
+          fi
+
+          cat > /tmp/reset.sql <<SQL
+          do \$\$
+          declare
+            v_uid uuid;
+          begin
+            select id into v_uid from auth.users where lower(email) = $LITERAL;
+            if v_uid is null then
+              raise exception 'no account with that address';
+            end if;
+
+            delete from public.workout_sessions where user_id = v_uid;
+            delete from public.user_course_state  where user_id = v_uid;
+            delete from public.benchmarks         where user_id = v_uid;
+            -- 0015 удаляет эту таблицу; на базе, где он уже применён, её нет.
+            if to_regclass('public.daily_logs') is not null then
+              execute 'delete from public.daily_logs where user_id = \$1' using v_uid;
+            end if;
+
+            update public.profiles
+               set onboarded_at     = null,
+                   training_profile = null,
+                   fitness_index    = null,
+                   fitness_level    = null,
+                   updated_at       = now()
+             where id = v_uid;
+          end \$\$;
+
+          -- Остатки, которых быть не должно. Только числа: ни адреса, ни имени.
+          select
+            (select count(*) from public.workout_sessions s
+               join auth.users u on u.id = s.user_id where lower(u.email) = $LITERAL) as sessions_left,
+            (select count(*) from public.user_course_state c
+               join auth.users u on u.id = c.user_id where lower(u.email) = $LITERAL) as course_state_left,
+            (select count(*) from public.benchmarks b
+               join auth.users u on u.id = b.user_id where lower(u.email) = $LITERAL) as benchmarks_left,
+            (select count(*) from public.profiles p
+               join auth.users u on u.id = p.id
+              where lower(u.email) = $LITERAL and p.onboarded_at is null)             as onboarding_cleared,
+            -- Покупки ищутся по адресу, а не по user_id: так устроена вся схема.
+            (select count(*) from public.purchases pu
+              where pu.email = $LITERAL and pu.status = 'active')                      as purchases_kept;
+          SQL
+
+          jq -Rs '{query: .}' < /tmp/reset.sql > /tmp/body.json
+          code=$(curl -sS -o /tmp/out.json -w '%{http_code}' \
+            -X POST "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H 'Content-Type: application/json' \
+            --data-binary @/tmp/body.json)
+          if [ "$code" -ge 300 ]; then
+            echo "::error::Supabase ответил HTTP $code. Дальше его собственный текст ошибки, не данные."
+            jq -r '.message // .error // "(без сообщения)"' < /tmp/out.json || true
+            echo "«no account with that address» значит, что под этим адресом никто не входил — проверь секрет RESET_EMAIL."
+            exit 1
+          fi
+
+          get() { jq -r ".[0].$1 // \"?\"" < /tmp/out.json; }
+          left=$(( $(get sessions_left) + $(get course_state_left) + $(get benchmarks_left) ))
+          if [ "$left" != "0" ]; then
+            echo "::error::Что-то осталось: $left строк. Сброс не полный."
+            exit 1
+          fi
+          if [ "$(get onboarding_cleared)" != "1" ]; then
+            echo "::error::Анкета не очистилась."
+            exit 1
+          fi
+          echo "::notice::Сброшено: тренировки, состояние курсов, самотест и анкета онбординга. Оплаченных курсов осталось: $(get purchases_kept) — их и клуб мы не трогали."
 
       # ---------------------------------------------------------------------
       # webhook-info — что об этом боте думает сам Telegram.
