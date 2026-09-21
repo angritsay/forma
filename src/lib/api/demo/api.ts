@@ -1022,8 +1022,44 @@ export async function unassignCustomWorkout(_workoutId: string, _email: string):
   throw new AppError('forbidden', 'demo_read_only');
 }
 
+/** Демо-двойник `my_done_custom_workouts()` (0024). */
+export async function listDoneCustomWorkouts(): Promise<string[]> {
+  return run(() => {
+    const db = readDb();
+    const user = requireDemoUser();
+    const ids = new Set<string>();
+    for (const s of db.sessions) {
+      if (s.user_id === user.id && s.course_id === 'custom' && s.completed_at) ids.add(s.node_id);
+    }
+    return [...ids];
+  });
+}
+
+/**
+ * В демо выданным считается всё, что собрано в конструкторе.
+ *
+ * Выдача — это строка «кому», а в демо есть ровно один человек, и он же тренер: `assignCustomWorkout`
+ * поэтому и отказывает (`demo_read_only`). Пустой список был бы честен буквально и лжив по сути —
+ * карусель «тренировки от тренера» не показывалась бы никогда, и проверить её было бы нечем. Тот же
+ * приём, что с клубом: «демо проходит ровно один круг, и он стоит за клуб».
+ *
+ * Новые — первыми, как и в реальном списке, где сортировка идёт по времени выдачи.
+ */
 export async function listMyAssignedWorkouts(): Promise<AssignedWorkoutRow[]> {
-  return [];
+  return run(() =>
+    [...readDb().customWorkouts]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .map((w) => ({
+        id: w.id,
+        shortId: w.shortId,
+        title: w.title,
+        description: w.description,
+        structure: w.structure,
+        estSec: w.estSec,
+        points: w.points,
+        assignedAt: w.createdAt,
+      })),
+  );
 }
 
 export async function getSharedCustomWorkout(_token: string): Promise<AssignedWorkoutRow | null> {

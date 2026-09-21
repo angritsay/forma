@@ -34,6 +34,7 @@ import { evaluateAchievements } from '@/lib/training/levels';
 import { useT } from '@/app/hooks/useT';
 import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { AssessmentBanner } from '@/app/features/assessment/AssessmentBanner';
+import { AssignedWorkoutsCard } from '@/app/features/customWorkout/AssignedWorkoutsCard';
 import { CourseCard } from '@/app/features/courses/CourseCard';
 import { courseAccentVars } from '@/app/features/courses/courseMeta';
 import { buildDeck } from '@/app/features/courses/deck';
@@ -211,6 +212,13 @@ export default function CoursesScreen() {
          * was reachable only by typing the URL.
          */}
         <AssessmentBanner />
+        {/*
+         * Что тренер выдал лично — первым, над колодой: «Плашка находится первой над колодой
+         * курсов». Оно и по смыслу первое: курс человек выбрал сам и может вернуться к нему
+         * когда угодно, а выданная тренировка — это то, что для него сделали, и она ждёт.
+         * Компонент решает сам, показываться ли; выданного нет — нет и блока.
+         */}
+        <AssignedWorkoutsCard onOpen={(id) => navigate(`/assigned/${id}`)} />
         {orphanResume && resume ? (
           <Button
             size="lg"

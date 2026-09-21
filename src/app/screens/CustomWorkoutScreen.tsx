@@ -1,8 +1,24 @@
 /**
- * Preview and start a coach-built workout — reached from an assigned workout on Home
- * (`/assigned/:id`) or from a share link (`/shared/:token`). Loads the workout, shows what is in
- * it, and hands it to the player. Everything sits behind the app's auth + onboarding guards, so a
- * share link opens the app and the person signs in before doing the workout.
+ * Preview and start a coach-built workout — reached from the carousel on «Курсы» (`/assigned/:id`)
+ * or from a share link (`/shared/:token`). Loads the workout, shows what is in it, and hands it to
+ * the player. Everything sits behind the app's auth + onboarding guards, so a share link opens the
+ * app and the person signs in before doing the workout.
+ *
+ * **It is built like a course's workout, because the owner asked for that in as many words:** «там
+ * уже внутри устройства этой тренировки должно быть, как внутри устройства каждой тренировки,
+ * внутри курса». So the screen opens on a still from the coach's own clip with the name and the
+ * facts laid on it, exactly as `NodePreviewScreen` does — same `WorkoutHero`, same scrim anchored
+ * to the type rather than to the picture, same pills.
+ *
+ * Two things a course workout has and this one does not, and both are differences rather than
+ * omissions:
+ *
+ *   • **No difficulty.** `useCustomWorkoutStart` starts at `normal` and scale 1 on purpose — the
+ *     coach wrote these numbers for this person, and scaling them would rewrite his prescription.
+ *     A chooser here would offer to overrule the person who built it.
+ *   • **The plan is open, not folded.** A course workout hides it behind «Что внутри» because it
+ *     is one of twenty and mostly unread. This one was made for you and arrived today; the answer
+ *     to «что там» is the reason the screen is open.
  */
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
@@ -12,6 +28,7 @@ import { Glyph } from '@/components/ui/Icon';
 import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { clsx } from 'clsx';
 import { findExercise } from '@/content/catalogue';
 import { getSharedCustomWorkout, listMyAssignedWorkouts } from '@/lib/api/customWorkouts';
 import type { AssignedWorkoutRow } from '@/lib/api/types';
@@ -27,6 +44,11 @@ import type { TKey } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
 import { useCustomWorkoutStart } from '@/app/features/customWorkout/useCustomWorkoutStart';
 import { DisplayTitle } from '@/app/features/home/DisplayTitle';
+import { workLabel } from '@/app/features/courses/sessionEstimate';
+import { WorkoutHero } from '@/app/features/path/WorkoutHero';
+import { exerciseStillUrl } from '@/lib/api/storage';
+import { buildPrescribedFromCustom } from '@/lib/training/customWorkout';
+import { workoutVolume } from '@/lib/training/estimate';
 
 const SECTION_KEY: Record<CustomSectionKind, TKey> = {
   warmup: 'app.playerSectionWarmup',
@@ -41,7 +63,8 @@ type LoadState =
   | { status: 'ready'; workout: AssignedWorkoutRow };
 
 export default function CustomWorkoutScreen() {
-  const { t, l } = useT();
+  const tr = useT();
+  const { t, l } = tr;
   const params = useParams();
   const token = params.token;
   const id = params.id;
@@ -114,8 +137,31 @@ export default function CustomWorkoutScreen() {
   const structure = w.structure as CustomWorkoutStructure | undefined;
   const playable = isPlayableStructure(structure);
   const minutes = w.estSec ? Math.max(1, Math.round(w.estSec / 60)) : null;
-  // How long it takes. Points are the club's currency and are not shown anywhere in training.
-  const facts = minutes ? [t('app.nodeDuration', { min: minutes })] : [];
+
+  /*
+   * The movement this workout is remembered by — the first item of its first working section, the
+   * same rule `workoutSignatureExercise()` uses on a course's workout. Warm-ups are skipped
+   * because every workout starts with the same shoulder circles, and a screen whose picture is
+   * always the same picture has no picture.
+   */
+  const signature = playable
+    ? (structure!.sections.find((sec) => sec.kind === 'main') ?? structure!.sections[0])?.items[0]
+    : undefined;
+  const heroExercise = signature ? findExercise(signature.exerciseId) : undefined;
+  const still = heroExercise ? exerciseStillUrl(heroExercise.id) : undefined;
+
+  /*
+   * How long and how much. The reps come from the built prescription rather than from a second
+   * count written here — `workoutVolume()` is what the course's own preview reports, and it is the
+   * function that knows an EMOM asks for one item per minute rather than for all of them.
+   *
+   * Points are the club's currency and are not shown anywhere in training.
+   */
+  const volume = playable ? workoutVolume(buildPrescribedFromCustom(w.shortId, structure!)) : null;
+  const facts = [
+    minutes ? t('app.nodeDuration', { min: minutes }) : null,
+    volume && volume.reps > 0 ? workLabel(tr, volume) : null,
+  ].filter(Boolean) as string[];
 
   /*
    * Each part of the workout as a numbered ruled section: 01 and its name as the kicker, the
@@ -178,28 +224,65 @@ export default function CustomWorkoutScreen() {
         </Button>
       }
     >
-      <div className="flex flex-col gap-6 py-4">
-        <div>
-          <span className="eyebrow">{t('app.customWorkoutFromCoach')}</span>
-          <DisplayTitle as="h2" text={w.title} className="mt-3 text-5xl" />
-          {w.description ? (
-            <p className="mt-4 text-[15px] leading-relaxed text-muted">{w.description}</p>
+      <div className="flex flex-col gap-6 pb-4">
+        {/*
+         * The still is the surface, not a picture inside the block — the construction
+         * `NodePreviewScreen` explains at length: the frame fills it, and the name, the kicker and
+         * the facts sit on the frame. Where no still exists yet there is no drawing to fall back
+         * to and no coloured field either; the block's own dark surface shows through.
+         *
+         * The scrim is anchored to the type rather than stated as a percentage of the picture, and
+         * that is the part worth copying: a workout's name is one line or three, and a percentage
+         * scrim measured on the short one leaves the long one on the bright half of the frame.
+         */}
+        <div
+          className={clsx(
+            'relative -mx-6 flex flex-col justify-end overflow-hidden bg-surface md:-mx-10',
+            still && 'min-h-[56svh] md:min-h-[440px]',
+          )}
+        >
+          <WorkoutHero exercise={heroExercise} />
+          <div className="photo-grain" aria-hidden="true" />
+          {still ? (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none relative h-32"
+              style={{
+                background:
+                  'linear-gradient(180deg, rgba(10,10,12,0) 0%, rgba(10,10,12,0.28) 46%, rgba(10,10,12,0.62) 74%, rgba(10,10,12,0.82) 100%)',
+              }}
+            />
           ) : null}
-          {/*
-           * How long it takes, as a pill. It was a `FactChips` row — a hairline box of tracked
-           * capitals with a square corner — and that object has no place left: a fact that is not
-           * a control is a pill (`design/CHANGELOG.md` §10), which is what the workout preview
-           * already states its three facts with. Same component, same shape, one language.
-           */}
-          {facts.length > 0 ? (
-            <ul className="mt-5 flex flex-wrap gap-2" aria-label={w.title}>
-              {facts.map((x) => (
-                <li key={x} className="flex min-w-0">
-                  <Pill>{x}</Pill>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          <div
+            className="relative px-6 pt-4 pb-7 md:px-10"
+            style={
+              still
+                ? {
+                    background:
+                      'linear-gradient(180deg, rgba(10,10,12,0.82) 0%, rgba(10,10,12,0.96) 100%)',
+                  }
+                : undefined
+            }
+          >
+            {/* No programme colour: a coach's workout belongs to no course, so the name is white
+                where a course's would be cyan. */}
+            <DisplayTitle as="h2" text={w.title} className="text-5xl" />
+            <p className="eyebrow mt-3.5 text-paper/75">{t('app.customWorkoutFromCoach')}</p>
+            {w.description ? (
+              <p className="mt-4 text-[15px] leading-relaxed text-paper/75">{w.description}</p>
+            ) : null}
+            {facts.length > 0 ? (
+              <ul className="mt-5 flex flex-wrap gap-2" aria-label={w.title}>
+                {facts.map((x) => (
+                  <li key={x} className="flex min-w-0">
+                    {/* `on-art` treatment: white ink on a white hairline, as on the course's own
+                        preview — a fact is a pill on any ground, and on a picture it goes white. */}
+                    <Pill className="border-paper/45 text-paper">{x}</Pill>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
         </div>
         {playable ? (
           <div className="flex flex-col gap-5">{structure!.sections.map(sectionSummary)}</div>
