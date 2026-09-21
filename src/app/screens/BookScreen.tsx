@@ -17,8 +17,32 @@
  * written.
  *
  * Neither of those two blocks has a kicker over it any more («РЕГАЛИИ», «ЧТО ЭТО ДАЁТ»), and the
- * two sections below say why. The tab also has a colour of its own now — `COACH_TILE`, on the two
- * pills and nowhere else.
+ * two sections below say why.
+ *
+ * ## The colour, and where it goes now
+ *
+ * The tab has a colour of its own — `COACH_TILE`, the blue in `src/lib/ui/tile.ts`. It used to
+ * paint the two pills at the top and nothing else, on the argument that colour here *names* the
+ * tab rather than fills anything. The owner's brief moved it: «сделай её более визуальной и
+ * привлекательной + добавь цвета в элементы связанные с покупкой».
+ *
+ * So the blue now runs down the screen on exactly the things that lead to paying, and on nothing
+ * else: the two pills, the 01 · 02 · 03 of what the session gives, then the offer itself — the
+ * card's edge and its faint tint, the price, the ticks in «Что входит», and the button. Everything
+ * factual stays monochrome. That is the whole rule, and it is what keeps the colour meaning
+ * something: his degree and his 10 000 hours are not for sale, so they are not blue.
+ *
+ * The club's screen already worked this way — an orange lockup, an orange «Вступить за 666 ₽ / мес»
+ * — so this is the two selling tabs speaking one language rather than a new idea. `Button` grew a
+ * `course` variant for it, which is the club's hand-built bar turned into a part of the kit.
+ *
+ * ## And the photograph
+ *
+ * 4:5, monochrome, with grain over it — the frame `CoachCard.astro` gives him on the website, and
+ * the treatment every photograph in this product gets. It replaces a 120px circle, which was the
+ * one piece of imagery on the tab and was reading as an avatar in a settings row. The source is
+ * only 240×240 (`content/site/coach.ts` says so and asks for a larger one), so it is held at 128px
+ * wide: the crop is taken from the middle and the grain covers what the upscale costs.
  *
  * Each length says what it is and what is in it, and nothing about the other one. It used to be
  * built as a comparison — «+1 000 ₽ к 30 минутам» beside the price, «Всё из 30 минут», and a kicker
@@ -169,9 +193,9 @@ export default function BookScreen() {
   return (
     /*
      * `--course-tile` around the whole tab, the way the club's screen carries its orange: the tab
-     * has no programme to take a colour from, so `COACH_TILE` is where its blue lives. Exactly two
-     * things read it — the pills below — which is the owner's «пилюли сделай цветными» and the end
-     * of it. Colour here names the tab; it does not fill anything.
+     * has no programme to take a colour from, so `COACH_TILE` is where its blue lives. Set once
+     * here, so everything below reads `text-course` / `bg-course` / `border-course` and the hex is
+     * never typed on a screen. The header comment says which of those things are allowed to.
      */
     <div style={courseTileVars(COACH_TILE)}>
       <Screen contentClassName="pt-4">
@@ -201,19 +225,28 @@ export default function BookScreen() {
                   ) : null}
                 </h2>
               </div>
+              {/*
+                The website's frame for him, not an avatar: 4:5, monochrome, grain over it. The
+                grain is a sibling element rather than an `::after` on the frame for the reason
+                global.css gives — it has to sit between the image and anything laid on top of it.
+              */}
               {COACH.photo ? (
-                <img
-                  src={withBase(COACH.photo)}
-                  alt={name}
-                  width={120}
-                  height={120}
-                  className="photo-mono size-30 shrink-0 rounded-pill object-cover"
-                />
+                <div className="relative w-32 shrink-0 overflow-hidden rounded-tile bg-surface">
+                  <img
+                    src={withBase(COACH.photo)}
+                    alt={name}
+                    width={256}
+                    height={320}
+                    className="photo-mono block aspect-[4/5] w-full object-cover"
+                  />
+                  <div className="photo-grain" aria-hidden="true" />
+                </div>
               ) : (
-                <Avatar seed={name} name={name} size={120} />
+                <Avatar seed={name} name={name} size={128} />
               )}
             </div>
-            {/* The tab's colour, and the only two things on the screen wearing it. */}
+            {/* Where the tab's colour starts. Outlined rather than filled: these two are facts
+                about the session, and the one filled thing on the screen is the button. */}
             <div className="flex flex-wrap gap-2">
               <Pill tone="course">{l(BOOKING.format, locale)}</Pill>
               <Pill tone="course">{t('app.bookLeadTimePill', { n: lead })}</Pill>
@@ -306,7 +339,10 @@ export default function BookScreen() {
                   key={o.title.en}
                   className="flex items-start gap-4 border-t border-border py-5 first:border-t-0 first:pt-0"
                 >
-                  <span className="numeral tabular w-6 shrink-0 pt-0.5 text-[15px] text-muted-2">
+                  {/* The first of the blue things. These three lines are the argument for the
+                      price below them, so they are where the offer starts and where its colour
+                      starts; the credentials above stay grey because they are not for sale. */}
+                  <span className="numeral tabular w-6 shrink-0 pt-0.5 text-[15px] text-course">
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <div className="flex min-w-0 flex-col gap-1.5">
@@ -354,7 +390,29 @@ export default function BookScreen() {
            * instead of a small choice before the price. Sized to its own labels it is a setting,
            * which is what it is.
            */}
-          <Card level={1} className="flex flex-col gap-5">
+          {/*
+           * The offer's own edge and ground, in the tab's colour.
+           *
+           * Both are set inline rather than by class, and that is not a shortcut. `level={1}`
+           * paints `bg-surface` and `border-border`; a Tailwind class passed through `className`
+           * sets the same two properties, so which one wins is decided by the order the two
+           * utilities happen to land in the stylesheet — not by the order they are written here.
+           * An inline declaration has no such argument to lose.
+           *
+           * 6% of the blue over the surface and 45% of it on the hairline: enough that the card
+           * reads as a different kind of object from the two hairline boxes above and below it
+           * (both of which are *states*, and both stay grey), and far too little to be a fill. The
+           * text on it is the app's own, unchanged, so nothing here needs re-measuring for
+           * contrast — a 6% tint moves the ground by about one surface level.
+           */}
+          <Card
+            level={1}
+            className="flex flex-col gap-5"
+            style={{
+              background: 'color-mix(in oklab, var(--course-tile) 6%, var(--surface))',
+              borderColor: 'color-mix(in oklab, var(--course-tile) 45%, transparent)',
+            }}
+          >
             {BOOKING.options.length > 1 ? (
               <SegmentedControl
                 size="sm"
@@ -620,7 +678,12 @@ function Option({
 
   return (
     <article className="flex flex-col gap-4">
-      <p className="display tabular text-[clamp(34px,11vw,48px)] leading-none">{price}</p>
+      {/* The price in the tab's blue — the loudest thing on the screen, and now the thing that
+          says what kind of screen it is. 11.2:1 on the app's ground and a shade better on the
+          card's tint of it, so the figure is as legible in colour as it was in white. */}
+      <p className="display tabular text-[clamp(34px,11vw,48px)] leading-none text-course">
+        {price}
+      </p>
 
       <div className="flex flex-col gap-3">
         <span className="eyebrow">{t('app.bookIncludes')}</span>
@@ -630,7 +693,10 @@ function Option({
               key={item.en}
               className="flex items-start gap-3 border-t border-border py-2.5 text-[15px] leading-snug first:border-t-0 first:pt-3"
             >
-              <Glyph size={14} className="mt-1 text-muted">
+              {/* The tick takes the colour and the line stays white: a blue list would be a
+                  block of coloured body copy, which is a different thing from a list with its
+                  marks picked out. */}
+              <Glyph size={14} className="mt-1 text-course">
                 ✓
               </Glyph>
               <span>{l(item, locale)}</span>
@@ -640,12 +706,15 @@ function Option({
       </div>
 
       {payment ? (
-        <Button size="lg" fullWidth loading={redirecting} onClick={onPay}>
+        /* The one button on the tab that takes money, and the only one wearing the colour. The
+           «Выбрать время» below it stays a grey secondary on purpose: it is the step *after* the
+           money, and two filled blue bars on one screen would make neither of them the action. */
+        <Button variant="course" size="lg" fullWidth loading={redirecting} onClick={onPay}>
           {t('app.bookPay', { price })}
         </Button>
       ) : (
         <>
-          <LinkButton href={contactHref} size="lg" fullWidth external>
+          <LinkButton href={contactHref} variant="course" size="lg" fullWidth external>
             {t('app.bookContact')}
           </LinkButton>
           <p className="text-sm text-muted">{t('app.bookContactHint')}</p>
