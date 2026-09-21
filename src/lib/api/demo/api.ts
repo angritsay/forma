@@ -6,6 +6,7 @@
  * difference beyond the demo badge.
  */
 import { COURSES, EXERCISES } from '@/content/registry';
+import { addDays } from '@/lib/util/dates';
 import { downscaleImage, isVideoFile, toDataUrl, type DownscaleOptions } from '@/lib/util/image';
 import { AppError } from '../errors';
 import type {
@@ -1435,6 +1436,30 @@ export async function joinClub(): Promise<string | null> {
       return club.id;
     }),
   );
+}
+
+/**
+ * Демо-двойник `my_club_days()` (0023): даты, за которые у демо-аккаунта есть незачёркнутый пруф.
+ *
+ * День считается так же, как в базе, — от начала раунда плюс номер дня, а не от момента отправки.
+ * Серию из этих дат считает одна и та же функция (`features/marathon/streak.ts`), и кормить её
+ * двумя разными определениями дня значило бы получить два разных ответа на один вопрос.
+ */
+export async function getMyClubDays(today: string): Promise<string[]> {
+  return run(() => {
+    const db = readDb();
+    const user = requireDemoUser();
+    const mine = new Set(db.marathonMembers.filter((m) => m.email === user.email).map((m) => m.id));
+    const days = new Set<string>();
+    for (const s of db.marathonSubmissions) {
+      if (!mine.has(s.memberId) || s.voidedAt) continue;
+      const round = db.marathons.find((m) => m.id === s.marathonId);
+      if (!round) continue;
+      const day = addDays(round.startsOn, s.dayIndex - 1);
+      if (day <= today) days.add(day);
+    }
+    return [...days].sort().reverse();
+  });
 }
 
 export async function listMyMarathons(): Promise<MyMarathon[]> {

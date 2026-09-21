@@ -170,6 +170,25 @@ export async function joinClub(): Promise<string | null> {
   });
 }
 
+/**
+ * The dates the athlete has an un-voided club proof for, newest first, across every round.
+ *
+ * The streak is computed from this list rather than by the server — see
+ * `src/app/features/marathon/streak.ts` for why the rule lives in one place, and
+ * `supabase/migrations/0023_club_days.sql` for why the date is the day the task was *for* rather
+ * than the moment the button was pressed.
+ *
+ * `today` is the athlete's own local date, not the server's: a streak that turned over at midnight
+ * UTC would break at three in the morning in Moscow and at four in the afternoon in Vladivostok.
+ */
+export async function getMyClubDays(today: string): Promise<string[]> {
+  if (isDemo()) return (await demo()).getMyClubDays(today);
+  return guard(async () => {
+    await requireUser();
+    return unwrap<string[]>(await supabase().rpc('my_club_days', { p_today: today }));
+  });
+}
+
 /** Every marathon the signed-in athlete plays, newest first. Drafts are not theirs to see. */
 export async function listMyMarathons(): Promise<MyMarathon[]> {
   if (isDemo()) return (await demo()).listMyMarathons();

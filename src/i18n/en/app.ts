@@ -1153,6 +1153,10 @@ export const app = {
   clubLeadPost: ': ten minutes on foot, twenty squats, a glass of water before coffee.',
   clubLeadWeek: 'Points add up over the week, and whoever is top of the board gets {prize}.',
   clubChargeNote: 'One payment: {price} for a year of access. The club and every Forma course.',
+  // --- Club, the streak (stream: club-streak) --------------------------------
+  clubStreakOne: '{n} day in a row',
+  clubStreakFew: '{n} days in a row',
+  clubStreakMany: '{n} days in a row',
   // --- Club, for somebody who is already in it (stream: club-pitch-states) ----
   clubMemberTitle: 'You are in the club',
   clubMemberNote:
