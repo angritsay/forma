@@ -1039,6 +1039,13 @@ export const app = {
   mAdminProofOpen: 'Посмотреть фото',
   mAdminProofOpenVideo: 'Посмотреть видео',
   mAdminProofFailed: 'Не открылось — нажми ещё раз',
+  // Десятиминутная разминка приходит десятиминутным видео, поэтому в плеере есть скорость и
+  // полоса, по которой можно провести пальцем: ни того, ни другого системные контролы на
+  // телефоне не дают.
+  mAdminProofPlay: 'Включить',
+  mAdminProofPause: 'Пауза',
+  mAdminProofSpeed: 'Скорость просмотра',
+  mAdminProofSeek: 'Место в видео',
   mAdminProofsAll: 'Все дни',
   mAdminVoid: 'Не засчитать',
   mAdminVoidReason: 'Почему',

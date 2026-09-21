@@ -1013,6 +1013,12 @@ export const app = {
   mAdminProofOpen: 'See the photo',
   mAdminProofOpenVideo: 'Watch the clip',
   mAdminProofFailed: 'Did not open — tap again',
+  // A ten-minute warm-up is sent in as a ten-minute clip, so the review player runs it fast and
+  // lets a thumb drag through it — neither of which the native controls offer on a phone.
+  mAdminProofPlay: 'Play',
+  mAdminProofPause: 'Pause',
+  mAdminProofSpeed: 'Playback speed',
+  mAdminProofSeek: 'Position in the clip',
   mAdminProofsAll: 'Every day',
   mAdminVoid: 'Do not count',
   mAdminVoidReason: 'Why',
