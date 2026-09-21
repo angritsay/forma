@@ -9,10 +9,10 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Glyph } from '@/components/ui/Icon';
 import { IconButton } from '@/components/ui/IconButton';
-import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
 import { Sheet } from '@/components/ui/Sheet';
+import { PersonPicker } from '@/app/features/admin/PersonPicker';
 import { useToast } from '@/components/ui/Toast';
 import {
   assignCustomWorkout,
@@ -353,18 +353,18 @@ function AssignSheet({
     <Sheet open onClose={onClose} title={t('app.builderAssignBtn')}>
       <div className="flex flex-col gap-3">
         <p className="text-[15px] text-muted">{t('app.builderAssignHint')}</p>
-        <div className="flex gap-2">
-          <Input
-            type="email"
-            inputMode="email"
-            autoComplete="off"
-            autoCapitalize="none"
-            spellCheck={false}
-            wrapperClassName="flex-1"
-            aria-label={t('app.builderEmailPlaceholder')}
+        {/*
+         * Поиск по имени вместо набора адреса: «мы обычно знаем их имена и хочется не писать его
+         * буквально, потому что мы можем создать ошибку, а выбрать из списка имеющихся».
+         * Печатать по-прежнему можно что угодно — тренировку иногда выдают человеку, которого в
+         * базе ещё нет, и `PersonPicker` это оставляет.
+         */}
+        <div className="flex items-start gap-2">
+          <PersonPicker
+            className="flex-1"
             placeholder={t('app.builderEmailPlaceholder')}
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={setEmail}
           />
           <Button loading={busy} onClick={() => void assign()}>
             {t('app.builderAssignAction')}

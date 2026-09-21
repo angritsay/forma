@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PersonPicker } from '@/app/features/admin/PersonPicker';
 import { Sheet } from '@/components/ui/Sheet';
 import { isValidEmail, normalizeEmail } from '@/lib/api/auth';
 import type { SubscriptionPlan } from '@/lib/api/types';
@@ -80,17 +81,12 @@ export function AddSubscriptionSheet({
     >
       <form id="admin-add-subscription" onSubmit={submit} className="flex flex-col gap-5 py-2">
         <p className="text-[15px] text-muted">{t('app.adminSubAddLead')}</p>
-        <Input
-          type="email"
-          inputMode="email"
-          autoComplete="off"
-          autoCapitalize="none"
-          spellCheck={false}
+        {/* Как в шторке покупки: подсказки по имени, поле остаётся полем. См. `PersonPicker`. */}
+        <PersonPicker
           label={t('app.adminAddEmail')}
-          placeholder={t('app.authEmailPlaceholder')}
+          placeholder={t('app.adminPersonPlaceholder')}
           value={email}
-          disabled={busy}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={setEmail}
           onBlur={() => setTouched(true)}
           error={error ?? (touched && email && !emailOk ? t('app.adminInvalidEmail') : undefined)}
         />
