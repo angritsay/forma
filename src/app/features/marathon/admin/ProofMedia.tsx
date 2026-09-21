@@ -13,14 +13,17 @@
  * busy club is hundreds of objects, and signing them all to render a page nobody scrolls to the
  * bottom of is hundreds of requests for nothing.
  *
- * Video and photo are one control, because the athlete's picker offers both. A clip gets a real
- * `<video controls>`; there is no autoplay and no loop — this is evidence being examined, not a
- * feed being browsed, and a dozen clips playing at once on one screen is unusable.
+ * Video and photo are one control, because the athlete's picker offers both. A clip gets the
+ * review player (ProofPlayer.tsx) rather than `<video controls>`: the proof is as long as the
+ * task it proves, so the coach needs to run it at 2× or 4× and drag a thumb through it. There is
+ * no autoplay and no loop — this is evidence being examined, not a feed being browsed, and a
+ * dozen clips playing at once on one screen is unusable.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Glyph } from '@/components/ui/Icon';
 import { resolveMediaUrl } from '@/lib/api/storage';
 import { useT } from '@/app/hooks/useT';
+import { ProofPlayer } from './ProofPlayer';
 
 export interface ProofMediaProps {
   /** The `storage:proofs/…` reference stored on the submission. */
@@ -70,19 +73,14 @@ export function ProofMedia({ mediaPath }: ProofMediaProps) {
   }, [mediaPath, state.kind]);
 
   if (state.kind === 'ready') {
+    if (video) return <ProofPlayer src={state.url} />;
     return (
       <span className="mt-2 block overflow-hidden rounded-tile border border-border bg-surface-2">
-        {video ? (
-          /* No `<track>`: a phone clip of somebody doing twenty squats carries no speech to
-             caption, and an empty track element is a worse lie than none. */
-          <video src={state.url} controls preload="metadata" className="block max-h-80 w-full" />
-        ) : (
-          <img
-            src={state.url}
-            alt={t('app.mAdminProofOpen')}
-            className="block max-h-80 w-full object-contain"
-          />
-        )}
+        <img
+          src={state.url}
+          alt={t('app.mAdminProofOpen')}
+          className="block max-h-80 w-full object-contain"
+        />
       </span>
     );
   }
