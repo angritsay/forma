@@ -274,6 +274,21 @@ export async function listMyAssignedWorkouts(): Promise<AssignedWorkoutRow[]> {
   });
 }
 
+/**
+ * Short ids of the coach-built workouts this person has already finished (`my_done_custom_workouts`,
+ * 0024).
+ *
+ * Read by the card on «Курсы» so an assignment stops being offered once it is done. Not computed
+ * from the progress store's `recentSessions`: that window is 60 rows, and a workout finished a
+ * month ago would fall out of it and come back on the screen.
+ */
+export async function listDoneCustomWorkouts(): Promise<string[]> {
+  if (isDemo()) return (await demo()).listDoneCustomWorkouts();
+  return guard(async () => {
+    return unwrap<string[]>(await supabase().rpc('my_done_custom_workouts'));
+  });
+}
+
 /** Resolve a share link to its workout, or null when the token is unknown / archived. */
 export async function getSharedCustomWorkout(token: string): Promise<AssignedWorkoutRow | null> {
   if (isDemo()) return (await demo()).getSharedCustomWorkout(token);

@@ -604,6 +604,7 @@ export const app = {
   customWorkoutMissingTitle: 'Workout not found',
   customWorkoutMissingBody: 'The link is invalid or the workout was removed.',
   customWorkoutFromCoach: 'From the coach',
+  customWorkoutOpen: 'Open',
   customWorkoutRounds: '{n} rounds',
   customWorkoutSeconds: '{n} sec',
   customWorkoutReps: '{n} reps',

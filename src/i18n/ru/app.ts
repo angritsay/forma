@@ -624,6 +624,9 @@ export const app = {
   customWorkoutMissingTitle: 'Тренировка не найдена',
   customWorkoutMissingBody: 'Ссылка недействительна или тренировку удалили.',
   customWorkoutFromCoach: 'От тренера',
+  // На карточке в ленте «Курсов». «Открыть», а не «Начать»: нажатие ведёт на экран тренировки, где
+  // она расписана и где стоит настоящее «Начать», — обещать старт с карточки значит врать на один шаг.
+  customWorkoutOpen: 'Открыть',
   customWorkoutRounds: '{n} кр.',
   customWorkoutSeconds: '{n} сек',
   customWorkoutReps: '{n} повт.',
