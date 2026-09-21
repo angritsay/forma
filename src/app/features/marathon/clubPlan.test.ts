@@ -8,7 +8,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { CLUB_PLAN_ID, PLAN_BY_ID, planMonthlyPrice } from '@content/site/plans';
-import { CLUB_PITCH_CELL_RATIO, clubPitchPhotos, panelFocus } from '@content/site/club';
+import { CLUB_PITCH_PHOTO_COUNT, clubPitchPhotos } from '@content/site/club';
 import { clubChargeLabel, clubJoinHref, clubMonthlyLabel, clubPlan } from './clubPlan';
 
 describe('the club price', () => {
@@ -72,31 +72,29 @@ describe('the photographs on the selling screen', () => {
   });
 
   /**
-   * The crop maths, because the old fixed «74%» read like a crop centre and was not one: it put
-   * the middle of the slice at 0.664 of the file, eight points left of everybody in the row.
+   * The carousel is ten frames or every consented file there is, whichever is fewer — the owner
+   * asked for ten and the product has exactly ten. A count that quietly fell back to three would
+   * look like a design choice rather than like missing data.
    */
-  it('puts the middle of the slice on the subject, not the percentage', () => {
-    const r = CLUB_PITCH_CELL_RATIO;
-    for (const center of [0.5, 0.733, 0.76, 0.758]) {
-      const p = panelFocus(center);
-      // The slice `object-position: p%` actually selects, and where its middle lands.
-      const left = p * (1 - r);
-      expect(left + r / 2).toBeCloseTo(center, 6);
-      expect(left).toBeGreaterThanOrEqual(0);
-      expect(left + r).toBeLessThanOrEqual(1 + 1e-9);
-    }
-  });
-
-  it('never asks for a slice that hangs off the file', () => {
-    expect(panelFocus(0.99)).toBe(1);
-    expect(panelFocus(0.01)).toBe(0);
-  });
-
-  it('gives each composite its own crop', () => {
+  it('fills the carousel with every consented photograph, up to ten', () => {
     const { photos } = clubPitchPhotos();
-    const focuses = photos.map((p) => p.focus);
-    for (const f of focuses) expect(f).toMatch(/^\d+(\.\d+)?% 50%$/);
-    // Three people standing in three different places: one number for all three is the bug.
-    expect(new Set(focuses).size).toBe(focuses.length);
+    expect(CLUB_PITCH_PHOTO_COUNT).toBe(10);
+    expect(photos.length).toBe(CLUB_PITCH_PHOTO_COUNT);
+    // Ten different people, not one file repeated.
+    expect(new Set(photos.map((p) => p.src)).size).toBe(photos.length);
+  });
+
+  /**
+   * A square cell shows the whole file, so every frame carries the description written for that
+   * exact image. While the cells were narrow slices these went out unlabelled on purpose — see
+   * `clubPitchPhotos()` — and losing the alt text again would be silent.
+   */
+  it('gives every frame its own description', () => {
+    const { photos } = clubPitchPhotos();
+    for (const p of photos) {
+      expect(p.alt?.ru, `club photo ${p.id} has no Russian alt`).toBeTruthy();
+      expect(p.alt?.en, `club photo ${p.id} has no English alt`).toBeTruthy();
+    }
+    expect(new Set(photos.map((p) => p.alt?.ru)).size).toBe(photos.length);
   });
 });

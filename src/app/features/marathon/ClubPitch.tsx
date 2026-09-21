@@ -7,11 +7,15 @@
  * same screen with `ClubMember` in the pill's place. See that component for why it is not a pill.
  *
  * She sent a 375×812 render and said «Сделай под него», so this is that picture: a small muted
- * label, a row of three tight monochrome crops running nearly the full width, the club's name
- * composited over the bottom of them in the brand's 200/800/200 device, one orange pill with the
- * price on it, and two paragraphs with a single phrase in orange. Nothing else. The version this
- * replaces was written from a description of the same drawing and had a prize pill, three
- * explanatory rows and a sticky footer — the same facts, arranged as a brochure.
+ * label, monochrome photographs running nearly the full width, the club's name in the brand's
+ * 200/800/200 device, one orange pill with the price on it, and two paragraphs with a single
+ * phrase in orange. Nothing else. The version this replaces was written from a description of the
+ * same drawing and had a prize pill, three explanatory rows and a sticky footer — the same facts,
+ * arranged as a brochure.
+ *
+ * Two things have moved since that render, both on her word and both explained at `Hero` below:
+ * the three fixed crops are now ten square frames you swipe, and the name sits under them rather
+ * than composited over them.
  *
  * Three departures from the rest of the app when this screen was written, and they are the point
  * of the redesign rather than mistakes to correct back: the type is **mixed case**; the **colour
@@ -20,7 +24,7 @@
  * departure: `.eyebrow` and `.control-label` dropped their capitals product-wide, so this screen
  * stopped opting out and simply uses them.
  *
- * ## The photographs and the label over them
+ * ## The photographs and the label above them
  *
  * The row renders from `clubPitchPhotos()` and the label is chosen by what came back. The mockup
  * says «Результаты участников» over photographs that belong to `content/site/results.ts` —
@@ -41,7 +45,6 @@
  * register, the screen says what is actually charged — one payment for a year — because a button
  * quoting a month for an annual charge is a chargeback waiting to be filed.
  */
-import { clsx } from 'clsx';
 import { useT } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
 import { isDemo } from '@/lib/api/mode';
@@ -49,7 +52,7 @@ import { withBase } from '@/lib/util/paths';
 import { externalLinkProps } from '@/app/hooks/useExternalLink';
 import { clubChargeLabel, clubJoinHref, clubMonthlyLabel } from '@/app/features/marathon/clubPlan';
 import { clubPrizeMidSentence } from '@/app/features/marathon/prize';
-import { CLUB_PITCH_ROW_ASPECT, clubPitchPhotos } from '@content/site/club';
+import { clubPitchPhotos } from '@content/site/club';
 
 export interface ClubPitchProps {
   /**
@@ -61,12 +64,29 @@ export interface ClubPitchProps {
 }
 
 /**
- * The hero: the label, the three crops, and the club's name lying across the bottom of them.
+ * The hero: the label, a strip of square photographs you swipe, and the club's name under them.
  *
- * The cells are pulled two units wider than the text column on either side (`-mx-2`), which is the
- * mockup's own relationship between the media and the words — the picture runs wide, the sentences
- * are inset. The name's last line is allowed to drop a few pixels past the bottom edge of the
- * photographs, as it does in the drawing; nothing here clips it.
+ * ## Why it is a carousel now
+ *
+ * The owner: «Сейчас они статичные, а нужно, чтобы это были квадратные изображения, которые можно
+ * скролить. То есть это каруселька должна быть, которая состоит из 10 фотографий.» The triptych
+ * showed three people through a 32%-wide slice of each file; the strip shows ten people whole. The
+ * crop arithmetic that made the slice land on a body rather than on the seam went with it —
+ * `content/site/club.ts` says what was removed and why.
+ *
+ * It bleeds to both screen edges and is padded back in, so the first frame lines up with the words
+ * and the last one runs off the right — which is the whole affordance: a strip that stops short of
+ * the edge looks finished, and nobody swipes a finished thing. `.deck-scroller` hides the bar a
+ * desktop browser would otherwise draw across the bottom of a photograph.
+ *
+ * ## Why the name came out of the photographs
+ *
+ * It used to be composited over the bottom of the row on a measured gradient — «the worst pixel in
+ * each line's band measures 5.57 : 1 for the orange» — and that measurement was taken against three
+ * known photographs. Ten photographs that slide underneath cannot be measured: any frame can end up
+ * behind «маленьких», and the honest choices are a scrim heavy enough to survive the brightest one,
+ * which would grey out a third of every picture, or the name on the page's own ground. The name is
+ * on the ground. It is still the 200/800/200 lockup the mockup draws, and it still opens the page.
  */
 function Hero() {
   const { t, l } = useT();
@@ -81,86 +101,52 @@ function Hero() {
           used to carry (`.eyebrow-sentence`) has nothing left to opt out of. */}
       {photos.length > 0 ? <p className="eyebrow px-3">{label}</p> : null}
 
-      <div className="relative -mx-2">
-        {photos.length > 0 ? (
-          <>
-            {/*
-             * The frames are unlabelled and the row carries one true sentence about what they are.
-             * Their source describes the before/after pair, left to right, and a single panel is
-             * not the pair — reusing that text here would describe a picture that is not on the
-             * screen to the one reader who cannot check. A `CLUB_PHOTOS` entry brings its own alt.
-             */}
-            <ul
-              aria-label={rowLabel}
-              className="flex gap-1.5"
-              /* The row's shape comes from the same constant the crops are computed against
-                 (`content/site/club.ts`), so a change to one is a change to both. */
-              style={{ aspectRatio: CLUB_PITCH_ROW_ASPECT }}
-            >
-              {photos.map((photo) => (
-                <li
-                  key={photo.id}
-                  className="relative min-w-0 flex-1 overflow-hidden rounded-tile bg-surface-2"
-                >
-                  <img
-                    src={withBase(photo.src)}
-                    alt={photo.alt ? l(photo.alt) : ''}
-                    loading="eager"
-                    decoding="async"
-                    className="photo-mono size-full object-cover"
-                    style={{ objectPosition: photo.focus ?? '50% 50%' }}
-                  />
-                  <div className="photo-grain" aria-hidden="true" />
-                </li>
-              ))}
-            </ul>
-            {/*
-             * One gradient across the whole row rather than one per cell, so the name lies on a
-             * single darkening rather than on three that stop at the gaps.
-             *
-             * It is steeper than the shared `.photo-scrim`, and the stops are measured off the
-             * rendered pixels rather than chosen by eye. Under `.photo-scrim` the brightest pixel
-             * of the photograph behind «маленьких» left the orange at 2.65:1 and «Клуб» at 3.41:1,
-             * under the 4.5:1 this product holds its type to. With these stops the worst pixel in
-             * each line's band measures 5.57 : 1 for the orange and 7.35 / 9.01 : 1 for the two
-             * white lines, and the top two thirds of the row stay photograph.
-             *
-             * Re-measure if the row's height, the type size or the photographs change: screenshot
-             * the page with the `h1` hidden and read the band each line occupies.
-             */}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 rounded-tile"
-              style={{
-                background:
-                  'linear-gradient(180deg, rgba(10,10,10,0) 30%, rgba(10,10,10,0.22) 48%, rgba(10,10,10,0.58) 62%, rgba(10,10,10,0.80) 80%, rgba(10,10,10,0.88) 100%)',
-              }}
-            />
-          </>
-        ) : null}
-
-        {/*
-         * «Клуб» 200 · «маленьких» 800 in the club's colour · «шагов» 200. This used to carry
-         * `normal-case` to undo `.display`'s capitals; `.display` is sentence case now, so the
-         * opt-out is gone and the class alone says what the mockup says.
-         *
-         * `leading-[1.12]` is kept and is deliberate: none of «Клуб», «маленьких», «шагов» has a
-         * descender, so this lockup can sit tighter than `.display`'s own 1.2 — which has to hold
-         * for any string, including the у that sets the floor.
-         */}
-        <h1
-          className={clsx(
-            'display text-[clamp(32px,10.2vw,44px)] leading-[1.12]',
-            photos.length > 0
-              ? 'absolute inset-x-0 bottom-[-6px] pl-5'
-              : 'px-3 pt-2 pb-1 text-balance',
-          )}
+      {photos.length > 0 ? (
+        /*
+         * `-mx-6 px-4` rather than the old `-mx-2`: the scroller itself has to reach the screen
+         * edge or the frames stop at a margin instead of running under it, and the padding puts
+         * the first frame back where the triptych began. `scroll-px-4` makes snapping land it
+         * there too, instead of flush against the viewport.
+         */
+        <ul
+          aria-label={rowLabel}
+          className="deck-scroller -mx-6 flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-px-4 px-4 md:-mx-10 md:scroll-px-8 md:px-8"
         >
-          <span className="t-thin block">{t('app.clubNameLead')}</span>
-          <span className="block text-course">{t('app.clubNameAccent')}</span>
-          <span className="t-thin block">{t('app.clubNameTail')}</span>
-        </h1>
-      </div>
+          {photos.map((photo, i) => (
+            <li
+              key={photo.id}
+              className="relative w-[66%] max-w-[300px] shrink-0 snap-start overflow-hidden rounded-tile bg-surface-2"
+            >
+              <img
+                src={withBase(photo.src)}
+                alt={photo.alt ? l(photo.alt) : ''}
+                /* The first two are on screen at rest; the other eight are a swipe away and must
+                   not compete with them for the connection. */
+                loading={i < 2 ? 'eager' : 'lazy'}
+                decoding="async"
+                className="photo-mono block aspect-square w-full object-cover"
+                style={{ objectPosition: photo.focus ?? '50% 50%' }}
+              />
+              <div className="photo-grain" aria-hidden="true" />
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {/*
+       * «Клуб» 200 · «маленьких» 800 in the club's colour · «шагов» 200. This used to carry
+       * `normal-case` to undo `.display`'s capitals; `.display` is sentence case now, so the
+       * opt-out is gone and the class alone says what the mockup says.
+       *
+       * `leading-[1.12]` is kept and is deliberate: none of «Клуб», «маленьких», «шагов» has a
+       * descender, so this lockup can sit tighter than `.display`'s own 1.2 — which has to hold
+       * for any string, including the у that sets the floor.
+       */}
+      <h1 className="display px-3 text-[clamp(32px,10.2vw,44px)] leading-[1.12] text-balance">
+        <span className="t-thin block">{t('app.clubNameLead')}</span>
+        <span className="block text-course">{t('app.clubNameAccent')}</span>
+        <span className="t-thin block">{t('app.clubNameTail')}</span>
+      </h1>
     </section>
   );
 }
