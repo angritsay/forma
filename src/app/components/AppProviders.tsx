@@ -1,5 +1,7 @@
 import { useEffect, useMemo, type ReactNode } from 'react';
 import { KitProvider, type KitLabels } from '@/components/ui/KitContext';
+import { linkTelegram } from '@/lib/api/telegram';
+import { telegram } from '@/lib/telegram/webapp';
 import { t } from '@/i18n/index';
 import { useCatalogue } from '@/app/store/catalogue';
 import { useLocale } from '@/app/store/locale';
@@ -23,6 +25,25 @@ export function AppProviders({ children }: { children: ReactNode }) {
    */
   useEffect(() => {
     if (signedIn) void useCatalogue.getState().load();
+  }, [signedIn]);
+
+  /*
+   * Привязать телеграм-аккаунт к профилю — внутри телеграма и только когда человек вошёл.
+   *
+   * Здесь, а не в онбординге: строка запуска живёт минуты, а до онбординга человек может дойти
+   * через неделю. Здесь она свежая, потому что приложение только что открылось.
+   *
+   * На каждый запуск, а не «один раз навсегда». Строка уже в руках, ответ функции — одна запись,
+   * а поводов привязке пропасть хватает: вошёл под другой почтой, тренер почистил профиль,
+   * телеграм выдал новый id. Отдельный запрос «а не привязано ли уже» стоил бы ровно столько же,
+   * сколько сама привязка.
+   *
+   * Отказ молчит: человек открыл приложение тренироваться, а не чинить уведомления.
+   */
+  useEffect(() => {
+    if (!signedIn) return;
+    const initData = telegram()?.initData;
+    if (initData) void linkTelegram(initData);
   }, [signedIn]);
 
   useEffect(() => {
