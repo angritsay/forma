@@ -17,7 +17,17 @@ export interface ModalProps {
   /** Styles the confirm button as destructive. */
   danger?: boolean;
   loading?: boolean;
+  /** Классы на саму панель. */
   className?: string;
+  /**
+   * Классы на обёртку содержимого.
+   *
+   * Панель складывает заголовок, содержимое и кнопку столбиком по естественной высоте, и почти
+   * всем диалогам этого достаточно. Диалогу с заданной высотой — нет: содержимое надо растянуть
+   * (`flex-1`), разрешить ему сжаться (`min-h-0`, иначе flex не даст ему стать меньше содержимого)
+   * и прокручивать. Одна строчка снаружи вместо второго такого же компонента рядом.
+   */
+  bodyClassName?: string;
 }
 
 /**
@@ -40,6 +50,7 @@ export function Modal({
   danger,
   loading,
   className,
+  bodyClassName,
 }: ModalProps) {
   const labels = useKitLabels();
   const ref = useRef<HTMLDivElement>(null);
@@ -93,7 +104,7 @@ export function Modal({
             {description}
           </p>
         ) : null}
-        {children ? <div className="mt-4">{children}</div> : null}
+        {children ? <div className={clsx('mt-4', bodyClassName)}>{children}</div> : null}
         <div className="mt-6 flex flex-col gap-2">
           {onConfirm ? (
             <Button

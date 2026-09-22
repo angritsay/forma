@@ -80,12 +80,12 @@ function CueList({ lines, glyph }: { lines: readonly string[]; glyph: string }) 
   );
 }
 
-interface ExerciseBackProps {
+export interface ExerciseBackProps {
   exerciseId: string;
   item: PrescribedItem;
 }
 
-function ExerciseBack({ exerciseId, item }: ExerciseBackProps) {
+export function ExerciseBack({ exerciseId, item }: ExerciseBackProps) {
   const { t, l } = useT();
   const [tab, setTab] = useState<Tab>('technique');
   const exercise = findExercise(exerciseId);
