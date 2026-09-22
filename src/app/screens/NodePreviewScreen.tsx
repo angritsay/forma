@@ -38,7 +38,7 @@ import { startSession } from '@/lib/api/sessions';
 import { exerciseStillUrl } from '@/lib/api/storage';
 import { prescribeWorkout } from '@/lib/training/prescribe';
 import { recommendDifficulty } from '@/lib/training/session';
-import type { DifficultyChoice, Recommendation } from '@/lib/training/types';
+import type { DifficultyChoice, PrescribedItem, Recommendation } from '@/lib/training/types';
 import { toLocalDateIso } from '@/lib/util/dates';
 import { TopBar } from '@/app/components/TopBar';
 import { ScreenLoader } from '@/app/components/ScreenLoader';
@@ -59,6 +59,7 @@ import { DisplayTitle } from '@/app/features/home/DisplayTitle';
 import { DifficultySheet } from '@/app/features/path/DifficultySheet';
 import { nodeStatus } from '@/app/features/path/nodeState';
 import { DIFFICULTY_CHOICES, workoutSignatureExercise } from '@/app/features/path/plan';
+import { ExercisePreview } from '@/app/features/path/ExercisePreview';
 import { PlanBlocks } from '@/app/features/path/PlanBlocks';
 import { useTrainingContext } from '@/app/features/path/useTrainingContext';
 import { WorkoutHero } from '@/app/features/path/WorkoutHero';
@@ -101,6 +102,8 @@ export default function NodePreviewScreen() {
   const activeSession = useActiveWorkoutStore((s) => s.session);
   const [chooserOpen, setChooserOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  /** Упражнение, открытое крупно поверх экрана, или null. */
+  const [preview, setPreview] = useState<PrescribedItem | null>(null);
   const [pending, setPending] = useState<DifficultyChoice | null>(null);
   const [replaceFor, setReplaceFor] = useState<DifficultyChoice | null>(null);
   // "Now" is fixed per mount so the recommendation does not flicker between renders.
@@ -452,6 +455,23 @@ export default function NodePreviewScreen() {
            * what someone checks when they are curious, and what they never open twice.
            */}
           <section className="border-t border-border">
+            {/*
+             * План — всегда на виду, а не в свёрнутой гармошке.
+             *
+             * Владелец, показав такой же список у выданной тренировки: «Показывай такое же перед
+             * каждой тренировкой». До этого «что я сейчас буду делать» лежало под «Что внутри»
+             * вместе с описанием и примечаниями — то есть ответ на главный вопрос экрана надо было
+             * сначала найти и развернуть. Гармошка осталась при прозе, которой место именно там.
+             *
+             * Без разминки и заминки (`work`): почему — в `mainWork.ts`.
+             */}
+            {shown ? (
+              <section className="flex flex-col gap-4 border-t border-border pt-4 pb-2">
+                <h3 className="eyebrow">{t('app.nodePlanTitle')}</h3>
+                <PlanBlocks prescribed={shown.prescribed} work onOpen={setPreview} />
+              </section>
+            ) : null}
+
             <button
               type="button"
               onClick={() => setDetailsOpen((o) => !o)}
@@ -502,17 +522,12 @@ export default function NodePreviewScreen() {
                 ) : null}
 
                 {shown ? <WorkoutStrip prescribed={shown.prescribed} /> : null}
-
-                {shown ? (
-                  <section className="flex flex-col gap-4 border-t border-border pt-4">
-                    <h3 className="eyebrow">{t('app.nodePlanTitle')}</h3>
-                    <PlanBlocks prescribed={shown.prescribed} />
-                  </section>
-                ) : null}
               </div>
             ) : null}
           </section>
         </div>
+
+        <ExercisePreview item={preview} onClose={() => setPreview(null)} />
 
         <DifficultySheet
           open={chooserOpen && replaceFor === null}

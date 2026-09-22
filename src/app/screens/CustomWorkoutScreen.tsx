@@ -21,6 +21,7 @@
  *     to «что там» is the reason the screen is open.
  */
 import { useEffect, useState } from 'react';
+import type { PrescribedItem } from '@/lib/training/types';
 import { useParams } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -36,10 +37,13 @@ import { isAppError } from '@/lib/api/errors';
 import {
   isPlayableStructure,
   type CustomSectionKind,
+  type CustomWorkoutItem,
   type CustomWorkoutSection,
   type CustomWorkoutStructure,
 } from '@/lib/training/customWorkout';
 import { TopBar } from '@/app/components/TopBar';
+import { ExercisePreview } from '@/app/features/path/ExercisePreview';
+import { mainOnly } from '@/app/features/path/mainWork';
 import type { TKey } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
 import { useCustomWorkoutStart } from '@/app/features/customWorkout/useCustomWorkoutStart';
@@ -62,6 +66,29 @@ type LoadState =
   | { status: 'missing' }
   | { status: 'ready'; workout: AssignedWorkoutRow };
 
+/**
+ * Упражнение конструктора в том виде, в каком его ждёт карточка из плеера.
+ *
+ * Строится здесь, а не берётся из `buildPrescribedFromCustom`: после того как из списка убрали
+ * разминку и заминку, порядковые номера в плане и в предписании разошлись, и искать по индексу
+ * значило бы однажды открыть не то движение. Нужных полей всего четыре, остальные — нули, потому
+ * что превью не считает ни время, ни отдых.
+ *
+ * Вес не проставляется: в конструкторе его нет, и «Осторожно» покажет противопоказания без него.
+ */
+function previewItem(it: CustomWorkoutItem): PrescribedItem {
+  return {
+    exerciseId: it.exerciseId,
+    originalExerciseId: it.exerciseId,
+    substituted: false,
+    unit: it.unit,
+    target: it.target,
+    perSide: it.perSide === true,
+    restAfterSec: 0,
+    estimatedSec: 0,
+  };
+}
+
 export default function CustomWorkoutScreen() {
   const tr = useT();
   const { t, l } = tr;
@@ -69,6 +96,8 @@ export default function CustomWorkoutScreen() {
   const token = params.token;
   const id = params.id;
   const [state, setState] = useState<LoadState>({ status: 'loading' });
+  /** Упражнение, открытое крупно поверх экрана, или null. */
+  const [preview, setPreview] = useState<PrescribedItem | null>(null);
   const { start, busy } = useCustomWorkoutStart();
 
   useEffect(() => {
@@ -191,15 +220,33 @@ export default function CustomWorkoutScreen() {
                 : t('app.customWorkoutReps', { n: it.target });
             const side = it.perSide ? ` · ${t('app.customWorkoutPerSide')}` : '';
             return (
-              <li
-                key={i}
-                className="flex items-baseline justify-between gap-3 border-t border-border py-2.5 text-[15px] first:border-t-0"
-              >
-                <span className="min-w-0 truncate">{exName}</span>
-                <span className="tabular shrink-0 text-sm text-muted">
-                  {amount}
-                  {side}
-                </span>
+              /*
+               * Нажимается, когда упражнение есть в базе: тогда оно открывается крупно, тем же
+               * компонентом, что в плеере. Нет в базе — обычная строка: элемент, который выглядит
+               * нажимаемым и ничего не делает, хуже ненажимаемого.
+               */
+              <li key={i} className="border-t border-border first:border-t-0">
+                {ex ? (
+                  <button
+                    type="button"
+                    onClick={() => setPreview(previewItem(it))}
+                    className="flex w-full items-baseline justify-between gap-3 py-2.5 text-left text-[15px] transition-colors duration-150 ease-(--ease-out) hover:text-text"
+                  >
+                    <span className="min-w-0 truncate">{exName}</span>
+                    <span className="tabular shrink-0 text-sm text-muted">
+                      {amount}
+                      {side}
+                    </span>
+                  </button>
+                ) : (
+                  <span className="flex items-baseline justify-between gap-3 py-2.5 text-[15px]">
+                    <span className="min-w-0 truncate">{exName}</span>
+                    <span className="tabular shrink-0 text-sm text-muted">
+                      {amount}
+                      {side}
+                    </span>
+                  </span>
+                )}
               </li>
             );
           })}
@@ -285,11 +332,14 @@ export default function CustomWorkoutScreen() {
           </div>
         </div>
         {playable ? (
-          <div className="flex flex-col gap-5">{structure!.sections.map(sectionSummary)}</div>
+          <div className="flex flex-col gap-5">
+            {mainOnly(structure!.sections, (x) => x.kind).map(sectionSummary)}
+          </div>
         ) : (
           <p className="text-sm text-muted">{t('app.customWorkoutEmpty')}</p>
         )}
       </div>
+      <ExercisePreview item={preview} onClose={() => setPreview(null)} />
     </Screen>
   );
 }
