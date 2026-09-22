@@ -114,6 +114,55 @@ export interface PersonRow {
   subscribed: boolean;
 }
 
+/**
+ * The headline numbers over the analytics screen (0025).
+ *
+ * `paidNeverSignedIn` is the only one that is a task rather than a fact: somebody paid and never
+ * got in. A purchase lives on an address and may precede sign-up, so those people belong to no
+ * cohort and appear nowhere else in this screen.
+ */
+export interface AdminOverview {
+  people: number;
+  onboarded: number;
+  paying: number;
+  subscribed: number;
+  paidNeverSignedIn: number;
+  active7d: number;
+  active28d: number;
+}
+
+/**
+ * One week of the funnel, keyed by the week somebody *first signed in* — never by the week a step
+ * happened. A purchase made today belongs to the buyer's own sign-up week, which is what makes
+ * «из этих десяти купили трое» a sentence about one group of people rather than two.
+ */
+export interface FunnelWeek {
+  /** Monday, Moscow time, as `YYYY-MM-DD`. */
+  weekStart: string;
+  signedUp: number;
+  onboarded: number;
+  /** Finished at least one workout. The first one is always free, so this step is "tried". */
+  trained: number;
+  /** Trained on two different days of their own. */
+  repeated: number;
+  /** Holds an active purchase or a live subscription, whenever it started. */
+  paid: number;
+}
+
+/** One person's progress, for the list under the funnel. */
+export interface ProgressRow {
+  email: string;
+  displayName: string | null;
+  createdAt: string;
+  onboardedAt: string | null;
+  workouts: number;
+  days: number;
+  points: number;
+  lastWorkoutAt: string | null;
+  courses: number;
+  subscribed: boolean;
+}
+
 export interface SubscriptionRow {
   id: string;
   email: string;

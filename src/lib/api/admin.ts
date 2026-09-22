@@ -13,7 +13,10 @@ import {
 } from './mappers';
 import { isDemo } from './mode';
 import type {
+  AdminOverview,
+  FunnelWeek,
   PersonRow,
+  ProgressRow,
   PurchaseFilter,
   PurchaseRow,
   PurchaseStatus,
@@ -160,6 +163,107 @@ export async function listPeople(search = '', limit = 500): Promise<PersonRow[]>
       createdAt: r.created_at,
       onboardedAt: r.onboarded_at,
       courses: Number(r.courses) || 0,
+      subscribed: r.subscribed === true,
+    }));
+  });
+}
+
+// --- analytics (0025) --------------------------------------------------------
+
+interface DbOverview {
+  people: number;
+  onboarded: number;
+  paying: number;
+  subscribed: number;
+  paid_never_signed_in: number;
+  active_7d: number;
+  active_28d: number;
+}
+
+interface DbFunnelWeek {
+  week_start: string;
+  signed_up: number;
+  onboarded: number;
+  trained: number;
+  repeated: number;
+  paid: number;
+}
+
+interface DbProgress {
+  email: string;
+  display_name: string | null;
+  created_at: string;
+  onboarded_at: string | null;
+  workouts: number;
+  days: number;
+  points: number;
+  last_workout_at: string | null;
+  courses: number;
+  subscribed: boolean;
+}
+
+const int = (v: number | string | null | undefined): number => Number(v) || 0;
+
+/** The headline numbers: how many people there are and how many of them are alive right now. */
+export async function getAdminOverview(): Promise<AdminOverview> {
+  if (isDemo()) return (await demo()).getAdminOverview();
+  return guard(async () => {
+    // `returns table` with one row arrives as an array of one.
+    const rows = unwrap<DbOverview[]>(await supabase().rpc('admin_overview'));
+    const r = rows[0];
+    if (!r) throw new AppError('unknown', 'no_overview');
+    return {
+      people: int(r.people),
+      onboarded: int(r.onboarded),
+      paying: int(r.paying),
+      subscribed: int(r.subscribed),
+      paidNeverSignedIn: int(r.paid_never_signed_in),
+      active7d: int(r.active_7d),
+      active28d: int(r.active_28d),
+    };
+  });
+}
+
+/**
+ * The funnel by sign-up week, newest first.
+ *
+ * Every count is about the people who first signed in that week, whenever the step itself
+ * happened — see `FunnelWeek`. The arithmetic on top of these rows lives in
+ * `src/app/features/admin/funnel.ts`, not here and not in SQL, so demo and production read the
+ * same numbers the same way.
+ */
+export async function listFunnel(weeks = 12): Promise<FunnelWeek[]> {
+  if (isDemo()) return (await demo()).listFunnel(weeks);
+  return guard(async () => {
+    const rows = unwrap<DbFunnelWeek[]>(await supabase().rpc('admin_funnel', { p_weeks: weeks }));
+    return rows.map((r) => ({
+      weekStart: r.week_start,
+      signedUp: int(r.signed_up),
+      onboarded: int(r.onboarded),
+      trained: int(r.trained),
+      repeated: int(r.repeated),
+      paid: int(r.paid),
+    }));
+  });
+}
+
+/** Everybody, by how recently they trained: the people behind the funnel's numbers. */
+export async function listProgress(search = '', limit = 200): Promise<ProgressRow[]> {
+  if (isDemo()) return (await demo()).listProgress(search, limit);
+  return guard(async () => {
+    const rows = unwrap<DbProgress[]>(
+      await supabase().rpc('admin_progress', { p_search: search.trim() || null, p_limit: limit }),
+    );
+    return rows.map((r) => ({
+      email: r.email,
+      displayName: r.display_name,
+      createdAt: r.created_at,
+      onboardedAt: r.onboarded_at,
+      workouts: int(r.workouts),
+      days: int(r.days),
+      points: int(r.points),
+      lastWorkoutAt: r.last_workout_at,
+      courses: int(r.courses),
       subscribed: r.subscribed === true,
     }));
   });
