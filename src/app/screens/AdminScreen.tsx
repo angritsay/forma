@@ -221,6 +221,11 @@ export default function AdminScreen() {
         case 'forbidden':
         case 'auth':
           return t('app.adminForbidden');
+        // В админке сидит тот самый человек, который применяет миграции, — значит ему можно и
+        // нужно сказать, что именно не сошлось. Имя колонки из ответа постгреста в тексте: без
+        // него «примени миграции» не отвечает на вопрос «какие».
+        case 'schema':
+          return t('app.adminSchemaBehind', { detail: e.message });
         case 'validation':
         case 'not_found':
         case 'unknown':

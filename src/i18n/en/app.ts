@@ -543,6 +543,10 @@ export const app = {
   adminStatusUpdated: 'Status updated',
   adminActionError: 'Couldn’t apply the change.',
   adminForbidden: 'Admins only. Sign in with the coach’s email.',
+  // Code ships on merge, migrations are applied by a button — in between, the app asks the
+  // database for something it does not have yet. The text names the cause and the button.
+  adminSchemaBehind:
+    'The database is behind the app. Apply migrations: Actions → Supabase apply → migration. {detail}',
   adminAdd: 'Add purchase',
   adminAddLead: 'Grants access by hand: bank transfer, gift, support case.',
   adminAddEmail: 'Who',

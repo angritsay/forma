@@ -99,8 +99,15 @@ function authErrorKey(e: AuthError): TKey {
       return 'app.authErrorInvalidEmail';
     case 'forbidden':
       return 'app.authErrorSignupDisabled';
+    /*
+     * Общая фраза — и `schema` тоже здесь намеренно. «База отстала от приложения» — правда, но не
+     * для того, кто пытается войти: сделать с этим он ничего не может, а имя колонки на экране
+     * входа только напугает. Про отставшую базу говорится в админке, где сидит тот, кто применяет
+     * миграции.
+     */
     case 'auth':
     case 'not_found':
+    case 'schema':
     case 'unknown':
       return 'app.authErrorGeneric';
   }

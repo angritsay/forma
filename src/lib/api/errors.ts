@@ -10,7 +10,21 @@
  */
 
 export type AppErrorCode =
-  'network' | 'auth' | 'not_found' | 'forbidden' | 'validation' | 'unknown';
+  | 'network'
+  | 'auth'
+  | 'not_found'
+  | 'forbidden'
+  | 'validation'
+  /**
+   * База отстала от приложения: запрошена колонка или таблица, которой в ней ещё нет.
+   *
+   * Это не ошибка пользователя и не сбой — это порядок выкладки. Код уезжает в прод мержем, а
+   * миграции применяются руками кнопкой в Actions, и между этими двумя моментами приложение
+   * просит у базы то, чего в ней пока нет. Раньше такое падало в `unknown` и доходило до тренера
+   * как «Не удалось сохранить»: ни что сломалось, ни что с этим делать.
+   */
+  | 'schema'
+  | 'unknown';
 
 export class AppError extends Error {
   readonly code: AppErrorCode;
@@ -87,6 +101,13 @@ const PG_NOT_FOUND = new Set(['PGRST116', 'P0002']);
 const PG_AUTH = new Set(['PGRST300', 'PGRST301', 'PGRST302', 'PGRST303']);
 /** insufficient_privilege: RLS denied the row, or an RPC raised not_admin. */
 const PG_FORBIDDEN = new Set(['42501']);
+/**
+ * Колонки или таблицы, которой нет.
+ *
+ * `PGRST204` — PostgREST не нашёл колонку в кеше схемы (это ответ на запись), `PGRST205` — таблицу.
+ * `42703` и `42P01` — то же самое, но от самого постгреса, когда запрос дошёл до него.
+ */
+const PG_SCHEMA = new Set(['PGRST204', 'PGRST205', '42703', '42P01']);
 /** raise_exception (our RPC validations) and Postgres data / constraint errors. */
 const PG_VALIDATION = new Set([
   'P0001',
@@ -145,6 +166,11 @@ function fromPostgrest(e: PostgrestLike): AppError {
   if (PG_AUTH.has(code)) return new AppError('auth', e.message, opts);
   if (PG_FORBIDDEN.has(code)) return new AppError('forbidden', e.message, opts);
   if (PG_VALIDATION.has(code)) return new AppError('validation', e.message, opts);
+  /*
+   * Сообщение постгреста сохраняется как есть и намеренно: в нём написано имя колонки, а увидит
+   * его только админка — то есть тот самый человек, который и применяет миграции.
+   */
+  if (PG_SCHEMA.has(code)) return new AppError('schema', e.message, opts);
   // supabase-js wraps a failed fetch as a Postgrest-shaped error with an empty code.
   if (code === '' && NETWORK_MESSAGE.test(e.message))
     return new AppError('network', e.message, opts);
