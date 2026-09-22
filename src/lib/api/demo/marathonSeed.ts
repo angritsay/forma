@@ -118,6 +118,12 @@ const SEED_VALUES: Record<string, number> = {
   'Прогулка сорок минут': 44,
 };
 
+/**
+ * Стенд-ин пары на вкладке «Дуо». Живёт здесь, а не в `api.ts`, потому что сид её и создаёт:
+ * два файла, знающие один и тот же идентификатор из разных мест, однажды разойдутся.
+ */
+export const DEMO_DUO_TEAM = 'demo-duo-team';
+
 export interface DemoMarathonSeed {
   marathon: MarathonRow;
   teams: MarathonTeamRow[];
@@ -138,8 +144,10 @@ export function seedMarathon(email: string, today = toLocalDateIso()): DemoMarat
     id: DEMO_MARATHON_ID,
     slug: 'sprint',
     title: 'Спринт Формы',
+    titleEn: 'Forma Sprint',
     description:
       'Две недели, одно задание в день, каждый сам за себя. В воскресенье неделя обнуляется.',
+    descriptionEn: 'Two weeks, one task a day, everyone for themselves. The week resets on Sunday.',
     status: 'active',
     startsOn,
     days: DEMO_MARATHON_DAYS,
@@ -148,12 +156,24 @@ export function seedMarathon(email: string, today = toLocalDateIso()): DemoMarat
     timezone: guessTimezone(),
     dueTime: '22:00:00',
     prize: 'Час с тренером и создателем Forma',
+    prizeEn: 'An hour with the coach who built Forma',
     createdAt,
     updatedAt: createdAt,
   };
 
-  /* No teams, and `marathon_is_solo()` is what makes that true rather than an empty array. */
-  const teams: MarathonTeamRow[] = [];
+  /*
+   * Круг здесь соло, и команд у него нет: пустым массивом это не доказывается — доказывает
+   * `marathon_is_solo()`, и `raceTeamId()` всё равно вернёт null, что бы тут ни лежало.
+   *
+   * Одна строка всё же есть, и она не про этот круг. Дуо-клуб — отдельный круг (0033), которого в
+   * демо нет: их всего один, и он стоит за оба. Эта команда — стенд-ин для пары на вкладке «Дуо»,
+   * чтобы демо показывало то состояние, в котором человек и оказывается через понедельник, а не
+   * только пустой баннер. Расторгнуть её можно — тогда видно и второе состояние. Доску она не
+   * трогает: там `raceTeamId()` для соло-круга возвращает null.
+   */
+  const teams: MarathonTeamRow[] = [
+    { id: DEMO_DUO_TEAM, marathonId: DEMO_MARATHON_ID, name: 'Пара недели', sortOrder: 0 },
+  ];
 
   const member = (id: string, memberEmail: string, displayName: string): MarathonMemberRow => ({
     id,
@@ -180,6 +200,9 @@ export function seedMarathon(email: string, today = toLocalDateIso()): DemoMarat
     marathonId: DEMO_MARATHON_ID,
     dayIndex: day,
     sortOrder: 0,
+    // Демо-задания живут только по-русски: это витрина продукта, а не его содержимое.
+    titleEn: null,
+    bodyEn: null,
     title,
     // No body anywhere: the name of the task is the task.
     body: null,

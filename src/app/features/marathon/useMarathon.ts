@@ -71,6 +71,16 @@ function useLoader<T>(load: () => Promise<T>, initial: T, deps: readonly unknown
 export interface MarathonState extends Loaded<MyMarathon[]> {
   /** The one the screens work with: the running marathon, or the most recent finished one. */
   marathon: MyMarathon | null;
+  /*
+   * Клуб существует ровно в двух видах (0033), и это решение владельца: «клуб существует только в
+   * двух вариациях — соло и дуо». Различает их размер команды, а не название: `team_size` — то, по
+   * чему их различает и сам индекс в базе, и второго такого признака заводить нельзя.
+   *
+   * `null` у любого из них — обычное дело, а не сбой: дуо-круг заводится миграцией 0033, и до её
+   * применения его просто нет. Экран тогда показывает одну вкладку.
+   */
+  soloClub: MyMarathon | null;
+  duoClub: MyMarathon | null;
 }
 
 export function useMyMarathons(): MarathonState {
@@ -106,7 +116,9 @@ export function useMyMarathons(): MarathonState {
     loaded.data.find((m) => m.status === 'active') ??
     loaded.data[0] ??
     null;
-  return { ...loaded, marathon: active };
+  const club = (duo: boolean) =>
+    loaded.data.find((m) => m.isClub && m.status === 'active' && m.teamSize > 1 === duo) ?? null;
+  return { ...loaded, marathon: active, soloClub: club(false), duoClub: club(true) };
 }
 
 export function useMarathonDay(

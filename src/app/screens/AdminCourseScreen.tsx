@@ -45,8 +45,10 @@ import type { CustomWorkoutStructure } from '@/lib/training/customWorkout';
 import { BootScreen } from '@/app/components/BootScreen';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { TopBar } from '@/app/components/TopBar';
+import { adminErrorTitle } from '@/app/features/admin/adminError';
 import { useT } from '@/app/hooks/useT';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
+import { LangTabs } from '@/app/features/admin/LangTabs';
 import { CourseMetaEditor } from '@/app/features/admin/courses/CourseMetaEditor';
 import { DayEditor } from '@/app/features/admin/courses/DayEditor';
 import { DayList } from '@/app/features/admin/courses/DayList';
@@ -60,7 +62,8 @@ type WorkoutTarget = { dayId: string; existing: CustomWorkoutRow | null } | null
 
 export default function AdminCourseScreen() {
   const { id = '' } = useParams();
-  const { t } = useT();
+  const tr = useT();
+  const { t } = tr;
   const toast = useToast();
   const admin = useIsAdmin();
 
@@ -161,8 +164,8 @@ export default function AdminCourseScreen() {
       });
       setBundle((b) => (b ? { ...b, days: [...b.days, created] } : b));
       setOpenDayId(created.id);
-    } catch {
-      toast.show({ kind: 'error', title: t('app.dayCreateError') });
+    } catch (e) {
+      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.dayCreateError') });
     }
   };
 
@@ -171,8 +174,8 @@ export default function AdminCourseScreen() {
     try {
       await deleteCourseDay(dayId);
       setBundle((b) => (b ? { ...b, days: b.days.filter((d) => d.id !== dayId) } : b));
-    } catch {
-      toast.show({ kind: 'error', title: t('app.dayDeleteError') });
+    } catch (e) {
+      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.dayDeleteError') });
     }
   };
 
@@ -199,8 +202,8 @@ export default function AdminCourseScreen() {
           : b,
       );
       setWorkoutFor(null);
-    } catch {
-      toast.show({ kind: 'error', title: t('app.builderSaveError') });
+    } catch (e) {
+      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.builderSaveError') });
     } finally {
       setSavingWorkout(false);
     }
@@ -213,8 +216,8 @@ export default function AdminCourseScreen() {
     }
     try {
       setWorkoutFor({ dayId, existing: await getCustomWorkout(workoutId) });
-    } catch {
-      toast.show({ kind: 'error', title: t('app.builderLoadError') });
+    } catch (e) {
+      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.builderLoadError') });
     }
   };
 
@@ -226,8 +229,8 @@ export default function AdminCourseScreen() {
       await publishAdminCourse(course.id);
       setBundle((b) => (b ? { ...b, course: { ...b.course, status: 'published' } } : b));
       toast.show({ kind: 'success', title: t('app.coursePublishedToast') });
-    } catch {
-      toast.show({ kind: 'error', title: t('app.coursePublishError') });
+    } catch (e) {
+      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.coursePublishError') });
     } finally {
       setPublishing(false);
     }
@@ -238,8 +241,8 @@ export default function AdminCourseScreen() {
     try {
       await unpublishAdminCourse(course.id);
       setBundle((b) => (b ? { ...b, course: { ...b.course, status: 'draft' } } : b));
-    } catch {
-      toast.show({ kind: 'error', title: t('app.coursePublishError') });
+    } catch (e) {
+      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.coursePublishError') });
     } finally {
       setPublishing(false);
     }
@@ -261,7 +264,9 @@ export default function AdminCourseScreen() {
           {...(existing
             ? {
                 initialTitle: existing.title,
+                initialTitleEn: existing.titleEn,
                 initialDescription: existing.description,
+                initialDescriptionEn: existing.descriptionEn,
                 initialStructure: (existing.structure ?? {
                   sections: [],
                 }) as CustomWorkoutStructure,
@@ -318,6 +323,18 @@ export default function AdminCourseScreen() {
           ]}
         />
       </div>
+
+      {/*
+       * «Пишем на» — под вкладками и над формой, и только там, где действительно печатают текст.
+       * На вкладке «Публикация» переключать нечего, и лишняя полоска там читалась бы как ещё одна
+       * настройка публикации.
+       */}
+      {tab !== 'publish' ? (
+        <div className="flex items-center justify-between gap-3 pt-4">
+          <span className="eyebrow">{t('app.adminEditingLanguage')}</span>
+          <LangTabs />
+        </div>
+      ) : null}
 
       {tab === 'meta' ? <CourseMetaEditor course={course} onPatch={patchCourse} /> : null}
 

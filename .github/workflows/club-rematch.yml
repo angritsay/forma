@@ -1,0 +1,77 @@
+name: Rematch the club's duos
+
+# Раз в неделю пересобирает автоматические пары дуо-клуба (0034).
+#
+# ## Почему по понедельникам ночью
+#
+# Неделя клуба начинается в понедельник: `starts_on` у круга — понедельник, и
+# `marathon_week_of()` нарезает от него календарные недели. Пара, собранная в
+# среду, прожила бы полнедели, а обещано «каждую неделю». 00:05 UTC — это 03:05
+# по Москве, то есть до того, как кто-нибудь откроет приложение.
+#
+# ## Что именно пересобирается
+#
+# Только автоматические пары. Те, что собрались по приглашению, живут, пока их
+# не расторгнут: человек выбрал подругу, и разлучать их раз в неделю значило бы
+# делать ровно обратное тому, ради чего приглашение существует.
+#
+# Нечётный остаётся без пары — и видит тот же баннер, что все без пары. Это
+# честнее, чем оставить его с прошлым напарником и называть это «поменяли».
+#
+# ## В логе только число
+#
+# Функция возвращает, сколько пар собралось. Ни имён, ни адресов: страница
+# запуска публичного репозитория видна всем и остаётся навсегда.
+
+on:
+  schedule:
+    # Понедельник, 00:05 UTC.
+    - cron: '5 0 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: club-rematch
+  cancel-in-progress: false
+
+jobs:
+  rematch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pair everyone who has no duo
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+        run: |
+          set -uo pipefail
+          # Секрета или адреса проекта нет — значит дуо-клуб ещё не включали, и это не
+          # поломка. Красный крест раз в неделю приучает не смотреть на Actions, а
+          # именно там видны настоящие сбои.
+          if [ -z "${TOKEN:-}" ] || [ -z "${SUPABASE_URL:-}" ]; then
+            echo "::notice::Автоподбор пар ещё не включён: нет секрета SUPABASE_ACCESS_TOKEN или переменной PUBLIC_SUPABASE_URL. Пары тем временем не меняются."
+            exit 0
+          fi
+
+          # https://<ref>.supabase.co → <ref>, как в supabase-apply.yml.
+          PROJECT_REF=$(printf '%s' "$SUPABASE_URL" | sed -E 's#^https?://##; s#\..*$##')
+          if [ -z "$PROJECT_REF" ]; then
+            echo "::error::Из PUBLIC_SUPABASE_URL не читается ref проекта."
+            exit 1
+          fi
+
+          printf '%s' 'select public.club_duo_rematch() as pairs;' | jq -Rs '{query: .}' > /tmp/body.json
+          code=$(curl -sS -o /tmp/out.json -w '%{http_code}' \
+            -X POST "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H 'Content-Type: application/json' \
+            --data-binary @/tmp/body.json)
+
+          if [ "$code" -ge 300 ]; then
+            # Печатается только текст ошибки самого API — в нём не бывает строк таблицы.
+            echo "::error::Supabase ответил HTTP $code."
+            jq -r '.message // .error // "(без сообщения)"' < /tmp/out.json || true
+            exit 1
+          fi
+
+          # Одно число — и это всё, что тут можно напечатать.
+          pairs=$(jq -r '.[0].pairs // 0' < /tmp/out.json 2>/dev/null || echo '?')
+          echo "::notice::Собрано пар: $pairs"

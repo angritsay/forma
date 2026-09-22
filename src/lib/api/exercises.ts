@@ -18,12 +18,14 @@ interface DbExercise {
   name_ru: string;
   name_en: string | null;
   short_name_ru: string | null;
+  short_name_en: string | null;
   description_ru: string | null;
   description_en: string | null;
   how_to: unknown;
   cues: unknown;
   mistakes: unknown;
   breathing_ru: string | null;
+  breathing_en: string | null;
   primary_muscle: string | null;
   muscles: string[] | null;
   pattern: string | null;
@@ -64,12 +66,14 @@ function fromDb(r: DbExercise): ExerciseCatalogRow {
     nameRu: r.name_ru,
     nameEn: r.name_en,
     shortNameRu: r.short_name_ru,
+    shortNameEn: r.short_name_en ?? null,
     descriptionRu: r.description_ru,
     descriptionEn: r.description_en,
     howTo: textList(r.how_to),
     cues: textList(r.cues),
     mistakes: textList(r.mistakes),
     breathingRu: r.breathing_ru,
+    breathingEn: r.breathing_en ?? null,
     primaryMuscle: r.primary_muscle,
     muscles: r.muscles ?? [],
     pattern: r.pattern,
@@ -91,12 +95,14 @@ function draftToDb(draft: Partial<ExerciseDraft>): Record<string, unknown> {
   if (draft.nameRu !== undefined) db.name_ru = draft.nameRu;
   if (draft.nameEn !== undefined) db.name_en = draft.nameEn || null;
   if (draft.shortNameRu !== undefined) db.short_name_ru = draft.shortNameRu || null;
+  if (draft.shortNameEn !== undefined) db.short_name_en = draft.shortNameEn || null;
   if (draft.descriptionRu !== undefined) db.description_ru = draft.descriptionRu || null;
   if (draft.descriptionEn !== undefined) db.description_en = draft.descriptionEn || null;
   if (draft.howTo !== undefined) db.how_to = draft.howTo;
   if (draft.cues !== undefined) db.cues = draft.cues;
   if (draft.mistakes !== undefined) db.mistakes = draft.mistakes;
   if (draft.breathingRu !== undefined) db.breathing_ru = draft.breathingRu || null;
+  if (draft.breathingEn !== undefined) db.breathing_en = draft.breathingEn || null;
   if (draft.primaryMuscle !== undefined) db.primary_muscle = draft.primaryMuscle || null;
   if (draft.muscles !== undefined) db.muscles = draft.muscles;
   if (draft.pattern !== undefined) db.pattern = draft.pattern || null;

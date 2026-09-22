@@ -15,6 +15,7 @@ import type { AdminCourseDayPatch, AdminCourseDayRow, CourseDayKind } from '@/li
 import type { CustomWorkoutSummary } from '@/lib/api/types';
 import type { TKey } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
+import { otherHalf, pick, put, useAdminLocale } from '@/app/features/admin/adminLocale';
 import { FieldLabel, TextList } from '@/app/features/admin/forms/TextList';
 import { MediaField } from '@/app/features/admin/media/MediaField';
 import { WorkoutPickerSheet } from './WorkoutPickerSheet';
@@ -53,6 +54,7 @@ export function DayEditor({
   onDelete,
 }: DayEditorProps) {
   const { t } = useT();
+  const editing = useAdminLocale((s) => s.editing);
   const [picking, setPicking] = useState(false);
   const [week, setWeek] = useState(String(day.week));
   const [dayNo, setDayNo] = useState(String(day.day));
@@ -103,22 +105,38 @@ export function DayEditor({
         />
       </div>
 
+      {/*
+       * Два языка в одних и тех же полях: наверху экрана стоит «Пишем на», и поля показывают ту
+       * половину. Подсказка — то же самое на другом языке, так что перевод делается, глядя в то
+       * поле, которое переводишь, а не в соседнюю колонку.
+       */}
       <Input
         label={t('app.dayTitle')}
-        value={content.title?.ru ?? ''}
-        onChange={(e) => setContent({ title: { ru: e.target.value } })}
+        placeholder={otherHalf(content.title, editing)}
+        value={pick(content.title, editing)}
+        onChange={(e) => setContent({ title: put(content.title, editing, e.target.value) })}
       />
       <Input
         label={t('app.daySubtitle')}
         hint={t('app.daySubtitleHint')}
-        value={content.subtitle?.ru ?? ''}
-        onChange={(e) => setContent({ subtitle: { ru: e.target.value } })}
+        placeholder={otherHalf(content.subtitle, editing)}
+        value={pick(content.subtitle, editing)}
+        onChange={(e) => setContent({ subtitle: put(content.subtitle, editing, e.target.value) })}
       />
+      {/*
+       * Список абзацев правится по одному языку за раз, и длина списка общая: третий абзац
+       * по-английски — это перевод третьего русского, а не отдельный текст. Поэтому значения
+       * накладываются на существующие по индексу, а не перезаписывают список целиком.
+       */}
       <TextList
         label={t('app.dayBody')}
         hint={t('app.dayBodyHint')}
-        values={(content.body ?? []).map((v) => v.ru ?? '')}
-        onChange={(values) => setContent({ body: values.map((v) => ({ ru: v })) })}
+        values={(content.body ?? []).map((v) => pick(v, editing))}
+        onChange={(values) =>
+          setContent({
+            body: values.map((v, i) => put((content.body ?? [])[i], editing, v)),
+          })
+        }
         placeholder={t('app.courseParagraph')}
       />
 

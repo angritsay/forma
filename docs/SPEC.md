@@ -90,8 +90,8 @@ public/                     # favicon.svg, icons, manifest
   in `src/content/schema.ts` is `['ru', 'en']` — Russian keeps the bare paths, English lives under
   `/en/`, both get hreflang and a switch in the site header. Every dictionary key and every content
   field carries both values by construction (the RU dictionary is typed against the EN one, and
-  `L10nSchema` requires both), so the languages cannot drift apart silently. The two exceptions are
-  named in §4a.
+  `L10nSchema` requires both), so the languages cannot drift apart silently. What the coach types
+  in the admin has both halves too — see §4a for how, and §4b for the little that stays Russian.
   - The app asks which language on its **first screen**, before sign-in, and keeps the answer in
     `localStorage` until there is an account and in `profiles.locale` after. It can be changed in
     the account, and the bot writes in whatever it says.
@@ -130,19 +130,36 @@ public/                     # favicon.svg, icons, manifest
   server timestamps are `timestamptz`.
 - Errors: never crash to a blank screen; show a localized error state with retry.
 
-## 4a. What stays Russian, and why
+## 4a. Translating what the coach types
 
-Two things do not follow into English, and both are limits of where the words come from rather
-than of the translation.
+Everything authored in the admin has both halves: the course and its days, the workout builder's
+title, description and per-exercise notes, the club's daily task, an admin-authored exercise.
 
-**What the coach types.** The workout builder, the day editor, the club's daily tasks and the
-admin's own exercises all write a single field (`DayEditor.tsx` writes `.ru`; `TextList` mirrors
-it). The data model has held both halves since `L10nSchema` existed, so the second field is a UI
-change and not a migration — but it doubles what Sergey types for every day of every course, and
-that is a decision about his time, not about the code. Until it is made, an English reader sees
-the Russian title he wrote. That is deliberate: `l10n()` in `src/lib/courses/draft.ts` falls back
-rather than leaving a blank, because a title in the wrong language can still be navigated by and
-an empty one cannot.
+**One switch per screen, not a second field per field.** A course has fifteen text fields; an
+English box under each would double the form, and it is filled one language at a time anyway —
+Russian to ship, English whenever. «Пишем на» sits above the form, the fields show that half, and
+the **placeholder is the other half**. That is the whole translation interface: flip to English
+and every field holds the Russian text greyed out — what to translate, and the fact that this one
+is still empty, in the place you are already looking. The choice is one setting for the whole
+admin (`src/app/features/admin/adminLocale.ts`), remembered between sessions: translating a course
+is an evening, not a form.
+
+**Russian is the source.** A record being created locks to Russian and shows «Сначала по-русски»
+instead of the switch — otherwise a switch left on English from last time meets a coach typing an
+English name into a form whose required field is the Russian one, and a Save button that will not
+press with nothing to say why.
+
+**Nothing is required.** An empty English half means "not translated", and the app substitutes the
+Russian (`l10n()` in `src/lib/courses/draft.ts`, and the same rule by hand in `TaskCard`): a title
+in the wrong language can still be navigated by, an empty one cannot. So an empty field **erases**
+its half rather than storing `''`, which would read as written text and defeat the substitution —
+`put()` in `adminLocale.ts`, and the test that pins it.
+
+Nothing is ever copied from the Russian column into the English one, either. Russian text sitting
+in an English field is indistinguishable from a translation, and after that "what is still
+untranslated" can never be answered.
+
+## 4b. What stays Russian
 
 **The payment page.** Prodamus is Russian, in roubles, and it only takes Russian cards — so the
 English reader is not sent there. There is a second till, lava.top, which takes foreign cards and

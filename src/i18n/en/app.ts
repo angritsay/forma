@@ -36,6 +36,12 @@ export const app = {
   // that cannot be read to the end is worse than none. The switch says what it does by moving.
   soundRow: 'Sound',
 
+  // The admin's own language switch: which language the coach is typing into right now
+  // (src/app/features/admin/LangTabs.tsx). Not the language of the panel itself.
+  adminEditingLanguage: 'Writing in',
+  // Shown instead of the switch while a record is being created: there is nothing to translate yet.
+  adminRussianFirst: 'In Russian first',
+
   // Language. The first screen shows these in *both* languages at once, so each string has to
   // stand on its own without the other one for context (src/app/screens/LanguageScreen.tsx).
   languageTitle: 'Choose your language',
@@ -537,6 +543,10 @@ export const app = {
   adminStatusUpdated: 'Status updated',
   adminActionError: 'Couldn’t apply the change.',
   adminForbidden: 'Admins only. Sign in with the coach’s email.',
+  // Code ships on merge, migrations are applied by a button — in between, the app asks the
+  // database for something it does not have yet. The text names the cause and the button.
+  adminSchemaBehind:
+    'The database is behind the app. Apply migrations: Actions → Supabase apply → migration. {detail}',
   adminAdd: 'Add purchase',
   adminAddLead: 'Grants access by hand: bank transfer, gift, support case.',
   adminAddEmail: 'Who',
@@ -670,6 +680,8 @@ export const app = {
   builderPickExercise: 'Pick an exercise',
   builderSearchExercise: 'Search exercises',
   builderNoMatches: 'Nothing found',
+  // Whose work it is, not who pressed Save: the owner enters the yoga instructor's workouts.
+  builderAuthor: 'Author',
   builderTitle: 'Title',
   builderTitlePlaceholder: 'Workout title',
   builderDescription: 'Description',
@@ -740,6 +752,7 @@ export const app = {
   exNameRu: 'Name',
   exNameEn: 'Name (EN)',
   exShortName: 'Short name',
+  exShortNameEn: 'Short name (EN)',
   exShortNameHint: 'For tight places — badges and lists',
   exSeededNotice:
     'This exercise comes from the course files, so its name, muscles and equipment are read-only here: the next seed would overwrite them. The video, image, tags and texts below are safe to edit — the seed never touches those.',
@@ -925,6 +938,19 @@ export const app = {
   marathonWeekThis: 'This week',
   marathonWeekLast: 'Last week',
   marathonPrizeShort: 'Prize',
+  // The duo club (0033, 0034). Solo and duo are two shapes of one club, not two products: one
+  // subscription, and you are in both.
+  clubTabSolo: 'Solo',
+  clubTabDuo: 'Duo',
+  duoMateAuto: 'Matched for this week',
+  duoMateChosen: 'The two of you, by invitation',
+  duoLeave: 'Split up',
+  duoNoneTitle: 'No partner yet',
+  duoNoneBody:
+    'On Monday we will match you with someone — and again every week after. Or invite a friend yourself: then you stay together until you decide otherwise.',
+  duoInvite: 'Invite a friend',
+  duoInviteTitle: 'Come do the club with me',
+  duoInviteCopied: 'Link copied',
   marathonBoardAll: 'Full board',
   marathonHomeCta: 'Open the club',
   marathonHomeTasksLeft: '{n} left today',

@@ -138,9 +138,18 @@ export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
         <div className="min-w-0 flex-1">
           {/* 1.08 → 1.2: the old number was drawn for capitals, and a task title is arbitrary text
               that can wrap. See the type-scale comment in global.css for the measurement. */}
-          <h3 className="display text-[24px] leading-[1.2] text-balance">{task.title}</h3>
-          {task.body ? (
-            <p className="mt-2 text-[14px] leading-snug text-muted">{task.body}</p>
+          {/*
+           * Название на языке читателя, если тренер его перевёл, и русское, если нет. Подстановка,
+           * а не пустая строка: по названию не на том языке ещё можно понять, что делать, а по
+           * пустому — нет. То же правило, что у курсов (`l10n()` в src/lib/courses/draft.ts).
+           */}
+          <h3 className="display text-[24px] leading-[1.2] text-balance">
+            {(locale === 'en' && task.titleEn) || task.title}
+          </h3>
+          {(locale === 'en' && task.bodyEn) || task.body ? (
+            <p className="mt-2 text-[14px] leading-snug text-muted">
+              {(locale === 'en' && task.bodyEn) || task.body}
+            </p>
           ) : null}
         </div>
         {done ? (

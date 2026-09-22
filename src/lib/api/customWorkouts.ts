@@ -23,7 +23,17 @@ import type {
 
 export interface CustomWorkoutInput {
   title: string;
+  /** Английская половина названия. null — не переведено; приложение подставит русское. */
+  titleEn?: string | null;
   description?: string | null;
+  descriptionEn?: string | null;
+  /**
+   * Чей это труд (`content/site/authors.ts`), а не кто нажал «Сохранить».
+   *
+   * Это разные факты, и расходятся они ровно там, ради чего поле и заведено: тренировки
+   * инструктора по йоге заводит владелец. «Кто нажал» база пишет сама в `author_id`.
+   */
+  authorSlug?: string | null;
   structure: CustomWorkoutStructure;
 }
 
@@ -31,10 +41,13 @@ interface DbCustomWorkout {
   id: string;
   short_id: string;
   title: string;
+  title_en: string | null;
   description: string | null;
+  description_en: string | null;
   structure: unknown;
   est_sec: number | null;
   points: number | null;
+  author_slug: string | null;
   share_token: string | null;
   created_at: string;
   updated_at: string;
@@ -65,7 +78,10 @@ function summaryFromDb(r: DbCustomWorkout): CustomWorkoutSummary {
     id: r.id,
     shortId: r.short_id,
     title: r.title,
+    titleEn: r.title_en ?? null,
     description: r.description,
+    descriptionEn: r.description_en ?? null,
+    authorSlug: r.author_slug ?? null,
     estSec: r.est_sec,
     points: r.points,
     shareToken: r.share_token,
@@ -121,7 +137,10 @@ export async function createCustomWorkout(input: CustomWorkoutInput): Promise<Cu
     const base = {
       author_id: me?.id ?? null,
       title: input.title,
+      title_en: input.titleEn ?? null,
       description: input.description ?? null,
+      description_en: input.descriptionEn ?? null,
+      author_slug: input.authorSlug ?? null,
       structure: input.structure,
       est_sec,
       points,
@@ -154,7 +173,10 @@ export async function updateCustomWorkout(
         .from('custom_workouts')
         .update({
           title: input.title,
+          title_en: input.titleEn ?? null,
           description: input.description ?? null,
+          description_en: input.descriptionEn ?? null,
+          author_slug: input.authorSlug ?? null,
           structure: input.structure,
           est_sec,
           points,
@@ -249,7 +271,10 @@ export async function listMyAssignedWorkouts(): Promise<AssignedWorkoutRow[]> {
         id: string;
         short_id: string;
         title: string;
+        title_en: string | null;
         description: string | null;
+        description_en: string | null;
+        author_slug: string | null;
         structure: unknown;
         est_sec: number | null;
         points: number | null;
@@ -265,7 +290,10 @@ export async function listMyAssignedWorkouts(): Promise<AssignedWorkoutRow[]> {
       id: r.id,
       shortId: r.short_id,
       title: r.title,
+      titleEn: r.title_en ?? null,
       description: r.description,
+      descriptionEn: r.description_en ?? null,
+      authorSlug: r.author_slug ?? null,
       structure: r.structure,
       estSec: r.est_sec,
       points: r.points,
@@ -310,7 +338,16 @@ export async function getSharedCustomWorkout(token: string): Promise<AssignedWor
       id: r.id,
       shortId: r.short_id,
       title: r.title,
+      /*
+       * Ссылкой делятся наружу, и функция `get_shared_custom_workout` отдаёт только то, что
+       * нужно, чтобы тренировку провести. Подписи среди этого нет: открывший ссылку не покупатель
+       * и часто не знает, кто такой Сергей, — «тренировка от …» ему ничего не говорит. Расширять
+       * ради этого функцию, к которой ходят без входа, тоже незачем.
+       */
+      titleEn: null,
       description: r.description,
+      descriptionEn: null,
+      authorSlug: null,
       structure: r.structure,
       estSec: r.est_sec,
       points: r.points,

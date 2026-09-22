@@ -29,6 +29,7 @@ import {
 import type { CustomWorkoutSummary, WorkoutAssigneeRow } from '@/lib/api/types';
 import type { CustomWorkoutStructure } from '@/lib/training/customWorkout';
 import { TopBar } from '@/app/components/TopBar';
+import { adminErrorTitle } from '@/app/features/admin/adminError';
 import { useT } from '@/app/hooks/useT';
 import { BootScreen } from '@/app/components/BootScreen';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
@@ -44,7 +45,8 @@ function shareUrl(token: string): string {
 type EditTarget = { id: string; input: CustomWorkoutInput } | 'new' | null;
 
 export default function AdminWorkoutsScreen() {
-  const { t } = useT();
+  const tr = useT();
+  const { t } = tr;
   const toast = useToast();
   const admin = useIsAdmin();
 
@@ -76,14 +78,24 @@ export default function AdminWorkoutsScreen() {
       const w = await getCustomWorkout(id);
       setEditing({
         id,
+        /*
+         * Всё, что у строки есть, а не половина.
+         *
+         * Английские половины сюда не клались, а `onSave` пишет то, что пришло из редактора, —
+         * то есть открыть переведённую тренировку и нажать «Сохранить» значило стереть перевод.
+         * Молча: на экране его и не было видно, потому что он не загрузился.
+         */
         input: {
           title: w.title,
+          titleEn: w.titleEn,
           description: w.description,
+          descriptionEn: w.descriptionEn,
+          authorSlug: w.authorSlug,
           structure: w.structure as CustomWorkoutStructure,
         },
       });
-    } catch {
-      toast.show({ kind: 'error', title: t('app.builderLoadError') });
+    } catch (e) {
+      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.builderLoadError') });
     }
   };
 
@@ -95,8 +107,8 @@ export default function AdminWorkoutsScreen() {
       setEditing(null);
       refresh();
       toast.show({ kind: 'success', title: t('app.builderSaved') });
-    } catch {
-      toast.show({ kind: 'error', title: t('app.builderSaveError') });
+    } catch (e) {
+      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.builderSaveError') });
     } finally {
       setSaving(false);
     }
@@ -109,8 +121,8 @@ export default function AdminWorkoutsScreen() {
     try {
       await deleteCustomWorkout(id);
       setRows((prev) => prev.filter((r) => r.id !== id));
-    } catch {
-      toast.show({ kind: 'error', title: t('app.builderDeleteError') });
+    } catch (e) {
+      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.builderDeleteError') });
     }
   };
 
@@ -130,7 +142,10 @@ export default function AdminWorkoutsScreen() {
             ? {}
             : {
                 initialTitle: editing.input.title,
+                initialTitleEn: editing.input.titleEn,
                 initialDescription: editing.input.description,
+                initialDescriptionEn: editing.input.descriptionEn,
+                initialAuthorSlug: editing.input.authorSlug,
                 initialStructure: editing.input.structure,
               })}
           saving={saving}
@@ -234,7 +249,8 @@ function ShareSheet({
   onClose: () => void;
   onChanged: () => void;
 }) {
-  const { t } = useT();
+  const tr = useT();
+  const { t } = tr;
   const toast = useToast();
   const [token, setToken] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -251,8 +267,8 @@ function ShareSheet({
       const next = await setCustomWorkoutShare(workout.id, enabled);
       setToken(next);
       onChanged();
-    } catch {
-      toast.show({ kind: 'error', title: t('app.builderShareError') });
+    } catch (e) {
+      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.builderShareError') });
     } finally {
       setBusy(false);
     }
@@ -304,7 +320,8 @@ function AssignSheet({
   workout: CustomWorkoutSummary | null;
   onClose: () => void;
 }) {
-  const { t } = useT();
+  const tr = useT();
+  const { t } = tr;
   const toast = useToast();
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
@@ -333,8 +350,8 @@ function AssignSheet({
       setAssignees(next);
       setEmail('');
       toast.show({ kind: 'success', title: t('app.builderAssigned') });
-    } catch {
-      toast.show({ kind: 'error', title: t('app.builderAssignError') });
+    } catch (e) {
+      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.builderAssignError') });
     } finally {
       setBusy(false);
     }
@@ -344,8 +361,8 @@ function AssignSheet({
     try {
       await unassignCustomWorkout(workout.id, target);
       setAssignees((prev) => prev.filter((a) => a.email !== target));
-    } catch {
-      toast.show({ kind: 'error', title: t('app.builderAssignError') });
+    } catch (e) {
+      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.builderAssignError') });
     }
   };
 

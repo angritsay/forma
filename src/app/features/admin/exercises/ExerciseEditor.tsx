@@ -20,6 +20,8 @@ import { EQUIPMENT, MOVEMENT_PATTERNS, MUSCLE_GROUPS } from '@/content/schema';
 import type { ExerciseCatalogRow, ExerciseDraft } from '@/lib/api/types';
 import type { TKey } from '@/i18n/index';
 import { PRIVATE_BUCKET, PUBLIC_BUCKET } from '@/lib/api/storage';
+import { pick, put } from '@/app/features/admin/adminLocale';
+import { LangTabs, useEditingLocale } from '@/app/features/admin/LangTabs';
 import { useT } from '@/app/hooks/useT';
 import { ChipToggles, TextList } from '@/app/features/admin/forms/TextList';
 import { MediaField } from '@/app/features/admin/media/MediaField';
@@ -47,8 +49,9 @@ export interface ExerciseEditorProps {
   onCancel: () => void;
 }
 
-const ru = (list: { ru?: string; en?: string }[]): string[] =>
-  list.map((v) => v.ru ?? v.en ?? '').filter((v) => v.length > 0);
+/** Оба языка списка целиком: длина общая, третий пункт по-английски — перевод третьего русского. */
+type Pair = { ru?: string; en?: string };
+const pairs = (list: Pair[]): Pair[] => list.filter((v) => (v.ru ?? v.en ?? '').length > 0);
 
 export function ExerciseEditor({
   initial,
@@ -59,6 +62,8 @@ export function ExerciseEditor({
 }: ExerciseEditorProps) {
   const { t } = useT();
   const isNew = initial === null;
+  // Новое упражнение заводится по-русски: русское название обязательно, и переводить пока нечего.
+  const editing = useEditingLocale(isNew);
   // A seeded row's descriptive fields are owned by content/exercises and re-seeded by 0007.
   const ownFields = isNew || initial.isCustom;
 
@@ -66,7 +71,9 @@ export function ExerciseEditor({
   const [nameRu, setNameRu] = useState(initial?.nameRu ?? '');
   const [nameEn, setNameEn] = useState(initial?.nameEn ?? '');
   const [shortNameRu, setShortNameRu] = useState(initial?.shortNameRu ?? '');
+  const [shortNameEn, setShortNameEn] = useState(initial?.shortNameEn ?? '');
   const [descriptionRu, setDescriptionRu] = useState(initial?.descriptionRu ?? '');
+  const [descriptionEn, setDescriptionEn] = useState(initial?.descriptionEn ?? '');
   const [unit, setUnit] = useState<Unit>(initial?.unit ?? 'seconds');
   const [secondsPerRep, setSecondsPerRep] = useState(String(initial?.secondsPerRep ?? 3));
   const [level, setLevel] = useState(String(initial?.level ?? 1));
@@ -74,10 +81,11 @@ export function ExerciseEditor({
   const [muscles, setMuscles] = useState<string[]>(initial?.muscles ?? []);
   const [pattern, setPattern] = useState(initial?.pattern ?? 'mobility');
   const [equipment, setEquipment] = useState<string[]>(initial?.equipment ?? ['none']);
-  const [howTo, setHowTo] = useState<string[]>(ru(initial?.howTo ?? []));
-  const [cues, setCues] = useState<string[]>(ru(initial?.cues ?? []));
-  const [mistakes, setMistakes] = useState<string[]>(ru(initial?.mistakes ?? []));
+  const [howTo, setHowTo] = useState<Pair[]>(pairs(initial?.howTo ?? []));
+  const [cues, setCues] = useState<Pair[]>(pairs(initial?.cues ?? []));
+  const [mistakes, setMistakes] = useState<Pair[]>(pairs(initial?.mistakes ?? []));
   const [breathingRu, setBreathingRu] = useState(initial?.breathingRu ?? '');
+  const [breathingEn, setBreathingEn] = useState(initial?.breathingEn ?? '');
   const [videoRu, setVideoRu] = useState<string | null>(initial?.videoRu ?? null);
   const [image, setImage] = useState<string | null>(initial?.image ?? null);
   const [tags, setTags] = useState((initial?.tags ?? []).join(', '));
@@ -92,18 +100,26 @@ export function ExerciseEditor({
   const canSave = !saving && nameRu.trim().length > 0 && (!isNew || (id.length > 0 && !idError));
 
   const save = () => {
-    const pairs = (list: string[]) =>
+    /*
+     * Обе половины как есть. Раньше английская была копией русской — и «что ещё не переведено»
+     * после этого было не узнать: русский текст в английской колонке неотличим от перевода.
+     * Пустая половина стирается, чтобы подстановка сработала.
+     */
+    const clean = (list: Pair[]) =>
       list
-        .map((v) => v.trim())
-        .filter(Boolean)
-        .map((v) => ({ ru: v, en: v }));
+        .map((v) => ({
+          ...(v.ru?.trim() ? { ru: v.ru.trim() } : {}),
+          ...(v.en?.trim() ? { en: v.en.trim() } : {}),
+        }))
+        .filter((v) => v.ru || v.en);
     const draft: ExerciseDraft = {
       id: isNew ? id : initial.id,
       nameRu: nameRu.trim(),
-      howTo: pairs(howTo),
-      cues: pairs(cues),
-      mistakes: pairs(mistakes),
+      howTo: clean(howTo),
+      cues: clean(cues),
+      mistakes: clean(mistakes),
       breathingRu: breathingRu.trim() || null,
+      breathingEn: breathingEn.trim() || null,
       videoRu,
       image,
       tags: tags
@@ -115,7 +131,9 @@ export function ExerciseEditor({
       Object.assign(draft, {
         nameEn: nameEn.trim() || null,
         shortNameRu: shortNameRu.trim() || null,
+        shortNameEn: shortNameEn.trim() || null,
         descriptionRu: descriptionRu.trim() || null,
+        descriptionEn: descriptionEn.trim() || null,
         unit,
         secondsPerRep: unit === 'reps' ? Number(secondsPerRep) || 3 : null,
         level: Number(level) || 1,
@@ -167,8 +185,26 @@ export function ExerciseEditor({
               value={shortNameRu}
               onChange={(e) => setShortNameRu(e.target.value)}
             />
+            {/*
+              Короткое имя стоит в полоске упражнений на карточке дня — самом узком месте в
+              приложении, и потому единственном, где длинное английское слово заметно хуже
+              короткого. Поле рядом с русским, а не под переключателем ниже: имя и его перевод
+              здесь уже показаны парой (exNameRu / exNameEn), и короткое имя — та же пара.
+            */}
+            <Input
+              label={t('app.exShortNameEn')}
+              placeholder={shortNameRu}
+              value={shortNameEn}
+              onChange={(e) => setShortNameEn(e.target.value)}
+            />
           </>
         ) : null}
+      </div>
+
+      {/* «Пишем на»: поля ниже показывают ту половину, а в подсказке стоит вторая. */}
+      <div className="flex items-center justify-between gap-3">
+        <span className="eyebrow">{t('app.adminEditingLanguage')}</span>
+        <LangTabs locked={isNew} />
       </div>
 
       {!ownFields ? (
@@ -184,8 +220,11 @@ export function ExerciseEditor({
             label={t('app.exDescription')}
             hint={t('app.exDescriptionHint')}
             rows={4}
-            value={descriptionRu}
-            onChange={(e) => setDescriptionRu(e.target.value)}
+            placeholder={editing === 'en' ? descriptionRu : descriptionEn}
+            value={editing === 'en' ? descriptionEn : descriptionRu}
+            onChange={(e) =>
+              (editing === 'en' ? setDescriptionEn : setDescriptionRu)(e.target.value)
+            }
           />
           <div className="grid gap-4 lg:grid-cols-3">
             <Select<Unit>
@@ -247,29 +286,35 @@ export function ExerciseEditor({
         </>
       ) : null}
 
+      {/*
+       * Списки правятся по одному языку за раз, и длина у них общая: третий пункт по-английски —
+       * перевод третьего русского. Поэтому значение накладывается на существующую пару по
+       * индексу, а не заменяет список.
+       */}
       <TextList
         label={t('app.exHowTo')}
         hint={t('app.exHowToHint')}
-        values={howTo}
-        onChange={setHowTo}
+        values={howTo.map((v) => pick(v, editing))}
+        onChange={(v) => setHowTo(v.map((x, i) => put(howTo[i], editing, x)))}
         placeholder={t('app.exHowToPlaceholder')}
       />
       <TextList
         label={t('app.exCues')}
-        values={cues}
-        onChange={setCues}
+        values={cues.map((v) => pick(v, editing))}
+        onChange={(v) => setCues(v.map((x, i) => put(cues[i], editing, x)))}
         placeholder={t('app.exCuesPlaceholder')}
       />
       <TextList
         label={t('app.exMistakes')}
-        values={mistakes}
-        onChange={setMistakes}
+        values={mistakes.map((v) => pick(v, editing))}
+        onChange={(v) => setMistakes(v.map((x, i) => put(mistakes[i], editing, x)))}
         placeholder={t('app.exMistakesPlaceholder')}
       />
       <Input
         label={t('app.exBreathing')}
-        value={breathingRu}
-        onChange={(e) => setBreathingRu(e.target.value)}
+        placeholder={editing === 'en' ? breathingRu : breathingEn}
+        value={editing === 'en' ? breathingEn : breathingRu}
+        onChange={(e) => (editing === 'en' ? setBreathingEn : setBreathingRu)(e.target.value)}
       />
 
       <div className="grid gap-4 lg:grid-cols-2">

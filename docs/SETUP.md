@@ -1264,6 +1264,7 @@ apply → Run workflow**, pick a task:
 | `payments-check`                       | Read-only: how many payment notifications have arrived and whether the last one applied.    |
 | `telegram-check`                       | Read-only: how many people have a Telegram account attached, so the bot can reach them.     |
 | `outbox-check`                         | Read-only: what is sitting in the bot message queue, by status. Counts only, no addresses.  |
+| `translation-check`                    | Read-only: how much of what the coach typed still has no English half. Counts only (§7.10). |
 | `migration` → `0030_reload_schema.sql` | Not a schema change: tells PostgREST to re-read the schema. Run it on `PGRST205`.           |
 
 One secret makes it work: **`SUPABASE_ACCESS_TOKEN`** (Settings → Secrets and variables → Actions),
@@ -1358,6 +1359,35 @@ leads: to the support address. It does not fall back to the rouble till — that
 exact wall the second till exists to remove.
 
 ---
+
+## 7.10 What is still only in Russian
+
+Everything written ahead of time is bilingual and the build says so: the interface dictionaries are
+parity-checked by the compiler, the courses in `content/` carry `{ru, en}`, and there are as many
+English guides as Russian ones. The site proves it — a scan of all 65 English pages finds Russian
+only in the names of three Russian statutes, which are citations and stay.
+
+What can fall behind is what gets **typed in the admin**: a day's title, a club task, an exercise's
+breathing cue, the prize. Every one of those has a second field beside it (the «Пишем на» switch),
+and none of them is required — the coach is a coach, not a translator, and an unfinished translation
+must never stop him publishing a day.
+
+So the English half is allowed to be empty, and when it is, the reader sees the Russian. That is
+better than a blank, and it is invisible — which is why the count exists:
+
+**Actions → Supabase apply → `translation-check`.** It prints one line per group («Клуб: задание
+дня: без английского 3 из 26») and nothing else. No text, no addresses: the run page of a public
+repository is visible to everyone, forever.
+
+Two things it deliberately does not do. It never copies Russian into the English column — a Russian
+string sitting in `en` is indistinguishable from a translation, and after that nobody can ever tell
+what is still untranslated. And it counts a string of spaces as untranslated, the same rule
+`pick_l10n()` uses (`0035`), so the count and the product cannot disagree about what a translation
+is.
+
+One thing genuinely cannot be pre-translated: the comment the coach writes when he sends a proof
+back. It is a message to one person, written in the moment. The right fix there is for him to see
+which language that person reads, not for us to translate him.
 
 ---
 

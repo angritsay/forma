@@ -22,12 +22,14 @@ import { courseTileVars } from '@/lib/ui/tile';
 import { BootScreen } from '@/app/components/BootScreen';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { TopBar } from '@/app/components/TopBar';
+import { adminErrorTitle } from '@/app/features/admin/adminError';
 import { useT } from '@/app/hooks/useT';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { COURSE_ID_RE } from '@/app/features/admin/courses/ids';
 
 export default function AdminCoursesScreen() {
-  const { t } = useT();
+  const tr = useT();
+  const { t } = tr;
   const toast = useToast();
   const navigate = useNavigate();
   const admin = useIsAdmin();
@@ -63,8 +65,8 @@ export default function AdminCoursesScreen() {
       setCreating(false);
       setNewId('');
       navigate(`/admin/courses/${course.id}`);
-    } catch {
-      toast.show({ kind: 'error', title: t('app.courseCreateError') });
+    } catch (e) {
+      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.courseCreateError') });
     } finally {
       setBusy(false);
     }

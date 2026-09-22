@@ -17,6 +17,7 @@ import type {
   AdminCourseRow,
   AdminOverview,
   AssignedWorkoutRow,
+  ClubDuoStatus,
   ClubWinner,
   MarathonWinner,
   FunnelWeek,
@@ -119,6 +120,7 @@ import type {
   SubscriptionStatus,
   WorkoutSessionRow,
 } from '../types';
+import { DEMO_DUO_TEAM } from './marathonSeed';
 import { delay } from './latency';
 import {
   currentDemoUser,
@@ -152,6 +154,23 @@ function requireDemoUser(): DemoUser {
   const user = currentDemoUser();
   if (!user) throw new AppError('auth', 'not_signed_in');
   return user;
+}
+
+/**
+ * `public.pick_l10n()` из 0035, но здесь.
+ *
+ * Название круга и приз приходят из `my_marathons()` и `club_winner()` уже выбранными — половину
+ * подставляет база по `profiles.locale` читателя. Демо стоит ровно на месте этих функций, и если
+ * оно отдаёт русскую строку там, где сервер отдал бы английскую, то демо показывает не то, что
+ * показывает продукт, — а это единственное, ради чего оно существует.
+ *
+ * Пустая английская половина означает «не перевели», и тогда ответ русский: то же правило, что в
+ * базе, и та же причина — читатель видит слова тренера, а не пустоту.
+ */
+function pickL10n(db: DemoDb, ru: string | null, en: string | null): string | null {
+  const user = currentDemoUser();
+  const locale = db.profiles.find((p) => p.id === user?.id)?.locale ?? 'ru';
+  return locale === 'en' ? en?.trim() || ru : ru;
 }
 
 /** Every demo call: artificial latency, then the same `guard()` error folding as Supabase. */
@@ -793,11 +812,13 @@ function compiledExerciseRows(): ExerciseCatalogRow[] {
     nameRu: e.name.ru,
     nameEn: e.name.en,
     shortNameRu: e.shortName?.ru ?? null,
+    shortNameEn: e.shortName?.en ?? null,
     descriptionRu: e.description.ru,
     descriptionEn: e.description.en,
     howTo: e.howTo.map((v) => ({ ru: v.ru, en: v.en })),
     cues: e.cues.map((v) => ({ ru: v.ru, en: v.en })),
     mistakes: e.mistakes.map((v) => ({ ru: v.ru, en: v.en })),
+    breathingEn: null,
     breathingRu: e.breathing?.ru ?? null,
     primaryMuscle: e.muscles[0] ?? null,
     muscles: [...e.muscles],
@@ -857,11 +878,13 @@ function draftToRow(draft: ExerciseDraft, base?: ExerciseCatalogRow): ExerciseCa
     nameRu: draft.nameRu,
     nameEn: draft.nameEn ?? base?.nameEn ?? null,
     shortNameRu: draft.shortNameRu ?? base?.shortNameRu ?? null,
+    shortNameEn: draft.shortNameEn ?? base?.shortNameEn ?? null,
     descriptionRu: draft.descriptionRu ?? base?.descriptionRu ?? null,
     descriptionEn: draft.descriptionEn ?? base?.descriptionEn ?? null,
     howTo: draft.howTo ?? base?.howTo ?? [],
     cues: draft.cues ?? base?.cues ?? [],
     mistakes: draft.mistakes ?? base?.mistakes ?? [],
+    breathingEn: null,
     breathingRu: draft.breathingRu ?? base?.breathingRu ?? null,
     primaryMuscle: draft.primaryMuscle ?? base?.primaryMuscle ?? null,
     muscles: draft.muscles ?? base?.muscles ?? [],
@@ -953,7 +976,11 @@ export async function createCustomWorkout(input: CustomWorkoutInput): Promise<Cu
       id: demoId('cw'),
       shortId: demoId('w'),
       title: input.title,
+      titleEn: input.titleEn ?? null,
+      // Демо показывает продукт Сергея, и подпись у заведённой в нём тренировки его же.
+      authorSlug: input.authorSlug ?? 'sergey',
       description: input.description ?? null,
+      descriptionEn: input.descriptionEn ?? null,
       structure: input.structure,
       estSec,
       points,
@@ -1060,7 +1087,10 @@ export async function listMyAssignedWorkouts(): Promise<AssignedWorkoutRow[]> {
         id: w.id,
         shortId: w.shortId,
         title: w.title,
+        titleEn: w.titleEn,
         description: w.description,
+        descriptionEn: w.descriptionEn,
+        authorSlug: w.authorSlug,
         structure: w.structure,
         estSec: w.estSec,
         points: w.points,
@@ -1522,13 +1552,14 @@ export async function listMyMarathons(): Promise<MyMarathon[]> {
           {
             id: m.id,
             slug: m.slug,
-            title: m.title,
-            description: m.description,
+            // Половину выбирает демо, как её выбрал бы `my_marathons()`.
+            title: pickL10n(db, m.title, m.titleEn) ?? m.title,
+            description: pickL10n(db, m.description, m.descriptionEn),
             status: m.status,
             startsOn: m.startsOn,
             days: m.days,
             teamSize: m.teamSize,
-            prize: m.prize,
+            prize: pickL10n(db, m.prize, m.prizeEn),
             dayIndex,
             week: weekOf(Math.max(dayIndex, 1)),
             totalWeeks: weekOf(m.days),
@@ -1768,7 +1799,11 @@ export async function createMarathon(input: {
         id: demoId('marathon'),
         slug: input.slug,
         title: input.title,
+        // Демо заводит круг с одним названием — тем, что напечатали в форме. Вторая половина
+        // пустая ровно так же, как была бы в базе: её ещё не написали.
+        titleEn: null,
         description: null,
+        descriptionEn: null,
         status: 'draft',
         startsOn: input.startsOn,
         days: input.days ?? 28,
@@ -1776,6 +1811,7 @@ export async function createMarathon(input: {
         timezone: input.timezone ?? 'Europe/Moscow',
         dueTime: input.dueTime ?? '22:00:00',
         prize: null,
+        prizeEn: null,
         createdAt: at,
         updatedAt: at,
       };
@@ -1833,6 +1869,8 @@ export async function createMarathonTask(
             (t) => t.marathonId === marathonId && t.dayIndex === patch.dayIndex,
           ).length,
         title: patch.title,
+        titleEn: patch.titleEn ?? null,
+        bodyEn: patch.bodyEn ?? null,
         body: patch.body ?? null,
         mediaUrl: patch.mediaUrl ?? null,
         proofKind: patch.proofKind ?? 'done',
@@ -2337,6 +2375,90 @@ function memberName(db: DemoDb, memberId: string): string {
   return (me?.display_name ?? '').trim() || 'Участник';
 }
 
+/* ---------------------------------------------------------------------------------------------
+ * Дуо-клуб в демо
+ *
+ * Пара — единственная механика в продукте, которой нужен второй живой человек, а в демо, как
+ * записано выше про выдачу и ссылки, никого больше нет. Поэтому показываются оба состояния, в
+ * которых человек реально бывает, и ни одного выдуманного:
+ *
+ *   * **пара есть** — подобранная нами, из той же придуманной когорты, что стоит на доске. Это
+ *     состояние большинства: подруги есть не у всех, а напарник в понедельник появляется у всех;
+ *   * **пары нет** — если расторгнуть. Тогда виден баннер и ссылка-приглашение.
+ *
+ * Чего демо не делает — не принимает приглашение: принять его может только второй человек, а его
+ * нет. Попытка отвечает `invite_own`, тем же кодом, что вернула бы база тому, кто открыл
+ * собственную ссылку, и это не заглушка, а правда про эту ситуацию.
+ * ------------------------------------------------------------------------------------------- */
+
+export async function getClubDuoStatus(): Promise<ClubDuoStatus | null> {
+  return run(() => {
+    const db = readDb();
+    const user = requireDemoUser();
+    const club = db.marathons.find((m) => m.status === 'active');
+    if (!club) return null;
+    const me = db.marathonMembers.find(
+      (m) => m.marathonId === club.id && m.email === user.email && m.status === 'active',
+    );
+    if (!me) return null;
+
+    // Напарница — первая из когорты, кто не я: тот же человек, что стоит на доске, а не второй,
+    // выдуманный отдельно для этой вкладки.
+    const mate = db.marathonMembers.find(
+      (m) => m.marathonId === club.id && m.id !== me.id && m.status === 'active',
+    );
+    const broken = db.marathonTeams.every((t) => t.id !== DEMO_DUO_TEAM);
+    if (!mate || broken) {
+      return {
+        marathonId: club.id,
+        memberId: me.id,
+        teamId: null,
+        isAuto: false,
+        mateName: null,
+        mateSeed: '',
+        inviteToken: demoInviteToken(user.email),
+      };
+    }
+    const mp = db.profiles.find((p) => p.email.toLowerCase() === (mate.email ?? '').toLowerCase());
+    return {
+      marathonId: club.id,
+      memberId: me.id,
+      teamId: DEMO_DUO_TEAM,
+      isAuto: true,
+      mateName: memberName(db, mate.id),
+      mateSeed: mp?.avatar_seed ?? '',
+      inviteToken: null,
+    };
+  });
+}
+
+/** Один и тот же токен на одну и ту же почту — как в базе, где второй вызов отдаёт первый. */
+function demoInviteToken(email: string): string {
+  let h = 0;
+  for (const ch of email) h = (h * 31 + ch.charCodeAt(0)) % 0xffffffff;
+  return `demo${h.toString(36).padStart(16, '0')}`.slice(0, 24);
+}
+
+export async function createClubInvite(): Promise<string> {
+  return run(() => demoInviteToken(requireDemoUser().email));
+}
+
+export async function redeemClubInvite(_token: string): Promise<string> {
+  return run<string>(() => {
+    // Принять приглашение может только второй человек, а в демо он один. `invite_own` — код,
+    // которым база отвечает тому, кто открыл собственную ссылку: здесь это ровно тот случай.
+    throw new AppError('validation', 'invite_own');
+  });
+}
+
+export async function breakClubDuo(_teamId: string): Promise<void> {
+  return run(() => {
+    mutateDb((db) => {
+      db.marathonTeams = db.marathonTeams.filter((t) => t.id !== DEMO_DUO_TEAM);
+    });
+  });
+}
+
 export async function getClubWinner(): Promise<ClubWinner | null> {
   return run(() => {
     const db = readDb();
@@ -2355,7 +2477,7 @@ export async function getClubWinner(): Promise<ClubWinner | null> {
         displayName: memberName(db, w.memberId),
         avatarSeed: me?.avatar_seed ?? '',
         note: w.note,
-        prize: round.prize ?? null,
+        prize: pickL10n(db, round.prize, round.prizeEn),
         announcedAt: w.announcedAt,
         isMe: (mem.email ?? '').toLowerCase() === (me?.email ?? '').toLowerCase(),
       };
