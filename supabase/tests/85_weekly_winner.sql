@@ -54,7 +54,11 @@ declare
   v_m1 uuid; v_m2 uuid; v_mo uuid;
 begin
   -- 10_smoke мог уже завести клуб: берём его, если он есть.
-  select id into v_club from public.marathons where is_club limit 1;
+  --
+  -- Именно соло: с 0033 клубов два, и `where is_club limit 1` отдавал бы то один, то
+  -- другой в зависимости от порядка строк — тест про победителя недели молча переехал
+  -- бы в дуо-клуб и однажды упал бы по причине, не имеющей к нему отношения.
+  select public.club_marathon(false) into v_club;
   if v_club is null then
     insert into public.marathons (slug, title, starts_on, days, team_size, status, is_club, prize)
     values ('win_club', 'Клуб маленьких шагов', current_date - 14, 365, 1, 'active', true,
