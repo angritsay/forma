@@ -21,6 +21,23 @@ export interface BoardRowProps {
   row: MarathonScoreRow;
   /** The place to draw, from `weekStandings`. `null` for an entry on nothing. */
   rank: number | null;
+  /**
+   * Тренер объявил эту строку победителем недели (0028). Видно всем: в этом и смысл.
+   *
+   * Не то же самое, что первое место. Первое место считает арифметика и оно может измениться,
+   * когда зачёркнут пруф; победителя называет Сергей, и с этого момента приз обещан именно этому
+   * человеку. Обычно это одна и та же строка, но когда нет — правдой должно быть объявление.
+   */
+  winner?: boolean;
+  /**
+   * Нажатие «объявить победителем» — только у тренера и только на доске.
+   *
+   * Живёт в строке, а не рядом с таблицей, потому что выбор здесь — это выбор строки: на телефоне
+   * «нажать на того, кто победил» короче любого списка имён, который пришлось бы строить сбоку.
+   */
+  onAnnounce?: () => void;
+  /** Подпись действия: «Победитель» или «Снять» — решает вызывающий, он же знает состояние. */
+  announceLabel?: string;
 }
 
 /**
@@ -28,7 +45,7 @@ export interface BoardRowProps {
  * quiet line under it — on a board where a pair wins together, "Ваня и Витя" is the racer and
  * «Ваня, Витя» is the detail.
  */
-export function BoardRow({ row, rank }: BoardRowProps) {
+export function BoardRow({ row, rank, winner, onAnnounce, announceLabel }: BoardRowProps) {
   const { t, locale } = useT();
   /*
    * The members go under the name — unless the name already contains them. A pair is very often
@@ -89,6 +106,12 @@ export function BoardRow({ row, rank }: BoardRowProps) {
          * member's own row is not drawn a second time underneath.
          */}
         <span className="flex min-w-0 items-baseline gap-2">
+          {/* Кубок перед именем, а не после очков: он про человека, а не про число. */}
+          {winner ? (
+            <span className="emoji shrink-0 text-[15px]" aria-hidden="true">
+              🏆
+            </span>
+          ) : null}
           <span className="font-display truncate text-[15px] leading-[1.24]">{row.title}</span>
           {showYou ? <span className="shrink-0 text-[13px] text-muted-2">{you}</span> : null}
         </span>
@@ -99,6 +122,20 @@ export function BoardRow({ row, rank }: BoardRowProps) {
       <span className="numeral tabular shrink-0 text-[17px]">
         {formatNumber(locale, row.points)}
       </span>
+      {onAnnounce ? (
+        <button
+          type="button"
+          onClick={onAnnounce}
+          className={clsx(
+            'control-label shrink-0 rounded-pill border px-3 py-1.5 text-[11px] transition-colors duration-150 ease-(--ease-out)',
+            winner
+              ? 'border-text text-text hover:bg-surface-2'
+              : 'border-border text-muted-2 hover:border-border-strong hover:text-text',
+          )}
+        >
+          {announceLabel}
+        </button>
+      ) : null}
     </div>
   );
 }

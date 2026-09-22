@@ -127,6 +127,17 @@ export interface DemoDb {
   marathonTaskTargets: { taskId: string; teamId: string | null; memberId: string | null }[];
   marathonSubmissions: MarathonSubmissionRow[];
   marathonAdjustments: MarathonAdjustmentRow[];
+  /** Кого тренер объявил победителем недели (0028). Одна строка на (круг, неделю). */
+  marathonWinners: DemoWinner[];
+}
+
+/** Демо-двойник строки `marathon_winners`. */
+export interface DemoWinner {
+  marathonId: string;
+  week: number;
+  memberId: string;
+  note: string | null;
+  announcedAt: string;
 }
 
 export interface DemoAuthState {
@@ -304,6 +315,7 @@ export function emptyDb(): DemoDb {
     marathonTaskTargets: [],
     marathonSubmissions: [],
     marathonAdjustments: [],
+    marathonWinners: [],
   };
 }
 
@@ -353,6 +365,7 @@ export function readDb(storage: StorageLike = defaultStorage()): DemoDb {
       }>(parsed.marathonTaskTargets),
       marathonSubmissions: asRows<MarathonSubmissionRow>(parsed.marathonSubmissions),
       marathonAdjustments: asRows<MarathonAdjustmentRow>(parsed.marathonAdjustments),
+      marathonWinners: asRows<DemoWinner>(parsed.marathonWinners),
     };
   } catch {
     return emptyDb();

@@ -14,6 +14,7 @@ import { demo } from './demo/load';
 import { guard, requireUser, unwrap } from './internal';
 import { isDemo } from './mode';
 import type {
+  ClubWinner,
   MarathonDayPoints,
   MarathonRosterRow,
   MarathonScoreRow,
@@ -379,3 +380,39 @@ export function proofMediaPath(
 }
 
 export const PROOFS_BUCKET = 'proofs';
+
+/**
+ * The most recently announced club winner, or null when nobody has been announced yet.
+ *
+ * The *last announced*, not the current week's: a week that is still running has no winner, and
+ * the interesting one on a Monday is whoever won on Sunday. See 0028.
+ */
+export async function getClubWinner(): Promise<ClubWinner | null> {
+  if (isDemo()) return (await demo()).getClubWinner();
+  return guard(async () => {
+    const rows = unwrap<
+      {
+        marathon_id: string;
+        week: number;
+        display_name: string;
+        avatar_seed: string;
+        note: string | null;
+        prize: string | null;
+        announced_at: string;
+        is_me: boolean;
+      }[]
+    >(await supabase().rpc('club_winner'));
+    const r = rows[0];
+    if (!r) return null;
+    return {
+      marathonId: r.marathon_id,
+      week: Number(r.week) || 1,
+      displayName: r.display_name,
+      avatarSeed: r.avatar_seed ?? '',
+      note: r.note,
+      prize: r.prize,
+      announcedAt: r.announced_at,
+      isMe: r.is_me === true,
+    };
+  });
+}

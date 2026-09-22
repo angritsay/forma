@@ -67,6 +67,7 @@ import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { BoardGap, BoardRow } from '@/app/features/marathon/BoardRow';
 import { ClubPitch } from '@/app/features/marathon/ClubPitch';
 import { ClubStreak } from '@/app/features/marathon/ClubStreak';
+import { ClubWinner } from '@/app/features/marathon/ClubWinner';
 import { clubPrize } from '@/app/features/marathon/prize';
 import { weekStandings } from '@/app/features/marathon/standings';
 import { TaskCard } from '@/app/features/marathon/TaskCard';
@@ -204,6 +205,12 @@ export default function MarathonScreen() {
     <div style={courseTileVars(GAME_TILE)}>
       <Screen contentClassName="pt-2">
         <ClubStreak />
+        {/*
+         * Над заданием дня, а не под ним: объявление — это про прошлую неделю, и оно закрывает её
+         * прежде, чем человек берётся за сегодняшнее. Своего победителя тут нет — плашка рисуется,
+         * только когда тренер кого-то объявил.
+         */}
+        <ClubWinner />
         {body}
       </Screen>
     </div>
