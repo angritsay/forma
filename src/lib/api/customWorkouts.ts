@@ -23,7 +23,10 @@ import type {
 
 export interface CustomWorkoutInput {
   title: string;
+  /** Английская половина названия. null — не переведено; приложение подставит русское. */
+  titleEn?: string | null;
   description?: string | null;
+  descriptionEn?: string | null;
   structure: CustomWorkoutStructure;
 }
 
@@ -31,7 +34,9 @@ interface DbCustomWorkout {
   id: string;
   short_id: string;
   title: string;
+  title_en: string | null;
   description: string | null;
+  description_en: string | null;
   structure: unknown;
   est_sec: number | null;
   points: number | null;
@@ -65,7 +70,9 @@ function summaryFromDb(r: DbCustomWorkout): CustomWorkoutSummary {
     id: r.id,
     shortId: r.short_id,
     title: r.title,
+    titleEn: r.title_en ?? null,
     description: r.description,
+    descriptionEn: r.description_en ?? null,
     estSec: r.est_sec,
     points: r.points,
     shareToken: r.share_token,
@@ -121,7 +128,9 @@ export async function createCustomWorkout(input: CustomWorkoutInput): Promise<Cu
     const base = {
       author_id: me?.id ?? null,
       title: input.title,
+      title_en: input.titleEn ?? null,
       description: input.description ?? null,
+      description_en: input.descriptionEn ?? null,
       structure: input.structure,
       est_sec,
       points,
@@ -154,7 +163,9 @@ export async function updateCustomWorkout(
         .from('custom_workouts')
         .update({
           title: input.title,
+          title_en: input.titleEn ?? null,
           description: input.description ?? null,
+          description_en: input.descriptionEn ?? null,
           structure: input.structure,
           est_sec,
           points,

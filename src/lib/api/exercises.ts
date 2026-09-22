@@ -24,6 +24,7 @@ interface DbExercise {
   cues: unknown;
   mistakes: unknown;
   breathing_ru: string | null;
+  breathing_en: string | null;
   primary_muscle: string | null;
   muscles: string[] | null;
   pattern: string | null;
@@ -70,6 +71,7 @@ function fromDb(r: DbExercise): ExerciseCatalogRow {
     cues: textList(r.cues),
     mistakes: textList(r.mistakes),
     breathingRu: r.breathing_ru,
+    breathingEn: r.breathing_en ?? null,
     primaryMuscle: r.primary_muscle,
     muscles: r.muscles ?? [],
     pattern: r.pattern,
@@ -97,6 +99,7 @@ function draftToDb(draft: Partial<ExerciseDraft>): Record<string, unknown> {
   if (draft.cues !== undefined) db.cues = draft.cues;
   if (draft.mistakes !== undefined) db.mistakes = draft.mistakes;
   if (draft.breathingRu !== undefined) db.breathing_ru = draft.breathingRu || null;
+  if (draft.breathingEn !== undefined) db.breathing_en = draft.breathingEn || null;
   if (draft.primaryMuscle !== undefined) db.primary_muscle = draft.primaryMuscle || null;
   if (draft.muscles !== undefined) db.muscles = draft.muscles;
   if (draft.pattern !== undefined) db.pattern = draft.pattern || null;

@@ -180,6 +180,9 @@ export function seedMarathon(email: string, today = toLocalDateIso()): DemoMarat
     marathonId: DEMO_MARATHON_ID,
     dayIndex: day,
     sortOrder: 0,
+    // Демо-задания живут только по-русски: это витрина продукта, а не его содержимое.
+    titleEn: null,
+    bodyEn: null,
     title,
     // No body anywhere: the name of the task is the task.
     body: null,

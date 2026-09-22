@@ -36,6 +36,12 @@ export const app = {
   // that cannot be read to the end is worse than none. The switch says what it does by moving.
   soundRow: 'Sound',
 
+  // The admin's own language switch: which language the coach is typing into right now
+  // (src/app/features/admin/LangTabs.tsx). Not the language of the panel itself.
+  adminEditingLanguage: 'Writing in',
+  // Shown instead of the switch while a record is being created: there is nothing to translate yet.
+  adminRussianFirst: 'In Russian first',
+
   // Language. The first screen shows these in *both* languages at once, so each string has to
   // stand on its own without the other one for context (src/app/screens/LanguageScreen.tsx).
   languageTitle: 'Choose your language',

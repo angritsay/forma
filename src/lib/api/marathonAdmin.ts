@@ -150,7 +150,9 @@ export function taskPatchToDb(patch: MarathonTaskPatch): Record<string, unknown>
   if (patch.dayIndex !== undefined) db.day_index = patch.dayIndex;
   if (patch.sortOrder !== undefined) db.sort_order = patch.sortOrder;
   if (patch.title !== undefined) db.title = patch.title;
+  if (patch.titleEn !== undefined) db.title_en = patch.titleEn;
   if (patch.body !== undefined) db.body = patch.body;
+  if (patch.bodyEn !== undefined) db.body_en = patch.bodyEn;
   if (patch.mediaUrl !== undefined) db.media_url = patch.mediaUrl;
   if (patch.proofKind !== undefined) db.proof_kind = patch.proofKind;
   if (patch.unit !== undefined) db.unit = patch.unit;
@@ -309,7 +311,9 @@ function taskSeed(task: MarathonTaskRow): MarathonTaskPatch & { title: string } 
   return {
     sortOrder: task.sortOrder,
     title: task.title,
+    titleEn: task.titleEn,
     body: task.body,
+    bodyEn: task.bodyEn,
     mediaUrl: task.mediaUrl,
     proofKind: task.proofKind,
     unit: task.unit,

@@ -22,6 +22,7 @@ import type { AdminCoursePatch, AdminCourseRow } from '@/lib/api/types';
 import type { CourseDraftContent } from '@/lib/courses/draft';
 import { courseTileVars } from '@/lib/ui/tile';
 import { useT } from '@/app/hooks/useT';
+import { otherHalf, pick, put, useAdminLocale } from '@/app/features/admin/adminLocale';
 import { ChipToggles, FieldLabel, TextList } from '@/app/features/admin/forms/TextList';
 import { MediaField } from '@/app/features/admin/media/MediaField';
 
@@ -41,12 +42,13 @@ export interface CourseMetaEditorProps {
   onPatch: (patch: AdminCoursePatch) => void;
 }
 
-/** A single-line Russian field of the content blob. */
+/** A single-line field of the content blob, in whichever language the admin is writing. */
 function useContentField(course: AdminCourseRow, onPatch: (p: AdminCoursePatch) => void) {
+  const editing = useAdminLocale((s) => s.editing);
   return (key: 'name' | 'tagline' | 'description', value: string) => {
     const content: CourseDraftContent = {
       ...course.content,
-      [key]: { ...(course.content[key] ?? {}), ru: value },
+      [key]: put(course.content[key], editing, value),
     };
     onPatch({ content });
   };
@@ -54,6 +56,7 @@ function useContentField(course: AdminCourseRow, onPatch: (p: AdminCoursePatch) 
 
 export function CourseMetaEditor({ course, onPatch }: CourseMetaEditorProps) {
   const { t } = useT();
+  const editing = useAdminLocale((s) => s.editing);
   const setText = useContentField(course, onPatch);
   const c = course.content;
 
@@ -81,51 +84,65 @@ export function CourseMetaEditor({ course, onPatch }: CourseMetaEditorProps) {
   };
   const tileInvalid = tileText.trim() !== '' && !HEX_RE.test(tileText.trim());
 
+  /*
+   * Список правится по одному языку за раз, и длина у него общая: третий пункт по-английски —
+   * это перевод третьего русского, а не отдельный пункт. Поэтому новое значение накладывается на
+   * существующее по индексу, а не заменяет список.
+   */
   const setList = (key: 'longDescription' | 'forWhom' | 'outcomes', values: string[]) =>
-    onPatch({ content: { ...c, [key]: values.map((v) => ({ ru: v })) } });
+    onPatch({
+      content: { ...c, [key]: values.map((v, i) => put((c[key] ?? [])[i], editing, v)) },
+    });
 
   const faq = c.faq ?? [];
   const setFaq = (next: typeof faq) => onPatch({ content: { ...c, faq: next } });
 
   return (
     <div className="flex flex-col gap-6 py-4">
+      {/*
+       * Все поля ниже — на языке, выбранном наверху экрана («Пишем на»). Подсказка поля — тот же
+       * текст на другом языке: перевод делается, глядя в то поле, которое переводишь.
+       */}
       <Input
         label={t('app.courseName')}
-        value={c.name?.ru ?? ''}
+        placeholder={otherHalf(c.name, editing)}
+        value={pick(c.name, editing)}
         onChange={(e) => setText('name', e.target.value)}
       />
       <Input
         label={t('app.courseTagline')}
         hint={t('app.courseTaglineHint')}
-        value={c.tagline?.ru ?? ''}
+        placeholder={otherHalf(c.tagline, editing)}
+        value={pick(c.tagline, editing)}
         onChange={(e) => setText('tagline', e.target.value)}
       />
       <Textarea
         label={t('app.courseDescription')}
         hint={t('app.courseDescriptionHint')}
         rows={3}
-        value={c.description?.ru ?? ''}
+        placeholder={otherHalf(c.description, editing)}
+        value={pick(c.description, editing)}
         onChange={(e) => setText('description', e.target.value)}
       />
 
       <TextList
         label={t('app.courseLongDescription')}
         hint={t('app.courseLongDescriptionHint')}
-        values={(c.longDescription ?? []).map((v) => v.ru ?? '')}
+        values={(c.longDescription ?? []).map((v) => pick(v, editing))}
         onChange={(v) => setList('longDescription', v)}
         placeholder={t('app.courseParagraph')}
       />
       <TextList
         label={t('app.courseForWhom')}
         hint={t('app.courseForWhomHint')}
-        values={(c.forWhom ?? []).map((v) => v.ru ?? '')}
+        values={(c.forWhom ?? []).map((v) => pick(v, editing))}
         onChange={(v) => setList('forWhom', v)}
         placeholder={t('app.courseForWhomPlaceholder')}
       />
       <TextList
         label={t('app.courseOutcomes')}
         hint={t('app.courseOutcomesHint')}
-        values={(c.outcomes ?? []).map((v) => v.ru ?? '')}
+        values={(c.outcomes ?? []).map((v) => pick(v, editing))}
         onChange={(v) => setList('outcomes', v)}
         placeholder={t('app.courseOutcomesPlaceholder')}
       />
@@ -318,18 +335,26 @@ export function CourseMetaEditor({ course, onPatch }: CourseMetaEditorProps) {
               <Input
                 aria-label={t('app.courseFaqQ')}
                 placeholder={t('app.courseFaqQ')}
-                value={item.q?.ru ?? ''}
+                value={pick(item.q, editing)}
                 onChange={(e) =>
-                  setFaq(faq.map((f, j) => (j === i ? { ...f, q: { ru: e.target.value } } : f)))
+                  setFaq(
+                    faq.map((f, j) =>
+                      j === i ? { ...f, q: put(f.q, editing, e.target.value) } : f,
+                    ),
+                  )
                 }
               />
               <Textarea
                 rows={2}
                 aria-label={t('app.courseFaqA')}
                 placeholder={t('app.courseFaqA')}
-                value={item.a?.ru ?? ''}
+                value={pick(item.a, editing)}
                 onChange={(e) =>
-                  setFaq(faq.map((f, j) => (j === i ? { ...f, a: { ru: e.target.value } } : f)))
+                  setFaq(
+                    faq.map((f, j) =>
+                      j === i ? { ...f, a: put(f.a, editing, e.target.value) } : f,
+                    ),
+                  )
                 }
               />
               <Button
