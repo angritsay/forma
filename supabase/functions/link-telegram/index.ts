@@ -20,15 +20,23 @@
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { verifyInitData } from './verify.ts';
+import { CORS_HEADERS, preflight } from './cors.ts';
 
 function reply(status: number, body: Record<string, unknown>): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'content-type': 'application/json; charset=utf-8' },
+    headers: { 'content-type': 'application/json; charset=utf-8', ...CORS_HEADERS },
   });
 }
 
 Deno.serve(async (req) => {
+  /*
+   * Предзапрос — раньше всего остального. Браузер спрашивает разрешения отдельным `OPTIONS`, и
+   * пока на него не ответить, самого `POST` не случится вовсе (`cors.ts`).
+   */
+  const allowed = preflight(req.method);
+  if (allowed) return allowed;
+
   if (req.method !== 'POST') return reply(405, { linked: false });
 
   const botToken = Deno.env.get('TELEGRAM_BOT_TOKEN');

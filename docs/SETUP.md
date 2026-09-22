@@ -1077,6 +1077,16 @@ a future migration breaks silently.
 People who never open the app from Telegram simply have no row here, and nothing is sent to them.
 That is the owner's decision and it is fine: «Это нормально».
 
+**If `telegram-check` keeps printing zero, read the Invocations tab, not the Logs tab.** This
+failed for weeks at 0 of 17 with an empty log, because the log only holds what the handler chose
+to write and the handler was never reached. The app is on `forma-app.co` and the function on
+`supabase.co`, so the browser sends a `OPTIONS` preflight first; the handler answered `405` to
+everything that was not `POST`, the preflight was refused, and the browser then never sent the
+`POST` at all. Invocations showed `OPTIONS → 405` and nothing else. `cors.ts` answers the
+preflight now, and `cors.test.ts` pins the status code so it cannot come back. The general lesson
+is worth more than the fix: **a function that is never called leaves the same empty log as a
+function that has nothing to say.**
+
 ### What the bot writes, and when
 
 `telegram_outbox` (`0027_telegram_outbox.sql`) is a queue. The database records the **occasion**;
