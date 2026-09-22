@@ -353,6 +353,8 @@ export interface CustomWorkoutSummary {
   titleEn: string | null;
   description: string | null;
   descriptionEn: string | null;
+  /** Чей это труд — id из `content/site/authors.ts`. Не тот, кто нажал «Сохранить». */
+  authorSlug: string | null;
   estSec: number | null;
   points: number | null;
   shareToken: string | null;
@@ -370,7 +372,11 @@ export interface AssignedWorkoutRow {
   id: string;
   shortId: string;
   title: string;
+  titleEn: string | null;
   description: string | null;
+  descriptionEn: string | null;
+  /** Чей это труд — id из `content/site/authors.ts`. */
+  authorSlug: string | null;
   structure: unknown;
   estSec: number | null;
   points: number | null;

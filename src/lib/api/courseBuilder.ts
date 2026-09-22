@@ -177,6 +177,7 @@ export async function getAdminCourse(id: string): Promise<AdminCourseBundle> {
             title_en: string | null;
             description: string | null;
             description_en: string | null;
+            author_slug: string | null;
             structure: unknown;
             est_sec: number | null;
             points: number | null;
@@ -192,6 +193,7 @@ export async function getAdminCourse(id: string): Promise<AdminCourseBundle> {
             titleEn: r.title_en ?? null,
             description: r.description,
             descriptionEn: r.description_en ?? null,
+            authorSlug: r.author_slug ?? null,
             structure: r.structure,
             estSec: r.est_sec,
             points: r.points,
@@ -388,6 +390,7 @@ export async function listPublishedCourses(): Promise<AdminCourseBundle[]> {
             title_en: string | null;
             description: string | null;
             description_en: string | null;
+            author_slug: string | null;
             structure: unknown;
             est_sec: number | null;
             points: number | null;
@@ -398,7 +401,7 @@ export async function listPublishedCourses(): Promise<AdminCourseBundle[]> {
           await supabase()
             .from('custom_workouts')
             .select(
-              'id, short_id, title, title_en, description, description_en, structure, est_sec, points, created_at, updated_at',
+              'id, short_id, title, title_en, description, description_en, author_slug, structure, est_sec, points, created_at, updated_at',
             )
             .in('id', ids),
         ).map((r): CustomWorkoutRow => ({
@@ -408,6 +411,7 @@ export async function listPublishedCourses(): Promise<AdminCourseBundle[]> {
           titleEn: r.title_en ?? null,
           description: r.description,
           descriptionEn: r.description_en ?? null,
+          authorSlug: r.author_slug ?? null,
           structure: r.structure,
           estSec: r.est_sec,
           points: r.points,

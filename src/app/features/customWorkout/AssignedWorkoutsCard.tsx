@@ -33,10 +33,33 @@ import { useEffect, useState } from 'react';
 import { Glyph } from '@/components/ui/Icon';
 import { listDoneCustomWorkouts, listMyAssignedWorkouts } from '@/lib/api/customWorkouts';
 import type { AssignedWorkoutRow } from '@/lib/api/types';
+import { withBase } from '@/lib/util/paths';
+import { AUTHORS, authorById } from '@content/site/authors';
 import { useT } from '@/app/hooks/useT';
 
 export interface AssignedWorkoutsCardProps {
   onOpen: (id: string) => void;
+}
+
+/** Лицо и имя того, чья это работа. Ничего не рисует, если подписать некем. */
+function AuthorLine({ slug }: { slug: string | null }) {
+  const { l } = useT();
+  const author = authorById(slug);
+  if (!author) return null;
+  return (
+    <span className="flex min-w-0 items-center gap-2 text-[13px] text-muted">
+      {author.photo ? (
+        <img
+          src={withBase(author.photo)}
+          alt=""
+          width={20}
+          height={20}
+          className="size-5 shrink-0 rounded-full object-cover"
+        />
+      ) : null}
+      <span className="truncate">{l(author.name)}</span>
+    </span>
+  );
 }
 
 export function AssignedWorkoutsCard({ onOpen }: AssignedWorkoutsCardProps) {
@@ -102,6 +125,14 @@ export function AssignedWorkoutsCard({ onOpen }: AssignedWorkoutsCardProps) {
                 <span className="font-display line-clamp-2 text-[19px] leading-[1.2] text-balance">
                   {w.title}
                 </span>
+                {/*
+                  Имя автора — только когда авторов больше одного.
+                  
+                  Пока тренер один, «от Сергея» повторяет заголовок над лентой и не сообщает
+                  ничего: других вариантов нет. С йогой вариант появляется, и тогда имя — это уже
+                  новость, а не подпись ради подписи. Тот же порог, что у выбора в редакторе.
+                */}
+                {AUTHORS.length > 1 ? <AuthorLine slug={w.authorSlug} /> : null}
                 {minutes || w.points ? (
                   <span className="flex flex-wrap items-center gap-2 text-[13px] text-muted">
                     {minutes ? (

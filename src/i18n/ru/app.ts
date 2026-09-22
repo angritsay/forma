@@ -698,6 +698,8 @@ export const app = {
   builderPickExercise: 'Выбери упражнение',
   builderSearchExercise: 'Поиск упражнения',
   builderNoMatches: 'Ничего не найдено',
+  // Чей это труд, а не кто нажал «Сохранить»: тренировки инструктора по йоге заводит владелец.
+  builderAuthor: 'Автор',
   builderTitle: 'Название',
   builderTitlePlaceholder: 'Название тренировки',
   builderDescription: 'Описание',
