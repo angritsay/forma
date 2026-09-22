@@ -18,6 +18,7 @@
  * icon. That is the whole fallback — the flat tile behind shows through, which is the brand's
  * answer for a picture that is not there yet.
  */
+import { useEffect, useState } from 'react';
 import { exerciseStillUrl } from '@/lib/api/storage';
 
 export interface ExerciseStillProps {
@@ -34,8 +35,28 @@ export function ExerciseStill({
   loading = 'lazy',
 }: ExerciseStillProps) {
   const src = exerciseId ? exerciseStillUrl(exerciseId) : undefined;
-  if (!src) return null;
-  return <img src={src} alt="" className={className} loading={loading} decoding="async" />;
+  /*
+   * Кадра может не быть, и это обычное дело: движение снято не всё, а файл живёт в бакете, а не в
+   * сборке. Выше написано, что тогда не рисуется ничего и сквозь просвечивает плитка, — но
+   * написано это было про `<img>` без обработки ошибки, а такой `<img>` показывает битую иконку.
+   * Владелец её и прислала: пять кадров в ряд и серый квадратик с вопросительным знаком пятым.
+   *
+   * Состояние сбрасывается при смене `src`: один и тот же компонент переиспользуется под разные
+   * движения, и «не загрузилось» от прошлого не должно прятать кадр следующего.
+   */
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [src]);
+  if (!src || failed) return null;
+  return (
+    <img
+      src={src}
+      alt=""
+      className={className}
+      loading={loading}
+      decoding="async"
+      onError={() => setFailed(true)}
+    />
+  );
 }
 
 export default ExerciseStill;
