@@ -746,7 +746,7 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
     club that needs him to clear one stops the first week he is busy. `submitted_at` never moves, so
     a redo keeps the hour the task was first delivered — he rejected the evidence, not the day — and
     his comment outlives the rejection, because after a redo it is the only record of why the proof
-    was sent twice. The rules are in `supabase/migrations/0025_proof_review.sql`, stated once for
+    was sent twice. The rules are in `supabase/migrations/0027_proof_review.sql`, stated once for
     the app in `src/lib/marathon/review.ts`.
 
     **«Мои баллы» is deleted** — screen, route and copy. A running total the member cannot act on

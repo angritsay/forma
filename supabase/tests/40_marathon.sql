@@ -308,7 +308,7 @@ do $$ declare v_id uuid; v_err text; begin
     'an athlete cannot move when the proof arrived';
 
   -- A rejection is a round rather than a verdict: sending proof again is a new attempt, and it is
-  -- the server that lifts the void (0025_proof_review.sql). Everything the athlete writes about
+  -- the server that lifts the void (0027_proof_review.sql). Everything the athlete writes about
   -- the verdict below is thrown away and recomputed from the row that was already there.
   update public.marathon_submissions
      set value_text = 'переснял', voided_at = null, void_reason = 'засчитал себе сам',

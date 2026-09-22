@@ -1702,7 +1702,7 @@ export async function sendProof(input: ProofInput): Promise<MarathonSubmissionRo
       );
       /*
        * A send against a rejected proof is the redo, exactly as the guard trigger reads it
-       * (0025_proof_review.sql): the rejection is lifted, the attempt goes up and the coach's
+       * (0027_proof_review.sql): the rejection is lifted, the attempt goes up and the coach's
        * «looked at» is cleared, so it comes back round to him. His comment stays — after a redo it
        * is the only record of why the proof was sent twice. This used to throw `proof_voided`,
        * which is the dead end the whole migration exists to remove.

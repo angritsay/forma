@@ -1,5 +1,5 @@
 -- =============================================================================
--- 0025 — the coach's verdict on one proof, and the athlete's second go at it.
+-- 0027 — the coach's verdict on one proof, and the athlete's second go at it.
 --
 -- Owner: «пользователь отправляет доказательство, мы ему автоматически зачитываем
 -- баллы. Дальше Серёжа заходит в админку, видит доказательство, просматривает его
@@ -51,13 +51,13 @@ alter table public.marathon_submissions
   add column if not exists reviewed_by uuid references auth.users (id) on delete set null;
 
 comment on column public.marathon_submissions.attempt is
-  'Which go this is: 1 until the coach rejects one and the athlete sends again (0025).';
+  'Which go this is: 1 until the coach rejects one and the athlete sends again (0027).';
 comment on column public.marathon_submissions.resubmitted_at is
-  'When proof was last sent again after a rejection. Null on a first attempt (0025).';
+  'When proof was last sent again after a rejection. Null on a first attempt (0027).';
 comment on column public.marathon_submissions.reviewed_at is
-  'When the coach last looked and left it standing. Cleared by a redo, so it is also the queue (0025).';
+  'When the coach last looked and left it standing. Cleared by a redo, so it is also the queue (0027).';
 comment on column public.marathon_submissions.void_reason is
-  'The coach''s comment on the proof. Survives a redo as the reason it was sent again; voided_at alone decides scoring (0025).';
+  'The coach''s comment on the proof. Survives a redo as the reason it was sent again; voided_at alone decides scoring (0027).';
 
 -- The queue: what has been redone and not looked at since. Small and partial, because
 -- that is the whole of it — the feed itself is still read by (marathon_id, submitted_at).
@@ -174,4 +174,4 @@ create policy "marathon_submissions: own update"
   with check (member_id = public.marathon_member_id(marathon_id));
 
 comment on table public.marathon_submissions is
-  'One proof per (task, member). Counts from the moment it is written; the coach rejects rather than approves, and the athlete can do the task again (0025).';
+  'One proof per (task, member). Counts from the moment it is written; the coach rejects rather than approves, and the athlete can do the task again (0027).';

@@ -244,7 +244,7 @@ interface ProofControlProps {
  * **A rejected proof keeps its control, and every label on it says «заново».** This returned
  * `null` for a voided proof, which left the athlete holding «Не засчитано» and nothing to press.
  * The coach's rejection is about one attempt, so the way back is the same control that sent the
- * first one — the server decides what a second send means (0025_proof_review.sql).
+ * first one — the server decides what a second send means (0027_proof_review.sql).
  */
 function ProofControl({
   item,

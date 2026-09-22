@@ -349,7 +349,7 @@ export async function getMarathonMyPoints(marathonId: string): Promise<MarathonD
  * The day, the marathon and the clock are all the server's: the guard trigger fills them from the
  * task and stamps `submitted_at` itself, which is what stops a phone clock from moving a proof
  * back into a day that has closed. The same trigger reads the row that is already there to tell a
- * correction from a redo, and lifts the rejection on a redo — see 0025_proof_review.sql. Nothing
+ * correction from a redo, and lifts the rejection on a redo — see 0027_proof_review.sql. Nothing
  * about the verdict is sent from here, because nothing about it is the client's to decide.
  */
 export async function sendProof(input: ProofInput): Promise<MarathonSubmissionRow> {
