@@ -1244,20 +1244,21 @@ history.
 `.github/workflows/supabase-apply.yml` does the dashboard chores from a phone. **Actions → Supabase
 apply → Run workflow**, pick a task:
 
-| Task              | What it does                                                                                |
-| ----------------- | ------------------------------------------------------------------------------------------- |
-| `migration`       | Runs one file from `supabase/migrations/`. The second input is its bare filename.           |
-| `club-seed`       | Runs `supabase/seed-club-week.sql` — the club's test week and its invented cohort (§9.1).   |
-| `club-join`       | Puts the real testers in that week, reading their addresses from a secret.                  |
-| `email-templates` | Puts `supabase/templates/otp.html` into **both** Magic Link and Confirm signup (§3.2).      |
-| `deploy-bot`      | Deploys the `telegram-bot` function and sets its secrets (§7.6).                            |
-| `deploy-link`     | Deploys `link-telegram`, which attaches a Telegram account to a profile (§7.6).             |
-| `deploy-payments` | Deploys `prodamus-webhook`, checks its two secrets and probes the live address (§7.4).      |
-| `secrets-check`   | Read-only: which function secrets Supabase has, which are missing, which override the repo. |
-| `webhook-info`    | Read-only: what Telegram itself believes about the bot's webhook, and why delivery failed.  |
-| `payments-check`  | Read-only: how many payment notifications have arrived and whether the last one applied.    |
-| `telegram-check`  | Read-only: how many people have a Telegram account attached, so the bot can reach them.     |
-| `outbox-check`    | Read-only: what is sitting in the bot message queue, by status. Counts only, no addresses.  |
+| Task                                   | What it does                                                                                |
+| -------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `migration`                            | Runs one file from `supabase/migrations/`. The second input is its bare filename.           |
+| `club-seed`                            | Runs `supabase/seed-club-week.sql` — the club's test week and its invented cohort (§9.1).   |
+| `club-join`                            | Puts the real testers in that week, reading their addresses from a secret.                  |
+| `email-templates`                      | Puts `supabase/templates/otp.html` into **both** Magic Link and Confirm signup (§3.2).      |
+| `deploy-bot`                           | Deploys the `telegram-bot` function and sets its secrets (§7.6).                            |
+| `deploy-link`                          | Deploys `link-telegram`, which attaches a Telegram account to a profile (§7.6).             |
+| `deploy-payments`                      | Deploys `prodamus-webhook`, checks its two secrets and probes the live address (§7.4).      |
+| `secrets-check`                        | Read-only: which function secrets Supabase has, which are missing, which override the repo. |
+| `webhook-info`                         | Read-only: what Telegram itself believes about the bot's webhook, and why delivery failed.  |
+| `payments-check`                       | Read-only: how many payment notifications have arrived and whether the last one applied.    |
+| `telegram-check`                       | Read-only: how many people have a Telegram account attached, so the bot can reach them.     |
+| `outbox-check`                         | Read-only: what is sitting in the bot message queue, by status. Counts only, no addresses.  |
+| `migration` → `0030_reload_schema.sql` | Not a schema change: tells PostgREST to re-read the schema. Run it on `PGRST205`.           |
 
 One secret makes it work: **`SUPABASE_ACCESS_TOKEN`** (Settings → Secrets and variables → Actions),
 a personal access token from <https://supabase.com/dashboard/account/tokens>. The project ref is

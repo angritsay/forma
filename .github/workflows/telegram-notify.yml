@@ -80,7 +80,16 @@ jobs:
             exit 0
           fi
           if [ "$code" -ge 300 ]; then
-            echo "::error::Функция ответила HTTP $code."
+            # Тело печатается, потому что оно наше и в нём по устройству нет ни
+            # адресов, ни текстов: только шаг и код Postgres из пяти символов.
+            # Без этого «HTTP 500» означает «иди читай логи функции», а логи
+            # читаются в дашборде, то есть не с телефона.
+            stage=$(jq -r '.stage // "?"' < /tmp/out.json 2>/dev/null || echo '?')
+            pg=$(jq -r '.code // ""' < /tmp/out.json 2>/dev/null || echo '')
+            echo "::error::Функция ответила HTTP $code на шаге «$stage»${pg:+, код Postgres $pg}."
+            if [ "$pg" = "PGRST205" ]; then
+              echo "::notice::PGRST205 — PostgREST не знает таблицу telegram_outbox. Обычно это несброшенный кэш схемы после миграции; лечится задачей Supabase apply → migration с файлом 0030_reload_schema.sql."
+            fi
             exit 1
           fi
 

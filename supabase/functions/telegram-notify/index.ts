@@ -15,6 +15,17 @@
  *
  * **Никакой параллельности.** Телеграм разрешает около 30 сообщений в секунду, а порядок здесь
  * не важен вовсе; последовательная отправка пачкой в 50 строк проще и никогда не упрётся в лимит.
+ *
+ * ## Отказ говорит, где именно
+ *
+ * Ответ на любом пути несёт `stage` и, если он есть, `code` от Postgres. Логи edge-функций
+ * читаются в дашборде, то есть не с телефона, — а это единственная машинка в проекте, которая
+ * работает сама и потому ломается молча. `{ok: false}` без подробностей означает «иди смотреть
+ * логи», чего владелец сделать не может.
+ *
+ * **Код, а не сообщение.** `PGRST205`, `42501` — это пять символов, по которым причина ищется
+ * однозначно, и в них не бывает ни адреса, ни текста. Страницу запуска в публичном репозитории
+ * видно всем и навсегда.
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { messageFor } from './copy.ts';
@@ -36,6 +47,11 @@ interface Row {
   expires_at: string;
 }
 
+interface PgError {
+  code?: string;
+  message?: string;
+}
+
 function reply(status: number, body: Record<string, unknown>): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -50,9 +66,11 @@ Deno.serve(async (req) => {
   const gate = Deno.env.get('NOTIFY_TOKEN');
   if (!botToken || !gate) {
     console.error('telegram-notify: TELEGRAM_BOT_TOKEN or NOTIFY_TOKEN is not set');
-    return reply(503, { ok: false });
+    return reply(503, { ok: false, stage: 'config' });
   }
-  if (new URL(req.url).searchParams.get('token') !== gate) return reply(403, { ok: false });
+  if (new URL(req.url).searchParams.get('token') !== gate) {
+    return reply(403, { ok: false, stage: 'gate' });
+  }
 
   const admin = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -70,11 +88,14 @@ Deno.serve(async (req) => {
     .limit(BATCH);
 
   if (error) {
-    console.error('telegram-notify: could not read the queue', error.message);
-    return reply(500, { ok: false });
+    const e = error as PgError;
+    console.error('telegram-notify: could not read the queue', e.code, e.message);
+    return reply(500, { ok: false, stage: 'read', code: e.code ?? '' });
   }
   const rows = (data ?? []) as Row[];
-  if (rows.length === 0) return reply(200, { ok: true, sent: 0, skipped: 0, failed: 0 });
+  if (rows.length === 0) {
+    return reply(200, { ok: true, stage: 'done', sent: 0, skipped: 0, failed: 0 });
+  }
 
   /*
    * Адреса пачкой, одним запросом.
@@ -83,11 +104,22 @@ Deno.serve(async (req) => {
    * регистрации, так что на момент записи привязки могло не быть вовсе (0027).
    */
   const emails = [...new Set(rows.map((r) => r.email))];
-  const { data: people } = await admin
+  const { data: people, error: peopleError } = await admin
     .from('profiles')
     .select('email, telegram_id')
     .in('email', emails)
     .not('telegram_id', 'is', null);
+
+  /*
+   * Раньше эта ошибка глоталась, и отказ читался как «никому не привязан телеграм»: строки
+   * оставались ждать вечно, а счётчики показывали ноль отправленных и ноль ошибок. Тишина,
+   * неотличимая от нормальной работы, — худший из возможных отказов для машинки без присмотра.
+   */
+  if (peopleError) {
+    const e = peopleError as PgError;
+    console.error('telegram-notify: could not read profiles', e.code, e.message);
+    return reply(500, { ok: false, stage: 'recipients', code: e.code ?? '' });
+  }
 
   const chat = new Map<string, number>();
   for (const p of (people ?? []) as { email: string; telegram_id: number }[]) {
@@ -177,5 +209,5 @@ Deno.serve(async (req) => {
   }
 
   console.log(`telegram-notify: sent ${sent}, skipped ${skipped}, failed ${failed}`);
-  return reply(200, { ok: true, sent, skipped, failed });
+  return reply(200, { ok: true, stage: 'done', sent, skipped, failed });
 });
