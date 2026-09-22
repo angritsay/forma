@@ -150,6 +150,16 @@ export function privacyDocument(): LegalDocument {
             ru: 'Фотографии и видео, которые ты сам прикладываешь как подтверждение задания в клубе. Их видит только тренер.',
             en: 'Photos and videos you attach yourself as proof of a club task. Only the coach sees them.',
           },
+          /*
+           * Номер аккаунта в телеграме — персональные данные, и он появляется в базе сам, без
+           * единого действия человека: приложение открылось внутри телеграма — связка записалась.
+           * Именно поэтому сказать об этом надо здесь и прямо, а не считать, что «он же и так
+           * открыл нас из телеграма, значит знал».
+           */
+          {
+            ru: 'Номер твоего аккаунта в телеграме — если ты открываешь приложение внутри телеграма. Он нужен только затем, чтобы бот мог написать тебе про оплату и про то, что тренер выдал тренировку. Ни имени, ни телефона, ни переписки мы из телеграма не получаем.',
+            en: 'Your Telegram account number — if you open the app inside Telegram. It exists only so the bot can write to you about a payment or a workout the coach assigned. We receive no name, phone number or messages from Telegram.',
+          },
           {
             ru: 'Технические данные: время действий и данные сессии, необходимые для работы входа.',
             en: 'Technical data: timestamps of actions and the session data needed for sign-in to work.',
@@ -213,6 +223,19 @@ export function privacyDocument(): LegalDocument {
           {
             ru: 'Поддержка, возвраты и выполнение требований закона.',
             en: 'Support, refunds and compliance with legal requirements.',
+          },
+          /*
+           * Цель обработки, которую надо было назвать: тренер смотрит сводку по всем — сколько
+           * людей дошло до какого шага и кто давно не занимался, — чтобы понимать, что в
+           * приложении чинить. Ст. 18.1 требует перечислять цели, а не только данные, и молчать
+           * о той, ради которой сделан целый экран в админке, нельзя.
+           *
+           * Сказано и то, чего мы не делаем: внешней аналитики в приложении нет вовсе, и это
+           * проверяемо — счётчиков и SDK в нём не стоит.
+           */
+          {
+            ru: 'Понять, как работает приложение: сколько людей доходит до каждого шага и кто перестал заниматься. Эту сводку видит только тренер, внутри приложения, и она нужна, чтобы улучшать курсы и сам сервис. Никаких внешних систем аналитики мы не используем.',
+            en: 'To understand how the app works: how many people reach each step and who has stopped training. Only the coach sees this summary, inside the app, and it exists so that the courses and the service can be improved. We use no third-party analytics.',
           },
         ],
         after: [

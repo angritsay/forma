@@ -6,7 +6,7 @@
  * difference beyond the demo badge.
  */
 import { COURSES, EXERCISES } from '@/content/registry';
-import { addDays } from '@/lib/util/dates';
+import { addDays, toLocalDateIso, weekStart } from '@/lib/util/dates';
 import { downscaleImage, isVideoFile, toDataUrl, type DownscaleOptions } from '@/lib/util/image';
 import { AppError } from '../errors';
 import type {
@@ -15,7 +15,10 @@ import type {
   AdminCourseDayRow,
   AdminCoursePatch,
   AdminCourseRow,
+  AdminOverview,
   AssignedWorkoutRow,
+  FunnelWeek,
+  ProgressRow,
   CustomWorkoutRow,
   CustomWorkoutSummary,
   ExerciseCatalogRow,
@@ -2176,4 +2179,145 @@ export async function deleteMarathonAdjustment(id: string): Promise<void> {
       db.marathonAdjustments = db.marathonAdjustments.filter((a) => a.id !== id);
     }),
   );
+}
+
+// --- analytics (0025) --------------------------------------------------------
+//
+// Демо — это один человек в своём браузере, и воронка из одного человека не воронка. Но экран
+// должен быть виден и проверяем, поэтому считается то же самое по той же демо-базе: числа выйдут
+// крошечные и честные, а не придуманные. Никаких подставных пользователей здесь нет — выдумывать
+// людей ради красивого графика значило бы выдумывать статистику.
+
+/** Живая подписка по тому же правилу, что у `subscription_live()` на сервере. */
+function subLive(db: DemoDb, email: string): boolean {
+  return db.subscriptions.some(
+    (x) =>
+      x.email.toLowerCase() === email.toLowerCase() &&
+      (x.status === 'active' || x.status === 'cancelled') &&
+      x.expires_at !== null &&
+      x.expires_at > nowIso(),
+  );
+}
+
+function paidEmail(db: DemoDb, email: string): boolean {
+  const lower = email.toLowerCase();
+  return (
+    db.purchases.some((p) => p.email.toLowerCase() === lower && p.status === 'active') ||
+    subLive(db, email)
+  );
+}
+
+/** Завершённые тренировки одного человека, сгруппированные по его собственным дням. */
+function doneDays(db: DemoDb, userId: string): string[] {
+  const days = new Set<string>();
+  for (const s of db.sessions) {
+    if (s.user_id === userId && s.completed_at) days.add(s.local_date);
+  }
+  return [...days];
+}
+
+export async function getAdminOverview(): Promise<AdminOverview> {
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    const since = (days: number) => {
+      const t = new Date(Date.now() - days * 86_400_000).toISOString();
+      return new Set(
+        db.sessions.filter((s) => s.completed_at && s.completed_at > t).map((s) => s.user_id),
+      ).size;
+    };
+    const known = new Set(db.profiles.map((p) => p.email.toLowerCase()));
+    const paidAddresses = new Set<string>();
+    for (const p of db.purchases)
+      if (p.status === 'active') paidAddresses.add(p.email.toLowerCase());
+    for (const s of db.subscriptions)
+      if (subLive(db, s.email)) paidAddresses.add(s.email.toLowerCase());
+
+    return {
+      people: db.profiles.length,
+      onboarded: db.profiles.filter((p) => p.onboarded_at !== null).length,
+      paying: db.profiles.filter((p) => paidEmail(db, p.email)).length,
+      subscribed: db.profiles.filter((p) => subLive(db, p.email)).length,
+      paidNeverSignedIn: [...paidAddresses].filter((e) => !known.has(e)).length,
+      active7d: since(7),
+      active28d: since(28),
+    };
+  });
+}
+
+export async function listFunnel(weeks = 12): Promise<FunnelWeek[]> {
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    const span = Math.max(1, Math.min(weeks, 104));
+    const thisMonday = weekStart(toLocalDateIso(new Date()));
+    const from = addDays(thisMonday, -(span - 1) * 7);
+
+    const byWeek = new Map<string, FunnelWeek>();
+    for (const p of db.profiles) {
+      const wk = weekStart(toLocalDateIso(new Date(p.created_at)));
+      if (wk < from) continue;
+      const row = byWeek.get(wk) ?? {
+        weekStart: wk,
+        signedUp: 0,
+        onboarded: 0,
+        trained: 0,
+        repeated: 0,
+        paid: 0,
+      };
+      const days = doneDays(db, p.id).length;
+      row.signedUp += 1;
+      if (p.onboarded_at !== null) row.onboarded += 1;
+      if (days >= 1) row.trained += 1;
+      if (days >= 2) row.repeated += 1;
+      if (paidEmail(db, p.email)) row.paid += 1;
+      byWeek.set(wk, row);
+    }
+    return [...byWeek.values()].sort((a, b) => b.weekStart.localeCompare(a.weekStart));
+  });
+}
+
+export async function listProgress(search = '', limit = 200): Promise<ProgressRow[]> {
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    const term = search.trim().toLowerCase();
+    return db.profiles
+      .filter(
+        (p) =>
+          !term ||
+          p.email.toLowerCase().includes(term) ||
+          (p.display_name ?? '').toLowerCase().includes(term),
+      )
+      .map((p) => {
+        const mine = db.sessions.filter((s) => s.user_id === p.id && s.completed_at);
+        const last = mine.reduce<string | null>(
+          (acc, s) => (acc === null || (s.completed_at ?? '') > acc ? s.completed_at : acc),
+          null,
+        );
+        return {
+          email: p.email,
+          displayName: p.display_name,
+          createdAt: p.created_at,
+          onboardedAt: p.onboarded_at,
+          workouts: mine.length,
+          days: doneDays(db, p.id).length,
+          points: mine.reduce((sum, s) => sum + (Number(s.points) || 0), 0),
+          lastWorkoutAt: last,
+          courses: db.purchases.filter(
+            (x) => x.email.toLowerCase() === p.email.toLowerCase() && x.status === 'active',
+          ).length,
+          subscribed: subLive(db, p.email),
+        };
+      })
+      .sort((a, b) => {
+        // Никогда не тренировавшиеся — вниз, как и на сервере (`nulls last`).
+        if (a.lastWorkoutAt === null && b.lastWorkoutAt === null)
+          return b.createdAt.localeCompare(a.createdAt);
+        if (a.lastWorkoutAt === null) return 1;
+        if (b.lastWorkoutAt === null) return -1;
+        return b.lastWorkoutAt.localeCompare(a.lastWorkoutAt);
+      })
+      .slice(0, limit);
+  });
 }
