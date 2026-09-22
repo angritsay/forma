@@ -52,7 +52,9 @@ export interface DbMarathonTask {
   day_index: number;
   sort_order: number;
   title: string;
+  title_en: string | null;
   body: string | null;
+  body_en: string | null;
   media_url: string | null;
   proof_kind: MarathonTaskRow['proofKind'];
   unit: string | null;
@@ -95,7 +97,9 @@ export function taskFromDb(r: DbMarathonTask): MarathonTaskRow {
     dayIndex: r.day_index,
     sortOrder: r.sort_order,
     title: r.title,
+    titleEn: r.title_en ?? null,
     body: r.body,
+    bodyEn: r.body_en ?? null,
     mediaUrl: r.media_url,
     proofKind: r.proof_kind,
     unit: r.unit,

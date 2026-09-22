@@ -130,7 +130,9 @@ export default function AdminWorkoutsScreen() {
             ? {}
             : {
                 initialTitle: editing.input.title,
+                initialTitleEn: editing.input.titleEn,
                 initialDescription: editing.input.description,
+                initialDescriptionEn: editing.input.descriptionEn,
                 initialStructure: editing.input.structure,
               })}
           saving={saving}

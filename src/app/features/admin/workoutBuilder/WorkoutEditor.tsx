@@ -28,6 +28,7 @@ import type {
 import type { ExerciseUnit } from '@/content/schema';
 import { findExercise } from '@/content/catalogue';
 import type { TKey } from '@/i18n/index';
+import { LangTabs, useEditingLocale } from '@/app/features/admin/LangTabs';
 import { useT } from '@/app/hooks/useT';
 import { ExercisePickerSheet } from './ExercisePickerSheet';
 
@@ -40,6 +41,7 @@ interface DraftItem {
   perSide: boolean;
   restAfterSec: number;
   note: string;
+  noteEn: string;
   /** The item this was read from, so fields the form has no control for survive a save. */
   source?: CustomWorkoutItem;
 }
@@ -55,7 +57,9 @@ interface DraftSection {
 
 export interface WorkoutEditorProps {
   initialTitle?: string;
+  initialTitleEn?: string | null;
   initialDescription?: string | null;
+  initialDescriptionEn?: string | null;
   initialStructure?: CustomWorkoutStructure;
   saving: boolean;
   onSave: (input: CustomWorkoutInput) => void;
@@ -89,6 +93,7 @@ function emptySections(initial?: CustomWorkoutStructure): DraftSection[] {
         perSide: it.perSide === true,
         restAfterSec: it.restAfterSec,
         note: it.note ?? '',
+        noteEn: it.noteEn ?? '',
         source: it,
       })),
     };
@@ -111,15 +116,22 @@ const NUM_INPUT =
 
 export function WorkoutEditor({
   initialTitle = '',
+  initialTitleEn = '',
   initialDescription = '',
+  initialDescriptionEn = '',
   initialStructure,
   saving,
   onSave,
   onCancel,
 }: WorkoutEditorProps) {
   const { t } = useT();
+  // Новая тренировка собирается по-русски: русское название обязательно, переводить пока нечего.
+  const isNew = !initialTitle;
+  const editing = useEditingLocale(isNew);
   const [title, setTitle] = useState(initialTitle);
+  const [titleEn, setTitleEn] = useState(initialTitleEn ?? '');
   const [description, setDescription] = useState(initialDescription ?? '');
+  const [descriptionEn, setDescriptionEn] = useState(initialDescriptionEn ?? '');
   const [sections, setSections] = useState<DraftSection[]>(() => emptySections(initialStructure));
   const [pickerFor, setPickerFor] = useState<CustomSectionKind | null>(null);
 
@@ -169,6 +181,7 @@ export function WorkoutEditor({
       perSide: false,
       restAfterSec: 0,
       note: '',
+      noteEn: '',
     };
     setSections((prev) =>
       prev.map((s) => (s.kind === kind ? { ...s, items: [...s.items, item] } : s)),
@@ -202,10 +215,18 @@ export function WorkoutEditor({
             ...(it.perSide ? { perSide: true } : { perSide: undefined }),
             restAfterSec: Math.max(0, it.restAfterSec),
             ...(it.note.trim() ? { note: it.note.trim() } : { note: undefined }),
+            ...(it.noteEn.trim() ? { noteEn: it.noteEn.trim() } : { noteEn: undefined }),
           })),
         })),
     };
-    onSave({ title: title.trim(), description: description.trim() || null, structure });
+    onSave({
+      title: title.trim(),
+      // Пустая половина — «не переведено», а не пустое название: приложение подставит русское.
+      titleEn: titleEn.trim() || null,
+      description: description.trim() || null,
+      descriptionEn: descriptionEn.trim() || null,
+      structure,
+    });
   };
 
   return (
@@ -215,20 +236,38 @@ export function WorkoutEditor({
        * disappears the moment you type — so a half-filled form stopped saying which field was
        * which, and the rest of the builder labels everything.
        */}
+      {/* «Пишем на» — до формы: на него смотрят раньше, чем начинают печатать. */}
+      <div className="flex items-center justify-between gap-3">
+        <span className="eyebrow">{t('app.adminEditingLanguage')}</span>
+        <LangTabs locked={isNew} />
+      </div>
+
       <div className="flex flex-col gap-3 lg:flex-row">
+        {/*
+         * На языке из «Пишем на». В подсказке — вторая половина, когда она есть: переводишь,
+         * глядя в то поле, которое переводишь. Когда её нет, остаётся обычная подсказка формы.
+         */}
         <Input
           wrapperClassName="lg:flex-1"
           label={t('app.builderTitle')}
-          placeholder={t('app.builderTitlePlaceholder')}
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          placeholder={
+            editing === 'en'
+              ? title || t('app.builderTitlePlaceholder')
+              : t('app.builderTitlePlaceholder')
+          }
+          value={editing === 'en' ? titleEn : title}
+          onChange={(e) => (editing === 'en' ? setTitleEn : setTitle)(e.target.value)}
         />
         <Input
           wrapperClassName="lg:flex-[2]"
           label={t('app.builderDescription')}
-          placeholder={t('app.builderDescriptionPlaceholder')}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          placeholder={
+            editing === 'en'
+              ? description || t('app.builderDescriptionPlaceholder')
+              : t('app.builderDescriptionPlaceholder')
+          }
+          value={editing === 'en' ? descriptionEn : description}
+          onChange={(e) => (editing === 'en' ? setDescriptionEn : setDescription)(e.target.value)}
         />
       </div>
 
@@ -392,9 +431,17 @@ export function WorkoutEditor({
 
                     <Input
                       aria-label={t('app.builderNote')}
-                      placeholder={t('app.builderNotePlaceholder')}
-                      value={it.note}
-                      onChange={(e) => updateItem(section.kind, it.key, { note: e.target.value })}
+                      placeholder={
+                        editing === 'en' && it.note ? it.note : t('app.builderNotePlaceholder')
+                      }
+                      value={editing === 'en' ? it.noteEn : it.note}
+                      onChange={(e) =>
+                        updateItem(
+                          section.kind,
+                          it.key,
+                          editing === 'en' ? { noteEn: e.target.value } : { note: e.target.value },
+                        )
+                      }
                     />
                   </div>
                 </li>

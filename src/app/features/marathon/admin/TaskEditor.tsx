@@ -27,6 +27,7 @@ import type {
 } from '@/lib/api/types';
 import { PUBLIC_BUCKET } from '@/lib/api/storage';
 import { useT } from '@/app/hooks/useT';
+import { LangTabs, useEditingLocale } from '@/app/features/admin/LangTabs';
 import { MediaField } from '@/app/features/admin/media/MediaField';
 
 /**
@@ -40,7 +41,10 @@ const MAX_TASK_IMAGE_BYTES = 8 * 1024 * 1024;
 
 export interface TaskDraft {
   title: string;
+  /** Английская половина. Пустая — не переведено; приложение покажет русскую. */
+  titleEn: string;
   body: string;
+  bodyEn: string;
   /** `storage:images/…` for the picture the club's card opens with, or '' for none. */
   mediaUrl: string;
   proofKind: ProofKind;
@@ -57,7 +61,9 @@ export interface TaskDraft {
 export function emptyDraft(solo = false): TaskDraft {
   return {
     title: '',
+    titleEn: '',
     body: '',
+    bodyEn: '',
     mediaUrl: '',
     proofKind: 'done',
     unit: '',
@@ -79,7 +85,9 @@ export function emptyDraft(solo = false): TaskDraft {
 export function draftFrom(task: MarathonTaskRow): TaskDraft {
   return {
     title: task.title,
+    titleEn: task.titleEn ?? '',
     body: task.body ?? '',
+    bodyEn: task.bodyEn ?? '',
     mediaUrl: task.mediaUrl ?? '',
     proofKind: task.proofKind,
     unit: task.unit ?? '',
@@ -99,7 +107,11 @@ export function draftToPatch(draft: TaskDraft): MarathonTaskPatch {
   const number = (v: string) => (v.trim() === '' ? null : Number(v));
   return {
     title: draft.title.trim(),
+    // Пустая половина — это «не переведено», а не пустой заголовок: null, и приложение подставит
+    // русское. Пустая строка прошла бы дальше как написанный текст.
+    titleEn: draft.titleEn.trim() || null,
     body: draft.body.trim() || null,
+    bodyEn: draft.bodyEn.trim() || null,
     mediaUrl: draft.mediaUrl.trim() || null,
     proofKind: draft.proofKind,
     unit: draft.proofKind === 'number' ? draft.unit.trim() || null : null,
@@ -160,6 +172,8 @@ export function TaskEditor({
   onDelete,
 }: TaskEditorProps) {
   const { t } = useT();
+  // Новое задание пишется по-русски: русское название обязательно, а переводить ещё нечего.
+  const editing = useEditingLocale(!task);
   const [draft, setDraft] = useState<TaskDraft>(emptyDraft());
   const [targets, setTargets] = useState<readonly MarathonTaskTarget[]>([]);
   const [repeatUntil, setRepeatUntil] = useState('');
@@ -240,6 +254,11 @@ export function TaskEditor({
       }
     >
       <div className="flex flex-col gap-4 pb-2">
+        {/* «Пишем на» — до всего остального: на него смотрят раньше, чем начинают печатать. */}
+        <div className="flex items-center justify-between gap-3">
+          <span className="eyebrow">{t('app.adminEditingLanguage')}</span>
+          <LangTabs locked={!task} />
+        </div>
         {/*
          * First in the form because it is first on the card. The owner's order for the club's
          * screen is picture, title, text, button, board, and a form that asked for them in a
@@ -255,17 +274,24 @@ export function TaskEditor({
           accept="image/*"
           maxBytes={MAX_TASK_IMAGE_BYTES}
         />
+        {/*
+         * Название и текст — на языке, выбранном в «Пишем на» наверху экрана. Русская половина
+         * обязательна (её проверяет `draftError`), английская нет: задание можно выпустить и
+         * перевести потом, а до тех пор английский участник прочтёт русское.
+         */}
         <Input
           label={t('app.mAdminTaskTitle')}
-          value={draft.title}
+          placeholder={editing === 'en' ? draft.title : draft.titleEn}
+          value={editing === 'en' ? draft.titleEn : draft.title}
           error={error === 'title' && draft.title !== '' ? ' ' : undefined}
-          onChange={(e) => set('title', e.target.value)}
+          onChange={(e) => set(editing === 'en' ? 'titleEn' : 'title', e.target.value)}
         />
         <Textarea
           label={t('app.mAdminTaskBody')}
           rows={3}
-          value={draft.body}
-          onChange={(e) => set('body', e.target.value)}
+          placeholder={editing === 'en' ? draft.body : draft.bodyEn}
+          value={editing === 'en' ? draft.bodyEn : draft.body}
+          onChange={(e) => set(editing === 'en' ? 'bodyEn' : 'body', e.target.value)}
         />
 
         <Select<ProofKind>

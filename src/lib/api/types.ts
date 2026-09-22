@@ -318,6 +318,7 @@ export interface ExerciseCatalogRow {
   cues: { ru?: string; en?: string }[];
   mistakes: { ru?: string; en?: string }[];
   breathingRu: string | null;
+  breathingEn: string | null;
   primaryMuscle: string | null;
   muscles: string[];
   pattern: string | null;
@@ -348,7 +349,10 @@ export interface CustomWorkoutSummary {
   id: string;
   shortId: string;
   title: string;
+  /** Английская половина. null — не переведено; приложение подставит русскую. */
+  titleEn: string | null;
   description: string | null;
+  descriptionEn: string | null;
   estSec: number | null;
   points: number | null;
   shareToken: string | null;
@@ -571,7 +575,10 @@ export interface MarathonTaskRow {
   dayIndex: number;
   sortOrder: number;
   title: string;
+  /** Английское название. null — не переведено; приложение покажет русское. */
+  titleEn: string | null;
   body: string | null;
+  bodyEn: string | null;
   mediaUrl: string | null;
   proofKind: ProofKind;
   unit: string | null;
@@ -592,7 +599,9 @@ export type MarathonTaskPatch = Partial<
     | 'dayIndex'
     | 'sortOrder'
     | 'title'
+    | 'titleEn'
     | 'body'
+    | 'bodyEn'
     | 'mediaUrl'
     | 'proofKind'
     | 'unit'
@@ -719,6 +728,7 @@ export interface ExerciseDraft {
   cues?: { ru?: string; en?: string }[];
   mistakes?: { ru?: string; en?: string }[];
   breathingRu?: string | null;
+  breathingEn?: string | null;
   primaryMuscle?: string | null;
   muscles?: string[];
   pattern?: string | null;

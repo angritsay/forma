@@ -47,6 +47,7 @@ import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
+import { LangTabs } from '@/app/features/admin/LangTabs';
 import { CourseMetaEditor } from '@/app/features/admin/courses/CourseMetaEditor';
 import { DayEditor } from '@/app/features/admin/courses/DayEditor';
 import { DayList } from '@/app/features/admin/courses/DayList';
@@ -261,7 +262,9 @@ export default function AdminCourseScreen() {
           {...(existing
             ? {
                 initialTitle: existing.title,
+                initialTitleEn: existing.titleEn,
                 initialDescription: existing.description,
+                initialDescriptionEn: existing.descriptionEn,
                 initialStructure: (existing.structure ?? {
                   sections: [],
                 }) as CustomWorkoutStructure,
@@ -318,6 +321,18 @@ export default function AdminCourseScreen() {
           ]}
         />
       </div>
+
+      {/*
+       * «Пишем на» — под вкладками и над формой, и только там, где действительно печатают текст.
+       * На вкладке «Публикация» переключать нечего, и лишняя полоска там читалась бы как ещё одна
+       * настройка публикации.
+       */}
+      {tab !== 'publish' ? (
+        <div className="flex items-center justify-between gap-3 pt-4">
+          <span className="eyebrow">{t('app.adminEditingLanguage')}</span>
+          <LangTabs />
+        </div>
+      ) : null}
 
       {tab === 'meta' ? <CourseMetaEditor course={course} onPatch={patchCourse} /> : null}
 
