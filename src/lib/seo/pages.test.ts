@@ -35,12 +35,17 @@ const guides = [
 describe('buildPages', () => {
   const pages = buildPages(guides);
 
-  // Forma publishes Russian only (LOCALES in src/content/schema.ts): one page per site path, no
-  // /en/ anywhere. These assertions are what would have to change to publish a second language.
-  it('lists every static page once, in Russian, and never /app/', () => {
+  /*
+   * Forma publishes both languages (LOCALES in src/content/schema.ts): Russian keeps the bare
+   * paths, English lives under /en/. A *static* page exists in both without exception — its text
+   * comes from the dictionaries, and those are complete by construction (src/i18n/index.ts types
+   * the RU dictionary against the EN one, so a missing key fails `astro check`, not the build).
+   */
+  it('lists every static page in both languages and never /app/', () => {
     const home = pages.filter((p) => p.sitePath === '/');
-    expect(home.map((p) => p.path)).toEqual(['/']);
-    expect(home[0]?.alternates).toEqual({ ru: '/' });
+    expect(home.map((p) => p.path).sort()).toEqual(['/', '/en/']);
+    // `alternates` holds *site* paths; the /en/ prefix is added by localePath when the URL is built.
+    expect(home[0]?.alternates).toEqual({ ru: '/', en: '/' });
     for (const sp of [
       '/courses/',
       '/exercises/',
@@ -51,17 +56,20 @@ describe('buildPages', () => {
       '/terms/',
       '/refund/',
     ]) {
-      expect(pages.filter((p) => p.sitePath === sp)).toHaveLength(1);
+      expect(
+        pages
+          .filter((p) => p.sitePath === sp)
+          .map((p) => p.locale)
+          .sort(),
+      ).toEqual(['en', 'ru']);
     }
     /*
      * /subscribe/ comes and goes with the subscription. The sitemap and `subscribe.astro` read the
-     * same flag, so this asserts the pair agrees: listed exactly once when the subscription is on
-     * sale, absent when it is not. A URL in the sitemap with no page behind it is a 404 served to
-     * a crawler, which is the failure this guards.
+     * same flag, so this asserts the pair agrees: listed once per language when the subscription
+     * is on sale, absent when it is not. A URL in the sitemap with no page behind it is a 404
+     * served to a crawler, which is the failure this guards.
      */
-    expect(pages.filter((p) => p.sitePath === '/subscribe/')).toHaveLength(PLANS_ENABLED ? 1 : 0);
-    expect(pages.some((p) => p.path.startsWith('/en/'))).toBe(false);
-    expect(pages.some((p) => p.locale !== 'ru')).toBe(false);
+    expect(pages.filter((p) => p.sitePath === '/subscribe/')).toHaveLength(PLANS_ENABLED ? 2 : 0);
     expect(pages.some((p) => p.path.includes('/app'))).toBe(false);
   });
 
@@ -77,25 +85,44 @@ describe('buildPages', () => {
     }
   });
 
-  it('publishes the Russian guide of a translated pair and uses updatedAt as lastmod', () => {
+  it('publishes both halves of a translated pair, pointing at each other', () => {
     const ru = pages.find((p) => p.path === '/guides/a-ru/');
     expect(ru?.kind).toBe('guide');
     expect(ru?.lastmod).toBe('2026-09-05');
     expect(ru?.priority).toBe(0.8);
-    // Its English translation exists in the collection and is simply not published.
-    expect(pages.find((p) => p.path === '/en/guides/a-en/')).toBeUndefined();
-    expect(ru?.alternates).toEqual({ ru: '/guides/a-ru/' });
-    const only = pages.find((p) => p.path === '/guides/only-ru/');
-    expect(only?.alternates).toEqual({ ru: '/guides/only-ru/' });
+    const en = pages.find((p) => p.path === '/en/guides/a-en/');
+    expect(en?.kind).toBe('guide');
+    const pair = { ru: '/guides/a-ru/', en: '/guides/a-en/' };
+    expect(ru?.alternates).toEqual(pair);
+    expect(en?.alternates).toEqual(pair);
   });
 
-  it('builds cluster hubs only for clusters that have guides', () => {
+  /*
+   * Guides are the one surface where a language can be genuinely missing: an article is written,
+   * not generated from a dictionary. An untranslated one must claim no English URL and no English
+   * hreflang — a hreflang pointing at a page that does not exist is worse than none at all.
+   */
+  it('gives an untranslated guide no English URL and no English hreflang', () => {
+    const only = pages.find((p) => p.path === '/guides/only-ru/');
+    expect(only?.alternates).toEqual({ ru: '/guides/only-ru/' });
+    expect(pages.some((p) => p.path.startsWith('/en/guides/only-'))).toBe(false);
+  });
+
+  it('builds cluster hubs only for clusters that have guides in that language', () => {
     const hubs = pages.filter(
       (p) => p.kind === 'hub' && p.sitePath.startsWith('/guides/') && p.sitePath !== '/guides/',
     );
-    expect(hubs.map((p) => p.path).sort()).toEqual(['/guides/beginners/', '/guides/formats/']);
+    // «formats» holds only the untranslated guide, so it has no English hub — and therefore no
+    // English alternate either.
+    expect(hubs.map((p) => p.path).sort()).toEqual([
+      '/en/guides/beginners/',
+      '/guides/beginners/',
+      '/guides/formats/',
+    ]);
     const formats = hubs.find((p) => p.path === '/guides/formats/');
     expect(formats?.alternates).toEqual({ ru: '/guides/formats/' });
     expect(formats?.lastmod).toBe('2026-09-05');
+    const beginners = hubs.find((p) => p.path === '/guides/beginners/');
+    expect(beginners?.alternates).toEqual({ ru: '/guides/beginners/', en: '/guides/beginners/' });
   });
 });

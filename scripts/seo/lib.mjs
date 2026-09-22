@@ -41,7 +41,7 @@ export const AUTHORED_LOCALES = /** @type {const} */ (['ru', 'en']);
  * Languages the site publishes, mirroring LOCALES in src/content/schema.ts. Only checks about
  * pages that actually exist — hreflang, translation pairing — use this one.
  */
-export const LOCALES = /** @type {const} */ (['ru']);
+export const LOCALES = /** @type {const} */ (['ru', 'en']);
 
 /** Fallback when src/content.config.ts cannot be parsed. Keep in sync with GUIDE_CLUSTERS. */
 export const DEFAULT_GUIDE_CLUSTERS = [
@@ -1314,8 +1314,8 @@ export function auditHtml(html, file, opts = {}) {
   if (canonicals.length === 0) push('error', 'no canonical link');
   else if (canonicals.length > 1) push('error', `${canonicals.length} canonical links`);
   const alternates = extractAlternates(html);
-  // With one published language there is nothing to alternate between, and the tags are correctly
-  // absent; the check comes back the moment a second language ships.
+  // Both languages ship, so the tags are expected. The guard stays: with one published language
+  // there is nothing to alternate between and their absence is correct, not a miss.
   if (LOCALES.length > 1) {
     if (alternates.length === 0) push('warning', 'no hreflang alternates');
     else if (!alternates.some((a) => a.hreflang === 'x-default'))

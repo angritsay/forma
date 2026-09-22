@@ -3,18 +3,35 @@
  * The wordmark for .astro templates — the same three spans as src/components/ui/Logo.tsx, kept
  * in step by hand. «FORMA»: FOR at 800, MA at 200, the first F stretched ×1.22. With `lockup`,
  * «FORMA // Сергей Титов». Colour is inherited; size is the font-size of the wrapper.
+ *
+ * The coach's name is **passed in**, not written here: it is the one part of the lockup that is
+ * data rather than drawing, and the English pages set it «Sergey Titov» (`COACH.name` carries
+ * both). A wordmark with a Cyrillic name beside it on an English page reads as a page that was
+ * translated by a machine and not looked at.
  */
+import { l } from '@/i18n/index';
+import { COACH } from '@content/site/coach';
+import { DEFAULT_LOCALE, type Locale } from '@/content/schema';
+
 interface Props {
   lockup?: boolean;
   label?: string;
+  /** Which language the name beside the mark is in. Ignored without `lockup`. */
+  locale?: Locale;
   class?: string;
 }
-const { lockup = false, label = 'Forma', class: className = '' } = Astro.props;
+const {
+  lockup = false,
+  label = 'Forma',
+  locale = DEFAULT_LOCALE,
+  class: className = '',
+} = Astro.props;
+const coach = l(COACH.name, locale);
 ---
 
 <span
   class:list={['inline-flex items-baseline', lockup && 'gap-[0.6em]', className]}
-  aria-label={lockup ? `${label} — Сергей Титов` : label}
+  aria-label={lockup ? `${label} — ${coach}` : label}
 >
   <span class="wordmark inline-flex items-baseline" aria-hidden="true">
     <span class="wordmark-f">F</span><span>OR</span><span class="wordmark-thin">MA</span>
@@ -27,7 +44,7 @@ const { lockup = false, label = 'Forma', class: className = '' } = Astro.props;
         <span class="glyph text-[0.55em] text-muted-2" aria-hidden="true">
           {'//'}
         </span>
-        <span class="text-[0.68em] font-semibold tracking-[0.01em] text-muted">Сергей Титов</span>
+        <span class="text-[0.68em] font-semibold tracking-[0.01em] text-muted">{coach}</span>
       </>
     )
   }

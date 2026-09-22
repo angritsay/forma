@@ -32,6 +32,14 @@ export const app = {
   errorScreenMissingTitle: 'This screen isn’t available yet',
   errorScreenMissingBody: 'Head back to the home screen.',
 
+  // Language. The first screen shows these in *both* languages at once, so each string has to
+  // stand on its own without the other one for context (src/app/screens/LanguageScreen.tsx).
+  languageTitle: 'Choose your language',
+  languageChangeLater: 'You can change it later in your account',
+  // The row in the account sheet, and the sheet the row opens.
+  languageRow: 'Language',
+  languageSheetTitle: 'Language',
+
   // Auth
   authEmailLabel: 'Email',
   authEmailPlaceholder: 'name@example.com',

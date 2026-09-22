@@ -28,7 +28,8 @@ export function FieldLabel({ label, hint }: { label: string; hint?: string }) {
 }
 
 /**
- * A list of paragraphs — how-to steps, cues, common mistakes. Russian only; en mirrors it.
+ * A list of paragraphs — how-to steps, cues, common mistakes. One field, in Russian; the English
+ * half mirrors it, so an English reader sees the coach's Russian rather than a blank.
  *
  * Rows are keyed by a generated id rather than by their index. With an index key, removing a line
  * makes React reuse the row's DOM node for its successor, which moves the caret to a different

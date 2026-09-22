@@ -32,7 +32,7 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Sheet } from '@/components/ui/Sheet';
 import { useToast } from '@/components/ui/Toast';
 import type { Equipment } from '@/content/schema';
-import { formatNumber } from '@/i18n/index';
+import { formatNumber, LANGUAGE_NAME } from '@/i18n/index';
 import { isAppError } from '@/lib/api/errors';
 import type { ProfilePatch } from '@/lib/api/types';
 import { levelForPoints } from '@/lib/training/levels';
@@ -41,6 +41,7 @@ import { useTotalPoints } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
 import { DataSheet } from './DataSheet';
 import { EquipmentSheet } from './EquipmentSheet';
+import { LanguageSheet } from './LanguageSheet';
 import { NameSheet } from './NameSheet';
 import { equipmentSummary, withEquipment } from './model';
 
@@ -61,6 +62,7 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
   const [gear, setGear] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [dataOpen, setDataOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const tp = profile?.trainingProfile ?? null;
 
@@ -164,7 +166,7 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
           </div>
 
           {/*
-           * Two settings now. The name is first because it is the one that is *shown to other
+           * Three settings now. The name is first because it is the one that is *shown to other
            * people* — it is the row on the club board — and because until this row existed the
            * privacy policy promised a correction the app could not perform (152-ФЗ ст. 14; see
            * NameSheet).
@@ -202,6 +204,27 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
               />
             </li>
             {/*
+             * Language third, under the two settings about the person themselves: it is the one
+             * row here that changes every other word on the screen, and a person who reached the
+             * account looking for it finds it without scrolling. The value on the right is the
+             * language's own name, which is also how it is found by someone who does not read the
+             * label above it.
+             */}
+            <li>
+              <ListRow
+                title={t('app.languageRow')}
+                onClick={() => setLangOpen(true)}
+                trailing={
+                  <>
+                    <span lang={locale} className="text-[15px] text-muted">
+                      {LANGUAGE_NAME[locale]}
+                    </span>
+                    <Glyph size={16}>›</Glyph>
+                  </>
+                }
+              />
+            </li>
+            {/*
              * And the row that makes the privacy policy's other two promises pressable: what is
              * held, how to withdraw the health consent, how to ask for deletion. It carries no
              * value on the right because it is a place to go rather than a setting with a state.
@@ -223,6 +246,7 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
         </div>
       </Sheet>
       <DataSheet open={dataOpen} email={email} onClose={() => setDataOpen(false)} />
+      <LanguageSheet open={langOpen} onClose={() => setLangOpen(false)} />
       <NameSheet
         open={renaming}
         name={name}

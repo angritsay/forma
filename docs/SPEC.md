@@ -86,10 +86,15 @@ public/                     # favicon.svg, icons, manifest
 
 ## 4. Conventions
 
-- Code, comments, commit messages, docs: **English**. Product copy: **Russian** — every string and
-  every content field still carries an English value (L10n), but `LOCALES` in
-  `src/content/schema.ts` publishes Russian only: no /en/ pages, no hreflang, no language switch.
-  Publishing English again is that one line plus a copy review.
+- Code, comments, commit messages, docs: **English**. Product copy: **both languages**. `LOCALES`
+  in `src/content/schema.ts` is `['ru', 'en']` — Russian keeps the bare paths, English lives under
+  `/en/`, both get hreflang and a switch in the site header. Every dictionary key and every content
+  field carries both values by construction (the RU dictionary is typed against the EN one, and
+  `L10nSchema` requires both), so the languages cannot drift apart silently. The two exceptions are
+  named in §4a.
+  - The app asks which language on its **first screen**, before sign-in, and keeps the answer in
+    `localStorage` until there is an account and in `profiles.locale` after. It can be changed in
+    the account, and the bot writes in whatever it says.
 - TypeScript strict. No `any` unless interfacing with untyped JSON (then narrow immediately).
 - Every user-visible string goes through i18n (`t()`) or an `L10n` content field. No hardcoded
   strings in components.
@@ -124,6 +129,28 @@ public/                     # favicon.svg, icons, manifest
 - Dates: store ISO strings; "today" is computed in the user's local timezone for the training count;
   server timestamps are `timestamptz`.
 - Errors: never crash to a blank screen; show a localized error state with retry.
+
+## 4a. What stays Russian, and why
+
+Two things do not follow into English, and both are limits of where the words come from rather
+than of the translation.
+
+**What the coach types.** The workout builder, the day editor, the club's daily tasks and the
+admin's own exercises all write a single field (`DayEditor.tsx` writes `.ru`; `TextList` mirrors
+it). The data model has held both halves since `L10nSchema` existed, so the second field is a UI
+change and not a migration — but it doubles what Sergey types for every day of every course, and
+that is a decision about his time, not about the code. Until it is made, an English reader sees
+the Russian title he wrote. That is deliberate: `l10n()` in `src/lib/courses/draft.ts` falls back
+rather than leaving a blank, because a title in the wrong language can still be navigated by and
+an empty one cannot.
+
+**The payment page.** Prodamus is Russian, the product on it is listed as «Доступ к обучающим
+материалам», and it is not ours to translate. `src/i18n/en/landing.ts` names that string in the
+English copy on purpose: somebody who is about to pay should recognise the page they land on.
+
+Two more surfaces are outside the repository and belong to the owner: the sign-in e-mail template
+(pasted into the Supabase dashboard) and the legal documents. The Russian legal text is the
+binding one; the English half is a translation for reading, not a second contract.
 
 ## 5. Brand & design system
 

@@ -77,10 +77,15 @@ describe('pairing and hreflang', () => {
     const pairs = guidePairs(all);
     expect(pairs.get('a')).toEqual({ ru: ruA, en: enA });
     expect(pairs.has('draft')).toBe(false);
-    // Pairing still sees both languages — hreflang lists only the published one (Russian).
-    expect(guideLocalizedPaths(ruA, all)).toEqual({ ru: '/guides/a-ru/' });
+    /*
+     * Both halves of a pair list each other, and both sides list the same pair — hreflang has to
+     * be symmetric or a search engine ignores it. `ruB` has no English article, so it lists only
+     * itself: a hreflang pointing at a page that was never written is the failure here.
+     */
+    const pair = { ru: '/guides/a-ru/', en: '/guides/a-en/' };
+    expect(guideLocalizedPaths(ruA, all)).toEqual(pair);
+    expect(guideLocalizedPaths(enA, all)).toEqual(pair);
     expect(guideLocalizedPaths(ruB, all)).toEqual({ ru: '/guides/b-ru/' });
-    expect(guideLocalizedPaths(enA, all)).toEqual({ ru: '/guides/a-ru/' });
     expect(pairedGuide(enA, all)).toBe(ruA);
     expect(pairedGuide(ruB, all)).toBeUndefined();
   });

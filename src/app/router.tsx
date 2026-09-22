@@ -8,9 +8,11 @@
  *
  * `/assessment` joins auth and onboarding outside the shell — see the route for why.
  *
+ * The language question sits above all of this and has no route of its own: see <LanguageGate>.
+ *
  * Inside a Telegram Mini App the same routes also drive Telegram's own back button.
  */
-import { Suspense } from 'react';
+import { Suspense, type ReactElement } from 'react';
 import { Navigate, Route, Routes, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -21,7 +23,10 @@ import { RedirectIfAuthed, RequireAuth, RequireOnboarded } from './components/Ro
 import { TopBar } from './components/TopBar';
 import { useT } from './hooks/useT';
 import { useTelegramBack } from './hooks/useTelegramBack';
+import { useLocale } from './store/locale';
+import { useSession } from './store/session';
 import AuthScreen from './screens/AuthScreen';
+import LanguageScreen from './screens/LanguageScreen';
 import OnboardingScreen from './screens/onboarding/OnboardingScreen';
 import { getScreen, type ScreenName } from './screens/registry';
 
@@ -46,80 +51,112 @@ function LazyScreen({ name }: { name: ScreenName }) {
   return <Component />;
 }
 
+/**
+ * The language question, above the router rather than inside it.
+ *
+ * **Not a route.** A route can be navigated away from, linked past and left in the history, and
+ * this is a question the app has to have an answer to before it draws anything with words on it.
+ * As a wrapper it is simply the first screen, with no back button and nothing behind it.
+ *
+ * **Only when signed out.** Someone signed in gets settled by their profile the moment it loads
+ * (`syncLocale` in store/session.ts), and everyone who existed before this shipped carries `'ru'`
+ * — so nobody who already uses Forma is ever asked. While the session is still booting, and when
+ * a signed-in profile fails to load, the question is skipped and the ordinary guards take over:
+ * the retry state belongs to RouteGuards, and a person staring at a language screen that will not
+ * go away is the one outcome this must not have.
+ */
+function LanguageGate({ children }: { children: ReactElement }) {
+  const chosen = useLocale((s) => s.chosen);
+  const status = useSession((s) => s.status);
+  if (!chosen && status === 'signed_out') return <LanguageScreen />;
+  return children;
+}
+
 export function AppRoutes() {
   // Telegram's header back button follows the route; no-op on the open web.
   useTelegramBack();
   return (
-    <Suspense fallback={<BootScreen />}>
-      <Routes>
-        <Route element={<FocusShell />}>
-          <Route element={<RedirectIfAuthed />}>
-            <Route path="/auth" element={<AuthScreen />} />
-          </Route>
-          <Route element={<RequireAuth />}>
-            <Route path="/onboarding/*" element={<OnboardingScreen />} />
-            {/*
-             * The physical test, which used to be the last step of onboarding and is asked for
-             * after a couple of workouts now. It is **here** rather than in the tabbed section
-             * below, and that is load-bearing: a screen inside <AppShell> arrives on a transform
-             * (`screen-in-*`), a transformed ancestor is a containing block, and the runner's
-             * `position: fixed` panel then measures itself against that box instead of the
-             * viewport — it lands at the top of the page with the tab bar drawn over it. Beside
-             * onboarding it is full-screen, which is what a test asked for mid-session has to be.
-             *
-             * Its module lands on another branch; until it does, `getScreen` returns null and the
-             * route renders the localized "not available" state rather than breaking the build,
-             * which is exactly what the registry's glob is for.
-             */}
-            <Route path="/assessment" element={<LazyScreen name="AssessmentScreen" />} />
-          </Route>
-        </Route>
-        <Route element={<RequireAuth />}>
-          <Route element={<RequireOnboarded />}>
-            <Route element={<AppShell />}>
-              {/* «Курсы» is the main screen: `/` is the progress of every course there is. */}
-              <Route index element={<LazyScreen name="CoursesScreen" />} />
+    <LanguageGate>
+      <Suspense fallback={<BootScreen />}>
+        <Routes>
+          <Route element={<FocusShell />}>
+            <Route element={<RedirectIfAuthed />}>
+              <Route path="/auth" element={<AuthScreen />} />
+            </Route>
+            <Route element={<RequireAuth />}>
+              <Route path="/onboarding/*" element={<OnboardingScreen />} />
               {/*
-               * `/courses` was that screen's own path for as long as it was the second tab. It is
-               * kept as a redirect rather than deleted: it is in the wild — in a Telegram deep
-               * link, in the owner's bookmarks, in a screenshot in a chat — and the bare path now
-               * means the same thing the index does.
+               * The physical test, which used to be the last step of onboarding and is asked for
+               * after a couple of workouts now. It is **here** rather than in the tabbed section
+               * below, and that is load-bearing: a screen inside <AppShell> arrives on a transform
+               * (`screen-in-*`), a transformed ancestor is a containing block, and the runner's
+               * `position: fixed` panel then measures itself against that box instead of the
+               * viewport — it lands at the top of the page with the tab bar drawn over it. Beside
+               * onboarding it is full-screen, which is what a test asked for mid-session has to be.
+               *
+               * Its module lands on another branch; until it does, `getScreen` returns null and the
+               * route renders the localized "not available" state rather than breaking the build,
+               * which is exactly what the registry's glob is for.
                */}
-              <Route path="/courses" element={<Navigate to="/" replace />} />
-              <Route path="/courses/:id" element={<LazyScreen name="CoursePathScreen" />} />
-              <Route
-                path="/courses/:id/nodes/:nodeId"
-                element={<LazyScreen name="NodePreviewScreen" />}
-              />
-              <Route path="/play" element={<LazyScreen name="PlayerScreen" />} />
-              <Route path="/assigned/:id" element={<LazyScreen name="CustomWorkoutScreen" />} />
-              <Route path="/shared/:token" element={<LazyScreen name="CustomWorkoutScreen" />} />
-              <Route path="/summary/:sessionId" element={<LazyScreen name="SummaryScreen" />} />
-              {/*
-               * The catalogue of achievements, behind the rosette entry point in the header of «Курсы»:
-               * every achievement there is and the rule that earns it, taken or not.
-               */}
-              <Route path="/achievements" element={<LazyScreen name="AchievementsScreen" />} />
-              <Route path="/leaderboard" element={<LazyScreen name="LeaderboardScreen" />} />
-              <Route path="/marathon" element={<LazyScreen name="MarathonScreen" />} />
-              <Route path="/marathon/board" element={<LazyScreen name="MarathonBoardScreen" />} />
-              <Route path="/book" element={<LazyScreen name="BookScreen" />} />
-              <Route path="/admin" element={<LazyScreen name="AdminScreen" />} />
-              <Route path="/admin/workouts" element={<LazyScreen name="AdminWorkoutsScreen" />} />
-              <Route path="/admin/stats" element={<LazyScreen name="AdminStatsScreen" />} />
-              <Route path="/admin/exercises" element={<LazyScreen name="AdminExercisesScreen" />} />
-              <Route path="/admin/courses" element={<LazyScreen name="AdminCoursesScreen" />} />
-              <Route path="/admin/courses/:id" element={<LazyScreen name="AdminCourseScreen" />} />
-              <Route path="/admin/marathons" element={<LazyScreen name="AdminMarathonsScreen" />} />
-              <Route
-                path="/admin/marathons/:id"
-                element={<LazyScreen name="AdminMarathonScreen" />}
-              />
+              <Route path="/assessment" element={<LazyScreen name="AssessmentScreen" />} />
             </Route>
           </Route>
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Suspense>
+          <Route element={<RequireAuth />}>
+            <Route element={<RequireOnboarded />}>
+              <Route element={<AppShell />}>
+                {/* «Курсы» is the main screen: `/` is the progress of every course there is. */}
+                <Route index element={<LazyScreen name="CoursesScreen" />} />
+                {/*
+                 * `/courses` was that screen's own path for as long as it was the second tab. It is
+                 * kept as a redirect rather than deleted: it is in the wild — in a Telegram deep
+                 * link, in the owner's bookmarks, in a screenshot in a chat — and the bare path now
+                 * means the same thing the index does.
+                 */}
+                <Route path="/courses" element={<Navigate to="/" replace />} />
+                <Route path="/courses/:id" element={<LazyScreen name="CoursePathScreen" />} />
+                <Route
+                  path="/courses/:id/nodes/:nodeId"
+                  element={<LazyScreen name="NodePreviewScreen" />}
+                />
+                <Route path="/play" element={<LazyScreen name="PlayerScreen" />} />
+                <Route path="/assigned/:id" element={<LazyScreen name="CustomWorkoutScreen" />} />
+                <Route path="/shared/:token" element={<LazyScreen name="CustomWorkoutScreen" />} />
+                <Route path="/summary/:sessionId" element={<LazyScreen name="SummaryScreen" />} />
+                {/*
+                 * The catalogue of achievements, behind the rosette entry point in the header of «Курсы»:
+                 * every achievement there is and the rule that earns it, taken or not.
+                 */}
+                <Route path="/achievements" element={<LazyScreen name="AchievementsScreen" />} />
+                <Route path="/leaderboard" element={<LazyScreen name="LeaderboardScreen" />} />
+                <Route path="/marathon" element={<LazyScreen name="MarathonScreen" />} />
+                <Route path="/marathon/board" element={<LazyScreen name="MarathonBoardScreen" />} />
+                <Route path="/book" element={<LazyScreen name="BookScreen" />} />
+                <Route path="/admin" element={<LazyScreen name="AdminScreen" />} />
+                <Route path="/admin/workouts" element={<LazyScreen name="AdminWorkoutsScreen" />} />
+                <Route path="/admin/stats" element={<LazyScreen name="AdminStatsScreen" />} />
+                <Route
+                  path="/admin/exercises"
+                  element={<LazyScreen name="AdminExercisesScreen" />}
+                />
+                <Route path="/admin/courses" element={<LazyScreen name="AdminCoursesScreen" />} />
+                <Route
+                  path="/admin/courses/:id"
+                  element={<LazyScreen name="AdminCourseScreen" />}
+                />
+                <Route
+                  path="/admin/marathons"
+                  element={<LazyScreen name="AdminMarathonsScreen" />}
+                />
+                <Route
+                  path="/admin/marathons/:id"
+                  element={<LazyScreen name="AdminMarathonScreen" />}
+                />
+              </Route>
+            </Route>
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    </LanguageGate>
   );
 }
