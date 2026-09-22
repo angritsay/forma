@@ -630,7 +630,17 @@ export interface MarathonSubmissionRow {
   mediaPath: string | null;
   submittedAt: string;
   voidedAt: string | null;
+  /**
+   * The coach's comment on this proof. It survives a redo — it is the reason the proof was sent
+   * again — so `voidedAt` and not this is what says the proof is currently rejected.
+   */
   voidReason: string | null;
+  /** Which go this is. 1 until the coach rejects one and the athlete does the task again. */
+  attempt: number;
+  /** When proof was last sent again after a rejection. Null on a first attempt. */
+  resubmittedAt: string | null;
+  /** When the coach last looked at it and left it standing. Cleared by a redo. */
+  reviewedAt: string | null;
 }
 
 /** What the app sends when proof is delivered. The server decides the day and the clock. */

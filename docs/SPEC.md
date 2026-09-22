@@ -731,6 +731,24 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
     coach writes one, and the screen still maps over a list, because the table allows two and a
     screen that silently dropped the second would be worse than one that shows it.
 
+    **Проверка — это раунд, а не приговор.** Proof scores the moment it is sent — nobody approves
+    anything — and the coach reads the feed afterwards: «Серёжа заходит в админку, видит
+    доказательство, просматривает его и принимает решение: оставить результат как есть или он может
+    наложить reject на это конкретное выполнение и оставить свой комментарий». A rejection takes the
+    points off the board and lands on the athlete's card **as a message from him** — a level-2 card
+    with «Сергей посмотрел» over his own words — and not as the line of `--danger` it used to be,
+    which read as the app refusing something rather than a person answering. Under it the control is
+    open again with «Отправить заново» on it: a rejected proof rendered no control at all, so «Не
+    засчитано» was a dead end with an instruction to fix it and no way to. Sending again is a new
+    attempt — the rejection lifts, the points come back, `attempt` goes up, and the row appears in
+    the coach's **«Ждут проверки»**, the club's only queue. That queue holds nothing but proof he
+    rejected himself and somebody has redone; a queue of everything would be an approval step, and a
+    club that needs him to clear one stops the first week he is busy. `submitted_at` never moves, so
+    a redo keeps the hour the task was first delivered — he rejected the evidence, not the day — and
+    his comment outlives the rejection, because after a redo it is the only record of why the proof
+    was sent twice. The rules are in `supabase/migrations/0027_proof_review.sql`, stated once for
+    the app in `src/lib/marathon/review.ts`.
+
     **«Мои баллы» is deleted** — screen, route and copy. A running total the member cannot act on
     is a number for its own sake, and the table above it already answers the only question it was
     asked. `marathon_my_points` stays in the database for the coach's own use; nothing in the app

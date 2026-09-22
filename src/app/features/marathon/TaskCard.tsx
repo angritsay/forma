@@ -24,10 +24,12 @@
 import { clsx } from 'clsx';
 import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { Glyph } from '@/components/ui/Icon';
 import { Input } from '@/components/ui/Input';
 import { Pill } from '@/components/ui/Pill';
 import { formatNumber, plural } from '@/i18n/index';
+import { isRejected, needsCoachLook } from '@/lib/marathon/review';
 import type { MarathonTodayTask, ProofInput } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
@@ -55,7 +57,10 @@ export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
   const [busy, setBusy] = useState(false);
 
   const done = Boolean(mine && !mine.voidedAt);
-  const voided = Boolean(mine?.voidedAt);
+  /* The coach rejected this attempt: it is not scoring, and the task is open again. */
+  const rejected = Boolean(mine && isRejected(mine));
+  /* Sent again since, and he has not been back to it. */
+  const waiting = Boolean(mine && needsCoachLook(mine));
 
   const send = async (proof: Omit<ProofInput, 'taskId' | 'memberId'>) => {
     setBusy(true);
@@ -160,16 +165,15 @@ export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
         ) : null}
       </div>
 
-      {voided && mine?.voidReason ? (
-        <p className="text-[13px] text-danger">
-          {t('app.marathonProofVoided', { reason: mine.voidReason })}
-        </p>
-      ) : null}
+      {rejected && mine?.voidReason ? <CoachNote reason={mine.voidReason} /> : null}
+
+      {waiting ? <p className="text-[13px] text-muted-2">{t('app.marathonProofResent')}</p> : null}
 
       <ProofControl
         item={item}
         busy={busy}
         closed={closed}
+        redo={rejected}
         text={text}
         value={value}
         onText={setText}
@@ -181,10 +185,39 @@ export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
   );
 }
 
+/**
+ * What the coach said about this proof — his words, in his voice, not an error state.
+ *
+ * It used to be one red line: «Не засчитано: не то видео, я всё вижу», set in `--danger` under the
+ * task and followed by nothing, because a rejected proof also hid the control. That read as a
+ * malfunction of the app rather than a message from a person, and it was a dead end: the athlete
+ * had been told they were wrong and given no way to be right.
+ *
+ * So it is a card with him at the top of it and a way out underneath: the rejection is one round
+ * of a conversation — «дальше пользователь может выполнить это задание заново, и флоу будет
+ * аналогичен» — and the control below this block is open for exactly that.
+ *
+ * Deliberately not `--danger`. Nothing has gone wrong; the coach watched the clip and wants
+ * another one, and the only red on this screen should be reserved for the app's own failures.
+ */
+function CoachNote({ reason }: { reason: string }) {
+  const { t } = useT();
+  return (
+    <Card level={2} padding="sm" className="flex flex-col gap-2">
+      <span className="eyebrow">{t('app.marathonProofCoachNote')}</span>
+      {/* His comment is the loudest thing in the block: it is the only part worth reading twice. */}
+      <p className="text-[15px] leading-snug text-text">{reason}</p>
+      <span className="text-[13px] text-muted-2">{t('app.marathonProofRejectedHint')}</span>
+    </Card>
+  );
+}
+
 interface ProofControlProps {
   item: MarathonTodayTask;
   busy: boolean;
   closed: boolean;
+  /** The coach rejected what was sent, so every control here is a second go at the task. */
+  redo: boolean;
   text: string;
   value: string;
   onText: (v: string) => void;
@@ -207,11 +240,17 @@ interface ProofControlProps {
  *
  * Only `media` keeps it as the primary control: there the attachment *is* the proof, and a task
  * that scores nothing without a photo should not offer a button that pretends otherwise.
+ *
+ * **A rejected proof keeps its control, and every label on it says «заново».** This returned
+ * `null` for a voided proof, which left the athlete holding «Не засчитано» and nothing to press.
+ * The coach's rejection is about one attempt, so the way back is the same control that sent the
+ * first one — the server decides what a second send means (0027_proof_review.sql).
  */
 function ProofControl({
   item,
   busy,
   closed,
+  redo,
   text,
   value,
   onText,
@@ -222,9 +261,6 @@ function ProofControl({
   const { t, locale } = useT();
   const { task, mine } = item;
   const done = Boolean(mine && !mine.voidedAt);
-  const locked = Boolean(mine?.voidedAt);
-
-  if (locked) return null;
 
   /* The day is over and this was not sent: the control stays, with the one honest line beside it. */
   const late =
@@ -236,7 +272,12 @@ function ProofControl({
      primary control below instead of repeating it. */
   const attach =
     task.proofKind === 'media' ? null : (
-      <AttachProof busy={busy} hasMedia={Boolean(mine?.mediaPath)} onPick={onSendMedia} />
+      <AttachProof
+        busy={busy}
+        hasMedia={Boolean(mine?.mediaPath)}
+        redo={redo}
+        onPick={onSendMedia}
+      />
     );
 
   if (task.proofKind === 'done') {
@@ -250,7 +291,7 @@ function ProofControl({
               onClick={() => void onSend({})}
               iconRight={<Glyph size={14}>✓</Glyph>}
             >
-              {t('app.marathonProofDone')}
+              {t(redo ? 'app.marathonProofRedo' : 'app.marathonProofDone')}
             </Button>
             {late}
           </div>
@@ -297,7 +338,7 @@ function ProofControl({
             disabled={value.trim() === ''}
             iconRight={<Glyph size={14}>✓</Glyph>}
           >
-            {t('common.done')}
+            {t(redo ? 'app.marathonProofRedo' : 'common.done')}
           </Button>
         </div>
         {late}
@@ -332,7 +373,7 @@ function ProofControl({
             disabled={!text.trim()}
             iconRight={<Glyph size={14}>✓</Glyph>}
           >
-            {t('common.done')}
+            {t(redo ? 'app.marathonProofRedo' : 'common.done')}
           </Button>
         </div>
         {late}
@@ -349,7 +390,13 @@ function ProofControl({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-3">
-        <AttachProof busy={busy} hasMedia={Boolean(mine?.mediaPath)} onPick={onSendMedia} primary />
+        <AttachProof
+          busy={busy}
+          hasMedia={Boolean(mine?.mediaPath)}
+          redo={redo}
+          onPick={onSendMedia}
+          primary
+        />
         {late}
       </div>
       <span className="text-[13px] text-muted-2">{t('app.marathonProofCoachOnly')}</span>
@@ -374,24 +421,29 @@ function ProofControl({
 function AttachProof({
   busy,
   hasMedia,
+  redo,
   onPick,
   primary = false,
 }: {
   busy: boolean;
   hasMedia: boolean;
+  /** The coach rejected what is attached, so «Заменить» is the wrong word for it. */
+  redo: boolean;
   onPick: (file: File) => void;
   /** The attachment is the whole proof (a `media` task), not an optional extra. */
   primary?: boolean;
 }) {
   const { t } = useT();
   const ref = useRef<HTMLInputElement>(null);
-  const label = primary
-    ? hasMedia
-      ? t('app.marathonProofPhotoAgain')
-      : t('app.marathonProofPhoto')
-    : hasMedia
-      ? t('app.marathonProofAttachAgain')
-      : t('app.marathonProofAttach');
+  const label = redo
+    ? t('app.marathonProofRedoMedia')
+    : primary
+      ? hasMedia
+        ? t('app.marathonProofPhotoAgain')
+        : t('app.marathonProofPhoto')
+      : hasMedia
+        ? t('app.marathonProofAttachAgain')
+        : t('app.marathonProofAttach');
 
   return (
     <>
@@ -410,7 +462,7 @@ function AttachProof({
       {primary ? (
         <Button
           size="md"
-          variant={hasMedia ? 'secondary' : 'primary'}
+          variant={hasMedia && !redo ? 'secondary' : 'primary'}
           loading={busy}
           onClick={() => ref.current?.click()}
         >

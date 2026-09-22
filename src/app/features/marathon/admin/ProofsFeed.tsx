@@ -1,21 +1,26 @@
 /**
  * Everything that has been sent in, newest first.
  *
- * This is the screen the trust-then-void decision rests on. Points count the moment proof arrives,
+ * This is the screen the trust-then-reject decision rests on. Points count the moment proof arrives,
  * so the coach never has to clear a queue — but he does have to be able to glance down a stream and
  * strike out the one that is wrong, and give somebody five points for something no task asked for.
  * Both of those are one tap from a row here.
  *
- * A struck-out proof stays on the feed with its reason. The athlete can see the same line on their
- * own card, which is what keeps "it did not count" from being a mystery.
+ * A rejected proof stays on the feed with its reason. The athlete reads the same words on their own
+ * card, which is what keeps «не засчитано» from being a mystery — and they can then do the task
+ * again, which is the one queue this screen does have. «Ждут проверки» is that queue and nothing
+ * else: proof nobody has rejected never appears in it, because a club where the coach has to
+ * approve things is a club that stops the day he is busy.
  */
 import { clsx } from 'clsx';
 import { useState } from 'react';
+import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Sheet } from '@/components/ui/Sheet';
 import { formatNumber } from '@/i18n/index';
+import { needsCoachLook } from '@/lib/marathon/review';
 import type { MarathonMemberRow, MarathonProofRow } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
 import { ProofMedia } from './ProofMedia';
@@ -27,8 +32,12 @@ export interface ProofsFeedProps {
   today: number;
   dayFilter: number | null;
   onDayFilter: (day: number | null) => void;
+  /** Show only what has been redone since a rejection and not looked at since. */
+  needsReviewOnly: boolean;
+  onNeedsReviewOnly: (only: boolean) => void;
   onVoid: (id: string, reason: string) => Promise<void>;
   onRestore: (id: string) => Promise<void>;
+  onAccept: (id: string) => Promise<void>;
   onBonus: (input: {
     memberId: string;
     dayIndex: number;
@@ -44,8 +53,11 @@ export function ProofsFeed({
   today,
   dayFilter,
   onDayFilter,
+  needsReviewOnly,
+  onNeedsReviewOnly,
   onVoid,
   onRestore,
+  onAccept,
   onBonus,
 }: ProofsFeedProps) {
   const { t, locale } = useT();
@@ -67,80 +79,120 @@ export function ProofsFeed({
 
   return (
     <div className="flex flex-col gap-5">
-      <Select
-        label={undefined}
-        aria-label={t('app.mAdminProofsAll')}
-        value={dayFilter === null ? '' : String(dayFilter)}
-        onChange={(v) => onDayFilter(v === '' ? null : Number(v))}
-        options={dayOptions}
-      />
+      <div className="flex flex-wrap items-center gap-3">
+        <Select
+          label={undefined}
+          aria-label={t('app.mAdminProofsAll')}
+          value={dayFilter === null ? '' : String(dayFilter)}
+          onChange={(v) => onDayFilter(v === '' ? null : Number(v))}
+          options={dayOptions}
+          wrapperClassName="min-w-0 flex-1"
+        />
+        {/* A filter rather than a tab: the queue is a view of the same feed, and everything the
+            coach does to a row he does in the same place whichever way he found it. */}
+        <Button
+          variant={needsReviewOnly ? 'primary' : 'secondary'}
+          size="md"
+          aria-pressed={needsReviewOnly}
+          onClick={() => onNeedsReviewOnly(!needsReviewOnly)}
+        >
+          {t('app.mAdminProofsNeedReview')}
+        </Button>
+      </div>
 
       {proofs.length === 0 ? (
         <p className="border-t border-border py-6 text-[15px] text-muted-2">
-          {t('app.mAdminProofsEmpty')}
+          {t(needsReviewOnly ? 'app.mAdminProofsNeedReviewEmpty' : 'app.mAdminProofsEmpty')}
         </p>
       ) : (
         <ul className="flex flex-col">
-          {proofs.map((proof) => (
-            <li
-              key={proof.id}
-              className={clsx(
-                'flex flex-wrap items-start gap-x-3 gap-y-2 border-t border-border py-3.5',
-                proof.voidedAt && 'opacity-60',
-              )}
-            >
-              <span className="numeral tabular w-8 shrink-0 pt-0.5 text-[13px] text-muted-2">
-                {String(proof.dayIndex).padStart(2, '0')}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="font-display block truncate text-[15px] leading-[1.24]">
-                  {proof.memberName}
-                  {proof.teamName ? (
-                    <span className="font-sans text-[13px] font-normal text-muted-2">
-                      {' · '}
-                      {proof.teamName}
+          {proofs.map((proof) => {
+            const redone = needsCoachLook(proof);
+            return (
+              <li
+                key={proof.id}
+                className={clsx(
+                  'flex flex-wrap items-start gap-x-3 gap-y-2 border-t border-border py-3.5',
+                  proof.voidedAt && 'opacity-60',
+                )}
+              >
+                <span className="numeral tabular w-8 shrink-0 pt-0.5 text-[13px] text-muted-2">
+                  {String(proof.dayIndex).padStart(2, '0')}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="font-display block truncate text-[15px] leading-[1.24]">
+                    {proof.memberName}
+                    {proof.teamName ? (
+                      <span className="font-sans text-[13px] font-normal text-muted-2">
+                        {' · '}
+                        {proof.teamName}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="block truncate text-[13px] text-muted">{proof.taskTitle}</span>
+                  {/*
+                    The one thing on this row that is a request rather than a record — the white
+                    stamp the design system keeps for «this one», on its own line rather than
+                    inside the truncating name, where a long name would have eaten it.
+                  */}
+                  {redone ? (
+                    <Badge tone="inverse" className="mt-1">
+                      {t('app.mAdminProofRedone', { n: formatNumber(locale, proof.attempt) })}
+                    </Badge>
+                  ) : null}
+                  {proof.valueNum !== null ? (
+                    <span className="numeral block text-[13px] text-text">
+                      {formatNumber(locale, proof.valueNum)} {proof.unit ?? ''}
                     </span>
                   ) : null}
-                </span>
-                <span className="block truncate text-[13px] text-muted">{proof.taskTitle}</span>
-                {proof.valueNum !== null ? (
-                  <span className="numeral block text-[13px] text-text">
-                    {formatNumber(locale, proof.valueNum)} {proof.unit ?? ''}
-                  </span>
-                ) : null}
-                {proof.valueText ? (
-                  <span className="block text-[13px] text-text">{proof.valueText}</span>
-                ) : null}
-                {/*
+                  {proof.valueText ? (
+                    <span className="block text-[13px] text-text">{proof.valueText}</span>
+                  ) : null}
+                  {/*
                   The proof, not a sentence about it. This printed «Фото отправлено» and nothing
                   else, which made the void decision this feed exists for impossible: you cannot
                   strike out evidence you have never looked at.
                 */}
-                {proof.mediaPath ? <ProofMedia mediaPath={proof.mediaPath} /> : null}
-                {proof.voidedAt && proof.voidReason ? (
-                  <span className="block text-[13px] text-danger">
-                    {t('app.marathonProofVoided', { reason: proof.voidReason })}
-                  </span>
-                ) : null}
-              </span>
-              {proof.voidedAt ? (
-                <Button variant="ghost" size="sm" onClick={() => void onRestore(proof.id)}>
-                  {t('app.mAdminRestoreProof')}
-                </Button>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setReason('');
-                    setVoidFor(proof);
-                  }}
-                >
-                  {t('app.mAdminVoid')}
-                </Button>
-              )}
-            </li>
-          ))}
+                  {proof.mediaPath ? <ProofMedia mediaPath={proof.mediaPath} /> : null}
+                  {proof.voidedAt && proof.voidReason ? (
+                    <span className="block text-[13px] text-danger">
+                      {t('app.marathonProofVoided', { reason: proof.voidReason })}
+                    </span>
+                  ) : proof.voidReason ? (
+                    /* Not rejected any more, so not red — his own last words, kept because they are
+                     the only thing that says why this was sent twice. */
+                    <span className="block text-[13px] text-muted-2">
+                      {t('app.mAdminProofPastNote', { reason: proof.voidReason })}
+                    </span>
+                  ) : null}
+                </span>
+                <span className="flex shrink-0 items-center gap-1">
+                  {/* «Оставить как есть» is only ever offered on the rows that ask a question. */}
+                  {redone ? (
+                    <Button variant="ghost" size="sm" onClick={() => void onAccept(proof.id)}>
+                      {t('app.mAdminAcceptProof')}
+                    </Button>
+                  ) : null}
+                  {proof.voidedAt ? (
+                    <Button variant="ghost" size="sm" onClick={() => void onRestore(proof.id)}>
+                      {t('app.mAdminRestoreProof')}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setReason('');
+                        setVoidFor(proof);
+                      }}
+                    >
+                      {t('app.mAdminVoid')}
+                    </Button>
+                  )}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       )}
 
@@ -170,7 +222,11 @@ export function ProofsFeed({
           </Button>
         }
       >
-        {/* A reason is required: «не засчитано» with no explanation is the fastest way to lose someone. */}
+        {/*
+          A reason is required, and it is not a note to himself: these words are what the athlete
+          reads on their own card, over his name, beside the button that sends the task again.
+          «Не засчитано» with no explanation is the fastest way to lose someone.
+        */}
         <Input
           label={t('app.mAdminVoidReason')}
           value={reason}

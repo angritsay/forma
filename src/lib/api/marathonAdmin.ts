@@ -544,6 +544,11 @@ export interface ProofFilter {
   memberId?: string;
   /** Only proof that has been struck out — how the coach reviews his own corrections. */
   voidedOnly?: boolean;
+  /**
+   * Only proof that was sent again after a rejection and has not been looked at since — the
+   * queue the coach's own rejections create, and the only queue the club has.
+   */
+  needsReviewOnly?: boolean;
   limit?: number;
 }
 
@@ -564,6 +569,9 @@ export async function listMarathonProofs(filter: ProofFilter): Promise<MarathonP
     if (filter.taskId) q = q.eq('task_id', filter.taskId);
     if (filter.memberId) q = q.eq('member_id', filter.memberId);
     if (filter.voidedOnly) q = q.not('voided_at', 'is', null);
+    if (filter.needsReviewOnly) {
+      q = q.is('voided_at', null).is('reviewed_at', null).gt('attempt', 1);
+    }
     const proofs = unwrap<DbMarathonSubmission[]>(await q).map(submissionFromDb);
     if (proofs.length === 0) return [];
 
@@ -592,24 +600,34 @@ export async function listMarathonProofs(filter: ProofFilter): Promise<MarathonP
 }
 
 /**
- * Strike a proof out, with a reason. The row stays — the athlete can still see what they sent and
- * why it did not count — it simply stops scoring, and the board corrects itself on the next read.
+ * Reject this attempt, with a comment. The row stays, the athlete reads the comment on their own
+ * card, the points come off the board on the next read — and the task opens again, because a
+ * rejection is a note about the evidence and not a verdict on the day («дальше пользователь может
+ * выполнить это задание заново»).
+ *
+ * The reason is required and it is written to be read by one person, so it is the coach's message
+ * rather than a code: «не засчитано» with nothing after it is the fastest way to lose somebody.
+ *
+ * `reviewed_at` is stamped here too. It changes nothing while the proof is rejected — the queue
+ * skips rejected rows — but it keeps «looked at» true of every row he has ruled on, so a redo of
+ * this proof is the only thing that can put it back in front of him.
  */
 export async function voidProof(id: string, reason: string): Promise<void> {
   const trimmed = reason.trim();
   if (!trimmed) throw new AppError('validation', 'reason_required');
   if (isDemo()) return (await demo()).voidProof(id, trimmed);
+  const now = new Date().toISOString();
   return guard(async () => {
     unwrapVoid(
       await supabase()
         .from('marathon_submissions')
-        .update({ voided_at: new Date().toISOString(), void_reason: trimmed })
+        .update({ voided_at: now, void_reason: trimmed, reviewed_at: now })
         .eq('id', id),
     );
   });
 }
 
-/** Undo a void — the coach changed his mind, or struck the wrong line. */
+/** Undo a rejection — the coach changed his mind, or struck the wrong line. */
 export async function restoreProof(id: string): Promise<void> {
   if (isDemo()) return (await demo()).restoreProof(id);
   return guard(async () => {
@@ -617,6 +635,25 @@ export async function restoreProof(id: string): Promise<void> {
       await supabase()
         .from('marathon_submissions')
         .update({ voided_at: null, void_reason: null, voided_by: null })
+        .eq('id', id),
+    );
+  });
+}
+
+/**
+ * «Оставить как есть»: the other half of the decision a redone proof asks for.
+ *
+ * It writes nothing the athlete sees and takes nothing away — the proof was already scoring. What
+ * it does is take the row out of «Ждут проверки», which is the only thing that keeps that filter
+ * honest: without it the queue would fill up with clips he has already watched.
+ */
+export async function acceptProof(id: string): Promise<void> {
+  if (isDemo()) return (await demo()).acceptProof(id);
+  return guard(async () => {
+    unwrapVoid(
+      await supabase()
+        .from('marathon_submissions')
+        .update({ reviewed_at: new Date().toISOString() })
         .eq('id', id),
     );
   });

@@ -59,6 +59,7 @@ import {
   type ScorableEntry,
   type ScorableTask,
 } from '@/lib/marathon/score';
+import { needsCoachLook } from '@/lib/marathon/review';
 import type { CustomWorkoutInput } from '../customWorkouts';
 import {
   buildPrescribedFromCustom,
@@ -1701,7 +1702,14 @@ export async function sendProof(input: ProofInput): Promise<MarathonSubmissionRo
       const existing = db.marathonSubmissions.find(
         (s) => s.taskId === input.taskId && s.memberId === input.memberId,
       );
-      if (existing?.voidedAt) throw new AppError('forbidden', 'proof_voided');
+      /*
+       * A send against a rejected proof is the redo, exactly as the guard trigger reads it
+       * (0027_proof_review.sql): the rejection is lifted, the attempt goes up and the coach's
+       * «looked at» is cleared, so it comes back round to him. His comment stays — after a redo it
+       * is the only record of why the proof was sent twice. This used to throw `proof_voided`,
+       * which is the dead end the whole migration exists to remove.
+       */
+      const redo = Boolean(existing?.voidedAt);
       const row: MarathonSubmissionRow = {
         id: existing?.id ?? demoId('msub'),
         taskId: input.taskId,
@@ -1711,10 +1719,14 @@ export async function sendProof(input: ProofInput): Promise<MarathonSubmissionRo
         valueText: input.valueText ?? null,
         valueNum: input.valueNum ?? null,
         mediaPath: input.mediaPath ?? null,
-        // Like the guard trigger: the clock is the server's, not the client's.
+        // Like the guard trigger: the clock is the server's, not the client's, and a redo keeps
+        // the hour the task was first delivered.
         submittedAt: existing?.submittedAt ?? nowIso(),
         voidedAt: null,
-        voidReason: null,
+        voidReason: existing?.voidReason ?? null,
+        attempt: redo ? (existing?.attempt ?? 1) + 1 : (existing?.attempt ?? 1),
+        resubmittedAt: redo ? nowIso() : (existing?.resubmittedAt ?? null),
+        reviewedAt: redo ? null : (existing?.reviewedAt ?? null),
       };
       db.marathonSubmissions = existing
         ? db.marathonSubmissions.map((s) => (s.id === existing.id ? row : s))
@@ -2040,6 +2052,7 @@ export async function listMarathonProofs(filter: ProofFilter): Promise<MarathonP
       .filter((s) => !filter.taskId || s.taskId === filter.taskId)
       .filter((s) => !filter.memberId || s.memberId === filter.memberId)
       .filter((s) => !filter.voidedOnly || s.voidedAt !== null)
+      .filter((s) => !filter.needsReviewOnly || needsCoachLook(s))
       .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))
       .slice(0, filter.limit ?? 200)
       .map((s) => {
@@ -2062,8 +2075,9 @@ export async function listMarathonProofs(filter: ProofFilter): Promise<MarathonP
 export async function voidProof(id: string, reason: string): Promise<void> {
   return run(() =>
     mutateDb((db) => {
+      const at = nowIso();
       db.marathonSubmissions = db.marathonSubmissions.map((s) =>
-        s.id === id ? { ...s, voidedAt: nowIso(), voidReason: reason } : s,
+        s.id === id ? { ...s, voidedAt: at, voidReason: reason, reviewedAt: at } : s,
       );
     }),
   );
@@ -2074,6 +2088,17 @@ export async function restoreProof(id: string): Promise<void> {
     mutateDb((db) => {
       db.marathonSubmissions = db.marathonSubmissions.map((s) =>
         s.id === id ? { ...s, voidedAt: null, voidReason: null } : s,
+      );
+    }),
+  );
+}
+
+/** «Оставить как есть»: the proof was already scoring, this only clears it off the queue. */
+export async function acceptProof(id: string): Promise<void> {
+  return run(() =>
+    mutateDb((db) => {
+      db.marathonSubmissions = db.marathonSubmissions.map((s) =>
+        s.id === id ? { ...s, reviewedAt: nowIso() } : s,
       );
     }),
   );
@@ -2104,7 +2129,10 @@ export async function recordProofFor(input: {
         mediaPath: existing?.mediaPath ?? null,
         submittedAt: input.submittedAt ?? nowIso(),
         voidedAt: null,
-        voidReason: null,
+        voidReason: existing?.voidReason ?? null,
+        attempt: existing?.attempt ?? 1,
+        resubmittedAt: existing?.resubmittedAt ?? null,
+        reviewedAt: existing?.reviewedAt ?? null,
       };
       db.marathonSubmissions = existing
         ? db.marathonSubmissions.map((s) => (s.id === existing.id ? row : s))

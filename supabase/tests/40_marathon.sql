@@ -250,6 +250,12 @@ do $$ begin
             and member_id = pg_temp.member('vanya@example.com'))
          = '00000000-0000-0000-0000-00000000000c', 'the void is stamped with who did it';
 
+  -- A second rejection, on the late Планка, for the redo below to answer. It scored nothing
+  -- before (an hour past the deadline) and scores nothing now, so no total here moves.
+  update public.marathon_submissions
+     set voided_at = now(), void_reason = 'не видно, что это ты', reviewed_at = now()
+   where task_id = pg_temp.task('Планка') and member_id = pg_temp.member('vanya@example.com');
+
   insert into public.marathon_adjustments (marathon_id, member_id, day_index, points, reason, created_by)
   values (pg_temp.m(), pg_temp.member('katya@example.com'), 3, 5, 'вытащила напарницу',
           '00000000-0000-0000-0000-00000000000c');
@@ -301,13 +307,35 @@ do $$ declare v_id uuid; v_err text; begin
   assert (select submitted_at from public.marathon_submissions where id = v_id) > now() - interval '1 minute',
     'an athlete cannot move when the proof arrived';
 
-  -- Nor can they lift a void.
-  update public.marathon_submissions set voided_at = null, void_reason = null
-  where task_id = pg_temp.task('Вторая палуба') and member_id = pg_temp.member('vanya@example.com');
+  -- A rejection is a round rather than a verdict: sending proof again is a new attempt, and it is
+  -- the server that lifts the void (0027_proof_review.sql). Everything the athlete writes about
+  -- the verdict below is thrown away and recomputed from the row that was already there.
+  update public.marathon_submissions
+     set value_text = 'переснял', voided_at = null, void_reason = 'засчитал себе сам',
+         attempt = 99, resubmitted_at = null, reviewed_at = now()
+  where task_id = pg_temp.task('Планка') and member_id = pg_temp.member('vanya@example.com');
+  assert (select voided_at is null and attempt = 2 and resubmitted_at is not null
+            and reviewed_at is null and void_reason = 'не видно, что это ты'
+          from public.marathon_submissions
+          where task_id = pg_temp.task('Планка')
+            and member_id = pg_temp.member('vanya@example.com')),
+    'a redo lifts the rejection, counts the attempt and goes back to the coach with his comment';
+
+  -- What is still his alone: nobody strikes or reviews their own proof, in either direction.
+  update public.marathon_submissions
+     set voided_at = now(), void_reason = 'сам себе', reviewed_at = now(), attempt = 7
+  where task_id = pg_temp.task('Сегодня') and member_id = pg_temp.member('vanya@example.com');
+  assert (select voided_at is null and reviewed_at is null and attempt = 1
+          from public.marathon_submissions
+          where task_id = pg_temp.task('Сегодня')
+            and member_id = pg_temp.member('vanya@example.com')),
+    'the verdict on a proof is the coach''s to write';
+
+  -- And a void the coach has not answered stays exactly where he left it.
   assert (select voided_at from public.marathon_submissions
           where task_id = pg_temp.task('Вторая палуба')
             and member_id = pg_temp.member('vanya@example.com')) is not null,
-    'a void is the coach''s to lift';
+    'a rejection nobody redid is still a rejection';
 
   -- Nor send proof in someone else's name.
   begin
