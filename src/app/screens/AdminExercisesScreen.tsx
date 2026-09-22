@@ -26,6 +26,7 @@ import {
 import type { ExerciseCatalogRow, ExerciseDraft } from '@/lib/api/types';
 import { BootScreen } from '@/app/components/BootScreen';
 import { TopBar } from '@/app/components/TopBar';
+import { adminErrorTitle } from '@/app/features/admin/adminError';
 import { useT } from '@/app/hooks/useT';
 import { SEARCH_DEBOUNCE_MS } from '@/app/features/admin/model';
 import { useDebounced } from '@/app/features/admin/useDebounced';
@@ -38,7 +39,8 @@ type Filter = 'all' | 'custom' | 'video';
 type EditTarget = ExerciseCatalogRow | 'new' | null;
 
 export default function AdminExercisesScreen() {
-  const { t } = useT();
+  const tr = useT();
+  const { t } = tr;
   const toast = useToast();
   const admin = useIsAdmin();
 
@@ -92,8 +94,8 @@ export default function AdminExercisesScreen() {
       });
       setEditing(null);
       toast.show({ kind: 'success', title: t('app.exSaved') });
-    } catch {
-      toast.show({ kind: 'error', title: t('app.exSaveError') });
+    } catch (e) {
+      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.exSaveError') });
     } finally {
       setSaving(false);
     }
@@ -106,8 +108,8 @@ export default function AdminExercisesScreen() {
     try {
       await deleteExercise(row.id);
       setRows((prev) => prev.filter((r) => r.id !== row.id));
-    } catch {
-      toast.show({ kind: 'error', title: t('app.exDeleteError') });
+    } catch (e) {
+      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.exDeleteError') });
     }
   };
 
