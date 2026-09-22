@@ -551,6 +551,10 @@ export const app = {
   adminPersonGiveCourse: 'Course',
   adminPersonGiveSub: 'Subscription',
   // Analytics (0025).
+  clubWinnerTitle: 'Winner of the week',
+  clubWinnerYou: 'You won this week',
+  boardAnnounceWinner: 'Winner',
+  boardWithdrawWinner: 'Undo',
   adminStatsTitle: 'Analytics',
   adminStatsNow: 'Right now',
   adminStatsPeople: 'People',

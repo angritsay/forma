@@ -21,7 +21,7 @@
  * tables cannot disagree about who is second. They could before: `marathon_scores()` breaks ties
  * inside its window function and hands back 2 and 3 where the demo's scorer shares a place.
  */
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Pill } from '@/components/ui/Pill';
@@ -36,6 +36,9 @@ import { BoardRow } from '@/app/features/marathon/BoardRow';
 import { clubPrize } from '@/app/features/marathon/prize';
 import { rankWeek } from '@/app/features/marathon/standings';
 import { useMarathonScores, useMyMarathons } from '@/app/features/marathon/useMarathon';
+import { getMarathonWinner, setMarathonWinner } from '@/lib/api/marathonAdmin';
+import type { MarathonWinner } from '@/lib/api/types';
+import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 
 type WeekChoice = 'this' | 'last';
 
@@ -52,6 +55,49 @@ export default function MarathonBoardScreen() {
     status,
     reload,
   } = useMarathonScores(marathon?.id ?? null, marathon ? week : null);
+
+  /*
+   * Объявление победителя живёт здесь, а не отдельным экраном в админке.
+   *
+   * Выбор победителя — это выбор строки таблицы, и таблица уже здесь: на телефоне нажать на того,
+   * кто выиграл, короче любого списка имён, который пришлось бы строить сбоку. Плюс переключатель
+   * недель уже есть, а объявляют почти всегда за прошлую — в понедельник, глядя на воскресенье.
+   *
+   * Кнопка видна только тренеру; кубок в строке — всем.
+   */
+  const admin = useIsAdmin();
+  const [winner, setWinner] = useState<MarathonWinner | null>(null);
+
+  useEffect(() => {
+    if (!marathon) return;
+    let alive = true;
+    getMarathonWinner(marathon.id, week)
+      .then((w) => {
+        if (alive) setWinner(w);
+      })
+      .catch(() => {
+        /* Не тренер или сеть отказала — доска остаётся доской. */
+        if (alive) setWinner(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [marathon, week]);
+
+  const announce = useCallback(
+    (memberId: string) => {
+      if (!marathon) return;
+      // Нажатие по уже объявленной строке снимает объявление: одна и та же кнопка туда и обратно.
+      const next = winner?.memberId === memberId ? null : memberId;
+      void setMarathonWinner(marathon.id, week, next)
+        .then(() => getMarathonWinner(marathon.id, week))
+        .then(setWinner)
+        .catch(() => {
+          /* Ничего не меняем на экране: следующий заход покажет, что на самом деле в базе. */
+        });
+    },
+    [marathon, week, winner],
+  );
 
   const header = <TopBar back title={t('app.marathonTitle')} />;
 
@@ -111,11 +157,32 @@ export default function MarathonBoardScreen() {
               <EmptyState title={t('app.marathonBoardEmpty')} />
             ) : (
               <ol className="flex flex-col">
-                {rankWeek(rows).map(({ row, rank }) => (
-                  <li key={row.entryId}>
-                    <BoardRow row={row} rank={rank} />
-                  </li>
-                ))}
+                {rankWeek(rows).map(({ row, rank }) => {
+                  /*
+                   * `entryId` — это member id, пока клуб играется соло (`team_size = 1`), а он
+                   * такой и есть. Для командного марафона объявлять победителя пока нечем, и
+                   * кнопка там просто не появляется.
+                   */
+                  const solo = row.entryKind === 'solo';
+                  const isWinner = solo && winner?.memberId === row.entryId;
+                  return (
+                    <li key={row.entryId}>
+                      <BoardRow
+                        row={row}
+                        rank={rank}
+                        winner={isWinner}
+                        {...(admin === true && solo
+                          ? {
+                              onAnnounce: () => announce(row.entryId),
+                              announceLabel: isWinner
+                                ? t('app.boardWithdrawWinner')
+                                : t('app.boardAnnounceWinner'),
+                            }
+                          : {})}
+                      />
+                    </li>
+                  );
+                })}
               </ol>
             )}
           </div>

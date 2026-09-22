@@ -570,6 +570,10 @@ export const app = {
   adminPersonGiveSub: 'Подписка',
   // Аналитика (0025). Владелец: «раз в неделю заходить и анализировать аналитику
   // по воронке и по конверсии».
+  clubWinnerTitle: 'Победитель недели',
+  clubWinnerYou: 'Ты победил на этой неделе',
+  boardAnnounceWinner: 'Победитель',
+  boardWithdrawWinner: 'Снять',
   adminStatsTitle: 'Аналитика',
   adminStatsNow: 'Сейчас',
   adminStatsPeople: 'Всего людей',

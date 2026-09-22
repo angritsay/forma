@@ -20,6 +20,7 @@ import {
 } from './marathon';
 import { isDemo } from './mode';
 import type {
+  MarathonWinner,
   MarathonAdjustmentRow,
   MarathonMemberPatch,
   MarathonMemberRow,
@@ -701,5 +702,64 @@ export async function deleteMarathonAdjustment(id: string): Promise<void> {
   if (isDemo()) return (await demo()).deleteMarathonAdjustment(id);
   return guard(async () => {
     unwrapVoid(await supabase().from('marathon_adjustments').delete().eq('id', id));
+  });
+}
+
+// --- the week's winner (0028) ------------------------------------------------
+
+/**
+ * Who the coach announced for one week, or null.
+ *
+ * Separate from `getClubWinner()` because the question is different: the coach looks at one
+ * particular week of one particular round, including a round he is not in, and needs the
+ * `memberId` so the board can mark the row he pressed.
+ */
+export async function getMarathonWinner(
+  marathonId: string,
+  week: number,
+): Promise<MarathonWinner | null> {
+  if (isDemo()) return (await demo()).getMarathonWinner(marathonId, week);
+  return guard(async () => {
+    const rows = unwrap<
+      { member_id: string; display_name: string; note: string | null; announced_at: string }[]
+    >(
+      await supabase().rpc('admin_marathon_winner', {
+        p_marathon_id: marathonId,
+        p_week: week,
+      }),
+    );
+    const r = rows[0];
+    if (!r) return null;
+    return {
+      memberId: r.member_id,
+      displayName: r.display_name,
+      note: r.note,
+      announcedAt: r.announced_at,
+    };
+  });
+}
+
+/**
+ * Announce the winner of a week, or withdraw the announcement with `memberId = null`.
+ *
+ * Withdrawing has to be as easy as announcing: the coach presses a row on a phone, and a mistake
+ * that cannot be taken back would sit in front of the whole club for a week.
+ */
+export async function setMarathonWinner(
+  marathonId: string,
+  week: number,
+  memberId: string | null,
+  note?: string,
+): Promise<void> {
+  if (isDemo()) return (await demo()).setMarathonWinner(marathonId, week, memberId, note);
+  return guard(async () => {
+    unwrapVoid(
+      await supabase().rpc('admin_set_winner', {
+        p_marathon_id: marathonId,
+        p_week: week,
+        p_member_id: memberId,
+        p_note: note?.trim() || null,
+      }),
+    );
   });
 }

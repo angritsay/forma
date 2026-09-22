@@ -17,6 +17,8 @@ import type {
   AdminCourseRow,
   AdminOverview,
   AssignedWorkoutRow,
+  ClubWinner,
+  MarathonWinner,
   FunnelWeek,
   ProgressRow,
   CustomWorkoutRow,
@@ -2291,5 +2293,90 @@ export async function listProgress(search = '', limit = 200): Promise<ProgressRo
         return b.lastWorkoutAt.localeCompare(a.lastWorkoutAt);
       })
       .slice(0, limit);
+  });
+}
+
+// --- the week's winner (0028) ------------------------------------------------
+//
+// В демо тренер и участник — один человек, так что объявить победителя можно самому себе, и это
+// честно показывает обе стороны: плашку в клубе и кнопку на доске.
+
+function memberName(db: DemoDb, memberId: string): string {
+  const mem = db.marathonMembers.find((m) => m.id === memberId);
+  const named = (mem?.displayName ?? '').trim();
+  if (named) return named;
+  const me = db.profiles.find((p) => p.email.toLowerCase() === (mem?.email ?? '').toLowerCase());
+  return (me?.display_name ?? '').trim() || 'Участник';
+}
+
+export async function getClubWinner(): Promise<ClubWinner | null> {
+  return run(() => {
+    const db = readDb();
+    const user = requireDemoUser();
+    // Последний объявленный, как и на сервере: идущая неделя победителя ещё не имеет.
+    const rows = [...db.marathonWinners].sort((a, b) => b.announcedAt.localeCompare(a.announcedAt));
+    for (const w of rows) {
+      const round = db.marathons.find((m) => m.id === w.marathonId);
+      if (!round) continue;
+      const mem = db.marathonMembers.find((m) => m.id === w.memberId);
+      if (!mem) continue;
+      const me = db.profiles.find((p) => p.id === user.id);
+      return {
+        marathonId: w.marathonId,
+        week: w.week,
+        displayName: memberName(db, w.memberId),
+        avatarSeed: me?.avatar_seed ?? '',
+        note: w.note,
+        prize: round.prize ?? null,
+        announcedAt: w.announcedAt,
+        isMe: (mem.email ?? '').toLowerCase() === (me?.email ?? '').toLowerCase(),
+      };
+    }
+    return null;
+  });
+}
+
+export async function getMarathonWinner(
+  marathonId: string,
+  week: number,
+): Promise<MarathonWinner | null> {
+  return run(() => {
+    const db = readDb();
+    const w = db.marathonWinners.find((x) => x.marathonId === marathonId && x.week === week);
+    if (!w) return null;
+    return {
+      memberId: w.memberId,
+      displayName: memberName(db, w.memberId),
+      note: w.note,
+      announcedAt: w.announcedAt,
+    };
+  });
+}
+
+export async function setMarathonWinner(
+  marathonId: string,
+  week: number,
+  memberId: string | null,
+  note?: string,
+): Promise<void> {
+  return run(() => {
+    requireDemoUser();
+    mutateDb((db) => {
+      const rest = db.marathonWinners.filter(
+        (x) => !(x.marathonId === marathonId && x.week === week),
+      );
+      db.marathonWinners = memberId
+        ? [
+            ...rest,
+            {
+              marathonId,
+              week,
+              memberId,
+              note: note?.trim() || null,
+              announcedAt: nowIso(),
+            },
+          ]
+        : rest;
+    });
   });
 }

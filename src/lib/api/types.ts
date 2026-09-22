@@ -751,3 +751,33 @@ export interface CoachBooking {
   status: CoachBookingStatus;
   eventName: string | null;
 }
+
+// --- weekly winner (0028) ----------------------------------------------------
+
+/**
+ * Who won a week of the club, as everybody in it sees them.
+ *
+ * Never an email: the winner is announced to the whole club, and the roster has never carried an
+ * address for the same reason.
+ */
+export interface ClubWinner {
+  marathonId: string;
+  /** Week number inside the club's own count, the one `marathon_scores` takes. */
+  week: number;
+  displayName: string;
+  avatarSeed: string;
+  /** Why, in the coach's words. Optional — «победил» is a message by itself. */
+  note: string | null;
+  /** The round's prize, so the strip can say what was won. */
+  prize: string | null;
+  announcedAt: string;
+  isMe: boolean;
+}
+
+/** Who is announced for one week, for the coach's screen. `memberId` marks the board row. */
+export interface MarathonWinner {
+  memberId: string;
+  displayName: string;
+  note: string | null;
+  announcedAt: string;
+}
