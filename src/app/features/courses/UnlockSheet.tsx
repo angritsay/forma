@@ -9,7 +9,7 @@ import { isAppError } from '@/lib/api/errors';
 import { createOrder } from '@/lib/api/orders';
 import { formatPrice } from '@content/site/pricing';
 import { TEST_PAYMENT_URL } from '@content/site/testPayment';
-import { paymentTarget, withEmail } from '@/lib/util/payment';
+import { payHref, payRoute } from '@/lib/util/payment';
 import { useT } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
 
@@ -54,7 +54,10 @@ export function UnlockSheet({ open, course, onClose }: UnlockSheetProps) {
   // TEST_PAYMENT_URL — временная подмена; см. content/site/testPayment.ts. Она стоит перед
   // ссылкой курса намеренно: курс приходит из базы, и править его ссылку в админке пришлось бы
   // отдельно, а снимать подмену надо одним движением.
-  const payment = paymentTarget(
+  // На неродном языке ведёт не в кассу, а на нашу страницу с инструкцией: касса русская и в
+  // рублях. Решение одно на все места, где есть «купить», — см. `payRoute`.
+  const route = payRoute(
+    locale,
     TEST_PAYMENT_URL ?? course?.paymentUrl?.[locale] ?? course?.paymentUrl?.ru,
   );
   const price = course ? formatPrice(locale, course.price) : '';
@@ -78,8 +81,10 @@ export function UnlockSheet({ open, course, onClose }: UnlockSheetProps) {
     }
     setOrdered(recorded ? 'ok' : 'failed');
     setBusy(false);
-    if (payment && email) {
-      window.location.assign(withEmail(payment, email));
+    // В кассу без почты не уходим: платёж потом не с кем связать. На своей странице с инструкцией
+    // почта не нужна в адресе — там её просят вписать в комментарий к переводу.
+    if (route && (route.kind === 'manual' || email)) {
+      window.location.assign(payHref(route, email));
     }
   };
 
@@ -92,7 +97,7 @@ export function UnlockSheet({ open, course, onClose }: UnlockSheetProps) {
 
         <p className="numeral tabular text-4xl leading-none">{price}</p>
 
-        {payment ? (
+        {route ? (
           <Button size="lg" fullWidth loading={busy} onClick={() => void go()}>
             {t('app.unlockCta')}
           </Button>

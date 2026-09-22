@@ -6,11 +6,20 @@
     <meta name="x-apple-disable-message-reformatting" />
     <meta name="color-scheme" content="dark" />
     <meta name="supported-color-schemes" content="dark" />
-    <title>Форма — код для входа</title>
+    <title>Форма — код для входа · Forma — sign-in code</title>
   </head>
   <!--
     The sign-in email. Paste into Supabase → Authentication → Email Templates (docs/SETUP.md) and
     keep every {{ }} placeholder: {{ .Token }} is the six-digit code the app asks for.
+
+    ## Почему в одном письме два языка
+
+    Приложение и сайт выходят на двух языках, а Supabase хранит один шаблон на тип письма и не
+    знает, на каком языке человек читает: в момент отправки кода аккаунта ещё нет, и спросить не у
+    кого. Владелец просит «по хорошему разные имейлы бы отправлять» — это Send Email Hook и свой
+    почтовый провайдер, то есть отдельное решение и отдельный секрет. До тех пор письмо говорит на
+    обоих: русский первым и в полную силу, английский под ним и тише. Код между ними один и в
+    переводе не нуждается — это шесть цифр, и именно за ними письмо и открывают.
 
     Written for email clients, not browsers, which is why it looks nothing like the rest of this
     repository: tables instead of flexbox, every style inline, no web fonts. Outlook and most
@@ -37,7 +46,7 @@
         opacity: 0;
       "
     >
-      Код для входа: {{ .Token }}
+      Код для входа · Sign-in code: {{ .Token }}
     </div>
 
     <table
@@ -93,10 +102,32 @@
               </td>
             </tr>
 
+            <!--
+              Английский заголовок тем же начертанием, но вдвое мельче и приглушённым цветом: это
+              то же самое, сказанное второй раз, а не вторая мысль. Русский читатель проскакивает
+              строку, английский находит её на месте заголовка.
+            -->
+            <tr lang="en">
+              <td
+                style="
+                  padding-bottom: 16px;
+                  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                  font-size: 15px;
+                  line-height: 1.1;
+                  font-weight: 900;
+                  letter-spacing: 0.01em;
+                  text-transform: uppercase;
+                  color: #6b6b74;
+                "
+              >
+                Sign-in code
+              </td>
+            </tr>
+
             <tr>
               <td
                 style="
-                  padding-bottom: 26px;
+                  padding-bottom: 8px;
                   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
                   font-size: 15px;
                   line-height: 1.5;
@@ -104,6 +135,20 @@
                 "
               >
                 Введи его в приложении. Код одноразовый — если не сработает, запроси новый.
+              </td>
+            </tr>
+
+            <tr lang="en">
+              <td
+                style="
+                  padding-bottom: 26px;
+                  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                  font-size: 15px;
+                  line-height: 1.5;
+                  color: #6b6b74;
+                "
+              >
+                Enter it in the app. The code works once — if it does not, ask for a new one.
               </td>
             </tr>
 
@@ -147,6 +192,21 @@
               </td>
             </tr>
 
+            <tr lang="en">
+              <td
+                style="
+                  padding-top: 10px;
+                  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                  font-size: 13px;
+                  line-height: 1.6;
+                  color: #6b6b74;
+                "
+              >
+                If you did not ask for a code, ignore this email. Never pass the code on: it opens
+                your account.
+              </td>
+            </tr>
+
             <tr>
               <td style="padding-top: 30px; border-top: 1px solid #26262c"></td>
             </tr>
@@ -177,7 +237,7 @@
                   color: #6b6b74;
                 "
               >
-                Письмо отправлено на {{ .Email }}<br />
+                Письмо отправлено на {{ .Email }} · Sent to {{ .Email }}<br />
                 <a href="{{ .SiteURL }}" style="color: #96969e; text-decoration: underline"
                   >{{ .SiteURL }}</a
                 >

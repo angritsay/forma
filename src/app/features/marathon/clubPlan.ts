@@ -29,7 +29,7 @@ import { CLUB_PLAN_ID, PLAN_BY_ID, planMonthlyPrice } from '@content/site/plans'
 import { formatPrice } from '@content/site/pricing';
 import { TEST_PAYMENT_URL } from '@content/site/testPayment';
 import type { Locale } from '@/i18n/index';
-import { paymentTarget, withEmail } from '@/lib/util/payment';
+import { payHref, payRoute } from '@/lib/util/payment';
 import { subscribeHref } from '@/app/features/courses/courseMeta';
 
 /** The plan the club is sold with, or null when plans are not configured. */
@@ -52,13 +52,17 @@ export function clubChargeLabel(locale: Locale): string | null {
 /**
  * Where the join button goes: the plan's own Prodamus product with the email appended, or the
  * plans page when there is no usable link (and always for a demo account).
+ *
+ * На неродном языке — на `/en/checkout/`: касса русская и в рублях, и кнопка, ведущая прямо в
+ * неё, обрывала покупку ровно там, где человек решился платить. Решает это `payRoute`, одинаково
+ * во всех четырёх местах, где в проекте есть «купить».
  */
 export function clubJoinHref(locale: Locale, email: string, demo: boolean): string {
   const plan = clubPlan();
   // TEST_PAYMENT_URL — временная подмена; см. content/site/testPayment.ts.
-  const target = demo
+  const route = demo
     ? null
-    : paymentTarget(TEST_PAYMENT_URL ?? plan?.paymentUrl?.[locale] ?? plan?.paymentUrl?.ru);
-  if (!target) return subscribeHref(locale);
-  return email ? withEmail(target, email) : target.href;
+    : payRoute(locale, TEST_PAYMENT_URL ?? plan?.paymentUrl?.[locale] ?? plan?.paymentUrl?.ru);
+  if (!route) return subscribeHref(locale);
+  return payHref(route, email);
 }

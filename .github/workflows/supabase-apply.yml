@@ -258,9 +258,13 @@ jobs:
           set -euo pipefail
           # The subject deliberately does NOT carry {{ .Token }}: a code in a subject line ends up
           # in notification previews and in logs (docs/SETUP.md §3.2).
+          #
+          # Обе половины темы по-своему: Supabase хранит одну тему на тип письма, а в момент
+          # отправки кода аккаунта ещё нет и язык человека спросить не у кого. В списке писем
+          # видно начало строки, поэтому русский стоит первым — русских читателей сейчас все.
           jq -n \
             --rawfile body supabase/templates/otp.html \
-            --arg subject 'Код для входа в Forma' \
+            --arg subject 'Код для входа в Forma · Forma sign-in code' \
             '{
                mailer_subjects_magic_link: $subject,
                mailer_templates_magic_link_content: $body,

@@ -144,13 +144,31 @@ the Russian title he wrote. That is deliberate: `l10n()` in `src/lib/courses/dra
 rather than leaving a blank, because a title in the wrong language can still be navigated by and
 an empty one cannot.
 
-**The payment page.** Prodamus is Russian, the product on it is listed as «Доступ к обучающим
-материалам», and it is not ours to translate. `src/i18n/en/landing.ts` names that string in the
-English copy on purpose: somebody who is about to pay should recognise the page they land on.
+**The payment page.** Prodamus is Russian, in roubles, and it is not ours to translate — so the
+English reader is not sent there at all. Every non-Russian "buy" button goes to `/<lang>/checkout/`
+instead: a page of ours with a PayPal transfer, an instruction to put the sign-up email in the note,
+and a button that reaches a person. One function decides this for all four places that take money —
+`payRoute()` in `src/lib/util/payment.ts`, used by the landing's order form, the course unlock
+sheet, the club's join button and the coach's booking. It checks the till link first and in every
+language: no link means the thing is not on sale, and then nobody is given instructions for buying
+something that does not exist.
 
-Two more surfaces are outside the repository and belong to the owner: the sign-in e-mail template
-(pasted into the Supabase dashboard) and the legal documents. The Russian legal text is the
-binding one; the English half is a translation for reading, not a second contract.
+That route has **no webhook** — PayPal knows nothing about Forma — so access is opened by hand in
+the admin, and the email in the transfer note is the only thing tying money to a person. The page is
+`noindex` and out of the sitemap by design (`isUnlisted` in `scripts/seo/lib.mjs`), and what it
+shows comes from `content/site/payments.ts`, which the owner fills. `docs/SETUP.md` §7.9 is the long
+form.
+
+The Russian reader's path is unchanged: the till, with the email appended, and the note naming the
+host about to open. That note is drawn only for a real till — naming our own domain in "you are
+about to open …" would be a bug, which is why `payHost()` returns null for our own page.
+
+The sign-in e-mail lives here too (`supabase/templates/otp.html`, deployed by **Actions → Supabase
+apply → `email-templates`**), and it says everything twice: Russian first, English under it in a
+quieter colour. Supabase keeps one template per email type and there is no account yet to read a
+language from — per-language letters need the Send Email Hook and an email provider of our own. The
+legal documents remain the owner's: the Russian text is the binding one, and the English half is a
+translation for reading, not a second contract.
 
 ## 5. Brand & design system
 

@@ -23,6 +23,7 @@ visible to customers until replaced.
 | Support links                      | `content/site/links.ts`                          | `supportTelegram`, `supportEmail` (used when a course has no `paymentUrl`)                                                                                                                                                                                                                 |
 | Prices                             | `content/courses/<course>.ts` → `price`          | `{ rub, usd }` per course                                                                                                                                                                                                                                                                  |
 | Payment links                      | `content/courses/<course>.ts` → `paymentUrl`     | `{ ru, en }`, optional; see §7                                                                                                                                                                                                                                                             |
+| Paying from outside Russia         | `content/site/payments.ts`                       | **Outstanding.** `paypal` and `helpTelegram`, both full `https://` links. Every non-Russian "buy" button leads to `/en/checkout/`, which is built from this file; until it is filled the page can only say "write to us". The file's own header says what goes where. §7.7                 |
 | Intro / exercise videos            | `content/courses/*.ts`, `content/exercises/*.ts` | `storage:videos/…` refs; see §5                                                                                                                                                                                                                                                            |
 | Sign-in montage                    | Storage: bucket `images`, path `site/auth.mp4`   | The reference in `content/site/media.ts` already points here. Until the file is uploaded to that exact path the sign-in screen shows the poster still — which is a working screen, not a broken one. §5                                                                                    |
 | Sign-in email templates            | **Actions → Supabase apply → `email-templates`** | One button: it PATCHes the Management API with `supabase/templates/otp.html` into **both** Magic Link and Confirm signup, subject included. This row used to say the dashboard was the only way and that only the owner could do it; both stopped being true when the task was added. §3.2 |
@@ -409,11 +410,16 @@ contain a link, not a code, so the user would never see the code.
 Dashboard → **Authentication → Email Templates**:
 
 1. Open **Magic Link**.
-2. Subject: `Код для входа в Forma`
+2. Subject: `Код для входа в Forma · Forma sign-in code`
    (do not put `{{ .Token }}` in the subject — it ends up in notification previews and logs).
-3. Replace the body with the contents of `supabase/templates/otp.html`: a dark, table-based
-   Russian email with the code in large type and a 10-minute note.
+3. Replace the body with the contents of `supabase/templates/otp.html`: a dark, table-based email
+   with the code in large type and a 10-minute note.
    The template uses `{{ .Token }}`, `{{ .Email }}` and `{{ .SiteURL }}`.
+   **It says everything twice — Russian first, English under it in a quieter colour.** Supabase
+   keeps one template per email type and has nobody to ask which language this reader uses: at the
+   moment a code is sent there is no account yet. Per-language emails need the **Send Email Hook**
+   and an email provider of our own; until that exists, one bilingual letter is how an English
+   reader gets in at all. The code itself is six digits and needs no translation.
 4. Repeat for **Confirm signup** with the same subject and body.
 5. There is no separate plain-text field in the dashboard; `supabase/templates/otp.txt` is the
    fallback to use if you send through a provider that asks for a text part.
@@ -1278,6 +1284,35 @@ is built in the runner and never appears anywhere.
 
 What it cannot do: DNS (SPF/DKIM/DMARC live at the registrar), anything on Prodamus, and uploading
 video, which is not in this repository.
+
+## 7.9 Paying from outside Russia
+
+The till is Prodamus: Russian, in roubles, and it is the only one. The site and the app have been
+bilingual since the English release, so an English reader used to reach a "buy" button, press it,
+and land on a page they could neither read nor pay — at the exact moment they had decided to buy.
+
+**Every non-Russian "buy" button now goes to `/en/checkout/` instead.** One function decides it for
+all four places that take money (`payRoute` in `src/lib/util/payment.ts`): the landing's order form,
+the course unlock sheet, the club's join button and the coach's booking. Nothing else in those
+screens changed, and a Russian reader's path is byte-for-byte what it was.
+
+That page is built from **`content/site/payments.ts`**, which is yours to fill:
+
+- `paypal` — the full link, `https://paypal.me/…` or a payment page. Empty and the transfer block
+  is not drawn at all: half an instruction is worse than none.
+- `helpTelegram` — **your** Telegram, not Sergey's, as a full `https://t.me/…` link. This route has
+  no automation behind it, so somebody has to be reachable when it goes wrong.
+- `note` — optional, both languages, for anything of your own (a currency, a figure in dollars).
+
+**There is no webhook on this route.** Prodamus notifies `prodamus-webhook` and access opens by
+itself; PayPal knows nothing about Forma. So each of these payments is opened **by hand** in the
+admin («Покупки», «Подписки»), and the email in the transfer note is the only thing tying the money
+to a person — which is why the page asks for it twice, in the note and in the message.
+
+The page is `noindex` and deliberately out of the sitemap: it is for people who were sent there, not
+for search. `scripts/seo/lib.mjs` knows this (`isUnlisted`), so the audit checks its title,
+description, canonical and hreflang like any other page and does not report the two things that are
+on purpose.
 
 ---
 

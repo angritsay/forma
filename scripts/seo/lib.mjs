@@ -1387,6 +1387,14 @@ export function auditDist(dist, opts = {}) {
   const relHtml = (/** @type {string} */ p) => rel(dist, p);
   const isApp = (/** @type {string} */ p) => /^app\//.test(relHtml(p));
   const is404 = (/** @type {string} */ p) => /^404\.html$|^404\/index\.html$/.test(relHtml(p));
+  /*
+   * `/<lang>/checkout/` — инструкция «как заплатить, если касса не в твоей валюте». Страница для
+   * тех, кого на неё привели кнопкой или кому прислали ссылку в личку, и потому намеренно вне
+   * карты сайта и под `noindex`: в выдаче она была бы первым, что человек узнаёт о Forma, и
+   * звучала бы как «у них не работает оплата». Всё остальное — заголовок, описание, canonical,
+   * hreflang — проверяется как у любой другой страницы: невидимая для поиска не значит небрежная.
+   */
+  const isUnlisted = (/** @type {string} */ p) => /(^|\/)checkout\/index\.html$/.test(relHtml(p));
 
   /** @type {Set<string>} */
   const inSitemap = new Set();
@@ -1436,7 +1444,8 @@ export function auditDist(dist, opts = {}) {
     if (isApp(file) || is404(file)) continue;
     const html = readFileSync(file, 'utf8');
     const label = `dist/${relHtml(file)}`;
-    const r = auditHtml(html, label);
+    const unlisted = isUnlisted(file);
+    const r = auditHtml(html, label, { allowNoindex: unlisted });
     issues.push(...r.issues);
     if (r.title) {
       const prev = titles.get(r.title);
@@ -1461,9 +1470,9 @@ export function auditDist(dist, opts = {}) {
           file: label,
           message: `canonical points elsewhere: ${r.canonical}`,
         });
-      else if (hasSitemap && !sitemapUrls.has(r.canonical))
+      else if (hasSitemap && !unlisted && !sitemapUrls.has(r.canonical))
         issues.push({ level: 'warning', file: label, message: 'page is not in the sitemap' });
-    } else if (hasSitemap && !inSitemap.has(file)) {
+    } else if (hasSitemap && !unlisted && !inSitemap.has(file)) {
       issues.push({ level: 'warning', file: label, message: 'page is not in the sitemap' });
     }
     for (const a of r.alternates) {

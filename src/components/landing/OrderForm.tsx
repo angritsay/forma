@@ -13,7 +13,7 @@ import { createOrder } from '@/lib/api/orders';
 import { createSubscriptionOrder } from '@/lib/api/subscriptions';
 import type { SubscriptionPlan } from '@/lib/api/types';
 import { TEST_PAYMENT_URL } from '@content/site/testPayment';
-import { paymentTarget, withEmail } from '@/lib/util/payment';
+import { payHost, payHref, payRoute } from '@/lib/util/payment';
 
 export interface OrderFormLabels {
   emailLabel: string;
@@ -156,7 +156,12 @@ export default function OrderForm({
   // Only an https link is ever followed; see lib/util/payment.
   // TEST_PAYMENT_URL — временная подмена на тестовый товар; снимается одной строкой в
   // content/site/testPayment.ts. В бою она null и выражение сводится к обычной ссылке.
-  const payment = paymentTarget(TEST_PAYMENT_URL ?? (plan ? plan.paymentUrl : paymentUrl));
+  // На неродном языке ведёт не в кассу, а на нашу же `/en/checkout/`: касса русская и в рублях.
+  // Заказ при этом всё равно записывается — почта в нём и есть то, по чему владелец потом
+  // опознаёт перевод. См. `payRoute`.
+  const payment = payRoute(locale, TEST_PAYMENT_URL ?? (plan ? plan.paymentUrl : paymentUrl));
+  // Хост называется в подписи только тогда, когда человек правда уходит на чужой сайт.
+  const paymentHost = payment ? payHost(payment) : null;
   const productName = plan ? plan.name : courseName;
 
   // Validation errors must reach keyboard and screen-reader users: the message is announced by its
@@ -214,7 +219,7 @@ export default function OrderForm({
     // A demo order never leaves the browser, so it never hands anyone to a payment page.
     if (payment && !demo) {
       setStatus({ kind: 'redirecting', email: trimmed });
-      window.location.assign(withEmail(payment, trimmed));
+      window.location.assign(payHref(payment, trimmed));
       return;
     }
     setStatus({ kind: 'success', email: trimmed });
@@ -388,8 +393,8 @@ export default function OrderForm({
         </span>
       </label>
 
-      {payment && !demo && labels.paymentNote && (
-        <p className="text-sm text-muted">{fill(labels.paymentNote, { host: payment.host })}</p>
+      {paymentHost && !demo && labels.paymentNote && (
+        <p className="text-sm text-muted">{fill(labels.paymentNote, { host: paymentHost })}</p>
       )}
 
       {errorText && (
@@ -413,7 +418,7 @@ export default function OrderForm({
        */}
       {status.kind === 'error' && status.retryEmail && payment && !demo && (
         <a
-          href={withEmail(payment, status.retryEmail)}
+          href={payHref(payment, status.retryEmail)}
           className="control-label inline-flex h-12 items-center justify-center rounded-control border border-border-strong px-6 text-[15px] text-text"
         >
           {labels.payAnyway}

@@ -12,6 +12,26 @@ export const landing = {
   navMenu: 'Menu',
   skipToContent: 'Skip to content',
   navLanguage: 'Language',
+  // Checkout for readers whose payment page does not exist: the processor is Russian and takes
+  // roubles, so English buyers are given instructions and a person to write to instead of a wall.
+  checkoutTitle: 'How to pay from outside Russia',
+  checkoutLead:
+    'Our card processor works in roubles and only speaks Russian. Until that changes, here is the way round it — and one of us reads every message.',
+  checkoutStep1: 'Send the payment',
+  checkoutStep1Body:
+    'Use the PayPal link below. In the note field, write the email address you signed up with — that address is what opens your access, and nothing else identifies the payment.',
+  checkoutStep2: 'Write to us',
+  checkoutStep2Body:
+    'Send a message with the same email address. Access is opened by hand on this route, usually within a few hours.',
+  checkoutStep3: 'Open the app',
+  checkoutStep3Body:
+    'Reload it and your course or subscription is there. If it is not, write to us again — nobody here minds being asked twice.',
+  checkoutPaypal: 'Pay with PayPal',
+  checkoutWrite: 'Write to us',
+  checkoutNoPaypal:
+    'The transfer details are not published yet. Write to us and we will send them and open your access.',
+  checkoutNoHelp: 'Write to us at {email} and we will help.',
+  checkoutBackToCourses: 'Back to the courses',
   // Caption for the age mark in the footer: "18+" on its own is a number and says nothing to a
   // screen reader.
   footerAgeLabel: 'For adults',
