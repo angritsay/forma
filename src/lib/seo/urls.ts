@@ -21,9 +21,9 @@ export function canonicalUrl(site: string, locale: Locale, sitePath: string): st
  * per locale (exercises, courses); when omitted the same path is used for every locale.
  * x-default points at the default locale (ru).
  *
- * With a single published language there is nothing to alternate between, and a lone
- * self-referencing hreflang is noise a crawler should not have to read: the list is empty, and
- * fills itself again the moment LOCALES grows.
+ * Both languages ship, so this fills. The guard below stays because it is the honest rule rather
+ * than a temporary state: with a single published language there is nothing to alternate between,
+ * and a lone self-referencing hreflang is noise a crawler should not have to read.
  */
 export function alternates(
   site: string,

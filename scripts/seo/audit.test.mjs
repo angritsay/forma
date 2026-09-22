@@ -395,9 +395,12 @@ describe('auditGuides', () => {
     expect(msgs).toContain('error:link "exercise:nope": unknown exercise "nope"');
     expect(msgs).toContain('error:link "course:missing": unknown course "missing"');
     expect(msgs).toContain('error:relatedExercises "ghost": unknown exercise "ghost"');
-    // Pairing is only required for languages the site publishes; Russian-only means an English
-    // article without a Russian counterpart is not a problem, it simply has no page.
-    expect(msgs.some((m) => m.startsWith('warning:no ru translation'))).toBe(false);
+    /*
+     * Pairing is required for languages the site publishes, and it now publishes both: an English
+     * article with no Russian counterpart is a page a Russian reader can reach and not leave. It
+     * is a warning, not an error — the article is still worth having, it is only half-linked.
+     */
+    expect(msgs.some((m) => m.startsWith('warning:no ru translation'))).toBe(true);
     expect(msgs.some((m) => m.startsWith('error:title duplicates'))).toBe(true);
     expect(msgs).toContain('error:slug "no-equipment" collides with a cluster hub URL');
   });

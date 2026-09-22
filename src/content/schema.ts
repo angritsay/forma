@@ -14,10 +14,14 @@ export type Locale = (typeof AUTHORED_LOCALES)[number];
 
 /**
  * Languages the product is *published* in: what the site renders and links, what the sitemap and
- * hreflang list, and what the app offers. Forma is Russian-only — the English half of the content
- * stays in the files, it simply has no surface.
+ * hreflang list, and what the app offers.
+ *
+ * Both are served. Russian is the default and keeps the bare paths (`/courses/`); English lives
+ * under `/en/`. `scripts/seo/lib.mjs` and `scripts/seo/og.mjs` carry their own copy of this list
+ * because they run as plain Node without the TypeScript path aliases — they have to be changed
+ * together with this line.
  */
-export const LOCALES: readonly Locale[] = ['ru'];
+export const LOCALES: readonly Locale[] = ['ru', 'en'];
 export const DEFAULT_LOCALE: Locale = 'ru';
 
 export const L10nSchema = z.object({ ru: z.string().min(1), en: z.string().min(1) });

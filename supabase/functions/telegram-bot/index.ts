@@ -32,12 +32,19 @@
 export interface TelegramUpdate {
   message?: {
     chat?: { id?: number; type?: string };
+    /** Telegram's own UI language for the sender, e.g. `ru`, `en-GB`. Often absent. */
+    from?: { language_code?: string };
     text?: string;
   };
 }
 
+/** Языки, на которых выходит продукт — `LOCALES` в src/content/schema.ts. */
+export type Locale = 'ru' | 'en';
+
 export interface BotReply {
   chatId: number;
+  /** Which language the greeting is in — also decides which site the second button opens. */
+  locale: Locale;
   text: string;
   /** Label on the button that opens the Mini App. */
   buttonText: string;
@@ -53,6 +60,48 @@ export interface BotCopy {
   siteButtonText: string;
   photoUrl: string;
 }
+
+/**
+ * Which language to greet someone in, from the only thing Telegram tells us about them.
+ *
+ * `/start` is the one message that arrives before there is an account, so `profiles.locale` — what
+ * the person actually chose — does not exist yet. All there is is `language_code`, the language of
+ * their Telegram app.
+ *
+ * **Russian is the default, and English is opt-in by an explicit `en`.** The obvious rule («not
+ * Russian → English») is wrong for this audience: Forma sells in roubles, the coach speaks Russian,
+ * and a large share of the people who find it have their phone set to Ukrainian, Kazakh or
+ * Belarusian and read Russian perfectly well. Greeting them in English would be the more confident
+ * mistake. The list below is the countries where Russian is the common second language; everyone
+ * else gets English.
+ *
+ * Whatever this guesses is undone by one tap: the app asks the question properly on its first
+ * screen, and from then on the bot writes in whatever was answered there (telegram-notify/copy.ts).
+ */
+const RUSSIAN_SPEAKING = new Set([
+  'ru',
+  'be',
+  'uk',
+  'kk',
+  'ky',
+  'uz',
+  'tg',
+  'tk',
+  'az',
+  'hy',
+  'ka',
+  'mo',
+]);
+
+export function localeOf(update: TelegramUpdate): Locale {
+  // `en-GB` and `en-US` both arrive; the region is not ours to read.
+  const code = (update.message?.from?.language_code ?? '').toLowerCase().split('-')[0] ?? '';
+  if (!code) return 'ru';
+  return RUSSIAN_SPEAKING.has(code) ? 'ru' : 'en';
+}
+
+/** The same photograph in both languages — there is no text on it. */
+const WELCOME_PHOTO = 'https://forma-app.co/bot/welcome.jpg';
 
 /**
  * The first thing anyone sees of Forma, written by the owner and sent as she wrote it.
@@ -77,29 +126,63 @@ export interface BotCopy {
  * the coach for whoever is top on Sunday. This is the one place a promise is made to somebody who
  * has not paid yet, so nothing here is rounded up.
  */
-export const DEFAULT_COPY: BotCopy = {
-  greeting:
-    'Привет. Это Сережа и Настя — создатели приложения <b>Forma</b> с тренировками, ' +
-    'которые не захочется бросить.\n\n' +
-    'Никакого зала. Всё что тебе нужно — это 15 минут и коврик.\n\n' +
-    'Внутри три раздела:\n\n' +
-    '🎬 <b>Курсы</b>\n' +
-    'Пока что только курс для новичков, но скоро добавим ещё. На каждое движение есть видео ' +
-    'и инструкции по выполнению. Попробуй во время тренировки свайп вниз чтобы перейти ' +
-    'к следующему упражнению, влево — чтобы узнать технику и ограничения.\n\n' +
-    '🏆 <b>Клуб маленьких шагов</b>\n' +
-    'Одно небольшое задание от тренера в день, чтобы постепенно изменить твои привычки. ' +
-    'Плюс общая таблица на неделю. Кто наверху в воскресенье, тот забирает час онлайн ' +
-    '1-1 с Сережей.\n\n' +
-    '📞 <b>Тренер</b>\n' +
-    'Это персональные тренировки и консультации с Сережей — тренером, экспертом по питанию ' +
-    'и создателем Forma. Можно проверить технику, собрать план на ближайшие недели ' +
-    'или обсудить диету.\n\n' +
-    '<blockquote>Проще всего — открыть приложение, войти и пройти первую тренировку. ' +
-    'Она короткая, остальное поймёшь по ходу.</blockquote>',
-  buttonText: 'Открыть приложение',
-  siteButtonText: 'Почитать на сайте',
-  photoUrl: 'https://forma-app.co/bot/welcome.jpg',
+export const DEFAULT_COPY: Record<Locale, BotCopy> = {
+  ru: {
+    greeting:
+      'Привет. Это Сережа и Настя — создатели приложения <b>Forma</b> с тренировками, ' +
+      'которые не захочется бросить.\n\n' +
+      'Никакого зала. Всё что тебе нужно — это 15 минут и коврик.\n\n' +
+      'Внутри три раздела:\n\n' +
+      '🎬 <b>Курсы</b>\n' +
+      'Пока что только курс для новичков, но скоро добавим ещё. На каждое движение есть видео ' +
+      'и инструкции по выполнению. Попробуй во время тренировки свайп вниз чтобы перейти ' +
+      'к следующему упражнению, влево — чтобы узнать технику и ограничения.\n\n' +
+      '🏆 <b>Клуб маленьких шагов</b>\n' +
+      'Одно небольшое задание от тренера в день, чтобы постепенно изменить твои привычки. ' +
+      'Плюс общая таблица на неделю. Кто наверху в воскресенье, тот забирает час онлайн ' +
+      '1-1 с Сережей.\n\n' +
+      '📞 <b>Тренер</b>\n' +
+      'Это персональные тренировки и консультации с Сережей — тренером, экспертом по питанию ' +
+      'и создателем Forma. Можно проверить технику, собрать план на ближайшие недели ' +
+      'или обсудить диету.\n\n' +
+      '<blockquote>Проще всего — открыть приложение, войти и пройти первую тренировку. ' +
+      'Она короткая, остальное поймёшь по ходу.</blockquote>',
+    buttonText: 'Открыть приложение',
+    siteButtonText: 'Почитать на сайте',
+    photoUrl: WELCOME_PHOTO,
+  },
+  /*
+   * Тот же текст по-английски, а не другой: это её приветствие, и переписывать его «под рынок»
+   * значило бы пообещать другой продукт. Отличий ровно два, и оба вынужденные — «Сережа» и
+   * «Настя» становятся Sergey и Nastya (иначе имена не прочитать), а подпись кнопки «Курсы»
+   * совпадает с тем, как вкладка называется в английском приложении.
+   *
+   * Длина проверяется отдельно: подпись к фотографии обрезается на 1024 символах, и английская
+   * версия имеет на это столько же прав, сколько русская.
+   */
+  en: {
+    greeting:
+      'Hi. We are Sergey and Nastya — the people behind <b>Forma</b>, an app with workouts ' +
+      'you will not want to quit.\n\n' +
+      'No gym. All you need is 15 minutes and a mat.\n\n' +
+      'There are three sections inside:\n\n' +
+      '🎬 <b>Courses</b>\n' +
+      'For now just the beginner course, more are coming. Every movement has a video and ' +
+      'instructions. During a workout, swipe down for the next exercise and left for the ' +
+      'technique and what to watch out for.\n\n' +
+      '🏆 <b>Club of small steps</b>\n' +
+      'One small task from the coach every day, to change your habits gradually. Plus a shared ' +
+      'table for the week. Whoever is on top on Sunday takes an hour one-to-one with Sergey.\n\n' +
+      '📞 <b>Coach</b>\n' +
+      'Personal sessions and consultations with Sergey — a coach, a nutrition specialist and ' +
+      'the maker of Forma. Check your technique, build a plan for the coming weeks or talk ' +
+      'through your diet.\n\n' +
+      '<blockquote>The easiest start: open the app, sign in and do the first workout. It is ' +
+      'short, and the rest makes sense as you go.</blockquote>',
+    buttonText: 'Open the app',
+    siteButtonText: 'Read on the site',
+    photoUrl: WELCOME_PHOTO,
+  },
 };
 
 /**
@@ -113,23 +196,42 @@ export const DEFAULT_COPY: BotCopy = {
 const DEFAULT_SITE_URL = 'https://forma-app.co/';
 
 /**
+ * The same page in the reader's language: Russian keeps the bare paths, English lives under
+ * `/en/` (LOCALES in src/content/schema.ts). Sending an English greeting and then a button onto a
+ * Russian page is the one way this could be worse than not translating the greeting at all.
+ *
+ * Only the site's own root is rewritten. If `TELEGRAM_SITE_URL` points somewhere else — another
+ * host, a landing page — it is left exactly as given: a guess about somebody else's URL structure
+ * is how a working link becomes a 404.
+ */
+export function siteUrlFor(locale: Locale, base: string): string {
+  if (locale === 'ru' || !base) return base;
+  return base === DEFAULT_SITE_URL ? `${DEFAULT_SITE_URL}en/` : base;
+}
+
+/**
  * The reply an update deserves, or null for the updates that are not a person writing to the bot.
  *
  * Groups and channels are left alone: a `web_app` button only launches from a private chat anyway,
  * and a bot that answers every message in a group chat is a bot people remove.
  */
-export function replyFor(update: TelegramUpdate, copy: BotCopy = DEFAULT_COPY): BotReply | null {
+export function replyFor(
+  update: TelegramUpdate,
+  copy: Record<Locale, BotCopy> = DEFAULT_COPY,
+): BotReply | null {
   const message = update.message;
   const chatId = message?.chat?.id;
   if (typeof chatId !== 'number') return null;
   if (message?.chat?.type !== 'private') return null;
   if (typeof message.text !== 'string' || message.text.trim() === '') return null;
+  const c = copy[localeOf(update)] ?? copy.ru;
   return {
     chatId,
-    text: copy.greeting,
-    buttonText: copy.buttonText,
-    siteButtonText: copy.siteButtonText,
-    photoUrl: copy.photoUrl,
+    locale: localeOf(update),
+    text: c.greeting,
+    buttonText: c.buttonText,
+    siteButtonText: c.siteButtonText,
+    photoUrl: c.photoUrl,
   };
 }
 
@@ -224,17 +326,24 @@ export async function handleRequest(req: Request): Promise<Response> {
     return reply(400, 'unreadable body');
   }
 
-  const copy: BotCopy = {
-    greeting: Deno.env.get('TELEGRAM_GREETING') ?? DEFAULT_COPY.greeting,
-    buttonText: Deno.env.get('TELEGRAM_BUTTON_TEXT') ?? DEFAULT_COPY.buttonText,
-    siteButtonText: Deno.env.get('TELEGRAM_SITE_BUTTON_TEXT') ?? DEFAULT_COPY.siteButtonText,
-    photoUrl: Deno.env.get('TELEGRAM_PHOTO_URL') ?? DEFAULT_COPY.photoUrl,
-  };
-  const answer = replyFor(update, copy);
+  /*
+   * Каждая настройка — своя на язык: `TELEGRAM_GREETING` правит русское приветствие,
+   * `TELEGRAM_GREETING_EN` — английское. Без суффикса значит «русское», потому что эти переменные
+   * уже могут стоять в проекте и раньше означали ровно это; переопределить один язык и нечаянно
+   * стереть второй так нельзя. Фотография одна на оба — на ней нет текста.
+   */
+  const env = (name: string, locale: Locale) => Deno.env.get(locale === 'ru' ? name : `${name}_EN`);
+  const copyFor = (locale: Locale): BotCopy => ({
+    greeting: env('TELEGRAM_GREETING', locale) ?? DEFAULT_COPY[locale].greeting,
+    buttonText: env('TELEGRAM_BUTTON_TEXT', locale) ?? DEFAULT_COPY[locale].buttonText,
+    siteButtonText: env('TELEGRAM_SITE_BUTTON_TEXT', locale) ?? DEFAULT_COPY[locale].siteButtonText,
+    photoUrl: Deno.env.get('TELEGRAM_PHOTO_URL') ?? DEFAULT_COPY[locale].photoUrl,
+  });
+  const answer = replyFor(update, { ru: copyFor('ru'), en: copyFor('en') });
   if (!answer) return reply(200, 'ignored');
 
   const appUrl = Deno.env.get('MINI_APP_URL') ?? DEFAULT_APP_URL;
-  const siteUrl = Deno.env.get('TELEGRAM_SITE_URL') ?? DEFAULT_SITE_URL;
+  const siteUrl = siteUrlFor(answer.locale, Deno.env.get('TELEGRAM_SITE_URL') ?? DEFAULT_SITE_URL);
 
   const call = (method: string, body: Record<string, unknown>) =>
     fetch(`https://api.telegram.org/bot${token}/${method}`, {

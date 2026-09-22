@@ -1,0 +1,66 @@
+---
+/**
+ * The site's language switch: «RU EN» in the header, the current one solid, the other quiet.
+ *
+ * ## Where the other language's URL comes from
+ *
+ * `localizedPaths` — the same map that feeds hreflang in <SeoHead>. It has to be the same map,
+ * because the switch and hreflang make the same promise to two different readers: this page also
+ * exists over there. Two sources would drift, and a switch that lands on a 404 is worse than no
+ * switch at all.
+ *
+ * Guides are the one place where a language can be genuinely missing — an article is written, not
+ * assembled from the dictionaries. There the switch falls back to that language's home page
+ * instead of disappearing: a reader who wants English wants it whatever page they happen to be on,
+ * and a control that vanishes on some pages reads as a bug rather than as a statement about this
+ * particular article.
+ *
+ * ## Why it is links and not a control
+ *
+ * Each language is a URL. A `<select>` would need JavaScript, would not be middle-clickable, and
+ * would hide the second language behind a tap. Two links of two letters each cost less room than
+ * the word «Меню» next to them.
+ */
+import { LOCALES, type Locale } from '@/content/schema';
+import { t } from '@/i18n/index';
+import { href } from '@/lib/util/paths';
+
+interface Props {
+  locale: Locale;
+  /** Site paths (unprefixed) of this page per language, exactly as <SeoHead> receives them. */
+  localizedPaths?: Partial<Record<Locale, string>>;
+  class?: string;
+}
+
+const { locale, localizedPaths, class: klass = '' } = Astro.props;
+
+/** Two letters, in the language itself — a reader looking for English is not reading Russian yet. */
+const LABEL: Record<Locale, string> = { ru: 'RU', en: 'EN' };
+
+const items = LOCALES.map((loc) => ({
+  loc,
+  current: loc === locale,
+  href: href(loc, localizedPaths?.[loc] ?? '/'),
+}));
+---
+
+{
+  LOCALES.length > 1 && (
+    <nav aria-label={t(locale, 'landing.navLanguage')} class:list={['flex items-center', klass]}>
+      {items.map((x) => (
+        <a
+          class:list={[
+            'eyebrow tap-target-y inline-flex items-center px-1.5 transition-colors duration-150',
+            x.current ? 'text-text' : 'text-muted hover:text-text',
+          ]}
+          href={x.href}
+          hreflang={x.loc}
+          lang={x.loc}
+          aria-current={x.current ? 'true' : undefined}
+        >
+          {LABEL[x.loc]}
+        </a>
+      ))}
+    </nav>
+  )
+}

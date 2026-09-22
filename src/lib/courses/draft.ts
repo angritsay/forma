@@ -123,10 +123,12 @@ export interface WorkoutDraft {
 /**
  * A partial {ru, en} becomes a full L10n.
  *
- * Product copy is Russian and the English half of the content model exists so a translation is
- * never lost — not because anything renders it today (`LOCALES` is `['ru']`). An untranslated
- * field therefore falls back to the Russian rather than blocking the author, and `fallback` covers
- * the case where neither has been written yet.
+ * The coach types one field, in Russian — `DayEditor.tsx` writes `.ru` and nothing else — and the
+ * product now serves both languages. So the English half falls back to the Russian rather than
+ * blocking the author or leaving a blank: an English reader sees «Тренировка 3» where no
+ * translation was written, which is still a title they can navigate by, and no course becomes
+ * unpublishable because of a language nobody typed. `fallback` covers the case where neither has
+ * been written yet.
  */
 function l10n(value: Partial<L10n> | undefined, fallback: string): L10n {
   const ru = value?.ru?.trim() || value?.en?.trim() || fallback;

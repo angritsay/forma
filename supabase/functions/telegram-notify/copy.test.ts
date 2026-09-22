@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { escapeHtml, messageFor } from './copy';
+import { escapeHtml, messageFor, toLocale } from './copy';
 
 describe('escapeHtml', () => {
   it('escapes the three characters Telegram treats as HTML', () => {
@@ -96,12 +96,60 @@ describe('messageFor', () => {
 
   it('keeps every message inside Telegram limits', () => {
     for (const kind of ['course_paid', 'subscription_paid', 'workout_assigned', 'weekly_winner']) {
-      const m = messageFor({
-        kind,
-        params: { title: 'х'.repeat(500), prize: 'х'.repeat(500), note: 'х'.repeat(500) },
-      });
-      expect(m).not.toBeNull();
-      expect(m!.text.length).toBeLessThan(4096);
+      for (const locale of ['ru', 'en'] as const) {
+        const m = messageFor(
+          {
+            kind,
+            params: { title: 'х'.repeat(500), prize: 'х'.repeat(500), note: 'х'.repeat(500) },
+          },
+          locale,
+        );
+        expect(m).not.toBeNull();
+        expect(m!.text.length).toBeLessThan(4096);
+      }
     }
+  });
+});
+
+describe('the language of the person being written to', () => {
+  const KINDS = ['course_paid', 'subscription_paid', 'workout_assigned', 'weekly_winner'];
+
+  it('writes English to someone who chose English', () => {
+    const m = messageFor({ kind: 'course_paid', params: {} }, 'en');
+    expect(m?.text).toContain('the course is open');
+    // Кнопка в приложении подписана дословно так — человек пойдёт искать её глазами.
+    expect(m?.text).toContain('Paid from another email?');
+    expect(m?.buttonText).toBe('Open the app');
+  });
+
+  it('translates every kind, leaving no Russian behind', () => {
+    for (const kind of KINDS) {
+      const m = messageFor({ kind, params: { title: 'Morning legs', prize: 'An hour' } }, 'en');
+      expect(m).not.toBeNull();
+      // Название тренировки и приз — чужие слова, и они не переводятся; всё остальное должно
+      // быть по-английски, а кириллица в тексте означала бы забытую строку.
+      expect(m!.text).not.toMatch(/[А-Яа-яЁё]/);
+      expect(m!.buttonText).not.toMatch(/[А-Яа-яЁё]/);
+    }
+  });
+
+  /*
+   * Название тренировки тренер пишет по-русски (в конструкторе одно поле, не два), и оно едет
+   * получателю как есть. Переводить его нечем, а выбрасывать — значит отправить «Sergey has set
+   * you a workout» без единого признака, какую именно.
+   */
+  it('passes the coach’s own words through untranslated', () => {
+    const m = messageFor({ kind: 'workout_assigned', params: { title: 'Утро на ногах' } }, 'en');
+    expect(m?.text).toContain('Sergey has set you a workout');
+    expect(m?.text).toContain('«Утро на ногах»');
+  });
+
+  it('falls back to Russian for anything it does not recognise', () => {
+    // 'ru' — язык колонки по умолчанию и язык всех, кто завёлся до выбора языка.
+    for (const x of ['de', '', null, undefined, 7, {}]) {
+      expect(toLocale(x)).toBe('ru');
+    }
+    expect(toLocale('en')).toBe('en');
+    expect(messageFor({ kind: 'course_paid', params: {} })?.text).toContain('курс открыт');
   });
 });

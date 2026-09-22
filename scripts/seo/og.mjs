@@ -27,7 +27,7 @@ const FONTS_DIR = join(HERE, 'fonts');
 const WIDTH = 1200;
 const HEIGHT = 630;
 // Published languages, mirroring LOCALES in src/content/schema.ts: a card per page that exists.
-const LOCALES = ['ru'];
+const LOCALES = ['ru', 'en'];
 /*
  * Second brandbook (src/styles/global.css). The card is black and white; the only colour on it is
  * the programme colour of the course it advertises, on the tile. Brand and hub cards, which are

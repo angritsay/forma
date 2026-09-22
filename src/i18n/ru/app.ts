@@ -32,6 +32,14 @@ export const app = {
   errorScreenMissingTitle: 'Этот экран пока недоступен',
   errorScreenMissingBody: 'Вернись на главный экран.',
 
+  // Язык. Первый экран показывает это сразу на обоих языках, поэтому каждая строка должна быть
+  // понятна сама по себе, без соседней (src/app/screens/LanguageScreen.tsx).
+  languageTitle: 'Выбери язык',
+  languageChangeLater: 'Поменять можно в аккаунте',
+  // Строка в аккаунте и шторка, которая по ней открывается.
+  languageRow: 'Язык',
+  languageSheetTitle: 'Язык',
+
   // Auth
   authEmailLabel: 'Почта',
   authEmailPlaceholder: 'name@example.com',

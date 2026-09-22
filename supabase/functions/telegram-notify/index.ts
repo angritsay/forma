@@ -28,7 +28,7 @@
  * видно всем и навсегда.
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { messageFor } from './copy.ts';
+import { messageFor, toLocale, type Locale } from './copy.ts';
 
 /** Сколько строк за один запуск. При раз в 10 минут это с огромным запасом. */
 const BATCH = 50;
@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
   const emails = [...new Set(rows.map((r) => r.email))];
   const { data: people, error: peopleError } = await admin
     .from('profiles')
-    .select('email, telegram_id')
+    .select('email, telegram_id, locale')
     .in('email', emails)
     .not('telegram_id', 'is', null);
 
@@ -121,9 +121,15 @@ Deno.serve(async (req) => {
     return reply(500, { ok: false, stage: 'recipients', code: e.code ?? '' });
   }
 
-  const chat = new Map<string, number>();
-  for (const p of (people ?? []) as { email: string; telegram_id: number }[]) {
-    chat.set(p.email.toLowerCase(), p.telegram_id);
+  /*
+   * Куда писать и на каком языке — одно и то же место, потому что это одна строка профиля.
+   * `locale` берётся здесь, а не в очереди: повод ставит триггер, который про человека ничего не
+   * знает (покупка живёт на почте и приходит раньше регистрации), а язык — свойство получателя и
+   * может смениться между постановкой в очередь и отправкой.
+   */
+  const chat = new Map<string, { id: number; locale: Locale }>();
+  for (const p of (people ?? []) as { email: string; telegram_id: number; locale: unknown }[]) {
+    chat.set(p.email.toLowerCase(), { id: p.telegram_id, locale: toLocale(p.locale) });
   }
 
   const now = Date.now();
@@ -150,13 +156,13 @@ Deno.serve(async (req) => {
       continue;
     }
 
-    const chatId = chat.get(row.email.toLowerCase());
-    if (chatId === undefined) {
+    const who = chat.get(row.email.toLowerCase());
+    if (who === undefined) {
       // Ждёт: человек может открыть приложение из телеграма завтра, и тогда дойдёт.
       continue;
     }
 
-    const message = messageFor(row);
+    const message = messageFor(row, who.locale);
     if (!message) {
       console.error('telegram-notify: unknown kind', row.kind);
       await done('skipped', `unknown kind ${row.kind}`);
@@ -170,7 +176,7 @@ Deno.serve(async (req) => {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          chat_id: chatId,
+          chat_id: who.id,
           text: message.text,
           parse_mode: 'HTML',
           link_preview_options: { is_disabled: true },

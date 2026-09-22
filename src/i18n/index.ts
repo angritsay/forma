@@ -56,6 +56,16 @@ export function l(value: L10n | undefined | null, locale: Locale): string {
   return value[locale] || value[DEFAULT_LOCALE] || value.en || '';
 }
 
+/**
+ * Each language's name in itself, never translated.
+ *
+ * The first screen (src/app/screens/LanguageScreen.tsx) asks before it knows which language to
+ * speak, so it cannot call `t()` for these; and someone looking for English inside a Russian app
+ * is looking for the word «English», not for «Английский». The account's language sheet uses the
+ * same map for the same reason.
+ */
+export const LANGUAGE_NAME: Record<Locale, string> = { ru: 'Русский', en: 'English' };
+
 /** True for a language the site actually serves — an unpublished one must not be routed to. */
 export function isLocale(x: unknown): x is Locale {
   return typeof x === 'string' && (LOCALES as readonly string[]).includes(x);

@@ -86,6 +86,32 @@ function endSession(): void {
 }
 
 export const useSession = create<SessionState>((set, get) => {
+  /**
+   * Reconcile the profile's language with the one this device is showing, on every profile load.
+   *
+   * Two directions, because either side can be the newer one:
+   *
+   * * nobody picked on this device — the profile decides, and everyone who existed before the
+   *   language screen shipped carries `'ru'`, so they are settled without ever being asked;
+   * * somebody picked here and the profile disagrees — the pick is the newer fact (it happened on
+   *   the screen just before sign-in), so it goes up. Without this, choosing English and *then*
+   *   signing in to an older account would leave the app English and the bot Russian: the
+   *   subscription below only fires on a change, and there is none.
+   */
+  function syncLocale(profile: Profile): void {
+    const { locale, chosen, adopt } = useLocale.getState();
+    if (!chosen) {
+      adopt(profile.locale);
+      return;
+    }
+    if (profile.locale === locale) return;
+    updateProfile({ locale })
+      .then((p) => set({ profile: p }))
+      .catch(() => {
+        /* The next profile save carries it; the app already speaks the right language. */
+      });
+  }
+
   /** Load profile + entitlements for a user; concurrent calls for the same user share one request. */
   function loadUser(user: SessionUser): Promise<void> {
     if (inflight && inflight.userId === user.id) return inflight.promise;
@@ -115,7 +141,7 @@ export const useSession = create<SessionState>((set, get) => {
         subscription,
         error,
       });
-      if (profile) useLocale.getState().setLocale(profile.locale);
+      if (profile) syncLocale(profile);
     })().finally(() => {
       if (inflight?.promise === promise) inflight = null;
     });
@@ -181,7 +207,7 @@ export const useSession = create<SessionState>((set, get) => {
       try {
         const profile = await getProfile();
         set({ profile, error: undefined });
-        if (profile) useLocale.getState().setLocale(profile.locale);
+        if (profile) syncLocale(profile);
         return profile;
       } catch (e) {
         set({ error: toAuthError(e) });
