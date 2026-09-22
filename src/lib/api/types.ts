@@ -312,6 +312,7 @@ export interface ExerciseCatalogRow {
   nameRu: string;
   nameEn: string | null;
   shortNameRu: string | null;
+  shortNameEn: string | null;
   descriptionRu: string | null;
   descriptionEn: string | null;
   howTo: { ru?: string; en?: string }[];
@@ -481,7 +482,14 @@ export interface MarathonRow {
   id: string;
   slug: string;
   title: string;
+  /*
+   * Вторая половина названия, описания и приза (0035). Только в админке: приложению они приходят
+   * уже выбранными — `my_marathons()` и `club_winner()` подставляют половину по `profiles.locale`
+   * читателя. Здесь обе, потому что редактору нужны обе.
+   */
+  titleEn: string | null;
   description: string | null;
+  descriptionEn: string | null;
   status: MarathonStatus;
   /** YYYY-MM-DD. Day 1 of the marathon. */
   startsOn: string;
@@ -493,6 +501,7 @@ export interface MarathonRow {
   /** HH:MM:SS. */
   dueTime: string;
   prize: string | null;
+  prizeEn: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -502,7 +511,9 @@ export type MarathonPatch = Partial<
     MarathonRow,
     | 'slug'
     | 'title'
+    | 'titleEn'
     | 'description'
+    | 'descriptionEn'
     | 'status'
     | 'startsOn'
     | 'days'
@@ -510,6 +521,7 @@ export type MarathonPatch = Partial<
     | 'timezone'
     | 'dueTime'
     | 'prize'
+    | 'prizeEn'
   >
 >;
 
@@ -728,6 +740,7 @@ export interface ExerciseDraft {
   nameRu: string;
   nameEn?: string | null;
   shortNameRu?: string | null;
+  shortNameEn?: string | null;
   descriptionRu?: string | null;
   descriptionEn?: string | null;
   howTo?: { ru?: string; en?: string }[];

@@ -154,6 +154,23 @@ function requireDemoUser(): DemoUser {
   return user;
 }
 
+/**
+ * `public.pick_l10n()` из 0035, но здесь.
+ *
+ * Название круга и приз приходят из `my_marathons()` и `club_winner()` уже выбранными — половину
+ * подставляет база по `profiles.locale` читателя. Демо стоит ровно на месте этих функций, и если
+ * оно отдаёт русскую строку там, где сервер отдал бы английскую, то демо показывает не то, что
+ * показывает продукт, — а это единственное, ради чего оно существует.
+ *
+ * Пустая английская половина означает «не перевели», и тогда ответ русский: то же правило, что в
+ * базе, и та же причина — читатель видит слова тренера, а не пустоту.
+ */
+function pickL10n(db: DemoDb, ru: string | null, en: string | null): string | null {
+  const user = currentDemoUser();
+  const locale = db.profiles.find((p) => p.id === user?.id)?.locale ?? 'ru';
+  return locale === 'en' ? en?.trim() || ru : ru;
+}
+
 /** Every demo call: artificial latency, then the same `guard()` error folding as Supabase. */
 async function run<T>(fn: () => T): Promise<T> {
   await delay();
@@ -793,6 +810,7 @@ function compiledExerciseRows(): ExerciseCatalogRow[] {
     nameRu: e.name.ru,
     nameEn: e.name.en,
     shortNameRu: e.shortName?.ru ?? null,
+    shortNameEn: e.shortName?.en ?? null,
     descriptionRu: e.description.ru,
     descriptionEn: e.description.en,
     howTo: e.howTo.map((v) => ({ ru: v.ru, en: v.en })),
@@ -858,6 +876,7 @@ function draftToRow(draft: ExerciseDraft, base?: ExerciseCatalogRow): ExerciseCa
     nameRu: draft.nameRu,
     nameEn: draft.nameEn ?? base?.nameEn ?? null,
     shortNameRu: draft.shortNameRu ?? base?.shortNameRu ?? null,
+    shortNameEn: draft.shortNameEn ?? base?.shortNameEn ?? null,
     descriptionRu: draft.descriptionRu ?? base?.descriptionRu ?? null,
     descriptionEn: draft.descriptionEn ?? base?.descriptionEn ?? null,
     howTo: draft.howTo ?? base?.howTo ?? [],
@@ -1531,13 +1550,14 @@ export async function listMyMarathons(): Promise<MyMarathon[]> {
           {
             id: m.id,
             slug: m.slug,
-            title: m.title,
-            description: m.description,
+            // Половину выбирает демо, как её выбрал бы `my_marathons()`.
+            title: pickL10n(db, m.title, m.titleEn) ?? m.title,
+            description: pickL10n(db, m.description, m.descriptionEn),
             status: m.status,
             startsOn: m.startsOn,
             days: m.days,
             teamSize: m.teamSize,
-            prize: m.prize,
+            prize: pickL10n(db, m.prize, m.prizeEn),
             dayIndex,
             week: weekOf(Math.max(dayIndex, 1)),
             totalWeeks: weekOf(m.days),
@@ -1777,7 +1797,11 @@ export async function createMarathon(input: {
         id: demoId('marathon'),
         slug: input.slug,
         title: input.title,
+        // Демо заводит круг с одним названием — тем, что напечатали в форме. Вторая половина
+        // пустая ровно так же, как была бы в базе: её ещё не написали.
+        titleEn: null,
         description: null,
+        descriptionEn: null,
         status: 'draft',
         startsOn: input.startsOn,
         days: input.days ?? 28,
@@ -1785,6 +1809,7 @@ export async function createMarathon(input: {
         timezone: input.timezone ?? 'Europe/Moscow',
         dueTime: input.dueTime ?? '22:00:00',
         prize: null,
+        prizeEn: null,
         createdAt: at,
         updatedAt: at,
       };
@@ -2366,7 +2391,7 @@ export async function getClubWinner(): Promise<ClubWinner | null> {
         displayName: memberName(db, w.memberId),
         avatarSeed: me?.avatar_seed ?? '',
         note: w.note,
-        prize: round.prize ?? null,
+        prize: pickL10n(db, round.prize, round.prizeEn),
         announcedAt: w.announcedAt,
         isMe: (mem.email ?? '').toLowerCase() === (me?.email ?? '').toLowerCase(),
       };

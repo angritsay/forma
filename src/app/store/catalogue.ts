@@ -40,14 +40,26 @@ export function exerciseFromRow(r: ExerciseCatalogRow): Exercise {
     id: r.id,
     slug: { ru: slug, en: slug },
     name,
-    ...(r.shortNameRu ? { shortName: { ru: r.shortNameRu, en: r.shortNameRu } } : {}),
+    /*
+     * `en: xEn ?? xRu` — тот же приём, что у `name` строкой выше, и он важнее, чем выглядит.
+     * Здесь стояло `en: r.shortNameRu` и `en: r.breathingRu`: русская строка ложилась в
+     * английскую половину безусловно, у дыхания — даже после того, как `breathing_en` появилось
+     * (0032). Читателю это ничего не меняло, он и так видит русское слово. Врали данные: русский
+     * текст в колонке `en` неотличим от перевода, и «что ещё не переведено» из них не узнать
+     * никогда. Подстановка делается здесь, при чтении; в колонке остаётся честный null.
+     */
+    ...(r.shortNameRu
+      ? { shortName: { ru: r.shortNameRu, en: r.shortNameEn ?? r.shortNameRu } }
+      : {}),
     description: r.descriptionRu
       ? { ru: r.descriptionRu, en: r.descriptionEn ?? r.descriptionRu }
       : name,
     howTo: text(r.howTo),
     cues: text(r.cues),
     mistakes: text(r.mistakes),
-    ...(r.breathingRu ? { breathing: { ru: r.breathingRu, en: r.breathingRu } } : {}),
+    ...(r.breathingRu
+      ? { breathing: { ru: r.breathingRu, en: r.breathingEn ?? r.breathingRu } }
+      : {}),
     muscles: (r.muscles.length ? r.muscles : ['full_body']) as Exercise['muscles'],
     pattern: (r.pattern ?? 'mobility') as Exercise['pattern'],
     equipment: (r.equipment.length ? r.equipment : ['none']) as Exercise['equipment'],
