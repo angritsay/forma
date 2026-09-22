@@ -161,13 +161,33 @@ untranslated" can never be answered.
 
 ## 4b. What stays Russian
 
-**The payment page.** Prodamus is Russian, the product on it is listed as «Доступ к обучающим
-материалам», and it is not ours to translate. `src/i18n/en/landing.ts` names that string in the
-English copy on purpose: somebody who is about to pay should recognise the page they land on.
+**The payment page.** Prodamus is Russian, in roubles, and it only takes Russian cards — so the
+English reader is not sent there. There is a second till, lava.top, which takes foreign cards and
+sends a webhook, and `payRoute()` in `src/lib/util/payment.ts` picks between the two by the
+reader's language. All four places that take money go through it: the landing's order form, the
+course unlock sheet, the club's join button and the coach's booking.
 
-Two more surfaces are outside the repository and belong to the owner: the sign-in e-mail template
-(pasted into the Supabase dashboard) and the legal documents. The Russian legal text is the
-binding one; the English half is a translation for reading, not a second contract.
+The rouble till's link is checked first and in every language, because it is what says the thing is
+on sale at all; when lava has no product for it the route is null and the button falls back to the
+support address, never to the rouble till — that would restore the wall the second till exists to
+remove.
+
+`supabase/functions/lava-webhook` opens the access. Two doors, the token and the HMAC signature, as
+with Prodamus; then `product.id` says what was bought, which Prodamus cannot do. **Its contract is
+reconstructed from lava.top's public SDK rather than from their documentation**, and a mismatch is a
+403 with nothing written — so a wrong contract reads as "payments do not arrive", never as access
+granted to somebody who did not pay. `docs/SETUP.md` §7.9 has the whole setup and says that the
+first real payment is the test.
+
+Prodamus keeps the rouble buyers because it issues the receipts Russian retail requires; moving
+those over is a decision with accounting inside it.
+
+The sign-in e-mail lives here too (`supabase/templates/otp.html`, deployed by **Actions → Supabase
+apply → `email-templates`**), and it says everything twice: Russian first, English under it in a
+quieter colour. Supabase keeps one template per email type and there is no account yet to read a
+language from — per-language letters need the Send Email Hook and an email provider of our own. The
+legal documents remain the owner's: the Russian text is the binding one, and the English half is a
+translation for reading, not a second contract.
 
 ## 5. Brand & design system
 

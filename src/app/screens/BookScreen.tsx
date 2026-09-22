@@ -79,7 +79,7 @@ import { isDemo } from '@/lib/api/mode';
 import { COACH_TILE, courseTileVars } from '@/lib/ui/tile';
 import { withBase } from '@/lib/util/paths';
 import { openExternal } from '@/lib/telegram/webapp';
-import { paymentTarget, withEmail } from '@/lib/util/payment';
+import { payHref, type PayRoute, payRoute, paymentTarget } from '@/lib/util/payment';
 import { LinkButton } from '@/app/features/courses/LinkButton';
 import { splitName } from '@/app/features/profile/model';
 import { externalLinkProps } from '@/app/hooks/useExternalLink';
@@ -167,7 +167,14 @@ export default function BookScreen() {
    */
   const schedule = paymentTarget(option?.scheduleUrl || BOOKING.scheduleUrl);
   const lead = BOOKING.leadTimeMin;
-  const payment = option ? paymentTarget(option.paymentUrl[locale] ?? option.paymentUrl.ru) : null;
+  /*
+   * Час с тренером продаётся той же русской кассой, что и всё остальное, — значит и здесь на
+   * неродном языке ведём на `/en/checkout/`. `schedule` выше это не касается: там не касса, а
+   * страница выбора времени в Google Calendar, и она никому ничего не продаёт.
+   */
+  const payment = option
+    ? payRoute(locale, option.paymentUrl[locale] ?? option.paymentUrl.ru)
+    : null;
   const contact = contactHref(option ? l(option.name, locale) : name);
 
   /* The credentials that are not already standing above as a figure. */
@@ -182,7 +189,7 @@ export default function BookScreen() {
       setSent(true);
       return;
     }
-    const target = withEmail(payment, email);
+    const target = payHref(payment, email);
     setSent(true);
     // Inside Telegram the payment page opens in the person's own browser, not in the Mini App.
     if (openExternal(target)) return;
@@ -668,7 +675,7 @@ function Option({
   contactHref,
 }: {
   option: BookingOption;
-  payment: URL | null;
+  payment: PayRoute | null;
   redirecting: boolean;
   onPay: () => void;
   contactHref: string;

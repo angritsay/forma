@@ -1,10 +1,14 @@
 FORMA // Сергей Титов
 
-Код для входа: {{ .Token }}
+Код для входа · Sign-in code: {{ .Token }}
 
 Введи его в приложении. Код одноразовый — если не сработает, запроси новый.
 Если ты не запрашивал(а) код — просто проигнорируй это письмо.
 Никому не сообщай код: он даёт доступ к твоему аккаунту.
 
-Письмо отправлено на {{ .Email }}
+Enter it in the app. The code works once — if it does not, ask for a new one.
+If you did not ask for a code, ignore this email.
+Never pass the code on: it opens your account.
+
+Письмо отправлено на {{ .Email }} · Sent to {{ .Email }}
 {{ .SiteURL }}
