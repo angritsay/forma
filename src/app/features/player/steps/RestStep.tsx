@@ -36,7 +36,8 @@ export function RestStep({ step, prescribed, paused, beep, onNext, registerNext 
     onNext();
   }, [onNext]);
 
-  useCountdownCues(clock, !paused, beep, advance);
+  // Ноль здесь — это переход, и он прозвучит сам (PlayerScreen). Отсчёт остаётся, конец молчит.
+  useCountdownCues(clock, !paused, beep, advance, null);
   useNextHandler(registerNext, advance);
 
   const nextId = step.nextExerciseId;

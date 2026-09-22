@@ -27,6 +27,7 @@ import { formatNumber } from '@/i18n/index';
 import { TopBar } from '@/app/components/TopBar';
 import { publishSessionResult } from '@/app/features/player/progress';
 import { buildSummary, createSummarySaver, type SaveOutcome } from '@/app/features/player/save';
+import { playCue } from '@/app/features/player/sound';
 import { loadUserStats } from '@/app/features/player/stats';
 import { DonePoster, type DoneFigure } from '@/app/features/player/summary/DonePoster';
 import { FeedbackForm, type FeedbackValue } from '@/app/features/player/summary/FeedbackForm';
@@ -69,6 +70,7 @@ import {
 import { useSession } from '@/app/store/session';
 import { findCourse, findNode } from '@/content/catalogue';
 import { isAppError } from '@/lib/api/errors';
+import { haptic } from '@/lib/telegram/webapp';
 import { getSession } from '@/lib/api/sessions';
 import type { WorkoutSessionRow } from '@/lib/api/types';
 import { evaluateAchievements } from '@/lib/training/levels';
@@ -227,6 +229,26 @@ function SavedView({
   const { t, locale } = useT();
   const navigate = useNavigate();
   const days = useWorkoutNumber(fresh === true);
+
+  /*
+   * Награда звучит.
+   *
+   * Один раз, сколько бы значков ни открылось разом: поздравляет сам факт, а не каждая строчка в
+   * списке. И только на свежем сохранении — на этот экран можно прийти по ссылке через неделю,
+   * и фанфары над чужой прошлой тренировкой были бы враньём.
+   *
+   * Столкнуться с сигналом конца тренировки это не может: тот звучит при выходе из плеера, а
+   * сюда доходят через форму обратной связи и кнопку «Сохранить», то есть минимум через
+   * несколько секунд осознанных действий.
+   */
+  const announced = useRef(false);
+  useEffect(() => {
+    if (!fresh || unlocked.length === 0 || announced.current) return;
+    announced.current = true;
+    haptic('success');
+    playCue('award');
+  }, [fresh, unlocked.length]);
+
   return (
     <Screen
       header={<TopBar title={t('app.summaryEyebrow')} />}

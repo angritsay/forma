@@ -32,6 +32,10 @@ export const app = {
   errorScreenMissingTitle: 'This screen isn’t available yet',
   errorScreenMissingBody: 'Head back to the home screen.',
 
+  // Sound. One row, one switch, no explanation: ListRow truncates a subtitle, and a sentence
+  // that cannot be read to the end is worse than none. The switch says what it does by moving.
+  soundRow: 'Sound',
+
   // Language. The first screen shows these in *both* languages at once, so each string has to
   // stand on its own without the other one for context (src/app/screens/LanguageScreen.tsx).
   languageTitle: 'Choose your language',

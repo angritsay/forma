@@ -12,7 +12,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { stepElapsedNow, useActiveWorkoutStore } from '@/app/store/activeWorkout';
-import type { Cue } from './sound';
+import { countdownCue, type Cue } from './sound';
 
 export interface StepClock {
   elapsedMs: number;
@@ -77,14 +77,22 @@ export function useStepClock(running: boolean, durationSec?: number): StepClock 
 }
 
 /**
- * Beeps at 3-2-1 and once at zero, then calls `onDone` exactly once.
+ * Counts the last three seconds out loud, then calls `onDone` exactly once.
  * `running` mirrors the clock so a pause never triggers a cue.
+ *
+ * **`endCue` is `null` for a step that moves on by itself**, and that is the rule the whole sound
+ * design rests on: one transition, one sound. A hold that runs out advances to the next exercise,
+ * and the advance announces itself (`'next'`, fired where the step actually changes) — so a cue
+ * here as well would be the same event said twice, a fifth of a second apart, forty times a
+ * session. A step that runs out and *stays* — an AMRAP waiting for the score, a for-time piece
+ * hitting its cap — has no transition to borrow, so it says `'end'` for itself.
  */
 export function useCountdownCues(
   clock: StepClock,
   running: boolean,
   beep: (cue: Cue) => void,
   onDone?: () => void,
+  endCue: Cue | null = 'end',
 ): void {
   const lastSec = useRef<number | null>(null);
   const fired = useRef(false);
@@ -98,16 +106,17 @@ export function useCountdownCues(
     }
     if (sec !== lastSec.current) {
       lastSec.current = sec;
-      if (sec >= 1 && sec <= 3) beep('tick');
+      const cue = countdownCue(sec);
+      if (cue) beep(cue);
     }
   }, [clock.remainingSec, clock.done, running, beep]);
 
   useEffect(() => {
     if (!clock.done || fired.current) return;
     fired.current = true;
-    beep('end');
+    if (endCue) beep(endCue);
     onDone?.();
-  }, [clock.done, beep, onDone]);
+  }, [clock.done, beep, endCue, onDone]);
 }
 
 /**
