@@ -30,12 +30,14 @@ import { ListRow } from '@/components/ui/ListRow';
 import { Modal } from '@/components/ui/Modal';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Sheet } from '@/components/ui/Sheet';
+import { Switch } from '@/components/ui/Switch';
 import { useToast } from '@/components/ui/Toast';
 import type { Equipment } from '@/content/schema';
 import { formatNumber, LANGUAGE_NAME } from '@/i18n/index';
 import { isAppError } from '@/lib/api/errors';
 import type { ProfilePatch } from '@/lib/api/types';
 import { levelForPoints } from '@/lib/training/levels';
+import { useSound } from '@/app/features/player/sound';
 import { useT } from '@/app/hooks/useT';
 import { useTotalPoints } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
@@ -54,6 +56,7 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
   const tr = useT();
   const { t, l, locale } = tr;
   const toast = useToast();
+  const sound = useSound();
   const profile = useSession((s) => s.profile);
   const user = useSession((s) => s.user);
   const points = useTotalPoints();
@@ -204,11 +207,38 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
               />
             </li>
             {/*
-             * Language third, under the two settings about the person themselves: it is the one
-             * row here that changes every other word on the screen, and a person who reached the
-             * account looking for it finds it without scrolling. The value on the right is the
-             * language's own name, which is also how it is found by someone who does not read the
-             * label above it.
+             * Sound. The only setting here that is on or off, so the only one carrying a switch
+             * rather than a value and a chevron — and the only row where nothing opens.
+             *
+             * It has to exist. The player counts the last seconds out loud, marks every move to
+             * the next exercise and plays a figure at the end, and until this row there was no way
+             * to stop any of it: the store had a `muted` flag that nothing in the product could
+             * reach. A sound with no off switch gets the phone muted instead, which takes the one
+             * cue that was worth hearing down with the rest.
+             */}
+            <li>
+              <ListRow
+                title={t('app.soundRow')}
+                trailing={
+                  <Switch
+                    checked={!sound.muted}
+                    onChange={(on) => {
+                      sound.toggle();
+                      // Включил — услышал, что именно включил. Тот же сигнал, что звучит чаще
+                      // всего, так что это не демонстрация, а честный образец.
+                      if (on) sound.beep('next');
+                    }}
+                    label={t('app.soundRow')}
+                  />
+                }
+              />
+            </li>
+            {/*
+             * Language, under the settings about the person themselves: it is the one row here
+             * that changes every other word on the screen, and a person who reached the account
+             * looking for it finds it without scrolling. The value on the right is the language's
+             * own name, which is also how it is found by someone who does not read the label
+             * above it.
              */}
             <li>
               <ListRow

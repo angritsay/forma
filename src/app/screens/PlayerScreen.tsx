@@ -367,6 +367,9 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
   const [glassHeight, setGlassHeight] = useState(0);
   // And how tall the clock's band is — zero on a step that has no clock, which is most of them.
   const [timerHeight, setTimerHeight] = useState(0);
+  // Стабильная ссылка: `useSound()` отдаёт новый объект каждый рендер, а эффекты ниже зависят от
+  // сигнала и перезапускались бы на каждом тике часов.
+  const beep = sound.beep;
   const nextHandler = useRef<(() => void) | null>(null);
   const registerNext = useCallback((fn: (() => void) | null) => {
     nextHandler.current = fn;
@@ -390,13 +393,36 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
     setFlipped(false);
   }, [stepIndex]);
 
-  // The last step is `done`: close the session and hand over to the summary.
+  /*
+   * Переход к следующему упражнению — и его звук, один на все дороги сюда.
+   *
+   * Сюда приходят все: вышло время на холде, нажали «Готово» после десяти повторов, свайпнули,
+   * пропустили шаг, нажали → на клавиатуре. Раньше звучали только те переходы, у которых был
+   * таймер, — то есть человек, делающий подход за подходом, не слышал вообще ничего и узнавал о
+   * смене упражнения только глазами, в тот момент, когда глаза заняты полом.
+   *
+   * Последний шаг — `done`, и он не упражнение: перед ним звучит не «дальше», а конец тренировки
+   * (эффект ниже). Иначе два сигнала подряд, и оба про одно.
+   */
+  const advance = useCallback(() => {
+    if (steps[stepIndex + 1]?.kind !== 'done') beep('next');
+    next();
+  }, [steps, stepIndex, beep, next]);
+
+  /*
+   * The last step is `done`: close the session and hand over to the summary.
+   *
+   * Здесь же — единственный за тренировку звук, которому позволено быть длинным. Он играет до
+   * `navigate`, а не на экране итогов: на итоги можно прийти по ссылке через неделю, а «сделал»
+   * бывает один раз, ровно в эту секунду.
+   */
   useEffect(() => {
     if (step?.kind !== 'done') return;
     haptic('success');
+    beep('finish');
     finish();
     navigate(summaryPath, { replace: true });
-  }, [step?.kind, finish, navigate, summaryPath]);
+  }, [step?.kind, beep, finish, navigate, summaryPath]);
 
   // Inside Telegram, closing the Mini App mid-workout would lose the session: ask first.
   useEffect(() => {
@@ -424,8 +450,8 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
   const unlock = sound.unlock;
   const doNext = useCallback(() => {
     unlock();
-    (nextHandler.current ?? next)();
-  }, [next, unlock]);
+    (nextHandler.current ?? advance)();
+  }, [advance, unlock]);
   const doPrev = useCallback(() => {
     unlock();
     prev();
@@ -467,7 +493,7 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
       const skipped = skippedResult(step, stepIndex);
       if (skipped) recordResult(skipped);
     }
-    next();
+    advance();
   };
 
   const endWorkout = () => {
@@ -555,7 +581,7 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
                       paused={paused}
                       beep={sound.beep}
                       onRecord={recordResult}
-                      onNext={next}
+                      onNext={advance}
                       registerNext={registerNext}
                     />
                   </div>

@@ -67,7 +67,8 @@ export function WorkTimerStep({
   );
 
   const onDone = useCallback(() => complete(duration), [complete, duration]);
-  useCountdownCues(clock, !paused, beep, onDone);
+  // Шаг сам переключается, и переход прозвучит один раз — здесь на нуле тишина.
+  useCountdownCues(clock, !paused, beep, onDone, null);
   useNextHandler(registerNext, () => complete(isEmom ? duration : clock.elapsedSec));
 
   const isHold = step.item.unit === 'seconds';

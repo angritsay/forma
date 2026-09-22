@@ -225,6 +225,36 @@ binding one; the English half is a translation for reading, not a second contrac
   workout, the movement grid. Where a movement has no clip the tile is left flat; nothing is drawn
   to stand in for footage that has not been shot.
 
+## 5a. Sound
+
+Eight cues, synthesised in `src/app/features/player/sound.ts` — no audio files anywhere. Two
+oscillators per note (a sine and a quiet octave above it), a fast attack and an exponential decay,
+which is what stops a short beep sounding like a kitchen timer.
+
+**One transition, one sound.** Moving to the next exercise announces itself once, however it
+happened: a countdown running out, «Готово» after a set, a skip, the → key. That is why a step
+that advances by itself stays silent at zero (`useCountdownCues(..., null)`) — the advance is
+already the announcement, and a cue on both would be the same event said twice a fifth of a second
+apart, forty times a session. Only a step that runs out and _stays_ — an AMRAP waiting for its
+score, a for-time piece hitting its cap — says `end` for itself.
+
+| cue                    | when                                                               | shape                                                                                              |
+| ---------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| `tick` / `tickLast`    | the last three seconds                                             | one note; the final second is higher, so the row is heard as an approach rather than as background |
+| `next`                 | the next exercise, by any route                                    | a short rising pair — the most frequent sound in the product and therefore the quietest            |
+| `go` · `round` · `end` | a test starts · a round is counted · time is up with nowhere to go | as before                                                                                          |
+| `finish`               | the workout is over                                                | an arpeggio with the notes overlapping; the one cue allowed half a second                          |
+| `award`                | an achievement opened                                              | a spark upward over a soft held note; once per save, however many unlocked                         |
+| `horn`                 | the end of an assessment window                                    | a single long low tone                                                                             |
+
+Loudness is part of the meaning: the cues that repeat all session are quieter than the ones that
+happen once, and a test holds that rule so the next person to edit the table does not "turn it up
+a bit". Everything is in a C pentatonic, so two cues that overlap cannot clash.
+
+**There is an off switch, in the account** — not over the clip, because it is a preference rather
+than something reached for mid-set. It has to exist: a sound that cannot be turned off gets the
+whole phone muted instead, which takes the one cue worth hearing down with the rest.
+
 ## 6. Content model (contract: `src/content/schema.ts`)
 
 `L10n = { ru: string; en: string }`. All content is TypeScript validated by zod at test time and
@@ -648,7 +678,8 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    and choose, and the choice could fail to arrive, which is exactly how black bars reached the
    owner's phone. With a back arrow and pause at the top and, at the bottom, the movement's
    name and its one number — a countdown for timed work, an adjustable rep count with "Done" for
-   reps. Nothing else: no elapsed clock, no sound control, no step counter, no next-up line. Back:
+   reps. Nothing else: no elapsed clock, no sound control, no step counter, no next-up line — the
+   sound is heard, not operated (§5a), and its switch is in the account. Back:
    the coach's words as tabs (technique + breathing, cues + mistakes, contraindications + muscles),
    reached by swiping right to left or the "How to do it" handle — never by scrolling over the
    clip — and put away by swiping left to right. Vertical on the front walks the workout: up is the

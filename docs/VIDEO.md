@@ -158,7 +158,9 @@ The clips are encoded with **no audio track at all** (`-an`). The coach talks th
 movement while filming; that is worth watching once and wrong to start up by itself in the middle
 of a set. Muting in the player was the old answer, but a muted `<video>` still carries the track
 and still showed an unmute button implying there was something to hear — so that button is gone
-too. The header's sound control is a different thing and stays: it is the app's own timer cues.
+too. The app's own cues are a different thing and stay — they are synthesised, not recorded
+(`src/app/features/player/sound.ts`), and their switch lives in the account rather than over the
+clip, because it is a preference and not a control you reach for mid-set.
 
 ## Progress
 

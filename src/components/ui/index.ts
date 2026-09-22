@@ -44,6 +44,7 @@ export { Skeleton, type SkeletonProps } from './Skeleton';
 export { Slider, type SliderProps } from './Slider';
 export { Spinner, type SpinnerProps } from './Spinner';
 export { StatTile, type StatTileProps, type StatTrend } from './StatTile';
+export { Switch, type SwitchProps } from './Switch';
 export { Tabs, tabPanelId, type TabItem, type TabsProps } from './Tabs';
 export { Textarea, type TextareaProps } from './Textarea';
 export {
