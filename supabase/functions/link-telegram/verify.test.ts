@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { dataCheckString, digestMatches, sign, verifyInitData } from './verify';
+import {
+  MAX_AGE_SEC,
+  checkInitData,
+  dataCheckString,
+  digestMatches,
+  sign,
+  verifyInitData,
+} from './verify';
 
 const TOKEN = '1234567890:AAH-test-bot-token';
 const NOW = 1_780_000_000;
@@ -116,5 +123,38 @@ describe('verifyInitData', () => {
     const initData = await launch({ auth_date: String(NOW), user: USER });
     const upper = initData.replace(/hash=([0-9a-f]+)/, (_, h: string) => `hash=${h.toUpperCase()}`);
     await expect(verifyInitData(upper, TOKEN, NOW)).resolves.not.toBeNull();
+  });
+});
+
+describe('checkInitData', () => {
+  /*
+   * Ради этого всё и затевалось: отказ должен называть себя. Одно слово «не верю» на все причины
+   * стоило часов гадания на пустом журнале — «подпись не та» и «строка просрочена» выглядели
+   * одинаково, а чинятся совершенно по-разному.
+   */
+  it('names the signature when the token is not the right bot', async () => {
+    const res = await checkInitData(await launch({ user: USER, auth_date: String(NOW) }), 'другой');
+    expect(res.ok).toBe(false);
+    expect(res.ok === false && res.reason).toBe('signature');
+  });
+
+  it('names staleness, and says how stale, when the signature is fine', async () => {
+    const data = await launch({ user: USER, auth_date: String(NOW) });
+    const res = await checkInitData(data, TOKEN, NOW + MAX_AGE_SEC + 61);
+    expect(res.ok).toBe(false);
+    expect(res.ok === false && res.reason).toBe('stale');
+    expect(res.ok === false && res.ageSec).toBe(MAX_AGE_SEC + 61);
+  });
+
+  it('tells a missing hash from a wrong one', async () => {
+    const res = await checkInitData(`user=${encodeURIComponent(USER)}&auth_date=${NOW}`, TOKEN);
+    expect(res.ok === false && res.reason).toBe('no-hash');
+  });
+
+  it('hands back the data when everything checks out', async () => {
+    const data = await launch({ user: USER, auth_date: String(NOW) });
+    const res = await checkInitData(data, TOKEN, NOW + 5);
+    expect(res.ok).toBe(true);
+    expect(res.ok === true && res.data.userId).toBe(77123);
   });
 });

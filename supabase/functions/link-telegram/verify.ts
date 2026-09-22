@@ -76,8 +76,74 @@ export function digestMatches(a: string, b: string): boolean {
 }
 
 /**
- * Разобрать и проверить строку запуска. `null` — значит «не верю», и звать это надо именно так:
- * причина отказа наружу не выходит, потому что снаружи она подсказка подбирающему.
+ * Почему не поверили. Наружу не уходит никогда — только в журнал функции.
+ *
+ * Одно слово «не верю» на все причины уже обошлось дорого: отказ выглядел одинаково и когда
+ * подпись не та, и когда строка просто устарела, а чинится это совершенно по-разному.
+ */
+export type Refusal =
+  /** Нет `hash` — это вообще не строка запуска телеграма. */
+  | 'no-hash'
+  /** Подпись не сошлась: чаще всего токен в секрете не от того бота, чей мини-апп открыли. */
+  | 'signature'
+  /** `auth_date` отсутствует или не число. */
+  | 'no-auth-date'
+  /** Подпись верна, но строке больше `MAX_AGE_SEC`: окно телеграма живёт дольше самой строки. */
+  | 'stale'
+  /** Подпись верна, а `user.id` не читается. */
+  | 'user';
+
+export type Checked =
+  | { ok: true; data: InitData }
+  /** `ageSec` есть только у `stale`: в журнал уходит возраст в секундах и больше ничего. */
+  | { ok: false; reason: Refusal; ageSec?: number };
+
+/**
+ * Проверить строку запуска и **сказать, что именно не так**.
+ *
+ * Причина нужна тому, кто чинит, и не нужна тому, кто стучится: наружу по-прежнему уходит одно
+ * `{ linked: false }` без подробностей (`index.ts`), потому что снаружи причина отказа — подсказка
+ * подбирающему.
+ *
+ * `nowSec` параметром, а не `Date.now()`, чтобы возраст проверялся тестом, а не ожиданием.
+ */
+export async function checkInitData(
+  initData: string,
+  botToken: string,
+  nowSec: number = Math.floor(Date.now() / 1000),
+  maxAgeSec: number = MAX_AGE_SEC,
+): Promise<Checked> {
+  if (!initData || !botToken) return { ok: false, reason: 'no-hash' };
+
+  const params = new URLSearchParams(initData);
+  const hash = params.get('hash');
+  if (!hash) return { ok: false, reason: 'no-hash' };
+
+  const expected = await sign(initData, botToken);
+  if (!digestMatches(expected, hash.toLowerCase())) return { ok: false, reason: 'signature' };
+
+  const authDate = Number(params.get('auth_date'));
+  if (!Number.isFinite(authDate) || authDate <= 0) return { ok: false, reason: 'no-auth-date' };
+  // Обе стороны: строка из будущего — это часы, которым нельзя верить, а значит и подписи под ними.
+  if (Math.abs(nowSec - authDate) > maxAgeSec) {
+    return { ok: false, reason: 'stale', ageSec: nowSec - authDate };
+  }
+
+  let userId = 0;
+  try {
+    const user = JSON.parse(params.get('user') ?? 'null') as { id?: unknown } | null;
+    userId = typeof user?.id === 'number' ? user.id : Number(user?.id);
+  } catch {
+    return { ok: false, reason: 'user' };
+  }
+  // Целое и положительное: id телеграма влезает в двойную точность, но дробей среди них нет.
+  if (!Number.isSafeInteger(userId) || userId <= 0) return { ok: false, reason: 'user' };
+
+  return { ok: true, data: { userId, authDate } };
+}
+
+/**
+ * То же самое, ответом «да или нет» — для тех, кому причина не нужна.
  *
  * `nowSec` параметром, а не `Date.now()`, чтобы возраст проверялся тестом, а не ожиданием.
  */
@@ -87,29 +153,6 @@ export async function verifyInitData(
   nowSec: number = Math.floor(Date.now() / 1000),
   maxAgeSec: number = MAX_AGE_SEC,
 ): Promise<InitData | null> {
-  if (!initData || !botToken) return null;
-
-  const params = new URLSearchParams(initData);
-  const hash = params.get('hash');
-  if (!hash) return null;
-
-  const expected = await sign(initData, botToken);
-  if (!digestMatches(expected, hash.toLowerCase())) return null;
-
-  const authDate = Number(params.get('auth_date'));
-  if (!Number.isFinite(authDate) || authDate <= 0) return null;
-  // Обе стороны: строка из будущего — это часы, которым нельзя верить, а значит и подписи под ними.
-  if (Math.abs(nowSec - authDate) > maxAgeSec) return null;
-
-  let userId = 0;
-  try {
-    const user = JSON.parse(params.get('user') ?? 'null') as { id?: unknown } | null;
-    userId = typeof user?.id === 'number' ? user.id : Number(user?.id);
-  } catch {
-    return null;
-  }
-  // Целое и положительное: id телеграма влезает в двойную точность, но дробей среди них нет.
-  if (!Number.isSafeInteger(userId) || userId <= 0) return null;
-
-  return { userId, authDate };
+  const checked = await checkInitData(initData, botToken, nowSec, maxAgeSec);
+  return checked.ok ? checked.data : null;
 }

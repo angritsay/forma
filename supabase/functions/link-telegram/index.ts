@@ -19,7 +19,7 @@
  * тому, кто подбирает, а внутрь и так пишется в лог.
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { verifyInitData } from './verify.ts';
+import { checkInitData } from './verify.ts';
 import { CORS_HEADERS, preflight } from './cors.ts';
 
 function reply(status: number, body: Record<string, unknown>): Response {
@@ -58,11 +58,20 @@ Deno.serve(async (req) => {
   }
   if (!initData) return reply(400, { linked: false });
 
-  const verified = await verifyInitData(initData, botToken);
-  if (!verified) {
-    console.warn('link-telegram: initData rejected');
+  /*
+   * Причина отказа — в журнал, и только туда. Наружу по-прежнему уходит одно `{ linked: false }`:
+   * снаружи причина работает подсказкой тому, кто подбирает.
+   *
+   * В журнале нет ничего личного: вид отказа и, у просроченной строки, её возраст в секундах.
+   * Ни id, ни почты, ни самой строки запуска.
+   */
+  const checked = await checkInitData(initData, botToken);
+  if (!checked.ok) {
+    const age = checked.ageSec === undefined ? '' : ` (${checked.ageSec}s old)`;
+    console.warn(`link-telegram: initData rejected — ${checked.reason}${age}`);
     return reply(403, { linked: false });
   }
+  const verified = checked.data;
 
   const admin = createClient(
     Deno.env.get('SUPABASE_URL')!,
