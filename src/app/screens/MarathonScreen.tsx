@@ -55,6 +55,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Glyph } from '@/components/ui/Icon';
 import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { PROOFS_BUCKET, proofMediaPath, sendProof } from '@/lib/api/marathon';
@@ -65,6 +66,7 @@ import { downscaleImage, extensionFor, isVideoFile, MAX_VIDEO_BYTES } from '@/li
 import { useT } from '@/app/hooks/useT';
 import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { BoardGap, BoardRow } from '@/app/features/marathon/BoardRow';
+import { ClubDuoPair } from '@/app/features/marathon/ClubDuoPair';
 import { ClubPitch } from '@/app/features/marathon/ClubPitch';
 import { ClubStreak } from '@/app/features/marathon/ClubStreak';
 import { ClubWinner } from '@/app/features/marathon/ClubWinner';
@@ -95,7 +97,32 @@ export default function MarathonScreen() {
   const newestPurchaseAt = useSession((s) => s.newestPurchaseAt);
   const navigate = useNavigate();
   const toast = useToast();
-  const { marathon, status: marathonStatus, error, reload: reloadMarathon } = useMyMarathons();
+  const {
+    soloClub,
+    duoClub,
+    marathon: anyRound,
+    status: marathonStatus,
+    error,
+    reload: reloadMarathon,
+  } = useMyMarathons();
+
+  /*
+   * Соло или дуо — два вида одного клуба, и переключатель между ними это и есть «вторая вкладка»
+   * из задания владельца. Подписка одна на оба («подписка единая на оба клуба, поэтому все
+   * пользователи могут участвовать как в соло-режиме, так и дуо»), поэтому это переключатель
+   * внутри экрана, а не вторая вкладка в нижней панели: выбирают не продукт, а режим.
+   *
+   * Начинаем с соло. Он есть у всех и всегда, а дуо на первой неделе — это ещё и баннер «пары
+   * пока нет»: открывать вкладку клуба на нём значило бы встречать человека сообщением о том,
+   * чего у него нет.
+   *
+   * Дуо-круга может не быть вовсе — до того, как применена 0033. Тогда переключателя нет и экран
+   * ровно такой, каким был; это не поломка, а состояние базы.
+   */
+  const [mode, setMode] = useState<'solo' | 'duo'>('solo');
+  const duo = mode === 'duo' && duoClub !== null;
+  /* Закрытый круг, который тренер ведёт руками, клубом не является — он приезжает в `anyRound`. */
+  const marathon = duo ? duoClub : (soloClub ?? anyRound);
   const dayIndex = marathon?.dayIndex ?? 0;
   const { data: tasks, status, reload } = useMarathonDay(marathon, dayIndex);
   const { data: scores, reload: reloadScores } = useMarathonScores(
@@ -285,6 +312,23 @@ export default function MarathonScreen() {
 
   return page(
     <div className="flex flex-col gap-6 pt-5 pb-4">
+      {/*
+       * Переключатель режима — над всем остальным, потому что он меняет всё остальное: задание,
+       * доску и то, с кем ты его делаешь. Рисуется, только когда дуо-круг заведён.
+       */}
+      {duoClub ? (
+        <SegmentedControl<'solo' | 'duo'>
+          value={mode}
+          onChange={setMode}
+          options={[
+            { value: 'solo', label: t('app.clubTabSolo') },
+            { value: 'duo', label: t('app.clubTabDuo') },
+          ]}
+        />
+      ) : null}
+
+      {/* Кто с тобой на этой неделе — первое, что видно в дуо, и только в нём. */}
+      {duo ? <ClubDuoPair onChanged={reload} /> : null}
       {/*
        * The task and the table, side by side from `md`.
        *

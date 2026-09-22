@@ -938,6 +938,19 @@ export const app = {
   marathonWeekThis: 'This week',
   marathonWeekLast: 'Last week',
   marathonPrizeShort: 'Prize',
+  // The duo club (0033, 0034). Solo and duo are two shapes of one club, not two products: one
+  // subscription, and you are in both.
+  clubTabSolo: 'Solo',
+  clubTabDuo: 'Duo',
+  duoMateAuto: 'Matched for this week',
+  duoMateChosen: 'The two of you, by invitation',
+  duoLeave: 'Split up',
+  duoNoneTitle: 'No partner yet',
+  duoNoneBody:
+    'On Monday we will match you with someone — and again every week after. Or invite a friend yourself: then you stay together until you decide otherwise.',
+  duoInvite: 'Invite a friend',
+  duoInviteTitle: 'Come do the club with me',
+  duoInviteCopied: 'Link copied',
   marathonBoardAll: 'Full board',
   marathonHomeCta: 'Open the club',
   marathonHomeTasksLeft: '{n} left today',

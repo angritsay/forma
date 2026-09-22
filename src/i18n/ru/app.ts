@@ -965,6 +965,19 @@ export const app = {
   marathonWeekLast: 'Прошлая неделя',
   // On the pill above the board: «Приз · Час с тренером».
   marathonPrizeShort: 'Приз',
+  // Дуо-клуб (0033, 0034). Соло и дуо — два вида одного клуба, а не два продукта: подписка одна,
+  // и участвуешь ты в обоих.
+  clubTabSolo: 'Соло',
+  clubTabDuo: 'Дуо',
+  duoMateAuto: 'Подобрали на эту неделю',
+  duoMateChosen: 'Вы вдвоём по приглашению',
+  duoLeave: 'Разойтись',
+  duoNoneTitle: 'Пары пока нет',
+  duoNoneBody:
+    'В понедельник подберём напарника — и так каждую неделю. Или позови подругу сама: тогда вы останетесь вместе, пока не решите иначе.',
+  duoInvite: 'Позвать подругу',
+  duoInviteTitle: 'Давай в клуб вдвоём',
+  duoInviteCopied: 'Ссылка скопирована',
   marathonBoardAll: 'Вся таблица',
   marathonHomeCta: 'Открыть клуб',
   marathonHomeTasksLeft: 'Осталось заданий: {n}',

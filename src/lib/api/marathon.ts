@@ -11,9 +11,10 @@
  */
 import { supabase } from './client';
 import { demo } from './demo/load';
-import { guard, requireUser, unwrap } from './internal';
+import { guard, requireUser, unwrap, unwrapVoid } from './internal';
 import { isDemo } from './mode';
 import type {
+  ClubDuoStatus,
   ClubWinner,
   MarathonDayPoints,
   MarathonRosterRow,
@@ -429,5 +430,94 @@ export async function getClubWinner(): Promise<ClubWinner | null> {
       announcedAt: r.announced_at,
       isMe: r.is_me === true,
     };
+  });
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * Дуо-клуб: пара, приглашение, расставание (0033, 0034)
+ * ------------------------------------------------------------------------------------------- */
+
+/**
+ * Состояние пары одним запросом: есть ли она, кто в ней, сама ли собралась, и какую ссылку
+ * показывать, если пары нет.
+ *
+ * `null` — это не ошибка и почти всегда так и есть: человек без подписки в дуо-круге не состоит,
+ * и функция честно не возвращает ни строки. Экран на это рисует предложение вступить, а не сбой.
+ *
+ * Почты здесь нет ни своей, ни чужой — этого не отдаёт и сама функция. Напарница приходит именем и
+ * зерном аватара, то есть ровно тем, чем её рисуют; адрес её знать незачем, а показать случайно
+ * было бы можно.
+ */
+export async function getClubDuoStatus(): Promise<ClubDuoStatus | null> {
+  if (isDemo()) return (await demo()).getClubDuoStatus();
+  return guard(async () => {
+    await requireUser();
+    const rows = unwrap<
+      {
+        marathon_id: string;
+        member_id: string;
+        team_id: string | null;
+        is_auto: boolean;
+        mate_name: string | null;
+        mate_seed: string | null;
+        invite_token: string | null;
+      }[]
+    >(await supabase().rpc('club_duo_status'));
+    const r = rows[0];
+    if (!r) return null;
+    return {
+      marathonId: r.marathon_id,
+      memberId: r.member_id,
+      teamId: r.team_id,
+      isAuto: r.is_auto === true,
+      // Имя напарницы приходит только вместе с ней: нет пары — нет и строки.
+      mateName: r.team_id && r.mate_name ? r.mate_name : null,
+      mateSeed: r.mate_seed ?? '',
+      inviteToken: r.invite_token,
+    };
+  });
+}
+
+/**
+ * Ссылка-приглашение для подруги. Второй вызов отдаёт тот же токен, что и первый.
+ *
+ * Это решение базы, а не экрана, и оно важное: «поделиться ссылкой» нажимают по многу раз, и
+ * каждая новая ссылка обесценивала бы предыдущую — ту, которую уже отправили в переписке.
+ */
+export async function createClubInvite(): Promise<string> {
+  if (isDemo()) return (await demo()).createClubInvite();
+  return guard(async () => {
+    await requireUser();
+    return unwrap<string>(await supabase().rpc('club_invite_create'));
+  });
+}
+
+/**
+ * Принять приглашение. Возвращает id получившейся пары.
+ *
+ * Отказы приходят кодами (`no_subscription`, `invite_used`, `invite_expired`, `invite_own`,
+ * `inviter_not_in_club`…), и разбирает их экран: каждый из них — это своя фраза человеку, а не
+ * «что-то пошло не так». Принятое приглашение расторгает прежние пары обеих сторон — то есть
+ * подруга всегда выигрывает у автоподбора, и это тоже решает база.
+ */
+export async function redeemClubInvite(token: string): Promise<string> {
+  if (isDemo()) return (await demo()).redeemClubInvite(token);
+  return guard(async () => {
+    await requireUser();
+    return unwrap<string>(await supabase().rpc('club_invite_redeem', { p_token: token }));
+  });
+}
+
+/**
+ * Расторгнуть пару.
+ *
+ * Оставшийся без пары попадает в общий котёл и в понедельник получит нового напарника — того же,
+ * что все без пары. Отдельного «ушла» состояния нет: пары нет, и всё.
+ */
+export async function breakClubDuo(teamId: string): Promise<void> {
+  if (isDemo()) return (await demo()).breakClubDuo(teamId);
+  return guard(async () => {
+    await requireUser();
+    unwrapVoid(await supabase().rpc('club_duo_break', { p_team_id: teamId }));
   });
 }

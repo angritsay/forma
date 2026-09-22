@@ -799,6 +799,28 @@ export interface CoachBooking {
  * Never an email: the winner is announced to the whole club, and the roster has never carried an
  * address for the same reason.
  */
+/**
+ * Состояние пары в дуо-клубе (`club_duo_status()`, 0034).
+ *
+ * Почты здесь нет намеренно — ни своей, ни напарницы: экрану нужно имя и аватар, а адрес,
+ * оказавшись в ответе, рано или поздно оказался бы и на экране.
+ *
+ * `teamId === null` — пары ещё нет, и это обычное состояние первой недели, а не ошибка.
+ * `isAuto` различает две пары, которые выглядят одинаково: подобранную нами (её меняют каждый
+ * понедельник) и собранную по приглашению (её не трогают, пока сами не расторгнут).
+ */
+export interface ClubDuoStatus {
+  marathonId: string;
+  memberId: string;
+  teamId: string | null;
+  isAuto: boolean;
+  /** Имя напарницы, или null, если пары нет. */
+  mateName: string | null;
+  mateSeed: string;
+  /** Открытая ссылка-приглашение, если человек её уже заводил. */
+  inviteToken: string | null;
+}
+
 export interface ClubWinner {
   marathonId: string;
   /** Week number inside the club's own count, the one `marathon_scores` takes. */
