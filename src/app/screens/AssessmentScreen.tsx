@@ -28,7 +28,7 @@
  * against. A record that fails to save must not cost the profile that has already been written,
  * so those are settled, not awaited-or-thrown.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -40,7 +40,12 @@ import { EXERCISE_BY_ID } from '@/content/registry';
 import { formatNumber } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
 import { AssessmentRunner } from '@/app/features/assessment/AssessmentRunner';
-import { AssessmentStrip } from '@/app/features/assessment/AssessmentStrip';
+import { AssessmentList } from '@/app/features/assessment/AssessmentList';
+import { assessmentDone, recordedMoves } from '@/app/features/assessment/recorded';
+import { ExercisePreview } from '@/app/features/path/ExercisePreview';
+import { listBenchmarks } from '@/lib/api/benchmarks';
+import type { BenchmarkSeries } from '@/lib/api/types';
+import type { PrescribedItem } from '@/lib/training/types';
 import {
   answersComplete,
   assessmentBenchmarks,
@@ -73,6 +78,51 @@ export default function AssessmentScreen() {
   const [phase, setPhase] = useState<Phase>('intro');
   const [answers, setAnswers] = useState<AssessmentAnswers>(emptyAnswers);
   const [saving, setSaving] = useState(false);
+  /*
+   * Уже сданное. Два источника — профиль и замеры, — потому что пять движений сохраняются в два
+   * разных места; сводит их `recordedMoves`.
+   *
+   * Сбой запроса не пустой экран: профиль уже в сессии, и три движения из пяти видны и без
+   * замеров. Пустой список замеров означает «ещё не сдавал», и ровно так же он выглядит у того,
+   * кто правда не сдавал, — путаницы это не создаёт, потому что ни то ни другое ничего не
+   * запрещает.
+   */
+  const [benchmarks, setBenchmarks] = useState<BenchmarkSeries[]>([]);
+  /** Движение, открытое крупно поверх экрана. */
+  const [preview, setPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    listBenchmarks()
+      .then((b) => alive && setBenchmarks(b))
+      .catch(() => alive && setBenchmarks([]));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const rows = useMemo(
+    () => recordedMoves(trainingProfile, benchmarks),
+    [trainingProfile, benchmarks],
+  );
+  const done = assessmentDone(rows);
+
+  /*
+   * Карточка движения ждёт `PrescribedItem` — то же, что в плане тренировки, и тем же компонентом.
+   * Здесь ни цели, ни отдыха нет: тест ничего не предписывает, он спрашивает.
+   */
+  const previewItem: PrescribedItem | null = preview
+    ? {
+        exerciseId: preview,
+        originalExerciseId: preview,
+        substituted: false,
+        unit: 'reps',
+        target: 0,
+        perSide: false,
+        restAfterSec: 0,
+        estimatedSec: 0,
+      }
+    : null;
 
   const close = () => navigate(-1);
   const complete = useMemo(() => answersComplete(answers), [answers]);
@@ -195,37 +245,68 @@ export default function AssessmentScreen() {
       className={FLAT_HEADER}
       header={header}
       footer={
-        <div className="flex flex-col gap-2">
-          <Button size="lg" fullWidth onClick={() => setPhase('running')}>
-            {t('app.onbAssessWarnCta')}
+        /*
+         * Пройденный тест не предлагается пройти снова. Владелец: «выполнить заново нельзя после
+         * сохранения результата».
+         *
+         * Это не упрямство интерфейса, а честность числа. Индекс формы и уровень считаются по
+         * набору, от них зависит нагрузка следующих недель, и «перепройти, пока не понравится»
+         * превращает замер в то, что человек про себя хотел бы думать. Спросят снова — тогда и
+         * будет новое число, которому есть с чем сравниться.
+         *
+         * Кнопка «Позже» тоже уходит: откладывать нечего, и остаётся один выход — закрыть.
+         */
+        done ? (
+          <Button variant="ghost" size="lg" fullWidth onClick={close}>
+            {t('common.close')}
           </Button>
-          <Button variant="ghost" fullWidth onClick={close}>
-            {t('app.assessBannerLater')}
-          </Button>
-        </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <Button size="lg" fullWidth onClick={() => setPhase('running')}>
+              {t('app.onbAssessWarnCta')}
+            </Button>
+            <Button variant="ghost" fullWidth onClick={close}>
+              {t('app.assessBannerLater')}
+            </Button>
+          </div>
+        )
       }
     >
       <div className="flex flex-col gap-6 py-7">
-        {/*
-         * Which five, and in what order. «Нужно будет сказать, сколько раз ты выполнишь 5
-         * упражнений» is an abstraction until you see which five, and every frame here is the
-         * coach's own still for that movement — the same one the runner shows a second later.
-         */}
-        <AssessmentStrip />
         {/*
          * The one instruction everything the assessment produces depends on, in the owner's own
          * words and nothing more: «тут просто нужно сказать, что не выжимаем максимум… конец. Не
          * нужно bloat-нода текста». It cannot ride along with the movement — beside a clip nobody
          * reads anything — so it stands here, before the first one.
          */}
-        <Question text={t('app.onbAssessWarnTitle')} />
+        <Question text={t(done ? 'app.assessDoneHubTitle' : 'app.onbAssessWarnTitle')} />
+        {/*
+         * Что именно произойдёт. Экран объяснял «сколько будет движений» и «сколько это займёт»
+         * двумя пилюлями и не говорил главного: ничего не надо выполнять прямо сейчас, надо
+         * назвать числа. Владелец: «на этом экране нужно объяснить суть как выполнять и что надо
+         * будет выполнять». Одна фраза, потому что запрет на bloat никуда не делся.
+         */}
+        <p className="text-[15px] leading-relaxed text-muted">
+          {t(done ? 'app.assessDoneHubBody' : 'app.assessHow')}
+        </p>
         <div className="flex flex-wrap gap-2">
           <Pill>
             {t('app.onbAssessMoves', { n: formatNumber(locale, ASSESSMENT_MOVES.length) })}
           </Pill>
           <Pill>{t('common.minutesShort', { n: formatNumber(locale, ASSESSMENT_TOTAL_MIN) })}</Pill>
         </div>
+        {/*
+         * Хаб: пять движений и то, что по каждому уже записано. Заменил полоску из квадратиков —
+         * она отвечала только на «какие пять», а спрошено было про «планка ту ду, отжимания: 10».
+         */}
+        <AssessmentList rows={rows} onOpen={setPreview} />
+        {/*
+         * Тест повторяемый, и сказать об этом надо здесь. Иначе единственный вывод из «пройти
+         * заново нельзя» — что число записано навсегда, а это неправда: его спросят снова.
+         */}
+        <p className="text-[13px] leading-relaxed text-muted-2">{t('app.assessRepeats')}</p>
       </div>
+      <ExercisePreview item={previewItem} onClose={() => setPreview(null)} />
     </Screen>
   );
 }

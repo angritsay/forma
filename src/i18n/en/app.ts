@@ -130,6 +130,17 @@ export const app = {
   onbAssessCountLabel: 'Reps',
   onbAssessDoneTitle: 'Written down',
   onbAssessRetake: 'Do it again',
+  // The test screen as a hub: what will be asked, what is already in, and what comes round again.
+  assessHow:
+    'Nothing to perform right now. Recall or check how many you manage, and enter the numbers — one per movement.',
+  assessUnitReps: 'Reps',
+  assessUnitSeconds: 'Seconds',
+  assessTodo: 'To do',
+  assessRepeats:
+    'The test comes round again: we will ask for it when there is something to compare with.',
+  assessDoneHubTitle: 'Test taken',
+  assessDoneHubBody:
+    'The numbers are recorded and your load is built from them. They cannot be rewritten — the next measurement will be a new one, when we ask for it.',
   onbSaveError: 'Couldn’t save your profile. Check the connection and try again.',
 
   // Home
