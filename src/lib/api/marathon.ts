@@ -76,6 +76,11 @@ export interface DbMarathonSubmission {
   submitted_at: string;
   voided_at: string | null;
   void_reason: string | null;
+  // 0025. Optional on the wire: a database without that migration returns no such column, and the
+  // club must keep working there — every proof simply reads as a first attempt nobody has reviewed.
+  attempt?: number | null;
+  resubmitted_at?: string | null;
+  reviewed_at?: string | null;
 }
 
 /** numeric(10,2) arrives from PostgREST as a string. */
@@ -116,6 +121,9 @@ export function submissionFromDb(r: DbMarathonSubmission): MarathonSubmissionRow
     submittedAt: r.submitted_at,
     voidedAt: r.voided_at,
     voidReason: r.void_reason,
+    attempt: r.attempt ?? 1,
+    resubmittedAt: r.resubmitted_at ?? null,
+    reviewedAt: r.reviewed_at ?? null,
   };
 }
 
@@ -335,11 +343,14 @@ export async function getMarathonMyPoints(marathonId: string): Promise<MarathonD
 // --- writes ------------------------------------------------------------------
 
 /**
- * Send proof, or correct proof already sent. One row per (task, member), so this is an upsert.
+ * Send proof, correct proof already sent, or do the task again after the coach rejected it. One row
+ * per (task, member), so this is an upsert.
  *
  * The day, the marathon and the clock are all the server's: the guard trigger fills them from the
  * task and stamps `submitted_at` itself, which is what stops a phone clock from moving a proof
- * back into a day that has closed.
+ * back into a day that has closed. The same trigger reads the row that is already there to tell a
+ * correction from a redo, and lifts the rejection on a redo — see 0025_proof_review.sql. Nothing
+ * about the verdict is sent from here, because nothing about it is the client's to decide.
  */
 export async function sendProof(input: ProofInput): Promise<MarathonSubmissionRow> {
   if (isDemo()) return (await demo()).sendProof(input);

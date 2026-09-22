@@ -17,6 +17,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { useToast } from '@/components/ui/Toast';
 import { dayIndexOf } from '@/lib/marathon/score';
 import {
+  acceptProof,
   addMarathonAdjustment,
   addMarathonMember,
   copyDayTasks,
@@ -75,6 +76,7 @@ export default function AdminMarathonScreen() {
   const [proofs, setProofs] = useState<MarathonProofRow[]>([]);
   const [targets, setTargets] = useState<Map<string, MarathonTaskTarget[]>>(new Map());
   const [dayFilter, setDayFilter] = useState<number | null>(null);
+  const [needsReviewOnly, setNeedsReviewOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [day, setDay] = useState(1);
   const [editing, setEditing] = useState<MarathonTaskRow | null>(null);
@@ -129,10 +131,14 @@ export default function AdminMarathonScreen() {
   }, [admin, id, refresh, fail]);
 
   const reloadProofs = useCallback(() => {
-    listMarathonProofs({ marathonId: id, dayIndex: dayFilter ?? undefined })
+    listMarathonProofs({
+      marathonId: id,
+      dayIndex: dayFilter ?? undefined,
+      needsReviewOnly: needsReviewOnly || undefined,
+    })
       .then(setProofs)
       .catch(fail('app.mAdminLoadError'));
-  }, [id, dayFilter, fail]);
+  }, [id, dayFilter, needsReviewOnly, fail]);
 
   useEffect(() => {
     if (admin && id && tab === 'proofs') reloadProofs();
@@ -286,12 +292,18 @@ export default function AdminMarathonScreen() {
               today={today}
               dayFilter={dayFilter}
               onDayFilter={setDayFilter}
+              needsReviewOnly={needsReviewOnly}
+              onNeedsReviewOnly={setNeedsReviewOnly}
               onVoid={async (proofId, reason) => {
                 await voidProof(proofId, reason).catch(fail('app.mAdminSaveError'));
                 reloadProofs();
               }}
               onRestore={async (proofId) => {
                 await restoreProof(proofId).catch(fail('app.mAdminSaveError'));
+                reloadProofs();
+              }}
+              onAccept={async (proofId) => {
+                await acceptProof(proofId).catch(fail('app.mAdminSaveError'));
                 reloadProofs();
               }}
               onBonus={async (input) => {

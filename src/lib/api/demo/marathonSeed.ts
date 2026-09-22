@@ -218,6 +218,9 @@ export function seedMarathon(email: string, today = toLocalDateIso()): DemoMarat
         submittedAt: new Date(`${addDays(startsOn, day - 1)}T18:40:00`).toISOString(),
         voidedAt: null,
         voidReason: null,
+        attempt: 1,
+        resubmittedAt: null,
+        reviewedAt: null,
       });
     }
   }

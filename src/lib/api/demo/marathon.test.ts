@@ -177,6 +177,46 @@ describe('the demo marathon', () => {
     expect((await week1())?.points).toBe(before?.points);
   });
 
+  it('lets the athlete do a rejected task again, and puts it back in front of the coach', async () => {
+    await signIn();
+    const [marathon] = await demo.listMyMarathons();
+    if (!marathon) throw new Error('no marathon');
+    const week1 = () => demo.getMarathonScores(marathon.id, 1).then((r) => r.find((x) => x.isMine));
+    const queue = () => demo.listMarathonProofs({ marathonId: marathon.id, needsReviewOnly: true });
+
+    const before = await week1();
+    const [dayOne] = await demo.getMarathonDay(marathon, 1);
+    const mine = dayOne?.mine;
+    if (!dayOne || !mine) throw new Error('no proof to reject');
+
+    await demo.voidProof(mine.id, 'Не то видео, я всё вижу');
+    expect((await week1())?.points).toBe((before?.points ?? 0) - 10);
+    // A rejection is not a queue item: the coach is not waiting on it, the athlete is.
+    expect(await queue()).toHaveLength(0);
+
+    // The card the athlete is now looking at: the coach's words, and the task open again.
+    const rejected = (await demo.getMarathonDay(marathon, 1))[0]?.mine;
+    expect(rejected?.voidedAt).not.toBeNull();
+    expect(rejected?.voidReason).toBe('Не то видео, я всё вижу');
+
+    // Doing it again lifts the rejection, restores the points and keeps the hour it was first sent.
+    await demo.sendProof({ taskId: dayOne.task.id, memberId: marathon.memberId });
+    const redone = (await demo.getMarathonDay(marathon, 1))[0]?.mine;
+    expect(redone?.voidedAt).toBeNull();
+    expect(redone?.attempt).toBe(2);
+    expect(redone?.resubmittedAt).not.toBeNull();
+    expect(redone?.submittedAt).toBe(mine.submittedAt);
+    // His comment survives as the reason it was sent twice, and the points are back.
+    expect(redone?.voidReason).toBe('Не то видео, я всё вижу');
+    expect((await week1())?.points).toBe(before?.points);
+
+    // And it is waiting for him, until he leaves it standing.
+    expect((await queue()).map((p) => p.id)).toEqual([mine.id]);
+    await demo.acceptProof(mine.id);
+    expect(await queue()).toHaveLength(0);
+    expect((await week1())?.points).toBe(before?.points);
+  });
+
   it("adds the coach's manual points to my own row", async () => {
     await signIn();
     const [marathon] = await demo.listMyMarathons();

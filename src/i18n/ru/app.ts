@@ -936,6 +936,13 @@ export const app = {
   marathonProofTooBig: 'Файл больше {n} МБ. Сними покороче — 10–15 секунд обычно хватает.',
   marathonProofVoided: 'Не засчитано: {reason}',
   marathonProofCoachOnly: 'Видит только тренер',
+  // The coach's verdict on one attempt. It is his message, so it is his name over it and a way
+  // back under it — never a line of red saying the app has refused something.
+  marathonProofCoachNote: 'Сергей посмотрел',
+  marathonProofRejectedHint: 'Пока не засчитано. Задание можно выполнить заново.',
+  marathonProofRedo: 'Отправить заново',
+  marathonProofRedoMedia: 'Прислать новое видео или фото',
+  marathonProofResent: 'Отправлено заново — Сергей посмотрит',
   // The board
   marathonBoardEmpty: 'Пока никто не набрал баллов',
   marathonBoardYou: 'Ты',
@@ -1054,9 +1061,15 @@ export const app = {
   mAdminProofSeek: 'Место в видео',
   mAdminProofsAll: 'Все дни',
   mAdminVoid: 'Не засчитать',
-  mAdminVoidReason: 'Почему',
+  // Read by one person on their own screen, so the field asks for a message and not a code.
+  mAdminVoidReason: 'Комментарий участнику',
   mAdminVoided: 'Не засчитано',
   mAdminRestoreProof: 'Вернуть',
+  mAdminAcceptProof: 'Оставить как есть',
+  mAdminProofsNeedReview: 'Ждут проверки',
+  mAdminProofRedone: 'Переснято · попытка {n}',
+  mAdminProofPastNote: 'Было не засчитано: {reason}',
+  mAdminProofsNeedReviewEmpty: 'Никто ничего не переснимал',
   mAdminBonus: 'Начислить вручную',
   mAdminBonusPoints: 'Баллы (можно минус)',
   mAdminBonusReason: 'За что',
