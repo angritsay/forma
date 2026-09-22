@@ -1040,8 +1040,36 @@ selling in-app.
 
 **Signing in.** Email one-time codes work inside Telegram, but the person has to leave for their
 mail app and come back. One-tap sign-in from Telegram's own identity needs an Edge Function that
-verifies `initData` server-side and mints a Supabase session; not built yet, and worth doing only
-once Telegram proves to be a real channel.
+mints a Supabase session from a verified `initData`; not built yet, and worth doing only once
+Telegram proves to be a real channel. The verification half of it now exists — see below.
+
+### Who this person is in Telegram
+
+The bot cannot write to anybody until the app knows their Telegram account: it learns a chat id
+only from people who messaged it first, and the app knows an email. `link-telegram`
+(`supabase/functions/link-telegram/`) is the bridge, and `0026_telegram_link.sql` is where the
+answer is kept — one `profiles.telegram_id`.
+
+**The client never sends its own id.** It is right there in `Telegram.WebApp.initDataUnsafe`, and
+`unsafe` is not decoration: anybody can edit it in a debugger. Sending it would let any signed-in
+person claim somebody else's account and take over their notifications, payment messages included.
+So the app forwards the whole **signed** launch string, and the function checks the signature with
+the bot token — which only exists as a Supabase secret, never in this public repository.
+
+The column is not client-writable, and that is load-bearing: the column-level grant in
+`0001_init.sql` names the writable fields one by one, so a new column is out by default.
+`supabase/tests/83_telegram_link.sql` asserts it, because a property that holds by omission is one
+a future migration breaks silently.
+
+1. Apply `0026_telegram_link.sql` — Actions → Supabase apply → `migration`.
+2. Actions → Supabase apply → **`deploy-link`**. It refuses to deploy if `TELEGRAM_BOT_TOKEN` is
+   not already a Supabase secret (`deploy-bot` is what sets it), because without the token the
+   function can verify nothing and answers 503 to everyone.
+3. Open the app inside Telegram once, then run **`telegram-check`**. It prints how many people the
+   bot can reach — counts and one date, never an address or an id.
+
+People who never open the app from Telegram simply have no row here, and nothing is sent to them.
+That is the owner's decision and it is fine: «Это нормально».
 
 ---
 
@@ -1184,10 +1212,12 @@ apply → Run workflow**, pick a task:
 | `club-join`       | Puts the real testers in that week, reading their addresses from a secret.                  |
 | `email-templates` | Puts `supabase/templates/otp.html` into **both** Magic Link and Confirm signup (§3.2).      |
 | `deploy-bot`      | Deploys the `telegram-bot` function and sets its secrets (§7.6).                            |
+| `deploy-link`     | Deploys `link-telegram`, which attaches a Telegram account to a profile (§7.6).             |
 | `deploy-payments` | Deploys `prodamus-webhook`, checks its two secrets and probes the live address (§7.4).      |
 | `secrets-check`   | Read-only: which function secrets Supabase has, which are missing, which override the repo. |
 | `webhook-info`    | Read-only: what Telegram itself believes about the bot's webhook, and why delivery failed.  |
 | `payments-check`  | Read-only: how many payment notifications have arrived and whether the last one applied.    |
+| `telegram-check`  | Read-only: how many people have a Telegram account attached, so the bot can reach them.     |
 
 One secret makes it work: **`SUPABASE_ACCESS_TOKEN`** (Settings → Secrets and variables → Actions),
 a personal access token from <https://supabase.com/dashboard/account/tokens>. The project ref is

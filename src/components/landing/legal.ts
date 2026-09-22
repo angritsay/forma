@@ -150,6 +150,16 @@ export function privacyDocument(): LegalDocument {
             ru: 'Фотографии и видео, которые ты сам прикладываешь как подтверждение задания в клубе. Их видит только тренер.',
             en: 'Photos and videos you attach yourself as proof of a club task. Only the coach sees them.',
           },
+          /*
+           * Номер аккаунта в телеграме — персональные данные, и он появляется в базе сам, без
+           * единого действия человека: приложение открылось внутри телеграма — связка записалась.
+           * Именно поэтому сказать об этом надо здесь и прямо, а не считать, что «он же и так
+           * открыл нас из телеграма, значит знал».
+           */
+          {
+            ru: 'Номер твоего аккаунта в телеграме — если ты открываешь приложение внутри телеграма. Он нужен только затем, чтобы бот мог написать тебе про оплату и про то, что тренер выдал тренировку. Ни имени, ни телефона, ни переписки мы из телеграма не получаем.',
+            en: 'Your Telegram account number — if you open the app inside Telegram. It exists only so the bot can write to you about a payment or a workout the coach assigned. We receive no name, phone number or messages from Telegram.',
+          },
           {
             ru: 'Технические данные: время действий и данные сессии, необходимые для работы входа.',
             en: 'Technical data: timestamps of actions and the session data needed for sign-in to work.',

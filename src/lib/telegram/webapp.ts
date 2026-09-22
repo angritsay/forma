@@ -15,6 +15,14 @@
 /** The slice of the Telegram WebApp API this app uses. Hand-written: the SDK ships no types. */
 export interface TelegramWebApp {
   readonly version: string;
+  /**
+   * Подписанная строка запуска, как её выдал телеграм.
+   *
+   * Наружу уходит только целиком и только в `link-telegram`, которая проверяет подпись токеном
+   * бота. Разбирать её здесь и брать оттуда id нельзя: разобранная копия лежит рядом под именем
+   * `initDataUnsafe`, и `unsafe` там не для красоты — подделать её в отладчике умеет кто угодно.
+   */
+  readonly initData: string;
   readonly platform: string;
   readonly colorScheme: 'light' | 'dark';
   readonly viewportStableHeight?: number;
