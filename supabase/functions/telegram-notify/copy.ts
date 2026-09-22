@@ -23,7 +23,7 @@
  */
 
 /** Виды поводов, ровно как в `telegram_outbox.kind` (0027). */
-export type NotifyKind = 'course_paid' | 'subscription_paid' | 'workout_assigned';
+export type NotifyKind = 'course_paid' | 'subscription_paid' | 'workout_assigned' | 'weekly_winner';
 
 export interface OutboxRow {
   kind: string;
@@ -92,6 +92,27 @@ export function messageFor(row: OutboxRow): Message | null {
           'Она ждёт на вкладке «Курсы» и висит там, пока не выполнишь.',
         buttonText: OPEN_APP,
       };
+    }
+
+    case 'weekly_winner': {
+      /*
+       * Единственное сообщение здесь, которое не сообщает факт, а поздравляет.
+       *
+       * Приз — словами тренера, из самого круга: он может смениться, и бот не должен обещать час,
+       * если на этой неделе обещали другое. Нет приза — нет и строки про него: «ты победил» само
+       * по себе полное сообщение.
+       *
+       * «Напиши Сергею» в конце, потому что приз надо получить, а получить его можно только
+       * написав. Сообщение, которое поздравляет и не говорит, что делать дальше, оставляет
+       * человека ждать, пока про него вспомнят.
+       */
+      const prize = typeof params.prize === 'string' ? params.prize.trim() : '';
+      const note = typeof params.note === 'string' ? params.note.trim() : '';
+      const lines = ['<b>Ты победил на этой неделе 🏆</b>'];
+      if (note) lines.push(`«${escapeHtml(note.slice(0, 300))}»`);
+      if (prize) lines.push(`Твой приз: ${escapeHtml(prize.slice(0, 200))}.`);
+      lines.push('Напиши Сергею, чтобы договориться, — он ждёт.');
+      return { text: lines.join('\n\n'), buttonText: OPEN_APP };
     }
 
     default:

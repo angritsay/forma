@@ -210,5 +210,57 @@ declare v_blocked boolean := false; begin
   assert v_blocked, 'рядом лежит member_id — читать таблицу напрямую нельзя';
 end $$;
 
+-- --- объявление становится сообщением в боте (0029) ------------------------------
+--
+-- Стык двух машин: 0028 объявляет, 0027 отправляет. Проверяется то, что легко
+-- сломать при следующей правке любой из них.
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000e0', 'winner-admin@example.com');
+do $$
+declare i record; begin
+  select * into i from win_ids;
+  -- Неделя 5, чтобы не пересекаться с тем, что объявлено выше.
+  perform public.admin_set_winner(i.club, 5, i.m1, 'неделя без пропусков');
+  perform public.admin_set_winner(i.club, 5, i.m1, 'поправил заметку');
+  -- Передумал: победа уходит другому.
+  perform public.admin_set_winner(i.club, 5, i.m2, 'всё-таки она');
+end $$;
+
 select pg_temp.as_super();
+do $$
+declare i record; v_n int; v_key text; begin
+  select * into i from win_ids;
+  -- Считаем только пятую неделю: выше по файлу тот же человек объявлялся за
+  -- первую и вторую, и это тоже поводы — просто другие.
+  v_key := 'weekly_winner:' || i.club::text || ':5:';
+
+  -- Настя: одно сообщение, хотя объявляли её дважды (второй раз — правка заметки).
+  select count(*) into v_n from public.telegram_outbox
+   where dedupe_key = v_key || i.m1::text;
+  assert v_n = 1, 'повторное объявление того же человека не удваивает, получили ' || v_n::text;
+
+  -- Второй участник: своё сообщение, потому что теперь победитель он.
+  select count(*) into v_n from public.telegram_outbox
+   where dedupe_key = v_key || i.m2::text;
+  assert v_n = 1, 'новому победителю сообщение уходит, получили ' || v_n::text;
+
+  /*
+   * И ничего не отзывается у прежнего: его строка по-прежнему ждёт отправки.
+   * Телеграм не умеет забирать отправленное, а «извини, не ты» роботом — это то,
+   * что тренер должен сказать сам.
+   */
+  assert (select status from public.telegram_outbox where dedupe_key = v_key || i.m1::text)
+         = 'pending',
+    'у прежнего победителя ничего не отзывается';
+
+  -- Приз круга едет в параметрах: текст подставит отправитель.
+  assert (select params ->> 'prize' from public.telegram_outbox
+           where dedupe_key = v_key || i.m2::text) = 'Час с Сергеем',
+    'приз должен попасть в параметры';
+
+  -- Сутки, а не трое: поздравление на третий день поздравлением не является.
+  assert (select expires_at - send_after from public.telegram_outbox
+           where dedupe_key = v_key || i.m2::text) <= interval '1 day',
+    'у поздравления срок сутки';
+end $$;
+
 select 'ok 85_weekly_winner';

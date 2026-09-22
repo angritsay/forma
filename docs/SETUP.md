@@ -1074,8 +1074,16 @@ That is the owner's decision and it is fine: «Это нормально».
 ### What the bot writes, and when
 
 `telegram_outbox` (`0027_telegram_outbox.sql`) is a queue. The database records the **occasion**;
-`telegram-notify` turns it into a message and sends it. Three occasions so far: a course paid, a
-subscription paid, a workout assigned.
+`telegram-notify` turns it into a message and sends it. Four occasions so far: a course paid, a
+subscription paid, a workout assigned, and the winner of a club week (`0029_winner_message.sql`).
+
+The winner's message is the one that would otherwise not arrive at all. A payment is visible the
+moment they open the app; a win is not — the strip on the club tab is seen only by whoever looked
+that day, and the prize has to be claimed by writing to the coach. So that message congratulates,
+names the prize in his words, and says what to do next.
+
+Changing the winner writes a message to the new one and never un-sends to the old. Telegram cannot
+take a message back, and «извини, не ты» from a robot is something the coach should say himself.
 
 Nothing sends from inside a transaction, and that is deliberate. The bot token is a Supabase secret
 and cannot live in the database; a slow Telegram would hold open — or roll back — the transaction
