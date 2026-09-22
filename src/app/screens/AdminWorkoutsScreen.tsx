@@ -78,9 +78,19 @@ export default function AdminWorkoutsScreen() {
       const w = await getCustomWorkout(id);
       setEditing({
         id,
+        /*
+         * Всё, что у строки есть, а не половина.
+         *
+         * Английские половины сюда не клались, а `onSave` пишет то, что пришло из редактора, —
+         * то есть открыть переведённую тренировку и нажать «Сохранить» значило стереть перевод.
+         * Молча: на экране его и не было видно, потому что он не загрузился.
+         */
         input: {
           title: w.title,
+          titleEn: w.titleEn,
           description: w.description,
+          descriptionEn: w.descriptionEn,
+          authorSlug: w.authorSlug,
           structure: w.structure as CustomWorkoutStructure,
         },
       });
@@ -135,6 +145,7 @@ export default function AdminWorkoutsScreen() {
                 initialTitleEn: editing.input.titleEn,
                 initialDescription: editing.input.description,
                 initialDescriptionEn: editing.input.descriptionEn,
+                initialAuthorSlug: editing.input.authorSlug,
                 initialStructure: editing.input.structure,
               })}
           saving={saving}

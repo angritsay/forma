@@ -17,7 +17,9 @@ import { Glyph } from '@/components/ui/Icon';
 import { IconButton } from '@/components/ui/IconButton';
 import { Input } from '@/components/ui/Input';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { Select } from '@/components/ui/Select';
 import type { CustomWorkoutInput } from '@/lib/api/customWorkouts';
+import { AUTHORS } from '@content/site/authors';
 import type { ExerciseCatalogRow } from '@/lib/api/types';
 import type {
   CustomSectionKind,
@@ -60,6 +62,8 @@ export interface WorkoutEditorProps {
   initialTitleEn?: string | null;
   initialDescription?: string | null;
   initialDescriptionEn?: string | null;
+  /** Чей это труд. Пусто у новой — тогда подставляется первый из списка. */
+  initialAuthorSlug?: string | null;
   initialStructure?: CustomWorkoutStructure;
   saving: boolean;
   onSave: (input: CustomWorkoutInput) => void;
@@ -119,17 +123,24 @@ export function WorkoutEditor({
   initialTitleEn = '',
   initialDescription = '',
   initialDescriptionEn = '',
+  initialAuthorSlug,
   initialStructure,
   saving,
   onSave,
   onCancel,
 }: WorkoutEditorProps) {
-  const { t } = useT();
+  const { t, l } = useT();
   // Новая тренировка собирается по-русски: русское название обязательно, переводить пока нечего.
   const isNew = !initialTitle;
   const editing = useEditingLocale(isNew);
   const [title, setTitle] = useState(initialTitle);
   const [titleEn, setTitleEn] = useState(initialTitleEn ?? '');
+  /*
+   * Автор — не тот, кто вошёл. Владелец будет заводить тренировки инструктора по йоге со своего
+   * аккаунта, и «чей труд» из «кто сохранил» не выводится. У новой тренировки предлагается первый
+   * из списка (Сергей), потому что так оно и есть почти всегда, но это предложение, а не факт.
+   */
+  const [authorSlug, setAuthorSlug] = useState(initialAuthorSlug ?? AUTHORS[0]?.id ?? '');
   const [description, setDescription] = useState(initialDescription ?? '');
   const [descriptionEn, setDescriptionEn] = useState(initialDescriptionEn ?? '');
   const [sections, setSections] = useState<DraftSection[]>(() => emptySections(initialStructure));
@@ -221,6 +232,7 @@ export function WorkoutEditor({
     };
     onSave({
       title: title.trim(),
+      authorSlug: authorSlug || null,
       // Пустая половина — «не переведено», а не пустое название: приложение подставит русское.
       titleEn: titleEn.trim() || null,
       description: description.trim() || null,
@@ -269,6 +281,19 @@ export function WorkoutEditor({
           value={editing === 'en' ? descriptionEn : description}
           onChange={(e) => (editing === 'en' ? setDescriptionEn : setDescription)(e.target.value)}
         />
+        {/*
+          Рисуется, только когда авторов больше одного: выбор из одного варианта — это не выбор,
+          а лишнее поле в форме, которую и так заполняют каждый день.
+        */}
+        {AUTHORS.length > 1 ? (
+          <Select
+            wrapperClassName="lg:flex-1"
+            label={t('app.builderAuthor')}
+            value={authorSlug}
+            onChange={setAuthorSlug}
+            options={AUTHORS.map((a) => ({ value: a.id, label: l(a.name) }))}
+          />
+        ) : null}
       </div>
 
       {sections.map((section, sectionNo) => (

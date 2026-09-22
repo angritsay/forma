@@ -680,6 +680,8 @@ export const app = {
   builderPickExercise: 'Pick an exercise',
   builderSearchExercise: 'Search exercises',
   builderNoMatches: 'Nothing found',
+  // Whose work it is, not who pressed Save: the owner enters the yoga instructor's workouts.
+  builderAuthor: 'Author',
   builderTitle: 'Title',
   builderTitlePlaceholder: 'Workout title',
   builderDescription: 'Description',
