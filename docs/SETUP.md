@@ -23,7 +23,7 @@ visible to customers until replaced.
 | Support links                      | `content/site/links.ts`                          | `supportTelegram`, `supportEmail` (used when a course has no `paymentUrl`)                                                                                                                                                                                                                 |
 | Prices                             | `content/courses/<course>.ts` → `price`          | `{ rub, usd }` per course                                                                                                                                                                                                                                                                  |
 | Payment links                      | `content/courses/<course>.ts` → `paymentUrl`     | `{ ru, en }`, optional; see §7                                                                                                                                                                                                                                                             |
-| Paying from outside Russia         | `content/site/payments.ts`                       | **Outstanding.** `paypal` and `helpTelegram`, both full `https://` links. Every non-Russian "buy" button leads to `/en/checkout/`, which is built from this file; until it is filled the page can only say "write to us". The file's own header says what goes where. §7.7                 |
+| Paying from outside Russia         | `content/site/payments.ts` + `deploy-lava`       | **Outstanding.** A lava.top product link and id per course and per plan, then the secrets and the button. Until it is done, a non-Russian "buy" button leads to the support address. §7.9                                                                                                  |
 | Intro / exercise videos            | `content/courses/*.ts`, `content/exercises/*.ts` | `storage:videos/…` refs; see §5                                                                                                                                                                                                                                                            |
 | Sign-in montage                    | Storage: bucket `images`, path `site/auth.mp4`   | The reference in `content/site/media.ts` already points here. Until the file is uploaded to that exact path the sign-in screen shows the poster still — which is a working screen, not a broken one. §5                                                                                    |
 | Sign-in email templates            | **Actions → Supabase apply → `email-templates`** | One button: it PATCHes the Management API with `supabase/templates/otp.html` into **both** Magic Link and Confirm signup, subject included. This row used to say the dashboard was the only way and that only the owner could do it; both stopped being true when the task was added. §3.2 |
@@ -1285,34 +1285,79 @@ is built in the runner and never appears anywhere.
 What it cannot do: DNS (SPF/DKIM/DMARC live at the registrar), anything on Prodamus, and uploading
 video, which is not in this repository.
 
-## 7.9 Paying from outside Russia
+## 7.9 Paying from outside Russia: lava.top
 
-The till is Prodamus: Russian, in roubles, and it is the only one. The site and the app have been
-bilingual since the English release, so an English reader used to reach a "buy" button, press it,
-and land on a page they could neither read nor pay — at the exact moment they had decided to buy.
+The till is Prodamus: Russian, in roubles, and it only takes Russian cards. The site and the app
+have been bilingual since the English release, so an English reader used to reach a "buy" button,
+press it, and land on a page they could neither read nor pay.
 
-**Every non-Russian "buy" button now goes to `/en/checkout/` instead.** One function decides it for
-all four places that take money (`payRoute` in `src/lib/util/payment.ts`): the landing's order form,
-the course unlock sheet, the club's join button and the coach's booking. Nothing else in those
-screens changed, and a Russian reader's path is byte-for-byte what it was.
+The first answer was a page of instructions — a PayPal transfer, the sign-up email in the note,
+access opened by hand. It would have worked, and it cost five minutes of the owner's time per
+payment plus an email in a note as the only thread between money and person. She replaced it:
+«давай подключим лава топ вместо всех приколов с пейпалом и инструкциями».
 
-That page is built from **`content/site/payments.ts`**, which is yours to fill:
+**lava.top is a second till, not a replacement.** Prodamus keeps the rouble buyers, because it
+issues the receipts Russian retail requires. Moving those over too is a decision with accounting
+inside it, not a config change.
 
-- `paypal` — the full link, `https://paypal.me/…` or a payment page. Empty and the transfer block
-  is not drawn at all: half an instruction is worse than none.
-- `helpTelegram` — **your** Telegram, not Sergey's, as a full `https://t.me/…` link. This route has
-  no automation behind it, so somebody has to be reachable when it goes wrong.
-- `note` — optional, both languages, for anything of your own (a currency, a figure in dollars).
+### What connecting it takes
 
-**There is no webhook on this route.** Prodamus notifies `prodamus-webhook` and access opens by
-itself; PayPal knows nothing about Forma. So each of these payments is opened **by hand** in the
-admin («Покупки», «Подписки»), and the email in the transfer note is the only thing tying the money
-to a person — which is why the page asks for it twice, in the note and in the message.
+1. **Register at [lava.top](https://lava.top/) as a seller** and pass whatever verification they
+   ask for. Nothing below works until the account can actually take money.
+2. **Create one product per thing you sell** — each course, and the subscription. The subscription
+   is a recurring product with a period (monthly / 3 / 6 / 12), which is what makes renewals
+   arrive on their own.
+3. From each product take **two values**: its public link, and its id.
+4. **Put them in `content/site/payments.ts`** under our own key — `course:<course id>` or
+   `plan:<plan id>`. Both are public by nature; they belong in the repository and nothing else
+   does.
+5. **In the cabinet, under API**, take the **API key** and the **webhook secret**. Neither ever
+   goes into the repository, into chat, or into a workflow input — only into GitHub Actions
+   secrets as `LAVA_WEBHOOK_SECRET`, from where the button below moves them into Supabase.
+6. Add the secret **`LAVA_PRODUCTS`** as well: a JSON map from the lava product id to our key,
+   `{"<product id>":"course:start"}`. It lives as a secret rather than in code so renaming a
+   product in the cabinet does not wait for the site to be rebuilt.
+7. **Actions → Supabase apply → `deploy-lava`.** It deploys the function, moves the secrets over,
+   prints which are missing, and prints the address to paste back.
+8. **Paste that address into the cabinet** as the webhook URL:
+   `https://<project>.functions.supabase.co/lava-webhook?token=<WEBHOOK_TOKEN>`.
+9. **Buy something for the smallest amount you can, with a real card**, and check that the access
+   opened by itself. This is the step that matters — see the warning below.
 
-The page is `noindex` and deliberately out of the sitemap: it is for people who were sent there, not
-for search. `scripts/seo/lib.mjs` knows this (`isUnlisted`), so the audit checks its title,
-description, canonical and hreflang like any other page and does not report the two things that are
-on purpose.
+### The contract was reconstructed, so the first payment is the test
+
+lava.top's own documentation is unreachable from the environment this was written in, so the
+webhook's contract — the `signature` header, HMAC-SHA256 over the raw body, the event names —
+comes from their public SDK. It is very probably right, and it is not confirmed.
+
+The failure mode is safe by construction: a signature that does not match is a 403 and nothing is
+written. So if the contract is wrong, it looks like "payments do not arrive", never like "access
+opened for somebody who did not pay". If that first live payment does not open anything, the
+function's logs say whether the signature matched, and fixing it is a change in one file.
+
+### What the webhook does
+
+Two doors guard it, the same pair as Prodamus: the token in the URL and the HMAC signature. Either
+failing is a 403 with nothing written.
+
+Then `product.id` says what was bought — which Prodamus cannot do, because its short links drop
+the query parameters, and there the course has to be inferred from the single pending order.
+Renewals (`subscription.recurring.payment.success`) extend the subscription on their own. A refusal
+or a cancellation opens nothing: a cancelled subscription means "do not renew", and the paid period
+still has to run out.
+
+`contractId` is the idempotency key, so a notification delivered twice opens access once.
+
+A payment that matches no order is recorded rather than lost, exactly as with Prodamus, and waits
+for «Оплатил(а) с другой почты?» to attach it to a person.
+
+### While it is not configured
+
+A "buy" button on a non-Russian page leads where every unconfigured payment link in this product
+leads: to the support address. It does not fall back to the rouble till — that would restore the
+exact wall the second till exists to remove.
+
+---
 
 ---
 

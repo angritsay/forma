@@ -12,36 +12,6 @@ export const landing = {
   navMenu: 'Menu',
   skipToContent: 'Skip to content',
   navLanguage: 'Language',
-  /*
-   * Checkout for readers whose payment page does not exist: the processor is Russian and takes
-   * roubles, so English buyers get instructions and a person instead of a wall.
-   *
-   * The owner opens access by hand and it takes her about five minutes, so the promise here is an
-   * hour — her own words, with room in it. What the page must not do is promise more than the
-   * product does: the bot message is real (`purchases_notify` fires on the row changing, whoever
-   * changed it — 0027 says so by name), and an email after a purchase does not exist yet, so it is
-   * not mentioned. The bot sentence carries its own condition, because a buyer who arrived from
-   * the website has no Telegram linked and would otherwise be waiting for a message that cannot
-   * come.
-   */
-  checkoutTitle: 'How to pay from outside Russia',
-  checkoutLead:
-    'Our card processor works in roubles and only speaks Russian. Until that changes, here is the way round it — and it is a person on this end, not a queue.',
-  checkoutStep1: 'Send the payment',
-  checkoutStep1Body:
-    'Use the PayPal link below. In the note field, write the email address you signed up with — that address is what opens your access, and nothing else identifies the payment.',
-  checkoutStep2: 'Access opens within the hour',
-  checkoutStep2Body:
-    'The payment reaches us straight away and opening your access takes about five minutes, so it is usually much sooner. If you signed in through our Telegram bot, it will message you the moment it is done.',
-  checkoutStep3: 'Open the app',
-  checkoutStep3Body:
-    'Reload it and your course or subscription is there. If an hour has passed and it still is not, write to us — nobody here minds being asked twice.',
-  checkoutPaypal: 'Pay with PayPal',
-  checkoutWrite: 'Write to us',
-  checkoutNoPaypal:
-    'The transfer details are not published yet. Write to us and we will send them and open your access.',
-  checkoutNoHelp: 'Write to us at {email} and we will help.',
-  checkoutBackToCourses: 'Back to the courses',
   // Caption for the age mark in the footer: "18+" on its own is a number and says nothing to a
   // screen reader.
   footerAgeLabel: 'For adults',

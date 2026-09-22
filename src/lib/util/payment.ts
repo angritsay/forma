@@ -1,5 +1,4 @@
 import { DEFAULT_LOCALE, type Locale } from '@/content/schema';
-import { href } from './paths';
 
 /**
  * Following a payment link hands the visitor's email to a third party, so only an absolute
@@ -40,58 +39,54 @@ export function withEmail(target: URL, email: string): string {
  * Тот, кто не может заплатить в рублях
  * ------------------------------------------------------------------------------------------- */
 
-/** Страница с инструкцией для языков, у которых своей кассы нет. */
-export const CHECKOUT_PATH = '/checkout/';
-
-/** Путь к инструкции, с учётом языка и базового пути. */
-export function checkoutPath(locale: Locale): string {
-  return href(locale, CHECKOUT_PATH);
-}
-
-/** Нужна ли этому языку страница с инструкцией вместо кассы. */
-export function needsManualCheckout(locale: Locale): boolean {
+/** Нужна ли этому языку вторая касса вместо рублёвой. */
+export function needsForeignTill(locale: Locale): boolean {
   return locale !== DEFAULT_LOCALE;
 }
 
 /**
  * Куда ведёт «купить» — и чем это место является.
  *
- * `external` — настоящая касса (Prodamus): туда уходит почта, и её хост можно назвать в подписи
- * под кнопкой, потому что человек сейчас окажется на чужом сайте и должен узнать его имя.
+ * `till` — настоящая касса: туда уходит почта, и её хост можно назвать в подписи под кнопкой,
+ * потому что человек сейчас окажется на чужом сайте и должен узнать его имя. Касс две, и какая
+ * из них — решает язык: рубли идут в Prodamus, остальное в lava.top.
  *
- * `manual` — наша же страница `/en/checkout/`: перевод на PayPal, почта в комментарии, кнопка
- * «написать мне». Касса одна, она русская и в рублях, и английский читатель упирался в неё ровно
- * в тот момент, когда собрался платить.
- *
- * Два разных случая названы двумя разными вариантами, а не одним `URL` с догадками на месте
- * вызова, потому что различий ровно два и оба легко забыть: почту к нашей же странице
- * приписывать незачем (а ссылку с чужим адресом в строке ещё и перешлют), и её хост —
- * `forma-app.co` — в подписи «сейчас откроется …» звучит как ошибка.
+ * Это по-прежнему один тип, а не два: со стороны экрана обе кассы — «чужой сайт, куда уходят
+ * платить», и всё, что их различает, решено здесь.
  */
-export type PayRoute = { kind: 'external'; url: URL } | { kind: 'manual'; href: string };
+export type PayRoute = { kind: 'external'; url: URL };
 
 /**
- * Маршрут оплаты для этого языка, или `null`, если платить негде.
+ * Маршрут оплаты, или `null`, если платить негде.
  *
- * Ссылка на кассу проверяется первой и на всех языках: она же и есть признак того, что вещь
- * продаётся. Нет её — значит не продаётся никому, и английский читатель получает ровно тот же
- * запасной путь, что русский («написать тренеру», «страница подписок»), а не инструкцию, как
- * заплатить за то, чего нет.
+ * Русскому читателю — рублёвая касса, всем остальным — `foreignUrl`, ссылка на товар в lava.top
+ * из `content/site/payments.ts`. Нет её — нет и маршрута: кнопка «купить» тогда ведёт туда же,
+ * куда ведёт любая отсутствующая ссылка на оплату в этом продукте, к адресу поддержки. Раньше на
+ * этом месте была страница с инструкцией и переводом на PayPal; владелец заменила её кассой,
+ * потому что касса открывает доступ сама.
+ *
+ * Ссылка на рублёвую кассу проверяется первой и на всех языках: она же и есть признак того, что
+ * вещь продаётся. Нет её — значит не продаётся никому, и английский читатель получает тот же
+ * запасной путь, что русский, а не ссылку на товар, которого нет.
  */
-export function payRoute(locale: Locale, url: string | undefined): PayRoute | null {
-  const target = paymentTarget(url);
-  if (!target) return null;
-  if (needsManualCheckout(locale)) return { kind: 'manual', href: checkoutPath(locale) };
-  return { kind: 'external', url: target };
+export function payRoute(
+  locale: Locale,
+  url: string | undefined,
+  foreignUrl?: string | null,
+): PayRoute | null {
+  const rub = paymentTarget(url);
+  if (!rub) return null;
+  if (!needsForeignTill(locale)) return { kind: 'external', url: rub };
+  const foreign = paymentTarget(foreignUrl ?? undefined);
+  return foreign ? { kind: 'external', url: foreign } : null;
 }
 
-/** Адрес для перехода. Почта приписывается только к настоящей кассе. */
+/** Адрес для перехода, с почтой — она связывает платёж с человеком. */
 export function payHref(route: PayRoute, email = ''): string {
-  if (route.kind === 'manual') return route.href;
   return email ? withEmail(route.url, email) : route.url.href;
 }
 
-/** Хост, который честно назвать в подписи под кнопкой; для своей же страницы — `null`. */
+/** Хост, который честно назвать в подписи под кнопкой. */
 export function payHost(route: PayRoute): string | null {
-  return route.kind === 'external' ? route.url.host : null;
+  return route.url.host;
 }

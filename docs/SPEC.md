@@ -144,24 +144,26 @@ the Russian title he wrote. That is deliberate: `l10n()` in `src/lib/courses/dra
 rather than leaving a blank, because a title in the wrong language can still be navigated by and
 an empty one cannot.
 
-**The payment page.** Prodamus is Russian, in roubles, and it is not ours to translate — so the
-English reader is not sent there at all. Every non-Russian "buy" button goes to `/<lang>/checkout/`
-instead: a page of ours with a PayPal transfer, an instruction to put the sign-up email in the note,
-and a button that reaches a person. One function decides this for all four places that take money —
-`payRoute()` in `src/lib/util/payment.ts`, used by the landing's order form, the course unlock
-sheet, the club's join button and the coach's booking. It checks the till link first and in every
-language: no link means the thing is not on sale, and then nobody is given instructions for buying
-something that does not exist.
+**The payment page.** Prodamus is Russian, in roubles, and it only takes Russian cards — so the
+English reader is not sent there. There is a second till, lava.top, which takes foreign cards and
+sends a webhook, and `payRoute()` in `src/lib/util/payment.ts` picks between the two by the
+reader's language. All four places that take money go through it: the landing's order form, the
+course unlock sheet, the club's join button and the coach's booking.
 
-That route has **no webhook** — PayPal knows nothing about Forma — so access is opened by hand in
-the admin, and the email in the transfer note is the only thing tying money to a person. The page is
-`noindex` and out of the sitemap by design (`isUnlisted` in `scripts/seo/lib.mjs`), and what it
-shows comes from `content/site/payments.ts`, which the owner fills. `docs/SETUP.md` §7.9 is the long
-form.
+The rouble till's link is checked first and in every language, because it is what says the thing is
+on sale at all; when lava has no product for it the route is null and the button falls back to the
+support address, never to the rouble till — that would restore the wall the second till exists to
+remove.
 
-The Russian reader's path is unchanged: the till, with the email appended, and the note naming the
-host about to open. That note is drawn only for a real till — naming our own domain in "you are
-about to open …" would be a bug, which is why `payHost()` returns null for our own page.
+`supabase/functions/lava-webhook` opens the access. Two doors, the token and the HMAC signature, as
+with Prodamus; then `product.id` says what was bought, which Prodamus cannot do. **Its contract is
+reconstructed from lava.top's public SDK rather than from their documentation**, and a mismatch is a
+403 with nothing written — so a wrong contract reads as "payments do not arrive", never as access
+granted to somebody who did not pay. `docs/SETUP.md` §7.9 has the whole setup and says that the
+first real payment is the test.
+
+Prodamus keeps the rouble buyers because it issues the receipts Russian retail requires; moving
+those over is a decision with accounting inside it.
 
 The sign-in e-mail lives here too (`supabase/templates/otp.html`, deployed by **Actions → Supabase
 apply → `email-templates`**), and it says everything twice: Russian first, English under it in a

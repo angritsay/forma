@@ -30,6 +30,7 @@ import { formatPrice } from '@content/site/pricing';
 import { TEST_PAYMENT_URL } from '@content/site/testPayment';
 import type { Locale } from '@/i18n/index';
 import { payHref, payRoute } from '@/lib/util/payment';
+import { lavaUrl, planKey } from '@content/site/payments';
 import { subscribeHref } from '@/app/features/courses/courseMeta';
 
 /** The plan the club is sold with, or null when plans are not configured. */
@@ -62,7 +63,11 @@ export function clubJoinHref(locale: Locale, email: string, demo: boolean): stri
   // TEST_PAYMENT_URL — временная подмена; см. content/site/testPayment.ts.
   const route = demo
     ? null
-    : payRoute(locale, TEST_PAYMENT_URL ?? plan?.paymentUrl?.[locale] ?? plan?.paymentUrl?.ru);
+    : payRoute(
+        locale,
+        TEST_PAYMENT_URL ?? plan?.paymentUrl?.[locale] ?? plan?.paymentUrl?.ru,
+        plan ? lavaUrl(planKey(plan.id)) : null,
+      );
   if (!route) return subscribeHref(locale);
   return payHref(route, email);
 }

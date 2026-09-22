@@ -42,6 +42,7 @@ on:
           - deploy-link
           - deploy-notify
           - deploy-payments
+          - deploy-lava
           - secrets-check
           - webhook-info
           - payments-check
@@ -539,6 +540,58 @@ jobs:
             echo "::error::Не задано секретов: $missing. Пока их нет, оплаты не активируют доступ."
             exit 1
           fi
+
+      # ---------------------------------------------------------------------
+      # deploy-lava — вторая касса, для тех, кто платит не в рублях.
+      #
+      # Всё то же, что у deploy-payments, и по тем же причинам: --no-verify-jwt,
+      # потому что lava.top не предъявляет токен Supabase, и секреты переносятся
+      # из GitHub, если они там заведены.
+      #
+      # LAVA_PRODUCTS — карта «товар в lava.top → что это у нас», JSON вида
+      # {"<product id>":"course:start"}. Секретом, а не в коде: переименование
+      # товара в кабинете не должно ждать выкладки сайта.
+      # ---------------------------------------------------------------------
+      - name: Deploy the lava.top webhook
+        if: ${{ inputs.task == 'deploy-lava' }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          LAVA_WEBHOOK_SECRET: ${{ secrets.LAVA_WEBHOOK_SECRET }}
+          LAVA_PRODUCTS: ${{ secrets.LAVA_PRODUCTS }}
+          WEBHOOK_TOKEN: ${{ secrets.WEBHOOK_TOKEN }}
+        run: |
+          set -uo pipefail
+          curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz \
+            | tar -xz -C /tmp
+
+          if ! /tmp/supabase functions deploy lava-webhook --project-ref "$PROJECT_REF" --no-verify-jwt; then
+            echo "::error::Не удалось выложить lava-webhook. Обычно это просроченный SUPABASE_ACCESS_TOKEN или нет доступа к проекту."
+            exit 1
+          fi
+          echo "::notice::Функция lava-webhook выложена."
+
+          args=()
+          if [ -n "${LAVA_WEBHOOK_SECRET:-}" ]; then args+=(LAVA_WEBHOOK_SECRET="$LAVA_WEBHOOK_SECRET"); fi
+          if [ -n "${LAVA_PRODUCTS:-}" ]; then args+=(LAVA_PRODUCTS="$LAVA_PRODUCTS"); fi
+          if [ -n "${WEBHOOK_TOKEN:-}" ]; then args+=(WEBHOOK_TOKEN="$WEBHOOK_TOKEN"); fi
+          if [ "${#args[@]}" -gt 0 ]; then
+            if /tmp/supabase secrets set --project-ref "$PROJECT_REF" "${args[@]}" >/dev/null 2>&1; then
+              echo "Секреты из GitHub перенесены в Supabase (${#args[@]} шт., значения не печатаются)."
+            else
+              echo "::error::Не удалось записать секреты в Supabase."
+            fi
+          fi
+
+          # Печатаются только имена — значения секретов в публичный лог не попадают никогда.
+          have=$(/tmp/supabase secrets list --project-ref "$PROJECT_REF" 2>/dev/null | awk '{print $1}')
+          for name in LAVA_WEBHOOK_SECRET LAVA_PRODUCTS WEBHOOK_TOKEN; do
+            if printf '%s\n' "$have" | grep -qx "$name"; then
+              echo "::notice::$name — на месте."
+            else
+              echo "::warning::$name не задан. Без него функция отвечает 403 на каждое уведомление и доступ не откроется."
+            fi
+          done
+          echo "::notice::Адрес для кабинета lava.top: https://$PROJECT_REF.functions.supabase.co/lava-webhook?token=<WEBHOOK_TOKEN>"
 
       # ---------------------------------------------------------------------
       # secrets-check — which function secrets exist, and which are missing.

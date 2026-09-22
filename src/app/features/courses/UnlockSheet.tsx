@@ -10,6 +10,7 @@ import { createOrder } from '@/lib/api/orders';
 import { formatPrice } from '@content/site/pricing';
 import { TEST_PAYMENT_URL } from '@content/site/testPayment';
 import { payHref, payRoute } from '@/lib/util/payment';
+import { courseKey, lavaUrl } from '@content/site/payments';
 import { useT } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
 
@@ -59,6 +60,7 @@ export function UnlockSheet({ open, course, onClose }: UnlockSheetProps) {
   const route = payRoute(
     locale,
     TEST_PAYMENT_URL ?? course?.paymentUrl?.[locale] ?? course?.paymentUrl?.ru,
+    course ? lavaUrl(courseKey(course.id)) : null,
   );
   const price = course ? formatPrice(locale, course.price) : '';
 
@@ -81,9 +83,8 @@ export function UnlockSheet({ open, course, onClose }: UnlockSheetProps) {
     }
     setOrdered(recorded ? 'ok' : 'failed');
     setBusy(false);
-    // В кассу без почты не уходим: платёж потом не с кем связать. На своей странице с инструкцией
-    // почта не нужна в адресе — там её просят вписать в комментарий к переводу.
-    if (route && (route.kind === 'manual' || email)) {
+    // В кассу без почты не уходим: платёж потом не с кем связать.
+    if (route && email) {
       window.location.assign(payHref(route, email));
     }
   };
