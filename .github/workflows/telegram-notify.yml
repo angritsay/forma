@@ -53,9 +53,16 @@ jobs:
             echo "::error::Переменной PUBLIC_SUPABASE_URL нет (Settings → Secrets and variables → Actions → Variables)."
             exit 1
           fi
+          # Секрета нет — значит рассылку ещё не включали, и это не поломка.
+          #
+          # Красный крест каждые десять минут приучает не смотреть на вкладку
+          # Actions вообще, а именно там видны настоящие сбои — упавший деплой,
+          # неприменённая миграция. Поэтому здесь заметка и тихий выход: очередь
+          # тем временем копится в базе и уйдёт целиком, как только секрет
+          # появится и задача deploy-notify выложит функцию.
           if [ -z "${TOKEN:-}" ]; then
-            echo "::error::Секрета NOTIFY_TOKEN нет, а без него функция отказывает всем. Заведи его: openssl rand -hex 32 → Settings → Secrets and variables → Actions → New repository secret, имя NOTIFY_TOKEN. То же значение положит в Supabase задача deploy-notify."
-            exit 1
+            echo "::notice::Рассылка ещё не включена: нет секрета NOTIFY_TOKEN. Сообщения копятся в очереди и уйдут, когда он появится. Завести: длинная случайная строка → Settings → Secrets and variables → Actions → New repository secret, имя NOTIFY_TOKEN, потом задача deploy-notify."
+            exit 0
           fi
 
           REF=$(printf '%s' "$URL" | sed -E 's#^https?://([^.]+)\..*#\1#')
@@ -66,9 +73,11 @@ jobs:
             echo "::error::Функция ответила 403: NOTIFY_TOKEN в GitHub и в Supabase не совпадают. Запусти задачу deploy-notify — она перенесёт секрет из GitHub в проект."
             exit 1
           fi
+          # 404 — функции ещё нет по адресу. Тоже не поломка, а «не доделали»:
+          # секрет уже завели, а выложить не успели. Заметка, не крест.
           if [ "$code" = "404" ]; then
-            echo "::error::Функции telegram-notify нет по адресу. Запусти Supabase apply → deploy-notify."
-            exit 1
+            echo "::notice::Функции telegram-notify ещё нет по адресу — запусти Supabase apply → deploy-notify. Очередь до тех пор копится в базе."
+            exit 0
           fi
           if [ "$code" -ge 300 ]; then
             echo "::error::Функция ответила HTTP $code."
