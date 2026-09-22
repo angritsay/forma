@@ -17,6 +17,7 @@ import type {
   AdminCourseRow,
   AdminOverview,
   AssignedWorkoutRow,
+  ClubDuoStatus,
   ClubWinner,
   MarathonWinner,
   FunnelWeek,
@@ -119,6 +120,7 @@ import type {
   SubscriptionStatus,
   WorkoutSessionRow,
 } from '../types';
+import { DEMO_DUO_TEAM } from './marathonSeed';
 import { delay } from './latency';
 import {
   currentDemoUser,
@@ -2341,6 +2343,90 @@ function memberName(db: DemoDb, memberId: string): string {
   if (named) return named;
   const me = db.profiles.find((p) => p.email.toLowerCase() === (mem?.email ?? '').toLowerCase());
   return (me?.display_name ?? '').trim() || 'Участник';
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * Дуо-клуб в демо
+ *
+ * Пара — единственная механика в продукте, которой нужен второй живой человек, а в демо, как
+ * записано выше про выдачу и ссылки, никого больше нет. Поэтому показываются оба состояния, в
+ * которых человек реально бывает, и ни одного выдуманного:
+ *
+ *   * **пара есть** — подобранная нами, из той же придуманной когорты, что стоит на доске. Это
+ *     состояние большинства: подруги есть не у всех, а напарник в понедельник появляется у всех;
+ *   * **пары нет** — если расторгнуть. Тогда виден баннер и ссылка-приглашение.
+ *
+ * Чего демо не делает — не принимает приглашение: принять его может только второй человек, а его
+ * нет. Попытка отвечает `invite_own`, тем же кодом, что вернула бы база тому, кто открыл
+ * собственную ссылку, и это не заглушка, а правда про эту ситуацию.
+ * ------------------------------------------------------------------------------------------- */
+
+export async function getClubDuoStatus(): Promise<ClubDuoStatus | null> {
+  return run(() => {
+    const db = readDb();
+    const user = requireDemoUser();
+    const club = db.marathons.find((m) => m.status === 'active');
+    if (!club) return null;
+    const me = db.marathonMembers.find(
+      (m) => m.marathonId === club.id && m.email === user.email && m.status === 'active',
+    );
+    if (!me) return null;
+
+    // Напарница — первая из когорты, кто не я: тот же человек, что стоит на доске, а не второй,
+    // выдуманный отдельно для этой вкладки.
+    const mate = db.marathonMembers.find(
+      (m) => m.marathonId === club.id && m.id !== me.id && m.status === 'active',
+    );
+    const broken = db.marathonTeams.every((t) => t.id !== DEMO_DUO_TEAM);
+    if (!mate || broken) {
+      return {
+        marathonId: club.id,
+        memberId: me.id,
+        teamId: null,
+        isAuto: false,
+        mateName: null,
+        mateSeed: '',
+        inviteToken: demoInviteToken(user.email),
+      };
+    }
+    const mp = db.profiles.find((p) => p.email.toLowerCase() === (mate.email ?? '').toLowerCase());
+    return {
+      marathonId: club.id,
+      memberId: me.id,
+      teamId: DEMO_DUO_TEAM,
+      isAuto: true,
+      mateName: memberName(db, mate.id),
+      mateSeed: mp?.avatar_seed ?? '',
+      inviteToken: null,
+    };
+  });
+}
+
+/** Один и тот же токен на одну и ту же почту — как в базе, где второй вызов отдаёт первый. */
+function demoInviteToken(email: string): string {
+  let h = 0;
+  for (const ch of email) h = (h * 31 + ch.charCodeAt(0)) % 0xffffffff;
+  return `demo${h.toString(36).padStart(16, '0')}`.slice(0, 24);
+}
+
+export async function createClubInvite(): Promise<string> {
+  return run(() => demoInviteToken(requireDemoUser().email));
+}
+
+export async function redeemClubInvite(_token: string): Promise<string> {
+  return run<string>(() => {
+    // Принять приглашение может только второй человек, а в демо он один. `invite_own` — код,
+    // которым база отвечает тому, кто открыл собственную ссылку: здесь это ровно тот случай.
+    throw new AppError('validation', 'invite_own');
+  });
+}
+
+export async function breakClubDuo(_teamId: string): Promise<void> {
+  return run(() => {
+    mutateDb((db) => {
+      db.marathonTeams = db.marathonTeams.filter((t) => t.id !== DEMO_DUO_TEAM);
+    });
+  });
 }
 
 export async function getClubWinner(): Promise<ClubWinner | null> {
