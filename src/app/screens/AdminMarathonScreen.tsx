@@ -53,6 +53,7 @@ import { BootScreen } from '@/app/components/BootScreen';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
+import { LangTabs, useEditingLocale } from '@/app/features/admin/LangTabs';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { DayPlan, dateOfDay, longDate } from '@/app/features/marathon/admin/DayPlan';
 import { People } from '@/app/features/marathon/admin/People';
@@ -356,6 +357,17 @@ function Settings({
   const set = <K extends keyof MarathonRow>(key: K, value: MarathonRow[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
 
+  /*
+   * Название, описание и приз — единственное здесь, что читает участник; всё остальное в этой
+   * форме (даты, часовой пояс, размер команды) — цифры, которые он видит уже разложенными по
+   * экрану. Поэтому переключатель стоит над тремя полями, а не над всей формой.
+   *
+   * Приз тут самый важный: `clubPrize()` подставляет переведённую строку по умолчанию только
+   * пока поле пустое. Стоит Сергею вписать «Час с тренером» — и её же видит английский читатель.
+   */
+  const editing = useEditingLocale();
+  const en = editing === 'en';
+
   return (
     <div className="flex flex-col gap-4">
       <Select<MarathonStatus>
@@ -370,24 +382,44 @@ function Settings({
           label: t(statusKey(s)),
         }))}
       />
+      <LangTabs />
       <Input
         label={t('app.mAdminName')}
-        value={draft.title}
-        onChange={(e) => set('title', e.target.value)}
-        onBlur={() => void onPatch({ title: draft.title })}
+        placeholder={en ? draft.title : (draft.titleEn ?? '')}
+        value={(en ? draft.titleEn : draft.title) ?? ''}
+        onChange={(e) => set(en ? 'titleEn' : 'title', e.target.value)}
+        onBlur={() =>
+          void onPatch(
+            en ? { titleEn: draft.titleEn?.trim() || null } : { title: draft.title.trim() },
+          )
+        }
       />
       <Textarea
         label={t('app.mAdminDescription')}
         rows={2}
-        value={draft.description ?? ''}
-        onChange={(e) => set('description', e.target.value)}
-        onBlur={() => void onPatch({ description: draft.description?.trim() || null })}
+        placeholder={(en ? draft.description : draft.descriptionEn) ?? ''}
+        value={(en ? draft.descriptionEn : draft.description) ?? ''}
+        onChange={(e) => set(en ? 'descriptionEn' : 'description', e.target.value)}
+        onBlur={() =>
+          void onPatch(
+            en
+              ? { descriptionEn: draft.descriptionEn?.trim() || null }
+              : { description: draft.description?.trim() || null },
+          )
+        }
       />
       <Input
         label={t('app.mAdminPrize')}
-        value={draft.prize ?? ''}
-        onChange={(e) => set('prize', e.target.value)}
-        onBlur={() => void onPatch({ prize: draft.prize?.trim() || null })}
+        placeholder={(en ? draft.prize : draft.prizeEn) ?? ''}
+        value={(en ? draft.prizeEn : draft.prize) ?? ''}
+        onChange={(e) => set(en ? 'prizeEn' : 'prize', e.target.value)}
+        onBlur={() =>
+          void onPatch(
+            en
+              ? { prizeEn: draft.prizeEn?.trim() || null }
+              : { prize: draft.prize?.trim() || null },
+          )
+        }
       />
       <div className="flex gap-3">
         <Input

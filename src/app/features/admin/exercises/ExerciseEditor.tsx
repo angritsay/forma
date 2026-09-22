@@ -71,6 +71,7 @@ export function ExerciseEditor({
   const [nameRu, setNameRu] = useState(initial?.nameRu ?? '');
   const [nameEn, setNameEn] = useState(initial?.nameEn ?? '');
   const [shortNameRu, setShortNameRu] = useState(initial?.shortNameRu ?? '');
+  const [shortNameEn, setShortNameEn] = useState(initial?.shortNameEn ?? '');
   const [descriptionRu, setDescriptionRu] = useState(initial?.descriptionRu ?? '');
   const [descriptionEn, setDescriptionEn] = useState(initial?.descriptionEn ?? '');
   const [unit, setUnit] = useState<Unit>(initial?.unit ?? 'seconds');
@@ -130,6 +131,7 @@ export function ExerciseEditor({
       Object.assign(draft, {
         nameEn: nameEn.trim() || null,
         shortNameRu: shortNameRu.trim() || null,
+        shortNameEn: shortNameEn.trim() || null,
         descriptionRu: descriptionRu.trim() || null,
         descriptionEn: descriptionEn.trim() || null,
         unit,
@@ -182,6 +184,18 @@ export function ExerciseEditor({
               hint={t('app.exShortNameHint')}
               value={shortNameRu}
               onChange={(e) => setShortNameRu(e.target.value)}
+            />
+            {/*
+              Короткое имя стоит в полоске упражнений на карточке дня — самом узком месте в
+              приложении, и потому единственном, где длинное английское слово заметно хуже
+              короткого. Поле рядом с русским, а не под переключателем ниже: имя и его перевод
+              здесь уже показаны парой (exNameRu / exNameEn), и короткое имя — та же пара.
+            */}
+            <Input
+              label={t('app.exShortNameEn')}
+              placeholder={shortNameRu}
+              value={shortNameEn}
+              onChange={(e) => setShortNameEn(e.target.value)}
             />
           </>
         ) : null}

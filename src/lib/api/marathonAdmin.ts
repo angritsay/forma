@@ -37,7 +37,9 @@ interface DbMarathon {
   id: string;
   slug: string;
   title: string;
+  title_en: string | null;
   description: string | null;
+  description_en: string | null;
   status: MarathonRow['status'];
   starts_on: string;
   days: number;
@@ -45,6 +47,7 @@ interface DbMarathon {
   timezone: string;
   due_time: string;
   prize: string | null;
+  prize_en: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -82,7 +85,9 @@ function marathonFromDb(r: DbMarathon): MarathonRow {
     id: r.id,
     slug: r.slug,
     title: r.title,
+    titleEn: r.title_en ?? null,
     description: r.description,
+    descriptionEn: r.description_en ?? null,
     status: r.status,
     startsOn: r.starts_on,
     days: r.days,
@@ -90,6 +95,7 @@ function marathonFromDb(r: DbMarathon): MarathonRow {
     timezone: r.timezone,
     dueTime: r.due_time,
     prize: r.prize,
+    prizeEn: r.prize_en ?? null,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
   };
@@ -134,7 +140,9 @@ export function marathonPatchToDb(patch: MarathonPatch): Record<string, unknown>
   const db: Record<string, unknown> = {};
   if (patch.slug !== undefined) db.slug = patch.slug;
   if (patch.title !== undefined) db.title = patch.title;
+  if (patch.titleEn !== undefined) db.title_en = patch.titleEn;
   if (patch.description !== undefined) db.description = patch.description;
+  if (patch.descriptionEn !== undefined) db.description_en = patch.descriptionEn;
   if (patch.status !== undefined) db.status = patch.status;
   if (patch.startsOn !== undefined) db.starts_on = patch.startsOn;
   if (patch.days !== undefined) db.days = patch.days;
@@ -142,6 +150,7 @@ export function marathonPatchToDb(patch: MarathonPatch): Record<string, unknown>
   if (patch.timezone !== undefined) db.timezone = patch.timezone;
   if (patch.dueTime !== undefined) db.due_time = patch.dueTime;
   if (patch.prize !== undefined) db.prize = patch.prize;
+  if (patch.prizeEn !== undefined) db.prize_en = patch.prizeEn;
   return db;
 }
 

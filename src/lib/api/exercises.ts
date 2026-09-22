@@ -18,6 +18,7 @@ interface DbExercise {
   name_ru: string;
   name_en: string | null;
   short_name_ru: string | null;
+  short_name_en: string | null;
   description_ru: string | null;
   description_en: string | null;
   how_to: unknown;
@@ -65,6 +66,7 @@ function fromDb(r: DbExercise): ExerciseCatalogRow {
     nameRu: r.name_ru,
     nameEn: r.name_en,
     shortNameRu: r.short_name_ru,
+    shortNameEn: r.short_name_en ?? null,
     descriptionRu: r.description_ru,
     descriptionEn: r.description_en,
     howTo: textList(r.how_to),
@@ -93,6 +95,7 @@ function draftToDb(draft: Partial<ExerciseDraft>): Record<string, unknown> {
   if (draft.nameRu !== undefined) db.name_ru = draft.nameRu;
   if (draft.nameEn !== undefined) db.name_en = draft.nameEn || null;
   if (draft.shortNameRu !== undefined) db.short_name_ru = draft.shortNameRu || null;
+  if (draft.shortNameEn !== undefined) db.short_name_en = draft.shortNameEn || null;
   if (draft.descriptionRu !== undefined) db.description_ru = draft.descriptionRu || null;
   if (draft.descriptionEn !== undefined) db.description_en = draft.descriptionEn || null;
   if (draft.howTo !== undefined) db.how_to = draft.howTo;

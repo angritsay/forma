@@ -138,8 +138,10 @@ export function seedMarathon(email: string, today = toLocalDateIso()): DemoMarat
     id: DEMO_MARATHON_ID,
     slug: 'sprint',
     title: 'Спринт Формы',
+    titleEn: 'Forma Sprint',
     description:
       'Две недели, одно задание в день, каждый сам за себя. В воскресенье неделя обнуляется.',
+    descriptionEn: 'Two weeks, one task a day, everyone for themselves. The week resets on Sunday.',
     status: 'active',
     startsOn,
     days: DEMO_MARATHON_DAYS,
@@ -148,6 +150,7 @@ export function seedMarathon(email: string, today = toLocalDateIso()): DemoMarat
     timezone: guessTimezone(),
     dueTime: '22:00:00',
     prize: 'Час с тренером и создателем Forma',
+    prizeEn: 'An hour with the coach who built Forma',
     createdAt,
     updatedAt: createdAt,
   };

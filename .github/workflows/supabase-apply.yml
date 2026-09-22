@@ -47,6 +47,7 @@ on:
           - payments-check
           - telegram-check
           - outbox-check
+          - translation-check
           - reset-athlete
       migration_file:
         description: 'Only for "migration": a filename in supabase/migrations/'
@@ -737,6 +738,47 @@ jobs:
             echo "::warning::Ни один аккаунт не привязан. Это значит одно из трёх: функция link-telegram не выложена (задача deploy-link), миграция 0026 не применена, либо после выкладки никто ещё не открывал приложение внутри телеграма. Открой его сам и запусти эту задачу снова."
           else
             echo "::notice::Бот может написать ${linked} из ${people}. У остальных нет телеграма или они не открывали приложение из него — это нормально, им просто ничего не придёт."
+          fi
+
+      # ---------------------------------------------------------------------
+      # translation-check — сколько из набранного в админке ещё без английского.
+      #
+      # Всё, что написано заранее, двуязычно и сверяется на сборке. Отстать
+      # может только то, что печатает тренер, и заметить это иначе можно,
+      # только открыв приложение по-английски и наткнувшись на русское слово.
+      #
+      # Запрос в `supabase/queries/translation-check.sql` возвращает одни
+      # счётчики: ни строки текста, ни адреса. Страница запуска публичного
+      # репозитория видна всем и остаётся навсегда.
+      # ---------------------------------------------------------------------
+      - name: Count what still has no English half
+        if: ${{ inputs.task == 'translation-check' }}
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -uo pipefail
+          jq -Rs '{query: .}' < supabase/queries/translation-check.sql > /tmp/body.json
+          code=$(curl -sS -o /tmp/out.json -w '%{http_code}' \
+            -X POST "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H 'Content-Type: application/json' \
+            --data-binary @/tmp/body.json)
+          if [ "$code" -ge 300 ]; then
+            echo "::error::Supabase ответил HTTP $code. Дальше — его собственный текст ошибки, не данные."
+            jq -r '.message // .error // "(без сообщения)"' < /tmp/out.json || true
+            echo "Если написано, что нет столбца short_name_en или prize_en — значит миграция 0035_authored_english_rest.sql ещё не применена."
+            exit 1
+          fi
+
+          # Печатается ровно то, что вернул запрос: три числа и название группы.
+          jq -r '.[] | "::notice::" + .what + ": без английского " + (.missing|tostring) + " из " + (.total|tostring)' \
+            < /tmp/out.json
+
+          left=$(jq -r '[.[].missing] | add // 0' < /tmp/out.json)
+          if [ "${left:-0}" = "0" ]; then
+            echo "::notice::Всё, что напечатал тренер, есть и по-английски."
+          else
+            echo "::warning::Без перевода осталось $left строк. Английский читатель видит на их месте русский текст — не пустоту, но и не свой язык. Переводится там же, где набиралось: в админке, переключателем «Пишем на»."
           fi
 
       # ---------------------------------------------------------------------

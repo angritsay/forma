@@ -746,6 +746,7 @@ export const app = {
   exNameRu: 'Name',
   exNameEn: 'Name (EN)',
   exShortName: 'Short name',
+  exShortNameEn: 'Short name (EN)',
   exShortNameHint: 'For tight places — badges and lists',
   exSeededNotice:
     'This exercise comes from the course files, so its name, muscles and equipment are read-only here: the next seed would overwrite them. The video, image, tags and texts below are safe to edit — the seed never touches those.',
