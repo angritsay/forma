@@ -40,11 +40,13 @@ on:
           - email-templates
           - deploy-bot
           - deploy-link
+          - deploy-notify
           - deploy-payments
           - secrets-check
           - webhook-info
           - payments-check
           - telegram-check
+          - outbox-check
           - reset-athlete
       migration_file:
         description: 'Only for "migration": a filename in supabase/migrations/'
@@ -393,6 +395,45 @@ jobs:
           echo "::notice::Функция link-telegram выложена. Дальше: открыть приложение внутри телеграма, потом запустить задачу telegram-check — она покажет, сколько аккаунтов привязалось."
 
       # ---------------------------------------------------------------------
+      # deploy-notify — выкладывает рассыльщика очереди сообщений (0027).
+      #
+      # Функция разносит то, что накопилось в `telegram_outbox`: оплата дошла,
+      # тренер выдал тренировку. Будит её раз в десять минут
+      # `.github/workflows/telegram-notify.yml`.
+      #
+      # **С `--no-verify-jwt`**: у расписания нет сессии человека. Дверь — секрет
+      # `NOTIFY_TOKEN` в адресе, и шаг переносит его из GitHub в Supabase, чтобы
+      # значение было одно, а не два, разъехавшихся.
+      # ---------------------------------------------------------------------
+      - name: Deploy the bot message sender
+        if: ${{ inputs.task == 'deploy-notify' }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          NOTIFY_TOKEN: ${{ secrets.NOTIFY_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${NOTIFY_TOKEN:-}" ]; then
+            echo "::error::Секрета NOTIFY_TOKEN нет, а без него функция отказывает всем. Сгенерируй: openssl rand -hex 32 — потом Settings → Secrets and variables → Actions → New repository secret, имя NOTIFY_TOKEN, и запусти эту задачу снова."
+            exit 1
+          fi
+
+          curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz \
+            | tar -xz -C /tmp
+
+          if ! /tmp/supabase secrets list --project-ref "$PROJECT_REF" >/tmp/raw.txt 2>/dev/null; then
+            echo "::error::Не удалось прочитать список секретов проекта. Обычно это просроченный SUPABASE_ACCESS_TOKEN."
+            exit 1
+          fi
+          if ! grep -q 'TELEGRAM_BOT_TOKEN' /tmp/raw.txt; then
+            echo "::error::В проекте нет секрета TELEGRAM_BOT_TOKEN — слать нечем. Сначала запусти задачу deploy-bot."
+            exit 1
+          fi
+
+          /tmp/supabase secrets set --project-ref "$PROJECT_REF" NOTIFY_TOKEN="$NOTIFY_TOKEN" >/dev/null
+          /tmp/supabase functions deploy telegram-notify --project-ref "$PROJECT_REF" --no-verify-jwt
+          echo "::notice::Рассыльщик выложен, NOTIFY_TOKEN перенесён в проект. Дальше он просыпается сам раз в десять минут; проверить очередь — задача outbox-check."
+
+      # ---------------------------------------------------------------------
       # deploy-payments — выкладывает функцию, которая принимает уведомления
       # Prodamus, и проверяет её живым запросом.
       #
@@ -696,6 +737,51 @@ jobs:
             echo "::warning::Ни один аккаунт не привязан. Это значит одно из трёх: функция link-telegram не выложена (задача deploy-link), миграция 0026 не применена, либо после выкладки никто ещё не открывал приложение внутри телеграма. Открой его сам и запусти эту задачу снова."
           else
             echo "::notice::Бот может написать ${linked} из ${people}. У остальных нет телеграма или они не открывали приложение из него — это нормально, им просто ничего не придёт."
+          fi
+
+      # ---------------------------------------------------------------------
+      # outbox-check — что творится в очереди сообщений (0027).
+      #
+      # Очередь наполняется триггерами и опустошается по расписанию, то есть вся
+      # целиком работает без единого нажатия. Значит, и ломается она молча: строки
+      # копятся, а никто не знает.
+      #
+      # Запрос не возвращает ни одного личного данного — только счётчики по видам
+      # и статусам.
+      # ---------------------------------------------------------------------
+      - name: Look at the bot message queue
+        if: ${{ inputs.task == 'outbox-check' }}
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -uo pipefail
+          jq -Rs '{query: .}' < supabase/queries/outbox-check.sql > /tmp/body.json
+          code=$(curl -sS -o /tmp/out.json -w '%{http_code}' \
+            -X POST "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H 'Content-Type: application/json' \
+            --data-binary @/tmp/body.json)
+          if [ "$code" -ge 300 ]; then
+            echo "::error::Supabase ответил HTTP $code. Дальше — его собственный текст ошибки, не данные."
+            jq -r '.message // .error // "(без сообщения)"' < /tmp/out.json || true
+            echo "Если написано, что нет таблицы telegram_outbox — значит миграция 0027_telegram_outbox.sql ещё не применена."
+            exit 1
+          fi
+
+          get() { jq -r ".[0].$1 // \"\"" < /tmp/out.json; }
+          pending=$(get pending)
+          waiting=$(get waiting_for_telegram)
+          sent=$(get sent)
+          skipped=$(get skipped)
+          failed=$(get failed)
+          oldest=$(get oldest_pending_utc)
+
+          echo "В очереди: ${pending:-?} · отправлено: ${sent:-?} · пропущено: ${skipped:-?} · не удалось: ${failed:-?}"
+          echo "Ждут привязки телеграма: ${waiting:-?}"
+          [ -n "${oldest:-}" ] && echo "Самая старая неотправленная: $oldest UTC"
+
+          if [ "${failed:-0}" != "0" ]; then
+            echo "::warning::Есть строки, которые не удалось отправить пять раз подряд. Обычно это значит, что у бота отобрали токен или телеграм недоступен дольше часа."
           fi
 
       # ---------------------------------------------------------------------

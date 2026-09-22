@@ -1,0 +1,84 @@
+name: Send queued bot messages
+
+# Раз в десять минут будит `telegram-notify`, и та разносит то, что накопилось в
+# `telegram_outbox` (0027): оплата дошла, тренер выдал тренировку.
+#
+# ## Почему расписание здесь, а не в базе
+#
+# pg_cron в проекте не включён, а включать расширение ради одного будильника — это
+# лишняя движущаяся часть в том самом месте, где лежат оплаты. Actions уже есть,
+# уже умеют ходить по HTTPS и уже показывают историю запусков глазами. Цена —
+# задержка до десяти минут, и для «оплата дошла» она незаметна: человек в этот
+# момент и так перезагружает приложение.
+#
+# ## Про саму дверь
+#
+# Функция выложена с `--no-verify-jwt` (у расписания нет сессии человека), поэтому
+# её дверь — секрет `NOTIFY_TOKEN` в адресе. Без него она отказывает всем: URL
+# функции не пароль — он виден в логах деплоя, — а за дверью стоит рассылка от
+# имени тренера.
+#
+# Секрет заводится один раз: Settings → Secrets and variables → Actions →
+# New repository secret, имя NOTIFY_TOKEN, значение — что угодно длинное
+# (`openssl rand -hex 32`). То же значение задача `deploy-notify` кладёт в Supabase.
+#
+# **В логе не печатается ничего, кроме счётчиков.** Функция возвращает `sent`,
+# `skipped`, `failed` — ни адреса, ни имени, ни текста. Страница запуска публичного
+# репозитория видна всем и остаётся навсегда.
+
+on:
+  schedule:
+    # Каждые 10 минут. Cron в Actions не точный — очередь это переживает, она
+    # берёт всё, чему настало время, а не то, что ровно сейчас.
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+# Один запуск за раз. Два параллельных взяли бы одну и ту же пачку строк и
+# отправили бы каждое сообщение дважды.
+concurrency:
+  group: telegram-notify
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake the sender
+        env:
+          URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          TOKEN: ${{ secrets.NOTIFY_TOKEN }}
+        run: |
+          set -uo pipefail
+          if [ -z "${URL:-}" ]; then
+            echo "::error::Переменной PUBLIC_SUPABASE_URL нет (Settings → Secrets and variables → Actions → Variables)."
+            exit 1
+          fi
+          if [ -z "${TOKEN:-}" ]; then
+            echo "::error::Секрета NOTIFY_TOKEN нет, а без него функция отказывает всем. Заведи его: openssl rand -hex 32 → Settings → Secrets and variables → Actions → New repository secret, имя NOTIFY_TOKEN. То же значение положит в Supabase задача deploy-notify."
+            exit 1
+          fi
+
+          REF=$(printf '%s' "$URL" | sed -E 's#^https?://([^.]+)\..*#\1#')
+          code=$(curl -sS -o /tmp/out.json -w '%{http_code}' -X POST \
+            "https://$REF.functions.supabase.co/telegram-notify?token=$TOKEN")
+
+          if [ "$code" = "403" ]; then
+            echo "::error::Функция ответила 403: NOTIFY_TOKEN в GitHub и в Supabase не совпадают. Запусти задачу deploy-notify — она перенесёт секрет из GitHub в проект."
+            exit 1
+          fi
+          if [ "$code" = "404" ]; then
+            echo "::error::Функции telegram-notify нет по адресу. Запусти Supabase apply → deploy-notify."
+            exit 1
+          fi
+          if [ "$code" -ge 300 ]; then
+            echo "::error::Функция ответила HTTP $code."
+            exit 1
+          fi
+
+          # Только счётчики — в ответе нет ни адресов, ни текстов.
+          jq -r '"Отправлено: \(.sent // 0) · пропущено: \(.skipped // 0) · не удалось: \(.failed // 0)"' \
+            < /tmp/out.json || cat /tmp/out.json
+
+          if [ "$(jq -r '.failed // 0' < /tmp/out.json)" != "0" ]; then
+            echo "::warning::Часть сообщений не ушла. Они останутся в очереди и будут пробоваться снова; после пяти неудач подряд строка помечается failed и больше не берётся."
+          fi

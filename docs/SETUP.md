@@ -1071,6 +1071,37 @@ a future migration breaks silently.
 People who never open the app from Telegram simply have no row here, and nothing is sent to them.
 That is the owner's decision and it is fine: «Это нормально».
 
+### What the bot writes, and when
+
+`telegram_outbox` (`0027_telegram_outbox.sql`) is a queue. The database records the **occasion**;
+`telegram-notify` turns it into a message and sends it. Three occasions so far: a course paid, a
+subscription paid, a workout assigned.
+
+Nothing sends from inside a transaction, and that is deliberate. The bot token is a Supabase secret
+and cannot live in the database; a slow Telegram would hold open — or roll back — the transaction
+that just activated a course, so somebody would have paid and got no access because a messenger was
+busy; and a purchase lives on an address, so the recipient may not exist yet. A row simply waits
+until the person signs in and opens the app from Telegram.
+
+The occasions are recorded by **triggers**, not by editing the three security-definer functions that
+grant access. There are several routes to "access opened" — the Prodamus webhook, a manual grant in
+the admin panel, the SQL editor — and adding a call to each is a promise to forget one.
+
+1. Apply `0027_telegram_outbox.sql`.
+2. Generate a gate secret — `openssl rand -hex 32` — and add it as the repository secret
+   **`NOTIFY_TOKEN`**.
+3. Actions → Supabase apply → **`deploy-notify`**. It copies that secret into the project and
+   deploys the function.
+
+From then on `.github/workflows/telegram-notify.yml` wakes it every ten minutes. A run prints three
+counters and nothing else — never an address, never a message. **`outbox-check`** is the fuller
+view: `waiting_for_telegram` climbing means everything works and those people simply have no
+Telegram; `pending` climbing with `waiting` at zero means the schedule or the function is broken.
+
+There is no unsubscribe button, by the owner's decision: «Не нужно добавлять кнопку "Отписаться" в
+каждом сообщении. Это не нарушает закон о рекламе 152 ФЗ.» Every message here is about something
+the person bought or was given, which is service, not advertising.
+
 ---
 
 ## 7.7 The booked session, on the Тренер screen (Google Calendar)
@@ -1218,6 +1249,7 @@ apply → Run workflow**, pick a task:
 | `webhook-info`    | Read-only: what Telegram itself believes about the bot's webhook, and why delivery failed.  |
 | `payments-check`  | Read-only: how many payment notifications have arrived and whether the last one applied.    |
 | `telegram-check`  | Read-only: how many people have a Telegram account attached, so the bot can reach them.     |
+| `outbox-check`    | Read-only: what is sitting in the bot message queue, by status. Counts only, no addresses.  |
 
 One secret makes it work: **`SUPABASE_ACCESS_TOKEN`** (Settings → Secrets and variables → Actions),
 a personal access token from <https://supabase.com/dashboard/account/tokens>. The project ref is
