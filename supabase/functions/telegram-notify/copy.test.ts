@@ -56,18 +56,50 @@ describe('messageFor', () => {
     expect(messageFor({ kind: 'workout_assigned', params: { title: 42 } })?.text).toBeTruthy();
   });
 
+  it('congratulates the winner, names the prize and says what to do next', () => {
+    const m = messageFor({
+      kind: 'weekly_winner',
+      params: { prize: 'Час с Сергеем', note: 'три дня подряд' },
+    });
+    expect(m?.text).toContain('Ты победил');
+    expect(m?.text).toContain('Час с Сергеем');
+    expect(m?.text).toContain('три дня подряд');
+    // Поздравление без «что дальше» оставляет человека ждать, пока про него вспомнят.
+    expect(m?.text).toContain('Напиши Сергею');
+  });
+
+  /* Приза может не быть: «ты победил» само по себе — полное сообщение. */
+  it('drops the prize line when the round has no prize', () => {
+    const m = messageFor({ kind: 'weekly_winner', params: { prize: '', note: '' } });
+    expect(m?.text).toContain('Ты победил');
+    expect(m?.text).not.toContain('Твой приз');
+    expect(m?.text).not.toContain('«»');
+  });
+
+  it('escapes a prize and a note the coach typed', () => {
+    const m = messageFor({
+      kind: 'weekly_winner',
+      params: { prize: '<b>час</b>', note: 'a & b' },
+    });
+    expect(m?.text).toContain('&lt;b&gt;час&lt;/b&gt;');
+    expect(m?.text).toContain('a &amp; b');
+  });
+
   /*
    * Неизвестный вид — это строка из будущей миграции, доехавшая до старой функции. Ронять на ней
    * всю рассылку нельзя, поэтому null, а не исключение.
    */
   it('answers null for a kind it does not know', () => {
-    expect(messageFor({ kind: 'weekly_winner', params: {} })).toBeNull();
+    expect(messageFor({ kind: 'club_trial_tomorrow', params: {} })).toBeNull();
     expect(messageFor({ kind: '', params: {} })).toBeNull();
   });
 
   it('keeps every message inside Telegram limits', () => {
-    for (const kind of ['course_paid', 'subscription_paid', 'workout_assigned']) {
-      const m = messageFor({ kind, params: { title: 'х'.repeat(500) } });
+    for (const kind of ['course_paid', 'subscription_paid', 'workout_assigned', 'weekly_winner']) {
+      const m = messageFor({
+        kind,
+        params: { title: 'х'.repeat(500), prize: 'х'.repeat(500), note: 'х'.repeat(500) },
+      });
       expect(m).not.toBeNull();
       expect(m!.text.length).toBeLessThan(4096);
     }
