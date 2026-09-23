@@ -1428,7 +1428,7 @@ export const COURSE_KETTLEBELL: CourseInput = {
   weeks: 6,
   sessionsPerWeek: 3,
   avgSessionMin: 32,
-  tile: '#1f1f24', // --tile-4 — neutral; no programme colour yet
+  tile: '#2e2e2e', // --tile-4 — neutral; no programme colour yet
   price: { rub: 3990, usd: 39 },
   workouts: [
     W_TEST,

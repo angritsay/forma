@@ -296,7 +296,7 @@ export default function CustomWorkoutScreen() {
               className="pointer-events-none relative h-32"
               style={{
                 background:
-                  'linear-gradient(180deg, rgba(10,10,12,0) 0%, rgba(10,10,12,0.28) 46%, rgba(10,10,12,0.62) 74%, rgba(10,10,12,0.82) 100%)',
+                  'linear-gradient(180deg, rgba(26,26,26,0) 0%, rgba(26,26,26,0.28) 46%, rgba(26,26,26,0.62) 74%, rgba(26,26,26,0.82) 100%)',
               }}
             />
           ) : null}
@@ -306,7 +306,7 @@ export default function CustomWorkoutScreen() {
               still
                 ? {
                     background:
-                      'linear-gradient(180deg, rgba(10,10,12,0.82) 0%, rgba(10,10,12,0.96) 100%)',
+                      'linear-gradient(180deg, rgba(26,26,26,0.82) 0%, rgba(26,26,26,0.96) 100%)',
                   }
                 : undefined
             }

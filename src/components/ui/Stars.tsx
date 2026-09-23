@@ -34,7 +34,7 @@ function Star({ fill, size }: { fill: number; size: number }) {
       <span className="absolute inset-0 text-muted-2 opacity-45">★</span>
       {fill > 0 ? (
         <span
-          className="absolute inset-0 overflow-hidden text-course"
+          className="absolute inset-0 overflow-hidden text-course-accent"
           style={{ width: `${Math.round(fill * 100)}%` }}
         >
           <span className="block" style={{ width: size }}>

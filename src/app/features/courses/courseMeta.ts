@@ -1,40 +1,11 @@
 /** Course-level lookups and labels shared by the Home rows and the Courses screen. */
-import type { CSSProperties } from 'react';
 import { findExercise } from '@/content/catalogue';
 import type { Course, Equipment, Exercise, Locale } from '@/content/schema';
 import { plural } from '@/i18n/index';
-import { courseTileVars, isLightTile } from '@/lib/ui/tile';
 import { href } from '@/lib/util/paths';
 import type { Translator } from '@/app/hooks/useT';
 import { workoutSignatureExercise } from '@/app/features/path/plan';
 import { EQUIPMENT_LABEL } from '@/app/screens/onboarding/labels';
-
-/**
- * The course's colour **as type on a photograph**, which is a different question from its colour
- * as a fill.
- *
- * `courseTileVars()` answers the fill question: here is the tile, and here is the ink that reads
- * on it. The card in the owner's mockup inverts that — the picture is the ground and the colour is
- * the figure, the name, the rule and the button — so a tile that is a *neutral dark surface*
- * (`--tile-4`, `--tile-5`: four of the six courses have no programme colour yet) would set
- * near-black type on a near-black card and disappear.
- *
- * So `--course-accent` is the tile when the tile is a colour, and the plain text white when it is
- * not. A course without a colour of its own reads as white on its photograph, which is the right
- * answer and not a fallback: it is what «no programme colour yet» looks like. The accent is always
- * light by construction, so whatever is set *on* it — the button's label — is always `--ink`.
- *
- * It lives here rather than in `src/lib/ui/tile.ts` because it is this screen's question; the tile
- * module stays the one place the fill/ink pair is decided.
- */
-export function courseAccentVars(tile: string | undefined): CSSProperties | undefined {
-  const base = courseTileVars(tile);
-  if (!base) return undefined;
-  return {
-    ...base,
-    '--course-accent': tile && isLightTile(tile) ? tile : 'var(--text)',
-  } as CSSProperties;
-}
 
 /** The exercise whose figure represents the course: from its first real workout. */
 export function courseSignatureExercise(course: Course): Exercise | undefined {

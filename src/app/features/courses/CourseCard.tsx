@@ -77,7 +77,7 @@ export interface CourseCardProps {
    * либо приглашение, но не оба сразу.
    */
   eyebrow?: ReactNode;
-  /** `--course-tile`, its ink and `--course-accent`, from courseAccentVars(). */
+  /** `--course-tile`, its ink and `--course-accent`, from courseTileVars(). */
   style?: React.CSSProperties;
 }
 

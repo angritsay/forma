@@ -1105,7 +1105,7 @@ export const COURSE_TEMPO: CourseInput = {
   weeks: 8,
   sessionsPerWeek: 4,
   avgSessionMin: 25,
-  tile: '#2a2a30', // --tile-5 — neutral; no programme colour yet
+  tile: '#383838', // --tile-5 — neutral; no programme colour yet
   price: { rub: 4990, usd: 49 },
   workouts: [
     W_GATE,

@@ -22,7 +22,7 @@ const VARIANT: Record<ButtonVariant, string> = {
   secondary: 'bg-surface-2 text-text border border-border-strong hover:bg-surface-3',
   ghost: 'bg-transparent text-muted hover:text-text',
   danger: 'bg-transparent text-danger border border-border-strong hover:bg-surface-2',
-  course: 'bg-course text-on-course hover:opacity-90',
+  course: 'bg-course text-tile-fg hover:opacity-90',
 };
 
 /* 40 / 48 / 56 tall with a 14–15px sentence-case label, as Button — keep the two tables equal. */

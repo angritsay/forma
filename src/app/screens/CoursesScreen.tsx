@@ -36,7 +36,7 @@ import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { AssessmentBanner } from '@/app/features/assessment/AssessmentBanner';
 import { AssignedWorkoutsCard } from '@/app/features/customWorkout/AssignedWorkoutsCard';
 import { CourseCard } from '@/app/features/courses/CourseCard';
-import { courseAccentVars } from '@/app/features/courses/courseMeta';
+import { courseTileVars } from '@/lib/ui/tile';
 import { buildDeck } from '@/app/features/courses/deck';
 import { CoursesHead } from '@/app/features/courses/CoursesHead';
 import { greetingName } from '@/app/features/home/greeting';
@@ -261,7 +261,7 @@ export default function CoursesScreen() {
                   <CourseCard
                     photo={photo}
                     priority={priority}
-                    style={courseAccentVars(course.tile)}
+                    style={courseTileVars(course.tile)}
                     title={title}
                     eyebrow={entry.tried ? undefined : t('app.coursesFreeBadge')}
                     ctaLabel={
@@ -291,7 +291,7 @@ export default function CoursesScreen() {
                 <CourseCard
                   photo={photo}
                   priority={priority}
-                  style={courseAccentVars(course.tile)}
+                  style={courseTileVars(course.tile)}
                   title={title}
                   pct={progress.pct}
                   ctaLabel={

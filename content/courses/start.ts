@@ -1237,12 +1237,14 @@ export const COURSE_START: CourseInput = {
    *
    * **This hex is the single source of truth for the programme's colour everywhere**, so the
    * change reaches the site too: the landing's course card, the course's own page, the exercise
-   * cards tagged to it and the SEO link cards all stop being brand yellow. Its luminance is 0.758
-   * against the 0.35 in `isLightTile()`, so black ink on it is unchanged — the hue moves, the
-   * treatment does not. The owner asked for the mockup, not for the landing; if she wants the site
+   * cards tagged to it and the SEO link cards all stop being brand yellow. The owner asked for the mockup, not for the landing; if she wants the site
    * kept yellow, that is a second colour for one programme and it needs a field of its own.
+   *
+   * **Third palette: Portland orange.** Owner: «наш курс для новичков будет оранжевый». Ink on it
+   * is near-black (6.04) — `tileInk()` measures it; the old lightness cutoff would have put white
+   * on it at 3.13. As type on charcoal it reads at 5.56.
    */
-  tile: '#9FEFF7', // programme colour: beginners — the mockup's cyan
+  tile: '#ff5a00', // programme colour: beginners — Portland orange
   /*
    * The owner's artwork: the coach walking out of the pool, monochrome, with «ФОРМА С НУЛЯ» drawn
    * across it in the programme yellow above. Vendored under `public/` rather than uploaded to the

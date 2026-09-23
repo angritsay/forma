@@ -87,7 +87,7 @@ export function BoardRow({ row, rank, winner, onAnnounce, announceLabel }: Board
         className={clsx(
           'numeral tabular flex size-11 shrink-0 items-center justify-center rounded-pill border text-[13px]',
           leader
-            ? 'border-transparent bg-course text-on-course'
+            ? 'border-transparent bg-course text-tile-fg'
             : row.isMine
               ? 'border-text text-text'
               : rank !== null && rank <= 3

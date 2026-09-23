@@ -349,7 +349,7 @@ export default function BookScreen() {
                   {/* The first of the blue things. These three lines are the argument for the
                       price below them, so they are where the offer starts and where its colour
                       starts; the credentials above stay grey because they are not for sale. */}
-                  <span className="numeral tabular w-6 shrink-0 pt-0.5 text-[15px] text-course">
+                  <span className="numeral tabular w-6 shrink-0 pt-0.5 text-[15px] text-course-accent">
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <div className="flex min-w-0 flex-col gap-1.5">
@@ -703,7 +703,7 @@ function Option({
               {/* The tick takes the colour and the line stays white: a blue list would be a
                   block of coloured body copy, which is a different thing from a list with its
                   marks picked out. */}
-              <Glyph size={14} className="mt-1 text-course">
+              <Glyph size={14} className="mt-1 text-course-accent">
                 ✓
               </Glyph>
               <span>{l(item, locale)}</span>

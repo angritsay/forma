@@ -43,7 +43,7 @@ import { toLocalDateIso } from '@/lib/util/dates';
 import { TopBar } from '@/app/components/TopBar';
 import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { useT } from '@/app/hooks/useT';
-import { courseAccentVars } from '@/app/features/courses/courseMeta';
+import { courseTileVars } from '@/lib/ui/tile';
 import {
   firstTrainableNode,
   hasCompletedIn,
@@ -306,10 +306,10 @@ export default function NodePreviewScreen() {
      * `--course-tile` scopes the screen so the progress the plan may draw reads the one colour,
      * and `--course-accent` is that colour *as type on a photograph* — the tile where the tile is
      * a colour, plain white where the course has none, so a near-black tile can never set
-     * near-black type on the picture. Both come from `courseAccentVars()`, which is the «Курсы»
+     * near-black type on the picture. Both come from `courseTileVars()`, which is the «Курсы»
      * card's own answer to the same question.
      */
-    <div style={courseAccentVars(course.tile)}>
+    <div style={courseTileVars(course.tile)}>
       <Screen
         header={header}
         footer={
@@ -397,7 +397,7 @@ export default function NodePreviewScreen() {
                 className="pointer-events-none relative h-32"
                 style={{
                   background:
-                    'linear-gradient(180deg, rgba(10,10,12,0) 0%, rgba(10,10,12,0.28) 46%, rgba(10,10,12,0.62) 74%, rgba(10,10,12,0.82) 100%)',
+                    'linear-gradient(180deg, rgba(26,26,26,0) 0%, rgba(26,26,26,0.28) 46%, rgba(26,26,26,0.62) 74%, rgba(26,26,26,0.82) 100%)',
                 }}
               />
             ) : null}
@@ -413,7 +413,7 @@ export default function NodePreviewScreen() {
                 still
                   ? {
                       background:
-                        'linear-gradient(180deg, rgba(10,10,12,0.82) 0%, rgba(10,10,12,0.96) 100%)',
+                        'linear-gradient(180deg, rgba(26,26,26,0.82) 0%, rgba(26,26,26,0.96) 100%)',
                     }
                   : undefined
               }

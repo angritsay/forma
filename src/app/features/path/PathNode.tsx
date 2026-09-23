@@ -74,7 +74,7 @@ export function PathNode({ node, status, n, column, stars, onPress, buttonRef }:
         className={clsx(
           'flex aspect-square w-full max-w-16 items-center justify-center justify-self-center rounded-pill border-2',
           'transition-transform duration-150 ease-(--ease-out) active:scale-[0.96]',
-          status === 'done' && 'hero-art border-course',
+          status === 'done' && 'hero-art border-course-accent',
           /*
            * Today lands: `.pop-in` is the spring the prototype gives the current stop (there a
            * halo pulses round it), and the one place on this screen the spring is allowed — it is
@@ -121,7 +121,9 @@ export function PathNode({ node, status, n, column, stars, onPress, buttonRef }:
           <span className="mt-1 line-clamp-2 block text-[13px] leading-snug text-muted-2">
             {status === 'current' ? (
               <>
-                <span className="font-semibold text-course">{t('app.homeTodayEyebrow')}</span>
+                <span className="font-semibold text-course-accent">
+                  {t('app.homeTodayEyebrow')}
+                </span>
                 {line ? ' · ' : null}
               </>
             ) : null}
