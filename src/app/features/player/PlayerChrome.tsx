@@ -64,9 +64,8 @@ export function PlayerHeader({ progress, paused, onBack, onTogglePause }: Player
        * How far through the session, as a 2px rule along the very top edge.
        *
        * A rule says the same thing «Шаг 5 из 20» said, without asking anyone to read two numbers
-       * and divide them mid-set. It is the one place the programme colour appears up here — as
-       * `--course-accent`, the colour made readable as a thin figure on a dark ground (the tile
-       * itself would vanish for the two blues).
+       * and divide them mid-set. It is progress, so it is the light blue (the semantic colour map,
+       * global.css header) — not the programme colour, which is identity and not a state.
        */}
       <div
         className="relative h-[2px] w-full bg-paper/15"
@@ -77,7 +76,7 @@ export function PlayerHeader({ progress, paused, onBack, onTogglePause }: Player
         aria-label={t('app.playerProgressLabel')}
       >
         <div
-          className="h-full bg-course-accent transition-[width] duration-300 ease-(--ease-out)"
+          className="h-full bg-accent transition-[width] duration-300 ease-(--ease-out)"
           style={{ width: `${Math.min(1, Math.max(0, progress)) * 100}%` }}
         />
       </div>
@@ -300,7 +299,7 @@ export function SectionStepper({ sections, current }: SectionStepperProps) {
             className={clsx(
               'eyebrow flex flex-1 items-center gap-1.5 border-t-2 pt-2 transition-colors duration-150 ease-(--ease-out)',
               active
-                ? 'border-course-accent text-course-accent'
+                ? 'border-accent text-accent'
                 : done
                   ? 'border-border-strong text-muted'
                   : 'border-border text-muted-2',

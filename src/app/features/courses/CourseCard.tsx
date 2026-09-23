@@ -192,7 +192,7 @@ export function CourseCard({
              */}
             <div className="h-[2px] w-full bg-paper/18">
               <div
-                className="h-full bg-course-accent"
+                className="h-full bg-accent"
                 style={{ width: `${share}%` }}
                 role="progressbar"
                 aria-label={title}
@@ -202,18 +202,20 @@ export function CourseCard({
               />
             </div>
             {/* The figure, set the prototype's way — the number larger than the word — and in the
-                course's colour, which is the whole of the mockup's colour system. `.tabular` so a
+                light blue, because it is progress and progress is the interface accent (the
+                semantic colour map, global.css header): the course's own colour is identity and
+                does not colour type on a photograph. `.tabular` so a
                 percentage does not jitter as it climbs; the display face at 800 through
                 `.font-display` with the weight raised, because `.display` brings a tracking and a
                 line height that a one-line figure of digits does not want. */}
-            <p className="font-display tabular mt-4 text-[42px] leading-none font-extrabold tracking-[-0.02em] text-course-accent">
+            <p className="font-display tabular mt-4 text-[42px] leading-none font-extrabold tracking-[-0.02em] text-accent">
               {share}%
             </p>
           </>
         )}
 
         {share === undefined && eyebrow ? (
-          <span className="eyebrow text-course-accent">{eyebrow}</span>
+          <span className="eyebrow text-paper/85">{eyebrow}</span>
         ) : null}
 
         {/* The name sits under the figure where there is one, and at the top of the card where
@@ -221,7 +223,7 @@ export function CourseCard({
             a card about nothing. */}
         <p
           className={clsx(
-            'text-[15px] leading-tight text-course-accent',
+            'text-[15px] leading-tight font-semibold text-paper',
             share === undefined && !eyebrow ? null : 'mt-2',
           )}
         >
@@ -279,8 +281,9 @@ interface CourseHeroProps {
  *
  * The same four facts as the photograph card, in the field's vocabulary:
  *
- *   - the course's own colour as a **tag**, never a field — the percentage in a pill of the tile
- *     with its measured ink (orange for the beginners' course, 6.04). A course not started has no
+ *   - the percentage as a light-blue pill: it is progress, and progress is the interface accent
+ *     (the semantic colour map, global.css header) — the course's orange is identity and would
+ *     read as «effort» on a number that only counts. A course not started has no
  *     figure; its tag is the neon promise instead («Первая тренировка бесплатно»), tilted like a
  *     sticker, because that is the attention the neon exists for;
  *   - the name in white at display weight, its last word the light-blue key word with the swoosh;
@@ -324,7 +327,7 @@ function CourseHero({
       <div className="pointer-events-none relative z-10 flex flex-col">
         <div className="flex min-h-8 items-start">
           {share !== undefined ? (
-            <Pill tone="course-fill" className="tabular">
+            <Pill tone="sky" className="tabular">
               {share}%
             </Pill>
           ) : eyebrow ? (

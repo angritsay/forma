@@ -9,7 +9,10 @@ export interface ProgressBarProps {
   label?: string;
   /** Text shown to the right of the bar (e.g. "3/12"). */
   valueText?: string;
-  /** Fill colour. Default `course`: the programme colour if a course is in scope, else light blue. */
+  /**
+   * Fill colour. Default `accent`: progress is the light blue's job in the semantic colour map
+   * (global.css header). `course` is the programme's identity colour — a course's own figure only.
+   */
   tone?: ProgressTone;
   size?: 'sm' | 'md';
   /**
@@ -22,16 +25,13 @@ export interface ProgressBarProps {
 }
 
 /*
- * The fill is the programme colour when a course is in scope — `--course-accent`, set by
- * courseTileVars() on the course's card or screen — and the brand's light blue `--accent` otherwise. It is the *accent* and
- * not the tile because a bar is a thin figure on the ground: the club's and the coach's blues
- * measure 2.26 and 4.37 on charcoal and would all but vanish, and the accent is exactly the tile's
- * colour made readable there (light blue for both blues, the tile itself for the rest). That is rule 1 of the
- * brandbook in one control: the bar is one of the three places the colour may land, and on a
- * screen with no course the progress is the interface accent. `accent` forces the light blue
- * (the third palette's accent — it was white while the accent was white); `primary` is plain white
- * for the rare bar that must not read as brand; the semantic tones are for a bar that reports a
- * result rather than progress.
+ * The fill is the brand's light blue `--accent` by default: progress is one of the light blue's
+ * jobs in the semantic colour map (global.css header, design/CHANGELOG.md §15). It used to be the
+ * programme colour whenever a course was in scope, which on «Форма с нуля» made every bar orange —
+ * and orange means effort in this product, not «how far along». `course` is still here for a
+ * figure that *is* the course (`--course-accent`, set by courseTileVars()); `primary` is plain
+ * white for the rare bar that must not read as brand; the semantic tones are for a bar that
+ * reports a result rather than progress.
  */
 const TONE: Record<Exclude<ProgressTone, 'course'>, string> = {
   primary: 'bg-primary',
@@ -47,7 +47,7 @@ export function ProgressBar({
   value,
   label,
   valueText,
-  tone = 'course',
+  tone = 'accent',
   size = 'md',
   ground = 'dark',
   className,

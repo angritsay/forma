@@ -88,6 +88,15 @@ interface TileProps {
 }
 
 /** Одно число и подпись под ним. Числа — дисплейным, потому что за ними сюда и приходят. */
+/** «14.09» — a week start short enough to leave the five numbers their room on a phone. */
+function weekLabel(locale: string, iso: string): string {
+  return new Intl.DateTimeFormat(locale === 'ru' ? 'ru-RU' : 'en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    timeZone: 'UTC',
+  }).format(new Date(`${iso.slice(0, 10)}T00:00:00Z`));
+}
+
 function Tile({ label, value }: TileProps) {
   return (
     <div className="flex flex-col gap-1 rounded-card border border-border bg-surface p-4">
@@ -262,20 +271,24 @@ export default function AdminStatsScreen() {
           {weeks.length > 0 ? (
             <section className="flex flex-col gap-3">
               <h2 className="font-display text-xl">{t('app.adminStatsWeeks')}</h2>
-              {/* Пять узких колонок цифр — таблица и есть таблица; на узком экране она скролится
-                  вбок сама, а не ломает страницу. */}
-              <div className="-mx-6 overflow-x-auto px-6 md:-mx-10 md:px-10">
-                <table className="w-full min-w-[420px] border-collapse text-[13px]">
+              {/*
+               * Пять узких колонок цифр — и помещаются они в 390px без прокрутки вбок: неделя
+               * записана числом («14.09»), «идёт» уходит строкой под дату, заголовки — короткие.
+               * Прокрутка вбок на телефоне прятала последний столбец — «Опл.», ради которого на
+               * таблицу и смотрят.
+               */}
+              <div>
+                <table className="w-full table-fixed border-collapse text-[13px]">
                   <thead>
                     <tr className="text-muted-2">
-                      <th scope="col" className="eyebrow py-2 text-left font-normal">
+                      <th scope="col" className="eyebrow w-[22%] py-2 text-left font-normal">
                         {t('app.adminStatsColWeek')}
                       </th>
                       {FUNNEL_STEPS.map((step) => (
                         <th
                           key={step}
                           scope="col"
-                          className="eyebrow py-2 text-right font-normal"
+                          className="eyebrow truncate py-2 text-right text-[11px] font-normal"
                           title={t(STEP_LABEL[step])}
                         >
                           {t(COL_SHORT[step])}
@@ -288,10 +301,10 @@ export default function AdminStatsScreen() {
                       const running = isCurrentWeek(w.weekStart, today);
                       return (
                         <tr key={w.weekStart} className="border-t border-border">
-                          <td className="py-2.5 whitespace-nowrap text-muted">
-                            {formatDate(locale, w.weekStart)}
+                          <td className="tabular py-2.5 whitespace-nowrap text-muted">
+                            {weekLabel(locale, w.weekStart)}
                             {running ? (
-                              <span className="ml-2 text-[11px] text-muted-2">
+                              <span className="block text-[11px] text-muted-2">
                                 {t('app.adminStatsWeekRunning')}
                               </span>
                             ) : null}

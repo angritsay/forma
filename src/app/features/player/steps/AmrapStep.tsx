@@ -91,7 +91,7 @@ export function AmrapStep({
               <BigClock
                 seconds={clock.remainingSec}
                 label={t('training.format_amrap')}
-                tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'accent' : 'default'}
+                tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'urgent' : 'default'}
                 caption={`${t('training.maxRepsHint', { min: minutes })} · ${t('training.maxRepsGoal', { n: goal })}`}
               />
             </PlayerTimerSlot>
@@ -168,7 +168,7 @@ export function AmrapStep({
             <BigClock
               seconds={clock.remainingSec}
               label={t('training.format_amrap')}
-              tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'accent' : 'default'}
+              tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'urgent' : 'default'}
               caption={`${t('training.amrapHint', { min: minutes })} · ${amrapExpectedText(t, locale, step.expectedRounds)}`}
             />
           </PlayerTimerSlot>

@@ -9,7 +9,11 @@ export interface RingProgressProps {
   size?: number;
   /** Stroke width in px. Default 6. */
   stroke?: number;
-  /** Stroke colour. Default `course`: the programme colour if a course is in scope, else light blue. */
+  /**
+   * Stroke colour. Default `accent`: progress is the light blue's job in the semantic colour map
+   * (global.css header). `course` is the programme's identity colour and is for a course's own
+   * figure only, never for generic progress.
+   */
   tone?: ProgressTone;
   /** Accessible name. */
   label?: string;
@@ -29,15 +33,14 @@ const TONE: Record<Exclude<ProgressTone, 'course'>, string> = {
 
 /**
  * The one ring the system allows — the design system ships it for the fitness index and the day's
- * completion. Same colour rule as {@link ProgressBar}: the programme colour when a course is in
- * scope, the light-blue accent otherwise. The arc ends are square, not rounded; a round cap on a thick stroke is a
+ * completion. Same colour rule as {@link ProgressBar}: progress is the light-blue accent. The arc ends are square, not rounded; a round cap on a thick stroke is a
  * pill end, and the system has none.
  */
 export function RingProgress({
   value,
   size = 120,
   stroke = 6,
-  tone = 'course',
+  tone = 'accent',
   label,
   valueText,
   children,

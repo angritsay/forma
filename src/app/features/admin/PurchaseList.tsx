@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { formatDate, type TKey } from '@/i18n/index';
 import type { PurchaseRow, PurchaseStatus } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
-import { courseName, nextStatuses } from './model';
+import { courseName, nextStatuses, sourceLabel } from './model';
 
 export const STATUS_LABEL: Record<PurchaseStatus, TKey> = {
   pending: 'app.adminStatusPending',
@@ -68,7 +68,7 @@ export function PurchaseList({ rows, busyId, onAction }: PurchaseListProps) {
                     {row.activatedAt
                       ? ` · ${t('app.adminActivated', { date: formatDate(locale, row.activatedAt, 'long') })}`
                       : ''}
-                    {row.source ? ` · ${row.source}` : ''}
+                    {sourceLabel(t, row.source) ? ` · ${sourceLabel(t, row.source)}` : ''}
                   </span>
                   {row.note ? <span className="text-xs text-muted">{row.note}</span> : null}
                 </div>

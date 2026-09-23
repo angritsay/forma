@@ -35,14 +35,14 @@ export interface OptionTileProps {
  *    44px; a plate is 48px and already past it, and the same pseudo-element inside a grid would
  *    overlap its neighbours.
  *
- * Selected is the white fill with black text — the one inversion the system uses for "this is the
- * thing that acts", the same as the primary button and the recommended row in the player's
- * difficulty sheet. It is the only fill in the group, so the chosen answer is found first.
+ * Selected is the light blue with ink words — selection is the light blue's job in the semantic
+ * colour map (global.css header, design/CHANGELOG.md §15), the same as a selected `Chip`. It is
+ * the only fill in the group, so the chosen answer is found first.
  *
  * **Picking one looks like something.** A check in a circle lands on the plate on the spring
  * (`.pop-in`, design/CHANGELOG.md §10: «сделанное выглядит сделанным») — the same mark a delivered
  * club task gets. On the white plate the circle is ink with a paper check, the plate's own
- * inversion inverted back, so it reads on the fill it sits on. It is keyed on nothing and mounts
+ * inversion inverted back, so it reads on the fill it sits on (ink on light blue 14.7). It is keyed on nothing and mounts
  * only while selected, so it pops once per pick and not on every re-render.
  *
  * **The label is sentence case, and this file is why the rule needed a second pass.** The case came
@@ -81,9 +81,9 @@ export function OptionTile({
          * ступенька» gets the room it needs, and the row still ends flush at the right margin.
          */
         wide ? 'w-full' : 'flex-auto',
-        /* Chosen is electric blue with white words, as every selection in the app. */
+        /* Chosen is the light blue with ink words, as every selection in the app. */
         selected
-          ? 'border-field bg-field text-on-field'
+          ? 'border-accent bg-accent text-on-accent'
           : 'border-border bg-surface-2 text-text hover:bg-surface-3',
       )}
     >
@@ -104,7 +104,7 @@ export function OptionTile({
       {mark ? (
         <span className="flex size-5 shrink-0 items-center justify-center" aria-hidden="true">
           {selected ? (
-            <span className="pop-in flex size-5 items-center justify-center rounded-pill bg-on-field text-field">
+            <span className="pop-in flex size-5 items-center justify-center rounded-pill bg-ink text-accent">
               <Glyph size={11}>✓</Glyph>
             </span>
           ) : null}

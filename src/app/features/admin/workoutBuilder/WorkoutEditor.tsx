@@ -11,7 +11,7 @@
  * changing one rep count would drop the twelve minutes.
  */
 import { clsx } from 'clsx';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Glyph } from '@/components/ui/Icon';
 import { IconButton } from '@/components/ui/IconButton';
@@ -68,6 +68,8 @@ export interface WorkoutEditorProps {
   saving: boolean;
   onSave: (input: CustomWorkoutInput) => void;
   onCancel: () => void;
+  /** Told whenever the form starts or stops differing from what it opened with. */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 const KINDS: CustomSectionKind[] = ['warmup', 'main', 'cooldown'];
@@ -112,11 +114,11 @@ const clampInt = (v: string, lo: number, hi: number, fallback: number) => {
 
 /*
  * The small number boxes of a row — the amount, the rest, the rounds — drawn as the kit's field
- * one step down: 40px, --surface-2, a hairline, a white border on focus, the figure set tabular in
- * the display face so a column of them lines up. Kept small on purpose: a row holds three.
+ * one step down: 44px (the tap minimum; 40 was a miss on a phone), --surface-2, a hairline, a
+ * white border on focus, the figure set tabular in the display face so a column of them lines up.
  */
 const NUM_INPUT =
-  'numeral tabular h-10 w-16 border border-border bg-surface-2 text-center text-[15px] text-text outline-none transition-colors duration-150 ease-(--ease-out) focus:border-primary';
+  'numeral tabular h-11 w-18 border border-border bg-surface-2 text-center text-[15px] text-text outline-none transition-colors duration-150 ease-(--ease-out) focus:border-primary';
 
 export function WorkoutEditor({
   initialTitle = '',
@@ -128,6 +130,7 @@ export function WorkoutEditor({
   saving,
   onSave,
   onCancel,
+  onDirtyChange,
 }: WorkoutEditorProps) {
   const { t, l } = useT();
   // Новая тренировка собирается по-русски: русское название обязательно, переводить пока нечего.
@@ -145,6 +148,37 @@ export function WorkoutEditor({
   const [descriptionEn, setDescriptionEn] = useState(initialDescriptionEn ?? '');
   const [sections, setSections] = useState<DraftSection[]>(() => emptySections(initialStructure));
   const [pickerFor, setPickerFor] = useState<CustomSectionKind | null>(null);
+
+  /*
+   * Dirty is «differs from what it opened with», not «was touched»: typing a letter and deleting
+   * it again leaves nothing to lose. The snapshot leaves out the row keys and sources, which are
+   * bookkeeping rather than content.
+   */
+  const snapshot = JSON.stringify([
+    title,
+    titleEn,
+    authorSlug,
+    description,
+    descriptionEn,
+    sections.map((s) => [
+      s.sets,
+      s.restBetweenRoundsSec,
+      s.items.map((it) => [
+        it.exerciseId,
+        it.unit,
+        it.target,
+        it.perSide,
+        it.restAfterSec,
+        it.note,
+        it.noteEn,
+      ]),
+    ]),
+  ]);
+  const initialSnapshot = useRef(snapshot);
+  const dirty = snapshot !== initialSnapshot.current;
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
 
   const totalItems = sections.reduce((n, s) => n + s.items.length, 0);
   const canSave = title.trim().length > 0 && totalItems > 0 && !saving;
@@ -320,7 +354,7 @@ export function WorkoutEditor({
                   onChange={(e) =>
                     updateSection('main', { sets: clampInt(e.target.value, 1, 20, 1) })
                   }
-                  className={clsx(NUM_INPUT, 'w-14')}
+                  className={clsx(NUM_INPUT, 'w-16')}
                 />
               </label>
             ) : null}

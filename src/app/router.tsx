@@ -157,6 +157,11 @@ export function AppRoutes() {
                 <Route path="/book" element={<LazyScreen name="BookScreen" />} />
                 <Route path="/admin" element={<LazyScreen name="AdminScreen" />} />
                 <Route path="/admin/workouts" element={<LazyScreen name="AdminWorkoutsScreen" />} />
+                {/* The workout editor on its own address (`new` for a new one), so back leaves it. */}
+                <Route
+                  path="/admin/workouts/:id"
+                  element={<LazyScreen name="AdminWorkoutsScreen" />}
+                />
                 <Route path="/admin/stats" element={<LazyScreen name="AdminStatsScreen" />} />
                 <Route
                   path="/admin/exercises"

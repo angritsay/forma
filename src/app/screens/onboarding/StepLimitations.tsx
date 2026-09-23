@@ -129,11 +129,18 @@ export function StepLimitations({ draft, update }: StepProps) {
  *
  * `aria-hidden` on the emoji: a screen reader announcing «нога Колени» is worse than «Колени», and
  * the word already carries the whole answer — the picture is here to be scanned, not read.
+ *
+ * The emoji sits on its own neutral `--surface-2` disc. A picked plate turns light blue, and an
+ * emoji is never laid straight on a coloured fill (the semantic colour map, global.css header) —
+ * on the unpicked plate the disc is the plate's own colour and simply disappears.
  */
 function TileLabel({ emoji, text }: { emoji: string; text: string }) {
   return (
     <span className="flex items-center gap-2">
-      <span aria-hidden="true" className="text-base leading-none">
+      <span
+        aria-hidden="true"
+        className="flex size-7 shrink-0 items-center justify-center rounded-pill bg-surface-2 text-base leading-none"
+      >
         {emoji}
       </span>
       <span className="min-w-0">{text}</span>

@@ -53,7 +53,7 @@ export function RestStep({ step, prescribed, paused, beep, onNext, registerNext 
         <BigClock
           seconds={clock.remainingSec}
           label={t('training.rest')}
-          tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'accent' : 'default'}
+          tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'urgent' : 'default'}
           {...(nextItem ? { caption: targetLabel(t, nextItem) } : {})}
         />
       </PlayerTimerSlot>

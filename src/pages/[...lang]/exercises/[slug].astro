@@ -81,12 +81,12 @@ const image = ogImagePath('exercise', ex.id, locale);
 const imageUrl = absoluteUrl(site, image);
 const tile = exerciseTile(ex);
 /*
- * The programme colour may paint numerals and pills — but only when there is one. A movement
- * that belongs to no course sits on the neutral dark tile, and `text-course` there is the ground
- * itself: the step numbers would vanish. Those pages keep the numerals grey.
+ * The step numerals are the light blue — key figures, the semantic colour map's job for it
+ * (global.css header) — whatever the movement's course: the programme colour is identity for a
+ * tile and a tag, not a type colour. `coloured` still decides the level fact's pill below.
  */
 const coloured = isLightTile(tile);
-const numeralCls = coloured ? 'text-course-accent' : 'text-muted';
+const numeralCls = 'text-accent';
 
 const courses = coursesUsingExercise(ex.id);
 const primary = courses[0];

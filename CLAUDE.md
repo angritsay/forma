@@ -16,7 +16,10 @@
   screen (white type, light-blue key word); neon `#f4ff3f` for the one main action; the crossroads
   gradient belongs to the club only; section colours are tags (beginners orange `#ff5a00`,
   dumbbells neon, yoga beige `#ffe6d0`, coach bleu ciel `#007bff`); ink on a fill is chosen by
-  measured contrast (`src/lib/ui/tile.ts`); no outlined text. Concentric radii, Unbounded in
+  measured contrast (`src/lib/ui/tile.ts`); no outlined text. Each colour carries one meaning —
+  the semantic map in `design/CHANGELOG.md` §15 and `src/lib/ui/semantic.ts` (orange = effort,
+  light blue = selection/progress, neon = «now»); the course colour is identity only, and no emoji
+  sits on a saturated fill (`contrast-usage.test.ts`). Concentric radii, Unbounded in
   sentence case for display, Onest for text, glyphs instead of icons. Check a new screen against
   `design/ui_kits`-style references before inventing a pattern.
 - Code, comments, commit messages and docs in English; product copy is Russian with an English

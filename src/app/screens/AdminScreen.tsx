@@ -88,7 +88,7 @@ const FILTER_LABEL: Record<StatusFilter, TKey> = {
 /** The three authoring tools, in the order the coach reaches for them. */
 const TOOLS: { key: TKey; to: string }[] = [
   { key: 'app.builderScreenTitle', to: '/admin/workouts' },
-  { key: 'app.courseScreenTitle', to: '/admin/courses' },
+  { key: 'app.courseNavLabel', to: '/admin/courses' },
   { key: 'app.exScreenTitle', to: '/admin/exercises' },
   { key: 'app.mAdminNav', to: '/admin/marathons' },
   { key: 'app.adminStatsTitle', to: '/admin/stats' },

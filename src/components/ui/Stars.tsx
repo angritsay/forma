@@ -1,8 +1,10 @@
 /**
  * Three stars, however full they are.
  *
- * The brandbook is black, white and the one programme colour, with glyphs rather than icons — so
- * a star here is a glyph set in the programme colour, not an illustration. It is a star and not
+ * Glyphs rather than icons — so a star here is a glyph set in the brand's light blue, not an
+ * illustration. It used to take the programme colour, which on «Форма с нуля» made a grade orange
+ * — the colour of effort; the semantic colour map (global.css header) keeps the course colour for
+ * identity, and a grade is the product speaking, which is the light blue's job. It is a star and not
  * some more austere mark because the owner asked for «звёздочки» and every athlete already knows
  * what one means; inventing a house shape for it would make the product harder to read in
  * exchange for nothing.
@@ -34,7 +36,7 @@ function Star({ fill, size }: { fill: number; size: number }) {
       <span className="absolute inset-0 text-muted-2 opacity-45">★</span>
       {fill > 0 ? (
         <span
-          className="absolute inset-0 overflow-hidden text-course-accent"
+          className="absolute inset-0 overflow-hidden text-accent"
           style={{ width: `${Math.round(fill * 100)}%` }}
         >
           <span className="block" style={{ width: size }}>
