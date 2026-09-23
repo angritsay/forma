@@ -36,6 +36,15 @@ function minutes(workout: Workout, choice: DifficultyChoice, scale = 1): number 
   return prescribeWorkout(workout, { profile: PROFILE, level: 2, choice, scale }).estimatedSec / 60;
 }
 
+/**
+ * The coach's "start every N minutes" pieces, authored as circuits so their rests play (beginner
+ * workouts 3 and 10). Their round is a couple of minutes by construction — workout 3 is a single
+ * pass of three pairs, which «Полегче» cannot shorten by a round, and workout 10's round is his
+ * two-minute window — so «Полегче» removes less than MIN_STEP_MIN. Stretching the rest to reach
+ * three minutes would rewrite his format; the harder side keeps the full check.
+ */
+const EVERY_N_MINUTES = new Set(['w_s03_pairs', 'w_s10_every_2min']);
+
 /** Blocks the choice can add a set to; without one, only volume and windows move. */
 function hasScalableSetBlock(workout: Workout): boolean {
   return workout.blocks.some(
@@ -70,10 +79,15 @@ describe('published course load', () => {
       const easier = minutes(workout, 'easier');
       const normal = minutes(workout, 'normal');
       const harder = minutes(workout, 'harder');
-      for (const step of [normal - easier, harder - normal]) {
+      const steps = EVERY_N_MINUTES.has(workout.id)
+        ? [harder - normal]
+        : [normal - easier, harder - normal];
+      for (const step of steps) {
         expect(step).toBeGreaterThanOrEqual(MIN_STEP_MIN);
         expect(step).toBeLessThanOrEqual(MAX_STEP_MIN);
       }
+      // Easier still has to be easier, even where it cannot be three minutes easier.
+      expect(normal - easier).toBeGreaterThan(0);
     },
   );
 
