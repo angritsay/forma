@@ -1,9 +1,11 @@
+import { useNavigate } from 'react-router';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Glyph } from '@/components/ui/Icon';
 import { formatDate, formatNumber } from '@/i18n/index';
 import type { PersonRow } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
+import { personPath } from './person/path';
 import { rowIndex } from './PurchaseList';
 
 export interface PeopleListProps {
@@ -30,6 +32,7 @@ export interface PeopleListProps {
  */
 export function PeopleList({ rows, onGrantCourse, onGrantSubscription }: PeopleListProps) {
   const { t, locale } = useT();
+  const navigate = useNavigate();
   return (
     <ul className="flex flex-col">
       {rows.map((row, i) => (
@@ -40,7 +43,14 @@ export function PeopleList({ rows, onGrantCourse, onGrantSubscription }: PeopleL
             </span>
             <div className="flex min-w-0 flex-1 flex-col gap-3 lg:flex-row lg:items-center lg:gap-6">
               <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
-                <div className="flex min-w-0 flex-col gap-0.5">
+                {/* The address and the name open the person's page (0046): everything they hold
+                    and have done, with the same grants one tap further. */}
+                <button
+                  type="button"
+                  aria-label={t('app.personOpen', { name: row.displayName?.trim() || row.email })}
+                  onClick={() => void navigate(personPath(row.email))}
+                  className="flex min-w-0 flex-col gap-0.5 text-left transition-opacity duration-150 ease-(--ease-out) hover:opacity-80 active:opacity-60"
+                >
                   {/*
                    * The address wraps instead of truncating, unlike the purchases ledger's copy of
                    * this row. There the email labels a purchase you already know about; here it is
@@ -59,7 +69,7 @@ export function PeopleList({ rows, onGrantCourse, onGrantSubscription }: PeopleL
                         a different person to help than somebody training. */}
                     {row.onboardedAt ? '' : ` · ${t('app.adminPersonNotOnboarded')}`}
                   </span>
-                </div>
+                </button>
                 {/* What they hold, in the order of what it costs to give: nothing at all is the
                     plain case and says so in words, because an empty space would read as loading. */}
                 <div className="flex shrink-0 flex-col items-end gap-1.5">

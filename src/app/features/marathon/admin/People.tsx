@@ -11,6 +11,7 @@
  * purchases, and it is what lets a round be built on a Sunday from a Telegram thread.
  */
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -18,6 +19,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Sheet } from '@/components/ui/Sheet';
 import type { MarathonMemberRow, MarathonTeamRow } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
+import { personPath } from '@/app/features/admin/person/path';
 
 export interface PeopleProps {
   members: readonly MarathonMemberRow[];
@@ -30,6 +32,7 @@ export interface PeopleProps {
 
 export function People({ members, teams, solo, onAddMember, onSetStatus }: PeopleProps) {
   const { t } = useT();
+  const navigate = useNavigate();
   const [addOpen, setAddOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -66,7 +69,15 @@ export function People({ members, teams, solo, onAddMember, onSetStatus }: Peopl
               key={member.id}
               className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border py-3.5"
             >
-              <span className="min-w-0 flex-1">
+              {/* The whole person — purchases, proofs, payments — one tap away (0046). */}
+              <button
+                type="button"
+                aria-label={t('app.personOpen', {
+                  name: member.displayName?.trim() || member.email,
+                })}
+                onClick={() => void navigate(personPath(member.email))}
+                className="min-w-0 flex-1 text-left transition-opacity duration-150 ease-(--ease-out) hover:opacity-80 active:opacity-60"
+              >
                 <span className="font-display block truncate text-[15px] leading-[1.24]">
                   {member.displayName?.trim() || member.email}
                 </span>
@@ -78,7 +89,7 @@ export function People({ members, teams, solo, onAddMember, onSetStatus }: Peopl
                     {(member.teamId && teamName.get(member.teamId)) || t('app.mAdminNoTeam')}
                   </span>
                 ) : null}
-              </span>
+              </button>
               {member.status === 'removed' ? (
                 <Badge tone="warning">{t('app.mAdminRemoved')}</Badge>
               ) : null}
