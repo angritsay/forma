@@ -29,9 +29,22 @@
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { messageFor, toLocale, type Locale } from './copy.ts';
+import { adminMessage, parseTopics, type AdminRow } from './admin.ts';
 
 /** Сколько строк за один запуск. При раз в 10 минут это с огромным запасом. */
 const BATCH = 50;
+
+/**
+ * Очередь владельца (0040) — вторая, и разгребается тем же запуском.
+ *
+ * Общего у двух очередей ровно одно: расписание, токен и дверь. Всё остальное разное — получатель,
+ * срок жизни строки, язык, — поэтому таблицы две, а функция одна. Заводить второй cron и второй
+ * секрет ради того же самого значило бы удвоить количество мест, где рассылка может встать молча.
+ */
+interface AdminQueueRow extends AdminRow {
+  id: string;
+  attempts: number;
+}
 
 /** После скольких неудач подряд строка признаётся безнадёжной. */
 const MAX_ATTEMPTS = 5;
@@ -59,6 +72,119 @@ function reply(status: number, body: Record<string, unknown>): Response {
   });
 }
 
+/**
+ * Разгрести очередь владельца: `admin_outbox` → темы группы.
+ *
+ * Отличий от рассылки людям три, и все три — про то, что получатель известен заранее.
+ *
+ * **Срока нет.** Покупка трёхдневной давности всё так же требует, чтобы её увидели, поэтому здесь
+ * нет ни `expires_at`, ни статуса `skipped`.
+ *
+ * **Неизвестная тема — не потеря.** Если id темы нет в секрете, сообщение уходит в ту же группу
+ * без `message_thread_id`, то есть в «General». Это заметно и поправимо; молча удалить строку про
+ * деньги — нет.
+ *
+ * **Незнакомый вид остаётся в очереди.** `adminMessage` отвечает `null`, когда база обогнала
+ * функцию: строка ждёт следующей выкладки вместо того, чтобы превратиться в пустое сообщение.
+ *
+ * **Пишет служебный бот, а не клиентский.** Владелец: «а мы можем второго бота как раз
+ * использовать под админку?» — да, и это лучше: клиентскому боту нечего делать во внутренней
+ * группе, а отозванный или перевыпущенный токен одного не гасит второй контур. Все возражения
+ * против второго бота касались его как **входа для клиентов** (подпись мини-аппа, рассылка
+ * покупателям); служебный отправитель в одну закрытую группу ни того, ни другого не трогает.
+ *
+ * `TELEGRAM_ADMIN_BOT_TOKEN` необязателен: без него пишет основной бот, как раньше.
+ */
+async function drainAdmin(
+  admin: ReturnType<typeof createClient>,
+  fallbackToken: string,
+): Promise<{ sent: number; failed: number }> {
+  const chatId = Deno.env.get('TELEGRAM_ADMIN_CHAT') ?? '';
+  if (!chatId.trim()) return { sent: 0, failed: 0 };
+
+  const botToken = (Deno.env.get('TELEGRAM_ADMIN_BOT_TOKEN') ?? '').trim() || fallbackToken;
+
+  const topics = parseTopics(Deno.env.get('TELEGRAM_ADMIN_TOPICS') ?? '');
+
+  const { data, error } = await admin
+    .from('admin_outbox')
+    .select('id, topic, kind, params, attempts')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true })
+    .limit(BATCH);
+
+  if (error) {
+    const e = error as PgError;
+    // Не 500 на весь запуск: рассылка людям к этой таблице отношения не имеет и должна уйти.
+    console.error('telegram-notify: could not read admin_outbox', e.code, e.message);
+    return { sent: 0, failed: 0 };
+  }
+
+  const rows = (data ?? []) as unknown as AdminQueueRow[];
+  let sent = 0;
+  let failed = 0;
+
+  for (const row of rows) {
+    const text = adminMessage(row);
+    if (!text) {
+      console.warn(`telegram-notify: unknown admin kind ${row.kind}; left in the queue`);
+      continue;
+    }
+
+    const threadId = topics[row.topic];
+    if (threadId === undefined) {
+      console.warn(`telegram-notify: no thread id for topic ${row.topic}; sending to the group`);
+    }
+
+    const done = (status: string, lastError?: string) =>
+      admin
+        .from('admin_outbox')
+        .update({
+          status,
+          attempts: row.attempts + 1,
+          last_error: lastError ? lastError.slice(0, 500) : null,
+        })
+        .eq('id', row.id);
+
+    let res: Response;
+    try {
+      res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          message_thread_id: threadId,
+          text,
+          parse_mode: 'HTML',
+          link_preview_options: { is_disabled: true },
+        }),
+      });
+    } catch (e) {
+      await done('pending', String(e));
+      failed += 1;
+      continue;
+    }
+
+    if (res.ok) {
+      await done('sent');
+      sent += 1;
+      continue;
+    }
+
+    /*
+     * 400 здесь — почти всегда «тема удалена» или «бота выгнали», и повторять это десять минут
+     * подряд бессмысленно. Строка становится `failed` с телом ответа в `last_error`, потому что
+     * ответ телеграма и есть объяснение.
+     */
+    const body = await res.text().catch(() => '');
+    const giveUp = res.status === 400 || res.status === 403 || row.attempts + 1 >= MAX_ATTEMPTS;
+    await done(giveUp ? 'failed' : 'pending', body);
+    failed += 1;
+  }
+
+  return { sent, failed };
+}
+
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return reply(405, { ok: false });
 
@@ -79,6 +205,15 @@ Deno.serve(async (req) => {
   );
   const appUrl = Deno.env.get('MINI_APP_URL') ?? DEFAULT_APP_URL;
 
+  /*
+   * Очередь владельца — первой и всегда.
+   *
+   * Раньше отказ на чтении `telegram_outbox` (а такой уже случался — 0031, `42501`) обрывал весь
+   * запуск. Пока очередь была одна, это было честно; теперь это значило бы, что сообщение о
+   * неприкреплённом платеже не уходит из-за чужой таблицы.
+   */
+  const admins = await drainAdmin(admin, botToken);
+
   const { data, error } = await admin
     .from('telegram_outbox')
     .select('id, email, kind, params, attempts, expires_at')
@@ -90,11 +225,18 @@ Deno.serve(async (req) => {
   if (error) {
     const e = error as PgError;
     console.error('telegram-notify: could not read the queue', e.code, e.message);
-    return reply(500, { ok: false, stage: 'read', code: e.code ?? '' });
+    return reply(500, { ok: false, stage: 'read', code: e.code ?? '', admin: admins });
   }
   const rows = (data ?? []) as Row[];
   if (rows.length === 0) {
-    return reply(200, { ok: true, stage: 'done', sent: 0, skipped: 0, failed: 0 });
+    return reply(200, {
+      ok: true,
+      stage: 'done',
+      sent: 0,
+      skipped: 0,
+      failed: 0,
+      admin: admins,
+    });
   }
 
   /*
@@ -214,6 +356,8 @@ Deno.serve(async (req) => {
     failed += 1;
   }
 
-  console.log(`telegram-notify: sent ${sent}, skipped ${skipped}, failed ${failed}`);
-  return reply(200, { ok: true, stage: 'done', sent, skipped, failed });
+  console.log(
+    `telegram-notify: sent ${sent}, skipped ${skipped}, failed ${failed}; admin sent ${admins.sent}, failed ${admins.failed}`,
+  );
+  return reply(200, { ok: true, stage: 'done', sent, skipped, failed, admin: admins });
 });

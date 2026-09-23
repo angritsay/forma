@@ -5,9 +5,13 @@ import {
   parseForm,
   planForAmount,
   readPayment,
+  sessionForAmount,
   sign,
   signatureMatches,
 } from './verify';
+import { BOOKING } from '@content/site/booking';
+import { COURSES } from '@/content/registry';
+import { PLANS } from '@content/site/plans';
 
 describe('parseForm', () => {
   it('builds the nested tree PHP would build from bracket keys', () => {
@@ -59,6 +63,44 @@ describe('planForAmount', () => {
     expect(planForAmount('3990.00', prices)).toBeNull();
     expect(planForAmount(undefined, prices)).toBeNull();
     expect(planForAmount('abc', prices)).toBeNull();
+  });
+});
+
+describe('sessionForAmount', () => {
+  const prices = { half: 2500, hour: 3500 };
+
+  it('maps the two session prices and nothing else', () => {
+    expect(sessionForAmount('2500.00', prices)).toBe('half');
+    expect(sessionForAmount('3500', prices)).toBe('hour');
+    expect(sessionForAmount('3990.00', prices)).toBeNull();
+    expect(sessionForAmount(undefined, prices)).toBeNull();
+    expect(sessionForAmount('abc', prices)).toBeNull();
+  });
+
+  /*
+   * Тот самый тест, на котором держится вся развилка.
+   *
+   * Prodamus не говорит, за что заплатили, — различает только сумма. Пока цена занятия ни с чем не
+   * совпадает, это безопасно; в день, когда курс поставят в 2 500 ₽, оплата курса начнёт
+   * засчитываться как занятие, курс не откроется, и выглядеть это будет как «покупка не дошла».
+   * Поэтому цены сверяются с настоящими, из контента, а не с переписанными сюда числами.
+   */
+  it('keeps the session prices clear of every course and plan price', () => {
+    const sessions = BOOKING.options.map((o) => o.price.rub);
+    const others = [...COURSES.map((c) => c.price.rub), ...PLANS.map((p) => p.price.rub)];
+    for (const rub of sessions) {
+      for (const other of others) {
+        expect(Math.abs(rub - other) >= 1, `${rub} ₽ collides with ${other} ₽`).toBe(true);
+      }
+    }
+  });
+
+  /* И сами цены — те, что напечатаны на экране брони, а не забытые умолчания функции. */
+  it('defaults to the prices the booking screen shows', () => {
+    const half = BOOKING.options.find((o) => o.id === 'half');
+    const hour = BOOKING.options.find((o) => o.id === 'hour');
+    expect(sessionForAmount(String(half?.price.rub), prices)).toBe('half');
+    expect(sessionForAmount(String(hour?.price.rub), prices)).toBe('hour');
   });
 });
 
