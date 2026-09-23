@@ -134,4 +134,4 @@ If you are not sure what volume to start from, read the [beginner's guide to Cro
 
 ## Wrap-up
 
-AMRAP teaches pacing, EMOM teaches technique under a timer, For Time teaches grit, and Tabata teaches short, even, maximal output. None of them is better than the others; each has a job, and a good program rotates them. If you would rather have the rotation, the volume and the rest calculated for you, open the [Bodyweight Engine course](course:engine): all four formats are already laid out week by week and adapt to your results.
+AMRAP teaches pacing, EMOM teaches technique under a timer, For Time teaches grit, and Tabata teaches short, even, maximal output. None of them is better than the others; each has a job, and a good program rotates them. If you would rather have the rotation, the volume and the rest calculated for you, open [the Start course](course:start): the formats arrive in it one at a time — from work by the minute to AMRAP, EMOM and a long chipper for time — and adapt to your results.

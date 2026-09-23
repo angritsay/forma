@@ -108,7 +108,7 @@ Three kettlebell sessions a week with a rest day between them is the right start
 | Wednesday | Swing school | Deadlifts, swings, halos, carries |
 | Friday | Metabolic | EMOM or a short AMRAP of swings, squats and burpees |
 
-That is exactly how the [Kettlebell Power course](course:kettlebell) is laid out: a strength day, a swing-technique day and a short interval day. EMOM and AMRAP are explained in the [guide to workout formats](guide:workout-formats).
+A week like that is easy to put together yourself: a strength day, a swing-technique day and a short interval day. EMOM and AMRAP are explained in the [guide to workout formats](guide:workout-formats).
 
 ## A sample kettlebell workout at home
 
@@ -147,4 +147,4 @@ If you do not own a bell yet but have dumbbells, the structure is the same; see 
 
 ## Wrap-up
 
-A kettlebell builds strength, conditioning and a resilient back, provided you learn it in the right order: deadlift, squat, swing, press, carries, and only then the clean and the snatch. Three sessions a week and a single bell are enough for the first two months. If you would rather have the order, the volume and the bell weight worked out for you, open the [Kettlebell Power course](course:kettlebell): six weeks from the deadlift to the snatch, with a deload week and a benchmark at the end.
+A kettlebell builds strength, conditioning and a resilient back, provided you learn it in the right order: deadlift, squat, swing, press, carries, and only then the clean and the snatch. Three sessions a week and a single bell are enough for the first two months. If the bell is your first piece of equipment at all, build the bodyweight base first in [the Start course](course:start): its squat, lunge and plank are exactly what the deadlift and the swing later stand on.

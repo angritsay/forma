@@ -18,11 +18,12 @@ export const SCREEN_NAMES = [
   'PlayerScreen',
   'SummaryScreen',
   // The physical test, now asked for after a couple of workouts rather than during onboarding.
-  // Its module arrives on another branch; until then the router renders the "not available" state.
   'AssessmentScreen',
   'LeaderboardScreen',
   'MarathonScreen',
   'MarathonBoardScreen',
+  // Accepting a friend's duo invite (the `#/duo/<token>` link).
+  'DuoInviteScreen',
   'BookScreen',
   'AdminScreen',
   'AdminWorkoutsScreen',

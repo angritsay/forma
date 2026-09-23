@@ -1979,56 +1979,6 @@ export async function listMarathonTeams(marathonId: string): Promise<MarathonTea
   );
 }
 
-export async function createMarathonTeam(
-  marathonId: string,
-  name: string,
-  sortOrder = 0,
-): Promise<MarathonTeamRow> {
-  return run(() =>
-    mutateDb((db) => {
-      const row: MarathonTeamRow = { id: demoId('mteam'), marathonId, name, sortOrder };
-      db.marathonTeams.push(row);
-      return row;
-    }),
-  );
-}
-
-export async function renameMarathonTeam(id: string, name: string): Promise<MarathonTeamRow> {
-  return run(() =>
-    mutateDb((db) => {
-      const current = db.marathonTeams.find((t) => t.id === id);
-      if (!current) throw new AppError('not_found', 'not_found');
-      const next = { ...current, name };
-      db.marathonTeams = db.marathonTeams.map((t) => (t.id === id ? next : t));
-      return next;
-    }),
-  );
-}
-
-export async function deleteMarathonTeam(id: string): Promise<void> {
-  return run(() =>
-    mutateDb((db) => {
-      db.marathonTeams = db.marathonTeams.filter((t) => t.id !== id);
-      db.marathonMembers = db.marathonMembers.map((m) =>
-        m.teamId === id ? { ...m, teamId: null } : m,
-      );
-    }),
-  );
-}
-
-/**
- * A solo marathon has nobody to pair with, so a team on a member is refused here as it is by the
- * table (`solo_marathon_has_no_teams` in migration 0011). The admin screen already hides pairing in
- * that mode; this is what keeps the two backends telling the same story if it ever does not.
- */
-function assertPairable(db: DemoDb, marathonId: string, teamId: string | null): void {
-  if (!teamId) return;
-  const marathon = db.marathons.find((m) => m.id === marathonId);
-  if (marathon && isSolo(marathon)) {
-    throw new AppError('validation', 'solo_marathon_has_no_teams');
-  }
-}
-
 export async function listMarathonMembers(marathonId: string): Promise<MarathonMemberRow[]> {
   return run(() => readDb().marathonMembers.filter((m) => m.marathonId === marathonId));
 }
@@ -2037,7 +1987,6 @@ export async function addMarathonMember(input: {
   marathonId: string;
   email: string;
   displayName?: string | null;
-  teamId?: string | null;
   note?: string | null;
 }): Promise<MarathonMemberRow> {
   return run(() =>
@@ -2046,12 +1995,11 @@ export async function addMarathonMember(input: {
       if (db.marathonMembers.some((m) => m.marathonId === input.marathonId && m.email === email)) {
         throw new AppError('validation', 'already_a_member');
       }
-      assertPairable(db, input.marathonId, input.teamId ?? null);
       const row: MarathonMemberRow = {
         id: demoId('mmember'),
         marathonId: input.marathonId,
         email,
-        teamId: input.teamId ?? null,
+        teamId: null,
         displayName: input.displayName ?? null,
         status: 'active',
         note: input.note ?? null,
@@ -2072,7 +2020,6 @@ export async function updateMarathonMember(
       const current = db.marathonMembers.find((m) => m.id === id);
       if (!current) throw new AppError('not_found', 'not_found');
       const next: MarathonMemberRow = { ...current, ...patch };
-      assertPairable(db, next.marathonId, next.teamId);
       db.marathonMembers = db.marathonMembers.map((m) => (m.id === id ? next : m));
       return next;
     }),

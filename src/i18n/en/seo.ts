@@ -11,7 +11,7 @@ export const seo = {
   // Static page names (sitemap registry, llms.txt)
   coursesHubTitle: 'Home CrossFit courses',
   coursesHubDescription:
-    'Five home CrossFit-style courses with and without equipment. Pick one, sign in with your email and the app adapts every workout to you.',
+    'Home CrossFit from zero: a twenty-workout no-equipment course, a club with a task a day and the coach in Telegram. Sign in by email; the load adapts to you.',
   aboutPage: 'About the coach',
   contactPage: 'Contact',
   privacyPage: 'Privacy policy',
@@ -179,7 +179,7 @@ export const seo = {
 
   // llms.txt / RSS / OG
   llmsIntro:
-    'Forma is a coach-made set of home CrossFit-style courses: five programs with and without equipment. The web app adapts reps, rest and load to your level after every session; access is lifetime after purchase.',
+    'Forma is home CrossFit from coach Sergey Titov: the no-equipment Start course, a club with one small task a day and a weekly board, and the coach on hand in Telegram. The app runs in Telegram and in the browser and adapts reps, rest and load after every session; a bought course is yours for life.',
   llmsCourses: 'Courses',
   llmsGuides: 'Guides',
   llmsExercises: 'Exercise library',

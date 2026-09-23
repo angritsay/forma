@@ -29,8 +29,8 @@ export const FAQ: FaqItem[] = [
   {
     q: { ru: 'Как я получу доступ к курсу?', en: 'How do I get access to a course?' },
     a: {
-      ru: 'На странице курса оставь e-mail. Мы записываем связку «почта — курс», тренер подтверждает доступ, и курс появляется в приложении под этой почтой. Купленный курс — навсегда. Если нужны все курсы сразу, есть подписка — помесячно или на год.',
-      en: 'Leave your email on the course page. We record the email–course pair, the coach confirms access, and the course shows up in the app under that email. A bought course is yours for life. If you want every course at once, there is a subscription — monthly or annual.',
+      ru: 'На странице курса оставь e-mail и оплати. Доступ откроется сам сразу после оплаты — курс появится в приложении под этой почтой. Купленный курс — навсегда. Клуб с заданием на каждый день и курс вместе — по подписке, помесячно или на год.',
+      en: 'Leave your email on the course page and pay. Access opens automatically right after the payment — the course shows up in the app under that email. A bought course is yours for life. The club with a task every day comes together with the course by subscription, monthly or annual.',
     },
   },
   {
@@ -56,15 +56,15 @@ export const FAQ: FaqItem[] = [
   {
     q: { ru: 'Нужно ли оборудование?', en: 'Do I need equipment?' },
     a: {
-      ru: 'Зависит от курса. Часть программ полностью без оборудования, для остальных нужны гантели, гиря, турник или скакалка — список есть на странице каждого курса. Если чего-то нет, приложение подберёт замену упражнению.',
-      en: 'It depends on the course. Some programs use no equipment at all; others need dumbbells, a kettlebell, a pull-up bar or a jump rope — each course page lists what it needs. If something is missing, the app substitutes the exercise.',
+      ru: 'Нет. «Форма с нуля» — без оборудования: хватит коврика и устойчивого стула. Если движение пока не получается, приложение заменит его более простым.',
+      en: 'No. Forma. Start uses no equipment: a mat and a sturdy chair are enough. If a movement is not there yet, the app swaps it for a simpler one.',
     },
   },
   {
     q: { ru: 'Я новичок. С чего начать?', en: 'I am a beginner. Where do I start?' },
     a: {
-      ru: 'При первом входе ты ответишь на несколько вопросов и сделаешь три простых теста: отжимания, приседания за минуту и планку. По ним приложение определит уровень и стартовую нагрузку. Начинать лучше с курса первого уровня.',
-      en: 'On first login you answer a few questions and do three simple tests: push-ups, air squats in a minute and a plank. The app uses them to set your level and starting load. A level-1 course is the right place to begin.',
+      ru: 'С курса «Форма с нуля» — он для новичков и тех, кто возвращается после перерыва. При первом входе ты ответишь на пять коротких вопросов, а после второй тренировки приложение предложит тест из пяти движений: приседания, отжимания, подъёмы корпуса, выпады и планку. По нему оно уточнит уровень и нагрузку.',
+      en: 'With Forma. Start — it is made for beginners and for anyone coming back after a break. On first login you answer five short questions, and after your second workout the app offers a test of five movements: squats, push-ups, sit-ups, lunges and a plank. It uses them to fine-tune your level and load.',
     },
   },
   {

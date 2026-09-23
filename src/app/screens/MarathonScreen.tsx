@@ -53,7 +53,7 @@
  * prize is the one filled pill — neon, as every «ask» tag in the app — and the leader is neon.
  */
 import { useCallback, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -124,7 +124,11 @@ export default function MarathonScreen() {
    * Дуо-круга может не быть вовсе — до того, как применена 0033. Тогда переключателя нет и экран
    * ровно такой, каким был; это не поломка, а состояние базы.
    */
-  const [mode, setMode] = useState<'solo' | 'duo'>('solo');
+  // `?mode=duo` — сюда ведёт принятое приглашение в пару (DuoInviteScreen).
+  const [searchParams] = useSearchParams();
+  const [mode, setMode] = useState<'solo' | 'duo'>(() =>
+    searchParams.get('mode') === 'duo' ? 'duo' : 'solo',
+  );
   const duo = mode === 'duo' && duoClub !== null;
   /* Закрытый круг, который тренер ведёт руками, клубом не является — он приезжает в `anyRound`. */
   const marathon = duo ? duoClub : (soloClub ?? anyRound);

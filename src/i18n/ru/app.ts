@@ -161,11 +161,9 @@ export const app = {
   homeResumeCta: 'Продолжить',
   homeResumeSave: 'Завершить и сохранить',
   homeTodayEyebrow: 'Сегодня',
-  homeTodayOpen: 'Открыть',
   // The prototype's «ВЫБЕРИ программу»: the first word heavy, the rest light (DisplayTitle).
   homeTodayNoCourseTitle: 'Выбери программу',
   homeTodayNoCourseBody: 'И первая тренировка появится здесь — уже сегодня.',
-  homeTodayCompletedTitle: 'Курс пройден',
   homeTodayOpenPath: 'Открыть путь',
   homeStatsKcal: 'ккал за неделю',
   homeStatsMinutes: 'Минут за неделю',
@@ -174,12 +172,6 @@ export const app = {
   homeYourCourses: 'Твои курсы',
   homeMoreCourses: 'Ещё курсы',
   homeCourseProgress: '{pct}% пройдено',
-  homeDeckGameLocked: 'Входит в подписку',
-  homeDeckGameTrial: 'Пробная неделя с курсом — осталось {n}',
-  homeDeckGameTrialDayOne: '1 день',
-  homeDeckGameTrialDayFew: '{n} дня',
-  homeDeckGameTrialDayMany: '{n} дней',
-  homeDeckGameLockedCta: 'Оформить подписку',
   // One word each, as the prototype's buttons have it: «Начать →», «Продолжить →».
   homeDeckStart: 'Начать',
   homeDeckContinue: 'Продолжить',
@@ -192,10 +184,8 @@ export const app = {
   coursesContinue: 'Продолжить · {pct}%',
   coursesStart: 'Начать курс',
   coursesCompleted: 'Пройден — открыть путь',
-  coursesGetAccess: 'Получить доступ',
   coursesBoughtHint:
     'Уже оплатил? Курс откроется сам, обычно за пару минут. Если нет — напиши нам.',
-  coursesSubscribe: 'Подписка — все курсы',
   coursesSubscribeHint: 'от {price} в месяц · или купи этот курс навсегда',
   coursesBuyOne: 'Купить этот курс',
   coursesWeekWordOne: 'неделя',
@@ -474,8 +464,6 @@ export const app = {
   summaryNoResultsBody: 'Эта тренировка не была завершена на этом устройстве, поэтому итогов нет.',
 
   // Прогресс
-  statsTitle: 'Прогресс',
-  statsWeekBoardTitle: 'Кто впереди',
   statsLeaderboard: 'Рейтинг',
   statsLevelEyebrow: 'Уровень {n}',
   statsPointsValue: '{n} очков',
@@ -519,7 +507,6 @@ export const app = {
   // Профиль
   profileTitle: 'Профиль',
   profileWeightsKg: '{list} кг',
-  profileLimitations: 'Что беречь',
   profileLimitationsNone: 'Ничего',
   profileSubscriptionNoneHint: 'от {price} в месяц',
   profileSubscriptionLive: '{plan} · до {date}',
@@ -529,12 +516,7 @@ export const app = {
   planMonthly: 'Месяц',
   planAnnual: 'Год',
 
-  // Home: the coach's hour
-  homeBookTitle: 'Занятие с тренером один на один',
-  homeBookText: 'Полчаса или час по видеосвязи · от {price}',
-
   // Book a session
-  bookTitle: 'Форма один на один',
   bookLengthLabel: 'Длительность сессии',
   bookDuration: '{n} мин',
   bookPay: 'Оплатить {price}',
@@ -611,7 +593,6 @@ export const app = {
   adminStatsNow: 'Сейчас',
   adminStatsPeople: 'Всего людей',
   adminStatsPaying: 'Платят',
-  adminStatsSubscribed: 'В клубе',
   adminStatsActive7: 'Тренировались за неделю',
   adminStatsActive28: 'За месяц',
   adminStatsGhostTitle: 'Заплатили и не вошли',
@@ -633,7 +614,6 @@ export const app = {
   adminStatsNeverTrained: 'ни одной тренировки',
   adminStatsLastSeen: 'был(а) {date}',
   adminStatsWorkouts: '{n} трен.',
-  adminStatsDays: '{n} дн.',
   adminStatsEmpty: 'Пока не из чего считать',
   adminStatsEmptyBody: 'Числа появятся, как только кто-нибудь войдёт в приложение.',
   adminStatsNoClosedWeeks:
@@ -685,14 +665,6 @@ export const app = {
     'В демо-режиме приложение работает целиком, на выдуманных данных внутри этого браузера. Ничего никуда не отправляется, Supabase не нужен.',
   demoAuthCode: 'Демо: код {code}',
   demoSection: 'Демо-режим',
-  demoReset: 'Сбросить демо-данные',
-  demoResetTitle: 'Сбросить демо-данные?',
-  demoResetBody:
-    'Демо-профиль, прогресс и покупки в этом браузере удалятся, и ты выйдешь из аккаунта. Никуда эти данные и не уходили.',
-  demoLeave: 'Выйти из демо',
-  demoLeaveTitle: 'Выйти из демо?',
-  demoLeaveBody:
-    'Приложение вернётся к экрану настройки. Демо-данные останутся в браузере — включишь демо снова, и всё будет на месте.',
 
   // --- custom (coach-built) workouts + builder ---
   customWorkoutTitle: 'Тренировка',
@@ -935,12 +907,6 @@ export const app = {
   dayDeload: 'Разгрузочная неделя',
   dayImage: 'Картинка дня',
   dayImageHint: 'Показывается на экране дня',
-  // Sign-in hero: the tagline split at the weight change — 800 for the claim, 200 for the promise.
-  homeUpNext: 'Дальше по курсу',
-  homeUpNextDay: 'День {n}',
-  homeTodayStatDay: 'День из {total}',
-  homeTodayStatExercises: 'Упражнения',
-  homeTodayStatTime: 'Времени',
   // Node preview: the formula kicker and the secondary action of the two-button row.
   nodeLater: 'Позже',
   // Admin: the exercise row's "has a video" stamp, and the course tile field's format error.
@@ -958,15 +924,15 @@ export const app = {
   // The name was the owner's, and it is the right one: «челлендж» promised a test, and the people
   // this is for are coming back after a break — a test is a reason not to start. A club promises
   // belonging, which is what the format actually delivers: a board with names, a day everyone is
-  // having at once. (It once delivered a partner too; «каждый сам за себя» ended that.) Where the two disagree is the prize, so the prize stopped being
-  // the pitch and became a fact of the week (see the Club block at the end of this file).
+  // having at once, and — in the duo club (0033, 0034) — a partner for the week. Where the two
+  // disagree is the prize, so the prize stopped being the pitch and became a fact of the week (see
+  // the Club block at the end of this file).
   marathonTitle: 'Клуб маленьких шагов',
   // The cover's big line before there is a day to count: what the format is, in one line.
   // No dash in it on purpose — the line sets in capitals across two lines of a 390px screen, and
   // an em-dash that lands first on the second line reads as a stray mark rather than as pause.
   marathonCoverPitch: 'Один маленький шаг в день',
   marathonTabBoard: 'Таблица',
-  marathonDayOf: 'День {n} из {total}',
   // The same line in two weights on the challenge's head: «ДЕНЬ 10» heavy, «из 14» light.
   marathonDayN: 'День {n}',
   marathonOfTotal: 'из {total}',
@@ -989,8 +955,20 @@ export const app = {
   duoInvite: 'Позвать подругу',
   duoInviteTitle: 'Давай в клуб вдвоём',
   duoInviteCopied: 'Ссылка скопирована',
+  // Экран /duo: принять приглашение по ссылке подруги. Отказы — коды club_invite_redeem (0034).
+  duoRedeemTitle: 'Приглашение в пару',
+  duoRedeemDone: 'Вы в паре',
+  duoRedeemToClub: 'В клуб',
+  duoRedeemNoSubscription:
+    'Пара собирается внутри клуба, а клуб — по подписке. Оформи её и открой ссылку подруги ещё раз.',
+  duoRedeemNoClub: 'Клуб сейчас не идёт. Как только начнётся новый круг, открой ссылку ещё раз.',
+  duoRedeemNotFound: 'Такого приглашения нет. Попроси подругу прислать ссылку заново.',
+  duoRedeemUsed: 'Это приглашение уже приняли — у подруги есть пара. Попроси новую ссылку.',
+  duoRedeemExpired: 'Срок приглашения вышел. Попроси подругу прислать ссылку заново.',
+  duoRedeemOwn: 'Это твоя собственная ссылка — отправь её подруге, чтобы она открыла её у себя.',
+  duoRedeemInviterGone: 'Подруга сейчас не в клубе, поэтому пару не собрать.',
+  duoRedeemFailed: 'Не получилось принять приглашение. Попробуй ещё раз позже.',
   marathonBoardAll: 'Вся таблица',
-  marathonHomeCta: 'Открыть клуб',
   marathonHomeTasksLeft: 'Осталось заданий: {n}',
   marathonHomeAllDone: 'На сегодня всё',
   // A round of the club has a start and an end; the club itself does not. So these two lines are
@@ -1042,11 +1020,11 @@ export const app = {
   marathonBoardPoints: '{n}',
 
   // --- Marathon admin --------------------------------------------------------
-  mAdminTitle: 'Марафоны',
-  mAdminNav: 'Марафоны',
-  mAdminNew: 'Новый марафон',
-  mAdminEmpty: 'Марафонов пока нет',
-  mAdminEmptyBody: 'Марафон — это ежедневные задания, пары и таблица по неделям.',
+  mAdminTitle: 'Клуб',
+  mAdminNav: 'Клуб',
+  mAdminNew: 'Новый круг',
+  mAdminEmpty: 'Кругов пока нет',
+  mAdminEmptyBody: 'Круг клуба — это ежедневные задания, пары и таблица по неделям.',
   mAdminSlug: 'Идентификатор',
   mAdminSlugHint: 'Латиница, цифры и _. Например sprint_oct',
   mAdminSlugInvalid: 'Только латиница, цифры и _, от 2 до 40 знаков',
@@ -1121,15 +1099,13 @@ export const app = {
   mAdminSave: 'Сохранить',
   mAdminDelete: 'Удалить',
   mAdminDeleteTask: 'Удалить задание?',
-  // People and teams
+  // People (pairs are shown, never edited: the Monday rematch and invites make them)
   mAdminPeople: 'Участники',
-  mAdminTeams: 'Команды',
   mAdminAddPerson: 'Добавить участника',
-  mAdminAddTeam: 'Добавить команду',
   mAdminEmail: 'Почта',
   mAdminPersonName: 'Как называть',
   mAdminTeam: 'Команда',
-  mAdminNoTeam: 'Без команды',
+  mAdminNoTeam: 'Без пары',
   mAdminRemove: 'Убрать',
   mAdminRestore: 'Вернуть',
   mAdminRemoved: 'Убран',
@@ -1334,7 +1310,7 @@ export const app = {
   // Under the join pill. «666 ₽ / мес» is the year divided by twelve and this is the payment that
   // actually happens — one charge, once. Quoting only the month for an annual product is how
   // chargebacks get written.
-  clubChargeNote: 'Оплата одна: {price} за год доступа. Клуб и все курсы Forma.',
+  clubChargeNote: 'Оплата одна: {price} за год доступа — клуб и курс «Форма с нуля».',
   // --- Club, the streak (stream: club-streak) --------------------------------
   // «Сколько дней подряд ты выполняешь упражнения». Only the accessible name is a sentence — the
   // pill itself is 🔥 and a number, because that is the whole of what it says.

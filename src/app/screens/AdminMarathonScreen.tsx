@@ -22,7 +22,6 @@ import {
   addMarathonMember,
   copyDayTasks,
   createMarathonTask,
-  createMarathonTeam,
   deleteMarathonTask,
   getMarathon,
   listMarathonMembers,
@@ -268,21 +267,9 @@ export default function AdminMarathonScreen() {
                   fail('app.mAdminAddError')();
                 }
               }}
-              onSetTeam={async (memberId, teamId) => {
-                await updateMarathonMember(memberId, { teamId }).catch(fail('app.mAdminSaveError'));
-                setMembers(await listMarathonMembers(id));
-              }}
               onSetStatus={async (memberId, status) => {
                 await updateMarathonMember(memberId, { status }).catch(fail('app.mAdminSaveError'));
                 setMembers(await listMarathonMembers(id));
-              }}
-              onAddTeam={async (name) => {
-                try {
-                  await createMarathonTeam(id, name, teams.length + 1);
-                  setTeams(await listMarathonTeams(id));
-                } catch {
-                  fail('app.mAdminAddError')();
-                }
               }}
             />
           ) : tab === 'proofs' ? (

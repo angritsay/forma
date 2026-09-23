@@ -1,9 +1,15 @@
 ---
 /**
- * Subscription page: every course for a monthly or annual price. Two plan tickets with the price
- * as the figure, what is included, the order form (records the intent, then hands over to the
- * plan's payment page), course vs subscription, a short FAQ. JSON-LD: Product with one Offer per
- * plan, BreadcrumbList, FAQPage.
+ * The club page («Клуб + курс»). The path is still /subscribe/ — it is linked from the app's
+ * club screen, the banners and the course pages, and the product it sells is still the
+ * subscription — but what it sells it *as* is the club: one small task a day, the week's board,
+ * the streak and the duo, with the beginners course inside (the owner's decision).
+ *
+ * Two plan tickets with the price as the figure (content/site/plans.ts — the club's plan,
+ * CLUB_PLAN_ID, is the preselected one and wears the badge), what is included, the order form
+ * (records the intent, then hands over to Prodamus for `ru` and lava.top otherwise — see
+ * `payRoute`), course vs club, a short FAQ. JSON-LD: Product with one Offer per plan,
+ * BreadcrumbList, FAQPage.
  */
 import Landing from '@/layouts/Landing.astro';
 import HeroField from '@/components/landing/HeroField.astro';
@@ -20,7 +26,7 @@ import { canonicalUrl } from '@/lib/seo/urls';
 import { appHref, href, localeStaticPaths } from '@/lib/util/paths';
 import { BRAND } from '@content/site/brand';
 import { LINKS } from '@content/site/links';
-import { PLAN_INCLUDES, PLANS, PLANS_ENABLED } from '@content/site/plans';
+import { CLUB_PLAN_ID, PLAN_INCLUDES, PLANS, PLANS_ENABLED } from '@content/site/plans';
 import { formatPrice, priceForLocale } from '@content/site/pricing';
 
 export function getStaticPaths() {
@@ -48,7 +54,7 @@ const planOptions: PlanOption[] = PLANS.map((p) => ({
   price: formatPrice(locale, p.price),
   period: t(locale, p.period === 'year' ? 'landing.subscribePerYear' : 'landing.subscribePerMonth'),
   note: l(p.note, locale),
-  badge: p.id === 'annual' ? t(locale, 'landing.subscribeBestValue') : undefined,
+  badge: p.id === CLUB_PLAN_ID ? t(locale, 'landing.subscribeBestValue') : undefined,
   paymentUrl: p.paymentUrl?.[locale] ?? p.paymentUrl?.ru,
 }));
 
@@ -182,10 +188,10 @@ const jsonLd = [
               <OrderForm
                 client:load
                 courseId="subscription"
-                courseName={t(locale, 'landing.navSubscribe')}
+                courseName={t(locale, 'app.marathonTitle')}
                 locale={locale}
                 plans={planOptions}
-                defaultPlan="annual"
+                defaultPlan={CLUB_PLAN_ID}
                 appUrl={appHref()}
                 privacyUrl={href(locale, '/privacy/')}
                 supportEmail={supportEmail}

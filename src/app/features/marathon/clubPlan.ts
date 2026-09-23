@@ -54,9 +54,8 @@ export function clubChargeLabel(locale: Locale): string | null {
  * Where the join button goes: the plan's own Prodamus product with the email appended, or the
  * plans page when there is no usable link (and always for a demo account).
  *
- * На неродном языке — на `/en/checkout/`: касса русская и в рублях, и кнопка, ведущая прямо в
- * неё, обрывала покупку ровно там, где человек решился платить. Решает это `payRoute`, одинаково
- * во всех четырёх местах, где в проекте есть «купить».
+ * На неродном языке — на товар в lava.top (content/site/payments.ts): рублёвая касса только для
+ * `ru`. Решает это `payRoute`, одинаково во всех местах, где в проекте есть «купить».
  */
 export function clubJoinHref(locale: Locale, email: string, demo: boolean): string {
   const plan = clubPlan();

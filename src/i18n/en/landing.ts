@@ -5,7 +5,7 @@ export const landing = {
   navExercises: 'Exercises',
   navGuides: 'Guides',
   navAbout: 'About',
-  navSubscribe: 'Subscription',
+  navSubscribe: 'Club',
   navApp: 'Open app',
   navHome: 'Home',
   navContact: 'Contact',
@@ -47,7 +47,7 @@ export const landing = {
   // Home: SEO
   homeTitle: 'Forma — home CrossFit that adapts to you',
   homeDescription:
-    'Five home CrossFit courses, with or without equipment. Lifetime access, a load that adapts to your level, video for every exercise.',
+    'Home CrossFit with coach Sergey Titov: the no-equipment Start course, a club with one small task a day, and the coach on hand in Telegram.',
 
   // Home: hero
   heroTitle: 'Home CrossFit that adapts to you',
@@ -114,11 +114,11 @@ export const landing = {
   adaptScaleNow: 'Load scale: {scale}',
   adaptHowTitle: 'The rules behind it',
   /* The engine's constants as pills, not as three sentences — see the Russian file. */
-  adaptRuleEasier: 'Easier · volume ×0.85',
-  adaptRuleHarder: 'Harder · volume ×1.15',
-  adaptRulePoints: 'Points ×0.8 / ×1.25',
+  adaptRuleEasier: 'Easier · volume ×{x}',
+  adaptRuleHarder: 'Harder · volume ×{x}',
+  adaptRulePoints: 'Points ×{easier} / ×{harder}',
   // The two streak pills went with the streak itself: the course schedules rest days.
-  adaptRuleDeload: 'Deload · volume ×0.65',
+  adaptRuleDeload: 'Deload · volume ×{x}',
 
   // Home: path & motivation
   pathEyebrow: 'Path & motivation',
@@ -170,7 +170,7 @@ export const landing = {
   // Courses hub
   coursesHubTitle: 'Home CrossFit courses — with or without equipment',
   coursesHubDescription:
-    'Five home CrossFit courses: bodyweight, dumbbells, kettlebell and pull-up bar. Lifetime access, adaptive load, video for every exercise.',
+    'Forma. Start: twenty no-equipment home CrossFit workouts, a load that adapts to you, the coach’s video for every move. Plus the club and the coach in Telegram.',
   coursesHubH1: 'Courses',
   coursesHubIntro: 'A week-by-week program with a test at the start and the end. Lifetime access.',
   filterEquipment: 'Equipment',
@@ -218,9 +218,9 @@ export const landing = {
   courseExercisesTitle: 'Exercises in this course',
   courseOrderTitle: 'Get access to the course',
   courseOrderIntro:
-    'Leave your email — the coach confirms access and the course appears in the app.',
+    'Leave your email and pay — access opens automatically and the course appears in the app under this email.',
   courseLifetimeNote: 'One payment, access forever',
-  courseOrSubscribe: 'Or every course by subscription — from {price} a month',
+  courseOrSubscribe: 'Or the club with the course — {price} a month, paid yearly',
   nodeWorkout: 'Workout',
   // It said «7,000 steps» while the app counted steps (see the Russian file).
   nodeRest: 'Walk',
@@ -244,11 +244,11 @@ export const landing = {
   orderRedirecting: 'Taking you to payment…',
   /* See the note on the Russian string — the quoted product wording is the processor's own. */
   orderPaymentNote:
-    'Payment is handled on {host}, where the course is listed as “Доступ к обучающим материалам” — that is this course. Use the same email you entered here: that is how the coach opens your access, and another address will not be matched to the order.',
+    'Payment is handled on {host}. Use the same email you entered here: access opens automatically as soon as the payment lands, and another address will not be matched to the order.',
   orderPayAnyway: 'Go to payment anyway',
   orderSuccessTitle: 'Order received',
   orderSuccessText:
-    'The coach will confirm access to {course} for {email}. Then open the app and sign in with this email.',
+    'We have recorded {course} for {email}. Access opens automatically once the payment lands — sign in to the app with this email.',
   orderSuccessApp: 'Open the app',
   orderErrorEmail: 'Check the email — the address does not look right.',
   orderErrorConsent: 'Please agree to the privacy policy.',
@@ -259,46 +259,44 @@ export const landing = {
   orderTryAgain: 'Try again',
 
   // Subscribe page
-  subscribeTitle: 'All courses. One subscription.',
+  subscribeTitle: 'The Small Steps Club and a home course',
   subscribeDescription:
-    'Every Forma course in one subscription: five home CrossFit programs, load that adapts to you, new courses included. Monthly or annual.',
-  subscribeEyebrow: 'Subscription',
+    'The Small Steps Club: one small task a day, a weekly board with a prize, a streak and a partner. The Start course is included. Monthly or yearly.',
+  subscribeEyebrow: 'The club',
   subscribeLead:
-    'One course is a start. A subscription is every program, with the next one ready when this one ends.',
+    'Big plans do not survive a working week. The club is one small task a day, a weekly board and a partner — and the Start course is already inside.',
   subscribeIncludes: 'What you get',
   subscribePlanLabel: 'Plan',
   subscribePerMonth: '/ month',
   subscribePerYear: '/ year',
   subscribeBestValue: 'Best value',
-  subscribeOrderTitle: 'Subscribe',
+  subscribeOrderTitle: 'Join the club',
   subscribeOrderIntro:
-    'Leave your email and pay on the next page — the courses open in the app under this email.',
+    'Leave your email and pay on the next page — the club and the course open in the app under this email on their own.',
   // This line sits under the pay button and promised auto-renewal, which does not exist — see
   // `content/site/plans.ts`. The plan card said the opposite two rows above it.
   subscribeNote: 'One payment · access for the whole paid period · renew whenever you want',
   subscribeSuccessText:
-    'We have recorded a {course} subscription for {email}. Once the payment lands, open the app and sign in with this email.',
-  subscribeCourseHint: 'Prefer one course for good?',
-  subscribeCourseLink: 'See the courses',
-  subscribeVsTitle: 'Course or subscription?',
+    'We have recorded {course} for {email}. Once the payment lands, access opens automatically — sign in to the app with this email.',
+  subscribeCourseHint: 'Just the course, for good?',
+  subscribeCourseLink: 'See the course',
+  subscribeVsTitle: 'Course or club?',
   subscribeVsCourse:
-    'One course, paid once, yours forever. Right when you know what you want and where you will stop.',
+    'One course, paid once, yours forever — with the first week of the club as a gift. Right when you want a training programme.',
   subscribeVsPlan:
-    'Every course, paid monthly or yearly, while you train. Right when the goal is to keep going.',
-  subscribeFaq1Q: 'What if I want to stop?',
+    'The club and the course, paid monthly or yearly: a task every day, the board, a streak and a partner. Right when the goal is to keep going.',
+  subscribeFaq1Q: 'What is the task of the day?',
   // There is nothing to cancel: nothing is ever charged unless you pay for a period.
   subscribeFaq1A:
-    'Just do not renew. Money only moves when you pay, the courses stay open to the end of the period you paid for, and there is no cancellation to arrange.',
-  subscribeFaq2Q: 'What happens when it ends?',
+    'One small thing: ten minutes on foot, twenty squats, a glass of water before coffee. Done it — mark it in the app and earn points on the weekly board. The week’s leader gets a prize.',
+  subscribeFaq2Q: 'What happens when the paid period ends?',
   subscribeFaq2A:
-    'The courses close, your progress and stats stay. Subscribe again and you continue where you stopped.',
-  subscribeFaq3Q: 'I already bought a course. Does it count?',
+    'The club and the course close, your progress and stats stay. There is no auto-renewal: money only moves when you pay. Renew and you continue where you stopped.',
+  subscribeFaq3Q: 'I already bought the course. Why the club?',
   // It said «the other four». There are six courses and one is published: a number here promises
   // programmes that are not on the site yet.
   subscribeFaq3A:
-    'A bought course is yours forever, subscription or not. The subscription opens every other Forma course — and the ones still to come.',
-  planMonthlyName: 'Monthly',
-  planAnnualName: 'Annual',
+    'A bought course is yours forever, and the first week of the club comes with it. The subscription keeps you in the club after that: a task every day, the weekly board, a streak and a partner.',
 
   // About
   aboutTitle: 'About the coach',
@@ -337,7 +335,7 @@ export const landing = {
   contactBeforeTitle: 'Before you write',
   contactBefore1: 'No code? Check the spam folder and request a new one after a minute.',
   contactBefore2:
-    'Course missing? The coach confirms access manually; mention the email you ordered with.',
+    'Course missing after paying? Check that you signed in with the email you paid with. If it matches, write to us from that address.',
   contactBefore3: 'For refunds, see the refund policy.',
 
   // Legal
