@@ -23,6 +23,11 @@ export interface TelegramWebApp {
    * `initDataUnsafe`, и `unsafe` там не для красоты — подделать её в отладчике умеет кто угодно.
    */
   readonly initData: string;
+  /**
+   * The parsed launch data. Unsigned — never trusted for identity; read only for harmless launch
+   * hints such as `start_param` (the `?startapp=` value of a `t.me/<bot>/<app>` link).
+   */
+  readonly initDataUnsafe?: { start_param?: string };
   readonly platform: string;
   readonly colorScheme: 'light' | 'dark';
   readonly viewportStableHeight?: number;
@@ -221,6 +226,24 @@ export function openExternal(url: string): boolean {
   } catch {
     return false;
   }
+}
+
+/**
+ * Leave for an external page: the person's own browser inside Telegram, a plain navigation
+ * everywhere else (or when the client refuses to open the link).
+ */
+export function goExternal(url: string): void {
+  if (openExternal(url)) return;
+  window.location.assign(url);
+}
+
+/**
+ * The `startapp` value the Mini App was launched with (`t.me/<bot>/<app>?startapp=<value>`), or
+ * null outside Telegram or when there is none.
+ */
+export function startParam(): string | null {
+  const value = telegram()?.initDataUnsafe?.start_param;
+  return typeof value === 'string' && value ? value : null;
 }
 
 /**

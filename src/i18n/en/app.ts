@@ -409,6 +409,9 @@ export const app = {
   // streak, then three figures. The ordinal is a word up to the tenth day — a figure that size
   // would fight the three under it — and «Day 11» after that.
   summaryDone: 'Done!',
+  // Names for a coach-built workout on the summary: it is not in the catalogue.
+  summaryCustomCourse: 'Custom workout',
+  summaryCustomWorkout: 'Coach workout',
   summaryCountFirst: 'The first one. The start is in.',
   summaryCountWord: '{ordinal} workout. That’s how form grows.',
   summaryCountNum: 'Workout no. {n}. That’s how form grows.',
@@ -481,6 +484,7 @@ export const app = {
   leaderboardFilterLabel: 'Course',
   leaderboardGlobal: 'Everyone',
   leaderboardRankLabel: 'Rank {n}',
+  leaderboardAnonymous: 'Athlete {id}',
   leaderboardYou: 'You',
   leaderboardEmptyTitle: 'No points yet',
   leaderboardEmptyWeek: 'Be the first this week: finish a workout.',
@@ -934,6 +938,7 @@ export const app = {
   duoInvite: 'Invite a friend',
   duoInviteTitle: 'Come do the club with me',
   duoInviteCopied: 'Link copied',
+  duoInviteNoAccess: 'Pairs live inside the club, and the club comes with a subscription.',
   // The /duo screen: accepting a friend's invite link. Refusals are club_invite_redeem codes (0034).
   duoRedeemTitle: 'Duo invite',
   duoRedeemDone: 'You are a pair now',

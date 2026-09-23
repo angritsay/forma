@@ -41,12 +41,14 @@ import { breakClubDuo, createClubInvite, getClubDuoStatus } from '@/lib/api/mara
 import type { ClubDuoStatus } from '@/lib/api/types';
 import { appHref } from '@/lib/util/paths';
 import { useT } from '@/app/hooks/useT';
+import { LINKS } from '@content/site/links';
+import { inviteLink, shareFailure } from './duoInvite';
 
 /** Полный адрес приглашения — то, что уедет в переписку. */
 export function inviteUrl(token: string): string {
   const path = `${appHref('#/duo/')}${encodeURIComponent(token)}`;
-  if (typeof window === 'undefined') return path;
-  return new URL(path, window.location.origin).href;
+  const web = typeof window === 'undefined' ? path : new URL(path, window.location.origin).href;
+  return inviteLink(token, web, LINKS.telegramMiniApp);
 }
 
 export interface ClubDuoPairProps {
@@ -89,9 +91,11 @@ export function ClubDuoPair({ onChanged }: ClubDuoPairProps) {
       }
       await navigator.clipboard.writeText(url);
       toast.show({ kind: 'success', title: t('app.duoInviteCopied') });
-    } catch {
-      // Отмена шторки «поделиться» приходит тем же путём, что отказ буфера, и она не ошибка.
-      // Ссылка написана на экране, поэтому промолчать здесь безопаснее, чем ругаться.
+    } catch (e) {
+      // Закрытая шторка «поделиться» — не ошибка, о ней молчим. Остальное (нет доступа к клубу,
+      // сеть, отказ буфера) говорится вслух: иначе кнопка просто «ничего не делает».
+      const message = shareFailure(e);
+      if (message) toast.show({ kind: 'error', title: t(message) });
     } finally {
       setBusy(false);
     }

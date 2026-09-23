@@ -179,6 +179,13 @@ export interface PrescribedBlock {
   items: PrescribedItem[];
   estimatedSec: number;
   scaled: boolean;
+  /**
+   * «Максимум повторений за N минут»: an AMRAP of one movement still counted in reps after
+   * substitution. Decided once, by whoever prescribes the block (the engine, a custom workout);
+   * the player reads it rather than re-deriving it. Optional only for prescriptions stored before
+   * the flag existed (an unfinished workout in localStorage) — see `isMaxRepsAmrap`.
+   */
+  maxReps?: boolean;
 }
 
 export interface PrescribedWorkout {

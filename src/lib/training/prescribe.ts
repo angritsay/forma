@@ -413,12 +413,12 @@ function effectiveSets(
       if (!scalable) return base;
       const fromScale =
         structuralScale >= SETS_ADD_AT ? 1 : structuralScale <= SETS_REMOVE_AT ? -1 : 0;
-      const fromChoice = choiceMovesThisBlock ? CHOICE_SETS_DELTA[choice] : 0;
+      // One or two rounds of the main piece: the reps carry the choice instead (`holdsRounds`).
+      const fromChoice =
+        choiceMovesThisBlock && !holdsRounds(block) ? CHOICE_SETS_DELTA[choice] : 0;
       // A circuit that IS the work (not a core or skill accessory) keeps two rounds on «полегче»:
       // one round of a two-round session is a different, three-minute session.
-      const mainCircuit =
-        block.format === 'circuit' && block.type !== 'core' && block.type !== 'skill';
-      const easierFloor = mainCircuit ? MIN_ROUNDS_EASIER_CIRCUIT : MIN_SETS_EASIER;
+      const easierFloor = isMainCircuit(block) ? MIN_ROUNDS_EASIER_CIRCUIT : MIN_SETS_EASIER;
       const floor = Math.min(base, choice === 'easier' ? easierFloor : MIN_SETS_AFTER_REMOVE);
       return clamp(base + fromScale + fromChoice, floor, base + MAX_SETS_ADDED);
     }
@@ -435,6 +435,27 @@ function effectiveSets(
     case 'fortime':
       return scaleRounds(block.sets ?? 1, scalable, choice, 1);
   }
+}
+
+/**
+ * A circuit that IS the work (not a core or skill accessory) — the session's main piece, whose
+ * rounds are the shape of the session.
+ */
+function isMainCircuit(block: Pick<Block, 'format' | 'type'>): boolean {
+  return block.format === 'circuit' && block.type !== 'core' && block.type !== 'skill';
+}
+
+/**
+ * A main circuit of one or two rounds: the choice never moves its round count (`effectiveSets`).
+ *
+ * One round more is a whole extra session on top — s03, three pairs once through, came out at
+ * 8 / 8 / 17 minutes on «Полегче / Как обычно / Посложнее», and s17's two rounds with three
+ * minutes between them grew by three quarters. One round fewer is a different session
+ * (MIN_ROUNDS_EASIER_CIRCUIT already keeps two). So, like a single-round for-time piece, it moves
+ * on reps alone, at the stronger for-time volume, so every choice is visibly different.
+ */
+export function holdsRounds(block: Pick<Block, 'format' | 'type' | 'sets'>): boolean {
+  return isMainCircuit(block) && (block.sets ?? 1) <= MIN_ROUNDS_EASIER_CIRCUIT;
 }
 
 /** Rounds of a self-clocked format, moved by the choice and never below `floor`. */
@@ -605,16 +626,25 @@ export function prescribeWorkout(
 
   const blocks = workout.blocks.map((block, blockIndex) => {
     const scalable = block.scalable !== false;
-    const blockScale = block.format === 'fortime' ? fortimeScale : effectiveScale;
+    const choiceMoves = choiceBlocks.has(block.id);
+    const sets = effectiveSets(block, structuralScale, scalable, choice, choiceMoves);
+    /*
+     * «Посложнее» on the main circuit: the added round IS the step. Stacking the harder reps on
+     * top of it as well made s10's four rounds grow by two fifths; a round is a quarter.
+     */
+    const roundAdded =
+      scalable &&
+      choice === 'harder' &&
+      isMainCircuit(block) &&
+      sets > effectiveSets(block, structuralScale, scalable, 'normal', choiceMoves);
+    const blockScale =
+      block.format === 'fortime' || (scalable && holdsRounds(block))
+        ? fortimeScale
+        : roundAdded
+          ? volumeScale(CHOICE_VOLUME.normal)
+          : effectiveScale;
     const s = scalable ? blockScale : 1;
     const restMul = scalable ? restMultiplier : 1;
-    const sets = effectiveSets(
-      block,
-      structuralScale,
-      scalable,
-      choice,
-      choiceBlocks.has(block.id),
-    );
     // Warm-ups, cool-downs and tests keep the authored movement, not only the authored numbers.
     // A block that does not scale is the same whatever the choice — its substitutions included,
     // so the level check runs as if the athlete had picked «как обычно».
@@ -731,6 +761,9 @@ export function prescribeWorkout(
       items,
       estimatedSec: 0,
       scaled: scalable,
+      // The one place the flag is decided. A substitute measured in seconds (a hold for a rep
+      // movement) is no longer a count of reps, so the flag goes with it.
+      maxReps: maxReps && items.length === 1 && items[0]!.unit === 'reps',
     };
     if (block.title) prescribed.title = block.title;
     if (block.description) prescribed.description = block.description;

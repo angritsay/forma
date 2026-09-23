@@ -17,6 +17,7 @@ import {
   benchmarkRecord,
   benchmarkResult,
   blockCompletions,
+  courseNames,
   elapsedStartedAt,
   workoutCountLine,
   shareText,
@@ -147,6 +148,17 @@ describe('workoutCountLine', () => {
     expect(workoutCountLine(t, 4)).toBe(t('app.summaryCountWord', { ordinal: 'Fourth' }));
     expect(workoutCountLine(t, 10)).toBe(t('app.summaryCountWord', { ordinal: 'Tenth' }));
     expect(workoutCountLine(t, 11)).toBe(t('app.summaryCountNum', { n: 11 }));
+  });
+});
+
+describe('courseNames', () => {
+  it("names a coach-built workout in the reader's language", () => {
+    expect(courseNames('custom', 'n', 'w', 'en')).toEqual({
+      course: 'Custom workout',
+      node: '',
+      workout: 'Coach workout',
+    });
+    expect(courseNames('custom', 'n', 'w', 'ru').workout).toBe('Тренировка от тренера');
   });
 });
 

@@ -3,10 +3,13 @@ import { AppError } from '@/lib/api/errors';
 import {
   clearDuoInvite,
   DUO_INVITE_KEY,
+  inviteLink,
   isInviteToken,
   pendingDuoInvite,
   redeemFailure,
+  shareFailure,
   stashDuoInvite,
+  stashStartParam,
 } from './duoInvite';
 
 function memory(): Storage {
@@ -82,5 +85,59 @@ describe('redeemFailure', () => {
       retry: true,
     });
     expect(redeemFailure(new Error('boom')).message).toBe('app.duoRedeemFailed');
+  });
+});
+
+describe('invite through the Mini App', () => {
+  const WEB = 'https://forma-app.co/app/#/duo/' + TOKEN;
+
+  it('builds a startapp link when the Mini App link is configured', () => {
+    expect(inviteLink(TOKEN, WEB, 'https://t.me/forma_training_bot/app')).toBe(
+      `https://t.me/forma_training_bot/app?startapp=duo_${TOKEN}`,
+    );
+    expect(inviteLink(TOKEN, WEB, 'https://t.me/forma_training_bot/app/')).toBe(
+      `https://t.me/forma_training_bot/app?startapp=duo_${TOKEN}`,
+    );
+  });
+
+  it('keeps the web link when nothing (or nonsense) is configured', () => {
+    expect(inviteLink(TOKEN, WEB, '')).toBe(WEB);
+    expect(inviteLink(TOKEN, WEB, undefined)).toBe(WEB);
+    expect(inviteLink(TOKEN, WEB, 'https://t.me/forma_training_bot')).toBe(WEB);
+    expect(inviteLink(TOKEN, WEB, 'https://evil.example/x/y')).toBe(WEB);
+  });
+
+  it('stashes a duo_ start parameter once per session', () => {
+    const store = memory();
+    expect(stashStartParam(`duo_${TOKEN}`, store)).toBe(true);
+    expect(pendingDuoInvite(store)).toBe(TOKEN);
+    clearDuoInvite(store);
+    // The webview reloads with the same launch data: an invite already taken is not taken again.
+    expect(stashStartParam(`duo_${TOKEN}`, store)).toBe(false);
+    expect(pendingDuoInvite(store)).toBeNull();
+  });
+
+  it('ignores other start parameters', () => {
+    const store = memory();
+    expect(stashStartParam(null, store)).toBe(false);
+    expect(stashStartParam('promo_spring', store)).toBe(false);
+    expect(stashStartParam('duo_short', store)).toBe(false);
+    expect(pendingDuoInvite(store)).toBeNull();
+  });
+});
+
+describe('share failures', () => {
+  it('stays quiet when the share sheet was closed', () => {
+    const abort = new Error('cancelled');
+    abort.name = 'AbortError';
+    expect(shareFailure(abort)).toBeNull();
+  });
+
+  it('says why otherwise', () => {
+    expect(shareFailure(new AppError('validation', 'no_club_access'))).toBe(
+      'app.duoInviteNoAccess',
+    );
+    expect(shareFailure(new AppError('network', 'Failed to fetch'))).toBe('common.errorOffline');
+    expect(shareFailure(new Error('NotAllowedError'))).toBe('common.errorGeneric');
   });
 });

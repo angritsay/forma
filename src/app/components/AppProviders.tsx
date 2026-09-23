@@ -3,12 +3,16 @@ import { clearMediaUrlCache } from '@/lib/api/storage';
 import { KitProvider, type KitLabels } from '@/components/ui/KitContext';
 import { linkTelegram } from '@/lib/api/telegram';
 import { telegram } from '@/lib/telegram/webapp';
+import { throttled } from '@/lib/util/throttle';
 import { t } from '@/i18n/index';
 import { useCatalogue } from '@/app/store/catalogue';
 import { useLocale } from '@/app/store/locale';
 import { useSession } from '@/app/store/session';
 import { ErrorBoundary } from './ErrorBoundary';
 import { Toaster } from './Toaster';
+
+/** How often a return to the foreground may re-read entitlements and subscription. */
+const FOREGROUND_REFRESH_MS = 60_000;
 
 /** Session bootstrap, locale → <html lang>, kit labels, toasts and the top-level error boundary. */
 export function AppProviders({ children }: { children: ReactNode }) {
@@ -48,6 +52,34 @@ export function AppProviders({ children }: { children: ReactNode }) {
     }
     ownedSeen.current = owned;
   }, [signedIn, owned]);
+
+  /*
+   * Someone who paid outside the app (the payment page opens in their browser) comes back to a
+   * Mini App that was only hidden, not restarted — and `boot` never runs again. So on every return
+   * to the foreground re-read what they own and their subscription (`refreshEntitlements` fetches
+   * both); the `owned` effect above then reloads the catalogue if a purchase landed. At most once a
+   * minute: switching apps back and forth must not turn into a request storm. Failure is silent —
+   * the next return tries again.
+   */
+  useEffect(() => {
+    if (!signedIn) return;
+    // Primed: the window starts now, because boot has just read the same data.
+    const refresh = throttled(
+      () => {
+        useSession
+          .getState()
+          .refreshEntitlements()
+          .catch(() => {});
+      },
+      FOREGROUND_REFRESH_MS,
+      { primed: true },
+    );
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') refresh();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [signedIn]);
 
   /*
    * Signed URLs for paid clips are kept for the tab (src/lib/api/storage.ts). They were signed

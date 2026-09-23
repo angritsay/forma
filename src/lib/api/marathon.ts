@@ -11,7 +11,7 @@
  */
 import { supabase } from './client';
 import { demo } from './demo/load';
-import { guard, requireUser, unwrap, unwrapVoid } from './internal';
+import { guard, requireUser, unwrap, unwrapMaybe, unwrapVoid } from './internal';
 import { isDemo } from './mode';
 import type {
   ClubDuoStatus,
@@ -180,7 +180,8 @@ export async function joinClub(): Promise<string | null> {
   if (isDemo()) return (await demo()).joinClub();
   return guard(async () => {
     await requireUser();
-    return unwrap<string | null>(await supabase().rpc('join_club'));
+    // `join_club()` answers "no" with a null, which is not an error (see useMyMarathons).
+    return unwrapMaybe<string>(await supabase().rpc('join_club'));
   });
 }
 
@@ -402,9 +403,13 @@ export const PROOFS_BUCKET = 'proofs';
  *
  * The *last announced*, not the current week's: a week that is still running has no winner, and
  * the interesting one on a Monday is whoever won on Sunday. See 0028.
+ *
+ * `duo` picks which club: solo and duo are separate rounds with separate winners (0033, 0035).
  */
-export async function getClubWinner(): Promise<ClubWinner | null> {
-  if (isDemo()) return (await demo()).getClubWinner();
+export async function getClubWinner({
+  duo = false,
+}: { duo?: boolean } = {}): Promise<ClubWinner | null> {
+  if (isDemo()) return (await demo()).getClubWinner(duo);
   return guard(async () => {
     const rows = unwrap<
       {
@@ -417,7 +422,7 @@ export async function getClubWinner(): Promise<ClubWinner | null> {
         announced_at: string;
         is_me: boolean;
       }[]
-    >(await supabase().rpc('club_winner'));
+    >(await supabase().rpc('club_winner', { p_duo: duo }));
     const r = rows[0];
     if (!r) return null;
     return {

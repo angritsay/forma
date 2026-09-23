@@ -2,7 +2,7 @@ import { clsx } from 'clsx';
 import { formatNumber } from '@/i18n/index';
 import type { LeaderboardRow } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
-import { podiumPlace } from './model';
+import { leaderboardName, podiumPlace } from './model';
 
 export interface LeaderboardRowViewProps {
   row: LeaderboardRow;
@@ -52,7 +52,7 @@ export function LeaderboardRowView({ row, pinned }: LeaderboardRowViewProps) {
       </span>
       <span className="min-w-0 flex-1">
         <span className="font-display block truncate text-[15px] leading-[1.24]">
-          {row.displayName}
+          {leaderboardName(row, t)}
         </span>
         {row.isMe ? <span className="sr-only">{t('app.leaderboardYou')}</span> : null}
       </span>

@@ -52,11 +52,17 @@ function restStep(block: PrescribedBlock, durationSec: number, next?: Prescribed
 }
 
 /**
- * An AMRAP of a single movement counted in reps is a max-reps piece («максимум за 5 минут»): its
- * target is the total, and the player counts reps rather than rounds.
+ * A max-reps piece («максимум за 5 минут»): its target is the total, and the player counts reps
+ * rather than rounds. The prescriber decides it (`PrescribedBlock.maxReps`); this only reads the
+ * flag. A prescription stored before the flag existed has none, and only then is the shape read —
+ * the same rule the engine applies, so a workout resumed across a deploy stays what it was.
  */
-export function isMaxRepsAmrap(block: Pick<PrescribedBlock, 'format' | 'items'>): boolean {
-  return block.format === 'amrap' && block.items.length === 1 && block.items[0]!.unit === 'reps';
+export function isMaxRepsAmrap(
+  block: Pick<PrescribedBlock, 'format' | 'items' | 'maxReps'>,
+): boolean {
+  if (block.format !== 'amrap') return false;
+  if (typeof block.maxReps === 'boolean') return block.maxReps;
+  return block.items.length === 1 && block.items[0]!.unit === 'reps';
 }
 
 /** Expected rounds for a fully completing athlete in an AMRAP (min 1). */

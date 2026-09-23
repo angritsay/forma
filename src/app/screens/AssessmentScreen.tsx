@@ -29,7 +29,7 @@
  * so those are settled, not awaited-or-thrown.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useBackOr } from '@/app/hooks/useBackOr';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { IconButton } from '@/components/ui/IconButton';
@@ -73,7 +73,6 @@ const FLAT_HEADER =
 
 export default function AssessmentScreen() {
   const { t, l, locale } = useT();
-  const navigate = useNavigate();
   const toast = useToast();
   const trainingProfile = useSession((s) => s.profile?.trainingProfile ?? null);
   const [phase, setPhase] = useState<Phase>('intro');
@@ -125,7 +124,8 @@ export default function AssessmentScreen() {
       }
     : null;
 
-  const close = () => navigate(-1);
+  // Opened from a link, there is no previous screen to return to: close to home instead.
+  const close = useBackOr('/');
   const complete = useMemo(() => answersComplete(answers), [answers]);
 
   const setCount = (exerciseId: string, reps: number) =>
