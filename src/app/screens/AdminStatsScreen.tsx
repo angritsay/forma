@@ -29,7 +29,7 @@
  * все остальные — это и есть выдуманная статистика, которую `docs/SPEC.md` запрещает.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { Navigate } from 'react-router';
+import { Navigate, useNavigate } from 'react-router';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/Input';
@@ -45,6 +45,7 @@ import { useT } from '@/app/hooks/useT';
 import { SEARCH_DEBOUNCE_MS } from '@/app/features/admin/model';
 import { useDebounced } from '@/app/features/admin/useDebounced';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
+import { personPath } from '@/app/features/admin/person/path';
 import {
   closedWeeks,
   formatPercent,
@@ -109,6 +110,7 @@ function Tile({ label, value }: TileProps) {
 export default function AdminStatsScreen() {
   const { t, locale } = useT();
   const admin = useIsAdmin();
+  const navigate = useNavigate();
 
   const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [weeks, setWeeks] = useState<FunnelWeek[]>([]);
@@ -341,14 +343,20 @@ export default function AdminStatsScreen() {
                   key={p.email}
                   className="flex items-center gap-3 border-t border-border py-3 first:border-t-0"
                 >
-                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  {/* The person behind the row, one tap away (0046). */}
+                  <button
+                    type="button"
+                    aria-label={t('app.personOpen', { name: p.displayName?.trim() || p.email })}
+                    onClick={() => void navigate(personPath(p.email))}
+                    className="flex min-w-0 flex-1 flex-col gap-0.5 text-left transition-opacity duration-150 ease-(--ease-out) hover:opacity-80 active:opacity-60"
+                  >
                     <span className="truncate text-[15px] leading-tight text-text">
                       {p.displayName?.trim() || '—'}
                     </span>
                     <span className="truncate text-[12px] leading-tight text-muted-2">
                       {p.email}
                     </span>
-                  </span>
+                  </button>
                   <span className="flex shrink-0 flex-col items-end gap-0.5 text-right">
                     {/* «трен.» — сокращение, и оно одинаково при любом числе: три формы
                         русского множественного здесь не нужны, а «0» заменяется словами. */}
