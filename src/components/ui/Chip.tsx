@@ -22,10 +22,10 @@ export interface ChipProps extends Omit<HTMLAttributes<HTMLElement>, 'onClick'> 
  * tracked .06em; the case went with the rest of the product and the tracking went with the case,
  * which bought the two points of size — a tracked-caps «107 повторов» and a sentence-case one are
  * within a few pixels of each other. Inactive
- * chips sit on --surface-3 behind a hairline; the selected one is electric blue with white words
- * (7.71) — the colour the tab bar's seat and every segmented control choose with, so selection
- * reads the same everywhere (style A, global.css header) — and it is the only fill in the row so
- * the eye finds it first.
+ * chips sit on --surface-3 behind a hairline; the selected one is the light blue with ink words
+ * (14.7) — selection is the light blue's job in the semantic colour map (global.css header,
+ * design/CHANGELOG.md §15); electric blue is a surface, the hero field and the tab bar's seat —
+ * and it is the only fill in the row so the eye finds it first.
  *
  * The named tones are for chips that state something rather than select something. `accent` is
  * the brand's light blue on the words and the hairline (13.2 on charcoal) — a target rep count, a
@@ -67,7 +67,7 @@ export const Chip = forwardRef<HTMLElement, ChipProps>(function Chip(
   const classes = clsx(
     'inline-flex shrink-0 items-center whitespace-nowrap rounded-control border font-semibold tracking-[0.01em]',
     SIZE[size],
-    selected ? 'border-field bg-field text-on-field' : TONE[tone],
+    selected ? 'border-accent bg-accent text-on-accent' : TONE[tone],
     // Interactive chips are 28/34px tall by design; `tap-target-y` (global.css) lifts the hit area
     // to the 44px minimum without changing the layout.
     onClick &&

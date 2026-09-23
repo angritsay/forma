@@ -162,7 +162,7 @@ function Lead() {
     <div className="flex flex-col gap-4 px-3 text-[15px] leading-[1.32]">
       <p>
         {t('app.clubLeadPre')}
-        <span className="text-course-accent">{t('app.clubLeadAccent')}</span>
+        <span className="text-accent">{t('app.clubLeadAccent')}</span>
         {t('app.clubLeadPost')}
       </p>
       {/*
@@ -206,7 +206,7 @@ export function ClubMember() {
   const { t } = useT();
   return (
     <div className="-mx-2 flex flex-col gap-2.5">
-      <p className="flex h-13 items-center justify-center rounded-tile border border-course-accent/55 px-6 text-center text-[15px] font-semibold text-course-accent">
+      <p className="flex h-13 items-center justify-center rounded-tile border border-accent/55 px-6 text-center text-[15px] font-semibold text-accent">
         {t('app.clubMemberTitle')}
       </p>
       <p className="px-5 text-[13px] leading-snug text-muted-2">{t('app.clubMemberNote')}</p>

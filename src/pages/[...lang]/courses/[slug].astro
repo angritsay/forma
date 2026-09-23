@@ -260,12 +260,12 @@ const jsonLd = [
       </div>
     </section>
 
-    <!-- The course in three figures, in its colour: the number bigger than the word. -->
+    <!-- The course in three figures, in the light blue of key figures: the number bigger than the word. -->
     <div class="mt-12 grid grid-cols-3 gap-6 border-t border-border pt-8 md:mt-16 md:gap-10">
-      <Stat tone="course" value={String(course.weeks)} label={weeksWord} />
-      <Stat tone="course" value={String(workouts)} label={workoutsWord} />
+      <Stat tone="accent" value={String(course.weeks)} label={weeksWord} />
+      <Stat tone="accent" value={String(workouts)} label={workoutsWord} />
       <Stat
-        tone="course"
+        tone="accent"
         value={`~${course.avgSessionMin}`}
         label={t(locale, 'common.minutesUnit')}
       />
@@ -333,7 +333,7 @@ const jsonLd = [
             {
               course.outcomes.map((x) => (
                 <li class="flex items-baseline gap-4 py-2.5">
-                  <span class="glyph shrink-0 text-sm text-course-accent" aria-hidden="true">
+                  <span class="glyph shrink-0 text-sm text-accent" aria-hidden="true">
                     ✓
                   </span>
                   <span>{l(x, locale)}</span>

@@ -8,15 +8,16 @@
  * page used to spell out in a sentence («четыре недели по пять тренировок примерно по 18 минут»)
  * is three of these in a row, and the sentence is gone.
  *
- * Unbounded at the display weight, tabular so a row of them aligns on the digits. `course` puts the
- * programme colour on the digits — the brandbook's «цвет красит номера» — for the strip under a
- * course's own headline; the default is white, for a figure that belongs to the product rather than
- * to one programme.
+ * Unbounded at the display weight, tabular so a row of them aligns on the digits. `accent` sets the
+ * digits in the brand's light blue — the key figures of a page, the semantic colour map's «key
+ * words» (global.css header). `course` is the older name for it and renders the same: the
+ * programme colour is identity for a course's tile and tag, and orange digits would read as
+ * «effort». The default is white.
  */
 interface Props {
   value: string;
   label: string;
-  tone?: 'default' | 'course';
+  tone?: 'default' | 'accent' | 'course';
   /** `lg` is the strip under a headline; `md` a figure inside a band that has a headline already. */
   size?: 'md' | 'lg';
   class?: string;
@@ -33,7 +34,7 @@ const sizes = {
     class:list={[
       'numeral tabular leading-none',
       sizes[size],
-      tone === 'course' ? 'text-course-accent' : 'text-text',
+      tone === 'default' ? 'text-text' : 'text-accent',
     ]}>{value}</span
   >
   <!-- The word wraps rather than truncates: three of these share a phone's width, and «тренировок»

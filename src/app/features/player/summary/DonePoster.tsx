@@ -19,10 +19,9 @@
  *
  * **The poster is the screen's blue hero field** (style A, global.css header): the result is the
  * one thing happening here. «Готово!» is white with the whole word as the light-blue key word and
- * its swoosh; the stars are neon on the field (the programme colour as a figure on electric blue
- * would be one more colour and, for orange, a weak one); the figures' rules are white alphas.
+ * its swoosh; the stars are the light blue on the field (5.7 — neon is for «do this», and the
+ * programme's orange would read as effort); the figures' rules are white alphas.
  */
-import type { CSSProperties } from 'react';
 import { HeroField, KeyWord } from '@/components/ui/HeroField';
 import { Stars } from '@/components/ui/Stars';
 import { useT } from '@/app/hooks/useT';
@@ -50,8 +49,7 @@ export function DonePoster({ eyebrow, line, stars, figures }: DonePosterProps) {
     <HeroField
       padding="lg"
       className="flex flex-col items-center text-center"
-      /* The stars read `--course-accent`; on the field they are the neon. */
-      style={{ '--course-accent': 'var(--action)' } as CSSProperties}
+      /* The stars are the light blue (`Stars`), 5.7 on the field — the neon is for «do this». */
     >
       <p className="eyebrow max-w-full truncate text-on-field/80">{eyebrow}</p>
       {/*
