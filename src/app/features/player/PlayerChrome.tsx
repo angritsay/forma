@@ -298,7 +298,7 @@ export function SectionStepper({ sections, current }: SectionStepperProps) {
             className={clsx(
               'eyebrow flex flex-1 items-center gap-1.5 border-t-2 pt-2 transition-colors duration-150 ease-(--ease-out)',
               active
-                ? 'border-course text-course'
+                ? 'border-course-accent text-course-accent'
                 : done
                   ? 'border-border-strong text-muted'
                   : 'border-border text-muted-2',

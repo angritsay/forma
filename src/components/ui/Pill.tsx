@@ -29,8 +29,8 @@ export interface PillProps extends HTMLAttributes<HTMLSpanElement> {
  */
 const TONE: Record<PillTone, string> = {
   neutral: 'border-border-strong text-muted',
-  course: 'border-course/60 text-course',
-  'course-fill': 'border-transparent bg-course text-on-course',
+  course: 'border-course-accent/60 text-course-accent',
+  'course-fill': 'border-transparent bg-course text-tile-fg',
   paper: 'border-transparent bg-paper text-ink',
 };
 

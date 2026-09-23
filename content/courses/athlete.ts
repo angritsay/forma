@@ -2027,7 +2027,7 @@ export const COURSE_ATHLETE: CourseInput = {
   weeks: 8,
   sessionsPerWeek: 4,
   avgSessionMin: 40,
-  tile: '#2a2a30', // --tile-5 — neutral; no programme colour yet
+  tile: '#383838', // --tile-5 — neutral; no programme colour yet
   price: { rub: 4990, usd: 49 },
   workouts: [
     W_TEST,

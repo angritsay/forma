@@ -1,67 +1,70 @@
 /**
- * The two custom properties a course tile sets, from the one hex content stores.
+ * The three custom properties a coloured section sets, from the one hex it is known by.
  *
- * A tile is either a programme colour (yellow, blue, orange — light, so the ink on it is black)
- * or a neutral dark surface (so the ink is light). CSS cannot derive that from the hex on its
- * own — `color-contrast()` is not shipped — so whoever paints a tile sets both properties, and
- * `.hero-art` in global.css reads them. Deciding it here, once, is what keeps a yellow cover from
- * ever carrying white text or a dark one black.
+ * A tile is any fill a section wears — a course's colour from content, the club's, the coach's. CSS
+ * cannot derive what goes *on* that fill from the hex alone — `color-contrast()` is not shipped — so
+ * whoever paints a tile sets all three properties, and `.hero-art`, `text-tile-fg` and
+ * `text-course-accent` read them. Deciding it here, once, is what keeps a light cover from ever
+ * carrying white text or a dark one black.
  *
  *   <div className="hero-art" style={courseTileVars(course.tile)} />
+ *
+ * ## Ink by measured contrast, not by lightness
+ *
+ * This used to be a cutoff: luminance above 0.35 took black ink, below took white. It worked while
+ * every colour was pale. The third palette (global.css header, design/CHANGELOG.md §14) is not:
+ * Portland orange measures 0.286 and bleu ciel 0.214, so the cutoff gave both white ink — 3.13:1 on
+ * the orange, a failed AA on the beginners' own course. Now both inks are measured against the fill
+ * and the better one wins. The same rule makes an unmigrated hex from the database (the admin's
+ * course builder stores its own `tile`) render correctly, whatever it is.
+ *
+ * The light ink is #111111 rather than the charcoal ground itself: charcoal on bleu ciel is 4.37 and
+ * fails, #111111 is 4.75 and passes, and the eye cannot tell the two apart.
  */
 import type { CSSProperties } from 'react';
 
-const INK_ON_LIGHT = '#0f0f11';
-const INK_ON_DARK = '#f6f6f7';
+/** The app's ground — `--bg` in global.css. */
+export const APP_BG = '#1a1a1a';
+/** `--ink` / `--tile-fg`: type on a light fill. */
+export const INK_ON_LIGHT = '#111111';
+/** `--text` / `--tile-fg-dark`: type on a dark fill. */
+export const INK_ON_DARK = '#f6f6f7';
 
 /**
- * The club's own colour.
+ * The club's solid colour.
  *
- * Colour in this product says which part of it you are in — a course wears the programme colour
- * content gives it, and the club wears orange everywhere it appears: the deck card, the row on
- * Home, the ring beside today's task. A marathon has no course tile of its own to read it from,
- * so this is where it lives, once.
+ * The club *paints* with the crossroads gradient — owner: «давай градиент для клуба сделаем, всё
+ * остальное как в стиле А» — on the streak ring, the day dots and the glow behind its screen. A
+ * gradient cannot be a tile, though: the ink, the type accent and the `-ink` variant all need one
+ * colour, and this is it. Electric blue, the gradient's deep end.
  *
- * It must stay in step with `--course-marathon` in global.css, which is the same hex for the CSS
- * side of the same idea.
- *
- * **This value used to sit on a cliff, and no longer does.** The orange before it, `#ff7a1a`, had a
- * luminance of 0.353 against the 0.35 in {@link isLightTile} — three thousandths, one careless
- * character from flipping the club's cover from black type on orange to white type on a darker
- * orange, which is a different screen rather than a different shade. The owner's mockup samples to
- * `#F8A050`, whose luminance is 0.457: **0.107 of margin**, thirty-five times the old one. The
- * change moves the colour away from the cliff, not toward it, and black ink on it clears 9.2:1.
- *
- * The cliff is still there, so anyone nudging this hue toward red should check the luminance first
- * and expect the flip, and anyone changing the 0.35 should know it moves this screen. `tile.test.ts`
- * holds both promises — the ink and the CSS token — so neither can be broken quietly.
+ * White ink on it (7.71); never type on the ground (2.26), so its type accent is the light blue —
+ * see {@link tileAccent}. It must stay in step with `--course-marathon` in global.css;
+ * `tile.test.ts` holds that.
  */
-export const GAME_TILE = '#f8a050';
+export const GAME_TILE = '#2038e2';
 
 /**
- * The coach tab's own colour.
+ * The coach tab's colour: bleu ciel.
  *
- * Same idea as {@link GAME_TILE}, same reason it has to live somewhere: «Тренер» is a screen
- * without a programme behind it, so there is no `course.tile` for it to read, and the brandbook's
- * «один экран — один цвет» still applies to it. Cyan is the courses', orange is the club's; blue
- * (`--course-yoga` in global.css, the third programme colour and the one nothing is using) is what
- * is left, and the three tabs then read as three colours rather than as two and a grey one.
- *
- * It started on the two pills at the top of the tab and nothing else — the owner's «пилюли сделай
- * цветными» — and her next brief for the screen extended it: «добавь цвета в элементы связанные с
- * покупкой». So it now runs down the tab on the things that lead to paying (the pills, the numbered
- * outcomes, the offer card's edge and tint, the price, the ticks, the pay button) and on nothing
- * factual: his degree and his 10 000 hours stay monochrome, which is what keeps the blue readable
- * as «this is the offer» rather than as decoration. `BookScreen.tsx` holds the rule in prose.
- *
- * Luminance 0.577, comfortably on the light side of the 0.35 cliff in {@link isLightTile}, and as
- * type on the app's dark ground it clears 11.2:1. As a *fill* — which is what the pay button now
- * is — it carries `--on-course`, the same near-black the club's orange bar carries.
- *
- * A course *can* be given this same hex in the admin's tile picker, and if one ever is, the two
- * never share a screen: a course wears it on the course screen, the coach wears it here.
+ * «Тренер» has no programme behind it, so no `course.tile` to read. It wears ciel on its section
+ * tag and the pay button's fill. Ink on it is #111111 (4.75). As type on the ground it measures
+ * 4.37 — large type only (≥3:1), so small type takes {@link tileAccent}'s light blue instead.
+ * `tile.test.ts` pins that 3–4.5 window: if either side moves, BookScreen's typography must be
+ * looked at again.
  */
-export const COACH_TILE = '#a8c8ff';
+export const COACH_TILE = '#007bff';
+
+/**
+ * Fills too dark to be read as type on charcoal, and what speaks for them instead.
+ *
+ * Both are blues, and both hand over to the brand's light blue — the one colour of the palette that
+ * belongs on a blue ground as much as on charcoal («поверх тёмно-синего или поверх чёрного»).
+ */
+const DARK_TILE_ACCENT: Readonly<Record<string, string>> = {
+  '#2038e2': '#afe9fd',
+  '#007bff': '#afe9fd',
+};
 
 /** Relative luminance per WCAG; 0 is black, 1 is white. */
 export function luminance(hex: string): number {
@@ -74,26 +77,46 @@ export function luminance(hex: string): number {
   return 0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4);
 }
 
-/** True for a tile light enough that black ink reads on it (the programme colours). */
-export function isLightTile(hex: string): boolean {
-  return luminance(hex) > 0.35;
+/** WCAG contrast ratio between two opaque colours, 1–21. */
+export function contrast(a: string, b: string): number {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x) as [number, number];
+  return (hi + 0.05) / (lo + 0.05);
 }
 
-/** Ink colour for text and figures drawn on the given tile. */
+/** Ink for text and figures drawn on the given fill: whichever of the two inks reads better. */
 export function tileInk(hex: string): string {
-  return isLightTile(hex) ? INK_ON_LIGHT : INK_ON_DARK;
+  return contrast(INK_ON_LIGHT, hex) >= contrast(INK_ON_DARK, hex) ? INK_ON_LIGHT : INK_ON_DARK;
+}
+
+/** True for a fill that takes the dark ink. Derived from {@link tileInk}, kept for callers. */
+export function isLightTile(hex: string): boolean {
+  return tileInk(hex) === INK_ON_LIGHT;
 }
 
 /**
- * Inline style carrying `--course-tile` and `--course-tile-fg` for React. `undefined` in,
- * `undefined` out, so it can be spread straight onto an element that may have no course.
+ * The section's colour *as type* on the charcoal ground: the fill itself when it reads (≥ 4.5),
+ * the light blue when it is one of the two blues, and `undefined` for a neutral dark surface —
+ * the caller then falls back to plain white text.
+ */
+export function tileAccent(hex: string): string | undefined {
+  if (contrast(hex, APP_BG) >= 4.5) return hex;
+  return DARK_TILE_ACCENT[hex.toLowerCase()];
+}
+
+/**
+ * Inline style carrying `--course-tile`, `--course-tile-fg` and `--course-accent` for React.
+ * `undefined` in, `undefined` out, so it can be spread onto an element that may have no course.
  */
 export function courseTileVars(tile: string | undefined): CSSProperties | undefined {
   if (!tile) return undefined;
-  return { '--course-tile': tile, '--course-tile-fg': tileInk(tile) } as CSSProperties;
+  return {
+    '--course-tile': tile,
+    '--course-tile-fg': tileInk(tile),
+    '--course-accent': tileAccent(tile) ?? 'var(--text)',
+  } as CSSProperties;
 }
 
-/** The same two properties as a `style` attribute string, for .astro templates. */
+/** The same three properties as a `style` attribute string, for .astro templates. */
 export function courseTileStyle(tile: string): string {
-  return `--course-tile:${tile};--course-tile-fg:${tileInk(tile)}`;
+  return `--course-tile:${tile};--course-tile-fg:${tileInk(tile)};--course-accent:${tileAccent(tile) ?? 'var(--text)'}`;
 }

@@ -144,7 +144,7 @@ function Hero() {
        */}
       <h1 className="display px-3 text-[clamp(32px,10.2vw,44px)] leading-[1.12] text-balance">
         <span className="t-thin block">{t('app.clubNameLead')}</span>
-        <span className="block text-course">{t('app.clubNameAccent')}</span>
+        <span className="block text-course-accent">{t('app.clubNameAccent')}</span>
         <span className="t-thin block">{t('app.clubNameTail')}</span>
       </h1>
     </section>
@@ -159,7 +159,7 @@ function Lead() {
     <div className="flex flex-col gap-4 px-3 text-[15px] leading-[1.32]">
       <p>
         {t('app.clubLeadPre')}
-        <span className="text-course">{t('app.clubLeadAccent')}</span>
+        <span className="text-course-accent">{t('app.clubLeadAccent')}</span>
         {t('app.clubLeadPost')}
       </p>
       {/*
@@ -203,7 +203,7 @@ export function ClubMember() {
   const { t } = useT();
   return (
     <div className="-mx-2 flex flex-col gap-2.5">
-      <p className="flex h-13 items-center justify-center rounded-tile border border-course/55 px-6 text-center text-[15px] font-semibold text-course">
+      <p className="flex h-13 items-center justify-center rounded-tile border border-course-accent/55 px-6 text-center text-[15px] font-semibold text-course-accent">
         {t('app.clubMemberTitle')}
       </p>
       <p className="px-5 text-[13px] leading-snug text-muted-2">{t('app.clubMemberNote')}</p>
@@ -233,7 +233,7 @@ export function ClubJoin() {
     <div className="-mx-2 flex flex-col gap-2.5">
       <a
         {...externalLinkProps(clubJoinHref(locale, email, isDemo()))}
-        className="flex h-13 select-none items-center justify-center rounded-tile bg-course px-6 text-center text-[15px] font-semibold text-on-course transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-90 active:scale-[0.99]"
+        className="flex h-13 select-none items-center justify-center rounded-tile bg-course px-6 text-center text-[15px] font-semibold text-tile-fg transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-90 active:scale-[0.99]"
       >
         {t('app.marathonJoinCta', { price })}
       </a>

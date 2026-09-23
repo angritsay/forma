@@ -80,7 +80,7 @@ declare global {
 }
 
 /** Forma's app background; Telegram paints its own chrome around the page in this colour. */
-const HEADER_COLOR = '#0e0e12';
+const HEADER_COLOR = '#1a1a1a';
 
 let cached: TelegramWebApp | null | undefined;
 /** `initTelegram` is called from an effect that can run twice; the handover happens once. */

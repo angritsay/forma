@@ -1605,7 +1605,7 @@ export const COURSE_DUMBBELLS: CourseInput = {
    * before, the neutral surface having taken light ink. That flip is the point: a course with a
    * colour is a light tile with black type on it, everywhere in the product.
    */
-  tile: '#E0F89A', // programme colour: dumbbells — the mockup's lime
+  tile: '#f4ff3f', // programme colour: dumbbells — the palette's neon (third palette)
   price: { rub: 3990, usd: 39 },
   workouts: [
     W_TEST,

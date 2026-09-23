@@ -3,93 +3,124 @@
 @import '@fontsource-variable/unbounded';
 
 /*
- * Forma design tokens — second brandbook (design system CHANGELOG §1–7).
+ * Forma design tokens — third palette: «синие поля, градиентная нить».
  *
- * The interface is strictly black and white. The base is #0f0f11 with three surfaces above it;
- * the profile and marketing backdrops are white "paper". There is no coloured UI accent any more
- * — the primary button is a white fill with black text — and the only colour anywhere is the
- * colour of the *programme* someone is training in: beginners #f2f52d, yoga #a8c8ff, marathon
- * #ff7a1a. One screen, one colour; it paints the course cover, the progress and the day number,
- * and never a button. Text on a programme colour is always black.
+ * Owner: «charcoal как фон… Фон больше не может быть другого цвета». The ground is charcoal
+ * #1a1a1a everywhere, in the app, on the site and in the admin panel. The strictly black-and-white
+ * interface of the second brandbook is retired, and with it the rule that the accent is white.
  *
- * Every radius is 0. The one circle in the system is the play button over a video.
+ * The system took five preview rounds to find (design/CHANGELOG.md §14). The owner chose a blend of
+ * two directions, and every colour has exactly one job:
+ *
+ *   - **The blue field** `--field` #2038e2 — one hero card per screen, the thing happening here.
+ *     White type on it (7.71), the key word in `--accent` light blue (5.7), a hand-drawn swoosh.
+ *     Electric blue is never type on charcoal (2.26).
+ *   - **Neon** `--action` #f4ff3f — action: the one main button of a screen and the tags «новое»,
+ *     «задание дня», «лидер», «сегодня». Ink on it.
+ *   - **The crossroads gradient** — the club's own colour. Owner: «давай градиент для клуба
+ *     сделаем, всё остальное как в стиле А». The streak ring, the day dots, the glow behind the
+ *     club screen and its key words. Nowhere else. As type only its warm half (light blue → beige
+ *     → orange), all ≥ 5.5.
+ *   - **Section tags** — orange for beginners, bleu ciel for the coach. Tags, never fields.
+ *   - **Light blue** `--accent` #afe9fd — the brand: logo dot, links, focus, accent words.
+ *
+ * Ink on any coloured fill is decided by measured contrast, not by lightness — `tileInk()` in
+ * src/lib/ui/tile.ts. The old luminance cutoff would have put white on Portland orange (3.13).
+ * Ink is #111111 rather than the charcoal itself: charcoal on bleu ciel is 4.37 and fails AA,
+ * #111111 is 4.75 and passes, and the eye cannot tell the two apart.
+ *
+ * No text is drawn as an outline anywhere — the owner turned it down in preview.
  */
 :root {
-  --bg: #0f0f11;
-  --surface: #17171a;
-  --surface-2: #1f1f24;
-  --surface-3: #2a2a30;
+  --bg: #1a1a1a;
+  --surface: #242424;
+  --surface-2: #2e2e2e;
+  --surface-3: #383838;
   --border: rgba(255, 255, 255, 0.1);
   --border-strong: rgba(255, 255, 255, 0.18);
   --text: #f6f6f7;
   /*
-   * Both muted tones must clear WCAG AA (4.5:1) for body text on every surface they are used on,
-   * including the darkest one (--surface-3). Measured:
-   *   --muted   #b9b9c0  on bg 9.81 · surface 9.17 · surface-2 8.41 · surface-3 7.31
-   *   --muted-2 #93939d  on bg 6.29 · surface 5.88 · surface-2 5.39 · surface-3 4.69
+   * Both muted tones clear WCAG AA (4.5:1) on every surface they are used on, the lightest one
+   * (--surface-3) included. Measured:
+   *   --muted   #b9b9c0  on bg 9.07 · surface 7.96 · surface-2 6.96 · surface-3 6.01
+   *   --muted-2 #a6a6ae  on bg 7.20 · surface 6.42 · surface-2 5.62 · surface-3 4.85
    *
-   * The design system's own text-3 is #84848d. It is not adopted: on --surface-2 it measures
-   * 4.43 and on --surface-3 3.85, and this codebase uses --muted-2 for small running text on
-   * both. #93939d is the closest grey that clears AA everywhere; the difference is invisible.
+   * --muted-2 was #93939d. On the new, lighter --surface-3 it measures 3.85 and fails.
    */
   --muted: #b9b9c0;
-  --muted-2: #93939d;
+  --muted-2: #a6a6ae;
   --primary: #ffffff;
-  --on-primary: #0f0f11;
+  --on-primary: #1a1a1a;
   /*
-   * The accent is white. `--accent` used to be the one blue in the system and marked the primary
-   * button, the logo's full stop and the active tab; all of those are now white on black, so the
-   * token stays — every `bg-accent` in the tree keeps meaning "the thing that acts" — and only
-   * its value changes. `--accent-2` (periwinkle) is gone with it and aliases the same white.
+   * The brand colour. It was white in the second brandbook ("the thing that acts"); acting is the
+   * neon's job now, and the brand is the owner's light blue — «светло-голубой — это брендовый
+   * цвет наш». 13.2:1 on charcoal. `--accent-2` aliases it.
    */
-  --accent: #ffffff;
-  --accent-2: #ffffff;
-  --on-accent: #0f0f11;
+  --accent: #afe9fd;
+  --accent-2: #afe9fd;
+  --on-accent: #111111;
+  /* Action: the one main button of a screen, and the tags that ask for attention. 15.9 on bg. */
+  --action: #f4ff3f;
+  --on-action: #111111;
+  /* The hero field: one blue card per screen. White on it 7.71, --accent on it 5.7. */
+  --field: #2038e2;
+  --on-field: #ffffff;
+  --field-rgb: 32, 56, 226;
+  /* The rest of the palette, named for what they are. */
+  --orange: #ff5a00;
+  --ciel: #007bff;
+  --beige: #ffe6d0;
   /*
-   * Paper: the white screens. The profile sits on it, so do the marketing backdrops, and a dark
-   * card cut into paper is the "inset" the brandbook asks for. Scoped as a theme below so a whole
-   * subtree flips at once with [data-theme='paper'].
+   * The owner's crossroads gradient, in our colours — the club's colour and nobody else's. It must
+   * carry the light blue and the «чуть-чуть желтоватый» beige, her words. `--grad-warm` is its
+   * readable half, the only part that may colour type on charcoal: every stop of it clears 5.5.
+   */
+  --grad-crossroads: linear-gradient(115deg, #afe9fd 0%, #ffe6d0 32%, #ff5a00 62%, #2038e2 100%);
+  --grad-warm: linear-gradient(100deg, #afe9fd 0%, #ffe6d0 45%, #ff5a00 100%);
+  /*
+   * White elements stay white — `bg-paper` plates, badges, the secondary button on a blue field.
+   * There is no white *screen* any more: the paper theme is gone, the ground may not be another
+   * colour.
    */
   --paper: #ffffff;
   --paper-2: #f2f2f0;
-  --ink: #0f0f11;
+  --ink: #111111;
   /*
-   * The same three colours again as bare `r, g, b` triplets, for the glass utilities below.
+   * The same colours as bare `r, g, b` triplets, for the glass utilities below.
    *
-   * A custom property holding `#0f0f11` cannot be given an alpha — `rgba(var(--bg), 0.35)` is not
-   * valid CSS and simply drops the declaration. `rgb(from var(--bg) r g b / 0.35)` would do it, but
-   * relative colour syntax is too new for the Android WebView a Telegram Mini App runs inside, and
-   * the failure there is silent. A triplet plus legacy `rgba()` works everywhere and has since
-   * forever, so the duplication is the price of the glass rendering at all.
-   *
-   * Keep these in step with the hexes above them. `--paper-rgb` is what hairlines on glass are
-   * drawn in, which is why it flips to ink under the paper theme rather than staying white.
+   * `rgba(var(--bg), 0.35)` is not valid CSS, and relative colour syntax is too new for the
+   * Android WebView a Telegram Mini App runs inside — the failure there is silent. Keep these in
+   * step with the hexes above them by hand.
    */
-  --bg-rgb: 15, 15, 17;
-  --surface-rgb: 23, 23, 26;
+  --bg-rgb: 26, 26, 26;
+  --surface-rgb: 36, 36, 36;
   --paper-rgb: 255, 255, 255;
-  --border-ink: rgba(15, 15, 17, 0.14);
-  --border-ink-strong: rgba(15, 15, 17, 0.25);
+  --border-ink: rgba(17, 17, 17, 0.14);
+  --border-ink-strong: rgba(17, 17, 17, 0.25);
   /*
-   * Programme colours — the only colour in the system, and it comes from the course, never from
-   * the interface. Black ink on all three clears AA with room: 14.74 on cyan, 11.28 on blue,
-   * 9.24 on orange. As text on the dark ground they clear it too (same ratios), which is what
-   * lets a day number or a kicker take the course colour.
+   * Section colours. They come from content (`course.tile`) and the two tabs that have no course
+   * (`GAME_TILE`, `COACH_TILE` in src/lib/ui/tile.ts). These tokens mirror them; keep them in step.
    *
-   * The `-ink` variants are the same hues darkened for use as text on paper, each ≥ 5.3:1.
+   *   beginners  #ff5a00  ink #111111 6.04 · as type on bg 5.56
+   *   dumbbells  #f4ff3f  ink #111111 17.3 · as type on bg 15.9
+   *   yoga       #ffe6d0  ink #111111 15.7 · as type on bg 14.5   (placeholder — no course yet)
+   *   marathon   #2038e2  ink white   7.71 · never type on bg (2.26). The club *paints* with the
+   *              crossroads gradient; this solid is what the tile machinery and the -ink need.
    *
-   * `--course-beginners` was the brand yellow `#f2f52d` and is the owner's cyan now — the same
-   * change as `tile` in `content/courses/start.ts`, which is the value the product actually reads.
-   * These tokens mirror content rather than driving it; keep the two in step or the next reader
-   * has two answers to one question.
+   * The `-ink` variants are the hues darkened for text on white, each ≥ 5.3:1.
    */
-  --course-beginners: #9feff7;
-  --course-yoga: #a8c8ff;
-  --course-marathon: #f8a050;
-  --on-course: #0f0f11;
-  --course-beginners-ink: #1b6c74;
-  --course-yoga-ink: #2f5f9e;
-  --course-marathon-ink: #ab5211;
+  --course-beginners: #ff5a00;
+  --course-dumbbells: #f4ff3f;
+  --course-yoga: #ffe6d0;
+  --course-marathon: #2038e2;
+  --course-beginners-ink: #b84300;
+  --course-dumbbells-ink: #5f6600;
+  --course-yoga-ink: #8a5a2e;
+  --course-marathon-ink: #2038e2;
+  /*
+   * Semantic colours are deliberately left alone. Neon is now a course colour and an action; it
+   * must never be read as «warning».
+   */
   --success: #7ce0b0;
   --warning: #ffd166;
   --danger: #ff6b6b;
@@ -97,18 +128,15 @@
   --warning-ink: #8a6100;
   --danger-ink: #c53030;
   /*
-   * Course tiles. A course sets `--course-tile` to one of these (content stores the hex). The
-   * first three are the programme colours and take black ink (`--tile-fg`); the last two are
-   * neutral surfaces for programmes that have no colour of their own and take light ink
-   * (`--tile-fg-dark`). `.hero-art` reads `--course-tile-fg` so whoever sets the tile sets the
-   * ink to match — `courseTileVars()` in src/lib/ui/tile.ts does both from the one hex.
+   * Course tiles. A course sets `--course-tile` to its hex; `courseTileVars()` sets the matching
+   * ink (`--course-tile-fg`) and type accent (`--course-accent`) from the same hex, by contrast.
    */
   --tile-1: var(--course-beginners);
   --tile-2: var(--course-yoga);
   --tile-3: var(--course-marathon);
   --tile-4: var(--surface-2);
   --tile-5: var(--surface-3);
-  --tile-fg: #0f0f11;
+  --tile-fg: #111111;
   --tile-fg-dark: #f6f6f7;
   /*
    * Radii: a concentric scale. This reverses the rule that stood here — «одна форма, острый
@@ -157,7 +185,7 @@
   /* Shadows are almost gone; paper polaroids get a soft one, dark cards get none. */
   --shadow-card: none;
   --shadow-soft: 0 12px 30px rgba(0, 0, 0, 0.3);
-  --shadow-paper: 0 12px 30px rgba(15, 15, 17, 0.18);
+  --shadow-paper: 0 12px 30px rgba(17, 17, 17, 0.18);
   --shadow-glow: none;
   /*
    * Type. Unbounded for display — 800 for the big lines and 600 for headings, with the brand's
@@ -193,49 +221,6 @@
 }
 
 /*
- * Paper theme — the white screens. Set `data-theme="paper"` on a subtree (the profile, a
- * marketing block) and every token below flips: the ground goes white, text goes ink, the
- * primary button inverts to black-on-white, and the semantic colours switch to their ink
- * variants so they still clear AA on a light ground. Measured: --muted #4c4c53 on paper 8.52,
- * on the raised surfaces 7.60 / 7.00 / 6.31; --muted-2 #66666f on paper 5.68, paper-2 5.07,
- * surface-2 4.67 — all AA.
- */
-[data-theme='paper'] {
-  --bg: var(--paper);
-  --surface: var(--paper-2);
-  --surface-2: #e9e9e6;
-  --surface-3: #dededa;
-  --border: var(--border-ink);
-  --border-strong: rgba(15, 15, 17, 0.2);
-  --text: var(--ink);
-  --muted: #4c4c53;
-  --muted-2: #66666f;
-  --primary: var(--ink);
-  --on-primary: #ffffff;
-  --accent: var(--ink);
-  --accent-2: var(--ink);
-  --on-accent: #ffffff;
-  --success: var(--success-ink);
-  --warning: var(--warning-ink);
-  --danger: var(--danger-ink);
-  --tile-4: #e9e9e6;
-  --tile-5: #dededa;
-  --tile-fg-dark: var(--ink);
-  /*
-   * Glass on paper. Without these three a sheet opened on the profile would keep blurring the
-   * white screen behind it into a near-black gradient — the material would be right and the colour
-   * would be from the other theme.
-   */
-  --bg-rgb: 255, 255, 255;
-  --surface-rgb: 242, 242, 240;
-  --paper-rgb: 15, 15, 17;
-  --shadow-soft: 0 8px 30px rgba(15, 15, 17, 0.1);
-  color-scheme: light;
-  background: var(--bg);
-  color: var(--text);
-}
-
-/*
  * The token layer, and it has to be `inline` — that is a correctness requirement, not a style.
  *
  * A plain `@theme` entry is emitted as a custom property on `:root`, and the utility refers to it:
@@ -244,8 +229,8 @@
  * every element in the document inherits that dark grey no matter what is redefined below it. Both
  * of this file's subtree overrides were dead because of it:
  *
- *   - `[data-theme='paper']` redefines fourteen tokens for the white screens, and not one of them
- *     reached a Tailwind utility. The profile's running text kept the dark theme's #b9b9c0 on
+ *   - `[data-theme='paper']` redefined fourteen tokens for the white screens (the theme is gone
+ *     now — the ground may not be another colour), and not one of them reached a Tailwind utility. The profile's running text kept the dark theme's #b9b9c0 on
  *     white — 1.95:1, against the 4.5 it needs — while the headings looked right only because they
  *     inherit the plain `color` declaration rather than going through a utility.
  *   - `--course-tile`, set per course by `courseTileVars()`, could never colour `text-course`.
@@ -277,7 +262,14 @@
   --color-course-beginners: var(--course-beginners);
   --color-course-yoga: var(--course-yoga);
   --color-course-marathon: var(--course-marathon);
-  --color-on-course: var(--on-course);
+  --color-course-dumbbells: var(--course-dumbbells);
+  --color-action: var(--action);
+  --color-on-action: var(--on-action);
+  --color-field: var(--field);
+  --color-on-field: var(--on-field);
+  --color-orange: var(--orange);
+  --color-ciel: var(--ciel);
+  --color-beige: var(--beige);
   /*
    * Not one colour but "whatever colour this course is": `courseTileVars()` sets `--course-tile`
    * on a subtree and these read it there. The fallback keeps an unassigned tile a quiet neutral.
@@ -396,6 +388,16 @@ body {
 @layer base {
   :where(.grid, .flex, .inline-flex) > * {
     min-width: 0;
+  }
+
+  /*
+   * Keyboard focus, in the brand's light blue. There was none before — the browser default ring
+   * was all anyone navigating by keyboard had, and on charcoal it is close to invisible. Only
+   * `:focus-visible`, so a tap never draws it.
+   */
+  :where(a, button, [role='button'], input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   /*
@@ -789,7 +791,7 @@ body {
    * liked *is* the token rather than a copy of it.
    *
    * THE RULE THAT DECIDES WHERE IT MAY GO: glass needs something to be glass over. `backdrop-filter`
-   * blurs what is painted behind an element, so a blurred bar over a flat #0f0f11 ground renders as
+   * blurs what is painted behind an element, so a blurred bar over a flat #1a1a1a ground renders as
    * a very slightly different flat dark bar — all the cost of a compositing layer, none of the
    * effect. Four surfaces qualify, because content genuinely passes beneath them: the tab bar
    * (`fixed`), a screen header (`sticky`), and a sheet or modal (the dimmed screen behind it). The
@@ -1025,7 +1027,7 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, transparent 45%, rgba(15, 15, 17, 0.8) 100%);
+  background: linear-gradient(180deg, transparent 45%, rgba(26, 26, 26, 0.85) 100%);
 }
 
 /*
@@ -1034,11 +1036,14 @@ body {
  *
  * It is stronger than `.photo-scrim` for a reason that is arithmetic rather than taste. That one
  * protects white, whose relative luminance is 1.0 and which clears 4.5:1 on anything up to about
- * sRGB 148. This one protects a programme colour: `#9FEFF7` measures 0.758, and 4.5:1 against it
- * needs the ground at sRGB 101 or below — a third of a stop darker, on a photograph whose top
- * third is usually the sky, which is the brightest thing in any frame.
+ * sRGB 148. This one protects a programme colour, and the beginners' colour is Portland orange now:
+ * `#ff5a00` measures 0.286, and 4.5:1 against it needs the composited ground at luminance 0.0247 or
+ * below — about sRGB 44, far stricter than the cyan it replaced (sRGB 101) — on a photograph whose
+ * top third is usually the sky, which is the brightest thing in any frame.
  *
- * So the top is held at 0.80 and only reaches zero at 55%, below the name's baseline. The card
+ * So the top is held at 0.88 and only reaches zero at 57%, below the name's baseline. If a bright
+ * cover still fails, the fallback is recorded: the small name and eyebrow go `text-text`, and the
+ * orange keeps only the large figure and the rule, which need 3:1. The card
  * still reads as a picture: the coach, the deck and the hills — everything the eye actually goes
  * to — are in the untouched half. The numbers were measured on the composited pixels of the
  * rendered card, not estimated; anyone lightening this must re-measure rather than eyeball it,
@@ -1051,10 +1056,30 @@ body {
   pointer-events: none;
   background: linear-gradient(
     180deg,
-    rgba(10, 10, 12, 0.78) 0%,
-    rgba(10, 10, 12, 0.64) 32%,
+    rgba(16, 16, 16, 0.88) 0%,
+    rgba(16, 16, 16, 0.72) 34%,
     transparent 57%
   );
+}
+
+/*
+ * The crossroads gradient as a fill and as type — the club's colour (design/CHANGELOG.md §14). A
+ * fill is the streak ring, the day dots, the glow behind the club screen. As type only `--grad-warm`
+ * is used: the electric-blue end of the full gradient is 2.26 on charcoal and would be unreadable.
+ *
+ * `background-clip: text` ships unprefixed in every engine a Mini App runs in; the prefixed one
+ * stays for older iOS WebViews.
+ */
+.bg-cross {
+  background-image: var(--grad-crossroads);
+}
+
+.text-gradient {
+  background-image: var(--grad-warm);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
 }
 
 /*

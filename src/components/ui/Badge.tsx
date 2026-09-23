@@ -36,7 +36,7 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 const TONE: Record<BadgeTone, string> = {
   neutral: 'bg-transparent border-border-strong text-text',
   inverse: 'bg-primary border-transparent text-on-primary',
-  course: 'bg-course border-transparent text-on-course',
+  course: 'bg-course border-transparent text-tile-fg',
   success: 'bg-transparent border-border-strong text-success',
   warning: 'bg-transparent border-border-strong text-warning',
   danger: 'bg-transparent border-border-strong text-danger',

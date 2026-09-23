@@ -55,7 +55,7 @@ type State = 'done' | 'current' | 'open' | 'locked';
 function stateOf(i: number): State {
   return i === 0 ? 'done' : i === 1 ? 'current' : i === 2 ? 'open' : 'locked';
 }
-const fill = tile ? 'bg-course text-on-course' : 'bg-paper text-ink';
+const fill = tile ? 'bg-course text-tile-fg' : 'bg-paper text-ink';
 const stateCls: Record<State, string> = {
   done: fill,
   current: 'bg-paper text-ink',

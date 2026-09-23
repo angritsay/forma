@@ -40,11 +40,10 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * **the button that takes money on a screen that is selling.** On such a screen the white button is
  * just another white button, and the tab's own colour is what says «вот это и есть покупка».
  *
- * The ink is `--on-course`, which is near-black and fixed — the same pairing the club's bar uses.
- * That is safe only because every colour this fill is used with is a *light* tile: the programme
- * colours and `COACH_TILE` all sit well above the 0.35 in `isLightTile()`. Paint this variant with
- * a dark tile and the label disappears; `text-tile-fg` is the property that picks the ink by
- * luminance, and a dark-tile button would have to use that instead.
+ * The ink is `text-tile-fg`, which `courseTileVars()` picks by measured contrast for whatever tile
+ * the button sits under — near-black on orange, neon and bleu ciel, white on the club's electric
+ * blue. It used to be a fixed near-black, which was safe only while every tile was pale; the third
+ * palette put a dark blue among them.
  *
  * Do not reach for it anywhere else. A colour that marks the purchase stops marking anything the
  * moment a second button on the screen wears it.
@@ -56,7 +55,7 @@ const VARIANT: Record<ButtonVariant, string> = {
   secondary: 'bg-surface-2 text-text border border-border-strong hover:bg-surface-3',
   ghost: 'bg-transparent text-muted hover:text-text',
   danger: 'bg-transparent text-danger border border-border-strong hover:bg-surface-2',
-  course: 'bg-course text-on-course hover:opacity-90',
+  course: 'bg-course text-tile-fg hover:opacity-90',
 };
 
 /*

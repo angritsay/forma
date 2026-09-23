@@ -176,7 +176,7 @@ export function DifficultySheet({
                       <span
                         className={clsx(
                           'numeral tabular text-2xl leading-none',
-                          isRecommended && 'text-course',
+                          isRecommended && 'text-course-accent',
                         )}
                       >
                         {Math.max(1, Math.round(o.durationSec / 60))}
