@@ -22,11 +22,24 @@ export function RequireAuth() {
   return <Outlet />;
 }
 
+/**
+ * Профиль не загрузился.
+ *
+ * До сих пор экран умел сказать ровно одно: «проверь соединение». На деле «проверь соединение» —
+ * это только `network`; всё остальное — отказ базы, протухшая сессия, отставшая миграция — выходило
+ * тем же текстом, и владелец, у которого связь в порядке, оставался с советом, который ни к чему
+ * не ведёт.
+ *
+ * Поэтому здесь есть подробности, и ровно тем же приёмом, что на экране падения (`ErrorBoundary`):
+ * свёрнутая строка, которую читают с фотографии чужого телефона. Код и сообщение — это то, что
+ * отличает «база отстала» от «токен просрочен», и без них починка превращается в гадание.
+ */
 function ProfileLoadError() {
   const { t } = useT();
   const error = useSession((s) => s.error);
   const boot = useSession((s) => s.boot);
   const signOut = useSession((s) => s.signOut);
+  const detail = error ? [error.code, error.status, error.message].filter(Boolean).join(' · ') : '';
   return (
     <div className="flex min-h-dvh items-center justify-center px-5">
       <EmptyState
@@ -42,6 +55,16 @@ function ProfileLoadError() {
             <Button variant="ghost" onClick={() => void signOut()}>
               {t('app.authSignOut')}
             </Button>
+            {detail ? (
+              <details className="mt-2 text-left">
+                <summary className="cursor-pointer text-[13px] text-muted-2">
+                  {t('app.errorDetails')}
+                </summary>
+                {/* `break-words`, а не скроллер: строка, которую надо прокручивать, на фотографии
+                    приезжает обрезанной. */}
+                <p className="mt-1.5 text-[12px] leading-snug break-words text-muted-2">{detail}</p>
+              </details>
+            ) : null}
           </div>
         }
       />

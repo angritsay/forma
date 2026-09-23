@@ -36,6 +36,12 @@ export interface SegmentedControlProps<T extends string> {
  * Contrast: the active cell is `--primary` with `--on-primary` on it — white and near-black,
  * either way round — so the inversion clears AA by a distance. The 3.65:1 hazard the audit found
  * belongs to the *tab bar's* lighter capsule, not here, and that bar already sets `--text` on it.
+ *
+ * **Inside a flex column, pass `fullWidth` or a `self-*` class.** The box is `inline-flex`, but
+ * `align-items: stretch` stretches it there anyway — and only the box: the cells keep the width of
+ * their own labels, so the frame runs the whole column with the options hugging its left edge and
+ * the rest of it empty. It has been drawn that way twice, in `BookScreen` (fixed with `self-start`)
+ * and in the club's solo/duo switch (`self-center`), which is why it is written down here.
  */
 export function SegmentedControl<T extends string>({
   options,
