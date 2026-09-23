@@ -1282,6 +1282,14 @@ inserts like on any other.
    logs says who booked, by design; to find one booking, look it up by its `external_id`
    (`gcal:<event id>`).
 
+9. **From the phone: Админка → Записи** (0045) lists the sessions — upcoming, past, cancelled — in
+   Moscow time, and «Синхронизировать сейчас» runs the same function at once. The button sends the
+   admin's own sign-in instead of `GOOGLE_SYNC_TOKEN`; the function lets it in only when PostgREST,
+   asked with that token, says `is_admin()` (`google-calendar-sync/door.ts`), and waits half a
+   minute between two such runs. When the Google secrets are missing the screen says so and names
+   them (the function's `503`); when the function is not deployed at all, it says to run
+   `deploy-calendar`. Needs `deploy-calendar` once after 0045 for the new door.
+
 ### If the coach ever cancels by deleting the event
 
 Both ways are handled. A cancelled event comes back from Google with `status: 'cancelled'` and is
@@ -1645,15 +1653,22 @@ says «please wait» once and then stays silent, so a flood cannot turn the bot 
 replies; the app shows the same as an error under the field. A message Telegram delivers twice
 (it retries when the function is slow) is recognised and passed on once.
 
-**How the coach replies.** From his own Telegram account — **no bot can write on his behalf**, and
-the service bot that posts into the group cannot write to a customer at all (a bot may only write
-to people who started a chat with it). So each message ends with a link:
+**How the coach replies.** Since 0045, from the admin: **Админка → Обращения** lists every message
+with its text (tabs Новые / Отвеченные / Все). «Ответить» writes the reply, and the **main bot**
+delivers it to the person's chat with it, signed «Ответ тренера:» / «Coach’s reply:» in their
+language and quoting the question when it was asked in the bot. It goes through the bot's queue
+(`telegram_outbox`, addressed by chat id — `chat_id`, 0045), so it arrives within ten minutes, and
+the card then says «Доставлен», or «Не дошёл» when the person has blocked the bot. Somebody who wrote
+from the app without a linked Telegram gets the reply when they next open the app from Telegram (up
+to a week); the card offers «Написать на почту» for them. At most 60 replies an hour in all.
 
-- `Ответить: @username` — opens the chat with that person. Works always.
+The topic message still ends with a link for answering from a personal account:
+
+- `Ответить: @username` — opens the chat with that person. Works always; «Открыть чат» on the card
+  is the same link.
 - `Ответить: открыть чат в телеграме` (`tg://user?id=…`) — for somebody with no @username. Telegram
-  opens it only if the person's privacy settings allow being found this way; otherwise it shows as
-  plain text. That is why the bot asks people without a @username to leave an email or phone in
-  their next message.
+  opens it only if the person's privacy settings allow being found this way; the reply through the
+  bot reaches them regardless.
 - `Ответить на почту: …` — from the app, when no Telegram is linked to the account.
 
 The numeric Telegram id is inside that message, which goes only to the private group. It never
@@ -1668,6 +1683,9 @@ about who.
    new secret.
 3. Actions → Supabase apply → **`deploy-notify`** — the sender needs the new code to format the
    «Обращение» message. Until then the rows wait in the queue and none is lost.
+4. For the inbox and replies: `migration` with **`0045_support_inbox.sql`**, then **`deploy-notify`**
+   (it formats and addresses the reply — deploy it before the first reply, or an older sender marks
+   the reply `skipped` as an unknown kind) and **`deploy-bot`** (the bot's «ответ придёт сюда»).
 
 If the bot is deployed before the migration, a message gets «Не получилось передать сообщение
 тренеру» back — honest, and nothing is lost that the person cannot resend.

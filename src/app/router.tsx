@@ -163,6 +163,8 @@ export function AppRoutes() {
                   element={<LazyScreen name="AdminWorkoutsScreen" />}
                 />
                 <Route path="/admin/stats" element={<LazyScreen name="AdminStatsScreen" />} />
+                <Route path="/admin/support" element={<LazyScreen name="AdminSupportScreen" />} />
+                <Route path="/admin/bookings" element={<LazyScreen name="AdminBookingsScreen" />} />
                 <Route
                   path="/admin/exercises"
                   element={<LazyScreen name="AdminExercisesScreen" />}
