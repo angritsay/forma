@@ -466,6 +466,7 @@ export const app = {
   summaryShareCopied: 'Скопировано в буфер обмена',
   summaryShareText:
     '{workout}: {time}, {points} очков, {kcal} ккал, выполнено {completion}% — Forma',
+  summaryShareTextNoPoints: '{workout}: {time}, {kcal} ккал, выполнено {completion}% — Forma',
   summaryNotFoundTitle: 'Тренировка не найдена',
   summaryNotFoundBody: 'Не нашли эту тренировку. Возможно, она сохранена с другого устройства.',
   summaryLoadErrorTitle: 'Не удалось загрузить итоги',
