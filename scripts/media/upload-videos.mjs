@@ -93,9 +93,17 @@ for (const clip of ready) {
     console.log(`  would upload  ${clip.file}  →  videos/${path}`);
     uploaded++;
   } else {
-    const { error } = await client.storage
-      .from('videos')
-      .upload(path, readFileSync(file), { contentType: 'video/mp4', upsert: true });
+    /*
+     * A year of cache. Every read of a clip goes through a signed URL, and the signature is part of
+     * the address, so a replaced clip is never served stale from cache — a new signature is a new
+     * URL. Without this Storage sends its default of an hour, and the player's second visit to a
+     * movement downloaded it again.
+     */
+    const { error } = await client.storage.from('videos').upload(path, readFileSync(file), {
+      contentType: 'video/mp4',
+      upsert: true,
+      cacheControl: '31536000',
+    });
     if (error) {
       console.error(`  FAILED   ${path}: ${error.message}`);
       failed++;
@@ -126,7 +134,13 @@ for (const clip of ready) {
   }
   const still = await client.storage
     .from('images')
-    .upload(posterPath, readFileSync(posterFile), { contentType: 'image/jpeg', upsert: true });
+    // A day, not a year: the still sits at a stable public path, so a re-upload has to reach
+    // people who already saw the old frame.
+    .upload(posterPath, readFileSync(posterFile), {
+      contentType: 'image/jpeg',
+      upsert: true,
+      cacheControl: '86400',
+    });
   if (still.error) {
     // Not fatal: the clip itself is up, and the player falls back to it with no poster frame.
     console.error(`  no still ${posterPath}: ${still.error.message}`);

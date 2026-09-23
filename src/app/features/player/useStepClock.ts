@@ -13,6 +13,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { stepElapsedNow, useActiveWorkoutStore } from '@/app/store/activeWorkout';
 import { countdownCue, type Cue } from './sound';
+import type { SwipeHold } from './feed';
 
 export interface StepClock {
   elapsedMs: number;
@@ -136,4 +137,19 @@ export function useNextHandler(
     register(stable);
     return () => register(null);
   }, [register, stable]);
+}
+
+/**
+ * Hold the feed's swipe while a step needs it held (see `SwipeHold`). The buttons and the keys
+ * still work: they are deliberate, a brushed screen is not.
+ */
+export function useSwipeHold(
+  register: ((hold: SwipeHold | null) => void) | undefined,
+  next: boolean,
+  prev: boolean,
+): void {
+  useEffect(() => {
+    register?.(next || prev ? { next, prev } : null);
+  }, [register, next, prev]);
+  useEffect(() => () => register?.(null), [register]);
 }

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { clearMediaUrlCache } from '@/lib/api/storage';
 import { KitProvider, type KitLabels } from '@/components/ui/KitContext';
 import { linkTelegram } from '@/lib/api/telegram';
 import { telegram } from '@/lib/telegram/webapp';
@@ -13,6 +14,9 @@ import { Toaster } from './Toaster';
 export function AppProviders({ children }: { children: ReactNode }) {
   const locale = useLocale((s) => s.locale);
   const signedIn = useSession((s) => s.status === 'signed_in');
+  const userId = useSession((s) => s.user?.id ?? null);
+  // What the user owns, as one comparable string: a change means a purchase or a claim landed.
+  const owned = useSession((s) => [...s.entitlements].sort().join(','));
 
   useEffect(() => {
     void useSession.getState().boot();
@@ -26,6 +30,35 @@ export function AppProviders({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (signedIn) void useCatalogue.getState().load();
   }, [signedIn]);
+
+  /*
+   * …and again when what the user owns changes. A course bought or claimed a minute ago is read
+   * through the same RLS, so the catalogue loaded before the purchase does not have its days and
+   * the course opened empty until the app was restarted. The first value is the one `load` above
+   * already used; only a change after it refreshes.
+   */
+  const ownedSeen = useRef<string | null>(null);
+  useEffect(() => {
+    if (!signedIn) {
+      ownedSeen.current = null;
+      return;
+    }
+    if (ownedSeen.current !== null && ownedSeen.current !== owned) {
+      void useCatalogue.getState().refresh();
+    }
+    ownedSeen.current = owned;
+  }, [signedIn, owned]);
+
+  /*
+   * Signed URLs for paid clips are kept for the tab (src/lib/api/storage.ts). They were signed
+   * under somebody's entitlements, so they go when that somebody does — on sign-out or a switch of
+   * account, not on the first sign-in.
+   */
+  const lastUser = useRef<string | null>(null);
+  useEffect(() => {
+    if (lastUser.current !== null && lastUser.current !== userId) clearMediaUrlCache();
+    lastUser.current = userId;
+  }, [userId]);
 
   /*
    * Привязать телеграм-аккаунт к профилю — внутри телеграма и только когда человек вошёл.

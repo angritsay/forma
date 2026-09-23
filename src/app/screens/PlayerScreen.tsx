@@ -19,16 +19,31 @@
  * State lives in `useActiveWorkoutStore` (persisted), so leaving keeps the session resumable.
  * Keyboard: Space = pause, → next, ← previous, Esc = turn the card back over.
  */
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
 import { Navigate, useNavigate } from 'react-router';
-import { ExerciseStill } from '@/components/media/ExerciseStill';
+import { clsx } from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { IconButton } from '@/components/ui/IconButton';
 import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
 import { TopBar } from '@/app/components/TopBar';
+import { ArtFeed, type FeedSlide } from '@/app/features/player/ArtFeed';
 import { CardBack } from '@/app/features/player/CardBack';
+import {
+  FEED_MS,
+  feedDecision,
+  feedOffset,
+  type FeedMove,
+  type SwipeHold,
+} from '@/app/features/player/feed';
 import { FlipCard } from '@/app/features/player/FlipCard';
 import {
   PausedOverlay,
@@ -38,11 +53,15 @@ import {
   SectionStepper,
 } from '@/app/features/player/PlayerChrome';
 import {
+  boardItems,
+  exerciseName,
   findBlock,
+  firstFilmedIndex,
   isTestBlock,
   sectionOfStep,
+  sessionVideoRefs,
   skippedResult,
-  stepExerciseId,
+  stepArtExerciseId,
   stepTitle,
   stepVideoRef,
   workoutSections,
@@ -59,9 +78,8 @@ import { haptic, setClosingConfirmation } from '@/lib/telegram/webapp';
 import { warmupSkipIndex } from '@/lib/training/player';
 import { SkipRow } from '@/app/features/player/SkipRow';
 import { TapToPause } from '@/app/features/player/TapToPause';
-import { exerciseStillUrl } from '@/lib/api/storage';
+import { signMediaUrls } from '@/lib/api/storage';
 import { courseTileVars } from '@/lib/ui/tile';
-import { useMediaUrl } from '@/app/features/player/useMediaUrl';
 import { useWakeLock } from '@/app/features/player/useWakeLock';
 import { useT } from '@/app/hooks/useT';
 import {
@@ -88,182 +106,6 @@ function NoSession() {
   );
 }
 
-interface ArtLayerProps {
-  exerciseId: string | undefined;
-  playing: boolean;
-  videoUrl: string | undefined;
-}
-
-/**
- * The demonstration: the coach's own clip of the movement.
- *
- * A still from that same clip is the poster, so the frame the athlete arrives on is the movement
- * rather than a black rectangle while the signed URL is fetched — and it is the whole picture for
- * a movement whose clip has not been uploaded yet. Nothing is drawn: a diagram of a movement we
- * film is a worse picture of it, and a diagram of one we do not film is a promise we cannot keep.
- *
- * **The fit is decided per clip, from the clip's own shape, and the clip always fills the width.**
- * This is the third answer to the same question and the first one true for both kinds of footage
- * the coach shoots.
- *
- * `object-cover` was tried once as a blanket rule and reverted, for a reason worth keeping written
- * down: he films some movements in landscape, in a garden, and a landscape frame cropped to a
- * phone-shaped hole keeps a vertical strip through the middle — the squat happens off-screen and
- * the video is worth nothing. The replacement, `w-full h-auto max-h-full object-contain`, was
- * documented here as «as wide as the screen … no bar at the sides in the ordinary case». It was
- * not: `max-h-full` wins whenever the clip is taller than the stage, and the owner sent a
- * screenshot of a portrait squat painted 239px wide between two 76px bars of black.
- *
- * Both rules were right about their own footage and wrong about the other's, because one
- * **The clip is as wide as the screen, always, and that is geometry rather than a decision.**
- * `w-full h-auto` sets the width to the stage's and lets the height follow the clip's own shape;
- * the stage hides what runs past it. A clip taller than the stage is therefore cropped evenly top
- * and bottom — the same result `object-cover` gives — and a shorter one sits centred with space
- * above and below. Neither case can put a bar down the side, because nothing is ever fitted by
- * height.
- *
- * It used to read the clip's `videoWidth`/`videoHeight` on `loadedmetadata` and choose `cover` or
- * `contain` from the two shapes. The arithmetic was right and the reading was not: the owner's
- * phone showed «ЗАМИНКА И РАСТЯЖКА» with 37pt of black down both sides. Measuring her screenshot
- * gave the reason — the stage was 402×740 and the clip was drawn 329×740, fitted by height, which
- * is what `contain` does when the decision never arrived. The coach's clips are about 9:20 (0.44),
- * taller than the 9:16 the sizing below was written for, so every one of them depended on that
- * decision landing. It only has to fail once — a metadata event that fired before the listener,
- * a stage measured while the panel below still reported zero height — and the fallback is the
- * bars. Geometry has no such moment.
- *
- * From `md` the stage is wider than it is tall and the same rule would crop half a movement away
- * to fill a width nobody was short of, so there the clip is contained instead — `md:h-full
- * md:w-auto`, letterboxed, which a laptop has the room for.
- *
- * **It ends above the glass.** The panel at the bottom reports its height and the clip is given the
- * room above it, so the movement is never half under the words. The clip still runs a little way
- * behind the glass — that is what gives the glass something to be glass over.
- *
- * It starts by itself the moment the step changes — that is what `key={videoUrl}` and the effect
- * below are for — because the athlete arriving at a movement wants to see it, not press play on
- * it. Either way it is a silent loop: the clips are encoded with no audio track at all
- * (scripts/media/prepare-videos.mjs), so there is nothing to mute. `muted` is still set on the
- * element — without it a browser refuses to autoplay, audio track or no.
- */
-/**
- * How a movement is drawn, clip or still, in one string.
- *
- * Phone: `w-full h-auto` — the width is the stage's, the height follows the frame's own shape, and
- * the stage crops whatever runs past. Laptop (`md`, where the stage is wider than it is tall):
- * `h-full w-auto`, contained, because filling that width would crop half the movement away.
- *
- * Both halves are pure CSS. Nothing here reads the clip's dimensions, so there is no moment at
- * which the answer can be missing — which is the bug this replaced.
- */
-const ART =
-  'player-art-lift w-full h-auto md:h-full md:w-auto md:max-h-full md:max-w-full object-contain';
-
-function ArtLayer({ exerciseId, playing, videoUrl }: ArtLayerProps) {
-  const video = useRef<HTMLVideoElement>(null);
-  const stage = useRef<HTMLDivElement>(null);
-  const still = exerciseId ? exerciseStillUrl(exerciseId) : undefined;
-  useEffect(() => {
-    const el = video.current;
-    if (!el) return;
-    if (playing) void el.play().catch(() => undefined);
-    else el.pause();
-  }, [playing, videoUrl]);
-
-  /*
-   * The ground is the app's own near-black, not the programme colour, even behind the drawn figure.
-   * A screen of full-bleed yellow was the handsomer idea and it does not survive contact with the
-   * chrome: the clock, the transport and the header all have to stay legible over whatever is
-   * behind them, which means an ink scrim, which turns yellow to olive. Black keeps one set of
-   * colours for both cases — a white line on dark, white type on dark — and the programme colour
-   * still runs the course path, the section stepper and the progress bar.
-   */
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden bg-bg" aria-hidden="true">
-      {/*
-       * The stage: everything above the glass, less a good deal that slips under it.
-       *
-       * The panel's measured height is what this is subtracted by, so a step with a stepper and a
-       * button leaves the clip correspondingly less room.
-       *
-       * The overlap is 120px, and that number is the fix for the black bars. A 9:16 clip in a
-       * 390px-wide stage wants to be 693px tall. At the old 40px the stage was 424px, so `contain`
-       * fitted it by height and painted 239px of picture between two 76px bars — the screenshot
-       * that started this. At 120px the stage is about 700px and the same `contain` fits by width
-       * instead: 390 across, no bars, nothing cropped.
-       *
-       * Filling that width by cropping was the other way to do it and it costs too much: `cover`
-       * in a 424px stage throws away 39% of the frame's height, which on a standing movement is
-       * the head and the feet. Better to let the foot of the clip run behind the glass, where the
-       * panel is at its sheerest, than to cut it off. The overlap also puts real picture behind
-       * the panel, which is the only thing that makes frosted glass read as glass — it now earns
-       * that keep several times over.
-       *
-       * `TapToPause` keeps the old 40px deliberately: it decides what counts as tapping the
-       * picture, and the part of the picture behind the panel belongs to the panel's buttons.
-       */}
-      <div
-        /*
-         * Centred, because a clip that is only as tall as its own shape no longer fills the stage
-         * on its own — the leftover room is split above and below it rather than left at the foot.
-         *
-         * From `md` the panel is a column on the right (`PlayerFooter`), so the stage gives up
-         * width instead of height: `right` is the panel's 380px less the same 40px of overlap that
-         * puts real picture behind the glass, and the measured height stops applying.
-         */
-        /*
-         * The bottom inset is a class, not an inline style. It used to be inline, and inline wins
-         * over a utility for the same property — so `md:bottom-0` could never take effect and the
-         * stage would have kept reserving room for a panel that is no longer underneath it.
-         */
-        /*
-         * `overflow-hidden` on the stage itself, not only on the layer around it. The clip is now
-         * as wide as the stage and as tall as its own shape asks, so a 9:20 clip is taller than
-         * the stage and has to be cropped by something. The layer outside runs the whole screen,
-         * so clipping there would let the frame bleed up over the header.
-         */
-        /*
-         * The top now belongs to the clock's band (`--player-top-h`), which is zero on the steps
-         * that have no clock. The clip starts under it rather than behind it — `PlayerTimerBand`
-         * is glass, and a movement half-read through frosted glass is not a demonstration.
-         */
-        ref={stage}
-        className="absolute inset-x-0 top-[var(--player-top-h,0px)] bottom-[max(0px,calc(var(--player-glass-h,0px)-120px))] flex items-center overflow-hidden md:right-85 md:bottom-0"
-      >
-        {/*
-         * `player-art-in` is the arrival: the next movement's picture settles in over 0.42s rather
-         * than replacing the last one on the spot, keyed on the source so every step replays it.
-         *
-         * `ART` is the one rule both the clip and the still obey — full width on a phone, contained
-         * on a laptop. See the note at the top of this file for why it is geometry and not a
-         * measurement.
-         */}
-        {videoUrl ? (
-          <video
-            key={videoUrl}
-            ref={video}
-            src={videoUrl}
-            poster={still}
-            className={`player-art-in ${ART}`}
-            playsInline
-            muted
-            loop
-            autoPlay
-            preload="metadata"
-          />
-        ) : (
-          <ExerciseStill
-            key={exerciseId}
-            exerciseId={exerciseId}
-            className={`player-art-in ${ART}`}
-            loading="eager"
-          />
-        )}
-      </div>
-    </div>
-  );
-}
-
 interface StepViewProps {
   step: PlayerStep;
   index: number;
@@ -273,6 +115,10 @@ interface StepViewProps {
   onRecord: (result: PlayerResult) => void;
   onNext: () => void;
   registerNext: (fn: (() => void) | null) => void;
+  /** The board row whose clip is playing, and how a tap on a row picks another. */
+  clip: number | undefined;
+  onClip: (index: number) => void;
+  holdSwipe: (hold: SwipeHold | null) => void;
 }
 
 function StepView({
@@ -284,6 +130,9 @@ function StepView({
   onRecord,
   onNext,
   registerNext,
+  clip,
+  onClip,
+  holdSwipe,
 }: StepViewProps) {
   const prescribed = session.prescribed;
   switch (step.kind) {
@@ -293,7 +142,9 @@ function StepView({
       const block = findBlock(prescribed, step.blockId);
       const format = block?.format ?? 'sets';
       const shared = { step, index, onRecord, onNext, registerNext };
-      if (isTestBlock(block)) return <TestStep {...shared} paused={paused} beep={beep} />;
+      if (isTestBlock(block)) {
+        return <TestStep {...shared} paused={paused} beep={beep} holdSwipe={holdSwipe} />;
+      }
       if (step.mode === 'timer' && (step.durationSec ?? 0) > 0) {
         return <WorkTimerStep {...shared} format={format} paused={paused} beep={beep} />;
       }
@@ -320,6 +171,9 @@ function StepView({
           onRecord={onRecord}
           onNext={onNext}
           registerNext={registerNext}
+          clip={clip}
+          onClip={onClip}
+          holdSwipe={holdSwipe}
         />
       );
     case 'fortime':
@@ -332,6 +186,9 @@ function StepView({
           onRecord={onRecord}
           onNext={onNext}
           registerNext={registerNext}
+          clip={clip}
+          onClip={onClip}
+          holdSwipe={holdSwipe}
         />
       );
     case 'done':
@@ -363,7 +220,7 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [endOpen, setEndOpen] = useState(false);
   const [flipped, setFlipped] = useState(false);
-  // How tall the glass panel is right now; the clip is sized against it. See ArtLayer.
+  // How tall the glass panel is right now; the clip is sized against it. See ArtFeed.
   const [glassHeight, setGlassHeight] = useState(0);
   // And how tall the clock's band is — zero on a step that has no clock, which is most of them.
   const [timerHeight, setTimerHeight] = useState(0);
@@ -382,15 +239,97 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
   // The programme colour for the art, the phase kicker and the progress bar — and the ink to match.
   const courseVars = courseTileVars(findCourse(session.courseId)?.tile);
 
-  const exerciseId = step ? stepExerciseId(step, prescribed) : undefined;
-  const videoUrl = useMediaUrl(stepVideoRef(step, locale));
+  /*
+   * Sign every clip of the session in one request, before the first slide asks for its own.
+   *
+   * A layout effect on purpose: those run before any passive effect in the tree, so the first
+   * clip's `useMediaUrl` finds the batch already in flight and waits for it rather than signing
+   * the same clip alone a moment earlier. Every step after the first then has its URL at hand.
+   */
+  useLayoutEffect(() => {
+    void signMediaUrls(sessionVideoRefs(prescribed, locale));
+  }, [prescribed, locale]);
 
   /*
-   * Arriving at a new movement always shows the movement. Someone who turned the card over to read
-   * the technique of the last exercise did not ask to start the next one facing away from it.
+   * Which movement of a board (AMRAP, for time, a block's title card) is playing: a tap on a row
+   * of the list picks it. Remembered with the step it belongs to, so it is gone on the next one.
    */
-  useEffect(() => {
+  const [clipPick, setClipPick] = useState<{ step: number; item: number } | null>(null);
+  const pick = clipPick?.step === stepIndex ? clipPick.item : undefined;
+  const board = boardItems(step, prescribed);
+  const clip = board.length > 0 ? (pick ?? firstFilmedIndex(board, locale)) : undefined;
+  const onClip = useCallback((item: number) => setClipPick({ step: stepIndex, item }), [stepIndex]);
+
+  // Directions the step on screen holds shut (a running AMRAP holds both). See `SwipeHold`.
+  const [hold, setHold] = useState<SwipeHold | null>(null);
+
+  /*
+   * --- the feed --------------------------------------------------------------------------------
+   *
+   * `feed.y` is where the track of slides is, in px from rest; `animate` says whether getting
+   * there is a snap (a transition) or a finger (immediate). `moving` is a snap on its way out that
+   * will turn the page when it lands. `fromGesture` tells the index change that follows that the
+   * picture is already in place, so it must not be slid in a second time.
+   */
+  const [feed, setFeed] = useState({ y: 0, animate: false });
+  const [dragging, setDragging] = useState(false);
+  // A released drag on its way to turning the page: the old step's words stay dimmed until it does.
+  const [leaving, setLeaving] = useState(false);
+  const moving = useRef<FeedMove | null>(null);
+  const fromGesture = useRef(false);
+  const settleTimer = useRef<number | undefined>(undefined);
+  const track = useRef<HTMLDivElement>(null);
+  // Which way the last change of step went: the panel's content arrives from that side.
+  const [dir, setDir] = useState<1 | -1>(1);
+  const shownIndex = useRef(stepIndex);
+
+  const feedHeight = () => track.current?.clientHeight || window.innerHeight || 1;
+  const reducedMotion = () =>
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+  const allowed = {
+    next: !!step && step.kind !== 'done' && !hold?.next && !overlayOpen,
+    prev: stepIndex > 0 && !hold?.prev && !overlayOpen,
+  };
+
+  /*
+   * Arriving at a new movement always shows the movement — someone who turned the card over to
+   * read the last exercise's technique did not ask to start the next one facing away from it —
+   * and slides it in from the side it is coming from.
+   *
+   * After a swipe the picture is already there: the snap carried it, and all that is left is to
+   * put the track back to rest now that the slides have moved up one place under it. After a
+   * button, a key or a clock running out, it slides in the same 280ms a swipe would have taken.
+   * A jump of more than one step (skipping the warm-up) and reduced motion just cut.
+   */
+  useLayoutEffect(() => {
+    const d = stepIndex - shownIndex.current;
+    shownIndex.current = stepIndex;
+    if (d === 0) return;
     setFlipped(false);
+    setHold(null);
+    setDir(d > 0 ? 1 : -1);
+    // The step changed some other way while a swipe was still landing: that swipe is spent.
+    if (moving.current) {
+      moving.current = null;
+      window.clearTimeout(settleTimer.current);
+      setLeaving(false);
+    }
+    const glide = !fromGesture.current && Math.abs(d) === 1 && !reducedMotion();
+    fromGesture.current = false;
+    if (!glide) {
+      setFeed({ y: 0, animate: false });
+      return;
+    }
+    setFeed({ y: d * feedHeight(), animate: false });
+    let inner = 0;
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => setFeed({ y: 0, animate: true }));
+    });
+    return () => {
+      cancelAnimationFrame(outer);
+      cancelAnimationFrame(inner);
+    };
   }, [stepIndex]);
 
   /*
@@ -456,6 +395,58 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
     unlock();
     prev();
   }, [prev, unlock]);
+  /** The snap has landed: turn the page it was carrying, or simply come to rest. */
+  const settle = useCallback(() => {
+    window.clearTimeout(settleTimer.current);
+    const move = moving.current;
+    moving.current = null;
+    setLeaving(false);
+    if (!move) {
+      setFeed((f) => (f.animate ? { ...f, animate: false } : f));
+      return;
+    }
+    const before = useActiveWorkoutStore.getState().stepIndex;
+    fromGesture.current = true;
+    if (move === 'next') doNext();
+    else doPrev();
+    if (useActiveWorkoutStore.getState().stepIndex === before) {
+      // The step's own «next» did something other than move on: bring the picture back.
+      fromGesture.current = false;
+      setFeed({ y: 0, animate: !reducedMotion() });
+    }
+  }, [doNext, doPrev]);
+
+  const onDragY = (dy: number) => {
+    if (moving.current) return;
+    setDragging(true);
+    setFeed({ y: feedOffset(dy, feedHeight(), allowed), animate: false });
+  };
+
+  const onReleaseY = (dy: number, velocity: number) => {
+    if (moving.current) return;
+    setDragging(false);
+    const h = feedHeight();
+    const move = feedDecision(dy, velocity, h, allowed);
+    const instant = reducedMotion();
+    if (!move) {
+      if (dy !== 0 && ((dy < 0 && !allowed.next) || (dy > 0 && !allowed.prev))) haptic('light');
+      setFeed({ y: 0, animate: !instant && dy !== 0 });
+      return;
+    }
+    moving.current = move;
+    if (instant) {
+      settle();
+      return;
+    }
+    setLeaving(true);
+    setFeed({ y: move === 'next' ? -h : h, animate: true });
+    // `transitionend` can go missing (a backgrounded tab, a zero-length move): never strand it.
+    window.clearTimeout(settleTimer.current);
+    settleTimer.current = window.setTimeout(settle, FEED_MS + 120);
+  };
+
+  useEffect(() => () => window.clearTimeout(settleTimer.current), []);
+
   const togglePause = useCallback(() => {
     unlock();
     setPaused(!paused);
@@ -525,6 +516,31 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
       ? skipWarmupTo
       : null;
 
+  /*
+   * The slides on the track: the step before, this one and the next. The closing `done` step is
+   * not a movement and has no slide — swiping up from the last movement shows the ground before
+   * the summary takes over.
+   */
+  const slides: (FeedSlide & { offset: number })[] = [];
+  for (let i = stepIndex - 1; i <= stepIndex + 1; i++) {
+    const s = steps[i];
+    if (!s || s.kind === 'done') continue;
+    const item = i === stepIndex ? pick : undefined;
+    const exerciseId = stepArtExerciseId(s, prescribed, locale, item);
+    slides.push({
+      index: i,
+      offset: i - stepIndex,
+      exerciseId,
+      videoRef: stepVideoRef(s, locale, prescribed, item),
+      name: exerciseId ? exerciseName(exerciseId, locale) : stepTitle(t, locale, s, prescribed),
+    });
+  }
+  const panelOpacity = leaving
+    ? 0.35
+    : dragging
+      ? Math.max(0.35, 1 - (1.5 * Math.abs(feed.y)) / feedHeight())
+      : 1;
+
   return (
     // The player is the only route that does not go through <Screen>, so it carries the app's
     // <main> landmark itself. Fixed and clipped: the card is exactly the viewport, and the page
@@ -534,12 +550,13 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
         flipped={flipped}
         onFlip={setFlipped}
         /*
-         * Up and down on the front are the same thing the → and ← keys already mean: "next" runs
-         * the step's own finishing action where it has one — a set of ten is recorded as ten, not
-         * abandoned — and only falls back to plain navigation where it does not.
+         * Up and down on the front drag the feed, and a drag that turns the page means the same
+         * thing the → and ← keys already mean: "next" runs the step's own finishing action where
+         * it has one — a set of ten is recorded as ten, not abandoned — and only falls back to
+         * plain navigation where it does not.
          */
-        onSwipeNext={doNext}
-        onSwipePrev={doPrev}
+        onDragY={onDragY}
+        onReleaseY={onReleaseY}
         front={
           <div
             className="relative size-full overflow-hidden"
@@ -552,7 +569,14 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
             onPointerDownCapture={unlock}
           >
             <PlayerTimerBand onHeight={setTimerHeight}>
-              <ArtLayer exerciseId={exerciseId} playing={!paused} videoUrl={videoUrl} />
+              <ArtFeed
+                slides={slides}
+                playing={!paused}
+                y={feed.y}
+                animate={feed.animate}
+                onSettled={settle}
+                trackRef={track}
+              />
               {/* The picture is the pause button; the panel below it is not. */}
               {step && step.kind !== 'done' && !paused ? <TapToPause onTap={togglePause} /> : null}
               <PlayerHeader
@@ -566,24 +590,40 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
                  * The panel's content arrives with the step rather than replacing it. Keyed exactly
                  * as StepView is, so the motion belongs to the step and not to a re-render.
                  */}
+                {/*
+                 * While a finger drags the page away, what is written on it goes with it — dimmed
+                 * rather than moved, because the glass stays where it is.
+                 */}
                 {step ? (
-                  <div key={`anim-${stepIndex}:${stepStartedMs}`} className="player-step-in">
-                    <StepView
-                      /*
-                       * Keyed on when the step began, not on an index alone: restarting a step is the
-                       * store moving that instant, and the component has to come back with it so a
-                       * half-dialled rep count goes too.
-                       */
-                      key={`${stepIndex}:${stepStartedMs}`}
-                      step={step}
-                      index={stepIndex}
-                      session={session}
-                      paused={paused}
-                      beep={sound.beep}
-                      onRecord={recordResult}
-                      onNext={advance}
-                      registerNext={registerNext}
-                    />
+                  <div
+                    className={clsx('player-feed-panel', dragging && 'is-dragging')}
+                    style={{ opacity: panelOpacity }}
+                  >
+                    <div
+                      key={`anim-${stepIndex}:${stepStartedMs}`}
+                      className="player-step-in"
+                      style={{ '--step-from': `${dir * 24}px` } as CSSProperties}
+                    >
+                      <StepView
+                        /*
+                         * Keyed on when the step began, not on an index alone: restarting a step is the
+                         * store moving that instant, and the component has to come back with it so a
+                         * half-dialled rep count goes too.
+                         */
+                        key={`${stepIndex}:${stepStartedMs}`}
+                        step={step}
+                        index={stepIndex}
+                        session={session}
+                        paused={paused}
+                        beep={sound.beep}
+                        onRecord={recordResult}
+                        onNext={advance}
+                        registerNext={registerNext}
+                        clip={clip}
+                        onClip={onClip}
+                        holdSwipe={setHold}
+                      />
+                    </div>
                   </div>
                 ) : null}
                 {step && step.kind !== 'done' ? (

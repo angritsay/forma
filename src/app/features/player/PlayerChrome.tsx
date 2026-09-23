@@ -206,7 +206,7 @@ export interface PlayerFooterProps {
  * there and something is sitting on top of it: a hairline along the top edge, a little of the app's
  * own ground, and a heavy blur of whatever is behind.
  *
- * It also reports its height, because the clip is sized to end above it (see ArtLayer) — and that
+ * It also reports its height, because the clip is sized to end above it (see ArtFeed) — and that
  * height changes with the step: a rep count with a stepper and a button is twice a countdown.
  *
  * **From `md` it is a column down the right-hand side instead of a band across the bottom.** The
@@ -218,7 +218,7 @@ export interface PlayerFooterProps {
  * Three things follow. The glass turns ninety degrees (`--glass-angle`), so it is sheer where the
  * clip meets it and dense where the numbers sit — the whole point of the gradient, now on the
  * other axis. The fade above it becomes a fade to its left. And the measured height stops mattering:
- * the column is a fixed width, so `ArtLayer` insets by that instead.
+ * the column is a fixed width, so `ArtFeed` insets by that instead.
  */
 export function PlayerFooter({ children, onHeight }: PlayerFooterProps) {
   const ref = useRef<HTMLDivElement>(null);

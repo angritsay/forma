@@ -4,11 +4,13 @@ import { IconButton } from '@/components/ui/IconButton';
 import { useT } from '@/app/hooks/useT';
 import type { PlayerResult } from '@/app/store/activeWorkout';
 import { BigClock } from '../BigClock';
+import type { SwipeHold } from '../feed';
+import { ItemList } from '../ItemList';
 import { PlayerTimerSlot } from '../PlayerChrome';
 import { Stepper } from '../Stepper';
 import { clampCount, type AmrapStep as Step } from '../model';
 import type { Cue } from '../sound';
-import { useCountdownCues, useNextHandler, useStepClock } from '../useStepClock';
+import { useCountdownCues, useNextHandler, useStepClock, useSwipeHold } from '../useStepClock';
 
 export interface AmrapStepProps {
   step: Step;
@@ -18,6 +20,10 @@ export interface AmrapStepProps {
   onRecord: (result: PlayerResult) => void;
   onNext: () => void;
   registerNext: (fn: (() => void) | null) => void;
+  /** Which row's clip is behind the board, and how a tap on a row changes it. */
+  clip?: number;
+  onClip?: (index: number) => void;
+  holdSwipe?: (hold: SwipeHold | null) => void;
 }
 
 type Phase = 'running' | 'result';
@@ -31,6 +37,9 @@ export function AmrapStep({
   onRecord,
   onNext,
   registerNext,
+  clip,
+  onClip,
+  holdSwipe,
 }: AmrapStepProps) {
   const { t } = useT();
   const [phase, setPhase] = useState<Phase>('running');
@@ -54,6 +63,13 @@ export function AmrapStep({
     if (phase === 'running') setPhase('result');
     else save();
   });
+  /*
+   * A running AMRAP is not swiped away. Swiping up used to be «next», and «next» here is «time's
+   * up» — so a thumb brushing the screen between rounds ended a twelve-minute piece at minute
+   * three. The feed now holds both ways while the clock runs; the pause menu and the keys still
+   * move on, because those are asked for on purpose.
+   */
+  useSwipeHold(holdSwipe, phase === 'running', phase === 'running');
 
   const minutes = Math.round(duration / 60);
 
@@ -70,6 +86,12 @@ export function AmrapStep({
               caption={`${t('training.amrapHint', { min: minutes })} · ${t('training.amrapExpected', { n: step.expectedRounds })}`}
             />
           </PlayerTimerSlot>
+          {/*
+           * The board: what one round is. It used to be only on the card's back, which left the
+           * front of an AMRAP a clock, a zero and nothing to do — the screenshot the owner sent.
+           * A tap on a row plays that movement's clip behind it.
+           */}
+          <ItemList items={step.items} compact onSelect={onClip} activeIndex={clip} />
           {/* The round count on a rule, the two controls opposite it — no box. */}
           <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
             <div className="flex flex-col">
@@ -84,7 +106,7 @@ export function AmrapStep({
                 onClick={() => setRounds((r) => Math.max(0, r - 1))}
                 disabled={rounds === 0}
               />
-              <Button size="lg" onClick={addRound} className="px-6">
+              <Button variant="action" size="lg" onClick={addRound} className="px-6">
                 {t('app.playerRoundDone')}
               </Button>
             </div>

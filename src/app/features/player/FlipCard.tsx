@@ -26,6 +26,7 @@
  */
 import { clsx } from 'clsx';
 import { useRef, type ReactNode } from 'react';
+import { FEED_SLOP_PX, releaseVelocity } from './feed';
 
 /**
  * Travel (px) that counts as a deliberate swipe rather than a tap that wandered.
@@ -36,7 +37,12 @@ import { useRef, type ReactNode } from 'react';
  * did not change, they changed sides.
  */
 const SWIPE_PX = 48;
-/** Vertical travel needed to change movement — longer, because it is the costlier mistake. */
+/**
+ * Vertical travel that counts as a swipe at all. Changing movement is no longer decided here — the
+ * front follows a vertical drag and `feedDecision` reads its release, with a share of the screen
+ * and a speed rather than one fixed distance — but the back still needs to know that a mostly
+ * vertical drag is reading, not a swipe.
+ */
 const SWIPE_Y_PX = 64;
 
 export type Swipe = 'up' | 'down' | 'left' | 'right' | null;
@@ -76,6 +82,103 @@ function useSwipe(onSwipe: (swipe: Exclude<Swipe, null>, target: EventTarget | n
   };
 }
 
+/** True when the touch began inside something that scrolls vertically and has room to. */
+function inVerticalScroller(target: EventTarget | null, root: Element): boolean {
+  let el = target instanceof Element ? target : null;
+  while (el && el !== root) {
+    if (el instanceof HTMLElement && el.scrollHeight > el.clientHeight + 1) {
+      const y = getComputedStyle(el).overflowY;
+      if (y === 'auto' || y === 'scroll') return true;
+    }
+    el = el.parentElement;
+  }
+  return false;
+}
+
+/**
+ * The front's gesture: a vertical drag that is followed while it happens, and a sideways swipe
+ * that is read when it ends.
+ *
+ * The first {@link FEED_SLOP_PX} of travel choose the axis for the rest of the touch, so a thumb
+ * that sets off upwards and drifts sideways keeps dragging the feed rather than turning the card
+ * halfway through. Vertical travel is reported on every move (`onDragY`) and once more on release
+ * with the speed it left at (`onReleaseY`), and `PlayerScreen` decides — see `feedDecision`.
+ *
+ * Touch events rather than pointer events: a pointer is cancelled the moment the browser thinks the
+ * touch might be a scroll, and on iOS it thinks so about any vertical drag. Nothing on the front
+ * scrolls except the panel at its foot when a step is taller than the screen — a touch that starts
+ * there, with room to scroll, is left to scroll.
+ */
+function useFrontGesture({
+  onDragY,
+  onReleaseY,
+  onSwipe,
+}: {
+  onDragY?: ((dy: number) => void) | undefined;
+  onReleaseY?: ((dy: number, velocity: number) => void) | undefined;
+  onSwipe: (swipe: Exclude<Swipe, null>) => void;
+}) {
+  const g = useRef<{
+    x: number;
+    y: number;
+    axis: 'x' | 'y' | null;
+    vertical: boolean;
+    samples: { y: number; t: number }[];
+  } | null>(null);
+  return {
+    onTouchStart: (e: React.TouchEvent) => {
+      const t = e.touches[0];
+      if (!t || e.touches.length > 1) {
+        g.current = null;
+        return;
+      }
+      g.current = {
+        x: t.clientX,
+        y: t.clientY,
+        axis: null,
+        vertical: !inVerticalScroller(e.target, e.currentTarget),
+        samples: [{ y: 0, t: e.timeStamp }],
+      };
+    },
+    onTouchMove: (e: React.TouchEvent) => {
+      const s = g.current;
+      const t = e.touches[0];
+      if (!s || !t) return;
+      const dx = t.clientX - s.x;
+      const dy = t.clientY - s.y;
+      if (s.axis === null) {
+        if (Math.hypot(dx, dy) < FEED_SLOP_PX) return;
+        s.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      }
+      if (s.axis !== 'y' || !s.vertical) return;
+      s.samples.push({ y: dy, t: e.timeStamp });
+      if (s.samples.length > 12) s.samples.shift();
+      onDragY?.(dy);
+    },
+    onTouchEnd: (e: React.TouchEvent) => {
+      const s = g.current;
+      g.current = null;
+      const t = e.changedTouches[0];
+      if (!s || !t) return;
+      const dx = t.clientX - s.x;
+      const dy = t.clientY - s.y;
+      if (s.axis === 'y' && s.vertical) {
+        s.samples.push({ y: dy, t: e.timeStamp });
+        onReleaseY?.(dy, releaseVelocity(s.samples));
+      } else if (s.axis === 'x') {
+        const swipe = swipeOf(dx, 0);
+        if (swipe) onSwipe(swipe);
+      }
+    },
+    onTouchCancel: () => {
+      const s = g.current;
+      g.current = null;
+      // The system took the touch (a call, a notification pulled down): put the picture back.
+      if (s?.axis === 'y' && s.vertical) onReleaseY?.(0, 0);
+    },
+  };
+}
+
 /**
  * One face of the card. The delay classes are added per face; 250ms is half of `duration-500`
  * below, which is the moment the card is edge-on.
@@ -92,29 +195,25 @@ export interface FlipCardProps {
   onFlip: (flipped: boolean) => void;
   front: ReactNode;
   back: ReactNode;
-  /** Swiped up on the front: on to the next movement. */
-  onSwipeNext?: () => void;
-  /** Swiped down on the front: back to the one before. */
-  onSwipePrev?: () => void;
+  /** A finger is dragging the front vertically, `dy` px from where it landed (negative is up). */
+  onDragY?: (dy: number) => void;
+  /** …and has let go, at `velocity` px/ms. Whether that turns the page is the caller's call. */
+  onReleaseY?: (dy: number, velocity: number) => void;
 }
 
-export function FlipCard({
-  flipped,
-  onFlip,
-  front,
-  back,
-  onSwipeNext,
-  onSwipePrev,
-}: FlipCardProps) {
+export function FlipCard({ flipped, onFlip, front, back, onDragY, onReleaseY }: FlipCardProps) {
   /*
-   * The front reads three directions. Left to right is deliberately unbound: the card has nothing
-   * to its left to come back from, and a gesture that does nothing is better than one that undoes
+   * The front reads three directions. Up and down are a drag the feed follows (see `feed.ts`);
+   * right to left turns the card. Left to right is deliberately unbound: the card has nothing to
+   * its left to come back from, and a gesture that does nothing is better than one that undoes
    * something.
    */
-  const frontSwipe = useSwipe((swipe) => {
-    if (swipe === 'up') onSwipeNext?.();
-    else if (swipe === 'down') onSwipePrev?.();
-    else if (swipe === 'left') onFlip(true);
+  const frontSwipe = useFrontGesture({
+    onDragY,
+    onReleaseY,
+    onSwipe: (swipe) => {
+      if (swipe === 'left') onFlip(true);
+    },
   });
 
   /*
@@ -162,7 +261,16 @@ export function FlipCard({
          * and it says the intent out loud.
          */}
         <div
-          className={clsx(FACE, flipped ? 'invisible delay-[250ms]' : 'visible delay-0')}
+          /*
+           * `touch-none`: the browser does nothing with a drag on the front — no page bounce, no
+           * pan — so every move reaches the feed and the picture stays under the thumb. It stops
+           * at the nearest scroll container, so a panel tall enough to scroll still scrolls.
+           */
+          className={clsx(
+            FACE,
+            'touch-none',
+            flipped ? 'invisible delay-[250ms]' : 'visible delay-0',
+          )}
           inert={flipped}
           {...frontSwipe}
         >

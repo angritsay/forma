@@ -1168,22 +1168,25 @@ body {
  * Moving from one movement to the next.
  *
  * The player used to change exercises by replacement: the clip, the name and the number were one
- * thing on one frame and a different thing on the next. Nothing was technically wrong with it and
- * it read as a glitch — at arm's length, on a mat, a hard cut looks like the app losing its place
- * rather than like the session advancing.
+ * thing on one frame and a different thing on the next, and it read as a glitch — at arm's length,
+ * on a mat, a hard cut looks like the app losing its place rather than like the session advancing.
  *
- * So the step arrives. The panel's content lifts a few pixels into place while the picture behind
- * it settles out of a slight scale — two different motions, because they are two different planes,
- * and the picture is the slower of the two so the eye lands on the movement rather than on the
- * words. Both are keyed on the step, so they replay on every change and never on a re-render.
+ * The picture now travels: it is a feed that follows the finger and snaps (`.player-feed-track`,
+ * at the end of this file), and a clip crossfades in over a still of itself rather than fading up
+ * from black. The panel's content arrives with it — a short lift into place from the side the step
+ * came from. Keyed on the step, so it replays on every change and never on a re-render.
  *
- * Short on purpose: 320ms and 420ms. A transition long enough to notice twice is long enough to
- * be in the way of somebody counting reps.
+ * Short on purpose: 320ms. A transition long enough to notice twice is long enough to be in the
+ * way of somebody counting reps.
+ *
+ * `--step-from` is the direction the step came from: up from below after a swipe up (and after
+ * «Готово», which is the same move), down from above after a swipe down. It used to be 10px up
+ * whichever way the athlete went, so going back looked like going on.
  */
 @keyframes player-step-in {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(var(--step-from, 10px));
   }
   to {
     opacity: 1;
@@ -1191,30 +1194,8 @@ body {
   }
 }
 
-/*
- * `--art-lift` rides through both keyframes rather than being a separate transform on a wrapper.
- * It has to: `animation-fill-mode: both` keeps the `to` frame applied for as long as the clip is
- * on screen, so a `transform` declared anywhere else on the same element is overwritten the moment
- * this animation lands — which is immediately, on every step. It defaults to 0 for any element
- * that does not set it.
- */
-@keyframes player-art-in {
-  from {
-    opacity: 0;
-    transform: translateY(var(--art-lift, 0)) scale(1.035);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(var(--art-lift, 0));
-  }
-}
-
 .player-step-in {
   animation: player-step-in 0.32s var(--ease-out) both;
-}
-
-.player-art-in {
-  animation: player-art-in 0.42s var(--ease-out) both;
 }
 
 /*
@@ -1223,7 +1204,7 @@ body {
  * The owner: «обрежь верхние 20% видео, потому что сейчас упражнение не попадает в кадр целиком …
  * видео все равно сверху нужно чуть подобрезать, потому что нижняя часть управления упражнением
  * все равно будет больше, чем верхняя». The clip is as wide as the stage and as tall as its own
- * shape asks (`ART` in PlayerScreen.tsx), and the stage centres it — so a clip taller than the
+ * shape asks (`ART` in ArtFeed.tsx), and the stage centres it — so a clip taller than the
  * stage already loses half its overflow off the top and half off the bottom. This is the rest of
  * the way.
  *
@@ -1263,8 +1244,7 @@ body {
  * plays on every movement of every session. The content still arrives, it just stops moving.
  */
 @media (prefers-reduced-motion: reduce) {
-  .player-step-in,
-  .player-art-in {
+  .player-step-in {
     animation: none;
   }
 }
@@ -1475,4 +1455,54 @@ body {
 
 .hero-field :focus-visible {
   outline-color: var(--action);
+}
+
+/* ── Player feed ── */
+
+/*
+ * The vertical feed of movements (src/app/features/player/ArtFeed.tsx, feed.ts).
+ *
+ * The track carries the slide above, the slide on screen and the slide below, one screen apart,
+ * and moves by `--feed-y`: while a finger has it, with no transition at all, so the picture is
+ * exactly under the thumb; when the finger lets go, `.is-snapping` adds one — 280ms on the
+ * system's own ease-out, the same curve as every other arrival (FEED_MS in feed.ts must match).
+ * `translate3d` keeps it on the compositor, so a drag never repaints the video.
+ */
+.player-feed-track {
+  transform: translate3d(0, var(--feed-y, 0px), 0);
+  will-change: transform;
+}
+
+.player-feed-track.is-snapping {
+  transition: transform 280ms var(--ease-out);
+}
+
+/*
+ * A clip is invisible until it has a frame, and then crossfades in over the still of the same
+ * movement that is under it. Never a fade from black: there is always a picture underneath.
+ */
+.player-clip {
+  opacity: 0;
+  transition: opacity 200ms var(--ease-out);
+}
+
+.player-clip.is-ready {
+  opacity: 1;
+}
+
+/* The panel's content dims as the page it belongs to is dragged away. */
+.player-feed-panel {
+  transition: opacity 200ms var(--ease-out);
+}
+
+.player-feed-panel.is-dragging {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-feed-track.is-snapping,
+  .player-clip,
+  .player-feed-panel {
+    transition: none;
+  }
 }
