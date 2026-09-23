@@ -113,6 +113,66 @@ export function sessionForAmount(
   return null;
 }
 
+/**
+ * Цены курсов по умолчанию, в рублях, — те, что стоят в `content/courses/*.ts`. `verify.test.ts`
+ * сверяет их с контентом: новый курс по новой цене без правки здесь уходил бы в «не привязан».
+ *
+ * Секрет `COURSE_PRICES_RUB` («2990,3990,4990») перекрывает список — на случай, если цену поменяли
+ * в Prodamus раньше, чем выложили функцию.
+ */
+export const DEFAULT_COURSE_PRICES_RUB: readonly number[] = [2990, 3990, 4990];
+
+/** Список цен из секрета; пустой или кривой — умолчание, а не «ни одного курса». */
+export function parsePriceList(raw: string | undefined, fallback: readonly number[]): number[] {
+  const out = (raw ?? '')
+    .split(',')
+    .map((x) => Number.parseFloat(x.trim()))
+    .filter((n) => Number.isFinite(n) && n > 0);
+  return out.length > 0 ? out : [...fallback];
+}
+
+/** Что купили, по сумме. */
+export type ProdamusRoute =
+  | { kind: 'plan'; plan: 'monthly' | 'annual' }
+  | { kind: 'session'; session: 'half' | 'hour' }
+  | { kind: 'course' }
+  | { kind: 'unknown' };
+
+/**
+ * Сумма → что с платежом делать.
+ *
+ * Порядок тот же, что был: сначала тариф (точное совпадение), потом занятие. Дальше новое: курсом
+ * считается только сумма, равная цене какого-нибудь курса. Раньше курсом было «всё остальное», и
+ * `apply_course_payment()` открывал единственный ожидающий заказ этой почты за любые деньги —
+ * хоть за 100 ₽, хоть за оплату, которую Prodamus прислал по чужой форме. Незнакомая сумма теперь
+ * записывается непривязанной, и в канал владельца уходит «Платёж не привязан».
+ */
+export function routeAmount(
+  sum: string | undefined,
+  prices: {
+    plans: { monthly: number; annual: number };
+    sessions: { half: number; hour: number };
+    courses: readonly number[];
+  },
+): ProdamusRoute {
+  const plan = planForAmount(sum, prices.plans);
+  if (plan) return { kind: 'plan', plan };
+  const session = sessionForAmount(sum, prices.sessions);
+  if (session) return { kind: 'session', session };
+  const amount = Number.parseFloat(sum ?? '');
+  if (Number.isFinite(amount) && prices.courses.some((p) => Math.abs(amount - p) < 0.5)) {
+    return { kind: 'course' };
+  }
+  return { kind: 'unknown' };
+}
+
+/** Вид платежа в журнале (`payments.intent`). Незнакомая сумма пишется курсом — см. lava-webhook. */
+export function intentForRoute(route: ProdamusRoute): 'monthly' | 'annual' | 'session' | 'course' {
+  if (route.kind === 'plan') return route.plan;
+  if (route.kind === 'session') return 'session';
+  return 'course';
+}
+
 function str(v: FormValue | undefined): string | undefined {
   return typeof v === 'string' ? v : undefined;
 }

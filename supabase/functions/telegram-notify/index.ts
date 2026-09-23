@@ -27,9 +27,9 @@
  * однозначно, и в них не бывает ни адреса, ни текста. Страницу запуска в публичном репозитории
  * видно всем и навсегда.
  */
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
 import { messageFor, toLocale, type Locale } from './copy.ts';
-import { adminMessage, parseTopics, type AdminRow } from './admin.ts';
+import { adminFailure, adminMessage, parseTopics, stripLinks, type AdminRow } from './admin.ts';
 
 /** Сколько строк за один запуск. При раз в 10 минут это с огромным запасом. */
 const BATCH = 50;
@@ -46,7 +46,7 @@ interface AdminQueueRow extends AdminRow {
   attempts: number;
 }
 
-/** После скольких неудач подряд строка признаётся безнадёжной. */
+/** После скольких неудач подряд строка людям признаётся безнадёжной. У канала свой счёт (`admin.ts`). */
 const MAX_ATTEMPTS = 5;
 
 const DEFAULT_APP_URL = 'https://forma-app.co/app/';
@@ -96,7 +96,7 @@ function reply(status: number, body: Record<string, unknown>): Response {
  * `TELEGRAM_ADMIN_BOT_TOKEN` необязателен: без него пишет основной бот, как раньше.
  */
 async function drainAdmin(
-  admin: ReturnType<typeof createClient>,
+  admin: SupabaseClient,
   fallbackToken: string,
 ): Promise<{ sent: number; failed: number }> {
   const chatId = Deno.env.get('TELEGRAM_ADMIN_CHAT') ?? '';
@@ -146,21 +146,38 @@ async function drainAdmin(
         })
         .eq('id', row.id);
 
-    let res: Response;
-    try {
-      res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    const send = (body: string) =>
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           chat_id: chatId,
           message_thread_id: threadId,
-          text,
+          text: body,
           parse_mode: 'HTML',
           link_preview_options: { is_disabled: true },
         }),
       });
+
+    let res: Response;
+    let answer = '';
+    try {
+      res = await send(text);
+      if (!res.ok) {
+        answer = await res.text().catch(() => '');
+        /*
+         * Разметка или ссылка не понравились телеграму — сразу ещё раз, без ссылок. Это почти
+         * всегда `tg://user?id=…` у человека, запретившего находить себя по id: сообщение о нём
+         * важнее ссылки на него, а строка «Ответить» без ссылки всё равно называет, кому.
+         */
+        if (adminFailure(res.status, answer, row.attempts + 1, false) === 'retry_plain') {
+          res = await send(stripLinks(text));
+          answer = res.ok ? '' : await res.text().catch(() => '');
+        }
+      }
     } catch (e) {
-      await done('pending', String(e));
+      const giveUp = adminFailure(0, '', row.attempts + 1, true) === 'give_up';
+      await done(giveUp ? 'failed' : 'pending', String(e));
       failed += 1;
       continue;
     }
@@ -172,17 +189,88 @@ async function drainAdmin(
     }
 
     /*
-     * 400 здесь — почти всегда «тема удалена» или «бота выгнали», и повторять это десять минут
-     * подряд бессмысленно. Строка становится `failed` с телом ответа в `last_error`, потому что
-     * ответ телеграма и есть объяснение.
+     * Остальные отказы — в очередь до следующего запуска, и `failed` только после
+     * `ADMIN_MAX_ATTEMPTS` попыток (`admin.ts`). Раньше 400 и 403 сразу хоронили строку: «тема
+     * удалена», «бота выгнали» — это чинится руками, и сообщение о деньгах должно этого дождаться.
      */
-    const body = await res.text().catch(() => '');
-    const giveUp = res.status === 400 || res.status === 403 || row.attempts + 1 >= MAX_ATTEMPTS;
-    await done(giveUp ? 'failed' : 'pending', body);
+    const giveUp = adminFailure(res.status, answer, row.attempts + 1, true) === 'give_up';
+    await done(giveUp ? 'failed' : 'pending', `${res.status} ${answer}`);
     failed += 1;
+
+    // 429 — телеграм просит подождать. Долбить его остальной пачкой значит продлить запрет.
+    if (res.status === 429) break;
   }
 
   return { sent, failed };
+}
+
+/** Строка очереди людям вместе с тем, куда и на каком языке её слать; `chat: null` — некуда. */
+interface DueRow extends Row {
+  chat: { id: number; locale: Locale } | null;
+}
+
+type Due = { rows: DueRow[] } | { stage: string; code: string };
+
+/**
+ * Что отправлять в этот запуск.
+ *
+ * С 0043 отбор делает база (`telegram_outbox_due`): только строки, у адресата которых есть
+ * телеграм. Раньше функция брала 50 самых ранних строк и уже потом искала получателей — и строки
+ * людей без телеграма, которых большинство, занимали всю пачку, пока не истекут. Сообщение
+ * человеку с телеграмом при этом стояло за ними до трёх дней.
+ *
+ * База без 0043 (функция выложена раньше миграции) отвечает `PGRST202`, и тогда — прежний путь:
+ * пачка по времени и поиск получателей по адресам. Хуже, но работает.
+ */
+async function loadDue(admin: SupabaseClient): Promise<Due> {
+  const { data, error } = await admin.rpc('telegram_outbox_due', { p_limit: BATCH });
+  if (!error) {
+    const rows = (data ?? []) as (Row & { telegram_id: number; locale: unknown })[];
+    return {
+      rows: rows.map((r) => ({ ...r, chat: { id: r.telegram_id, locale: toLocale(r.locale) } })),
+    };
+  }
+  const e = error as PgError;
+  if (e.code !== 'PGRST202') {
+    console.error('telegram-notify: could not read the queue', e.code, e.message);
+    return { stage: 'read', code: e.code ?? '' };
+  }
+
+  const { data: legacy, error: legacyError } = await admin
+    .from('telegram_outbox')
+    .select('id, email, kind, params, attempts, expires_at')
+    .eq('status', 'pending')
+    .lte('send_after', new Date().toISOString())
+    .order('send_after', { ascending: true })
+    .limit(BATCH);
+  if (legacyError) {
+    const le = legacyError as PgError;
+    console.error('telegram-notify: could not read the queue', le.code, le.message);
+    return { stage: 'read', code: le.code ?? '' };
+  }
+  const rows = (legacy ?? []) as Row[];
+  if (rows.length === 0) return { rows: [] };
+
+  const emails = [...new Set(rows.map((r) => r.email))];
+  const { data: people, error: peopleError } = await admin
+    .from('profiles')
+    .select('email, telegram_id, locale')
+    .in('email', emails)
+    .not('telegram_id', 'is', null);
+  /*
+   * Отказ здесь не глотается: иначе он читался бы как «никому не привязан телеграм», строки ждали
+   * бы вечно, а счётчики показывали бы ноль отправленных и ноль ошибок.
+   */
+  if (peopleError) {
+    const pe = peopleError as PgError;
+    console.error('telegram-notify: could not read profiles', pe.code, pe.message);
+    return { stage: 'recipients', code: pe.code ?? '' };
+  }
+  const chat = new Map<string, { id: number; locale: Locale }>();
+  for (const p of (people ?? []) as { email: string; telegram_id: number; locale: unknown }[]) {
+    chat.set(p.email.toLowerCase(), { id: p.telegram_id, locale: toLocale(p.locale) });
+  }
+  return { rows: rows.map((r) => ({ ...r, chat: chat.get(r.email.toLowerCase()) ?? null })) };
 }
 
 Deno.serve(async (req) => {
@@ -214,69 +302,43 @@ Deno.serve(async (req) => {
    */
   const admins = await drainAdmin(admin, botToken);
 
-  const { data, error } = await admin
+  /*
+   * Истёкшие — одним запросом и первыми. Раньше они гасились по одной внутри пачки, а значит
+   * сначала занимали в ней место: пятьдесят просроченных строк людей без телеграма означали
+   * запуск, который не отправил никому ничего.
+   */
+  let skipped = 0;
+  const { data: expired, error: expireError } = await admin
     .from('telegram_outbox')
-    .select('id, email, kind, params, attempts, expires_at')
+    .update({ status: 'skipped', last_error: 'expired' })
     .eq('status', 'pending')
-    .lte('send_after', new Date().toISOString())
-    .order('send_after', { ascending: true })
-    .limit(BATCH);
-
-  if (error) {
-    const e = error as PgError;
-    console.error('telegram-notify: could not read the queue', e.code, e.message);
-    return reply(500, { ok: false, stage: 'read', code: e.code ?? '', admin: admins });
+    .lt('expires_at', new Date().toISOString())
+    .select('id');
+  if (expireError) {
+    const e = expireError as PgError;
+    console.error('telegram-notify: could not expire old rows', e.code, e.message);
+  } else {
+    skipped += (expired ?? []).length;
   }
-  const rows = (data ?? []) as Row[];
+
+  const due = await loadDue(admin);
+  if ('stage' in due) {
+    return reply(500, { ok: false, stage: due.stage, code: due.code, admin: admins });
+  }
+  const rows = due.rows;
   if (rows.length === 0) {
     return reply(200, {
       ok: true,
       stage: 'done',
       sent: 0,
-      skipped: 0,
+      skipped,
       failed: 0,
       admin: admins,
     });
   }
 
-  /*
-   * Адреса пачкой, одним запросом.
-   *
-   * Получателя ищем здесь, а не в момент повода: покупка живёт на почте и приходит раньше
-   * регистрации, так что на момент записи привязки могло не быть вовсе (0027).
-   */
-  const emails = [...new Set(rows.map((r) => r.email))];
-  const { data: people, error: peopleError } = await admin
-    .from('profiles')
-    .select('email, telegram_id, locale')
-    .in('email', emails)
-    .not('telegram_id', 'is', null);
-
-  /*
-   * Раньше эта ошибка глоталась, и отказ читался как «никому не привязан телеграм»: строки
-   * оставались ждать вечно, а счётчики показывали ноль отправленных и ноль ошибок. Тишина,
-   * неотличимая от нормальной работы, — худший из возможных отказов для машинки без присмотра.
-   */
-  if (peopleError) {
-    const e = peopleError as PgError;
-    console.error('telegram-notify: could not read profiles', e.code, e.message);
-    return reply(500, { ok: false, stage: 'recipients', code: e.code ?? '' });
-  }
-
-  /*
-   * Куда писать и на каком языке — одно и то же место, потому что это одна строка профиля.
-   * `locale` берётся здесь, а не в очереди: повод ставит триггер, который про человека ничего не
-   * знает (покупка живёт на почте и приходит раньше регистрации), а язык — свойство получателя и
-   * может смениться между постановкой в очередь и отправкой.
-   */
-  const chat = new Map<string, { id: number; locale: Locale }>();
-  for (const p of (people ?? []) as { email: string; telegram_id: number; locale: unknown }[]) {
-    chat.set(p.email.toLowerCase(), { id: p.telegram_id, locale: toLocale(p.locale) });
-  }
-
   const now = Date.now();
   let sent = 0;
-  let skipped = 0;
   let failed = 0;
 
   for (const row of rows) {
@@ -298,8 +360,8 @@ Deno.serve(async (req) => {
       continue;
     }
 
-    const who = chat.get(row.email.toLowerCase());
-    if (who === undefined) {
+    const who = row.chat;
+    if (who === null) {
       // Ждёт: человек может открыть приложение из телеграма завтра, и тогда дойдёт.
       continue;
     }
@@ -354,6 +416,8 @@ Deno.serve(async (req) => {
     const giveUp = row.attempts + 1 >= MAX_ATTEMPTS;
     await done(giveUp ? 'failed' : 'pending', body);
     failed += 1;
+    // 429 — телеграм просит подождать; остальная пачка подождёт следующего запуска.
+    if (res.status === 429) break;
   }
 
   console.log(

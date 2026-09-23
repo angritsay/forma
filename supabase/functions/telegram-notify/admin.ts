@@ -119,6 +119,13 @@ export function moscowTime(iso: string): string {
   return `${pad(d.getUTCDate())}.${pad(d.getUTCMonth() + 1)} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} МСК`;
 }
 
+/** Сумма с валютой, если она известна (0043): «19» без неё в канале читается как рубли. */
+function money(p: Record<string, unknown> | null): string {
+  const amount = str(p, 'amount');
+  const currency = str(p, 'currency');
+  return amount && currency ? `${amount} ${currency}` : amount;
+}
+
 /** Строки «ключ: значение», пустые выброшены. Пустая строка в журнале хуже отсутствующей. */
 function lines(...pairs: (readonly [string, string])[]): string {
   return pairs
@@ -295,7 +302,7 @@ export function adminMessage(row: AdminRow): string | null {
         'Занятие оплачено',
         lines(
           ['Почта', email],
-          ['Сумма', str(p, 'amount')],
+          ['Сумма', money(p)],
           ['Касса', tillName(str(p, 'provider'))],
           ['Заказ', str(p, 'ref')],
         ),
@@ -336,11 +343,30 @@ export function adminMessage(row: AdminRow): string | null {
         'Платёж не привязан',
         lines(
           ['Почта', email],
-          ['Сумма', str(p, 'amount')],
+          ['Сумма', money(p)],
           ['За что', INTENT_NAMES[str(p, 'intent')] ?? str(p, 'intent')],
           ['Касса', tillName(str(p, 'provider'))],
           ['Заказ', str(p, 'ref')],
-        ) + '\n\nДоступ не открылся — заказа нет, их несколько или почта в кассе другая.',
+        ) +
+          '\n\nДоступ не открылся — заказа нет, их несколько, почта в кассе другая или товар не распознан.',
+      );
+
+    /*
+     * Человек пришёл забирать платёж за курс по номеру из чека, а ожидающего заказа у него нет
+     * (0043). Платёж не сожжён — его можно забрать снова, — но человек сейчас стоит перед экраном
+     * без курса и ждёт, так что это надо увидеть сразу.
+     */
+    case 'claim_no_order':
+      return block(
+        'Пришли за платежом, а заказа нет',
+        lines(
+          ['Аккаунт', email],
+          ['Почта в кассе', str(p, 'payEmail')],
+          ['Сумма', money(p)],
+          ['Касса', tillName(str(p, 'provider'))],
+          ['Заказ', str(p, 'ref')],
+        ) +
+          '\n\nКурс не открылся: у аккаунта нет ожидающего заказа или их несколько. Платёж ждёт — открой курс вручную или попроси оформить заказ и забрать снова.',
       );
 
     case 'support_message':
@@ -352,4 +378,52 @@ export function adminMessage(row: AdminRow): string | null {
     default:
       return null;
   }
+}
+
+/**
+ * Сколько неудачных попыток подряд строка канала переживает, прежде чем стать `failed`.
+ *
+ * Запуск раз в десять минут, так что двенадцать попыток — два часа. Этого хватает, чтобы пережить
+ * перебой у телеграма, лимит частоты и выкладку, и не хватает, чтобы строка с настоящей ошибкой
+ * (бота выгнали из группы, тему удалили) висела вечно.
+ */
+export const ADMIN_MAX_ATTEMPTS = 12;
+
+/**
+ * Ответы телеграма, которые чинятся тем же сообщением без ссылок: ссылка на человека
+ * (`tg://user?id=…`) бывает запрещена его настройками приватности, и тогда телеграм отказывает
+ * всему сообщению — хотя всё остальное в нём в порядке.
+ */
+const LINK_TROUBLE_RE =
+  /can't parse entities|invalid url|wrong http url|url host is empty|unsupported url protocol|button_url_invalid/i;
+
+/** Что делать со строкой канала после отказа. */
+export type AdminFailure = 'retry_plain' | 'retry' | 'give_up';
+
+/**
+ * Решение по отказу телеграма.
+ *
+ * * **400 про разметку или ссылку** — сразу ещё раз, тем же текстом без ссылок, один раз.
+ * * **Всё остальное** — 429, 5xx, обрыв, но и 400/403 («тему удалили», «бота выгнали»): строка
+ *   остаётся `pending` и пробуется в следующий запуск. Раньше 400 и 403 сразу делали строку
+ *   `failed`, и сообщение о деньгах пропадало из-за того, что владелец в ту минуту переименовывал
+ *   тему. Эти ошибки чинятся руками, и строка должна дождаться, пока их починят.
+ * * **`failed`** — только после {@link ADMIN_MAX_ATTEMPTS} попыток.
+ *
+ * `attemptsAfter` — сколько попыток будет с учётом этой.
+ */
+export function adminFailure(
+  status: number,
+  body: string,
+  attemptsAfter: number,
+  plainTried: boolean,
+): AdminFailure {
+  if (status === 400 && !plainTried && LINK_TROUBLE_RE.test(body)) return 'retry_plain';
+  if (attemptsAfter >= ADMIN_MAX_ATTEMPTS) return 'give_up';
+  return 'retry';
+}
+
+/** Ссылки — в простой текст: `<a href="…">подпись</a>` → `подпись`. Остальная разметка остаётся. */
+export function stripLinks(html: string): string {
+  return html.replace(/<a\s[^>]*>/gi, '').replace(/<\/a>/gi, '');
 }

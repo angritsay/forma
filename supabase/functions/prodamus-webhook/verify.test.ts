@@ -1,14 +1,20 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import {
   canonicalize,
+  DEFAULT_COURSE_PRICES_RUB,
   encode,
+  intentForRoute,
   parseForm,
+  parsePriceList,
   planForAmount,
   readPayment,
+  routeAmount,
   sessionForAmount,
   sign,
   signatureMatches,
 } from './verify';
+import { COURSES } from '@/content/registry';
 import { BOOKING } from '@content/site/booking';
 import { COURSES } from '@/content/registry';
 import { PLANS } from '@content/site/plans';
@@ -116,5 +122,75 @@ describe('readPayment', () => {
       ),
     ).toEqual({ email: 'sub@example.com', sum: '1990', status: 'success', ref: 'o-1' });
     expect(readPayment(parseForm(new URLSearchParams('sum=1990')))).toBeNull();
+  });
+});
+
+describe('routeAmount', () => {
+  const prices = {
+    plans: { monthly: 1990, annual: 7990 },
+    sessions: { half: 2500, hour: 3500 },
+    courses: DEFAULT_COURSE_PRICES_RUB,
+  };
+
+  it('keeps the old order: plan, then session, then course', () => {
+    expect(routeAmount('7990', prices)).toEqual({ kind: 'plan', plan: 'annual' });
+    expect(routeAmount('3500.00', prices)).toEqual({ kind: 'session', session: 'hour' });
+    expect(routeAmount('2990', prices)).toEqual({ kind: 'course' });
+  });
+
+  /*
+   * Раньше всё, что не тариф и не занятие, открывало ожидающий заказ этой почты — за любые деньги.
+   * Незнакомая сумма теперь ничего не открывает: платёж ложится в журнал непривязанным.
+   */
+  it('opens nothing for an amount that is no price we sell', () => {
+    expect(routeAmount('100', prices)).toEqual({ kind: 'unknown' });
+    expect(routeAmount('2991', prices)).toEqual({ kind: 'unknown' });
+    expect(routeAmount(undefined, prices)).toEqual({ kind: 'unknown' });
+    expect(routeAmount('не число', prices)).toEqual({ kind: 'unknown' });
+  });
+
+  /* Занятие — `session`, незнакомое — `course`: у журнала нет вида «неизвестно». */
+  it('names the intent each route is recorded under', () => {
+    expect(intentForRoute({ kind: 'plan', plan: 'monthly' })).toBe('monthly');
+    expect(intentForRoute({ kind: 'session', session: 'half' })).toBe('session');
+    expect(intentForRoute({ kind: 'course' })).toBe('course');
+    expect(intentForRoute({ kind: 'unknown' })).toBe('course');
+  });
+});
+
+describe('course prices', () => {
+  it('reads a list from the secret, and falls back when it is empty or broken', () => {
+    expect(parsePriceList('2990, 3990', [1])).toEqual([2990, 3990]);
+    expect(parsePriceList('', [1])).toEqual([1]);
+    expect(parsePriceList(undefined, [1])).toEqual([1]);
+    expect(parsePriceList('abc,-5', [1])).toEqual([1]);
+  });
+
+  /*
+   * Цены курсов живут в контенте, а функция — отдельно от сборки. Курс по новой цене без правки
+   * здесь молча уходил бы в «не привязан», поэтому списки сверяются.
+   */
+  it('covers every paid course we sell', () => {
+    const missing = COURSES.filter(
+      (c) => c.price.rub > 0 && !DEFAULT_COURSE_PRICES_RUB.includes(c.price.rub),
+    ).map((c) => `${c.id}:${c.price.rub}`);
+    expect(missing).toEqual([]);
+  });
+});
+
+/* Обработчик здесь не запускается (`Deno.serve`); ветки 0043 проверяются по тексту. */
+describe('index.ts', () => {
+  const src = readFileSync(new URL('./index.ts', import.meta.url), 'utf8');
+  const branch = (marker: string) => src.slice(src.indexOf(marker), src.indexOf(marker) + 400);
+
+  it('records a paid session as applied', () => {
+    expect(branch("if (route.kind === 'session')")).toContain('await record(true)');
+  });
+
+  it('stops an unknown amount before any course is applied', () => {
+    const unknown = src.indexOf("if (route.kind === 'unknown')");
+    expect(unknown).toBeGreaterThan(0);
+    expect(unknown).toBeLessThan(src.indexOf("rpc('apply_course_payment'"));
+    expect(branch("if (route.kind === 'unknown')")).toContain('await record(false)');
   });
 });

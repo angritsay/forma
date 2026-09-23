@@ -26,7 +26,8 @@
  *
  * Сопоставление «товар в lava.top → что это у нас» лежит в секрете `LAVA_PRODUCTS` — JSON вида
  * `{"<product id>": "course:start", "<product id>": "plan:annual"}`, те же ключи, что в
- * `content/site/payments.ts`. Секретом, а не в коде, потому что функция живёт отдельно от сборки
+ * `content/site/payments.ts`. Ключ, не начинающийся с `course:`, `plan:` или `session:`, ничего не
+ * открывает: платёж записывается непривязанным и ждёт владельца (`products.ts`, `actionFor`). Секретом, а не в коде, потому что функция живёт отдельно от сборки
  * сайта: переименовали товар в кабинете — поправили секрет, не дожидаясь выкладки.
  *
  * ## Идемпотентность
@@ -44,7 +45,14 @@
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { basicMatches, grantsAccess, parseHook } from './verify.ts';
-import { keyFor, parseProductMap, type ProductMap } from './products.ts';
+import {
+  actionFor,
+  currencyCode,
+  intentFor,
+  keyFor,
+  parseProductMap,
+  type ProductMap,
+} from './products.ts';
 
 const TOKEN = Deno.env.get('WEBHOOK_TOKEN') ?? '';
 const SECRET = Deno.env.get('LAVA_WEBHOOK_SECRET') ?? '';
@@ -142,14 +150,16 @@ Deno.serve(async (req) => {
   const paidAt = hook.timestamp ?? new Date().toISOString();
   /*
    * Сумма участвует наравне с товаром: тариф в lava.top держит месяц и год под одним `product.id`,
-   * а периода в уведомлении нет вовсе (`products.ts`).
+   * а периода в уведомлении нет вовсе (`products.ts`). Валюта — тоже: «19» в долларах и в евро —
+   * разные деньги, и в журнал она пишется рядом с суммой.
    */
   const amount = typeof hook.amount === 'number' ? hook.amount : null;
-  const what = keyFor(productMap(), hook.product.id ?? '', amount);
-  const plan = what.startsWith('plan:') ? what.slice('plan:'.length) : '';
-  if (!what) {
+  const currency = currencyCode(hook.currency);
+  const key = keyFor(productMap(), hook.product.id ?? '', amount, currency);
+  const action = actionFor(key);
+  if (action.kind === 'unknown') {
     console.warn(
-      `lava-webhook: product ${hook.product.id ?? '(none)'} at ${amount ?? '?'} is not in LAVA_PRODUCTS`,
+      `lava-webhook: product ${hook.product.id ?? '(none)'} at ${amount ?? '?'} ${currency ?? '???'} is not in LAVA_PRODUCTS (key "${key}"); recorded as unclaimed`,
     );
   }
 
@@ -158,13 +168,13 @@ Deno.serve(async (req) => {
    * Никогда не фатален, ровно как в `prodamus-webhook`.
    */
   async function record(applied: boolean): Promise<void> {
-    const { error } = await supabase.rpc('record_payment', {
+    const args = {
       p_email: email,
-      p_amount: typeof hook!.amount === 'number' ? hook!.amount : null,
+      p_amount: amount,
       p_provider_ref: hook!.contractId,
       p_paid_at: paidAt,
       // Занятие — свой вид с 0039: иначе его оплата попадала бы в канал в тему «Курсы».
-      p_intent: plan || (what.startsWith('session:') ? 'session' : 'course'),
+      p_intent: intentFor(action),
       p_applied: applied,
       /*
        * Касса. До 0038 её никто не записывал, и покупка через lava.top ложилась в базу как
@@ -172,14 +182,31 @@ Deno.serve(async (req) => {
        * «нужно писать… как была совершена покупка, потому что у нас разные платформы есть».
        */
       p_provider: 'lava',
-    });
+    };
+    // Валюта — с 0043. Пустая строка, а не пропуск: умолчание функции — рубли, а это не рубли.
+    let { error } = await supabase.rpc('record_payment', { ...args, p_currency: currency ?? '' });
+    if (error && (error as { code?: string }).code === 'PGRST202') {
+      // База ещё без 0043: та же запись без валюты, чем никакой.
+      ({ error } = await supabase.rpc('record_payment', args));
+    }
     if (error) console.warn('lava-webhook: record_payment failed', error.message);
   }
 
-  if (plan) {
+  /*
+   * Незнакомый товар, цена или валюта. Раньше такое уходило ниже, в `apply_course_payment()`, и
+   * открывало курс, на который у этой почты висел заказ, — то есть угадывало. Теперь платёж
+   * записывается непривязанным, триггер 0040 кладёт «Платёж не привязан» в канал владельца, и
+   * решает человек. 200, а не ошибка: повторная доставка ничего не изменит.
+   */
+  if (action.kind === 'unknown') {
+    await record(false);
+    return reply(200, 'ignored: unknown product, recorded, waiting to be claimed');
+  }
+
+  if (action.kind === 'plan') {
     const { error } = await supabase.rpc('apply_subscription_payment', {
       p_email: email,
-      p_plan: plan,
+      p_plan: action.plan,
       p_provider_ref: hook.contractId,
       p_paid_at: paidAt,
       p_source: 'lava',
@@ -190,46 +217,50 @@ Deno.serve(async (req) => {
       return reply(500, 'could not apply the payment');
     }
     await record(true);
-    return reply(200, `ok: ${plan} for ${email}`);
+    return reply(200, `ok: ${action.plan} for ${email}`);
   }
 
   /*
    * Занятие с тренером — полчаса или час (`content/site/payments.ts`, `sessionKey`). Открывать
    * нечего: оплачено время человека, а не доступ, и время назначается на странице выбора слота
-   * или в переписке. Поэтому здесь только журнал.
+   * или в переписке. Поэтому здесь только журнал — и с `applied = true`: платёж сделал всё, что
+   * мог, и в «непривязанные» не попадает (0043).
    *
-   * Ветка отдельная, и это не аккуратность ради аккуратности. Всё, что не подписка, ниже уходит в
-   * `apply_course_payment()`, а тот ищет единственный ожидающий заказ на курс этой почты. У
-   * человека, который оформил заказ на курс и затем купил час с тренером, оплата часа открыла бы
-   * курс бесплатно. Один платёж — одна вещь.
+   * Ветка отдельная, и это не аккуратность ради аккуратности: оплата часа, ушедшая в
+   * `apply_course_payment()`, открыла бы курс. Один платёж — одна вещь.
    *
    * В журнал это ложится как `session` (0039) — и оттуда в канал владельца, в тему
    * «Онлайн-тренировки» (0040). Prodamus опознаёт занятие суммой и пишет тот же вид.
    */
-  if (what.startsWith('session:')) {
-    await record(false);
+  if (action.kind === 'session') {
+    await record(true);
     console.info(
-      `lava-webhook: ${what} paid by ${email} (contract ${hook.contractId}); nothing to unlock, the coach agrees the time`,
+      `lava-webhook: ${action.key} paid by ${email} (contract ${hook.contractId}); nothing to unlock, the coach agrees the time`,
     );
-    return reply(200, `ok: ${what} recorded for ${email}`);
+    return reply(200, `ok: ${action.key} recorded for ${email}`);
   }
 
   /*
-   * Курс. `apply_course_payment()` ищет единственный ожидающий заказ этой почты — тот, что пишут
-   * и форма на сайте, и шторка разблокировки, прежде чем отправить человека платить.
-   *
-   * Товар из уведомления здесь пока не используется, и это осознанно: открыть **названный** курс
-   * умеет только админка, а у функции нет и не будет прав админа. Зато `product.id` попал в
-   * журнал через `p_intent`, так что при ручной выдаче видно, что именно куплено, — этого у
-   * Prodamus не было вовсе.
+   * Курс — названный товаром. lava.top, в отличие от Prodamus, говорит, что купили, поэтому курс
+   * открывается тот, что в ключе, а не «единственный ожидающий заказ этой почты»: заказ на один
+   * курс и оплата другого больше не открывают первый.
    */
   const { data: activated, error } = await supabase.rpc('apply_course_payment', {
     p_email: email,
     p_provider_ref: hook.contractId,
     p_paid_at: paidAt,
+    p_course_id: action.courseId,
     p_source: 'lava',
   });
   if (error) {
+    // Курса с таким id нет в базе — ошибка секрета, а не сбой: повтор доставки её не исправит.
+    if ((error.message ?? '').includes('invalid_course')) {
+      console.error(
+        `lava-webhook: LAVA_PRODUCTS names course "${action.courseId}", which does not exist`,
+      );
+      await record(false);
+      return reply(200, 'ignored: unknown course, recorded, waiting to be claimed');
+    }
     console.error('lava-webhook: apply_course_payment failed', error.message);
     await record(false);
     return reply(500, 'could not apply the payment');
@@ -237,7 +268,7 @@ Deno.serve(async (req) => {
   if (!activated) {
     await record(false);
     console.warn(
-      `lava-webhook: ${email} paid and no single pending order matches it; recorded as unclaimed (contract ${hook.contractId})`,
+      `lava-webhook: ${email} paid for ${action.courseId} and nothing was activated; recorded as unclaimed (contract ${hook.contractId})`,
     );
     return reply(200, 'ignored: recorded, waiting to be claimed');
   }

@@ -513,11 +513,16 @@ export async function redeemClubInvite(token: string): Promise<string> {
  *
  * Оставшийся без пары попадает в общий котёл и в понедельник получит нового напарника — того же,
  * что все без пары. Отдельного «ушла» состояния нет: пары нет, и всё.
+ *
+ * Зовёт `club_duo_leave()` (0043) без аргументов: база сама находит пару звонящего. Прежняя
+ * `club_duo_break(uuid)` закрыта от вошедших с 0034 — иначе чужой id разрывал бы чужую пару, — и
+ * кнопка отвечала отказом. `teamId` нужен только демо-режиму, у которого своя база в браузере.
+ * Отказы — кодами: `no_pair`, `no_club`.
  */
-export async function breakClubDuo(teamId: string): Promise<void> {
-  if (isDemo()) return (await demo()).breakClubDuo(teamId);
+export async function breakClubDuo(teamId?: string): Promise<void> {
+  if (isDemo()) return (await demo()).breakClubDuo(teamId ?? '');
   return guard(async () => {
     await requireUser();
-    unwrapVoid(await supabase().rpc('club_duo_break', { p_team_id: teamId }));
+    unwrapVoid(await supabase().rpc('club_duo_leave'));
   });
 }

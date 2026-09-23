@@ -60,8 +60,11 @@ The schema lives in `supabase/migrations/` and is idempotent: re-running a file 
 
 ### Option A — two steps, no tooling (start here)
 
-`supabase/setup-all.sql` is every migration below concatenated in order by `npm run db:bundle`, so
-there is one thing to paste instead of ten, and no way to run them out of order.
+`supabase/setup-all.sql` is every migration in `supabase/migrations/` except `0009_course_import.sql`,
+concatenated in filename order by `npm run db:bundle`, so there is one thing to paste instead of
+forty, and no way to run them out of order. The list is read from the directory, so a new migration
+is in the bundle as soon as the bundle is regenerated; `scripts/db/bundle.test.mjs` fails when the
+committed bundle is missing one.
 
 1. Open [`supabase/setup-all.sql`](../supabase/setup-all.sql). **Edit the admin block near the
    top** — those addresses are the people who can open the admin panel. A line left as
@@ -83,42 +86,37 @@ there is one thing to paste instead of ten, and no way to run them out of order.
 
    They are `0009_course_import.sql` cut one course per file by `node scripts/db/split-import.mjs`,
    because the whole thing is 660 KB — too big for a browser text area, and importing a file is
-   more ceremony than pasting five. Running the single migration instead (or letting the CLI apply
-   it) loads exactly the same rows; `scripts/db/verify-bundle.sh` checks that the two agree.
+   more ceremony than pasting five. Running the single migration instead loads exactly the same
+   rows; `scripts/db/verify-bundle.sh` checks that the two agree.
+
+   The import runs after the bundle, so the workouts it brings in miss one backfill the bundle
+   made earlier: `0036` signs every existing workout as Sergey's. Run `setup-all.sql` once more
+   after the import (it is safe to re-run) and they get the signature too.
 
 Both steps are safe to re-run, and re-running is how an existing project is upgraded.
 
 ### Option B — file by file
 
-Dashboard → **SQL Editor** → **New query**, paste each file in this order and click **Run**:
+Dashboard → **SQL Editor** → **New query**, paste each file of `supabase/migrations/` **in filename
+order** and click **Run** — the same order the bundle uses and the same set, plus `0009`. From a
+phone, Actions → Supabase apply → `migration` runs one file by name (§7.8).
 
-1. `supabase/migrations/0001_init.sql` — extensions, tables, triggers, RLS policies, grants
-2. `supabase/migrations/0002_functions.sql` — `create_order`, `my_entitlements`,
-   admin RPCs, `get_leaderboard`, `get_my_totals`
-3. `supabase/migrations/0003_storage.sql` — private `videos` bucket and its policies
-4. `supabase/migrations/0004_content_seed.sql` — **required**: the course and workout
-   catalogue the backend enforces (see §2.1)
-5. `supabase/migrations/0005_subscriptions.sql` — subscription plans, intents and activation
-6. `supabase/migrations/0006_custom_workouts.sql` — the `exercises` library, the coach-built
-   `custom_workouts` and the `assigned_workouts` that grant them to an email
-7. `supabase/migrations/0007_exercise_seed.sql` — generated: the exercise library, from
-   `content/exercises` (see §2.1)
-8. `supabase/migrations/0008_course_builder.sql` — `admin_courses` and `admin_course_days`,
-   the public `images` bucket, and `admin_publish_course()` (see §2.2)
-9. `supabase/migrations/0009_course_import.sql` — generated: every course written as a file,
-   as rows the admin panel can edit (see §2.3). Optional, and safe to skip.
-10. `supabase/migrations/0010_public_course_pages.sql` — lets the static site read a published
-    course so it can have a landing page (see §2.4)
-11. `supabase/migrations/0011_marathon.sql` — the marathon format: daily tasks, proof, pairs or
-    everyone-for-themselves, the private `proofs` bucket and the weekly board (see §2.5)
-12. `supabase/migrations/0012_step_proofs.sql` — a screenshot of the step counter, filed against
-    the day. **Superseded by 0015**; run it anyway so the chain applies in order on a fresh project
-13. `supabase/migrations/0013_admin_people.sql` — the admin's people screen
-14. `supabase/migrations/0014_coach_bookings.sql` — the booked session shown on «Тренер» (see §7.7)
-15. `supabase/migrations/0015_drop_steps.sql` — **removes steps from the product** (see §2.6).
-    ⚠️ It drops `daily_logs` and everything in it, and that cannot be undone
-16. `supabase/seed.sql` — nothing runs by default; open it, uncomment the `insert into
-public.admins` line with the coach's email (see §4)
+What to know along the way:
+
+- `0004_content_seed.sql` is **required**: the course and workout catalogue the backend enforces
+  (§2.1). `0007_exercise_seed.sql` is generated the same way, from `content/exercises`.
+- `0009_course_import.sql` is generated and **optional**: every course written as a file, as rows
+  the admin panel can edit (§2.3). Safe to skip.
+- `0012_step_proofs.sql` is **superseded by 0015**; run it anyway so the chain applies in order on
+  a fresh project.
+- `0015_drop_steps.sql` **removes steps from the product** (§2.6). ⚠️ It drops `daily_logs` and
+  everything in it, and that cannot be undone.
+- There is no `0021`, and there are **two `0027`s**: `0027_proof_review.sql`, then
+  `0027_telegram_outbox.sql` (byte order of the names; neither depends on the other).
+- `0030_reload_schema.sql` changes nothing; it tells PostgREST to re-read the schema, which is the
+  cure for `PGRST205`.
+- Finally `supabase/seed.sql` — nothing runs by default; open it, uncomment the `insert into
+public.admins` line with the coach's email (see §4).
 
 Each run must end with "Success. No rows returned". If a statement fails, fix the cause and
 re-run the whole file — the `create … if not exists` / `drop policy if exists` guards make that
@@ -126,18 +124,14 @@ safe. Re-running the whole set in order is also how you upgrade an existing proj
 bounds are added as `not valid` constraints, so they apply to every new write without ever
 failing on rows written earlier.
 
-### Option C — Supabase CLI
+### Option C — Supabase CLI: not supported
 
-```bash
-npm i -g supabase          # or: brew install supabase/tap/supabase
-supabase login
-supabase init              # once; creates supabase/config.toml (commit it or ignore it)
-supabase link --project-ref <project-ref>   # the id from the Project URL
-supabase db push           # applies supabase/migrations/*.sql in filename order
-```
-
-`seed.sql` is intentionally not applied by `db push`; run it in the SQL editor.
-`0004_content_seed.sql` **is** applied by `db push` (it is a normal migration).
+`supabase db push` records each migration under its numeric prefix, and two files here share one
+(`0027_proof_review.sql` and `0027_telegram_outbox.sql`). The CLI refuses the pair, or records one
+and skips the other, depending on version — either way the schema it leaves is not the one the
+tests check. Renaming either file now would make every project that already applied it think it
+has a new migration to run. Use Option A or B; the CLI is still what deploys the edge functions
+(§7.8 does that from GitHub, with a pinned CLI version).
 
 ### 2.1 The generated catalogue (`0004_content_seed.sql`)
 
@@ -931,6 +925,17 @@ price there and in Prodamus, and set the matching secret too, or the payment arr
 recognised as a session. `deploy-payments` reports how many of the two are set (names only, never
 the values).
 
+A course is recognised by amount too, but only to tell it from everything else: the course itself
+still comes from the single pending order of that address. The course prices default to **2 990,
+3 990 and 4 990 ₽** (the prices in `content/courses/*.ts`; a test keeps the two in step), and the
+optional secret `COURSE_PRICES_RUB` (`2990,3990,4990`) overrides them. **An amount that is no plan,
+no session and no course price opens nothing** (since `0043`): it is recorded as an unclaimed
+payment and the owner's channel gets «Платёж не привязан». It used to open whatever course the
+address had a pending order for, for any amount.
+
+A paid session is recorded with `applied = true`: there is nothing to attach it to, so it is never
+counted as unclaimed.
+
 ### 7.5 Automating course purchases later
 
 ---
@@ -1149,6 +1154,12 @@ From then on `.github/workflows/telegram-notify.yml` wakes it every ten minutes.
 counters and nothing else — never an address, never a message. **`outbox-check`** is the fuller
 view: `waiting_for_telegram` climbing means everything works and those people simply have no
 Telegram; `pending` climbing with `waiting` at zero means the schedule or the function is broken.
+It prints the owner's-channel queue (§7.11) the same way, counts only.
+
+Each run takes only rows whose recipient already has Telegram attached (`telegram_outbox_due`,
+`0043`) and expires the stale ones in one statement first. Before that, fifty rows for people
+without Telegram — most of the queue, since a purchase arrives before the link — filled the whole
+batch and held back a message to somebody who could receive it until they expired.
 
 There is no unsubscribe button, by the owner's decision: «Не нужно добавлять кнопку "Отписаться" в
 каждом сообщении. Это не нарушает закон о рекламе 152 ФЗ.» Every message here is about something
@@ -1295,14 +1306,17 @@ apply → Run workflow**, pick a task:
 | `email-templates`                      | Puts `supabase/templates/otp.html` into **both** Magic Link and Confirm signup (§3.2).      |
 | `deploy-bot`                           | Deploys the `telegram-bot` function and sets its secrets (§7.6).                            |
 | `deploy-link`                          | Deploys `link-telegram`, which attaches a Telegram account to a profile (§7.6).             |
+| `deploy-notify`                        | Deploys `telegram-notify`, copies `NOTIFY_TOKEN` and the owner's-channel secrets (§7.11).   |
 | `deploy-payments`                      | Deploys `prodamus-webhook`, checks its two secrets and probes the live address (§7.4).      |
+| `deploy-lava`                          | Deploys `lava-webhook`, copies its three secrets, fails if any is missing, probes (§7.9).   |
 | `deploy-calendar`                      | Deploys `google-calendar-sync`, copies its secrets and runs the first sync (§7.7).          |
 | `secrets-check`                        | Read-only: which function secrets Supabase has, which are missing, which override the repo. |
 | `webhook-info`                         | Read-only: what Telegram itself believes about the bot's webhook, and why delivery failed.  |
 | `payments-check`                       | Read-only: how many payment notifications have arrived and whether the last one applied.    |
 | `telegram-check`                       | Read-only: how many people have a Telegram account attached, so the bot can reach them.     |
-| `outbox-check`                         | Read-only: what is sitting in the bot message queue, by status. Counts only, no addresses.  |
+| `outbox-check`                         | Read-only: both queues (bot and owner's channel), by status. Counts only, no addresses.     |
 | `translation-check`                    | Read-only: how much of what the coach typed still has no English half. Counts only (§7.10). |
+| `reset-athlete`                        | Resets one person to "just signed in"; the address comes from the `RESET_EMAIL` secret.     |
 | `migration` → `0030_reload_schema.sql` | Not a schema change: tells PostgREST to re-read the schema. Run it on `PGRST205`.           |
 
 One secret makes it work: **`SUPABASE_ACCESS_TOKEN`** (Settings → Secrets and variables → Actions),
@@ -1317,9 +1331,32 @@ repository:
   that could carry SQL is an input that could carry an email address or a key.
 - **No response body is printed.** A query result can contain real rows.
 
-`club-join` is the only task that takes a value, and it takes it from a secret:
-`CLUB_TESTER_EMAILS`, falling back to `PROBE_EMAIL`. Secrets are masked in the log, so the statement
-is built in the runner and never appears anywhere.
+Two tasks take a value, and both take it from a secret. `club-join` reads `CLUB_TESTER_EMAILS`,
+falling back to `PROBE_EMAIL`. `reset-athlete` reads **`RESET_EMAIL`** — the address of the one
+person to reset (the coach, usually, to walk through onboarding again). It wipes that person's
+onboarding answers, fitness index, self-test results, finished workouts and course state; it
+leaves payments, subscriptions, club membership with its points and proofs, bookings, consents and
+admin rights alone. Secrets are masked in the log, so the statement is built in the runner and
+never appears anywhere. Set `RESET_EMAIL` right before the run and change it for the next person;
+an address in a workflow input would stay on the public run page forever.
+
+**Secrets that override the repository.** The bot reads its copy as `secret ?? code`, so a set
+secret beats whatever `supabase/functions/telegram-bot/index.ts` says, and a new text deployed from
+the repository never reaches Telegram. Each has an English twin with an `_EN` suffix, read for
+readers whose Telegram is not in Russian: `TELEGRAM_GREETING` / `TELEGRAM_GREETING_EN`,
+`TELEGRAM_BUTTON_TEXT` / `TELEGRAM_BUTTON_TEXT_EN`, `TELEGRAM_SITE_BUTTON_TEXT` /
+`TELEGRAM_SITE_BUTTON_TEXT_EN`; plus `TELEGRAM_PHOTO_URL`, `TELEGRAM_SITE_URL` and `MINI_APP_URL`,
+which are shared. `secrets-check` warns about every one it finds. To go back to the repository's
+text, delete the secret in Supabase → Project Settings → Edge Functions → Secrets.
+
+`secrets-check` also lists every secret the functions read — the required ones as warnings when
+missing (`NOTIFY_TOKEN`, `LAVA_WEBHOOK_SECRET`, `LAVA_PRODUCTS`, `GOOGLE_*` included), the optional
+ones (`TELEGRAM_ADMIN_*`, the price overrides, `GOOGLE_BOOKING_TITLE`, `GOOGLE_COACH_EMAILS`) as a
+plain line.
+
+**The Supabase CLI version is pinned** in the workflow (`SUPABASE_CLI_VERSION` at the top of
+`supabase-apply.yml`). It used to download `releases/latest`, so two deploys a day apart could run
+different programs. To upgrade, change that one line and watch the next run.
 
 What it cannot do: DNS (SPF/DKIM/DMARC live at the registrar), anything on Prodamus, and uploading
 video, which is not in this repository.
@@ -1412,6 +1449,18 @@ inside it, not a config change.
    to be attached by hand. Opening a year for somebody who paid for a month is the one outcome
    worth avoiding at any cost.
 
+   A price may carry a currency — `"19 USD"` — and then matches only in that currency; a bare
+   `"19"` matches in any, which is how the map was written before. The currency of every payment
+   is stored beside its amount (`payments.currency`, since `0043`), so «19» in the ledger and in the
+   owner's channel is never read as roubles.
+
+   **Only the three prefixes mean anything.** `course:<id>` opens that course (the id must exist
+   in the database), `plan:monthly` / `plan:annual` the subscription, `session:<…>` records a paid
+   session. Anything else — a product missing from the map, a typo in a key, an unknown price or
+   currency — opens nothing: the payment is recorded unclaimed and «Платёж не привязан» arrives in
+   the owner's channel. Before `0043` everything that was not a plan or a session went on to open
+   the pending course order of that address.
+
 7. **Actions → Supabase apply → `deploy-lava`.** It deploys the function, moves the secrets over,
    prints which are missing, and prints the address to paste back.
 8. **Paste that address into the cabinet** as the webhook URL:
@@ -1453,15 +1502,22 @@ Two doors guard it, the same pair as Prodamus: the token in the URL and the HMAC
 failing is a 403 with nothing written.
 
 Then `product.id` says what was bought — which Prodamus cannot do, because its short links drop
-the query parameters, and there the course has to be inferred from the single pending order.
+the query parameters, and there the course has to be inferred from the single pending order. Here
+the course is the one named in the key, not the pending order: an order for one course and a
+payment for another no longer open the first.
 Renewals (`subscription.recurring.payment.success`) extend the subscription on their own. A refusal
 or a cancellation opens nothing: a cancelled subscription means "do not renew", and the paid period
 still has to run out.
 
 `contractId` is the idempotency key, so a notification delivered twice opens access once.
 
-A payment that matches no order is recorded rather than lost, exactly as with Prodamus, and waits
-for «Оплатил(а) с другой почты?» to attach it to a person.
+A payment whose product is not in the map is recorded rather than lost, exactly as with Prodamus,
+and waits for the owner. A paid session is recorded as applied — there is nothing to attach.
+
+«Оплатил(а) с другой почты?» (`claim_payment`) no longer burns a course payment when there is no
+pending order to open: the answer is `no_order` (the app shows the same «nothing to open yet,
+write to us»), the payment stays claimable for when the order exists, and the owner's channel gets
+«Пришли за платежом, а заказа нет».
 
 ### While it is not configured
 
@@ -1524,7 +1580,7 @@ one topic is deleted, make it by hand and correct one number in the secret.
 | Topic             | Messages                                                                          |
 | ----------------- | --------------------------------------------------------------------------------- |
 | Регистрации       | a new account, with its language                                                  |
-| Курсы             | course paid, refund, and **a payment that opened nothing**                        |
+| Курсы             | course paid, refund, **a payment that opened nothing**, a claim with no order     |
 | Клуб              | paid, renewed, cancelled, a duo pair formed, a proof sent again after a rejection |
 | Онлайн-тренировки | session paid, time chosen, moved, cancelled                                       |
 | Обращения         | what people write to the bot, and the app's «Написать тренеру» (§7.12)            |
@@ -1533,6 +1589,13 @@ The most valuable of these is **«Платёж не привязан»**: money 
 because there was no order, or several, or the address at the till was a different one. It has
 always been visible in the ledger to whoever scrolled it; now it arrives, because that is the case
 where somebody paid and is sitting without their course.
+
+**Delivery is retried, not abandoned.** A message the channel refuses stays in the queue and is
+tried again on the next run — on 429 and 5xx, but also on 400 and 403, which here mean "the topic
+was deleted" or "the bot was removed" and are fixed by hand. It becomes `failed` only after twelve
+attempts in a row (two hours). A 400 about the markup or a link (`can't parse entities`, `invalid
+URL` — usually a `tg://user?id=` link the person's privacy settings forbid) is retried at once
+without links. `outbox-check` shows how many are pending, retrying and failed.
 
 **Proofs are the one thing that cannot move wholesale.** Every club member sends one every day; a
 message per proof would turn the channel into a feed that gets muted within a day — and the

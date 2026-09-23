@@ -330,6 +330,9 @@ export async function getSharedCustomWorkout(token: string): Promise<AssignedWor
         structure: unknown;
         est_sec: number | null;
         points: number | null;
+        // С 0043. Необязательные: база без неё их просто не вернёт.
+        title_en?: string | null;
+        description_en?: string | null;
       }[]
     >(await supabase().rpc('get_shared_custom_workout', { p_token: token }));
     const r = rows?.[0];
@@ -338,15 +341,15 @@ export async function getSharedCustomWorkout(token: string): Promise<AssignedWor
       id: r.id,
       shortId: r.short_id,
       title: r.title,
+      titleEn: r.title_en ?? null,
+      description: r.description,
+      descriptionEn: r.description_en ?? null,
       /*
        * Ссылкой делятся наружу, и функция `get_shared_custom_workout` отдаёт только то, что
-       * нужно, чтобы тренировку провести. Подписи среди этого нет: открывший ссылку не покупатель
-       * и часто не знает, кто такой Сергей, — «тренировка от …» ему ничего не говорит. Расширять
-       * ради этого функцию, к которой ходят без входа, тоже незачем.
+       * нужно, чтобы тренировку провести, — с 0043 на обоих языках. Подписи среди этого нет:
+       * открывший ссылку не покупатель и часто не знает, кто такой Сергей, — «тренировка от …» ему
+       * ничего не говорит.
        */
-      titleEn: null,
-      description: r.description,
-      descriptionEn: null,
       authorSlug: null,
       structure: r.structure,
       estSec: r.est_sec,

@@ -11,39 +11,57 @@
  *
  * The bundle is generated, never edited. Change a migration and re-run this.
  */
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { readFileSync, readdirSync, writeFileSync, mkdirSync } from 'node:fs';
+import { join, dirname, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const MIGRATIONS = 'supabase/migrations';
 const DEST = 'supabase/setup-all.sql';
 
-/** In application order. 0002 references what 0001 creates, 0005 redefines a view from 0002. */
-const FILES = [
-  ['0001_init.sql', 'tables, triggers, row-level security, grants'],
-  ['0002_functions.sql', 'create_order, entitlements, admin RPCs, leaderboard'],
-  ['0003_storage.sql', 'the private videos bucket and its access policies'],
-  ['0004_content_seed.sql', 'the course and workout catalogue the backend enforces'],
-  ['0005_subscriptions.sql', 'monthly / annual subscriptions and the entitlements union'],
-  ['0006_custom_workouts.sql', 'exercise catalogue + coach-built custom workouts, sharing, assign'],
-  ['0007_exercise_seed.sql', 'the exercise library seeded into the database'],
-  ['0008_course_builder.sql', 'courses and days authored in the admin panel, and publishing'],
-  ['0010_public_course_pages.sql', 'anonymous reads of a published course, so it gets a page'],
-  ['0011_marathon.sql', 'marathons: daily tasks, proof, teams and the weekly board'],
-  ['0012_step_proofs.sql', 'a screenshot of the step counter, filed against the day'],
-];
-
 /**
  * 0009_course_import.sql is deliberately NOT bundled.
  *
- * It carries the five existing courses — 83 workouts and 204 days of Sergey's programming — as
- * editable rows, and at 660 KB it is four times the size of everything else here put together.
- * Pasting that into a browser text editor is a bad experience and an easy way to lose a paste
- * halfway through; it wants to be opened as a file instead (SQL Editor's "+" -> Import SQL file).
+ * It carries the existing courses — every workout and day of Sergey's programming — as editable
+ * rows, and at 660 KB it is four times the size of everything else here put together. Pasting that
+ * into a browser text editor is a bad experience and an easy way to lose a paste halfway through;
+ * it wants to be opened as a file instead (SQL Editor's "+" -> Import SQL file), or pasted as the
+ * per-course files in supabase/course-import/.
  *
  * Nothing else depends on it: it only needs the tables 0008 creates, and skipping it leaves a
  * working, empty course builder. So it stays a separate, optional second step.
  */
 const SEPARATE = '0009_course_import.sql';
+
+/**
+ * Every migration, in application order, read from the directory.
+ *
+ * This used to be a hand-kept list, and it stopped at 0012 while the migrations went on to 0043:
+ * a project set up from the bundle got a schema thirty migrations old, with nothing to say so.
+ * The directory is the list now.
+ *
+ * Order is the filename, compared byte by byte (not by locale), which is also the order the
+ * `migration` task and the local test harness use. Two files share the 0027 prefix —
+ * `0027_proof_review.sql` and `0027_telegram_outbox.sql` — and neither depends on the other; the
+ * byte order puts `proof_review` first, every time, on every machine.
+ */
+export function migrationFiles(names) {
+  return names
+    .filter((n) => /^\d{4}_[a-z0-9_]+\.sql$/.test(n) && n !== SEPARATE)
+    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+}
+
+/**
+ * One line for the section header, taken from the migration's own header: its second line, minus
+ * the "Forma — 0001_init:" / "0034 —" prefix. The migrations all open with that line, so the bundle
+ * describes each one in its author's words instead of a second copy kept here.
+ */
+export function headline(sql) {
+  const line = (sql.split('\n')[1] ?? '').replace(/^--\s*/, '').trim();
+  return line
+    .replace(/^Forma\s+—\s+/, '')
+    .replace(/^\d{4}(_[a-z0-9_]+)?\s*[:—-]\s*/, '')
+    .trim();
+}
 
 const rule = '-- ' + '='.repeat(77);
 
@@ -63,7 +81,7 @@ const head = `${rule}
 -- ONE THING TO EDIT: the section immediately below lists who can open the admin panel. Put the
 -- real sign-in addresses there. Left as they are, the script stops without changing anything.
 --
--- AFTERWARDS, OPTIONAL: ${SEPARATE} loads the five existing courses as rows the admin
+-- AFTERWARDS, OPTIONAL: ${SEPARATE} loads the existing courses as rows the admin
 -- panel can edit. It is 660 KB — too big to paste comfortably — so open it as a file instead:
 -- SQL Editor -> "+" -> Import SQL file. Skip it and the course builder still works, just empty.
 ${rule}
@@ -133,16 +151,22 @@ select email from _forma_admin_emails
 on conflict (email) do nothing;
 `;
 
-const parts = [head, adminBlock];
-for (const [name, what] of FILES) {
-  parts.push(`\n${rule}\n-- ${name} — ${what}\n${rule}\n\n`);
-  parts.push(`${readFileSync(join(MIGRATIONS, name), 'utf8').trimEnd()}\n`);
+/** Run only when executed, not when imported by the test. */
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  const files = migrationFiles(readdirSync(MIGRATIONS));
+  const parts = [head, adminBlock];
+  for (const name of files) {
+    const sql = readFileSync(join(MIGRATIONS, name), 'utf8');
+    const what = headline(sql);
+    parts.push(`\n${rule}\n-- ${name}${what ? ` — ${what}` : ''}\n${rule}\n\n`);
+    parts.push(`${sql.trimEnd()}\n`);
+  }
+  parts.push(tail);
+
+  mkdirSync(dirname(DEST), { recursive: true });
+  const sql = parts.join('');
+  writeFileSync(DEST, sql);
+
+  console.log(`${DEST}  ${sql.split('\n').length} lines, ${(sql.length / 1024).toFixed(0)} KB`);
+  console.log(`bundled ${files.length}: ${files.join(', ')}`);
 }
-parts.push(tail);
-
-mkdirSync(dirname(DEST), { recursive: true });
-const sql = parts.join('');
-writeFileSync(DEST, sql);
-
-console.log(`${DEST}  ${sql.split('\n').length} lines, ${(sql.length / 1024).toFixed(0)} KB`);
-console.log(`bundled: ${FILES.map(([f]) => f).join(', ')}`);

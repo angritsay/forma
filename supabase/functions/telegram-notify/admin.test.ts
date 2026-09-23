@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ADMIN_MAX_ATTEMPTS,
   ADMIN_TOPICS,
+  adminFailure,
   adminMessage,
   escapeHtml,
   moscowTime,
   parseTopics,
+  stripLinks,
   TOPIC_TITLES,
 } from './admin';
 
@@ -87,6 +90,7 @@ describe('adminMessage', () => {
       'session_moved',
       'session_cancelled',
       'payment_unclaimed',
+      'claim_no_order',
       'support_message',
       'channel_ready',
     ];
@@ -211,5 +215,76 @@ describe('parseTopics', () => {
 
   it('drops what cannot be a thread id, and keeps the rest', () => {
     expect(parseTopics('{"a":0,"b":-3,"c":"x","d":5}')).toEqual({ d: 5 });
+  });
+});
+
+describe('money', () => {
+  /* «19» без валюты в канале читается как рубли, а lava.top берёт доллары и евро (0043). */
+  it('prints the currency beside the amount when it is known', () => {
+    expect(
+      adminMessage(
+        row('payment_unclaimed', { amount: '19.00', currency: 'USD', intent: 'monthly' }),
+      ),
+    ).toContain('Сумма: 19.00 USD');
+    expect(adminMessage(row('session_paid', { amount: '3500.00' }))).toContain('Сумма: 3500.00');
+  });
+
+  it('says who came for a payment with no order behind it', () => {
+    const text = adminMessage(
+      row('claim_no_order', {
+        email: 'me@b.co',
+        payEmail: 'work@b.co',
+        amount: '2990.00',
+        currency: 'RUB',
+        ref: 'R-1',
+        provider: 'prodamus',
+      }),
+    )!;
+    expect(text).toContain('заказа нет');
+    expect(text).toContain('me@b.co');
+    expect(text).toContain('work@b.co');
+    expect(text).toContain('2990.00 RUB');
+    expect(text).toContain('Prodamus');
+  });
+});
+
+describe('adminFailure', () => {
+  /*
+   * Ссылка `tg://user?id=…` бывает запрещена настройками человека, и телеграм отказывает всему
+   * сообщению. Сразу — ещё раз без ссылок, один раз.
+   */
+  it('retries once without links when Telegram rejects the markup or a link', () => {
+    const parse = 'Bad Request: can\'t parse entities: Unsupported start tag "x"';
+    expect(adminFailure(400, parse, 1, false)).toBe('retry_plain');
+    expect(adminFailure(400, 'Bad Request: invalid URL', 1, false)).toBe('retry_plain');
+    // Второй раз без ссылок уже не пробуют: это та же строка в следующий запуск.
+    expect(adminFailure(400, parse, 1, true)).toBe('retry');
+  });
+
+  /* Раньше 400 и 403 сразу делали строку `failed`: сообщение о деньгах терялось на первой ошибке. */
+  it('keeps the row for the next run on 429, 5xx, 400 and 403', () => {
+    for (const status of [429, 500, 502, 400, 403, 0]) {
+      expect(
+        adminFailure(status, 'Bad Request: message thread not found', 1, true),
+        String(status),
+      ).toBe('retry');
+    }
+  });
+
+  it('gives up only after the last attempt', () => {
+    expect(adminFailure(500, '', ADMIN_MAX_ATTEMPTS - 1, true)).toBe('retry');
+    expect(adminFailure(500, '', ADMIN_MAX_ATTEMPTS, true)).toBe('give_up');
+    expect(adminFailure(403, '', ADMIN_MAX_ATTEMPTS, true)).toBe('give_up');
+  });
+});
+
+describe('stripLinks', () => {
+  it('keeps the words and drops the link', () => {
+    expect(stripLinks('Ответить: <a href="tg://user?id=5">открыть чат</a>')).toBe(
+      'Ответить: открыть чат',
+    );
+    expect(stripLinks('<b>Обращение</b>\n<a href="https://t.me/x">@x</a>')).toBe(
+      '<b>Обращение</b>\n@x',
+    );
   });
 });

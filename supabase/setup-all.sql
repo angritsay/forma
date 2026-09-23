@@ -14,7 +14,7 @@
 -- ONE THING TO EDIT: the section immediately below lists who can open the admin panel. Put the
 -- real sign-in addresses there. Left as they are, the script stops without changing anything.
 --
--- AFTERWARDS, OPTIONAL: 0009_course_import.sql loads the five existing courses as rows the admin
+-- AFTERWARDS, OPTIONAL: 0009_course_import.sql loads the existing courses as rows the admin
 -- panel can edit. It is 660 KB — too big to paste comfortably — so open it as a file instead:
 -- SQL Editor -> "+" -> Import SQL file. Skip it and the course builder still works, just empty.
 -- =============================================================================
@@ -62,7 +62,7 @@ begin
 end $adm$;
 
 -- =============================================================================
--- 0001_init.sql — tables, triggers, row-level security, grants
+-- 0001_init.sql — extensions, tables, triggers, RLS policies, grants.
 -- =============================================================================
 
 -- =============================================================================
@@ -929,7 +929,7 @@ revoke all on public.benchmarks from anon, authenticated;
 grant select, insert, update, delete on public.benchmarks to authenticated;
 
 -- =============================================================================
--- 0002_functions.sql — create_order, entitlements, admin RPCs, leaderboard
+-- 0002_functions.sql — RPCs and views (orders, entitlements, admin, leaderboard).
 -- =============================================================================
 
 -- =============================================================================
@@ -1322,7 +1322,7 @@ revoke execute on function public.get_my_totals() from public, anon;
 grant execute on function public.get_my_totals() to authenticated;
 
 -- =============================================================================
--- 0003_storage.sql — the private videos bucket and its access policies
+-- 0003_storage.sql — private `videos` bucket + access policies.
 -- =============================================================================
 
 -- =============================================================================
@@ -1379,7 +1379,7 @@ create policy "videos: admin delete"
 -- No anon policies: the bucket is private and never listed publicly.
 
 -- =============================================================================
--- 0004_content_seed.sql — the course and workout catalogue the backend enforces
+-- 0004_content_seed.sql — the course / workout catalogue the backend enforces.
 -- =============================================================================
 
 -- =============================================================================
@@ -1607,7 +1607,7 @@ delete from public.workouts where (course_id, id) not in (
 delete from public.courses where id not in ('start', 'engine', 'dumbbells', 'kettlebell', 'athlete', 'tempo');
 
 -- =============================================================================
--- 0005_subscriptions.sql — monthly / annual subscriptions and the entitlements union
+-- 0005_subscriptions.sql — Subscriptions: monthly / annual access to every course.
 -- =============================================================================
 
 -- =============================================================================
@@ -1940,7 +1940,7 @@ revoke execute on function public.admin_set_subscription(text, text, text, times
 grant execute on function public.admin_set_subscription(text, text, text, timestamptz, text) to authenticated;
 
 -- =============================================================================
--- 0006_custom_workouts.sql — exercise catalogue + coach-built custom workouts, sharing, assign
+-- 0006_custom_workouts.sql — Exercise catalogue + custom workouts built by the coach.
 -- =============================================================================
 
 -- =============================================================================
@@ -2279,7 +2279,7 @@ revoke execute on function public.admin_unassign_custom_workout(uuid, text) from
 grant execute on function public.admin_unassign_custom_workout(uuid, text) to authenticated;
 
 -- =============================================================================
--- 0007_exercise_seed.sql — the exercise library seeded into the database
+-- 0007_exercise_seed.sql — the exercise library, in the database.
 -- =============================================================================
 
 -- =============================================================================
@@ -2408,7 +2408,7 @@ on conflict (id) do update set
 where public.exercises.is_custom = false;
 
 -- =============================================================================
--- 0008_course_builder.sql — courses and days authored in the admin panel, and publishing
+-- 0008_course_builder.sql — Courses the coach builds in the admin panel.
 -- =============================================================================
 
 -- =============================================================================
@@ -2789,7 +2789,7 @@ revoke execute on function public.admin_unpublish_course(uuid) from public, anon
 grant execute on function public.admin_unpublish_course(uuid) to authenticated;
 
 -- =============================================================================
--- 0010_public_course_pages.sql — anonymous reads of a published course, so it gets a page
+-- 0010_public_course_pages.sql — let the static site read a published course, so it can have a page.
 -- =============================================================================
 
 -- =============================================================================
@@ -2856,7 +2856,7 @@ grant select on public.admin_course_days to anon;
 -- -----------------------------------------------------------------------------
 
 -- =============================================================================
--- 0011_marathon.sql — marathons: daily tasks, proof, teams and the weekly board
+-- 0011_marathon.sql — Marathons: the second format.
 -- =============================================================================
 
 -- =============================================================================
@@ -4196,7 +4196,7 @@ revoke execute on function public.marathon_my_points(uuid) from public, anon;
 grant execute on function public.marathon_my_points(uuid) to authenticated;
 
 -- =============================================================================
--- 0012_step_proofs.sql — a screenshot of the step counter, filed against the day
+-- 0012_step_proofs.sql — a screenshot attached to a day's steps.
 -- =============================================================================
 
 -- =============================================================================
@@ -4307,6 +4307,6999 @@ create policy "proofs: steps own delete"
   on storage.objects for delete
   to authenticated
   using (bucket_id = 'proofs' and public.owns_step_proof_path(name));
+
+-- =============================================================================
+-- 0013_admin_people.sql — admin_people — everybody who has signed in, for the admin to pick from.
+-- =============================================================================
+
+-- =============================================================================
+-- admin_people — everybody who has signed in, for the admin to pick from.
+--
+-- «В админку показывай всех пользователей которые прошли активацию чтобы я могла
+-- не писать а пролистать все почты и выбрать кому накинуть курс или подписку.»
+--
+-- Granting a course or a subscription meant typing an address from memory into a
+-- field that only tells you it was wrong after you submit it. One letter out and
+-- the grant lands on an account that does not exist, silently: `admin_add_purchase`
+-- takes any well-formed address, because a pre-sale grant to somebody who has not
+-- signed up yet is a real thing the coach does. So the check cannot live there —
+-- it has to be a list you choose from instead of a box you type into.
+--
+-- "Прошла активацию" means: there is a row in `public.profiles`. A profile is
+-- created by the trigger on `auth.users` once the one-time code has been confirmed,
+-- so a profile is exactly the set of people who got in. It is read here rather than
+-- `auth.users` because the app's own table is the one that carries the display name
+-- and the onboarding state, and because reaching into `auth` from a function the
+-- client can call is a habit worth not having.
+--
+-- What it returns, per person: the address, what they call themselves, when they
+-- first signed in, whether they finished onboarding, how many courses they already
+-- hold, and whether a subscription is live. Those last two are what make the list
+-- usable — the point is to pick somebody who does *not* already have the thing you
+-- were about to give them.
+-- =============================================================================
+
+create or replace function public.admin_people(
+  p_search text default null,
+  p_limit  int  default 500
+)
+returns table (
+  email        citext,
+  display_name text,
+  created_at   timestamptz,
+  onboarded_at timestamptz,
+  courses      int,
+  subscribed   boolean
+)
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_term text;
+begin
+  if not public.is_admin() then
+    raise exception 'not_admin' using errcode = '42501';
+  end if;
+
+  -- A substring match on the address or the name, or everybody when it is empty.
+  -- `%` and `_` are escaped so a pasted address cannot turn into a wildcard scan.
+  v_term := nullif(trim(coalesce(p_search, '')), '');
+  if v_term is not null then
+    v_term := '%' || replace(replace(v_term, '\', '\\'), '%', '\%') || '%';
+    v_term := replace(v_term, '_', '\_');
+  end if;
+
+  return query
+  select
+    p.email,
+    p.display_name,
+    p.created_at,
+    p.onboarded_at,
+    /*
+     * Active grants only. A refunded purchase is history and a person holding one is
+     * a person with nothing — showing it as a course they have would be the list
+     * telling the coach not to give them the thing they are owed.
+     */
+    (
+      select count(*)::int
+      from public.purchases pu
+      where pu.email = p.email and pu.status = 'active'
+    ) as courses,
+    /*
+     * `subscription_live()` rather than a status check written again here. A cancelled
+     * subscription still has access until it expires (0005_subscriptions.sql), and a
+     * second copy of that rule is a second place for it to drift.
+     */
+    exists (
+      select 1
+      from public.subscriptions s
+      where s.email = p.email
+        and public.subscription_live(s.status, s.expires_at)
+    ) as subscribed
+  from public.profiles p
+  where v_term is null
+     or p.email::text ilike v_term escape '\'
+     or coalesce(p.display_name, '') ilike v_term escape '\'
+  order by p.created_at desc
+  limit greatest(1, least(coalesce(p_limit, 500), 1000));
+end;
+$$;
+
+comment on function public.admin_people(text, int) is
+  'Admin-only: everybody with a profile (i.e. who confirmed a sign-in code), with what they already hold.';
+
+revoke execute on function public.admin_people(text, int) from public, anon;
+grant execute on function public.admin_people(text, int) to authenticated;
+
+-- =============================================================================
+-- 0014_coach_bookings.sql — Coach bookings: the one-to-one session a person booked with the coach.
+-- =============================================================================
+
+-- =============================================================================
+-- 0014 — Coach bookings: the one-to-one session a person booked with the coach.
+--
+-- «Будет здорово если мы будем подгружать в приложение информацию о встрече которую сделал
+--  пользователь. Типо вот ссылка на вход, через столько то начнется, дата, время»
+--
+-- The Тренер tab used to end at "pay and write to the coach". Bookings now happen in a scheduling
+-- tool, and this table is the app's copy of them: one row per booked session, so the screen can
+-- say when it starts, how long until it starts, and where to join.
+--
+-- NOTHING HERE IS CALENDLY-SHAPED
+-- ------------------------------
+-- Calendly's webhooks need its Standard plan; the free tier has no webhooks, no post-booking
+-- redirect and one active event type, so it cannot serve the 30- and 60-minute sessions at all.
+-- Which scheduler the owner ends up paying for (or replacing with a free Google Calendar
+-- appointment schedule) is therefore an open question, and this table is written so that the
+-- answer never reaches it:
+--
+--   external_id         the provider's own id for this booking-for-this-person. Calendly's
+--                       invitee uri; a Google Calendar event id; whatever the next one calls it.
+--                       Unique, and the reason a delivery repeated twice writes one row.
+--   external_event_id   the provider's id for the session itself, which several people could
+--                       in principle share.
+--   source              a short slug naming the ingestion path, validated by shape and not
+--                       against a list — so adding one is a new caller, never a migration.
+--                       In use or foreseen: 'calendly_webhook', 'google_calendar', 'admin'.
+--
+-- Only `calendly_webhook` exists today (supabase/functions/calendly-webhook/), and only on a paid
+-- Calendly plan. A second source fills the same columns through the same two functions below.
+--
+-- IDENTITY, AND WHY AN EMAIL HERE GRANTS NOTHING
+-- ----------------------------------------------
+-- A scheduler knows a person by the address typed into its form, which anybody can type. So the
+-- address is a *join key*, never an identity: a row may exist for an address that never signs in,
+-- and it does nothing until somebody holds a confirmed session for that address. Reading is
+-- `public.current_email()`, which resolves through `auth.uid()` → a confirmed, unbanned
+-- `auth.users` row — exactly as purchases (0001) and subscriptions (0005) do it. Booking a slot
+-- therefore cannot grant access to anything; it only makes a card appear for the person who can
+-- actually prove that address.
+--
+-- IDEMPOTENCY AND RESCHEDULES
+-- ---------------------------
+-- `external_id` is unique, so a delivery repeated twice writes once. Rescheduling is the awkward
+-- case, because at least one provider does not have an event for it: Calendly cancels the old
+-- invitee (with `rescheduled: true`) and creates a new one carrying `old_invitee`, i.e. a new
+-- `external_id` for the same session. `apply_coach_booking()` takes that predecessor id and
+-- *moves* the existing row onto the new booking instead of adding a second one. A cancellation
+-- marks the row cancelled and keeps it: the person should see that the session they had is gone,
+-- and the coach should still see that it happened.
+-- =============================================================================
+
+create table if not exists public.coach_bookings (
+  id                   uuid primary key default gen_random_uuid(),
+  -- The address the person gave the scheduler. A join key, not an identity — see the header.
+  email                citext not null,
+  -- The provider's ids. `external_id` is unique per booking and is the idempotency key.
+  external_id          text not null unique,
+  external_event_id    text not null,
+  -- Set when this row replaced an earlier booking, kept so support can follow a reschedule back.
+  previous_external_id text,
+  starts_at            timestamptz not null,
+  ends_at              timestamptz not null,
+  -- The IANA zone the person booked in, as the provider recorded it. See `my_coach_bookings`.
+  timezone             text,
+  -- Where to join. A conference location carries `join_url`; a physical one carries text instead,
+  -- so the two are kept apart rather than squeezed into one column that means different things.
+  join_url             text,
+  location_kind        text,
+  location_text        text,
+  cancel_url           text,
+  reschedule_url       text,
+  status               text not null default 'active' check (status in ('active', 'cancelled')),
+  cancel_reason        text,
+  event_name           text,
+  source               text not null default 'calendly_webhook',
+  created_at           timestamptz not null default now(),
+  updated_at           timestamptz not null default now()
+);
+
+comment on table public.coach_bookings is
+  'One-to-one sessions booked with the coach, whatever scheduler they came from. A reschedule moves the row; a cancellation keeps it.';
+
+alter table public.coach_bookings drop constraint if exists coach_bookings_email_len;
+alter table public.coach_bookings add constraint coach_bookings_email_len
+  check (length(email::text) <= 254) not valid;
+alter table public.coach_bookings drop constraint if exists coach_bookings_external_id_len;
+alter table public.coach_bookings add constraint coach_bookings_external_id_len
+  check (length(external_id) between 1 and 400) not valid;
+alter table public.coach_bookings drop constraint if exists coach_bookings_external_event_id_len;
+alter table public.coach_bookings add constraint coach_bookings_external_event_id_len
+  check (length(external_event_id) between 1 and 400) not valid;
+alter table public.coach_bookings drop constraint if exists coach_bookings_replaces_len;
+alter table public.coach_bookings add constraint coach_bookings_replaces_len
+  check (previous_external_id is null or length(previous_external_id) <= 400) not valid;
+alter table public.coach_bookings drop constraint if exists coach_bookings_order;
+alter table public.coach_bookings add constraint coach_bookings_order
+  check (ends_at > starts_at) not valid;
+-- An IANA zone name, loosely: enough to keep junk out of Intl.DateTimeFormat on the client.
+alter table public.coach_bookings drop constraint if exists coach_bookings_timezone_fmt;
+alter table public.coach_bookings add constraint coach_bookings_timezone_fmt
+  check (timezone is null or timezone ~ '^[A-Za-z][A-Za-z0-9+_/-]{1,63}$') not valid;
+/*
+ * Every url the app may render as a link has to be https. The payload is attacker-shaped in the
+ * worst case, and a `javascript:` or `data:` value that reaches an anchor is the whole exploit —
+ * so it is refused at the column rather than sanitised at every call site.
+ */
+alter table public.coach_bookings drop constraint if exists coach_bookings_join_url_https;
+alter table public.coach_bookings add constraint coach_bookings_join_url_https
+  check (join_url is null or (join_url ~ '^https://' and length(join_url) <= 2000)) not valid;
+alter table public.coach_bookings drop constraint if exists coach_bookings_cancel_url_https;
+alter table public.coach_bookings add constraint coach_bookings_cancel_url_https
+  check (cancel_url is null or (cancel_url ~ '^https://' and length(cancel_url) <= 2000)) not valid;
+alter table public.coach_bookings drop constraint if exists coach_bookings_reschedule_url_https;
+alter table public.coach_bookings add constraint coach_bookings_reschedule_url_https
+  check (reschedule_url is null or (reschedule_url ~ '^https://' and length(reschedule_url) <= 2000)) not valid;
+/*
+ * `location_kind` is capped rather than enumerated. Calendly's set today is physical,
+ * outbound_call, inbound_call, google_conference, zoom_conference, gotomeeting,
+ * microsoft_teams_conference, custom and ask_invitee — and it grows whenever they add a
+ * conferencing partner. An enum here would turn that into a failed webhook and a booking the
+ * person never sees; the client already treats "has a join_url" as the thing that matters.
+ */
+alter table public.coach_bookings drop constraint if exists coach_bookings_location_kind_len;
+alter table public.coach_bookings add constraint coach_bookings_location_kind_len
+  check (location_kind is null or length(location_kind) <= 40) not valid;
+alter table public.coach_bookings drop constraint if exists coach_bookings_location_text_len;
+alter table public.coach_bookings add constraint coach_bookings_location_text_len
+  check (location_text is null or length(location_text) <= 500) not valid;
+alter table public.coach_bookings drop constraint if exists coach_bookings_event_name_len;
+alter table public.coach_bookings add constraint coach_bookings_event_name_len
+  check (event_name is null or length(event_name) <= 200) not valid;
+alter table public.coach_bookings drop constraint if exists coach_bookings_cancel_reason_len;
+alter table public.coach_bookings add constraint coach_bookings_cancel_reason_len
+  check (cancel_reason is null or length(cancel_reason) <= 500) not valid;
+/*
+ * `source` is checked for shape, not for membership of a list, and deliberately — an enumerated
+ * constraint would mean a migration every time the owner changes her mind about which scheduler
+ * she is paying for, which is exactly the change this table exists to absorb. `subscriptions.source`
+ * (0005) is capped the same way for the same reason.
+ */
+alter table public.coach_bookings drop constraint if exists coach_bookings_source_fmt;
+alter table public.coach_bookings add constraint coach_bookings_source_fmt
+  check (source ~ '^[a-z][a-z0-9_]{1,39}$') not valid;
+
+-- The only query the app makes: this person's sessions, soonest first.
+create index if not exists coach_bookings_email_starts_idx
+  on public.coach_bookings (email, starts_at desc);
+-- The coach's list: what is coming up, across everybody.
+create index if not exists coach_bookings_status_starts_idx
+  on public.coach_bookings (status, starts_at);
+
+drop trigger if exists coach_bookings_touch on public.coach_bookings;
+create trigger coach_bookings_touch
+  before update on public.coach_bookings
+  for each row execute function public.set_updated_at();
+
+alter table public.coach_bookings enable row level security;
+
+-- The coach and the owner read and write everything, as with purchases and subscriptions.
+drop policy if exists "coach_bookings: admins all" on public.coach_bookings;
+create policy "coach_bookings: admins all"
+  on public.coach_bookings for all
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
+
+/*
+ * Everybody else reads their own rows and only their own. This is a read policy and there is no
+ * matching write policy on purpose: bookings are made in the scheduler and written by ingestion with
+ * the service role. A signed-in person can never insert, move or cancel a booking through the API,
+ * including their own — that would be a way to write a session into somebody else's account.
+ */
+drop policy if exists "coach_bookings: owner select" on public.coach_bookings;
+create policy "coach_bookings: owner select"
+  on public.coach_bookings for select
+  to authenticated
+  using (email = public.current_email());
+
+revoke all on public.coach_bookings from anon, authenticated;
+grant select, insert, update, delete on public.coach_bookings to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- my_coach_bookings — the signed-in person's own sessions, soonest first.
+--
+-- `timezone` is passed through rather than used here: the row records the zone the person booked
+-- in, but the app shows the time in the zone of the device they are holding, which is the one
+-- they are actually living in when the session starts. The stored value is the fallback for a
+-- browser that reports nothing useful. See src/lib/coach/booking.ts.
+-- -----------------------------------------------------------------------------
+drop view if exists public.my_coach_bookings;
+create view public.my_coach_bookings
+with (security_invoker = false)
+as
+  select b.id, b.starts_at, b.ends_at, b.timezone, b.join_url, b.location_kind, b.location_text,
+         b.cancel_url, b.reschedule_url, b.status, b.event_name
+  from public.coach_bookings b
+  where b.email = public.current_email()
+  order by b.starts_at;
+
+revoke all on public.my_coach_bookings from anon, authenticated;
+grant select on public.my_coach_bookings to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- apply_coach_booking — a booking was made, or moved. Called by the ingestion path with the
+-- service role; never by a signed-in user.
+--
+-- Idempotent on `p_external_id`: the same delivery twice writes one row. When `p_previous_external_id`
+-- names a row we already have, that row is *moved* onto the new booking — a reschedule is the same
+-- session at a new time, not a second session. Provider-neutral: see the header.
+-- -----------------------------------------------------------------------------
+create or replace function public.apply_coach_booking(
+  p_email                text,
+  p_external_id          text,
+  p_external_event_id    text,
+  p_starts_at            timestamptz,
+  p_ends_at              timestamptz,
+  p_timezone             text default null,
+  p_join_url             text default null,
+  p_location_kind        text default null,
+  p_location_text        text default null,
+  p_cancel_url           text default null,
+  p_reschedule_url       text default null,
+  p_event_name           text default null,
+  p_previous_external_id text default null,
+  p_source               text default 'calendly_webhook'
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email    citext;
+  v_external  text;
+  v_previous text;
+  v_source   text;
+  v_id       uuid;
+begin
+  -- Only the service role (the webhook) and the SQL editor: never a signed-in user.
+  if coalesce(current_setting('request.jwt.claims', true), '') <> ''
+     and coalesce(current_setting('request.jwt.claims', true)::json ->> 'role', '') <> 'service_role' then
+    raise exception 'not_allowed' using errcode = '42501';
+  end if;
+
+  v_email   := public.normalize_email(p_email);
+  v_external := nullif(trim(coalesce(p_external_id, '')), '');
+  if v_external is null then
+    raise exception 'invalid_external_id' using errcode = 'P0001';
+  end if;
+  if p_starts_at is null or p_ends_at is null or p_ends_at <= p_starts_at then
+    raise exception 'invalid_times' using errcode = 'P0001';
+  end if;
+  -- By shape, like the column: a new ingestion path is a new caller, not a new migration.
+  if p_source is null or p_source !~ '^[a-z][a-z0-9_]{1,39}$' then
+    raise exception 'invalid_source' using errcode = 'P0001';
+  end if;
+  v_source   := p_source;
+  v_previous := nullif(trim(coalesce(p_previous_external_id, '')), '');
+
+  -- A reschedule: move the row we already hold onto the new booking rather than inserting.
+  if v_previous is not null and v_previous <> v_external then
+    update public.coach_bookings
+       set email                = v_email,
+           external_id          = v_external,
+           external_event_id    = p_external_event_id,
+           previous_external_id = v_previous,
+           starts_at            = p_starts_at,
+           ends_at              = p_ends_at,
+           timezone             = p_timezone,
+           join_url             = p_join_url,
+           location_kind        = p_location_kind,
+           location_text        = p_location_text,
+           cancel_url           = p_cancel_url,
+           reschedule_url       = p_reschedule_url,
+           status               = 'active',
+           cancel_reason        = null,
+           event_name           = coalesce(p_event_name, event_name),
+           source               = v_source
+     where external_id = v_previous
+     returning id into v_id;
+    if v_id is not null then
+      return v_id;
+    end if;
+    -- The earlier booking never reached us (the webhook was added mid-flight, or the first
+    -- delivery failed). Fall through and record the new one on its own.
+  end if;
+
+  insert into public.coach_bookings as cb (
+    email, external_id, external_event_id, previous_external_id, starts_at, ends_at, timezone,
+    join_url, location_kind, location_text, cancel_url, reschedule_url, status, event_name, source
+  )
+  values (
+    v_email, v_external, p_external_event_id, v_previous, p_starts_at, p_ends_at, p_timezone,
+    p_join_url, p_location_kind, p_location_text, p_cancel_url, p_reschedule_url, 'active',
+    p_event_name, v_source
+  )
+  on conflict (external_id) do update
+    set email                = excluded.email,
+        external_event_id    = excluded.external_event_id,
+        previous_external_id = coalesce(excluded.previous_external_id, cb.previous_external_id),
+        starts_at            = excluded.starts_at,
+        ends_at              = excluded.ends_at,
+        timezone             = excluded.timezone,
+        join_url             = excluded.join_url,
+        location_kind        = excluded.location_kind,
+        location_text        = excluded.location_text,
+        cancel_url           = excluded.cancel_url,
+        reschedule_url       = excluded.reschedule_url,
+        -- A replayed "booked" delivery never resurrects a booking cancelled afterwards: the
+        -- cancellation is the later fact about the same external id.
+        status               = cb.status,
+        event_name           = coalesce(excluded.event_name, cb.event_name),
+        source               = excluded.source,
+        updated_at           = now()
+  returning cb.id into v_id;
+
+  return v_id;
+end;
+$$;
+
+comment on function public.apply_coach_booking(text, text, text, timestamptz, timestamptz, text, text, text, text, text, text, text, text, text) is
+  'Service-role only: record or move a coach booking. Idempotent per external id; a reschedule moves the existing row.';
+
+revoke execute on function public.apply_coach_booking(text, text, text, timestamptz, timestamptz, text, text, text, text, text, text, text, text, text)
+  from public, anon, authenticated;
+grant execute on function public.apply_coach_booking(text, text, text, timestamptz, timestamptz, text, text, text, text, text, text, text, text, text)
+  to service_role;
+
+-- -----------------------------------------------------------------------------
+-- cancel_coach_booking — the person (or the coach) cancelled. The row stays: the person needs
+-- to see that the session is gone, and the coach needs the history.
+--
+-- Returns the row id, or null when the booking was never recorded here — which is normal for a
+-- cancellation that arrives for a booking made before ingestion was switched on, and is not an
+-- error the caller should retry.
+-- -----------------------------------------------------------------------------
+create or replace function public.cancel_coach_booking(
+  p_external_id text,
+  p_reason      text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_external text;
+  v_id      uuid;
+begin
+  if coalesce(current_setting('request.jwt.claims', true), '') <> ''
+     and coalesce(current_setting('request.jwt.claims', true)::json ->> 'role', '') <> 'service_role' then
+    raise exception 'not_allowed' using errcode = '42501';
+  end if;
+
+  v_external := nullif(trim(coalesce(p_external_id, '')), '');
+  if v_external is null then
+    raise exception 'invalid_external_id' using errcode = 'P0001';
+  end if;
+
+  update public.coach_bookings
+     set status        = 'cancelled',
+         cancel_reason = left(nullif(trim(coalesce(p_reason, '')), ''), 500)
+   where external_id = v_external
+   returning id into v_id;
+
+  return v_id;
+end;
+$$;
+
+comment on function public.cancel_coach_booking(text, text) is
+  'Service-role only: mark a coach booking cancelled. Never deletes; null when the booking is unknown.';
+
+revoke execute on function public.cancel_coach_booking(text, text) from public, anon, authenticated;
+grant execute on function public.cancel_coach_booking(text, text) to service_role;
+
+-- =============================================================================
+-- 0015_drop_steps.sql — steps leave the product.
+-- =============================================================================
+
+-- =============================================================================
+-- 0015 — steps leave the product.
+--
+-- WHY. The owner's rule, in her own words: «Он либо стекается либо его нет
+-- вообще. Потому что пользователь не будет заниматься трекингом одних и тех же
+-- шагов в разных приложениях.» Either the step count syncs from the phone's own
+-- health app, or the feature does not exist.
+--
+-- It cannot sync. Forma is a Telegram Mini App — a WebView — and:
+--   • Apple HealthKit is a native iOS framework with no browser API at all. The
+--     only way to read it is to ship a native app.
+--   • Google Fit's REST API stopped accepting new developer registrations on
+--     1 May 2024 and shuts down at the end of 2026, so it cannot even be applied
+--     for.
+--   • Health Connect, its replacement, reads on-device data from a native
+--     Android app. There is no web endpoint.
+--   • The Google Health API (the former Fitbit Web API) is a cloud API for
+--     Fitbit and Pixel Watch accounts — not the phone's Health app, and not
+--     something a person without one of those devices has anything in.
+--
+-- So the number could only ever be typed in by hand, which is what the app did,
+-- and which is the arrangement the rule rejects. Everything that counted steps
+-- is therefore removed rather than left switched off.
+--
+-- ⚠️ THIS DROPS DATA AND CANNOT BE UNDONE. `public.daily_logs` holds every day
+-- anyone ever logged, together with the screenshot path that went with it. Take
+-- a backup first if any of it is worth keeping — on a project that has not
+-- launched, it is test data and it is not.
+--
+-- Objects in the `proofs` bucket under `steps/<user_id>/…` are NOT deleted here:
+-- SQL cannot remove files from Storage. After this runs they are unreachable
+-- (the policies that granted access are gone) and can be deleted from the
+-- Storage screen, or left to sit.
+--
+-- Safe to re-run: every drop is `if exists`, and both functions are rewritten
+-- with `create or replace`.
+-- =============================================================================
+
+begin;
+
+-- -----------------------------------------------------------------------------
+-- 1) The leaderboard stops counting step points.
+--
+-- Same function, minus the `d` CTE that summed `daily_logs` and minus the cap
+-- that clamped it. A course board never counted steps in the first place
+-- (`where p_course_id is null`), so only the global board changes.
+-- -----------------------------------------------------------------------------
+create or replace function public.get_leaderboard(
+  p_period    text default 'week',
+  p_course_id text default null,
+  p_limit     int  default 100
+)
+returns table (
+  user_id      uuid,
+  display_name text,
+  avatar_seed  text,
+  points       bigint,
+  rank         bigint,
+  is_me        boolean
+)
+language plpgsql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  -- Defence in depth: the engine ceiling (basePoints 250 × harder 1.25 × streak 1.2).
+  -- workout_sessions_guard already clamps per workout, but the board is the one place
+  -- every athlete sees, so it clamps again.
+  c_max_session_points constant int := 375;
+
+  v_me      uuid := auth.uid();
+  v_limit   int  := least(greatest(coalesce(p_limit, 100), 1), 500);
+  v_week_ts timestamp;
+  v_from    timestamptz;
+begin
+  if v_me is null then
+    raise exception 'not_authenticated' using errcode = '42501';
+  end if;
+
+  if p_period is null or p_period not in ('week', 'all') then
+    raise exception 'invalid_period' using errcode = 'P0001';
+  end if;
+
+  if p_course_id is not null and p_course_id !~ '^[a-z0-9_]{2,40}$' then
+    raise exception 'invalid_course' using errcode = 'P0001';
+  end if;
+
+  -- Monday 00:00 UTC of the current ISO week.
+  v_week_ts := date_trunc('week', now() at time zone 'utc');
+  v_from    := v_week_ts at time zone 'utc';
+
+  return query
+  with totals as (
+    select ws.user_id as uid,
+           sum(least(greatest(ws.points, 0), c_max_session_points))::bigint as pts
+    from public.workout_sessions ws
+    where ws.completed_at is not null
+      and ws.completed_at <= now()
+      and (p_period = 'all' or ws.completed_at >= v_from)
+      and (p_course_id is null or ws.course_id = p_course_id)
+    group by ws.user_id
+  ),
+  ranked as (
+    select t.uid, t.pts, rank() over (order by t.pts desc, t.uid) as rnk
+    from totals t
+    where t.pts > 0
+  ),
+  top as (
+    select r.uid, r.pts, r.rnk from ranked r order by r.rnk, r.uid limit v_limit
+  ),
+  me as (
+    select r.uid, r.pts, r.rnk from ranked r where r.uid = v_me
+    union all
+    -- Caller without points yet: last place, 0 points.
+    select v_me, 0::bigint, (select count(*) from ranked) + 1
+    where not exists (select 1 from ranked r where r.uid = v_me)
+  ),
+  rows_out as (
+    select * from top
+    union
+    select * from me
+  )
+  select
+    ro.uid,
+    -- Clamped again on the way out: this row is relayed to every other athlete.
+    left(coalesce(nullif(trim(p.display_name), ''), 'Athlete ' || left(ro.uid::text, 4)), 60),
+    left(coalesce(p.avatar_seed, left(ro.uid::text, 8)), 64),
+    ro.pts,
+    ro.rnk,
+    ro.uid = v_me
+  from rows_out ro
+  left join public.profiles p on p.id = ro.uid
+  order by ro.rnk, ro.uid;
+end;
+$$;
+
+revoke execute on function public.get_leaderboard(text, text, int) from public, anon;
+grant execute on function public.get_leaderboard(text, text, int) to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- 2) All-time totals stop adding step points.
+-- -----------------------------------------------------------------------------
+create or replace function public.get_my_totals()
+returns table (points bigint, workouts bigint, minutes bigint)
+language sql
+stable
+security invoker
+set search_path = pg_catalog, public, extensions
+as $$
+  select
+    coalesce((select sum(ws.points) from public.workout_sessions ws
+              where ws.user_id = auth.uid() and ws.completed_at is not null), 0)::bigint as points,
+    coalesce((select count(*) from public.workout_sessions ws
+              where ws.user_id = auth.uid() and ws.completed_at is not null), 0)::bigint as workouts,
+    coalesce((select sum(ws.duration_sec) from public.workout_sessions ws
+              where ws.user_id = auth.uid() and ws.completed_at is not null), 0)::bigint / 60 as minutes;
+$$;
+
+revoke execute on function public.get_my_totals() from public, anon;
+grant execute on function public.get_my_totals() to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- 3) The storage policies for step screenshots, and the function behind them.
+--
+-- The `proofs` bucket itself stays — the club's own proof lives in it under
+-- `marathon/…` and is governed by 0011's policies, which are untouched.
+-- -----------------------------------------------------------------------------
+drop policy if exists "proofs: steps own read"   on storage.objects;
+drop policy if exists "proofs: steps own insert" on storage.objects;
+drop policy if exists "proofs: steps own update" on storage.objects;
+drop policy if exists "proofs: steps own delete" on storage.objects;
+
+drop function if exists public.owns_step_proof_path(text);
+
+-- -----------------------------------------------------------------------------
+-- 4) The table, its trigger and its scoring function.
+--
+-- The trigger goes with the table (`drop table` takes it), but the two functions
+-- are separate objects and have to be named.
+-- -----------------------------------------------------------------------------
+drop table if exists public.daily_logs cascade;
+
+drop function if exists public.daily_logs_set_points();
+drop function if exists public.steps_points(int, int);
+
+-- -----------------------------------------------------------------------------
+-- 5) The rest day's step goal, in the course builder.
+--
+-- A rest day was completed by reaching a number of steps; it is now simply a day
+-- that is marked as taken. The column is dropped rather than ignored so the
+-- admin screen and the published bundle cannot disagree about whether it exists.
+-- -----------------------------------------------------------------------------
+-- `if exists` on the table as well: this file is order-independent, and a throwaway database
+-- built for the smoke suite has 0001-0004 but not yet 0008, which creates this table.
+alter table if exists public.admin_course_days drop column if exists steps_goal;
+
+commit;
+
+-- =============================================================================
+-- 0016_club_membership.sql — the club is a subscription, not a cohort.
+-- =============================================================================
+
+-- =============================================================================
+-- 0016 — the club is a subscription, not a cohort.
+--
+-- The defect this fixes, in the owner's words: «У нас каждую неделю новый
+-- лидерборд для всех и все. Если ты в клубе то ты участвуешь. Если нет то нет.»
+--
+-- What the code did instead: the club was a `marathons` row and you were in it
+-- only if somebody had written your email into `marathon_members` by hand — the
+-- `club-join` workflow, reading a list out of a repository secret. That is
+-- inherited from the marathon this schema was built for, where the coach ran a
+-- closed cohort and typed the names in. A club has no cohort. Paying IS the
+-- membership.
+--
+-- The visible symptom: the coach opened the club tab and got «Ты в клубе» over
+-- the sales screen — `gameAccess` let him past the gate (he is entitled), and
+-- then `my_marathons()` found no row for his address and returned nothing, so
+-- there was no task, no board and no challenge. Everything built to the Figma
+-- mockups lives inside that screen, so none of it was reachable.
+--
+-- Three things here, and nothing is deleted:
+--
+--   1. `marathons.is_club` — which row IS the club. One at a time.
+--   2. `days` may exceed 100, so the club does not end.
+--   3. `club_access()` and `join_club()` — the gate, in the database.
+--
+-- **The gate is re-implemented server-side on purpose.** `gameAccess` (the
+-- TypeScript) decides whether to *draw* the tab; it cannot decide who gets a row
+-- in `marathon_members`, because it runs on the customer's phone. An RPC that
+-- took the client's word for it would be a paywall anyone signed in could walk
+-- through by calling it directly. So `club_access()` reads the same two facts
+-- from the tables — a live subscription, or a course activated inside the trial
+-- window — and the two definitions have to be kept in step. `GAME_TRIAL_DAYS`
+-- in src/app/features/marathon/gameAccess.ts is the other half of this rule.
+--
+-- ## Calendar weeks without touching the scoring
+--
+-- The owner asked for the leaderboard to reset on calendar weeks. It already
+-- resets every seven days — `marathon_week_of(day)` is `((day - 1) / 7) + 1`,
+-- counted from `starts_on` — so the whole of "calendar weeks" is **starting the
+-- club on a Monday**. Then day 1 is a Monday, days 1..7 are one calendar week,
+-- and every bucket after it is too.
+--
+-- That is deliberately not a rewrite of `marathon_week_of`. Every point the club
+-- has ever scored is derived through it (`marathon_scores` filters the week's
+-- tasks with it, and points are computed rather than stored), so changing it
+-- rewrites history for everyone. A Monday start gives the identical result for
+-- the price of a date.
+--
+-- Requires 0011_marathon.sql.
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- 1. Which marathon is the club.
+--
+-- A flag rather than a magic slug: `join_club()` has to find it from inside the
+-- database, and a string constant compiled into a function is the kind of thing
+-- that survives a rename of the row it points at and then silently matches
+-- nothing.
+--
+-- The partial unique index is the whole guard. Two clubs would mean a member
+-- joined to one of them and scored on the other, and the failure would look like
+-- an empty board rather than like a duplicate.
+-- -----------------------------------------------------------------------------
+alter table public.marathons
+  add column if not exists is_club boolean not null default false;
+
+comment on column public.marathons.is_club is
+  'The one continuous club. Anyone whose subscription (or course trial) is live joins it by opening the tab; every other marathon is a closed cohort the coach fills by hand.';
+
+create unique index if not exists marathons_one_club_idx
+  on public.marathons (is_club) where is_club;
+
+-- -----------------------------------------------------------------------------
+-- 2. The club does not end.
+--
+-- `days` was capped at 100 with the comment "far past anything a daily-proof
+-- format survives; it is a guard rail, not a target" — true of a marathon, and
+-- exactly wrong for a club that runs for as long as people pay. Past `days` the
+-- day counter stops (`my_marathons` takes `least(day_index, days)`), so a club
+-- on 7 days would sit on day 7 for ever, repeating day 7's task.
+--
+-- The guard rail stays, ten years out. A number this size is still a typo
+-- detector; it just is not a horizon any more.
+-- -----------------------------------------------------------------------------
+alter table public.marathons drop constraint if exists marathons_days_check;
+alter table public.marathons add constraint marathons_days_check
+  check (days between 1 and 3700);
+
+-- -----------------------------------------------------------------------------
+-- 3a. club_access — may the caller be in the club right now?
+--
+-- The same two grounds the app draws the tab on, read from the tables:
+--
+--   • a live subscription — `subscription_live()` is already the one definition
+--     of that, and a cancelled subscription stays live until the period it paid
+--     for runs out;
+--   • a course activated within the trial window — `purchases.activated_at` is
+--     stamped when the coach confirms the payment, so a refunded course takes
+--     its trial with it and no second table can drift out of step.
+--
+-- Admins always pass: the coach has to be able to open the club he runs without
+-- buying his own subscription, and he is the reason this bug was reported.
+-- -----------------------------------------------------------------------------
+create or replace function public.club_access()
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+  select
+    public.is_admin()
+    or exists (
+      select 1 from public.subscriptions s
+      where s.email = public.current_email()
+        and public.subscription_live(s.status, s.expires_at)
+    )
+    or exists (
+      select 1 from public.purchases p
+      where p.email = public.current_email()
+        and p.status = 'active'
+        and p.activated_at is not null
+        -- 7 days, matching GAME_TRIAL_DAYS in gameAccess.ts. The two are one rule
+        -- in two places; change them together.
+        and p.activated_at > now() - interval '7 days'
+    );
+$$;
+
+revoke execute on function public.club_access() from public, anon;
+grant execute on function public.club_access() to authenticated;
+
+comment on function public.club_access() is
+  'Server-side twin of gameAccess(): a live subscription, a course inside its 7-day trial, or an admin.';
+
+-- -----------------------------------------------------------------------------
+-- 3b. join_club — put the caller in the club, if they are entitled to be.
+--
+-- Idempotent, and safe to call on every open of the tab: it either does nothing
+-- or reactivates a row. Returns the club's id so the caller can tell "you are in"
+-- from "there is no club" without a second round trip.
+--
+-- `team_id` is null and stays null. The club is `team_size = 1` — «каждый сам за
+-- себя» — and `marathon_members_check_team` refuses a member pointing at a team
+-- in that mode, so a row carrying one would not insert at all.
+--
+-- `display_name` is left null on purpose: the board then reads the name off the
+-- person's own profile, which is the name they chose for themselves.
+--
+-- A member the coach removed by hand is **not** silently let back in. `status`
+-- is only lifted back to 'active' for a row this function could have written —
+-- one with no note and no display name the coach set. Anything he touched is his
+-- decision, and a self-join that undoes a removal would be the product arguing
+-- with its own admin.
+-- -----------------------------------------------------------------------------
+create or replace function public.join_club()
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_club  uuid;
+  v_email citext := public.current_email();
+begin
+  if v_email is null or not public.club_access() then
+    return null;
+  end if;
+
+  select id into v_club
+  from public.marathons
+  where is_club and status = 'active'
+  limit 1;
+
+  if v_club is null then
+    return null;
+  end if;
+
+  insert into public.marathon_members (marathon_id, email, team_id, status)
+  values (v_club, v_email, null, 'active')
+  on conflict (marathon_id, email) do update
+    set status = case
+      when public.marathon_members.status = 'removed'
+       and public.marathon_members.note is null
+       and public.marathon_members.display_name is null
+      then 'active'
+      else public.marathon_members.status
+    end
+  returning marathon_id into v_club;
+
+  return v_club;
+end;
+$$;
+
+revoke execute on function public.join_club() from public, anon;
+grant execute on function public.join_club() to authenticated;
+
+comment on function public.join_club() is
+  'Self-join the club on the strength of a live subscription or a course trial. Idempotent; returns the club id, or null when there is no club or no entitlement.';
+
+-- -----------------------------------------------------------------------------
+-- 4. The club itself.
+--
+-- A row of its own rather than promoting `klub_test`, and that is the whole
+-- reason it is here: the test week is seeded with seven fictional members on
+-- `@example.test`, and promoting it would put them on the leaderboard of every
+-- paying member. The test week is left exactly as it is — still running, still
+-- the owner's to play with, archived by hand whenever she is done with it.
+--
+-- `starts_on` is **this week's Monday**, which is the entire implementation of
+-- "the leaderboard resets on calendar weeks": `marathon_week_of` buckets seven
+-- days from the start, so a Monday start makes every bucket a Monday-to-Sunday
+-- week. `date_trunc('week', …)` is ISO — Monday — in every locale, unlike
+-- `extract(dow …)`, which counts from Sunday.
+--
+-- Ten years of `days`, so the club does not end. No tasks: the coach writes the
+-- day's task in the admin, and a club seeded with invented ones would be putting
+-- words in his mouth on a screen members pay to read.
+--
+-- Idempotent on the slug, and it deliberately does **not** rewrite `starts_on`
+-- on a re-run. Moving the start would shift every task's day index and rewrite
+-- which week every point was earned in.
+-- -----------------------------------------------------------------------------
+insert into public.marathons (
+  slug, title, description, status, starts_on, days, team_size, timezone, due_time, prize, is_club
+)
+values (
+  'club',
+  'Клуб маленьких шагов',
+  'Одно небольшое задание в день и общая таблица. Каждую неделю таблица начинается заново.',
+  'active',
+  date_trunc('week', current_date)::date,
+  3650,
+  1,                      -- каждый сам за себя
+  'Europe/Moscow',
+  '22:00',
+  'Час с тренером и создателем Forma',
+  true
+)
+on conflict (slug) do update set
+  status   = 'active',
+  days     = greatest(public.marathons.days, 3650),
+  is_club  = true;
+
+-- -----------------------------------------------------------------------------
+-- 5. my_marathons carries is_club.
+--
+-- Two marathons can be running at once — the club, and a closed round the coach
+-- is putting people into by hand — and the app has to know which is which. It
+-- used to take "the first active one", ordered by start date, which would hand a
+-- member the test week simply because it started later.
+--
+-- Same body as 0011 with one column added; replacing the function is the only
+-- way Postgres allows a change to its return type, so the drop is required and
+-- carries no data.
+-- -----------------------------------------------------------------------------
+drop function if exists public.my_marathons();
+
+create or replace function public.my_marathons()
+returns table (
+  id          uuid,
+  slug        text,
+  title       text,
+  description text,
+  status      text,
+  starts_on   date,
+  days        int,
+  team_size   int,
+  prize       text,
+  day_index   int,
+  week        int,
+  total_weeks int,
+  member_id   uuid,
+  team_id     uuid,
+  team_name   text,
+  is_club     boolean
+)
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+  select
+    m.id, m.slug, m.title, m.description, m.status, m.starts_on, m.days, m.team_size, m.prize,
+    least(public.marathon_day_index(m.id), m.days) as day_index,
+    public.marathon_week_of(least(public.marathon_day_index(m.id), m.days)) as week,
+    public.marathon_week_of(m.days) as total_weeks,
+    mem.id, mem.team_id, t.name, m.is_club
+  from public.marathons m
+  join public.marathon_members mem
+    on mem.marathon_id = m.id
+   and mem.status = 'active'
+   and mem.email = public.current_email()
+  left join public.marathon_teams t on t.id = mem.team_id
+  where m.status in ('active', 'finished')
+  order by m.is_club desc, m.starts_on desc;
+$$;
+
+revoke execute on function public.my_marathons() from public, anon;
+grant execute on function public.my_marathons() to authenticated;
+
+-- =============================================================================
+-- 0017_club_first_weeks.sql — the club's first three weeks of tasks.
+-- =============================================================================
+
+-- =============================================================================
+-- 0017 — the club's first three weeks of tasks.
+--
+-- A one-off fill, so the club is not an empty screen on the day people are let
+-- into it. **Everything after this is written in the admin**, one task a
+-- morning, by the coach — this file is a runway, not a schedule, and nothing
+-- here should ever be edited to change next week.
+--
+-- ## What is written, and what is deliberately not
+--
+-- Twenty-one tasks, one a day, keyed to `day_index` 1..21 — the club started on
+-- a Monday, so those are exactly three calendar weeks. Only days from **today
+-- onwards** are inserted: a task on a day that has already passed is a row
+-- nobody could have delivered, and it would sit in the week's scoring as points
+-- everybody missed.
+--
+-- They are small on purpose, and none of them is a maximum. «Не выжимай
+-- максимум» is the instruction the onboarding gives in the coach's voice, and a
+-- club task that contradicted it on day two would be the product arguing with
+-- itself. So: a walk, a stretch, a glass of water, a number of squats spread
+-- across a day — things anyone can do in the clothes they are wearing, and
+-- things a person with a bad knee can scale without being told to.
+--
+-- No `media_url` on any of them. The card draws the coach's picture above the
+-- title, and the honest answer to "which picture" is that he has not taken them
+-- yet; the same stock frame twenty-one times would read as a fault rather than
+-- as a photograph. The field is in the admin and the day he attaches one it
+-- appears.
+--
+-- Nothing here claims a benefit. No «сожжёшь N калорий», no «за две недели
+-- уйдёт», no percentages — `docs/SPEC.md` forbids invented statistics, and the
+-- screen this text lands on is one people pay to read.
+--
+-- ## The shape
+--
+--   rule = 'per_member'   the club is team_size = 1: you deliver, you score.
+--   proof_kind mostly 'done'; a few numbers where a figure is the point, one
+--   photograph for the coach only, and a line of text at the end of each week.
+--   points 8..15, heavier where the task costs more of the day.
+--
+-- Idempotent: the range is cleared first, but only of tasks **nobody has
+-- delivered against** — a task with proof on it belongs to the people who did
+-- it, and deleting it would cascade their submissions away.
+--
+-- Requires 0016_club_membership.sql.
+-- =============================================================================
+
+do $$
+declare
+  v_club  uuid;
+  v_today int;
+begin
+  select id into v_club from public.marathons where is_club limit 1;
+  if v_club is null then
+    raise exception 'no_club' using hint = 'Run 0016_club_membership.sql first.';
+  end if;
+
+  v_today := greatest(public.marathon_day_index(v_club), 1);
+
+  delete from public.marathon_tasks t
+  where t.marathon_id = v_club
+    and t.day_index between v_today and 21
+    and not exists (
+      select 1 from public.marathon_submissions s where s.task_id = t.id
+    );
+
+  insert into public.marathon_tasks
+    (marathon_id, day_index, sort_order, title, body, proof_kind, unit, target_num, rule, points,
+     proof_visibility)
+  select
+    v_club, v.day, 0, v.title, v.body, v.proof_kind, v.unit, v.target_num, 'per_member', v.points,
+    /*
+     * A photograph goes to the coach and to nobody else, and it is derived here rather than typed
+     * per row so the two can never disagree: day 13's body says «видит только тренер», and a row
+     * that left the default 'team' on it would make the screen lie about who is looking. Everything
+     * else is a fact and a figure, which the board shows anyway.
+     */
+    case when v.proof_kind = 'media' then 'coach' else 'team' end
+  from (values
+    -- --- week 1 -------------------------------------------------------------
+    (1,  'Двадцать приседаний до завтрака',
+         'Не на скорость и не на счёт до отказа. Двадцать спокойных, с прямой спиной — просто чтобы тело проснулось раньше телефона.',
+         'done', null::text, null::numeric, 10),
+    (2,  'Стакан воды до кофе',
+         'Ровно один стакан и ровно до, а не вместо. Кофе никто не отменял.',
+         'done', null, null, 8),
+    (3,  'Десять минут пешком',
+         'Где угодно: до магазина подальше, круг вокруг дома, одна остановка ногами. Считается всё, что не диван.',
+         'done', null, null, 10),
+    (4,  'Пешком по лестнице',
+         'Сегодня лифт мимо. Если живёшь на двенадцатом — хотя бы половину, остальное лифтом, это честно.',
+         'done', null, null, 12),
+    (5,  'Планка — сколько держится',
+         'Без рекордов. Встал, подержал с прямой спиной, записал секунды. Спина округлилась — значит уже всё, это и есть твоё число.',
+         'number', 'сек', null, 10),
+    (6,  'Сорок минут на улице',
+         'Не тренировка — просто время снаружи. Пешком, с собакой, с коляской, с наушниками. Сорок минут подряд или двумя заходами.',
+         'number', 'мин', 40, 12),
+    (7,  'Итог недели одной строкой',
+         'Что получилось, что нет и что мешало. Одно предложение, честное — оно не для отчёта, а чтобы самому увидеть неделю целиком.',
+         'text', null, null, 10),
+    -- --- week 2 -------------------------------------------------------------
+    (8,  'Десять минут растяжки',
+         'Спина, задняя поверхность бедра, грудной отдел. Тянем до «тянет», а не до «больно» — это разные ощущения и путать их не надо.',
+         'done', null, null, 10),
+    (9,  'Сто приседаний за день',
+         'Можно разбить как угодно: пять по двадцать между делами считаются так же, как сто подряд. Важно, чтобы к вечеру их было сто.',
+         'done', null, null, 15),
+    (10, 'День без сахара',
+         'Без добавленного: конфеты, газировка, сахар в кофе. Фрукты — это фрукты, их никто не трогает.',
+         'done', null, null, 12),
+    (11, 'Отжимания, три подхода',
+         'Сколько получается за подход — столько и делай. С колен или от стола — тоже отжимания, техника важнее высоты.',
+         'done', null, null, 12),
+    (12, 'Двадцать минут пешком после ужина',
+         'Самая недооценённая привычка из всех. Спокойным шагом, сразу после еды.',
+         'number', 'мин', 20, 10),
+    (13, 'Фото тарелки',
+         'Один обычный приём пищи, без подготовки к съёмке. Видит только тренер — это не лента, а разговор про еду с человеком, который в ней разбирается.',
+         'media', null, null, 10),
+    (14, 'Итог недели одной строкой',
+         'Та же строка, что и в прошлое воскресенье. Через неделю их будет интересно сравнить.',
+         'text', null, null, 10),
+    -- --- week 3 -------------------------------------------------------------
+    (15, 'Зарядка десять минут',
+         'Любая, какая нравится. Суставы, немного пульса, и всё — это разогрев дня, а не тренировка.',
+         'done', null, null, 10),
+    (16, 'Час на улице',
+         'Набирается за день по кускам: дорога, обед, вечерняя прогулка. Считаем суммарно.',
+         'number', 'мин', 60, 12),
+    (17, 'Планка — сколько держится',
+         'То же, что в первую неделю. Сравни с тем числом, но не гонись за ним: сегодняшнее число — это сегодняшнее число.',
+         'number', 'сек', null, 10),
+    (18, 'Стакан воды до кофе',
+         'Возвращаем. Мелочь, которая держится только на повторении.',
+         'done', null, null, 8),
+    (19, 'Пятьдесят берпи за день',
+         'Самое тяжёлое за три недели — и всё равно можно разложить на пять по десять. Колени берегут: шагом вместо прыжка, это полноценный вариант.',
+         'done', null, null, 15),
+    (20, 'Десять минут растяжки',
+         'После вчерашнего — самое то. Спокойно, без фанатизма.',
+         'done', null, null, 10),
+    (21, 'Итог трёх недель',
+         'Что изменилось за три недели и что из этого хочется оставить насовсем. Одно-два предложения.',
+         'text', null, null, 12)
+  ) as v (day, title, body, proof_kind, unit, target_num, points)
+  where v.day >= v_today;
+end $$;
+
+-- =============================================================================
+-- 0018_consents.sql — the consent log: proof that a person agreed, and to which text.
+-- =============================================================================
+
+-- =============================================================================
+-- 0018 — the consent log: proof that a person agreed, and to which text.
+--
+-- ## Why a table and not a checkbox
+--
+-- The order form on the site has had an unticked consent box since it was
+-- written, and the box works: nothing is submitted until it is ticked. What it
+-- does not do is leave a trace. 152-ФЗ ст. 9 ч. 3 puts the burden of proof on
+-- the operator — «обязанность предоставить доказательство получения согласия
+-- субъекта персональных данных … возлагается на оператора» — and a checkbox
+-- that lives for one page load proves nothing the day it is asked about.
+--
+-- So every consent becomes a row: who, which text, which version of it, when,
+-- in which language, and from which surface. That row is the evidence.
+--
+-- ## Three kinds, because they are three different agreements
+--
+--   privacy  the policy on processing personal data. Given by everybody, at the
+--            first point where an address is collected.
+--   offer    the public offer (оферта) — a contract, not a data question. Given
+--            when ordering, never in the app.
+--   health   the one that made this file necessary. Onboarding asks what to
+--            protect, and the answers include гипертония and беременность.
+--            That is «состояние здоровья», a special category under 152-ФЗ
+--            ст. 10, and ст. 10 ч. 2 п. 1 allows it only on a consent given in
+--            writing. Ст. 9 ч. 4 treats an electronic document signed with an
+--            electronic signature as equivalent, and the sign-in this consent
+--            sits behind is a one-time code delivered to a verified address —
+--            the simple electronic signature the clause contemplates.
+--
+--            It is therefore a **separate** consent, asked separately, refusable
+--            separately, and the app has to work without it: `record_consent`
+--            is never a precondition for anything, and a person who declines
+--            simply trains without the adaptations that need the answers.
+--
+-- ## What is deliberately not here
+--
+-- No IP address and no user agent. They are the usual companions of a consent
+-- log and they would make this table more probative, but they are also more
+-- personal data collected for a reason the policy does not currently state, and
+-- the operator here is one coach and one designer. The email, the timestamp and
+-- the document version are what a request from Роскомнадзор actually asks for.
+--
+-- Requires 0001_init.sql (citext, normalize_email, profiles) and
+-- 0002_functions.sql (create_order, which this file replaces in place).
+-- Idempotent.
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- The log.
+-- -----------------------------------------------------------------------------
+create table if not exists public.consents (
+  id          uuid primary key default gen_random_uuid(),
+  -- Null for a consent given on the site before the person ever signed in: at
+  -- that moment there is no auth user, only an address. Cascades so that
+  -- deleting the account destroys the log with it — ст. 21 says destroy, and a
+  -- consent record for data that no longer exists has nothing left to prove.
+  user_id     uuid references auth.users (id) on delete cascade,
+  email       citext not null,
+  kind        text not null check (kind in ('privacy', 'offer', 'health')),
+  -- The version of the text that was shown, e.g. '2026-09-18'. Not a hash of it:
+  -- a hash proves nothing to a reader, and the versions are published pages.
+  doc_version text not null check (length(doc_version) between 1 and 40),
+  locale      text not null default 'ru' check (locale in ('ru', 'en')),
+  source      text not null default 'app' check (length(source) <= 40),
+  granted_at  timestamptz not null default now(),
+  -- Set by revoke_consent(). The row is kept rather than deleted: a withdrawal
+  -- is itself an event the operator has to be able to date.
+  revoked_at  timestamptz
+);
+
+comment on table public.consents is
+  'Consent log (152-ФЗ ст. 9 ч. 3): who agreed, to which document version, when. One row per grant.';
+
+-- One live grant per address per kind per version, so a form submitted twice
+-- does not grow the table and re-reading the same version is a no-op.
+create unique index if not exists consents_live_uniq
+  on public.consents (email, kind, doc_version)
+  where revoked_at is null;
+
+create index if not exists consents_user_idx on public.consents (user_id, kind)
+  where revoked_at is null;
+
+alter table public.consents enable row level security;
+
+-- Granted explicitly rather than inherited from the project's default privileges:
+-- reading is for signed-in people (and RLS below decides which rows), writing is
+-- for nobody — every insert goes through a security-definer function, so a client
+-- cannot forge a consent for an address that is not theirs.
+revoke all on public.consents from anon, authenticated;
+grant select on public.consents to authenticated;
+
+-- Read your own, by the address on the verified session. No insert, update or
+-- delete policy at all: everything is written through the functions below, so a
+-- client cannot forge a consent for somebody else's address.
+drop policy if exists "consents: owner select" on public.consents;
+create policy "consents: owner select"
+  on public.consents for select
+  to authenticated
+  using (user_id = auth.uid() or email = public.current_email());
+
+drop policy if exists "consents: admin select" on public.consents;
+create policy "consents: admin select"
+  on public.consents for select
+  to authenticated
+  using (public.is_admin());
+
+-- -----------------------------------------------------------------------------
+-- record_consent — the signed-in path (the app).
+--
+-- Takes the address from the session rather than from the caller: the whole
+-- point of the log is that the row cannot be written on somebody else's behalf.
+-- -----------------------------------------------------------------------------
+create or replace function public.record_consent(
+  p_kinds   text[],
+  p_version text,
+  p_locale  text default 'ru',
+  p_source  text default 'app'
+)
+returns int
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email  citext := public.current_email();
+  v_uid    uuid := auth.uid();
+  v_locale text;
+  v_source text;
+  v_kind   text;
+  v_n      int := 0;
+begin
+  if v_uid is null or v_email is null then
+    raise exception 'not_signed_in' using errcode = '42501';
+  end if;
+  if p_version is null or length(trim(p_version)) = 0 or length(p_version) > 40 then
+    raise exception 'invalid_version' using errcode = 'P0001';
+  end if;
+
+  v_locale := case when p_locale in ('ru', 'en') then p_locale else 'ru' end;
+  v_source := left(coalesce(nullif(trim(p_source), ''), 'app'), 40);
+
+  foreach v_kind in array coalesce(p_kinds, array[]::text[]) loop
+    if v_kind not in ('privacy', 'offer', 'health') then
+      raise exception 'invalid_kind' using errcode = 'P0001';
+    end if;
+
+    insert into public.consents (user_id, email, kind, doc_version, locale, source)
+    values (v_uid, v_email, v_kind, p_version, v_locale, v_source)
+    on conflict (email, kind, doc_version) where revoked_at is null do update
+      -- The address consented on the site before signing in: attach the account
+      -- to the row that already exists instead of writing a second one.
+      set user_id = coalesce(consents.user_id, excluded.user_id);
+    v_n := v_n + 1;
+  end loop;
+
+  return v_n;
+end;
+$$;
+
+revoke execute on function public.record_consent(text[], text, text, text) from public, anon;
+grant execute on function public.record_consent(text[], text, text, text) to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- my_consents — what the signed-in person has agreed to, for the app to decide
+-- whether to ask. Returns the live grants only.
+-- -----------------------------------------------------------------------------
+create or replace function public.my_consents()
+returns table (kind text, doc_version text, granted_at timestamptz)
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+  select c.kind, c.doc_version, c.granted_at
+  from public.consents c
+  where c.revoked_at is null
+    and (c.user_id = auth.uid() or c.email = public.current_email())
+  order by c.granted_at desc;
+$$;
+
+revoke execute on function public.my_consents() from public, anon;
+grant execute on function public.my_consents() to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- revoke_consent — ст. 9 ч. 2: consent may be withdrawn at any time.
+--
+-- Withdrawing the health consent is the only one that changes what the app may
+-- do while the account still exists; withdrawing `privacy` is a request to stop
+-- processing altogether, which means deleting the account, and that is handled
+-- by a human on the support address (docs/COMPLIANCE.md). So this function
+-- marks the log and says so — it does not pretend to delete anything.
+-- -----------------------------------------------------------------------------
+create or replace function public.revoke_consent(p_kind text)
+returns int
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email citext := public.current_email();
+  v_n     int;
+begin
+  if auth.uid() is null or v_email is null then
+    raise exception 'not_signed_in' using errcode = '42501';
+  end if;
+  if p_kind not in ('privacy', 'offer', 'health') then
+    raise exception 'invalid_kind' using errcode = 'P0001';
+  end if;
+
+  update public.consents
+     set revoked_at = now()
+   where revoked_at is null
+     and kind = p_kind
+     and (user_id = auth.uid() or email = v_email);
+
+  get diagnostics v_n = row_count;
+  return v_n;
+end;
+$$;
+
+revoke execute on function public.revoke_consent(text) from public, anon;
+grant execute on function public.revoke_consent(text) to authenticated;
+
+-- =============================================================================
+-- create_order, with the consent it was already collecting.
+--
+-- The form has always refused to submit until the box is ticked, so a successful
+-- call *is* the consent event; what was missing was writing it down. The version
+-- of the text the visitor was shown travels with the call, because the site is
+-- static and a page cached in a browser for a week shows an older policy than
+-- the one deployed today — the row has to name the text that was actually on
+-- screen, not the text that is current at the moment the row is written.
+--
+-- Dropped and recreated rather than overloaded: two `create_order`s, one with
+-- four parameters and one with five, make a four-key PostgREST call ambiguous.
+-- The new parameter has a default, so a browser still running the previous
+-- bundle keeps working after this migration and before the site redeploys.
+-- =============================================================================
+drop function if exists public.create_order(text, text, text, text);
+
+create or replace function public.create_order(
+  p_email            text,
+  p_course_id        text,
+  p_locale           text default 'ru',
+  p_source           text default 'landing',
+  p_consent_version  text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  c_ip_limit     constant int := 30;
+  c_global_limit constant int := 200;
+  c_window       constant interval := interval '1 hour';
+
+  v_email   citext;
+  v_locale  text;
+  v_source  text;
+  v_headers json;
+  v_forward text[];
+  v_ip      text;
+  v_bucket  text;
+  v_limit   int;
+  v_hits    int;
+  v_pending int;
+  v_id      uuid;
+begin
+  v_email := public.normalize_email(p_email);
+
+  if p_course_id is null
+     or p_course_id !~ '^[a-z0-9_]{2,40}$'
+     or not exists (select 1 from public.courses c where c.id = p_course_id) then
+    raise exception 'invalid_course' using errcode = 'P0001', hint = 'Unknown course id';
+  end if;
+
+  v_locale := case when p_locale in ('ru', 'en') then p_locale else 'ru' end;
+  v_source := left(coalesce(nullif(trim(p_source), ''), 'landing'), 40);
+
+  begin
+    v_headers := nullif(current_setting('request.headers', true), '')::json;
+  exception when others then
+    v_headers := null;
+  end;
+
+  v_forward := string_to_array(coalesce(v_headers ->> 'x-forwarded-for', ''), ',');
+  v_ip := coalesce(
+    nullif(btrim(coalesce(v_headers ->> 'cf-connecting-ip', '')), ''),
+    nullif(btrim(coalesce(v_headers ->> 'x-real-ip', '')), ''),
+    nullif(btrim(coalesce(v_forward[cardinality(v_forward)], '')), '')
+  );
+
+  if v_ip is null then
+    v_bucket := 'global';
+    v_limit  := c_global_limit;
+  else
+    v_bucket := left(v_ip, 45);
+    v_limit  := c_ip_limit;
+  end if;
+
+  insert into public.order_throttle as t (bucket, window_start, hits)
+  values (v_bucket, now(), 1)
+  on conflict (bucket) do update
+    set window_start = case when t.window_start < now() - c_window then now() else t.window_start end,
+        hits         = case when t.window_start < now() - c_window then 1 else t.hits + 1 end
+  returning t.hits into v_hits;
+
+  if v_hits > v_limit then
+    raise exception 'too_many_orders' using errcode = 'P0001', hint = 'Too many orders from this address, try again later';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtextextended('forma:create_order:' || v_email::text, 0));
+
+  select count(*) into v_pending
+  from public.purchases
+  where email = v_email and status = 'pending';
+
+  if v_pending >= 10 then
+    raise exception 'too_many_pending' using errcode = 'P0001', hint = 'Too many pending orders for this email';
+  end if;
+
+  insert into public.purchases (email, course_id, status, source, locale)
+  values (v_email, p_course_id, 'pending', v_source, v_locale)
+  on conflict (email, course_id) do update
+    set updated_at = now(),
+        source     = excluded.source,
+        locale     = coalesce(excluded.locale, purchases.locale),
+        status     = 'pending'
+    where purchases.status <> 'active'
+  returning id into v_id;
+
+  if v_id is null then
+    select p.id into v_id
+    from public.purchases p
+    where p.email = v_email and p.course_id = p_course_id;
+  end if;
+
+  -- The consent, after the throttle and the locks: a call that was refused above
+  -- never got as far as agreeing to anything, and the row must not claim it did.
+  -- Two kinds, because ordering is both a data question and a contract.
+  if p_consent_version is not null and length(trim(p_consent_version)) between 1 and 40 then
+    insert into public.consents (user_id, email, kind, doc_version, locale, source)
+    select null, v_email, k, trim(p_consent_version), v_locale, v_source
+    from unnest(array['privacy', 'offer']) as k
+    on conflict (email, kind, doc_version) where revoked_at is null do nothing;
+  end if;
+
+  return v_id;
+end;
+$$;
+
+revoke execute on function public.create_order(text, text, text, text, text) from public;
+grant execute on function public.create_order(text, text, text, text, text) to anon, authenticated;
+
+-- =============================================================================
+-- 0019_free_first_workout.sql — первая тренировка бесплатно, и активация курса без участия тренера.
+-- =============================================================================
+
+-- =============================================================================
+-- 0019 — первая тренировка бесплатно, и активация курса без участия тренера.
+--
+-- Две независимые вещи, которые попали в один файл потому, что обе про одно:
+-- путь человека от «посмотрел» до «оплатил» больше нигде не упирается в
+-- ожидание.
+--
+-- ## 1. Пробная тренировка
+--
+-- До сих пор курс был заперт ровно в одном настоящем месте: insert-политика
+-- `workout_sessions` требовала активную покупку. Всё остальное — тусклая
+-- карточка, заглушка «Этого курса у тебя пока нет» — это клиент, и клиент
+-- переписывается. Тексты тренировок и так читает любой вошедший (`courses` и
+-- `workouts` открыты на select), а первая тренировка курса ещё и целиком
+-- напечатана на его странице сайта в блоке «Пример тренировки». То есть мы
+-- ничего не раздаём заново — мы разрешаем **выполнить и записать**.
+--
+-- Правило: начать сессию на чужом курсе можно, **пока на нём нет ни одной
+-- завершённой**. Не флаг на курсе и не отдельная таблица — вычитание из того,
+-- что уже есть, как пробная неделя клуба сделана вычитанием из `activated_at`.
+-- Оно не может разойтись с покупкой и не требует, чтобы кто-то его выключал.
+--
+-- **Чего оно намеренно не делает.** Оно не проверяет, что узел — первый.
+-- Порядка узлов база не знает вовсе: `public.courses` это allowlist из одного
+-- `id`, а порядок живёт в `admin_course_days` и в скомпилированном контенте.
+-- Клиент предлагает только первый узел, остальные заперты; тот, кто подделает
+-- запрос, получит одну запись о тренировке, текст которой и так открыт. Приз
+-- не стоит связывания политики с таблицей дней.
+--
+-- ## 2. Активация по оплате
+--
+-- Раньше курс включал тренер руками в админке. Подписки при этом активировались
+-- сами — `prodamus-webhook` → `apply_subscription_payment`. Асимметрия была
+-- видна покупателю: за подписку доступ открывался сразу, за курс — «обычно в
+-- тот же день».
+--
+-- `apply_course_payment()` закрывает её. Какой курс оплачен, функция решает не
+-- по сумме: суммы совпадают между продуктами, а короткие ссылки Prodamus
+-- теряют параметры, которые им передали (docs/SETUP.md §7.1). Вместо этого она
+-- читает то, что система уже знает, — **ожидающую покупку**. И форма на сайте,
+-- и шторка разблокировки в приложении пишут `pending`-строку через
+-- `create_order()` до того, как отправить человека платить; платёж эту строку
+-- подтверждает. Никакой карты цен, которую надо держать в синхроне, не нужно.
+--
+-- Неоднозначность не угадывается: если ожидающих покупок несколько, функция
+-- отвечает null и строка остаётся тренеру. Молчаливая активация не того курса
+-- хуже, чем задержка.
+--
+-- Требует 0001_init.sql и 0002_functions.sql. От 0018_consents.sql **не
+-- зависит** — файлы можно применять в любом порядке. Идемпотентна.
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- purchases.provider_ref — идентификатор платежа у провайдера.
+--
+-- Нужен для идемпотентности: Prodamus доставляет уведомление повторно, если наш
+-- ответ не дошёл, и дважды доставленный платёж должен активировать один раз.
+-- Подписки хранят его в своей таблице с того же дня, покупки — нет, потому что
+-- до сих пор их активировал человек, а человек не нажимает «Активировать»
+-- дважды по ошибке сети.
+-- -----------------------------------------------------------------------------
+alter table public.purchases add column if not exists provider_ref text;
+
+alter table public.purchases drop constraint if exists purchases_provider_ref_len;
+alter table public.purchases add constraint purchases_provider_ref_len
+  check (provider_ref is null or length(provider_ref) <= 120)
+  not valid;
+
+comment on column public.purchases.provider_ref is
+  'Payment id at the provider (Prodamus order_id). Idempotency key for apply_course_payment().';
+
+-- Частичный, потому что null-ов здесь большинство и они не конфликтуют.
+create index if not exists purchases_provider_ref_idx
+  on public.purchases (provider_ref)
+  where provider_ref is not null;
+
+-- =============================================================================
+-- can_try_course — есть ли у вызывающего право на пробную тренировку здесь.
+--
+-- Security definer: `workout_sessions` читается по своей политике и так, но
+-- функция вызывается **изнутри** политики этой же таблицы, и рекурсии там быть
+-- не должно.
+-- =============================================================================
+create or replace function public.can_try_course(p_course_id text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+  select auth.uid() is not null
+     and p_course_id is not null
+     and p_course_id <> 'custom'
+     and exists (select 1 from public.courses c where c.id = p_course_id)
+     and not exists (
+       select 1
+       from public.workout_sessions s
+       where s.user_id = auth.uid()
+         and s.course_id = p_course_id
+         and s.completed_at is not null
+     );
+$$;
+
+comment on function public.can_try_course(text) is
+  'True while the caller has no completed session in this course: the one free workout (0019).';
+
+revoke execute on function public.can_try_course(text) from public, anon;
+grant execute on function public.can_try_course(text) to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- Политика вставки сессий. Ветка `custom` не тронута — она про персональную
+-- тренировку, назначенную тренером, и к покупкам курса отношения не имеет.
+-- -----------------------------------------------------------------------------
+drop policy if exists "workout_sessions: owner insert" on public.workout_sessions;
+create policy "workout_sessions: owner insert"
+  on public.workout_sessions for insert
+  to authenticated
+  with check (
+    user_id = auth.uid()
+    and (
+      (
+        course_id <> 'custom'
+        and (public.has_entitlement(course_id) or public.can_try_course(course_id))
+      )
+      or (course_id = 'custom' and public.can_play_custom(node_id))
+    )
+  );
+
+-- =============================================================================
+-- my_trained_courses — курсы, где у вызывающего есть хотя бы одна завершённая
+-- тренировка. Один вызов вместо одного на курс.
+--
+-- Клиенту это нужно, чтобы не обещать бесплатную тренировку там, где она уже
+-- потрачена. Считать это по `recentSessions` нельзя: там окно из двадцати
+-- последних записей, и человек, сделавший пробу месяц назад и с тех пор много
+-- тренировавшийся, выпал бы из него — экран предложил бы «Попробовать», а
+-- политика отказала бы во вставке. Кнопка есть, нажатие отказано — худшее, что
+-- можно показать.
+--
+-- Security definer, потому что ответ — это агрегат по своим же строкам, и
+-- политика select на `workout_sessions` его и так разрешает; definer здесь
+-- только ради того, чтобы план был один и тот же независимо от RLS.
+-- =============================================================================
+create or replace function public.my_trained_courses()
+returns text[]
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+  select coalesce(array_agg(distinct s.course_id), array[]::text[])
+  from public.workout_sessions s
+  where s.user_id = auth.uid()
+    and s.completed_at is not null;
+$$;
+
+revoke execute on function public.my_trained_courses() from public, anon;
+grant execute on function public.my_trained_courses() to authenticated;
+
+-- =============================================================================
+-- apply_course_payment — включить курс по оплате.
+--
+-- Возвращает id покупки, либо **null**, когда решить однозначно нельзя: вызвавший
+-- (вебхук) тогда отвечает 200 и пишет в лог, а строка остаётся тренеру. Null —
+-- это ответ, а не ошибка: исключение заставило бы Prodamus повторять доставку
+-- вечно из-за того, что человек оплатил, не оформив заказ.
+-- =============================================================================
+create or replace function public.apply_course_payment(
+  p_email        text,
+  p_provider_ref text default null,
+  p_paid_at      timestamptz default now(),
+  p_course_id    text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email  citext;
+  v_ref    text;
+  v_course text;
+  v_count  int;
+  v_id     uuid;
+begin
+  -- Только сервисная роль (вебхук) и SQL-редактор: никогда не вошедший пользователь.
+  if coalesce(current_setting('request.jwt.claims', true), '') <> ''
+     and coalesce(current_setting('request.jwt.claims', true)::json ->> 'role', '') <> 'service_role' then
+    raise exception 'not_allowed' using errcode = '42501';
+  end if;
+
+  v_email := public.normalize_email(p_email);
+  v_ref := left(nullif(trim(p_provider_ref), ''), 120);
+
+  -- Тот же платёж, доставленный повторно.
+  if v_ref is not null then
+    select id into v_id from public.purchases where provider_ref = v_ref limit 1;
+    if v_id is not null then
+      return v_id;
+    end if;
+  end if;
+
+  -- Какой курс. Либо сказали прямо, либо это единственная ожидающая покупка.
+  if p_course_id is not null then
+    if p_course_id !~ '^[a-z0-9_]{2,40}$'
+       or not exists (select 1 from public.courses c where c.id = p_course_id) then
+      raise exception 'invalid_course' using errcode = 'P0001';
+    end if;
+    v_course := p_course_id;
+  else
+    select count(*), min(p.course_id)
+      into v_count, v_course
+    from public.purchases p
+    where p.email = v_email and p.status = 'pending';
+
+    -- Ноль — платёж без заказа; больше одного — неизвестно, за какой из них.
+    -- В обоих случаях решает человек.
+    if v_count <> 1 then
+      return null;
+    end if;
+  end if;
+
+  -- Сериализуем по адресу, как это делает create_order: заказ и оплата могут
+  -- прийти в одну секунду, если человек платит сразу после нажатия.
+  perform pg_advisory_xact_lock(hashtextextended('forma:course_payment:' || v_email::text, 0));
+
+  insert into public.purchases (email, course_id, status, source, activated_at, provider_ref)
+  values (v_email, v_course, 'active', 'prodamus', p_paid_at, v_ref)
+  on conflict (email, course_id) do update
+    set status = 'active',
+        source = 'prodamus',
+        -- Первая активация ставит дату; повторная сохраняет исходную, потому что
+        -- от неё отсчитывается и возврат, и пробная неделя клуба.
+        activated_at = coalesce(purchases.activated_at, excluded.activated_at),
+        provider_ref = coalesce(purchases.provider_ref, excluded.provider_ref),
+        updated_at   = now()
+  returning id into v_id;
+
+  return v_id;
+end;
+$$;
+
+revoke execute on function public.apply_course_payment(text, text, timestamptz, text)
+  from public, anon, authenticated;
+grant execute on function public.apply_course_payment(text, text, timestamptz, text)
+  to service_role;
+
+-- =============================================================================
+-- 0020_payment_emails.sql — оплата с одной почты, аккаунт на другой.
+-- =============================================================================
+
+-- =============================================================================
+-- 0020 — оплата с одной почты, аккаунт на другой.
+--
+-- Всё в этой базе, что касается денег, найдено по почте: `purchases.email`,
+-- `subscriptions.email`, и обе — по `current_email()`, то есть по подтверждённому
+-- адресу входа. Пока покупатель платит с того же адреса, это работает и это
+-- правильно: почта — единственное, что Prodamus про него сообщает.
+--
+-- Но адреса расходятся, и будут расходиться всегда:
+--
+--   * короткая ссылка Prodamus (`payform.ru/xxxxxx/`) перебрасывает на форму
+--     магазина и теряет переданные ей параметры — `?customer_email=` до формы
+--     не доезжает, и покупатель вбивает адрес руками;
+--   * руками он вбивает тот, которым платит: рабочий, привязанный к карте, или
+--     тот, что подставил браузер;
+--   * платит вообще другой человек — муж, жена, компания.
+--
+-- Сейчас такой платёж не теряется только потому, что его находит тренер и
+-- активирует руками. Уведомление приходит, подпись сходится, и дальше
+-- `apply_course_payment` не находит ни одного ожидающего заказа на этот адрес и
+-- возвращает null. В логе строчка, у человека — ничего.
+--
+-- Здесь три вещи, которые это закрывают:
+--
+--   1. `payments` — журнал. Каждое проверенное уведомление записывается, даже
+--      (особенно) то, которое ни к чему не привязалось. Платёж перестаёт быть
+--      строчкой в логе и становится строкой, к которой можно вернуться.
+--   2. `payment_emails` — дополнительные адреса аккаунта. Доступ ищется уже не
+--      по одному адресу, а по всем, которые аккаунт за собой закрепил.
+--   3. `claim_payment(номер заказа)` — как человек закрепляет чужой адрес за
+--      собой: вводит номер заказа из чека Prodamus. Номер знает только тот, кто
+--      платил, — поэтому это доказательство, а не заявление.
+--
+-- **Почему номер заказа, а не просто «вот моя вторая почта».** Второе было бы
+-- на один экран проще и открывало бы дыру: зная адрес чужого покупателя, любой
+-- мог бы привязать его к себе и забрать оплаченный доступ. Номер заказа приходит
+-- в чеке на почту плательщика и больше нигде не появляется.
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- payments — журнал проверенных уведомлений.
+--
+-- Пишет только вебхук (service_role), и только после того, как сошлась подпись:
+-- строка здесь означает «Prodamus подтвердил, что деньги пришли». Читать её
+-- клиенту незачем и нельзя — `claim_payment` ниже сам смотрит в неё от имени
+-- вызывающего и отдаёт только то, что случилось.
+-- -----------------------------------------------------------------------------
+create table if not exists public.payments (
+  id           uuid primary key default gen_random_uuid(),
+  -- Адрес, который плательщик ввёл в форме Prodamus. Не обязательно адрес аккаунта.
+  email        citext not null,
+  amount       numeric(12, 2),
+  -- Номер заказа провайдера. Он же — то, что человек вводит, чтобы забрать платёж,
+  -- и то, по чему повторная доставка узнаётся как повторная.
+  provider_ref text,
+  paid_at      timestamptz not null default now(),
+  -- За что заплатили, как это понял вебхук по сумме: план подписки или курс.
+  intent       text not null default 'course' check (intent in ('monthly', 'annual', 'course')),
+  -- Привязался ли платёж сразу (адрес совпал) или ждёт, пока его заберут.
+  applied      boolean not null default false,
+  claimed_by   uuid references auth.users (id) on delete set null,
+  claimed_at   timestamptz,
+  created_at   timestamptz not null default now()
+);
+
+comment on table public.payments is
+  'Каждое проверенное уведомление Prodamus. applied = привязалось к заказу сразу; остальные ждут claim_payment().';
+
+-- Один номер заказа — одна строка. Повторная доставка того же уведомления
+-- (Prodamus повторяет, пока не получит 200) не создаёт второй платёж.
+create unique index if not exists payments_ref_uniq
+  on public.payments (provider_ref)
+  where provider_ref is not null and provider_ref <> '';
+
+create index if not exists payments_email_idx on public.payments (email);
+
+alter table public.payments enable row level security;
+-- Ни одной политики: никто, кроме service_role (он обходит RLS) и функций
+-- security definer ниже, эту таблицу не видит.
+revoke all on public.payments from anon, authenticated;
+
+-- -----------------------------------------------------------------------------
+-- payment_emails — адреса, с которых аккаунт платит.
+--
+-- `unique (email)` — глобально, а не на аккаунт: один платёжный адрес
+-- принадлежит одному аккаунту. Иначе двое привязали бы один адрес и делили бы
+-- один оплаченный доступ.
+-- -----------------------------------------------------------------------------
+create table if not exists public.payment_emails (
+  id        uuid primary key default gen_random_uuid(),
+  user_id   uuid not null references auth.users (id) on delete cascade,
+  email     citext not null unique,
+  -- Номер заказа, которым этот адрес был доказан. Для поддержки: видно, откуда взялась привязка.
+  linked_by text,
+  linked_at timestamptz not null default now()
+);
+
+comment on table public.payment_emails is
+  'Дополнительные адреса аккаунта: с них приходят оплаты. Привязываются через claim_payment().';
+
+create index if not exists payment_emails_user_idx on public.payment_emails (user_id);
+
+alter table public.payment_emails enable row level security;
+
+drop policy if exists "payment_emails: owner reads" on public.payment_emails;
+create policy "payment_emails: owner reads"
+  on public.payment_emails for select
+  to authenticated
+  using (user_id = auth.uid());
+
+revoke all on public.payment_emails from anon;
+grant select on public.payment_emails to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- my_billing_emails() — все адреса, по которым у этого аккаунта может быть оплата.
+--
+-- Подтверждённый адрес входа плюс привязанные платёжные. Заменяет `current_email()`
+-- ровно в тех местах, где ищутся деньги, — и только там. Членство в клубе,
+-- бронь, согласия, марафон остаются на `current_email()`: это вопрос «кто ты»,
+-- а не «чем ты платил», и расширять его было бы ошибкой.
+-- -----------------------------------------------------------------------------
+create or replace function public.my_billing_emails()
+returns setof citext
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+  select public.current_email()
+  where public.current_email() is not null
+  union
+  select e.email
+  from public.payment_emails e
+  where e.user_id = auth.uid();
+$$;
+
+revoke execute on function public.my_billing_emails() from public, anon;
+grant execute on function public.my_billing_emails() to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- Те самые места, где ищутся деньги. Четыре: доступ к курсу, представление
+-- покупок, представление подписки и доступ в клуб.
+-- -----------------------------------------------------------------------------
+create or replace function public.has_entitlement(p_course_id text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+  select public.is_admin() or exists (
+    select 1
+    from public.purchases p
+    where p.status = 'active'
+      and p.course_id = p_course_id
+      and p.email in (select public.my_billing_emails())
+  );
+$$;
+
+revoke execute on function public.has_entitlement(text) from public, anon;
+grant execute on function public.has_entitlement(text) to authenticated;
+
+drop view if exists public.my_entitlements;
+create view public.my_entitlements
+with (security_invoker = false)
+as
+  select p.course_id, p.activated_at
+  from public.purchases p
+  where p.status = 'active'
+    and p.email in (select public.my_billing_emails())
+  union
+  select c.id as course_id, s.started_at as activated_at
+  from public.subscriptions s
+  cross join public.courses c
+  where public.subscription_live(s.status, s.expires_at)
+    and s.email in (select public.my_billing_emails());
+
+revoke all on public.my_entitlements from anon, authenticated;
+grant select on public.my_entitlements to authenticated;
+
+drop view if exists public.my_subscription;
+create view public.my_subscription
+with (security_invoker = false)
+as
+  select s.plan, s.status, s.started_at, s.expires_at,
+         public.subscription_live(s.status, s.expires_at) as is_live
+  from public.subscriptions s
+  where s.email in (select public.my_billing_emails());
+
+revoke all on public.my_subscription from anon, authenticated;
+grant select on public.my_subscription to authenticated;
+
+create or replace function public.club_access()
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+  select
+    public.is_admin()
+    or exists (
+      select 1 from public.subscriptions s
+      where s.email in (select public.my_billing_emails())
+        and public.subscription_live(s.status, s.expires_at)
+    )
+    or exists (
+      select 1 from public.purchases p
+      where p.email in (select public.my_billing_emails())
+        and p.status = 'active'
+        and p.activated_at is not null
+        -- 7 дней, как GAME_TRIAL_DAYS в gameAccess.ts. Это одно правило в двух
+        -- местах; меняются вместе.
+        and p.activated_at > now() - interval '7 days'
+    );
+$$;
+
+revoke execute on function public.club_access() from public, anon;
+grant execute on function public.club_access() to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- record_payment — вебхук записывает проверенное уведомление.
+--
+-- Только service_role. Идемпотентна по номеру заказа: повторная доставка
+-- возвращает ту же строку и ничего не меняет.
+-- -----------------------------------------------------------------------------
+create or replace function public.record_payment(
+  p_email        text,
+  p_amount       numeric,
+  p_provider_ref text,
+  p_paid_at      timestamptz,
+  p_intent       text,
+  p_applied      boolean
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email citext := lower(btrim(coalesce(p_email, '')));
+  v_ref   text   := nullif(btrim(coalesce(p_provider_ref, '')), '');
+  v_id    uuid;
+begin
+  if v_email = '' then
+    return null;
+  end if;
+  if p_intent is null or p_intent not in ('monthly', 'annual', 'course') then
+    raise exception 'invalid_intent' using errcode = 'P0001';
+  end if;
+
+  if v_ref is not null then
+    select id into v_id from public.payments where provider_ref = v_ref;
+    if v_id is not null then
+      -- Уже записан. Если в прошлый раз он не привязался, а теперь привязался —
+      -- отметим это; больше ничего трогать не нужно.
+      update public.payments
+      set applied = applied or p_applied
+      where id = v_id;
+      return v_id;
+    end if;
+  end if;
+
+  insert into public.payments (email, amount, provider_ref, paid_at, intent, applied)
+  values (v_email, p_amount, v_ref, coalesce(p_paid_at, now()), p_intent, coalesce(p_applied, false))
+  returning id into v_id;
+  return v_id;
+end;
+$$;
+
+revoke execute on function public.record_payment(text, numeric, text, timestamptz, text, boolean)
+  from public, anon, authenticated;
+
+-- -----------------------------------------------------------------------------
+-- claim_payment — «я оплатил(а) с другой почты».
+--
+-- Человек вводит номер заказа из чека Prodamus. Если такой платёж есть и его
+-- ещё никто не забрал, его адрес закрепляется за этим аккаунтом, и оплата
+-- применяется так, как применилась бы сразу: план — подпиской, всё остальное —
+-- единственным ожидающим заказом на курс.
+--
+-- Возвращает, что получилось: 'subscription', 'course' или 'linked' (адрес
+-- привязан, но активировать было нечего — например, заказ на курс не был
+-- оформлен заранее; тогда доступ откроется, как только тренер подтвердит, и
+-- дальше этот адрес уже свой).
+--
+-- И три ответа про неудачу, тоже строкой: 'not_found' — такого номера нет или
+-- платёж уже забран; 'email_taken' — адрес закреплён за другим аккаунтом;
+-- 'rate_limited' — слишком много попыток.
+--
+-- **Почему неудача — это `return`, а не `raise`.** Ограничение на перебор
+-- считается здесь же, в `order_throttle`, и исключение в plpgsql откатывает всё,
+-- что функция успела сделать, — в том числе этот счётчик. То есть на `raise`
+-- неудачная попытка обнуляла бы собственную цену, и перебор номеров был бы
+-- бесплатным: ровно та дыра, ради которой счётчик и заведён. Первый вариант
+-- этой функции так и падал, и тест в supabase/tests/90 это поймал.
+--
+-- Лимит — десять попыток в час на аккаунт, в том же ведре, что и заказы с
+-- лендинга. Неудачная стоит столько же, сколько удачная.
+-- -----------------------------------------------------------------------------
+create or replace function public.claim_payment(p_provider_ref text)
+returns text
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  c_window   constant interval := interval '1 hour';
+  c_max      constant int := 10;
+  v_uid      uuid := auth.uid();
+  v_mine     citext := public.current_email();
+  v_ref      text := nullif(btrim(coalesce(p_provider_ref, '')), '');
+  v_hits     int;
+  v_payment  public.payments%rowtype;
+  v_owner    uuid;
+  v_result   text;
+  v_claims   text;
+begin
+  if v_uid is null or v_mine is null then
+    raise exception 'not_signed_in' using errcode = '42501';
+  end if;
+  if v_ref is null or length(v_ref) > 120 then
+    return 'not_found';
+  end if;
+
+  -- Скользящее окно, то же, что у create_order(). Считается до поиска платежа,
+  -- чтобы неудачные попытки тоже стоили: иначе перебор ничего не стоил бы.
+  insert into public.order_throttle as t (bucket, window_start, hits)
+  values ('claim:' || v_uid::text, now(), 1)
+  on conflict (bucket) do update
+  set window_start = case when t.window_start < now() - c_window then now() else t.window_start end,
+      hits         = case when t.window_start < now() - c_window then 1 else t.hits + 1 end
+  returning hits into v_hits;
+
+  if v_hits > c_max then
+    return 'rate_limited';
+  end if;
+
+  select * into v_payment
+  from public.payments
+  where provider_ref = v_ref
+    and claimed_by is null;
+
+  if not found then
+    return 'not_found';
+  end if;
+
+  -- Адрес уже за кем-то закреплён? Если за этим же аккаунтом — всё в порядке,
+  -- идём дальше; если за чужим — стоп, и не молча.
+  select user_id into v_owner from public.payment_emails where email = v_payment.email;
+  if v_owner is not null and v_owner <> v_uid then
+    return 'email_taken';
+  end if;
+
+  if v_payment.email <> v_mine and v_owner is null then
+    insert into public.payment_emails (user_id, email, linked_by)
+    values (v_uid, v_payment.email, v_ref);
+  end if;
+
+  update public.payments
+  set claimed_by = v_uid,
+      claimed_at = now(),
+      applied    = true
+  where id = v_payment.id;
+
+  /*
+   * И применяем — на собственный адрес аккаунта, потому что именно на него
+   * оформлен ожидающий заказ и именно его увидит `my_entitlements`.
+   *
+   * `apply_subscription_payment` и `apply_course_payment` отказываются работать,
+   * если их зовут с пользовательским JWT: «никогда не вошедший пользователь».
+   * Это правильная защита — она держит дверь, за которой кто угодно выписал бы
+   * себе год подписки, — и здесь её приходится на два вызова снять.
+   *
+   * Почему это не дыра. Защита запрещает вызывать эти функции с произвольными
+   * аргументами. Здесь произвольного нет ни одного: план, номер заказа и дата
+   * прочитаны из строки `payments`, которую записал вебхук после сошедшейся
+   * подписи Prodamus, а адрес — собственный подтверждённый адрес вызывающего.
+   * Единственное, что пришло от человека, — номер заказа, и он уже проверен
+   * выше: без настоящего неоплаченного платежа сюда не доходят.
+   *
+   * `set_config(..., true)` — на транзакцию, и значение возвращается на место
+   * сразу после вызовов, чтобы ничто ниже по коду не выполнялось без клеймов.
+   */
+  v_claims := coalesce(current_setting('request.jwt.claims', true), '');
+  perform set_config('request.jwt.claims', '', true);
+
+  if v_payment.intent in ('monthly', 'annual') then
+    perform public.apply_subscription_payment(
+      v_mine::text, v_payment.intent, v_payment.provider_ref, v_payment.paid_at);
+    v_result := 'subscription';
+  else
+    if public.apply_course_payment(
+         v_mine::text, v_payment.provider_ref, v_payment.paid_at) is not null then
+      v_result := 'course';
+    else
+      v_result := 'linked';
+    end if;
+  end if;
+
+  perform set_config('request.jwt.claims', v_claims, true);
+
+  return v_result;
+end;
+$$;
+
+revoke execute on function public.claim_payment(text) from public, anon;
+grant execute on function public.claim_payment(text) to authenticated;
+
+-- =============================================================================
+-- 0022_replayable_first_workout.sql — пробную тренировку можно перепроходить сколько угодно.
+-- =============================================================================
+
+-- =============================================================================
+-- 0022 — пробную тренировку можно перепроходить сколько угодно.
+--
+-- Владелец: «Сделай возможность пользователю перепроходить первую тренировку и
+-- всегда в бесплатном режиме, не требуя оплаты. Но вот вторую, третью и так
+-- далее у пользователя должна быть возможность её перепроходить, но только
+-- после того, как он уже купил этот курс. То есть до оплаты курса он может
+-- кликать, и мы будем его перенаправлять на пейволл, за исключением первой
+-- тренировки.»
+--
+-- ## Что было не так
+--
+-- `can_try_course()` (0019) разрешала вставку сессии на некупленном курсе,
+-- **пока на нём нет ни одной завершённой**. Первая тренировка была бесплатной
+-- ровно один раз: закончил — и дверь закрылась, включая дверь обратно на ту же
+-- самую тренировку. Для человека, который хочет повторить её через неделю,
+-- потому что в первый раз ничего не понял, это выглядит как отобранный подарок.
+--
+-- ## Новое правило, и почему оно именно такое
+--
+-- > На некупленном курсе можно тренировать **тот узел, который уже
+-- > тренировали**, — и никакой другой.
+--
+-- Формально: вставка проходит, если среди завершённых сессий этого человека на
+-- этом курсе **нет ни одной на другом узле**. Первый раз это верно тривиально
+-- (завершённых нет вовсе), дальше — только для того узла, который и был выбран.
+--
+-- **База по-прежнему не знает порядка узлов, и это правило её об этом не
+-- спрашивает.** 0019 объяснила, почему не спрашивает: `public.courses` — это
+-- allowlist из одного `id`, порядок живёт в `admin_course_days` и в
+-- скомпилированном контенте. Можно было бы завести колонку «бесплатный узел» и
+-- заполнять её из сборки; это ещё одно место, которое обязано не разойтись с
+-- контентом, ради приза, которого нет. Правило «тот же узел» — вычитание из
+-- того, что уже записано, как и пробная неделя клуба, и разойтись ему не с чем.
+--
+-- Что это значит для того, кто подделает запрос: он выберет себе бесплатным не
+-- первый узел, а любой, и сможет повторять его. Ровно та же цена, что и у 0019
+-- (там он получал одну такую запись), а тексты тренировок и так открыты на
+-- select любому вошедшему. Первый узел — правило клиента, и клиент его держит:
+-- `src/app/features/courses/courseAccess.ts`.
+--
+-- ## Клиент изменился сильнее, чем база
+--
+-- До оплаты **любой** узел, кроме первого, ведёт на шторку с ценой — а не на
+-- подсказку «сначала пройди предыдущие». Порядок остаётся для того, кто курс
+-- купил; тому, кто не купил, «ты ещё не дошёл» отвечает не на тот вопрос,
+-- который он задал, нажав на двадцатый день.
+--
+-- Требует 0001_init.sql и 0019_free_first_workout.sql. Идемпотентна.
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- can_train_free_node — можно ли вызывающему тренировать этот узел бесплатно.
+--
+-- Security definer по той же причине, что и can_try_course: функция вызывается
+-- **изнутри** политики `workout_sessions`, и рекурсии там быть не должно.
+-- -----------------------------------------------------------------------------
+create or replace function public.can_train_free_node(p_course_id text, p_node_id text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+  select auth.uid() is not null
+     and p_course_id is not null
+     and p_course_id <> 'custom'
+     and p_node_id is not null
+     and exists (select 1 from public.courses c where c.id = p_course_id)
+     and not exists (
+       select 1
+       from public.workout_sessions s
+       where s.user_id = auth.uid()
+         and s.course_id = p_course_id
+         and s.completed_at is not null
+         and s.node_id is distinct from p_node_id
+     );
+$$;
+
+comment on function public.can_train_free_node(text, text) is
+  'True while every completed session of the caller in this course is on this same node: the one free workout, repeatable (0022).';
+
+revoke execute on function public.can_train_free_node(text, text) from public, anon;
+grant execute on function public.can_train_free_node(text, text) to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- Политика вставки сессий. Ветка `custom` не тронута — она про персональную
+-- тренировку, назначенную тренером, и к покупкам курса отношения не имеет.
+-- -----------------------------------------------------------------------------
+drop policy if exists "workout_sessions: owner insert" on public.workout_sessions;
+create policy "workout_sessions: owner insert"
+  on public.workout_sessions for insert
+  to authenticated
+  with check (
+    user_id = auth.uid()
+    and (
+      (
+        course_id <> 'custom'
+        and (
+          public.has_entitlement(course_id)
+          or public.can_train_free_node(course_id, node_id)
+        )
+      )
+      or (course_id = 'custom' and public.can_play_custom(node_id))
+    )
+  );
+
+-- -----------------------------------------------------------------------------
+-- can_try_course больше не используется ничем.
+--
+-- Она отвечала на вопрос «цела ли проба», а пробы, которая тратится, больше
+-- нет. Оставить её — значит оставить функцию, чей ответ звучит как разрешение
+-- и разрешением больше не является; следующий, кто на неё обопрётся, запрёт
+-- человеку повтор. Дроп идёт **после** пересоздания политики, иначе Postgres
+-- откажет из-за зависимости.
+-- -----------------------------------------------------------------------------
+drop function if exists public.can_try_course(text);
+
+-- =============================================================================
+-- 0023_club_days.sql — дни, в которые человек сдал задание клуба.
+-- =============================================================================
+
+-- =============================================================================
+-- 0023 — дни, в которые человек сдал задание клуба.
+--
+-- Владелец: «в клубе как раз-таки можно сделать вот эту историю со стриком и
+-- показывать, сколько дней подряд ты выполняешь упражнения».
+--
+-- ## Почему это список дат, а не число
+--
+-- Серия — правило, а правило в этом коде живёт в одном месте. Если бы серию
+-- считала база, её пришлось бы считать второй раз в демо-режиме, и два ответа
+-- на один вопрос разошлись бы ровно в тот день, когда правило поменяется.
+-- Поэтому база отвечает на вопрос, на который есть один правильный ответ, —
+-- **в какие дни задание сдано**, — а серию из этих дат считает
+-- `src/app/features/marathon/streak.ts`, покрытый тестами. Демо-режим
+-- отвечает тем же списком из своей базы и попадает в ту же функцию.
+--
+-- ## Почему дата считается от раунда, а не от `submitted_at`
+--
+-- `submitted_at` — это когда нажали кнопку. Пруф, отправленный в час ночи за
+-- вчерашний день, по метке времени попал бы в сегодня, и один день засчитался
+-- бы дважды, а вчерашний пропал. `marathons.starts_on + (day_index - 1)` — это
+-- день, **за который** задание сдано, и он не зависит ни от часового пояса, ни
+-- от того, когда человек дошёл до телефона.
+--
+-- ## Почему через все раунды сразу
+--
+-- Клуб идёт недельными раундами, каждый — своя строка в `marathons`. Считать
+-- внутри одного раунда значило бы обнулять серию каждое воскресенье, а владелец
+-- сказала прямо: «воскресенье и конец недели не ругают серию». Функция смотрит
+-- на все участия этого человека и отдаёт даты подряд, где бы ни проходила
+-- граница раунда.
+--
+-- Требует 0011_marathon.sql. Идемпотентна.
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- my_club_days — даты, за которые у вызывающего есть незачёркнутый пруф.
+--
+-- Security definer: `marathon_submissions` читается по своей политике и так, но
+-- дни нужны по **всем** раундам, включая завершённые и заархивированные, а
+-- политика показа маратонов этого не обещает. Ответ — только свои даты и
+-- ничего больше, так что расширение прав здесь ровно в один столбец.
+--
+-- Горизонт — год с небольшим. Серия длиной в четыреста дней в интерфейсе всё
+-- равно не поместится, а список без границы рос бы вечно и ехал бы на телефон
+-- целиком при каждом открытии вкладки.
+-- -----------------------------------------------------------------------------
+create or replace function public.my_club_days(p_today date default current_date)
+returns setof date
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+  select distinct (m.starts_on + (s.day_index - 1))::date as d
+  from public.marathon_submissions s
+  join public.marathon_members mm on mm.id = s.member_id
+  join public.marathons m on m.id = s.marathon_id
+  -- По почте, а не по user_id: в `marathon_members` нет user_id вовсе (0011, строка 144) —
+  -- тренер добавляет людей до того, как они завели аккаунт, поэтому членство держится на адресе.
+  where mm.email = public.current_email()
+    and s.voided_at is null
+    and (m.starts_on + (s.day_index - 1))::date <= coalesce(p_today, current_date)
+    and (m.starts_on + (s.day_index - 1))::date > coalesce(p_today, current_date) - 400
+  order by d desc;
+$$;
+
+comment on function public.my_club_days(date) is
+  'Dates the caller has an un-voided club proof for, newest first, across every round (0023). The streak is computed from these in the client.';
+
+revoke execute on function public.my_club_days(date) from public, anon;
+grant execute on function public.my_club_days(date) to authenticated;
+
+-- =============================================================================
+-- 0024_done_custom_workouts.sql — какие выданные тренером тренировки уже сделаны.
+-- =============================================================================
+
+-- =============================================================================
+-- 0024 — какие выданные тренером тренировки уже сделаны.
+--
+-- Владелец: «эту тренировку нужно показывать на странице, на вкладке "Курсы"
+-- отдельно плашкой… тренировка висит до тех пор, пока не выполнена».
+--
+-- Чтобы плашка исчезла, экрану надо знать, какие из выданных тренировок
+-- завершены. Своего признака у `assigned_workouts` нет и не должно быть:
+-- выполнение записывается там же, где выполнение всего остального, — строкой в
+-- `workout_sessions` с `course_id = 'custom'` и `node_id` = коротким id
+-- тренировки (`useCustomWorkoutStart.ts`). Это вычитание из того, что уже
+-- записано, как проба курса и пробная неделя клуба.
+--
+-- ## Почему не по `recentSessions`
+--
+-- Стор прогресса держит последние 60 сессий. Тренировка, выданная и сделанная
+-- месяц назад, из этого окна выпадает — и плашка, которую человек закрыл,
+-- вернулась бы. Ровно этот довод записан в `courseAccess.ts` про
+-- `my_trained_courses()`; здесь та же функция для другого ключа.
+--
+-- Требует 0001_init.sql и 0006_custom_workouts.sql. Идемпотентна.
+-- =============================================================================
+
+create or replace function public.my_done_custom_workouts()
+returns text[]
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+  select coalesce(array_agg(distinct s.node_id), array[]::text[])
+  from public.workout_sessions s
+  where s.user_id = auth.uid()
+    and s.course_id = 'custom'
+    and s.completed_at is not null;
+$$;
+
+comment on function public.my_done_custom_workouts() is
+  'Short ids of the coach-built workouts the caller has finished at least once (0024). The card on «Курсы» reads it to know which assignment is still outstanding.';
+
+revoke execute on function public.my_done_custom_workouts() from public, anon;
+grant execute on function public.my_done_custom_workouts() to authenticated;
+
+-- =============================================================================
+-- 0025_admin_analytics.sql — что происходит со всеми, а не с одним: воронка, конверсия, прогресс.
+-- =============================================================================
+
+-- =============================================================================
+-- 0025 — что происходит со всеми, а не с одним: воронка, конверсия, прогресс.
+--
+-- Владелец: «Обязательно добавь внутри админки возможность отслеживать прогресс
+-- всех пользователей, чтобы мы собирали аналитику и могли в дальнейшем улучшать
+-- все приложение на основе реальных данных наших пользователей» и, уточняя,
+-- «я вообще заинтересована просто в том, чтобы раз в неделю заходить и
+-- анализировать аналитику по воронке и по конверсии».
+--
+-- ## Воронка считается по когортам, и это главное решение здесь
+--
+-- Самый простой отчёт — «за эту неделю: вошло 10, купило 3» — почти всегда врёт.
+-- Эти трое могли зайти в марте и купить сегодня; неделя, в которой они посчитаны
+-- покупкой, к их регистрации отношения не имеет, и конверсия «30%» не относится
+-- ни к какой группе людей. Поэтому человек попадает ровно в одну строку — неделю
+-- своего первого входа, — а его покупка считается в этой же строке, когда бы она
+-- ни случилась. Тогда «из 10 вошедших на той неделе купили 3» — это предложение
+-- про одних и тех же десятерых, и его можно сравнивать с соседней неделей.
+--
+-- Цена честности: свежая неделя всегда выглядит хуже старой, потому что её людям
+-- ещё не хватило времени дойти до оплаты. Экран за это отвечает сам — он не
+-- усредняет последнюю неделю вместе с остальными и подписывает её как идущую.
+--
+-- ## Неделя — московская, с понедельника
+--
+-- `date_trunc('week')` в Postgres уже даёт понедельник (ISO). Часовой пояс взят
+-- тот же, что по умолчанию у марафонов (0011), — тренер и почти все занимающиеся
+-- в нём и живут, а отчёт, у которого воскресенье уезжает в следующую неделю,
+-- читается неправильно ровно там, где по нему принимают решения.
+--
+-- ## Почему отдельные функции, а не расширение `admin_people()`
+--
+-- `admin_people()` (0013) отвечает на нажатие клавиши в поле выбора человека и
+-- обязана оставаться дешёвой. Здесь наоборот: это запрос на открытие страницы,
+-- он проходит по всем сессиям. Одна функция на две работы означала бы, что поиск
+-- по имени платит за подсчёт тренировок на каждую букву.
+--
+-- Всё admin-only через `is_admin()`, как и вся 0013. Ни одна из функций не пишет.
+-- Требует 0001_init.sql, 0005_subscriptions.sql, 0013_admin_people.sql.
+-- Идемпотентна.
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- admin_overview — несколько чисел «прямо сейчас», шапкой над воронкой.
+-- -----------------------------------------------------------------------------
+--
+-- `paid_never_signed_in` — единственное число здесь, которое требует действия, а
+-- не размышления: человек заплатил и ни разу не вошёл. Покупка живёт на почте и
+-- может быть раньше регистрации (0013 прямо это оговаривает), так что такие люди
+-- не попадают ни в одну когорту воронки и не видны нигде. Обычно это опечатка в
+-- адресе или письмо, которое не дошло, — и то и другое чинится звонком.
+create or replace function public.admin_overview()
+returns table (
+  people               int,
+  onboarded            int,
+  paying               int,
+  subscribed           int,
+  paid_never_signed_in int,
+  active_7d            int,
+  active_28d           int
+)
+language plpgsql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+begin
+  if not public.is_admin() then
+    raise exception 'not_admin' using errcode = '42501';
+  end if;
+
+  return query
+  select
+    (select count(*)::int from public.profiles),
+    (select count(*)::int from public.profiles p where p.onboarded_at is not null),
+    -- Платящий — это человек, а не покупка: два курса одного человека это один он.
+    (
+      select count(distinct p.id)::int
+      from public.profiles p
+      where exists (
+              select 1 from public.purchases pu
+              where pu.email = p.email and pu.status = 'active'
+            )
+         or exists (
+              select 1 from public.subscriptions s
+              where s.email = p.email
+                and public.subscription_live(s.status, s.expires_at)
+            )
+    ),
+    (
+      select count(distinct p.id)::int
+      from public.profiles p
+      where exists (
+        select 1 from public.subscriptions s
+        where s.email = p.email
+          and public.subscription_live(s.status, s.expires_at)
+      )
+    ),
+    (
+      select count(*)::int
+      from (
+        select pu.email from public.purchases pu where pu.status = 'active'
+        union
+        select s.email from public.subscriptions s
+        where public.subscription_live(s.status, s.expires_at)
+      ) paid
+      where not exists (select 1 from public.profiles p where p.email = paid.email)
+    ),
+    -- Занимался, а не заходил: вход мы не пишем, да и заходить, не тренируясь, —
+    -- не та активность, ради которой всё это.
+    (
+      select count(distinct ws.user_id)::int
+      from public.workout_sessions ws
+      where ws.completed_at is not null and ws.completed_at > now() - interval '7 days'
+    ),
+    (
+      select count(distinct ws.user_id)::int
+      from public.workout_sessions ws
+      where ws.completed_at is not null and ws.completed_at > now() - interval '28 days'
+    );
+end;
+$$;
+
+comment on function public.admin_overview() is
+  'Admin-only: headline numbers for the analytics screen (0025). Read-only.';
+
+revoke execute on function public.admin_overview() from public, anon;
+grant execute on function public.admin_overview() to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- admin_funnel — по неделе первого входа: сколько дошло до каждого шага.
+-- -----------------------------------------------------------------------------
+--
+-- Шаги выбраны так, чтобы каждый был фактом в базе, а не догадкой:
+--   signed_up — есть строка в `profiles` (код подтверждён);
+--   onboarded — `onboarded_at` проставлен;
+--   trained   — есть хоть одна завершённая тренировка (первая всегда бесплатна,
+--               0022, так что это шаг «попробовал», а не «купил»);
+--   repeated  — завершённые тренировки в два разных собственных дня. Именно
+--               `local_date`, а не `completed_at`: две тренировки подряд вечером
+--               и утром — это два дня, а две за один вечер — один;
+--   paid      — есть активная покупка или живая подписка, когда бы ни появилась.
+--
+-- Шага «открыл приложение» здесь нет и не будет, пока мы не пишем входы. Считать
+-- воронку от того, чего не измеряем, — это придумать первое число и поделить на
+-- него все остальные.
+create or replace function public.admin_funnel(p_weeks int default 12)
+returns table (
+  week_start date,
+  signed_up  int,
+  onboarded  int,
+  trained    int,
+  repeated   int,
+  paid       int
+)
+language plpgsql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_weeks int := greatest(1, least(coalesce(p_weeks, 12), 104));
+  v_from  date;
+begin
+  if not public.is_admin() then
+    raise exception 'not_admin' using errcode = '42501';
+  end if;
+
+  v_from := (date_trunc('week', (now() at time zone 'Europe/Moscow'))::date)
+            - ((v_weeks - 1) * 7);
+
+  return query
+  with cohort as (
+    select
+      p.id,
+      p.email,
+      p.onboarded_at,
+      date_trunc('week', (p.created_at at time zone 'Europe/Moscow'))::date as wk
+    from public.profiles p
+    where (p.created_at at time zone 'Europe/Moscow')::date >= v_from
+  ),
+  done as (
+    select
+      ws.user_id,
+      count(distinct ws.local_date)::int as days
+    from public.workout_sessions ws
+    where ws.completed_at is not null
+      and ws.user_id in (select c.id from cohort c)
+    group by ws.user_id
+  )
+  select
+    c.wk,
+    count(*)::int,
+    count(*) filter (where c.onboarded_at is not null)::int,
+    count(*) filter (where coalesce(d.days, 0) >= 1)::int,
+    count(*) filter (where coalesce(d.days, 0) >= 2)::int,
+    count(*) filter (
+      where exists (
+              select 1 from public.purchases pu
+              where pu.email = c.email and pu.status = 'active'
+            )
+         or exists (
+              select 1 from public.subscriptions s
+              where s.email = c.email
+                and public.subscription_live(s.status, s.expires_at)
+            )
+    )::int
+  from cohort c
+  left join done d on d.user_id = c.id
+  group by c.wk
+  order by c.wk desc;
+end;
+$$;
+
+comment on function public.admin_funnel(int) is
+  'Admin-only: the sign-up-week cohort funnel — signed up → onboarded → trained → repeated → paid (0025).';
+
+revoke execute on function public.admin_funnel(int) from public, anon;
+grant execute on function public.admin_funnel(int) to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- admin_progress — «прогресс всех пользователей», по одной строке на человека.
+-- -----------------------------------------------------------------------------
+--
+-- Воронка говорит, сколько людей отвалилось; это — кто именно. Без второго первое
+-- нельзя починить: «на шаге «попробовал» теряем половину» превращается в работу
+-- только тогда, когда видно, кто эта половина и когда они были тут в последний раз.
+--
+-- Сортировка по последней тренировке, а не по дате входа: сверху те, кто занимался
+-- только что, снизу — кто пропал. Никогда не тренировавшиеся идут в самом низу,
+-- новыми вперёд.
+create or replace function public.admin_progress(
+  p_search text default null,
+  p_limit  int  default 200
+)
+returns table (
+  email           citext,
+  display_name    text,
+  created_at      timestamptz,
+  onboarded_at    timestamptz,
+  workouts        int,
+  days            int,
+  points          int,
+  last_workout_at timestamptz,
+  courses         int,
+  subscribed      boolean
+)
+language plpgsql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_term text;
+begin
+  if not public.is_admin() then
+    raise exception 'not_admin' using errcode = '42501';
+  end if;
+
+  -- Тот же escape, что в `admin_people()` (0013): вставленный адрес не должен
+  -- превращаться в шаблон поиска.
+  v_term := nullif(trim(coalesce(p_search, '')), '');
+  if v_term is not null then
+    v_term := '%' || replace(replace(v_term, '\', '\\'), '%', '\%') || '%';
+    v_term := replace(v_term, '_', '\_');
+  end if;
+
+  return query
+  select
+    p.email,
+    p.display_name,
+    p.created_at,
+    p.onboarded_at,
+    coalesce(w.workouts, 0),
+    coalesce(w.days, 0),
+    coalesce(w.points, 0),
+    w.last_at,
+    (
+      select count(*)::int
+      from public.purchases pu
+      where pu.email = p.email and pu.status = 'active'
+    ),
+    exists (
+      select 1
+      from public.subscriptions s
+      where s.email = p.email
+        and public.subscription_live(s.status, s.expires_at)
+    )
+  from public.profiles p
+  left join lateral (
+    select
+      count(*)::int                    as workouts,
+      count(distinct ws.local_date)::int as days,
+      coalesce(sum(ws.points), 0)::int as points,
+      max(ws.completed_at)             as last_at
+    from public.workout_sessions ws
+    where ws.user_id = p.id and ws.completed_at is not null
+  ) w on true
+  where v_term is null
+     or p.email::text ilike v_term escape '\'
+     or coalesce(p.display_name, '') ilike v_term escape '\'
+  order by w.last_at desc nulls last, p.created_at desc
+  limit greatest(1, least(coalesce(p_limit, 200), 1000));
+end;
+$$;
+
+comment on function public.admin_progress(text, int) is
+  'Admin-only: one row per person — workouts done, days trained, points, last seen, what they hold (0025).';
+
+revoke execute on function public.admin_progress(text, int) from public, anon;
+grant execute on function public.admin_progress(text, int) to authenticated;
+
+-- =============================================================================
+-- 0026_telegram_link.sql — кто этот человек в телеграме.
+-- =============================================================================
+
+-- =============================================================================
+-- 0026 — кто этот человек в телеграме.
+--
+-- Без этой строки бот не может написать никому. Он знает chat id только тех, кто
+-- сам ему написал, а приложение знает почту — и связать одно с другим было нечем.
+-- Из-за этого стоят все задачи про сообщения: про оплату, про выданную
+-- тренировку, про победителя недели.
+--
+-- ## Почему здесь нет функции, которую зовёт клиент
+--
+-- Соблазн очевиден: RPC `link_telegram(p_telegram_id)`, клиент читает свой id из
+-- `Telegram.WebApp.initDataUnsafe` и передаёт. Это дыра. Любой вошедший мог бы
+-- назвать чужой telegram id и увести на себя чужие уведомления — включая письма
+-- об оплате. `initDataUnsafe` называется так не случайно.
+--
+-- Проверить подпись `initData` можно только там, где лежит токен бота, а он —
+-- секрет Supabase и в репозиторий (публичный) не попадает никогда. Поэтому
+-- проверка живёт в edge-функции `link-telegram`, она же и пишет сюда сервисным
+-- ключом. Клиенту столбец недоступен на запись: колоночный грант в 0001 перечисляет
+-- разрешённые поля поимённо, и `telegram_id` в него не добавляется.
+--
+-- ## Почему unique
+--
+-- Один телеграм-аккаунт — не больше одного профиля. Иначе человек, сменивший
+-- почту, получал бы по два одинаковых сообщения, а «кому слать» переставало быть
+-- вопросом с одним ответом. Перенос делает сама функция: снимает id со старого
+-- профиля и ставит на новый — это тот же человек, просто вошёл под другой почтой.
+--
+-- ## Почему здесь только столбец
+--
+-- Ни одной функции: показывать «привязан ли телеграм» пока негде и незачем, а
+-- функция, которую никто не зовёт, — это код, который никто и не проверяет. Считать
+-- охват (скольким бот вообще может написать) умеет
+-- `supabase/queries/telegram-check.sql`, и он ходит сервисным ключом из Actions,
+-- мимо всякого RPC. Админская сводка появится вместе с экраном, который её покажет.
+--
+-- Требует 0001_init.sql. Идемпотентна.
+-- =============================================================================
+
+alter table public.profiles
+  add column if not exists telegram_id bigint;
+
+comment on column public.profiles.telegram_id is
+  'Telegram user id, written only by the link-telegram edge function after verifying initData (0026). Never client-writable.';
+
+-- Частичный, потому что null'ов тут будет большинство — у всех, кто пришёл с сайта.
+create unique index if not exists profiles_telegram_id_key
+  on public.profiles (telegram_id)
+  where telegram_id is not null;
+
+-- =============================================================================
+-- 0027_proof_review.sql — the coach's verdict on one proof, and the athlete's second go at it.
+-- =============================================================================
+
+-- =============================================================================
+-- 0027 — the coach's verdict on one proof, and the athlete's second go at it.
+--
+-- Owner: «пользователь отправляет доказательство, мы ему автоматически зачитываем
+-- баллы. Дальше Серёжа заходит в админку, видит доказательство, просматривает его
+-- и принимает решение: оставить результат как есть или он может наложить reject на
+-- это конкретное выполнение и оставить свой комментарий. Этот комментарий и reject
+-- должны появиться у пользователя, и мы не должны засчитывать его баллы. Дальше
+-- пользователь может выполнить это задание заново, и флоу будет аналогичен».
+--
+-- Everything up to the reject already worked: proof scores from the moment it is
+-- written and `voided_at` takes the points back. What did not exist was the way
+-- out of the reject. The athlete's own update policy required `voided_at is null`
+-- and the guard trigger copied the void fields back on every non-admin write, so a
+-- rejected proof was a dead end — the card said «Не засчитано» and offered nothing.
+--
+-- This migration makes the rejection a round rather than a verdict:
+--
+--   * `attempt`        which go this is. 1 until the coach rejects one.
+--   * `resubmitted_at` when the athlete last sent proof again after a rejection.
+--   * `reviewed_at`    when the coach last looked at it and left it standing.
+--   * `reviewed_by`    who looked, stamped like `voided_by`.
+--
+-- Three decisions worth writing down:
+--
+--   **The redo clears the void, and only the athlete's own write can do it.** The
+--   guard tells the two apart by what the row already says: an update of a proof
+--   that is not voided is a correction and may not touch the review at all, and an
+--   update of one that is voided is a new attempt — void lifted, `attempt` up,
+--   `reviewed_at` cleared, so it lands back in the coach's queue. The athlete never
+--   writes any of those fields; they are computed from `old`.
+--
+--   **`void_reason` survives the redo.** It is the coach's last comment, and it is
+--   the only record of why the proof was sent twice. `voided_at` alone decides
+--   scoring, here and in `marathon_scores()`, so a row with a reason and no
+--   `voided_at` counts — it is a proof that was rejected once and redone.
+--
+--   **`submitted_at` still cannot move.** A redo keeps the instant of the first
+--   send, which is what stops the rejection from costing the athlete a day they
+--   delivered on time: the coach rejected the evidence, not the hour it arrived.
+--   That also keeps the deadline rules in `score.ts` and `marathon_scores()`
+--   reading one column. The coach can always reject the second attempt too.
+--
+-- Requires 0011_marathon.sql. Idempotent.
+-- =============================================================================
+
+alter table public.marathon_submissions
+  add column if not exists attempt int not null default 1 check (attempt >= 1),
+  add column if not exists resubmitted_at timestamptz,
+  add column if not exists reviewed_at timestamptz,
+  add column if not exists reviewed_by uuid references auth.users (id) on delete set null;
+
+comment on column public.marathon_submissions.attempt is
+  'Which go this is: 1 until the coach rejects one and the athlete sends again (0027).';
+comment on column public.marathon_submissions.resubmitted_at is
+  'When proof was last sent again after a rejection. Null on a first attempt (0027).';
+comment on column public.marathon_submissions.reviewed_at is
+  'When the coach last looked and left it standing. Cleared by a redo, so it is also the queue (0027).';
+comment on column public.marathon_submissions.void_reason is
+  'The coach''s comment on the proof. Survives a redo as the reason it was sent again; voided_at alone decides scoring (0027).';
+
+-- The queue: what has been redone and not looked at since. Small and partial, because
+-- that is the whole of it — the feed itself is still read by (marathon_id, submitted_at).
+create index if not exists marathon_submissions_review_idx
+  on public.marathon_submissions (marathon_id, resubmitted_at desc)
+  where voided_at is null and reviewed_at is null and attempt > 1;
+
+/*
+ * The guard, with the redo in it. Everything 0011 said still holds — the marathon and
+ * the day come from the task, a submission cannot move to another task or person, and
+ * the clock is the server's — and the review fields join the list of what a client
+ * must not be trusted with.
+ */
+create or replace function public.marathon_submissions_guard()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_task   public.marathon_tasks%rowtype;
+  v_member public.marathon_members%rowtype;
+  v_admin  boolean := public.is_admin();
+begin
+  select * into v_task from public.marathon_tasks where id = new.task_id;
+  if not found then
+    raise exception 'unknown_task' using errcode = 'P0001';
+  end if;
+  select * into v_member from public.marathon_members where id = new.member_id;
+  if not found then
+    raise exception 'unknown_member' using errcode = 'P0001';
+  end if;
+  if v_member.marathon_id <> v_task.marathon_id then
+    raise exception 'member_from_another_marathon' using errcode = 'P0001';
+  end if;
+
+  new.marathon_id := v_task.marathon_id;
+  new.day_index := v_task.day_index;
+
+  if tg_op = 'UPDATE' then
+    if new.task_id <> old.task_id or new.member_id <> old.member_id then
+      raise exception 'submission_is_fixed_to_its_task_and_member' using errcode = 'P0001';
+    end if;
+    if not v_admin then
+      -- An athlete may correct what they sent, and may do the task again once it has been
+      -- rejected. They may not write the verdict on it, and they may not move when it was
+      -- sent: editing yesterday's number does not make it yesterday's proof.
+      new.submitted_at := old.submitted_at;
+      new.void_reason := old.void_reason;
+
+      if old.voided_at is null then
+        -- A correction. Nothing about the review changes.
+        new.voided_at := old.voided_at;
+        new.voided_by := old.voided_by;
+        new.attempt := old.attempt;
+        new.resubmitted_at := old.resubmitted_at;
+        new.reviewed_at := old.reviewed_at;
+        new.reviewed_by := old.reviewed_by;
+      else
+        -- The redo. The proof counts again from this moment and goes back to the coach.
+        new.voided_at := null;
+        new.voided_by := null;
+        new.attempt := old.attempt + 1;
+        new.resubmitted_at := now();
+        new.reviewed_at := null;
+        new.reviewed_by := null;
+      end if;
+    end if;
+  elsif not v_admin then
+    new.voided_at := null;
+    new.void_reason := null;
+    new.voided_by := null;
+    new.attempt := 1;
+    new.resubmitted_at := null;
+    new.reviewed_at := null;
+    new.reviewed_by := null;
+    -- The deadline is the game, so the clock is the server's. The coach keeps the ability to set
+    -- it by hand, which is how proof that arrived in Telegram gets entered after the fact.
+    new.submitted_at := now();
+  end if;
+
+  -- Stamp who struck it and who looked at it, so the feed can say so without a second write.
+  if new.voided_at is not null and new.voided_by is null then
+    new.voided_by := auth.uid();
+  end if;
+  if new.reviewed_at is not null and new.reviewed_by is null then
+    new.reviewed_by := auth.uid();
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists marathon_submissions_guard on public.marathon_submissions;
+create trigger marathon_submissions_guard
+  before insert or update on public.marathon_submissions
+  for each row execute function public.marathon_submissions_guard();
+
+/*
+ * The one policy change: a rejected proof is writable by its author again.
+ *
+ * `voided_at is null` in 0011 was what made «Не засчитано» final. The guard above now
+ * decides what such a write may say, which is the right place for it — RLS answers
+ * whether a row may be written, not what it may become.
+ */
+drop policy if exists "marathon_submissions: own update" on public.marathon_submissions;
+create policy "marathon_submissions: own update"
+  on public.marathon_submissions for update
+  to authenticated
+  using (
+    member_id = public.marathon_member_id(marathon_id)
+    and public.marathon_task_is_open(task_id)
+  )
+  with check (member_id = public.marathon_member_id(marathon_id));
+
+comment on table public.marathon_submissions is
+  'One proof per (task, member). Counts from the moment it is written; the coach rejects rather than approves, and the athlete can do the task again (0027).';
+
+-- =============================================================================
+-- 0027_telegram_outbox.sql — очередь сообщений в бота.
+-- =============================================================================
+
+-- =============================================================================
+-- 0027 — очередь сообщений в бота.
+--
+-- Владелец: «Когда тренер выдает тренировку, об этом нужно написать сообщение в
+-- боте», плюс сообщения про оплату. Связка аккаунта с телеграмом появилась в
+-- 0026; это вторая половина — что именно и кому отправить.
+--
+-- ## Почему очередь, а не отправка на месте
+--
+-- Соблазн: дописать HTTP-вызов в `apply_course_payment`. Три причины так не делать,
+-- и каждая по отдельности решающая.
+--
+-- 1. **Токена бота в базе нет и не будет.** Он секрет Supabase, а репозиторий
+--    публичный. Отправлять умеет только edge-функция.
+-- 2. **Сеть внутри транзакции — способ потерять оплату.** Телеграм тормозит или
+--    отвечает 429 — и транзакция, которая включала курс, висит или откатывается.
+--    Человек заплатил, а доступа нет, потому что мессенджер был занят.
+-- 3. **Получателя может ещё не быть.** Покупка живёт на почте и приходит раньше
+--    регистрации (0013). Строка ждёт в очереди, пока человек войдёт и откроет
+--    приложение из телеграма, — и тогда сообщение уходит.
+--
+-- Поэтому база только **записывает повод**. Отправляет `telegram-notify`,
+-- запускаемая по расписанию из Actions.
+--
+-- ## Ключ — почта, а не telegram_id
+--
+-- По той же причине: на момент повода привязки может не быть вовсе. Очередь
+-- хранит адрес, а получателя ищет отправитель, в момент отправки.
+--
+-- ## Сроки
+--
+-- `send_after` — не раньше чего слать (для «накануне вечером» и «через три дня»).
+-- `expires_at` — после чего сообщение уже не новость. «Тренер выдал тренировку»,
+-- доставленное через неделю, — это не уведомление, а недоумение. Просроченные
+-- переходят в `skipped`, а не висят вечно.
+--
+-- Владелец про тех, у кого телеграма нет: «Это нормально». Такие строки тоже
+-- уходят в `skipped` по истечении срока — молча.
+--
+-- ## Кнопки «Отписаться» здесь нет
+--
+-- Прямое решение владельца: «Не нужно добавлять кнопку "Отписаться" в каждом
+-- сообщении. Это не нарушает закон о рекламе 152 ФЗ.» Всё, что тут рассылается, —
+-- сервисные сообщения о том, что человек сам купил или получил, а не реклама.
+--
+-- Требует 0001_init.sql, 0005_subscriptions.sql, 0006_custom_workouts.sql,
+-- 0026_telegram_link.sql. Идемпотентна.
+-- =============================================================================
+
+create table if not exists public.telegram_outbox (
+  id          uuid primary key default gen_random_uuid(),
+  -- Кому — адресом. Получателя ищет отправитель, в момент отправки.
+  email       citext not null check (length(email::text) <= 254),
+  kind        text not null check (kind in (
+                'course_paid',
+                'subscription_paid',
+                'workout_assigned'
+              )),
+  -- Что подставить в текст. Никаких готовых предложений: текст живёт в функции,
+  -- и правка формулировки не должна требовать миграции.
+  params      jsonb not null default '{}'::jsonb
+                check (octet_length(params::text) <= 2048),
+  send_after  timestamptz not null default now(),
+  expires_at  timestamptz not null default now() + interval '3 days',
+  status      text not null default 'pending'
+                check (status in ('pending', 'sent', 'skipped', 'failed')),
+  attempts    int not null default 0 check (attempts >= 0),
+  last_error  text check (last_error is null or length(last_error) <= 500),
+  /*
+   * Один повод — одно сообщение.
+   *
+   * Prodamus доставляет уведомление повторно, админ может нажать «Активировать»
+   * дважды, тренер — переназначить ту же тренировку. Уникальный ключ превращает
+   * всё это в одну строку, и `on conflict do nothing` в `enqueue_telegram()`
+   * делает повтор бесплатным.
+   */
+  dedupe_key  text not null unique check (length(dedupe_key) <= 200),
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+comment on table public.telegram_outbox is
+  'Queue of bot messages to send (0027). The database only records the occasion; telegram-notify sends.';
+
+-- Ровно тот порядок, которым ходит отправитель: свежие поводы первыми.
+create index if not exists telegram_outbox_due_idx
+  on public.telegram_outbox (send_after)
+  where status = 'pending';
+
+alter table public.telegram_outbox enable row level security;
+
+-- Ни одной политики — значит, никто, кроме сервисной роли, эту таблицу не видит.
+-- Здесь лежат адреса и поводы; вошедшему человеку тут нечего делать даже со своими.
+revoke all on public.telegram_outbox from anon, authenticated;
+
+drop trigger if exists set_updated_at on public.telegram_outbox;
+create trigger set_updated_at
+  before update on public.telegram_outbox
+  for each row execute function public.set_updated_at();
+
+-- -----------------------------------------------------------------------------
+-- enqueue_telegram — записать повод.
+-- -----------------------------------------------------------------------------
+--
+-- Никому не выдана: её зовут только триггеры ниже, а они и так идут от владельца
+-- таблицы. Отдельной ручки «отправь сообщение» в API не появляется — иначе
+-- рассылка стала бы тем, что можно вызвать.
+create or replace function public.enqueue_telegram(
+  p_email      text,
+  p_kind       text,
+  p_dedupe_key text,
+  p_params     jsonb default '{}'::jsonb,
+  p_send_after timestamptz default now(),
+  p_ttl        interval default interval '3 days'
+)
+returns void
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email citext;
+begin
+  -- Адрес мусорный — повода нет. Исключение здесь уронило бы оплату, а она
+  -- важнее уведомления о ней.
+  begin
+    v_email := public.normalize_email(p_email);
+  exception when others then
+    return;
+  end;
+  if v_email is null or length(v_email::text) = 0 then
+    return;
+  end if;
+
+  insert into public.telegram_outbox (email, kind, params, send_after, expires_at, dedupe_key)
+  values (v_email, p_kind, coalesce(p_params, '{}'::jsonb), p_send_after,
+          greatest(p_send_after, now()) + p_ttl, p_dedupe_key)
+  on conflict (dedupe_key) do nothing;
+end;
+$$;
+
+comment on function public.enqueue_telegram(text, text, text, jsonb, timestamptz, interval) is
+  'Records one occasion for the bot to write about (0027). Callable by nobody: triggers only.';
+
+revoke execute on function public.enqueue_telegram(text, text, text, jsonb, timestamptz, interval)
+  from public, anon, authenticated;
+
+-- -----------------------------------------------------------------------------
+-- Поводы: оплата курса, оплата подписки, выданная тренировка.
+-- -----------------------------------------------------------------------------
+--
+-- Триггерами, а не правкой трёх security-definer функций. Путей к «доступ
+-- открылся» несколько — вебхук Prodamus, ручная выдача из админки, SQL-редактор, —
+-- и дописывать вызов в каждый значит однажды забыть про один. Строка в таблице
+-- поменялась — повод есть, кто её поменял, неважно.
+
+create or replace function public.purchases_notify()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+begin
+  -- Только переход в «активна». Повторный `update` активной строки (вебхук
+  -- доставил то же ещё раз) повода не создаёт.
+  if new.status = 'active' and (tg_op = 'INSERT' or coalesce(old.status, '') <> 'active') then
+    perform public.enqueue_telegram(
+      new.email::text,
+      'course_paid',
+      'course_paid:' || new.id::text,
+      jsonb_build_object('courseId', new.course_id)
+    );
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists purchases_notify on public.purchases;
+create trigger purchases_notify
+  after insert or update of status on public.purchases
+  for each row execute function public.purchases_notify();
+
+create or replace function public.subscriptions_notify()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+begin
+  /*
+   * Продление — тоже повод, и это осознанно.
+   *
+   * Ключ включает `expires_at`, поэтому каждый оплаченный период даёт ровно одно
+   * сообщение: человек заплатил ещё раз и должен увидеть, что деньги дошли. Если
+   * бы ключом был только id, второй месяц уходил бы в тишину.
+   */
+  if new.status = 'active'
+     and (tg_op = 'INSERT'
+          or coalesce(old.status, '') <> 'active'
+          or old.expires_at is distinct from new.expires_at) then
+    perform public.enqueue_telegram(
+      new.email::text,
+      'subscription_paid',
+      'subscription_paid:' || new.id::text || ':' || coalesce(new.expires_at::text, 'none'),
+      jsonb_build_object('plan', new.plan)
+    );
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists subscriptions_notify on public.subscriptions;
+create trigger subscriptions_notify
+  after insert or update of status, expires_at on public.subscriptions
+  for each row execute function public.subscriptions_notify();
+
+create or replace function public.assigned_workouts_notify()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_title text;
+begin
+  select w.title into v_title
+  from public.custom_workouts w
+  where w.id = new.custom_workout_id;
+
+  perform public.enqueue_telegram(
+    new.email::text,
+    'workout_assigned',
+    'workout_assigned:' || new.custom_workout_id::text || ':' || new.email::text,
+    jsonb_build_object('title', coalesce(v_title, '')),
+    now(),
+    -- Сутки, а не трое: «тренер выдал тренировку», дошедшее через три дня,
+    -- это уже не новость, а недоумение.
+    interval '1 day'
+  );
+  return new;
+end;
+$$;
+
+drop trigger if exists assigned_workouts_notify on public.assigned_workouts;
+create trigger assigned_workouts_notify
+  after insert on public.assigned_workouts
+  for each row execute function public.assigned_workouts_notify();
+
+-- =============================================================================
+-- 0028_weekly_winner.sql — победитель недели.
+-- =============================================================================
+
+-- =============================================================================
+-- 0028 — победитель недели.
+--
+-- В приветствии бота людям обещан «час с тренером тому, кто выше всех в
+-- воскресенье». До сих пор это жило только в тексте: доска очков есть, а кто
+-- победил — нигде не записано, и в понедельник неделя просто начиналась заново.
+--
+-- ## Ключ — (клуб, неделя), и это не мелочь
+--
+-- Клуб — **одна непрерывная строка** в `marathons`, а не новый ряд каждую
+-- неделю: `marathons_one_club_idx` (0016) физически запрещает второй клуб.
+-- Неделями его режет `marathon_week_of(day_index)`, и доска (`marathon_scores`)
+-- принимает номер недели именно поэтому. Значит и победитель — это пара
+-- (круг, неделя), а не строка на марафон. Ключ на одном `marathon_id` означал бы
+-- ровно одного победителя за всю историю клуба.
+--
+-- ## Объявляет тренер, а не арифметика
+--
+-- Очки выводятся из пруфов (0011), так что верхнюю строку машина знает и сама.
+-- Но победителем её делать нельзя, и это решение, а не осторожность:
+--
+--   * пруф можно зачеркнуть задним числом — «победитель», назначенный в
+--     полночь, к утру может оказаться не победителем;
+--   * ничья возможна и разрешается человеком;
+--   * приз — живой час Сергея. Обещание такого размера не должно раздаваться
+--     триггером.
+--
+-- Машина считает и показывает доску; строку сюда пишет тренер.
+--
+-- Требует 0011_marathon.sql, 0016_club_membership.sql. Идемпотентна.
+-- =============================================================================
+
+create table if not exists public.marathon_winners (
+  marathon_id  uuid not null references public.marathons (id) on delete cascade,
+  -- Номер недели от начала круга, как его считает `marathon_week_of()`.
+  week         int not null check (week between 1 and 1000),
+  member_id    uuid not null references public.marathon_members (id) on delete cascade,
+  -- За что, словами тренера. Необязательно: «победил» само по себе — уже сообщение.
+  note         text check (note is null or length(note) <= 300),
+  announced_at timestamptz not null default now(),
+  announced_by uuid references auth.users (id) on delete set null,
+  -- Один победитель на неделю. Не правило «по бизнесу», а свойство схемы:
+  -- «передумал» — это update той же строки, а не вторая запись рядом.
+  primary key (marathon_id, week)
+);
+
+comment on table public.marathon_winners is
+  'Who won one week of a club round. Written by the coach, never derived: proof can be voided and the prize is an hour of his time (0028).';
+
+-- Участник принадлежит кругу; победитель из чужого круга — опечатка, а не данные.
+-- Триггером, потому что составного ключа на `marathon_members` нет.
+create or replace function public.marathon_winners_guard()
+returns trigger
+language plpgsql
+set search_path = pg_catalog, public, extensions
+as $$
+begin
+  if not exists (
+    select 1 from public.marathon_members mem
+    where mem.id = new.member_id and mem.marathon_id = new.marathon_id
+  ) then
+    raise exception 'member_not_in_marathon' using errcode = 'P0001';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists marathon_winners_guard on public.marathon_winners;
+create trigger marathon_winners_guard
+  before insert or update on public.marathon_winners
+  for each row execute function public.marathon_winners_guard();
+
+alter table public.marathon_winners enable row level security;
+
+-- Ни одной политики: рядом лежит `member_id`, а читают эту таблицу только
+-- функции ниже, каждая под своим правилом.
+revoke all on public.marathon_winners from anon, authenticated;
+
+-- -----------------------------------------------------------------------------
+-- admin_set_winner — объявить победителя недели или снять объявление.
+-- -----------------------------------------------------------------------------
+--
+-- `p_member_id = null` снимает: тренер нажал не на ту строку, и отменить это
+-- должно быть так же просто, как назначить. Иначе ошибка живёт неделю на глазах
+-- у всех.
+create or replace function public.admin_set_winner(
+  p_marathon_id uuid,
+  p_week        int,
+  p_member_id   uuid default null,
+  p_note        text default null
+)
+returns void
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+begin
+  if not public.is_admin() then
+    raise exception 'not_admin' using errcode = '42501';
+  end if;
+  if p_week is null or p_week < 1 then
+    raise exception 'invalid_week' using errcode = 'P0001';
+  end if;
+
+  if p_member_id is null then
+    delete from public.marathon_winners
+    where marathon_id = p_marathon_id and week = p_week;
+    return;
+  end if;
+
+  insert into public.marathon_winners (marathon_id, week, member_id, note, announced_by)
+  values (p_marathon_id, p_week, p_member_id,
+          nullif(trim(coalesce(p_note, '')), ''), auth.uid())
+  on conflict (marathon_id, week) do update
+    set member_id    = excluded.member_id,
+        note         = excluded.note,
+        announced_at = now(),
+        announced_by = excluded.announced_by;
+end;
+$$;
+
+comment on function public.admin_set_winner(uuid, int, uuid, text) is
+  'Announce (or withdraw) the winner of one week. Admin only (0028).';
+
+revoke execute on function public.admin_set_winner(uuid, int, uuid, text) from public, anon;
+grant execute on function public.admin_set_winner(uuid, int, uuid, text) to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- club_winner — кого объявили последним, для всех в клубе.
+-- -----------------------------------------------------------------------------
+--
+-- Последнего объявленного, а не победителя текущей недели: неделя, которая идёт,
+-- победителя ещё не имеет, и интересен как раз прошлый. В понедельник на экране
+-- висит тот, кто выиграл в воскресенье, — ровно то, зачем это всё.
+--
+-- Имя берётся тем же правилом, что в `marathon_roster()`: имя, которое тренер
+-- вписал участнику, потом имя из профиля, потом «Участник».
+--
+-- Адрес не возвращается никогда: победителя видят все участники клуба.
+-- `create or replace` не меняет тип возврата, а набор колонок здесь ещё может
+-- уточниться. Явный drop делает файл идемпотентным при любой правке.
+drop function if exists public.club_winner();
+create function public.club_winner()
+returns table (
+  marathon_id  uuid,
+  week         int,
+  display_name text,
+  avatar_seed  text,
+  note         text,
+  prize        text,
+  announced_at timestamptz,
+  is_me        boolean
+)
+language plpgsql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email citext := public.current_email();
+begin
+  if v_email is null then
+    return;
+  end if;
+
+  return query
+  select
+    m.id,
+    w.week,
+    left(coalesce(
+      nullif(trim(mem.display_name), ''),
+      nullif(trim(p.display_name), ''),
+      'Участник'
+    ), 60),
+    coalesce(p.avatar_seed, ''),
+    w.note,
+    m.prize,
+    w.announced_at,
+    mem.email = v_email
+  from public.marathon_winners w
+  join public.marathons m on m.id = w.marathon_id
+  join public.marathon_members mem on mem.id = w.member_id
+  left join public.profiles p on p.email = mem.email
+  where m.is_club
+    -- Только своим: победитель клуба — новость для тех, кто в нём состоит.
+    and exists (
+      select 1 from public.marathon_members me
+      where me.marathon_id = m.id and me.email = v_email and me.status = 'active'
+    )
+  order by w.announced_at desc
+  limit 1;
+end;
+$$;
+
+comment on function public.club_winner() is
+  'The most recently announced club winner, for members of the club (0028). Never returns an email.';
+
+revoke execute on function public.club_winner() from public, anon;
+grant execute on function public.club_winner() to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- admin_marathon_winner — кто объявлен за эту неделю, для экрана тренера.
+-- -----------------------------------------------------------------------------
+--
+-- Отдельно от `club_winner()`, потому что вопрос другой: тренер смотрит на
+-- конкретную неделю конкретного круга, в том числе того, в котором сам не
+-- состоит, и ему нужен `member_id` — чтобы подсветить строку доски.
+drop function if exists public.admin_marathon_winner(uuid, int);
+create function public.admin_marathon_winner(p_marathon_id uuid, p_week int)
+returns table (
+  member_id    uuid,
+  display_name text,
+  note         text,
+  announced_at timestamptz
+)
+language plpgsql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+begin
+  if not public.is_admin() then
+    raise exception 'not_admin' using errcode = '42501';
+  end if;
+
+  return query
+  select
+    w.member_id,
+    left(coalesce(
+      nullif(trim(mem.display_name), ''),
+      nullif(trim(p.display_name), ''),
+      'Участник'
+    ), 60),
+    w.note,
+    w.announced_at
+  from public.marathon_winners w
+  join public.marathon_members mem on mem.id = w.member_id
+  left join public.profiles p on p.email = mem.email
+  where w.marathon_id = p_marathon_id and w.week = p_week;
+end;
+$$;
+
+comment on function public.admin_marathon_winner(uuid, int) is
+  'Who is announced as the winner of one week, for the coach screen (0028). Admin only.';
+
+revoke execute on function public.admin_marathon_winner(uuid, int) from public, anon;
+grant execute on function public.admin_marathon_winner(uuid, int) to authenticated;
+
+-- =============================================================================
+-- 0029_winner_message.sql — сказать победителю, что он победил.
+-- =============================================================================
+
+-- =============================================================================
+-- 0029 — сказать победителю, что он победил.
+--
+-- 0028 научила тренера объявлять победителя недели, 0027 — ставить поводы в
+-- очередь. Это стык: объявление становится сообщением.
+--
+-- ## Почему это важнее остальных сообщений в очереди
+--
+-- «Оплата дошла» человек и так узнает, открыв приложение. А победа — нет:
+-- плашку на вкладке клуба увидит только тот, кто в тот день туда зашёл, а приз
+-- (час с Сергеем) нужно ещё получить, то есть написать ему. Без сообщения
+-- обещание из приветствия бота закрывается только для внимательных.
+--
+-- ## Один победитель — одно сообщение, даже если тренер передумал
+--
+-- Ключ включает и неделю, и участника. Поэтому:
+--   * повторное объявление того же человека за ту же неделю (тренер поправил
+--     заметку) второго сообщения не даёт;
+--   * объявление **другого** человека — даёт, ему: он победитель и узнать об
+--     этом должен;
+--   * тому, у кого победу забрали, ничего не отправляется и ничего не
+--     отзывается. Забрать уже отправленное сообщение телеграм не умеет, а
+--     «извини, не ты» роботом — это то, что тренер должен сказать сам.
+--
+-- Срок — сутки. Поздравление, доехавшее на третий день, поздравлением уже не
+-- является.
+--
+-- Требует 0027_telegram_outbox.sql, 0028_weekly_winner.sql. Идемпотентна.
+-- =============================================================================
+
+alter table public.telegram_outbox drop constraint if exists telegram_outbox_kind_check;
+alter table public.telegram_outbox add constraint telegram_outbox_kind_check
+  check (kind in (
+    'course_paid',
+    'subscription_paid',
+    'workout_assigned',
+    'weekly_winner'
+  ));
+
+create or replace function public.marathon_winners_notify()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email citext;
+  v_prize text;
+begin
+  -- Адрес участника — единственное, что связывает победителя с очередью: она
+  -- вся живёт на почтах, потому что получателя ищет отправитель (0027).
+  select mem.email into v_email
+  from public.marathon_members mem
+  where mem.id = new.member_id;
+
+  if v_email is null then
+    return new;
+  end if;
+
+  select m.prize into v_prize from public.marathons m where m.id = new.marathon_id;
+
+  perform public.enqueue_telegram(
+    v_email::text,
+    'weekly_winner',
+    'weekly_winner:' || new.marathon_id::text || ':' || new.week::text
+      || ':' || new.member_id::text,
+    jsonb_build_object('prize', coalesce(v_prize, ''), 'note', coalesce(new.note, '')),
+    now(),
+    interval '1 day'
+  );
+  return new;
+end;
+$$;
+
+drop trigger if exists marathon_winners_notify on public.marathon_winners;
+create trigger marathon_winners_notify
+  after insert or update of member_id on public.marathon_winners
+  for each row execute function public.marathon_winners_notify();
+
+comment on function public.marathon_winners_notify() is
+  'Turns an announcement (0028) into a queued bot message (0027). Keyed on the member, so changing the winner writes to the new one and never un-sends to the old (0029).';
+
+-- =============================================================================
+-- 0030_reload_schema.sql — сказать PostgREST перечитать схему.
+-- =============================================================================
+
+-- =============================================================================
+-- 0030 — сказать PostgREST перечитать схему.
+--
+-- Ничего не меняет в базе. Это кнопка.
+--
+-- ## Зачем она нужна
+--
+-- PostgREST (через него ходят и приложение, и edge-функции) держит схему в
+-- памяти: какие есть таблицы, какие колонки, какие функции. Кэш сбрасывается
+-- событийным триггером на DDL, и обычно этого достаточно. Но миграции здесь
+-- применяются через Management API, и бывает, что новая таблица появляется в
+-- базе раньше, чем PostgREST о ней узнаёт. Симптом однозначный: `PGRST205`,
+-- «Could not find the table … in the schema cache», при том что таблица есть и
+-- прекрасно читается SQL-запросом.
+--
+-- Лечится одной строкой. Отдельным файлом, а не припиской к следующей миграции,
+-- потому что это не изменение схемы, а действие: его запускают по симптому,
+-- сколько угодно раз, и оно ничего не портит.
+--
+-- Идемпотентна по устройству: `notify` ничего не пишет.
+-- =============================================================================
+
+notify pgrst, 'reload schema';
+
+-- =============================================================================
+-- 0031_service_role_grants.sql — вернуть сервисной роли права на таблицы, которые пишут edge-функции.
+-- =============================================================================
+
+-- =============================================================================
+-- 0031 — вернуть сервисной роли права на таблицы, которые пишут edge-функции.
+--
+-- Первый живой запуск рассылки ответил `42501`, insufficient_privilege, на
+-- чтении `telegram_outbox`. Таблица есть, SQL-запросом читается, а функция с
+-- сервисным ключом — нет.
+--
+-- ## Почему так вышло
+--
+-- Supabase раздаёт права новым таблицам через `alter default privileges`, и в
+-- обычном проекте этого достаточно. Но миграции здесь применяются через
+-- Management API, и таблицы, созданные этим путём, под те умолчания не попали.
+-- Новая таблица оказывается видна `postgres` и невидима `service_role` — а RLS
+-- эту роль не останавливает вовсе, так что симптом выглядит как что угодно,
+-- только не как права.
+--
+-- ## Что чинится, кроме очереди
+--
+-- Та же дыра стоит под каждой таблицей, которую пишет функция сервисным ключом.
+-- `payments` и `payment_emails` — это вебхук Prodamus: без права на запись он
+-- принял бы уведомление, не сохранил бы его и ответил 500, а Prodamus повторял
+-- бы доставку. Оплата при этом уже прошла. Проверить это живым платежом дороже,
+-- чем выдать право, поэтому выдаётся всем, кого трогают функции.
+--
+-- `grant`, а не `revoke` наоборот: сервисный ключ и так обходит RLS и живёт
+-- только в секретах Supabase. Права на таблицу ему ничего не добавляют сверх
+-- того, что у него и так есть, — они лишь возвращают то, что по устройству
+-- платформы у него быть должно.
+--
+-- ## И чтобы это не повторилось
+--
+-- `alter default privileges` в конце: следующая таблица, созданная этой же
+-- дорогой, получит права сама. Иначе та же история повторится с первой же
+-- функцией, которой понадобится новая таблица, — и опять выяснится через отказ
+-- в проде.
+--
+-- Требует 0020_payment_emails.sql, 0027_telegram_outbox.sql. Идемпотентна.
+-- =============================================================================
+
+grant select, insert, update, delete on public.telegram_outbox to service_role;
+grant select, insert, update, delete on public.payments        to service_role;
+grant select, insert, update, delete on public.payment_emails  to service_role;
+-- `link-telegram` пишет сюда `telegram_id`, `telegram-notify` читает его отсюда.
+grant select, insert, update, delete on public.profiles        to service_role;
+
+-- Будущие таблицы — сами, без отдельной миграции по следам отказа.
+alter default privileges in schema public
+  grant all on tables to service_role;
+alter default privileges in schema public
+  grant all on sequences to service_role;
+
+-- Права меняют то, что PostgREST держит в памяти, — иначе первая же попытка
+-- после миграции снова упрётся в старый снимок.
+notify pgrst, 'reload schema';
+
+-- =============================================================================
+-- 0032_authored_english.sql — вторая половина у того, что печатает тренер.
+-- =============================================================================
+
+-- =============================================================================
+-- 0032 — вторая половина у того, что печатает тренер.
+--
+-- Сайт и приложение выходят на двух языках (0154), и у почти всего текста обе половины были с
+-- самого начала: словари интерфейса сверяет компилятор, контент курсов лежит как `{ru, en}`.
+-- Не хватало ровно там, где текст не написан заранее, а набирается в админке.
+--
+-- ## Что добавляется
+--
+-- * `custom_workouts.title_en`, `.description_en` — название тренировки из конструктора. Сама
+--   структура (разделы, заметки к упражнениям) уже двуязычная: `titleEn`, `descriptionEn`,
+--   `noteEn` внутри `structure` появились вместе с импортом курсов (0009) и заполнены у всего,
+--   что пришло оттуда. Не было только верхнего уровня.
+-- * `marathon_tasks.title_en`, `.body_en` — задание клуба.
+-- * `exercises.breathing_en` — единственное поле упражнения, у которого была только русская
+--   половина; `description_en`, `how_to`, `cues`, `mistakes` двуязычны с 0007.
+--
+-- ## Почему nullable и без значения по умолчанию
+--
+-- Пустая половина — это «не перевели», и так и должно читаться. Приложение подставляет русское
+-- вместо отсутствующего английского (`l10n()` в src/lib/courses/draft.ts), так что английский
+-- читатель видит русское название, а не пустоту. Обязательный перевод означал бы, что Сергей не
+-- может выпустить день, пока не переведёт его, — а он тренер, а не переводчик.
+--
+-- Поэтому же ничего не копируется из русских колонок: русский текст, положенный в английскую
+-- колонку, неотличим от перевода, и «что ещё не переведено» после такого не узнать никогда.
+--
+-- Идемпотентна.
+-- =============================================================================
+
+-- Конструктор тренировок. Длины — как у русских колонок рядом.
+alter table public.custom_workouts add column if not exists title_en text;
+alter table public.custom_workouts add column if not exists description_en text;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'custom_workouts_title_en_len'
+  ) then
+    alter table public.custom_workouts
+      add constraint custom_workouts_title_en_len
+      check (title_en is null or length(title_en) between 1 and 120);
+  end if;
+end $$;
+
+-- Задание клуба.
+alter table public.marathon_tasks add column if not exists title_en text;
+alter table public.marathon_tasks add column if not exists body_en text;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'marathon_tasks_title_en_len'
+  ) then
+    alter table public.marathon_tasks
+      add constraint marathon_tasks_title_en_len
+      check (title_en is null or length(title_en) between 1 and 120);
+  end if;
+  if not exists (
+    select 1 from pg_constraint where conname = 'marathon_tasks_body_en_len'
+  ) then
+    alter table public.marathon_tasks
+      add constraint marathon_tasks_body_en_len
+      check (body_en is null or length(body_en) <= 4000);
+  end if;
+end $$;
+
+-- Дыхание в упражнении.
+alter table public.exercises add column if not exists breathing_en text;
+
+comment on column public.custom_workouts.title_en is
+  'Английское название. NULL — не переведено; приложение покажет русское.';
+comment on column public.marathon_tasks.title_en is
+  'Английское название задания. NULL — не переведено; приложение покажет русское.';
+
+-- Колонки меняют то, что PostgREST держит в памяти.
+notify pgrst, 'reload schema';
+
+-- =============================================================================
+-- 0033_club_duo.sql — клуб в двух вариантах: соло и дуо.
+-- =============================================================================
+
+-- =============================================================================
+-- 0033 — клуб в двух вариантах: соло и дуо.
+--
+-- «Я хочу, чтобы у нас клуб существовал только в двух вариациях. Первое — это
+-- самостоятельное, то есть типа соло. Второе — это дуо.»
+--
+-- ## Почему два круга, а не один с режимом внутри
+--
+-- Марафон — это правила, задания и участники, и у соло с дуо все три разные:
+-- задания соло одинаковые для всех, задания дуо адресуются паре или одному из
+-- двоих; доска соло — люди, доска дуо — пары; победитель у каждого свой. Это два
+-- разных круга, и попытка уместить их в одну строку кончилась бы флагом, который
+-- надо не забыть проверить в каждой функции.
+--
+-- Режим и так записан: `team_size`. Соло — 1, дуо — 2, и `marathon_is_solo()`
+-- читает именно его (0011: «a separate mode flag beside a size would let the two
+-- disagree»). Новой колонки здесь поэтому нет — меняется только уникальность:
+-- раньше клуб был один, теперь один **на режим**.
+--
+-- ## Подписка одна
+--
+-- «Подписка единая на оба клуба, поэтому все пользователи могут участвовать как
+-- в соло-режиме, так и дуо.» `join_club()` поэтому кладёт человека сразу в оба
+-- круга: право на клуб одно (`club_access()`), а кругов два.
+--
+-- В дуо человек попадает **без пары**: `team_id` остаётся null, пока пару не
+-- составит приглашение по ссылке или автоподбор (0034). Незапаренный участник
+-- дуо-клуба — нормальное состояние, а не поломка: именно ему показывается
+-- баннер «дуо пока нет».
+--
+-- Требует 0011_marathon.sql, 0016_club_membership.sql, 0028_weekly_winner.sql.
+-- Идемпотентна.
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- 1. Клуб — один на режим, а не один на всё.
+--
+-- Индекс по выражению `team_size > 1`: два значения, значит ровно два клуба —
+-- соло и дуо. Третьего размера команды у клуба быть не может, и это не
+-- ограничение реализации, а решение владельца: «только в двух вариациях».
+-- -----------------------------------------------------------------------------
+drop index if exists public.marathons_one_club_idx;
+create unique index if not exists marathons_one_club_per_mode_idx
+  on public.marathons ((team_size > 1)) where is_club;
+
+comment on index public.marathons_one_club_per_mode_idx is
+  'Ровно один клуб каждого режима: соло (team_size = 1) и дуо (team_size = 2).';
+
+-- -----------------------------------------------------------------------------
+-- 2. Дуо-клуб.
+--
+-- Всё как у соло из 0016 и по тем же причинам: старт — понедельник этой недели
+-- (`marathon_week_of` от него нарезает календарные недели), десять лет `days`,
+-- никаких заданий — их пишет тренер.
+--
+-- Приз назван во множественном числе намеренно. Владелец: «по часу каждому» —
+-- выигрывает пара, но встреча у каждого своя. Обещание на экране должно
+-- совпадать с тем, что тренер потом отдаёт.
+--
+-- Идемпотентна по slug и **не** переписывает `starts_on`: сдвиг старта сдвинул
+-- бы день у каждого задания и неделю у каждого очка.
+-- -----------------------------------------------------------------------------
+insert into public.marathons (
+  slug, title, description, status, starts_on, days, team_size, timezone, due_time, prize, is_club
+)
+values (
+  'club_duo',
+  'Клуб вдвоём',
+  'То же, что клуб, только вдвоём: задание на пару или на кого-то одного, и общая таблица пар.',
+  'active',
+  date_trunc('week', current_date)::date,
+  3650,
+  2,                      -- пара
+  'Europe/Moscow',
+  '22:00',
+  'Час с тренером — каждому из пары',
+  true
+)
+on conflict (slug) do update set
+  status  = 'active',
+  days    = greatest(public.marathons.days, 3650),
+  is_club = true;
+
+-- -----------------------------------------------------------------------------
+-- 3. Найти клуб нужного режима.
+--
+-- Одной функцией, потому что «клуб» перестал быть единственным числом, и каждое
+-- место, которое раньше писало `where is_club limit 1`, теперь обязано сказать,
+-- какой именно. Без этого выбор был бы «какой попадётся», а попадаться стало бы
+-- по-разному в зависимости от порядка строк.
+-- -----------------------------------------------------------------------------
+create or replace function public.club_marathon(p_duo boolean default false)
+returns uuid
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+  select m.id
+  from public.marathons m
+  where m.is_club
+    and m.status = 'active'
+    and (m.team_size > 1) = coalesce(p_duo, false)
+  limit 1;
+$$;
+
+revoke execute on function public.club_marathon(boolean) from public, anon;
+grant execute on function public.club_marathon(boolean) to authenticated;
+
+comment on function public.club_marathon(boolean) is
+  'Id клуба нужного режима: соло по умолчанию, дуо при p_duo. NULL, если такого клуба нет.';
+
+-- -----------------------------------------------------------------------------
+-- 4. join_club — в оба круга сразу.
+--
+-- Право на клуб одно, кругов два, и человек, оплативший подписку, участвует в
+-- обоих. Возвращает id соло-клуба — как и раньше, чтобы вызывающий отличал «ты
+-- внутри» от «клуба нет»; дуо при этом тоже заведён.
+--
+-- Всё остальное — как в 0016 и по тем же причинам: идемпотентно, безопасно
+-- звать на каждое открытие вкладки, и участника, которого тренер убрал руками,
+-- обратно не пускает.
+-- -----------------------------------------------------------------------------
+create or replace function public.join_club()
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email citext := public.current_email();
+  v_club  uuid;
+  v_id    uuid;
+begin
+  if v_email is null or not public.club_access() then
+    return null;
+  end if;
+
+  -- Оба круга, в одном цикле: разойтись они не могут по устройству.
+  foreach v_id in array array[
+    public.club_marathon(false),
+    public.club_marathon(true)
+  ] loop
+    continue when v_id is null;
+
+    /*
+     * `team_id` не трогается вовсе — ни при вставке, ни при возврате из
+     * «removed». В соло его и не может быть (`marathon_members_check_team`), а в
+     * дуо он уже может указывать на пару, которую человек выбрал сам: затереть
+     * его здесь значило бы разбивать пару при каждом открытии вкладки.
+     */
+    insert into public.marathon_members (marathon_id, email, status)
+    values (v_id, v_email, 'active')
+    on conflict (marathon_id, email) do update
+      set status = case
+        when public.marathon_members.status = 'removed'
+         and public.marathon_members.note is null
+         and public.marathon_members.display_name is null
+        then 'active'
+        else public.marathon_members.status
+      end;
+  end loop;
+
+  v_club := public.club_marathon(false);
+  return v_club;
+end;
+$$;
+
+revoke execute on function public.join_club() from public, anon;
+grant execute on function public.join_club() to authenticated;
+
+comment on function public.join_club() is
+  'Самозапись в оба клуба (соло и дуо) по живой подписке или пробному доступу. Идемпотентна; возвращает id соло-клуба или null.';
+
+-- -----------------------------------------------------------------------------
+-- 5. club_winner — у каждого клуба свой.
+--
+-- Раньше функция брала последнего объявленного «в клубе», потому что клуб был
+-- один. Теперь их два, и без режима она отдавала бы то соло-победителя, то
+-- дуо — в зависимости от того, кого объявили последним.
+--
+-- Тип возврата не меняется, но `create or replace` не умеет менять сигнатуру:
+-- появился аргумент, значит это другая функция. Старую убираем явно.
+-- -----------------------------------------------------------------------------
+drop function if exists public.club_winner();
+
+create or replace function public.club_winner(p_duo boolean default false)
+returns table (
+  marathon_id  uuid,
+  week         int,
+  display_name text,
+  avatar_seed  text,
+  note         text,
+  prize        text,
+  announced_at timestamptz,
+  is_me        boolean
+)
+language plpgsql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email citext := public.current_email();
+  v_club  uuid   := public.club_marathon(p_duo);
+begin
+  if v_email is null or v_club is null then
+    return;
+  end if;
+
+  return query
+  select
+    m.id,
+    w.week,
+    left(coalesce(
+      nullif(trim(mem.display_name), ''),
+      nullif(trim(p.display_name), ''),
+      'Участник'
+    ), 60),
+    coalesce(p.avatar_seed, ''),
+    w.note,
+    m.prize,
+    w.announced_at,
+    mem.email = v_email
+  from public.marathon_winners w
+  join public.marathons m on m.id = w.marathon_id
+  join public.marathon_members mem on mem.id = w.member_id
+  left join public.profiles p on p.email = mem.email
+  where m.id = v_club
+    -- Только своим: победитель клуба — новость для тех, кто в нём состоит.
+    and exists (
+      select 1 from public.marathon_members me
+      where me.marathon_id = m.id and me.email = v_email and me.status = 'active'
+    )
+  order by w.announced_at desc
+  limit 1;
+end;
+$$;
+
+revoke execute on function public.club_winner(boolean) from public, anon;
+grant execute on function public.club_winner(boolean) to authenticated;
+
+comment on function public.club_winner(boolean) is
+  'Последний объявленный победитель клуба нужного режима, для его участников (0028/0033). Почту не возвращает никогда.';
+
+notify pgrst, 'reload schema';
+
+-- =============================================================================
+-- 0034_club_pairs.sql — пары в дуо-клубе: по ссылке подруге и автоподбором каждую неделю.
+-- =============================================================================
+
+-- =============================================================================
+-- 0034 — пары в дуо-клубе: по ссылке подруге и автоподбором каждую неделю.
+--
+-- «Пригласить друга, и ты скидываешь другу, и вы чуть дешевле покупаете
+-- подписку. Но это вот подешевле это в будущем. Сейчас это просто типа с
+-- подружкой, чтобы вместе участвовать.» — скидки здесь нет, есть пара.
+--
+-- «Если же у тебя нету дуо, то там должен быть баннер, что нету дуо, мы найдём
+-- тебе его автоматически, и каждую неделю мы будем менять тебе дуо.»
+--
+-- ## Две породы пар, и разница между ними — вся механика
+--
+-- Пара, которую выбрали, живёт, пока её не расторгнут. Пара, которую подобрали,
+-- живёт неделю. Отличить их надо в схеме, а не по соглашению: `is_auto` на
+-- `marathon_teams`. Автоподбор пересобирает только свои пары и не трогает чужие
+-- — иначе он раз в неделю разлучал бы подруг, которые специально сошлись.
+--
+-- ## Приглашение живёт на почте
+--
+-- Как покупки и как участники клуба (0011: «keyed on email … the row has to
+-- exist before Ваня signs in»). Подруга, которой скинули ссылку, ещё не
+-- зарегистрирована и уж точно не оплатила, так что привязать приглашение к
+-- `member_id` было бы привязкой к строке, которой нет.
+--
+-- ## Пока подруга не оплатила
+--
+-- Решение владельца: «подбираем автоматически, потом заменим». Приглашение
+-- висит, автоподбор тем временем ставит пару на неделю, и в тот момент, когда
+-- подруга оплатит и откроет ссылку, автоматическая пара расходится и собирается
+-- выбранная. Никто не сидит неделю без дуо из-за того, что подруга задержалась.
+--
+-- Требует 0011_marathon.sql, 0016_club_membership.sql, 0033_club_duo.sql.
+-- Идемпотентна.
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- 1. Автоматическая пара — та, которую можно расторгнуть без спроса.
+-- -----------------------------------------------------------------------------
+alter table public.marathon_teams
+  add column if not exists is_auto boolean not null default false;
+
+comment on column public.marathon_teams.is_auto is
+  'Пара, собранная автоподбором на неделю. Выбранные вручную (тренером или приглашением) живут, пока их не расторгнут.';
+
+create index if not exists marathon_teams_auto_idx
+  on public.marathon_teams (marathon_id) where is_auto;
+
+-- -----------------------------------------------------------------------------
+-- 2. Приглашение в пару.
+--
+-- Токен — первичный ключ и он же то, что уезжает в ссылку. Отдельного id нет:
+-- строка и есть приглашение, а второй ключ рядом с токеном давал бы два способа
+-- сослаться на одно.
+--
+-- Открытое приглашение у человека одно: частичный уникальный индекс по
+-- приглашающему среди непогашенных. Вторая ссылка от того же человека — это не
+-- второе приглашение, а та же самая, и `club_invite_create()` её и возвращает.
+-- -----------------------------------------------------------------------------
+create table if not exists public.club_duo_invites (
+  token         text primary key check (token ~ '^[A-Za-z0-9_-]{16,64}$'),
+  inviter_email citext not null check (length(inviter_email::text) <= 254),
+  created_at    timestamptz not null default now(),
+  -- Две недели: ссылка, которую нашли в переписке через полгода, приводит к
+  -- паре, о которой обе уже забыли.
+  expires_at    timestamptz not null default now() + interval '14 days',
+  redeemed_by   citext check (redeemed_by is null or length(redeemed_by::text) <= 254),
+  redeemed_at   timestamptz,
+  -- Погашено — значит известно кем и когда: одно без другого читалось бы как сбой.
+  constraint club_duo_invites_redeemed_pair check (
+    (redeemed_by is null) = (redeemed_at is null)
+  ),
+  -- Сама себе парой человек не становится.
+  constraint club_duo_invites_not_self check (
+    redeemed_by is null or redeemed_by <> inviter_email
+  )
+);
+
+comment on table public.club_duo_invites is
+  'Приглашение в пару дуо-клуба по ссылке. Живёт на почте: приглашённая может быть ещё не зарегистрирована.';
+
+create unique index if not exists club_duo_invites_open_idx
+  on public.club_duo_invites (inviter_email) where redeemed_at is null;
+
+create index if not exists club_duo_invites_redeemed_idx
+  on public.club_duo_invites (redeemed_by) where redeemed_by is not null;
+
+/*
+ * Таблица закрыта наглухо: в ней чужие адреса, а токен — это доступ к паре.
+ * Всё идёт через функции ниже, которые возвращают ровно столько, сколько нужно
+ * экрану, и никогда чужую почту.
+ */
+alter table public.club_duo_invites enable row level security;
+revoke all on public.club_duo_invites from anon, authenticated;
+
+-- -----------------------------------------------------------------------------
+-- 3. Расторгнуть пару.
+--
+-- Вспомогательная: используется и при автоподборе, и когда выбранная пара
+-- уступает место другой. Команда удаляется целиком, а не остаётся пустой —
+-- `team_id` у участников обнуляется каскадом (`on delete set null`).
+--
+-- Очки при этом никуда не деваются: они лежат на `marathon_submissions` и
+-- считаются от участника, а не от команды.
+-- -----------------------------------------------------------------------------
+create or replace function public.club_duo_break(p_team_id uuid)
+returns void
+language sql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+  delete from public.marathon_teams where id = p_team_id;
+$$;
+
+revoke execute on function public.club_duo_break(uuid) from public, anon, authenticated;
+
+-- -----------------------------------------------------------------------------
+-- 4. Свести двоих в пару.
+--
+-- Обе прежние пары расходятся, и обе — независимо от того, автоматические они
+-- или выбранные: человек, принявший приглашение, решение уже принял.
+--
+-- Имя команды собирается из двух имён, потому что доска показывает именно его.
+-- Уникальность `(marathon_id, name)` может столкнуться с тёзками, поэтому к
+-- имени добавляется кусочек id — видно его только на доске у пары, и лучше
+-- «Настя и Настя · 7f3» один раз, чем отказ завести пару.
+-- -----------------------------------------------------------------------------
+create or replace function public.club_duo_pair(
+  p_marathon_id uuid,
+  p_a uuid,
+  p_b uuid,
+  p_auto boolean default false
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_team uuid;
+  v_name text;
+  v_a    record;
+  v_b    record;
+begin
+  if p_a is null or p_b is null or p_a = p_b then
+    raise exception 'need_two_members' using errcode = 'P0001';
+  end if;
+
+  select m.id, m.team_id,
+         coalesce(nullif(trim(m.display_name), ''), nullif(trim(p.display_name), ''), 'Участник')
+           as name
+    into v_a
+  from public.marathon_members m
+  left join public.profiles p on p.email = m.email
+  where m.id = p_a and m.marathon_id = p_marathon_id and m.status = 'active';
+
+  select m.id, m.team_id,
+         coalesce(nullif(trim(m.display_name), ''), nullif(trim(p.display_name), ''), 'Участник')
+           as name
+    into v_b
+  from public.marathon_members m
+  left join public.profiles p on p.email = m.email
+  where m.id = p_b and m.marathon_id = p_marathon_id and m.status = 'active';
+
+  if v_a.id is null or v_b.id is null then
+    raise exception 'member_not_in_marathon' using errcode = 'P0001';
+  end if;
+
+  if v_a.team_id is not null then perform public.club_duo_break(v_a.team_id); end if;
+  if v_b.team_id is not null then perform public.club_duo_break(v_b.team_id); end if;
+
+  v_name := left(v_a.name || ' и ' || v_b.name, 50);
+  insert into public.marathon_teams (marathon_id, name, is_auto)
+  values (p_marathon_id, v_name || ' · ' || left(gen_random_uuid()::text, 3), p_auto)
+  returning id into v_team;
+
+  update public.marathon_members
+     set team_id = v_team
+   where id in (p_a, p_b);
+
+  return v_team;
+end;
+$$;
+
+revoke execute on function public.club_duo_pair(uuid, uuid, uuid, boolean) from public, anon, authenticated;
+
+-- -----------------------------------------------------------------------------
+-- 5. Автоподбор на неделю.
+--
+-- Берёт всех активных в дуо-клубе, у кого пары нет или пара автоматическая,
+-- распускает автоматические и сводит заново в случайном порядке.
+--
+-- **Нечётный остаётся без пары**, и это честнее любой альтернативы: тройка
+-- ломает и `team_size = 2`, и саму метафору дуо, а оставить человека в паре
+-- прошлой недели значит сказать «каждую неделю меняем» и не поменять. Экран
+-- показывает ему тот же баннер, что и всем без пары.
+--
+-- Возвращает, сколько пар собралось, — чтобы расписание могло напечатать число,
+-- а не «готово».
+-- -----------------------------------------------------------------------------
+create or replace function public.club_duo_rematch()
+returns int
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_club  uuid := public.club_marathon(true);
+  v_pairs int := 0;
+  v_prev  uuid := null;
+  r       record;
+begin
+  if v_club is null then
+    return 0;
+  end if;
+
+  -- Прошлая неделя закончилась: автоматические пары расходятся все разом.
+  delete from public.marathon_teams where marathon_id = v_club and is_auto;
+
+  /*
+   * `order by random()` — жеребьёвка, и это весь алгоритм подбора. Никаких
+   * «по уровню» и «по активности»: клуб маленький, а любая попытка подбирать
+   * по заслугам означала бы, что кто-то каждую неделю достаётся отстающим.
+   */
+  for r in
+    select m.id
+    from public.marathon_members m
+    where m.marathon_id = v_club
+      and m.status = 'active'
+      and m.team_id is null
+    order by random()
+  loop
+    if v_prev is null then
+      v_prev := r.id;
+    else
+      perform public.club_duo_pair(v_club, v_prev, r.id, true);
+      v_prev := null;
+      v_pairs := v_pairs + 1;
+    end if;
+  end loop;
+
+  return v_pairs;
+end;
+$$;
+
+revoke execute on function public.club_duo_rematch() from public, anon, authenticated;
+grant execute on function public.club_duo_rematch() to service_role;
+
+comment on function public.club_duo_rematch() is
+  'Пересобрать автоматические пары дуо-клуба. Выбранные пары не трогает; нечётный остаётся без пары. Возвращает число собранных пар.';
+
+-- -----------------------------------------------------------------------------
+-- 6. Приглашение: создать.
+--
+-- Возвращает открытый токен звонящего, создавая его при первом вызове. Второй
+-- вызов отдаёт тот же — «поделиться ссылкой» нажимают по многу раз, и каждая
+-- новая ссылка обесценивала бы предыдущую, уже отправленную.
+-- -----------------------------------------------------------------------------
+create or replace function public.club_invite_create()
+returns text
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email citext := public.current_email();
+  v_token text;
+begin
+  if v_email is null or not public.club_access() then
+    raise exception 'no_club_access' using errcode = 'P0001';
+  end if;
+
+  -- Просроченное открытое приглашение — это не приглашение: гасим и выдаём новое.
+  delete from public.club_duo_invites
+   where inviter_email = v_email and redeemed_at is null and expires_at < now();
+
+  select token into v_token
+  from public.club_duo_invites
+  where inviter_email = v_email and redeemed_at is null;
+
+  if v_token is not null then
+    return v_token;
+  end if;
+
+  -- 32 символа из URL-безопасного алфавита: в ссылку уезжает как есть.
+  v_token := translate(encode(gen_random_bytes(24), 'base64'), '+/=', '-_');
+  insert into public.club_duo_invites (token, inviter_email) values (v_token, v_email);
+  return v_token;
+end;
+$$;
+
+revoke execute on function public.club_invite_create() from public, anon;
+grant execute on function public.club_invite_create() to authenticated;
+
+comment on function public.club_invite_create() is
+  'Ссылка-приглашение в пару. Идемпотентна: у человека одно открытое приглашение.';
+
+-- -----------------------------------------------------------------------------
+-- 7. Приглашение: принять.
+--
+-- Звонящая должна иметь доступ к клубу — то есть оплатить. Это и есть условие
+-- владельца: «вы участвуете в клубе вместе после того, как она оплачивает
+-- подписку». До оплаты ссылка открывается, но пары не делает, и экран честно
+-- говорит, чего не хватает.
+--
+-- Коды ошибок, а не текст: их читает приложение и показывает свою фразу на
+-- языке читателя.
+-- -----------------------------------------------------------------------------
+create or replace function public.club_invite_redeem(p_token text)
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email  citext := public.current_email();
+  v_club   uuid   := public.club_marathon(true);
+  v_inv    record;
+  v_me     uuid;
+  v_them   uuid;
+  v_team   uuid;
+begin
+  if v_email is null then
+    raise exception 'not_signed_in' using errcode = 'P0001';
+  end if;
+  if not public.club_access() then
+    raise exception 'no_subscription' using errcode = 'P0001';
+  end if;
+  if v_club is null then
+    raise exception 'no_club' using errcode = 'P0001';
+  end if;
+
+  select * into v_inv
+  from public.club_duo_invites
+  where token = p_token;
+
+  if v_inv.token is null then
+    raise exception 'invite_not_found' using errcode = 'P0001';
+  end if;
+  if v_inv.redeemed_at is not null then
+    raise exception 'invite_used' using errcode = 'P0001';
+  end if;
+  if v_inv.expires_at < now() then
+    raise exception 'invite_expired' using errcode = 'P0001';
+  end if;
+  if v_inv.inviter_email = v_email then
+    raise exception 'invite_own' using errcode = 'P0001';
+  end if;
+
+  -- Обе должны быть в дуо-клубе. Звонящую заводим сами: она только что оплатила
+  -- и могла ещё ни разу не открыть вкладку.
+  perform public.join_club();
+
+  select id into v_me   from public.marathon_members
+   where marathon_id = v_club and email = v_email and status = 'active';
+  select id into v_them from public.marathon_members
+   where marathon_id = v_club and email = v_inv.inviter_email and status = 'active';
+
+  if v_me is null or v_them is null then
+    raise exception 'inviter_not_in_club' using errcode = 'P0001';
+  end if;
+
+  v_team := public.club_duo_pair(v_club, v_them, v_me, false);
+
+  update public.club_duo_invites
+     set redeemed_by = v_email, redeemed_at = now()
+   where token = p_token;
+
+  return v_team;
+end;
+$$;
+
+revoke execute on function public.club_invite_redeem(text) from public, anon;
+grant execute on function public.club_invite_redeem(text) to authenticated;
+
+comment on function public.club_invite_redeem(text) is
+  'Принять приглашение в пару. Требует оплаченного доступа к клубу; расторгает прежние пары обеих.';
+
+-- -----------------------------------------------------------------------------
+-- 8. Что показать на вкладке «Дуо».
+--
+-- Одна поездка за всем состоянием пары: есть ли она, кто в ней, сама ли она
+-- собралась, и какую ссылку показывать, если пары нет. Почту не возвращает
+-- никогда — ни свою, ни чужую.
+-- -----------------------------------------------------------------------------
+create or replace function public.club_duo_status()
+returns table (
+  marathon_id  uuid,
+  member_id    uuid,
+  team_id      uuid,
+  is_auto      boolean,
+  mate_name    text,
+  mate_seed    text,
+  invite_token text
+)
+language plpgsql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email citext := public.current_email();
+  v_club  uuid   := public.club_marathon(true);
+begin
+  if v_email is null or v_club is null then
+    return;
+  end if;
+
+  return query
+  select
+    v_club,
+    me.id,
+    me.team_id,
+    coalesce(t.is_auto, false),
+    left(coalesce(
+      nullif(trim(mate.display_name), ''),
+      nullif(trim(mp.display_name), ''),
+      'Участник'
+    ), 60),
+    coalesce(mp.avatar_seed, ''),
+    inv.token
+  from public.marathon_members me
+  left join public.marathon_teams t on t.id = me.team_id
+  left join public.marathon_members mate
+    on mate.team_id = me.team_id and mate.id <> me.id and mate.status = 'active'
+  left join public.profiles mp on mp.email = mate.email
+  left join public.club_duo_invites inv
+    on inv.inviter_email = v_email and inv.redeemed_at is null and inv.expires_at > now()
+  where me.marathon_id = v_club and me.email = v_email and me.status = 'active'
+  limit 1;
+end;
+$$;
+
+revoke execute on function public.club_duo_status() from public, anon;
+grant execute on function public.club_duo_status() to authenticated;
+
+comment on function public.club_duo_status() is
+  'Состояние пары в дуо-клубе: напарник (без почты), сама ли пара собралась, и открытая ссылка-приглашение.';
+
+notify pgrst, 'reload schema';
+
+-- =============================================================================
+-- 0035_authored_english_rest.sql — последние две дыры во второй половине.
+-- =============================================================================
+
+-- =============================================================================
+-- 0035 — последние две дыры во второй половине.
+--
+-- 0032 добавил английскую половину тому, что печатает тренер: название тренировки, задание клуба,
+-- дыхание в упражнении. Проверка всего, что вообще доходит до читателя, нашла ещё две — и обе
+-- видны не в редких местах, а на главных экранах.
+--
+-- ## `marathons.title_en`, `.description_en`, `.prize_en`
+--
+-- **Приз виден всем.** `clubPrize()` подставляет переведённую строку по умолчанию только когда
+-- поле пустое; как только Сергей вписал «Час с тренером», её видит и английский читатель — на
+-- экране клуба, на доске и в плашке победителя. Название круга и описание — там же.
+--
+-- ## `exercises.short_name_en`
+--
+-- Короткое имя движения — то, что стоит в полоске упражнений на карточке дня. Английской половины
+-- у него не было вовсе, и `catalogue.ts` выходил из положения так:
+--
+--     shortName: { ru: r.shortNameRu, en: r.shortNameRu }
+--
+-- То есть клал русскую строку в английскую половину. Это хуже, чем отсутствие перевода: пустое
+-- поле видно и в интерфейсе, и в проверке, а русский текст, лежащий в колонке `en`, неотличим от
+-- перевода — после такого «что ещё не переведено» не узнать никогда. Та строка уходит вместе с
+-- этой миграцией.
+--
+-- ## Почему снова nullable и снова ничего не копируется
+--
+-- По тем же причинам, что в 0032, и они не изменились. Пустая половина читается как «не
+-- перевели»; `l10n()` подставит русское, так что английский читатель увидит русское название, а
+-- не пустоту. Обязательный перевод означал бы, что Сергей не может объявить приз, пока не
+-- переведёт его, — а он тренер, а не переводчик.
+--
+-- Идемпотентна.
+-- =============================================================================
+
+-- Круг клуба: название, описание и приз.
+alter table public.marathons add column if not exists title_en text;
+alter table public.marathons add column if not exists description_en text;
+alter table public.marathons add column if not exists prize_en text;
+
+do $$
+begin
+  -- Длины — как у русских колонок рядом (0011).
+  if not exists (select 1 from pg_constraint where conname = 'marathons_title_en_len') then
+    alter table public.marathons
+      add constraint marathons_title_en_len
+      check (title_en is null or length(title_en) between 1 and 120);
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'marathons_description_en_len') then
+    alter table public.marathons
+      add constraint marathons_description_en_len
+      check (description_en is null or length(description_en) <= 2000);
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'marathons_prize_en_len') then
+    alter table public.marathons
+      add constraint marathons_prize_en_len
+      check (prize_en is null or length(prize_en) <= 200);
+  end if;
+end $$;
+
+-- Короткое имя движения.
+alter table public.exercises add column if not exists short_name_en text;
+
+-- Англоязычному читателю у заведённых кругов уже есть что показать: обе строки написаны здесь, а
+-- не набраны в админке, и это те же слова, что стоят в русских колонках с 0033. Условие `is null`
+-- обязательно: если Сергей успел вписать свой перевод, повторный прогон миграции его не затрёт.
+update public.marathons
+set title_en = 'Solo club'
+where slug = 'club' and title_en is null;
+
+update public.marathons
+set title_en = 'Club in pairs'
+where slug = 'club_duo' and title_en is null;
+
+update public.marathons
+set prize_en = 'An hour with the coach'
+where slug = 'club' and prize_en is null and prize is not null;
+
+update public.marathons
+set prize_en = 'An hour with the coach — for each of the pair'
+where slug = 'club_duo' and prize_en is null and prize is not null;
+
+-- =============================================================================
+-- Кто выбирает половину
+--
+-- У круга клуба это решается **в базе, а не в приложении**, и это не каприз. Название, описание и
+-- приз доходят до экрана не колонками, а через `my_marathons()` и `club_winner()` — функции
+-- возвращают по одной строке на поле. Отдать наружу обе половины значило бы расширить возвращаемый
+-- тип двух функций, провести `titleEn`/`prizeEn` через типы, мапперы строк, демо-слой и четыре
+-- экрана — и всё это чтобы в конце вызвать `l()`, который выберет то же самое.
+--
+-- Язык читателя базе известен: `profiles.locale` стоит с 0001 и с 0154 им управляет само
+-- приложение. Значит выбрать можно там же, где берётся строка, и ниже по течению ничего не знает,
+-- что выбор вообще был.
+--
+-- Это не общий приём, а решение для этих двух функций. Там, где текст правит тренер в админке
+-- (`custom_workouts`, `marathon_tasks`, упражнения), наружу по-прежнему уходят обе половины: их
+-- надо не только показать, но и отредактировать, а редактору нужны обе.
+-- =============================================================================
+
+/*
+ * Язык текущего читателя. `stable`, поэтому в пределах одного запроса вычисляется раз, а не на
+ * каждую строку. `'ru'` — ответ и для анонима, и для того, у кого профиля ещё нет: язык по
+ * умолчанию задан в `profiles.locale` с самого начала, и менять его здесь было бы вторым местом,
+ * где написано, какой язык родной.
+ */
+create or replace function public.my_locale()
+returns text
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+  select coalesce(
+    (select p.locale from public.profiles p where p.email = public.current_email()),
+    'ru'
+  );
+$$;
+
+revoke execute on function public.my_locale() from public, anon;
+grant execute on function public.my_locale() to authenticated;
+
+/*
+ * Половина на языке читателя. Пустая английская половина — это «не перевели», и тогда ответ
+ * русский: читатель видит слова тренера, а не пустоту. `btrim` потому, что строка из одних
+ * пробелов приходит от формы, а не от переводчика.
+ */
+create or replace function public.pick_l10n(p_ru text, p_en text)
+returns text
+language sql
+stable
+set search_path = pg_catalog, public, extensions
+as $$
+  select case
+    when public.my_locale() = 'en' then coalesce(nullif(btrim(p_en), ''), p_ru)
+    else p_ru
+  end;
+$$;
+
+revoke execute on function public.pick_l10n(text, text) from public, anon;
+grant execute on function public.pick_l10n(text, text) to authenticated;
+
+-- Круги, в которых состоит читатель. Тип возвращаемого значения не меняется — меняются три
+-- выражения в списке выборки.
+create or replace function public.my_marathons()
+returns table (
+  id          uuid,
+  slug        text,
+  title       text,
+  description text,
+  status      text,
+  starts_on   date,
+  days        int,
+  team_size   int,
+  prize       text,
+  day_index   int,
+  week        int,
+  total_weeks int,
+  member_id   uuid,
+  team_id     uuid,
+  team_name   text,
+  is_club     boolean
+)
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+  select
+    m.id,
+    m.slug,
+    public.pick_l10n(m.title, m.title_en),
+    public.pick_l10n(m.description, m.description_en),
+    m.status,
+    m.starts_on,
+    m.days,
+    m.team_size,
+    public.pick_l10n(m.prize, m.prize_en),
+    least(public.marathon_day_index(m.id), m.days) as day_index,
+    public.marathon_week_of(least(public.marathon_day_index(m.id), m.days)) as week,
+    public.marathon_week_of(m.days) as total_weeks,
+    mem.id, mem.team_id, t.name, m.is_club
+  from public.marathons m
+  join public.marathon_members mem
+    on mem.marathon_id = m.id
+   and mem.status = 'active'
+   and mem.email = public.current_email()
+  left join public.marathon_teams t on t.id = mem.team_id
+  where m.status in ('active', 'finished')
+  order by m.is_club desc, m.starts_on desc;
+$$;
+
+revoke execute on function public.my_marathons() from public, anon;
+grant execute on function public.my_marathons() to authenticated;
+
+-- Победитель недели. Тот же приз, та же подмена; остальное — как в 0033.
+create or replace function public.club_winner(p_duo boolean default false)
+returns table (
+  marathon_id  uuid,
+  week         int,
+  display_name text,
+  avatar_seed  text,
+  note         text,
+  prize        text,
+  announced_at timestamptz,
+  is_me        boolean
+)
+language plpgsql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email citext := public.current_email();
+  v_club  uuid   := public.club_marathon(p_duo);
+begin
+  if v_email is null or v_club is null then
+    return;
+  end if;
+
+  return query
+  select
+    m.id,
+    w.week,
+    left(coalesce(
+      nullif(trim(mem.display_name), ''),
+      nullif(trim(p.display_name), ''),
+      -- Безымянному участнику подпись ставит база, и на языке того, кто её читает.
+      case when public.my_locale() = 'en' then 'Member' else 'Участник' end
+    ), 60),
+    coalesce(p.avatar_seed, ''),
+    w.note,
+    public.pick_l10n(m.prize, m.prize_en),
+    w.announced_at,
+    mem.email = v_email
+  from public.marathon_winners w
+  join public.marathons m on m.id = w.marathon_id
+  join public.marathon_members mem on mem.id = w.member_id
+  left join public.profiles p on p.email = mem.email
+  where m.id = v_club
+    -- Только своим: победитель клуба — новость для тех, кто в нём состоит.
+    and exists (
+      select 1 from public.marathon_members me
+      where me.marathon_id = m.id and me.email = v_email and me.status = 'active'
+    )
+  order by w.announced_at desc
+  limit 1;
+end;
+$$;
+
+revoke execute on function public.club_winner(boolean) from public, anon;
+grant execute on function public.club_winner(boolean) to authenticated;
+
+/*
+ * Сообщение победителю в бота.
+ *
+ * Здесь `pick_l10n()` не годится: очередь наполняет триггер от имени того, кто объявил победителя,
+ * то есть тренера, а прочитает сообщение победитель. Язык у них разный, и берётся он в момент
+ * отправки — `telegram-notify` уже читает `profiles.locale` получателя (0154).
+ *
+ * Поэтому в полезную нагрузку кладутся **обе половины**, а выбор делает отправщик. `prize` остаётся
+ * на месте и остаётся русским: письма, уже лежащие в очереди, разбираются старым кодом, и отнимать
+ * у них поле значило бы разослать «ты выиграл(а) » без приза.
+ */
+create or replace function public.marathon_winners_notify()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email    citext;
+  v_prize    text;
+  v_prize_en text;
+begin
+  -- Адрес участника — единственное, что связывает победителя с очередью: она
+  -- вся живёт на почтах, потому что получателя ищет отправитель (0027).
+  select mem.email into v_email
+  from public.marathon_members mem
+  where mem.id = new.member_id;
+
+  if v_email is null then
+    return new;
+  end if;
+
+  select m.prize, m.prize_en into v_prize, v_prize_en
+  from public.marathons m where m.id = new.marathon_id;
+
+  perform public.enqueue_telegram(
+    v_email::text,
+    'weekly_winner',
+    'weekly_winner:' || new.marathon_id::text || ':' || new.week::text
+      || ':' || new.member_id::text,
+    jsonb_build_object(
+      'prize', coalesce(v_prize, ''),
+      'prize_en', coalesce(v_prize_en, ''),
+      'note', coalesce(new.note, '')
+    ),
+    now(),
+    interval '1 day'
+  );
+  return new;
+end;
+$$;
+
+/*
+ * Триггер не пересоздаётся: `create or replace function` сохраняет привязку, и он продолжает
+ * указывать сюда. Первая версия этой миграции его всё-таки пересоздавала — и потеряла половину
+ * условия: у 0029 он стоит на `insert or update of member_id`, потому что тренер может сменить
+ * победителя, и тогда сообщение должно уйти новому. Написанное заново `after insert` это молча
+ * отменило; поймал 85_weekly_winner.sql. Меняется тело — трогать надо только тело.
+ */
+
+notify pgrst, 'reload schema';
+
+-- =============================================================================
+-- 0036_authored_by.sql — чья это тренировка.
+-- =============================================================================
+
+-- =============================================================================
+-- 0036 — чья это тренировка.
+--
+-- Владелец: «по хорошему бы запоминать от кого тренировка, через кого она создавалась и показывать
+-- это пользователю, потому что я также хочу сделать с йогой потом».
+--
+-- ## Два разных факта, и в базе их теперь тоже два
+--
+-- `author_id` (0006) уже есть и отвечает на «через кого» — это аккаунт, из которого нажали
+-- «Сохранить». Он служебный: по нему видно, кто правил, и наружу он не выходит никогда, потому что
+-- ведёт на `auth.users`.
+--
+-- `author_slug` — про «от кого», и это другое. Йогу ведёт не Сергей, а заводить её тренировки
+-- будет владелец: аккаунт один, работа чужая. Вывести одно из другого нельзя, поэтому автора
+-- **выбирают** в редакторе.
+--
+-- ## Почему text, а не ссылка на таблицу
+--
+-- Авторов двое, и список живёт в `content/site/authors.ts`, а не в базе: таблица, экран для неё и
+-- загрузка фотографий стоили бы дороже всего, что они дают. Здесь остаётся ключ — короткое слово,
+-- по которому приложение находит имя и фотографию.
+--
+-- Проверка формы, но не существования: база не знает, кто есть в том файле, и не должна. Автор,
+-- которого удалили из списка, — это `authorById()` вернул null и подписи нет; строка при этом
+-- цела, и вернуть автора можно правкой одной строчки в файле.
+--
+-- Курсы сюда не попали, и это не упущение: `admin_courses.content` — jsonb в форме, которую
+-- задаёт `CourseDraftContent`, и автор кладётся туда полем. Миграция для этого не нужна.
+--
+-- Идемпотентна.
+-- =============================================================================
+
+alter table public.custom_workouts add column if not exists author_slug text;
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'custom_workouts_author_slug_fmt') then
+    alter table public.custom_workouts
+      add constraint custom_workouts_author_slug_fmt
+      check (author_slug is null or author_slug ~ '^[a-z0-9_]{2,40}$');
+  end if;
+end $$;
+
+/*
+ * Всё, что заведено до сегодня, — Сергея: других авторов до этой миграции не было, и продукт до
+ * сих пор говорил о тренировках как о его. Пустая колонка означала бы «неизвестно», а это неправда.
+ *
+ * `is null` обязательно: повторный прогон не должен переписать то, что уже проставили руками.
+ */
+update public.custom_workouts set author_slug = 'sergey' where author_slug is null;
+
+/*
+ * Подпись должна доехать до того, кому тренировку выдали, — а он читает не таблицу, а это
+ * представление. Остальные колонки и `security_invoker = false` как в 0006: представление само
+ * фильтрует по `current_email()`, и менять тут больше нечего.
+ */
+drop view if exists public.my_custom_workouts;
+create view public.my_custom_workouts
+with (security_invoker = false)
+as
+  select w.id, w.short_id, w.title, w.title_en, w.description, w.description_en,
+         w.author_slug, w.structure, w.est_sec, w.points,
+         a.created_at as assigned_at
+  from public.assigned_workouts a
+  join public.custom_workouts w on w.id = a.custom_workout_id
+  where a.email = public.current_email() and w.is_archived = false;
+
+revoke all on public.my_custom_workouts from anon, authenticated;
+grant select on public.my_custom_workouts to authenticated;
+
+notify pgrst, 'reload schema';
+
+-- =============================================================================
+-- 0037_board_skips_assigned.sql — доска не считает тренировки, выданные тренером лично.
+-- =============================================================================
+
+-- =============================================================================
+-- 0037 — доска не считает тренировки, выданные тренером лично.
+--
+-- Владелец: «не надо никаких баллов за тренировки Сергея, которые он назначил, потому что эти
+-- баллы тогда будут влиять на лидерборд. Люди, которые покупают тренировки Сергея, будут
+-- автоматически выше и будут каждую неделю получать просто бесплатные тренировки, что не очень
+-- честно по отношению к остальным».
+--
+-- Приложение с этой же правкой перестаёт начислять очки за такую тренировку вовсе
+-- (`customWorkoutPoints`). Здесь — вторая половина: сессии, записанные раньше, уже лежат в базе со
+-- своими очками, и доска перестаёт их считать, вместо того чтобы переписывать историю.
+--
+-- Сама тренировка ничего не теряет: она по-прежнему засчитывается выполненной, держит серию и
+-- уходит с полки — всё это считается по наличию строки, а не по числу в ней.
+--
+-- Требует 0002_functions.sql. Идемпотентна.
+-- =============================================================================
+
+create or replace function public.get_leaderboard(
+  p_period    text default 'week',
+  p_course_id text default null,
+  p_limit     int  default 100
+)
+returns table (
+  user_id      uuid,
+  display_name text,
+  avatar_seed  text,
+  points       bigint,
+  rank         bigint,
+  is_me        boolean
+)
+language plpgsql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  -- Defence in depth: the engine ceiling (basePoints 250 × harder 1.25 × streak 1.2)
+  -- and the step-points cap. workout_sessions_guard already clamps per workout, but
+  -- the board is the one place every athlete sees, so it clamps again.
+  c_max_session_points constant int := 375;
+  c_max_step_points    constant int := 60;
+
+  /*
+   * Тренировки, выданные тренером лично, лежат в сессиях под этим курсом (0024) — и в счёт недели
+   * не идут. Решение владельца, и оно про справедливость, а не про подсчёт: приз недели — час с
+   * тренером, а очки за персональную работу давали купившему её фору в гонке за бесплатную
+   * персональную работу. Деньги превращались в место в рейтинге, место — обратно в деньги.
+   *
+   * Правило живёт здесь, а не только в приложении, по двум причинам. Уже записанные сессии несут
+   * свои старые очки, и переписывать историю ради этого не нужно — достаточно перестать её
+   * считать. И доска — единственное место, которое видит каждый; она уже перестраховывается
+   * потолками выше, здесь та же мысль.
+   */
+  c_custom_course_id   constant text := 'custom';
+
+  v_me        uuid := auth.uid();
+  v_limit     int  := least(greatest(coalesce(p_limit, 100), 1), 500);
+  v_week_ts   timestamp;
+  v_from      timestamptz;
+  v_from_date date;
+begin
+  if v_me is null then
+    raise exception 'not_authenticated' using errcode = '42501';
+  end if;
+
+  if p_period is null or p_period not in ('week', 'all') then
+    raise exception 'invalid_period' using errcode = 'P0001';
+  end if;
+
+  if p_course_id is not null and p_course_id !~ '^[a-z0-9_]{2,40}$' then
+    raise exception 'invalid_course' using errcode = 'P0001';
+  end if;
+
+  -- Monday 00:00 UTC of the current ISO week.
+  v_week_ts   := date_trunc('week', now() at time zone 'utc');
+  v_from      := v_week_ts at time zone 'utc';
+  v_from_date := v_week_ts::date;
+
+  return query
+  with s as (
+    select ws.user_id as uid, sum(least(greatest(ws.points, 0), c_max_session_points))::bigint as pts
+    from public.workout_sessions ws
+    where ws.completed_at is not null
+      and ws.completed_at <= now()
+      and (p_period = 'all' or ws.completed_at >= v_from)
+      and (p_course_id is null or ws.course_id = p_course_id)
+      -- Выданная тренером лично тренировка неделю не двигает (объяснение у c_custom_course_id).
+      and ws.course_id is distinct from c_custom_course_id
+    group by ws.user_id
+  ),
+  d as (
+    select dl.user_id as uid, sum(least(greatest(dl.points, 0), c_max_step_points))::bigint as pts
+    from public.daily_logs dl
+    -- Never count a day that has not happened yet (time zones ahead of the server
+    -- reach current_date + 1).
+    where p_course_id is null
+      and dl.local_date <= current_date + 1
+      and (p_period = 'all' or dl.local_date >= v_from_date)
+    group by dl.user_id
+  ),
+  totals as (
+    select coalesce(s.uid, d.uid) as uid,
+           coalesce(s.pts, 0) + coalesce(d.pts, 0) as pts
+    from s
+    full outer join d on d.uid = s.uid
+  ),
+  ranked as (
+    select t.uid, t.pts, rank() over (order by t.pts desc, t.uid) as rnk
+    from totals t
+    where t.pts > 0
+  ),
+  top as (
+    select r.uid, r.pts, r.rnk from ranked r order by r.rnk, r.uid limit v_limit
+  ),
+  me as (
+    select r.uid, r.pts, r.rnk from ranked r where r.uid = v_me
+    union all
+    -- Caller without points yet: last place, 0 points.
+    select v_me, 0::bigint, (select count(*) from ranked) + 1
+    where not exists (select 1 from ranked r where r.uid = v_me)
+  ),
+  rows_out as (
+    select * from top
+    union
+    select * from me
+  )
+  select
+    ro.uid,
+    -- Clamped again on the way out: this row is relayed to every other athlete.
+    left(coalesce(nullif(trim(p.display_name), ''), 'Athlete ' || left(ro.uid::text, 4)), 60),
+    left(coalesce(p.avatar_seed, left(ro.uid::text, 8)), 64),
+    ro.pts,
+    ro.rnk,
+    ro.uid = v_me
+  from rows_out ro
+  left join public.profiles p on p.id = ro.uid
+  order by ro.rnk, ro.uid;
+end;
+$$;
+
+-- =============================================================================
+-- 0038_payment_source.sql — записывать, какая касса принесла деньги.
+-- =============================================================================
+
+-- =============================================================================
+-- 0038 — записывать, какая касса принесла деньги.
+--
+-- Владелец: «нужно писать, какой курс и как была совершена покупка, потому что у нас разные
+-- платформы есть».
+--
+-- Сегодня это невозможно, и не потому, что некуда писать. Колонка `source` есть у `purchases` с
+-- 0001 и у `subscriptions` с 0005, и в обеих применяющих функциях в неё **жёстко вписано**
+-- `'prodamus'` — всегда, кем бы функция ни была позвана. То есть покупка через lava.top уже
+-- сейчас лежит в базе как покупка через Prodamus, и никакое уведомление не смогло бы сказать
+-- правду: её просто нет в данных.
+--
+-- ## Что меняется
+--
+-- У трёх функций появляется последний аргумент со значением по умолчанию `'prodamus'`, и литерал
+-- внутри заменяется на него. Умолчание не для красоты: оно означает, что **до** обновления
+-- вебхуков ничего не ломается, и порядок выкладки перестаёт иметь значение. Старый вызов без
+-- аргумента ведёт себя ровно как вчера.
+--
+-- У `payments` появляется колонка `provider` — по той же причине, что и всё остальное здесь.
+-- Журнал платежей читает владелец, и «откуда пришли деньги» — половина ответа на вопрос, который
+-- он к этому журналу приходит задать.
+--
+-- `claim_payment()` («оплатил(а) с другой почты») теперь передаёт кассу из записанного платежа
+-- дальше, вместо того чтобы молча звать умолчание. Иначе платёж lava.top, забранный руками,
+-- превращался бы в Prodamus на последнем шаге — ровно та ложь, ради которой всё это и делается.
+--
+-- ## Почему drop, а не create or replace
+--
+-- `create or replace` не умеет менять список аргументов: он создал бы **вторую** функцию рядом с
+-- первой. Две перегрузки с одинаковыми именами параметров — это `PGRST203`, и вебхук перестал бы
+-- открывать доступ с ошибкой, которая выглядит как что угодно, кроме миграции. Поэтому старая
+-- сигнатура сносится явно, и сразу за ней создаётся новая.
+--
+-- Права выдаются заново и явно, включая `record_payment`, у которой явной выдачи не было: новая
+-- функция — это новый объект, и умолчания платформы на неё не распространяются. Ровно та дыра,
+-- через которую 0031 уже один раз провалилась в проде.
+--
+-- Требует 0005_subscriptions.sql, 0019_free_first_workout.sql, 0020_payment_emails.sql.
+-- Идемпотентна.
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- 1. Журнал платежей помнит кассу.
+-- -----------------------------------------------------------------------------
+alter table public.payments
+  add column if not exists provider text;
+
+alter table public.payments drop constraint if exists payments_provider_len;
+alter table public.payments add constraint payments_provider_len
+  check (provider is null or length(provider) <= 40);
+
+comment on column public.payments.provider is
+  'Which till the money came through: prodamus, lava. Null on rows written before 0038.';
+
+-- -----------------------------------------------------------------------------
+-- 2. record_payment — та же функция, плюс касса.
+-- -----------------------------------------------------------------------------
+drop function if exists public.record_payment(text, numeric, text, timestamptz, text, boolean);
+
+create or replace function public.record_payment(
+  p_email        text,
+  p_amount       numeric,
+  p_provider_ref text,
+  p_paid_at      timestamptz,
+  p_intent       text,
+  p_applied      boolean,
+  p_provider     text default 'prodamus'
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email citext := lower(btrim(coalesce(p_email, '')));
+  v_ref   text   := nullif(btrim(coalesce(p_provider_ref, '')), '');
+  v_id    uuid;
+  -- Касса, принёсшая платёж. Журнал читает владелец, и «откуда» — половина ответа.
+  v_prov  text   := left(coalesce(nullif(btrim(p_provider), ''), 'prodamus'), 40);
+begin
+  if v_email = '' then
+    return null;
+  end if;
+  if p_intent is null or p_intent not in ('monthly', 'annual', 'course') then
+    raise exception 'invalid_intent' using errcode = 'P0001';
+  end if;
+
+  if v_ref is not null then
+    select id into v_id from public.payments where provider_ref = v_ref;
+    if v_id is not null then
+      -- Уже записан. Если в прошлый раз он не привязался, а теперь привязался —
+      -- отметим это; больше ничего трогать не нужно.
+      update public.payments
+      set applied = applied or p_applied
+      where id = v_id;
+      return v_id;
+    end if;
+  end if;
+
+  insert into public.payments (email, amount, provider_ref, paid_at, intent, applied, provider)
+  values (v_email, p_amount, v_ref, coalesce(p_paid_at, now()), p_intent, coalesce(p_applied, false), v_prov)
+  returning id into v_id;
+  return v_id;
+end;
+$$;
+
+revoke execute on function
+  public.record_payment(text, numeric, text, timestamptz, text, boolean, text)
+  from public, anon, authenticated;
+grant execute on function
+  public.record_payment(text, numeric, text, timestamptz, text, boolean, text)
+  to service_role;
+
+-- -----------------------------------------------------------------------------
+-- 3. apply_subscription_payment — source больше не константа.
+-- -----------------------------------------------------------------------------
+drop function if exists public.apply_subscription_payment(text, text, text, timestamptz);
+
+create or replace function public.apply_subscription_payment(
+  p_email        text,
+  p_plan         text,
+  p_provider_ref text default null,
+  p_paid_at      timestamptz default now(),
+  p_source       text default 'prodamus'
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email  citext;
+  v_row    public.subscriptions%rowtype;
+  v_from   timestamptz;
+  v_ref    text;
+  v_id     uuid;
+  -- Какая касса принесла деньги. Пусто — Prodamus: так это писалось до 0038.
+  v_source text := left(coalesce(nullif(btrim(p_source), ''), 'prodamus'), 40);
+begin
+  -- Only the service role (the webhook) and the SQL editor: never a signed-in user.
+  if coalesce(current_setting('request.jwt.claims', true), '') <> ''
+     and coalesce(current_setting('request.jwt.claims', true)::json ->> 'role', '') <> 'service_role' then
+    raise exception 'not_allowed' using errcode = '42501';
+  end if;
+
+  v_email := public.normalize_email(p_email);
+  if p_plan is null or p_plan not in ('monthly', 'annual') then
+    raise exception 'invalid_plan' using errcode = 'P0001';
+  end if;
+  v_ref := left(nullif(trim(p_provider_ref), ''), 120);
+
+  select * into v_row from public.subscriptions where email = v_email;
+
+  if found and v_ref is not null and v_row.provider_ref = v_ref then
+    return v_row.id; -- the same payment, delivered again
+  end if;
+
+  v_from := case
+    when found and v_row.status in ('active', 'cancelled') and v_row.expires_at > p_paid_at then v_row.expires_at
+    else p_paid_at
+  end;
+
+  insert into public.subscriptions (email, plan, status, started_at, expires_at, source, provider_ref)
+  values (v_email, p_plan, 'active', p_paid_at, v_from + public.subscription_period(p_plan), v_source, v_ref)
+  on conflict (email) do update
+    set plan         = excluded.plan,
+        status       = 'active',
+        started_at   = coalesce(subscriptions.started_at, excluded.started_at),
+        expires_at   = excluded.expires_at,
+        source       = v_source,
+        provider_ref = coalesce(excluded.provider_ref, subscriptions.provider_ref),
+        updated_at   = now()
+  returning id into v_id;
+
+  return v_id;
+end;
+$$;
+
+revoke execute on function public.apply_subscription_payment(text, text, text, timestamptz, text)
+  from public, anon, authenticated;
+grant execute on function public.apply_subscription_payment(text, text, text, timestamptz, text)
+  to service_role;
+
+-- -----------------------------------------------------------------------------
+-- 4. apply_course_payment — то же самое.
+-- -----------------------------------------------------------------------------
+drop function if exists public.apply_course_payment(text, text, timestamptz, text);
+
+create or replace function public.apply_course_payment(
+  p_email        text,
+  p_provider_ref text default null,
+  p_paid_at      timestamptz default now(),
+  p_course_id    text default null,
+  p_source       text default 'prodamus'
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email  citext;
+  v_ref    text;
+  v_course text;
+  v_count  int;
+  v_id     uuid;
+  -- Какая касса принесла деньги. Пусто — Prodamus: так это писалось до 0038.
+  v_source text := left(coalesce(nullif(btrim(p_source), ''), 'prodamus'), 40);
+begin
+  -- Только сервисная роль (вебхук) и SQL-редактор: никогда не вошедший пользователь.
+  if coalesce(current_setting('request.jwt.claims', true), '') <> ''
+     and coalesce(current_setting('request.jwt.claims', true)::json ->> 'role', '') <> 'service_role' then
+    raise exception 'not_allowed' using errcode = '42501';
+  end if;
+
+  v_email := public.normalize_email(p_email);
+  v_ref := left(nullif(trim(p_provider_ref), ''), 120);
+
+  -- Тот же платёж, доставленный повторно.
+  if v_ref is not null then
+    select id into v_id from public.purchases where provider_ref = v_ref limit 1;
+    if v_id is not null then
+      return v_id;
+    end if;
+  end if;
+
+  -- Какой курс. Либо сказали прямо, либо это единственная ожидающая покупка.
+  if p_course_id is not null then
+    if p_course_id !~ '^[a-z0-9_]{2,40}$'
+       or not exists (select 1 from public.courses c where c.id = p_course_id) then
+      raise exception 'invalid_course' using errcode = 'P0001';
+    end if;
+    v_course := p_course_id;
+  else
+    select count(*), min(p.course_id)
+      into v_count, v_course
+    from public.purchases p
+    where p.email = v_email and p.status = 'pending';
+
+    -- Ноль — платёж без заказа; больше одного — неизвестно, за какой из них.
+    -- В обоих случаях решает человек.
+    if v_count <> 1 then
+      return null;
+    end if;
+  end if;
+
+  -- Сериализуем по адресу, как это делает create_order: заказ и оплата могут
+  -- прийти в одну секунду, если человек платит сразу после нажатия.
+  perform pg_advisory_xact_lock(hashtextextended('forma:course_payment:' || v_email::text, 0));
+
+  insert into public.purchases (email, course_id, status, source, activated_at, provider_ref)
+  values (v_email, v_course, 'active', v_source, p_paid_at, v_ref)
+  on conflict (email, course_id) do update
+    set status = 'active',
+        source = v_source,
+        -- Первая активация ставит дату; повторная сохраняет исходную, потому что
+        -- от неё отсчитывается и возврат, и пробная неделя клуба.
+        activated_at = coalesce(purchases.activated_at, excluded.activated_at),
+        provider_ref = coalesce(purchases.provider_ref, excluded.provider_ref),
+        updated_at   = now()
+  returning id into v_id;
+
+  return v_id;
+end;
+$$;
+
+revoke execute on function public.apply_course_payment(text, text, timestamptz, text, text)
+  from public, anon, authenticated;
+grant execute on function public.apply_course_payment(text, text, timestamptz, text, text)
+  to service_role;
+
+-- -----------------------------------------------------------------------------
+-- 5. claim_payment — передаёт кассу дальше.
+--
+-- Сигнатура не меняется, поэтому `create or replace`: права и выдача остаются на месте. Меняются
+-- два вызова внутри, и оба одинаково — касса берётся из строки платежа, а не из умолчания.
+-- -----------------------------------------------------------------------------
+create or replace function public.claim_payment(p_provider_ref text)
+returns text
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  c_window   constant interval := interval '1 hour';
+  c_max      constant int := 10;
+  v_uid      uuid := auth.uid();
+  v_mine     citext := public.current_email();
+  v_ref      text := nullif(btrim(coalesce(p_provider_ref, '')), '');
+  v_hits     int;
+  v_payment  public.payments%rowtype;
+  v_owner    uuid;
+  v_result   text;
+  v_claims   text;
+begin
+  if v_uid is null or v_mine is null then
+    raise exception 'not_signed_in' using errcode = '42501';
+  end if;
+  if v_ref is null or length(v_ref) > 120 then
+    return 'not_found';
+  end if;
+
+  -- Скользящее окно, то же, что у create_order(). Считается до поиска платежа,
+  -- чтобы неудачные попытки тоже стоили: иначе перебор ничего не стоил бы.
+  insert into public.order_throttle as t (bucket, window_start, hits)
+  values ('claim:' || v_uid::text, now(), 1)
+  on conflict (bucket) do update
+  set window_start = case when t.window_start < now() - c_window then now() else t.window_start end,
+      hits         = case when t.window_start < now() - c_window then 1 else t.hits + 1 end
+  returning hits into v_hits;
+
+  if v_hits > c_max then
+    return 'rate_limited';
+  end if;
+
+  select * into v_payment
+  from public.payments
+  where provider_ref = v_ref
+    and claimed_by is null;
+
+  if not found then
+    return 'not_found';
+  end if;
+
+  -- Адрес уже за кем-то закреплён? Если за этим же аккаунтом — всё в порядке,
+  -- идём дальше; если за чужим — стоп, и не молча.
+  select user_id into v_owner from public.payment_emails where email = v_payment.email;
+  if v_owner is not null and v_owner <> v_uid then
+    return 'email_taken';
+  end if;
+
+  if v_payment.email <> v_mine and v_owner is null then
+    insert into public.payment_emails (user_id, email, linked_by)
+    values (v_uid, v_payment.email, v_ref);
+  end if;
+
+  update public.payments
+  set claimed_by = v_uid,
+      claimed_at = now(),
+      applied    = true
+  where id = v_payment.id;
+
+  /*
+   * И применяем — на собственный адрес аккаунта, потому что именно на него
+   * оформлен ожидающий заказ и именно его увидит `my_entitlements`.
+   *
+   * `apply_subscription_payment` и `apply_course_payment` отказываются работать,
+   * если их зовут с пользовательским JWT: «никогда не вошедший пользователь».
+   * Это правильная защита — она держит дверь, за которой кто угодно выписал бы
+   * себе год подписки, — и здесь её приходится на два вызова снять.
+   *
+   * Почему это не дыра. Защита запрещает вызывать эти функции с произвольными
+   * аргументами. Здесь произвольного нет ни одного: план, номер заказа и дата
+   * прочитаны из строки `payments`, которую записал вебхук после сошедшейся
+   * подписи Prodamus, а адрес — собственный подтверждённый адрес вызывающего.
+   * Единственное, что пришло от человека, — номер заказа, и он уже проверен
+   * выше: без настоящего неоплаченного платежа сюда не доходят.
+   *
+   * `set_config(..., true)` — на транзакцию, и значение возвращается на место
+   * сразу после вызовов, чтобы ничто ниже по коду не выполнялось без клеймов.
+   */
+  v_claims := coalesce(current_setting('request.jwt.claims', true), '');
+  perform set_config('request.jwt.claims', '', true);
+
+  if v_payment.intent in ('monthly', 'annual') then
+    perform public.apply_subscription_payment(
+      v_mine::text, v_payment.intent, v_payment.provider_ref, v_payment.paid_at,
+      coalesce(v_payment.provider, 'prodamus'));
+    v_result := 'subscription';
+  else
+    if public.apply_course_payment(
+         v_mine::text, v_payment.provider_ref, v_payment.paid_at, null,
+         coalesce(v_payment.provider, 'prodamus')) is not null then
+      v_result := 'course';
+    else
+      v_result := 'linked';
+    end if;
+  end if;
+
+  perform set_config('request.jwt.claims', v_claims, true);
+
+  return v_result;
+end;
+$$;
+
+revoke execute on function public.claim_payment(text) from public, anon;
+grant execute on function public.claim_payment(text) to authenticated;
+
+-- Сигнатуры изменились — без этого PostgREST продолжит искать старые.
+notify pgrst, 'reload schema';
+
+-- =============================================================================
+-- 0039_session_intent.sql — платёж за занятие с тренером — свой вид, а не «курс».
+-- =============================================================================
+
+-- =============================================================================
+-- 0039 — платёж за занятие с тренером — свой вид, а не «курс».
+--
+-- Владелец: «что касается онлайн-тренировок, то тут тоже нужно присылать уведомление о том, что
+-- кто-то оплатил тренировку».
+--
+-- Отличить такой платёж сегодня нечем. `payments.intent` знает три значения — `monthly`, `annual`
+-- и `course`, — и занятие записывается третьим, как всё, что не подписка. В журнале час с
+-- тренером за 3 500 ₽ неотличим от курса за 3 990 ₽ ничем, кроме суммы, которую надо знать
+-- наизусть.
+--
+-- ## И это не только про отчётность
+--
+-- Всё, что не подписка, уходит в `apply_course_payment()`, а тот открывает **единственный
+-- ожидающий заказ на курс** этой почты. Человек, который оформил заказ на курс и потом купил час
+-- с тренером, получает курс даром: оплата часа сходит за оплату курса.
+--
+-- Дыра живая и на русской кассе, где покупают почти все. В lava.top её закрывает отдельная ветка
+-- по `product.id`; у Prodamus опознать занятие можно только суммой — как там опознаётся и тариф,
+-- и по той же причине: короткая ссылка теряет параметры. Цены занятий (2 500 и 3 500) не
+-- совпадают ни с одной ценой курса (2 990, 3 990, 4 990) и ни с одной ценой тарифа (1 990,
+-- 7 990), так что сумма здесь различает однозначно.
+--
+-- `claim_payment()` получает ту же ветку: «оплатил(а) с другой почты» для занятия закрепляет
+-- адрес и на этом останавливается, вместо того чтобы открыть курс.
+--
+-- Требует 0020_payment_emails.sql, 0038_payment_source.sql. Идемпотентна.
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- 1. Журнал принимает четвёртый вид.
+-- -----------------------------------------------------------------------------
+alter table public.payments drop constraint if exists payments_intent_check;
+alter table public.payments add constraint payments_intent_check
+  check (intent in ('monthly', 'annual', 'course', 'session'));
+
+comment on column public.payments.intent is
+  'What was bought: monthly / annual (subscription), course, session (the coach time). Set by the webhook.';
+
+-- -----------------------------------------------------------------------------
+-- 2. record_payment — тот же текст, что в 0038, плюс четвёртый вид.
+--
+-- `create or replace`, а не drop: список аргументов тот же, что оставила 0038, — значит права и
+-- выдача остаются на месте.
+-- -----------------------------------------------------------------------------
+create or replace function public.record_payment(
+  p_email        text,
+  p_amount       numeric,
+  p_provider_ref text,
+  p_paid_at      timestamptz,
+  p_intent       text,
+  p_applied      boolean,
+  p_provider     text default 'prodamus'
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email citext := lower(btrim(coalesce(p_email, '')));
+  v_ref   text   := nullif(btrim(coalesce(p_provider_ref, '')), '');
+  v_id    uuid;
+  -- Касса, принёсшая платёж. Журнал читает владелец, и «откуда» — половина ответа.
+  v_prov  text   := left(coalesce(nullif(btrim(p_provider), ''), 'prodamus'), 40);
+begin
+  if v_email = '' then
+    return null;
+  end if;
+  if p_intent is null or p_intent not in ('monthly', 'annual', 'course', 'session') then
+    raise exception 'invalid_intent' using errcode = 'P0001';
+  end if;
+
+  if v_ref is not null then
+    select id into v_id from public.payments where provider_ref = v_ref;
+    if v_id is not null then
+      -- Уже записан. Если в прошлый раз он не привязался, а теперь привязался —
+      -- отметим это; больше ничего трогать не нужно.
+      update public.payments
+      set applied = applied or p_applied
+      where id = v_id;
+      return v_id;
+    end if;
+  end if;
+
+  insert into public.payments (email, amount, provider_ref, paid_at, intent, applied, provider)
+  values (v_email, p_amount, v_ref, coalesce(p_paid_at, now()), p_intent, coalesce(p_applied, false), v_prov)
+  returning id into v_id;
+  return v_id;
+end;
+$$;
+
+-- -----------------------------------------------------------------------------
+-- 3. claim_payment — занятие не открывает курс.
+-- -----------------------------------------------------------------------------
+create or replace function public.claim_payment(p_provider_ref text)
+returns text
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  c_window   constant interval := interval '1 hour';
+  c_max      constant int := 10;
+  v_uid      uuid := auth.uid();
+  v_mine     citext := public.current_email();
+  v_ref      text := nullif(btrim(coalesce(p_provider_ref, '')), '');
+  v_hits     int;
+  v_payment  public.payments%rowtype;
+  v_owner    uuid;
+  v_result   text;
+  v_claims   text;
+begin
+  if v_uid is null or v_mine is null then
+    raise exception 'not_signed_in' using errcode = '42501';
+  end if;
+  if v_ref is null or length(v_ref) > 120 then
+    return 'not_found';
+  end if;
+
+  -- Скользящее окно, то же, что у create_order(). Считается до поиска платежа,
+  -- чтобы неудачные попытки тоже стоили: иначе перебор ничего не стоил бы.
+  insert into public.order_throttle as t (bucket, window_start, hits)
+  values ('claim:' || v_uid::text, now(), 1)
+  on conflict (bucket) do update
+  set window_start = case when t.window_start < now() - c_window then now() else t.window_start end,
+      hits         = case when t.window_start < now() - c_window then 1 else t.hits + 1 end
+  returning hits into v_hits;
+
+  if v_hits > c_max then
+    return 'rate_limited';
+  end if;
+
+  select * into v_payment
+  from public.payments
+  where provider_ref = v_ref
+    and claimed_by is null;
+
+  if not found then
+    return 'not_found';
+  end if;
+
+  -- Адрес уже за кем-то закреплён? Если за этим же аккаунтом — всё в порядке,
+  -- идём дальше; если за чужим — стоп, и не молча.
+  select user_id into v_owner from public.payment_emails where email = v_payment.email;
+  if v_owner is not null and v_owner <> v_uid then
+    return 'email_taken';
+  end if;
+
+  if v_payment.email <> v_mine and v_owner is null then
+    insert into public.payment_emails (user_id, email, linked_by)
+    values (v_uid, v_payment.email, v_ref);
+  end if;
+
+  update public.payments
+  set claimed_by = v_uid,
+      claimed_at = now(),
+      applied    = true
+  where id = v_payment.id;
+
+  /*
+   * И применяем — на собственный адрес аккаунта, потому что именно на него
+   * оформлен ожидающий заказ и именно его увидит `my_entitlements`.
+   *
+   * `apply_subscription_payment` и `apply_course_payment` отказываются работать,
+   * если их зовут с пользовательским JWT: «никогда не вошедший пользователь».
+   * Это правильная защита — она держит дверь, за которой кто угодно выписал бы
+   * себе год подписки, — и здесь её приходится на два вызова снять.
+   *
+   * Почему это не дыра. Защита запрещает вызывать эти функции с произвольными
+   * аргументами. Здесь произвольного нет ни одного: план, номер заказа и дата
+   * прочитаны из строки `payments`, которую записал вебхук после сошедшейся
+   * подписи Prodamus, а адрес — собственный подтверждённый адрес вызывающего.
+   * Единственное, что пришло от человека, — номер заказа, и он уже проверен
+   * выше: без настоящего неоплаченного платежа сюда не доходят.
+   *
+   * `set_config(..., true)` — на транзакцию, и значение возвращается на место
+   * сразу после вызовов, чтобы ничто ниже по коду не выполнялось без клеймов.
+   */
+  v_claims := coalesce(current_setting('request.jwt.claims', true), '');
+  perform set_config('request.jwt.claims', '', true);
+
+  if v_payment.intent = 'session' then
+    /*
+     * Занятие открывать нечем: куплено время тренера, а не доступ. Адрес закреплён выше — это и
+     * есть всё, что забирание платежа может для занятия сделать, и ответ `linked` говорит ровно
+     * это. Без этой ветки платёж за занятие проваливался бы в `apply_course_payment()` ниже и
+     * открывал ожидающий заказ на курс: человек, оформивший заказ и купивший час, получил бы курс
+     * даром.
+     */
+    v_result := 'linked';
+  elsif v_payment.intent in ('monthly', 'annual') then
+    perform public.apply_subscription_payment(
+      v_mine::text, v_payment.intent, v_payment.provider_ref, v_payment.paid_at,
+      coalesce(v_payment.provider, 'prodamus'));
+    v_result := 'subscription';
+  else
+    if public.apply_course_payment(
+         v_mine::text, v_payment.provider_ref, v_payment.paid_at, null,
+         coalesce(v_payment.provider, 'prodamus')) is not null then
+      v_result := 'course';
+    else
+      v_result := 'linked';
+    end if;
+  end if;
+
+  perform set_config('request.jwt.claims', v_claims, true);
+
+  return v_result;
+end;
+$$;
+
+notify pgrst, 'reload schema';
+
+-- =============================================================================
+-- 0040_admin_channel.sql — канал владельца: очередь сообщений в темы телеграм-группы.
+-- =============================================================================
+
+-- =============================================================================
+-- 0040 — канал владельца: очередь сообщений в темы телеграм-группы.
+--
+-- Владелец: «давай заведем канал в телеграмме в котором будет несколько обсуждений: регистрации,
+-- курсы, клуб соло, клуб дуо, онлайн-тренировки, обращения… хочется просто иметь визибилити над
+-- всеми покупками, возвратами и так далее, ну то есть всеми транзакциями».
+--
+-- Сегодня о деньгах не узнаёт никто. Вебхук открывает доступ и пишет строку в журнал, и это
+-- видно только тому, кто зашёл в админку и посмотрел. То есть узнать о покупке можно, а **заметить**
+-- её нельзя.
+--
+-- ## Клуб один, а не два
+--
+-- Тем пять, а не шесть, и это решение владельца после вопроса. Подписка на клуб **единая на оба
+-- режима** — так записано в 0033 её же словами: «Подписка единая на оба клуба, поэтому все
+-- пользователи могут участвовать как в соло-режиме, так и дуо». Значит отдельных покупок «соло» и
+-- «дуо» не бывает: транзакция одна, а кругов два, и две темы под деньги разошлись бы с
+-- действительностью на первой же оплате. Пары дуо — событие, а не покупка, и живут в той же теме.
+--
+-- ## Почему не `telegram_outbox`
+--
+-- Очередь сообщений людям уже есть (0027), и соблазн дописать в неё колонку большой. Три отличия,
+-- и каждого хватает.
+--
+--   1. **Получатель.** Там — человек, которого ещё надо найти по почте, и он может не найтись
+--      никогда. Здесь — чат с темой, известный заранее и всегда один.
+--   2. **Срок.** Там `expires_at` обязателен: «тренер выдал тренировку», доставленное через
+--      неделю, — недоумение. Здесь срока нет вовсе: покупка трёхдневной давности всё так же
+--      требует, чтобы её увидели. Поэтому здесь нет и статуса `skipped` — пропускать нечего.
+--   3. **Язык.** Там он берётся у получателя. Здесь читателя два, оба русские, и выбирать не из
+--      чего.
+--
+-- Общая у них ровно одна вещь — отправщик: `telegram-notify` разгребает обе очереди за один
+-- запуск, потому что расписание, токен и дверь у них и правда одни.
+--
+-- ## Зеркало не ломает то, что отражает
+--
+-- Каждый триггер здесь обёрнут в `exception when others then null`, и это главное отличие от
+-- 0027. Уведомление — зеркало; если зеркало треснуло, комната не обязана исчезнуть. Строка в
+-- `admin_outbox` не должна стоить покупки, а на регистрации это прямо опасно: `handle_new_user()`
+-- выполняется внутри транзакции, которой заводится аккаунт, и исключение в ней означает человека,
+-- который не смог зарегистрироваться, потому что не записалось уведомление.
+--
+-- 0027 так не делает, и это осознанно не трогается здесь: те триггеры давно в проде, менять их
+-- заодно значит проверять заодно.
+--
+-- Требует 0001_init.sql, 0005_subscriptions.sql, 0014_coach_bookings.sql, 0020_payment_emails.sql,
+-- 0034_club_pairs.sql, 0039_session_intent.sql. Идемпотентна.
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- 1. Очередь.
+-- -----------------------------------------------------------------------------
+create table if not exists public.admin_outbox (
+  id         uuid primary key default gen_random_uuid(),
+  -- Тема группы. Имена наши, а не телеграмные: числовой id темы живёт секретом, потому что
+  -- заводится руками и меняется вместе с группой.
+  topic      text not null check (topic in ('signups', 'courses', 'club', 'sessions', 'support')),
+  kind       text not null check (kind ~ '^[a-z_]{3,40}$'),
+  -- Что подставить в текст. Текст живёт в функции: правка формулировки не должна быть миграцией.
+  params     jsonb not null default '{}'::jsonb
+               check (octet_length(params::text) <= 4096),
+  status     text not null default 'pending' check (status in ('pending', 'sent', 'failed')),
+  attempts   int not null default 0 check (attempts >= 0),
+  last_error text check (last_error is null or length(last_error) <= 500),
+  -- Один повод — одно сообщение. Вебхук доставляет повторно, админ нажимает дважды.
+  dedupe_key text not null unique check (length(dedupe_key) <= 200),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+comment on table public.admin_outbox is
+  'Queue of messages to the owner''s Telegram topics (0040). The database records the occasion; telegram-notify sends.';
+
+-- Ровно тот порядок, которым ходит отправитель.
+create index if not exists admin_outbox_due_idx
+  on public.admin_outbox (created_at)
+  where status = 'pending';
+
+alter table public.admin_outbox enable row level security;
+
+-- Ни одной политики: здесь чужие адреса и суммы. Даже администратору продукта незачем читать это
+-- через API — он читает это в телеграме.
+revoke all on public.admin_outbox from anon, authenticated;
+grant select, insert, update, delete on public.admin_outbox to service_role;
+
+drop trigger if exists set_updated_at on public.admin_outbox;
+create trigger set_updated_at
+  before update on public.admin_outbox
+  for each row execute function public.set_updated_at();
+
+-- -----------------------------------------------------------------------------
+-- 2. enqueue_admin — записать повод.
+--
+-- Никому не выдана: зовут только триггеры ниже. Отдельной ручки «напиши в канал» в API не
+-- появляется — иначе канал стал бы тем, что можно вызвать снаружи.
+-- -----------------------------------------------------------------------------
+create or replace function public.enqueue_admin(
+  p_topic      text,
+  p_kind       text,
+  p_dedupe_key text,
+  p_params     jsonb default '{}'::jsonb
+)
+returns void
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+begin
+  insert into public.admin_outbox (topic, kind, params, dedupe_key)
+  values (p_topic, p_kind, coalesce(p_params, '{}'::jsonb), left(p_dedupe_key, 200))
+  on conflict (dedupe_key) do nothing;
+end;
+$$;
+
+revoke execute on function public.enqueue_admin(text, text, text, jsonb)
+  from public, anon, authenticated;
+
+-- -----------------------------------------------------------------------------
+-- 3. Регистрации.
+--
+-- Повод — строка в `profiles`, а не в `auth.users`: она создаётся тем же триггером и в той же
+-- транзакции, а читать `auth.users` триггером своей схемы — лишнее право на чужую таблицу.
+-- -----------------------------------------------------------------------------
+create or replace function public.profiles_notify_admin()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+begin
+  begin
+    perform public.enqueue_admin(
+      'signups',
+      'signup',
+      'signup:' || new.id::text,
+      jsonb_build_object('email', new.email::text, 'locale', new.locale)
+    );
+  exception when others then
+    -- Регистрация человека не стоит уведомления о ней. См. «Зеркало» в шапке.
+    null;
+  end;
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_notify_admin on public.profiles;
+create trigger profiles_notify_admin
+  after insert on public.profiles
+  for each row execute function public.profiles_notify_admin();
+
+-- -----------------------------------------------------------------------------
+-- 4. Курсы: оплата и возврат.
+--
+-- `source` в параметрах — та самая «как была совершена покупка»: с 0038 там настоящая касса, а не
+-- вписанная константа.
+-- -----------------------------------------------------------------------------
+create or replace function public.purchases_notify_admin()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_kind text;
+begin
+  begin
+    if new.status = 'active' and (tg_op = 'INSERT' or coalesce(old.status, '') <> 'active') then
+      v_kind := 'course_paid';
+    elsif new.status = 'refunded' and coalesce(old.status, '') <> 'refunded' then
+      v_kind := 'course_refunded';
+    end if;
+
+    if v_kind is not null then
+      perform public.enqueue_admin(
+        'courses',
+        v_kind,
+        v_kind || ':' || new.id::text,
+        jsonb_build_object(
+          'email', new.email::text,
+          'courseId', new.course_id,
+          'source', coalesce(new.source, '')
+        )
+      );
+    end if;
+  exception when others then
+    null;
+  end;
+  return new;
+end;
+$$;
+
+drop trigger if exists purchases_notify_admin on public.purchases;
+create trigger purchases_notify_admin
+  after insert or update of status on public.purchases
+  for each row execute function public.purchases_notify_admin();
+
+-- -----------------------------------------------------------------------------
+-- 5. Клуб: оплата, продление, отмена.
+--
+-- Продление — отдельный повод, и ключ включает `expires_at`: каждый оплаченный период даёт ровно
+-- одно сообщение. Ключом по одному id второй месяц уходил бы в тишину, и «подписки не
+-- продлеваются» выглядело бы точно так же, как «продлеваются молча».
+-- -----------------------------------------------------------------------------
+create or replace function public.subscriptions_notify_admin()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_kind text;
+begin
+  begin
+    if new.status = 'active' and (tg_op = 'INSERT' or coalesce(old.status, '') <> 'active') then
+      v_kind := 'club_paid';
+    elsif new.status = 'active' and old.expires_at is distinct from new.expires_at then
+      v_kind := 'club_renewed';
+    elsif new.status = 'cancelled' and coalesce(old.status, '') <> 'cancelled' then
+      v_kind := 'club_cancelled';
+    end if;
+
+    if v_kind is not null then
+      perform public.enqueue_admin(
+        'club',
+        v_kind,
+        v_kind || ':' || new.id::text || ':' || coalesce(new.expires_at::text, 'none'),
+        jsonb_build_object(
+          'email', new.email::text,
+          'plan', new.plan,
+          'source', coalesce(new.source, ''),
+          'expiresAt', coalesce(new.expires_at::text, '')
+        )
+      );
+    end if;
+  exception when others then
+    null;
+  end;
+  return new;
+end;
+$$;
+
+drop trigger if exists subscriptions_notify_admin on public.subscriptions;
+create trigger subscriptions_notify_admin
+  after insert or update of status, expires_at on public.subscriptions
+  for each row execute function public.subscriptions_notify_admin();
+
+-- -----------------------------------------------------------------------------
+-- 6. Клуб: пара дуо собралась.
+--
+-- Не покупка, а событие — и единственное, что в дуо вообще происходит отдельно от соло. Поэтому
+-- оно и есть весь вклад дуо в эту тему.
+-- -----------------------------------------------------------------------------
+create or replace function public.duo_invites_notify_admin()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+begin
+  begin
+    if new.redeemed_at is not null and old.redeemed_at is null then
+      perform public.enqueue_admin(
+        'club',
+        'duo_paired',
+        'duo_paired:' || new.token,
+        jsonb_build_object(
+          'inviter', new.inviter_email::text,
+          'partner', coalesce(new.redeemed_by::text, '')
+        )
+      );
+    end if;
+  exception when others then
+    null;
+  end;
+  return new;
+end;
+$$;
+
+drop trigger if exists duo_invites_notify_admin on public.club_duo_invites;
+create trigger duo_invites_notify_admin
+  after update of redeemed_at on public.club_duo_invites
+  for each row execute function public.duo_invites_notify_admin();
+
+-- -----------------------------------------------------------------------------
+-- 7. Онлайн-тренировки: выбрали время, перенесли, отменили.
+--
+-- Владелец: «присылать, что кто-то выбрал время». Строка в `coach_bookings` — это и есть
+-- выбранное время, откуда бы оно ни приехало (0014 провайдер-нейтральна).
+--
+-- Перенос — свой повод, и ключ включает новое время: иначе перенесённая встреча выглядела бы в
+-- канале как та же самая, и тренер пришёл бы к старому часу.
+-- -----------------------------------------------------------------------------
+create or replace function public.coach_bookings_notify_admin()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_kind text;
+begin
+  begin
+    if tg_op = 'INSERT' then
+      v_kind := 'session_booked';
+    elsif new.status = 'cancelled' and coalesce(old.status, '') <> 'cancelled' then
+      v_kind := 'session_cancelled';
+    elsif old.starts_at is distinct from new.starts_at then
+      v_kind := 'session_moved';
+    end if;
+
+    if v_kind is not null then
+      perform public.enqueue_admin(
+        'sessions',
+        v_kind,
+        v_kind || ':' || new.external_id || ':' || new.starts_at::text,
+        jsonb_build_object(
+          'email', new.email::text,
+          'startsAt', new.starts_at::text,
+          'minutes', greatest(1, round(extract(epoch from (new.ends_at - new.starts_at)) / 60)::int),
+          'timezone', coalesce(new.timezone, ''),
+          'eventName', coalesce(new.event_name, '')
+        )
+      );
+    end if;
+  exception when others then
+    null;
+  end;
+  return new;
+end;
+$$;
+
+drop trigger if exists coach_bookings_notify_admin on public.coach_bookings;
+create trigger coach_bookings_notify_admin
+  after insert or update of status, starts_at on public.coach_bookings
+  for each row execute function public.coach_bookings_notify_admin();
+
+-- -----------------------------------------------------------------------------
+-- 8. Клуб: пруф прислали заново после отказа.
+--
+-- Владелец: «я не хочу заходить в админку, я хочу получать уведомления сразу в телеге».
+--
+-- Пруфы — единственное в админке, что нельзя вынести целиком, и это стоит сказать прямо.
+-- Доказательство присылает каждый участник клуба каждый день; сообщение на каждое превратило бы
+-- канал в ленту, которую отключат на второй день, и вместе с ней отключат покупки.
+--
+-- Поэтому сюда уходит не всякий пруф, а тот, который **ждёт решения человека**: присланный
+-- заново после отказа тренера (`attempt` вырос — 0027). Такой пруф уже стоил кому-то отказа,
+-- вернулся в очередь и висит там, пока тренер не посмотрит. Обычный первый пруф не ждёт ничего:
+-- он сразу засчитан, и просмотр — это сверка, а не ответ.
+--
+-- Сводку «сколько пруфов ждут» лучше слать раз в день одной строкой, а не поштучно; для этого
+-- нужен свой повод по расписанию, и он тут намеренно не сделан.
+-- -----------------------------------------------------------------------------
+create or replace function public.submissions_notify_admin()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email text;
+begin
+  begin
+    if new.attempt > coalesce(old.attempt, 0) and new.attempt > 1 then
+      select m.email::text into v_email
+      from public.marathon_members m
+      where m.id = new.member_id;
+
+      perform public.enqueue_admin(
+        'club',
+        'proof_resubmitted',
+        'proof_resubmitted:' || new.id::text || ':' || new.attempt::text,
+        jsonb_build_object(
+          'email', coalesce(v_email, ''),
+          'attempt', new.attempt,
+          'day', new.day_index,
+          'reason', coalesce(new.void_reason, '')
+        )
+      );
+    end if;
+  exception when others then
+    null;
+  end;
+  return new;
+end;
+$$;
+
+drop trigger if exists submissions_notify_admin on public.marathon_submissions;
+create trigger submissions_notify_admin
+  after update of attempt on public.marathon_submissions
+  for each row execute function public.submissions_notify_admin();
+
+-- -----------------------------------------------------------------------------
+-- 9. Деньги, которые ничего не открыли.
+--
+-- Два повода из одной таблицы, и оба про то, чего не видно нигде больше.
+--
+-- **Занятие.** Оплата часа с тренером не создаёт ни покупки, ни подписки: куплено время, а не
+-- доступ. Значит ни один триггер выше её не увидит, и без этой строки «кто-то оплатил тренировку»
+-- не наступало бы никогда. Вид платежа отличает 0039.
+--
+-- **Непривязанный платёж.** `applied = false` означает: деньги пришли, а доступ не открылся —
+-- заказа не было, или их было несколько, или почта в кассе другая. Сегодня это видно только тому,
+-- кто листает журнал. Это ровно тот случай, когда человек заплатил и сидит без курса, и чем позже
+-- это заметят, тем дороже.
+-- -----------------------------------------------------------------------------
+create or replace function public.payments_notify_admin()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+begin
+  begin
+    if new.intent = 'session' then
+      perform public.enqueue_admin(
+        'sessions',
+        'session_paid',
+        'session_paid:' || new.id::text,
+        jsonb_build_object(
+          'email', new.email::text,
+          'amount', coalesce(new.amount::text, ''),
+          'provider', coalesce(new.provider, ''),
+          'ref', coalesce(new.provider_ref, '')
+        )
+      );
+    elsif not new.applied then
+      perform public.enqueue_admin(
+        case when new.intent in ('monthly', 'annual') then 'club' else 'courses' end,
+        'payment_unclaimed',
+        'payment_unclaimed:' || new.id::text,
+        jsonb_build_object(
+          'email', new.email::text,
+          'amount', coalesce(new.amount::text, ''),
+          'intent', new.intent,
+          'provider', coalesce(new.provider, ''),
+          'ref', coalesce(new.provider_ref, '')
+        )
+      );
+    end if;
+  exception when others then
+    null;
+  end;
+  return new;
+end;
+$$;
+
+drop trigger if exists payments_notify_admin on public.payments;
+create trigger payments_notify_admin
+  after insert on public.payments
+  for each row execute function public.payments_notify_admin();
+
+notify pgrst, 'reload schema';
+
+-- =============================================================================
+-- 0041_palette_retint.sql — перекраска плиток курсов под третью палитру.
+-- =============================================================================
+
+-- =============================================================================
+-- 0041 — перекраска плиток курсов под третью палитру.
+--
+-- Владелец: «charcoal как фон… Фон больше не может быть другого цвета». Палитра сменилась
+-- (design/CHANGELOG.md §14): грунт — уголь #1a1a1a, цвета программ — оранжевый новичкам,
+-- неон гантелям, бежевый йоге, нейтральные курсы — #2e2e2e и #383838. Файлы курсов и пикер в
+-- админке уже на новых цветах; в базе остались старые — их записал пикер конструктора курсов
+-- и импорт 0009.
+--
+-- ## Что меняется
+--
+-- 1. Умолчание `admin_courses.tile`: `'#1A2634'` (тёмно-синий первого брендбука) → `'#2e2e2e'`,
+--    первая нейтральная поверхность, ровно то, что ставит новому курсу демо-режим.
+-- 2. Уже записанные плитки со старыми цветами переводятся по карте ниже. Остальные значения —
+--    включая любые руками введённые хексы — не трогаются: чернила на плитке выбираются
+--    измеренным контрастом (`tileInk()` в src/lib/ui/tile.ts), так что любой цвет из базы
+--    отрисуется читаемо и без этой миграции. Она нужна, чтобы админка и приложение показывали
+--    палитру, а не её прошлые версии.
+--
+-- ## Карта старое → новое
+--
+-- Старые значения взяты из истории, а не из памяти: пикер `CourseMetaEditor.tsx` (оба его
+-- набора), файлы курсов `content/courses/*.ts` и 0009.
+--
+--   #9feff7  циан новичков из макета          → #ff5a00  оранжевый — цвет новичков теперь
+--   #e0f89a  лайм гантелей из макета          → #f4ff3f  неон — цвет гантелей теперь
+--   #f2f52d  жёлтый новичков второго брендбука → #f4ff3f  ближайший по тону, тот же неон
+--   #a8c8ff  голубой йоги                     → #ffe6d0  бежевый — цвет йоги теперь
+--   #ff7a1a  оранжевый марафона (пикер)        → #ff5a00  см. ниже
+--   #f8a050  оранжевый марафона (токен)        → #ff5a00  см. ниже
+--   #1f1f24  нейтраль --tile-4                → #2e2e2e  новая --tile-4
+--   #2a2a30  нейтраль --tile-5                → #383838  новая --tile-5
+--   #1a2634, #20293c, #16202b, #232f42, #1c2532
+--            тёмно-синие плитки первого пикера → #2e2e2e  нейтраль
+--
+-- **Оранжевые марафона не становятся синими.** Марафон — это клуб, и клуб теперь электрик-синий
+-- #2038e2, но синие намеренно не входят в пикер курсов: #2038e2 — клуба, #007bff — тренера,
+-- светло-голубой — интерфейса. Курс в синем читался бы как клуб. Из двух оставшихся ходов
+-- оранжевый сохраняет то, что видел автор курса, — тёплую яркую плитку, — а нейтраль стёрла бы
+-- выбор без спроса. Поэтому #ff5a00.
+--
+-- Сравнение идёт по `lower(tile)`: пикер писал строчными, импорт 0009 и старое умолчание —
+-- заглавными. Записывается строчными, как пишет пикер теперь.
+--
+-- Ничего не удаляется: одна колонка цвета и её умолчание. Триггер `admin_courses_touch` (0008)
+-- сдвинет `updated_at` перекрашенных строк — это честно, строка и правда изменилась, и ничего в
+-- приложении на эту дату не опирается, кроме подписи в списке курсов. Перечитывать схему
+-- PostgREST (`notify pgrst`) не нужно: колонки и функции те же.
+--
+-- Требует 0008_course_builder.sql. Идемпотентна: повторный запуск не находит старых цветов.
+-- =============================================================================
+
+alter table public.admin_courses alter column tile set default '#2e2e2e';
+
+update public.admin_courses
+set tile = case lower(tile)
+  when '#9feff7' then '#ff5a00'
+  when '#e0f89a' then '#f4ff3f'
+  when '#f2f52d' then '#f4ff3f'
+  when '#a8c8ff' then '#ffe6d0'
+  when '#ff7a1a' then '#ff5a00'
+  when '#f8a050' then '#ff5a00'
+  when '#1f1f24' then '#2e2e2e'
+  when '#2a2a30' then '#383838'
+  when '#1a2634' then '#2e2e2e'
+  when '#20293c' then '#2e2e2e'
+  when '#16202b' then '#2e2e2e'
+  when '#232f42' then '#2e2e2e'
+  when '#1c2532' then '#2e2e2e'
+end
+where lower(tile) in (
+  '#9feff7', '#e0f89a', '#f2f52d', '#a8c8ff', '#ff7a1a', '#f8a050', '#1f1f24', '#2a2a30',
+  '#1a2634', '#20293c', '#16202b', '#232f42', '#1c2532'
+);
+
+-- =============================================================================
+-- 0042_support.sql — «Обращения»: вопросы людей в тему группы владельца.
+-- =============================================================================
+
+-- =============================================================================
+-- 0042 — «Обращения»: вопросы людей в тему группы владельца.
+--
+-- Тема «Обращения» заведена в 0040 и до сих пор пустая: `admin_outbox` её принимает,
+-- `telegram-notify` умеет её назвать, а писать в неё некому. Здесь появляются два входа.
+--
+--   1. **Бот.** Человек пишет основному боту обычный текст, не команду. Раньше в ответ приходило
+--      всё рекламное приветствие целиком — на «а можно заниматься с больным коленом?». Теперь
+--      функция `telegram-bot` передаёт текст сюда (`support_from_telegram`, сервисным ключом) и
+--      отвечает коротко: «Передали тренеру — он ответит тебе здесь, в Телеграме».
+--   2. **Приложение.** Кнопка «Написать тренеру» на вкладке «Тренер» и в «Данных и согласиях»
+--      открывает поле ввода и зовёт `support_message` от имени вошедшего человека. Это вход для
+--      тех, кто пришёл с сайта, а не из телеграма, и чей телеграм мы не знаем.
+--
+-- ## Почему не выдать `enqueue_admin` наружу
+--
+-- 0040 закрыла её от всех намеренно: иначе канал владельца стал бы тем, что можно вызвать снаружи
+-- с любой темой и любым текстом. Здесь две узкие двери вместо одной широкой: тема всегда
+-- `support`, вид всегда `support_message`, текст режется по длине, частота — по человеку.
+--
+-- ## Частота
+--
+-- Не больше пяти обращений в час от одного человека (`SUPPORT_PER_HOUR` ниже, в двух местах).
+-- Этого с запасом хватает, чтобы задать вопрос и дописать забытое, и не хватает, чтобы залить
+-- тему, которую читают двое. Журнал частоты — `support_requests`: кто и когда, **без текста**.
+-- Текст живёт только в очереди сообщений, откуда уходит в закрытую группу.
+--
+-- Боту важен ещё один ответ: «лимит только что кончился» отличается от «лимит давно кончился».
+-- На первое бот один раз вежливо говорит «подожди немного», на второе молчит — иначе поток из
+-- ста сообщений получил бы сто ответов, и защита от спама сама стала бы спамом.
+--
+-- ## Повтор доставки
+--
+-- Телеграм повторяет доставку, если функция не ответила вовремя. Ключ дедупликации для бота —
+-- id чата и id сообщения, так что повтор не создаёт второго обращения и второго ответа.
+--
+-- Не деструктивна: новая таблица и две новые функции, ничего существующего не меняется.
+-- Требует 0001_init.sql, 0026_telegram_link.sql, 0040_admin_channel.sql. Идемпотентна.
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- 1. Журнал частоты. Кто и когда — и ничего больше.
+-- -----------------------------------------------------------------------------
+create table if not exists public.support_requests (
+  id          uuid primary key default gen_random_uuid(),
+  channel     text not null check (channel in ('app', 'telegram')),
+  -- Ровно одно из двух: вошедший в приложение человек или телеграм-аккаунт.
+  user_id     uuid references auth.users (id) on delete cascade,
+  telegram_id bigint,
+  -- false — обращение не принято из-за частоты. Такая строка нужна, чтобы бот сказал «подожди»
+  -- один раз, а не на каждое следующее сообщение.
+  accepted    boolean not null default true,
+  created_at  timestamptz not null default now(),
+  constraint support_requests_who check ((user_id is null) <> (telegram_id is null))
+);
+
+comment on table public.support_requests is
+  'Rate-limit log for support messages (0042): who and when, never the text.';
+
+create index if not exists support_requests_user_idx
+  on public.support_requests (user_id, created_at)
+  where user_id is not null;
+create index if not exists support_requests_telegram_idx
+  on public.support_requests (telegram_id, created_at)
+  where telegram_id is not null;
+
+alter table public.support_requests enable row level security;
+
+-- Ни одной политики: читать это через API незачем никому. Пишут только функции ниже.
+revoke all on public.support_requests from anon, authenticated;
+grant select, insert, update, delete on public.support_requests to service_role;
+
+-- -----------------------------------------------------------------------------
+-- 2. Текст, который поместится в очередь.
+--
+-- `admin_outbox.params` ограничен 4096 байтами (0040). Длина в символах этого не гарантирует:
+-- эмодзи — четыре байта, кириллица — два. Поэтому сначала тысяча символов, потом — пока не
+-- влезет в 2800 байт, оставляя место остальным полям.
+-- -----------------------------------------------------------------------------
+create or replace function public.support_clip(p_text text)
+returns text
+language plpgsql
+immutable
+set search_path = pg_catalog, public
+as $$
+declare
+  v text := left(btrim(coalesce(p_text, '')), 1000);
+begin
+  while octet_length(v) > 2800 loop
+    v := left(v, length(v) - 50);
+  end loop;
+  return v;
+end;
+$$;
+
+revoke execute on function public.support_clip(text) from public, anon, authenticated;
+
+-- -----------------------------------------------------------------------------
+-- 3. Из приложения: вошедший человек пишет тренеру.
+--
+-- Имя, почта и язык — из профиля, а не из аргументов: иначе в канал можно было бы написать от
+-- чужого имени. Если к профилю привязан телеграм (0026), его id уходит в сообщение, и тренер
+-- может ответить там; если нет — отвечают на почту.
+--
+-- Ошибки — короткими словами, которые приложение переводит (`src/lib/api/support.ts`):
+--   text_empty, text_too_long, rate_limited.
+-- -----------------------------------------------------------------------------
+create or replace function public.support_message(p_text text, p_context text default null)
+returns void
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_uid     uuid := auth.uid();
+  v_text    text := btrim(coalesce(p_text, ''));
+  v_recent  int;
+  v_profile record;
+begin
+  if v_uid is null then
+    raise exception 'not_signed_in' using errcode = '42501';
+  end if;
+  if length(v_text) = 0 then
+    raise exception 'text_empty';
+  end if;
+  -- Приложение режет на 1000 само; больше — значит пришло не из приложения.
+  if length(v_text) > 1000 then
+    raise exception 'text_too_long';
+  end if;
+
+  -- SUPPORT_PER_HOUR = 5.
+  select count(*) into v_recent
+  from public.support_requests r
+  where r.user_id = v_uid
+    and r.accepted
+    and r.created_at > now() - interval '1 hour';
+  if v_recent >= 5 then
+    raise exception 'rate_limited';
+  end if;
+
+  select p.display_name, p.email::text as email, p.locale, p.telegram_id
+    into v_profile
+  from public.profiles p
+  where p.id = v_uid;
+
+  insert into public.support_requests (channel, user_id) values ('app', v_uid);
+
+  perform public.enqueue_admin(
+    'support',
+    'support_message',
+    'support:app:' || gen_random_uuid()::text,
+    jsonb_build_object(
+      'source', 'app',
+      'name', left(coalesce(v_profile.display_name, ''), 60),
+      'email', coalesce(v_profile.email, ''),
+      'locale', coalesce(v_profile.locale, ''),
+      'tgId', coalesce(v_profile.telegram_id::text, ''),
+      'account', 'yes',
+      'context', left(btrim(coalesce(p_context, '')), 80),
+      'text', public.support_clip(v_text)
+    )
+  );
+end;
+$$;
+
+revoke execute on function public.support_message(text, text) from public, anon;
+grant execute on function public.support_message(text, text) to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- 4. Из бота: человек написал основному боту в личку.
+--
+-- Зовёт только функция `telegram-bot` сервисным ключом: имя и @username приходят из апдейта
+-- телеграма, подписанного секретом вебхука, и больше им взяться неоткуда.
+--
+-- Ответ — одно слово, по которому бот выбирает, что сказать человеку:
+--   queued     — передано;
+--   duplicate  — это повтор доставки того же сообщения, отвечать второй раз не нужно;
+--   limited    — лимит только что кончился: один раз вежливо попросить подождать;
+--   muted      — лимит кончился давно: молчать;
+--   empty      — нечего передавать.
+-- -----------------------------------------------------------------------------
+create or replace function public.support_from_telegram(
+  p_telegram_id bigint,
+  p_message_id  bigint,
+  p_name        text,
+  p_username    text,
+  p_locale      text,
+  p_text        text,
+  p_attachment  text default null
+)
+returns text
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_key      text;
+  v_text     text := public.support_clip(p_text);
+  v_recent   int;
+  v_refused  int;
+  v_email    text;
+  v_username text := coalesce(substring(btrim(coalesce(p_username, '')) from '^@?([A-Za-z0-9_]{3,32})$'), '');
+begin
+  if p_telegram_id is null or p_telegram_id <= 0 then
+    raise exception 'invalid_telegram_id';
+  end if;
+  if length(v_text) = 0 then
+    return 'empty';
+  end if;
+
+  v_key := 'support:tg:' || p_telegram_id::text || ':' || coalesce(p_message_id::text, gen_random_uuid()::text);
+  if exists (select 1 from public.admin_outbox o where o.dedupe_key = v_key) then
+    return 'duplicate';
+  end if;
+
+  -- SUPPORT_PER_HOUR = 5.
+  select count(*) filter (where r.accepted), count(*) filter (where not r.accepted)
+    into v_recent, v_refused
+  from public.support_requests r
+  where r.telegram_id = p_telegram_id
+    and r.created_at > now() - interval '1 hour';
+  if v_recent >= 5 then
+    if v_refused > 0 then
+      return 'muted';
+    end if;
+    insert into public.support_requests (channel, telegram_id, accepted)
+    values ('telegram', p_telegram_id, false);
+    return 'limited';
+  end if;
+
+  -- Есть ли у человека аккаунт в приложении — по привязанному телеграму (0026).
+  select p.email::text into v_email
+  from public.profiles p
+  where p.telegram_id = p_telegram_id;
+
+  insert into public.support_requests (channel, telegram_id) values ('telegram', p_telegram_id);
+
+  perform public.enqueue_admin(
+    'support',
+    'support_message',
+    v_key,
+    jsonb_build_object(
+      'source', 'telegram',
+      'name', left(btrim(coalesce(p_name, '')), 60),
+      'username', v_username,
+      'tgId', p_telegram_id::text,
+      'locale', left(coalesce(p_locale, ''), 8),
+      'account', case when v_email is null then 'no' else 'yes' end,
+      'email', coalesce(v_email, ''),
+      'attachment', left(coalesce(p_attachment, ''), 20),
+      'text', v_text
+    )
+  );
+  return 'queued';
+end;
+$$;
+
+revoke execute on function public.support_from_telegram(bigint, bigint, text, text, text, text, text)
+  from public, anon, authenticated;
+-- Явно, а не по умолчанию: функции, созданные через Management API, умолчаний Supabase не
+-- получают (см. 0031).
+grant execute on function public.support_from_telegram(bigint, bigint, text, text, text, text, text)
+  to service_role;
+
+notify pgrst, 'reload schema';
+
+-- =============================================================================
+-- 0043_fixes.sql — серверные исправления после аудита: пара, права, очки, деньги, очередь.
+-- =============================================================================
+
+-- =============================================================================
+-- 0043 — серверные исправления после аудита: пара, права, очки, деньги, очередь.
+--
+-- Мелкие правки, собранные в одну миграцию: каждая сама по себе — строчка-две, а применять их
+-- владелец будет одной кнопкой. Каждая описана у себя в разделе; здесь — сводка.
+--
+--   1. `club_duo_leave()` — расторгнуть свою пару из приложения. Кнопка «Расторгнуть пару» звала
+--      `club_duo_break(uuid)`, а та с 0034 закрыта от всех, кроме базы: кнопка отвечала отказом.
+--   2. Права сервисной роли на `coach_bookings`: `google-calendar-sync` читает таблицу напрямую, и
+--      без права сверка с календарём молча не находила отменённых встреч (история 0031).
+--   3. `get_my_totals()` — очки за тренировки, выданные тренером лично, не считаются, как на
+--      доске (0037). Иначе «мои очки» на главной и в таблице расходились.
+--   3а. `get_leaderboard()` — 0037 вернула в доску удалённую в 0015 таблицу шагов, и общий
+--      рейтинг падал на каждом вызове.
+--   4. `get_shared_custom_workout()` отдаёт английские название и описание (0032).
+--   5–6. `payments.currency` и `record_payment(…, p_currency)` — сумма без валюты в журнале
+--      lava.top читалась как рубли.
+--   7. Занятия с тренером — `applied = true`: открывать нечего, значит и «непривязанными» они не
+--      бывают. Старые строки поправлены.
+--   8. `claim_payment()` — курс без ожидающего заказа больше не «сжигает» платёж: ответ `no_order`
+--      и сообщение в тему «Курсы».
+--   9. Канал владельца видит валюту в «Платёж не привязан» и «Занятие оплачено».
+--  10. `telegram_outbox_due()` — рассыльщик берёт сначала тех, кому есть куда писать, и очередь из
+--      людей без телеграма больше не забивает пачку.
+--
+-- Не деструктивна: одна новая колонка, новые функции, пересозданные функции с тем же поведением
+-- плюс исправление, одно обновление флага у строк-занятий. Из данных ничего не удаляется;
+-- `drop function` — только у двух функций, чей список аргументов или колонок меняется, и обе
+-- создаются заново тут же, с прежними правами.
+-- Требует 0014, 0015, 0020, 0032, 0034, 0037, 0038, 0039, 0040. Идемпотентна.
+-- =============================================================================
+
+-- -----------------------------------------------------------------------------
+-- 1. Расторгнуть свою пару.
+--
+-- `club_duo_break(uuid)` принимает id команды и потому не может быть дверью наружу: кто угодно
+-- вписал бы чужой id и развёл бы чужую пару. Здесь аргументов нет вовсе — команда ищется по
+-- адресу звонящего в дуо-клубе, то есть разорвать можно только свою.
+--
+-- Коды ошибок, а не текст, как у приглашений (0034): их читает приложение.
+-- -----------------------------------------------------------------------------
+create or replace function public.club_duo_leave()
+returns void
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email citext := public.current_email();
+  v_club  uuid   := public.club_marathon(true);
+  v_team  uuid;
+begin
+  if v_email is null then
+    raise exception 'not_signed_in' using errcode = 'P0001';
+  end if;
+  if v_club is null then
+    raise exception 'no_club' using errcode = 'P0001';
+  end if;
+
+  select m.team_id into v_team
+  from public.marathon_members m
+  where m.marathon_id = v_club and m.email = v_email and m.status = 'active';
+
+  if v_team is null then
+    raise exception 'no_pair' using errcode = 'P0001';
+  end if;
+
+  -- Команда удаляется целиком; у напарника `team_id` обнуляется каскадом, и в понедельник
+  -- автоподбор даст обоим новых (0034). Очки остаются на сданных заданиях.
+  perform public.club_duo_break(v_team);
+end;
+$$;
+
+revoke execute on function public.club_duo_leave() from public, anon;
+grant execute on function public.club_duo_leave() to authenticated;
+
+comment on function public.club_duo_leave() is
+  'Расторгнуть собственную пару в дуо-клубе. Команда ищется по адресу звонящего; ошибки no_club / no_pair.';
+
+-- -----------------------------------------------------------------------------
+-- 2. Права сервисной роли на брони.
+--
+-- `google-calendar-sync` после полного прохода по календарю читает активные брони из
+-- `coach_bookings` сервисным ключом, чтобы найти пропавшие и отменить их. 0031 выдала права
+-- таблицам, которые тогда трогали функции, — эту пропустила: брони пишутся через
+-- `apply_coach_booking()`, а прямое чтение появилось позже. Отказ `42501` на этом шаге
+-- логировался и глотался, и удалённая из календаря встреча так и висела на вкладке «Тренер».
+--
+-- Остальные таблицы, которые функции трогают напрямую, проверены: `telegram_outbox`,
+-- `payments`, `payment_emails`, `profiles` — 0031; `admin_outbox` — 0040; `support_requests` —
+-- 0042. Всё прочее идёт через функции `security definer`.
+-- -----------------------------------------------------------------------------
+grant select, update on public.coach_bookings to service_role;
+
+-- -----------------------------------------------------------------------------
+-- 3. «Мои очки» — по тем же правилам, что доска.
+--
+-- С 0037 доска не считает тренировки, выданные тренером лично (`course_id = 'custom'`): приз
+-- недели — час с тренером, и оплаченная персональная работа не должна давать в нём фору. Главная
+-- показывала сумму по-старому, и человек видел у себя больше очков, чем в таблице, без
+-- объяснения. Число тренировок и минуты считают всё — это объём работы, а не место в гонке.
+-- -----------------------------------------------------------------------------
+create or replace function public.get_my_totals()
+returns table (points bigint, workouts bigint, minutes bigint)
+language sql
+stable
+security invoker
+set search_path = pg_catalog, public, extensions
+as $$
+  select
+    -- Как на доске: выданное тренером лично в очки не идёт (0037), и очки одной тренировки
+    -- зажаты тем же потолком 0…375 (0015), иначе «за всё время» на доске и здесь расходились бы.
+    coalesce((select sum(least(greatest(ws.points, 0), 375)) from public.workout_sessions ws
+              where ws.user_id = auth.uid() and ws.completed_at is not null
+                and ws.completed_at <= now()
+                and ws.course_id is distinct from 'custom'), 0)::bigint as points,
+    coalesce((select count(*) from public.workout_sessions ws
+              where ws.user_id = auth.uid() and ws.completed_at is not null), 0)::bigint as workouts,
+    coalesce((select sum(ws.duration_sec) from public.workout_sessions ws
+              where ws.user_id = auth.uid() and ws.completed_at is not null), 0)::bigint / 60 as minutes;
+$$;
+
+revoke execute on function public.get_my_totals() from public, anon;
+grant execute on function public.get_my_totals() to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- 3а. Доска — снова без шагов.
+--
+-- 0037 пересоздала `get_leaderboard()` из текста 0002, а не 0015, и вернула в неё подсчёт
+-- `daily_logs` — таблицы, которую 0015 удалила. На базе, где применены обе, общая доска отвечала
+-- `42P01` («relation daily_logs does not exist») на каждый вызов: plpgsql разбирает запрос только
+-- при выполнении, поэтому сама миграция прошла молча. Здесь — текст 0015 плюс правило 0037.
+-- -----------------------------------------------------------------------------
+create or replace function public.get_leaderboard(
+  p_period    text default 'week',
+  p_course_id text default null,
+  p_limit     int  default 100
+)
+returns table (
+  user_id      uuid,
+  display_name text,
+  avatar_seed  text,
+  points       bigint,
+  rank         bigint,
+  is_me        boolean
+)
+language plpgsql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  -- Defence in depth: the engine ceiling (basePoints 250 × harder 1.25 × streak 1.2).
+  -- workout_sessions_guard already clamps per workout, but the board is the one place
+  -- every athlete sees, so it clamps again.
+  c_max_session_points constant int := 375;
+
+  v_me      uuid := auth.uid();
+  v_limit   int  := least(greatest(coalesce(p_limit, 100), 1), 500);
+  v_week_ts timestamp;
+  v_from    timestamptz;
+begin
+  if v_me is null then
+    raise exception 'not_authenticated' using errcode = '42501';
+  end if;
+
+  if p_period is null or p_period not in ('week', 'all') then
+    raise exception 'invalid_period' using errcode = 'P0001';
+  end if;
+
+  if p_course_id is not null and p_course_id !~ '^[a-z0-9_]{2,40}$' then
+    raise exception 'invalid_course' using errcode = 'P0001';
+  end if;
+
+  -- Monday 00:00 UTC of the current ISO week.
+  v_week_ts := date_trunc('week', now() at time zone 'utc');
+  v_from    := v_week_ts at time zone 'utc';
+
+  return query
+  with totals as (
+    select ws.user_id as uid,
+           sum(least(greatest(ws.points, 0), c_max_session_points))::bigint as pts
+    from public.workout_sessions ws
+    where ws.completed_at is not null
+      and ws.completed_at <= now()
+      and (p_period = 'all' or ws.completed_at >= v_from)
+      and (p_course_id is null or ws.course_id = p_course_id)
+      -- Выданная тренером лично тренировка доску не двигает (0037).
+      and ws.course_id is distinct from 'custom'
+    group by ws.user_id
+  ),
+  ranked as (
+    select t.uid, t.pts, rank() over (order by t.pts desc, t.uid) as rnk
+    from totals t
+    where t.pts > 0
+  ),
+  top as (
+    select r.uid, r.pts, r.rnk from ranked r order by r.rnk, r.uid limit v_limit
+  ),
+  me as (
+    select r.uid, r.pts, r.rnk from ranked r where r.uid = v_me
+    union all
+    -- Caller without points yet: last place, 0 points.
+    select v_me, 0::bigint, (select count(*) from ranked) + 1
+    where not exists (select 1 from ranked r where r.uid = v_me)
+  ),
+  rows_out as (
+    select * from top
+    union
+    select * from me
+  )
+  select
+    ro.uid,
+    -- Clamped again on the way out: this row is relayed to every other athlete.
+    left(coalesce(nullif(trim(p.display_name), ''), 'Athlete ' || left(ro.uid::text, 4)), 60),
+    left(coalesce(p.avatar_seed, left(ro.uid::text, 8)), 64),
+    ro.pts,
+    ro.rnk,
+    ro.uid = v_me
+  from rows_out ro
+  left join public.profiles p on p.id = ro.uid
+  order by ro.rnk, ro.uid;
+end;
+$$;
+
+revoke execute on function public.get_leaderboard(text, text, int) from public, anon;
+grant execute on function public.get_leaderboard(text, text, int) to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- 4. Тренировка по ссылке — с английской половиной.
+--
+-- 0032 завела `title_en` и `description_en`, а функция, которой открывают ссылку, отдавала только
+-- русские. Английский читатель, которому скинули ссылку, видел русское название там, где перевод
+-- уже был. Состав возвращаемых колонок меняется — значит `drop` и заново, с теми же правами.
+-- -----------------------------------------------------------------------------
+drop function if exists public.get_shared_custom_workout(text);
+
+create function public.get_shared_custom_workout(p_token text)
+returns table (
+  id uuid, short_id text, title text, description text, structure jsonb, est_sec int, points int,
+  title_en text, description_en text
+)
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+  select w.id, w.short_id, w.title, w.description, w.structure, w.est_sec, w.points,
+         w.title_en, w.description_en
+  from public.custom_workouts w
+  where w.share_token = p_token and w.is_archived = false;
+$$;
+
+revoke execute on function public.get_shared_custom_workout(text) from public, anon;
+grant execute on function public.get_shared_custom_workout(text) to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- 5. Валюта платежа.
+--
+-- Prodamus берёт только рубли, и пока касса была одна, сумма без валюты читалась однозначно.
+-- lava.top присылает `currency` рядом с суммой, и «19» в журнале — это доллары или евро, а не 19 ₽.
+-- Старые строки остаются с `null`: какой валютой они были, по ним уже не сказать, а угадывать
+-- рубли значило бы соврать про строки lava.top, пришедшие до этой миграции.
+-- -----------------------------------------------------------------------------
+alter table public.payments add column if not exists currency text;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'payments_currency_format'
+  ) then
+    alter table public.payments add constraint payments_currency_format
+      check (currency is null or currency ~ '^[A-Z]{3}$') not valid;
+  end if;
+end $$;
+
+comment on column public.payments.currency is
+  'ISO 4217 code the amount is in: RUB from Prodamus, whatever lava.top reported. Null on rows written before 0043.';
+
+-- -----------------------------------------------------------------------------
+-- 6. record_payment — с валютой.
+--
+-- Новый необязательный аргумент меняет сигнатуру, поэтому старая функция удаляется, как в 0038:
+-- две перегрузки рядом сделали бы вызов без валюты неоднозначным. Права выдаются заново и явно.
+--
+-- Вебхук, выложенный раньше этой миграции, зовёт функцию без `p_currency` — умолчание `RUB`
+-- делает этот вызов верным для Prodamus. lava-webhook передаёт валюту сам.
+-- -----------------------------------------------------------------------------
+drop function if exists public.record_payment(text, numeric, text, timestamptz, text, boolean, text);
+
+create or replace function public.record_payment(
+  p_email        text,
+  p_amount       numeric,
+  p_provider_ref text,
+  p_paid_at      timestamptz,
+  p_intent       text,
+  p_applied      boolean,
+  p_provider     text default 'prodamus',
+  p_currency     text default 'RUB'
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  v_email citext := lower(btrim(coalesce(p_email, '')));
+  v_ref   text   := nullif(btrim(coalesce(p_provider_ref, '')), '');
+  v_id    uuid;
+  -- Касса, принёсшая платёж. Журнал читает владелец, и «откуда» — половина ответа.
+  v_prov  text   := left(coalesce(nullif(btrim(p_provider), ''), 'prodamus'), 40);
+  -- Код валюты. Что-то непохожее на три буквы — не повод потерять платёж: пишется `null`.
+  v_cur   text   := upper(btrim(coalesce(p_currency, '')));
+begin
+  if v_email = '' then
+    return null;
+  end if;
+  if p_intent is null or p_intent not in ('monthly', 'annual', 'course', 'session') then
+    raise exception 'invalid_intent' using errcode = 'P0001';
+  end if;
+  if v_cur !~ '^[A-Z]{3}$' then
+    v_cur := null;
+  end if;
+
+  if v_ref is not null then
+    select id into v_id from public.payments where provider_ref = v_ref;
+    if v_id is not null then
+      -- Уже записан. Если в прошлый раз он не привязался, а теперь привязался —
+      -- отметим это; валюту допишем, если её не было. Больше ничего не трогаем.
+      update public.payments
+      set applied  = applied or coalesce(p_applied, false),
+          currency = coalesce(currency, v_cur)
+      where id = v_id;
+      return v_id;
+    end if;
+  end if;
+
+  insert into public.payments (email, amount, provider_ref, paid_at, intent, applied, provider, currency)
+  values (v_email, p_amount, v_ref, coalesce(p_paid_at, now()), p_intent,
+          coalesce(p_applied, false), v_prov, v_cur)
+  returning id into v_id;
+  return v_id;
+end;
+$$;
+
+revoke execute on function
+  public.record_payment(text, numeric, text, timestamptz, text, boolean, text, text)
+  from public, anon, authenticated;
+grant execute on function
+  public.record_payment(text, numeric, text, timestamptz, text, boolean, text, text)
+  to service_role;
+
+-- -----------------------------------------------------------------------------
+-- 7. Занятия с тренером не бывают «непривязанными».
+--
+-- Оплата часа ничего не открывает — куплено время, а не доступ, — и оба вебхука до сих пор
+-- писали её с `applied = false`. Для журнала это значило «деньги пришли, доступ не открылся», и
+-- каждое занятие попадало в счётчик непривязанных платежей (`payments-check`) рядом с настоящими
+-- потерянными курсами. С этой миграции вебхуки пишут `true`; здесь — строки, записанные раньше.
+--
+-- Триггер канала владельца висит на `insert`, так что это обновление ничего не отправляет.
+-- -----------------------------------------------------------------------------
+update public.payments
+set applied = true
+where intent = 'session' and applied = false;
+
+-- -----------------------------------------------------------------------------
+-- 8. claim_payment — курс без заказа не сжигает платёж.
+--
+-- Раньше платёж помечался забранным (`claimed_by`, `applied = true`) до того, как выяснялось,
+-- открылось ли что-нибудь. Для курса без ожидающего заказа ответ был `linked`, а платёж — уже
+-- забран: второй раз его не найти, и человек, оформивший заказ потом, упирался в «такого номера
+-- нет». Деньги при этом так и лежали без курса.
+--
+-- Теперь для курса платёж помечается, только если курс открылся. Иначе ответ `no_order`, платёж
+-- остаётся ждать — после оформления заказа его можно забрать снова, — а в тему «Курсы» уходит
+-- сообщение: человек заплатил, пришёл за курсом и не получил его, и это видно сразу, а не по
+-- жалобе.
+--
+-- Адрес при этом закрепляется, как и раньше: номер заказа из чека — доказательство, что платёж
+-- его, и это не зависит от того, нашёлся ли заказ.
+--
+-- `for update` на строке платежа — два одновременных нажатия больше не проходят оба.
+-- -----------------------------------------------------------------------------
+create or replace function public.claim_payment(p_provider_ref text)
+returns text
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+declare
+  c_window   constant interval := interval '1 hour';
+  c_max      constant int := 10;
+  v_uid      uuid := auth.uid();
+  v_mine     citext := public.current_email();
+  v_ref      text := nullif(btrim(coalesce(p_provider_ref, '')), '');
+  v_hits     int;
+  v_payment  public.payments%rowtype;
+  v_owner    uuid;
+  v_result   text;
+  v_claims   text;
+  v_mark     boolean := true;
+begin
+  if v_uid is null or v_mine is null then
+    raise exception 'not_signed_in' using errcode = '42501';
+  end if;
+  if v_ref is null or length(v_ref) > 120 then
+    return 'not_found';
+  end if;
+
+  -- Скользящее окно, то же, что у create_order(). Считается до поиска платежа,
+  -- чтобы неудачные попытки тоже стоили: иначе перебор ничего не стоил бы.
+  insert into public.order_throttle as t (bucket, window_start, hits)
+  values ('claim:' || v_uid::text, now(), 1)
+  on conflict (bucket) do update
+  set window_start = case when t.window_start < now() - c_window then now() else t.window_start end,
+      hits         = case when t.window_start < now() - c_window then 1 else t.hits + 1 end
+  returning hits into v_hits;
+
+  if v_hits > c_max then
+    return 'rate_limited';
+  end if;
+
+  select * into v_payment
+  from public.payments
+  where provider_ref = v_ref
+    and claimed_by is null
+  for update;
+
+  if not found then
+    return 'not_found';
+  end if;
+
+  -- Адрес уже за кем-то закреплён? Если за этим же аккаунтом — всё в порядке,
+  -- идём дальше; если за чужим — стоп, и не молча.
+  select user_id into v_owner from public.payment_emails where email = v_payment.email;
+  if v_owner is not null and v_owner <> v_uid then
+    return 'email_taken';
+  end if;
+
+  if v_payment.email <> v_mine and v_owner is null then
+    insert into public.payment_emails (user_id, email, linked_by)
+    values (v_uid, v_payment.email, v_ref);
+  end if;
+
+  /*
+   * Применяем — на собственный адрес аккаунта. Почему здесь снимаются клеймы и почему это не
+   * дыра — подробно в 0020/0039: план, номер заказа и дата прочитаны из строки `payments`,
+   * записанной вебхуком после сошедшейся подписи, а адрес — подтверждённый адрес звонящего.
+   */
+  v_claims := coalesce(current_setting('request.jwt.claims', true), '');
+  perform set_config('request.jwt.claims', '', true);
+
+  if v_payment.intent = 'session' then
+    -- Занятие открывать нечем (0039): адрес закреплён выше, и это всё, что здесь можно сделать.
+    v_result := 'linked';
+  elsif v_payment.intent in ('monthly', 'annual') then
+    perform public.apply_subscription_payment(
+      v_mine::text, v_payment.intent, v_payment.provider_ref, v_payment.paid_at,
+      coalesce(v_payment.provider, 'prodamus'));
+    v_result := 'subscription';
+  elsif public.apply_course_payment(
+          v_mine::text, v_payment.provider_ref, v_payment.paid_at, null,
+          coalesce(v_payment.provider, 'prodamus')) is not null then
+    v_result := 'course';
+  else
+    -- Ни одного ожидающего заказа (или несколько). Платёж не трогаем — его заберут снова.
+    v_result := 'no_order';
+    v_mark := false;
+  end if;
+
+  perform set_config('request.jwt.claims', v_claims, true);
+
+  if v_mark then
+    update public.payments
+    set claimed_by = v_uid,
+        claimed_at = now(),
+        applied    = true
+    where id = v_payment.id;
+  else
+    -- Зеркало, а не условие: сбой очереди не должен стоить человеку ответа (0040).
+    begin
+      perform public.enqueue_admin(
+        'courses',
+        'claim_no_order',
+        'claim_no_order:' || v_payment.id::text,
+        jsonb_build_object(
+          'email', v_mine::text,
+          'payEmail', v_payment.email::text,
+          'amount', coalesce(v_payment.amount::text, ''),
+          'currency', coalesce(v_payment.currency, ''),
+          'provider', coalesce(v_payment.provider, ''),
+          'ref', coalesce(v_payment.provider_ref, '')
+        )
+      );
+    exception when others then
+      null;
+    end;
+  end if;
+
+  return v_result;
+end;
+$$;
+
+revoke execute on function public.claim_payment(text) from public, anon;
+grant execute on function public.claim_payment(text) to authenticated;
+
+-- -----------------------------------------------------------------------------
+-- 9. «Платёж не привязан» — с валютой.
+--
+-- Тот же триггер, что в 0040, плюс `currency` в параметрах: «Сумма: 19» без валюты в канале
+-- читается как рубли.
+-- -----------------------------------------------------------------------------
+create or replace function public.payments_notify_admin()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+begin
+  begin
+    if new.intent = 'session' then
+      perform public.enqueue_admin(
+        'sessions',
+        'session_paid',
+        'session_paid:' || new.id::text,
+        jsonb_build_object(
+          'email', new.email::text,
+          'amount', coalesce(new.amount::text, ''),
+          'currency', coalesce(new.currency, ''),
+          'provider', coalesce(new.provider, ''),
+          'ref', coalesce(new.provider_ref, '')
+        )
+      );
+    elsif not new.applied then
+      perform public.enqueue_admin(
+        case when new.intent in ('monthly', 'annual') then 'club' else 'courses' end,
+        'payment_unclaimed',
+        'payment_unclaimed:' || new.id::text,
+        jsonb_build_object(
+          'email', new.email::text,
+          'amount', coalesce(new.amount::text, ''),
+          'currency', coalesce(new.currency, ''),
+          'intent', new.intent,
+          'provider', coalesce(new.provider, ''),
+          'ref', coalesce(new.provider_ref, '')
+        )
+      );
+    end if;
+  exception when others then
+    null;
+  end;
+  return new;
+end;
+$$;
+
+-- -----------------------------------------------------------------------------
+-- 10. Очередь бота: сначала те, кому есть куда писать.
+--
+-- Рассыльщик брал 50 самых ранних строк в очереди и только потом искал, у кого из адресатов есть
+-- телеграм. Строки людей без телеграма (а их большинство: покупка приходит раньше привязки)
+-- живут до трёх дней и всё это время занимают пачку. Стоит накопиться полусотне таких — и
+-- сообщение человеку с телеграмом не уходит, пока они не истекут.
+--
+-- Здесь отбор делает база: только строки, у адресата которых есть `telegram_id`, вместе с ним и
+-- языком. Истёкшие строки сюда не попадают — их гасит сам рассыльщик, отдельным запросом.
+-- Только для сервисной роли: в ответе адреса и id чатов.
+-- -----------------------------------------------------------------------------
+create or replace function public.telegram_outbox_due(p_limit int default 50)
+returns table (
+  id          uuid,
+  email       text,
+  kind        text,
+  params      jsonb,
+  attempts    int,
+  expires_at  timestamptz,
+  telegram_id bigint,
+  locale      text
+)
+language sql
+stable
+security definer
+set search_path = pg_catalog, public, extensions
+as $$
+  select o.id, o.email::text, o.kind, o.params, o.attempts, o.expires_at,
+         p.telegram_id, p.locale::text
+  from public.telegram_outbox o
+  join lateral (
+    select pr.telegram_id, pr.locale
+    from public.profiles pr
+    where pr.email = o.email and pr.telegram_id is not null
+    limit 1
+  ) p on true
+  where o.status = 'pending'
+    and o.send_after <= now()
+    and o.expires_at >= now()
+  order by o.send_after
+  limit least(greatest(coalesce(p_limit, 50), 1), 200);
+$$;
+
+revoke execute on function public.telegram_outbox_due(int) from public, anon, authenticated;
+grant execute on function public.telegram_outbox_due(int) to service_role;
+
+comment on function public.telegram_outbox_due(int) is
+  'Pending, unexpired bot messages whose recipient has a linked Telegram, with chat id and locale (0043). Service role only.';
+
+notify pgrst, 'reload schema';
 
 -- =============================================================================
 -- Admin access — the addresses collected at the top of this script.
