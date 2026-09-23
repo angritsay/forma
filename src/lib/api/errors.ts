@@ -47,6 +47,11 @@ export function isAppError(e: unknown): e is AppError {
   );
 }
 
+/** The request never reached the server (offline, DNS, a dropped connection). */
+export function isNetworkError(e: unknown): boolean {
+  return isAppError(e) && e.code === 'network';
+}
+
 // --- structural detection ---------------------------------------------------
 
 function isRecord(e: unknown): e is Record<string, unknown> {

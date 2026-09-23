@@ -422,6 +422,9 @@ export const app = {
   // streak, then three figures. The ordinal is a word up to the tenth day — a figure that size
   // would fight the three under it — and «11-й день» after that.
   summaryDone: 'Готово!',
+  // Names for a coach-built workout on the summary: it is not in the catalogue.
+  summaryCustomCourse: 'Своя тренировка',
+  summaryCustomWorkout: 'Тренировка от тренера',
   summaryCountFirst: 'Первая. Начало положено.',
   summaryCountWord: '{ordinal} тренировка. Так и растёт форма.',
   summaryCountNum: 'Тренировка №{n}. Так и растёт форма.',
@@ -499,6 +502,7 @@ export const app = {
   leaderboardFilterLabel: 'Курс',
   leaderboardGlobal: 'Общий',
   leaderboardRankLabel: 'Место {n}',
+  leaderboardAnonymous: 'Атлет {id}',
   leaderboardYou: 'Это ты',
   leaderboardEmptyTitle: 'Очков пока нет',
   leaderboardEmptyWeek: 'Стань первым на этой неделе: заверши тренировку.',
@@ -993,6 +997,7 @@ export const app = {
   duoInvite: 'Позвать подругу',
   duoInviteTitle: 'Давай в клуб вдвоём',
   duoInviteCopied: 'Ссылка скопирована',
+  duoInviteNoAccess: 'Пара собирается внутри клуба, а клуб — по подписке.',
   // Экран /duo: принять приглашение по ссылке подруги. Отказы — коды club_invite_redeem (0034).
   duoRedeemTitle: 'Приглашение в пару',
   duoRedeemDone: 'Вы в паре',

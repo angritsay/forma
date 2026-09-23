@@ -11,10 +11,11 @@ import { useEffect, useState } from 'react';
 import { HashRouter } from 'react-router';
 import { isConfigured } from '@/lib/api/client';
 import { enableDemo, isDemo } from '@/lib/api/mode';
-import { initTelegram, waitForTelegram } from '@/lib/telegram/webapp';
+import { initTelegram, startParam, waitForTelegram } from '@/lib/telegram/webapp';
 import { AppProviders } from './components/AppProviders';
 import { AppFrame } from './components/AppShell';
 import { BootScreen } from './components/BootScreen';
+import { stashStartParam } from './features/marathon/duoInvite';
 import { AppRoutes } from './router';
 import NotConfiguredScreen from './screens/NotConfiguredScreen';
 
@@ -35,6 +36,12 @@ export default function App() {
     void waitForTelegram().then((api) => {
       if (!alive) return;
       initTelegram(api);
+      /*
+       * A duo invite sent as `t.me/<bot>/<app>?startapp=duo_<token>` arrives as the launch
+       * parameter, not as a route. Put it where `#/duo/<token>` puts it, before the router mounts,
+       * and the shell takes the person to /duo the same way.
+       */
+      stashStartParam(startParam());
       setReady(true);
     });
     return () => {

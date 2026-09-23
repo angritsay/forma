@@ -75,6 +75,7 @@ import { ClubDuoPair } from '@/app/features/marathon/ClubDuoPair';
 import { ClubPitch } from '@/app/features/marathon/ClubPitch';
 import { ClubStreak } from '@/app/features/marathon/ClubStreak';
 import { ClubWinner } from '@/app/features/marathon/ClubWinner';
+import { boardPath, clubFor, clubModeOf, type ClubMode } from '@/app/features/marathon/clubMode';
 import { clubPrize } from '@/app/features/marathon/prize';
 import { weekStandings } from '@/app/features/marathon/standings';
 import { TaskCard } from '@/app/features/marathon/TaskCard';
@@ -126,12 +127,10 @@ export default function MarathonScreen() {
    */
   // `?mode=duo` — сюда ведёт принятое приглашение в пару (DuoInviteScreen).
   const [searchParams] = useSearchParams();
-  const [mode, setMode] = useState<'solo' | 'duo'>(() =>
-    searchParams.get('mode') === 'duo' ? 'duo' : 'solo',
-  );
+  const [mode, setMode] = useState<ClubMode>(() => clubModeOf(searchParams.get('mode')));
   const duo = mode === 'duo' && duoClub !== null;
   /* Закрытый круг, который тренер ведёт руками, клубом не является — он приезжает в `anyRound`. */
-  const marathon = duo ? duoClub : (soloClub ?? anyRound);
+  const marathon = clubFor({ soloClub, duoClub, marathon: anyRound }, mode);
   const dayIndex = marathon?.dayIndex ?? 0;
   const { data: tasks, status, reload } = useMarathonDay(marathon, dayIndex);
   const { data: scores, reload: reloadScores } = useMarathonScores(
@@ -248,7 +247,7 @@ export default function MarathonScreen() {
          * прежде, чем человек берётся за сегодняшнее. Своего победителя тут нет — плашка рисуется,
          * только когда тренер кого-то объявил.
          */}
-        <ClubWinner />
+        <ClubWinner duo={duo} />
         {body}
       </Screen>
     </div>
@@ -349,7 +348,19 @@ export default function MarathonScreen() {
       ) : null}
 
       {/* Кто с тобой на этой неделе — первое, что видно в дуо, и только в нём. */}
-      {duo ? <ClubDuoPair onChanged={reload} /> : null}
+      {/*
+       * A pair formed or broken changes more than today's task: the board counts the pair's points
+       * together and `my_marathons()` hands back a new team — so all three reload.
+       */}
+      {duo ? (
+        <ClubDuoPair
+          onChanged={() => {
+            reload();
+            reloadScores();
+            reloadMarathon();
+          }}
+        />
+      ) : null}
       {/*
        * The task and the table, side by side from `md`.
        *
@@ -457,7 +468,7 @@ export default function MarathonScreen() {
             variant="ghost"
             size="sm"
             className="mt-2 -ml-4.5"
-            onClick={() => navigate('/marathon/board')}
+            onClick={() => navigate(boardPath(duo ? 'duo' : 'solo'))}
             iconRight={<Glyph size={12}>→</Glyph>}
           >
             {t('app.marathonBoardAll')}

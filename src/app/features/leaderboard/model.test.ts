@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { COURSES } from '@/content/registry';
 import type { LeaderboardRow } from '@/lib/api/types';
-import { podiumPlace, resolveCourseParam, splitLeaderboard } from './model';
+import { t as translate, type TKey, type TParams } from '@/i18n/index';
+import { leaderboardName, podiumPlace, resolveCourseParam, splitLeaderboard } from './model';
 
 function row(rank: number, points: number, isMe = false): LeaderboardRow {
   return {
@@ -63,5 +64,15 @@ describe('podiumPlace', () => {
     expect(podiumPlace(3)).toBe(3);
     expect(podiumPlace(4)).toBeNull();
     expect(podiumPlace(0)).toBeNull();
+  });
+});
+
+describe('leaderboardName', () => {
+  it("keeps a real name and labels a missing one in the reader's language", () => {
+    const en = (k: TKey, p?: TParams) => translate('en', k, p);
+    const ru = (k: TKey, p?: TParams) => translate('ru', k, p);
+    expect(leaderboardName({ displayName: 'Аня', userId: 'abcdef' }, en)).toBe('Аня');
+    expect(leaderboardName({ displayName: '', userId: 'abcdef' }, en)).toBe('Athlete abcd');
+    expect(leaderboardName({ displayName: ' ', userId: 'abcdef' }, ru)).toBe('Атлет abcd');
   });
 });

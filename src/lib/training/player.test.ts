@@ -174,6 +174,49 @@ describe('buildPlayerSteps — timed formats', () => {
     expect(amrapExpectedRounds({ ...p.blocks[2]!, durationSec: 30 })).toBe(1);
   });
 
+  it('max reps: the engine flags the block and the player reads the flag', () => {
+    const maxBlock = { id: 'm', format: 'amrap' as const, durationSec: 300 };
+    const one = prescribeWorkout(
+      workout({ id: 'w', blocks: [block({ ...maxBlock, items: [item('burpee', { reps: 50 })] })] }),
+      opts,
+      fixtureLookup,
+    );
+    expect(one.blocks[0]!.maxReps).toBe(true);
+    const step = buildPlayerSteps(one).find((s) => s.kind === 'amrap');
+    expect(step?.kind === 'amrap' && step.maxReps).toBe(true);
+    if (step?.kind === 'amrap') expect(step.expectedRounds).toBe(1);
+
+    // Two movements, or one timed movement: an ordinary AMRAP, flagged false.
+    const two = prescribeWorkout(
+      workout({
+        id: 'w',
+        blocks: [block({ ...maxBlock, items: [item('burpee'), item('air_squat')] })],
+      }),
+      opts,
+      fixtureLookup,
+    );
+    expect(two.blocks[0]!.maxReps).toBe(false);
+    const timed = prescribeWorkout(
+      workout({
+        id: 'w',
+        blocks: [block({ ...maxBlock, items: [item('plank', { seconds: 60 })] })],
+      }),
+      opts,
+      fixtureLookup,
+    );
+    expect(timed.blocks[0]!.maxReps).toBe(false);
+
+    // The player follows the flag, not the shape: a block the prescriber did not flag stays rounds.
+    const unflagged = { ...one, blocks: [{ ...one.blocks[0]!, maxReps: false }] };
+    const plain = buildPlayerSteps(unflagged).find((s) => s.kind === 'amrap');
+    expect(plain?.kind === 'amrap' && plain.maxReps).toBeFalsy();
+    // A prescription stored before the flag existed falls back to the same rule.
+    const { maxReps: _dropped, ...legacyBlock } = one.blocks[0]!;
+    const legacy = { ...one, blocks: [legacyBlock] };
+    const old = buildPlayerSteps(legacy).find((s) => s.kind === 'amrap');
+    expect(old?.kind === 'amrap' && old.maxReps).toBe(true);
+  });
+
   it('fortime: a single step with rounds and cap', () => {
     const steps = stepsFor({
       id: 'f',

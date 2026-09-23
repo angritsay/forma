@@ -4,7 +4,7 @@
  */
 import type { ExerciseUnit } from '@/content/schema';
 import { findCourse } from '@/content/catalogue';
-import { formatClock, type Locale } from '@/i18n/index';
+import { formatClock, t as translate, type Locale } from '@/i18n/index';
 import { stepCompletion, stepWeightSec } from '@/lib/training/session';
 import type {
   ExerciseResult,
@@ -225,11 +225,10 @@ export function courseNames(
 ): { course: string; node: string; workout: string } {
   // A custom (coach-built) workout is not in the catalogue; give it a readable label.
   if (courseId === 'custom') {
-    const ru = locale === 'ru';
     return {
-      course: ru ? 'Своя тренировка' : 'Custom workout',
+      course: translate(locale, 'app.summaryCustomCourse'),
       node: '',
-      workout: ru ? 'Тренировка от тренера' : 'Coach workout',
+      workout: translate(locale, 'app.summaryCustomWorkout'),
     };
   }
   const course = findCourse(courseId);

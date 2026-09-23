@@ -31,13 +31,16 @@ import { getClubWinner } from '@/lib/api/marathon';
 import type { ClubWinner as ClubWinnerRow } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
 
-export function ClubWinner() {
+/** `duo` — whose winner: the solo club's or the duo club's; each tab shows its own. */
+export function ClubWinner({ duo = false }: { duo?: boolean }) {
   const { t } = useT();
   const [row, setRow] = useState<ClubWinnerRow | null>(null);
 
   useEffect(() => {
     let alive = true;
-    getClubWinner()
+    // A switch of tab must not leave the other club's winner on screen while this one loads.
+    setRow(null);
+    getClubWinner({ duo })
       .then((r) => {
         if (alive) setRow(r);
       })
@@ -47,7 +50,7 @@ export function ClubWinner() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [duo]);
 
   if (!row) return null;
 

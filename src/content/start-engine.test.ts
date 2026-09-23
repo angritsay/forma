@@ -14,7 +14,7 @@ import { computeFitnessIndex, initialScale } from '@/lib/training/assessment';
 import { SUBSTITUTE_REPS_FACTOR } from '@/lib/training/constants';
 import { estimateTrainingDuration, isTrainingBlock } from '@/lib/training/estimate';
 import { buildPlayerSteps } from '@/lib/training/player';
-import { prescribeWorkout } from '@/lib/training/prescribe';
+import { holdsRounds, prescribeWorkout } from '@/lib/training/prescribe';
 import type {
   DifficultyChoice,
   PlayerStep,
@@ -243,6 +243,56 @@ describe('«Форма с нуля» through the engine', () => {
       });
     },
   );
+
+  /*
+   * The owner's screenshot of workout 3: 8 / 8 / 17 minutes on the three rows. s03 is one pass of
+   * three pairs; «Посложнее» added a second pass and doubled the session.
+   */
+  it.each(matrix)('$id × $profileName: no choice changes a 1-round circuit', ({ workout, c }) => {
+    for (const choice of CHOICES) {
+      const p = prescribe(workout, c, choice);
+      workout.blocks.forEach((b, bi) => {
+        if (b.format !== 'circuit' || (b.sets ?? 1) !== 1) return;
+        expect(p.blocks[bi]!.sets, `${choice} ${b.id}`).toBe(1);
+      });
+    }
+  });
+
+  /*
+   * The same screenshot's other half: «Полегче» and «Как обычно» both read 8 minutes. A circuit
+   * whose rounds the choice holds (`holdsRounds`) has only its reps to give, so they give at least
+   * a tenth.
+   */
+  it.each(matrix)('$id × $profileName: a held circuit is visibly lighter', ({ workout, c }) => {
+    const [e, n] = (['easier', 'normal'] as const).map((ch) => prescribe(workout, c, ch));
+    workout.blocks.forEach((b, bi) => {
+      if (b.scalable === false || !holdsRounds(b)) return;
+      const reps = (p: PrescribedWorkout) =>
+        p.blocks[bi]!.items.reduce((sum, it) => sum + (it.unit === 'reps' ? it.target : 0), 0);
+      expect(e!.blocks[bi]!.sets, b.id).toBe(n!.blocks[bi]!.sets);
+      expect(reps(e!), b.id).toBeLessThanOrEqual(reps(n!) * 0.9);
+    });
+  });
+
+  /*
+   * The minutes the difficulty sheet shows (training only). «Посложнее» is a step, not another
+   * session: at most a little over a third more — unless all it does is give back rounds the
+   * athlete's scale took away, which is the coach's own session and never more than it.
+   */
+  it.each(matrix)('$id × $profileName: harder ≤ 1.35 × normal minutes', ({ workout, c }) => {
+    const normal = prescribe(workout, c, 'normal');
+    const harder = prescribe(workout, c, 'harder');
+    const beyondAuthored = harder.blocks.some((b, bi) => {
+      const authored = workout.blocks[bi]!;
+      return (
+        (authored.format === 'sets' || authored.format === 'circuit') &&
+        b.sets > (authored.sets ?? 1)
+      );
+    });
+    if (!beyondAuthored) return;
+    const min = (p: PrescribedWorkout) => estimateTrainingDuration(p).totalSec / 60;
+    expect(min(harder), workout.id).toBeLessThanOrEqual(min(normal) * 1.35);
+  });
 
   it('training minutes stay in a beginner session', () => {
     const c = PROFILES[0]!;

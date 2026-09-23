@@ -663,6 +663,40 @@ describe('audit of «Форма с нуля» (engine rules)', () => {
     }
   });
 
+  it('a main circuit of one or two rounds keeps them; the choice moves its reps', () => {
+    for (const rounds of [1, 2]) {
+      const w = one({
+        id: 'c',
+        type: 'metcon',
+        format: 'circuit',
+        sets: rounds,
+        items: [item('a', { reps: 20 }), item('b', { reps: 20 })],
+      });
+      const [easier, normal, harder] = (['easier', 'normal', 'harder'] as const).map(
+        (choice) => run(w, { choice }).blocks[0]!,
+      );
+      expect([easier!.sets, normal!.sets, harder!.sets]).toEqual([rounds, rounds, rounds]);
+      // The for-time volume: a fifth either way, so «полегче» is not a rounding error away.
+      expect(easier!.items[0]!.target).toBe(16);
+      expect(normal!.items[0]!.target).toBe(20);
+      expect(harder!.items[0]!.target).toBe(24);
+    }
+  });
+
+  it('a longer main circuit gains its round on «посложнее» at the usual reps', () => {
+    const w = one({
+      id: 'c',
+      type: 'metcon',
+      format: 'circuit',
+      sets: 4,
+      items: [item('a', { reps: 20 })],
+    });
+    const normal = run(w).blocks[0]!;
+    const harder = run(w, { choice: 'harder' }).blocks[0]!;
+    expect(harder.sets).toBe(normal.sets + 1);
+    expect(harder.items[0]!.target).toBe(normal.items[0]!.target);
+  });
+
   it('EMOM minutes are whole cycles of the movements', () => {
     const w = one({
       id: 'e',

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { externalTarget, haptic, isTelegram, openExternal, telegram } from './webapp';
+import { externalTarget, haptic, isTelegram, openExternal, startParam, telegram } from './webapp';
 
 /** A window with a location, the only browser API these helpers touch. */
 function fakeWindow(href: string, telegramApi?: unknown): void {
@@ -46,6 +46,7 @@ describe('outside Telegram', () => {
     expect(telegram()).toBeNull();
     expect(isTelegram()).toBe(false);
     expect(openExternal('https://pay.example.com')).toBe(false);
+    expect(startParam()).toBeNull();
     expect(() => haptic('success')).not.toThrow();
   });
 });
@@ -68,6 +69,32 @@ describe('inside Telegram', () => {
     });
     expect(mod.openExternal('https://t.me/forma_training_bot')).toBe(true);
     expect(openTelegramLink).toHaveBeenCalledWith('https://t.me/forma_training_bot');
+  });
+
+  it('goExternal prefers Telegram and falls back to a plain navigation', async () => {
+    const openLink = vi.fn();
+    fakeWindow('https://angritsay.github.io/forma/app/', { platform: 'ios', openLink });
+    const assign = vi.fn();
+    (window as unknown as { location: { assign: unknown } }).location.assign = assign;
+    const mod = await import('./webapp');
+    mod.goExternal('https://pay.example.com/p/1');
+    expect(openLink).toHaveBeenCalledTimes(1);
+    expect(assign).not.toHaveBeenCalled();
+
+    openLink.mockImplementation(() => {
+      throw new Error('unsupported');
+    });
+    mod.goExternal('https://pay.example.com/p/2');
+    expect(assign).toHaveBeenCalledWith('https://pay.example.com/p/2');
+  });
+
+  it('reads the startapp parameter', async () => {
+    fakeWindow('https://angritsay.github.io/forma/app/', {
+      platform: 'android',
+      initDataUnsafe: { start_param: 'duo_abc' },
+    });
+    const mod = await import('./webapp');
+    expect(mod.startParam()).toBe('duo_abc');
   });
 
   it('treats a page loaded outside a Telegram launch as absent', async () => {

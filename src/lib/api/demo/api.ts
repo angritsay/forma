@@ -2406,7 +2406,7 @@ export async function breakClubDuo(_teamId: string): Promise<void> {
   });
 }
 
-export async function getClubWinner(): Promise<ClubWinner | null> {
+export async function getClubWinner(duo = false): Promise<ClubWinner | null> {
   return run(() => {
     const db = readDb();
     const user = requireDemoUser();
@@ -2414,7 +2414,8 @@ export async function getClubWinner(): Promise<ClubWinner | null> {
     const rows = [...db.marathonWinners].sort((a, b) => b.announcedAt.localeCompare(a.announcedAt));
     for (const w of rows) {
       const round = db.marathons.find((m) => m.id === w.marathonId);
-      if (!round) continue;
+      // Solo and duo are separate clubs with separate winners, as on the server.
+      if (!round || isSolo(round) === duo) continue;
       const mem = db.marathonMembers.find((m) => m.id === w.memberId);
       if (!mem) continue;
       const me = db.profiles.find((p) => p.id === user.id);

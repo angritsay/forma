@@ -299,7 +299,7 @@ describe('leaderboard / totals', () => {
       }),
     ).toEqual({
       userId: 'abcdef12-0000',
-      displayName: 'Athlete abcd',
+      displayName: '',
       avatarSeed: 'abcdef12',
       points: 340,
       rank: 2,

@@ -105,6 +105,21 @@ describe('draftToCourse', () => {
     expect(course.workouts).toHaveLength(1);
   });
 
+  it('carries the English title and description of a workout, falling back to the Russian', () => {
+    const en = { ...workout('y_flow_a'), titleEn: 'Flow A', descriptionEn: 'A gentle sequence' };
+    const [translated] = draftToCourse(completeDraft(), fourDays(), [en]).course.workouts;
+    expect(translated!.name).toEqual({ ru: 'Поток A', en: 'Flow A' });
+    expect(translated!.description).toEqual({
+      ru: 'Мягкая последовательность',
+      en: 'A gentle sequence',
+    });
+    const [plain] = draftToCourse(completeDraft(), fourDays(), [
+      { ...workout('y_flow_a'), titleEn: '  ', descriptionEn: null },
+    ]).course.workouts;
+    expect(plain!.name).toEqual({ ru: 'Поток A', en: 'Поток A' });
+    expect(plain!.description.en).toBe('Мягкая последовательность');
+  });
+
   it('reports what is still missing instead of throwing', () => {
     const draft = completeDraft();
     draft.content.outcomes = [{ ru: 'Только один' }];
