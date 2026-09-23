@@ -5,9 +5,15 @@
  * Tabs rather than screens because the work moves between them constantly — he writes
  * tomorrow's task, checks who has not sent anything, gives someone five points, and goes back to
  * the plan. A navigation stack would make that a chore.
+ *
+ * Club management (0047) lives in the same tabs rather than on screens of its own: «Скопировать
+ * неделю» under the day plan, the pair tools at the top of «Люди» in the live duo club, and «Сделать
+ * клубом» at the top of «Настройки».
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, useParams, useSearchParams } from 'react-router';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
@@ -25,15 +31,20 @@ import {
   deleteMarathonAdjustment,
   deleteMarathonTask,
   getMarathon,
+  listMarathons,
   listMarathonAdjustments,
   listMarathonMembers,
   listMarathonProofs,
   listMarathonTasks,
   listMarathonTeams,
   listTaskTargets,
+  pairDuo,
+  rematchDuo,
   repeatTask,
   restoreProof,
+  setLiveClub,
   setTaskTargets,
+  splitDuo,
   updateMarathon,
   updateMarathonMember,
   updateMarathonTask,
@@ -58,13 +69,15 @@ import { useT } from '@/app/hooks/useT';
 import { LangTabs, useEditingLocale } from '@/app/features/admin/LangTabs';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { BoardTab } from '@/app/features/marathon/admin/BoardTab';
+import { clubErrorKey, otherLiveClub } from '@/app/features/marathon/admin/clubTools';
+import { CopyTasksSheet } from '@/app/features/marathon/admin/CopyTasksSheet';
 import { dateOfDay } from '@/app/features/marathon/admin/dates';
 import { DayPlan, longDate } from '@/app/features/marathon/admin/DayPlan';
 import { People } from '@/app/features/marathon/admin/People';
 import { ProofsFeed } from '@/app/features/marathon/admin/ProofsFeed';
 import { TaskEditor } from '@/app/features/marathon/admin/TaskEditor';
 import { statusKey } from '@/app/features/marathon/admin/model';
-import type { TKey } from '@/i18n/index';
+import { formatNumber, type TKey } from '@/i18n/index';
 
 type Tab = 'plan' | 'people' | 'proofs' | 'board' | 'settings';
 
@@ -106,6 +119,9 @@ export default function AdminMarathonScreen() {
   const [day, setDay] = useState(1);
   const [editing, setEditing] = useState<MarathonTaskRow | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [copyOpen, setCopyOpen] = useState(false);
+  /** Every round — for the other live club (copy across) and the live one this would replace. */
+  const [allRounds, setAllRounds] = useState<MarathonRow[]>([]);
 
   const fail = useCallback(
     (key: 'app.mAdminLoadError' | 'app.mAdminSaveError' | 'app.mAdminAddError') => () =>
@@ -148,6 +164,10 @@ export default function AdminMarathonScreen() {
     setMembers(ms);
     setTeams(tm);
     setTargets(tg);
+    // Only the club tools read this; a failure here must not take the whole screen down.
+    listMarathons()
+      .then(setAllRounds)
+      .catch(() => setAllRounds([]));
     return m;
   }, [id]);
 
@@ -272,6 +292,33 @@ export default function AdminMarathonScreen() {
 
   // Everyone for themselves: the one setting that changes what the rest of this screen offers.
   const solo = marathon.teamSize <= 1;
+  const liveDuo = marathon.isClub === true && marathon.status === 'active' && !solo;
+  const otherClub = otherLiveClub(marathon, allRounds);
+
+  /** A club tool: run it, toast its own words, or the server's refusal in hers. */
+  const clubAct = async (write: () => Promise<string | void>) => {
+    try {
+      const said = await write();
+      toast.show({ kind: 'success', title: said || t('app.mAdminSaved') });
+    } catch (e) {
+      toast.show({ kind: 'error', title: t(clubErrorKey(e)) });
+      throw e;
+    }
+  };
+
+  const reloadPeople = async () => {
+    const [ms, tm] = await Promise.all([listMarathonMembers(id), listMarathonTeams(id)]);
+    setMembers(ms);
+    setTeams(tm);
+  };
+
+  const makeLive = async () => {
+    await clubAct(async () => {
+      await setLiveClub(id, !solo);
+      await refresh();
+      return t('app.clubLiveDone');
+    });
+  };
 
   return (
     <Screen header={<TopBar back title={marathon.title} />}>
@@ -314,12 +361,37 @@ export default function AdminMarathonScreen() {
                   .then(() => done('app.mAdminDayCopied'))
                   .catch(() => toast.show({ kind: 'error', title: t('app.mAdminCopyDayError') }));
               }}
+              onCopyWeek={() => setCopyOpen(true)}
             />
           ) : tab === 'people' ? (
             <People
               members={members}
               teams={teams}
               solo={solo}
+              pairs={
+                liveDuo
+                  ? {
+                      onRematch: () =>
+                        clubAct(async () => {
+                          const n = await rematchDuo();
+                          await reloadPeople();
+                          return t('app.clubPairsRematched', { n: formatNumber(locale, n) });
+                        }),
+                      onSplit: (teamId) =>
+                        clubAct(async () => {
+                          await splitDuo(teamId);
+                          await reloadPeople();
+                          return t('app.clubPairSplitDone');
+                        }),
+                      onPair: (a, b, keep) =>
+                        clubAct(async () => {
+                          await pairDuo(a, b, keep);
+                          await reloadPeople();
+                          return t('app.clubPairMadeDone');
+                        }),
+                    }
+                  : undefined
+              }
               onAddMember={(input) =>
                 act(
                   async () => {
@@ -397,7 +469,17 @@ export default function AdminMarathonScreen() {
           ) : tab === 'board' ? (
             <BoardTab marathon={marathon} today={today} />
           ) : (
-            <Settings marathon={marathon} onPatch={patchMarathon} />
+            <Settings
+              marathon={marathon}
+              onPatch={patchMarathon}
+              liveNow={
+                allRounds.find(
+                  (r) =>
+                    r.isClub && r.status === 'active' && r.teamSize > 1 === !solo && r.id !== id,
+                ) ?? null
+              }
+              onMakeLive={makeLive}
+            />
           )}
         </div>
       </div>
@@ -417,6 +499,34 @@ export default function AdminMarathonScreen() {
         onSave={saveTask}
         onDelete={editing ? removeTask : undefined}
       />
+
+      <CopyTasksSheet
+        open={copyOpen}
+        onClose={() => setCopyOpen(false)}
+        marathon={marathon}
+        day={day}
+        otherClub={otherClub}
+        onCopied={(result, toOther) => {
+          if (!toOther) {
+            void Promise.all([listMarathonTasks(id), listTaskTargets(id)])
+              .then(([ts, tg]) => {
+                setTasks(ts);
+                setTargets(tg);
+              })
+              .catch(fail('app.mAdminLoadError'));
+          }
+          toast.show({
+            kind: 'success',
+            title: t('app.clubCopyDone', { n: formatNumber(locale, result.tasksCopied) }),
+            description:
+              result.daysSkipped + result.daysLocked > 0
+                ? t('app.clubCopyDoneSkipped', {
+                    n: formatNumber(locale, result.daysSkipped + result.daysLocked),
+                  })
+                : undefined,
+          });
+        }}
+      />
     </Screen>
   );
 }
@@ -434,13 +544,22 @@ export default function AdminMarathonScreen() {
 function Settings({
   marathon,
   onPatch,
+  liveNow,
+  onMakeLive,
 }: {
   marathon: MarathonRow;
   onPatch: (patch: MarathonPatch) => Promise<void>;
+  /** The round that is the live club of this round's mode now, if another one is. */
+  liveNow: MarathonRow | null;
+  onMakeLive: () => Promise<void>;
 }) {
   const { t } = useT();
   const [draft, setDraft] = useState(marathon);
   const [pendingStatus, setPendingStatus] = useState<MarathonStatus | null>(null);
+  const [liveOpen, setLiveOpen] = useState(false);
+  const [liveBusy, setLiveBusy] = useState(false);
+  const duo = marathon.teamSize > 1;
+  const isLive = marathon.isClub === true && marathon.status === 'active';
   useEffect(() => setDraft(marathon), [marathon]);
 
   const set = <K extends keyof MarathonRow>(key: K, value: MarathonRow[K]) =>
@@ -484,6 +603,37 @@ function Settings({
 
   return (
     <div className="flex flex-col gap-4">
+      {/*
+        Which round people are in. At the top, because it is the one setting here that moves
+        everyone at once — and so it asks first, and says so.
+      */}
+      <section className="flex flex-col gap-2 border-b border-border pb-4">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[15px]">
+            {t(duo ? 'app.clubLiveRowDuo' : 'app.clubLiveRowSolo')}
+          </span>
+          {isLive ? (
+            <Badge tone="success">
+              {t(duo ? 'app.clubLiveBadgeDuo' : 'app.clubLiveBadgeSolo')}
+            </Badge>
+          ) : null}
+        </div>
+        {isLive ? (
+          <p className="text-[13px] text-muted-2">{t('app.clubLiveIsHint')}</p>
+        ) : (
+          <>
+            <p className="text-[13px] text-muted-2">
+              {liveNow
+                ? t('app.clubLiveNowIs', { title: liveNow.title })
+                : t('app.clubLiveNowNone')}
+            </p>
+            <Button variant="secondary" size="md" onClick={() => setLiveOpen(true)}>
+              {t(duo ? 'app.clubLiveMakeDuo' : 'app.clubLiveMakeSolo')}
+            </Button>
+          </>
+        )}
+      </section>
+
       <Select<MarathonStatus>
         label={t('app.mAdminStatus')}
         value={draft.status}
@@ -613,6 +763,29 @@ function Settings({
             commit({ status: pendingStatus });
           }
           setPendingStatus(null);
+        }}
+      />
+
+      <Modal
+        open={liveOpen}
+        onClose={() => setLiveOpen(false)}
+        title={t(duo ? 'app.clubLiveConfirmTitleDuo' : 'app.clubLiveConfirmTitleSolo', {
+          title: marathon.title,
+        })}
+        description={
+          liveNow
+            ? t('app.clubLiveConfirmBodySwap', { previous: liveNow.title })
+            : t('app.clubLiveConfirmBody')
+        }
+        confirmLabel={t('app.clubLiveConfirm')}
+        cancelLabel={t('common.cancel')}
+        loading={liveBusy}
+        onConfirm={() => {
+          setLiveBusy(true);
+          void onMakeLive()
+            .then(() => setLiveOpen(false))
+            .catch(() => undefined)
+            .finally(() => setLiveBusy(false));
         }}
       />
     </div>

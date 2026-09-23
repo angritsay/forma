@@ -3,6 +3,7 @@
  * downloads or evaluates any of it. Names match the functions in `src/lib/api/*`.
  */
 export * from './api';
+export * from './clubAdmin';
 export * from './adminPayments';
 export {
   getSession,

@@ -105,7 +105,18 @@ describe('the demo marathon', () => {
     expect(JSON.stringify(roster)).not.toContain('@');
   });
 
-  it('scores my own proof the moment it is sent, and moves me up the board', async () => {
+  it('scores my own proof the moment it is sent, and moves me up the board', async ({
+    onTestFinished,
+  }) => {
+    // Today's task closes at 22:00 on the viewer's clock, and a proof sent after that is late and
+    // rightly scores nothing. Pin the clock to midday so the test means the same at any hour.
+    const noon = new Date();
+    noon.setHours(12, 0, 0, 0);
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(noon);
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
     await signIn();
     const [marathon] = await demo.listMyMarathons();
     if (!marathon) throw new Error('no marathon');

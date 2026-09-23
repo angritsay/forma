@@ -35,6 +35,8 @@ export interface DayPlanProps {
   onOpenTask: (task: MarathonTaskRow) => void;
   onAddTask: () => void;
   onCopyYesterday: () => void;
+  /** «Скопировать неделю…» — the week of the selected day, onto another week or the other club. */
+  onCopyWeek?: () => void;
 }
 
 /** Monday-first weekday index, because the weeks in this product start on Monday. */
@@ -53,6 +55,7 @@ export function DayPlan({
   onOpenTask,
   onAddTask,
   onCopyYesterday,
+  onCopyWeek,
 }: DayPlanProps) {
   const { t, locale } = useT();
   const selectedIso = dateOfDay(marathon.startsOn, day);
@@ -236,6 +239,11 @@ export function DayPlan({
         {day > 1 ? (
           <Button variant="ghost" size="md" onClick={onCopyYesterday}>
             {t('app.mAdminCopyDay')}
+          </Button>
+        ) : null}
+        {onCopyWeek ? (
+          <Button variant="ghost" size="md" onClick={onCopyWeek}>
+            {t('app.clubCopyWeek')}
           </Button>
         ) : null}
       </div>

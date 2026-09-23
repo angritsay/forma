@@ -10,7 +10,7 @@
 import { supabase } from './client';
 import { demo } from './demo/load';
 import { AppError } from './errors';
-import { EMAIL_RE, guard, unwrap, unwrapVoid } from './internal';
+import { EMAIL_RE, guard, unwrap, unwrapMaybe, unwrapVoid } from './internal';
 import {
   submissionFromDb,
   taskFromDb,
@@ -20,6 +20,7 @@ import {
 } from './marathon';
 import { isDemo } from './mode';
 import type {
+  CopyTasksResult,
   MarathonWinner,
   MarathonAdjustmentRow,
   MarathonMemberPatch,
@@ -31,6 +32,8 @@ import type {
   MarathonTaskRow,
   MarathonTaskTarget,
   MarathonTeamRow,
+  ProofQueue,
+  QueuedProofRow,
 } from './types';
 
 interface DbMarathon {
@@ -50,6 +53,7 @@ interface DbMarathon {
   prize_en: string | null;
   created_at: string;
   updated_at: string;
+  is_club?: boolean;
 }
 
 interface DbMember {
@@ -68,6 +72,7 @@ interface DbTeam {
   marathon_id: string;
   name: string;
   sort_order: number;
+  is_auto?: boolean;
 }
 
 interface DbAdjustment {
@@ -98,6 +103,7 @@ function marathonFromDb(r: DbMarathon): MarathonRow {
     prizeEn: r.prize_en ?? null,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
+    isClub: r.is_club === true,
   };
 }
 
@@ -119,6 +125,7 @@ const teamFromDb = (r: DbTeam): MarathonTeamRow => ({
   marathonId: r.marathon_id,
   name: r.name,
   sortOrder: r.sort_order,
+  isAuto: r.is_auto === true,
 });
 
 const adjustmentFromDb = (r: DbAdjustment): MarathonAdjustmentRow => ({
@@ -771,4 +778,205 @@ export async function setMarathonWinner(
       }),
     );
   });
+}
+
+// --- club management (0047) --------------------------------------------------
+
+/** One row of `admin_copy_tasks`. */
+export interface DbCopyTasksResult {
+  days_copied: number;
+  days_skipped: number;
+  days_locked: number;
+  tasks_copied: number;
+  tasks_replaced: number;
+}
+
+export function copyTasksResultFromDb(r: DbCopyTasksResult | undefined): CopyTasksResult {
+  return {
+    daysCopied: r?.days_copied ?? 0,
+    daysSkipped: r?.days_skipped ?? 0,
+    daysLocked: r?.days_locked ?? 0,
+    tasksCopied: r?.tasks_copied ?? 0,
+    tasksReplaced: r?.tasks_replaced ?? 0,
+  };
+}
+
+export interface CopyTasksInput {
+  fromMarathonId: string;
+  fromDay: number;
+  dayCount: number;
+  toMarathonId: string;
+  toDay: number;
+  /** Replace the tasks of destination days that already have some — never a day with proof. */
+  overwrite?: boolean;
+  /** Count what would happen and write nothing: the preview under the button. */
+  dryRun?: boolean;
+}
+
+/**
+ * «Скопировать неделю» and «Скопировать в другой клуб»: a range of days, copied in one call.
+ *
+ * One RPC rather than the loop `copyDayTasks` runs, because this is seven days and a dozen tasks
+ * from a phone — a loop that dies on the fourth insert leaves half a week, and nothing on the
+ * screen would say which half. The server does it in one transaction and answers in counts.
+ */
+export async function copyTasks(input: CopyTasksInput): Promise<CopyTasksResult> {
+  if (isDemo()) return (await demo()).copyTasks(input);
+  return guard(async () => {
+    const rows = unwrap<DbCopyTasksResult[]>(
+      await supabase().rpc('admin_copy_tasks', {
+        p_from_marathon: input.fromMarathonId,
+        p_from_day: input.fromDay,
+        p_day_count: input.dayCount,
+        p_to_marathon: input.toMarathonId,
+        p_to_day: input.toDay,
+        p_overwrite: input.overwrite ?? false,
+        p_dry_run: input.dryRun ?? false,
+      }),
+    );
+    return copyTasksResultFromDb(rows[0]);
+  });
+}
+
+/** «Пересобрать пары сейчас» — the Monday draw, run now. Returns how many pairs it made. */
+export async function rematchDuo(): Promise<number> {
+  if (isDemo()) return (await demo()).rematchDuo();
+  return guard(async () => Number(unwrap<number>(await supabase().rpc('admin_duo_rematch'))) || 0);
+}
+
+/** «Разбить пару»: both stay in the duo club, without a partner. */
+export async function splitDuo(teamId: string): Promise<void> {
+  if (isDemo()) return (await demo()).splitDuo(teamId);
+  return guard(async () => {
+    unwrapVoid(await supabase().rpc('admin_duo_split', { p_team_id: teamId }));
+  });
+}
+
+/**
+ * «Поставить в пару»: two people who have no partner. Until Monday by default — then they go into
+ * the draw like everyone else; `keep` makes it a pair the draw leaves alone.
+ */
+export async function pairDuo(emailA: string, emailB: string, keep = false): Promise<string> {
+  if (isDemo()) return (await demo()).pairDuo(emailA, emailB, keep);
+  return guard(async () =>
+    unwrap<string>(
+      await supabase().rpc('admin_duo_pair', {
+        p_email_a: emailA,
+        p_email_b: emailB,
+        p_keep: keep,
+      }),
+    ),
+  );
+}
+
+/**
+ * Make a round the live club of its mode. The previous live club of that mode is finished; the
+ * id of it comes back (null when there was none, or it was this one already).
+ */
+export async function setLiveClub(marathonId: string, duo: boolean): Promise<string | null> {
+  if (isDemo()) return (await demo()).setLiveClub(marathonId, duo);
+  return guard(async () => {
+    const prev = unwrapMaybe<string>(
+      await supabase().rpc('admin_set_live_club', { p_marathon_id: marathonId, p_duo: duo }),
+    );
+    return prev ?? null;
+  });
+}
+
+/** One row of `admin_proof_queue`. */
+export interface DbQueuedProof {
+  id: string;
+  marathon_id: string;
+  marathon_title: string;
+  duo: boolean;
+  member_id: string;
+  member_name: string | null;
+  email: string | null;
+  team_name: string | null;
+  task_id: string;
+  task_title: string | null;
+  proof_kind: string | null;
+  unit: string | null;
+  day_index: number;
+  value_text: string | null;
+  value_num: number | string | null;
+  media_path: string | null;
+  submitted_at: string;
+  attempt: number | null;
+  resubmitted_at: string | null;
+  reviewed_at: string | null;
+  voided_at: string | null;
+  void_reason: string | null;
+  total: number | string | null;
+}
+
+const PROOF_KINDS = new Set(['done', 'text', 'number', 'media']);
+
+export function queuedProofFromDb(r: DbQueuedProof): QueuedProofRow {
+  const num = r.value_num === null || r.value_num === undefined ? null : Number(r.value_num);
+  return {
+    id: r.id,
+    taskId: r.task_id,
+    memberId: r.member_id,
+    marathonId: r.marathon_id,
+    dayIndex: r.day_index,
+    valueText: r.value_text,
+    valueNum: num !== null && Number.isFinite(num) ? num : null,
+    mediaPath: r.media_path,
+    submittedAt: r.submitted_at,
+    voidedAt: r.voided_at,
+    voidReason: r.void_reason,
+    attempt: r.attempt ?? 1,
+    resubmittedAt: r.resubmitted_at,
+    reviewedAt: r.reviewed_at,
+    memberName: r.member_name?.trim() || r.email || '—',
+    teamName: r.team_name,
+    taskTitle: r.task_title ?? '—',
+    proofKind: (PROOF_KINDS.has(r.proof_kind ?? '')
+      ? r.proof_kind
+      : 'done') as QueuedProofRow['proofKind'],
+    unit: r.unit,
+    marathonTitle: r.marathon_title,
+    duo: r.duo === true,
+    email: r.email ?? '',
+  };
+}
+
+export function proofQueueFromDb(rows: readonly DbQueuedProof[]): ProofQueue {
+  return {
+    items: rows.map(queuedProofFromDb),
+    total: rows.length > 0 ? Number(rows[0]?.total) || rows.length : 0,
+  };
+}
+
+/**
+ * «Не просмотрено»: proof from both live clubs the coach has not looked at yet, newest first.
+ * With `proofId`, that one proof in whatever state and round it is — the Telegram deep link.
+ */
+export async function listProofQueue(
+  options: { limit?: number; proofId?: string } = {},
+): Promise<ProofQueue> {
+  if (isDemo()) return (await demo()).listProofQueue(options);
+  return guard(async () =>
+    proofQueueFromDb(
+      unwrap<DbQueuedProof[]>(
+        await supabase().rpc('admin_proof_queue', {
+          p_limit: options.limit ?? 50,
+          p_proof_id: options.proofId ?? null,
+        }),
+      ),
+    ),
+  );
+}
+
+/** «Всё просмотрено» for the proofs on screen. Rejected ones are left as they are. */
+export async function markProofsReviewed(ids: readonly string[]): Promise<number> {
+  if (ids.length === 0) return 0;
+  if (isDemo()) return (await demo()).markProofsReviewed(ids);
+  return guard(
+    async () =>
+      Number(
+        unwrap<number>(await supabase().rpc('admin_proofs_mark_reviewed', { p_ids: [...ids] })),
+      ) || 0,
+  );
 }

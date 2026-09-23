@@ -7,6 +7,10 @@
  * the owner took that out: a hand-made pair was the one pairing nobody had asked for, and the next
  * Monday's rematch undid it anyway.
  *
+ * The one exception is the live duo club (0047): there the owner can run the draw now, split a
+ * pair, and pair someone the draw left out — see `DuoPairs`. Those are not transcription; they are
+ * the same draw and the same pairing the club already does, pressed by hand.
+ *
  * People are added by email whether or not they have ever opened the app. That is the same rule as
  * purchases, and it is what lets a round be built on a Sunday from a Telegram thread.
  */
@@ -20,6 +24,7 @@ import { Sheet } from '@/components/ui/Sheet';
 import type { MarathonMemberRow, MarathonTeamRow } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
 import { personPath } from '@/app/features/admin/person/path';
+import { DuoPairs, type DuoPairsProps } from './DuoPairs';
 
 export interface PeopleProps {
   members: readonly MarathonMemberRow[];
@@ -28,9 +33,11 @@ export interface PeopleProps {
   solo: boolean;
   onAddMember: (input: { email: string; displayName: string }) => Promise<void>;
   onSetStatus: (memberId: string, status: 'active' | 'removed') => Promise<void>;
+  /** Only for the live duo club: the pair tools above the list. */
+  pairs?: Omit<DuoPairsProps, 'members' | 'teams'>;
 }
 
-export function People({ members, teams, solo, onAddMember, onSetStatus }: PeopleProps) {
+export function People({ members, teams, solo, onAddMember, onSetStatus, pairs }: PeopleProps) {
   const { t } = useT();
   const navigate = useNavigate();
   const [addOpen, setAddOpen] = useState(false);
@@ -58,6 +65,7 @@ export function People({ members, teams, solo, onAddMember, onSetStatus }: Peopl
 
   return (
     <div className="flex flex-col gap-5">
+      {pairs ? <DuoPairs members={members} teams={teams} {...pairs} /> : null}
       {members.length === 0 ? (
         <p className="border-t border-border py-6 text-[15px] text-muted-2">
           {t('app.mAdminPeopleEmptyBody')}
