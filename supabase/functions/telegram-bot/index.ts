@@ -1,8 +1,11 @@
 /**
- * Telegram → the Mini App: answer `/start` with a greeting and a button that opens Forma.
+ * Telegram → the Mini App: answer `/start` with a greeting and a button that opens Forma, and
+ * pass anything else a person writes on to the coach («Обращения», 0042).
  *
  * Deploy:  supabase functions deploy telegram-bot --no-verify-jwt
  * Secrets: supabase secrets set TELEGRAM_BOT_TOKEN=… TELEGRAM_WEBHOOK_SECRET=… MINI_APP_URL=…
+ *          (SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided by the platform; the support
+ *          path uses them to call `support_from_telegram`.)
  * Then point Telegram at it once:
  *   https://api.telegram.org/bot<TOKEN>/setWebhook
  *     ?url=https://<project>.functions.supabase.co/telegram-bot
@@ -31,10 +34,29 @@
 /** The slice of Telegram's Update we read. Everything else is ignored on purpose. */
 export interface TelegramUpdate {
   message?: {
+    /** Unique within the chat; with the chat id it is what makes a redelivery recognisable. */
+    message_id?: number;
     chat?: { id?: number; type?: string };
-    /** Telegram's own UI language for the sender, e.g. `ru`, `en-GB`. Often absent. */
-    from?: { language_code?: string };
+    from?: {
+      id?: number;
+      is_bot?: boolean;
+      first_name?: string;
+      last_name?: string;
+      username?: string;
+      /** Telegram's own UI language for the sender, e.g. `ru`, `en-GB`. Often absent. */
+      language_code?: string;
+    };
     text?: string;
+    /** The words under a photo, a video or a file. `text` is absent on those. */
+    caption?: string;
+    photo?: unknown;
+    video?: unknown;
+    video_note?: unknown;
+    animation?: unknown;
+    document?: unknown;
+    audio?: unknown;
+    voice?: unknown;
+    sticker?: unknown;
   };
 }
 
@@ -135,7 +157,7 @@ export const DEFAULT_COPY: Record<Locale, BotCopy> = {
       'Внутри три раздела:\n\n' +
       '🎬 <b>Курсы</b>\n' +
       'Пока что только курс для новичков, но скоро добавим ещё. На каждое движение есть видео ' +
-      'и инструкции по выполнению. Попробуй во время тренировки свайп вниз чтобы перейти ' +
+      'и инструкции по выполнению. Попробуй во время тренировки свайп вверх чтобы перейти ' +
       'к следующему упражнению, влево — чтобы узнать технику и ограничения.\n\n' +
       '🏆 <b>Клуб маленьких шагов</b>\n' +
       'Одно небольшое задание от тренера в день, чтобы постепенно изменить твои привычки. ' +
@@ -168,7 +190,7 @@ export const DEFAULT_COPY: Record<Locale, BotCopy> = {
       'There are three sections inside:\n\n' +
       '🎬 <b>Courses</b>\n' +
       'For now just the beginner course, more are coming. Every movement has a video and ' +
-      'instructions. During a workout, swipe down for the next exercise and left for the ' +
+      'instructions. During a workout, swipe up for the next exercise and left for the ' +
       'technique and what to watch out for.\n\n' +
       '🏆 <b>Club of small steps</b>\n' +
       'One small task from the coach every day, to change your habits gradually. Plus a shared ' +
@@ -209,30 +231,215 @@ export function siteUrlFor(locale: Locale, base: string): string {
   return base === DEFAULT_SITE_URL ? `${DEFAULT_SITE_URL}en/` : base;
 }
 
+/** `/start`, `/start marathon`, `/help@forma_bot` — a command, as Telegram itself marks one. */
+const COMMAND_RE = /^\/[A-Za-z0-9_]{1,32}(@[A-Za-z0-9_]{3,32})?(\s|$)/;
+
+export function isCommand(text: string): boolean {
+  return COMMAND_RE.test(text.trim());
+}
+
+/** The longest message passed on, in characters (code points, so an emoji is never cut in half). */
+export const SUPPORT_MAX = 1000;
+
+/** What kinds of attachment are named in the owner's topic. The rest are «файл». */
+const ATTACHMENTS = ['photo', 'video', 'animation', 'document', 'audio', 'voice'] as const;
+/** Media that has no caption to pass on at all. */
+const CAPTIONLESS = ['video_note', 'sticker'] as const;
+
+/** A person asking something: what goes to the coach, and who it came from. */
+export interface SupportRequest {
+  chatId: number;
+  locale: Locale;
+  telegramId: number;
+  messageId: number | null;
+  /** First and last name as the person set them in Telegram, or ''. */
+  name: string;
+  /** Without the `@`, or '' — many people have none. */
+  username: string;
+  text: string;
+  /** `photo`, `video`, … when the text is a caption, else ''. */
+  attachment: string;
+}
+
 /**
- * The reply an update deserves, or null for the updates that are not a person writing to the bot.
+ * What to do with an update:
+ *
+ *   - `greeting` — a command. `/start` is the one that matters, and any other command gets the same
+ *     greeting because it is the only thing the bot has to show.
+ *   - `support` — anything a person typed that is not a command. It used to get the full promo
+ *     greeting too, which is the wrong answer to «а можно заниматься с больным коленом?»; now it is
+ *     passed on to the coach's topic and answered in one line.
+ *   - `media` — a photo, a voice note, a sticker with no words under it. Nothing to pass on as text,
+ *     so the person is told, politely, what does work.
+ *   - null — not a person writing to the bot in private.
  *
  * Groups and channels are left alone: a `web_app` button only launches from a private chat anyway,
  * and a bot that answers every message in a group chat is a bot people remove.
+ */
+export type Route =
+  | { kind: 'greeting'; reply: BotReply }
+  | { kind: 'support'; request: SupportRequest }
+  | { kind: 'media'; chatId: number; locale: Locale };
+
+export function routeUpdate(
+  update: TelegramUpdate,
+  copy: Record<Locale, BotCopy> = DEFAULT_COPY,
+): Route | null {
+  const message = update.message;
+  const chatId = message?.chat?.id;
+  if (typeof chatId !== 'number') return null;
+  if (message?.chat?.type !== 'private') return null;
+  if (message.from?.is_bot) return null;
+  const locale = localeOf(update);
+
+  const text = typeof message.text === 'string' ? message.text.trim() : '';
+  if (text && isCommand(text)) {
+    const c = copy[locale] ?? copy.ru;
+    return {
+      kind: 'greeting',
+      reply: {
+        chatId,
+        locale,
+        text: c.greeting,
+        buttonText: c.buttonText,
+        siteButtonText: c.siteButtonText,
+        photoUrl: c.photoUrl,
+      },
+    };
+  }
+
+  const caption = typeof message.caption === 'string' ? message.caption.trim() : '';
+  const attachment = ATTACHMENTS.find((k) => message[k] !== undefined) ?? '';
+  const words = text || caption;
+  if (!words) {
+    const media = attachment || CAPTIONLESS.some((k) => message[k] !== undefined);
+    return media ? { kind: 'media', chatId, locale } : null;
+  }
+
+  // Without the sender's id there is nobody to rate-limit and nobody to answer later.
+  const telegramId = message.from?.id;
+  if (typeof telegramId !== 'number' || telegramId <= 0) return null;
+
+  const name = [message.from?.first_name, message.from?.last_name]
+    .filter((s): s is string => typeof s === 'string' && s.trim() !== '')
+    .map((s) => s.trim())
+    .join(' ');
+  const username = (message.from?.username ?? '').replace(/^@/, '');
+
+  return {
+    kind: 'support',
+    request: {
+      chatId,
+      locale,
+      telegramId,
+      messageId: typeof message.message_id === 'number' ? message.message_id : null,
+      name: Array.from(name).slice(0, 60).join(''),
+      username: /^[A-Za-z0-9_]{3,32}$/.test(username) ? username : '',
+      text: Array.from(words).slice(0, SUPPORT_MAX).join(''),
+      attachment: text ? '' : attachment,
+    },
+  };
+}
+
+/**
+ * The greeting an update deserves, or null — a command in a private chat gets it, and nothing
+ * else does. Kept as its own function because the greeting's payloads are built from it.
  */
 export function replyFor(
   update: TelegramUpdate,
   copy: Record<Locale, BotCopy> = DEFAULT_COPY,
 ): BotReply | null {
-  const message = update.message;
-  const chatId = message?.chat?.id;
-  if (typeof chatId !== 'number') return null;
-  if (message?.chat?.type !== 'private') return null;
-  if (typeof message.text !== 'string' || message.text.trim() === '') return null;
-  const c = copy[localeOf(update)] ?? copy.ru;
+  const route = routeUpdate(update, copy);
+  return route?.kind === 'greeting' ? route.reply : null;
+}
+
+/** The arguments of `support_from_telegram` (0042), named the way PostgREST wants them. */
+export function supportRpcArgs(request: SupportRequest): Record<string, unknown> {
   return {
-    chatId,
-    locale: localeOf(update),
-    text: c.greeting,
-    buttonText: c.buttonText,
-    siteButtonText: c.siteButtonText,
-    photoUrl: c.photoUrl,
+    p_telegram_id: request.telegramId,
+    p_message_id: request.messageId,
+    p_name: request.name,
+    p_username: request.username,
+    p_locale: request.locale,
+    p_text: request.text,
+    p_attachment: request.attachment || null,
   };
+}
+
+/**
+ * What `support_from_telegram` answered (0042), plus `failed` for when it could not be asked.
+ * `duplicate` is Telegram delivering the same message again; `muted` is somebody still writing
+ * well past the limit. Both are answered with silence.
+ */
+export type SupportStatus = 'queued' | 'duplicate' | 'limited' | 'muted' | 'empty' | 'failed';
+
+export function parseSupportStatus(body: unknown): SupportStatus {
+  const known: SupportStatus[] = ['queued', 'duplicate', 'limited', 'muted', 'empty'];
+  return typeof body === 'string' && (known as string[]).includes(body)
+    ? (body as SupportStatus)
+    : 'failed';
+}
+
+/**
+ * The one line the person gets back.
+ *
+ * **«Он ответит тебе здесь, в Телеграме», not «в этом чате».** The coach answers from his own
+ * account, in a new chat with the person — no bot can write on his behalf. Promising an answer in
+ * the bot's chat would send people to look for it in the wrong place.
+ *
+ * Somebody with no @username cannot always be found from the coach's side: Telegram opens a chat
+ * by numeric id only when the person's privacy settings allow it. So they are asked, in the same
+ * line, to leave a way back — which is cheaper than a question that silently never gets answered.
+ */
+export const SUPPORT_COPY: Record<
+  Locale,
+  { queued: string; queuedNoUsername: string; limited: string; media: string; failed: string }
+> = {
+  ru: {
+    queued: 'Передали тренеру — он ответит тебе здесь, в Телеграме.',
+    queuedNoUsername:
+      'Передали тренеру — он ответит тебе здесь, в Телеграме. У тебя не задано имя пользователя ' +
+      '(@…), поэтому на всякий случай оставь почту или телефон следующим сообщением.',
+    limited:
+      'Сообщения дошли. Подожди, пожалуйста, ответа тренера, прежде чем писать ещё, — ' +
+      'следующий час новые сообщения ему не передаются.',
+    media: 'Тренеру передаётся только текст. Напиши словами — или пришли фото с подписью.',
+    failed: 'Не получилось передать сообщение тренеру. Попробуй, пожалуйста, чуть позже.',
+  },
+  en: {
+    queued: 'Passed on to the coach — he will reply to you here in Telegram.',
+    queuedNoUsername:
+      'Passed on to the coach — he will reply to you here in Telegram. You have no username ' +
+      '(@…) set, so please send your email or phone number in the next message, just in case.',
+    limited:
+      'Your messages have arrived. Please wait for the coach to reply before writing more — ' +
+      'new messages are not passed on for the next hour.',
+    media:
+      'Only text is passed on to the coach. Write it in words — or send the photo with a caption.',
+    failed: 'Could not pass your message on to the coach. Please try again a little later.',
+  },
+};
+
+/** The reply to a support message, or null when silence is the right answer. */
+export function supportReplyText(
+  status: SupportStatus,
+  locale: Locale,
+  hasUsername: boolean,
+): string | null {
+  const c = SUPPORT_COPY[locale] ?? SUPPORT_COPY.ru;
+  switch (status) {
+    case 'queued':
+      return hasUsername ? c.queued : c.queuedNoUsername;
+    case 'limited':
+      return c.limited;
+    case 'empty':
+      return c.media;
+    case 'failed':
+      return c.failed;
+    case 'duplicate':
+    case 'muted':
+      return null;
+  }
 }
 
 /**
@@ -298,7 +505,7 @@ export async function handleRequest(req: Request): Promise<Response> {
   }
 
   /*
-   * Fail closed, as calendly-webhook already does.
+   * Fail closed, as every webhook in this project does.
    *
    * This used to warn and carry on, which meant that a project missing the secret ran an
    * unauthenticated endpoint: the function URL is not a credential — it appears in deploy logs,
@@ -339,11 +546,8 @@ export async function handleRequest(req: Request): Promise<Response> {
     siteButtonText: env('TELEGRAM_SITE_BUTTON_TEXT', locale) ?? DEFAULT_COPY[locale].siteButtonText,
     photoUrl: Deno.env.get('TELEGRAM_PHOTO_URL') ?? DEFAULT_COPY[locale].photoUrl,
   });
-  const answer = replyFor(update, { ru: copyFor('ru'), en: copyFor('en') });
-  if (!answer) return reply(200, 'ignored');
-
-  const appUrl = Deno.env.get('MINI_APP_URL') ?? DEFAULT_APP_URL;
-  const siteUrl = siteUrlFor(answer.locale, Deno.env.get('TELEGRAM_SITE_URL') ?? DEFAULT_SITE_URL);
+  const route = routeUpdate(update, { ru: copyFor('ru'), en: copyFor('en') });
+  if (!route) return reply(200, 'ignored');
 
   const call = (method: string, body: Record<string, unknown>) =>
     fetch(`https://api.telegram.org/bot${token}/${method}`, {
@@ -351,6 +555,31 @@ export async function handleRequest(req: Request): Promise<Response> {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(body),
     });
+
+  if (route.kind === 'media') {
+    const res = await call('sendMessage', {
+      chat_id: route.chatId,
+      text: SUPPORT_COPY[route.locale].media,
+    });
+    if (!res.ok) console.error('telegram-bot: media note failed', res.status);
+    return reply(200, 'ok');
+  }
+
+  if (route.kind === 'support') {
+    const status = await passOn(route.request);
+    const text = supportReplyText(status, route.request.locale, route.request.username !== '');
+    if (text) {
+      const res = await call('sendMessage', { chat_id: route.request.chatId, text });
+      if (!res.ok) console.error('telegram-bot: support reply failed', res.status);
+    }
+    // The status and nothing else: never who wrote, never what.
+    console.info(`telegram-bot: support ${status}`);
+    return reply(200, 'ok');
+  }
+
+  const answer = route.reply;
+  const appUrl = Deno.env.get('MINI_APP_URL') ?? DEFAULT_APP_URL;
+  const siteUrl = siteUrlFor(answer.locale, Deno.env.get('TELEGRAM_SITE_URL') ?? DEFAULT_SITE_URL);
 
   /*
    * The picture first, the words alone if the picture will not go.
@@ -378,6 +607,52 @@ export async function handleRequest(req: Request): Promise<Response> {
     console.error('telegram-bot: sendMessage failed', res.status, await res.text());
   }
   return reply(200, 'ok');
+}
+
+/**
+ * Hand a support message to the database (`support_from_telegram`, 0042), which rate-limits it,
+ * recognises a redelivery and queues it for the owner's «Обращения» topic.
+ *
+ * Plain `fetch` to PostgREST rather than supabase-js: this file stays one file with no imports
+ * (see the header). The service-role key is the platform's own secret in the function's
+ * environment; it is never logged, and neither is anything the person wrote. Any failure —
+ * migration not applied, network — is `failed`, and the person is told the truth: it did not
+ * go through.
+ */
+async function passOn(request: SupportRequest): Promise<SupportStatus> {
+  const url = Deno.env.get('SUPABASE_URL');
+  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!url || !key) {
+    console.error('telegram-bot: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing');
+    return 'failed';
+  }
+  try {
+    const res = await fetch(`${url}/rest/v1/rpc/support_from_telegram`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        apikey: key,
+        authorization: `Bearer ${key}`,
+      },
+      body: JSON.stringify(supportRpcArgs(request)),
+    });
+    if (!res.ok) {
+      // PostgREST's error body carries a code like PGRST202 (the function is not there yet) and
+      // nothing about the person.
+      let code = '';
+      try {
+        code = String(((await res.json()) as { code?: unknown }).code ?? '');
+      } catch {
+        /* no body */
+      }
+      console.error('telegram-bot: support_from_telegram failed', res.status, code);
+      return 'failed';
+    }
+    return parseSupportStatus(await res.json());
+  } catch (error) {
+    console.error('telegram-bot: support_from_telegram unreachable', (error as Error).name);
+    return 'failed';
+  }
 }
 
 // Guarded so the unit tests can import this file: outside Deno there is nothing to serve.

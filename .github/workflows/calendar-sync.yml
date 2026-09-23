@@ -1,0 +1,89 @@
+name: Sync the coach's Google Calendar
+
+# Раз в десять минут будит `google-calendar-sync`, и та переносит брони из календаря тренера в
+# `coach_bookings` (0014): вкладка «Тренер» показывает ближайшую, тема «Онлайн-тренировки» в
+# группе владельца получает «Выбрали время» (триггер 0040).
+#
+# ## Почему расписание здесь, а не в базе
+#
+# То же, что у `telegram-notify.yml`: pg_cron в проекте не включён, а Actions уже умеют ходить по
+# HTTPS и показывают историю запусков глазами. Цена — бронь появляется в приложении с задержкой
+# до десяти минут (`POLL_INTERVAL_MINUTES` в sync.ts), и отмена исчезает с той же задержкой.
+#
+# ## Про дверь
+#
+# Функция выложена с `--no-verify-jwt`, поэтому её дверь — секрет `GOOGLE_SYNC_TOKEN` в заголовке
+# `x-sync-token`. Секрет заводится один раз (docs/SETUP.md §7.7), то же значение задача
+# `deploy-calendar` кладёт в Supabase.
+#
+# **В логе нет ничего, кроме кода ответа и счётчиков.** Функция отвечает строкой вида
+# `scanned=12 booked=1 cancelled=0 vanished=0 ignored=11 failed=0` — ни адреса, ни названия
+# события. И даже эта строка печатается, только если она ровно такой формы.
+
+on:
+  schedule:
+    # Каждые 10 минут. Cron в Actions не точный — опрос читает окно целиком, а не «что нового».
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+# Один опрос за раз: два параллельных сверяли бы «пропавшие» брони друг против друга.
+concurrency:
+  group: calendar-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Wake the calendar sync
+        env:
+          URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          TOKEN: ${{ secrets.GOOGLE_SYNC_TOKEN }}
+        run: |
+          set -uo pipefail
+          if [ -z "${URL:-}" ]; then
+            echo "::error::Переменной PUBLIC_SUPABASE_URL нет (Settings → Secrets and variables → Actions → Variables)."
+            exit 1
+          fi
+          # Секрета нет — значит синхронизацию ещё не включали, и это не поломка. Красный крест
+          # каждые десять минут приучает не смотреть на вкладку Actions вообще.
+          if [ -z "${TOKEN:-}" ]; then
+            echo "::notice::Синхронизация календаря ещё не включена: нет секрета GOOGLE_SYNC_TOKEN. Как включить: docs/SETUP.md §7.7."
+            exit 0
+          fi
+
+          REF=$(printf '%s' "$URL" | sed -E 's#^https?://([^.]+)\..*#\1#')
+          code=$(curl -sS -o /tmp/out.txt -w '%{http_code}' -X POST \
+            -H "x-sync-token: $TOKEN" \
+            "https://$REF.functions.supabase.co/google-calendar-sync" || echo 000)
+          counts=$(grep -oE '^scanned=[0-9]+ booked=[0-9]+ cancelled=[0-9]+ vanished=[0-9]+ ignored=[0-9]+ failed=[0-9]+' /tmp/out.txt || true)
+
+          case "$code" in
+            200)
+              echo "::notice::Календарь прочитан: ${counts:-без счётчиков}"
+              ;;
+            # Секрет в GitHub уже есть, а функцию не выложили. «Не доделали», а не поломка.
+            404)
+              echo "::notice::Функции google-calendar-sync ещё нет по адресу — запусти Supabase apply → deploy-calendar."
+              ;;
+            403)
+              echo "::error::403: GOOGLE_SYNC_TOKEN в GitHub и в Supabase не совпадают. Запусти Supabase apply → deploy-calendar — она перенесёт секрет в проект."
+              exit 1
+              ;;
+            503)
+              echo "::error::503: функции не хватает секретов Google. Запусти Supabase apply → deploy-calendar и посмотри, какого имени она не нашла."
+              exit 1
+              ;;
+            502)
+              echo "::error::502: Google не пустил — ключ робота не тот, или календарь тренера больше не открыт адресу робота. docs/SETUP.md §7.7."
+              exit 1
+              ;;
+            500)
+              echo "::warning::Часть броней не записалась: ${counts:-без счётчиков}. Следующий опрос попробует снова; подробности — Supabase → Edge Functions → google-calendar-sync → Logs."
+              ;;
+            *)
+              echo "::error::Функция ответила HTTP $code."
+              exit 1
+              ;;
+          esac

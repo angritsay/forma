@@ -88,23 +88,15 @@ import { withBase } from '@/lib/util/paths';
 import { openExternal } from '@/lib/telegram/webapp';
 import { payHref, type PayRoute, payRoute, paymentTarget } from '@/lib/util/payment';
 import { LinkButton } from '@/app/features/courses/LinkButton';
+import { SupportSheet } from '@/app/features/support/SupportSheet';
 import { splitName } from '@/app/features/profile/model';
 import { externalLinkProps } from '@/app/hooks/useExternalLink';
 import { useT, type Translator } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
 import { BOOKING, type BookingOption } from '@content/site/booking';
-import { BRAND } from '@content/site/brand';
 import { COACH } from '@content/site/coach';
-import { LINKS } from '@content/site/links';
 import { lavaUrl, sessionKey } from '@content/site/payments';
 import { formatPrice } from '@content/site/pricing';
-
-/** Where "message the coach" goes: Telegram if set, else mail. */
-function contactHref(subject: string): string {
-  const telegram = LINKS.supportTelegram || BRAND.telegram;
-  if (telegram) return telegram;
-  return `mailto:${LINKS.supportEmail || BRAND.contactEmail}?subject=${encodeURIComponent(subject)}`;
-}
 
 export default function BookScreen() {
   const { t, locale } = useT();
@@ -195,7 +187,14 @@ export default function BookScreen() {
         lavaUrl(sessionKey(option.id)),
       )
     : null;
-  const contact = contactHref(option ? l(option.name, locale) : name);
+  /*
+   * «Написать тренеру» opens a message sheet (0042) instead of a mailto or a bare Telegram link:
+   * the message lands in the owner's «Обращения» topic, which is where she and the coach look.
+   * The context is in Russian whatever the app's language — the coach reads the topic in Russian.
+   */
+  const [writing, setWriting] = useState(false);
+  const contactContext = option ? option.name.ru : 'Вкладка «Тренер»';
+  const openContact = () => setWriting(true);
 
   /* The credentials that are not already standing above as a figure. */
   const rest = COACH.credentials.filter((c) => !COACH.figures.some((f) => f.of === c));
@@ -480,7 +479,7 @@ export default function BookScreen() {
                 payment={payment}
                 redirecting={redirecting}
                 onPay={pay}
-                contactHref={contact}
+                onContact={openContact}
               />
             ) : null}
           </Card>
@@ -521,18 +520,26 @@ export default function BookScreen() {
                 {t('app.bookPickTime')}
               </LinkButton>
             ) : payment ? (
-              <LinkButton
-                href={contact}
+              <Button
                 variant={sent ? 'primary' : 'secondary'}
                 size="lg"
                 fullWidth
-                external
+                onClick={openContact}
               >
                 {t('app.bookContact')}
-              </LinkButton>
+              </Button>
             ) : null}
             <p className="text-xs text-muted-2">{l(BOOKING.reschedule, locale)}</p>
+            {/* With a slot page and a till both in place nothing above offers a way to ask, and a
+                question before paying is exactly when one is needed. Quiet, so it is not a
+                second action. */}
+            {schedule && payment ? (
+              <Button variant="ghost" size="md" className="self-start" onClick={openContact}>
+                {t('app.supportWrite')}
+              </Button>
+            ) : null}
           </section>
+          <SupportSheet open={writing} onClose={() => setWriting(false)} context={contactContext} />
         </div>
       </Screen>
     </div>
@@ -702,13 +709,13 @@ function Option({
   payment,
   redirecting,
   onPay,
-  contactHref,
+  onContact,
 }: {
   option: BookingOption;
   payment: PayRoute | null;
   redirecting: boolean;
   onPay: () => void;
-  contactHref: string;
+  onContact: () => void;
 }) {
   const { t, locale } = useT();
   const price = formatPrice(locale, option.price);
@@ -758,9 +765,9 @@ function Option({
         </Button>
       ) : (
         <>
-          <LinkButton href={contactHref} variant="action" size="lg" fullWidth external>
+          <Button variant="action" size="lg" fullWidth onClick={onContact}>
             {t('app.bookContact')}
-          </LinkButton>
+          </Button>
           <p className="text-sm text-muted">{t('app.bookContactHint')}</p>
         </>
       )}

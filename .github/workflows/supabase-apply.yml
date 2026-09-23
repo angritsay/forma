@@ -43,6 +43,7 @@ on:
           - deploy-notify
           - deploy-payments
           - deploy-lava
+          - deploy-calendar
           - secrets-check
           - webhook-info
           - payments-check
@@ -649,6 +650,129 @@ jobs:
             fi
           done
           echo "::notice::Адрес для кабинета lava.top: https://$PROJECT_REF.functions.supabase.co/lava-webhook?token=<WEBHOOK_TOKEN>"
+
+      # ---------------------------------------------------------------------
+      # deploy-calendar — синхронизация Google Календаря тренера (0014).
+      #
+      # Функция `google-calendar-sync` читает календарь Сергея и записывает брони
+      # в `coach_bookings`: их показывает вкладка «Тренер», а триггер 0040 кладёт
+      # каждую новую в тему «Онлайн-тренировки». Будит её раз в десять минут
+      # `.github/workflows/calendar-sync.yml`.
+      #
+      # **С `--no-verify-jwt`**: у расписания нет сессии человека. Дверь — секрет
+      # `GOOGLE_SYNC_TOKEN` в заголовке, и шаг переносит его из GitHub в Supabase,
+      # чтобы значение было одно.
+      #
+      # Ключ робота можно положить целиком: секрет `GOOGLE_SA_JSON` — всё
+      # содержимое скачанного JSON-файла. Шаг сам достаёт из него адрес и
+      # закрытый ключ и кладёт в Supabase как GOOGLE_SA_CLIENT_EMAIL и
+      # GOOGLE_SA_PRIVATE_KEY. Можно и по отдельности, этими двумя именами.
+      #
+      # Ни одно значение не печатается — только имена и коды ответа.
+      # ---------------------------------------------------------------------
+      - name: Deploy the Google Calendar sync
+        if: ${{ inputs.task == 'deploy-calendar' }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          GOOGLE_SYNC_TOKEN: ${{ secrets.GOOGLE_SYNC_TOKEN }}
+          GOOGLE_CALENDAR_ID: ${{ secrets.GOOGLE_CALENDAR_ID }}
+          GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
+          GOOGLE_SA_CLIENT_EMAIL: ${{ secrets.GOOGLE_SA_CLIENT_EMAIL }}
+          GOOGLE_SA_PRIVATE_KEY: ${{ secrets.GOOGLE_SA_PRIVATE_KEY }}
+          GOOGLE_BOOKING_TITLE: ${{ secrets.GOOGLE_BOOKING_TITLE }}
+          GOOGLE_COACH_EMAILS: ${{ secrets.GOOGLE_COACH_EMAILS }}
+        run: |
+          set -uo pipefail
+          if [ -z "${GOOGLE_SYNC_TOKEN:-}" ]; then
+            echo "::error::Секрета GOOGLE_SYNC_TOKEN нет, а без него функция отказывает всем. Сгенерируй длинную случайную строку (openssl rand -hex 32) — Settings → Secrets and variables → Actions → New repository secret, имя GOOGLE_SYNC_TOKEN — и запусти эту задачу снова."
+            exit 1
+          fi
+
+          # Ключ целиком → два секрета функции. jq читает файл из переменной и
+          # ничего не печатает; при кривом JSON — только слова, без содержимого.
+          if [ -n "${GOOGLE_SA_JSON:-}" ]; then
+            email=$(printf '%s' "$GOOGLE_SA_JSON" | jq -r '.client_email // empty' 2>/dev/null || true)
+            key=$(printf '%s' "$GOOGLE_SA_JSON" | jq -r '.private_key // empty' 2>/dev/null || true)
+            if [ -z "$email" ] || [ -z "$key" ]; then
+              echo "::error::GOOGLE_SA_JSON задан, но в нём нет client_email или private_key. Нужно всё содержимое JSON-файла ключа, от { до }, как есть."
+              exit 1
+            fi
+            echo "::add-mask::$email"
+            GOOGLE_SA_CLIENT_EMAIL="$email"
+            GOOGLE_SA_PRIVATE_KEY="$key"
+          fi
+
+          curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz \
+            | tar -xz -C /tmp
+
+          if ! /tmp/supabase functions deploy google-calendar-sync --project-ref "$PROJECT_REF" --no-verify-jwt; then
+            echo "::error::Не удалось выложить google-calendar-sync. Обычно это просроченный SUPABASE_ACCESS_TOKEN или нет доступа к проекту."
+            exit 1
+          fi
+          echo "::notice::Функция google-calendar-sync выложена."
+
+          # Переводы строк ключа — как два символа «\n»: одна строка переживает
+          # `secrets set` наверняка, а функция сама превращает их обратно (auth.ts).
+          if [ -n "${GOOGLE_SA_PRIVATE_KEY:-}" ]; then
+            GOOGLE_SA_PRIVATE_KEY="${GOOGLE_SA_PRIVATE_KEY//$'\r'/}"
+            GOOGLE_SA_PRIVATE_KEY="${GOOGLE_SA_PRIVATE_KEY//$'\n'/\\n}"
+          fi
+
+          # Только непустые: пустой секрет в GitHub не должен стереть заданный в дашборде.
+          args=(GOOGLE_SYNC_TOKEN="$GOOGLE_SYNC_TOKEN")
+          for name in GOOGLE_CALENDAR_ID GOOGLE_SA_CLIENT_EMAIL GOOGLE_SA_PRIVATE_KEY GOOGLE_BOOKING_TITLE GOOGLE_COACH_EMAILS; do
+            value="${!name:-}"
+            if [ -n "$value" ]; then args+=("$name=$value"); fi
+          done
+          if /tmp/supabase secrets set --project-ref "$PROJECT_REF" "${args[@]}" >/dev/null 2>&1; then
+            echo "Секреты из GitHub перенесены в Supabase (${#args[@]} шт., значения не печатаются)."
+          else
+            echo "::error::Не удалось записать секреты в Supabase."
+            exit 1
+          fi
+
+          # Имена обратно — что бы их ни задало, GitHub или дашборд.
+          missing=0
+          if /tmp/supabase secrets list --project-ref "$PROJECT_REF" >/tmp/raw.txt 2>/dev/null; then
+            grep -oE '[A-Z][A-Z0-9_]{2,}' /tmp/raw.txt | grep -vxE 'NAME|DIGEST' | sort -u > /tmp/have.txt || true
+            for name in GOOGLE_SYNC_TOKEN GOOGLE_CALENDAR_ID GOOGLE_SA_CLIENT_EMAIL GOOGLE_SA_PRIVATE_KEY; do
+              if grep -qx -- "$name" /tmp/have.txt; then
+                echo "::notice::$name — на месте."
+              else
+                missing=$((missing + 1))
+                echo "::warning::$name не задан — без него синхронизация отвечает 503 и ничего не пишет. Как завести: docs/SETUP.md §7.7."
+              fi
+            done
+            if grep -qx 'GOOGLE_BOOKING_TITLE' /tmp/have.txt; then
+              echo "::notice::GOOGLE_BOOKING_TITLE — на месте."
+            else
+              echo "::warning::GOOGLE_BOOKING_TITLE не задан: бронью считается любое событие с одним гостем, и обед тренера с другом станет «сессией» в чьём-то приложении. Задай название расписания встреч."
+            fi
+          else
+            echo "::warning::Список секретов прочитать не удалось — проверь их глазами в дашборде Supabase."
+          fi
+
+          # Живая проверка, и сразу первый опрос. Печатается только код ответа и
+          # счётчики — в ответе функции по устройству нет ни адресов, ни названий.
+          URL="https://$PROJECT_REF.functions.supabase.co/google-calendar-sync"
+          probe=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$URL" || echo 000)
+          case "$probe" in
+            403) echo "::notice::Функция отвечает по адресу (403 на запрос без токена — так и должно быть)." ;;
+            401) echo "::error::401 — платформа требует токен Supabase раньше функции. Деплой прошёл без --no-verify-jwt; запусти задачу ещё раз." ; exit 1 ;;
+            404) echo "::error::404 — по адресу ничего нет. Деплой не доехал; запусти задачу ещё раз." ; exit 1 ;;
+            *)   echo "::warning::На запрос без токена функция ответила $probe." ;;
+          esac
+
+          code=$(curl -sS -o /tmp/sync.txt -w '%{http_code}' -X POST -H "x-sync-token: $GOOGLE_SYNC_TOKEN" "$URL" || echo 000)
+          counts=$(grep -oE '^scanned=[0-9]+ booked=[0-9]+ cancelled=[0-9]+ vanished=[0-9]+ ignored=[0-9]+ failed=[0-9]+' /tmp/sync.txt || true)
+          case "$code" in
+            200) echo "::notice::Первый опрос прошёл: ${counts:-без счётчиков}. Дальше календарь читается сам раз в десять минут." ;;
+            503) echo "::error::503 — функции не хватает секретов (см. предупреждения выше)." ; exit 1 ;;
+            502) echo "::error::502 — Google не пустил. Либо ключ робота не тот (GOOGLE_SA_JSON), либо календарь тренера ещё не открыт адресу робота с правом «Просмотр всех сведений о мероприятии», либо GOOGLE_CALENDAR_ID не его адрес." ; exit 1 ;;
+            500) echo "::warning::Опрос прошёл с ошибками записи: ${counts:-без счётчиков}. Смотри Supabase → Edge Functions → google-calendar-sync → Logs." ;;
+            *)   echo "::warning::Первый опрос ответил $code." ;;
+          esac
+          if [ "$missing" -gt 0 ]; then exit 1; fi
 
       # ---------------------------------------------------------------------
       # secrets-check — which function secrets exist, and which are missing.
