@@ -936,13 +936,31 @@ Telegram and adapts. All that is needed on Telegram's side is a bot whose menu b
 
 **Create the bot** (in Telegram, with @BotFather):
 
-1. `/newbot` → a name, then a username ending in `bot` (ours: `@forma_training_bot`).
+1. `/newbot` → a name, then a username ending in `bot` (ours: `@forma_appbot`).
 2. `/mybots` → the bot → **Bot Settings → Menu Button → Configure menu button**. BotFather asks
    two questions, answer them as two separate messages: the URL
    (`https://<user>.github.io/<repo>/app/`), then the button text.
 3. Optional but worth it: `/setuserpic`, `/setdescription`, `/setabouttext`.
 
 Setting the menu button again overwrites it; there is nothing to undo.
+
+**Renaming a bot that already exists.** The display name — what people read at the top of the chat
+— changes freely: @BotFather → `/mybots` → the bot → **Edit Bot → Edit Name**. Nothing else moves:
+the token, the webhook, the Mini App and every link keep working, because none of them is built
+from the name.
+
+The **username** is the expensive one, and it is worth knowing why before doing it. The Mini App
+link `t.me/<bot>/<short name>` is the only way into the app from inside Telegram, and it is built
+from the username: change it and every old link — in messages the bot already sent, in a bio, in a
+post — stops opening anything. The freed username is also immediately available to anybody else,
+and a stranger's bot standing at the address customers used to pay through is worse than an
+awkward name. If it is changed anyway, take the old username with a second, empty bot the same
+day, so it cannot be taken.
+
+Nothing in this repository is built from the username: `BRAND.telegram` is empty, `MINI_APP_URL`
+points at the website rather than at `t.me`, and the handle appears only in prose and in test
+fixtures. So a rename is entirely a BotFather operation — but the links already in the world are
+not.
 
 **A direct link** is worth more than the menu button: it is what goes in an Instagram bio, in the
 Telegram channel and in any post. `/newapp` → the bot → title, short description, a 640×360
@@ -1440,6 +1458,90 @@ for «Оплатил(а) с другой почты?» to attach it to a person.
 A "buy" button on a non-Russian page leads where every unconfigured payment link in this product
 leads: to the support address. It does not fall back to the rouble till — that would restore the
 exact wall the second till exists to remove.
+
+---
+
+## 7.11 The owner's channel: everything in Telegram instead of the admin panel
+
+Owner: «я не хочу заходить в админку, я хочу получать уведомления сразу в телеге».
+
+Until now a payment arrived, opened access, wrote a row — and told nobody. You could **learn** of a
+purchase by opening the admin panel; you could not **notice** one. The channel turns every money
+event and every booking into a message in a private group, split into topics.
+
+### Five topics, not six
+
+`Регистрации · Курсы · Клуб · Онлайн-тренировки · Обращения`.
+
+The club is one topic and not two, which was the owner's decision after the question. The club
+subscription is **single across both modes** — 0033 records it in her own words: «Подписка единая
+на оба клуба, поэтому все пользователи могут участвовать как в соло-режиме, так и дуо». So a solo
+purchase and a duo purchase do not exist as separate things: there is one transaction and two
+circles, and two topics for money would have disagreed with reality on the first payment. Pairing
+is an event rather than a purchase, and lives in the same topic.
+
+### Setting it up
+
+1. **Create a group** in Telegram and switch on **Topics** in its settings. A group, not a channel:
+   channels have no topics.
+2. **Add the bot and make it an administrator** with the **Manage topics** right. Without it the
+   setup job is refused, and it says so.
+3. **Find the group id**: write anything in the group and open
+   `https://api.telegram.org/bot<token>/getUpdates` — the reply carries `"chat":{"id":-100…}`. A
+   group with topics always starts with `-100`.
+4. Put it in the **`TELEGRAM_ADMIN_CHAT`** repository secret.
+5. Run **Actions → "Set up the owner's Telegram channel"**. It creates the five topics, writes one
+   line into each so the whole path is proven right away, and prints the JSON to paste into
+   **`TELEGRAM_ADMIN_TOPICS`**.
+6. Run **Supabase apply → `deploy-notify`**, which carries both secrets into the project.
+
+Both secrets are optional by construction: without them the sender simply does not touch the second
+queue and messages to customers go on as before. The channel going quiet can never stop a purchase
+notification reaching the person who paid.
+
+**Running the setup job twice creates the topics twice** — Telegram has no "create if absent". If
+one topic is deleted, make it by hand and correct one number in the secret.
+
+### What arrives, and what deliberately does not
+
+| Topic             | Messages                                                                          |
+| ----------------- | --------------------------------------------------------------------------------- |
+| Регистрации       | a new account, with its language                                                  |
+| Курсы             | course paid, refund, and **a payment that opened nothing**                        |
+| Клуб              | paid, renewed, cancelled, a duo pair formed, a proof sent again after a rejection |
+| Онлайн-тренировки | session paid, time chosen, moved, cancelled                                       |
+| Обращения         | nothing yet — see below                                                           |
+
+The most valuable of these is **«Платёж не привязан»**: money arrived and access did not open,
+because there was no order, or several, or the address at the till was a different one. It has
+always been visible in the ledger to whoever scrolled it; now it arrives, because that is the case
+where somebody paid and is sitting without their course.
+
+**Proofs are the one thing that cannot move wholesale.** Every club member sends one every day; a
+message per proof would turn the channel into a feed that gets muted within a day — and the
+purchases would be muted along with it. So only the proof that is **waiting on a person** is sent:
+one resubmitted after the coach rejected it. A daily one-line digest of how many are queued is the
+right next step and is deliberately not built yet.
+
+**Обращения is created empty.** Its source is the next piece of work: messages people write to the
+bot, plus a «Написать» button in the app for those who came from the website rather than from
+Telegram.
+
+### Why a second queue rather than a column on the first
+
+`telegram_outbox` (0027) already queues messages to customers, and the temptation to add a column
+is real. Three differences, each sufficient: the recipient here is a known chat rather than a
+person who has to be found by email and may never be found; there is no expiry, because a purchase
+from three days ago still needs to be seen, while «the coach assigned a workout» delivered a week
+late is bewilderment; and there is one language rather than the reader's own. What they do share is
+the sender — `telegram-notify` drains both queues in one run, because the schedule, the token and
+the door really are the same.
+
+Every trigger that fills the queue swallows its own errors. A notification is a mirror, and a
+cracked mirror does not oblige the room to disappear: a row in `admin_outbox` must never cost a
+purchase, and on signup it would be worse than that — `handle_new_user()` runs inside the
+transaction that creates the account, so an exception there is a person who could not register
+because a notification failed to write.
 
 ---
 

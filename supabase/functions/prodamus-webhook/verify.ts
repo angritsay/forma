@@ -89,6 +89,30 @@ export function planForAmount(
   return null;
 }
 
+/**
+ * Занятие с тренером, опознанное по сумме, — получас, час или ничего.
+ *
+ * Сумма здесь различает так же, как у тарифа выше, и по той же причине: короткая ссылка Prodamus
+ * теряет параметры, так что в уведомлении не сказано, за что заплатили. Разница в том, что здесь
+ * это безопаснее, чем кажется: цены занятий (2 500 и 3 500) не совпадают ни с одной ценой курса
+ * (2 990, 3 990, 4 990) и ни с одной ценой тарифа (1 990, 7 990). Совпадение возможно только
+ * после того, как кто-то поставит курс ровно в цену занятия, — и тогда это увидит тест, который
+ * читает те же цены из контента.
+ *
+ * Допуск в полтинник копеек — тот же, что у `planForAmount`: Prodamus присылает сумму строкой, и
+ * «2500», «2500.0» и «2500.00» должны значить одно.
+ */
+export function sessionForAmount(
+  sum: string | undefined,
+  prices: { half: number; hour: number },
+): 'half' | 'hour' | null {
+  const amount = Number.parseFloat(sum ?? '');
+  if (!Number.isFinite(amount)) return null;
+  if (Math.abs(amount - prices.half) < 0.5) return 'half';
+  if (Math.abs(amount - prices.hour) < 0.5) return 'hour';
+  return null;
+}
+
 function str(v: FormValue | undefined): string | undefined {
   return typeof v === 'string' ? v : undefined;
 }

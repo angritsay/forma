@@ -442,6 +442,8 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           NOTIFY_TOKEN: ${{ secrets.NOTIFY_TOKEN }}
+          TELEGRAM_ADMIN_CHAT: ${{ secrets.TELEGRAM_ADMIN_CHAT }}
+          TELEGRAM_ADMIN_TOPICS: ${{ secrets.TELEGRAM_ADMIN_TOPICS }}
         run: |
           set -euo pipefail
           if [ -z "${NOTIFY_TOKEN:-}" ]; then
@@ -462,6 +464,24 @@ jobs:
           fi
 
           /tmp/supabase secrets set --project-ref "$PROJECT_REF" NOTIFY_TOKEN="$NOTIFY_TOKEN" >/dev/null
+
+          # Канал владельца (0040). Необязателен: без него функция просто не трогает вторую
+          # очередь, а рассылка людям работает как работала. Поэтому не ошибка, а строчка в логе.
+          if [ -n "${TELEGRAM_ADMIN_CHAT:-}" ]; then
+            /tmp/supabase secrets set --project-ref "$PROJECT_REF" \
+              TELEGRAM_ADMIN_CHAT="$TELEGRAM_ADMIN_CHAT" >/dev/null
+            echo "::notice::TELEGRAM_ADMIN_CHAT перенесён"
+          else
+            echo "::notice::TELEGRAM_ADMIN_CHAT не задан — канал владельца молчит. Как его завести: docs/SETUP.md, «Канал владельца»."
+          fi
+          if [ -n "${TELEGRAM_ADMIN_TOPICS:-}" ]; then
+            /tmp/supabase secrets set --project-ref "$PROJECT_REF" \
+              TELEGRAM_ADMIN_TOPICS="$TELEGRAM_ADMIN_TOPICS" >/dev/null
+            echo "::notice::TELEGRAM_ADMIN_TOPICS перенесён"
+          else
+            echo "::notice::TELEGRAM_ADMIN_TOPICS не задан — сообщения пойдут в группу без тем. Запусти «Set up the owner's Telegram channel»."
+          fi
+
           /tmp/supabase functions deploy telegram-notify --project-ref "$PROJECT_REF" --no-verify-jwt
           echo "::notice::Рассыльщик выложен, NOTIFY_TOKEN перенесён в проект. Дальше он просыпается сам раз в десять минут; проверить очередь — задача outbox-check."
 

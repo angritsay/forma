@@ -27,11 +27,24 @@
  * guards that the two price sets stay disjoint.
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { parseForm, planForAmount, readPayment, sign, signatureMatches } from './verify.ts';
+import {
+  parseForm,
+  planForAmount,
+  readPayment,
+  sessionForAmount,
+  sign,
+  signatureMatches,
+} from './verify.ts';
 
 const PRICES = {
   monthly: Number(Deno.env.get('PLAN_MONTHLY_RUB') ?? '1990'),
   annual: Number(Deno.env.get('PLAN_ANNUAL_RUB') ?? '7990'),
+};
+
+/** Цены занятий с тренером — те же, что в `content/site/booking.ts`. */
+const SESSION_PRICES = {
+  half: Number(Deno.env.get('SESSION_HALF_RUB') ?? '2500'),
+  hour: Number(Deno.env.get('SESSION_HOUR_RUB') ?? '3500'),
 };
 
 function reply(status: number, body: string): Response {
@@ -105,13 +118,14 @@ Deno.serve(async (req) => {
    */
   const amount = Number.parseFloat(payment.sum ?? '');
   const plan = planForAmount(payment.sum, PRICES);
+  const session = plan ? null : sessionForAmount(payment.sum, SESSION_PRICES);
   async function record(applied: boolean): Promise<void> {
     const { error } = await supabase.rpc('record_payment', {
       p_email: payment!.email,
       p_amount: Number.isFinite(amount) ? amount : null,
       p_provider_ref: payment!.ref || null,
       p_paid_at: paidAt,
-      p_intent: plan ?? 'course',
+      p_intent: plan ?? (session ? 'session' : 'course'),
       p_applied: applied,
       // Касса, из которой пришли деньги. Названа явно, хотя это и умолчание: касс теперь две, и
       // «какая» должно читаться на месте вызова, а не в сигнатуре функции (миграция 0038).
@@ -138,6 +152,25 @@ Deno.serve(async (req) => {
     }
     await record(true);
     return reply(200, `ok: ${plan} for ${payment.email}`);
+  }
+
+  /*
+   * Занятие с тренером: полчаса или час, опознанные по сумме.
+   *
+   * Открывать нечего — куплено время тренера, а не доступ, — поэтому только журнал. И ветка эта
+   * не про отчётность: без неё платёж за занятие проваливался бы вниз, в `apply_course_payment()`,
+   * а тот открывает единственный ожидающий заказ на курс этой почты. Человек, который оформил
+   * заказ на курс и потом купил час с тренером, получал бы курс даром.
+   *
+   * `record()` уже знает, что это `session` (см. `p_intent` выше), так что в журнале видно, за
+   * что заплатили, а не только сколько.
+   */
+  if (session) {
+    await record(false);
+    console.info(
+      `prodamus-webhook: session ${session} paid by ${payment.email} (order ${payment.ref || 'without a number'}); nothing to unlock, the coach agrees the time`,
+    );
+    return reply(200, `ok: session ${session} recorded`);
   }
 
   /*
