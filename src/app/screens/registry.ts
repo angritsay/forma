@@ -33,6 +33,8 @@ export const SCREEN_NAMES = [
   'AdminMarathonsScreen',
   'AdminMarathonScreen',
   'AdminStatsScreen',
+  // One person by email: everything known about them and what can be done (0046).
+  'AdminPersonScreen',
   'CustomWorkoutScreen',
 ] as const;
 
