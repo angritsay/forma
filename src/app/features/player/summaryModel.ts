@@ -227,6 +227,19 @@ export function courseNames(
 }
 
 export function shareText(t: Translate, workout: string, summary: SessionSummary): string {
+  /*
+   * Без очков — когда их нет. Выданная тренером тренировка их больше не приносит
+   * (`customWorkoutPoints`), и «0 очков» в строке, которой хвастаются, читается как поломка, а не
+   * как правило. Убираем сам пункт: время, калории и процент выполнения никуда не делись.
+   */
+  if (!(summary.points > 0)) {
+    return t('app.summaryShareTextNoPoints', {
+      workout,
+      time: formatClock(summary.durationSec),
+      kcal: summary.calories,
+      completion: Math.round(summary.completion * 100),
+    });
+  }
   return t('app.summaryShareText', {
     workout,
     time: formatClock(summary.durationSec),

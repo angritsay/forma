@@ -19,9 +19,11 @@ import {
   blockCompletions,
   elapsedStartedAt,
   workoutCountLine,
+  shareText,
   testResults,
   totalReps,
 } from './summaryModel';
+import type { SessionSummary } from '@/lib/training/types';
 
 const t = (key: TKey, params?: TParams) => translate('en', key, params);
 const opts = { profile: profile(), scale: 1, choice: 'normal' as const, level: 2 as const };
@@ -296,5 +298,36 @@ describe('model helpers', () => {
     expect(skippedResult(steps[introIndex]!, introIndex)).toBeNull();
     const restIndex = steps.findIndex((s) => s.kind === 'rest');
     expect(skippedResult(steps[restIndex]!, restIndex)).toBeNull();
+  });
+});
+
+describe('shareText', () => {
+  const summary = (points: number): SessionSummary => ({
+    courseId: 'custom',
+    nodeId: 'cw_test',
+    workoutId: 'cw_test',
+    choice: 'normal',
+    scale: 1,
+    completion: 1,
+    rpe: 7,
+    feeling: 'ok',
+    points,
+    durationSec: 1800,
+    calories: 210,
+    completedAt: '2026-09-01T10:00:00.000Z',
+  });
+
+  it('names the points when there are any', () => {
+    expect(shareText(t, 'Coach workout', summary(120))).toBe(
+      'Coach workout: 30:00, 120 pts, 210 kcal, 100% done — Forma',
+    );
+  });
+
+  // A coach-assigned workout earns none by design, and «0 pts» in a line people show off
+  // reads as a broken app rather than as the rule.
+  it('drops the points clause when there are none', () => {
+    const line = shareText(t, 'Coach workout', summary(0));
+    expect(line).toBe('Coach workout: 30:00, 210 kcal, 100% done — Forma');
+    expect(line).not.toContain('pts');
   });
 });

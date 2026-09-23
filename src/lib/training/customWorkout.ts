@@ -111,17 +111,30 @@ const KIND_TO_TYPE: Record<CustomSectionKind, BlockType> = {
   cooldown: 'cooldown',
 };
 
-const clampInt = (n: number, lo: number, hi: number) =>
-  Math.max(lo, Math.min(hi, Math.round(Number.isFinite(n) ? n : lo)));
-
 function ru(text: string): L10n {
   // Product copy is Russian; a custom workout carries no separate English, so both values match.
   return { ru: text, en: text };
 }
 
-/** Points for a finished custom workout: proportional to work, capped under the server ceiling. */
-export function customWorkoutPoints(estSec: number): number {
-  return clampInt((estSec / 60) * 6, 40, 72);
+/**
+ * Очков за выданную тренировку нет, и это решение про справедливость, а не про подсчёт.
+ *
+ * Владелец: «не надо никаких баллов за тренировки Сергея, которые он назначил, потому что эти
+ * баллы тогда будут влиять на лидерборд. Люди, которые покупают тренировки Сергея, будут
+ * автоматически выше и будут каждую неделю получать просто бесплатные тренировки, что не очень
+ * честно по отношению к остальным».
+ *
+ * Доска считает неделю по всем завершённым сессиям (`get_leaderboard`, 0002), а приз недели — час
+ * с тренером. Пока выданная тренировка приносила очки, купивший персональную работу получал фору
+ * в гонке за бесплатную персональную работу: деньги превращались в место в рейтинге, а место —
+ * обратно в деньги. Круг замыкался, и проигрывали в нём все остальные.
+ *
+ * Ноль, а не «поменьше»: доля от очков осталась бы той же форой, просто незаметной. Сама
+ * тренировка от этого не исчезает — она засчитывается выполненной, держит серию и уходит с полки,
+ * потому что всё это считается по наличию строки в `workout_sessions`, а не по числу в ней.
+ */
+export function customWorkoutPoints(): number {
+  return 0;
 }
 
 /**
@@ -184,7 +197,7 @@ export function buildPrescribedFromCustom(
     deload: false,
     blocks,
     estimatedSec,
-    points: customWorkoutPoints(estimatedSec),
+    points: customWorkoutPoints(),
   };
 }
 

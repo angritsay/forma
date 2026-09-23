@@ -57,12 +57,6 @@ describe('buildPrescribedFromCustom', () => {
     expect(p.estimatedSec).toBeGreaterThan(0);
   });
 
-  it('awards points within the server ceiling', () => {
-    const p = buildPrescribedFromCustom('cw_test', structure);
-    expect(p.points).toBeGreaterThanOrEqual(40);
-    expect(p.points).toBeLessThanOrEqual(72);
-  });
-
   it('opens inside the warm-up when the first section is a warm-up', () => {
     const prescribed = buildPrescribedFromCustom('cw_test', structure);
     const steps = buildPlayerSteps(prescribed);
@@ -72,9 +66,21 @@ describe('buildPrescribedFromCustom', () => {
     expect(steps[steps.length - 1]?.kind).toBe('done');
   });
 
-  it('customWorkoutPoints clamps to [40, 72]', () => {
-    expect(customWorkoutPoints(0)).toBe(40);
-    expect(customWorkoutPoints(60 * 60)).toBe(72);
+  /*
+   * Ноль по решению владельца: доска считает неделю по всем сессиям, а приз недели — час с
+   * тренером. Очки за выданную тренировку превращали покупку персональной работы в фору в гонке
+   * за бесплатную персональную работу.
+   */
+  it('customWorkoutPoints is zero, so an assigned workout cannot move the board', () => {
+    expect(customWorkoutPoints()).toBe(0);
+  });
+
+  it('builds a workout worth no points at all', () => {
+    const prescribed = buildPrescribedFromCustom('cw_test', structure);
+    expect(prescribed.points).toBe(0);
+    // Но сама работа никуда не делась: тренировка по-прежнему играется целиком.
+    expect(prescribed.estimatedSec).toBeGreaterThan(0);
+    expect(prescribed.blocks.length).toBeGreaterThan(0);
   });
 
   it('isPlayableStructure rejects empty structures', () => {

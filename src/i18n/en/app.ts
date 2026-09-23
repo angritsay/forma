@@ -452,6 +452,7 @@ export const app = {
   summaryShare: 'Share',
   summaryShareCopied: 'Copied to clipboard',
   summaryShareText: '{workout}: {time}, {points} pts, {kcal} kcal, {completion}% done — Forma',
+  summaryShareTextNoPoints: '{workout}: {time}, {kcal} kcal, {completion}% done — Forma',
   summaryNotFoundTitle: 'Session not found',
   summaryNotFoundBody: 'We couldn’t find this workout. It may have been saved from another device.',
   summaryLoadErrorTitle: 'Couldn’t load the results',
