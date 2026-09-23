@@ -1,3 +1,5 @@
+import { KeyTitle } from '@/components/ui/HeroField';
+
 /**
  * The one line a step is allowed: its question, in the display face.
  *
@@ -27,11 +29,17 @@
  * no longer load-bearing — it is kept because the argument for it here is the strongest in the app
  * and a future change of mind upstream should not silently reach a form. `overflow-wrap:
  * break-word` from `body` is still the last resort, so nothing can widen the column.
+ *
+ * **The last word is the key word** (`KeyTitle`): light blue with the swoosh under it, style A's
+ * one device for «the word that matters» (global.css header). It is colour, not weight, so the
+ * owner's «убери выделение» still holds — the whole line stays at 200.
  */
 export function Question({ text }: { text: string }) {
   // 1.08 → 1.2: every question wraps to two lines and 1.08 was drawn for capitals, which have
   // no descenders. The measurement is in global.css's type-scale comment.
   return (
-    <h1 className="display t-thin hyphens-none text-[28px] leading-[1.2] text-balance">{text}</h1>
+    <h1 className="display t-thin hyphens-none text-[28px] leading-[1.2] text-balance">
+      <KeyTitle text={text} />
+    </h1>
   );
 }

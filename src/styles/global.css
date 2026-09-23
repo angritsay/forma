@@ -45,7 +45,8 @@
    *   --muted   #b9b9c0  on bg 9.07 · surface 7.96 · surface-2 6.96 · surface-3 6.01
    *   --muted-2 #a6a6ae  on bg 7.20 · surface 6.42 · surface-2 5.62 · surface-3 4.85
    *
-   * --muted-2 was #93939d. On the new, lighter --surface-3 it measures 3.85 and fails.
+   * --muted-2 was #93939d in the second brandbook's grey ramp. On the third palette's neutral
+   * --surface-3 (#383838) that grey measures 3.85 and fails AA, so it moved up to #a6a6ae.
    */
   --muted: #b9b9c0;
   --muted-2: #a6a6ae;

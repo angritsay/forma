@@ -8,7 +8,7 @@ export function CourseCard({ title, meta, tile = 1, figureSrc, badge, badgeTone 
       border: '1px solid var(--border-1)', cursor: onClick ? 'pointer' : 'default', ...style }}>
       <div style={{ background: `var(--tile-${tile})`, height: 132, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
         {figureSrc ? <img src={figureSrc} alt="" style={{ height: '72%', filter: tile >= 4 ? 'invert(1)' : 'none' }} /> : null}
-        {badge ? <Badge tone={badgeTone} style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(15,15,17,.85)', color: '#fff', border: 'none' }}>{badge}</Badge> : null}
+        {badge ? <Badge tone={badgeTone} style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(17,17,17,.85)', color: '#fff', border: 'none' }}>{badge}</Badge> : null}
       </div>
       <div style={{ padding: 16, display: 'grid', gap: 8 }}>
         <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, textTransform: 'uppercase', color: 'var(--text-1)', lineHeight: 1.3 }}>{title}</div>

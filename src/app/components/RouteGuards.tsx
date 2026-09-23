@@ -49,7 +49,7 @@ function ProfileLoadError() {
         }
         action={
           <div className="flex flex-col gap-2">
-            <Button size="lg" onClick={() => void boot()}>
+            <Button variant="action" size="lg" onClick={() => void boot()}>
               {t('common.retry')}
             </Button>
             <Button variant="ghost" onClick={() => void signOut()}>

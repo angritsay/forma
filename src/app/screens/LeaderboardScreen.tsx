@@ -8,11 +8,13 @@ import { useSearchParams } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { HeroField, KeyTitle } from '@/components/ui/HeroField';
 import { Glyph } from '@/components/ui/Icon';
 import { IconButton } from '@/components/ui/IconButton';
 import { Screen } from '@/components/ui/Screen';
 import { Tabs, tabPanelId } from '@/components/ui/Tabs';
 import type { LeaderboardPeriod } from '@/lib/api/types';
+import { formatNumber } from '@/i18n/index';
 import { TopBar } from '@/app/components/TopBar';
 import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { useT } from '@/app/hooks/useT';
@@ -25,7 +27,7 @@ import { useSession } from '@/app/store/session';
 import { courseTitle } from '@/content/catalogue';
 
 export default function LeaderboardScreen() {
-  const { t, l } = useT();
+  const { t, l, locale } = useT();
   const [searchParams, setSearchParams] = useSearchParams();
   const entitlements = useSession((s) => s.entitlements);
   const courseId = resolveCourseParam(searchParams.get('course'), entitlements);
@@ -75,7 +77,7 @@ export default function LeaderboardScreen() {
           error?.code === 'network' ? t('common.errorOffline') : t('common.errorGeneric')
         }
         action={
-          <Button size="lg" onClick={reload}>
+          <Button variant="action" size="lg" onClick={reload}>
             {t('common.retry')}
           </Button>
         }
@@ -91,7 +93,31 @@ export default function LeaderboardScreen() {
       />
     );
   } else {
-    body = <LeaderboardList rows={view.top} />;
+    /*
+     * The screen's one blue field: where you stand. It is the question anyone opening a table asks
+     * first, and until now the answer was one row among a hundred (or pinned under the fold). Only
+     * once there are points: a caller who has not scored comes back last with 0, and «Место 214» for
+     * nothing done is a number that says nothing.
+     */
+    const me = view.me && view.me.points > 0 ? view.me : null;
+    body = (
+      <div className="flex flex-col gap-4">
+        {me ? (
+          <HeroField className="flex items-end justify-between gap-4">
+            <div className="flex min-w-0 flex-col gap-2">
+              <span className="eyebrow text-on-field/85">{t('app.leaderboardYou')}</span>
+              <p className="display tabular text-[32px] leading-[1.2]">
+                <KeyTitle text={t('app.leaderboardRankLabel', { n: me.rank })} />
+              </p>
+            </div>
+            <span className="numeral tabular shrink-0 pb-1 text-[15px]">
+              {t('app.statsPointsValue', { n: formatNumber(locale, me.points) })}
+            </span>
+          </HeroField>
+        ) : null}
+        <LeaderboardList rows={view.top} />
+      </div>
+    );
   }
 
   return (

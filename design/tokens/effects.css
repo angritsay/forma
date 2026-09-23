@@ -9,7 +9,7 @@
 /* Тени — минимум; бумага-полароид даёт мягкую тень */
 --shadow-soft:0 12px 30px rgba(0,0,0,.30);
 --shadow-card:none;
---shadow-paper:0 12px 30px rgba(15,15,17,.18);
+--shadow-paper:0 12px 30px rgba(17,17,17,.18);
 --glow-blue:none; /* @kind other */
 --glow-peri:none; /* @kind other */
 /* Анимация: спокойные fades, без bounce */
@@ -18,7 +18,7 @@
 --dur-med:280ms; /* @kind other */
 }
 [data-forma-theme="light"]{
---shadow-soft:0 8px 30px rgba(15,15,17,.10);
+--shadow-soft:0 8px 30px rgba(17,17,17,.10);
 }
 /* Зерно для фото (наложить поверх изображения) */
 .photo-grain{position:relative}

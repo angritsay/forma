@@ -142,7 +142,11 @@ export default function NodePreviewScreen() {
       <Screen header={<TopBar back="/courses" />}>
         <EmptyState
           title={t('app.nodeNotFound')}
-          action={<Button onClick={() => navigate('/')}>{t('app.tabCourses')}</Button>}
+          action={
+            <Button variant="action" onClick={() => navigate('/')}>
+              {t('app.tabCourses')}
+            </Button>
+          }
         />
       </Screen>
     );
@@ -209,7 +213,7 @@ export default function NodePreviewScreen() {
           title={t('app.nodeProfileMissingTitle')}
           description={t('app.nodeProfileMissingBody')}
           action={
-            <Button size="lg" onClick={() => navigate('/onboarding')}>
+            <Button variant="action" size="lg" onClick={() => navigate('/onboarding')}>
               {t('app.nodeProfileMissingCta')}
             </Button>
           }
@@ -336,7 +340,7 @@ export default function NodePreviewScreen() {
           {/*
            * **The photograph is the surface, and the day's name lies on it.**
            *
-           * This block used to be a flat field of the programme colour — 580px of `#9FEFF7` on a
+           * This block used to be a flat field of the programme colour — 580px of the old palette's pale cyan on a
            * 390px screen — with the title, the kicker and the facts stacked on a black panel
            * under it. That is the screen the owner photographed when she said «используется
            * старый стиль», and the two mockups answer it with one rule each: colour goes on the
@@ -386,9 +390,9 @@ export default function NodePreviewScreen() {
              * pixel whatever the name does.
              *
              * The numbers are measured on the composited pixels, not chosen: the type here is a
-             * programme colour, and `#9FEFF7` at 0.758 relative luminance needs the ground at
-             * sRGB 101 or below for 4.5:1, where white would clear it at 148. 0.82 over a frame
-             * that is pure white composites to sRGB 54, and the title measures 9.3:1 there; every
+             * programme colour, and the lightest of them, neon `#f4ff3f` at 0.911 relative luminance,
+             * needs the ground at sRGB 113 or below for 4.5:1. 0.82 over a frame that is pure
+             * white composites to sRGB 54, and the title measures 11.1:1 there; every
              * line below it sits on more. A fifth of the picture still comes through the type's
              * ground, so it is a scrim and not the panel the mockups took away.
              *

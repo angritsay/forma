@@ -610,9 +610,13 @@ function RemoteSummary({ sessionId }: { sessionId: string }) {
           }
           action={
             notFound ? (
-              <Button onClick={() => navigate('/')}>{t('app.tabCourses')}</Button>
+              <Button variant="action" onClick={() => navigate('/')}>
+                {t('app.tabCourses')}
+              </Button>
             ) : (
-              <Button onClick={load}>{t('common.retry')}</Button>
+              <Button variant="action" onClick={load}>
+                {t('common.retry')}
+              </Button>
             )
           }
         />
@@ -630,6 +634,7 @@ function RemoteSummary({ sessionId }: { sessionId: string }) {
           description={t('app.summaryNoResultsBody')}
           action={
             <Button
+              variant="action"
               onClick={() => navigate(row.courseId === 'custom' ? '/' : `/courses/${row.courseId}`)}
             >
               {t('app.summaryBackToCourse')}

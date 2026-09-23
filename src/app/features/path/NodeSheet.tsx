@@ -42,7 +42,14 @@ export function NodeSheet({ node, status, busy, onClose, onComplete }: NodeSheet
 
   const footer = isRest ? (
     <div className="flex flex-col gap-2">
-      <Button size="lg" fullWidth loading={busy} disabled={done} onClick={() => onComplete(false)}>
+      <Button
+        variant="action"
+        size="lg"
+        fullWidth
+        loading={busy}
+        disabled={done}
+        onClick={() => onComplete(false)}
+      >
         {done ? t('app.pathRestMarked') : t('app.pathRestMarkDone')}
       </Button>
       {!done ? (
@@ -52,7 +59,14 @@ export function NodeSheet({ node, status, busy, onClose, onComplete }: NodeSheet
       ) : null}
     </div>
   ) : (
-    <Button size="lg" fullWidth loading={busy} disabled={done} onClick={() => onComplete(false)}>
+    <Button
+      variant="action"
+      size="lg"
+      fullWidth
+      loading={busy}
+      disabled={done}
+      onClick={() => onComplete(false)}
+    >
       {done ? t('app.pathMilestoneDone') : t('app.pathMilestoneMark')}
     </Button>
   );

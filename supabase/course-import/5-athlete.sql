@@ -34,7 +34,7 @@ insert into public.admin_courses (
   equipment, tile, price_rub, price_usd, content
 ) values (
   'athlete', 'draft', 5, 3, 8, 4, 40,
-  '{"dumbbells","pullup_bar","jump_rope","none","mat"}'::text[], '#2a2a30', 4990, 49,
+  '{"dumbbells","pullup_bar","jump_rope","none","mat"}'::text[], '#383838', 4990, 49,
   '{"slug":{"ru":"atlet-prodvinutyj-domashnij-krossfit","en":"home-athlete"},"name":{"ru":"Форма атлета: продвинутый домашний кроссфит","en":"Forma. Athlete: advanced home CrossFit"},"tagline":{"ru":"Восемь недель продвинутого кроссфита дома: подтягивания, двойные прыжки, дьявольский жим, длинные AMRAP — и «Мёрф» в финале.","en":"Eight weeks of advanced CrossFit at home: pull-ups, double-unders, devil presses, long AMRAPs — and Murph at the end."},"description":{"ru":"Курс для тех, кто уже тренируется и хочет большего: четыре дня в неделю, гантели, турник и скакалка. Два силовых дня — присед и жим, тяга и подтягивания, — день «двигателя» с EMOM, AMRAP и табатой и день чипперов. Разгрузка в четвёртую неделю с «Синди» на 20 минут в её конце и половина «Мёрфа» в восьмую.","en":"For those who already train and want more: four days a week, dumbbells, a pull-up bar and a jump rope. Two strength days — squat & push, pull & hinge — an engine day with EMOMs, AMRAPs and Tabata, and a chipper day. A deload in week four with a 20-minute Cindy at its end, and Half Murph in week eight."},"longDescription":[{"ru":"Это третий уровень: курс для тех, кто отжимается двадцать пять раз подряд, держит планку две минуты и хотя бы раз висел на турнике с мыслью «а если подтянуться?». Восемь недель построены вокруг трёх навыков, которых нет в младших курсах: строгие подтягивания, двойные прыжки на скакалке и дьявольский жим. Каждый идёт по своей лестнице — негативные подтягивания превращаются в строгие по четыре, потом по шесть; синглы на скакалке — в серии двойных; бёрпи — в бёрпи с гантелями и махом над головой.","en":"This is level three: a course for someone who does twenty-five push-ups in a row, holds a plank for two minutes and has hung from a bar at least once thinking \"what if I pulled?\". Eight weeks are built around three skills the earlier courses do not have: strict pull-ups, double-unders and the devil press. Each climbs its own ladder — negative pull-ups become strict sets of four, then six; single-unders become sets of doubles; burpees become burpees with dumbbells and a swing overhead."},{"ru":"Неделя — четыре тренировки. День приседа и жима: фронтальный присед и швунг с тяжёлой парой, прыжковые выпады, отжимания, короткий AMRAP и кор. День тяги и подтягиваний: подтягивания в паре с подъёмами коленей в висе, становая и румынская тяга, тяга ренегата, прогулка фермера. День «двигателя»: EMOM-куплеты, AMRAP 15, табата, EMOM 16 из четырёх движений. И шестой день — чипперы и репетиции «Мёрфа». Между ними дни отдыха с целью 7000 шагов: в этом курсе они важны не меньше тренировок.","en":"A week is four sessions. Squat & push day: front squats and push presses with the heavy pair, jumping lunges, push-ups, a short AMRAP and core. Pull & hinge day: pull-ups paired with hanging knee raises, deadlifts and Romanian deadlifts, renegade rows, the farmer carry. Engine day: EMOM couplets, AMRAP 15, Tabata, a four-movement EMOM 16. And day six — chippers and Murph rehearsals. Between them, rest days with a 7,000-step goal: in this course they matter as much as the sessions."},{"ru":"Объём растёт волнами: недели 1–2 — база, 3 — тяжелее, 4 — разгрузка на треть с «Синди» в конце, 5–7 — пик: пять подходов, тяжёлая пара, EMOM 16 и репетиции «Мёрфа» на 5 и 8 кругов. Восьмая неделя лёгкая: техника, половина «Мёрфа» и тот же тест, что в первый день. Приложение подбирает повторения по входному тесту и твоей оценке усилия после каждой тренировки, а веса — по гантелям из профиля. Если движение пока недоступно — двойные без скакалки или подтягивания без турника, — оно подставит вариант проще.","en":"Volume rises in waves: weeks 1–2 are the base, week 3 is heavier, week 4 is a one-third deload with Cindy at its end, weeks 5–7 are the peak: five sets, the heavy pair, EMOM 16 and Murph rehearsals of 5 and 8 rounds. Week eight is light: technique, Half Murph and the same test as on day one. The app sets rep counts from the baseline test and your effort rating after every session, and weights from the dumbbells in your profile. If a movement is not available yet — double-unders without a rope or pull-ups without a bar — it substitutes an easier variant."},{"ru":"Два бенчмарка держат курс в тонусе. «Синди» — 20 минут AMRAP из 5 подтягиваний, 10 отжиманий и 15 приседаний — в конце четвёртой недели. Половина «Мёрфа» — бег, 50 подтягиваний, 100 отжиманий, 150 приседаний, бег, лимит 40 минут — в восьмую. К ней ты подойдёшь через три репетиции, зная свою разбивку и свой темп. А входной и повторный тест покажут, сколько отжиманий, приседаний и бёрпи прибавилось за два месяца.","en":"Two benchmarks keep the course honest. Cindy — a 20-minute AMRAP of 5 pull-ups, 10 push-ups and 15 squats — at the end of week four. Half Murph — run, 50 pull-ups, 100 push-ups, 150 squats, run, 40-minute cap — in week eight. You arrive at it after three rehearsals, knowing your partitioning and your pace. And the baseline and final tests show how many push-ups, squats and burpees two months added."}],"forWhom":[{"ru":"У тебя есть пара гантелей (лучше две пары или разборные), турник и скакалка.","en":"You own a pair of dumbbells (two pairs or adjustables are better), a pull-up bar and a jump rope."},{"ru":"Ты отжимаешься 20–25 раз подряд, держишь планку две минуты и висишь на турнике хотя бы 30 секунд — или прошёл «Форма своим весом» или «Форма с гантелями».","en":"You do 20–25 push-ups in a row, hold a plank for two minutes and can hang from the bar for at least 30 seconds — or you finished Forma Bodyweight or Forma Dumbbells."},{"ru":"Хочешь первое строгое подтягивание — или десятое — и серии двойных на скакалке.","en":"You want your first strict pull-up — or your tenth — and sets of double-unders."},{"ru":"Тебе нужен вызов с понятной целью: «Синди» и «Мёрф» на время.","en":"You want a challenge with a clear goal: Cindy and Murph on the clock."},{"ru":"Есть 35–45 минут четыре раза в неделю и готовность отдыхать в дни отдыха.","en":"You have 35–45 minutes four times a week and the discipline to rest on rest days."}],"outcomes":[{"ru":"Строгие подтягивания: от негативных к подходам по шесть — тридцать подтягиваний за тренировку к седьмой неделе.","en":"Strict pull-ups: from negatives to sets of six — thirty pull-ups in a session by week seven."},{"ru":"Двойные прыжки на скакалке сериями по 20–40 внутри метконов.","en":"Double-unders in sets of 20–40 inside metcons."},{"ru":"Дьявольский жим, рывок гантели, трастер и тяга ренегата — в силовых блоках и в EMOM.","en":"The devil press, dumbbell snatch, thruster and renegade row — in strength blocks and in EMOMs."},{"ru":"Результат в «Синди» (круги за 20 минут) и в половине «Мёрфа» (время при лимите 40 минут).","en":"A Cindy score (rounds in 20 minutes) and a Half Murph time (40-minute cap)."},{"ru":"Умение держать темп в длинных AMRAP и чипперах и разбивать большие числа на выполнимые серии.","en":"The skill of pacing long AMRAPs and chippers and breaking big numbers into doable sets."},{"ru":"Больше отжиманий, приседаний и бёрпи в повторном тесте — и привычка к четырём тренировкам в неделю с разгрузкой.","en":"More push-ups, squats and burpees in the retest — and a habit of four sessions a week with a built-in deload."}],"faq":[{"q":{"ru":"Какое оборудование нужно и можно ли без чего-то обойтись?","en":"What equipment do I need, and can I skip any of it?"},"a":{"ru":"Три вещи: пара гантелей (идеально две пары — лёгкая для рывков, трастеров и дьявольского жима, тяжёлая для приседа, становой и тяги), турник в дверном проёме или на стене и скакалка. Без турника курс теряет главное — подтягивания, — поэтому он обязателен. Без скакалки приложение заменит двойные прыжки на джампинг-джеки, но двойные — навык, который стоит освоить, а скакалка стоит недорого.","en":"Three things: a pair of dumbbells (ideally two pairs — a light one for snatches, thrusters and devil presses, a heavy one for squats, deadlifts and rows), a doorway or wall-mounted pull-up bar, and a jump rope. Without a bar the course loses its centrepiece — pull-ups — so it is mandatory. Without a rope the app swaps double-unders for jumping jacks, but doubles are a skill worth learning, and a rope costs very little."}},{"q":{"ru":"У меня нет ни одного строгого подтягивания. Мне рано?","en":"I don''t have a single strict pull-up yet. Is it too early?"},"a":{"ru":"Нет, если ты можешь висеть на турнике 30 секунд и медленно опускаться из верхней точки. Первые две недели курса — только негативные подтягивания, и именно так большинство людей получают первое строгое. С третьей недели в подходах появляются строгие, а рядом с каждым таким упражнением написано, как заменить: два строгих и два негативных, или негативные с прыжком в метконах. Если и вис пока даётся тяжело, начни с «Форма с гантелями» или «Форма своим весом» — там есть тяги и планки, которые готовят спину.","en":"Not if you can hang from the bar for 30 seconds and lower yourself slowly from the top. The first two weeks are negatives only, and that is how most people get their first strict rep. From week three strict reps appear in the sets, and every such exercise says how to scale: two strict plus two negatives, or jumping negatives in the metcons. If even the hang is hard for now, start with Forma Dumbbells or Forma Bodyweight — the rows and planks there prepare your back."}},{"q":{"ru":"Сколько длится тренировка?","en":"How long is a session?"},"a":{"ru":"В среднем 35–40 минут с разминкой и заминкой. Силовые дни — 40–48 минут (в пиковые недели ближе к 48), «двигатель» — около 30, чипперы и репетиции «Мёрфа» — 20–30. Два исключения — бенчмарки: «Синди» с разминкой занимает около 30 минут, половина «Мёрфа» — от 35 минут до часа, в зависимости от того, как ты разобьёшь повторения. Перед стартом приложение показывает расчётное время для каждого из трёх режимов сложности.","en":"Between 35 and 40 minutes on average with warm-up and cool-down. Strength days run 40–48 minutes (closer to 48 in the peak weeks), engine days about 30, chippers and Murph rehearsals 20–30. The two exceptions are the benchmarks: Cindy takes about 30 minutes with the warm-up, Half Murph anywhere from 35 minutes to an hour depending on how you partition the reps. Before you start, the app shows the estimated time for each of the three difficulty options."}},{"q":{"ru":"Пропустил тренировку или целую неделю — что делать?","en":"I missed a session or a whole week — what now?"},"a":{"ru":"Одну тренировку — просто продолжай со следующего узла: путь не сбрасывается. Не ставь два силовых дня подряд, чтобы «догнать», — сдвинь неделю. После паузы дольше двух недель выбери «Полегче» в первых двух тренировках. Если выпала неделя перед «Мёрфом», сделай сначала репетицию — четверть «Мёрфа», — а бенчмарк через три-четыре дня после неё.","en":"One session — just continue from the next node: the path does not reset. Do not stack two strength days back to back to ''catch up'' — shift the week. After a break longer than two weeks, pick ''Easier'' for the first two sessions. If the missing week was the one before Murph, do a rehearsal first — Quarter Murph — and the benchmark three or four days later."}},{"q":{"ru":"Как приложение подбирает нагрузку?","en":"How does the app pick the load?"},"a":{"ru":"Повторения считаются по входному тесту, а после каждой тренировки ты оцениваешь усилие от 1 до 10 и самочувствие — объём в следующий раз чуть растёт или снижается. Метки «лёгкий», «средний» и «тяжёлый» приложение сопоставляет с гантелями из твоего профиля. В разгрузочную неделю объём падает автоматически примерно на треть, а перед каждой тренировкой можно выбрать «Полегче», «Как обычно» или «Сложнее». Двойные без скакалки и подтягивания без турника приложение заменит само, а вариант «нет строгих — негативные» ты выбираешь сам по подсказке рядом с упражнением.","en":"Rep counts come from the baseline test, and after every session you rate the effort from 1 to 10 and how you felt — the volume nudges up or down next time. The labels ''light'', ''medium'' and ''heavy'' are mapped to the dumbbells in your profile. In the deload week volume drops by about a third automatically, and before every session you can choose Easier, As usual or Harder. Double-unders without a rope and pull-ups without a bar are substituted by the app; the ''no strict reps — do negatives'' option you choose yourself from the hint next to the exercise."}},{"q":{"ru":"Болят ладони и предплечья от турника. Это нормально?","en":"My palms and forearms hurt from the bar. Is that normal?"},"a":{"ru":"Усталость предплечий и мозоли в первые недели — норма: хват догоняет спину. Что помогает: не сжимать перекладину сильнее, чем нужно, спиливать огрубевшую кожу пемзой, чтобы мозоли не рвались, и не висеть лишнего вне плана. Острая боль в локте или плече — другое дело: отметь «Боль» в отчёте после тренировки, приложение снизит нагрузку, а подтягивания замени тягой гантели в наклоне до конца недели. Если боль держится больше недели — к врачу.","en":"Forearm fatigue and calluses in the first weeks are normal: your grip is catching up with your back. What helps: do not squeeze the bar harder than necessary, file down thick skin with a pumice stone so calluses do not tear, and do not hang extra outside the plan. Sharp pain in the elbow or shoulder is different: mark ''Pain'' in the post-workout feedback, the app reduces the load, and swap pull-ups for bent-over rows for the rest of the week. Pain that lasts more than a week means see a doctor."}}]}'::jsonb
 )
 on conflict (slug_id) do update set
@@ -232,12 +232,12 @@ on conflict (short_id) do update set
 
 -- days
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w1d1_test', 1, 1, 'test', (select id from public.custom_workouts where short_id = 'athlete_w_test'),
-  '{"title":{"ru":"Входной тест","en":"Baseline test"},"subtitle":{"ru":"Отжимания, присед, планка, бёрпи","en":"Push-ups, squats, plank, burpees"},"body":[]}'::jsonb, false, null, 0
+  '{"title":{"ru":"Входной тест","en":"Baseline test"},"subtitle":{"ru":"Отжимания, присед, планка, бёрпи","en":"Push-ups, squats, plank, burpees"},"body":[]}'::jsonb, false, 0
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -246,17 +246,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w1d2_rest', 1, 2, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Пройди 7000 шагов и запиши их в приложении — день зачтётся в серию","en":"Walk 7,000 steps and log them in the app — the day counts toward your streak"},"body":[]}'::jsonb, false, 7000, 1
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Пройди 7000 шагов и запиши их в приложении — день зачтётся в серию","en":"Walk 7,000 steps and log them in the app — the day counts toward your streak"},"body":[]}'::jsonb, false, 1
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -265,17 +264,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w1d3_squat_push', 1, 3, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_squat_push_a'),
-  '{"title":{"ru":"Присед и жим","en":"Squat & push"},"subtitle":{"ru":"4 подхода + AMRAP 7 мин","en":"4 sets + AMRAP 7 min"},"body":[]}'::jsonb, false, null, 2
+  '{"title":{"ru":"Присед и жим","en":"Squat & push"},"subtitle":{"ru":"4 подхода + AMRAP 7 мин","en":"4 sets + AMRAP 7 min"},"body":[]}'::jsonb, false, 2
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -284,17 +282,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w1d4_rest', 1, 4, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Крепатура после выпадов и подтягиваний — норма. Прогулка снимет её быстрее, чем диван","en":"Soreness after lunges and pull-ups is normal. A walk clears it faster than the couch"},"body":[]}'::jsonb, false, 7000, 3
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Крепатура после выпадов и подтягиваний — норма. Прогулка снимет её быстрее, чем диван","en":"Soreness after lunges and pull-ups is normal. A walk clears it faster than the couch"},"body":[]}'::jsonb, false, 3
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -303,17 +300,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w1d5_pull_hinge', 1, 5, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_pull_hinge_a'),
-  '{"title":{"ru":"Тяга и подтягивания","en":"Pull & hinge"},"subtitle":{"ru":"Негативные подтягивания + тяга","en":"Negative pull-ups + hinge"},"body":[]}'::jsonb, false, null, 4
+  '{"title":{"ru":"Тяга и подтягивания","en":"Pull & hinge"},"subtitle":{"ru":"Негативные подтягивания + тяга","en":"Negative pull-ups + hinge"},"body":[]}'::jsonb, false, 4
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -322,17 +318,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w1d6_engine', 1, 6, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_engine_emom12'),
-  '{"title":{"ru":"Двигатель","en":"Engine"},"subtitle":{"ru":"Техника рывка + EMOM 12 мин","en":"Snatch skill + EMOM 12 min"},"body":[]}'::jsonb, false, null, 5
+  '{"title":{"ru":"Двигатель","en":"Engine"},"subtitle":{"ru":"Техника рывка + EMOM 12 мин","en":"Snatch skill + EMOM 12 min"},"body":[]}'::jsonb, false, 5
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -341,17 +336,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w1d7_rest', 1, 7, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Выходной: прогулка, растяжка, нормальная еда","en":"Day off: a walk, a stretch, proper food"},"body":[]}'::jsonb, false, 7000, 6
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Выходной: прогулка, растяжка, нормальная еда","en":"Day off: a walk, a stretch, proper food"},"body":[]}'::jsonb, false, 6
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -360,17 +354,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w2d1_squat_push', 2, 1, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_squat_push_a'),
-  '{"title":{"ru":"Присед и жим","en":"Squat & push"},"subtitle":{"ru":"4 подхода · чуть тяжелее","en":"4 sets · a little heavier"},"body":[]}'::jsonb, false, null, 7
+  '{"title":{"ru":"Присед и жим","en":"Squat & push"},"subtitle":{"ru":"4 подхода · чуть тяжелее","en":"4 sets · a little heavier"},"body":[]}'::jsonb, false, 7
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -379,17 +372,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w2d2_rest', 2, 2, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Прогулка 40 минут и сон 7–8 часов — лучшая добавка к силе","en":"A 40-minute walk and 7–8 hours of sleep — the best strength supplement there is"},"body":[]}'::jsonb, false, 7000, 8
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Прогулка 40 минут и сон 7–8 часов — лучшая добавка к силе","en":"A 40-minute walk and 7–8 hours of sleep — the best strength supplement there is"},"body":[]}'::jsonb, false, 8
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -398,17 +390,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w2d3_pull_hinge', 2, 3, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_pull_hinge_a'),
-  '{"title":{"ru":"Тяга и подтягивания","en":"Pull & hinge"},"subtitle":{"ru":"4 подхода · негативные по 5 секунд","en":"4 sets · five-second negatives"},"body":[]}'::jsonb, false, null, 9
+  '{"title":{"ru":"Тяга и подтягивания","en":"Pull & hinge"},"subtitle":{"ru":"4 подхода · негативные по 5 секунд","en":"4 sets · five-second negatives"},"body":[]}'::jsonb, false, 9
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -417,17 +408,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w2d4_engine', 2, 4, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_engine_amrap15'),
-  '{"title":{"ru":"Двигатель","en":"Engine"},"subtitle":{"ru":"Скакалка + AMRAP 15 мин","en":"Rope skill + AMRAP 15 min"},"body":[]}'::jsonb, false, null, 10
+  '{"title":{"ru":"Двигатель","en":"Engine"},"subtitle":{"ru":"Скакалка + AMRAP 15 мин","en":"Rope skill + AMRAP 15 min"},"body":[]}'::jsonb, false, 10
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -436,17 +426,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w2d5_rest', 2, 5, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"7000 шагов и вода: мышцы растут в дни отдыха, а не на тренировке","en":"7,000 steps and water: muscles grow on rest days, not during the workout"},"body":[]}'::jsonb, false, 7000, 11
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"7000 шагов и вода: мышцы растут в дни отдыха, а не на тренировке","en":"7,000 steps and water: muscles grow on rest days, not during the workout"},"body":[]}'::jsonb, false, 11
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -455,17 +444,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w2d6_chipper', 2, 6, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_chipper_a'),
-  '{"title":{"ru":"Чиппер","en":"Chipper"},"subtitle":{"ru":"60-50-40-30-20-10 на время","en":"60-50-40-30-20-10 for time"},"body":[]}'::jsonb, false, null, 12
+  '{"title":{"ru":"Чиппер","en":"Chipper"},"subtitle":{"ru":"60-50-40-30-20-10 на время","en":"60-50-40-30-20-10 for time"},"body":[]}'::jsonb, false, 12
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -474,17 +462,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w2d7_rest', 2, 7, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Выходной: прогулка, растяжка, нормальная еда","en":"Day off: a walk, a stretch, proper food"},"body":[]}'::jsonb, false, 7000, 13
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Выходной: прогулка, растяжка, нормальная еда","en":"Day off: a walk, a stretch, proper food"},"body":[]}'::jsonb, false, 13
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -493,17 +480,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w3d1_squat_push', 3, 1, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_squat_push_b'),
-  '{"title":{"ru":"Присед и жим","en":"Squat & push"},"subtitle":{"ru":"5 подходов + AMRAP 8 мин","en":"5 sets + AMRAP 8 min"},"body":[]}'::jsonb, false, null, 14
+  '{"title":{"ru":"Присед и жим","en":"Squat & push"},"subtitle":{"ru":"5 подходов + AMRAP 8 мин","en":"5 sets + AMRAP 8 min"},"body":[]}'::jsonb, false, 14
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -512,17 +498,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w3d2_rest', 3, 2, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Дай ладоням отдохнуть: никаких лишних висов. Шаги, вода, сон","en":"Give your palms a break: no extra hanging. Steps, water, sleep"},"body":[]}'::jsonb, false, 7000, 15
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Дай ладоням отдохнуть: никаких лишних висов. Шаги, вода, сон","en":"Give your palms a break: no extra hanging. Steps, water, sleep"},"body":[]}'::jsonb, false, 15
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -531,17 +516,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w3d3_pull_hinge', 3, 3, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_pull_hinge_b'),
-  '{"title":{"ru":"Тяга и подтягивания","en":"Pull & hinge"},"subtitle":{"ru":"5 подходов · строгие подтягивания","en":"5 sets · strict pull-ups"},"body":[]}'::jsonb, false, null, 16
+  '{"title":{"ru":"Тяга и подтягивания","en":"Pull & hinge"},"subtitle":{"ru":"5 подходов · строгие подтягивания","en":"5 sets · strict pull-ups"},"body":[]}'::jsonb, false, 16
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -550,17 +534,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w3d4_engine', 3, 4, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_engine_tabata'),
-  '{"title":{"ru":"Двигатель","en":"Engine"},"subtitle":{"ru":"Скакалка + 3 табаты 20/10","en":"Rope skill + 3 Tabatas 20/10"},"body":[]}'::jsonb, false, null, 17
+  '{"title":{"ru":"Двигатель","en":"Engine"},"subtitle":{"ru":"Скакалка + 3 табаты 20/10","en":"Rope skill + 3 Tabatas 20/10"},"body":[]}'::jsonb, false, 17
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -569,17 +552,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w3d5_rest', 3, 5, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Крепатура после выпадов и подтягиваний — норма. Прогулка снимет её быстрее, чем диван","en":"Soreness after lunges and pull-ups is normal. A walk clears it faster than the couch"},"body":[]}'::jsonb, false, 7000, 18
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Крепатура после выпадов и подтягиваний — норма. Прогулка снимет её быстрее, чем диван","en":"Soreness after lunges and pull-ups is normal. A walk clears it faster than the couch"},"body":[]}'::jsonb, false, 18
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -588,17 +570,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w3d6_murph_prep', 3, 6, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_murph_prep_a'),
-  '{"title":{"ru":"Репетиция Мёрфа","en":"Murph rehearsal"},"subtitle":{"ru":"Четверть Мёрфа · лимит 20 мин","en":"Quarter Murph · 20-min cap"},"body":[]}'::jsonb, false, null, 19
+  '{"title":{"ru":"Репетиция Мёрфа","en":"Murph rehearsal"},"subtitle":{"ru":"Четверть Мёрфа · лимит 20 мин","en":"Quarter Murph · 20-min cap"},"body":[]}'::jsonb, false, 19
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -607,17 +588,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w3d7_rest', 3, 7, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Прогулка 40 минут и сон 7–8 часов — лучшая добавка к силе","en":"A 40-minute walk and 7–8 hours of sleep — the best strength supplement there is"},"body":[]}'::jsonb, false, 7000, 20
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Прогулка 40 минут и сон 7–8 часов — лучшая добавка к силе","en":"A 40-minute walk and 7–8 hours of sleep — the best strength supplement there is"},"body":[]}'::jsonb, false, 20
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -626,17 +606,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w4d1_squat_push', 4, 1, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_squat_push_b'),
-  '{"title":{"ru":"Присед и жим","en":"Squat & push"},"subtitle":{"ru":"Разгрузка · объём −35 %","en":"Deload · volume −35%"},"body":[]}'::jsonb, true, null, 21
+  '{"title":{"ru":"Присед и жим","en":"Squat & push"},"subtitle":{"ru":"Разгрузка · объём −35 %","en":"Deload · volume −35%"},"body":[]}'::jsonb, true, 21
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -645,17 +624,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w4d2_rest', 4, 2, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Разгрузочная неделя: гуляй и спи. Тело усваивает три недели работы","en":"Deload week: walk and sleep. Your body is absorbing three weeks of work"},"body":[]}'::jsonb, false, 7000, 22
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Разгрузочная неделя: гуляй и спи. Тело усваивает три недели работы","en":"Deload week: walk and sleep. Your body is absorbing three weeks of work"},"body":[]}'::jsonb, false, 22
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -664,17 +642,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w4d3_pull_hinge', 4, 3, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_pull_hinge_b'),
-  '{"title":{"ru":"Тяга и подтягивания","en":"Pull & hinge"},"subtitle":{"ru":"Разгрузка · объём −35 %","en":"Deload · volume −35%"},"body":[]}'::jsonb, true, null, 23
+  '{"title":{"ru":"Тяга и подтягивания","en":"Pull & hinge"},"subtitle":{"ru":"Разгрузка · объём −35 %","en":"Deload · volume −35%"},"body":[]}'::jsonb, true, 23
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -683,17 +660,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w4d4_flow', 4, 4, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_skill_flow'),
-  '{"title":{"ru":"Лёгкий день","en":"Easy day"},"subtitle":{"ru":"Разгрузка · скакалка и техника","en":"Deload · rope and technique"},"body":[]}'::jsonb, true, null, 24
+  '{"title":{"ru":"Лёгкий день","en":"Easy day"},"subtitle":{"ru":"Разгрузка · скакалка и техника","en":"Deload · rope and technique"},"body":[]}'::jsonb, true, 24
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -702,17 +678,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w4d5_rest', 4, 5, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Завтра бенчмарк: шаги, вода, ранний сон. Никакой «дополнительной» работы","en":"Benchmark tomorrow: steps, water, an early night. No \"extra\" work today"},"body":[]}'::jsonb, false, 7000, 25
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Завтра бенчмарк: шаги, вода, ранний сон. Никакой «дополнительной» работы","en":"Benchmark tomorrow: steps, water, an early night. No \"extra\" work today"},"body":[]}'::jsonb, false, 25
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -721,17 +696,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w4d6_benchmark', 4, 6, 'benchmark', (select id from public.custom_workouts where short_id = 'athlete_w_bench_cindy'),
-  '{"title":{"ru":"Синди","en":"Cindy"},"subtitle":{"ru":"Бенчмарк · AMRAP 20 мин","en":"Benchmark · AMRAP 20 min"},"body":[]}'::jsonb, false, null, 26
+  '{"title":{"ru":"Синди","en":"Cindy"},"subtitle":{"ru":"Бенчмарк · AMRAP 20 мин","en":"Benchmark · AMRAP 20 min"},"body":[]}'::jsonb, false, 26
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -740,17 +714,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w4d7_rest', 4, 7, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Прогулка 40 минут и сон 7–8 часов — лучшая добавка к силе","en":"A 40-minute walk and 7–8 hours of sleep — the best strength supplement there is"},"body":[]}'::jsonb, false, 7000, 27
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Прогулка 40 минут и сон 7–8 часов — лучшая добавка к силе","en":"A 40-minute walk and 7–8 hours of sleep — the best strength supplement there is"},"body":[]}'::jsonb, false, 27
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -759,17 +732,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w5d1_squat_push', 5, 1, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_squat_push_c'),
-  '{"title":{"ru":"Присед и жим","en":"Squat & push"},"subtitle":{"ru":"5 подходов · тяжёлая пара + AMRAP 10","en":"5 sets · heavy pair + AMRAP 10"},"body":[]}'::jsonb, false, null, 28
+  '{"title":{"ru":"Присед и жим","en":"Squat & push"},"subtitle":{"ru":"5 подходов · тяжёлая пара + AMRAP 10","en":"5 sets · heavy pair + AMRAP 10"},"body":[]}'::jsonb, false, 28
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -778,17 +750,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w5d2_rest', 5, 2, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Крепатура после выпадов и подтягиваний — норма. Прогулка снимет её быстрее, чем диван","en":"Soreness after lunges and pull-ups is normal. A walk clears it faster than the couch"},"body":[]}'::jsonb, false, 7000, 29
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Крепатура после выпадов и подтягиваний — норма. Прогулка снимет её быстрее, чем диван","en":"Soreness after lunges and pull-ups is normal. A walk clears it faster than the couch"},"body":[]}'::jsonb, false, 29
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -797,17 +768,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w5d3_pull_hinge', 5, 3, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_pull_hinge_c'),
-  '{"title":{"ru":"Тяга и подтягивания","en":"Pull & hinge"},"subtitle":{"ru":"5 × 6 подтягиваний + становая","en":"5 × 6 pull-ups + deadlifts"},"body":[]}'::jsonb, false, null, 30
+  '{"title":{"ru":"Тяга и подтягивания","en":"Pull & hinge"},"subtitle":{"ru":"5 × 6 подтягиваний + становая","en":"5 × 6 pull-ups + deadlifts"},"body":[]}'::jsonb, false, 30
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -816,17 +786,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w5d4_engine', 5, 4, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_engine_emom16'),
-  '{"title":{"ru":"Двигатель","en":"Engine"},"subtitle":{"ru":"EMOM 16 мин · 4 движения","en":"EMOM 16 min · 4 movements"},"body":[]}'::jsonb, false, null, 31
+  '{"title":{"ru":"Двигатель","en":"Engine"},"subtitle":{"ru":"EMOM 16 мин · 4 движения","en":"EMOM 16 min · 4 movements"},"body":[]}'::jsonb, false, 31
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -835,17 +804,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w5d5_rest', 5, 5, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Дай ладоням отдохнуть: никаких лишних висов. Шаги, вода, сон","en":"Give your palms a break: no extra hanging. Steps, water, sleep"},"body":[]}'::jsonb, false, 7000, 32
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Дай ладоням отдохнуть: никаких лишних висов. Шаги, вода, сон","en":"Give your palms a break: no extra hanging. Steps, water, sleep"},"body":[]}'::jsonb, false, 32
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -854,17 +822,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w5d6_chipper', 5, 6, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_chipper_b'),
-  '{"title":{"ru":"Чиппер","en":"Chipper"},"subtitle":{"ru":"4 круга на время, лимит 20 мин","en":"4 rounds for time, 20-min cap"},"body":[]}'::jsonb, false, null, 33
+  '{"title":{"ru":"Чиппер","en":"Chipper"},"subtitle":{"ru":"4 круга на время, лимит 20 мин","en":"4 rounds for time, 20-min cap"},"body":[]}'::jsonb, false, 33
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -873,17 +840,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w5d7_rest', 5, 7, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Выходной: прогулка, растяжка, нормальная еда","en":"Day off: a walk, a stretch, proper food"},"body":[]}'::jsonb, false, 7000, 34
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Выходной: прогулка, растяжка, нормальная еда","en":"Day off: a walk, a stretch, proper food"},"body":[]}'::jsonb, false, 34
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -892,17 +858,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w6d1_squat_push', 6, 1, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_squat_push_c'),
-  '{"title":{"ru":"Присед и жим","en":"Squat & push"},"subtitle":{"ru":"5 подходов · вес ещё тяжелее","en":"5 sets · heavier still"},"body":[]}'::jsonb, false, null, 35
+  '{"title":{"ru":"Присед и жим","en":"Squat & push"},"subtitle":{"ru":"5 подходов · вес ещё тяжелее","en":"5 sets · heavier still"},"body":[]}'::jsonb, false, 35
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -911,17 +876,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w6d2_rest', 6, 2, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Прогулка 40 минут и сон 7–8 часов — лучшая добавка к силе","en":"A 40-minute walk and 7–8 hours of sleep — the best strength supplement there is"},"body":[]}'::jsonb, false, 7000, 36
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Прогулка 40 минут и сон 7–8 часов — лучшая добавка к силе","en":"A 40-minute walk and 7–8 hours of sleep — the best strength supplement there is"},"body":[]}'::jsonb, false, 36
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -930,17 +894,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w6d3_pull_hinge', 6, 3, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_pull_hinge_c'),
-  '{"title":{"ru":"Тяга и подтягивания","en":"Pull & hinge"},"subtitle":{"ru":"5 × 6 подтягиваний + прогулка фермера","en":"5 × 6 pull-ups + farmer carry"},"body":[]}'::jsonb, false, null, 37
+  '{"title":{"ru":"Тяга и подтягивания","en":"Pull & hinge"},"subtitle":{"ru":"5 × 6 подтягиваний + прогулка фермера","en":"5 × 6 pull-ups + farmer carry"},"body":[]}'::jsonb, false, 37
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -949,17 +912,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w6d4_engine', 6, 4, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_engine_amrap15'),
-  '{"title":{"ru":"Двигатель","en":"Engine"},"subtitle":{"ru":"AMRAP 15 мин · побей вторую неделю","en":"AMRAP 15 min · beat week two"},"body":[]}'::jsonb, false, null, 38
+  '{"title":{"ru":"Двигатель","en":"Engine"},"subtitle":{"ru":"AMRAP 15 мин · побей вторую неделю","en":"AMRAP 15 min · beat week two"},"body":[]}'::jsonb, false, 38
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -968,17 +930,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w6d5_rest', 6, 5, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"7000 шагов и вода: мышцы растут в дни отдыха, а не на тренировке","en":"7,000 steps and water: muscles grow on rest days, not during the workout"},"body":[]}'::jsonb, false, 7000, 39
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"7000 шагов и вода: мышцы растут в дни отдыха, а не на тренировке","en":"7,000 steps and water: muscles grow on rest days, not during the workout"},"body":[]}'::jsonb, false, 39
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -987,17 +948,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w6d6_murph_prep', 6, 6, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_murph_prep_b'),
-  '{"title":{"ru":"Репетиция Мёрфа","en":"Murph rehearsal"},"subtitle":{"ru":"Генеральная репетиция · лимит 30 мин","en":"Dress rehearsal · 30-min cap"},"body":[]}'::jsonb, false, null, 40
+  '{"title":{"ru":"Репетиция Мёрфа","en":"Murph rehearsal"},"subtitle":{"ru":"Генеральная репетиция · лимит 30 мин","en":"Dress rehearsal · 30-min cap"},"body":[]}'::jsonb, false, 40
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -1006,17 +966,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w6d7_rest', 6, 7, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Прогулка 40 минут и сон 7–8 часов — лучшая добавка к силе","en":"A 40-minute walk and 7–8 hours of sleep — the best strength supplement there is"},"body":[]}'::jsonb, false, 7000, 41
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Прогулка 40 минут и сон 7–8 часов — лучшая добавка к силе","en":"A 40-minute walk and 7–8 hours of sleep — the best strength supplement there is"},"body":[]}'::jsonb, false, 41
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -1025,17 +984,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w7d1_squat_push', 7, 1, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_squat_push_c'),
-  '{"title":{"ru":"Присед и жим","en":"Squat & push"},"subtitle":{"ru":"5 подходов · последний тяжёлый присед","en":"5 sets · the last heavy squat day"},"body":[]}'::jsonb, false, null, 42
+  '{"title":{"ru":"Присед и жим","en":"Squat & push"},"subtitle":{"ru":"5 подходов · последний тяжёлый присед","en":"5 sets · the last heavy squat day"},"body":[]}'::jsonb, false, 42
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -1044,17 +1002,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w7d2_rest', 7, 2, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Крепатура после выпадов и подтягиваний — норма. Прогулка снимет её быстрее, чем диван","en":"Soreness after lunges and pull-ups is normal. A walk clears it faster than the couch"},"body":[]}'::jsonb, false, 7000, 43
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Крепатура после выпадов и подтягиваний — норма. Прогулка снимет её быстрее, чем диван","en":"Soreness after lunges and pull-ups is normal. A walk clears it faster than the couch"},"body":[]}'::jsonb, false, 43
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -1063,17 +1020,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w7d3_pull_hinge', 7, 3, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_pull_hinge_c'),
-  '{"title":{"ru":"Тяга и подтягивания","en":"Pull & hinge"},"subtitle":{"ru":"5 × 6 · последний день тяги","en":"5 × 6 · the last pull day"},"body":[]}'::jsonb, false, null, 44
+  '{"title":{"ru":"Тяга и подтягивания","en":"Pull & hinge"},"subtitle":{"ru":"5 × 6 · последний день тяги","en":"5 × 6 · the last pull day"},"body":[]}'::jsonb, false, 44
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -1082,17 +1038,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w7d4_engine', 7, 4, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_engine_emom16'),
-  '{"title":{"ru":"Двигатель","en":"Engine"},"subtitle":{"ru":"EMOM 16 мин · второй раз","en":"EMOM 16 min · second pass"},"body":[]}'::jsonb, false, null, 45
+  '{"title":{"ru":"Двигатель","en":"Engine"},"subtitle":{"ru":"EMOM 16 мин · второй раз","en":"EMOM 16 min · second pass"},"body":[]}'::jsonb, false, 45
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -1101,17 +1056,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w7d5_rest', 7, 5, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"7000 шагов и вода: мышцы растут в дни отдыха, а не на тренировке","en":"7,000 steps and water: muscles grow on rest days, not during the workout"},"body":[]}'::jsonb, false, 7000, 46
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"7000 шагов и вода: мышцы растут в дни отдыха, а не на тренировке","en":"7,000 steps and water: muscles grow on rest days, not during the workout"},"body":[]}'::jsonb, false, 46
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -1120,17 +1074,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w7d6_murph_prep', 7, 6, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_murph_prep_a'),
-  '{"title":{"ru":"Репетиция Мёрфа","en":"Murph rehearsal"},"subtitle":{"ru":"Четверть Мёрфа · сравни с третьей неделей","en":"Quarter Murph · compare with week three"},"body":[]}'::jsonb, false, null, 47
+  '{"title":{"ru":"Репетиция Мёрфа","en":"Murph rehearsal"},"subtitle":{"ru":"Четверть Мёрфа · сравни с третьей неделей","en":"Quarter Murph · compare with week three"},"body":[]}'::jsonb, false, 47
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -1139,17 +1092,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w7d7_rest', 7, 7, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Выходной: прогулка, растяжка, нормальная еда","en":"Day off: a walk, a stretch, proper food"},"body":[]}'::jsonb, false, 7000, 48
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Выходной: прогулка, растяжка, нормальная еда","en":"Day off: a walk, a stretch, proper food"},"body":[]}'::jsonb, false, 48
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -1158,17 +1110,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w8d1_flow', 8, 1, 'workout', (select id from public.custom_workouts where short_id = 'athlete_w_skill_flow'),
-  '{"title":{"ru":"Лёгкий день","en":"Easy day"},"subtitle":{"ru":"Подводка · техника и растяжка","en":"Taper · technique and stretching"},"body":[]}'::jsonb, false, null, 49
+  '{"title":{"ru":"Лёгкий день","en":"Easy day"},"subtitle":{"ru":"Подводка · техника и растяжка","en":"Taper · technique and stretching"},"body":[]}'::jsonb, false, 49
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -1177,17 +1128,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w8d2_rest', 8, 2, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Завтра бенчмарк: шаги, вода, ранний сон. Никакой «дополнительной» работы","en":"Benchmark tomorrow: steps, water, an early night. No \"extra\" work today"},"body":[]}'::jsonb, false, 7000, 50
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Завтра бенчмарк: шаги, вода, ранний сон. Никакой «дополнительной» работы","en":"Benchmark tomorrow: steps, water, an early night. No \"extra\" work today"},"body":[]}'::jsonb, false, 50
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -1196,17 +1146,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w8d3_benchmark', 8, 3, 'benchmark', (select id from public.custom_workouts where short_id = 'athlete_w_bench_half_murph'),
-  '{"title":{"ru":"Половина Мёрфа","en":"Half Murph"},"subtitle":{"ru":"Бенчмарк · на время, лимит 40 мин","en":"Benchmark · for time, 40-min cap"},"body":[]}'::jsonb, false, null, 51
+  '{"title":{"ru":"Половина Мёрфа","en":"Half Murph"},"subtitle":{"ru":"Бенчмарк · на время, лимит 40 мин","en":"Benchmark · for time, 40-min cap"},"body":[]}'::jsonb, false, 51
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -1215,17 +1164,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w8d4_rest', 8, 4, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"После «Мёрфа» — только прогулка и еда. Плечи и спина восстанавливаются двое суток","en":"After Murph — a walk and food, nothing else. Shoulders and back need two days to recover"},"body":[]}'::jsonb, false, 7000, 52
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"После «Мёрфа» — только прогулка и еда. Плечи и спина восстанавливаются двое суток","en":"After Murph — a walk and food, nothing else. Shoulders and back need two days to recover"},"body":[]}'::jsonb, false, 52
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -1234,17 +1182,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w8d5_rest', 8, 5, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Завтра повторный тест — только прогулка и хороший сон","en":"Retest tomorrow — just a walk and a good night''s sleep"},"body":[]}'::jsonb, false, 7000, 53
+  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Завтра повторный тест — только прогулка и хороший сон","en":"Retest tomorrow — just a walk and a good night''s sleep"},"body":[]}'::jsonb, false, 53
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -1253,17 +1200,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'athlete'),
   'w8d6_retest', 8, 6, 'test', (select id from public.custom_workouts where short_id = 'athlete_w_test'),
-  '{"title":{"ru":"Повторный тест","en":"Retest"},"subtitle":{"ru":"Те же 4 теста · сравни с первой неделей","en":"Same 4 tests · compare with week 1"},"body":[]}'::jsonb, false, null, 54
+  '{"title":{"ru":"Повторный тест","en":"Retest"},"subtitle":{"ru":"Те же 4 теста · сравни с первой неделей","en":"Same 4 tests · compare with week 1"},"body":[]}'::jsonb, false, 54
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -1272,6 +1218,5 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();

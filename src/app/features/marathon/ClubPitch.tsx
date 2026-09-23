@@ -49,7 +49,7 @@ import { useT } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
 import { isDemo } from '@/lib/api/mode';
 import { withBase } from '@/lib/util/paths';
-import { externalLinkProps } from '@/app/hooks/useExternalLink';
+import { LinkButton } from '@/app/features/courses/LinkButton';
 import { clubChargeLabel, clubJoinHref, clubMonthlyLabel } from '@/app/features/marathon/clubPlan';
 import { clubPrizeMidSentence } from '@/app/features/marathon/prize';
 import { clubPitchPhotos } from '@content/site/club';
@@ -220,9 +220,10 @@ export function ClubMember() {
  * Null when there is no plan to take a price from: a button that cannot name its price is worse
  * than no button, because the number then has to be invented somewhere else.
  *
- * It is a link rather than a `Button` because it leaves the app — `externalLinkProps` hands the
- * address to Telegram so the payment page opens in the person's own browser instead of replacing
- * the Mini App. The fill is the club's colour and the label is sentence case, both as drawn.
+ * It is a link rather than a `Button` because it leaves the app — `LinkButton` hands the address to
+ * Telegram so the payment page opens in the person's own browser instead of replacing the Mini App.
+ * It is the screen's one main action, so it is the neon (style A): the club's gradient is never a
+ * button (design/CHANGELOG.md §14).
  */
 export function ClubJoin() {
   const { t, locale } = useT();
@@ -234,12 +235,9 @@ export function ClubJoin() {
   const email = profile?.email || user?.email || '';
   return (
     <div className="-mx-2 flex flex-col gap-2.5">
-      <a
-        {...externalLinkProps(clubJoinHref(locale, email, isDemo()))}
-        className="flex h-13 select-none items-center justify-center rounded-tile bg-course px-6 text-center text-[15px] font-semibold text-tile-fg transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-90 active:scale-[0.99]"
-      >
+      <LinkButton href={clubJoinHref(locale, email, isDemo())} variant="action" size="lg" fullWidth>
         {t('app.marathonJoinCta', { price })}
-      </a>
+      </LinkButton>
       <p className="px-5 text-[13px] leading-snug text-muted-2">
         {t('app.clubChargeNote', { price: charge })}
       </p>

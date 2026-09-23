@@ -78,10 +78,11 @@ export function ClaimSheet({ open, onClose }: ClaimSheetProps) {
           spellCheck={false}
           placeholder={t('app.claimPlaceholder')}
           aria-label={t('app.claimTitle')}
-          className="w-full rounded-control border border-border bg-surface-2 px-3.5 py-3 text-[15px] text-text placeholder:text-muted-2 focus:border-primary focus:outline-none"
+          className="w-full rounded-control border border-border bg-surface-2 px-3.5 py-3 text-[15px] text-text placeholder:text-muted-2 focus:border-accent focus:outline-none"
         />
 
         <Button
+          variant="action"
           size="lg"
           fullWidth
           loading={busy}

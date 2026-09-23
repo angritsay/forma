@@ -298,7 +298,7 @@ export default function MarathonScreen() {
           error?.code === 'network' ? t('common.errorOffline') : t('common.errorGeneric')
         }
         action={
-          <Button size="lg" onClick={reloadMarathon}>
+          <Button variant="action" size="lg" onClick={reloadMarathon}>
             {t('common.retry')}
           </Button>
         }
