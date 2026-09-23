@@ -9,6 +9,8 @@
  * Call it: POST https://<project>.functions.supabase.co/google-calendar-sync with the header
  *          `x-sync-token: <GOOGLE_SYNC_TOKEN>`, every POLL_INTERVAL_MINUTES — that is
  *          `.github/workflows/calendar-sync.yml`, because pg_cron is not enabled in this project.
+ *          Or from the app: an admin's «Синхронизировать сейчас» on «Записи» sends the signed-in
+ *          JWT instead (door.ts, 0045).
  *
  * WHAT IT IS FOR
  * --------------
@@ -23,13 +25,13 @@
  *
  * THE DOOR
  * --------
- * Two things have to be true before anything runs, and neither of them is "somebody is signed in":
+ * Two things have to be true before anything runs:
  *
- *   - `GOOGLE_SYNC_TOKEN` is set and matches the `token` query parameter (or the `x-sync-token`
- *     header). Deployed with `--no-verify-jwt`, this token is the whole authentication, which is
- *     why it must be long and random. Deployed *with* JWT verification, note that any signed-in
- *     user of the project holds a valid JWT — so the token is what keeps a user from triggering
- *     the poll either way.
+ *   - either `GOOGLE_SYNC_TOKEN` is set and matches the `token` query parameter (or the
+ *     `x-sync-token` header) — the schedule — or the bearer JWT belongs to an admin, which
+ *     PostgREST's own `is_admin()` decides when asked with that JWT (door.ts). Any signed-in user
+ *     holds a valid JWT, so validity alone is never enough; being in `admins` is. Syncs started
+ *     from the app wait ADMIN_COOLDOWN_MS between each other (429 inside it).
  *   - the three Google credentials are set. Without them the function returns 503 rather than
  *     quietly succeeding with nothing to do: a sync that silently writes nothing looks identical
  *     to a sync that works and has no bookings, and the difference is a person staring at an
@@ -44,6 +46,7 @@
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { fetchAccessToken } from './auth.ts';
+import { chooseDoor, coolingDown, CORS_HEADERS, isAdminJwt } from './door.ts';
 import {
   describeTally,
   emptyTally,
@@ -59,19 +62,41 @@ const MAX_PAGES = 20;
 const PAGE_SIZE = 250;
 
 function reply(status: number, body: string): Response {
-  return new Response(body, { status, headers: { 'content-type': 'text/plain; charset=utf-8' } });
+  return new Response(body, {
+    status,
+    headers: { 'content-type': 'text/plain; charset=utf-8', ...CORS_HEADERS },
+  });
 }
 
+/** When this instance last ran a sync an admin asked for (door.ts, `coolingDown`). */
+let lastAdminRun: number | null = null;
+
 Deno.serve(async (req) => {
+  // The app's button is a browser request with an `authorization` header: it asks first.
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS });
   if (req.method !== 'POST') return reply(405, 'method not allowed');
 
-  const token = Deno.env.get('GOOGLE_SYNC_TOKEN');
-  if (!token) {
-    console.error('google-calendar-sync: GOOGLE_SYNC_TOKEN is not set; refusing to run');
-    return reply(503, 'not configured');
+  const door = chooseDoor(
+    Deno.env.get('GOOGLE_SYNC_TOKEN'),
+    new URL(req.url).searchParams.get('token') ?? req.headers.get('x-sync-token'),
+    req.headers.get('authorization'),
+  );
+  if (door.kind === 'refuse') {
+    if (door.status === 503) {
+      console.error('google-calendar-sync: GOOGLE_SYNC_TOKEN is not set; refusing to run');
+    }
+    return reply(door.status, door.body);
   }
-  const offered = new URL(req.url).searchParams.get('token') ?? req.headers.get('x-sync-token');
-  if (offered !== token) return reply(403, 'bad token');
+  if (door.kind === 'bearer') {
+    const admin = await isAdminJwt(
+      door.jwt,
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      fetch,
+    );
+    if (!admin) return reply(403, 'not an admin');
+    if (coolingDown(lastAdminRun, Date.now())) return reply(429, 'just synced');
+  }
 
   const calendarId = Deno.env.get('GOOGLE_CALENDAR_ID');
   const clientEmail = Deno.env.get('GOOGLE_SA_CLIENT_EMAIL');
@@ -81,6 +106,11 @@ Deno.serve(async (req) => {
       'google-calendar-sync: GOOGLE_CALENDAR_ID, GOOGLE_SA_CLIENT_EMAIL or GOOGLE_SA_PRIVATE_KEY is not set; refusing to run',
     );
     return reply(503, 'not configured');
+  }
+  if (door.kind === 'bearer') {
+    // Only a sync that will really read the calendar starts the pause: a 503 can be asked again.
+    lastAdminRun = Date.now();
+    console.info('google-calendar-sync: started by an admin');
   }
 
   const options = {

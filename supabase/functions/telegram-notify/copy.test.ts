@@ -153,3 +153,40 @@ describe('the language of the person being written to', () => {
     expect(messageFor({ kind: 'course_paid', params: {} })?.text).toContain('курс открыт');
   });
 });
+
+describe('the coach’s reply to a support message (0045)', () => {
+  it('labels the reply in the person’s language and keeps the words as written', () => {
+    const ru = messageFor({ kind: 'support_reply', params: { text: 'Можно, но осторожно' } }, 'ru');
+    expect(ru?.text).toBe('<b>Ответ тренера:</b>\n\nМожно, но осторожно');
+    const en = messageFor({ kind: 'support_reply', params: { text: 'Можно, но осторожно' } }, 'en');
+    expect(en?.text).toBe('<b>Coach’s reply:</b>\n\nМожно, но осторожно');
+    // A conversation, not an occasion to open the app.
+    expect(ru?.buttonText).toBe('');
+  });
+
+  it('escapes what the admin typed', () => {
+    const m = messageFor({ kind: 'support_reply', params: { text: 'a <3 & <b>b</b>' } });
+    expect(m?.text).toContain('a &lt;3 &amp; &lt;b&gt;b&lt;/b&gt;');
+  });
+
+  it('quotes the question only when it has a real message id', () => {
+    expect(messageFor({ kind: 'support_reply', params: { text: 'x', replyTo: 77 } })?.replyTo).toBe(
+      77,
+    );
+    for (const replyTo of [undefined, null, 0, -3, 'abc', 1.5]) {
+      const m = messageFor({ kind: 'support_reply', params: { text: 'x', replyTo } });
+      expect(m?.replyTo).toBeUndefined();
+    }
+  });
+
+  it('sends nothing for an empty reply', () => {
+    expect(messageFor({ kind: 'support_reply', params: { text: '  ' } })).toBeNull();
+    expect(messageFor({ kind: 'support_reply', params: null })).toBeNull();
+  });
+
+  it('caps the reply at a thousand characters, counting an emoji as one', () => {
+    const m = messageFor({ kind: 'support_reply', params: { text: '💪'.repeat(1200) } });
+    const body = m!.text.split('\n\n')[1]!;
+    expect(Array.from(body)).toHaveLength(1000);
+  });
+});
