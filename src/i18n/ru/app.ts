@@ -381,6 +381,13 @@ export const app = {
   playerTimeUp: 'Время!',
   playerAmrapPartial: 'Повторения в незавершённом круге',
   playerSaveScore: 'Записать результат',
+  // AMRAP одного движения: счёт повторений вместо кругов.
+  playerMaxRepsCount: 'Повторения',
+  playerMaxRepsRemove: 'Убрать повтор',
+  playerMaxRepsAddOne: 'Плюс один повтор',
+  playerMaxRepsAddFive: 'Плюс пять повторений',
+  playerMaxRepsQuestion: 'Сколько получилось?',
+  playerMaxRepsSave: 'Сохранить результат',
   playerFortimeRound: 'Круг {n} из {total}',
   playerFortimeCap: 'Лимит {time}',
   playerFortimeFinished: 'Финиш',

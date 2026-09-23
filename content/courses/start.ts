@@ -769,6 +769,7 @@ const WORKOUTS: WorkoutInput[] = [
         format: 'fortime',
         sets: 1,
         durationSec: 360,
+        restAfterSec: 120,
         title: l('Первый круг', 'The first round'),
         description: l(
           'Каждое движение по разу, потом отдых 2 минуты перед вторым кругом.',
@@ -955,6 +956,7 @@ const WORKOUTS: WorkoutInput[] = [
         type: 'metcon',
         format: 'amrap',
         durationSec: 60,
+        restAfterSec: 60,
         title: l('Интервал 1: максимум червячков', 'Interval 1: max inchworms'),
         description: l(
           'До конца интервала — максимум червячков. Потом минута отдыха.',

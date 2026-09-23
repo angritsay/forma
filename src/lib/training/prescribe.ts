@@ -22,6 +22,7 @@ import {
   DELOAD_VOLUME,
   EFFECTIVE_SCALE_MAX,
   EFFECTIVE_SCALE_MIN,
+  FILMED_FALLBACK_VOLUME,
   HYPERTENSION_MAX_HOLD_SEC,
   ISOMETRIC_ID_PATTERN,
   KNEE_RISKY_IDS,
@@ -30,6 +31,7 @@ import {
   MAX_SETS_ADDED,
   METERS_PER_SEC,
   MIN_FORMAT_ROUNDS,
+  MIN_ROUNDS_EASIER_CIRCUIT,
   MIN_SECONDS_TARGET,
   MIN_SETS_AFTER_REMOVE,
   MIN_SETS_EASIER,
@@ -40,7 +42,9 @@ import {
   SEC_PER_CALORIE,
   SETS_ADD_AT,
   SETS_REMOVE_AT,
+  SUBSTITUTE_REPS_FACTOR,
   TABATA_DEFAULT_ROUNDS,
+  WINDOW_STEP_SEC,
 } from './constants';
 import { estimateBlockDuration, estimatePoints, registryLookup } from './estimate';
 import { PRESCRIBE_NOTE } from './messages';
@@ -235,34 +239,16 @@ function issuesOf(exercise: Exercise, authoredLoad: Load | undefined, ctx: Subst
   return issues;
 }
 
-/**
- * Resolve the exercise actually prescribed for an item.
- * Walks `scaling.easier` (2 steps) when the original is unsuitable; uses `scaling.harder`
- * (1 step) for confident level-3 athletes on bodyweight moves.
- */
-export function substituteExercise(
-  original: Exercise,
-  item: Pick<WorkoutItem, 'load'>,
-  ctx: SubstitutionContext,
+/** Does the coach have a clip of this movement? (A lookup without media counts as not filmed.) */
+function isFilmedExercise(exercise: Exercise): boolean {
+  return Boolean(exercise.video);
+}
+
+/** The old four-step walk over one chain (original first): see `substituteExercise`. */
+function pickFromChain(
+  chain: readonly Exercise[],
+  issues: readonly ReadonlySet<Issue>[],
 ): { exercise: Exercise; note?: L10n } {
-  const originalIssues = issuesOf(original, item.load, ctx);
-  if (originalIssues.size === 0) {
-    if (
-      ctx.choice === 'harder' &&
-      ctx.allowHarderVariant !== false &&
-      ctx.level === 3 &&
-      isBodyweight(original) &&
-      original.scaling.harder
-    ) {
-      const harder = ctx.lookup(original.scaling.harder);
-      if (harder && issuesOf(harder, item.load, ctx).size === 0) return { exercise: harder };
-    }
-    return { exercise: original };
-  }
-
-  const chain = easierChain(original, ctx.lookup, 2);
-  const issues = chain.map((e) => issuesOf(e, item.load, ctx));
-
   // 1. A candidate with no issues at all.
   for (let i = 0; i < chain.length; i++) if (issues[i]!.size === 0) return { exercise: chain[i]! };
   // 2. Doable and safe, merely above the athlete's level.
@@ -278,7 +264,78 @@ export function substituteExercise(
       return { exercise: chain[i]!, note: PRESCRIBE_NOTE.limitationCaution };
   }
   // 4. Nothing doable without equipment the athlete lacks: keep the original and say so.
-  return { exercise: original, note: PRESCRIBE_NOTE.equipmentNeeded };
+  return { exercise: chain[0]!, note: PRESCRIBE_NOTE.equipmentNeeded };
+}
+
+/** Cannot be done as prescribed at all: no equipment, or it hits a limitation. */
+function isUnsafe(issues: ReadonlySet<Issue>): boolean {
+  return issues.has('equipment') || issues.has('limitation');
+}
+
+export interface Substitution {
+  exercise: Exercise;
+  note?: L10n;
+  /**
+   * The engine wanted an easier (or harder) variant but kept the filmed original because the
+   * variant has no clip: the caller moves the target instead (FILMED_FALLBACK_VOLUME).
+   */
+  fallback?: 'easier' | 'harder';
+}
+
+/**
+ * Resolve the exercise actually prescribed for an item.
+ * Walks `scaling.easier` (2 steps) when the original is unsuitable; uses `scaling.harder`
+ * (1 step) for confident level-3 athletes on bodyweight moves.
+ *
+ * **A filmed movement is not swapped for an unfilmed one** — the whole beginner course plays with
+ * the coach's own clips, and a substitute without one is a black card with a name on it. When the
+ * original has a clip, candidates without one are skipped; if that leaves nothing better than the
+ * original, the original stays and `fallback` tells the caller to move the target instead.
+ *
+ * **Safety beats video.** The one exception: when every filmed candidate still hits the athlete's
+ * limitation (or needs equipment they lack) and an unfilmed one does not, the unfilmed one is
+ * prescribed. Losing the clip is a worse screen; loading sore wrists is a worse outcome. When the
+ * unfilmed variant is no safer (knee push-up → incline push-up is on the hands too), the filmed
+ * original stays, with its caution note.
+ */
+export function substituteExercise(
+  original: Exercise,
+  item: Pick<WorkoutItem, 'load'>,
+  ctx: SubstitutionContext,
+): Substitution {
+  const keepFilm = isFilmedExercise(original);
+  const originalIssues = issuesOf(original, item.load, ctx);
+  if (originalIssues.size === 0) {
+    if (
+      ctx.choice === 'harder' &&
+      ctx.allowHarderVariant !== false &&
+      ctx.level === 3 &&
+      isBodyweight(original) &&
+      original.scaling.harder
+    ) {
+      const harder = ctx.lookup(original.scaling.harder);
+      if (harder && issuesOf(harder, item.load, ctx).size === 0) {
+        if (!keepFilm || isFilmedExercise(harder)) return { exercise: harder };
+        return { exercise: original, fallback: 'harder' };
+      }
+    }
+    return { exercise: original };
+  }
+
+  const chain = easierChain(original, ctx.lookup, 2);
+  const issues = chain.map((e) => issuesOf(e, item.load, ctx));
+  const ideal = pickFromChain(chain, issues);
+  if (!keepFilm || isFilmedExercise(ideal.exercise)) return ideal;
+
+  const filmedIdx = [...chain.keys()].filter((i) => isFilmedExercise(chain[i]!));
+  const filmed = pickFromChain(
+    filmedIdx.map((i) => chain[i]!),
+    filmedIdx.map((i) => issues[i]!),
+  );
+  const idealIssues = issues[chain.indexOf(ideal.exercise)]!;
+  const filmedIssues = issues[chain.indexOf(filmed.exercise)]!;
+  if (isUnsafe(filmedIssues) && !isUnsafe(idealIssues)) return ideal;
+  return filmed.exercise.id === original.id ? { ...filmed, fallback: 'easier' } : filmed;
 }
 
 /* ---------------------------------------------------------------------------------------------
@@ -357,11 +414,16 @@ function effectiveSets(
       const fromScale =
         structuralScale >= SETS_ADD_AT ? 1 : structuralScale <= SETS_REMOVE_AT ? -1 : 0;
       const fromChoice = choiceMovesThisBlock ? CHOICE_SETS_DELTA[choice] : 0;
-      const floor = Math.min(base, choice === 'easier' ? MIN_SETS_EASIER : MIN_SETS_AFTER_REMOVE);
+      // A circuit that IS the work (not a core or skill accessory) keeps two rounds on «полегче»:
+      // one round of a two-round session is a different, three-minute session.
+      const mainCircuit =
+        block.format === 'circuit' && block.type !== 'core' && block.type !== 'skill';
+      const easierFloor = mainCircuit ? MIN_ROUNDS_EASIER_CIRCUIT : MIN_SETS_EASIER;
+      const floor = Math.min(base, choice === 'easier' ? easierFloor : MIN_SETS_AFTER_REMOVE);
       return clamp(base + fromScale + fromChoice, floor, base + MAX_SETS_ADDED);
     }
     case 'emom':
-      return scaleRounds(block.rounds ?? 1, scalable, choice);
+      return emomMinutes(block.rounds ?? 1, block.items.length, scalable, choice);
     case 'tabata':
       return scaleRounds(block.rounds ?? TABATA_DEFAULT_ROUNDS, scalable, choice);
     case 'interval':
@@ -388,6 +450,27 @@ function scaleRounds(
 }
 
 /**
+ * EMOM minutes. The player gives each minute to the next movement in turn, so a scaled count that
+ * is not a multiple of the movements either repeats one («4 минуты на 3 движения») or drops the
+ * last. Scaled minutes snap to the nearest whole cycle — never below one cycle (nor the format's
+ * floor), never past the authored count in the wrong direction. The authored count at «как
+ * обычно» is left alone.
+ */
+function emomMinutes(
+  rounds: number,
+  movements: number,
+  scalable: boolean,
+  choice: DifficultyChoice,
+): number {
+  if (movements <= 1) return scaleRounds(rounds, scalable, choice);
+  if (!scalable || CHOICE_WINDOW[choice] === 1) return rounds;
+  const cycles = (m: number) => Math.round(m / movements) * movements;
+  const floor = Math.ceil(Math.min(rounds, MIN_FORMAT_ROUNDS) / movements) * movements;
+  const snapped = Math.max(movements, floor, cycles(rounds * CHOICE_WINDOW[choice]));
+  return choice === 'easier' ? Math.min(rounds, snapped) : Math.max(rounds, snapped);
+}
+
+/**
  * The blocks whose set count the choice is allowed to move: the biggest working blocks, capped at
  * MAX_CHOICE_SET_BLOCKS. Ranked by authored sets so the change lands on the main strength and
  * conditioning work rather than on a two-round core finisher.
@@ -402,13 +485,14 @@ export function choiceSetBlockIds(workout: Workout): ReadonlySet<string> {
 }
 
 /**
- * AMRAP / for-time window, moved by the choice and rounded to a whole half-minute.
- * "As usual" returns the authored number untouched: rounding a 200 s cap to the nearest 30 s
- * would quietly turn it into 210 even when the athlete asked for no change at all.
+ * AMRAP / for-time window, moved by the choice and rounded to a whole minute (WINDOW_STEP_SEC):
+ * the player and the summaries show it in minutes, and a 390 s window read as «7 мин».
+ * "As usual" returns the authored number untouched: rounding an authored 200 s cap would quietly
+ * change it even when the athlete asked for no change at all.
  */
 function scaleWindow(sec: number, scalable: boolean, choice: DifficultyChoice): number {
   if (!scalable || CHOICE_WINDOW[choice] === 1) return sec;
-  const scaled = Math.round((sec * CHOICE_WINDOW[choice]) / 30) * 30;
+  const scaled = Math.round((sec * CHOICE_WINDOW[choice]) / WINDOW_STEP_SEC) * WINDOW_STEP_SEC;
   return Math.max(Math.min(sec, MIN_WINDOW_SEC), scaled);
 }
 
@@ -468,6 +552,14 @@ function joinNotes(engine: L10n | undefined, authored: L10n | undefined): L10n |
   return engine ?? authored;
 }
 
+/**
+ * «Максимум повторений за N минут»: an AMRAP of exactly one movement counted in reps. Its reps are
+ * the whole goal rather than one round, and the player counts reps instead of rounds.
+ */
+export function isMaxRepsBlock(block: Pick<Block, 'format' | 'items'>): boolean {
+  return block.format === 'amrap' && block.items.length === 1 && block.items[0]!.reps !== undefined;
+}
+
 /* ---------------------------------------------------------------------------------------------
  * Main entry
  * ------------------------------------------------------------------------------------------- */
@@ -511,7 +603,7 @@ export function prescribeWorkout(
 
   const choiceBlocks = choiceSetBlockIds(workout);
 
-  const blocks = workout.blocks.map((block) => {
+  const blocks = workout.blocks.map((block, blockIndex) => {
     const scalable = block.scalable !== false;
     const blockScale = block.format === 'fortime' ? fortimeScale : effectiveScale;
     const s = scalable ? blockScale : 1;
@@ -524,44 +616,82 @@ export function prescribeWorkout(
       choiceBlocks.has(block.id),
     );
     // Warm-ups, cool-downs and tests keep the authored movement, not only the authored numbers.
+    // A block that does not scale is the same whatever the choice — its substitutions included,
+    // so the level check runs as if the athlete had picked «как обычно».
     const blockCtx: SubstitutionContext = {
       ...ctx,
+      choice: scalable ? choice : 'normal',
       allowHarderVariant: scalable && block.type !== 'test',
     };
+    // «Полегче» on an EMOM: the minutes cannot give much (a whole cycle or nothing), so the reps
+    // must — never the same number as «как обычно» (below).
+    const emomEasier = scalable && block.format === 'emom' && choice === 'easier';
+    // An AMRAP of one movement is «максимум повторений за N минут»: the authored reps are the
+    // total goal (s04: 100 bridges in 5 minutes), the window is the test and never moves.
+    const maxReps = isMaxRepsBlock(block);
+    const normalScale = volumeScale(CHOICE_VOLUME.normal);
 
     const items: PrescribedItem[] = block.items.map((item) => {
       const original = exerciseLookup(item.exerciseId);
       let exercise = original;
       let note: L10n | undefined;
+      let fallback: Substitution['fallback'];
       if (original) {
         const r = substituteExercise(original, item, blockCtx);
         exercise = r.exercise;
         note = r.note;
+        fallback = r.fallback;
       }
-      const given = givenUnit(item);
-      let unit = given.unit;
-      let target = scaleTarget(unit, given.value, s);
-      // A substitute measured in another unit gets the same work time, not the same number.
-      if (original && exercise && exercise.id !== original.id) {
-        const converted = convertTarget(unit, target, original, exercise);
-        unit = converted.unit;
-        target = converted.target;
-      }
-      if (
-        limitations.has('hypertension') &&
-        unit === 'seconds' &&
-        exercise &&
-        isIsometricHold(exercise)
-      ) {
-        target = Math.min(target, HYPERTENSION_MAX_HOLD_SEC);
-      }
+      const substituted = !!original && !!exercise && exercise.id !== original.id;
       const perSide = item.perSide === true;
-      /*
-       * Two-sided and counted as a total: make it even so both sides get the same work. `perSide`
-       * items are already per side and are left alone — see `evenTarget`.
-       */
-      if (unit === 'reps' && !perSide && exercise && isTwoSided(exercise)) {
-        target = evenTarget(target);
+      const given = givenUnit(item);
+      /** The whole target pipeline at one volume scale. */
+      const targetAt = (volume: number): { unit: ExerciseUnit; target: number; even: boolean } => {
+        let unit = given.unit;
+        let target = scaleTarget(unit, given.value, volume);
+        let even = unit === 'reps' && !perSide && !!exercise && isTwoSided(exercise);
+        // A substitute measured in another unit gets the same work time, not the same number.
+        if (substituted) {
+          const converted = convertTarget(unit, target, original!, exercise!);
+          unit = converted.unit;
+          target = converted.target;
+          const pair = SUBSTITUTE_REPS_FACTOR[`${original!.id}>${exercise!.id}`];
+          if (pair && unit === 'reps') {
+            target = Math.max(1, Math.round(target * pair.factor));
+            even ||= pair.even && !perSide;
+          }
+        }
+        if (
+          limitations.has('hypertension') &&
+          unit === 'seconds' &&
+          exercise &&
+          isIsometricHold(exercise)
+        ) {
+          target = Math.min(target, HYPERTENSION_MAX_HOLD_SEC);
+        }
+        /*
+         * Two-sided and counted as a total: make it even so both sides get the same work.
+         * `perSide` items are already per side and are left alone — see `evenTarget`.
+         */
+        if (unit === 'reps' && even) target = evenTarget(target);
+        return { unit, target, even };
+      };
+      const pairFactor =
+        (substituted && SUBSTITUTE_REPS_FACTOR[`${original!.id}>${exercise!.id}`]?.factor) || 1;
+      // The filmed original kept in place of an unfilmed variant moves its number instead.
+      const fallbackMul = scalable && fallback ? FILMED_FALLBACK_VOLUME[fallback] : 1;
+      const prescribedTarget = targetAt(s * fallbackMul);
+      const unit = prescribedTarget.unit;
+      let target = prescribedTarget.target;
+      if (maxReps && unit === 'reps') {
+        // A goal of 100, not 97: round to 5 (and keep a two-sided count even).
+        target = Math.max(5, round5(target));
+        if (prescribedTarget.even && target % 2 === 1) target += 5;
+      }
+      if (emomEasier && unit === 'reps') {
+        const step = prescribedTarget.even ? 2 : 1;
+        const usual = targetAt(normalScale).target;
+        if (usual > step && target > usual - step) target = usual - step;
       }
       const loadLabel = exercise ? effectiveLoadLabel(exercise, item.load, limitations) : item.load;
       const loadKg =
@@ -572,16 +702,21 @@ export function prescribeWorkout(
       const out: PrescribedItem = {
         exerciseId: exercise?.id ?? item.exerciseId,
         originalExerciseId: item.exerciseId,
-        substituted: exercise !== undefined && exercise.id !== item.exerciseId,
+        substituted,
         unit,
         target,
         perSide,
         restAfterSec: scaleRest(item.restAfterSec, restMul),
-        estimatedSec: estimateItemSec(unit, target, perSide, exercise),
+        // A doubled dead-bug count is the coach's equivalent of the sit-ups, not twice the work:
+        // one rep a side, so the clock sees the time of the original number.
+        estimatedSec: estimateItemSec(unit, target, perSide, exercise) / pairFactor,
       };
       if (loadLabel) out.loadLabel = loadLabel;
       if (loadKg !== undefined) out.loadKg = loadKg;
-      const finalNote = joinNotes(note, item.note);
+      // The authored note is a cue for the authored movement («не тяни себя за шею» on a sit-up):
+      // on a substitute it would describe the wrong exercise. The substitute's own cues are on
+      // the card.
+      const finalNote = joinNotes(note, substituted ? undefined : item.note);
       if (finalNote) out.note = finalNote;
       return out;
     });
@@ -601,10 +736,19 @@ export function prescribeWorkout(
     if (block.description) prescribed.description = block.description;
     if (block.durationSec !== undefined) {
       // AMRAP has no sets to add; the window itself is the lever. For-time keeps its rounds, so
-      // moving the cap only changes how much slack a slower athlete has.
-      prescribed.durationSec = scaleWindow(block.durationSec, scalable, choice);
+      // moving the cap only changes how much slack a slower athlete has. A max-reps AMRAP keeps
+      // its window: its goal moves instead.
+      prescribed.durationSec = maxReps
+        ? block.durationSec
+        : scaleWindow(block.durationSec, scalable, choice);
     }
     if (block.workSec !== undefined) prescribed.workSec = block.workSec;
+    // A pause after the whole block, before the next one. Never after the last block: there is
+    // nothing to rest for, and the player would end on a countdown.
+    if (block.restAfterSec && blockIndex < workout.blocks.length - 1) {
+      const rest = scaleRest(block.restAfterSec, restMul);
+      if (rest > 0) prescribed.restAfterSec = rest;
+    }
     if (block.restSec !== undefined) {
       prescribed.restSec =
         block.format === 'interval' ? scaleRest(block.restSec, restMul) : block.restSec;

@@ -277,6 +277,11 @@ export const BlockSchema = z
     restSec: z.number().int().nonnegative().optional(),
     restBetweenSetsSec: z.number().int().nonnegative().optional(),
     restBetweenRoundsSec: z.number().int().nonnegative().optional(),
+    /**
+     * Rest after the whole block, before the next one starts (s14: two minutes between the 20s and
+     * the 40s). The player plays it as a rest step; ignored on the workout's last block.
+     */
+    restAfterSec: z.number().int().nonnegative().optional(),
     items: z.array(WorkoutItemSchema).min(1),
     scalable: z.boolean().default(true),
     /**

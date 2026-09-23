@@ -29,8 +29,14 @@ export const training = {
   // Player hints (engine semantics)
   emomMinuteHint: 'Do {n} reps, then rest for the remainder of the minute',
   amrapHint: 'As many rounds as possible in {min} min',
-  amrapExpected: 'Target: about {n} rounds',
-  fortimeHint: '{rounds} rounds for time, cap {min} min',
+  amrapExpectedOne: 'Target: about {n} round',
+  amrapExpectedFew: 'Target: about {n} rounds',
+  amrapExpectedMany: 'Target: about {n} rounds',
+  // A one-movement AMRAP: max reps in N minutes.
+  maxRepsHint: 'Max reps in {min} min',
+  maxRepsGoal: 'Goal: {n}',
+  // {rounds} already carries the word: "1 round", "3 rounds" (app.playerRounds*).
+  fortimeHint: '{rounds} for time, cap {min} min',
   testHint: 'Max effort — record your result',
   substitutedFrom: 'Instead of {name}',
   deloadBadge: 'Deload week',

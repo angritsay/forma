@@ -192,6 +192,7 @@ export function blockToSection(block: Block): CustomWorkoutSection {
     ...(block.restBetweenRoundsSec !== undefined
       ? { restBetweenRoundsSec: block.restBetweenRoundsSec }
       : {}),
+    ...(block.restAfterSec !== undefined ? { restAfterSec: block.restAfterSec } : {}),
     ...(block.title ? { title: block.title.ru, titleEn: block.title.en } : {}),
     ...(block.description
       ? { description: block.description.ru, descriptionEn: block.description.en }
@@ -282,6 +283,7 @@ function sectionToBlock(section: CustomWorkoutSection, index: number): Block {
     ...(section.restBetweenRoundsSec !== undefined
       ? { restBetweenRoundsSec: section.restBetweenRoundsSec }
       : {}),
+    ...(section.restAfterSec !== undefined ? { restAfterSec: section.restAfterSec } : {}),
     items,
     scalable: section.scalable ?? true,
   };

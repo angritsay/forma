@@ -29,8 +29,15 @@ export const training = {
   // Подсказки плеера (смысл форматов)
   emomMinuteHint: 'Сделай {n} повторений и отдыхай до конца минуты',
   amrapHint: 'Максимум кругов за {min} мин',
-  amrapExpected: 'Ориентир: около {n} кругов',
-  fortimeHint: '{rounds} кругов на время, лимит {min} мин',
+  // «около» + родительный падеж: около 1 круга, около 2 / 5 кругов.
+  amrapExpectedOne: 'Ориентир: около {n} круга',
+  amrapExpectedFew: 'Ориентир: около {n} кругов',
+  amrapExpectedMany: 'Ориентир: около {n} кругов',
+  // AMRAP одного движения — «максимум повторений за N минут».
+  maxRepsHint: 'Максимум повторений за {min} мин',
+  maxRepsGoal: 'Цель: {n}',
+  // {rounds} — уже со словом: «1 круг», «3 круга» (app.playerRounds*).
+  fortimeHint: '{rounds} на время, лимит {min} мин',
   testHint: 'Выложись по максимуму и запиши результат',
   substitutedFrom: 'Вместо: {name}',
   deloadBadge: 'Разгрузочная неделя',
