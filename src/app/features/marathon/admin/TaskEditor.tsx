@@ -12,6 +12,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
 import { Sheet } from '@/components/ui/Sheet';
 import { Textarea } from '@/components/ui/Textarea';
@@ -29,6 +30,7 @@ import { PUBLIC_BUCKET } from '@/lib/api/storage';
 import { useT } from '@/app/hooks/useT';
 import { LangTabs, useEditingLocale } from '@/app/features/admin/LangTabs';
 import { MediaField } from '@/app/features/admin/media/MediaField';
+import { dateOfDay, repeatUntilDay } from './dates';
 
 /**
  * Ceiling on the task picture.
@@ -139,6 +141,8 @@ export interface TaskEditorProps {
   task: MarathonTaskRow | null;
   /** The date this task is on, in words — the calendar picked it, so the sheet only confirms it. */
   dayLabel: string;
+  /** Day 1 of the round: «повторять до» is picked as a date and stored as a day. */
+  startsOn: string;
   dayIndex: number;
   /** Last day of the marathon, so "repeat until" cannot run off the end. */
   lastDay: number;
@@ -161,6 +165,7 @@ export function TaskEditor({
   open,
   task,
   dayLabel,
+  startsOn,
   dayIndex,
   lastDay,
   teams,
@@ -176,8 +181,11 @@ export function TaskEditor({
   const editing = useEditingLocale(!task);
   const [draft, setDraft] = useState<TaskDraft>(emptyDraft());
   const [targets, setTargets] = useState<readonly MarathonTaskTarget[]>([]);
+  /** An ISO date from the date input; turned into a day only when saving. */
   const [repeatUntil, setRepeatUntil] = useState('');
   const [busy, setBusy] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   /*
    * Where this task's picture is uploaded to.
@@ -195,6 +203,7 @@ export function TaskEditor({
     setDraft(task ? draftFrom(task) : emptyDraft(solo));
     setTargets(initialTargets);
     setRepeatUntil('');
+    setConfirmDelete(false);
     setUploadKey(crypto.randomUUID());
   }, [open, task, initialTargets, solo]);
 
@@ -207,9 +216,14 @@ export function TaskEditor({
     if (error) return;
     setBusy(true);
     try {
-      const until = repeatUntil ? Math.min(Number(repeatUntil), lastDay) : null;
-      await onSave(draftToPatch(draft), targets, until && until > dayIndex ? until : null);
+      await onSave(
+        draftToPatch(draft),
+        targets,
+        repeatUntilDay(startsOn, lastDay, dayIndex, repeatUntil),
+      );
       onClose();
+    } catch {
+      /* The screen has already said what went wrong; the sheet stays open with the draft. */
     } finally {
       setBusy(false);
     }
@@ -231,6 +245,7 @@ export function TaskEditor({
         <div className="flex gap-3">
           <Button
             size="lg"
+            variant="action"
             className="flex-1"
             loading={busy}
             disabled={Boolean(error)}
@@ -243,9 +258,7 @@ export function TaskEditor({
               size="lg"
               variant="ghost"
               className="shrink-0"
-              onClick={() => {
-                void onDelete().then(onClose);
-              }}
+              onClick={() => setConfirmDelete(true)}
             >
               {t('app.mAdminDelete')}
             </Button>
@@ -417,13 +430,37 @@ export function TaskEditor({
         {!task && dayIndex < lastDay ? (
           <Input
             label={t('app.mAdminRepeatUntil')}
-            inputMode="numeric"
-            placeholder={String(lastDay)}
+            hint={t('app.mAdminRepeatUntilHint')}
+            type="date"
+            min={dateOfDay(startsOn, dayIndex + 1)}
+            max={dateOfDay(startsOn, lastDay)}
             value={repeatUntil}
             onChange={(e) => setRepeatUntil(e.target.value)}
           />
         ) : null}
       </div>
+
+      <Modal
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        title={t('app.mAdminDeleteTask')}
+        description={t('app.mAdminDeleteTaskBody')}
+        confirmLabel={t('app.mAdminDelete')}
+        cancelLabel={t('common.cancel')}
+        danger
+        loading={deleting}
+        onConfirm={() => {
+          if (!onDelete) return;
+          setDeleting(true);
+          void onDelete()
+            .then(() => {
+              setConfirmDelete(false);
+              onClose();
+            })
+            .catch(() => undefined)
+            .finally(() => setDeleting(false));
+        }}
+      />
     </Sheet>
   );
 }

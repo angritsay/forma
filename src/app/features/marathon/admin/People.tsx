@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
 import { Sheet } from '@/components/ui/Sheet';
 import type { MarathonMemberRow, MarathonTeamRow } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
@@ -33,6 +34,8 @@ export function People({ members, teams, solo, onAddMember, onSetStatus }: Peopl
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
+  const [removing, setRemoving] = useState<MarathonMemberRow | null>(null);
+  const [removeBusy, setRemoveBusy] = useState(false);
 
   const teamName = new Map(teams.map((team) => [team.id, team.name]));
 
@@ -43,6 +46,8 @@ export function People({ members, teams, solo, onAddMember, onSetStatus }: Peopl
       setEmail('');
       setName('');
       setAddOpen(false);
+    } catch {
+      /* Said by the screen; the sheet keeps what was typed. */
     } finally {
       setBusy(false);
     }
@@ -66,19 +71,24 @@ export function People({ members, teams, solo, onAddMember, onSetStatus }: Peopl
                   {member.displayName?.trim() || member.email}
                 </span>
                 <span className="block truncate text-xs text-muted-2">{member.email}</span>
+                {/* The pair on its own line under the address rather than a fixed 160px column
+                    beside it, which squeezed the name to a few letters on a phone. */}
+                {member.status !== 'removed' && !solo ? (
+                  <span className="block truncate text-xs text-muted-2">
+                    {(member.teamId && teamName.get(member.teamId)) || t('app.mAdminNoTeam')}
+                  </span>
+                ) : null}
               </span>
               {member.status === 'removed' ? (
                 <Badge tone="warning">{t('app.mAdminRemoved')}</Badge>
-              ) : solo ? null : (
-                <span className="w-40 shrink-0 truncate text-xs text-muted-2">
-                  {(member.teamId && teamName.get(member.teamId)) || t('app.mAdminNoTeam')}
-                </span>
-              )}
+              ) : null}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() =>
-                  void onSetStatus(member.id, member.status === 'active' ? 'removed' : 'active')
+                  member.status === 'active'
+                    ? setRemoving(member)
+                    : void onSetStatus(member.id, 'active').catch(() => undefined)
                 }
               >
                 {member.status === 'active' ? t('app.mAdminRemove') : t('app.mAdminRestore')}
@@ -94,6 +104,27 @@ export function People({ members, teams, solo, onAddMember, onSetStatus }: Peopl
         </Button>
       </div>
 
+      <Modal
+        open={removing !== null}
+        onClose={() => setRemoving(null)}
+        title={t('app.mAdminRemoveConfirmTitle', {
+          name: removing ? removing.displayName?.trim() || removing.email : '',
+        })}
+        description={t('app.mAdminRemoveConfirmBody')}
+        confirmLabel={t('app.mAdminRemove')}
+        cancelLabel={t('common.cancel')}
+        danger
+        loading={removeBusy}
+        onConfirm={() => {
+          if (!removing) return;
+          setRemoveBusy(true);
+          void onSetStatus(removing.id, 'removed')
+            .then(() => setRemoving(null))
+            .catch(() => undefined)
+            .finally(() => setRemoveBusy(false));
+        }}
+      />
+
       <Sheet
         open={addOpen}
         onClose={() => setAddOpen(false)}
@@ -101,6 +132,7 @@ export function People({ members, teams, solo, onAddMember, onSetStatus }: Peopl
         footer={
           <Button
             size="lg"
+            variant="action"
             fullWidth
             loading={busy}
             disabled={!email.includes('@')}
