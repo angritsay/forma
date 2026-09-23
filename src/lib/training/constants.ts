@@ -73,6 +73,12 @@ export const CHOICE_VOLUME_FORTIME: Readonly<Record<DifficultyChoice, number>> =
 export const MIN_FORMAT_ROUNDS = 4;
 export const MIN_WINDOW_SEC = 240;
 
+/**
+ * A scaled AMRAP / for-time window lands on a whole minute. The player and every summary show the
+ * window in minutes, so a half-minute step (390 s) read as «7 мин» and then ran six and a half.
+ */
+export const WINDOW_STEP_SEC = 60;
+
 /** Points multiplier per difficulty choice. */
 export const CHOICE_POINTS: Readonly<Record<DifficultyChoice, number>> = {
   easier: 0.8,
@@ -117,8 +123,33 @@ export const SETS_ADD_AT = 1.3;
 export const SETS_REMOVE_AT = 0.7;
 /** Floor when adaptation removes a set (unless the block was authored with fewer). */
 export const MIN_SETS_AFTER_REMOVE = 2;
-/** Floor when the athlete chose "easier" — one honest set beats skipping the session. */
+/**
+ * Floor when the athlete chose "easier" — one honest set beats skipping the session. A circuit
+ * authored with two or more rounds keeps two: «два круга» cut to one is a different session
+ * (the coach's s17 on «полегче» came out at under three minutes).
+ */
 export const MIN_SETS_EASIER = 1;
+export const MIN_ROUNDS_EASIER_CIRCUIT = 2;
+
+/**
+ * When the engine wanted an easier or harder variant but the only one in the library has no clip
+ * of the coach, the filmed original stays and its target moves instead — by this factor on top of
+ * the choice's own volume.
+ */
+export const FILMED_FALLBACK_VOLUME: Readonly<Record<'easier' | 'harder', number>> = {
+  easier: 0.85,
+  harder: 1.15,
+};
+
+/**
+ * Substitutions whose work is not the same number of reps: `from>to` → factor on the target, and
+ * whether the result must be even. The coach's rule for the sit-up / Russian-twist → dead-bug swap
+ * is «в два раза больше повторений», counted in pairs (one per side).
+ */
+export const SUBSTITUTE_REPS_FACTOR: Readonly<Record<string, { factor: number; even: boolean }>> = {
+  'sit_up>dead_bug': { factor: 2, even: true },
+  'russian_twist>dead_bug': { factor: 2, even: true },
+};
 /** Most sets adaptation and the choice may add on top of what was authored. */
 export const MAX_SETS_ADDED = 2;
 /** Shortest timed target after scaling (seconds). */

@@ -8,7 +8,7 @@ import type { SwipeHold } from '../feed';
 import { ItemList } from '../ItemList';
 import { PlayerTimerSlot } from '../PlayerChrome';
 import { Stepper } from '../Stepper';
-import { clampCount, type AmrapStep as Step } from '../model';
+import { amrapExpectedText, clampCount, type AmrapStep as Step } from '../model';
 import type { Cue } from '../sound';
 import { useCountdownCues, useNextHandler, useStepClock, useSwipeHold } from '../useStepClock';
 
@@ -41,7 +41,7 @@ export function AmrapStep({
   onClip,
   holdSwipe,
 }: AmrapStepProps) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const [phase, setPhase] = useState<Phase>('running');
   const [rounds, setRounds] = useState(0);
   const [extraReps, setExtraReps] = useState(0);
@@ -50,6 +50,15 @@ export function AmrapStep({
 
   const timeUp = useCallback(() => setPhase('result'), []);
   useCountdownCues(clock, phase === 'running' && !paused, beep, timeUp);
+
+  // Max reps (one movement): the count is reps, and it is saved as `{ rounds: 0, extraReps }`,
+  // which session.ts reads as total / target.
+  const maxReps = step.maxReps === true;
+  const goal = step.items[0]?.target ?? 0;
+  const addReps = (n: number) => {
+    setExtraReps((r) => clampCount(r + n));
+    if (n > 0) beep('round');
+  };
 
   const addRound = () => {
     setRounds((r) => clampCount(r + 1));
@@ -73,6 +82,83 @@ export function AmrapStep({
 
   const minutes = Math.round(duration / 60);
 
+  if (maxReps) {
+    return (
+      <div className="flex flex-col gap-6">
+        {phase === 'running' ? (
+          <>
+            <PlayerTimerSlot>
+              <BigClock
+                seconds={clock.remainingSec}
+                label={t('training.format_amrap')}
+                tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'accent' : 'default'}
+                caption={`${t('training.maxRepsHint', { min: minutes })} · ${t('training.maxRepsGoal', { n: goal })}`}
+              />
+            </PlayerTimerSlot>
+            <ItemList items={step.items} compact onSelect={onClip} activeIndex={clip} />
+            <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
+              <div className="flex flex-col">
+                <span className="eyebrow">{t('app.playerMaxRepsCount')}</span>
+                <span className="numeral tabular mt-1 text-5xl leading-none">{extraReps}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <IconButton
+                  label={t('app.playerMaxRepsRemove')}
+                  icon="minus"
+                  variant="surface"
+                  onClick={() => addReps(-1)}
+                  disabled={extraReps === 0}
+                />
+                <IconButton
+                  label={t('app.playerMaxRepsAddOne')}
+                  icon="plus"
+                  variant="surface"
+                  onClick={() => addReps(1)}
+                />
+                <Button
+                  variant="action"
+                  size="lg"
+                  onClick={() => addReps(5)}
+                  className="px-6"
+                  aria-label={t('app.playerMaxRepsAddFive')}
+                >
+                  +5
+                </Button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <h2 className="display text-center text-5xl">{t('app.playerTimeUp')}</h2>
+            <div className="flex flex-col gap-4 border-t border-border pt-4">
+              <span className="eyebrow text-center">{t('app.playerMaxRepsQuestion')}</span>
+              <Stepper
+                value={extraReps}
+                onChange={setExtraReps}
+                size="lg"
+                unit={t('training.reps')}
+                label={t('app.playerMaxRepsQuestion')}
+                decreaseLabel={t('app.playerDecrease')}
+                increaseLabel={t('app.playerIncrease')}
+              />
+              <div className="flex justify-center gap-2">
+                <Button variant="secondary" size="sm" onClick={() => addReps(-5)}>
+                  −5
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => addReps(5)}>
+                  +5
+                </Button>
+              </div>
+            </div>
+            <Button variant="action" size="lg" fullWidth onClick={save}>
+              {t('app.playerMaxRepsSave')}
+            </Button>
+          </>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {phase === 'running' ? (
@@ -83,7 +169,7 @@ export function AmrapStep({
               seconds={clock.remainingSec}
               label={t('training.format_amrap')}
               tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'accent' : 'default'}
-              caption={`${t('training.amrapHint', { min: minutes })} · ${t('training.amrapExpected', { n: step.expectedRounds })}`}
+              caption={`${t('training.amrapHint', { min: minutes })} · ${amrapExpectedText(t, locale, step.expectedRounds)}`}
             />
           </PlayerTimerSlot>
           {/*

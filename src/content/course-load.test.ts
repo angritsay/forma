@@ -13,7 +13,8 @@
  */
 import { describe, expect, it } from 'vitest';
 import { COURSES } from '@content/courses';
-import { prescribeWorkout } from '@/lib/training/prescribe';
+import { choiceSetBlockIds, prescribeWorkout } from '@/lib/training/prescribe';
+import { MIN_ROUNDS_EASIER_CIRCUIT } from '@/lib/training/constants';
 import type { DifficultyChoice, UserTrainingProfile } from '@/lib/training/types';
 import type { Workout } from '@/content/schema';
 
@@ -40,6 +41,26 @@ function minutes(workout: Workout, choice: DifficultyChoice, scale = 1): number 
 function hasScalableSetBlock(workout: Workout): boolean {
   return workout.blocks.some(
     (b) => b.scalable !== false && (b.format === 'sets' || b.format === 'circuit'),
+  );
+}
+
+/**
+ * «Полегче» has no round to take away: every block the choice moves is a main circuit already at
+ * the two-round floor (MIN_ROUNDS_EASIER_CIRCUIT — «два круга» is not cut to one), so easier moves
+ * on reps alone and is not expected to save minutes.
+ */
+function easierAtRoundFloor(workout: Workout): boolean {
+  const ids = choiceSetBlockIds(workout);
+  const moved = workout.blocks.filter((b) => ids.has(b.id));
+  return (
+    moved.length > 0 &&
+    moved.every(
+      (b) =>
+        b.format === 'circuit' &&
+        b.type !== 'core' &&
+        b.type !== 'skill' &&
+        (b.sets ?? 1) <= MIN_ROUNDS_EASIER_CIRCUIT,
+    )
   );
 }
 
@@ -70,7 +91,10 @@ describe('published course load', () => {
       const easier = minutes(workout, 'easier');
       const normal = minutes(workout, 'normal');
       const harder = minutes(workout, 'harder');
-      for (const step of [normal - easier, harder - normal]) {
+      const steps = easierAtRoundFloor(workout)
+        ? [harder - normal]
+        : [normal - easier, harder - normal];
+      for (const step of steps) {
         expect(step).toBeGreaterThanOrEqual(MIN_STEP_MIN);
         expect(step).toBeLessThanOrEqual(MAX_STEP_MIN);
       }

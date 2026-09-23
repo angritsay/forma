@@ -290,3 +290,48 @@ describe('buildPlayerSteps — rest previews what is coming', () => {
     expect(warmupSkipIndex(buildPlayerSteps(p), p)).toBeNull();
   });
 });
+
+describe('buildPlayerSteps — rest after a block', () => {
+  it('plays the block rest before the next block and counts it in the estimate', () => {
+    const w = workout({
+      id: 'w',
+      blocks: [
+        block({
+          id: 'x',
+          format: 'fortime',
+          sets: 1,
+          durationSec: 360,
+          items: [item('air_squat', { reps: 20 })],
+          restAfterSec: 120,
+        }),
+        block({
+          id: 'y',
+          format: 'fortime',
+          sets: 1,
+          durationSec: 600,
+          items: [item('push_up', { reps: 10 })],
+          restAfterSec: 60,
+        }),
+      ],
+    });
+    const p = prescribeWorkout(w, opts, fixtureLookup);
+    const steps = buildPlayerSteps(p);
+    expect(kinds(steps)).toEqual([
+      'block_intro',
+      'fortime',
+      'rest',
+      'block_intro',
+      'fortime',
+      'done',
+    ]);
+    const rest = rests(steps)[0]!;
+    expect(rest.durationSec).toBe(120);
+    expect(rest.nextExerciseId).toBe('push_up');
+    const without = prescribeWorkout(
+      { ...w, blocks: w.blocks.map((b) => ({ ...b, restAfterSec: undefined })) },
+      opts,
+      fixtureLookup,
+    );
+    expect(p.estimatedSec - without.estimatedSec).toBe(120);
+  });
+});

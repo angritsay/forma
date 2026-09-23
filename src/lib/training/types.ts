@@ -174,6 +174,8 @@ export interface PrescribedBlock {
   restSec?: number;
   restBetweenSetsSec: number;
   restBetweenRoundsSec: number;
+  /** Rest after the whole block, before the next one (absent when none, and on the last block). */
+  restAfterSec?: number;
   items: PrescribedItem[];
   estimatedSec: number;
   scaled: boolean;
@@ -246,6 +248,11 @@ export type PlayerStep =
       items: PrescribedItem[];
       /** Rounds a fully-completing athlete is expected to reach (for completion ratio). */
       expectedRounds: number;
+      /**
+       * One movement, max reps in the window: the item's target is the total goal, the result is
+       * recorded as `{ rounds: 0, extraReps: total }` (so completion is total / target).
+       */
+      maxReps?: boolean;
     }
   | {
       kind: 'fortime';

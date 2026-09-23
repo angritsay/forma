@@ -76,6 +76,8 @@ export interface CustomWorkoutSection {
   restSec?: number;
   restBetweenSetsSec?: number;
   restBetweenRoundsSec?: number;
+  /** Rest after the whole section, before the next one (`BlockSchema.restAfterSec`). */
+  restAfterSec?: number;
   /** Optional Russian title override; falls back to the section's default name. */
   title?: string;
   /** Optional Russian note shown under the title. */
@@ -180,6 +182,8 @@ export function buildPrescribedFromCustom(
     if (section.durationSec !== undefined) block.durationSec = section.durationSec;
     if (section.workSec !== undefined) block.workSec = section.workSec;
     if (section.restSec !== undefined) block.restSec = section.restSec;
+    const restAfter = Math.max(0, Math.round(section.restAfterSec ?? 0));
+    if (restAfter > 0 && index < structure.sections.length - 1) block.restAfterSec = restAfter;
     if (section.title && section.title.trim()) block.title = ru(section.title.trim());
     if (section.description && section.description.trim()) {
       block.description = ru(section.description.trim());
