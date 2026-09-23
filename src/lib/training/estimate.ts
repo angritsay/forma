@@ -150,6 +150,9 @@ export function blockSegments(
     }
   }
 
+  // The pause after the block (prescribe only keeps it where a next block follows).
+  restSec += Math.max(0, num(block.restAfterSec));
+
   const workSec = sum(work.map((s) => s.sec));
   return { work, workSec, restSec, overheadSec, totalSec: workSec + restSec + overheadSec };
 }

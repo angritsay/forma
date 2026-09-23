@@ -112,7 +112,7 @@ describe('targets', () => {
           id: 'a',
           format: 'amrap',
           durationSec: 600,
-          items: [item('burpee', { reps: 10 })],
+          items: [item('burpee', { reps: 10 }), item('air_squat', { reps: 10 })],
         }),
         block({ id: 'e', format: 'emom', rounds: 10, items: [item('air_squat', { reps: 10 })] }),
         block({
@@ -610,5 +610,146 @@ describe('two-sided movements come out even', () => {
       (id) => (id === untagged.id ? untagged : undefined),
     ).blocks[0]!.items[0]!.target;
     expect(t % 2).toBe(0);
+  });
+});
+
+describe('audit of «Форма с нуля» (engine rules)', () => {
+  const clip = { ru: 'clip.mp4' };
+  const lib = new Map(
+    [
+      makeExercise({ id: 'squat', pattern: 'squat', video: clip, scaling: { harder: 'jump' } }),
+      makeExercise({ id: 'jump', pattern: 'jump', level: 3 }),
+      makeExercise({
+        id: 'climber',
+        pattern: 'locomotion',
+        tags: ['on_hands'],
+        level: 2,
+        video: clip,
+        scaling: { easier: 'march' },
+      }),
+      makeExercise({ id: 'march', pattern: 'locomotion' }),
+      makeExercise({
+        id: 'kneepush',
+        pattern: 'push_horizontal',
+        video: clip,
+        scaling: { easier: 'wallpush' },
+      }),
+      makeExercise({ id: 'wallpush', pattern: 'push_horizontal' }),
+      makeExercise({
+        id: 'sit_up',
+        pattern: 'core_flexion',
+        video: clip,
+        scaling: { easier: 'dead_bug' },
+      }),
+      makeExercise({ id: 'dead_bug', pattern: 'core_anti_extension', video: clip }),
+      makeExercise({ id: 'a', video: clip }),
+      makeExercise({ id: 'b', video: clip }),
+      makeExercise({ id: 'c', video: clip }),
+    ].map((e) => [e.id, e]),
+  );
+  const lookup = (id: string) => lib.get(id);
+  const run = (w: ReturnType<typeof workout>, o: Partial<PrescribeOptions> = {}) =>
+    prescribeWorkout(w, base(o), lookup);
+  const one = (b: Parameters<typeof block>[0]) => workout({ id: 'w', blocks: [block(b)] });
+
+  it('scaled AMRAP / for-time windows land on whole minutes', () => {
+    for (const choice of ['easier', 'harder'] as const) {
+      for (const d of [300, 420, 480, 540, 600, 780]) {
+        const p = run(one({ id: 'm', format: 'amrap', durationSec: d, items: [item('a')] }), {
+          choice,
+        });
+        expect(p.blocks[0]!.durationSec! % 60).toBe(0);
+      }
+    }
+  });
+
+  it('EMOM minutes are whole cycles of the movements', () => {
+    const w = one({
+      id: 'e',
+      format: 'emom',
+      rounds: 12,
+      items: [item('a'), item('b'), item('c')],
+    });
+    expect(run(w, { choice: 'easier' }).blocks[0]!.sets).toBe(9);
+    expect(run(w, { choice: 'normal' }).blocks[0]!.sets).toBe(12);
+    expect(run(w, { choice: 'harder' }).blocks[0]!.sets).toBe(15);
+    const short = one({
+      id: 'e',
+      format: 'emom',
+      rounds: 3,
+      items: [item('a'), item('b'), item('c')],
+    });
+    for (const choice of ['easier', 'harder'] as const)
+      expect(run(short, { choice }).blocks[0]!.sets).toBe(3);
+  });
+
+  it('EMOM reps on «полегче» are always below «как обычно»', () => {
+    const w = one({ id: 'e', format: 'emom', rounds: 3, items: [item('a', { reps: 5 })] });
+    const normal = run(w).blocks[0]!.items[0]!.target;
+    const easier = run(w, { choice: 'easier' }).blocks[0]!.items[0]!.target;
+    expect(normal).toBe(5);
+    expect(easier).toBe(4);
+  });
+
+  it('a two-round main circuit keeps two rounds on «полегче»', () => {
+    const w = one({ id: 'c', type: 'metcon', format: 'circuit', sets: 2, items: [item('a')] });
+    expect(run(w, { choice: 'easier' }).blocks[0]!.sets).toBe(2);
+    const core = one({ id: 'c', type: 'core', format: 'circuit', sets: 2, items: [item('a')] });
+    expect(run(core, { choice: 'easier' }).blocks[0]!.sets).toBe(1);
+  });
+
+  it('a filmed movement is not swapped for an unfilmed harder variant; the target moves', () => {
+    const w = one({ id: 's', format: 'sets', sets: 3, items: [item('squat', { reps: 10 })] });
+    const normal = run(w, { level: 3 }).blocks[0]!.items[0]!;
+    const harder = run(w, { level: 3, choice: 'harder' }).blocks[0]!.items[0]!;
+    expect(harder.exerciseId).toBe('squat');
+    expect(harder.target).toBeGreaterThan(normal.target);
+  });
+
+  it('a filmed level-2 movement stays on «полегче» for a beginner instead of an unfilmed one', () => {
+    const w = one({ id: 's', format: 'sets', sets: 3, items: [item('climber', { reps: 20 })] });
+    const easier = run(w, { level: 1, choice: 'easier' }).blocks[0]!.items[0]!;
+    expect(easier.exerciseId).toBe('climber');
+    expect(easier.substituted).toBe(false);
+  });
+
+  it('safety beats video: sore wrists get the unfilmed variant that is off the hands', () => {
+    const w = one({ id: 's', format: 'sets', sets: 3, items: [item('climber', { reps: 20 })] });
+    const p = run(w, { profile: profile({ limitations: ['wrists'] }) });
+    expect(p.blocks[0]!.items[0]!.exerciseId).toBe('march');
+  });
+
+  it('an unfilmed variant that is no safer does not replace the filmed original', () => {
+    const w = one({ id: 's', format: 'sets', sets: 3, items: [item('kneepush', { reps: 10 })] });
+    const it0 = run(w, { profile: profile({ limitations: ['wrists'] }) }).blocks[0]!.items[0]!;
+    expect(it0.exerciseId).toBe('kneepush');
+    expect(it0.note).toBeDefined();
+  });
+
+  it('sit-ups swapped for dead bugs: twice the reps, even, without the sit-up cue', () => {
+    const w = one({
+      id: 's',
+      format: 'sets',
+      sets: 1,
+      items: [item('sit_up', { reps: 7, note: { ru: 'Не тяни шею', en: 'Neck' } })],
+    });
+    const it0 = run(w, { profile: profile({ limitations: ['pregnancy'] }) }).blocks[0]!.items[0]!;
+    expect(it0.exerciseId).toBe('dead_bug');
+    expect(it0.target % 2).toBe(0);
+    expect(it0.target).toBeGreaterThanOrEqual(12);
+    expect(it0.note?.ru ?? '').not.toContain('Не тяни шею');
+  });
+
+  it('block rest is kept between blocks and dropped after the last', () => {
+    const w = workout({
+      id: 'w',
+      blocks: [
+        block({ id: 'x', format: 'sets', sets: 1, items: [item('a')], restAfterSec: 120 }),
+        block({ id: 'y', format: 'sets', sets: 1, items: [item('b')], restAfterSec: 60 }),
+      ],
+    });
+    const p = run(w);
+    expect(p.blocks[0]!.restAfterSec).toBe(120);
+    expect(p.blocks[1]!.restAfterSec).toBeUndefined();
   });
 });

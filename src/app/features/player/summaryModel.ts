@@ -90,7 +90,14 @@ export function testResults(
 }
 
 export type BenchmarkView =
-  | { kind: 'amrap'; rounds: number; extraReps: number; repsPerRound: number }
+  | {
+      kind: 'amrap';
+      rounds: number;
+      extraReps: number;
+      repsPerRound: number;
+      /** One movement, max reps: the score is the total reps, not rounds. */
+      maxReps?: boolean;
+    }
   | { kind: 'fortime'; timeSec: number; completed: boolean; capSec: number };
 
 /** Score of the workout's AMRAP / For-time step (the first one), when it was recorded. */
@@ -106,7 +113,14 @@ export function benchmarkResult(
     if (step.kind === 'amrap') {
       if (r.rounds === undefined) return null;
       const repsPerRound = step.items.reduce((n, it) => n + it.target, 0);
-      return { kind: 'amrap', rounds: r.rounds, extraReps: r.extraReps ?? 0, repsPerRound };
+      const view: BenchmarkView = {
+        kind: 'amrap',
+        rounds: r.rounds,
+        extraReps: r.extraReps ?? 0,
+        repsPerRound,
+      };
+      if (step.maxReps) view.maxReps = true;
+      return view;
     }
     if (r.timeSec === undefined) return null;
     return { kind: 'fortime', timeSec: r.timeSec, completed: r.completed, capSec: step.capSec };
@@ -118,6 +132,8 @@ export function benchmarkResult(
 export function benchmarkRecord(view: BenchmarkView): { value: number; unit: string } | null {
   switch (view.kind) {
     case 'amrap': {
+      if (view.maxReps)
+        return { value: view.rounds * view.repsPerRound + view.extraReps, unit: 'reps' };
       const partial = view.repsPerRound > 0 ? view.extraReps / view.repsPerRound : 0;
       return { value: Math.round((view.rounds + partial) * 100) / 100, unit: 'rounds' };
     }

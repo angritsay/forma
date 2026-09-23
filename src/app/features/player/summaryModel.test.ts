@@ -331,3 +331,49 @@ describe('shareText', () => {
     expect(line).not.toContain('pts');
   });
 });
+
+describe('max-reps AMRAP (one movement)', () => {
+  const w = workout({
+    id: 'w',
+    blocks: [
+      block({
+        id: 'm',
+        type: 'metcon',
+        format: 'amrap',
+        durationSec: 300,
+        items: [item('air_squat', { reps: 100 })],
+      }),
+    ],
+  });
+  const at = (choice: 'easier' | 'normal' | 'harder', scale = 1) =>
+    prescribeWorkout(w, { ...opts, choice, scale }, fixtureLookup);
+
+  it('keeps the window at every choice and moves the goal in steps of 5', () => {
+    const [e, n, h] = (['easier', 'normal', 'harder'] as const).map((c) => at(c, 0.73));
+    for (const p of [e, n, h]) {
+      expect(p!.blocks[0]!.durationSec).toBe(300);
+      expect(p!.blocks[0]!.items[0]!.target % 5).toBe(0);
+    }
+    expect(e!.blocks[0]!.items[0]!.target).toBeLessThan(n!.blocks[0]!.items[0]!.target);
+    expect(h!.blocks[0]!.items[0]!.target).toBeGreaterThan(n!.blocks[0]!.items[0]!.target);
+    expect(at('normal').blocks[0]!.items[0]!.target).toBe(100);
+  });
+
+  it('is played as max reps: completion is reps / goal, the record is reps', () => {
+    const p = at('normal');
+    const s = buildPlayerSteps(p);
+    const amrap = s.find((x) => x.kind === 'amrap')!;
+    expect(amrap.kind === 'amrap' && amrap.maxReps).toBe(true);
+    expect(amrap.kind === 'amrap' && amrap.expectedRounds).toBe(1);
+    const idx = s.indexOf(amrap);
+    const result = (n: number): PlayerResult[] => [
+      { stepIndex: idx, blockId: 'm', completed: true, rounds: 0, extraReps: n },
+    ];
+    expect(computeCompletion(s, result(60))).toBe(0.6);
+    expect(computeCompletion(s, result(130))).toBe(1);
+    expect(computeCompletion(s, result(0))).toBe(0);
+    const view = benchmarkResult(s, result(87))!;
+    expect(benchmarkRecord(view)).toEqual({ value: 87, unit: 'reps' });
+    expect(totalReps(s, result(87))).toBe(87);
+  });
+});

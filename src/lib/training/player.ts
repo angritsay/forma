@@ -51,8 +51,18 @@ function restStep(block: PrescribedBlock, durationSec: number, next?: Prescribed
   return step;
 }
 
+/**
+ * An AMRAP of a single movement counted in reps is a max-reps piece («максимум за 5 минут»): its
+ * target is the total, and the player counts reps rather than rounds.
+ */
+export function isMaxRepsAmrap(block: Pick<PrescribedBlock, 'format' | 'items'>): boolean {
+  return block.format === 'amrap' && block.items.length === 1 && block.items[0]!.unit === 'reps';
+}
+
 /** Expected rounds for a fully completing athlete in an AMRAP (min 1). */
 export function amrapExpectedRounds(block: PrescribedBlock): number {
+  // Max reps: the one item's target is the whole goal — one "round" is all of it.
+  if (isMaxRepsAmrap(block)) return 1;
   const workSec = sum(block.items.map((it) => Math.max(0, num(it.estimatedSec))));
   // No usable work estimate (no items, or numbers lost in storage): expect a single round rather
   // than an expectation built from transitions alone, which would punish the athlete.
@@ -159,13 +169,15 @@ export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
         break;
       }
       case 'amrap': {
-        steps.push({
+        const amrap: Extract<PlayerStep, { kind: 'amrap' }> = {
           kind: 'amrap',
           blockId: block.blockId,
           durationSec: Math.max(0, num(block.durationSec)),
           items,
           expectedRounds: amrapExpectedRounds(block),
-        });
+        };
+        if (isMaxRepsAmrap(block)) amrap.maxReps = true;
+        steps.push(amrap);
         break;
       }
       case 'fortime': {
@@ -179,6 +191,11 @@ export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
         break;
       }
     }
+
+    // The authored pause between this block and the next; previews the next block's first move.
+    const blockRest = num(block.restAfterSec);
+    const nextBlock = p.blocks[blockIndex + 1];
+    if (blockRest > 0 && nextBlock) steps.push(restStep(block, blockRest, nextBlock.items[0]));
   });
 
   steps.push({ kind: 'done' });

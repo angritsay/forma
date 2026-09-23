@@ -6,6 +6,7 @@ import type { BlockFormat, BlockType, Exercise, ExerciseUnit, Load } from '@/con
 import { findExercise } from '@/content/catalogue';
 import { plural, type Locale, type TKey, type TParams } from '@/i18n/index';
 import { ISOMETRIC_ID_PATTERN } from '@/lib/training/constants';
+import { isMaxRepsAmrap } from '@/lib/training/player';
 import { conflictsWithLimitations } from '@/lib/training/prescribe';
 import type {
   Limitation,
@@ -302,6 +303,15 @@ export function roundsText(t: Translate, locale: Locale, n: number): string {
   });
 }
 
+/** «Ориентир: около 1 круга / 3 кругов» under the AMRAP clock. */
+export function amrapExpectedText(t: Translate, locale: Locale, n: number): string {
+  return plural(locale, n, {
+    one: t('training.amrapExpectedOne', { n }),
+    few: t('training.amrapExpectedFew', { n }),
+    many: t('training.amrapExpectedMany', { n }),
+  });
+}
+
 /** One-line structure of a block for intros and summaries. */
 export function blockMeta(t: Translate, locale: Locale, block: PrescribedBlock): string {
   const min = Math.round((block.durationSec ?? 0) / 60);
@@ -317,9 +327,11 @@ export function blockMeta(t: Translate, locale: Locale, block: PrescribedBlock):
     case 'interval':
       return `${roundsText(t, locale, block.sets)} · ${block.workSec ?? 30}/${block.restSec ?? 30} ${t('training.seconds')}`;
     case 'amrap':
-      return t('training.amrapHint', { min });
+      return isMaxRepsAmrap(block)
+        ? `${t('training.maxRepsHint', { min })} · ${t('training.maxRepsGoal', { n: block.items[0]!.target })}`
+        : t('training.amrapHint', { min });
     case 'fortime':
-      return t('training.fortimeHint', { rounds: block.sets, min });
+      return t('training.fortimeHint', { rounds: roundsText(t, locale, block.sets), min });
   }
 }
 

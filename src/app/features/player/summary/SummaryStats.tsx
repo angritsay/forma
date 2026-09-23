@@ -77,7 +77,14 @@ export function BenchmarkCard({ result }: { result: BenchmarkView | null }) {
   if (!result) return null;
   let value: string;
   let note: string | undefined;
-  if (result.kind === 'amrap') {
+  if (result.kind === 'amrap' && result.maxReps) {
+    const n = result.rounds * result.repsPerRound + result.extraReps;
+    value = plural(locale, n, {
+      one: t('app.nodeRepsOne', { n }),
+      few: t('app.nodeRepsFew', { n }),
+      many: t('app.nodeRepsMany', { n }),
+    });
+  } else if (result.kind === 'amrap') {
     value = plural(locale, result.rounds, {
       one: t('app.summaryRoundsOne', { n: result.rounds }),
       few: t('app.summaryRoundsFew', { n: result.rounds }),
