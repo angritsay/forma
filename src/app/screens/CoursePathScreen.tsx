@@ -200,8 +200,9 @@ export default function CoursePathScreen() {
 
   return (
     /*
-     * `--course-tile` is set once, around the whole screen: the ring, the week bands, the
-     * finished circles and today's «Сегодня» read the same variable. One screen, one colour — and this is the screen it belongs to.
+     * `--course-tile` is set once, around the whole screen: the week tags and the finished circles
+     * read it — the course's identity lives on the path's own figures. The ring is progress and
+     * takes the light blue, today is the neon (the semantic colour map, global.css header).
      */
     <div style={courseTileVars(course.tile)}>
       <Screen>
@@ -213,7 +214,7 @@ export default function CoursePathScreen() {
          * kicker in the block's top-left corner and the leaderboard sits opposite.
          *
          * It used to be painted in the programme colour. Section colours are tags now and never
-         * fields; the programme's colour lives on the ring below and on the path's figures.
+         * fields; the programme's colour lives on the path's figures, the week tags and the done stops.
          */}
         <header className="-mx-6 -mt-[var(--safe-top)] rounded-b-card bg-field px-6 pt-[calc(var(--safe-top)+14px)] pb-7 text-on-field md:-mx-10 md:px-10">
           <div className="flex items-baseline justify-between gap-3">
@@ -243,9 +244,9 @@ export default function CoursePathScreen() {
          * «ДЕНЬ 4 из 28», 800 + 200. The club's screen used to open on the same figure; the owner
          * took it off that tab («шапку с кольцом убери») because there the number reported a day
          * nobody acts on. Here it is the programme's own progress, which is the thing being worked
-         * through, so it stays. It
-         * stands on the dark ground rather than on the coloured head so the ring can be drawn in
-         * the programme colour, which is where §10 puts the colour: on the figure, not the field.
+         * through, so it stays. It stands on the dark ground rather than on the blue head, and it is
+         * drawn in the light blue: progress is the light blue's job in the semantic colour map
+         * (design/CHANGELOG.md §15), and the programme's orange on it would read as «effort».
          * When the course is finished the line says so, in the same two weights.
          */}
         <div className="flex items-center gap-5 pt-6">

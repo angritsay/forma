@@ -16,13 +16,42 @@
  *     White type on it (7.71), the key word in `--accent` light blue (5.7), a hand-drawn swoosh.
  *     Electric blue is never type on charcoal (2.26).
  *   - **Neon** `--action` #f4ff3f — action: the one main button of a screen and the tags «новое»,
- *     «задание дня», «лидер», «сегодня». Ink on it.
+ *     «задание дня», «лидер», «сегодня», «рекомендуем». Ink on it.
  *   - **The crossroads gradient** — the club's own colour. Owner: «давай градиент для клуба
  *     сделаем, всё остальное как в стиле А». The streak ring, the day dots, the glow behind the
  *     club screen and its key words. Nowhere else. As type only its warm half (light blue → beige
  *     → orange), all ≥ 5.5.
  *   - **Section tags** — orange for beginners, bleu ciel for the coach. Tags, never fields.
- *   - **Light blue** `--accent` #afe9fd — the brand: logo dot, links, focus, accent words.
+ *   - **Light blue** `--accent` #afe9fd — the brand: logo dot, links, focus, accent words,
+ *     selection and progress.
+ *
+ * ## The semantic colour map (2026-09-23, design/CHANGELOG.md §15)
+ *
+ * Owner: «Замени цвета, чтобы они отображали смыслы». One meaning per colour, and the meaning wins
+ * over «this screen belongs to a course». `src/lib/ui/semantic.ts` holds it as data and
+ * `src/lib/ui/contrast-usage.test.ts` enforces it.
+ *
+ *   - **Neon** #f4ff3f — «сделай это / сейчас»: the one main action, and the markers «Рекомендуем»,
+ *     «Сегодня», «Новое». Ink #111111.
+ *   - **Light blue** #afe9fd — brand accent and selection: key words, links, the selected chip or
+ *     answer, progress fills and rings, focus, info, earned stars.
+ *   - **Electric blue** #2038e2 — a surface only: the hero field, the tab bar's active pill. Never
+ *     type on charcoal.
+ *   - **Orange** #ff5a00 — intensity and effort: «Посложнее», heat, max effort, the last seconds of
+ *     a timer. Also the beginners' course tag and tile — identity on its own tile or tag only.
+ *   - **Difficulty scale** — «Полегче» light blue, «Как обычно» white, «Посложнее» orange. The
+ *     recommended choice wears a neon «Рекомендуем» pill, not a filled circle.
+ *   - **Bleu ciel** #007bff — the coach. **The crossroads gradient** — the club only.
+ *   - **success / warning / danger** — unchanged; danger is errors and destructive actions.
+ *
+ * **The course colour is identity**, not a state: `--course-accent`, `text-course`, `bg-course`
+ * belong on a course's tile, its tag or pill, and the stops of its path. Not on a heading over a
+ * photograph (white, bold, the light-blue key word via `KeyTitle`, on a scrim holding ≥ 4.5:1),
+ * not on «recommended», not on generic progress.
+ *
+ * **Emoji and icons.** An emoji is never laid on a saturated fill (orange, neon, the blues, the
+ * gradient) — it sits on a neutral surface (#242424 / #2e2e2e) or white. A glyph used as an icon
+ * clears 3:1 against what is directly under it (WCAG 1.4.11), text 4.5:1.
  *
  * Ink on any coloured fill is decided by measured contrast, not by lightness — `tileInk()` in
  * src/lib/ui/tile.ts. The old luminance cutoff would have put white on Portland orange (3.13).
