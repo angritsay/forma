@@ -23,7 +23,8 @@ Everything below follows from that.
 | Record    | Write down how it felt, 2–3 minutes                       | after    | —                    |
 | Fallback  | Did not feel like training? Walk, up to 10 000 steps      | any day  | —                    |
 
-A session in the app is therefore 14–23 minutes at "as usual"; the work inside it is his 5–15.
+A session in the app is therefore 13–20 minutes at "as usual" (about 17 on average); the work inside
+it is 3–10 minutes.
 
 ### Warm-up: joint mobility, top to bottom
 
@@ -92,13 +93,22 @@ Where that lives in content:
 - Every main-work item carries 3 as its `note`. `CUES` in `start.ts` holds his cue per movement and
   `withCues()` applies it to any item that has no note of its own, so no movement is ever shown as
   a bare number.
-- 2 and 6 live in the shared warm-up and cool-down blocks.
+- 2 and 6 live in the shared warm-up and cool-down blocks: the warm-up description ends with «резкая
+  боль — не норма, остановись», and the cool-down description carries the record and the walking
+  fallback («не получилось потренироваться — прогулка»).
+- Numbers the difficulty choice moves (reps, AMRAP windows, caps, EMOM minutes, circuit rounds) stay
+  out of titles, node subtitles and descriptions — the player shows the prescribed numbers. Texts
+  quote numbers only for `scalable: false` blocks (the ladders of workouts 12 and 13 and the
+  reference points 19 and 20) and for workout 4's 5-minute window, which a one-item AMRAP never
+  moves.
 
 ## Loading rules
 
 - **No max-effort test on day one.** «Никаких максимумов»: no 2-minute push-up test, no max
-  squats, no 5-minute plank. Day one is workout 1. The onboarding self-tests set the starting
-  load; the only test in the course is the retest at the end (still open whether he wants it).
+  squats, no 5-minute plank. Day one is workout 1. The onboarding sets the starting load and the
+  assessment the app offers after the second workout fine-tunes it; there is no test inside the
+  course. His own reference points are workouts 19 (the inchworm ladder) and 20 (the finale he
+  compares with workout 1).
 - **First-week reps:** knee push-ups 5–10 (start at 5; from a high surface if 5 is too hard), dead
   bug 6–10 per side, sit-ups 8–15, squats 8–15 (start at 8). A beginner "does not know how strong
   they are", so the range starts low.
@@ -109,28 +119,43 @@ Where that lives in content:
   confidently and without discomfort. Diastasis: sit-ups, Russian twists and toe reaches are out —
   dead bugs instead, twice the reps. `sit_up.scaling.easier = dead_bug` so the pregnancy
   limitation swaps automatically.
-- **Jumps:** jumping jacks appear from week 3 and always carry the "step out to the sides"
-  option; a rope is never required (jumping jacks replace it 1:1 by time). Burpees appear in
-  workout 13 (week 5), stepped if the jump is not there.
-- **One main piece per session.** His sessions are one format: rounds with a minute of rest,
-  rounds for time, AMRAP, EMOM, "every N minutes", a ladder, a chipper. Two blocks only where he
-  wrote two (workouts 3, 15, 19).
-- **Rest is generous early.** A full minute after every movement in weeks 1–2; "minimal rest"
-  in his text means 15–30 s in content, never zero for a beginner.
+- **No jumps.** His 20-workout programme has no jumping jacks, rope or burpees; do not add them.
+- **One main piece per session.** His sessions are one format: work by the minute, rounds for
+  time, AMRAP, EMOM, "every N minutes", a ladder, a chipper, buy-in intervals. Two blocks only where
+  he wrote two (workout 14's round of 20 and round of 40); workout 18's two buy-in intervals are
+  each a one-round for-time buy-in plus a one-minute AMRAP of the "max" movement, so the AMRAP never
+  loops back to the buy-in.
+- **"Start every N minutes" is a circuit with the rest authored.** The app has no "every N minutes"
+  clock, so the rest is written as what is left of the window at the authored numbers: workout 3
+  (three pairs, `restAfterSec` after each pair) and workout 10 (`restBetweenRoundsSec`). A for-time
+  block never plays per-item rests — do not use one where a rest has to play.
+- **Rest is generous early.** Workouts 1–2 rest until the minute is up; "minimal rest" in his text
+  means 15–30 s in content, never zero for a beginner.
+- **Ladders and benchmarks are `scalable: false`.** Scaling each rung would bend a ladder out of
+  shape (12, 13), and a reference point is only comparable if it is the same every time (19, 20).
+- **Workout 4 is a max-reps block.** A one-item AMRAP: the item's reps are the total target
+  (100 at scale 1, scaled to the person) and the 5-minute window never moves.
 - **No deload week** — his programme has none. Add one only if he asks, on the week he names.
 - **Only movements he has on video** in the main work (`media/manifest.json`), so nothing needs
-  to be re-shot. The single exception is the glute bridge (his workout 4).
+  to be re-shot. The glute bridge (workout 4), once the exception, he filmed for the app.
 
 ## Cadence and the path
 
-- 8 weeks, 3 sessions a week on days 1, 3 and 5; rest nodes between them with a 7 000-step goal
-  and a note that a walk is the fallback for a day without training.
-- 24 workouts in his posting order (his labels had two "13"s and two "18"s and no 19/20; the app
-  renumbers 1–24 and keeps his label on the review page).
-- Workout 5 is repeated as workout 21 (same workout id, `benchmark` node both times) so the app
-  can show the time difference — his «сравните ощущения с 5-й тренировкой».
-- The burpee ladder (workout 20) is his reference point «через месяц-два»; keep it an EMOM so
-  the app shows the target per minute.
+- His spec of 10 September: **20 workouts in a row, four blocks of five**, no rest days on the path,
+  no deload, no test at the start or the end. `week` on a node is the block (1–4) and `day` the
+  position inside it (1–5), not a day of the week. He suggests five a week; the athlete keeps their
+  own pace and a missed day breaks nothing.
+- Workout and node ids are stable (`w_s01_emom` … `w_s20_finisher`, `w1_d1_s01` … `w4_d5_s20`);
+  change the content of a workout, never its id, or progress and the seed break.
+- Workouts 19 and 20 are `benchmark` nodes: the inchworm ladder is his «через месяц-два повторите»
+  reference (an EMOM, one rung per minute, so the app shows the target per minute), and the finale
+  mirrors workout 1 so the athlete compares how it feels.
+
+History: the first app version of his programme was the 24 workouts from the channel in posting
+order, over 8 weeks, three sessions a week on days 1, 3 and 5 with «Отдых и прогулка» nodes and a
+7 000-step goal between them, jumping jacks from week 3, burpees in week 5 and a retest at the end.
+He replaced it with the 20-workout spec above; the channel messages stay in `docs/COACH_SOURCE.md`
+and the review page pairs each current workout with the nearest one.
 
 ## Session length guardrails
 
@@ -151,10 +176,22 @@ tests at every difficulty. Keep sessions well under the cap; his target is 5–1
 
 ## Open questions for the coach
 
-Tracked on the review page and in the PR; update here when he answers.
+Tracked on the review page (`scripts/content/review-course.mjs`, `ANNOTATIONS.start`) and in the
+PR; update both when he answers.
 
-- Keep the end-of-course retest, or drop it too?
-- Glute bridge: film it, or allow the existing clip by someone else?
+- Workouts 1–2: how many 4-minute EMOM cycles? The app plays one (his timer picture is not in the
+  export).
+- Workout 3: the core pair's volume (sit-ups authored at 8 against his 10–20, then 30 dead bugs);
+  the 2-minute rest after each pair standing in for "start every 2 minutes"; «Посложнее» adding a
+  second pass of all three pairs.
+- Workout 4: 100 bridges in 5 minutes (his 10 September spec) against the channel's 200 with a
+  10 / 8-minute cap — confirm.
+- Workout 7: sit-ups swap for dead bugs one-for-one inside the minute (his «12 ситапов / 12 жуков»).
+- Workout 9: is an 8-minute cap enough for two rounds (about 8 minutes of work at his numbers)?
+- Workout 10: "every 2 minutes" as the round plus 70 s of rest.
+- Workouts 12–13: the ladders are the same numbers for everyone, beginners included.
+- Push-ups three workouts in a row (13, 14 — 60 knee push-ups — and 15); inchworms four in a row
+  (16–19).
+- Workouts 17–18: how the "max in the time left" windows are played (buy-in + a fixed count, then
+  3 minutes of rest; buy-in with a one-minute cap + a one-minute AMRAP).
 - His three warm-up videos — send them; the warm-up has no picture until they arrive.
-- Toe reaches shown as sit-ups; 100 sit-ups (his workout 7) in week 3; workout 22 as two rounds;
-  "4 minutes of squats" as its own short day; rope as optional equipment.

@@ -1,29 +1,29 @@
 /**
- * Course "start" — Старт: кроссфит дома без оборудования / Start: home CrossFit basics.
+ * Course "start" — Форма с нуля: кроссфит дома без оборудования / Forma. Start: home CrossFit basics.
  *
- * Level 1, 4 weeks, 5 sessions per week: the coach's own beginner programme, transcribed from
- * the 20 workouts he posted to his `‼️НОВИЧКИ‼️` channel (docs/COACH_SOURCE.md — each workout
- * below names the message it comes from). The app adds what the channel did not have: a
- * retest at the end so the numbers can be compared with the onboarding self-tests and warm-up /
- * cool-down blocks in the player. (It used to add rest days with a step goal between his sessions
- * too; the path is his twenty workouts and nothing else now — see `NODES`.) There is no
- * max-effort test on day one: the coach's rule is that the first session must not destroy
- * anyone, and the onboarding already sets the starting load.
+ * Level 1, twenty workouts in four blocks of five: the coach's own beginner programme as he wrote
+ * it out for the app (his 20-workout spec of 10 September), which in turn grew out of the workouts
+ * he posted to his `‼️НОВИЧКИ‼️` channel (docs/COACH_SOURCE.md; the review page pairs every
+ * workout with the nearest channel message). The app adds only the warm-up / cool-down blocks in
+ * the player. There is no retest and no max-effort test on day one: the coach's rule is that the
+ * first session must not destroy anyone, and the onboarding already sets the starting load. His
+ * own reference points are inside the programme — the inchworm ladder (19) and the finale that
+ * mirrors workout 1 (20).
  *
  * Authoring rules for this course:
  * - Only movements the coach demonstrates on video (media/manifest.json) are used in the main
- *   work, so the whole programme plays with his own clips and nothing has to be re-shot. The
- *   one exception is the glute bridge (workout 4), which he programmed but never filmed.
- * - His alternatives are kept as notes on the item: sit-ups ↔ dead bug (diastasis), jumping
- *   jacks ↔ jump rope, toe reaches → sit-ups (the library has no toe reach; the sit-up clip is
- *   the nearest movement and the numbers are the sit-up numbers).
+ *   work, so the whole programme plays with his own clips — the glute bridge included, which he
+ *   filmed for the app.
+ * - His alternatives are kept as notes on the item: sit-ups ↔ dead bug (diastasis).
  * - Reps are authored at his "confident beginner" figure (scale 1.0). The engine multiplies
  *   them by the athlete's scale (a real beginner starts at 0.6–0.8), which lands on his
  *   "start from the minimum" advice without a separate beginner column.
- * - Where he posted a workout twice (the channel ran the programme for two intakes), the later,
- *   simpler version is used; the review page (npm run content:review) lists both.
- * - His channel numbered two workouts "13"; the duplicate (a 2-minute max-squat test) is dropped so
- *   the course is exactly his 20 sessions over 20 days, numbered 1–20.
+ * - Numbers that the difficulty choice moves (reps, AMRAP windows, caps, EMOM minutes, rounds)
+ *   stay out of titles; texts quote them only for `scalable: false` blocks (the ladders and the
+ *   two benchmarks), whose numbers are the same at every difficulty, and for workout 4's
+ *   5 minutes (a one-item AMRAP is a max-reps block whose window never moves).
+ * - His channel numbered two workouts "13"; the duplicate (a 2-minute max-squat test) is not
+ *   part of his spec, so the course is exactly his 20 sessions, numbered 1–20.
  */
 import type { CourseInput, L10n, WorkoutInput } from '@/content/schema';
 
@@ -50,8 +50,8 @@ function warmup(): BlockInput {
     scalable: false,
     title: l('Разминка: суставная гимнастика', 'Warm-up: joint mobility'),
     description: l(
-      'Обязательно перед каждой тренировкой. Идём сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы. Спокойный темп, амплитуда растёт постепенно, без рывков. Разминка не входит в тренировку — это подготовка.',
-      'Mandatory before every session. Top to bottom: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles. Easy pace, the range grows gradually, no jerks. The warm-up is not part of the workout — it is preparation.',
+      'Обязательно перед каждой тренировкой. Идём сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы. Спокойный темп, амплитуда растёт постепенно, без рывков. Разминка не входит в тренировку — это подготовка. Резкая боль — не норма: остановись.',
+      'Mandatory before every session. Top to bottom: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles. Easy pace, the range grows gradually, no jerks. The warm-up is not part of the workout — it is preparation. Sharp pain is not normal: stop.',
     ),
     items: [
       {
@@ -96,8 +96,8 @@ function cooldown(): BlockInput {
     scalable: false,
     title: l('Заминка и растяжка', 'Cool-down and stretch'),
     description: l(
-      'Не пропускаем. Дыши медленно, тяни до приятного натяжения, не через боль. Потом потрать 2–3 минуты и отметь в приложении, как было: усилие, что далось легко, что оказалось тяжёлым, было ли что-то, что вызвало дискомфорт. Через несколько недель ты увидишь по этим записям, насколько легче стало тренироваться.',
-      'Do not skip it. Breathe slowly, stretch to a pleasant pull, never into pain. Then take 2–3 minutes and record in the app how it went: the effort, what felt easy, what turned out hard, anything that caused discomfort. In a few weeks these notes will show you how much easier training has become.',
+      'Не пропускаем. Дыши медленно, тяни до приятного натяжения, не через боль. Потом потрать 2–3 минуты и отметь в приложении, как было: усилие, что далось легко, что оказалось тяжёлым, было ли что-то, что вызвало дискомфорт. Через несколько недель ты увидишь по этим записям, насколько легче стало тренироваться. А если в какой-то день потренироваться не получилось — не страшно, выйди на прогулку.',
+      'Do not skip it. Breathe slowly, stretch to a pleasant pull, never into pain. Then take 2–3 minutes and record in the app how it went: the effort, what felt easy, what turned out hard, anything that caused discomfort. In a few weeks these notes will show you how much easier training has become. And on a day you could not train at all — no drama, go for a walk.',
     ),
     items: [
       { exerciseId: 'cat_cow', reps: 6 },
@@ -116,10 +116,6 @@ function cooldown(): BlockInput {
 const NOTE_DEAD_BUG = l(
   'Не тяни себя за шею — поднимайся животом. Если ситапы очень тяжело или есть диастаз — «мёртвый жук», в два раза больше повторений',
   'Do not pull on your neck — lift with the abdominals. If sit-ups are very hard or you have diastasis, do dead bugs instead — twice the reps',
-);
-const NOTE_ROPE = l(
-  'Или столько же прыжков на скакалке. Мягко на носки; не хочешь прыгать — шагай в стороны',
-  'Or the same number of rope skips. Land softly on the toes; do not want to jump? Step out to the sides',
 );
 const NOTE_LUNGE_TOTAL = l(
   'Считаем в сумме на две ноги. Шаг назад, колено мягко к полу, корпус прямой',
@@ -165,18 +161,13 @@ const CUES: Record<string, L10n> = {
     'Плечи над кистями, таз не задираем. Считаем по коленям — каждое колено это повтор',
     'Shoulders over the wrists, hips not piked. Count per knee — every knee drive is a rep',
   ),
-  jumping_jack: NOTE_ROPE,
-  burpee: l(
-    'Шагом назад и вперёд, если прыжок пока не даётся. Темп — такой, который держится до конца',
-    'Step back and forward if the jump is not there yet. A pace you can hold to the end',
-  ),
   russian_twist: l(
     'Спина прямая, поворот от корпуса, а не руками. При диастазе — «мёртвый жук», вдвое больше',
     'Back straight, twist from the trunk, not the arms. With diastasis, dead bugs — twice the reps',
   ),
   glute_bridge: l(
-    'Вверху сожми ягодицы на секунду, поясницу не прогибай',
-    'Squeeze the glutes for a second at the top, do not arch the lower back',
+    'Вверху сожми ягодицы, поясницу не прогибай',
+    'Squeeze the glutes at the top, do not arch the lower back',
   ),
   push_up: l(
     'Корпус ровно, локти назад под 45°, грудь к полу. Тяжело — с колен или от высокой опоры',
@@ -203,6 +194,24 @@ function withCues(workout: WorkoutInput): WorkoutInput {
 /* ---------------------------------------------------------------------------------------- */
 /* Workouts                                                                                  */
 /* ---------------------------------------------------------------------------------------- */
+
+/**
+ * Workout 3's rest after a pair: «старт раз в 2 минуты», one round, then «отдых 1 минута». The app
+ * has no "start every N minutes" clock, so the rest is authored as what is left of the two minutes
+ * after a pair at the authored numbers (about a minute of work) plus his extra minute.
+ */
+const S03_PAIR_REST = 120;
+/**
+ * Workout 10's rest: the two-minute window minus a round — about 55 s at the authored numbers,
+ * nearer 40 s for a beginner at scale 0.7 — so 70 s sits between the two.
+ */
+const S10_ROUND_REST = 70;
+
+/** Workout 7 plays the sit-up every fourth minute: the dead-bug swap keeps the count, not ×2. */
+const NOTE_S07_SIT_UP = l(
+  'Не тяни себя за шею — поднимайся животом. Ситапы тяжело или есть диастаз — «мёртвый жук», столько же повторений: тренер даёт 12–14 за минуту',
+  'Do not pull on your neck — lift with the abdominals. Sit-ups hard or diastasis? Dead bugs, the same count: the coach gives 12–14 in the minute',
+);
 
 const WORKOUTS: WorkoutInput[] = [
   /* --- 1 — по таймеру, каждую минуту новое движение ------------------------------------- */
@@ -287,24 +296,24 @@ const WORKOUTS: WorkoutInput[] = [
             exerciseId: 'chair_dip',
             reps: 12,
             note: l(
-              'Тренер: 8–16. Стул к стене, локти назад, плечи вниз',
-              'The coach: 8–16. Chair to the wall, elbows back, shoulders down',
+              'Тренер: 10–20. Стул к стене, локти назад, плечи вниз',
+              'The coach: 10–20. Chair to the wall, elbows back, shoulders down',
             ),
           },
           {
             exerciseId: 'reverse_lunge',
             reps: 12,
             note: l(
-              'Тренер: 8–16 в сумме на две ноги. Колено мягко к полу',
-              'The coach: 8–16 total for both legs. Knee softly to the floor',
+              'Тренер: 10–18 в сумме на две ноги. Колено мягко к полу',
+              'The coach: 10–18 total for both legs. Knee softly to the floor',
             ),
           },
           {
             exerciseId: 'dead_bug',
             reps: 12,
             note: l(
-              'Тренер: 8–16, суммарно. Медленно, поясница прижата',
-              'The coach: 8–16 total. Slow, lower back pressed down',
+              'Тренер: 10–16, суммарно. Медленно, поясница прижата',
+              'The coach: 10–16 total. Slow, lower back pressed down',
             ),
           },
         ],
@@ -319,8 +328,8 @@ const WORKOUTS: WorkoutInput[] = [
     name: l('Три пары: верх, ноги, пресс', 'Three pairs: upper, legs, core'),
     focus: l('Прорабатываем большие группы мышц', 'Working the big muscle groups'),
     description: l(
-      'Тренировка 3. Три пары упражнений, старт каждой пары раз в 2 минуты: сделал круг — до конца двух минут отдыхаешь, потом минута отдыха и следующая пара. Пара 1 — обратные отжимания и отжимания с колен, пара 2 — приседания и выпады назад, пара 3 — ситапы и «мёртвый жук». По одному кругу на каждую пару.',
-      'Workout 3. Three pairs of exercises, each pair starting every 2 minutes: do the round, rest until the two minutes are up, then a rest minute and the next pair. Pair 1 dips and knee push-ups, pair 2 squats and reverse lunges, pair 3 sit-ups and dead bugs. One round per pair.',
+      'Тренировка 3. Три пары упражнений, старт каждой пары раз в 2 минуты: сделал пару — до конца двух минут отдыхаешь, потом ещё минута отдыха и следующая пара. Пара 1 — обратные отжимания и отжимания с колен, пара 2 — приседания и выпады назад, пара 3 — ситапы и «мёртвый жук». Отдых после пары приложение отсчитывает само.',
+      'Workout 3. Three pairs of exercises, each pair starting every 2 minutes: do the pair, rest until the two minutes are up, then one more minute of rest and the next pair. Pair 1 dips and knee push-ups, pair 2 squats and reverse lunges, pair 3 sit-ups and dead bugs. The app counts the rest after each pair for you.',
     ),
     basePoints: 100,
     tags: ['circuit', 'beginner', 'full_body'],
@@ -329,20 +338,19 @@ const WORKOUTS: WorkoutInput[] = [
       {
         id: 's03_main',
         type: 'metcon',
-        format: 'fortime',
+        format: 'circuit',
         sets: 1,
-        durationSec: 540,
         title: l('Три пары', 'Three pairs'),
         description: l(
-          'По одному кругу на каждую пару, между парами — минута отдыха. Не торопись: техника важнее скорости.',
-          'One round per pair, a minute of rest between pairs. Do not rush: technique beats speed.',
+          'Пару делаешь без пауз, потом отдых — остаток двухминутки и ещё минута, таймер ведёт его сам. Не торопись: техника важнее скорости.',
+          'Do each pair without a pause, then rest — what is left of the 2 minutes plus one more minute; the timer runs it. Do not rush: technique beats speed.',
         ),
         items: [
           { exerciseId: 'chair_dip', reps: 15, note: l('Тренер: 10–20', 'The coach: 10–20') },
           {
             exerciseId: 'knee_push_up',
             reps: 13,
-            restAfterSec: 60,
+            restAfterSec: S03_PAIR_REST,
             note: l('Тренер: 10–15', 'The coach: 10–15'),
           },
           { exerciseId: 'air_squat', reps: 15, note: l('Тренер: 10–20', 'The coach: 10–20') },
@@ -353,15 +361,15 @@ const WORKOUTS: WorkoutInput[] = [
              */
             exerciseId: 'reverse_lunge',
             reps: 16,
-            restAfterSec: 60,
+            restAfterSec: S03_PAIR_REST,
             note: l('Тренер: 10–20 в сумме на две ноги', 'The coach: 10–20 total for both legs'),
           },
           {
             exerciseId: 'sit_up',
             reps: 8,
             note: l(
-              'Тренер: 5–10. При диастазе — «жук»',
-              'The coach: 5–10. With diastasis, dead bugs',
+              'Тренер: 10–20. При диастазе — «жук»',
+              'The coach: 10–20. With diastasis, dead bugs',
             ),
           },
           {
@@ -379,10 +387,10 @@ const WORKOUTS: WorkoutInput[] = [
   {
     id: 'w_s04_bridges',
     name: l('Ягодичный мост, 5 минут', 'Glute bridge, 5 minutes'),
-    focus: l('Максимум мостов, цель 100', 'As many bridges as possible, target 100'),
+    focus: l('Одно движение, максимум повторений', 'One movement, as many reps as possible'),
     description: l(
-      'Тренировка 4. Одно движение — ягодичный мост. Набери максимум повторений за 5 минут, цель — 100. Разбивай на подходы как удобно и в верхней точке каждый раз на секунду сжимай ягодицы.',
-      'Workout 4. One movement — the glute bridge. As many reps as possible in 5 minutes, target 100. Break it into sets as you like and squeeze the glutes for a second at the top of every rep.',
+      'Тренировка 4. Одно движение — ягодичный мост. Набери максимум повторений за 5 минут; ориентир приложение показывает под тебя. Разбивай на подходы как удобно и сжимай ягодицы вверху.',
+      'Workout 4. One movement — the glute bridge. As many reps as possible in 5 minutes; the app shows a target fitted to you. Break it into sets as you like and squeeze the glutes at the top.',
     ),
     basePoints: 90,
     tags: ['amrap', 'glutes', 'hinge', 'beginner'],
@@ -393,12 +401,16 @@ const WORKOUTS: WorkoutInput[] = [
         type: 'metcon',
         format: 'amrap',
         durationSec: 300,
-        title: l('5 минут, цель 100', '5 minutes, target 100'),
+        title: l('Максимум мостов за 5 минут', 'Max bridges in 5 minutes'),
         description: l(
-          'Максимум мостов за 5 минут. Разбивай на подходы по 20–25, отдыхай сколько нужно; цель — сто повторений.',
-          'As many bridges as possible in 5 minutes. Break it into sets of 20–25, rest as needed; the target is one hundred.',
+          'Сколько успеешь за 5 минут. Ориентир — сто. Разбивай на подходы по 20–25 и отдыхай сколько нужно.',
+          'As many as you can in 5 minutes. The target is one hundred. Break it into sets of 20–25 and rest as needed.',
         ),
-        items: [{ exerciseId: 'glute_bridge', reps: 25 }],
+        /*
+         * One item in an AMRAP is a "max reps" block: the reps are the TOTAL target (scaled with
+         * difficulty), and the 5-minute window is never scaled.
+         */
+        items: [{ exerciseId: 'glute_bridge', reps: 100 }],
       },
       cooldown(),
     ],
@@ -410,8 +422,8 @@ const WORKOUTS: WorkoutInput[] = [
     name: l('Три круга: пресс, ноги, верх', 'Three rounds: core, legs, upper'),
     focus: l('Первый комплекс на время', 'Your first workout for time'),
     description: l(
-      'Тренировка 5. Три круга: ситапы, приседания и отжимания с колен. Во втором круге отжиманий чуть больше. Крышка 10 минут, отдыхай как комфортно. Запиши время и ощущения — в конце курса сравнишь с этой тренировкой.',
-      'Workout 5. Three rounds: sit-ups, squats and knee push-ups. A few more push-ups in the second round. 10-minute cap, rest as you like. Note your time and how it felt — you will compare at the end of the course.',
+      'Тренировка 5. Три круга: ситапы, приседания и отжимания с колен. Во втором круге отжиманий чуть больше. Работа на время с крышкой, отдыхай как комфортно. Запиши время и ощущения.',
+      'Workout 5. Three rounds: sit-ups, squats and knee push-ups. A few more push-ups in the second round. For time with a cap, rest as you like. Note your time and how it felt.',
     ),
     basePoints: 100,
     tags: ['fortime', 'beginner', 'full_body'],
@@ -425,8 +437,8 @@ const WORKOUTS: WorkoutInput[] = [
         durationSec: 600,
         title: l('3 круга на время', '3 rounds for time'),
         description: l(
-          'Крышка 10 минут. Ситапы можно заменить «жуком» (вдвое больше). Отдыхай между кругами как комфортно.',
-          '10-minute cap. Sit-ups can be swapped for dead bugs (twice the reps). Rest between rounds as you like.',
+          'Крышка — на таймере. Ситапы можно заменить «жуком» (вдвое больше). Отдыхай между кругами как комфортно.',
+          'The cap is on the timer. Sit-ups can be swapped for dead bugs (twice the reps). Rest between rounds as you like.',
         ),
         items: [
           { exerciseId: 'sit_up', reps: 10, note: NOTE_DEAD_BUG },
@@ -447,11 +459,11 @@ const WORKOUTS: WorkoutInput[] = [
   /* --- 6 — AMRAP 8 --------------------------------------------------------------------- */
   {
     id: 'w_s06_amrap8',
-    name: l('AMRAP 8: пресс, присед, отжимания', 'AMRAP 8: core, squat, push-ups'),
-    focus: l('Максимум кругов за 8 минут', 'As many rounds as possible in 8 minutes'),
+    name: l('AMRAP: пресс, присед, отжимания', 'AMRAP: core, squat, push-ups'),
+    focus: l('Максимум кругов за отведённое время', 'As many rounds as possible in the time'),
     description: l(
-      'Тренировка 6. Тот же круг, что в пятой, но теперь по кругу в течение 8 минут в спокойном темпе: столько кругов, сколько получится. Не спринтуй первые две минуты — выбери темп, который сможешь держать всё время.',
-      'Workout 6. The same round as workout 5, now on a loop for 8 minutes at an easy pace: as many rounds as you can. Do not sprint the first two minutes — pick a pace you can hold.',
+      'Тренировка 6. Тот же круг, что в пятой, но теперь по кругу, пока идёт таймер, в спокойном темпе: столько кругов, сколько получится. Не спринтуй первые две минуты — выбери темп, который сможешь держать всё время.',
+      'Workout 6. The same round as workout 5, now on a loop while the timer runs, at an easy pace: as many rounds as you can. Do not sprint the first two minutes — pick a pace you can hold.',
     ),
     basePoints: 100,
     tags: ['amrap', 'beginner', 'full_body'],
@@ -462,10 +474,10 @@ const WORKOUTS: WorkoutInput[] = [
         type: 'metcon',
         format: 'amrap',
         durationSec: 480,
-        title: l('AMRAP 8 мин', 'AMRAP 8 min'),
+        title: l('Максимум кругов', 'As many rounds as possible'),
         description: l(
-          'Максимум кругов за 8 минут в ровном темпе. Ситапы можно заменить «жуком» (вдвое больше).',
-          'As many rounds as possible in 8 minutes at an even pace. Sit-ups can be swapped for dead bugs (twice the reps).',
+          'Максимум кругов за отведённое время в ровном темпе. Ситапы можно заменить «жуком» (вдвое больше).',
+          'As many rounds as possible in the time at an even pace. Sit-ups can be swapped for dead bugs (twice the reps).',
         ),
         items: [
           { exerciseId: 'sit_up', reps: 10, note: NOTE_DEAD_BUG },
@@ -486,8 +498,8 @@ const WORKOUTS: WorkoutInput[] = [
       'By the minute, more in the second loop',
     ),
     description: l(
-      'Тренировка 7. Каждую минуту новое упражнение, выполнил — отдыхаешь до конца минуты. Круг из четырёх движений: приседания, отжимания с колен, выпады, ситапы. Во втором круге добавь по 2 повтора к каждому. Всего два круга — восемь минут.',
-      'Workout 7. A new exercise every minute, do it and rest until the minute is up. A round of four: squats, knee push-ups, lunges, sit-ups. In the second loop add 2 reps to each. Two loops, eight minutes.',
+      'Тренировка 7. Каждую минуту новое упражнение, выполнил — отдыхаешь до конца минуты. Круг из четырёх движений: приседания, отжимания с колен, выпады, ситапы. Во втором круге каждое движение — на пару повторов больше; приложение уже посчитало, сколько.',
+      'Workout 7. A new exercise every minute, do it and rest until the minute is up. A round of four: squats, knee push-ups, lunges, sit-ups. In the second loop every movement gets a couple more reps; the app has already worked out how many.',
     ),
     basePoints: 100,
     tags: ['emom', 'beginner', 'full_body'],
@@ -498,16 +510,20 @@ const WORKOUTS: WorkoutInput[] = [
         type: 'metcon',
         format: 'emom',
         rounds: 8,
-        title: l('EMOM 8, +2 во втором круге', 'EMOM 8, +2 in the second loop'),
+        title: l('EMOM, прибавка во втором круге', 'EMOM, more in the second loop'),
         description: l(
-          'Минуты 1–4 — по 12 повторений, минуты 5–8 — по 14. Выполнил движение — отдыхаешь до конца минуты.',
-          'Minutes 1–4 twelve reps, minutes 5–8 fourteen. Do the movement, then rest until the minute is up.',
+          'Первый круг — четыре минуты по базовому числу, второй — те же движения, на пару повторов больше. Выполнил движение — отдыхаешь до конца минуты.',
+          'The first loop is four minutes at the base count, the second the same movements with a couple more reps. Do the movement, then rest until the minute is up.',
         ),
         items: [
           { exerciseId: 'air_squat', reps: 12 },
           { exerciseId: 'knee_push_up', reps: 12 },
           { exerciseId: 'reverse_lunge', reps: 12, note: NOTE_LUNGE_TOTAL },
-          { exerciseId: 'sit_up', reps: 12, note: NOTE_DEAD_BUG },
+          { exerciseId: 'sit_up', reps: 12, note: NOTE_S07_SIT_UP },
+          { exerciseId: 'air_squat', reps: 14 },
+          { exerciseId: 'knee_push_up', reps: 14 },
+          { exerciseId: 'reverse_lunge', reps: 14, note: NOTE_LUNGE_TOTAL },
+          { exerciseId: 'sit_up', reps: 14, note: NOTE_S07_SIT_UP },
         ],
       },
       cooldown(),
@@ -520,8 +536,8 @@ const WORKOUTS: WorkoutInput[] = [
     name: l('Два круга: верх, ноги, кор', 'Two rounds: upper, legs, core'),
     focus: l('Длиннее круг, отдых по желанию', 'A longer round, rest as you like'),
     description: l(
-      'Тренировка 8. Круг из четырёх движений по 20 повторений: обратные отжимания, приседания, скалолазы, выпады назад. Два круга, крышка 10 минут, отдыхаешь когда хочешь. Держи ровный темп и не жертвуй техникой ради секунд.',
-      'Workout 8. A round of four at 20 reps each: dips, squats, mountain climbers, reverse lunges. Two rounds, 10-minute cap, rest whenever you want. Keep an even pace and do not trade technique for seconds.',
+      'Тренировка 8. Круг из четырёх движений, в каждом одинаковое число повторений: обратные отжимания, приседания, скалолазы, выпады назад. Два круга на время с крышкой, отдыхаешь когда хочешь. Держи ровный темп и не жертвуй техникой ради секунд.',
+      'Workout 8. A round of four movements, the same count for each: dips, squats, mountain climbers, reverse lunges. Two rounds for time with a cap, rest whenever you want. Keep an even pace and do not trade technique for seconds.',
     ),
     basePoints: 110,
     tags: ['fortime', 'conditioning', 'full_body'],
@@ -535,8 +551,8 @@ const WORKOUTS: WorkoutInput[] = [
         durationSec: 600,
         title: l('2 круга на время', '2 rounds for time'),
         description: l(
-          'Крышка 10 минут. Скалолазы считаем по коленям. Отдыхаешь когда хочешь — задача закрыть два круга.',
-          '10-minute cap. Count mountain climbers per knee. Rest whenever — the task is to close two rounds.',
+          'Крышка — на таймере. Скалолазы считаем по коленям. Отдыхаешь когда хочешь — задача закрыть два круга.',
+          'The cap is on the timer. Count mountain climbers per knee. Rest whenever — the task is to close two rounds.',
         ),
         items: [
           { exerciseId: 'chair_dip', reps: 20 },
@@ -555,8 +571,8 @@ const WORKOUTS: WorkoutInput[] = [
     name: l('Пресс и скалолазы на время', 'Core and climbers for time'),
     focus: l('Чем быстрее, тем быстрее освободишься', 'The faster you go, the sooner you are done'),
     description: l(
-      'Тренировка 9. Два круга на время: 15 ситапов, 30 скалолазов, 30 «жуков», 15 ситапов. Работа на время — чем быстрее сделаешь, тем быстрее освободишься; отдыхаешь когда хочешь, задача закрыть два круга как можно скорее. Крышка 8 минут.',
-      'Workout 9. Two rounds for time: 15 sit-ups, 30 mountain climbers, 30 dead bugs, 15 sit-ups. The faster you finish, the sooner you are free; rest whenever, close the two rounds as fast as you can. 8-minute cap.',
+      'Тренировка 9. Два круга на время: ситапы, скалолазы, «жуки» и снова ситапы — скалолазов и «жуков» вдвое больше, чем ситапов. Работа на время — чем быстрее сделаешь, тем быстрее освободишься; отдыхаешь когда хочешь, задача закрыть два круга как можно скорее. Крышка — на таймере.',
+      'Workout 9. Two rounds for time: sit-ups, mountain climbers, dead bugs and sit-ups again — twice as many climbers and dead bugs as sit-ups. The faster you finish, the sooner you are free; rest whenever, close the two rounds as fast as you can. The cap is on the timer.',
     ),
     basePoints: 100,
     tags: ['fortime', 'core', 'conditioning'],
@@ -570,8 +586,8 @@ const WORKOUTS: WorkoutInput[] = [
         durationSec: 480,
         title: l('2 круга на время', '2 rounds for time'),
         description: l(
-          'Крышка 8 минут. Скалолазы по коленям, «жук» медленно и под контролем. Ситапы при диастазе — «жук», вдвое больше.',
-          '8-minute cap. Climbers per knee, dead bugs slow and controlled. Sit-ups with diastasis: dead bugs, twice the reps.',
+          'Крышка — на таймере. Скалолазы по коленям, «жук» медленно и под контролем. Ситапы при диастазе — «жук», вдвое больше.',
+          'The cap is on the timer. Climbers per knee, dead bugs slow and controlled. Sit-ups with diastasis: dead bugs, twice the reps.',
         ),
         items: [
           { exerciseId: 'sit_up', reps: 15, note: NOTE_DEAD_BUG },
@@ -593,8 +609,8 @@ const WORKOUTS: WorkoutInput[] = [
       'Fit the round into 2 minutes, the rest is rest',
     ),
     description: l(
-      'Тренировка 10. Короткий круг — 5 червячков и 10 приседаний. Старт раз в 2 минуты: выполнил круг — до конца двухминутки отдыхаешь. Четыре круга, всего восемь минут. Червячки — в спокойном темпе, шаг руками не слишком широкий.',
-      'Workout 10. A short round — 5 inchworms and 10 squats. Start every 2 minutes: done early, rest until the 2 minutes are up. Four rounds, eight minutes. Inchworms at an easy pace, hand steps not too wide.',
+      'Тренировка 10. Короткий круг — червячки и вдвое больше приседаний. Старт раз в 2 минуты: выполнил круг — до конца двухминутки отдыхаешь, приложение отсчитывает отдых само. Червячки — в спокойном темпе, шаг руками не слишком широкий.',
+      'Workout 10. A short round — inchworms and twice as many squats. Start every 2 minutes: done early, rest until the 2 minutes are up; the app counts the rest for you. Inchworms at an easy pace, hand steps not too wide.',
     ),
     basePoints: 100,
     tags: ['interval', 'beginner', 'full_body'],
@@ -603,13 +619,13 @@ const WORKOUTS: WorkoutInput[] = [
       {
         id: 's10_main',
         type: 'metcon',
-        format: 'fortime',
+        format: 'circuit',
         sets: 4,
-        durationSec: 480,
-        title: l('4 круга, старт раз в 2 минуты', '4 rounds, start every 2 minutes'),
+        restBetweenRoundsSec: S10_ROUND_REST,
+        title: l('Старт раз в 2 минуты', 'Start every 2 minutes'),
         description: l(
-          'Круг без пауз, потом отдых до конца двухминутки — около 1–1,5 минуты. Не торопись на червячках.',
-          'No pauses inside the round, then rest until the 2-minute mark — about 1–1.5 minutes. Do not rush the inchworms.',
+          'Круг без пауз, потом отдых до конца двухминутки — таймер ведёт его сам. Не торопись на червячках.',
+          'No pauses inside the round, then rest until the 2-minute mark — the timer runs it. Do not rush the inchworms.',
         ),
         items: [
           { exerciseId: 'inchworm', reps: 5 },
@@ -623,11 +639,11 @@ const WORKOUTS: WorkoutInput[] = [
   /* --- 11 — EMOM, 4 движения, 2 круга -------------------------------------------------- */
   {
     id: 'w_s11_emom8',
-    name: l('EMOM 8: отжимания, присед, пресс, выпады', 'EMOM 8: push-ups, squat, core, lunges'),
-    focus: l('Работа по минутам, восемь минут', 'By the minute, eight minutes'),
+    name: l('EMOM: отжимания, присед, пресс, выпады', 'EMOM: push-ups, squat, core, lunges'),
+    focus: l('Работа по минутам, два круга', 'By the minute, two loops'),
     description: l(
-      'Тренировка 11. Каждую минуту новое упражнение, выполнил — отдыхаешь до конца минуты. Круг из четырёх движений по 10 повторений: отжимания с колен, приседания, ситапы (или 20 «жуков»), выпады. Два круга — восемь минут.',
-      'Workout 11. A new exercise every minute, do it and rest until the minute is up. A round of four at 10 reps: knee push-ups, squats, sit-ups (or 20 dead bugs), lunges. Two loops, eight minutes.',
+      'Тренировка 11. Каждую минуту новое упражнение, выполнил — отдыхаешь до конца минуты. Круг из четырёх движений, у всех одинаковое число повторений: отжимания с колен, приседания, ситапы (или вдвое больше «жуков»), выпады. Два круга.',
+      'Workout 11. A new exercise every minute, do it and rest until the minute is up. A round of four, the same count for each: knee push-ups, squats, sit-ups (or twice as many dead bugs), lunges. Two loops.',
     ),
     basePoints: 100,
     tags: ['emom', 'beginner', 'full_body'],
@@ -638,7 +654,7 @@ const WORKOUTS: WorkoutInput[] = [
         type: 'metcon',
         format: 'emom',
         rounds: 8,
-        title: l('EMOM 8 мин', 'EMOM 8 min'),
+        title: l('Каждую минуту — новое движение', 'A new movement every minute'),
         description: l(
           'Минута 1 — отжимания, 2 — приседания, 3 — ситапы или «жук», 4 — выпады, и снова по кругу.',
           'Minute 1 push-ups, 2 squats, 3 sit-ups or dead bugs, 4 lunges, then round again.',
@@ -673,6 +689,8 @@ const WORKOUTS: WorkoutInput[] = [
         format: 'fortime',
         sets: 1,
         durationSec: 600,
+        // The ladder is the workout: scaling each rung would bend 10-8-6-4-2 out of shape.
+        scalable: false,
         title: l('Лесенка на время', 'The ladder for time'),
         description: l(
           'Крышка 10 минут. Зашагивания — на стул без колёсиков или на ступеньку; вставай через пятку и полностью выпрямляйся наверху.',
@@ -713,7 +731,9 @@ const WORKOUTS: WorkoutInput[] = [
         type: 'metcon',
         format: 'amrap',
         durationSec: 480,
-        title: l('AMRAP 8, цель 3 круга', 'AMRAP 8, target 3 rounds'),
+        // 5-6-7-8-9 is a ladder: the same numbers and window at every difficulty.
+        scalable: false,
+        title: l('Максимум кругов', 'As many rounds as possible'),
         description: l(
           'Максимум кругов за 8 минут, ориентир — три круга. Выпады считаем в сумме на две ноги.',
           'As many rounds as possible in 8 minutes, three is the mark. Lunges counted as the total for both legs.',
@@ -733,11 +753,11 @@ const WORKOUTS: WorkoutInput[] = [
   /* --- 14 — два круга: 20 и 40 -------------------------------------------------------- */
   {
     id: 'w_s14_double',
-    name: l('Выпады, отжимания, твисты: 20 и 40', 'Lunges, push-ups, twists: 20 and 40'),
-    focus: l('Два круга: сначала по 20, потом по 40', 'Two rounds: 20s, then 40s'),
+    name: l('Выпады, отжимания, твисты: два круга', 'Lunges, push-ups, twists: two rounds'),
+    focus: l('Короткий круг, потом вдвое длиннее', 'A short round, then one twice as long'),
     description: l(
-      'Тренировка 14. Два круга. Первый — по 20: выпады назад, отжимания с колен, русские твисты (или 40 «жуков»). Отдых 2 минуты. Второй — по 40: те же движения. Второй круг длинный, разбивай на подходы и держи технику.',
-      'Workout 14. Two rounds. The first at 20: reverse lunges, knee push-ups, Russian twists (or 40 dead bugs). Rest 2 minutes. The second at 40: the same movements. The second round is long — break it into sets and keep the technique.',
+      'Тренировка 14. Два круга. Первый: выпады назад, отжимания с колен, русские твисты (или вдвое больше «жуков»). Отдых 2 минуты. Второй — те же движения, но каждого вдвое больше. Второй круг длинный, разбивай на подходы и держи технику.',
+      'Workout 14. Two rounds. The first: reverse lunges, knee push-ups, Russian twists (or twice as many dead bugs). Rest 2 minutes. The second: the same movements, twice as many of each. The second round is long — break it into sets and keep the technique.',
     ),
     basePoints: 110,
     tags: ['fortime', 'core', 'full_body'],
@@ -749,10 +769,11 @@ const WORKOUTS: WorkoutInput[] = [
         format: 'fortime',
         sets: 1,
         durationSec: 360,
-        title: l('Круг по 20', 'Round of 20'),
+        restAfterSec: 120,
+        title: l('Первый круг', 'The first round'),
         description: l(
-          'По 20 повторений каждого движения, потом отдых 2 минуты перед вторым кругом.',
-          '20 reps of each movement, then rest 2 minutes before the second round.',
+          'Каждое движение по разу, потом отдых 2 минуты перед вторым кругом.',
+          'Each movement once, then rest 2 minutes before the second round.',
         ),
         items: [
           { exerciseId: 'reverse_lunge', reps: 20, note: NOTE_LUNGE_TOTAL },
@@ -766,10 +787,10 @@ const WORKOUTS: WorkoutInput[] = [
         format: 'fortime',
         sets: 1,
         durationSec: 600,
-        title: l('Круг по 40', 'Round of 40'),
+        title: l('Второй круг, вдвое длиннее', 'The second round, twice as long'),
         description: l(
-          'После двух минут отдыха — по 40 каждого. Разбивай на подходы, техника важнее скорости.',
-          'After two minutes of rest — 40 of each. Break it into sets, technique over speed.',
+          'После двух минут отдыха — каждого движения вдвое больше. Разбивай на подходы, техника важнее скорости.',
+          'After two minutes of rest — twice as many of each. Break it into sets, technique over speed.',
         ),
         items: [
           { exerciseId: 'reverse_lunge', reps: 40, note: NOTE_LUNGE_TOTAL },
@@ -784,11 +805,11 @@ const WORKOUTS: WorkoutInput[] = [
   /* --- 15 — AMRAP 8: отжимания, присед, скалолазы -------------------------------------- */
   {
     id: 'w_s15_amrap8',
-    name: l('AMRAP 8: отжимания, присед, скалолазы', 'AMRAP 8: push-ups, squat, climbers'),
-    focus: l('Максимум кругов за 8 минут', 'As many rounds as possible in 8 minutes'),
+    name: l('AMRAP: отжимания, присед, скалолазы', 'AMRAP: push-ups, squat, climbers'),
+    focus: l('Максимум кругов за отведённое время', 'As many rounds as possible in the time'),
     description: l(
-      'Тренировка 15. По кругу в течение 8 минут: 8 отжиманий, 16 приседаний, 32 скалолаза. Обычные отжимания — тяжело, делай с колен. Ровный темп: столько кругов, сколько получится держать до конца.',
-      'Workout 15. On a loop for 8 minutes: 8 push-ups, 16 squats, 32 mountain climbers. Full push-ups hard? Do them from the knees. Even pace: as many rounds as you can hold to the end.',
+      'Тренировка 15. По кругу, пока идёт таймер: отжимания, вдвое больше приседаний и ещё вдвое больше скалолазов. Обычные отжимания — тяжело, делай с колен. Ровный темп: столько кругов, сколько получится держать до конца.',
+      'Workout 15. On a loop while the timer runs: push-ups, twice as many squats and twice as many again mountain climbers. Full push-ups hard? Do them from the knees. Even pace: as many rounds as you can hold to the end.',
     ),
     basePoints: 100,
     tags: ['amrap', 'conditioning', 'full_body'],
@@ -799,10 +820,10 @@ const WORKOUTS: WorkoutInput[] = [
         type: 'metcon',
         format: 'amrap',
         durationSec: 480,
-        title: l('AMRAP 8 мин', 'AMRAP 8 min'),
+        title: l('Максимум кругов', 'As many rounds as possible'),
         description: l(
-          'Максимум кругов за 8 минут. Скалолазы по коленям. Отжимания тяжело — с колен.',
-          'As many rounds as possible in 8 minutes. Climbers per knee. Push-ups hard? From the knees.',
+          'Максимум кругов за отведённое время. Скалолазы по коленям. Отжимания тяжело — с колен.',
+          'As many rounds as possible in the time. Climbers per knee. Push-ups hard? From the knees.',
         ),
         items: [
           { exerciseId: 'push_up', reps: 8 },
@@ -823,8 +844,8 @@ const WORKOUTS: WorkoutInput[] = [
     ),
     focus: l('Один длинный список сверху вниз', 'One long list, top to bottom'),
     description: l(
-      'Тренировка 16. Длинный список на время: 60 приседаний, 40 выпадов, 30 зашагиваний, 20 червячков. Порядок и количество менять нельзя — идём сверху вниз. Крышка 13 минут; разбивай на подходы, но не меняй последовательность.',
-      'Workout 16. A long list for time: 60 squats, 40 lunges, 30 step-ups, 20 inchworms. Order and reps are fixed — top to bottom. 13-minute cap; break it into sets but keep the order.',
+      'Тренировка 16. Длинный список на время: приседания, выпады, зашагивания, червячки — от самого большого числа к самому маленькому. Порядок менять нельзя — идём сверху вниз. Крышка — на таймере; разбивай на подходы, но не меняй последовательность.',
+      'Workout 16. A long list for time: squats, lunges, step-ups, inchworms — from the biggest number to the smallest. The order is fixed — top to bottom. The cap is on the timer; break it into sets but keep the order.',
     ),
     basePoints: 120,
     tags: ['fortime', 'chipper', 'lower'],
@@ -838,8 +859,8 @@ const WORKOUTS: WorkoutInput[] = [
         durationSec: 780,
         title: l('Чиппер на время', 'The chipper for time'),
         description: l(
-          'Крышка 13 минут. Выпады и зашагивания считаем в сумме на две ноги. Порядок менять нельзя.',
-          '13-minute cap. Lunges and step-ups counted as the total for both legs. Do not change the order.',
+          'Крышка — на таймере. Выпады и зашагивания считаем в сумме на две ноги. Порядок менять нельзя.',
+          'The cap is on the timer. Lunges and step-ups counted as the total for both legs. Do not change the order.',
         ),
         items: [
           { exerciseId: 'air_squat', reps: 60 },
@@ -862,8 +883,8 @@ const WORKOUTS: WorkoutInput[] = [
     name: l('Входной билет и червячки', 'Buy-in, then inchworms'),
     focus: l('Сделал обязательное — остальное максимум', 'Do the fixed part, then max out'),
     description: l(
-      'Тренировка 17. Раз в 3 минуты выполни входной билет: 10 отжиманий, 10 приседаний, 10 ситапов, а в оставшееся время — максимум червячков. Два круга, между кругами 3 минуты отдыха. Червячки не торопи.',
-      'Workout 17. Every 3 minutes do the buy-in: 10 push-ups, 10 squats, 10 sit-ups, and in the time left, max inchworms. Two rounds, 3 minutes of rest between them. Do not rush the inchworms.',
+      'Тренировка 17. Круг — это входной билет (отжимания, приседания, ситапы поровну), а за ним червячки. После круга — 3 минуты отдыха, и следующий круг. Червячки не торопи: тренер просит, чтобы в каждом круге их выходило одинаково.',
+      'Workout 17. A round is the buy-in (push-ups, squats and sit-ups, the same count each), then inchworms. After the round, 3 minutes of rest, then the next round. Do not rush the inchworms: the coach wants the same number of them in every round.',
     ),
     basePoints: 110,
     tags: ['interval', 'full_body', 'conditioning'],
@@ -875,10 +896,10 @@ const WORKOUTS: WorkoutInput[] = [
         format: 'circuit',
         sets: 2,
         restBetweenRoundsSec: 180,
-        title: l('2 круга раз в 3 минуты', '2 rounds every 3 minutes'),
+        title: l('Круги: 3 минуты отдыха после круга', 'Rounds: 3 minutes of rest after each'),
         description: l(
-          'Входной билет — 10/10/10, оставшееся время трёхминутки — максимум червячков. Между кругами 3 минуты отдыха. Отжимания тяжело — с колен.',
-          'The buy-in is 10/10/10; spend the rest of the 3 minutes on max inchworms. 3 minutes of rest between rounds. Push-ups hard? From the knees.',
+          'Входной билет, потом червячки. После круга — 3 минуты отдыха, таймер ведёт его сам. Отжимания тяжело — с колен.',
+          'The buy-in, then inchworms. After the round, 3 minutes of rest — the timer runs it. Push-ups hard? From the knees.',
         ),
         items: [
           { exerciseId: 'push_up', reps: 10 },
@@ -888,8 +909,8 @@ const WORKOUTS: WorkoutInput[] = [
             exerciseId: 'inchworm',
             reps: 8,
             note: l(
-              'Максимум за оставшееся время трёхминутки',
-              'As many as possible in the time left in the 3 minutes',
+              'Ровный темп: в каждом круге — одинаковое число червячков',
+              'An even pace: the same number of inchworms in every round',
             ),
           },
         ],
@@ -904,44 +925,78 @@ const WORKOUTS: WorkoutInput[] = [
     name: l('Два интервала: верх и низ', 'Two intervals: upper and lower'),
     focus: l('Обязательное, потом максимум', 'The fixed part, then max out'),
     description: l(
-      'Тренировка 18. Два интервала по 2 минуты. Первый: 15 отжиманий, в оставшееся время — максимум червячков. Минута отдыха. Второй: 20 выпадов, в оставшееся время — максимум ситапов. Отжимания тяжело — с колен.',
-      'Workout 18. Two 2-minute intervals. First: 15 push-ups, then max inchworms in the time left. One minute of rest. Second: 20 lunges, then max sit-ups. Push-ups hard? From the knees.',
+      'Тренировка 18. Два интервала по 2 минуты. Первый: входной билет — отжимания, в оставшееся время — максимум червячков. Минута отдыха. Второй: входной билет — выпады, в оставшееся время — максимум ситапов. Отжимания тяжело — с колен.',
+      'Workout 18. Two 2-minute intervals. First: a buy-in of push-ups, then max inchworms in the time left. One minute of rest. Second: a buy-in of lunges, then max sit-ups. Push-ups hard? From the knees.',
     ),
     basePoints: 100,
     tags: ['interval', 'full_body', 'conditioning'],
     blocks: [
       warmup(),
+      /*
+       * Each 2-minute interval is two blocks: the buy-in, then an AMRAP of the "max" movement
+       * alone. As one AMRAP the loop went back to the buy-in once the max movement's number was
+       * done, which is not what he wrote. The buy-in is a one-round for-time with a minute's cap
+       * (a circuit would gain a second round on «Посложнее»); the AMRAP is the minute that is left.
+       */
       {
         id: 's18_first',
         type: 'metcon',
-        format: 'amrap',
-        durationSec: 120,
-        title: l('2 минуты: отжимания + червячки', '2 minutes: push-ups + inchworms'),
+        format: 'fortime',
+        sets: 1,
+        durationSec: 60,
+        title: l('Интервал 1: отжимания', 'Interval 1: push-ups'),
         description: l(
-          '15 отжиманий, потом до конца двух минут — максимум червячков. Затем минута отдыха.',
-          '15 push-ups, then max inchworms until the 2 minutes are up. Then one minute of rest.',
+          'Входной билет — отжимания. Сделал — сразу к червячкам.',
+          'The buy-in is push-ups. Done — straight on to the inchworms.',
+        ),
+        items: [{ exerciseId: 'push_up', reps: 15 }],
+      },
+      {
+        id: 's18_first_max',
+        type: 'metcon',
+        format: 'amrap',
+        durationSec: 60,
+        restAfterSec: 60,
+        title: l('Интервал 1: максимум червячков', 'Interval 1: max inchworms'),
+        description: l(
+          'До конца интервала — максимум червячков. Потом минута отдыха.',
+          'Max inchworms until the interval is up. Then one minute of rest.',
         ),
         items: [
-          { exerciseId: 'push_up', reps: 15 },
           {
             exerciseId: 'inchworm',
             reps: 8,
-            note: l('Максимум за оставшееся время', 'As many as possible in the time left'),
+            note: l(
+              'Максимум за оставшееся время, спина ровная',
+              'As many as possible in the time left, back flat',
+            ),
           },
         ],
       },
       {
         id: 's18_second',
         type: 'metcon',
-        format: 'amrap',
-        durationSec: 120,
-        title: l('2 минуты: выпады + ситапы', '2 minutes: lunges + sit-ups'),
+        format: 'fortime',
+        sets: 1,
+        durationSec: 60,
+        title: l('Интервал 2: выпады', 'Interval 2: lunges'),
         description: l(
-          'После минуты отдыха: 20 выпадов, потом до конца двух минут — максимум ситапов (или «жука», вдвое больше).',
-          'After a minute of rest: 20 lunges, then max sit-ups until the 2 minutes are up (or dead bugs, twice the reps).',
+          'После минуты отдыха — входной билет: выпады. Сделал — сразу к ситапам.',
+          'After a minute of rest, the buy-in: lunges. Done — straight on to the sit-ups.',
+        ),
+        items: [{ exerciseId: 'reverse_lunge', reps: 20, note: NOTE_LUNGE_TOTAL }],
+      },
+      {
+        id: 's18_second_max',
+        type: 'metcon',
+        format: 'amrap',
+        durationSec: 60,
+        title: l('Интервал 2: максимум ситапов', 'Interval 2: max sit-ups'),
+        description: l(
+          'До конца интервала — максимум ситапов (или «жука», вдвое больше).',
+          'Max sit-ups until the interval is up (or dead bugs, twice the reps).',
         ),
         items: [
-          { exerciseId: 'reverse_lunge', reps: 20, note: NOTE_LUNGE_TOTAL },
           {
             exerciseId: 'sit_up',
             reps: 10,
@@ -972,9 +1027,10 @@ const WORKOUTS: WorkoutInput[] = [
       {
         id: 's19_main',
         type: 'metcon',
-        format: 'fortime',
-        sets: 1,
-        durationSec: 600,
+        format: 'emom',
+        rounds: 10,
+        // A benchmark: the same ladder at every difficulty, one rung per minute.
+        scalable: false,
         title: l('Лесенка червячков', 'The inchworm ladder'),
         description: l(
           'По минутам, каждую на один больше. Это ориентир, а не тест на разрыв: остановись, где перестанешь укладываться, и запиши минуту.',
@@ -1016,7 +1072,9 @@ const WORKOUTS: WorkoutInput[] = [
         format: 'fortime',
         sets: 3,
         durationSec: 600,
-        title: l('3 круга', '3 rounds'),
+        // The finale is compared with workout 1: the same numbers at every difficulty.
+        scalable: false,
+        title: l('Финальные круги', 'The final rounds'),
         description: l(
           'Три круга в спокойном темпе. «Жук» медленно, поясница прижата; приседания и отжимания — чисто.',
           'Three rounds at an easy pace. Dead bugs slow, lower back pressed down; squats and push-ups clean.',
@@ -1088,24 +1146,30 @@ const NODES: NodeInput[] = [
     'w_s03_pairs',
     l('Три пары, старт раз в 2 мин', 'Three pairs, start every 2 min'),
   ),
-  workoutNode(1, 4, 4, 'w_s04_bridges', l('Мосты 5 мин, цель 100', 'Bridges 5 min, target 100')),
+  workoutNode(1, 4, 4, 'w_s04_bridges', l('Мосты, 5 минут', 'Bridges, 5 minutes')),
   workoutNode(1, 5, 5, 'w_s05_three_rounds', l('3 круга на время', '3 rounds for time')),
 
   /* Block 2 */
-  workoutNode(2, 1, 6, 'w_s06_amrap8', l('AMRAP 8 мин', 'AMRAP 8 min')),
-  workoutNode(2, 2, 7, 'w_s07_emom_ladder', l('EMOM 8, +2 во 2-м круге', 'EMOM 8, +2 in loop 2')),
-  workoutNode(2, 3, 8, 'w_s08_two_rounds', l('2 круга, крышка 10 мин', '2 rounds, 10-min cap')),
+  workoutNode(2, 1, 6, 'w_s06_amrap8', l('AMRAP: максимум кругов', 'AMRAP: max rounds')),
+  workoutNode(
+    2,
+    2,
+    7,
+    'w_s07_emom_ladder',
+    l('EMOM, прибавка во 2-м круге', 'EMOM, more in loop 2'),
+  ),
+  workoutNode(2, 3, 8, 'w_s08_two_rounds', l('2 круга на время', '2 rounds for time')),
   workoutNode(
     2,
     4,
     9,
     'w_s09_for_time',
-    l('2 круга на время, крышка 8', '2 rounds for time, cap 8'),
+    l('Пресс и скалолазы на время', 'Core and climbers for time'),
   ),
-  workoutNode(2, 5, 10, 'w_s10_every_2min', l('4 круга раз в 2 минуты', '4 rounds every 2 min')),
+  workoutNode(2, 5, 10, 'w_s10_every_2min', l('Круги раз в 2 минуты', 'Rounds every 2 min')),
 
   /* Block 3 */
-  workoutNode(3, 1, 11, 'w_s11_emom8', l('EMOM 8 мин', 'EMOM 8 min')),
+  workoutNode(3, 1, 11, 'w_s11_emom8', l('EMOM, 4 движения', 'EMOM, 4 movements')),
   workoutNode(3, 2, 12, 'w_s12_step_ladder', l('Лесенка вниз', 'Descending ladder')),
   workoutNode(
     3,
@@ -1114,11 +1178,17 @@ const NODES: NodeInput[] = [
     'w_s13_ladder5',
     l('5 движений, максимум кругов', '5 movements, max rounds'),
   ),
-  workoutNode(3, 4, 14, 'w_s14_double', l('Два круга: 20 и 40', 'Two rounds: 20 and 40')),
-  workoutNode(3, 5, 15, 'w_s15_amrap8', l('AMRAP 8 мин', 'AMRAP 8 min')),
+  workoutNode(
+    3,
+    4,
+    14,
+    'w_s14_double',
+    l('Два круга: короткий и длинный', 'Two rounds: short and long'),
+  ),
+  workoutNode(3, 5, 15, 'w_s15_amrap8', l('AMRAP: максимум кругов', 'AMRAP: max rounds')),
 
   /* Block 4 — ends on the benchmark finale (workout 20), the course's last node. */
-  workoutNode(4, 1, 16, 'w_s16_chipper', l('Чиппер, крышка 13 мин', 'Chipper, 13-min cap')),
+  workoutNode(4, 1, 16, 'w_s16_chipper', l('Чиппер на время', 'Chipper for time')),
   workoutNode(4, 2, 17, 'w_s17_buyin', l('Входной билет + червячки', 'Buy-in + inchworms')),
   workoutNode(4, 3, 18, 'w_s18_intervals', l('Два интервала по 2 мин', 'Two 2-min intervals')),
   workoutNode(
@@ -1157,8 +1227,8 @@ export const COURSE_START: CourseInput = {
     'Twenty workouts from the coach’s own beginner programme: short, in rounds, no equipment.',
   ),
   description: l(
-    'Программа для тех, кто начинает с нуля или возвращается после долгого перерыва. Двадцать коротких тренировок — те самые, по которым тренер ведёт новичков: отжимания с колен, приседания, ситапы, выпады, зашагивания и червячки. По 15–20 минут вместе с разминкой и заминкой, в своём темпе, нагрузка подстраивается под тебя.',
-    'A programme for complete beginners and anyone coming back after a long break. Twenty short workouts — the same ones the coach runs his beginners through: knee push-ups, squats, sit-ups, lunges, step-ups and inchworms. 15–20 minutes each including warm-up and cool-down, at your own pace, and the load adapts to you.',
+    'Программа для тех, кто начинает с нуля или возвращается после долгого перерыва. Двадцать коротких тренировок — те самые, по которым тренер ведёт новичков: отжимания с колен, приседания, ситапы, выпады, зашагивания и червячки. Около 17 минут вместе с разминкой и заминкой, в своём темпе, нагрузка подстраивается под тебя.',
+    'A programme for complete beginners and anyone coming back after a long break. Twenty short workouts — the same ones the coach runs his beginners through: knee push-ups, squats, sit-ups, lunges, step-ups and inchworms. About 17 minutes each including warm-up and cool-down, at your own pace, and the load adapts to you.',
   ),
   longDescription: [
     l(
@@ -1166,16 +1236,16 @@ export const COURSE_START: CourseInput = {
       'Start is the beginner programme the coach runs with his own group, moved into the app without changing what matters: the same 20 sessions, the same order, the same words. The aim of the first weeks is to work the big muscle groups and get you into the process, not to wring you out. The coach demonstrates every session himself: every movement has his video.',
     ),
     l(
-      'Первые тренировки — работа по таймеру: каждую минуту новое движение, потом простые круги с минутой отдыха. Дальше форматы кроссфита по одному: три круга на время, AMRAP, EMOM, старт раз в 2–3 минуты, лесенки и длинный комплекс на время. Двадцать тренировок, по пять в блоке. Тренер советует пять в неделю, но путь не привязан к календарю: между тренировками нужен отдых, а пропущенная неделя ничего не ломает — следующая ждёт на том же месте.',
-      'The first sessions are work by the timer — a new movement every minute — then simple rounds with a minute of rest. The CrossFit formats arrive one at a time: three rounds for time, AMRAP, EMOM, starts every 2–3 minutes, ladders and a long chipper for time. Twenty workouts in four blocks of five. The coach suggests five a week, but the path is not tied to a calendar: you need rest between sessions, and a week off breaks nothing — the next one waits where you left it.',
+      'Первые тренировки — работа по таймеру: каждую минуту новое движение, потом простые круги с минутой отдыха. Дальше форматы кроссфита по одному: три круга на время, AMRAP, EMOM, старт раз в 2–3 минуты, лесенки и длинный комплекс на время. Двадцать тренировок подряд, четыре блока по пять. Тренер советует пять в неделю, но путь не привязан к календарю: идёшь в своём темпе, а пропущенный день ничего не ломает — следующая тренировка ждёт на том же месте.',
+      'The first sessions are work by the timer — a new movement every minute — then simple rounds with a minute of rest. The CrossFit formats arrive one at a time: three rounds for time, AMRAP, EMOM, starts every 2–3 minutes, ladders and a long chipper for time. Twenty workouts in a row, four blocks of five. The coach suggests five a week, but the path is not tied to a calendar: you go at your own pace, and a missed day breaks nothing — the next workout waits where you left it.',
     ),
     l(
-      'Тренировки короткие — 15–20 минут вместе с разминкой и заминкой, самая длинная около 23. Сама работа — 5–15 минут, как у тренера; разминка — суставная гимнастика сверху вниз, без бега — и растяжка в конце в это время не входят. Из инвентаря нужны коврик и устойчивый стул: от него ты будешь отжиматься и на него зашагивать. Приложение считает, сколько повторений тебе делать сегодня, по результатам прошлой тренировки — было тяжело, легко или в самый раз. Тяжёлые упражнения заменяются простыми: ситапы — «мёртвым жуком», прыжки — шагом.',
-      'Sessions are short — 15–20 minutes including warm-up and cool-down, the longest around 23. The work itself is 5–15 minutes, as the coach runs it; the warm-up — top-to-bottom joint mobility, no running — and the stretch at the end are not counted in that. You need a mat and a sturdy chair: you will do dips off it and step-ups onto it. The app works out how many reps you should do today from how your last session went — too hard, too easy or just right. Hard movements swap for simple ones: sit-ups for dead bugs, jumps for steps.',
+      'Тренировки короткие — 13–20 минут вместе с разминкой и заминкой, в среднем около 17. Сама работа — от 3 до 10 минут; разминка — суставная гимнастика сверху вниз, без бега — и растяжка в конце в это время не входят. Оборудование не нужно — нужен устойчивый стул и коврик: от стула ты будешь отжиматься и на него зашагивать. Прыжков и бёрпи в курсе нет. Приложение считает, сколько повторений тебе делать сегодня, по результатам прошлой тренировки — было тяжело, легко или в самый раз. Если движение пока не даётся, есть замена попроще: ситапы — «мёртвый жук», отжимания — с колен.',
+      'Sessions are short — 13–20 minutes including warm-up and cool-down, about 17 on average. The work itself is 3 to 10 minutes; the warm-up — top-to-bottom joint mobility, no running — and the stretch at the end are not counted in that. No equipment — you need a sturdy chair and a mat: you will do dips off the chair and step-ups onto it. There are no jumps or burpees in the course. The app works out how many reps you should do today from how your last session went — too hard, too easy or just right. If a movement is not there yet, there is a simpler one: dead bugs for sit-ups, push-ups from the knees.',
     ),
     l(
-      'Первый день — это первая тренировка, а не тест на максимум: тренер считает, что первое занятие не должно тебя уничтожить. Стартовую нагрузку задаёт анкета при первом входе. Внутри программы у тренера свои точки отсчёта: лесенка червячков в предпоследней тренировке, к которой вернёшься через месяц-два, и финальные три круга, где сравнишь ощущения с самой первой тренировкой.',
-      'Day one is the first workout, not a max-effort test: the coach believes the first session must not destroy you. Your starting load comes from the onboarding on first login. Inside the programme the coach has his own reference points: an inchworm ladder in the penultimate session that you come back to in a month or two, and a final three rounds where you compare how it feels with your very first workout.',
+      'Первый день — это первая тренировка, а не тест на максимум: тренер считает, что первое занятие не должно тебя уничтожить. Стартовую нагрузку задаёт анкета при первом входе, а после второй тренировки приложение предложит короткий тест и уточнит её. Внутри программы у тренера свои точки отсчёта: лесенка червячков в предпоследней тренировке, к которой вернёшься через месяц-два, и финальные три круга, где сравнишь ощущения с самой первой тренировкой.',
+      'Day one is the first workout, not a max-effort test: the coach believes the first session must not destroy you. Your starting load comes from the onboarding on first login, and after the second workout the app offers a short test to fine-tune it. Inside the programme the coach has his own reference points: an inchworm ladder in the penultimate session that you come back to in a month or two, and a final three rounds where you compare how it feels with your very first workout.',
     ),
   ],
   forWhom: [
@@ -1192,8 +1262,8 @@ export const COURSE_START: CourseInput = {
       'You have no gear and little space: a mat, a chair and two square metres.',
     ),
     l(
-      'Есть 15–20 минут пять раз в неделю и желание не бросить через две.',
-      'You can find 15–20 minutes five times a week and want to still be going in week three.',
+      'Есть 15–20 минут несколько раз в неделю и желание не бросить через две.',
+      'You can find 15–20 minutes a few times a week and want to still be going in week three.',
     ),
   ],
   outcomes: [
@@ -1206,8 +1276,8 @@ export const COURSE_START: CourseInput = {
       'Every CrossFit format in gentle doses — and an inchworm ladder you will come back to and see the difference.',
     ),
     l(
-      'Привычка возвращаться к тренировке — не раз в год по запалу, а через день-два, спокойно.',
-      'The habit of coming back — not once a year on a burst of enthusiasm, but every other day, calmly.',
+      'Привычка возвращаться к тренировке — не раз в год по запалу, а регулярно и спокойно.',
+      'The habit of coming back — not once a year on a burst of enthusiasm, but regularly and calmly.',
     ),
     l(
       'Знакомство со всеми форматами кроссфита: круги, «на время», AMRAP, EMOM, лесенки, длинный комплекс.',
@@ -1218,15 +1288,15 @@ export const COURSE_START: CourseInput = {
       'Your own numbers: the coach’s reference points — the inchworm ladder and the final three rounds against your very first workout.',
     ),
     l(
-      'Готовность перейти к курсу «Форма своим весом» или к тренировкам с гантелями.',
-      'Readiness to move on to Forma Bodyweight or to dumbbell training.',
+      'Готовность идти дальше: повторить курс с большей нагрузкой или перейти к более сложным тренировкам.',
+      'Readiness for the next step: repeat the course at a higher load or move on to harder training.',
     ),
   ],
   equipment: ['none', 'mat', 'chair'],
   level: 1,
   weeks: 4,
   sessionsPerWeek: 5,
-  avgSessionMin: 18,
+  avgSessionMin: 17,
   /*
    * The programme's colour, and it is cyan now rather than the brand yellow.
    *
@@ -1265,8 +1335,8 @@ export const COURSE_START: CourseInput = {
     {
       q: l('Что нужно из оборудования?', 'What equipment do I need?'),
       a: l(
-        'Коврик и устойчивый стул без колёсиков — от него ты будешь делать обратные отжимания и на него зашагивать. Если стула нет, зашагивай на ступеньку, а обратные отжимания замени на отжимания от подоконника. Скакалка — по желанию: везде, где она есть, можно делать джампинг-джеки.',
-        'A mat and a sturdy chair without wheels — you will do dips off it and step-ups onto it. No chair? Use a stair step for step-ups and a windowsill for the dips. A jump rope is optional: wherever it appears, jumping jacks do the same job.',
+        'Оборудование не нужно — нужен устойчивый стул без колёсиков и коврик. От стула ты будешь делать обратные отжимания и на него зашагивать. Если стула нет, зашагивай на ступеньку, а обратные отжимания замени на отжимания от подоконника.',
+        'No equipment — you need a sturdy chair without wheels and a mat. You will do dips off the chair and step-ups onto it. No chair? Use a stair step for step-ups and a windowsill for the dips.',
       ),
     },
     {
@@ -1279,15 +1349,15 @@ export const COURSE_START: CourseInput = {
     {
       q: l('Сколько времени занимает тренировка?', 'How long is a session?'),
       a: l(
-        'В среднем около 18 минут вместе с разминкой и заминкой — по 5 минут на суставную гимнастику и растяжку и 5–15 минут работы. Самые короткие — первые тренировки по таймеру, около 14–15 минут; самые длинные — чиппер и два длинных круга, около 22–23 минут. Перед стартом приложение показывает расчётное время для каждого режима сложности.',
-        'About 18 minutes on average including warm-up and cool-down — 5 minutes each of joint mobility and stretching plus 5–15 minutes of work. The shortest are the first timer sessions at around 14–15 minutes; the longest are the chipper and the two long rounds at around 22–23. Before you start, the app shows the estimated time for each difficulty option.',
+        'В среднем около 17 минут вместе с разминкой и заминкой — по 5 минут на суставную гимнастику и растяжку и от 3 до 10 минут работы. Самые короткие — первые тренировки по таймеру, около 13 минут; самые длинные — лесенка червячков, чиппер и три пары, около 19–20 минут. Перед стартом приложение показывает расчётное время для каждого режима сложности.',
+        'About 17 minutes on average including warm-up and cool-down — 5 minutes each of joint mobility and stretching plus 3 to 10 minutes of work. The shortest are the first timer sessions at around 13 minutes; the longest are the inchworm ladder, the chipper and the three pairs at around 19–20. Before you start, the app shows the estimated time for each difficulty option.',
       ),
     },
     {
       q: l('Пропустил тренировку — что делать?', 'I missed a session — what now?'),
       a: l(
-        'Ничего страшного: сделай её на следующий день и сдвинь остальные. Не пытайся нагнать две за один день — у новичков это заканчивается крепатурой и пропуском ещё одной недели. Если совсем нет сил или времени, у тренера есть альтернатива на любой день: 10 000 шагов.',
-        'No drama: do it the next day and shift the rest. Do not try to squeeze two into one day — for beginners that ends in soreness and another week off. And if there is no energy or time at all, the coach has an alternative for any day: 10,000 steps.',
+        'Ничего страшного: сделай её на следующий день и сдвинь остальные. Не пытайся нагнать две за один день — у новичков это заканчивается крепатурой и пропуском ещё одной недели. Если совсем нет сил или времени, у тренера есть альтернатива на любой день: прогулка, до 10 000 шагов.',
+        'No drama: do it the next day and shift the rest. Do not try to squeeze two into one day — for beginners that ends in soreness and another week off. And if there is no energy or time at all, the coach has an alternative for any day: a walk, up to 10,000 steps.',
       ),
     },
     {

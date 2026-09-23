@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: motivation
 translationKey: streaks-consistency
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-02'
+updatedAt: '2026-09-23'
 faq:
   - q: 'What should I do after missing a workout?'
     a: 'Do not make it up. Continue the plan from the next scheduled session, and restore the streak today with a 7,000-step walk or the short fallback workout.'
@@ -123,4 +123,4 @@ For how to spread sessions across the week, read the [beginner's guide to CrossF
 
 ## Wrap-up
 
-Staying consistent means removing everything that depends on your mood: fix the time, lower the bar to eight minutes, and see a trace of every day. Streaks, points and achievements in the app exist for that, as an honest counter rather than a game. If you want a program where rest days, minimum options and recommendations are already built in, open the [Start: home CrossFit basics course](course:start): eight weeks, three sessions a week, and the streak starts growing on day one.
+Staying consistent means removing everything that depends on your mood: fix the time, lower the bar to eight minutes, and see a trace of every day. Streaks, points and achievements in the app exist for that, as an honest counter rather than a game. If you want a program where minimum options and recommendations are already built in, open the [Start: home CrossFit basics course](course:start): twenty workouts in four blocks of five, at your own pace — a missed day resets nothing, and the workout count only grows.

@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: recovery
 translationKey: rest-days-steps
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-02'
+updatedAt: '2026-09-23'
 faq:
   - q: 'How many rest days a week do I need?'
     a: 'Beginners need at least two or three, and the ACSM recommends 48 to 72 hours between sessions for the same muscle groups. Three or four workouts a week with a rest day between them is a sound home schedule.'
@@ -79,7 +79,7 @@ Forma watches the first two on its own. If your last session was less than 24 ho
 
 ### Planned deloads
 
-Rest is not only the gap between sessions but also the gap between weeks. In Forma's six-week courses, week four is a deload: every workout's volume drops to 65 percent and the rest inside the session gets 20 percent longer. That is not a weakness in the program; it is standard practice among strength coaches, shedding accumulated fatigue before the next step up.
+Rest is not only the gap between sessions but also the gap between weeks. In longer programmes week four is often a deload: every workout's volume drops by about a third and the rest inside the session gets longer. That is not a weakness in the program; it is standard practice among strength coaches, shedding accumulated fatigue before the next step up.
 
 ## Why 7000 steps a day
 
@@ -109,7 +109,7 @@ The mobility circuit in the next section does not count toward the streak: the a
 
 ## What to do on a rest day: a one-hour plan
 
-In a Forma course a rest day is the "Rest & walk" node on the course path. It has no plan in the player and it is not scaled: the steps goal is the same for every level, and how you reach it is up to you. Here is a version that works.
+The Start course has no rest days on its path: it is twenty workouts in a row, and you decide when to rest. On such a day the coach suggests a walk. Here is a version that works.
 
 **Walk, 40 to 60 minutes.** For most people 7000 steps is about an hour of easy walking; split it into two or three outings if that is easier. Keep a conversational pace, one where you can speak in full sentences. That is active recovery.
 
@@ -135,7 +135,7 @@ The American Academy of Sleep Medicine recommends that adults sleep at least sev
 - **Complete rest.** A day on the couch recovers you worse than a day with a walk: soreness lasts longer and stiffness is greater.
 - **A "light" session that is not light.** If active recovery leaves you sweaty and tired, it was a workout. Rest-day effort is 3 or 4 out of 10.
 - **Chasing steps at night.** 7000 steps at half past eleven, pacing the apartment, is not recovery. Plan the walk for daytime.
-- **Skipping the deload week.** It is in the course for a reason; choosing "harder" when the app asks for "easier" is the fastest route to a plateau.
+- **Skipping the deload week.** If it is in the plan, it is there for a reason; choosing "harder" when the app asks for "easier" is the fastest route to a plateau.
 - **Putting the streak above how you feel.** The streak is a habit tool, not the goal. A sick day is better skipped, then start again.
 - **Cutting sleep for a workout.** Getting up early to train on six hours of sleep takes more than it gives.
 
@@ -150,4 +150,4 @@ For keeping motivation over a long streak, read [how to stay consistent with wor
 
 ## Wrap-up
 
-Progress is made between workouts, not during them: 48 to 72 hours between sessions for the same muscles, 7000 steps on rest days, at least seven hours of sleep and a deload week once a month. The app counts such a day toward your streak and tells you when to back off. If you would rather have the workouts and rest days already in place, open the [Start: home CrossFit basics course](course:start): three sessions a week with walks in between, and all eight weeks are planned for you.
+Progress is made between workouts, not during them: 48 to 72 hours between sessions for the same muscles, 7000 steps on rest days, at least seven hours of sleep and a deload week once a month. The app counts such a day toward your streak and tells you when to back off. If you would rather have the workouts already in order, open the [Start: home CrossFit basics course](course:start): twenty workouts in four blocks of five, at your own pace, and a walk on a free day.

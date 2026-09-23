@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: fat_loss
 translationKey: crossfit-fat-loss
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-02'
+updatedAt: '2026-09-23'
 faq:
   - q: 'How many times a week should I do CrossFit to lose fat?'
     a: 'Three or four sessions a week: two strength days and one or two short metcons, plus 7,000 or more steps on the other days. More than that usually hurts recovery and the quality of every session.'
@@ -131,4 +131,4 @@ Judging progress by the scale alone is a mistake. Track three things together: y
 
 ## Wrap-up
 
-CrossFit for fat loss is two strength days, one or two short metcons, daily steps and a calm deficit in the kitchen. None of the parts works without the others; together they produce a result that stays. If you would rather have the volume and the rotation calculated for you, start with [the Start course](course:start): twenty sessions of 15–20 minutes where the formats arrive gradually and every jump has a stepping version. The daily steps and the other small habits are what the Small Steps Club in the app is for: one task a day and a weekly board.
+CrossFit for fat loss is two strength days, one or two short metcons, daily steps and a calm deficit in the kitchen. None of the parts works without the others; together they produce a result that stays. If you would rather have the volume and the rotation calculated for you, start with [the Start course](course:start): twenty sessions of about 17 minutes on average where the formats arrive gradually and there are no jumps. The daily steps and the other small habits are what the Small Steps Club in the app is for: one task a day and a weekly board.

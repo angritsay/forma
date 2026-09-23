@@ -68,7 +68,7 @@ export const landing = {
   howEyebrow: 'How it works',
   howTitle: 'Three steps to your first workout',
   howStep1Title: 'Pick a course',
-  howStep1Text: 'The coach’s week-by-week program, with a test at the start and the end.',
+  howStep1Text: 'The coach’s program in order: twenty workouts at your own pace.',
   howStep2Title: 'Enter your email',
   howStep2Text: 'No passwords: your email on the course page, and the course is yours for good.',
   howStep3Title: 'Log in with a code and train',
@@ -86,7 +86,7 @@ export const landing = {
   coursesEyebrow: 'Courses',
   coursesTitle: 'Pick your program',
   coursesIntro:
-    'A week-by-week program with a test, rest days and a deload. Buy once, keep forever.',
+    'The coach’s program in order, with the load fitted to you. Buy once, keep forever.',
   coursesAll: 'All courses',
   cardView: 'View course',
   /* The ticket's kicker: what kind of thing this is («Course · Beginner»), as in the app. */
@@ -123,7 +123,7 @@ export const landing = {
   // Home: path & motivation
   pathEyebrow: 'Path & motivation',
   pathTitle: 'Every week feels like a level in a game',
-  pathIntro: 'Twenty workouts and the tests come in order — you always see where you are.',
+  pathIntro: 'Twenty workouts come in order — you always see where you are.',
   // «Streak» and «7,000 steps on rest days» stood here. Neither is in the app any more.
   pathCountTitle: 'Workout count',
   pathCountText: 'Every workout counts. A week off resets nothing — the number only goes up.',
@@ -172,7 +172,7 @@ export const landing = {
   coursesHubDescription:
     'Forma. Start: twenty no-equipment home CrossFit workouts, a load that adapts to you, the coach’s video for every move. Plus the club and the coach in Telegram.',
   coursesHubH1: 'Courses',
-  coursesHubIntro: 'A week-by-week program with a test at the start and the end. Lifetime access.',
+  coursesHubIntro: 'Twenty workouts in order, at your own pace. Lifetime access.',
   filterEquipment: 'Equipment',
   filterLevel: 'Level',
   filterAll: 'All',
@@ -187,7 +187,7 @@ export const landing = {
   courseForWhomTitle: 'Who it is for',
   courseOutcomesTitle: 'What you will get',
   courseEquipmentTitle: 'Equipment',
-  courseEquipmentNone: 'No equipment — a mat is enough',
+  courseEquipmentNone: 'No equipment — you need a sturdy chair and a mat',
   courseProgramTitle: 'Program',
   courseProgramIntro: 'Week by week. Tap a week to see its days.',
   courseWeek: 'Week {n}',
@@ -311,7 +311,7 @@ export const landing = {
     'Technique before volume. Every exercise comes with cues and common mistakes, and every one has an easier version. Pain is a signal to reduce load, not to push through.',
   aboutPhilosophy3Title: 'Consistency',
   aboutPhilosophy3Text:
-    'Results come from weeks in a row, not one hard session. That is why the app counts workouts rather than unbroken days, and the courses have deload weeks.',
+    'Results come from weeks in a row, not one hard session. That is why the app counts workouts rather than unbroken days, and a missed day resets nothing.',
   aboutScienceTitle: 'The science, briefly',
   aboutScienceText:
     'The programs draw on ACSM and WHO physical-activity guidelines, progressive overload and RPE-based autoregulation.',

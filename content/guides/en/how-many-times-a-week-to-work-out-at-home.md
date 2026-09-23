@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: programming
 translationKey: training-frequency
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-02'
+updatedAt: '2026-09-23'
 faq:
   - q: 'How many times a week should a beginner work out at home?'
     a: 'Three times, with a rest day between sessions. The ACSM advises novices to leave about 48 hours between sessions that load the same muscle groups, and three 30- to 40-minute sessions fit that rule.'
@@ -101,7 +101,7 @@ A workout is anything after which you honestly rate the effort at 4 out of 10 or
 | 4    | Strength A | Metcon | Steps      | Strength B | Steps      | Short metcon      | Rest |
 | 5    | Strength A | Metcon | Strength B | Steps      | Metcon     | Core and mobility | Rest |
 
-The principle in all three: strength days never sit next to each other, an intense metcon does not follow a strength day that loaded the same muscles, and one day a week is complete rest with no step target. That is how the nodes are laid out in the Forma courses: Start runs three days a week on the coach’s programme with no deload week, Bodyweight Engine four, and there every fourth week is a deload, with volume cut by about a third and longer rest between sets. The deload is part of the plan, not a sign you are slacking.
+The principle in all three: strength days never sit next to each other, an intense metcon does not follow a strength day that loaded the same muscles, and one day a week is complete rest with no step target. In the Start course the twenty workouts run in a row, four blocks of five, with no deload week; the coach suggests five a week, but you set the pace. In longer programmes the deload is part of the plan, not a sign you are slacking.
 
 ## A sample 3 day workout week
 
@@ -138,4 +138,4 @@ If the goal is fat loss, more often is not better: three or four sessions plus d
 
 ## Wrap-up
 
-Three sessions a week at home is the right start for most people, four is the working norm after a few months, and five only when the days differ in focus and sleep is in order. The count is secondary; what comes first is the rest between sessions, walking on the free days and a deload every fourth week. If you would rather have the rest days, the deload and the "easier or harder" calls handled automatically, start with [the Start course](course:start): eight weeks, three sessions a week, no equipment. And on the free days the Small Steps Club in the app keeps the rhythm going: one small task a day, so the habit does not break between sessions.
+Three sessions a week at home is the right start for most people, four is the working norm after a few months, and five only when the days differ in focus and sleep is in order. The count is secondary; what comes first is the rest between sessions, walking on the free days and a deload every fourth week. If you would rather have the "easier or harder" calls handled automatically, start with [the Start course](course:start): twenty workouts in four blocks of five, at your own pace, no equipment. And on the free days the Small Steps Club in the app keeps the rhythm going: one small task a day, so the habit does not break between sessions.

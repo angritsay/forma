@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: no_equipment
 translationKey: 20-minute-workouts
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-02'
+updatedAt: '2026-09-23'
 faq:
   - q: 'Is a 20-minute workout enough to get results?'
     a: 'Yes, if the minutes are dense: a three-minute warm-up, 12 to 14 minutes of timed work and a cool-down. Four such sessions a week add up to 80 minutes, which fits the WHO recommendation of 75 to 150 minutes of vigorous activity a week.'
@@ -144,4 +144,4 @@ If you are just starting and are not sure these four sessions are within reach, 
 
 ## Wrap-up
 
-Twenty minutes is enough when three of them go to the warm-up, three to the cool-down and fourteen to one dense, timed format. The four sessions above cover strength, conditioning and core, and rotating them keeps the body from settling. If you would rather have those twenty minutes already placed on the calendar with the volume adapting to your results, open the [Start: home CrossFit basics course](course:start): eight weeks, three sessions a week, about 18 minutes each on average.
+Twenty minutes is enough when three of them go to the warm-up, three to the cool-down and fourteen to one dense, timed format. The four sessions above cover strength, conditioning and core, and rotating them keeps the body from settling. If you would rather have those twenty minutes already put in order with the volume adapting to your results, open the [Start: home CrossFit basics course](course:start): twenty workouts in four blocks of five, at your own pace, about 17 minutes each on average.

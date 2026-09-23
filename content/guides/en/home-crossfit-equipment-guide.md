@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: equipment
 translationKey: home-gym-equipment
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-02'
+updatedAt: '2026-09-23'
 faq:
   - q: 'What should I buy first for CrossFit at home?'
     a: 'A mat and a sturdy chair: they cover the first month of technique work. The first loaded implement, a kettlebell or a pair of dumbbells, is worth buying once bodyweight exercises have become easy.'
@@ -135,7 +135,7 @@ If you have joint, back or blood-pressure problems, talk to a doctor before your
 
 ## How to expand the setup
 
-1. **Weeks 1 to 4.** Mat and chair. Do four weeks of [CrossFit without equipment](guide:no-equipment-crossfit) or the first half of the Start course: squat, hinge, push-up and plank technique should be solid before the first piece of iron.
+1. **Weeks 1 to 4.** Mat and chair. Do four weeks of [CrossFit without equipment](guide:no-equipment-crossfit) or the Start course: squat, hinge, push-up and plank technique should be solid before the first piece of iron.
 2. **Month 2.** One implement: a kettlebell or a pair of dumbbells by the rules above. One, not two: you do not yet know which you prefer.
 3. **Month 3.** A jump rope and bands. They are cheap and close the gaps in jumping and pulling.
 4. **Later.** A pull-up bar, a second pair or a second bell, a box, as the exercises with your current set become easy.
@@ -144,4 +144,4 @@ If you have joint, back or blood-pressure problems, talk to a doctor before your
 
 ## Wrap-up
 
-Home CrossFit equipment builds in tiers, and the first tier is already in your room. A mat and a chair cover a month of technique, a kettlebell or dumbbells cover the next six months of strength, and a rope, bands and a bar close the remaining patterns. If you want to start today rather than wait for a delivery, open the [Start course](course:start): eight weeks on a mat and a chair with no other gear, and by the end of it you will know exactly what to buy.
+Home CrossFit equipment builds in tiers, and the first tier is already in your room. A mat and a chair cover a month of technique, a kettlebell or dumbbells cover the next six months of strength, and a rope, bands and a bar close the remaining patterns. If you want to start today rather than wait for a delivery, open the [Start course](course:start): twenty workouts on a mat and a chair with no other gear, and by the end of it you will know exactly what to buy.
