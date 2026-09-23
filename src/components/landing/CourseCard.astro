@@ -114,10 +114,15 @@ const facts = [
   <div
     class:list={['flex flex-1 flex-col px-5 pt-4 pb-5 md:p-6', wide && 'md:justify-center md:p-8']}
   >
-    <p class="eyebrow truncate">
-      {t(locale, 'landing.cardKicker')} · {levelLabel(locale, course.level)}
+    <!--
+      The level is the course's own tag, filled in its colour with its ink and leaning — orange for
+      the beginners (Style A, global.css header). The kicker beside it is the quiet word.
+    -->
+    <p class="flex flex-wrap items-center gap-x-3 gap-y-2">
+      <Pill tone="course-fill" size="sm" tilt="left">{levelLabel(locale, course.level)}</Pill>
+      <span class="eyebrow truncate">{t(locale, 'landing.cardKicker')}</span>
     </p>
-    <Heading class="font-display mt-2 text-lg leading-snug text-balance">
+    <Heading class="font-display mt-3 text-lg leading-snug text-balance">
       <a href={url} class="hover:underline">{l(course.name, locale)}</a>
     </Heading>
     <ul class="mt-4 flex flex-wrap gap-1.5">
@@ -142,7 +147,7 @@ const facts = [
       <span class="numeral tabular shrink-0 text-3xl whitespace-nowrap">{price}</span>
       <a
         href={url}
-        class="control-label inline-flex h-12 shrink-0 items-center rounded-control bg-primary px-6 text-[15px] text-on-primary transition-opacity duration-150 group-hover:opacity-85"
+        class="control-label inline-flex h-12 shrink-0 items-center rounded-control bg-action px-6 text-[15px] text-on-action transition-opacity duration-150 group-hover:opacity-85"
       >
         {t(locale, 'landing.cardView')}
       </a>

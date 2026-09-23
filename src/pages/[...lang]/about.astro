@@ -3,10 +3,11 @@
  * About the coach: profile from config, principles, the science in short. JSON-LD: Person.
  *
  * Drawn in the owner's prototype's language (design/CHANGELOG.md §10, «Профиль»): a person is a
- * circle, so the portrait is round beside the name; the name carries the brand's device on its
- * own — the first name at 800, the surname at 200; under it one line, his role. Then three
- * figures the way the prototype sets «24 тренировок · 312 минут · 4 180 ккал»: since when he
- * coaches, how many hours, since when he has been in sport — set larger than the words under them.
+ * circle, so the portrait is round beside the name, both in the page's blue field — the surname
+ * the key word in light blue, a bleu-ciel «Тренер» tag over it; under it one line, his role.
+ * Then three figures the way the prototype sets «24 тренировок · 312 минут · 4 180 ккал»: since
+ * when he coaches, how many hours, since when he has been in sport — set larger than the words
+ * under them.
  * The bio and the checkable credential list stay below, because this page sells his courses
  * under his name and a figure without its source is a boast. `CoachCard` still draws the home
  * page's compact version; this page stopped sharing it because its frame is now a different
@@ -20,6 +21,9 @@ import Landing from '@/layouts/Landing.astro';
 import Breadcrumbs from '@/components/landing/Breadcrumbs.astro';
 import Button from '@/components/landing/Button.astro';
 import Cta from '@/components/landing/Cta.astro';
+import HeroField from '@/components/landing/HeroField.astro';
+import KeyTitle from '@/components/landing/KeyTitle.astro';
+import Pill from '@/components/landing/Pill.astro';
 import { breadcrumbLd, personLd } from '@/components/landing/jsonld';
 import type { Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
@@ -39,8 +43,7 @@ const title = t(locale, 'landing.aboutTitle');
 const description = t(locale, 'landing.aboutDescription');
 
 const name = l(COACH.name, locale);
-const [heavy, ...thinParts] = name.trim().split(/\s+/);
-const thin = thinParts.join(' ');
+const [heavy] = name.trim().split(/\s+/);
 const role = l(COACH.role, locale);
 const bio = l(COACH.bio, locale);
 const bookHint = t(locale, 'landing.coachBookHint', {
@@ -93,8 +96,12 @@ const H2 = 'display text-lg md:text-xl';
       ]}
     />
 
-    <!-- The identity: a circle, the name, one line. -->
-    <header class="mt-8 flex items-center gap-5 md:gap-8">
+    <!--
+      The identity: a circle, the name, one line — in the page's blue field (Style A). The coach's
+      tag is bleu ciel, the colour his section wears in the app; his surname is the key word, in
+      light blue over the swoosh, where it used to be the 200-weight half of the name.
+    -->
+    <HeroField as="header" class="mt-8 flex items-center gap-5 md:gap-8">
       {
         COACH.photo ? (
           <span class="relative size-24 shrink-0 overflow-hidden rounded-pill bg-surface md:size-32">
@@ -111,7 +118,7 @@ const H2 = 'display text-lg md:text-xl';
           </span>
         ) : (
           <span
-            class="display flex size-24 shrink-0 items-center justify-center rounded-pill bg-paper text-4xl text-ink md:size-32"
+            class="display flex size-24 shrink-0 items-center justify-center rounded-pill bg-paper text-4xl text-field md:size-32"
             aria-hidden="true"
           >
             {heavy?.charAt(0)}
@@ -119,13 +126,11 @@ const H2 = 'display text-lg md:text-xl';
         )
       }
       <div class="min-w-0">
-        <h1 class="display text-3xl text-balance md:text-5xl">
-          {heavy}
-          {thin && <span class="t-thin"> {thin}</span>}
-        </h1>
-        <p class="mt-2 text-[15px] leading-snug text-muted">{role}</p>
+        <Pill tone="ciel" size="sm" tilt="right">{t(locale, 'landing.coachEyebrow')}</Pill>
+        <KeyTitle text={name} class="display mt-3 text-3xl md:text-5xl" />
+        <p class="field-lead mt-3 text-[15px] leading-snug">{role}</p>
       </div>
-    </header>
+    </HeroField>
 
     <!--
       The figures, larger than the words that name them. Side by side from `sm`; on a phone one

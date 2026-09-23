@@ -420,13 +420,14 @@ export const CourseSchema = z.object({
    * The course's tile colour — the one colour on the screen while this course is open. It paints
    * the cover, the progress and the number of the current day, and never a button.
    *
-   * It is a *programme* colour, not a course's own hue: beginners #f2f52d, yoga #a8c8ff, marathon
-   * #ff7a1a (--course-* in src/styles/global.css). A course that belongs to none of those
-   * programmes takes a neutral surface (--tile-4 #1f1f24 or --tile-5 #2a2a30) and the interface
-   * around it stays black and white, which is the design: one screen, one colour, or none.
+   * It is a *programme* colour, not a course's own hue: beginners #ff5a00, dumbbells #f4ff3f, yoga
+   * #ffe6d0 (--course-* in src/styles/global.css). A course that belongs to none of those
+   * programmes takes a neutral surface (--tile-4 #2e2e2e or --tile-5 #383838). The blues are not
+   * course colours: electric blue #2038e2 is the club's, bleu ciel #007bff the coach's, and the
+   * light blue #afe9fd is the interface's accent.
    *
-   * Ink on the tile is derived from the hex by `courseTileVars()` (src/lib/ui/tile.ts) — black on
-   * a programme colour, light on a surface — so content never has to say which it is.
+   * Ink on the tile is derived from the hex by `courseTileVars()` (src/lib/ui/tile.ts) — whichever
+   * of #111111 and white measures the better contrast — so content never has to say which it is.
    */
   tile: z.string().regex(hexRegex),
   /*

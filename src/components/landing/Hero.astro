@@ -22,9 +22,18 @@
  *
  * `photo` wins when it is set; a frame from the named movement's clip stands in, so the hero still
  * renders before a usable photograph exists.
+ *
+ * Style A (global.css header): the words stand in the blue hero field — the page's one — white,
+ * the headline's last two words («под тебя», «to you») in the brand's light blue over the swoosh.
+ * The field is opaque, so on the phone the photograph behind it no longer has to be darkened into
+ * ground for the type to read; it shows above the field instead. The first fact pill is white and
+ * leans, the rest are white hairlines. The primary button is the page's neon and stands under the
+ * field, on charcoal, as in the owner's mockup.
  */
 import ExerciseStill from '@/components/media/ExerciseStill';
 import Button from './Button.astro';
+import HeroField from './HeroField.astro';
+import KeyTitle from './KeyTitle.astro';
 import Pill from './Pill.astro';
 
 interface Props {
@@ -48,18 +57,20 @@ interface Props {
 const { title, subtitle, primary, secondary, chips, figure, photo, tileTop } = Astro.props;
 
 /** Where the heavy half of the headline ends: at the first comma, else after two words. */
-function splitHeadline(text: string, thin?: string): [string, string] {
-  if (thin) {
-    const at = text.indexOf(thin);
-    if (at > 0) return [text.slice(0, at), text.slice(at)];
-  }
+function thinFrom(text: string, thin?: string): string | undefined {
+  if (thin && text.indexOf(thin) > 0) return thin;
   const comma = text.indexOf(',');
-  if (comma > 0) return [text.slice(0, comma + 1), text.slice(comma + 1)];
+  if (comma > 0) return text.slice(comma + 1);
   const words = text.split(' ');
-  if (words.length < 3) return [text, ''];
-  return [words.slice(0, 2).join(' '), ' ' + words.slice(2).join(' ')];
+  if (words.length < 3) return undefined;
+  return ' ' + words.slice(2).join(' ');
 }
-const [heavy, light] = splitHeadline(title, Astro.props.thin);
+const thin = thinFrom(title, Astro.props.thin);
+/*
+ * A second pill leans the other way, but only a short one: a tilt lifts a pill's far end by
+ * about a tenth of its width, and a long fact leaning 5° runs into the row under it.
+ */
+const rightTilt = chips.findIndex((c, i) => i > 0 && c.length <= 14);
 ---
 
 <!--
@@ -77,21 +88,32 @@ const [heavy, light] = splitHeadline(title, Astro.props.thin);
   class="relative isolate mx-auto flex min-h-[86svh] max-w-6xl flex-col justify-end overflow-x-clip px-5 pt-10 pb-12 md:grid md:min-h-0 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:items-end md:gap-14 md:pt-20 md:pb-28"
 >
   <div class="relative z-10">
-    <p class="eyebrow">{tileTop}</p>
-    <h1 class="display mt-5 max-w-[16ch] text-[clamp(1.75rem,7vw,2.75rem)]">
-      {heavy}{light && <span class="t-thin">{light}</span>}
-    </h1>
-    <p class="mt-5 max-w-xl text-base leading-relaxed text-muted md:text-lg">{subtitle}</p>
-    <ul class="mt-6 flex flex-wrap gap-2">
-      {
-        chips.map((c) => (
-          <li class="flex max-w-full">
-            <Pill size="md">{c}</Pill>
-          </li>
-        ))
-      }
-    </ul>
-    <div class="mt-8 flex flex-wrap items-center gap-3">
+    <HeroField>
+      <p class="eyebrow">{tileTop}</p>
+      <KeyTitle
+        text={title}
+        keyWords={2}
+        thin={thin}
+        class="display mt-4 max-w-[16ch] text-[clamp(1.75rem,7vw,2.75rem)]"
+      />
+      <p class="field-lead mt-5 max-w-xl text-base leading-relaxed md:text-lg">{subtitle}</p>
+      <ul class="mt-6 flex flex-wrap gap-2">
+        {
+          chips.map((c, i) => (
+            <li class="flex max-w-full">
+              <Pill
+                size="md"
+                tone={i === 0 ? 'white' : 'ghost'}
+                tilt={i === 0 ? 'left' : i === rightTilt ? 'right' : undefined}
+              >
+                {c}
+              </Pill>
+            </li>
+          ))
+        }
+      </ul>
+    </HeroField>
+    <div class="mt-5 flex flex-wrap items-center gap-3">
       <Button href={primary.href} size="lg" class="w-full sm:w-auto">{primary.label}</Button>
       {
         secondary && (
@@ -136,9 +158,9 @@ const [heavy, light] = splitHeadline(title, Astro.props.thin);
             <div class="photo-grain" aria-hidden="true" />
             <div class="photo-scrim" aria-hidden="true" />
             {/*
-              A second, page-coloured scrim for the phone only, where the type stands on the
-              picture: `.photo-scrim` is drawn for a caption in the bottom third, and a headline,
-              a paragraph, a row of pills and a button need the bottom half to be nearly ground.
+              A second, page-coloured scrim for the phone only, where the field stands on the
+              picture: the field is opaque and needs no protection, but the photograph has to run
+              out into charcoal under it, so the button beneath the field stands on the ground.
             */}
             <div
               class="absolute inset-0 bg-linear-to-t from-bg via-bg/80 via-45% to-transparent md:hidden"

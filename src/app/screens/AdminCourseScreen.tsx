@@ -440,7 +440,11 @@ export default function AdminCourseScreen() {
           {/* Publishing is instant in the app and not on the website; say so where it is decided. */}
           <p className="text-[15px] text-muted">{t('app.coursePublishSite')}</p>
 
-          {/* Publish is the one white button on this tab; taking it back is a secondary. */}
+          {/*
+           * Publish is the one neon button on this tab — neon is the palette's colour for action,
+           * and this is the action the whole tab exists for. Taking it back is a secondary. The `!`
+           * is there because the primary variant sets its own fill; the ink is #111111 (17.3).
+           */}
           {published ? (
             <Button
               variant="secondary"
@@ -453,6 +457,7 @@ export default function AdminCourseScreen() {
           ) : (
             <Button
               size="lg"
+              className="bg-action! text-on-action!"
               loading={publishing}
               disabled={issues.length > 0}
               onClick={() => void publish()}

@@ -62,7 +62,8 @@ const annual = PLAN_BY_ID.get('annual');
           />
         </div>
         <p class="text-xs text-muted md:text-right">{l(annual.note, locale)}</p>
-        <Button href={href(locale, '/subscribe/')}>
+        {/* White, not the neon: in the courses section the course's own button is the action. */}
+        <Button href={href(locale, '/subscribe/')} variant="plain">
           {t(locale, 'landing.navSubscribe')}{' '}
           <span class="glyph" aria-hidden="true">
             →

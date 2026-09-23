@@ -7,6 +7,7 @@
  * doing the work a grey caption used to do. Everything else is one line per language.
  */
 import Base from '@/layouts/Base.astro';
+import HeroField from '@/components/landing/HeroField.astro';
 import Logo from '@/components/landing/Logo.astro';
 import { t } from '@/i18n/index';
 import { appHref, href, withBase } from '@/lib/util/paths';
@@ -40,9 +41,14 @@ const blocks = [
     <a href={withBase('/')} class="inline-flex text-2xl text-text">
       <Logo lockup label={BRAND.name} />
     </a>
-    <h1 class="display tabular text-[128px] leading-none md:text-[200px]" aria-label="404">
-      <span aria-hidden="true">4<span class="t-thin">0</span>4</span>
-    </h1>
+    <HeroField>
+      <h1
+        class="display tabular text-[96px] leading-none text-on-field sm:text-[128px] md:text-[200px]"
+        aria-label="404"
+      >
+        <span aria-hidden="true">4<span class="t-thin text-accent">0</span>4</span>
+      </h1>
+    </HeroField>
     <div class="grid gap-x-10 md:grid-cols-2">
       {
         blocks.map((b, i) => (
@@ -55,7 +61,7 @@ const blocks = [
             <div class="mt-6 flex flex-wrap gap-3">
               <a
                 href={href(b.locale, '/')}
-                class="control-label inline-flex h-12 items-center rounded-control bg-primary px-6.5 text-[13px] text-on-primary hover:opacity-85"
+                class="control-label inline-flex h-12 items-center rounded-control bg-action px-6.5 text-[13px] text-on-action hover:opacity-85"
               >
                 {b.home}
               </a>

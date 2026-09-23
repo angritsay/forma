@@ -1162,7 +1162,7 @@ export async function createAdminCourse(
       sessionsPerWeek: 3,
       avgSessionMin: 30,
       equipment: ['none'],
-      tile: '#1A2634',
+      tile: '#2e2e2e',
       priceRub: 0,
       priceUsd: 0,
       content: { longDescription: [], forWhom: [], outcomes: [], faq: [] },

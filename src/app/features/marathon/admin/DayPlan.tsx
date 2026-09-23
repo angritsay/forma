@@ -165,13 +165,15 @@ export function DayPlan({
                 className={clsx(
                   'relative flex aspect-square flex-col items-center justify-center border text-[13px]',
                   'transition-colors duration-150 ease-(--ease-out)',
+                  // The chosen day wears the interface accent, today a neon rim — the club's own
+                  // calendar marks today in neon too.
                   selected
-                    ? 'border-primary bg-primary text-bg'
+                    ? 'border-accent bg-accent text-on-accent'
                     : inRun
                       ? 'border-border text-text hover:bg-surface-2'
                       : // Outside the run: drawn so the week keeps its shape, and nothing more.
                         'border-transparent text-muted-2/40',
-                  isToday && !selected && 'border-primary',
+                  isToday && !selected && 'border-action',
                 )}
               >
                 <span className="numeral tabular leading-none">{dayNumber}</span>

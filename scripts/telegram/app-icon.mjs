@@ -3,28 +3,33 @@
  * The 640×360 image BotFather asks for when a Mini App is created (`/newapp`).
  *
  * It is the card people see in a Telegram link preview and in the bot's profile, so it is the
- * brand's first frame: the same dark ground, blue glow and Manrope wordmark as the OG cards,
- * cropped to Telegram's aspect ratio. Rendered here rather than exported by hand so it stays in
- * step with the brand and can be regenerated in a second.
+ * brand's first frame: the charcoal ground, the Unbounded wordmark and the brand's light blue —
+ * the same faces and tokens as the OG cards (scripts/seo/og.mjs, src/styles/global.css), cropped
+ * to Telegram's aspect ratio. Rendered here rather than exported by hand so it stays in step with
+ * the brand and can be regenerated in a second.
  *
  *   npm run telegram:icon            → media/telegram/app-icon.png
  *   npm run telegram:icon -- --out x.png
+ *
+ * After regenerating, the image has to be uploaded to BotFather by hand (`/myapps` → the app →
+ * Edit Photo); nothing here can push it.
  */
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Resvg } from '@resvg/resvg-js';
+import { BODY, FONTS_DIR, WORDMARK, WORDMARK_THIN, advanceWidth } from '../seo/font-metrics.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..', '..');
-const FONTS_DIR = join(ROOT, 'scripts', 'seo', 'fonts');
 const WIDTH = 640;
 const HEIGHT = 360;
 
-const BG = '#0B0B0D';
-const TEXT = '#F4F4F6';
-const MUTED = '#9A9AA3';
-const ACCENT = '#9ECBFF';
+// Tokens from src/styles/global.css, as literals: an SVG handed to resvg has no custom properties.
+const BG = '#1A1A1A';
+const TEXT = '#F6F6F7';
+const MUTED = '#B9B9C0';
+const ACCENT = '#AFE9FD';
 
 const args = process.argv.slice(2);
 const outArg = args.indexOf('--out');
@@ -34,33 +39,36 @@ const OUT =
     : join(ROOT, 'media', 'telegram', 'app-icon.png');
 
 /**
- * Brand card: a soft blue glow behind the wordmark, a hairline rule, tagline underneath.
+ * Brand card: the wordmark with a light-blue swoosh under it, the tagline with its key words in
+ * the same light blue, and what is inside the app in the quiet grey.
  *
- * The wordmark's full stop is the accent — the one place blue appears at any size in the
- * identity — so it is drawn as its own <text> after measuring the name. The rule under it is a
- * flat 1px hairline rather than the 4px gradient bar it replaced.
+ * The wordmark is the one in src/components/ui/Logo.tsx — «FOR» at 800, «MA» at 200, the F
+ * stretched ×1.22 with a wider gap after it — measured piece by piece against the faces it is
+ * drawn in, like the OG cards' wordmark. The swoosh is the site's hand-drawn underline; on charcoal
+ * it is light blue rather than the neon it wears on a blue field, because this card has no action.
  */
 function svg() {
-  // Measured from Manrope-ExtraBold.ttf: "FORMA" advances 3.501em, so 266.1px at 76px, less the
-  // 1.5px of negative tracking applied after each of its five glyphs. Hard-coded because this
-  // script does not carry the OG generator's font-metrics parser and the wordmark never changes;
-  // re-measure if the face, the weight or the size does.
-  const nameWidth = 258.6;
+  const x = 56;
+  const size = 64;
+  const y = 164;
+  const tracking = size * 0.05;
+  const fWidth = advanceWidth('F', WORDMARK) * size * 1.22 + size * 0.16;
+  const orWidth = (advanceWidth('OR', WORDMARK) + 0.05 * 2) * size;
+  const maWidth = (advanceWidth('MA', WORDMARK_THIN) + 0.05 * 2) * size;
+  const markWidth = fWidth + orWidth + maWidth - tracking;
+  const lineY = y + 26;
+  const head = 'Кроссфит дома. ';
+  const headWidth = advanceWidth(head, BODY) * 26;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
-  <defs>
-    <radialGradient id="glow" cx="0.5" cy="0.1" r="0.9">
-      <stop offset="0" stop-color="${ACCENT}" stop-opacity="0.22"/>
-      <stop offset="0.55" stop-color="${ACCENT}" stop-opacity="0.07"/>
-      <stop offset="1" stop-color="${BG}" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
   <rect width="${WIDTH}" height="${HEIGHT}" fill="${BG}"/>
-  <rect width="${WIDTH}" height="${HEIGHT}" fill="url(#glow)"/>
-  <rect x="56" y="196" width="72" height="1" fill="${ACCENT}"/>
-  <text x="56" y="168" font-family="Manrope" font-weight="800" font-size="76" letter-spacing="-1.5" fill="${TEXT}">FORMA</text>
-  <text x="${56 + nameWidth}" y="168" font-family="Manrope" font-weight="800" font-size="76" fill="${ACCENT}">.</text>
-  <text x="56" y="240" font-family="Onest" font-size="24" fill="${MUTED}">Кроссфит дома. Под тебя.</text>
-  <text x="56" y="284" font-family="Onest" font-size="20" fill="${MUTED}">5 курсов · нагрузка подстраивается под тебя</text>
+  <g fill="${TEXT}" font-family="Unbounded" font-size="${size}">
+    <text x="0" y="${y}" font-weight="800" transform="translate(${x} 0) scale(1.22 1)">F</text>
+    <text x="${(x + fWidth).toFixed(1)}" y="${y}" font-weight="800" letter-spacing="${tracking}">OR</text>
+    <text x="${(x + fWidth + orWidth).toFixed(1)}" y="${y}" font-weight="200" letter-spacing="${tracking}">MA</text>
+  </g>
+  <path d="M${x + 2} ${lineY + 5} C${(x + markWidth * 0.3).toFixed(1)} ${lineY - 2} ${(x + markWidth * 0.7).toFixed(1)} ${lineY - 3} ${(x + markWidth - 2).toFixed(1)} ${lineY + 2}" stroke="${ACCENT}" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <text x="${x}" y="252" font-family="Onest" font-size="26" fill="${TEXT}">${head}<tspan x="${(x + headWidth).toFixed(1)}" fill="${ACCENT}">Под тебя.</tspan></text>
+  <text x="${x}" y="292" font-family="Onest" font-size="20" fill="${MUTED}">Курсы · клуб · тренер — в Telegram</text>
 </svg>`;
 }
 

@@ -16,6 +16,8 @@
  * figure grows on its own the week he films more.
  */
 import Landing from '@/layouts/Landing.astro';
+import HeroField from '@/components/landing/HeroField.astro';
+import KeyTitle from '@/components/landing/KeyTitle.astro';
 import Breadcrumbs from '@/components/seo/Breadcrumbs.astro';
 import ExerciseCard from '@/components/exercises/ExerciseCard.astro';
 import { FILMED_EXERCISES } from '@/content/registry';
@@ -84,10 +86,10 @@ const jsonLd = [
       then the number that sizes it — because the H1 has to come first for anything reading the
       document rather than looking at it.
     -->
-    <header class="mt-8 md:flex md:items-end md:justify-between md:gap-10">
+    <HeroField as="header" class="mt-8 md:flex md:items-end md:justify-between md:gap-10">
       <div class="max-w-2xl md:order-1">
-        <h1 class="display text-3xl md:text-5xl">{t(locale, 'seo.exercisesHubH1')}</h1>
-        <p class="mt-4 max-w-xl text-[15px] leading-relaxed text-muted">
+        <KeyTitle text={t(locale, 'seo.exercisesHubH1')} class="display text-3xl md:text-5xl" />
+        <p class="field-lead mt-4 max-w-xl text-[15px] leading-relaxed">
           {t(locale, 'seo.exercisesHubIntro')}
         </p>
       </div>
@@ -99,7 +101,7 @@ const jsonLd = [
           </p>
         )
       }
-    </header>
+    </HeroField>
 
     {
       groups.length === 0 ? (

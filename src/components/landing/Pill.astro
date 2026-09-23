@@ -26,6 +26,14 @@
  * caller is responsible for not asking for `course` on a neutral dark tile, where the colour is
  * the ground.
  *
+ * Style A (global.css header) adds the palette's tags, the site's twins of the app `Pill`'s:
+ * `action` is the neon — «новое», «выгоднее», the tags that ask for attention; `orange` marks the
+ * beginners, `ciel` the coach; `sky` is the brand's light blue; `white` and `ghost` are the two
+ * that sit on a blue hero field (white with blue words, a white hairline with white words). Every
+ * filled tag takes the ink, #111111, which clears 4.5 on each of them — on `ciel` too (4.75), where
+ * the charcoal would not. `tilt` leans a tag ±5–6°, the hand-placed look of the owner's mockups;
+ * use it on one or two tags in a row, not all of them.
+ *
  * The height is a minimum, not a fixed 28px, and the words wrap rather than truncate. The longest
  * equipment name in the library — «Тумба или устойчивая ступенька» — is nine pixels wider than an
  * exercise row's text column on a 390px phone, and a pill that reads «Тумба или устойчивая сту…»
@@ -35,8 +43,21 @@
 import type { HTMLAttributes } from 'astro/types';
 
 interface Props extends HTMLAttributes<'span'> {
-  tone?: 'neutral' | 'course' | 'course-fill' | 'paper' | 'ink';
+  tone?:
+    | 'neutral'
+    | 'course'
+    | 'course-fill'
+    | 'paper'
+    | 'ink'
+    | 'action'
+    | 'orange'
+    | 'ciel'
+    | 'sky'
+    | 'white'
+    | 'ghost';
   size?: 'sm' | 'md';
+  /** Lean the tag: `left` −6°, `right` +5°. */
+  tilt?: 'left' | 'right';
   /** `li` inside a list of facts, `span` (default) inline. */
   as?: 'span' | 'li';
 }
@@ -47,7 +68,15 @@ const TONE = {
   'course-fill': 'border-transparent bg-course text-tile-fg',
   paper: 'border-transparent bg-paper text-ink',
   ink: 'border-transparent bg-ink/85 text-paper',
+  action: 'border-transparent bg-action text-on-action',
+  orange: 'border-transparent bg-orange text-ink',
+  ciel: 'border-transparent bg-ciel text-ink',
+  sky: 'border-transparent bg-accent text-on-accent',
+  white: 'border-transparent bg-paper text-field',
+  ghost: 'border-on-field/85 text-on-field',
 } as const;
+
+const TILT = { left: '-rotate-6', right: 'rotate-5' } as const;
 
 const SIZE = {
   sm: 'min-h-8 px-3 py-1 text-[13px]',
@@ -57,6 +86,7 @@ const SIZE = {
 const {
   tone = 'neutral',
   size = 'sm',
+  tilt,
   as: Tag = 'span',
   class: className = '',
   ...rest
@@ -73,6 +103,7 @@ const {
     'control-label inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-pill border leading-[1.3]',
     SIZE[size],
     TONE[tone],
+    tilt && TILT[tilt],
     className,
   ]}
   {...rest}

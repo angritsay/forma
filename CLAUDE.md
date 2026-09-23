@@ -11,9 +11,13 @@
 - **Visual rules live in `design/`** — the vendored design system. `design/SKILL.md` is the
   one-paragraph law, `design/CHANGELOG.md` says what changed from the first brandbook, and
   `design/tokens/*.css` are the values; `src/styles/global.css` is their implementation and
-  documents every deliberate deviation (two greys darkened for AA). Interface strictly black
-  and white, radius 0, Unbounded capitals for display, Onest for text, the programme colour of
-  the open course as the only colour, glyphs instead of icons. Check a new screen against
+  documents every deliberate deviation. The ground is charcoal `#1a1a1a` and nothing else; light
+  blue `#afe9fd` is the brand and interface accent; one electric-blue `#2038e2` hero field per
+  screen (white type, light-blue key word); neon `#f4ff3f` for the one main action; the crossroads
+  gradient belongs to the club only; section colours are tags (beginners orange `#ff5a00`,
+  dumbbells neon, yoga beige `#ffe6d0`, coach bleu ciel `#007bff`); ink on a fill is chosen by
+  measured contrast (`src/lib/ui/tile.ts`); no outlined text. Concentric radii, Unbounded in
+  sentence case for display, Onest for text, glyphs instead of icons. Check a new screen against
   `design/ui_kits`-style references before inventing a pattern.
 - Code, comments, commit messages and docs in English; product copy is Russian with an English
   value on every `L10n` field.
