@@ -52,9 +52,35 @@ export interface LavaProduct {
  * которые однажды разойдутся.
  */
 export const LAVA_PRODUCTS: Readonly<Record<string, LavaProduct>> = {
-  // Заполняется из кабинета lava.top, например:
-  // 'course:start': { productUrl: 'https://lava.top/…', productId: '…' },
-  // 'plan:annual': { productUrl: 'https://lava.top/…', productId: '…' },
+  'course:start': {
+    productUrl: 'https://app.lava.top/products/8a142d2b-59ec-49ec-8f4e-6b187a409e80',
+    productId: '8a142d2b-59ec-49ec-8f4e-6b187a409e80',
+  },
+
+  /*
+   * Месяц и год ведут по одной ссылке, и это не недоделка.
+   *
+   * Подписка в lava.top заводится «тарифом»: один товар, внутри которого периоды. Отдельной
+   * страницы у месяца и у года нет — период выбирается там же, на странице тарифа. Значит обе
+   * наши кнопки ведут в одно место, и нажавший «год» выбирает год уже на той стороне.
+   *
+   * В адресе два идентификатора: товар и тариф внутри него. Какой из них приедет в вебхук полем
+   * `product.id`, снаружи не проверить, поэтому в секрете перечислены оба
+   * (`supabase/functions/lava-webhook/products.ts`). Здесь нужен только адрес.
+   *
+   * Адрес кабинетный, `app.lava.top`, и это правильно: у lava.top публичная и приватная ссылка на
+   * товар — одна и та же («Публичные и приватные ссылки в Лава Топ не отличаются»).
+   */
+  'plan:monthly': {
+    productUrl:
+      'https://app.lava.top/products/7cc73d70-b569-409d-b928-0f34cacbfe17/e98d187a-1700-40ff-80a2-ec3a78fd1cc1',
+    productId: '7cc73d70-b569-409d-b928-0f34cacbfe17',
+  },
+  'plan:annual': {
+    productUrl:
+      'https://app.lava.top/products/7cc73d70-b569-409d-b928-0f34cacbfe17/e98d187a-1700-40ff-80a2-ec3a78fd1cc1',
+    productId: '7cc73d70-b569-409d-b928-0f34cacbfe17',
+  },
 };
 
 /** Ключ курса в таблице выше. */
