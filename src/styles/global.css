@@ -1408,3 +1408,43 @@ body {
     animation: none;
   }
 }
+
+/* ── Palette B: screens ── */
+
+/*
+ * The club's glow — style B of the third palette (see the header of this file): a soft aurora of
+ * the crossroads colours behind the club's screens, and nowhere else.
+ *
+ * It is a layer *behind* the screen rather than a background on it, so it never sits under a
+ * paragraph as a colour of its own: three blurred blobs at low alpha across the top of the ground.
+ * The alpha is the whole contrast budget, and `tile.test.ts` holds it: even with all three colours
+ * stacked on one pixel at full strength (they are not — they sit apart and blur out), `--muted-2`
+ * keeps 4.5:1 there and the warm gradient's orange end keeps 3:1. That is why **`.text-gradient`
+ * on the club is for large type only** (the club's name, a task's title); a key phrase in body
+ * copy takes the light blue, which clears 9:1 on the worst pixel.
+ *
+ * `pointer-events: none` and `z-index: -1` inside an isolated wrapper (`.club-aurora-host`), so it
+ * can neither take a tap nor escape above a sibling. Motion-free: a glow that breathes is a
+ * spinner nobody asked for.
+ */
+.club-aurora-host {
+  position: relative;
+  isolation: isolate;
+}
+
+.club-aurora {
+  position: absolute;
+  inset: 0 0 auto;
+  height: min(520px, 70vh);
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0.1;
+  background:
+    radial-gradient(60% 55% at 18% 0%, #afe9fd 0%, transparent 70%),
+    radial-gradient(55% 50% at 88% 8%, #ff5a00 0%, transparent 72%),
+    radial-gradient(70% 60% at 55% 30%, #2038e2 0%, transparent 75%);
+  filter: blur(28px);
+  -webkit-mask-image: linear-gradient(180deg, #000 30%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 30%, transparent 100%);
+}

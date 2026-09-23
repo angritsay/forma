@@ -64,7 +64,9 @@ export function PlayerHeader({ progress, paused, onBack, onTogglePause }: Player
        * How far through the session, as a 2px rule along the very top edge.
        *
        * A rule says the same thing «Шаг 5 из 20» said, without asking anyone to read two numbers
-       * and divide them mid-set. It is the one place the programme colour appears up here.
+       * and divide them mid-set. It is the one place the programme colour appears up here — as
+       * `--course-accent`, the colour made readable as a thin figure on a dark ground (the tile
+       * itself would vanish for the two blues).
        */}
       <div
         className="relative h-[2px] w-full bg-paper/15"
@@ -75,7 +77,7 @@ export function PlayerHeader({ progress, paused, onBack, onTogglePause }: Player
         aria-label={t('app.playerProgressLabel')}
       >
         <div
-          className="h-full bg-course transition-[width] duration-300 ease-(--ease-out)"
+          className="h-full bg-course-accent transition-[width] duration-300 ease-(--ease-out)"
           style={{ width: `${Math.min(1, Math.max(0, progress)) * 100}%` }}
         />
       </div>
@@ -350,7 +352,13 @@ export function PausedOverlay({ onResume, actions, className }: PausedOverlayPro
     >
       <span className="font-display text-4xl">{t('app.playerPausedTitle')}</span>
       <p className="max-w-[30ch] text-[15px] text-muted">{t('app.playerPausedBody')}</p>
-      <Button size="lg" onClick={onResume} icon={<Icon name="play" size={16} />} data-autofocus>
+      <Button
+        variant="action"
+        size="lg"
+        onClick={onResume}
+        icon={<Icon name="play" size={16} />}
+        data-autofocus
+      >
         {t('app.playerResume')}
       </Button>
       {actions && actions.length > 0 ? (

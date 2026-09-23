@@ -6,10 +6,10 @@
  * quietly undo that by making an early leader unbeatable and telling anyone who joined late that
  * they are already out of it.
  *
- * It is a screen of the club, so it carries the club's colour: `--course-tile` is set at
- * the root and lands on the prize's pill and on the leader's filled circle — the two things the
- * colour marks on the day screen's own table. Your own row is a white ring, not the colour. The
- * week switch stays black and white; it is a control.
+ * It is a screen of the club, so it wears the club's style (style B, global.css header): the glow
+ * behind it. The prize's pill and the leader's filled circle are the neon — the two things the
+ * day screen's own table marks too. Your own row is a white ring. The week switch is a control and
+ * chooses in electric blue like every other.
  *
  * It is the tab's overflow and nothing more. The standings are on the tab itself now — the top
  * three and the member's own row — because «только задание и лидерборд» means the leaderboard is
@@ -112,7 +112,9 @@ export default function MarathonBoardScreen() {
   const scored = rows.some((r) => r.points > 0);
 
   return (
-    <div style={courseTileVars(GAME_TILE)}>
+    <div className="club-aurora-host" style={courseTileVars(GAME_TILE)}>
+      {/* The club's glow (style B, global.css): this is a screen of the club. */}
+      <div className="club-aurora" aria-hidden="true" />
       <Screen header={header}>
         <div className="flex flex-col gap-5 py-2">
           <Tabs<WeekChoice>
@@ -132,7 +134,7 @@ export default function MarathonBoardScreen() {
               draws above its five rows, so the two tables read as one race. `flex` rather than a
               bare child so the pill hugs its words instead of being stretched by the column. */}
           <div className="flex">
-            <Pill tone="course-fill">
+            <Pill tone="neon">
               {t('app.marathonPrizeShort')} · {clubPrize(tr, marathon.prize)}
             </Pill>
           </div>

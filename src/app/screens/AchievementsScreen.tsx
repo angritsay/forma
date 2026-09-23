@@ -14,6 +14,8 @@
  */
 import { useMemo } from 'react';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { HeroField, KeyTitle } from '@/components/ui/HeroField';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Screen } from '@/components/ui/Screen';
 import { formatNumber } from '@/i18n/index';
 import { evaluateAchievements } from '@/lib/training/levels';
@@ -49,21 +51,11 @@ export default function AchievementsScreen() {
   );
   const unlocked = achievements.filter((a) => a.unlocked).length;
 
-  const header = (
-    <TopBar
-      back
-      title={t('app.achievementsTitle')}
-      right={
-        /* The count as the header's own figure: it is the one number the catalogue is about. */
-        <span className="numeral tabular text-sm text-muted">
-          {t('app.statsAchievementsCount', {
-            done: formatNumber(locale, unlocked),
-            total: formatNumber(locale, achievements.length),
-          })}
-        </span>
-      }
-    />
-  );
+  const count = t('app.statsAchievementsCount', {
+    done: formatNumber(locale, unlocked),
+    total: formatNumber(locale, achievements.length),
+  });
+  const header = <TopBar back title={t('app.achievementsTitle')} />;
 
   if (status === 'idle' || status === 'loading') {
     return (
@@ -79,8 +71,25 @@ export default function AchievementsScreen() {
         <EmptyState icon="trophy" title={t('app.achievementsEmpty')} />
       ) : (
         /* No lead over the list. «Всё, что можно взять, и как.» described what the rows under it
-           already are, and the count in the header is the one line this screen needs. */
-        <AchievementList items={achievements} />
+           already are, and the count is the one line this screen needs.
+
+           The count is the screen's blue hero field (style A, global.css header) — the one number
+           the catalogue is about, which used to sit small in the header's corner. Its last word,
+           the total, is the key word. */
+        <div className="flex flex-col gap-6">
+          <HeroField>
+            <p className="display tabular text-[40px] leading-[1.2]">
+              <KeyTitle text={count} />
+            </p>
+            <ProgressBar
+              value={unlocked / achievements.length}
+              ground="field"
+              label={t('app.achievementsTitle')}
+              className="mt-6"
+            />
+          </HeroField>
+          <AchievementList items={achievements} />
+        </div>
       )}
     </Screen>
   );

@@ -11,6 +11,7 @@
  */
 import { useEffect, useMemo, useRef } from 'react';
 import { Badge } from '@/components/ui/Badge';
+import { Pill } from '@/components/ui/Pill';
 import type { Course, CourseNode } from '@/content/schema';
 import { useT } from '@/app/hooks/useT';
 import { groupNodesByWeek, nodeStatus, type NodeStatus, type PathState } from './nodeState';
@@ -65,18 +66,23 @@ export function PathView({ course, state, stars, onNodePress }: PathViewProps) {
         return (
           <section key={g.week}>
             {/*
-             * The week's band: the programme colour, bleeding past both gutters, the week on the
-             * left and its score on the right — «НЕДЕЛЯ 1 · 3/7», plain figures, no zero-padding,
-             * as the prototype writes it. It is the one horizontal thing in a screen of stops,
-             * which is what makes the weeks readable as chapters rather than as more of the same
-             * column.
+             * The week's band, bleeding past both gutters, the week on the left and its score on
+             * the right — «Неделя 1 · 3/7», plain figures, no zero-padding, as the prototype writes
+             * it. It is the one horizontal thing in a screen of stops, which is what makes the
+             * weeks readable as chapters rather than as more of the same column.
+             *
+             * It used to be a band of the programme colour. The third palette keeps a section's
+             * colour to tags (global.css header), so the band is a charcoal surface and the week
+             * is the tag — a pill of the programme colour with its measured ink.
              */}
-            <div className="hero-art -mx-6 flex items-baseline justify-between gap-3 px-6 py-3 md:-mx-10 md:px-10">
-              <div className="flex items-baseline gap-2">
-                <h2 className="eyebrow text-current">{t('app.pathWeek', { n: g.week })}</h2>
+            <div className="-mx-6 flex items-center justify-between gap-3 border-y border-border bg-surface px-6 py-2.5 md:-mx-10 md:px-10">
+              <div className="flex items-center gap-2">
+                <h2 className="flex">
+                  <Pill tone="course-fill">{t('app.pathWeek', { n: g.week })}</Pill>
+                </h2>
                 {g.deload ? <Badge tone="neutral">{t('training.deloadBadge')}</Badge> : null}
               </div>
-              <span className="numeral tabular text-[13px] text-current">
+              <span className="numeral tabular text-[13px] text-muted">
                 {done}/{g.nodes.length}
               </span>
             </div>

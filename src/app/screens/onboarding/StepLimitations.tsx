@@ -103,7 +103,7 @@ export function StepLimitations({ draft, update }: StepProps) {
               onChange={(e) => update({ limitationsOther: e.target.value })}
               placeholder={t('app.onbLimOtherPlaceholder')}
               aria-label={t('app.onbLimOther')}
-              className="w-full resize-none rounded-control border border-border bg-surface-2 px-3.5 py-3 text-[15px] text-text placeholder:text-muted-2 focus:border-primary focus:outline-none"
+              className="w-full resize-none rounded-control border border-border bg-surface-2 px-3.5 py-3 text-[15px] text-text placeholder:text-muted-2 focus:border-accent focus:outline-none"
             />
             <p className="text-[13px] leading-snug text-muted">{t('app.onbLimOtherHint')}</p>
           </div>

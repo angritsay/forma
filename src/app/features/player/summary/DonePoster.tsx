@@ -16,7 +16,14 @@
  *
  * The stars stay, because they are the reason to come back to a day and do it better; they moved
  * off the plate to just under the word, where the eye already is.
+ *
+ * **The poster is the screen's blue hero field** (style A, global.css header): the result is the
+ * one thing happening here. «Готово!» is white with the whole word as the light-blue key word and
+ * its swoosh; the stars are neon on the field (the programme colour as a figure on electric blue
+ * would be one more colour and, for orange, a weak one); the figures' rules are white alphas.
  */
+import type { CSSProperties } from 'react';
+import { HeroField, KeyWord } from '@/components/ui/HeroField';
 import { Stars } from '@/components/ui/Stars';
 import { useT } from '@/app/hooks/useT';
 
@@ -40,8 +47,13 @@ export interface DonePosterProps {
 export function DonePoster({ eyebrow, line, stars, figures }: DonePosterProps) {
   const { t } = useT();
   return (
-    <section className="flex flex-col items-center pt-6 text-center">
-      <p className="eyebrow max-w-full truncate text-muted-2">{eyebrow}</p>
+    <HeroField
+      padding="lg"
+      className="flex flex-col items-center text-center"
+      /* The stars read `--course-accent`; on the field they are the neon. */
+      style={{ '--course-accent': 'var(--action)' } as CSSProperties}
+    >
+      <p className="eyebrow max-w-full truncate text-on-field/80">{eyebrow}</p>
       {/*
        * The word. It lands on the spring — this is the one moment in the app where a thing
        * arriving *is* the content. `text-balance` is not wanted here: it is one word, and the
@@ -53,11 +65,11 @@ export function DonePoster({ eyebrow, line, stars, figures }: DonePosterProps) {
        * line, the clamp keeps it one line, and «Готово!» and «Done!» have no descender between
        * them. If this ever holds more than a single known word the number goes back to 1.2.
        */}
-      <h1 className="display pop-in mt-3 text-[clamp(56px,17vw,88px)] leading-[0.95]">
-        {t('app.summaryDone')}
+      <h1 className="display pop-in mt-3 text-[clamp(52px,16vw,84px)] leading-[0.95]">
+        <KeyWord>{t('app.summaryDone')}</KeyWord>
       </h1>
       {line ? (
-        <p className="mt-4 max-w-[26ch] text-[15px] leading-snug text-muted">{line}</p>
+        <p className="mt-6 max-w-[26ch] text-[15px] leading-snug text-on-field/90">{line}</p>
       ) : null}
       {stars !== null && stars !== undefined ? (
         <Stars
@@ -77,14 +89,14 @@ export function DonePoster({ eyebrow, line, stars, figures }: DonePosterProps) {
        * narrower, so the class's own 13px fits — «Повторов» measures ~57px — and the label in the
        * one place it is smallest is finally at the size the rest of the product reads at.
        */}
-      <div className="mt-8 grid w-full grid-cols-3 divide-x divide-border border-t border-border pt-5">
+      <div className="mt-8 grid w-full grid-cols-3 divide-x divide-on-field/20 border-t border-on-field/20 pt-5">
         {figures.map((f) => (
           <div key={f.label} className="px-2">
-            <span className="display tabular block text-[28px] leading-none">{f.value}</span>
-            <span className="eyebrow mt-2 block truncate">{f.label}</span>
+            <span className="display tabular block text-[26px] leading-none">{f.value}</span>
+            <span className="eyebrow mt-2 block truncate text-on-field/80">{f.label}</span>
           </div>
         ))}
       </div>
-    </section>
+    </HeroField>
   );
 }

@@ -44,8 +44,13 @@
  *
  * The colour is still the brandbook's own rule: «один экран — один цвет, и он приходит от
  * программы». The club's is `GAME_TILE`; `--course-tile` is set once around the whole screen, so
- * the pills and the leader's circle read the same variable. It paints figures and pills, never a
- * button and never a field of it.
+ * the pills read the same variable.
+ *
+ * **The club is style B of the third palette** (global.css header) — owner: «давай градиент для
+ * клуба сделаем, всё остальное как в стиле а». So this tab alone wears the crossroads gradient: a
+ * soft glow behind the screen (`.club-aurora`), the streak's rim and its day dots (`ClubStreak`),
+ * and the key words of the pitch and of the task's title as `.text-gradient`, large type only. The
+ * prize is the one filled pill — neon, as every «ask» tag in the app — and the leader is neon.
  */
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -220,7 +225,8 @@ export default function MarathonScreen() {
    * the round's own screens and in the full table.
    *
    * There is no top bar either; the tab bar names the screen. `--course-tile` stays on the outer
-   * element so the pills and the leader's circle take the club's colour from one place.
+   * element so everything that reads the club's colour takes it from one place, and the club's
+   * glow (`.club-aurora`) sits behind the whole page.
    *
    * **One thing did come back up there, and it is not a head.** The owner asked for the streak —
    * «показывать, сколько дней подряд ты выполняешь упражнения» — «в том же месте, как у нас это
@@ -229,7 +235,8 @@ export default function MarathonScreen() {
    * number the person made, rather than a number the calendar made.
    */
   const page = (body: ReactNode) => (
-    <div style={courseTileVars(GAME_TILE)}>
+    <div className="club-aurora-host" style={courseTileVars(GAME_TILE)}>
+      <div className="club-aurora" aria-hidden="true" />
       <Screen contentClassName="pt-2">
         <ClubStreak />
         {/*
@@ -245,7 +252,8 @@ export default function MarathonScreen() {
 
   /* The tab's other face: no head, no footer, the photographs starting near the top of the page. */
   const pitch = (body: ReactNode) => (
-    <div style={courseTileVars(GAME_TILE)}>
+    <div className="club-aurora-host" style={courseTileVars(GAME_TILE)}>
+      <div className="club-aurora" aria-hidden="true" />
       <Screen contentClassName="pt-3">{body}</Screen>
     </div>
   );
@@ -391,7 +399,7 @@ export default function MarathonScreen() {
            * ring in the head already counts the days, and the club runs one week. A prize the
            * coach types longer than the standing one will ellipsise, like every other pill.
            */}
-          <Pill tone="course-fill">
+          <Pill tone="neon">
             {t('app.marathonPrizeShort')} · {clubPrize(tr, marathon.prize)}
           </Pill>
           {/*

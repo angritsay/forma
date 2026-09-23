@@ -57,7 +57,7 @@ export function RestStep({ step, prescribed, paused, beep, onNext, registerNext 
           {...(nextItem ? { caption: targetLabel(t, nextItem) } : {})}
         />
       </PlayerTimerSlot>
-      <Button size="lg" fullWidth onClick={advance}>
+      <Button variant="action" size="lg" fullWidth onClick={advance}>
         {t('app.playerGo')}
       </Button>
     </>

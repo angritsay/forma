@@ -191,19 +191,22 @@ export default function CoursePathScreen() {
 
   return (
     /*
-     * `--course-tile` is set once, around the whole screen: the head is painted in it, and
-     * further down the ring, the week bands, the finished circles and today's «Сегодня» read the
-     * same variable. One screen, one colour — and this is the screen it belongs to.
+     * `--course-tile` is set once, around the whole screen: the ring, the week bands, the
+     * finished circles and today's «Сегодня» read the same variable. One screen, one colour — and this is the screen it belongs to.
      */
     <div style={courseTileVars(course.tile)}>
       <Screen>
         {/*
-         * The head is the programme colour with ink text, bleeding past the gutters and up under
-         * the status bar, and it carries two things: the way out and the way to the board on one
-         * line, and the course's name as the one big line. There is no bar; the back control is a
+         * The head is the screen's blue hero field (style A, global.css header), bleeding past the
+         * gutters and up under the status bar, and it carries two things: the way out and the way
+         * to the board on one line, and the course's name as the one big line — its light half the
+         * field's light-blue key word, with the swoosh. There is no bar; the back control is a
          * kicker in the block's top-left corner and the leaderboard sits opposite.
+         *
+         * It used to be painted in the programme colour. Section colours are tags now and never
+         * fields; the programme's colour lives on the ring below and on the path's figures.
          */}
-        <header className="hero-art -mx-6 -mt-[var(--safe-top)] px-6 pt-[calc(var(--safe-top)+14px)] pb-6 md:-mx-10 md:px-10">
+        <header className="-mx-6 -mt-[var(--safe-top)] rounded-b-card bg-field px-6 pt-[calc(var(--safe-top)+14px)] pb-7 text-on-field md:-mx-10 md:px-10">
           <div className="flex items-baseline justify-between gap-3">
             <button
               type="button"
@@ -223,7 +226,7 @@ export default function CoursePathScreen() {
               <Glyph size={12}>›</Glyph>
             </button>
           </div>
-          <DisplayTitle text={l(courseTitle(course))} className="mt-6 text-4xl lg:text-5xl" />
+          <DisplayTitle keyed text={l(courseTitle(course))} className="mt-6 text-4xl lg:text-5xl" />
         </header>
 
         {/*

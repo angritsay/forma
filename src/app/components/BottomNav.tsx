@@ -116,8 +116,8 @@ export function activeTabIndex(pathname: string, admin = false): number {
  *     44px target does not shrink at the moment a finger is inside it.
  *   - **In Telegram a tap ticks.**
  *
- * All of it is motion and material, none of it colour: the brandbook keeps colour for the
- * programmes, so chrome has only these two registers to be alive in.
+ * The capsule is the one piece of colour the chrome carries: electric blue, the hero field's
+ * colour, so the seat you are in and the thing happening on the screen speak the same colour.
  *
  * The container is inset far more than a tab bar usually is — the mockup puts it at 292 of 375,
  * about 78% of the column — which is what makes it read as a control laid on the screen rather
@@ -178,12 +178,11 @@ export function BottomNav() {
         <span
           aria-hidden="true"
           className={clsx(
-            /* The mockup's capsule sits at about rgb(88); 28% white over `--surface` (23, 23, 26)
-               lands on exactly that, and it stays proportionate on any ground because it is an
-               alpha rather than a hex. The current seat's word is `--text` on it and nothing else:
-               `--muted` measures 3.7:1 there, under the 4.5 docs/SPEC.md §4 sets, where `--text`
-               measures 6.6. The grey is for the words on the container, which is far darker. */
-            'pointer-events-none absolute inset-y-1 left-1 rounded-pill bg-paper/28',
+            /* The blue pill of the third palette (global.css header, style A): the current seat
+               wears the hero field's electric blue. Its word is white on it and nothing else —
+               7.71:1 — while `--muted` there would measure 3.4, so the grey stays for the words
+               on the container, which is far darker. */
+            'pointer-events-none absolute inset-y-1 left-1 rounded-pill bg-field',
             'transition-[transform,opacity] duration-420 ease-(--ease-spring)',
             'motion-reduce:transition-none',
             active < 0 && 'opacity-0',
@@ -219,7 +218,7 @@ export function BottomNav() {
                    with a pseudo-element instead of the box. */
                 'tap-target-y relative z-10 flex min-w-0 flex-1 items-center justify-center rounded-pill',
                 'transition-colors duration-150 ease-(--ease-out)',
-                isActive ? 'text-text' : 'text-muted hover:text-text',
+                isActive ? 'text-on-field' : 'text-muted hover:text-text',
               )}
             >
               <span

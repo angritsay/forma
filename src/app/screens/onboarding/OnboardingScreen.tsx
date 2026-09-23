@@ -265,6 +265,7 @@ export default function OnboardingScreen() {
            */}
           {isLast ? (
             <Button
+              variant="action"
               size="lg"
               fullWidth
               loading={saving}
@@ -274,7 +275,7 @@ export default function OnboardingScreen() {
               {t('app.onbFinish')}
             </Button>
           ) : (
-            <Button size="lg" fullWidth disabled={!canContinue} onClick={next}>
+            <Button variant="action" size="lg" fullWidth disabled={!canContinue} onClick={next}>
               {t('app.onbNext')}
             </Button>
           )}

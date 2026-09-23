@@ -2,7 +2,8 @@ import { clsx } from 'clsx';
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { Spinner } from './Spinner';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'course';
+export type ButtonVariant =
+  'primary' | 'secondary' | 'ghost' | 'danger' | 'course' | 'action' | 'on-field';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 export type ButtonShape = 'control' | 'pill';
 
@@ -48,6 +49,15 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * Do not reach for it anywhere else. A colour that marks the purchase stops marking anything the
  * moment a second button on the screen wears it.
  *
+ * **`action` is the neon: the one main button of a screen** (global.css header, style A) — «Продолжить»
+ * on the course you are walking, «Оплатить» on the coach, «Отправить» on the club's task. Ink on it
+ * is `--on-action`, 17.3. One per screen, like the blue field: a second neon button on the same
+ * screen and neither of them is the main one any more. The white `primary` stays for everything
+ * that is a button but not *the* button.
+ *
+ * `on-field` is the secondary button *on* the blue hero field: white with the field's own blue for
+ * words (7.71), so it sits on the field the way the neon sits on charcoal without competing with it.
+ *
  * Hover lightens by one surface or drops to .85 opacity; press is a 2% scale. Nothing bounces.
  */
 const VARIANT: Record<ButtonVariant, string> = {
@@ -56,6 +66,8 @@ const VARIANT: Record<ButtonVariant, string> = {
   ghost: 'bg-transparent text-muted hover:text-text',
   danger: 'bg-transparent text-danger border border-border-strong hover:bg-surface-2',
   course: 'bg-course text-tile-fg hover:opacity-90',
+  action: 'bg-action text-on-action hover:opacity-90',
+  'on-field': 'bg-paper text-field hover:opacity-90',
 };
 
 /*

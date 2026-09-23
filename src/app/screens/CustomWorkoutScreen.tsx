@@ -260,6 +260,7 @@ export default function CustomWorkoutScreen() {
       header={header}
       footer={
         <Button
+          variant="action"
           size="lg"
           fullWidth
           loading={busy}
@@ -314,7 +315,10 @@ export default function CustomWorkoutScreen() {
             {/* No programme colour: a coach's workout belongs to no course, so the name is white
                 where a course's would be cyan. */}
             <DisplayTitle as="h2" text={w.title} className="text-5xl" />
-            <p className="eyebrow mt-3.5 text-paper/75">{t('app.customWorkoutFromCoach')}</p>
+            {/* The coach's section tag: bleu ciel with its measured ink (4.75). */}
+            <Pill tone="ciel" className="mt-3.5">
+              {t('app.customWorkoutFromCoach')}
+            </Pill>
             {w.description ? (
               <p className="mt-4 text-[15px] leading-relaxed text-paper/75">{w.description}</p>
             ) : null}

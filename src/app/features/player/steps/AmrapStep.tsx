@@ -119,7 +119,7 @@ export function AmrapStep({
               increaseLabel={t('app.playerIncrease')}
             />
           </div>
-          <Button size="lg" fullWidth onClick={save}>
+          <Button variant="action" size="lg" fullWidth onClick={save}>
             {t('app.playerSaveScore')}
           </Button>
         </>

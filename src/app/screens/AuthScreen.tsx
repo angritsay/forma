@@ -445,7 +445,8 @@ export default function AuthScreen() {
              * you pressed a grey rectangle and the screen did not react, which reads as broken.
              * Pressed empty it now says what to type and where the code goes.
              */}
-            <Button type="submit" size="lg" fullWidth loading={busy}>
+            {/* The screen's one main action, so the neon (style A, global.css header). */}
+            <Button variant="action" type="submit" size="lg" fullWidth loading={busy}>
               {t('app.authSendCode')}
             </Button>
             {/*
@@ -490,7 +491,7 @@ export default function AuthScreen() {
             {demoCode ? (
               /* Demo mode has no inbox, so the code it just issued is said on the screen — as a
                  pill, because it is a fact and not a control (design/CHANGELOG.md §10). */
-              <Pill tone="paper" className="self-center">
+              <Pill tone="sky" className="self-center">
                 {t('app.demoAuthCode', { code: demoCode })}
               </Pill>
             ) : null}
@@ -522,6 +523,7 @@ export default function AuthScreen() {
               </p>
             ) : null}
             <Button
+              variant="action"
               type="submit"
               size="lg"
               fullWidth

@@ -12,8 +12,8 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
 }
 
 /**
- * A multi-line field, styled as {@link Input} is: --surface-2, a hairline, a 1px white border on
- * focus and a red one on error.
+ * A multi-line field, styled as {@link Input} is: --surface-2, a hairline, a 1px `--accent`
+ * border on focus and a red one on error.
  *
  * The kit had no textarea because nothing in the app ever asked for one: every screen either shows
  * prose or collects a single line. The course builder writes prose — course descriptions, what a
@@ -44,7 +44,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
       <div
         className={clsx(
           'rounded-control border bg-surface-2 px-4 py-3',
-          'transition-colors duration-150 ease-(--ease-out) focus-within:border-primary',
+          'transition-colors duration-150 ease-(--ease-out) focus-within:border-accent',
           error ? 'border-danger' : 'border-border',
         )}
       >

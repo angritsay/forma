@@ -15,7 +15,8 @@ import { externalLinkProps } from '@/app/hooks/useExternalLink';
  * fill, the raised surface behind a strong hairline, bare muted text, the red outline, and the
  * programme colour. The first four never take the programme colour; `course` is the exception
  * Button's own `VARIANT` table explains, and it belongs here as much as there — the button that
- * takes money is usually a link out to the payment page rather than a <button>.
+ * takes money is usually a link out to the payment page rather than a <button>. So do the neon
+ * `action` (the screen's one main button) and `on-field` (white on the blue hero field).
  */
 const VARIANT: Record<ButtonVariant, string> = {
   primary: 'bg-primary text-on-primary hover:opacity-85',
@@ -23,6 +24,8 @@ const VARIANT: Record<ButtonVariant, string> = {
   ghost: 'bg-transparent text-muted hover:text-text',
   danger: 'bg-transparent text-danger border border-border-strong hover:bg-surface-2',
   course: 'bg-course text-tile-fg hover:opacity-90',
+  action: 'bg-action text-on-action hover:opacity-90',
+  'on-field': 'bg-paper text-field hover:opacity-90',
 };
 
 /* 40 / 48 / 56 tall with a 14–15px sentence-case label, as Button — keep the two tables equal. */

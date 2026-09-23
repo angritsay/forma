@@ -77,7 +77,7 @@ export function WorkRepsStep({
         />
         {load ? <span className="text-[13px] text-paper/70">{load}</span> : null}
       </div>
-      <Button size="lg" fullWidth onClick={done}>
+      <Button variant="action" size="lg" fullWidth onClick={done}>
         {t('app.playerDone')}
       </Button>
     </div>

@@ -116,12 +116,14 @@ export function Tabs<T extends string>({
                     // `min-w-0` so three long labels shrink their cells instead of running over
                     // each other — a Russian «Противопоказания» is wider than a third of a phone.
                     'tap-target-y h-10 min-w-0 flex-1 justify-center border-l border-border-strong px-2 first:border-l-0',
-                    selected ? 'bg-primary text-on-primary' : 'text-muted hover:text-text',
+                    // The chosen cell is electric blue with white words, like the tab bar's seat
+                    // (style A, global.css header): selection has one colour across the app.
+                    selected ? 'bg-field text-on-field' : 'text-muted hover:text-text',
                   )
                 : clsx(
                     '-mb-px border-b-2 py-3',
                     selected
-                      ? 'border-primary text-text'
+                      ? 'border-accent text-text'
                       : 'border-transparent text-muted hover:text-text',
                   ),
             )}

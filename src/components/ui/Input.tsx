@@ -16,9 +16,8 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
 }
 
 /*
- * A field is a 48px sharp rectangle on --surface-2 behind a hairline. Focus is a 1px white border
- * and nothing else — no ring, no glow; `--primary` flips to ink on paper so the same class is
- * right on both grounds. An error is the same border in --danger. The label sits above at 13px.
+ * A field is a 48px sharp rectangle on --surface-2 behind a hairline. Focus is a 1px border in the
+ * brand's light blue (`--accent`) and nothing else — no ring, no glow. An error is the same border in --danger. The label sits above at 13px.
  *
  * The field's own text stays 16px rather than the design system's 15: below 16px iOS Safari
  * zooms the page when the field takes focus.
@@ -44,7 +43,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       <div
         className={clsx(
           'flex h-12 items-center gap-3 rounded-control border bg-surface-2 px-4',
-          'transition-colors duration-150 ease-(--ease-out) focus-within:border-primary',
+          'transition-colors duration-150 ease-(--ease-out) focus-within:border-accent',
           error ? 'border-danger' : 'border-border',
         )}
       >

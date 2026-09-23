@@ -12,10 +12,10 @@
  * выиграл, одной строкой, тихо. Победителю — то, ради чего он неделю и старался, и здесь скупость
  * была бы ошибкой: это единственное место, где приложение поздравляет.
  *
- * Поэтому у своей победы белая заливка (`bg-primary`) — то же «вот оно», которым помечается
- * активная вкладка, — а у чужой обычная поверхность и кубок эмодзи. Цвет клуба тут не участвует:
- * он уже занят под место лидера в таблице, и красить им же объявление значило бы говорить два
- * разных «важно» одним словом.
+ * Поэтому у своей победы кант из градиента клуба — единственная карточка вкладки, обведённая им,
+ * — а у чужой обычная поверхность и кубок эмодзи. Неон тут не участвует: он уже занят под место
+ * лидера в таблице и под приз, и красить им же объявление значило бы говорить два разных «важно»
+ * одним словом.
  *
  * ## Последний объявленный, а не текущая неделя
  *
@@ -53,17 +53,24 @@ export function ClubWinner() {
 
   if (row.isMe) {
     return (
-      <div className="mb-4 flex flex-col gap-1 rounded-card bg-primary p-4 text-on-primary">
-        <span className="eyebrow opacity-70">{t('app.clubWinnerTitle')}</span>
-        <span className="font-display text-[19px] leading-[1.2] text-balance">
-          {t('app.clubWinnerYou')}
-        </span>
-        {/*
-         * Приз — словами тренера, из самого круга. Не зашит в текст: он может смениться, и
-         * приложение не должно обещать час, если на этой неделе обещали другое.
-         */}
-        {row.prize ? <span className="text-[13px] opacity-80">{row.prize}</span> : null}
-        {row.note ? <span className="text-[13px] opacity-80">«{row.note}»</span> : null}
+      /*
+       * Своя победа — в кант градиента клуба (стиль B, global.css): 1.5px crossroads вокруг
+       * обычной тёмной карточки. Белая плашка, что стояла здесь, ставила `.eyebrow` серым по
+       * белому; на поверхности угля всё, что внутри, читается с теми же цифрами, что и везде.
+       */
+      <div className="mb-4 rounded-card bg-cross p-[1.5px]">
+        <div className="flex flex-col gap-1 rounded-[calc(var(--r-card)-1.5px)] bg-surface p-4">
+          <span className="eyebrow">{t('app.clubWinnerTitle')}</span>
+          <span className="font-display text-[19px] leading-[1.2] text-balance">
+            {t('app.clubWinnerYou')}
+          </span>
+          {/*
+           * Приз — словами тренера, из самого круга. Не зашит в текст: он может смениться, и
+           * приложение не должно обещать час, если на этой неделе обещали другое.
+           */}
+          {row.prize ? <span className="text-[13px] text-muted">{row.prize}</span> : null}
+          {row.note ? <span className="text-[13px] text-muted">«{row.note}»</span> : null}
+        </div>
       </div>
     );
   }

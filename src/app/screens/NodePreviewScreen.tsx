@@ -178,13 +178,14 @@ export default function NodePreviewScreen() {
           action={
             firstFree ? (
               <Button
+                variant="action"
                 size="lg"
                 onClick={() => navigate(`/courses/${course.id}/nodes/${firstFree.id}`)}
               >
                 {t('app.pathTrialLeftCta')}
               </Button>
             ) : (
-              <Button size="lg" onClick={() => setUnlockOpen(true)}>
+              <Button variant="action" size="lg" onClick={() => setUnlockOpen(true)}>
                 {t('app.unlockTitle')}
               </Button>
             )
@@ -317,7 +318,9 @@ export default function NodePreviewScreen() {
             {locked ? (
               <p className="text-center text-sm text-muted">{t('app.nodeLocked')}</p>
             ) : null}
+            {/* The screen's one main action, so the neon (global.css header, style A). */}
             <Button
+              variant="action"
               size="lg"
               fullWidth
               disabled={locked || plans.length === 0}
