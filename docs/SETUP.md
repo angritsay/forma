@@ -1322,9 +1322,24 @@ inside it, not a config change.
 4. **Put them in `content/site/payments.ts`** under our own key — `course:<course id>` or
    `plan:<plan id>`. Both are public by nature; they belong in the repository and nothing else
    does.
-5. **In the cabinet, under API**, take the **API key** and the **webhook secret**. Neither ever
-   goes into the repository, into chat, or into a workflow input — only into GitHub Actions
-   secrets as `LAVA_WEBHOOK_SECRET`, from where the button below moves them into Supabase.
+5. **In the cabinet, add the webhook** (Web-Widget → Webhooks → **Add Webhook**), pick **Basic**
+   as the authentication and invent a login and a password there. Put the pair into GitHub
+   Actions secrets as **`LAVA_WEBHOOK_SECRET`**, written exactly `login:password` — one line, one
+   colon, no spaces around it. It never goes into the repository, into chat, or into a workflow
+   input; the button below moves it into Supabase.
+
+   **It is a login and a password, not a signing secret, and that distinction was paid for.** This
+   was built first around an HMAC signature of the request body, taken from lava.top's public
+   Python SDK, which has a `verify_webhook_signature()`. The cabinet says otherwise: a webhook
+   authenticates with Basic or with your service's API key, and no signature is sent at all. The
+   function would have refused every real notification, and looked like "payments don't arrive".
+   **A third party's SDK is not a specification** — it shows what its author found useful, not
+   what the service does.
+
+   The password may hold any characters: the function decodes the header as UTF-8 rather than as
+   raw bytes, so a Cyrillic or accented password matches like any other. It did not at first —
+   `atob` returns bytes, and the test caught it before the deploy did.
+
 6. Add the secret **`LAVA_PRODUCTS`** as well: a JSON map from the lava product id to our key. It
    lives as a secret rather than in code so renaming a product in the cabinet does not wait for
    the site to be rebuilt.

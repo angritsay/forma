@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { grantsAccess, hmacHex, parseHook, signatureMatches } from './verify';
+import { basicMatches, grantsAccess, parseHook } from './verify';
 
 /** Уведомление той формы, что описана в их SDK. */
 const HOOK = {
@@ -12,40 +12,6 @@ const HOOK = {
   status: 'completed',
   timestamp: '2026-09-22T12:00:00Z',
 };
-
-describe('hmacHex', () => {
-  it('signs the exact text it is given', async () => {
-    const a = await hmacHex('secret', '{"a":1}');
-    expect(a).toMatch(/^[0-9a-f]{64}$/);
-    // Тот же текст — та же подпись; другой секрет — другая.
-    expect(await hmacHex('secret', '{"a":1}')).toBe(a);
-    expect(await hmacHex('other', '{"a":1}')).not.toBe(a);
-  });
-
-  /*
-   * Ради этого подпись и считается по сырому телу: разобрать и собрать JSON обратно даёт другой
-   * текст — другие пробелы, другой порядок ключей, — и подпись перестанет сходиться на
-   * совершенно правильном уведомлении.
-   */
-  it('gives a different digest for the same JSON formatted differently', async () => {
-    const raw = '{"a":1, "b":2}';
-    expect(await hmacHex('s', raw)).not.toBe(await hmacHex('s', JSON.stringify(JSON.parse(raw))));
-  });
-});
-
-describe('signatureMatches', () => {
-  it('accepts the same digest in any case and with stray spaces', () => {
-    expect(signatureMatches('abcd', 'ABCD')).toBe(true);
-    expect(signatureMatches('abcd', ' abcd ')).toBe(true);
-  });
-
-  it('refuses anything else, including an empty header', () => {
-    expect(signatureMatches('abcd', 'abce')).toBe(false);
-    expect(signatureMatches('abcd', 'abc')).toBe(false);
-    expect(signatureMatches('abcd', '')).toBe(false);
-    expect(signatureMatches('', '')).toBe(false);
-  });
-});
 
 describe('parseHook', () => {
   it('reads the fields the handler acts on', () => {
@@ -88,5 +54,47 @@ describe('grantsAccess', () => {
     expect(grantsAccess('payment.failed')).toBe(false);
     expect(grantsAccess('subscription.recurring.payment.failed')).toBe(false);
     expect(grantsAccess('subscription.cancelled')).toBe(false);
+  });
+});
+
+describe('basicMatches', () => {
+  /*
+   * Так lava.top и представляется: в кабинете у вебхука выбирается Basic, логин и пароль. Подписи
+   * тела она не шлёт — на неё здесь стояла проверка, и она отвергла бы каждое настоящее
+   * уведомление.
+   */
+  const SECRET = 'forma:s3cr3t-пароль';
+  /* Как это кодирует настоящий клиент: UTF-8 в байты, байты в base64. */
+  const header = (login: string, pass: string) => {
+    const bytes = new TextEncoder().encode(`${login}:${pass}`);
+    return `Basic ${btoa(String.fromCharCode(...bytes))}`;
+  };
+
+  it('accepts the login and password from the cabinet', () => {
+    expect(basicMatches(SECRET, header('forma', 's3cr3t-пароль'))).toBe(true);
+  });
+
+  it('does not care how the scheme is capitalised', () => {
+    expect(basicMatches(SECRET, header('forma', 's3cr3t-пароль').toLowerCase())).toBe(false);
+    expect(basicMatches(SECRET, header('forma', 's3cr3t-пароль').replace('Basic', 'basic'))).toBe(
+      true,
+    );
+    expect(basicMatches(SECRET, `  ${header('forma', 's3cr3t-пароль')}  `)).toBe(true);
+  });
+
+  it('refuses a wrong password, a wrong login and an empty header', () => {
+    expect(basicMatches(SECRET, header('forma', 'другой'))).toBe(false);
+    expect(basicMatches(SECRET, header('нетакой', 's3cr3t-пароль'))).toBe(false);
+    expect(basicMatches(SECRET, '')).toBe(false);
+    expect(basicMatches('', header('forma', 's3cr3t-пароль'))).toBe(false);
+  });
+
+  /* Другая схема — не наш случай, и гадать по ней нечего. */
+  it('refuses anything that is not Basic', () => {
+    expect(basicMatches(SECRET, header('forma', 's3cr3t-пароль').replace('Basic', 'Bearer'))).toBe(
+      false,
+    );
+    expect(basicMatches(SECRET, 'Basic не-base64!!')).toBe(false);
+    expect(basicMatches(SECRET, 'Basic ')).toBe(false);
   });
 });

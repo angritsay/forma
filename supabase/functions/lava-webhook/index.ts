@@ -14,10 +14,9 @@
  *
  * ## Дверь охраняют две проверки
  *
- * Токен в адресе (его знает только lava.top) и подпись HMAC в заголовке `signature` (её может
- * сделать только она же). Любая не сошлась — 403 и ничего не записано. Ровно та же пара, что у
- * `prodamus-webhook`, и по той же причине: адрес функции публичен, а открывать доступ по
- * «кто-то постучался» нельзя.
+ * Токен в адресе и Basic-авторизация: логин с паролем, заведённые в кабинете lava.top («Add
+ * Webhook» → Basic). Любая не сошлась — 403 и ничего не записано. Адрес функции публичен, и
+ * открывать доступ по «кто-то постучался» нельзя.
  *
  * ## Что открывать — сказано в самом уведомлении
  *
@@ -44,7 +43,7 @@
  * («Оплатил(а) с другой почты?» и `claim_payment()`, 0020). Деньги не теряются никогда.
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { grantsAccess, hmacHex, parseHook, signatureMatches } from './verify.ts';
+import { basicMatches, grantsAccess, parseHook } from './verify.ts';
 import { keyFor, parseProductMap, type ProductMap } from './products.ts';
 
 const TOKEN = Deno.env.get('WEBHOOK_TOKEN') ?? '';
@@ -72,22 +71,20 @@ Deno.serve(async (req) => {
   if (!TOKEN || url.searchParams.get('token') !== TOKEN) return reply(403, 'forbidden');
 
   /*
-   * Сырое тело, а не разобранный объект: подпись считается по тому тексту, который приехал.
-   * Разобрать и собрать обратно почти наверняка даст другие пробелы и другой порядок ключей, и
-   * подпись перестанет сходиться на совершенно правильном уведомлении.
+   * Вторая дверь: Basic. В кабинете lava.top у вебхука выбирается способ представиться — логин с
+   * паролем или API-ключ, — и подписи тела она не шлёт вовсе (`verify.ts`). Секрет у нас хранит
+   * пару целиком, `логин:пароль`.
    */
-  const body = await req.text();
-
-  // Вторая дверь: подпись.
   if (!SECRET) {
     console.error('lava-webhook: LAVA_WEBHOOK_SECRET is not set; refusing everything');
     return reply(403, 'forbidden');
   }
-  const got = req.headers.get('signature') ?? '';
-  if (!signatureMatches(await hmacHex(SECRET, body), got)) {
-    console.warn('lava-webhook: signature mismatch');
+  if (!basicMatches(SECRET, req.headers.get('authorization') ?? '')) {
+    console.warn('lava-webhook: basic auth did not match');
     return reply(403, 'forbidden');
   }
+
+  const body = await req.text();
 
   let parsed: unknown;
   try {
