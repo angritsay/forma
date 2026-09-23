@@ -4,6 +4,7 @@
  */
 export * from './api';
 export * from './clubAdmin';
+export * from './adminPayments';
 export {
   getSession,
   getUser,

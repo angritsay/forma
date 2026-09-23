@@ -29,7 +29,7 @@
  * все остальные — это и есть выдуманная статистика, которую `docs/SPEC.md` запрещает.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { Navigate } from 'react-router';
+import { Link, Navigate, useNavigate } from 'react-router';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/Input';
@@ -43,8 +43,10 @@ import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { SEARCH_DEBOUNCE_MS } from '@/app/features/admin/model';
+import { adminHref } from '@/app/features/admin/payments/model';
 import { useDebounced } from '@/app/features/admin/useDebounced';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
+import { personPath } from '@/app/features/admin/person/path';
 import {
   closedWeeks,
   formatPercent,
@@ -109,6 +111,7 @@ function Tile({ label, value }: TileProps) {
 export default function AdminStatsScreen() {
   const { t, locale } = useT();
   const admin = useIsAdmin();
+  const navigate = useNavigate();
 
   const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [weeks, setWeeks] = useState<FunnelWeek[]>([]);
@@ -193,19 +196,29 @@ export default function AdminStatsScreen() {
                * людей нет: предупреждение о нуле — это шум, который приучают пролистывать.
                */}
               {overview.paidNeverSignedIn > 0 ? (
-                <div className="flex items-start gap-3 rounded-card border border-warning/40 bg-surface p-4">
+                /*
+                 * A link, not a caption: the list that answers «who» is the unmatched payments on
+                 * the admin home (0044), and that is where these people are found and bound.
+                 */
+                <Link
+                  to={adminHref('payments', { filter: 'unclaimed' })}
+                  className="flex items-start gap-3 rounded-card border border-warning/40 bg-surface p-4 transition-colors duration-150 ease-(--ease-out) hover:bg-surface-2 active:bg-surface-3"
+                >
                   <span className="font-display tabular shrink-0 text-[22px] leading-none text-warning">
                     {n(overview.paidNeverSignedIn)}
                   </span>
-                  <span className="flex min-w-0 flex-col gap-0.5">
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span className="text-[14px] leading-tight text-text">
                       {t('app.adminStatsGhostTitle')}
                     </span>
                     <span className="text-[12px] leading-tight text-muted">
                       {t('app.adminStatsGhostBody')}
                     </span>
+                    <span className="pt-1 text-[13px] leading-tight text-accent">
+                      {t('app.adminStatsGhostAction')} ›
+                    </span>
                   </span>
-                </div>
+                </Link>
               ) : null}
             </section>
           ) : null}
@@ -341,14 +354,20 @@ export default function AdminStatsScreen() {
                   key={p.email}
                   className="flex items-center gap-3 border-t border-border py-3 first:border-t-0"
                 >
-                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  {/* The person behind the row, one tap away (0046). */}
+                  <button
+                    type="button"
+                    aria-label={t('app.personOpen', { name: p.displayName?.trim() || p.email })}
+                    onClick={() => void navigate(personPath(p.email))}
+                    className="flex min-w-0 flex-1 flex-col gap-0.5 text-left transition-opacity duration-150 ease-(--ease-out) hover:opacity-80 active:opacity-60"
+                  >
                     <span className="truncate text-[15px] leading-tight text-text">
                       {p.displayName?.trim() || '—'}
                     </span>
                     <span className="truncate text-[12px] leading-tight text-muted-2">
                       {p.email}
                     </span>
-                  </span>
+                  </button>
                   <span className="flex shrink-0 flex-col items-end gap-0.5 text-right">
                     {/* «трен.» — сокращение, и оно одинаково при любом числе: три формы
                         русского множественного здесь не нужны, а «0» заменяется словами. */}

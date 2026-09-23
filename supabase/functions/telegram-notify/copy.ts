@@ -35,7 +35,8 @@
  */
 
 /** Виды поводов, ровно как в `telegram_outbox.kind` (0027). */
-export type NotifyKind = 'course_paid' | 'subscription_paid' | 'workout_assigned' | 'weekly_winner';
+export type NotifyKind =
+  'course_paid' | 'subscription_paid' | 'workout_assigned' | 'weekly_winner' | 'support_reply';
 
 /** Языки, на которых выходит продукт — `LOCALES` в src/content/schema.ts. */
 export type Locale = 'ru' | 'en';
@@ -51,6 +52,8 @@ export interface Message {
   text: string;
   /** Подпись кнопки, открывающей мини-апп. Пустая — кнопки нет. */
   buttonText: string;
+  /** Id сообщения в том же чате, на которое это — ответ (цитата вопроса). */
+  replyTo?: number;
 }
 
 /** `&`, `<` и `>` — всё, что телеграм считает особым в HTML. */
@@ -94,6 +97,8 @@ interface Copy {
   /** `{prize}` — приз словами тренера, на языке победителя, если тренер написал обе половины. */
   winnerPrize: string;
   winnerWrite: string;
+  /** Подпись над ответом тренера на обращение (0045). */
+  supportReply: string;
 }
 
 const COPY: Record<Locale, Copy> = {
@@ -109,6 +114,7 @@ const COPY: Record<Locale, Copy> = {
     winnerTitle: 'Ты победил на этой неделе 🏆',
     winnerPrize: 'Твой приз: {prize}.',
     winnerWrite: 'Напиши Сергею, чтобы договориться, — он ждёт.',
+    supportReply: 'Ответ тренера:',
   },
   en: {
     afterPayment:
@@ -122,6 +128,7 @@ const COPY: Record<Locale, Copy> = {
     winnerTitle: 'You won this week 🏆',
     winnerPrize: 'Your prize: {prize}.',
     winnerWrite: 'Write to Sergey to arrange it — he is waiting.',
+    supportReply: 'Coach’s reply:',
   },
 };
 
@@ -189,7 +196,36 @@ export function messageFor(row: OutboxRow, locale: Locale = DEFAULT_LOCALE): Mes
       return { text: lines.join('\n\n'), buttonText: c.openApp };
     }
 
+    case 'support_reply':
+      return supportReplyMessage(params, c);
+
     default:
       return null;
   }
+}
+
+/** Сколько символов ответа доходит до человека — тот же предел, что у обращения (0042, 0045). */
+export const SUPPORT_REPLY_MAX = 1000;
+
+/**
+ * Ответ тренера на обращение (0045): подпись на языке человека и сам текст.
+ *
+ * Текст — слово в слово, как его написали в админке: бот его не переводит и не правит, только
+ * экранирует. Подпись нужна потому, что пишет бот, а не тренер: без неё ответ читался бы как
+ * очередное автоматическое сообщение. Кнопки нет — это разговор, а не повод открыть приложение.
+ *
+ * Если вопрос был задан боту, ответ цитирует его (`replyTo`): в чате, где человек написал три
+ * вопроса за вечер, иначе не понять, на который ответили. Пустой ответ — `null`, как неизвестный
+ * вид: отправлять одну подпись незачем.
+ */
+function supportReplyMessage(params: Record<string, unknown>, c: Copy): Message | null {
+  const raw = typeof params.text === 'string' ? params.text.trim() : '';
+  if (!raw) return null;
+  const text = Array.from(raw).slice(0, SUPPORT_REPLY_MAX).join('');
+  const replyTo = Number(params.replyTo);
+  return {
+    text: `<b>${c.supportReply}</b>\n\n${escapeHtml(text)}`,
+    buttonText: '',
+    ...(Number.isSafeInteger(replyTo) && replyTo > 0 ? { replyTo } : {}),
+  };
 }

@@ -11,6 +11,7 @@ export const SUB_STATUS_LABEL: Record<SubscriptionStatus, TKey> = {
   pending: 'app.adminSubStatusPending',
   active: 'app.adminSubStatusActive',
   cancelled: 'app.adminSubStatusCancelled',
+  refunded: 'app.adminSubStatusRefunded',
 };
 
 /* The live subscription is the one white stamp; pending and cancelled are outlines. */
@@ -18,10 +19,15 @@ const SUB_STATUS_TONE: Record<SubscriptionStatus, BadgeTone> = {
   pending: 'neutral',
   active: 'inverse',
   cancelled: 'neutral',
+  refunded: 'neutral',
 };
 
-/** What the coach can do from a row: extend (any state), cancel (only while renewals matter). */
-export type SubscriptionAction = 'extend_month' | 'extend_year' | 'cancel';
+/**
+ * What the coach can do from a row: extend (any state), cancel (only while renewals matter), and
+ * — while access is live — end it right now or refund it (0044). Cancel lets the paid period run
+ * out; the last two end access this second.
+ */
+export type SubscriptionAction = 'extend_month' | 'extend_year' | 'cancel' | 'close_now' | 'refund';
 
 export interface SubscriptionListProps {
   rows: readonly SubscriptionRow[];
@@ -69,7 +75,7 @@ export function SubscriptionList({ rows, busyId, onAction }: SubscriptionListPro
                     {t(SUB_STATUS_LABEL[row.status])}
                   </Badge>
                 </div>
-                <div className="flex flex-wrap gap-2 lg:shrink-0 lg:flex-nowrap">
+                <div className="flex flex-wrap gap-2 lg:max-w-md lg:shrink-0 lg:justify-end">
                   <Button
                     size="sm"
                     variant={live ? 'secondary' : 'primary'}
@@ -98,6 +104,26 @@ export function SubscriptionList({ rows, busyId, onAction }: SubscriptionListPro
                     >
                       {t('app.adminSubCancel')}
                     </Button>
+                  ) : null}
+                  {live ? (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        disabled={busyId !== null}
+                        onClick={() => onAction(row, 'close_now')}
+                      >
+                        {t('app.adminSubCloseNow')}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        disabled={busyId !== null}
+                        onClick={() => onAction(row, 'refund')}
+                      >
+                        {t('app.adminSubRefund')}
+                      </Button>
+                    </>
                   ) : null}
                 </div>
               </div>

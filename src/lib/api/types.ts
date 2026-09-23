@@ -82,8 +82,11 @@ export interface OrderInput {
 // --- subscriptions ----------------------------------------------------------
 
 export type SubscriptionPlan = 'monthly' | 'annual';
-/** pending → active (paid) → cancelled (no more renewals; access lasts until expiresAt). */
-export type SubscriptionStatus = 'pending' | 'active' | 'cancelled';
+/**
+ * pending → active (paid) → cancelled (no more renewals; access lasts until expiresAt).
+ * refunded (0044) — the money went back by hand; access ended when it was marked.
+ */
+export type SubscriptionStatus = 'pending' | 'active' | 'cancelled' | 'refunded';
 
 /** The signed-in user's own subscription (view `my_subscription`). */
 export interface Subscription {

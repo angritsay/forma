@@ -53,7 +53,8 @@ const DEFAULT_APP_URL = 'https://forma-app.co/app/';
 
 interface Row {
   id: string;
-  email: string;
+  /** `null` у строки, адресованной прямо в чат (`chat_id`, 0045): ответ на обращение в бота. */
+  email: string | null;
   kind: string;
   params: Record<string, unknown> | null;
   attempts: number;
@@ -98,6 +99,7 @@ function reply(status: number, body: Record<string, unknown>): Response {
 async function drainAdmin(
   admin: SupabaseClient,
   fallbackToken: string,
+  appUrl: string,
 ): Promise<{ sent: number; failed: number }> {
   const chatId = Deno.env.get('TELEGRAM_ADMIN_CHAT') ?? '';
   if (!chatId.trim()) return { sent: 0, failed: 0 };
@@ -108,7 +110,7 @@ async function drainAdmin(
 
   const { data, error } = await admin
     .from('admin_outbox')
-    .select('id, topic, kind, params, attempts')
+    .select('id, topic, kind, params, attempts, dedupe_key')
     .eq('status', 'pending')
     .order('created_at', { ascending: true })
     .limit(BATCH);
@@ -125,7 +127,8 @@ async function drainAdmin(
   let failed = 0;
 
   for (const row of rows) {
-    const text = adminMessage(row);
+    // Со ссылкой прямо на экран админки (0044): платёж, отчёты клуба или человек.
+    const text = adminMessage(row, appUrl);
     if (!text) {
       console.warn(`telegram-notify: unknown admin kind ${row.kind}; left in the queue`);
       continue;
@@ -251,7 +254,7 @@ async function loadDue(admin: SupabaseClient): Promise<Due> {
   const rows = (legacy ?? []) as Row[];
   if (rows.length === 0) return { rows: [] };
 
-  const emails = [...new Set(rows.map((r) => r.email))];
+  const emails = [...new Set(rows.map((r) => r.email).filter((e): e is string => !!e))];
   const { data: people, error: peopleError } = await admin
     .from('profiles')
     .select('email, telegram_id, locale')
@@ -270,7 +273,9 @@ async function loadDue(admin: SupabaseClient): Promise<Due> {
   for (const p of (people ?? []) as { email: string; telegram_id: number; locale: unknown }[]) {
     chat.set(p.email.toLowerCase(), { id: p.telegram_id, locale: toLocale(p.locale) });
   }
-  return { rows: rows.map((r) => ({ ...r, chat: chat.get(r.email.toLowerCase()) ?? null })) };
+  return {
+    rows: rows.map((r) => ({ ...r, chat: (r.email && chat.get(r.email.toLowerCase())) || null })),
+  };
 }
 
 Deno.serve(async (req) => {
@@ -300,7 +305,7 @@ Deno.serve(async (req) => {
    * запуск. Пока очередь была одна, это было честно; теперь это значило бы, что сообщение о
    * неприкреплённом платеже не уходит из-за чужой таблицы.
    */
-  const admins = await drainAdmin(admin, botToken);
+  const admins = await drainAdmin(admin, botToken, appUrl);
 
   /*
    * Истёкшие — одним запросом и первыми. Раньше они гасились по одной внутри пачки, а значит
@@ -386,6 +391,13 @@ Deno.serve(async (req) => {
           link_preview_options: { is_disabled: true },
           reply_markup: message.buttonText
             ? { inline_keyboard: [[{ text: message.buttonText, web_app: { url: appUrl } }]] }
+            : undefined,
+          /*
+           * Ответ на обращение цитирует вопрос (0045). Если человек его удалил, телеграм без
+           * `allow_sending_without_reply` отказал бы всему сообщению — а ответ важнее цитаты.
+           */
+          reply_parameters: message.replyTo
+            ? { message_id: message.replyTo, allow_sending_without_reply: true }
             : undefined,
         }),
       });

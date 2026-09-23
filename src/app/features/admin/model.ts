@@ -62,7 +62,7 @@ export function withStatus(
   });
 }
 
-export const SUB_STATUS_FILTERS = ['all', 'pending', 'active', 'cancelled'] as const;
+export const SUB_STATUS_FILTERS = ['all', 'pending', 'active', 'cancelled', 'refunded'] as const;
 export type SubStatusFilter = (typeof SUB_STATUS_FILTERS)[number];
 
 /** Filter for `listSubscriptions`; same shape as the purchases one. */

@@ -16,6 +16,8 @@ const ITEMS: readonly AdminItem[] = [
   { to: '/admin/exercises', labelKey: 'app.exScreenTitle' },
   { to: '/admin/marathons', labelKey: 'app.mAdminNav' },
   { to: '/admin/stats', labelKey: 'app.adminStatsTitle' },
+  { to: '/admin/support', labelKey: 'app.inboxNav' },
+  { to: '/admin/bookings', labelKey: 'app.bookingsNav' },
 ];
 
 /**

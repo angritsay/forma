@@ -2,9 +2,13 @@
  * Admin (docs/SPEC.md §10 flow 12), admins only — everyone else is sent back to the profile.
  * Purchases with an email search and status filter; activate / refund with a confirmation;
  * "Add purchase" grants a course by hand. Every call is re-checked by `is_admin()` server-side.
+ *
+ * On top, «Сегодня» (0044): the last day and what waits for a decision, each row a link. The
+ * «Платежи» tab is the payments journal with «Привязать к человеку» and «Отметить как
+ * разобранный»; the tab, its filter and a payment id live in the URL so links land on them.
  */
-import { useCallback, useEffect, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { clsx } from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
@@ -28,6 +32,15 @@ import {
   setSubscription,
 } from '@/lib/api/admin';
 import { isAppError, toAppError, type AppError } from '@/lib/api/errors';
+import {
+  bindPayment,
+  dismissPayment,
+  endSubscription,
+  listPayments,
+  PAYMENT_FILTERS,
+  type PaymentFilter,
+  type PaymentRow,
+} from '@/lib/api/adminPayments';
 import type {
   PersonRow,
   PurchaseRow,
@@ -45,6 +58,7 @@ import {
   courseName,
   purchaseFilter,
   SEARCH_DEBOUNCE_MS,
+  sourceLabel,
   STATUS_FILTERS,
   withStatus,
   type StatusFilter,
@@ -56,6 +70,18 @@ import { PurchaseList, STATUS_LABEL } from '@/app/features/admin/PurchaseList';
 import { PeopleList } from '@/app/features/admin/PeopleList';
 import { useDebounced } from '@/app/features/admin/useDebounced';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
+import { BindPaymentSheet } from '@/app/features/admin/payments/BindPaymentSheet';
+import { PaymentList } from '@/app/features/admin/payments/PaymentList';
+import { TodayCard } from '@/app/features/admin/payments/TodayCard';
+import {
+  adminTabFrom,
+  bindErrorKey,
+  formatMoney,
+  INTENT_LABEL,
+  paymentFilterFrom,
+  paymentIdFrom,
+  type AdminTab,
+} from '@/app/features/admin/payments/model';
 
 type ListStatus = 'loading' | 'ready' | 'error';
 
@@ -64,7 +90,20 @@ interface PendingAction {
   status: PurchaseStatus;
 }
 
-type Tab = 'purchases' | 'subscriptions' | 'people';
+type Tab = AdminTab;
+
+/** A payment picked in the bind sheet, waiting for «Открыть доступ» in the confirmation. */
+interface PendingBind {
+  row: PaymentRow;
+  email: string;
+  courseId: string | null;
+}
+
+const PAY_FILTER_LABEL: Record<PaymentFilter, TKey> = {
+  unclaimed: 'app.adminPayFilterUnclaimed',
+  all: 'app.adminFilterAll',
+  sessions: 'app.adminPayFilterSessions',
+};
 
 interface PendingSubAction {
   row: SubscriptionRow;
@@ -76,6 +115,47 @@ const SUB_FILTER_LABEL: Record<SubStatusFilter, TKey> = {
   pending: 'app.adminSubStatusPending',
   active: 'app.adminSubStatusActive',
   cancelled: 'app.adminSubStatusCancelled',
+  refunded: 'app.adminSubStatusRefunded',
+};
+
+/**
+ * The confirmation for each subscription action. The two that end access now say plainly that
+ * the money does not move by itself — the refund is made by hand in the till.
+ */
+const SUB_CONFIRM: Record<
+  SubscriptionAction,
+  { title: TKey; body: TKey; confirm: TKey; danger: boolean }
+> = {
+  extend_month: {
+    title: 'app.adminSubConfirmExtendTitle',
+    body: 'app.adminSubConfirmExtendBody',
+    confirm: 'app.adminSubExtendMonth',
+    danger: false,
+  },
+  extend_year: {
+    title: 'app.adminSubConfirmExtendTitle',
+    body: 'app.adminSubConfirmExtendBody',
+    confirm: 'app.adminSubExtendYear',
+    danger: false,
+  },
+  cancel: {
+    title: 'app.adminSubConfirmCancelTitle',
+    body: 'app.adminSubConfirmCancelBody',
+    confirm: 'app.adminSubCancel',
+    danger: true,
+  },
+  close_now: {
+    title: 'app.adminSubConfirmCloseTitle',
+    body: 'app.adminSubConfirmCloseBody',
+    confirm: 'app.adminSubCloseNow',
+    danger: true,
+  },
+  refund: {
+    title: 'app.adminSubConfirmRefundTitle',
+    body: 'app.adminSubConfirmRefundBody',
+    confirm: 'app.adminSubRefund',
+    danger: true,
+  },
 };
 
 const FILTER_LABEL: Record<StatusFilter, TKey> = {
@@ -92,6 +172,8 @@ const TOOLS: { key: TKey; to: string }[] = [
   { key: 'app.exScreenTitle', to: '/admin/exercises' },
   { key: 'app.mAdminNav', to: '/admin/marathons' },
   { key: 'app.adminStatsTitle', to: '/admin/stats' },
+  { key: 'app.inboxNav', to: '/admin/support' },
+  { key: 'app.bookingsNav', to: '/admin/bookings' },
 ];
 
 function ListSkeleton() {
@@ -121,7 +203,27 @@ export default function AdminScreen() {
   const [addOpen, setAddOpen] = useState(false);
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>('purchases');
+  /*
+   * The tab, the payments filter and a payment id live in the URL, not in state: a link from
+   * «Сегодня», from the stats screen or from the owner's Telegram channel has to land on the right
+   * list, and the back button has to leave it the way it came.
+   */
+  const [params, setParams] = useSearchParams();
+  const tab = adminTabFrom(params.get('tab'), PLANS_ENABLED);
+  const payFilter = paymentFilterFrom(params.get('filter'));
+  const payId = paymentIdFrom(params.get('id'));
+  const listTop = useRef<HTMLDivElement>(null);
+  const tappedTab = useRef(false);
+  const setTab = (next: Tab) => {
+    if (next === tab && !payId) return;
+    tappedTab.current = true;
+    setParams({ tab: next }, { replace: true });
+  };
+  const setPayFilter = (next: PaymentFilter) => {
+    if (next === payFilter && !payId) return;
+    tappedTab.current = true;
+    setParams({ tab: 'payments', filter: next }, { replace: true });
+  };
   const [subFilter, setSubFilter] = useState<SubStatusFilter>('all');
   const [subRows, setSubRows] = useState<SubscriptionRow[]>([]);
   const [subStatus, setSubStatus] = useState<ListStatus>('loading');
@@ -131,6 +233,16 @@ export default function AdminScreen() {
   const [subAdding, setSubAdding] = useState(false);
   const [subAddError, setSubAddError] = useState<string | null>(null);
   const subscriptions = tab === 'subscriptions';
+  const isPayments = tab === 'payments';
+  const [payRows, setPayRows] = useState<PaymentRow[]>([]);
+  const [payTotal, setPayTotal] = useState(0);
+  const [payStatus, setPayStatus] = useState<ListStatus>('loading');
+  const [payError, setPayError] = useState<AppError | null>(null);
+  const [payMore, setPayMore] = useState(false);
+  const [bindRow, setBindRow] = useState<PaymentRow | null>(null);
+  const [bindError, setBindError] = useState<string | null>(null);
+  const [pendingBind, setPendingBind] = useState<PendingBind | null>(null);
+  const [pendingDismiss, setPendingDismiss] = useState<PaymentRow | null>(null);
 
   /*
    * The people list. Separate state rather than a third branch of the purchases one: it answers a
@@ -190,7 +302,45 @@ export default function AdminScreen() {
   }, [admin, subscriptions, subFilter, debouncedSearch, tick]);
 
   useEffect(() => {
-    if (admin !== true || isPeople) return;
+    if (admin !== true || !isPayments) return;
+    let alive = true;
+    setPayStatus('loading');
+    setPayError(null);
+    listPayments(payFilter, 0, payId)
+      .then((page) => {
+        if (!alive) return;
+        setPayRows(page.rows);
+        setPayTotal(page.total);
+        setPayStatus('ready');
+      })
+      .catch((e: unknown) => {
+        if (!alive) return;
+        setPayError(toAppError(e));
+        setPayStatus('error');
+      });
+    return () => {
+      alive = false;
+    };
+  }, [admin, isPayments, payFilter, payId, tick]);
+
+  /*
+   * Arriving on a tab by a link — from «Сегодня» above or from outside — scrolls the list into
+   * view: on a phone it starts below the card and the tools, and a link that lands on the card
+   * instead of the list it named looks like a link that did nothing. A tap on the tab control
+   * itself does not scroll; the list is already where the thumb is.
+   */
+  const linkedTab = params.get('tab');
+  useEffect(() => {
+    if (admin !== true || !linkedTab) return;
+    if (tappedTab.current) {
+      tappedTab.current = false;
+      return;
+    }
+    listTop.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }, [admin, linkedTab, payId, payFilter]);
+
+  useEffect(() => {
+    if (admin !== true || tab !== 'purchases') return;
     let alive = true;
     setStatus('loading');
     setError(null);
@@ -208,7 +358,7 @@ export default function AdminScreen() {
     return () => {
       alive = false;
     };
-  }, [admin, isPeople, filter, debouncedSearch, tick]);
+  }, [admin, tab, filter, debouncedSearch, tick]);
 
   const reload = useCallback(() => setTick((n) => n + 1), []);
 
@@ -259,17 +409,101 @@ export default function AdminScreen() {
     try {
       if (action === 'cancel') {
         await setSubscription({ email: row.email, plan: row.plan, status: 'cancelled' });
+      } else if (action === 'close_now' || action === 'refund') {
+        await endSubscription(row.email, action === 'refund');
       } else {
         const plan: SubscriptionPlan = action === 'extend_year' ? 'annual' : 'monthly';
         await setSubscription({ email: row.email, plan, status: 'active' });
       }
-      toast.show({ kind: 'success', title: t('app.adminStatusUpdated') });
+      if (action === 'refund') {
+        toast.show({
+          kind: 'success',
+          title: t('app.adminSubRefunded'),
+          description: t('app.adminSubRefundReminder', {
+            till: sourceLabel(t, row.source) ?? 'Prodamus / lava.top',
+          }),
+        });
+      } else {
+        toast.show({
+          kind: 'success',
+          title: action === 'close_now' ? t('app.adminSubClosed') : t('app.adminStatusUpdated'),
+        });
+      }
       setPendingSub(null);
       reload();
     } catch (e) {
       toast.show({ kind: 'error', title: t('app.adminActionError'), description: errorText(e) });
     } finally {
       setBusyId(null);
+    }
+  };
+
+  const confirmBind = async () => {
+    if (!pendingBind) return;
+    const { row, email, courseId } = pendingBind;
+    setBusyId(row.id);
+    try {
+      const result = await bindPayment(row.id, email, courseId);
+      toast.show({
+        kind: 'success',
+        title: result === 'subscription' ? t('app.adminPayBoundSub') : t('app.adminPayBoundCourse'),
+        description: email,
+      });
+      setPendingBind(null);
+      setBindRow(null);
+      reload();
+    } catch (e) {
+      const key = bindErrorKey(e);
+      setPendingBind(null);
+      // The two refusals the person can fix in the sheet go back to it, under the field.
+      if (key === 'app.adminPayErrNoOrder' || key === 'app.adminInvalidEmail') {
+        setBindError(t(key));
+        toast.show({ kind: 'error', title: t('app.adminActionError'), description: t(key) });
+      } else {
+        setBindRow(null);
+        toast.show({
+          kind: 'error',
+          title: t('app.adminActionError'),
+          description: key ? t(key) : errorText(e),
+        });
+        reload();
+      }
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const confirmDismiss = async () => {
+    if (!pendingDismiss) return;
+    const row = pendingDismiss;
+    setBusyId(row.id);
+    try {
+      await dismissPayment(row.id);
+      toast.show({ kind: 'success', title: t('app.adminPayDismissed') });
+      setPendingDismiss(null);
+      reload();
+    } catch (e) {
+      const key = bindErrorKey(e);
+      toast.show({
+        kind: 'error',
+        title: t('app.adminActionError'),
+        description: key ? t(key) : errorText(e),
+      });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const loadMorePayments = async () => {
+    setPayMore(true);
+    try {
+      const page = await listPayments(payFilter, payRows.length);
+      setPayRows((list) => [...list, ...page.rows]);
+      setPayTotal(page.total);
+    } catch (e) {
+      toast.show({ kind: 'error', title: t('app.adminPayErrorTitle'), description: errorText(e) });
+    } finally {
+      setPayMore(false);
     }
   };
 
@@ -316,6 +550,14 @@ export default function AdminScreen() {
     }
   };
 
+  const currentStatus: ListStatus = isPeople
+    ? peopleStatus
+    : subscriptions
+      ? subStatus
+      : isPayments
+        ? payStatus
+        : status;
+
   const header = (
     <TopBar
       back="/"
@@ -328,12 +570,10 @@ export default function AdminScreen() {
          */
         <IconButton
           label={t('app.adminRefresh')}
-          icon={
-            (subscriptions ? subStatus : status) === 'loading' ? <Spinner size={16} /> : 'refresh'
-          }
+          icon={currentStatus === 'loading' ? <Spinner size={16} /> : 'refresh'}
           variant="ghost"
           size="sm"
-          disabled={admin !== true || (subscriptions ? subStatus : status) === 'loading'}
+          disabled={admin !== true || currentStatus === 'loading'}
           onClick={reload}
         />
       }
@@ -351,23 +591,30 @@ export default function AdminScreen() {
   }
   if (admin === false) return <Navigate to="/" replace />;
 
-  const countWord = isPeople
-    ? plural(locale, people.length, {
-        one: t('app.adminPeopleCountOne', { n: people.length }),
-        few: t('app.adminPeopleCountFew', { n: people.length }),
-        many: t('app.adminPeopleCountMany', { n: people.length }),
+  const payCount = payId ? payRows.length : payTotal;
+  const countWord = isPayments
+    ? plural(locale, payCount, {
+        one: t('app.adminPayCountOne', { n: payCount }),
+        few: t('app.adminPayCountFew', { n: payCount }),
+        many: t('app.adminPayCountMany', { n: payCount }),
       })
-    : subscriptions
-      ? plural(locale, subRows.length, {
-          one: t('app.adminSubCountOne', { n: subRows.length }),
-          few: t('app.adminSubCountFew', { n: subRows.length }),
-          many: t('app.adminSubCountMany', { n: subRows.length }),
+    : isPeople
+      ? plural(locale, people.length, {
+          one: t('app.adminPeopleCountOne', { n: people.length }),
+          few: t('app.adminPeopleCountFew', { n: people.length }),
+          many: t('app.adminPeopleCountMany', { n: people.length }),
         })
-      : plural(locale, rows.length, {
-          one: t('app.adminCountOne', { n: rows.length }),
-          few: t('app.adminCountFew', { n: rows.length }),
-          many: t('app.adminCountMany', { n: rows.length }),
-        });
+      : subscriptions
+        ? plural(locale, subRows.length, {
+            one: t('app.adminSubCountOne', { n: subRows.length }),
+            few: t('app.adminSubCountFew', { n: subRows.length }),
+            many: t('app.adminSubCountMany', { n: subRows.length }),
+          })
+        : plural(locale, rows.length, {
+            one: t('app.adminCountOne', { n: rows.length }),
+            few: t('app.adminCountFew', { n: rows.length }),
+            many: t('app.adminCountMany', { n: rows.length }),
+          });
 
   let body: React.ReactNode;
   if (isPeople) {
@@ -406,6 +653,57 @@ export default function AdminScreen() {
               }
             : {})}
         />
+      );
+    }
+  } else if (isPayments) {
+    if (payStatus === 'loading') {
+      body = <ListSkeleton />;
+    } else if (payStatus === 'error') {
+      body = (
+        <EmptyState
+          title={t('app.adminPayErrorTitle')}
+          description={errorText(payError)}
+          action={
+            <Button size="lg" onClick={reload}>
+              {t('common.retry')}
+            </Button>
+          }
+        />
+      );
+    } else if (payRows.length === 0) {
+      body =
+        payFilter === 'unclaimed' && !payId ? (
+          <EmptyState
+            title={t('app.adminPayEmptyUnclaimed')}
+            description={t('app.adminPayEmptyUnclaimedBody')}
+          />
+        ) : (
+          <EmptyState title={t('app.adminPayEmpty')} description={t('app.adminPayEmptyBody')} />
+        );
+    } else {
+      body = (
+        <div className="flex flex-col gap-4">
+          <PaymentList
+            rows={payRows}
+            busyId={busyId}
+            highlightId={payId}
+            onBind={(row) => {
+              setBindError(null);
+              setBindRow(row);
+            }}
+            onDismiss={(row) => setPendingDismiss(row)}
+          />
+          {!payId && payRows.length < payTotal ? (
+            <Button
+              variant="secondary"
+              fullWidth
+              loading={payMore}
+              onClick={() => void loadMorePayments()}
+            >
+              {t('app.adminPayMore')}
+            </Button>
+          ) : null}
+        </div>
       );
     }
   } else if (subscriptions) {
@@ -472,7 +770,7 @@ export default function AdminScreen() {
        * still on the other two tabs, where it is the only way in.
        */
       footer={
-        isPeople ? undefined : (
+        isPeople || isPayments ? undefined : (
           <Button
             size="lg"
             fullWidth
@@ -493,6 +791,7 @@ export default function AdminScreen() {
       }
     >
       <div className="flex flex-col gap-4 py-2">
+        <TodayCard reloadKey={tick} />
         {/*
          * The coach's authoring tools as a numbered index — 01 / 02 / 03, hairlines, a › at the
          * end of each row — rather than three framed buttons with pictures on them. Hidden from
@@ -519,30 +818,42 @@ export default function AdminScreen() {
             </button>
           ))}
         </nav>
-        {PLANS_ENABLED ? (
-          <SegmentedControl<Tab>
-            fullWidth
-            label={t('app.adminTitle')}
-            value={tab}
-            onChange={setTab}
-            options={[
-              { value: 'purchases', label: t('app.adminTabPurchases') },
-              { value: 'subscriptions', label: t('app.adminTabSubscriptions') },
-              { value: 'people', label: t('app.adminTabPeople') },
-            ]}
-          />
-        ) : null}
-        <Input
-          type="search"
-          inputMode="email"
-          autoComplete="off"
-          autoCapitalize="none"
-          spellCheck={false}
-          aria-label={t('app.adminSearch')}
-          placeholder={t('app.adminSearch')}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+        {/* The list starts here; a link to a tab scrolls to this line. */}
+        <div ref={listTop} className="scroll-mt-4" />
+        {/*
+         * Four tabs with «Платежи», so the small size: at 390px the four labels fit side by side
+         * at 14px and would not at 15. Without plans the control stays — «Платежи» and «Люди» are
+         * there either way.
+         */}
+        <SegmentedControl<Tab>
+          fullWidth
+          size="sm"
+          label={t('app.adminTitle')}
+          value={tab}
+          onChange={setTab}
+          options={[
+            { value: 'purchases', label: t('app.adminTabPurchases') },
+            ...(PLANS_ENABLED
+              ? [{ value: 'subscriptions' as const, label: t('app.adminTabSubscriptions') }]
+              : []),
+            { value: 'payments', label: t('app.adminTabPayments') },
+            { value: 'people', label: t('app.adminTabPeople') },
+          ]}
         />
+        {/* The journal has no search: it is read by filter, and a link opens one payment. */}
+        {isPayments ? null : (
+          <Input
+            type="search"
+            inputMode="email"
+            autoComplete="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            aria-label={t('app.adminSearch')}
+            placeholder={t('app.adminSearch')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        )}
         {/* No status chips on «Люди»: a person has no status to filter by, and leaving the
             purchases' row under the people list offered a filter that changed nothing. */}
         <div
@@ -550,41 +861,61 @@ export default function AdminScreen() {
           aria-label={t('app.adminFilterLabel')}
           className={clsx('-mx-6 flex gap-2 overflow-x-auto px-6 pb-1', isPeople && 'hidden')}
         >
-          {subscriptions
-            ? SUB_STATUS_FILTERS.map((f) => (
-                <Chip
-                  key={f}
-                  role="radio"
-                  aria-checked={subFilter === f}
-                  selected={subFilter === f}
-                  onClick={() => setSubFilter(f)}
-                >
-                  {t(SUB_FILTER_LABEL[f])}
-                </Chip>
-              ))
-            : STATUS_FILTERS.map((f) => (
-                <Chip
-                  key={f}
-                  role="radio"
-                  aria-checked={filter === f}
-                  selected={filter === f}
-                  onClick={() => setFilter(f)}
-                >
-                  {t(FILTER_LABEL[f])}
-                </Chip>
-              ))}
+          {isPayments
+            ? payId
+              ? [
+                  <Chip key="all" onClick={() => setPayFilter(payFilter)}>
+                    {t('app.adminPayShowAll')}
+                  </Chip>,
+                ]
+              : PAYMENT_FILTERS.map((f) => (
+                  <Chip
+                    key={f}
+                    role="radio"
+                    aria-checked={payFilter === f}
+                    selected={payFilter === f}
+                    onClick={() => setPayFilter(f)}
+                  >
+                    {t(PAY_FILTER_LABEL[f])}
+                  </Chip>
+                ))
+            : subscriptions
+              ? SUB_STATUS_FILTERS.map((f) => (
+                  <Chip
+                    key={f}
+                    role="radio"
+                    aria-checked={subFilter === f}
+                    selected={subFilter === f}
+                    onClick={() => setSubFilter(f)}
+                  >
+                    {t(SUB_FILTER_LABEL[f])}
+                  </Chip>
+                ))
+              : STATUS_FILTERS.map((f) => (
+                  <Chip
+                    key={f}
+                    role="radio"
+                    aria-checked={filter === f}
+                    selected={filter === f}
+                    onClick={() => setFilter(f)}
+                  >
+                    {t(FILTER_LABEL[f])}
+                  </Chip>
+                ))}
         </div>
         <div className="flex items-baseline justify-between gap-3 border-t border-border pt-5 pb-1">
           <h2 className="font-display text-xl">
-            {isPeople
-              ? t('app.adminTabPeople')
-              : subscriptions
-                ? t('app.adminSubscriptions')
-                : t('app.adminPurchases')}
+            {isPayments
+              ? payId
+                ? t('app.adminPayOneTitle')
+                : t('app.adminTabPayments')
+              : isPeople
+                ? t('app.adminTabPeople')
+                : subscriptions
+                  ? t('app.adminSubscriptions')
+                  : t('app.adminPurchases')}
           </h2>
-          {(isPeople ? peopleStatus : subscriptions ? subStatus : status) === 'ready' ? (
-            <span className="eyebrow tabular">{countWord}</span>
-          ) : null}
+          {currentStatus === 'ready' ? <span className="eyebrow tabular">{countWord}</span> : null}
         </div>
         {body}
       </div>
@@ -628,31 +959,77 @@ export default function AdminScreen() {
       <Modal
         open={pendingSub !== null}
         onClose={() => setPendingSub(null)}
-        title={
-          pendingSub?.action === 'cancel'
-            ? t('app.adminSubConfirmCancelTitle')
-            : t('app.adminSubConfirmExtendTitle')
-        }
+        title={t(SUB_CONFIRM[pendingSub?.action ?? 'extend_month'].title)}
         description={
           pendingSub
-            ? `${pendingSub.row.email}. ${
-                pendingSub.action === 'cancel'
-                  ? t('app.adminSubConfirmCancelBody')
-                  : t('app.adminSubConfirmExtendBody')
-              }`
+            ? `${pendingSub.row.email}. ${t(SUB_CONFIRM[pendingSub.action].body)}`
             : undefined
         }
-        confirmLabel={
-          pendingSub?.action === 'cancel'
-            ? t('app.adminSubCancel')
-            : pendingSub?.action === 'extend_year'
-              ? t('app.adminSubExtendYear')
-              : t('app.adminSubExtendMonth')
-        }
+        confirmLabel={t(SUB_CONFIRM[pendingSub?.action ?? 'extend_month'].confirm)}
         cancelLabel={t('common.cancel')}
-        danger={pendingSub?.action === 'cancel'}
+        danger={SUB_CONFIRM[pendingSub?.action ?? 'extend_month'].danger}
         loading={busyId !== null}
         onConfirm={() => void applySubAction()}
+      />
+      <BindPaymentSheet
+        open={pendingBind === null}
+        row={bindRow}
+        error={bindError}
+        onClose={() => {
+          setBindRow(null);
+          setBindError(null);
+        }}
+        onSubmit={(email, courseId) => {
+          if (!bindRow) return;
+          setBindError(null);
+          setPendingBind({ row: bindRow, email, courseId });
+        }}
+      />
+      <Modal
+        open={pendingBind !== null}
+        onClose={() => setPendingBind(null)}
+        title={pendingBind ? t('app.adminPayBindConfirmTitle', { email: pendingBind.email }) : ''}
+        description={
+          pendingBind
+            ? t('app.adminPayBindConfirmBody', {
+                what: [
+                  t(INTENT_LABEL[pendingBind.row.intent]),
+                  pendingBind.courseId ? courseName(pendingBind.courseId, locale) : '',
+                ]
+                  .filter(Boolean)
+                  .join(' · '),
+                amount: formatMoney(
+                  locale,
+                  pendingBind.row.amount,
+                  pendingBind.row.currency,
+                  pendingBind.row.provider,
+                ),
+              })
+            : undefined
+        }
+        confirmLabel={t('app.adminPayBindConfirm')}
+        cancelLabel={t('common.cancel')}
+        loading={busyId !== null}
+        onConfirm={() => void confirmBind()}
+      />
+      <Modal
+        open={pendingDismiss !== null}
+        onClose={() => setPendingDismiss(null)}
+        title={t('app.adminPayDismissTitle')}
+        description={
+          pendingDismiss
+            ? `${formatMoney(
+                locale,
+                pendingDismiss.amount,
+                pendingDismiss.currency,
+                pendingDismiss.provider,
+              )} · ${pendingDismiss.email}. ${t('app.adminPayDismissBody')}`
+            : undefined
+        }
+        confirmLabel={t('app.adminPayDismiss')}
+        cancelLabel={t('common.cancel')}
+        loading={busyId !== null}
+        onConfirm={() => void confirmDismiss()}
       />
       <AddSubscriptionSheet
         open={subAddOpen}
