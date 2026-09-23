@@ -99,6 +99,7 @@ function reply(status: number, body: Record<string, unknown>): Response {
 async function drainAdmin(
   admin: SupabaseClient,
   fallbackToken: string,
+  appUrl: string,
 ): Promise<{ sent: number; failed: number }> {
   const chatId = Deno.env.get('TELEGRAM_ADMIN_CHAT') ?? '';
   if (!chatId.trim()) return { sent: 0, failed: 0 };
@@ -109,7 +110,7 @@ async function drainAdmin(
 
   const { data, error } = await admin
     .from('admin_outbox')
-    .select('id, topic, kind, params, attempts')
+    .select('id, topic, kind, params, attempts, dedupe_key')
     .eq('status', 'pending')
     .order('created_at', { ascending: true })
     .limit(BATCH);
@@ -126,7 +127,8 @@ async function drainAdmin(
   let failed = 0;
 
   for (const row of rows) {
-    const text = adminMessage(row);
+    // Со ссылкой прямо на экран админки (0044): платёж, отчёты клуба или человек.
+    const text = adminMessage(row, appUrl);
     if (!text) {
       console.warn(`telegram-notify: unknown admin kind ${row.kind}; left in the queue`);
       continue;
@@ -303,7 +305,7 @@ Deno.serve(async (req) => {
    * запуск. Пока очередь была одна, это было честно; теперь это значило бы, что сообщение о
    * неприкреплённом платеже не уходит из-за чужой таблицы.
    */
-  const admins = await drainAdmin(admin, botToken);
+  const admins = await drainAdmin(admin, botToken, appUrl);
 
   /*
    * Истёкшие — одним запросом и первыми. Раньше они гасились по одной внутри пачки, а значит

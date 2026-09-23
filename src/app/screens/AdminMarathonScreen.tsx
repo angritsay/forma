@@ -7,7 +7,7 @@
  * the plan. A navigation stack would make that a chore.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Navigate, useParams } from 'react-router';
+import { Navigate, useParams, useSearchParams } from 'react-router';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
@@ -68,6 +68,9 @@ import type { TKey } from '@/i18n/index';
 
 type Tab = 'plan' | 'people' | 'proofs' | 'board' | 'settings';
 
+const TABS: readonly Tab[] = ['plan', 'people', 'proofs', 'board', 'settings'];
+const tabFrom = (v: string | null): Tab => TABS.find((x) => x === v) ?? 'plan';
+
 /**
  * The zones a round is run in. A free-text field took «Москва» and «MSK» and failed on save with
  * `unknown_timezone`; these are the places the club's people actually live, west to east.
@@ -87,7 +90,9 @@ export default function AdminMarathonScreen() {
   const admin = useIsAdmin();
   const { id = '' } = useParams();
 
-  const [tab, setTab] = useState<Tab>('plan');
+  // `?tab=proofs` — links from «Сегодня» and the owner's Telegram channel open the right tab (0044).
+  const [linked] = useSearchParams();
+  const [tab, setTab] = useState<Tab>(() => tabFrom(linked.get('tab')));
   const [marathon, setMarathon] = useState<MarathonRow | null>(null);
   const [tasks, setTasks] = useState<MarathonTaskRow[]>([]);
   const [members, setMembers] = useState<MarathonMemberRow[]>([]);
