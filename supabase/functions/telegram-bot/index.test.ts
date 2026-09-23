@@ -377,25 +377,49 @@ describe('the support path', () => {
   });
 
   it('answers briefly, in the sender’s language', () => {
-    expect(supportReplyText('queued', 'ru', true)).toBe(SUPPORT_COPY.ru.queued);
-    expect(supportReplyText('queued', 'en', true)).toBe(SUPPORT_COPY.en.queued);
+    expect(supportReplyText('queued', 'ru')).toBe(SUPPORT_COPY.ru.queued);
+    expect(supportReplyText('queued', 'en')).toBe(SUPPORT_COPY.en.queued);
     expect(SUPPORT_COPY.ru.queued).toContain('Передали тренеру');
     expect(SUPPORT_COPY.en.queued).not.toMatch(/[А-Яа-яЁё]/);
   });
 
-  it('asks for a way back from somebody with no username', () => {
-    expect(supportReplyText('queued', 'ru', false)).toBe(SUPPORT_COPY.ru.queuedNoUsername);
+  /* Since 0045 the reply comes through the bot, so the bot's own chat is the way back for all. */
+  it('says the reply will come to this chat, username or not', () => {
+    expect(supportReplyText('queued', 'ru')).toContain('в этот чат');
+    expect(supportReplyText('queued', 'en')).toContain('in this chat');
+    expect(JSON.stringify(SUPPORT_COPY)).not.toMatch(/почт|email/i);
+  });
+
+  /* 0045 stores the text itself; a caption is the text when there is nothing else. */
+  it('hands the caption and what it was under to the database', () => {
+    const update: TelegramUpdate = {
+      message: {
+        message_id: 9,
+        chat: { id: 42, type: 'private' },
+        from: { id: 4242, first_name: 'Аня', username: '@anya_k' },
+        photo: [{}],
+        caption: '  вот так правильно?  ',
+      },
+    };
+    const route = routeUpdate(update);
+    if (route?.kind !== 'support') throw new Error('expected support');
+    expect(supportRpcArgs(route.request)).toMatchObject({
+      p_message_id: 9,
+      p_username: 'anya_k',
+      p_text: 'вот так правильно?',
+      p_attachment: 'photo',
+    });
   });
 
   /* Защита от спама не должна сама стать спамом: «подожди» — один раз, дальше тишина. */
   it('says wait once, then stays quiet', () => {
-    expect(supportReplyText('limited', 'ru', true)).toBe(SUPPORT_COPY.ru.limited);
-    expect(supportReplyText('muted', 'ru', true)).toBeNull();
-    expect(supportReplyText('duplicate', 'ru', true)).toBeNull();
+    expect(supportReplyText('limited', 'ru')).toBe(SUPPORT_COPY.ru.limited);
+    expect(supportReplyText('muted', 'ru')).toBeNull();
+    expect(supportReplyText('duplicate', 'ru')).toBeNull();
   });
 
   it('owns up when the message did not go through', () => {
-    expect(supportReplyText('failed', 'en', true)).toBe(SUPPORT_COPY.en.failed);
+    expect(supportReplyText('failed', 'en')).toBe(SUPPORT_COPY.en.failed);
   });
 
   it('keeps every reply short and plain', () => {

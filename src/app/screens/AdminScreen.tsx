@@ -172,6 +172,8 @@ const TOOLS: { key: TKey; to: string }[] = [
   { key: 'app.exScreenTitle', to: '/admin/exercises' },
   { key: 'app.mAdminNav', to: '/admin/marathons' },
   { key: 'app.adminStatsTitle', to: '/admin/stats' },
+  { key: 'app.inboxNav', to: '/admin/support' },
+  { key: 'app.bookingsNav', to: '/admin/bookings' },
 ];
 
 function ListSkeleton() {

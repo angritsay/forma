@@ -163,6 +163,13 @@ export function AppRoutes() {
                   element={<LazyScreen name="AdminWorkoutsScreen" />}
                 />
                 <Route path="/admin/stats" element={<LazyScreen name="AdminStatsScreen" />} />
+                <Route path="/admin/support" element={<LazyScreen name="AdminSupportScreen" />} />
+                <Route path="/admin/bookings" element={<LazyScreen name="AdminBookingsScreen" />} />
+                {/* One person, by the address (encodeURIComponent'd — see features/admin/person/path.ts). */}
+                <Route
+                  path="/admin/people/:email"
+                  element={<LazyScreen name="AdminPersonScreen" />}
+                />
                 <Route
                   path="/admin/exercises"
                   element={<LazyScreen name="AdminExercisesScreen" />}

@@ -384,23 +384,18 @@ export function parseSupportStatus(body: unknown): SupportStatus {
 /**
  * The one line the person gets back.
  *
- * **«Он ответит тебе здесь, в Телеграме», not «в этом чате».** The coach answers from his own
- * account, in a new chat with the person — no bot can write on his behalf. Promising an answer in
- * the bot's chat would send people to look for it in the wrong place.
- *
- * Somebody with no @username cannot always be found from the coach's side: Telegram opens a chat
- * by numeric id only when the person's privacy settings allow it. So they are asked, in the same
- * line, to leave a way back — which is cheaper than a question that silently never gets answered.
+ * **«Ответ придёт сюда, в этот чат».** Since 0045 the coach answers from the admin screen and the
+ * answer arrives from this bot, in this chat, signed «Ответ тренера:» — so the promise is where to
+ * look, and it is the same for everybody. It used to ask people with no @username to leave an
+ * email or a phone number, because the coach then wrote from his own account and could not always
+ * find them; a reply through the bot needs only the chat, which the bot already has.
  */
 export const SUPPORT_COPY: Record<
   Locale,
-  { queued: string; queuedNoUsername: string; limited: string; media: string; failed: string }
+  { queued: string; limited: string; media: string; failed: string }
 > = {
   ru: {
-    queued: 'Передали тренеру — он ответит тебе здесь, в Телеграме.',
-    queuedNoUsername:
-      'Передали тренеру — он ответит тебе здесь, в Телеграме. У тебя не задано имя пользователя ' +
-      '(@…), поэтому на всякий случай оставь почту или телефон следующим сообщением.',
+    queued: 'Передали тренеру — ответ придёт сюда, в этот чат.',
     limited:
       'Сообщения дошли. Подожди, пожалуйста, ответа тренера, прежде чем писать ещё, — ' +
       'следующий час новые сообщения ему не передаются.',
@@ -408,10 +403,7 @@ export const SUPPORT_COPY: Record<
     failed: 'Не получилось передать сообщение тренеру. Попробуй, пожалуйста, чуть позже.',
   },
   en: {
-    queued: 'Passed on to the coach — he will reply to you here in Telegram.',
-    queuedNoUsername:
-      'Passed on to the coach — he will reply to you here in Telegram. You have no username ' +
-      '(@…) set, so please send your email or phone number in the next message, just in case.',
+    queued: 'Passed on to the coach — the reply will come here, in this chat.',
     limited:
       'Your messages have arrived. Please wait for the coach to reply before writing more — ' +
       'new messages are not passed on for the next hour.',
@@ -422,15 +414,11 @@ export const SUPPORT_COPY: Record<
 };
 
 /** The reply to a support message, or null when silence is the right answer. */
-export function supportReplyText(
-  status: SupportStatus,
-  locale: Locale,
-  hasUsername: boolean,
-): string | null {
+export function supportReplyText(status: SupportStatus, locale: Locale): string | null {
   const c = SUPPORT_COPY[locale] ?? SUPPORT_COPY.ru;
   switch (status) {
     case 'queued':
-      return hasUsername ? c.queued : c.queuedNoUsername;
+      return c.queued;
     case 'limited':
       return c.limited;
     case 'empty':
@@ -568,7 +556,7 @@ export async function handleRequest(req: Request): Promise<Response> {
 
   if (route.kind === 'support') {
     const status = await passOn(route.request);
-    const text = supportReplyText(status, route.request.locale, route.request.username !== '');
+    const text = supportReplyText(status, route.request.locale);
     if (text) {
       const res = await call('sendMessage', { chat_id: route.request.chatId, text });
       if (!res.ok) console.error('telegram-bot: support reply failed', res.status);

@@ -19,9 +19,11 @@ export interface WorkoutPickerSheetProps {
   open: boolean;
   onClose: () => void;
   onPick: (workout: CustomWorkoutSummary) => void;
+  /** The sheet's heading; the course-day wording by default. */
+  title?: string;
 }
 
-export function WorkoutPickerSheet({ open, onClose, onPick }: WorkoutPickerSheetProps) {
+export function WorkoutPickerSheet({ open, onClose, onPick, title }: WorkoutPickerSheetProps) {
   const { t } = useT();
   const [rows, setRows] = useState<CustomWorkoutSummary[]>([]);
   const [loading, setLoading] = useState(false);
@@ -58,7 +60,7 @@ export function WorkoutPickerSheet({ open, onClose, onPick }: WorkoutPickerSheet
   }, [rows, query]);
 
   return (
-    <Sheet open={open} onClose={onClose} title={t('app.dayPickWorkout')}>
+    <Sheet open={open} onClose={onClose} title={title ?? t('app.dayPickWorkout')}>
       <div className="flex flex-col gap-3">
         <Input
           type="search"

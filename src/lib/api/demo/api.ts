@@ -2478,3 +2478,108 @@ export async function setMarathonWinner(
     });
   });
 }
+
+// --- the person page (0046) ----------------------------------------------------
+//
+// Демо-двойник `admin_person()`: та же форма ответа (snake_case), чтобы её читал тот же
+// `adminPersonFromDb`. Платежей, поддержки и выданных тренировок в демо-базе нет — эти списки
+// честно пустые, а не придуманные.
+
+export async function getAdminPerson(email: string): Promise<unknown> {
+  return run(() => {
+    requireDemoUser();
+    const db = readDb();
+    const lower = email.trim().toLowerCase();
+    const same = (e: string) => e.toLowerCase() === lower;
+    const profile = db.profiles.find((p) => same(p.email)) ?? null;
+    const sub = db.subscriptions.find((s) => same(s.email)) ?? null;
+    const members = db.marathonMembers.filter((m) => same(m.email));
+    const mine = profile
+      ? db.sessions
+          .filter((s) => s.user_id === profile.id)
+          .sort((a, b) => b.started_at.localeCompare(a.started_at))
+      : [];
+    const done = mine.filter((s) => s.completed_at);
+    const marathon = (id: string) => db.marathons.find((m) => m.id === id);
+    return {
+      email: lower,
+      profile: profile
+        ? {
+            display_name: profile.display_name,
+            locale: profile.locale,
+            created_at: profile.created_at,
+            onboarded_at: profile.onboarded_at,
+            fitness_level: profile.fitness_level,
+            telegram_linked: false,
+          }
+        : null,
+      purchases: db.purchases
+        .filter((p) => same(p.email))
+        .sort((a, b) => b.created_at.localeCompare(a.created_at)),
+      subscription: sub ? { ...sub, live: subLive(db, sub.email) } : null,
+      club_access: subLive(db, lower),
+      memberships: members.map((m) => {
+        const mk = marathon(m.marathonId);
+        return {
+          member_id: m.id,
+          marathon_id: m.marathonId,
+          marathon_title: mk?.title ?? '',
+          // Демо ведёт один круг, и он стоит за клуб (см. `listMyMarathons`).
+          is_club: true,
+          solo: (mk?.teamSize ?? 2) <= 1,
+          status: m.status,
+          joined_at: m.createdAt,
+          team_name: db.marathonTeams.find((t) => t.id === m.teamId)?.name ?? null,
+          partners: db.marathonMembers
+            .filter((o) => m.teamId && o.teamId === m.teamId && o.id !== m.id)
+            .map((o) => ({ email: o.email, display_name: o.displayName })),
+        };
+      }),
+      proofs: db.marathonSubmissions
+        .filter((s) => members.some((m) => m.id === s.memberId))
+        .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt))
+        .slice(0, 10)
+        .map((s) => ({
+          id: s.id,
+          marathon_title: marathon(s.marathonId)?.title ?? '',
+          is_club: true,
+          day_index: s.dayIndex,
+          task_title: db.marathonTasks.find((t) => t.id === s.taskId)?.title ?? '',
+          submitted_at: s.submittedAt,
+          voided_at: s.voidedAt,
+          void_reason: s.voidReason,
+          attempt: s.attempt,
+          reviewed_at: s.reviewedAt,
+        })),
+      assigned: [],
+      activity: {
+        sessions: done.length,
+        started: mine.length,
+        days: profile ? doneDays(db, profile.id).length : 0,
+        points: done.reduce((sum, s) => sum + (Number(s.points) || 0), 0),
+        last_completed_at: done.reduce<string | null>(
+          (acc, s) => (acc === null || (s.completed_at ?? '') > acc ? s.completed_at : acc),
+          null,
+        ),
+      },
+      sessions: mine.slice(0, 10).map((s) => ({
+        id: s.id,
+        course_id: s.course_id,
+        node_id: s.node_id,
+        workout_id: s.workout_id,
+        custom_title:
+          s.course_id === 'custom'
+            ? (db.customWorkouts.find((w) => w.shortId === s.node_id)?.title ?? null)
+            : null,
+        points: s.points,
+        feeling: s.feeling,
+        started_at: s.started_at,
+        completed_at: s.completed_at,
+      })),
+      support: [],
+      payment_emails: [],
+      payments: [],
+      can_end_subscription: false,
+    };
+  });
+}
