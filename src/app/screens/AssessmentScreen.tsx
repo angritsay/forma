@@ -33,6 +33,7 @@ import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { IconButton } from '@/components/ui/IconButton';
+import { HeroField } from '@/components/ui/HeroField';
 import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
 import { useToast } from '@/components/ui/Toast';
@@ -199,6 +200,7 @@ export default function AssessmentScreen() {
         footer={
           <div className="flex flex-col gap-2">
             <Button
+              variant="action"
               size="lg"
               fullWidth
               loading={saving}
@@ -262,7 +264,7 @@ export default function AssessmentScreen() {
           </Button>
         ) : (
           <div className="flex flex-col gap-2">
-            <Button size="lg" fullWidth onClick={() => setPhase('running')}>
+            <Button variant="action" size="lg" fullWidth onClick={() => setPhase('running')}>
               {t('app.onbAssessWarnCta')}
             </Button>
             <Button variant="ghost" fullWidth onClick={close}>
@@ -279,22 +281,30 @@ export default function AssessmentScreen() {
          * нужно bloat-нода текста». It cannot ride along with the movement — beside a clip nobody
          * reads anything — so it stands here, before the first one.
          */}
-        <Question text={t(done ? 'app.assessDoneHubTitle' : 'app.onbAssessWarnTitle')} />
         {/*
-         * Что именно произойдёт. Экран объяснял «сколько будет движений» и «сколько это займёт»
-         * двумя пилюлями и не говорил главного: ничего не надо выполнять прямо сейчас, надо
-         * назвать числа. Владелец: «на этом экране нужно объяснить суть как выполнять и что надо
-         * будет выполнять». Одна фраза, потому что запрет на bloat никуда не делся.
+         * The instruction, what will happen and how long it takes are the screen's blue hero
+         * field (style A, global.css header): white type, the facts as white outlined pills.
          */}
-        <p className="text-[15px] leading-relaxed text-muted">
-          {t(done ? 'app.assessDoneHubBody' : 'app.assessHow')}
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <Pill>
-            {t('app.onbAssessMoves', { n: formatNumber(locale, ASSESSMENT_MOVES.length) })}
-          </Pill>
-          <Pill>{t('common.minutesShort', { n: formatNumber(locale, ASSESSMENT_TOTAL_MIN) })}</Pill>
-        </div>
+        <HeroField className="flex flex-col gap-5">
+          <Question text={t(done ? 'app.assessDoneHubTitle' : 'app.onbAssessWarnTitle')} />
+          {/*
+           * Что именно произойдёт. Экран объяснял «сколько будет движений» и «сколько это займёт»
+           * двумя пилюлями и не говорил главного: ничего не надо выполнять прямо сейчас, надо
+           * назвать числа. Владелец: «на этом экране нужно объяснить суть как выполнять и что надо
+           * будет выполнять». Одна фраза, потому что запрет на bloat никуда не делся.
+           */}
+          <p className="text-[15px] leading-relaxed text-on-field/90">
+            {t(done ? 'app.assessDoneHubBody' : 'app.assessHow')}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Pill tone="ghost">
+              {t('app.onbAssessMoves', { n: formatNumber(locale, ASSESSMENT_MOVES.length) })}
+            </Pill>
+            <Pill tone="ghost">
+              {t('common.minutesShort', { n: formatNumber(locale, ASSESSMENT_TOTAL_MIN) })}
+            </Pill>
+          </div>
+        </HeroField>
         {/*
          * Хаб: пять движений и то, что по каждому уже записано. Заменил полоску из квадратиков —
          * она отвечала только на «какие пять», а спрошено было про «планка ту ду, отжимания: 10».

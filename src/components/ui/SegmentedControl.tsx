@@ -113,7 +113,8 @@ export function SegmentedControl<T extends string>({
               // 14 / 15px, up from 11 / 12: sentence case set the labels free of their tracking.
               size === 'sm' ? 'h-8 px-3 text-[14px]' : 'h-10 px-4 text-[15px]',
               fullWidth && 'flex-1',
-              selected ? 'bg-primary text-on-primary' : 'bg-transparent text-muted hover:text-text',
+              // Electric blue, like the tab bar's seat: selection has one colour across the app.
+              selected ? 'bg-field text-on-field' : 'bg-transparent text-muted hover:text-text',
             )}
           >
             {o.icon ? <Icon name={o.icon} size={12} /> : null}

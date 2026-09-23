@@ -43,8 +43,9 @@ export interface PathNodeProps {
  *
  * The circle says the state in fill rather than in words — the owner's prototype
  * (`design/ui_kits/app-v2`, «Путь по дням»): a finished day is filled in the programme colour
- * and ticked; today is filled in paper with its number, because white is the loudest thing this
- * palette has and the one day that has to be found without reading is today; a day still open is
+ * and ticked; today is filled in the neon with its number, because the neon is the loudest thing
+ * this palette has — the tag it gives «сегодня» — and the one day that has to be found without
+ * reading is today; a day still open is
  * outlined; a locked one is outlined and dimmed.
  *
  * It was a square, on the rule that «this brand has no circles». `design/CHANGELOG.md` §10
@@ -80,7 +81,8 @@ export function PathNode({ node, status, n, column, stars, onPress, buttonRef }:
            * halo pulses round it), and the one place on this screen the spring is allowed — it is
            * a thing arriving, not content moving. Reduced motion switches it off in global.css.
            */
-          status === 'current' && 'pop-in border-paper bg-paper text-ink',
+          /* Today is the neon — «сегодня» is one of the tags the third palette gives it. */
+          status === 'current' && 'pop-in border-action bg-action text-on-action',
           status === 'open' && 'border-border-strong text-text',
           status === 'locked' && 'border-border text-muted-2 opacity-50',
         )}

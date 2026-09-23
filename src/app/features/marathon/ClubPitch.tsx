@@ -134,7 +134,7 @@ function Hero() {
       ) : null}
 
       {/*
-       * «Клуб» 200 · «маленьких» 800 in the club's colour · «шагов» 200. This used to carry
+       * «Клуб» 200 · «маленьких» 800 in the club's warm gradient · «шагов» 200. This used to carry
        * `normal-case` to undo `.display`'s capitals; `.display` is sentence case now, so the
        * opt-out is gone and the class alone says what the mockup says.
        *
@@ -144,7 +144,10 @@ function Hero() {
        */}
       <h1 className="display px-3 text-[clamp(32px,10.2vw,44px)] leading-[1.12] text-balance">
         <span className="t-thin block">{t('app.clubNameLead')}</span>
-        <span className="block text-course-accent">{t('app.clubNameAccent')}</span>
+        {/* The club's key word in its warm gradient — large type only (global.css, `.club-aurora`). */}
+        <span className="block">
+          <span className="text-gradient box-decoration-clone">{t('app.clubNameAccent')}</span>
+        </span>
         <span className="t-thin block">{t('app.clubNameTail')}</span>
       </h1>
     </section>

@@ -141,7 +141,7 @@ export function FortimeStep({
               );
             })}
           </ol>
-          <Button size="lg" fullWidth onClick={roundDone}>
+          <Button variant="action" size="lg" fullWidth onClick={roundDone}>
             {roundsDone + 1 >= step.rounds
               ? t('app.playerFortimeFinished')
               : t('app.playerRoundDone')}
@@ -164,7 +164,7 @@ export function FortimeStep({
               {formatClock(phase === 'finished' ? clock.elapsedSec : (cap ?? clock.elapsedSec))}
             </span>
           </div>
-          <Button size="lg" fullWidth onClick={onNext}>
+          <Button variant="action" size="lg" fullWidth onClick={onNext}>
             {t('common.continue')}
           </Button>
         </>

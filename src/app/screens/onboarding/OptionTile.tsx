@@ -81,8 +81,9 @@ export function OptionTile({
          * ступенька» gets the room it needs, and the row still ends flush at the right margin.
          */
         wide ? 'w-full' : 'flex-auto',
+        /* Chosen is electric blue with white words, as every selection in the app. */
         selected
-          ? 'border-primary bg-primary text-on-primary'
+          ? 'border-field bg-field text-on-field'
           : 'border-border bg-surface-2 text-text hover:bg-surface-3',
       )}
     >
@@ -103,7 +104,7 @@ export function OptionTile({
       {mark ? (
         <span className="flex size-5 shrink-0 items-center justify-center" aria-hidden="true">
           {selected ? (
-            <span className="pop-in flex size-5 items-center justify-center rounded-pill bg-on-primary text-primary">
+            <span className="pop-in flex size-5 items-center justify-center rounded-pill bg-on-field text-field">
               <Glyph size={11}>✓</Glyph>
             </span>
           ) : null}

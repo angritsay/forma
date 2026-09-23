@@ -51,7 +51,7 @@ export function BlockIntroStep({ step, prescribed, onNext }: BlockIntroStepProps
           ) : null}
         </div>
       </div>
-      <Button size="lg" fullWidth onClick={onNext} data-autofocus>
+      <Button variant="action" size="lg" fullWidth onClick={onNext} data-autofocus>
         {t('app.playerGo')}
       </Button>
     </div>

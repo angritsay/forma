@@ -143,3 +143,89 @@ describe('global.css tokens', () => {
     }
   });
 });
+
+/*
+ * The screens' pairings (the third palette's style A and the club's style B). Every colour a
+ * screen now puts type on, and every colour it now puts as type, with the ratio it has to clear.
+ */
+describe('screen pairings', () => {
+  const FIELD = token('field')!;
+  const ACTION = token('action')!;
+  const ACCENT = token('accent')!;
+  const WHITE = '#ffffff';
+
+  it('reads on the blue hero field: white type, the light-blue key word', () => {
+    expect(contrast(WHITE, FIELD)).toBeGreaterThanOrEqual(7);
+    expect(contrast(token('on-field') ?? WHITE, FIELD)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(ACCENT, FIELD)).toBeGreaterThanOrEqual(4.5);
+    // The neon swoosh and the neon stars on the field are figures (3:1), and clear body text.
+    expect(contrast(ACTION, FIELD)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('never sets the blue field as type on charcoal', () => {
+    expect(contrast(FIELD, APP_BG)).toBeLessThan(3);
+  });
+
+  it('keeps ink on the neon, and the neon on charcoal', () => {
+    expect(contrast(token('on-action')!, ACTION)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(ACTION, APP_BG)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('reads on every pill tone', () => {
+    const pills: [string, string][] = [
+      [INK_ON_LIGHT, ACTION], // neon
+      [INK_ON_LIGHT, token('orange')!], // beginners
+      [INK_ON_LIGHT, token('ciel')!], // coach
+      [token('on-accent')!, ACCENT], // sky
+      [FIELD, WHITE], // white sticker on the field
+      [WHITE, FIELD], // ghost outline on the field
+    ];
+    for (const [ink, fill] of pills) {
+      expect(contrast(ink, fill), `${ink} on ${fill}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it('keeps the selected segment (white on the field) AA', () => {
+    expect(contrast(WHITE, FIELD)).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe('the club', () => {
+  /*
+   * `.club-aurora` glows behind the club's screens at a fixed alpha. Model the worst pixel: all
+   * three of its colours stacked at that alpha over charcoal, which is brighter than anything the
+   * blurred, separated blobs can actually produce.
+   */
+  const alpha = Number(/\.club-aurora\s*\{[^}]*?opacity:\s*([0-9.]+)/.exec(css)?.[1]);
+  const mix = (under: number[], over: number[], a: number) =>
+    under.map((u, i) => u * (1 - a) + over[i]! * a);
+  const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const hex = (c: number[]) =>
+    `#${c.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')}`;
+  const worst = hex(
+    ['#2038e2', '#ff5a00', '#afe9fd'].reduce((g, c) => mix(g, rgb(c), alpha), rgb(APP_BG)),
+  );
+
+  it('has a glow alpha to measure', () => {
+    expect(alpha).toBeGreaterThan(0);
+    expect(alpha).toBeLessThanOrEqual(0.1);
+  });
+
+  it('keeps body text AA on the brightest pixel of the glow', () => {
+    for (const name of ['text', 'muted', 'muted-2', 'accent']) {
+      expect(contrast(token(name)!, worst), name).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it('keeps every stop of the warm gradient ≥ 3 there, so it is large type only', () => {
+    for (const stop of ['#afe9fd', '#ffe6d0', '#ff5a00']) {
+      expect(contrast(stop, worst), stop).toBeGreaterThanOrEqual(3);
+      // On bare charcoal the warm gradient clears body text; the glow is what limits it.
+      expect(contrast(stop, APP_BG), stop).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it('puts ink on the neon «today» dot', () => {
+    expect(contrast(INK_ON_LIGHT, token('action')!)).toBeGreaterThanOrEqual(4.5);
+  });
+});

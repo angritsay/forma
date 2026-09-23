@@ -126,7 +126,7 @@ export function TestStep({
       </div>
 
       {phase === 'ready' ? (
-        <Button size="lg" fullWidth onClick={start}>
+        <Button variant="action" size="lg" fullWidth onClick={start}>
           {t('app.playerTestStart')}
         </Button>
       ) : phase === 'running' ? (
@@ -134,7 +134,7 @@ export function TestStep({
           {t('app.playerStop')}
         </Button>
       ) : (
-        <Button size="lg" fullWidth onClick={save}>
+        <Button variant="action" size="lg" fullWidth onClick={save}>
           {t('app.playerTestSave')}
         </Button>
       )}

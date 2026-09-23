@@ -62,7 +62,7 @@ function SelectInner<T extends string>(
       <div
         className={clsx(
           'relative flex h-12 items-center rounded-control border bg-surface-2',
-          'transition-colors duration-150 ease-(--ease-out) focus-within:border-primary',
+          'transition-colors duration-150 ease-(--ease-out) focus-within:border-accent',
           error ? 'border-danger' : 'border-border',
         )}
       >

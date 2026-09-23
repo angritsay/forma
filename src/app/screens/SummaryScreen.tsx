@@ -255,6 +255,7 @@ function SavedView({
       footer={
         <div className="flex flex-col gap-1">
           <Button
+            variant="action"
             size="lg"
             fullWidth
             iconRight={<Glyph size={14}>→</Glyph>}
@@ -470,6 +471,7 @@ function LocalSummary({
             </p>
           ) : null}
           <Button
+            variant="action"
             size="lg"
             fullWidth
             loading={status === 'saving'}

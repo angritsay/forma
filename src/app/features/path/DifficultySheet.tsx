@@ -197,7 +197,7 @@ export function DifficultySheet({
                     <span
                       className={clsx(
                         'block h-full rounded-pill transition-[width] duration-300 ease-(--ease-out)',
-                        isRecommended ? 'bg-course' : 'bg-muted-2',
+                        isRecommended ? 'bg-course-accent' : 'bg-muted-2',
                       )}
                       style={{ width: `${Math.round(share(o) * 100)}%` }}
                     />

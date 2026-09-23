@@ -261,6 +261,7 @@ export default function CoursesScreen() {
                   <CourseCard
                     photo={photo}
                     priority={priority}
+                    hero={i === 0}
                     style={courseTileVars(course.tile)}
                     title={title}
                     eyebrow={entry.tried ? undefined : t('app.coursesFreeBadge')}
@@ -291,6 +292,7 @@ export default function CoursesScreen() {
                 <CourseCard
                   photo={photo}
                   priority={priority}
+                  hero={i === 0}
                   style={courseTileVars(course.tile)}
                   title={title}
                   pct={progress.pct}

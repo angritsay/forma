@@ -14,8 +14,10 @@
  *     the percentage, near-black for the remainder;
  *   - the percentage under it, very large, in the course's colour;
  *   - the course's name under that, small and regular, in the same colour;
- *   - a pill button in the course's colour at the bottom right, dark sentence-case text, with a
- *     dark circle at its right end holding a white arrow — inside the pill, not beside it.
+ *   - a white pill button at the bottom right, dark sentence-case text, with a dark circle at its
+ *     right end holding a white arrow — inside the pill, not beside it. It was the course's colour
+ *     until the third palette: the neon is now the one main button of a screen (the hero's), and a
+ *     course tinted neon or orange would have put a second one beside it.
  *
  * **Colour carries the programme, on type rather than on fills.** The card used to be painted in
  * `--course-tile`: a yellow cover band, a yellow progress fill. Here the tile colours the *type*
@@ -41,7 +43,10 @@
  */
 import type { ReactNode } from 'react';
 import { clsx } from 'clsx';
+import { KeyTitle } from '@/components/ui/HeroField';
 import { Glyph } from '@/components/ui/Icon';
+import { Pill } from '@/components/ui/Pill';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import type { Photo } from '@/lib/media/photos';
 import { isPlaceholder, photoSrc } from '@/lib/media/photos';
 import { externalLinkProps } from '@/app/hooks/useExternalLink';
@@ -79,6 +84,11 @@ export interface CourseCardProps {
   eyebrow?: ReactNode;
   /** `--course-tile`, its ink and `--course-accent`, from courseTileVars(). */
   style?: React.CSSProperties;
+  /**
+   * The screen's hero: the course you are walking, drawn as the blue field instead of a
+   * photograph. See {@link CourseHero}. One card per screen, the first of the deck.
+   */
+  hero?: boolean;
 }
 
 export function CourseCard({
@@ -94,8 +104,24 @@ export function CourseCard({
   priority = false,
   dimmed = false,
   style,
+  hero = false,
 }: CourseCardProps) {
   const share = pct === undefined ? undefined : Math.max(0, Math.min(100, Math.round(pct)));
+  if (hero) {
+    return (
+      <CourseHero
+        title={title}
+        share={share}
+        eyebrow={eyebrow}
+        ctaLabel={ctaLabel}
+        onCta={onCta}
+        ctaHref={ctaHref}
+        onOpen={onOpen}
+        openLabel={openLabel}
+        style={style}
+      />
+    );
+  }
   const art = photo && !isPlaceholder(photo);
   return (
     <article
@@ -207,7 +233,7 @@ export function CourseCard({
             /* No arrow: it does not go forward into the work, it leaves for the web. */
             <a
               {...externalLinkProps(ctaHref)}
-              className="pointer-events-auto inline-flex items-center rounded-pill bg-course-accent px-6 py-3 text-[15px] leading-none font-medium text-ink transition-opacity duration-150 ease-(--ease-out) hover:opacity-90"
+              className="pointer-events-auto inline-flex items-center rounded-pill bg-paper px-6 py-3 text-[15px] leading-none font-medium text-ink transition-opacity duration-150 ease-(--ease-out) hover:opacity-90"
             >
               {ctaLabel}
             </a>
@@ -215,12 +241,122 @@ export function CourseCard({
             <button
               type="button"
               onClick={onCta}
-              className="pointer-events-auto inline-flex items-center gap-3 rounded-pill bg-course-accent py-1 pr-1 pl-6 text-[15px] leading-none font-medium text-ink transition-transform duration-120 ease-(--ease-out) active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
+              className="pointer-events-auto inline-flex items-center gap-3 rounded-pill bg-paper py-1 pr-1 pl-6 text-[15px] leading-none font-medium text-ink transition-transform duration-120 ease-(--ease-out) active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
             >
               {ctaLabel}
               {/* The arrow's circle sits *inside* the pill, at its right end — the mockup's one
                   piece of ornament, and the thing that makes the button read as "onward" rather
-                  than as a label. Dark on the course colour, so the arrow is white in it. */}
+                  than as a label. Dark on the white pill, so the arrow is white in it. */}
+              <span
+                aria-hidden="true"
+                className="flex size-8 items-center justify-center rounded-full bg-ink text-paper"
+              >
+                <Glyph size={13}>→</Glyph>
+              </span>
+            </button>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+}
+
+interface CourseHeroProps {
+  title: string;
+  share?: number;
+  eyebrow?: ReactNode;
+  ctaLabel: ReactNode;
+  onCta?: () => void;
+  ctaHref?: string;
+  onOpen?: () => void;
+  openLabel?: string;
+  style?: React.CSSProperties;
+}
+
+/**
+ * The first card of «Курсы» as the blue hero field (global.css header, style A): the course you
+ * are walking is the one thing happening on this screen, so it is the one field on it.
+ *
+ * The same four facts as the photograph card, in the field's vocabulary:
+ *
+ *   - the course's own colour as a **tag**, never a field — the percentage in a pill of the tile
+ *     with its measured ink (orange for the beginners' course, 6.04). A course not started has no
+ *     figure; its tag is the neon promise instead («Первая тренировка бесплатно»), tilted like a
+ *     sticker, because that is the attention the neon exists for;
+ *   - the name in white at display weight, its last word the light-blue key word with the swoosh;
+ *   - the progress as a white rule on the field;
+ *   - **the screen's one neon button**, with the arrow's dark circle inside it.
+ *
+ * Like the photograph card, the field opens the course and the button starts it: two targets, the
+ * open one under the type.
+ */
+function CourseHero({
+  title,
+  share,
+  eyebrow,
+  ctaLabel,
+  onCta,
+  ctaHref,
+  onOpen,
+  openLabel,
+  style,
+}: CourseHeroProps) {
+  return (
+    <article
+      className="relative isolate flex flex-col overflow-hidden rounded-card bg-field p-6 text-on-field"
+      style={style}
+    >
+      {ctaHref ? (
+        <a
+          {...externalLinkProps(ctaHref)}
+          aria-label={openLabel ?? title}
+          className="absolute inset-0 z-0"
+        />
+      ) : onOpen ? (
+        <button
+          type="button"
+          onClick={onOpen}
+          aria-label={openLabel ?? title}
+          className="absolute inset-0 z-0"
+        />
+      ) : null}
+
+      <div className="pointer-events-none relative z-10 flex flex-col">
+        <div className="flex min-h-8 items-start">
+          {share !== undefined ? (
+            <Pill tone="course-fill" className="tabular">
+              {share}%
+            </Pill>
+          ) : eyebrow ? (
+            <Pill tone="neon" tilt="left" className="origin-left">
+              {eyebrow}
+            </Pill>
+          ) : null}
+        </div>
+
+        <h2 className="font-display mt-6 text-[28px] leading-[1.2] font-extrabold tracking-[-0.02em] text-balance">
+          <KeyTitle text={title} />
+        </h2>
+
+        {share !== undefined ? (
+          <ProgressBar value={share / 100} ground="field" label={title} className="mt-6" />
+        ) : null}
+
+        <div className="mt-6 flex justify-end">
+          {ctaHref ? (
+            <a
+              {...externalLinkProps(ctaHref)}
+              className="pointer-events-auto inline-flex items-center rounded-pill bg-action px-6 py-3 text-[15px] leading-none font-medium text-on-action transition-opacity duration-150 ease-(--ease-out) hover:opacity-90"
+            >
+              {ctaLabel}
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={onCta}
+              className="pointer-events-auto inline-flex items-center gap-3 rounded-pill bg-action py-1 pr-1 pl-6 text-[15px] leading-none font-medium text-on-action transition-transform duration-120 ease-(--ease-out) active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
+            >
+              {ctaLabel}
               <span
                 aria-hidden="true"
                 className="flex size-8 items-center justify-center rounded-full bg-ink text-paper"

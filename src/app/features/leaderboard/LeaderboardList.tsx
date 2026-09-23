@@ -14,9 +14,8 @@ export interface LeaderboardRowViewProps {
  * One athlete: the rank in a circle, the name, the points as a bare numeral.
  *
  * Drawn the way the club's `BoardRow` draws its rows, because a product with two boards that
- * look different has two races. The leader's circle is filled — white here, not the club's
- * orange: this table belongs to no programme, and white is what the brandbook gives a figure with
- * no course in scope. Your own row is a white ring, the same «you are here» the tab bar's
+ * look different has two races. The leader's circle is filled in the neon on both — the third
+ * palette's «лидер» tag, which belongs to no programme. Your own row is a white ring, the same «you are here» the tab bar's
  * highlight gives a tab; the podium keeps a stronger hairline, the rest fade to the second grey.
  *
  * The avatar is gone from the row. A rank is a circle and a person is a circle, and two circles
@@ -38,8 +37,9 @@ export function LeaderboardRowView({ row, pinned }: LeaderboardRowViewProps) {
       <span
         className={clsx(
           'numeral tabular flex size-11 shrink-0 items-center justify-center rounded-pill border text-[13px]',
+          /* The leader is the neon — one of the tags the third palette gives it («лидер»). */
           leader
-            ? 'border-transparent bg-paper text-ink'
+            ? 'border-transparent bg-action text-on-action'
             : row.isMe
               ? 'border-text text-text'
               : podiumPlace(row.rank)

@@ -31,6 +31,7 @@ import { Pill } from '@/components/ui/Pill';
 import { formatNumber, plural } from '@/i18n/index';
 import { isRejected, needsCoachLook } from '@/lib/marathon/review';
 import type { MarathonTodayTask, ProofInput } from '@/lib/api/types';
+import { splitKeyWord } from '@/lib/ui/keyWord';
 import { useT } from '@/app/hooks/useT';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
 
@@ -143,8 +144,10 @@ export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
            * а не пустая строка: по названию не на том языке ещё можно понять, что делать, а по
            * пустому — нет. То же правило, что у курсов (`l10n()` в src/lib/courses/draft.ts).
            */}
+          {/* The title's last word is the club's key word, in the warm gradient: 24px is large
+              type, which is what the gradient on the club may be (global.css, `.club-aurora`). */}
           <h3 className="display text-[24px] leading-[1.2] text-balance">
-            {(locale === 'en' && task.titleEn) || task.title}
+            <GradientKey text={(locale === 'en' && task.titleEn) || task.title} />
           </h3>
           {(locale === 'en' && task.bodyEn) || task.body ? (
             <p className="mt-2 text-[14px] leading-snug text-muted">
@@ -167,10 +170,12 @@ export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
           </span>
         ) : task.rule !== 'none' ? (
           /*
-           * What is still on the table, in the club's colour — the brandbook's «цвет красит
-           * номера» spent on the one number that is a decision.
+           * What is still on the table, as a neon tag — the one number on the card that is a
+           * decision, and the neon is what asks for one.
            */
-          <Pill tone="course">{points}</Pill>
+          <Pill tone="neon" tilt="right">
+            {points}
+          </Pill>
         ) : null}
       </div>
 
@@ -492,6 +497,17 @@ function AttachProof({
           {label}
         </button>
       )}
+    </>
+  );
+}
+
+/** A heading with its last word in the club's warm gradient (`splitKeyWord`). */
+function GradientKey({ text }: { text: string }) {
+  const [lead, key] = splitKeyWord(text);
+  return (
+    <>
+      {lead}
+      <span className="text-gradient box-decoration-clone">{key}</span>
     </>
   );
 }

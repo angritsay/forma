@@ -1,4 +1,4 @@
-/** Forma UI kit — black and white, sharp, editorial, token-driven React components. One component per file. */
+/** Forma UI kit — charcoal ground, token-driven React components. One component per file. */
 export { Avatar, avatarTile, initials, type AvatarProps } from './Avatar';
 export { Badge, type BadgeProps, type BadgeTone } from './Badge';
 export { BarChart, type BarChartProps, type BarDatum } from './BarChart';
@@ -7,7 +7,16 @@ export { Card, type CardLevel, type CardPadding, type CardProps } from './Card';
 export { Chip, type ChipProps, type ChipSize, type ChipTone } from './Chip';
 export { CodeInput, type CodeInputProps } from './CodeInput';
 export { Divider, type DividerProps } from './Divider';
+export { DotCalendar, type DotCalendarProps, type DotDay, type DotState } from './DotCalendar';
 export { EmptyState, type EmptyStateProps } from './EmptyState';
+export {
+  HeroField,
+  KeyTitle,
+  KeyWord,
+  type HeroFieldProps,
+  type KeyTitleProps,
+  type KeyWordProps,
+} from './HeroField';
 export {
   Glyph,
   Icon,
@@ -30,6 +39,7 @@ export { Logo, type LogoProps } from './Logo';
 export { LogoLoader, type LogoLoaderProps } from './LogoLoader';
 export { Modal, type ModalProps } from './Modal';
 export { PageTitle, type PageTitleProps } from './PageTitle';
+export { Pill, type PillProps, type PillTilt, type PillTone } from './Pill';
 export { ProgressBar, type ProgressBarProps, type ProgressTone } from './ProgressBar';
 export { RingProgress, type RingProgressProps } from './RingProgress';
 export { Screen, type ScreenProps } from './Screen';
@@ -44,6 +54,7 @@ export { Skeleton, type SkeletonProps } from './Skeleton';
 export { Slider, type SliderProps } from './Slider';
 export { Spinner, type SpinnerProps } from './Spinner';
 export { StatTile, type StatTileProps, type StatTrend } from './StatTile';
+export { Swoosh, type SwooshProps, type SwooshTone } from './Swoosh';
 export { Switch, type SwitchProps } from './Switch';
 export { Tabs, tabPanelId, type TabItem, type TabsProps } from './Tabs';
 export { Textarea, type TextareaProps } from './Textarea';

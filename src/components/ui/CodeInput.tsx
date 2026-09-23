@@ -2,7 +2,7 @@
  * One-time-code input: N boxes, numeric keyboard, auto-advance, backspace to the previous box,
  * paste of the whole code, `autoComplete="one-time-code"` for iOS/Android SMS/mail suggestions.
  *
- * The cells are the kit's field — 48px, --surface-2, a hairline, a 1px white border on focus —
+ * The cells are the kit's field — 48px, --surface-2, a hairline, a 1px light-blue (`--accent`) border on focus —
  * cut into squares, with the digit set as a numeral in the display face.
  */
 import { clsx } from 'clsx';
@@ -138,7 +138,7 @@ export function CodeInput({
           onFocus={(e) => e.target.select()}
           className={clsx(
             'numeral h-12 w-full min-w-0 rounded-control border bg-surface-2 text-center text-xl text-text',
-            'outline-none transition-colors duration-150 ease-(--ease-out) focus:border-primary disabled:opacity-40',
+            'outline-none transition-colors duration-150 ease-(--ease-out) focus:border-accent disabled:opacity-40',
             error ? 'border-danger' : 'border-border',
           )}
         />

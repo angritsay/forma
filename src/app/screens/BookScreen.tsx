@@ -36,6 +36,12 @@
  * — so this is the two selling tabs speaking one language rather than a new idea. `Button` grew a
  * `course` variant for it, which is the club's hand-built bar turned into a part of the kit.
  *
+ * **The third palette re-cast it** (global.css header, style A). The coach himself is the screen's
+ * blue hero field — role as a white sticker, surname as the light-blue key word, the session facts
+ * as white outlined pills. Bleu ciel (`COACH_TILE`) is the tab's *tag*: the length as a ciel pill on
+ * the offer, the card's tint and edge, the big price (large type only — see `Option`) and the
+ * numerals and ticks as the light-blue accent. The pay button is the neon, the screen's one action.
+ *
  * ## And the photograph
  *
  * 4:5, monochrome, with grain over it — the frame `CoachCard.astro` gives him on the website, and
@@ -66,6 +72,7 @@ import { useEffect, useState } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { HeroField, KeyWord } from '@/components/ui/HeroField';
 import { Glyph } from '@/components/ui/Icon';
 import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
@@ -228,10 +235,18 @@ export default function BookScreen() {
           he is the founder as well as the coach, and «Основатель и тренер Forma» in capitals at
           kicker tracking is both too long for the slot and too loud for a fact this plain.
         */}
-          <section className="flex flex-col gap-5">
+          {/*
+            The coach is the screen's blue hero field (style A, global.css header): his role as a
+            white sticker, his name with the surname as the field's key word over a neon swoosh, and
+            the two facts about the session as white outlined pills. The tab's own bleu ciel is a
+            tag further down, on the offer — a section colour is a tag, never a field.
+          */}
+          <HeroField as="section" className="flex flex-col gap-5">
             <div className="flex items-end gap-5">
-              <div className="flex min-w-0 flex-1 flex-col gap-2">
-                <span className="eyebrow">{l(COACH.formaRole, locale)}</span>
+              <div className="flex min-w-0 flex-1 flex-col items-start gap-3">
+                <Pill tone="white" tilt="right" className="origin-left">
+                  {l(COACH.formaRole, locale)}
+                </Pill>
                 {/* 1.02 → 1.2. The lockup is two lines — «Сергей» over «Титов» — and 1.02 was drawn for
                   capitals, which have no descenders; «р» drops 0.182em below the baseline and the
                   «Т» under it rises to cap height. global.css carries the measurement. */}
@@ -240,7 +255,9 @@ export default function BookScreen() {
                   {thin ? (
                     <>
                       {' '}
-                      <span className="t-thin">{thin}</span>
+                      <KeyWord className="t-thin" swooshTone="action">
+                        {thin}
+                      </KeyWord>
                     </>
                   ) : null}
                 </h2>
@@ -251,7 +268,7 @@ export default function BookScreen() {
                 global.css gives — it has to sit between the image and anything laid on top of it.
               */}
               {COACH.photo ? (
-                <div className="relative w-32 shrink-0 overflow-hidden rounded-tile bg-surface">
+                <div className="relative w-28 shrink-0 overflow-hidden rounded-inner bg-surface">
                   <img
                     src={withBase(COACH.photo)}
                     alt={name}
@@ -262,16 +279,16 @@ export default function BookScreen() {
                   <div className="photo-grain" aria-hidden="true" />
                 </div>
               ) : (
-                <Avatar seed={name} name={name} size={128} />
+                <Avatar seed={name} name={name} size={112} />
               )}
             </div>
-            {/* Where the tab's colour starts. Outlined rather than filled: these two are facts
-                about the session, and the one filled thing on the screen is the button. */}
+            {/* Facts about the session, so outlined: the one filled thing on the tab is its
+                neon button. */}
             <div className="flex flex-wrap gap-2">
-              <Pill tone="course">{l(BOOKING.format, locale)}</Pill>
-              <Pill tone="course">{t('app.bookLeadTimePill', { n: lead })}</Pill>
+              <Pill tone="ghost">{l(BOOKING.format, locale)}</Pill>
+              <Pill tone="ghost">{t('app.bookLeadTimePill', { n: lead })}</Pill>
             </div>
-          </section>
+          </HeroField>
 
           {/*
            * What he has behind him. Two of the facts are numbers and are set as numbers, side by
@@ -698,9 +715,15 @@ function Option({
 
   return (
     <article className="flex flex-col gap-4">
-      {/* The price in the tab's blue — the loudest thing on the screen, and now the thing that
-          says what kind of screen it is. 11.2:1 on the app's ground and a shade better on the
-          card's tint of it, so the figure is as legible in colour as it was in white. */}
+      {/* The coach's section tag: the length in bleu ciel with its measured ink (4.75). */}
+      <Pill tone="ciel" className="self-start">
+        {t('app.bookDuration', { n: option.durationMin })}
+      </Pill>
+      {/* The price in the tab's bleu ciel — the loudest thing on the screen, and the thing that
+          says what kind of screen it is. **Large type only**: ciel on charcoal is 4.37, inside
+          the 3:1 that large type needs and short of the 4.5 body text needs; tile.test.ts pins
+          that window, and the figure never drops below 34px. Anything small in the tab's colour
+          takes `text-course-accent` (the light blue) instead. */}
       <p className="display tabular text-[clamp(34px,11vw,48px)] leading-none text-course">
         {price}
       </p>
@@ -726,15 +749,16 @@ function Option({
       </div>
 
       {payment ? (
-        /* The one button on the tab that takes money, and the only one wearing the colour. The
-           «Выбрать время» below it stays a grey secondary on purpose: it is the step *after* the
-           money, and two filled blue bars on one screen would make neither of them the action. */
-        <Button variant="course" size="lg" fullWidth loading={redirecting} onClick={onPay}>
+        /* The one button on the tab that takes money, and the tab's one neon action (style A,
+           global.css header). The «Выбрать время» below it stays a grey secondary on purpose: it
+           is the step *after* the money, and two filled bars on one screen would make neither of
+           them the action. */
+        <Button variant="action" size="lg" fullWidth loading={redirecting} onClick={onPay}>
           {t('app.bookPay', { price })}
         </Button>
       ) : (
         <>
-          <LinkButton href={contactHref} variant="course" size="lg" fullWidth external>
+          <LinkButton href={contactHref} variant="action" size="lg" fullWidth external>
             {t('app.bookContact')}
           </LinkButton>
           <p className="text-sm text-muted">{t('app.bookContactHint')}</p>

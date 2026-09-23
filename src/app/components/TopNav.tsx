@@ -54,7 +54,7 @@ function NavWord({
          */
         'flex h-16 items-center text-[15px] font-medium',
         'transition-colors duration-150 ease-(--ease-out)',
-        active ? 'text-text' : 'text-muted hover:text-text',
+        active ? 'text-accent' : 'text-muted hover:text-text',
       )}
     >
       {t(item.labelKey)}
@@ -164,7 +164,7 @@ export function TopNav() {
           <span
             aria-hidden="true"
             className={clsx(
-              'pointer-events-none absolute bottom-0 left-0 h-[2px] bg-primary',
+              'pointer-events-none absolute bottom-0 left-0 h-[2px] bg-accent',
               'transition-[transform,width,opacity] duration-280 ease-(--ease-out)',
               'motion-reduce:transition-none',
               mark ? 'opacity-100' : 'opacity-0',
