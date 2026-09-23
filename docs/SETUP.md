@@ -936,7 +936,7 @@ Telegram and adapts. All that is needed on Telegram's side is a bot whose menu b
 
 **Create the bot** (in Telegram, with @BotFather):
 
-1. `/newbot` → a name, then a username ending in `bot` (ours: `@forma_appbot`).
+1. `/newbot` → a name, then a username ending in `bot` (ours: `@forma_training_bot`).
 2. `/mybots` → the bot → **Bot Settings → Menu Button → Configure menu button**. BotFather asks
    two questions, answer them as two separate messages: the URL
    (`https://<user>.github.io/<repo>/app/`), then the button text.
@@ -944,23 +944,27 @@ Telegram and adapts. All that is needed on Telegram's side is a bot whose menu b
 
 Setting the menu button again overwrites it; there is nothing to undo.
 
-**Renaming a bot that already exists.** The display name — what people read at the top of the chat
-— changes freely: @BotFather → `/mybots` → the bot → **Edit Bot → Edit Name**. Nothing else moves:
-the token, the webhook, the Mini App and every link keep working, because none of them is built
-from the name.
+**Renaming a bot that already exists, and why this one is not renamed.** The display name — what
+people read at the top of the chat — changes freely: @BotFather → `/mybots` → the bot → **Edit Bot
+→ Edit Name**. Nothing else moves: the token, the webhook, the Mini App and every link keep
+working, because none of them is built from the name.
 
-The **username** is the expensive one, and it is worth knowing why before doing it. The Mini App
-link `t.me/<bot>/<short name>` is the only way into the app from inside Telegram, and it is built
-from the username: change it and every old link — in messages the bot already sent, in a bio, in a
-post — stops opening anything. The freed username is also immediately available to anybody else,
-and a stranger's bot standing at the address customers used to pay through is worse than an
-awkward name. If it is changed anyway, take the old username with a second, empty bot the same
-day, so it cannot be taken.
+The **username** is the expensive one. The Mini App link `t.me/<bot>/<short name>` is the only way
+into the app from inside Telegram and is built from the username: change it and every old link — in
+messages the bot already sent, in a bio, in a post — stops opening anything. The freed username is
+immediately available to anybody else, and a stranger's bot standing at the address customers used
+to pay through is worse than an awkward name.
 
-Nothing in this repository is built from the username: `BRAND.telegram` is empty, `MINI_APP_URL`
-points at the website rather than at `t.me`, and the handle appears only in prose and in test
-fixtures. So a rename is entirely a BotFather operation — but the links already in the world are
-not.
+**And one bot cannot hold two usernames.** Two addresses mean two bots with two tokens, which the
+backend is not built for and should not be: `link-telegram` verifies the Mini App launch string
+against the token of _the bot that opened it_, so a person arriving through a second bot would be
+refused — and `telegram-notify` writes from one token, so a bot can only message people who
+started that same bot. Two entrances buy two silent failures. The bot therefore stays
+`@forma_training_bot`, which is the one people already have.
+
+Nothing in this repository is built from the username in any case: `BRAND.telegram` is empty,
+`MINI_APP_URL` points at the website rather than at `t.me`, and the handle appears only in prose
+and in one test fixture.
 
 **A direct link** is worth more than the menu button: it is what goes in an Instagram bio, in the
 Telegram channel and in any post. `/newapp` → the bot → title, short description, a 640×360

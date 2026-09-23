@@ -66,8 +66,8 @@ describe('inside Telegram', () => {
     expect(openLink).toHaveBeenCalledWith('https://pay.example.com/p/1', {
       try_instant_view: false,
     });
-    expect(mod.openExternal('https://t.me/forma_appbot')).toBe(true);
-    expect(openTelegramLink).toHaveBeenCalledWith('https://t.me/forma_appbot');
+    expect(mod.openExternal('https://t.me/forma_training_bot')).toBe(true);
+    expect(openTelegramLink).toHaveBeenCalledWith('https://t.me/forma_training_bot');
   });
 
   it('treats a page loaded outside a Telegram launch as absent', async () => {
