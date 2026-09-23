@@ -58,7 +58,7 @@ CrossFit without equipment is training where your body is the resistance and the
 
 ## CrossFit without equipment: why it works
 
-Training load is not only weight. It is also volume (how many reps), density (how much work per minute) and movement difficulty. Without dumbbells you cannot add kilograms, but you can shorten the rest, raise the tempo and move to a harder version of the exercise: from [knee push-ups](exercise:knee_push_up) to [full push-ups](exercise:push_up), from full push-ups to [diamond push-ups](exercise:diamond_push_up). That is exactly how the load climbs across six weeks of [the Bodyweight Engine course](course:engine) without a single piece of kit.
+Training load is not only weight. It is also volume (how many reps), density (how much work per minute) and movement difficulty. Without dumbbells you cannot add kilograms, but you can shorten the rest, raise the tempo and move to a harder version of the exercise: from [knee push-ups](exercise:knee_push_up) to [full push-ups](exercise:push_up), from full push-ups to [diamond push-ups](exercise:diamond_push_up). That is how the load climbs in [the Start course](course:start) too, session by session, with nothing but a mat and a chair.
 
 The second tool is the format. A ten-minute AMRAP of burpees and squats taxes your heart and lungs harder than thirty minutes of leisurely sets. The WHO recommends adults get 150–300 minutes of moderate activity per week or 75–150 minutes of vigorous activity; short, dense workouts hit the second target quickly but need a rest day in between. For the same reason the ACSM advises novices not to load the same muscle groups more often than every 48 hours.
 
@@ -142,4 +142,4 @@ Progress without equipment is measured three ways: a harder version of the movem
 
 ## Wrap-up
 
-CrossFit without equipment rests on three things: patterns instead of random exercises, a strength block plus a metcon in a fixed format, and progression from the easy version of each movement to the hard one. All of it is packaged in [the Bodyweight Engine course](course:engine): six weeks, four sessions a week, not a single piece of kit — and if you are a complete beginner, start with [the Start course](course:start).
+CrossFit without equipment rests on three things: patterns instead of random exercises, a strength block plus a metcon in a fixed format, and progression from the easy version of each movement to the hard one. All of it is packaged in [the Start course](course:start): twenty short sessions with no equipment and a load that adapts to you — and between them the Small Steps Club in the app keeps you going with one task a day.

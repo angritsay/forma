@@ -12,6 +12,7 @@ import { isDemo, isDemoEnv } from '@/lib/api/mode';
 import { createOrder } from '@/lib/api/orders';
 import { createSubscriptionOrder } from '@/lib/api/subscriptions';
 import type { SubscriptionPlan } from '@/lib/api/types';
+import { courseKey, lavaUrl, planKey } from '@content/site/payments';
 import { TEST_PAYMENT_URL } from '@content/site/testPayment';
 import { payHost, payHref, payRoute } from '@/lib/util/payment';
 
@@ -156,10 +157,13 @@ export default function OrderForm({
   // Only an https link is ever followed; see lib/util/payment.
   // TEST_PAYMENT_URL — временная подмена на тестовый товар; снимается одной строкой в
   // content/site/testPayment.ts. В бою она null и выражение сводится к обычной ссылке.
-  // На неродном языке ведёт не в кассу, а на нашу же `/en/checkout/`: касса русская и в рублях.
-  // Заказ при этом всё равно записывается — почта в нём и есть то, по чему владелец потом
-  // опознаёт перевод. См. `payRoute`.
-  const payment = payRoute(locale, TEST_PAYMENT_URL ?? (plan ? plan.paymentUrl : paymentUrl));
+  // На неродном языке — в lava.top (content/site/payments.ts): рублёвая касса только для `ru`.
+  // Без третьего аргумента английский читатель оставался без кнопки оплаты вовсе. См. `payRoute`.
+  const payment = payRoute(
+    locale,
+    TEST_PAYMENT_URL ?? (plan ? plan.paymentUrl : paymentUrl),
+    lavaUrl(plan ? planKey(plan.id) : courseKey(courseId)),
+  );
   // Хост называется в подписи только тогда, когда человек правда уходит на чужой сайт.
   const paymentHost = payment ? payHost(payment) : null;
   const productName = plan ? plan.name : courseName;
@@ -308,7 +312,7 @@ export default function OrderForm({
                   key={p.id}
                   className={`relative flex cursor-pointer flex-col gap-1 border p-4 transition-colors duration-150 ${
                     selected
-                      ? 'border-primary bg-surface-2'
+                      ? 'border-accent bg-surface-2'
                       : 'border-border hover:border-border-strong'
                   }`}
                 >
@@ -360,7 +364,7 @@ export default function OrderForm({
             if (status.kind === 'error') setStatus({ kind: 'idle' });
           }}
           placeholder={labels.emailPlaceholder}
-          className={`mt-2 h-12 w-full border bg-surface-2 px-4 text-base text-text placeholder:text-muted-2 focus:border-primary focus:outline-none ${
+          className={`mt-2 h-12 w-full border bg-surface-2 px-4 text-base text-text placeholder:text-muted-2 focus:border-accent focus:outline-none ${
             emailInvalid ? 'border-danger' : 'border-border'
           }`}
         />

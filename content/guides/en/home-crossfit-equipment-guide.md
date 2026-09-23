@@ -100,17 +100,11 @@ Two body types: cast iron (the size grows with the weight) and competition steel
 
 **Box** is for step-ups and jumps at 40 to 50 cm. At home it is a tier-3 item, because a chair and a stair cover the same job at the start.
 
-## What each Forma course needs
+## What the Forma course needs
 
-| Course | Required | Optional |
-| --- | --- | --- |
-| [Start: home CrossFit basics](course:start) | Mat, sturdy chair | — |
-| [Bodyweight Engine](course:engine) | Mat, chair | Jump rope |
-| [Dumbbell Builder](course:dumbbells) | A pair of dumbbells, mat | A second pair or adjustables |
-| [Kettlebell Power](course:kettlebell) | One kettlebell, mat | A second bell of a different weight |
-| [Home Athlete](course:athlete) | A pair of dumbbells, pull-up bar, mat | Jump rope, a second pair |
+Right now Forma has one course open — [Start: home CrossFit basics](course:start) — and it needs only tier 1: a mat and a sturdy chair. You do dips off the chair and step-ups onto it, and everything else happens on the mat. The dumbbells, kettlebell, rope and bar from this guide come later, once the base is there and you want to add weight.
 
-Note the last row: the bar is mandatory there, because without pull-ups the course loses its centrepiece. It is the only Forma program where tier 3 is needed from day one.
+Between sessions you need no gear at all: the Small Steps Club in the app gives you one small task a day — a walk, twenty squats, a glass of water before coffee — and it gets done wherever you are standing.
 
 How the app works with your gear. In your profile you tick what you own and enter the weights of your dumbbells and bells. Loads in the programs are labelled light, medium and heavy, and Forma maps them to your implements: with a single bell all three labels point to it and the volume and rest adjust instead. No rope means rope jumps become [jumping jacks](exercise:jumping_jack) and the program stays the same. And the chair can always be swapped for squats or reverse lunges when nothing sturdy is at hand.
 

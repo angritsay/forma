@@ -54,7 +54,9 @@ on:
       migration_file:
         description: 'Only for "migration": a filename in supabase/migrations/'
         required: false
-        default: '0013_admin_people.sql'
+        # Пусто: файл называют каждый раз. Старое значение по умолчанию (0013) при случайном
+        # запуске тихо применяло давно применённую миграцию.
+        default: ''
         type: string
 
 # The token is a project-wide credential. One run at a time, and never from a fork.
@@ -572,6 +574,19 @@ jobs:
                 fi
               fi
             done
+            # Цены занятий с тренером — необязательные: без них функция узнаёт
+            # занятие по суммам из content/site/booking.ts (2500 и 3500 ₽).
+            # Печатаются только имена и счёт, значения — никогда.
+            sessions=0
+            for name in SESSION_HALF_RUB SESSION_HOUR_RUB; do
+              if grep -qx -- "$name" /tmp/have.txt; then
+                sessions=$((sessions + 1))
+                echo "  ✓ $name"
+              else
+                echo "  · $name не задан — берётся цена по умолчанию"
+              fi
+            done
+            echo "::notice::Цены занятий в секретах: $sessions из 2. Чего нет — функция считает по умолчанию: полчаса 2500 ₽, час 3500 ₽ (docs/SETUP.md §7.4)."
           else
             echo "::warning::Список секретов прочитать не удалось — проверь их глазами в дашборде Supabase."
           fi

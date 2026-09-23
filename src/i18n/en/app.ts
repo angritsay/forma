@@ -159,10 +159,8 @@ export const app = {
   homeResumeCta: 'Resume',
   homeResumeSave: 'Finish & save',
   homeTodayEyebrow: 'Today',
-  homeTodayOpen: 'Open',
   homeTodayNoCourseTitle: 'Pick a programme',
   homeTodayNoCourseBody: 'And your first workout appears here — today.',
-  homeTodayCompletedTitle: 'Course completed',
   homeTodayOpenPath: 'Open the path',
   homeStatsKcal: 'kcal this week',
   homeStatsMinutes: 'Minutes this week',
@@ -171,12 +169,6 @@ export const app = {
   homeYourCourses: 'Your courses',
   homeMoreCourses: 'More courses',
   homeCourseProgress: '{pct}% done',
-  homeDeckGameLocked: 'Part of the subscription',
-  homeDeckGameTrial: 'Free week with the course — {n} left',
-  homeDeckGameTrialDayOne: '1 day',
-  homeDeckGameTrialDayFew: '{n} days',
-  homeDeckGameTrialDayMany: '{n} days',
-  homeDeckGameLockedCta: 'Subscribe',
   homeDeckStart: 'Start',
   homeDeckContinue: 'Continue',
   homeErrorTitle: 'Couldn’t load your progress',
@@ -188,10 +180,8 @@ export const app = {
   coursesContinue: 'Continue · {pct}%',
   coursesStart: 'Start the course',
   coursesCompleted: 'Completed — open the path',
-  coursesGetAccess: 'Get access',
   coursesBoughtHint:
     'Already paid? The course opens by itself, usually within a couple of minutes. If not, write to us.',
-  coursesSubscribe: 'Subscribe — all courses',
   coursesSubscribeHint: 'from {price} a month · or buy this course for good',
   coursesBuyOne: 'Buy this course',
   coursesWeekWordOne: 'week',
@@ -460,8 +450,6 @@ export const app = {
   summaryNoResultsBody: 'This workout wasn’t finished on this device, so there is nothing to show.',
 
   // Progress
-  statsTitle: 'Progress',
-  statsWeekBoardTitle: 'Who’s ahead',
   statsLeaderboard: 'Leaderboard',
   statsLevelEyebrow: 'Level {n}',
   statsPointsValue: '{n} points',
@@ -502,7 +490,6 @@ export const app = {
   // Profile
   profileTitle: 'Profile',
   profileWeightsKg: '{list} kg',
-  profileLimitations: 'Go easy on',
   profileLimitationsNone: 'Nothing',
   profileSubscriptionNoneHint: 'from {price} a month',
   profileSubscriptionLive: '{plan} · until {date}',
@@ -512,12 +499,7 @@ export const app = {
   planMonthly: 'Monthly',
   planAnnual: 'Annual',
 
-  // Home: the coach's hour
-  homeBookTitle: 'One-to-one with the coach',
-  homeBookText: 'Half an hour or an hour over video · from {price}',
-
   // Book a session
-  bookTitle: 'Forma. One-to-One',
   bookLengthLabel: 'Session length',
   bookDuration: '{n} min',
   bookPay: 'Pay {price}',
@@ -593,7 +575,6 @@ export const app = {
   adminStatsNow: 'Right now',
   adminStatsPeople: 'People',
   adminStatsPaying: 'Paying',
-  adminStatsSubscribed: 'In the club',
   adminStatsActive7: 'Trained this week',
   adminStatsActive28: 'This month',
   adminStatsGhostTitle: 'Paid, never signed in',
@@ -616,7 +597,6 @@ export const app = {
   adminStatsNeverTrained: 'no workouts yet',
   adminStatsLastSeen: 'last seen {date}',
   adminStatsWorkouts: '{n} workouts',
-  adminStatsDays: '{n} days',
   adminStatsEmpty: 'Nothing to count yet',
   adminStatsEmptyBody: 'The numbers appear as soon as somebody signs in.',
   adminStatsNoClosedWeeks:
@@ -666,14 +646,6 @@ export const app = {
     'Demo mode runs the whole app on made-up data stored in this browser. Nothing is sent anywhere and no Supabase project is needed.',
   demoAuthCode: 'Demo: code is {code}',
   demoSection: 'Demo mode',
-  demoReset: 'Reset demo data',
-  demoResetTitle: 'Reset demo data?',
-  demoResetBody:
-    'The demo profile, progress and purchases in this browser are deleted and you are signed out. Nothing was ever sent anywhere.',
-  demoLeave: 'Leave demo mode',
-  demoLeaveTitle: 'Leave demo mode?',
-  demoLeaveBody:
-    'The app goes back to the setup screen. Your demo data stays in this browser — turning the demo on again brings it back.',
 
   // --- custom (coach-built) workouts + builder ---
   customWorkoutTitle: 'Workout',
@@ -915,12 +887,6 @@ export const app = {
   dayDeload: 'Deload week',
   dayImage: 'Day image',
   dayImageHint: "Shown on the day's screen",
-  // Sign-in hero: the tagline split at the weight change — 800 for the claim, 200 for the promise.
-  homeUpNext: 'Next in the course',
-  homeUpNextDay: 'Day {n}',
-  homeTodayStatDay: 'Day of {total}',
-  homeTodayStatExercises: 'Exercises',
-  homeTodayStatTime: 'Time',
   // Node preview: the formula kicker and the secondary action of the two-button row.
   nodeLater: 'Later',
   // Admin: the exercise row's "has a video" stamp, and the course tile field's format error.
@@ -943,7 +909,6 @@ export const app = {
   // The cover's big line before there is a day to count: what the format is, in one line.
   marathonCoverPitch: 'One small step a day',
   marathonTabBoard: 'Board',
-  marathonDayOf: 'Day {n} of {total}',
   marathonDayN: 'Day {n}',
   marathonOfTotal: 'of {total}',
   // The full board's own switch; the club screen carries no week kicker (see the Russian file).
@@ -963,8 +928,22 @@ export const app = {
   duoInvite: 'Invite a friend',
   duoInviteTitle: 'Come do the club with me',
   duoInviteCopied: 'Link copied',
+  // The /duo screen: accepting a friend's invite link. Refusals are club_invite_redeem codes (0034).
+  duoRedeemTitle: 'Duo invite',
+  duoRedeemDone: 'You are a pair now',
+  duoRedeemToClub: 'To the club',
+  duoRedeemNoSubscription:
+    'Pairs live inside the club, and the club comes with a subscription. Get one, then open your friend’s link again.',
+  duoRedeemNoClub:
+    'The club is not running right now. Open the link again once the next round starts.',
+  duoRedeemNotFound: 'This invite does not exist. Ask your friend to send the link again.',
+  duoRedeemUsed:
+    'This invite has already been accepted — your friend has a partner. Ask for a new link.',
+  duoRedeemExpired: 'This invite has expired. Ask your friend to send the link again.',
+  duoRedeemOwn: 'This is your own link — send it to a friend so she can open it on her phone.',
+  duoRedeemInviterGone: 'Your friend is not in the club right now, so there is no pair to join.',
+  duoRedeemFailed: 'We could not accept the invite. Please try again later.',
   marathonBoardAll: 'Full board',
-  marathonHomeCta: 'Open the club',
   marathonHomeTasksLeft: '{n} left today',
   marathonHomeAllDone: 'Done for today',
   // A round of the club starts and ends; the club itself does not.
@@ -1012,11 +991,11 @@ export const app = {
   marathonBoardPoints: '{n}',
 
   // --- Marathon admin --------------------------------------------------------
-  mAdminTitle: 'Marathons',
-  mAdminNav: 'Marathons',
-  mAdminNew: 'New marathon',
-  mAdminEmpty: 'No marathons yet',
-  mAdminEmptyBody: 'A marathon is a daily task, pairs, and a board that resets every week.',
+  mAdminTitle: 'Club',
+  mAdminNav: 'Club',
+  mAdminNew: 'New round',
+  mAdminEmpty: 'No rounds yet',
+  mAdminEmptyBody: 'A club round is a daily task, pairs and a board that resets every week.',
   mAdminSlug: 'Handle',
   mAdminSlugHint: 'Latin letters, digits and _. For example sprint_oct',
   mAdminSlugInvalid: 'Latin letters, digits and _ only, 2 to 40 characters',
@@ -1091,15 +1070,13 @@ export const app = {
   mAdminSave: 'Save',
   mAdminDelete: 'Delete',
   mAdminDeleteTask: 'Delete this task?',
-  // People and teams
+  // People (pairs are shown, never edited: the Monday rematch and invites make them)
   mAdminPeople: 'People',
-  mAdminTeams: 'Teams',
   mAdminAddPerson: 'Add a person',
-  mAdminAddTeam: 'Add a team',
   mAdminEmail: 'Email',
   mAdminPersonName: 'What to call them',
   mAdminTeam: 'Team',
-  mAdminNoTeam: 'No team',
+  mAdminNoTeam: 'No partner',
   mAdminRemove: 'Remove',
   mAdminRestore: 'Bring back',
   mAdminRemoved: 'Removed',
@@ -1264,7 +1241,7 @@ export const app = {
   clubLeadAccent: 'here it is one small task a day',
   clubLeadPost: ': ten minutes on foot, twenty squats, a glass of water before coffee.',
   clubLeadWeek: 'Points add up over the week, and whoever is top of the board gets {prize}.',
-  clubChargeNote: 'One payment: {price} for a year of access. The club and every Forma course.',
+  clubChargeNote: 'One payment: {price} for a year of access — the club and the Start course.',
   // --- Club, the streak (stream: club-streak) --------------------------------
   clubStreakOne: '{n} day in a row',
   clubStreakFew: '{n} days in a row',

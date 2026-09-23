@@ -49,7 +49,7 @@ import { absoluteUrl, appHref, href } from '@/lib/util/paths';
 import { BRAND } from '@content/site/brand';
 import { LINKS } from '@content/site/links';
 import { formatPrice, isFree } from '@content/site/pricing';
-import { PLAN_BY_ID, PLANS_ENABLED } from '@content/site/plans';
+import { CLUB_PLAN_ID, PLAN_BY_ID, PLANS_ENABLED, planMonthlyPrice } from '@content/site/plans';
 
 export function getStaticPaths() {
   return SITE_COURSES.flatMap((c) =>
@@ -63,7 +63,8 @@ type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 const { courseId } = Astro.props as Props;
 const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';
-const monthlyPlan = PLAN_BY_ID.get('monthly');
+// The club's plan, quoted per month the way the club screen quotes it (year ÷ 12, never retyped).
+const clubPlan = PLAN_BY_ID.get(CLUB_PLAN_ID);
 const site = (Astro.site?.toString() ?? 'http://localhost:4321').replace(/\/$/, '');
 
 const course = SITE_COURSES.find((c) => c.id === courseId)!;
@@ -243,14 +244,14 @@ const jsonLd = [
           </Button>
         </div>
         {
-          PLANS_ENABLED && monthlyPlan && (
+          PLANS_ENABLED && clubPlan && (
             <p class="mt-4 text-sm">
               <a
                 href={href(locale, '/subscribe/')}
                 class="text-muted underline decoration-border-strong underline-offset-4 hover:text-text hover:decoration-text"
               >
                 {t(locale, 'landing.courseOrSubscribe', {
-                  price: formatPrice(locale, monthlyPlan.price),
+                  price: formatPrice(locale, planMonthlyPrice(clubPlan)),
                 })}
               </a>
             </p>

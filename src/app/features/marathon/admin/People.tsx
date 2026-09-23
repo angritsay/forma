@@ -1,23 +1,19 @@
 /**
- * Who plays, and — in a marathon run in pairs — who they are paired with.
+ * Who plays, and — in a round run in pairs — who they are paired with this week.
  *
- * Pairing is a select on the person's row rather than a drag between two lists: the coach knows the
- * pairs before he opens the screen — he decided them in the group chat — so the job is transcription,
- * and a select is the fastest way to transcribe.
- *
- * In a marathon where everyone plays for themselves there is nothing to pair, so the team column,
- * the team field in the add sheet and «Добавить команду» are simply not drawn. A disabled control
- * would be a promise that this mode has teams in it somewhere; it does not, and the table refuses
- * them outright (`solo_marathon_has_no_teams` in migration 0011).
+ * The pair is shown, not edited. Pairs are made in two ways only: the Monday rematch pairs
+ * everyone left without one, and an invite link (0034) pairs two friends until they split up.
+ * The coach used to transcribe pairs by hand here — a select per row and «Добавить команду» — and
+ * the owner took that out: a hand-made pair was the one pairing nobody had asked for, and the next
+ * Monday's rematch undid it anyway.
  *
  * People are added by email whether or not they have ever opened the app. That is the same rule as
- * purchases, and it is what lets a marathon be built on a Sunday from a Telegram thread.
+ * purchases, and it is what lets a round be built on a Sunday from a Telegram thread.
  */
 import { useState } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
 import { Sheet } from '@/components/ui/Sheet';
 import type { MarathonMemberRow, MarathonTeamRow } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
@@ -25,45 +21,25 @@ import { useT } from '@/app/hooks/useT';
 export interface PeopleProps {
   members: readonly MarathonMemberRow[];
   teams: readonly MarathonTeamRow[];
-  /** Everyone for themselves: no teams anywhere on this screen. */
+  /** Everyone for themselves: no pairs anywhere on this screen. */
   solo: boolean;
-  onAddMember: (input: {
-    email: string;
-    displayName: string;
-    teamId: string | null;
-  }) => Promise<void>;
-  onSetTeam: (memberId: string, teamId: string | null) => Promise<void>;
+  onAddMember: (input: { email: string; displayName: string }) => Promise<void>;
   onSetStatus: (memberId: string, status: 'active' | 'removed') => Promise<void>;
-  onAddTeam: (name: string) => Promise<void>;
 }
 
-export function People({
-  members,
-  teams,
-  solo,
-  onAddMember,
-  onSetTeam,
-  onSetStatus,
-  onAddTeam,
-}: PeopleProps) {
+export function People({ members, teams, solo, onAddMember, onSetStatus }: PeopleProps) {
   const { t } = useT();
   const [addOpen, setAddOpen] = useState(false);
-  const [teamOpen, setTeamOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
-  const [teamId, setTeamId] = useState<string>('');
-  const [teamName, setTeamName] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const teamOptions = [
-    { value: '', label: t('app.mAdminNoTeam') },
-    ...teams.map((team) => ({ value: team.id, label: team.name })),
-  ];
+  const teamName = new Map(teams.map((team) => [team.id, team.name]));
 
   const add = async () => {
     setBusy(true);
     try {
-      await onAddMember({ email, displayName: name, teamId: teamId || null });
+      await onAddMember({ email, displayName: name });
       setEmail('');
       setName('');
       setAddOpen(false);
@@ -94,14 +70,9 @@ export function People({
               {member.status === 'removed' ? (
                 <Badge tone="warning">{t('app.mAdminRemoved')}</Badge>
               ) : solo ? null : (
-                <Select
-                  label={undefined}
-                  aria-label={t('app.mAdminTeam')}
-                  value={member.teamId ?? ''}
-                  onChange={(v) => void onSetTeam(member.id, v || null)}
-                  options={teamOptions}
-                  wrapperClassName="w-40 shrink-0"
-                />
+                <span className="w-40 shrink-0 truncate text-xs text-muted-2">
+                  {(member.teamId && teamName.get(member.teamId)) || t('app.mAdminNoTeam')}
+                </span>
               )}
               <Button
                 variant="ghost"
@@ -121,11 +92,6 @@ export function People({
         <Button variant="secondary" size="md" onClick={() => setAddOpen(true)}>
           {t('app.mAdminAddPerson')}
         </Button>
-        {solo ? null : (
-          <Button variant="ghost" size="md" onClick={() => setTeamOpen(true)}>
-            {t('app.mAdminAddTeam')}
-          </Button>
-        )}
       </div>
 
       <Sheet
@@ -158,43 +124,7 @@ export function People({
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-          {solo ? null : (
-            <Select
-              label={t('app.mAdminTeam')}
-              value={teamId}
-              onChange={setTeamId}
-              options={teamOptions}
-            />
-          )}
         </div>
-      </Sheet>
-
-      <Sheet
-        open={teamOpen}
-        onClose={() => setTeamOpen(false)}
-        title={t('app.mAdminAddTeam')}
-        footer={
-          <Button
-            size="lg"
-            fullWidth
-            disabled={!teamName.trim()}
-            onClick={() => {
-              void onAddTeam(teamName.trim()).then(() => {
-                setTeamName('');
-                setTeamOpen(false);
-              });
-            }}
-          >
-            {t('app.mAdminAddTeam')}
-          </Button>
-        }
-      >
-        <Input
-          label={t('app.mAdminName')}
-          value={teamName}
-          onChange={(e) => setTeamName(e.target.value)}
-          wrapperClassName="pb-2"
-        />
       </Sheet>
     </div>
   );

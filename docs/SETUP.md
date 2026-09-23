@@ -921,9 +921,15 @@ Prodamus notifications, so nobody has to press anything:
    `WEBHOOK_TOKEN` disagree. `not configured` means `PRODAMUS_SECRET` is unset.
 
 The plan is recognised by the amount (`PLAN_MONTHLY_RUB` / `PLAN_ANNUAL_RUB` secrets override the
-defaults), so keep the Prodamus prices equal to `plans.ts`. Any other amount — a course, a
-session with the coach — is acknowledged and left to the manual flow. Notifications are
-idempotent per order id: a retry never extends twice.
+defaults), so keep the Prodamus prices equal to `plans.ts`. Notifications are idempotent per order
+id: a retry never extends twice.
+
+A session with the coach is recognised the same way, by amount. Two optional secrets set the
+amounts: `SESSION_HALF_RUB` (half an hour) and `SESSION_HOUR_RUB` (an hour). Unset, the function
+falls back to **2 500** and **3 500 ₽** — the prices in `content/site/booking.ts`. Change a session
+price there and in Prodamus, and set the matching secret too, or the payment arrives and is not
+recognised as a session. `deploy-payments` reports how many of the two are set (names only, never
+the values).
 
 ### 7.5 Automating course purchases later
 

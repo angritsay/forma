@@ -123,4 +123,4 @@ Before you start, Forma offers three options. "Easier" cuts reps by roughly 15 p
 
 ## Wrap-up
 
-A full body dumbbell workout at home works when it contains the five patterns, an honestly chosen weight and a clear progression rule. Three 40-minute sessions a week satisfy the WHO and ACSM guidance on strength training and produce a visible result within two months. If you would rather have the weight, the volume and the day rotation adjust to you automatically, open the [Dumbbell Builder course](course:dumbbells): six weeks, four sessions a week, one pair of dumbbells and a mat.
+A full body dumbbell workout at home works when it contains the five patterns, an honestly chosen weight and a clear progression rule. Three 40-minute sessions a week satisfy the WHO and ACSM guidance on strength training and produce a visible result within two months. If you would rather build the base without weights first and let the volume adjust to you automatically, open [the Start course](course:start): twenty short sessions on a mat and a chair — the dumbbells then land on technique that is already there.

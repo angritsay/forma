@@ -572,8 +572,12 @@ export interface MarathonMemberRow {
   createdAt: string;
 }
 
+/**
+ * What the admin may change on a member. Not the pair: pairs are made only by the Monday rematch
+ * and by invites (0034), never by hand.
+ */
 export type MarathonMemberPatch = Partial<
-  Pick<MarathonMemberRow, 'teamId' | 'displayName' | 'status' | 'note'>
+  Pick<MarathonMemberRow, 'displayName' | 'status' | 'note'>
 >;
 
 /** What a member is allowed to know about the others: names, never emails. From `marathon_roster()`. */

@@ -135,4 +135,4 @@ How each format changes the feel of effort, EMOM with its built-in rest versus F
 
 ## Wrap-up
 
-RPE is the simplest honest tool for setting the load at home: one number after the workout plus the share of the plan you completed. Hard days at 7–8, easy days at 5–6, tests at 9–10, and the volume grows in 2–5 percent steps at exactly the pace you recover. If you want those rules to run automatically, open the [Start course](course:start) or the [Bodyweight Engine course](course:engine): the rating after every session is already built into the plan.
+RPE is the simplest honest tool for setting the load at home: one number after the workout plus the share of the plan you completed. Hard days at 7–8, easy days at 5–6, tests at 9–10, and the volume grows in 2–5 percent steps at exactly the pace you recover. If you want those rules to run automatically, open the [Start course](course:start): the rating after every session is already built into the plan.

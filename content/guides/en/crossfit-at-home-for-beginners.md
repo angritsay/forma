@@ -131,7 +131,7 @@ Progress for a home beginner is not "more rounds"; it is a steady climb through 
 
 - **Weeks 1–2.** Technique and volume: the same exercises with a few more reps. Incline push-ups become [knee push-ups](exercise:knee_push_up), the plank grows from 20 to 40 seconds, the bridge from 12 to 15 reps.
 - **Weeks 3–4.** [Reverse lunges](exercise:reverse_lunge), [supermans](exercise:superman) and the first short AMRAPs of 6–8 minutes appear. What those formats mean and how to count rounds is explained in [the AMRAP, EMOM and Tabata guide](guide:workout-formats).
-- **After four weeks.** Retest. If you squat noticeably more in a minute and hold the plank longer, the base is there. Next come [half burpees](exercise:half_burpee), [jump squats](exercise:jump_squat) and [the Bodyweight Engine course](course:engine) with four sessions a week.
+- **After four weeks.** Retest. If you squat noticeably more in a minute and hold the plank longer, the base is there. Next come [half burpees](exercise:half_burpee), [jump squats](exercise:jump_squat) and the second half of [the Start course](course:start), where AMRAP, EMOM and a long chipper for time arrive.
 
 If push-ups are your sticking point, there is a separate [push-up progression guide](guide:push-up-progression). And for building workouts from whatever is in the room, read [the guide to CrossFit without equipment](guide:no-equipment-crossfit).
 

@@ -443,44 +443,6 @@ export async function listMarathonTeams(marathonId: string): Promise<MarathonTea
   });
 }
 
-export async function createMarathonTeam(
-  marathonId: string,
-  name: string,
-  sortOrder = 0,
-): Promise<MarathonTeamRow> {
-  if (isDemo()) return (await demo()).createMarathonTeam(marathonId, name, sortOrder);
-  return guard(async () =>
-    teamFromDb(
-      unwrap<DbTeam>(
-        await supabase()
-          .from('marathon_teams')
-          .insert({ marathon_id: marathonId, name, sort_order: sortOrder })
-          .select('*')
-          .single(),
-      ),
-    ),
-  );
-}
-
-export async function renameMarathonTeam(id: string, name: string): Promise<MarathonTeamRow> {
-  if (isDemo()) return (await demo()).renameMarathonTeam(id, name);
-  return guard(async () =>
-    teamFromDb(
-      unwrap<DbTeam>(
-        await supabase().from('marathon_teams').update({ name }).eq('id', id).select('*').single(),
-      ),
-    ),
-  );
-}
-
-/** Deleting a team leaves its members in the marathon, each on their own. */
-export async function deleteMarathonTeam(id: string): Promise<void> {
-  if (isDemo()) return (await demo()).deleteMarathonTeam(id);
-  return guard(async () => {
-    unwrapVoid(await supabase().from('marathon_teams').delete().eq('id', id));
-  });
-}
-
 export async function listMarathonMembers(marathonId: string): Promise<MarathonMemberRow[]> {
   if (isDemo()) return (await demo()).listMarathonMembers(marathonId);
   return guard(async () => {
@@ -504,7 +466,6 @@ export async function addMarathonMember(input: {
   marathonId: string;
   email: string;
   displayName?: string | null;
-  teamId?: string | null;
   note?: string | null;
 }): Promise<MarathonMemberRow> {
   const email = input.email.trim().toLowerCase();
@@ -519,7 +480,6 @@ export async function addMarathonMember(input: {
             marathon_id: input.marathonId,
             email,
             display_name: input.displayName ?? null,
-            team_id: input.teamId ?? null,
             note: input.note ?? null,
           })
           .select('*')
@@ -535,7 +495,6 @@ export async function updateMarathonMember(
 ): Promise<MarathonMemberRow> {
   if (isDemo()) return (await demo()).updateMarathonMember(id, patch);
   const db: Record<string, unknown> = {};
-  if (patch.teamId !== undefined) db.team_id = patch.teamId;
   if (patch.displayName !== undefined) db.display_name = patch.displayName;
   if (patch.status !== undefined) db.status = patch.status;
   if (patch.note !== undefined) db.note = patch.note;

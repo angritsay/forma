@@ -26,6 +26,7 @@ import Ring from '@/components/landing/Ring.astro';
 import Section from '@/components/landing/Section.astro';
 import Steps from '@/components/landing/Steps.astro';
 import { buildDemo, DEMO_COURSE_ID } from '@/components/landing/demo';
+import { CHOICE_POINTS, CHOICE_VOLUME, DELOAD_VOLUME } from '@/lib/training/constants';
 import {
   coursePath,
   coursesCountLabel,
@@ -115,12 +116,16 @@ const boardRows = [
   { w: '61%', you: false },
 ];
 
-// The engine's constants, as pills under the demo.
+// The engine's constants, as pills under the demo — read from the engine, never retyped.
+const factor = (n: number) => new Intl.NumberFormat(locale).format(n);
 const adaptRules = [
-  t(locale, 'landing.adaptRuleEasier'),
-  t(locale, 'landing.adaptRuleHarder'),
-  t(locale, 'landing.adaptRulePoints'),
-  t(locale, 'landing.adaptRuleDeload'),
+  t(locale, 'landing.adaptRuleEasier', { x: factor(CHOICE_VOLUME.easier) }),
+  t(locale, 'landing.adaptRuleHarder', { x: factor(CHOICE_VOLUME.harder) }),
+  t(locale, 'landing.adaptRulePoints', {
+    easier: factor(CHOICE_POINTS.easier),
+    harder: factor(CHOICE_POINTS.harder),
+  }),
+  t(locale, 'landing.adaptRuleDeload', { x: factor(DELOAD_VOLUME) }),
 ];
 
 const jsonLd = [

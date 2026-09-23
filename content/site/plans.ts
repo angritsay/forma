@@ -1,5 +1,5 @@
 /**
- * Subscription plans: one price for every course, monthly or annual.
+ * Subscription plans: the club and every course, monthly or annual.
  *
  * Why this exists next to the one-off courses: a course is bought once and kept forever; a
  * subscription is paid every period and covers all of them plus whatever is added. The two
@@ -110,25 +110,34 @@ export function planMonthlyPrice(plan: Plan): CoursePrice {
 
 export const PLAN_BY_ID: ReadonlyMap<SubscriptionPlan, Plan> = new Map(PLANS.map((p) => [p.id, p]));
 
-/** What every plan includes; shown on the subscribe page and in the app. */
+/**
+ * What every plan includes; shown on the club page (/subscribe/) and in the landing's banner.
+ *
+ * The club first, because that is what the subscription is sold as now (the owner: /subscribe
+ * becomes «Клуб + курс»), then the course that comes with it. What the club *is* follows the
+ * app's own club screen: one small task a day, the week's board with its prize, the streak, and
+ * the duo — `gameAccess` opens all of it on any live subscription.
+ *
+ * The course line names the one course on sale and promises the rest without a count: a line
+ * that names a number goes stale the moment a course is held back or added.
+ */
 export const PLAN_INCLUDES: readonly L10n[] = [
-  /*
-   * Deliberately not a count. Only the beginner course is on sale at launch (`published` in
-   * src/content/schema.ts), and a line that names a number goes stale the moment a course is
-   * held back or added — which is exactly when nobody re-reads the marketing copy.
-   */
   {
-    ru: 'Все курсы Forma — и каждый новый, как только выходит',
-    en: 'Every Forma course — and each new one the day it lands',
+    ru: 'Клуб: одно маленькое задание в день и таблица недели с призом',
+    en: 'The club: one small task a day and a weekly board with a prize',
+  },
+  {
+    ru: 'Серия дней подряд и пара на неделю — или с подругой по приглашению',
+    en: 'A streak, and a partner for the week — or a friend by invitation',
+  },
+  {
+    ru: 'Курс «Форма с нуля» — и каждый новый курс, как только выходит',
+    en: 'The Start course — and every new course the day it lands',
   },
   {
     ru: 'Нагрузка подстраивается под тебя после каждой тренировки',
     en: 'Load adapts to you after every workout',
   },
-  { ru: 'Новые курсы — сразу, без доплат', en: 'New courses as they appear, at no extra cost' },
-  // «Прогресс» was the name of a tab, and that tab is gone; beside two feature names it read as
-  // a third one.
-  { ru: 'Достижения и таблица лидеров', en: 'Achievements and the leaderboard' },
 ];
 
 /**
