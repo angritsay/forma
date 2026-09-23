@@ -857,7 +857,7 @@ export const app = {
   courseEquipment: 'Equipment',
   courseTile: 'Course tile',
   courseTileHint:
-    'The one colour on the course screen. Programme colours: beginners #f2f52d, yoga #a8c8ff, marathon #ff7a1a. Any other course takes one of the two neutral surfaces: #1f1f24 or #2a2a30.',
+    'The course’s colour on its screen. Programme colours: beginners #ff5a00, dumbbells #f4ff3f, yoga #ffe6d0. Any other course takes one of the two neutral surfaces: #2e2e2e or #383838. The blues belong to the club, the coach and the interface — not to a course.',
   courseCover: 'Cover image',
   courseCoverHint: 'Shown on the course page and in the catalogue',
   courseIntroVideo: 'Intro video',
@@ -925,7 +925,7 @@ export const app = {
   nodeLater: 'Later',
   // Admin: the exercise row's "has a video" stamp, and the course tile field's format error.
   exHasVideo: 'video',
-  courseTileInvalid: 'A colour is six hex digits, e.g. #1f1f24',
+  courseTileInvalid: 'A colour is six hex digits, e.g. #2e2e2e',
 
   // --- Marathon -------------------------------------------------------------
   // The second format: daily tasks, proof, a weekly board. Everyone races for themselves.

@@ -68,7 +68,7 @@ function completeDraft(): CourseDraft {
     sessionsPerWeek: 3,
     avgSessionMin: 30,
     equipment: ['mat'],
-    tile: '#1A2634',
+    tile: '#2e2e2e',
     priceRub: 4900,
     priceUsd: 59,
     content: parseCourseContent({
