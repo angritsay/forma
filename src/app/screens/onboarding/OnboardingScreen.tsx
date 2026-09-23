@@ -245,7 +245,7 @@ export default function OnboardingScreen() {
           </div>
           <ProgressBar
             value={(stepIndex + 1) / total}
-            tone="primary"
+            tone="accent"
             size="sm"
             label={t('app.onbStepOf', { n: stepIndex + 1, total })}
             className="flex-1"

@@ -1280,6 +1280,26 @@ export const app = {
   bookNoLink: 'No join link yet.',
   bookMove: 'Reschedule',
   bookCancel: 'Cancel',
+  // --- «Message the coach»: a message into the owner's «Обращения» topic (0042) ---
+  supportWrite: 'Message the coach',
+  supportTitle: 'Message the coach',
+  supportLead:
+    'Your message goes to the coach. We reply in Telegram if it is linked to your account, or by email.',
+  supportPlaceholder: 'For example: can I train with a sore knee?',
+  supportSend: 'Send',
+  supportSent: 'Message sent',
+  supportSentHint: 'We will reply in Telegram or by email.',
+  // There is no coach behind a demo, and «sent» would be untrue.
+  supportDemo: 'In the demo the message goes nowhere.',
+  supportCounter: '{n} / {max}',
+  supportError: 'Could not send it. Please try again a little later.',
+  supportErrorEmpty: 'Write at least a few words.',
+  supportErrorLong: 'Too long — 1000 characters at most.',
+  supportErrorRate: 'That is a lot of messages this hour — please wait for a reply.',
+  supportErrorNetwork: 'No connection. Check the internet and try again.',
+  supportErrorAuth: 'Your session has expired — sign in again to send it.',
+  dataSupportTitle: 'A question or a request',
+  dataSupportBody: 'About your data, a payment or the app itself — write, and we will reply.',
   // --- Club: the week's board, top three and where you are (stream: club-board) ---
   marathonBoardGapOne: '{n} more place',
   marathonBoardGapFew: '{n} more places',

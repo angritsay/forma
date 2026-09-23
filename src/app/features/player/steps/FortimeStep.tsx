@@ -7,10 +7,12 @@ import { useT } from '@/app/hooks/useT';
 import type { PlayerResult } from '@/app/store/activeWorkout';
 import { formatClock } from '@/i18n/index';
 import { BigClock } from '../BigClock';
+import type { SwipeHold } from '../feed';
+import { ItemList } from '../ItemList';
 import { PlayerTimerSlot } from '../PlayerChrome';
 import type { FortimeStep as Step } from '../model';
 import type { Cue } from '../sound';
-import { useCountdownCues, useNextHandler, useStepClock } from '../useStepClock';
+import { useCountdownCues, useNextHandler, useStepClock, useSwipeHold } from '../useStepClock';
 
 export interface FortimeStepProps {
   step: Step;
@@ -20,6 +22,10 @@ export interface FortimeStepProps {
   onRecord: (result: PlayerResult) => void;
   onNext: () => void;
   registerNext: (fn: (() => void) | null) => void;
+  /** Which row's clip is behind the board, and how a tap on a row changes it. */
+  clip?: number;
+  onClip?: (index: number) => void;
+  holdSwipe?: (hold: SwipeHold | null) => void;
 }
 
 type Phase = 'running' | 'finished' | 'capped';
@@ -33,6 +39,9 @@ export function FortimeStep({
   onRecord,
   onNext,
   registerNext,
+  clip,
+  onClip,
+  holdSwipe,
 }: FortimeStepProps) {
   const { t } = useT();
   const [phase, setPhase] = useState<Phase>('running');
@@ -84,6 +93,12 @@ export function FortimeStep({
    * the step unrecorded, which scores as not done — the honest reading of walking away from it.
    */
   useNextHandler(registerNext, onNext);
+  /*
+   * And while the clock runs, a swipe is not even that. Walking away from a for-time piece mid-way
+   * is a decision, and it lives behind Pause with the others; the feed holds both ways until the
+   * piece is finished or capped.
+   */
+  useSwipeHold(holdSwipe, phase === 'running', phase === 'running');
 
   const remaining = cap !== undefined ? cap - clock.elapsedSec : undefined;
 
@@ -111,9 +126,12 @@ export function FortimeStep({
               <Chip>{t('app.playerFortimeCap', { time: formatClock(cap) })}</Chip>
             </div>
           ) : null}
+          {/* The board — what one round is — with a tap on a row playing that movement. */}
+          <ItemList items={step.items} compact onSelect={onClip} activeIndex={clip} />
           {/*
            * The rounds as a row of square cells: a finished one is a ticked outline, the current
-           * one is the white fill, the rest are faint numbers.
+           * one is filled in the brand's light blue (it was white, from the retired black-and-white
+           * palette), the rest are faint numbers.
            */}
           <ol
             className="flex flex-wrap justify-center gap-2"
@@ -131,7 +149,7 @@ export function FortimeStep({
                     done
                       ? 'border-border-strong text-muted'
                       : current
-                        ? 'border-primary bg-primary text-on-primary'
+                        ? 'border-accent bg-accent text-on-accent'
                         : 'border-border text-muted-2',
                   )}
                 >

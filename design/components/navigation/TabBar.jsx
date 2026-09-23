@@ -4,7 +4,7 @@ import { Icon } from '../actions/Icon.jsx';
 export function TabBar({ items = [], activeIndex = 0, onChange, style }) {
   return (
     <nav style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 24, padding: '0 22px',
-      background: 'rgba(15,15,17,.88)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+      background: 'rgba(17,17,17,.88)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
       borderTop: '1px solid var(--border-1)', minHeight: 56, ...style }}>
       {items.map((it, i) => {
         const active = i === activeIndex;

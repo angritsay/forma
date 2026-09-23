@@ -87,11 +87,85 @@ describe('adminMessage', () => {
       'session_moved',
       'session_cancelled',
       'payment_unclaimed',
+      'support_message',
       'channel_ready',
     ];
     for (const kind of kinds) {
       expect(adminMessage(row(kind)), kind).not.toBeNull();
     }
+  });
+});
+
+describe('support_message', () => {
+  const support = (params: Record<string, unknown>) =>
+    adminMessage({ topic: 'support', kind: 'support_message', params })!;
+
+  it('quotes what the person wrote and says who wrote it', () => {
+    const text = support({
+      source: 'telegram',
+      name: 'Аня К',
+      username: 'anya_k',
+      tgId: '777001',
+      locale: 'ru',
+      account: 'no',
+      text: 'Колено болит — можно заниматься?',
+    });
+    expect(text).toMatch(/^<b>Обращение в бот<\/b>/);
+    expect(text).toContain('Имя: Аня К');
+    expect(text).toContain('Аккаунт в приложении: нет');
+    expect(text).toContain('Язык: русский');
+    expect(text).toContain('<blockquote>Колено болит — можно заниматься?</blockquote>');
+  });
+
+  /* Ради этой строки сообщение и нужно: без неё тренер не знает, куда ответить. */
+  it('links the chat by @username when there is one', () => {
+    const text = support({ source: 'telegram', username: '@anya_k', tgId: '777001', text: 'x' });
+    expect(text).toContain('<a href="https://t.me/anya_k">@anya_k</a>');
+    expect(text).not.toContain('tg://');
+  });
+
+  it('falls back to a tg://user link, then to the address', () => {
+    expect(support({ source: 'telegram', tgId: '777001', text: 'x' })).toContain(
+      '<a href="tg://user?id=777001">',
+    );
+    const app = support({ source: 'app', email: 'a@b.co', text: 'x' });
+    expect(app).toMatch(/^<b>Обращение из приложения<\/b>/);
+    expect(app).toContain('Ответить на почту: a@b.co');
+    // Из приложения аккаунт есть всегда — строка про него там лишняя.
+    expect(app).not.toContain('Аккаунт в приложении');
+  });
+
+  /*
+   * Всё, что попадает в href, проверено по форме. Сообщение уходит с parse_mode HTML, и кривой id
+   * или имя с кавычкой сломали бы разметку, а с ней — всё сообщение.
+   */
+  it('never puts an unchecked value into a link', () => {
+    const text = support({
+      source: 'telegram',
+      username: 'x" onclick="y',
+      tgId: '12a"><b>',
+      text: 'x',
+    });
+    expect(text).not.toContain('href');
+    expect(text).not.toContain('onclick');
+  });
+
+  it('escapes the message itself', () => {
+    expect(support({ source: 'app', text: '<script>1 & 2</script>' })).toContain(
+      '<blockquote>&lt;script&gt;1 &amp; 2&lt;/script&gt;</blockquote>',
+    );
+  });
+
+  it('says there is an attachment to look at in the chat', () => {
+    expect(support({ source: 'telegram', attachment: 'photo', text: 'смотри' })).toContain(
+      'Вложение: фото — открой чат',
+    );
+  });
+
+  it('names where in the app it was written from', () => {
+    expect(support({ source: 'app', context: 'Персональная тренировка', text: 'x' })).toContain(
+      'Откуда: Персональная тренировка',
+    );
   });
 });
 

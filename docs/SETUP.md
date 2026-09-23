@@ -1163,10 +1163,11 @@ the coach: when it starts, how long until it starts, and where to join. It is fi
 running with the service role — **a signed-in person can never write a booking, not even their
 own** — and read through `my_coach_bookings`, which shows each person only their own.
 
-There are two ingestion paths in the repository. `supabase/functions/calendly-webhook/` needs
-Calendly **Standard** (~$10/seat/month: the free plan has no webhooks, no post-booking redirect and
-one active event type). `supabase/functions/google-calendar-sync/` needs nothing but a Google
-account, and is the one in use.
+It is filled by `supabase/functions/google-calendar-sync/`, which needs nothing but a Google
+account. (A Calendly webhook used to sit next to it; it needed Calendly **Standard**, was never
+switched on, and has been removed.) Every new booking also reaches the owner's channel as
+«Выбрали время» (§7.11) — the `coach_bookings_notify_admin` trigger of 0040 fires on the sync's
+inserts like on any other.
 
 ### What Google gives and what it does not
 
@@ -1178,12 +1179,12 @@ account, and is the one in use.
   That is what `GOOGLE_BOOKING_TITLE` below is for.
 - **Google cannot call us when somebody books.** There are no webhooks on an appointment schedule,
   and Google's push channels need a verified HTTPS domain and renewal every few days. So the sync
-  **polls**, every `POLL_INTERVAL_MINUTES` (5, in `sync.ts`). The cost of that is staleness in one
-  direction only: a session cancelled just after a poll **can still be shown for up to five
-  minutes**. A new booking has the same delay before it appears.
+  **polls**, every `POLL_INTERVAL_MINUTES` (10, in `sync.ts`, driven by `calendar-sync.yml`). The
+  cost of that is staleness: a session cancelled just after a poll **can still be shown for up to
+  ten minutes**, and a new booking has the same delay before it appears.
 - **Google has no cancel or reschedule link in its API.** The booker's own links are in the
-  invitation mail Google sends them, and nowhere else. So a Google booking has no «Отменить»
-  button in the app; a Calendly one would.
+  invitation mail Google sends them, and nowhere else. So a booking has no «Отменить» button in
+  the app.
 
 ### The coach does this, once
 
@@ -1200,7 +1201,7 @@ account, and is the one in use.
    permission the sync needs; it cannot change or delete anything.
 
    The robot now reads that whole calendar, so if there is anything on it he would rather the sync
-   never looked at, the answer is a title filter (step 4 below), not a different permission.
+   never looked at, the answer is a title filter (`GOOGLE_BOOKING_TITLE`, step 5 below), not a different permission.
 
 ### The owner does this, once
 
@@ -1214,63 +1215,61 @@ account, and is the one in use.
    Send the coach the service account's address (`…@….iam.gserviceaccount.com`) so he can do
    step 3. That address is not a secret.
 
-5. **Deploy the function.** Dashboard → **Edge Functions** → deploy `google-calendar-sync` with
-   **Verify JWT off**, or `supabase functions deploy google-calendar-sync --no-verify-jwt`. Unlike
-   `telegram-bot` this one is three files (`index.ts`, `auth.ts`, `sync.ts`), so deploy it with the
-   CLI rather than by pasting into the dashboard editor.
+5. **Put five secrets into GitHub.** Repository → **Settings → Secrets and variables → Actions →
+   New repository secret**, once per name. Type each value in yourself; nobody else needs to see
+   them, and none of them is ever printed in a run log.
 
-6. **Set the secrets.** Dashboard → **Edge Functions → Secrets**, or:
-
-   ```sh
-   supabase secrets set \
-     GOOGLE_SYNC_TOKEN=$(openssl rand -hex 24) \
-     GOOGLE_CALENDAR_ID=<the coach's gmail address> \
-     GOOGLE_SA_CLIENT_EMAIL=<…@….iam.gserviceaccount.com> \
-     GOOGLE_SA_PRIVATE_KEY="$(jq -r .private_key ~/Downloads/<the json file>)" \
-     GOOGLE_BOOKING_TITLE='Персональная тренировка'
-   ```
-
-   | Secret                   | Required | What it is                                                    |
-   | ------------------------ | -------- | ------------------------------------------------------------- |
-   | `GOOGLE_SYNC_TOKEN`      | yes      | Long random string; whoever knows it can trigger a poll       |
-   | `GOOGLE_CALENDAR_ID`     | yes      | The calendar to read — the coach's own address                |
-   | `GOOGLE_SA_CLIENT_EMAIL` | yes      | The service account's address                                 |
-   | `GOOGLE_SA_PRIVATE_KEY`  | yes      | `private_key` out of the JSON key file, `-----BEGIN…` and all |
-   | `GOOGLE_BOOKING_TITLE`   | no       | Only events whose title contains this are bookings            |
-   | `GOOGLE_COACH_EMAILS`    | no       | Further addresses that are the coach, comma-separated         |
+   | Secret name            | Required | What to paste                                                                                                                 |
+   | ---------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
+   | `GOOGLE_SA_JSON`       | yes      | The **whole** JSON key file from step 4, from the first `{` to the last `}`. Open it in any text editor, select all, copy.    |
+   | `GOOGLE_CALENDAR_ID`   | yes      | The calendar to read — the coach's own Gmail address (the one whose calendar he shared in step 3).                            |
+   | `GOOGLE_SYNC_TOKEN`    | yes      | Any long random string: `openssl rand -hex 32`, or 40+ letters and digits typed at random. It is the lock on the function.    |
+   | `GOOGLE_BOOKING_TITLE` | strongly | The appointment schedule's title from step 1, exactly, e.g. `Персональная тренировка`. Only events with it count as bookings. |
+   | `GOOGLE_COACH_EMAILS`  | no       | Other addresses that are the coach, comma-separated, so they are never mistaken for a client.                                 |
 
    **Set `GOOGLE_BOOKING_TITLE`.** Without it, any event on that calendar with exactly one outside
    guest is read as a booking, and the coach's lunch with a friend becomes a session in somebody's
-   app. With it, only events titled after the appointment schedule are ingested.
+   app — and a message in the «Онлайн-тренировки» topic.
 
-   The private key is a Supabase secret and only ever a Supabase secret. If it is ever pasted
-   somewhere it should not be, delete that key in the Cloud console and add a new one; the old one
-   stops working immediately. **Without all four required secrets the function returns 503 and
-   writes nothing** — it never pretends to have synced.
+   Instead of `GOOGLE_SA_JSON` the two halves can be given separately as `GOOGLE_SA_CLIENT_EMAIL`
+   and `GOOGLE_SA_PRIVATE_KEY` (`client_email` and `private_key` out of the file). The whole file is
+   easier to paste from a phone, and the job takes it apart itself.
 
-7. **Schedule the poll.** Dashboard → **Integrations → Cron** → **Create job**, every 5 minutes,
-   type **Supabase Edge Function**, `google-calendar-sync`, method POST, and add the header
-   `x-sync-token: <GOOGLE_SYNC_TOKEN>`. In SQL it is the same thing:
+   The key file is the only copy of the robot's password. Once it is in the secret, delete the
+   downloaded file. If it is ever pasted somewhere it should not be, delete that key in the Cloud
+   console (service account → **Keys**), create a new one and replace the secret: the old one stops
+   working immediately.
 
-   ```sql
-   select cron.schedule('google-calendar-sync', '*/5 * * * *', $$
-     select net.http_post(
-       url    := 'https://<project-ref>.functions.supabase.co/google-calendar-sync',
-       headers:= jsonb_build_object('x-sync-token', '<GOOGLE_SYNC_TOKEN>')
-     );
-   $$);
-   ```
+6. **Run Actions → Supabase apply → `deploy-calendar`.** It deploys `google-calendar-sync` with JWT
+   verification off (a schedule has no signed-in person; the token is the lock), copies the
+   secrets that are set in GitHub into Supabase — an empty one never overwrites a value typed in
+   the dashboard — lists which names the project has, and then runs **one real sync** so the
+   answer is on the run page right away:
 
-   Anything that can make a POST every five minutes does: a scheduled GitHub Actions job with the
-   token in repository secrets works too. **The token goes in a secret, never in a
-   `workflow_dispatch` input** — an input is typed in the open and kept in the run's log.
+   | What the run says                         | What it means                                                                                 |
+   | ----------------------------------------- | --------------------------------------------------------------------------------------------- |
+   | `Первый опрос прошёл: scanned=… booked=…` | It works. `booked` is how many bookings it found in the next 60 days.                         |
+   | `502 — Google не пустил`                  | Wrong key file, or the calendar is not shared with the robot yet (step 3), or wrong calendar. |
+   | `503 — функции не хватает секретов`       | A warning above names the missing secret.                                                     |
+   | `booked=0 ignored=12`                     | Nothing matched: the schedule's title and `GOOGLE_BOOKING_TITLE` disagree.                    |
 
-8. **Book a test slot** from the coach's link with an address you can sign in with, wait five
-   minutes, and read the function logs. A line like `scanned=12 booked=1 cancelled=0 vanished=0
-ignored=11 failed=0 interval=5m` is a working sync. `ignored=12 booked=0` means nothing matched
-   — usually `GOOGLE_BOOKING_TITLE` and the appointment schedule's title disagree. `403 bad token`
-   means the Cron header and the secret disagree. Nothing in those logs says who booked, by
-   design; to find one booking, look it up by its `external_id` (`gcal:<event id>`).
+   The first sync also sends one «Выбрали время» message per future booking it finds into the
+   owner's channel — the channel has never heard of them. After that, only new ones.
+
+7. **Nothing else to schedule.** `.github/workflows/calendar-sync.yml` wakes the function every ten
+   minutes (pg_cron is not enabled in this project; this is the same arrangement as
+   `telegram-notify.yml`). Each run prints one line of counters and nothing else — never an
+   address, never an event title. Until `GOOGLE_SYNC_TOKEN` exists the schedule only leaves a note
+   and exits green, so a red cross in Actions always means something real: `403` — the token in
+   GitHub and in Supabase differ (run `deploy-calendar` again); `502` — Google stopped letting the
+   robot in, usually because the calendar was un-shared.
+
+8. **Book a test slot** from the coach's link with an address you can sign in with, wait up to ten
+   minutes (or run **Actions → Sync the coach's Google Calendar → Run workflow**), and open the
+   Тренер tab signed in with that address: the session is at the top, with its join link. The
+   owner's channel gets «Выбрали время» in «Онлайн-тренировки» at the same time. Nothing in the
+   logs says who booked, by design; to find one booking, look it up by its `external_id`
+   (`gcal:<event id>`).
 
 ### If the coach ever cancels by deleting the event
 
@@ -1297,6 +1296,7 @@ apply → Run workflow**, pick a task:
 | `deploy-bot`                           | Deploys the `telegram-bot` function and sets its secrets (§7.6).                            |
 | `deploy-link`                          | Deploys `link-telegram`, which attaches a Telegram account to a profile (§7.6).             |
 | `deploy-payments`                      | Deploys `prodamus-webhook`, checks its two secrets and probes the live address (§7.4).      |
+| `deploy-calendar`                      | Deploys `google-calendar-sync`, copies its secrets and runs the first sync (§7.7).          |
 | `secrets-check`                        | Read-only: which function secrets Supabase has, which are missing, which override the repo. |
 | `webhook-info`                         | Read-only: what Telegram itself believes about the bot's webhook, and why delivery failed.  |
 | `payments-check`                       | Read-only: how many payment notifications have arrived and whether the last one applied.    |
@@ -1527,7 +1527,7 @@ one topic is deleted, make it by hand and correct one number in the secret.
 | Курсы             | course paid, refund, and **a payment that opened nothing**                        |
 | Клуб              | paid, renewed, cancelled, a duo pair formed, a proof sent again after a rejection |
 | Онлайн-тренировки | session paid, time chosen, moved, cancelled                                       |
-| Обращения         | nothing yet — see below                                                           |
+| Обращения         | what people write to the bot, and the app's «Написать тренеру» (§7.12)            |
 
 The most valuable of these is **«Платёж не привязан»**: money arrived and access did not open,
 because there was no order, or several, or the address at the till was a different one. It has
@@ -1540,9 +1540,7 @@ purchases would be muted along with it. So only the proof that is **waiting on a
 one resubmitted after the coach rejected it. A daily one-line digest of how many are queued is the
 right next step and is deliberately not built yet.
 
-**Обращения is created empty.** Its source is the next piece of work: messages people write to the
-bot, plus a «Написать» button in the app for those who came from the website rather than from
-Telegram.
+**Обращения** is filled by the bot and by the app — see §7.12.
 
 ### Why a second queue rather than a column on the first
 
@@ -1559,6 +1557,57 @@ cracked mirror does not oblige the room to disappear: a row in `admin_outbox` mu
 purchase, and on signup it would be worse than that — `handle_new_user()` runs inside the
 transaction that creates the account, so an exception there is a person who could not register
 because a notification failed to write.
+
+---
+
+## 7.12 «Обращения»: questions from people, in the owner's channel
+
+Two ways in, one topic.
+
+- **The bot.** Anything a person writes to the main bot in private that is not a command is passed
+  on. Before, every such message got the full promo greeting back — the wrong answer to «а можно
+  заниматься с больным коленом?». Now the person gets one line in their language — «Передали
+  тренеру — он ответит тебе здесь, в Телеграме» — and the message appears in «Обращения» with
+  their name, @username, language and whether they have an app account. `/start` (and any other
+  command) still gets the greeting. A photo with a caption is passed on as its caption, marked
+  «Вложение: фото — открой чат»; a photo, voice note or sticker with no words gets a polite «only
+  text is passed on».
+- **The app.** «Написать тренеру» on the Тренер tab (it used to open mail or a Telegram link) and
+  «Вопрос или просьба» in Профиль → Данные и согласия open a small sheet with a text field. The
+  message goes through `support_message` (0042) with the person's name, address and language taken
+  from their profile — never from what the app sends — and the place they wrote from.
+
+**Limits.** Five messages an hour per person, a thousand characters each. Past the limit the bot
+says «please wait» once and then stays silent, so a flood cannot turn the bot into a flood of
+replies; the app shows the same as an error under the field. A message Telegram delivers twice
+(it retries when the function is slow) is recognised and passed on once.
+
+**How the coach replies.** From his own Telegram account — **no bot can write on his behalf**, and
+the service bot that posts into the group cannot write to a customer at all (a bot may only write
+to people who started a chat with it). So each message ends with a link:
+
+- `Ответить: @username` — opens the chat with that person. Works always.
+- `Ответить: открыть чат в телеграме` (`tg://user?id=…`) — for somebody with no @username. Telegram
+  opens it only if the person's privacy settings allow being found this way; otherwise it shows as
+  plain text. That is why the bot asks people without a @username to leave an email or phone in
+  their next message.
+- `Ответить на почту: …` — from the app, when no Telegram is linked to the account.
+
+The numeric Telegram id is inside that message, which goes only to the private group. It never
+appears in a GitHub Actions log: the bot's own logs say `support queued` / `limited` and nothing
+about who.
+
+**Turning it on**, in this order:
+
+1. Actions → Supabase apply → `migration` with **`0042_support.sql`**.
+2. Actions → Supabase apply → **`deploy-bot`** — the bot needs the new code to pass messages on.
+   It uses `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`, which Supabase gives every function; no
+   new secret.
+3. Actions → Supabase apply → **`deploy-notify`** — the sender needs the new code to format the
+   «Обращение» message. Until then the rows wait in the queue and none is lost.
+
+If the bot is deployed before the migration, a message gets «Не получилось передать сообщение
+тренеру» back — honest, and nothing is lost that the person cannot resend.
 
 ---
 

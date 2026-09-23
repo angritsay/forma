@@ -219,6 +219,7 @@ export function AssessmentRunner({
             onChange={(e) => setReps(e.target.value)}
           />
           <Button
+            variant="action"
             size="lg"
             fullWidth
             disabled={parseIntField(reps, maxAnswer) === undefined}

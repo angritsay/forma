@@ -131,6 +131,78 @@ function block(title: string, body: string): string {
   return body ? `<b>${escapeHtml(title)}</b>\n${body}` : `<b>${escapeHtml(title)}</b>`;
 }
 
+const LANGUAGE_NAMES: Readonly<Record<string, string>> = { ru: 'русский', en: 'английский' };
+
+const ATTACHMENT_NAMES: Readonly<Record<string, string>> = {
+  photo: 'фото',
+  video: 'видео',
+  document: 'файл',
+  audio: 'аудио',
+  voice: 'голосовое',
+  animation: 'гифка',
+};
+
+/** Имя в телеграме по его правилам: латиница, цифры и `_`, до 32 символов. Иначе — не ссылка. */
+const USERNAME_RE = /^[A-Za-z0-9_]{3,32}$/;
+/** Id пользователя телеграма — только цифры. Всё прочее в ссылку не подставляется. */
+const TELEGRAM_ID_RE = /^[1-9][0-9]{0,15}$/;
+
+/**
+ * Как ответить человеку, одной строкой со ссылкой — ради неё сообщение и нужно.
+ *
+ * **Отвечает тренер сам, со своего аккаунта.** Ни служебный бот, ни основной не могут написать
+ * человеку от имени тренера, а служебный не может написать ему вовсе: бот пишет только тем, кто
+ * сам начал с ним разговор. Поэтому ссылка открывает личный чат с человеком.
+ *
+ * `@username` — надёжнее всего: `t.me/<username>` открывается у кого угодно. Без него остаётся
+ * `tg://user?id=…`, которую телеграм открывает, если человек не запретил находить себя по номеру
+ * и уже попадался тренеру; иначе ссылка превращается в простой текст, и тогда ответить можно
+ * только через почту или — если человек писал в бота — попросить его в ответе оставить @username.
+ */
+function replyLine(p: Record<string, unknown> | null): string {
+  const username = str(p, 'username').replace(/^@/, '');
+  if (USERNAME_RE.test(username)) {
+    return `Ответить: <a href="https://t.me/${username}">@${escapeHtml(username)}</a>`;
+  }
+  const tgId = str(p, 'tgId');
+  if (TELEGRAM_ID_RE.test(tgId)) {
+    return `Ответить: <a href="tg://user?id=${tgId}">открыть чат в телеграме</a>`;
+  }
+  const email = str(p, 'email');
+  if (email) return `Ответить на почту: ${escapeHtml(email)}`;
+  return '';
+}
+
+/**
+ * Обращение — единственный повод, где главное не поля, а то, что человек написал. Поэтому текст
+ * идёт цитатой, отдельно от строк про автора, а под ним — как ответить.
+ */
+function supportMessage(p: Record<string, unknown> | null): string {
+  const fromBot = str(p, 'source') === 'telegram';
+  const username = str(p, 'username').replace(/^@/, '');
+  const account = str(p, 'account');
+  const attachment = str(p, 'attachment');
+  const text = str(p, 'text').trim();
+
+  const head = lines(
+    ['Имя', str(p, 'name')],
+    ['Телеграм', USERNAME_RE.test(username) ? `@${username}` : ''],
+    ['Почта', str(p, 'email')],
+    ['Аккаунт в приложении', fromBot ? (account === 'yes' ? 'есть' : 'нет') : ''],
+    ['Язык', LANGUAGE_NAMES[str(p, 'locale')] ?? str(p, 'locale')],
+    ['Откуда', str(p, 'context')],
+    ['Вложение', attachment ? `${ATTACHMENT_NAMES[attachment] ?? attachment} — открой чат` : ''],
+  );
+  const parts = [head];
+  if (text) parts.push(`<blockquote>${escapeHtml(text)}</blockquote>`);
+  const how = replyLine(p);
+  if (how) parts.push(how);
+  return block(
+    fromBot ? 'Обращение в бот' : 'Обращение из приложения',
+    parts.filter(Boolean).join('\n\n'),
+  );
+}
+
 /**
  * Текст сообщения, или `null` — повод незнакомый.
  *
@@ -270,6 +342,9 @@ export function adminMessage(row: AdminRow): string | null {
           ['Заказ', str(p, 'ref')],
         ) + '\n\nДоступ не открылся — заказа нет, их несколько или почта в кассе другая.',
       );
+
+    case 'support_message':
+      return supportMessage(p);
 
     case 'channel_ready':
       return block('Канал подключён', 'Сюда будут приходить события этой темы.');

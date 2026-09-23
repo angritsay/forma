@@ -457,7 +457,7 @@ export default function AdminCourseScreen() {
           ) : (
             <Button
               size="lg"
-              className="bg-action! text-on-action!"
+              variant="action"
               loading={publishing}
               disabled={issues.length > 0}
               onClick={() => void publish()}

@@ -39,7 +39,7 @@ function ErrorFallback({ error, onRetry }: { error: Error | null; onRetry: () =>
         description={t('app.errorBody')}
         action={
           <div className="flex flex-col gap-2">
-            <Button size="lg" onClick={() => window.location.reload()}>
+            <Button variant="action" size="lg" onClick={() => window.location.reload()}>
               {t('app.errorReload')}
             </Button>
             <Button variant="ghost" onClick={onRetry}>

@@ -14,12 +14,165 @@ import { isDemo } from './mode';
 export const SIGNED_URL_TTL_SEC = 3600;
 /** Re-sign a little before expiry so a URL handed to a <video> never dies mid-playback. */
 const REFRESH_MARGIN_MS = 5 * 60 * 1000;
+/**
+ * Where the signed URLs outlive a reload. Session storage rather than local: a signature is an hour
+ * long, and a tab is the unit it makes sense to keep one for — a Mini App that is closed and opened
+ * again tomorrow has nothing worth reading back.
+ */
+export const SIGNED_URL_STORAGE_KEY = 'forma.signedMedia';
+/** `createSignedUrls` takes a list; this keeps one request to a size the API is happy with. */
+const SIGN_BATCH = 100;
 
-const cache = new Map<string, { url: string; expiresAt: number }>();
+type Signed = { url: string; expiresAt: number };
+
+const cache = new Map<string, Signed>();
+/** Signatures being fetched right now, so two asks for one clip share a request. */
+const inflight = new Map<string, Promise<string | undefined>>();
+let hydrated = false;
+
+function fresh(entry: Signed | undefined, now = Date.now()): entry is Signed {
+  return entry !== undefined && entry.expiresAt - REFRESH_MARGIN_MS > now;
+}
+
+function sessionStore(): Storage | null {
+  try {
+    return typeof sessionStorage === 'undefined' ? null : sessionStorage;
+  } catch {
+    // A sandboxed frame can throw on the bare property read.
+    return null;
+  }
+}
+
+/** Read back what an earlier page of this tab signed; anything stale or malformed is dropped. */
+function hydrate(): void {
+  if (hydrated) return;
+  hydrated = true;
+  try {
+    const raw = sessionStore()?.getItem(SIGNED_URL_STORAGE_KEY);
+    if (!raw) return;
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== 'object' || parsed === null) return;
+    const now = Date.now();
+    for (const [ref, v] of Object.entries(parsed as Record<string, unknown>)) {
+      const e = v as Partial<Signed> | null;
+      if (typeof e?.url !== 'string' || typeof e.expiresAt !== 'number') continue;
+      const entry = { url: e.url, expiresAt: e.expiresAt };
+      if (fresh(entry, now) && !cache.has(ref)) cache.set(ref, entry);
+    }
+  } catch {
+    /* A corrupt entry costs one round of signing, nothing more. */
+  }
+}
+
+function persist(): void {
+  const store = sessionStore();
+  if (!store) return;
+  const now = Date.now();
+  const out: Record<string, Signed> = {};
+  for (const [ref, entry] of cache) if (fresh(entry, now)) out[ref] = entry;
+  try {
+    store.setItem(SIGNED_URL_STORAGE_KEY, JSON.stringify(out));
+  } catch {
+    /* Quota or a private window: the in-memory copy still works for this page. */
+  }
+}
+
+function remember(ref: string, url: string, now = Date.now()): void {
+  cache.set(ref, { url, expiresAt: now + SIGNED_URL_TTL_SEC * 1000 });
+}
 
 /** Drop cached signed URLs (call on sign-out; entitlements may differ for the next user). */
 export function clearMediaUrlCache(): void {
   cache.clear();
+  inflight.clear();
+  hydrated = true;
+  try {
+    sessionStore()?.removeItem(SIGNED_URL_STORAGE_KEY);
+  } catch {
+    /* Nothing to clear. */
+  }
+}
+
+/**
+ * The URL for a reference **if it is known right now**, without asking anybody.
+ *
+ * This is what lets the player hand a clip to a `<video>` on the very render that shows it: a URL
+ * the session already signed, a public image, a plain address. Undefined means "ask
+ * {@link resolveMediaUrl}", not "there is no clip".
+ */
+export function cachedMediaUrl(ref: string | undefined): string | undefined {
+  const trimmed = ref?.trim();
+  if (!trimmed) return undefined;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  const parsed = parseStorageRef(trimmed);
+  if (!parsed) return trimmed;
+  // The demo has no buckets at all; `resolveMediaUrl` says the same.
+  if (isDemo()) return undefined;
+  if (parsed.bucket === PUBLIC_BUCKET) return publicMediaUrl(trimmed);
+  hydrate();
+  const hit = cache.get(trimmed);
+  return fresh(hit) ? hit.url : undefined;
+}
+
+/**
+ * Sign every clip a workout will need, in as few requests as there are buckets.
+ *
+ * The player used to sign a clip when it arrived at it — one round trip to Storage, then the
+ * download, at the exact moment the athlete was looking at a black rectangle waiting for the
+ * movement. A session is known in full when it starts, so the signatures are fetched together then
+ * and every step after the first finds its URL already here. Best effort: a clip this fails for is
+ * signed on its own when it is reached, as before.
+ */
+export async function signMediaUrls(refs: readonly (string | undefined)[]): Promise<void> {
+  if (isDemo() || !isConfigured()) return;
+  hydrate();
+  const byBucket = new Map<string, { ref: string; path: string }[]>();
+  for (const raw of refs) {
+    const ref = raw?.trim();
+    if (!ref || inflight.has(ref) || fresh(cache.get(ref))) continue;
+    const parsed = parseStorageRef(ref);
+    if (!parsed || parsed.bucket === PUBLIC_BUCKET) continue;
+    const list = byBucket.get(parsed.bucket) ?? [];
+    if (!list.some((e) => e.ref === ref)) list.push({ ref, path: parsed.path });
+    byBucket.set(parsed.bucket, list);
+  }
+
+  const batches: Promise<void>[] = [];
+  const waiting = new Map<string, Promise<string | undefined>>();
+  for (const [bucket, entries] of byBucket) {
+    for (let i = 0; i < entries.length; i += SIGN_BATCH) {
+      const chunk = entries.slice(i, i + SIGN_BATCH);
+      const request = supabase()
+        .storage.from(bucket)
+        .createSignedUrls(
+          chunk.map((e) => e.path),
+          SIGNED_URL_TTL_SEC,
+        )
+        .then(({ data, error }) => {
+          if (error || !data) return;
+          const now = Date.now();
+          const byPath = new Map(data.map((d) => [d.path, d]));
+          for (const e of chunk) {
+            const hit = byPath.get(e.path);
+            if (hit && !hit.error && hit.signedUrl) remember(e.ref, hit.signedUrl, now);
+          }
+        })
+        .catch(() => undefined);
+      // Individual asks for these refs wait for the batch rather than signing them a second time.
+      for (const e of chunk) {
+        const wait = request.then(() => {
+          const hit = cache.get(e.ref);
+          return fresh(hit) ? hit.url : undefined;
+        });
+        waiting.set(e.ref, wait);
+        inflight.set(e.ref, wait);
+      }
+      batches.push(request);
+    }
+  }
+  await Promise.all(batches);
+  for (const [ref, wait] of waiting) if (inflight.get(ref) === wait) inflight.delete(ref);
+  persist();
 }
 
 /** Resolve a content media reference to a URL the browser can load. */
@@ -38,17 +191,32 @@ export async function resolveMediaUrl(ref: string | undefined): Promise<string |
   // expires, and these references end up in static landing pages that are built once.
   if (parsed.bucket === PUBLIC_BUCKET) return publicMediaUrl(trimmed);
 
+  hydrate();
   const hit = cache.get(trimmed);
-  if (hit && hit.expiresAt - REFRESH_MARGIN_MS > Date.now()) return hit.url;
+  if (fresh(hit)) return hit.url;
 
-  return guard(async () => {
+  // A batch already on its way covers this one; if it came back without it, sign it alone.
+  const pending = inflight.get(trimmed);
+  if (pending) {
+    const url = await pending;
+    if (url) return url;
+  }
+
+  const single = guard(async () => {
     const { data, error } = await supabase()
       .storage.from(parsed.bucket)
       .createSignedUrl(parsed.path, SIGNED_URL_TTL_SEC);
     if (error) throw error;
-    cache.set(trimmed, { url: data.signedUrl, expiresAt: Date.now() + SIGNED_URL_TTL_SEC * 1000 });
+    remember(trimmed, data.signedUrl);
+    persist();
     return data.signedUrl;
   });
+  inflight.set(trimmed, single);
+  try {
+    return await single;
+  } finally {
+    if (inflight.get(trimmed) === single) inflight.delete(trimmed);
+  }
 }
 
 // --- admin uploads ----------------------------------------------------------
@@ -109,6 +277,7 @@ export async function uploadMedia(bucket: string, path: string, file: Blob): Pro
     const ref = `storage:${bucket}/${path}`;
     // A replaced file keeps its URL, so a cached signed URL would still point at the old bytes.
     cache.delete(ref);
+    persist();
     return ref;
   });
 }
@@ -122,5 +291,6 @@ export async function deleteMedia(ref: string): Promise<void> {
     const { error } = await supabase().storage.from(parsed.bucket).remove([parsed.path]);
     if (error) throw error;
     cache.delete(ref.trim());
+    persist();
   });
 }

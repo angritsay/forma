@@ -1,19 +1,32 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_COPY,
+  isCommand,
   keyboard,
   localeOf,
+  parseSupportStatus,
   replyFor,
+  routeUpdate,
   sendMessageBody,
   sendPhotoBody,
   siteUrlFor,
+  SUPPORT_COPY,
+  SUPPORT_MAX,
+  supportReplyText,
+  supportRpcArgs,
   type BotCopy,
   type Locale,
+  type TelegramUpdate,
 } from './index';
 
 /** A message from somebody whose Telegram is in Russian, unless told otherwise. */
 const privateMessage = (text: string, language_code = 'ru') => ({
-  message: { chat: { id: 42, type: 'private' }, from: { language_code }, text },
+  message: {
+    message_id: 7,
+    chat: { id: 42, type: 'private' },
+    from: { id: 4242, first_name: 'Аня', last_name: 'К', username: 'anya_k', language_code },
+    text,
+  },
 });
 
 const ONE: BotCopy = {
@@ -44,8 +57,13 @@ describe('replyFor', () => {
     expect(replyFor(privateMessage('/start marathon'))?.chatId).toBe(42);
   });
 
-  it('answers anything else a person types, because they want the same thing', () => {
-    expect(replyFor(privateMessage('привет'))?.chatId).toBe(42);
+  it('answers any other command with the same greeting', () => {
+    expect(replyFor(privateMessage('/help'))?.chatId).toBe(42);
+  });
+
+  /* An ordinary message is a question for the coach now, not a cue for the promo. */
+  it('does not greet an ordinary message', () => {
+    expect(replyFor(privateMessage('привет'))).toBeNull();
   });
 
   it('greets somebody whose Telegram is in English in English', () => {
@@ -231,5 +249,172 @@ describe('payloads', () => {
     // The fallback must lose the picture and nothing else.
     expect(text.reply_markup).toEqual(photo.reply_markup);
     expect(text.text).toEqual(photo.caption);
+  });
+});
+
+describe('isCommand', () => {
+  it('knows a command the way Telegram marks one', () => {
+    expect(isCommand('/start')).toBe(true);
+    expect(isCommand('/start marathon')).toBe(true);
+    expect(isCommand('/help@forma_bot')).toBe(true);
+    expect(isCommand('  /start')).toBe(true);
+  });
+
+  it('does not take a slash in a sentence for a command', () => {
+    expect(isCommand('привет')).toBe(false);
+    expect(isCommand('3/4 подхода')).toBe(false);
+    expect(isCommand('/ ну и что')).toBe(false);
+    expect(isCommand('//')).toBe(false);
+  });
+});
+
+describe('routeUpdate', () => {
+  it('greets a command', () => {
+    expect(routeUpdate(privateMessage('/start'))?.kind).toBe('greeting');
+  });
+
+  it('passes an ordinary message on, with who sent it', () => {
+    expect(routeUpdate(privateMessage('Колено болит — можно заниматься?'))).toEqual({
+      kind: 'support',
+      request: {
+        chatId: 42,
+        locale: 'ru',
+        telegramId: 4242,
+        messageId: 7,
+        name: 'Аня К',
+        username: 'anya_k',
+        text: 'Колено болит — можно заниматься?',
+        attachment: '',
+      },
+    });
+  });
+
+  it('keeps the language of the sender for the reply', () => {
+    const route = routeUpdate(privateMessage('hello', 'en-US'));
+    expect(route?.kind === 'support' && route.request.locale).toBe('en');
+  });
+
+  /* Посчитано в символах, а не в UTF-16: эмодзи не режется пополам. */
+  it('cuts a long message on a whole character', () => {
+    const route = routeUpdate(privateMessage('💪'.repeat(SUPPORT_MAX + 50)));
+    expect(route?.kind).toBe('support');
+    if (route?.kind !== 'support') return;
+    expect(Array.from(route.request.text)).toHaveLength(SUPPORT_MAX);
+    expect(route.request.text.endsWith('💪')).toBe(true);
+  });
+
+  it('passes a caption on and says what it was under', () => {
+    const update: TelegramUpdate = {
+      message: {
+        message_id: 8,
+        chat: { id: 42, type: 'private' },
+        from: { id: 4242, first_name: 'Аня' },
+        photo: [{}],
+        caption: 'вот так правильно?',
+      },
+    };
+    const route = routeUpdate(update);
+    expect(route?.kind === 'support' && route.request).toMatchObject({
+      text: 'вот так правильно?',
+      attachment: 'photo',
+      username: '',
+      name: 'Аня',
+    });
+  });
+
+  it('answers a photo, a voice note or a sticker with no words with a note', () => {
+    for (const media of ['photo', 'voice', 'sticker', 'video_note'] as const) {
+      const update: TelegramUpdate = {
+        message: { chat: { id: 42, type: 'private' }, from: { id: 4242 }, [media]: {} },
+      };
+      expect(routeUpdate(update), media).toEqual({ kind: 'media', chatId: 42, locale: 'ru' });
+    }
+  });
+
+  it('leaves groups, bots and nameless senders alone', () => {
+    const group = privateMessage('привет');
+    group.message.chat.type = 'supergroup';
+    expect(routeUpdate(group)).toBeNull();
+
+    const bot: TelegramUpdate = {
+      message: { chat: { id: 42, type: 'private' }, from: { id: 1, is_bot: true }, text: 'hi' },
+    };
+    expect(routeUpdate(bot)).toBeNull();
+
+    const nobody: TelegramUpdate = { message: { chat: { id: 42, type: 'private' }, text: 'hi' } };
+    expect(routeUpdate(nobody)).toBeNull();
+  });
+
+  it('drops a username that is not one', () => {
+    const odd = privateMessage('вопрос');
+    odd.message.from.username = 'not a name';
+    const route = routeUpdate(odd);
+    expect(route?.kind === 'support' && route.request.username).toBe('');
+  });
+});
+
+describe('the support path', () => {
+  it('names the arguments the way support_from_telegram takes them', () => {
+    const route = routeUpdate(privateMessage('вопрос'));
+    if (route?.kind !== 'support') throw new Error('expected support');
+    expect(supportRpcArgs(route.request)).toEqual({
+      p_telegram_id: 4242,
+      p_message_id: 7,
+      p_name: 'Аня К',
+      p_username: 'anya_k',
+      p_locale: 'ru',
+      p_text: 'вопрос',
+      p_attachment: null,
+    });
+  });
+
+  it('reads only the answers the database can give', () => {
+    expect(parseSupportStatus('queued')).toBe('queued');
+    expect(parseSupportStatus('muted')).toBe('muted');
+    expect(parseSupportStatus('something')).toBe('failed');
+    expect(parseSupportStatus(null)).toBe('failed');
+    expect(parseSupportStatus({ code: 'PGRST202' })).toBe('failed');
+  });
+
+  it('answers briefly, in the sender’s language', () => {
+    expect(supportReplyText('queued', 'ru', true)).toBe(SUPPORT_COPY.ru.queued);
+    expect(supportReplyText('queued', 'en', true)).toBe(SUPPORT_COPY.en.queued);
+    expect(SUPPORT_COPY.ru.queued).toContain('Передали тренеру');
+    expect(SUPPORT_COPY.en.queued).not.toMatch(/[А-Яа-яЁё]/);
+  });
+
+  it('asks for a way back from somebody with no username', () => {
+    expect(supportReplyText('queued', 'ru', false)).toBe(SUPPORT_COPY.ru.queuedNoUsername);
+  });
+
+  /* Защита от спама не должна сама стать спамом: «подожди» — один раз, дальше тишина. */
+  it('says wait once, then stays quiet', () => {
+    expect(supportReplyText('limited', 'ru', true)).toBe(SUPPORT_COPY.ru.limited);
+    expect(supportReplyText('muted', 'ru', true)).toBeNull();
+    expect(supportReplyText('duplicate', 'ru', true)).toBeNull();
+  });
+
+  it('owns up when the message did not go through', () => {
+    expect(supportReplyText('failed', 'en', true)).toBe(SUPPORT_COPY.en.failed);
+  });
+
+  it('keeps every reply short and plain', () => {
+    for (const locale of ['ru', 'en'] as const) {
+      for (const text of Object.values(SUPPORT_COPY[locale])) {
+        expect(text.length).toBeLessThan(300);
+        // Sent without parse_mode: nothing here may look like markup.
+        expect(text).not.toMatch(/[<>*_`]/);
+      }
+    }
+  });
+});
+
+describe('the swipe in the greeting', () => {
+  /* The player moves to the next exercise on a swipe up; the greeting used to say down. */
+  it('says up, in both languages', () => {
+    expect(DEFAULT_COPY.ru.greeting).toContain('свайп вверх');
+    expect(DEFAULT_COPY.ru.greeting).not.toContain('свайп вниз');
+    expect(DEFAULT_COPY.en.greeting).toContain('swipe up');
+    expect(DEFAULT_COPY.en.greeting).not.toContain('swipe down');
   });
 });

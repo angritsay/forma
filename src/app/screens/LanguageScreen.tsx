@@ -1,3 +1,4 @@
+import { HeroField, KeyTitle } from '@/components/ui/HeroField';
 import { Logo } from '@/components/ui/Logo';
 import { LANGUAGE_NAME, LOCALES, t } from '@/i18n/index';
 import { useLocale } from '@/app/store/locale';
@@ -41,35 +42,47 @@ export default function LanguageScreen() {
         <Logo className="text-[15px]" />
 
         {/*
-         * Both languages, stacked, the second one quieter — not because English matters less but
-         * because two lines of equal weight read as a heading and a subheading, and this is one
-         * sentence said twice. The order follows LOCALES, so the default language leads.
+         * The question and the answers are the screen's one blue field (style A, global.css
+         * header): this is the thing happening here, and the only thing. The plates on it are the
+         * field's secondary button — white with the field's blue for words (7.71) — two of them,
+         * equal, because neither language is *the* action.
+         *
+         * Both languages of the question, stacked, the second one quieter — not because English
+         * matters less but because two lines of equal weight read as a heading and a subheading,
+         * and this is one sentence said twice. The order follows LOCALES, so the default language
+         * leads, and it carries the key word.
          */}
-        <div className="flex flex-col items-center gap-1 text-center">
-          {LOCALES.map((loc, i) => (
-            <p
-              key={loc}
-              lang={loc}
-              className={i === 0 ? 'font-display text-lg' : 'text-[15px] text-paper/60'}
-            >
-              {t(loc, 'app.languageTitle')}
-            </p>
-          ))}
-        </div>
+        <HeroField padding="lg" className="flex w-full flex-col gap-7">
+          <div className="flex flex-col items-center gap-1 text-center">
+            {LOCALES.map((loc, i) => (
+              <p
+                key={loc}
+                lang={loc}
+                className={i === 0 ? 'font-display text-lg' : 'text-[15px] text-on-field/85'}
+              >
+                {i === 0 ? (
+                  <KeyTitle text={t(loc, 'app.languageTitle')} />
+                ) : (
+                  t(loc, 'app.languageTitle')
+                )}
+              </p>
+            ))}
+          </div>
 
-        <div className="flex w-full flex-col gap-3">
-          {LOCALES.map((loc) => (
-            <button
-              key={loc}
-              type="button"
-              lang={loc}
-              onClick={() => setLocale(loc)}
-              className="flex min-h-14 w-full items-center justify-center rounded-control border border-paper/25 bg-paper/10 px-4 text-[17px] font-semibold text-paper transition-[background-color,transform] duration-150 ease-(--ease-out) hover:bg-paper/18 active:scale-[0.99]"
-            >
-              {LANGUAGE_NAME[loc]}
-            </button>
-          ))}
-        </div>
+          <div className="flex w-full flex-col gap-3">
+            {LOCALES.map((loc) => (
+              <button
+                key={loc}
+                type="button"
+                lang={loc}
+                onClick={() => setLocale(loc)}
+                className="flex min-h-14 w-full items-center justify-center rounded-control bg-paper px-4 text-[17px] font-semibold text-field transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-90 active:scale-[0.99]"
+              >
+                {LANGUAGE_NAME[loc]}
+              </button>
+            ))}
+          </div>
+        </HeroField>
 
         {/*
          * Also in both, and on one line rather than two: this is a reassurance, not an

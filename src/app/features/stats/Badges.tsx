@@ -84,9 +84,9 @@ export function BadgeCircle({ item, n, delay = 0 }: BadgeCircleProps) {
       ) : (
         /*
          * The ring's track is the hairline the prototype outlines a locked badge with, and the
-         * white arc on it is the progress that used to be a bar under two lines of text.
+         * light-blue arc on it is the progress that used to be a bar under two lines of text.
          */
-        <RingProgress value={item.progress} size={SIZE} stroke={2} tone="primary">
+        <RingProgress value={item.progress} size={SIZE} stroke={2} tone="accent">
           <span className="numeral tabular text-[13px] text-muted-2">
             {String(n).padStart(2, '0')}
           </span>
@@ -154,7 +154,7 @@ function AchievementRow({ item, n }: { item: AchievementStatus; n: number }) {
           value={item.progress}
           size={ROW}
           stroke={2}
-          tone="primary"
+          tone="accent"
           className="shrink-0"
         >
           <span className="numeral tabular text-[12px] text-muted-2">

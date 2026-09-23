@@ -50,11 +50,12 @@ function NavWord({
          * from the owner's mockup. The capitals went with the capsule down there; a top row that
          * still shouted «КУРСЫ» while the phone said «Курсы» would be the same product speaking
          * two dialects at two widths. The row is not a segmented control — a capsule across the
-         * top of a 1280px page is a control the size of a banner — so the mark below stays.
+         * top of a 1280px page is a control the size of a banner — so it is not one; the seat you
+         * are in wears the tab bar's blue pill behind its word instead (see the mark below).
          */
-        'flex h-16 items-center text-[15px] font-medium',
+        'relative z-10 flex h-9 items-center rounded-pill px-4 text-[15px] font-medium',
         'transition-colors duration-150 ease-(--ease-out)',
-        active ? 'text-accent' : 'text-muted hover:text-text',
+        active ? 'text-on-field' : 'text-muted hover:text-text',
       )}
     >
       {t(item.labelKey)}
@@ -68,7 +69,7 @@ function NavWord({
  * It replaces the left rail (`SideNav`), and the choice was the owner's — a top row is what the
  * site's own header is (`layouts/Landing.astro`), so the app and the site read as one product
  * instead of two. It is typographic like the tab bar: no icons, no accent edge, the same four
- * sentence-case words, and a 2px mark that travels under the one you are in.
+ * sentence-case words, and the tab bar's blue pill that travels behind the one you are in.
  *
  * **It starts at `md`, not `lg`, and that is the point of the whole component.** The app used to be
  * a 480px phone column until 1024px, so every tablet — an iPad in portrait is 820 — showed a phone
@@ -148,7 +149,7 @@ export function TopNav() {
     >
       <div className="mx-auto flex w-full max-w-[1280px] items-center gap-8 px-6 md:px-10">
         <Logo className="shrink-0 text-lg" />
-        <div ref={row} className="relative flex min-w-0 flex-1 items-center gap-7">
+        <div ref={row} className="relative flex h-16 min-w-0 flex-1 items-center gap-1">
           {/* «Админка» is one of these now rather than a word appended after the loop: it is a seat
               «наравне с курсами, клубом и тренером», and the mark can only travel to a word the
               row has actually registered. */}
@@ -156,15 +157,18 @@ export function TopNav() {
             <NavWord key={item.to} item={item} active={i === active} innerRef={register(item.to)} />
           ))}
           {/*
-           * The same 2px rule the tab bar uses, on the bar's own bottom edge rather than beside
-           * it. It travels for the same reason it travels down there: one mark moving between the
-           * words says they are seats of one object, where a mark blinking on and off in three
-           * places would say three unrelated things happened.
+           * The tab bar's blue pill (`BottomNav`, style A of the third palette): the current seat
+           * wears the hero field's electric blue, its word white on it (7.71). It was a 2px
+           * light-blue rule on the bar's bottom edge — the second brandbook's mark — and the phone
+           * and the desktop said «you are here» in two different ways. It travels for the same
+           * reason it travels down there: one mark moving between the words says they are seats of
+           * one object, where a mark blinking on and off in three places would say three unrelated
+           * things happened. Centred on the 64px row: (64 − 36) / 2 = 14px from the top.
            */}
           <span
             aria-hidden="true"
             className={clsx(
-              'pointer-events-none absolute bottom-0 left-0 h-[2px] bg-accent',
+              'pointer-events-none absolute top-3.5 left-0 h-9 rounded-pill bg-field',
               'transition-[transform,width,opacity] duration-280 ease-(--ease-out)',
               'motion-reduce:transition-none',
               mark ? 'opacity-100' : 'opacity-0',

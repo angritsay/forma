@@ -27,15 +27,15 @@
 
 -- ---------------------------------------------------------------------------
 -- start — Форма с нуля: кроссфит дома без оборудования
--- 20 workouts, 28 days
+-- 20 workouts, 20 days
 -- ---------------------------------------------------------------------------
 insert into public.admin_courses (
   slug_id, status, sort_order, level, weeks, sessions_per_week, avg_session_min,
   equipment, tile, price_rub, price_usd, content
 ) values (
   'start', 'draft', 1, 1, 4, 5, 18,
-  '{"none","mat","chair"}'::text[], '#f2f52d', 2990, 29,
-  '{"slug":{"ru":"start-krossfit-doma-bez-oborudovaniya","en":"start-home-crossfit-basics"},"name":{"ru":"Форма с нуля: кроссфит дома без оборудования","en":"Forma. Start: home CrossFit basics"},"tagline":{"ru":"Четыре недели по программе тренера для новичков: коротко, по кругу, без оборудования.","en":"Four weeks of the coach’s own beginner programme: short, in rounds, no equipment."},"description":{"ru":"Программа для тех, кто начинает с нуля или возвращается после долгого перерыва. Двадцать коротких тренировок за двадцать дней — те самые, по которым тренер ведёт новичков: отжимания с колен, приседания, ситапы, выпады, зашагивания и червячки. Пять раз в неделю по 15–20 минут вместе с разминкой и заминкой, нагрузка подстраивается под тебя.","en":"A programme for complete beginners and anyone coming back after a long break. Twenty short sessions over twenty days — the same ones the coach runs his beginners through: knee push-ups, squats, sit-ups, lunges, step-ups and inchworms. Five times a week, 15–20 minutes each including warm-up and cool-down, and the load adapts to you."},"longDescription":[{"ru":"«Форма с нуля» — это программа для новичков, которую тренер ведёт в своей группе, перенесённая в приложение без изменений в сути: те же 20 тренировок, тот же порядок, те же слова. Цель первых недель — проработать большие группы мышц и включить тебя в процесс, а не выжать до предела. Каждую тренировку тренер показывает сам: на каждое движение есть его видео.","en":"Start is the beginner programme the coach runs with his own group, moved into the app without changing what matters: the same 20 sessions, the same order, the same words. The aim of the first weeks is to work the big muscle groups and get you into the process, not to wring you out. The coach demonstrates every session himself: every movement has his video."},{"ru":"Первые тренировки — работа по таймеру: каждую минуту новое движение, потом простые круги с минутой отдыха. Дальше форматы кроссфита по одному: три круга на время, AMRAP, EMOM, старт раз в 2–3 минуты, лесенки и длинный комплекс на время. Пять тренировок в неделю, два дня — отдых с целью 10000 шагов: мышцы восстанавливаются лучше, когда ты двигаешься, а не лежишь.","en":"The first sessions are work by the timer — a new movement every minute — then simple rounds with a minute of rest. The CrossFit formats arrive one at a time: three rounds for time, AMRAP, EMOM, starts every 2–3 minutes, ladders and a long chipper for time. Five sessions a week, two rest days with a 10,000-step goal — muscles recover better when you move than when you lie still."},{"ru":"Тренировки короткие — 15–20 минут вместе с разминкой и заминкой, самая длинная около 23. Сама работа — 5–15 минут, как у тренера; разминка — суставная гимнастика сверху вниз, без бега — и растяжка в конце в это время не входят. Из инвентаря нужны коврик и устойчивый стул: от него ты будешь отжиматься и на него зашагивать. Приложение считает, сколько повторений тебе делать сегодня, по результатам прошлой тренировки — было тяжело, легко или в самый раз. Тяжёлые упражнения заменяются простыми: ситапы — «мёртвым жуком», прыжки — шагом.","en":"Sessions are short — 15–20 minutes including warm-up and cool-down, the longest around 23. The work itself is 5–15 minutes, as the coach runs it; the warm-up — top-to-bottom joint mobility, no running — and the stretch at the end are not counted in that. You need a mat and a sturdy chair: you will do dips off it and step-ups onto it. The app works out how many reps you should do today from how your last session went — too hard, too easy or just right. Hard movements swap for simple ones: sit-ups for dead bugs, jumps for steps."},{"ru":"Первый день — это первая тренировка, а не тест на максимум: тренер считает, что первое занятие не должно тебя уничтожить. Стартовую нагрузку задаёт анкета при первом входе. Внутри программы у тренера свои точки отсчёта: лесенка червячков в предпоследней тренировке, к которой вернёшься через месяц-два, и финальные три круга, где сравнишь ощущения с самой первой тренировкой.","en":"Day one is the first workout, not a max-effort test: the coach believes the first session must not destroy you. Your starting load comes from the onboarding on first login. Inside the programme the coach has his own reference points: an inchworm ladder in the penultimate session that you come back to in a month or two, and a final three rounds where you compare how it feels with your very first workout."}],"forWhom":[{"ru":"Ты начинаешь с нуля или возвращаешься после долгого перерыва — год и больше.","en":"You are starting from zero or coming back after a long break — a year or more."},{"ru":"Хочешь тренироваться по программе живого тренера, а не по подборке упражнений из интернета.","en":"You want a real coach’s programme, not a list of exercises off the internet."},{"ru":"Нет инвентаря и места: только коврик, стул и два квадратных метра.","en":"You have no gear and little space: a mat, a chair and two square metres."},{"ru":"Есть 15–20 минут пять раз в неделю и желание не бросить через две.","en":"You can find 15–20 minutes five times a week and want to still be going in week three."}],"outcomes":[{"ru":"Уверенная техника базовых движений: присед, отжимание с колен, ситап, выпад, зашагивание.","en":"Confident technique in the base movements: squat, knee push-up, sit-up, lunge, step-up."},{"ru":"Все форматы кроссфита в лёгких дозах — и лесенка червячков, к которой ты вернёшься, чтобы увидеть прогресс.","en":"Every CrossFit format in gentle doses — and an inchworm ladder you will come back to and see the difference."},{"ru":"Привычка тренироваться пять раз в неделю и ходить в дни отдыха.","en":"A habit of training five times a week and walking on rest days."},{"ru":"Знакомство со всеми форматами кроссфита: круги, «на время», AMRAP, EMOM, лесенки, длинный комплекс.","en":"A working knowledge of every CrossFit format: rounds, for-time, AMRAP, EMOM, ladders, the chipper."},{"ru":"Твои личные цифры: точки отсчёта тренера — лесенка червячков и финальные три круга против самой первой тренировки.","en":"Your own numbers: the coach’s reference points — the inchworm ladder and the final three rounds against your very first workout."},{"ru":"Готовность перейти к курсу «Форма своим весом» или к тренировкам с гантелями.","en":"Readiness to move on to Forma Bodyweight or to dumbbell training."}],"faq":[{"q":{"ru":"Что нужно из оборудования?","en":"What equipment do I need?"},"a":{"ru":"Коврик и устойчивый стул без колёсиков — от него ты будешь делать обратные отжимания и на него зашагивать. Если стула нет, зашагивай на ступеньку, а обратные отжимания замени на отжимания от подоконника. Скакалка — по желанию: везде, где она есть, можно делать джампинг-джеки.","en":"A mat and a sturdy chair without wheels — you will do dips off it and step-ups onto it. No chair? Use a stair step for step-ups and a windowsill for the dips. A jump rope is optional: wherever it appears, jumping jacks do the same job."}},{"q":{"ru":"Я совсем не в форме. Точно получится?","en":"I am completely out of shape. Will I cope?"},"a":{"ru":"Курс написан именно для этого. Тренер советует новичкам начинать с минимальных цифр — и приложение делает это за тебя: после анкеты при первом входе оно уменьшает количество повторений, а после каждой тренировки спрашивает, как было, и корректирует следующую. Если тяжело — выбирай режим «Полегче»: это не поражение, а часть плана. Ситапы можно всегда заменить «мёртвым жуком».","en":"That is exactly who this course is for. The coach tells beginners to start at the minimum — and the app does it for you: after the onboarding on first login it lowers the rep counts, then asks how each session felt and adjusts the next one. If it is hard, pick \"Easier\" — that is not failure, it is part of the plan. Sit-ups can always become dead bugs."}},{"q":{"ru":"Сколько времени занимает тренировка?","en":"How long is a session?"},"a":{"ru":"В среднем около 18 минут вместе с разминкой и заминкой — по 5 минут на суставную гимнастику и растяжку и 5–15 минут работы. Самые короткие — первые тренировки по таймеру, около 14–15 минут; самые длинные — чиппер и два длинных круга, около 22–23 минут. Перед стартом приложение показывает расчётное время для каждого режима сложности.","en":"About 18 minutes on average including warm-up and cool-down — 5 minutes each of joint mobility and stretching plus 5–15 minutes of work. The shortest are the first timer sessions at around 14–15 minutes; the longest are the chipper and the two long rounds at around 22–23. Before you start, the app shows the estimated time for each difficulty option."}},{"q":{"ru":"Пропустил тренировку — что делать?","en":"I missed a session — what now?"},"a":{"ru":"Ничего страшного: сделай её на следующий день и сдвинь остальные. Не пытайся нагнать две за один день — у новичков это заканчивается крепатурой и пропуском ещё одной недели. Если совсем нет сил или времени, у тренера есть альтернатива на любой день: 10 000 шагов.","en":"No drama: do it the next day and shift the rest. Do not try to squeeze two into one day — for beginners that ends in soreness and another week off. And if there is no energy or time at all, the coach has an alternative for any day: 10,000 steps."}},{"q":{"ru":"У меня диастаз. Можно ли делать ситапы?","en":"I have diastasis. Can I do sit-ups?"},"a":{"ru":"Тренер не рекомендует ситапы, русский твист и тягу к носкам при диастазе. Везде, где они есть, делай «мёртвого жука» — в два раза больше повторений. В приложении это написано прямо в упражнении, а при ограничении «беременность» замена происходит автоматически.","en":"The coach advises against sit-ups, Russian twists and toe reaches with diastasis. Wherever they appear, do dead bugs — twice the reps. The app says so right on the exercise, and with the \"pregnancy\" limitation set the swap happens automatically."}},{"q":{"ru":"Мышцы болят после тренировки. Это нормально?","en":"My muscles are sore. Is that normal?"},"a":{"ru":"Лёгкая боль на второй день после новой нагрузки — норма, особенно в первые две недели. Помогают прогулка, вода и сон. Если боль острая, в суставе или не проходит три дня — отдохни и при необходимости покажись врачу. В отзыве о тренировке отметь «Боль»: приложение снизит нагрузку.","en":"Mild soreness a day or two after a new load is normal, especially in the first two weeks. Walking, water and sleep help. If the pain is sharp, in a joint, or lasts more than three days, rest and see a professional if needed. Mark \"Pain\" in the session feedback: the app will reduce the load."}}],"paymentUrl":{"ru":"https://payform.ru/jfcyh1M/"}}'::jsonb
+  '{"none","mat","chair"}'::text[], '#ff5a00', 2990, 29,
+  '{"slug":{"ru":"start-krossfit-doma-bez-oborudovaniya","en":"start-home-crossfit-basics"},"name":{"ru":"Форма с нуля: кроссфит дома без оборудования","en":"Forma. Start: home CrossFit basics"},"tagline":{"ru":"Двадцать тренировок по программе тренера для новичков: коротко, по кругу, без оборудования.","en":"Twenty workouts from the coach’s own beginner programme: short, in rounds, no equipment."},"description":{"ru":"Программа для тех, кто начинает с нуля или возвращается после долгого перерыва. Двадцать коротких тренировок — те самые, по которым тренер ведёт новичков: отжимания с колен, приседания, ситапы, выпады, зашагивания и червячки. По 15–20 минут вместе с разминкой и заминкой, в своём темпе, нагрузка подстраивается под тебя.","en":"A programme for complete beginners and anyone coming back after a long break. Twenty short workouts — the same ones the coach runs his beginners through: knee push-ups, squats, sit-ups, lunges, step-ups and inchworms. 15–20 minutes each including warm-up and cool-down, at your own pace, and the load adapts to you."},"longDescription":[{"ru":"«Форма с нуля» — это программа для новичков, которую тренер ведёт в своей группе, перенесённая в приложение без изменений в сути: те же 20 тренировок, тот же порядок, те же слова. Цель первых недель — проработать большие группы мышц и включить тебя в процесс, а не выжать до предела. Каждую тренировку тренер показывает сам: на каждое движение есть его видео.","en":"Start is the beginner programme the coach runs with his own group, moved into the app without changing what matters: the same 20 sessions, the same order, the same words. The aim of the first weeks is to work the big muscle groups and get you into the process, not to wring you out. The coach demonstrates every session himself: every movement has his video."},{"ru":"Первые тренировки — работа по таймеру: каждую минуту новое движение, потом простые круги с минутой отдыха. Дальше форматы кроссфита по одному: три круга на время, AMRAP, EMOM, старт раз в 2–3 минуты, лесенки и длинный комплекс на время. Двадцать тренировок, по пять в блоке. Тренер советует пять в неделю, но путь не привязан к календарю: между тренировками нужен отдых, а пропущенная неделя ничего не ломает — следующая ждёт на том же месте.","en":"The first sessions are work by the timer — a new movement every minute — then simple rounds with a minute of rest. The CrossFit formats arrive one at a time: three rounds for time, AMRAP, EMOM, starts every 2–3 minutes, ladders and a long chipper for time. Twenty workouts in four blocks of five. The coach suggests five a week, but the path is not tied to a calendar: you need rest between sessions, and a week off breaks nothing — the next one waits where you left it."},{"ru":"Тренировки короткие — 15–20 минут вместе с разминкой и заминкой, самая длинная около 23. Сама работа — 5–15 минут, как у тренера; разминка — суставная гимнастика сверху вниз, без бега — и растяжка в конце в это время не входят. Из инвентаря нужны коврик и устойчивый стул: от него ты будешь отжиматься и на него зашагивать. Приложение считает, сколько повторений тебе делать сегодня, по результатам прошлой тренировки — было тяжело, легко или в самый раз. Тяжёлые упражнения заменяются простыми: ситапы — «мёртвым жуком», прыжки — шагом.","en":"Sessions are short — 15–20 minutes including warm-up and cool-down, the longest around 23. The work itself is 5–15 minutes, as the coach runs it; the warm-up — top-to-bottom joint mobility, no running — and the stretch at the end are not counted in that. You need a mat and a sturdy chair: you will do dips off it and step-ups onto it. The app works out how many reps you should do today from how your last session went — too hard, too easy or just right. Hard movements swap for simple ones: sit-ups for dead bugs, jumps for steps."},{"ru":"Первый день — это первая тренировка, а не тест на максимум: тренер считает, что первое занятие не должно тебя уничтожить. Стартовую нагрузку задаёт анкета при первом входе. Внутри программы у тренера свои точки отсчёта: лесенка червячков в предпоследней тренировке, к которой вернёшься через месяц-два, и финальные три круга, где сравнишь ощущения с самой первой тренировкой.","en":"Day one is the first workout, not a max-effort test: the coach believes the first session must not destroy you. Your starting load comes from the onboarding on first login. Inside the programme the coach has his own reference points: an inchworm ladder in the penultimate session that you come back to in a month or two, and a final three rounds where you compare how it feels with your very first workout."}],"forWhom":[{"ru":"Ты начинаешь с нуля или возвращаешься после долгого перерыва — год и больше.","en":"You are starting from zero or coming back after a long break — a year or more."},{"ru":"Хочешь тренироваться по программе живого тренера, а не по подборке упражнений из интернета.","en":"You want a real coach’s programme, not a list of exercises off the internet."},{"ru":"Нет инвентаря и места: только коврик, стул и два квадратных метра.","en":"You have no gear and little space: a mat, a chair and two square metres."},{"ru":"Есть 15–20 минут пять раз в неделю и желание не бросить через две.","en":"You can find 15–20 minutes five times a week and want to still be going in week three."}],"outcomes":[{"ru":"Уверенная техника базовых движений: присед, отжимание с колен, ситап, выпад, зашагивание.","en":"Confident technique in the base movements: squat, knee push-up, sit-up, lunge, step-up."},{"ru":"Все форматы кроссфита в лёгких дозах — и лесенка червячков, к которой ты вернёшься, чтобы увидеть прогресс.","en":"Every CrossFit format in gentle doses — and an inchworm ladder you will come back to and see the difference."},{"ru":"Привычка возвращаться к тренировке — не раз в год по запалу, а через день-два, спокойно.","en":"The habit of coming back — not once a year on a burst of enthusiasm, but every other day, calmly."},{"ru":"Знакомство со всеми форматами кроссфита: круги, «на время», AMRAP, EMOM, лесенки, длинный комплекс.","en":"A working knowledge of every CrossFit format: rounds, for-time, AMRAP, EMOM, ladders, the chipper."},{"ru":"Твои личные цифры: точки отсчёта тренера — лесенка червячков и финальные три круга против самой первой тренировки.","en":"Your own numbers: the coach’s reference points — the inchworm ladder and the final three rounds against your very first workout."},{"ru":"Готовность перейти к курсу «Форма своим весом» или к тренировкам с гантелями.","en":"Readiness to move on to Forma Bodyweight or to dumbbell training."}],"faq":[{"q":{"ru":"Что нужно из оборудования?","en":"What equipment do I need?"},"a":{"ru":"Коврик и устойчивый стул без колёсиков — от него ты будешь делать обратные отжимания и на него зашагивать. Если стула нет, зашагивай на ступеньку, а обратные отжимания замени на отжимания от подоконника. Скакалка — по желанию: везде, где она есть, можно делать джампинг-джеки.","en":"A mat and a sturdy chair without wheels — you will do dips off it and step-ups onto it. No chair? Use a stair step for step-ups and a windowsill for the dips. A jump rope is optional: wherever it appears, jumping jacks do the same job."}},{"q":{"ru":"Я совсем не в форме. Точно получится?","en":"I am completely out of shape. Will I cope?"},"a":{"ru":"Курс написан именно для этого. Тренер советует новичкам начинать с минимальных цифр — и приложение делает это за тебя: после анкеты при первом входе оно уменьшает количество повторений, а после каждой тренировки спрашивает, как было, и корректирует следующую. Если тяжело — выбирай режим «Полегче»: это не поражение, а часть плана. Ситапы можно всегда заменить «мёртвым жуком».","en":"That is exactly who this course is for. The coach tells beginners to start at the minimum — and the app does it for you: after the onboarding on first login it lowers the rep counts, then asks how each session felt and adjusts the next one. If it is hard, pick \"Easier\" — that is not failure, it is part of the plan. Sit-ups can always become dead bugs."}},{"q":{"ru":"Сколько времени занимает тренировка?","en":"How long is a session?"},"a":{"ru":"В среднем около 18 минут вместе с разминкой и заминкой — по 5 минут на суставную гимнастику и растяжку и 5–15 минут работы. Самые короткие — первые тренировки по таймеру, около 14–15 минут; самые длинные — чиппер и два длинных круга, около 22–23 минут. Перед стартом приложение показывает расчётное время для каждого режима сложности.","en":"About 18 minutes on average including warm-up and cool-down — 5 minutes each of joint mobility and stretching plus 5–15 minutes of work. The shortest are the first timer sessions at around 14–15 minutes; the longest are the chipper and the two long rounds at around 22–23. Before you start, the app shows the estimated time for each difficulty option."}},{"q":{"ru":"Пропустил тренировку — что делать?","en":"I missed a session — what now?"},"a":{"ru":"Ничего страшного: сделай её на следующий день и сдвинь остальные. Не пытайся нагнать две за один день — у новичков это заканчивается крепатурой и пропуском ещё одной недели. Если совсем нет сил или времени, у тренера есть альтернатива на любой день: 10 000 шагов.","en":"No drama: do it the next day and shift the rest. Do not try to squeeze two into one day — for beginners that ends in soreness and another week off. And if there is no energy or time at all, the coach has an alternative for any day: 10,000 steps."}},{"q":{"ru":"У меня диастаз. Можно ли делать ситапы?","en":"I have diastasis. Can I do sit-ups?"},"a":{"ru":"Тренер не рекомендует ситапы, русский твист и тягу к носкам при диастазе. Везде, где они есть, делай «мёртвого жука» — в два раза больше повторений. В приложении это написано прямо в упражнении, а при ограничении «беременность» замена происходит автоматически.","en":"The coach advises against sit-ups, Russian twists and toe reaches with diastasis. Wherever they appear, do dead bugs — twice the reps. The app says so right on the exercise, and with the \"pregnancy\" limitation set the swap happens automatically."}},{"q":{"ru":"Мышцы болят после тренировки. Это нормально?","en":"My muscles are sore. Is that normal?"},"a":{"ru":"Лёгкая боль на второй день после новой нагрузки — норма, особенно в первые две недели. Помогают прогулка, вода и сон. Если боль острая, в суставе или не проходит три дня — отдохни и при необходимости покажись врачу. В отзыве о тренировке отметь «Боль»: приложение снизит нагрузку.","en":"Mild soreness a day or two after a new load is normal, especially in the first two weeks. Walking, water and sleep help. If the pain is sharp, in a joint, or lasts more than three days, rest and see a professional if needed. Mark \"Pain\" in the session feedback: the app will reduce the load."}}],"paymentUrl":{"ru":"https://payform.ru/jfcyh1M/"}}'::jsonb
 )
 on conflict (slug_id) do update set
   sort_order = excluded.sort_order,
@@ -252,12 +252,12 @@ on conflict (short_id) do update set
 
 -- days
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
   'w1_d1_s01', 1, 1, 'workout', (select id from public.custom_workouts where short_id = 'start_w_s01_emom'),
-  '{"title":{"ru":"Тренировка 1","en":"Workout 1"},"subtitle":{"ru":"По таймеру, 3 движения","en":"By the timer, 3 movements"},"body":[]}'::jsonb, false, null, 0
+  '{"title":{"ru":"Тренировка 1","en":"Workout 1"},"subtitle":{"ru":"По таймеру, 3 движения","en":"By the timer, 3 movements"},"body":[]}'::jsonb, false, 0
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -266,17 +266,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
   'w1_d2_s02', 1, 2, 'workout', (select id from public.custom_workouts where short_id = 'start_w_s02_emom'),
-  '{"title":{"ru":"Тренировка 2","en":"Workout 2"},"subtitle":{"ru":"По таймеру, 3 движения","en":"By the timer, 3 movements"},"body":[]}'::jsonb, false, null, 1
+  '{"title":{"ru":"Тренировка 2","en":"Workout 2"},"subtitle":{"ru":"По таймеру, 3 движения","en":"By the timer, 3 movements"},"body":[]}'::jsonb, false, 1
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -285,17 +284,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
   'w1_d3_s03', 1, 3, 'workout', (select id from public.custom_workouts where short_id = 'start_w_s03_pairs'),
-  '{"title":{"ru":"Тренировка 3","en":"Workout 3"},"subtitle":{"ru":"Три пары, старт раз в 2 мин","en":"Three pairs, start every 2 min"},"body":[]}'::jsonb, false, null, 2
+  '{"title":{"ru":"Тренировка 3","en":"Workout 3"},"subtitle":{"ru":"Три пары, старт раз в 2 мин","en":"Three pairs, start every 2 min"},"body":[]}'::jsonb, false, 2
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -304,17 +302,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
   'w1_d4_s04', 1, 4, 'workout', (select id from public.custom_workouts where short_id = 'start_w_s04_bridges'),
-  '{"title":{"ru":"Тренировка 4","en":"Workout 4"},"subtitle":{"ru":"Мосты 5 мин, цель 100","en":"Bridges 5 min, target 100"},"body":[]}'::jsonb, false, null, 3
+  '{"title":{"ru":"Тренировка 4","en":"Workout 4"},"subtitle":{"ru":"Мосты 5 мин, цель 100","en":"Bridges 5 min, target 100"},"body":[]}'::jsonb, false, 3
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -323,17 +320,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
   'w1_d5_s05', 1, 5, 'workout', (select id from public.custom_workouts where short_id = 'start_w_s05_three_rounds'),
-  '{"title":{"ru":"Тренировка 5","en":"Workout 5"},"subtitle":{"ru":"3 круга на время","en":"3 rounds for time"},"body":[]}'::jsonb, false, null, 4
+  '{"title":{"ru":"Тренировка 5","en":"Workout 5"},"subtitle":{"ru":"3 круга на время","en":"3 rounds for time"},"body":[]}'::jsonb, false, 4
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -342,55 +338,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
-  sort_order
-) values (
-  (select id from public.admin_courses where slug_id = 'start'),
-  'w1_d6_rest', 1, 6, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Пройдись: лёгкое движение снимает крепатуру","en":"Go for a walk: gentle movement eases soreness"},"body":[]}'::jsonb, false, 10000, 5
-)
-on conflict (course_id, node_id) do update set
-  week = excluded.week,
-  day = excluded.day,
-  kind = excluded.kind,
-  custom_workout_id = excluded.custom_workout_id,
-  content = excluded.content,
-  deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
-  sort_order = excluded.sort_order,
-  updated_at = now();
-
-insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
-  sort_order
-) values (
-  (select id from public.admin_courses where slug_id = 'start'),
-  'w1_d7_rest', 1, 7, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Выходные: два дня прогулок, сна и нормальной еды","en":"Weekend: two days of walks, sleep and proper food"},"body":[]}'::jsonb, false, 10000, 6
-)
-on conflict (course_id, node_id) do update set
-  week = excluded.week,
-  day = excluded.day,
-  kind = excluded.kind,
-  custom_workout_id = excluded.custom_workout_id,
-  content = excluded.content,
-  deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
-  sort_order = excluded.sort_order,
-  updated_at = now();
-
-insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
   'w2_d1_s06', 2, 1, 'workout', (select id from public.custom_workouts where short_id = 'start_w_s06_amrap8'),
-  '{"title":{"ru":"Тренировка 6","en":"Workout 6"},"subtitle":{"ru":"AMRAP 8 мин","en":"AMRAP 8 min"},"body":[]}'::jsonb, false, null, 7
+  '{"title":{"ru":"Тренировка 6","en":"Workout 6"},"subtitle":{"ru":"AMRAP 8 мин","en":"AMRAP 8 min"},"body":[]}'::jsonb, false, 5
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -399,17 +356,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
   'w2_d2_s07', 2, 2, 'workout', (select id from public.custom_workouts where short_id = 'start_w_s07_emom_ladder'),
-  '{"title":{"ru":"Тренировка 7","en":"Workout 7"},"subtitle":{"ru":"EMOM 8, +2 во 2-м круге","en":"EMOM 8, +2 in loop 2"},"body":[]}'::jsonb, false, null, 8
+  '{"title":{"ru":"Тренировка 7","en":"Workout 7"},"subtitle":{"ru":"EMOM 8, +2 во 2-м круге","en":"EMOM 8, +2 in loop 2"},"body":[]}'::jsonb, false, 6
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -418,17 +374,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
   'w2_d3_s08', 2, 3, 'workout', (select id from public.custom_workouts where short_id = 'start_w_s08_two_rounds'),
-  '{"title":{"ru":"Тренировка 8","en":"Workout 8"},"subtitle":{"ru":"2 круга, крышка 10 мин","en":"2 rounds, 10-min cap"},"body":[]}'::jsonb, false, null, 9
+  '{"title":{"ru":"Тренировка 8","en":"Workout 8"},"subtitle":{"ru":"2 круга, крышка 10 мин","en":"2 rounds, 10-min cap"},"body":[]}'::jsonb, false, 7
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -437,17 +392,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
   'w2_d4_s09', 2, 4, 'workout', (select id from public.custom_workouts where short_id = 'start_w_s09_for_time'),
-  '{"title":{"ru":"Тренировка 9","en":"Workout 9"},"subtitle":{"ru":"2 круга на время, крышка 8","en":"2 rounds for time, cap 8"},"body":[]}'::jsonb, false, null, 10
+  '{"title":{"ru":"Тренировка 9","en":"Workout 9"},"subtitle":{"ru":"2 круга на время, крышка 8","en":"2 rounds for time, cap 8"},"body":[]}'::jsonb, false, 8
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -456,17 +410,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
   'w2_d5_s10', 2, 5, 'workout', (select id from public.custom_workouts where short_id = 'start_w_s10_every_2min'),
-  '{"title":{"ru":"Тренировка 10","en":"Workout 10"},"subtitle":{"ru":"4 круга раз в 2 минуты","en":"4 rounds every 2 min"},"body":[]}'::jsonb, false, null, 11
+  '{"title":{"ru":"Тренировка 10","en":"Workout 10"},"subtitle":{"ru":"4 круга раз в 2 минуты","en":"4 rounds every 2 min"},"body":[]}'::jsonb, false, 9
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -475,55 +428,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
-  sort_order
-) values (
-  (select id from public.admin_courses where slug_id = 'start'),
-  'w2_d6_rest', 2, 6, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"10000 шагов и сон — так растёт сила","en":"10,000 steps and sleep — that is how strength grows"},"body":[]}'::jsonb, false, 10000, 12
-)
-on conflict (course_id, node_id) do update set
-  week = excluded.week,
-  day = excluded.day,
-  kind = excluded.kind,
-  custom_workout_id = excluded.custom_workout_id,
-  content = excluded.content,
-  deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
-  sort_order = excluded.sort_order,
-  updated_at = now();
-
-insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
-  sort_order
-) values (
-  (select id from public.admin_courses where slug_id = 'start'),
-  'w2_d7_rest', 2, 7, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Выходные: два дня прогулок, сна и нормальной еды","en":"Weekend: two days of walks, sleep and proper food"},"body":[]}'::jsonb, false, 10000, 13
-)
-on conflict (course_id, node_id) do update set
-  week = excluded.week,
-  day = excluded.day,
-  kind = excluded.kind,
-  custom_workout_id = excluded.custom_workout_id,
-  content = excluded.content,
-  deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
-  sort_order = excluded.sort_order,
-  updated_at = now();
-
-insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
   'w3_d1_s11', 3, 1, 'workout', (select id from public.custom_workouts where short_id = 'start_w_s11_emom8'),
-  '{"title":{"ru":"Тренировка 11","en":"Workout 11"},"subtitle":{"ru":"EMOM 8 мин","en":"EMOM 8 min"},"body":[]}'::jsonb, false, null, 14
+  '{"title":{"ru":"Тренировка 11","en":"Workout 11"},"subtitle":{"ru":"EMOM 8 мин","en":"EMOM 8 min"},"body":[]}'::jsonb, false, 10
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -532,17 +446,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
   'w3_d2_s12', 3, 2, 'workout', (select id from public.custom_workouts where short_id = 'start_w_s12_step_ladder'),
-  '{"title":{"ru":"Тренировка 12","en":"Workout 12"},"subtitle":{"ru":"Лесенка вниз","en":"Descending ladder"},"body":[]}'::jsonb, false, null, 15
+  '{"title":{"ru":"Тренировка 12","en":"Workout 12"},"subtitle":{"ru":"Лесенка вниз","en":"Descending ladder"},"body":[]}'::jsonb, false, 11
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -551,17 +464,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
   'w3_d3_s13', 3, 3, 'workout', (select id from public.custom_workouts where short_id = 'start_w_s13_ladder5'),
-  '{"title":{"ru":"Тренировка 13","en":"Workout 13"},"subtitle":{"ru":"5 движений, максимум кругов","en":"5 movements, max rounds"},"body":[]}'::jsonb, false, null, 16
+  '{"title":{"ru":"Тренировка 13","en":"Workout 13"},"subtitle":{"ru":"5 движений, максимум кругов","en":"5 movements, max rounds"},"body":[]}'::jsonb, false, 12
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -570,17 +482,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
   'w3_d4_s14', 3, 4, 'workout', (select id from public.custom_workouts where short_id = 'start_w_s14_double'),
-  '{"title":{"ru":"Тренировка 14","en":"Workout 14"},"subtitle":{"ru":"Два круга: 20 и 40","en":"Two rounds: 20 and 40"},"body":[]}'::jsonb, false, null, 17
+  '{"title":{"ru":"Тренировка 14","en":"Workout 14"},"subtitle":{"ru":"Два круга: 20 и 40","en":"Two rounds: 20 and 40"},"body":[]}'::jsonb, false, 13
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -589,17 +500,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
   'w3_d5_s15', 3, 5, 'workout', (select id from public.custom_workouts where short_id = 'start_w_s15_amrap8'),
-  '{"title":{"ru":"Тренировка 15","en":"Workout 15"},"subtitle":{"ru":"AMRAP 8 мин","en":"AMRAP 8 min"},"body":[]}'::jsonb, false, null, 18
+  '{"title":{"ru":"Тренировка 15","en":"Workout 15"},"subtitle":{"ru":"AMRAP 8 мин","en":"AMRAP 8 min"},"body":[]}'::jsonb, false, 14
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -608,55 +518,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
-  sort_order
-) values (
-  (select id from public.admin_courses where slug_id = 'start'),
-  'w3_d6_rest', 3, 6, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"10000 шагов и сон — так растёт сила","en":"10,000 steps and sleep — that is how strength grows"},"body":[]}'::jsonb, false, 10000, 19
-)
-on conflict (course_id, node_id) do update set
-  week = excluded.week,
-  day = excluded.day,
-  kind = excluded.kind,
-  custom_workout_id = excluded.custom_workout_id,
-  content = excluded.content,
-  deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
-  sort_order = excluded.sort_order,
-  updated_at = now();
-
-insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
-  sort_order
-) values (
-  (select id from public.admin_courses where slug_id = 'start'),
-  'w3_d7_rest', 3, 7, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Выходные: два дня прогулок, сна и нормальной еды","en":"Weekend: two days of walks, sleep and proper food"},"body":[]}'::jsonb, false, 10000, 20
-)
-on conflict (course_id, node_id) do update set
-  week = excluded.week,
-  day = excluded.day,
-  kind = excluded.kind,
-  custom_workout_id = excluded.custom_workout_id,
-  content = excluded.content,
-  deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
-  sort_order = excluded.sort_order,
-  updated_at = now();
-
-insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
   'w4_d1_s16', 4, 1, 'workout', (select id from public.custom_workouts where short_id = 'start_w_s16_chipper'),
-  '{"title":{"ru":"Тренировка 16","en":"Workout 16"},"subtitle":{"ru":"Чиппер, крышка 13 мин","en":"Chipper, 13-min cap"},"body":[]}'::jsonb, false, null, 21
+  '{"title":{"ru":"Тренировка 16","en":"Workout 16"},"subtitle":{"ru":"Чиппер, крышка 13 мин","en":"Chipper, 13-min cap"},"body":[]}'::jsonb, false, 15
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -665,17 +536,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
   'w4_d2_s17', 4, 2, 'workout', (select id from public.custom_workouts where short_id = 'start_w_s17_buyin'),
-  '{"title":{"ru":"Тренировка 17","en":"Workout 17"},"subtitle":{"ru":"Входной билет + червячки","en":"Buy-in + inchworms"},"body":[]}'::jsonb, false, null, 22
+  '{"title":{"ru":"Тренировка 17","en":"Workout 17"},"subtitle":{"ru":"Входной билет + червячки","en":"Buy-in + inchworms"},"body":[]}'::jsonb, false, 16
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -684,17 +554,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
   'w4_d3_s18', 4, 3, 'workout', (select id from public.custom_workouts where short_id = 'start_w_s18_intervals'),
-  '{"title":{"ru":"Тренировка 18","en":"Workout 18"},"subtitle":{"ru":"Два интервала по 2 мин","en":"Two 2-min intervals"},"body":[]}'::jsonb, false, null, 23
+  '{"title":{"ru":"Тренировка 18","en":"Workout 18"},"subtitle":{"ru":"Два интервала по 2 мин","en":"Two 2-min intervals"},"body":[]}'::jsonb, false, 17
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -703,17 +572,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
-  'w4_d4_rest', 4, 4, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Восстановление — часть тренировки, а не пауза в ней","en":"Recovery is part of the training, not a break from it"},"body":[]}'::jsonb, false, 10000, 24
+  'w4_d4_s19', 4, 4, 'benchmark', (select id from public.custom_workouts where short_id = 'start_w_s19_inchworm_ladder'),
+  '{"title":{"ru":"Тренировка 19","en":"Workout 19"},"subtitle":{"ru":"Лесенка червячков — точка отсчёта","en":"Inchworm ladder — a benchmark"},"body":[]}'::jsonb, false, 18
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -722,17 +590,16 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();
 
 insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
+  course_id, node_id, week, day, kind, custom_workout_id, content, deload,
   sort_order
 ) values (
   (select id from public.admin_courses where slug_id = 'start'),
-  'w4_d5_s19', 4, 5, 'benchmark', (select id from public.custom_workouts where short_id = 'start_w_s19_inchworm_ladder'),
-  '{"title":{"ru":"Тренировка 19","en":"Workout 19"},"subtitle":{"ru":"Лесенка червячков — точка отсчёта","en":"Inchworm ladder — a benchmark"},"body":[]}'::jsonb, false, null, 25
+  'w4_d5_s20', 4, 5, 'benchmark', (select id from public.custom_workouts where short_id = 'start_w_s20_finisher'),
+  '{"title":{"ru":"Тренировка 20","en":"Workout 20"},"subtitle":{"ru":"3 круга — сравни с первой","en":"3 rounds — compare to workout 1"},"body":[]}'::jsonb, false, 19
 )
 on conflict (course_id, node_id) do update set
   week = excluded.week,
@@ -741,44 +608,5 @@ on conflict (course_id, node_id) do update set
   custom_workout_id = excluded.custom_workout_id,
   content = excluded.content,
   deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
-  sort_order = excluded.sort_order,
-  updated_at = now();
-
-insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
-  sort_order
-) values (
-  (select id from public.admin_courses where slug_id = 'start'),
-  'w4_d6_rest', 4, 6, 'rest', null,
-  '{"title":{"ru":"Отдых и прогулка","en":"Rest & walk"},"subtitle":{"ru":"Завтра повторный тест. Пройдись, выспись, не переедай","en":"Retest tomorrow. Walk, sleep well, do not overeat"},"body":[]}'::jsonb, false, 10000, 26
-)
-on conflict (course_id, node_id) do update set
-  week = excluded.week,
-  day = excluded.day,
-  kind = excluded.kind,
-  custom_workout_id = excluded.custom_workout_id,
-  content = excluded.content,
-  deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
-  sort_order = excluded.sort_order,
-  updated_at = now();
-
-insert into public.admin_course_days (
-  course_id, node_id, week, day, kind, custom_workout_id, content, deload, steps_goal,
-  sort_order
-) values (
-  (select id from public.admin_courses where slug_id = 'start'),
-  'w4_d7_s20', 4, 7, 'benchmark', (select id from public.custom_workouts where short_id = 'start_w_s20_finisher'),
-  '{"title":{"ru":"Тренировка 20","en":"Workout 20"},"subtitle":{"ru":"3 круга — сравни с первой","en":"3 rounds — compare to workout 1"},"body":[]}'::jsonb, false, null, 27
-)
-on conflict (course_id, node_id) do update set
-  week = excluded.week,
-  day = excluded.day,
-  kind = excluded.kind,
-  custom_workout_id = excluded.custom_workout_id,
-  content = excluded.content,
-  deload = excluded.deload,
-  steps_goal = excluded.steps_goal,
   sort_order = excluded.sort_order,
   updated_at = now();

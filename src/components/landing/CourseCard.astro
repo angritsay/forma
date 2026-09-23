@@ -44,9 +44,17 @@ interface Props {
   headingLevel?: 'h2' | 'h3';
   /** Cover beside the words from `md`, for a grid with one course in it. */
   wide?: boolean;
+  /**
+   * The card's button in neon, as the page's one main action. Off by default: the cards stand in
+   * a grid under a hero whose own CTA is the neon (`Hero`, `Cta`), and the third palette allows one
+   * neon per viewport (global.css header) — a row of neon «Смотреть курс» makes none of them the
+   * main one. So the card's button is the white `plain` fill, the site's secondary button, unless a
+   * page with nothing neon above it asks for the neon.
+   */
+  action?: boolean;
 }
 
-const { course, locale, headingLevel: Heading = 'h3', wide = false } = Astro.props;
+const { course, locale, headingLevel: Heading = 'h3', wide = false, action = false } = Astro.props;
 const url = courseHref(locale, course);
 const signature = signatureExercise(course);
 /*
@@ -147,7 +155,10 @@ const facts = [
       <span class="numeral tabular shrink-0 text-3xl whitespace-nowrap">{price}</span>
       <a
         href={url}
-        class="control-label inline-flex h-12 shrink-0 items-center rounded-control bg-action px-6 text-[15px] text-on-action transition-opacity duration-150 group-hover:opacity-85"
+        class:list={[
+          'control-label inline-flex h-12 shrink-0 items-center rounded-control px-6 text-[15px] transition-opacity duration-150 group-hover:opacity-85',
+          action ? 'bg-action text-on-action' : 'bg-primary text-on-primary',
+        ]}
       >
         {t(locale, 'landing.cardView')}
       </a>

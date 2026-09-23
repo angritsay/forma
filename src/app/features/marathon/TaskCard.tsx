@@ -300,6 +300,7 @@ function ProofControl({
         {done ? null : (
           <div className="flex items-center gap-3">
             <Button
+              variant="action"
               size="md"
               loading={busy}
               onClick={() => void onSend({})}
@@ -347,6 +348,7 @@ function ProofControl({
           />
           <Button
             type="submit"
+            variant="action"
             size="md"
             loading={busy}
             disabled={value.trim() === ''}
@@ -382,6 +384,7 @@ function ProofControl({
           />
           <Button
             type="submit"
+            variant="action"
             size="md"
             loading={busy}
             disabled={!text.trim()}
@@ -476,7 +479,7 @@ function AttachProof({
       {primary ? (
         <Button
           size="md"
-          variant={hasMedia && !redo ? 'secondary' : 'primary'}
+          variant={hasMedia && !redo ? 'secondary' : 'action'}
           loading={busy}
           onClick={() => ref.current?.click()}
         >

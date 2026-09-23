@@ -25,10 +25,6 @@ body{font-family:var(--font-body);color:var(--text-1);}
 .t-kicker{font-family:var(--font-body);font-size:var(--type-micro);line-height:var(--lh-micro);font-weight:600;letter-spacing:var(--kicker-tracking)}
 /* Главный приём дисплея: контраст весов внутри строки — толстое 800 + тонкое 200 */
 .t-thin{font-weight:200}
-/* Эхо/контур — легаси-акценты, в новых макетах предпочитать вес 200 */
-.t-echo{position:relative}
-.t-echo::before{content:attr(data-t);position:absolute;inset:0;filter:blur(6px);opacity:.45}
-/* Контурная строка */
-.t-stroke{color:transparent;-webkit-text-stroke:1px currentColor}
+/* Эхо (.t-echo) и контурная строка (.t-stroke) удалены: текста обводкой нет нигде (CHANGELOG §14, п. 6). */
 /* Акцент в заголовке — белый на тёмном (цвет даёт только курс) */
 .t-highlight{color:var(--text-1)}
