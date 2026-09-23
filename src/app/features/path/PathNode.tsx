@@ -116,16 +116,15 @@ export function PathNode({ node, status, n, column, stars, onPress, buttonRef }:
         <span className="line-clamp-2 block text-[15px] leading-snug font-semibold">{title}</span>
         {/*
          * One short line in sentence case, not a kicker: «Мосты 5 мин, цель 100» is read, and
-         * Cyrillic capitals at 11px are not. On today the line opens with «Сегодня» in the
-         * programme colour — the one word of colour in the column, on the one day it is about.
+         * Cyrillic capitals at 11px are not. On today the line opens with «Сегодня» in the neon
+         * — the colour map's «now», the same neon as today's circle (15.9 on charcoal) — the one
+         * word of colour in the column, on the one day it is about.
          */}
         {line || status === 'current' ? (
           <span className="mt-1 line-clamp-2 block text-[13px] leading-snug text-muted-2">
             {status === 'current' ? (
               <>
-                <span className="font-semibold text-course-accent">
-                  {t('app.homeTodayEyebrow')}
-                </span>
+                <span className="font-semibold text-action">{t('app.homeTodayEyebrow')}</span>
                 {line ? ' · ' : null}
               </>
             ) : null}

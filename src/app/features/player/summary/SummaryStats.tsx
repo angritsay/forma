@@ -32,11 +32,11 @@ export function BlockList({ blocks }: { blocks: readonly BlockCompletion[] }) {
                 </span>
               )}
             </div>
-            {/* The fill is the programme colour; a block well short of its plan warns instead. */}
+            {/* The fill is the light blue of progress; a block well short of its plan warns instead. */}
             <ProgressBar
               value={b.completion}
               size="sm"
-              tone={b.completion >= 0.8 ? 'course' : 'warning'}
+              tone={b.completion >= 0.8 ? 'accent' : 'warning'}
               label={b.title}
             />
           </li>

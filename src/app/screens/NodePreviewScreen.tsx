@@ -14,8 +14,10 @@
  * the owner photographed when she said «используется старый стиль»: a flat field of the programme
  * colour with a black panel of type under it. Her two mockups rule that colour lands on type and
  * never on a fill, and that a photograph carries what is written on it with no panel beneath — so
- * the field became the still, the title took the programme colour, and the kicker and the three
- * facts came up onto the picture with it. See the hero block below for how the contrast on it is
+ * the field became the still, and the title, the kicker and the three facts came up onto the
+ * picture. The title is white with a light-blue key word (the semantic colour map, global.css
+ * header): the programme's orange on a photograph measured low and said nothing — orange means
+ * effort in this product, and the course colour is identity for its tile and tag only. See the hero block below for how the contrast on it is
  * held, and `features/courses/CourseCard.tsx` for where this construction was first built.
  *
  * Pressing Начать does not lead to another preview. It asks the one question that changes what
@@ -55,7 +57,7 @@ import {
   sessionPills,
   type SessionEstimate,
 } from '@/app/features/courses/sessionEstimate';
-import { DisplayTitle } from '@/app/features/home/DisplayTitle';
+import { KeyTitle } from '@/components/ui/HeroField';
 import { DifficultySheet } from '@/app/features/path/DifficultySheet';
 import { nodeStatus } from '@/app/features/path/nodeState';
 import { DIFFICULTY_CHOICES, workoutSignatureExercise } from '@/app/features/path/plan';
@@ -349,13 +351,13 @@ export default function NodePreviewScreen() {
            * built; this is the same construction turned the other way up, because a card's figure
            * sits at its top and a screen's title sits at the foot of its picture.
            *
-           * So: the still fills the block, the title takes `--course-accent` — the programme
-           * colour where the course has one, plain white where it does not — and the kicker and
-           * the three facts sit on the picture with it.
+           * So: the still fills the block, the title is white at display weight with its last word
+           * the light-blue key word (`KeyTitle`) — never the programme colour, which is identity
+           * for the course's tile and tag and not a type colour on a photograph — and the kicker
+           * and the three facts sit on the picture with it.
            *
            * Where there is no frame for the movement yet the ground is `--surface`, not the
-           * programme colour. Cyan type on a cyan field is nothing at all, and the accent reads on
-           * a dark ground exactly as the card's does.
+           * programme colour, and the same white and light blue read on it.
            */}
           <div
             className={clsx(
@@ -389,11 +391,11 @@ export default function NodePreviewScreen() {
              * its own ground and putting the fade directly above it makes the worst pixel the same
              * pixel whatever the name does.
              *
-             * The numbers are measured on the composited pixels, not chosen: the type here is a
-             * programme colour, and the lightest of them, neon `#f4ff3f` at 0.911 relative luminance,
-             * needs the ground at sRGB 113 or below for 4.5:1. 0.82 over a frame that is pure
-             * white composites to sRGB 54, and the title measures 11.1:1 there; every
-             * line below it sits on more. A fifth of the picture still comes through the type's
+             * The numbers are measured on the composited pixels, not chosen: the dimmest type here
+             * is the light-blue key word `#afe9fd`, which needs the ground at sRGB 99 or below for
+             * 4.5:1. 0.82 over a frame that is pure white composites to sRGB 54: the key word
+             * measures 9.1:1 there and the white 12.1:1; every line below it sits on more
+             * (`contrast-usage.test.ts` holds both). A fifth of the picture still comes through the type's
              * ground, so it is a scrim and not the panel the mockups took away.
              *
              * Re-measure rather than eyeball if the alphas, the title's size or the stills change.
@@ -425,11 +427,9 @@ export default function NodePreviewScreen() {
                   : undefined
               }
             >
-              <DisplayTitle
-                as="h2"
-                text={l(workout.name)}
-                className="text-6xl text-course-accent"
-              />
+              <h2 className="display text-6xl text-balance text-paper">
+                <KeyTitle text={l(workout.name)} />
+              </h2>
               {/*
                 Course and block, and the day is gone from it. It read «Форма с нуля · Неделя 1 ·
                 День 1» over a title that already says «Тренировка 1» — three numbers for one

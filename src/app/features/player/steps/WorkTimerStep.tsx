@@ -99,7 +99,7 @@ export function WorkTimerStep({
         <div className="flex flex-col items-center gap-1.5">
           <BigClock
             seconds={clock.remainingSec}
-            tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'accent' : 'default'}
+            tone={clock.remainingSec <= 3 && clock.remainingSec > 0 ? 'urgent' : 'default'}
             {...(isEmom ? { caption: t('training.emomMinuteHint', { n: step.target }) } : {})}
           />
           {/*

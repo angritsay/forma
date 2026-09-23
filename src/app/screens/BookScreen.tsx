@@ -220,8 +220,9 @@ export default function BookScreen() {
     /*
      * `--course-tile` around the whole tab, the way the club's screen carries its orange: the tab
      * has no programme to take a colour from, so `COACH_TILE` is where its blue lives. Set once
-     * here, so everything below reads `text-course` / `bg-course` / `border-course` and the hex is
-     * never typed on a screen. The header comment says which of those things are allowed to.
+     * here, so the offer card's tint reads `--course-tile` and the hex is never typed on a screen.
+     * Type says what it means instead (the semantic colour map, global.css header): the price is
+     * the coach's `text-ciel`, the marks and numerals the light-blue `text-accent`.
      */
     <div style={courseTileVars(COACH_TILE)}>
       <Screen contentClassName="pt-4">
@@ -378,7 +379,7 @@ export default function BookScreen() {
                   {/* The first of the blue things. These three lines are the argument for the
                       price below them, so they are where the offer starts and where its colour
                       starts; the credentials above stay grey because they are not for sale. */}
-                  <span className="numeral tabular w-6 shrink-0 pt-0.5 text-[15px] text-course-accent">
+                  <span className="numeral tabular w-6 shrink-0 pt-0.5 text-[15px] text-accent">
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <div className="flex min-w-0 flex-col gap-1.5">
@@ -730,10 +731,8 @@ function Option({
           says what kind of screen it is. **Large type only**: ciel on charcoal is 4.37, inside
           the 3:1 that large type needs and short of the 4.5 body text needs; tile.test.ts pins
           that window, and the figure never drops below 34px. Anything small in the tab's colour
-          takes `text-course-accent` (the light blue) instead. */}
-      <p className="display tabular text-[clamp(34px,11vw,48px)] leading-none text-course">
-        {price}
-      </p>
+          takes `text-accent` (the light blue) instead. */}
+      <p className="display tabular text-[clamp(34px,11vw,48px)] leading-none text-ciel">{price}</p>
 
       <div className="flex flex-col gap-3">
         <span className="eyebrow">{t('app.bookIncludes')}</span>
@@ -746,7 +745,7 @@ function Option({
               {/* The tick takes the colour and the line stays white: a blue list would be a
                   block of coloured body copy, which is a different thing from a list with its
                   marks picked out. */}
-              <Glyph size={14} className="mt-1 text-course-accent">
+              <Glyph size={14} className="mt-1 text-accent">
                 ✓
               </Glyph>
               <span>{l(item, locale)}</span>
