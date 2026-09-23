@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { keyFor, parseProductMap } from './products';
+import { readFileSync } from 'node:fs';
+import { actionFor, currencyCode, intentFor, keyFor, parseProductMap } from './products';
 
 /** Секрет в том виде, в каком его заполняет владелец: курс — товаром, подписка — тарифом. */
 const RAW = JSON.stringify({
@@ -82,5 +83,94 @@ describe('keyFor', () => {
     // И наоборот: курс и тариф этим префиксом не помечены, иначе ветка съела бы их.
     expect(keyFor(map, 'prod_course', 29).startsWith('session:')).toBe(false);
     expect(keyFor(map, 'prod_tier', 19).startsWith('session:')).toBe(false);
+  });
+});
+
+describe('keyFor with a currency', () => {
+  const map = parseProductMap(
+    JSON.stringify({
+      tier: { '19 USD': 'plan:monthly', '17 EUR': 'plan:monthly', '79': 'plan:annual' },
+    }),
+  );
+
+  it('keeps prices written with a currency', () => {
+    expect(Object.keys(map['tier'] as Record<string, string>)).toHaveLength(3);
+  });
+
+  it('matches a price with a currency only in that currency', () => {
+    expect(keyFor(map, 'tier', 19, 'USD')).toBe('plan:monthly');
+    expect(keyFor(map, 'tier', 17, 'EUR')).toBe('plan:monthly');
+    expect(keyFor(map, 'tier', 19, 'EUR')).toBe('');
+    expect(keyFor(map, 'tier', 19, null)).toBe('');
+  });
+
+  it('matches a price without a currency in any, as the secret was filled before', () => {
+    expect(keyFor(map, 'tier', 79, 'USD')).toBe('plan:annual');
+    expect(keyFor(map, 'tier', 79, null)).toBe('plan:annual');
+  });
+});
+
+describe('currencyCode', () => {
+  it('upper-cases a three-letter code and drops anything else', () => {
+    expect(currencyCode('usd')).toBe('USD');
+    expect(currencyCode(' EUR ')).toBe('EUR');
+    expect(currencyCode('dollars')).toBeNull();
+    expect(currencyCode(undefined)).toBeNull();
+    expect(currencyCode(19)).toBeNull();
+  });
+});
+
+describe('actionFor', () => {
+  it('reads the three kinds it knows, word for word', () => {
+    expect(actionFor('plan:monthly')).toEqual({ kind: 'plan', plan: 'monthly' });
+    expect(actionFor('plan:annual')).toEqual({ kind: 'plan', plan: 'annual' });
+    expect(actionFor('session:hour')).toEqual({ kind: 'session', key: 'session:hour' });
+    expect(actionFor('course:start')).toEqual({ kind: 'course', courseId: 'start' });
+  });
+
+  /*
+   * Раньше всё, что не тариф и не занятие, открывало курс по ожидающему заказу. Незнакомый товар,
+   * опечатка в секрете, пустой ключ — теперь `unknown`: платёж записывается непривязанным, и ни
+   * один курс не открывается наугад.
+   */
+  it('never guesses a course', () => {
+    for (const key of ['', 'start', 'plan:weekly', 'course:', 'course:Start!', 'kurs:start']) {
+      expect(actionFor(key), key).toEqual({ kind: 'unknown' });
+    }
+    const map = parseProductMap(RAW);
+    expect(actionFor(keyFor(map, 'somebody_elses_product', 29, 'USD'))).toEqual({
+      kind: 'unknown',
+    });
+    expect(actionFor(keyFor(map, 'prod_tier', 49, 'USD'))).toEqual({ kind: 'unknown' });
+  });
+
+  it('records a session as a session and anything unknown as a course', () => {
+    expect(intentFor(actionFor('session:half'))).toBe('session');
+    expect(intentFor(actionFor('plan:annual'))).toBe('annual');
+    expect(intentFor(actionFor('course:start'))).toBe('course');
+    expect(intentFor(actionFor('???'))).toBe('course');
+  });
+});
+
+/*
+ * Обработчик читает `Deno.env` и живёт в `Deno.serve`, так что здесь он не запускается. Две
+ * ветки, ради которых 0043 и писалась, проверяются по тексту: занятие записывается привязанным,
+ * а незнакомый товар возвращается раньше, чем код доходит до `apply_course_payment`.
+ */
+describe('index.ts', () => {
+  const src = readFileSync(new URL('./index.ts', import.meta.url), 'utf8');
+  const branch = (marker: string) => src.slice(src.indexOf(marker), src.indexOf(marker) + 600);
+
+  it('records a paid session as applied', () => {
+    expect(branch("if (action.kind === 'session')")).toContain('await record(true)');
+  });
+
+  it('stops an unknown product before any course is applied', () => {
+    const unknown = src.indexOf("if (action.kind === 'unknown') {\n    await record(false)");
+    expect(unknown).toBeGreaterThan(0);
+    expect(unknown).toBeLessThan(src.indexOf("rpc('apply_course_payment'"));
+    expect(branch("if (action.kind === 'unknown') {\n    await record(false)")).toContain(
+      'return reply(200',
+    );
   });
 });

@@ -27,4 +27,14 @@ select
          where p.email = o.email and p.telegram_id is not null
        ))                                                                 as waiting_for_telegram,
   (select to_char(min(created_at) at time zone 'UTC', 'YYYY-MM-DD HH24:MI')
-     from public.telegram_outbox where status = 'pending')                as oldest_pending_utc;
+     from public.telegram_outbox where status = 'pending')                as oldest_pending_utc,
+  -- Канал владельца (0040): вторая очередь, тот же рассыльщик. `admin_retrying` — строки, у
+  -- которых уже была неудачная попытка: они ждут следующего запуска, а `failed` станут только
+  -- после двенадцати подряд (0043).
+  (select count(*) from public.admin_outbox where status = 'pending')     as admin_pending,
+  (select count(*) from public.admin_outbox
+     where status = 'pending' and attempts > 0)                           as admin_retrying,
+  (select count(*) from public.admin_outbox where status = 'sent')        as admin_sent,
+  (select count(*) from public.admin_outbox where status = 'failed')      as admin_failed,
+  (select to_char(min(created_at) at time zone 'UTC', 'YYYY-MM-DD HH24:MI')
+     from public.admin_outbox where status = 'pending')                   as admin_oldest_pending_utc;

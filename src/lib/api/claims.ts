@@ -58,6 +58,13 @@ export async function claimPayment(orderRef: string): Promise<ClaimResult> {
   return guard(async () => {
     await requireUser();
     const answer = unwrap<string>(await supabase().rpc('claim_payment', { p_provider_ref: ref }));
+    /*
+     * `no_order` (0043): платёж за курс нашёлся, но ожидающего заказа нет. Платёж при этом не
+     * забран — его можно забрать снова после оформления заказа, — а владелец уже получил
+     * сообщение в канал. Экрану это то же, что `linked`: «платёж нашёлся, открывать пока нечего,
+     * напиши нам» — и это правда слово в слово.
+     */
+    if (answer === 'no_order') return 'linked';
     return isClaimResult(answer) ? answer : 'not_found';
   });
 }

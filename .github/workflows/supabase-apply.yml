@@ -62,6 +62,13 @@ on:
 # The token is a project-wide credential. One run at a time, and never from a fork.
 concurrency: supabase-apply
 
+# Версия Supabase CLI — одна на все задачи и закреплённая. `releases/latest` означал, что выкладка
+# в среду и выкладка в четверг шли разными программами, и новая версия CLI, поменявшая флаг или
+# формат `secrets list`, ломала бы деплой без единой правки в репозитории. Обновлять — здесь,
+# одной строкой, и смотреть на первый запуск после.
+env:
+  SUPABASE_CLI_VERSION: '2.117.0'
+
 jobs:
   apply:
     runs-on: ubuntu-latest
@@ -315,7 +322,7 @@ jobs:
           MINI_APP_URL: ${{ vars.MINI_APP_URL }}
         run: |
           set -euo pipefail
-          curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz \
+          curl -fsSL "https://github.com/supabase/cli/releases/download/v${SUPABASE_CLI_VERSION}/supabase_linux_amd64.tar.gz" \
             | tar -xz -C /tmp
           /tmp/supabase functions deploy telegram-bot --project-ref "$PROJECT_REF" --no-verify-jwt
 
@@ -386,7 +393,7 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           set -euo pipefail
-          curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz \
+          curl -fsSL "https://github.com/supabase/cli/releases/download/v${SUPABASE_CLI_VERSION}/supabase_linux_amd64.tar.gz" \
             | tar -xz -C /tmp
 
           # Имена, и только имена: вторая колонка — дайджест значения, и ему в
@@ -455,7 +462,7 @@ jobs:
             exit 1
           fi
 
-          curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz \
+          curl -fsSL "https://github.com/supabase/cli/releases/download/v${SUPABASE_CLI_VERSION}/supabase_linux_amd64.tar.gz" \
             | tar -xz -C /tmp
 
           if ! /tmp/supabase secrets list --project-ref "$PROJECT_REF" >/tmp/raw.txt 2>/dev/null; then
@@ -532,7 +539,7 @@ jobs:
           # Не `set -e`: каждая ошибка разбирается явно и объясняется словами,
           # а `grep`, ничего не нашедший, — это ответ «такого секрета нет».
           set -uo pipefail
-          curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz \
+          curl -fsSL "https://github.com/supabase/cli/releases/download/v${SUPABASE_CLI_VERSION}/supabase_linux_amd64.tar.gz" \
             | tar -xz -C /tmp
 
           # --no-verify-jwt обязателен: Prodamus — сторонний сервис, он не
@@ -633,8 +640,9 @@ jobs:
           LAVA_PRODUCTS: ${{ secrets.LAVA_PRODUCTS }}
           WEBHOOK_TOKEN: ${{ secrets.WEBHOOK_TOKEN }}
         run: |
+          # Не `set -e`: каждая ошибка разбирается явно, как в deploy-payments.
           set -uo pipefail
-          curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz \
+          curl -fsSL "https://github.com/supabase/cli/releases/download/v${SUPABASE_CLI_VERSION}/supabase_linux_amd64.tar.gz" \
             | tar -xz -C /tmp
 
           if ! /tmp/supabase functions deploy lava-webhook --project-ref "$PROJECT_REF" --no-verify-jwt; then
@@ -643,6 +651,8 @@ jobs:
           fi
           echo "::notice::Функция lava-webhook выложена."
 
+          # Секреты из GitHub, если они там есть. Не записались — это ошибка, а не строчка в логе:
+          # иначе задача зеленела бы, а функция жила бы со старыми значениями или без них.
           args=()
           if [ -n "${LAVA_WEBHOOK_SECRET:-}" ]; then args+=(LAVA_WEBHOOK_SECRET="$LAVA_WEBHOOK_SECRET"); fi
           if [ -n "${LAVA_PRODUCTS:-}" ]; then args+=(LAVA_PRODUCTS="$LAVA_PRODUCTS"); fi
@@ -651,20 +661,48 @@ jobs:
             if /tmp/supabase secrets set --project-ref "$PROJECT_REF" "${args[@]}" >/dev/null 2>&1; then
               echo "Секреты из GitHub перенесены в Supabase (${#args[@]} шт., значения не печатаются)."
             else
-              echo "::error::Не удалось записать секреты в Supabase."
+              echo "::error::Не удалось записать секреты в Supabase. Обычно это просроченный SUPABASE_ACCESS_TOKEN."
+              exit 1
             fi
           fi
 
-          # Печатаются только имена — значения секретов в публичный лог не попадают никогда.
-          have=$(/tmp/supabase secrets list --project-ref "$PROJECT_REF" 2>/dev/null | awk '{print $1}')
-          for name in LAVA_WEBHOOK_SECRET LAVA_PRODUCTS WEBHOOK_TOKEN; do
-            if printf '%s\n' "$have" | grep -qx "$name"; then
-              echo "::notice::$name — на месте."
-            else
-              echo "::warning::$name не задан. Без него функция отвечает 403 на каждое уведомление и доступ не откроется."
-            fi
-          done
-          echo "::notice::Адрес для кабинета lava.top: https://$PROJECT_REF.functions.supabase.co/lava-webhook?token=<WEBHOOK_TOKEN>"
+          # Имена обратно — что бы их ни задало, GitHub или дашборд. Печатаются только имена.
+          missing=0
+          if /tmp/supabase secrets list --project-ref "$PROJECT_REF" >/tmp/raw.txt 2>/dev/null; then
+            grep -oE '[A-Z][A-Z0-9_]{2,}' /tmp/raw.txt | grep -vxE 'NAME|DIGEST' | sort -u > /tmp/have.txt || true
+            for name in LAVA_WEBHOOK_SECRET LAVA_PRODUCTS WEBHOOK_TOKEN; do
+              if grep -qx -- "$name" /tmp/have.txt; then
+                echo "  ✓ $name"
+              else
+                missing=$((missing + 1))
+                case "$name" in
+                  LAVA_PRODUCTS) echo "::warning::LAVA_PRODUCTS не задан — функция не знает ни одного товара, и каждый платёж ложится в журнал непривязанным." ;;
+                  *) echo "::warning::$name не задан. Без него функция отвечает 403 на каждое уведомление и доступ не откроется." ;;
+                esac
+              fi
+            done
+          else
+            echo "::error::Список секретов прочитать не удалось — обычно это просроченный SUPABASE_ACCESS_TOKEN."
+            exit 1
+          fi
+
+          # Живая проверка, как у deploy-payments. POST без токена должен получить 403 от самой
+          # функции: значит, она по адресу есть и отвечает сама, а не платформа вместо неё.
+          URL="https://$PROJECT_REF.functions.supabase.co/lava-webhook"
+          code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$URL" --data '{}' || echo 000)
+          case "$code" in
+            403) echo "::notice::Функция отвечает по адресу (403 на запрос без токена — так и должно быть)." ;;
+            401) echo "::error::401 — платформа требует токен Supabase раньше функции. Деплой прошёл без --no-verify-jwt; запусти задачу ещё раз." ; exit 1 ;;
+            404) echo "::error::404 — по адресу ничего нет. Деплой не доехал; запусти задачу ещё раз." ; exit 1 ;;
+            000) echo "::warning::Адрес не ответил вовсе — сеть или проект недоступен." ;;
+            *)   echo "::warning::Неожиданный ответ $code. Смотри Supabase → Edge Functions → lava-webhook → Logs." ;;
+          esac
+
+          echo "::notice::Адрес для кабинета lava.top: $URL?token=<WEBHOOK_TOKEN>"
+          if [ "$missing" -gt 0 ]; then
+            echo "::error::Не задано секретов: $missing. Пока их нет, оплаты через lava.top не открывают доступ."
+            exit 1
+          fi
 
       # ---------------------------------------------------------------------
       # deploy-calendar — синхронизация Google Календаря тренера (0014).
@@ -717,7 +755,7 @@ jobs:
             GOOGLE_SA_PRIVATE_KEY="$key"
           fi
 
-          curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz \
+          curl -fsSL "https://github.com/supabase/cli/releases/download/v${SUPABASE_CLI_VERSION}/supabase_linux_amd64.tar.gz" \
             | tar -xz -C /tmp
 
           if ! /tmp/supabase functions deploy google-calendar-sync --project-ref "$PROJECT_REF" --no-verify-jwt; then
@@ -806,7 +844,7 @@ jobs:
           # Не `set -e`: каждая ошибка обрабатывается явно, а `grep`, ничего не
           # нашедший, — это нормальный ответ «такого секрета нет», а не падение.
           set -uo pipefail
-          curl -fsSL https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz \
+          curl -fsSL "https://github.com/supabase/cli/releases/download/v${SUPABASE_CLI_VERSION}/supabase_linux_amd64.tar.gz" \
             | tar -xz -C /tmp
 
           if ! /tmp/supabase secrets list --project-ref "$PROJECT_REF" >/tmp/raw.txt 2>/tmp/err.txt; then
@@ -837,11 +875,43 @@ jobs:
               fi
             fi
           done <<'NEEDED'
-          TELEGRAM_BOT_TOKEN|бот не отвечает вовсе
+          TELEGRAM_BOT_TOKEN|бот не отвечает вовсе, рассылка молчит (telegram-bot, telegram-notify, link-telegram)
           TELEGRAM_WEBHOOK_SECRET|бот отклоняет все запросы Telegram (fail closed)
           PRODAMUS_SECRET|оплаты не активируют подписку (fail closed)
-          WEBHOOK_TOKEN|оплаты не активируют подписку
+          WEBHOOK_TOKEN|оплаты Prodamus и lava.top не доходят (403)
+          NOTIFY_TOKEN|рассыльщик отвечает 503, сообщения копятся в очереди (deploy-notify)
+          LAVA_WEBHOOK_SECRET|lava.top — функция отвечает 403 на всё (deploy-lava)
+          LAVA_PRODUCTS|lava.top — ни один товар не распознаётся, платежи ложатся непривязанными
+          GOOGLE_SYNC_TOKEN|брони из календаря тренера не синхронизируются (deploy-calendar)
+          GOOGLE_CALENDAR_ID|синхронизация календаря отвечает 503
+          GOOGLE_SA_CLIENT_EMAIL|синхронизация календаря отвечает 503
+          GOOGLE_SA_PRIVATE_KEY|синхронизация календаря отвечает 503
           NEEDED
+
+          # Необязательные: у каждого есть умолчание или путь без него. Печатаются, чтобы было
+          # видно, чем именно живёт проект, — но предупреждений не дают.
+          echo ""
+          echo "Необязательные:"
+          while IFS='|' read -r name why; do
+            if [ -n "$name" ]; then
+              if grep -qx -- "$name" /tmp/have.txt; then
+                echo "  ✓ $name"
+              else
+                echo "  · $name не задан — $why"
+              fi
+            fi
+          done <<'OPTIONAL'
+          TELEGRAM_ADMIN_CHAT|канал владельца молчит (§7.11)
+          TELEGRAM_ADMIN_TOPICS|сообщения канала идут в группу без тем
+          TELEGRAM_ADMIN_BOT_TOKEN|в канал пишет основной бот
+          GOOGLE_BOOKING_TITLE|бронью считается любое событие с одним гостем
+          GOOGLE_COACH_EMAILS|адреса тренера не отсеиваются из гостей
+          PLAN_MONTHLY_RUB|цена месяца по умолчанию, 1990 ₽
+          PLAN_ANNUAL_RUB|цена года по умолчанию, 7990 ₽
+          SESSION_HALF_RUB|цена получаса по умолчанию, 2500 ₽
+          SESSION_HOUR_RUB|цена часа по умолчанию, 3500 ₽
+          COURSE_PRICES_RUB|цены курсов по умолчанию, 2990/3990/4990 ₽
+          OPTIONAL
 
           # -------------------------------------------------------------------
           # Переопределения: секреты, которые СИЛЬНЕЕ кода в репозитории.
@@ -865,10 +935,13 @@ jobs:
               overrides=$((overrides + 1))
             fi
           done <<'OVERRIDES'
-          TELEGRAM_GREETING|текст приветствия бота
+          TELEGRAM_GREETING|текст приветствия бота (русский)
+          TELEGRAM_GREETING_EN|текст приветствия бота (английский)
           TELEGRAM_PHOTO_URL|фотографию в приветствии
-          TELEGRAM_BUTTON_TEXT|надпись на кнопке приложения
-          TELEGRAM_SITE_BUTTON_TEXT|надпись на кнопке сайта
+          TELEGRAM_BUTTON_TEXT|надпись на кнопке приложения (русскую)
+          TELEGRAM_BUTTON_TEXT_EN|надпись на кнопке приложения (английскую)
+          TELEGRAM_SITE_BUTTON_TEXT|надпись на кнопке сайта (русскую)
+          TELEGRAM_SITE_BUTTON_TEXT_EN|надпись на кнопке сайта (английскую)
           TELEGRAM_SITE_URL|ссылку на сайт
           MINI_APP_URL|адрес мини-приложения
           OVERRIDES
@@ -927,10 +1000,11 @@ jobs:
           pending=$(get orders_pending)
           active=$(get purchases_active)
           linked=$(get linked_payment_emails)
+          sessions=$(get sessions_paid)
 
           echo "Уведомлений об оплате записано всего: ${total:-?}, за сутки: ${day:-?}"
           echo "Живых подписок: ${subs:-?} · оплаченных курсов: ${active:-?} · ожидающих заказов: ${pending:-?}"
-          echo "Привязанных платёжных адресов: ${linked:-?}"
+          echo "Привязанных платёжных адресов: ${linked:-?} · оплаченных занятий с тренером: ${sessions:-?}"
 
           if [ "${total:-0}" = "0" ]; then
             echo "::warning::Ни одного уведомления не записано. Это значит одно из двух: Prodamus не звонил вовсе, либо звонил и был отвергнут на входе — с неверным токеном или несошедшейся подписью функция отвечает 403 и ничего не сохраняет. Что именно — видно в кабинете Prodamus: у каждого платежа есть статус отправки уведомления и ответ, который он получил."
@@ -1074,6 +1148,18 @@ jobs:
           # экране лога. Ради этих шести чисел задачу и запускают.
           echo "::notice::В очереди: ${pending:-?} · отправлено: ${sent:-?} · пропущено: ${skipped:-?} · не удалось: ${failed:-?} · ждут привязки телеграма: ${waiting:-?}"
           [ -n "${oldest:-}" ] && echo "::notice::Самая старая неотправленная: $oldest UTC"
+
+          # Канал владельца (0040) — только счётчики, как и выше.
+          a_pending=$(get admin_pending)
+          a_retry=$(get admin_retrying)
+          a_sent=$(get admin_sent)
+          a_failed=$(get admin_failed)
+          a_oldest=$(get admin_oldest_pending_utc)
+          echo "::notice::Канал владельца — в очереди: ${a_pending:-?} (из них повторяются: ${a_retry:-?}) · отправлено: ${a_sent:-?} · не удалось: ${a_failed:-?}"
+          [ -n "${a_oldest:-}" ] && echo "::notice::Канал владельца, самая старая неотправленная: $a_oldest UTC"
+          if [ "${a_failed:-0}" != "0" ]; then
+            echo "::warning::В канал владельца не ушло сообщений: $a_failed — двенадцать неудач подряд. Обычно это бот, которого убрали из группы, или удалённая тема."
+          fi
 
           if [ "${failed:-0}" != "0" ]; then
             echo "::warning::Есть строки, которые не удалось отправить пять раз подряд. Обычно это значит, что у бота отобрали токен или телеграм недоступен дольше часа."

@@ -141,8 +141,9 @@ const WELCOME_PHOTO = 'https://forma-app.co/bot/welcome.jpg';
  *
  * **The length is load-bearing.** A caption is capped at 1024 characters against a message's 4096,
  * and going over does not truncate — `sendPhoto` fails outright and the bot falls back to text,
- * silently dropping the photograph. The visible text here is 928 characters, which leaves under a
- * hundred to spare, so `index.test.ts` measures it. Anything added must come out of something else.
+ * silently dropping the photograph. The visible text here is 940 characters in Russian and 909 in
+ * English, which leaves under a hundred to spare, so `index.test.ts` measures both. Anything added
+ * must come out of something else.
  *
  * The claims are the product's own: one beginner course, a video on every movement, an hour with
  * the coach for whoever is top on Sunday. This is the one place a promise is made to somebody who

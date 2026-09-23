@@ -14,8 +14,9 @@
  * Which plan was paid is decided by the amount (PLAN_MONTHLY_RUB / PLAN_ANNUAL_RUB, defaulting to
  * the prices in content/site/plans.ts).
  *
- * **Anything that is not a plan is tried as a course** (0019). Not by amount: amounts collide
- * between products and a Prodamus short link drops the query parameters it was given, so the
+ * **An amount that is a course price is tried as a course** (0019); an amount that matches no
+ * plan, session or course price opens nothing and is recorded unclaimed (0043). The course itself
+ * is not chosen by amount: amounts collide between products and a Prodamus short link drops the query parameters it was given, so the
  * course id cannot ride along with the payment. `apply_course_payment()` reads what the system
  * already knows instead — the `pending` purchase that both the site form and the app's unlock
  * sheet write through `create_order()` before sending anyone to pay. When that is ambiguous (no
@@ -28,10 +29,12 @@
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import {
+  DEFAULT_COURSE_PRICES_RUB,
+  intentForRoute,
   parseForm,
-  planForAmount,
+  parsePriceList,
   readPayment,
-  sessionForAmount,
+  routeAmount,
   sign,
   signatureMatches,
 } from './verify.ts';
@@ -46,6 +49,9 @@ const SESSION_PRICES = {
   half: Number(Deno.env.get('SESSION_HALF_RUB') ?? '2500'),
   hour: Number(Deno.env.get('SESSION_HOUR_RUB') ?? '3500'),
 };
+
+/** Цены курсов: сумма, не равная ни одной, ничего не открывает (`verify.ts`, `routeAmount`). */
+const COURSE_PRICES = parsePriceList(Deno.env.get('COURSE_PRICES_RUB'), DEFAULT_COURSE_PRICES_RUB);
 
 function reply(status: number, body: string): Response {
   return new Response(body, { status, headers: { 'content-type': 'text/plain; charset=utf-8' } });
@@ -117,15 +123,18 @@ Deno.serve(async (req) => {
    * a failure to apply must not also lose the record of the payment.
    */
   const amount = Number.parseFloat(payment.sum ?? '');
-  const plan = planForAmount(payment.sum, PRICES);
-  const session = plan ? null : sessionForAmount(payment.sum, SESSION_PRICES);
+  const route = routeAmount(payment.sum, {
+    plans: PRICES,
+    sessions: SESSION_PRICES,
+    courses: COURSE_PRICES,
+  });
   async function record(applied: boolean): Promise<void> {
     const { error } = await supabase.rpc('record_payment', {
       p_email: payment!.email,
       p_amount: Number.isFinite(amount) ? amount : null,
       p_provider_ref: payment!.ref || null,
       p_paid_at: paidAt,
-      p_intent: plan ?? (session ? 'session' : 'course'),
+      p_intent: intentForRoute(route),
       p_applied: applied,
       // Касса, из которой пришли деньги. Названа явно, хотя это и умолчание: касс теперь две, и
       // «какая» должно читаться на месте вызова, а не в сигнатуре функции (миграция 0038).
@@ -137,10 +146,10 @@ Deno.serve(async (req) => {
     if (error) console.warn('prodamus-webhook: record_payment failed', error.message);
   }
 
-  if (plan) {
+  if (route.kind === 'plan') {
     const { error } = await supabase.rpc('apply_subscription_payment', {
       p_email: payment.email,
-      p_plan: plan,
+      p_plan: route.plan,
       p_provider_ref: payment.ref || null,
       p_paid_at: paidAt,
       p_source: 'prodamus',
@@ -151,7 +160,7 @@ Deno.serve(async (req) => {
       return reply(500, 'could not apply the payment');
     }
     await record(true);
-    return reply(200, `ok: ${plan} for ${payment.email}`);
+    return reply(200, `ok: ${route.plan} for ${payment.email}`);
   }
 
   /*
@@ -163,18 +172,33 @@ Deno.serve(async (req) => {
    * заказ на курс и потом купил час с тренером, получал бы курс даром.
    *
    * `record()` уже знает, что это `session` (см. `p_intent` выше), так что в журнале видно, за
-   * что заплатили, а не только сколько.
+   * что заплатили, а не только сколько. И пишет его привязанным (`applied = true`, 0043): платёж
+   * сделал всё, что мог, и в счётчик непривязанных не попадает.
    */
-  if (session) {
-    await record(false);
+  if (route.kind === 'session') {
+    await record(true);
     console.info(
-      `prodamus-webhook: session ${session} paid by ${payment.email} (order ${payment.ref || 'without a number'}); nothing to unlock, the coach agrees the time`,
+      `prodamus-webhook: session ${route.session} paid by ${payment.email} (order ${payment.ref || 'without a number'}); nothing to unlock, the coach agrees the time`,
     );
-    return reply(200, `ok: session ${session} recorded`);
+    return reply(200, `ok: session ${route.session} recorded`);
   }
 
   /*
-   * Not a plan, so it is a course — or something we have no record of.
+   * A sum that is no plan, no session and no course price. It used to fall through to the course
+   * branch below, and `apply_course_payment()` would open whatever course this address had a
+   * pending order for — for any amount at all. Now it is recorded unapplied, the 0040 trigger puts
+   * «Платёж не привязан» in the owner's channel, and a person decides. 200: a retry changes nothing.
+   */
+  if (route.kind === 'unknown') {
+    await record(false);
+    console.warn(
+      `prodamus-webhook: ${payment.email} paid ${payment.sum ?? '?'}, which is no plan, session or course price; recorded as unclaimed (order ${payment.ref || 'without a number'})`,
+    );
+    return reply(200, 'ignored: unknown amount, recorded, waiting to be claimed');
+  }
+
+  /*
+   * A course price — the course itself still comes from the pending order.
    *
    * A 500 here would be wrong twice over: Prodamus retries on 5xx, and there is nothing to retry
    * when the cause is that a person paid without ever placing an order. The RPC answers null for

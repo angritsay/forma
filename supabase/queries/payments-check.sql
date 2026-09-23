@@ -21,8 +21,11 @@ select
   (select count(*) from public.payments)                                        as payments_total,
   (select count(*) from public.payments
     where paid_at > now() - interval '24 hours')                                as payments_24h,
+  -- Занятие с тренером ничего не открывает и непривязанным не бывает (0043 пишет его с
+  -- applied = true и поправила старые строки); исключено и здесь — на базе, где 0043 ещё нет.
   (select count(*) from public.payments
-    where applied = false and claimed_by is null)                               as payments_unclaimed,
+    where applied = false and claimed_by is null and intent <> 'session')       as payments_unclaimed,
+  (select count(*) from public.payments where intent = 'session')               as sessions_paid,
   (select to_char(max(paid_at) at time zone 'UTC', 'YYYY-MM-DD HH24:MI')
      from public.payments)                                                      as last_paid_at_utc,
   (select amount  from public.payments order by paid_at desc limit 1)           as last_amount,
