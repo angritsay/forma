@@ -193,7 +193,7 @@ translation for reading, not a second contract.
 
 - Name: **Forma** (`content/site/brand.ts`). Tagline RU "Кроссфит дома. Под тебя." EN "Home CrossFit
   that adapts to you."
-- Look: near-black ground throughout, structured by hairline rules and editorial numerals rather
+- Look: a charcoal ground (`#1A1A1A`) throughout — the only background there is, structured by hairline rules and editorial numerals rather
   than by a card around every object. Composition is asymmetric — a 7/5 grid, not a balanced
   split; headings sit low against their column; photographs bleed past the page gutter. Large
   radii where an object is genuinely discrete (24px cards, 20px tiles) and 16px on everything
@@ -223,15 +223,32 @@ translation for reading, not a second contract.
   word is `--text` on it and never `--muted`, which measures 3.6:1 there against the 4.5 §4 sets.
   A screen arrives the way the capsule went (`screenMotion`). Generous spacing, 1px borders
   (`--border`).
-- The accent is a dosage rule, not just a colour: `#9ECBFF` marks the primary button, the
-  wordmark's full stop, a rule, a kicker, "you are here". Never a large fill. Large areas are
-  shades of black and full-bleed monochrome photography.
-- Tokens (`src/styles/global.css`): `--bg #0B0B0D`, `--surface #151519`, `--surface-2 #1E1E24`,
-  `--surface-3 #2A2A31`, `--border rgba(255,255,255,.08)`, `--text #F4F4F6`, `--muted #A8A8B2`,
-  `--muted-2 #93939D`, `--primary #FFFFFF` (on-primary `#0B0B0D`), `--accent #9ECBFF`,
-  `--accent-2 #C9D6FF` (periwinkle), `--success #7CE0B0`, `--warning #FFD166`, `--danger #FF6B6B`,
-  course tiles `--tile-1…5` with `--tile-fg #DCE9FA` as their ink, radii `--r-card 24px`,
-  `--r-tile 20px`, `--r-inner 12px`, `--r-control 16px`, `--r-pill 999px`.
+- **Palette — one job per colour** (`design/CHANGELOG.md` §14; the owner's pick of «style A, and
+  the gradient for the club»). The ground is charcoal and may not be another colour; white lives
+  in elements (plates, badges), never as a screen. **Light blue `#AFE9FD`** (`--accent`) is the
+  brand and the interface accent: links, focus rings, the active state, accent words, the
+  wordmark's dot. **The blue field `#2038E2`** (`--field`) is one hero card per screen — white bold
+  type (7.71), its key word in light blue (5.8), a hand-drawn swoosh; electric blue is never type
+  on charcoal (2.26). **Neon `#F4FF3F`** (`--action`) is action: the one main button of a screen
+  and the tags «новое», «задание дня», «лидер», «сегодня», with `#111111` ink. **The crossroads
+  gradient** (`--grad-crossroads`, light blue → beige → orange → blue) belongs to the club alone —
+  streak ring, day dots, glow, key words (`.text-gradient`, only its warm half `--grad-warm` as
+  type). Section colours are tags, not fields: beginners orange `#FF5A00`, dumbbells neon
+  `#F4FF3F`, yoga beige `#FFE6D0`, club `#2038E2`, coach bleu ciel `#007BFF` (as type only large,
+  4.37). No text is ever drawn as an outline.
+- **Ink on a coloured fill is chosen by measured contrast**, not by lightness: `tileInk()`
+  (`src/lib/ui/tile.ts`) measures `#111111` and white against the fill and takes the better one;
+  `tileAccent()` gives a section's colour as type on charcoal (the fill when it clears 4.5, light
+  blue for the two blues, plain text for a neutral surface). `tile.test.ts` is the AA gate.
+- Tokens (`src/styles/global.css`, whose header comment is the reference): `--bg #1A1A1A`,
+  `--surface #242424`, `--surface-2 #2E2E2E`, `--surface-3 #383838`,
+  `--border rgba(255,255,255,.10)`, `--text #F6F6F7`, `--muted #B9B9C0`, `--muted-2 #A6A6AE`,
+  `--primary #FFFFFF` (on-primary `#1A1A1A`), `--accent #AFE9FD` (on-accent `#111111`),
+  `--action #F4FF3F`, `--field #2038E2`, `--orange`, `--ciel`, `--beige`, `--ink #111111`,
+  `--course-beginners/-dumbbells/-yoga/-marathon` with darker `-ink` variants for type on white,
+  `--success #7CE0B0`, `--warning #FFD166`, `--danger #FF6B6B` (not recoloured — neon must not
+  read as «warning»), course tiles `--tile-1…5`, radii `--r-card 24px`, `--r-tile 20px`,
+  `--r-inner 12px`, `--r-control 16px`, `--r-pill 999px`.
 - Typography: display = Manrope variable 600 (`font-display`; 800 for the wordmark), body/UI =
   Onest variable (`font-sans`). Both are chosen for Cyrillic first: an earlier pair drew и, п and
   т as composite glyphs pointing at the Latin u, n and m outlines, so every Russian heading
@@ -317,7 +334,8 @@ cooldown are not scaled).
 (rest nodes, default 7000).
 **Course** — `id`, `order`, `slug: L10n`, `name`, `tagline`, `description`, `longDescription[]`,
 `forWhom[]`, `outcomes[]`, `equipment[]`, `level`, `weeks`, `sessionsPerWeek`, `avgSessionMin`,
-`tile` (hex — one of `--tile-1…5`), `price {rub, usd}`, `paymentUrl? {ru?, en?}`,
+`tile` (hex — a programme colour `#FF5A00` / `#F4FF3F` / `#FFE6D0` or a neutral `#2E2E2E` /
+`#383838`; the blues are the club's and the coach's, never a course's), `price {rub, usd}`, `paymentUrl? {ru?, en?}`,
 `introVideo? {ru?, en?}`, `workouts[]`, `nodes[]`, `faq[]`.
 
 Content rules: exercises referenced by workouts must exist; every exercise used by a course must be
@@ -636,11 +654,12 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    number is the content.
 
    **Colour on type needs a scrim, and the scrim is measured.** A programme colour is far less
-   luminous than white (`#9FEFF7` is 0.758), so 4.5:1 against it needs the ground at sRGB 101 or
-   below; `.photo-scrim-top` is tuned to that and re-measured on the composited pixels whenever it
-   changes, never eyeballed. A course whose tile is one of the neutral dark surfaces takes plain
-   white for its type instead (`courseAccentVars()`), because near-black type on a near-black card
-   is no type at all.
+   luminous than white (Portland orange `#FF5A00` is 0.286), so 4.5:1 against it needs the ground
+   at luminance 0.0247 or below, about sRGB 44; `.photo-scrim-top` is tuned to that and
+   re-measured on the composited pixels whenever it changes, never eyeballed. The type takes
+   `--course-accent`, which `courseTileVars()` sets from the tile: a course whose tile is one of
+   the neutral dark surfaces gets plain white, because near-black type on a near-black card is no
+   type at all.
 
    **A photograph, never lettered artwork.** The card does not read `course.cover`: the one cover
    in the catalogue has «ФОРМА // С НУЛЯ» baked into it, and a lettered cover under a coloured
@@ -889,10 +908,12 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
     Somebody who already pays and is simply not in a running round gets the same screen without the
     price: the coach forms the rounds and the pairs by hand, so there is nothing for them to press.
 
-    **The club's colour is `#F8A050`** (`GAME_TILE`, `--course-marathon`), sampled from the mockup.
-    It replaced `#ff7a1a`, which sat three thousandths above the black/white ink cliff in
-    `isLightTile`; the new one has 0.107 of margin, so the cover, the ring and the prize pill keep
-    black ink with room. `src/lib/ui/tile.test.ts` holds both promises.
+    **The club's colour is the crossroads gradient**, and its solid stand-in is electric blue
+    `#2038E2` (`GAME_TILE`, `--course-marathon`) — what the tile machinery, the ink and the `-ink`
+    variant need, since a gradient cannot be a tile. White ink on it (7.71); as type on charcoal it
+    hands over to light blue (`tileAccent()`). The gradient paints the streak ring, the day dots,
+    the glow behind the screen and its key words (`design/CHANGELOG.md` §14).
+    `src/lib/ui/tile.test.ts` holds the contrast promises.
 
 ## 11. SEO conveyor (docs/SEO.md is the runbook)
 

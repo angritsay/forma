@@ -243,7 +243,7 @@ export default function AdminStatsScreen() {
                        */}
                       <div className="h-2 overflow-hidden rounded-pill bg-surface-2">
                         <div
-                          className="h-full rounded-pill bg-primary"
+                          className="h-full rounded-pill bg-accent"
                           style={{ width: `${Math.round((share ?? 0) * 100)}%` }}
                         />
                       </div>

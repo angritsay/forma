@@ -28,11 +28,16 @@ import { MediaField } from '@/app/features/admin/media/MediaField';
 
 /*
  * The five tiles a course may take, from src/styles/global.css: the three programme colours —
- * beginners, yoga, marathon — and the two neutral surfaces for a course that belongs to no
- * programme. The tile is the one colour on the screen while the course is open, so this row is
- * the only place in the admin where colour is chosen at all.
+ * beginners orange, dumbbells neon, yoga beige — and the two neutral surfaces for a course that
+ * belongs to no programme. The tile is the one colour on the screen while the course is open, so
+ * this row is the only place in the admin where colour is chosen at all.
+ *
+ * The blues and the brand's light blue are left out on purpose: electric blue is the club's,
+ * bleu ciel the coach's and light blue the interface's own accent. A course wearing one of them
+ * would read as the club, the coach or a link. The hex field below still takes any colour, and
+ * `courseTileVars()` picks the ink for whatever it gets.
  */
-const TILES = ['#f2f52d', '#a8c8ff', '#ff7a1a', '#1f1f24', '#2a2a30'] as const;
+const TILES = ['#ff5a00', '#f4ff3f', '#ffe6d0', '#2e2e2e', '#383838'] as const;
 
 /** The same shape `CourseSchema` accepts for `tile` (src/content/schema.ts) — six hex digits. */
 const HEX_RE = /^#[0-9a-f]{6}$/i;
@@ -256,9 +261,9 @@ export function CourseMetaEditor({ course, onPatch }: CourseMetaEditorProps) {
                 style={courseTileVars(tile)}
                 className={
                   // A swatch is a square of course art; the chosen one is outlined in the interface
-                  // white and carries a tick in the tile's own ink.
+                  // accent and carries a tick in the tile's own ink.
                   on
-                    ? 'hero-art flex size-11 items-center justify-center rounded-inner outline-2 outline-offset-2 outline-primary'
+                    ? 'hero-art flex size-11 items-center justify-center rounded-inner outline-2 outline-offset-2 outline-accent'
                     : 'hero-art size-11 rounded-inner border border-border-strong transition-opacity duration-150 ease-(--ease-out) hover:opacity-85'
                 }
               >
@@ -270,7 +275,7 @@ export function CourseMetaEditor({ course, onPatch }: CourseMetaEditorProps) {
             wrapperClassName="w-36"
             className="font-mono"
             aria-label={t('app.courseTile')}
-            placeholder="#1f1f24"
+            placeholder="#2e2e2e"
             autoCapitalize="none"
             spellCheck={false}
             maxLength={7}

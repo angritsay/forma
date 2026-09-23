@@ -1,48 +1,69 @@
 :root{
-/* Ч/б база — интерфейс всегда монохромный */
---bg-0:#0f0f11;
---surface-1:#17171a;
---surface-2:#1f1f24;
---surface-3:#2a2a30;
+/* Грунт — уголь, единственный фон (CHANGELOG §14). Другим фон не бывает. */
+--bg-0:#1a1a1a;
+--surface-1:#242424;
+--surface-2:#2e2e2e;
+--surface-3:#383838;
 --border-1:rgba(255,255,255,.10);
 --border-2:rgba(255,255,255,.18);
 --text-1:#f6f6f7;
 --text-2:#b9b9c0;
---text-3:#84848d;
---text-inverse:#0f0f11;
-/* Белая «бумага» — профиль, светлые экраны, полароид */
+--text-3:#a6a6ae;           /* 4.85 даже на surface-3 */
+--text-inverse:#111111;
+/* Белые элементы (плашки, бейджи, вторичная кнопка на синем) — белого экрана нет */
 --paper:#ffffff;
 --paper-2:#f2f2f0;
---ink:#0f0f11;
---border-ink-1:rgba(15,15,17,.14);
---border-ink-2:rgba(15,15,17,.25);
-/* Акцент интерфейса — белый */
---accent:#ffffff;
---text-on-accent:#0f0f11;
-/* Цвета программ: единственный цвет в системе — из курса */
---course-marathon:#ff7a1a;  /* марафон / челлендж */
---course-yoga:#a8c8ff;      /* йога */
---course-beginners:#f2f52d; /* программа новичков */
---text-on-course:#0f0f11;
-/* Чернила курсов — для текста на белом (AA) */
---course-marathon-ink:#ab5211;
---course-yoga-ink:#2f5f9e;
---course-beginners-ink:#6c7005;
-/* Легаси-алиасы (не использовать в новом коде) */
---blue:var(--course-yoga);
---peri:var(--course-yoga);
---blue-fg:var(--course-yoga);
---peri-fg:var(--course-yoga);
---blue-ink:var(--course-yoga-ink);
---peri-ink:var(--course-yoga-ink);
-/* Плитки курсов = цвета программ */
+/* Чернила на любой цветной заливке. #111111, а не уголь: уголь на Bleu Ciel — 4.37, провал AA */
+--ink:#111111;
+--border-ink-1:rgba(17,17,17,.14);
+--border-ink-2:rgba(17,17,17,.25);
+/* Бренд — светло-голубой: точка логотипа, ссылки, фокус, акцентные слова. 13.2 на угле */
+--accent:#afe9fd;
+--accent-2:var(--accent);
+--text-on-accent:#111111;
+/* Действие — неон: одна главная кнопка экрана + плашки «новое», «задание дня», «лидер», «сегодня» */
+--action:#f4ff3f;
+--text-on-action:#111111;
+/* Синее поле — одна карточка-герой на экран. Белый текст 7.71, ключевое слово --accent 5.8.
+   Текстом на угле синий не бывает никогда (2.26) */
+--field:#2038e2;
+--text-on-field:#ffffff;
+/* Палитра целиком */
+--orange:#ff5a00;
+--ciel:#007bff;
+--beige:#ffe6d0;
+/* Градиент crossroads — только клуб. Текстом — только тёплая половина (--grad-warm, все ≥5.5) */
+--grad-crossroads:linear-gradient(115deg,#afe9fd 0%,#ffe6d0 32%,#ff5a00 62%,#2038e2 100%);
+--grad-warm:linear-gradient(100deg,#afe9fd 0%,#ffe6d0 45%,#ff5a00 100%);
+/* Цвета разделов. Чернила на заливке — измеренным контрастом (tileInk в src/lib/ui/tile.ts) */
+--course-beginners:#ff5a00; /* новички — ink #111111 6.04; текстом на угле 5.56 */
+--course-dumbbells:#f4ff3f; /* гантели — ink #111111 17.3 */
+--course-yoga:#ffe6d0;      /* йога — ink #111111 15.7 */
+--course-marathon:#2038e2;  /* клуб — белые чернила 7.71; красит градиентом */
+--coach:#007bff;            /* тренер — ink #111111 4.75; текстом только крупным (4.37) */
+--text-on-course:var(--ink); /* легаси; в коде чернила считает tileInk() */
+/* Чернила разделов — для текста на белом (AA) */
+--course-beginners-ink:#b84300;
+--course-dumbbells-ink:#5f6600;
+--course-yoga-ink:#8a5a2e;
+--course-marathon-ink:#2038e2;
+/* Легаси-алиасы (не использовать в новом коде): старые «голубые» ссылки — теперь бренд */
+--blue:var(--accent);
+--peri:var(--accent);
+--blue-fg:var(--accent);
+--peri-fg:var(--accent);
+--blue-ink:var(--course-marathon-ink);
+--peri-ink:var(--course-marathon-ink);
+/* Плитки (как в global.css). Пикер курсов в админке: оранжевый, неон, бежевый, #2e2e2e, #383838 —
+   синие и светло-голубой курсам не даются: это клуб, тренер и интерфейс */
 --tile-1:var(--course-beginners);
 --tile-2:var(--course-yoga);
---tile-3:var(--course-marathon);
---tile-4:var(--surface-2);
---tile-5:var(--surface-3);
---tile-fg:#0f0f11;
-/* Семантика (на тёмном) */
+--tile-3:var(--course-marathon); /* клуб; в пикер курсов не входит */
+--tile-4:var(--surface-2);  /* #2e2e2e — нейтральный курс */
+--tile-5:var(--surface-3);  /* #383838 — нейтральный курс */
+--tile-fg:#111111;
+--tile-fg-dark:#f6f6f7;
+/* Семантика (на тёмном) — не перекрашивается: неон не должен читаться как «предупреждение» */
 --success:#7ce0b0;
 --warning:#ffd166;
 --error:#ff6b6b;
@@ -53,27 +74,6 @@
 --surface-card:var(--surface-1);
 --surface-raised:var(--surface-2);
 --surface-input:var(--surface-2);
---accent-2:var(--accent);
 --text-on-tile:var(--tile-fg);
 }
-/* Светлая (бумажная) тема — по явному атрибуту, для белых экранов и маркетинга */
-[data-forma-theme="light"]{
---bg-0:#ffffff;
---surface-1:#f2f2f0;
---surface-2:#e9e9e6;
---surface-3:#dededa;
---border-1:rgba(15,15,17,.10);
---border-2:rgba(15,15,17,.20);
---text-1:#0f0f11;
---text-2:#4c4c53;
---text-3:#7c7c85;
---text-inverse:#f6f6f7;
---accent:#0f0f11;
---text-on-accent:#ffffff;
---success:#1c7a52;
---warning:#8a6100;
---error:#c53030;
---surface-card:#ffffff;
---surface-raised:#ffffff;
---surface-input:#ffffff;
-}
+/* Светлой темы больше нет: фон — всегда уголь (CHANGELOG §14). */

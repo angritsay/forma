@@ -877,7 +877,7 @@ export const app = {
   courseEquipment: 'Оборудование',
   courseTile: 'Плашка курса',
   courseTileHint:
-    'Единственный цвет на экране курса. Цвета программ: новичкам #f2f52d, йога #a8c8ff, марафон #ff7a1a. Другому курсу — одна из двух нейтральных поверхностей: #1f1f24 или #2a2a30.',
+    'Цвет курса на его экране. Цвета программ: новичкам #ff5a00, гантели #f4ff3f, йога #ffe6d0. Другому курсу — одна из двух нейтральных поверхностей: #2e2e2e или #383838. Синие — цвета клуба, тренера и интерфейса, курсу они не даются.',
   courseCover: 'Обложка',
   courseCoverHint: 'Показывается на странице курса и в каталоге',
   courseIntroVideo: 'Вступительное видео',
@@ -945,7 +945,7 @@ export const app = {
   nodeLater: 'Позже',
   // Admin: the exercise row's "has a video" stamp, and the course tile field's format error.
   exHasVideo: 'видео',
-  courseTileInvalid: 'Цвет — шесть шестнадцатеричных знаков, например #1f1f24',
+  courseTileInvalid: 'Цвет — шесть шестнадцатеричных знаков, например #2e2e2e',
 
   // --- Marathon -------------------------------------------------------------
   // The second format: daily tasks, proof, a weekly board. Everyone races for themselves.
