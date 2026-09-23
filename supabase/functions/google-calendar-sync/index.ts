@@ -1,21 +1,24 @@
 /**
  * Google Calendar → Supabase: record the sessions people booked with the coach.
  *
- * Deploy:  supabase functions deploy google-calendar-sync --no-verify-jwt
- * Secrets: supabase secrets set GOOGLE_SYNC_TOKEN=… GOOGLE_CALENDAR_ID=… \
- *            GOOGLE_SA_CLIENT_EMAIL=… GOOGLE_SA_PRIVATE_KEY=… [GOOGLE_BOOKING_TITLE=…] \
- *            [GOOGLE_COACH_EMAILS=…]
+ * Deploy:  Actions → Supabase apply → `deploy-calendar` (deploys with --no-verify-jwt and copies
+ *          the secrets below from GitHub into the project; docs/SETUP.md §7.7).
+ * Secrets: GOOGLE_SYNC_TOKEN, GOOGLE_CALENDAR_ID, GOOGLE_SA_CLIENT_EMAIL, GOOGLE_SA_PRIVATE_KEY,
+ *          optional GOOGLE_BOOKING_TITLE and GOOGLE_COACH_EMAILS.
  *          (SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided by the platform.)
- * Call it: POST https://<project>.functions.supabase.co/google-calendar-sync?token=<GOOGLE_SYNC_TOKEN>
- *          every POLL_INTERVAL_MINUTES, from Supabase Cron or anything else that can make a POST.
+ * Call it: POST https://<project>.functions.supabase.co/google-calendar-sync with the header
+ *          `x-sync-token: <GOOGLE_SYNC_TOKEN>`, every POLL_INTERVAL_MINUTES — that is
+ *          `.github/workflows/calendar-sync.yml`, because pg_cron is not enabled in this project.
  *
  * WHAT IT IS FOR
  * --------------
  * The coach's booking page is a Google Calendar appointment schedule, which is free and which has
  * no webhooks, no callbacks and no way to tell anybody that somebody booked. So this reads his
- * calendar on a schedule and writes what it finds through the same two service-role functions the
- * Calendly path uses — `apply_coach_booking()` and `cancel_coach_booking()` — into the same
- * provider-neutral table. See sync.ts for how an event is judged to be a booking, and
+ * calendar on a schedule and writes what it finds through the two service-role functions of
+ * 0014 — `apply_coach_booking()` and `cancel_coach_booking()` — into its provider-neutral table.
+ * (A Calendly webhook used to write there too; it needed a paid Calendly plan, was never switched
+ * on, and has been removed.) Every new row wakes the owner's «Онлайн-тренировки» topic through
+ * the `coach_bookings_notify_admin` trigger of 0040. See sync.ts for how an event is judged to be a booking, and
  * 0014_coach_bookings.sql for why the address on a booking grants nothing.
  *
  * THE DOOR
@@ -28,9 +31,9 @@
  *     user of the project holds a valid JWT — so the token is what keeps a user from triggering
  *     the poll either way.
  *   - the three Google credentials are set. Without them the function returns 503 rather than
- *     quietly succeeding with nothing to do, exactly as calendly-webhook does without its signing
- *     key: a sync that silently writes nothing looks identical to a sync that works and has no
- *     bookings, and the difference is a person staring at an empty screen.
+ *     quietly succeeding with nothing to do: a sync that silently writes nothing looks identical
+ *     to a sync that works and has no bookings, and the difference is a person staring at an
+ *     empty screen.
  *
  * Nothing here can be used to write a booking of the caller's choosing: the only input is the
  * coach's calendar. A signed-in user cannot write to `coach_bookings` at all — the table has no

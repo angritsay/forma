@@ -1380,6 +1380,26 @@ export const app = {
   bookNoLink: 'Ссылки на вход пока нет.',
   bookMove: 'Перенести',
   bookCancel: 'Отменить',
+  // --- «Написать тренеру»: сообщение в тему «Обращения» группы владельца (0042) ---
+  supportWrite: 'Написать тренеру',
+  supportTitle: 'Написать тренеру',
+  supportLead:
+    'Сообщение уйдёт тренеру. Ответим в Телеграме, если он привязан к аккаунту, или на почту.',
+  supportPlaceholder: 'Например: можно ли заниматься с больным коленом?',
+  supportSend: 'Отправить',
+  supportSent: 'Сообщение отправлено',
+  supportSentHint: 'Ответим в Телеграме или на почту.',
+  // В демо тренера нет, и «отправлено» было бы неправдой.
+  supportDemo: 'В демо сообщение никуда не уходит.',
+  supportCounter: '{n} / {max}',
+  supportError: 'Не получилось отправить. Попробуй ещё раз чуть позже.',
+  supportErrorEmpty: 'Напиши хотя бы пару слов.',
+  supportErrorLong: 'Слишком длинно — не больше 1000 символов.',
+  supportErrorRate: 'За последний час сообщений уже много — дождись, пожалуйста, ответа.',
+  supportErrorNetwork: 'Нет связи. Проверь интернет и попробуй ещё раз.',
+  supportErrorAuth: 'Сессия истекла — войди снова, и сообщение можно будет отправить.',
+  dataSupportTitle: 'Вопрос или просьба',
+  dataSupportBody: 'Про данные, оплату или само приложение — напиши, и мы ответим.',
   // --- Club: the week's board, top three and where you are (stream: club-board) ---
   // The break between the top of the table and your own row, counted in rows left out.
   marathonBoardGapOne: 'ещё {n} место',

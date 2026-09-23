@@ -61,7 +61,7 @@
  */
 
 /** How often the poll runs. A cancellation can be up to this stale on the Тренер screen. */
-export const POLL_INTERVAL_MINUTES = 5;
+export const POLL_INTERVAL_MINUTES = 10;
 
 /**
  * How far ahead to look. Long enough that a session booked two months out is recorded the moment
@@ -80,8 +80,8 @@ export const LOOKBACK_MINUTES = 60;
 export const SOURCE = 'google_calendar';
 
 /**
- * `external_id` is `gcal:<event id>`. The prefix is for whoever reads the table later: a Calendly
- * invitee is a `https://api.calendly.com/…` uri, so provenance is legible at a glance, and the two
+ * `external_id` is `gcal:<event id>`. The prefix is for whoever reads the table later: a row from
+ * the Calendly webhook this project once had is a `https://api.calendly.com/…` uri, so provenance is legible at a glance, and the two
  * can never collide. The column caps the id at 400 characters; Google allows an event id of up to
  * 1024, so the cap is checked here rather than discovered as a constraint violation.
  */

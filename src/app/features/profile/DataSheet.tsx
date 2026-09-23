@@ -4,6 +4,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Sheet } from '@/components/ui/Sheet';
 import { useToast } from '@/components/ui/Toast';
 import { useT } from '@/app/hooks/useT';
+import { SupportSheet } from '@/app/features/support/SupportSheet';
 import { hasConsent, listMyConsents, revokeConsent, type ConsentRecord } from '@/lib/api/consents';
 import { LINKS } from '@content/site/links';
 import { BRAND } from '@content/site/brand';
@@ -39,6 +40,8 @@ export function DataSheet({ open, email, onClose }: DataSheetProps) {
   const [records, setRecords] = useState<ConsentRecord[] | null>(null);
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
+  /* «Написать тренеру» replaces this sheet while it is open rather than stacking over it. */
+  const [writing, setWriting] = useState(false);
 
   // Read on opening, not on mount: the sheet lives inside a profile that is mounted the whole
   // session, and a consent list fetched once at sign-in would be stale by the time it is read.
@@ -77,7 +80,7 @@ export function DataSheet({ open, email, onClose }: DataSheetProps) {
 
   return (
     <>
-      <Sheet open={open && !confirm} onClose={onClose} title={t('app.dataTitle')}>
+      <Sheet open={open && !confirm && !writing} onClose={onClose} title={t('app.dataTitle')}>
         <div className="flex flex-col gap-6 py-2">
           <p className="text-[15px] leading-relaxed text-muted">{t('app.dataLead')}</p>
 
@@ -96,6 +99,19 @@ export function DataSheet({ open, email, onClose }: DataSheetProps) {
               </Button>
             </div>
           ) : null}
+
+          {/*
+           * A question that is not a legal request — «где мой курс», «как сменить почту» — goes to
+           * the owner's Telegram topic, where somebody actually reads it on a phone. Deletion stays
+           * a letter below: it is the channel the policy names, and it needs a written record.
+           */}
+          <div className="flex flex-col gap-3 border-t border-border pt-5">
+            <h3 className="display text-lg">{t('app.dataSupportTitle')}</h3>
+            <p className="text-[13px] leading-snug text-muted">{t('app.dataSupportBody')}</p>
+            <Button variant="secondary" size="md" onClick={() => setWriting(true)}>
+              {t('app.supportWrite')}
+            </Button>
+          </div>
 
           <div className="flex flex-col gap-3 border-t border-border pt-5">
             <h3 className="display text-lg">{t('app.dataDeleteTitle')}</h3>
@@ -116,6 +132,13 @@ export function DataSheet({ open, email, onClose }: DataSheetProps) {
           </a>
         </div>
       </Sheet>
+
+      <SupportSheet
+        open={open && writing}
+        onClose={() => setWriting(false)}
+        // For the coach, who reads the topic in Russian whatever language the app is in.
+        context="Профиль · данные и согласия"
+      />
 
       <Modal
         open={confirm}
