@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { isNetworkError } from '@/lib/api/errors';
 import { Button } from '@/components/ui/Button';
 import { Sheet } from '@/components/ui/Sheet';
 import { useToast } from '@/components/ui/Toast';
@@ -48,8 +49,12 @@ export function ClaimSheet({ open, onClose }: ClaimSheetProps) {
         toast.show({ kind: 'success', title: t('app.claimOk') });
         onClose();
       }
-    } catch {
-      toast.show({ kind: 'error', title: t('common.errorOffline') });
+    } catch (e) {
+      // «Нет соединения» — только когда его и правда нет; отказ сервера — другая фраза.
+      toast.show({
+        kind: 'error',
+        title: t(isNetworkError(e) ? 'common.errorOffline' : 'common.errorGeneric'),
+      });
     } finally {
       setBusy(false);
     }

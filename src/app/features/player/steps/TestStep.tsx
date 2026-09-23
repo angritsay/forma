@@ -123,7 +123,7 @@ export function TestStep({
           <PlayerTimerSlot>
             <BigClock
               seconds={phase === 'ready' ? (windowSec ?? 0) : clock.remainingSec}
-              tone={phase === 'running' && clock.remainingSec <= 3 ? 'accent' : 'default'}
+              tone={phase === 'running' && clock.remainingSec <= 3 ? 'urgent' : 'default'}
               caption={step.item.note ? l(step.item.note) : undefined}
             />
           </PlayerTimerSlot>

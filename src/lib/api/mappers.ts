@@ -434,7 +434,8 @@ export function groupBenchmarks(rows: BenchmarkRow[]): BenchmarkSeries[] {
 export function leaderboardRowFromDb(r: DbLeaderboardRow): LeaderboardRow {
   return {
     userId: r.user_id,
-    displayName: r.display_name ?? `Athlete ${r.user_id.slice(0, 4)}`,
+    // No name → empty: the screen names the athlete in the reader's language (`leaderboardName`).
+    displayName: r.display_name?.trim() ?? '',
     avatarSeed: r.avatar_seed ?? r.user_id.slice(0, 8),
     points: toNumberOr(r.points, 0),
     rank: toNumberOr(r.rank, 0),

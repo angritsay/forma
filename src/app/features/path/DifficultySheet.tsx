@@ -23,13 +23,14 @@
  *
  *   • the boxes are gone. Rows sit on hairlines, the way every list in the app does now — the
  *     club's board, the task card, the achievements;
- *   • the bar and the recommended row's figures take the **programme colour**, which is the
- *     brandbook's «один экран — один цвет, и он приходит от программы». The sheet portals to
- *     `document.body`, so it cannot inherit `--course-tile` from the screen behind it and is
- *     handed the tile instead;
+ *   • the bars carry the **difficulty scale** of the semantic colour map (global.css header,
+ *     design/CHANGELOG.md §15): «Полегче» the light blue, «Как обычно» plain white, «Посложнее» the
+ *     orange of effort. It used to be the programme colour on the recommended row, which on
+ *     «Форма с нуля» made «recommended» orange — the colour that means «harder» everywhere else;
  *   • **each choice wears an emoji** — «вот тут можно добавить эмодзи». 🌿 / 👟 / 🔥 read at a
- *     glance and on both grounds, and they are the one thing on the row that needs no reading at
- *     all. They are not the count pill's 💪 in any sense the eye can confuse: different screen,
+ *     glance, and they are the one thing on the row that needs no reading at all. All three sit
+ *     on the same neutral `--surface-2` disc: an emoji on a saturated fill is unreadable (🌿 in
+ *     an orange disc was the screenshot that started the colour map). They are not the count pill's 💪 in any sense the eye can confuse: different screen,
  *     different size, different neighbours;
  *   • the calories went. «~31 ккал» barely moved between the three (31 / 31 / 34), so it was a
  *     third figure that decided nothing — and the reps beside it are the one that does.
@@ -46,17 +47,17 @@
  * whatever you pick — «не надо считать разминку и заминку в плане тренировки и в количестве
  * повторений» (`workoutVolume`).
  *
- * **The recommended row is marked, not fenced.** Its emoji sits in a circle filled with the
- * programme colour and its minutes are set in it, exactly the way the club's board marks its
- * leader. The other two are one tap away, at the same size, because the recommendation is advice
- * and not a gate.
+ * **The recommended row is marked, not fenced.** A neon «Рекомендуем» pill beside its name — the
+ * neon is the map's «do this now», which is exactly what a recommendation says. The other two are
+ * one tap away, at the same size, because the recommendation is advice and not a gate.
  */
 import { clsx } from 'clsx';
 import { Glyph } from '@/components/ui/Icon';
+import { Pill } from '@/components/ui/Pill';
 import { Sheet } from '@/components/ui/Sheet';
 import { Spinner } from '@/components/ui/Spinner';
 import { useT } from '@/app/hooks/useT';
-import { courseTileVars } from '@/lib/ui/tile';
+import { DIFFICULTY_BAR_CLASS } from '@/lib/ui/semantic';
 import type { DifficultyChoice, Recommendation } from '@/lib/training/types';
 import { workLabel } from '@/app/features/courses/sessionEstimate';
 import { DisplayText } from '@/app/features/home/DisplayTitle';
@@ -66,8 +67,8 @@ import { DIFFICULTY_LABEL } from './plan';
  * One glyph per choice, and they are doing the job the words do — «вот тут можно добавить эмодзи».
  *
  * 🌿 is lighter, 👟 is the ordinary day you just put your shoes on, 🔥 is more. All three carry
- * their own colour, so they read on the dark ground and inside the filled circle alike, and none of
- * them is a face — a face on a difficulty is a judgement about the person.
+ * their own colour, so they sit on a neutral disc and never on a saturated fill, and none of them
+ * is a face — a face on a difficulty is a judgement about the person.
  */
 const DIFFICULTY_EMOJI: Record<DifficultyChoice, string> = {
   easier: '🌿',
@@ -89,7 +90,10 @@ export interface DifficultyOption {
 export interface DifficultySheetProps {
   open: boolean;
   onClose: () => void;
-  /** The programme's colour. The sheet portals out of the screen, so it cannot inherit it. */
+  /**
+   * The programme's colour. Kept for callers; the sheet no longer paints with it — the difficulty
+   * scale has its own colours (`DIFFICULTY_BAR_CLASS`).
+   */
   tile?: string | undefined;
   options: readonly DifficultyOption[];
   recommended: Recommendation;
@@ -101,7 +105,6 @@ export interface DifficultySheetProps {
 export function DifficultySheet({
   open,
   onClose,
-  tile,
   options,
   recommended,
   pending,
@@ -129,7 +132,7 @@ export function DifficultySheet({
       onClose={onClose}
       title={<DisplayText text={t('app.nodeDifficultyTitle')} />}
     >
-      <div className="flex flex-col gap-4" style={courseTileVars(tile)}>
+      <div className="flex flex-col gap-4">
         <div className="flex flex-col">
           {options.map((o) => {
             const isRecommended = o.choice === recommended.choice;
@@ -148,16 +151,12 @@ export function DifficultySheet({
                 )}
               >
                 {/*
-                 * The emoji in a circle, and the circle is the club's `BoardRow` geometry exactly:
-                 * filled in the programme colour for the one being recommended, a hairline for the
-                 * other two. It is the whole of the recommendation — no badge, no second word.
+                 * The emoji in a circle, the club's `BoardRow` geometry, on the same neutral
+                 * `--surface-2` for all three rows: an emoji is never laid on a saturated fill.
                  */}
                 <span
                   aria-hidden="true"
-                  className={clsx(
-                    'flex size-12 shrink-0 items-center justify-center rounded-pill',
-                    isRecommended ? 'bg-course' : 'border border-border',
-                  )}
+                  className="flex size-12 shrink-0 items-center justify-center rounded-pill bg-surface-2"
                 >
                   {/* `.emoji` on the glyph, never on the circle: it sizes itself to 1em and the
                       circle is a 48px plate, exactly as `Badges` and `CoursesHead` do it. */}
@@ -168,17 +167,15 @@ export function DifficultySheet({
 
                 <span className="flex min-w-0 flex-1 flex-col gap-2">
                   <span className="flex items-baseline justify-between gap-3">
-                    <span className="font-display text-[17px]">
-                      {t(DIFFICULTY_LABEL[o.choice])}
+                    <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="font-display text-[17px]">
+                        {t(DIFFICULTY_LABEL[o.choice])}
+                      </span>
+                      {/* The recommendation: the neon's «do this now», as a marker and not a fill. */}
+                      {isRecommended ? <Pill tone="neon">{t('training.recommended')}</Pill> : null}
                     </span>
-                    {/* The minutes, in the programme colour on the row being recommended. */}
                     <span className="flex shrink-0 items-baseline gap-1">
-                      <span
-                        className={clsx(
-                          'numeral tabular text-2xl leading-none',
-                          isRecommended && 'text-course-accent',
-                        )}
-                      >
+                      <span className="numeral tabular text-2xl leading-none">
                         {Math.max(1, Math.round(o.durationSec / 60))}
                       </span>
                       <span className="eyebrow text-muted-2">{t('common.minutesUnit')}</span>
@@ -197,7 +194,7 @@ export function DifficultySheet({
                     <span
                       className={clsx(
                         'block h-full rounded-pill transition-[width] duration-300 ease-(--ease-out)',
-                        isRecommended ? 'bg-course-accent' : 'bg-muted-2',
+                        DIFFICULTY_BAR_CLASS[o.choice],
                       )}
                       style={{ width: `${Math.round(share(o) * 100)}%` }}
                     />

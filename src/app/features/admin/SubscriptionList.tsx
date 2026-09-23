@@ -4,6 +4,7 @@ import { formatDate, type TKey } from '@/i18n/index';
 import { subscriptionLive } from '@/lib/api/mappers';
 import type { SubscriptionRow, SubscriptionStatus } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
+import { sourceLabel } from './model';
 import { rowIndex } from './PurchaseList';
 
 export const SUB_STATUS_LABEL: Record<SubscriptionStatus, TKey> = {
@@ -59,7 +60,7 @@ export function SubscriptionList({ rows, busyId, onAction }: SubscriptionListPro
                     </span>
                     <span className="text-xs text-muted-2">
                       {t('app.adminCreated', { date: formatDate(locale, row.createdAt, 'long') })}
-                      {row.source ? ` · ${row.source}` : ''}
+                      {sourceLabel(t, row.source) ? ` · ${sourceLabel(t, row.source)}` : ''}
                       {row.providerRef ? ` · ${row.providerRef}` : ''}
                     </span>
                     {row.note ? <span className="text-xs text-muted">{row.note}</span> : null}

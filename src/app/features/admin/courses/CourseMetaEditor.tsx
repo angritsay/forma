@@ -78,6 +78,15 @@ export function CourseMetaEditor({ course, onPatch }: CourseMetaEditorProps) {
    * at once and the field follows it.
    */
   const [tileText, setTileText] = useState(course.tile);
+  /*
+   * The hex field is behind «Свой цвет». The five swatches are the answer for every course the
+   * programme has; a field of hex digits in front of a non-technical owner was an invitation to
+   * type a brand blue the palette keeps for the club. It opens by itself when the course already
+   * wears a colour that is not one of the swatches, so that colour is never hidden.
+   */
+  const [customTile, setCustomTile] = useState(
+    () => !(TILES as readonly string[]).includes(course.tile.toLowerCase()),
+  );
   useEffect(() => setTileText(course.tile), [course.tile]);
   const commitTile = () => {
     const next = tileText.trim().toLowerCase();
@@ -271,6 +280,13 @@ export function CourseMetaEditor({ course, onPatch }: CourseMetaEditorProps) {
               </button>
             );
           })}
+          {customTile ? null : (
+            <Button variant="ghost" size="sm" onClick={() => setCustomTile(true)}>
+              {t('app.courseTileCustom')}
+            </Button>
+          )}
+        </div>
+        {customTile ? (
           <Input
             wrapperClassName="w-36"
             className="font-mono"
@@ -287,7 +303,7 @@ export function CourseMetaEditor({ course, onPatch }: CourseMetaEditorProps) {
               if (e.key === 'Enter') commitTile();
             }}
           />
-        </div>
+        ) : null}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

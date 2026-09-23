@@ -105,7 +105,9 @@ export function courseFromBundle(bundle: AdminCourseBundle): Course {
     bundle.workouts.map((w) => ({
       shortId: w.shortId,
       title: w.title,
+      titleEn: w.titleEn,
       description: w.description,
+      descriptionEn: w.descriptionEn,
       points: w.points,
       structure: (w.structure ?? { sections: [] }) as CustomWorkoutStructure,
     })),

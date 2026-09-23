@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { COURSES } from '@/content/registry';
 import type { PurchaseRow } from '@/lib/api/types';
-import { courseName, nextStatuses, purchaseFilter, withStatus } from './model';
+import {
+  courseName,
+  nextStatuses,
+  purchaseFilter,
+  sourceLabel,
+  sourceLabelKey,
+  withStatus,
+} from './model';
 
 function purchase(id: string, status: PurchaseRow['status']): PurchaseRow {
   return {
@@ -52,5 +59,22 @@ describe('withStatus', () => {
     expect(refunded[0]).toMatchObject({ status: 'refunded', activatedAt: now });
     const again = withStatus(refunded, 'a', 'active', '2026-09-05T00:00:00Z');
     expect(again[0]?.activatedAt).toBe(now);
+  });
+});
+
+describe('sourceLabel', () => {
+  const t = (key: string) => `<${key}>`;
+
+  it('names the tills and the manual grant', () => {
+    expect(sourceLabelKey('prodamus')).toBe('app.adminSourceProdamus');
+    expect(sourceLabelKey(' Lava ')).toBe('app.adminSourceLava');
+    expect(sourceLabelKey('admin')).toBe('app.adminSourceAdmin');
+    expect(sourceLabel(t, 'admin')).toBe('<app.adminSourceAdmin>');
+  });
+
+  it('shows an unknown source as stored and nothing for none', () => {
+    expect(sourceLabel(t, 'landing')).toBe('landing');
+    expect(sourceLabel(t, null)).toBeNull();
+    expect(sourceLabel(t, '  ')).toBeNull();
   });
 });

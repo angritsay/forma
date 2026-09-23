@@ -107,8 +107,8 @@ function ArtSlide({ exerciseId, videoRef, name, offset, playing }: ArtSlideProps
           loading="eager"
           fallback={
             videoRef || !name ? null : (
-              <div className="flex size-full items-center justify-center bg-course px-8 text-center">
-                <span className="display text-3xl text-tile-fg">{name}</span>
+              <div className="flex size-full items-center justify-center bg-surface-2 px-8 text-center">
+                <span className="display text-3xl text-text">{name}</span>
               </div>
             )
           }

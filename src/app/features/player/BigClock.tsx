@@ -9,18 +9,20 @@ export interface BigClockProps {
   /** Line under the digits (hint, cap). */
   caption?: ReactNode;
   /**
-   * `accent` marks the last seconds of a countdown and renders as plain white now: the beeps do
-   * the counting, and a timer is not one of the places the programme colour may land. `warning`
-   * and `danger` are for a cap running out and stay semantic.
+   * `urgent` marks the last seconds of a countdown: time running out is one of the orange's jobs
+   * in the semantic colour map (global.css header, design/CHANGELOG.md §15) — intensity, effort —
+   * and it is never the programme colour. 5.56 on charcoal. `accent` is its older name, kept so
+   * callers do not break. `warning` and `danger` are for a cap running out and stay semantic.
    */
-  tone?: 'default' | 'accent' | 'warning' | 'danger';
+  tone?: 'default' | 'urgent' | 'accent' | 'warning' | 'danger';
   size?: 'md' | 'lg';
   className?: string;
 }
 
 const TONE = {
   default: 'text-text',
-  accent: 'text-text',
+  urgent: 'text-orange',
+  accent: 'text-orange',
   warning: 'text-warning',
   danger: 'text-danger',
 } as const;

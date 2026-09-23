@@ -17,8 +17,10 @@ import { Button } from '@/components/ui/Button';
 import { Glyph } from '@/components/ui/Icon';
 import { formatNumber, type TKey, type TParams } from '@/i18n/index';
 import type { MarathonRow, MarathonTaskRow, MarathonTaskTarget } from '@/lib/api/types';
-import { addDays } from '@/lib/util/dates';
 import { useT } from '@/app/hooks/useT';
+import { dateOfDay, dayOfDate } from './dates';
+
+export { dateOfDay } from './dates';
 
 export interface DayPlanProps {
   marathon: MarathonRow;
@@ -33,18 +35,6 @@ export interface DayPlanProps {
   onOpenTask: (task: MarathonTaskRow) => void;
   onAddTask: () => void;
   onCopyYesterday: () => void;
-}
-
-/** The date a marathon day falls on. Day 1 is `startsOn`. */
-export function dateOfDay(startsOn: string, dayIndex: number): string {
-  return addDays(startsOn, dayIndex - 1);
-}
-
-/** Which marathon day a date is, or 0 when it is outside the run. */
-function dayOfDate(startsOn: string, days: number, iso: string): number {
-  const ms = Date.parse(`${iso}T00:00:00Z`) - Date.parse(`${startsOn}T00:00:00Z`);
-  const n = Math.round(ms / 86_400_000) + 1;
-  return n >= 1 && n <= days ? n : 0;
 }
 
 /** Monday-first weekday index, because the weeks in this product start on Monday. */
@@ -119,7 +109,7 @@ export function DayPlan({
           type="button"
           onClick={() => shiftMonth(-1)}
           aria-label={t('app.mAdminPrevMonth')}
-          className="flex size-9 items-center justify-center text-muted hover:text-text"
+          className="flex size-11 items-center justify-center text-muted hover:text-text"
         >
           <Glyph size={16}>‹</Glyph>
         </button>
@@ -128,7 +118,7 @@ export function DayPlan({
           type="button"
           onClick={() => shiftMonth(1)}
           aria-label={t('app.mAdminNextMonth')}
-          className="flex size-9 items-center justify-center text-muted hover:text-text"
+          className="flex size-11 items-center justify-center text-muted hover:text-text"
         >
           <Glyph size={16}>›</Glyph>
         </button>

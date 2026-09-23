@@ -422,6 +422,9 @@ export const app = {
   // streak, then three figures. The ordinal is a word up to the tenth day — a figure that size
   // would fight the three under it — and «11-й день» after that.
   summaryDone: 'Готово!',
+  // Names for a coach-built workout on the summary: it is not in the catalogue.
+  summaryCustomCourse: 'Своя тренировка',
+  summaryCustomWorkout: 'Тренировка от тренера',
   summaryCountFirst: 'Первая. Начало положено.',
   summaryCountWord: '{ordinal} тренировка. Так и растёт форма.',
   summaryCountNum: 'Тренировка №{n}. Так и растёт форма.',
@@ -499,6 +502,7 @@ export const app = {
   leaderboardFilterLabel: 'Курс',
   leaderboardGlobal: 'Общий',
   leaderboardRankLabel: 'Место {n}',
+  leaderboardAnonymous: 'Атлет {id}',
   leaderboardYou: 'Это ты',
   leaderboardEmptyTitle: 'Очков пока нет',
   leaderboardEmptyWeek: 'Стань первым на этой неделе: заверши тренировку.',
@@ -555,7 +559,8 @@ export const app = {
   adminConfirmActivateTitle: 'Открыть доступ?',
   adminConfirmActivateBody: 'Курс сразу откроется для этой почты.',
   adminConfirmRefundTitle: 'Отметить возврат?',
-  adminConfirmRefundBody: 'Доступ к курсу для этой почты закроется.',
+  adminConfirmRefundBody:
+    'Доступ к курсу для этой почты закроется. Деньги это не вернёт — возврат делается вручную в Prodamus или lava.top, смотря куда платили.',
   adminStatusUpdated: 'Статус обновлён',
   adminActionError: 'Не удалось применить изменение.',
   adminForbidden: 'Только для админов. Войди с почтой тренера.',
@@ -741,6 +746,36 @@ export const app = {
   builderAssignError: 'Не удалось выдать',
   builderUnassign: 'Забрать доступ',
 
+  // --- Admin: quick wins (payment source, confirmations, toasts) --------------
+  // Касса так, как её называет человек, — те же слова, что в сообщениях админам в Telegram.
+  adminSourceProdamus: 'Prodamus',
+  adminSourceLava: 'lava.top',
+  adminSourceAdmin: 'выдано вручную',
+  builderSearch: 'Поиск по названию',
+  builderSearchEmpty: 'Ничего не нашлось',
+  builderDeleted: 'Тренировка удалена',
+  builderCopyFailed: 'Не получилось скопировать — выдели ссылку и скопируй вручную',
+  builderSendTelegram: 'Отправить в Telegram',
+  builderShareNative: 'Поделиться…',
+  builderUnassignTitle: 'Забрать тренировку у {email}?',
+  builderUnassignBody: 'Она пропадёт из личного кабинета этого человека.',
+  builderUnassigned: 'Доступ забран',
+  builderLeaveTitle: 'Уйти без сохранения?',
+  builderLeaveBody: 'Изменения в тренировке пропадут.',
+  builderLeaveConfirm: 'Уйти',
+  builderLeaveStay: 'Остаться',
+  courseUnpublishConfirmTitle: 'Снять курс с публикации?',
+  courseUnpublishConfirmBody: 'Курс пропадёт из каталога. У тех, кто уже купил, он останется.',
+  courseUnpublished: 'Курс снят с публикации',
+  courseDeleteConfirmTitle: 'Удалить курс?',
+  courseDeleteConfirmBody: 'Черновик удалится насовсем. Отменить нельзя.',
+  courseDeleted: 'Курс удалён',
+  courseDeleteError: 'Не удалось удалить курс',
+  dayDeleteConfirmTitle: 'Удалить день?',
+  dayDeleteConfirmBody: 'День и его текст удалятся. Тренировка останется в конструкторе.',
+  dayDeleted: 'День удалён',
+  courseTileCustom: 'Свой цвет',
+
   // --- exercise library (admin) ---------------------------------------------
   exScreenTitle: 'База упражнений',
   exSearch: 'Поиск по названию, id или тегу',
@@ -817,7 +852,7 @@ export const app = {
 
   // --- course builder (admin) -----------------------------------------------
   courseNavLabel: 'Конструктор курсов',
-  courseScreenTitle: 'Курсы',
+  courseScreenTitle: 'Конструктор курсов',
   courseNew: 'Новый курс',
   courseNewBody:
     'Идентификатор менять потом нельзя — по нему записаны покупки и история тренировок.',
@@ -856,7 +891,7 @@ export const app = {
   courseEquipment: 'Оборудование',
   courseTile: 'Плашка курса',
   courseTileHint:
-    'Цвет курса на его экране. Цвета программ: новичкам #ff5a00, гантели #f4ff3f, йога #ffe6d0. Другому курсу — одна из двух нейтральных поверхностей: #2e2e2e или #383838. Синие — цвета клуба, тренера и интерфейса, курсу они не даются.',
+    'Цвет курса на его экране. Оранжевый — новичкам, неон — гантелям, бежевый — йоге, два серых — курсам вне программ.',
   courseCover: 'Обложка',
   courseCoverHint: 'Показывается на странице курса и в каталоге',
   courseIntroVideo: 'Вступительное видео',
@@ -962,6 +997,7 @@ export const app = {
   duoInvite: 'Позвать подругу',
   duoInviteTitle: 'Давай в клуб вдвоём',
   duoInviteCopied: 'Ссылка скопирована',
+  duoInviteNoAccess: 'Пара собирается внутри клуба, а клуб — по подписке.',
   // Экран /duo: принять приглашение по ссылке подруги. Отказы — коды club_invite_redeem (0034).
   duoRedeemTitle: 'Приглашение в пару',
   duoRedeemDone: 'Вы в паре',
@@ -1048,7 +1084,7 @@ export const app = {
   mAdminPrize: 'Приз недели',
   mAdminDescription: 'Описание',
   mAdminCreate: 'Создать',
-  mAdminCreateError: 'Не удалось создать марафон',
+  mAdminCreateError: 'Не удалось создать круг',
   mAdminLoadError: 'Не удалось загрузить',
   mAdminSaveError: 'Не удалось сохранить',
   mAdminStatus: 'Статус',
@@ -1070,7 +1106,8 @@ export const app = {
   mAdminAddTask: 'Добавить задание',
   mAdminCopyDay: 'Скопировать вчерашний день',
   mAdminCopyDayError: 'Копировать нечего',
-  mAdminRepeatUntil: 'Повторять до дня',
+  mAdminRepeatUntil: 'Повторять до',
+  mAdminRepeatUntilHint: 'Пусто — только этот день',
   mAdminRepeat: 'Повторить',
   mAdminTaskNew: 'Новое задание',
   mAdminTaskEdit: 'Задание',
@@ -1117,8 +1154,10 @@ export const app = {
   mAdminRestore: 'Вернуть',
   mAdminRemoved: 'Убран',
   mAdminPeopleEmpty: 'Пока никого',
+  // В клуб попадают оплатой: участник — это тот, кто заплатил. Руками добавляют только тех, кто
+  // заплатил мимо кассы.
   mAdminPeopleEmptyBody:
-    'Добавь участников по почте — они увидят клуб, когда войдут с этим адресом.',
+    'Люди попадают в круг сами, когда оплачивают клуб. Вручную добавляй по почте только тех, кто заплатил мимо кассы — переводом или подарком.',
   mAdminAddError: 'Не удалось добавить',
   // Proofs
   mAdminProofsEmpty: 'Отчётов пока нет',
@@ -1150,6 +1189,59 @@ export const app = {
   mAdminBonusPoints: 'Баллы (можно минус)',
   mAdminBonusReason: 'За что',
   mAdminBonusAdd: 'Начислить',
+
+  // --- Club admin: quick wins (confirmations, toasts, board, bonuses) ---------
+  mAdminTabBoard: 'Доска',
+  mAdminSaved: 'Сохранено',
+  mAdminTaskSaved: 'Задание сохранено',
+  mAdminTaskDeleted: 'Задание удалено',
+  mAdminDeleteTaskBody: 'Оно пропадёт у всех, кому было отправлено. Отменить нельзя.',
+  mAdminDayCopied: 'Вчерашние задания скопированы',
+  mAdminStatusConfirmDraftTitle: 'Вернуть круг в черновик?',
+  mAdminStatusConfirmDraftBody:
+    'Участники перестанут его видеть, пока статус снова не станет «Идёт».',
+  mAdminStatusConfirmArchivedTitle: 'Отправить круг в архив?',
+  mAdminStatusConfirmArchivedBody: 'Он пропадёт из списка кругов и у участников.',
+  mAdminStatusConfirm: 'Сменить статус',
+  mAdminTzMoscow: 'Москва (UTC+3)',
+  mAdminTzKaliningrad: 'Калининград (UTC+2)',
+  mAdminTzYekaterinburg: 'Екатеринбург (UTC+5)',
+  mAdminTzNovosibirsk: 'Новосибирск (UTC+7)',
+  mAdminTzVladivostok: 'Владивосток (UTC+10)',
+  mAdminTzUtc: 'UTC',
+  mAdminRemoveConfirmTitle: 'Убрать {name} из круга?',
+  mAdminRemoveConfirmBody:
+    'Задания и таблица для этого человека пропадут. Вернуть можно здесь же, кнопкой «Вернуть».',
+  mAdminMemberAdded: 'Участник добавлен',
+  mAdminMemberRemoved: 'Участник убран',
+  mAdminMemberRestored: 'Участник возвращён',
+  mAdminProofVoidedToast: 'Отчёт не засчитан',
+  mAdminProofRestoredToast: 'Отчёт снова засчитан',
+  mAdminProofAcceptedToast: 'Оставлено как есть',
+  mAdminToday: 'Сегодня',
+  mAdminYesterday: 'Вчера',
+  mAdminProofsPickDate: 'Другая дата',
+  mAdminBonusAdded: 'Баллы начислены',
+  mAdminBonusList: 'Начислено вручную',
+  mAdminBonusListEmpty: 'Вручную пока ничего не начисляли',
+  mAdminBonusUndo: 'Отменить',
+  mAdminBonusUndoTitle: 'Отменить начисление?',
+  mAdminBonusUndoBody: '{points} у {name} пропадут из таблицы.',
+  mAdminBonusRemoved: 'Начисление отменено',
+  mAdminBoardWeek: 'Неделя {n}',
+  mAdminBoardHint:
+    'Нажми «Победитель» у строки, чтобы объявить победителя недели. Кубок у имени увидит весь клуб.',
+  mAdminBoardPairsNote:
+    'В круге с парами победителя отсюда не объявить — только посмотреть таблицу.',
+  mAdminAnnounceTitle: 'Объявить {name} победителем недели {week}?',
+  mAdminAnnounceBody: 'Весь клуб увидит кубок у этого имени.',
+  mAdminAnnounceConfirm: 'Объявить',
+  mAdminWithdrawTitle: 'Снять объявление?',
+  mAdminWithdrawBody: '{name} перестанет быть победителем недели {week}.',
+  mAdminWithdrawConfirm: 'Снять',
+  mAdminWinnerAnnounced: 'Победитель объявлен',
+  mAdminWinnerWithdrawn: 'Объявление снято',
+  mAdminWinnerError: 'Не удалось сохранить объявление',
 
   // --- Club (stream 4) --------------------------------------------------------
   // The tab is «только задание и лидерборд», and this is everything the two states of it say

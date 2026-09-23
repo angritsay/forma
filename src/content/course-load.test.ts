@@ -13,8 +13,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { COURSES } from '@content/courses';
-import { choiceSetBlockIds, prescribeWorkout } from '@/lib/training/prescribe';
-import { MIN_ROUNDS_EASIER_CIRCUIT } from '@/lib/training/constants';
+import { choiceSetBlockIds, holdsRounds, prescribeWorkout } from '@/lib/training/prescribe';
 import type { DifficultyChoice, UserTrainingProfile } from '@/lib/training/types';
 import type { Workout } from '@/content/schema';
 
@@ -38,13 +37,14 @@ function minutes(workout: Workout, choice: DifficultyChoice, scale = 1): number 
 }
 
 /**
- * The coach's "start every N minutes" pieces, authored as circuits so their rests play (beginner
- * workouts 3 and 10). Their round is a couple of minutes by construction — workout 3 is a single
- * pass of three pairs, which «Полегче» cannot shorten by a round, and workout 10's round is his
- * two-minute window — so «Полегче» removes less than MIN_STEP_MIN. Stretching the rest to reach
- * three minutes would rewrite his format; the harder side keeps the full check.
+ * The coach's "start every N minutes" piece with more than two rounds (beginner workout 10). Its
+ * round is his two-minute window, so a step between choices is one window: «Полегче» takes one
+ * away and «Посложнее» adds one, at the same reps (the added round is the step — see
+ * `prescribeWorkout`). A window is two minutes, not three; stretching the rest to reach three
+ * would rewrite his format.
  */
-const EVERY_N_MINUTES = new Set(['w_s03_pairs', 'w_s10_every_2min']);
+const EVERY_N_MINUTES = new Set(['w_s10_every_2min']);
+const EVERY_N_MINUTES_STEP_MIN = 2;
 
 /** Blocks the choice can add a set to; without one, only volume and windows move. */
 function hasScalableSetBlock(workout: Workout): boolean {
@@ -54,23 +54,15 @@ function hasScalableSetBlock(workout: Workout): boolean {
 }
 
 /**
- * «Полегче» has no round to take away: every block the choice moves is a main circuit already at
- * the two-round floor (MIN_ROUNDS_EASIER_CIRCUIT — «два круга» is not cut to one), so easier moves
- * on reps alone and is not expected to save minutes.
+ * Every block the choice would move is a main circuit of one or two rounds (`holdsRounds`: s03's
+ * single pass of three pairs, s17's two rounds with three minutes between). The choice moves
+ * their reps, not their rounds — a round either way is a different session — so the minutes move
+ * by less than a felt step; they still have to move, and in the right direction.
  */
-function easierAtRoundFloor(workout: Workout): boolean {
+function repsOnly(workout: Workout): boolean {
   const ids = choiceSetBlockIds(workout);
   const moved = workout.blocks.filter((b) => ids.has(b.id));
-  return (
-    moved.length > 0 &&
-    moved.every(
-      (b) =>
-        b.format === 'circuit' &&
-        b.type !== 'core' &&
-        b.type !== 'skill' &&
-        (b.sets ?? 1) <= MIN_ROUNDS_EASIER_CIRCUIT,
-    )
-  );
+  return moved.length > 0 && moved.every((b) => holdsRounds(b));
 }
 
 const everyWorkout = COURSES.flatMap((c) =>
@@ -100,12 +92,14 @@ describe('published course load', () => {
       const easier = minutes(workout, 'easier');
       const normal = minutes(workout, 'normal');
       const harder = minutes(workout, 'harder');
-      const steps =
-        EVERY_N_MINUTES.has(workout.id) || easierAtRoundFloor(workout)
-          ? [harder - normal]
-          : [normal - easier, harder - normal];
+      const steps = [normal - easier, harder - normal];
+      const min = repsOnly(workout)
+        ? Number.EPSILON
+        : EVERY_N_MINUTES.has(workout.id)
+          ? EVERY_N_MINUTES_STEP_MIN
+          : MIN_STEP_MIN;
       for (const step of steps) {
-        expect(step).toBeGreaterThanOrEqual(MIN_STEP_MIN);
+        expect(step).toBeGreaterThanOrEqual(min);
         expect(step).toBeLessThanOrEqual(MAX_STEP_MIN);
       }
       // Easier still has to be easier, even where it cannot be three minutes easier.

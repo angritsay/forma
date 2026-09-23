@@ -1,14 +1,20 @@
 /**
  * The coach's workout builder (admins only). A list of custom workouts, the editor, and the two
  * ways to hand a workout out: a share link (opens the app) and assigning it to a person's email.
+ *
+ * The editor has its own address, `/admin/workouts/:id` (`new` for a new one). It used to be a
+ * state of the list, so Telegram's back button — which walks history — skipped straight past it
+ * and threw away whatever was being built. On its own route the back button is the editor's, and
+ * leaving with unsaved work asks first (`useUnsavedGuard`).
  */
-import { useCallback, useEffect, useState } from 'react';
-import { Navigate } from 'react-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Navigate, useNavigate, useParams } from 'react-router';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Glyph } from '@/components/ui/Icon';
 import { IconButton } from '@/components/ui/IconButton';
+import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
 import { Sheet } from '@/components/ui/Sheet';
@@ -28,12 +34,15 @@ import {
 } from '@/lib/api/customWorkouts';
 import type { CustomWorkoutSummary, WorkoutAssigneeRow } from '@/lib/api/types';
 import type { CustomWorkoutStructure } from '@/lib/training/customWorkout';
+import { openExternal } from '@/lib/telegram/webapp';
 import { TopBar } from '@/app/components/TopBar';
 import { adminErrorTitle } from '@/app/features/admin/adminError';
 import { useT } from '@/app/hooks/useT';
 import { BootScreen } from '@/app/components/BootScreen';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
+import { telegramShareUrl } from '@/app/features/admin/share';
+import { useUnsavedGuard } from '@/app/features/admin/useUnsavedGuard';
 import { WorkoutEditor } from '@/app/features/admin/workoutBuilder/WorkoutEditor';
 
 function shareUrl(token: string): string {
@@ -42,18 +51,124 @@ function shareUrl(token: string): string {
   return `${base}#/shared/${token}`;
 }
 
-type EditTarget = { id: string; input: CustomWorkoutInput } | 'new' | null;
-
 export default function AdminWorkoutsScreen() {
+  const { id } = useParams();
+  const admin = useIsAdmin();
+  if (admin === null) return <BootScreen />;
+  if (admin === false) return <Navigate to="/" replace />;
+  return id ? <WorkoutEditScreen id={id} /> : <WorkoutList />;
+}
+
+/** The editor on its own route: loads the workout (or starts a new one) and guards unsaved work. */
+function WorkoutEditScreen({ id }: { id: string }) {
   const tr = useT();
   const { t } = tr;
   const toast = useToast();
-  const admin = useIsAdmin();
+  const isNew = id === 'new';
+  const [input, setInput] = useState<CustomWorkoutInput | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const guard = useUnsavedGuard(dirty, '/admin/workouts');
+
+  useEffect(() => {
+    if (isNew) return;
+    let alive = true;
+    getCustomWorkout(id)
+      .then((w) => {
+        if (!alive) return;
+        /*
+         * Всё, что у строки есть, а не половина.
+         *
+         * Английские половины сюда не клались, а `onSave` пишет то, что пришло из редактора, —
+         * то есть открыть переведённую тренировку и нажать «Сохранить» значило стереть перевод.
+         * Молча: на экране его и не было видно, потому что он не загрузился.
+         */
+        setInput({
+          title: w.title,
+          titleEn: w.titleEn,
+          description: w.description,
+          descriptionEn: w.descriptionEn,
+          authorSlug: w.authorSlug,
+          structure: w.structure as CustomWorkoutStructure,
+        });
+      })
+      .catch((e: unknown) => {
+        if (!alive) return;
+        setFailed(true);
+        toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.builderLoadError') });
+      });
+    return () => {
+      alive = false;
+    };
+  }, [id, isNew, toast, tr]);
+
+  const onSave = async (next: CustomWorkoutInput) => {
+    setSaving(true);
+    try {
+      if (isNew) await createCustomWorkout(next);
+      else await updateCustomWorkout(id, next);
+      toast.show({ kind: 'success', title: t('app.builderSaved') });
+      setDirty(false);
+      guard.leave();
+    } catch (e) {
+      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.builderSaveError') });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (failed) return <Navigate to="/admin/workouts" replace />;
+
+  return (
+    <Screen
+      header={
+        <TopBar back={guard.attempt} title={isNew ? t('app.builderNew') : t('app.builderEdit')} />
+      }
+    >
+      {!isNew && !input ? (
+        <LoadingBlock />
+      ) : (
+        <WorkoutEditor
+          {...(input
+            ? {
+                initialTitle: input.title,
+                initialTitleEn: input.titleEn,
+                initialDescription: input.description,
+                initialDescriptionEn: input.descriptionEn,
+                initialAuthorSlug: input.authorSlug,
+                initialStructure: input.structure,
+              }
+            : {})}
+          saving={saving}
+          onSave={(next) => void onSave(next)}
+          onCancel={guard.attempt}
+          onDirtyChange={setDirty}
+        />
+      )}
+      <Modal
+        open={guard.asking}
+        onClose={guard.stay}
+        title={t('app.builderLeaveTitle')}
+        description={t('app.builderLeaveBody')}
+        confirmLabel={t('app.builderLeaveConfirm')}
+        cancelLabel={t('app.builderLeaveStay')}
+        danger
+        onConfirm={guard.leave}
+      />
+    </Screen>
+  );
+}
+
+function WorkoutList() {
+  const tr = useT();
+  const { t } = tr;
+  const toast = useToast();
+  const navigate = useNavigate();
 
   const [rows, setRows] = useState<CustomWorkoutSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState<EditTarget>(null);
-  const [saving, setSaving] = useState(false);
+  const [query, setQuery] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [shareFor, setShareFor] = useState<CustomWorkoutSummary | null>(null);
   const [assignFor, setAssignFor] = useState<CustomWorkoutSummary | null>(null);
@@ -67,52 +182,18 @@ export default function AdminWorkoutsScreen() {
   }, [toast, t]);
 
   useEffect(() => {
-    if (admin) refresh();
-  }, [admin, refresh]);
+    refresh();
+  }, [refresh]);
 
-  if (admin === null) return <BootScreen />;
-  if (admin === false) return <Navigate to="/" replace />;
-
-  const startEdit = async (id: string) => {
-    try {
-      const w = await getCustomWorkout(id);
-      setEditing({
-        id,
-        /*
-         * Всё, что у строки есть, а не половина.
-         *
-         * Английские половины сюда не клались, а `onSave` пишет то, что пришло из редактора, —
-         * то есть открыть переведённую тренировку и нажать «Сохранить» значило стереть перевод.
-         * Молча: на экране его и не было видно, потому что он не загрузился.
-         */
-        input: {
-          title: w.title,
-          titleEn: w.titleEn,
-          description: w.description,
-          descriptionEn: w.descriptionEn,
-          authorSlug: w.authorSlug,
-          structure: w.structure as CustomWorkoutStructure,
-        },
-      });
-    } catch (e) {
-      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.builderLoadError') });
-    }
-  };
-
-  const onSave = async (input: CustomWorkoutInput) => {
-    setSaving(true);
-    try {
-      if (editing && editing !== 'new') await updateCustomWorkout(editing.id, input);
-      else await createCustomWorkout(input);
-      setEditing(null);
-      refresh();
-      toast.show({ kind: 'success', title: t('app.builderSaved') });
-    } catch (e) {
-      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.builderSaveError') });
-    } finally {
-      setSaving(false);
-    }
-  };
+  /*
+   * Search by title, on the list already loaded: the library is dozens of workouts, not thousands,
+   * and a round trip per letter would only make the list flicker.
+   */
+  const shown = useMemo(() => {
+    const q = query.trim().toLocaleLowerCase();
+    if (!q) return rows;
+    return rows.filter((w) => w.title.toLocaleLowerCase().includes(q));
+  }, [rows, query]);
 
   const confirmDelete = async () => {
     if (!deleteId) return;
@@ -121,40 +202,11 @@ export default function AdminWorkoutsScreen() {
     try {
       await deleteCustomWorkout(id);
       setRows((prev) => prev.filter((r) => r.id !== id));
+      toast.show({ kind: 'success', title: t('app.builderDeleted') });
     } catch (e) {
       toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.builderDeleteError') });
     }
   };
-
-  if (editing) {
-    const isNew = editing === 'new';
-    return (
-      <Screen
-        header={
-          <TopBar
-            back={() => setEditing(null)}
-            title={isNew ? t('app.builderNew') : t('app.builderEdit')}
-          />
-        }
-      >
-        <WorkoutEditor
-          {...(isNew
-            ? {}
-            : {
-                initialTitle: editing.input.title,
-                initialTitleEn: editing.input.titleEn,
-                initialDescription: editing.input.description,
-                initialDescriptionEn: editing.input.descriptionEn,
-                initialAuthorSlug: editing.input.authorSlug,
-                initialStructure: editing.input.structure,
-              })}
-          saving={saving}
-          onSave={onSave}
-          onCancel={() => setEditing(null)}
-        />
-      </Screen>
-    );
-  }
 
   return (
     <Screen
@@ -164,19 +216,36 @@ export default function AdminWorkoutsScreen() {
           size="lg"
           fullWidth
           icon={<Glyph size={16}>+</Glyph>}
-          onClick={() => setEditing('new')}
+          onClick={() => navigate('/admin/workouts/new')}
         >
           {t('app.builderNew')}
         </Button>
       }
     >
+      {rows.length > 0 ? (
+        <div className="pt-2">
+          <Input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t('app.builderSearch')}
+            aria-label={t('app.builderSearch')}
+            autoComplete="off"
+            spellCheck={false}
+          />
+        </div>
+      ) : null}
       {loading ? (
         <LoadingBlock />
       ) : rows.length === 0 ? (
         <EmptyState title={t('app.builderEmptyTitle')} description={t('app.builderEmptyBody')} />
+      ) : shown.length === 0 ? (
+        <p className="border-t border-border py-6 text-[15px] text-muted-2">
+          {t('app.builderSearchEmpty')}
+        </p>
       ) : (
         <ul className="flex flex-col py-2">
-          {rows.map((w, i) => {
+          {shown.map((w, i) => {
             const minutes = w.estSec ? Math.max(1, Math.round(w.estSec / 60)) : null;
             return (
               <li key={w.id} className="flex gap-3 border-t border-border py-4 lg:gap-4">
@@ -203,7 +272,11 @@ export default function AdminWorkoutsScreen() {
                   </div>
                   {/* Row actions are words in small buttons; the pictures they used to carry said nothing the words did not. */}
                   <div className="flex flex-wrap gap-2">
-                    <Button size="sm" variant="secondary" onClick={() => void startEdit(w.id)}>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => navigate(`/admin/workouts/${w.id}`)}
+                    >
                       {t('app.builderEditBtn')}
                     </Button>
                     <Button size="sm" variant="secondary" onClick={() => setShareFor(w)}>
@@ -280,7 +353,29 @@ function ShareSheet({
       await navigator.clipboard.writeText(shareUrl(token));
       toast.show({ kind: 'success', title: t('app.builderLinkCopied') });
     } catch {
-      /* Clipboard blocked: the link is shown for manual copy. */
+      // Clipboard blocked (Telegram's webview often is): the link is on screen to copy by hand.
+      toast.show({ kind: 'error', title: t('app.builderCopyFailed') });
+    }
+  };
+
+  /*
+   * Straight into a chat: Telegram's own share sheet inside the Mini App, a new tab elsewhere.
+   * This is how a workout actually travels — the owner sends it to a person, she does not paste a
+   * link into a field.
+   */
+  const sendTelegram = () => {
+    if (!token) return;
+    const url = telegramShareUrl(shareUrl(token), workout.title);
+    if (!openExternal(url)) window.open(url, '_blank', 'noopener');
+  };
+
+  const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const shareNative = async () => {
+    if (!token) return;
+    try {
+      await navigator.share({ title: workout.title, url: shareUrl(token) });
+    } catch {
+      /* Dismissed or refused — nothing was sent and there is nothing to say. */
     }
   };
 
@@ -294,14 +389,22 @@ function ShareSheet({
             <div className="border border-border bg-surface-2 px-4 py-3 font-mono text-[13px] break-all select-all">
               {shareUrl(token)}
             </div>
-            <div className="flex gap-2">
-              <Button fullWidth onClick={() => void copy()}>
+            <Button variant="action" fullWidth onClick={sendTelegram}>
+              {t('app.builderSendTelegram')}
+            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button className="flex-1" onClick={() => void copy()}>
                 {t('app.builderCopyLink')}
               </Button>
-              <Button variant="ghost" loading={busy} onClick={() => void toggle(false)}>
-                {t('app.builderShareOff')}
-              </Button>
+              {canShare ? (
+                <Button variant="secondary" className="flex-1" onClick={() => void shareNative()}>
+                  {t('app.builderShareNative')}
+                </Button>
+              ) : null}
             </div>
+            <Button variant="ghost" loading={busy} onClick={() => void toggle(false)}>
+              {t('app.builderShareOff')}
+            </Button>
           </>
         ) : (
           <Button fullWidth loading={busy} onClick={() => void toggle(true)}>
@@ -326,6 +429,7 @@ function AssignSheet({
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const [assignees, setAssignees] = useState<WorkoutAssigneeRow[]>([]);
+  const [unassigning, setUnassigning] = useState<string | null>(null);
 
   useEffect(() => {
     if (!workout) return;
@@ -361,6 +465,7 @@ function AssignSheet({
     try {
       await unassignCustomWorkout(workout.id, target);
       setAssignees((prev) => prev.filter((a) => a.email !== target));
+      toast.show({ kind: 'success', title: t('app.builderUnassigned') });
     } catch (e) {
       toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.builderAssignError') });
     }
@@ -404,13 +509,27 @@ function AssignSheet({
                   label={t('app.builderUnassign')}
                   icon="close"
                   className="-mr-2 text-muted-2 hover:text-danger"
-                  onClick={() => void remove(a.email)}
+                  onClick={() => setUnassigning(a.email)}
                 />
               </li>
             ))}
           </ul>
         ) : null}
       </div>
+      <Modal
+        open={unassigning !== null}
+        onClose={() => setUnassigning(null)}
+        title={t('app.builderUnassignTitle', { email: unassigning ?? '' })}
+        description={t('app.builderUnassignBody')}
+        confirmLabel={t('app.builderUnassign')}
+        cancelLabel={t('common.cancel')}
+        danger
+        onConfirm={() => {
+          const target = unassigning;
+          setUnassigning(null);
+          if (target) void remove(target);
+        }}
+      />
     </Sheet>
   );
 }

@@ -14,6 +14,7 @@ import { payHref, payRoute } from '@/lib/util/payment';
 import { courseKey, lavaUrl } from '@content/site/payments';
 import { useT } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
+import { goExternal } from '@/lib/telegram/webapp';
 
 export interface UnlockSheetProps {
   open: boolean;
@@ -86,7 +87,8 @@ export function UnlockSheet({ open, course, onClose }: UnlockSheetProps) {
     setBusy(false);
     // В кассу без почты не уходим: платёж потом не с кем связать.
     if (route && email) {
-      window.location.assign(payHref(route, email));
+      // Inside Telegram the payment page opens in the person's own browser, not in the Mini App.
+      goExternal(payHref(route, email));
     }
   };
 

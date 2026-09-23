@@ -3,6 +3,7 @@
  * into the top list and the athlete's own row (pinned when outside the top).
  */
 import { hasCourse } from '@/content/catalogue';
+import type { TKey, TParams } from '@/i18n/index';
 import type { LeaderboardRow } from '@/lib/api/types';
 
 export const LEADERBOARD_LIMIT = 100;
@@ -49,4 +50,15 @@ export type Podium = 1 | 2 | 3;
 /** Podium place for the first three ranks, null otherwise. */
 export function podiumPlace(rank: number): Podium | null {
   return rank === 1 || rank === 2 || rank === 3 ? rank : null;
+}
+
+/**
+ * The name on a row. Someone who never set one gets a label in the reader's language with the
+ * first characters of their id, so two nameless rows still read as two people.
+ */
+export function leaderboardName(
+  row: Pick<LeaderboardRow, 'displayName' | 'userId'>,
+  t: (key: TKey, params?: TParams) => string,
+): string {
+  return row.displayName.trim() || t('app.leaderboardAnonymous', { id: row.userId.slice(0, 4) });
 }

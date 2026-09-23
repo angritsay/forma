@@ -115,7 +115,10 @@ export interface CourseDayDraft {
 export interface WorkoutDraft {
   shortId: string;
   title: string;
+  /** English half (`custom_workouts.title_en`, 0032); empty falls back to the Russian. */
+  titleEn?: string | null;
   description: string | null;
+  descriptionEn?: string | null;
   points: number | null;
   structure: CustomWorkoutStructure;
 }
@@ -310,10 +313,15 @@ function workoutFromDraft(w: WorkoutDraft): Workout {
   const blocks = w.structure.sections
     .filter((s) => s.items.length > 0)
     .map((s, i) => sectionToBlock(s, i));
-  const name: L10n = { ru: w.title, en: w.title };
-  const description: L10n = w.description?.trim()
-    ? { ru: w.description.trim(), en: w.description.trim() }
-    : name;
+  const name: L10n = { ru: w.title, en: w.titleEn?.trim() || w.title };
+  const ruDescription = w.description?.trim() || '';
+  const enDescription = w.descriptionEn?.trim() || '';
+  // Each half falls back on its own: an English description without a Russian one (or the other
+  // way round) is still better than the title repeated.
+  const description: L10n =
+    ruDescription || enDescription
+      ? { ru: ruDescription || enDescription, en: enDescription || ruDescription }
+      : name;
   return {
     id: w.shortId,
     name,

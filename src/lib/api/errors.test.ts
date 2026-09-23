@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { AppError, isAppError, toAppError } from './errors';
+import { AppError, isAppError, isNetworkError, toAppError } from './errors';
 
 /** Shape of a PostgrestError as supabase-js hands it back. */
 function pg(code: string, message = 'boom') {
@@ -44,6 +44,15 @@ describe('AppError', () => {
   it('toAppError passes an AppError through untouched', () => {
     const e = new AppError('validation', 'invalid_email');
     expect(toAppError(e)).toBe(e);
+  });
+});
+
+describe('isNetworkError', () => {
+  it('is true only for a request that never reached the server', () => {
+    expect(isNetworkError(new AppError('network', 'Failed to fetch'))).toBe(true);
+    expect(isNetworkError(new AppError('validation', 'not_found'))).toBe(false);
+    expect(isNetworkError(new Error('boom'))).toBe(false);
+    expect(isNetworkError(null)).toBe(false);
   });
 });
 

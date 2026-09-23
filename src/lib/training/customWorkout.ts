@@ -176,6 +176,8 @@ export function buildPrescribedFromCustom(
       items,
       estimatedSec: 0,
       scaled: false,
+      // A coach's AMRAP of one movement in reps is the same «максимум за N минут» piece.
+      maxReps: section.format === 'amrap' && items.length === 1 && items[0]!.unit === 'reps',
     };
     // Timing belongs to the format: without it the estimator falls back to counting the work, and
     // an 8-minute AMRAP would be reported as however long one pass through its items takes.

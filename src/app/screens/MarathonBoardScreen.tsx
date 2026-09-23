@@ -22,6 +22,7 @@
  * inside its window function and hands back 2 and 3 where the demo's scorer shares a place.
  */
 import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Pill } from '@/components/ui/Pill';
@@ -33,6 +34,7 @@ import { TopBar } from '@/app/components/TopBar';
 import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { useT } from '@/app/hooks/useT';
 import { BoardRow } from '@/app/features/marathon/BoardRow';
+import { clubFor, clubModeOf } from '@/app/features/marathon/clubMode';
 import { clubPrize } from '@/app/features/marathon/prize';
 import { rankWeek } from '@/app/features/marathon/standings';
 import { useMarathonScores, useMyMarathons } from '@/app/features/marathon/useMarathon';
@@ -45,7 +47,11 @@ type WeekChoice = 'this' | 'last';
 export default function MarathonBoardScreen() {
   const tr = useT();
   const { t } = tr;
-  const { marathon, status: marathonStatus } = useMyMarathons();
+  const clubs = useMyMarathons();
+  const { status: marathonStatus } = clubs;
+  // `?mode=duo` from the duo tab's «всё» link: the duo club's table, not the first round listed.
+  const [searchParams] = useSearchParams();
+  const marathon = clubFor(clubs, clubModeOf(searchParams.get('mode')));
   const [choice, setChoice] = useState<WeekChoice>('this');
 
   const thisWeek = marathon?.week ?? 1;

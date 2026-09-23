@@ -9,11 +9,12 @@
  */
 import { clsx } from 'clsx';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Navigate, useParams } from 'react-router';
+import { Navigate, useNavigate, useParams } from 'react-router';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Glyph } from '@/components/ui/Icon';
+import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useToast } from '@/components/ui/Toast';
@@ -59,6 +60,9 @@ import { WorkoutEditor } from '@/app/features/admin/workoutBuilder/WorkoutEditor
 type Tab = 'meta' | 'days' | 'publish';
 /** The workout builder, opened either for a brand-new workout or on an existing one. */
 type WorkoutTarget = { dayId: string; existing: CustomWorkoutRow | null } | null;
+/** The three irreversible-looking actions on this screen, each asked about before it runs. */
+type Confirm =
+  { kind: 'unpublish' } | { kind: 'deleteCourse' } | { kind: 'deleteDay'; dayId: string };
 
 export default function AdminCourseScreen() {
   const { id = '' } = useParams();
@@ -66,7 +70,9 @@ export default function AdminCourseScreen() {
   const { t } = tr;
   const toast = useToast();
   const admin = useIsAdmin();
+  const navigate = useNavigate();
 
+  const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [bundle, setBundle] = useState<AdminCourseBundle | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>('meta');
@@ -174,6 +180,7 @@ export default function AdminCourseScreen() {
     try {
       await deleteCourseDay(dayId);
       setBundle((b) => (b ? { ...b, days: b.days.filter((d) => d.id !== dayId) } : b));
+      toast.show({ kind: 'success', title: t('app.dayDeleted') });
     } catch (e) {
       toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.dayDeleteError') });
     }
@@ -241,11 +248,31 @@ export default function AdminCourseScreen() {
     try {
       await unpublishAdminCourse(course.id);
       setBundle((b) => (b ? { ...b, course: { ...b.course, status: 'draft' } } : b));
+      toast.show({ kind: 'success', title: t('app.courseUnpublished') });
     } catch (e) {
       toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.coursePublishError') });
     } finally {
       setPublishing(false);
     }
+  };
+
+  const removeCourse = async () => {
+    try {
+      await deleteAdminCourse(course.id);
+      toast.show({ kind: 'success', title: t('app.courseDeleted') });
+      navigate('/admin/courses', { replace: true });
+    } catch (e) {
+      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.courseDeleteError') });
+    }
+  };
+
+  const runConfirm = () => {
+    const c = confirm;
+    setConfirm(null);
+    if (!c) return;
+    if (c.kind === 'unpublish') void unpublish();
+    else if (c.kind === 'deleteCourse') void removeCourse();
+    else void removeDay(c.dayId);
   };
 
   // --- the workout builder, opened from a day ---------------------------------
@@ -390,7 +417,7 @@ export default function AdminCourseScreen() {
                   onPatch={(patch) => patchDay(openDay.id, patch)}
                   onBuildNewWorkout={() => setWorkoutFor({ dayId: openDay.id, existing: null })}
                   onEditWorkout={(workoutId) => void openWorkoutEditor(openDay.id, workoutId)}
-                  onDelete={() => void removeDay(openDay.id)}
+                  onDelete={() => setConfirm({ kind: 'deleteDay', dayId: openDay.id })}
                 />
               </div>
             ) : null}
@@ -450,7 +477,7 @@ export default function AdminCourseScreen() {
               variant="secondary"
               size="lg"
               loading={publishing}
-              onClick={() => void unpublish()}
+              onClick={() => setConfirm({ kind: 'unpublish' })}
             >
               {t('app.courseUnpublish')}
             </Button>
@@ -471,17 +498,42 @@ export default function AdminCourseScreen() {
               variant="danger"
               size="sm"
               className="self-start"
-              onClick={() => {
-                void deleteAdminCourse(course.id).then(() => {
-                  window.location.hash = '#/admin/courses';
-                });
-              }}
+              onClick={() => setConfirm({ kind: 'deleteCourse' })}
             >
               {t('app.courseDelete')}
             </Button>
           ) : null}
         </div>
       ) : null}
+
+      <Modal
+        open={confirm !== null}
+        onClose={() => setConfirm(null)}
+        title={t(
+          confirm?.kind === 'unpublish'
+            ? 'app.courseUnpublishConfirmTitle'
+            : confirm?.kind === 'deleteCourse'
+              ? 'app.courseDeleteConfirmTitle'
+              : 'app.dayDeleteConfirmTitle',
+        )}
+        description={t(
+          confirm?.kind === 'unpublish'
+            ? 'app.courseUnpublishConfirmBody'
+            : confirm?.kind === 'deleteCourse'
+              ? 'app.courseDeleteConfirmBody'
+              : 'app.dayDeleteConfirmBody',
+        )}
+        confirmLabel={t(
+          confirm?.kind === 'unpublish'
+            ? 'app.courseUnpublish'
+            : confirm?.kind === 'deleteCourse'
+              ? 'app.courseDelete'
+              : 'app.dayDelete',
+        )}
+        cancelLabel={t('common.cancel')}
+        danger
+        onConfirm={runConfirm}
+      />
     </Screen>
   );
 }
