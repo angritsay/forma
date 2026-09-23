@@ -168,7 +168,7 @@ export default function CoursesScreen() {
         title={t('app.homeErrorTitle')}
         description={error?.code === 'network' ? t('common.errorOffline') : t('app.homeErrorBody')}
         action={
-          <Button size="lg" loading={loading} onClick={() => void refresh()}>
+          <Button variant="action" size="lg" loading={loading} onClick={() => void refresh()}>
             {t('common.retry')}
           </Button>
         }
@@ -180,7 +180,7 @@ export default function CoursesScreen() {
         title={t('app.homeTodayNoCourseTitle')}
         description={t('app.homeTodayNoCourseBody')}
         action={
-          <Button size="lg" onClick={() => void refresh()}>
+          <Button variant="action" size="lg" onClick={() => void refresh()}>
             {t('common.retry')}
           </Button>
         }
@@ -221,6 +221,7 @@ export default function CoursesScreen() {
         <AssignedWorkoutsCard onOpen={(id) => navigate(`/assigned/${id}`)} />
         {orphanResume && resume ? (
           <Button
+            variant="action"
             size="lg"
             fullWidth
             onClick={() => navigate(resume.path)}

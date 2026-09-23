@@ -24,23 +24,25 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
  * A badge is a stamp: a state on a card, a count on a row. 24px, sentence case at 12px. It was
  * capitals at 11px tracked .12em, and it leaves them with the rest of the product — a stamp that
  * shouts beside a chip that does not is exactly the half-migration the owner ruled against.
- * Neutral is an outline; `inverse` is the white fill for the one genuine "this one"; `course` is
+ * Neutral is an outline; `inverse` is the light-blue fill for the one genuine "this one" — active,
+ * published, subscribed: the third palette's accent marks the active state (global.css header),
+ * which the white fill of the second brandbook did; `course` is
  * the only tone that takes colour — the programme colour, with black text — for a stamp that
  * names the programme itself. Success, warning and danger keep the colour on the text and stay
  * outlined, so a list of statuses is a list of words, not a row of coloured blocks.
  *
- * `accent` was the blue "this one" and renders as `inverse`. `on-art` sat on a pastel tile and
+ * `accent` is the older name for the same light-blue "this one" and renders as `inverse`. `on-art` sat on a pastel tile and
  * is now the dark plate the design system stamps on a course cover — `--ink` on `--paper`, which
  * do not flip with the theme, so it is dark on any tile in any theme.
  */
 const TONE: Record<BadgeTone, string> = {
   neutral: 'bg-transparent border-border-strong text-text',
-  inverse: 'bg-primary border-transparent text-on-primary',
+  inverse: 'bg-accent border-transparent text-on-accent',
   course: 'bg-course border-transparent text-tile-fg',
   success: 'bg-transparent border-border-strong text-success',
   warning: 'bg-transparent border-border-strong text-warning',
   danger: 'bg-transparent border-border-strong text-danger',
-  accent: 'bg-primary border-transparent text-on-primary',
+  accent: 'bg-accent border-transparent text-on-accent',
   'on-art': 'bg-ink/85 border-transparent text-paper',
 };
 

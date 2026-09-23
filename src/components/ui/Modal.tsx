@@ -108,7 +108,7 @@ export function Modal({
         <div className="mt-6 flex flex-col gap-2">
           {onConfirm ? (
             <Button
-              variant={danger ? 'danger' : 'primary'}
+              variant={danger ? 'danger' : 'action'}
               size="lg"
               fullWidth
               loading={loading}

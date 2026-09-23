@@ -9,7 +9,7 @@ export interface ProgressBarProps {
   label?: string;
   /** Text shown to the right of the bar (e.g. "3/12"). */
   valueText?: string;
-  /** Fill colour. Default `course`: the programme colour if a course is in scope, else white. */
+  /** Fill colour. Default `course`: the programme colour if a course is in scope, else light blue. */
   tone?: ProgressTone;
   size?: 'sm' | 'md';
   /**
@@ -23,24 +23,25 @@ export interface ProgressBarProps {
 
 /*
  * The fill is the programme colour when a course is in scope — `--course-accent`, set by
- * courseTileVars() on the course's card or screen — and white otherwise. It is the *accent* and
+ * courseTileVars() on the course's card or screen — and the brand's light blue `--accent` otherwise. It is the *accent* and
  * not the tile because a bar is a thin figure on the ground: the club's and the coach's blues
  * measure 2.26 and 4.37 on charcoal and would all but vanish, and the accent is exactly the tile's
  * colour made readable there (light blue for both blues, the tile itself for the rest). That is rule 1 of the
  * brandbook in one control: the bar is one of the three places the colour may land, and on a
- * screen with no course there is no colour at all. `primary` and `accent` force white (they are
- * the same white now; `accent` is kept for callers that still say it), and the semantic tones are
- * for a bar that reports a result rather than progress.
+ * screen with no course the progress is the interface accent. `accent` forces the light blue
+ * (the third palette's accent — it was white while the accent was white); `primary` is plain white
+ * for the rare bar that must not read as brand; the semantic tones are for a bar that reports a
+ * result rather than progress.
  */
 const TONE: Record<Exclude<ProgressTone, 'course'>, string> = {
   primary: 'bg-primary',
-  accent: 'bg-primary',
+  accent: 'bg-accent',
   success: 'bg-success',
   warning: 'bg-warning',
   danger: 'bg-danger',
 };
 
-export const COURSE_FILL = 'var(--course-accent, var(--primary))';
+export const COURSE_FILL = 'var(--course-accent, var(--accent))';
 
 export function ProgressBar({
   value,

@@ -31,6 +31,7 @@
  */
 import { useEffect, useState } from 'react';
 import { Glyph } from '@/components/ui/Icon';
+import { Pill } from '@/components/ui/Pill';
 import { listDoneCustomWorkouts, listMyAssignedWorkouts } from '@/lib/api/customWorkouts';
 import type { CustomWorkoutStructure } from '@/lib/training/customWorkout';
 import { workoutEquipment } from '@/lib/training/equipment';
@@ -133,7 +134,10 @@ export function AssignedWorkoutsCard({ onOpen }: AssignedWorkoutsCardProps) {
               >
                 {/* Без надписи «От тренера»: она уже стоит заголовком над лентой, и на карточке
                     была бы тем же предложением в третий раз — считая экран самой тренировки.
-                    Там она нужна, потому что туда приходят и по ссылке, мимо этой полки. */}
+                    Там она нужна, потому что туда приходят и по ссылке, мимо этой полки.
+                    Вместо фразы — плашка раздела: bleu ciel — цвет тренера (design/CHANGELOG.md
+                    §14), и это тег, а не поле; он говорит «чьё это» одним цветом, не словами. */}
+                <Pill tone="ciel">{t('app.tabCoach')}</Pill>
                 <span className="font-display line-clamp-2 text-[19px] leading-[1.2] text-balance">
                   {w.title}
                 </span>

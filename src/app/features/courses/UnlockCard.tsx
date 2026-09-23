@@ -52,7 +52,7 @@ export function UnlockCard({ courseId }: UnlockCardProps) {
           <p className="display text-2xl">{t('app.unlockCardTitle')}</p>
           <p className="text-[15px] leading-relaxed text-muted">{t('app.unlockCardBody')}</p>
         </div>
-        <Button size="lg" fullWidth onClick={() => setOpen(true)}>
+        <Button variant="action" size="lg" fullWidth onClick={() => setOpen(true)}>
           {t('app.coursesUnlock', { price: formatPrice(locale, course.price) })}
         </Button>
       </Card>

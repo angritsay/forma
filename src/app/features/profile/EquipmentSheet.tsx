@@ -45,6 +45,7 @@ export function EquipmentSheet({ open, profile, busy, onClose, onSave }: Equipme
       title={t('app.profileEquipmentTitle')}
       footer={
         <Button
+          variant="action"
           size="lg"
           fullWidth
           loading={busy}

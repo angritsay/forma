@@ -12,23 +12,30 @@ export interface TrainingCalendarProps {
 }
 
 /*
- * Three kinds of day in black and white. A workout day is the white square with a tick; an empty
- * day is the base surface; a day still ahead is an outline. Today is told apart by its ring,
- * whatever kind it is. No green: a calendar that colours one kind of day makes that kind look like
- * the point of the exercise.
+ * Three kinds of day as dots — the calendar the third palette draws (design/CHANGELOG.md §14:
+ * «календарь — сетка точек (белые — сделано, неон — сегодня)»), in the same shapes as the club's
+ * `DotCalendar`. A workout day is a white dot with a tick; an empty day is a hairline ring; a day
+ * still ahead is a faint dot. Today is the neon dot — the one day that still asks for something —
+ * whatever kind it is, with the tick once it is done. No green, and not the club's gradient either:
+ * that is the club's colour, and this is every athlete's own record.
+ *
+ * `DotCalendar` itself is not reused because its done dot *is* the gradient, and because this grid
+ * says «a workout» with a tick where the club's says nothing on it.
  *
  * There was a fourth — a steps-goal day, a raised surface with the footprints mark, for a day
  * carried by walking rather than training. It went with the step feature, and the calendar is
- * easier to read for it: a square is either a training day or it is not.
+ * easier to read for it: a dot is either a training day or it is not.
  */
 const KIND_CLASS: Record<CalendarKind, string> = {
-  workout: 'bg-primary text-on-primary',
-  empty: 'bg-surface-2 text-muted-2',
-  future: 'border border-border text-muted-2',
+  workout: 'bg-paper text-ink',
+  empty: 'border border-border-strong',
+  future: 'bg-paper/10',
 };
 
+const TODAY_CLASS = 'bg-action text-on-action';
+
 /**
- * Five weeks of days: workout day, empty or still ahead; today is ringed.
+ * Five weeks of days: workout day, empty or still ahead; today is the neon dot.
  *
  * The two figures beside the title used to be «Сейчас 3 · Лучшая 11» — the streak now and the
  * streak at its best. Both are gone: a plan with rest days in it cannot hold a long streak, so the
@@ -71,9 +78,8 @@ export function TrainingCalendar({ weeks, count }: TrainingCalendarProps) {
                 c.today ? ` (${t('app.statsCalendarToday')})` : ''
               }`}
               className={clsx(
-                'flex aspect-square items-center justify-center',
-                KIND_CLASS[c.kind],
-                c.today && 'ring-2 ring-primary ring-offset-2 ring-offset-bg',
+                'flex aspect-square items-center justify-center rounded-full',
+                c.today ? TODAY_CLASS : KIND_CLASS[c.kind],
               )}
             >
               {c.kind === 'workout' ? <Glyph size={14}>✓</Glyph> : null}
@@ -84,7 +90,10 @@ export function TrainingCalendar({ weeks, count }: TrainingCalendarProps) {
       <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
         {(['workout', 'empty'] as const).map((kind) => (
           <li key={kind} className="flex items-center gap-1.5">
-            <span aria-hidden="true" className={clsx('inline-block size-3', KIND_CLASS[kind])} />
+            <span
+              aria-hidden="true"
+              className={clsx('inline-block size-3 rounded-full', KIND_CLASS[kind])}
+            />
             {KIND_LABEL[kind]}
           </li>
         ))}

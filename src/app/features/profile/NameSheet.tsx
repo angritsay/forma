@@ -55,7 +55,14 @@ export function NameSheet({ open, name, busy, onClose, onSave }: NameSheetProps)
       onClose={onClose}
       title={t('app.profileNameTitle')}
       footer={
-        <Button size="lg" fullWidth loading={busy} disabled={!trimmed} onClick={submit}>
+        <Button
+          variant="action"
+          size="lg"
+          fullWidth
+          loading={busy}
+          disabled={!trimmed}
+          onClick={submit}
+        >
           {t('common.save')}
         </Button>
       }

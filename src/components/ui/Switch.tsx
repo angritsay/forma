@@ -18,8 +18,9 @@ export interface SwitchProps {
  * for something the eye can already see the state of, and a row of text that toggles on tap looks
  * exactly like the rows beside it that navigate.
  *
- * **The white fill is the "on" state**, the same inversion the primary button and the selected
- * plate use: it is the one thing in the row that acts, so it is the one thing that is filled. Off
+ * **The light-blue fill is the "on" state** — the third palette's accent marks what is active
+ * (global.css header; it was the white fill while the accent was white): it is the one thing in the
+ * row that acts, so it is the one thing that is filled. Off
  * is `--surface-3` behind the same hairline every quiet control wears.
  *
  * `role="switch"` rather than a checkbox: a screen reader then says «вкл»/«выкл» instead of
@@ -44,7 +45,7 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
         'transition-colors duration-150 ease-(--ease-out)',
         // The touch target, without the box: 44px tall, centred on the 24px track.
         'after:absolute after:-inset-y-2.5 after:-inset-x-1 after:content-[""]',
-        checked ? 'border-primary bg-primary' : 'border-border bg-surface-3',
+        checked ? 'border-accent bg-accent' : 'border-border bg-surface-3',
         disabled && 'pointer-events-none opacity-40',
         className,
       )}
@@ -53,7 +54,7 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
         aria-hidden="true"
         className={clsx(
           'block size-4.5 rounded-pill transition-transform duration-150 ease-(--ease-out)',
-          checked ? 'translate-x-[22px] bg-on-primary' : 'translate-x-[3px] bg-muted',
+          checked ? 'translate-x-[22px] bg-on-accent' : 'translate-x-[3px] bg-muted',
         )}
       />
     </button>

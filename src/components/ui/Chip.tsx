@@ -27,15 +27,16 @@ export interface ChipProps extends Omit<HTMLAttributes<HTMLElement>, 'onClick'> 
  * reads the same everywhere (style A, global.css header) — and it is the only fill in the row so
  * the eye finds it first.
  *
- * The named tones are for chips that state something rather than select something. `accent`
- * used to be the blue highlight and is now the same chip with a stronger hairline and full-white
- * text — a target rep count, the last three seconds of a rest. The semantic tones keep their
+ * The named tones are for chips that state something rather than select something. `accent` is
+ * the brand's light blue on the words and the hairline (13.2 on charcoal) — a target rep count, a
+ * test block, the last three seconds of a rest — the interface accent of the third palette, where
+ * the second brandbook had full white. The semantic tones keep their
  * colour on the text only. `on-art` sits on course art and reads whatever ink the tile has set
  * through `--course-tile-fg`, so it is black on a programme colour and light on a neutral one.
  */
 const TONE: Record<ChipTone, string> = {
   default: 'bg-surface-3 border-border text-muted',
-  accent: 'bg-surface-3 border-border-strong text-text',
+  accent: 'bg-surface-3 border-accent/60 text-accent',
   success: 'bg-transparent border-border-strong text-success',
   warning: 'bg-transparent border-border-strong text-warning',
   danger: 'bg-transparent border-border-strong text-danger',

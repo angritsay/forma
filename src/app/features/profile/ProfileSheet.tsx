@@ -25,6 +25,7 @@
  */
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
+import { HeroField, KeyTitle } from '@/components/ui/HeroField';
 import { Glyph } from '@/components/ui/Icon';
 import { ListRow } from '@/components/ui/ListRow';
 import { Modal } from '@/components/ui/Modal';
@@ -144,21 +145,30 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
            * The level, and the one line that says how to get the next one. That line is the reason
            * the level is here at all: a rank with no rule attached is a badge, and the athlete has
            * no way to act on it. The rule is points, and points come from training.
+           *
+           * It is the sheet's one blue field (style A, global.css header): the level is the thing
+           * this account is *for*, its title's last word the key word.
            */}
-          <div className="flex flex-col gap-2 border-t border-border pt-5">
+          <HeroField className="flex flex-col gap-2">
             <div className="flex items-baseline justify-between gap-3">
-              <span className="eyebrow">{t('app.statsLevelEyebrow', { n: level.level })}</span>
+              <span className="eyebrow text-on-field/85">
+                {t('app.statsLevelEyebrow', { n: level.level })}
+              </span>
               <span className="numeral tabular shrink-0 text-sm">
                 {t('app.statsPointsValue', { n: formatNumber(locale, points) })}
               </span>
             </div>
-            <h3 className="display text-2xl">{l(level.title)}</h3>
+            <h3 className="display text-2xl">
+              <KeyTitle text={l(level.title)} />
+            </h3>
             <ProgressBar
               value={level.progress}
-              tone="primary"
+              tone="accent"
+              ground="field"
               label={t('app.statsLevelProgress')}
+              className="mt-1"
             />
-            <p className="text-[13px] text-muted">
+            <p className="text-[13px] text-on-field/90">
               {next
                 ? t('app.statsLevelNext', {
                     n: formatNumber(locale, remaining),
@@ -166,7 +176,7 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
                   })
                 : t('app.statsLevelMax')}
             </p>
-          </div>
+          </HeroField>
 
           {/*
            * Three settings now. The name is first because it is the one that is *shown to other

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ClaimSheet } from '@/app/features/payments/ClaimSheet';
 import { Button } from '@/components/ui/Button';
+import { KeyWord } from '@/components/ui/HeroField';
 import { Sheet } from '@/components/ui/Sheet';
 import { useToast } from '@/components/ui/Toast';
 import { courseTitle } from '@/content/catalogue';
@@ -96,10 +97,13 @@ export function UnlockSheet({ open, course, onClose }: UnlockSheetProps) {
           {t('app.unlockBody', { course: l(courseTitle(course)) })}
         </p>
 
-        <p className="numeral tabular text-4xl leading-none">{price}</p>
+        {/* The price is the sheet's key word: light blue with the swoosh, the one thing to read. */}
+        <p className="numeral tabular text-4xl leading-none">
+          <KeyWord>{price}</KeyWord>
+        </p>
 
         {route ? (
-          <Button size="lg" fullWidth loading={busy} onClick={() => void go()}>
+          <Button variant="action" size="lg" fullWidth loading={busy} onClick={() => void go()}>
             {t('app.unlockCta')}
           </Button>
         ) : (

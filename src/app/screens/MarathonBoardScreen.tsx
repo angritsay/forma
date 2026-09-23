@@ -150,7 +150,7 @@ export default function MarathonBoardScreen() {
               <EmptyState
                 title={t('app.marathonErrorTitle')}
                 action={
-                  <Button size="lg" onClick={reload}>
+                  <Button variant="action" size="lg" onClick={reload}>
                     {t('common.retry')}
                   </Button>
                 }
