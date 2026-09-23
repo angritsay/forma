@@ -21,7 +21,9 @@ export interface CatalogueState {
   status: CatalogueStatus;
   /** Compiled courses plus the published database ones, in catalogue order. */
   courses: readonly Course[];
+  /** Load once; again if the last attempt failed. */
   load: () => Promise<void>;
+  /** Load now, whatever the state — after a purchase, say, which can change what is readable. */
   refresh: () => Promise<void>;
 }
 
@@ -110,16 +112,35 @@ export function courseFromBundle(bundle: AdminCourseBundle): Course {
   ).course;
 }
 
+/** Waits before retrying a catalogue that failed to load: 4s, 12s, 36s, then it stops asking. */
+export const CATALOGUE_RETRY_MS = [4000, 12000, 36000] as const;
+
+let retries = 0;
+let retryTimer: ReturnType<typeof setTimeout> | undefined;
+/** A refresh was asked for while one was running; run once more when it lands. */
+let again = false;
+
 export const useCatalogue = create<CatalogueState>((set, get) => ({
   status: 'idle',
   courses: allCourses(),
 
+  /*
+   * Once, unless the last try failed. It used to be once, full stop: a catalogue that failed at
+   * launch — a bad connection in a lift, a token refreshing — stayed on the compiled courses until
+   * the app was closed, and a course written in the admin panel showed its days empty.
+   */
   load: async () => {
-    if (get().status !== 'idle') return;
+    const { status } = get();
+    if (status === 'loading' || status === 'ready') return;
     await get().refresh();
   },
 
   refresh: async () => {
+    if (get().status === 'loading') {
+      again = true;
+      return;
+    }
+    clearTimeout(retryTimer);
     set({ status: 'loading' });
     try {
       const [bundles, rows] = await Promise.all([listPublishedCourses(), listExerciseCatalog()]);
@@ -127,10 +148,20 @@ export const useCatalogue = create<CatalogueState>((set, get) => ({
         courses: bundles.map(courseFromBundle),
         exercises: rows.map(exerciseFromRow),
       });
+      retries = 0;
       set({ status: 'ready', courses: allCourses() });
     } catch {
       // A catalogue that will not load must not take the app down: the compiled courses still work.
       set({ status: 'error' });
+      const wait = CATALOGUE_RETRY_MS[retries];
+      if (wait !== undefined && !again) {
+        retries += 1;
+        retryTimer = setTimeout(() => void get().load(), wait);
+      }
+    }
+    if (again) {
+      again = false;
+      await get().refresh();
     }
   },
 }));

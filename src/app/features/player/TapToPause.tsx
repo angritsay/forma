@@ -46,7 +46,7 @@ export function TapToPause({ onTap }: TapToPauseProps) {
   return (
     <div
       /*
-       * The same bottom as the clip's own stage (ArtLayer): whatever the panel measures itself to
+       * The same bottom as the clip's own stage (ArtFeed): whatever the panel measures itself to
        * be, the tap area ends where the picture does.
        */
       className="absolute inset-x-0 top-0 z-10"

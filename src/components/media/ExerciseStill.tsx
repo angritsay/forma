@@ -18,7 +18,7 @@
  * icon. That is the whole fallback — the flat tile behind shows through, which is the brand's
  * answer for a picture that is not there yet.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { exerciseStillUrl } from '@/lib/api/storage';
 
 export interface ExerciseStillProps {
@@ -27,12 +27,19 @@ export interface ExerciseStillProps {
   className?: string;
   /** `eager` for the one still above the fold; everything else waits. */
   loading?: 'lazy' | 'eager';
+  /**
+   * What to draw when there is no frame. Nothing by default — a tile's own flat colour is the
+   * answer there. The player passes the movement's name: its picture is the whole screen, and
+   * nothing at all there is a black rectangle that looks like a broken workout.
+   */
+  fallback?: ReactNode;
 }
 
 export function ExerciseStill({
   exerciseId,
   className = 'size-full object-cover',
   loading = 'lazy',
+  fallback = null,
 }: ExerciseStillProps) {
   const src = exerciseId ? exerciseStillUrl(exerciseId) : undefined;
   /*
@@ -46,7 +53,7 @@ export function ExerciseStill({
    */
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [src]);
-  if (!src || failed) return null;
+  if (!src || failed) return <>{fallback}</>;
   return (
     <img
       src={src}

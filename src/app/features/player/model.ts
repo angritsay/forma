@@ -60,27 +60,83 @@ export function exerciseVideoRef(id: string | undefined, locale: Locale): string
 }
 
 /**
+ * The movements a step that is about a whole block puts on its board: an AMRAP's or a for-time
+ * piece's own list, or the block a title card introduces. Empty for a step about one movement.
+ */
+export function boardItems(
+  step: PlayerStep | undefined,
+  prescribed?: PrescribedWorkout,
+): readonly PrescribedItem[] {
+  switch (step?.kind) {
+    case 'amrap':
+    case 'fortime':
+      return step.items;
+    case 'block_intro':
+      return (prescribed && findBlock(prescribed, step.blockId)?.items) ?? [];
+    default:
+      return [];
+  }
+}
+
+/** The first movement on a board that the coach has filmed, or 0 when none of them is. */
+export function firstFilmedIndex(items: readonly PrescribedItem[], locale: Locale): number {
+  const i = items.findIndex((it) => exerciseVideoRef(it.exerciseId, locale) !== undefined);
+  return i < 0 ? 0 : i;
+}
+
+/**
  * The clip to play behind a step, if the exercise has one.
  *
  * Wherever an exercise is the subject of the screen, its footage is what belongs on it: while it is
  * explained, while it is being done, and — for the exercise coming next — through the rest before
  * it. Work was once excluded on the theory that a recording cannot match a prescribed count. It
  * cannot, but that is not what these clips are: they are the movement itself, filmed once and
- * looped, with no separate "explaining" version to hold back for. The animated figure stays for
- * every exercise with no footage, which is most of them.
+ * looped, with no separate "explaining" version to hold back for.
  *
- * Steps that are about a block rather than a movement — the intro, a whole AMRAP — get nothing and
- * keep the figure.
+ * **A step about a block plays one of its movements.** An AMRAP, a for-time piece and a block's
+ * title card used to get nothing, on the theory that they are about the block rather than a
+ * movement — and on a phone that theory was a black screen with a clock on it, which is what the
+ * owner sent. They now play the first movement on the board that has footage, and the board's
+ * rows switch it (`pick`, the row's index). A block intro needs the prescription to find its
+ * block; without one it keeps the old answer.
  */
-export function stepVideoRef(step: PlayerStep | undefined, locale: Locale): string | undefined {
+export function stepVideoRef(
+  step: PlayerStep | undefined,
+  locale: Locale,
+  prescribed?: PrescribedWorkout,
+  pick?: number,
+): string | undefined {
   switch (step?.kind) {
     case 'work':
       return exerciseVideoRef(step.exerciseId, locale);
     case 'rest':
       return exerciseVideoRef(step.nextExerciseId, locale);
+    case 'amrap':
+    case 'fortime':
+    case 'block_intro': {
+      const items = boardItems(step, prescribed);
+      const item = items[pick ?? firstFilmedIndex(items, locale)];
+      return exerciseVideoRef(item?.exerciseId, locale);
+    }
     default:
       return undefined;
   }
+}
+
+/**
+ * Every clip a session can show, once each — what the player signs in one go when it opens (see
+ * `signMediaUrls`). Every movement of every block, not only the ones a step plays by default: a
+ * board's rows can switch to any of theirs.
+ */
+export function sessionVideoRefs(prescribed: PrescribedWorkout, locale: Locale): string[] {
+  const refs = new Set<string>();
+  for (const block of prescribed.blocks) {
+    for (const item of block.items) {
+      const ref = exerciseVideoRef(item.exerciseId, locale);
+      if (ref) refs.add(ref);
+    }
+  }
+  return [...refs];
 }
 
 const ALL_LIMITATIONS: readonly Limitation[] = [
@@ -315,6 +371,21 @@ export function stepExerciseId(
       break;
   }
   return exerciseId;
+}
+
+/**
+ * The movement whose picture is behind a step: the one `stepVideoRef` plays, so the still under
+ * the clip is a frame of the same movement.
+ */
+export function stepArtExerciseId(
+  step: PlayerStep,
+  prescribed: PrescribedWorkout,
+  locale: Locale,
+  pick?: number,
+): string | undefined {
+  const items = boardItems(step, prescribed);
+  if (items.length > 0) return items[pick ?? firstFilmedIndex(items, locale)]?.exerciseId;
+  return stepExerciseId(step, prescribed);
 }
 
 /** Result for a step the athlete chose to skip (null for steps without a result). */

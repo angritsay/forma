@@ -8,8 +8,9 @@ import { BigClock } from '../BigClock';
 import { PlayerTimerSlot } from '../PlayerChrome';
 import { Stepper } from '../Stepper';
 import { findExercise, unitLabel, type WorkStep } from '../model';
+import type { SwipeHold } from '../feed';
 import type { Cue } from '../sound';
-import { useCountdownCues, useNextHandler, useStepClock } from '../useStepClock';
+import { useCountdownCues, useNextHandler, useStepClock, useSwipeHold } from '../useStepClock';
 
 export interface TestStepProps {
   step: WorkStep;
@@ -19,6 +20,7 @@ export interface TestStepProps {
   onRecord: (result: PlayerResult) => void;
   onNext: () => void;
   registerNext: (fn: (() => void) | null) => void;
+  holdSwipe?: (hold: SwipeHold | null) => void;
 }
 
 type Phase = 'ready' | 'running' | 'result';
@@ -36,6 +38,7 @@ export function TestStep({
   onRecord,
   onNext,
   registerNext,
+  holdSwipe,
 }: TestStepProps) {
   const { t, l } = useT();
   const exercise = findExercise(step.exerciseId);
@@ -79,6 +82,12 @@ export function TestStep({
     else if (phase === 'running') stop();
     else save();
   });
+  /*
+   * «Next» on a test starts it and then stops it — neither of which is the page turning, and a
+   * feed that slid away and came back would say otherwise. So up is held until there is a result
+   * to save, and down while the clock runs.
+   */
+  useSwipeHold(holdSwipe, phase !== 'result', phase === 'running');
 
   const targetChip = timed
     ? `${t('training.block_test')} · ${Math.round((windowSec ?? 0) / 60) > 0 ? t('common.minutesShort', { n: Math.round((windowSec ?? 0) / 60) }) : `${windowSec} ${t('training.seconds')}`}`
