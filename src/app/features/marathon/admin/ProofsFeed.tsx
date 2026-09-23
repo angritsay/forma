@@ -16,18 +16,23 @@ import { clsx } from 'clsx';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { Chip } from '@/components/ui/Chip';
 import { Input } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
 import { Sheet } from '@/components/ui/Sheet';
-import { formatNumber } from '@/i18n/index';
+import { formatDate, formatNumber } from '@/i18n/index';
 import { needsCoachLook } from '@/lib/marathon/review';
-import type { MarathonMemberRow, MarathonProofRow } from '@/lib/api/types';
+import type { MarathonAdjustmentRow, MarathonMemberRow, MarathonProofRow } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
+import { dateOfDay, dayOfDate, recentDays } from './dates';
 import { ProofMedia } from './ProofMedia';
 
 export interface ProofsFeedProps {
   proofs: readonly MarathonProofRow[];
   members: readonly MarathonMemberRow[];
+  /** Day 1 of the round, so the filter can speak in dates. */
+  startsOn: string;
   days: number;
   today: number;
   dayFilter: number | null;
@@ -35,6 +40,7 @@ export interface ProofsFeedProps {
   /** Show only what has been redone since a rejection and not looked at since. */
   needsReviewOnly: boolean;
   onNeedsReviewOnly: (only: boolean) => void;
+  /** Each action rejects when it failed (the caller has already said so), so a sheet stays open. */
   onVoid: (id: string, reason: string) => Promise<void>;
   onRestore: (id: string) => Promise<void>;
   onAccept: (id: string) => Promise<void>;
@@ -44,11 +50,15 @@ export interface ProofsFeedProps {
     points: number;
     reason: string;
   }) => Promise<void>;
+  /** Points given by hand, newest first — the list under «Начислить вручную». */
+  adjustments: readonly MarathonAdjustmentRow[];
+  onUndoBonus: (id: string) => Promise<void>;
 }
 
 export function ProofsFeed({
   proofs,
   members,
+  startsOn,
   days,
   today,
   dayFilter,
@@ -59,6 +69,8 @@ export function ProofsFeed({
   onRestore,
   onAccept,
   onBonus,
+  adjustments,
+  onUndoBonus,
 }: ProofsFeedProps) {
   const { t, locale } = useT();
   const [voidFor, setVoidFor] = useState<MarathonProofRow | null>(null);
@@ -68,24 +80,60 @@ export function ProofsFeed({
   const [bonusPoints, setBonusPoints] = useState('5');
   const [bonusReason, setBonusReason] = useState('');
   const [busy, setBusy] = useState(false);
+  const [undoFor, setUndoFor] = useState<MarathonAdjustmentRow | null>(null);
 
-  const dayOptions = [
-    { value: '', label: t('app.mAdminProofsAll') },
-    ...Array.from({ length: days }, (_, i) => ({
-      value: String(i + 1),
-      label: t('app.mAdminDay', { n: formatNumber(locale, i + 1) }),
-    })),
-  ];
+  /*
+   * The filter speaks in dates. It was a select of every day of the run — 3650 options on a club
+   * that runs for ten years — and «День 214» is not a day anyone remembers. The last two weeks are
+   * chips, which is where every question about a proof actually lands; anything older is a date.
+   */
+  const chips = recentDays(today, days);
+  const chipLabel = (d: number) =>
+    d === today
+      ? t('app.mAdminToday')
+      : d === today - 1
+        ? t('app.mAdminYesterday')
+        : formatDate(locale, dateOfDay(startsOn, d));
+  const lastDate = dateOfDay(startsOn, Math.max(Math.min(today || 1, days), 1));
+  const pickedOlder = dayFilter !== null && !chips.includes(dayFilter);
+  const memberName = (id: string) => {
+    const m = members.find((x) => x.id === id);
+    return m ? m.displayName?.trim() || m.email : '—';
+  };
+  const signed = (n: number) => (n > 0 ? `+${formatNumber(locale, n)}` : formatNumber(locale, n));
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center gap-3">
-        <Select
-          label={undefined}
-          aria-label={t('app.mAdminProofsAll')}
-          value={dayFilter === null ? '' : String(dayFilter)}
-          onChange={(v) => onDayFilter(v === '' ? null : Number(v))}
-          options={dayOptions}
+      <div className="flex flex-wrap gap-2" role="group" aria-label={t('app.mAdminTabProofs')}>
+        <Chip
+          className="tap-target-y"
+          selected={dayFilter === null}
+          onClick={() => onDayFilter(null)}
+        >
+          {t('app.mAdminProofsAll')}
+        </Chip>
+        {chips.map((d) => (
+          <Chip
+            key={d}
+            className="tap-target-y"
+            selected={dayFilter === d}
+            onClick={() => onDayFilter(d)}
+          >
+            {chipLabel(d)}
+          </Chip>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-end gap-3">
+        <Input
+          label={t('app.mAdminProofsPickDate')}
+          type="date"
+          min={startsOn}
+          max={lastDate}
+          value={pickedOlder && dayFilter !== null ? dateOfDay(startsOn, dayFilter) : ''}
+          onChange={(e) => {
+            const d = dayOfDate(startsOn, days, e.target.value);
+            onDayFilter(d > 0 ? d : null);
+          }}
           wrapperClassName="min-w-0 flex-1"
         />
         {/* A filter rather than a tab: the queue is a view of the same feed, and everything the
@@ -116,8 +164,8 @@ export function ProofsFeed({
                   proof.voidedAt && 'opacity-60',
                 )}
               >
-                <span className="numeral tabular w-8 shrink-0 pt-0.5 text-[13px] text-muted-2">
-                  {String(proof.dayIndex).padStart(2, '0')}
+                <span className="tabular w-14 shrink-0 pt-0.5 text-[13px] text-muted-2">
+                  {formatDate(locale, dateOfDay(startsOn, proof.dayIndex))}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="font-display block truncate text-[15px] leading-[1.24]">
@@ -169,12 +217,20 @@ export function ProofsFeed({
                 <span className="flex shrink-0 items-center gap-1">
                   {/* «Оставить как есть» is only ever offered on the rows that ask a question. */}
                   {redone ? (
-                    <Button variant="ghost" size="sm" onClick={() => void onAccept(proof.id)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => void onAccept(proof.id).catch(() => undefined)}
+                    >
                       {t('app.mAdminAcceptProof')}
                     </Button>
                   ) : null}
                   {proof.voidedAt ? (
-                    <Button variant="ghost" size="sm" onClick={() => void onRestore(proof.id)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => void onRestore(proof.id).catch(() => undefined)}
+                    >
                       {t('app.mAdminRestoreProof')}
                     </Button>
                   ) : (
@@ -200,6 +256,65 @@ export function ProofsFeed({
         {t('app.mAdminBonus')}
       </Button>
 
+      {/*
+        What has been given by hand, with a way to take it back. Points by hand used to be
+        write-only: a +50 typed as +5 stayed on the board for the week.
+      */}
+      <section className="flex flex-col gap-2">
+        <h3 className="eyebrow">{t('app.mAdminBonusList')}</h3>
+        {adjustments.length === 0 ? (
+          <p className="border-t border-border py-4 text-[15px] text-muted-2">
+            {t('app.mAdminBonusListEmpty')}
+          </p>
+        ) : (
+          <ul className="flex flex-col">
+            {adjustments.map((a) => (
+              <li
+                key={a.id}
+                className="flex items-center gap-3 border-t border-border py-3 text-[15px]"
+              >
+                <span className="numeral tabular w-12 shrink-0 text-right">{signed(a.points)}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate">{memberName(a.memberId)}</span>
+                  <span className="block truncate text-[13px] text-muted-2">
+                    {formatDate(locale, dateOfDay(startsOn, a.dayIndex))} · {a.reason}
+                  </span>
+                </span>
+                <Button variant="ghost" size="sm" onClick={() => setUndoFor(a)}>
+                  {t('app.mAdminBonusUndo')}
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <Modal
+        open={undoFor !== null}
+        onClose={() => setUndoFor(null)}
+        title={t('app.mAdminBonusUndoTitle')}
+        description={
+          undoFor
+            ? t('app.mAdminBonusUndoBody', {
+                points: signed(undoFor.points),
+                name: memberName(undoFor.memberId),
+              })
+            : undefined
+        }
+        confirmLabel={t('app.mAdminBonusUndo')}
+        cancelLabel={t('common.cancel')}
+        danger
+        loading={busy}
+        onConfirm={() => {
+          if (!undoFor) return;
+          setBusy(true);
+          void onUndoBonus(undoFor.id)
+            .then(() => setUndoFor(null))
+            .catch(() => undefined)
+            .finally(() => setBusy(false));
+        }}
+      />
+
       <Sheet
         open={voidFor !== null}
         onClose={() => setVoidFor(null)}
@@ -215,6 +330,7 @@ export function ProofsFeed({
               setBusy(true);
               void onVoid(voidFor.id, reason.trim())
                 .then(() => setVoidFor(null))
+                .catch(() => undefined)
                 .finally(() => setBusy(false));
             }}
           >
@@ -242,9 +358,10 @@ export function ProofsFeed({
         footer={
           <Button
             size="lg"
+            variant="action"
             fullWidth
             loading={busy}
-            disabled={!bonusMember || !bonusReason.trim() || Number(bonusPoints) === 0}
+            disabled={!bonusMember || !bonusReason.trim() || !Number(bonusPoints)}
             onClick={() => {
               setBusy(true);
               void onBonus({
@@ -257,6 +374,7 @@ export function ProofsFeed({
                   setBonusOpen(false);
                   setBonusReason('');
                 })
+                .catch(() => undefined)
                 .finally(() => setBusy(false));
             }}
           >

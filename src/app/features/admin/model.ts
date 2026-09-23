@@ -4,6 +4,7 @@
  */
 import { findCourse } from '@/content/catalogue';
 import type { Locale } from '@/content/schema';
+import type { TKey } from '@/i18n/index';
 import type {
   PurchaseFilter,
   PurchaseRow,
@@ -71,4 +72,32 @@ export function subscriptionFilter(status: SubStatusFilter, search: string): Sub
   const term = search.trim();
   if (term) filter.search = term;
   return filter;
+}
+
+/**
+ * Where a purchase or a subscription came from, in the words the admin messages in Telegram use:
+ * the till's own name, or «выдано вручную». A source this list does not know is shown as stored —
+ * a new till should appear on the screen as itself rather than vanish.
+ */
+export function sourceLabelKey(source: string | null | undefined): TKey | null {
+  switch (source?.trim().toLowerCase()) {
+    case 'prodamus':
+      return 'app.adminSourceProdamus';
+    case 'lava':
+      return 'app.adminSourceLava';
+    case 'admin':
+      return 'app.adminSourceAdmin';
+    default:
+      return null;
+  }
+}
+
+export function sourceLabel(
+  t: (key: TKey) => string,
+  source: string | null | undefined,
+): string | null {
+  const s = source?.trim();
+  if (!s) return null;
+  const key = sourceLabelKey(s);
+  return key ? t(key) : s;
 }
