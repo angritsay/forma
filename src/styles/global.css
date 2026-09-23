@@ -1408,3 +1408,30 @@ body {
     animation: none;
   }
 }
+
+/* ── Palette C: site ── */
+
+/*
+ * The site's hero field (src/components/landing/HeroField.astro). The quiet greys are measured
+ * for charcoal: on electric blue --muted is 3.3 and --muted-2 2.8. Inside the field the same roles
+ * are white at reduced strength, each composited on #2038e2 and measured:
+ *   0.86 → 5.96 (a lead paragraph)   0.8 → 5.2 (a kicker)
+ * Links keep the full white, underlined. A focus ring is the neon, which the light blue would be
+ * too close to the key word to tell apart from.
+ */
+.hero-field {
+  --field-quiet: rgba(255, 255, 255, 0.86);
+  --field-kicker: rgba(255, 255, 255, 0.8);
+}
+
+.hero-field .eyebrow {
+  color: var(--field-kicker);
+}
+
+.hero-field .field-lead {
+  color: var(--field-quiet);
+}
+
+.hero-field :focus-visible {
+  outline-color: var(--action);
+}

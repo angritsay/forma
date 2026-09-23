@@ -1,0 +1,29 @@
+---
+/**
+ * The blue hero field — Style A's one card per page (global.css header, design/CHANGELOG.md §14):
+ * electric blue `--field`, white type on it (7.71:1), the key word in the brand's light blue with a
+ * swoosh (`KeyTitle`). It holds the page's name and the one or two lines under it; everything else
+ * on the page stands on charcoal surfaces.
+ *
+ * Inside it `.hero-field` (global.css, «Palette C: site») re-inks the quiet type: the muted greys
+ * are drawn for charcoal and fall to ~3:1 on blue, so a kicker or a lead here is white at 80–86 %,
+ * which clears 4.5. Tags on it are `Pill` tones `white`, `ghost` and the filled section colours —
+ * never the `course` outline, whose orange measures 2.5 on the blue.
+ *
+ * The site's twin of the app's `HeroField` in src/components/ui.
+ */
+interface Props {
+  as?: 'div' | 'section' | 'header';
+  class?: string;
+}
+const { as: Tag = 'div', class: className = '' }: Props = Astro.props;
+---
+
+<Tag
+  class:list={[
+    'hero-field relative overflow-hidden rounded-card bg-field px-5 py-6 text-on-field sm:px-7 sm:py-8 md:px-10 md:py-10',
+    className,
+  ]}
+>
+  <slot />
+</Tag>

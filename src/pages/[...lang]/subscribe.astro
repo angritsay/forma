@@ -6,6 +6,8 @@
  * plan, BreadcrumbList, FAQPage.
  */
 import Landing from '@/layouts/Landing.astro';
+import HeroField from '@/components/landing/HeroField.astro';
+import KeyTitle from '@/components/landing/KeyTitle.astro';
 import Breadcrumbs from '@/components/landing/Breadcrumbs.astro';
 import Faq from '@/components/landing/Faq.astro';
 import OrderForm, { type PlanOption } from '@/components/landing/OrderForm';
@@ -102,11 +104,13 @@ const jsonLd = [
     />
     <div class="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12">
       <div>
-        <p class="eyebrow">{t(locale, 'landing.subscribeEyebrow')}</p>
-        <h1 class="display mt-4 text-4xl text-balance md:text-5xl">{title}</h1>
-        <p class="mt-4 max-w-xl text-base leading-relaxed text-muted md:text-lg">
-          {t(locale, 'landing.subscribeLead')}
-        </p>
+        <HeroField>
+          <p class="eyebrow">{t(locale, 'landing.subscribeEyebrow')}</p>
+          <KeyTitle text={title} class="display mt-4 text-4xl md:text-5xl" />
+          <p class="field-lead mt-5 max-w-xl text-base leading-relaxed md:text-lg">
+            {t(locale, 'landing.subscribeLead')}
+          </p>
+        </HeroField>
 
         <!--
           Plan tickets: the price is the figure of each — display size, with the period under it
@@ -127,7 +131,7 @@ const jsonLd = [
                 <p class="flex items-center justify-between gap-3">
                   <span class="eyebrow truncate">{p.name}</span>
                   {p.badge && (
-                    <Pill tone="paper" size="sm" class="shrink-0">
+                    <Pill tone="action" size="sm" tilt="right" class="shrink-0">
                       {p.badge}
                     </Pill>
                   )}

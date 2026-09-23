@@ -8,6 +8,8 @@
  * things to check before writing stay a numbered «01 / 02 / 03» column.
  */
 import Landing from '@/layouts/Landing.astro';
+import HeroField from '@/components/landing/HeroField.astro';
+import KeyTitle from '@/components/landing/KeyTitle.astro';
 import Breadcrumbs from '@/components/landing/Breadcrumbs.astro';
 import { breadcrumbLd } from '@/components/landing/jsonld';
 import type { Locale } from '@/content/schema';
@@ -63,10 +65,12 @@ const jsonLd = breadcrumbLd([
         { label: title },
       ]}
     />
-    <h1 class="display mt-8 text-4xl md:text-6xl">{title}</h1>
-    <p class="mt-4 max-w-xl text-[15px] leading-relaxed text-muted md:text-base">
-      {t(locale, 'landing.contactIntro')}
-    </p>
+    <HeroField class="mt-8">
+      <KeyTitle text={title} class="display text-4xl md:text-6xl" />
+      <p class="field-lead mt-5 max-w-xl text-[15px] leading-relaxed md:text-base">
+        {t(locale, 'landing.contactIntro')}
+      </p>
+    </HeroField>
 
     <ul class="mt-8 divide-y divide-border border-t border-b border-border">
       {

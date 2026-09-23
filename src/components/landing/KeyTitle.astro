@@ -1,0 +1,40 @@
+---
+/**
+ * A hero field's headline: white, its key word in the brand's light blue with the hand-drawn
+ * swoosh under it (Style A, global.css header). One per page — it lives inside `HeroField`.
+ *
+ * The key word is the headline's last `keyWords` words (`splitKeyWord`), set at the headline's own
+ * weight and kept on one line, so the swoosh underlines a word rather than a wrapped phrase. The
+ * light blue measures 5.7:1 on the field; electric blue itself never becomes type on charcoal.
+ *
+ * `thin` keeps the brand's two-weight headline (800 and 200) for the home hero: the part of the
+ * text from `thin` on is set at 200, up to the key word, which keeps the headline's weight.
+ */
+import Swoosh from './Swoosh.astro';
+import { splitKeyWord } from './keyWord';
+
+interface Props {
+  text: string;
+  keyWords?: number;
+  /** Where the 200-weight half of the headline starts (a substring of `text`). */
+  thin?: string;
+  as?: 'h1' | 'h2' | 'p';
+  class?: string;
+}
+
+const { text, keyWords = 1, thin, as: Tag = 'h1', class: className = '' }: Props = Astro.props;
+const { head, key, tail } = splitKeyWord(text, keyWords);
+// `thin` is found in the whole text (it may run on into the key word, which stays heavy).
+const thinAt = thin ? text.indexOf(thin) : -1;
+const heavy = thinAt > 0 && thinAt < head.length ? head.slice(0, thinAt) : head;
+const light = thinAt > 0 && thinAt < head.length ? head.slice(thinAt) : '';
+---
+
+<Tag class:list={['text-balance text-on-field', className]}>
+  {heavy}{light && <span class="t-thin">{light}</span>}<span
+    class="relative inline-block whitespace-nowrap text-accent"
+    >{key}<Swoosh
+      class="pointer-events-none absolute inset-x-0 -bottom-[0.26em] h-[0.24em] w-full text-action"
+    /></span
+  >{tail}
+</Tag>

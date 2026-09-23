@@ -1,0 +1,32 @@
+---
+/**
+ * The hand-drawn underline of Style A (global.css header, design/CHANGELOG.md §14): one stroke
+ * under the key word of a hero field. The site's twin of the app's `Swoosh` in src/components/ui,
+ * kept as a static SVG so a page that has no island does not ship React for a line.
+ *
+ * It takes its colour from `currentColor` and its size from the box it is given — `KeyTitle`
+ * stretches it under the word, so the path is drawn with `preserveAspectRatio="none"` and a
+ * `non-scaling-stroke`: the curve bends to any word's width and the line keeps one weight.
+ * Decorative, always: the word it underlines is already in the heading.
+ */
+interface Props {
+  class?: string;
+}
+const { class: className = '' } = Astro.props;
+---
+
+<svg
+  class={className}
+  viewBox="0 0 150 14"
+  preserveAspectRatio="none"
+  fill="none"
+  aria-hidden="true"
+  focusable="false"
+>
+  <path
+    d="M3 10 C 45 3, 100 2, 147 8"
+    stroke="currentColor"
+    stroke-width="4"
+    stroke-linecap="round"
+    vector-effect="non-scaling-stroke"></path>
+</svg>
