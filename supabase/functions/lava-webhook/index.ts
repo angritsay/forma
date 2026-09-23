@@ -45,26 +45,21 @@
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { grantsAccess, hmacHex, parseHook, signatureMatches } from './verify.ts';
+import { keyFor, parseProductMap, type ProductMap } from './products.ts';
 
 const TOKEN = Deno.env.get('WEBHOOK_TOKEN') ?? '';
 const SECRET = Deno.env.get('LAVA_WEBHOOK_SECRET') ?? '';
 
-/** `{"<product id>": "course:start"}` — что именно продаёт каждый товар lava.top. */
-function productMap(): Record<string, string> {
+/** Что продаёт каждый товар lava.top. Форма секрета — в `products.ts`. */
+function productMap(): ProductMap {
   const raw = Deno.env.get('LAVA_PRODUCTS') ?? '';
-  if (!raw.trim()) return {};
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    if (typeof parsed !== 'object' || parsed === null) return {};
-    const out: Record<string, string> = {};
-    for (const [k, v] of Object.entries(parsed)) if (typeof v === 'string') out[k] = v;
-    return out;
-  } catch {
-    // Кривой JSON в секрете не должен валить каждое уведомление: без карты товаров платёж
-    // всё равно попадёт в журнал и будет ждать выдачи руками.
-    console.error('lava-webhook: LAVA_PRODUCTS is not valid JSON');
-    return {};
+  const map = parseProductMap(raw);
+  if (raw.trim() && Object.keys(map).length === 0) {
+    // Кривой секрет не должен валить каждое уведомление: без карты товаров платёж всё равно
+    // попадёт в журнал и будет ждать выдачи руками.
+    console.error('lava-webhook: LAVA_PRODUCTS is empty or not valid JSON');
   }
+  return map;
 }
 
 const reply = (status: number, text: string) => new Response(text, { status });
@@ -122,8 +117,18 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
   );
   const paidAt = hook.timestamp ?? new Date().toISOString();
-  const what = productMap()[hook.product.id ?? ''] ?? '';
+  /*
+   * Сумма участвует наравне с товаром: тариф в lava.top держит месяц и год под одним `product.id`,
+   * а периода в уведомлении нет вовсе (`products.ts`).
+   */
+  const amount = typeof hook.amount === 'number' ? hook.amount : null;
+  const what = keyFor(productMap(), hook.product.id ?? '', amount);
   const plan = what.startsWith('plan:') ? what.slice('plan:'.length) : '';
+  if (!what) {
+    console.warn(
+      `lava-webhook: product ${hook.product.id ?? '(none)'} at ${amount ?? '?'} is not in LAVA_PRODUCTS`,
+    );
+  }
 
   /*
    * Журнал — до выдачи и отдельно от неё: сбой выдачи не должен ещё и терять запись о платеже.

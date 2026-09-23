@@ -1325,9 +1325,34 @@ inside it, not a config change.
 5. **In the cabinet, under API**, take the **API key** and the **webhook secret**. Neither ever
    goes into the repository, into chat, or into a workflow input — only into GitHub Actions
    secrets as `LAVA_WEBHOOK_SECRET`, from where the button below moves them into Supabase.
-6. Add the secret **`LAVA_PRODUCTS`** as well: a JSON map from the lava product id to our key,
-   `{"<product id>":"course:start"}`. It lives as a secret rather than in code so renaming a
-   product in the cabinet does not wait for the site to be rebuilt.
+6. Add the secret **`LAVA_PRODUCTS`** as well: a JSON map from the lava product id to our key. It
+   lives as a secret rather than in code so renaming a product in the cabinet does not wait for
+   the site to be rebuilt.
+
+   ```json
+   {
+     "<course product id>": "course:start",
+     "<tier id>": { "19": "plan:monthly", "79": "plan:annual" }
+   }
+   ```
+
+   **The subscription needs the price form, and that is not decoration.** In lava.top a
+   subscription is a _tier_, and a tier is one product holding several periods — the monthly price
+   is mandatory, the yearly one is a toggle beside it. So the month and the year arrive under the
+   same `product.id`, and the notification carries no period at all: its body is `eventType`,
+   `product {id, title}`, `contractId`, `buyer`, `amount`, `currency`, `status`, `timestamp` and
+   nothing else (checked against their SDK's `PurchaseWebhookLog`; the documentation itself is
+   unreachable from the build environment). The amount is the only thing that tells them apart —
+   the same bind `prodamus-webhook` is in, for the same reason.
+
+   Leave **3 months and 6 months switched off** in the tier. The app knows two plans, `monthly`
+   and `annual` (`SubscriptionPlan` in `src/lib/api/types.ts`); a payment for a period it has no
+   name for would be recorded and left unclaimed, which is honest but useless.
+
+   A price the map does not list is never guessed at: the payment is logged as unclaimed and waits
+   to be attached by hand. Opening a year for somebody who paid for a month is the one outcome
+   worth avoiding at any cost.
+
 7. **Actions → Supabase apply → `deploy-lava`.** It deploys the function, moves the secrets over,
    prints which are missing, and prints the address to paste back.
 8. **Paste that address into the cabinet** as the webhook URL:
