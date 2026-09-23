@@ -23,15 +23,23 @@ describe('LAVA_PRODUCTS', () => {
   });
 
   /*
-   * Занятия с тренером ещё не заведены в кабинете, и это состояние проверяется явно, а не
-   * подразумевается: кнопка на неродном языке ведёт в поддержку, а не в пустоту. Когда товары
-   * появятся, этот тест упадёт — и упадёт правильно, его надо будет переписать на `not.toBeNull()`
-   * вместе с добавлением строк.
+   * Обе длительности заведены — значит обе и должны быть здесь. Занятие без товара продаётся
+   * только за рубли, и это видно ровно одним способом: сходить сюда и посмотреть. Цикл по
+   * `BOOKING.options`, а не два выражения: появится третья длительность — тест потребует и её.
    */
-  it('has no session products yet, and says so out loud', () => {
+  it('covers every session length the coach sells', () => {
     for (const option of BOOKING.options) {
-      expect(lavaUrl(sessionKey(option.id)), option.id).toBeNull();
+      expect(lavaUrl(sessionKey(option.id)), option.id).not.toBeNull();
     }
+  });
+
+  /*
+   * Полчаса и час — разные товары, и это стоит проверять, а не считать очевидным: скопированная
+   * строка увела бы купившего час на страницу получаса, и заметили бы это по чужому счёту.
+   */
+  it('gives each length its own product', () => {
+    const ids = BOOKING.options.map((o) => LAVA_PRODUCTS[sessionKey(o.id)]?.productId);
+    expect(new Set(ids).size).toBe(BOOKING.options.length);
   });
 
   /* Только абсолютный https — та же проверка, что у любой платёжной ссылки в продукте. */
