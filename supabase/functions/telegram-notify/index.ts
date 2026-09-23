@@ -86,13 +86,23 @@ function reply(status: number, body: Record<string, unknown>): Response {
  *
  * **Незнакомый вид остаётся в очереди.** `adminMessage` отвечает `null`, когда база обогнала
  * функцию: строка ждёт следующей выкладки вместо того, чтобы превратиться в пустое сообщение.
+ *
+ * **Пишет служебный бот, а не клиентский.** Владелец: «а мы можем второго бота как раз
+ * использовать под админку?» — да, и это лучше: клиентскому боту нечего делать во внутренней
+ * группе, а отозванный или перевыпущенный токен одного не гасит второй контур. Все возражения
+ * против второго бота касались его как **входа для клиентов** (подпись мини-аппа, рассылка
+ * покупателям); служебный отправитель в одну закрытую группу ни того, ни другого не трогает.
+ *
+ * `TELEGRAM_ADMIN_BOT_TOKEN` необязателен: без него пишет основной бот, как раньше.
  */
 async function drainAdmin(
   admin: ReturnType<typeof createClient>,
-  botToken: string,
+  fallbackToken: string,
 ): Promise<{ sent: number; failed: number }> {
   const chatId = Deno.env.get('TELEGRAM_ADMIN_CHAT') ?? '';
   if (!chatId.trim()) return { sent: 0, failed: 0 };
+
+  const botToken = (Deno.env.get('TELEGRAM_ADMIN_BOT_TOKEN') ?? '').trim() || fallbackToken;
 
   const topics = parseTopics(Deno.env.get('TELEGRAM_ADMIN_TOPICS') ?? '');
 

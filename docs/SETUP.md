@@ -1488,16 +1488,23 @@ is an event rather than a purchase, and lives in the same topic.
 
 1. **Create a group** in Telegram and switch on **Topics** in its settings. A group, not a channel:
    channels have no topics.
-2. **Add the bot and make it an administrator** with the **Manage topics** right. Without it the
-   setup job is refused, and it says so.
+2. **Add the service bot and make it an administrator** with the **Manage topics** right. Without
+   it the setup job is refused, and it says so. Use a **second bot**, not the one customers talk
+   to — owner: «а мы можем второго бота как раз использовать под админку?». The customer bot has
+   no business in an internal group, and a revoked or reissued token then takes down one circuit,
+   not both. Every objection to a second bot was about it as a customer _entrance_ (the Mini App
+   signature, messaging buyers); a sender into one closed group touches neither. Put its token in
+   **`TELEGRAM_ADMIN_BOT_TOKEN`**. Optional: without it the main bot writes, and then it is the
+   main bot that must be in the group.
 3. **Find the group id**: write anything in the group and open
-   `https://api.telegram.org/bot<token>/getUpdates` — the reply carries `"chat":{"id":-100…}`. A
-   group with topics always starts with `-100`.
+   `https://api.telegram.org/bot<service bot token>/getUpdates` — the reply carries
+   `"chat":{"id":-100…}`. A group with topics always starts with `-100`. It must be the token of
+   the bot that is _in_ the group; no other bot sees it.
 4. Put it in the **`TELEGRAM_ADMIN_CHAT`** repository secret.
 5. Run **Actions → "Set up the owner's Telegram channel"**. It creates the five topics, writes one
    line into each so the whole path is proven right away, and prints the JSON to paste into
    **`TELEGRAM_ADMIN_TOPICS`**.
-6. Run **Supabase apply → `deploy-notify`**, which carries both secrets into the project.
+6. Run **Supabase apply → `deploy-notify`**, which carries all three secrets into the project.
 
 Both secrets are optional by construction: without them the sender simply does not touch the second
 queue and messages to customers go on as before. The channel going quiet can never stop a purchase

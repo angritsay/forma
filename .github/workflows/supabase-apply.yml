@@ -444,6 +444,7 @@ jobs:
           NOTIFY_TOKEN: ${{ secrets.NOTIFY_TOKEN }}
           TELEGRAM_ADMIN_CHAT: ${{ secrets.TELEGRAM_ADMIN_CHAT }}
           TELEGRAM_ADMIN_TOPICS: ${{ secrets.TELEGRAM_ADMIN_TOPICS }}
+          TELEGRAM_ADMIN_BOT_TOKEN: ${{ secrets.TELEGRAM_ADMIN_BOT_TOKEN }}
         run: |
           set -euo pipefail
           if [ -z "${NOTIFY_TOKEN:-}" ]; then
@@ -480,6 +481,15 @@ jobs:
             echo "::notice::TELEGRAM_ADMIN_TOPICS перенесён"
           else
             echo "::notice::TELEGRAM_ADMIN_TOPICS не задан — сообщения пойдут в группу без тем. Запусти «Set up the owner's Telegram channel»."
+          fi
+
+          # Служебный бот канала. Необязателен: без него в группу пишет основной.
+          if [ -n "${TELEGRAM_ADMIN_BOT_TOKEN:-}" ]; then
+            /tmp/supabase secrets set --project-ref "$PROJECT_REF" \
+              TELEGRAM_ADMIN_BOT_TOKEN="$TELEGRAM_ADMIN_BOT_TOKEN" >/dev/null
+            echo "::notice::TELEGRAM_ADMIN_BOT_TOKEN перенесён — в группу пишет служебный бот"
+          else
+            echo "::notice::TELEGRAM_ADMIN_BOT_TOKEN не задан — в группу пишет основной бот"
           fi
 
           /tmp/supabase functions deploy telegram-notify --project-ref "$PROJECT_REF" --no-verify-jwt

@@ -7,11 +7,14 @@ name: Set up the owner's Telegram channel
 #
 # 1. Создаёт **группу** в телеграме и включает в её настройках **«Темы» (Topics)**. Именно группу с
 #    темами, а не канал: в канале тем нет, и обсуждать в нём нельзя.
-# 2. Добавляет туда бота и делает его **администратором** с правом **«Управление темами»**. Без
-#    этого права `createForumTopic` отвечает отказом, и задача об этом скажет.
+# 2. Добавляет туда **служебного** бота (не клиентского) и делает его **администратором** с правом
+#    **«Управление темами»**. Без этого права `createForumTopic` отвечает отказом, и задача об этом
+#    скажет. Токен служебного бота — секрет `TELEGRAM_ADMIN_BOT_TOKEN`; без него работает
+#    основной бот, но тогда в группу надо добавлять его.
 # 3. Узнаёт id группы. Самый простой способ — написать в группу что угодно и открыть
-#    `https://api.telegram.org/bot<токен>/getUpdates`: в ответе будет `"chat":{"id":-100…}`. Id
-#    группы с темами всегда начинается с `-100`.
+#    `https://api.telegram.org/bot<токен служебного бота>/getUpdates`: в ответе будет
+#    `"chat":{"id":-100…}`. Id группы с темами всегда начинается с `-100`. Токен именно того
+#    бота, который в группе, — другой её не видит.
 # 4. Кладёт его в секрет `TELEGRAM_ADMIN_CHAT` (Settings → Secrets and variables → Actions).
 #
 # ## Что делает эта задача
@@ -47,12 +50,20 @@ jobs:
     steps:
       - name: Create the five topics
         env:
-          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          ADMIN_BOT_TOKEN: ${{ secrets.TELEGRAM_ADMIN_BOT_TOKEN }}
+          MAIN_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           CHAT_ID: ${{ secrets.TELEGRAM_ADMIN_CHAT }}
         run: |
           set -euo pipefail
+          # Служебный бот, если он есть; иначе основной — тот же выбор, что в telegram-notify.
+          BOT_TOKEN="${ADMIN_BOT_TOKEN:-${MAIN_BOT_TOKEN:-}}"
           if [ -z "${BOT_TOKEN:-}" ]; then
-            echo "::error::TELEGRAM_BOT_TOKEN is not set"; exit 1
+            echo "::error::Neither TELEGRAM_ADMIN_BOT_TOKEN nor TELEGRAM_BOT_TOKEN is set"; exit 1
+          fi
+          if [ -n "${ADMIN_BOT_TOKEN:-}" ]; then
+            echo "::notice::Using the admin bot (TELEGRAM_ADMIN_BOT_TOKEN)"
+          else
+            echo "::notice::TELEGRAM_ADMIN_BOT_TOKEN is not set — using the main bot"
           fi
           if [ -z "${CHAT_ID:-}" ]; then
             echo "::error::TELEGRAM_ADMIN_CHAT is not set — create the group, enable Topics, add the bot as an admin, then put the group id (it starts with -100) into the secret"; exit 1
