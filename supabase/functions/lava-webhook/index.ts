@@ -165,6 +165,12 @@ Deno.serve(async (req) => {
       p_paid_at: paidAt,
       p_intent: plan || 'course',
       p_applied: applied,
+      /*
+       * Касса. До 0038 её никто не записывал, и покупка через lava.top ложилась в базу как
+       * покупка через Prodamus: `source` был вписан в применяющие функции константой. Владелец:
+       * «нужно писать… как была совершена покупка, потому что у нас разные платформы есть».
+       */
+      p_provider: 'lava',
     });
     if (error) console.warn('lava-webhook: record_payment failed', error.message);
   }
@@ -175,6 +181,7 @@ Deno.serve(async (req) => {
       p_plan: plan,
       p_provider_ref: hook.contractId,
       p_paid_at: paidAt,
+      p_source: 'lava',
     });
     if (error) {
       console.error('lava-webhook: apply_subscription_payment failed', error.message);
@@ -198,6 +205,7 @@ Deno.serve(async (req) => {
     p_email: email,
     p_provider_ref: hook.contractId,
     p_paid_at: paidAt,
+    p_source: 'lava',
   });
   if (error) {
     console.error('lava-webhook: apply_course_payment failed', error.message);
