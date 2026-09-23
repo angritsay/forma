@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { COURSES } from '@/content/registry';
+import { BOOKING } from './booking';
 import { PLANS } from './plans';
-import { LAVA_PRODUCTS, courseKey, lavaUrl, planKey } from './payments';
+import { LAVA_PRODUCTS, courseKey, lavaUrl, planKey, sessionKey } from './payments';
 
 describe('LAVA_PRODUCTS', () => {
   /*
@@ -11,12 +12,34 @@ describe('LAVA_PRODUCTS', () => {
   it('keys every entry to something that actually exists', () => {
     const courseIds = new Set(COURSES.map((c) => c.id));
     const planIds = new Set<string>(PLANS.map((p) => p.id));
+    const sessionIds = new Set<string>(BOOKING.options.map((o) => o.id));
     for (const key of Object.keys(LAVA_PRODUCTS)) {
       const [kind, id] = key.split(':');
       if (kind === 'course') expect(courseIds.has(id!)).toBe(true);
       else if (kind === 'plan') expect(planIds.has(id!)).toBe(true);
+      else if (kind === 'session') expect(sessionIds.has(id!)).toBe(true);
       else throw new Error(`неизвестный вид ключа: ${key}`);
     }
+  });
+
+  /*
+   * Обе длительности заведены — значит обе и должны быть здесь. Занятие без товара продаётся
+   * только за рубли, и это видно ровно одним способом: сходить сюда и посмотреть. Цикл по
+   * `BOOKING.options`, а не два выражения: появится третья длительность — тест потребует и её.
+   */
+  it('covers every session length the coach sells', () => {
+    for (const option of BOOKING.options) {
+      expect(lavaUrl(sessionKey(option.id)), option.id).not.toBeNull();
+    }
+  });
+
+  /*
+   * Полчаса и час — разные товары, и это стоит проверять, а не считать очевидным: скопированная
+   * строка увела бы купившего час на страницу получаса, и заметили бы это по чужому счёту.
+   */
+  it('gives each length its own product', () => {
+    const ids = BOOKING.options.map((o) => LAVA_PRODUCTS[sessionKey(o.id)]?.productId);
+    expect(new Set(ids).size).toBe(BOOKING.options.length);
   });
 
   /* Только абсолютный https — та же проверка, что у любой платёжной ссылки в продукте. */

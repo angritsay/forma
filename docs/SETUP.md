@@ -1315,13 +1315,20 @@ inside it, not a config change.
 
 1. **Register at [lava.top](https://lava.top/) as a seller** and pass whatever verification they
    ask for. Nothing below works until the account can actually take money.
-2. **Create one product per thing you sell** — each course, and the subscription. The subscription
-   is a recurring product with a period (monthly / 3 / 6 / 12), which is what makes renewals
-   arrive on their own.
+2. **Create one product per thing you sell** — each course, the subscription, and **each length of
+   a session with the coach**. The subscription is a recurring product with a period (monthly / 3
+   / 6 / 12), which is what makes renewals arrive on their own; the two sessions are ordinary
+   one-off products.
+
+   The sessions were the gap the owner named — «в лава топ не добавлены продажи на 30 минут и на
+   60 минут Сергея» — and until they exist, an English reader on the coach's tab is offered a
+   message to him instead of a button. Their prices are in `content/site/booking.ts` and must
+   match it: **\$29 for the half-hour, \$39 for the hour**.
+
 3. From each product take **two values**: its public link, and its id.
-4. **Put them in `content/site/payments.ts`** under our own key — `course:<course id>` or
-   `plan:<plan id>`. Both are public by nature; they belong in the repository and nothing else
-   does.
+4. **Put them in `content/site/payments.ts`** under our own key — `course:<course id>`,
+   `plan:<plan id>` or `session:<half|hour>`. All of them are public by nature; they belong in the
+   repository and nothing else does.
 5. **In the cabinet, add the webhook** (Web-Widget → Webhooks → **Add Webhook**), pick **Basic**
    as the authentication and invent a login and a password there. Put the pair into GitHub
    Actions secrets as **`LAVA_WEBHOOK_SECRET`**, written exactly `login:password` — one line, one
@@ -1347,9 +1354,18 @@ inside it, not a config change.
    ```json
    {
      "<course product id>": "course:start",
-     "<tier id>": { "19": "plan:monthly", "79": "plan:annual" }
+     "<tier id>": { "19": "plan:monthly", "79": "plan:annual" },
+     "<half-hour product id>": "session:half",
+     "<hour product id>": "session:hour"
    }
    ```
+
+   A `session:` key means **money arrived and nothing is unlocked**: a session is the coach's
+   time, not access, and the slot is agreed with a person. The function records the payment and
+   stops there. That branch exists so a session can never be mistaken for a course — everything
+   that is not a subscription otherwise goes to `apply_course_payment()`, which opens the single
+   pending course order of that email, and somebody who had ordered a course and then bought an
+   hour would have got the course for free.
 
    **The subscription needs the price form, and that is not decoration.** In lava.top a
    subscription is a _tier_, and a tier is one product holding several periods — the monthly price
