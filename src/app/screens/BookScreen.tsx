@@ -89,6 +89,7 @@ import { BOOKING, type BookingOption } from '@content/site/booking';
 import { BRAND } from '@content/site/brand';
 import { COACH } from '@content/site/coach';
 import { LINKS } from '@content/site/links';
+import { lavaUrl, sessionKey } from '@content/site/payments';
 import { formatPrice } from '@content/site/pricing';
 
 /** Where "message the coach" goes: Telegram if set, else mail. */
@@ -168,12 +169,23 @@ export default function BookScreen() {
   const schedule = paymentTarget(option?.scheduleUrl || BOOKING.scheduleUrl);
   const lead = BOOKING.leadTimeMin;
   /*
-   * Час с тренером продаётся той же русской кассой, что и всё остальное, — значит и здесь на
-   * неродном языке ведём на `/en/checkout/`. `schedule` выше это не касается: там не касса, а
-   * страница выбора времени в Google Calendar, и она никому ничего не продаёт.
+   * Занятие продаётся теми же двумя кассами, что и всё остальное: рубли — в Prodamus, остальное —
+   * в lava.top по ключу из `content/site/payments.ts`. Второго адреса здесь не было вовсе, и это
+   * был не пробел в тексте, а закрытая дверь: `payRoute` без него отдавал `null`, и человек с
+   * нерублёвой картой не мог купить час с тренером никак.
+   *
+   * Товаров в кабинете пока нет, и тогда `lavaUrl` отвечает `null` — кнопка честно уступает место
+   * предложению написать тренеру. Появятся — заработает само, без правки этого экрана.
+   *
+   * `schedule` выше это не касается: там не касса, а страница выбора времени в Google Calendar, и
+   * она никому ничего не продаёт.
    */
   const payment = option
-    ? payRoute(locale, option.paymentUrl[locale] ?? option.paymentUrl.ru)
+    ? payRoute(
+        locale,
+        option.paymentUrl[locale] ?? option.paymentUrl.ru,
+        lavaUrl(sessionKey(option.id)),
+      )
     : null;
   const contact = contactHref(option ? l(option.name, locale) : name);
 

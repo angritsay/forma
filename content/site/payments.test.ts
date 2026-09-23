@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { COURSES } from '@/content/registry';
+import { BOOKING } from './booking';
 import { PLANS } from './plans';
-import { LAVA_PRODUCTS, courseKey, lavaUrl, planKey } from './payments';
+import { LAVA_PRODUCTS, courseKey, lavaUrl, planKey, sessionKey } from './payments';
 
 describe('LAVA_PRODUCTS', () => {
   /*
@@ -11,11 +12,25 @@ describe('LAVA_PRODUCTS', () => {
   it('keys every entry to something that actually exists', () => {
     const courseIds = new Set(COURSES.map((c) => c.id));
     const planIds = new Set<string>(PLANS.map((p) => p.id));
+    const sessionIds = new Set<string>(BOOKING.options.map((o) => o.id));
     for (const key of Object.keys(LAVA_PRODUCTS)) {
       const [kind, id] = key.split(':');
       if (kind === 'course') expect(courseIds.has(id!)).toBe(true);
       else if (kind === 'plan') expect(planIds.has(id!)).toBe(true);
+      else if (kind === 'session') expect(sessionIds.has(id!)).toBe(true);
       else throw new Error(`неизвестный вид ключа: ${key}`);
+    }
+  });
+
+  /*
+   * Занятия с тренером ещё не заведены в кабинете, и это состояние проверяется явно, а не
+   * подразумевается: кнопка на неродном языке ведёт в поддержку, а не в пустоту. Когда товары
+   * появятся, этот тест упадёт — и упадёт правильно, его надо будет переписать на `not.toBeNull()`
+   * вместе с добавлением строк.
+   */
+  it('has no session products yet, and says so out loud', () => {
+    for (const option of BOOKING.options) {
+      expect(lavaUrl(sessionKey(option.id)), option.id).toBeNull();
     }
   });
 

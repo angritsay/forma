@@ -5,6 +5,8 @@ import { keyFor, parseProductMap } from './products';
 const RAW = JSON.stringify({
   prod_course: 'course:start',
   prod_tier: { '19': 'plan:monthly', '79': 'plan:annual' },
+  prod_half: 'session:half',
+  prod_hour: 'session:hour',
 });
 
 describe('parseProductMap', () => {
@@ -64,5 +66,21 @@ describe('keyFor', () => {
     expect(keyFor(map, 'prod_tier', 49)).toBe('');
     expect(keyFor(map, 'prod_tier', null)).toBe('');
     expect(keyFor(map, 'somebody_elses_product', 19)).toBe('');
+  });
+
+  /*
+   * Занятия с тренером — обычные разовые товары, по одному на длительность, и в карте они живут
+   * строкой. Обработчик отличает их по префиксу `session:` и на них ничего не открывает: оплачено
+   * время человека, а не доступ. Префикс здесь и проверяется — на нём держится та ветка.
+   */
+  it('names a session by its own product, and marks it as one', () => {
+    expect(keyFor(map, 'prod_half', 29)).toBe('session:half');
+    expect(keyFor(map, 'prod_hour', 39)).toBe('session:hour');
+    for (const id of ['prod_half', 'prod_hour']) {
+      expect(keyFor(map, id, null).startsWith('session:'), id).toBe(true);
+    }
+    // И наоборот: курс и тариф этим префиксом не помечены, иначе ветка съела бы их.
+    expect(keyFor(map, 'prod_course', 29).startsWith('session:')).toBe(false);
+    expect(keyFor(map, 'prod_tier', 19).startsWith('session:')).toBe(false);
   });
 });
