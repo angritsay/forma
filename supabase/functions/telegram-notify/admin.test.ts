@@ -3,7 +3,9 @@ import {
   ADMIN_MAX_ATTEMPTS,
   ADMIN_TOPICS,
   adminFailure,
+  adminLink,
   adminMessage,
+  appBase,
   escapeHtml,
   moscowTime,
   parseTopics,
@@ -91,6 +93,8 @@ describe('adminMessage', () => {
       'session_cancelled',
       'payment_unclaimed',
       'claim_no_order',
+      'club_closed',
+      'club_refunded',
       'support_message',
       'channel_ready',
     ];
@@ -285,6 +289,91 @@ describe('stripLinks', () => {
     );
     expect(stripLinks('<b>Обращение</b>\n<a href="https://t.me/x">@x</a>')).toBe(
       '<b>Обращение</b>\n@x',
+    );
+  });
+});
+
+describe('links into the admin (0044)', () => {
+  const APP = 'https://forma-app.co/app/';
+  const PAY = '0b6a3f7e-1c2d-4e5f-8a9b-0c1d2e3f4a5b';
+  const CLUB = '11111111-2222-4333-8444-555555555555';
+
+  it('accepts only an https base, and always ends it with a slash', () => {
+    expect(appBase('https://forma-app.co/app')).toBe('https://forma-app.co/app/');
+    expect(appBase('https://forma-app.co/app/#/old?x=1')).toBe('https://forma-app.co/app/');
+    expect(appBase('http://forma-app.co/app/')).toBeNull();
+    expect(appBase('tg://resolve?domain=x')).toBeNull();
+    expect(appBase('')).toBeNull();
+    expect(appBase('not a url')).toBeNull();
+  });
+
+  it('takes an unclaimed payment straight to it', () => {
+    const link = adminLink(
+      { topic: 'courses', kind: 'payment_unclaimed', params: { paymentId: PAY, email: 'a@b.co' } },
+      APP,
+    );
+    expect(link?.url).toBe(`https://forma-app.co/app/#/admin?tab=payments&id=${PAY}`);
+  });
+
+  /* Строки, поставленные в очередь до 0044, id в параметрах не несут — он есть в ключе. */
+  it('finds the payment id in the dedupe key of an older row', () => {
+    const link = adminLink(
+      {
+        topic: 'sessions',
+        kind: 'session_paid',
+        params: { email: 'a@b.co' },
+        dedupe_key: `session_paid:${PAY}`,
+      },
+      APP,
+    );
+    expect(link?.url).toContain(`id=${PAY}`);
+    const none = adminLink({ topic: 'sessions', kind: 'session_paid', params: {} }, APP);
+    expect(none?.url).toBe('https://forma-app.co/app/#/admin?tab=payments&filter=sessions');
+  });
+
+  it('opens the club proofs for a resubmitted proof', () => {
+    const link = adminLink(
+      { topic: 'club', kind: 'proof_resubmitted', params: { marathonId: CLUB, email: 'a@b.co' } },
+      APP,
+    );
+    expect(link?.url).toBe(`https://forma-app.co/app/#/admin/marathons/${CLUB}?tab=proofs`);
+    const bare = adminLink({ topic: 'club', kind: 'proof_resubmitted', params: {} }, APP);
+    expect(bare?.url).toBe('https://forma-app.co/app/#/admin/marathons');
+  });
+
+  it('opens the person, with the address encoded', () => {
+    const link = adminLink(
+      { topic: 'signups', kind: 'signup', params: { email: 'Anna+x@B.co' } },
+      APP,
+    );
+    expect(link?.url).toBe('https://forma-app.co/app/#/admin/people/anna%2Bx%40b.co');
+    // Не адрес — не ссылка.
+    expect(adminLink({ topic: 'signups', kind: 'signup', params: { email: '' } }, APP)).toBeNull();
+  });
+
+  it('puts the link at the end of the message, escaped, and nowhere without a base', () => {
+    const row = {
+      topic: 'courses',
+      kind: 'payment_unclaimed',
+      params: { paymentId: PAY, email: 'a@b.co' },
+    };
+    const text = adminMessage(row, APP)!;
+    expect(text).toMatch(
+      new RegExp(`<a href="https://forma-app\\.co/app/#/admin\\?tab=payments&amp;id=${PAY}">`),
+    );
+    expect(text.endsWith('Открыть платёж в админке</a>')).toBe(true);
+    expect(adminMessage(row)).not.toContain('<a ');
+    expect(adminMessage(row, 'http://insecure.example/')).not.toContain('<a ');
+    // Запасной путь без ссылок оставляет подпись, а не адрес.
+    expect(stripLinks(text)).toContain('Открыть платёж в админке');
+  });
+
+  it('says a refund and an ended access in their own words', () => {
+    expect(adminMessage(row('club_refunded', { email: 'a@b.co', plan: 'annual' }))).toContain(
+      'Возврат за клуб',
+    );
+    expect(adminMessage(row('club_closed', { email: 'a@b.co' }))).toContain(
+      'Доступ к клубу закрыт',
     );
   });
 });

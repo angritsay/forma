@@ -69,6 +69,8 @@ export interface AdminRow {
   topic: string;
   kind: string;
   params: Record<string, unknown> | null;
+  /** `payment_unclaimed:<id>` and the like; the payment id for rows queued before 0044. */
+  dedupe_key?: string | null;
 }
 
 /** `&`, `<` и `>` — всё, что телеграм считает особым в HTML. */
@@ -215,8 +217,101 @@ function supportMessage(p: Record<string, unknown> | null): string {
  *
  * `null`, а не заглушка: неизвестный вид значит, что база обогнала функцию, и молча написать
  * «событие» в канал было бы хуже, чем оставить строку в очереди и сказать об этом в логе.
+ *
+ * `appUrl` — адрес приложения (`MINI_APP_URL`). С ним в конце сообщения стоит ссылка прямо на
+ * нужный экран админки (0044); без него, или если он не https, — сообщение как раньше.
  */
-export function adminMessage(row: AdminRow): string | null {
+export function adminMessage(row: AdminRow, appUrl = ''): string | null {
+  const text = adminBody(row);
+  if (text === null) return null;
+  const link = adminLink(row, appUrl);
+  return link ? `${text}\n\n<a href="${escapeHtml(link.url)}">${escapeHtml(link.label)}</a>` : text;
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * Ссылка в админку (0044).
+ *
+ * Владелец: сообщение в канале — это повод что-то сделать, а сделать это можно только в админке.
+ * Ссылка ведёт прямо туда: платёж — на него самого во вкладке «Платежи», пруф — в отчёты клуба,
+ * всё остальное — на страницу человека.
+ *
+ * Телеграм принимает в `href` только настоящий адрес: `https://…`. Кривой `MINI_APP_URL` значит
+ * сообщение без ссылки, а не отказ телеграма и сообщение, отправленное со второй попытки.
+ * ------------------------------------------------------------------------------------------- */
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const EMAIL_RE = /^[^\s@<>"]+@[^\s@<>"]+$/;
+
+/** Корень приложения с `/` на конце, или `null`, если это не https-адрес. */
+export function appBase(appUrl: string): string | null {
+  let u: URL;
+  try {
+    u = new URL(appUrl.trim());
+  } catch {
+    return null;
+  }
+  if (u.protocol !== 'https:' || !u.hostname) return null;
+  u.hash = '';
+  u.search = '';
+  const s = u.toString();
+  return s.endsWith('/') ? s : `${s}/`;
+}
+
+/** Путь внутри приложения → полный адрес. Приложение живёт на hash-роутере: `…/app/#/admin`. */
+export function appLink(appUrl: string, path: string): string | null {
+  const base = appBase(appUrl);
+  return base ? `${base}#${path}` : null;
+}
+
+/** Id платежа: из параметров (0044) или из ключа строки — у строк, поставленных раньше. */
+function paymentIdOf(row: AdminRow): string {
+  const fromParams = str(row.params, 'paymentId');
+  if (UUID_RE.test(fromParams)) return fromParams.toLowerCase();
+  const tail = (row.dedupe_key ?? '').split(':')[1] ?? '';
+  return UUID_RE.test(tail) ? tail.toLowerCase() : '';
+}
+
+function personPath(email: string): string | null {
+  const e = email.trim();
+  return EMAIL_RE.test(e) ? `/admin/people/${encodeURIComponent(e.toLowerCase())}` : null;
+}
+
+const PAYMENT_KINDS = new Set(['payment_unclaimed', 'session_paid', 'claim_no_order']);
+
+/** Куда ведёт сообщение этого вида, и как ссылка подписана. */
+export function adminLinkPath(row: AdminRow): { path: string; label: string } | null {
+  const p = row.params;
+  if (PAYMENT_KINDS.has(row.kind)) {
+    const id = paymentIdOf(row);
+    const filter = row.kind === 'session_paid' ? 'sessions' : 'unclaimed';
+    return {
+      path: id ? `/admin?tab=payments&id=${id}` : `/admin?tab=payments&filter=${filter}`,
+      label: 'Открыть платёж в админке',
+    };
+  }
+  if (row.kind === 'proof_resubmitted') {
+    const club = str(p, 'marathonId');
+    return {
+      path: UUID_RE.test(club)
+        ? `/admin/marathons/${club.toLowerCase()}?tab=proofs`
+        : '/admin/marathons',
+      label: 'Открыть отчёты клуба',
+    };
+  }
+  if (row.kind === 'channel_ready') return null;
+  const person = personPath(row.kind === 'duo_paired' ? str(p, 'inviter') : str(p, 'email'));
+  return person ? { path: person, label: 'Открыть человека в админке' } : null;
+}
+
+/** Полная ссылка для сообщения, или `null`. */
+export function adminLink(row: AdminRow, appUrl: string): { url: string; label: string } | null {
+  const target = adminLinkPath(row);
+  if (!target) return null;
+  const url = appLink(appUrl, target.path);
+  return url ? { url, label: target.label } : null;
+}
+
+function adminBody(row: AdminRow): string | null {
   const p = row.params;
   const email = str(p, 'email');
 
@@ -271,6 +366,27 @@ export function adminMessage(row: AdminRow): string | null {
      * «действует до» здесь поэтому главная, а не служебная: она говорит, сколько времени ещё есть
      * на то, чтобы человека вернуть.
      */
+    /*
+     * «Закрыть доступ сейчас» и «Возврат подписки» из админки (0044). Оба закрывают доступ сразу,
+     * в отличие от отмены, — поэтому свои слова: иначе в канале это выглядело бы как «Клуб
+     * отменён» с датой, которая уже наступила.
+     */
+    case 'club_closed':
+      return block(
+        'Доступ к клубу закрыт',
+        lines(['Почта', email], ['Тариф', PLAN_NAMES[str(p, 'plan')] ?? str(p, 'plan')]),
+      );
+
+    case 'club_refunded':
+      return block(
+        'Возврат за клуб',
+        lines(
+          ['Почта', email],
+          ['Тариф', PLAN_NAMES[str(p, 'plan')] ?? str(p, 'plan')],
+          ['Касса', tillName(str(p, 'source'))],
+        ) + '\n\nДоступ закрыт. Деньги возвращаются вручную в кассе.',
+      );
+
     case 'club_cancelled':
       return block(
         'Клуб отменён',

@@ -270,7 +270,7 @@ function asPlan(v: string): SubscriptionPlan {
 }
 
 function asSubscriptionStatus(v: string): SubscriptionStatus {
-  return v === 'active' || v === 'cancelled' ? v : 'pending';
+  return v === 'active' || v === 'cancelled' || v === 'refunded' ? v : 'pending';
 }
 
 /** Client-side copy of `subscription_live()`: used only where the server verdict is not to hand. */
@@ -279,7 +279,7 @@ export function subscriptionLive(
   expiresAt: string | null,
   now = Date.now(),
 ): boolean {
-  if (status === 'pending' || !expiresAt) return false;
+  if (status === 'pending' || status === 'refunded' || !expiresAt) return false;
   const t = Date.parse(expiresAt);
   return Number.isFinite(t) && t > now;
 }
