@@ -13,6 +13,7 @@ import { BOOKING, bookingFromPrice } from '@content/site/booking';
 import { COACH } from '@content/site/coach';
 import { formatPrice } from '@content/site/pricing';
 import Button from './Button.astro';
+import Pill from './Pill.astro';
 
 interface Props {
   locale: Locale;
@@ -58,6 +59,10 @@ const bookHint = t(locale, 'landing.coachBookHint', {
     }
     <span class="eyebrow kicker-vertical absolute top-1 -left-5 hidden md:block" aria-hidden="true">
       FORMA // {name}
+    </span>
+    {/* The coach's section tag: bleu ciel, the colour his tab wears in the app (Style A). */}
+    <span class="absolute -bottom-3 left-3 flex" aria-hidden="true">
+      <Pill tone="ciel" size="sm" tilt="right">{t(locale, 'landing.coachEyebrow')}</Pill>
     </span>
   </div>
   <div>

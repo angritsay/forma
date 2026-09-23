@@ -3,16 +3,18 @@
  * Landing button — the Astro twin of the kit's Button (src/components/ui/Button.tsx), kept in
  * step by hand so both surfaces share one control language.
  *
- * Black and white only: primary is a white fill with black text, secondary a raised surface
- * behind a strong hairline, ghost is text alone, danger an outline with red text. None of them
- * ever takes the programme colour. Heights 40 / 48 / 56; the label is sentence case at 14–15px
+ * Style A (global.css header): `primary` is the neon — the one main action of a section, ink on
+ * #f4ff3f (17.3:1) — so a section asks for it once. `plain` is the white fill the primary used to
+ * be, for a second strong action beside it; secondary is a raised surface behind a strong
+ * hairline, ghost is text alone, danger an outline with red text. None of them ever takes the
+ * programme colour, and none is ever a gradient. Heights 40 / 48 / 56; the label is sentence case at 14–15px
  * (`.control-label`), up from the 12–13px the tracked capitals forced. Hover drops to .85 opacity
  * or lightens one surface; press is a 2% scale.
  * Renders <a> when `href` is set, otherwise <button>.
  */
 interface Props {
   href?: string;
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  variant?: 'primary' | 'plain' | 'secondary' | 'ghost' | 'danger';
   size?: 'sm' | 'md' | 'lg';
   type?: 'button' | 'submit';
   class?: string;
@@ -29,7 +31,7 @@ const {
 } = Astro.props;
 
 const base =
-  'control-label inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-control transition-[background-color,color,opacity,transform] duration-150 ease-(--ease-out) active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
+  'control-label inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-control transition-[background-color,color,opacity,transform] duration-150 ease-(--ease-out) active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
 // `sm` is under the 44px touch minimum on its own; `tap-target-y` grows its hit area, not its box.
 const sizes = {
   sm: 'tap-target-y h-10 px-4.5 text-[14px]',
@@ -37,7 +39,8 @@ const sizes = {
   lg: 'h-14 px-8 text-[15px]',
 };
 const variants = {
-  primary: 'bg-primary text-on-primary hover:opacity-85',
+  primary: 'bg-action text-on-action hover:opacity-85',
+  plain: 'bg-primary text-on-primary hover:opacity-85',
   secondary: 'border border-border-strong bg-surface-2 text-text hover:bg-surface-3',
   ghost: 'bg-transparent text-muted hover:text-text',
   danger: 'border border-border-strong bg-transparent text-danger hover:bg-surface-2',

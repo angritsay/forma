@@ -13,37 +13,53 @@
  * The tile is a flat square of the programme colour. It used to carry a drawn stick figure; the
  * movements are filmed now, and a drawing of a movement we have on video is a worse picture of it.
  */
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { register } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Resvg } from '@resvg/resvg-js';
+import {
+  BODY,
+  DISPLAY,
+  FONTS_DIR,
+  WORDMARK,
+  WORDMARK_THIN,
+  advanceWidth,
+} from './font-metrics.mjs';
 import { loadContentIndex, loadGuides } from './lib.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..', '..');
 const OUT_DIR = join(ROOT, 'public', 'og');
-const FONTS_DIR = join(HERE, 'fonts');
 const WIDTH = 1200;
 const HEIGHT = 630;
 // Published languages, mirroring LOCALES in src/content/schema.ts: a card per page that exists.
 const LOCALES = ['ru', 'en'];
 /*
- * Second brandbook (src/styles/global.css). The card is black and white; the only colour on it is
+ * Third palette (src/styles/global.css): charcoal ground, and the only colour on a content card is
  * the programme colour of the course it advertises, on the tile. Brand and hub cards, which are
- * about no course in particular, take a neutral surface rather than a colour of their own.
+ * about no course in particular, take a neutral surface rather than a colour of their own — except
+ * the default card, which is the brand's own and wears the hero field (see `template`).
  */
-const BRAND_TILE = '#1F1F24';
+const BRAND_TILE = '#2E2E2E';
 /**
- * The five course tiles (--tile-1..5): the three programme colours, then the two neutral
- * surfaces. Rotated per guide cluster so hub cards vary deterministically.
+ * The five course tiles (--tile-1..5 and the dumbbells colour): the three programme colours, then
+ * the two neutral surfaces. Rotated per guide cluster so hub cards vary deterministically. Electric
+ * blue and bleu ciel are not here on purpose: blue belongs to the club and the coach, and the light
+ * blue to the interface.
  */
-const TILES = ['#F2F52D', '#A8C8FF', '#F08A3C', '#1F1F24', '#2A2A30'];
+const TILES = ['#FF5A00', '#F4FF3F', '#FFE6D0', '#2E2E2E', '#383838'];
 const COLORS = {
-  bg: '#0F0F11',
+  bg: '#1A1A1A',
   text: '#F6F6F7',
   muted: '#B9B9C0',
-  muted2: '#93939D',
+  muted2: '#A6A6AE',
+  /* The hero field: electric blue, white type on it (7.71), the key word in light blue (5.7). */
+  field: '#2038E2',
+  onField: '#FFFFFF',
+  onFieldQuiet: 'rgba(255,255,255,0.86)',
+  accent: '#AFE9FD',
+  action: '#F4FF3F',
 };
 
 // Node prints an ExperimentalWarning for type stripping; keep every other warning.
@@ -148,121 +164,6 @@ function errMessage(err) {
 /* ------------------------------------------------------------------------------------------ */
 
 /** @param {string} s */
-/**
- * Bundled OG faces, all baked latin+cyrillic so one file covers a Russian card.
- *
- * Display is Unbounded, in capitals, at three weights: 600 for the headline, 800 and 200 for the
- * wordmark's «FOR» and «MA». resvg picks a face by `font-weight`, so each weight is a separate
- * static instance (cut from Google's variable file with fontTools; see fonts/OFL-Unbounded.txt).
- * The keys below are for the metrics parser only — to the renderer every Unbounded file declares
- * the same family name and differs by weight.
- */
-const DISPLAY = 'Unbounded';
-const BODY = 'Onest';
-const WORDMARK = 'Unbounded800';
-const WORDMARK_THIN = 'Unbounded200';
-const FONT_FILES = {
-  [DISPLAY]: 'Unbounded-SemiBold.ttf',
-  [WORDMARK]: 'Unbounded-ExtraBold.ttf',
-  [WORDMARK_THIN]: 'Unbounded-ExtraLight.ttf',
-  [BODY]: 'Onest-Regular.ttf',
-};
-
-/** @type {Map<string, {upem: number, cmap: Map<number, number>, hmtx: number[], fallback: number}>} */
-const METRICS = new Map();
-
-/**
- * Minimal TrueType reader: enough of `head`, `hhea`, `hmtx` and `cmap` to sum advance widths.
- * Kept inline rather than pulling in fontkit — the site build must not grow a dependency for a
- * few hundred lines of table parsing, and these two files never change without this script.
- * @param {string} family
- */
-function metrics(family) {
-  const cached = METRICS.get(family);
-  if (cached) return cached;
-  const buf = readFileSync(join(FONTS_DIR, FONT_FILES[family]));
-  const u16 = (/** @type {number} */ o) => buf.readUInt16BE(o);
-  const u32 = (/** @type {number} */ o) => buf.readUInt32BE(o);
-
-  /** @type {Record<string, number>} */
-  const tables = {};
-  for (let i = 0, n = u16(4); i < n; i++) {
-    const rec = 12 + i * 16;
-    tables[buf.toString('ascii', rec, rec + 4)] = u32(rec + 8);
-  }
-  const upem = u16(tables.head + 18);
-  const numHMetrics = u16(tables.hhea + 34);
-  /** @type {number[]} */
-  const hmtx = [];
-  for (let i = 0; i < numHMetrics; i++) hmtx.push(u16(tables.hmtx + i * 4));
-
-  // Pick a Unicode subtable: prefer format 12 (full range), else format 4 (BMP).
-  const cmap = new Map();
-  let best = 0;
-  for (let i = 0, n = u16(tables.cmap + 2); i < n; i++) {
-    const rec = tables.cmap + 4 + i * 8;
-    const platform = u16(rec);
-    const encoding = u16(rec + 2);
-    const sub = tables.cmap + u32(rec + 4);
-    const unicode = platform === 0 || (platform === 3 && (encoding === 1 || encoding === 10));
-    if (unicode && (best === 0 || u16(sub) === 12)) best = sub;
-  }
-  const format = u16(best);
-  if (format === 12) {
-    for (let g = 0, n = u32(best + 12); g < n; g++) {
-      const rec = best + 16 + g * 12;
-      const start = u32(rec);
-      const end = u32(rec + 4);
-      const startGlyph = u32(rec + 8);
-      for (let cp = start; cp <= end; cp++) cmap.set(cp, startGlyph + (cp - start));
-    }
-  } else if (format === 4) {
-    const segX2 = u16(best + 6);
-    const ends = best + 14;
-    const starts = ends + segX2 + 2;
-    const deltas = starts + segX2;
-    const ranges = deltas + segX2;
-    for (let s2 = 0; s2 < segX2; s2 += 2) {
-      const end = u16(ends + s2);
-      const start = u16(starts + s2);
-      const delta = buf.readInt16BE(deltas + s2);
-      const rangeOffset = u16(ranges + s2);
-      for (let cp = start; cp <= end && cp !== 0xffff; cp++) {
-        let glyph;
-        if (rangeOffset === 0) glyph = (cp + delta) & 0xffff;
-        else {
-          const at = ranges + s2 + rangeOffset + (cp - start) * 2;
-          if (at + 1 >= buf.length) continue;
-          const raw = u16(at);
-          glyph = raw === 0 ? 0 : (raw + delta) & 0xffff;
-        }
-        if (glyph) cmap.set(cp, glyph);
-      }
-    }
-  }
-  // Space is the safest stand-in for a codepoint this face does not carry.
-  const fallback = hmtx[cmap.get(0x20) ?? 0] ?? upem / 2;
-  const m = { upem, cmap, hmtx, fallback };
-  METRICS.set(family, m);
-  return m;
-}
-
-/**
- * Advance width of `text` in em units (multiply by font size for pixels).
- * @param {string} text
- * @param {string} family
- */
-function advanceWidth(text, family) {
-  const { upem, cmap, hmtx, fallback } = metrics(family);
-  let total = 0;
-  for (const ch of text) {
-    const glyph = cmap.get(ch.codePointAt(0) ?? 0);
-    const adv = glyph === undefined ? fallback : (hmtx[glyph] ?? hmtx[hmtx.length - 1] ?? fallback);
-    total += adv;
-  }
-  return total / upem;
-}
-
 function esc(s) {
   return String(s)
     .replace(/&/g, '&amp;')
@@ -321,13 +222,24 @@ function fitText(text, sizes, maxWidth, maxLines, family) {
 }
 
 /**
- * @param {{ eyebrow: string, title: string, subtitle: string, tile: string, brand: string, host: string, big?: boolean }} c
+ * A card: charcoal ground, the words on the left, the programme colour as a square on the right.
+ *
+ * With `field`, the card is the site's hero instead (Style A, global.css header): the whole card
+ * is an electric-blue field inset from the edge, white type on it, the title's last word in the
+ * brand's light blue with a hand-drawn neon swoosh under it, and no tile — the field is the colour.
+ * Only the default card wears it: one field per screen, and the default is the brand's own screen.
+ *
+ * @param {{ eyebrow: string, title: string, subtitle: string, tile: string, brand: string, host: string, big?: boolean, field?: boolean }} c
  */
 function template(c) {
-  const margin = 80;
-  // The tile is a sharp square: the brand has one shape and it has no radius.
+  const field = c.field === true;
+  const margin = field ? 104 : 80;
+  // The tile is a sharp square: a colour swatch, not a card.
   const tile = { x: 720, y: 105, size: 420, r: 0 };
-  const textWidth = tile.x - margin - 56;
+  const textWidth = field ? WIDTH - margin * 2 : tile.x - margin - 56;
+  const ink = field
+    ? { title: COLORS.onField, body: COLORS.onFieldQuiet, quiet: COLORS.onFieldQuiet }
+    : { title: COLORS.text, body: COLORS.muted, quiet: COLORS.muted2 };
   /*
    * The headline is Unbounded, drawn exactly as the title is written — sentence case, and no
    * `toUpperCase()`. That call was here for as long as `.font-display` uppercased; the owner
@@ -365,13 +277,32 @@ function template(c) {
    */
   const eyebrowY = 150;
   let y = c.eyebrow ? 216 : 190;
+  const titleTop = y;
+  const lastLine = title.lines.length - 1;
+  /*
+   * On the field the title's last word is the key word: light blue, a neon swoosh under it. The
+   * split is on the last line only — the swoosh underlines one word, never a wrapped phrase.
+   */
+  const keyAt = field ? (title.lines[lastLine] ?? '').lastIndexOf(' ') + 1 : -1;
   const titleTspans = title.lines
-    .map(
-      (line, i) =>
-        `<tspan x="${margin}" y="${(y + i * titleLineHeight).toFixed(1)}">${esc(line)}</tspan>`,
-    )
+    .map((line, i) => {
+      const at = `x="${margin}" y="${(y + i * titleLineHeight).toFixed(1)}"`;
+      if (i !== lastLine || keyAt < 0) return `<tspan ${at}>${esc(line)}</tspan>`;
+      const head = line.slice(0, keyAt);
+      return `<tspan ${at}>${esc(head)}<tspan fill="${COLORS.accent}">${esc(line.slice(keyAt))}</tspan></tspan>`;
+    })
     .join('');
-  y += title.lines.length * titleLineHeight + 18;
+  let swoosh = '';
+  if (field) {
+    const line = title.lines[lastLine] ?? '';
+    const x0 = margin + advanceWidth(line.slice(0, keyAt), DISPLAY) * title.size;
+    const x1 = margin + advanceWidth(line, DISPLAY) * title.size;
+    const base = titleTop + lastLine * titleLineHeight + title.size * 0.3;
+    const w = x1 - x0;
+    const sw = Math.max(5, title.size * 0.08);
+    swoosh = `<path d="M${(x0 + 2).toFixed(1)} ${(base + sw).toFixed(1)} C${(x0 + w * 0.3).toFixed(1)} ${(base - sw * 0.4).toFixed(1)} ${(x0 + w * 0.68).toFixed(1)} ${(base - sw * 0.6).toFixed(1)} ${(x1 - 2).toFixed(1)} ${(base + sw * 0.3).toFixed(1)}" stroke="${COLORS.action}" stroke-width="${sw.toFixed(1)}" fill="none" stroke-linecap="round"/>`;
+  }
+  y += title.lines.length * titleLineHeight + (field ? 40 : 18);
   /*
    * How many subtitle lines actually fit above the wordmark.
    *
@@ -406,18 +337,22 @@ function template(c) {
   const maWidth = (advanceWidth('MA', WORDMARK_THIN) + 0.05 * 2) * wmSize;
   const wordmarkWidth = fWidth + orWidth + maWidth;
   const wordmark = `
-  <g fill="${COLORS.text}" font-family="Unbounded" font-size="${wmSize}">
+  <g fill="${ink.title}" font-family="Unbounded" font-size="${wmSize}">
     <text x="0" y="${wmY}" font-weight="800" transform="translate(${margin} 0) scale(1.22 1)">F</text>
     <text x="${(margin + fWidth).toFixed(1)}" y="${wmY}" font-weight="800" letter-spacing="${wmTracking}">OR</text>
     <text x="${(margin + fWidth + orWidth).toFixed(1)}" y="${wmY}" font-weight="200" letter-spacing="${wmTracking}">MA</text>
   </g>`;
+  const inset = 36;
+  const ground = field
+    ? `<rect x="${inset}" y="${inset}" width="${WIDTH - inset * 2}" height="${HEIGHT - inset * 2}" rx="40" fill="${COLORS.field}"/>`
+    : `<rect x="${tile.x}" y="${tile.y}" width="${tile.size}" height="${tile.size}" fill="${c.tile}"/>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
   <rect width="${WIDTH}" height="${HEIGHT}" fill="${COLORS.bg}"/>
-  <rect x="${tile.x}" y="${tile.y}" width="${tile.size}" height="${tile.size}" fill="${c.tile}"/>
-  ${c.eyebrow ? `<text x="${margin}" y="${eyebrowY}" font-family="Onest" font-size="20" letter-spacing="0.2" fill="${COLORS.muted}">${esc(c.eyebrow)}</text>` : ''}
-  <text font-family="Unbounded" font-weight="600" font-size="${title.size}" fill="${COLORS.text}">${titleTspans}</text>
-  <text font-family="Onest" font-size="${subtitle.size}" fill="${COLORS.muted}">${subtitleTspans}</text>${wordmark}
-  <text x="${(margin + wordmarkWidth + 26).toFixed(1)}" y="${wmY}" font-family="Onest" font-size="20" fill="${COLORS.muted2}">${esc(c.host)}</text>
+  ${ground}
+  ${c.eyebrow ? `<text x="${margin}" y="${eyebrowY}" font-family="Onest" font-size="20" letter-spacing="0.2" fill="${ink.body}">${esc(c.eyebrow)}</text>` : ''}
+  <text font-family="Unbounded" font-weight="600" font-size="${title.size}" fill="${ink.title}">${titleTspans}</text>${swoosh}
+  <text font-family="Onest" font-size="${subtitle.size}" fill="${ink.body}">${subtitleTspans}</text>${wordmark}
+  <text x="${(margin + wordmarkWidth + 26).toFixed(1)}" y="${wmY}" font-family="Onest" font-size="20" fill="${ink.quiet}">${esc(c.host)}</text>
 </svg>`;
 }
 
@@ -479,6 +414,7 @@ function buildJobs(content, labels, host) {
       brand,
       host,
       big: true,
+      field: true,
     },
   });
 

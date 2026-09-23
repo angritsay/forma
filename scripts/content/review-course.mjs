@@ -548,80 +548,33 @@ const page = html`<title>${course.name.ru}</title>
     href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=Onest:wght@400;500;600&display=swap"
   />
   <style>
-    /* Second brandbook: strictly black and white (paper by default, #0f0f11 dark), Unbounded for
-       display, one shape — no radius. The accent is ink/white; nothing here is blue any more. */
+    /* Third palette (src/styles/global.css): charcoal is the only ground — «фон больше не может
+       быть другого цвета» — so there is no light variant any more. Light blue #afe9fd is the
+       brand accent, the neon is kept for action and does not appear on a page with none. */
     :root {
-      color-scheme: light;
-      --bg: #ffffff;
-      --surface: #f2f2f0;
-      --surface-2: #e9e9e6;
-      --surface-3: #dededa;
-      --border: rgba(15, 15, 17, 0.14);
-      --border-strong: rgba(15, 15, 17, 0.25);
-      --text: #0f0f11;
-      --muted: #4c4c53;
-      --muted-2: #66666f;
-      --accent: #0f0f11;
-      --accent-soft: rgba(15, 15, 17, 0.08);
-      --accent-2: #0f0f11;
-      --accent-2-soft: rgba(15, 15, 17, 0.08);
-      --warning: #8a6100;
-      --warning-soft: rgba(138, 97, 0, 0.12);
-      --danger: #c53030;
-      --danger-soft: rgba(197, 48, 48, 0.12);
-      --rest: #f2f2f0;
-      --bar: #0f0f11;
-      --bar-range: rgba(15, 15, 17, 0.2);
-      --font-sans: 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-      --font-display: 'Unbounded', 'Onest', system-ui, sans-serif;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-theme='light']) {
-        color-scheme: dark;
-        --bg: #0f0f11;
-        --surface: #17171a;
-        --surface-2: #1f1f24;
-        --surface-3: #2a2a30;
-        --border: rgba(255, 255, 255, 0.1);
-        --border-strong: rgba(255, 255, 255, 0.18);
-        --text: #f6f6f7;
-        --muted: #b9b9c0;
-        --muted-2: #93939d;
-        --accent: #ffffff;
-        --accent-soft: rgba(255, 255, 255, 0.12);
-        --accent-2: #ffffff;
-        --accent-2-soft: rgba(255, 255, 255, 0.12);
-        --warning: #ffd166;
-        --warning-soft: rgba(255, 209, 102, 0.14);
-        --danger: #ff6b6b;
-        --danger-soft: rgba(255, 107, 107, 0.16);
-        --rest: #17171a;
-        --bar: #ffffff;
-        --bar-range: rgba(255, 255, 255, 0.25);
-      }
-    }
-    :root[data-theme='dark'] {
       color-scheme: dark;
-      --bg: #0f0f11;
-      --surface: #17171a;
-      --surface-2: #1f1f24;
-      --surface-3: #2a2a30;
+      --bg: #1a1a1a;
+      --surface: #242424;
+      --surface-2: #2e2e2e;
+      --surface-3: #383838;
       --border: rgba(255, 255, 255, 0.1);
       --border-strong: rgba(255, 255, 255, 0.18);
       --text: #f6f6f7;
       --muted: #b9b9c0;
-      --muted-2: #93939d;
-      --accent: #ffffff;
-      --accent-soft: rgba(255, 255, 255, 0.12);
-      --accent-2: #ffffff;
-      --accent-2-soft: rgba(255, 255, 255, 0.12);
+      --muted-2: #a6a6ae;
+      --accent: #afe9fd;
+      --accent-soft: rgba(175, 233, 253, 0.14);
+      --accent-2: #afe9fd;
+      --accent-2-soft: rgba(175, 233, 253, 0.1);
       --warning: #ffd166;
       --warning-soft: rgba(255, 209, 102, 0.14);
       --danger: #ff6b6b;
       --danger-soft: rgba(255, 107, 107, 0.16);
-      --rest: #17171a;
-      --bar: #ffffff;
-      --bar-range: rgba(255, 255, 255, 0.25);
+      --rest: #242424;
+      --bar: #afe9fd;
+      --bar-range: rgba(175, 233, 253, 0.28);
+      --font-sans: 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --font-display: 'Unbounded', 'Onest', system-ui, sans-serif;
     }
 
     * {

@@ -12,6 +12,8 @@
  */
 import { getCollection } from 'astro:content';
 import Landing from '@/layouts/Landing.astro';
+import HeroField from '@/components/landing/HeroField.astro';
+import KeyTitle from '@/components/landing/KeyTitle.astro';
 import Breadcrumbs from '@/components/seo/Breadcrumbs.astro';
 import GuideCard from '@/components/seo/GuideCard.astro';
 import type { Locale } from '@/content/schema';
@@ -73,10 +75,10 @@ const countWord = plural(locale, list.length, {
 >
   <div class="mx-auto max-w-6xl px-5 pb-16 pt-8 md:pt-12">
     <Breadcrumbs locale={locale} items={crumbs} />
-    <header class="mt-8 md:flex md:items-end md:justify-between md:gap-10">
+    <HeroField as="header" class="mt-8 md:flex md:items-end md:justify-between md:gap-10">
       <div class="max-w-2xl md:order-1">
-        <h1 class="display text-3xl md:text-5xl">{t(locale, 'seo.guidesHubH1')}</h1>
-        <p class="mt-4 max-w-xl text-[15px] leading-relaxed text-muted">
+        <KeyTitle text={t(locale, 'seo.guidesHubH1')} class="display text-3xl md:text-5xl" />
+        <p class="field-lead mt-4 max-w-xl text-[15px] leading-relaxed">
           {t(locale, 'seo.guidesHubIntro')}
         </p>
       </div>
@@ -88,7 +90,7 @@ const countWord = plural(locale, list.length, {
           </p>
         )
       }
-    </header>
+    </HeroField>
 
     {
       groups.length === 0 ? (

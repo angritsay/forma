@@ -273,7 +273,7 @@ export default function OrderForm({
         </p>
         <a
           href={appUrl}
-          className="control-label mt-5 inline-flex h-12 items-center justify-center rounded-control bg-primary px-6.5 text-[15px] text-on-primary transition-opacity duration-150 hover:opacity-85"
+          className="control-label mt-5 inline-flex h-12 items-center justify-center rounded-control bg-action px-6.5 text-[15px] text-on-action transition-opacity duration-150 hover:opacity-85"
         >
           {labels.successApp}
         </a>
@@ -323,7 +323,7 @@ export default function OrderForm({
                   <span className="flex items-baseline justify-between gap-3">
                     <span className="font-display text-sm">{p.name}</span>
                     {p.badge && (
-                      <span className="inline-flex h-6 items-center bg-primary px-2.5 text-[12px] font-semibold tracking-[0.01em] text-on-primary">
+                      <span className="inline-flex h-6 items-center rounded-pill bg-action px-2.5 text-[12px] font-semibold tracking-[0.01em] text-on-action">
                         {p.badge}
                       </span>
                     )}
@@ -428,7 +428,7 @@ export default function OrderForm({
       <button
         type="submit"
         disabled={busy}
-        className="control-label inline-flex h-14 items-center justify-center rounded-control bg-primary px-8 text-[15px] text-on-primary transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-85 active:scale-[0.98] disabled:cursor-wait disabled:opacity-40"
+        className="control-label inline-flex h-14 items-center justify-center rounded-control bg-action px-8 text-[15px] text-on-action transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-85 active:scale-[0.98] disabled:cursor-wait disabled:opacity-40"
       >
         {status.kind === 'submitting'
           ? labels.submitting

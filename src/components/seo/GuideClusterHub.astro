@@ -12,6 +12,8 @@
 import Landing from '@/layouts/Landing.astro';
 import Breadcrumbs from '@/components/seo/Breadcrumbs.astro';
 import GuideCard from '@/components/seo/GuideCard.astro';
+import HeroField from '@/components/landing/HeroField.astro';
+import KeyTitle from '@/components/landing/KeyTitle.astro';
 import type { Locale } from '@/content/schema';
 import { LOCALES } from '@/content/schema';
 import { plural, t } from '@/i18n/index';
@@ -90,10 +92,10 @@ const jsonLd = [
 >
   <div class="mx-auto max-w-6xl px-5 pb-16 pt-8 md:pt-12">
     <Breadcrumbs locale={locale} items={crumbs} />
-    <header class="mt-8 md:flex md:items-end md:justify-between md:gap-10">
+    <HeroField as="header" class="mt-8 md:flex md:items-end md:justify-between md:gap-10">
       <div class="max-w-2xl md:order-1">
-        <h1 class="display text-3xl md:text-5xl">{clusterTitle}</h1>
-        <p class="mt-4 max-w-xl text-[15px] leading-relaxed text-muted">{description}</p>
+        <KeyTitle text={clusterTitle} class="display text-3xl md:text-5xl" />
+        <p class="field-lead mt-4 max-w-xl text-[15px] leading-relaxed">{description}</p>
       </div>
       <p
         class="mt-8 flex items-baseline gap-3 md:order-2 md:mt-0 md:shrink-0 md:flex-col md:items-end md:gap-1"
@@ -101,7 +103,7 @@ const jsonLd = [
         <span class="display tabular text-7xl leading-none md:text-8xl">{list.length}</span>
         <span class="eyebrow">{countWord}</span>
       </p>
-    </header>
+    </HeroField>
     <ul class="mt-10 grid gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
       {
         list.map((guide) => (

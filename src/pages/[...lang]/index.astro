@@ -108,7 +108,7 @@ const heroPhoto = COACH.heroPhoto
   ? { src: withBase(COACH.heroPhoto), alt: COACH.name[locale] }
   : { src: photoSrc(PHOTOS.landingHero), alt: '' };
 
-// Leaderboard demo rows: three neutral avatars, the visitor's row picked out by the white bar.
+// Leaderboard demo rows: three neutral avatars, the visitor's row picked out by the light-blue bar.
 const boardRows = [
   { w: '100%', you: false },
   { w: '78%', you: true },
@@ -269,6 +269,9 @@ const jsonLd = [
         was «7 000 шагов в день отдыха» inside a ring, and steps went with #104, because nothing
         in a Mini App can read a phone's step counter. The week of circles is kept and re-labelled:
         it is the training count, which is what the app actually shows now.
+
+        Style A's dot calendar and board: days done are white, today is the neon; the leader's
+        place is the neon, the visitor's row the brand's light blue.
       -->
       <div class="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-1">
         <article class="flex flex-col gap-4 border-t border-border py-6">
@@ -286,7 +289,7 @@ const jsonLd = [
                       i < 3
                         ? 'bg-primary text-on-primary'
                         : i === 3
-                          ? 'border border-primary text-text'
+                          ? 'bg-action text-on-action'
                           : 'border border-border-strong text-muted-2'
                     }`}
                   >
@@ -308,7 +311,7 @@ const jsonLd = [
                   <span
                     class={`numeral flex size-7 shrink-0 items-center justify-center rounded-pill text-[11px] ${
                       i === 0
-                        ? 'bg-primary text-on-primary'
+                        ? 'bg-action text-on-action'
                         : 'border border-border-strong text-muted'
                     }`}
                   >
@@ -319,12 +322,12 @@ const jsonLd = [
                   />
                   <span class="h-1 flex-1 overflow-hidden rounded-pill bg-surface-3">
                     <span
-                      class={`block h-full ${row.you ? 'bg-primary' : 'bg-border-strong'}`}
+                      class={`block h-full ${row.you ? 'bg-accent' : 'bg-border-strong'}`}
                       style={`width:${row.w}`}
                     />
                   </span>
                   {row.you && (
-                    <Pill tone="paper" size="sm">
+                    <Pill tone="sky" size="sm">
                       {t(locale, 'landing.pathYou')}
                     </Pill>
                   )}

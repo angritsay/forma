@@ -10,8 +10,9 @@
  * The numeral is the biggest thing in the row — display size, above a one-line title and one
  * sentence. It used to be a small «01» over a heading over a three-sentence paragraph; the owner's
  * prototype (`design/ui_kits/app-v2`, «Сложность») sets the figure at 40px and the word at 13, and
- * the strings behind this were cut to a sentence each to match. The numerals are white: the
- * programme colour marks the *current* day in the app, and nothing on this page is current.
+ * the strings behind this were cut to a sentence each to match. The numerals are the brand's
+ * light blue (13.2:1), not the programme colour: that marks the *current* day in the app, and
+ * nothing on this page is current.
  */
 interface Props {
   steps: { title: string; text: string }[];
@@ -25,7 +26,7 @@ const cols = columns === 4 ? 'sm:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-3';
   {
     steps.map((s, i) => (
       <li class="flex flex-col border-t border-border pt-5 pb-3">
-        <span class="numeral text-4xl leading-none text-text" aria-hidden="true">
+        <span class="numeral text-4xl leading-none text-accent" aria-hidden="true">
           {String(i + 1).padStart(2, '0')}
         </span>
         <h3 class="font-display mt-4 text-base">{s.title}</h3>

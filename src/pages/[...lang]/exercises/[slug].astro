@@ -18,6 +18,8 @@
  * ground, and nothing can go wrong with the contrast.
  */
 import Landing from '@/layouts/Landing.astro';
+import HeroField from '@/components/landing/HeroField.astro';
+import KeyTitle from '@/components/landing/KeyTitle.astro';
 import Breadcrumbs from '@/components/seo/Breadcrumbs.astro';
 import CourseLinkCard from '@/components/seo/CourseLinkCard.astro';
 import FaqAccordion from '@/components/seo/FaqAccordion.astro';
@@ -202,23 +204,41 @@ const H2 = 'display text-lg md:text-xl';
         />
         <div class="photo-grain" aria-hidden="true"></div>
       </div>
+      <!--
+        The words in the page's blue field (Style A): the name's last word in light blue over the
+        swoosh. The facts that wear the course's colour on the rest of the page are white pills
+        here — the course's outline would not read on the blue — and the neutral ones are white
+        hairlines. A test movement says so with the neon tag.
+      -->
       <div class="mt-6 md:col-span-5 md:mt-0">
-        <p class="eyebrow flex flex-wrap items-center gap-x-3 gap-y-1">
-          <span>{patternName(ex.pattern, locale)}</span>
-          {ex.isTest && <span class="text-text">{t(locale, 'seo.exerciseTestBadge')}</span>}
-        </p>
-        <h1 class="display mt-3 text-4xl md:text-5xl">{name}</h1>
-        <h2 id="facts-title" class="sr-only">{t(locale, 'seo.exerciseFacts')}</h2>
-        <ul aria-labelledby="facts-title" class="mt-5 flex flex-wrap gap-1.5">
-          {
-            facts.map((f) => (
-              <Pill as="li" tone={f.tone} aria-label={`${f.label}: ${f.value}`}>
-                {f.value}
-              </Pill>
-            ))
-          }
-        </ul>
-        <div class="mt-7">
+        <HeroField>
+          <p class="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span class="eyebrow">{patternName(ex.pattern, locale)}</span>
+            {
+              ex.isTest && (
+                <Pill tone="action" size="sm" tilt="left">
+                  {t(locale, 'seo.exerciseTestBadge')}
+                </Pill>
+              )
+            }
+          </p>
+          <KeyTitle text={name} class="display mt-4 text-4xl md:text-5xl" />
+          <h2 id="facts-title" class="sr-only">{t(locale, 'seo.exerciseFacts')}</h2>
+          <ul aria-labelledby="facts-title" class="mt-5 flex flex-wrap gap-1.5">
+            {
+              facts.map((f) => (
+                <Pill
+                  as="li"
+                  tone={f.tone === 'course' ? 'white' : 'ghost'}
+                  aria-label={`${f.label}: ${f.value}`}
+                >
+                  {f.value}
+                </Pill>
+              ))
+            }
+          </ul>
+        </HeroField>
+        <div class="mt-5">
           <Button href={ctaHref} size="lg" class="w-full sm:w-auto">{ctaButton}</Button>
         </div>
       </div>
