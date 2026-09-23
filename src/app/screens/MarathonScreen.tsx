@@ -318,6 +318,15 @@ export default function MarathonScreen() {
        */}
       {duoClub ? (
         <SegmentedControl<'solo' | 'duo'>
+          /*
+           * `self-center` — по решению владельца: «переключатель сделай по центру».
+           *
+           * Без него рамка уезжала во всю ширину, а «Соло | Дуо» жались к левому краю: в колонке
+           * `align-items: stretch` растягивает `inline-flex` коробку, но не ячейки — те остаются
+           * шириной своих подписей. Та же ловушка уже описана в `BookScreen`, там она решена
+           * `self-start`; здесь — по центру.
+           */
+          className="self-center"
           value={mode}
           onChange={setMode}
           options={[
