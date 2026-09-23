@@ -49,6 +49,17 @@ import { keyFor, parseProductMap, type ProductMap } from './products.ts';
 const TOKEN = Deno.env.get('WEBHOOK_TOKEN') ?? '';
 const SECRET = Deno.env.get('LAVA_WEBHOOK_SECRET') ?? '';
 
+/**
+ * События, на которые нечего делать, и это осознанно — в отличие от тех, про которые мы просто не
+ * знаем. Возврата и чарджбэка здесь нет намеренно: они требуют закрыть доступ, а этого функция
+ * пока не умеет, и молчать о них значит терять их.
+ */
+const IGNORED = new Set([
+  'payment.failed',
+  'subscription.recurring.payment.failed',
+  'subscription.cancelled',
+]);
+
 /** Что продаёт каждый товар lava.top. Форма секрета — в `products.ts`. */
 function productMap(): ProductMap {
   const raw = Deno.env.get('LAVA_PRODUCTS') ?? '';
@@ -96,12 +107,27 @@ Deno.serve(async (req) => {
   if (!hook) return reply(400, 'not a lava notification');
 
   /*
-   * Событие, которое ничего не открывает, — это 200 и тишина. Отказ в оплате ничего не меняет, а
+   * Событие, которое ничего не открывает, — это 200. Отказ в оплате ничего не меняет, а
    * `subscription.cancelled` означает «больше не продлевать»: доступ живёт до конца оплаченного
    * периода, и отбирать его сейчас значило бы забрать неделю, за которую заплатили. 4xx здесь был
    * бы хуже вдвойне — lava.top повторяет доставку на ошибках, и повторять нечего.
+   *
+   * Но **не тишина**. В кабинете событий больше, чем знает эта функция: возврат и чарджбэк тоже
+   * можно включить галочкой, и они сюда доедут. Доступ они не открывают — и правильно, — но и не
+   * закрывают, а должны бы: человек вернул деньги и продолжает заниматься. Пока это делается
+   * руками, и единственное, что отделяет «сделано руками» от «никто не заметил», — строка в
+   * журнале. Поэтому незнакомое событие кричит, а известное безобидное шепчет.
    */
-  if (!grantsAccess(hook.eventType)) return reply(200, `ignored: ${hook.eventType}`);
+  if (!grantsAccess(hook.eventType)) {
+    if (IGNORED.has(hook.eventType)) {
+      console.info(`lava-webhook: ${hook.eventType} (${hook.contractId}) — nothing to do`);
+    } else {
+      console.warn(
+        `lava-webhook: ${hook.eventType} (${hook.contractId}) is not handled — access left as it is, look at it by hand`,
+      );
+    }
+    return reply(200, `ignored: ${hook.eventType}`);
+  }
 
   const email = (hook.buyer.email ?? '').trim().toLowerCase();
   if (!email) {
