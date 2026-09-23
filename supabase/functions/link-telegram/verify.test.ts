@@ -27,11 +27,15 @@ describe('dataCheckString', () => {
     expect(s).toBe('a=1\nb=2\nc=3');
   });
 
-  it('leaves out hash and signature', () => {
-    // `signature` is Telegram's own third-party Ed25519 field and is not part of what it signed;
-    // including it would break verification on every newer client.
+  /*
+   * Только `hash`, и это выстраданное. `signature` выбрасывалась вместе с ним, из-за чего HMAC
+   * считался не от того текста и не сходился ни у кого: 0 привязок из 17. Телеграм шлёт
+   * `signature` с Bot API 8.0 и **включает** её в data_check_string — проверено по aiogram и по
+   * SDK мини-аппов, который исключает её только в ветке Ed25519.
+   */
+  it('leaves out hash and nothing else — signature stays in', () => {
     const s = dataCheckString(new URLSearchParams('a=1&hash=deadbeef&signature=xyz'));
-    expect(s).toBe('a=1');
+    expect(s).toBe('a=1\nsignature=xyz');
   });
 
   it('keeps values exactly as the query string decoded them', () => {
@@ -156,5 +160,78 @@ describe('checkInitData', () => {
     const res = await checkInitData(data, TOKEN, NOW + 5);
     expect(res.ok).toBe(true);
     expect(res.ok === true && res.data.userId).toBe(77123);
+  });
+});
+
+/**
+ * Подпись, собранная **не нашим кодом** — по описанию телеграма, руками.
+ *
+ * Все остальные тесты подписывают строку через `sign()`, то есть через тот же `dataCheckString`,
+ * который и проверяют. Ошибка в нём сокращается с обеих сторон, и тест её не видит: именно так
+ * `signature` и прожила в списке исключений несколько недель, при зелёных тестах и нуле привязок.
+ * Шапка `verify.ts` объясняла общий помощник тем, что «второй копии правила в тестах быть не
+ * должно», — и ровно эта экономия стоила всей механики сообщений.
+ *
+ * Поэтому здесь копия есть, и она намеренная: независимый оракул, чтобы было с чем сверяться.
+ */
+async function telegramWouldSign(fields: Record<string, string>, token: string): Promise<string> {
+  // Ровно то, что делает телеграм: все пары кроме hash, отсортированы, через перевод строки.
+  const dcs = Object.entries(fields)
+    .map(([k, v]) => `${k}=${v}`)
+    .sort()
+    .join('\n');
+  const enc = new TextEncoder();
+  const hmac = async (key: ArrayBuffer | Uint8Array, msg: string) => {
+    const material = key instanceof Uint8Array ? (key.slice().buffer as ArrayBuffer) : key;
+    const k = await crypto.subtle.importKey(
+      'raw',
+      material,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign'],
+    );
+    return crypto.subtle.sign('HMAC', k, enc.encode(msg));
+  };
+  const secret = await hmac(enc.encode('WebAppData'), token);
+  return [...new Uint8Array(await hmac(secret, dcs))]
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+describe('a launch string as today\u2019s Telegram actually sends it', () => {
+  /*
+   * Регрессия на поломку, которая стоила всей механики сообщений.
+   *
+   * С Bot API 8.0 телеграм кладёт в строку запуска `signature` — свою подпись для третьих сторон —
+   * и **включает** её в data_check_string. Мы выбрасывали её вместе с `hash`, считали HMAC не от
+   * того текста, и привязка не срабатывала ни у кого: 0 из 17, `initData rejected — signature`.
+   *
+   * Подпись здесь ставит `telegramWouldSign`, а не наш `sign`, — иначе тест зелёный при обоих
+   * поведениях, что и проверено: с прежним кодом он падает.
+   */
+  it('verifies a string Telegram signed, signature field and all', async () => {
+    const fields = {
+      auth_date: String(NOW),
+      chat_instance: '-1234567890',
+      chat_type: 'private',
+      signature: 'Ed25519-подпись-для-третьих-сторон',
+      user: USER,
+    };
+    const params = new URLSearchParams(fields);
+    params.set('hash', await telegramWouldSign(fields, TOKEN));
+
+    const res = await checkInitData(params.toString(), TOKEN, NOW + 5);
+    expect(res.ok).toBe(true);
+    expect(res.ok === true && res.data.userId).toBe(77123);
+  });
+
+  /* И обычная строка, без `signature`, — телеграм постарше шлёт именно такую. */
+  it('still verifies a string with no signature field', async () => {
+    const fields = { auth_date: String(NOW), user: USER };
+    const params = new URLSearchParams(fields);
+    params.set('hash', await telegramWouldSign(fields, TOKEN));
+
+    const res = await checkInitData(params.toString(), TOKEN, NOW + 5);
+    expect(res.ok).toBe(true);
   });
 });
