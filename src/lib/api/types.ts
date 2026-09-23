@@ -504,6 +504,11 @@ export interface MarathonRow {
   prizeEn: string | null;
   createdAt: string;
   updatedAt: string;
+  /**
+   * This round is the live club of its mode — solo or duo, told apart by `teamSize` (0016, 0033).
+   * At most one of each. Changed only through `setLiveClub()` (0047), never by a patch.
+   */
+  isClub?: boolean;
 }
 
 export type MarathonPatch = Partial<
@@ -558,6 +563,8 @@ export interface MarathonTeamRow {
   marathonId: string;
   name: string;
   sortOrder: number;
+  /** A pair the draw made for the week (0034); false for an invite or a pair the coach kept. */
+  isAuto?: boolean;
 }
 
 /** A row of `marathon_members`. Admin-only: it carries the email and the coach's note. */
@@ -736,6 +743,33 @@ export interface MarathonProofRow extends MarathonSubmissionRow {
   taskTitle: string;
   proofKind: ProofKind;
   unit: string | null;
+}
+
+/** What `admin_copy_tasks` did — or, on a dry run, would do (0047). Counts only. */
+export interface CopyTasksResult {
+  /** Days that received tasks. */
+  daysCopied: number;
+  /** Destination days that already had tasks and were left alone. */
+  daysSkipped: number;
+  /** Destination days that would have been replaced but already have proof on them. */
+  daysLocked: number;
+  tasksCopied: number;
+  /** Tasks removed from the destination to make room, when replacing. */
+  tasksReplaced: number;
+}
+
+/** One proof in «Не просмотрено» — across both live clubs (0047). */
+export interface QueuedProofRow extends MarathonProofRow {
+  marathonTitle: string;
+  /** From the duo club rather than the solo one. */
+  duo: boolean;
+  email: string;
+}
+
+export interface ProofQueue {
+  items: QueuedProofRow[];
+  /** Everything waiting, not only what was loaded. */
+  total: number;
 }
 
 /** Fields of an admin-authored exercise, beyond the markup an existing one accepts. */
