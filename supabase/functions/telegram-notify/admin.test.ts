@@ -296,7 +296,6 @@ describe('stripLinks', () => {
 describe('links into the admin (0044)', () => {
   const APP = 'https://forma-app.co/app/';
   const PAY = '0b6a3f7e-1c2d-4e5f-8a9b-0c1d2e3f4a5b';
-  const CLUB = '11111111-2222-4333-8444-555555555555';
 
   it('accepts only an https base, and always ends it with a slash', () => {
     expect(appBase('https://forma-app.co/app')).toBe('https://forma-app.co/app/');
@@ -331,14 +330,36 @@ describe('links into the admin (0044)', () => {
     expect(none?.url).toBe('https://forma-app.co/app/#/admin?tab=payments&filter=sessions');
   });
 
-  it('opens the club proofs for a resubmitted proof', () => {
+  it('opens the proof itself, by id from the params or from the key', () => {
+    const PROOF = '22222222-3333-4444-8555-666666666666';
     const link = adminLink(
-      { topic: 'club', kind: 'proof_resubmitted', params: { marathonId: CLUB, email: 'a@b.co' } },
+      { topic: 'club', kind: 'proof_resubmitted', params: { proofId: PROOF, email: 'a@b.co' } },
       APP,
     );
-    expect(link?.url).toBe(`https://forma-app.co/app/#/admin/marathons/${CLUB}?tab=proofs`);
+    expect(link?.url).toBe(`https://forma-app.co/app/#/admin/marathons?proof=${PROOF}`);
+    const old = adminLink(
+      {
+        topic: 'club',
+        kind: 'proof_resubmitted',
+        params: { email: 'a@b.co' },
+        dedupe_key: `proof_resubmitted:${PROOF}:2`,
+      },
+      APP,
+    );
+    expect(old?.url).toBe(`https://forma-app.co/app/#/admin/marathons?proof=${PROOF}`);
     const bare = adminLink({ topic: 'club', kind: 'proof_resubmitted', params: {} }, APP);
     expect(bare?.url).toBe('https://forma-app.co/app/#/admin/marathons');
+  });
+
+  it('sends support to the inbox and bookings to their list', () => {
+    expect(
+      adminLink({ topic: 'support', kind: 'support_message', params: { email: 'a@b.co' } }, APP)
+        ?.url,
+    ).toBe('https://forma-app.co/app/#/admin/support');
+    expect(
+      adminLink({ topic: 'sessions', kind: 'session_booked', params: { email: 'a@b.co' } }, APP)
+        ?.url,
+    ).toBe('https://forma-app.co/app/#/admin/bookings');
   });
 
   it('opens the person, with the address encoded', () => {

@@ -232,8 +232,8 @@ export function adminMessage(row: AdminRow, appUrl = ''): string | null {
  * Ссылка в админку (0044).
  *
  * Владелец: сообщение в канале — это повод что-то сделать, а сделать это можно только в админке.
- * Ссылка ведёт прямо туда: платёж — на него самого во вкладке «Платежи», пруф — в отчёты клуба,
- * всё остальное — на страницу человека.
+ * Ссылка ведёт прямо туда: платёж — на него самого во вкладке «Платежи», пруф — на сам пруф,
+ * обращение — в «Обращения», встреча — в «Записи», всё остальное — на страницу человека.
  *
  * Телеграм принимает в `href` только настоящий адрес: `https://…`. Кривой `MINI_APP_URL` значит
  * сообщение без ссылки, а не отказ телеграма и сообщение, отправленное со второй попытки.
@@ -289,14 +289,28 @@ export function adminLinkPath(row: AdminRow): { path: string; label: string } | 
       label: 'Открыть платёж в админке',
     };
   }
+  /*
+   * Пруф — на сам пруф: `/admin/marathons?proof=<id>` открывает его в очереди клуба. Id — из
+   * параметров (0044) или из ключа строки `proof_resubmitted:<id>:<attempt>`.
+   */
   if (row.kind === 'proof_resubmitted') {
-    const club = str(p, 'marathonId');
+    const fromParams = str(p, 'proofId');
+    const fromKey = (row.dedupe_key ?? '').split(':')[1] ?? '';
+    const proof = UUID_RE.test(fromParams) ? fromParams : UUID_RE.test(fromKey) ? fromKey : '';
     return {
-      path: UUID_RE.test(club)
-        ? `/admin/marathons/${club.toLowerCase()}?tab=proofs`
-        : '/admin/marathons',
-      label: 'Открыть отчёты клуба',
+      path: proof ? `/admin/marathons?proof=${proof.toLowerCase()}` : '/admin/marathons',
+      label: 'Открыть пруф в админке',
     };
+  }
+  if (row.kind === 'support_message') {
+    return { path: '/admin/support', label: 'Открыть обращения в админке' };
+  }
+  if (
+    row.kind === 'session_booked' ||
+    row.kind === 'session_moved' ||
+    row.kind === 'session_cancelled'
+  ) {
+    return { path: '/admin/bookings', label: 'Открыть записи в админке' };
   }
   if (row.kind === 'channel_ready') return null;
   const person = personPath(row.kind === 'duo_paired' ? str(p, 'inviter') : str(p, 'email'));
