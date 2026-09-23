@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: beginners
 translationKey: crossfit-home-beginners
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-02'
+updatedAt: '2026-09-23'
 faq:
   - q: 'Can I do CrossFit at home with zero experience?'
     a: 'Yes, as long as you start with the basic movements and no jumping: squats, incline push-ups, glute bridges and planks. Three short sessions a week with a rest day in between is a safe starting dose for a beginner.'
@@ -54,7 +54,7 @@ CrossFit at home for beginners is not box jumps and a barbell overhead. It is th
 
 - A plain explanation of what CrossFit for beginners actually is at home and how it differs from "doing some exercise".
 - The six movements to learn before you add anything harder.
-- A complete first workout with exact reps and rest — built on the same logic as week one of the Start course.
+- A complete first workout with exact reps and rest — built on the same logic as the first block of the Start course.
 - The common mistakes and a progression plan for your first four weeks.
 
 ## CrossFit at home for beginners: where to start
@@ -86,11 +86,11 @@ A beginner CrossFit workout is built from six patterns. Learn each in its simple
 | Core       | [Plank](exercise:plank)                  | Trunk stability, lower-back protection        |
 | Locomotion | [Jog in place](exercise:jog_in_place)    | Heart rate, warm-up, transitions              |
 
-The rule for the first two weeks: **no jumping**. Burpees, jump squats and rope work come once your knees and ankles have adapted to the volume. That is how [the Start course](course:start) is built too: jumping jacks only appear from week three, always with a "step out to the sides" option, and burpees only in week five.
+The rule for the first two weeks: **no jumping**. Burpees, jump squats and rope work come once your knees and ankles have adapted to the volume. [The Start course](course:start) has no jumps at all: twenty workouts in four blocks of five, built on squats, push-ups, lunges, step-ups, dead bugs and inchworms.
 
 ## Your first workout
 
-This is a workout for your first day; in the Start course day one is exactly this kind of session: simple rounds with a minute of rest and no max-effort test. With the warm-up and cool-down it takes about 30 minutes. The strength block is slow: two seconds down, one second up; if your form breaks, end the set early.
+This is a workout for your first day; in the Start course day one has no max-effort test either: work by the timer, a new movement every minute and rest until the minute is up. With the warm-up and cool-down it takes about 30 minutes. The strength block is slow: two seconds down, one second up; if your form breaks, end the set early.
 
 **Warm-up — 2 rounds, no rest:**
 
@@ -115,7 +115,7 @@ This is a workout for your first day; in the Start course day one is exactly thi
 
 ### How the app scales it
 
-Before the course starts, Forma runs a short test: max knee push-ups in two minutes, max squats in one minute and a plank hold. Those numbers produce a fitness index, and the index sets your starting volume multiplier — anywhere from 0.6 to 1.3. A beginner with a weak test gets 6 squats per set instead of 10; someone arriving with a base gets 13. Before each session you can pick easier or harder (volume changes by 15 %, rest gets longer or shorter), and afterwards you rate the effort from 1 to 10. Finished everything at an easy effort? The next session grows a little. Struggled, or something hurt? The volume drops, and the app tells you to back off and to see a professional if the pain persists.
+On first login Forma asks a few short questions, and after your second workout the app offers a short test: squats, push-ups, sit-ups, lunges and a plank. The answers and the test produce a fitness index, and the index sets your volume multiplier — anywhere from 0.6 to 1.3. A beginner with a weak test gets 6 squats per set instead of 10; someone arriving with a base gets 13. Before each session you can pick easier or harder (volume changes by 15 %, rest gets longer or shorter), and afterwards you rate the effort from 1 to 10. Finished everything at an easy effort? The next session grows a little. Struggled, or something hurt? The volume drops, and the app tells you to back off and to see a professional if the pain persists.
 
 ## Common beginner mistakes
 
@@ -131,10 +131,10 @@ Progress for a home beginner is not "more rounds"; it is a steady climb through 
 
 - **Weeks 1–2.** Technique and volume: the same exercises with a few more reps. Incline push-ups become [knee push-ups](exercise:knee_push_up), the plank grows from 20 to 40 seconds, the bridge from 12 to 15 reps.
 - **Weeks 3–4.** [Reverse lunges](exercise:reverse_lunge), [supermans](exercise:superman) and the first short AMRAPs of 6–8 minutes appear. What those formats mean and how to count rounds is explained in [the AMRAP, EMOM and Tabata guide](guide:workout-formats).
-- **After four weeks.** Retest. If you squat noticeably more in a minute and hold the plank longer, the base is there. Next come [half burpees](exercise:half_burpee), [jump squats](exercise:jump_squat) and the second half of [the Start course](course:start), where AMRAP, EMOM and a long chipper for time arrive.
+- **After four weeks.** Retest. If you squat noticeably more in a minute and hold the plank longer, the base is there. Next come [half burpees](exercise:half_burpee) and [jump squats](exercise:jump_squat); and if you want to set the base first, go through [the Start course](course:start), where AMRAP, EMOM and a long chipper for time arrive one at a time.
 
 If push-ups are your sticking point, there is a separate [push-up progression guide](guide:push-up-progression). And for building workouts from whatever is in the room, read [the guide to CrossFit without equipment](guide:no-equipment-crossfit).
 
 ## Wrap-up
 
-CrossFit at home for beginners means three sessions a week, six basic movements and honest reps with no jumping for the first two weeks. Start with the test and the first workout of [the Start course](course:start): the app sets the volume for you and adjusts it from your feedback after every session.
+CrossFit at home for beginners means three sessions a week, six basic movements and honest reps with no jumping for the first two weeks. Start with the first workout of [the Start course](course:start): the app sets the volume for you and adjusts it from your feedback after every session.

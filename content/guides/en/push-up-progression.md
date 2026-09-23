@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: beginners
 translationKey: push-up-progression
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-02'
+updatedAt: '2026-09-23'
 faq:
   - q: 'Where do I start if I cannot do a single push-up?'
     a: 'With incline push-ups against a high surface such as a table or a kitchen counter. Find the height where you can do 8 clean reps and train there three times a week until you reach three sets of 12.'
@@ -138,4 +138,4 @@ To see how these sessions fit inside a complete program, read the [beginner's gu
 
 ## Wrap-up
 
-Learning the push-up is not about talent; it is about the right step and eight weeks of patience. Hold the four checkpoints, move up by the 3 × 12 rule, and train the trunk as seriously as the arms. If you would rather have the step, the volume and the substitutions picked automatically from your test, open the [Start: home CrossFit basics course](course:start): knee push-ups progress there from week one to week eight without any arithmetic on your side.
+Learning the push-up is not about talent; it is about the right step and eight weeks of patience. Hold the four checkpoints, move up by the 3 × 12 rule, and train the trunk as seriously as the arms. If you would rather have the step, the volume and the substitutions picked automatically from your test, open the [Start: home CrossFit basics course](course:start): knee push-ups progress there from the first workout to the twentieth without any arithmetic on your side.

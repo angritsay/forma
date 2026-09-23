@@ -56,52 +56,49 @@ if (!course) {
 
 const l = (ru, en) => ({ ru, en });
 
+/*
+ * Keyed by the current workout ids of the 20-workout course (Sergey's spec of 10 September).
+ * `label` is his number in the channel, `messages` the nearest channel post (docs/COACH_SOURCE.md),
+ * `alternatives` other versions he posted. `flags` are the open questions for him — keep this list
+ * in step with «Open questions for the coach» in docs/COACH_RULES.md.
+ */
 /** @type {Record<string, Record<string, { label?: string; messages: number[]; alternatives?: number[]; flags: {ru:string,en:string}[] }>>} */
 const ANNOTATIONS = {
   start: {
-    w_test_start: {
-      messages: [],
-      flags: [
-        l(
-          'Этого нет в канале. Теста на максимум в первый день больше нет — по твоему замечанию. Остался только повтор в конце курса: те же три упражнения, что в анкете при первом входе, чтобы сравнить цифры за 8 недель. Оставить или убрать и его?',
-          'Not from the channel. The day-one max test is gone, per your note. Only the end-of-course repeat remains: the same three movements as the onboarding on first login, to compare the numbers after 8 weeks. Keep it, or drop this one too?',
-        ),
-      ],
-    },
-    w_s01_sets: {
+    w_s01_emom: {
       label: '1',
-      messages: [80],
-      alternatives: [198, 199, 201],
+      messages: [201],
+      alternatives: [80, 198, 199],
       flags: [
         l(
-          'Взята версия с двумя кругами и минутой отдыха (сообщение 80). Во втором наборе (198–201) та же тренировка по таймеру: минута на упражнение, четвёртая — отдых. Какую оставить?',
-          'The two-rounds-with-a-minute-rest version (message 80) is used. The second run (198–201) had the same session on a timer: one minute per exercise, the fourth minute rest. Which should stay?',
-        ),
-        l(
-          'Переписано по твоей «идеальной» первой тренировке: «жук» — основной вариант (6–10 на сторону), ситапы — если уверенно; отжимания 5–10, приседания 8–15; техника и комфорт, без максимумов. «Как написано» 8 / 8 на сторону / 13; новичок с коэффициентом 0,6 получит 5 / 5 / 8 — твой «минимум».',
-          'Rewritten from your "ideal" first workout: dead bug as the main option (6–10 per side), sit-ups only if confident; push-ups 5–10, squats 8–15; technique and comfort, no maxes. Authored 8 / 8 per side / 13; a beginner at scale 0.6 gets 5 / 5 / 8 — your "minimum".',
+          'Сколько циклов по 4 минуты? Приложение играет один цикл: три минуты работы (отжимания, приседания, «жук»), и на этом основная часть заканчивается — около 3 минут работы. В канале приложена схема таймера, её в экспорте нет. Нужно два-три цикла?',
+          'How many 4-minute cycles? The app plays one: three working minutes (push-ups, squats, dead bugs) and the main part ends — about 3 minutes of work. The channel post had a timer picture that is not in the export. Should it be two or three cycles?',
         ),
       ],
     },
-    w_s02_sets: {
+    w_s02_emom: {
       label: '2',
-      messages: [84],
-      alternatives: [207],
+      messages: [207],
+      alternatives: [84],
       flags: [
         l(
-          '«Тяга к носкам поочерёдно» показана ситапом: в библиотеке нет такого упражнения и нет твоего ролика с ним. Нормально ли показывать ролик с ситапом, или снимем тягу к носкам отдельно?',
-          '"Alternating toe reaches" is shown as a sit-up: the library has no such movement and no clip of you doing it. Is the sit-up clip acceptable, or should we film the toe reach separately?',
+          'Тот же вопрос, что в первой: сколько циклов по 4 минуты? Сейчас один. Диапазоны в подсказках — твои из сообщения 207: обратные отжимания 10–20, выпады 10–18, «жук» 10–16; «как написано» по 12.',
+          'Same question as workout 1: how many 4-minute cycles? One today. The ranges in the notes are yours from message 207: dips 10–20, lunges 10–18, dead bugs 10–16; authored at 12 each.',
         ),
       ],
     },
     w_s03_pairs: {
       label: '3',
-      messages: [88],
-      alternatives: [213],
+      messages: [213],
+      alternatives: [88],
       flags: [
         l(
-          'Взята версия «три пары по два круга» (88). Во втором наборе (213) — «старт раз в 2 минуты, по одному кругу». Отдых 2 минуты между парами написан в описании, таймер его не считает.',
-          'The "three pairs, two rounds each" version (88) is used. The second run (213) had "start every 2 minutes, one round each". The 2-minute rest between pairs is in the text; the timer does not run it.',
+          'Объём пары на пресс: ситапы «как написано» 8 при твоём диапазоне 10–20, «жук» 30 (20–40) сразу за ними. Так оставить?',
+          'Core pair volume: sit-ups authored at 8 against your 10–20 range, then 30 dead bugs (20–40) straight after. Keep it?',
+        ),
+        l(
+          '«Старт раз в 2 минуты» приложение считать не умеет, поэтому после каждой пары — 2 минуты отдыха (остаток двухминутки плюс твоя минута). При «Посложнее» приложение добавляет второй проход всех трёх пар. Нормально?',
+          'The app cannot run "start every 2 minutes", so each pair is followed by 2 minutes of rest (what is left of the window plus your minute). On "Harder" the app adds a second pass of all three pairs. Acceptable?',
         ),
       ],
     },
@@ -110,77 +107,57 @@ const ANNOTATIONS = {
       messages: [221],
       flags: [
         l(
-          'Ягодичный мост — единственное движение курса без твоего видео. В экспорте есть ролик моста, но снят другим человеком в другом зале; он не подключён. Снять свой или разрешить чужой?',
-          'The glute bridge is the only movement in the course without your video. The export has a bridge clip, but by someone else in another gym; it is not wired up. Film your own or allow that one?',
+          'В канале было 200 мостов с крышкой 10 минут (новички) / 8 (уверенные). В твоей программе от 10 сентября — максимум за 5 минут, ориентир 100. Подтверди 100 за 5 минут: приложение показывает ориентир под человека, окно всегда 5 минут.',
+          'The channel had 200 bridges with a 10-minute cap (beginners) / 8 (confident). Your 10 September programme says max in 5 minutes, target 100. Please confirm 100 in 5 minutes: the app shows a target fitted to the person, the window is always 5 minutes.',
         ),
       ],
     },
     w_s05_three_rounds: {
-      label: '5 и 21',
-      messages: [94, 173],
+      label: '5',
+      messages: [94],
       alternatives: [225],
-      flags: [
-        l(
-          'Тренировки 5 и 21 сделаны одной и той же тренировкой, чтобы приложение записало время оба раза и показало разницу. В 21-й ты просил без отдыха между кругами — здесь это «чем быстрее, тем лучше». Так можно?',
-          'Workouts 5 and 21 are the same workout so the app records the time both times and shows the difference. In 21 you asked for no rest between rounds — here that is "the faster the better". Acceptable?',
-        ),
-        l(
-          'Во втором наборе (225) пятая — лесенка 10-15-20 с крышкой 8 минут. Не взята, чтобы сравнение с 21-й осталось честным.',
-          'In the second run (225) the fifth was a 10-15-20 ladder with an 8-minute cap. Not used, so the comparison with 21 stays honest.',
-        ),
-      ],
+      flags: [],
     },
     w_s06_amrap8: {
       label: '6',
       messages: [230],
       alternatives: [98],
-      flags: [
-        l(
-          'Взято 8 минут (230), в первом наборе было 10 (98).',
-          '8 minutes (230) is used; the first run had 10 (98).',
-        ),
-      ],
+      flags: [],
     },
-    w_s07_hundred_situps: {
-      label: '7',
-      messages: [102],
-      flags: [
-        l(
-          'У тебя помечено «новички и уверенные новички». Оставить на третьей неделе или сдвинуть позже?',
-          'You marked it "beginners and confident beginners". Keep it in week three or move it later?',
-        ),
-      ],
-    },
-    w_s08_emom_ladder: {
+    w_s07_emom_ladder: {
       label: '8',
       messages: [238],
       alternatives: [104, 235],
       flags: [
         l(
-          'Взята последняя версия: два круга, 12 и 14 (238). Приложение показывает 12 на каждой минуте, «+2 во втором круге» — текстом. Первые версии: три круга 10-12-14 с минутой отдыха (104) и без неё (235).',
-          'The latest version is used: two loops, 12 and 14 (238). The app shows 12 every minute; "+2 in the second loop" is text. Earlier versions: three loops 10-12-14 with a rest minute (104) and without (235).',
+          'Теперь приложение показывает оба круга цифрами: минуты 1–4 по 12, минуты 5–8 по 14. Ситапы в этой тренировке меняются на «жука» один к одному (у тебя «12 ситапов / 12 жуков»), а не вдвое — иначе не уложиться в минуту. Верно?',
+          'The app now shows both loops as numbers: minutes 1–4 at 12, minutes 5–8 at 14. In this workout sit-ups swap for dead bugs one-for-one (your "12 sit-ups / 12 dead bugs"), not twice — otherwise it does not fit the minute. Right?',
         ),
       ],
     },
-    w_s09_chipper_x2: {
+    w_s08_two_rounds: {
       label: '9',
       messages: [245],
       alternatives: [110],
+      flags: [],
+    },
+    w_s09_for_time: {
+      messages: [],
       flags: [
         l(
-          'Крышка 8 минут из второго набора (245).',
-          'The 8-minute cap comes from the second run (245).',
+          'Крышка 8 минут на два круга: 30 ситапов, 60 скалолазов, 60 «жуков» всего. По расчёту приложения это около 8 минут чистой работы — уверенный новичок едва укладывается. Оставить 8 или дать 10?',
+          'An 8-minute cap for two rounds: 30 sit-ups, 60 climbers, 60 dead bugs in total. The app estimates about 8 minutes of pure work — a confident beginner barely fits. Keep 8 or give 10?',
         ),
       ],
     },
-    w_s10_every_3_min: {
+    w_s10_every_2min: {
       label: '10',
-      messages: [115],
-      alternatives: [253],
+      messages: [253],
+      alternatives: [115],
       flags: [
         l(
-          'Взята версия «раз в 3 минуты, 3 круга» (115). Во втором наборе (253): раз в 2 минуты, червячки + отжимания + приседания, 4 круга. Окно 3 минуты показано как круг и отдых 75 секунд.',
-          'The "every 3 minutes, 3 rounds" version (115) is used. The second run (253): every 2 minutes, inchworms + push-ups + squats, 4 rounds. The 3-minute window is shown as a round plus 75 seconds of rest.',
+          '«Раз в 2 минуты» показано как круг и 70 секунд отдыха после него (при твоих цифрах круг занимает около минуты). Так годится?',
+          '"Every 2 minutes" is shown as the round plus 70 seconds of rest after it (at your numbers the round takes about a minute). Good enough?',
         ),
       ],
     },
@@ -188,129 +165,78 @@ const ANNOTATIONS = {
       label: '11',
       messages: [254],
       alternatives: [120],
-      flags: [
-        l(
-          'Взято два круга (254); в первом наборе было три (120).',
-          'Two loops (254) are used; the first run had three (120).',
-        ),
-      ],
+      flags: [],
     },
     w_s12_step_ladder: {
       label: '12',
       messages: [126],
       flags: [
-        l('Крышки в тексте нет — поставлена 10 минут.', 'No cap in the text — 10 minutes is set.'),
-      ],
-    },
-    w_s13_amrap8_burpees: {
-      label: '13',
-      messages: [128],
-      flags: [
         l(
-          'Первые бёрпи в курсе. Показывается твой ролик полного бёрпи; вариант шагом — текстом.',
-          'The first burpees in the course. Your full-burpee clip is shown; the step-back option is text.',
+          'Лесенка теперь одинаковая при любой сложности — 10-8-6-4-2 и 5-4-3-2-1, крышка 10 минут, — чтобы она не теряла форму. Новичок делает те же цифры. Так?',
+          'The ladder is now the same at every difficulty — 10-8-6-4-2 and 5-4-3-2-1, a 10-minute cap — so it keeps its shape. A beginner does the same numbers. Right?',
         ),
       ],
     },
-    w_s14_squats_4min: {
-      label: '13 (второй)',
-      messages: [134],
+    w_s13_ladder5: {
+      label: '23',
+      messages: [184],
+      alternatives: [128],
       flags: [
         l(
-          'В канале это второе сообщение под номером 13. Здесь — отдельный короткий день (около 14 минут с разминкой). Оставить отдельным днём или присоединить к другой тренировке?',
-          'In the channel this is the second message numbered 13. Here it is its own short day (about 14 minutes with the warm-up). Keep it as a day or fold it into another session?',
+          'Тоже одинаково при любой сложности: 5-6-7-8-9, 8 минут. Отжимания идут три тренировки подряд (13, 14 — 60 отжиманий с колен, 15) — не много ли для новичка подряд?',
+          'Also the same at every difficulty: 5-6-7-8-9, 8 minutes. Push-ups come three workouts in a row (13, 14 — 60 knee push-ups, 15) — too much back to back for a beginner?',
         ),
       ],
     },
-    w_s15_twenty_forty: {
+    w_s14_double: {
       label: '14',
       messages: [135],
-      flags: [
-        l(
-          'Отдых 2 минуты между «20-20-20» и «40-40-40» написан в описании второго блока. Крышки по 7 минут добавлены.',
-          'The 2-minute rest between "20-20-20" and "40-40-40" is in the second block’s text. 7-minute caps are added.',
-        ),
-      ],
+      flags: [],
     },
-    w_s16_amrap8_jacks: {
+    w_s15_amrap8: {
       label: '15',
       messages: [139],
-      flags: [
-        l(
-          'Скакалка везде заменена джампинг-джеками (в описании курса скакалки нет). Твой ролик со скакалкой есть — если хочешь, добавим скакалку как необязательный инвентарь.',
-          'The rope is replaced by jumping jacks everywhere (the course lists no rope). Your rope clip exists — we can add the rope as optional equipment if you want.',
-        ),
-      ],
+      flags: [],
     },
-    w_s17_long_chipper: {
+    w_s16_chipper: {
       label: '16',
       messages: [149],
       flags: [
         l(
-          '«Тяга к носкам» показана ситапом (см. тренировку 2).',
-          '"Toe reaches" shown as sit-ups (see workout 2).',
+          'Червячки идут четыре тренировки подряд (16, 17, 18, 19) — кисти и задняя поверхность бедра выдержат у новичка?',
+          'Inchworms come four workouts in a row (16, 17, 18, 19) — will a beginner’s wrists and hamstrings cope?',
         ),
       ],
     },
-    w_s18_buy_in: {
+    w_s17_buyin: {
       label: '18 (первое)',
       messages: [157],
       flags: [
         l(
-          'В канале это сообщение подписано «18», но выложено раньше 17-й — здесь порядок по дате. «Максимум червячков» показан как 6 повторов: приложению нужна цифра.',
-          'In the channel this is labelled "18" but was posted before 17 — the order here follows the dates. "Max inchworms" is shown as 6 reps: the app needs a number.',
+          '«Раз в 3 минуты, в остаток — максимум червячков» приложение показывает так: входной билет, 8 червячков, потом 3 минуты отдыха и второй круг. Так понятно?',
+          '"Every 3 minutes, max inchworms in the rest" is shown as: the buy-in, 8 inchworms, then 3 minutes of rest and the second round. Clear enough?',
         ),
       ],
     },
-    w_s19_three_windows: {
+    w_s18_intervals: {
       label: '17',
       messages: [163],
       flags: [
         l(
-          'Три окна по 2 минуты — три блока «на время» с крышкой 2 минуты. «Максимум» показан как 10 червячков / 10 бёрпи / 4+4 — твои ориентиры 13 и 18 в описании.',
-          'Three 2-minute windows are three for-time blocks capped at 2 minutes. "Max" is shown as 10 inchworms / 10 burpees / 4+4 — your 13 and 18 targets are in the text.',
+          'Каждый интервал — два шага: входной билет (крышка минута), потом минута на максимум. Минута отдыха между интервалами пока только в тексте. Так годится?',
+          'Each interval is two steps: the buy-in (a one-minute cap), then a minute of max reps. The minute of rest between intervals is only in the text for now. Good enough?',
         ),
       ],
     },
-    w_s20_burpee_ladder: {
+    w_s19_inchworm_ladder: {
       label: '18 (второе)',
       messages: [168],
-      flags: [
-        l(
-          'Лесенка 1…12 бёрпи по минутам. В режиме «Потяжелее» приложение даёт 14 минут, и 13-я минута начинается снова с 1 бёрпи — так устроен движок.',
-          'The 1…12 burpee ladder by the minute. On "Harder" the app gives 14 minutes and minute 13 restarts at 1 burpee — that is how the engine works.',
-        ),
-      ],
+      flags: [],
     },
-    w_s22_chipper_x2: {
-      label: '22',
-      messages: [179],
-      flags: [
-        l(
-          'В тексте «между кругами нет отдыха», но количество кругов не написано. Сделано два круга с крышкой 10 минут. Один или два?',
-          'The text says "no rest between rounds" but not how many rounds. Two rounds with a 10-minute cap are set. One or two?',
-        ),
-      ],
-    },
-    w_s23_amrap8_worms: {
-      label: '23',
-      messages: [184],
-      flags: [
-        l(
-          '«Тяга к носкам» показана ситапом (см. тренировку 2).',
-          '"Toe reaches" shown as sit-ups (see workout 2).',
-        ),
-      ],
-    },
-    w_s24_steps_and_jumps: {
-      label: '24',
-      messages: [189],
-      flags: [
-        l(
-          '100 прыжков на скакалке = 60 джампинг-джеков (по времени). Минута отдыха после каждого круга — текстом. Крышка 12 минут.',
-          '100 rope skips = 60 jumping jacks (by time). The minute of rest after each round is text. 12-minute cap.',
-        ),
-      ],
+    w_s20_finisher: {
+      label: '21',
+      messages: [173],
+      flags: [],
     },
   },
 };
@@ -318,20 +244,16 @@ const ANNOTATIONS = {
 const GENERAL_NOTES = {
   start: [
     l(
-      'В экспорте 24 разных тренировки. Номера 19 и 20 в канале отсутствуют, а 13 и 18 встречаются дважды — здесь всё пронумеровано 1–24 по порядку публикации, твой номер указан рядом.',
-      'The export holds 24 distinct workouts. Numbers 19 and 20 are missing from the channel, and 13 and 18 appear twice — everything here is renumbered 1–24 in posting order, with your number shown beside it.',
+      'Курс — твоя программа от 10 сентября: 20 тренировок подряд, четыре блока по пять, без дней отдыха на пути, без теста в начале и в конце и без разгрузки. Рядом с каждой тренировкой — ближайшее сообщение из канала; номер в канале указан, где он есть.',
+      'The course is your programme of 10 September: 20 workouts in a row, four blocks of five, no rest days on the path, no test at the start or the end and no deload. Beside each workout is the nearest channel message, with its channel number where there is one.',
     ),
     l(
-      'Разминка — суставная гимнастика сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы, потом медленный присед; без бега, около 5 минут. Заминка — растяжка: спина, бёдра, сгибатели бедра, поза ребёнка — и запись ощущений. Твоих трёх разминочных роликов в экспорте нет — если пришлёшь, подставим их. Разминка и заминка не масштабируются и в «5–15 минут тренировки» не входят.',
-      'The warm-up is joint mobility from the top down: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles, then a slow squat; no running, about 5 minutes. The cool-down is a stretch — spine, thighs, hip flexors, child pose — and a note of how it felt. Your three warm-up clips are not in the export — send them and we will wire them in. Warm-up and cool-down do not scale and are not counted in the "5–15 minutes of training".',
+      'Разминка — суставная гимнастика сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы, потом медленный присед; без бега, около 5 минут. Заминка — растяжка: спина, бёдра, сгибатели бедра, поза ребёнка — и запись ощущений, плюс «не получилось потренироваться — прогулка». Твоих трёх разминочных роликов в экспорте нет — если пришлёшь, подставим их. Разминка и заминка не масштабируются.',
+      'The warm-up is joint mobility from the top down: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles, then a slow squat; no running, about 5 minutes. The cool-down is a stretch — spine, thighs, hip flexors, child pose — a note of how it felt, and "could not train? Go for a walk". Your three warm-up clips are not in the export — send them and we will wire them in. Warm-up and cool-down do not scale.',
     ),
     l(
-      'Цифры «как написано» — для уверенного новичка. Приложение умножает их на коэффициент человека: после анкеты при первом входе новичок получает 0,6–0,8, и цифры сходятся с твоим «начинайте с минимума». Ниже показано и то и другое.',
-      'The authored numbers are for a confident beginner. The app multiplies them by the person’s scale: after the onboarding on first login a beginner gets 0.6–0.8, which lands on your "start from the minimum". Both are shown below.',
-    ),
-    l(
-      'Разгрузочной недели нет — как и в канале. Если нужна, скажи, на какой неделе.',
-      'There is no deload week — same as the channel. If you want one, say which week.',
+      'Цифры «как написано» — для уверенного новичка. Приложение умножает их на коэффициент человека: новичок получает 0,6–0,8, и цифры сходятся с твоим «начинайте с минимума». Ниже показано и то и другое. Лесенки (12, 13) и точки отсчёта (19, 20) одинаковы при любой сложности.',
+      'The authored numbers are for a confident beginner. The app multiplies them by the person’s scale: a beginner gets 0.6–0.8, which lands on your "start from the minimum". Both are shown below. The ladders (12, 13) and the reference points (19, 20) are the same at every difficulty.',
     ),
   ],
 };

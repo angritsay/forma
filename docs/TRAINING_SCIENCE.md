@@ -297,6 +297,7 @@ The result, per course (session at "as usual", minutes):
 | ------------ | ------------------------ | ------------------------------- |
 | `start`      | 18.3 / 23.0 / 26.2       | unchanged — it was already sane |
 | `start` (v2) | —                        | 13.7 / 18.2 / 23.2 (see below)  |
+| `start` (v3) | —                        | 12.7 / 16.6 / 19.7 (see below)  |
 | `engine`     | 20.0 / 29.0 / 36.9       | 20.0 / 28.8 / 36.9              |
 | `dumbbells`  | 17.6 / 28.1 / 40.0       | 17.6 / 28.1 / 38.7              |
 | `kettlebell` | 17.6 / 29.0 / 38.5       | 17.6 / 29.0 / 38.0              |
@@ -305,17 +306,25 @@ The result, per course (session at "as usual", minutes):
 Core work was not deleted from the product — it survives in the warm-ups, in the sessions built
 around it (`w_hinge_core_*`), and in every session that does not already ask for two main pieces.
 
-**The beginner course was later rebuilt around the coach's own programme** (`start` v2): the 24
-workouts he posted for his beginner group (`docs/COACH_SOURCE.md`), transcribed one to one, over 8
-weeks. Every session is one warm-up, one piece of main work (two only where he wrote two) and a
-cool-down; the main work runs 4–12 minutes and a session 14–23 minutes at "as usual". The warm-up
-is top-to-bottom joint mobility (about 5 minutes) without running, and the cool-down a stretch of
-the same length, since the coach counts both outside the session. There is no
-max-effort test on day one — his rule is that the first session must not destroy anyone — only a
-retest at the end against the onboarding self-tests. The numbers
-are authored at his "confident beginner" figure, so a real beginner at scale 0.6–0.8 lands on his
-"start from the minimum" advice. `npm run content:review` renders the course day by day with these
-estimates for the coach to check.
+**The beginner course was later rebuilt around the coach's own programme** (`start` v2): at first
+the 24 workouts he posted for his beginner group (`docs/COACH_SOURCE.md`), transcribed one to one
+over 8 weeks, three sessions a week with rest-and-walk nodes between them and a retest at the end
+(13.7 / 18.2 / 23.2 in the table). That version is history.
+
+**Today (`start` v3) the course is Sergey's own 20-workout spec of 10 September**: twenty workouts
+in a row, four blocks of five, no rest days on the path, no test at the start or the end and no
+deload. Every session is one warm-up, the main work (two blocks only where he wrote two, and the
+two 2-minute buy-in intervals of workout 18 as buy-in + AMRAP pairs) and a cool-down. At "as
+usual" and scale 1.0 a session is **12.7 / 16.6 / 19.7** minutes (min / avg / max) and the main work
+3–10 minutes. The warm-up is top-to-bottom joint mobility (about 5 minutes) without running, and
+the cool-down a stretch of the same length plus the walking fallback, since the coach counts both
+outside the session. There is no max-effort test on day one — his rule is that the first session
+must not destroy anyone; the onboarding and the assessment offered after the second workout set the
+load. The numbers are authored at his "confident beginner" figure, so a real beginner at scale
+0.6–0.8 lands on his "start from the minimum" advice. The ladders (workouts 12 and 13) and his two
+reference points (19, the inchworm ladder as a 10-minute EMOM, and 20, the finale compared with
+workout 1) are `scalable: false`, so their shape is the same at every difficulty. `npm run
+content:review` renders the course day by day with these estimates for the coach to check.
 
 ## 4. Duration (`estimate.ts`)
 
