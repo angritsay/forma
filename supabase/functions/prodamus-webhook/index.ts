@@ -113,6 +113,9 @@ Deno.serve(async (req) => {
       p_paid_at: paidAt,
       p_intent: plan ?? 'course',
       p_applied: applied,
+      // Касса, из которой пришли деньги. Названа явно, хотя это и умолчание: касс теперь две, и
+      // «какая» должно читаться на месте вызова, а не в сигнатуре функции (миграция 0038).
+      p_provider: 'prodamus',
     });
     // Never fatal. The ledger is for support; the access is what the customer paid for, and a
     // database without 0020 has no `record_payment` at all — which must not turn every payment
@@ -126,6 +129,7 @@ Deno.serve(async (req) => {
       p_plan: plan,
       p_provider_ref: payment.ref || null,
       p_paid_at: paidAt,
+      p_source: 'prodamus',
     });
     if (error) {
       console.error('prodamus-webhook: apply_subscription_payment failed', error.message);
@@ -152,6 +156,7 @@ Deno.serve(async (req) => {
     p_email: payment.email,
     p_provider_ref: payment.ref || null,
     p_paid_at: paidAt,
+    p_source: 'prodamus',
   });
   if (error) {
     console.error('prodamus-webhook: apply_course_payment failed', error.message);

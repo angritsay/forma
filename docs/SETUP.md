@@ -1391,6 +1391,23 @@ inside it, not a config change.
 9. **Buy something for the smallest amount you can, with a real card**, and check that the access
    opened by itself. This is the step that matters — see the warning below.
 
+### Which till a purchase came through
+
+Every purchase and every subscription carries a `source`, and since migration `0038` it is the
+truth: `prodamus` or `lava`. The admin panel already prints it beside each row in Purchases and
+Subscriptions, so "how was this bought" is answerable without opening the database.
+
+It was not answerable before. Both `apply_course_payment()` and `apply_subscription_payment()` had
+`'prodamus'` written into them as a constant, whichever webhook called them — so a lava.top
+purchase was recorded as a Prodamus one. The till is now the last argument of both, defaulting to
+`prodamus` so an old call keeps its old meaning, and each webhook names its own. The payment ledger
+gained a `provider` column for the same reason, and `claim_payment()` passes it through rather than
+falling back to the default.
+
+Rows written before `0038` keep whatever they had: `source` says `prodamus` on lava purchases made
+earlier, and `payments.provider` is null. Nothing is rewritten — the figure is only trustworthy
+going forward, which is worth knowing before reading an old row as evidence.
+
 ### The contract was reconstructed, so the first payment is the test
 
 lava.top's own documentation is unreachable from the environment this was written in, so the
