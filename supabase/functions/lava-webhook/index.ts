@@ -163,7 +163,8 @@ Deno.serve(async (req) => {
       p_amount: typeof hook!.amount === 'number' ? hook!.amount : null,
       p_provider_ref: hook!.contractId,
       p_paid_at: paidAt,
-      p_intent: plan || 'course',
+      // Занятие — свой вид с 0039: иначе его оплата попадала бы в канал в тему «Курсы».
+      p_intent: plan || (what.startsWith('session:') ? 'session' : 'course'),
       p_applied: applied,
       /*
        * Касса. До 0038 её никто не записывал, и покупка через lava.top ложилась в базу как
@@ -202,9 +203,8 @@ Deno.serve(async (req) => {
    * человека, который оформил заказ на курс и затем купил час с тренером, оплата часа открыла бы
    * курс бесплатно. Один платёж — одна вещь.
    *
-   * В журнал это ложится как `course`: `record_payment()` (0020) принимает только `monthly`,
-   * `annual` и `course`, и отдельного вида для занятия там пока нет. Ровно так же туда ложатся
-   * занятия, оплаченные через Prodamus, так что журнал не становится менее правдивым, чем был.
+   * В журнал это ложится как `session` (0039) — и оттуда в канал владельца, в тему
+   * «Онлайн-тренировки» (0040). Prodamus опознаёт занятие суммой и пишет тот же вид.
    */
   if (what.startsWith('session:')) {
     await record(false);
