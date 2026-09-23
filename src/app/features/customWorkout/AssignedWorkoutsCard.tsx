@@ -32,8 +32,11 @@
 import { useEffect, useState } from 'react';
 import { Glyph } from '@/components/ui/Icon';
 import { listDoneCustomWorkouts, listMyAssignedWorkouts } from '@/lib/api/customWorkouts';
+import type { CustomWorkoutStructure } from '@/lib/training/customWorkout';
+import { workoutEquipment } from '@/lib/training/equipment';
 import type { AssignedWorkoutRow } from '@/lib/api/types';
 import { withBase } from '@/lib/util/paths';
+import { EXERCISE_BY_ID } from '@/content/registry';
 import { AUTHORS, authorById } from '@content/site/authors';
 import { useT } from '@/app/hooks/useT';
 
@@ -107,6 +110,15 @@ export function AssignedWorkoutsCard({ onOpen }: AssignedWorkoutsCardProps) {
       <ul className="deck-scroller -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 md:-mx-10 md:scroll-px-10 md:px-10">
         {rows.map((w) => {
           const minutes = w.estSec ? Math.max(1, Math.round(w.estSec / 60)) : null;
+          /*
+             Оборудование знает упражнение, а не тренировка: у неё только список id. Берём его из
+             скомпилированной библиотеки — она в сборке и не ждёт сети, так что строка появляется
+             вместе с карточкой, а не через мгновение после неё.
+          */
+          const gear = workoutEquipment(
+            w.structure as CustomWorkoutStructure | null,
+            (id) => EXERCISE_BY_ID.get(id)?.equipment,
+          );
           return (
             <li
               key={w.id}
@@ -133,13 +145,21 @@ export function AssignedWorkoutsCard({ onOpen }: AssignedWorkoutsCardProps) {
                   новость, а не подпись ради подписи. Тот же порог, что у выбора в редакторе.
                 */}
                 {AUTHORS.length > 1 ? <AuthorLine slug={w.authorSlug} /> : null}
-                {minutes || w.points ? (
+                {/*
+                  Время и оборудование — вместо времени и очков.
+
+                  Владелец: «вместо points нужно необходимое оборудование писать». Очки человек
+                  узнаёт после тренировки, а гантели нужны до неё: из всего, что помещается в эту
+                  строку, только оборудование способно изменить решение — открыть сейчас или
+                  когда будет чем.
+                */}
+                {minutes || gear.length > 0 ? (
                   <span className="flex flex-wrap items-center gap-2 text-[13px] text-muted">
                     {minutes ? (
                       <span className="tabular">{t('app.nodeDuration', { min: minutes })}</span>
                     ) : null}
-                    {w.points ? (
-                      <span className="tabular">{t('app.nodePoints', { n: w.points })}</span>
+                    {gear.length > 0 ? (
+                      <span>{gear.map((e) => t(`common.equipment_${e}`)).join(' · ')}</span>
                     ) : null}
                   </span>
                 ) : null}
