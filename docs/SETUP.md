@@ -1322,12 +1322,52 @@ inside it, not a config change.
 4. **Put them in `content/site/payments.ts`** under our own key — `course:<course id>` or
    `plan:<plan id>`. Both are public by nature; they belong in the repository and nothing else
    does.
-5. **In the cabinet, under API**, take the **API key** and the **webhook secret**. Neither ever
-   goes into the repository, into chat, or into a workflow input — only into GitHub Actions
-   secrets as `LAVA_WEBHOOK_SECRET`, from where the button below moves them into Supabase.
-6. Add the secret **`LAVA_PRODUCTS`** as well: a JSON map from the lava product id to our key,
-   `{"<product id>":"course:start"}`. It lives as a secret rather than in code so renaming a
-   product in the cabinet does not wait for the site to be rebuilt.
+5. **In the cabinet, add the webhook** (Web-Widget → Webhooks → **Add Webhook**), pick **Basic**
+   as the authentication and invent a login and a password there. Put the pair into GitHub
+   Actions secrets as **`LAVA_WEBHOOK_SECRET`**, written exactly `login:password` — one line, one
+   colon, no spaces around it. It never goes into the repository, into chat, or into a workflow
+   input; the button below moves it into Supabase.
+
+   **It is a login and a password, not a signing secret, and that distinction was paid for.** This
+   was built first around an HMAC signature of the request body, taken from lava.top's public
+   Python SDK, which has a `verify_webhook_signature()`. The cabinet says otherwise: a webhook
+   authenticates with Basic or with your service's API key, and no signature is sent at all. The
+   function would have refused every real notification, and looked like "payments don't arrive".
+   **A third party's SDK is not a specification** — it shows what its author found useful, not
+   what the service does.
+
+   The password may hold any characters: the function decodes the header as UTF-8 rather than as
+   raw bytes, so a Cyrillic or accented password matches like any other. It did not at first —
+   `atob` returns bytes, and the test caught it before the deploy did.
+
+6. Add the secret **`LAVA_PRODUCTS`** as well: a JSON map from the lava product id to our key. It
+   lives as a secret rather than in code so renaming a product in the cabinet does not wait for
+   the site to be rebuilt.
+
+   ```json
+   {
+     "<course product id>": "course:start",
+     "<tier id>": { "19": "plan:monthly", "79": "plan:annual" }
+   }
+   ```
+
+   **The subscription needs the price form, and that is not decoration.** In lava.top a
+   subscription is a _tier_, and a tier is one product holding several periods — the monthly price
+   is mandatory, the yearly one is a toggle beside it. So the month and the year arrive under the
+   same `product.id`, and the notification carries no period at all: its body is `eventType`,
+   `product {id, title}`, `contractId`, `buyer`, `amount`, `currency`, `status`, `timestamp` and
+   nothing else (checked against their SDK's `PurchaseWebhookLog`; the documentation itself is
+   unreachable from the build environment). The amount is the only thing that tells them apart —
+   the same bind `prodamus-webhook` is in, for the same reason.
+
+   Leave **3 months and 6 months switched off** in the tier. The app knows two plans, `monthly`
+   and `annual` (`SubscriptionPlan` in `src/lib/api/types.ts`); a payment for a period it has no
+   name for would be recorded and left unclaimed, which is honest but useless.
+
+   A price the map does not list is never guessed at: the payment is logged as unclaimed and waits
+   to be attached by hand. Opening a year for somebody who paid for a month is the one outcome
+   worth avoiding at any cost.
+
 7. **Actions → Supabase apply → `deploy-lava`.** It deploys the function, moves the secrets over,
    prints which are missing, and prints the address to paste back.
 8. **Paste that address into the cabinet** as the webhook URL:
