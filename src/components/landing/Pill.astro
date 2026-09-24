@@ -29,10 +29,17 @@
  * Style A (global.css header) adds the palette's tags, the site's twins of the app `Pill`'s:
  * `action` is the neon — «новое», «выгоднее», the tags that ask for attention; `orange` marks the
  * beginners, `ciel` the coach; `sky` is the brand's light blue; `white` and `ghost` are the two
- * that sit on a blue hero field (white with blue words, a white hairline with white words). Every
- * filled tag takes the ink, #111111, which clears 4.5 on each of them — on `ciel` too (4.75), where
- * the charcoal would not. `tilt` leans a tag ±5–6°, the hand-placed look of the owner's mockups;
- * use it on one or two tags in a row, not all of them.
+ * that sit on a blue hero field. Every filled tag takes the ink, #111111, which clears 4.5 on each
+ * of them — on `ciel` too (4.75), where the graphite would not. `tilt` leans a tag ±5–6°, the
+ * hand-placed look of the owner's mockups; use it on one or two tags in a row, not all of them.
+ *
+ * The neutral tones — `ghost`, `white`, `paper` — are glass (`.glass-tag`, design/CHANGELOG.md
+ * §16): a frosted tint of the surface with a hairline, white words on it. `white` used to be a
+ * white fill with blue words and `ghost` a bare white outline; on glass they share the material
+ * and differ by the weight of the hairline, so the first fact in a row still stands out from the
+ * rest. The words stay `--on-field`: white on the tint clears 4.5 over the blue field at the
+ * sheerest alpha the class uses. The coloured tones stay solid, because their colour is their
+ * meaning (§15) and a translucent neon is no longer the neon.
  *
  * The height is a minimum, not a fixed 28px, and the words wrap rather than truncate. The longest
  * equipment name in the library — «Тумба или устойчивая ступенька» — is nine pixels wider than an
@@ -66,14 +73,14 @@ const TONE = {
   neutral: 'border-border-strong text-muted',
   course: 'border-course-accent/60 text-course-accent',
   'course-fill': 'border-transparent bg-course text-tile-fg',
-  paper: 'border-transparent bg-paper text-ink',
+  paper: 'glass-tag border-paper/40 text-paper',
   ink: 'border-transparent bg-ink/85 text-paper',
   action: 'border-transparent bg-action text-on-action',
   orange: 'border-transparent bg-orange text-ink',
   ciel: 'border-transparent bg-ciel text-ink',
   sky: 'border-transparent bg-accent text-on-accent',
-  white: 'border-transparent bg-paper text-field',
-  ghost: 'border-on-field/85 text-on-field',
+  white: 'glass-tag border-on-field/80 text-on-field',
+  ghost: 'glass-tag border-on-field/40 text-on-field',
 } as const;
 
 const TILT = { left: '-rotate-6', right: 'rotate-5' } as const;
