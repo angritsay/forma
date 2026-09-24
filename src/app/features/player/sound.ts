@@ -72,7 +72,14 @@ type AudioContextCtor = typeof AudioContext;
 let context: AudioContext | null = null;
 let unavailable = false;
 
-function getContext(): AudioContext | null {
+/**
+ * The one AudioContext of the app, created on first use — or null where there is none (SSR, a
+ * browser without WebAudio, a construction that threw).
+ *
+ * Exported for `voice.ts`: the spoken names go through the same context as the cues, so the
+ * gesture that unlocked one has unlocked the other. Everything else should still say `playCue`.
+ */
+export function getAudioContext(): AudioContext | null {
   if (context) return context;
   if (unavailable || typeof window === 'undefined') return null;
   const w = window as typeof window & { webkitAudioContext?: AudioContextCtor };
@@ -94,10 +101,15 @@ function resume(c: AudioContext): void {
   if (c.state === 'suspended') void c.resume().catch(() => undefined);
 }
 
+/** The mute switch, read synchronously — for code that runs outside React (`voice.ts`). */
+export function isSoundMuted(): boolean {
+  return useSoundStore.getState().muted;
+}
+
 /** Create / resume the audio context. Call from a pointer or key handler. */
 export function unlockAudio(): void {
-  if (useSoundStore.getState().muted) return;
-  const c = getContext();
+  if (isSoundMuted()) return;
+  const c = getAudioContext();
   if (c) resume(c);
 }
 
@@ -232,8 +244,8 @@ export function cueDurationMs(cue: Cue): number {
 
 /** Play a cue unless muted or audio is unavailable. Never throws. */
 export function playCue(cue: Cue): void {
-  if (useSoundStore.getState().muted) return;
-  const c = getContext();
+  if (isSoundMuted()) return;
+  const c = getAudioContext();
   if (!c) return;
   resume(c);
   try {

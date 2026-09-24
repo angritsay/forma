@@ -257,7 +257,10 @@ with the same access rules as `videos` (`shared/…` for anyone signed in, `<cou
 entitlement, admins write). Two kinds of recording:
 
 - **The name, spoken.** The player says the exercise's name at the start of the step, so a person
-  holding a pose does not have to read it off the screen. One file per language.
+  holding a pose does not have to read it off the screen. One file per language. It is played by
+  `src/app/features/player/voice.ts` as a `work` step (or a one-movement AMRAP / for-time piece)
+  begins, through the same AudioContext as the cues and under the same mute switch — see
+  docs/SPEC.md §5a. Keep it under two seconds: a pause cuts it and a resume does not repeat it.
 - **An explanation.** Shown before the exercise: the full one the first time, the brief one the
   next two times, then nothing. Each tier is any subset of text, one clip (the same for both
   languages) and a recording per language.
