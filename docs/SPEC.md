@@ -514,6 +514,17 @@ points, rank, is_me)`. Never exposes emails. `points` = sum of `workout_sessions
   `(user_id, exercise_id)`, own rows. RPCs (security invoker): `mark_exercise_intro_seen(p_exercise_id
 text) → int` (upsert, `views + 1`, returns the new count) and `my_exercise_intro_views() →
 (exercise_id, views)`. The player shows `introFull` at 0 views, `introBrief` at 1–2, nothing after.
+- **Feature flags** (0049): `feature_flags` (`flag text` matching `^[a-z0-9_]{2,60}$`, `user_id →
+auth.users`, `created_at`), pk `(flag, user_id)`; a row means «on for this person». RLS: own rows
+  readable, no direct writes. RPCs: `my_feature_flags() → text[]` (security invoker, the caller's
+  flags), and two admin-only (security definer, `is_admin()`, the person found by
+  `profiles.email` case-insensitively, `no_user` when nobody has the address):
+  `admin_feature_flags(p_email text) → text[]` and `admin_set_feature_flag(p_flag text, p_email
+text, p_on boolean) → boolean` (the new state). The admin switches a flag per person on the person
+  page (`/admin/people/<email>`, section «Функции»); the app reads the caller's flags with the
+  profile (`src/app/store/flags.ts`, `useFlag`, off until loaded and on error). Known keys are
+  `FLAGS` in `src/lib/flags.ts`: `coach_nastia` — the owner's card beside the coach's on the
+  «Тренер» tab. Nothing is seeded.
 - Admin RPC: `admin_set_purchase_status(p_id uuid, p_status text)`.
 
 `src/lib/api/` exposes typed functions (`auth.ts`, `profiles.ts`, `entitlements.ts`,

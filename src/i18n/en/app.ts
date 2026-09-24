@@ -621,6 +621,13 @@ export const app = {
   personNoAssigned: 'Nothing given personally',
   personAssignedDone: 'Done',
   personAssignedOpen: 'Not done',
+  // Per-person feature flags (0049) on the person page, and the coach tab's strip.
+  personFeatures: 'Features',
+  personFeaturesNoUser: 'Can be switched on once this person signs in to the app.',
+  personFeatureOn: 'On: {name}',
+  personFeatureOff: 'Off: {name}',
+  flagLabelCoachNastia: 'Anastasia’s card on the Coach tab',
+  bookHeroStrip: 'Who runs the sessions',
   personActivity: 'Training',
   personActSessions: 'workouts',
   personActDays: 'days',

@@ -135,6 +135,17 @@ export interface DemoDb {
    * discards the whole stored demo, everything the person typed into it, for one new table.
    */
   introViews?: DemoIntroView[];
+  /**
+   * `feature_flags` (0049): which flags are on for whom. Optional and defaulted where it is read,
+   * for the same reason as `introViews` — no `DEMO_SCHEMA_VERSION` bump for one new table.
+   */
+  featureFlags?: DemoFeatureFlag[];
+}
+
+/** One row of `feature_flags`. */
+export interface DemoFeatureFlag {
+  flag: string;
+  userId: string;
 }
 
 /** One row of `exercise_intro_views`. */
@@ -330,6 +341,7 @@ export function emptyDb(): DemoDb {
     marathonAdjustments: [],
     marathonWinners: [],
     introViews: [],
+    featureFlags: [],
   };
 }
 
@@ -381,6 +393,7 @@ export function readDb(storage: StorageLike = defaultStorage()): DemoDb {
       marathonAdjustments: asRows<MarathonAdjustmentRow>(parsed.marathonAdjustments),
       marathonWinners: asRows<DemoWinner>(parsed.marathonWinners),
       introViews: asRows<DemoIntroView>(parsed.introViews),
+      featureFlags: asRows<DemoFeatureFlag>(parsed.featureFlags),
     };
   } catch {
     return emptyDb();

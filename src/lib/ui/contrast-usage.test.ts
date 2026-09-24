@@ -235,6 +235,20 @@ describe('the semantic colour map — glass', () => {
     }
   });
 
+  it('reads the owner’s light-blue card: ink type, and white on its ink stickers', () => {
+    // §21: `NastiaCard` is `bg-accent` under `text-on-accent`, and its two stickers are Pill
+    // `ink` — the sheer end of the ground's dark glass over the light blue.
+    expect(token('on-accent')).toBe(COLOUR.ink);
+    expect(contrast(COLOUR.ink, COLOUR.accent)).toBeGreaterThanOrEqual(TEXT);
+    const { from, tint } = alphas('glass-tag-ink');
+    expect(tint).toBe('bg');
+    const tag = composite(COLOUR.accent, APP_BG, from);
+    expect(contrast('#ffffff', tag), 'white on the ink tag over light blue').toBeGreaterThanOrEqual(
+      TEXT,
+    );
+    expect(contrast(tag, COLOUR.accent), 'the tag on light blue').toBeGreaterThanOrEqual(GRAPHIC);
+  });
+
   it('reads white and the light-blue key word on the hero’s plate over a white sky', () => {
     // CourseCard's hero plate (`.glass-card-on-art`, §17, sheerer since §19): the sheer end of
     // the ground over the brightest pixel a photograph can put there — white, dimmed by

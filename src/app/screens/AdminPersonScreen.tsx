@@ -12,7 +12,8 @@
  *   - the actions reuse the sheets and calls the rest of the admin already has: the purchase and
  *     subscription sheets prefilled with this address, the workout picker, the member update. The
  *     two that take something away ask first;
- *   - then the record, one card per question, newest first everywhere.
+ *   - then the record, one card per question, newest first everywhere — with «Функции», the
+ *     per-person feature flags (0049), right after access.
  *
  * An address nobody has signed in with still has a page: a pre-sale grant is a real thing, and the
  * page for it says «ещё не входил(а)» rather than «не найдено».
@@ -59,6 +60,7 @@ import {
   type ProofState,
 } from '@/app/features/admin/person/model';
 import { emailFromParam, personPath } from '@/app/features/admin/person/path';
+import { FeatureFlags } from '@/app/features/admin/person/FeatureFlags';
 
 type Status = 'loading' | 'ready' | 'error';
 type Open = 'course' | 'sub' | 'workout' | 'close' | 'remove' | null;
@@ -400,6 +402,11 @@ export default function AdminPersonScreen() {
           {!p.subscription && p.purchases.length === 0 ? (
             <Empty>{t('app.personNoPurchases')}</Empty>
           ) : null}
+        </Section>
+
+        {/* --- features (0049): per-person flags ------------------------------ */}
+        <Section title={t('app.personFeatures')}>
+          <FeatureFlags email={p.email} signedIn={p.profile !== null} />
         </Section>
 
         {/* --- club ------------------------------------------------------------ */}

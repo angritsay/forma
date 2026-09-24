@@ -72,6 +72,12 @@
  * person in a hundred who has it, it is the only thing on this tab that is not an advertisement:
  * the 30/60 switch is asking them to buy something they have already bought. Everything below is
  * unchanged, because they may well want another one.
+ *
+ * ## The owner's card, behind a flag
+ *
+ * With `coach_nastia` switched on for the person (0049, admin → the person page → «Функции»), the
+ * hero becomes a snap strip of two: his blue field, then the owner's light-blue card
+ * (`features/coach/NastiaCard.tsx`) peeking in from the right. Without it the DOM is what it was.
  */
 import { clsx } from 'clsx';
 import { useEffect, useState } from 'react';
@@ -97,8 +103,10 @@ import { payHref, type PayRoute, payRoute, paymentTarget } from '@/lib/util/paym
 import { LinkButton } from '@/app/features/courses/LinkButton';
 import { SupportSheet } from '@/app/features/support/SupportSheet';
 import { splitName } from '@/app/features/profile/model';
+import { NastiaCard } from '@/app/features/coach/NastiaCard';
 import { externalLinkProps } from '@/app/hooks/useExternalLink';
 import { useT, type Translator } from '@/app/hooks/useT';
+import { useFlag } from '@/app/store/flags';
 import { useSession } from '@/app/store/session';
 import { BOOKING, type BookingOption } from '@content/site/booking';
 import { COACH } from '@content/site/coach';
@@ -110,6 +118,8 @@ export default function BookScreen() {
   const toast = useToast();
   const profile = useSession((s) => s.profile);
   const user = useSession((s) => s.user);
+  /* The owner's card beside the coach's (0049); off for everyone it was not switched on for. */
+  const nastia = useFlag('coach_nastia');
   const [redirecting, setRedirecting] = useState(false);
   /*
    * Whether the payment page has been opened from here. It is not proof of a payment — nothing on
@@ -206,6 +216,69 @@ export default function BookScreen() {
   /* The credentials that are not already standing above as a figure. */
   const rest = COACH.credentials.filter((c) => !COACH.figures.some((f) => f.of === c));
 
+  /* Sergey's hero, the same with or without the strip around it. */
+  const coachHero = (
+    <>
+      <div className="flex items-end gap-5">
+        <div className="flex min-w-0 flex-1 flex-col items-start gap-3">
+          {/* Two stickers rather than one long one: as a single pill the role was cut off
+              («Founder and coach of …»). They lean opposite ways, like two stuck on by hand. */}
+          <div className="flex flex-wrap items-center gap-2">
+            {COACH.formaRoles.map((role, i) => (
+              <Pill
+                key={role.en}
+                tone="white"
+                tilt={i === 0 ? 'right' : 'left'}
+                className={i === 0 ? 'origin-left' : 'origin-center'}
+              >
+                {l(role, locale)}
+              </Pill>
+            ))}
+          </div>
+          {/* 1.02 → 1.2. The lockup is two lines — «Сергей» over «Титов» — and 1.02 was drawn for
+              capitals, which have no descenders; «р» drops 0.182em below the baseline and the
+              «Т» under it rises to cap height. global.css carries the measurement. */}
+          <h2 className="display text-[clamp(30px,9vw,44px)] leading-[1.2] text-balance">
+            {heavy}
+            {thin ? (
+              <>
+                {' '}
+                <KeyWord className="t-thin" swooshTone="action">
+                  {thin}
+                </KeyWord>
+              </>
+            ) : null}
+          </h2>
+        </div>
+        {/*
+          The website's frame for him, not an avatar: 4:5, monochrome, grain over it. The
+          grain is a sibling element rather than an `::after` on the frame for the reason
+          global.css gives — it has to sit between the image and anything laid on top of it.
+        */}
+        {COACH.photo ? (
+          <div className="relative w-28 shrink-0 overflow-hidden rounded-inner bg-surface">
+            <img
+              src={withBase(COACH.photo)}
+              alt={name}
+              width={256}
+              height={320}
+              className="photo-mono block aspect-[4/5] w-full object-cover"
+            />
+            <div className="photo-grain" aria-hidden="true" />
+          </div>
+        ) : (
+          <Avatar seed={name} name={name} size={112} />
+        )}
+      </div>
+      {/* Facts about the session, so outlined: the one filled thing on the tab is its
+          neon button. */}
+      <div className="flex flex-wrap gap-2">
+        <Pill tone="ghost">{l(BOOKING.format, locale)}</Pill>
+        <Pill tone="ghost">{t('app.bookLeadTimePill', { n: lead })}</Pill>
+      </div>
+    </>
+  );
+
   const pay = () => {
     if (!payment) return;
     // A demo account never reaches a real payment page — but it does reach the step after it,
@@ -248,65 +321,30 @@ export default function BookScreen() {
             the two facts about the session as white outlined pills. The tab's own bleu ciel is a
             tag further down, on the offer — a section colour is a tag, never a field.
           */}
-          <HeroField as="section" className="flex flex-col gap-5">
-            <div className="flex items-end gap-5">
-              <div className="flex min-w-0 flex-1 flex-col items-start gap-3">
-                {/* Two stickers rather than one long one: as a single pill the role was cut off
-                    («Founder and coach of …»). They lean opposite ways, like two stuck on by hand. */}
-                <div className="flex flex-wrap items-center gap-2">
-                  {COACH.formaRoles.map((role, i) => (
-                    <Pill
-                      key={role.en}
-                      tone="white"
-                      tilt={i === 0 ? 'right' : 'left'}
-                      className={i === 0 ? 'origin-left' : 'origin-center'}
-                    >
-                      {l(role, locale)}
-                    </Pill>
-                  ))}
-                </div>
-                {/* 1.02 → 1.2. The lockup is two lines — «Сергей» over «Титов» — and 1.02 was drawn for
-                  capitals, which have no descenders; «р» drops 0.182em below the baseline and the
-                  «Т» under it rises to cap height. global.css carries the measurement. */}
-                <h2 className="display text-[clamp(30px,9vw,44px)] leading-[1.2] text-balance">
-                  {heavy}
-                  {thin ? (
-                    <>
-                      {' '}
-                      <KeyWord className="t-thin" swooshTone="action">
-                        {thin}
-                      </KeyWord>
-                    </>
-                  ) : null}
-                </h2>
-              </div>
-              {/*
-                The website's frame for him, not an avatar: 4:5, monochrome, grain over it. The
-                grain is a sibling element rather than an `::after` on the frame for the reason
-                global.css gives — it has to sit between the image and anything laid on top of it.
-              */}
-              {COACH.photo ? (
-                <div className="relative w-28 shrink-0 overflow-hidden rounded-inner bg-surface">
-                  <img
-                    src={withBase(COACH.photo)}
-                    alt={name}
-                    width={256}
-                    height={320}
-                    className="photo-mono block aspect-[4/5] w-full object-cover"
-                  />
-                  <div className="photo-grain" aria-hidden="true" />
-                </div>
-              ) : (
-                <Avatar seed={name} name={name} size={112} />
-              )}
-            </div>
-            {/* Facts about the session, so outlined: the one filled thing on the tab is its
-                neon button. */}
-            <div className="flex flex-wrap gap-2">
-              <Pill tone="ghost">{l(BOOKING.format, locale)}</Pill>
-              <Pill tone="ghost">{t('app.bookLeadTimePill', { n: lead })}</Pill>
-            </div>
-          </HeroField>
+          {nastia ? (
+            /*
+             * With the `coach_nastia` flag (0049) the hero is a strip of two: Sergey's field first,
+             * the owner's light-blue card peeking in from the right — the `.deck-scroller` strip of
+             * «Тренировки от тренера», bleeding past both edges and pulled back with padding.
+             * Everything below stays his: the figures, the credentials and the offer.
+             */
+            <section
+              aria-label={t('app.bookHeroStrip')}
+              className="deck-scroller -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 md:-mx-10 md:scroll-px-10 md:px-10"
+            >
+              <HeroField
+                as="article"
+                className="flex w-[86%] max-w-[420px] shrink-0 snap-start flex-col gap-5"
+              >
+                {coachHero}
+              </HeroField>
+              <NastiaCard locale={locale} className="w-[86%] max-w-[420px] shrink-0 snap-start" />
+            </section>
+          ) : (
+            <HeroField as="section" className="flex flex-col gap-5">
+              {coachHero}
+            </HeroField>
+          )}
 
           {/*
            * What he has behind him. Two of the facts are numbers and are set as numbers, side by

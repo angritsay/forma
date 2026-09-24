@@ -18,6 +18,7 @@ import { newestActivation } from '@/app/features/marathon/gameAccess';
 import { getMySubscription } from '@/lib/api/subscriptions';
 import type { Subscription } from '@/lib/api/types';
 import { clearDraft } from '@/app/screens/onboarding/draft';
+import { useFlags } from './flags';
 import { useLocale } from './locale';
 
 export type { Profile, ProfilePatch };
@@ -83,6 +84,8 @@ const SIGNED_OUT = {
 function endSession(): void {
   epoch += 1;
   inflight = null;
+  // The feature flags (0049) were somebody's; they go with the session.
+  useFlags.getState().clear();
 }
 
 export const useSession = create<SessionState>((set, get) => {
@@ -118,6 +121,9 @@ export const useSession = create<SessionState>((set, get) => {
     const startedAt = epoch;
     const promise = (async () => {
       set({ user, error: undefined });
+      // Feature flags (0049) load beside the profile and never hold it up: `load` cannot reject,
+      // and every flag reads off until it lands.
+      void useFlags.getState().load();
       const [profileRes, entRes, subRes] = await Promise.allSettled([
         getProfile(),
         listEntitlements(),
@@ -216,6 +222,8 @@ export const useSession = create<SessionState>((set, get) => {
     },
 
     refreshEntitlements: async () => {
+      // A flag switched on in the admin shows up on the next return to the app, like a purchase.
+      void useFlags.getState().load();
       const [rows, subscription] = await Promise.all([listEntitlements(), getMySubscription()]);
       const entitlements = rows.map((r) => r.courseId);
       set({ entitlements, newestPurchaseAt: newestActivation(rows), subscription });
