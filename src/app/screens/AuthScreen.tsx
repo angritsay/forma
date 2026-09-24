@@ -208,7 +208,7 @@ function Backdrop({ src, poster }: { src?: string; poster?: string }) {
         <img src={still} alt="" className="photo-mono size-full object-cover" decoding="async" />
       )}
       <div className="photo-grain" />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(26,26,26,0.55),rgba(26,26,26,0.35)_38%,rgba(26,26,26,0.92))]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(var(--bg-rgb),0.55),rgba(var(--bg-rgb),0.35)_38%,rgba(var(--bg-rgb),0.92))]" />
     </div>
   );
 }

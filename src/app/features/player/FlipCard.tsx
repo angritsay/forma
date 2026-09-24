@@ -280,6 +280,14 @@ export function FlipCard({ flipped, onFlip, front, back, onDragY, onReleaseY }: 
           className={clsx(
             FACE,
             '[transform:rotateY(180deg)]',
+            /*
+             * `.glass-off`: the back is a text panel, and the chips on it (`CardBack`) are glass
+             * everywhere else in the product. Inside this 3D scene they must not be — the
+             * compositing context a `backdrop-filter` opens is the WebKit hazard above — so the
+             * panel turns them back into their solid fallback (global.css). The front keeps its
+             * glass: that panel is over video, and it is the one this workaround was written for.
+             */
+            'glass-off',
             flipped ? 'visible delay-0' : 'invisible delay-[250ms]',
           )}
           inert={!flipped}

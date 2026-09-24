@@ -75,7 +75,7 @@ export function ProofMedia({ mediaPath }: ProofMediaProps) {
   if (state.kind === 'ready') {
     if (video) return <ProofPlayer src={state.url} />;
     return (
-      <span className="mt-2 block overflow-hidden rounded-tile border border-border bg-surface-2">
+      <span className="glass-card mt-2 block overflow-hidden rounded-tile">
         <img
           src={state.url}
           alt={t('app.mAdminProofOpen')}

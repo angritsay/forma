@@ -105,7 +105,7 @@ export function TodayCard({ reloadKey }: TodayCardProps) {
   return (
     <section
       aria-labelledby="admin-today-title"
-      className="flex flex-col rounded-card border border-border bg-surface px-4 pt-3.5 pb-1"
+      className="glass-card flex flex-col rounded-card px-4 pt-3.5 pb-1"
     >
       <div className="flex items-baseline justify-between gap-3 pb-2">
         <h2 id="admin-today-title" className="font-display text-xl">

@@ -117,7 +117,7 @@ export function PathNode({ node, status, n, column, stars, onPress, buttonRef }:
         {/*
          * One short line in sentence case, not a kicker: «Мосты 5 мин, цель 100» is read, and
          * Cyrillic capitals at 11px are not. On today the line opens with «Сегодня» in the neon
-         * — the colour map's «now», the same neon as today's circle (15.9 on charcoal) — the one
+         * — the colour map's «now», the same neon as today's circle (17.15 on graphite) — the one
          * word of colour in the column, on the one day it is about.
          */}
         {line || status === 'current' ? (

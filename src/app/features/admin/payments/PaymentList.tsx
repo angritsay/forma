@@ -65,7 +65,7 @@ export function PaymentList({ rows, busyId, highlightId, onBind, onDismiss }: Pa
             <div
               className={
                 row.id === highlightId
-                  ? 'flex gap-4 rounded-card border border-border-strong px-3 py-4'
+                  ? 'glass-card glass-card-3 flex gap-4 rounded-card px-3 py-4'
                   : 'flex gap-4 border-t border-border py-4'
               }
             >

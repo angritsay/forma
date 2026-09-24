@@ -155,7 +155,7 @@ export interface ArtFeedProps {
 }
 
 /**
- * The ground is the app's own charcoal, not the programme colour: the clock, the transport and the
+ * The ground is the app's own graphite, not the programme colour: the clock, the transport and the
  * header all have to stay legible over whatever is behind them.
  */
 export function ArtFeed({ slides, playing, y, animate, onSettled, trackRef }: ArtFeedProps) {

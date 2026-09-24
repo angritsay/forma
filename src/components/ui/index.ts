@@ -1,4 +1,4 @@
-/** Forma UI kit — charcoal ground, token-driven React components. One component per file. */
+/** Forma UI kit — graphite ground, token-driven React components. One component per file. */
 export { Avatar, avatarTile, initials, type AvatarProps } from './Avatar';
 export { Badge, type BadgeProps, type BadgeTone } from './Badge';
 export { BarChart, type BarChartProps, type BarDatum } from './BarChart';

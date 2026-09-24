@@ -161,15 +161,21 @@ export function BottomNav() {
           : 'w-[calc(100%-88px)] max-w-[360px]',
         'bottom-[calc(var(--safe-bottom)+var(--demo-inset,0px)+12px)]',
         /*
-         * `.nav-segmented`: an opaque dark capsule with a hairline ring and a shadow. It was
-         * `.glass-float`, and the glass was not a flourish this bar could keep — a flat alpha lets
-         * running text read through, which `design/CHANGELOG.md` §8 already records as tried and
-         * rejected, and with the leaderboard scrolled underneath the row «13 Настя 105» was
-         * legible inside the capsule. The mockup draws a solid control; so does this.
+         * `.glass-capsule` is the material, `.nav-segmented` the ring and the shadow (global.css).
+         *
+         * The bar has been glass, opaque and glass again, and the middle step is why this glass is
+         * tuned the way it is. The first glass, `.glass-float`, was a *flat* alpha, which
+         * `design/CHANGELOG.md` §8 records as tried and rejected: with the leaderboard scrolled
+         * underneath, the row «13 Настя 105» was legible inside the capsule, so the bar went
+         * solid. The owner then asked for the glass back on every plate (§16), and the answer to
+         * the objection is density rather than opacity — the capsule is a gradient of the ground,
+         * .62 at its top edge and .96 where «Курсы · Клуб · Тренер» sit, so a scrolled row reads
+         * as texture under the sheer edge and nothing reads through the words. The leaderboard is
+         * still the case to check it against.
          *
          * Full rounding, because this is the object the pill radius exists for now — see the token.
          */
-        'nav-segmented rounded-pill',
+        'glass-capsule nav-segmented rounded-pill',
       )}
     >
       {/* The row is its own element so the capsule is positioned against the seats themselves,

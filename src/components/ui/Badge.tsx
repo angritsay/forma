@@ -24,26 +24,28 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
  * A badge is a stamp: a state on a card, a count on a row. 24px, sentence case at 12px. It was
  * capitals at 11px tracked .12em, and it leaves them with the rest of the product — a stamp that
  * shouts beside a chip that does not is exactly the half-migration the owner ruled against.
- * Neutral is an outline; `inverse` is the light-blue fill for the one genuine "this one" — active,
- * published, subscribed: the third palette's accent marks the active state (global.css header),
- * which the white fill of the second brandbook did; `course` is
+ * Neutral is a tag of glass (`.glass-tag`, global.css — the owner's «вернуть стекло на плашках»,
+ * design/CHANGELOG.md §16; it was an outline); `inverse` is the light-blue fill for the one genuine
+ * "this one" — active, published, subscribed: the third palette's accent marks the active state
+ * (global.css header), which the white fill of the second brandbook did; `course` is
  * the only tone that takes colour — the programme colour, with black text — for a stamp that
  * names the programme itself. Success, warning and danger keep the colour on the text and stay
  * outlined, so a list of statuses is a list of words, not a row of coloured blocks.
  *
- * `accent` is the older name for the same light-blue "this one" and renders as `inverse`. `on-art` sat on a pastel tile and
- * is now the dark plate the design system stamps on a course cover — `--ink` on `--paper`, which
- * do not flip with the theme, so it is dark on any tile in any theme.
+ * `accent` is the older name for the same light-blue "this one" and renders as `inverse`. `on-art`
+ * sat on a pastel tile and is now the dark stamp on a course cover — the dense ink glass
+ * (`.glass-tag-ink`, tinted from the ground at .72 and up), because the ordinary tag over a white
+ * sky would leave white type at 2.6 where this holds ≥ 7.
  */
 const TONE: Record<BadgeTone, string> = {
-  neutral: 'bg-transparent border-border-strong text-text',
+  neutral: 'glass-tag text-text',
   inverse: 'bg-accent border-transparent text-on-accent',
   course: 'bg-course border-transparent text-tile-fg',
   success: 'bg-transparent border-border-strong text-success',
   warning: 'bg-transparent border-border-strong text-warning',
   danger: 'bg-transparent border-border-strong text-danger',
   accent: 'bg-accent border-transparent text-on-accent',
-  'on-art': 'bg-ink/85 border-transparent text-paper',
+  'on-art': 'glass-tag glass-tag-ink text-paper',
 };
 
 /* `sm` is the design system's badge; `md` is a touch roomier for a stamp that stands alone. */
