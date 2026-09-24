@@ -19,15 +19,8 @@ import { describe, expect, it } from 'vitest';
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 
-/*
- * The roots scanned. `scripts/`, `supabase/templates/` and `design/` are being repainted on a
- * parallel branch (the site, the generators and the design system); widen this to
- * `['src', 'public', 'scripts', 'supabase/templates', 'design']` once that branch has merged —
- * the allowlist below already knows what to skip there.
- *
- * TODO(graphite): widen ROOTS after the site/design-system branch merges.
- */
-const ROOTS = ['src', 'public'] as const;
+/* The roots scanned: the app and site, the generators, the email template, the design system. */
+const ROOTS = ['src', 'public', 'scripts', 'supabase/templates', 'design'] as const;
 
 /** Paths (relative to the repo, forward slashes) that may keep the old value. */
 const ALLOW: readonly RegExp[] = [
@@ -39,8 +32,8 @@ const ALLOW: readonly RegExp[] = [
   /^src\/lib\/ui\/ground-literals\.test\.ts$/,
 ];
 
-/** A line that names the old value as something it *was*. */
-const HISTORY = /\b(?:was|were|было|был|была|были)\b/i;
+/** A line that names the old value as something it *was* — or walks the palette's history with arrows. */
+const HISTORY = /\b(?:was|were|было|был|была|были)\b|→/i;
 
 /** Text files worth reading; the rest of `public/` is images, video and fonts. */
 const TEXT = /\.(?:astro|tsx?|mjs|cjs|js|css|json|webmanifest|svg|html|md|txt|xml|sql)$/;
