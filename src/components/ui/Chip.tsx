@@ -22,21 +22,25 @@ export interface ChipProps extends Omit<HTMLAttributes<HTMLElement>, 'onClick'> 
  * tracked .06em; the case went with the rest of the product and the tracking went with the case,
  * which bought the two points of size — a tracked-caps «107 повторов» and a sentence-case one are
  * within a few pixels of each other. Inactive
- * chips sit on --surface-3 behind a hairline; the selected one is the light blue with ink words
- * (14.7) — selection is the light blue's job in the semantic colour map (global.css header,
- * design/CHANGELOG.md §15); electric blue is a surface, the hero field and the tab bar's seat —
- * and it is the only fill in the row so the eye finds it first.
+ * chips are tags of glass (`.glass-tag`, global.css — the owner's «вернуть стекло на плашках»,
+ * design/CHANGELOG.md §16) with their own hairline; the selected one is the light blue with ink
+ * words (14.7) — selection is the light blue's job in the semantic colour map (global.css header,
+ * §15); electric blue is a surface, the hero field and the tab bar's seat — and it is the only
+ * solid fill in the row so the eye finds it first.
  *
  * The named tones are for chips that state something rather than select something. `accent` is
- * the brand's light blue on the words and the hairline (13.2 on charcoal) — a target rep count, a
+ * the brand's light blue on the words and the hairline (14.18 on graphite) — a target rep count, a
  * test block, the last three seconds of a rest — the interface accent of the third palette, where
  * the second brandbook had full white. The semantic tones keep their
  * colour on the text only. `on-art` sits on course art and reads whatever ink the tile has set
  * through `--course-tile-fg`, so it is black on a programme colour and light on a neutral one.
+ *
+ * Inside the technique card's 3D scene the glass is switched off by `.glass-off` on the face
+ * (FlipCard.tsx) — the WebKit hazard global.css records — and the chip falls back to its solid.
  */
 const TONE: Record<ChipTone, string> = {
-  default: 'bg-surface-3 border-border text-muted',
-  accent: 'bg-surface-3 border-accent/60 text-accent',
+  default: 'glass-tag text-muted',
+  accent: 'glass-tag border-accent/60 text-accent',
   success: 'bg-transparent border-border-strong text-success',
   warning: 'bg-transparent border-border-strong text-warning',
   danger: 'bg-transparent border-border-strong text-danger',

@@ -393,10 +393,11 @@ export default function NodePreviewScreen() {
              *
              * The numbers are measured on the composited pixels, not chosen: the dimmest type here
              * is the light-blue key word `#afe9fd`, which needs the ground at sRGB 99 or below for
-             * 4.5:1. 0.82 over a frame that is pure white composites to sRGB 54: the key word
-             * measures 9.1:1 there and the white 12.1:1; every line below it sits on more
-             * (`contrast-usage.test.ts` holds both). A fifth of the picture still comes through the type's
-             * ground, so it is a scrim and not the panel the mockups took away.
+             * 4.5:1. 0.82 of the graphite ground (`--bg-rgb`) over a frame that is pure white
+             * composites to sRGB 61: the key word measures 8.2:1 there and the white 10.9:1;
+             * every line below it sits on more (`contrast-usage.test.ts` holds both, derived from
+             * `APP_BG`). A fifth of the picture still comes through the type's ground, so it is a
+             * scrim and not the panel the mockups took away.
              *
              * Re-measure rather than eyeball if the alphas, the title's size or the stills change.
              */}
@@ -406,7 +407,7 @@ export default function NodePreviewScreen() {
                 className="pointer-events-none relative h-32"
                 style={{
                   background:
-                    'linear-gradient(180deg, rgba(26,26,26,0) 0%, rgba(26,26,26,0.28) 46%, rgba(26,26,26,0.62) 74%, rgba(26,26,26,0.82) 100%)',
+                    'linear-gradient(180deg, rgba(var(--bg-rgb),0) 0%, rgba(var(--bg-rgb),0.28) 46%, rgba(var(--bg-rgb),0.62) 74%, rgba(var(--bg-rgb),0.82) 100%)',
                 }}
               />
             ) : null}
@@ -422,7 +423,7 @@ export default function NodePreviewScreen() {
                 still
                   ? {
                       background:
-                        'linear-gradient(180deg, rgba(26,26,26,0.82) 0%, rgba(26,26,26,0.96) 100%)',
+                        'linear-gradient(180deg, rgba(var(--bg-rgb),0.82) 0%, rgba(var(--bg-rgb),0.96) 100%)',
                     }
                   : undefined
               }

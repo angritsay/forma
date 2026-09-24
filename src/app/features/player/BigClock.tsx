@@ -11,7 +11,7 @@ export interface BigClockProps {
   /**
    * `urgent` marks the last seconds of a countdown: time running out is one of the orange's jobs
    * in the semantic colour map (global.css header, design/CHANGELOG.md §15) — intensity, effort —
-   * and it is never the programme colour. 5.56 on charcoal. `accent` is its older name, kept so
+   * and it is never the programme colour. 5.99 on graphite. `accent` is its older name, kept so
    * callers do not break. `warning` and `danger` are for a cap running out and stay semantic.
    */
   tone?: 'default' | 'urgent' | 'accent' | 'warning' | 'danger';

@@ -5,16 +5,18 @@
 /*
  * Forma design tokens — third palette: «синие поля, градиентная нить».
  *
- * Owner: «charcoal как фон… Фон больше не может быть другого цвета». The ground is charcoal
- * #1a1a1a everywhere, in the app, on the site and in the admin panel. The strictly black-and-white
- * interface of the second brandbook is retired, and with it the rule that the accent is white.
+ * Owner: «charcoal как фон… Фон больше не может быть другого цвета», and a step later «сделать фон
+ * потемнее — графит темнее; вернуть стекло на плашках». The ground is graphite #121212 everywhere,
+ * in the app, on the site and in the admin panel (design/CHANGELOG.md §16; it was charcoal #1a1a1a
+ * from §14). The strictly black-and-white interface of the second brandbook is retired, and with it
+ * the rule that the accent is white.
  *
  * The system took five preview rounds to find (design/CHANGELOG.md §14). The owner chose a blend of
  * two directions, and every colour has exactly one job:
  *
  *   - **The blue field** `--field` #2038e2 — one hero card per screen, the thing happening here.
  *     White type on it (7.71), the key word in `--accent` light blue (5.7), a hand-drawn swoosh.
- *     Electric blue is never type on charcoal (2.26).
+ *     Electric blue is never type on graphite (2.43).
  *   - **Neon** `--action` #f4ff3f — action: the one main button of a screen and the tags «новое»,
  *     «задание дня», «лидер», «сегодня», «рекомендуем». Ink on it.
  *   - **The crossroads gradient** — the club's own colour. Owner: «давай градиент для клуба
@@ -36,12 +38,14 @@
  *   - **Light blue** #afe9fd — brand accent and selection: key words, links, the selected chip or
  *     answer, progress fills and rings, focus, info, earned stars.
  *   - **Electric blue** #2038e2 — a surface only: the hero field, the tab bar's active pill. Never
- *     type on charcoal.
+ *     type on graphite.
  *   - **Orange** #ff5a00 — intensity and effort: «Посложнее», heat, max effort, the last seconds of
  *     a timer. Also the beginners' course tag and tile — identity on its own tile or tag only.
  *   - **Difficulty scale** — «Полегче» light blue, «Как обычно» white, «Посложнее» orange. The
  *     recommended choice wears a neon «Рекомендуем» pill, not a filled circle.
- *   - **Bleu ciel** #007bff — the coach. **The crossroads gradient** — the club only.
+ *   - **Bleu ciel** #007bff — the coach. On the darker ground it reads as small type (4.71 on
+ *     #121212, where it was 4.37 on #1a1a1a and large-type-only), so the coach's accent is ciel
+ *     itself. **The crossroads gradient** — the club only.
  *   - **success / warning / danger** — unchanged; danger is errors and destructive actions.
  *
  * **The course colour is identity**, not a state: `--course-accent`, `text-course`, `bg-course`
@@ -50,46 +54,55 @@
  * not on «recommended», not on generic progress.
  *
  * **Emoji and icons.** An emoji is never laid on a saturated fill (orange, neon, the blues, the
- * gradient) — it sits on a neutral surface (#242424 / #2e2e2e) or white. A glyph used as an icon
+ * gradient) — it sits on a neutral surface (#1c1c1c / #262626) or white. A glyph used as an icon
  * clears 3:1 against what is directly under it (WCAG 1.4.11), text 4.5:1.
  *
  * Ink on any coloured fill is decided by measured contrast, not by lightness — `tileInk()` in
  * src/lib/ui/tile.ts. The old luminance cutoff would have put white on Portland orange (3.13).
- * Ink is #111111 rather than the charcoal itself: charcoal on bleu ciel is 4.37 and fails AA,
- * #111111 is 4.75 and passes, and the eye cannot tell the two apart.
+ * Ink is #111111 rather than the ground itself, and that stays true although the graphite ground
+ * (4.71 on bleu ciel) would now pass where charcoal (4.37) failed: the ink is a token of its own
+ * so it does not move every time the ground does, #111111 is 4.75 on ciel, and the eye cannot tell
+ * the two apart.
  *
  * No text is drawn as an outline anywhere — the owner turned it down in preview.
  */
 :root {
-  --bg: #1a1a1a;
-  --surface: #242424;
-  --surface-2: #2e2e2e;
-  --surface-3: #383838;
+  /*
+   * The ground: graphite #121212, one step darker than the charcoal #1a1a1a that was §14's, at the
+   * owner's word. The surface ladder keeps its spacing (+10 / +20 / +30 in sRGB) from the new
+   * floor. Everything outside this file that names the ground — `APP_BG` in src/lib/ui/tile.ts,
+   * `COLOUR.ground` in semantic.ts, the Telegram header colour, the manifest, the favicon — is a
+   * copy of this value, and `src/lib/ui/ground-literals.test.ts` fails the build on the old one.
+   */
+  --bg: #121212;
+  --surface: #1c1c1c;
+  --surface-2: #262626;
+  --surface-3: #303030;
   --border: rgba(255, 255, 255, 0.1);
   --border-strong: rgba(255, 255, 255, 0.18);
   --text: #f6f6f7;
   /*
    * Both muted tones clear WCAG AA (4.5:1) on every surface they are used on, the lightest one
    * (--surface-3) included. Measured:
-   *   --muted   #b9b9c0  on bg 9.07 · surface 7.96 · surface-2 6.96 · surface-3 6.01
-   *   --muted-2 #a6a6ae  on bg 7.20 · surface 6.42 · surface-2 5.62 · surface-3 4.85
+   *   --muted   #b9b9c0  on bg 9.60 · surface 8.73 · surface-2 7.76 · surface-3 6.76
+   *   --muted-2 #a6a6ae  on bg 7.75 · surface 7.05 · surface-2 6.26 · surface-3 5.46
    *
    * --muted-2 was #93939d in the second brandbook's grey ramp. On the third palette's neutral
-   * --surface-3 (#383838) that grey measures 3.85 and fails AA, so it moved up to #a6a6ae.
+   * --surface-3 (then #383838) that grey measured 3.85 and failed AA, so it moved up to #a6a6ae.
    */
   --muted: #b9b9c0;
   --muted-2: #a6a6ae;
   --primary: #ffffff;
-  --on-primary: #1a1a1a;
+  --on-primary: #121212;
   /*
    * The brand colour. It was white in the second brandbook ("the thing that acts"); acting is the
    * neon's job now, and the brand is the owner's light blue — «светло-голубой — это брендовый
-   * цвет наш». 13.2:1 on charcoal. `--accent-2` aliases it.
+   * цвет наш». 14.18:1 on graphite. `--accent-2` aliases it.
    */
   --accent: #afe9fd;
   --accent-2: #afe9fd;
   --on-accent: #111111;
-  /* Action: the one main button of a screen, and the tags that ask for attention. 15.9 on bg. */
+  /* Action: the one main button of a screen, and the tags that ask for attention. 17.15 on bg. */
   --action: #f4ff3f;
   --on-action: #111111;
   /* The hero field: one blue card per screen. White on it 7.71, --accent on it 5.7. */
@@ -97,13 +110,14 @@
   --on-field: #ffffff;
   --field-rgb: 32, 56, 226;
   /* The rest of the palette, named for what they are. */
+  /* Orange 5.99 as type on the ground; ciel 4.71 — small type is legal on graphite. */
   --orange: #ff5a00;
   --ciel: #007bff;
   --beige: #ffe6d0;
   /*
    * The owner's crossroads gradient, in our colours — the club's colour and nobody else's. It must
    * carry the light blue and the «чуть-чуть желтоватый» beige, her words. `--grad-warm` is its
-   * readable half, the only part that may colour type on charcoal: every stop of it clears 5.5.
+   * readable half, the only part that may colour type on graphite: every stop of it clears 5.9.
    */
   --grad-crossroads: linear-gradient(115deg, #afe9fd 0%, #ffe6d0 32%, #ff5a00 62%, #2038e2 100%);
   --grad-warm: linear-gradient(100deg, #afe9fd 0%, #ffe6d0 45%, #ff5a00 100%);
@@ -122,8 +136,8 @@
    * Android WebView a Telegram Mini App runs inside — the failure there is silent. Keep these in
    * step with the hexes above them by hand.
    */
-  --bg-rgb: 26, 26, 26;
-  --surface-rgb: 36, 36, 36;
+  --bg-rgb: 18, 18, 18;
+  --surface-rgb: 28, 28, 28;
   --paper-rgb: 255, 255, 255;
   --border-ink: rgba(17, 17, 17, 0.14);
   --border-ink-strong: rgba(17, 17, 17, 0.25);
@@ -131,10 +145,10 @@
    * Section colours. They come from content (`course.tile`) and the two tabs that have no course
    * (`GAME_TILE`, `COACH_TILE` in src/lib/ui/tile.ts). These tokens mirror them; keep them in step.
    *
-   *   beginners  #ff5a00  ink #111111 6.04 · as type on bg 5.56
-   *   dumbbells  #f4ff3f  ink #111111 17.3 · as type on bg 15.9
-   *   yoga       #ffe6d0  ink #111111 15.7 · as type on bg 14.5   (placeholder — no course yet)
-   *   marathon   #2038e2  ink white   7.71 · never type on bg (2.26). The club *paints* with the
+   *   beginners  #ff5a00  ink #111111 6.04 · as type on bg 5.99
+   *   dumbbells  #f4ff3f  ink #111111 17.3 · as type on bg 17.15
+   *   yoga       #ffe6d0  ink #111111 15.7 · as type on bg 15.59  (placeholder — no course yet)
+   *   marathon   #2038e2  ink white   7.71 · never type on bg (2.43). The club *paints* with the
    *              crossroads gradient; this solid is what the tile machinery and the -ink need.
    *
    * The `-ink` variants are the hues darkened for text on white, each ≥ 5.3:1.
@@ -422,7 +436,7 @@ body {
 
   /*
    * Keyboard focus, in the brand's light blue. There was none before — the browser default ring
-   * was all anyone navigating by keyboard had, and on charcoal it is close to invisible. Only
+   * was all anyone navigating by keyboard had, and on graphite it is close to invisible. Only
    * `:focus-visible`, so a tap never draws it.
    */
   :where(a, button, [role='button'], input, select, textarea, summary, [tabindex]):focus-visible {
@@ -821,11 +835,25 @@ body {
    * liked *is* the token rather than a copy of it.
    *
    * THE RULE THAT DECIDES WHERE IT MAY GO: glass needs something to be glass over. `backdrop-filter`
-   * blurs what is painted behind an element, so a blurred bar over a flat #1a1a1a ground renders as
-   * a very slightly different flat dark bar — all the cost of a compositing layer, none of the
-   * effect. Four surfaces qualify, because content genuinely passes beneath them: the tab bar
-   * (`fixed`), a screen header (`sticky`), and a sheet or modal (the dimmed screen behind it). The
-   * player is the fifth, and it has video. Everything else takes a solid surface and a radius.
+   * blurs what is painted behind an element, so a blurred bar over a flat ground renders as a very
+   * slightly different flat dark bar — all the cost of a compositing layer, none of the effect.
+   * Three situations qualify:
+   *
+   *   1. **Over a photograph or video** — a tag on a course cover, the player's panel.
+   *   2. **Over scrolling content** — the tab bar (`fixed`), a screen header (`sticky`), a sheet or
+   *      modal (the dimmed screen behind it), a toast.
+   *   3. **A plate over the ground** — a `Card`, a tag, a badge. This is the owner's reversal of
+   *      design/CHANGELOG.md §8 («вернуть стекло на плашках», §16): a plate is its own object laid
+   *      on the screen, and the graphite ground (#121212) is dark enough that a surface tinted at
+   *      .55–.80 over it still reads as a plate while the aurora, a photograph or a hero field
+   *      passing behind it shows through the material. §8's «everything else solid» is superseded.
+   *
+   * What stays solid, and for performance rather than taste: rows (`ListRow`), table rows, the
+   * long lists of the admin panel, the technique card's text panel — anything that repeats
+   * twenty times on a screen or lives inside a scroller, where twenty compositing layers cost more
+   * than one plate's worth of material is worth. A media frame whose fill never shows (a photograph
+   * covers it edge to edge) stays solid for the same reason. `.glass-off` on an ancestor turns any
+   * glass inside it back into its solid fallback, for those cases.
    *
    * The band is a GRADIENT, not a flat alpha, and that is load-bearing rather than decorative. A
    * flat 85% panel was tried here before and rejected for a real reason — recorded in Screen.tsx —
@@ -834,25 +862,33 @@ body {
    * without anything reading through the words.
    *
    * `--glass-tint` picks which colour is being made translucent: the page ground for chrome laid
-   * over a screen, the raised surface for a panel that is its own object. Both flip with the paper
-   * theme, so a sheet opened on the profile frosts white.
+   * over a screen, the raised surface for a panel that is its own object. `--glass-overlay` is an
+   * optional flat colour laid over the band — the offer card on «Тренер» tints its glass 6% ciel
+   * this way instead of replacing the band with a solid, which would have kept the blur and lost
+   * the material.
    *
    * One hazard, and it has already cost this codebase a bug: `backdrop-filter` establishes a
    * compositing context. WebKit flattens a 3D scene when a descendant does that, which is how the
    * player's technique card lost `backface-visibility` and showed its front face through its back,
    * mirrored (see FlipCard.tsx). Adding glass inside a 3D transform, or above a `position: fixed`
-   * child, is worth checking on a real iPhone rather than assuming.
+   * child, is worth checking on a real iPhone rather than assuming — the technique card's back
+   * face carries `.glass-off` for exactly this.
    */
   .glass,
   .glass-bar,
   .glass-bar-top,
+  .glass-card,
+  .glass-capsule,
+  .glass-tag,
   .glass-tile {
-    background: linear-gradient(
-      var(--glass-angle, 180deg),
-      rgba(var(--glass-tint, var(--bg-rgb)), var(--glass-from)) 0%,
-      rgba(var(--glass-tint, var(--bg-rgb)), var(--glass-via)) var(--glass-mid, 55%),
-      rgba(var(--glass-tint, var(--bg-rgb)), var(--glass-to)) 100%
-    );
+    background:
+      linear-gradient(var(--glass-overlay, transparent), var(--glass-overlay, transparent)),
+      linear-gradient(
+        var(--glass-angle, 180deg),
+        rgba(var(--glass-tint, var(--bg-rgb)), var(--glass-from)) 0%,
+        rgba(var(--glass-tint, var(--bg-rgb)), var(--glass-via)) var(--glass-mid, 55%),
+        rgba(var(--glass-tint, var(--bg-rgb)), var(--glass-to)) 100%
+      );
     -webkit-backdrop-filter: blur(20px) saturate(140%);
     backdrop-filter: blur(20px) saturate(140%);
   }
@@ -925,53 +961,112 @@ body {
     --glass-mid: 50%;
   }
 
-  /* A badge or a stamp laid on artwork: lighter, because there is a picture worth seeing under it. */
+  /*
+   * A plate: a `Card`, a hand-built panel, a stat card in the admin — the surface tinted rather
+   * than solid, so whatever is behind it (the ground, the club's aurora, a photograph, the hero
+   * field) shows through as a material. The hairline is part of the definition, as on the bars:
+   * a plate is told apart from its ground by an edge, and every caller used to add the same one.
+   *
+   * `.glass-card-2` and `.glass-card-3` are the raised levels — `Card level={2|3}`, a toast — and
+   * they step the *alphas* up instead of switching to a lighter solid, so a level-3 card is the
+   * same material, denser. The stronger hairline on level 3 is what `--border-strong` did there.
+   *
+   * Measured, and held by `contrast-usage.test.ts`: at the sheer end (.55 of --surface over the
+   * ground) `--muted-2` reads 7.35, and on the solid fallback (--surface) 7.05.
+   */
+  .glass-card {
+    --glass-tint: var(--surface-rgb);
+    --glass-from: 0.55;
+    --glass-via: 0.7;
+    --glass-to: 0.8;
+    border: 1px solid rgba(var(--paper-rgb), 0.12);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    backdrop-filter: blur(16px) saturate(140%);
+  }
+  .glass-card-2 {
+    --glass-from: 0.65;
+    --glass-via: 0.78;
+    --glass-to: 0.86;
+  }
+  .glass-card-3 {
+    --glass-from: 0.72;
+    --glass-via: 0.84;
+    --glass-to: 0.9;
+    border-color: rgba(var(--paper-rgb), 0.18);
+  }
+  /*
+   * A plate inside the blue hero field. Tinted from the ground rather than the surface: a
+   * surface-tinted plate on electric blue reads as a grey smudge, a ground-tinted one as a darker
+   * pane of the same field. White type on its sheer end over the field is 11.9.
+   */
+  .glass-card-on-field {
+    --glass-tint: var(--bg-rgb);
+  }
+
+  /*
+   * A tag, a badge, a chip — the small fact laid on a card, on the ground or on artwork. Lighter
+   * than a card, because it is small and the thing under it (a picture, a plate's own material)
+   * is worth seeing; blur 12 rather than 16 because a 28px tag has no room for a wider halo.
+   * `.glass-tile` is the material's older name, kept as an alias.
+   *
+   * `.glass-tag-ink` is the dense variant for a stamp on a *photograph* — `Badge` `on-art`, the
+   * ink plate that stands on a course cover with a white sky in it. Tinted from the ground and
+   * .72 at its sheerest, so white on it stays ≥ 7 over pure white; the ordinary tag over white
+   * would drop to 2.6.
+   */
+  .glass-tag,
   .glass-tile {
-    --glass-from: 0.3;
-    --glass-via: 0.4;
-    --glass-to: 0.48;
+    --glass-tint: var(--surface-rgb);
+    --glass-from: 0.45;
+    --glass-via: 0.55;
+    --glass-to: 0.62;
+    border: 1px solid rgba(var(--paper-rgb), 0.12);
     -webkit-backdrop-filter: blur(12px) saturate(140%);
     backdrop-filter: blur(12px) saturate(140%);
   }
-
-  /*
-   * The tab bar's container: a floating capsule, and an **opaque** one.
-   *
-   * It was `.glass-float`, and that was a defect rather than a decoration. A flat alpha is the one
-   * treatment `design/CHANGELOG.md` §8 already records as tried and rejected — running text reads
-   * through it — and the tab bar was proving the point: with the leaderboard scrolled under the
-   * capsule, the row «13 Настя 105» was legible *inside* it. The owner's mockup draws a solid dark
-   * control, so the fix and the design agree.
-   *
-   * `--surface` is the same colour `.glass-float` was tinted from, so nothing shifts hue; what
-   * goes is the transparency and the compositing layer that paid for it. The ring is an inset
-   * shadow so it follows the pill radius exactly, and it still casts a shadow, because a thing
-   * that floats is a thing that casts one.
-   */
-  .nav-segmented {
-    background: var(--surface);
-    box-shadow:
-      inset 0 0 0 1px rgba(var(--paper-rgb), 0.08),
-      0 10px 30px rgba(0, 0, 0, 0.5);
+  .glass-tag-ink {
+    --glass-tint: var(--bg-rgb);
+    --glass-from: 0.72;
+    --glass-via: 0.82;
+    --glass-to: 0.88;
   }
 
   /*
-   * A floating object: an even tint rather than a gradient — a gradient is for a band with one
-   * edge that content arrives from, and a capsule has content on every side.
+   * The tab bar's container: a floating capsule of glass over whatever list is scrolling.
    *
-   * **Nothing uses this any more.** The tab bar was its only caller and is opaque now, for the
-   * reason given above. It is left defined rather than deleted because the fallbacks below name it
-   * alongside the other glasses and the brandbook still lists the material; the next thing tempted
-   * to float on it should read §8 first.
+   * It has been glass, then opaque, and is glass again — and the reason it went opaque is still
+   * the reason it is tuned the way it is. `.glass-float` was a *flat* alpha, the one treatment
+   * `design/CHANGELOG.md` §8 records as tried and rejected: with the leaderboard on «Прогресс»
+   * scrolled under the capsule, the row «13 Настя 105» was legible *inside* it. The answer was
+   * never "no glass"; it was density where the labels sit. This band is the bar's own gradient
+   * tinted from the ground, dense by 40% of the way down and .96 at the bottom, where the words
+   * are — the leaderboard is still the case to tune against: names under the sheer top edge read
+   * as texture, and nothing reads through «Курсы · Клуб · Тренер». A white label on the dense
+   * end composited over white scrolled text is 17.2 (`contrast-usage.test.ts`).
+   *
+   * The ring is an inset shadow so it follows the pill radius exactly; `.nav-segmented` below adds
+   * the drop shadow, because a thing that floats is a thing that casts one.
    */
-  .glass-float {
-    --glass-tint: var(--surface-rgb);
-    background: rgba(var(--glass-tint), 0.7);
-    -webkit-backdrop-filter: blur(28px) saturate(180%);
-    backdrop-filter: blur(28px) saturate(180%);
+  .glass-capsule {
+    --glass-tint: var(--bg-rgb);
+    --glass-from: 0.62;
+    --glass-via: 0.9;
+    --glass-to: 0.96;
+    --glass-mid: 40%;
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    backdrop-filter: blur(24px) saturate(140%);
+    box-shadow: inset 0 0 0 1px rgba(var(--paper-rgb), 0.14);
+  }
+
+  /*
+   * The tab bar's geometry: the ring that follows the pill and the shadow it casts. The fill is
+   * `.glass-capsule`'s; this class no longer paints one. Paired on the same element, and declared
+   * after it so the combined shadow wins.
+   */
+  .nav-segmented {
     box-shadow:
-      inset 0 0 0 1px rgba(var(--paper-rgb), 0.12),
-      0 10px 30px rgba(0, 0, 0, 0.45);
+      inset 0 0 0 1px rgba(var(--paper-rgb), 0.14),
+      0 10px 30px rgba(0, 0, 0, 0.5);
   }
 
   /*
@@ -979,13 +1074,19 @@ body {
    *
    * Never a half-transparent unblurred one — that is the single genuinely broken-looking outcome,
    * where the words of the screen below sit legibly inside the bar. `--glass-solid` resolves to the
-   * same colour the gradient was tinted from, so nothing shifts hue on the way.
+   * same colour the gradient was tinted from, so nothing shifts hue on the way; `--glass-overlay`
+   * stays laid over it, so the offer card keeps its tint.
+   *
+   * The third way is deliberate: `.glass-off` on an ancestor, for glass that landed somewhere it
+   * must not blur — inside the technique card's 3D scene, in a long list.
    */
   .glass,
   .glass-bar,
   .glass-bar-top,
-  .glass-tile,
-  .glass-float {
+  .glass-card,
+  .glass-capsule,
+  .glass-tag,
+  .glass-tile {
     --glass-solid: rgb(var(--glass-tint, var(--bg-rgb)));
   }
 
@@ -993,9 +1094,13 @@ body {
     .glass,
     .glass-bar,
     .glass-bar-top,
-    .glass-tile,
-    .glass-float {
-      background: var(--glass-solid);
+    .glass-card,
+    .glass-capsule,
+    .glass-tag,
+    .glass-tile {
+      background:
+        linear-gradient(var(--glass-overlay, transparent), var(--glass-overlay, transparent)),
+        var(--glass-solid);
     }
   }
 
@@ -1004,12 +1109,30 @@ body {
     .glass,
     .glass-bar,
     .glass-bar-top,
-    .glass-tile,
-    .glass-float {
-      background: var(--glass-solid);
+    .glass-card,
+    .glass-capsule,
+    .glass-tag,
+    .glass-tile {
+      background:
+        linear-gradient(var(--glass-overlay, transparent), var(--glass-overlay, transparent)),
+        var(--glass-solid);
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
     }
+  }
+
+  .glass-off .glass,
+  .glass-off .glass-bar,
+  .glass-off .glass-bar-top,
+  .glass-off .glass-card,
+  .glass-off .glass-capsule,
+  .glass-off .glass-tag,
+  .glass-off .glass-tile {
+    background:
+      linear-gradient(var(--glass-overlay, transparent), var(--glass-overlay, transparent)),
+      var(--glass-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 }
 
@@ -1057,7 +1180,7 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, transparent 45%, rgba(26, 26, 26, 0.85) 100%);
+  background: linear-gradient(180deg, transparent 45%, rgba(var(--bg-rgb), 0.85) 100%);
 }
 
 /*
@@ -1095,7 +1218,7 @@ body {
 /*
  * The crossroads gradient as a fill and as type — the club's colour (design/CHANGELOG.md §14). A
  * fill is the streak ring, the day dots, the glow behind the club screen. As type only `--grad-warm`
- * is used: the electric-blue end of the full gradient is 2.26 on charcoal and would be unreadable.
+ * is used: the electric-blue end of the full gradient is 2.43 on graphite and would be unreadable.
  *
  * `background-clip: text` ships unprefixed in every engine a Mini App runs in; the prefixed one
  * stays for older iOS WebViews.
@@ -1463,7 +1586,7 @@ body {
 
 /*
  * The site's hero field (src/components/landing/HeroField.astro). The quiet greys are measured
- * for charcoal: on electric blue --muted is 3.3 and --muted-2 2.8. Inside the field the same roles
+ * for the graphite ground: on electric blue --muted is 3.3 and --muted-2 2.8. Inside the field the same roles
  * are white at reduced strength, each composited on #2038e2 and measured:
  *   0.86 → 5.96 (a lead paragraph)   0.8 → 5.2 (a kicker)
  * Links keep the full white, underlined. A focus ring is the neon, which the light blue would be

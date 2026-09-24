@@ -34,6 +34,8 @@ describe('tileInk', () => {
   });
 
   it('clears AA on every fill of the palette', () => {
+    // The last four are the neutral tiles: the graphite ladder, and the two the hidden courses
+    // and the admin's picker still carry from the charcoal ladder (content and DB were not moved).
     const fills = [
       '#ff5a00',
       '#f4ff3f',
@@ -41,6 +43,8 @@ describe('tileInk', () => {
       '#afe9fd',
       '#2038e2',
       '#007bff',
+      '#262626',
+      '#303030',
       '#2e2e2e',
       '#383838',
     ];
@@ -63,20 +67,21 @@ describe('tileInk', () => {
 });
 
 describe('tileAccent', () => {
-  it('is the fill itself when the fill reads on charcoal', () => {
-    for (const fill of ['#ff5a00', '#f4ff3f', '#ffe6d0']) {
+  it('is the fill itself when the fill reads on graphite', () => {
+    // Bleu ciel joined this list with the graphite ground (4.71); on charcoal it was 4.37.
+    for (const fill of ['#ff5a00', '#f4ff3f', '#ffe6d0', '#007bff']) {
       expect(tileAccent(fill)).toBe(fill);
       expect(contrast(fill, APP_BG), fill).toBeGreaterThanOrEqual(4.5);
     }
   });
 
-  it('hands the two blues over to the light blue', () => {
+  it('hands the electric blue over to the light blue', () => {
     expect(tileAccent('#2038e2')).toBe('#afe9fd');
-    expect(tileAccent('#007bff')).toBe('#afe9fd');
     expect(contrast('#afe9fd', APP_BG)).toBeGreaterThanOrEqual(4.5);
   });
 
   it('gives nothing for a neutral dark surface, so the caller uses white', () => {
+    expect(tileAccent('#262626')).toBeUndefined();
     expect(tileAccent('#2e2e2e')).toBeUndefined();
   });
 });
@@ -108,20 +113,37 @@ describe('COACH_TILE', () => {
   });
 
   /*
-   * As type on the ground it is large-only: at least 3:1, below 4.5. If either edge of that window
-   * moves, BookScreen's typography — the big price in ciel — has to be looked at again.
+   * As type on the graphite ground it reads as small type (4.71), so the coach's accent is ciel
+   * itself. On charcoal it sat in the large-type window (4.37) and this test pinned that window;
+   * if the ground or the blue ever moves back under 4.5, BookScreen's small ciel type and
+   * `tileAccent` both have to be looked at again.
    */
-  it('sits in the large-type-only window on charcoal', () => {
-    const c = contrast(COACH_TILE, APP_BG);
-    expect(c).toBeGreaterThanOrEqual(3);
-    expect(c).toBeLessThan(4.5);
+  it('reads as small type on the ground (≥ 4.5), so it is its own accent', () => {
+    expect(contrast(COACH_TILE, APP_BG)).toBeGreaterThanOrEqual(4.5);
+    expect(tileAccent(COACH_TILE)).toBe(COACH_TILE);
   });
 });
 
 describe('global.css tokens', () => {
-  it('keeps the ground charcoal and the triplet in step with it', () => {
+  const rgbOf = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const triplet = (name: string) =>
+    /--(?:[a-z-]+)-rgb:\s*(\d+),\s*(\d+),\s*(\d+)\s*;/
+      .exec(css.slice(css.indexOf(`--${name}-rgb:`)))
+      ?.slice(1, 4)
+      .map(Number);
+
+  it('keeps the ground graphite and the triplets in step with their hexes', () => {
     expect(token('bg')).toBe(APP_BG);
-    expect(/--bg-rgb:\s*26,\s*26,\s*26\s*;/.test(css)).toBe(true);
+    expect(APP_BG).toBe('#121212');
+    expect(/--bg-rgb:\s*18,\s*18,\s*18\s*;/.test(css)).toBe(true);
+    // The glass utilities read the triplets; a hex that moved without its triplet would tint the
+    // glass with the old ground, silently.
+    expect(triplet('bg')).toEqual(rgbOf(token('bg')!));
+    expect(triplet('surface')).toEqual(rgbOf(token('surface')!));
+  });
+
+  it('paints the primary button ink with the ground', () => {
+    expect(token('on-primary')).toBe(APP_BG);
   });
 
   it('keeps the ink tokens in step with tile.ts', () => {
@@ -138,6 +160,8 @@ describe('global.css tokens', () => {
   });
 
   it('keeps both muted greys AA on the lightest surface', () => {
+    // --surface-3 is #303030 on the graphite ladder: --muted 6.76, --muted-2 5.46.
+    expect(token('surface-3')).toBe('#303030');
     for (const name of ['muted', 'muted-2']) {
       expect(contrast(token(name)!, token('surface-3')!), name).toBeGreaterThanOrEqual(4.5);
     }
@@ -162,11 +186,12 @@ describe('screen pairings', () => {
     expect(contrast(ACTION, FIELD)).toBeGreaterThanOrEqual(4.5);
   });
 
-  it('never sets the blue field as type on charcoal', () => {
+  it('never sets the blue field as type on graphite', () => {
+    // 2.43 on #121212 (2.26 on the charcoal it replaced): still a surface, never type.
     expect(contrast(FIELD, APP_BG)).toBeLessThan(3);
   });
 
-  it('keeps ink on the neon, and the neon on charcoal', () => {
+  it('keeps ink on the neon, and the neon on graphite', () => {
     expect(contrast(token('on-action')!, ACTION)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(ACTION, APP_BG)).toBeGreaterThanOrEqual(4.5);
   });
@@ -193,8 +218,8 @@ describe('screen pairings', () => {
 describe('the club', () => {
   /*
    * `.club-aurora` glows behind the club's screens at a fixed alpha. Model the worst pixel: all
-   * three of its colours stacked at that alpha over charcoal, which is brighter than anything the
-   * blurred, separated blobs can actually produce.
+   * three of its colours stacked at that alpha over the ground (`APP_BG`, so the model darkens
+   * with it), which is brighter than anything the blurred, separated blobs can actually produce.
    */
   const alpha = Number(/\.club-aurora\s*\{[^}]*?opacity:\s*([0-9.]+)/.exec(css)?.[1]);
   const mix = (under: number[], over: number[], a: number) =>
@@ -220,7 +245,7 @@ describe('the club', () => {
   it('keeps every stop of the warm gradient ≥ 3 there, so it is large type only', () => {
     for (const stop of ['#afe9fd', '#ffe6d0', '#ff5a00']) {
       expect(contrast(stop, worst), stop).toBeGreaterThanOrEqual(3);
-      // On bare charcoal the warm gradient clears body text; the glow is what limits it.
+      // On the bare ground the warm gradient clears body text; the glow is what limits it.
       expect(contrast(stop, APP_BG), stop).toBeGreaterThanOrEqual(4.5);
     }
   });

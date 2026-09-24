@@ -101,7 +101,7 @@ function weekLabel(locale: string, iso: string): string {
 
 function Tile({ label, value }: TileProps) {
   return (
-    <div className="flex flex-col gap-1 rounded-card border border-border bg-surface p-4">
+    <div className="glass-card flex flex-col gap-1 rounded-card p-4">
       <span className="font-display tabular text-[26px] leading-none">{value}</span>
       <span className="text-[12px] leading-tight text-muted">{label}</span>
     </div>
@@ -202,7 +202,7 @@ export default function AdminStatsScreen() {
                  */
                 <Link
                   to={adminHref('payments', { filter: 'unclaimed' })}
-                  className="flex items-start gap-3 rounded-card border border-warning/40 bg-surface p-4 transition-colors duration-150 ease-(--ease-out) hover:bg-surface-2 active:bg-surface-3"
+                  className="glass-card flex items-start gap-3 rounded-card border-warning/40 p-4 transition-colors duration-150 ease-(--ease-out) hover:bg-surface-2 active:bg-surface-3"
                 >
                   <span className="font-display tabular shrink-0 text-[22px] leading-none text-warning">
                     {n(overview.paidNeverSignedIn)}

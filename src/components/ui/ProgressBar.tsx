@@ -16,7 +16,7 @@ export interface ProgressBarProps {
   tone?: ProgressTone;
   size?: 'sm' | 'md';
   /**
-   * What the bar lies on. `dark` (default) is charcoal or a surface card; `field` is the blue hero
+   * What the bar lies on. `dark` (default) is graphite or a surface card; `field` is the blue hero
    * field, where the track is a white alpha and the fill is white — the programme's colour as a
    * thin rule on electric blue would be one more colour on a field that already has its two.
    */

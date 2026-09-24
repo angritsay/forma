@@ -25,14 +25,19 @@ export interface CardProps extends Omit<HTMLAttributes<HTMLElement>, 'onClick'> 
 }
 
 /*
- * A card is a sharp rectangle one surface up from its ground, told apart by a hairline and
- * nothing else — --shadow-card is none, and a dark card on a dark ground does not need a shadow
- * to look raised, it needs an edge.
+ * A card is a plate of glass over its ground, told apart by a hairline and nothing else —
+ * --shadow-card is none, and a dark card on a dark ground does not need a shadow to look raised,
+ * it needs an edge. `.glass-card` (global.css) is the material and carries the hairline; the
+ * levels step its density up rather than switching to a lighter solid, so a level-3 card is the
+ * same material, denser, and still lets the aurora or a photograph behind it through. The owner's
+ * reversal of design/CHANGELOG.md §8 («вернуть стекло на плашках», §16) — cards were solid
+ * surfaces until then. No `border-*` utility here: the hairline is the class's own, so a
+ * utility cannot fight it for the colour.
  */
 const LEVEL: Record<CardLevel, string> = {
-  1: 'bg-surface border border-border',
-  2: 'bg-surface-2 border border-border',
-  3: 'bg-surface-3 border border-border-strong',
+  1: 'glass-card',
+  2: 'glass-card glass-card-2',
+  3: 'glass-card glass-card-3',
 };
 
 const PADDING: Record<CardPadding, string> = {

@@ -56,7 +56,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * that is a button but not *the* button.
  *
  * `on-field` is the secondary button *on* the blue hero field: white with the field's own blue for
- * words (7.71), so it sits on the field the way the neon sits on charcoal without competing with it.
+ * words (7.71), so it sits on the field the way the neon sits on graphite without competing with it.
  *
  * Hover lightens by one surface or drops to .85 opacity; press is a 2% scale. Nothing bounces.
  */

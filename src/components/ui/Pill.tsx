@@ -42,8 +42,7 @@ export interface PillProps extends HTMLAttributes<HTMLSpanElement> {
  * rule in `Button` is about *controls*; a pill is a fact, and a fact is round everywhere.
  *
  * `course` is the programme colour on the border and the words; `course-fill` is the colour as a
- * fill with the tile's black ink, for the one pill on a screen that is the point of it (the prize);
- * `paper` is white on ink, for a pill laid on a dark figure.
+ * fill with the tile's black ink, for the one pill on a screen that is the point of it (the prize).
  *
  * The third palette (global.css header) adds the named fills, one job each, all measured in
  * `tile.test.ts`:
@@ -53,9 +52,16 @@ export interface PillProps extends HTMLAttributes<HTMLSpanElement> {
  *   - `orange` — the beginners' section tag. Ink 6.04.
  *   - `ciel` — the coach's section tag. Ink 4.75.
  *   - `sky` — the brand's light blue, for a fact that belongs to the product rather than a section.
- *   - `white` — a sticker on the blue hero field: electric blue on white, 7.71.
- *   - `ghost` — an outline on the blue hero field: white words and a white hairline. White on the
- *     field is 7.71; the ring is decoration and carries nothing.
+ *
+ * Those carry meaning (the semantic colour map, §15) and stay solid. The three tones that carry
+ * none are glass now (`.glass-tag`, global.css — the owner's «вернуть стекло на плашках»,
+ * design/CHANGELOG.md §16):
+ *
+ *   - `paper` — a pill laid on a dark figure. It was white on ink; now the figure shows through.
+ *   - `white` — a sticker on the blue hero field. It was electric blue on white; the glass is
+ *     tinted from the surface and the words are white (11.9 on its sheer end over the field).
+ *   - `ghost` — the same glass with the field's white hairline kept strong, so the two still read
+ *     as a sticker and an outline beside each other.
  *
  * The section colours are tags and never fields: a pill is the most colour a section may wear.
  */
@@ -63,13 +69,13 @@ const TONE: Record<PillTone, string> = {
   neutral: 'border-border-strong text-muted',
   course: 'border-course-accent/60 text-course-accent',
   'course-fill': 'border-transparent bg-course text-tile-fg',
-  paper: 'border-transparent bg-paper text-ink',
+  paper: 'glass-tag text-text',
   neon: 'border-transparent bg-action text-on-action',
   orange: 'border-transparent bg-orange text-ink',
   ciel: 'border-transparent bg-ciel text-ink',
   sky: 'border-transparent bg-accent text-on-accent',
-  white: 'border-transparent bg-paper text-field',
-  ghost: 'border-on-field/85 text-on-field',
+  white: 'glass-tag text-on-field',
+  ghost: 'glass-tag border-on-field/85 text-on-field',
 };
 
 const TILT: Record<PillTilt, string> = {

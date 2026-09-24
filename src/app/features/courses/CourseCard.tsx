@@ -130,8 +130,12 @@ export function CourseCard({
        * phone with the second one's top edge showing, which is the deck saying there is more below
        * without a pager under it. `isolate` so the stacking here is the card's own: the open
        * target sits under the type and over the picture.
+       *
+       * `.glass-card`: a plate over the ground (global.css), so a course with no photograph yet is
+       * the same material as every other card, and one with a photograph gets the hairline the
+       * plates share. The photograph covers the fill edge to edge, so nothing else changes there.
        */
-      className="relative isolate aspect-[347/345] overflow-hidden rounded-tile bg-surface"
+      className="glass-card relative isolate aspect-[347/345] overflow-hidden rounded-tile"
       style={style}
     >
       {/*
