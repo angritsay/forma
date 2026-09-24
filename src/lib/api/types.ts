@@ -2,7 +2,7 @@
  * Domain types exposed by the API layer (camelCase).
  * Database rows (snake_case) are converted in mappers.ts; the app never sees raw rows.
  */
-import type { Locale } from '@/content/schema';
+import type { ExerciseIntro, Locale, VideoMode } from '@/content/schema';
 import type { CourseDayContent, CourseDraftContent } from '@/lib/courses/draft';
 import type {
   DifficultyChoice,
@@ -332,11 +332,32 @@ export interface ExerciseCatalogRow {
   secondsPerRep: number | null;
   videoRu: string | null;
   videoEn: string | null;
+  /** How the player runs the clip (0048); `loop` unless the admin chose otherwise. */
+  videoMode: VideoMode;
+  /** The name spoken aloud, per language: `storage:audio/…` or a URL. */
+  audioRu: string | null;
+  audioEn: string | null;
+  /** Explanations before the exercise (0048): the first time, then the next two. */
+  introFull: ExerciseIntro | null;
+  introBrief: ExerciseIntro | null;
   image: string | null;
   tags: string[];
   isTest: boolean;
   /** True when authored in the admin panel; the generated seed never overwrites these rows. */
   isCustom: boolean;
+}
+
+/** A file in a storage bucket, as the media library lists it. */
+export interface MediaObject {
+  /** The file name inside its folder. */
+  name: string;
+  /** `<folder>/<name>` — the object path inside the bucket. */
+  path: string;
+  /** `storage:<bucket>/<path>` — what content and exercise rows point at. */
+  ref: string;
+  sizeBytes: number | null;
+  /** ISO timestamp of the last upload, when Storage reports one. */
+  updatedAt: string | null;
 }
 
 /** Hand-editable markup on an exercise (video links and tags). */
@@ -798,6 +819,11 @@ export interface ExerciseDraft {
   secondsPerRep?: number | null;
   videoRu?: string | null;
   videoEn?: string | null;
+  videoMode?: VideoMode;
+  audioRu?: string | null;
+  audioEn?: string | null;
+  introFull?: ExerciseIntro | null;
+  introBrief?: ExerciseIntro | null;
   image?: string | null;
   tags?: string[];
   isTest?: boolean;

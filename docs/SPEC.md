@@ -343,7 +343,15 @@ recognizable latin term), `name`, `description` (2–4 sentences), `howTo[]` (�
 (≥2), `mistakes[]` (≥1), `breathing?`, `muscles[]`, `pattern`, `equipment[]` (`['none']` for
 bodyweight), `level 1|2|3`, `unit` (`reps|seconds|meters|calories`), `secondsPerRep` (required for
 reps), `met` (metabolic equivalent), `loadable`, `scaling {easier?, harder?}` (exercise ids),
-`video? {ru?, en?}` (URL or `storage:<bucket>/<path>`), `tags[]`, `isTest?`.
+`video? {ru?, en?}` (URL or `storage:<bucket>/<path>`), `videoMode? ('loop' | 'fit')` — how the
+player runs the clip: `loop` (default) repeats it while the step lasts, `fit` slows it to the step's
+duration (no slower than 0.5×) and holds the last frame, for a pose entered once and held;
+`audio? {ru?, en?}` — the name spoken aloud (`storage:audio/…`), played at the start of the step;
+`introFull?` / `introBrief?` — an `ExerciseIntro` `{ text? {ru?, en?}, video?, audio? {ru?, en?} }`
+shown before the exercise: the full one the first time the person meets it, the brief one the next
+two times, then nothing (the count is `exercise_intro_views`, §8); `tags[]`, `isTest?`. The media
+fields are markup: on a seeded exercise the admin's values in `public.exercises` are overlaid onto
+the compiled one (`mediaOverlay` in `src/content/catalogue.ts`), every other field stays compiled.
 
 **Workout** — `id`, `name`, `focus`, `description`, `blocks[]`, `basePoints` (60–250), `tags[]`.
 **Block** — `id`, `type` (`warmup|skill|strength|metcon|core|cooldown|test`), `format`
@@ -473,6 +481,16 @@ points, rank, is_me)`. Never exposes emails. `points` = sum of `workout_sessions
   `daily_logs.points` for global). Week = current ISO week (UTC).
 - Storage bucket `videos` (private): read policy for authenticated users with an active purchase of
   the course encoded as the first path segment (`<course_id>/…`) or under `shared/`.
+- Storage bucket `audio` (private, 0048): spoken exercise names and explanation recordings, with
+  the same policies as `videos` — `shared/…` for anyone signed in, `<course_id>/…` by entitlement,
+  admins write. Paths: `audio/shared/<id>.<lang>.m4a`, `audio/shared/<id>.intro-<tier>.<lang>.m4a`.
+- `exercises` media columns (0048): `video_mode text ('loop'|'fit')`, `audio_ru`, `audio_en`,
+  `intro_full jsonb`, `intro_brief jsonb` (≤ 16 KB each) — the `videoMode` / `audio` / `introFull` /
+  `introBrief` of §6; never re-seeded.
+- `exercise_intro_views` (`user_id → auth.users`, `exercise_id text`, `views int`, `updated_at`), pk
+  `(user_id, exercise_id)`, own rows. RPCs (security invoker): `mark_exercise_intro_seen(p_exercise_id
+text) → int` (upsert, `views + 1`, returns the new count) and `my_exercise_intro_views() →
+(exercise_id, views)`. The player shows `introFull` at 0 views, `introBrief` at 1–2, nothing after.
 - Admin RPC: `admin_set_purchase_status(p_id uuid, p_status text)`.
 
 `src/lib/api/` exposes typed functions (`auth.ts`, `profiles.ts`, `entitlements.ts`,
@@ -532,6 +550,7 @@ was ever linked or bookmarked broke:
 /leaderboard
 /assigned/:id  /shared/:token
 /admin  /admin/workouts  /admin/exercises  /admin/courses[/:id]  /admin/marathons[/:id]
+/admin/media               «Медиатека» — файлы бакетов videos / audio / images по папкам, кто их использует
 /admin/stats               «Аналитика» — воронка по когортам недели входа + прогресс людей
 ```
 

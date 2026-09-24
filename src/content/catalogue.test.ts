@@ -8,6 +8,7 @@ import {
   findWorkout,
   hasCourse,
   isCompiledCourse,
+  mediaOverlay,
   resetCatalogueOverlay,
   setCatalogueOverlay,
 } from './catalogue';
@@ -90,6 +91,47 @@ describe('catalogue', () => {
     // The database copy is seeded *from* the files, so it is at best identical and at worst stale.
     expect(findExercise(compiled.id)?.name.ru).toBe(compiled.name.ru);
     expect(allExercises().length).toBe(EXERCISES.length + 1);
+  });
+
+  /*
+   * The one thing a colliding row knows that the file does not is what the admin uploaded: the
+   * seed never writes the media columns. That markup used to be dropped with the row.
+   */
+  it('takes the media of a database row whose id is compiled, and nothing else', () => {
+    const compiled = EXERCISES[0]!;
+    const row: Exercise = {
+      ...fakeExercise(compiled.id),
+      video: { ru: 'storage:videos/shared/row.ru.mp4' },
+      videoMode: 'fit',
+      audio: { ru: 'storage:audio/shared/row.ru.m4a' },
+      introFull: { text: { ru: 'Полное' } },
+      introBrief: { video: 'storage:videos/shared/row.intro-brief.mp4' },
+    };
+    setCatalogueOverlay({ courses: [], exercises: [row] });
+    const merged = findExercise(compiled.id)!;
+    expect(merged.name.ru).toBe(compiled.name.ru);
+    expect(merged.description).toEqual(compiled.description);
+    expect(merged.video).toEqual({ ru: 'storage:videos/shared/row.ru.mp4' });
+    expect(merged.videoMode).toBe('fit');
+    expect(merged.audio).toEqual({ ru: 'storage:audio/shared/row.ru.m4a' });
+    expect(merged.introFull).toEqual({ text: { ru: 'Полное' } });
+    expect(merged.introBrief).toEqual({ video: 'storage:videos/shared/row.intro-brief.mp4' });
+    expect(allExercises().length).toBe(EXERCISES.length);
+    // The list carries the same object the lookup does.
+    expect(allExercises().find((e) => e.id === compiled.id)).toBe(merged);
+  });
+
+  it('keeps a compiled clip when the row has no media of its own', () => {
+    const withClip = EXERCISES.find((e) => e.video !== undefined) ?? EXERCISES[0]!;
+    const bare: Exercise = { ...fakeExercise(withClip.id) };
+    delete bare.video;
+    delete bare.videoMode;
+    delete bare.audio;
+    delete bare.introFull;
+    delete bare.introBrief;
+    setCatalogueOverlay({ courses: [], exercises: [bare] });
+    expect(findExercise(withClip.id)).toEqual(withClip);
+    expect(mediaOverlay(bare)).toEqual({});
   });
 
   it('goes back to the compiled content on reset', () => {

@@ -82,6 +82,18 @@ export function exerciseFromRow(r: ExerciseCatalogRow): Exercise {
           },
         }
       : {}),
+    // `loop` is the schema's default, so only the other mode is worth a field.
+    ...(r.videoMode === 'fit' ? { videoMode: 'fit' as const } : {}),
+    ...(r.audioRu || r.audioEn
+      ? {
+          audio: {
+            ...(r.audioRu ? { ru: r.audioRu } : {}),
+            ...(r.audioEn ? { en: r.audioEn } : {}),
+          },
+        }
+      : {}),
+    ...(r.introFull ? { introFull: r.introFull } : {}),
+    ...(r.introBrief ? { introBrief: r.introBrief } : {}),
     tags: r.tags,
     ...(r.isTest ? { isTest: true } : {}),
   };

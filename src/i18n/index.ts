@@ -121,3 +121,22 @@ export function formatClock(totalSec: number): string {
   const r = s % 60;
   return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
 }
+
+/**
+ * A file size the way a file manager writes it: `840 B`, `12 KB`, `1.4 MB`, `2.1 GB`.
+ *
+ * Binary steps, one decimal once the unit is a megabyte or above (that is where `1.4` and `1.9`
+ * start to be different files), and the unit letters left in Latin for both languages — the
+ * Russian «МБ» is what Windows writes, but a storage console, a phone and Telegram all write
+ * `MB`, and this string sits next to a file name that is Latin anyway.
+ */
+export function formatBytes(n: number): string {
+  if (!Number.isFinite(n) || n < 0) return '—';
+  if (n < 1024) return `${Math.round(n)} B`;
+  const kb = n / 1024;
+  if (kb < 1024) return `${Math.round(kb)} KB`;
+  const mb = kb / 1024;
+  if (mb < 1024) return `${mb < 10 ? mb.toFixed(1) : Math.round(mb)} MB`;
+  const gb = mb / 1024;
+  return `${gb < 10 ? gb.toFixed(1) : Math.round(gb)} GB`;
+}

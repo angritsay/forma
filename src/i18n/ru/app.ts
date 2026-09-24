@@ -1000,6 +1000,28 @@ export const app = {
   exImageHint: 'Кадр из видео — на случай, когда видео ещё не снято',
   exTags: 'Теги',
   exTagsHint: 'Через запятую. По ним ищет конструктор.',
+  exVideoEn: 'Видео (EN)',
+  exVideoEnHint: 'Если в клипе есть речь или надписи. Иначе плеер возьмёт русское.',
+  exVideoMode: 'Видео в плеере',
+  exVideoModeLoop: 'По кругу',
+  exVideoModeFit: 'Растянуть на шаг',
+  exVideoModeHint:
+    '«По кругу» — клип повторяется, пока идёт упражнение. «Растянуть» — клип замедляется под длительность шага (не сильнее чем вдвое) и держит последний кадр: для позы, в которую входят один раз.',
+  exAudioSection: 'Название голосом',
+  exAudioHint:
+    'Короткая запись с названием упражнения — плеер произносит её в начале шага. Формат .m4a, до 5 МБ.',
+  exAudioRu: 'Запись (RU)',
+  exAudioEn: 'Запись (EN)',
+  exIntroSection: 'Объяснения',
+  exIntroSectionHint: 'Полное — в первый раз, короткое — ещё два раза, потом ничего.',
+  exIntroFull: 'Полное объяснение',
+  exIntroBrief: 'Короткое объяснение',
+  exIntroText: 'Текст',
+  exIntroTextHint: 'Что человек читает перед упражнением. Пустое объяснение не показывается.',
+  exIntroVideo: 'Видео объяснения',
+  exIntroVideoHint: 'Одно на оба языка',
+  exIntroAudio: 'Запись объяснения ({lang})',
+  exIntroAudioHint: 'На языке, который выбран в «Пишем на»',
 
   // --- media upload (admin) -------------------------------------------------
   mediaNone: 'Ничего не загружено',
@@ -1008,7 +1030,26 @@ export const app = {
   mediaRemove: 'Убрать',
   mediaUploaded: 'Загружено',
   mediaUploadError: 'Не удалось загрузить',
+  mediaDeleteError: 'Не удалось удалить файл',
   mediaTooLarge: 'Файл больше {mb} МБ',
+
+  // --- media library (admin) ------------------------------------------------
+  mediaLibTitle: 'Медиатека',
+  mediaLibTabVideos: 'Видео',
+  mediaLibTabAudio: 'Аудио',
+  mediaLibTabImages: 'Картинки',
+  mediaLibFolder: 'Папка',
+  mediaLibUpload: 'Загрузить файл',
+  mediaLibEmptyTitle: 'В этой папке пусто',
+  mediaLibEmptyBody:
+    'Загрузите файл сюда или из редактора упражнения — он появится в списке с размером и тем, где используется.',
+  mediaLibLoadError: 'Не удалось загрузить список файлов',
+  mediaLibUnused: 'Не используется',
+  mediaLibNoPreview: 'Предпросмотр недоступен: файл не удалось подписать',
+  mediaLibDeleteTitle: 'Удалить файл?',
+  mediaLibDeleteBody: '«{name}» исчезнет из хранилища. Вернуть его будет нельзя.',
+  mediaLibDeleteBlocked: 'Файл используется упражнением — сначала уберите его там',
+  mediaLibDeleted: 'Файл удалён',
 
   // --- course builder (admin) -----------------------------------------------
   courseNavLabel: 'Конструктор курсов',

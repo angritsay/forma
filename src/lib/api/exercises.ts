@@ -7,6 +7,7 @@
  * `is_custom`, which is what keeps a re-seed from overwriting it. A course whose movements are not
  * in the compiled library — yoga, say — is built entirely out of these.
  */
+import type { ExerciseIntro, VideoMode } from '@/content/schema';
 import { supabase } from './client';
 import { demo } from './demo/load';
 import { guard, unwrap, unwrapVoid } from './internal';
@@ -35,11 +36,48 @@ interface DbExercise {
   seconds_per_rep: number | string | null;
   video_ru: string | null;
   video_en: string | null;
+  video_mode: string | null;
+  audio_ru: string | null;
+  audio_en: string | null;
+  intro_full: unknown;
+  intro_brief: unknown;
   image: string | null;
   tags: string[] | null;
   is_test: boolean;
   is_custom: boolean;
 }
+
+/** One `{ru?, en?}` half-pair out of a jsonb value; absent halves stay absent. */
+function halves(value: unknown): { ru?: string; en?: string } | null {
+  if (typeof value !== 'object' || value === null) return null;
+  const v = value as Record<string, unknown>;
+  const out = {
+    ...(typeof v.ru === 'string' && v.ru ? { ru: v.ru } : {}),
+    ...(typeof v.en === 'string' && v.en ? { en: v.en } : {}),
+  };
+  return out.ru || out.en ? out : null;
+}
+
+/**
+ * An `intro_full` / `intro_brief` column, which should hold an {@link ExerciseIntro} but came
+ * from the database, so trust nothing: unknown keys are dropped, wrong types are dropped, and an
+ * intro with nothing left in it is null — the player treats null as "no explanation".
+ */
+export function introFromDb(value: unknown): ExerciseIntro | null {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return null;
+  const v = value as Record<string, unknown>;
+  const text = halves(v.text);
+  const audio = halves(v.audio);
+  const video = typeof v.video === 'string' && v.video ? v.video : undefined;
+  if (!text && !audio && !video) return null;
+  return {
+    ...(text ? { text } : {}),
+    ...(video ? { video } : {}),
+    ...(audio ? { audio } : {}),
+  };
+}
+
+const videoModeFromDb = (v: string | null): VideoMode => (v === 'fit' ? 'fit' : 'loop');
 
 /** A jsonb column that should hold [{ru,en}] but came from the database, so trust nothing. */
 function textList(value: unknown): { ru?: string; en?: string }[] {
@@ -83,6 +121,11 @@ function fromDb(r: DbExercise): ExerciseCatalogRow {
     secondsPerRep: num(r.seconds_per_rep),
     videoRu: r.video_ru,
     videoEn: r.video_en,
+    videoMode: videoModeFromDb(r.video_mode),
+    audioRu: r.audio_ru ?? null,
+    audioEn: r.audio_en ?? null,
+    introFull: introFromDb(r.intro_full),
+    introBrief: introFromDb(r.intro_brief),
     image: r.image,
     tags: r.tags ?? [],
     isTest: r.is_test,
@@ -112,6 +155,11 @@ function draftToDb(draft: Partial<ExerciseDraft>): Record<string, unknown> {
   if (draft.secondsPerRep !== undefined) db.seconds_per_rep = draft.secondsPerRep;
   if (draft.videoRu !== undefined) db.video_ru = draft.videoRu || null;
   if (draft.videoEn !== undefined) db.video_en = draft.videoEn || null;
+  if (draft.videoMode !== undefined) db.video_mode = draft.videoMode;
+  if (draft.audioRu !== undefined) db.audio_ru = draft.audioRu || null;
+  if (draft.audioEn !== undefined) db.audio_en = draft.audioEn || null;
+  if (draft.introFull !== undefined) db.intro_full = draft.introFull;
+  if (draft.introBrief !== undefined) db.intro_brief = draft.introBrief;
   if (draft.image !== undefined) db.image = draft.image || null;
   if (draft.tags !== undefined) db.tags = draft.tags;
   if (draft.isTest !== undefined) db.is_test = draft.isTest;
