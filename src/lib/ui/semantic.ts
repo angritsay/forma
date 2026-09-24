@@ -39,6 +39,8 @@ export const COLOUR = {
   effort: '#ff5a00',
   /** Bleu ciel — the coach. */
   coach: '#007bff',
+  /** The coach card's field: ciel one step deeper, under white type (5.26). */
+  coachField: '#0066e0',
   /** Beige — the yoga section's tag, and the middle stop of the club's warm gradient. */
   beige: '#ffe6d0',
   success: '#7ce0b0',
@@ -59,15 +61,38 @@ export const GRAD_WARM_STOPS = [COLOUR.accent, COLOUR.beige, COLOUR.effort] as c
 /**
  * The coach's workout cards on «Курсы» are bright fields, not plates (design/CHANGELOG.md §17):
  * ciel first — the coach's colour — and orange and neon after it only so that several cards in
- * the carousel can be told apart at a glance. A single card is always ciel. Ink #111111 on all
- * three (4.75 / 6.04 / 17.3). **Neon on a coach card is identity, not «do it now»**: the one-neon
+ * the carousel can be told apart at a glance. A single card is always ciel. The ciel card is
+ * `--ciel-deep` under white type (5.26) with a solid white tag — black on plain ciel passed at
+ * 4.75 and still did not read on a phone (§19); orange and neon keep ink (6.04 / 17.3) and the
+ * dark glass tag. **Neon on a coach card is identity, not «do it now»**: the one-neon
  * main-action rule is about buttons and still stands. `coachCardFill()` in
  * src/app/features/customWorkout/coachCardFill.ts walks this list.
  */
 export const COACH_CARD_FILLS = [
-  { name: 'ciel', hex: COLOUR.coach, className: 'bg-ciel' },
-  { name: 'orange', hex: COLOUR.effort, className: 'bg-orange' },
-  { name: 'neon', hex: COLOUR.action, className: 'bg-action' },
+  {
+    name: 'ciel',
+    hex: COLOUR.coachField,
+    className: 'bg-ciel-deep',
+    ink: COLOUR.text,
+    textClass: 'text-paper',
+    tag: 'chalk',
+  },
+  {
+    name: 'orange',
+    hex: COLOUR.effort,
+    className: 'bg-orange',
+    ink: COLOUR.ink,
+    textClass: 'text-ink',
+    tag: 'ink',
+  },
+  {
+    name: 'neon',
+    hex: COLOUR.action,
+    className: 'bg-action',
+    ink: COLOUR.ink,
+    textClass: 'text-ink',
+    tag: 'ink',
+  },
 ] as const;
 
 /**
@@ -102,4 +127,5 @@ export const SATURATED_FILL_CLASSES = [
   'bg-cross',
   'bg-warm',
   'bg-ciel',
+  'bg-ciel-deep',
 ] as const;

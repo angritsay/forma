@@ -133,6 +133,10 @@
   /* Orange 5.99 as type on the ground; ciel 4.71 — small type is legal on graphite. */
   --orange: #ff5a00;
   --ciel: #007bff;
+  /* The coach card's field: ciel taken one step deeper so white type reads on it (5.26). Black
+     on plain ciel measured 4.75 and still read poorly on a phone — a saturated mid-blue wants
+     light type (design/CHANGELOG.md §19). */
+  --ciel-deep: #0066e0;
   --beige: #ffe6d0;
   /*
    * The owner's crossroads gradient, in our colours — the club's colour and nobody else's. It must
@@ -333,6 +337,7 @@
   --color-on-field: var(--on-field);
   --color-orange: var(--orange);
   --color-ciel: var(--ciel);
+  --color-ciel-deep: var(--ciel-deep);
   --color-beige: var(--beige);
   /*
    * Not one colour but "whatever colour this course is": `courseTileVars()` sets `--course-tile`
@@ -1033,9 +1038,12 @@ body {
    */
   .glass-card-on-art {
     --glass-tint: var(--bg-rgb);
-    --glass-from: 0.72;
-    --glass-via: 0.84;
-    --glass-to: 0.9;
+    /* Sheerer since §19 (was .72/.84/.90): the plate sits over `.photo-scrim`, which already
+       darkens the bottom of the photograph, so the glass need not do all the work alone. Measured
+       over a white sky dimmed by `.photo-mono` and the scrim at the plate's top edge. */
+    --glass-from: 0.52;
+    --glass-via: 0.6;
+    --glass-to: 0.66;
     border-color: rgba(var(--paper-rgb), 0.18);
   }
 

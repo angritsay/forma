@@ -94,12 +94,16 @@ describe('the semantic colour map — registry', () => {
     expect(contrast('#ffffff', COLOUR.accent)).toBeLessThan(TEXT);
   });
 
-  it('reads ink on every coach card fill, ciel first', () => {
-    expect(COACH_CARD_FILLS[0].hex).toBe(COLOUR.coach);
+  it('reads its type on every coach card fill, deep ciel first', () => {
+    // §19: the ciel card is `--ciel-deep` under white; orange and neon keep ink.
+    expect(COACH_CARD_FILLS[0].hex).toBe(COLOUR.coachField);
     expect(new Set(COACH_CARD_FILLS.map((f) => f.hex)).size).toBe(COACH_CARD_FILLS.length);
     for (const fill of COACH_CARD_FILLS) {
-      expect(contrast(COLOUR.ink, fill.hex), fill.name).toBeGreaterThanOrEqual(TEXT);
-      expect(tileInk(fill.hex), fill.name).toBe(COLOUR.ink);
+      expect(contrast(fill.ink, fill.hex), fill.name).toBeGreaterThanOrEqual(TEXT);
+      // The arrow's ink circle is a shape on every fill.
+      expect(contrast(COLOUR.ink, fill.hex), `arrow on ${fill.name}`).toBeGreaterThanOrEqual(
+        GRAPHIC,
+      );
       // Every fill is one the emoji scanner below knows as saturated.
       expect(SATURATED_FILL_CLASSES).toContain(fill.className);
     }
@@ -208,11 +212,19 @@ describe('the semantic colour map — glass', () => {
     expect(contrast('#ffffff', composite('#ffffff', APP_BG, from))).toBeGreaterThanOrEqual(TEXT);
   });
 
-  it('keeps the white «Тренер» tag (glass-tag-ink) AA over every coach card fill', () => {
-    // Pill `ink` on a bright field (§17): the sheer end of the ground over ciel, orange, neon.
+  it('keeps the «Тренер» tag AA and visible on every coach card fill', () => {
+    // Pill `ink` on orange and neon (§17): the sheer end of the ground over the field. The deep
+    // ciel card takes the solid white `chalk` tag instead (§19): ink on white, white on blue.
     const { from, tint } = alphas('glass-tag-ink');
     expect(tint).toBe('bg');
     for (const fill of COACH_CARD_FILLS) {
+      if (fill.tag === 'chalk') {
+        expect(contrast(COLOUR.ink, '#ffffff')).toBeGreaterThanOrEqual(TEXT);
+        expect(contrast('#ffffff', fill.hex), `the tag on ${fill.name}`).toBeGreaterThanOrEqual(
+          GRAPHIC,
+        );
+        continue;
+      }
       const ground = composite(fill.hex, APP_BG, from);
       expect(
         contrast('#ffffff', ground),
@@ -224,11 +236,17 @@ describe('the semantic colour map — glass', () => {
   });
 
   it('reads white and the light-blue key word on the hero’s plate over a white sky', () => {
-    // CourseCard's hero plate (`.glass-card-on-art`, §17): the sheer end of the ground over pure
-    // white, the brightest thing a photograph can put behind it.
+    // CourseCard's hero plate (`.glass-card-on-art`, §17, sheerer since §19): the sheer end of
+    // the ground over the brightest pixel a photograph can put there — white, dimmed by
+    // `.photo-mono` (brightness .92) and by `.photo-scrim` at the plate's top edge. The plate
+    // covers the bottom 40% of the card; the scrim runs from 0 at 45% to .85 at 100%, so at 60%
+    // it is already (60 − 45) / 55 × .85 ≈ .23 of the ground.
     const { from, tint } = alphas('glass-card-on-art');
     expect(tint).toBe('bg');
-    const sheer = composite('#ffffff', APP_BG, from);
+    const sky = '#ebebeb'; // pure white × .photo-mono's brightness(0.92)
+    const scrimAtPlateTop = ((60 - 45) / 55) * 0.85;
+    const behind = composite(sky, APP_BG, scrimAtPlateTop);
+    const sheer = composite(behind, APP_BG, from);
     expect(contrast('#ffffff', sheer)).toBeGreaterThanOrEqual(TEXT);
     expect(contrast(COLOUR.accent, sheer)).toBeGreaterThanOrEqual(TEXT);
     // The progress rule's track (18% white) and fill (light blue) are shapes on the plate.

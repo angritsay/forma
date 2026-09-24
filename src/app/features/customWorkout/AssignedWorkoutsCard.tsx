@@ -153,14 +153,16 @@ export function AssignedWorkoutsCard({ onOpen }: AssignedWorkoutsCardProps) {
             <button
               type="button"
               onClick={() => onOpen(w.id)}
-              /* A field, not a plate: the colour by index (`coachCardFill`), ink on everything.
+              /* A field, not a plate: the colour by index (`coachCardFill`), and the type colour the fill
+                 carries — white on deep ciel, ink on orange and neon (§19).
                  Hover is opacity rather than a surface: a solid colour has no «one step lighter». */
               className={clsx(
-                'flex h-full w-full flex-col items-start gap-3 rounded-card p-4 text-left text-ink transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-90 active:scale-[0.99]',
+                'flex h-full w-full flex-col items-start gap-3 rounded-card p-4 text-left transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-90 active:scale-[0.99]',
                 fill.className,
+                fill.textClass,
               )}
             >
-              <Pill tone="ink">{tag}</Pill>
+              <Pill tone={fill.tag}>{tag}</Pill>
               <span className="font-display line-clamp-2 text-[22px] leading-[1.2] font-extrabold tracking-[-0.02em] text-balance">
                 {w.title}
               </span>
