@@ -468,6 +468,18 @@ export const app = {
   statsLevelProgress: 'How far to the next level',
   statsLevelNext: '{n} more points and you are {title}',
   statsLevelMax: 'No level above this one. Just keep training.',
+  levelsTitle: 'Levels',
+  levelsOpen: 'All levels',
+  levelsOpenLabel: 'Level “{title}”. Open all levels',
+  levelsLead:
+    'Points come from workouts. Each one has its own value, set by the option you pick before you start:',
+  levelsChoiceEasier: 'Easier {x}',
+  levelsChoiceNormal: 'As written {x}',
+  levelsChoiceHarder: 'Harder {x}',
+  levelsRepeatHalf:
+    'Repeating a workout you have already done pays half: levels grow as you move on through a course.',
+  levelsYouAreHere: 'You are here',
+  levelsFootnote: 'On the right, the total points each level needs. Points never expire.',
   statsCalendarTotal: 'Total {n}',
   statsCalendarWeek: 'This week {n}',
   statsCalendarWorkout: 'Workout',
