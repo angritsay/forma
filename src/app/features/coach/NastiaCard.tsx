@@ -17,8 +17,8 @@
  * ## The layout
  *
  * Sergey's card, mirrored as far as it goes: stickers (picture on the right) → name → facts →
- * short text → topics → links. There is no photograph yet, so the picture's frame — the same
- * 4:5 box, 112px wide — holds a monogram in the display face on a faint ink plate.
+ * short text → topics → links. Her portrait sits in the same 4:5 frame, 112px wide, monochrome
+ * with grain like his; a monogram on a faint ink plate stands in if the photograph is removed.
  *
  * Every word is in `content/site/nastia.ts`, bilingual, picked by the app's language — the links
  * too, which are per language by the owner's instruction.
@@ -29,6 +29,7 @@ import { BrandMark } from '@/components/ui/BrandMark';
 import { Pill } from '@/components/ui/Pill';
 import { l, type Locale } from '@/i18n/index';
 import { externalLinkProps } from '@/app/hooks/useExternalLink';
+import { withBase } from '@/lib/util/paths';
 import { NASTIA } from '@content/site/nastia';
 
 export interface NastiaCardProps {
@@ -68,15 +69,31 @@ export function NastiaCard({ locale, className }: NastiaCardProps) {
               </Pill>
             ))}
           </div>
-          {/* Where the photograph goes when there is one: the same 4:5 frame as Sergey's. */}
-          <div
-            aria-hidden="true"
-            className="flex aspect-[4/5] w-28 shrink-0 items-center justify-center rounded-inner bg-ink/10"
-          >
-            <span className="display text-[56px] leading-none text-on-accent">
-              {l(NASTIA.initial, locale)}
-            </span>
-          </div>
+          {/* The same 4:5 frame as Sergey's, the same monochrome and grain; the monogram stays
+              as the fallback if the photograph is ever removed. */}
+          {NASTIA.photo ? (
+            <div className="relative w-28 shrink-0 overflow-hidden rounded-inner bg-ink/10">
+              <img
+                src={withBase(NASTIA.photo)}
+                alt={l(NASTIA.name, locale)}
+                width={256}
+                height={320}
+                loading="lazy"
+                decoding="async"
+                className="photo-mono block aspect-[4/5] w-full object-cover"
+              />
+              <div className="photo-grain" aria-hidden="true" />
+            </div>
+          ) : (
+            <div
+              aria-hidden="true"
+              className="flex aspect-[4/5] w-28 shrink-0 items-center justify-center rounded-inner bg-ink/10"
+            >
+              <span className="display text-[56px] leading-none text-on-accent">
+                {l(NASTIA.initial, locale)}
+              </span>
+            </div>
+          )}
         </div>
         <h2
           id={nameId}

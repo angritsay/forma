@@ -15,7 +15,7 @@
  * аккаунт её тревел-бренда, поэтому он в английском списке, а `@what.is.nastia` — в русском.
  * Если языки у аккаунтов наоборот, это две строчки ниже.
  *
- * Фотографии пока нет: на её месте монограмма «А» / «A».
+ * Фотография — её собственная (`photo`); монограмма «А» / «A» осталась запасным вариантом.
  */
 import type { L10n } from '@/content/schema';
 
@@ -60,7 +60,13 @@ export const NASTIA = {
   ] satisfies L10n[],
   /** One word, set heavy — no surname. */
   name: { ru: 'Анастасия', en: 'Anastasia' } satisfies L10n,
-  /** The monogram that stands where a photograph would. */
+  /**
+   * Her portrait, sent by the owner: cropped to the 4:5 frame Sergey's card uses, the camera's
+   * date stamp cut out and the file's metadata stripped, 512x640 for a 112px frame at 2x+.
+   * Shown monochrome with grain like his (`.photo-mono`, `.photo-grain`).
+   */
+  photo: '/coach/nastia.jpg',
+  /** The monogram that stands where a photograph would, if `photo` is ever emptied. */
   initial: { ru: 'А', en: 'A' } satisfies L10n,
   facts: [
     { figure: '11', caption: { ru: 'лет в продуктовом дизайне', en: 'years in product design' } },
