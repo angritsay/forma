@@ -18,6 +18,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -54,6 +55,7 @@ export interface PlayerHeaderProps {
  */
 export function PlayerHeader({ progress, paused, onBack, onTogglePause }: PlayerHeaderProps) {
   const { t } = useT();
+  const headerSlot = useContext(HeaderSlotContext);
   return (
     <header className="absolute inset-x-0 top-0 z-30 text-paper">
       {/* Its own layer, so it can run past the bar and fade out over the frame. */}
@@ -84,7 +86,12 @@ export function PlayerHeader({ progress, paused, onBack, onTogglePause }: Player
       <div className="relative mx-auto w-full max-w-[560px] px-3 pt-[var(--safe-top)]">
         <div className="flex h-14 items-center gap-2">
           <IconButton label={t('common.back')} icon="back" variant="on-art" onClick={onBack} />
-          <span className="flex-1" />
+          {/* The step's own progress line lands here, between the two buttons — see
+              `PlayerHeaderSlot`. Empty on a step without one, and then it is only the spacer. */}
+          <div
+            ref={headerSlot?.setNode}
+            className="flex min-w-0 flex-1 items-center justify-center px-4"
+          />
           <IconButton
             label={paused ? t('app.playerResume') : t('app.playerPause')}
             icon={paused ? 'play' : 'pause'}
@@ -121,6 +128,21 @@ export function PlayerHeader({ progress, paused, onBack, onTogglePause }: Player
  */
 const TimerBandContext = createContext<HTMLElement | null>(null);
 
+/**
+ * The gap between the back and pause buttons in the header, as a second portal target.
+ *
+ * The owner: «нижнюю полоску с цифрами под большим таймером нужно расположить между кнопками назад
+ * и пауза, цифры можно не подписывать». The line says how far through this movement you are; under
+ * the clock it made the band taller and pushed the clip down, and its two numbers repeated what the
+ * clock already says. In the header it costs no height at all. The header is a sibling of the
+ * steps, like the band, so the node lives in the same provider: the header registers it, a step
+ * portals into it.
+ */
+const HeaderSlotContext = createContext<{
+  node: HTMLElement | null;
+  setNode: (el: HTMLElement | null) => void;
+} | null>(null);
+
 export interface PlayerTimerBandProps {
   /** Publishes the band's height so the clip can start below it. Zero while it is empty. */
   onHeight?: (px: number) => void;
@@ -147,6 +169,8 @@ export interface PlayerTimerBandProps {
  */
 export function PlayerTimerBand({ onHeight, children }: PlayerTimerBandProps) {
   const [node, setNode] = useState<HTMLElement | null>(null);
+  const [headerNode, setHeaderNode] = useState<HTMLElement | null>(null);
+  const headerSlot = useMemo(() => ({ node: headerNode, setNode: setHeaderNode }), [headerNode]);
   const ref: RefCallback<HTMLDivElement> = (el) => {
     setNode(el);
   };
@@ -167,11 +191,13 @@ export function PlayerTimerBand({ onHeight, children }: PlayerTimerBandProps) {
 
   return (
     <TimerBandContext.Provider value={node}>
-      <div
-        ref={ref}
-        className="glass-bar-top glass-sheer pointer-events-none absolute inset-x-0 top-[calc(var(--safe-top)+56px)] z-20 px-6 pt-2 pb-4 text-paper empty:hidden md:right-95"
-      />
-      {children}
+      <HeaderSlotContext.Provider value={headerSlot}>
+        <div
+          ref={ref}
+          className="glass-bar-top glass-sheer pointer-events-none absolute inset-x-0 top-[calc(var(--safe-top)+56px)] z-20 px-6 pt-2 pb-4 text-paper empty:hidden md:right-95"
+        />
+        {children}
+      </HeaderSlotContext.Provider>
     </TimerBandContext.Provider>
   );
 }
@@ -189,6 +215,13 @@ export function PlayerTimerSlot({ children }: { children: ReactNode }) {
     <div className="pointer-events-auto mx-auto w-full max-w-[560px]">{children}</div>,
     node,
   );
+}
+
+/** Puts its children between the header's back and pause buttons, from anywhere in the player. */
+export function PlayerHeaderSlot({ children }: { children: ReactNode }) {
+  const slot = useContext(HeaderSlotContext);
+  if (!slot?.node) return null;
+  return createPortal(<div className="w-full max-w-[240px]">{children}</div>, slot.node);
 }
 
 export interface PlayerFooterProps {
