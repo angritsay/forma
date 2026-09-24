@@ -3,7 +3,8 @@
  * Sample workout: blocks with their format as a pill and items linking to exercise pages.
  * Numbers are the authored (scale 1.0) values — the app adapts them per athlete.
  *
- * One rounded frame around the workout, hairlines between the blocks. A block's format and
+ * One rounded glass plate around the workout (`.glass-card`, design/CHANGELOG.md §16), hairlines
+ * between the blocks. A block's format and
  * volume («Круговая · 3 раунда») is a pill on its row; the block descriptions are gone from the
  * page — they are the coach's coaching notes and belong in the player, where the athlete reads
  * them one at a time, not stacked under a sales page's sample.
@@ -21,7 +22,7 @@ interface Props {
 const { locale, workout } = Astro.props;
 ---
 
-<div class="rounded-card border border-border bg-surface p-5 md:p-7">
+<div class="glass-card rounded-card border border-border p-5 md:p-7">
   <div class="flex flex-wrap items-center justify-between gap-3">
     <h3 class="font-display text-xl">{l(workout.name, locale)}</h3>
     <Pill tone="course" size="sm">{l(workout.focus, locale)}</Pill>

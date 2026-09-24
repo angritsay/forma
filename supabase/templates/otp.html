@@ -28,12 +28,15 @@
     brandbook actually specifies (FOR at 900, MA at 200) rather than by Unbounded itself.
 
     The values are the tokens from src/styles/global.css written out as literals, because an
-    email has no custom properties: the charcoal ground #1a1a1a (the only background the product
-    has), surface #242424 behind the code, the brand's light blue #afe9fd on the two rules around
-    it. Every grey is one of the two muted tones, which clear 4.5:1 on charcoal — the old #6b6b74
-    measured 3.3 and was below AA for the very lines that tell someone to ignore a stray code.
+    email has no custom properties: the graphite ground #121212 (the only background the product
+    has; design/CHANGELOG.md §16), surface #1c1c1c behind the code, the brand's light blue #afe9fd
+    on the two rules around it, the hairline #262626 (surface-2) above the footer. Every grey is one
+    of the two muted tones, which clear 4.5:1 on graphite (#b9b9c0 9.60, #a6a6ae 7.75) — the old
+    #6b6b74 measured 3.3 and was below AA for the very lines that tell someone to ignore a stray
+    code. No glass here: email clients do not render backdrop-filter, so the plate behind the code
+    is the solid surface, which is what the glass falls back to everywhere else.
   -->
-  <body style="margin: 0; padding: 0; background-color: #1a1a1a; color: #f6f6f7">
+  <body style="margin: 0; padding: 0; background-color: #121212; color: #f6f6f7">
     <!-- Preheader: shown in the inbox preview so the code is visible without opening the email. -->
     <div
       style="
@@ -42,7 +45,7 @@
         overflow: hidden;
         font-size: 1px;
         line-height: 1px;
-        color: #1a1a1a;
+        color: #121212;
         opacity: 0;
       "
     >
@@ -55,8 +58,8 @@
       cellpadding="0"
       cellspacing="0"
       border="0"
-      bgcolor="#1a1a1a"
-      style="background-color: #1a1a1a; padding: 40px 16px"
+      bgcolor="#121212"
+      style="background-color: #121212; padding: 40px 16px"
     >
       <tr>
         <td align="center">
@@ -159,9 +162,9 @@
             <tr>
               <td
                 align="center"
-                bgcolor="#242424"
+                bgcolor="#1c1c1c"
                 style="
-                  background-color: #242424;
+                  background-color: #1c1c1c;
                   border-top: 2px solid #afe9fd;
                   border-bottom: 2px solid #afe9fd;
                   padding: 26px 16px;
@@ -208,7 +211,7 @@
             </tr>
 
             <tr>
-              <td style="padding-top: 30px; border-top: 1px solid #2e2e2e"></td>
+              <td style="padding-top: 30px; border-top: 1px solid #262626"></td>
             </tr>
 
             <tr>

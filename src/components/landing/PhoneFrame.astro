@@ -6,6 +6,10 @@
  * for anything that is genuinely a discrete object, and a phone is the most discrete object on the
  * page. Concentric: the bezel is `--r-card` and the screen inside it `--r-inner`, which is the
  * outer radius minus the bezel's padding — the rule §8 gives for a nested radius.
+ *
+ * The bezel is the denser glass (`.glass-card-2`, CHANGELOG §16) rather than a solid surface: a
+ * phone lying on the page is exactly the kind of discrete object §16 puts on glass. The screen
+ * inside stays the ground — it is a picture of the app, and the app's ground is not translucent.
  */
 interface Props {
   class?: string;
@@ -16,7 +20,7 @@ const { class: extra = '', label } = Astro.props;
 ---
 
 <div
-  class={`relative mx-auto w-[280px] max-w-full rounded-card border border-border-strong bg-surface-2 p-2 ${extra}`}
+  class={`glass-card-2 relative mx-auto w-[280px] max-w-full rounded-card border border-border-strong p-2 ${extra}`}
   role={label ? 'img' : undefined}
   aria-label={label}
 >

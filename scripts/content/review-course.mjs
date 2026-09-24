@@ -470,15 +470,16 @@ const page = html`<title>${course.name.ru}</title>
     href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600;700;800&family=Onest:wght@400;500;600&display=swap"
   />
   <style>
-    /* Third palette (src/styles/global.css): charcoal is the only ground — «фон больше не может
-       быть другого цвета» — so there is no light variant any more. Light blue #afe9fd is the
-       brand accent, the neon is kept for action and does not appear on a page with none. */
+    /* Third palette (src/styles/global.css): graphite is the only ground — «фон больше не может
+       быть другого цвета», darkened to #121212 in design/CHANGELOG.md §16 — so there is no light
+       variant any more. Light blue #afe9fd is the brand accent, the neon is kept for action and
+       does not appear on a page with none. */
     :root {
       color-scheme: dark;
-      --bg: #1a1a1a;
-      --surface: #242424;
-      --surface-2: #2e2e2e;
-      --surface-3: #383838;
+      --bg: #121212;
+      --surface: #1c1c1c;
+      --surface-2: #262626;
+      --surface-3: #303030;
       --border: rgba(255, 255, 255, 0.1);
       --border-strong: rgba(255, 255, 255, 0.18);
       --text: #f6f6f7;
@@ -492,7 +493,7 @@ const page = html`<title>${course.name.ru}</title>
       --warning-soft: rgba(255, 209, 102, 0.14);
       --danger: #ff6b6b;
       --danger-soft: rgba(255, 107, 107, 0.16);
-      --rest: #242424;
+      --rest: #1c1c1c;
       --bar: #afe9fd;
       --bar-range: rgba(175, 233, 253, 0.28);
       --font-sans: 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;

@@ -11,11 +11,15 @@
 - **Visual rules live in `design/`** — the vendored design system. `design/SKILL.md` is the
   one-paragraph law, `design/CHANGELOG.md` says what changed from the first brandbook, and
   `design/tokens/*.css` are the values; `src/styles/global.css` is their implementation and
-  documents every deliberate deviation. The ground is charcoal `#1a1a1a` and nothing else; light
+  documents every deliberate deviation. The ground is graphite `#121212` and nothing else
+  (surfaces `#1c1c1c` / `#262626` / `#303030`); plates, cards, the tab-bar capsule and neutral
+  tags are frosted glass over it (`.glass-card`, `.glass-capsule`, `.glass-tag`, `design/CHANGELOG.md`
+  §16), list rows and text blocks stay solid; light
   blue `#afe9fd` is the brand and interface accent; one electric-blue `#2038e2` hero field per
   screen (white type, light-blue key word); neon `#f4ff3f` for the one main action; the crossroads
   gradient belongs to the club only; section colours are tags (beginners orange `#ff5a00`,
-  dumbbells neon, yoga beige `#ffe6d0`, coach bleu ciel `#007bff`); ink on a fill is chosen by
+  dumbbells neon, yoga beige `#ffe6d0`, coach bleu ciel `#007bff` — 4.71 on the ground, so it
+  reads as small type too); ink on a fill is chosen by
   measured contrast (`src/lib/ui/tile.ts`); no outlined text. Each colour carries one meaning —
   the semantic map in `design/CHANGELOG.md` §15 and `src/lib/ui/semantic.ts` (orange = effort,
   light blue = selection/progress, neon = «now»); the course colour is identity only, and no emoji

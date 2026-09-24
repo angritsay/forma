@@ -3,7 +3,7 @@
  * The 640×360 image BotFather asks for when a Mini App is created (`/newapp`).
  *
  * It is the card people see in a Telegram link preview and in the bot's profile, so it is the
- * brand's first frame: the charcoal ground, the Unbounded wordmark and the brand's light blue —
+ * brand's first frame: the graphite ground, the Unbounded wordmark and the brand's light blue —
  * the same faces and tokens as the OG cards (scripts/seo/og.mjs, src/styles/global.css), cropped
  * to Telegram's aspect ratio. Rendered here rather than exported by hand so it stays in step with
  * the brand and can be regenerated in a second.
@@ -26,7 +26,7 @@ const WIDTH = 640;
 const HEIGHT = 360;
 
 // Tokens from src/styles/global.css, as literals: an SVG handed to resvg has no custom properties.
-const BG = '#1A1A1A';
+const BG = '#121212';
 const TEXT = '#F6F6F7';
 const MUTED = '#B9B9C0';
 const ACCENT = '#AFE9FD';
@@ -44,7 +44,7 @@ const OUT =
  *
  * The wordmark is the one in src/components/ui/Logo.tsx — «FOR» at 800, «MA» at 200, the F
  * stretched ×1.22 with a wider gap after it — measured piece by piece against the faces it is
- * drawn in, like the OG cards' wordmark. The swoosh is the site's hand-drawn underline; on charcoal
+ * drawn in, like the OG cards' wordmark. The swoosh is the site's hand-drawn underline; on graphite
  * it is light blue rather than the neon it wears on a blue field, because this card has no action.
  */
 function svg() {

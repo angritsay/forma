@@ -36,21 +36,24 @@ const HEIGHT = 630;
 // Published languages, mirroring LOCALES in src/content/schema.ts: a card per page that exists.
 const LOCALES = ['ru', 'en'];
 /*
- * Third palette (src/styles/global.css): charcoal ground, and the only colour on a content card is
- * the programme colour of the course it advertises, on the tile. Brand and hub cards, which are
- * about no course in particular, take a neutral surface rather than a colour of their own — except
- * the default card, which is the brand's own and wears the hero field (see `template`).
+ * Third palette (src/styles/global.css): graphite ground (#121212, design/CHANGELOG.md §16), and
+ * the only colour on a content card is the programme colour of the course it advertises, on the
+ * tile. Brand and hub cards, which are about no course in particular, take a neutral surface
+ * rather than a colour of their own — except the default card, which is the brand's own and wears
+ * the hero field (see `template`).
  */
-const BRAND_TILE = '#2E2E2E';
+const BRAND_TILE = '#262626';
 /**
  * The five course tiles (--tile-1..5 and the dumbbells colour): the three programme colours, then
- * the two neutral surfaces. Rotated per guide cluster so hub cards vary deterministically. Electric
- * blue and bleu ciel are not here on purpose: blue belongs to the club and the coach, and the light
- * blue to the interface.
+ * the two neutral course tiles. Rotated per guide cluster so hub cards vary deterministically.
+ * Electric blue and bleu ciel are not here on purpose: blue belongs to the club and the coach, and
+ * the light blue to the interface. The two greys are the hidden courses' identity colours as
+ * stored in content and in the database (§16 kept them when the surfaces went darker), so they do
+ * not follow the surface ladder — a course's tile is its own, not a surface.
  */
 const TILES = ['#FF5A00', '#F4FF3F', '#FFE6D0', '#2E2E2E', '#383838'];
 const COLORS = {
-  bg: '#1A1A1A',
+  bg: '#121212',
   text: '#F6F6F7',
   muted: '#B9B9C0',
   muted2: '#A6A6AE',
@@ -222,7 +225,7 @@ function fitText(text, sizes, maxWidth, maxLines, family) {
 }
 
 /**
- * A card: charcoal ground, the words on the left, the programme colour as a square on the right.
+ * A card: graphite ground, the words on the left, the programme colour as a square on the right.
  *
  * With `field`, the card is the site's hero instead (Style A, global.css header): the whole card
  * is an electric-blue field inset from the edge, white type on it, the title's last word in the

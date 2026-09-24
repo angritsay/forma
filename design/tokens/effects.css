@@ -16,6 +16,30 @@
 --ease-out:cubic-bezier(.22,.61,.36,1); /* @kind other */
 --dur-fast:150ms; /* @kind other */
 --dur-med:280ms; /* @kind other */
+/* Стекло (CHANGELOG §8 — материал, §16 — где оно лежит). Значения зеркалят классы в
+   src/styles/global.css; сами селекторы живут только там. Полоса всегда градиент трёх альф
+   (прозрачнее у края, откуда приходит контент, плотнее там, где лежат подписи), тинт — триплет
+   --surface-1-rgb или --bg-0-rgb (colors.css), и два отката к плотной поверхности:
+   @supports not (backdrop-filter) и prefers-reduced-transparency: reduce. */
+/* .glass-card — плашка/карточка над грунтом или фото (Card, Toast, карточки курсов, плашки лендинга) */
+--glass-card-tint:var(--surface-1-rgb); /* @kind other */
+--glass-card-alpha:.55 .70 .80; /* @kind other */
+--glass-card-blur:16px; /* @kind other */
+--glass-card-line:rgba(255,255,255,.12); /* @kind other */
+--glass-card-solid:var(--surface-1); /* @kind other — откат */
+/* .glass-card-2 / .glass-card-3 — те же плашки плотнее (уровни Card, корпус телефона): шаг по альфе, блюр тот же */
+/* .glass-capsule — капсула таб-бара: тинт грунта, плотный конец .96 под подписями (§16) */
+--glass-capsule-tint:var(--bg-0-rgb); /* @kind other */
+--glass-capsule-alpha:.62 .90 .96; /* @kind other */
+--glass-capsule-blur:24px; /* @kind other */
+--glass-capsule-ring:rgba(255,255,255,.14); /* @kind other */
+/* .glass-tag — нейтральные теги и бейджи (ghost / white / ink / paper); цветные теги — плотные (§15) */
+--glass-tag-tint:var(--surface-1-rgb); /* @kind other */
+--glass-tag-alpha:.45 .55 .62; /* @kind other */
+--glass-tag-blur:12px; /* @kind other */
+/* .glass / .glass-bar / .glass-bar-top / .glass-sheer — шторка, модалка, шапка, плеер (§8): блюр 20px, без изменений */
+--glass-chrome-blur:20px; /* @kind other */
+--glass-saturate:140%; /* @kind other */
 }
 [data-forma-theme="light"]{
 --shadow-soft:0 8px 30px rgba(17,17,17,.10);

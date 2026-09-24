@@ -101,7 +101,7 @@ export default function DifficultyDemo({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-      <div className="rounded-card border border-border bg-surface p-5 md:p-7">
+      <div className="glass-card rounded-card border border-border p-5 md:p-7">
         {/* Two lines rather than one clipped one: «Тренировка из курса «Форма с нуля: кроссфит
             дома без оборудования»: Отжимания…» is a sentence carrying a course name, and at 390px
             `truncate` cut it inside a word. */}
@@ -229,7 +229,7 @@ export default function DifficultyDemo({
         </details>
       </div>
 
-      <div className="rounded-card border border-border bg-surface p-5 md:p-7">
+      <div className="glass-card rounded-card border border-border p-5 md:p-7">
         <h3 className="font-display text-xl">{labels.rpeTitle}</h3>
         <p className="mt-2 text-sm text-muted">{labels.rpeIntro}</p>
         <div className="mt-5 grid grid-cols-2 gap-2" role="group" aria-label={labels.rpeTitle}>

@@ -193,8 +193,9 @@ translation for reading, not a second contract.
 
 - Name: **Forma** (`content/site/brand.ts`). Tagline RU "Кроссфит дома. Под тебя." EN "Home CrossFit
   that adapts to you."
-- Look: a charcoal ground (`#1A1A1A`) throughout — the only background there is, structured by hairline rules and editorial numerals rather
-  than by a card around every object. Composition is asymmetric — a 7/5 grid, not a balanced
+- Look: a graphite ground (`#121212`, darkened from charcoal in `design/CHANGELOG.md` §16) throughout — the only background there is, structured by hairline rules and editorial numerals rather
+  than by a card around every object; where an object does get a plate, the plate is frosted glass
+  over the ground (`.glass-card`, §16). Composition is asymmetric — a 7/5 grid, not a balanced
   split; headings sit low against their column; photographs bleed past the page gutter. Large
   radii where an object is genuinely discrete (24px cards, 20px tiles) and 16px on everything
   interactive — buttons, inputs and chips alike, with **sentence-case labels** (`design/CHANGELOG.md`
@@ -207,43 +208,56 @@ translation for reading, not a second contract.
   ground is a rounded rectangle at `--r-control`. That replaces §10's pressed-versus-read line,
   which the owner's two mockups broke by disagreeing — «Продолжить» on the course photograph is a
   full pill and «Вступить за 666 ₽ / мес» on the page ground is a 16px rectangle, and both get
-  pressed. `Button`/`LinkButton` carry it as `shape="pill"`. Chrome that has content moving under it — a screen header, a
-  sheet, a modal, the player — is frosted glass (`design/CHANGELOG.md` §8); everything else is a
-  solid surface. **The app's tab bar (Курсы / Клуб / Тренер, plus Админка as a fourth seat for
-  whoever has the panel — the profile is a sheet behind a person glyph, not a tab) is an iOS
-  segmented control**: one opaque dark capsule floating over the bottom of the screen, inset from
-  both sides, holding equal segments of sentence-case words with a lighter capsule on the current
-  one. No icons — that is the owner's mockup. (Its sentence case is no longer a departure: §13.1
-  took the capitals off every control in the product, and this bar simply got there first.) It is
-  **opaque rather than glass** for a
-  reason §8 already gives: a flat alpha lets running text read through it, and with the
-  leaderboard scrolled underneath, the row «13 Настя 105» was legible inside the capsule. The
+  pressed. `Button`/`LinkButton` carry it as `shape="pill"`. **Glass** (`design/CHANGELOG.md` §8
+  for the material, §16 for where it goes): chrome with content moving under it — a screen header,
+  a sheet, a modal, the player — and, since §16, plates and cards over the ground or a photograph
+  (`.glass-card`, denser `.glass-card-2/-3`), the tab-bar capsule (`.glass-capsule`) and neutral
+  tags and badges (`.glass-tag`). Every glass is a gradient of three alphas over `--surface-rgb`
+  (the capsule over `--bg-rgb`) with a hairline, and falls back to the solid surface under
+  `@supports not (backdrop-filter)` and `prefers-reduced-transparency`. List rows, table rows and
+  text blocks stay solid (no blur per row of a long list), and coloured tags stay solid because
+  their colour is their meaning (§15). **The app's tab bar (Курсы / Клуб / Тренер, plus Админка as
+  a fourth seat for whoever has the panel — the profile is a sheet behind a person glyph, not a
+  tab) is an iOS segmented control**: one dark glass capsule floating over the bottom of the
+  screen, inset from both sides, holding equal segments of sentence-case words with a lighter
+  capsule on the current one. No icons — that is the owner's mockup. (Its sentence case is no
+  longer a departure: §13.1 took the capitals off every control in the product, and this bar
+  simply got there first.) It was opaque for a reason §8 gives — a flat alpha lets running text
+  read through it, and with the leaderboard scrolled underneath, the row «13 Настя 105» was
+  legible inside the capsule — and §16 answers that with density rather than opacity: the
+  capsule is .96 of the ground where the labels sit and sheer only at the edge the list arrives
+  from, so the material shows without the row reading through the words. The
   lighter capsule is a share of however many seats the bar has, never a hard-coded quarter,
   because the same bar is three seats for most people and four for an admin; the current seat's
   word is `--text` on it and never `--muted`, which measures 3.6:1 there against the 4.5 §4 sets.
   A screen arrives the way the capsule went (`screenMotion`). Generous spacing, 1px borders
   (`--border`).
 - **Palette — one job per colour** (`design/CHANGELOG.md` §14; the owner's pick of «style A, and
-  the gradient for the club»). The ground is charcoal and may not be another colour; white lives
+  the gradient for the club»). The ground is graphite and may not be another colour; white lives
   in elements (plates, badges), never as a screen. **Light blue `#AFE9FD`** (`--accent`) is the
   brand and the interface accent: links, focus rings, the active state, accent words, the
-  wordmark's dot. **The blue field `#2038E2`** (`--field`) is one hero card per screen — white bold
+  wordmark's dot (14.18 on the ground). **The blue field `#2038E2`** (`--field`) is one hero card per screen — white bold
   type (7.71), its key word in light blue (5.8), a hand-drawn swoosh; electric blue is never type
-  on charcoal (2.26). **Neon `#F4FF3F`** (`--action`) is action: the one main button of a screen
+  on graphite (2.43). **Neon `#F4FF3F`** (`--action`) is action: the one main button of a screen
   and the tags «новое», «задание дня», «лидер», «сегодня», with `#111111` ink. **The crossroads
   gradient** (`--grad-crossroads`, light blue → beige → orange → blue) belongs to the club alone —
   streak ring, day dots, glow, key words (`.text-gradient`, only its warm half `--grad-warm` as
   type). Section colours are tags, not fields: beginners orange `#FF5A00`, dumbbells neon
-  `#F4FF3F`, yoga beige `#FFE6D0`, club `#2038E2`, coach bleu ciel `#007BFF` (as type only large,
-  4.37). No text is ever drawn as an outline.
+  `#F4FF3F`, yoga beige `#FFE6D0`, club `#2038E2`, coach bleu ciel `#007BFF` (4.71 on the graphite
+  ground since §16 — it reads as small type now, where on charcoal it was large-only at 4.37). No
+  text is ever drawn as an outline.
 - **Ink on a coloured fill is chosen by measured contrast**, not by lightness: `tileInk()`
   (`src/lib/ui/tile.ts`) measures `#111111` and white against the fill and takes the better one;
-  `tileAccent()` gives a section's colour as type on charcoal (the fill when it clears 4.5, light
-  blue for the two blues, plain text for a neutral surface). `tile.test.ts` is the AA gate.
-- Tokens (`src/styles/global.css`, whose header comment is the reference): `--bg #1A1A1A`,
-  `--surface #242424`, `--surface-2 #2E2E2E`, `--surface-3 #383838`,
-  `--border rgba(255,255,255,.10)`, `--text #F6F6F7`, `--muted #B9B9C0`, `--muted-2 #A6A6AE`,
-  `--primary #FFFFFF` (on-primary `#1A1A1A`), `--accent #AFE9FD` (on-accent `#111111`),
+  `tileAccent()` gives a section's colour as type on graphite (the fill when it clears 4.5 — bleu
+  ciel included now, light blue for electric blue, plain text for a neutral surface).
+  `tile.test.ts` is the AA gate.
+- Tokens (`src/styles/global.css`, whose header comment is the reference): `--bg #121212`
+  (`--bg-rgb 18,18,18`), `--surface #1C1C1C` (`--surface-rgb 28,28,28`), `--surface-2 #262626`,
+  `--surface-3 #303030` — the hidden courses' tiles `#2E2E2E` / `#383838` are identity colours
+  stored in content and the database and did not move with the surfaces —
+  `--border rgba(255,255,255,.10)`, `--text #F6F6F7`, `--muted #B9B9C0` (9.60), `--muted-2 #A6A6AE`
+  (7.75; 5.46 on surface-3),
+  `--primary #FFFFFF` (on-primary `#121212`), `--accent #AFE9FD` (on-accent `#111111`),
   `--action #F4FF3F`, `--field #2038E2`, `--orange`, `--ciel`, `--beige`, `--ink #111111`,
   `--course-beginners/-dumbbells/-yoga/-marathon` with darker `-ink` variants for type on white,
   `--success #7CE0B0`, `--warning #FFD166`, `--danger #FF6B6B` (not recoloured — neon must not
@@ -910,7 +924,7 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
 
     **The club's colour is the crossroads gradient**, and its solid stand-in is electric blue
     `#2038E2` (`GAME_TILE`, `--course-marathon`) — what the tile machinery, the ink and the `-ink`
-    variant need, since a gradient cannot be a tile. White ink on it (7.71); as type on charcoal it
+    variant need, since a gradient cannot be a tile. White ink on it (7.71); as type on the ground it
     hands over to light blue (`tileAccent()`). The gradient paints the streak ring, the day dots,
     the glow behind the screen and its key words (`design/CHANGELOG.md` §14).
     `src/lib/ui/tile.test.ts` holds the contrast promises.
