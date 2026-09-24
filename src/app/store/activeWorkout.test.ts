@@ -187,6 +187,30 @@ describe('activeWorkout store', () => {
     expect(s.elapsedSec).toBe(12);
   });
 
+  it('rehydrates a prescription carrying explanations to the very same steps', async () => {
+    const explained = {
+      ...prescribed,
+      intros: { air_squat: 'full' as const, push_up: 'brief' as const },
+    };
+    useActiveWorkoutStore.getState().begin({
+      sessionId: 's2',
+      courseId: 'c1',
+      nodeId: 'n1',
+      workoutId: FULL_WORKOUT.id,
+      prescribed: explained,
+      startedAt: T0.toISOString(),
+    });
+    const before = useActiveWorkoutStore.getState().steps;
+    expect(before.filter((s) => s.kind === 'intro')).toHaveLength(2);
+    const raw = storage.getItem(ACTIVE_WORKOUT_STORAGE_KEY)!;
+    useActiveWorkoutStore.setState({ session: null, steps: [], stepIndex: 0, paused: true });
+    storage.setItem(ACTIVE_WORKOUT_STORAGE_KEY, raw);
+    await useActiveWorkoutStore.persist.rehydrate();
+    const s = useActiveWorkoutStore.getState();
+    expect(s.session?.prescribed.intros).toEqual(explained.intros);
+    expect(s.steps).toEqual(before);
+  });
+
   /*
    * The step's own clock. It used to live in a ref inside the player's clock hook, which meant it
    * died with the component: leaving a plank with twenty seconds left and coming back restarted it

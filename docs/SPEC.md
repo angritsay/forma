@@ -338,7 +338,11 @@ where an `<audio>` element would need a gesture of its own on iOS. The session's
 signed together with its clips and decoded up front (`prefetchVoice`), the viewer's language falls
 back to Russian exactly as the clips do, and the mute switch covers both. One voice at a time — a
 name still being said when the next step arrives is cut, while a cue may sound over it. Pausing
-stops the voice; resuming does not repeat it, and a name is at most two seconds.
+stops the voice; resuming does not repeat it, and a name is at most two seconds. A recording still
+decoding when its step arrives (the first step on a slow connection) is waited for up to 1.5 s and
+said only if that step is still current — every stop or new voice moves a generation counter on,
+and a late recording whose generation is gone stays silent. The coach's **explanation** of an
+exercise (flow 6) is the other recording: it plays from its own step, not as a name.
 
 **A clip fitted to the step.** A clip's `videoMode` (`loop`, the default, or `fit`) says how the
 player runs it. `fit` is for a pose entered once and held: the clip is slowed to fill the step's
@@ -410,7 +414,8 @@ prescribeWorkout(workout: Workout, opts: PrescribeOptions, lookup?: ExerciseLook
 estimateDuration(p: PrescribedWorkout): DurationEstimate                        // seconds, per block
 estimatePoints(workout: Workout, choice: DifficultyChoice, opts?: { repeat?: boolean }): number
 estimateCalories(p: PrescribedWorkout, weightKg?: number, lookup?: ExerciseLookup): number
-buildPlayerSteps(p: PrescribedWorkout): PlayerStep[]                            // block_intro → work → rest … → done
+buildPlayerSteps(p: PrescribedWorkout): PlayerStep[]                            // block_intro → (intro) → work → rest … → done
+introTiersFor(p: PrescribedWorkout, views: Record<string, number>, lookup?): Record<string, IntroTier>  // intro.ts: which explanation each exercise opens with
 warmupSkipIndex(steps: readonly PlayerStep[], p: PrescribedWorkout): number | null  // where "skip the warm-up" lands
 summarizeSession(p: PrescribedWorkout, results: ExerciseResult[], feedback: SessionFeedback, opts): SessionSummary
 adaptScale(state: CourseState, summary: SessionSummary): { scale: number; delta: number; reason: L10n }
@@ -830,6 +835,30 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    stopped** — same step, same countdown. The step's clock is derived from the session clock
    (`stepStartedMs` in the store), so pausing, walking out and closing the app all freeze it the
    same way, and Home offers a **Продолжить** strip naming the movement it will pick up on.
+
+   **The coach's explanation before an exercise** (the owner: «первый раз подробно, два
+   последующих коротко»). An exercise may carry two explanations written and recorded in the admin
+   panel, `introFull` and `introBrief` (§6). Where one is configured, the session puts an `intro`
+   step just before the athlete first does that exercise — once per session, warm-up included, and
+   for a board only when it is one movement; an EMOM or interval block explains its movements up
+   front, so its running clock is not broken up. The full one the first time a person meets the
+   exercise, the brief one the next two times, nothing after; with only the full one configured it
+   is shown once, with only the brief one three times (`introTiersFor`, `src/lib/training/intro.ts`).
+   The card is the block's title card over again: kicker «Объяснение» or «Коротко», the exercise's
+   name in the display face, the coach's text at 15 px in its own scrolling block, «Поехали». Its
+   recording plays as the step opens (the viewer's language, else Russian, else the movement's
+   spoken name), is cut on leaving and on pause, and starts again from the top on resume; behind
+   it, the explanation's own clip if one was filmed, else the movement's, always looped. No clock.
+   **A view counts when the athlete moves forward off the step** — «Поехали», a swipe, the key or
+   «Пропустить», all of which go through the player's one `advance()`; going back, skipping the
+   warm-up and leaving the workout do not count. The count is `exercise_intro_views` (§8), mirrored
+   on the device under `forma.introViews` (merged by the larger count) so a start never waits on
+   the network: the start buttons give the server 1.5 s and then decide from the copy. **Which
+   explanation each exercise opens with is decided once, when the session starts, and baked into
+   the prescription** (`PrescribedWorkout.intros`, stored with `workout_sessions.prescribed` too),
+   because the steps are rebuilt from the prescription on resume, in the summary and for the stars,
+   and results are keyed by step index — a view counted mid-session must not move a step.
+
 7. **Summary + feedback**: «Готово!» at the size of the screen, under a kicker naming the day and
    the programme; **one warm line computed from the real count** and never invented — «Четвёртая
    тренировка. Так и растёт форма.», the ordinal in words to the tenth and «Тренировка №11» after

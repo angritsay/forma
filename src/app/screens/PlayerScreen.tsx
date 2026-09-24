@@ -74,6 +74,8 @@ import { useSound, type Cue } from '@/app/features/player/sound';
 import { playVoice, prefetchVoice, stopVoice } from '@/app/features/player/voice';
 import { AmrapStep } from '@/app/features/player/steps/AmrapStep';
 import { BlockIntroStep } from '@/app/features/player/steps/BlockIntroStep';
+import { IntroStep } from '@/app/features/player/steps/IntroStep';
+import { bumpIntroViews } from '@/app/features/player/introViews';
 import { FortimeStep } from '@/app/features/player/steps/FortimeStep';
 import { RestStep } from '@/app/features/player/steps/RestStep';
 import { TestStep } from '@/app/features/player/steps/TestStep';
@@ -143,6 +145,8 @@ function StepView({
   switch (step.kind) {
     case 'block_intro':
       return <BlockIntroStep step={step} prescribed={prescribed} onNext={onNext} />;
+    case 'intro':
+      return <IntroStep step={step} paused={paused} onNext={onNext} />;
     case 'work': {
       const block = findBlock(prescribed, step.blockId);
       const format = block?.format ?? 'sets';
@@ -246,7 +250,8 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
 
   /*
    * Sign every clip and every spoken name of the session in one request, before the first slide
-   * asks for its own.
+   * asks for its own — the coach's explanations included, their clips and their recordings, for
+   * the exercises this session explains (`prescribed.intros`).
    *
    * A layout effect on purpose: those run before any passive effect in the tree, so the first
    * clip's `useMediaUrl` finds the batch already in flight and waits for it rather than signing
@@ -372,8 +377,17 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
    *
    * Последний шаг — `done`, и он не упражнение: перед ним звучит не «дальше», а конец тренировки
    * (эффект ниже). Иначе два сигнала подряд, и оба про одно.
+   *
+   * И здесь же считается просмотр объяснения тренера: объяснение засчитано, когда с него ушли
+   * вперёд — кнопкой «Поехали», свайпом, стрелкой или «Пропустить», все они идут сюда. Назад
+   * (`prev`), выход из тренировки и «Пропустить разминку» (прыжок через `goTo`) не считаются:
+   * человек его не дослушал, и в следующий раз оно покажется снова. Счёт уходит в копию на
+   * устройстве сразу и на сервер в фоне (introViews.ts); на шаги этой тренировки он не влияет —
+   * они уже построены из рецепта.
    */
   const advance = useCallback(() => {
+    const leaving = steps[stepIndex];
+    if (leaving?.kind === 'intro') bumpIntroViews(leaving.exerciseId);
     if (steps[stepIndex + 1]?.kind !== 'done') beep('next');
     next();
   }, [steps, stepIndex, beep, next]);

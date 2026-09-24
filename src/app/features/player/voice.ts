@@ -28,6 +28,17 @@
  * pick it up again — half a word a minute later would be stranger than silence — and the step
  * it belongs to is still on screen with its name written on the panel.
  *
+ * ## A recording still on its way
+ *
+ * On a slow connection the first step can arrive before its name has finished decoding: the
+ * player signs and prefetches everything as it opens, and the first step asks at once. Saying
+ * nothing then was the known gap. So a recording whose decode is in flight is waited for — up to
+ * {@link VOICE_WAIT_MS}, longer for a caller that asks (an explanation has no clock running) — and
+ * said only if nothing has happened since: every `stopVoice` and every `playVoice` moves a
+ * generation counter on, and a late recording whose generation is gone stays silent. A step that
+ * was left, paused or replaced in the meantime is exactly one of those. A ref never asked for
+ * (not prefetched) is still not fetched here.
+ *
  * Everything here is best effort and never throws: a name that failed to load, decode or play is
  * a name not said, and the workout goes on.
  */
@@ -43,6 +54,11 @@ const decoding = new Map<string, Promise<AudioBuffer | null>>();
 const ready = new Map<string, AudioBuffer>();
 
 let current: AudioBufferSourceNode | null = null;
+/** Moves on with every stop and every play: a late recording plays only if it is still current. */
+let generation = 0;
+
+/** How long a recording still decoding is waited for before the moment is considered gone. */
+export const VOICE_WAIT_MS = 1500;
 
 /**
  * `decodeAudioData` returns a promise everywhere that matters now; old WebKit only took callbacks
@@ -98,6 +114,7 @@ export async function prefetchVoice(refs: readonly string[]): Promise<void> {
 
 /** Cut the voice that is playing, if any. */
 export function stopVoice(): void {
+  generation += 1;
   const source = current;
   current = null;
   if (!source) return;
@@ -112,14 +129,36 @@ export function stopVoice(): void {
 
 /**
  * Say a recording, cutting whatever was being said. A no-op with nothing to say (no ref), with the
- * sound off, and for a recording that has not decoded yet — a name that arrives late is not said
- * late, because by then the step it named may be over.
+ * sound off, and for a recording that was never prefetched or failed to load. One still decoding
+ * is waited for up to `waitMs` and said then — unless anything else was played or stopped in the
+ * meantime, because then the step it belonged to is over.
  */
-export function playVoice(ref: string | undefined): void {
+export function playVoice(ref: string | undefined, opts?: { waitMs?: number }): void {
   if (!ref || isSoundMuted()) return;
   stopVoice();
   const buffer = ready.get(ref);
-  if (!buffer) return;
+  if (buffer) {
+    start(buffer);
+    return;
+  }
+  const pending = decoding.get(ref);
+  if (!pending) return;
+  const mine = generation;
+  const waitMs = Math.max(0, opts?.waitMs ?? VOICE_WAIT_MS);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<null>((resolve) => {
+    timer = setTimeout(() => resolve(null), waitMs);
+  });
+  void Promise.race([pending, timeout])
+    .then((late) => {
+      clearTimeout(timer);
+      if (!late || mine !== generation || isSoundMuted()) return;
+      start(late);
+    })
+    .catch(() => undefined);
+}
+
+function start(buffer: AudioBuffer): void {
   const ctx = getAudioContext();
   if (!ctx) return;
   try {

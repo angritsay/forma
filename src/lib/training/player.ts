@@ -1,14 +1,24 @@
 /**
  * Turn a prescribed workout into a deterministic, index-addressable list of player steps:
- * block_intro → (work → rest …) → done. The app persists `stepIndex`, so the order must only
+ * block_intro → (intro → work → rest …) → done. The app persists `stepIndex`, so the order must only
  * depend on the prescription. Rules: docs/TRAINING_SCIENCE.md §6.
  *
- * No step exists only to introduce an exercise. There used to be one, from before the coach's clips
- * did: a screen with the name, the target and the words, shown once per movement. The clips turned
- * out to be the movement itself rather than a talk about it, so the demonstration now runs through
- * the work — and an introduction with nothing left to introduce is one more tap between the athlete
- * and their workout. What it carried is still on screen: a rest previews the exercise that follows
- * it, and the technique, cues and cautions are on the back of the card (CardBack.tsx).
+ * One step exists only to introduce an exercise, and only where the coach has written one.
+ *
+ * There used to be an introduction for every movement, from before the coach's clips existed: a
+ * screen with the name, the target and the words, shown once per movement. It went, because the
+ * clips turned out to be the movement itself rather than a talk about it, and an introduction that
+ * only re-said what the clip already shows is one more tap between the athlete and their workout.
+ *
+ * The `intro` step that is here now is a different thing. It carries an explanation the coach
+ * wrote and recorded for this movement in the admin panel (`Exercise.introFull` / `introBrief`) —
+ * how to breathe into it, what to feel, what not to do — and it appears only where one is
+ * configured, and only the first three times a person meets that movement: the full explanation
+ * once, the brief one twice (intro.ts). Which exercises get one is decided when the session starts
+ * and written on the prescription (`PrescribedWorkout.intros`), so these steps depend only on the
+ * prescription like every other. A prescription without that map builds exactly what it did
+ * before. What the old introduction carried for everyone is still on screen: a rest previews the
+ * exercise that follows it, and the technique, cues and cautions are on the back of the card.
  */
 import { FORMAT_DEFAULT_WORK_REST, TABATA_DEFAULT_ROUNDS, TRANSITION_SEC } from './constants';
 import type { PlayerStep, PrescribedBlock, PrescribedItem, PrescribedWorkout } from './types';
@@ -90,6 +100,21 @@ export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
    */
   const openingWarmup = p.blocks[0]?.type === 'warmup' ? p.blocks[0] : undefined;
 
+  /*
+   * The coach's explanation, once per exercise per session, just before the athlete first does it.
+   * `p.intros` already holds only exercises that have one to show and only the sessions they are
+   * shown in (the first three meetings) — see intro.ts; here it is only placed.
+   */
+  const intros = p.intros ?? {};
+  const introduced = new Set<string>();
+  const introduce = (block: PrescribedBlock, exerciseId: string) => {
+    // Read defensively: the map comes back from storage, and only the two known tiers count.
+    const tier: unknown = intros[exerciseId];
+    if ((tier !== 'full' && tier !== 'brief') || introduced.has(exerciseId)) return;
+    introduced.add(exerciseId);
+    steps.push({ kind: 'intro', blockId: block.blockId, exerciseId, tier });
+  };
+
   p.blocks.forEach((block, blockIndex) => {
     if (block !== openingWarmup) {
       const intro: Extract<PlayerStep, { kind: 'block_intro' }> = {
@@ -121,6 +146,7 @@ export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
         );
         for (let s = 1; s <= sets; s++) {
           items.forEach((item, i) => {
+            introduce(block, item.exerciseId);
             steps.push(workStep(block, item, s, sets));
             const after = num(item.restAfterSec);
             const isLastItem = i === n - 1;
@@ -136,8 +162,16 @@ export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
       }
       case 'emom': {
         const minutes = Math.max(1, num(block.sets, 1));
+        /*
+         * A clock that runs minute after minute (and the interval below, round after round) is
+         * one piece of work: an explanation of its second movement landing between minute 1 and
+         * minute 2 would stop it halfway. So every explained movement of such a block is explained
+         * up front, in order, before its first minute.
+         */
+        items.forEach((item) => introduce(block, item.exerciseId));
         for (let m = 1; m <= minutes; m++) {
           const item = items[(m - 1) % n]!;
+          introduce(block, item.exerciseId);
           steps.push(workStep(block, item, m, minutes, { durationSec: 60, target: item.target }));
         }
         break;
@@ -149,6 +183,7 @@ export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
         items.forEach((item, i) => {
           const target = item.unit === 'reps' ? item.target : w;
           for (let round = 1; round <= rounds; round++) {
+            introduce(block, item.exerciseId);
             steps.push(workStep(block, item, round, rounds, { durationSec: w, target }));
             if (round < rounds && r > 0) steps.push(restStep(block, r, item));
           }
@@ -164,9 +199,12 @@ export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
         const rounds = Math.max(1, num(block.sets, 1));
         const w = Math.max(0, num(block.workSec, FORMAT_DEFAULT_WORK_REST.interval.workSec));
         const r = Math.max(0, num(block.restSec, FORMAT_DEFAULT_WORK_REST.interval.restSec));
+        // Up front, as for the EMOM above: the rounds are one continuous piece.
+        items.forEach((item) => introduce(block, item.exerciseId));
         for (let round = 1; round <= rounds; round++) {
           items.forEach((item, i) => {
             const target = item.unit === 'reps' ? item.target : w;
+            introduce(block, item.exerciseId);
             steps.push(workStep(block, item, round, rounds, { durationSec: w, target }));
             const isLast = round === rounds && i === n - 1;
             if (!isLast && r > 0) steps.push(restStep(block, r, items[(i + 1) % n]));
@@ -183,10 +221,13 @@ export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
           expectedRounds: amrapExpectedRounds(block),
         };
         if (isMaxRepsAmrap(block)) amrap.maxReps = true;
+        // A board of one movement is that movement; a board of several is not explained (intro.ts).
+        if (n === 1) introduce(block, items[0]!.exerciseId);
         steps.push(amrap);
         break;
       }
       case 'fortime': {
+        if (n === 1) introduce(block, items[0]!.exerciseId);
         steps.push({
           kind: 'fortime',
           blockId: block.blockId,

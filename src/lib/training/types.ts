@@ -200,7 +200,22 @@ export interface PrescribedWorkout {
   estimatedSec: number;
   /** Points awarded for full completion. */
   points: number;
+  /**
+   * Which exercises open with the coach's explanation in this session, and which of the two
+   * (`introFull` / `introBrief` on the exercise). Decided once, when the session starts, from how
+   * many times this person has already seen each explanation (`introTiersFor`, intro.ts) — and
+   * stored here rather than looked up again, because the steps are rebuilt from the prescription
+   * in several places (a resumed workout, the summary, the stars) and results are keyed by step
+   * index: a count that moved in the meantime must not shift a single step.
+   *
+   * Optional and additive: prescriptions stored before it (localStorage, `workout_sessions`) have
+   * none and build exactly the steps they always did.
+   */
+  intros?: Record<string, IntroTier>;
 }
+
+/** The long explanation (first meeting) or the short one (the next two). */
+export type IntroTier = 'full' | 'brief';
 
 export interface DurationEstimate {
   totalSec: number;
@@ -220,6 +235,18 @@ export type PlayerStep =
       description?: L10n;
       sets: number;
       durationSec?: number;
+    }
+  | {
+      /**
+       * The coach's explanation of an exercise, just before the athlete first does it in this
+       * session. Carries only which exercise and which tier: the text, clip and recording are read
+       * from the catalogue when the step is shown, so an explanation edited in the admin panel
+       * shows its latest words.
+       */
+      kind: 'intro';
+      blockId: string;
+      exerciseId: string;
+      tier: IntroTier;
     }
   | {
       kind: 'work';

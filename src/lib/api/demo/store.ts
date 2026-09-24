@@ -129,6 +129,19 @@ export interface DemoDb {
   marathonAdjustments: MarathonAdjustmentRow[];
   /** Кого тренер объявил победителем недели (0028). Одна строка на (круг, неделю). */
   marathonWinners: DemoWinner[];
+  /**
+   * `exercise_intro_views` (0048): how often each person has seen each exercise's explanation.
+   * Optional, and defaulted where it is read, rather than a `DEMO_SCHEMA_VERSION` bump: a bump
+   * discards the whole stored demo, everything the person typed into it, for one new table.
+   */
+  introViews?: DemoIntroView[];
+}
+
+/** One row of `exercise_intro_views`. */
+export interface DemoIntroView {
+  userId: string;
+  exerciseId: string;
+  views: number;
 }
 
 /** Демо-двойник строки `marathon_winners`. */
@@ -316,6 +329,7 @@ export function emptyDb(): DemoDb {
     marathonSubmissions: [],
     marathonAdjustments: [],
     marathonWinners: [],
+    introViews: [],
   };
 }
 
@@ -366,6 +380,7 @@ export function readDb(storage: StorageLike = defaultStorage()): DemoDb {
       marathonSubmissions: asRows<MarathonSubmissionRow>(parsed.marathonSubmissions),
       marathonAdjustments: asRows<MarathonAdjustmentRow>(parsed.marathonAdjustments),
       marathonWinners: asRows<DemoWinner>(parsed.marathonWinners),
+      introViews: asRows<DemoIntroView>(parsed.introViews),
     };
   } catch {
     return emptyDb();

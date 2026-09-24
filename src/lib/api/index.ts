@@ -19,6 +19,7 @@ export * from './subscriptions';
 export * from './coachBookings';
 export * from './admin';
 export * from './exercises';
+export * from './introViews';
 export * from './customWorkouts';
 export * from './courseBuilder';
 export * from './marathon';

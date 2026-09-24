@@ -337,6 +337,9 @@ export const app = {
   playerSectionCooldown: 'Cool-down',
   playerSectionPart: 'Part {n} of {total}',
   playerGo: 'Go',
+  // Over the coach's explanation before an exercise: the full one (first time), the brief one.
+  playerIntroFull: 'Explanation',
+  playerIntroBrief: 'In short',
   playerDone: 'Done',
   playerSkipWarmup: 'Skip the warm-up',
   playerHowTo: 'How to do it',
