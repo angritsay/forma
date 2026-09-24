@@ -156,7 +156,7 @@ export function AssignedWorkoutsCard({ onOpen }: AssignedWorkoutsCardProps) {
               /* A field, not a plate: the colour by index (`coachCardFill`), ink on everything.
                  Hover is opacity rather than a surface: a solid colour has no «one step lighter». */
               className={clsx(
-                'flex h-full w-full flex-col items-start gap-3 rounded-card p-5 text-left text-ink transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-90 active:scale-[0.99]',
+                'flex h-full w-full flex-col items-start gap-3 rounded-card p-4 text-left text-ink transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-90 active:scale-[0.99]',
                 fill.className,
               )}
             >
