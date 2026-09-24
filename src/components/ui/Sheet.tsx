@@ -106,7 +106,7 @@ export function Sheet({ open, onClose, title, children, footer, label, className
             onClick={onClose}
           />
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">{children}</div>
+        <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-6 pb-6">{children}</div>
         {footer ? (
           <div className="shrink-0 border-t border-border px-6 pt-5 pb-[calc(var(--safe-bottom)+16px)] md:pb-5">
             {footer}

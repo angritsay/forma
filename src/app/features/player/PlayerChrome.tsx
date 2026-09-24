@@ -13,10 +13,12 @@
  * that is words lives on the back of the card (CardBack.tsx).
  */
 import { clsx } from 'clsx';
+import { Pill } from '@/components/ui/Pill';
 import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -24,7 +26,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/Button';
-import { Glyph, Icon } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { IconButton } from '@/components/ui/IconButton';
 import { useT } from '@/app/hooks/useT';
 import { sectionLabel, type BlockSection } from './model';
@@ -53,6 +55,7 @@ export interface PlayerHeaderProps {
  */
 export function PlayerHeader({ progress, paused, onBack, onTogglePause }: PlayerHeaderProps) {
   const { t } = useT();
+  const headerSlot = useContext(HeaderSlotContext);
   return (
     <header className="absolute inset-x-0 top-0 z-30 text-paper">
       {/* Its own layer, so it can run past the bar and fade out over the frame. */}
@@ -83,7 +86,12 @@ export function PlayerHeader({ progress, paused, onBack, onTogglePause }: Player
       <div className="relative mx-auto w-full max-w-[560px] px-3 pt-[var(--safe-top)]">
         <div className="flex h-14 items-center gap-2">
           <IconButton label={t('common.back')} icon="back" variant="on-art" onClick={onBack} />
-          <span className="flex-1" />
+          {/* The step's own progress line lands here, between the two buttons — see
+              `PlayerHeaderSlot`. Empty on a step without one, and then it is only the spacer. */}
+          <div
+            ref={headerSlot?.setNode}
+            className="flex min-w-0 flex-1 items-center justify-center px-4"
+          />
           <IconButton
             label={paused ? t('app.playerResume') : t('app.playerPause')}
             icon={paused ? 'play' : 'pause'}
@@ -120,6 +128,21 @@ export function PlayerHeader({ progress, paused, onBack, onTogglePause }: Player
  */
 const TimerBandContext = createContext<HTMLElement | null>(null);
 
+/**
+ * The gap between the back and pause buttons in the header, as a second portal target.
+ *
+ * The owner: «нижнюю полоску с цифрами под большим таймером нужно расположить между кнопками назад
+ * и пауза, цифры можно не подписывать». The line says how far through this movement you are; under
+ * the clock it made the band taller and pushed the clip down, and its two numbers repeated what the
+ * clock already says. In the header it costs no height at all. The header is a sibling of the
+ * steps, like the band, so the node lives in the same provider: the header registers it, a step
+ * portals into it.
+ */
+const HeaderSlotContext = createContext<{
+  node: HTMLElement | null;
+  setNode: (el: HTMLElement | null) => void;
+} | null>(null);
+
 export interface PlayerTimerBandProps {
   /** Publishes the band's height so the clip can start below it. Zero while it is empty. */
   onHeight?: (px: number) => void;
@@ -146,6 +169,8 @@ export interface PlayerTimerBandProps {
  */
 export function PlayerTimerBand({ onHeight, children }: PlayerTimerBandProps) {
   const [node, setNode] = useState<HTMLElement | null>(null);
+  const [headerNode, setHeaderNode] = useState<HTMLElement | null>(null);
+  const headerSlot = useMemo(() => ({ node: headerNode, setNode: setHeaderNode }), [headerNode]);
   const ref: RefCallback<HTMLDivElement> = (el) => {
     setNode(el);
   };
@@ -166,11 +191,13 @@ export function PlayerTimerBand({ onHeight, children }: PlayerTimerBandProps) {
 
   return (
     <TimerBandContext.Provider value={node}>
-      <div
-        ref={ref}
-        className="glass-bar-top glass-sheer pointer-events-none absolute inset-x-0 top-[calc(var(--safe-top)+56px)] z-20 px-6 pt-2 pb-4 text-paper empty:hidden md:right-95"
-      />
-      {children}
+      <HeaderSlotContext.Provider value={headerSlot}>
+        <div
+          ref={ref}
+          className="glass-bar-top glass-sheer pointer-events-none absolute inset-x-0 top-[calc(var(--safe-top)+56px)] z-20 px-6 pt-2 pb-4 text-paper empty:hidden md:right-95"
+        />
+        {children}
+      </HeaderSlotContext.Provider>
     </TimerBandContext.Provider>
   );
 }
@@ -188,6 +215,13 @@ export function PlayerTimerSlot({ children }: { children: ReactNode }) {
     <div className="pointer-events-auto mx-auto w-full max-w-[560px]">{children}</div>,
     node,
   );
+}
+
+/** Puts its children between the header's back and pause buttons, from anywhere in the player. */
+export function PlayerHeaderSlot({ children }: { children: ReactNode }) {
+  const slot = useContext(HeaderSlotContext);
+  if (!slot?.node) return null;
+  return createPortal(<div className="w-full max-w-[240px]">{children}</div>, slot.node);
 }
 
 export interface PlayerFooterProps {
@@ -279,39 +313,32 @@ export interface SectionStepperProps {
 }
 
 /**
- * The three parts of a session — Разминка · Тренировка · Заминка — as kickers over 2px rules.
- * It lives on the back of the card now: where you are in the session is context, and context is
- * what the reverse is for. Hidden when a workout has only one part (a bare test), where it would
- * say nothing.
+ * Where you are in the session — Разминка, Тренировка or Заминка — as one of the brand's pills.
+ *
+ * It was three kickers over 2px rules, all three at once, the current one light blue. On the back
+ * of the card that read as a tab bar: three words in a row with a line over each look pressable,
+ * and they are not. The owner: «вместо верхнего таба сделай наши фирменные пилюли, но не все сразу
+ * три, а только ту, что подходит». So the reverse says the one fact it is there for — which part
+ * this movement belongs to — in the `sky` pill (light blue is progress and «where you are», the
+ * semantic map in global.css). The full order stays in the accessible name, where a screen reader
+ * still hears «2 of 3».
+ *
+ * Hidden when a workout has only one part (a bare test), where it would say nothing.
  */
 export function SectionStepper({ sections, current }: SectionStepperProps) {
   const { t } = useT();
   if (sections.length < 2) return null;
-  const currentIdx = sections.indexOf(current);
+  const position = sections.indexOf(current) + 1;
   return (
-    <ol className="flex items-stretch gap-2.5" aria-label={t('app.playerSectionsLabel')}>
-      {sections.map((section, i) => {
-        const done = i < currentIdx;
-        const active = i === currentIdx;
-        return (
-          <li
-            key={section}
-            className={clsx(
-              'eyebrow flex flex-1 items-center gap-1.5 border-t-2 pt-2 transition-colors duration-150 ease-(--ease-out)',
-              active
-                ? 'border-accent text-accent'
-                : done
-                  ? 'border-border-strong text-muted'
-                  : 'border-border text-muted-2',
-            )}
-            aria-current={active ? 'step' : undefined}
-          >
-            {sectionLabel(t, section)}
-            {done ? <Glyph size={11}>✓</Glyph> : null}
-          </li>
-        );
-      })}
-    </ol>
+    <div
+      className="flex"
+      role="status"
+      aria-label={`${t('app.playerSectionsLabel')}: ${sectionLabel(t, current)} (${position}/${sections.length})`}
+    >
+      <Pill tone="sky" aria-hidden="true">
+        {sectionLabel(t, current)}
+      </Pill>
+    </div>
   );
 }
 
