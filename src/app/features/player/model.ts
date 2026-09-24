@@ -130,10 +130,73 @@ export function stepVideoRef(
  * board's rows can switch to any of theirs.
  */
 export function sessionVideoRefs(prescribed: PrescribedWorkout, locale: Locale): string[] {
+  return sessionRefs(prescribed, (id) => exerciseVideoRef(id, locale));
+}
+
+/**
+ * How long the step's clip has to fill, for a clip in `fit` mode (see `fit.ts`) — or undefined
+ * where the clip should loop as before.
+ *
+ * Only a step about doing one movement has a length the clip can be stretched to: a timed hold
+ * has its countdown, a set of reps has the engine's estimate of how long it takes. A rest shows the
+ * next movement as a preview, a board (AMRAP, for time, a title card) shows one of several, and
+ * none of those is the movement being done for that long — so they loop, whatever the clip's mode.
+ */
+export function stepFitSec(step: PlayerStep): number | undefined {
+  if (step.kind !== 'work') return undefined;
+  // The same branch the player takes: a timer with no length is shown as reps.
+  if (step.mode === 'timer' && (step.durationSec ?? 0) > 0) return step.durationSec;
+  return step.item.estimatedSec > 0 ? step.item.estimatedSec : undefined;
+}
+
+/**
+ * The exercise's name spoken in the viewer's language, falling back to Russian as the clips do:
+ * a name in the wrong language still tells the athlete which movement is next.
+ */
+export function exerciseAudioRef(id: string | undefined, locale: Locale): string | undefined {
+  const a = id ? findExercise(id)?.audio : undefined;
+  return a?.[locale] ?? a?.ru ?? undefined;
+}
+
+/**
+ * The recording to say when a step begins: the movement's name (see `voice.ts`).
+ *
+ * A set of one movement says that movement. An AMRAP or a for-time piece of exactly one movement
+ * says it too — «максимум повторений» is still one exercise. A board of several says nothing: the
+ * athlete is about to do all of them, and listing them would be a sentence, not a name. A rest
+ * says nothing either — its clip is a preview of the next movement, and the name will be said when
+ * that movement begins.
+ */
+export function stepVoiceRef(step: PlayerStep | undefined, locale: Locale): string | undefined {
+  switch (step?.kind) {
+    case 'work':
+      return exerciseAudioRef(step.exerciseId, locale);
+    case 'amrap':
+    case 'fortime':
+      return step.items.length === 1
+        ? exerciseAudioRef(step.items[0]?.exerciseId, locale)
+        : undefined;
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * Every recording a session can speak, once each — signed together with the clips and decoded
+ * ahead by `prefetchVoice`, so the first name is ready before the first step asks for it.
+ */
+export function sessionAudioRefs(prescribed: PrescribedWorkout, locale: Locale): string[] {
+  return sessionRefs(prescribed, (id) => exerciseAudioRef(id, locale));
+}
+
+function sessionRefs(
+  prescribed: PrescribedWorkout,
+  refOf: (exerciseId: string) => string | undefined,
+): string[] {
   const refs = new Set<string>();
   for (const block of prescribed.blocks) {
     for (const item of block.items) {
-      const ref = exerciseVideoRef(item.exerciseId, locale);
+      const ref = refOf(item.exerciseId);
       if (ref) refs.add(ref);
     }
   }

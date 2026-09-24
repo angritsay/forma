@@ -56,17 +56,22 @@ import {
   boardItems,
   exerciseName,
   findBlock,
+  findExercise,
   firstFilmedIndex,
   isTestBlock,
   sectionOfStep,
+  sessionAudioRefs,
   sessionVideoRefs,
   skippedResult,
   stepArtExerciseId,
+  stepFitSec,
   stepTitle,
   stepVideoRef,
+  stepVoiceRef,
   workoutSections,
 } from '@/app/features/player/model';
 import { useSound, type Cue } from '@/app/features/player/sound';
+import { playVoice, prefetchVoice, stopVoice } from '@/app/features/player/voice';
 import { AmrapStep } from '@/app/features/player/steps/AmrapStep';
 import { BlockIntroStep } from '@/app/features/player/steps/BlockIntroStep';
 import { FortimeStep } from '@/app/features/player/steps/FortimeStep';
@@ -240,15 +245,40 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
   const courseVars = courseTileVars(findCourse(session.courseId)?.tile);
 
   /*
-   * Sign every clip of the session in one request, before the first slide asks for its own.
+   * Sign every clip and every spoken name of the session in one request, before the first slide
+   * asks for its own.
    *
    * A layout effect on purpose: those run before any passive effect in the tree, so the first
    * clip's `useMediaUrl` finds the batch already in flight and waits for it rather than signing
    * the same clip alone a moment earlier. Every step after the first then has its URL at hand.
+   * The names are then fetched and decoded straight away (`prefetchVoice` waits on the same
+   * batch), so the first movement's name is ready by the time its step arrives.
    */
   useLayoutEffect(() => {
-    void signMediaUrls(sessionVideoRefs(prescribed, locale));
+    const audioRefs = sessionAudioRefs(prescribed, locale);
+    void signMediaUrls([...sessionVideoRefs(prescribed, locale), ...audioRefs]);
+    void prefetchVoice(audioRefs);
   }, [prescribed, locale]);
+
+  /*
+   * The movement's name, spoken as its step begins — once per beginning. Keyed on when the step
+   * started rather than its index alone, so a restarted step and a repeated set of the same
+   * movement are each announced again, and a re-render is not. A step that arrives paused (a
+   * session resumed after a reload) is announced when it is resumed instead; pausing cuts the
+   * voice and resuming does not pick it back up — see `voice.ts`.
+   */
+  const spoken = useRef<string | null>(null);
+  useEffect(() => {
+    if (!step || paused) return;
+    const key = `${stepIndex}:${stepStartedMs}`;
+    if (spoken.current === key) return;
+    spoken.current = key;
+    playVoice(stepVoiceRef(step, locale));
+  }, [step, stepIndex, stepStartedMs, paused, locale]);
+  useEffect(() => {
+    if (paused) stopVoice();
+  }, [paused]);
+  useEffect(() => () => stopVoice(), []);
 
   /*
    * Which movement of a board (AMRAP, for time, a block's title card) is playing: a tap on a row
@@ -357,6 +387,7 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
    */
   useEffect(() => {
     if (step?.kind !== 'done') return;
+    stopVoice();
     haptic('success');
     beep('finish');
     finish();
@@ -489,11 +520,13 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
 
   const endWorkout = () => {
     setEndOpen(false);
+    stopVoice();
     finish();
     navigate(summaryPath, { replace: true });
   };
   const leave = () => {
     setLeaveOpen(false);
+    stopVoice();
     setPaused(true);
     // A custom workout has no course path to return to.
     navigate(session.courseId === 'custom' ? '/' : `/courses/${session.courseId}`);
@@ -520,6 +553,10 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
    * The slides on the track: the step before, this one and the next. The closing `done` step is
    * not a movement and has no slide — swiping up from the last movement shows the ground before
    * the summary takes over.
+   *
+   * Each slide carries its clip's mode and its own step's length, the neighbours included: they
+   * are only preloading, but a swipe makes one of them current without remounting it, so the rate
+   * it was given has to be the right one for the step it lands on.
    */
   const slides: (FeedSlide & { offset: number })[] = [];
   for (let i = stepIndex - 1; i <= stepIndex + 1; i++) {
@@ -533,6 +570,8 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
       exerciseId,
       videoRef: stepVideoRef(s, locale, prescribed, item),
       name: exerciseId ? exerciseName(exerciseId, locale) : stepTitle(t, locale, s, prescribed),
+      videoMode: exerciseId ? findExercise(exerciseId)?.videoMode : undefined,
+      stepSec: stepFitSec(s),
     });
   }
   const panelOpacity = leaving

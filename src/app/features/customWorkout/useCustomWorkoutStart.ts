@@ -6,6 +6,7 @@
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useToast } from '@/components/ui/Toast';
+import { unlockAudio } from '@/app/features/player/sound';
 import { startSession } from '@/lib/api/sessions';
 import {
   buildPrescribedFromCustom,
@@ -28,6 +29,9 @@ export function useCustomWorkoutStart() {
 
   const start = useCallback(
     async (workout: StartableCustomWorkout) => {
+      // First thing, before any await: this is the tap that lets the player make sound — the
+      // cues and the spoken names both — and a browser only honours it inside the gesture.
+      unlockAudio();
       if (busy) return;
       setBusy(true);
       try {

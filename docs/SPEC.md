@@ -329,6 +329,24 @@ Loudness is part of the meaning: the cues that repeat all session are quieter th
 happen once, and a test holds that rule so the next person to edit the table does not "turn it up
 a bit". Everything is in a C pentatonic, so two cues that overlap cannot clash.
 
+**The one recorded sound: the exercise's name.** Since 0048 an exercise can carry its name spoken,
+per language (`Exercise.audio`, docs/VIDEO.md «Аудио»). The player says it as the step begins — a
+`work` step, or an AMRAP / for-time piece of exactly one movement; a rest, a title card and a board
+of several stay silent (`stepVoiceRef` in `model.ts`). It is decoded into the **same AudioContext
+the cues play through** (`voice.ts`): the tap that starts the session unlocks that context once,
+where an `<audio>` element would need a gesture of its own on iOS. The session's recordings are
+signed together with its clips and decoded up front (`prefetchVoice`), the viewer's language falls
+back to Russian exactly as the clips do, and the mute switch covers both. One voice at a time — a
+name still being said when the next step arrives is cut, while a cue may sound over it. Pausing
+stops the voice; resuming does not repeat it, and a name is at most two seconds.
+
+**A clip fitted to the step.** A clip's `videoMode` (`loop`, the default, or `fit`) says how the
+player runs it. `fit` is for a pose entered once and held: the clip is slowed to fill the step's
+length (`fitRate` in `fit.ts` — never sped up, and no slower than 0.5×, which is the floor Safari
+honours), then holds its last frame instead of looping. Only a step about doing one movement has a
+length to fill — a timed hold's countdown, a set's estimated seconds (`stepFitSec`); a rest or a
+board loops the clip whatever its mode says.
+
 **There is an off switch, in the account** — not over the clip, because it is a preference rather
 than something reached for mid-set. It has to exist: a sound that cannot be turned off gets the
 whole phone muted instead, which takes the one cue worth hearing down with the rest.

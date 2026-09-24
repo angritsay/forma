@@ -1,12 +1,17 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import { resetCatalogueOverlay, setCatalogueOverlay } from '@/content/catalogue';
 import { EXERCISE_BY_ID } from '@/content/registry';
 import {
   contraindicationsFor,
+  exerciseAudioRef,
   exerciseVideoRef,
   firstFilmedIndex,
+  sessionAudioRefs,
   sessionVideoRefs,
   stepArtExerciseId,
+  stepFitSec,
   stepVideoRef,
+  stepVoiceRef,
 } from './model';
 import type { PlayerStep, PrescribedItem, PrescribedWorkout } from '@/lib/training/types';
 
@@ -115,5 +120,123 @@ describe('stepVideoRef on a board', () => {
       ],
     } as unknown as PrescribedWorkout;
     expect(sessionVideoRefs(twice, 'ru')).toEqual([squat, pushUp]);
+  });
+});
+
+/*
+ * A clip in `fit` mode is stretched over the step, so the step has to say how long it is. Only a
+ * step about doing one movement can: everything else loops whatever the clip's mode says.
+ */
+describe('stepFitSec', () => {
+  const item = { exerciseId: 'plank', estimatedSec: 24 } as unknown as PrescribedItem;
+
+  it('is the countdown of a timed hold', () => {
+    const step = { kind: 'work', mode: 'timer', durationSec: 60, item } as unknown as PlayerStep;
+    expect(stepFitSec(step)).toBe(60);
+  });
+
+  it("is the engine's estimate for a set of reps", () => {
+    const step = { kind: 'work', mode: 'reps', item } as unknown as PlayerStep;
+    expect(stepFitSec(step)).toBe(24);
+    // A timer with no length is shown as reps, and fits as reps.
+    const empty = { kind: 'work', mode: 'timer', durationSec: 0, item } as unknown as PlayerStep;
+    expect(stepFitSec(empty)).toBe(24);
+  });
+
+  it('is undefined where there is no length to fill, so the clip loops', () => {
+    const none = { ...item, estimatedSec: 0 };
+    expect(
+      stepFitSec({ kind: 'work', mode: 'reps', item: none } as unknown as PlayerStep),
+    ).toBeUndefined();
+    expect(stepFitSec({ kind: 'rest', durationSec: 30 } as unknown as PlayerStep)).toBeUndefined();
+    expect(
+      stepFitSec({ kind: 'amrap', durationSec: 600, items: [item] } as unknown as PlayerStep),
+    ).toBeUndefined();
+    expect(
+      stepFitSec({ kind: 'fortime', capSec: 600, items: [item] } as unknown as PlayerStep),
+    ).toBeUndefined();
+    expect(
+      stepFitSec({ kind: 'block_intro', durationSec: 600 } as unknown as PlayerStep),
+    ).toBeUndefined();
+    expect(stepFitSec({ kind: 'done' } as PlayerStep)).toBeUndefined();
+  });
+});
+
+/*
+ * The spoken name. None of the compiled exercises carries a recording, so one is marked up the
+ * way the admin panel does it: as a media overlay on a compiled movement.
+ */
+describe('the spoken name', () => {
+  const RU = 'storage:audio/shared/plank.ru.m4a';
+  const EN = 'storage:audio/shared/plank.en.m4a';
+  const SQUAT_RU = 'storage:audio/shared/air_squat.ru.m4a';
+  const overlay = () =>
+    setCatalogueOverlay({
+      courses: [],
+      exercises: [
+        { ...ex('plank'), audio: { ru: RU, en: EN } },
+        { ...ex('air_squat'), audio: { ru: SQUAT_RU } },
+      ],
+    });
+  afterEach(() => resetCatalogueOverlay());
+
+  it('speaks the viewer’s language and falls back to Russian, as the clips do', () => {
+    overlay();
+    expect(exerciseAudioRef('plank', 'en')).toBe(EN);
+    expect(exerciseAudioRef('plank', 'ru')).toBe(RU);
+    expect(exerciseAudioRef('air_squat', 'en')).toBe(SQUAT_RU);
+  });
+
+  it('is silent for an exercise with no recording, or no exercise', () => {
+    expect(exerciseAudioRef('push_up', 'ru')).toBeUndefined();
+    expect(exerciseAudioRef('no_such_exercise', 'ru')).toBeUndefined();
+    expect(exerciseAudioRef(undefined, 'ru')).toBeUndefined();
+  });
+
+  it('names the movement of a work step and of a one-movement AMRAP or for-time piece', () => {
+    overlay();
+    const item = (exerciseId: string) => ({ exerciseId }) as unknown as PrescribedItem;
+    expect(stepVoiceRef({ kind: 'work', exerciseId: 'plank' } as unknown as PlayerStep, 'ru')).toBe(
+      RU,
+    );
+    expect(
+      stepVoiceRef({ kind: 'amrap', items: [item('plank')] } as unknown as PlayerStep, 'en'),
+    ).toBe(EN);
+    expect(
+      stepVoiceRef({ kind: 'fortime', items: [item('plank')] } as unknown as PlayerStep, 'ru'),
+    ).toBe(RU);
+  });
+
+  it('says nothing for a board of several, a rest, a title card or the end', () => {
+    overlay();
+    const item = (exerciseId: string) => ({ exerciseId }) as unknown as PrescribedItem;
+    const several = [item('plank'), item('air_squat')];
+    expect(
+      stepVoiceRef({ kind: 'amrap', items: several } as unknown as PlayerStep, 'ru'),
+    ).toBeUndefined();
+    expect(
+      stepVoiceRef({ kind: 'fortime', items: several } as unknown as PlayerStep, 'ru'),
+    ).toBeUndefined();
+    expect(
+      stepVoiceRef({ kind: 'rest', nextExerciseId: 'plank' } as unknown as PlayerStep, 'ru'),
+    ).toBeUndefined();
+    expect(
+      stepVoiceRef({ kind: 'block_intro', blockId: 'b1' } as unknown as PlayerStep, 'ru'),
+    ).toBeUndefined();
+    expect(stepVoiceRef({ kind: 'done' } as PlayerStep, 'ru')).toBeUndefined();
+    expect(stepVoiceRef(undefined, 'ru')).toBeUndefined();
+  });
+
+  it('lists every recording of the session once, for signing and decoding in one go', () => {
+    overlay();
+    const item = (exerciseId: string) => ({ exerciseId }) as unknown as PrescribedItem;
+    const prescribed = {
+      blocks: [
+        { blockId: 'b1', items: [item('plank'), item('push_up'), item('air_squat')] },
+        { blockId: 'b2', items: [item('plank')] },
+      ],
+    } as unknown as PrescribedWorkout;
+    expect(sessionAudioRefs(prescribed, 'en')).toEqual([EN, SQUAT_RU]);
+    expect(sessionAudioRefs(prescribed, 'ru')).toEqual([RU, SQUAT_RU]);
   });
 });

@@ -17,9 +17,11 @@
  * name on the programme colour instead, because a black screen reads as a broken workout.
  */
 import { clsx } from 'clsx';
-import { useEffect, useRef, useState, type CSSProperties, type Ref } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type Ref } from 'react';
 import { ExerciseStill } from '@/components/media/ExerciseStill';
 import { exerciseStillUrl } from '@/lib/api/storage';
+import type { VideoMode } from '@/content/schema';
+import { fitRate } from './fit';
 import { useMediaUrl } from './useMediaUrl';
 
 /**
@@ -74,6 +76,10 @@ export interface FeedSlide {
   videoRef: string | undefined;
   /** The movement's name, drawn when there is neither a clip nor a still. */
   name: string | undefined;
+  /** How the clip runs: looped (the default) or stretched over the step. See `fit.ts`. */
+  videoMode?: VideoMode;
+  /** How long the step is, when the clip is to be stretched over it (`stepFitSec`). */
+  stepSec?: number;
 }
 
 interface ArtSlideProps extends FeedSlide {
@@ -82,20 +88,53 @@ interface ArtSlideProps extends FeedSlide {
   playing: boolean;
 }
 
-function ArtSlide({ exerciseId, videoRef, name, offset, playing }: ArtSlideProps) {
+function ArtSlide({
+  exerciseId,
+  videoRef,
+  name,
+  videoMode,
+  stepSec,
+  offset,
+  playing,
+}: ArtSlideProps) {
   const video = useRef<HTMLVideoElement>(null);
   const url = useMediaUrl(videoRef);
   const still = exerciseId ? exerciseStillUrl(exerciseId) : undefined;
   // The URL whose first frame has arrived. Until then the video is transparent over the still.
   const [ready, setReady] = useState<string | undefined>(undefined);
   const current = offset === 0;
+  /*
+   * A yoga hold: the coach's ten seconds of entering the pose, stretched over a sixty-second hold
+   * and then standing still on the last frame — rather than the person on screen sinking into
+   * the pose six times while the athlete holds it once. Only a step with a length can be fitted;
+   * a rest or a board (no `stepSec`) loops whatever the clip's mode says. See `fit.ts`.
+   */
+  const fit = videoMode === 'fit' && stepSec !== undefined;
+  const applyRate = useCallback(
+    (el: HTMLVideoElement) => {
+      try {
+        el.playbackRate = fit && stepSec !== undefined ? fitRate(el.duration, stepSec) : 1;
+      } catch {
+        /* A browser that refuses the rate plays at 1: a clip a little short of the step. */
+      }
+    },
+    [fit, stepSec],
+  );
 
   useEffect(() => {
     const el = video.current;
     if (!el) return;
-    if (current && playing) void el.play().catch(() => undefined);
-    else el.pause();
-  }, [current, playing, url]);
+    if (current && playing) {
+      // A fitted clip that has reached its end stays on its last frame: `play()` on an ended
+      // element would rewind it, and the pose would be entered a second time on resume.
+      if (fit && el.ended) return;
+      // Set again right before playing: some Android WebViews snap the rate back to 1 on play().
+      applyRate(el);
+      void el.play().catch(() => undefined);
+    } else {
+      el.pause();
+    }
+  }, [current, playing, url, fit, applyRate]);
 
   return (
     <div className="absolute inset-x-0 h-full" style={{ top: `${offset * 100}%` }}>
@@ -118,8 +157,10 @@ function ArtSlide({ exerciseId, videoRef, name, offset, playing }: ArtSlideProps
         <div className={STAGE}>
           {/*
            * It starts by itself when its slide becomes current — that is what the effect above is
-           * for. A silent loop: the clips carry no audio track (scripts/media/prepare-videos.mjs),
-           * and `muted` is still set because without it a browser refuses to autoplay at all.
+           * for. Silent: the clips carry no audio track (scripts/media/prepare-videos.mjs), and
+           * `muted` is still set because without it a browser refuses to autoplay at all. Looped,
+           * unless the clip is fitted to the step — then it plays once, slowed, and the last frame
+           * holds: no seek, no loop, just a pause where the clip ends.
            */}
           <video
             key={url}
@@ -129,11 +170,15 @@ function ArtSlide({ exerciseId, videoRef, name, offset, playing }: ArtSlideProps
             className={clsx(ART, 'player-clip', ready === url && 'is-ready')}
             playsInline
             muted
-            loop
+            loop={!fit}
             autoPlay={current && playing}
             preload="auto"
+            onLoadedMetadata={(e) => applyRate(e.currentTarget)}
             onLoadedData={() => setReady(url)}
             onPlaying={() => setReady(url)}
+            onEnded={(e) => {
+              if (fit) e.currentTarget.pause();
+            }}
           />
         </div>
       ) : null}

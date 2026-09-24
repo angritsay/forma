@@ -66,6 +66,7 @@ import { PlanBlocks } from '@/app/features/path/PlanBlocks';
 import { useTrainingContext } from '@/app/features/path/useTrainingContext';
 import { WorkoutHero } from '@/app/features/path/WorkoutHero';
 import { WorkoutStrip } from '@/app/features/path/WorkoutStrip';
+import { unlockAudio } from '@/app/features/player/sound';
 import { useActiveWorkoutStore } from '@/app/store/activeWorkout';
 import {
   useCourseStateRow,
@@ -245,6 +246,9 @@ export default function NodePreviewScreen() {
   const shown = plans.find((p) => p.choice === recommendation.choice) ?? plans[0] ?? null;
 
   const start = async (choice: DifficultyChoice) => {
+    // First thing, before any await: this is the tap that lets the player make sound — the cues
+    // and the spoken names both — and a browser only honours it inside the gesture.
+    unlockAudio();
     const plan = plans.find((p) => p.choice === choice);
     if (!plan || locked) return;
     setReplaceFor(null);
