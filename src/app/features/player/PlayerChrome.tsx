@@ -13,6 +13,7 @@
  * that is words lives on the back of the card (CardBack.tsx).
  */
 import { clsx } from 'clsx';
+import { Pill } from '@/components/ui/Pill';
 import {
   createContext,
   useContext,
@@ -24,7 +25,7 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/Button';
-import { Glyph, Icon } from '@/components/ui/Icon';
+import { Icon } from '@/components/ui/Icon';
 import { IconButton } from '@/components/ui/IconButton';
 import { useT } from '@/app/hooks/useT';
 import { sectionLabel, type BlockSection } from './model';
@@ -279,39 +280,32 @@ export interface SectionStepperProps {
 }
 
 /**
- * The three parts of a session — Разминка · Тренировка · Заминка — as kickers over 2px rules.
- * It lives on the back of the card now: where you are in the session is context, and context is
- * what the reverse is for. Hidden when a workout has only one part (a bare test), where it would
- * say nothing.
+ * Where you are in the session — Разминка, Тренировка or Заминка — as one of the brand's pills.
+ *
+ * It was three kickers over 2px rules, all three at once, the current one light blue. On the back
+ * of the card that read as a tab bar: three words in a row with a line over each look pressable,
+ * and they are not. The owner: «вместо верхнего таба сделай наши фирменные пилюли, но не все сразу
+ * три, а только ту, что подходит». So the reverse says the one fact it is there for — which part
+ * this movement belongs to — in the `sky` pill (light blue is progress and «where you are», the
+ * semantic map in global.css). The full order stays in the accessible name, where a screen reader
+ * still hears «2 of 3».
+ *
+ * Hidden when a workout has only one part (a bare test), where it would say nothing.
  */
 export function SectionStepper({ sections, current }: SectionStepperProps) {
   const { t } = useT();
   if (sections.length < 2) return null;
-  const currentIdx = sections.indexOf(current);
+  const position = sections.indexOf(current) + 1;
   return (
-    <ol className="flex items-stretch gap-2.5" aria-label={t('app.playerSectionsLabel')}>
-      {sections.map((section, i) => {
-        const done = i < currentIdx;
-        const active = i === currentIdx;
-        return (
-          <li
-            key={section}
-            className={clsx(
-              'eyebrow flex flex-1 items-center gap-1.5 border-t-2 pt-2 transition-colors duration-150 ease-(--ease-out)',
-              active
-                ? 'border-accent text-accent'
-                : done
-                  ? 'border-border-strong text-muted'
-                  : 'border-border text-muted-2',
-            )}
-            aria-current={active ? 'step' : undefined}
-          >
-            {sectionLabel(t, section)}
-            {done ? <Glyph size={11}>✓</Glyph> : null}
-          </li>
-        );
-      })}
-    </ol>
+    <div
+      className="flex"
+      role="status"
+      aria-label={`${t('app.playerSectionsLabel')}: ${sectionLabel(t, current)} (${position}/${sections.length})`}
+    >
+      <Pill tone="sky" aria-hidden="true">
+        {sectionLabel(t, current)}
+      </Pill>
+    </div>
   );
 }
 
