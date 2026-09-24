@@ -10,6 +10,9 @@ export type PillTone =
   | 'orange'
   | 'ciel'
   | 'sky'
+  | 'beige'
+  | 'warm'
+  | 'ink'
   | 'white'
   | 'ghost';
 
@@ -52,9 +55,13 @@ export interface PillProps extends HTMLAttributes<HTMLSpanElement> {
  *   - `orange` — the beginners' section tag. Ink 6.04.
  *   - `ciel` — the coach's section tag. Ink 4.75.
  *   - `sky` — the brand's light blue, for a fact that belongs to the product rather than a section.
+ *   - `beige` — the yoga section's tag. Ink 15.7.
+ *   - `warm` — the club's one filled pill: the prize (design/CHANGELOG.md §17). The warm half of
+ *     the crossroads gradient (`.bg-warm`) under ink, ≥ 6.04 on every stop. The club has no neon;
+ *     what would be the neon pill anywhere else is this one on the club's screens.
  *
- * Those carry meaning (the semantic colour map, §15) and stay solid. The three tones that carry
- * none are glass now (`.glass-tag`, global.css — the owner's «вернуть стекло на плашках»,
+ * Those carry meaning (the semantic colour map, §15) and stay solid. The tones that carry none
+ * are glass now (`.glass-tag`, global.css — the owner's «вернуть стекло на плашках»,
  * design/CHANGELOG.md §16):
  *
  *   - `paper` — a pill laid on a dark figure. It was white on ink; now the figure shows through.
@@ -62,6 +69,11 @@ export interface PillProps extends HTMLAttributes<HTMLSpanElement> {
  *     tinted from the surface and the words are white (11.9 on its sheer end over the field).
  *   - `ghost` — the same glass with the field's white hairline kept strong, so the two still read
  *     as a sticker and an outline beside each other.
+ *   - `ink` — the dense glass tinted from the ground (`.glass-tag-ink`, `Badge` `on-art`) with
+ *     white words: the section tag on a *bright* field — «Тренер» on a coach workout card, which
+ *     is ciel, orange or neon by turn (§17) — where a solid ciel tag would vanish on the ciel card
+ *     and a surface-tinted glass would read as a grey smudge on the neon one. White on its sheer
+ *     end over each of the three fills is ≥ 7 (`contrast-usage.test.ts`).
  *
  * The section colours are tags and never fields: a pill is the most colour a section may wear.
  */
@@ -74,6 +86,9 @@ const TONE: Record<PillTone, string> = {
   orange: 'border-transparent bg-orange text-ink',
   ciel: 'border-transparent bg-ciel text-ink',
   sky: 'border-transparent bg-accent text-on-accent',
+  beige: 'border-transparent bg-beige text-ink',
+  warm: 'border-transparent bg-warm text-ink',
+  ink: 'glass-tag glass-tag-ink text-paper',
   white: 'glass-tag text-on-field',
   ghost: 'glass-tag border-on-field/85 text-on-field',
 };

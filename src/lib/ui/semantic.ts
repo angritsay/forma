@@ -39,10 +39,36 @@ export const COLOUR = {
   effort: '#ff5a00',
   /** Bleu ciel — the coach. */
   coach: '#007bff',
+  /** Beige — the yoga section's tag, and the middle stop of the club's warm gradient. */
+  beige: '#ffe6d0',
   success: '#7ce0b0',
   warning: '#ffd166',
   danger: '#ff6b6b',
 } as const;
+
+/**
+ * The stops of `--grad-warm` (global.css), the readable half of the crossroads gradient: light
+ * blue → beige → orange. It is the club's *button* and its one filled pill (`.bg-warm`, `Button`
+ * `gradient`, `Pill` `warm`; design/CHANGELOG.md §17) and it takes ink #111111, which
+ * `contrast-usage.test.ts` holds at ≥ 4.5 on every stop — 13.2 / 15.7 / 6.04. The full crossroads
+ * gradient ends in electric blue (2.16 with ink) and can never carry a label; it stays a rim, a
+ * dot, a glow and the aurora.
+ */
+export const GRAD_WARM_STOPS = [COLOUR.accent, COLOUR.beige, COLOUR.effort] as const;
+
+/**
+ * The coach's workout cards on «Курсы» are bright fields, not plates (design/CHANGELOG.md §17):
+ * ciel first — the coach's colour — and orange and neon after it only so that several cards in
+ * the carousel can be told apart at a glance. A single card is always ciel. Ink #111111 on all
+ * three (4.75 / 6.04 / 17.3). **Neon on a coach card is identity, not «do it now»**: the one-neon
+ * main-action rule is about buttons and still stands. `coachCardFill()` in
+ * src/app/features/customWorkout/coachCardFill.ts walks this list.
+ */
+export const COACH_CARD_FILLS = [
+  { name: 'ciel', hex: COLOUR.coach, className: 'bg-ciel' },
+  { name: 'orange', hex: COLOUR.effort, className: 'bg-orange' },
+  { name: 'neon', hex: COLOUR.action, className: 'bg-action' },
+] as const;
 
 /**
  * The difficulty scale: lighter is the light blue, the ordinary day is plain white, harder is the
@@ -74,5 +100,6 @@ export const SATURATED_FILL_CLASSES = [
   'bg-orange',
   'bg-field',
   'bg-cross',
+  'bg-warm',
   'bg-ciel',
 ] as const;

@@ -17,7 +17,14 @@ import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
-import { COLOUR, DIFFICULTY_COLOUR, EMOJI_PLATES, SATURATED_FILL_CLASSES } from './semantic';
+import {
+  COACH_CARD_FILLS,
+  COLOUR,
+  DIFFICULTY_COLOUR,
+  EMOJI_PLATES,
+  GRAD_WARM_STOPS,
+  SATURATED_FILL_CLASSES,
+} from './semantic';
 import { APP_BG, contrast, tileInk } from './tile';
 
 const TEXT = 4.5;
@@ -55,12 +62,46 @@ describe('the semantic colour map — registry', () => {
       orange: [COLOUR.effort, COLOUR.ink],
       ciel: [COLOUR.coach, COLOUR.ink],
       sky: [COLOUR.accent, COLOUR.ink],
+      beige: [COLOUR.beige, COLOUR.ink],
       white: ['#ffffff', COLOUR.field],
       ghost: [COLOUR.field, '#ffffff'],
     };
     for (const [tone, [fill, ink]] of Object.entries(pills)) {
       expect(contrast(fill, ink), tone).toBeGreaterThanOrEqual(TEXT);
       expect(tileInk(fill) === ink || fill === '#ffffff' || fill === COLOUR.field, tone).toBe(true);
+    }
+  });
+
+  /*
+   * The three card treatments (global.css header, design/CHANGELOG.md §17): the club's buttons
+   * and its one filled pill are the warm gradient under ink; the coach's workout cards are bright
+   * fields under ink.
+   */
+  it('reads ink on every stop of the warm gradient — the club’s button and prize pill', () => {
+    // The stops are the ones `--grad-warm` names in global.css; the map must not drift from it.
+    const warm = /--grad-warm:\s*linear-gradient\(([^)]*)\)/.exec(css)?.[1] ?? '';
+    const stops = [...warm.matchAll(/#[0-9a-fA-F]{6}/g)].map((m) => m[0].toLowerCase());
+    expect(stops).toEqual([...GRAD_WARM_STOPS]);
+    for (const stop of GRAD_WARM_STOPS) {
+      expect(contrast(COLOUR.ink, stop), stop).toBeGreaterThanOrEqual(TEXT);
+      expect(tileInk(stop), stop).toBe(COLOUR.ink);
+    }
+  });
+
+  it('never lets the crossroads gradient carry a label: no one ink reads on both its ends', () => {
+    // Its blue end fails ink; its light-blue end fails white. A rim, a dot, a glow — not a button.
+    expect(contrast(COLOUR.ink, COLOUR.field)).toBeLessThan(TEXT);
+    expect(contrast('#ffffff', COLOUR.accent)).toBeLessThan(TEXT);
+  });
+
+  it('reads ink on every coach card fill, ciel first', () => {
+    expect(COACH_CARD_FILLS[0].hex).toBe(COLOUR.coach);
+    expect(new Set(COACH_CARD_FILLS.map((f) => f.hex)).size).toBe(COACH_CARD_FILLS.length);
+    for (const fill of COACH_CARD_FILLS) {
+      expect(contrast(COLOUR.ink, fill.hex), fill.name).toBeGreaterThanOrEqual(TEXT);
+      expect(tileInk(fill.hex), fill.name).toBe(COLOUR.ink);
+      // Every fill is one the emoji scanner below knows as saturated.
+      expect(SATURATED_FILL_CLASSES).toContain(fill.className);
     }
   });
 
@@ -165,6 +206,35 @@ describe('the semantic colour map — glass', () => {
     // Badge `on-art` (`.glass-tag-ink`): the sheer end of the ground over pure white.
     const { from } = alphas('glass-tag-ink');
     expect(contrast('#ffffff', composite('#ffffff', APP_BG, from))).toBeGreaterThanOrEqual(TEXT);
+  });
+
+  it('keeps the white «Тренер» tag (glass-tag-ink) AA over every coach card fill', () => {
+    // Pill `ink` on a bright field (§17): the sheer end of the ground over ciel, orange, neon.
+    const { from, tint } = alphas('glass-tag-ink');
+    expect(tint).toBe('bg');
+    for (const fill of COACH_CARD_FILLS) {
+      const ground = composite(fill.hex, APP_BG, from);
+      expect(
+        contrast('#ffffff', ground),
+        `white on the tag over ${fill.name}`,
+      ).toBeGreaterThanOrEqual(TEXT);
+      // And the tag is a visible shape on the field it stands on.
+      expect(contrast(ground, fill.hex), `the tag on ${fill.name}`).toBeGreaterThanOrEqual(GRAPHIC);
+    }
+  });
+
+  it('reads white and the light-blue key word on the hero’s plate over a white sky', () => {
+    // CourseCard's hero plate (`.glass-card-on-art`, §17): the sheer end of the ground over pure
+    // white, the brightest thing a photograph can put behind it.
+    const { from, tint } = alphas('glass-card-on-art');
+    expect(tint).toBe('bg');
+    const sheer = composite('#ffffff', APP_BG, from);
+    expect(contrast('#ffffff', sheer)).toBeGreaterThanOrEqual(TEXT);
+    expect(contrast(COLOUR.accent, sheer)).toBeGreaterThanOrEqual(TEXT);
+    // The progress rule's track (18% white) and fill (light blue) are shapes on the plate.
+    expect(contrast(COLOUR.accent, composite(APP_BG, '#ffffff', 0.18))).toBeGreaterThanOrEqual(
+      GRAPHIC,
+    );
   });
 });
 

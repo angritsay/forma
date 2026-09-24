@@ -28,10 +28,23 @@
  *
  * Пока ничего не выдано — не рисуется ничего. Пустая полка с заголовком на экране человека,
  * которому не выдавали, — это обещание, которого никто не давал.
+ *
+ * ## Почему карточки — яркие поля, а не стекло
+ *
+ * Владелец: «для тренировок от тренера — яркие цвета» (design/CHANGELOG.md §17). Курсы —
+ * фотографии под стеклом, клуб — градиент, а выданная тренером тренировка — сплошное цветное
+ * поле: единственный на «Курсах» предмет без фотографии, и цвет тут говорит «это сделали для
+ * тебя» громче любой плашки. Поля чередуются по индексу — ciel, оранжевый, неон
+ * (`coachCardFill.ts`): ciel — цвет тренера, и одна карточка всегда ciel; второй и третий цвета
+ * нужны только чтобы несколько карточек в ленте различались на свайпе. Чернила #111111 на всех
+ * трёх; тег «Тренер» — плотное стекло от грунта с белым словом (`Pill` `ink`), потому что
+ * сплошной ciel-тег на ciel-карточке исчезает, а неон на карточке — идентичность, не «сейчас».
  */
 import { useEffect, useState } from 'react';
+import { clsx } from 'clsx';
 import { Glyph } from '@/components/ui/Icon';
 import { Pill } from '@/components/ui/Pill';
+import { coachCardFill } from './coachCardFill';
 import { listDoneCustomWorkouts, listMyAssignedWorkouts } from '@/lib/api/customWorkouts';
 import type { CustomWorkoutStructure } from '@/lib/training/customWorkout';
 import { workoutEquipment } from '@/lib/training/equipment';
@@ -51,7 +64,7 @@ function AuthorLine({ slug }: { slug: string | null }) {
   const author = authorById(slug);
   if (!author) return null;
   return (
-    <span className="flex min-w-0 items-center gap-2 text-[13px] text-muted">
+    <span className="flex min-w-0 items-center gap-2 text-[13px]">
       {author.photo ? (
         <img
           src={withBase(author.photo)}
@@ -109,8 +122,9 @@ export function AssignedWorkoutsCard({ onOpen }: AssignedWorkoutsCardProps) {
        * заставляет снап приземлять её туда же.
        */}
       <ul className="deck-scroller -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 md:-mx-10 md:scroll-px-10 md:px-10">
-        {rows.map((w) => {
+        {rows.map((w, i) => {
           const minutes = w.estSec ? Math.max(1, Math.round(w.estSec / 60)) : null;
+          const fill = coachCardFill(i);
           /*
              Оборудование знает упражнение, а не тренировка: у неё только список id. Берём его из
              скомпилированной библиотеки — она в сборке и не ждёт сети, так что строка появляется
@@ -130,14 +144,20 @@ export function AssignedWorkoutsCard({ onOpen }: AssignedWorkoutsCardProps) {
               <button
                 type="button"
                 onClick={() => onOpen(w.id)}
-                className="glass-card flex h-full w-full flex-col items-start gap-2.5 rounded-card p-5 text-left transition-[background-color,transform] duration-150 ease-(--ease-out) hover:bg-surface-2 active:scale-[0.99]"
+                /* Поле, а не плашка: цвет по индексу (`coachCardFill`), чернила на всём. Ховер —
+                   прозрачность, а не поверхность: у сплошного цвета нет «на ступень светлее». */
+                className={clsx(
+                  'flex h-full w-full flex-col items-start gap-2.5 rounded-card p-5 text-left text-ink transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-90 active:scale-[0.99]',
+                  fill.className,
+                )}
               >
                 {/* Без надписи «От тренера»: она уже стоит заголовком над лентой, и на карточке
                     была бы тем же предложением в третий раз — считая экран самой тренировки.
                     Там она нужна, потому что туда приходят и по ссылке, мимо этой полки.
-                    Вместо фразы — плашка раздела: bleu ciel — цвет тренера (design/CHANGELOG.md
-                    §14), и это тег, а не поле; он говорит «чьё это» одним цветом, не словами. */}
-                <Pill tone="ciel">{t('app.tabCoach')}</Pill>
+                    Вместо фразы — тег раздела. Он был сплошным ciel, пока карточка была стеклом;
+                    на ciel-поле такой тег пропадает, поэтому тег — плотное стекло от грунта с
+                    белым словом (`Pill` `ink`, ≥ 7 на любом из трёх полей). */}
+                <Pill tone="ink">{t('app.tabCoach')}</Pill>
                 <span className="font-display line-clamp-2 text-[19px] leading-[1.2] text-balance">
                   {w.title}
                 </span>
@@ -157,8 +177,10 @@ export function AssignedWorkoutsCard({ onOpen }: AssignedWorkoutsCardProps) {
                   строку, только оборудование способно изменить решение — открыть сейчас или
                   когда будет чем.
                 */}
+                {/* Мета и «Открыть →» — те же чернила, что и заголовок, без прозрачности: чернила
+                    на 80 % поверх ciel дают 3.9 и не проходят мелким текстом. Иерархия — кеглем. */}
                 {minutes || gear.length > 0 ? (
-                  <span className="flex flex-wrap items-center gap-2 text-[13px] text-muted">
+                  <span className="flex flex-wrap items-center gap-2 text-[13px]">
                     {minutes ? (
                       <span className="tabular">{t('app.nodeDuration', { min: minutes })}</span>
                     ) : null}
@@ -167,11 +189,9 @@ export function AssignedWorkoutsCard({ onOpen }: AssignedWorkoutsCardProps) {
                     ) : null}
                   </span>
                 ) : null}
-                <span className="control-label mt-1 inline-flex items-center gap-1.5 text-[14px] text-text">
+                <span className="control-label mt-1 inline-flex items-center gap-1.5 text-[14px]">
                   {t('app.customWorkoutOpen')}
-                  <Glyph size={13} className="text-muted-2">
-                    →
-                  </Glyph>
+                  <Glyph size={13}>→</Glyph>
                 </span>
               </button>
             </li>

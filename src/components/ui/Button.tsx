@@ -3,7 +3,7 @@ import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { Spinner } from './Spinner';
 
 export type ButtonVariant =
-  'primary' | 'secondary' | 'ghost' | 'danger' | 'course' | 'action' | 'on-field';
+  'primary' | 'secondary' | 'ghost' | 'danger' | 'course' | 'action' | 'gradient' | 'on-field';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 export type ButtonShape = 'control' | 'pill';
 
@@ -53,7 +53,17 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * on the course you are walking, «Оплатить» on the coach, «Отправить» on the club's task. Ink on it
  * is `--on-action`, 17.3. One per screen, like the blue field: a second neon button on the same
  * screen and neither of them is the main one any more. The white `primary` stays for everything
- * that is a button but not *the* button.
+ * that is a button but not *the* button. **Except in the club**, which has no neon at all
+ * (design/CHANGELOG.md §17):
+ *
+ * **`gradient` is the club's main button** — «Вступить», «Готово / Отправить» on the task, the
+ * invitation to a partner, the retry on a failed load. The fill is `--grad-warm` (`.bg-warm`),
+ * the *warm* half of the crossroads gradient — light blue → beige → orange — and ink #111111 on
+ * it, which clears 4.5 on every stop (13.2 / 15.7 / 6.04; `contrast-usage.test.ts`). The full
+ * crossroads gradient can never be a button: its electric-blue end is 2.16 with ink and 7.71
+ * with white, and no one ink reads across both ends. Same geometry as `action`, and the same
+ * rule — one per screen, the thing that delivers the task. Member club screens only; the admin's
+ * club tools keep the neon, because they are tools and not the club.
  *
  * `on-field` is the secondary button *on* the blue hero field: white with the field's own blue for
  * words (7.71), so it sits on the field the way the neon sits on graphite without competing with it.
@@ -67,6 +77,7 @@ const VARIANT: Record<ButtonVariant, string> = {
   danger: 'bg-transparent text-danger border border-border-strong hover:bg-surface-2',
   course: 'bg-course text-tile-fg hover:opacity-90',
   action: 'bg-action text-on-action hover:opacity-90',
+  gradient: 'bg-warm text-ink hover:opacity-90',
   'on-field': 'bg-paper text-field hover:opacity-90',
 };
 

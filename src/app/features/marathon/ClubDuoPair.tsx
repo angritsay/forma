@@ -151,7 +151,7 @@ export function ClubDuoPair({ onChanged }: ClubDuoPairProps) {
           {inviteUrl(row.inviteToken)}
         </span>
       ) : null}
-      <Button variant="action" size="md" loading={busy} onClick={() => void share()}>
+      <Button variant="gradient" size="md" loading={busy} onClick={() => void share()}>
         {t('app.duoInvite')}
       </Button>
     </Card>

@@ -16,9 +16,11 @@ const PAD = { md: 'p-5', lg: 'px-5 pt-6 pb-5.5' } as const;
 /**
  * The blue field — the third palette's hero card (global.css header, style A).
  *
- * **One per screen**, and it holds the thing happening here: the course you are walking, the coach
- * you can book, the result you just earned. Everything secondary sits on a glass `Card` below it.
- * Two blue fields on one screen is two «main things», which is none.
+ * **One per screen**, and it holds the thing happening here: the coach you can book, the result
+ * you just earned. Everything secondary sits on a glass `Card` below it. Two blue fields on one
+ * screen is two «main things», which is none — and «Курсы» has none at all since
+ * design/CHANGELOG.md §17: the course you are walking is its photograph with a glass plate
+ * (`CourseCard`), and this field's `KeyTitle` is what the plate borrows from it.
  *
  * Type on it is white (7.71 on the field), the key word light blue (`KeyWord`, 5.7), a tag on it is
  * a `Pill` in `white`, `ghost`, `neon` or a section tone. The field itself never becomes type on

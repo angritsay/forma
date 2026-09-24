@@ -49,8 +49,11 @@
  * **The club is style B of the third palette** (global.css header) — owner: «давай градиент для
  * клуба сделаем, всё остальное как в стиле а». So this tab alone wears the crossroads gradient: a
  * soft glow behind the screen (`.club-aurora`), the streak's rim and its day dots (`ClubStreak`),
- * and the key words of the pitch and of the task's title as `.text-gradient`, large type only. The
- * prize is the one filled pill — neon, as every «ask» tag in the app — and the leader is neon.
+ * and the key words of the pitch and of the task's title as `.text-gradient`, large type only.
+ * **No neon on the club's screens** (design/CHANGELOG.md §17): the task's button, «Вступить», the
+ * retry and the prize pill are the warm half of the gradient under ink, the leader's circle too,
+ * and today's dot on the streak is orange. The neon is the rest of the app's main action; the
+ * club's is its own colour.
  */
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
@@ -301,7 +304,7 @@ export default function MarathonScreen() {
           error?.code === 'network' ? t('common.errorOffline') : t('common.errorGeneric')
         }
         action={
-          <Button variant="action" size="lg" onClick={reloadMarathon}>
+          <Button variant="gradient" size="lg" onClick={reloadMarathon}>
             {t('common.retry')}
           </Button>
         }
@@ -412,9 +415,10 @@ export default function MarathonScreen() {
            * The prize is the one filled pill on the screen — what the table is for, and the reason
            * the table is on this tab at all. The «Неделя 1» kicker that stood over it is gone: the
            * ring in the head already counts the days, and the club runs one week. A prize the
-           * coach types longer than the standing one will ellipsise, like every other pill.
+           * coach types longer than the standing one will ellipsise, like every other pill. It
+           * is the warm gradient, not the neon: the club's one filled pill is the club's colour.
            */}
-          <Pill tone="neon">
+          <Pill tone="warm">
             {t('app.marathonPrizeShort')} · {clubPrize(tr, marathon.prize)}
           </Pill>
           {/*

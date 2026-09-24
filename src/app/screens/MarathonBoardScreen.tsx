@@ -7,8 +7,9 @@
  * they are already out of it.
  *
  * It is a screen of the club, so it wears the club's style (style B, global.css header): the glow
- * behind it. The prize's pill and the leader's filled circle are the neon — the two things the
- * day screen's own table marks too. Your own row is a white ring. The week switch is a control and
+ * behind it. The prize's pill and the leader's filled circle are the warm gradient under ink —
+ * the two things the day screen's own table marks too; no neon on the club's screens
+ * (design/CHANGELOG.md §17). Your own row is a white ring. The week switch is a control and
  * chooses in electric blue like every other.
  *
  * It is the tab's overflow and nothing more. The standings are on the tab itself now — the top
@@ -140,7 +141,7 @@ export default function MarathonBoardScreen() {
               draws above its five rows, so the two tables read as one race. `flex` rather than a
               bare child so the pill hugs its words instead of being stretched by the column. */}
           <div className="flex">
-            <Pill tone="neon">
+            <Pill tone="warm">
               {t('app.marathonPrizeShort')} · {clubPrize(tr, marathon.prize)}
             </Pill>
           </div>
@@ -156,7 +157,7 @@ export default function MarathonBoardScreen() {
               <EmptyState
                 title={t('app.marathonErrorTitle')}
                 action={
-                  <Button variant="action" size="lg" onClick={reload}>
+                  <Button variant="gradient" size="lg" onClick={reload}>
                     {t('common.retry')}
                   </Button>
                 }

@@ -170,10 +170,11 @@ export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
           </span>
         ) : task.rule !== 'none' ? (
           /*
-           * What is still on the table, as a neon tag — the one number on the card that is a
-           * decision, and the neon is what asks for one.
+           * What is still on the table, as a light-blue tag — the one number on the card that is a
+           * decision. It was the neon, which asks for one everywhere else; the club has no neon
+           * (design/CHANGELOG.md §17), and the light blue is the gradient's own first stop.
            */
-          <Pill tone="neon" tilt="right">
+          <Pill tone="sky" tilt="right">
             {points}
           </Pill>
         ) : null}
@@ -299,8 +300,9 @@ function ProofControl({
       <div className="flex flex-col gap-2">
         {done ? null : (
           <div className="flex items-center gap-3">
+            {/* The club's main button is the warm gradient, not the neon (§17). */}
             <Button
-              variant="action"
+              variant="gradient"
               size="md"
               loading={busy}
               onClick={() => void onSend({})}
@@ -348,7 +350,7 @@ function ProofControl({
           />
           <Button
             type="submit"
-            variant="action"
+            variant="gradient"
             size="md"
             loading={busy}
             disabled={value.trim() === ''}
@@ -384,7 +386,7 @@ function ProofControl({
           />
           <Button
             type="submit"
-            variant="action"
+            variant="gradient"
             size="md"
             loading={busy}
             disabled={!text.trim()}
@@ -479,7 +481,7 @@ function AttachProof({
       {primary ? (
         <Button
           size="md"
-          variant={hasMedia && !redo ? 'secondary' : 'action'}
+          variant={hasMedia && !redo ? 'secondary' : 'gradient'}
           loading={busy}
           onClick={() => ref.current?.click()}
         >
