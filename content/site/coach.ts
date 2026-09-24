@@ -62,12 +62,11 @@ export interface CoachLink {
 }
 
 /**
- * His Telegram username, without the «@». Empty until the owner supplies it — the owner asked
- * for a Telegram link («надо бы тг ещё дать») and the account could not be looked up from here, so
- * nothing is guessed: while this is empty the link is simply not drawn, on the tab, on the site and
- * in the JSON-LD `sameAs` alike. Filling it in is the whole change.
+ * His Telegram username, without the «@», as the owner supplied it («надо бы тг ещё дать»). It is
+ * the same handle as his Instagram. Set here, it reaches the tab, the site and the JSON-LD
+ * `sameAs` alike; an empty string would hide the link everywhere.
  */
-export const COACH_TELEGRAM = '';
+export const COACH_TELEGRAM: string = 'titovtrener';
 
 export const COACH = {
   name: { ru: 'Сергей Титов', en: 'Sergey Titov' } satisfies L10n,
