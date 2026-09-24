@@ -46,6 +46,8 @@ import { DataSheet } from './DataSheet';
 import { EquipmentSheet } from './EquipmentSheet';
 import { LanguageSheet } from './LanguageSheet';
 import { LevelsSheet } from './LevelsSheet';
+import { FeatureFlags } from '@/app/features/admin/person/FeatureFlags';
+import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { NameSheet } from './NameSheet';
 import { equipmentSummary, withEquipment } from './model';
 
@@ -69,6 +71,7 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
   const [dataOpen, setDataOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [levelsOpen, setLevelsOpen] = useState(false);
+  const isAdmin = useIsAdmin() === true;
   const [saving, setSaving] = useState(false);
   const tp = profile?.trainingProfile ?? null;
 
@@ -300,6 +303,20 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
               />
             </li>
           </ul>
+
+          {/*
+           * An admin's own feature flags, right here. The owner could not find where to switch her
+           * own card on («я не вижу у себя в аккаунте мой профиль тренера»): the switch lived only
+           * on her person page in the admin, three screens away. This is the same component, pointed
+           * at the signed-in account, and it refreshes the app's flags on change, so the card
+           * appears on «Тренер» at once. Only admins see it; the RPC refuses anyone else anyway.
+           */}
+          {isAdmin && email ? (
+            <section className="flex flex-col gap-3" aria-label={t('app.personFeatures')}>
+              <span className="eyebrow">{t('app.personFeatures')}</span>
+              <FeatureFlags email={email} signedIn />
+            </section>
+          ) : null}
 
           {/* The red is on the label, not on the button: `ghost` sets its own text colour and a
               `text-danger` beside it is a coin toss on which utility the stylesheet emits last. */}
