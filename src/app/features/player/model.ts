@@ -2,13 +2,21 @@
  * Pure helpers shared by the player and summary screens: content lookups for steps, localized
  * labels for targets / sets / block formats, and result shapes.
  */
-import type { BlockFormat, BlockType, Exercise, ExerciseUnit, Load } from '@/content/schema';
+import type {
+  BlockFormat,
+  BlockType,
+  Exercise,
+  ExerciseIntro,
+  ExerciseUnit,
+  Load,
+} from '@/content/schema';
 import { findExercise } from '@/content/catalogue';
 import { plural, type Locale, type TKey, type TParams } from '@/i18n/index';
 import { ISOMETRIC_ID_PATTERN } from '@/lib/training/constants';
 import { isMaxRepsAmrap } from '@/lib/training/player';
 import { conflictsWithLimitations } from '@/lib/training/prescribe';
 import type {
+  IntroTier,
   Limitation,
   PlayerStep,
   PrescribedBlock,
@@ -20,6 +28,7 @@ import type { PlayerResult } from '@/app/store/activeWorkout';
 export type Translate = (key: TKey, params?: TParams) => string;
 
 export type BlockIntroStep = Extract<PlayerStep, { kind: 'block_intro' }>;
+export type IntroStep = Extract<PlayerStep, { kind: 'intro' }>;
 export type WorkStep = Extract<PlayerStep, { kind: 'work' }>;
 export type RestStep = Extract<PlayerStep, { kind: 'rest' }>;
 export type AmrapStep = Extract<PlayerStep, { kind: 'amrap' }>;
@@ -58,6 +67,47 @@ export function exerciseName(id: string, locale: Locale): string {
 export function exerciseVideoRef(id: string | undefined, locale: Locale): string | undefined {
   const v = id ? findExercise(id)?.video : undefined;
   return v?.[locale] ?? v?.ru ?? undefined;
+}
+
+/**
+ * The explanation an `intro` step shows: read from the catalogue when it is shown rather than
+ * stored on the step, so an explanation re-edited in the admin panel shows its latest words.
+ */
+export function exerciseIntro(exerciseId: string, tier: IntroTier): ExerciseIntro | undefined {
+  const e = findExercise(exerciseId);
+  return (tier === 'full' ? e?.introFull : e?.introBrief) ?? undefined;
+}
+
+/** The explanation's own clip, if the coach filmed one (one clip for every language). */
+export function introVideoRef(exerciseId: string, tier: IntroTier): string | undefined {
+  const v = exerciseIntro(exerciseId, tier)?.video;
+  return typeof v === 'string' && v.trim() !== '' ? v : undefined;
+}
+
+/**
+ * The explanation's recording in the viewer's language, falling back to Russian — and, when the
+ * coach wrote the explanation but recorded nothing, to the movement's spoken name, so the athlete
+ * with their eyes elsewhere still hears which movement is being explained.
+ */
+export function introAudioRef(
+  exerciseId: string,
+  tier: IntroTier,
+  locale: Locale,
+): string | undefined {
+  const a = exerciseIntro(exerciseId, tier)?.audio;
+  return a?.[locale] || a?.ru || exerciseAudioRef(exerciseId, locale);
+}
+
+/**
+ * An explanation's words in the viewer's language (else Russian, else English), as paragraphs:
+ * the coach separates them with a blank line in the admin panel's text box.
+ */
+export function introParagraphs(text: ExerciseIntro['text'], locale: Locale): string[] {
+  const raw = text?.[locale]?.trim() || text?.ru?.trim() || text?.en?.trim() || '';
+  return raw
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter((p) => p !== '');
 }
 
 /**
@@ -110,6 +160,9 @@ export function stepVideoRef(
   switch (step?.kind) {
     case 'work':
       return exerciseVideoRef(step.exerciseId, locale);
+    // The explanation's own clip when there is one, else the movement it explains.
+    case 'intro':
+      return introVideoRef(step.exerciseId, step.tier) ?? exerciseVideoRef(step.exerciseId, locale);
     case 'rest':
       return exerciseVideoRef(step.nextExerciseId, locale);
     case 'amrap':
@@ -130,7 +183,8 @@ export function stepVideoRef(
  * board's rows can switch to any of theirs.
  */
 export function sessionVideoRefs(prescribed: PrescribedWorkout, locale: Locale): string[] {
-  return sessionRefs(prescribed, (id) => exerciseVideoRef(id, locale));
+  const refs = sessionRefs(prescribed, (id) => exerciseVideoRef(id, locale));
+  return unique([...refs, ...introRefs(prescribed, (id, tier) => introVideoRef(id, tier))]);
 }
 
 /**
@@ -165,7 +219,8 @@ export function exerciseAudioRef(id: string | undefined, locale: Locale): string
  * says it too — «максимум повторений» is still one exercise. A board of several says nothing: the
  * athlete is about to do all of them, and listing them would be a sentence, not a name. A rest
  * says nothing either — its clip is a preview of the next movement, and the name will be said when
- * that movement begins.
+ * that movement begins. An explanation (`intro`) says nothing here either: it plays its own
+ * recording, which is longer than a name and belongs to the explanation's screen (IntroStep).
  */
 export function stepVoiceRef(step: PlayerStep | undefined, locale: Locale): string | undefined {
   switch (step?.kind) {
@@ -186,7 +241,30 @@ export function stepVoiceRef(step: PlayerStep | undefined, locale: Locale): stri
  * ahead by `prefetchVoice`, so the first name is ready before the first step asks for it.
  */
 export function sessionAudioRefs(prescribed: PrescribedWorkout, locale: Locale): string[] {
-  return sessionRefs(prescribed, (id) => exerciseAudioRef(id, locale));
+  const refs = sessionRefs(prescribed, (id) => exerciseAudioRef(id, locale));
+  return unique([...refs, ...introRefs(prescribed, (id, tier) => introAudioRef(id, tier, locale))]);
+}
+
+/**
+ * The explanations' own media, for the exercises this session explains (`prescribed.intros`) —
+ * signed and decoded with everything else, so an explanation's recording is ready when its step
+ * arrives. Absent map, nothing.
+ */
+function introRefs(
+  prescribed: PrescribedWorkout,
+  refOf: (exerciseId: string, tier: IntroTier) => string | undefined,
+): string[] {
+  const out: string[] = [];
+  for (const [id, tier] of Object.entries(prescribed.intros ?? {})) {
+    if (tier !== 'full' && tier !== 'brief') continue;
+    const ref = refOf(id, tier);
+    if (ref) out.push(ref);
+  }
+  return out;
+}
+
+function unique(refs: readonly string[]): string[] {
+  return [...new Set(refs)];
 }
 
 function sessionRefs(
@@ -409,6 +487,7 @@ export function stepTitle(
     case 'block_intro':
       return step.title ? step.title[locale] : blockTypeLabel(t, step.type);
     case 'work':
+    case 'intro':
       return exerciseName(step.exerciseId, locale);
     case 'rest':
       return t('training.rest');
@@ -431,6 +510,7 @@ export function stepExerciseId(
   let exerciseId: string | undefined;
   switch (step.kind) {
     case 'work':
+    case 'intro':
       exerciseId = step.exerciseId;
       break;
     case 'rest':
@@ -478,6 +558,7 @@ export function skippedResult(step: PlayerStep, stepIndex: number): PlayerResult
     case 'fortime':
       return { stepIndex, blockId: step.blockId, completed: false, skipped: true };
     case 'block_intro':
+    case 'intro':
     case 'rest':
     case 'done':
       return null;

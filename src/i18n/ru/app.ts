@@ -350,6 +350,9 @@ export const app = {
   playerSectionCooldown: 'Заминка',
   playerSectionPart: 'Часть {n} из {total}',
   playerGo: 'Поехали',
+  // Над объяснением тренера перед упражнением: подробное (первый раз) и короткое (ещё два).
+  playerIntroFull: 'Объяснение',
+  playerIntroBrief: 'Коротко',
   playerDone: 'Готово',
   playerSkipWarmup: 'Пропустить разминку',
   playerHowTo: 'Как делать',

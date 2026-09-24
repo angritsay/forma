@@ -6,10 +6,16 @@ import {
   exerciseAudioRef,
   exerciseVideoRef,
   firstFilmedIndex,
+  introAudioRef,
+  introParagraphs,
+  introVideoRef,
   sessionAudioRefs,
   sessionVideoRefs,
   stepArtExerciseId,
+  skippedResult,
+  stepExerciseId,
   stepFitSec,
+  stepTitle,
   stepVideoRef,
   stepVoiceRef,
 } from './model';
@@ -238,5 +244,97 @@ describe('the spoken name', () => {
     } as unknown as PrescribedWorkout;
     expect(sessionAudioRefs(prescribed, 'en')).toEqual([EN, SQUAT_RU]);
     expect(sessionAudioRefs(prescribed, 'ru')).toEqual([RU, SQUAT_RU]);
+  });
+});
+
+/*
+ * The coach's explanation before an exercise. Marked up the way the admin panel does it, as a
+ * media overlay on compiled movements: plank has both tiers with every medium, air_squat has only
+ * words in the full one.
+ */
+describe('the explanation step', () => {
+  const FULL_VIDEO = 'storage:videos/shared/plank.intro-full.mp4';
+  const FULL_RU = 'storage:audio/shared/plank.intro-full.ru.m4a';
+  const FULL_EN = 'storage:audio/shared/plank.intro-full.en.m4a';
+  const BRIEF_RU = 'storage:audio/shared/plank.intro-brief.ru.m4a';
+  const NAME_RU = 'storage:audio/shared/air_squat.ru.m4a';
+  const overlay = () =>
+    setCatalogueOverlay({
+      courses: [],
+      exercises: [
+        {
+          ...ex('plank'),
+          introFull: {
+            text: { ru: 'Первый абзац.\n\nВторой абзац.' },
+            video: FULL_VIDEO,
+            audio: { ru: FULL_RU, en: FULL_EN },
+          },
+          introBrief: { text: { ru: 'Коротко.' }, audio: { ru: BRIEF_RU } },
+        },
+        { ...ex('air_squat'), audio: { ru: NAME_RU }, introFull: { text: { ru: 'Слова.' } } },
+      ],
+    });
+  afterEach(() => resetCatalogueOverlay());
+
+  const intro = (exerciseId: string, tier: 'full' | 'brief') =>
+    ({ kind: 'intro', blockId: 'b1', exerciseId, tier }) as PlayerStep;
+  const t = (key: string) => key;
+
+  it('plays the explanation’s own clip, else the movement’s, and always loops', () => {
+    overlay();
+    expect(introVideoRef('plank', 'full')).toBe(FULL_VIDEO);
+    expect(stepVideoRef(intro('plank', 'full'), 'ru')).toBe(FULL_VIDEO);
+    expect(stepVideoRef(intro('plank', 'brief'), 'ru')).toBe(exerciseVideoRef('plank', 'ru'));
+    expect(stepVideoRef(intro('air_squat', 'full'), 'en')).toBe(
+      exerciseVideoRef('air_squat', 'en'),
+    );
+    expect(stepFitSec(intro('plank', 'full'))).toBeUndefined();
+  });
+
+  it('speaks the tier’s recording by language, else Russian, else the movement’s name', () => {
+    overlay();
+    expect(introAudioRef('plank', 'full', 'en')).toBe(FULL_EN);
+    expect(introAudioRef('plank', 'brief', 'en')).toBe(BRIEF_RU);
+    expect(introAudioRef('air_squat', 'full', 'ru')).toBe(NAME_RU);
+    // The step's own recording plays from the step, so the generic «say the name» stays quiet.
+    expect(stepVoiceRef(intro('plank', 'full'), 'ru')).toBeUndefined();
+  });
+
+  it('adds the explanations’ media to what the session signs and decodes', () => {
+    overlay();
+    const item = (exerciseId: string) => ({ exerciseId }) as unknown as PrescribedItem;
+    const base = {
+      blocks: [{ blockId: 'b1', items: [item('plank'), item('air_squat')] }],
+    } as unknown as PrescribedWorkout;
+    const plainVideo = sessionVideoRefs(base, 'ru');
+    expect(plainVideo).not.toContain(FULL_VIDEO);
+    expect(sessionAudioRefs(base, 'ru')).toEqual([NAME_RU]);
+
+    const explained = {
+      ...base,
+      intros: { plank: 'full', air_squat: 'full' },
+    } as PrescribedWorkout;
+    expect(sessionVideoRefs(explained, 'ru')).toEqual([...plainVideo, FULL_VIDEO]);
+    // air_squat's explanation falls back to its name, already listed: listed once.
+    expect(sessionAudioRefs(explained, 'en')).toEqual([NAME_RU, FULL_EN]);
+    const brief = { ...base, intros: { plank: 'brief' } } as PrescribedWorkout;
+    expect(sessionAudioRefs(brief, 'ru')).toEqual([NAME_RU, BRIEF_RU]);
+  });
+
+  it('is about its exercise, has no result, and is titled with its name', () => {
+    overlay();
+    const p = { blocks: [] } as unknown as PrescribedWorkout;
+    expect(stepExerciseId(intro('plank', 'full'), p)).toBe('plank');
+    expect(stepArtExerciseId(intro('plank', 'full'), p, 'ru')).toBe('plank');
+    expect(skippedResult(intro('plank', 'full'), 3)).toBeNull();
+    expect(stepTitle(t as never, 'ru', intro('plank', 'full'), p)).toBe(ex('plank').name.ru);
+  });
+
+  it('splits the words into paragraphs on blank lines, in the viewer’s language or Russian', () => {
+    expect(introParagraphs({ ru: 'Один.\n\n  Два.\n\n\n' }, 'ru')).toEqual(['Один.', 'Два.']);
+    expect(introParagraphs({ ru: 'Строка\nи ещё' }, 'en')).toEqual(['Строка\nи ещё']);
+    expect(introParagraphs({ ru: 'Ру', en: 'En' }, 'en')).toEqual(['En']);
+    expect(introParagraphs(undefined, 'ru')).toEqual([]);
+    expect(introParagraphs({ ru: '   ' }, 'ru')).toEqual([]);
   });
 });

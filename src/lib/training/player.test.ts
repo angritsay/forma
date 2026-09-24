@@ -9,7 +9,8 @@ import {
 } from './fixtures.test-helpers';
 import { amrapExpectedRounds, buildPlayerSteps, warmupSkipIndex } from './player';
 import { prescribeWorkout } from './prescribe';
-import type { PlayerStep, PrescribeOptions } from './types';
+import { computeCompletion } from './session';
+import type { PlayerStep, PrescribeOptions, PrescribedWorkout } from './types';
 
 const opts: PrescribeOptions = { profile: profile(), scale: 1, choice: 'normal', level: 2 };
 const stepsFor = (b: Parameters<typeof block>[0]) =>
@@ -76,7 +77,7 @@ describe('buildPlayerSteps — sets and circuits', () => {
    * The whole of a real workout, not a two-item fixture: an introduction step would be easy to
    * reintroduce for one format and miss here.
    */
-  it('never puts a step between the athlete and a movement', () => {
+  it('never puts a step between the athlete and a movement the coach has not explained', () => {
     const steps = buildPlayerSteps(prescribeWorkout(FULL_WORKOUT, opts, fixtureLookup));
     const kindsSeen = new Set(steps.map((s) => s.kind));
     expect([...kindsSeen]).not.toContain('explain');
@@ -376,5 +377,130 @@ describe('buildPlayerSteps — rest after a block', () => {
       fixtureLookup,
     );
     expect(p.estimatedSec - without.estimatedSec).toBe(120);
+  });
+});
+
+describe("buildPlayerSteps — the coach's explanation before an exercise", () => {
+  const base = (): PrescribedWorkout => prescribeWorkout(FULL_WORKOUT, opts, fixtureLookup);
+  const intros = (steps: PlayerStep[]) =>
+    steps.filter((s): s is Extract<PlayerStep, { kind: 'intro' }> => s.kind === 'intro');
+
+  it("builds exactly today's steps without the map, and with an empty one", () => {
+    const p = base();
+    expect(p.intros).toBeUndefined();
+    const today = buildPlayerSteps(p);
+    expect(buildPlayerSteps({ ...p, intros: {} })).toEqual(today);
+    expect(intros(today)).toHaveLength(0);
+  });
+
+  it('puts one explanation before the first time each explained exercise is done', () => {
+    const p: PrescribedWorkout = { ...base(), intros: { air_squat: 'full', push_up: 'brief' } };
+    const steps = buildPlayerSteps(p);
+    const found = intros(steps);
+    expect(found.map((s) => [s.exerciseId, s.tier, s.blockId])).toEqual([
+      ['air_squat', 'full', 'warmup'],
+      ['push_up', 'brief', 'strength'],
+    ]);
+    for (const intro of found) {
+      const i = steps.indexOf(intro);
+      const next = steps[i + 1];
+      expect(next?.kind).toBe('work');
+      expect(next && 'exerciseId' in next ? next.exerciseId : undefined).toBe(intro.exerciseId);
+      // And nowhere earlier is that exercise done.
+      const earlier = works(steps.slice(0, i)).filter((w) => w.exerciseId === intro.exerciseId);
+      expect(earlier).toHaveLength(0);
+    }
+    // Everything else is today's sequence with those two steps taken out.
+    expect(steps.filter((s) => s.kind !== 'intro')).toEqual(buildPlayerSteps(base()));
+  });
+
+  it('explains a one-movement board and skips a board of several', () => {
+    const w = workout({
+      id: 'w',
+      blocks: [
+        block({
+          id: 'multi',
+          format: 'amrap',
+          durationSec: 300,
+          items: [item('burpee', { reps: 5 }), item('air_squat', { reps: 10 })],
+        }),
+        block({ id: 'one', format: 'fortime', durationSec: 300, items: [item('burpee')] }),
+      ],
+    });
+    const p = prescribeWorkout(w, opts, fixtureLookup);
+    const steps = buildPlayerSteps({ ...p, intros: { burpee: 'full', air_squat: 'brief' } });
+    // `air_squat` appears only on the multi-movement board: no step for it.
+    expect(intros(steps).map((s) => [s.exerciseId, s.blockId])).toEqual([['burpee', 'one']]);
+    const i = steps.findIndex((s) => s.kind === 'intro');
+    expect(steps[i + 1]?.kind).toBe('fortime');
+  });
+
+  it('explains every movement of an EMOM or an interval up front, not between its minutes', () => {
+    for (const format of ['emom', 'interval'] as const) {
+      const w = workout({
+        id: 'w',
+        blocks: [
+          block({
+            id: 'b',
+            format,
+            sets: 4,
+            items: [item('burpee', { reps: 5 }), item('air_squat', { reps: 10 })],
+          }),
+        ],
+      });
+      const p = prescribeWorkout(w, opts, fixtureLookup);
+      const steps = buildPlayerSteps({ ...p, intros: { burpee: 'full', air_squat: 'brief' } });
+      expect(kinds(steps).slice(0, 4)).toEqual(['block_intro', 'intro', 'intro', 'work']);
+      expect(intros(steps).map((s) => s.exerciseId)).toEqual(['burpee', 'air_squat']);
+    }
+  });
+
+  it('keeps the warm-up skip after the whole warm-up, its explanations included', () => {
+    const p: PrescribedWorkout = { ...base(), intros: { air_squat: 'full', plank: 'brief' } };
+    const steps = buildPlayerSteps(p);
+    expect(steps[0]).toEqual({
+      kind: 'intro',
+      blockId: 'warmup',
+      exerciseId: 'air_squat',
+      tier: 'full',
+    });
+    const skipTo = warmupSkipIndex(steps, p);
+    const plain = buildPlayerSteps(base());
+    // Two explanations inside the warm-up: the target moves by exactly those two.
+    expect(skipTo).toBe((warmupSkipIndex(plain, base()) ?? -99) + 2);
+    expect(steps[skipTo!]).toEqual(plain[skipTo! - 2]);
+  });
+
+  it('weighs nothing in completion: explained or not, the same results give the same share', () => {
+    const plainP = base();
+    const plain = buildPlayerSteps(plainP);
+    const withP: PrescribedWorkout = { ...plainP, intros: { push_up: 'full' } };
+    const withIntro = buildPlayerSteps(withP);
+    // Complete every other work step of the plain list.
+    const plainResults = plain
+      .map((s, i) => ({ s, i }))
+      .filter(({ s }) => s.kind === 'work')
+      .filter((_, n) => n % 2 === 0)
+      .map(({ s, i }) => ({
+        stepIndex: i,
+        blockId: (s as { blockId: string }).blockId,
+        completed: true,
+      }));
+    // Rebuilt steps are fresh objects, so match by position instead: intros are the only insertions.
+    const map = new Map<number, number>();
+    let j = 0;
+    withIntro.forEach((s, k) => {
+      if (s.kind === 'intro') return;
+      map.set(j, k);
+      j += 1;
+    });
+    const moved = plainResults.map((r) => ({ ...r, stepIndex: map.get(r.stepIndex)! }));
+    expect(computeCompletion(withIntro, moved)).toBe(computeCompletion(plain, plainResults));
+    expect(computeCompletion(withIntro, moved)).toBeGreaterThan(0);
+  });
+
+  it('ignores a tier it does not know, as a map from storage might carry', () => {
+    const p = { ...base(), intros: { air_squat: 'long' } } as unknown as PrescribedWorkout;
+    expect(buildPlayerSteps(p)).toEqual(buildPlayerSteps(base()));
   });
 });

@@ -266,3 +266,24 @@ describe('demo backend — the tester journey', () => {
     expect(await demo.resolveMediaUrl(undefined)).toBeUndefined();
   });
 });
+
+describe('demo backend — explanation view counts (0048)', () => {
+  it('counts per exercise for the signed-in person and returns the new total', async () => {
+    await signIn();
+    expect(await demo.listMyIntroViews()).toEqual({});
+    expect(await demo.markIntroSeen('cat_cow')).toBe(1);
+    expect(await demo.markIntroSeen('cat_cow')).toBe(2);
+    expect(await demo.markIntroSeen('child_pose')).toBe(1);
+    expect(await demo.listMyIntroViews()).toEqual({ cat_cow: 2, child_pose: 1 });
+  });
+
+  it('reads a database stored before the table existed as no views, keeping everything else', async () => {
+    await signIn();
+    const raw = JSON.parse(store.getItem('forma.demo.db')!) as Record<string, unknown>;
+    delete raw.introViews;
+    store.setItem('forma.demo.db', JSON.stringify(raw));
+    expect(await demo.listMyIntroViews()).toEqual({});
+    expect(await demo.getProfile()).not.toBeNull();
+    expect(await demo.markIntroSeen('cat_cow')).toBe(1);
+  });
+});

@@ -6,6 +6,7 @@
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useToast } from '@/components/ui/Toast';
+import { withIntros } from '@/app/features/player/introViews';
 import { unlockAudio } from '@/app/features/player/sound';
 import { startSession } from '@/lib/api/sessions';
 import {
@@ -35,7 +36,11 @@ export function useCustomWorkoutStart() {
       if (busy) return;
       setBusy(true);
       try {
-        const prescribed = buildPrescribedFromCustom(workout.shortId, workout.structure);
+        // The coach's explanations this session opens exercises with, decided now and stored with
+        // it (bounded: a slow network starts the workout on the device's own counts).
+        const prescribed = await withIntros(
+          buildPrescribedFromCustom(workout.shortId, workout.structure),
+        );
         const startedAt = new Date().toISOString();
         const { id: sessionId } = await startSession({
           // A custom workout is not part of a course: course_id 'custom' unlocks the sessions

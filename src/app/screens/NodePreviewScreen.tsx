@@ -66,6 +66,7 @@ import { PlanBlocks } from '@/app/features/path/PlanBlocks';
 import { useTrainingContext } from '@/app/features/path/useTrainingContext';
 import { WorkoutHero } from '@/app/features/path/WorkoutHero';
 import { WorkoutStrip } from '@/app/features/path/WorkoutStrip';
+import { withIntros } from '@/app/features/player/introViews';
 import { unlockAudio } from '@/app/features/player/sound';
 import { useActiveWorkoutStore } from '@/app/store/activeWorkout';
 import {
@@ -256,7 +257,7 @@ export default function NodePreviewScreen() {
     try {
       const state = await useProgress.getState().ensureCourseState(course.id);
       // The stored scale wins if it changed since the estimates were computed.
-      const prescribed =
+      const scaled =
         state.scale === plan.prescribed.scale
           ? plan.prescribed
           : prescribeWorkout(workout, {
@@ -267,6 +268,9 @@ export default function NodePreviewScreen() {
               deload,
               repeat,
             });
+      // Which exercises open with the coach's explanation, and which one, decided once here and
+      // stored with the session (see `withIntros`: never more than a moment's wait).
+      const prescribed = await withIntros(scaled);
       const startedAt = new Date().toISOString();
       const { id: sessionId } = await startSession({
         courseId: course.id,

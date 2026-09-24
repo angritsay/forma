@@ -28,17 +28,24 @@ const TABS: { id: Tab; key: TKey }[] = [
   { id: 'cautions', key: 'app.playerTabCautions' },
 ];
 
-/** Which movement this step is about — for a rest, the one it is resting *for*. */
+/**
+ * Which movement this step is about — for a rest, the one it is resting *for*; for the coach's
+ * explanation, the one it explains (its technique is the natural thing to turn the card over for).
+ */
 export function stepExerciseId(
   step: PlayerStep,
   prescribed: PrescribedWorkout,
 ): { exerciseId: string; item: PrescribedItem } | null {
   if (step.kind === 'work') return { exerciseId: step.exerciseId, item: step.item };
-  if (step.kind === 'rest' && step.nextExerciseId) {
-    const item = findBlock(prescribed, step.blockId)?.items.find(
-      (it) => it.exerciseId === step.nextExerciseId,
-    );
-    if (item) return { exerciseId: step.nextExerciseId, item };
+  const aheadId =
+    step.kind === 'rest'
+      ? step.nextExerciseId
+      : step.kind === 'intro'
+        ? step.exerciseId
+        : undefined;
+  if ((step.kind === 'rest' || step.kind === 'intro') && aheadId) {
+    const item = findBlock(prescribed, step.blockId)?.items.find((it) => it.exerciseId === aheadId);
+    if (item) return { exerciseId: aheadId, item };
   }
   return null;
 }

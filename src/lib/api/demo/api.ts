@@ -1088,6 +1088,40 @@ export async function unassignCustomWorkout(_workoutId: string, _email: string):
 }
 
 /** Демо-двойник `my_done_custom_workouts()` (0024). */
+// --- exercise explanations (0048) ------------------------------------------------
+
+/** `my_exercise_intro_views()`: this person's view counts. Rows stored before 0048: none yet. */
+export async function listMyIntroViews(): Promise<Record<string, number>> {
+  return run(() => {
+    const user = requireDemoUser();
+    const out: Record<string, number> = {};
+    for (const r of readDb().introViews ?? []) {
+      if (r.userId === user.id) out[r.exerciseId] = r.views;
+    }
+    return out;
+  });
+}
+
+/** `mark_exercise_intro_seen(p_exercise_id)`: one more view, returning the new total. */
+export async function markIntroSeen(exerciseId: string): Promise<number> {
+  return run(() => {
+    const user = requireDemoUser();
+    if (typeof exerciseId !== 'string' || exerciseId.trim() === '') {
+      throw new AppError('validation', 'invalid_exercise_id');
+    }
+    return mutateDb((db) => {
+      const rows = (db.introViews ??= []);
+      const row = rows.find((r) => r.userId === user.id && r.exerciseId === exerciseId);
+      if (row) {
+        row.views += 1;
+        return row.views;
+      }
+      rows.push({ userId: user.id, exerciseId, views: 1 });
+      return 1;
+    });
+  });
+}
+
 export async function listDoneCustomWorkouts(): Promise<string[]> {
   return run(() => {
     const db = readDb();

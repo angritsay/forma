@@ -162,3 +162,65 @@ describe('playVoice', () => {
     expect(FakeContext.last?.sources).toHaveLength(1);
   });
 });
+
+describe('playVoice while the recording is still decoding', () => {
+  /** A fetch held open until the test lets it go: a slow connection, on demand. */
+  function holdFetch(): () => void {
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    fetchMock.mockImplementation(async () => {
+      await gate;
+      return okResponse(1500);
+    });
+    return release;
+  }
+
+  it('says the first name once it decodes, if its step is still current', async () => {
+    const release = holdFetch();
+    const loading = voice.prefetchVoice([RU]);
+    voice.playVoice(RU);
+    expect(FakeContext.last?.sources ?? []).toHaveLength(0);
+    release();
+    await loading;
+    await vi.waitFor(() => expect(FakeContext.last?.sources).toHaveLength(1));
+    expect(FakeContext.last?.sources[0]?.started).toBe(true);
+  });
+
+  it('stays silent when the step was left (stopVoice) before it decoded', async () => {
+    const release = holdFetch();
+    const loading = voice.prefetchVoice([RU]);
+    voice.playVoice(RU);
+    voice.stopVoice();
+    release();
+    await loading;
+    await new Promise((r) => setTimeout(r, 0));
+    expect(FakeContext.last?.sources ?? []).toHaveLength(0);
+  });
+
+  it('stays silent when another voice was asked for in the meantime', async () => {
+    await voice.prefetchVoice([EN]);
+    const release = holdFetch();
+    const loading = voice.prefetchVoice([RU]);
+    voice.playVoice(RU);
+    voice.playVoice(EN);
+    release();
+    await loading;
+    await new Promise((r) => setTimeout(r, 0));
+    const sources = FakeContext.last!.sources;
+    expect(sources).toHaveLength(1);
+    expect(sources[0]?.buffer).toBeTruthy();
+  });
+
+  it('gives up after the wait: a name that arrives too late is not said late', async () => {
+    const release = holdFetch();
+    const loading = voice.prefetchVoice([RU]);
+    voice.playVoice(RU, { waitMs: 5 });
+    await new Promise((r) => setTimeout(r, 20));
+    release();
+    await loading;
+    await new Promise((r) => setTimeout(r, 0));
+    expect(FakeContext.last?.sources ?? []).toHaveLength(0);
+  });
+});

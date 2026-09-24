@@ -364,9 +364,8 @@ unknown. The result is an estimate for motivation and trend, not a measurement.
 `buildPlayerSteps` is deterministic and index-addressable (the app persists `stepIndex`):
 
 - `block_intro` per block, then
-- **sets / circuit:** per set → per item: `explain` (only the first time the exercise appears in
-  the whole workout), `work` (`timer` for seconds, `reps` otherwise), `rest` after the item
-  (`restAfterSec`) or between sets/rounds; no rest after the last set;
+- **sets / circuit:** per set → per item: `work` (`timer` for seconds, `reps` otherwise), `rest`
+  after the item (`restAfterSec`) or between sets/rounds; no rest after the last set;
 - **emom:** one 60 s `timer` step per minute, items round-robin, `target` = reps of that item;
 - **tabata:** per item, rounds × (work + rest) without the trailing rest; a rest between items;
 - **interval:** items alternate every round, trailing rest skipped;
@@ -377,6 +376,15 @@ unknown. The result is an estimate for motivation and trend, not a measurement.
   that carry `isTest: true`. The UI runs the window and then records the **measurement** (reps done
   or seconds held) as the benchmark value; completion ignores that number and counts the step as
   done or skipped (§7.1), because a max effort has no target to fall short of. Then `done`.
+- **`intro`** — the coach's explanation of an exercise (`introFull` / `introBrief`, written in the
+  admin panel): one step immediately before the first `work` step of that exercise in the session
+  (or before a one-movement `amrap` / `fortime` step; an `emom` or `interval` block explains all
+  its explained movements up front, before its first minute, so its clock is not broken up), at
+  most once per exercise per session, the warm-up included. It is placed only for exercises in `PrescribedWorkout.intros`, which the app
+  fills when the session starts from the person's view counts (`introTiersFor` in `intro.ts`: the
+  full explanation at 0 views, the brief one at 1–2, none from 3; only tiers that exist). A
+  prescription without that map builds exactly the steps it always did. The step has no result and
+  weighs 0 in completion (§7.1).
 
 ## 7. After the session (`session.ts`)
 
