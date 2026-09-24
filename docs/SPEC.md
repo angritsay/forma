@@ -245,7 +245,17 @@ translation for reading, not a second contract.
   type). Section colours are tags, not fields: beginners orange `#FF5A00`, dumbbells neon
   `#F4FF3F`, yoga beige `#FFE6D0`, club `#2038E2`, coach bleu ciel `#007BFF` (4.71 on the graphite
   ground since §16 — it reads as small type now, where on charcoal it was large-only at 4.37). No
-  text is ever drawn as an outline.
+  text is ever drawn as an outline. **Three card treatments** (`design/CHANGELOG.md` §17, the
+  owner's «для курсов — картинки и стекло, для тренировок от тренера — яркие цвета; в клубе —
+  градиент»): a course card is its photograph, and the hero of «Курсы» is that photograph with a
+  plate of dense glass tinted from the ground pinned to its bottom (`.glass-card-on-art`) — no
+  blue field on that screen; a coach's assigned workout is a bright field, ciel first and then
+  orange and neon by index only to tell several apart, ink on all three, where neon is identity
+  and not «now» (`coachCardFill()`); and **the club has no neon at all** — its buttons, its prize
+  pill and its leader's circle are the warm half of the crossroads gradient under ink (`Button`
+  `gradient`, `Pill` `warm`, `.bg-warm`; the electric-blue end can never carry a label), today's
+  streak dot is orange. So: neon is the main action everywhere except the club; the club's main
+  action is the warm gradient (`club-no-neon.test.ts`).
 - **Ink on a coloured fill is chosen by measured contrast**, not by lightness: `tileInk()`
   (`src/lib/ui/tile.ts`) measures `#111111` and white against the fill and takes the better one;
   `tileAccent()` gives a section's colour as type on graphite (the fill when it clears 4.5 — bleu
@@ -667,6 +677,17 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    is the prototype's device — the number larger than the word — because on a progress screen the
    number is the content.
 
+   **The first card is the hero, and it is photograph + glass** (`design/CHANGELOG.md` §17): the
+   course being walked is taller (347×400) with a pane of dense glass pinned to its bottom
+   (`.glass-card-on-art`, tinted from the ground at the level-3 alphas — measured so white reads
+   7.5 and the light-blue key word 5.7 over a white sky), holding the light-blue % pill or the
+   tilted neon «Первая тренировка бесплатно» sticker, the title with its key word (`KeyTitle`),
+   the progress rule and **the screen's one neon button** with the arrow's circle. It was the
+   blue field for one iteration; nothing on «Курсы» is the field now. A course without a
+   photograph shows the plate over the plain glass card. Above the deck, the coach's assigned
+   workouts (`AssignedWorkoutsCard`) are the screen's bright fields — ciel, orange, neon by index,
+   a single one always ciel, ink on all, the «Тренер» tag as dense glass with a white word.
+
    **Colour on type needs a scrim, and the scrim is measured.** A programme colour is far less
    luminous than white (Portland orange `#FF5A00` is 0.286), so 4.5:1 against it needs the ground
    at luminance 0.0247 or below, about sRGB 44; `.photo-scrim-top` is tuned to that and
@@ -837,7 +858,9 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
     is one sentence — «Только задание, кнопка и лидерборд» — and it is a subtraction, applied
     twice: the screen had accumulated sections, they were cut to two, and it accumulated furniture
     again. The head is the day as a ring with the club's name beside it; then one `TaskCard`; then
-    the week — the prize as the one filled pill, three rows of circled ranks and the member's own
+    the week — the prize as the one filled pill (the warm gradient under ink, as is every button
+    on the club's screens and the leader's circle: no neon in the club, §17), three rows of
+    circled ranks and the member's own
     under them, the full table one tap further (`/marathon/board`, this week and last). From `md`
     the two sit side by side: on a phone the task has to win, on a laptop the board beside the task
     is the race made visible while the task is being done.

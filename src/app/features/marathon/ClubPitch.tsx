@@ -222,8 +222,11 @@ export function ClubMember() {
  *
  * It is a link rather than a `Button` because it leaves the app — `LinkButton` hands the address to
  * Telegram so the payment page opens in the person's own browser instead of replacing the Mini App.
- * It is the screen's one main action, so it is the neon (style A): the club's gradient is never a
- * button (design/CHANGELOG.md §14).
+ * It is the screen's one main action, and in the club the main action is the **warm gradient**
+ * (`gradient`, design/CHANGELOG.md §17): the club's material is its gradient, and the neon is the
+ * rest of the app's. Only the warm half — light blue → beige → orange — under ink, because the
+ * crossroads gradient's electric-blue end cannot carry a label; §14's «the gradient is never a
+ * button» was about that end, and stands for it.
  */
 export function ClubJoin() {
   const { t, locale } = useT();
@@ -235,7 +238,12 @@ export function ClubJoin() {
   const email = profile?.email || user?.email || '';
   return (
     <div className="-mx-2 flex flex-col gap-2.5">
-      <LinkButton href={clubJoinHref(locale, email, isDemo())} variant="action" size="lg" fullWidth>
+      <LinkButton
+        href={clubJoinHref(locale, email, isDemo())}
+        variant="gradient"
+        size="lg"
+        fullWidth
+      >
         {t('app.marathonJoinCta', { price })}
       </LinkButton>
       <p className="px-5 text-[13px] leading-snug text-muted-2">

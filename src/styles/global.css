@@ -48,6 +48,26 @@
  *     itself. **The crossroads gradient** — the club only.
  *   - **success / warning / danger** — unchanged; danger is errors and destructive actions.
  *
+ * ## Three card treatments (2026-09-24, design/CHANGELOG.md §17)
+ *
+ * Owner: «для курсов — картинки и стекло, для тренировок от тренера — яркие цвета; в клубе —
+ * градиент и цвета, связанные с ним». Amends the map above; does not contradict it.
+ *
+ *   - **Courses = photograph + glass.** The hero of «Курсы» is no longer the blue field: it is the
+ *     course's photograph with a plate of dense glass tinted from the ground pinned to its bottom
+ *     (`.glass-card-on-art`), and on the plate the light-blue % pill, the title with its key word,
+ *     the progress rule and the screen's one neon button. `--field` keeps its other jobs.
+ *   - **Coach workouts = bright fields.** The cards the coach assigns are solid fields, ciel first
+ *     and then orange and neon by index, only so several cards in one carousel are told apart; a
+ *     single card is always ciel. Ink #111111 on all three. **Neon on a coach card is identity,
+ *     not «сейчас»** — the one-neon-main-button rule is about buttons and still stands.
+ *   - **Neon = the main action everywhere except the club; club actions = the warm gradient.**
+ *     Member club screens carry no neon at all: their buttons, the prize pill and the leader's
+ *     circle are `--grad-warm` (`.bg-warm`) under ink #111111 — 13.2 / 15.7 / 6.04 on its stops —
+ *     and today's dot on the streak is orange, the gradient's hot end. The full crossroads
+ *     gradient never carries a label: its electric-blue end is 2.16 with ink. Admin club screens
+ *     are tools and keep the neon.
+ *
  * **The course colour is identity**, not a state: `--course-accent`, `text-course`, `bg-course`
  * belong on a course's tile, its tag or pill, and the stops of its path. Not on a heading over a
  * photograph (white, bold, the light-blue key word via `KeyTitle`, on a scrim holding ≥ 4.5:1),
@@ -1002,6 +1022,22 @@ body {
   .glass-card-on-field {
     --glass-tint: var(--bg-rgb);
   }
+  /*
+   * A plate pinned to a *photograph* — the hero of «Курсы» (design/CHANGELOG.md §17): the course's
+   * picture with its title, its progress and the screen's one neon button on a pane of glass at
+   * the bottom of it. Tinted from the ground, as the plate on the field is, and at the level-3
+   * alphas, because the thing behind it is a picture with a white sky in it and not the graphite:
+   * at the sheer end (.72 of the ground over pure white) white type reads 7.5 and the light-blue
+   * key word 5.7; at level 2 (.65) the key word would have dropped to 4.4 and failed. Held by
+   * `contrast-usage.test.ts`. Paired with `.glass-card`, which brings the blur and the hairline.
+   */
+  .glass-card-on-art {
+    --glass-tint: var(--bg-rgb);
+    --glass-from: 0.72;
+    --glass-via: 0.84;
+    --glass-to: 0.9;
+    border-color: rgba(var(--paper-rgb), 0.18);
+  }
 
   /*
    * A tag, a badge, a chip — the small fact laid on a card, on the ground or on artwork. Lighter
@@ -1225,6 +1261,17 @@ body {
  */
 .bg-cross {
   background-image: var(--grad-crossroads);
+}
+
+/*
+ * The warm half as a fill — the club's button and its one filled pill (`Button` `gradient`, `Pill`
+ * `warm`, the leader's circle on the board; design/CHANGELOG.md §17). It is the only gradient that
+ * may sit under a label: ink #111111 clears 4.5 on every stop (13.2 / 15.7 / 6.04), where the full
+ * crossroads gradient's electric-blue end is 2.16 with ink and 7.71 with white — no one ink reads
+ * across it. `contrast-usage.test.ts` measures the stops.
+ */
+.bg-warm {
+  background-image: var(--grad-warm);
 }
 
 .text-gradient {

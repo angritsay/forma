@@ -27,6 +27,12 @@ export interface DotCalendarProps {
    * writes the day of the month in the ones that carry ink.
    */
   size?: 'sm' | 'md';
+  /**
+   * What today's dot is filled with. `neon` (the default) is the «now» of the semantic colour map;
+   * `orange` is the gradient's hot end, for the club's own strip, where there is no neon at all
+   * (design/CHANGELOG.md §17). Ink on both: 17.3 and 6.04.
+   */
+  todayTone?: 'neon' | 'orange';
   className?: string;
 }
 
@@ -37,8 +43,9 @@ export interface DotCalendarProps {
  *     takes a slice of a gradient as wide as the grid (`background-size` in columns, position by
  *     column), so a row of done days reads as one ribbon broken into beads. Nothing is written on
  *     it — the gradient runs from light to deep blue and no one ink reads on all of it.
- *   - today — neon with ink (17.3), the one dot that asks for something.
- *   - today-done — neon too, with a check: today is still today once it is done.
+ *   - today — neon with ink (17.3), the one dot that asks for something; orange on the club's own
+ *     strip (`todayTone`), which paints with its gradient and nothing else.
+ *   - today-done — the same fill, with a check: today is still today once it is done.
  *   - open — a missed or not-yet-done past day: a hairline ring, no fill.
  *   - future — a faint dot.
  */
@@ -47,11 +54,17 @@ const BASE: Record<'sm' | 'md', string> = {
   md: 'aspect-square w-full text-[11px] font-semibold',
 };
 
+const TODAY: Record<NonNullable<DotCalendarProps['todayTone']>, string> = {
+  neon: 'bg-action text-on-action',
+  orange: 'bg-orange text-ink',
+};
+
 export function DotCalendar({
   days,
   label,
   columns = 7,
   size = 'md',
+  todayTone = 'neon',
   className,
 }: DotCalendarProps) {
   return (
@@ -76,7 +89,7 @@ export function DotCalendar({
               'tabular flex items-center justify-center rounded-full',
               BASE[size],
               done && 'bg-cross',
-              today && 'bg-action text-on-action',
+              today && TODAY[todayTone],
               d.state === 'open' && 'border border-border-strong',
               d.state === 'future' && 'bg-paper/10',
             )}

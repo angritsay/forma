@@ -23,7 +23,11 @@
   measured contrast (`src/lib/ui/tile.ts`); no outlined text. Each colour carries one meaning —
   the semantic map in `design/CHANGELOG.md` §15 and `src/lib/ui/semantic.ts` (orange = effort,
   light blue = selection/progress, neon = «now»); the course colour is identity only, and no emoji
-  sits on a saturated fill (`contrast-usage.test.ts`). Concentric radii, Unbounded in
+  sits on a saturated fill (`contrast-usage.test.ts`). Three card treatments (§17): courses =
+  photograph + glass plate (no blue field on «Курсы»), coach workouts = bright fields ciel →
+  orange → neon by index (neon there is identity), and the club has no neon — its buttons and
+  prize pill are the warm gradient under ink (`Button` `gradient`, `Pill` `warm`;
+  `club-no-neon.test.ts`). Concentric radii, Unbounded in
   sentence case for display, Onest for text, glyphs instead of icons. Check a new screen against
   `design/ui_kits`-style references before inventing a pattern.
 - Code, comments, commit messages and docs in English; product copy is Russian with an English

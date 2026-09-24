@@ -18,7 +18,8 @@
  *
  * **Цвет — градиент клуба** (третья палитра, global.css, стиль B): кант плашки — crossroads, а
  * рядом с числом — неделя точками, последние семь дней: сделанные — бусины одного градиента,
- * сегодня — неон. Точки повторяют то, что число уже сказало словами, поэтому для чтеца экрана они
+ * сегодня — оранжевый, горячий конец того же градиента (в клубе нет неона, design/CHANGELOG.md
+ * §17). Точки повторяют то, что число уже сказало словами, поэтому для чтеца экрана они
  * скрыты: `aria-label` плашки остаётся единственным, что он слышит.
  *
  * Пустая серия не рисуется вовсе. Ноль в плашке — это укор человеку, который сегодня ещё не дошёл
@@ -99,7 +100,7 @@ export function ClubStreak() {
           <span className="tabular text-[13px] leading-none font-medium">
             {formatNumber(locale, n)}
           </span>
-          <DotCalendar days={week} size="sm" columns={7} className="ml-1" />
+          <DotCalendar days={week} size="sm" columns={7} todayTone="orange" className="ml-1" />
         </span>
       </span>
     </div>
@@ -107,7 +108,7 @@ export function ClubStreak() {
 }
 
 /**
- * The last seven days, oldest first, as dots: done where a proof is in, neon for today, an open
+ * The last seven days, oldest first, as dots: done where a proof is in, orange for today, an open
  * ring for a day that went by without one. Dates are compared as the same `YYYY-MM-DD` strings
  * `my_club_days()` returns, stepped back from `today` at local noon so a DST change cannot skip a
  * day.

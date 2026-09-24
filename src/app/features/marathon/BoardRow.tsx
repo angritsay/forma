@@ -3,9 +3,10 @@
  * day screen — the short table under today's tasks is the same rows as the full one, and a race
  * with two different-looking tables is two races.
  *
- * The rank is a circle, the way the owner's prototype draws it: the leader's filled in the neon
- * (the third palette's «лидер» tag), the rest outlined, so the top of the table is found before a single number
- * is read. It used to be a bare numeral with «ЧАС С ТРЕНЕРОМ» printed under the leader's name; the
+ * The rank is a circle, the way the owner's prototype draws it: the leader's filled in the club's
+ * warm gradient under ink (design/CHANGELOG.md §17 — it was the third palette's neon «лидер» tag,
+ * and the club has no neon), the rest outlined, so the top of the table is found before a single
+ * number is read. It used to be a bare numeral with «ЧАС С ТРЕНЕРОМ» printed under the leader's name; the
  * prize is one pill above the table now, said once for the whole race rather than on one row.
  *
  * The place in the circle comes from `standings.ts` rather than from the row: the two backends
@@ -61,7 +62,7 @@ export function BoardRow({ row, rank, winner, onAnnounce, announceLabel }: Board
    * Марек» has already said it, and «Ты и Марек · Ты» is the row stuttering. Matched as a whole
    * word, so a team called «Тыквы» keeps its tag.
    *
-   * Except on the week you are leading. Then the circle is filled in the neon and the
+   * Except on the week you are leading. Then the circle is filled in the gradient and the
    * white ring that marks your row everywhere else is gone — and that is the one row the tag has
    * to survive on, because a leader's row is never drawn a second time lower down.
    */
@@ -86,9 +87,11 @@ export function BoardRow({ row, rank, winner, onAnnounce, announceLabel }: Board
       <span
         className={clsx(
           'numeral tabular flex size-11 shrink-0 items-center justify-center rounded-pill border text-[13px]',
-          /* The leader is the neon, as on every table in the app («лидер», global.css header). */
+          /* The leader wears the club's warm gradient with ink on it (≥ 6.04 on every stop) —
+             this is the club's table, and the club paints with its gradient, not the neon the
+             general leaderboard gives its leader (§17). */
           leader
-            ? 'border-transparent bg-action text-on-action'
+            ? 'border-transparent bg-warm text-ink'
             : row.isMine
               ? 'border-text text-text'
               : rank !== null && rank <= 3

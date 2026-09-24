@@ -16,7 +16,9 @@ import { externalLinkProps } from '@/app/hooks/useExternalLink';
  * programme colour. The first four never take the programme colour; `course` is the exception
  * Button's own `VARIANT` table explains, and it belongs here as much as there — the button that
  * takes money is usually a link out to the payment page rather than a <button>. So do the neon
- * `action` (the screen's one main button) and `on-field` (white on the blue hero field).
+ * `action` (the screen's one main button), the club's `gradient` (the warm half of the crossroads
+ * gradient under ink — the club's «Вступить» is exactly a link out to the till) and `on-field`
+ * (white on the blue hero field).
  */
 const VARIANT: Record<ButtonVariant, string> = {
   primary: 'bg-primary text-on-primary hover:opacity-85',
@@ -25,6 +27,7 @@ const VARIANT: Record<ButtonVariant, string> = {
   danger: 'bg-transparent text-danger border border-border-strong hover:bg-surface-2',
   course: 'bg-course text-tile-fg hover:opacity-90',
   action: 'bg-action text-on-action hover:opacity-90',
+  gradient: 'bg-warm text-ink hover:opacity-90',
   'on-field': 'bg-paper text-field hover:opacity-90',
 };
 
