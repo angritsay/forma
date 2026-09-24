@@ -17,12 +17,16 @@ const PAD = { md: 'p-5', lg: 'px-5 pt-6 pb-5.5' } as const;
  * The blue field — the third palette's hero card (global.css header, style A).
  *
  * **One per screen**, and it holds the thing happening here: the course you are walking, the coach
- * you can book, the result you just earned. Everything secondary sits on a charcoal `Card` below it.
+ * you can book, the result you just earned. Everything secondary sits on a glass `Card` below it.
  * Two blue fields on one screen is two «main things», which is none.
  *
  * Type on it is white (7.71 on the field), the key word light blue (`KeyWord`, 5.7), a tag on it is
  * a `Pill` in `white`, `ghost`, `neon` or a section tone. The field itself never becomes type on
- * charcoal — electric blue on the ground is 2.26.
+ * graphite — electric blue on the ground is 2.43.
+ *
+ * A plate laid *inside* the field takes `.glass-card glass-card-on-field` (global.css): the same
+ * glass tinted from the ground rather than the surface, so it reads as a darker pane of the field
+ * and not a grey smudge on it. Nothing in the app needs one yet; the landing's field does.
  */
 export function HeroField({
   as: Tag = 'section',

@@ -119,7 +119,7 @@ export function ProofPlayer({ src }: ProofPlayerProps) {
   const ratio = playedRatio(time, duration);
 
   return (
-    <span className="relative mt-2 block overflow-hidden rounded-tile border border-border bg-ink">
+    <span className="glass-card relative mt-2 block overflow-hidden rounded-tile">
       {/* No `<track>`: a phone clip of somebody doing twenty squats carries no speech to caption,
           and an empty track element is a worse lie than none. */}
       <video

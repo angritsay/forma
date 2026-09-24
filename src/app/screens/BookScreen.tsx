@@ -39,8 +39,14 @@
  * **The third palette re-cast it** (global.css header, style A). The coach himself is the screen's
  * blue hero field — role as a white sticker, surname as the light-blue key word, the session facts
  * as white outlined pills. Bleu ciel (`COACH_TILE`) is the tab's *tag*: the length as a ciel pill on
- * the offer, the card's tint and edge, the big price (large type only — see `Option`) and the
- * numerals and ticks as the light-blue accent. The pay button is the neon, the screen's one action.
+ * the offer, the card's tint and edge, the big price, and the numerals and ticks as the light-blue
+ * accent. The pay button is the neon, the screen's one action.
+ *
+ * On the graphite ground (design/CHANGELOG.md §16) ciel reads as small type — 4.71, where it was
+ * 4.37 on charcoal and large-type only — so `tileAccent(COACH_TILE)` is ciel itself now and
+ * `text-course-accent` under this screen's `courseTileVars` resolves to it. The big price never
+ * depended on that (see `Option`); the numerals keep the light blue by naming `text-accent`
+ * directly, because that is what they mean, not because ciel would fail.
  *
  * ## And the photograph
  *
@@ -430,25 +436,30 @@ export default function BookScreen() {
           {/*
            * The offer's own edge and ground, in the tab's colour.
            *
-           * Both are set inline rather than by class, and that is not a shortcut. `level={1}`
-           * paints `bg-surface` and `border-border`; a Tailwind class passed through `className`
-           * sets the same two properties, so which one wins is decided by the order the two
-           * utilities happen to land in the stylesheet — not by the order they are written here.
-           * An inline declaration has no such argument to lose.
+           * Both are set inline rather than by class, and that is not a shortcut. `level={1}` is
+           * `.glass-card`, whose hairline is a `border` shorthand in the components layer; a
+           * Tailwind class passed through `className` sets the same property, so which one wins is
+           * decided by where the two happen to land in the stylesheet — not by the order they are
+           * written here. An inline declaration has no such argument to lose.
            *
-           * 6% of the blue over the surface and 45% of it on the hairline: enough that the card
-           * reads as a different kind of object from the two hairline boxes above and below it
-           * (both of which are *states*, and both stay grey), and far too little to be a fill. The
-           * text on it is the app's own, unchanged, so nothing here needs re-measuring for
-           * contrast — a 6% tint moves the ground by about one surface level.
+           * The tint goes through `--glass-overlay` rather than `background`, because a solid
+           * `background` would have replaced the glass band and kept the blur — the cost of the
+           * material with none of it showing. The overlay is a flat 6% of the blue laid over the
+           * band (global.css), and 45% of it on the hairline: enough that the card reads as a
+           * different kind of object from the two glass boxes above and below it (both of which
+           * are *states*, and both stay grey), and far too little to be a fill. The text on it is
+           * the app's own, unchanged, so nothing here needs re-measuring for contrast — a 6% tint
+           * moves the ground by about one surface level.
            */}
           <Card
             level={1}
             className="flex flex-col gap-5"
-            style={{
-              background: 'color-mix(in oklab, var(--course-tile) 6%, var(--surface))',
-              borderColor: 'color-mix(in oklab, var(--course-tile) 45%, transparent)',
-            }}
+            style={
+              {
+                '--glass-overlay': 'color-mix(in oklab, var(--course-tile) 6%, transparent)',
+                borderColor: 'color-mix(in oklab, var(--course-tile) 45%, transparent)',
+              } as React.CSSProperties
+            }
           >
             {BOOKING.options.length > 1 ? (
               <SegmentedControl
@@ -496,7 +507,7 @@ export default function BookScreen() {
           <section
             className={
               sent
-                ? 'flex flex-col gap-3 rounded-card border border-border-strong p-5'
+                ? 'glass-card flex flex-col gap-3 rounded-card p-5'
                 : 'flex flex-col gap-3 border-t border-border pt-5'
             }
           >
@@ -650,7 +661,7 @@ function UpcomingSession({ booking, now }: { booking: CoachBooking; now: number 
   });
 
   return (
-    <section className="flex flex-col gap-4 rounded-card border border-border-strong p-5">
+    <section className="glass-card flex flex-col gap-4 rounded-card p-5">
       <div className="flex flex-col gap-2">
         <span className="eyebrow">{t('app.bookUpcoming')}</span>
         {/* 1.2, as the lockup above: «идёт сейчас» and «через 2 часа» both drop a descender. */}
@@ -728,10 +739,11 @@ function Option({
         {t('app.bookDuration', { n: option.durationMin })}
       </Pill>
       {/* The price in the tab's bleu ciel — the loudest thing on the screen, and the thing that
-          says what kind of screen it is. **Large type only**: ciel on charcoal is 4.37, inside
-          the 3:1 that large type needs and short of the 4.5 body text needs; tile.test.ts pins
-          that window, and the figure never drops below 34px. Anything small in the tab's colour
-          takes `text-accent` (the light blue) instead. */}
+          says what kind of screen it is. Ciel on the graphite ground is 4.71 — body-text legal —
+          and tile.test.ts pins that floor; the figure still never drops below 34px, because it is
+          a price and not a sentence. It was 4.37 on charcoal and large type only, which is why
+          the small facts of this screen took `text-accent`; they keep the light blue because it
+          is what they mean, the interface accent rather than the coach's tag. */}
       <p className="display tabular text-[clamp(34px,11vw,48px)] leading-none text-ciel">{price}</p>
 
       <div className="flex flex-col gap-3">

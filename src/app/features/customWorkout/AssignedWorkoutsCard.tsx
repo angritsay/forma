@@ -130,7 +130,7 @@ export function AssignedWorkoutsCard({ onOpen }: AssignedWorkoutsCardProps) {
               <button
                 type="button"
                 onClick={() => onOpen(w.id)}
-                className="flex h-full w-full flex-col items-start gap-2.5 rounded-card border border-border bg-surface p-5 text-left transition-[background-color,transform] duration-150 ease-(--ease-out) hover:bg-surface-2 active:scale-[0.99]"
+                className="glass-card flex h-full w-full flex-col items-start gap-2.5 rounded-card p-5 text-left transition-[background-color,transform] duration-150 ease-(--ease-out) hover:bg-surface-2 active:scale-[0.99]"
               >
                 {/* Без надписи «От тренера»: она уже стоит заголовком над лентой, и на карточке
                     была бы тем же предложением в третий раз — считая экран самой тренировки.

@@ -54,7 +54,8 @@ export function Toast({ toast, onDismiss }: { toast: ToastItem; onDismiss: (id: 
   return (
     <div
       role={toast.kind === 'error' ? 'alert' : 'status'}
-      className="flex items-start gap-3 rounded-card border border-border-strong bg-surface-3 p-4"
+      /* The densest glass: a toast floats over whatever the screen is doing (global.css). */
+      className="glass-card glass-card-3 flex items-start gap-3 rounded-card p-4"
     >
       <Glyph size={14} className={clsx('mt-1', KIND_CLASS[toast.kind])}>
         {KIND_GLYPH[toast.kind]}

@@ -58,11 +58,12 @@ export function ClubWinner({ duo = false }: { duo?: boolean }) {
     return (
       /*
        * Своя победа — в кант градиента клуба (стиль B, global.css): 1.5px crossroads вокруг
-       * обычной тёмной карточки. Белая плашка, что стояла здесь, ставила `.eyebrow` серым по
-       * белому; на поверхности угля всё, что внутри, читается с теми же цифрами, что и везде.
+       * обычной стеклянной карточки. Белая плашка, что стояла здесь, ставила `.eyebrow` серым по
+       * белому; на стекле поверх графита всё, что внутри, читается с теми же цифрами, что и везде.
+       * `border-0`: кант здесь — сам градиент, своя волосяная линия стекла была бы второй.
        */
       <div className="mb-4 rounded-card bg-cross p-[1.5px]">
-        <div className="flex flex-col gap-1 rounded-[calc(var(--r-card)-1.5px)] bg-surface p-4">
+        <div className="glass-card flex flex-col gap-1 rounded-[calc(var(--r-card)-1.5px)] border-0 p-4">
           <span className="eyebrow">{t('app.clubWinnerTitle')}</span>
           <span className="font-display text-[19px] leading-[1.2] text-balance">
             {t('app.clubWinnerYou')}
@@ -79,7 +80,7 @@ export function ClubWinner({ duo = false }: { duo?: boolean }) {
   }
 
   return (
-    <div className="mb-4 flex items-center gap-3 rounded-card border border-border bg-surface p-4">
+    <div className="glass-card mb-4 flex items-center gap-3 rounded-card p-4">
       <span className="emoji shrink-0 text-[20px]" aria-hidden="true">
         🏆
       </span>

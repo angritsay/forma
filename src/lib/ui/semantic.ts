@@ -10,10 +10,10 @@
  *
  *   - neon      «do this / now»: the one main action; the «Рекомендуем», «Сегодня», «Новое» markers
  *   - light blue brand accent and selection: key words, links, selected state, progress, focus, info
- *   - field     electric blue as a surface only (hero field, active tab pill), never type on charcoal
+ *   - field     electric blue as a surface only (hero field, active tab pill), never type on graphite
  *   - orange    intensity and effort: «Посложнее», heat, max effort, time running out; also the
  *               beginners' course tag — identity on its own tile or tag only
- *   - ciel      the coach
+ *   - ciel      the coach (4.71 on graphite — small type is legal)
  *   - success, warning, danger — unchanged
  *
  * The course colour (`--course-accent`, `text-course`, `bg-course`) is identity: a course's tile,
@@ -21,18 +21,19 @@
  */
 import type { DifficultyChoice } from '@/lib/training/types';
 
+/** The neutrals mirror `--bg` / `--surface*` in global.css (graphite, design/CHANGELOG.md §16). */
 export const COLOUR = {
-  ground: '#1a1a1a',
-  surface: '#242424',
-  surface2: '#2e2e2e',
-  surface3: '#383838',
+  ground: '#121212',
+  surface: '#1c1c1c',
+  surface2: '#262626',
+  surface3: '#303030',
   text: '#f6f6f7',
   ink: '#111111',
   /** Neon — «сделай это / сейчас». */
   action: '#f4ff3f',
   /** Light blue — brand accent and selection. */
   accent: '#afe9fd',
-  /** Electric blue — a surface, never type on charcoal. */
+  /** Electric blue — a surface, never type on graphite. */
   field: '#2038e2',
   /** Orange — intensity and effort. */
   effort: '#ff5a00',

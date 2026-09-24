@@ -18,13 +18,18 @@
  * and the better one wins. The same rule makes an unmigrated hex from the database (the admin's
  * course builder stores its own `tile`) render correctly, whatever it is.
  *
- * The light ink is #111111 rather than the charcoal ground itself: charcoal on bleu ciel is 4.37 and
- * fails, #111111 is 4.75 and passes, and the eye cannot tell the two apart.
+ * The light ink is #111111 rather than the ground itself. On the charcoal of §14 that was a matter
+ * of contrast (charcoal on bleu ciel 4.37, a fail; #111111 4.75, a pass); the graphite ground would
+ * pass too (4.71), and the ink stays its own token so it does not move every time the ground does.
  */
 import type { CSSProperties } from 'react';
 
-/** The app's ground — `--bg` in global.css. */
-export const APP_BG = '#1a1a1a';
+/**
+ * The app's ground — `--bg` in global.css. Graphite #121212 (design/CHANGELOG.md §16); the ground
+ * was charcoal #1a1a1a before. `tile.test.ts` holds the two in step; `ground-literals.test.ts`
+ * hunts the old value everywhere else.
+ */
+export const APP_BG = '#121212';
 /** `--ink` / `--tile-fg`: type on a light fill. */
 export const INK_ON_LIGHT = '#111111';
 /** `--text` / `--tile-fg-dark`: type on a dark fill. */
@@ -38,7 +43,7 @@ export const INK_ON_DARK = '#f6f6f7';
  * gradient cannot be a tile, though: the ink, the type accent and the `-ink` variant all need one
  * colour, and this is it. Electric blue, the gradient's deep end.
  *
- * White ink on it (7.71); never type on the ground (2.26), so its type accent is the light blue —
+ * White ink on it (7.71); never type on the ground (2.43), so its type accent is the light blue —
  * see {@link tileAccent}. It must stay in step with `--course-marathon` in global.css;
  * `tile.test.ts` holds that.
  */
@@ -48,22 +53,23 @@ export const GAME_TILE = '#2038e2';
  * The coach tab's colour: bleu ciel.
  *
  * «Тренер» has no programme behind it, so no `course.tile` to read. It wears ciel on its section
- * tag and the pay button's fill. Ink on it is #111111 (4.75). As type on the ground it measures
- * 4.37 — large type only (≥3:1), so small type takes {@link tileAccent}'s light blue instead.
- * `tile.test.ts` pins that 3–4.5 window: if either side moves, BookScreen's typography must be
- * looked at again.
+ * tag and the pay button's fill. Ink on it is #111111 (4.75). As type on the graphite ground it
+ * measures 4.71 — legal small type — so {@link tileAccent} returns ciel itself and the tab's
+ * accent is its own colour. On the charcoal ground it was 4.37, large type only, and the accent
+ * was the light blue; `tile.test.ts` pins the new floor (≥ 4.5): if the ground or the blue moves
+ * back under it, BookScreen's small ciel type must be looked at again.
  */
 export const COACH_TILE = '#007bff';
 
 /**
- * Fills too dark to be read as type on charcoal, and what speaks for them instead.
+ * Fills too dark to be read as type on graphite, and what speaks for them instead.
  *
- * Both are blues, and both hand over to the brand's light blue — the one colour of the palette that
- * belongs on a blue ground as much as on charcoal («поверх тёмно-синего или поверх чёрного»).
+ * Electric blue hands over to the brand's light blue — the one colour of the palette that belongs
+ * on a blue ground as much as on graphite («поверх тёмно-синего или поверх чёрного»). Bleu ciel
+ * was here too while the ground was charcoal; on graphite it reads on its own.
  */
 const DARK_TILE_ACCENT: Readonly<Record<string, string>> = {
   '#2038e2': '#afe9fd',
-  '#007bff': '#afe9fd',
 };
 
 /** Relative luminance per WCAG; 0 is black, 1 is white. */
@@ -94,9 +100,9 @@ export function isLightTile(hex: string): boolean {
 }
 
 /**
- * The section's colour *as type* on the charcoal ground: the fill itself when it reads (≥ 4.5),
- * the light blue when it is one of the two blues, and `undefined` for a neutral dark surface —
- * the caller then falls back to plain white text.
+ * The section's colour *as type* on the graphite ground: the fill itself when it reads (≥ 4.5),
+ * the light blue when it is the electric blue, and `undefined` for a neutral dark surface — the
+ * caller then falls back to plain white text.
  */
 export function tileAccent(hex: string): string | undefined {
   if (contrast(hex, APP_BG) >= 4.5) return hex;

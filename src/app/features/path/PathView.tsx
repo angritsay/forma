@@ -72,7 +72,7 @@ export function PathView({ course, state, stars, onNodePress }: PathViewProps) {
              * weeks readable as chapters rather than as more of the same column.
              *
              * It used to be a band of the programme colour. The third palette keeps a section's
-             * colour to tags (global.css header), so the band is a charcoal surface and the week
+             * colour to tags (global.css header), so the band is a graphite surface and the week
              * is the tag — a pill of the programme colour with its measured ink.
              */}
             <div className="-mx-6 flex items-center justify-between gap-3 border-y border-border bg-surface px-6 py-2.5 md:-mx-10 md:px-10">
