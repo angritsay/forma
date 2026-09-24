@@ -8,12 +8,12 @@
  * ## Ссылки
  *
  * Владелица: «ссылки на мой линк и инст на русском и на англ, должно зависеть от выбранного языка
- * приложения». Поэтому `links` — два списка, по языку приложения. Сейчас в обоих один и тот же
- * Instagram — другого адреса не давали.
+ * приложения». Поэтому `links` — два списка, по языку приложения.
  *
- * **LinkedIn и отдельный английский (или русский) Instagram владелица пришлёт сама.** Тип и
- * отрисовка их уже поддерживают (`kind: 'linkedin'`, знак в `BrandMark`); адреса не
- * придумывались — строчка добавляется сюда, когда адрес будет.
+ * Все три адреса владелица прислала сама (параметры отслеживания из ссылок убраны):
+ * LinkedIn `in/gritsay-design` — в обоих языках; Instagram `@where.is.nastia` — англоязычный
+ * аккаунт её тревел-бренда, поэтому он в английском списке, а `@what.is.nastia` — в русском.
+ * Если языки у аккаунтов наоборот, это две строчки ниже.
  *
  * Фотографии пока нет: на её месте монограмма «А» / «A».
  */
@@ -34,10 +34,22 @@ export interface NastiaFact {
   caption: L10n;
 }
 
-const INSTAGRAM: NastiaLink = {
+const INSTAGRAM_EN: NastiaLink = {
   kind: 'instagram',
   label: '@where.is.nastia',
   url: 'https://www.instagram.com/where.is.nastia/',
+};
+
+const INSTAGRAM_RU: NastiaLink = {
+  kind: 'instagram',
+  label: '@what.is.nastia',
+  url: 'https://www.instagram.com/what.is.nastia/',
+};
+
+const LINKEDIN: NastiaLink = {
+  kind: 'linkedin',
+  label: 'in/gritsay-design',
+  url: 'https://www.linkedin.com/in/gritsay-design/',
 };
 
 export const NASTIA = {
@@ -69,9 +81,9 @@ export const NASTIA = {
     { ru: 'питании', en: 'nutrition' },
     { ru: 'IT и ИИ', en: 'tech and AI' },
   ] satisfies L10n[],
-  /** Per app language. Only Instagram so far — see the header. */
+  /** Per app language — see the header for which Instagram goes where. */
   links: {
-    ru: [INSTAGRAM],
-    en: [INSTAGRAM],
+    ru: [INSTAGRAM_RU, LINKEDIN],
+    en: [INSTAGRAM_EN, LINKEDIN],
   } satisfies Record<'ru' | 'en', NastiaLink[]>,
 };
