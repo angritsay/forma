@@ -716,6 +716,9 @@ function UpcomingSession({ booking, now }: { booking: CoachBooking; now: number 
  * four lines instead of two, which is the honest answer to «что я получу за 3 500 ₽» and needs no
  * arithmetic from the reader. The switch above is what lets the two be compared, and it always was.
  */
+/** What the shortest session includes; anything a longer one lists beyond it is an extra. */
+const BASE_INCLUDES = new Set((BOOKING.options[0]?.includes ?? []).map((item) => item.en));
+
 function Option({
   option,
   payment,
@@ -738,31 +741,37 @@ function Option({
       <Pill tone="ciel" className="self-start">
         {t('app.bookDuration', { n: option.durationMin })}
       </Pill>
-      {/* The price in the tab's bleu ciel — the loudest thing on the screen, and the thing that
-          says what kind of screen it is. Ciel on the graphite ground is 4.71 — body-text legal —
-          and tile.test.ts pins that floor; the figure still never drops below 34px, because it is
-          a price and not a sentence. It was 4.37 on charcoal and large type only, which is why
-          the small facts of this screen took `text-accent`; they keep the light blue because it
-          is what they mean, the interface accent rather than the coach's tag. */}
-      <p className="display tabular text-[clamp(34px,11vw,48px)] leading-none text-ciel">{price}</p>
+      {/* The price in neon — the owner: «сделай блок жёлтым, я имею в виду цифры». It was the
+          tab's bleu ciel; the figure is what this block is for, and neon is the colour of the one
+          thing to act on (the pay button under it is the same neon). 17.3 on the graphite ground.
+          The length above keeps the coach's ciel tag, so the tab still says whose it is. */}
+      <p className="display tabular text-[clamp(34px,11vw,48px)] leading-none text-action">
+        {price}
+      </p>
 
       <div className="flex flex-col gap-3">
         <span className="eyebrow">{t('app.bookIncludes')}</span>
         <ul className="flex flex-col border-t border-border">
-          {option.includes.map((item) => (
-            <li
-              key={item.en}
-              className="flex items-start gap-3 border-t border-border py-2.5 text-[15px] leading-snug first:border-t-0 first:pt-3"
-            >
-              {/* The tick takes the colour and the line stays white: a blue list would be a
+          {option.includes.map((item) => {
+            /* What the longer session adds over the shortest one — the owner: «нужно допы
+               подчеркнуть оранжевым, но не текст». Orange is effort, «more» (the semantic map), and
+               it lands on the tick only: the words stay white like every other line. */
+            const extra = !BASE_INCLUDES.has(item.en);
+            return (
+              <li
+                key={item.en}
+                className="flex items-start gap-3 border-t border-border py-2.5 text-[15px] leading-snug first:border-t-0 first:pt-3"
+              >
+                {/* The tick takes the colour and the line stays white: a blue list would be a
                   block of coloured body copy, which is a different thing from a list with its
                   marks picked out. */}
-              <Glyph size={14} className="mt-1 text-accent">
-                ✓
-              </Glyph>
-              <span>{l(item, locale)}</span>
-            </li>
-          ))}
+                <Glyph size={14} className={clsx('mt-1', extra ? 'text-orange' : 'text-accent')}>
+                  {extra ? '+' : '✓'}
+                </Glyph>
+                <span>{l(item, locale)}</span>
+              </li>
+            );
+          })}
         </ul>
       </div>
 
