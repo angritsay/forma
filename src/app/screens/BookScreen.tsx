@@ -502,16 +502,13 @@ export default function BookScreen() {
            * the app's own, unchanged, so nothing here needs re-measuring for contrast — a 6% tint
            * moves the ground by about one surface level.
            */}
-          <Card
-            level={1}
-            className="flex flex-col gap-5"
-            style={
-              {
-                '--glass-overlay': 'color-mix(in oklab, var(--course-tile) 6%, transparent)',
-                borderColor: 'color-mix(in oklab, var(--course-tile) 45%, transparent)',
-              } as React.CSSProperties
-            }
-          >
+          {/*
+           * Plain glass since the price turned neon. The owner, on the blue-tinted card with a
+           * neon figure in it: «синий не вписывается тут». The tint and the blue hairline were
+           * there to set the offer apart from the grey state boxes around it; the neon price and
+           * the neon button do that now, and blue beside them read as a third colour competing.
+           */}
+          <Card level={1} className="flex flex-col gap-5">
             {BOOKING.options.length > 1 ? (
               <SegmentedControl
                 size="sm"
@@ -788,10 +785,8 @@ function Option({
 
   return (
     <article className="flex flex-col gap-4">
-      {/* The coach's section tag: the length in bleu ciel with its measured ink (4.75). */}
-      <Pill tone="ciel" className="self-start">
-        {t('app.bookDuration', { n: option.durationMin })}
-      </Pill>
+      {/* No length tag here any more: it said «30 мин» right under the switch that already says
+          it, in a blue the owner took out of this block («синий не вписывается тут»). */}
       {/* The price in neon — the owner: «сделай блок жёлтым, я имею в виду цифры». It was the
           tab's bleu ciel; the figure is what this block is for, and neon is the colour of the one
           thing to act on (the pay button under it is the same neon). 17.3 on the graphite ground.
