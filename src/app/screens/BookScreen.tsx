@@ -250,9 +250,20 @@ export default function BookScreen() {
           <HeroField as="section" className="flex flex-col gap-5">
             <div className="flex items-end gap-5">
               <div className="flex min-w-0 flex-1 flex-col items-start gap-3">
-                <Pill tone="white" tilt="right" className="origin-left">
-                  {l(COACH.formaRole, locale)}
-                </Pill>
+                {/* Two stickers rather than one long one: as a single pill the role was cut off
+                    («Founder and coach of …»). They lean opposite ways, like two stuck on by hand. */}
+                <div className="flex flex-wrap items-center gap-2">
+                  {COACH.formaRoles.map((role, i) => (
+                    <Pill
+                      key={role.en}
+                      tone="white"
+                      tilt={i === 0 ? 'right' : 'left'}
+                      className={i === 0 ? 'origin-left' : 'origin-center'}
+                    >
+                      {l(role, locale)}
+                    </Pill>
+                  ))}
+                </div>
                 {/* 1.02 → 1.2. The lockup is two lines — «Сергей» over «Титов» — and 1.02 was drawn for
                   capitals, which have no descenders; «р» drops 0.182em below the baseline and the
                   «Т» under it rises to cap height. global.css carries the measurement. */}
