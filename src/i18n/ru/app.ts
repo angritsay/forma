@@ -485,6 +485,18 @@ export const app = {
   // declined. Putting the rank last lets it stay nominative and the line stay Russian.
   statsLevelNext: 'Ещё {n} очков — и «{title}»',
   statsLevelMax: 'Выше уровня нет. Дальше — просто тренируйся.',
+  levelsTitle: 'Уровни',
+  levelsOpen: 'Все уровни',
+  levelsOpenLabel: 'Уровень «{title}». Открыть все уровни',
+  levelsLead:
+    'Очки дают тренировки. У каждой своя цена, и она зависит от варианта, который ты выбрал перед стартом:',
+  levelsChoiceEasier: 'Полегче {x}',
+  levelsChoiceNormal: 'Как есть {x}',
+  levelsChoiceHarder: 'Посложнее {x}',
+  levelsRepeatHalf:
+    'Повтор уже пройденной тренировки — половина очков: уровень растёт, когда идёшь по курсу дальше.',
+  levelsYouAreHere: 'Ты здесь',
+  levelsFootnote: 'Справа — сколько очков всего нужно для уровня. Очки не сгорают.',
   statsCalendarTotal: 'Всего {n}',
   statsCalendarWeek: 'На этой неделе {n}',
   statsCalendarWorkout: 'Тренировка',

@@ -45,6 +45,7 @@ import { useSession } from '@/app/store/session';
 import { DataSheet } from './DataSheet';
 import { EquipmentSheet } from './EquipmentSheet';
 import { LanguageSheet } from './LanguageSheet';
+import { LevelsSheet } from './LevelsSheet';
 import { NameSheet } from './NameSheet';
 import { equipmentSummary, withEquipment } from './model';
 
@@ -67,6 +68,7 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
   const [renaming, setRenaming] = useState(false);
   const [dataOpen, setDataOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [levelsOpen, setLevelsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const tp = profile?.trainingProfile ?? null;
 
@@ -122,7 +124,7 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
       {/* One sheet at a time: two stacked are two focus traps arguing, and the way back from
           either of the small ones is this sheet reappearing underneath. */}
       <Sheet
-        open={open && !gear && !renaming && !dataOpen}
+        open={open && !gear && !renaming && !dataOpen && !levelsOpen}
         onClose={onClose}
         title={t('app.profileTitle')}
       >
@@ -149,7 +151,13 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
            * It is the sheet's one blue field (style A, global.css header): the level is the thing
            * this account is *for*, its title's last word the key word.
            */}
-          <HeroField className="flex flex-col gap-2">
+          {/*
+           * The whole card opens the ladder (LevelsSheet): «нужно добавить пояснение интерактивное
+           * наших уровней». No swoosh under the title here — the progress bar right under it is
+           * already a line, and the two read as one tangled stroke («прогресс конфликтует с
+           * подчёркиванием»). The key word keeps its light blue.
+           */}
+          <HeroField className="relative isolate flex flex-col gap-2">
             <div className="flex items-baseline justify-between gap-3">
               <span className="eyebrow text-on-field/85">
                 {t('app.statsLevelEyebrow', { n: level.level })}
@@ -159,7 +167,7 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
               </span>
             </div>
             <h3 className="display text-2xl">
-              <KeyTitle text={l(level.title)} />
+              <KeyTitle text={l(level.title)} swoosh={false} />
             </h3>
             <ProgressBar
               value={level.progress}
@@ -176,6 +184,21 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
                   })
                 : t('app.statsLevelMax')}
             </p>
+            <span
+              aria-hidden="true"
+              className="control-label mt-1 inline-flex items-center gap-1.5 text-[13px]"
+            >
+              {t('app.levelsOpen')}
+              <Glyph size={12}>›</Glyph>
+            </span>
+            {/* The card's one target, laid over it like the course cards' open button: a heading
+                and a section cannot live inside a <button>, so the button is a sibling. */}
+            <button
+              type="button"
+              onClick={() => setLevelsOpen(true)}
+              aria-label={t('app.levelsOpenLabel', { title: l(level.title) })}
+              className="absolute inset-0 z-10 rounded-card transition-colors duration-150 ease-(--ease-out) active:bg-paper/5"
+            />
           </HeroField>
 
           {/*
@@ -287,6 +310,7 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
       </Sheet>
       <DataSheet open={dataOpen} email={email} onClose={() => setDataOpen(false)} />
       <LanguageSheet open={langOpen} onClose={() => setLangOpen(false)} />
+      <LevelsSheet open={levelsOpen} points={points} onClose={() => setLevelsOpen(false)} />
       <NameSheet
         open={renaming}
         name={name}
