@@ -25,6 +25,11 @@
  * The achievements circle holds only the rosette. It used to carry «5/13» and the mockup does not,
  * which is a real loss of a figure — so the count stays in the accessible name, where a screen
  * reader still gets it, and the catalogue one tap away is where it is read properly.
+ *
+ * The greeting is muted, the name is not (design/CHANGELOG.md §18): the head has exactly two
+ * sizes, the 15px body line and the 26px name, and the greeting is the quieter of the two — a
+ * time of day, not a fact about the athlete. In the screen's one type scale (26 / 22 / 15 / 13)
+ * this line and the card buttons share the 15, and the name is the only 26 there is.
  */
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -67,7 +72,7 @@ export function CoursesHead({ name, workouts, unlocked, total, onAccount }: Cour
   return (
     <div className="flex items-start gap-3 px-6 pt-1 pb-4 md:px-10">
       <div className="min-w-0 flex-1">
-        <p className="text-[15px] leading-tight text-text">
+        <p className="text-[15px] leading-tight text-muted">
           {t(GREET_KEY[dayPart(new Date().getHours())])}
         </p>
         <div className="mt-1 flex items-center gap-2">

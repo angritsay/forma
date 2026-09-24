@@ -670,23 +670,28 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    which is the wrong promise for a tally that cannot.
 
    Then the courses, one card each, in the shape the owner drew — **the photograph _is_ the card**,
-   nearly square, with no panel under it. On it: a hairline **progress rule** across the top, the
-   **share completed as one large figure** under it, the course's **name**, and **one pill button**
-   at the bottom right with a dark circle at its right end holding the arrow. The rule, the figure,
-   the name and the button all take the course's colour; the picture stays a photograph. The figure
-   is the prototype's device — the number larger than the word — because on a progress screen the
-   number is the content.
+   nearly square, with no panel under it. On it, the screen's one card grammar
+   (`design/CHANGELOG.md` §18 — tag → title → bottom row): the **share completed as a light-blue
+   pill** (or the tilted neon «Первая тренировка бесплатно» on a course not started), the course's
+   **name** in white at 22px in the display face, and **one pill button** at the bottom right with
+   a dark circle at its right end holding the arrow. The mockup's progress rule and 42px figure
+   were removed with §18: the pill says the same number, and they were the loudest type on the
+   screen. Every card title on the screen is 22px, the name in the head 26px, body 15px, pills and
+   meta 13px (`courses-type-scale.test.ts`).
 
    **The first card is the hero, and it is photograph + glass** (`design/CHANGELOG.md` §17): the
    course being walked is taller (347×400) with a pane of dense glass pinned to its bottom
    (`.glass-card-on-art`, tinted from the ground at the level-3 alphas — measured so white reads
    7.5 and the light-blue key word 5.7 over a white sky), holding the light-blue % pill or the
-   tilted neon «Первая тренировка бесплатно» sticker, the title with its key word (`KeyTitle`),
-   the progress rule and **the screen's one neon button** with the arrow's circle. It was the
-   blue field for one iteration; nothing on «Курсы» is the field now. A course without a
-   photograph shows the plate over the plain glass card. Above the deck, the coach's assigned
+   tilted neon «Первая тренировка бесплатно» sticker, the title with its key word (`KeyTitle`)
+   and **the screen's one neon button** with the arrow's circle. It was the blue field for one
+   iteration; nothing on «Курсы» is the field now. A course without a photograph shows the plate
+   over the plain glass card. Above the deck, with no heading of their own, the coach's assigned
    workouts (`AssignedWorkoutsCard`) are the screen's bright fields — ciel, orange, neon by index,
-   a single one always ciel, ink on all, the «Тренер» tag as dense glass with a white word.
+   a single one always ciel, ink on all, the «Тренер» tag as dense glass with a white word (the
+   author's name in it once there is more than one author), the title, and a bottom row of minutes
+   and equipment with the arrow's circle at its right. The self-test offer above them is one row
+   on the dark grey plate: title, hint, one button and a × to dismiss.
 
    **Colour on type needs a scrim, and the scrim is measured.** A programme colour is far less
    luminous than white (Portland orange `#FF5A00` is 0.286), so 4.5:1 against it needs the ground
