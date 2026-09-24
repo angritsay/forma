@@ -1,3 +1,4 @@
+import { ExerciseStill } from '@/components/media/ExerciseStill';
 import { Chip } from '@/components/ui/Chip';
 import { findExercise } from '@/content/catalogue';
 import { formatDuration } from '@/i18n/index';
@@ -7,9 +8,15 @@ import { mainOnly } from './mainWork';
 import { blockMetaLabel, exerciseName, itemLoadLabel, itemTargetLabel } from './plan';
 
 /**
- * One movement of a block: its number, its name (with the swap note and the coach's note under
- * it) and the target on the right. The number replaces the thumbnail that used to sit here — a
- * plan is read as a list, and 01/02/03 is how the brand numbers a list.
+ * One movement of a block: a still of the movement, its name (with the swap note and the coach's
+ * note under it) and the target on the right.
+ *
+ * The still is back. For a while the number stood in for it, because a plan is read as a list and
+ * 01/02/03 is how the brand numbers one. The owner asked for the pictures again («тут надо добавить
+ * картинки превью упражнений»): the name alone does not tell a newcomer what a movement looks
+ * like, and the frame does at a glance. The number has not gone. It is the fallback inside the
+ * same square when a movement has no frame yet, so the row never shows an empty box or a broken
+ * image, and the order stays readable.
  */
 function PlanItem({
   item,
@@ -33,8 +40,14 @@ function PlanItem({
   const open = exercise && onOpen ? () => onOpen(item) : null;
   const inner = (
     <>
-      <span className="numeral tabular w-6 shrink-0 text-sm text-muted">
-        {String(n).padStart(2, '0')}
+      <span className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-[12px] bg-surface-2">
+        <ExerciseStill
+          exerciseId={exercise ? item.exerciseId : undefined}
+          className="photo-mono absolute inset-0 size-full object-cover"
+          fallback={
+            <span className="numeral tabular text-sm text-muted">{String(n).padStart(2, '0')}</span>
+          }
+        />
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[15px] font-medium">{name}</span>
@@ -63,12 +76,12 @@ function PlanItem({
         <button
           type="button"
           onClick={open}
-          className="flex w-full items-center gap-3.5 py-3 text-left transition-colors duration-150 ease-(--ease-out) hover:text-text"
+          className="flex w-full items-center gap-3.5 py-2.5 text-left transition-colors duration-150 ease-(--ease-out) hover:text-text"
         >
           {inner}
         </button>
       ) : (
-        <span className="flex items-center gap-3.5 py-3">{inner}</span>
+        <span className="flex items-center gap-3.5 py-2.5">{inner}</span>
       )}
     </li>
   );
