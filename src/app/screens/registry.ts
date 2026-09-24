@@ -28,6 +28,8 @@ export const SCREEN_NAMES = [
   'AdminScreen',
   'AdminWorkoutsScreen',
   'AdminExercisesScreen',
+  // Every clip, recording and still in the buckets, with the exercises that use them (0048).
+  'AdminMediaScreen',
   'AdminCoursesScreen',
   'AdminCourseScreen',
   'AdminMarathonsScreen',

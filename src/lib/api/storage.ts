@@ -10,6 +10,7 @@ import { demo } from './demo/load';
 import { guard } from './internal';
 import { parseStorageRef } from './mappers';
 import { isDemo } from './mode';
+import type { MediaObject } from './types';
 
 export const SIGNED_URL_TTL_SEC = 3600;
 /** Re-sign a little before expiry so a URL handed to a <video> never dies mid-playback. */
@@ -225,6 +226,8 @@ export async function resolveMediaUrl(ref: string | undefined): Promise<string |
 export const PUBLIC_BUCKET = 'images';
 /** The private bucket: the paid content. Reads go through a signed URL and an entitlement check. */
 export const PRIVATE_BUCKET = 'videos';
+/** Spoken names and explanations (0048): private, gated exactly as `videos` is. */
+export const AUDIO_BUCKET = 'audio';
 
 /**
  * The public URL of a `storage:images/…` reference.
@@ -279,6 +282,36 @@ export async function uploadMedia(bucket: string, path: string, file: Blob): Pro
     cache.delete(ref);
     persist();
     return ref;
+  });
+}
+
+/**
+ * The files in one folder of a bucket, for the admin's media library.
+ *
+ * One level only: the conventions put every file straight under `shared/` or a course id, so a
+ * folder is the whole of what the owner wants to see at once. Storage lists sub-folders as rows
+ * with no `id`; those are skipped. Readable by whoever the bucket's select policy admits, which
+ * for the library means the admin.
+ */
+export async function listMedia(bucket: string, prefix: string): Promise<MediaObject[]> {
+  if (isDemo()) return (await demo()).listMedia(bucket, prefix);
+  return guard(async () => {
+    const { data, error } = await supabase()
+      .storage.from(bucket)
+      .list(prefix, { limit: 1000, sortBy: { column: 'name', order: 'asc' } });
+    if (error) throw error;
+    return (data ?? [])
+      .filter((o) => o.id !== null && o.id !== undefined)
+      .map((o) => {
+        const size = (o.metadata as { size?: unknown } | null)?.size;
+        return {
+          name: o.name,
+          path: `${prefix}/${o.name}`,
+          ref: `storage:${bucket}/${prefix}/${o.name}`,
+          sizeBytes: typeof size === 'number' ? size : null,
+          updatedAt: typeof o.updated_at === 'string' ? o.updated_at : null,
+        };
+      });
   });
 }
 

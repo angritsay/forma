@@ -308,6 +308,8 @@ rebuild the database for each run.
 | `admin_publish_course()`, `admin_unpublish_course()`             | The only non-migration writers of `courses` / `workouts` (§2.2)               |
 | `images` bucket                                                  | Public: course covers, day pictures, exercise stills (`videos` stays private) |
 | Storage bucket `videos` (private)                                | Read requires an active purchase of the course in the path, or `shared/`      |
+| Storage bucket `audio` (private, 0048)                           | Spoken exercise names and explanation recordings; gated exactly as `videos`   |
+| `exercise_intro_views` + `mark_exercise_intro_seen()`            | How many times a person saw an exercise's explanation (0048); own rows only   |
 | `marathons`, `marathon_teams`, `marathon_members`                | A marathon run, its pairs (none when `team_size = 1`), and who plays (§2.5)   |
 | `marathon_tasks`, `marathon_submissions`, `marathon_adjustments` | The daily plan, the proof sent against it, and the coach's manual ±points     |
 | `marathon_scores()`, `marathon_my_points()`                      | The weekly board and one athlete's days; points are derived, never stored     |

@@ -42,6 +42,7 @@ import type {
   MarathonTaskTarget,
   MarathonTeamRow,
   MarathonTodayTask,
+  MediaObject,
   MyMarathon,
   ProofInput,
   WorkoutAssigneeRow,
@@ -829,6 +830,11 @@ function compiledExerciseRows(): ExerciseCatalogRow[] {
     secondsPerRep: e.secondsPerRep ?? null,
     videoRu: e.video?.ru ?? null,
     videoEn: e.video?.en ?? null,
+    videoMode: e.videoMode ?? 'loop',
+    audioRu: e.audio?.ru ?? null,
+    audioEn: e.audio?.en ?? null,
+    introFull: e.introFull ?? null,
+    introBrief: e.introBrief ?? null,
     image: null,
     tags: [...e.tags],
     isTest: e.isTest === true,
@@ -836,10 +842,29 @@ function compiledExerciseRows(): ExerciseCatalogRow[] {
   }));
 }
 
+/**
+ * A stored row, with the media columns 0048 added filled in.
+ *
+ * Rows written before those fields existed are still in the browser's `localStorage`; reading
+ * them as they are would hand the app `videoMode: undefined` where the type promises a string.
+ * Defaulting here is cheaper for the person than bumping `DEMO_SCHEMA_VERSION`, which would
+ * throw away everything they had typed into the demo.
+ */
+function withMediaDefaults(row: ExerciseCatalogRow): ExerciseCatalogRow {
+  return {
+    ...row,
+    videoMode: row.videoMode ?? 'loop',
+    audioRu: row.audioRu ?? null,
+    audioEn: row.audioEn ?? null,
+    introFull: row.introFull ?? null,
+    introBrief: row.introBrief ?? null,
+  };
+}
+
 /** Compiled rows, with anything written in the admin panel layered over them by id. */
 function exerciseRows(db: DemoDb): ExerciseCatalogRow[] {
   const byId = new Map(compiledExerciseRows().map((r) => [r.id, r]));
-  for (const row of db.exercises) byId.set(row.id, row);
+  for (const row of db.exercises) byId.set(row.id, withMediaDefaults(row));
   return [...byId.values()];
 }
 
@@ -895,6 +920,12 @@ function draftToRow(draft: ExerciseDraft, base?: ExerciseCatalogRow): ExerciseCa
     secondsPerRep: draft.secondsPerRep ?? base?.secondsPerRep ?? null,
     videoRu: draft.videoRu ?? base?.videoRu ?? null,
     videoEn: draft.videoEn ?? base?.videoEn ?? null,
+    videoMode: draft.videoMode ?? base?.videoMode ?? 'loop',
+    audioRu: draft.audioRu ?? base?.audioRu ?? null,
+    audioEn: draft.audioEn ?? base?.audioEn ?? null,
+    // `null` in the draft means "cleared", so it must not fall through to the stored intro.
+    introFull: draft.introFull !== undefined ? draft.introFull : (base?.introFull ?? null),
+    introBrief: draft.introBrief !== undefined ? draft.introBrief : (base?.introBrief ?? null),
     image: draft.image ?? base?.image ?? null,
     tags: draft.tags ?? base?.tags ?? [],
     isTest: draft.isTest ?? base?.isTest ?? false,
@@ -1361,6 +1392,11 @@ export async function uploadMedia(bucket: string, _path: string, file: Blob): Pr
 
 export async function deleteMedia(_ref: string): Promise<void> {
   throw new AppError('forbidden', 'demo_read_only');
+}
+
+/** No bucket, so no files: the library shows its empty state. */
+export async function listMedia(_bucket: string, _prefix: string): Promise<MediaObject[]> {
+  return run(() => []);
 }
 
 // --- marathons ---------------------------------------------------------------

@@ -979,6 +979,29 @@ export const app = {
   exImageHint: 'A frame from the video — for when the video has not been shot yet',
   exTags: 'Tags',
   exTagsHint: 'Comma-separated. The builder searches them.',
+  exVideoEn: 'Video (EN)',
+  exVideoEnHint:
+    'If the clip has speech or captions in it. Otherwise the player uses the Russian one.',
+  exVideoMode: 'Video in the player',
+  exVideoModeLoop: 'Loop',
+  exVideoModeFit: 'Stretch to the step',
+  exVideoModeHint:
+    '"Loop" repeats the clip while the exercise lasts. "Stretch" slows the clip down to the length of the step (no more than twofold) and holds the last frame: for a pose that is entered once.',
+  exAudioSection: 'Name spoken aloud',
+  exAudioHint:
+    'A short recording of the exercise name — the player says it at the start of the step. .m4a, up to 5 MB.',
+  exAudioRu: 'Recording (RU)',
+  exAudioEn: 'Recording (EN)',
+  exIntroSection: 'Explanations',
+  exIntroSectionHint: 'The full one the first time, the brief one twice more, then nothing.',
+  exIntroFull: 'Full explanation',
+  exIntroBrief: 'Brief explanation',
+  exIntroText: 'Text',
+  exIntroTextHint: 'What the person reads before the exercise. An empty explanation is not shown.',
+  exIntroVideo: 'Explanation video',
+  exIntroVideoHint: 'One for both languages',
+  exIntroAudio: 'Explanation recording ({lang})',
+  exIntroAudioHint: 'In the language chosen under "Writing in"',
 
   // --- media upload (admin) -------------------------------------------------
   mediaNone: 'Nothing uploaded',
@@ -987,7 +1010,26 @@ export const app = {
   mediaRemove: 'Remove',
   mediaUploaded: 'Uploaded',
   mediaUploadError: 'Could not upload',
+  mediaDeleteError: 'Could not delete the file',
   mediaTooLarge: 'The file is larger than {mb} MB',
+
+  // --- media library (admin) ------------------------------------------------
+  mediaLibTitle: 'Media library',
+  mediaLibTabVideos: 'Videos',
+  mediaLibTabAudio: 'Audio',
+  mediaLibTabImages: 'Images',
+  mediaLibFolder: 'Folder',
+  mediaLibUpload: 'Upload a file',
+  mediaLibEmptyTitle: 'This folder is empty',
+  mediaLibEmptyBody:
+    'Upload a file here or from the exercise editor — it appears in the list with its size and where it is used.',
+  mediaLibLoadError: 'Could not load the file list',
+  mediaLibUnused: 'Not used',
+  mediaLibNoPreview: 'No preview: the file could not be signed',
+  mediaLibDeleteTitle: 'Delete this file?',
+  mediaLibDeleteBody: '"{name}" disappears from storage. It cannot be brought back.',
+  mediaLibDeleteBlocked: 'An exercise uses this file — remove it there first',
+  mediaLibDeleted: 'File deleted',
 
   // --- course builder (admin) -----------------------------------------------
   courseNavLabel: 'Course builder',

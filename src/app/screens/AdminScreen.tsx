@@ -170,6 +170,7 @@ const TOOLS: { key: TKey; to: string }[] = [
   { key: 'app.builderScreenTitle', to: '/admin/workouts' },
   { key: 'app.courseNavLabel', to: '/admin/courses' },
   { key: 'app.exScreenTitle', to: '/admin/exercises' },
+  { key: 'app.mediaLibTitle', to: '/admin/media' },
   { key: 'app.mAdminNav', to: '/admin/marathons' },
   { key: 'app.adminStatsTitle', to: '/admin/stats' },
   { key: 'app.inboxNav', to: '/admin/support' },

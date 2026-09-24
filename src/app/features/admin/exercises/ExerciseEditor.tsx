@@ -10,21 +10,32 @@
  *
  * An exercise created here is marked `is_custom` and is nobody else's: every field is editable and
  * the seed leaves it alone.
+ *
+ * Media — the clip and how it plays, the spoken name, the explanations (0048) — is markup on
+ * both kinds of row: it is what the seed never writes, and on a seeded movement it is the whole
+ * point of opening this form. It is saved unconditionally.
  */
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
-import { EQUIPMENT, MOVEMENT_PATTERNS, MUSCLE_GROUPS } from '@/content/schema';
+import { EQUIPMENT, MOVEMENT_PATTERNS, MUSCLE_GROUPS, type VideoMode } from '@/content/schema';
 import type { ExerciseCatalogRow, ExerciseDraft } from '@/lib/api/types';
 import type { TKey } from '@/i18n/index';
-import { PRIVATE_BUCKET, PUBLIC_BUCKET } from '@/lib/api/storage';
+import { AUDIO_BUCKET, PRIVATE_BUCKET, PUBLIC_BUCKET } from '@/lib/api/storage';
 import { pick, put } from '@/app/features/admin/adminLocale';
 import { LangTabs, useEditingLocale } from '@/app/features/admin/LangTabs';
 import { useT } from '@/app/hooks/useT';
 import { ChipToggles, TextList } from '@/app/features/admin/forms/TextList';
 import { MediaField } from '@/app/features/admin/media/MediaField';
+import {
+  cleanIntro,
+  INTRO_AUDIO_MAX_BYTES,
+  introToDraft,
+  IntroTierEditor,
+} from '@/app/features/admin/exercises/IntroTierEditor';
 
 /** Matches the id check on public.exercises. */
 export const EXERCISE_ID_RE = /^[a-z0-9_]{2,60}$/;
@@ -87,6 +98,12 @@ export function ExerciseEditor({
   const [breathingRu, setBreathingRu] = useState(initial?.breathingRu ?? '');
   const [breathingEn, setBreathingEn] = useState(initial?.breathingEn ?? '');
   const [videoRu, setVideoRu] = useState<string | null>(initial?.videoRu ?? null);
+  const [videoEn, setVideoEn] = useState<string | null>(initial?.videoEn ?? null);
+  const [videoMode, setVideoMode] = useState<VideoMode>(initial?.videoMode ?? 'loop');
+  const [audioRu, setAudioRu] = useState<string | null>(initial?.audioRu ?? null);
+  const [audioEn, setAudioEn] = useState<string | null>(initial?.audioEn ?? null);
+  const [introFull, setIntroFull] = useState(() => introToDraft(initial?.introFull));
+  const [introBrief, setIntroBrief] = useState(() => introToDraft(initial?.introBrief));
   const [image, setImage] = useState<string | null>(initial?.image ?? null);
   const [tags, setTags] = useState((initial?.tags ?? []).join(', '));
   /*
@@ -121,6 +138,12 @@ export function ExerciseEditor({
       breathingRu: breathingRu.trim() || null,
       breathingEn: breathingEn.trim() || null,
       videoRu,
+      videoEn,
+      videoMode,
+      audioRu,
+      audioEn,
+      introFull: cleanIntro(introFull),
+      introBrief: cleanIntro(introBrief),
       image,
       tags: tags
         .split(',')
@@ -150,6 +173,8 @@ export function ExerciseEditor({
     { value: 'shared', label: t('app.exVideoFolderShared') },
     ...courseIds.map((c) => ({ value: c, label: c })),
   ];
+  /** What names every file of this exercise; a new one without an id yet gets a placeholder. */
+  const fileId = (isNew ? id : initial.id) || 'exercise';
 
   return (
     <div className="flex flex-col gap-6 py-2">
@@ -332,7 +357,20 @@ export function ExerciseEditor({
             value={videoRu}
             onChange={setVideoRu}
             bucket={PRIVATE_BUCKET}
-            pathBase={`${videoFolder}/${(isNew ? id : initial.id) || 'exercise'}.ru`}
+            pathBase={`${videoFolder}/${fileId}.ru`}
+            accept="video/*"
+          />
+          {/*
+           * The English clip is rarely a different file — a movement looks the same in any
+           * language — but a clip with a spoken cue in it is, and the player picks by locale.
+           */}
+          <MediaField
+            label={t('app.exVideoEn')}
+            hint={t('app.exVideoEnHint')}
+            value={videoEn}
+            onChange={setVideoEn}
+            bucket={PRIVATE_BUCKET}
+            pathBase={`${videoFolder}/${fileId}.en`}
             accept="video/*"
           />
         </div>
@@ -342,9 +380,80 @@ export function ExerciseEditor({
           value={image}
           onChange={setImage}
           bucket={PUBLIC_BUCKET}
-          pathBase={`exercises/${(isNew ? id : initial.id) || 'exercise'}`}
+          pathBase={`exercises/${fileId}`}
           accept="image/*"
           maxBytes={8 * 1024 * 1024}
+        />
+      </div>
+
+      {/*
+       * Loop or fit. A movement that is repeated loops; a pose that is entered once and held is
+       * slowed to the step and holds its last frame, so the person is not shown sitting down into
+       * it again every eight seconds. The switch is the only thing here that is not a file.
+       */}
+      <div className="flex flex-col gap-2">
+        <span className="text-[13px] font-semibold text-muted">{t('app.exVideoMode')}</span>
+        <SegmentedControl<VideoMode>
+          className="self-start"
+          size="sm"
+          label={t('app.exVideoMode')}
+          value={videoMode}
+          onChange={setVideoMode}
+          options={[
+            { value: 'loop', label: t('app.exVideoModeLoop') },
+            { value: 'fit', label: t('app.exVideoModeFit') },
+          ]}
+        />
+        <p className="text-[13px] text-muted-2">{t('app.exVideoModeHint')}</p>
+      </div>
+
+      {/* The name, spoken: one recording per language, under `shared/` — a name is not paid content. */}
+      <div className="flex flex-col gap-3">
+        <span className="eyebrow">{t('app.exAudioSection')}</span>
+        <p className="text-[13px] text-muted-2">{t('app.exAudioHint')}</p>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <MediaField
+            label={t('app.exAudioRu')}
+            value={audioRu}
+            onChange={setAudioRu}
+            bucket={AUDIO_BUCKET}
+            pathBase={`shared/${fileId}.ru`}
+            accept="audio/*"
+            maxBytes={INTRO_AUDIO_MAX_BYTES}
+          />
+          <MediaField
+            label={t('app.exAudioEn')}
+            value={audioEn}
+            onChange={setAudioEn}
+            bucket={AUDIO_BUCKET}
+            pathBase={`shared/${fileId}.en`}
+            accept="audio/*"
+            maxBytes={INTRO_AUDIO_MAX_BYTES}
+          />
+        </div>
+      </div>
+
+      {/* Explanations: the full one the first time, the brief one twice more, then nothing. */}
+      <div className="flex flex-col gap-5 border-t border-border pt-5">
+        <div className="flex flex-col gap-1">
+          <span className="eyebrow">{t('app.exIntroSection')}</span>
+          <p className="text-[13px] text-muted-2">{t('app.exIntroSectionHint')}</p>
+        </div>
+        <IntroTierEditor
+          tier="full"
+          title={t('app.exIntroFull')}
+          exerciseId={fileId}
+          editing={editing}
+          value={introFull}
+          onChange={setIntroFull}
+        />
+        <IntroTierEditor
+          tier="brief"
+          title={t('app.exIntroBrief')}
+          exerciseId={fileId}
+          editing={editing}
+          value={introBrief}
+          onChange={setIntroBrief}
         />
       </div>
 

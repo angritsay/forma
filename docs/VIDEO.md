@@ -249,3 +249,32 @@ without writing anything or needing the secret — then run again with it off. `
 
 If clips are re-identified later, regenerate `media/drive-files.json` from the export (each entry
 is `{ exerciseId, key, id }`, one per identified clip) and the next run picks them up.
+
+## Аудио
+
+Since 0048 an exercise can carry sound as well as a clip, in a second private bucket, **`audio`**,
+with the same access rules as `videos` (`shared/…` for anyone signed in, `<course_id>/…` by
+entitlement, admins write). Two kinds of recording:
+
+- **The name, spoken.** The player says the exercise's name at the start of the step, so a person
+  holding a pose does not have to read it off the screen. One file per language.
+- **An explanation.** Shown before the exercise: the full one the first time, the brief one the
+  next two times, then nothing. Each tier is any subset of text, one clip (the same for both
+  languages) and a recording per language.
+
+Encode every recording as **AAC in `.m4a`, mono, 64 kbps** — a spoken name is under a second and a
+two-sentence explanation a few hundred kilobytes; keep each file **≤ 1 MB** (the editor refuses
+anything over 5 MB). The paths are fixed by the exercise id, so a re-upload replaces the file:
+
+    audio/shared/<exercise_id>.<lang>.m4a                 the name, spoken
+    audio/shared/<exercise_id>.intro-<tier>.<lang>.m4a    an explanation's recording, tier = full | brief
+    videos/shared/<exercise_id>.intro-<tier>.<ext>        an explanation's clip
+
+Everything here is uploaded from the exercise editor (`/app/#/admin/exercises`, the «Название
+голосом» and «Объяснения» sections) — no script, no dashboard. The media library
+(`/app/#/admin/media`) lists what is in each bucket by folder, with the size and the exercises that
+reference each file, and removes what nothing references.
+
+The clip's mode lives next to it: `loop` repeats the clip while the step lasts; `fit`, for a pose
+entered once and held, slows the clip to the step's duration (no slower than 0.5×) and holds its
+last frame.

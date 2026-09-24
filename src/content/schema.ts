@@ -103,6 +103,31 @@ export const SlugL10nSchema = z.object({
   en: z.string().regex(slugRegex, 'latin kebab-case slug'),
 });
 
+/**
+ * How the player runs an exercise's clip.
+ *
+ * `loop` (the default): the clip repeats while the step lasts — right for a movement that is done
+ * over and over. `fit`: the clip is slowed down to fill the step's duration, no slower than 0.5×,
+ * and then holds its last frame — right for a pose that is entered once and held, where a loop
+ * would show the person entering it again every few seconds.
+ */
+export const VideoModeSchema = z.enum(['loop', 'fit']);
+export type VideoMode = z.infer<typeof VideoModeSchema>;
+
+/**
+ * An explanation shown before an exercise: text, a clip, a spoken version, any subset.
+ *
+ * An exercise carries up to two of these. `introFull` is shown the first time the person meets
+ * the movement, `introBrief` the next two times, and after that nothing (the count is kept in
+ * `exercise_intro_views`, 0048). Media are `storage:` references or URLs, as `video` is.
+ */
+export const ExerciseIntroSchema = z.object({
+  text: OptionalL10nSchema.optional(),
+  video: z.string().optional(),
+  audio: OptionalL10nSchema.optional(),
+});
+export type ExerciseIntro = z.infer<typeof ExerciseIntroSchema>;
+
 export const ExerciseSchema = z
   .object({
     id: z.string().regex(idRegex),
@@ -146,6 +171,14 @@ export const ExerciseSchema = z
      */
     relativeDifficulty: z.number().positive().optional(),
     video: OptionalL10nSchema.optional(),
+    /** How the player runs `video`; absent means `loop`. See {@link VideoModeSchema}. */
+    videoMode: VideoModeSchema.optional(),
+    /** The exercise's name spoken aloud, per language — played at the start of the step. */
+    audio: OptionalL10nSchema.optional(),
+    /** Shown before the exercise the first time the person meets it. */
+    introFull: ExerciseIntroSchema.optional(),
+    /** Shown the second and third time; after that the exercise starts at once. */
+    introBrief: ExerciseIntroSchema.optional(),
     tags: z.array(z.string()).default([]),
     isTest: z.boolean().optional(),
   })

@@ -46,13 +46,37 @@ export const isCompiledCourse = (id: string): boolean => COMPILED_COURSE_BY_ID.h
 export const isCompiledExercise = (id: string): boolean => EXERCISE_BY_ID.has(id);
 
 /**
+ * The media half of a database exercise: the fields the admin marks up and the seed never writes.
+ *
+ * These are the columns 0006 and 0048 leave alone on a re-seed — the clip and its mode, the spoken
+ * name, the explanations — so on a row that mirrors a compiled exercise they are the only thing
+ * the row knows that the file does not. Only fields that are set are returned, so spreading the
+ * result over the compiled exercise never blanks a clip the file carries.
+ */
+export function mediaOverlay(e: Exercise): Partial<Exercise> {
+  return {
+    ...(e.video !== undefined ? { video: e.video } : {}),
+    ...(e.audio !== undefined ? { audio: e.audio } : {}),
+    ...(e.videoMode !== undefined ? { videoMode: e.videoMode } : {}),
+    ...(e.introFull !== undefined ? { introFull: e.introFull } : {}),
+    ...(e.introBrief !== undefined ? { introBrief: e.introBrief } : {}),
+  };
+}
+
+/**
  * Replace the runtime half of the catalogue.
  *
- * Compiled content always wins a collision. Database exercises are *seeded from* the files and
- * re-seeded on every content change, so a row that shares an id is at best identical and at worst
- * stale; the rows worth taking are the ones with no compiled counterpart, which is exactly the set
- * somebody authored. The same rule one level up keeps the five reviewed course files authoritative
- * while they are being migrated into the database.
+ * Compiled content wins a collision on everything descriptive. Database exercises are *seeded
+ * from* the files and re-seeded on every content change, so a row that shares an id is at best
+ * identical and at worst stale; the rows worth taking whole are the ones with no compiled
+ * counterpart, which is exactly the set somebody authored. The same rule one level up keeps the
+ * five reviewed course files authoritative while they are being migrated into the database.
+ *
+ * Media is the exception, and it used to be the bug. The admin marks up a compiled movement — a
+ * clip, its mode, a spoken name, an explanation — into columns the seed never touches, and the
+ * app dropped the whole row because its id was compiled: the markup landed in the database and
+ * never reached a player. So a colliding row now contributes its {@link mediaOverlay} on top of
+ * the compiled exercise, and nothing else.
  */
 export function setCatalogueOverlay(overlay: {
   courses: readonly Course[];
@@ -60,11 +84,20 @@ export function setCatalogueOverlay(overlay: {
 }): void {
   const extraCourses = overlay.courses.filter((c) => !COMPILED_COURSE_BY_ID.has(c.id));
   const extraExercises = overlay.exercises.filter((e) => !EXERCISE_BY_ID.has(e.id));
+  const mediaById = new Map(
+    overlay.exercises.filter((e) => EXERCISE_BY_ID.has(e.id)).map((e) => [e.id, mediaOverlay(e)]),
+  );
 
   courses = [...LIVE_COURSES, ...extraCourses].sort((a, b) => a.order - b.order);
   // Keyed over every compiled course, not just the ones on sale — see the note by the declaration.
   courseById = new Map([...COURSES, ...extraCourses].map((c) => [c.id, c]));
-  exercises = [...EXERCISES, ...extraExercises];
+  exercises = [
+    ...EXERCISES.map((e) => {
+      const media = mediaById.get(e.id);
+      return media ? { ...e, ...media } : e;
+    }),
+    ...extraExercises,
+  ];
   exerciseById = new Map(exercises.map((e) => [e.id, e]));
 
   for (const fn of listeners) fn();
