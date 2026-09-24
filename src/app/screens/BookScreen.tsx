@@ -76,6 +76,7 @@
 import { clsx } from 'clsx';
 import { useEffect, useState } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
+import { BrandMark } from '@/components/ui/BrandMark';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { HeroField, KeyWord } from '@/components/ui/HeroField';
@@ -362,8 +363,9 @@ export default function BookScreen() {
                     <a
                       {...externalLinkProps(x.url)}
                       rel="me noopener noreferrer"
-                      className="control-label inline-flex h-10 items-center rounded-control border border-border-strong px-4 text-[13px] text-muted transition-colors duration-150 active:bg-surface-2"
+                      className="control-label inline-flex h-10 items-center gap-2 rounded-control border border-border-strong px-4 text-[13px] text-muted transition-colors duration-150 active:bg-surface-2"
                     >
+                      <BrandMark kind={x.kind} size={16} className="shrink-0 text-text" />
                       {x.label}
                     </a>
                   </li>

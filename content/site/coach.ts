@@ -52,6 +52,23 @@ export interface CoachFigure {
   of: L10n;
 }
 
+/** Which service a link points at — it picks the mark drawn beside the address. */
+export type CoachLinkKind = 'profi' | 'instagram' | 'telegram';
+
+export interface CoachLink {
+  kind: CoachLinkKind;
+  label: string;
+  url: string;
+}
+
+/**
+ * His Telegram username, without the «@». Empty until the owner supplies it — the owner asked
+ * for a Telegram link («надо бы тг ещё дать») and the account could not be looked up from here, so
+ * nothing is guessed: while this is empty the link is simply not drawn, on the tab, on the site and
+ * in the JSON-LD `sameAs` alike. Filling it in is the whole change.
+ */
+export const COACH_TELEGRAM = '';
+
 export const COACH = {
   name: { ru: 'Сергей Титов', en: 'Sergey Titov' } satisfies L10n,
   role: {
@@ -153,10 +170,16 @@ export const COACH = {
    * search would not have been proof of anything.
    */
   links: [
-    { label: 'profi.ru', url: 'https://profi.ru/profile/TitovSA5/' },
-    { label: '@titovtrener', url: 'https://www.instagram.com/titovtrener/' },
-  ] as {
-    label: string;
-    url: string;
-  }[],
+    { kind: 'profi', label: 'profi.ru', url: 'https://profi.ru/profile/TitovSA5/' },
+    { kind: 'instagram', label: '@titovtrener', url: 'https://www.instagram.com/titovtrener/' },
+    ...(COACH_TELEGRAM
+      ? [
+          {
+            kind: 'telegram' as const,
+            label: `@${COACH_TELEGRAM}`,
+            url: `https://t.me/${COACH_TELEGRAM}`,
+          },
+        ]
+      : []),
+  ] as CoachLink[],
 } as const;
