@@ -234,10 +234,11 @@ export default function CoursesScreen() {
          * Two across from `md`. A card is a fixed object, not a block of text: stretched to 680px
          * it becomes a banner with a cover band 380px tall, and the screen's question — how far am
          * I through each of these — is answered by seeing them at once rather than by seeing one
-         * of them larger. `items-start`, or the grid would stretch a card with no figure on it to
-         * the height of one that has it.
+         * of them larger. `items-start`, or the grid would stretch a card with no pill on it to
+         * the height of one that has it. `gap-4`, the same step the banner and the coach's strip
+         * sit at above the deck, so the screen has one rhythm (design/CHANGELOG.md §18).
          */}
-        <ul className="flex flex-col gap-6 md:grid md:grid-cols-2 md:items-start">
+        <ul className="flex flex-col gap-4 md:grid md:grid-cols-2 md:items-start">
           {entries.map((entry, i) => {
             const photo = DECK_PHOTOS[i % DECK_PHOTOS.length]!;
             const priority = i === 0;

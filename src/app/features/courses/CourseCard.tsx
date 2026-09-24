@@ -1,53 +1,62 @@
 /**
- * One course on «Курсы»: the photograph, how far through it you are, and one button.
+ * One course on «Курсы»: the photograph, a pill, the name, and one button.
  *
  * **The photograph is the card.** That is the owner's mockup and it is the third reduction of this
  * object. It was a ticket with nine parts (`CourseTicket`); then a 16:9 cover band over a panel of
- * text with a full-width button under it; now there is no panel at all — a rule, a figure, a name
- * and a pill button, all laid on the picture. The panel was the last piece of furniture left: it
- * cost a third of the card's height to say three short things, and a card that is a picture with
- * its figure on it is read at a glance, which is the whole job of a progress screen.
+ * text with a full-width button under it; now there is no panel at all — three pieces laid on the
+ * picture. The panel was the last piece of furniture left: it cost a third of the card's height
+ * to say three short things, and a card that is a picture with its figure on it is read at a
+ * glance, which is the whole job of a progress screen.
  *
- * The anatomy, top to bottom, exactly as the mockup draws it:
+ * The anatomy, top to bottom, the same on both shapes of the card (design/CHANGELOG.md §18 — the
+ * screen's one card grammar, tag → title → bottom row):
  *
- *   - a hairline progress rule across the top, inset from both edges: the course's colour up to
- *     the percentage, near-black for the remainder;
- *   - the percentage under it, very large, in the course's colour;
- *   - the course's name under that, small and regular, in the same colour;
- *   - a white pill button at the bottom right, dark sentence-case text, with a dark circle at its
- *     right end holding a white arrow — inside the pill, not beside it. It was the course's colour
- *     until the third palette: the neon is now the one main button of a screen (the hero's), and a
- *     course tinted neon or orange would have put a second one beside it.
+ *   - the **pill**: the share completed, light blue, because progress is the interface accent
+ *     (the semantic colour map, global.css header); or, on a course not started, the tilted neon
+ *     promise («Первая тренировка бесплатно»); or nothing, on a course with neither;
+ *   - the **name** under it, 22px in the display face at 800, at most two lines — the one title
+ *     size every card on this screen has, so the coach's field and the course photograph read as
+ *     one deck;
+ *   - a **pill button** at the bottom right, sentence-case text, with a dark circle at its right
+ *     end holding a white arrow — inside the pill, not beside it. White on a square card; the neon
+ *     on the hero, which is the one main button of the screen. It was the course's colour until
+ *     the third palette: a course tinted neon or orange would have put a second neon button
+ *     beside the hero's.
+ *
+ * The mockup also drew a hairline progress rule across the top of the card and the share as a
+ * 42px figure under it, in the course's colour. Both went with §18: the %-pill says the same
+ * number, and the rule and the figure were the loudest type on a screen the owner found had
+ * «слишком много типографики и элементов». What is left is three pieces per card and four type
+ * sizes on the screen (26 / 22 / 15 / 13; `courses-type-scale.test.ts`).
  *
  * **The hero is the same photograph with a plate of glass on it** (design/CHANGELOG.md §17 —
  * owner: «для курсов — картинки и стекло»). The first card of the deck, the course you are
  * walking, was the screen's blue field for one iteration (§14's hero card); it is a picture again,
  * taller, with a pane of dense glass pinned to its bottom (`heroPlate.ts`) that holds the same
- * four facts in the field's vocabulary: the % as a light-blue pill (progress is the interface
- * accent), or the tilted neon promise on a course not started; the name at display weight with
- * its key word light blue under the swoosh (`KeyTitle`); the progress rule; and **the screen's one
- * neon button** with the arrow's dark circle inside it. Nothing on this screen is the blue field
- * any more.
+ * three pieces in the field's vocabulary: the pill; the name at display weight with its key word
+ * light blue under the swoosh (`KeyTitle`); and **the screen's one neon button** with the arrow's
+ * dark circle inside it. Nothing on this screen is the blue field any more.
  *
- * **Colour carries the programme, on type rather than on fills.** The card used to be painted in
- * `--course-tile`: a yellow cover band, a yellow progress fill. Here the tile colours the *type*
- * and the photograph stays a photograph. That is what lets two courses sit on one screen and be
- * told apart without either of them shouting.
+ * **Colour carries the programme, on the tag rather than on fills or type.** The card used to be
+ * painted in `--course-tile`: a yellow cover band, a yellow progress fill. Here the photograph
+ * stays a photograph and the name is white. That is what lets two courses sit on one screen and
+ * be told apart without either of them shouting.
  *
- * Which also means the type has to survive the picture under it. A cyan name on a hazy grey
- * photograph is the exact combination that fails WCAG, so the art carries `.photo-scrim-top` —
- * a gradient sized to the block of type, heavy where the figure is and gone by the middle of the
- * card. The ratios are measured on the composited pixels, not estimated; see the class in
- * global.css for the numbers this scrim was tuned to. The hero's type sits on its plate, and the
- * plate is what is measured there (`.glass-card-on-art`, `contrast-usage.test.ts`).
+ * Which still means the type has to survive the picture under it. A white name on a photograph
+ * whose top third is a white sky fails WCAG just as a cyan one did, so the art carries
+ * `.photo-scrim-top` — a gradient sized to the block of type, heavy where the pill and the name
+ * sit and gone by the middle of the card. The ratios are measured on the composited pixels, not
+ * estimated; see the class in global.css for the numbers this scrim was tuned to. The hero's type
+ * sits on its plate, and the plate is what is measured there (`.glass-card-on-art`,
+ * `contrast-usage.test.ts`).
  *
  * **A photograph, never lettered artwork.** `Course['cover']` is not read here any more. The one
  * cover the catalogue has, `/covers/start.jpg`, carries «ФОРМА // С НУЛЯ» in baked-in yellow
  * lettering, and a lettered cover under a cyan course name is two titles fighting for the same
  * card. The cover still leads the course's page on the site, where it is the only title there is.
  *
- * A course the athlete does **not** own has no figure and no rule — nought per cent is not a fact
- * about somebody who has not started, it is a fact about somebody who is failing — so it shows the
+ * A course the athlete does **not** own has no % pill — nought per cent is not a fact about
+ * somebody who has not started, it is a fact about somebody who is failing — so it shows the
  * picture held back, the name, and «Подробнее», which leaves for the course's own page. The button
  * is only ever offered when there is a page behind it (`LIVE_COURSES`); the screen decides that,
  * because the boundary belongs to the content and not to a card.
@@ -85,12 +94,14 @@ export interface CourseCardProps {
   /** Not owned: the picture is held back so the courses being walked lead. */
   dimmed?: boolean;
   /**
-   * Одна строка над названием — там, где у начатого курса стоит процент.
+   * The promise on a course not started — the tag above the name, where a started course has its
+   * % pill.
    *
-   * Существует ради «Первая тренировка бесплатно»: обещание должно стоять на карточке, а не
-   * открываться после нажатия, иначе оно не работает вовсе. Набрана мелким капсом, как все
-   * надстрочные строки продукта, и не показывается вместе с процентом — у курса либо прогресс,
-   * либо приглашение, но не оба сразу.
+   * It exists for «Первая тренировка бесплатно»: the promise has to stand on the card, not open
+   * after a tap, or it does not work at all. It is a pill on both shapes of the card — the tilted
+   * neon sticker, the attention the neon exists for — and it is never shown together with the
+   * percentage: a course has either progress or an invitation, not both at once. It was a line of
+   * small capitals on the square card until §18 gave both shapes the same tag slot.
    */
   eyebrow?: ReactNode;
   /** `--course-tile`, its ink and `--course-accent`, from courseTileVars(). */
@@ -188,57 +199,32 @@ export function CourseCard({
           ctaHref={ctaHref}
         />
       ) : (
-        /* 24px of inset all round, which is the app's gutter and, measured off the mockup, the
-           card's own. `pointer-events-none` so the whole picture stays one open target and only
-           the button takes a press back. */
-        <div className="pointer-events-none relative z-10 flex h-full flex-col p-6">
-          {share === undefined ? null : (
-            <>
-              {/*
-               * The rule, at the very top of the card rather than under the figure: it is the thing
-               * the eye lands on, and the figure is what it means.
-               *
-               * The mockup draws the unfilled remainder near-black, which works there because its
-               * photograph is a light haze. Ours is not: the scrim that makes the accent type legal
-               * is heaviest exactly where this rule sits, so a black track disappears into it — and
-               * on a course with no photograph yet it disappears completely, leaving a progress bar
-               * with no bar. 18% white is the same quiet second colour on both grounds.
-               */}
-              <div className="h-[2px] w-full bg-paper/18">
-                <div
-                  className="h-full bg-accent"
-                  style={{ width: `${share}%` }}
-                  role="progressbar"
-                  aria-label={title}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={share}
-                />
-              </div>
-              {/* The figure, set the prototype's way — the number larger than the word — and in
-                  the light blue, because it is progress and progress is the interface accent (the
-                  semantic colour map, global.css header): the course's own colour is identity and
-                  does not colour type on a photograph. `.tabular` so a percentage does not jitter
-                  as it climbs; the display face at 800 through `.font-display` with the weight
-                  raised, because `.display` brings a tracking and a line height that a one-line
-                  figure of digits does not want. */}
-              <p className="font-display tabular mt-4 text-[42px] leading-none font-extrabold tracking-[-0.02em] text-accent">
-                {share}%
-              </p>
-            </>
-          )}
-
-          {share === undefined && eyebrow ? (
-            <span className="eyebrow text-paper/85">{eyebrow}</span>
+        /* 16px of inset all round — the hero's plate has the same, so the pill and the name stand
+           on one vertical across the deck. `pointer-events-none` so the whole picture stays one
+           open target and only the button takes a press back. */
+        <div className="pointer-events-none relative z-10 flex h-full flex-col p-4">
+          {/*
+           * The tag: the share as the light-blue pill (`.tabular` so a percentage does not jitter
+           * as it climbs), or the tilted neon promise on a course not started, or nothing. The
+           * same slot, in the same two tones, as the hero's plate.
+           */}
+          {share !== undefined ? (
+            <Pill tone="sky" className="tabular">
+              {share}%
+            </Pill>
+          ) : eyebrow ? (
+            <Pill tone="neon" tilt="left" className="origin-left">
+              {eyebrow}
+            </Pill>
           ) : null}
 
-          {/* The name sits under the figure where there is one, and at the top of the card where
-              there is not — a locked course has no figure to stand under, and an unnamed picture
-              is a card about nothing. */}
+          {/* The name, at the screen's one title size, under the pill where there is one and at
+              the top of the card where there is not — an unnamed picture is a card about
+              nothing. White, not the course's colour: the tag carries the programme now. */}
           <p
             className={clsx(
-              'text-[15px] leading-tight font-semibold text-paper',
-              share === undefined && !eyebrow ? null : 'mt-2',
+              'font-display line-clamp-2 text-[22px] leading-[1.2] font-extrabold tracking-[-0.02em] text-balance text-paper',
+              share === undefined && !eyebrow ? null : 'mt-3',
             )}
           >
             {title}
@@ -264,27 +250,27 @@ interface HeroPlateProps {
 
 /**
  * The hero's plate: a pane of glass pinned to the bottom of the photograph (design/CHANGELOG.md
- * §17), holding the same four facts as the square card in the vocabulary the blue field had:
+ * §17), holding the same three pieces as the square card in the vocabulary the blue field had:
  *
  *   - the percentage as a light-blue pill: it is progress, and progress is the interface accent
  *     (the semantic colour map, global.css header) — the course's orange is identity and would
  *     read as «effort» on a number that only counts. A course not started has no figure; its tag
  *     is the neon promise instead («Первая тренировка бесплатно»), tilted like a sticker, because
  *     that is the attention the neon exists for;
- *   - the name in white at display weight, its last word the light-blue key word with the swoosh;
- *   - the progress as a rule on the plate — the accent over 18% white, the square card's own rule;
- *   - **the screen's one neon button**, with the arrow's dark circle inside it, beside the rule.
+ *   - the name in white at display weight, its last word the light-blue key word with the swoosh
+ *     — at the screen's one title size, 22px, the same as the square card and the coach's field;
+ *   - **the screen's one neon button**, with the arrow's dark circle inside it, on its own row.
  *
- * The rule and the button share a row so the plate stays under half the card and the photograph
- * keeps its top half: stacked, the plate would have taken 57% of a 347×400 card. The material is
- * `.glass-card-on-art` (`heroPlate.ts`): the ground's tint at the level-3 alphas, the density a
- * white sky behind it needs. `pointer-events-none` on the plate and `-auto` on the button, as on
- * the square card: the picture and the plate open the course, the button starts it.
+ * The plate carried a progress rule beside the button until §18; the pill says the same number,
+ * and without the rule the button's row is the bottom row every card on the screen ends in. The
+ * material is `.glass-card-on-art` (`heroPlate.ts`): the ground's tint at the level-3 alphas, the
+ * density a white sky behind it needs. `pointer-events-none` on the plate and `-auto` on the
+ * button, as on the square card: the picture and the plate open the course, the button starts it.
  */
 function HeroPlate({ title, share, eyebrow, ctaLabel, onCta, ctaHref }: HeroPlateProps) {
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col p-3">
-      <div className={clsx(heroPlateClasses(), 'flex flex-col rounded-tile p-5 text-paper')}>
+      <div className={clsx(heroPlateClasses(), 'flex flex-col rounded-tile p-4 text-paper')}>
         <div className="flex min-h-8 items-start">
           {share !== undefined ? (
             <Pill tone="sky" className="tabular">
@@ -297,24 +283,11 @@ function HeroPlate({ title, share, eyebrow, ctaLabel, onCta, ctaHref }: HeroPlat
           ) : null}
         </div>
 
-        <h2 className="font-display mt-3 line-clamp-2 text-[26px] leading-[1.2] font-extrabold tracking-[-0.02em] text-balance">
+        <h2 className="font-display mt-3 line-clamp-2 text-[22px] leading-[1.2] font-extrabold tracking-[-0.02em] text-balance">
           <KeyTitle text={title} />
         </h2>
 
-        <div className="mt-4 flex items-center justify-end gap-4">
-          {share !== undefined ? (
-            <div className="h-[2px] min-w-0 flex-1 bg-paper/18">
-              <div
-                className="h-full bg-accent"
-                style={{ width: `${share}%` }}
-                role="progressbar"
-                aria-label={title}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={share}
-              />
-            </div>
-          ) : null}
+        <div className="mt-4 flex justify-end">
           <Cta ctaLabel={ctaLabel} onCta={onCta} ctaHref={ctaHref} tone="neon" />
         </div>
       </div>

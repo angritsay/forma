@@ -5,12 +5,13 @@
  * Two shapes of the same card:
  *
  *   - the **hero** — the first card of the deck, the course you are walking — is taller
- *     (347×400 on a 375 column) so a plate of glass pinned to its bottom fits the % pill, a title
- *     on two lines, the progress rule and the screen's one neon button, with half the photograph
- *     left untouched above it. Its scrim darkens from the bottom (`.photo-scrim`), under the
- *     plate, not over the sky;
- *   - every **other** card is very nearly square (347×345), the mockup's shape, with its type in
- *     the top third and the scrim there (`.photo-scrim-top`).
+ *     (347×400 on a 375 column) so a plate of glass pinned to its bottom fits the three pieces
+ *     every card on the screen has (§18): the pill, a title on two lines, and the screen's one
+ *     neon button — with half the photograph left untouched above it. Its scrim darkens from the
+ *     bottom (`.photo-scrim`), under the plate, not over the sky;
+ *   - every **other** card is very nearly square (347×345), the mockup's shape, with the same
+ *     three pieces laid on the picture — the pill and the title in the top third under the scrim
+ *     there (`.photo-scrim-top`), the button at the bottom.
  */
 export type CourseCardFrame = {
   /** The article's aspect and corner. */
