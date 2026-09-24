@@ -70,6 +70,14 @@ export const COACH = {
     ru: 'Основатель и тренер Forma',
     en: 'Founder and coach of Forma',
   } satisfies L10n,
+  /**
+   * The same framing as two short stickers, for the booking tab's hero. As one pill the line was
+   * cut to «Founder and coach of …» on a phone; the owner: «сделай это двумя разными пилюлями».
+   */
+  formaRoles: [
+    { ru: 'Основатель Forma', en: 'Founder of Forma' },
+    { ru: 'Тренер', en: 'Coach' },
+  ] as readonly L10n[],
   bio: {
     ru: 'Тренирует с 2015 года: лёгкая атлетика, спортивное ориентирование, кроссфит. Ведёт общую и специальную физическую подготовку — сила и выносливость, мышцы кора, осанка, работа с опорно-двигательным аппаратом, коррекция веса. Домашние программы Forma собраны из той же логики нагрузки, что и его персональные занятия.',
     en: 'Coaching since 2015, with a background in track and field, orienteering and CrossFit. Works on general and sport-specific conditioning — strength and endurance, core, posture, the musculoskeletal system and body composition. The Forma home programs are built on the same load logic as his personal sessions.',
