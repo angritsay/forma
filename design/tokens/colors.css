@@ -32,7 +32,7 @@
 --text-on-field:#ffffff;
 /* Палитра целиком */
 --orange:#ff5a00;
---ciel:#007bff;
+--ciel:#007bff;--ciel-deep:#0066e0;
 --beige:#ffe6d0;
 /* Градиент crossroads — только клуб. Текстом — только тёплая половина (--grad-warm, все ≥5.5) */
 --grad-crossroads:linear-gradient(115deg,#afe9fd 0%,#ffe6d0 32%,#ff5a00 62%,#2038e2 100%);

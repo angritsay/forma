@@ -13,6 +13,7 @@ export type PillTone =
   | 'beige'
   | 'warm'
   | 'ink'
+  | 'chalk'
   | 'white'
   | 'ghost';
 
@@ -75,6 +76,9 @@ export interface PillProps extends HTMLAttributes<HTMLSpanElement> {
  *     and a surface-tinted glass would read as a grey smudge on the neon one. White on its sheer
  *     end over each of the three fills is ≥ 7 (`contrast-usage.test.ts`).
  *
+ *   - `chalk` — a solid white tag with ink: the section tag on the deep-ciel coach card, where
+ *     the dark glass tag would be a shape of 2.5:1 and white type sits beside it (§19).
+ *
  * The section colours are tags and never fields: a pill is the most colour a section may wear.
  */
 const TONE: Record<PillTone, string> = {
@@ -89,6 +93,7 @@ const TONE: Record<PillTone, string> = {
   beige: 'border-transparent bg-beige text-ink',
   warm: 'border-transparent bg-warm text-ink',
   ink: 'glass-tag glass-tag-ink text-paper',
+  chalk: 'border-transparent bg-paper text-ink',
   white: 'glass-tag text-on-field',
   ghost: 'glass-tag border-on-field/85 text-on-field',
 };

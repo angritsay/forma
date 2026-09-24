@@ -283,11 +283,13 @@ function HeroPlate({ title, share, eyebrow, ctaLabel, onCta, ctaHref }: HeroPlat
           ) : null}
         </div>
 
-        <h2 className="font-display mt-3 line-clamp-2 text-[22px] leading-[1.2] font-extrabold tracking-[-0.02em] text-balance">
+        {/* `pb-[0.35em]`: the key word's swoosh hangs 0.28em under the baseline, and `line-clamp`
+            clips to the padding box — without the room the swoosh was cut off. */}
+        <h2 className="font-display mt-3 line-clamp-2 pb-[0.35em] text-[22px] leading-[1.2] font-extrabold tracking-[-0.02em] text-balance">
           <KeyTitle text={title} />
         </h2>
 
-        <div className="mt-4 flex justify-end">
+        <div className="mt-2 flex justify-end">
           <Cta ctaLabel={ctaLabel} onCta={onCta} ctaHref={ctaHref} tone="neon" />
         </div>
       </div>
