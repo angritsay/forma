@@ -287,3 +287,38 @@ describe('demo backend — explanation view counts (0048)', () => {
     expect(await demo.markIntroSeen('cat_cow')).toBe(1);
   });
 });
+
+describe('demo backend — feature flags (0049)', () => {
+  it('starts with no flags and lets the signed-in account switch one on and off for itself', async () => {
+    await signIn();
+    expect(await demo.listMyFlags()).toEqual([]);
+    expect(await demo.adminSetFlag('coach_nastia', EMAIL.toUpperCase(), true)).toBe(true);
+    expect(await demo.adminSetFlag('coach_nastia', EMAIL, true)).toBe(true);
+    expect(await demo.listMyFlags()).toEqual(['coach_nastia']);
+    expect(await demo.adminFlagsFor(EMAIL)).toEqual(['coach_nastia']);
+    expect(await demo.adminSetFlag('coach_nastia', EMAIL, false)).toBe(false);
+    expect(await demo.listMyFlags()).toEqual([]);
+  });
+
+  it('refuses an address nobody signed in with, and a malformed key', async () => {
+    await signIn();
+    const nobody = `nobody.${EMAIL}`;
+    await expect(demo.adminFlagsFor(nobody)).rejects.toMatchObject({ code: 'not_found' });
+    await expect(demo.adminSetFlag('coach_nastia', nobody, true)).rejects.toMatchObject({
+      code: 'not_found',
+    });
+    await expect(demo.adminSetFlag('Bad Key', EMAIL, true)).rejects.toMatchObject({
+      code: 'validation',
+    });
+  });
+
+  it('reads a database stored before the table existed as no flags', async () => {
+    await signIn();
+    const raw = JSON.parse(store.getItem('forma.demo.db')!) as Record<string, unknown>;
+    delete raw.featureFlags;
+    store.setItem('forma.demo.db', JSON.stringify(raw));
+    expect(await demo.listMyFlags()).toEqual([]);
+    expect(await demo.adminSetFlag('coach_nastia', EMAIL, true)).toBe(true);
+    expect(await demo.listMyFlags()).toEqual(['coach_nastia']);
+  });
+});

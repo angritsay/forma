@@ -639,6 +639,13 @@ export const app = {
   personNoAssigned: 'Лично ничего не выдано',
   personAssignedDone: 'Сделана',
   personAssignedOpen: 'Не сделана',
+  // Per-person feature flags (0049) on the person page, and the coach tab's strip.
+  personFeatures: 'Функции',
+  personFeaturesNoUser: 'Включить можно, когда человек войдёт в приложение.',
+  personFeatureOn: 'Включено: {name}',
+  personFeatureOff: 'Выключено: {name}',
+  flagLabelCoachNastia: 'Карточка Анастасии на вкладке «Тренер»',
+  bookHeroStrip: 'Кто ведёт занятия',
   personActivity: 'Тренировки',
   personActSessions: 'тренировок',
   personActDays: 'дней',

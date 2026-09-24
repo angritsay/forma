@@ -20,6 +20,7 @@ export * from './coachBookings';
 export * from './admin';
 export * from './exercises';
 export * from './introViews';
+export * from './flags';
 export * from './customWorkouts';
 export * from './courseBuilder';
 export * from './marathon';
