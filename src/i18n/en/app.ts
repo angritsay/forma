@@ -1585,6 +1585,10 @@ export const app = {
   bookNextSchedule: 'Pay, then pick a slot on his page. The next one may be {n} minutes away.',
   bookNextContact:
     'There is no slot page yet: pay and message the coach — he sets the time himself, even {n} minutes before the start.',
+  // Her side of the same step (design/CHANGELOG.md §23): her own slot page, and she sets the time.
+  bookNextScheduleHer: 'Pay, then pick a slot on her page. The next one may be {n} minutes away.',
+  bookNextContactHer:
+    'There is no slot page yet: pay and send a message — she sets the time herself, even {n} minutes before the start.',
   bookPaidNote: 'The payment page opened in your browser. Once it is paid, come back for a time.',
 
   // --- Stream 3: sign-in, the bot, the emailed code -------------------------

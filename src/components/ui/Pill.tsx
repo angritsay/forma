@@ -15,7 +15,8 @@ export type PillTone =
   | 'ink'
   | 'chalk'
   | 'white'
-  | 'ghost';
+  | 'ghost'
+  | 'ink-line';
 
 export type PillTilt = 'left' | 'right';
 
@@ -76,6 +77,9 @@ export interface PillProps extends HTMLAttributes<HTMLSpanElement> {
  *     and a surface-tinted glass would read as a grey smudge on the neon one. White on its sheer
  *     end over each of the three fills is ≥ 7 (`contrast-usage.test.ts`).
  *
+ *   - `ink-line` — `ghost`'s counterpart on the owner's light-blue card (§23): no fill, an ink
+ *     hairline and ink words (14.3 on `--accent`). White would be 1.3 there.
+ *
  *   - `chalk` — a solid white tag with ink: the section tag on the deep-ciel coach card, where
  *     the dark glass tag would be a shape of 2.5:1 and white type sits beside it (§19).
  *
@@ -96,6 +100,7 @@ const TONE: Record<PillTone, string> = {
   chalk: 'border-transparent bg-paper text-ink',
   white: 'glass-tag text-on-field',
   ghost: 'glass-tag border-on-field/85 text-on-field',
+  'ink-line': 'border-ink text-on-accent',
 };
 
 const TILT: Record<PillTilt, string> = {

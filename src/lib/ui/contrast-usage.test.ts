@@ -236,7 +236,7 @@ describe('the semantic colour map — glass', () => {
   });
 
   it('reads the owner’s light-blue card: ink type, and white on its ink stickers', () => {
-    // §21: `NastiaCard` is `bg-accent` under `text-on-accent`, and its two stickers are Pill
+    // §21, §23: her `CoachHeroCard` (`sky`) is `bg-accent` under `text-on-accent`, its stickers Pill
     // `ink` — the sheer end of the ground's dark glass over the light blue.
     expect(token('on-accent')).toBe(COLOUR.ink);
     expect(contrast(COLOUR.ink, COLOUR.accent)).toBeGreaterThanOrEqual(TEXT);
