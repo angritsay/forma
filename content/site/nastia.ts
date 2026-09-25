@@ -11,8 +11,8 @@
  *
  * - для карточки: `roles` (три стикера), `name`, `photo`;
  * - для блока под ней, когда её карточка в кадре: `facts` (крупные цифры, как у Сергея), `bio`
- *   (на месте его регалий), `topicsLead` + `topics`, `links`, и `scheduleUrl` — её страница
- *   записи. Цены и оплата общие («Prices should be the same, the payment links should be the
+ *   (на месте его регалий), `links`, `outcomes` (три пункта «что я могу дать», как его три) и
+ *   `scheduleUrl` — её страница записи. Цены и оплата общие («Prices should be the same, the payment links should be the
  *   same»), они в `content/site/booking.ts`; запись у каждого своя («the booking links should be
  *   different»).
  *
@@ -30,6 +30,7 @@
  * Если языки у аккаунтов наоборот, это две строчки ниже.
  */
 import type { L10n } from '@/content/schema';
+import type { BookingOutcome } from './booking';
 
 export type NastiaLinkKind = 'instagram' | 'linkedin';
 
@@ -99,14 +100,37 @@ export const NASTIA = {
     ru: 'Сертифицированный фитнес-тренер и нутрициолог. Одиннадцать лет проектирую продукты, четыре года живу в дороге. Веду йогу и консультирую по питанию — силовые тренировки у Сергея.',
     en: "Certified fitness trainer and nutritionist. Eleven years designing products, four years living on the road. I teach yoga and consult on nutrition — strength training is Sergey's.",
   } satisfies L10n,
-  topicsLead: { ru: 'Со мной говорят о', en: 'People talk to me about' } satisfies L10n,
-  topics: [
-    { ru: 'жизни', en: 'life' },
-    { ru: 'путешествиях', en: 'travel' },
-    { ru: 'спорте', en: 'sport' },
-    { ru: 'питании', en: 'nutrition' },
-    { ru: 'IT и ИИ', en: 'tech and AI' },
-  ] satisfies L10n[],
+  /**
+   * What an hour with her gives — three, like Sergey's `BOOKING.outcomes`, in the same shape: a line
+   * you could say out loud and two sentences that make it concrete. The owner: «вкладку про меня
+   * структурируй так же, как у Серёжи, — что я могу дать людям, конкретно три пункта, и убери
+   * теги». Built from what she said about herself: yoga at most, never strength; a nutrition
+   * consultation; and the conversations people like having with her — life, travel, sport, food,
+   * IT and AI (the topics that were tags are the third point now).
+   */
+  outcomes: [
+    {
+      title: { ru: 'Йога под твоё тело', en: 'Yoga that fits your body' },
+      body: {
+        ru: 'Подберу практику под твой режим: на гибкость, на восстановление после силовых или чтобы просто выдохнуть. Занятие онлайн, по видео — вижу, как ты делаешь, и поправляю по ходу.',
+        en: 'I will build a practice around your routine: for mobility, for recovering from strength days, or simply to breathe out. Online, over video — I see how you move and adjust as we go.',
+      },
+    },
+    {
+      title: { ru: 'Питание без диет', en: 'Eating without a diet' },
+      body: {
+        ru: 'Разберём, как ты ешь сейчас, и соберём понятный план: что поменять, чтобы хватало сил на тренировки. Без запретов и подсчёта каждой калории.',
+        en: 'We look at how you eat now and put together a plan you can follow: what to change so you have the energy to train. No bans and no counting every calorie.',
+      },
+    },
+    {
+      title: { ru: 'Разговор о том, что важно', en: 'A conversation about what matters' },
+      body: {
+        ru: 'Жизнь, путешествия, спорт, IT и ИИ — со мной об этом любят говорить. Одиннадцать лет в продуктовом дизайне и четыре года в дороге: могу поделиться тем, что работает.',
+        en: 'Life, travel, sport, tech and AI — people like talking to me about all of it. Eleven years in product design and four years on the road: I can share what works.',
+      },
+    },
+  ] satisfies BookingOutcome[],
   /** Per app language — see the header for which Instagram goes where. */
   links: {
     ru: [INSTAGRAM_RU, LINKEDIN],

@@ -104,7 +104,6 @@ import { BrandMark } from '@/components/ui/BrandMark';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Glyph } from '@/components/ui/Icon';
-import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useToast } from '@/components/ui/Toast';
@@ -130,7 +129,7 @@ import { externalLinkProps } from '@/app/hooks/useExternalLink';
 import { useT, type Translator } from '@/app/hooks/useT';
 import { useFlag } from '@/app/store/flags';
 import { useSession } from '@/app/store/session';
-import { BOOKING, type BookingOption } from '@content/site/booking';
+import { BOOKING, type BookingOption, type BookingOutcome } from '@content/site/booking';
 import { COACH } from '@content/site/coach';
 import { NASTIA, type NastiaLink } from '@content/site/nastia';
 import { lavaUrl, sessionKey } from '@content/site/payments';
@@ -510,31 +509,7 @@ export default function BookScreen() {
                  * shape of the session — he looks, he sets the load, you leave with the next weeks — so
                  * 01 · 02 · 03 is an order and not a decoration.
                  */}
-                <section>
-                  <ul className="flex flex-col">
-                    {BOOKING.outcomes.map((o, i) => (
-                      <li
-                        key={o.title.en}
-                        className="flex items-start gap-4 border-t border-border py-5 first:border-t-0 first:pt-0"
-                      >
-                        {/* The first of the blue things. These three lines are the argument for the
-                      price below them, so they are where the offer starts and where its colour
-                      starts; the credentials above stay grey because they are not for sale. */}
-                        <span className="numeral tabular w-6 shrink-0 pt-0.5 text-[15px] text-accent">
-                          {String(i + 1).padStart(2, '0')}
-                        </span>
-                        <div className="flex min-w-0 flex-col gap-1.5">
-                          <p className="font-display text-[17px] leading-snug">
-                            {l(o.title, locale)}
-                          </p>
-                          <p className="text-[14px] leading-relaxed text-muted">
-                            {l(o.body, locale)}
-                          </p>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
+                <OutcomeList outcomes={BOOKING.outcomes} locale={locale} />
               </>
             )}
 
@@ -704,54 +679,86 @@ export default function BookScreen() {
 
 /**
  * What stands under Anastasia's card when it is in view (design/CHANGELOG.md §23) — Sergey's
- * blocks in the same styles, filled with hers: two figures as his are, her text where his
- * credentials are, what people talk to her about as outlined pills, her links for the app's
- * language. No «I watch how you move»: those are his words about his sessions.
+ * blocks in the same styles and the same order, filled with hers: two figures as his are, her text
+ * where his credentials are, her links for the app's language, and then her three things, numbered
+ * like his. What people talk to her about used to be a row of tags; the owner took them out and it
+ * is the third of the three now.
  */
 function NastiaAbout({ locale, links }: { locale: Locale; links: readonly NastiaLink[] }) {
   return (
-    <section className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 divide-x divide-border border-y border-border">
-        {NASTIA.facts.map((f, i) => (
-          <div
-            key={f.figure}
-            className={clsx('flex min-w-0 flex-col gap-2 py-4', i === 0 ? 'pr-4' : 'pl-4')}
+    <>
+      <section className="flex flex-col gap-4">
+        <div className="grid grid-cols-2 divide-x divide-border border-y border-border">
+          {NASTIA.facts.map((f, i) => (
+            <div
+              key={f.figure}
+              className={clsx('flex min-w-0 flex-col gap-2 py-4', i === 0 ? 'pr-4' : 'pl-4')}
+            >
+              <span className="numeral tabular text-[clamp(26px,8vw,34px)] leading-none">
+                {f.figure}
+              </span>
+              <span className="eyebrow">{l(f.caption, locale)}</span>
+            </div>
+          ))}
+        </div>
+        <p className="text-[14px] leading-snug text-muted">{l(NASTIA.bio, locale)}</p>
+        {/* The same chips as his links, and through `externalLinkProps` for the same reason. */}
+        {links.length > 0 ? (
+          <ul className="flex flex-wrap gap-2 pt-1">
+            {links.map((x) => (
+              <li key={x.url}>
+                <a
+                  {...externalLinkProps(x.url)}
+                  rel="noopener noreferrer"
+                  className="control-label inline-flex h-10 items-center gap-2 rounded-control border border-border-strong px-4 text-[13px] text-muted transition-colors duration-150 active:bg-surface-2"
+                >
+                  <BrandMark kind={x.kind} size={16} className="shrink-0 text-text" />
+                  {x.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </section>
+      <OutcomeList outcomes={NASTIA.outcomes} locale={locale} />
+    </>
+  );
+}
+
+/**
+ * What an hour gives, as three numbered jobs — his from `BOOKING.outcomes`, hers from
+ * `NASTIA.outcomes`. One component so the two people's lists can never drift apart in style.
+ *
+ * Numbered rather than ticked, and the numbers mean something: a tick is a line item in a price,
+ * and these are not line items. Read down, they are the shape of the session, so 01 · 02 · 03 is an
+ * order and not a decoration. The numbers are the first of the blue things on the tab: these lines
+ * are the argument for the price below them, so they are where the offer's colour starts.
+ */
+function OutcomeList({
+  outcomes,
+  locale,
+}: {
+  outcomes: readonly BookingOutcome[];
+  locale: Locale;
+}) {
+  return (
+    <section>
+      <ul className="flex flex-col">
+        {outcomes.map((o, i) => (
+          <li
+            key={o.title.en}
+            className="flex items-start gap-4 border-t border-border py-5 first:border-t-0 first:pt-0"
           >
-            <span className="numeral tabular text-[clamp(26px,8vw,34px)] leading-none">
-              {f.figure}
+            <span className="numeral tabular w-6 shrink-0 pt-0.5 text-[15px] text-accent">
+              {String(i + 1).padStart(2, '0')}
             </span>
-            <span className="eyebrow">{l(f.caption, locale)}</span>
-          </div>
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <p className="font-display text-[17px] leading-snug">{l(o.title, locale)}</p>
+              <p className="text-[14px] leading-relaxed text-muted">{l(o.body, locale)}</p>
+            </div>
+          </li>
         ))}
-      </div>
-      <p className="text-[14px] leading-snug text-muted">{l(NASTIA.bio, locale)}</p>
-      <div className="flex flex-col gap-2 pt-1">
-        <p className="eyebrow">{l(NASTIA.topicsLead, locale)}</p>
-        <ul className="flex flex-wrap gap-2">
-          {NASTIA.topics.map((topic) => (
-            <li key={topic.en}>
-              <Pill tone="neutral">{l(topic, locale)}</Pill>
-            </li>
-          ))}
-        </ul>
-      </div>
-      {/* The same chips as his links, and through `externalLinkProps` for the same reason. */}
-      {links.length > 0 ? (
-        <ul className="flex flex-wrap gap-2 pt-1">
-          {links.map((x) => (
-            <li key={x.url}>
-              <a
-                {...externalLinkProps(x.url)}
-                rel="noopener noreferrer"
-                className="control-label inline-flex h-10 items-center gap-2 rounded-control border border-border-strong px-4 text-[13px] text-muted transition-colors duration-150 active:bg-surface-2"
-              >
-                <BrandMark kind={x.kind} size={16} className="shrink-0 text-text" />
-                {x.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      </ul>
     </section>
   );
 }
