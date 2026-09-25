@@ -305,7 +305,8 @@ jobs:
       # the stored bodies are not the repo file, the subject is not ours, or a
       # Send Email Hook is on (then Supabase ignores the templates entirely and
       # the hook's own HTML is what arrives). It prints yes/no, lengths and the
-      # hook's scheme — never a URL, a host, an address or an id.
+      # hook's scheme — never a URL, a host, an address or an id. As notices, so
+      # the answer shows on the run page and in the check's annotations.
       # ---------------------------------------------------------------------
       - name: Read back the sign-in templates and the email hook
         if: ${{ inputs.task == 'email-templates-check' }}
@@ -329,13 +330,13 @@ jobs:
             old=$(printf '%s' "$body" | grep -c 'Твой код для входа' || true)
             subj=$(jq -r ".mailer_subjects_${slot} // \"\"" /tmp/auth.json)
             if [ "$subj" = "$subject" ]; then s=yes; else s=no; fi
-            echo "$slot: body matches repo: $m (stored ${#body} chars, repo $(wc -c < supabase/templates/otp.html) bytes); has English: $([ "$bilingual" -gt 0 ] && echo yes || echo no); old letter text: $([ "$old" -gt 0 ] && echo yes || echo no); subject ours: $s"
+            echo "::notice::$slot: body matches repo: $m (stored ${#body} chars, repo $(wc -c < supabase/templates/otp.html) bytes); has English: $([ "$bilingual" -gt 0 ] && echo yes || echo no); old letter text: $([ "$old" -gt 0 ] && echo yes || echo no); subject ours: $s"
           done
           hook=$(jq -r '.hook_send_email_enabled // false' /tmp/auth.json)
           scheme=$(jq -r '.hook_send_email_uri // ""' /tmp/auth.json | sed -E 's#^([a-z-]+)://.*#\1#; t; s#.*#none#')
           smtp=$(jq -r 'if (.smtp_host // "") != "" then "on" else "off" end' /tmp/auth.json)
-          echo "send-email hook enabled: $hook (scheme: ${scheme:-none})"
-          echo "custom SMTP: $smtp"
+          echo "::notice::send-email hook enabled: $hook (scheme: ${scheme:-none})"
+          echo "::notice::custom SMTP: $smtp"
 
       # ---------------------------------------------------------------------
       # The bot: deploy it, give it its secrets, and point Telegram at it.
