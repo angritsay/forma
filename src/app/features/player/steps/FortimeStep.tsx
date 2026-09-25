@@ -103,7 +103,7 @@ export function FortimeStep({
   const remaining = cap !== undefined ? cap - clock.elapsedSec : undefined;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 md:flex-1">
       {phase === 'running' ? (
         <>
           {/*
@@ -159,7 +159,7 @@ export function FortimeStep({
               );
             })}
           </ol>
-          <Button variant="action" size="lg" fullWidth onClick={roundDone}>
+          <Button variant="action" size="lg" fullWidth onClick={roundDone} className="md:mt-auto">
             {roundsDone + 1 >= step.rounds
               ? t('app.playerFortimeFinished')
               : t('app.playerRoundDone')}
@@ -182,7 +182,7 @@ export function FortimeStep({
               {formatClock(phase === 'finished' ? clock.elapsedSec : (cap ?? clock.elapsedSec))}
             </span>
           </div>
-          <Button variant="action" size="lg" fullWidth onClick={onNext}>
+          <Button variant="action" size="lg" fullWidth onClick={onNext} className="md:mt-auto">
             {t('common.continue')}
           </Button>
         </>

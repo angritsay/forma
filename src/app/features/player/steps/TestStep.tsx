@@ -94,7 +94,7 @@ export function TestStep({
     : t('training.block_test');
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 md:flex-1">
       <div className="flex flex-col items-center gap-3 text-center">
         {/* A hint, not a kicker — a sentence in the quiet register rather than a section mark.
             See `.eyebrow` in global.css for the line the two sit either side of. */}
@@ -135,15 +135,15 @@ export function TestStep({
       </div>
 
       {phase === 'ready' ? (
-        <Button variant="action" size="lg" fullWidth onClick={start}>
+        <Button variant="action" size="lg" fullWidth onClick={start} className="md:mt-auto">
           {t('app.playerTestStart')}
         </Button>
       ) : phase === 'running' ? (
-        <Button size="lg" fullWidth variant="secondary" onClick={stop}>
+        <Button size="lg" fullWidth variant="secondary" onClick={stop} className="md:mt-auto">
           {t('app.playerStop')}
         </Button>
       ) : (
-        <Button variant="action" size="lg" fullWidth onClick={save}>
+        <Button variant="action" size="lg" fullWidth onClick={save} className="md:mt-auto">
           {t('app.playerTestSave')}
         </Button>
       )}

@@ -84,7 +84,7 @@ export function AmrapStep({
 
   if (maxReps) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 md:flex-1">
         {phase === 'running' ? (
           <>
             <PlayerTimerSlot>
@@ -96,7 +96,7 @@ export function AmrapStep({
               />
             </PlayerTimerSlot>
             <ItemList items={step.items} compact onSelect={onClip} activeIndex={clip} />
-            <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
+            <div className="flex items-center justify-between gap-3 border-t border-border pt-4 md:mt-auto">
               <div className="flex flex-col">
                 <span className="eyebrow">{t('app.playerMaxRepsCount')}</span>
                 <span className="numeral tabular mt-1 text-5xl leading-none">{extraReps}</span>
@@ -150,7 +150,7 @@ export function AmrapStep({
                 </Button>
               </div>
             </div>
-            <Button variant="action" size="lg" fullWidth onClick={save}>
+            <Button variant="action" size="lg" fullWidth onClick={save} className="md:mt-auto">
               {t('app.playerMaxRepsSave')}
             </Button>
           </>
@@ -160,7 +160,7 @@ export function AmrapStep({
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 md:flex-1">
       {phase === 'running' ? (
         <>
           {/* Running: the clock is up in the band, the round count and its two controls are here. */}
@@ -179,7 +179,7 @@ export function AmrapStep({
            */}
           <ItemList items={step.items} compact onSelect={onClip} activeIndex={clip} />
           {/* The round count on a rule, the two controls opposite it — no box. */}
-          <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
+          <div className="flex items-center justify-between gap-3 border-t border-border pt-4 md:mt-auto">
             <div className="flex flex-col">
               <span className="eyebrow">{t('app.playerAmrapRounds')}</span>
               <span className="numeral tabular mt-1 text-5xl leading-none">{rounds}</span>
@@ -227,7 +227,7 @@ export function AmrapStep({
               increaseLabel={t('app.playerIncrease')}
             />
           </div>
-          <Button variant="action" size="lg" fullWidth onClick={save}>
+          <Button variant="action" size="lg" fullWidth onClick={save} className="md:mt-auto">
             {t('app.playerSaveScore')}
           </Button>
         </>

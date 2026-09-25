@@ -973,6 +973,20 @@ body {
   }
 
   /*
+   * The player's clock band from `md`, where it stands inside the right-hand column rather than
+   * across the top of the clip: the column's own glass is already behind it, and a second pane on
+   * top would be a darker rectangle round the digits. Paired classes, for the reason given above.
+   */
+  @media (width >= 48rem) {
+    .glass-bar-top.player-band {
+      background: none;
+      border-bottom: 0;
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+
+  /*
    * A band with something worth seeing behind it. The tab bar is dense because it carries 10px
    * tracked capitals over whatever list happens to be scrolling; the player's panel has the
    * opposite job — the clip continues behind the numbers and is meant to. These are the alphas the

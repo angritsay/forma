@@ -57,7 +57,7 @@ export function WorkRepsStep({
   useNextHandler(registerNext, done);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 md:flex-1">
       <StepHeading
         eyebrow={step.totalSets > 1 ? setLabel(t, format, step.set, step.totalSets) : undefined}
         title={exerciseName(step.exerciseId, locale)}
@@ -77,7 +77,7 @@ export function WorkRepsStep({
         />
         {load ? <span className="text-[13px] text-paper/70">{load}</span> : null}
       </div>
-      <Button variant="action" size="lg" fullWidth onClick={done}>
+      <Button variant="action" size="lg" fullWidth onClick={done} className="md:mt-auto">
         {t('app.playerDone')}
       </Button>
     </div>

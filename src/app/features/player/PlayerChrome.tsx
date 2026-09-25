@@ -29,6 +29,7 @@ import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { IconButton } from '@/components/ui/IconButton';
 import { useT } from '@/app/hooks/useT';
+import { PLAYER_BAND, PLAYER_COLUMN, PLAYER_HEADER_ROW, PLAYER_PANEL } from './layout';
 import { sectionLabel, type BlockSection } from './model';
 
 export interface PlayerHeaderProps {
@@ -83,7 +84,7 @@ export function PlayerHeader({ progress, paused, onBack, onTogglePause }: Player
           style={{ width: `${Math.min(1, Math.max(0, progress)) * 100}%` }}
         />
       </div>
-      <div className="relative mx-auto w-full max-w-[560px] px-3 pt-[var(--safe-top)]">
+      <div className={PLAYER_HEADER_ROW}>
         <div className="flex h-14 items-center gap-2">
           <IconButton label={t('common.back')} icon="back" variant="on-art" onClick={onBack} />
           {/* The step's own progress line lands here, between the two buttons — see
@@ -177,14 +178,23 @@ export function PlayerTimerBand({ onHeight, children }: PlayerTimerBandProps) {
 
   useEffect(() => {
     if (!node || !onHeight) return;
-    const report = () => onHeight(node.getBoundingClientRect().height);
+    /*
+     * From `md` the band is a slot in the right-hand column, not a strip over the clip, so the clip
+     * owes it nothing: it reports zero there, and the stage stays put when a step with no clock
+     * comes round (see layout.ts).
+     */
+    const desktop =
+      typeof window.matchMedia === 'function' ? window.matchMedia('(width >= 48rem)') : null;
+    const report = () => onHeight(desktop?.matches ? 0 : node.getBoundingClientRect().height);
     report();
     // The clock's own box changes inside one step — a caption appears, a progress line is added —
     // so the box is measured rather than guessed at, exactly as the footer's is.
     const ro = new ResizeObserver(report);
     ro.observe(node);
+    desktop?.addEventListener('change', report);
     return () => {
       ro.disconnect();
+      desktop?.removeEventListener('change', report);
       onHeight(0);
     };
   }, [node, onHeight]);
@@ -192,10 +202,7 @@ export function PlayerTimerBand({ onHeight, children }: PlayerTimerBandProps) {
   return (
     <TimerBandContext.Provider value={node}>
       <HeaderSlotContext.Provider value={headerSlot}>
-        <div
-          ref={ref}
-          className="glass-bar-top glass-sheer pointer-events-none absolute inset-x-0 top-[calc(var(--safe-top)+56px)] z-20 px-6 pt-2 pb-4 text-paper empty:hidden md:right-95"
-        />
+        <div ref={ref} className={PLAYER_BAND} />
         {children}
       </HeaderSlotContext.Provider>
     </TimerBandContext.Provider>
@@ -252,6 +259,10 @@ export interface PlayerFooterProps {
  * clip meets it and dense where the numbers sit — the whole point of the gradient, now on the
  * other axis. The fade above it becomes a fade to its left. And the measured height stops mattering:
  * the column is a fixed width, so `ArtFeed` insets by that instead.
+ *
+ * In that column nothing is centred any more. The content starts under the clock's slot on every
+ * step and a step's button sits at the foot, so neither moves from one step to the next — the
+ * owner's «чтобы кнопки не скакали» (layout.ts).
  */
 export function PlayerFooter({ children, onHeight }: PlayerFooterProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -268,10 +279,7 @@ export function PlayerFooter({ children, onHeight }: PlayerFooterProps) {
   }, [onHeight]);
 
   return (
-    <div
-      ref={ref}
-      className="absolute inset-x-0 bottom-0 z-30 md:inset-y-0 md:right-0 md:left-auto md:w-95"
-    >
+    <div ref={ref} className={PLAYER_COLUMN}>
       <div
         aria-hidden="true"
         /*
@@ -300,9 +308,7 @@ export function PlayerFooter({ children, onHeight }: PlayerFooterProps) {
        * save button — and in a card that is clipped rather than scrolled, anything taller than the
        * viewport would lose its top edge off the screen with no way to reach it.
        */}
-      <div className="relative mx-auto max-h-dvh w-full max-w-[560px] overflow-y-auto overscroll-contain px-6 pt-6 pb-[calc(var(--safe-bottom)+16px+var(--demo-inset,0px))] md:flex md:h-full md:max-h-none md:flex-col md:justify-center md:px-8">
-        {children}
-      </div>
+      <div className={PLAYER_PANEL}>{children}</div>
     </div>
   );
 }

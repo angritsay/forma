@@ -22,6 +22,7 @@ import { ExerciseStill } from '@/components/media/ExerciseStill';
 import { exerciseStillUrl } from '@/lib/api/storage';
 import type { VideoMode } from '@/content/schema';
 import { fitRate } from './fit';
+import { PLAYER_STAGE } from './layout';
 import { useMediaUrl } from './useMediaUrl';
 
 /**
@@ -65,9 +66,15 @@ const ART =
  * right, so the stage gives up width instead of height. `overflow-hidden` is on the stage itself
  * because a 9:20 clip is taller than it and has to be cropped by something that does not also
  * run up behind the header.
+ *
+ * From `md` the stage is a fixed box and nothing a step does can move it: it starts under the
+ * header (not under the clock, which lives in the right-hand column there), ends where that
+ * column begins (`right-95`, the column's own width — it was 85, and the clip ran 40px under the
+ * glass), and centres the contained clip on both axes inside a 24px margin. Before, nothing
+ * centred it across, and a portrait clip sat flush against the left edge — the owner's «видео в
+ * углу».
  */
-const STAGE =
-  'absolute inset-x-0 top-[var(--player-top-h,0px)] bottom-[max(0px,calc(var(--player-glass-h,0px)-120px))] flex items-center overflow-hidden md:right-85 md:bottom-0';
+const STAGE = PLAYER_STAGE;
 
 export interface FeedSlide {
   /** The step's index — the slide's key, so a clip that moves into view is the same element. */
