@@ -1,4 +1,5 @@
 import { clsx } from 'clsx';
+import { tabSeat } from './tabSeat';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router';
 import { Icon } from '@/components/ui/Icon';
@@ -55,7 +56,7 @@ function NavWord({
          */
         'relative z-10 flex h-9 items-center rounded-pill px-4 text-[15px] font-medium',
         'transition-colors duration-150 ease-(--ease-out)',
-        active ? 'text-on-field' : 'text-muted hover:text-text',
+        active ? tabSeat(item.to).ink : 'text-muted hover:text-text',
       )}
     >
       {t(item.labelKey)}
@@ -157,8 +158,8 @@ export function TopNav() {
             <NavWord key={item.to} item={item} active={i === active} innerRef={register(item.to)} />
           ))}
           {/*
-           * The tab bar's blue pill (`BottomNav`, style A of the third palette): the current seat
-           * wears the hero field's electric blue, its word white on it (7.71). It was a 2px
+           * The tab bar's seat (`BottomNav`): the current seat wears its tab's own colour
+           * (`tabSeat.ts` — neon, the club's gradient, deep ciel, grey), its word in the ink that fill needs. It was a 2px
            * light-blue rule on the bar's bottom edge — the second brandbook's mark — and the phone
            * and the desktop said «you are here» in two different ways. It travels for the same
            * reason it travels down there: one mark moving between the words says they are seats of
@@ -168,8 +169,9 @@ export function TopNav() {
           <span
             aria-hidden="true"
             className={clsx(
-              'pointer-events-none absolute top-3.5 left-0 h-9 rounded-pill bg-field',
-              'transition-[transform,width,opacity] duration-280 ease-(--ease-out)',
+              'pointer-events-none absolute top-3.5 left-0 h-9 rounded-pill',
+              tabSeat(items[active]?.to).seat,
+              'transition-[transform,width,opacity,background-color] duration-280 ease-(--ease-out)',
               'motion-reduce:transition-none',
               mark ? 'opacity-100' : 'opacity-0',
             )}
