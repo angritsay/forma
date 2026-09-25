@@ -23,13 +23,14 @@ import { Glyph } from '@/components/ui/Icon';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
-import { formatNumber } from '@/i18n/index';
 import { TopBar } from '@/app/components/TopBar';
 import { publishSessionResult } from '@/app/features/player/progress';
 import { buildSummary, createSummarySaver, type SaveOutcome } from '@/app/features/player/save';
 import { playCue } from '@/app/features/player/sound';
 import { loadUserStats } from '@/app/features/player/stats';
-import { DonePoster, type DoneFigure } from '@/app/features/player/summary/DonePoster';
+import { DonePoster } from '@/app/features/player/summary/DonePoster';
+import { doneFigures } from '@/app/features/player/summary/figures';
+import { ShareButton } from '@/app/features/share/ShareButton';
 import { FeedbackForm, type FeedbackValue } from '@/app/features/player/summary/FeedbackForm';
 import { AchievementList, AdaptationCard } from '@/app/features/player/summary/SavedCards';
 import {
@@ -41,7 +42,6 @@ import {
   benchmarkResult,
   blockCompletions,
   courseNames,
-  shareText,
   workoutCountLine,
   testResults,
   totalReps,
@@ -125,72 +125,6 @@ function useWorkoutNumber(enabled: boolean): number | null {
   return training.todayDone ? training.total : training.total + 1;
 }
 
-/**
- * The three numerals under «Готово!» — minutes, repetitions, calories, as the prototype sets them.
- *
- * A session with no rep-counted work at all (a plank test, a mobility day) has no repetitions to
- * report, and «0 ПОВТОРОВ» for having held a plank is worse than saying nothing; that slot carries
- * how much of the plan was done instead. A stored session read back from the server has no step
- * results on this device at all, and takes the same substitution.
- */
-function doneFigures(
-  t: ReturnType<typeof useT>['t'],
-  locale: ReturnType<typeof useT>['locale'],
-  session: { durationSec: number; calories: number; completion: number; reps: number | null },
-): DoneFigure[] {
-  return [
-    {
-      value: formatNumber(locale, Math.round(session.durationSec / 60)),
-      label: t('app.summaryMinutes'),
-    },
-    session.reps !== null
-      ? { value: formatNumber(locale, session.reps), label: t('app.summaryReps') }
-      : {
-          value: `${Math.round(session.completion * 100)}%`,
-          label: t('app.summaryCompletion'),
-        },
-    { value: formatNumber(locale, session.calories), label: t('app.summaryKcal') },
-  ];
-}
-
-async function shareOrCopy(text: string): Promise<'shared' | 'copied' | 'failed'> {
-  if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
-    try {
-      await navigator.share({ text });
-      return 'shared';
-    } catch (e) {
-      if (e instanceof Error && e.name === 'AbortError') return 'shared';
-    }
-  }
-  try {
-    await navigator.clipboard.writeText(text);
-    return 'copied';
-  } catch {
-    return 'failed';
-  }
-}
-
-/** The quiet second line under «К пути →», where the prototype puts «Как зашло?» on this screen. */
-function ShareButton({ text }: { text: string }) {
-  const { t } = useT();
-  const toast = useToast();
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      fullWidth
-      onClick={() => {
-        void shareOrCopy(text).then((r) => {
-          if (r === 'copied') toast.show({ kind: 'success', title: t('app.summaryShareCopied') });
-          if (r === 'failed') toast.show({ kind: 'error', title: t('common.errorGeneric') });
-        });
-      }}
-    >
-      {t('app.summaryShare')}
-    </Button>
-  );
-}
-
 /* ---------------------------------------------------------------------------------------------
  * Saved view (after a successful save, or for a stored session)
  * ------------------------------------------------------------------------------------------- */
@@ -263,7 +197,13 @@ function SavedView({
           >
             {t('app.summaryBackToCourse')}
           </Button>
-          <ShareButton text={shareText(t, workoutName, summary)} />
+          <ShareButton
+            summary={summary}
+            workoutName={workoutName}
+            courseName={courseName}
+            stars={stars ?? null}
+            reps={reps}
+          />
         </div>
       }
     >

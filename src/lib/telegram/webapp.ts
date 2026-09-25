@@ -74,6 +74,25 @@ export interface TelegramWebApp {
   enableVerticalSwipes?(): void;
   onEvent(event: string, cb: () => void): void;
   offEvent(event: string, cb: () => void): void;
+  /** Bot API 6.0+; older clients lack it, so `versionAtLeast` falls back to `version`. */
+  isVersionAtLeast?(version: string): boolean;
+  /**
+   * Open the native story editor with a picture (Bot API 7.8). `mediaUrl` must be a public HTTPS
+   * address Telegram's servers can fetch — a blob or data URL is refused.
+   */
+  shareToStory?(mediaUrl: string, params?: StoryShareParams): void;
+  /**
+   * Ask the person to save a file to the device (Bot API 8.0). The callback says whether they
+   * accepted the download prompt, not whether it finished.
+   */
+  downloadFile?(params: { url: string; file_name: string }, cb?: (accepted: boolean) => void): void;
+}
+
+/** The second argument of `shareToStory`. The text is capped at 200 characters (2048 premium). */
+export interface StoryShareParams {
+  text?: string;
+  /** A link under the story; Telegram shows it for premium accounts only. */
+  widget_link?: { url: string; name?: string };
 }
 
 declare global {
@@ -212,6 +231,69 @@ export function setClosingConfirmation(on: boolean): void {
   } catch {
     /* older client */
   }
+}
+
+/**
+ * `a >= b` for dotted version strings ("7.10" is newer than "7.8"). Missing parts count as 0 and
+ * anything unparseable as 0, so a garbled version reads as old rather than new.
+ */
+export function compareVersions(a: string, b: string): number {
+  const pa = a.split('.').map((n) => Number.parseInt(n, 10) || 0);
+  const pb = b.split('.').map((n) => Number.parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i += 1) {
+    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
+    if (d !== 0) return d > 0 ? 1 : -1;
+  }
+  return 0;
+}
+
+/** Whether the client speaks at least this Bot API version. False outside Telegram. */
+export function versionAtLeast(version: string, api: TelegramWebApp | null = telegram()): boolean {
+  if (!api) return false;
+  try {
+    if (typeof api.isVersionAtLeast === 'function') return api.isVersionAtLeast(version);
+  } catch {
+    /* fall through to the string */
+  }
+  return typeof api.version === 'string' && compareVersions(api.version, version) >= 0;
+}
+
+/** Story sharing needs Bot API 7.8 and the method itself. */
+export function canShareToStory(api: TelegramWebApp | null = telegram()): boolean {
+  return versionAtLeast('7.8', api) && typeof api?.shareToStory === 'function';
+}
+
+/** Saving a file to the phone needs Bot API 8.0 and the method itself. */
+export function canDownloadFile(api: TelegramWebApp | null = telegram()): boolean {
+  return versionAtLeast('8.0', api) && typeof api?.downloadFile === 'function';
+}
+
+/** Open Telegram's story editor with a public image; false when the client cannot. */
+export function shareToStory(mediaUrl: string, params?: StoryShareParams): boolean {
+  const api = telegram();
+  if (!api || !canShareToStory(api)) return false;
+  try {
+    api.shareToStory?.(mediaUrl, params);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Ask Telegram to save a file from a public URL. Resolves true when the person accepted the
+ * prompt, false when they declined or the client cannot download at all.
+ */
+export function downloadFile(url: string, fileName: string): Promise<boolean> {
+  const api = telegram();
+  if (!api || !canDownloadFile(api)) return Promise.resolve(false);
+  return new Promise((resolve) => {
+    try {
+      api.downloadFile?.({ url, file_name: fileName }, (accepted) => resolve(accepted === true));
+    } catch {
+      resolve(false);
+    }
+  });
 }
 
 /**

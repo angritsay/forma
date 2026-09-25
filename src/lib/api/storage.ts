@@ -7,7 +7,7 @@
  */
 import { isConfigured, projectUrl, supabase } from './client';
 import { demo } from './demo/load';
-import { guard } from './internal';
+import { guard, requireUser } from './internal';
 import { parseStorageRef } from './mappers';
 import { isDemo } from './mode';
 import type { MediaObject } from './types';
@@ -325,5 +325,39 @@ export async function deleteMedia(ref: string): Promise<void> {
     if (error) throw error;
     cache.delete(ref.trim());
     persist();
+  });
+}
+
+// --- story images -------------------------------------------------------------
+
+/**
+ * The public bucket the share sheet writes story pictures to (0050_share_stories.sql). Telegram's
+ * `shareToStory` and `downloadFile` fetch the image from Telegram's servers, so it has to be at a
+ * public HTTPS address; the picture carries no name and no email, only the workout and its numbers.
+ */
+export const STORIES_BUCKET = 'stories';
+
+export interface StoryUpload {
+  url: string;
+  /** False in the demo, where the URL is a local object URL Telegram cannot fetch. */
+  public: boolean;
+}
+
+/**
+ * Upload a story PNG as `<uid>/<name>` and return its public URL.
+ *
+ * Never overwritten: a name is `<sessionId>-<template>.png`, the same picture every time, so a
+ * second upload of it finding the file already there is a success, not an error.
+ */
+export async function uploadStory(blob: Blob, name: string): Promise<StoryUpload> {
+  if (isDemo()) return (await demo()).uploadStory(blob, name);
+  return guard(async () => {
+    const { id } = await requireUser();
+    const path = `${id}/${name}`;
+    const { error } = await supabase()
+      .storage.from(STORIES_BUCKET)
+      .upload(path, blob, { upsert: false, contentType: 'image/png' });
+    if (error && !/exists|duplicate/i.test(error.message)) throw error;
+    return { url: publicMediaUrl(`storage:${STORIES_BUCKET}/${path}`), public: true };
   });
 }

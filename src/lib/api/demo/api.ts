@@ -2653,3 +2653,16 @@ export async function getAdminPerson(email: string): Promise<unknown> {
     };
   });
 }
+
+// --- story images -------------------------------------------------------------
+
+/**
+ * No bucket in the demo: the picture stays on the device as an object URL. It is marked non-public,
+ * so the share sheet hides Telegram Stories (Telegram's servers could not fetch it).
+ */
+export async function uploadStory(
+  blob: Blob,
+  _name: string,
+): Promise<{ url: string; public: boolean }> {
+  return { url: URL.createObjectURL(blob), public: false };
+}
