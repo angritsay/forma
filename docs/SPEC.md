@@ -507,6 +507,10 @@ points, rank, is_me)`. Never exposes emails. `points` = sum of `workout_sessions
 - Storage bucket `audio` (private, 0048): spoken exercise names and explanation recordings, with
   the same policies as `videos` — `shared/…` for anyone signed in, `<course_id>/…` by entitlement,
   admins write. Paths: `audio/shared/<id>.<lang>.m4a`, `audio/shared/<id>.intro-<tier>.<lang>.m4a`.
+- Storage bucket `stories` (public, 0050): the share sheet's story pictures,
+  `stories/<uid>/<session_id>-<template>.png`, PNG only, ≤ 5 MB. Anyone reads (Telegram fetches the
+  picture from its own servers); a signed-in user inserts only under their own `<uid>/` folder and
+  may delete their own; nobody updates. The picture carries no name and no email.
 - `exercises` media columns (0048): `video_mode text ('loop'|'fit')`, `audio_ru`, `audio_en`,
   `intro_full jsonb`, `intro_brief jsonb` (≤ 16 KB each) — the `videoMode` / `audio` / `introFull` /
   `introBrief` of §6; never re-seeded.
@@ -880,6 +884,26 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    them, feeling chips (great / ok / hard / pain) and a note. «Save» → the achievements just
    unlocked, the adaptation message («next time +5%»), «К пути →» and «Поделиться». The whole
    session block by block, the test results and the benchmark are behind «Подробности».
+
+   **«Поделиться»** opens a sheet (`src/app/features/share/`) with a **story picture** — 1080×1920,
+   drawn on a canvas in the app's own fonts: the workout's name, the course, the date, the same
+   figures as the poster (plus points when there are any), the stars, the FORMA wordmark and
+   «forma-app.co»; nothing personal. One of **six designs** (field, neon, warm, crossroads, effort,
+   graphite — design/CHANGELOG.md §24), chosen by the session id so the same workout always shows
+   the same one; «Другой вариант» walks to the next. Nothing that must be read sits in the top 250px
+   or the bottom 300px, where Instagram and Telegram lay their own chrome. The targets, each shown
+   only where it can work (`targets.ts`):
+   - **Instagram Stories** — the system share sheet with the PNG (`navigator.share({ files })`);
+     where a webview cannot share files, Telegram's `downloadFile` (Bot API 8.0) saves it and
+     Instagram is opened, with the line «Картинка сохранится на телефон — в Instagram открой сторис
+     и выбери её»; outside Telegram, a plain download. Instagram has no web API for Stories.
+   - **Telegram Stories** — the picture is uploaded to the `stories` bucket and handed to
+     `shareToStory` (Bot API 7.8) with the share text (≤ 200 characters) and a widget link to the
+     app. Hidden in the demo (no public URL) and in older clients.
+   - **В чат Telegram** — `t.me/share/url` with the public picture (or the app's link) and the text.
+   - **Сохранить картинку** — `downloadFile` in Telegram, a download elsewhere.
+   - **Ещё…** — the system share with the text and the file, else the clipboard.
+
 8. **«Достижения»** (`/achievements`, from the 🏅 in the header of «Курсы»): every achievement the
    product has, **including the ones not yet earned, each with the rule that earns it**. That rule
    is the reason the screen exists — «Достижения открывают каталог достижений» — and a grid of grey

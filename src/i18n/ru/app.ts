@@ -470,6 +470,25 @@ export const app = {
   summaryShareText:
     '{workout}: {time}, {points} очков, {kcal} ккал, выполнено {completion}% — Forma',
   summaryShareTextNoPoints: '{workout}: {time}, {kcal} ккал, выполнено {completion}% — Forma',
+  // The share sheet and the story picture (design/CHANGELOG.md §24).
+  storyPoints: 'Очков',
+  // The graphite story's tilted neon sticker.
+  storySticker: 'Сделано',
+  shareSheetTitle: 'Поделиться',
+  sharePreviewAlt: 'Сторис с итогами тренировки',
+  shareRendering: 'Рисуем сторис…',
+  shareAnother: 'Другой вариант',
+  shareInstagram: 'Instagram Stories',
+  shareTelegramStory: 'Telegram Stories',
+  shareTelegramChat: 'В чат Telegram',
+  shareSave: 'Сохранить картинку',
+  shareMore: 'Ещё…',
+  // The one line under the targets when Instagram can only be reached through the gallery.
+  shareInstagramHint: 'Картинка сохранится на телефон — в Instagram открой сторис и выбери её.',
+  shareInstagramSaved: 'Картинка сохранена — открой сторис и выбери её',
+  shareSaved: 'Картинка сохранена',
+  shareRenderFailed: 'Не получилось нарисовать сторис',
+  shareFailed: 'Не получилось поделиться. Попробуй ещё раз.',
   summaryNotFoundTitle: 'Тренировка не найдена',
   summaryNotFoundBody: 'Не нашли эту тренировку. Возможно, она сохранена с другого устройства.',
   summaryLoadErrorTitle: 'Не удалось загрузить итоги',

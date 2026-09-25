@@ -8,6 +8,8 @@ export const BRAND = {
   name: 'Forma',
   /** Short legal/organization name used in JSON-LD and footers. */
   organization: 'Forma',
+  /** The site's address as printed on things people share (the story images). */
+  domain: 'forma-app.co',
   tagline: {
     ru: 'Кроссфит дома. Под тебя.',
     en: 'Home CrossFit that adapts to you.',

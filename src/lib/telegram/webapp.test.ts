@@ -106,3 +106,59 @@ describe('inside Telegram', () => {
     expect(mod.isTelegram()).toBe(false);
   });
 });
+
+describe('version guards', () => {
+  it('compares dotted versions numerically', async () => {
+    const { compareVersions } = await import('./webapp');
+    expect(compareVersions('7.10', '7.8')).toBe(1);
+    expect(compareVersions('8.0', '8')).toBe(0);
+    expect(compareVersions('7.7', '7.8')).toBe(-1);
+    expect(compareVersions('garbage', '6.0')).toBe(-1);
+  });
+
+  it('offers story sharing from 7.8 and downloads from 8.0', async () => {
+    const { canDownloadFile, canShareToStory } = await import('./webapp');
+    const api = (version: string) =>
+      ({
+        version,
+        platform: 'ios',
+        shareToStory: vi.fn(),
+        downloadFile: vi.fn(),
+      }) as never;
+    expect(canShareToStory(api('7.7'))).toBe(false);
+    expect(canShareToStory(api('7.8'))).toBe(true);
+    expect(canDownloadFile(api('7.10'))).toBe(false);
+    expect(canDownloadFile(api('8.0'))).toBe(true);
+    expect(canShareToStory(null)).toBe(false);
+  });
+
+  it('trusts the client’s own isVersionAtLeast when it has one', async () => {
+    const { canShareToStory } = await import('./webapp');
+    const api = { version: '6.0', isVersionAtLeast: () => true, shareToStory: vi.fn() } as never;
+    expect(canShareToStory(api)).toBe(true);
+  });
+
+  it('refuses a method the client does not have, whatever the version says', async () => {
+    const { canShareToStory } = await import('./webapp');
+    expect(canShareToStory({ version: '9.0' } as never)).toBe(false);
+  });
+
+  it('shareToStory and downloadFile call through inside Telegram', async () => {
+    const shareToStory = vi.fn();
+    const downloadFile = vi.fn((_p: unknown, cb: (ok: boolean) => void) => cb(true));
+    fakeWindow('https://angritsay.github.io/forma/app/', {
+      platform: 'android',
+      version: '8.0',
+      shareToStory,
+      downloadFile,
+    });
+    const mod = await import('./webapp');
+    expect(mod.shareToStory('https://x/y.png', { text: 'hi' })).toBe(true);
+    expect(shareToStory).toHaveBeenCalledWith('https://x/y.png', { text: 'hi' });
+    await expect(mod.downloadFile('https://x/y.png', 'y.png')).resolves.toBe(true);
+    expect(downloadFile).toHaveBeenCalledWith(
+      { url: 'https://x/y.png', file_name: 'y.png' },
+      expect.any(Function),
+    );
+  });
+});
