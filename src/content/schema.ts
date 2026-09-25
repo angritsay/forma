@@ -27,6 +27,13 @@ export const DEFAULT_LOCALE: Locale = 'ru';
 export const L10nSchema = z.object({ ru: z.string().min(1), en: z.string().min(1) });
 export type L10n = z.infer<typeof L10nSchema>;
 
+/**
+ * The hand-drawn glyphs a piece of site content may name (`src/components/ui/Doodle.tsx`): the
+ * coach tab's three points for each person, and the heart on Nastia's card.
+ */
+export const DOODLE_KINDS = ['eye', 'dumbbell', 'arrow', 'lotus', 'bowl', 'talk', 'heart'] as const;
+export type DoodleKind = (typeof DOODLE_KINDS)[number];
+
 export const OptionalL10nSchema = z.object({
   ru: z.string().optional(),
   en: z.string().optional(),

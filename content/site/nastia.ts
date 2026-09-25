@@ -73,10 +73,11 @@ export const NASTIA = {
     { ru: 'Сооснователь Forma', en: 'Co-founder of Forma' },
   ] satisfies L10n[],
   /**
-   * One word, set heavy — no surname. A second word, if one is ever added, is set thin after it,
-   * the way «Сергей Титов» is (`splitName`).
+   * One word, set heavy — no surname, and in Latin letters in both languages: the owner, «моё имя
+   * напиши Nastia». Her card draws a heart after it where his has the swoosh (`mark="heart"`). A
+   * second word, if one is ever added, is set thin after it, the way «Сергей Титов» is (`splitName`).
    */
-  name: { ru: 'Анастасия', en: 'Anastasia' } satisfies L10n,
+  name: { ru: 'Nastia', en: 'Nastia' } satisfies L10n,
   /**
    * Her portrait, sent by the owner: cropped to the 4:5 frame Sergey's card uses, the camera's
    * date stamp cut out and the file's metadata stripped, 512x640 for a 112px frame at 2x+.
@@ -115,6 +116,7 @@ export const NASTIA = {
         ru: 'Подберу практику под твой режим: на гибкость, на восстановление после силовых или чтобы просто выдохнуть. Занятие онлайн, по видео — вижу, как ты делаешь, и поправляю по ходу.',
         en: 'I will build a practice around your routine: for mobility, for recovering from strength days, or simply to breathe out. Online, over video — I see how you move and adjust as we go.',
       },
+      doodle: 'lotus',
     },
     {
       title: { ru: 'Питание без диет', en: 'Eating without a diet' },
@@ -122,6 +124,7 @@ export const NASTIA = {
         ru: 'Разберём, как ты ешь сейчас, и соберём понятный план: что поменять, чтобы хватало сил на тренировки. Без запретов и подсчёта каждой калории.',
         en: 'We look at how you eat now and put together a plan you can follow: what to change so you have the energy to train. No bans and no counting every calorie.',
       },
+      doodle: 'bowl',
     },
     {
       title: { ru: 'Разговор о том, что важно', en: 'A conversation about what matters' },
@@ -129,6 +132,7 @@ export const NASTIA = {
         ru: 'Жизнь, путешествия, спорт, IT и ИИ — со мной об этом любят говорить. Больше десяти лет в дизайне и четыре года в дороге: могу поделиться тем, что работает.',
         en: 'Life, travel, sport, tech and AI — people like talking to me about all of it. Over ten years in design and four years on the road: I can share what works.',
       },
+      doodle: 'talk',
     },
   ] satisfies BookingOutcome[],
   /** Per app language — see the header for which Instagram goes where. */

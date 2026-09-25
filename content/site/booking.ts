@@ -18,7 +18,7 @@
  * appointment schedule holds one duration and the two lengths are therefore two pages, and once on
  * `BOOKING` as the fallback for a tool that asks the visitor to choose a length itself.
  */
-import type { L10n, PaymentUrl } from '@/content/schema';
+import type { DoodleKind, L10n, PaymentUrl } from '@/content/schema';
 import type { CoursePrice } from './pricing';
 
 export interface BookingOption {
@@ -70,6 +70,8 @@ export interface BookingOutcome {
   title: L10n;
   /** What it means in practice: one or two sentences in the words a person uses. */
   body: L10n;
+  /** The hand-drawn glyph on its tile (`Doodle`) — the owner's «добавь визуал». */
+  doodle: DoodleKind;
 }
 
 /*
@@ -182,6 +184,7 @@ export const BOOKING = {
         ru: 'Покажешь упражнение — увижу круглую спину или колено внутрь и поправлю сразу. Кривая техника сначала съедает результат, а потом начинает болеть.',
         en: 'Show me the movement and I will see the rounded back or the knee caving in, and fix it there and then. Bad technique eats your results first and starts to hurt later.',
       },
+      doodle: 'eye',
     },
     {
       title: { ru: 'Считаю нагрузку под тебя', en: 'I work out the load for you' },
@@ -189,6 +192,7 @@ export const BOOKING = {
         ru: 'Не «двадцать приседаний всем», а сколько и с чем именно тебе — под цель, под то, что есть дома, и под то, что пока болит.',
         en: 'Not "twenty squats for everyone", but how many and with what for you — your goal, the kit you have at home, and whatever still aches.',
       },
+      doodle: 'dumbbell',
     },
     {
       title: { ru: 'Скажу, что делать дальше', en: 'I tell you what comes next' },
@@ -196,6 +200,7 @@ export const BOOKING = {
         ru: 'Разберём всё, что накопилось, и ты уйдёшь с планом на ближайшие недели, а не с одной тренировкой.',
         en: 'We go through everything that has piled up, and you leave with a plan for the coming weeks, not one workout.',
       },
+      doodle: 'arrow',
     },
   ] as readonly BookingOutcome[],
   /**

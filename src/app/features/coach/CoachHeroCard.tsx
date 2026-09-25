@@ -36,6 +36,7 @@ import { clsx } from 'clsx';
 import { useId, type HTMLAttributes } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { HeroField, KeyWord } from '@/components/ui/HeroField';
+import { Doodle } from '@/components/ui/Doodle';
 import { Pill } from '@/components/ui/Pill';
 import { l, type Locale } from '@/i18n/index';
 import type { L10n } from '@/content/schema';
@@ -60,6 +61,12 @@ export interface CoachHeroCardProps extends Omit<HTMLAttributes<HTMLElement>, 'c
   photo?: string;
   /** The full name: the photograph's alt text and the fallback avatar's seed. */
   name: string;
+  /**
+   * The drawn mark on the name. `swoosh` (default) underlines the thin second word, as on Sergey's
+   * card; `heart` hangs a hand-drawn heart off the heavy word instead — the owner's «вместо
+   * подчёркивания сделай в таком же стиле сердечко» for her card. Electric blue, his card's colour.
+   */
+  mark?: 'swoosh' | 'heart';
   /**
    * The facts about the session, as outlined pills under the name. The «Тренер» tab no longer
    * passes any: the owner moved them out of the cards into a heading above the strip, where they
@@ -92,6 +99,7 @@ export function CoachHeroCard({
   photo,
   name,
   facts = [],
+  mark = 'swoosh',
   className,
   ...rest
 }: CoachHeroCardProps) {
@@ -123,7 +131,20 @@ export function CoachHeroCard({
         tone === 'sky' && 'text-on-accent',
       )}
     >
-      {heavy}
+      {mark === 'heart' ? (
+        /* The heart takes no layout — the heading is as tall and as wide as without it — and sits
+           off the word's top-right corner, tilted, like a doodle added after the name was set. */
+        <span className="relative inline-block">
+          {heavy}
+          <Doodle
+            kind="heart"
+            strokeWidth={3}
+            className="pointer-events-none absolute -top-[0.12em] -right-[0.62em] size-[0.55em] rotate-12 text-field"
+          />
+        </span>
+      ) : (
+        heavy
+      )}
       {thin ? (
         <>
           {' '}

@@ -118,6 +118,7 @@ import { payHref, type PayRoute, payRoute, paymentTarget } from '@/lib/util/paym
 import { LinkButton } from '@/app/features/courses/LinkButton';
 import { SupportSheet } from '@/app/features/support/SupportSheet';
 import { splitName } from '@/app/features/profile/model';
+import { Doodle } from '@/components/ui/Doodle';
 import { CoachHeroCard } from '@/app/features/coach/CoachHeroCard';
 import {
   activeFromScroll,
@@ -391,6 +392,7 @@ export default function BookScreen() {
                   thin={her.thin}
                   photo={NASTIA.photo}
                   name={herName}
+                  mark="heart"
                   aria-current={who === 'nastia' ? 'true' : undefined}
                   onClick={(e) => showCard('nastia', e.currentTarget)}
                   className="w-full shrink-0 cursor-pointer snap-start"
@@ -509,7 +511,7 @@ export default function BookScreen() {
                  * shape of the session — he looks, he sets the load, you leave with the next weeks — so
                  * 01 · 02 · 03 is an order and not a decoration.
                  */}
-                <OutcomeList outcomes={BOOKING.outcomes} locale={locale} />
+                <OutcomeList outcomes={BOOKING.outcomes} tone="field" locale={locale} />
               </>
             )}
 
@@ -720,7 +722,7 @@ function NastiaAbout({ locale, links }: { locale: Locale; links: readonly Nastia
           </ul>
         ) : null}
       </section>
-      <OutcomeList outcomes={NASTIA.outcomes} locale={locale} />
+      <OutcomeList outcomes={NASTIA.outcomes} tone="sky" locale={locale} />
     </>
   );
 }
@@ -729,30 +731,50 @@ function NastiaAbout({ locale, links }: { locale: Locale; links: readonly Nastia
  * What an hour gives, as three numbered jobs — his from `BOOKING.outcomes`, hers from
  * `NASTIA.outcomes`. One component so the two people's lists can never drift apart in style.
  *
- * Numbered rather than ticked, and the numbers mean something: a tick is a line item in a price,
- * and these are not line items. Read down, they are the shape of the session, so 01 · 02 · 03 is an
- * order and not a decoration. The numbers are the first of the blue things on the tab: these lines
- * are the argument for the price below them, so they are where the offer's colour starts.
+ * Each job has a drawn glyph on a tile in the person's colour — the owner: «надо добавить визуал и
+ * у меня, и у Серёжи, и больше воздуха». The glyphs are in the swoosh's stroke (`Doodle`), so the
+ * list reads as the same hand as the cards above it: his tile is his card's electric blue with the
+ * doodle in the swoosh's neon, hers is her light blue with the doodle in his blue, like her heart.
+ *
+ * Still numbered, and the numbers still mean something: read down, the three are the shape of the
+ * session, so 01 · 02 · 03 is an order and not a decoration. They are small now and sit over the
+ * title, because the tile is what the eye lands on first.
  */
+const OUTCOME_TILE = {
+  field: 'bg-field text-action',
+  sky: 'bg-accent text-field',
+} as const;
+
 function OutcomeList({
   outcomes,
+  tone,
   locale,
 }: {
   outcomes: readonly BookingOutcome[];
+  tone: keyof typeof OUTCOME_TILE;
   locale: Locale;
 }) {
   return (
-    <section>
+    <section className="pt-2">
       <ul className="flex flex-col">
         {outcomes.map((o, i) => (
           <li
             key={o.title.en}
-            className="flex items-start gap-4 border-t border-border py-5 first:border-t-0 first:pt-0"
+            className="flex items-start gap-5 border-t border-border py-7 first:border-t-0 first:pt-0 last:pb-0"
           >
-            <span className="numeral tabular w-6 shrink-0 pt-0.5 text-[15px] text-accent">
-              {String(i + 1).padStart(2, '0')}
+            <span
+              aria-hidden="true"
+              className={clsx(
+                'flex size-14 shrink-0 items-center justify-center rounded-tile',
+                OUTCOME_TILE[tone],
+              )}
+            >
+              <Doodle kind={o.doodle} className="size-8" />
             </span>
-            <div className="flex min-w-0 flex-col gap-1.5">
+            <div className="flex min-w-0 flex-col gap-2">
+              <span className="numeral tabular text-[13px] leading-none text-accent">
+                {String(i + 1).padStart(2, '0')}
+              </span>
               <p className="font-display text-[17px] leading-snug">{l(o.title, locale)}</p>
               <p className="text-[14px] leading-relaxed text-muted">{l(o.body, locale)}</p>
             </div>
