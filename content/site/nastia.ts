@@ -42,7 +42,7 @@ export interface NastiaLink {
 }
 
 export interface NastiaFact {
-  /** The figure as set, «11», «20+». */
+  /** The figure as set, «10+», «20+». */
   figure: string;
   caption: L10n;
 }
@@ -90,15 +90,15 @@ export const NASTIA = {
    */
   scheduleUrl: '' as string,
   facts: [
-    { figure: '11', caption: { ru: 'лет в продуктовом дизайне', en: 'years in product design' } },
+    { figure: '10+', caption: { ru: 'лет в дизайне', en: 'years in design' } },
     {
       figure: '20+',
       caption: { ru: 'стран за четыре года в дороге', en: 'countries in four years on the road' },
     },
   ] satisfies NastiaFact[],
   bio: {
-    ru: 'Сертифицированный фитнес-тренер и нутрициолог. Одиннадцать лет проектирую продукты, четыре года живу в дороге. Веду йогу и консультирую по питанию — силовые тренировки у Сергея.',
-    en: "Certified fitness trainer and nutritionist. Eleven years designing products, four years living on the road. I teach yoga and consult on nutrition — strength training is Sergey's.",
+    ru: 'Сертифицированный фитнес-тренер и нутрициолог. Больше десяти лет в дизайне, четыре года живу в дороге. Веду йогу и консультирую по питанию — силовые тренировки у Сергея.',
+    en: "Certified fitness trainer and nutritionist. Over ten years in design, four years living on the road. I teach yoga and consult on nutrition — strength training is Sergey's.",
   } satisfies L10n,
   /**
    * What an hour with her gives — three, like Sergey's `BOOKING.outcomes`, in the same shape: a line
@@ -126,8 +126,8 @@ export const NASTIA = {
     {
       title: { ru: 'Разговор о том, что важно', en: 'A conversation about what matters' },
       body: {
-        ru: 'Жизнь, путешествия, спорт, IT и ИИ — со мной об этом любят говорить. Одиннадцать лет в продуктовом дизайне и четыре года в дороге: могу поделиться тем, что работает.',
-        en: 'Life, travel, sport, tech and AI — people like talking to me about all of it. Eleven years in product design and four years on the road: I can share what works.',
+        ru: 'Жизнь, путешествия, спорт, IT и ИИ — со мной об этом любят говорить. Больше десяти лет в дизайне и четыре года в дороге: могу поделиться тем, что работает.',
+        en: 'Life, travel, sport, tech and AI — people like talking to me about all of it. Over ten years in design and four years on the road: I can share what works.',
       },
     },
   ] satisfies BookingOutcome[],
