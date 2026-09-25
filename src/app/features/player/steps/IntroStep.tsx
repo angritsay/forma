@@ -61,7 +61,7 @@ export function IntroStep({ step, paused, onNext }: IntroStepProps) {
   useEffect(() => () => stopVoice(), []);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 md:flex-1">
       <div className="flex flex-col gap-2.5">
         <span className="eyebrow">
           {step.tier === 'full' ? t('app.playerIntroFull') : t('app.playerIntroBrief')}
@@ -77,7 +77,14 @@ export function IntroStep({ step, paused, onNext }: IntroStepProps) {
           </div>
         ) : null}
       </div>
-      <Button variant="action" size="lg" fullWidth onClick={onNext} data-autofocus>
+      <Button
+        variant="action"
+        size="lg"
+        fullWidth
+        onClick={onNext}
+        data-autofocus
+        className="md:mt-auto"
+      >
         {t('app.playerGo')}
       </Button>
     </div>

@@ -46,7 +46,11 @@ export function Stepper({
         <span
           role="status"
           aria-label={label}
-          className={clsx('numeral leading-none', size === 'lg' ? 'text-[64px]' : 'text-[40px]')}
+          /* Three digits wide whatever the value, so 9 → 10 → 100 never moves the − and + beside it. */
+          className={clsx(
+            'numeral inline-block min-w-[3ch] text-center leading-none',
+            size === 'lg' ? 'text-[64px]' : 'text-[40px]',
+          )}
         >
           {value}
         </span>

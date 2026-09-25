@@ -28,7 +28,7 @@ export function BlockIntroStep({ step, prescribed, onNext }: BlockIntroStepProps
   const section = blockSection(step.type);
   const part = section === 'main' ? mainPart(prescribed, step.blockId) : null;
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 md:flex-1">
       <div className="flex flex-col gap-2.5">
         <span className="eyebrow">
           {sectionLabel(t, section)}
@@ -51,7 +51,14 @@ export function BlockIntroStep({ step, prescribed, onNext }: BlockIntroStepProps
           ) : null}
         </div>
       </div>
-      <Button variant="action" size="lg" fullWidth onClick={onNext} data-autofocus>
+      <Button
+        variant="action"
+        size="lg"
+        fullWidth
+        onClick={onNext}
+        data-autofocus
+        className="md:mt-auto"
+      >
         {t('app.playerGo')}
       </Button>
     </div>

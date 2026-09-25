@@ -84,6 +84,7 @@ import { WorkTimerStep } from '@/app/features/player/steps/WorkTimerStep';
 import { haptic, setClosingConfirmation } from '@/lib/telegram/webapp';
 import { warmupSkipIndex } from '@/lib/training/player';
 import { SkipRow } from '@/app/features/player/SkipRow';
+import { PLAYER_STEP_FILL } from '@/app/features/player/layout';
 import { TapToPause } from '@/app/features/player/TapToPause';
 import { signMediaUrls } from '@/lib/api/storage';
 import { courseTileVars } from '@/lib/ui/tile';
@@ -649,12 +650,16 @@ function Player({ session, steps, stepIndex, paused }: PlayerProps) {
                  */}
                 {step ? (
                   <div
-                    className={clsx('player-feed-panel', dragging && 'is-dragging')}
+                    className={clsx(
+                      'player-feed-panel',
+                      PLAYER_STEP_FILL,
+                      dragging && 'is-dragging',
+                    )}
                     style={{ opacity: panelOpacity }}
                   >
                     <div
                       key={`anim-${stepIndex}:${stepStartedMs}`}
-                      className="player-step-in"
+                      className={clsx('player-step-in', PLAYER_STEP_FILL)}
                       style={{ '--step-from': `${dir * 24}px` } as CSSProperties}
                     >
                       <StepView

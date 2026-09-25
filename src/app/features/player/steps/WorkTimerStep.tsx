@@ -87,7 +87,7 @@ export function WorkTimerStep({
   ].filter(Boolean) as string[];
 
   return (
-    <>
+    <div className="flex flex-col md:flex-1">
       {/*
        * The clock is written here and lands in the band under the header — see `PlayerTimerSlot`.
        * It stays inside this component because everything that drives it is: `useStepClock`, the
@@ -129,6 +129,6 @@ export function WorkTimerStep({
           <span className="text-[13px] text-paper/70">{facts.join(' · ')}</span>
         ) : null}
       </div>
-    </>
+    </div>
   );
 }

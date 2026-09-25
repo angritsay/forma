@@ -38,7 +38,15 @@ export function BigClock({
 }: BigClockProps) {
   return (
     <div className={clsx('flex flex-col items-center gap-1 text-center', className)}>
-      {label ? <span className="eyebrow">{label}</span> : null}
+      {/* From `md` the clock has a slot of its own and the digits must land at the same height
+          whether or not there is a word above them (layout.ts), so the line is always there. */}
+      {label ? (
+        <span className="eyebrow">{label}</span>
+      ) : (
+        <span aria-hidden="true" className="eyebrow hidden md:invisible md:block">
+          ·
+        </span>
+      )}
       <div
         aria-live="polite"
         aria-atomic="true"

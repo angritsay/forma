@@ -17,7 +17,15 @@ export interface StepHeadingProps {
 export function StepHeading({ eyebrow, title }: StepHeadingProps) {
   return (
     <div className="flex flex-col items-center gap-1.5 text-center">
-      {eyebrow ? <span className="eyebrow text-paper/60">{eyebrow}</span> : null}
+      {/* From `md` the line is kept even when there is no set counter, so the name starts at the
+          same height on every step (layout.ts). */}
+      {eyebrow ? (
+        <span className="eyebrow text-paper/60">{eyebrow}</span>
+      ) : (
+        <span aria-hidden="true" className="eyebrow hidden md:invisible md:block">
+          ·
+        </span>
+      )}
       <DisplayTitle as="h2" text={title} className="text-3xl text-paper" />
     </div>
   );

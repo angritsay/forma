@@ -47,7 +47,7 @@ export function RestStep({ step, prescribed, paused, beep, onNext, registerNext 
     : undefined;
 
   return (
-    <>
+    <div className="flex flex-col md:flex-1">
       {/* The countdown goes to the band under the header; «Дальше» is the whole of what is left. */}
       <PlayerTimerSlot>
         <BigClock
@@ -57,9 +57,9 @@ export function RestStep({ step, prescribed, paused, beep, onNext, registerNext 
           {...(nextItem ? { caption: targetLabel(t, nextItem) } : {})}
         />
       </PlayerTimerSlot>
-      <Button variant="action" size="lg" fullWidth onClick={advance}>
+      <Button variant="action" size="lg" fullWidth onClick={advance} className="md:mt-auto">
         {t('app.playerGo')}
       </Button>
-    </>
+    </div>
   );
 }
