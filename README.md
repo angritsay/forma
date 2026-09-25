@@ -39,6 +39,7 @@ npm run seo:audit           # SEO conveyor checks
 | [`docs/CONTENT.md`](docs/CONTENT.md)                   | Authoring exercises, courses, guides, videos, animations                            |
 | [`docs/COACH_RULES.md`](docs/COACH_RULES.md)           | The coach's rules for the beginner course — read before editing its workouts        |
 | [`docs/SEO.md`](docs/SEO.md)                           | The SEO conveyor runbook (keywords → pages → audit → deploy → IndexNow)             |
+| [`docs/IDEAS.md`](docs/IDEAS.md)                       | Ideas that are not planned yet — each becomes a task and a PR when taken            |
 
 ## Repository layout
 
