@@ -38,6 +38,7 @@ on:
           - club-seed
           - club-join
           - email-templates
+          - email-templates-check
           - deploy-bot
           - deploy-link
           - deploy-notify
@@ -295,6 +296,46 @@ jobs:
           fi
           echo "HTTP $code — Magic Link and Confirm signup both carry the code template now."
           echo "This does not fix deliverability. SPF, DKIM and DMARC are DNS and are still outstanding (docs/SETUP.md §3.5.1)."
+
+      # ---------------------------------------------------------------------
+      # email-templates-check — what Supabase will actually send, read back.
+      #
+      # Read-only. After a green `email-templates` run the owner still received
+      # the pre-#25 letter, so this answers the three ways that can happen:
+      # the stored bodies are not the repo file, the subject is not ours, or a
+      # Send Email Hook is on (then Supabase ignores the templates entirely and
+      # the hook's own HTML is what arrives). It prints yes/no, lengths and the
+      # hook's scheme — never a URL, a host, an address or an id.
+      # ---------------------------------------------------------------------
+      - name: Read back the sign-in templates and the email hook
+        if: ${{ inputs.task == 'email-templates-check' }}
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set -euo pipefail
+          code=$(curl -sS -o /tmp/auth.json -w '%{http_code}' \
+            "https://api.supabase.com/v1/projects/$PROJECT_REF/config/auth" \
+            -H "Authorization: Bearer $TOKEN")
+          if [ "$code" -ge 300 ]; then
+            echo "::error::Supabase returned HTTP $code."
+            exit 1
+          fi
+          subject='Код для входа в Forma · Forma sign-in code'
+          for slot in magic_link confirmation; do
+            body=$(jq -r ".mailer_templates_${slot}_content // \"\"" /tmp/auth.json)
+            # Compared as text; `$(...)` strips a trailing newline on both sides alike.
+            if [ "$(printf '%s' "$body")" = "$(cat supabase/templates/otp.html)" ]; then m=yes; else m=no; fi
+            bilingual=$(printf '%s' "$body" | grep -c 'sign-in code' || true)
+            old=$(printf '%s' "$body" | grep -c 'Твой код для входа' || true)
+            subj=$(jq -r ".mailer_subjects_${slot} // \"\"" /tmp/auth.json)
+            if [ "$subj" = "$subject" ]; then s=yes; else s=no; fi
+            echo "$slot: body matches repo: $m (stored ${#body} chars, repo $(wc -c < supabase/templates/otp.html) bytes); has English: $([ "$bilingual" -gt 0 ] && echo yes || echo no); old letter text: $([ "$old" -gt 0 ] && echo yes || echo no); subject ours: $s"
+          done
+          hook=$(jq -r '.hook_send_email_enabled // false' /tmp/auth.json)
+          scheme=$(jq -r '.hook_send_email_uri // ""' /tmp/auth.json | sed -E 's#^([a-z-]+)://.*#\1#; t; s#.*#none#')
+          smtp=$(jq -r 'if (.smtp_host // "") != "" then "on" else "off" end' /tmp/auth.json)
+          echo "send-email hook enabled: $hook (scheme: ${scheme:-none})"
+          echo "custom SMTP: $smtp"
 
       # ---------------------------------------------------------------------
       # The bot: deploy it, give it its secrets, and point Telegram at it.

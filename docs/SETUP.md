@@ -1314,6 +1314,7 @@ apply → Run workflow**, pick a task:
 | `club-seed`                            | Runs `supabase/seed-club-week.sql` — the club's test week and its invented cohort (§9.1).   |
 | `club-join`                            | Puts the real testers in that week, reading their addresses from a secret.                  |
 | `email-templates`                      | Puts `supabase/templates/otp.html` into **both** Magic Link and Confirm signup (§3.2).      |
+| `email-templates-check`                | Read-only: do the stored templates match the repo, and is a Send Email Hook overriding them. |
 | `deploy-bot`                           | Deploys the `telegram-bot` function and sets its secrets (§7.6).                            |
 | `deploy-link`                          | Deploys `link-telegram`, which attaches a Telegram account to a profile (§7.6).             |
 | `deploy-notify`                        | Deploys `telegram-notify`, copies `NOTIFY_TOKEN` and the owner's-channel secrets (§7.11).   |
