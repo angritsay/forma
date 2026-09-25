@@ -253,7 +253,17 @@ export default function BookScreen() {
   const rest = COACH.credentials.filter((c) => !COACH.figures.some((f) => f.of === c));
 
   /* The two facts about the session — the same booking product whoever's card it is. */
-  const sessionFacts = [l(BOOKING.format, locale), t('app.bookLeadTimePill', { n: lead })];
+  /*
+   * How a session happens, said once above the cards rather than as two pills inside each: the
+   * owner, on the strip of two, «убери про видео онлайн 15 минут до, сделай это сверху заголовком
+   * просто». It is the same for both people, so it belongs to the tab, not to a card.
+   */
+  const sessionHeading = (
+    <header className="flex flex-col gap-1">
+      <h1 className="font-display text-[22px] leading-tight">{l(BOOKING.format, locale)}</h1>
+      <p className="text-[15px] text-muted">{t('app.bookLeadTimePill', { n: lead })}</p>
+    </header>
+  );
 
   /*
    * The strip: which card it rests on, read once the scroll settles. A debounce rather than every
@@ -339,64 +349,54 @@ export default function BookScreen() {
             the two facts about the session as white outlined pills. The tab's own bleu ciel is a
             tag further down, on the offer — a section colour is a tag, never a field.
           */}
+          {sessionHeading}
           {nastia ? (
             /*
              * With the `coach_nastia` flag (0049) the hero is a strip of two header cards: Sergey's
-             * field first, the owner's light-blue card peeking in from the right — the
-             * `.deck-scroller` strip of «Тренировки от тренера», bleeding past both edges and
-             * pulled back with padding. `items-start`, so a card is as tall as its own content and
-             * never stretched to its neighbour's height. The card in view decides what is below.
+             * field first, the owner's light-blue card after it. The owner's rules for the strip:
+             *
+             *   - each card is the full width of the column, the size his single card always was;
+             *   - hers shows only a sliver, ~12px, at the right edge: the gap is 4px and the page's
+             *     16px gutter is where she peeks in;
+             *   - both cards are the same height (`items-stretch`), whichever has more to say;
+             *   - no dots under the strip — the sliver is the hint that there is a second card.
+             *
+             * The card in view decides what is below.
              */
-            <div className="flex flex-col gap-3">
+            <div>
               <section
                 ref={stripRef}
                 aria-label={t('app.bookHeroStrip')}
                 onScroll={onStripScroll}
-                className="deck-scroller -mx-4 flex snap-x snap-mandatory items-start gap-3 overflow-x-auto scroll-px-4 px-4 md:-mx-10 md:scroll-px-10 md:px-10"
+                className="deck-scroller -mx-4 flex snap-x snap-mandatory items-stretch gap-1 overflow-x-auto scroll-px-4 px-4 md:-mx-10 md:scroll-px-10 md:px-10"
               >
                 <CoachHeroCard
                   as="article"
                   tone="field"
-                  layout="stacked"
                   locale={locale}
                   stickers={COACH.formaRoles}
                   heavy={heavy}
                   thin={thin}
                   photo={COACH.photo}
                   name={name}
-                  facts={sessionFacts}
                   aria-current={who === 'sergey' ? 'true' : undefined}
                   onClick={(e) => showCard('sergey', e.currentTarget)}
-                  className="w-[86%] max-w-[420px] shrink-0 cursor-pointer snap-start"
+                  className="w-full shrink-0 cursor-pointer snap-start"
                 />
                 <CoachHeroCard
                   as="article"
                   tone="sky"
-                  layout="stacked"
                   locale={locale}
                   stickers={NASTIA.roles}
                   heavy={her.heavy}
                   thin={her.thin}
                   photo={NASTIA.photo}
                   name={herName}
-                  facts={sessionFacts}
                   aria-current={who === 'nastia' ? 'true' : undefined}
                   onClick={(e) => showCard('nastia', e.currentTarget)}
-                  className="w-[86%] max-w-[420px] shrink-0 cursor-pointer snap-start"
+                  className="w-full shrink-0 cursor-pointer snap-start"
                 />
               </section>
-              {/* Two dots, so the swipe is discoverable; the cards themselves are the control. */}
-              <div aria-hidden="true" className="flex justify-center gap-1.5">
-                {COACH_PEOPLE.map((p) => (
-                  <span
-                    key={p}
-                    className={clsx(
-                      'size-1.5 rounded-full transition-colors duration-200',
-                      p === who ? 'bg-accent' : 'bg-border-strong',
-                    )}
-                  />
-                ))}
-              </div>
               {/* Says whose information is below once it changes; the cards do not move focus. */}
               <p aria-live="polite" className="sr-only">
                 {personName}
@@ -411,7 +411,6 @@ export default function BookScreen() {
               thin={thin}
               photo={COACH.photo}
               name={name}
-              facts={sessionFacts}
             />
           )}
 
