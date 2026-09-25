@@ -60,8 +60,12 @@ export interface CoachHeroCardProps extends Omit<HTMLAttributes<HTMLElement>, 'c
   photo?: string;
   /** The full name: the photograph's alt text and the fallback avatar's seed. */
   name: string;
-  /** The facts about the session, as outlined pills under the name. */
-  facts: readonly string[];
+  /**
+   * The facts about the session, as outlined pills under the name. The «Тренер» tab no longer
+   * passes any: the owner moved them out of the cards into a heading above the strip, where they
+   * are said once for both people instead of twice.
+   */
+  facts?: readonly string[];
 }
 
 const TONE: Record<
@@ -87,7 +91,7 @@ export function CoachHeroCard({
   thin,
   photo,
   name,
-  facts,
+  facts = [],
   className,
   ...rest
 }: CoachHeroCardProps) {
@@ -165,15 +169,16 @@ export function CoachHeroCard({
   );
 
   /* Facts about the session, so outlined: the one filled thing on the tab is its neon button. */
-  const factRow = (
-    <div className="flex flex-wrap gap-2">
-      {facts.map((f) => (
-        <Pill key={f} tone={look.fact}>
-          {f}
-        </Pill>
-      ))}
-    </div>
-  );
+  const factRow =
+    facts.length === 0 ? null : (
+      <div className="flex flex-wrap gap-2">
+        {facts.map((f) => (
+          <Pill key={f} tone={look.fact}>
+            {f}
+          </Pill>
+        ))}
+      </div>
+    );
 
   const body = stacked ? (
     <>
