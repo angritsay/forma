@@ -1,6 +1,20 @@
 /**
- * Анастасия — владелица и сооснователь Forma — на вкладке «Тренер», во второй карточке рядом с
- * Сергеем. Показывается только тем, у кого включён флаг `coach_nastia` (0049); пока — только ей.
+ * Анастасия — владелица и сооснователь Forma — на вкладке «Тренер». Показывается только тем, у кого
+ * включён флаг `coach_nastia` (0049); пока — только ей.
+ *
+ * ## Как это устроено теперь (design/CHANGELOG.md §23)
+ *
+ * Вкладка — переключатель по людям. Наверху две карточки-шапки одной анатомии: стикеры, имя,
+ * фотография, формат и срок записи. Владелица: «В карточке — "йога", "питание", "сооснователь
+ * Forma", моё имя и моё фото, а ниже — моя информация. Ты положил мою информацию *в* карточку, а
+ * обновлять её нужно *под* карточкой». Поэтому здесь два сорта полей:
+ *
+ * - для карточки: `roles` (три стикера), `name`, `photo`;
+ * - для блока под ней, когда её карточка в кадре: `facts` (крупные цифры, как у Сергея), `bio`
+ *   (на месте его регалий), `topicsLead` + `topics`, `links`, и `scheduleUrl` — её страница
+ *   записи. Цены и оплата общие («Prices should be the same, the payment links should be the
+ *   same»), они в `content/site/booking.ts`; запись у каждого своя («the booking links should be
+ *   different»).
  *
  * Всё здесь — её собственные слова из задания владелицы, по-русски и по-английски. Ничего не
  * дописано и не угадано: если какого-то факта здесь нет, его нет и на экране.
@@ -14,8 +28,6 @@
  * LinkedIn `in/gritsay-design` — в обоих языках; Instagram `@where.is.nastia` — англоязычный
  * аккаунт её тревел-бренда, поэтому он в английском списке, а `@what.is.nastia` — в русском.
  * Если языки у аккаунтов наоборот, это две строчки ниже.
- *
- * Фотография — её собственная (`photo`); монограмма «А» / «A» осталась запасным вариантом.
  */
 import type { L10n } from '@/content/schema';
 
@@ -53,21 +65,29 @@ const LINKEDIN: NastiaLink = {
 };
 
 export const NASTIA = {
-  /** Two stickers, like Sergey's `formaRoles`. */
+  /** The stickers on her header card, like Sergey's `formaRoles` — the owner's three. */
   roles: [
+    { ru: 'Йога', en: 'Yoga' },
+    { ru: 'Питание', en: 'Nutrition' },
     { ru: 'Сооснователь Forma', en: 'Co-founder of Forma' },
-    { ru: 'Йога и питание', en: 'Yoga and nutrition' },
   ] satisfies L10n[],
-  /** One word, set heavy — no surname. */
+  /**
+   * One word, set heavy — no surname. A second word, if one is ever added, is set thin after it,
+   * the way «Сергей Титов» is (`splitName`).
+   */
   name: { ru: 'Анастасия', en: 'Anastasia' } satisfies L10n,
   /**
    * Her portrait, sent by the owner: cropped to the 4:5 frame Sergey's card uses, the camera's
    * date stamp cut out and the file's metadata stripped, 512x640 for a 112px frame at 2x+.
    * Shown monochrome with grain like his (`.photo-mono`, `.photo-grain`).
    */
-  photo: '/coach/nastia.jpg',
-  /** The monogram that stands where a photograph would, if `photo` is ever emptied. */
-  initial: { ru: 'А', en: 'A' } satisfies L10n,
+  photo: '/coach/nastia.jpg' as string,
+  /**
+   * Her own slot page — where somebody who paid picks a time with *her*. The owner supplies it;
+   * nothing is invented here. Empty → the step after payment says to message and she sets the
+   * time, exactly as Sergey's hour does without a slot page (`scheduleUrlFor`).
+   */
+  scheduleUrl: '' as string,
   facts: [
     { figure: '11', caption: { ru: 'лет в продуктовом дизайне', en: 'years in product design' } },
     {

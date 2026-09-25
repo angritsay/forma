@@ -73,19 +73,36 @@
  * the 30/60 switch is asking them to buy something they have already bought. Everything below is
  * unchanged, because they may well want another one.
  *
- * ## The owner's card, behind a flag
+ * ## A switch by person, behind a flag (design/CHANGELOG.md §23)
  *
  * With `coach_nastia` switched on for the person (0049, admin → the person page → «Функции»), the
- * hero becomes a snap strip of two: his blue field, then the owner's light-blue card
- * (`features/coach/NastiaCard.tsx`) peeking in from the right. Without it the DOM is what it was.
+ * tab is about one of two people at a time. The owner: «When we have this card at the top, we
+ * have "Founder of Forma", "personal trainer" for Sergey, his name, his photo, and below the
+ * information for him. In a similar way present information for my card. I swipe to the right and
+ * the information below the card gets updated… Prices should be the same, the payment links should
+ * be the same, the booking links should be different.»
+ *
+ * - **The cards are headers only**, one anatomy (`features/coach/CoachHeroCard.tsx`): his blue
+ *   field, then her light-blue card peeking in from the right, in a `.deck-scroller` snap strip
+ *   with a two-dot pager under it. Tapping a card scrolls it into view.
+ * - **The card in view picks `person`.** The strip's scroll position, read once it settles
+ *   (`activeFromScroll`, `src/lib/coach/person.ts`), rather than an IntersectionObserver per card:
+ *   at the far end the last card never reaches a full step, and a wide screen showing both cards
+ *   whole never scrolls at all — one pure function covers both, and a tap covers the second.
+ * - **Everything below follows `person`.** Sergey: exactly what this tab always was. Anastasia:
+ *   her figures, her text in the credentials' place, what people talk to her about, her links —
+ *   and no «I watch how you move», which is his voice. Then the same offer for both (same lengths,
+ *   same prices, same payment), and the step after it with the person's own slot page
+ *   (`scheduleUrlFor`); hers is empty until the owner supplies it, which is the «pay, then write,
+ *   and she sets the time» path.
+ *
+ * Without the flag the DOM is what it was and `person` is always Sergey.
  */
 import { clsx } from 'clsx';
-import { useEffect, useState } from 'react';
-import { Avatar } from '@/components/ui/Avatar';
+import { useEffect, useRef, useState } from 'react';
 import { BrandMark } from '@/components/ui/BrandMark';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { HeroField, KeyWord } from '@/components/ui/HeroField';
 import { Glyph } from '@/components/ui/Icon';
 import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
@@ -97,19 +114,25 @@ import type { CoachBooking } from '@/lib/api/types';
 import { describeCountdown, deviceTimeZone, type Countdown } from '@/lib/coach/booking';
 import { isDemo } from '@/lib/api/mode';
 import { COACH_TILE, courseTileVars } from '@/lib/ui/tile';
-import { withBase } from '@/lib/util/paths';
 import { openExternal } from '@/lib/telegram/webapp';
 import { payHref, type PayRoute, payRoute, paymentTarget } from '@/lib/util/payment';
 import { LinkButton } from '@/app/features/courses/LinkButton';
 import { SupportSheet } from '@/app/features/support/SupportSheet';
 import { splitName } from '@/app/features/profile/model';
-import { NastiaCard } from '@/app/features/coach/NastiaCard';
+import { CoachHeroCard } from '@/app/features/coach/CoachHeroCard';
+import {
+  activeFromScroll,
+  COACH_PEOPLE,
+  scheduleUrlFor,
+  type CoachPerson,
+} from '@/lib/coach/person';
 import { externalLinkProps } from '@/app/hooks/useExternalLink';
 import { useT, type Translator } from '@/app/hooks/useT';
 import { useFlag } from '@/app/store/flags';
 import { useSession } from '@/app/store/session';
 import { BOOKING, type BookingOption } from '@content/site/booking';
 import { COACH } from '@content/site/coach';
+import { NASTIA, type NastiaLink } from '@content/site/nastia';
 import { lavaUrl, sessionKey } from '@content/site/payments';
 import { formatPrice } from '@content/site/pricing';
 
@@ -120,6 +143,14 @@ export default function BookScreen() {
   const user = useSession((s) => s.user);
   /* The owner's card beside the coach's (0049); off for everyone it was not switched on for. */
   const nastia = useFlag('coach_nastia');
+  /*
+   * Whose card is in view (design/CHANGELOG.md §23). Sergey until the strip says otherwise, and
+   * always Sergey without the flag. `swapped` turns the fade on only once the person has actually
+   * changed, so the tab does not fade in on arrival.
+   */
+  const [person, setPerson] = useState<CoachPerson>('sergey');
+  const [swapped, setSwapped] = useState(false);
+  const who: CoachPerson = nastia ? person : 'sergey';
   const [redirecting, setRedirecting] = useState(false);
   /*
    * Whether the payment page has been opened from here. It is not proof of a payment — nothing on
@@ -175,14 +206,17 @@ export default function BookScreen() {
   const email = profile?.email || user?.email || '';
   const name = l(COACH.name, locale);
   const { heavy, thin } = splitName(name);
+  const herName = l(NASTIA.name, locale);
+  const her = splitName(herName);
   /*
-   * The slot page for the length that is selected, falling back to the shared one.
+   * The slot page for the person in view and the length that is selected (`scheduleUrlFor`).
    *
-   * It reads from `option` rather than from `BOOKING` because a Google Calendar appointment
-   * schedule carries a single duration: half an hour and an hour are two pages. Reading the shared
-   * field alone would have sent somebody who paid for an hour to the half-hour's booking page.
+   * Sergey's reads from `option` before `BOOKING` because a Google Calendar appointment schedule
+   * carries a single duration: half an hour and an hour are two pages. Reading the shared field
+   * alone would have sent somebody who paid for an hour to the half-hour's booking page.
+   * Anastasia's is her own page for either length — the one thing in the offer that is per person.
    */
-  const schedule = paymentTarget(option?.scheduleUrl || BOOKING.scheduleUrl);
+  const schedule = paymentTarget(scheduleUrlFor(who, option));
   const lead = BOOKING.leadTimeMin;
   /*
    * Занятие продаётся теми же двумя кассами, что и всё остальное: рубли — в Prodamus, остальное —
@@ -210,74 +244,58 @@ export default function BookScreen() {
    * The context is in Russian whatever the app's language — the coach reads the topic in Russian.
    */
   const [writing, setWriting] = useState(false);
-  const contactContext = option ? option.name.ru : 'Вкладка «Тренер»';
+  const contactContext =
+    (option ? option.name.ru : 'Вкладка «Тренер»') +
+    (who === 'nastia' ? ` · ${NASTIA.name.ru}` : '');
   const openContact = () => setWriting(true);
 
   /* The credentials that are not already standing above as a figure. */
   const rest = COACH.credentials.filter((c) => !COACH.figures.some((f) => f.of === c));
 
-  /* Sergey's hero, the same with or without the strip around it. */
-  const coachHero = (
-    <>
-      <div className="flex items-end gap-5">
-        <div className="flex min-w-0 flex-1 flex-col items-start gap-3">
-          {/* Two stickers rather than one long one: as a single pill the role was cut off
-              («Founder and coach of …»). They lean opposite ways, like two stuck on by hand. */}
-          <div className="flex flex-wrap items-center gap-2">
-            {COACH.formaRoles.map((role, i) => (
-              <Pill
-                key={role.en}
-                tone="white"
-                tilt={i === 0 ? 'right' : 'left'}
-                className={i === 0 ? 'origin-left' : 'origin-center'}
-              >
-                {l(role, locale)}
-              </Pill>
-            ))}
-          </div>
-          {/* 1.02 → 1.2. The lockup is two lines — «Сергей» over «Титов» — and 1.02 was drawn for
-              capitals, which have no descenders; «р» drops 0.182em below the baseline and the
-              «Т» under it rises to cap height. global.css carries the measurement. */}
-          <h2 className="display text-[clamp(30px,9vw,44px)] leading-[1.2] text-balance">
-            {heavy}
-            {thin ? (
-              <>
-                {' '}
-                <KeyWord className="t-thin" swooshTone="action">
-                  {thin}
-                </KeyWord>
-              </>
-            ) : null}
-          </h2>
-        </div>
-        {/*
-          The website's frame for him, not an avatar: 4:5, monochrome, grain over it. The
-          grain is a sibling element rather than an `::after` on the frame for the reason
-          global.css gives — it has to sit between the image and anything laid on top of it.
-        */}
-        {COACH.photo ? (
-          <div className="relative w-28 shrink-0 overflow-hidden rounded-inner bg-surface">
-            <img
-              src={withBase(COACH.photo)}
-              alt={name}
-              width={256}
-              height={320}
-              className="photo-mono block aspect-[4/5] w-full object-cover"
-            />
-            <div className="photo-grain" aria-hidden="true" />
-          </div>
-        ) : (
-          <Avatar seed={name} name={name} size={112} />
-        )}
-      </div>
-      {/* Facts about the session, so outlined: the one filled thing on the tab is its
-          neon button. */}
-      <div className="flex flex-wrap gap-2">
-        <Pill tone="ghost">{l(BOOKING.format, locale)}</Pill>
-        <Pill tone="ghost">{t('app.bookLeadTimePill', { n: lead })}</Pill>
-      </div>
-    </>
-  );
+  /* The two facts about the session — the same booking product whoever's card it is. */
+  const sessionFacts = [l(BOOKING.format, locale), t('app.bookLeadTimePill', { n: lead })];
+
+  /*
+   * The strip: which card it rests on, read once the scroll settles. A debounce rather than every
+   * frame, so the content below changes once per swipe and not back and forth mid-gesture.
+   */
+  const stripRef = useRef<HTMLElement>(null);
+  const settle = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(settle.current), []);
+
+  const choose = (next: CoachPerson) => {
+    if (next === person) return;
+    setPerson(next);
+    setSwapped(true);
+  };
+
+  const onStripScroll = () => {
+    window.clearTimeout(settle.current);
+    settle.current = window.setTimeout(() => {
+      const el = stripRef.current;
+      const first = el?.children[0] as HTMLElement | undefined;
+      const second = el?.children[1] as HTMLElement | undefined;
+      if (!el || !first || !second) return;
+      const i = activeFromScroll({
+        scrollLeft: el.scrollLeft,
+        maxScroll: el.scrollWidth - el.clientWidth,
+        step: second.offsetLeft - first.offsetLeft,
+        count: el.children.length,
+      });
+      if (i !== null) choose(COACH_PEOPLE[i] ?? 'sergey');
+    }, 90);
+  };
+
+  /* A tap on a card brings it into view and makes it the person, even where the strip cannot
+     scroll because both cards fit. */
+  const showCard = (next: CoachPerson, card: HTMLElement) => {
+    choose(next);
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+    card.scrollIntoView({ behavior: still ? 'auto' : 'smooth', inline: 'start', block: 'nearest' });
+  };
+
+  const personName = who === 'nastia' ? herName : name;
+  const herLinks = NASTIA.links[locale] ?? NASTIA.links.ru;
 
   const pay = () => {
     if (!payment) return;
@@ -323,286 +341,419 @@ export default function BookScreen() {
           */}
           {nastia ? (
             /*
-             * With the `coach_nastia` flag (0049) the hero is a strip of two: Sergey's field first,
-             * the owner's light-blue card peeking in from the right — the `.deck-scroller` strip of
-             * «Тренировки от тренера», bleeding past both edges and pulled back with padding.
-             * Everything below stays his: the figures, the credentials and the offer.
+             * With the `coach_nastia` flag (0049) the hero is a strip of two header cards: Sergey's
+             * field first, the owner's light-blue card peeking in from the right — the
+             * `.deck-scroller` strip of «Тренировки от тренера», bleeding past both edges and
+             * pulled back with padding. `items-start`, so a card is as tall as its own content and
+             * never stretched to its neighbour's height. The card in view decides what is below.
              */
-            <section
-              aria-label={t('app.bookHeroStrip')}
-              className="deck-scroller -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 md:-mx-10 md:scroll-px-10 md:px-10"
-            >
-              <HeroField
-                as="article"
-                className="flex w-[86%] max-w-[420px] shrink-0 snap-start flex-col gap-5"
+            <div className="flex flex-col gap-3">
+              <section
+                ref={stripRef}
+                aria-label={t('app.bookHeroStrip')}
+                onScroll={onStripScroll}
+                className="deck-scroller -mx-4 flex snap-x snap-mandatory items-start gap-3 overflow-x-auto scroll-px-4 px-4 md:-mx-10 md:scroll-px-10 md:px-10"
               >
-                {coachHero}
-              </HeroField>
-              <NastiaCard locale={locale} className="w-[86%] max-w-[420px] shrink-0 snap-start" />
-            </section>
+                <CoachHeroCard
+                  as="article"
+                  tone="field"
+                  layout="stacked"
+                  locale={locale}
+                  stickers={COACH.formaRoles}
+                  heavy={heavy}
+                  thin={thin}
+                  photo={COACH.photo}
+                  name={name}
+                  facts={sessionFacts}
+                  aria-current={who === 'sergey' ? 'true' : undefined}
+                  onClick={(e) => showCard('sergey', e.currentTarget)}
+                  className="w-[86%] max-w-[420px] shrink-0 cursor-pointer snap-start"
+                />
+                <CoachHeroCard
+                  as="article"
+                  tone="sky"
+                  layout="stacked"
+                  locale={locale}
+                  stickers={NASTIA.roles}
+                  heavy={her.heavy}
+                  thin={her.thin}
+                  photo={NASTIA.photo}
+                  name={herName}
+                  facts={sessionFacts}
+                  aria-current={who === 'nastia' ? 'true' : undefined}
+                  onClick={(e) => showCard('nastia', e.currentTarget)}
+                  className="w-[86%] max-w-[420px] shrink-0 cursor-pointer snap-start"
+                />
+              </section>
+              {/* Two dots, so the swipe is discoverable; the cards themselves are the control. */}
+              <div aria-hidden="true" className="flex justify-center gap-1.5">
+                {COACH_PEOPLE.map((p) => (
+                  <span
+                    key={p}
+                    className={clsx(
+                      'size-1.5 rounded-full transition-colors duration-200',
+                      p === who ? 'bg-accent' : 'bg-border-strong',
+                    )}
+                  />
+                ))}
+              </div>
+              {/* Says whose information is below once it changes; the cards do not move focus. */}
+              <p aria-live="polite" className="sr-only">
+                {personName}
+              </p>
+            </div>
           ) : (
-            <HeroField as="section" className="flex flex-col gap-5">
-              {coachHero}
-            </HeroField>
+            <CoachHeroCard
+              tone="field"
+              locale={locale}
+              stickers={COACH.formaRoles}
+              heavy={heavy}
+              thin={thin}
+              photo={COACH.photo}
+              name={name}
+              facts={sessionFacts}
+            />
           )}
 
           {/*
-           * What he has behind him. Two of the facts are numbers and are set as numbers, side by
-           * side with a hairline between; the rest are sentences and stay sentences —
-           * «Волгоградский государственный социально-педагогический университет…» is a fact you
-           * read once, not a figure you glance at, and no amount of typography makes it one.
-           *
-           * **No kicker over it.** «РЕГАЛИИ» stood here and the owner took it out, and the reason it
-           * was removable is that it was never carrying anything: «10 000+ персональных часов» over
-           * a degree announces itself, and a label in capitals telling the reader what kind of
-           * information is coming next is a table of contents for three lines. The same went for
-           * «ЧТО ЭТО ДАЁТ» below.
-           */}
-          <section className="flex flex-col gap-4">
-            {COACH.figures.length > 0 ? (
-              <div className="grid grid-cols-2 divide-x divide-border border-y border-border">
-                {COACH.figures.map((f, i) => (
-                  <div
-                    key={f.value}
-                    className={clsx('flex min-w-0 flex-col gap-2 py-4', i === 0 ? 'pr-4' : 'pl-4')}
-                  >
-                    <span className="numeral tabular text-[clamp(26px,8vw,34px)] leading-none">
-                      {f.value}
-                    </span>
-                    <span className="eyebrow">{l(f.label, locale)}</span>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-            <ul className="flex flex-col">
-              {rest.map((c) => (
-                <li
-                  key={c.en}
-                  className="border-t border-border py-2.5 text-[14px] leading-snug first:border-t-0 first:pt-0 text-muted"
-                >
-                  {l(c, locale)}
-                </li>
-              ))}
-            </ul>
-            {/*
-             * Where to find him, under what he has behind him rather than next to the pills above.
-             * The pills say what the session is; these say where the person is, and the credentials
-             * are the block that question belongs to.
-             *
-             * `externalLinkProps` and not a bare `href`: inside Telegram a top-level navigation out
-             * of the Mini App either does nothing or replaces the app with a website the customer
-             * cannot get back from, so Telegram is asked to open the address outside instead. On the
-             * web the anchor behaves normally. Every link out of this app goes through that hook.
-             */}
-            {COACH.links.length > 0 ? (
-              <ul className="flex flex-wrap gap-2 pt-1">
-                {COACH.links.map((x) => (
-                  <li key={x.url}>
-                    <a
-                      {...externalLinkProps(x.url)}
-                      rel="me noopener noreferrer"
-                      className="control-label inline-flex h-10 items-center gap-2 rounded-control border border-border-strong px-4 text-[13px] text-muted transition-colors duration-150 active:bg-surface-2"
-                    >
-                      <BrandMark kind={x.kind} size={16} className="shrink-0 text-text" />
-                      {x.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </section>
-
-          {/*
-           * What an hour with him gives, as three jobs rather than three features.
-           *
-           * Each one is a short line you could say out loud and a couple of sentences that make it
-           * concrete — the owner's «реальные jtbd написать понятным языком». The copy is in
-           * `content/site/booking.ts`; what changed here is that an outcome is now two pieces of
-           * text instead of one clause, so it needs a heading line and a paragraph rather than a
-           * single row.
-           *
-           * They are still numbered rather than ticked, and the numbers still mean something: a tick
-           * is a line item in a price, and these are not line items. Read down, they are also the
-           * shape of the session — he looks, he sets the load, you leave with the next weeks — so
-           * 01 · 02 · 03 is an order and not a decoration.
-           */}
-          <section>
-            <ul className="flex flex-col">
-              {BOOKING.outcomes.map((o, i) => (
-                <li
-                  key={o.title.en}
-                  className="flex items-start gap-4 border-t border-border py-5 first:border-t-0 first:pt-0"
-                >
-                  {/* The first of the blue things. These three lines are the argument for the
-                      price below them, so they are where the offer starts and where its colour
-                      starts; the credentials above stay grey because they are not for sale. */}
-                  <span className="numeral tabular w-6 shrink-0 pt-0.5 text-[15px] text-accent">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <div className="flex min-w-0 flex-col gap-1.5">
-                    <p className="font-display text-[17px] leading-snug">{l(o.title, locale)}</p>
-                    <p className="text-[14px] leading-relaxed text-muted">{l(o.body, locale)}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          {/*
-           * The lengths as a switch over one block, not as two blocks stacked.
-           *
-           * They used to stand one under the other, each with its own price, its own list and its own
-           * button, on the argument that a picker makes the person choose twice. The owner's verdict
-           * overrules it: «нужно сделать не разные карточки а переключение по продолжительности
-           * сессии. Чтобы проще и компактнее было». She is right about the shape — the two blocks are
-           * the same four things twice, and on a 390px phone the second one starts below the fold, so
-           * «two prices side by side» was never what the screen actually showed.
-           *
-           * The segment is the duration, because that is what is being chosen. The price follows it
-           * and is not on the switch: a switch whose cells carry prices is asking to be read as the
-           * cheaper and the dearer rather than as the shorter and the longer.
-           *
-           * ## Why it sits on a card, and why the switch is small
-           *
-           * The owner: «этот блок нужно сделать внутри плашки а переключатель по времени сделать
-           * компактнее». Both halves are the same observation. The switch, the price, what is
-           * included and the button are one object — pick a length, see its price, buy it — and on
-           * flat ground they read as four unrelated things stacked between two essays. A surface
-           * under them says where the offer starts and stops.
-           *
-           * **Filled rather than outlined, and that is the distinction on this screen.** The two
-           * other cards here — the booked session at the top, and «Дальше» once payment has opened
-           * — are hairline boxes with no fill, and they are both *states*: something that is true
-           * right now and will not be true later. The offer is always there, so it gets the
-           * surface. `level={1}`, because `design/README.md` reads the levels as a stack
-           * (bg-0 → surface-1 → surface-2) rather than as emphasis, and this card sits directly on
-           * the background.
-           *
-           * The switch stops being `fullWidth` for the reason she circled: stretched across the
-           * column, «30 мин» floated in the middle of a cell twice as wide as the words, and two
-           * cells of mostly empty white are what made it read as the loudest control on the screen
-           * instead of a small choice before the price. Sized to its own labels it is a setting,
-           * which is what it is.
-           */}
-          {/*
-           * The offer's own edge and ground, in the tab's colour.
-           *
-           * Both are set inline rather than by class, and that is not a shortcut. `level={1}` is
-           * `.glass-card`, whose hairline is a `border` shorthand in the components layer; a
-           * Tailwind class passed through `className` sets the same property, so which one wins is
-           * decided by where the two happen to land in the stylesheet — not by the order they are
-           * written here. An inline declaration has no such argument to lose.
-           *
-           * The tint goes through `--glass-overlay` rather than `background`, because a solid
-           * `background` would have replaced the glass band and kept the blur — the cost of the
-           * material with none of it showing. The overlay is a flat 6% of the blue laid over the
-           * band (global.css), and 45% of it on the hairline: enough that the card reads as a
-           * different kind of object from the two glass boxes above and below it (both of which
-           * are *states*, and both stay grey), and far too little to be a fill. The text on it is
-           * the app's own, unchanged, so nothing here needs re-measuring for contrast — a 6% tint
-           * moves the ground by about one surface level.
-           */}
-          {/*
-           * Plain glass since the price turned neon. The owner, on the blue-tinted card with a
-           * neon figure in it: «синий не вписывается тут». The tint and the blue hairline were
-           * there to set the offer apart from the grey state boxes around it; the neon price and
-           * the neon button do that now, and blue beside them read as a third colour competing.
-           */}
-          <Card level={1} className="flex flex-col gap-5">
-            {BOOKING.options.length > 1 ? (
-              <SegmentedControl
-                size="sm"
-                /*
-                 * `self-start` is not decoration. `SegmentedControl` is an `inline-flex` box, but
-                 * inside a flex column `align-items: stretch` still stretches it, and only the box
-                 * stretches — the cells stay the width of their own labels. Dropping `fullWidth`
-                 * without this drew the frame across the whole card with «30 мин | 60 мин» hugging
-                 * the left and half the box empty, which is worse than the stretched version it
-                 * replaced. Measured, not guessed: frame 300px, cells 73 + 74.
-                 */
-                className="self-start"
-                label={t('app.bookLengthLabel')}
-                value={pick}
-                onChange={(next) => {
-                  setPick(next);
-                  setSent(false);
-                }}
-                options={BOOKING.options.map((o) => ({
-                  value: o.id,
-                  label: t('app.bookDuration', { n: o.durationMin }),
-                }))}
-              />
-            ) : null}
-            {option ? (
-              <Option
-                option={option}
-                payment={payment}
-                redirecting={redirecting}
-                onPay={pay}
-                onContact={openContact}
-              />
-            ) : null}
-          </Card>
-
-          {/*
-           * The step after the money, which is the one the offer was missing.
-           *
-           * «Оплатил → выбрал время» only has a second half when `BOOKING.scheduleUrl` is set. Until
-           * it is, this block says what actually happens — the coach sets the time in a message —
-           * rather than leaving a paid button as the last thing on the screen. Either way it is one
-           * sentence and one button, and it sharpens once payment has been opened from here.
+           * Everything below the cards follows the card in view. Keyed by the person, so a change
+           * swaps it whole with a short fade (`.fade-in`, none under reduced motion).
            */}
           <section
-            className={
-              sent
-                ? 'glass-card flex flex-col gap-3 rounded-card p-5'
-                : 'flex flex-col gap-3 border-t border-border pt-5'
-            }
+            key={who}
+            aria-label={personName}
+            className={clsx('flex flex-col gap-9', swapped && 'fade-in')}
           >
-            <span className="eyebrow">{t('app.bookNext')}</span>
-            {/* Not in demo: there the toast has just said there was no payment page to open. */}
-            {sent && !isDemo() ? (
-              <p className="text-[15px] leading-snug">{t('app.bookPaidNote')}</p>
-            ) : null}
-            <p className="text-sm leading-snug text-muted">
-              {schedule
-                ? t('app.bookNextSchedule', { n: lead })
-                : t('app.bookNextContact', { n: lead })}
-            </p>
-            {schedule ? (
-              <LinkButton
-                href={schedule.href}
-                variant={sent ? 'primary' : 'secondary'}
-                size="lg"
-                fullWidth
-                external
-              >
-                {t('app.bookPickTime')}
-              </LinkButton>
-            ) : payment ? (
-              <Button
-                variant={sent ? 'primary' : 'secondary'}
-                size="lg"
-                fullWidth
-                onClick={openContact}
-              >
-                {t('app.bookContact')}
-              </Button>
-            ) : null}
-            <p className="text-xs text-muted-2">{l(BOOKING.reschedule, locale)}</p>
-            {/* With a slot page and a till both in place nothing above offers a way to ask, and a
+            {who === 'nastia' ? (
+              <NastiaAbout locale={locale} links={herLinks} />
+            ) : (
+              <>
+                {/*
+                 * What he has behind him. Two of the facts are numbers and are set as numbers, side by
+                 * side with a hairline between; the rest are sentences and stay sentences —
+                 * «Волгоградский государственный социально-педагогический университет…» is a fact you
+                 * read once, not a figure you glance at, and no amount of typography makes it one.
+                 *
+                 * **No kicker over it.** «РЕГАЛИИ» stood here and the owner took it out, and the reason it
+                 * was removable is that it was never carrying anything: «10 000+ персональных часов» over
+                 * a degree announces itself, and a label in capitals telling the reader what kind of
+                 * information is coming next is a table of contents for three lines. The same went for
+                 * «ЧТО ЭТО ДАЁТ» below.
+                 */}
+                <section className="flex flex-col gap-4">
+                  {COACH.figures.length > 0 ? (
+                    <div className="grid grid-cols-2 divide-x divide-border border-y border-border">
+                      {COACH.figures.map((f, i) => (
+                        <div
+                          key={f.value}
+                          className={clsx(
+                            'flex min-w-0 flex-col gap-2 py-4',
+                            i === 0 ? 'pr-4' : 'pl-4',
+                          )}
+                        >
+                          <span className="numeral tabular text-[clamp(26px,8vw,34px)] leading-none">
+                            {f.value}
+                          </span>
+                          <span className="eyebrow">{l(f.label, locale)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                  <ul className="flex flex-col">
+                    {rest.map((c) => (
+                      <li
+                        key={c.en}
+                        className="border-t border-border py-2.5 text-[14px] leading-snug first:border-t-0 first:pt-0 text-muted"
+                      >
+                        {l(c, locale)}
+                      </li>
+                    ))}
+                  </ul>
+                  {/*
+                   * Where to find him, under what he has behind him rather than next to the pills above.
+                   * The pills say what the session is; these say where the person is, and the credentials
+                   * are the block that question belongs to.
+                   *
+                   * `externalLinkProps` and not a bare `href`: inside Telegram a top-level navigation out
+                   * of the Mini App either does nothing or replaces the app with a website the customer
+                   * cannot get back from, so Telegram is asked to open the address outside instead. On the
+                   * web the anchor behaves normally. Every link out of this app goes through that hook.
+                   */}
+                  {COACH.links.length > 0 ? (
+                    <ul className="flex flex-wrap gap-2 pt-1">
+                      {COACH.links.map((x) => (
+                        <li key={x.url}>
+                          <a
+                            {...externalLinkProps(x.url)}
+                            rel="me noopener noreferrer"
+                            className="control-label inline-flex h-10 items-center gap-2 rounded-control border border-border-strong px-4 text-[13px] text-muted transition-colors duration-150 active:bg-surface-2"
+                          >
+                            <BrandMark kind={x.kind} size={16} className="shrink-0 text-text" />
+                            {x.label}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </section>
+
+                {/*
+                 * What an hour with him gives, as three jobs rather than three features.
+                 *
+                 * Each one is a short line you could say out loud and a couple of sentences that make it
+                 * concrete — the owner's «реальные jtbd написать понятным языком». The copy is in
+                 * `content/site/booking.ts`; what changed here is that an outcome is now two pieces of
+                 * text instead of one clause, so it needs a heading line and a paragraph rather than a
+                 * single row.
+                 *
+                 * They are still numbered rather than ticked, and the numbers still mean something: a tick
+                 * is a line item in a price, and these are not line items. Read down, they are also the
+                 * shape of the session — he looks, he sets the load, you leave with the next weeks — so
+                 * 01 · 02 · 03 is an order and not a decoration.
+                 */}
+                <section>
+                  <ul className="flex flex-col">
+                    {BOOKING.outcomes.map((o, i) => (
+                      <li
+                        key={o.title.en}
+                        className="flex items-start gap-4 border-t border-border py-5 first:border-t-0 first:pt-0"
+                      >
+                        {/* The first of the blue things. These three lines are the argument for the
+                      price below them, so they are where the offer starts and where its colour
+                      starts; the credentials above stay grey because they are not for sale. */}
+                        <span className="numeral tabular w-6 shrink-0 pt-0.5 text-[15px] text-accent">
+                          {String(i + 1).padStart(2, '0')}
+                        </span>
+                        <div className="flex min-w-0 flex-col gap-1.5">
+                          <p className="font-display text-[17px] leading-snug">
+                            {l(o.title, locale)}
+                          </p>
+                          <p className="text-[14px] leading-relaxed text-muted">
+                            {l(o.body, locale)}
+                          </p>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              </>
+            )}
+
+            {/*
+             * The lengths as a switch over one block, not as two blocks stacked.
+             *
+             * They used to stand one under the other, each with its own price, its own list and its own
+             * button, on the argument that a picker makes the person choose twice. The owner's verdict
+             * overrules it: «нужно сделать не разные карточки а переключение по продолжительности
+             * сессии. Чтобы проще и компактнее было». She is right about the shape — the two blocks are
+             * the same four things twice, and on a 390px phone the second one starts below the fold, so
+             * «two prices side by side» was never what the screen actually showed.
+             *
+             * The segment is the duration, because that is what is being chosen. The price follows it
+             * and is not on the switch: a switch whose cells carry prices is asking to be read as the
+             * cheaper and the dearer rather than as the shorter and the longer.
+             *
+             * ## Why it sits on a card, and why the switch is small
+             *
+             * The owner: «этот блок нужно сделать внутри плашки а переключатель по времени сделать
+             * компактнее». Both halves are the same observation. The switch, the price, what is
+             * included and the button are one object — pick a length, see its price, buy it — and on
+             * flat ground they read as four unrelated things stacked between two essays. A surface
+             * under them says where the offer starts and stops.
+             *
+             * **Filled rather than outlined, and that is the distinction on this screen.** The two
+             * other cards here — the booked session at the top, and «Дальше» once payment has opened
+             * — are hairline boxes with no fill, and they are both *states*: something that is true
+             * right now and will not be true later. The offer is always there, so it gets the
+             * surface. `level={1}`, because `design/README.md` reads the levels as a stack
+             * (bg-0 → surface-1 → surface-2) rather than as emphasis, and this card sits directly on
+             * the background.
+             *
+             * The switch stops being `fullWidth` for the reason she circled: stretched across the
+             * column, «30 мин» floated in the middle of a cell twice as wide as the words, and two
+             * cells of mostly empty white are what made it read as the loudest control on the screen
+             * instead of a small choice before the price. Sized to its own labels it is a setting,
+             * which is what it is.
+             */}
+            {/*
+             * The offer's own edge and ground, in the tab's colour.
+             *
+             * Both are set inline rather than by class, and that is not a shortcut. `level={1}` is
+             * `.glass-card`, whose hairline is a `border` shorthand in the components layer; a
+             * Tailwind class passed through `className` sets the same property, so which one wins is
+             * decided by where the two happen to land in the stylesheet — not by the order they are
+             * written here. An inline declaration has no such argument to lose.
+             *
+             * The tint goes through `--glass-overlay` rather than `background`, because a solid
+             * `background` would have replaced the glass band and kept the blur — the cost of the
+             * material with none of it showing. The overlay is a flat 6% of the blue laid over the
+             * band (global.css), and 45% of it on the hairline: enough that the card reads as a
+             * different kind of object from the two glass boxes above and below it (both of which
+             * are *states*, and both stay grey), and far too little to be a fill. The text on it is
+             * the app's own, unchanged, so nothing here needs re-measuring for contrast — a 6% tint
+             * moves the ground by about one surface level.
+             */}
+            {/*
+             * Plain glass since the price turned neon. The owner, on the blue-tinted card with a
+             * neon figure in it: «синий не вписывается тут». The tint and the blue hairline were
+             * there to set the offer apart from the grey state boxes around it; the neon price and
+             * the neon button do that now, and blue beside them read as a third colour competing.
+             */}
+            <Card level={1} className="flex flex-col gap-5">
+              {BOOKING.options.length > 1 ? (
+                <SegmentedControl
+                  size="sm"
+                  /*
+                   * `self-start` is not decoration. `SegmentedControl` is an `inline-flex` box, but
+                   * inside a flex column `align-items: stretch` still stretches it, and only the box
+                   * stretches — the cells stay the width of their own labels. Dropping `fullWidth`
+                   * without this drew the frame across the whole card with «30 мин | 60 мин» hugging
+                   * the left and half the box empty, which is worse than the stretched version it
+                   * replaced. Measured, not guessed: frame 300px, cells 73 + 74.
+                   */
+                  className="self-start"
+                  label={t('app.bookLengthLabel')}
+                  value={pick}
+                  onChange={(next) => {
+                    setPick(next);
+                    setSent(false);
+                  }}
+                  options={BOOKING.options.map((o) => ({
+                    value: o.id,
+                    label: t('app.bookDuration', { n: o.durationMin }),
+                  }))}
+                />
+              ) : null}
+              {option ? (
+                <Option
+                  option={option}
+                  payment={payment}
+                  redirecting={redirecting}
+                  onPay={pay}
+                  onContact={openContact}
+                />
+              ) : null}
+            </Card>
+
+            {/*
+             * The step after the money, which is the one the offer was missing.
+             *
+             * «Оплатил → выбрал время» only has a second half when `BOOKING.scheduleUrl` is set. Until
+             * it is, this block says what actually happens — the coach sets the time in a message —
+             * rather than leaving a paid button as the last thing on the screen. Either way it is one
+             * sentence and one button, and it sharpens once payment has been opened from here.
+             */}
+            <section
+              className={
+                sent
+                  ? 'glass-card flex flex-col gap-3 rounded-card p-5'
+                  : 'flex flex-col gap-3 border-t border-border pt-5'
+              }
+            >
+              <span className="eyebrow">{t('app.bookNext')}</span>
+              {/* Not in demo: there the toast has just said there was no payment page to open. */}
+              {sent && !isDemo() ? (
+                <p className="text-[15px] leading-snug">{t('app.bookPaidNote')}</p>
+              ) : null}
+              {/* Per person: «his page» / «her page», «he sets» / «she sets». */}
+              <p className="text-sm leading-snug text-muted">
+                {who === 'nastia'
+                  ? schedule
+                    ? t('app.bookNextScheduleHer', { n: lead })
+                    : t('app.bookNextContactHer', { n: lead })
+                  : schedule
+                    ? t('app.bookNextSchedule', { n: lead })
+                    : t('app.bookNextContact', { n: lead })}
+              </p>
+              {schedule ? (
+                <LinkButton
+                  href={schedule.href}
+                  variant={sent ? 'primary' : 'secondary'}
+                  size="lg"
+                  fullWidth
+                  external
+                >
+                  {t('app.bookPickTime')}
+                </LinkButton>
+              ) : payment ? (
+                <Button
+                  variant={sent ? 'primary' : 'secondary'}
+                  size="lg"
+                  fullWidth
+                  onClick={openContact}
+                >
+                  {t('app.bookContact')}
+                </Button>
+              ) : null}
+              <p className="text-xs text-muted-2">{l(BOOKING.reschedule, locale)}</p>
+              {/* With a slot page and a till both in place nothing above offers a way to ask, and a
                 question before paying is exactly when one is needed. Quiet, so it is not a
                 second action. */}
-            {schedule && payment ? (
-              <Button variant="ghost" size="md" className="self-start" onClick={openContact}>
-                {t('app.supportWrite')}
-              </Button>
-            ) : null}
+              {schedule && payment ? (
+                <Button variant="ghost" size="md" className="self-start" onClick={openContact}>
+                  {t('app.supportWrite')}
+                </Button>
+              ) : null}
+            </section>
           </section>
           <SupportSheet open={writing} onClose={() => setWriting(false)} context={contactContext} />
         </div>
       </Screen>
     </div>
+  );
+}
+
+/**
+ * What stands under Anastasia's card when it is in view (design/CHANGELOG.md §23) — Sergey's
+ * blocks in the same styles, filled with hers: two figures as his are, her text where his
+ * credentials are, what people talk to her about as outlined pills, her links for the app's
+ * language. No «I watch how you move»: those are his words about his sessions.
+ */
+function NastiaAbout({ locale, links }: { locale: Locale; links: readonly NastiaLink[] }) {
+  return (
+    <section className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 divide-x divide-border border-y border-border">
+        {NASTIA.facts.map((f, i) => (
+          <div
+            key={f.figure}
+            className={clsx('flex min-w-0 flex-col gap-2 py-4', i === 0 ? 'pr-4' : 'pl-4')}
+          >
+            <span className="numeral tabular text-[clamp(26px,8vw,34px)] leading-none">
+              {f.figure}
+            </span>
+            <span className="eyebrow">{l(f.caption, locale)}</span>
+          </div>
+        ))}
+      </div>
+      <p className="text-[14px] leading-snug text-muted">{l(NASTIA.bio, locale)}</p>
+      <div className="flex flex-col gap-2 pt-1">
+        <p className="eyebrow">{l(NASTIA.topicsLead, locale)}</p>
+        <ul className="flex flex-wrap gap-2">
+          {NASTIA.topics.map((topic) => (
+            <li key={topic.en}>
+              <Pill tone="neutral">{l(topic, locale)}</Pill>
+            </li>
+          ))}
+        </ul>
+      </div>
+      {/* The same chips as his links, and through `externalLinkProps` for the same reason. */}
+      {links.length > 0 ? (
+        <ul className="flex flex-wrap gap-2 pt-1">
+          {links.map((x) => (
+            <li key={x.url}>
+              <a
+                {...externalLinkProps(x.url)}
+                rel="noopener noreferrer"
+                className="control-label inline-flex h-10 items-center gap-2 rounded-control border border-border-strong px-4 text-[13px] text-muted transition-colors duration-150 active:bg-surface-2"
+              >
+                <BrandMark kind={x.kind} size={16} className="shrink-0 text-text" />
+                {x.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
   );
 }
 
