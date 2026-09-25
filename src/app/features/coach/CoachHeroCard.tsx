@@ -26,8 +26,8 @@
  *   face at 800 and does not fit beside a 112px frame on a phone card, and a name broken mid-word
  *   is worse than a name one row lower. Both cards use it, so both have the same compact shape —
  *   which also fixes the strip drawing his card as a tall empty field beside a taller one of hers.
- *   A sticker longer than its column («Сооснователь Forma») is allowed past the column's edge onto
- *   the photograph's corner rather than truncated — a sticker stuck on by hand does that.
+ *   The frame steps down to 80px here so the sticker column has room for the longest sticker
+ *   («Co-founder of Forma»): nothing is truncated and nothing lands on the photograph.
  *
  * The photograph is the same frame in both: 112px, 4:5, monochrome with grain (`.photo-mono`,
  * `.photo-grain`); an `Avatar` stands in if the path is ever emptied.
@@ -102,8 +102,7 @@ export function CoachHeroCard({
       key={role.en}
       tone={look.sticker}
       tilt={i % 2 === 0 ? 'right' : 'left'}
-      className={clsx(i === 0 ? 'origin-left' : 'origin-center', stacked && 'relative z-10')}
-      style={stacked ? { width: 'max-content', maxWidth: 'none' } : undefined}
+      className={i === 0 ? 'origin-left' : 'origin-center'}
     >
       {l(role, locale)}
     </Pill>
@@ -142,7 +141,16 @@ export function CoachHeroCard({
    * between the image and anything laid on top of it.
    */
   const frame = photo ? (
-    <div className={clsx('relative w-28 shrink-0 overflow-hidden rounded-inner', look.frame)}>
+    <div
+      className={clsx(
+        'relative shrink-0 overflow-hidden rounded-inner',
+        /* In the two-card strip the card is ~86% of the phone, so the frame steps down to 80px:
+           that leaves the sticker column ~184px, room for «Co-founder of Forma» without the
+           sticker spilling onto the photograph or being cut. */
+        stacked ? 'w-20' : 'w-28',
+        look.frame,
+      )}
+    >
       <img
         src={withBase(photo)}
         alt={name}
@@ -153,7 +161,7 @@ export function CoachHeroCard({
       <div className="photo-grain" aria-hidden="true" />
     </div>
   ) : (
-    <Avatar seed={name} name={name} size={112} />
+    <Avatar seed={name} name={name} size={stacked ? 80 : 112} />
   );
 
   /* Facts about the session, so outlined: the one filled thing on the tab is its neon button. */
@@ -170,7 +178,7 @@ export function CoachHeroCard({
   const body = stacked ? (
     <>
       <div className="flex flex-col gap-3">
-        <div className="flex items-start gap-5">
+        <div className="flex items-start gap-4">
           <div className="flex min-w-0 flex-1 flex-col items-start gap-2">{stickerList}</div>
           {frame}
         </div>
