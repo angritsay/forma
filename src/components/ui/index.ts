@@ -7,6 +7,7 @@ export { Card, type CardLevel, type CardPadding, type CardProps } from './Card';
 export { Chip, type ChipProps, type ChipSize, type ChipTone } from './Chip';
 export { CodeInput, type CodeInputProps } from './CodeInput';
 export { Divider, type DividerProps } from './Divider';
+export { Doodle, DOODLES, type DoodleKind, type DoodleProps } from './Doodle';
 export { DotCalendar, type DotCalendarProps, type DotDay, type DotState } from './DotCalendar';
 export { EmptyState, type EmptyStateProps } from './EmptyState';
 export {
