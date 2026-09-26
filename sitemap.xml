@@ -1,0 +1,1155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://forma-app.co/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/courses/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/courses/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/courses/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/courses/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/courses/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/courses/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/courses/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/courses/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/subscribe/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/subscribe/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/subscribe/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/subscribe/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/subscribe/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/subscribe/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/subscribe/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/subscribe/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/about/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/about/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/about/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/about/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/about/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/about/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/about/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/about/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/contact/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/contact/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/contact/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/contact/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/contact/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/contact/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/contact/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/contact/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/privacy/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/privacy/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/privacy/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/privacy/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/privacy/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/privacy/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/privacy/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/privacy/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/terms/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/terms/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/terms/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/terms/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/terms/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/terms/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/terms/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/terms/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/refund/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/refund/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/refund/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/refund/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/refund/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/refund/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/refund/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/refund/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/courses/start-krossfit-doma-bez-oborudovaniya/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/courses/start-krossfit-doma-bez-oborudovaniya/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/courses/start-home-crossfit-basics/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/courses/start-krossfit-doma-bez-oborudovaniya/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/courses/start-home-crossfit-basics/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/courses/start-krossfit-doma-bez-oborudovaniya/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/courses/start-home-crossfit-basics/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/courses/start-krossfit-doma-bez-oborudovaniya/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/prisedaniya/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/prisedaniya/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/air-squat/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/prisedaniya/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/air-squat/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/prisedaniya/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/air-squat/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/prisedaniya/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/yagodichnyy-mostik/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/yagodichnyy-mostik/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/glute-bridge/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/yagodichnyy-mostik/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/glute-bridge/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/yagodichnyy-mostik/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/glute-bridge/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/yagodichnyy-mostik/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/obratnye-vypady/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/obratnye-vypady/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/reverse-lunge/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/obratnye-vypady/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/reverse-lunge/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/obratnye-vypady/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/reverse-lunge/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/obratnye-vypady/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/zashagivaniya-na-vozvyshenie/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/zashagivaniya-na-vozvyshenie/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/step-up/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/zashagivaniya-na-vozvyshenie/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/step-up/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/zashagivaniya-na-vozvyshenie/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/step-up/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/zashagivaniya-na-vozvyshenie/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/otzhimaniya/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/otzhimaniya/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/push-up/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/otzhimaniya/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/push-up/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/otzhimaniya/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/push-up/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/otzhimaniya/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/otzhimaniya-s-kolen/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/otzhimaniya-s-kolen/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/knee-push-up/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/otzhimaniya-s-kolen/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/knee-push-up/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/otzhimaniya-s-kolen/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/knee-push-up/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/otzhimaniya-s-kolen/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/obratnye-otzhimaniya-ot-stula/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/obratnye-otzhimaniya-ot-stula/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/bench-dip/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/obratnye-otzhimaniya-ot-stula/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/bench-dip/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/obratnye-otzhimaniya-ot-stula/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/bench-dip/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/obratnye-otzhimaniya-ot-stula/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/prised-razgibanie/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/prised-razgibanie/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/squat-to-stand/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/prised-razgibanie/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/squat-to-stand/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/prised-razgibanie/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/squat-to-stand/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/prised-razgibanie/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/gusenitsa/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/gusenitsa/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/inchworm/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/gusenitsa/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/inchworm/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/gusenitsa/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/inchworm/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/gusenitsa/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/sitap/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/sitap/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/sit-up/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/sitap/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/sit-up/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/sitap/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/sit-up/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/sitap/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/mertvyy-zhuk/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/mertvyy-zhuk/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/dead-bug/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/mertvyy-zhuk/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/dead-bug/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/mertvyy-zhuk/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/dead-bug/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/mertvyy-zhuk/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/russkiy-tvist/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/russkiy-tvist/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/russian-twist/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/russkiy-tvist/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/russian-twist/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/russkiy-tvist/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/russian-twist/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/russkiy-tvist/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/skalolaz/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/skalolaz/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/mountain-climbers/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/skalolaz/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/mountain-climbers/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/skalolaz/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/mountain-climbers/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/skalolaz/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/krugi-rukami/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/krugi-rukami/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/arm-circles/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/krugi-rukami/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/arm-circles/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/krugi-rukami/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/arm-circles/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/krugi-rukami/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/mahi-nogami/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/mahi-nogami/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/leg-swings/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/mahi-nogami/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/leg-swings/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/mahi-nogami/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/leg-swings/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/mahi-nogami/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/koshka-korova/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/koshka-korova/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/cat-cow/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/koshka-korova/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/cat-cow/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/koshka-korova/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/cat-cow/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/koshka-korova/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/rastyazhka-sgibateley-bedra/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/rastyazhka-sgibateley-bedra/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/hip-flexor-stretch/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/rastyazhka-sgibateley-bedra/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/hip-flexor-stretch/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/rastyazhka-sgibateley-bedra/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/hip-flexor-stretch/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/rastyazhka-sgibateley-bedra/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/rastyazhka-zadney-poverhnosti-bedra/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/rastyazhka-zadney-poverhnosti-bedra/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/hamstring-stretch/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/rastyazhka-zadney-poverhnosti-bedra/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/hamstring-stretch/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/rastyazhka-zadney-poverhnosti-bedra/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/hamstring-stretch/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/rastyazhka-zadney-poverhnosti-bedra/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/poza-rebenka/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/poza-rebenka/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/childs-pose/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/poza-rebenka/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/childs-pose/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/poza-rebenka/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/childs-pose/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/poza-rebenka/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/krugi-golovoy/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/krugi-golovoy/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/neck-circles/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/krugi-golovoy/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/neck-circles/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/krugi-golovoy/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/neck-circles/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/krugi-golovoy/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/vrashcheniya-loktyami-i-kistyami/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/vrashcheniya-loktyami-i-kistyami/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/elbow-and-wrist-circles/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/vrashcheniya-loktyami-i-kistyami/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/elbow-and-wrist-circles/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/vrashcheniya-loktyami-i-kistyami/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/elbow-and-wrist-circles/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/vrashcheniya-loktyami-i-kistyami/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/naklony-v-storony/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/naklony-v-storony/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/side-bends/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/naklony-v-storony/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/side-bends/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/naklony-v-storony/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/side-bends/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/naklony-v-storony/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/vrashcheniya-tazom/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/vrashcheniya-tazom/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/hip-circles/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/vrashcheniya-tazom/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/hip-circles/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/vrashcheniya-tazom/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/hip-circles/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/vrashcheniya-tazom/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/krugi-kolenyami/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/krugi-kolenyami/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/knee-circles/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/krugi-kolenyami/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/knee-circles/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/krugi-kolenyami/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/knee-circles/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/krugi-kolenyami/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/vrashcheniya-stopami/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/vrashcheniya-stopami/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/ankle-circles/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/vrashcheniya-stopami/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/ankle-circles/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/vrashcheniya-stopami/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/ankle-circles/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/vrashcheniya-stopami/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/exercises/rastyazhka-kvadritsepsa-stoya/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/rastyazhka-kvadritsepsa-stoya/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/standing-quad-stretch/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/rastyazhka-kvadritsepsa-stoya/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/exercises/standing-quad-stretch/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/exercises/rastyazhka-kvadritsepsa-stoya/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/exercises/standing-quad-stretch/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/exercises/rastyazhka-kvadritsepsa-stoya/"/>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/beginners/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/beginners/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/beginners/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/beginners/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/no-equipment/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/no-equipment/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/no-equipment/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/no-equipment/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/dumbbells/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/dumbbells/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/dumbbells/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/dumbbells/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/kettlebell/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/kettlebell/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/kettlebell/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/kettlebell/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/formats/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/formats/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/formats/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/formats/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/fat-loss/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/fat-loss/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/fat-loss/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/fat-loss/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/programming/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/programming/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/programming/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/programming/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/recovery/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/recovery/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/recovery/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/recovery/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/mobility/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/mobility/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/mobility/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/mobility/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/motivation/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/motivation/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/motivation/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/motivation/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/equipment/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/equipment/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/equipment/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/equipment/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/beginners/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/beginners/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/beginners/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/beginners/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/no-equipment/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/no-equipment/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/no-equipment/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/no-equipment/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/dumbbells/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/dumbbells/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/dumbbells/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/dumbbells/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/kettlebell/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/kettlebell/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/kettlebell/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/kettlebell/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/formats/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/formats/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/formats/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/formats/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/fat-loss/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/fat-loss/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/fat-loss/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/fat-loss/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/programming/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/programming/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/programming/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/programming/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/recovery/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/recovery/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/recovery/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/recovery/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/mobility/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/mobility/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/mobility/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/mobility/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/motivation/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/motivation/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/motivation/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/motivation/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/equipment/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/equipment/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/equipment/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/equipment/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/amrap-emom-for-time-tabata/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/amrap-emom-for-time-tabata/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/crossfit-workout-formats-amrap-emom-tabata/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/amrap-emom-for-time-tabata/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/rpe-kak-podobrat-nagruzku/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/rpe-kak-podobrat-nagruzku/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/rpe-scale-how-hard-should-workouts-be/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/rpe-kak-podobrat-nagruzku/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/dni-otdyha-i-7000-shagov/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/dni-otdyha-i-7000-shagov/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/rest-days-recovery-7000-steps/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/dni-otdyha-i-7000-shagov/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/kak-delat-berpi/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/kak-delat-berpi/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/how-to-do-a-burpee/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/kak-delat-berpi/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/kak-nauchitsya-otzhimatsya/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/kak-nauchitsya-otzhimatsya/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/push-up-progression/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/kak-nauchitsya-otzhimatsya/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/kak-ne-brosit-trenirovki/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/kak-ne-brosit-trenirovki/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/how-to-stay-consistent-with-workouts/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/kak-ne-brosit-trenirovki/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/crossfit-bez-oborudovaniya/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/crossfit-bez-oborudovaniya/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/crossfit-without-equipment/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/crossfit-bez-oborudovaniya/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/crossfit-dlya-pohudeniya/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/crossfit-dlya-pohudeniya/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/crossfit-for-fat-loss/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/crossfit-dlya-pohudeniya/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/crossfit-doma-dlya-nachinayushchih/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/crossfit-doma-dlya-nachinayushchih/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/crossfit-at-home-for-beginners/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/crossfit-doma-dlya-nachinayushchih/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/crossfit-posle-40/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/crossfit-posle-40/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/crossfit-at-home-after-40/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/crossfit-posle-40/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/oborudovanie-dlya-crossfita-doma/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/oborudovanie-dlya-crossfita-doma/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/home-crossfit-equipment-guide/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/oborudovanie-dlya-crossfita-doma/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/razminka-pered-trenirovkoy-doma/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/razminka-pered-trenirovkoy-doma/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/warm-up-before-a-home-workout/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/razminka-pered-trenirovkoy-doma/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/skolko-raz-v-nedelyu-trenirovatsya-doma/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/skolko-raz-v-nedelyu-trenirovatsya-doma/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/how-many-times-a-week-to-work-out-at-home/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/skolko-raz-v-nedelyu-trenirovatsya-doma/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/trenirovka-20-minut-doma/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/trenirovka-20-minut-doma/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/20-minute-home-workouts/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/trenirovka-20-minut-doma/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/trenirovka-s-gantelyami-doma/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/trenirovka-s-gantelyami-doma/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/full-body-dumbbell-workout-at-home/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/trenirovka-s-gantelyami-doma/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/guides/trenirovki-s-girey-doma/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/trenirovki-s-girey-doma/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/kettlebell-workouts-at-home-for-beginners/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/trenirovki-s-girey-doma/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/20-minute-home-workouts/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/trenirovka-20-minut-doma/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/20-minute-home-workouts/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/trenirovka-20-minut-doma/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/crossfit-workout-formats-amrap-emom-tabata/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/amrap-emom-for-time-tabata/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/crossfit-workout-formats-amrap-emom-tabata/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/amrap-emom-for-time-tabata/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/crossfit-at-home-after-40/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/crossfit-posle-40/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/crossfit-at-home-after-40/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/crossfit-posle-40/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/crossfit-at-home-for-beginners/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/crossfit-doma-dlya-nachinayushchih/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/crossfit-at-home-for-beginners/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/crossfit-doma-dlya-nachinayushchih/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/crossfit-for-fat-loss/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/crossfit-dlya-pohudeniya/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/crossfit-for-fat-loss/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/crossfit-dlya-pohudeniya/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/crossfit-without-equipment/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/crossfit-bez-oborudovaniya/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/crossfit-without-equipment/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/crossfit-bez-oborudovaniya/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/full-body-dumbbell-workout-at-home/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/trenirovka-s-gantelyami-doma/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/full-body-dumbbell-workout-at-home/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/trenirovka-s-gantelyami-doma/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/home-crossfit-equipment-guide/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/oborudovanie-dlya-crossfita-doma/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/home-crossfit-equipment-guide/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/oborudovanie-dlya-crossfita-doma/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/how-many-times-a-week-to-work-out-at-home/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/skolko-raz-v-nedelyu-trenirovatsya-doma/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/how-many-times-a-week-to-work-out-at-home/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/skolko-raz-v-nedelyu-trenirovatsya-doma/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/how-to-do-a-burpee/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/kak-delat-berpi/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/how-to-do-a-burpee/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/kak-delat-berpi/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/how-to-stay-consistent-with-workouts/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/kak-ne-brosit-trenirovki/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/how-to-stay-consistent-with-workouts/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/kak-ne-brosit-trenirovki/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/kettlebell-workouts-at-home-for-beginners/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/trenirovki-s-girey-doma/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/kettlebell-workouts-at-home-for-beginners/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/trenirovki-s-girey-doma/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/push-up-progression/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/kak-nauchitsya-otzhimatsya/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/push-up-progression/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/kak-nauchitsya-otzhimatsya/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/rest-days-recovery-7000-steps/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/dni-otdyha-i-7000-shagov/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/rest-days-recovery-7000-steps/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/dni-otdyha-i-7000-shagov/"/>
+    <lastmod>2026-09-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/rpe-scale-how-hard-should-workouts-be/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/rpe-kak-podobrat-nagruzku/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/rpe-scale-how-hard-should-workouts-be/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/rpe-kak-podobrat-nagruzku/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://forma-app.co/en/guides/warm-up-before-a-home-workout/</loc>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://forma-app.co/guides/razminka-pered-trenirovkoy-doma/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://forma-app.co/en/guides/warm-up-before-a-home-workout/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://forma-app.co/guides/razminka-pered-trenirovkoy-doma/"/>
+    <lastmod>2026-09-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>
