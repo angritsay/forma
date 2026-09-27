@@ -1229,7 +1229,7 @@ export const app = {
   // кнопка и лидерборд» — so «Эта неделя» is said here, on the screen that can show another one.
   marathonWeekThis: 'Эта неделя',
   marathonWeekLast: 'Прошлая неделя',
-  // On the pill above the board: «Приз · Час с тренером».
+  // On the full board's header line: «Приз · Час с тренером».
   marathonPrizeShort: 'Приз',
   // Дуо-клуб (0033, 0034). Соло и дуо — два вида одного клуба, а не два продукта: подписка одна,
   // и участвуешь ты в обоих.
@@ -1238,7 +1238,7 @@ export const app = {
   duoMateAuto: 'Подобрали на эту неделю',
   duoMateChosen: 'Вы вдвоём по приглашению',
   duoLeave: 'Выйти из пары',
-  // The «···» sheet on the duo tile (ClubDuo): how a pair comes to be. Read once, not daily.
+  // The «···» sheet on the duo row (DuoRow): how a pair comes to be. Read once, not daily.
   duoNoneBody:
     'В понедельник подберём напарника — и так каждую неделю. Или позови друга сам(а): тогда вы останетесь вместе, пока не решите иначе.',
   duoInvite: 'Позвать друга',
@@ -1853,7 +1853,12 @@ export const app = {
   clubPodium: 'Первая тройка недели',
   clubPodiumEmpty: 'Пока без баллов',
   clubPodiumStep: 'Место {n}: {name}, {points}',
-  // The duo tile (ClubDuo): the pair's rule in numbers, the marks' names, the sheet.
+  // The podium's caption: «Приз недели — час с тренером», so the prize reads as what the
+  // columns are climbing for and not as a stray button.
+  clubPrizeWeek: 'Приз недели',
+  // The HUD in duo mode: the points are the pair's, so the numeral says so — «0 пара».
+  clubPairPoints: 'пара',
+  // The duo row on the card (DuoRow): the pair's rule in numbers, the marks' names, the sheet.
   clubDuoRuleBoth: '+{p} · оба',
   clubDuoRuleEach: '+{p} · каждый',
   clubDuoRuleCap: 'до {cap} · пара',

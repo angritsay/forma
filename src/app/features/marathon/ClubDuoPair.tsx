@@ -1,6 +1,6 @@
 /**
- * The pair's state and its two actions — read, share the invite, leave — as a hook. `ClubDuo`
- * draws it.
+ * The pair's state and its two actions — read, share the invite, leave — as a hook. `DuoRow`
+ * draws it, on the task card's face.
  *
  * ## Два состояния, и второе не хуже первого
  *

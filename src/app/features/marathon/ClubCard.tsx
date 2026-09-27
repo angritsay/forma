@@ -27,18 +27,33 @@
  * when the coach rejected the proof, to his note (`CoachNote`) over the control that sends it
  * again. A finished task does not disappear: the day should still read as a day.
  *
- * **Rest day** (`item` null): the face reads «Отдых» and «Новое — утром». No back — there is
- * nothing to open.
+ * **The pair** (`duo`, duo mode only): `DuoRow` — two small avatars with today's marks, the
+ * rule as numbers, «Напомнить», «···» — sits on the face between the title block and the
+ * control, under a hairline. The owner asked for the duo block inside the task card rather
+ * than as a tile under it: the pair's rule is a fact about *this* task. The back does not show
+ * it (the back is «+15» and «Открыть» and nothing else).
  *
- * The turn is `.club-flip` in global.css (perspective, `rotateY`, the far face switched off as
- * the card passes edge-on). Under reduced motion the screen never seals the card (taskSeal.ts),
- * so the face is simply there.
+ * **Rest day** (`item` null): the face reads «Отдых» and «Новое — утром», and still carries the
+ * duo row — people look at their partner on rest days too. No back — there is nothing to open.
+ *
+ * **The turn has no third dimension.** It was a `rotateY` in a `perspective` scene, two glass
+ * faces stacked with `backface-visibility: hidden` — and on the owner's iPhone the card rendered
+ * as an empty glass rectangle: no eyebrow, no «+15», no control. WebKit flattens a `preserve-3d`
+ * scene when a descendant establishes its own compositing context, and each face is
+ * `backdrop-filter` glass; flattened, `backface-visibility` means nothing, and Safari stopped
+ * painting either face (the trap `FlipCard.tsx` documents; the delayed-`visibility` belt on top
+ * did not save it). So the card renders **exactly one face at a time** — `open ? face : back` —
+ * and the turn is a squeeze on the X axis: the back plays `.club-turn-out` (`scaleX(1→0)`,
+ * 150ms), on `animationend` (or a timeout of the same length, should the event not come) the
+ * state switches, and the face mounts with `.club-turn-in` (`scaleX(0→1)`, 250ms on the
+ * spring). Under reduced motion the keyframes are off and the switch is immediate; the screen
+ * never seals the card there anyway (taskSeal.ts).
  *
  * `onSend` and `onSendMedia` receive the element that was pressed, so the screen can start the
  * celebration (`ClubCelebrate`) from where the finger was.
  */
 import { clsx } from 'clsx';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Glyph } from '@/components/ui/Icon';
@@ -50,6 +65,7 @@ import { formatNumber } from '@/i18n/index';
 import { isRejected, needsCoachLook } from '@/lib/marathon/review';
 import type { MarathonTodayTask, ProofInput } from '@/lib/api/types';
 import { splitKeyWord } from '@/lib/ui/keyWord';
+import { prefersReducedMotion } from '@/lib/ui/motion';
 import { useT } from '@/app/hooks/useT';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
 
@@ -74,7 +90,12 @@ export interface ClubCardProps {
   onSendMedia?: (file: File, keep: Proof, anchor?: HTMLElement | null) => Promise<void>;
   /** «Поделиться» (`ClubShare`), drawn once the proof is in. */
   share?: ReactNode;
+  /** The pair's row (`DuoRow`), on the face only — under the title block, over the control. */
+  duo?: ReactNode;
 }
+
+/** How long the back takes to narrow to a line (`.club-turn-out`, global.css). */
+const TURN_OUT_MS = 150;
 
 /** «22:00:00» → «22:00». Anything that is not HH:MM(:SS) is left out rather than mangled. */
 export function shortTime(due: string | null | undefined): string | null {
@@ -85,13 +106,19 @@ export function shortTime(due: string | null | undefined): string | null {
 
 /*
  * The card's proportion: ~4:5 on a phone, so it is an object and not a strip; from `md` it sits
- * beside the podium and takes its own height with a floor. The faces are laid on top of each
- * other, so the frame is what gives the card its size.
+ * beside the podium and takes its own height with a floor. Whichever face is rendered wears the
+ * frame, so the card keeps its size across the turn.
  */
 const FRAME = 'aspect-[4/5] md:aspect-auto md:min-h-[440px]';
 /* The 1px warm rim and the glass inside it — the club's material (design/CHANGELOG.md §17). */
 const RIM = 'bg-warm p-px rounded-card';
 const GLASS = 'glass-card rounded-[calc(var(--r-card)-1px)] border-0';
+
+/** The pair's row under its hairline, or nothing. */
+function DuoSlot({ duo }: { duo: ReactNode }) {
+  if (!duo) return null;
+  return <div className="border-t border-border pt-3">{duo}</div>;
+}
 
 export function ClubCard({
   item,
@@ -101,6 +128,7 @@ export function ClubCard({
   onSend,
   onSendMedia,
   share,
+  duo,
 }: ClubCardProps) {
   const { t, locale } = useT();
   const task = item?.task ?? null;
@@ -111,19 +139,54 @@ export function ClubCard({
   const [more, setMore] = useState(false);
   /* Face up. Starts as the seal says; once turned it never turns back this visit. */
   const [open, setOpen] = useState(!sealed);
+  /* The back is narrowing (`.club-turn-out`); the face is not mounted yet. */
+  const [turning, setTurning] = useState(false);
+  /* The face was reached by a turn, so it mounts with `.club-turn-in` — not when it loads open. */
+  const [turned, setTurned] = useState(false);
   const faceRef = useRef<HTMLElement>(null);
   const media = useMediaUrl(task?.mediaUrl ?? undefined);
 
+  /* The seal lifted from outside (proof sent, the memory updated) — but not while the back is
+     mid-turn: `onOpen` marks the task opened on the tap, which unseals it on the same tick, and
+     the face has to wait for the back to finish narrowing. */
   useEffect(() => {
-    if (!sealed) setOpen(true);
-  }, [sealed]);
+    if (!sealed && !turning) setOpen(true);
+  }, [sealed, turning]);
+
+  /* The second step of the turn: the back is gone, the face comes. Idempotent. */
+  const reveal = useCallback(() => {
+    setTurning(false);
+    setTurned(true);
+    setOpen(true);
+  }, []);
+
+  const turn = () => {
+    if (open || turning) return;
+    onOpen?.();
+    if (prefersReducedMotion()) {
+      setOpen(true);
+      return;
+    }
+    setTurning(true);
+  };
+
+  /* Should `animationend` never fire (an animation cancelled, a tab in the background), the
+     timeout switches faces at the moment the animation would have ended. */
+  useEffect(() => {
+    if (!turning) return;
+    const id = window.setTimeout(reveal, TURN_OUT_MS);
+    return () => window.clearTimeout(id);
+  }, [turning, reveal]);
 
   if (!task || !item) {
     return (
       <div className={clsx(RIM, FRAME, 'flex')}>
-        <div className={clsx(GLASS, 'flex flex-1 flex-col items-center justify-center gap-2 p-5')}>
-          <span className="display text-[28px] leading-none">{t('app.clubRestTitle')}</span>
-          <span className="text-[13px] text-muted">{t('app.clubRestBody')}</span>
+        <div className={clsx(GLASS, 'flex flex-1 flex-col gap-3 p-5')}>
+          <div className="flex flex-1 flex-col items-center justify-center gap-2">
+            <span className="display text-[28px] leading-none">{t('app.clubRestTitle')}</span>
+            <span className="text-[13px] text-muted">{t('app.clubRestBody')}</span>
+          </div>
+          <DuoSlot duo={duo} />
         </div>
       </div>
     );
@@ -182,18 +245,17 @@ export function ClubCard({
   );
 
   return (
-    <div className={clsx('club-flip', FRAME, open && 'is-open')}>
-      <div className="club-flip-inner">
-        {/* The back: one button, the whole card. */}
+    <>
+      {!open ? (
+        /* The back: one button, the whole card. */
         <button
           type="button"
-          onClick={() => {
-            setOpen(true);
-            onOpen?.();
+          onClick={turn}
+          onAnimationEnd={(e) => {
+            if (e.animationName === 'club-turn-out') reveal();
           }}
-          inert={open || undefined}
           aria-label={`${t('app.clubCardEyebrow')} — ${t('app.clubCardOpen')}`}
-          className={clsx('club-face club-face-back', RIM, 'flex text-left')}
+          className={clsx(RIM, FRAME, 'flex w-full text-left', turning && 'club-turn-out')}
         >
           <span
             className={clsx(GLASS, 'flex flex-1 flex-col items-center justify-center gap-4 p-5')}
@@ -212,12 +274,11 @@ export function ClubCard({
             </span>
           </span>
         </button>
-
-        {/* The face. */}
+      ) : (
+        /* The face. */
         <article
           ref={faceRef}
-          inert={!open || undefined}
-          className={clsx('club-face club-face-front', RIM, 'flex')}
+          className={clsx(RIM, FRAME, 'flex', turned && 'club-turn-in')}
           aria-busy={busy}
         >
           <div
@@ -276,6 +337,9 @@ export function ClubCard({
             {waiting ? (
               <p className="text-[13px] text-muted-2">{t('app.marathonProofResent')}</p>
             ) : null}
+
+            {/* The pair, under its hairline: this task's rule is a fact about the two of us. */}
+            <DuoSlot duo={duo} />
 
             {/* The one control, at the foot of the card. */}
             <div className="mt-auto flex flex-col gap-2 pt-2">
@@ -373,7 +437,7 @@ export function ClubCard({
             </div>
           </div>
         </article>
-      </div>
+      )}
 
       {/* «ещё»: the whole of the coach's text, his picture, and the attach link. */}
       <Sheet open={more} onClose={() => setMore(false)} title={title}>
@@ -394,7 +458,7 @@ export function ClubCard({
           </div>
         </div>
       </Sheet>
-    </div>
+    </>
   );
 }
 

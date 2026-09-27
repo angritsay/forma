@@ -8,7 +8,9 @@
  *
  *   - **Left:** the member's own avatar (the profile's seed and name, as everywhere) and the
  *     week's points in the numeral face — my row of `marathon_scores`, «0» when unscored. A real
- *     zero, not a dash: the HUD counts what the week has, and this week has nothing yet.
+ *     zero, not a dash: the HUD counts what the week has, and this week has nothing yet. In duo
+ *     mode the row is the pair's (the duo board scores the team), so a small «пара» follows the
+ *     numeral: a 0 next to my own face must not read as my own count.
  *   - **Middle:** the mode switch as two small chips, drawn only when a duo round exists. The
  *     selected one is the club's warm gradient under ink (`Chip` `warm`), the other a hairline.
  *     The owner's choice: «переключатель маленький, в строке».
@@ -49,15 +51,20 @@ export interface ClubHudProps {
 export function ClubHud({ points, mode, onMode, hasDuo, streak }: ClubHudProps) {
   const { t, locale } = useT();
   const me = useMeAvatar();
+  const pair = hasDuo && mode === 'duo';
+  const pairWord = t('app.clubPairPoints');
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-2.5">
         <Avatar seed={me.seed} name={me.name} size={32} />
         <span
-          className="numeral text-[24px] leading-none text-text"
-          aria-label={`${t('app.clubMyPoints')}: ${formatNumber(locale, points)}`}
+          className="flex items-baseline gap-1.5"
+          aria-label={`${t('app.clubMyPoints')}: ${formatNumber(locale, points)}${pair ? ` · ${pairWord}` : ''}`}
         >
-          {formatNumber(locale, points)}
+          <span className="numeral text-[24px] leading-none text-text">
+            {formatNumber(locale, points)}
+          </span>
+          {pair ? <span className="text-[12px] leading-none text-muted">{pairWord}</span> : null}
         </span>
       </div>
 

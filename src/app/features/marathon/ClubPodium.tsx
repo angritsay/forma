@@ -1,6 +1,6 @@
 /**
  * The week's top three as a podium: 2 · 1 · 3, the leader's column on the warm gradient, the
- * prize as one small pill over it, my own line under it when I am not up there.
+ * prize as the caption over it, my own line under it when I am not up there.
  *
  * Replaces the board preview (three `BoardRow`s, a gap, my row and its neighbours, a full-width
  * prize bar, «Пока никто не набрал баллов», «Вся таблица →») after the owner's «Визуально
@@ -10,9 +10,12 @@
  *   - **Columns:** avatar (seed = the row's title, as the board's rows are named), the name on
  *     one line, the points as a numeral on the step. The first step is `bg-warm text-ink` —
  *     the leader's circle of the board, grown into a block; the other two are `--surface-2`.
- *   - **The prize** is a `Pill` `warm` centred over the podium, which puts it over the leader's
- *     column, with the trophy as a monochrome mark (an emoji never sits on the gradient —
- *     `contrast-usage.test.ts`) and the prize shortened to a label (`shortPrize`).
+ *   - **The prize** is the podium's caption, one quiet line above the columns: the trophy as a
+ *     monochrome mark and «Приз недели — час с тренером» at 13px in `text-muted`, the prize
+ *     shortened to a label (`shortPrize`). It was a warm `Pill` floating over the leader's
+ *     column, and the owner read that as a button with no job («непонятно что это»): a pill on
+ *     the gradient is the club's *action* material, and this is not an action. A caption
+ *     says what the columns are climbing for.
  *   - **Empty week:** three dashed steps with «—». No sentence.
  *   - **My line:** `#5 · Ты · 58`, the move since last visit («↑2», `boardDelta`) and the chase
  *     as a chip («до Димы — 2 балла», `boardGap`). Only when I am not one of the three.
@@ -24,7 +27,6 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { Glyph, Icon } from '@/components/ui/Icon';
-import { Pill } from '@/components/ui/Pill';
 import { formatNumber } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
 import { pointsWord } from '@/app/features/share/story/data';
@@ -53,14 +55,16 @@ export function ClubPodium({ standings, delta, gap, prize, onAll }: ClubPodiumPr
 
   return (
     <section className="flex flex-col gap-3" aria-label={t('app.clubPodium')}>
-      <Pill
-        tone="warm"
-        className="self-center"
-        aria-label={`${t('app.marathonPrizeShort')} · ${prize}`}
-      >
-        <Icon name="trophy" size={14} className="mr-1 inline-block align-[-2px]" />
-        {shortPrize(prize)}
-      </Pill>
+      {/* The caption: the short label for the eye, the whole prize for the reader. */}
+      <p className="flex items-center gap-1.5 text-[13px] text-muted">
+        <Icon name="trophy" size={14} className="shrink-0" />
+        <span className="min-w-0 truncate" aria-hidden="true">
+          {t('app.clubPrizeWeek')} — {shortPrize(prize)}
+        </span>
+        <span className="sr-only">
+          {t('app.clubPrizeWeek')} — {prize}
+        </span>
+      </p>
 
       <ol
         className="grid grid-cols-3 items-end gap-2"
