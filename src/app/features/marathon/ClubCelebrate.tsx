@@ -4,7 +4,7 @@
  * The owner's brief for the club's active week — «геймифицировать… регулярная подпитка
  * дофамином… желание зайти и узнать новое задание, поучаствовать, поделиться» — has a moment in
  * the middle that the screen used to answer with a check mark and nothing else. The check still
- * lands (`TaskCard`); this adds the three things a phone can do in the same second:
+ * lands (`ClubCard`); this adds the three things a phone can do in the same second:
  *
  *   1. a haptic «success» through Telegram, silent elsewhere (`haptic`);
  *   2. a burst of confetti, about sixty pieces, for under a second, drawn on a canvas laid over

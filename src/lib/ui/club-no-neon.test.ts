@@ -62,7 +62,7 @@ describe('the club has no neon', () => {
 
   it('finds the club’s files and leaves the admin’s tools alone', () => {
     expect(files.length).toBeGreaterThan(5);
-    expect(files.some((f) => f.endsWith('TaskCard.tsx'))).toBe(true);
+    expect(files.some((f) => f.endsWith('ClubCard.tsx'))).toBe(true);
     expect(files.some((f) => f.includes(`${join('marathon', 'admin')}`))).toBe(false);
   });
 

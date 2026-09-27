@@ -87,7 +87,7 @@ const SEED_TASKS: readonly SeedTask[] = [
       mediaUrl: '/coach/sergey-hero.jpg',
       /*
        * Its own deadline, the same hour the round closes at. `my_marathons()` does not hand the
-       * round's `due_time` to the app, so the day's header (`ClubDay`) can only say «до 22:00»
+       * round's `due_time` to the app, so the card's face (`ClubCard`) can only say «до 22:00»
        * when the task carries the hour itself — and the one day the demo opens on has to show it.
        */
       dueTime: '22:00:00',

@@ -89,9 +89,14 @@ export interface ClubStreakProps {
   today: string;
   /** The local hour, for the at-risk state. Defaults to the clock at render. */
   hour?: number;
+  /**
+   * The HUD's variant (`ClubHud`): 🔥 and the number only. The week's dots are the week track
+   * under the row now, and the at-risk line moves into the sheet — the pulse still says it.
+   */
+  compact?: boolean;
 }
 
-export function ClubStreak({ days, today, hour }: ClubStreakProps) {
+export function ClubStreak({ days, today, hour, compact = false }: ClubStreakProps) {
   const { t, locale } = useT();
   const { memory, update } = useClubMemory();
   const [open, setOpen] = useState(false);
@@ -125,7 +130,7 @@ export function ClubStreak({ days, today, hour }: ClubStreakProps) {
   });
 
   return (
-    <div className="flex flex-col items-end gap-1 pt-1">
+    <div className={compact ? 'flex flex-col items-end' : 'flex flex-col items-end gap-1 pt-1'}>
       {/* The rim: the crossroads gradient showing 1.5px around the pill's own ground. It is the
           rim that pulses, so the whole pill breathes and not only its label. */}
       <span
@@ -162,10 +167,12 @@ export function ClubStreak({ days, today, hour }: ClubStreakProps) {
           <span className="tabular text-[13px] leading-none font-medium">
             {formatNumber(locale, n)}
           </span>
-          <DotCalendar days={week} size="sm" columns={7} todayTone="orange" className="ml-1" />
+          {compact ? null : (
+            <DotCalendar days={week} size="sm" columns={7} todayTone="orange" className="ml-1" />
+          )}
         </button>
       </span>
-      {atRisk ? (
+      {atRisk && !compact ? (
         <span className="text-[12px] leading-none text-orange">{t('app.clubStreakAtRisk')}</span>
       ) : null}
 

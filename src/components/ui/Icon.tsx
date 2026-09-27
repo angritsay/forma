@@ -47,6 +47,7 @@ export const ICON_NAMES = [
   'user',
   'person',
   'rosette',
+  'camera',
 ] as const;
 
 export type IconName = (typeof ICON_NAMES)[number];
@@ -158,6 +159,15 @@ export const ICONS: Record<IconName, IconDef> = {
    */
   rosette: {
     d: 'M18 10l-3-5.2H9L6 10l3 5.2h6zM13.6 10a1.6 1.6 0 1 1-3.2 0 1.6 1.6 0 1 1 3.2 0M9 15.2V21l3-2.4 3 2.4v-5.8',
+  },
+  /*
+   * A camera, for attaching a photo or a clip to the club's task (`ClubCard`). It was a «+»
+   * with a sentence beside it; the sentence went (the owner's «много текстов») and the mark
+   * has to say the whole thing on its own, which a plus does not. A body with a raised
+   * viewfinder and a lens — the one shape everybody reads as «take a picture» at 18px.
+   */
+  camera: {
+    d: 'M3 8.5h4l2-3h6l2 3h4V19H3zM12 16.5a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4',
   },
 };
 

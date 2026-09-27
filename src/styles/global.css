@@ -1662,6 +1662,59 @@ body {
 }
 
 /*
+ * The club's card (src/app/features/marathon/ClubCard.tsx): a playing card with two faces and a
+ * real turn between them. Owner: «нет элемента игры» — so the task of the day is dealt face down
+ * (the back: «Задание дня», «+12», «Открыть») and a tap turns it over.
+ *
+ *   - `.club-flip` gives the scene its perspective; `.club-flip-inner` keeps the two faces in
+ *     3D and turns 180° on `.is-open`, 600ms on the brand's ease-out.
+ *   - Each `.club-face` is laid over the other with `backface-visibility: hidden`, the front
+ *     face pre-rotated 180° so it reads the right way round once the card has turned.
+ *   - **The far face is also switched off with `visibility`**, on a delay of half the turn — the
+ *     same belt and braces the player's technique card wears (FlipCard.tsx): WebKit flattens a
+ *     3D scene when a descendant establishes its own compositing context, and each face here is
+ *     glass (`backdrop-filter`); flattened, `backface-visibility` means nothing and both faces
+ *     paint. The delay is on the *hiding* state only, so the face turning towards you is never
+ *     late: transitions take their timing from the state they move into.
+ *
+ * Off under `prefers-reduced-motion` below: the screen never seals the card there (taskSeal.ts),
+ * and should the class still flip, it snaps.
+ */
+.club-flip {
+  perspective: 1400px;
+}
+
+.club-flip-inner {
+  position: relative;
+  height: 100%;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transition: transform 0.6s var(--ease-out);
+}
+
+.club-flip.is-open .club-flip-inner {
+  transform: rotateY(180deg);
+}
+
+.club-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition: visibility 0s;
+}
+
+.club-face-front {
+  transform: rotateY(180deg);
+}
+
+.club-flip:not(.is-open) .club-face-front,
+.club-flip.is-open .club-face-back {
+  visibility: hidden;
+  transition-delay: 0.3s;
+}
+
+/*
  * Somebody is typing: three dots that breathe one after another, the way every messenger draws
  * it. Only the club's selling screen uses it (`ClubDemoChat`), where the coach's next message is
  * being written as you watch.
@@ -1707,6 +1760,15 @@ body {
   .points-up,
   .streak-pulse {
     animation: none;
+  }
+
+  .club-flip-inner {
+    transition: none;
+  }
+
+  .club-flip:not(.is-open) .club-face-front,
+  .club-flip.is-open .club-face-back {
+    transition-delay: 0s;
   }
 }
 
