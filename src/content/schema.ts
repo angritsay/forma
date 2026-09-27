@@ -29,9 +29,22 @@ export type L10n = z.infer<typeof L10nSchema>;
 
 /**
  * The hand-drawn glyphs a piece of site content may name (`src/components/ui/Doodle.tsx`): the
- * coach tab's three points for each person, and the heart on Nastia's card.
+ * coach tab's three points for each person, the heart on Nastia's card, and the club's four
+ * features on its selling screen.
  */
-export const DOODLE_KINDS = ['eye', 'dumbbell', 'arrow', 'lotus', 'bowl', 'talk', 'heart'] as const;
+export const DOODLE_KINDS = [
+  'eye',
+  'dumbbell',
+  'arrow',
+  'lotus',
+  'bowl',
+  'talk',
+  'heart',
+  'steps',
+  'camera',
+  'flame',
+  'trophy',
+] as const;
 export type DoodleKind = (typeof DOODLE_KINDS)[number];
 
 export const OptionalL10nSchema = z.object({

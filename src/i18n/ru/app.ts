@@ -1751,13 +1751,37 @@ export const app = {
   clubLeadPre: 'Большие планы не выдерживают рабочую неделю, поэтому ',
   clubLeadAccent: 'здесь одно маленькое задание в день',
   clubLeadPost: ': 10 минут пешком, 20 приседаний, стакан воды до кофе.',
-  // `{prize}` is app.marathonPrizeDefault lowered into the sentence (prize.ts), so the board, the
-  // member's tab and this screen cannot drift into three different promises.
-  clubLeadWeek: 'За неделю набираешь баллы, а тому, кто наверху таблицы, достаётся {prize}.',
   // Under the join pill. «666 ₽ / мес» is the year divided by twelve and this is the payment that
   // actually happens — one charge, once. Quoting only the month for an annual product is how
   // chargebacks get written.
   clubChargeNote: 'Оплата одна: {price} за год доступа — клуб и курс «Форма с нуля».',
+  // --- Club, the selling screen's demo chat and features (stream: club-pitch-chat) ---
+  // The owner: «Он абсолютно не продаёт клуб». So the screen now opens on what a day in the club
+  // looks like — a short exchange with the coach that plays itself — and then says the four things
+  // you get. The task, its points and the winner's line are the club's real ones (0017, the bot's
+  // copy.ts); nothing here is a review, a name or a statistic.
+  clubDemoEyebrow: 'Так выглядит день в клубе',
+  clubDemoCoachRole: 'тренер',
+  clubDemoTime1: '8:00',
+  clubDemoTime2: '8:14',
+  clubDemoTime3: 'вс, 20:00',
+  clubDemoTaskTitle: 'Задание на сегодня: стакан воды до кофе',
+  clubDemoTaskBody: 'Ровно один стакан и ровно до, а не вместо. Кофе никто не отменял.',
+  clubDemoPoints: '{n} баллов',
+  clubDemoDone: 'Сделано ☕',
+  clubDemoAccepted: 'Принято: +{n} баллов. Третий день подряд 🔥',
+  // The bot's winner message, gender-neutral. `{prize}` is app.marathonPrizeDefault lowered.
+  clubDemoWin: 'Победа на этой неделе — твоя 🏆 Приз: {prize}.',
+  clubFeature1Title: 'Одно маленькое задание в день',
+  clubFeature1Body:
+    'Тренер присылает его утром: 20 приседаний, стакан воды, 10 минут пешком — то, что помещается в рабочий день.',
+  clubFeature2Title: 'Отчёт — фото, видео или «сделано»',
+  clubFeature2Body: 'Сергей смотрит каждый и отвечает, если что-то не так.',
+  clubFeature3Title: 'Серия и баллы',
+  clubFeature3Body:
+    'Каждый день подряд — плюс к серии, каждое задание — 8–15 баллов в таблицу недели.',
+  clubFeature4Title: 'Приз недели — час с тренером',
+  clubFeature4Body: 'Кто наверху таблицы в воскресенье, получает час один на один с Сергеем.',
   // --- Club, the streak (stream: club-streak) --------------------------------
   // «Сколько дней подряд ты выполняешь упражнения». Only the accessible name is a sentence — the
   // pill itself is 🔥 and a number, because that is the whole of what it says.
