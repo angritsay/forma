@@ -19,6 +19,13 @@
  * шагов — that went with the step feature (`docs/SPEC.md` §11.10): a Mini App cannot read a phone's
  * step counter, so the figure was typed in by hand. Days measured in seconds and minutes stay,
  * because a person knows those without another app.
+ *
+ * **What the club's game layer finds here** (`MarathonScreen`, the owner's «геймифицировать»):
+ * today's task unsent, so it opens sealed; days 7–9 delivered and day 6 missed, so the streak is
+ * three (a milestone already behind, the week as the next ring) and sending today makes it four;
+ * a board with Дима one row up (five points away) for the «До Димы — 5 баллов» line; and today's
+ * task carrying its `due_time` for the header. The duo tab is not reachable in the demo — the
+ * one round is solo — so the partner line is covered by `partner.test.ts` instead.
  */
 import { addDays, toLocalDateIso } from '@/lib/util/dates';
 import type {
@@ -78,6 +85,12 @@ const SEED_TASKS: readonly SeedTask[] = [
     {
       body: 'Можно разбить на подходы и раскидать по дню — пять по десять между делами считаются так же, как пятьдесят подряд. Важно, чтобы к вечеру их было пятьдесят.',
       mediaUrl: '/coach/sergey-hero.jpg',
+      /*
+       * Its own deadline, the same hour the round closes at. `my_marathons()` does not hand the
+       * round's `due_time` to the app, so the day's header (`ClubDay`) can only say «до 22:00»
+       * when the task carries the hour itself — and the one day the demo opens on has to show it.
+       */
+      dueTime: '22:00:00',
     },
   ],
   [11, 'Прогулка сорок минут', 10, { proofKind: 'number', unit: 'мин', targetNum: 40 }],

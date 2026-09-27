@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { MarathonScoreRow } from '@/lib/api/types';
-import { rankWeek, TOP_ROWS, weekStandings } from './standings';
+import { boardDelta, boardGap, rankWeek, TOP_ROWS, weekStandings } from './standings';
 
 const ME = 'demo_mmember_me';
 
@@ -259,5 +259,66 @@ describe('weekStandings', () => {
     expect(allZero.top).toEqual([]);
     expect(allZero.mine).toBeNull();
     expect(allZero.place).toEqual({ kind: 'unscored' });
+  });
+});
+
+describe('boardDelta', () => {
+  it('has nothing to compare on a first visit', () => {
+    expect(boardDelta(null, { rank: 3, points: 20, week: 2 })).toEqual({
+      rankDelta: null,
+      pointsDelta: 0,
+    });
+  });
+
+  it('measures places gained and points earned since the last visit', () => {
+    const prev = { rank: 5, points: 12, week: 2 };
+    expect(boardDelta(prev, { rank: 3, points: 27, week: 2 })).toEqual({
+      rankDelta: 2,
+      pointsDelta: 15,
+    });
+    expect(boardDelta(prev, { rank: 6, points: 12, week: 2 })).toEqual({
+      rankDelta: -1,
+      pointsDelta: 0,
+    });
+  });
+
+  it('never compares across weeks', () => {
+    expect(boardDelta({ rank: 1, points: 60, week: 1 }, { rank: 4, points: 0, week: 2 })).toEqual({
+      rankDelta: null,
+      pointsDelta: 0,
+    });
+  });
+
+  it('does not count a first score as a move up from nowhere', () => {
+    expect(
+      boardDelta({ rank: null, points: 0, week: 2 }, { rank: 4, points: 10, week: 2 }),
+    ).toEqual({ rankDelta: null, pointsDelta: 10 });
+    expect(
+      boardDelta({ rank: 4, points: 10, week: 2 }, { rank: null, points: 0, week: 2 }),
+    ).toEqual({ rankDelta: null, pointsDelta: -10 });
+  });
+});
+
+describe('boardGap', () => {
+  it('names the nearest entry with more points and the distance to it', () => {
+    // Аня 42 · Марек 37 · Дима 27 · Ты 22 — the seed's own week.
+    const gap = boardGap([row('Аня', 42), row('Марек', 37), row('Дима', 27), row('Ты', 22, true)]);
+    expect(gap).toEqual({ kind: 'chase', name: 'Дима', points: 5 });
+  });
+
+  it('chases past a tie to the first entry actually above', () => {
+    const gap = boardGap([row('a', 30), row('b', 20), row('me', 20, true), row('c', 10)]);
+    expect(gap).toEqual({ kind: 'chase', name: 'a', points: 10 });
+  });
+
+  it('reports the lead when the member is alone at the top', () => {
+    expect(boardGap([row('me', 30, true), row('b', 24)])).toEqual({ kind: 'leader', lead: 6 });
+    expect(boardGap([row('me', 30, true)])).toEqual({ kind: 'leader', lead: 30 });
+  });
+
+  it('says nothing for a shared lead, an unscored member or no row at all', () => {
+    expect(boardGap([row('me', 30, true), row('b', 30)])).toBeNull();
+    expect(boardGap([row('a', 30), row('me', 0, true)])).toBeNull();
+    expect(boardGap([row('a', 30)])).toBeNull();
   });
 });

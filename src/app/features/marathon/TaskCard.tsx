@@ -20,9 +20,26 @@
  *
  * A delivered task does not disappear and does not turn grey: it gets a check in a white circle,
  * landing on the spring, and steps back a little. Finishing something should look like something.
+ *
+ * ## The envelope (the owner's «желание зайти и узнать новое задание»)
+ *
+ * On the first look of the day the card is sealed: a warm-gradient rim, «Задание дня готово», a
+ * light-blue pill reading «+?» where the points will be, and a tap anywhere opens it — the open
+ * card lands on the spring (`pop-in`) with the title's gradient key word and the real number.
+ * Whether it is sealed is the screen's call (`isSealed` in taskSeal.ts, remembered per task in
+ * `clubMemory`); this card only draws the two states. A done task is never sealed, and neither
+ * is a day for somebody who asked for less motion.
+ *
+ * Two more things came back onto the card with the duo club, both as slots the screen fills:
+ * `partner` (`ClubPartnerLine`, where the other half of the pair has got to today) and `share`
+ * (`ClubShare`, after the proof is in). Both are handed in rather than built here because both
+ * need what the screen has and the card does not — the partner's name, the streak, the place.
+ *
+ * `onSend` and `onSendMedia` receive the element that was pressed, so the screen can start the
+ * celebration (`ClubCelebrate`) from where the finger was.
  */
 import { clsx } from 'clsx';
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Glyph } from '@/components/ui/Icon';
@@ -39,7 +56,10 @@ export interface TaskCardProps {
   item: MarathonTodayTask;
   /** The day has closed; proof can still be sent, but the card says it will not score. */
   closed: boolean;
-  onSend: (proof: Omit<ProofInput, 'taskId' | 'memberId'>) => Promise<void>;
+  onSend: (
+    proof: Omit<ProofInput, 'taskId' | 'memberId'>,
+    anchor?: HTMLElement | null,
+  ) => Promise<void>;
   /**
    * Uploads the file to the private `proofs` bucket and sends its path.
    *
@@ -47,15 +67,38 @@ export interface TaskCardProps {
    * a photo to a task that was delivered with a number would otherwise null the number out — the
    * attachment has to re-send the answer it is being attached to.
    */
-  onSendMedia: (file: File, keep: Omit<ProofInput, 'taskId' | 'memberId'>) => Promise<void>;
+  onSendMedia: (
+    file: File,
+    keep: Omit<ProofInput, 'taskId' | 'memberId'>,
+    anchor?: HTMLElement | null,
+  ) => Promise<void>;
+  /** The envelope is still closed (`isSealed`). A tap calls `onOpen`. */
+  sealed?: boolean;
+  onOpen?: () => void;
+  /** The partner's day (`ClubPartnerLine`), in the duo club. */
+  partner?: ReactNode;
+  /** «Поделиться» (`ClubShare`), drawn once the proof is in. */
+  share?: ReactNode;
 }
 
-export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
+export function TaskCard({
+  item,
+  closed,
+  onSend,
+  onSendMedia,
+  sealed = false,
+  onOpen,
+  partner,
+  share,
+}: TaskCardProps) {
   const { t, locale } = useT();
   const { task, mine } = item;
   const [text, setText] = useState(mine?.valueText ?? '');
   const [value, setValue] = useState(mine?.valueNum === null ? '' : String(mine?.valueNum ?? ''));
   const [busy, setBusy] = useState(false);
+  /* Opened by a tap this visit: the card lands (`pop-in`). A card that loads open does not. */
+  const [revealed, setRevealed] = useState(false);
+  const cardRef = useRef<HTMLElement>(null);
 
   const done = Boolean(mine && !mine.voidedAt);
   /* The coach rejected this attempt: it is not scoring, and the task is open again. */
@@ -63,10 +106,10 @@ export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
   /* Sent again since, and he has not been back to it. */
   const waiting = Boolean(mine && needsCoachLook(mine));
 
-  const send = async (proof: Omit<ProofInput, 'taskId' | 'memberId'>) => {
+  const send = async (proof: Omit<ProofInput, 'taskId' | 'memberId'>, anchor?: HTMLElement) => {
     setBusy(true);
     try {
-      await onSend(proof);
+      await onSend(proof, anchor ?? cardRef.current);
     } finally {
       setBusy(false);
     }
@@ -79,10 +122,14 @@ export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
   const sendMedia = async (file: File) => {
     setBusy(true);
     try {
-      await onSendMedia(file, {
-        ...(mine?.valueText != null ? { valueText: mine.valueText } : {}),
-        ...(mine?.valueNum != null ? { valueNum: mine.valueNum } : {}),
-      });
+      await onSendMedia(
+        file,
+        {
+          ...(mine?.valueText != null ? { valueText: mine.valueText } : {}),
+          ...(mine?.valueNum != null ? { valueNum: mine.valueNum } : {}),
+        },
+        cardRef.current,
+      );
     } finally {
       setBusy(false);
     }
@@ -96,8 +143,20 @@ export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
     many: t('app.marathonPointsMany', { n: formatNumber(locale, task.points) }),
   });
 
+  if (sealed) {
+    return (
+      <SealedTask
+        onOpen={() => {
+          setRevealed(true);
+          onOpen?.();
+        }}
+      />
+    );
+  }
+
   return (
     <article
+      ref={cardRef}
       className={clsx(
         /*
          * The rule separates one task from the next, so the first card has none — and that only
@@ -108,6 +167,7 @@ export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
         'flex flex-col gap-4 border-t border-border py-5 first:border-t-0 first:pt-0',
         // A finished task steps back rather than disappearing: the day should still read as a day.
         done && 'opacity-70',
+        revealed && 'pop-in',
       )}
     >
       {/*
@@ -180,6 +240,8 @@ export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
         ) : null}
       </div>
 
+      {partner}
+
       {rejected && mine?.voidReason ? <CoachNote reason={mine.voidReason} /> : null}
 
       {waiting ? <p className="text-[13px] text-muted-2">{t('app.marathonProofResent')}</p> : null}
@@ -196,7 +258,48 @@ export function TaskCard({ item, closed, onSend, onSendMedia }: TaskCardProps) {
         onSend={send}
         onSendMedia={sendMedia}
       />
+
+      {/* Pride is the last step of the loop, so the button for it appears only once there is
+          something to be proud of. A ghost, under the attach row, with the same left edge. */}
+      {done && share ? <div className="-ml-4.5 self-start">{share}</div> : null}
     </article>
+  );
+}
+
+/**
+ * The closed envelope. A single button, the whole card, so a tap anywhere opens it — the
+ * gesture is «what is it today?», not «find the control».
+ *
+ * The rim is the warm gradient at 1px (`bg-warm p-px`), the club's colour and the same idea as
+ * the winner card's crossroads rim, one notch quieter: this is a promise, not a prize. Inside it
+ * the ordinary glass card, so the gradient is a line and never a fill under type
+ * (design/CHANGELOG.md §17). The «+?» pill is `sky`, exactly where the points pill sits on the
+ * open card, so the number lands in the place the question was.
+ */
+function SealedTask({ onOpen }: { onOpen: () => void }) {
+  const { t } = useT();
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label={`${t('app.clubSealedTitle')} — ${t('app.clubSealedHint')}`}
+      className="w-full rounded-tile bg-warm p-px text-left"
+    >
+      <span className="glass-card flex flex-col gap-4 rounded-[calc(var(--r-tile)-1px)] border-0 p-5">
+        <span className="flex items-start gap-4">
+          <span className="flex min-w-0 flex-1 flex-col gap-1">
+            <span className="eyebrow">{t('app.clubSealedKicker')}</span>
+            <span className="display text-[24px] leading-[1.2] text-balance">
+              <GradientKey text={t('app.clubSealedTitle')} />
+            </span>
+          </span>
+          <Pill tone="sky" tilt="right">
+            {t('app.clubSealedPoints')}
+          </Pill>
+        </span>
+        <span className="text-[13px] text-muted">{t('app.clubSealedHint')}</span>
+      </span>
+    </button>
   );
 }
 
@@ -237,7 +340,7 @@ interface ProofControlProps {
   value: string;
   onText: (v: string) => void;
   onValue: (v: string) => void;
-  onSend: (proof: Omit<ProofInput, 'taskId' | 'memberId'>) => Promise<void>;
+  onSend: (proof: Omit<ProofInput, 'taskId' | 'memberId'>, anchor?: HTMLElement) => Promise<void>;
   onSendMedia: (file: File) => Promise<void>;
 }
 
@@ -305,7 +408,7 @@ function ProofControl({
               variant="gradient"
               size="md"
               loading={busy}
-              onClick={() => void onSend({})}
+              onClick={(e) => void onSend({}, e.currentTarget)}
               iconRight={<Glyph size={14}>✓</Glyph>}
             >
               {t(redo ? 'app.marathonProofRedo' : 'app.marathonProofDone')}
@@ -333,7 +436,7 @@ function ProofControl({
           e.preventDefault();
           const n = Number(value);
           if (!Number.isFinite(n) || n < 0) return;
-          void onSend({ valueNum: n });
+          void onSend({ valueNum: n }, e.currentTarget);
         }}
       >
         <div className="flex items-center gap-2">
@@ -373,7 +476,7 @@ function ProofControl({
         onSubmit={(e) => {
           e.preventDefault();
           if (!text.trim()) return;
-          void onSend({ valueText: text.trim() });
+          void onSend({ valueText: text.trim() }, e.currentTarget);
         }}
       >
         <div className="flex items-center gap-2">

@@ -1273,6 +1273,12 @@ export const app = {
   inviteStatsEyebrow: 'Твои приглашения',
   inviteStats: 'Пришли: {attached} · Оплатили: {rewarded} · Дней получено: {days}',
   inviteFailed: 'Не получилось загрузить ссылку. Попробуй ещё раз.',
+  // The card on the week screen once today's task is done, and the partner nudge (0051).
+  clubInviteCardRest: 'тебе и другу',
+  clubInviteCardBody:
+    'Друг оплатит клуб по твоей ссылке — и вы оба получите месяц. И сразу окажетесь в одной паре.',
+  clubNudge: 'Напомнить',
+  clubNudgeSent: 'Напомнили',
   marathonBoardAll: 'Вся таблица',
   marathonHomeTasksLeft: 'Осталось заданий: {n}',
   marathonHomeAllDone: 'На сегодня всё',
@@ -1808,6 +1814,62 @@ export const app = {
   clubStreakOne: '{n} день подряд',
   clubStreakFew: '{n} дня подряд',
   clubStreakMany: '{n} дней подряд',
+  // --- Club, the active week as a game (stream: club-week-game) --------------
+  // Owner: «геймифицировать… регулярная подпитка дофамином… желание зайти и узнать новое
+  // задание, поучаствовать, поделиться». Every number below comes from the API; these are the
+  // words around it. Informal «ты» throughout, like the rest of the club.
+  //
+  // The day's header row (ClubDay): «День 10 · неделя 2 из 2 · до 22:00».
+  clubWeekOf: 'неделя {w} из {total}',
+  clubDueAt: 'до {time}',
+  // The sealed task (TaskCard): a closed envelope on the first look of the day.
+  clubSealedKicker: 'Новое задание',
+  clubSealedTitle: 'Задание дня готово',
+  clubSealedHint: 'Нажми, чтобы открыть',
+  clubSealedPoints: '+?',
+  // The board that moves (BoardRow, MarathonScreen): the arrow's accessible name, and the one
+  // line under the short table. {points} is already «4 балла».
+  clubRankUp: 'Выше на {n}',
+  clubRankDown: 'Ниже на {n}',
+  clubGapChase: 'До {name} — {points}',
+  clubGapLeader: 'Ты лидер: отрыв {points}',
+  // The partner's day (ClubPartnerLine). The roster has no gender, hence «сделал(а)».
+  clubPartnerDone: '{name} уже сделал(а) ✓ — твоя очередь',
+  clubPartnerWaiting: '{name} ещё не сделал(а)',
+  clubPartnerBoth: 'Вы оба сделали 🎉',
+  clubRuleAll: '+{p} каждому, если сделаете оба',
+  clubRulePer: '+{p} за каждого из вас',
+  clubRuleCapped: 'до {cap} на пару',
+  clubPartnerSoon: 'Партнёр появится в понедельник — или позови друга сейчас',
+  // The streak at risk, and its sheet (ClubStreak).
+  clubStreakAtRisk: 'Серия сгорит сегодня',
+  clubStreakSheetTitle: 'Серия',
+  clubStreakWeek: 'Последние семь дней',
+  clubStreakDaysOne: 'день подряд',
+  clubStreakDaysFew: 'дня подряд',
+  clubStreakDaysMany: 'дней подряд',
+  clubMilestonesTitle: 'Вехи',
+  clubMilestoneDone: 'Веха {n} дней пройдена',
+  clubMilestoneAhead: 'Веха {n} дней впереди',
+  clubMilestoneRing: 'До вехи {n} дней',
+  clubMilestoneNextOne: 'До следующей — {n} день',
+  clubMilestoneNextFew: 'До следующей — {n} дня',
+  clubMilestoneNextMany: 'До следующей — {n} дней',
+  clubMilestonesAll: 'Все вехи пройдены',
+  // The week's recap (ClubWeekRecap) and the club's story (story/data.ts). Short labels under
+  // a numeral; the «…N» forms are the same facts in words, for the caption.
+  clubRecapTitle: 'Неделя {w}',
+  clubRecapTasks: 'заданий',
+  clubRecapTasksOf: '{done}/{total}',
+  clubStoryPoints: 'баллов',
+  clubStoryDay: 'день',
+  clubStoryStreak: 'серия',
+  clubStoryPlace: 'место',
+  clubStoryDayN: 'день {n}',
+  clubStoryStreakN: 'серия {n} 🔥',
+  clubStoryPlaceN: 'место #{n}',
+  clubStoryDone: 'Шаг сделан',
+  clubStorySticker: 'Клуб',
   // --- Club, for somebody who is already in it (stream: club-pitch-states) ----
   // Where the join pill stands on the selling screen. They pay, so there is nothing to sell and
   // nothing to press: the coach builds each round by hand. The note is the sentence that used to

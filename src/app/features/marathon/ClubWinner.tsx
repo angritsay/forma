@@ -13,9 +13,14 @@
  * была бы ошибкой: это единственное место, где приложение поздравляет.
  *
  * Поэтому у своей победы кант из градиента клуба — единственная карточка вкладки, обведённая им,
- * — а у чужой обычная поверхность и кубок эмодзи. Неон тут не участвует: он уже занят под место
+ * — у чужой обычная поверхность и кубок эмодзи. Неон тут не участвует: он уже занят под место
  * лидера в таблице и под приз, и красить им же объявление значило бы говорить два разных «важно»
  * одним словом.
+ *
+ * **И конфетти — один раз.** Своя победа теперь встречается тем же залпом, что и сданное задание
+ * (`ClubCelebrate`): владелец просила «регулярную подпитку дофамином», а выигранная неделя — самая
+ * крупная её порция. Один раз на неделю: `clubMemory` помнит `marathonId:week`, и повторное
+ * открытие вкладки в понедельник конфетти не повторяет.
  *
  * ## Последний объявленный, а не текущая неделя
  *
@@ -26,15 +31,20 @@
  * Ничего не объявлено — не рисуется ничего. Заголовок «Победитель недели» над пустотой обещает
  * то, чего ещё не случилось.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getClubWinner } from '@/lib/api/marathon';
 import type { ClubWinner as ClubWinnerRow } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
+import { celebrate } from './ClubCelebrate';
+import { hasWinner, rememberWinner, winnerKey } from './clubMemory';
+import { useClubMemory } from './useClubMemory';
 
 /** `duo` — whose winner: the solo club's or the duo club's; each tab shows its own. */
 export function ClubWinner({ duo = false }: { duo?: boolean }) {
   const { t } = useT();
+  const { memory, update } = useClubMemory();
   const [row, setRow] = useState<ClubWinnerRow | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let alive = true;
@@ -52,6 +62,15 @@ export function ClubWinner({ duo = false }: { duo?: boolean }) {
     };
   }, [duo]);
 
+  // Своя победа — с залпом, один раз на объявленную неделю.
+  useEffect(() => {
+    if (!row?.isMe) return;
+    const key = winnerKey(row.marathonId, row.week);
+    if (hasWinner(memory, key)) return;
+    update((m) => rememberWinner(m, key));
+    celebrate({ anchor: cardRef.current });
+  }, [row, memory, update]);
+
   if (!row) return null;
 
   if (row.isMe) {
@@ -62,7 +81,7 @@ export function ClubWinner({ duo = false }: { duo?: boolean }) {
        * белому; на стекле поверх графита всё, что внутри, читается с теми же цифрами, что и везде.
        * `border-0`: кант здесь — сам градиент, своя волосяная линия стекла была бы второй.
        */
-      <div className="mb-4 rounded-card bg-cross p-[1.5px]">
+      <div ref={cardRef} className="mb-4 rounded-card bg-cross p-[1.5px]">
         <div className="glass-card flex flex-col gap-1 rounded-[calc(var(--r-card)-1.5px)] border-0 p-4">
           <span className="eyebrow">{t('app.clubWinnerTitle')}</span>
           <span className="font-display text-[19px] leading-[1.2] text-balance">

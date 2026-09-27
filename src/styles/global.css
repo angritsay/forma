@@ -1596,6 +1596,72 @@ body {
 }
 
 /*
+ * The club's small wins (src/app/features/marathon/ClubCelebrate.tsx). Owner: «геймифицировать…
+ * регулярная подпитка дофамином». Three pieces, all in the club's own colours and none of them
+ * neon (design/CHANGELOG.md §17):
+ *
+ *   - `.points-up` — the «+12» that rises from the button a proof was sent with and fades. It is
+ *     appended to `<body>` at the button's screen position, so it is `fixed` and drawn above
+ *     everything, and it takes no taps. 900ms: long enough to be read, short enough that the
+ *     board reloading under it is the next thing seen.
+ *   - `.club-confetti` — the canvas the burst is drawn on, for the same 900ms. The colours are
+ *     read from `--accent`, `--beige` and `--orange` at run time — the warm gradient's stops, so
+ *     the burst is the club's colour and nothing else.
+ *   - `.streak-pulse` — the streak pill after 18:00 on a day the task is not in yet: a slow 2s
+ *     breath, the one animation on the screen that repeats, because it is the one that is asking
+ *     for something. It stops the moment the proof is sent.
+ *
+ * All three are off under `prefers-reduced-motion` below; the helper also declines to draw
+ * the burst at all there, so the canvas never appears.
+ */
+@keyframes points-up {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -100%) scale(0.8);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(-50%, -115%) scale(1.12);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% - 72px)) scale(1);
+  }
+}
+
+.points-up {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  white-space: nowrap;
+  transform: translate(-50%, -100%);
+  animation: points-up 0.9s var(--ease-out) both;
+}
+
+.club-confetti {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+
+@keyframes streak-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.78;
+    transform: scale(1.04);
+  }
+}
+
+.streak-pulse {
+  animation: streak-pulse 2s ease-in-out infinite;
+}
+
+/*
  * Somebody is typing: three dots that breathe one after another, the way every messenger draws
  * it. Only the club's selling screen uses it (`ClubDemoChat`), where the coach's next message is
  * being written as you watch.
@@ -1637,7 +1703,9 @@ body {
   .screen-in-up,
   .fade-in,
   .pop-in,
-  .typing-dot {
+  .typing-dot,
+  .points-up,
+  .streak-pulse {
     animation: none;
   }
 }

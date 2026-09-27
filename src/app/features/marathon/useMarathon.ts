@@ -5,21 +5,23 @@
  * a single one rather than making every screen pick. If that ever stops being true the list is
  * still there — `marathons` holds all of them and `marathon` is simply the first.
  *
- * There is no hook for `marathon_my_points` any more: «Мои баллы» was the only reader, the club's
- * tab is «только задание и лидерборд», and the screen is deleted. The RPC and the API call stay
- * where they are — the coach's own tools may yet want the breakdown — but nothing in the app
- * subscribes to it.
+ * `useMarathonMyPoints` (`marathon_my_points`) is back for one reader: the week's recap on the
+ * club tab (`ClubWeekRecap`), which needs the tasks done against the tasks set for a week. The
+ * «Мои баллы» screen that used to read it is still gone — «только задание и лидерборд» — and
+ * the recap is a card on the tab, not a screen.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { toAppError, type AppError } from '@/lib/api/errors';
 import {
   getMarathonDay,
+  getMarathonMyPoints,
   getMarathonRoster,
   getMarathonScores,
   joinClub,
   listMyMarathons,
 } from '@/lib/api/marathon';
 import type {
+  MarathonDayPoints,
   MarathonRosterRow,
   MarathonScoreRow,
   MarathonTodayTask,
@@ -140,6 +142,18 @@ export function useMarathonScores(
     () => (marathonId ? getMarathonScores(marathonId, week ?? undefined) : Promise.resolve([])),
     [],
     [marathonId, week],
+  );
+}
+
+/** My own days of a round, newest first. `version` re-reads it (after a proof is sent). */
+export function useMarathonMyPoints(
+  marathonId: string | null,
+  version = 0,
+): Loaded<MarathonDayPoints[]> {
+  return useLoader<MarathonDayPoints[]>(
+    () => (marathonId ? getMarathonMyPoints(marathonId) : Promise.resolve([])),
+    [],
+    [marathonId, version],
   );
 }
 

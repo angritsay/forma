@@ -39,6 +39,13 @@ export interface BoardRowProps {
   onAnnounce?: () => void;
   /** Подпись действия: «Победитель» или «Снять» — решает вызывающий, он же знает состояние. */
   announceLabel?: string;
+  /**
+   * Places moved since the member's last visit (`boardDelta` in standings.ts): positive is up,
+   * drawn «↑2» in the light blue, negative «↓1» in the quiet grey. Zero or null draws nothing.
+   * Only the member's own row carries it — the table is about where *you* went, and a column
+   * of arrows next to strangers' names is a stock ticker.
+   */
+  delta?: number | null;
 }
 
 /**
@@ -46,7 +53,7 @@ export interface BoardRowProps {
  * quiet line under it — on a board where a pair wins together, "Ваня и Витя" is the racer and
  * «Ваня, Витя» is the detail.
  */
-export function BoardRow({ row, rank, winner, onAnnounce, announceLabel }: BoardRowProps) {
+export function BoardRow({ row, rank, winner, onAnnounce, announceLabel, delta }: BoardRowProps) {
   const { t, locale } = useT();
   /*
    * The members go under the name — unless the name already contains them. A pair is very often
@@ -101,6 +108,25 @@ export function BoardRow({ row, rank, winner, onAnnounce, announceLabel }: Board
       >
         {rank === null ? '—' : String(rank).padStart(2, '0')}
       </span>
+      {/*
+       * The move since last time, right after the circle it moved. Up is the light blue —
+       * progress in the semantic map — and down is the quiet grey, not the danger red: losing a
+       * place to somebody who did the task is not an error.
+       */}
+      {delta ? (
+        <span
+          className={clsx(
+            'numeral tabular -ml-2 shrink-0 text-[12px]',
+            delta > 0 ? 'text-accent' : 'text-muted-2',
+          )}
+          aria-label={t(delta > 0 ? 'app.clubRankUp' : 'app.clubRankDown', {
+            n: formatNumber(locale, Math.abs(delta)),
+          })}
+        >
+          {delta > 0 ? '↑' : '↓'}
+          {formatNumber(locale, Math.abs(delta))}
+        </span>
+      ) : null}
       <span className="min-w-0 flex-1">
         {/*
          * «Ты» is a visible tag now, not an `sr-only` one. The white ring told you which row was
