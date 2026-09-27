@@ -74,6 +74,11 @@ export interface BotReply {
   siteButtonText: string;
   /** Picture above the greeting, or '' to send the greeting as plain text. */
   photoUrl: string;
+  /**
+   * The `startapp` value the app button carries, e.g. `ref_a1b2c3d4` from `/start ref_a1b2c3d4`
+   * (0051). Absent on a plain `/start`, so the button opens the app exactly as before.
+   */
+  startParam?: string;
 }
 
 export interface BotCopy {
@@ -239,6 +244,29 @@ export function isCommand(text: string): boolean {
   return COMMAND_RE.test(text.trim());
 }
 
+/**
+ * `/start ref_<code>` — a referral link that met the bot before it met the app (0051).
+ *
+ * A friend who opens `t.me/<bot>?start=ref_<code>` lands in the chat, not in the Mini App, and
+ * the code would be lost between the two. So it rides on into the app button as `startapp=`, the
+ * same parameter the direct `t.me/<bot>/<app>?startapp=ref_<code>` link carries, and the app
+ * treats both alike. Only the exact shape of a code (`referral_codes.code`) is passed on;
+ * anything else in the payload is ignored, never forwarded.
+ */
+const START_REF_RE = /^\/start(?:@[A-Za-z0-9_]{3,32})?\s+(ref_[a-z0-9]{8})\s*$/;
+
+export function startParamOf(text: string): string | undefined {
+  return START_REF_RE.exec(text.trim())?.[1];
+}
+
+/** The app URL with `startapp=<param>` added, keeping any query string it already has. */
+export function appUrlWith(appUrl: string, startParam?: string): string {
+  if (!startParam) return appUrl;
+  const [head, hash] = appUrl.split('#', 2);
+  const sep = head!.includes('?') ? '&' : '?';
+  return `${head}${sep}startapp=${encodeURIComponent(startParam)}${hash ? `#${hash}` : ''}`;
+}
+
 /** The longest message passed on, in characters (code points, so an emoji is never cut in half). */
 export const SUPPORT_MAX = 1000;
 
@@ -296,6 +324,7 @@ export function routeUpdate(
   const text = typeof message.text === 'string' ? message.text.trim() : '';
   if (text && isCommand(text)) {
     const c = copy[locale] ?? copy.ru;
+    const startParam = startParamOf(text);
     return {
       kind: 'greeting',
       reply: {
@@ -305,6 +334,7 @@ export function routeUpdate(
         buttonText: c.buttonText,
         siteButtonText: c.siteButtonText,
         photoUrl: c.photoUrl,
+        ...(startParam ? { startParam } : {}),
       },
     };
   }
@@ -441,7 +471,7 @@ export function supportReplyText(status: SupportStatus, locale: Locale): string 
  */
 export function keyboard(reply: BotReply, appUrl: string, siteUrl: string) {
   const rows: { text: string; web_app?: { url: string }; url?: string }[][] = [
-    [{ text: reply.buttonText, web_app: { url: appUrl } }],
+    [{ text: reply.buttonText, web_app: { url: appUrlWith(appUrl, reply.startParam) } }],
   ];
   if (reply.siteButtonText && siteUrl) rows.push([{ text: reply.siteButtonText, url: siteUrl }]);
   return { inline_keyboard: rows };

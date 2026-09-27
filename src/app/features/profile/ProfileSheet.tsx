@@ -24,6 +24,7 @@
  * way back from the inventory is this sheet reopening.
  */
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { HeroField, KeyTitle } from '@/components/ui/HeroField';
 import { Glyph } from '@/components/ui/Icon';
@@ -59,6 +60,7 @@ export interface ProfileSheetProps {
 export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
   const tr = useT();
   const { t, l, locale } = tr;
+  const navigate = useNavigate();
   const toast = useToast();
   const sound = useSound();
   const profile = useSession((s) => s.profile);
@@ -299,6 +301,22 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
               <ListRow
                 title={t('app.dataRow')}
                 onClick={() => setDataOpen(true)}
+                trailing={<Glyph size={16}>›</Glyph>}
+              />
+            </li>
+            {/*
+             * «Позови друга — +30 дней» (0051). A place to go, like the row above it, and here
+             * for the same reason the account is where people look for the things about them:
+             * the referral link is theirs. The sheet closes first — a screen under an open sheet
+             * is a screen nobody sees.
+             */}
+            <li>
+              <ListRow
+                title={t('app.inviteRow')}
+                onClick={() => {
+                  onClose();
+                  navigate('/invite');
+                }}
                 trailing={<Glyph size={16}>›</Glyph>}
               />
             </li>

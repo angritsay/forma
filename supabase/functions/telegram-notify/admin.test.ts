@@ -41,6 +41,26 @@ describe('adminMessage', () => {
     expect(adminMessage(row('course_paid', { source: '' }))).toContain('неизвестно');
   });
 
+  /* Реферал оплатил (0051): кто позвал, кто пришёл, сколько дней обоим — и ссылка на позвавшего. */
+  it('reports a referral that paid, with both people and both rewards', () => {
+    const r = {
+      topic: 'club',
+      kind: 'referral_paid',
+      params: { inviter: 'a@b.co', friend: 'c@d.co', days: 30, inviterDays: 30 },
+    };
+    const text = adminMessage(r)!;
+    expect(text).toContain('Реферал оплатил');
+    expect(text).toContain('Позвал: a@b.co');
+    expect(text).toContain('Пришёл: c@d.co');
+    expect(text).toContain('+дней пришедшему: 30');
+    expect(text).toContain('+дней позвавшему: 30');
+    expect(adminLink(r, 'https://forma-app.co/app/')?.url).toBe(
+      'https://forma-app.co/app/#/admin/people/a%40b.co',
+    );
+    const capped = adminMessage({ ...r, params: { ...r.params, inviterDays: 0 } })!;
+    expect(capped).toContain('лимит за год');
+  });
+
   /* Пустое поле не печатается вовсе: «Заказ: » в журнале хуже отсутствующей строки. */
   it('drops the fields that have nothing in them', () => {
     const text = adminMessage(row('session_paid', { email: 'a@b.co', amount: '', ref: '' }))!;

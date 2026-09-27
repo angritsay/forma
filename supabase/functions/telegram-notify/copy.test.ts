@@ -95,12 +95,25 @@ describe('messageFor', () => {
   });
 
   it('keeps every message inside Telegram limits', () => {
-    for (const kind of ['course_paid', 'subscription_paid', 'workout_assigned', 'weekly_winner']) {
+    for (const kind of [
+      'course_paid',
+      'subscription_paid',
+      'workout_assigned',
+      'weekly_winner',
+      'referral_reward',
+      'duo_nudge',
+    ]) {
       for (const locale of ['ru', 'en'] as const) {
         const m = messageFor(
           {
             kind,
-            params: { title: 'х'.repeat(500), prize: 'х'.repeat(500), note: 'х'.repeat(500) },
+            params: {
+              title: 'х'.repeat(500),
+              prize: 'х'.repeat(500),
+              note: 'х'.repeat(500),
+              name: 'х'.repeat(500),
+              days: 30,
+            },
           },
           locale,
         );
@@ -111,8 +124,59 @@ describe('messageFor', () => {
   });
 });
 
+describe('the referral reward (0051)', () => {
+  it('tells the one who invited and the one who came, each their own line', () => {
+    const owner = messageFor({ kind: 'referral_reward', params: { role: 'owner', days: 30 } });
+    expect(owner?.text).toBe('<b>Друг оплатил клуб — тебе +30 дней 🎁</b>');
+    expect(owner?.buttonText).toBe('Открыть приложение');
+    const friend = messageFor({ kind: 'referral_reward', params: { role: 'friend', days: 30 } });
+    expect(friend?.text).toBe('<b>Тебя позвали в клуб — тебе +30 дней 🎁</b>');
+  });
+
+  /* Лимит за год: подруга своё получила, позвавшей — спасибо без обещания дней. */
+  it('thanks rather than promises when the inviter’s year is used up', () => {
+    const m = messageFor({ kind: 'referral_reward', params: { role: 'owner', days: 0 } });
+    expect(m?.text).toContain('спасибо');
+    expect(m?.text).not.toContain('+');
+  });
+
+  it('says the same in English', () => {
+    const m = messageFor({ kind: 'referral_reward', params: { role: 'friend', days: 30 } }, 'en');
+    expect(m?.text).toBe('<b>A friend invited you to the club — 30 days on us 🎁</b>');
+    expect(m?.buttonText).toBe('Open the app');
+  });
+});
+
+describe('the duo nudge (0051)', () => {
+  it('names the partner as the board does', () => {
+    const m = messageFor({ kind: 'duo_nudge', params: { name: 'Аня' } });
+    expect(m?.text).toBe('<b>Аня уже сделал(а) задание — твоя очередь</b>');
+    expect(messageFor({ kind: 'duo_nudge', params: { name: 'Anna' } }, 'en')?.text).toBe(
+      '<b>Anna has done today’s task — your turn</b>',
+    );
+  });
+
+  /* Имя пишет человек: экранируется, а пустое заменяется словом. */
+  it('escapes the name and survives its absence', () => {
+    expect(messageFor({ kind: 'duo_nudge', params: { name: '<b>x</b>' } })?.text).toContain(
+      '&lt;b&gt;x&lt;/b&gt;',
+    );
+    expect(messageFor({ kind: 'duo_nudge', params: {} })?.text).toContain('Напарник уже');
+    expect(messageFor({ kind: 'duo_nudge', params: { name: 7 } }, 'en')?.text).toContain(
+      'Your partner has',
+    );
+  });
+});
+
 describe('the language of the person being written to', () => {
-  const KINDS = ['course_paid', 'subscription_paid', 'workout_assigned', 'weekly_winner'];
+  const KINDS = [
+    'course_paid',
+    'subscription_paid',
+    'workout_assigned',
+    'weekly_winner',
+    'referral_reward',
+    'duo_nudge',
+  ];
 
   it('writes English to someone who chose English', () => {
     const m = messageFor({ kind: 'course_paid', params: {} }, 'en');

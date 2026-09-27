@@ -12,8 +12,9 @@
  *
  * Inside a Telegram Mini App the same routes also drive Telegram's own back button.
  */
-import { Suspense, type ReactElement } from 'react';
+import { Suspense, useEffect, useRef, type ReactElement } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router';
+import { attachReferral } from '@/lib/api/referral';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Screen } from '@/components/ui/Screen';
@@ -29,7 +30,13 @@ import AuthScreen from './screens/AuthScreen';
 import LanguageScreen from './screens/LanguageScreen';
 import OnboardingScreen from './screens/onboarding/OnboardingScreen';
 import { getScreen, type ScreenName } from './screens/registry';
-import { pendingDuoInvite, stashDuoInvite } from './features/marathon/duoInvite';
+import {
+  clearReferral,
+  pendingDuoInvite,
+  pendingReferral,
+  stashDuoInvite,
+  stashReferral,
+} from './features/marathon/duoInvite';
 
 function MissingScreen({ name }: { name: ScreenName }) {
   const { t } = useT();
@@ -70,9 +77,46 @@ function DuoInviteCapture() {
   return <Navigate to="/duo" replace />;
 }
 
+/**
+ * `#/ref/<code>` — a friend's referral link (0051), caught before any guard like the duo invite.
+ *
+ * The code goes to localStorage rather than the session: the person who opens it may sign up days
+ * later. It is attached once they are in (<ShellWithPendingInvite>), and the link itself moves on
+ * to «Курсы» — there is no screen to show for a code, only a fact to record.
+ */
+function ReferralCapture() {
+  const { code } = useParams();
+  stashReferral(code);
+  return <Navigate to="/" replace />;
+}
+
+/**
+ * Attach the referral code set aside by `#/ref/<code>` or `?startapp=ref_<code>`, once the person
+ * is signed in and through onboarding — which is exactly when this shell first renders.
+ *
+ * Once, and cleared whatever the outcome: the database answers silently when the person already
+ * has a code or already paid, and loudly only for a malformed or their own code — none of which
+ * is anything to show somebody who tapped a link and did not press anything. Nothing is logged:
+ * a referral is who knows whom.
+ */
+function useAttachPendingReferral(): void {
+  const done = useRef(false);
+  useEffect(() => {
+    if (done.current) return;
+    done.current = true;
+    const code = pendingReferral();
+    if (!code) return;
+    clearReferral();
+    attachReferral(code).catch(() => {
+      /* see above */
+    });
+  }, []);
+}
+
 /** The tabbed shell — unless an invite is still set aside, which wins over whatever screen this was. */
 function ShellWithPendingInvite() {
   const { pathname } = useLocation();
+  useAttachPendingReferral();
   if (pathname !== '/duo' && pendingDuoInvite()) return <Navigate to="/duo" replace />;
   return <AppShell />;
 }
@@ -124,6 +168,7 @@ export function AppRoutes() {
             </Route>
           </Route>
           <Route path="/duo/:token" element={<DuoInviteCapture />} />
+          <Route path="/ref/:code" element={<ReferralCapture />} />
           <Route element={<RequireAuth />}>
             <Route element={<RequireOnboarded />}>
               <Route element={<ShellWithPendingInvite />}>
@@ -154,6 +199,8 @@ export function AppRoutes() {
                 <Route path="/marathon" element={<LazyScreen name="MarathonScreen" />} />
                 <Route path="/marathon/board" element={<LazyScreen name="MarathonBoardScreen" />} />
                 <Route path="/duo" element={<LazyScreen name="DuoInviteScreen" />} />
+                {/* «Позови друга» — the referral link and what it has brought (0051). */}
+                <Route path="/invite" element={<LazyScreen name="ClubInviteScreen" />} />
                 <Route path="/book" element={<LazyScreen name="BookScreen" />} />
                 <Route path="/admin" element={<LazyScreen name="AdminScreen" />} />
                 <Route path="/admin/workouts" element={<LazyScreen name="AdminWorkoutsScreen" />} />

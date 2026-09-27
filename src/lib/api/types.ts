@@ -888,6 +888,16 @@ export interface ClubDuoStatus {
   inviteToken: string | null;
 }
 
+/** «Позови друга» (0051): три числа с экрана, и ни одной почты. */
+export interface ReferralStats {
+  /** Пришли по коду. */
+  attached: number;
+  /** Из них оплатили клуб. */
+  rewarded: number;
+  /** Сколько дней это принесло позвавшему. */
+  daysEarned: number;
+}
+
 export interface ClubWinner {
   marathonId: string;
   /** Week number inside the club's own count, the one `marathon_scores` takes. */
