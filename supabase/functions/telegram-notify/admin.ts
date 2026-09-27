@@ -313,7 +313,10 @@ export function adminLinkPath(row: AdminRow): { path: string; label: string } | 
     return { path: '/admin/bookings', label: 'Открыть записи в админке' };
   }
   if (row.kind === 'channel_ready') return null;
-  const person = personPath(row.kind === 'duo_paired' ? str(p, 'inviter') : str(p, 'email'));
+  // Пара и реферал — про двоих; ссылка ведёт на того, кто позвал (0040, 0051).
+  const person = personPath(
+    row.kind === 'duo_paired' || row.kind === 'referral_paid' ? str(p, 'inviter') : str(p, 'email'),
+  );
   return person ? { path: person, label: 'Открыть человека в админке' } : null;
 }
 
@@ -415,6 +418,24 @@ function adminBody(row: AdminRow): string | null {
         'Пара дуо собралась',
         lines(['Позвал', str(p, 'inviter')], ['Принял', str(p, 'partner')]),
       );
+
+    /*
+     * Реферал оплатил (0051): подруга пришла по коду и заплатила за клуб. Дни — обоим, и если
+     * позвавшей ноль, значит, её лимит за год исчерпан, и это стоит увидеть.
+     */
+    case 'referral_paid': {
+      const days = str(p, 'days');
+      const inviterDays = str(p, 'inviterDays');
+      return block(
+        'Реферал оплатил',
+        lines(
+          ['Позвал', str(p, 'inviter')],
+          ['Пришёл', str(p, 'friend')],
+          ['+дней пришедшему', days],
+          ['+дней позвавшему', inviterDays === '0' ? '0 (лимит за год)' : inviterDays],
+        ),
+      );
+    }
 
     case 'proof_resubmitted':
       return block(

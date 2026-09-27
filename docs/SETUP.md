@@ -1695,6 +1695,44 @@ If the bot is deployed before the migration, a message gets «Не получи�
 
 ---
 
+## 7.13 Referral: «+30 дней тебе и другу»
+
+The owner's decision: a free month for **both** the person who invited and the friend who came,
+paid out when the friend's club subscription first becomes active. `0051_referrals.sql`.
+
+**What it does.** Every signed-in person has one short code (`my_referral_code()`, made on first
+use, never changed). The link is `t.me/<bot>/<app>?startapp=ref_<code>` when `LINKS.telegramMiniApp`
+is set in `content/site/links.ts`, and `…/app/#/ref/<code>` otherwise — the web link works, but it
+opens a browser rather than the app inside Telegram, so set the Mini App link first. A friend who
+meets the bot before the app (`t.me/<bot>?start=ref_<code>`) is carried on: the bot puts the code on
+its app button. The code waits in the friend's phone until they sign in; then `referral_attach`
+records it — silently ignored for anybody who already has a code or already had a club
+subscription (they are not a new customer).
+
+**The reward.** A `before` trigger on `subscriptions`: when the friend's row becomes active, their
+own period gets +30 days in the same write, the inviter's live subscription is extended by 30 days
+(or a 30-day row is created, `source = 'referral'`), both get one bot message, and «Реферал оплатил»
+lands in the «Клуб» topic. If both are in the duo club, they are put in one chosen pair. A
+subscription that came from a reward never pays a reward itself, and **an inviter is rewarded at
+most 12 times in a rolling year** — the friend still gets theirs, the topic message says «лимит за
+год». Nothing here can break a payment: the reward is wrapped in its own error handling.
+
+**Turning it on**, in this order:
+
+1. Actions → Supabase apply → `migration` with **`0051_referrals.sql`**.
+2. Actions → Supabase apply → **`deploy-notify`** — two new kinds in `telegram_outbox`:
+   `referral_reward` (to both people) and `duo_nudge` («{имя} уже сделал(а) задание — твоя
+   очередь», sent by `club_duo_nudge()` at most once a day per direction). An older sender marks
+   them `skipped`, so deploy before the first payment through a link.
+3. Actions → Supabase apply → **`deploy-bot`** — for `/start ref_<code>`.
+4. Set `LINKS.telegramMiniApp` and deploy the site.
+
+The screen is **Профиль → Позови друга** (`/invite`): the link, how it works, and three counts
+(came · paid · days earned). Counts only — `my_referrals()` returns no addresses, and the two
+tables are closed to the API.
+
+---
+
 ## 7.10 What is still only in Russian
 
 Everything written ahead of time is bilingual and the build says so: the interface dictionaries are

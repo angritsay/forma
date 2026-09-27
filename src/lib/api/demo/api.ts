@@ -22,6 +22,7 @@ import type {
   MarathonWinner,
   FunnelWeek,
   ProgressRow,
+  ReferralStats,
   CustomWorkoutRow,
   CustomWorkoutSummary,
   ExerciseCatalogRow,
@@ -2473,6 +2474,42 @@ export async function breakClubDuo(_teamId: string): Promise<void> {
     mutateDb((db) => {
       db.marathonTeams = db.marathonTeams.filter((t) => t.id !== DEMO_DUO_TEAM);
     });
+  });
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * «Позови друга» в демо (0051)
+ *
+ * Код один и тот же на всё демо — как в базе, где второй вызов отдаёт первый. Числа — одно
+ * состояние, в котором человек бывает: ссылку открыли, но ещё не оплатили. Привязка и «подтолкнуть»
+ * ничего не делают: второго человека в демо нет.
+ * ------------------------------------------------------------------------------------------- */
+
+const DEMO_REFERRAL_CODE = 'demo0001';
+
+export async function getMyReferralCode(): Promise<string> {
+  return run(() => {
+    requireDemoUser();
+    return DEMO_REFERRAL_CODE;
+  });
+}
+
+export async function attachReferral(_code: string): Promise<void> {
+  return run(() => {
+    requireDemoUser();
+  });
+}
+
+export async function getMyReferrals(): Promise<ReferralStats> {
+  return run(() => {
+    requireDemoUser();
+    return { attached: 1, rewarded: 0, daysEarned: 0 };
+  });
+}
+
+export async function nudgePartner(): Promise<void> {
+  return run(() => {
+    requireDemoUser();
   });
 }
 

@@ -24,6 +24,8 @@ export const SCREEN_NAMES = [
   'MarathonBoardScreen',
   // Accepting a friend's duo invite (the `#/duo/<token>` link).
   'DuoInviteScreen',
+  // «Позови друга»: the referral link, how it works, what it has brought (0051).
+  'ClubInviteScreen',
   'BookScreen',
   'AdminScreen',
   'AdminWorkoutsScreen',

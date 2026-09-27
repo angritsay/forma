@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  appUrlWith,
   DEFAULT_COPY,
   isCommand,
   keyboard,
@@ -10,6 +11,7 @@ import {
   sendMessageBody,
   sendPhotoBody,
   siteUrlFor,
+  startParamOf,
   SUPPORT_COPY,
   SUPPORT_MAX,
   supportReplyText,
@@ -221,6 +223,47 @@ describe('keyboard', () => {
     expect(keyboard(noLabel, APP, SITE).inline_keyboard).toHaveLength(1);
     const noUrl = replyFor(privateMessage('/start'), COPY)!;
     expect(keyboard(noUrl, APP, '').inline_keyboard).toHaveLength(1);
+  });
+});
+
+/*
+ * A referral link that met the bot first (0051): `/start ref_<code>` puts the code on the app
+ * button as `startapp=`, so the friend arrives in the app already attached.
+ */
+describe('a referral code on /start', () => {
+  it('rides on into the app button', () => {
+    const reply = replyFor(privateMessage('/start ref_a1b2c3d4'), COPY)!;
+    expect(reply.startParam).toBe('ref_a1b2c3d4');
+    expect(keyboard(reply, APP, SITE).inline_keyboard[0]).toEqual([
+      { text: 'Train', web_app: { url: `${APP}?startapp=ref_a1b2c3d4` } },
+    ]);
+    // The greeting itself is untouched: same words, same picture, same second button.
+    expect(reply.text).toBe('Hi');
+    expect(keyboard(reply, APP, SITE).inline_keyboard[1]).toEqual([{ text: 'Read', url: SITE }]);
+  });
+
+  it('respects a query string the app URL already has', () => {
+    expect(appUrlWith('https://forma-app.co/app/?x=1', 'ref_a1b2c3d4')).toBe(
+      'https://forma-app.co/app/?x=1&startapp=ref_a1b2c3d4',
+    );
+    expect(appUrlWith('https://forma-app.co/app/#/marathon', 'ref_a1b2c3d4')).toBe(
+      'https://forma-app.co/app/?startapp=ref_a1b2c3d4#/marathon',
+    );
+    expect(appUrlWith(APP, undefined)).toBe(APP);
+  });
+
+  it('forwards only the shape of a code, and nothing else in a payload', () => {
+    expect(startParamOf('/start ref_a1b2c3d4')).toBe('ref_a1b2c3d4');
+    expect(startParamOf('/start@forma_bot ref_a1b2c3d4')).toBe('ref_a1b2c3d4');
+    expect(startParamOf('/start')).toBeUndefined();
+    expect(startParamOf('/start marathon')).toBeUndefined();
+    expect(startParamOf('/start ref_TOOLONG123')).toBeUndefined();
+    expect(startParamOf('/start ref_<script>')).toBeUndefined();
+    expect(startParamOf('/help ref_a1b2c3d4')).toBeUndefined();
+    // A plain /start carries no parameter at all, so the button URL is exactly as configured.
+    const plain = replyFor(privateMessage('/start'), COPY)!;
+    expect('startParam' in plain).toBe(false);
+    expect(keyboard(plain, APP, SITE).inline_keyboard[0]![0]!.web_app?.url).toBe(APP);
   });
 });
 

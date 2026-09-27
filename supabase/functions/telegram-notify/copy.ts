@@ -36,7 +36,13 @@
 
 /** Виды поводов, ровно как в `telegram_outbox.kind` (0027). */
 export type NotifyKind =
-  'course_paid' | 'subscription_paid' | 'workout_assigned' | 'weekly_winner' | 'support_reply';
+  | 'course_paid'
+  | 'subscription_paid'
+  | 'workout_assigned'
+  | 'weekly_winner'
+  | 'support_reply'
+  | 'referral_reward'
+  | 'duo_nudge';
 
 /** Языки, на которых выходит продукт — `LOCALES` в src/content/schema.ts. */
 export type Locale = 'ru' | 'en';
@@ -99,6 +105,14 @@ interface Copy {
   winnerWrite: string;
   /** Подпись над ответом тренера на обращение (0045). */
   supportReply: string;
+  /** Награда за реферала (0051): позвавшей — с `{days}`; без дней, если лимит за год исчерпан. */
+  referralOwner: string;
+  referralOwnerNoDays: string;
+  /** …и пришедшей: подруга позвала, клуб оплачен, `{days}` в подарок. */
+  referralFriend: string;
+  /** Напарник по дуо сделал задание (0051): `{name}` — как его зовут на доске. */
+  duoNudge: string;
+  duoNudgeNoName: string;
 }
 
 const COPY: Record<Locale, Copy> = {
@@ -115,6 +129,11 @@ const COPY: Record<Locale, Copy> = {
     winnerPrize: 'Твой приз: {prize}.',
     winnerWrite: 'Напиши Сергею, чтобы договориться, — он ждёт.',
     supportReply: 'Ответ тренера:',
+    referralOwner: 'Друг оплатил клуб — тебе +{days} дней 🎁',
+    referralOwnerNoDays: 'Друг оплатил клуб — спасибо 🎁',
+    referralFriend: 'Тебя позвали в клуб — тебе +{days} дней 🎁',
+    duoNudge: '{name} уже сделал(а) задание — твоя очередь',
+    duoNudgeNoName: 'Напарник',
   },
   en: {
     afterPayment:
@@ -129,6 +148,11 @@ const COPY: Record<Locale, Copy> = {
     winnerPrize: 'Your prize: {prize}.',
     winnerWrite: 'Write to Sergey to arrange it — he is waiting.',
     supportReply: 'Coach’s reply:',
+    referralOwner: 'Your friend paid for the club — {days} days on us 🎁',
+    referralOwnerNoDays: 'Your friend paid for the club — thank you 🎁',
+    referralFriend: 'A friend invited you to the club — {days} days on us 🎁',
+    duoNudge: '{name} has done today’s task — your turn',
+    duoNudgeNoName: 'Your partner',
   },
 };
 
@@ -198,6 +222,33 @@ export function messageFor(row: OutboxRow, locale: Locale = DEFAULT_LOCALE): Mes
 
     case 'support_reply':
       return supportReplyMessage(params, c);
+
+    /*
+     * Награда за реферала (0051): одна строка и кнопка. Кому она — говорит `role`: позвавшей или
+     * пришедшей. Дни — из очереди, а не из текста: лимит за год у позвавшей может дать ноль, и
+     * тогда строка благодарит, а не обещает.
+     */
+    case 'referral_reward': {
+      const days = Number(params.days);
+      const n = Number.isSafeInteger(days) && days > 0 ? String(days) : '';
+      const line =
+        params.role === 'friend'
+          ? c.referralFriend.replace('{days}', n || '0')
+          : n
+            ? c.referralOwner.replace('{days}', n)
+            : c.referralOwnerNoDays;
+      return { text: `<b>${line}</b>`, buttonText: c.openApp };
+    }
+
+    /*
+     * Напарник по дуо сделал задание (0051). Имя — как на доске, его пишет человек, поэтому оно
+     * экранируется; без имени — «Напарник», чтобы фраза не начиналась с пробела.
+     */
+    case 'duo_nudge': {
+      const raw = typeof params.name === 'string' ? params.name.trim() : '';
+      const name = raw ? escapeHtml(raw.slice(0, 60)) : c.duoNudgeNoName;
+      return { text: `<b>${c.duoNudge.replace('{name}', name)}</b>`, buttonText: c.openApp };
+    }
 
     default:
       return null;

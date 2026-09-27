@@ -25,6 +25,7 @@ export * from './customWorkouts';
 export * from './courseBuilder';
 export * from './marathon';
 export * from './marathonAdmin';
+export * from './referral';
 export * from './storage';
 // auth.ts is written by the app shell (requestCode / verifyCode / signOut / onAuthChange).
 export * from './auth';
