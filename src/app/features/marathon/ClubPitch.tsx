@@ -1,5 +1,16 @@
 /**
- * The club when there is no round to show — built to the owner's mockup, which is the measure.
+ * The club when there is no round to show.
+ *
+ * ## The order, since the redesign
+ *
+ * The owner, on the mockup version: «Он абсолютно не продаёт клуб маленьких шагов». It described
+ * the club — photographs, a name, a price, two paragraphs — and showed none of it. So the screen
+ * now opens on a day of the club playing itself (`ClubDemoChat`: the task arriving, your «done»,
+ * the points, the prize), then the name and the owner's one sentence, then the four things you
+ * get as drawn rows, then the photographs as proof, and only then the price. Her choices, in
+ * order: chat and paywall rather than slides; the chat first; the photographs kept, lower down.
+ *
+ * ## Built to the owner's mockup, which was the measure until then
  *
  * **Two people arrive here and only one of them was drawn.** Somebody outside the club gets the
  * screen the owner sent: the hero, the join pill, her two paragraphs. Somebody who already pays —
@@ -13,7 +24,7 @@
  * same drawing and had a prize pill, three explanatory rows and a sticky footer — the same facts,
  * arranged as a brochure.
  *
- * Two things have moved since that render, both on her word and both explained at `Hero` below:
+ * Two things have moved since that render, both on her word and both explained at `Photos` and `Name` below:
  * the three fixed crops are now ten square frames you swipe, and the name sits under them rather
  * than composited over them.
  *
@@ -47,11 +58,13 @@
  */
 import { useT } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
+import { Doodle } from '@/components/ui/Doodle';
+import type { DoodleKind } from '@/content/schema';
 import { isDemo } from '@/lib/api/mode';
 import { withBase } from '@/lib/util/paths';
 import { LinkButton } from '@/app/features/courses/LinkButton';
 import { clubChargeLabel, clubJoinHref, clubMonthlyLabel } from '@/app/features/marathon/clubPlan';
-import { clubPrizeMidSentence } from '@/app/features/marathon/prize';
+import { ClubDemoChat } from '@/app/features/marathon/ClubDemoChat';
 import { clubPitchPhotos } from '@content/site/club';
 
 export interface ClubPitchProps {
@@ -64,7 +77,8 @@ export interface ClubPitchProps {
 }
 
 /**
- * The hero: the label, a strip of square photographs you swipe, and the club's name under them.
+ * The photographs: the label, and a strip of square frames you swipe. They stood at the top as the
+ * hero; since the redesign they are the proof under the features, before the price.
  *
  * ## Why it is a carousel now
  *
@@ -88,7 +102,7 @@ export interface ClubPitchProps {
  * which would grey out a third of every picture, or the name on the page's own ground. The name is
  * on the ground. It is still the 200/800/200 lockup the mockup draws, and it still opens the page.
  */
-function Hero() {
+function Photos() {
   const { t, l } = useT();
   const { photos, source } = clubPitchPhotos();
   const members = source === 'members';
@@ -132,17 +146,24 @@ function Hero() {
           ))}
         </ul>
       ) : null}
+    </section>
+  );
+}
 
-      {/*
-       * «Клуб» 200 · «маленьких» 800 in the club's warm gradient · «шагов» 200. This used to carry
-       * `normal-case` to undo `.display`'s capitals; `.display` is sentence case now, so the
-       * opt-out is gone and the class alone says what the mockup says.
-       *
-       * `leading-[1.12]` is kept and is deliberate: none of «Клуб», «маленьких», «шагов» has a
-       * descender, so this lockup can sit tighter than `.display`'s own 1.2 — which has to hold
-       * for any string, including the у that sets the floor.
-       */}
-      <h1 className="display px-3 text-[clamp(32px,10.2vw,44px)] leading-[1.12] text-balance">
+/**
+ * The club's name and the owner's one sentence under it.
+ *
+ * «Клуб» 200 · «маленьких» 800 in the club's warm gradient · «шагов» 200 — the lockup from her
+ * mockup, kept whole. `leading-[1.12]` is deliberate: none of the three words has a descender, so
+ * the lockup can sit tighter than `.display`'s 1.2. The sentence is hers verbatim, with the one
+ * phrase she set in orange; the second paragraph (points, the board, the prize) is gone, because
+ * the chat above and the rows below now say it.
+ */
+function Name() {
+  const { t } = useT();
+  return (
+    <section className="flex flex-col gap-4 px-3">
+      <h1 className="display text-[clamp(32px,10.2vw,44px)] leading-[1.12] text-balance">
         <span className="t-thin block">{t('app.clubNameLead')}</span>
         {/* The club's key word in its warm gradient — large type only (global.css, `.club-aurora`). */}
         <span className="block">
@@ -150,37 +171,65 @@ function Hero() {
         </span>
         <span className="t-thin block">{t('app.clubNameTail')}</span>
       </h1>
-    </section>
-  );
-}
-
-/** The two paragraphs, verbatim, with the one phrase the mockup sets in orange. */
-function Lead() {
-  const tr = useT();
-  const { t } = tr;
-  return (
-    <div className="flex flex-col gap-4 px-3 text-[15px] leading-[1.32]">
-      <p>
+      <p className="text-[15px] leading-[1.32]">
         {t('app.clubLeadPre')}
         <span className="text-accent">{t('app.clubLeadAccent')}</span>
         {t('app.clubLeadPost')}
       </p>
-      {/*
-       * The prize is the same string the member's board and the full board print
-       * (`app.marathonPrizeDefault`), lowered into the sentence rather than written out again —
-       * three copies of one promise is three promises the moment one of them is edited.
-       */}
-      <p>{t('app.clubLeadWeek', { prize: clubPrizeMidSentence(tr) })}</p>
-    </div>
+    </section>
+  );
+}
+
+/**
+ * What you get, as four rows — the Coach tab's drawn-glyph rows, in the club's colours: a glyph
+ * in the streak's orange on the surface tile, no gradient (the gradient is the one button) and
+ * no neon (`club-no-neon.test.ts`). Each row is a mechanic the code actually has: the daily task,
+ * the proof the coach reviews, the streak and the points, the weekly prize.
+ */
+const FEATURES: readonly {
+  doodle: DoodleKind;
+  title: 'clubFeature1Title' | 'clubFeature2Title' | 'clubFeature3Title' | 'clubFeature4Title';
+  body: 'clubFeature1Body' | 'clubFeature2Body' | 'clubFeature3Body' | 'clubFeature4Body';
+}[] = [
+  { doodle: 'steps', title: 'clubFeature1Title', body: 'clubFeature1Body' },
+  { doodle: 'camera', title: 'clubFeature2Title', body: 'clubFeature2Body' },
+  { doodle: 'flame', title: 'clubFeature3Title', body: 'clubFeature3Body' },
+  { doodle: 'trophy', title: 'clubFeature4Title', body: 'clubFeature4Body' },
+];
+
+function Features() {
+  const { t } = useT();
+  return (
+    <ul className="flex flex-col px-1">
+      {FEATURES.map((f) => (
+        <li
+          key={f.doodle}
+          className="flex items-start gap-4 border-t border-border py-5 first:border-t-0 first:pt-0 last:pb-0"
+        >
+          <span
+            aria-hidden="true"
+            className="flex size-12 shrink-0 items-center justify-center rounded-tile bg-surface-2 text-orange"
+          >
+            <Doodle kind={f.doodle} className="size-7" />
+          </span>
+          <div className="flex min-w-0 flex-col gap-1">
+            <p className="font-display text-[17px] leading-snug">{t(`app.${f.title}`)}</p>
+            <p className="text-[14px] leading-relaxed text-muted">{t(`app.${f.body}`)}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
 
 export function ClubPitch({ locked }: ClubPitchProps) {
   return (
-    <div className="flex flex-col gap-7 pb-2">
-      <Hero />
+    <div className="flex flex-col gap-8 pb-2">
+      <ClubDemoChat />
+      <Name />
+      <Features />
+      <Photos />
       {locked ? <ClubJoin /> : <ClubMember />}
-      <Lead />
     </div>
   );
 }
