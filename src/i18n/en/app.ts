@@ -1753,6 +1753,8 @@ export const app = {
   clubPodium: 'The week’s top three',
   clubPodiumEmpty: 'No points yet',
   clubPodiumStep: 'Place {n}: {name}, {points}',
+  clubPrizeWeek: 'Prize of the week',
+  clubPairPoints: 'pair',
   clubDuoRuleBoth: '+{p} · both',
   clubDuoRuleEach: '+{p} · each',
   clubDuoRuleCap: 'up to {cap} · pair',

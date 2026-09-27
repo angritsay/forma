@@ -17,19 +17,21 @@
  *      (`ClubStreak`, compact, with its at-risk pulse and milestones sheet). Under it the
  *      **week track** (`WeekTrack`): seven tiles `пн … вс` from `my_club_days` and today.
  *   2. **The card** (`ClubCard`): dealt face down on the first look of the day (`isSealed`,
- *      remembered in `clubMemory`), a real 3D turn to the face — eyebrow «Задание дня · до
- *      22:00», the «+12» pill, the title, two lines of the coach's text with «ещё», one control.
- *      A rest day is the face reading «Отдых».
- *   3. **The duo tile** (`ClubDuo`, duo mode only): two avatars, `&`, today's mark under each,
- *      the rule as numbers, «Напомнить»; leaving and the explanation live in a «···» sheet. No
- *      partner yet: a dashed «?», one line, one «Позвать друга» that shares the link directly.
- *   4. **The podium** (`ClubPodium`): the top three as 2 · 1 · 3 columns, the leader on the warm
- *      gradient under one small prize pill, my own line under it when I am not up there («#5 ·
- *      Ты · 58», «↑2», «до Димы — 2 балла»), «Вся таблица →» as a ghost.
- *   5. `ClubWinner`, `ClubWeekRecap`, `ClubInviteCard` — unchanged.
+ *      remembered in `clubMemory`), a turn to the face — eyebrow «Задание дня · до 22:00», the
+ *      «+12» pill, the title, two lines of the coach's text with «ещё», one control. In duo mode
+ *      the face also carries **the pair's row** (`DuoRow`) between the title and the control:
+ *      two small avatars with today's mark on each, the rule as numbers, «Напомнить»; leaving
+ *      and the explanation live in a «···» sheet. No partner yet: a dashed «?», one line, one
+ *      «Позвать друга» that shares the link directly. A rest day is the face reading «Отдых»
+ *      (with the pair's row still on it).
+ *   3. **The podium** (`ClubPodium`): the top three as 2 · 1 · 3 columns, the leader on the warm
+ *      gradient, the prize as the caption above («Приз недели — час с тренером»), my own line
+ *      under it when I am not up there («#5 · Ты · 58», «↑2», «до Димы — 2 балла»), «Вся
+ *      таблица →» as a ghost.
+ *   4. `ClubWinner`, `ClubWeekRecap`, `ClubInviteCard` — unchanged.
  *
- * From `md` the card sits left and the duo tile + podium right: the race beside the task is the
- * whole argument for having a board on the same tab.
+ * From `md` the card sits left and the podium right: the race beside the task is the whole
+ * argument for having a board on the same tab.
  *
  * What did not change: the rules. The club is style B of the third palette (global.css header)
  * — the crossroads gradient as a glow behind the screen (`.club-aurora`), the warm half of it as
@@ -53,7 +55,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { PROOFS_BUCKET, proofMediaPath, sendProof } from '@/lib/api/marathon';
 import { uploadMedia } from '@/lib/api/storage';
-import type { ProofInput } from '@/lib/api/types';
+import type { MarathonTodayTask, ProofInput } from '@/lib/api/types';
 import { prefersReducedMotion } from '@/lib/ui/motion';
 import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
 import { toLocalDateIso } from '@/lib/util/dates';
@@ -62,7 +64,6 @@ import { useT } from '@/app/hooks/useT';
 import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { celebrate } from '@/app/features/marathon/ClubCelebrate';
 import { ClubCard } from '@/app/features/marathon/ClubCard';
-import { ClubDuo } from '@/app/features/marathon/ClubDuo';
 import { ClubHud } from '@/app/features/marathon/ClubHud';
 import { ClubInviteCard } from '@/app/features/marathon/ClubInviteCard';
 import { ClubPitch } from '@/app/features/marathon/ClubPitch';
@@ -71,6 +72,7 @@ import { ClubShare } from '@/app/features/marathon/ClubShare';
 import { ClubStreak, useClubDays } from '@/app/features/marathon/ClubStreak';
 import { ClubWeekRecap } from '@/app/features/marathon/ClubWeekRecap';
 import { ClubWinner } from '@/app/features/marathon/ClubWinner';
+import { DuoRow } from '@/app/features/marathon/DuoRow';
 import { WeekTrack } from '@/app/features/marathon/WeekTrack';
 import {
   isOpened,
@@ -345,6 +347,10 @@ export default function MarathonScreen() {
     reloadMarathon();
   };
 
+  /* The pair's row for the card's face — duo mode only. */
+  const duoRow = (item: MarathonTodayTask | null) =>
+    duo ? <DuoRow item={item} onChanged={onPairChanged} /> : null;
+
   return page(
     <div className="flex flex-col gap-5 pt-3 pb-4">
       <ClubHud
@@ -371,7 +377,7 @@ export default function MarathonScreen() {
           ) : status === 'loading' ? (
             <DaySkeleton />
           ) : tasks.length === 0 ? (
-            <ClubCard item={null} />
+            <ClubCard item={null} duo={duoRow(null)} />
           ) : (
             /* One card, because the club is one task a day. It stays a list because the table
                still lets a coach write two, and a screen that silently dropped the second would
@@ -407,6 +413,7 @@ export default function MarathonScreen() {
                     onSendMedia={(file, keep, anchor) =>
                       sendMedia(item.task.id, file, keep, anchor)
                     }
+                    duo={duoRow(item)}
                   />
                 );
               })}
@@ -417,7 +424,6 @@ export default function MarathonScreen() {
         {/* 384px: wide enough for three podium columns beside the card without reading as a
             sidebar. */}
         <section className="flex flex-col gap-5 md:w-96 md:shrink-0">
-          {duo ? <ClubDuo item={tasks[0] ?? null} onChanged={onPairChanged} /> : null}
           <ClubPodium
             standings={standings}
             delta={rankDelta}

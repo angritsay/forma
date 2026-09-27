@@ -65,9 +65,10 @@ const DANGLING = new Set([
 ]);
 
 /**
- * The prize as a pill over the podium: «Час с тренером и создателем Forma» is a sentence, and a
- * pill holds a label. Cut at « — » when the coach wrote a dash, then at a word boundary inside
- * `max` characters with an ellipsis, never leaving a conjunction hanging at the end.
+ * The prize as the podium's caption: «Час с тренером и создателем Forma» is a sentence, and the
+ * caption («Приз недели — …») holds a label. Cut at « — » when the coach wrote a dash, then at a
+ * word boundary inside `max` characters with an ellipsis, never leaving a conjunction hanging at
+ * the end.
  */
 export function shortPrize(prize: string, max = 24): string {
   const text = prize.trim();
