@@ -1688,9 +1688,6 @@ export const app = {
   // --- Club, the selling screen's demo chat and features (stream: club-pitch-chat) ---
   clubDemoEyebrow: 'A day in the club',
   clubDemoCoachRole: 'coach',
-  clubDemoTime1: '8:00',
-  clubDemoTime2: '8:14',
-  clubDemoTime3: 'Sun, 20:00',
   clubDemoTaskTitle: 'Today’s task: a glass of water before coffee',
   clubDemoTaskBody: 'Exactly one glass, and before — not instead. Nobody is cancelling coffee.',
   clubDemoPoints: '{n} points',

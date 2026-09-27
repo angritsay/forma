@@ -1762,9 +1762,6 @@ export const app = {
   // copy.ts); nothing here is a review, a name or a statistic.
   clubDemoEyebrow: 'Так выглядит день в клубе',
   clubDemoCoachRole: 'тренер',
-  clubDemoTime1: '8:00',
-  clubDemoTime2: '8:14',
-  clubDemoTime3: 'вс, 20:00',
   clubDemoTaskTitle: 'Задание на сегодня: стакан воды до кофе',
   clubDemoTaskBody: 'Ровно один стакан и ровно до, а не вместо. Кофе никто не отменял.',
   clubDemoPoints: '{n} баллов',

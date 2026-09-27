@@ -31,8 +31,6 @@ export interface DemoMessage {
   title?: 'clubDemoTaskTitle';
   /** A pill under the text: the task's points. */
   points?: number;
-  /** The small time under the bubble; omitted for a message that follows straight on. */
-  time?: 'clubDemoTime1' | 'clubDemoTime2' | 'clubDemoTime3';
 }
 
 /** «Стакан воды до кофе» is worth 8 in 0017; the accepted line quotes the same number. */
@@ -44,11 +42,10 @@ export const CLUB_DEMO: readonly DemoMessage[] = [
     title: 'clubDemoTaskTitle',
     text: 'clubDemoTaskBody',
     points: DEMO_TASK_POINTS,
-    time: 'clubDemoTime1',
   },
-  { from: 'me', text: 'clubDemoDone', time: 'clubDemoTime2' },
+  { from: 'me', text: 'clubDemoDone' },
   { from: 'coach', text: 'clubDemoAccepted' },
-  { from: 'coach', text: 'clubDemoWin', time: 'clubDemoTime3' },
+  { from: 'coach', text: 'clubDemoWin' },
 ];
 
 export interface DemoMoment {

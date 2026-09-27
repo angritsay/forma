@@ -6,7 +6,7 @@ import { CLUB_DEMO, DEMO_PACE, DEMO_TASK_POINTS, demoTimeline } from './clubDemo
 describe('the club’s demo chat', () => {
   it('names only lines both languages have', () => {
     for (const m of CLUB_DEMO) {
-      for (const key of [m.text, m.title, m.time]) {
+      for (const key of [m.text, m.title]) {
         if (!key) continue;
         expect(ru).toHaveProperty(key);
         expect(en).toHaveProperty(key);

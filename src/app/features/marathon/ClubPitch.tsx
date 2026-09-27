@@ -5,10 +5,11 @@
  *
  * The owner, on the mockup version: «Он абсолютно не продаёт клуб маленьких шагов». It described
  * the club — photographs, a name, a price, two paragraphs — and showed none of it. So the screen
- * now opens on a day of the club playing itself (`ClubDemoChat`: the task arriving, your «done»,
- * the points, the prize), then the name and the owner's one sentence, then the four things you
- * get as drawn rows, then the photographs as proof, and only then the price. Her choices, in
- * order: chat and paywall rather than slides; the chat first; the photographs kept, lower down.
+ * now opens on the name and the owner's one sentence, then a day of the club playing itself
+ * (`ClubDemoChat`: the task arriving, your «done», the points, the prize), then the four things
+ * you get as drawn rows, then the photographs as proof, and only then the price. Her choices, in
+ * order: chat and paywall rather than slides; the photographs kept, lower down; and, seeing it,
+ * the name over the chat and the chat a third shorter.
  *
  * ## Built to the owner's mockup, which was the measure until then
  *
@@ -225,8 +226,8 @@ function Features() {
 export function ClubPitch({ locked }: ClubPitchProps) {
   return (
     <div className="flex flex-col gap-8 pb-2">
-      <ClubDemoChat />
       <Name />
+      <ClubDemoChat />
       <Features />
       <Photos />
       {locked ? <ClubJoin /> : <ClubMember />}

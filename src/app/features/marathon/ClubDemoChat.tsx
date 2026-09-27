@@ -10,6 +10,10 @@
  * Every bubble is in the DOM from the first paint, hidden, and is revealed in its place when its
  * moment comes. The thread is therefore exactly as tall at rest as it will be at the end, and the
  * name, the features and the button under it never shift while the messages arrive. The typing
+ *
+ * It is set a size smaller than body copy and without timestamps — the owner, seeing it a full
+ * screen tall: «анимацию чуть-чуть меньше по высоте, процентов на 30». A thread is glanced at,
+ * not read like a paragraph, and the times said nothing the order did not.
  * dots sit inside the slot of the message they precede, for the same reason.
  *
  * Under `prefers-reduced-motion` the whole exchange is shown at once: somebody who asked for less
@@ -53,7 +57,7 @@ function TypingDots() {
   return (
     <span
       aria-hidden="true"
-      className="inline-flex h-10 items-center gap-1 rounded-card rounded-bl-md bg-surface-2 px-4"
+      className="inline-flex h-9 items-center gap-1 rounded-tile rounded-bl-md bg-surface-2 px-4"
     >
       {[0, 1, 2].map((i) => (
         <span key={i} className="typing-dot block size-1.5 rounded-full bg-muted" />
@@ -75,14 +79,14 @@ function Bubble({ message, visible }: { message: DemoMessage; visible: boolean }
   return (
     <div
       className={clsx(
-        'flex max-w-[86%] flex-col gap-1',
+        'flex max-w-[86%] flex-col',
         mine ? 'items-end self-end' : 'items-start self-start',
         visible ? 'pop-in' : 'invisible',
       )}
     >
       <div
         className={clsx(
-          'flex flex-col gap-2 rounded-card px-4 py-3 text-[15px] leading-snug',
+          'flex flex-col gap-1.5 rounded-tile px-3.5 py-2.5 text-[14px] leading-snug',
           mine ? 'rounded-br-md bg-accent text-ink' : 'rounded-bl-md bg-surface-2 text-text',
         )}
       >
@@ -94,9 +98,6 @@ function Bubble({ message, visible }: { message: DemoMessage; visible: boolean }
           </div>
         ) : null}
       </div>
-      {message.time ? (
-        <span className="px-1 text-[11px] text-muted-2">{t(`app.${message.time}`)}</span>
-      ) : null}
     </div>
   );
 }
@@ -108,22 +109,22 @@ export function ClubDemoChat() {
   return (
     <section aria-label={t('app.clubDemoEyebrow')} className="flex flex-col gap-3">
       <p className="eyebrow px-3">{t('app.clubDemoEyebrow')}</p>
-      <div className="glass-card flex flex-col gap-4 rounded-card p-4">
-        <header className="flex items-center gap-3">
+      <div className="glass-card flex flex-col gap-3 rounded-card p-3.5">
+        <header className="flex items-center gap-2.5">
           <img
             src={withBase(COACH.photo)}
             alt=""
-            width={40}
-            height={40}
-            className="photo-mono size-10 shrink-0 rounded-full object-cover"
+            width={32}
+            height={32}
+            className="photo-mono size-8 shrink-0 rounded-full object-cover"
           />
           <div className="flex min-w-0 flex-col">
-            <p className="truncate text-[15px] leading-tight font-semibold">{l(COACH.name)}</p>
-            <p className="text-[13px] leading-tight text-muted">{t('app.clubDemoCoachRole')}</p>
+            <p className="truncate text-[13px] leading-tight font-semibold">{l(COACH.name)}</p>
+            <p className="text-[12px] leading-tight text-muted">{t('app.clubDemoCoachRole')}</p>
           </div>
         </header>
         {/* `aria-live` so a screen reader hears the lines arrive in order, once each. */}
-        <ol aria-live="polite" className="flex flex-col gap-2.5">
+        <ol aria-live="polite" className="flex flex-col gap-2">
           {CLUB_DEMO.map((message, i) => (
             <li key={i} className="relative flex flex-col">
               {typing && i === shown && message.from === 'coach' ? (
