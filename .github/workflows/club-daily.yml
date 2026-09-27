@@ -1,0 +1,98 @@
+name: Club daily messages
+
+# Раз в час просит базу поставить в очередь ежедневные сообщения клуба (0052):
+# утреннее задание, вечернее «серия сгорит», воскресные итоги. Отправляет их,
+# как и всё остальное, telegram-notify.yml — раз в десять минут.
+#
+# ## Почему каждый час, а не три cron-строки
+#
+# У каждого круга клуба свой часовой пояс (`marathons.timezone`), а cron в
+# Actions живёт в UTC. Переводить «8:00 по Москве» в UTC здесь значило бы
+# переводить заново при смене пояса или появлении второго круга. Поэтому час
+# решает сама функция: workflow зовёт её каждый час с каждым из трёх видов, а
+# она смотрит на местное время круга и кладёт в очередь только то, чему пора,
+# ровно один раз в день на человека. Лишний вызов стоит один запрос и ноль строк.
+#
+# Минута 7, а не 0: в начале часа Actions перегружен и запуски опаздывают
+# сильнее всего. Опоздание функция переживает — окно у каждого вида два часа.
+#
+# ## В логе только числа
+#
+# Функция возвращает, сколько строк легло в очередь. Ни адресов, ни имён, ни
+# текстов заданий: страница запуска публичного репозитория видна всем и остаётся
+# навсегда.
+
+on:
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+    inputs:
+      kind:
+        description: 'Какой вид проверить (all — все три, как по расписанию)'
+        type: choice
+        default: all
+        options:
+          - all
+          - club_task
+          - club_reminder
+          - club_recap
+
+concurrency:
+  group: club-daily
+  cancel-in-progress: false
+
+jobs:
+  enqueue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Queue what the hour calls for
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+          KIND: ${{ inputs.kind || 'all' }}
+        run: |
+          set -uo pipefail
+          # Секрета или адреса проекта нет — значит ежедневные сообщения ещё не включали,
+          # и это не поломка. Красный крест каждый час приучает не смотреть на Actions,
+          # а именно там видны настоящие сбои.
+          if [ -z "${TOKEN:-}" ] || [ -z "${SUPABASE_URL:-}" ]; then
+            echo "::notice::Ежедневные сообщения клуба ещё не включены: нет секрета SUPABASE_ACCESS_TOKEN или переменной PUBLIC_SUPABASE_URL."
+            exit 0
+          fi
+
+          # https://<ref>.supabase.co → <ref>, как в supabase-apply.yml.
+          PROJECT_REF=$(printf '%s' "$SUPABASE_URL" | sed -E 's#^https?://##; s#\..*$##')
+          if [ -z "$PROJECT_REF" ]; then
+            echo "::error::Из PUBLIC_SUPABASE_URL не читается ref проекта."
+            exit 1
+          fi
+
+          case "$KIND" in
+            all) KINDS="club_task club_reminder club_recap" ;;
+            club_task|club_reminder|club_recap) KINDS="$KIND" ;;
+            *) echo "::error::Неизвестный вид: $KIND"; exit 1 ;;
+          esac
+
+          rc=0
+          for kind in $KINDS; do
+            printf 'select public.club_enqueue_daily(%s) as queued;' "'$kind'" \
+              | jq -Rs '{query: .}' > /tmp/body.json
+            code=$(curl -sS -o /tmp/out.json -w '%{http_code}' \
+              -X POST "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
+              -H "Authorization: Bearer $TOKEN" \
+              -H 'Content-Type: application/json' \
+              --data-binary @/tmp/body.json)
+
+            if [ "$code" -ge 300 ]; then
+              # Печатается только текст ошибки самого API — в нём не бывает строк таблицы.
+              echo "::error::Supabase ответил HTTP $code на «$kind»."
+              jq -r '.message // .error // "(без сообщения)"' < /tmp/out.json || true
+              rc=1
+              continue
+            fi
+
+            # Одно число на вид — и это всё, что тут можно напечатать.
+            queued=$(jq -r '.[0].queued // 0' < /tmp/out.json 2>/dev/null || echo '?')
+            echo "::notice::$kind — в очередь: $queued"
+          done
+          exit $rc

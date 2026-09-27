@@ -69,3 +69,18 @@ export async function adminSetFlag(flag: string, email: string, on: boolean): Pr
     });
   });
 }
+
+/** `set_my_feature_flag(p_flag, p_on)`: the caller's own row, `club_quiet` only; the new state. */
+export async function setMyFeatureFlag(flag: string, on: boolean): Promise<boolean> {
+  return run(() => {
+    const user = requireUser();
+    if (flag !== 'club_quiet') throw new AppError('validation', 'invalid_flag');
+    return mutateDb((db) => {
+      const rows = (db.featureFlags ??= []);
+      const at = rows.findIndex((r) => r.flag === flag && r.userId === user.id);
+      if (on && at < 0) rows.push({ flag, userId: user.id });
+      if (!on && at >= 0) rows.splice(at, 1);
+      return on;
+    });
+  });
+}

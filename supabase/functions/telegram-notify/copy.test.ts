@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { escapeHtml, messageFor, toLocale } from './copy';
+import { escapeHtml, messageFor, plural, toLocale } from './copy';
 
 describe('escapeHtml', () => {
   it('escapes the three characters Telegram treats as HTML', () => {
@@ -102,6 +102,9 @@ describe('messageFor', () => {
       'weekly_winner',
       'referral_reward',
       'duo_nudge',
+      'club_task',
+      'club_reminder',
+      'club_recap',
     ]) {
       for (const locale of ['ru', 'en'] as const) {
         const m = messageFor(
@@ -113,6 +116,9 @@ describe('messageFor', () => {
               note: 'х'.repeat(500),
               name: 'х'.repeat(500),
               days: 30,
+              streak: 999999,
+              points: 999999,
+              week: 999999,
             },
           },
           locale,
@@ -176,6 +182,9 @@ describe('the language of the person being written to', () => {
     'weekly_winner',
     'referral_reward',
     'duo_nudge',
+    'club_task',
+    'club_reminder',
+    'club_recap',
   ];
 
   it('writes English to someone who chose English', () => {
@@ -188,7 +197,10 @@ describe('the language of the person being written to', () => {
 
   it('translates every kind, leaving no Russian behind', () => {
     for (const kind of KINDS) {
-      const m = messageFor({ kind, params: { title: 'Morning legs', prize: 'An hour' } }, 'en');
+      const m = messageFor(
+        { kind, params: { title: 'Morning legs', prize: 'An hour', streak: 3, week: 2 } },
+        'en',
+      );
       expect(m).not.toBeNull();
       // Название тренировки и приз — чужие слова, и они не переводятся; всё остальное должно
       // быть по-английски, а кириллица в тексте означала бы забытую строку.
@@ -252,5 +264,146 @@ describe('the coach’s reply to a support message (0045)', () => {
     const m = messageFor({ kind: 'support_reply', params: { text: '💪'.repeat(1200) } });
     const body = m!.text.split('\n\n')[1]!;
     expect(Array.from(body)).toHaveLength(1000);
+  });
+});
+
+describe('the club’s daily touches (0052)', () => {
+  it('names the task and its points in the morning, and says what to do', () => {
+    const m = messageFor({
+      kind: 'club_task',
+      params: { title: '20 приседаний', points: 12, day: 3 },
+    });
+    expect(m?.text).toBe(
+      'Задание на сегодня: <b>20 приседаний</b> · 12 баллов\n\nСделай — и отметь в приложении.',
+    );
+    expect(m?.buttonText).toBe('Открыть Forma');
+  });
+
+  it('declines the points, and drops them at zero', () => {
+    expect(messageFor({ kind: 'club_task', params: { title: 'x', points: 1 } })?.text).toContain(
+      '· 1 балл\n',
+    );
+    expect(messageFor({ kind: 'club_task', params: { title: 'x', points: 3 } })?.text).toContain(
+      '· 3 балла',
+    );
+    expect(messageFor({ kind: 'club_task', params: { title: 'x', points: 21 } })?.text).toContain(
+      '· 21 балл\n',
+    );
+    // «Доброе утро» и день отдыха стоят ноль — и «· 0 баллов» читается как насмешка.
+    const rest = messageFor({ kind: 'club_task', params: { title: 'Отдых', points: 0 } });
+    expect(rest?.text).toBe('Задание на сегодня: <b>Отдых</b>\n\nСделай — и отметь в приложении.');
+  });
+
+  /* Название пишет тренер, и однажды оно приедет со знаком «<». */
+  it('escapes the title the coach typed', () => {
+    const m = messageFor({
+      kind: 'club_task',
+      params: { title: '<b>20</b> приседаний & вода', points: 5 },
+    });
+    expect(m?.text).toContain('<b>&lt;b&gt;20&lt;/b&gt; приседаний &amp; вода</b>');
+    expect(m?.text).not.toContain('<b><b>');
+  });
+
+  it('uses the English title for an English reader when the coach wrote one', () => {
+    const params = { title: '20 приседаний', title_en: '20 squats', points: 12 };
+    expect(messageFor({ kind: 'club_task', params }, 'en')?.text).toBe(
+      'Today’s task: <b>20 squats</b> · 12 points\n\nDo it — and tick it off in the app.',
+    );
+    // Без английской половины — русское название, как у тренировки (чужие слова не переводятся).
+    expect(
+      messageFor({ kind: 'club_task', params: { title: '20 приседаний', points: 1 } }, 'en')?.text,
+    ).toContain('<b>20 приседаний</b> · 1 point');
+    expect(messageFor({ kind: 'club_task', params }, 'ru')?.text).toContain('<b>20 приседаний</b>');
+  });
+
+  it('sends nothing for a task without a title', () => {
+    expect(messageFor({ kind: 'club_task', params: { title: '  ', points: 5 } })).toBeNull();
+    expect(messageFor({ kind: 'club_task', params: null })).toBeNull();
+  });
+
+  it('reminds about the streak that is about to break, in the right plural', () => {
+    expect(messageFor({ kind: 'club_reminder', params: { streak: 1 } })?.text).toBe(
+      '<b>Сегодня ещё нет отметки. Серия 1 день — сгорит в полночь 🔥</b>',
+    );
+    expect(messageFor({ kind: 'club_reminder', params: { streak: 3 } })?.text).toContain(
+      'Серия 3 дня —',
+    );
+    expect(messageFor({ kind: 'club_reminder', params: { streak: 12 } })?.text).toContain(
+      'Серия 12 дней —',
+    );
+    expect(messageFor({ kind: 'club_reminder', params: { streak: '5' } })?.text).toContain(
+      'Серия 5 дней —',
+    );
+    expect(messageFor({ kind: 'club_reminder', params: { streak: 1 } }, 'en')?.text).toBe(
+      '<b>No tick today yet. Your streak of 1 day burns out at midnight 🔥</b>',
+    );
+    expect(messageFor({ kind: 'club_reminder', params: { streak: 4 } }, 'en')?.text).toContain(
+      'streak of 4 days',
+    );
+  });
+
+  /* Серии нет — напоминать не о чем; база такое не кладёт, но старая строка может. */
+  it('sends no reminder without a streak', () => {
+    expect(messageFor({ kind: 'club_reminder', params: { streak: 0 } })).toBeNull();
+    expect(messageFor({ kind: 'club_reminder', params: {} })).toBeNull();
+    expect(messageFor({ kind: 'club_reminder', params: { streak: 'many' } })).toBeNull();
+  });
+
+  it('closes the week with place, points, tasks and streak', () => {
+    const m = messageFor({
+      kind: 'club_recap',
+      params: { week: 2, place: 3, points: 41, done: 5, total: 7, streak: 5 },
+    });
+    expect(m?.text).toBe(
+      '<b>Неделя 2: 41 балл, 5 из 7 заданий, место 3. Серия 5 дней 🔥. Новая неделя — в понедельник.</b>',
+    );
+    expect(m?.buttonText).toBe('Открыть Forma');
+    const en = messageFor(
+      {
+        kind: 'club_recap',
+        params: { week: 2, place: 1, points: 1, done: 1, total: 1, streak: 1 },
+      },
+      'en',
+    );
+    expect(en?.text).toBe(
+      '<b>Week 2: 1 point, 1 of 1 task, place 1. Streak 1 day 🔥. A new week starts Monday.</b>',
+    );
+  });
+
+  it('omits the place and the streak when there is none to name', () => {
+    const m = messageFor({
+      kind: 'club_recap',
+      params: { week: 4, place: null, points: 0, done: 0, total: 1, streak: 0 },
+    });
+    expect(m?.text).toBe(
+      '<b>Неделя 4: 0 баллов, 0 из 1 задания. Новая неделя — в понедельник.</b>',
+    );
+    expect(m?.text).not.toContain('место');
+    expect(m?.text).not.toContain('Серия');
+  });
+
+  it('still says something when the numbers are missing', () => {
+    const m = messageFor({ kind: 'club_recap', params: {} });
+    expect(m?.text).toBe('<b>0 баллов, 0 из 0 заданий. Новая неделя — в понедельник.</b>');
+  });
+});
+
+describe('plural', () => {
+  it('picks the Russian form by the last digits and the English by one', () => {
+    const f = { one: 'день', few: 'дня', many: 'дней' };
+    expect([1, 2, 5, 11, 12, 21, 22, 25, 101, 111].map((n) => plural('ru', n, f))).toEqual([
+      'день',
+      'дня',
+      'дней',
+      'дней',
+      'дней',
+      'день',
+      'дня',
+      'дней',
+      'день',
+      'дней',
+    ]);
+    expect(plural('en', 1, { one: 'day', many: 'days' })).toBe('day');
+    expect(plural('en', 0, { one: 'day', many: 'days' })).toBe('days');
   });
 });

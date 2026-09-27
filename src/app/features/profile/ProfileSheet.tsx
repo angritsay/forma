@@ -37,10 +37,12 @@ import { useToast } from '@/components/ui/Toast';
 import type { Equipment } from '@/content/schema';
 import { formatNumber, LANGUAGE_NAME } from '@/i18n/index';
 import { isAppError } from '@/lib/api/errors';
+import { setMyFeatureFlag } from '@/lib/api/flags';
 import type { ProfilePatch } from '@/lib/api/types';
 import { levelForPoints } from '@/lib/training/levels';
 import { useSound } from '@/app/features/player/sound';
 import { useT } from '@/app/hooks/useT';
+import { useFlag, useFlags } from '@/app/store/flags';
 import { useTotalPoints } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
 import { DataSheet } from './DataSheet';
@@ -75,6 +77,14 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
   const [levelsOpen, setLevelsOpen] = useState(false);
   const isAdmin = useIsAdmin() === true;
   const [saving, setSaving] = useState(false);
+  /*
+   * The club's daily bot messages (0052): on unless the person set `club_quiet` on themselves.
+   * `quietDraft` is the optimistic state while the write is in flight — a switch that waits for
+   * the network before moving reads as broken — and clears once the flags are re-read.
+   */
+  const quiet = useFlag('club_quiet');
+  const [quietDraft, setQuietDraft] = useState<boolean | null>(null);
+  const [quietBusy, setQuietBusy] = useState(false);
   const tp = profile?.trainingProfile ?? null;
 
   const level = levelForPoints(points);
@@ -112,6 +122,26 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
     void save({ trainingProfile: withEquipment(tp, equipment, dumbbellKg, kettlebellKg) }, () =>
       setGear(false),
     );
+  };
+
+  const setQuiet = async (next: boolean) => {
+    setQuietDraft(next);
+    setQuietBusy(true);
+    try {
+      await setMyFeatureFlag('club_quiet', next);
+      await useFlags.getState().load();
+    } catch (e) {
+      toast.show({
+        kind: 'error',
+        title:
+          isAppError(e) && e.code === 'network'
+            ? t('common.errorOffline')
+            : t('app.profileSaveError'),
+      });
+    } finally {
+      setQuietDraft(null);
+      setQuietBusy(false);
+    }
   };
 
   const signOut = async () => {
@@ -267,6 +297,27 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
                       if (on) sound.beep('next');
                     }}
                     label={t('app.soundRow')}
+                  />
+                }
+              />
+            </li>
+            {/*
+             * The club's daily bot messages (0052): the morning task, the evening «серия сгорит»,
+             * the Sunday recap. Here for everyone signed in rather than only for club members: the
+             * flag is harmless to a person the bot would not write to anyway, and deciding «is this
+             * person in the club» would drag the subscription and the trial window into a sheet
+             * about the account. On = the bot writes; the flag stored is the *quiet* one, so the
+             * switch shows its inverse.
+             */}
+            <li>
+              <ListRow
+                title={t('app.clubMessagesRow')}
+                trailing={
+                  <Switch
+                    checked={!(quietDraft ?? quiet)}
+                    disabled={quietBusy}
+                    onChange={(on) => void setQuiet(!on)}
+                    label={t('app.clubMessagesRow')}
                   />
                 }
               />

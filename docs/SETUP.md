@@ -1733,6 +1733,47 @@ tables are closed to the API.
 
 ---
 
+## 7.14 The club's daily messages: morning, evening, Sunday
+
+The owner's brief: a member should be pulled back every day — «регулярная подпитка дофамином».
+`0052_club_daily.sql` and `.github/workflows/club-daily.yml`.
+
+**What arrives**, in the round's own timezone (`marathons.timezone`, Moscow for the club):
+
+| When         | Kind            | To whom                                                                        |
+| ------------ | --------------- | ------------------------------------------------------------------------------ |
+| 08:00 daily  | `club_task`     | Everyone reachable: the day's task («Задание на сегодня: … · 12 баллов»).      |
+| 20:00 daily  | `club_reminder` | Only people with a streak and no tick today: «Серия 3 дня — сгорит в полночь». |
+| 21:00 Sunday | `club_recap`    | Place, points, done of total, streak; skipped for a week with nothing in it.   |
+
+«Reachable» is `club_access()` for that address (a live subscription, a course in its trial week,
+or an admin — so the coach gets them too) minus anyone who turned them off: **Профиль → Сообщения
+клуба в Telegram**. That switch is the `club_quiet` feature flag (§7.8's person page shows it
+too), the one flag a person sets on themselves. Someone in both the solo and the duo club gets
+each message once, from the solo round.
+
+**How it runs.** `club-daily.yml` fires every hour and asks `club_enqueue_daily(kind)` for each
+of the three kinds through the Management API, exactly as the weekly `club-rematch.yml` (which
+re-pairs the duo club on Monday night) does. The function looks at the round's local hour and
+queues rows into `telegram_outbox` only when it is the hour — with a two-hour window and a
+per-day key, so a late Actions run still delivers and never twice. `telegram-notify.yml` then sends
+them within ten minutes. pg_cron is not enabled in the project, and Actions already carries the
+sender's schedule. **Run workflow** with a kind lets you check one kind by hand; it still only
+queues when the hour is right.
+
+**Turning it on**, in this order:
+
+1. Actions → Supabase apply → `migration` with **`0052_club_daily.sql`**.
+2. Actions → Supabase apply → **`deploy-notify`** — three new kinds in `telegram_outbox`. An older
+   sender marks them `skipped` as unknown, so deploy before the first morning.
+3. Nothing else: the workflow uses the same **`SUPABASE_ACCESS_TOKEN`** secret and
+   **`PUBLIC_SUPABASE_URL`** variable as §7.8, and stays quiet (a notice, not a failure) until
+   they exist.
+
+Each run prints one number per kind — how many rows were queued — and nothing else.
+
+---
+
 ## 7.10 What is still only in Russian
 
 Everything written ahead of time is bilingual and the build says so: the interface dictionaries are

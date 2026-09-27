@@ -35,6 +35,8 @@ export const app = {
   // Sound. One row, one switch, no explanation: ListRow truncates a subtitle, and a sentence
   // that cannot be read to the end is worse than none. The switch says what it does by moving.
   soundRow: 'Sound',
+  // The club's daily bot messages (0052): on = the bot writes.
+  clubMessagesRow: 'Club messages in Telegram',
 
   // The admin's own language switch: which language the coach is typing into right now
   // (src/app/features/admin/LangTabs.tsx). Not the language of the panel itself.
@@ -658,6 +660,8 @@ export const app = {
   personFeatureOn: 'On: {name}',
   personFeatureOff: 'Off: {name}',
   flagLabelCoachNastia: 'Anastasia’s card on the Coach tab',
+  // On = the person muted the club's daily bot messages (0052).
+  flagLabelClubQuiet: 'No club messages in Telegram',
   bookHeroStrip: 'Who runs the sessions',
   personActivity: 'Training',
   personActSessions: 'workouts',

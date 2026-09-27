@@ -42,7 +42,10 @@ export type NotifyKind =
   | 'weekly_winner'
   | 'support_reply'
   | 'referral_reward'
-  | 'duo_nudge';
+  | 'duo_nudge'
+  | 'club_task'
+  | 'club_reminder'
+  | 'club_recap';
 
 /** Языки, на которых выходит продукт — `LOCALES` в src/content/schema.ts. */
 export type Locale = 'ru' | 'en';
@@ -113,6 +116,42 @@ interface Copy {
   /** Напарник по дуо сделал задание (0051): `{name}` — как его зовут на доске. */
   duoNudge: string;
   duoNudgeNoName: string;
+  /** Кнопка под ежедневными сообщениями клуба (0052): короче, чем «Открыть приложение». */
+  openForma: string;
+  /** Утро (0052): `{title}` — задание словами тренера, `{points}` — «12 баллов» или ничего. */
+  clubTask: string;
+  clubTaskDo: string;
+  /** Вечер (0052): `{streak}` — «3 дня». */
+  clubReminder: string;
+  /** Воскресенье (0052): `{place}` — «, место 3» или ничего; `{streak}` — «Серия 3 дня 🔥. » или ничего. */
+  clubRecap: string;
+  clubRecapWeek: string;
+  clubRecapPlace: string;
+  clubRecapStreak: string;
+  /** Формы слов при числе: балл / день / задание. */
+  points: Plural;
+  days: Plural;
+  tasks: Plural;
+}
+
+/** Формы одного слова при числе. `few` — у русского (2–4); английскому хватает двух. */
+interface Plural {
+  one: string;
+  few?: string;
+  many: string;
+}
+
+/** «1 балл», «3 балла», «12 баллов»; по-английски «1 point», «3 points». Правило — `src/i18n`. */
+export function plural(locale: Locale, n: number, f: Plural): string {
+  const abs = Math.abs(n);
+  if (locale === 'ru') {
+    const mod10 = abs % 10;
+    const mod100 = abs % 100;
+    if (mod10 === 1 && mod100 !== 11) return f.one;
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return f.few ?? f.many;
+    return f.many;
+  }
+  return abs === 1 ? f.one : f.many;
 }
 
 const COPY: Record<Locale, Copy> = {
@@ -134,6 +173,19 @@ const COPY: Record<Locale, Copy> = {
     referralFriend: 'Тебя позвали в клуб — тебе +{days} дней 🎁',
     duoNudge: '{name} уже сделал(а) задание — твоя очередь',
     duoNudgeNoName: 'Напарник',
+    openForma: 'Открыть Forma',
+    clubTask: 'Задание на сегодня: <b>{title}</b>{points}',
+    clubTaskDo: 'Сделай — и отметь в приложении.',
+    clubReminder: 'Сегодня ещё нет отметки. Серия {streak} — сгорит в полночь 🔥',
+    clubRecap:
+      '{week}{points}, {done} из {total} {tasks}{place}. {streak}Новая неделя — в понедельник.',
+    clubRecapWeek: 'Неделя {week}: ',
+    clubRecapPlace: ', место {place}',
+    clubRecapStreak: 'Серия {streak} 🔥. ',
+    points: { one: 'балл', few: 'балла', many: 'баллов' },
+    days: { one: 'день', few: 'дня', many: 'дней' },
+    // Родительный после «из»: «из 1 задания», «из 5 заданий».
+    tasks: { one: 'задания', few: 'заданий', many: 'заданий' },
   },
   en: {
     afterPayment:
@@ -153,6 +205,18 @@ const COPY: Record<Locale, Copy> = {
     referralFriend: 'A friend invited you to the club — {days} days on us 🎁',
     duoNudge: '{name} has done today’s task — your turn',
     duoNudgeNoName: 'Your partner',
+    openForma: 'Open Forma',
+    clubTask: 'Today’s task: <b>{title}</b>{points}',
+    clubTaskDo: 'Do it — and tick it off in the app.',
+    clubReminder: 'No tick today yet. Your streak of {streak} burns out at midnight 🔥',
+    clubRecap:
+      '{week}{points}, {done} of {total} {tasks}{place}. {streak}A new week starts Monday.',
+    clubRecapWeek: 'Week {week}: ',
+    clubRecapPlace: ', place {place}',
+    clubRecapStreak: 'Streak {streak} 🔥. ',
+    points: { one: 'point', many: 'points' },
+    days: { one: 'day', many: 'days' },
+    tasks: { one: 'task', many: 'tasks' },
   },
 };
 
@@ -250,9 +314,94 @@ export function messageFor(row: OutboxRow, locale: Locale = DEFAULT_LOCALE): Mes
       return { text: `<b>${c.duoNudge.replace('{name}', name)}</b>`, buttonText: c.openApp };
     }
 
+    /*
+     * Ежедневные касания клуба (0052). Кнопка — «Открыть Forma»: сообщение приходит каждый
+     * день, и длинная подпись под ним каждый день — лишняя.
+     */
+    case 'club_task':
+      return clubTaskMessage(params, c, locale);
+
+    case 'club_reminder': {
+      const streak = count(params.streak);
+      // Серии нет — напоминать не о чем; база такое не кладёт, но старая строка может.
+      if (streak === null || streak < 1) return null;
+      const line = c.clubReminder.replace(
+        '{streak}',
+        `${streak} ${plural(locale, streak, c.days)}`,
+      );
+      return { text: `<b>${line}</b>`, buttonText: c.openForma };
+    }
+
+    case 'club_recap':
+      return clubRecapMessage(params, c, locale);
+
     default:
       return null;
   }
+}
+
+/** Целое неотрицательное число из очереди, или `null`: строку «12» тоже принимает. */
+function count(x: unknown): number | null {
+  const n = typeof x === 'string' ? Number(x) : x;
+  return typeof n === 'number' && Number.isSafeInteger(n) && n >= 0 ? n : null;
+}
+
+/**
+ * Утро (0052): «Задание на сегодня: <b>{title}</b> · 12 баллов» и одна строка про то, что делать.
+ *
+ * Название — словами тренера, как у `workout_assigned`: экранируется и не переводится; английская
+ * половина берётся, если тренер её написал (0032), как у приза победителя. Без названия сообщения
+ * нет — база такое не кладёт. Ноль баллов («Доброе утро», день отдыха) — без хвоста про баллы:
+ * «· 0 баллов» читается как насмешка.
+ */
+function clubTaskMessage(params: Record<string, unknown>, c: Copy, locale: Locale): Message | null {
+  const ru = typeof params.title === 'string' ? params.title.trim() : '';
+  const en = typeof params.title_en === 'string' ? params.title_en.trim() : '';
+  const title = locale === 'en' && en ? en : ru;
+  if (!title) return null;
+  const points = count(params.points) ?? 0;
+  const tail = points > 0 ? ` · ${points} ${plural(locale, points, c.points)}` : '';
+  const line = c.clubTask
+    .replace('{title}', escapeHtml(title.slice(0, 120)))
+    .replace('{points}', tail);
+  return { text: `${line}\n\n${c.clubTaskDo}`, buttonText: c.openForma };
+}
+
+/**
+ * Воскресенье (0052): неделя, баллы, сделано из скольких, место, серия — и что дальше.
+ *
+ * Места нет, когда доска его не назвала (`null` в очереди); серии нет — нет и фразы про неё:
+ * «Серия 0 дней» в вечер закрытия недели — упрёк, а не итог. Номера недели нет — нет и «Неделя N:».
+ * Нет ни одного числа — остаётся «0 баллов, 0 из 0» и последняя фраза: это всё ещё сообщение,
+ * а не пустой `<b></b>`.
+ */
+function clubRecapMessage(params: Record<string, unknown>, c: Copy, locale: Locale): Message {
+  const week = count(params.week);
+  const points = count(params.points) ?? 0;
+  const done = count(params.done) ?? 0;
+  const total = count(params.total) ?? 0;
+  const place = count(params.place);
+  const streak = count(params.streak) ?? 0;
+  const line = c.clubRecap
+    .replace(
+      '{week}',
+      week !== null && week > 0 ? c.clubRecapWeek.replace('{week}', String(week)) : '',
+    )
+    .replace('{points}', `${points} ${plural(locale, points, c.points)}`)
+    .replace('{done}', String(done))
+    .replace('{total}', String(total))
+    .replace('{tasks}', plural(locale, total, c.tasks))
+    .replace(
+      '{place}',
+      place !== null && place > 0 ? c.clubRecapPlace.replace('{place}', String(place)) : '',
+    )
+    .replace(
+      '{streak}',
+      streak > 0
+        ? c.clubRecapStreak.replace('{streak}', `${streak} ${plural(locale, streak, c.days)}`)
+        : '',
+    );
+  return { text: `<b>${line}</b>`, buttonText: c.openForma };
 }
 
 /** Сколько символов ответа доходит до человека — тот же предел, что у обращения (0042, 0045). */

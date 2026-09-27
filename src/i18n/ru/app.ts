@@ -35,6 +35,9 @@ export const app = {
   // Звук. Одна строка, один переключатель и никаких пояснений: ListRow обрезает подпись, а
   // предложение, которое нельзя дочитать, хуже, чем его отсутствие.
   soundRow: 'Звук',
+  // Ежедневные сообщения клуба в боте (0052): включено = бот пишет. Ошибка сохранения —
+  // общая строка profileSaveError.
+  clubMessagesRow: 'Сообщения клуба в Telegram',
 
   // Переключатель языка в админке: на каком языке тренер сейчас печатает
   // (src/app/features/admin/LangTabs.tsx). Не язык самой панели.
@@ -676,6 +679,8 @@ export const app = {
   personFeatureOn: 'Включено: {name}',
   personFeatureOff: 'Выключено: {name}',
   flagLabelCoachNastia: 'Карточка Анастасии на вкладке «Тренер»',
+  // On = the person muted the club's daily bot messages (0052).
+  flagLabelClubQuiet: 'Не писать в Telegram про клуб',
   bookHeroStrip: 'Кто ведёт занятия',
   personActivity: 'Тренировки',
   personActSessions: 'тренировок',
