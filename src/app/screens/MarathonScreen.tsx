@@ -23,9 +23,10 @@
  * won for — and the single link to the full table, which is the only way the board screen is
  * reachable.
  *
- * **Nobody has a partner.** «Никакого напарника в клубе быть не должно. Каждый сам за себя.» The
- * club is `team_size = 1`, so there is no roster to read here and no line on the card about where
- * somebody else has got to. Each member is their own row.
+ * **Nobody has a partner** in the solo club. «Никакого напарника в клубе быть не должно. Каждый сам
+ * за себя.» The club is `team_size = 1`, so there is no roster to read here and no line on the
+ * card about where somebody else has got to. Each member is their own row. The duo club (0033) is
+ * the one place a partner exists, and there the card does say where they are (`ClubPartnerLine`).
  *
  * The table is short on purpose. At 7am on a mat the answer to "where am I in the standings" is
  * never what gets someone moving, so the task comes first; but a race nobody can see the score of
@@ -54,8 +55,28 @@
  * retry and the prize pill are the warm half of the gradient under ink, the leader's circle too,
  * and today's dot on the streak is orange. The neon is the rest of the app's main action; the
  * club's is its own colour.
+ *
+ * ## The week as a game (2026-09-27)
+ *
+ * Owner: «геймифицировать… регулярная подпитка дофамином… желание зайти и узнать новое задание,
+ * поучаствовать, поделиться». The three things are still the three things; what changed is that
+ * each of them now has a moment attached, and every moment is made of numbers the API already
+ * returned — nothing on this screen is invented for effect:
+ *
+ *   - **morning** — the day named (`ClubDay`: «День 10 · неделя 2 из 2 · до 22:00») and the task
+ *     sealed until the first tap (`TaskCard`, `isSealed`, remembered in `clubMemory`);
+ *   - **doing it** — on a new proof, haptic + confetti + «+12» rising from the button
+ *     (`ClubCelebrate`), the board reloading under it with «↑1» on your row and «До Димы — 5
+ *     баллов» beneath the table (`boardDelta`, `boardGap`);
+ *   - **the partner** — in the duo club, where they have got to today (`ClubPartnerLine`);
+ *   - **the evening** — the streak at risk after 18:00 (`ClubStreak`), with its milestones;
+ *   - **Sunday** — the week's recap and a «Поделиться» (`ClubWeekRecap`, `ClubShare`), the same
+ *     six story designs the workout summary has, with the club's own facts on them.
+ *
+ * All the client keeps for this is in `localStorage`, per email (`clubMemory.ts`): which envelope
+ * was opened, where you were last time, which confetti already fell.
  */
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -68,25 +89,48 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { PROOFS_BUCKET, proofMediaPath, sendProof } from '@/lib/api/marathon';
 import { uploadMedia } from '@/lib/api/storage';
-import type { ProofInput } from '@/lib/api/types';
+import type { ClubDuoStatus, ProofInput } from '@/lib/api/types';
+import { prefersReducedMotion } from '@/lib/ui/motion';
 import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
+import { toLocalDateIso } from '@/lib/util/dates';
 import { downscaleImage, extensionFor, isVideoFile, MAX_VIDEO_BYTES } from '@/lib/util/image';
 import { useT } from '@/app/hooks/useT';
 import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { BoardGap, BoardRow } from '@/app/features/marathon/BoardRow';
+import { celebrate } from '@/app/features/marathon/ClubCelebrate';
+import { ClubDay } from '@/app/features/marathon/ClubDay';
 import { ClubDuoPair } from '@/app/features/marathon/ClubDuoPair';
+import { ClubInviteCard } from '@/app/features/marathon/ClubInviteCard';
+import { ClubPartnerLine } from '@/app/features/marathon/ClubPartnerLine';
 import { ClubPitch } from '@/app/features/marathon/ClubPitch';
-import { ClubStreak } from '@/app/features/marathon/ClubStreak';
+import { ClubShare } from '@/app/features/marathon/ClubShare';
+import { ClubStreak, useClubDays } from '@/app/features/marathon/ClubStreak';
+import { ClubWeekRecap } from '@/app/features/marathon/ClubWeekRecap';
 import { ClubWinner } from '@/app/features/marathon/ClubWinner';
+import {
+  isOpened,
+  markOpened,
+  readClubMemory,
+  rememberBoard,
+} from '@/app/features/marathon/clubMemory';
 import { boardPath, clubFor, clubModeOf, type ClubMode } from '@/app/features/marathon/clubMode';
 import { clubPrize } from '@/app/features/marathon/prize';
-import { weekStandings } from '@/app/features/marathon/standings';
+import {
+  boardDelta,
+  boardGap,
+  weekStandings,
+  type BoardSeen,
+} from '@/app/features/marathon/standings';
+import { clubStreak } from '@/app/features/marathon/streak';
 import { TaskCard } from '@/app/features/marathon/TaskCard';
+import { isSealed } from '@/app/features/marathon/taskSeal';
+import { useClubMemory } from '@/app/features/marathon/useClubMemory';
 import {
   useMarathonDay,
   useMarathonScores,
   useMyMarathons,
 } from '@/app/features/marathon/useMarathon';
+import { pointsWord } from '@/app/features/share/story/data';
 import { useSession } from '@/app/store/session';
 import { gameAccess } from '@/app/features/marathon/gameAccess';
 import { GAME_REQUIRES_SUBSCRIPTION } from '@content/site/plans';
@@ -101,7 +145,7 @@ function DaySkeleton() {
 
 export default function MarathonScreen() {
   const tr = useT();
-  const { t } = tr;
+  const { t, locale } = tr;
   const subscription = useSession((s) => s.subscription);
   const newestPurchaseAt = useSession((s) => s.newestPurchaseAt);
   const navigate = useNavigate();
@@ -136,11 +180,30 @@ export default function MarathonScreen() {
   const marathon = clubFor({ soloClub, duoClub, marathon: anyRound }, mode);
   const dayIndex = marathon?.dayIndex ?? 0;
   const { data: tasks, status, reload } = useMarathonDay(marathon, dayIndex);
-  const { data: scores, reload: reloadScores } = useMarathonScores(
-    marathon?.id ?? null,
-    marathon?.week ?? null,
-  );
+  const {
+    data: scores,
+    status: scoresStatus,
+    reload: reloadScores,
+  } = useMarathonScores(marathon?.id ?? null, marathon?.week ?? null);
   const [sending, setSending] = useState(false);
+
+  /*
+   * The member's own clock, fixed per mount: the streak, the recap's weekday and the seal are all
+   * «today» questions, and a render at midnight must not move any of them under the reader.
+   * `daysVersion` re-reads `my_club_days()` after a proof, so the pill and the recap move with
+   * the board instead of waiting for the tab to be mounted again.
+   */
+  const [today] = useState(() => toLocalDateIso(new Date()));
+  const [weekday] = useState(() => new Date().getDay());
+  const [daysVersion, setDaysVersion] = useState(0);
+  const days = useClubDays(today, daysVersion);
+  const streak = days ? clubStreak(days, today) : 0;
+  const reducedMotion = useMemo(() => prefersReducedMotion(), []);
+
+  /* What this phone remembers about this account (`clubMemory.ts`). */
+  const { memory, update, email } = useClubMemory();
+  /* The duo pair, read once by `ClubDuoPair` and shared with the task card. */
+  const [duoStatus, setDuoStatus] = useState<ClubDuoStatus | null>(null);
 
   /*
    * The week's table. The arithmetic is in `standings.ts` and unit-tested there — ties, an empty
@@ -152,13 +215,56 @@ export default function MarathonScreen() {
     () => weekStandings(scores, marathon?.memberId ?? null),
     [scores, marathon?.memberId],
   );
+  const gap = useMemo(() => boardGap(scores), [scores]);
+
+  /*
+   * «↑2»: the place now against the place the last time this mode was on screen. The baseline is
+   * read once per visit (per account and mode) and the current place is written back whenever
+   * the board arrives, so the arrow is honest for the whole visit — after a proof it measures
+   * against where the person *was* when they opened the tab, which is the move they made.
+   */
+  const seen = useMemo(() => readClubMemory(email).board[mode] ?? null, [email, mode]);
+  const week = marathon?.week ?? null;
+  const place = standings.place;
+  const now = useMemo<BoardSeen | null>(
+    () =>
+      week !== null && place.kind !== 'missing'
+        ? {
+            rank: place.kind === 'ranked' ? place.rank : null,
+            points: place.kind === 'ranked' ? place.points : 0,
+            week,
+          }
+        : null,
+    [week, place],
+  );
+  const rankDelta = now ? boardDelta(seen, now).rankDelta : null;
+  useEffect(() => {
+    if (scoresStatus !== 'ready' || !now) return;
+    update((m) => rememberBoard(m, mode, now));
+  }, [scoresStatus, now, mode, update]);
 
   const send = useCallback(
-    async (taskId: string, proof: Omit<ProofInput, 'taskId' | 'memberId'>) => {
+    async (
+      taskId: string,
+      proof: Omit<ProofInput, 'taskId' | 'memberId'>,
+      anchor?: HTMLElement | null,
+    ) => {
       if (!marathon) return;
+      /* New, as against corrected or done again after a rejection: only a first proof celebrates. */
+      const item = tasks.find((i) => i.task.id === taskId);
+      const fresh = item !== undefined && item.mine === null;
       setSending(true);
       try {
         await sendProof({ ...proof, taskId, memberId: marathon.memberId });
+        /*
+         * The small win (`ClubCelebrate`): the haptic, the burst and the «+12» from where the
+         * finger was. Only for a task that scores and only the first time — a corrected number or
+         * a redo after the coach's rejection is the same points again, not new ones. Before the
+         * reloads, while the button it rises from is still on the page.
+         */
+        if (fresh && item.task.rule !== 'none') {
+          celebrate({ points: item.task.points, anchor });
+        }
         reload();
         /*
          * And the board with it. Proof is counted the moment it is sent (0011_marathon.sql), so the
@@ -167,17 +273,23 @@ export default function MarathonScreen() {
          * «где ты» reads as the score not counting.
          */
         reloadScores();
+        setDaysVersion((v) => v + 1);
       } catch {
         toast.show({ kind: 'error', title: t('common.errorGeneric') });
       } finally {
         setSending(false);
       }
     },
-    [marathon, reload, reloadScores, t, toast],
+    [marathon, tasks, reload, reloadScores, t, toast],
   );
 
   const sendMedia = useCallback(
-    async (taskId: string, file: File, keep: Omit<ProofInput, 'taskId' | 'memberId'>) => {
+    async (
+      taskId: string,
+      file: File,
+      keep: Omit<ProofInput, 'taskId' | 'memberId'>,
+      anchor?: HTMLElement | null,
+    ) => {
       if (!marathon) return;
       /*
        * A photograph is shrunk first, through `lib/util/image`. This path used to upload whatever
@@ -212,7 +324,7 @@ export default function MarathonScreen() {
         const ext = extensionFor(blob, file.name.split('.').pop() || (video ? 'mp4' : 'jpg'));
         const path = proofMediaPath(marathon.id, marathon.memberId, taskId, ext);
         const ref = await uploadMedia(PROOFS_BUCKET, path, blob);
-        await send(taskId, { ...keep, mediaPath: ref });
+        await send(taskId, { ...keep, mediaPath: ref }, anchor);
       } catch {
         toast.show({ kind: 'error', title: t('common.errorGeneric') });
       }
@@ -238,13 +350,18 @@ export default function MarathonScreen() {
    * «показывать, сколько дней подряд ты выполняешь упражнения» — «в том же месте, как у нас это
    * сделано на курсах», which is the top right. It is one pill and it draws nothing when the
    * streak is zero, so the objection that took the ring away does not apply to it: it reports a
-   * number the person made, rather than a number the calendar made.
+   * number the person made, rather than a number the calendar made. It now sits at the right end
+   * of the day's line (`ClubDay`) — one quiet 13px row, still not a head.
    */
   const page = (body: ReactNode) => (
     <div className="club-aurora-host" style={courseTileVars(GAME_TILE)}>
       <div className="club-aurora" aria-hidden="true" />
       <Screen contentClassName="pt-2">
-        <ClubStreak />
+        <ClubDay
+          marathon={marathon}
+          dueTime={tasks[0]?.task.dueTime ?? null}
+          streak={<ClubStreak days={days} today={today} />}
+        />
         {/*
          * Над заданием дня, а не под ним: объявление — это про прошлую неделю, и оно закрывает её
          * прежде, чем человек берётся за сегодняшнее. Своего победителя тут нет — плашка рисуется,
@@ -323,6 +440,10 @@ export default function MarathonScreen() {
   }
 
   const closed = marathon.status === 'finished';
+  const todayDone = tasks.length > 0 && tasks.every((i) => i.mine !== null && !i.mine.voidedAt);
+  const myPlace = standings.place.kind === 'ranked' ? standings.place.rank : null;
+
+  const rowDelta = (isMine: boolean) => (isMine ? rankDelta : null);
 
   return page(
     <div className="flex flex-col gap-6 pt-5 pb-4">
@@ -357,6 +478,7 @@ export default function MarathonScreen() {
        */}
       {duo ? (
         <ClubDuoPair
+          onStatus={setDuoStatus}
           onChanged={() => {
             reload();
             reloadScores();
@@ -364,6 +486,21 @@ export default function MarathonScreen() {
           }}
         />
       ) : null}
+
+      {/* Today's task delivered: the moment to ask a friend along (0051). */}
+      {dayIndex >= 1 && status === 'ready' && todayDone ? <ClubInviteCard /> : null}
+
+      {/* The week closed: Sunday once the task is done, Monday–Tuesday until the first new proof. */}
+      {dayIndex >= 1 && status === 'ready' ? (
+        <ClubWeekRecap
+          marathon={marathon}
+          todayDone={todayDone}
+          streak={streak}
+          weekday={weekday}
+          version={daysVersion}
+        />
+      ) : null}
+
       {/*
        * The task and the table, side by side from `md`.
        *
@@ -394,15 +531,44 @@ export default function MarathonScreen() {
              * worse than one that shows it.
              */
             <div className="flex flex-col" aria-busy={sending}>
-              {tasks.map((item) => (
-                <TaskCard
-                  key={item.task.id}
-                  item={item}
-                  closed={closed}
-                  onSend={(proof) => send(item.task.id, proof)}
-                  onSendMedia={(file, keep) => sendMedia(item.task.id, file, keep)}
-                />
-              ))}
+              {tasks.map((item) => {
+                const done = item.mine !== null && !item.mine.voidedAt;
+                const title = (locale === 'en' && item.task.titleEn) || item.task.title;
+                return (
+                  <TaskCard
+                    key={item.task.id}
+                    item={item}
+                    closed={closed}
+                    sealed={isSealed({
+                      done,
+                      opened: isOpened(memory, item.task.id),
+                      closed,
+                      reducedMotion,
+                    })}
+                    onOpen={() => update((m) => markOpened(m, item.task.id, today))}
+                    partner={
+                      duo && duoStatus?.mateName ? (
+                        <ClubPartnerLine item={item} mateName={duoStatus.mateName} />
+                      ) : null
+                    }
+                    share={
+                      <ClubShare
+                        seed={item.task.id}
+                        headline={title}
+                        points={item.task.rule === 'none' ? null : item.task.points}
+                        pointsMode="gain"
+                        day={dayIndex}
+                        streak={streak}
+                        place={myPlace}
+                      />
+                    }
+                    onSend={(proof, anchor) => send(item.task.id, proof, anchor)}
+                    onSendMedia={(file, keep, anchor) =>
+                      sendMedia(item.task.id, file, keep, anchor)
+                    }
+                  />
+                );
+              })}
             </div>
           )}
         </section>
@@ -432,7 +598,7 @@ export default function MarathonScreen() {
             <ol className="mt-3 flex flex-col">
               {standings.top.map(({ row, rank }) => (
                 <li key={row.entryId}>
-                  <BoardRow row={row} rank={rank} />
+                  <BoardRow row={row} rank={rank} delta={rowDelta(row.isMine)} />
                 </li>
               ))}
               {standings.mine ? (
@@ -455,7 +621,11 @@ export default function MarathonScreen() {
                     </li>
                   ) : null}
                   <li>
-                    <BoardRow row={standings.mine.row} rank={standings.mine.rank} />
+                    <BoardRow
+                      row={standings.mine.row}
+                      rank={standings.mine.rank}
+                      delta={rankDelta}
+                    />
                   </li>
                   {standings.below ? (
                     <li>
@@ -468,6 +638,21 @@ export default function MarathonScreen() {
           ) : (
             <p className="mt-3 text-[13px] text-muted">{t('app.marathonBoardEmpty')}</p>
           )}
+          {/*
+           * The one line that turns a place into a task: how far the row above is, in points, or
+           * the size of the lead. Nothing for an unscored week — «До Ани — 42 балла» over a dash
+           * is a mountain, not a nudge (`boardGap`).
+           */}
+          {gap ? (
+            <p className="mt-2 text-[13px] text-muted">
+              {gap.kind === 'chase'
+                ? t('app.clubGapChase', {
+                    name: gap.name,
+                    points: pointsWord(t, locale, gap.points),
+                  })
+                : t('app.clubGapLeader', { points: pointsWord(t, locale, gap.lead) })}
+            </p>
+          ) : null}
           <Button
             variant="ghost"
             size="sm"

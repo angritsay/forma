@@ -170,3 +170,72 @@ export function weekStandings(
 
   return { top, mine, above, below, skipped: Math.max(cut - top.length, 0), place };
 }
+
+/* ---------------------------------------------------------------------------------------------
+ * A board that moves
+ * ------------------------------------------------------------------------------------------- */
+
+/**
+ * The member's own place as it was the last time this club mode was on screen, kept in
+ * `clubMemory` so the next visit can say «↑2». The week travels with it: places are per week, and
+ * a Monday compared with Sunday's final table would read as a collapse.
+ */
+export interface BoardSeen {
+  rank: number | null;
+  points: number;
+  week: number;
+}
+
+export interface BoardDelta {
+  /** Places gained since `prev` (positive = up), or null when there is nothing to compare. */
+  rankDelta: number | null;
+  /** Points gained since `prev`; 0 when there is nothing to compare. */
+  pointsDelta: number;
+}
+
+/**
+ * What changed since the last visit.
+ *
+ * Nothing to compare — no previous visit, another week, or an unranked entry on either side —
+ * answers with `rankDelta: null` rather than with a number that would mean something else. A
+ * member who was on nothing and is now fourth did not «move up» from anywhere.
+ */
+export function boardDelta(prev: BoardSeen | null, now: BoardSeen): BoardDelta {
+  if (prev === null || prev.week !== now.week) return { rankDelta: null, pointsDelta: 0 };
+  const rankDelta = prev.rank === null || now.rank === null ? null : prev.rank - now.rank;
+  return { rankDelta, pointsDelta: now.points - prev.points };
+}
+
+/**
+ * The one line under the short table that gives the member something to do about their place.
+ *
+ *   - `chase` — the nearest entry with strictly more points, and how many points away it is:
+ *     «До Ани — 4 балла». Strictly more, because a tie is shared and «До Маши — 0 баллов» chases
+ *     nobody.
+ *   - `leader` — the member is alone at the top, and by how much: «Ты лидер: отрыв 5».
+ *   - `null` — nothing honest to say: the member is unscored or absent, or shares the lead.
+ */
+export type BoardGap =
+  { kind: 'chase'; name: string; points: number } | { kind: 'leader'; lead: number } | null;
+
+export function boardGap(rows: readonly MarathonScoreRow[]): BoardGap {
+  const ranked = rankWeek(rows);
+  const mine = ranked.find((r) => r.row.isMine);
+  if (!mine || mine.rank === null) return null;
+  if (mine.rank === 1) {
+    const rest = ranked.filter((r) => r !== mine && r.rank !== null);
+    const runnerUp = rest[0];
+    if (!runnerUp) return { kind: 'leader', lead: mine.row.points };
+    const lead = mine.row.points - runnerUp.row.points;
+    return lead > 0 ? { kind: 'leader', lead } : null;
+  }
+  // Reading up from my row: the first entry with more points than mine is the one in reach.
+  const at = ranked.indexOf(mine);
+  for (let i = at - 1; i >= 0; i -= 1) {
+    const r = ranked[i];
+    if (r && r.row.points > mine.row.points) {
+      return { kind: 'chase', name: r.row.title, points: r.row.points - mine.row.points };
+    }
+  }
+  return null;
+}

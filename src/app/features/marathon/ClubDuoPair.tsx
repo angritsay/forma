@@ -54,9 +54,15 @@ export function inviteUrl(token: string): string {
 export interface ClubDuoPairProps {
   /** Дёргается, когда пара изменилась: задания дня у пары свои, и их надо перечитать. */
   onChanged?: () => void;
+  /**
+   * Состояние пары, как только оно прочитано (и после каждого изменения). Экрану нужно имя
+   * напарницы для строки на карточке задания (`ClubPartnerLine`), а второй запрос ради того же
+   * ответа был бы лишним.
+   */
+  onStatus?: (row: ClubDuoStatus | null) => void;
 }
 
-export function ClubDuoPair({ onChanged }: ClubDuoPairProps) {
+export function ClubDuoPair({ onChanged, onStatus }: ClubDuoPairProps) {
   const { t } = useT();
   const toast = useToast();
   const [row, setRow] = useState<ClubDuoStatus | null>(null);
@@ -66,16 +72,20 @@ export function ClubDuoPair({ onChanged }: ClubDuoPairProps) {
     let alive = true;
     getClubDuoStatus()
       .then((r) => {
-        if (alive) setRow(r);
+        if (!alive) return;
+        setRow(r);
+        onStatus?.(r);
       })
       // Сбой запроса не должен занимать место пары: вкладка ниже работает и без неё.
       .catch(() => {
-        if (alive) setRow(null);
+        if (!alive) return;
+        setRow(null);
+        onStatus?.(null);
       });
     return () => {
       alive = false;
     };
-  }, []);
+  }, [onStatus]);
 
   useEffect(load, [load]);
 
@@ -144,6 +154,12 @@ export function ClubDuoPair({ onChanged }: ClubDuoPairProps) {
     <Card level={2} padding="sm" className="flex flex-col gap-3">
       <span className="text-[15px] leading-snug">{t('app.duoNoneTitle')}</span>
       <span className="text-[13px] leading-relaxed text-muted">{t('app.duoNoneBody')}</span>
+      {/*
+       * Одной строкой, прямо над кнопкой: партнёр будет в любом случае, а позвать своего можно
+       * уже сейчас. Абзац выше объясняет, чем одно отличается от другого; эта строка — про то,
+       * что делать сегодня.
+       */}
+      <span className="text-[14px] leading-snug text-text">{t('app.clubPartnerSoon')}</span>
       {row.inviteToken ? (
         /* Ссылка написана целиком: шторка «поделиться» может не открыться, и тогда её копируют
            глазами. `break-all` — потому что токен не переносится по словам. */
