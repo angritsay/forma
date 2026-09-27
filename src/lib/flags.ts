@@ -7,17 +7,26 @@
  * dictionaries (`flagLabel…`), and it shows up as a switch on every person's page.
  *
  *   - `coach_nastia` — the owner's own card beside Sergey's on the «Тренер» tab.
+ *   - `club_quiet` — the club's daily bot messages (0052) are *off* for this person. The one flag
+ *     a person sets on themselves (`setMyFeatureFlag`, the «Сообщения клуба» switch in the
+ *     account); the admin sees and can flip it on their page like any other.
  */
 import type { TKey } from '@/i18n/index';
 
-export const FLAGS = ['coach_nastia'] as const;
+export const FLAGS = ['coach_nastia', 'club_quiet'] as const;
 
 export type Flag = (typeof FLAGS)[number];
 
 /** The admin's name for each flag, as an i18n key. */
 export const FLAG_LABEL: Record<Flag, TKey> = {
   coach_nastia: 'app.flagLabelCoachNastia',
+  club_quiet: 'app.flagLabelClubQuiet',
 };
+
+/** The flags a person may switch on themselves; the server allow-lists the same set (0052). */
+export const SELF_FLAGS = ['club_quiet'] as const satisfies readonly Flag[];
+
+export type SelfFlag = (typeof SELF_FLAGS)[number];
 
 export function isFlag(value: string): value is Flag {
   return (FLAGS as readonly string[]).includes(value);

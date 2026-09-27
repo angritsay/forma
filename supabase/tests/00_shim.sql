@@ -61,6 +61,9 @@ create table if not exists storage.buckets (
   public boolean not null default false,
   created_at timestamptz not null default now()
 );
+-- The real schema carries per-bucket limits, and 0050 sets them on the `stories` bucket.
+alter table storage.buckets add column if not exists file_size_limit bigint;
+alter table storage.buckets add column if not exists allowed_mime_types text[];
 create table if not exists storage.objects (
   id uuid primary key default gen_random_uuid(),
   bucket_id text references storage.buckets (id),
