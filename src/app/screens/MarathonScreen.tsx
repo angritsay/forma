@@ -1,112 +1,77 @@
 /**
- * The club (the second tab). **Three things and nothing else** — «Только задание, кнопка и
- * лидерборд», which is the owner reading a screen that had accumulated furniture again and naming
- * what survives: today's task, the one control that delivers it, and the week's table.
+ * The club (the second tab), take two: **a card game, almost no words.**
  *
- * What went with that sentence, in the order it had piled up:
+ * Owner, on the version this replaces (#230): «Визуально мусорно и не структурировано и много
+ * текстов, нет элемента игры». Her screenshots showed why: a header «Day 7 · week 1 of 522» (a
+ * 3650-day round makes the total meaningless), a centred Solo/Duo control on a row of its own,
+ * the unpaired duo card saying the same thing in two paragraphs plus a raw URL, the task as a
+ * heading + paragraph + field + link, a full-width prize bar, «Nobody has scored yet», «Full
+ * board →», and on a rest day a huge «Nothing set for today». Everything was prose; nothing was
+ * a game. Her choices for the replacement: a **card game**; the title and **two lines** of task
+ * text; the Solo/Duo switch **small, in the HUD row**.
  *
- *   • the «Задания дня» kicker and the «1/3» counter beside it — over a list of one that counter
- *     reads «0/1», which is a worse way of saying «не сделано» than the card already says it;
- *   • the «Пробная неделя · осталось 3 дня» pill, a sales line on a screen that is not for selling;
- *   • the «Неделя 1» kicker over the table;
- *   • «Ты ещё без баллов на этой неделе» and «Тебя пока нет в таблице» — the row draws a dash where
- *     the place would be, and the dash says it.
+ * Top to bottom, every piece a number, a mark or a card:
  *
- * **The head went the same way, later and on its own instruction: «шапку с кольцом убери».** It was
- * the day as a ring with «День 10 из 14» beside it, and it was this tab's title in the idiom the
- * other three use. Her mockups have no equivalent — the picture the coach attached to today's task
- * is the first thing on the page — and the trade is the right one: the ring reported a number
- * nobody acts on, directly above the one thing on the screen that is asking to be done today. The
- * day is still named inside the round's own screens and on the full table.
+ *   1. **The HUD** (`ClubHud`): `[avatar] 58 · [соло|дуо] · 🔥 4` — my avatar and the week's
+ *      points, the mode as two small chips (only when a duo round exists), the streak pill
+ *      (`ClubStreak`, compact, with its at-risk pulse and milestones sheet). Under it the
+ *      **week track** (`WeekTrack`): seven tiles `пн … вс` from `my_club_days` and today.
+ *   2. **The card** (`ClubCard`): dealt face down on the first look of the day (`isSealed`,
+ *      remembered in `clubMemory`), a real 3D turn to the face — eyebrow «Задание дня · до
+ *      22:00», the «+12» pill, the title, two lines of the coach's text with «ещё», one control.
+ *      A rest day is the face reading «Отдых».
+ *   3. **The duo tile** (`ClubDuo`, duo mode only): two avatars, `&`, today's mark under each,
+ *      the rule as numbers, «Напомнить»; leaving and the explanation live in a «···» sheet. No
+ *      partner yet: a dashed «?», one line, one «Позвать друга» that shares the link directly.
+ *   4. **The podium** (`ClubPodium`): the top three as 2 · 1 · 3 columns, the leader on the warm
+ *      gradient under one small prize pill, my own line under it when I am not up there («#5 ·
+ *      Ты · 58», «↑2», «до Димы — 2 балла»), «Вся таблица →» as a ghost.
+ *   5. `ClubWinner`, `ClubWeekRecap`, `ClubInviteCard` — unchanged.
  *
- * Two things stayed: the prize pill — the table exists to be won, and one short pill is what it is
- * won for — and the single link to the full table, which is the only way the board screen is
- * reachable.
+ * From `md` the card sits left and the duo tile + podium right: the race beside the task is the
+ * whole argument for having a board on the same tab.
  *
- * **Nobody has a partner** in the solo club. «Никакого напарника в клубе быть не должно. Каждый сам
- * за себя.» The club is `team_size = 1`, so there is no roster to read here and no line on the
- * card about where somebody else has got to. Each member is their own row. The duo club (0033) is
- * the one place a partner exists, and there the card does say where they are (`ClubPartnerLine`).
- *
- * The table is short on purpose. At 7am on a mat the answer to "where am I in the standings" is
- * never what gets someone moving, so the task comes first; but a race nobody can see the score of
- * is not a race, and a link to it was not enough to make it one.
+ * What did not change: the rules. The club is style B of the third palette (global.css header)
+ * — the crossroads gradient as a glow behind the screen (`.club-aurora`), the warm half of it as
+ * the material of every action and rim, ink on it, **no neon** (design/CHANGELOG.md §17,
+ * `club-no-neon.test.ts`); `.text-gradient` on large type only. Nothing on the screen is an
+ * invented number: the points, the places, the days, the deadline all come back from the API.
+ * The small wins are as they were — haptic, confetti and «+12» rising from the button
+ * (`ClubCelebrate`), the board reloading under it with «↑2» measured against the last visit,
+ * the streak's milestones, Sunday's recap and «Поделиться».
  *
  * **The tab has a second state, and it is a screen rather than a closed door.** Somebody who is
- * not in the club gets the screen the owner drew
- * and sent as a picture — a row of photographs with the club's name across it, one orange pill
- * with the price on it, and her two paragraphs (`ClubPitch`). It is built without a sticky footer,
- * because there is none in the drawing.
- *
- * **The screen is drawn in the language of the owner's prototype** (`design/ui_kits/app-v2`,
- * «Челлендж»), after she called the previous version «вообще мимо», and then to the order she gave
- * off her Figma mockups: the coach's picture, the task's name, its text, the control that delivers
- * it, and the board — which ends on your own row between its two neighbours.
- *
- * The colour is still the brandbook's own rule: «один экран — один цвет, и он приходит от
- * программы». The club's is `GAME_TILE`; `--course-tile` is set once around the whole screen, so
- * the pills read the same variable.
- *
- * **The club is style B of the third palette** (global.css header) — owner: «давай градиент для
- * клуба сделаем, всё остальное как в стиле а». So this tab alone wears the crossroads gradient: a
- * soft glow behind the screen (`.club-aurora`), the streak's rim and its day dots (`ClubStreak`),
- * and the key words of the pitch and of the task's title as `.text-gradient`, large type only.
- * **No neon on the club's screens** (design/CHANGELOG.md §17): the task's button, «Вступить», the
- * retry and the prize pill are the warm half of the gradient under ink, the leader's circle too,
- * and today's dot on the streak is orange. The neon is the rest of the app's main action; the
- * club's is its own colour.
- *
- * ## The week as a game (2026-09-27)
- *
- * Owner: «геймифицировать… регулярная подпитка дофамином… желание зайти и узнать новое задание,
- * поучаствовать, поделиться». The three things are still the three things; what changed is that
- * each of them now has a moment attached, and every moment is made of numbers the API already
- * returned — nothing on this screen is invented for effect:
- *
- *   - **morning** — the day named (`ClubDay`: «День 10 · неделя 2 из 2 · до 22:00») and the task
- *     sealed until the first tap (`TaskCard`, `isSealed`, remembered in `clubMemory`);
- *   - **doing it** — on a new proof, haptic + confetti + «+12» rising from the button
- *     (`ClubCelebrate`), the board reloading under it with «↑1» on your row and «До Димы — 5
- *     баллов» beneath the table (`boardDelta`, `boardGap`);
- *   - **the partner** — in the duo club, where they have got to today (`ClubPartnerLine`);
- *   - **the evening** — the streak at risk after 18:00 (`ClubStreak`), with its milestones;
- *   - **Sunday** — the week's recap and a «Поделиться» (`ClubWeekRecap`, `ClubShare`), the same
- *     six story designs the workout summary has, with the club's own facts on them.
- *
- * All the client keeps for this is in `localStorage`, per email (`clubMemory.ts`): which envelope
- * was opened, where you were last time, which confetti already fell.
+ * not in the club gets the selling screen the owner drew (`ClubPitch`).
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Glyph } from '@/components/ui/Icon';
-import { Pill } from '@/components/ui/Pill';
 import { Screen } from '@/components/ui/Screen';
-import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { PROOFS_BUCKET, proofMediaPath, sendProof } from '@/lib/api/marathon';
 import { uploadMedia } from '@/lib/api/storage';
-import type { ClubDuoStatus, ProofInput } from '@/lib/api/types';
+import type { ProofInput } from '@/lib/api/types';
 import { prefersReducedMotion } from '@/lib/ui/motion';
 import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
 import { toLocalDateIso } from '@/lib/util/dates';
 import { downscaleImage, extensionFor, isVideoFile, MAX_VIDEO_BYTES } from '@/lib/util/image';
 import { useT } from '@/app/hooks/useT';
 import { ScreenLoader } from '@/app/components/ScreenLoader';
-import { BoardGap, BoardRow } from '@/app/features/marathon/BoardRow';
 import { celebrate } from '@/app/features/marathon/ClubCelebrate';
-import { ClubDay } from '@/app/features/marathon/ClubDay';
-import { ClubDuoPair } from '@/app/features/marathon/ClubDuoPair';
+import { ClubCard } from '@/app/features/marathon/ClubCard';
+import { ClubDuo } from '@/app/features/marathon/ClubDuo';
+import { ClubHud } from '@/app/features/marathon/ClubHud';
 import { ClubInviteCard } from '@/app/features/marathon/ClubInviteCard';
-import { ClubPartnerLine } from '@/app/features/marathon/ClubPartnerLine';
 import { ClubPitch } from '@/app/features/marathon/ClubPitch';
+import { ClubPodium } from '@/app/features/marathon/ClubPodium';
 import { ClubShare } from '@/app/features/marathon/ClubShare';
 import { ClubStreak, useClubDays } from '@/app/features/marathon/ClubStreak';
 import { ClubWeekRecap } from '@/app/features/marathon/ClubWeekRecap';
 import { ClubWinner } from '@/app/features/marathon/ClubWinner';
+import { WeekTrack } from '@/app/features/marathon/WeekTrack';
 import {
   isOpened,
   markOpened,
@@ -122,7 +87,6 @@ import {
   type BoardSeen,
 } from '@/app/features/marathon/standings';
 import { clubStreak } from '@/app/features/marathon/streak';
-import { TaskCard } from '@/app/features/marathon/TaskCard';
 import { isSealed } from '@/app/features/marathon/taskSeal';
 import { useClubMemory } from '@/app/features/marathon/useClubMemory';
 import {
@@ -130,15 +94,15 @@ import {
   useMarathonScores,
   useMyMarathons,
 } from '@/app/features/marathon/useMarathon';
-import { pointsWord } from '@/app/features/share/story/data';
 import { useSession } from '@/app/store/session';
 import { gameAccess } from '@/app/features/marathon/gameAccess';
 import { GAME_REQUIRES_SUBSCRIPTION } from '@content/site/plans';
 
+/** The card's frame while the day loads: the same proportion, so nothing jumps when it lands. */
 function DaySkeleton() {
   return (
-    <div className="flex flex-col gap-6 py-4" aria-hidden="true">
-      <Skeleton rounded="control" className="h-36" />
+    <div aria-hidden="true">
+      <Skeleton rounded="card" className="aspect-[4/5] w-full md:aspect-auto md:h-[440px]" />
     </div>
   );
 }
@@ -161,16 +125,9 @@ export default function MarathonScreen() {
 
   /*
    * Соло или дуо — два вида одного клуба, и переключатель между ними это и есть «вторая вкладка»
-   * из задания владельца. Подписка одна на оба («подписка единая на оба клуба, поэтому все
-   * пользователи могут участвовать как в соло-режиме, так и дуо»), поэтому это переключатель
-   * внутри экрана, а не вторая вкладка в нижней панели: выбирают не продукт, а режим.
-   *
-   * Начинаем с соло. Он есть у всех и всегда, а дуо на первой неделе — это ещё и баннер «пары
-   * пока нет»: открывать вкладку клуба на нём значило бы встречать человека сообщением о том,
-   * чего у него нет.
-   *
-   * Дуо-круга может не быть вовсе — до того, как применена 0033. Тогда переключателя нет и экран
-   * ровно такой, каким был; это не поломка, а состояние базы.
+   * из задания владельца. Подписка одна на оба, поэтому это переключатель внутри экрана, а не
+   * вторая вкладка в нижней панели: выбирают не продукт, а режим. Начинаем с соло: он есть у всех
+   * и всегда. Дуо-круга может не быть вовсе — до 0033; тогда переключателя нет.
    */
   // `?mode=duo` — сюда ведёт принятое приглашение в пару (DuoInviteScreen).
   const [searchParams] = useSearchParams();
@@ -188,10 +145,10 @@ export default function MarathonScreen() {
   const [sending, setSending] = useState(false);
 
   /*
-   * The member's own clock, fixed per mount: the streak, the recap's weekday and the seal are all
-   * «today» questions, and a render at midnight must not move any of them under the reader.
-   * `daysVersion` re-reads `my_club_days()` after a proof, so the pill and the recap move with
-   * the board instead of waiting for the tab to be mounted again.
+   * The member's own clock, fixed per mount: the streak, the week track, the recap's weekday and
+   * the seal are all «today» questions, and a render at midnight must not move any of them under
+   * the reader. `daysVersion` re-reads `my_club_days()` after a proof, so the pill, the track and
+   * the recap move with the board instead of waiting for the tab to be mounted again.
    */
   const [today] = useState(() => toLocalDateIso(new Date()));
   const [weekday] = useState(() => new Date().getDay());
@@ -202,14 +159,11 @@ export default function MarathonScreen() {
 
   /* What this phone remembers about this account (`clubMemory.ts`). */
   const { memory, update, email } = useClubMemory();
-  /* The duo pair, read once by `ClubDuoPair` and shared with the task card. */
-  const [duoStatus, setDuoStatus] = useState<ClubDuoStatus | null>(null);
 
   /*
    * The week's table. The arithmetic is in `standings.ts` and unit-tested there — ties, an empty
-   * week, a member with no row and a member on nothing are all cases this screen would otherwise
-   * be the only place to get wrong, and the wrong answer («0 место», or a place counted over the
-   * three rows on screen instead of over the week) is not one a screenshot catches.
+   * week, a member with no row and a member on nothing are all cases the podium would otherwise
+   * be the only place to get wrong.
    */
   const standings = useMemo(
     () => weekStandings(scores, marathon?.memberId ?? null),
@@ -268,9 +222,8 @@ export default function MarathonScreen() {
         reload();
         /*
          * And the board with it. Proof is counted the moment it is sent (0011_marathon.sql), so the
-         * points are already different — leaving the table alone until the tab is next mounted made
-         * the card tick and the standings sit still, which on a screen whose second half is now
-         * «где ты» reads as the score not counting.
+         * points are already different — a podium that sat still while the card ticked would read
+         * as the score not counting.
          */
         reloadScores();
         setDaysVersion((v) => v + 1);
@@ -292,24 +245,15 @@ export default function MarathonScreen() {
     ) => {
       if (!marathon) return;
       /*
-       * A photograph is shrunk first, through `lib/util/image`. This path used to upload whatever
-       * the picker handed it: a 3MB phone photograph over mobile data to prove a task the coach
-       * reads in two seconds, and in demo mode that same 3MB base64'd into `localStorage` beside
-       * the rest of the demo database. `downscaleImage` degrades rather than fails — a decoder
-       * that will not open the file returns it untouched — so the upload still happens either way.
+       * A photograph is shrunk first, through `lib/util/image` — `downscaleImage` degrades rather
+       * than fails, so the upload still happens either way. **A clip is uploaded as picked**,
+       * because a browser has no way to re-encode one, and is refused above `MAX_VIDEO_BYTES`
+       * with a line saying what to do about it.
        *
-       * **A clip is uploaded as picked**, because a browser has no way to re-encode one, and is
-       * refused above `MAX_VIDEO_BYTES` with a line saying what to do about it. Silently uploading
-       * 90MB over mobile data is not a kindness.
-       *
-       * The extension comes from the blob first and from `file.name` only as the fallback, because
-       * after a re-encode the name is a lie: a picked `.png` leaves here as JPEG bytes, and the
-       * object was being stored as `.png`. `extensionFor` knows the types a re-encode can produce
-       * plus the three video types stored as picked; anything else keeps whatever the file called
-       * itself, and `proofMediaPath` strips it to `[a-z0-9]`.
-       *
-       * `keep` re-sends what the proof already said: `sendProof` upserts the whole row, so a photo
-       * attached to a number would otherwise erase the number.
+       * The extension comes from the blob first and from `file.name` only as the fallback,
+       * because after a re-encode the name is a lie. `keep` re-sends what the proof already said:
+       * `sendProof` upserts the whole row, so a photo attached to a number would otherwise erase
+       * the number.
        */
       const video = isVideoFile(file);
       if (video && file.size > MAX_VIDEO_BYTES) {
@@ -333,59 +277,20 @@ export default function MarathonScreen() {
   );
 
   /*
-   * Every state of this screen is the same page, and it now opens on its content.
-   *
-   * **The head is gone, on the owner's word: «шапку с кольцом убери».** It was the day as a ring
-   * with «День 10 из 14» beside it, and it was the screen's title in the same idiom as the other
-   * three tabs. Her mockups have no equivalent — the picture the coach attached is the first thing
-   * on the page — and she is right about the trade: the ring reported a number nobody acts on,
-   * directly above the one thing on the tab that is asking to be done today. The day is still in
-   * the round's own screens and in the full table.
-   *
-   * There is no top bar either; the tab bar names the screen. `--course-tile` stays on the outer
-   * element so everything that reads the club's colour takes it from one place, and the club's
-   * glow (`.club-aurora`) sits behind the whole page.
-   *
-   * **One thing did come back up there, and it is not a head.** The owner asked for the streak —
-   * «показывать, сколько дней подряд ты выполняешь упражнения» — «в том же месте, как у нас это
-   * сделано на курсах», which is the top right. It is one pill and it draws nothing when the
-   * streak is zero, so the objection that took the ring away does not apply to it: it reports a
-   * number the person made, rather than a number the calendar made. It now sits at the right end
-   * of the day's line (`ClubDay`) — one quiet 13px row, still not a head.
+   * Every state of this screen is the same page: no head, no top bar — the tab bar names the
+   * screen. `--course-tile` stays on the outer element so everything that reads the club's colour
+   * takes it from one place, and the club's glow (`.club-aurora`) sits behind the whole page.
    */
   const page = (body: ReactNode) => (
     <div className="club-aurora-host" style={courseTileVars(GAME_TILE)}>
       <div className="club-aurora" aria-hidden="true" />
-      <Screen contentClassName="pt-2">
-        <ClubDay
-          marathon={marathon}
-          dueTime={tasks[0]?.task.dueTime ?? null}
-          streak={<ClubStreak days={days} today={today} />}
-        />
-        {/*
-         * Над заданием дня, а не под ним: объявление — это про прошлую неделю, и оно закрывает её
-         * прежде, чем человек берётся за сегодняшнее. Своего победителя тут нет — плашка рисуется,
-         * только когда тренер кого-то объявил.
-         */}
-        <ClubWinner duo={duo} />
-        {body}
-      </Screen>
-    </div>
-  );
-
-  /* The tab's other face: no head, no footer, the photographs starting near the top of the page. */
-  const pitch = (body: ReactNode) => (
-    <div className="club-aurora-host" style={courseTileVars(GAME_TILE)}>
-      <div className="club-aurora" aria-hidden="true" />
-      <Screen contentClassName="pt-3">{body}</Screen>
+      <Screen contentClassName="pt-2">{body}</Screen>
     </div>
   );
 
   /*
    * The club is part of the subscription (content/site/plans.ts). The screen says so plainly and
-   * offers the subscription rather than pretending the format does not exist — somebody who got
-   * here tapped a tab that told them what the club is, and the answer to "can I play" is a price,
-   * not a locked door.
+   * offers the subscription rather than pretending the format does not exist.
    */
   const access = gameAccess({
     subscriptionLive: subscription?.isLive === true,
@@ -394,21 +299,11 @@ export default function MarathonScreen() {
     gated: GAME_REQUIRES_SUBSCRIPTION,
   });
 
-  /*
-   * The selling screen is the owner's mockup end to end, so it has no head and no sticky footer:
-   * the club's name is set over the photographs and the join pill sits in the flow under them. A
-   * ring counting a club this person is not in would be the one thing on the screen with nothing
-   * to count, and a sticky CTA would cover the copy that explains what is being bought.
-   */
   if (!access.allowed) {
-    return pitch(<ClubPitch locked />);
+    return page(<ClubPitch locked />);
   }
 
-  /*
-   * The mark, not a drawn-empty page. That rendered the whole screen with nothing in it — a «?»
-   * where the day number went, the generic title, an empty card — and then swapped it for the real
-   * one a moment later, which is the jerk the owner reported.
-   */
+  /* The mark, not a drawn-empty page that is swapped for the real one a moment later. */
   if (marathonStatus === 'loading') {
     return <ScreenLoader />;
   }
@@ -431,87 +326,43 @@ export default function MarathonScreen() {
 
   /*
    * Paid for, or on the course's trial week, and not in a running round: the coach adds people by
-   * hand, so there is no button that would put them in one. Same screen, without the
-   * price — quoting a subscription to somebody who is already paying for it is the kind of thing
-   * that makes a product look like it does not know who it is talking to.
+   * hand, so there is no button that would put them in one. Same screen, without the price.
    */
   if (!marathon) {
-    return pitch(<ClubPitch locked={false} />);
+    return page(<ClubPitch locked={false} />);
   }
 
   const closed = marathon.status === 'finished';
   const todayDone = tasks.length > 0 && tasks.every((i) => i.mine !== null && !i.mine.voidedAt);
   const myPlace = standings.place.kind === 'ranked' ? standings.place.rank : null;
+  const myPoints = standings.place.kind === 'ranked' ? standings.place.points : 0;
 
-  const rowDelta = (isMine: boolean) => (isMine ? rankDelta : null);
+  /* A pair formed or broken changes more than today's task: the board counts the pair's points
+     together and `my_marathons()` hands back a new team — so all three reload. */
+  const onPairChanged = () => {
+    reload();
+    reloadScores();
+    reloadMarathon();
+  };
 
   return page(
-    <div className="flex flex-col gap-6 pt-5 pb-4">
-      {/*
-       * Переключатель режима — над всем остальным, потому что он меняет всё остальное: задание,
-       * доску и то, с кем ты его делаешь. Рисуется, только когда дуо-круг заведён.
-       */}
-      {duoClub ? (
-        <SegmentedControl<'solo' | 'duo'>
-          /*
-           * `self-center` — по решению владельца: «переключатель сделай по центру».
-           *
-           * Без него рамка уезжала во всю ширину, а «Соло | Дуо» жались к левому краю: в колонке
-           * `align-items: stretch` растягивает `inline-flex` коробку, но не ячейки — те остаются
-           * шириной своих подписей. Та же ловушка уже описана в `BookScreen`, там она решена
-           * `self-start`; здесь — по центру.
-           */
-          className="self-center"
-          value={mode}
-          onChange={setMode}
-          options={[
-            { value: 'solo', label: t('app.clubTabSolo') },
-            { value: 'duo', label: t('app.clubTabDuo') },
-          ]}
-        />
-      ) : null}
-
-      {/* Кто с тобой на этой неделе — первое, что видно в дуо, и только в нём. */}
-      {/*
-       * A pair formed or broken changes more than today's task: the board counts the pair's points
-       * together and `my_marathons()` hands back a new team — so all three reload.
-       */}
-      {duo ? (
-        <ClubDuoPair
-          onStatus={setDuoStatus}
-          onChanged={() => {
-            reload();
-            reloadScores();
-            reloadMarathon();
-          }}
-        />
-      ) : null}
-
-      {/* Today's task delivered: the moment to ask a friend along (0051). */}
-      {dayIndex >= 1 && status === 'ready' && todayDone ? <ClubInviteCard /> : null}
-
-      {/* The week closed: Sunday once the task is done, Monday–Tuesday until the first new proof. */}
-      {dayIndex >= 1 && status === 'ready' ? (
-        <ClubWeekRecap
-          marathon={marathon}
-          todayDone={todayDone}
-          streak={streak}
-          weekday={weekday}
-          version={daysVersion}
-        />
-      ) : null}
+    <div className="flex flex-col gap-5 pt-3 pb-4">
+      <ClubHud
+        points={myPoints}
+        mode={mode}
+        onMode={setMode}
+        hasDuo={duoClub !== null}
+        streak={<ClubStreak days={days} today={today} compact />}
+      />
+      <WeekTrack days={days} today={today} />
 
       {/*
-       * The task and the table, side by side from `md`.
-       *
-       * On a phone they are stacked because only one of them can be on screen at a time, and the
-       * task has to be the one: at 7am the standings are not what gets anyone off the sofa. A
-       * laptop has room for both, and then the order stops being a ranking — the board beside the
-       * task is the race made visible while the task is being done, which is the whole argument
-       * for having a board at all.
+       * The card and the race, side by side from `md`. On a phone they are stacked because only
+       * one of them can be on screen at a time, and the task has to be the one: at 7am the
+       * standings are not what gets anyone off the sofa.
        */}
-      <div className="flex flex-col gap-6 md:flex-row md:items-start md:gap-8">
-        <section className="min-w-0 flex-1">
+      <div className="flex flex-col gap-5 md:flex-row md:items-start md:gap-8">
+        <section className="min-w-0 flex-1" aria-busy={sending}>
           {dayIndex < 1 ? (
             <EmptyState
               title={t('app.marathonNotStarted')}
@@ -520,22 +371,17 @@ export default function MarathonScreen() {
           ) : status === 'loading' ? (
             <DaySkeleton />
           ) : tasks.length === 0 ? (
-            <EmptyState
-              title={t('app.marathonNoTasksToday')}
-              description={t('app.marathonNoTasksTodayBody')}
-            />
+            <ClubCard item={null} />
           ) : (
-            /*
-             * One card, because the club is one task a day. It stays a list because the table
-             * still lets a coach write two, and a screen that silently dropped the second would be
-             * worse than one that shows it.
-             */
-            <div className="flex flex-col" aria-busy={sending}>
+            /* One card, because the club is one task a day. It stays a list because the table
+               still lets a coach write two, and a screen that silently dropped the second would
+               be worse than one that shows it. */
+            <div className="flex flex-col gap-5">
               {tasks.map((item) => {
                 const done = item.mine !== null && !item.mine.voidedAt;
                 const title = (locale === 'en' && item.task.titleEn) || item.task.title;
                 return (
-                  <TaskCard
+                  <ClubCard
                     key={item.task.id}
                     item={item}
                     closed={closed}
@@ -546,11 +392,6 @@ export default function MarathonScreen() {
                       reducedMotion,
                     })}
                     onOpen={() => update((m) => markOpened(m, item.task.id, today))}
-                    partner={
-                      duo && duoStatus?.mateName ? (
-                        <ClubPartnerLine item={item} mateName={duoStatus.mateName} />
-                      ) : null
-                    }
                     share={
                       <ClubShare
                         seed={item.task.id}
@@ -573,97 +414,36 @@ export default function MarathonScreen() {
           )}
         </section>
 
-        {/* 384px rather than 320: the prize is the widest thing in this column at 304px, and a
-            column half again as wide as the pill keeps the table from reading as a narrow sidebar
-            beside the task. */}
-        <section className="md:w-96 md:shrink-0">
-          {/*
-           * The prize is the one filled pill on the screen — what the table is for, and the reason
-           * the table is on this tab at all. The «Неделя 1» kicker that stood over it is gone: the
-           * ring in the head already counts the days, and the club runs one week. A prize the
-           * coach types longer than the standing one will ellipsise, like every other pill. It
-           * is the warm gradient, not the neon: the club's one filled pill is the club's colour.
-           */}
-          <Pill tone="warm">
-            {t('app.marathonPrizeShort')} · {clubPrize(tr, marathon.prize)}
-          </Pill>
-          {/*
-           * «Топ 3 и где ты» — three rows, then the member's own, which is the shape a standings
-           * table has had since long before there were screens. The row is pulled down only when
-           * it is not already one of the three; up there the «Ты» tag marks it instead, because
-           * the same name printed twice in nine rows of table is the reader wondering whether the
-           * board is broken.
-           */}
-          {standings.top.length > 0 ? (
-            <ol className="mt-3 flex flex-col">
-              {standings.top.map(({ row, rank }) => (
-                <li key={row.entryId}>
-                  <BoardRow row={row} rank={rank} delta={rowDelta(row.isMine)} />
-                </li>
-              ))}
-              {standings.mine ? (
-                <>
-                  {standings.skipped > 0 ? (
-                    <li>
-                      <BoardGap hidden={standings.skipped} />
-                    </li>
-                  ) : null}
-                  {/*
-                   * The neighbour above, your row, the neighbour below — the tail the owner drew
-                   * («168 Маша · 169 Ты · 170 Никита»). At 169th the leader is news about a
-                   * stranger and the person one row up is the only opponent in reach, so the table
-                   * now ends with something to do rather than with a number. `standings.ts` drops
-                   * either neighbour that is already one of the three rows above.
-                   */}
-                  {standings.above ? (
-                    <li>
-                      <BoardRow row={standings.above.row} rank={standings.above.rank} />
-                    </li>
-                  ) : null}
-                  <li>
-                    <BoardRow
-                      row={standings.mine.row}
-                      rank={standings.mine.rank}
-                      delta={rankDelta}
-                    />
-                  </li>
-                  {standings.below ? (
-                    <li>
-                      <BoardRow row={standings.below.row} rank={standings.below.rank} />
-                    </li>
-                  ) : null}
-                </>
-              ) : null}
-            </ol>
-          ) : (
-            <p className="mt-3 text-[13px] text-muted">{t('app.marathonBoardEmpty')}</p>
-          )}
-          {/*
-           * The one line that turns a place into a task: how far the row above is, in points, or
-           * the size of the lead. Nothing for an unscored week — «До Ани — 42 балла» over a dash
-           * is a mountain, not a nudge (`boardGap`).
-           */}
-          {gap ? (
-            <p className="mt-2 text-[13px] text-muted">
-              {gap.kind === 'chase'
-                ? t('app.clubGapChase', {
-                    name: gap.name,
-                    points: pointsWord(t, locale, gap.points),
-                  })
-                : t('app.clubGapLeader', { points: pointsWord(t, locale, gap.lead) })}
-            </p>
-          ) : null}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-2 -ml-4.5"
-            onClick={() => navigate(boardPath(duo ? 'duo' : 'solo'))}
-            iconRight={<Glyph size={12}>→</Glyph>}
-          >
-            {t('app.marathonBoardAll')}
-          </Button>
+        {/* 384px: wide enough for three podium columns beside the card without reading as a
+            sidebar. */}
+        <section className="flex flex-col gap-5 md:w-96 md:shrink-0">
+          {duo ? <ClubDuo item={tasks[0] ?? null} onChanged={onPairChanged} /> : null}
+          <ClubPodium
+            standings={standings}
+            delta={rankDelta}
+            gap={gap}
+            prize={clubPrize(tr, marathon.prize)}
+            onAll={() => navigate(boardPath(duo ? 'duo' : 'solo'))}
+          />
         </section>
       </div>
+
+      {/* Плашка рисуется, только когда тренер кого-то объявил. */}
+      <ClubWinner duo={duo} />
+
+      {/* The week closed: Sunday once the task is done, Monday–Tuesday until the first new proof. */}
+      {dayIndex >= 1 && status === 'ready' ? (
+        <ClubWeekRecap
+          marathon={marathon}
+          todayDone={todayDone}
+          streak={streak}
+          weekday={weekday}
+          version={daysVersion}
+        />
+      ) : null}
+
+      {/* Today's task delivered: the moment to ask a friend along (0051). */}
+      {dayIndex >= 1 && status === 'ready' && todayDone ? <ClubInviteCard /> : null}
     </div>,
   );
 }

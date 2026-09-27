@@ -1,20 +1,19 @@
 /**
- * Кто с тобой на этой неделе — первое, что видно на вкладке «Дуо».
+ * The pair's state and its two actions — read, share the invite, leave — as a hook. `ClubDuo`
+ * draws it.
  *
  * ## Два состояния, и второе не хуже первого
  *
- * **Пара есть.** Тогда это одна строка: аватар, имя и приписка, откуда она взялась. Откуда —
- * важно, потому что это два разных обещания: подругу ты выбрала сама и она останется, пока вы
- * сами не разойдётесь; подобранная нами меняется каждый понедельник. Человек, не знающий, какая у
- * него пара, в понедельник обнаружит чужое имя и решит, что что-то сломалось.
+ * **Пара есть.** Тогда на экране два аватара и `&` между ними, под каждым — отметка за сегодня.
+ * Откуда пара — важно, потому что это два разных обещания: подругу ты выбрала сама и она
+ * останется, пока вы сами не разойдётесь; подобранная нами меняется каждый понедельник. Это
+ * сказано в шторке «···», а не на лицевой стороне: человек, не знающий, какая у него пара, в
+ * понедельник обнаружит чужое имя и решит, что что-то сломалось, — но читает он это раз в неделю.
  *
  * **Пары нет.** Владелец: «если же у тебя нету дуо, то там должен быть баннер, что нету дуо, мы
- * найдём тебе его автоматически, и каждую неделю мы будем менять тебе дуо. Таким образом, у тебя
- * каждую неделю появляется шанс двойной получить встречу с Сережей». Это не извинение за пустоту,
- * а предложение: отсюда зовут подругу, и отсюда же видно, что без подруги всё равно играешь.
- *
- * Порядок внутри баннера именно такой: сначала сказано, что напарник будет в любом случае, и
- * только потом — что можно позвать свою. Наоборот читалось бы как «позови, иначе не играешь».
+ * найдём тебе его автоматически, и каждую неделю мы будем менять тебе дуо». Второе место —
+ * пунктирный «?», одна строка «Партнёр — в понедельник» и одна кнопка «Позвать друга». Ни абзаца,
+ * ни адреса ссылки: после #230 («много текстов») ссылка уходит только в «поделиться».
  *
  * ## Ссылка одна и та же
  *
@@ -24,8 +23,6 @@
  *
  * Делится через `navigator.share`, если он есть — внутри телеграма это родное меню «переслать», то
  * есть ровно то действие, которое тут и нужно. Нет его — копируем в буфер и говорим об этом.
- * Провалиться может и то и другое (отказ в разрешении, отмена шторки), поэтому текст ссылки виден
- * на экране и без кнопки: он и есть запасной путь.
  *
  * ## Чего здесь нет
  *
@@ -33,9 +30,6 @@
  * нужны имя и аватар, а адрес, оказавшись в ответе, рано или поздно оказался бы и на экране.
  */
 import { useCallback, useEffect, useState } from 'react';
-import { Avatar } from '@/components/ui/Avatar';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { useToast } from '@/components/ui/Toast';
 import { breakClubDuo, createClubInvite, getClubDuoStatus } from '@/lib/api/marathon';
 import type { ClubDuoStatus } from '@/lib/api/types';
@@ -44,25 +38,32 @@ import { useT } from '@/app/hooks/useT';
 import { LINKS } from '@content/site/links';
 import { inviteLink, shareFailure } from './duoInvite';
 
-/** Полный адрес приглашения — то, что уедет в переписку. */
+/** Полный адрес приглашения — то, что уедет в переписку. Никогда не печатается на экране. */
 export function inviteUrl(token: string): string {
   const path = `${appHref('#/duo/')}${encodeURIComponent(token)}`;
   const web = typeof window === 'undefined' ? path : new URL(path, window.location.origin).href;
   return inviteLink(token, web, LINKS.telegramMiniApp);
 }
 
-export interface ClubDuoPairProps {
+export interface ClubDuoPairOptions {
   /** Дёргается, когда пара изменилась: задания дня у пары свои, и их надо перечитать. */
   onChanged?: () => void;
-  /**
-   * Состояние пары, как только оно прочитано (и после каждого изменения). Экрану нужно имя
-   * напарницы для строки на карточке задания (`ClubPartnerLine`), а второй запрос ради того же
-   * ответа был бы лишним.
-   */
+  /** Состояние пары, как только оно прочитано (и после каждого изменения). */
   onStatus?: (row: ClubDuoStatus | null) => void;
 }
 
-export function ClubDuoPair({ onChanged, onStatus }: ClubDuoPairProps) {
+export interface ClubDuoPairHandle {
+  /** Null while loading, or for somebody outside the duo round. */
+  row: ClubDuoStatus | null;
+  busy: boolean;
+  share: () => Promise<void>;
+  leave: () => Promise<void>;
+}
+
+export function useClubDuoPair({
+  onChanged,
+  onStatus,
+}: ClubDuoPairOptions = {}): ClubDuoPairHandle {
   const { t } = useT();
   const toast = useToast();
   const [row, setRow] = useState<ClubDuoStatus | null>(null);
@@ -125,51 +126,5 @@ export function ClubDuoPair({ onChanged, onStatus }: ClubDuoPairProps) {
     }
   }, [row?.teamId, load, onChanged, t, toast]);
 
-  // Ещё не загрузилось, или человека нет в дуо-круге: место под пару не занимаем.
-  if (!row) return null;
-
-  if (row.teamId && row.mateName) {
-    return (
-      <Card level={2} padding="sm" className="flex items-center gap-3">
-        <Avatar seed={row.mateSeed} name={row.mateName} size={40} />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-[15px] font-semibold">{row.mateName}</span>
-          <span className="text-[13px] text-muted-2">
-            {row.isAuto ? t('app.duoMateAuto') : t('app.duoMateChosen')}
-          </span>
-        </div>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => void leave()}
-          className="shrink-0 text-[13px] text-muted underline underline-offset-4 disabled:opacity-50"
-        >
-          {t('app.duoLeave')}
-        </button>
-      </Card>
-    );
-  }
-
-  return (
-    <Card level={2} padding="sm" className="flex flex-col gap-3">
-      <span className="text-[15px] leading-snug">{t('app.duoNoneTitle')}</span>
-      <span className="text-[13px] leading-relaxed text-muted">{t('app.duoNoneBody')}</span>
-      {/*
-       * Одной строкой, прямо над кнопкой: партнёр будет в любом случае, а позвать своего можно
-       * уже сейчас. Абзац выше объясняет, чем одно отличается от другого; эта строка — про то,
-       * что делать сегодня.
-       */}
-      <span className="text-[14px] leading-snug text-text">{t('app.clubPartnerSoon')}</span>
-      {row.inviteToken ? (
-        /* Ссылка написана целиком: шторка «поделиться» может не открыться, и тогда её копируют
-           глазами. `break-all` — потому что токен не переносится по словам. */
-        <span className="break-all text-[12px] leading-snug text-muted-2">
-          {inviteUrl(row.inviteToken)}
-        </span>
-      ) : null}
-      <Button variant="gradient" size="md" loading={busy} onClick={() => void share()}>
-        {t('app.duoInvite')}
-      </Button>
-    </Card>
-  );
+  return { row, busy, share, leave };
 }

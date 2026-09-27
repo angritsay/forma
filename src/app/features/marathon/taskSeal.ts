@@ -3,7 +3,7 @@
  *
  * The morning half of the club's loop is curiosity — the owner's «желание зайти и узнать новое
  * задание». So the card the coach wrote is not simply on the page: on the first look of the day
- * it is a closed envelope with «Задание дня готово» on it, and a tap opens it (`TaskCard`). The
+ * it is dealt face down — «Задание дня», «+12», «Открыть» — and a tap turns it (`ClubCard`). The
  * open is remembered per task id in `clubMemory`, and a task id belongs to one day, so the seal is
  * once a day by construction.
  *

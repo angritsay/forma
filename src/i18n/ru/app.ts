@@ -1237,11 +1237,11 @@ export const app = {
   clubTabDuo: 'Дуо',
   duoMateAuto: 'Подобрали на эту неделю',
   duoMateChosen: 'Вы вдвоём по приглашению',
-  duoLeave: 'Разойтись',
-  duoNoneTitle: 'Пары пока нет',
+  duoLeave: 'Выйти из пары',
+  // The «···» sheet on the duo tile (ClubDuo): how a pair comes to be. Read once, not daily.
   duoNoneBody:
-    'В понедельник подберём напарника — и так каждую неделю. Или позови подругу сама: тогда вы останетесь вместе, пока не решите иначе.',
-  duoInvite: 'Позвать подругу',
+    'В понедельник подберём напарника — и так каждую неделю. Или позови друга сам(а): тогда вы останетесь вместе, пока не решите иначе.',
+  duoInvite: 'Позвать друга',
   duoInviteTitle: 'Давай в клуб вдвоём',
   duoInviteCopied: 'Ссылка скопирована',
   duoInviteNoAccess: 'Пара собирается внутри клуба, а клуб — по подписке.',
@@ -1293,8 +1293,9 @@ export const app = {
   marathonNotStartedBody: 'Задания появятся утром первого дня.',
   marathonFinished: 'Этот круг закончен',
   marathonFinishedBody: 'Таблица остаётся — можно посмотреть, чем всё кончилось.',
-  marathonNoTasksToday: 'Сегодня заданий нет',
-  marathonNoTasksTodayBody: 'Отдыхаем. Завтра утром будет новое.',
+  // A rest day is the card's face reading «Отдых» (ClubCard); the week track already says it.
+  clubRestTitle: 'Отдых',
+  clubRestBody: 'Новое — утром',
   marathonErrorTitle: 'Не удалось загрузить клуб',
   // The pill on the day screen: «Пробная неделя · осталось 7 дней →», leading to the subscription.
   // One task
@@ -1308,7 +1309,6 @@ export const app = {
   marathonRulePerMember: 'Каждому за себя',
   marathonRuleCapped: 'На команду не больше {n}',
   marathonRuleNone: 'Без баллов',
-  marathonProofDone: 'Отметить выполнение',
   marathonProofUndo: 'Отменить',
   marathonProofSent: 'Отправлено',
   marathonProofTextLabel: 'Напиши, как прошло',
@@ -1824,28 +1824,45 @@ export const app = {
   // задание, поучаствовать, поделиться». Every number below comes from the API; these are the
   // words around it. Informal «ты» throughout, like the rest of the club.
   //
-  // The day's header row (ClubDay): «День 10 · неделя 2 из 2 · до 22:00».
-  clubWeekOf: 'неделя {w} из {total}',
+  //
+  // Take two (the owner on #230: «много текстов, нет элемента игры»): a card game. Every line
+  // below is a label, a number or an accessible name — nothing on the screen is a sentence.
+  //
+  // The HUD (ClubHud): my points, the mode, the streak; and the week track (WeekTrack) under it.
+  clubMyPoints: 'Твои баллы за неделю',
+  clubMode: 'Режим',
+  clubWeekTrack: 'Эта неделя',
+  // Seven two-letter weekdays from Monday, comma-separated: the labels under the tiles.
+  clubWeekdays: 'пн,вт,ср,чт,пт,сб,вс',
+  clubTileDone: 'сделано',
+  clubTileMissed: 'пропущено',
+  clubTileToday: 'сегодня',
+  clubTileFuture: 'впереди',
+  // The card (ClubCard): the back reads the eyebrow, «+12» and «Открыть»; the face has the
+  // eyebrow with the hour («Задание дня · до 22:00»), the body clamped to two lines and «ещё».
+  clubCardEyebrow: 'Задание дня',
   clubDueAt: 'до {time}',
-  // The sealed task (TaskCard): a closed envelope on the first look of the day.
-  clubSealedKicker: 'Новое задание',
-  clubSealedTitle: 'Задание дня готово',
-  clubSealedHint: 'Нажми, чтобы открыть',
-  clubSealedPoints: '+?',
-  // The board that moves (BoardRow, MarathonScreen): the arrow's accessible name, and the one
-  // line under the short table. {points} is already «4 балла».
+  clubCardOpen: 'Открыть',
+  clubCardMore: 'ещё',
+  clubCardPhoto: 'Фото или видео',
+  // The board that moves (ClubPodium): the arrow's accessible name, and the chase as a chip.
+  // {points} is already «4 балла».
   clubRankUp: 'Выше на {n}',
   clubRankDown: 'Ниже на {n}',
   clubGapChase: 'До {name} — {points}',
-  clubGapLeader: 'Ты лидер: отрыв {points}',
-  // The partner's day (ClubPartnerLine). The roster has no gender, hence «сделал(а)».
-  clubPartnerDone: '{name} уже сделал(а) ✓ — твоя очередь',
-  clubPartnerWaiting: '{name} ещё не сделал(а)',
-  clubPartnerBoth: 'Вы оба сделали 🎉',
-  clubRuleAll: '+{p} каждому, если сделаете оба',
-  clubRulePer: '+{p} за каждого из вас',
-  clubRuleCapped: 'до {cap} на пару',
-  clubPartnerSoon: 'Партнёр появится в понедельник — или позови друга сейчас',
+  clubPodium: 'Первая тройка недели',
+  clubPodiumEmpty: 'Пока без баллов',
+  clubPodiumStep: 'Место {n}: {name}, {points}',
+  // The duo tile (ClubDuo): the pair's rule in numbers, the marks' names, the sheet.
+  clubDuoRuleBoth: '+{p} · оба',
+  clubDuoRuleEach: '+{p} · каждый',
+  clubDuoRuleCap: 'до {cap} · пара',
+  clubDuoDone: '{name} — сделано',
+  clubDuoNotYet: '{name} — ещё нет',
+  clubDuoSlot: 'Место для партнёра',
+  clubDuoMonday: 'Партнёр — в понедельник',
+  clubDuoMenu: 'Про пару',
+  clubDuoAbout: 'Пара',
   // The streak at risk, and its sheet (ClubStreak).
   clubStreakAtRisk: 'Серия сгорит сегодня',
   clubStreakSheetTitle: 'Серия',

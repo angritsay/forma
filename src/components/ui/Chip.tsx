@@ -2,7 +2,7 @@ import { clsx } from 'clsx';
 import { forwardRef, type HTMLAttributes, type MouseEventHandler, type ReactNode } from 'react';
 import { Icon, type IconName } from './Icon';
 
-export type ChipTone = 'default' | 'accent' | 'success' | 'warning' | 'danger' | 'on-art';
+export type ChipTone = 'default' | 'accent' | 'success' | 'warning' | 'danger' | 'on-art' | 'warm';
 export type ChipSize = 'sm' | 'md';
 
 export interface ChipProps extends Omit<HTMLAttributes<HTMLElement>, 'onClick'> {
@@ -37,6 +37,10 @@ export interface ChipProps extends Omit<HTMLAttributes<HTMLElement>, 'onClick'> 
  *
  * Inside the technique card's 3D scene the glass is switched off by `.glass-off` on the face
  * (FlipCard.tsx) — the WebKit hazard global.css records — and the chip falls back to its solid.
+ *
+ * `warm` is the club's selected chip (design/CHANGELOG.md §17): the warm half of the crossroads
+ * gradient under ink, where the rest of the app selects in the light blue. The club's HUD picks
+ * solo or duo with it (`ClubHud`), and nothing outside the club's screens should.
  */
 const TONE: Record<ChipTone, string> = {
   default: 'glass-tag text-muted',
@@ -45,6 +49,7 @@ const TONE: Record<ChipTone, string> = {
   warning: 'bg-transparent border-border-strong text-warning',
   danger: 'bg-transparent border-border-strong text-danger',
   'on-art': 'bg-tile-fg/10 border-tile-fg/30 text-tile-fg',
+  warm: 'border-transparent bg-warm text-ink',
 };
 
 /* `md` is the design system's chip; `sm` is the same chip a step down for metrics inside a card. */
