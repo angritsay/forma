@@ -105,7 +105,7 @@ Every movement is in the Forma library, and you can lose fat without equipment; 
 
 **Cool-down, 3 minutes.** 30 seconds of [hamstring stretch](exercise:hamstring_stretch) per leg and a minute in [child's pose](exercise:child_pose).
 
-How the app scales this session. Before you start, Forma offers three choices: "easier" trims the volume by roughly 15 percent and lengthens the rest, "harder" adds reps and shortens the breaks, "as planned" keeps the coach's numbers. If your baseline test put you at level 1, burpees become [half burpees](exercise:half_burpee) and push-ups become [knee push-ups](exercise:knee_push_up). At the end you see minutes, a calorie estimate and rate the effort from 1 to 10; two consecutive sessions at 6 or lower with the full plan completed make the next one harder. The load grows without you doing the math.
+How the app scales this session. Before you start, Forma offers three choices: "easier" drops a set from one or two of the biggest blocks and trims the reps by about 10 percent, "harder" does the reverse, "as planned" keeps the coach's numbers; rest between sets stays the same. If your baseline test put you at level 1, burpees become [half burpees](exercise:half_burpee) and push-ups become [knee push-ups](exercise:knee_push_up). At the end you see minutes, a calorie estimate and rate the effort from 1 to 10; two consecutive sessions at 6 or lower with the full plan completed make the next one harder. The load grows without you doing the math.
 
 ## Food and sleep: the part training cannot replace
 
@@ -131,4 +131,4 @@ Judging progress by the scale alone is a mistake. Track three things together: y
 
 ## Wrap-up
 
-CrossFit for fat loss is two strength days, one or two short metcons, daily steps and a calm deficit in the kitchen. None of the parts works without the others; together they produce a result that stays. If you would rather have the volume and the rotation calculated for you, start with [the Start course](course:start): twenty sessions of about 17 minutes on average where the formats arrive gradually and there are no jumps. The daily steps and the other small habits are what the Small Steps Club in the app is for: one task a day and a weekly board.
+CrossFit for fat loss is two strength days, one or two short metcons, daily steps and a calm deficit in the kitchen. None of the parts works without the others; together they produce a result that stays. If you would rather have the volume and the rotation calculated for you, start with [the Start course](course:start): twenty sessions of about 18 minutes on average where the formats arrive gradually and there are no jumps. The daily steps and the other small habits are what the Small Steps Club in the app is for: one task a day and a weekly board.

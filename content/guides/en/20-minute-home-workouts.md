@@ -120,7 +120,7 @@ Count reps in every interval; a Tabata's score is the worst interval. This is th
 
 ### How the app scales these workouts
 
-In Forma every session is shown in three versions before you start. "Easier" trims reps by about 15 percent and lengthens rest by 15 percent, "harder" adds 15 percent volume and shortens rest by 10 percent, "as usual" keeps the coach's numbers multiplied by your current volume scale. The clock on AMRAP, EMOM and Tabata never changes, only the work inside it. Warm-ups and cool-downs are never scaled.
+In Forma every session is shown in three versions before you start. "Easier" drops a set from one or two of the biggest blocks and trims reps by about 10 percent, "harder" does the reverse, "as usual" keeps the coach's numbers multiplied by your current volume scale. On AMRAP, EMOM, Tabata and For Time the choice moves the clock itself: "easier" shortens the window or the number of rounds by about a fifth, "harder" lengthens it. Rest between sets stays the same. Warm-ups and cool-downs are never scaled.
 
 If the questionnaire and the short test after your second workout put you at level 1, push-ups become [knee push-ups](exercise:knee_push_up), and if you add [burpees](exercise:burpee) to Workout A they become [half burpees](exercise:half_burpee). With a knee limitation the app removes jumping movements; with hypertension it caps the plank at 30 seconds. The workout preview shows an honest duration estimate, slightly over 20 minutes because it includes 20 seconds of intro per block and 8 seconds of transition per exercise. After the session you rate the effort from 1 to 10, and next time the volume moves 2 to 5 percent in the right direction.
 
@@ -144,4 +144,4 @@ If you are just starting and are not sure these four sessions are within reach, 
 
 ## Wrap-up
 
-Twenty minutes is enough when three of them go to the warm-up, three to the cool-down and fourteen to one dense, timed format. The four sessions above cover strength, conditioning and core, and rotating them keeps the body from settling. If you would rather have those twenty minutes already put in order with the volume adapting to your results, open the [Start: home CrossFit basics course](course:start): twenty workouts in four blocks of five, at your own pace, about 17 minutes each on average.
+Twenty minutes is enough when three of them go to the warm-up, three to the cool-down and fourteen to one dense, timed format. The four sessions above cover strength, conditioning and core, and rotating them keeps the body from settling. If you would rather have those twenty minutes already put in order with the volume adapting to your results, open the [Start: home CrossFit basics course](course:start): twenty workouts in four blocks of five, at your own pace, about 18 minutes each on average.

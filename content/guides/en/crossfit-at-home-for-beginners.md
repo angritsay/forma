@@ -115,7 +115,7 @@ This is a workout for your first day; in the Start course day one has no max-eff
 
 ### How the app scales it
 
-On first login Forma asks a few short questions, and after your second workout the app offers a short test: squats, push-ups, sit-ups, lunges and a plank. The answers and the test produce a fitness index, and the index sets your volume multiplier — anywhere from 0.6 to 1.3. A beginner with a weak test gets 6 squats per set instead of 10; someone arriving with a base gets 13. Before each session you can pick easier or harder (volume changes by 15 %, rest gets longer or shorter), and afterwards you rate the effort from 1 to 10. Finished everything at an easy effort? The next session grows a little. Struggled, or something hurt? The volume drops, and the app tells you to back off and to see a professional if the pain persists.
+On first login Forma asks a few short questions, and after your second workout the app offers a short test: squats, push-ups, sit-ups, lunges and a plank. The answers and the test produce a fitness index, and the index sets your volume multiplier — anywhere from 0.6 to 1.3. A beginner with a weak test gets 6 squats per set instead of 10; someone arriving with a base gets 13. Before each session you can pick easier or harder (a set fewer or more in one or two blocks, reps down or up about 10 %, rest unchanged), and afterwards you rate the effort from 1 to 10. Finished everything at an easy effort? The next session grows a little. Struggled, or something hurt? The volume drops, and the app tells you to back off and to see a professional if the pain persists.
 
 ## Common beginner mistakes
 

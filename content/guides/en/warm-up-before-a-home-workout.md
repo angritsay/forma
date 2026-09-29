@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: mobility
 translationKey: warm-up-home
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-02'
+updatedAt: '2026-09-29'
 faq:
   - q: 'How long should a warm-up before a home workout be?'
     a: 'Seven to ten minutes: one or two on pulse, three or four on joints and range, two or three on light versions of the working movements. Before a 20-minute session, five minutes is enough.'
@@ -102,7 +102,7 @@ About seven minutes with transitions. On a no-jump day, sore knees or the first 
 - **Jumps and burpees.** 10 slow [half burpees](exercise:half_burpee), then 5 low [jump squats](exercise:jump_squat) with soft landings.
 - **Dumbbells and kettlebell.** [Kettlebell halos](exercise:kb_halo), 5 each way, and 15 [band pull-aparts](exercise:band_pull_apart) get the shoulders ready for presses and snatches. Before swings, 10 [kettlebell deadlifts](exercise:kb_deadlift) with no speed.
 
-How the app handles it. In Forma's courses the warm-up and cool-down are separate blocks at the start and end of every session, and the app does not scale their volume: "easier" and "harder" change the reps in the working blocks and the length of the rest pauses, while the warm-up reps and seconds stay exactly as the coach wrote them. That is deliberate; the warm-up needs to be the same at every level. Limitations still apply here: if you flagged wrist problems, hand-supported floor work such as planks and push-ups is swapped for gentler variants where one exists, and with hypertension the squat hold and the plank are capped at 30 seconds.
+How the app handles it. In Forma's courses the warm-up and cool-down are separate blocks at the start and end of every session, and the app does not scale their volume: "easier" and "harder" change the sets, reps and format clocks in the working blocks, while the warm-up reps and seconds stay exactly as the coach wrote them. That is deliberate; the warm-up needs to be the same at every level. Limitations still apply here: if you flagged wrist problems, hand-supported floor work such as planks and push-ups is swapped for gentler variants where one exists, and with hypertension the squat hold and the plank are capped at 30 seconds.
 
 ## The cool-down after the workout
 

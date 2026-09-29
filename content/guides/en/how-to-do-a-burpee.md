@@ -116,7 +116,7 @@ Suitable for week two or three, once stage 2 or 3 is solid. Every exercise is in
 
 **Cool-down.** 45 seconds in [child's pose](exercise:child_pose), then 40 seconds of the [hamstring stretch](exercise:hamstring_stretch) per leg.
 
-How the app scales this session. The questionnaire on first login and the short test after your second workout set your level, and at level 1 the burpees in the plan are automatically swapped for half burpees and the push-ups for knee push-ups. Before you start there are three options: "easier" removes about 15 percent of the reps and lengthens the rest, "harder" adds volume and shortens the breaks, "as planned" keeps the coach's numbers. After the session you rate the effort from 1 to 10; two sessions in a row rated 6 or lower with the full plan completed is the signal for Forma to suggest "harder".
+How the app scales this session. The questionnaire on first login and the short test after your second workout set your level, and at level 1 the burpees in the plan are automatically swapped for half burpees and the push-ups for knee push-ups. Before you start there are three options: "easier" drops a set from one or two of the biggest blocks and trims the reps by about 10 percent, "harder" does the reverse, "as planned" keeps the coach's numbers; rest between sets stays the same. After the session you rate the effort from 1 to 10; two sessions in a row rated 6 or lower with the full plan completed is the signal for Forma to suggest "harder".
 
 ## Common mistakes
 

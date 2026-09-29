@@ -112,7 +112,7 @@ One session per format, all built from the Forma library. Warm up first: a minut
 
 **Tabata, 4 minutes.** Eight intervals of high knees. Count the reps in every interval; the lowest number is your score.
 
-How the app scales these sessions. Before you start, Forma offers three choices: "easier" trims the volume by roughly 15 percent and lengthens the rest, "harder" adds volume and shortens the breaks, "as planned" keeps the coach's numbers. The clock on AMRAP, EMOM and Tabata never changes, only the work inside it, and For Time keeps its cap. If your test put you at level 1, burpees become [half burpees](exercise:half_burpee) and push-ups become [knee push-ups](exercise:knee_push_up). After the session you rate the effort from 1 to 10, and the next session gets slightly easier or harder based on that rating and how much of the plan you completed.
+How the app scales these sessions. Before you start, Forma offers three choices: "easier" trims the reps by about 10 percent, "harder" adds about 10 percent, "as planned" keeps the coach's numbers. On AMRAP, EMOM, Tabata and For Time the choice moves the clock itself: "easier" shortens the window or the number of rounds by about a fifth, "harder" lengthens it. Rest between sets stays the same. If your test put you at level 1, burpees become [half burpees](exercise:half_burpee) and push-ups become [knee push-ups](exercise:knee_push_up). After the session you rate the effort from 1 to 10, and the next session gets slightly easier or harder based on that rating and how much of the plan you completed.
 
 ## Common mistakes
 

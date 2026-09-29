@@ -102,7 +102,7 @@ Do the first set of superset A with a light weight; that is your specific warm-u
 
 ### How the app scales the session
 
-Before you start, Forma offers three options. "Easier" cuts reps by roughly 15 percent and lengthens the rest, "harder" adds reps and shortens the breaks, "as planned" keeps the coach's numbers. The warm-up and cool-down are never scaled. If your baseline test placed you at level 1, complex movements are swapped for simpler ones down the exercise's own chain: the thruster becomes a front squat or a goblet squat, the floor press becomes a push-up, the deadlift becomes a [glute bridge](exercise:glute_bridge). After the session you rate the effort from 1 to 10 and log how much you completed, and the next session gets slightly easier or harder.
+Before you start, Forma offers three options. "Easier" drops a set from one or two of the biggest blocks and trims the reps by about 10 percent, "harder" does the reverse, "as planned" keeps the coach's numbers; rest between sets stays the same. The warm-up and cool-down are never scaled. If your baseline test placed you at level 1, complex movements are swapped for simpler ones down the exercise's own chain: the thruster becomes a front squat or a goblet squat, the floor press becomes a push-up, the deadlift becomes a [glute bridge](exercise:glute_bridge). After the session you rate the effort from 1 to 10 and log how much you completed, and the next session gets slightly easier or harder.
 
 ## Common mistakes
 
