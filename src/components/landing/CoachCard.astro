@@ -125,7 +125,7 @@ const bookHint = t(locale, 'landing.coachBookHint', {
          * enough to be read at a glance; this is a caption, so it is set as one.
          */
         <div class="mt-8 flex flex-col items-start gap-4">
-          <Button href={appHref('#/book')}>{t(locale, 'landing.coachBook')}</Button>
+          <Button href={appHref('/book', { locale })}>{t(locale, 'landing.coachBook')}</Button>
           <p class="text-sm text-muted">{bookHint}</p>
         </div>
       )

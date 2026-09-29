@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useT } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
+import { rememberNext } from '@/app/features/entry/next';
 import { BootScreen } from './BootScreen';
 
 interface FromState {
@@ -17,6 +18,13 @@ export function RequireAuth() {
   if (status === 'signed_out') {
     // Keep the query string too, so e.g. /leaderboard?course=x comes back intact.
     const from = `${location.pathname}${location.search}`;
+    /*
+     * `from` rides in the history state, which survives only as long as nobody leaves /auth for
+     * somewhere else — and onboarding is somewhere else. The whitelisted destinations are also
+     * set aside in the session, so the screen that ends the *last* detour can still find them
+     * (features/entry/next.ts). A path off the list clears what an older detour left there.
+     */
+    rememberNext(from);
     return <Navigate to="/auth" replace state={{ from } satisfies FromState} />;
   }
   return <Outlet />;
@@ -77,10 +85,18 @@ export function RequireOnboarded() {
   const status = useSession((s) => s.status);
   const profile = useSession((s) => s.profile);
   const error = useSession((s) => s.error);
+  const location = useLocation();
   if (status === 'booting') return <BootScreen />;
-  if (status === 'signed_out') return <Navigate to="/auth" replace />;
+  if (status === 'signed_out') {
+    rememberNext(`${location.pathname}${location.search}`);
+    return <Navigate to="/auth" replace />;
+  }
   if (!profile && error) return <ProfileLoadError />;
-  if (!profile || !profile.onboardedAt) return <Navigate to="/onboarding" replace />;
+  if (!profile || !profile.onboardedAt) {
+    // Onboarding ends on `consumeNext() ?? '/'`: the link that sent them here is where they land.
+    rememberNext(`${location.pathname}${location.search}`);
+    return <Navigate to="/onboarding" replace />;
+  }
   return <Outlet />;
 }
 

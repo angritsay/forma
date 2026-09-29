@@ -38,6 +38,7 @@ import { useToast } from '@/components/ui/Toast';
 import { recordConsent } from '@/lib/api/consents';
 import { useT } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
+import { consumeNext } from '@/app/features/entry/next';
 import {
   clearDraft,
   draftToTrainingProfile,
@@ -198,7 +199,8 @@ export default function OnboardingScreen() {
         await recordConsent(['health'], 'onboarding', draft.locale ?? locale);
       }
       clearDraft();
-      navigate('/', { replace: true });
+      // The deep link that sent them through sign-up, if there was one (features/entry/next.ts).
+      navigate(consumeNext() ?? '/', { replace: true });
     } catch {
       toast.show({ kind: 'error', title: t('app.onbSaveError') });
     } finally {

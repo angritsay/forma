@@ -100,6 +100,7 @@
  */
 import { clsx } from 'clsx';
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { BrandMark } from '@/components/ui/BrandMark';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -198,8 +199,17 @@ export default function BookScreen() {
    * Which length is showing. The first option leads because `content/site/booking.ts` orders them
    * cheapest first, and the cheaper one is the lower step in: somebody who wants the hour will
    * still find it, somebody unsure of the whole idea is looking for the half.
+   *
+   * Unless the link already said which: the site's «book an hour» button opens `#/book?len=hour`
+   * (the same value survives sign-in — see features/entry/next.ts). Read once, as the starting
+   * position only; the switch is theirs from then on. An id the offer does not carry is ignored.
    */
-  const [pick, setPick] = useState<BookingOption['id']>(BOOKING.options[0]?.id ?? 'half');
+  const [searchParams] = useSearchParams();
+  const [pick, setPick] = useState<BookingOption['id']>(() => {
+    const len = searchParams.get('len');
+    const asked = BOOKING.options.find((o) => o.id === len);
+    return asked?.id ?? BOOKING.options[0]?.id ?? 'half';
+  });
   const index = BOOKING.options.findIndex((o) => o.id === pick);
   const option = BOOKING.options[index] ?? BOOKING.options[0];
 

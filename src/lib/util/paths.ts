@@ -42,9 +42,31 @@ export function localeStaticPaths(): { params: { lang: string | undefined } }[] 
   }));
 }
 
-/** Path to the app, optionally with a hash route: appHref('#/courses'). */
-export function appHref(hashRoute = ''): string {
-  return `${withBase('/app/')}${hashRoute}`;
+/** What a site link can tell the app about the visit; read by src/app/features/entry/params.ts. */
+export interface AppHrefOptions {
+  /** The language of the page the link is on: the app adopts it if the person never chose one. */
+  locale?: Locale;
+  /** A referral code (0051), set aside until the person is signed in. */
+  ref?: string;
+}
+
+/**
+ * Path to the app, optionally with a hash route: appHref('#/courses') or appHref('/start').
+ *
+ * The route may be written with or without its `#`. Without `opts` the output is exactly what it
+ * always was for the `'#/…'` and `''` forms every older caller uses. With them, the facts go in
+ * the query string *before* the hash — `/app/?lang=en#/start` — because everything after `#`
+ * belongs to the app's router, and the app reads the query once and clears it.
+ */
+export function appHref(hashRoute = '', opts?: AppHrefOptions): string {
+  const route = hashRoute.replace(/^#/, '');
+  const hash = route ? `#${route}` : '';
+  if (!opts) return `${withBase('/app/')}${hash}`;
+  const q = new URLSearchParams();
+  if (opts.locale) q.set('lang', opts.locale);
+  if (opts.ref) q.set('ref', opts.ref);
+  const query = q.toString();
+  return `${withBase('/app/')}${query ? `?${query}` : ''}${hash}`;
 }
 
 /** Strip base + locale prefix from a pathname → site path and locale. */

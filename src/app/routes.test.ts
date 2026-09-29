@@ -16,6 +16,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { isNextPath } from './features/entry/next';
 
 const SRC = join(process.cwd(), 'src', 'app');
 const read = (p: string) => readFileSync(join(SRC, p), 'utf8');
@@ -77,6 +78,29 @@ describe('navigation targets', () => {
   it('declares the replay of the onboarding stories', () => {
     expect(routes).toContain('/intro');
     expect(read('features/profile/ProfileSheet.tsx')).toContain("navigate('/intro')");
+  });
+
+  /*
+   * A link that survives sign-in (features/entry/next.ts) is only worth keeping if it lands on a
+   * route. One sample per alternative of that whitelist, the query stripped as the router does.
+   */
+  it('declares a route for every destination a deep link may be kept for', () => {
+    for (const path of [
+      '/start',
+      '/marathon',
+      '/invite',
+      '/duo',
+      '/book?len=hour',
+      '/courses/start',
+      '/courses/start/nodes/abc',
+    ]) {
+      expect(isNextPath(path), `${path} should be on the whitelist`).toBe(true);
+      const bare = path.split('?')[0]!;
+      expect(
+        routes.some((r) => matches(r, bare)),
+        `${path} is whitelisted but no <Route> declares it`,
+      ).toBe(true);
+    }
   });
 
   it('declares a route for every registered screen name that is reachable by path', () => {

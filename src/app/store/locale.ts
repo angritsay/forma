@@ -37,6 +37,14 @@ export interface LocaleState {
   locale: Locale;
   /** True once a person (or their profile) settled it — the first screen asks only when false. */
   chosen: boolean;
+  /**
+   * True when the language came from a link (`?lang=` on a site button) rather than from a person.
+   * Enough to skip the first screen's question — the page they clicked was already in a language —
+   * but not a choice: it is never remembered, and on sign-in an existing profile's language wins
+   * over it (`syncLocale` in session.ts). Otherwise a link could rewrite somebody's saved language,
+   * and the bot's with it, just by being opened on a new phone.
+   */
+  hinted: boolean;
   /** A deliberate choice: remembered on this device and pushed to the profile by session.ts. */
   setLocale: (locale: Locale) => void;
   /**
@@ -44,6 +52,8 @@ export interface LocaleState {
    * overwrites a pick made on this device a moment ago, on the screen before sign-in.
    */
   adopt: (locale: Locale) => void;
+  /** A link's suggestion: shown, not remembered, and ignored once anything firmer is known. */
+  hint: (locale: Locale) => void;
 }
 
 function read(): { locale: Locale; chosen: boolean } {
@@ -66,10 +76,11 @@ function write(locale: Locale): void {
 
 export const useLocale = create<LocaleState>()((set, get) => ({
   ...read(),
+  hinted: false,
   setLocale: (locale) => {
     if (!isLocale(locale)) return;
     write(locale);
-    set({ locale, chosen: true });
+    set({ locale, chosen: true, hinted: false });
   },
   adopt: (locale) => {
     if (!isLocale(locale)) return;
@@ -77,7 +88,11 @@ export const useLocale = create<LocaleState>()((set, get) => ({
     // that still says Russian is about to be updated by the subscription in session.ts.
     if (get().chosen) return;
     write(locale);
-    set({ locale, chosen: true });
+    set({ locale, chosen: true, hinted: false });
+  },
+  hint: (locale) => {
+    if (!isLocale(locale) || get().chosen) return;
+    set({ locale, hinted: true });
   },
 }));
 

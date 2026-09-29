@@ -171,7 +171,9 @@ const H2 = 'display text-lg md:text-xl';
           (COACH.links.length > 0 || BOOKING.enabled) && (
             <div class="mt-7 flex flex-wrap items-center gap-x-4 gap-y-3">
               {BOOKING.enabled && (
-                <Button href={appHref('#/book')}>{t(locale, 'landing.coachBook')}</Button>
+                <Button href={appHref('/book', { locale })}>
+                  {t(locale, 'landing.coachBook')}
+                </Button>
               )}
               {COACH.links.map((x) => (
                 <a
@@ -255,6 +257,6 @@ const H2 = 'display text-lg md:text-xl';
     title={t(locale, 'landing.ctaTitle')}
     text={t(locale, 'landing.ctaText')}
     primary={{ label: t(locale, 'landing.ctaPrimary'), href: href(locale, '/courses/') }}
-    secondary={{ label: t(locale, 'landing.ctaSecondary'), href: appHref() }}
+    secondary={{ label: t(locale, 'landing.ctaSecondary'), href: appHref('', { locale }) }}
   />
 </Landing>

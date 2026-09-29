@@ -93,3 +93,27 @@ describe('adopt — the profile speaking', () => {
     expect(useLocale.getState().locale).toBe('en');
   });
 });
+
+describe('hint — a link speaking', () => {
+  it('shows the language without remembering it or calling it a choice', async () => {
+    const { useLocale } = await load();
+    useLocale.getState().hint('en');
+    expect(useLocale.getState()).toMatchObject({ locale: 'en', chosen: false, hinted: true });
+    expect(store.map.get(LOCALE_STORAGE_KEY)).toBeUndefined();
+  });
+
+  it('gives way to the profile on sign-in', async () => {
+    const { useLocale } = await load();
+    // Opened from the English site on a new phone; the account was made in Russian.
+    useLocale.getState().hint('en');
+    useLocale.getState().adopt('ru');
+    expect(useLocale.getState()).toMatchObject({ locale: 'ru', chosen: true, hinted: false });
+  });
+
+  it('never overrules a choice already made on this device', async () => {
+    store.map.set(LOCALE_STORAGE_KEY, 'ru');
+    const { useLocale } = await load();
+    useLocale.getState().hint('en');
+    expect(useLocale.getState()).toMatchObject({ locale: 'ru', chosen: true, hinted: false });
+  });
+});

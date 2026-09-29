@@ -37,6 +37,9 @@ import {
   stashDuoInvite,
   stashReferral,
 } from './features/marathon/duoInvite';
+import { firstTrainableNode } from './features/courses/courseAccess';
+import { consumeNext } from './features/entry/next';
+import { findCourse } from '@/content/catalogue';
 
 function MissingScreen({ name }: { name: ScreenName }) {
   const { t } = useT();
@@ -70,6 +73,10 @@ function LazyScreen({ name }: { name: ScreenName }) {
  * end somewhere else (`/` after onboarding). So the token is set aside in sessionStorage and the
  * link moves on to `/duo`, where it is accepted once the person is in; <PendingDuoInvite> brings
  * them back there from wherever the detours land.
+ *
+ * It goes to `/duo` rather than to a set-aside destination (features/entry/next.ts): the pending
+ * invite overrides every screen in the shell anyway, and taking the destination here would only
+ * throw it away.
  */
 function DuoInviteCapture() {
   const { token } = useParams();
@@ -82,12 +89,40 @@ function DuoInviteCapture() {
  *
  * The code goes to localStorage rather than the session: the person who opens it may sign up days
  * later. It is attached once they are in (<ShellWithPendingInvite>), and the link itself moves on
- * to «Курсы» — there is no screen to show for a code, only a fact to record.
+ * to wherever a guard had set aside (features/entry/next.ts), or to «Курсы» — there is no screen
+ * to show for a code, only a fact to record.
  */
 function ReferralCapture() {
   const { code } = useParams();
-  stashReferral(code);
-  return <Navigate to="/" replace />;
+  const navigate = useNavigate();
+  /*
+   * In an effect with a ref rather than in render: `consumeNext()` removes what it reads, and a
+   * render may run more than once — the second one would find nothing and send them to `/`.
+   */
+  const done = useRef(false);
+  useEffect(() => {
+    if (done.current) return;
+    done.current = true;
+    stashReferral(code);
+    // A destination a guard set aside earlier in this tab still wins over the default.
+    navigate(consumeNext() ?? '/', { replace: true });
+  }, [code, navigate]);
+  return null;
+}
+
+/**
+ * `#/start` — «the first workout», the address the site's main button and the bot link to.
+ *
+ * It names an intent rather than a node id, so the site never has to know how the beginner course
+ * is laid out: the first node that can actually be trained (`firstTrainableNode` — not `nodes[0]`,
+ * which may be a rest day). Behind the same guards as the node screens, so a signed-out visitor is
+ * sent through sign-in with `/start` set aside and comes back here. A catalogue without the
+ * course (it cannot happen with the compiled content, but a lookup is a lookup) falls back to home.
+ */
+function StartRedirect() {
+  const course = findCourse('start');
+  const node = course ? firstTrainableNode(course) : null;
+  return <Navigate to={node ? `/courses/start/nodes/${node.id}` : '/'} replace />;
 }
 
 /**
@@ -137,8 +172,10 @@ function ShellWithPendingInvite() {
  */
 function LanguageGate({ children }: { children: ReactElement }) {
   const chosen = useLocale((s) => s.chosen);
+  // A site button's `?lang=` already answered the question for this visit (features/entry).
+  const hinted = useLocale((s) => s.hinted);
   const status = useSession((s) => s.status);
-  if (!chosen && status === 'signed_out') return <LanguageScreen />;
+  if (!chosen && !hinted && status === 'signed_out') return <LanguageScreen />;
   return children;
 }
 
@@ -187,6 +224,8 @@ export function AppRoutes() {
                  * means the same thing the index does.
                  */}
                 <Route path="/courses" element={<Navigate to="/" replace />} />
+                {/* «The first workout» by intent; see <StartRedirect>. */}
+                <Route path="/start" element={<StartRedirect />} />
                 <Route path="/courses/:id" element={<LazyScreen name="CoursePathScreen" />} />
                 <Route
                   path="/courses/:id/nodes/:nodeId"

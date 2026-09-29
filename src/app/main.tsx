@@ -15,9 +15,17 @@ import { initTelegram, startParam, waitForTelegram } from '@/lib/telegram/webapp
 import { AppProviders } from './components/AppProviders';
 import { AppFrame } from './components/AppShell';
 import { BootScreen } from './components/BootScreen';
+import { applyEntryParams } from './features/entry/params';
 import { stashStartParam } from './features/marathon/duoInvite';
 import { AppRoutes } from './router';
 import NotConfiguredScreen from './screens/NotConfiguredScreen';
+
+/*
+ * The visit's query string (`?lang`, `?ref`, `?startapp`, `?src`): read and cleared at module load,
+ * which is before the first render — the language must be settled before the language question
+ * decides whether to show itself, and before HashRouter starts owning the address.
+ */
+applyEntryParams();
 
 export default function App() {
   // The island is client-only, so reading the demo flag during the first render is safe.
