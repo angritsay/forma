@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { actionFor, currencyCode, intentFor, keyFor, parseProductMap } from './products';
+import {
+  actionFor,
+  currencyCode,
+  intentFor,
+  keyFor,
+  parseProductMap,
+  sessionOption,
+} from './products';
+import { BOOKING } from '@content/site/booking';
+import { sessionKey } from '@content/site/payments';
 
 /** Секрет в том виде, в каком его заполняет владелец: курс — товаром, подписка — тарифом. */
 const RAW = JSON.stringify({
@@ -154,15 +163,30 @@ describe('actionFor', () => {
 
 /*
  * Обработчик читает `Deno.env` и живёт в `Deno.serve`, так что здесь он не запускается. Две
- * ветки, ради которых 0043 и писалась, проверяются по тексту: занятие записывается привязанным,
- * а незнакомый товар возвращается раньше, чем код доходит до `apply_course_payment`.
+ * ветки проверяются по тексту: занятие подтверждает бронь (0055), а незнакомый товар возвращается
+ * раньше, чем код доходит до `apply_course_payment` (0043).
  */
 describe('index.ts', () => {
   const src = readFileSync(new URL('./index.ts', import.meta.url), 'utf8');
   const branch = (marker: string) => src.slice(src.indexOf(marker), src.indexOf(marker) + 600);
 
-  it('records a paid session as applied', () => {
-    expect(branch("if (action.kind === 'session')")).toContain('await record(true)');
+  /*
+   * 0055: a session payment confirms the payer's hold. It is recorded unapplied first (the RPC
+   * marks it applied when it books), and it never reaches the course branch.
+   */
+  it('records a session, then confirms its hold, before any course is applied', () => {
+    const session = src.indexOf("if (action.kind === 'session') {");
+    expect(session).toBeGreaterThan(0);
+    expect(session).toBeLessThan(src.indexOf("rpc('apply_course_payment'"));
+    const body = src.slice(session, src.indexOf("rpc('apply_course_payment'"));
+    expect(body.indexOf('await record(false)')).toBeGreaterThan(0);
+    expect(body.indexOf('await record(false)')).toBeLessThan(
+      body.indexOf("rpc('apply_session_payment'"),
+    );
+    expect(body).toContain('p_option: option');
+    // The ledger row's id, so a payment without an order number still lands on its booking.
+    expect(body).toContain('const paymentId = await record(false)');
+    expect(body).toContain('p_payment_id: paymentId');
   });
 
   it('stops an unknown product before any course is applied', () => {
@@ -172,5 +196,31 @@ describe('index.ts', () => {
     expect(branch("if (action.kind === 'unknown') {\n    await record(false)")).toContain(
       'return reply(200',
     );
+  });
+});
+
+/*
+ * The session branch of the webhook (0055): the product names the option, and the option picks
+ * the hold the payment confirms. Every option on sale must come through by its own key, and a
+ * `session:` key that names no option must confirm nothing rather than guess.
+ */
+describe('sessionOption', () => {
+  it('names the option of a session product', () => {
+    const map = parseProductMap(RAW);
+    expect(sessionOption(actionFor(keyFor(map, 'prod_half', 29)))).toBe('half');
+    expect(sessionOption(actionFor(keyFor(map, 'prod_hour', 39)))).toBe('hour');
+  });
+
+  it('reaches every option the booking screen sells', () => {
+    for (const option of BOOKING.options) {
+      expect(sessionOption(actionFor(sessionKey(option.id))), option.id).toBe(option.id);
+    }
+  });
+
+  it('names nothing for other products or an unknown session key', () => {
+    expect(sessionOption(actionFor('session:forty'))).toBeNull();
+    expect(sessionOption(actionFor('course:start'))).toBeNull();
+    expect(sessionOption(actionFor('plan:monthly'))).toBeNull();
+    expect(sessionOption(actionFor(''))).toBeNull();
   });
 });

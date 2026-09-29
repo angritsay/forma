@@ -51,6 +51,7 @@ import {
   intentFor,
   keyFor,
   parseProductMap,
+  sessionOption,
   type ProductMap,
 } from './products.ts';
 
@@ -167,7 +168,8 @@ Deno.serve(async (req) => {
    * Журнал — до выдачи и отдельно от неё: сбой выдачи не должен ещё и терять запись о платеже.
    * Никогда не фатален, ровно как в `prodamus-webhook`.
    */
-  async function record(applied: boolean): Promise<void> {
+  /** Записывает платёж; id строки журнала или null, если записать не вышло. */
+  async function record(applied: boolean): Promise<string | null> {
     const args = {
       p_email: email,
       p_amount: amount,
@@ -184,12 +186,16 @@ Deno.serve(async (req) => {
       p_provider: 'lava',
     };
     // Валюта — с 0043. Пустая строка, а не пропуск: умолчание функции — рубли, а это не рубли.
-    let { error } = await supabase.rpc('record_payment', { ...args, p_currency: currency ?? '' });
+    let { data, error } = await supabase.rpc('record_payment', {
+      ...args,
+      p_currency: currency ?? '',
+    });
     if (error && (error as { code?: string }).code === 'PGRST202') {
       // База ещё без 0043: та же запись без валюты, чем никакой.
-      ({ error } = await supabase.rpc('record_payment', args));
+      ({ data, error } = await supabase.rpc('record_payment', args));
     }
     if (error) console.warn('lava-webhook: record_payment failed', error.message);
+    return typeof data === 'string' ? data : null;
   }
 
   /*
@@ -221,23 +227,52 @@ Deno.serve(async (req) => {
   }
 
   /*
-   * Занятие с тренером — полчаса или час (`content/site/payments.ts`, `sessionKey`). Открывать
-   * нечего: оплачено время человека, а не доступ, и время назначается на странице выбора слота
-   * или в переписке. Поэтому здесь только журнал — и с `applied = true`: платёж сделал всё, что
-   * мог, и в «непривязанные» не попадает (0043).
+   * A session with the coach: half an hour or an hour (`content/site/payments.ts`, `sessionKey`).
    *
-   * Ветка отдельная, и это не аккуратность ради аккуратности: оплата часа, ушедшая в
-   * `apply_course_payment()`, открыла бы курс. Один платёж — одна вещь.
+   * Since 0055 the client picks a slot first and pays second, so the product confirms the slot:
+   * `apply_session_payment()` turns this address's hold for the option into a booking with the
+   * coach's room link. Separate from the course branch for the reason it always was (0039): a
+   * session payment that reached `apply_course_payment()` would open a course.
    *
-   * В журнал это ложится как `session` (0039) — и оттуда в канал владельца, в тему
-   * «Онлайн-тренировки» (0040). Prodamus опознаёт занятие суммой и пишет тот же вид.
+   * Recorded first and unapplied; the RPC marks it applied when it books. No matching hold, or a
+   * `session:` key that names no option → nothing is booked, the row waits for
+   * `claim_payment()`, and the owner is told (`session_unmatched`). A database without 0055
+   * answers PGRST202, and the old behaviour stands: recorded as done, the coach agrees the time.
    */
   if (action.kind === 'session') {
-    await record(true);
-    console.info(
-      `lava-webhook: ${action.key} paid by ${email} (contract ${hook.contractId}); nothing to unlock, the coach agrees the time`,
-    );
-    return reply(200, `ok: ${action.key} recorded for ${email}`);
+    const option = sessionOption(action);
+    const paymentId = await record(false);
+    if (!option) {
+      console.warn(
+        `lava-webhook: ${action.key} names no booking option; recorded as unclaimed (contract ${hook.contractId})`,
+      );
+      return reply(200, `ignored: ${action.key} recorded, waiting for the owner`);
+    }
+    const { data: booked, error } = await supabase.rpc('apply_session_payment', {
+      p_email: email,
+      p_provider_ref: hook.contractId,
+      p_option: option,
+      p_paid_at: paidAt,
+      p_payment_id: paymentId,
+    });
+    if (error && (error as { code?: string }).code === 'PGRST202') {
+      await record(true);
+      console.info(
+        `lava-webhook: ${action.key} paid by ${email} (contract ${hook.contractId}); no booking core yet, the coach agrees the time`,
+      );
+      return reply(200, `ok: ${action.key} recorded for ${email}`);
+    }
+    if (error) {
+      console.error('lava-webhook: apply_session_payment failed', error.message);
+      return reply(500, 'could not apply the payment');
+    }
+    if (!booked) {
+      console.warn(
+        `lava-webhook: ${action.key} paid by ${email} matches no hold; recorded as unclaimed (contract ${hook.contractId})`,
+      );
+      return reply(200, `ignored: ${action.key} recorded, no hold, waiting for the owner`);
+    }
+    return reply(200, `ok: ${action.key} booked for ${email}`);
   }
 
   /*

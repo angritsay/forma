@@ -25,6 +25,8 @@ export const CLAIM_RESULTS = [
   'subscription',
   /** A pending course order was activated. */
   'course',
+  /** A session payment confirmed the account's held slot (0055). */
+  'session',
   /** The address is linked, but there was nothing waiting to activate. */
   'linked',
   'not_found',

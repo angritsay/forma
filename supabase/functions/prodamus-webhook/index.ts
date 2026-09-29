@@ -35,6 +35,7 @@ import {
   parsePriceList,
   readPayment,
   routeAmount,
+  sessionOptionOf,
   sign,
   signatureMatches,
 } from './verify.ts';
@@ -128,8 +129,9 @@ Deno.serve(async (req) => {
     sessions: SESSION_PRICES,
     courses: COURSE_PRICES,
   });
-  async function record(applied: boolean): Promise<void> {
-    const { error } = await supabase.rpc('record_payment', {
+  /** Records the payment; the ledger row's id, or null when it could not be written. */
+  async function record(applied: boolean): Promise<string | null> {
+    const { data, error } = await supabase.rpc('record_payment', {
       p_email: payment!.email,
       p_amount: Number.isFinite(amount) ? amount : null,
       p_provider_ref: payment!.ref || null,
@@ -144,6 +146,7 @@ Deno.serve(async (req) => {
     // database without 0020 has no `record_payment` at all — which must not turn every payment
     // into a 500 and an endless Prodamus retry.
     if (error) console.warn('prodamus-webhook: record_payment failed', error.message);
+    return typeof data === 'string' ? data : null;
   }
 
   if (route.kind === 'plan') {
@@ -164,23 +167,52 @@ Deno.serve(async (req) => {
   }
 
   /*
-   * Занятие с тренером: полчаса или час, опознанные по сумме.
+   * A session with the coach: half an hour or an hour, told apart by the amount.
    *
-   * Открывать нечего — куплено время тренера, а не доступ, — поэтому только журнал. И ветка эта
-   * не про отчётность: без неё платёж за занятие проваливался бы вниз, в `apply_course_payment()`,
-   * а тот открывает единственный ожидающий заказ на курс этой почты. Человек, который оформил
-   * заказ на курс и потом купил час с тренером, получал бы курс даром.
+   * Since 0055 the client picks a slot first and pays second, so the money confirms the slot:
+   * `apply_session_payment()` turns this address's hold for this option into a booking with the
+   * coach's room link, and the booking queues the client's messages. The branch still matters for
+   * the reason it was added (0039): a session payment that fell through to `apply_course_payment()`
+   * would open whatever course this address had a pending order for.
    *
-   * `record()` уже знает, что это `session` (см. `p_intent` выше), так что в журнале видно, за
-   * что заплатили, а не только сколько. И пишет его привязанным (`applied = true`, 0043): платёж
-   * сделал всё, что мог, и в счётчик непривязанных не попадает.
+   * The payment is recorded first and unapplied; the RPC marks it applied when it books. No
+   * matching hold (paid from another address, the wrong length, the slot gone) → nothing is
+   * booked, the row waits for `claim_payment()`, and the owner's channel says why
+   * (`session_unmatched`). 200 either way: a retry changes nothing.
+   *
+   * A database without 0055 answers PGRST202, and the old behaviour stands: recorded as done, the
+   * coach agrees the time.
    */
-  if (route.kind === 'session') {
-    await record(true);
-    console.info(
-      `prodamus-webhook: session ${route.session} paid by ${payment.email} (order ${payment.ref || 'without a number'}); nothing to unlock, the coach agrees the time`,
-    );
-    return reply(200, `ok: session ${route.session} recorded`);
+  const option = sessionOptionOf(route);
+  if (option) {
+    // The ledger row's id, not only the order number: Prodamus may send none, and the booking
+    // must still point at this payment (and mark it applied).
+    const paymentId = await record(false);
+    const { data: booked, error } = await supabase.rpc('apply_session_payment', {
+      p_email: payment.email,
+      p_provider_ref: payment.ref || null,
+      p_option: option,
+      p_paid_at: paidAt,
+      p_payment_id: paymentId,
+    });
+    if (error && (error as { code?: string }).code === 'PGRST202') {
+      await record(true);
+      console.info(
+        `prodamus-webhook: session ${option} paid by ${payment.email} (order ${payment.ref || 'without a number'}); no booking core yet, the coach agrees the time`,
+      );
+      return reply(200, `ok: session ${option} recorded`);
+    }
+    if (error) {
+      console.error('prodamus-webhook: apply_session_payment failed', error.message);
+      return reply(500, 'could not apply the payment');
+    }
+    if (!booked) {
+      console.warn(
+        `prodamus-webhook: session ${option} paid by ${payment.email} matches no hold; recorded as unclaimed (order ${payment.ref || 'without a number'})`,
+      );
+      return reply(200, `ignored: session ${option} recorded, no hold, waiting for the owner`);
+    }
+    return reply(200, `ok: session ${option} booked`);
   }
 
   /*

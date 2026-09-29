@@ -138,6 +138,18 @@ export function actionFor(key: string): LavaAction {
   return { kind: 'unknown' };
 }
 
+/**
+ * The booking option a session product pays for (0055, `apply_session_payment`): `session:half`
+ * and `session:hour`, the keys of `content/site/payments.ts`. Any other `session:` key names no
+ * option this booking knows, so it confirms nothing and the payment waits for the owner.
+ */
+export function sessionOption(action: LavaAction): 'half' | 'hour' | null {
+  if (action.kind !== 'session') return null;
+  if (action.key === 'session:half') return 'half';
+  if (action.key === 'session:hour') return 'hour';
+  return null;
+}
+
 /** Вид платежа в журнале (`payments.intent`) для каждого действия. */
 export function intentFor(action: LavaAction): 'monthly' | 'annual' | 'session' | 'course' {
   if (action.kind === 'plan') return action.plan;

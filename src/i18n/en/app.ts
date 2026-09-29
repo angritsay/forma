@@ -234,6 +234,7 @@ export const app = {
   claimPlaceholder: 'Order number from the receipt',
   claimCta: 'Find the payment',
   claimOk: 'Found it. Access is open.',
+  claimSession: 'Found it. Your session is booked — it is on the Coach tab.',
   claimLinked:
     'The payment was found and the address is linked, but there is nothing to open yet. Write to us and we will sort it out.',
   claimNotFound: 'No such number. Check it against the receipt — or it has already been claimed.',
