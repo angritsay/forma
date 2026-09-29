@@ -56,6 +56,7 @@ import { CourseMetaEditor } from '@/app/features/admin/courses/CourseMetaEditor'
 import { DayEditor } from '@/app/features/admin/courses/DayEditor';
 import { DayList } from '@/app/features/admin/courses/DayList';
 import { nextDaySlot, nodeIdFor } from '@/app/features/admin/courses/ids';
+import { canPublish } from '@/app/features/admin/courses/publishRule';
 import { useAutosave } from '@/app/features/admin/courses/useAutosave';
 import { WorkoutEditor } from '@/app/features/admin/workoutBuilder/WorkoutEditor';
 
@@ -313,7 +314,7 @@ export default function AdminCourseScreen() {
   const issues = assembled?.issues ?? [];
   const published = course.status === 'published';
   // A compiled course's file wins over this draft (see CompiledCourseNotice), so publishing it
-  // would change nothing for anyone — the button stays off rather than pretend.
+  // would change nothing for anyone — the button stays off rather than pretend (`canPublish`).
   const compiled = isCompiledCourse(course.slugId);
 
   return (
@@ -474,9 +475,17 @@ export default function AdminCourseScreen() {
             </div>
           )}
 
-          <p className="text-[15px] text-muted">{t('app.coursePublishExplain')}</p>
-          {/* Publishing is instant in the app and not on the website; say so where it is decided. */}
-          <p className="text-[15px] text-muted">{t('app.coursePublishSite')}</p>
+          {/*
+           * Publishing is instant in the app and not on the website; say so where it is decided.
+           * Not on a compiled course: Publish is off there, and neither the catalogue nor the site
+           * would show its draft, so both sentences would describe something that cannot happen.
+           */}
+          {compiled ? null : (
+            <>
+              <p className="text-[15px] text-muted">{t('app.coursePublishExplain')}</p>
+              <p className="text-[15px] text-muted">{t('app.coursePublishSite')}</p>
+            </>
+          )}
 
           {/*
            * Publish is the one neon button on this tab — neon is the palette's colour for action,
@@ -497,7 +506,7 @@ export default function AdminCourseScreen() {
               size="lg"
               variant="action"
               loading={publishing}
-              disabled={compiled || issues.length > 0}
+              disabled={!canPublish(course.slugId, issues)}
               onClick={() => void publish()}
             >
               {t('app.coursePublish')}

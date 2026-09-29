@@ -4,7 +4,7 @@
  * admin panel can edit.
  *
  * Anastasia asked to be able to open what Sergey wrote and change it — a set count here, the order
- * of two days there — without a code change. That means the five compiled courses have to exist as
+ * of two days there — without a code change. That means the six compiled courses have to exist as
  * `admin_courses` + `admin_course_days` + `custom_workouts` rows.
  *
  * The conversion itself is `workoutToStructure()` in src/lib/courses/draft.ts, and it is lossless:
