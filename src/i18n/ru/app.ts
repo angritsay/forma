@@ -1153,6 +1153,7 @@ export const app = {
   coursePublish: 'Опубликовать',
   courseUnpublish: 'Снять с публикации',
   coursePublishReady: 'Курс готов к публикации.',
+  courseCompiledNotice: 'Этот курс ведётся в коде — правки здесь не видны ученикам.',
   coursePublishBlocked: 'Пока опубликовать нельзя:',
   coursePublishSite:
     'Страница курса на сайте появится после следующей сборки — она собирается раз в сутки. Нужно сразу — запусти «Deploy site» в GitHub Actions.',

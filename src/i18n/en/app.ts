@@ -1133,6 +1133,7 @@ export const app = {
   coursePublish: 'Publish',
   courseUnpublish: 'Unpublish',
   coursePublishReady: 'The course is ready to publish.',
+  courseCompiledNotice: 'This course is maintained in code — edits here are not seen by students.',
   coursePublishBlocked: 'Not publishable yet:',
   coursePublishSite:
     'The course page on the website appears on the next build, which runs nightly. Need it now — run "Deploy site" in GitHub Actions.',

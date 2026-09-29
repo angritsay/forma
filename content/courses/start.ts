@@ -1233,8 +1233,8 @@ export const COURSE_START: CourseInput = {
     'Twenty workouts from the coach’s own beginner programme: short, in rounds, no equipment.',
   ),
   description: l(
-    'Программа для тех, кто начинает с нуля или возвращается после долгого перерыва. Двадцать коротких тренировок — те самые, по которым тренер ведёт новичков: отжимания с колен, приседания, ситапы, выпады, зашагивания и червячки. Около 17 минут вместе с разминкой и заминкой, в своём темпе, нагрузка подстраивается под тебя.',
-    'A programme for complete beginners and anyone coming back after a long break. Twenty short workouts — the same ones the coach runs his beginners through: knee push-ups, squats, sit-ups, lunges, step-ups and inchworms. About 17 minutes each including warm-up and cool-down, at your own pace, and the load adapts to you.',
+    'Программа для тех, кто начинает с нуля или возвращается после долгого перерыва. Двадцать коротких тренировок — те самые, по которым тренер ведёт новичков: отжимания с колен, приседания, ситапы, выпады, зашагивания и червячки. Около 18 минут вместе с разминкой и заминкой, в своём темпе, нагрузка подстраивается под тебя.',
+    'A programme for complete beginners and anyone coming back after a long break. Twenty short workouts — the same ones the coach runs his beginners through: knee push-ups, squats, sit-ups, lunges, step-ups and inchworms. About 18 minutes each including warm-up and cool-down, at your own pace, and the load adapts to you.',
   ),
   longDescription: [
     l(
@@ -1302,7 +1302,7 @@ export const COURSE_START: CourseInput = {
   level: 1,
   weeks: 4,
   sessionsPerWeek: 5,
-  avgSessionMin: 17,
+  avgSessionMin: 18,
   /*
    * The programme's colour, and it is cyan now rather than the brand yellow.
    *
