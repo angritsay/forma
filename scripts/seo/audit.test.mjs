@@ -3,10 +3,12 @@ import {
   auditContentIndex,
   auditGuides,
   auditHtml,
+  auditInternalLinks,
   checkLength,
   collectObjectsWithId,
   containsPhrase,
   extractAlternates,
+  extractAnchorIds,
   extractCanonical,
   extractHeadings,
   extractImages,
@@ -505,5 +507,89 @@ describe('auditHtml / parseSitemap', () => {
       { loc: 'https://a.b/x/', lastmod: '2026-09-01' },
       { loc: 'https://a.b/y/?q=1&r=2', lastmod: undefined },
     ]);
+  });
+});
+
+describe('auditInternalLinks', () => {
+  const files = new Set([
+    'index.html',
+    'courses/start/index.html',
+    'exercises/squat/index.html',
+    'guides/a/index.html',
+    'app/index.html',
+    'favicon.svg',
+    '404.html',
+  ]);
+  const page = (/** @type {string} */ body) => `<html><body>${body}</body></html>`;
+  const messages = (/** @type {import('./lib.mjs').Issue[]} */ issues) =>
+    issues.map((i) => `${i.file}: ${i.message}`);
+
+  it('passes links that land on a built page, a file or an id', () => {
+    const pages = new Map([
+      [
+        'index.html',
+        page('<a href="/courses/start/">c</a><a href="#main">skip</a><main id="main">'),
+      ],
+      [
+        'guides/a/index.html',
+        page(
+          '<h2 id="итог">x</h2><a href="#%D0%B8%D1%82%D0%BE%D0%B3">toc</a><a href="../../exercises/squat/">rel</a>' +
+            '<a href="/courses/start">no slash</a><link rel="icon" href="/favicon.svg">',
+        ),
+      ],
+    ]);
+    expect(auditInternalLinks(pages, files)).toEqual([]);
+  });
+
+  it('ignores other origins, mail links and the app hash router', () => {
+    const pages = new Map([
+      [
+        'index.html',
+        page(
+          '<a href="https://t.me/x">t</a><a href="mailto:a@b.c">m</a><a href="tel:+1">p</a>' +
+            '<a href="/app/?lang=ru#/start">app</a><a href="//cdn.example.com/x.js">cdn</a>',
+        ),
+      ],
+    ]);
+    expect(auditInternalLinks(pages, files)).toEqual([]);
+  });
+
+  it('flags a link to a page that was never built, once per target with a page count', () => {
+    const card = '<a href="/courses/hidden/">hidden course</a>';
+    const pages = new Map([
+      ['exercises/squat/index.html', page(card)],
+      ['index.html', page(card)],
+    ]);
+    expect(messages(auditInternalLinks(pages, files))).toEqual([
+      'dist/exercises/squat/index.html: link to /courses/hidden/ has no page (404) (on 2 pages)',
+    ]);
+  });
+
+  it('flags an anchor that is not an id on its target page', () => {
+    const pages = new Map([
+      ['index.html', page('<a href="/guides/a/#missing">x</a>')],
+      ['guides/a/index.html', page('<h2 id="present">x</h2>')],
+    ]);
+    expect(messages(auditInternalLinks(pages, files))).toEqual([
+      'dist/index.html: link /guides/a/#missing points at #missing, which is not an id on guides/a/index.html',
+    ]);
+  });
+
+  it('honours the base path', () => {
+    const pages = new Map([
+      [
+        'index.html',
+        page('<a href="/forma/courses/start/">ok</a><a href="/courses/start/">out</a>'),
+      ],
+    ]);
+    expect(messages(auditInternalLinks(pages, files, { base: '/forma/' }))).toEqual([
+      'dist/index.html: link /courses/start/ is outside the base path /forma/',
+    ]);
+  });
+
+  it('reads ids and names, decoding entities', () => {
+    expect([
+      ...extractAnchorIds('<div id="a&amp;b"></div><a name="top"></a><p data-id="no">'),
+    ]).toEqual(['a&b', 'top']);
   });
 });

@@ -8,7 +8,8 @@
  *   content/exercises, courses   ids unique, both locales, kebab-case slugs unique per locale
  *   dist/ (when present)     every sitemap URL has an index.html; every page has one <title>,
  *                            one <h1>, canonical, hreflang alternates, meta description, no noindex
- *                            (except /app/); unique titles; robots/llms/rss present
+ *                            (except /app/); unique titles; robots/llms/rss present; every internal
+ *                            href lands on a built file and every #anchor on an id (no 404s)
  *
  * Usage: npm run seo:audit [-- --dist <dir>] [--base </forma/>] [--no-dist] [--json]
  * Exit 1 on errors, 0 on warnings only. The base path (--base or BASE_PATH, default "/") is
