@@ -1777,9 +1777,14 @@ Each run prints one number per kind — how many rows were queued — and nothin
 grant of three days or less) and `club_trial_tomorrow` (a day before a course's free club week
 ends; only to someone in the club whose subscription does not outlive it), once per period.
 `0054_outbox_kinds.sql` also adds `session_confirmed`, `session_reminder`, `session_moved` and
-`session_cancelled` to the kind list for the in-app booking (0055). To turn it on: apply
-**`0054_outbox_kinds.sql`**, then run **`deploy-notify`**. Until 0054 is applied the workflow
-prints a notice for `access_ending` instead of failing.
+`session_cancelled` to the kind list for the in-app booking (0055). To turn it on, **in this
+order**: run **`deploy-notify`** first, then apply **`0054_outbox_kinds.sql`**. The order matters:
+once 0054 is applied the hourly run starts queueing the two warnings, and an older
+`telegram-notify` marks a kind it does not know as `skipped` — for good, since each warning is
+queued once per period. The new sender is harmless before the migration. Until 0054 is applied
+the workflow prints a notice for `access_ending` instead of failing. The sender checks each
+warning again right before sending and drops it if its moment has passed or the person has since
+renewed or subscribed.
 
 ---
 

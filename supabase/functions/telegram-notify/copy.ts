@@ -227,7 +227,7 @@ const COPY: Record<Locale, Copy> = {
     clubRecapStreak: 'Серия {streak} 🔥. ',
     subscriptionEnding: 'Клуб открыт до {date}',
     subscriptionEndingDo:
-      'Автопродления нет: чтобы остаться в клубе, оплати следующий месяц в приложении.',
+      'Автопродления нет: чтобы остаться в клубе, продли подписку в приложении.',
     trialTomorrow: 'Завтра заканчивается пробная неделя клуба',
     trialTomorrowDo: 'Чтобы остаться в клубе, оформи подписку в приложении.',
     sessionConfirmed: 'Встреча с тренером подтверждена',
@@ -281,7 +281,7 @@ const COPY: Record<Locale, Copy> = {
     clubRecapStreak: 'Streak {streak} 🔥. ',
     subscriptionEnding: 'The club is open until {date}',
     subscriptionEndingDo:
-      'There is no auto-renewal: to stay in the club, pay for the next month in the app.',
+      'There is no auto-renewal: to stay in the club, renew your subscription in the app.',
     trialTomorrow: 'Your free week in the club ends tomorrow',
     trialTomorrowDo: 'To stay in the club, subscribe in the app.',
     sessionConfirmed: 'Your session with the coach is confirmed',
@@ -304,6 +304,24 @@ const COPY: Record<Locale, Copy> = {
     minutes: { one: 'minute', many: 'minutes' },
   },
 };
+
+/**
+ * The moment an access warning (0054) is about: `expires_at` of `subscription_ending`, `ends_at`
+ * of `club_trial_tomorrow`, as epoch milliseconds. `null` for every other kind, and for a row
+ * whose time does not parse.
+ *
+ * The text is built when the row is sent, not when it is queued, and a row can wait for the
+ * person to link Telegram. By then the warning may be moot: the moment has passed, or the person
+ * has renewed or subscribed. `index.ts` uses this to check both before sending, so a warning never
+ * arrives after the fact.
+ */
+export function accessWarningEnd(row: OutboxRow): number | null {
+  if (row.kind !== 'subscription_ending' && row.kind !== 'club_trial_tomorrow') return null;
+  const raw = row.kind === 'subscription_ending' ? row.params?.expires_at : row.params?.ends_at;
+  if (typeof raw !== 'string' || !raw) return null;
+  const t = Date.parse(raw);
+  return Number.isFinite(t) ? t : null;
+}
 
 /**
  * Текст сообщения по строке очереди, или `null` для вида, которого мы не знаем.

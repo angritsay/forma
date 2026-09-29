@@ -8,7 +8,8 @@
 --     grant, or twice for the same period — and not again after a renewal;
 --   * `club_trial_tomorrow` goes to someone who never joined the club, whose subscription
 --     outlives the trial, whose week is not ending, or whose newer course moved the end;
---   * a signed-in person can call the function.
+--   * a signed-in person or an anonymous visitor can call the function, or the service role cannot;
+--   * a queued warning outlives the moment it warns about.
 --
 -- The message text is not here: it lives in `telegram-notify/copy.ts` with its own tests.
 -- Everything this suite creates is removed at the end, so the suites after it see no new rows.
@@ -94,6 +95,40 @@ begin
 end $$;
 select pg_temp.as_super();
 
+-- --- nor can an anonymous visitor; the service role can ---------------------------
+do $$
+begin
+  assert not has_function_privilege('anon', 'public.club_enqueue_access_ending(timestamptz)', 'execute'),
+    'anon can execute club_enqueue_access_ending';
+  assert not has_function_privilege('authenticated', 'public.club_enqueue_access_ending(timestamptz)', 'execute'),
+    'authenticated can execute club_enqueue_access_ending';
+  assert has_function_privilege('service_role', 'public.club_enqueue_access_ending(timestamptz)', 'execute'),
+    'service_role cannot execute club_enqueue_access_ending';
+end $$;
+
+select pg_temp.as_user(null, null, 'anon');
+do $$
+declare v_blocked boolean := false;
+begin
+  begin
+    perform public.club_enqueue_access_ending();
+  exception when others then
+    v_blocked := sqlstate = '42501';
+  end;
+  assert v_blocked, 'club_enqueue_access_ending is open to an anonymous visitor';
+end $$;
+select pg_temp.as_super();
+
+-- The service role (an edge function with the service key): allowed. A time long past queues
+-- nothing, so this adds no rows for the blocks below.
+select pg_temp.as_user(null, null, 'service_role');
+do $$
+begin
+  assert public.club_enqueue_access_ending('2000-01-01T00:00:00Z') = 0,
+    'the service role runs it, and a time with nothing due queues nothing';
+end $$;
+select pg_temp.as_super();
+
 -- --- subscription_ending ----------------------------------------------------------
 do $$
 declare
@@ -142,6 +177,8 @@ begin
     'the message carries the end of the period';
   assert v_row.send_after <= now(), 'sent right away';
   assert v_row.expires_at <= now() + interval '2 days 1 minute', 'the row lives two days';
+  assert v_row.expires_at <= (v_row.params ->> 'expires_at')::timestamptz,
+    'the row never outlives the period it warns about';
 
   -- The next hour: nothing new.
   assert public.club_enqueue_access_ending(now() + interval '1 hour') = 0, 'a repeat adds nothing';
@@ -216,6 +253,10 @@ begin
          = (select p.activated_at + interval '7 days' from public.purchases p
             where p.email = 'ending-trial@example.com' and p.course_id = 'start'),
     'the message carries the end of the week';
+  assert (select o.expires_at from public.telegram_outbox o
+          where o.kind = 'club_trial_tomorrow' and o.email = 'ending-trial@example.com')
+         <= (v_row.params ->> 'ends_at')::timestamptz,
+    'the row never outlives the week it warns about';
 
   assert public.club_enqueue_access_ending(now() + interval '1 hour') = 0,
     'a repeat within the window adds nothing';

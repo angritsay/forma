@@ -34,6 +34,9 @@
 --   * Neither checks `club_quiet` (0052). That switch silences the daily touches; these two are
 --     one-off notices about the person's own access, like `subscription_paid`.
 --   * People without Telegram get a row that waits and expires quietly, as everywhere (0027).
+--     The row never lives past the moment it warns about, and `telegram-notify` checks it again
+--     right before sending: a warning whose moment has passed, or whose person has since renewed
+--     or subscribed, is dropped (`accessWarningEnd` in `copy.ts`).
 --
 -- ## Once per period
 --
@@ -139,7 +142,8 @@ begin
         v_key,
         jsonb_build_object('expires_at', v_row.expires_at),
         now(),
-        interval '2 days'
+        -- Never outlives the period it warns about (the sender also re-checks, see the header).
+        least(interval '2 days', v_row.expires_at - now())
       );
       -- enqueue_telegram drops a malformed address without a word: count only a row that landed.
       if exists (select 1 from public.telegram_outbox o where o.dedupe_key = v_key) then
@@ -152,6 +156,9 @@ begin
   end loop;
 
   -- --- club_trial_tomorrow: the newest course's free week ends within a day --
+  -- Tied to the club being gated: `GAME_REQUIRES_SUBSCRIPTION` (content/site/plans.ts, equal to
+  -- `PLANS_ENABLED`). While it is true the club closes when the week ends; if it is ever switched
+  -- off, nothing ends, and this block must be switched off with it.
   for v_row in
     select n.id, n.email, n.activated_at + interval '7 days' as ends_at
     from (
@@ -192,7 +199,8 @@ begin
         v_key,
         jsonb_build_object('ends_at', v_row.ends_at),
         now(),
-        interval '20 hours'
+        -- Never outlives the week itself: a first run with two hours left gets a two-hour row.
+        least(interval '20 hours', v_row.ends_at - now())
       );
       if exists (select 1 from public.telegram_outbox o where o.dedupe_key = v_key) then
         v_queued := v_queued + 1;

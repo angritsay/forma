@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { escapeHtml, messageFor, plural, toLocale } from './copy';
+import { accessWarningEnd, escapeHtml, messageFor, plural, toLocale } from './copy';
 
 describe('escapeHtml', () => {
   it('escapes the three characters Telegram treats as HTML', () => {
@@ -466,7 +466,7 @@ describe('access running out (0054)', () => {
     });
     expect(m?.text).toBe(
       '<b>Клуб открыт до 3 октября</b>\n\n' +
-        'Автопродления нет: чтобы остаться в клубе, оплати следующий месяц в приложении.',
+        'Автопродления нет: чтобы остаться в клубе, продли подписку в приложении.',
     );
     expect(m?.buttonText).toBe('Открыть приложение');
     const en = messageFor(
@@ -475,6 +475,9 @@ describe('access running out (0054)', () => {
     );
     expect(en?.text).toContain('<b>The club is open until 3 October</b>');
     expect(en?.text).toContain('no auto-renewal');
+    // Annual plans exist (0005): the copy names no period.
+    expect(en?.text).not.toMatch(/month|year/);
+    expect(m?.text).not.toMatch(/месяц|год/);
   });
 
   it('sends nothing without a readable date', () => {
@@ -495,6 +498,40 @@ describe('access running out (0054)', () => {
     expect(messageFor({ kind: 'club_trial_tomorrow', params: null }, 'en')?.text).toContain(
       'Your free week in the club ends tomorrow',
     );
+  });
+});
+
+describe('accessWarningEnd', () => {
+  it('reads the moment each access warning is about', () => {
+    expect(
+      accessWarningEnd({
+        kind: 'subscription_ending',
+        params: { expires_at: '2026-10-02T21:30:00Z' },
+      }),
+    ).toBe(Date.parse('2026-10-02T21:30:00Z'));
+    expect(
+      accessWarningEnd({
+        kind: 'club_trial_tomorrow',
+        params: { ends_at: '2026-10-02T09:00:00Z' },
+      }),
+    ).toBe(Date.parse('2026-10-02T09:00:00Z'));
+  });
+
+  it('is null for other kinds and for a missing or unreadable time', () => {
+    expect(
+      accessWarningEnd({ kind: 'club_task', params: { expires_at: '2026-10-02T21:30:00Z' } }),
+    ).toBeNull();
+    expect(accessWarningEnd({ kind: 'club_trial_tomorrow', params: null })).toBeNull();
+    expect(
+      accessWarningEnd({ kind: 'subscription_ending', params: { expires_at: 'soon' } }),
+    ).toBeNull();
+    // The other kind's field does not count.
+    expect(
+      accessWarningEnd({
+        kind: 'subscription_ending',
+        params: { ends_at: '2026-10-02T09:00:00Z' },
+      }),
+    ).toBeNull();
   });
 });
 
