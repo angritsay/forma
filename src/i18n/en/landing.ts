@@ -59,9 +59,9 @@ export const landing = {
   heroTitle: 'Home CrossFit. Your first workout — today',
   heroThin: 'Your first workout —',
   heroSubtitle:
-    'Small steps: 13–20 minutes with the warm-up, just a chair and a mat. Sergey shows every movement on video, and the load adapts after each workout. The first one is free, no card.',
+    'Small steps: 14–21 minutes with the warm-up, just a chair and a mat. Sergey shows every movement on video, and the load adapts after each workout. The first one is free, no card.',
   heroChipFree: 'The first one is free',
-  heroChipTime: '13–20 minutes',
+  heroChipTime: '14–21 minutes',
   heroChipNoKit: 'No equipment',
   heroChipVideo: 'The coach’s video for every move',
   heroChipNoJumps: 'No jumping',
