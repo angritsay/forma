@@ -5,7 +5,22 @@
 import Base from '@/layouts/Base.astro';
 import App from '@/app/main';
 import { t } from '@/i18n';
-import { withBase } from '@/lib/util/paths';
+import { BRAND } from '@content/site/brand';
+import { absoluteUrl } from '@/lib/util/paths';
+import { ogLocale } from '@/lib/seo/urls';
+
+/*
+ * The link preview. Not indexed, but shared all the time: a referral link, a duo invite, «открой
+ * мою тренировку» — every one of them is an `/app/…` address pasted into a chat, and without these
+ * tags the messenger drew a bare URL. Same card and the same words as the home page, so a preview
+ * of the app and a preview of the site read as one product. No canonical and no hreflang: those
+ * are for pages that want to be found, and this one says `noindex`.
+ */
+const site = (Astro.site?.toString() ?? 'http://localhost:4321').replace(/\/$/, '');
+const ogTitle = `${BRAND.name} — ${BRAND.tagline.ru}`;
+const ogDescription = t('ru', 'landing.homeDescription');
+const ogImage = absoluteUrl(site, BRAND.ogImage);
+const ogUrl = absoluteUrl(site, '/app/');
 
 /*
  * «FORMA», letter by letter, for the loading screen below. Each letter is drawn twice — the
@@ -27,9 +42,22 @@ const LETTERS = [
   <Fragment slot="head">
     <title>Forma</title>
     <meta name="robots" content="noindex, nofollow" />
+    <meta name="description" content={ogDescription} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={BRAND.name} />
+    <meta property="og:locale" content={ogLocale('ru')} />
+    <meta property="og:title" content={ogTitle} />
+    <meta property="og:description" content={ogDescription} />
+    <meta property="og:url" content={ogUrl} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={ogTitle} />
+    <meta name="twitter:description" content={ogDescription} />
+    <meta name="twitter:image" content={ogImage} />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="apple-touch-icon" href={withBase('/favicon.svg')} />
     {
       /*
       Telegram Mini App bootstrap.

@@ -151,7 +151,7 @@ const primaryLink =
         <LangSwitch locale={locale} localizedPaths={localizedPaths} class="-mr-1" />
 
         <!-- `max-sm:hidden`, not `hidden sm:inline-flex` — see the note on the lockup above. -->
-        <a href={appHref()} class:list={[primaryLink, 'max-sm:hidden']}>
+        <a href={appHref('', { locale })} class:list={[primaryLink, 'max-sm:hidden']}>
           {t(locale, 'landing.navApp')}
         </a>
 
@@ -198,7 +198,7 @@ const primaryLink =
               </li>
             </ul>
             <a
-              href={appHref()}
+              href={appHref('', { locale })}
               class="control-label mt-4 flex h-12 items-center justify-center rounded-control bg-primary px-5 text-[15px] text-on-primary"
             >
               {t(locale, 'landing.navApp')}
@@ -225,7 +225,7 @@ const primaryLink =
           {t(locale, 'common.tagline')}
         </p>
         <a
-          href={appHref()}
+          href={appHref('', { locale })}
           class="control-label mt-6 inline-flex h-10 items-center rounded-control border border-border-strong bg-surface-2 px-4.5 text-[14px] transition-colors duration-150 hover:bg-surface-3"
         >
           {t(locale, 'common.openApp')}

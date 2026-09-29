@@ -155,7 +155,7 @@ const jsonLd = [
   <Hero
     title={t(locale, 'landing.heroTitle')}
     subtitle={t(locale, 'landing.heroSubtitle')}
-    primary={{ label: t(locale, 'landing.heroCtaFree'), href: appHref() }}
+    primary={{ label: t(locale, 'landing.heroCtaFree'), href: appHref('/start', { locale }) }}
     secondary={{ label: t(locale, 'landing.heroCtaCourses'), href: href(locale, '/courses/') }}
     chips={chips}
     figure={{ exerciseId: 'burpee' }}
@@ -498,6 +498,6 @@ const jsonLd = [
     title={t(locale, 'landing.ctaTitle')}
     text={t(locale, 'landing.ctaText')}
     primary={{ label: t(locale, 'landing.ctaPrimary'), href: href(locale, '/courses/') }}
-    secondary={{ label: t(locale, 'landing.ctaSecondary'), href: appHref() }}
+    secondary={{ label: t(locale, 'landing.ctaSecondary'), href: appHref('', { locale }) }}
   />
 </Landing>

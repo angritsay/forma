@@ -27,6 +27,7 @@
     "media:apply": "node scripts/media/apply-manifest.mjs",
     "media:upload": "node scripts/media/upload-videos.mjs --dir media/clips",
     "telegram:icon": "node scripts/telegram/app-icon.mjs",
+    "pwa:icons": "node scripts/pwa/icons.mjs",
     "content:import": "node scripts/content/gen-course-import.mjs"
   },
   "dependencies": {

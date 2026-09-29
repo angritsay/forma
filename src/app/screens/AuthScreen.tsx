@@ -45,6 +45,7 @@ import {
   withDomain,
 } from '@/lib/api/auth';
 import { AUTH_FILM } from '@content/site/media';
+import { consumeNext } from '@/app/features/entry/next';
 import type { TKey, TParams } from '@/i18n/index';
 
 const RESEND_SEC = 60;
@@ -57,6 +58,25 @@ const INTRO_HOLD_MS = 1400;
 const INTRO_FADE_MS = 700;
 
 type Step = 'email' | 'code';
+
+/**
+ * The address the site's start form hands over (sessionStorage, same tab): the person already
+ * typed it once, on the website, next to the same consent line this screen shows — asking again
+ * would be the second of two identical forms.
+ */
+export const AUTH_EMAIL_KEY = 'forma.authEmail';
+
+/** Read the handed-over address and remove it in the same breath: it is used once or never. */
+function takeHandedEmail(): string | null {
+  try {
+    if (typeof sessionStorage === 'undefined') return null;
+    const value = sessionStorage.getItem(AUTH_EMAIL_KEY);
+    sessionStorage.removeItem(AUTH_EMAIL_KEY);
+    return value;
+  } catch {
+    return null;
+  }
+}
 /** enter → hold → fade → done. `done` is where a reduced-motion visitor starts. */
 type Intro = 'enter' | 'hold' | 'fade' | 'done';
 
@@ -297,9 +317,9 @@ export default function AuthScreen() {
     );
   const introOver = intro === 'done';
 
-  const send = async () => {
+  const send = async (address: string = email) => {
     setError(null);
-    const clean = normalizeEmail(email);
+    const clean = normalizeEmail(address);
     const check = checkEmail(clean);
     if (!check.ok) {
       if (check.reason === 'email_typo') {
@@ -344,7 +364,13 @@ export default function AuthScreen() {
         await verifyCode(email, value);
         await useSession.getState().boot();
         const profile = useSession.getState().profile;
-        navigate(profile?.onboardedAt ? '/' : '/onboarding', { replace: true });
+        /*
+         * A deep link that sent them to sign in lands where it pointed (features/entry/next.ts).
+         * Not yet onboarded, it stays set aside: onboarding takes it back when it finishes.
+         */
+        navigate(profile?.onboardedAt ? (consumeNext() ?? '/') : '/onboarding', {
+          replace: true,
+        });
       } catch (e) {
         const failure = toAuthError(e);
         if (failure.reason === 'invalid_code') wrongCodes.current += 1;
@@ -356,6 +382,27 @@ export default function AuthScreen() {
     },
     [email, navigate],
   );
+
+  /*
+   * An address handed over by the site's start form: fill it in and send the code straight away,
+   * once. Only an address the ordinary check passes outright — a typo guess or a malformed value
+   * is left in the field for the person to look at, exactly as if they had typed it. A failed send
+   * (a rate limit most of all) is the ordinary failure: the email step, the ordinary message.
+   *
+   * The ref is what makes it once, whatever re-runs the effect; and the key is already gone by
+   * then anyway.
+   */
+  const handed = useRef(false);
+  useEffect(() => {
+    if (handed.current) return;
+    handed.current = true;
+    const value = takeHandedEmail();
+    if (!value) return;
+    setEmail(value);
+    if (checkEmail(normalizeEmail(value)).ok) void send(value);
+    // `send` is recreated every render; this runs on mount only, by design.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onSubmitEmail = (e: FormEvent) => {
     e.preventDefault();

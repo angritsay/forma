@@ -69,6 +69,14 @@ const site = (Astro.site?.toString() ?? 'http://localhost:4321').replace(/\/$/, 
 
 const course = SITE_COURSES.find((c) => c.id === courseId)!;
 const name = l(course.name, locale);
+/*
+ * Where «do it in the app» and the paid order's «open the app» land: this course, not the home
+ * screen. The beginner course goes through `#/start` — its first trainable workout, whatever its
+ * layout — and any other through its path. Both survive sign-in (src/app/features/entry/next.ts).
+ */
+const courseAppHref = appHref(course.id === 'start' ? '/start' : `/courses/${course.id}`, {
+  locale,
+});
 // Keep <title> ≤ 60 chars once SeoHead appends " — Forma": drop the suffix for long names.
 const titleWithSuffix = `${name} — ${t(locale, 'landing.courseTitleSuffix')}`;
 const title = `${titleWithSuffix} — ${BRAND.name}`.length <= 60 ? titleWithSuffix : name;
@@ -387,7 +395,7 @@ const jsonLd = [
         */}
         <p class="mb-6">
           <a
-            href={appHref()}
+            href={courseAppHref}
             class="control-label inline-flex h-12 items-center rounded-control bg-action px-6.5 text-[15px] text-on-action transition-opacity duration-150 hover:opacity-85"
           >
             {t(locale, 'landing.courseSampleCta')}
@@ -474,7 +482,7 @@ const jsonLd = [
           courseName={name}
           locale={locale}
           paymentUrl={paymentUrl}
-          appUrl={appHref()}
+          appUrl={courseAppHref}
           privacyUrl={href(locale, '/privacy/')}
           supportEmail={supportEmail}
           supportTelegram={supportTelegram}

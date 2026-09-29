@@ -102,10 +102,18 @@ export const useSession = create<SessionState>((set, get) => {
    *   subscription below only fires on a change, and there is none.
    */
   function syncLocale(profile: Profile): void {
-    const { locale, chosen, adopt } = useLocale.getState();
+    const { locale, chosen, hinted, adopt, setLocale } = useLocale.getState();
     if (!chosen) {
-      adopt(profile.locale);
-      return;
+      /*
+       * A link's `?lang=` (hinted) only speaks for a brand-new account, whose profile carries the
+       * column default rather than anybody's answer; an onboarded profile's language was chosen,
+       * and a link opened on a new phone must not rewrite it (or the bot's language with it).
+       */
+      if (!hinted || profile.onboardedAt) {
+        adopt(profile.locale);
+        return;
+      }
+      setLocale(locale);
     }
     if (profile.locale === locale) return;
     updateProfile({ locale })
