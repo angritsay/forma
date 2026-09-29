@@ -23,6 +23,13 @@
  * - **Small print** — the app's own `app.inviteNote`, quoted, and «Скидки нет — есть дни и пара».
  *
  * The plain link promises nothing: the +30 line enters the message only with the sender's code.
+ * **`compact`** — the homepage's version: no name field, the message drawn as an outgoing chat
+ * bubble inside a phone (the date chip over it, the bubble clamped to five lines), then «Отправить»
+ * and one row of four icon buttons — Telegram, WhatsApp, «Ссылка», «Календарь» (the short labels,
+ * so none wraps under its 48 px icon) — then the referral row. No kicker and no small print: the
+ * section's own title names it, and the reward's terms are `/together/`'s questions. Same state,
+ * same links, same rules; only the drawing is shorter.
+ *
  * Every rule lives in pure modules with tests — the composition in `@/lib/share/compose`, the
  * state in `shareInviteState.ts` — and the island imports neither the app nor the dictionaries:
  * the words arrive as props, built by Astro (`inviteCopy`), so the page ships only these strings.
@@ -57,6 +64,10 @@ export interface ShareInviteLabels {
   /** The clipboard refused: the link is in the message above. */
   copyFailed: string;
   calendar: string;
+  /** The compact row's one-word labels under the icons: «Ссылка», «Скопировано», «Календарь». */
+  copyShort: string;
+  copiedShort: string;
+  calendarShort: string;
   calendarGoogle: string;
   calendarFile: string;
   /** Row A: no personal link yet. */
@@ -82,6 +93,8 @@ export interface ShareInviteProps {
   /** `appHref('/start', { locale })` — what the calendar event opens. */
   startHref: string;
   labels: ShareInviteLabels;
+  /** The homepage's shorter drawing: phone with the message, one button, a row of icons. */
+  compact?: boolean;
   class?: string;
 }
 
@@ -100,6 +113,34 @@ const gradient = `${base} h-14 px-8 text-[15px] bg-warm text-ink hover:opacity-9
 const plain = `${base} h-12 px-6 text-[15px] bg-primary text-on-primary hover:opacity-85`;
 const plainSm = `${base} tap-target-y h-10 px-4.5 text-[14px] bg-primary text-on-primary hover:opacity-85`;
 const ghost = `${base} h-12 px-4 text-[15px] bg-transparent text-muted hover:text-text`;
+const iconButton =
+  'flex size-12 items-center justify-center rounded-full border border-border-strong bg-surface-2 text-text transition-colors group-hover:bg-surface-3';
+const iconLabel = 'text-[12px] leading-tight text-muted group-hover:text-text';
+
+/** Stroke glyphs for the compact row, 24×24, drawn in `currentColor`; hidden from assistive tech. */
+const GLYPHS = {
+  telegram: 'M21 4 3 11.2l6.2 2.3M21 4l-3.4 16-8.4-6.5M21 4 9.2 13.5v5.6l3.1-3.4',
+  whatsapp:
+    'M4.2 20 5.5 16a8 8 0 1 1 3 3zM9.2 8.4c-.4 2.9 2.6 6 5.5 5.6l.9-1.5-1.9-1-1 .8c-.9-.4-1.6-1.1-2-2l.8-1-1-1.9z',
+  copy: 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1',
+  calendar: 'M4 6h16v14H4zM4 10.5h16M8 3v4M16 3v4',
+} as const;
+
+function Glyph({ d }: { d: string }) {
+  return (
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" className="size-5">
+      <path
+        d={d}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 const menuLink =
   'flex min-h-11 items-center text-[14px] text-text underline decoration-border-strong underline-offset-4 hover:decoration-text';
 
@@ -111,6 +152,7 @@ export default function ShareInvite({
   inviteHref,
   startHref,
   labels,
+  compact = false,
   class: className = '',
 }: ShareInviteProps) {
   const id = useId();
@@ -193,6 +235,157 @@ export default function ShareInvite({
     dispatch({ type: 'calendar', open: false });
   }
 
+  const copyLabel =
+    state.copied === 'ok'
+      ? labels.copied
+      : state.copied === 'failed'
+        ? labels.copyFailed
+        : labels.copy;
+
+  const calendarMenu = (menuId: string) =>
+    state.calendarOpen && calendarEvent ? (
+      <ul id={menuId} className="flex flex-col border-t border-border pt-2">
+        <li>
+          <a
+            href={gcalUrl(calendarEvent)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={menuLink}
+          >
+            {labels.calendarGoogle}
+          </a>
+        </li>
+        <li>
+          <button type="button" onClick={onIcs} className={menuLink}>
+            {labels.calendarFile}
+          </button>
+        </li>
+      </ul>
+    ) : null;
+
+  const referral = view.personal ? (
+    <p className="text-[14px] leading-snug text-text">{labels.refOn}</p>
+  ) : (
+    <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+      <p className="max-w-md text-[14px] leading-snug text-text">{labels.refOff}</p>
+      <a href={inviteHref} className={plainSm} data-app-link data-goal="personal_link">
+        {labels.refOffCta}
+      </a>
+    </div>
+  );
+
+  if (compact) {
+    const compactMenuId = `${id}-calendar`;
+    return (
+      <div
+        className={`club-aurora-host glass-card-2 relative overflow-hidden rounded-card border border-border-strong p-5 md:p-8 ${className}`}
+      >
+        <span className="club-aurora" aria-hidden="true" />
+        <span className="bg-cross absolute inset-x-0 top-0 h-px" aria-hidden="true" />
+
+        <div className="grid items-center gap-8 md:grid-cols-[280px_minmax(0,1fr)] md:gap-12">
+          {/* The message as the friend gets it: an outgoing bubble on a phone. Plain text only. */}
+          <figure className="glass-card relative mx-auto w-[280px] max-w-full rounded-card border border-border-strong p-2">
+            <div className="flex min-h-[260px] flex-col gap-3 overflow-hidden rounded-inner border border-border bg-bg px-3 pt-2 pb-4">
+              <div className="mx-auto h-1 w-16 rounded-full bg-surface-3" aria-hidden="true" />
+              <figcaption className="self-center">
+                <span className="glass-tag inline-flex min-h-7 items-center rounded-full px-3 text-[12px] text-text">
+                  {fill(labels.chip, { date: view.label })}
+                </span>
+              </figcaption>
+              {/* The clamp sits on an inner span: on the padded bubble the sixth line would show
+                  through the bottom padding. */}
+              <p className="mt-auto max-w-[92%] self-end rounded-tile rounded-br-md bg-accent px-3.5 py-2.5 text-[13px] leading-snug break-words whitespace-pre-line text-ink">
+                <span className="line-clamp-5">{view.text}</span>
+              </p>
+            </div>
+          </figure>
+
+          <div className="flex flex-col gap-5">
+            <button
+              type="button"
+              onClick={onSend}
+              className={`${gradient} w-full sm:w-auto sm:self-start`}
+              data-goal="share_open"
+            >
+              {labels.send}
+              <span className="glyph" aria-hidden="true">
+                ↗
+              </span>
+            </button>
+            <ul className="grid max-w-md grid-cols-4 gap-2">
+              <li>
+                <a
+                  href={telegramShareUrl(view.url, view.bare)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex flex-col items-center gap-1.5 text-center"
+                  data-goal="share_telegram"
+                >
+                  <span className={iconButton}>
+                    <Glyph d={GLYPHS.telegram} />
+                  </span>
+                  <span className={iconLabel}>Telegram</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href={waUrl(view.text)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex flex-col items-center gap-1.5 text-center"
+                  data-goal="share_whatsapp"
+                >
+                  <span className={iconButton}>
+                    <Glyph d={GLYPHS.whatsapp} />
+                  </span>
+                  <span className={iconLabel}>WhatsApp</span>
+                </a>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={onCopy}
+                  className="group flex w-full flex-col items-center gap-1.5 text-center"
+                  data-goal="share_copy"
+                >
+                  <span className={iconButton}>
+                    <Glyph d={GLYPHS.copy} />
+                  </span>
+                  <span className={iconLabel} aria-live="polite">
+                    {state.copied === 'ok'
+                      ? labels.copiedShort
+                      : state.copied === 'failed'
+                        ? labels.copyFailed
+                        : labels.copyShort}
+                  </span>
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => dispatch({ type: 'calendar' })}
+                  className="group flex w-full flex-col items-center gap-1.5 text-center disabled:opacity-50"
+                  aria-expanded={state.calendarOpen}
+                  aria-controls={compactMenuId}
+                  disabled={!calendarEvent}
+                  data-goal="share_calendar"
+                >
+                  <span className={iconButton}>
+                    <Glyph d={GLYPHS.calendar} />
+                  </span>
+                  <span className={iconLabel}>{labels.calendarShort}</span>
+                </button>
+              </li>
+            </ul>
+            {calendarMenu(compactMenuId)}
+            <div className="border-t border-border pt-4">{referral}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const nameId = `${id}-name`;
   const hintId = `${id}-hint`;
   const menuId = `${id}-calendar`;
@@ -273,13 +466,7 @@ export default function ShareInvite({
             </div>
             <div className="flex flex-wrap gap-x-2">
               <button type="button" onClick={onCopy} className={ghost} data-goal="share_copy">
-                <span aria-live="polite">
-                  {state.copied === 'ok'
-                    ? labels.copied
-                    : state.copied === 'failed'
-                      ? labels.copyFailed
-                      : labels.copy}
-                </span>
+                <span aria-live="polite">{copyLabel}</span>
               </button>
               <button
                 type="button"
@@ -296,25 +483,7 @@ export default function ShareInvite({
                 </span>
               </button>
             </div>
-            {state.calendarOpen && calendarEvent && (
-              <ul id={menuId} className="flex flex-col border-t border-border pt-2">
-                <li>
-                  <a
-                    href={gcalUrl(calendarEvent)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={menuLink}
-                  >
-                    {labels.calendarGoogle}
-                  </a>
-                </li>
-                <li>
-                  <button type="button" onClick={onIcs} className={menuLink}>
-                    {labels.calendarFile}
-                  </button>
-                </li>
-              </ul>
-            )}
+            {calendarMenu(menuId)}
           </div>
         </div>
 
@@ -327,16 +496,7 @@ export default function ShareInvite({
       </div>
 
       <div className="mt-6 flex flex-col gap-3 border-t border-border pt-5">
-        {view.personal ? (
-          <p className="text-[14px] leading-snug text-text">{labels.refOn}</p>
-        ) : (
-          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-            <p className="max-w-md text-[14px] leading-snug text-text">{labels.refOff}</p>
-            <a href={inviteHref} className={plainSm} data-app-link data-goal="personal_link">
-              {labels.refOffCta}
-            </a>
-          </div>
-        )}
+        {referral}
         <p className="text-[13px] leading-snug text-muted">
           {labels.note} {labels.noDiscount}
         </p>

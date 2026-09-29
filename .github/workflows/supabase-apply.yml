@@ -52,6 +52,7 @@ on:
           - outbox-check
           - translation-check
           - reset-athlete
+          - site-loops
       migration_file:
         description: 'Only for "migration": a filename in supabase/migrations/'
         required: false
@@ -1388,4 +1389,97 @@ jobs:
 
           if [ "$pending" -gt 0 ]; then
             echo "::warning::$pending обновлений лежит в очереди и не доставлено — Telegram не смог их отдать."
+          fi
+
+      # ---------------------------------------------------------------------
+      # site-loops — the coach's movements as silent loops for the website.
+      #
+      # The site shows filmed movements as short muted loops next to their
+      # stills. The clips live in the private `videos` bucket; this cuts four
+      # seconds of each (from 1.0 s, no sound, 480 px wide) and puts the result
+      # in the PUBLIC bucket at images/loops/<id>.mp4 — the path
+      # `exerciseLoopUrl()` in src/lib/api/storage.ts derives. Public on
+      # purpose, like the stills: four silent seconds of a demonstration, not
+      # the lesson. Which clips exist is read from content/exercises by
+      # scripts/media/site-loop-ids.mjs; a clip missing from storage is skipped.
+      #
+      # The service_role key is fetched from the Management API and masked on
+      # the very next line. Nothing prints a key, a URL with a token or a row:
+      # only counters, as notices.
+      # ---------------------------------------------------------------------
+      - name: Cut silent loops of the coach's clips for the site
+        if: ${{ inputs.task == 'site-loops' }}
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL }}
+        run: |
+          set -euo pipefail
+          BASE="${SUPABASE_URL%/}"
+          # The revealed keys never outlive the step, whichever line fails.
+          trap 'rm -f /tmp/keys.json' EXIT
+
+          code=$(curl -sS -o /tmp/keys.json -w '%{http_code}' \
+            "https://api.supabase.com/v1/projects/$PROJECT_REF/api-keys?reveal=true" \
+            -H "Authorization: Bearer $TOKEN")
+          if [ "$code" -ge 300 ]; then
+            rm -f /tmp/keys.json
+            echo "::error::Supabase returned HTTP $code for the project's API keys."
+            exit 1
+          fi
+          KEY=$(jq -r '[.[] | select(.name == "service_role") | .api_key][0] // ""' < /tmp/keys.json)
+          rm -f /tmp/keys.json
+          if [ -z "$KEY" ]; then
+            echo "::error::The project has no service_role key the Management API would reveal."
+            exit 1
+          fi
+          echo "::add-mask::$KEY"
+
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update -qq >/dev/null
+            sudo apt-get install -y -qq ffmpeg >/dev/null
+          fi
+
+          node scripts/media/site-loop-ids.mjs > /tmp/loop-ids.txt
+          mkdir -p /tmp/loops
+          uploaded=0; skipped=0; failed=0
+          while IFS= read -r id; do
+            # The id script only emits [a-z0-9_]; checked again here because it becomes a path.
+            case "$id" in ''|*[!a-z0-9_]*) failed=$((failed + 1)); continue ;; esac
+            src="/tmp/loops/$id.src.mp4"
+            out="/tmp/loops/$id.mp4"
+            code=$(curl -sS -o "$src" -w '%{http_code}' \
+              "$BASE/storage/v1/object/videos/shared/$id.ru.mp4" \
+              -H "Authorization: Bearer $KEY" -H "apikey: $KEY" || true)
+            # curl prints 000 itself when it cannot connect; `|| true` only keeps `set -e` quiet.
+            code=${code:-000}
+            if [ "$code" = "404" ] || [ "$code" = "400" ]; then
+              # Storage answers 400 «not_found» as well as 404 for a missing object.
+              skipped=$((skipped + 1)); rm -f "$src"; continue
+            fi
+            if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
+              failed=$((failed + 1)); rm -f "$src"; continue
+            fi
+            if ! ffmpeg -nostdin -loglevel error -y -ss 1.0 -i "$src" -t 4 -an \
+              -vf 'scale=480:-2' -c:v libx264 -preset veryfast -crf 30 \
+              -pix_fmt yuv420p -movflags +faststart "$out"; then
+              failed=$((failed + 1)); rm -f "$src" "$out"; continue
+            fi
+            code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
+              "$BASE/storage/v1/object/images/loops/$id.mp4" \
+              -H "Authorization: Bearer $KEY" -H "apikey: $KEY" \
+              -H 'x-upsert: true' -H 'Content-Type: video/mp4' \
+              --data-binary @"$out" || true)
+            code=${code:-000}
+            if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
+              failed=$((failed + 1))
+            else
+              uploaded=$((uploaded + 1))
+            fi
+            rm -f "$src" "$out"
+          done < /tmp/loop-ids.txt
+
+          echo "::notice::loops uploaded $uploaded, skipped $skipped"
+          if [ "$failed" -gt 0 ]; then
+            echo "::error::loops failed $failed (download, cut or upload). Run the task again; it overwrites in place."
+            exit 1
           fi

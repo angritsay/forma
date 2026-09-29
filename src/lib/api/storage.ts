@@ -263,6 +263,20 @@ export function exerciseStillUrl(exerciseId: string): string | undefined {
 }
 
 /**
+ * Where a silent four-second loop of an exercise's clip lives, by convention.
+ *
+ * `images/loops/<id>.mp4` in the public bucket, cut from the private clip by the `site-loops` task
+ * in .github/workflows/supabase-apply.yml. Public for the reason the still is: a few muted seconds
+ * of the demonstration are what the website shows of a movement, and a static page cannot sign
+ * anything. Same guards as {@link exerciseStillUrl}; an id with no loop yet simply 404s, and the
+ * site's `LoopTile` keeps showing the still.
+ */
+export function exerciseLoopUrl(exerciseId: string): string | undefined {
+  if (!isConfigured() || isDemo()) return undefined;
+  return publicMediaUrl(`storage:${PUBLIC_BUCKET}/loops/${exerciseId}.mp4`);
+}
+
+/**
  * Upload a file and return the `storage:<bucket>/<path>` reference to store in content.
  *
  * `upsert` so re-uploading a cover replaces it rather than accumulating orphans; the path is the

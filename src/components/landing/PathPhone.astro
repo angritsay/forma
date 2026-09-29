@@ -1,0 +1,67 @@
+---
+/**
+ * The course's path as the app draws it, in a phone: workout 1 open and marked «сегодня» with its
+ * free tag, the next four locked. Every word is the product's own — node titles and the first
+ * node's subtitle from the course file, the lock and the tag from the dictionaries.
+ *
+ * A picture (`role="img"` on the frame, with a label). No neon: today's node is paper with ink,
+ * the free tag the light blue (selection, §15).
+ */
+import { COURSE_BY_ID } from '@/content/registry';
+import type { Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import PhoneFrame from './PhoneFrame.astro';
+import Pill from './Pill.astro';
+import { DEMO_COURSE_ID, firstWorkoutFacts } from './demo';
+
+interface Props {
+  locale: Locale;
+  class?: string;
+}
+const { locale, class: extra = '' } = Astro.props;
+
+const course = COURSE_BY_ID.get(DEMO_COURSE_ID);
+const facts = firstWorkoutFacts(locale, course);
+const path = (course?.nodes ?? [])
+  .filter((n) => n.kind === 'workout' || n.kind === 'benchmark')
+  .slice(0, 5);
+---
+
+{
+  facts && path.length > 0 && (
+    <PhoneFrame class={extra} label={`${t(locale, 'landing.phonesPath')} — ${facts.nodeTitle}`}>
+      <ol class="flex flex-col gap-3 px-4 pt-4 pb-5">
+        {path.map((node, i) => (
+          <li class="flex items-center gap-3">
+            <span
+              class:list={[
+                'numeral flex size-11 shrink-0 items-center justify-center rounded-pill text-sm',
+                i === 0 ? 'bg-paper text-ink' : 'border border-border text-muted-2',
+              ]}
+            >
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <span class="flex min-w-0 flex-col gap-0.5">
+              <span
+                class:list={['text-[13px] leading-tight font-semibold', i > 0 && 'text-muted-2']}
+              >
+                {l(node.title, locale)}
+                {i === 0 && (
+                  <span class="font-normal text-accent"> — {t(locale, 'landing.phonesToday')}</span>
+                )}
+              </span>
+              <span class="text-[11px] leading-tight text-muted">
+                {i === 0 ? facts.nodeSubtitle : t(locale, 'landing.pathNodeLocked')}
+              </span>
+              {i === 0 && (
+                <span class="mt-1 flex">
+                  <Pill tone="sky">{t(locale, 'landing.priceFree')}</Pill>
+                </span>
+              )}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </PhoneFrame>
+  )
+}

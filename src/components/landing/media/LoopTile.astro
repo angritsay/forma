@@ -1,0 +1,83 @@
+---
+/**
+ * One filmed movement as a tile: a silent four-second loop over its still.
+ *
+ *   <LoopTile id="air_squat" name="Присед" numeral="×10" href={withBase('/start/')} />
+ *
+ * The picture is `LoopVideo`: the loop over the movement's still, played by the shared script in
+ * `loops.ts` only while the tile is on screen, never under reduced motion or data saver. With no
+ * backend configured — or a still that is missing from the bucket — the media draws nothing, and
+ * what shows is the layer under it: the app's hand-drawn dumbbell (`Doodle`, rendered at build time,
+ * no script) large in the light blue, so a tile is never a blank grey card. The box is sized by
+ * `aspect-ratio` either way, so nothing shifts when media lands.
+ *
+ * The picture is decorative: the name is set on the tile, and a linked tile must have one.
+ */
+import { Doodle } from '@/components/ui/Doodle';
+import LoopVideo from './LoopVideo.astro';
+
+interface Props {
+  /** Exercise id, e.g. `air_squat`. */
+  id: string;
+  /** The movement's name, shown on the tile. Already localized. */
+  name?: string;
+  /** A small number in the corner — reps or seconds, preformatted: `×10`, `30 с`. */
+  numeral?: string;
+  /** Makes the whole tile a link. Pass a base-resolved href. */
+  href?: string;
+  ratio?: 'portrait' | 'square' | 'tall';
+  /** `lg` sets the name and the numeral larger, for a row of two or three big tiles. */
+  size?: 'md' | 'lg';
+  class?: string;
+}
+
+const { id, name, numeral, href, ratio = 'portrait', size = 'md', class: extra = '' } = Astro.props;
+// A link needs a name to be announced by; the picture is decorative and cannot be it.
+if (href && !name) throw new Error(`LoopTile ${id}: a linked tile needs a name`);
+const RATIO = { portrait: 'aspect-[4/5]', square: 'aspect-square', tall: 'aspect-[9/16]' } as const;
+const Tag = href ? 'a' : 'div';
+const big = size === 'lg';
+---
+
+<Tag
+  href={href}
+  class={`group relative block overflow-hidden rounded-card border border-border bg-surface-2 ${RATIO[ratio]} ${href ? 'transition-[border-color] hover:border-border-strong' : ''} ${extra}`}
+>
+  <span
+    class="absolute inset-0 flex items-center justify-center pb-10 text-accent opacity-80"
+    aria-hidden="true"
+  >
+    <Doodle kind="dumbbell" className={big ? 'size-24 md:size-28' : 'size-16'} />
+  </span>
+  <LoopVideo id={id} />
+  <div class="photo-grain" aria-hidden="true"></div>
+  {
+    (name || numeral) && (
+      <>
+        <div class="photo-scrim" aria-hidden="true" />
+        <div class="absolute inset-x-3 bottom-3 flex items-end justify-between gap-2">
+          {name && (
+            <span
+              class:list={[
+                'leading-tight font-semibold text-paper',
+                big ? 'text-[16px] md:text-lg' : 'text-[15px]',
+              ]}
+            >
+              {name}
+            </span>
+          )}
+          {numeral && (
+            <span
+              class:list={[
+                'numeral glass-tag-ink shrink-0 rounded-pill text-paper',
+                big ? 'px-3 py-1.5 text-[18px] md:text-xl' : 'px-2.5 py-1 text-[13px]',
+              ]}
+            >
+              {numeral}
+            </span>
+          )}
+        </div>
+      </>
+    )
+  }
+</Tag>

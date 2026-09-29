@@ -117,7 +117,7 @@ export const CLUB_PITCH_PHOTO_COUNT = 10;
  * git history has it if a narrow row is ever wanted again.
  *
  * The consequence worth stating: the frames are before/after composites, and a square cell shows
- * **both** halves. That is what the website already shows of the same files (`BeforeAfter.astro`),
+ * **both** halves. That is what the website already shows of the same files (the homepage's photo strip),
  * with the same consent behind it, so nothing new is claimed — but it does mean the alt text can
  * now be the honest one. See `clubPitchPhotos()`.
  */

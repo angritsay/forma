@@ -19,6 +19,7 @@ const src = resolve(root, 'src');
 const ASTRO_SCRIPTS = [
   'src/layouts/Landing.astro',
   'src/components/landing/StickyStart.astro',
+  'src/components/landing/media/LoopVideo.astro',
   'src/pages/[...lang]/together.astro',
   'src/pages/[...lang]/subscribe.astro',
 ];

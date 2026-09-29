@@ -7,7 +7,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { BOOKING } from './booking';
-import { FAQ } from './faq';
+import { FAQ, HOME_FAQ } from './faq';
 import { CLUB_PLAN_ID, PLAN_BY_ID, PLANS_ENABLED, planMonthlyPrice } from './plans';
 import { formatPrice } from './pricing';
 
@@ -43,5 +43,19 @@ describe('landing FAQ', () => {
       expect(text).not.toMatch(/вступите вдвоём/i);
       expect(text).not.toMatch(/получите час/i);
     }
+  });
+});
+
+describe('homepage FAQ', () => {
+  it('is five of the ten, in their order: free, sign-in, course or club, together, auto-renewal', () => {
+    if (!PLANS_ENABLED) return;
+    expect(HOME_FAQ.map((f) => f.q.ru)).toEqual([
+      'Что бесплатно?',
+      'Как войти?',
+      'Курс или клуб?',
+      'Как начать вместе?',
+      'Есть автосписание?',
+    ]);
+    for (const item of HOME_FAQ) expect(FAQ).toContain(item);
   });
 });

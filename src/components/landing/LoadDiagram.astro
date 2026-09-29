@@ -1,0 +1,89 @@
+---
+/**
+ * How the load follows you, as one picture — the site's twin of the onboarding story slide
+ * (`onboarding/slides/Adapt.tsx`): the difficulty sheet's three chips with «как обычно» selected,
+ * then today's load as a bar and the next workout's as the same bar grown by the engine's step for
+ * «легко», with that step set large beside it.
+ *
+ * The step is `ADAPTATION.easyDelta` (through `firstWorkoutFacts().easyDeltaPercent`), never typed,
+ * and the bars are drawn to it: the grown bar is exactly that many percent longer. The chip
+ * labels are the app's difficulty names (`training.difficulty*`).
+ *
+ * Colour follows the semantic map (§15): the selected chip and the growth are the light blue
+ * (selection, progress); the bar itself is the «как обычно» white. No neon. A picture: the frame is
+ * `role="img"` with a label that says the whole thing in words.
+ */
+import type { Locale } from '@/content/schema';
+import { t } from '@/i18n/index';
+
+interface Props {
+  locale: Locale;
+  /** The engine's step after an easy workout, whole percent (+5). */
+  deltaPercent: number;
+  class?: string;
+}
+const { locale, deltaPercent, class: extra = '' } = Astro.props;
+
+const chips = [
+  { label: t(locale, 'training.difficultyEasier'), on: false },
+  { label: t(locale, 'training.difficultyNormal'), on: true },
+  { label: t(locale, 'training.difficultyHarder'), on: false },
+];
+const delta = t(locale, 'landing.adaptDelta', { n: deltaPercent });
+/* Today's bar is 60% of the track; the next one is that, grown by the real step. */
+const BASE = 60;
+const grown = BASE * (1 + deltaPercent / 100);
+const label = `${t(locale, 'landing.adaptBarToday')} → ${t(locale, 'landing.adaptEasyTag')} → ${t(locale, 'landing.adaptBarNext')}: ${delta}`;
+---
+
+<div
+  class:list={[
+    'glass-card flex flex-col gap-8 rounded-card border border-border p-6 md:p-10',
+    extra,
+  ]}
+  role="img"
+  aria-label={label}
+>
+  {/* A fixed three-way segment, as the app's sheet draws it: it never wraps on a phone. */}
+  <div class="grid max-w-md grid-cols-3 gap-1.5 sm:gap-2" aria-hidden="true">
+    {
+      chips.map((c) => (
+        <span
+          class:list={[
+            'inline-flex h-10 min-w-0 items-center justify-center truncate rounded-pill px-2 text-[13px] sm:px-4 sm:text-[14px]',
+            c.on ? 'bg-accent text-ink' : 'border border-border-strong text-muted',
+          ]}
+        >
+          {c.label}
+        </span>
+      ))
+    }
+  </div>
+
+  <div class="grid items-end gap-6 sm:grid-cols-[minmax(0,1fr)_auto]" aria-hidden="true">
+    <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-2">
+        <span class="text-[13px] text-muted">{t(locale, 'landing.adaptBarToday')}</span>
+        <span class="block h-4 rounded-pill bg-surface-3">
+          <span class="block h-full rounded-pill bg-text" style={`width:${BASE}%`}></span>
+        </span>
+      </div>
+      <span
+        class="glass-tag inline-flex min-h-7 w-fit items-center rounded-pill px-3 text-[12px] text-text"
+      >
+        {t(locale, 'landing.adaptEasyTag')}
+        <span class="glyph ml-1.5">↓</span>
+      </span>
+      <div class="flex flex-col gap-2">
+        <span class="text-[13px] text-muted">{t(locale, 'landing.adaptBarNext')}</span>
+        <span class="flex h-4 rounded-pill bg-surface-3">
+          <span class="block h-full rounded-l-pill bg-text" style={`width:${BASE}%`}></span>
+          <span
+            class="block h-full rounded-r-pill bg-accent"
+            style={`width:${(grown - BASE).toFixed(2)}%`}></span>
+        </span>
+      </div>
+    </div>
+    <p class="numeral text-6xl leading-none text-accent md:text-7xl">{delta}</p>
+  </div>
+</div>

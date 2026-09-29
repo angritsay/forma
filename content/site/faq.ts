@@ -119,21 +119,25 @@ const autoRenewal: FaqItem[] = clubPlan
     ]
   : [];
 
+const free: FaqItem = {
+  q: { ru: 'Что бесплатно?', en: 'What is free?' },
+  a: {
+    ru: `Первая тренировка курса «${courseName.ru}» — без карты, и её можно повторять. Нужны только почта и код из письма.`,
+    en: `The first workout of the ${courseName.en} course — no card, and you can repeat it. All it takes is your email and the code we send to it.`,
+  },
+};
+
+const signIn: FaqItem = {
+  q: { ru: 'Как войти?', en: 'How do I sign in?' },
+  a: {
+    ru: 'По почте: приходит код из 6 цифр, пароля нет. Приложение работает в браузере — скачивать ничего не нужно, его можно добавить на экран «Домой». Telegram подключается после входа, чтобы получать сообщения клуба.',
+    en: 'With your email: a 6-digit code arrives, and there is no password. The app runs in the browser — nothing to download, and you can add it to your home screen. Telegram is connected after sign-in, for the club’s messages.',
+  },
+};
+
 export const FAQ: FaqItem[] = [
-  {
-    q: { ru: 'Что бесплатно?', en: 'What is free?' },
-    a: {
-      ru: `Первая тренировка курса «${courseName.ru}» — без карты, и её можно повторять. Нужны только почта и код из письма.`,
-      en: `The first workout of the ${courseName.en} course — no card, and you can repeat it. All it takes is your email and the code we send to it.`,
-    },
-  },
-  {
-    q: { ru: 'Как войти?', en: 'How do I sign in?' },
-    a: {
-      ru: 'По почте: приходит код из 6 цифр, пароля нет. Приложение работает в браузере — скачивать ничего не нужно, его можно добавить на экран «Домой». Telegram подключается после входа, чтобы получать сообщения клуба.',
-      en: 'With your email: a 6-digit code arrives, and there is no password. The app runs in the browser — nothing to download, and you can add it to your home screen. Telegram is connected after sign-in, for the club’s messages.',
-    },
-  },
+  free,
+  signIn,
   ...courseOrClub,
   together,
   ...pairAndPrize,
@@ -154,3 +158,10 @@ export const FAQ: FaqItem[] = [
     },
   },
 ];
+
+/**
+ * The homepage keeps five of them — what is free, how to get in, course or club, starting
+ * together, auto-renewal — and its FAQPage JSON-LD is built from the same five, so the markup
+ * never describes a question the page does not show. The rest stay in `FAQ` for the inner pages.
+ */
+export const HOME_FAQ: FaqItem[] = [free, signIn, ...courseOrClub, together, ...autoRenewal];

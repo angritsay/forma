@@ -1,0 +1,78 @@
+---
+/**
+ * A row of short facts as tiles, each with one of the app's hand-drawn glyphs (`Doodle`) — what a
+ * bullet list or a row of «title + paragraph» becomes on a visual-first page.
+ *
+ *   <IconTiles items={[{ kind: 'flame', label: 'Серия дней' }]} />
+ *   <IconTiles ordered items={steps} />   — numbered 01, 02, 03: a sequence, as an `<ol>`
+ *
+ * A label is at most four words; the tile has no room for a sentence and should not be given one.
+ * The glyph is decoration (`Doodle` hides it from assistive tech) and the label is the content.
+ * `Doodle` is a React component drawn at build time here — no client directive, no script.
+ *
+ * Colour: the glyph is the light blue, the site's accent — legal in the club too (no neon, §17).
+ * Tiles are glass.
+ */
+import { Doodle, type DoodleKind } from '@/components/ui/Doodle';
+
+export interface IconTileItem {
+  kind: DoodleKind;
+  /** Four words at most. */
+  label: string;
+}
+
+interface Props {
+  items: readonly IconTileItem[];
+  /** A sequence: an ordered list with the step's number in the corner. */
+  ordered?: boolean;
+  /** Columns from `md` up; phones get two (or one per row for three items). */
+  cols?: 2 | 3 | 4;
+  class?: string;
+}
+
+const { items, ordered = false, cols = 4, class: extra = '' } = Astro.props;
+const List = ordered ? 'ol' : 'ul';
+const grid = { 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-4' }[cols];
+/* Three tiles do not fit across a phone: there each is a row — glyph, then label — and a card
+   from `sm` up. Four go two by two everywhere below `md`. */
+const rows = items.length === 3;
+const phone = rows ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-2';
+---
+
+<List class:list={['grid gap-3', phone, grid, extra]}>
+  {
+    items.map((item, i) => (
+      <li
+        class:list={[
+          'glass-card relative flex gap-4 rounded-tile border border-border p-4 md:min-h-[9rem] md:p-5',
+          rows
+            ? 'items-center sm:min-h-[8rem] sm:flex-col sm:items-start sm:justify-between'
+            : 'min-h-[7.5rem] flex-col justify-between',
+        ]}
+      >
+        <span class="shrink-0 text-accent">
+          <Doodle kind={item.kind} className="size-9 md:size-10" />
+        </span>
+        {ordered && (
+          <span
+            class:list={[
+              'numeral absolute right-4 text-sm text-muted-2',
+              rows ? 'top-1/2 -translate-y-1/2 sm:top-4 sm:translate-y-0' : 'top-4',
+            ]}
+            aria-hidden="true"
+          >
+            {String(i + 1).padStart(2, '0')}
+          </span>
+        )}
+        <span
+          class:list={[
+            'font-display text-[15px] leading-snug text-balance md:text-base',
+            ordered && 'pr-10',
+          ]}
+        >
+          {item.label}
+        </span>
+      </li>
+    ))
+  }
+</List>
