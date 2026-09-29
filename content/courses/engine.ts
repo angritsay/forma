@@ -314,8 +314,8 @@ const W_SQUAT_PUSH_C: WorkoutInput = {
       restBetweenSetsSec: 75,
       title: { ru: 'Силовой блок', en: 'Strength' },
       description: {
-        ru: 'Четыре подхода, стульчик в конце каждого. Держи дыхание ровным в стульчике — это тренировка терпения.',
-        en: 'Four sets with a wall sit closing each one. Keep breathing evenly in the wall sit — it is patience training.',
+        ru: 'Три подхода, стульчик в конце каждого. Держи дыхание ровным в стульчике — это тренировка терпения.',
+        en: 'Three sets with a wall sit closing each one. Keep breathing evenly in the wall sit — it is patience training.',
       },
       items: [
         { exerciseId: 'jump_squat', reps: 12, restAfterSec: 20 },

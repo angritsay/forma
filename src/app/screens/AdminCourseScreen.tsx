@@ -41,6 +41,7 @@ import type {
   AdminCoursePatch,
   CustomWorkoutRow,
 } from '@/lib/api/types';
+import { isCompiledCourse } from '@/content/catalogue';
 import { draftToCourse } from '@/lib/courses/draft';
 import type { CustomWorkoutStructure } from '@/lib/training/customWorkout';
 import { BootScreen } from '@/app/components/BootScreen';
@@ -50,10 +51,12 @@ import { adminErrorTitle } from '@/app/features/admin/adminError';
 import { useT } from '@/app/hooks/useT';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { LangTabs } from '@/app/features/admin/LangTabs';
+import { CompiledCourseNotice } from '@/app/features/admin/courses/CompiledCourseNotice';
 import { CourseMetaEditor } from '@/app/features/admin/courses/CourseMetaEditor';
 import { DayEditor } from '@/app/features/admin/courses/DayEditor';
 import { DayList } from '@/app/features/admin/courses/DayList';
 import { nextDaySlot, nodeIdFor } from '@/app/features/admin/courses/ids';
+import { canPublish } from '@/app/features/admin/courses/publishRule';
 import { useAutosave } from '@/app/features/admin/courses/useAutosave';
 import { WorkoutEditor } from '@/app/features/admin/workoutBuilder/WorkoutEditor';
 
@@ -310,6 +313,9 @@ export default function AdminCourseScreen() {
   // --- the course -------------------------------------------------------------
   const issues = assembled?.issues ?? [];
   const published = course.status === 'published';
+  // A compiled course's file wins over this draft (see CompiledCourseNotice), so publishing it
+  // would change nothing for anyone — the button stays off rather than pretend (`canPublish`).
+  const compiled = isCompiledCourse(course.slugId);
 
   return (
     <Screen
@@ -350,6 +356,9 @@ export default function AdminCourseScreen() {
           ]}
         />
       </div>
+
+      {/* On every tab, not only «Публикация»: the edits the notice is about happen on the other two. */}
+      <CompiledCourseNotice slugId={course.slugId} />
 
       {/*
        * «Пишем на» — под вкладками и над формой, и только там, где действительно печатают текст.
@@ -439,9 +448,12 @@ export default function AdminCourseScreen() {
            * text. A kicker marks a section; a verdict is read.
            */}
           {issues.length === 0 ? (
-            <p className="border-y border-border py-3 text-[13px] leading-[1.3] text-success">
-              {t('app.coursePublishReady')}
-            </p>
+            /* «Готов к публикации» would contradict the notice above on a course that is in code. */
+            compiled ? null : (
+              <p className="border-y border-border py-3 text-[13px] leading-[1.3] text-success">
+                {t('app.coursePublishReady')}
+              </p>
+            )
           ) : (
             <div className="flex flex-col border-t border-border">
               <p className="py-3 text-[13px] leading-[1.3] text-warning">
@@ -463,9 +475,17 @@ export default function AdminCourseScreen() {
             </div>
           )}
 
-          <p className="text-[15px] text-muted">{t('app.coursePublishExplain')}</p>
-          {/* Publishing is instant in the app and not on the website; say so where it is decided. */}
-          <p className="text-[15px] text-muted">{t('app.coursePublishSite')}</p>
+          {/*
+           * Publishing is instant in the app and not on the website; say so where it is decided.
+           * Not on a compiled course: Publish is off there, and neither the catalogue nor the site
+           * would show its draft, so both sentences would describe something that cannot happen.
+           */}
+          {compiled ? null : (
+            <>
+              <p className="text-[15px] text-muted">{t('app.coursePublishExplain')}</p>
+              <p className="text-[15px] text-muted">{t('app.coursePublishSite')}</p>
+            </>
+          )}
 
           {/*
            * Publish is the one neon button on this tab — neon is the palette's colour for action,
@@ -486,7 +506,7 @@ export default function AdminCourseScreen() {
               size="lg"
               variant="action"
               loading={publishing}
-              disabled={issues.length > 0}
+              disabled={!canPublish(course.slugId, issues)}
               onClick={() => void publish()}
             >
               {t('app.coursePublish')}
