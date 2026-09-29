@@ -528,6 +528,7 @@ declare
   v_min    int;
   v_hits   int;
   v_old    uuid;
+  v_until  timestamptz;
   v_id     uuid := gen_random_uuid();
 begin
   if v_uid is null or v_email is null then
@@ -554,6 +555,34 @@ begin
     raise exception 'rate_limited' using errcode = 'P0001';
   end if;
 
+  -- The same pick again (a reload, a double tap) is the hold the person has, not a fresh one.
+  return query
+  select b.id, b.coach_id, b.option_id, b.starts_at, b.ends_at, b.hold_expires_at
+  from public.coach_bookings b
+  where b.email = v_email and b.status = 'pending' and b.hold_expires_at > now()
+    and b.coach_id = p_coach and b.option_id = p_option and b.starts_at = p_starts_at;
+  if found then
+    return;
+  end if;
+
+  /*
+   * A slot is one address's for one hold time per twice that time. Without this, picking the
+   * same start again every 19 minutes (three calls an hour, well inside the limit) would keep a
+   * slot unbookable for everyone, for free. So a start this address held within the window
+   * gets only what is left of that first hold, and nothing once it has run out — answered as a
+   * taken slot. Switching to another time and back is not a way round: released holds count.
+   */
+  select min(b.created_at) + public.booking_hold_time() into v_until
+  from public.coach_bookings b
+  where b.email = v_email and b.source = 'forma' and b.coach_id = p_coach
+    and b.starts_at = p_starts_at
+    and b.status in ('pending', 'expired')
+    and b.created_at > now() - 2 * public.booking_hold_time();
+  if v_until is not null and v_until <= now() then
+    return;  -- slot_taken
+  end if;
+  v_until := coalesce(v_until, now() + public.booking_hold_time());
+
   -- The person's current hold does not stand in the way of their own new pick (30 → 60 at the
   -- same start), and it survives a pick that fails: it goes only when the new one is taken.
   select b.id into v_old from public.coach_bookings b
@@ -578,7 +607,7 @@ begin
     ) values (
       v_id, v_email, 'forma:' || v_id::text, 'forma:' || v_id::text, p_starts_at,
       p_starts_at + make_interval(mins => v_min), v_coach.timezone, 'pending', 'forma',
-      p_coach, p_option, now() + public.booking_hold_time()
+      p_coach, p_option, v_until
     );
   exception when exclusion_violation or unique_violation then
     -- Somebody took it between the check and the insert. The block rolls back to its start, so
@@ -877,9 +906,22 @@ begin
   returning * into v_new;
 
   if v_new.room_url is distinct from v_old.room_url and v_new.room_url is not null then
-    update public.coach_bookings b
-       set join_url = v_new.room_url
-     where b.coach_id = p_id and b.status = 'active' and b.ends_at > now();
+    with moved as (
+      update public.coach_bookings b
+         set join_url      = v_new.room_url,
+             location_kind = 'room'
+       where b.coach_id = p_id and b.status = 'active' and b.ends_at > now()
+      returning b.id
+    )
+    -- The confirmation and reminders already queued carry the link of the moment they were
+    -- queued, possibly none: the booking trigger does not fire on a link. They get the new one,
+    -- or the client is told of a room the reminders do not point to.
+    update public.telegram_outbox o
+       set params = jsonb_set(o.params, '{join_url}', to_jsonb(v_new.room_url))
+      from moved m
+     where o.status = 'pending'
+       and o.kind in ('session_confirmed', 'session_reminder', 'session_moved')
+       and split_part(o.dedupe_key, ':', 2) = m.id::text;
   end if;
   return v_new.id;
 end;
@@ -1120,7 +1162,9 @@ comment on function public.apply_session_payment(text, text, text, timestamptz, 
 -- The text of 0044 with one branch changed. Until now a claimed session payment only linked the
 -- address (`linked`): there was nothing to open. Now the client's hold is under the account's
 -- address, so the claim runs `apply_session_payment()` for it with the option the webhook wrote
--- onto the payment, and answers `session` when that booked the slot.
+-- onto the payment, and answers `session` when that booked the slot. When it booked nothing, the
+-- payment is claimed (it cannot be claimed twice) but stays unapplied, so it stays in the owner's
+-- list, and the owner's channel names the account that claimed it.
 -- -----------------------------------------------------------------------------
 create or replace function public.claim_payment(p_provider_ref text)
 returns text
@@ -1140,6 +1184,7 @@ declare
   v_result   text;
   v_claims   text;
   v_mark     boolean := true;
+  v_unbooked boolean := false;
 begin
   if v_uid is null or v_mine is null then
     raise exception 'not_signed_in' using errcode = '42501';
@@ -1197,6 +1242,10 @@ begin
              v_mine::text, v_payment.provider_ref, v_payment.session_option, v_payment.paid_at,
              v_payment.id) is not null then
       v_result := 'session';
+    else
+      -- Claimed, but no session exists: the payment stays unapplied, so it stays in the owner's
+      -- list, and the owner hears which account claimed it (see below).
+      v_unbooked := true;
     end if;
   elsif v_payment.intent in ('monthly', 'annual') then
     perform public.apply_subscription_payment(
@@ -1215,7 +1264,34 @@ begin
 
   perform set_config('request.jwt.claims', v_claims, true);
 
-  if v_mark then
+  if v_unbooked then
+    update public.payments
+    set claimed_by = v_uid,
+        claimed_at = now()
+    where id = v_payment.id;
+    -- Its own key: `session_unmatched:<id>` went out from the webhook already, naming the address
+    -- in the till, and would swallow this one.
+    begin
+      perform public.enqueue_admin(
+        'sessions',
+        'session_unmatched',
+        'session_claim_unmatched:' || v_payment.id::text,
+        jsonb_build_object(
+          'paymentId', v_payment.id::text,
+          'email', v_mine::text,
+          'payEmail', v_payment.email::text,
+          'option', coalesce(v_payment.session_option, ''),
+          'reason', 'claimed_no_hold',
+          'amount', coalesce(v_payment.amount::text, ''),
+          'currency', coalesce(v_payment.currency, ''),
+          'provider', coalesce(v_payment.provider, ''),
+          'ref', coalesce(v_payment.provider_ref, '')
+        )
+      );
+    exception when others then
+      null;
+    end;
+  elsif v_mark then
     update public.payments
     set claimed_by = v_uid,
         claimed_at = now(),

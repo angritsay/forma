@@ -442,6 +442,20 @@ describe('session_unmatched (0055)', () => {
     expect(text).toContain('Встреча не создана');
   });
 
+  it('names the account that claimed a payment with no hold', () => {
+    const text = adminMessage(
+      row('session_unmatched', {
+        email: 'me@b.co',
+        payEmail: 'till@b.co',
+        option: 'half',
+        reason: 'claimed_no_hold',
+      }),
+    )!;
+    expect(text).toContain('me@b.co');
+    expect(text).toContain('Почта в кассе: till@b.co');
+    expect(text).toContain('привязал платёж к аккаунту');
+  });
+
   it('opens the payment in the admin', () => {
     const PAY = '11111111-2222-3333-4444-555555555555';
     const link = adminLinkPath({

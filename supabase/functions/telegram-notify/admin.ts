@@ -111,6 +111,7 @@ const UNMATCHED_REASONS: Readonly<Record<string, string>> = {
   slot_taken: 'бронь истекла, и время уже заняли',
   hold_in_past: 'бронь была на время, которое уже прошло',
   no_payment: 'платёж не записался в журнал — проверь кассу',
+  claimed_no_hold: 'человек привязал платёж к аккаунту, а брони на нём нет',
 };
 
 const INTENT_NAMES: Readonly<Record<string, string>> = {
@@ -517,6 +518,7 @@ function adminBody(row: AdminRow): string | null {
         'Оплата занятия без брони',
         lines(
           ['Почта', email],
+          ['Почта в кассе', str(p, 'payEmail')],
           ['Длительность', SESSION_OPTION_NAMES[str(p, 'option')] ?? str(p, 'option')],
           ['Почему', UNMATCHED_REASONS[str(p, 'reason')] ?? str(p, 'reason')],
           ['Бронь была на', str(p, 'startsAt') ? moscowTime(str(p, 'startsAt')) : ''],

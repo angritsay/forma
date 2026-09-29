@@ -59,7 +59,8 @@ insert into auth.users (id, email, raw_user_meta_data) values
   ('00000000-0000-0000-0000-0000000055e5', 'book-admin@example.com', '{}'),
   ('00000000-0000-0000-0000-0000000055f6', 'book-eva@example.com', '{}'),
   ('00000000-0000-0000-0000-0000000055f7', 'book-fedor@example.com', '{}'),
-  ('00000000-0000-0000-0000-0000000055f8', 'book-gleb@example.com', '{}')
+  ('00000000-0000-0000-0000-0000000055f8', 'book-gleb@example.com', '{}'),
+  ('00000000-0000-0000-0000-0000000055f9', 'book-hana@example.com', '{}')
 on conflict (id) do nothing;
 insert into public.admins (email) values ('book-admin@example.com') on conflict do nothing;
 delete from public.order_throttle where bucket like 'hold:00000000-0000-0000-0000-000000005%'
@@ -829,6 +830,104 @@ begin
          = 'https://example.com/room-sergey-2', 'the new link reached a booked session';
   assert (select room_url from public.coaches where id = 'sergey') = 'https://example.com/room-sergey-2',
     'the coach has the new link';
+  -- And the messages already queued for it: the trigger does not fire on a link.
+  assert exists (select 1 from public.telegram_outbox
+                 where email = 'book-clara@example.com' and status = 'pending'
+                   and kind in ('session_confirmed', 'session_reminder', 'session_moved')),
+    'Clara has messages waiting';
+  assert not exists (select 1 from public.telegram_outbox
+                     where email = 'book-clara@example.com' and status = 'pending'
+                       and kind in ('session_confirmed', 'session_reminder', 'session_moved')
+                       and params ->> 'join_url' is distinct from 'https://example.com/room-sergey-2'),
+    'a waiting message still points to the old room';
+end $$;
+
+-- --- a slot cannot be kept by picking it again ------------------------------------------
+select pg_temp.as_user('00000000-0000-0000-0000-0000000055f9', 'book-hana@example.com');
+do $$
+declare
+  v_first record;
+  v_again record;
+begin
+  select * into v_first from public.hold_slot('sergey', 'half', pg_temp.msk(4, '16:30'));
+  assert v_first.id is not null, 'Hana holds 16:30';
+  select * into v_again from public.hold_slot('sergey', 'half', pg_temp.msk(4, '16:30'));
+  assert v_again.id = v_first.id and v_again.hold_expires_at = v_first.hold_expires_at,
+    'the same pick made a new hold';
+end $$;
+select pg_temp.as_super();
+-- Nineteen minutes on.
+update public.coach_bookings
+   set created_at = now() - interval '19 minutes', hold_expires_at = now() + interval '1 minute'
+ where email = 'book-hana@example.com' and status = 'pending';
+select pg_temp.as_user('00000000-0000-0000-0000-0000000055f9', 'book-hana@example.com');
+do $$
+declare v_row record;
+begin
+  -- The same start as another length: what is left of the first hold, not a fresh 20 minutes.
+  select * into v_row from public.hold_slot('sergey', 'hour', pg_temp.msk(4, '16:00'));
+  assert v_row.id is not null, 'Hana moves to another start';
+  select * into v_row from public.hold_slot('sergey', 'half', pg_temp.msk(4, '16:30'));
+  assert v_row.id is not null, 'Hana comes back to 16:30';
+  assert v_row.hold_expires_at <= now() + interval '2 minutes',
+    'switching away and back refreshed the hold: ' || v_row.hold_expires_at::text;
+end $$;
+select pg_temp.as_super();
+-- It ran out.
+update public.coach_bookings
+   set created_at = created_at - interval '2 minutes', hold_expires_at = now() - interval '1 second'
+ where email = 'book-hana@example.com' and starts_at = pg_temp.msk(4, '16:30');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000055f9', 'book-hana@example.com');
+do $$
+begin
+  assert not exists (select 1 from public.hold_slot('sergey', 'half', pg_temp.msk(4, '16:30'))),
+    'Hana held 16:30 again straight after her hold ran out';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000055b2', 'book-boris@example.com');
+do $$
+begin
+  assert exists (select 1 from public.hold_slot('sergey', 'half', pg_temp.msk(4, '16:30'))),
+    'somebody else cannot take the slot Hana let go';
+  perform public.release_hold();
+end $$;
+select pg_temp.as_super();
+-- Twice the hold time later, it is anybody's again, Hana's too.
+update public.coach_bookings set created_at = now() - interval '41 minutes'
+ where email = 'book-hana@example.com' and starts_at = pg_temp.msk(4, '16:30');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000055f9', 'book-hana@example.com');
+do $$
+declare v_row record;
+begin
+  select * into v_row from public.hold_slot('sergey', 'half', pg_temp.msk(4, '16:30'));
+  assert v_row.hold_expires_at > now() + interval '19 minutes', 'a fresh hold after the window';
+  perform public.release_hold();
+end $$;
+select pg_temp.as_super();
+
+-- --- a claimed session payment that books nothing stays in the owner's view ----------------
+select pg_temp.as_service();
+do $$
+begin
+  perform public.record_payment('book-hana-other@example.com', 2500, 'BOOK-9', now(), 'session', false, 'prodamus', 'RUB');
+  assert public.apply_session_payment('book-hana-other@example.com', 'BOOK-9', 'half') is null,
+    'a payment with no hold booked something';
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000055f9', 'book-hana@example.com');
+do $$
+begin
+  assert public.claim_payment('BOOK-9') = 'linked', 'a claim with no hold still links the address';
+  assert public.claim_payment('BOOK-9') = 'not_found', 'the payment was claimed twice';
+end $$;
+select pg_temp.as_super();
+do $$
+declare v_pay public.payments%rowtype;
+begin
+  select * into v_pay from public.payments where provider_ref = 'BOOK-9';
+  assert v_pay.claimed_by = '00000000-0000-0000-0000-0000000055f9', 'the claim is recorded';
+  assert not v_pay.applied, 'a claim that booked nothing marked the payment applied';
+  assert (select params ->> 'email' from public.admin_outbox
+          where dedupe_key = 'session_claim_unmatched:' || v_pay.id::text) = 'book-hana@example.com',
+    'the owner was not told which account claimed it';
 end $$;
 
 -- --- Google rows stay valid, and they are Sergey's busy time -------------------------
