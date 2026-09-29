@@ -62,10 +62,20 @@
  * The third could not stand alone, so the whole apparatus went and the hour simply prints its four
  * lines. The switch is what compares them, which is what a switch is for.
  *
- * Booking «хоть за 15 минут» is honest about which half of it exists. Paying is a real link;
- * choosing the time is `BOOKING.scheduleUrl`, which is still empty, so the step after payment says
- * outright that the coach sets the time in a message. The day that URL is filled the same block
- * becomes the slot page and nothing else on the screen moves.
+ * ## Pick a time, then pay (0055)
+ *
+ * The owner, 29 Sep: the booking order is «pick a slot, then pay» — the slot is held for 20
+ * minutes and the payment confirms it. So the offer card ends in the picker (`SlotPicker`: two
+ * weeks of days, then that day's free times) and one neon action, «Забронировать и оплатить»:
+ * `hold_slot`, then the same static till link as before (`payRoute` / `payHref`). While the hold
+ * lives the card shows it instead of the picker — «Слот держится до 14:35», the minutes left, the
+ * pay button again (Telegram may not have opened the page) and a way to give it back. The app
+ * never confirms anything itself: the webhook does, and the screen asks again when the person
+ * comes back to it (focus, visibility), which is when the session appears at the top.
+ *
+ * This replaced the Google appointment page and the «pay, then write, and he sets the time»
+ * block. Without a till link for the length there is still nothing to hold a slot for, so that
+ * case keeps «Написать тренеру».
  *
  * Above all of it, when there is one, stands the session the person has already booked — «вот
  * ссылка на вход, через столько то начнется, дата, время». It comes first because for the one
@@ -92,14 +102,14 @@
  * - **Everything below follows `person`.** Sergey: exactly what this tab always was. Anastasia:
  *   her figures, her text in the credentials' place, what people talk to her about, her links —
  *   and no «I watch how you move», which is his voice. Then the same offer for both (same lengths,
- *   same prices, same payment), and the step after it with the person's own slot page
- *   (`scheduleUrlFor`); hers is empty until the owner supplies it, which is the «pay, then write,
- *   and she sets the time» path.
+ *   same prices, same payment) and the picker on the person's own calendar — the card in view
+ *   is the coach switch (`coaches.id` is `sergey` / `nastia`, and hers is bookable only with the
+ *   same flag, 0055).
  *
  * Without the flag the DOM is what it was and `person` is always Sergey.
  */
 import { clsx } from 'clsx';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { BrandMark } from '@/components/ui/BrandMark';
 import { Button } from '@/components/ui/Button';
@@ -107,26 +117,40 @@ import { Card } from '@/components/ui/Card';
 import { Glyph } from '@/components/ui/Icon';
 import { Screen } from '@/components/ui/Screen';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { Sheet } from '@/components/ui/Sheet';
 import { useToast } from '@/components/ui/Toast';
 import { l, plural, type Locale } from '@/i18n/index';
 import { getMyUpcomingBooking } from '@/lib/api/coachBookings';
-import type { CoachBooking } from '@/lib/api/types';
+import {
+  confirmDemoHold,
+  getMyHold,
+  holdSlot,
+  moveMyBooking,
+  releaseHold,
+} from '@/lib/api/coachSlots';
+import { isAppError } from '@/lib/api/errors';
+import type { BookingHold, CoachBooking, SessionOption } from '@/lib/api/types';
 import { describeCountdown, deviceTimeZone, type Countdown } from '@/lib/coach/booking';
+import {
+  canSelfMove,
+  clockIn,
+  holdClock,
+  holdDeadline,
+  JOIN_OPENS_MINUTES,
+  joinOpen,
+} from '@/lib/coach/slots';
 import { isDemo } from '@/lib/api/mode';
 import { COACH_TILE, courseTileVars } from '@/lib/ui/tile';
 import { openExternal } from '@/lib/telegram/webapp';
-import { payHref, type PayRoute, payRoute, paymentTarget } from '@/lib/util/payment';
+import { payHref, type PayRoute, payRoute } from '@/lib/util/payment';
 import { LinkButton } from '@/app/features/courses/LinkButton';
 import { SupportSheet } from '@/app/features/support/SupportSheet';
 import { splitName } from '@/app/features/profile/model';
 import { Doodle } from '@/components/ui/Doodle';
 import { CoachHeroCard } from '@/app/features/coach/CoachHeroCard';
-import {
-  activeFromScroll,
-  COACH_PEOPLE,
-  scheduleUrlFor,
-  type CoachPerson,
-} from '@/lib/coach/person';
+import { SlotPicker } from '@/app/features/coach/SlotPicker';
+import { dateOf, slotErrorKey } from '@/app/features/coach/slotCopy';
+import { activeFromScroll, COACH_PEOPLE, type CoachPerson } from '@/lib/coach/person';
 import { externalLinkProps } from '@/app/hooks/useExternalLink';
 import { useT, type Translator } from '@/app/hooks/useT';
 import { useFlag } from '@/app/store/flags';
@@ -136,6 +160,9 @@ import { COACH } from '@content/site/coach';
 import { NASTIA, type NastiaLink } from '@content/site/nastia';
 import { lavaUrl, sessionKey } from '@content/site/payments';
 import { formatPrice } from '@content/site/pricing';
+
+/** A hold as the screen keeps it: the server's row plus its deadline on this device's clock. */
+type HeldSlot = BookingHold & { deadline: number };
 
 export default function BookScreen() {
   const { t, locale } = useT();
@@ -174,26 +201,77 @@ export default function BookScreen() {
    */
   const [booking, setBooking] = useState<CoachBooking | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  /*
+   * The slot held for this person while they pay (0055), or null. Read with the booking, so a
+   * reload — or coming back from the payment page — finds the countdown where it was.
+   *
+   * The countdown runs on this device's clock from a deadline fixed when the hold arrived
+   * (`holdDeadline`), never by comparing the server's `hold_expires_at` with `Date.now()` on
+   * every tick: a phone whose clock runs ahead would see the hold end early, drop it, ask again,
+   * get the same live hold back and drop it again, once a round trip, until the server caught up.
+   * So the same hold coming back keeps the deadline it had (and the same object, so nothing
+   * re-fires), and a hold that has lapsed here is never taken back (`lapsed`), whatever the
+   * server still says about it for the few seconds its clock is behind ours.
+   */
+  const [hold, setHold] = useState<HeldSlot | null>(null);
+  const lapsed = useRef(new Set<string>());
+  const adoptHold = useCallback((next: BookingHold | null) => {
+    const receivedAt = Date.now();
+    setHold((prev) => {
+      if (!next || lapsed.current.has(next.id)) return null;
+      if (prev && prev.id === next.id && prev.holdExpiresAt === next.holdExpiresAt) return prev;
+      return { ...next, deadline: holdDeadline(next.holdExpiresAt, receivedAt) };
+    });
+  }, []);
+  const alive = useRef(true);
+  useEffect(
+    () => () => {
+      alive.current = false;
+    },
+    [],
+  );
 
-  useEffect(() => {
-    let alive = true;
+  /*
+   * Asked on arrival and again whenever the person comes back to the tab: the payment is
+   * confirmed by a webhook, not by anything here, so «back from the till» is the moment the
+   * session may have appeared and the hold gone. Failures leave the screen as it was.
+   */
+  const refresh = useCallback(() => {
     getMyUpcomingBooking()
       .then((b) => {
-        if (alive) setBooking(b);
+        if (alive.current) setBooking(b);
       })
       .catch(() => {
         /* Nothing booked and could-not-ask look the same here, deliberately. */
       });
-    return () => {
-      alive = false;
-    };
-  }, []);
+    getMyHold()
+      .then((h) => {
+        if (alive.current) adoptHold(h);
+      })
+      .catch(() => {
+        /* No countdown is better than an error where the offer is. */
+      });
+  }, [adoptHold]);
 
   useEffect(() => {
-    if (!booking) return;
-    const id = window.setInterval(() => setNow(Date.now()), 30_000);
+    refresh();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refresh();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', refresh);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', refresh);
+    };
+  }, [refresh]);
+
+  /* Every second while a hold counts down; every half minute while only a session does. */
+  useEffect(() => {
+    if (!booking && !hold) return;
+    const id = window.setInterval(() => setNow(Date.now()), hold ? 1_000 : 30_000);
     return () => window.clearInterval(id);
-  }, [booking]);
+  }, [booking, hold]);
 
   /*
    * Which length is showing. The first option leads because `content/site/booking.ts` orders them
@@ -218,15 +296,6 @@ export default function BookScreen() {
   const { heavy, thin } = splitName(name);
   const herName = l(NASTIA.name, locale);
   const her = splitName(herName);
-  /*
-   * The slot page for the person in view and the length that is selected (`scheduleUrlFor`).
-   *
-   * Sergey's reads from `option` before `BOOKING` because a Google Calendar appointment schedule
-   * carries a single duration: half an hour and an hour are two pages. Reading the shared field
-   * alone would have sent somebody who paid for an hour to the half-hour's booking page.
-   * Anastasia's is her own page for either length — the one thing in the offer that is per person.
-   */
-  const schedule = paymentTarget(scheduleUrlFor(who, option));
   const lead = BOOKING.leadTimeMin;
   /*
    * Занятие продаётся теми же двумя кассами, что и всё остальное: рубли — в Prodamus, остальное —
@@ -238,16 +307,13 @@ export default function BookScreen() {
    * уступает место предложению написать тренеру. Заводится это в кабинете, а не здесь, так что
    * появление третьей длительности правки экрана не потребует.
    *
-   * `schedule` выше это не касается: там не касса, а страница выбора времени в Google Calendar, и
-   * она никому ничего не продаёт.
+   * The till follows the length — and once a slot is held, the *hold's* length, not whatever
+   * the switch shows now: the webhook tells a session by its amount (Prodamus) or product
+   * (lava.top), and half an hour paid against a held hour would leave the slot unconfirmed.
    */
-  const payment = option
-    ? payRoute(
-        locale,
-        option.paymentUrl[locale] ?? option.paymentUrl.ru,
-        lavaUrl(sessionKey(option.id)),
-      )
-    : null;
+  const routeFor = (o: BookingOption | undefined): PayRoute | null =>
+    o ? payRoute(locale, o.paymentUrl[locale] ?? o.paymentUrl.ru, lavaUrl(sessionKey(o.id))) : null;
+  const payment = routeFor(option);
   /*
    * «Написать тренеру» opens a message sheet (0042) instead of a mailto or a bare Telegram link:
    * the message lands in the owner's «Обращения» topic, which is where she and the coach look.
@@ -276,6 +342,19 @@ export default function BookScreen() {
   );
 
   /*
+   * The picker's state: the start picked on the card in view, and a counter that makes the picker
+   * ask again (a slot someone else took, a hold that ran out, a hold given back).
+   */
+  const [slot, setSlot] = useState<string | null>(null);
+  const [slotsKey, setSlotsKey] = useState(0);
+  const [holding, setHolding] = useState(false);
+  /* Said once under the picker after a hold ran out, until the next pick. */
+  const [holdLapsed, setHoldLapsed] = useState(false);
+  /* The picker is asking for times: nothing on screen is a pick yet, so the button waits. */
+  const [slotsLoading, setSlotsLoading] = useState(true);
+  const reloadSlots = () => setSlotsKey((n) => n + 1);
+
+  /*
    * The strip: which card it rests on, read once the scroll settles. A debounce rather than every
    * frame, so the content below changes once per swipe and not back and forth mid-gesture.
    */
@@ -283,10 +362,16 @@ export default function BookScreen() {
   const settle = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(settle.current), []);
 
+  /*
+   * Another card is another calendar: the time picked on the first is not a time on the second,
+   * so it goes, and «Забронировать и оплатить» waits for a pick on the calendar now in view.
+   */
   const choose = (next: CoachPerson) => {
     if (next === person) return;
     setPerson(next);
     setSwapped(true);
+    setSlot(null);
+    setHoldLapsed(false);
   };
 
   const onStripScroll = () => {
@@ -317,22 +402,88 @@ export default function BookScreen() {
   const personName = who === 'nastia' ? herName : name;
   const herLinks = NASTIA.links[locale] ?? NASTIA.links.ru;
 
-  const pay = () => {
-    if (!payment) return;
-    // A demo account never reaches a real payment page — but it does reach the step after it,
-    // which is the half of this screen worth looking at.
-    if (isDemo()) {
-      toast.show({ kind: 'info', title: t('app.bookDemoNote') });
-      setSent(true);
+  const clock = hold ? holdClock(hold.deadline, now) : null;
+  useEffect(() => {
+    if (!hold || !clock?.expired) return;
+    lapsed.current.add(hold.id);
+    setHold(null);
+    setSent(false);
+    setHoldLapsed(true);
+    setSlotsKey((n) => n + 1);
+    // A payment that landed in the last seconds may have made it a session: ask.
+    refresh();
+  }, [hold, clock?.expired, refresh]);
+
+  /*
+   * Open the till for a held slot. In the demo there is no till: the demo's stand-in for the
+   * webhook confirms the hold, so the walkthrough reaches the booked card.
+   */
+  const payFor = async (held: BookingHold) => {
+    const route = routeFor(BOOKING.options.find((o) => o.id === held.optionId));
+    // No till for the hold's length in this language: the panel offers a message instead.
+    if (!route) {
+      openContact();
       return;
     }
-    const target = payHref(payment, email);
+    if (isDemo()) {
+      await confirmDemoHold().catch(() => false);
+      toast.show({ kind: 'success', title: t('app.bookDemoPaid') });
+      setSent(false);
+      refresh();
+      return;
+    }
+    const target = payHref(route, email);
     setSent(true);
     // Inside Telegram the payment page opens in the person's own browser, not in the Mini App.
     if (openExternal(target)) return;
     setRedirecting(true);
     window.location.assign(target);
   };
+
+  /* «Забронировать и оплатить»: hold the picked slot, then straight to the till. */
+  const book = async () => {
+    if (!slot || !option || !payment || holding || slotsLoading) return;
+    setHolding(true);
+    setHoldLapsed(false);
+    try {
+      const held = await holdSlot(who, option.id as SessionOption, slot);
+      if (!held) {
+        toast.show({ kind: 'error', title: t('app.bookHoldTaken') });
+        setSlot(null);
+        reloadSlots();
+        return;
+      }
+      // A fresh pick is a fresh hold, even of a start that lapsed here before.
+      lapsed.current.delete(held.id);
+      adoptHold(held);
+      setNow(Date.now());
+      await payFor(held);
+    } catch (e) {
+      toast.show({ kind: 'error', title: t(slotErrorKey(e)) });
+      if (isAppError(e) && e.message === 'slot_taken') reloadSlots();
+    } finally {
+      setHolding(false);
+    }
+  };
+
+  /* «Выбрать другое время»: the slot goes back to everybody, the picker comes back. */
+  const giveBack = async () => {
+    setHolding(true);
+    try {
+      await releaseHold();
+    } catch {
+      /* A hold that could not be released runs out on its own in minutes. */
+    } finally {
+      setHold(null);
+      setSent(false);
+      setSlot(null);
+      reloadSlots();
+      setHolding(false);
+    }
+  };
+
+  /* The session being moved, while the sheet is open. */
+  const [moving, setMoving] = useState<CoachBooking | null>(null);
 
   return (
     /*
@@ -345,7 +496,14 @@ export default function BookScreen() {
     <div style={courseTileVars(COACH_TILE)}>
       <Screen contentClassName="pt-4">
         <div className="flex flex-col gap-9">
-          {booking ? <UpcomingSession booking={booking} now={now} /> : null}
+          {booking ? (
+            <UpcomingSession
+              booking={booking}
+              now={now}
+              onMove={() => setMoving(booking)}
+              onContact={openContact}
+            />
+          ) : null}
 
           {/*
           The coach, as a photograph and one display line — first name at 800, surname at 200.
@@ -602,7 +760,7 @@ export default function BookScreen() {
                   value={pick}
                   onChange={(next) => {
                     setPick(next);
-                    setSent(false);
+                    setSlot(null);
                   }}
                   options={BOOKING.options.map((o) => ({
                     value: o.id,
@@ -610,78 +768,96 @@ export default function BookScreen() {
                   }))}
                 />
               ) : null}
-              {option ? (
-                <Option
-                  option={option}
-                  payment={payment}
-                  redirecting={redirecting}
-                  onPay={pay}
+              {option ? <Option option={option} payment={payment} onContact={openContact} /> : null}
+              {/*
+               * The time, then the one action (0055). While a slot is held the hold stands here
+               * instead — whichever card or length is in view, because it is the person's one hold
+               * and the thing they are in the middle of. No till for this length, no picker: there
+               * would be nothing to hold a slot for (`Option` offers the message instead).
+               */}
+              {hold && clock && !clock.expired ? (
+                <HoldPanel
+                  hold={hold}
+                  left={clock.left}
+                  canPay={routeFor(BOOKING.options.find((o) => o.id === hold.optionId)) !== null}
                   onContact={openContact}
+                  sent={sent}
+                  busy={holding || redirecting}
+                  onPay={() => void payFor(hold)}
+                  onRelease={() => void giveBack()}
                 />
+              ) : option && payment ? (
+                <section className="flex flex-col gap-4 border-t border-border pt-5">
+                  <span className="eyebrow">{t('app.bookPickerTitle')}</span>
+                  {holdLapsed ? (
+                    <p role="status" className="text-sm leading-snug text-muted">
+                      {t('app.bookHoldExpired')}
+                    </p>
+                  ) : null}
+                  <SlotPicker
+                    coach={who}
+                    option={option.id as SessionOption}
+                    value={slot}
+                    onChange={setSlot}
+                    onLoading={setSlotsLoading}
+                    reloadKey={slotsKey}
+                    empty={
+                      <Button
+                        variant="secondary"
+                        size="md"
+                        className="self-start"
+                        onClick={openContact}
+                      >
+                        {t('app.bookContact')}
+                      </Button>
+                    }
+                  />
+                  {/* The tab's one neon action, as the pay button always was (style A). */}
+                  <Button
+                    variant="action"
+                    size="lg"
+                    fullWidth
+                    disabled={!slot || slotsLoading}
+                    loading={holding}
+                    onClick={() => void book()}
+                  >
+                    {slot
+                      ? t('app.bookHoldPay', { price: formatPrice(locale, option.price) })
+                      : t('app.bookPickerTitle')}
+                  </Button>
+                </section>
               ) : null}
             </Card>
 
             {/*
-             * The step after the money, which is the one the offer was missing.
-             *
-             * «Оплатил → выбрал время» only has a second half when `BOOKING.scheduleUrl` is set. Until
-             * it is, this block says what actually happens — the coach sets the time in a message —
-             * rather than leaving a paid button as the last thing on the screen. Either way it is one
-             * sentence and one button, and it sharpens once payment has been opened from here.
+             * Under the offer: the rule for changes, and a way to ask before paying. It used to be
+             * «Дальше» — the step after the money, a Google slot page or «write and he sets the
+             * time» — and the picker above is that step now, taken before the money.
              */}
-            <section
-              className={
-                sent
-                  ? 'glass-card flex flex-col gap-3 rounded-card p-5'
-                  : 'flex flex-col gap-3 border-t border-border pt-5'
-              }
-            >
-              <span className="eyebrow">{t('app.bookNext')}</span>
-              {/* Not in demo: there the toast has just said there was no payment page to open. */}
-              {sent && !isDemo() ? (
-                <p className="text-[15px] leading-snug">{t('app.bookPaidNote')}</p>
-              ) : null}
-              {/* Per person: «his page» / «her page», «he sets» / «she sets». */}
-              <p className="text-sm leading-snug text-muted">
-                {who === 'nastia'
-                  ? schedule
-                    ? t('app.bookNextScheduleHer', { n: lead })
-                    : t('app.bookNextContactHer', { n: lead })
-                  : schedule
-                    ? t('app.bookNextSchedule', { n: lead })
-                    : t('app.bookNextContact', { n: lead })}
-              </p>
-              {schedule ? (
-                <LinkButton
-                  href={schedule.href}
-                  variant={sent ? 'primary' : 'secondary'}
-                  size="lg"
-                  fullWidth
-                  external
-                >
-                  {t('app.bookPickTime')}
-                </LinkButton>
-              ) : payment ? (
+            <section className="flex flex-col gap-2 border-t border-border pt-5">
+              <p className="text-xs text-muted-2">{l(BOOKING.reschedule, locale)}</p>
+              {payment ? (
                 <Button
-                  variant={sent ? 'primary' : 'secondary'}
-                  size="lg"
-                  fullWidth
+                  variant="ghost"
+                  size="md"
+                  className="-ml-6.5 self-start"
                   onClick={openContact}
                 >
-                  {t('app.bookContact')}
-                </Button>
-              ) : null}
-              <p className="text-xs text-muted-2">{l(BOOKING.reschedule, locale)}</p>
-              {/* With a slot page and a till both in place nothing above offers a way to ask, and a
-                question before paying is exactly when one is needed. Quiet, so it is not a
-                second action. */}
-              {schedule && payment ? (
-                <Button variant="ghost" size="md" className="self-start" onClick={openContact}>
                   {t('app.supportWrite')}
                 </Button>
               ) : null}
             </section>
           </section>
+          {moving ? (
+            <MoveSheet
+              booking={moving}
+              onClose={() => setMoving(null)}
+              onMoved={() => {
+                setMoving(null);
+                refresh();
+              }}
+            />
+          ) : null}
           <SupportSheet open={writing} onClose={() => setWriting(false)} context={contactContext} />
         </div>
       </Screen>
@@ -831,6 +1007,23 @@ function formatIn(
 /* h23 so a Russian clock reads «9:00» and never «9:00 AM»; `numeric` so it is not «09:00». */
 const CLOCK: Intl.DateTimeFormatOptions = { hour: 'numeric', minute: '2-digit', hourCycle: 'h23' };
 
+/** «6 октября · 10:00 – 11:00 · 60 мин» — a session's date, hours and length, in `zone`. */
+function whenLine(
+  { t, locale }: Translator,
+  startsAt: string,
+  endsAt: string,
+  zone: string | undefined,
+): string {
+  const starts = Date.parse(startsAt);
+  const ends = Date.parse(endsAt);
+  return t('app.bookWhen', {
+    date: formatIn(locale, starts, { day: 'numeric', month: 'long' }, zone),
+    from: formatIn(locale, starts, CLOCK, zone),
+    to: formatIn(locale, ends, CLOCK, zone),
+    dur: t('app.bookDuration', { n: Math.round((ends - starts) / 60_000) }),
+  });
+}
+
 /**
  * The countdown, said out loud.
  *
@@ -878,9 +1071,19 @@ function countdownLine(countdown: Countdown, { t, locale }: Translator): string 
  * No glass and no photograph: a hairline card on the flat ground, so the buttons in it are
  * rectangles at `--r-control` and not pills (design/CHANGELOG.md §13).
  */
-function UpcomingSession({ booking, now }: { booking: CoachBooking; now: number }) {
+function UpcomingSession({
+  booking,
+  now,
+  onMove,
+  onContact,
+}: {
+  booking: CoachBooking;
+  now: number;
+  onMove: () => void;
+  onContact: () => void;
+}) {
   const tr = useT();
-  const { t, locale } = tr;
+  const { t } = tr;
   const zone = deviceTimeZone() ?? booking.timezone ?? undefined;
   const countdown = describeCountdown(booking.startsAt, booking.endsAt, now, zone);
 
@@ -888,14 +1091,7 @@ function UpcomingSession({ booking, now }: { booking: CoachBooking; now: number 
   // remounted, so the tick is what takes the card away.
   if (countdown.kind === 'past') return null;
 
-  const starts = Date.parse(booking.startsAt);
-  const ends = Date.parse(booking.endsAt);
-  const when = t('app.bookWhen', {
-    date: formatIn(locale, starts, { day: 'numeric', month: 'long' }, zone),
-    from: formatIn(locale, starts, CLOCK, zone),
-    to: formatIn(locale, ends, CLOCK, zone),
-    dur: t('app.bookDuration', { n: booking.durationMinutes }),
-  });
+  const when = whenLine(tr, booking.startsAt, booking.endsAt, zone);
 
   return (
     <section className="glass-card flex flex-col gap-4 rounded-card p-5">
@@ -908,10 +1104,16 @@ function UpcomingSession({ booking, now }: { booking: CoachBooking; now: number 
         <p className="tabular text-[13px] leading-snug text-muted">{when}</p>
       </div>
 
-      {booking.joinUrl ? (
+      {/* The room opens fifteen minutes before (0055): until then the button would only take
+          somebody into an empty call, so its place says when it will be there. */}
+      {booking.joinUrl && joinOpen(booking.startsAt, booking.endsAt, now) ? (
         <LinkButton href={booking.joinUrl} size="lg" fullWidth external>
           {t('app.bookJoin')}
         </LinkButton>
+      ) : booking.joinUrl ? (
+        <p className="text-[13px] leading-snug text-muted">
+          {t('app.bookJoinSoon', { n: JOIN_OPENS_MINUTES })}
+        </p>
       ) : booking.locationText ? (
         <p className="text-[15px] leading-snug">
           {t('app.bookPlace', { place: booking.locationText })}
@@ -920,9 +1122,34 @@ function UpcomingSession({ booking, now }: { booking: CoachBooking; now: number 
         <p className="text-[13px] leading-snug text-muted-2">{t('app.bookNoLink')}</p>
       )}
 
-      {/* Both of these are Calendly's; a Google Calendar booking has neither, and then there is no
-          row at all. `-ml-4.5` pulls the first ghost label back onto the card's own left edge. */}
-      {booking.rescheduleUrl || booking.cancelUrl ? (
+      {/*
+       * A session booked in the app (it has a coach, 0055) moves here, by the owner's rule: the
+       * client moves it themselves 24 hours or more ahead, into a free slot; later than that only
+       * the coach can, so the action becomes a message to him. There is no cancel — no
+       * self-cancel and no refund. `-ml-4.5` pulls the ghost label back onto the card's edge.
+       */}
+      {booking.coachId ? (
+        canSelfMove(booking.startsAt, now) ? (
+          <div className="-mb-2 -ml-4.5 flex">
+            <Button variant="ghost" size="sm" onClick={onMove}>
+              {t('app.bookMove')}
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1">
+            <p className="text-xs leading-snug text-muted-2">{t('app.bookMoveLate')}</p>
+            <div className="-mb-2 -ml-4.5 flex">
+              <Button variant="ghost" size="sm" onClick={onContact}>
+                {t('app.bookContact')}
+              </Button>
+            </div>
+          </div>
+        )
+      ) : null}
+
+      {/* A Calendly booking's own links; a Google Calendar booking has neither, and then there is
+          no row at all. */}
+      {!booking.coachId && (booking.rescheduleUrl || booking.cancelUrl) ? (
         <div className="-mb-2 -ml-4.5 flex flex-wrap items-center">
           {booking.rescheduleUrl ? (
             <LinkButton href={booking.rescheduleUrl} variant="ghost" size="sm" external>
@@ -959,14 +1186,10 @@ const BASE_INCLUDES = new Set((BOOKING.options[0]?.includes ?? []).map((item) =>
 function Option({
   option,
   payment,
-  redirecting,
-  onPay,
   onContact,
 }: {
   option: BookingOption;
   payment: PayRoute | null;
-  redirecting: boolean;
-  onPay: () => void;
   onContact: () => void;
 }) {
   const { t, locale } = useT();
@@ -1010,15 +1233,10 @@ function Option({
         </ul>
       </div>
 
-      {payment ? (
-        /* The one button on the tab that takes money, and the tab's one neon action (style A,
-           global.css header). The «Выбрать время» below it stays a grey secondary on purpose: it
-           is the step *after* the money, and two filled bars on one screen would make neither of
-           them the action. */
-        <Button variant="action" size="lg" fullWidth loading={redirecting} onClick={onPay}>
-          {t('app.bookPay', { price })}
-        </Button>
-      ) : (
+      {/* With a till, the action is the picker's «Забронировать и оплатить» under this block
+          (0055): time first, then money. Without one there is nothing to hold a slot for, and the
+          action is a message to the coach. */}
+      {payment ? null : (
         <>
           <Button variant="action" size="lg" fullWidth onClick={onContact}>
             {t('app.bookContact')}
@@ -1027,5 +1245,177 @@ function Option({
         </>
       )}
     </article>
+  );
+}
+
+/**
+ * The slot held while the person pays (0055) — in the offer card, in the picker's place.
+ *
+ * What is held and until when, as the owner put it («Слот держится до 14:35»), with the minutes
+ * and seconds left beside it in the light blue of progress; then the pay button again, because
+ * inside Telegram the till opens in another app and may simply not have; then a quiet way to give
+ * the slot back. The hold is the person's one, whichever card or length is in view, so it names
+ * its own coach, length and price rather than borrowing the switch's.
+ */
+function HoldPanel({
+  hold,
+  left,
+  canPay,
+  onContact,
+  sent,
+  busy,
+  onPay,
+  onRelease,
+}: {
+  hold: HeldSlot;
+  left: string;
+  /**
+   * The hold's length has a till in this language. It may not — a hold made in one language and
+   * looked at in another — and then the pay button would do nothing, so a message stands in.
+   */
+  canPay: boolean;
+  onContact: () => void;
+  sent: boolean;
+  busy: boolean;
+  onPay: () => void;
+  onRelease: () => void;
+}) {
+  const { t, locale } = useT();
+  const zone = deviceTimeZone();
+  const option = BOOKING.options.find((o) => o.id === hold.optionId);
+  const coach = hold.coachId === 'nastia' ? l(NASTIA.name, locale) : l(COACH.name, locale);
+  return (
+    <section className="flex flex-col gap-4 border-t border-border pt-5">
+      <div className="flex flex-col gap-1.5">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <span className="font-display text-[17px] leading-snug">
+            {t('app.bookHoldUntil', { time: clockIn(hold.deadline, zone) })}
+          </span>
+          <span className="tabular text-[13px] text-accent">{t('app.bookHoldLeft', { left })}</span>
+        </div>
+        <p className="tabular text-[13px] leading-snug text-muted">
+          {[
+            coach,
+            dateOf(hold.startsAt, locale, zone),
+            `${clockIn(hold.startsAt, zone)} – ${clockIn(hold.endsAt, zone)}`,
+            option ? t('app.bookDuration', { n: option.durationMin }) : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </p>
+      </div>
+      {sent && !isDemo() ? (
+        <p className="text-[15px] leading-snug">{t('app.bookPaidNote')}</p>
+      ) : (
+        <p className="text-sm leading-snug text-muted">{t('app.bookHoldNote')}</p>
+      )}
+      {option && canPay ? (
+        <Button variant="action" size="lg" fullWidth loading={busy} onClick={onPay}>
+          {t('app.bookPay', { price: formatPrice(locale, option.price) })}
+        </Button>
+      ) : (
+        <Button variant="secondary" size="lg" fullWidth disabled={busy} onClick={onContact}>
+          {t('app.bookContact')}
+        </Button>
+      )}
+      <Button
+        variant="ghost"
+        size="md"
+        className="-ml-6.5 self-start"
+        disabled={busy}
+        onClick={onRelease}
+      >
+        {t('app.bookHoldRelease')}
+      </Button>
+    </section>
+  );
+}
+
+/**
+ * «Перенести» (0055): the same picker on the session's own calendar and length, and one button
+ * that names the new time. `move_my_booking` checks the 24 hours again — the sheet may have sat
+ * open across the line — and a refusal says what to do instead.
+ */
+function MoveSheet({
+  booking,
+  onClose,
+  onMoved,
+}: {
+  booking: CoachBooking;
+  onClose: () => void;
+  onMoved: () => void;
+}) {
+  const tr = useT();
+  const { t } = tr;
+  const toast = useToast();
+  const zone = deviceTimeZone() ?? booking.timezone ?? undefined;
+  const [slot, setSlot] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [reload, setReload] = useState(0);
+  const option: SessionOption =
+    booking.optionId ?? (booking.durationMinutes > 30 ? 'hour' : 'half');
+
+  const move = async () => {
+    if (!slot) return;
+    setBusy(true);
+    try {
+      await moveMyBooking(booking.id, slot);
+      toast.show({ kind: 'success', title: t('app.bookMoveDone') });
+      onMoved();
+    } catch (e) {
+      toast.show({ kind: 'error', title: t(slotErrorKey(e)) });
+      if (isAppError(e) && e.message === 'too_late') onClose();
+      else {
+        setSlot(null);
+        setReload((n) => n + 1);
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Sheet
+      open
+      onClose={onClose}
+      title={t('app.bookMoveTitle')}
+      footer={
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
+          disabled={!slot}
+          loading={busy}
+          onClick={() => void move()}
+        >
+          {slot
+            ? t('app.bookMoveConfirm', {
+                time: `${dateOf(slot, tr.locale, zone)}, ${clockIn(slot, zone)}`,
+              })
+            : t('app.bookPickerTitle')}
+        </Button>
+      }
+    >
+      <div className="flex flex-col gap-5">
+        <p className="tabular text-[13px] text-muted">
+          {t('app.bookMoveNow', { when: whenLine(tr, booking.startsAt, booking.endsAt, zone) })}
+        </p>
+        {/*
+         * `available_slots` counts this very session as busy, so a start overlapping it (10:00 →
+         * 10:30) is not offered here though `move_my_booking` would take it. Said, until the
+         * server offers slots for a move (`p_ignore`), rather than left as a silent gap.
+         */}
+        <p className="text-xs leading-snug text-muted-2">{t('app.bookMoveOverlapNote')}</p>
+        {booking.coachId ? (
+          <SlotPicker
+            coach={booking.coachId}
+            option={option}
+            value={slot}
+            onChange={setSlot}
+            reloadKey={reload}
+          />
+        ) : null}
+      </div>
+    </Sheet>
   );
 }

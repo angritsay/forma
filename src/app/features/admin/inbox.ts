@@ -88,6 +88,7 @@ export function replyErrorKey(e: unknown): TKey {
 export function bookingSourceKey(source: string): TKey {
   if (source === 'google_calendar') return 'app.bookingsSourceGoogle';
   if (source === 'admin') return 'app.bookingsSourceAdmin';
+  if (source === 'forma') return 'app.bookingsSourceForma';
   return 'app.bookingsSourceOther';
 }
 

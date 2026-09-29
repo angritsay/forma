@@ -298,10 +298,15 @@ export async function createSubscriptionOrder(input: SubscriptionOrderInput): Pr
 export async function getMyCoachBookings(): Promise<CoachBooking[]> {
   return run(() => {
     const user = requireDemoUser();
-    return readDb()
-      .coachBookings.filter((b) => b.email === user.email)
-      .map(coachBookingFromDb)
-      .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+    return (
+      readDb()
+        // The view's rule (0055): a hold, live or dead, is never a session.
+        .coachBookings.filter(
+          (b) => b.email === user.email && (b.status === 'active' || b.status === 'cancelled'),
+        )
+        .map(coachBookingFromDb)
+        .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+    );
   });
 }
 

@@ -440,8 +440,8 @@ export const landing = {
   aboutSessionsEyebrow: 'Online sessions',
   aboutSessionsTitle: 'Half an hour or an hour',
   aboutHowTitle: 'How to book',
-  aboutHowPick: 'Pay, then pick a time',
-  aboutHowWrite: 'Pay, then message him — the coach sets the time',
+  // The owner's order (29 Sep): the time first, then the payment — the slot is held 20 minutes.
+  aboutHowPick: 'Pick a time, then pay',
   aboutRule: 'No refunds — a session can be moved if you ask at least 24 hours ahead',
   aboutDailyEyebrow: 'In the app',
   aboutDailyTitle: 'Every day in Forma',

@@ -27,6 +27,7 @@ import type {
   ProfilePatch,
   PurchaseRow,
   PurchaseStatus,
+  SessionOption,
   StartSessionInput,
   WorkoutSessionRow,
   Subscription,
@@ -477,6 +478,14 @@ export interface DbCoachBooking {
   reschedule_url: string | null;
   status: string;
   event_name: string | null;
+  /** 0055. Optional: a row read before the migration, or the demo's old seed, has neither. */
+  coach_id?: string | null;
+  option_id?: string | null;
+}
+
+/** `half` or `hour`, or null for anything else (a Google row has no option). */
+export function asSessionOption(v: unknown): SessionOption | null {
+  return v === 'half' || v === 'hour' ? v : null;
 }
 
 function asCoachBookingStatus(v: string): CoachBookingStatus {
@@ -497,5 +506,7 @@ export function coachBookingFromDb(r: DbCoachBooking): CoachBooking {
     rescheduleUrl: r.reschedule_url ?? null,
     status: asCoachBookingStatus(r.status),
     eventName: r.event_name ?? null,
+    coachId: r.coach_id ?? null,
+    optionId: asSessionOption(r.option_id),
   };
 }

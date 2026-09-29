@@ -17,6 +17,7 @@ export * from './claims';
 export * from './orders';
 export * from './subscriptions';
 export * from './coachBookings';
+export * from './coachSlots';
 export * from './admin';
 export * from './exercises';
 export * from './introViews';

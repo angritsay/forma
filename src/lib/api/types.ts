@@ -856,6 +856,37 @@ export interface CoachBooking {
   rescheduleUrl: string | null;
   status: CoachBookingStatus;
   eventName: string | null;
+  /**
+   * Whose calendar it is in (0055) — `sergey` or `nastia` — for a session booked in the app;
+   * null for a row from the Google Calendar. Only a session with a coach can be moved in the app.
+   */
+  coachId: string | null;
+  /** The length that was paid for, `half` or `hour` (0055); null for a Google row. */
+  optionId: SessionOption | null;
+}
+
+// --- our own calendar (0055) -------------------------------------------------
+
+/** The two lengths of a session (`content/site/booking.ts`, `booking_option_minutes()`). */
+export type SessionOption = 'half' | 'hour';
+
+/** A free start, as `available_slots` returns it. */
+export interface FreeSlot {
+  startsAt: string;
+  endsAt: string;
+}
+
+/**
+ * A slot held while the client pays (`hold_slot`, `my_booking_hold`): 20 minutes, one per
+ * address. The payment turns it into a session; nothing else does.
+ */
+export interface BookingHold {
+  id: string;
+  coachId: string;
+  optionId: SessionOption;
+  startsAt: string;
+  endsAt: string;
+  holdExpiresAt: string;
 }
 
 // --- weekly winner (0028) ----------------------------------------------------
