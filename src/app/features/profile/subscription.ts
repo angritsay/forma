@@ -8,12 +8,14 @@
  * the date ahead of time is not surprised by it.
  *
  * The price is the club's own quote (`clubMonthlyLabel`, «666 ₽»), not the monthly plan's: the
- * club is sold with the annual plan, and the row must name the figure the join button names.
+ * club is sold with the annual plan, and the row must name the figure the join button names. And
+ * because a tap on the row goes straight to that plan's checkout, the row also says what is
+ * charged (`subscriptionChargeNote`) — the same line `ClubJoin` puts under its button.
  */
 import type { Locale } from '@/i18n/index';
 import type { Subscription } from '@/lib/api/types';
 import type { Translator } from '@/app/hooks/useT';
-import { clubMonthlyLabel } from '@/app/features/marathon/clubPlan';
+import { clubChargeLabel, clubMonthlyLabel } from '@/app/features/marathon/clubPlan';
 
 /**
  * «12 марта» — the day and the month, and the year only when it is not this one. The row's value
@@ -61,4 +63,16 @@ export function subscriptionSubtitle(
   if (!date) return t('app.profileSubscriptionLiveUndated');
   if (sub.status === 'cancelled') return t('app.profileSubscriptionCancelled', { date });
   return t('app.profileSubscriptionLive', { date });
+}
+
+/**
+ * «Одна оплата: 7 990 ₽ за год» — the subtitle of a row that leads to the checkout. The value
+ * quotes the year divided by twelve, and the link charges the whole year at once; quoting a month
+ * for a year's single payment without saying so is how chargebacks are made (`clubPlan.ts`).
+ * Empty when the row leads nowhere or no plan is configured.
+ */
+export function subscriptionChargeNote(tr: Translator, sub: Subscription | null): string {
+  if (!subscriptionLeadsToJoin(sub)) return '';
+  const charge = clubChargeLabel(tr.locale);
+  return charge ? tr.t('app.profileSubscriptionCharge', { price: charge }) : '';
 }

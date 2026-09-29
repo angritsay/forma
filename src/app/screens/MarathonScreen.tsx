@@ -388,7 +388,7 @@ export default function MarathonScreen() {
                error (audit item 4). */
             <EmptyState
               className="py-6"
-              title={t('app.marathonErrorTitle')}
+              title={t('app.clubDayError')}
               description={
                 dayError?.code === 'network' ? t('common.errorOffline') : t('common.errorGeneric')
               }

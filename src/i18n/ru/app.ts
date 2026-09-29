@@ -533,6 +533,7 @@ export const app = {
   profileSubscriptionEnded: 'Закончилась {date} · продлить',
   profileSubscriptionEndedUndated: 'Закончилась · продлить',
   profileSubscriptionPending: 'Ждёт оплаты',
+  profileSubscriptionCharge: 'Одна оплата: {price} за год',
   planMonthly: 'Месяц',
   planAnnual: 'Год',
 
@@ -1252,6 +1253,9 @@ export const app = {
   clubRestTitle: 'Отдых',
   clubRestBody: 'Новое — утром',
   marathonErrorTitle: 'Не удалось загрузить клуб',
+  // Today's task did not load, though the club did: said as that, with «Повторить», never as
+  // «Отдых» — a member told it is a rest day loses the task and the streak to a network error.
+  clubDayError: 'Задание дня не загрузилось',
   // The podium when the week's table did not arrive: said as a failure with «Повторить», never
   // drawn as an empty week — three dashed steps would claim nobody has scored.
   clubPodiumError: 'Таблица не загрузилась',

@@ -2,8 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { t, type Locale } from '@/i18n/index';
 import type { Subscription } from '@/lib/api/types';
 import type { Translator } from '@/app/hooks/useT';
-import { clubMonthlyLabel } from '@/app/features/marathon/clubPlan';
-import { subscriptionDate, subscriptionLeadsToJoin, subscriptionSubtitle } from './subscription';
+import { clubChargeLabel, clubMonthlyLabel } from '@/app/features/marathon/clubPlan';
+import {
+  subscriptionChargeNote,
+  subscriptionDate,
+  subscriptionLeadsToJoin,
+  subscriptionSubtitle,
+} from './subscription';
 
 const tr = (locale: Locale): Translator => ({
   locale,
@@ -79,5 +84,20 @@ describe('subscriptionLeadsToJoin', () => {
     expect(subscriptionLeadsToJoin(sub({ status: 'cancelled' }))).toBe(false);
     // Money on its way: a second payment link beside it invites a double charge.
     expect(subscriptionLeadsToJoin(sub({ status: 'pending', isLive: false }))).toBe(false);
+  });
+});
+
+describe('subscriptionChargeNote', () => {
+  it('names the one annual charge wherever the row leads to the checkout', () => {
+    const charge = clubChargeLabel('ru');
+    expect(charge).not.toBeNull();
+    expect(subscriptionChargeNote(tr('ru'), null)).toBe(`Одна оплата: ${charge} за год`);
+    expect(subscriptionChargeNote(tr('ru'), sub({ isLive: false }))).toContain(charge);
+    expect(subscriptionChargeNote(tr('en'), null)).toContain(clubChargeLabel('en') ?? '');
+  });
+
+  it('says nothing while it runs or while a payment is on its way', () => {
+    expect(subscriptionChargeNote(tr('ru'), sub({}))).toBe('');
+    expect(subscriptionChargeNote(tr('ru'), sub({ status: 'pending', isLive: false }))).toBe('');
   });
 });

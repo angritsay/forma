@@ -512,6 +512,7 @@ export const app = {
   profileSubscriptionEnded: 'Ended {date} · renew',
   profileSubscriptionEndedUndated: 'Ended · renew',
   profileSubscriptionPending: 'Waiting for payment',
+  profileSubscriptionCharge: 'One payment: {price} for a year',
   planMonthly: 'Monthly',
   planAnnual: 'Annual',
 
@@ -1224,6 +1225,7 @@ export const app = {
   clubRestTitle: 'Rest',
   clubRestBody: 'A new one in the morning',
   marathonErrorTitle: 'Could not load the club',
+  clubDayError: 'Today’s task did not load',
   clubPodiumError: 'The table did not load',
   clubTrialPill: 'Trial week · {n} d left',
   // One task
