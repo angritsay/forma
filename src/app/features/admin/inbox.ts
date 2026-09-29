@@ -3,7 +3,7 @@
  */
 import type { Locale, TKey } from '@/i18n/index';
 import { isAppError } from '@/lib/api/errors';
-import type { ReplyDelivery, SupportItem, SyncOutcome } from '@/lib/api/adminInbox';
+import type { ReplyDelivery, SupportItem } from '@/lib/api/adminInbox';
 
 /** The coach's time zone: every booking and every message is read in Moscow time. */
 export const COACH_TIME_ZONE = 'Europe/Moscow';
@@ -90,38 +90,4 @@ export function bookingSourceKey(source: string): TKey {
   if (source === 'admin') return 'app.bookingsSourceAdmin';
   if (source === 'forma') return 'app.bookingsSourceForma';
   return 'app.bookingsSourceOther';
-}
-
-export interface SyncMessage {
-  key: TKey;
-  params?: Record<string, number>;
-  /** `error` stays on the screen until the next try; the rest is a toast. */
-  tone: 'success' | 'info' | 'error';
-}
-
-export function syncMessage(outcome: SyncOutcome): SyncMessage {
-  switch (outcome.kind) {
-    case 'ok':
-      return {
-        key: 'app.bookingsSyncOk',
-        params: { booked: outcome.booked, cancelled: outcome.cancelled },
-        tone: 'success',
-      };
-    case 'partial':
-      return { key: 'app.bookingsSyncPartial', params: { failed: outcome.failed }, tone: 'error' };
-    case 'not_configured':
-      return { key: 'app.bookingsSyncNotConfigured', tone: 'error' };
-    case 'not_deployed':
-      return { key: 'app.bookingsSyncNotDeployed', tone: 'error' };
-    case 'forbidden':
-      return { key: 'app.bookingsSyncForbidden', tone: 'error' };
-    case 'busy':
-      return { key: 'app.bookingsSyncBusy', tone: 'info' };
-    case 'google':
-      return { key: 'app.bookingsSyncGoogle', tone: 'error' };
-    case 'demo':
-      return { key: 'app.bookingsSyncDemo', tone: 'info' };
-    case 'network':
-      return { key: 'app.bookingsSyncNetwork', tone: 'error' };
-  }
 }

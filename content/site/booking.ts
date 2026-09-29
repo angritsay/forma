@@ -13,10 +13,14 @@
  * `paymentUrl` follows the course rule (docs/SETUP.md §7.1): an absolute https link per locale, the
  * signed-in email is appended as `?email=`, anything else is ignored. An option without a link
  * offers a message to the coach instead of a payment button, so the half-hour can be published
- * before its product exists. `scheduleUrl` is where the client picks a slot after paying (a Google
- * Calendar appointment page, a Telegram link); optional. It can be set per length, because a Google
- * appointment schedule holds one duration and the two lengths are therefore two pages, and once on
- * `BOOKING` as the fallback for a tool that asks the visitor to choose a length itself.
+ * before its product exists.
+ *
+ * The time is picked in the app, before paying (owner, 29 Sep): the client chooses a free slot in
+ * the coach's own calendar (0055), it is held for 20 minutes, and the payment confirms it. There is
+ * no slot page here any more — the Google appointment pages it used to hold are gone with the
+ * cutover, and old Google bookings stay in `coach_bookings` as history. The webhooks tell the two
+ * lengths apart by amount (Prodamus, `SESSION_PRICES`) and by product (lava, `session:half|hour`),
+ * so the two `price.rub` values must stay different.
  */
 import type { DoodleKind, L10n, PaymentUrl } from '@/content/schema';
 import type { CoursePrice } from './pricing';
@@ -42,19 +46,6 @@ export interface BookingOption {
    * docs/SETUP.md §7.1 and §7.3.
    */
   paymentUrl: PaymentUrl;
-  /**
-   * Slot page for **this length**, overriding `BOOKING.scheduleUrl`.
-   *
-   * It exists because of how the tool on the other end actually works: a Google Calendar
-   * appointment schedule carries **one duration**, set on the schedule itself. So half an hour and
-   * an hour are two separate schedules with two separate links, and one shared field cannot hold
-   * them — whichever link it held, the other length would send a client who had just paid to a page
-   * offering the duration they did not buy.
-   *
-   * Empty falls back to `BOOKING.scheduleUrl`, which stays right for a booking tool that does ask
-   * the visitor to choose a length on its own page.
-   */
-  scheduleUrl?: string;
 }
 
 /**
@@ -116,7 +107,6 @@ const HALF: BookingOption = {
   price: { rub: 2500, usd: 29 },
   includes: HALF_INCLUDES,
   paymentUrl: { ru: 'https://payform.ru/9jcyga8/' },
-  scheduleUrl: 'https://calendar.app.google/ExC4NWUTJQJT7JvP6',
 };
 
 const HOUR: BookingOption = {
@@ -126,19 +116,6 @@ const HOUR: BookingOption = {
   price: { rub: 3500, usd: 39 },
   includes: [...HALF_INCLUDES, ...HOUR_ADDS],
   paymentUrl: { ru: 'https://payform.ru/cpcygbP/' },
-  /*
-   * No slot page for the hour, deliberately, and it is not a gap waiting to be filled.
-   *
-   * A personal Google account carries one appointment schedule, and it is spent on the half-hour.
-   * The alternatives all cost something real: a single 60-minute schedule makes everyone booking
-   * thirty minutes block an hour of his day, and a 30-minute one booked twice depends on the two
-   * slots happening to be adjacent, which nothing guarantees — a client who paid for an hour could
-   * end up with two half-hours on opposite sides of an afternoon.
-   *
-   * So the hour keeps the honest fallback: pay, write, and he sets the time. It is the rarer and
-   * more considered purchase of the two, and someone spending 3 500 ₽ on a programme review is
-   * already going to be in a conversation with him. Fill this in if a second schedule ever exists.
-   */
 };
 
 export const BOOKING = {
@@ -207,9 +184,9 @@ export const BOOKING = {
    * How close to the start a session can still be taken, in minutes.
    *
    * The owner's own promise — «забронировать тренировку хоть за 15 минут до тренировки прямо с
-   * черешки» — and the number the screen quotes. It is honoured by whichever half of the flow is
-   * live: the slot page below when there is one, the coach answering when there is not. Raise it
-   * the day that stops being true rather than letting the screen keep the old figure.
+   * черешки» — and the number the screen quotes. The picker offers no slot closer than this
+   * (`booking_lead_time()`, 0055, must match). Raise both the day that stops being true rather
+   * than letting the screen keep the old figure.
    */
   leadTimeMin: 15,
   /** Shown under the button; keep it a fact the coach honours. */
@@ -217,20 +194,6 @@ export const BOOKING = {
     ru: 'Перенос — не позднее чем за 24 часа до занятия',
     en: 'Reschedule up to 24 hours before the session',
   } satisfies L10n,
-  /**
-   * Slot picker the client opens after paying — a Google Calendar appointment page is enough.
-   *
-   * Empty → the button is not drawn and the coach agrees the time in a message instead, which is
-   * the missing half of «оплатил → выбрал время». The booking screen states that outright rather
-   * than ending on a paid button with nothing after it: pay, then write, and he sets the time.
-   * Filled, the same screen offers the slot page as the step straight after payment and the
-   * «хоть за {leadTimeMin} минут» promise stops depending on him being at his phone.
-   *
-   * **The fallback, not the usual answer.** With Google Calendar each length is its own appointment
-   * schedule with its own link, so those go on the options and this stays empty. Set this one only
-   * for a booking page that asks the visitor to pick the length itself.
-   */
-  scheduleUrl: '' as string,
 } as const;
 
 /**

@@ -1,6 +1,7 @@
 /**
  * «Обращения» and «Записи» in the admin (0045). Every call is re-checked server-side by
- * `is_admin()`; the calendar sync by the function itself, with the caller's own token.
+ * `is_admin()`. Bookings are the app's own (0055); the Google Calendar sync is gone, and its old
+ * rows stay in `coach_bookings` as history.
  *
  * Kept out of `admin.ts` on purpose: the two screens own these calls, and the mappers below are
  * pure so they are tested without a database.
@@ -173,7 +174,7 @@ export interface AdminBooking {
   joinUrl: string | null;
   locationText: string | null;
   cancelReason: string | null;
-  /** Whose calendar (0055); null for a Google row. Filled by a second read, see below. */
+  /** Whose calendar (0055); null for a historical Google row. Filled by a second read, see below. */
   coachId: string | null;
 }
 
@@ -247,66 +248,4 @@ export async function listAdminBookings(scope: BookingScope): Promise<AdminBooki
     );
     return rows.map((r) => ({ ...r, coachId: coaches.get(r.id) ?? null }));
   });
-}
-
-/**
- * What «Синхронизировать сейчас» came back with, as the screen needs to say it.
- *
- *   ok             — the calendar was read; counts from the function's own line.
- *   partial        — read, but some rows failed to write (500 with counts).
- *   not_configured — 503: the Google secrets are not set in Supabase.
- *   not_deployed   — 404: the function is not on the project at all.
- *   forbidden      — 401/403: not an admin (or the session expired).
- *   busy           — 429: it has just been run.
- *   google         — 502: Google refused the credentials or the calendar.
- *   network        — no answer at all.
- */
-export type SyncOutcome =
-  | { kind: 'ok' | 'partial'; booked: number; cancelled: number; failed: number }
-  | { kind: 'not_configured' | 'not_deployed' | 'forbidden' | 'busy' | 'google' | 'network' }
-  | { kind: 'demo' };
-
-const count = (body: string, name: string): number => {
-  const m = new RegExp(`\\b${name}=(\\d+)`).exec(body);
-  return m ? Number(m[1]) : 0;
-};
-
-export function syncOutcome(status: number, body: string): SyncOutcome {
-  const counts = () => ({
-    booked: count(body, 'booked'),
-    // A booking that vanished from the calendar is cancelled too, as far as she is concerned.
-    cancelled: count(body, 'cancelled') + count(body, 'vanished'),
-    failed: count(body, 'failed'),
-  });
-  if (status >= 200 && status < 300) return { kind: 'ok', ...counts() };
-  if (status === 500 && /\bscanned=\d+/.test(body)) return { kind: 'partial', ...counts() };
-  if (status === 503) return { kind: 'not_configured' };
-  if (status === 404) return { kind: 'not_deployed' };
-  if (status === 401 || status === 403) return { kind: 'forbidden' };
-  if (status === 429) return { kind: 'busy' };
-  if (status === 502) return { kind: 'google' };
-  return { kind: 'network' };
-}
-
-interface FunctionsErrorLike {
-  context?: { status?: number; text?: () => Promise<string> };
-}
-
-export async function syncCalendarNow(): Promise<SyncOutcome> {
-  if (isDemo()) return { kind: 'demo' };
-  try {
-    const { data, error } = await supabase().functions.invoke<string>('google-calendar-sync', {
-      method: 'POST',
-      body: {},
-    });
-    if (!error) return syncOutcome(200, typeof data === 'string' ? data : '');
-    const res = (error as FunctionsErrorLike).context;
-    if (res && typeof res.status === 'number') {
-      const body = typeof res.text === 'function' ? await res.text().catch(() => '') : '';
-      return syncOutcome(res.status, body);
-    }
-    return { kind: 'network' };
-  } catch {
-    return { kind: 'network' };
-  }
 }

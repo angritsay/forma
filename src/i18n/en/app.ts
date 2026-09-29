@@ -521,7 +521,6 @@ export const app = {
   bookLengthLabel: 'Session length',
   bookDuration: '{n} min',
   bookPay: 'Pay {price}',
-  bookPickTime: 'Pick a time',
   bookContact: 'Message the coach',
   bookContactHint:
     'Payment isn’t connected yet: write, and you agree on a time and payment directly.',
@@ -1626,14 +1625,6 @@ export const app = {
    * «Сверх 30 минут» kicker, and the third line had nothing left to belong to. Each length prints
    * its own full list now.
    */
-  bookNext: 'Next',
-  bookNextSchedule: 'Pay, then pick a slot on his page. The next one may be {n} minutes away.',
-  bookNextContact:
-    'There is no slot page: pay and message the coach — he sets the time himself, even {n} minutes before the start.',
-  // Her side of the same step (design/CHANGELOG.md §23): her own slot page, and she sets the time.
-  bookNextScheduleHer: 'Pay, then pick a slot on her page. The next one may be {n} minutes away.',
-  bookNextContactHer:
-    'There is no slot page: pay and send a message — she sets the time herself, even {n} minutes before the start.',
   bookPaidNote:
     'The payment page opened in your browser. Once it is paid, the booking confirms itself and shows up here.',
 
@@ -1915,19 +1906,6 @@ export const app = {
   bookingsSourceAdmin: 'Added by hand',
   bookingsSourceOther: 'Other',
   bookingsJoin: 'Join link',
-  bookingsSync: 'Sync now',
-  bookingsSyncHint: 'The calendar is also read by itself every 10 minutes.',
-  bookingsSyncOk: 'Calendar read: {booked} booked, {cancelled} cancelled.',
-  bookingsSyncPartial: 'Calendar read, but {failed} could not be saved. Try again in a minute.',
-  bookingsSyncNotConfigured:
-    'The calendar is not connected: the Google secrets are not set in Supabase (GOOGLE_CALENDAR_ID, GOOGLE_SA_CLIENT_EMAIL, GOOGLE_SA_PRIVATE_KEY). Set them and run Actions → Supabase apply → deploy-calendar.',
-  bookingsSyncNotDeployed:
-    'The sync function is not deployed yet. Run Actions → Supabase apply → deploy-calendar.',
-  bookingsSyncForbidden: 'No access. Sign in again with the admin email.',
-  bookingsSyncBusy: 'It has just been synced — try again in half a minute.',
-  bookingsSyncGoogle: 'Google refused. Check that the calendar is shared with the service account.',
-  bookingsSyncNetwork: 'Could not reach the server. Check the connection.',
-  bookingsSyncDemo: 'There is no calendar in the demo.',
   // --- Club: the week's board, top three and where you are (stream: club-board) ---
   marathonBoardGapOne: '{n} more place',
   marathonBoardGapFew: '{n} more places',
@@ -2022,5 +2000,6 @@ export const app = {
   bookingsCancelConfirm: 'Cancel the booking',
   bookingsCancelledToast: 'Booking cancelled',
   bookingsSourceForma: 'In the app',
-  bookingsExternalHint: 'This booking comes from the calendar — move or cancel it there.',
+  bookingsExternalHint:
+    'This booking was not made in the app. It is kept here as history — agree a move or a cancellation with the client directly.',
 } as const;

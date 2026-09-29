@@ -11,10 +11,11 @@
  *
  * - для карточки: `roles` (три стикера), `name`, `photo`;
  * - для блока под ней, когда её карточка в кадре: `facts` (крупные цифры, как у Сергея), `bio`
- *   (на месте его регалий), `links`, `outcomes` (три пункта «что я могу дать», как его три) и
- *   `scheduleUrl` — её страница записи. Цены и оплата общие («Prices should be the same, the payment links should be the
- *   same»), они в `content/site/booking.ts`; запись у каждого своя («the booking links should be
- *   different»).
+ *   (на месте его регалий), `links` и `outcomes` (три пункта «что я могу дать», как его три). Цены
+ *   и оплата общие («Prices should be the same, the payment links should be the same»), они в
+ *   `content/site/booking.ts`; запись у каждого своя («the booking links should be different») —
+ *   теперь это её собственный календарь в приложении (`coaches`, id `nastia`, 0055) и её ссылка на
+ *   комнату, которые она заполняет в админке, а не страница записи здесь.
  *
  * Всё здесь — её собственные слова из задания владелицы, по-русски и по-английски. Ничего не
  * дописано и не угадано: если какого-то факта здесь нет, его нет и на экране.
@@ -84,12 +85,6 @@ export const NASTIA = {
    * Shown monochrome with grain like his (`.photo-mono`, `.photo-grain`).
    */
   photo: '/coach/nastia.jpg' as string,
-  /**
-   * Her own slot page — where somebody who paid picks a time with *her*. The owner supplies it;
-   * nothing is invented here. Empty → the step after payment says to message and she sets the
-   * time, exactly as Sergey's hour does without a slot page (`scheduleUrlFor`).
-   */
-  scheduleUrl: '' as string,
   facts: [
     { figure: '10+', caption: { ru: 'лет в дизайне', en: 'years in design' } },
     {

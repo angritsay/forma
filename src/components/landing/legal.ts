@@ -80,10 +80,15 @@ const SESSION_RULES: L10n[] = [
 ];
 
 /*
- * The same three rules in the refund policy's own voice. /refund/ speaks to the reader as «ты»,
- * the offer as «Пользователь»; the rules are one decision, so change both lists together.
+ * The same flow and the same three rules in the refund policy's own voice. /refund/ speaks to the
+ * reader as «ты», the offer as «Пользователь»; the rules are one decision, so change both lists
+ * together.
  */
 const SESSION_RULES_YOU: L10n[] = [
+  {
+    ru: `Выбираешь время в Приложении и оплачиваешь; слот держится ${HOLD_MINUTES} минут. Оплата в это время подтверждает запись, а если оплаты нет — время снова свободно.`,
+    en: `You pick a time in the App and pay; the slot is held for ${HOLD_MINUTES} minutes. Paying within that time confirms the booking, and without a payment the time is free again.`,
+  },
   {
     ru: 'Возврата за оплаченное занятие нет. Вместо этого занятие можно перенести — самому в Приложении или написав тренеру или на e-mail ниже, не позднее чем за 24 часа до его начала.',
     en: 'A paid session is not refunded. Instead, you can move it — yourself in the App, or by writing to the coach or to the email below, at least 24 hours before it starts.',

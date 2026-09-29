@@ -13,8 +13,9 @@
  * - **The pair is not a promotion.** +30 days each happens when a friend pays for the club through
  *   a personal link, and the weekly prize is an hour with the coach for each of a winning pair.
  *   Nothing here promises an hour for joining together.
- * - **Coach sessions are not refunded.** A session can be moved when the coach is told at least 24
- *   hours ahead — the same line `SessionTickets` prints under the tickets.
+ * - **Coach sessions are not refunded.** The time is picked in the app and paid for there (the
+ *   slot is held `HOLD_MINUTES`), and the client moves it in the app at least 24 hours ahead — the
+ *   same rule the line under the landing's `SessionTickets` states.
  *
  * A question whose product is switched off (`BOOKING.enabled`, `PLANS_ENABLED`) drops out rather
  * than describing something that cannot be bought.
@@ -22,7 +23,8 @@
 import type { FaqItem, L10n } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { COURSE_START } from '../courses/start';
-import { BOOKING, type BookingOption } from './booking';
+import { HOLD_MINUTES } from '@/lib/coach/slots';
+import { BOOKING } from './booking';
 import { CLUB_PLAN_ID, PLAN_BY_ID, PLANS, PLANS_ENABLED, planMonthlyPrice } from './plans';
 import { formatPrice, PRICING, type CoursePrice } from './pricing';
 
@@ -41,16 +43,6 @@ const thirtyDays = PLANS.find((p) => p.period === 'month' && p.id !== CLUB_PLAN_
 
 const half = BOOKING.options.find((o) => o.id === 'half');
 const hour = BOOKING.options.find((o) => o.id === 'hour');
-
-/** «Оплати и выбери время» when the length has a slot page, else the coach sets the time. */
-function howToBook(o: BookingOption): L10n {
-  return o.scheduleUrl || BOOKING.scheduleUrl
-    ? { ru: 'оплати и выбери время', en: 'pay and pick a time' }
-    : {
-        ru: 'оплати и напиши — время поставит тренер',
-        en: 'pay and send a message — the coach sets the time',
-      };
-}
 
 const courseOrClub: FaqItem[] = clubPlan
   ? [
@@ -100,8 +92,8 @@ const coach: FaqItem[] =
             en: 'Can I train with the coach one-to-one?',
           },
           a: {
-            ru: `Да, онлайн: полчаса — ${formatPrice('ru', half.price)}, час — ${formatPrice('ru', hour.price)}. Полчаса: ${howToBook(half).ru}. Час: ${howToBook(hour).ru}. Возврата нет — занятие можно перенести, если написать не позднее чем за 24 часа.`,
-            en: `Yes, online: half an hour is ${formatPrice('en', half.price)}, an hour ${formatPrice('en', hour.price)}. Half an hour: ${howToBook(half).en}. An hour: ${howToBook(hour).en}. No refunds — a session can be moved if you write at least 24 hours ahead.`,
+            ru: `Да, онлайн: полчаса — ${formatPrice('ru', half.price)}, час — ${formatPrice('ru', hour.price)}. Выбираешь время в приложении и оплачиваешь; слот держится ${HOLD_MINUTES} минут. Возврата нет — занятие можно перенести самому в приложении не позднее чем за 24 часа.`,
+            en: `Yes, online: half an hour is ${formatPrice('en', half.price)}, an hour ${formatPrice('en', hour.price)}. You pick a time in the app and pay; the slot is held for ${HOLD_MINUTES} minutes. No refunds — you can move a session yourself in the app at least 24 hours ahead.`,
           },
         },
       ]

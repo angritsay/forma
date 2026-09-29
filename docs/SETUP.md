@@ -859,7 +859,6 @@ asks for the coach's time — everything else runs without him.
 
 ```ts
 paymentUrl: { ru: 'https://…/pay/session-ru', en: 'https://…/pay/session-en' },
-scheduleUrl: 'https://calendar.app.google/…', // where the client picks a slot after paying
 ```
 
 Same rule as courses in every respect, including the important one: `https://` only, the signed-in
@@ -869,10 +868,10 @@ it opens asks for a sum the customer can type, the link is pointing at an open f
 a product with a locked price, and the two will disagree until the link is fixed on the processor
 (see §7.1).
 
-`scheduleUrl` is the second half of the flow and the screen already has the button for it —
-**Выбрать время**, shown under the payment button only when this is set. Leave it empty and the
-client pays and then waits for the coach to write; a free Google Calendar appointment schedule is
-enough to close that gap.
+The time is picked **in the app, before paying** (§7.16): the client chooses a free slot in the
+coach's own calendar, it is held for 20 minutes, and the payment confirms it. There is no slot page
+to configure here. Prodamus tells the two lengths apart by the amount alone (`SESSION_PRICES`), so
+the two prices must stay different (`content/site/booking.test.ts` checks it).
 
 Until `paymentUrl` is set the screen shows **Message the coach** (Telegram from `links.ts`, else
 mail) instead of a payment button, so the offer is live from day one. Set `enabled: false` to hide
@@ -1169,137 +1168,27 @@ the person bought or was given, which is service, not advertising.
 
 ---
 
-## 7.7 The booked session, on the Тренер screen (Google Calendar)
+## 7.7 The booked session, on the Тренер screen
 
-`coach_bookings` (`0014_coach_bookings.sql`) is the app's copy of the sessions people booked with
-the coach: when it starts, how long until it starts, and where to join. It is filled by ingestion
-running with the service role — **a signed-in person can never write a booking, not even their
-own** — and read through `my_coach_bookings`, which shows each person only their own.
+`coach_bookings` (`0014_coach_bookings.sql`) is the app's record of the sessions people booked
+with a coach: when it starts, how long until it starts, and where to join. **A signed-in person can
+never write a booking directly, not even their own** — every change goes through an RPC that
+checks the rules (§7.16) — and it is read through `my_coach_bookings`, which shows each person only
+their own. Every new booking reaches the owner's channel as «Выбрали время» (§7.11, trigger 0040).
 
-It is filled by `supabase/functions/google-calendar-sync/`, which needs nothing but a Google
-account. (A Calendly webhook used to sit next to it; it needed Calendly **Standard**, was never
-switched on, and has been removed.) Every new booking also reaches the owner's channel as
-«Выбрали время» (§7.11) — the `coach_bookings_notify_admin` trigger of 0040 fires on the sync's
-inserts like on any other.
+Since 0055 bookings are made in the app (§7.16). Until then they were read in from Sergey's Google
+Calendar by a sync function on a ten-minute cron; **that function, its cron and its `GOOGLE_*`
+secrets are gone.** The rows it wrote stay in `coach_bookings` as history (`source =
+'google_calendar'`, no coach): a future one still blocks Sergey's time in the picker, the client
+still sees it on the Тренер tab, and the admin shows it read-only. A move or a cancellation of one
+of those is agreed with the client directly.
 
-### What Google gives and what it does not
-
-- **An appointment schedule is free** on a personal Google account. The catch is that a free
-  account gets **exactly one booking page**; automated reminders to the person who booked,
-  collecting payment, verified bookings and putting the schedule on a secondary calendar are paid
-  Workspace features. One page is enough here — one page can offer more than one duration — but it
-  does mean **bookings land on the coach's own primary calendar**, next to the rest of his life.
-  That is what `GOOGLE_BOOKING_TITLE` below is for.
-- **Google cannot call us when somebody books.** There are no webhooks on an appointment schedule,
-  and Google's push channels need a verified HTTPS domain and renewal every few days. So the sync
-  **polls**, every `POLL_INTERVAL_MINUTES` (10, in `sync.ts`, driven by `calendar-sync.yml`). The
-  cost of that is staleness: a session cancelled just after a poll **can still be shown for up to
-  ten minutes**, and a new booking has the same delay before it appears.
-- **Google has no cancel or reschedule link in its API.** The booker's own links are in the
-  invitation mail Google sends them, and nowhere else. So a booking has no «Отменить» button in
-  the app.
-
-### The coach does this, once
-
-1. **Make the booking page.** Google Calendar → **Создать** → **Расписание встреч**. Give it a
-   title that says what it is and that nothing else on his calendar will ever be called — for
-   example `Персональная тренировка`. Set the length, the hours he is free, and turn on
-   **Google Meet** as the location so every booking gets a join link.
-2. **Copy the link** (open the schedule on the grid → **Копировать ссылку**) and send it to the
-   owner. It goes into `scheduleUrl` in `content/site/booking.ts` (§7.3).
-3. **Share the calendar with the robot.** Once the owner sends him an address ending in
-   `.iam.gserviceaccount.com`: Google Calendar → settings of **his own** calendar → **Доступ для
-   отдельных пользователей и групп** → **Добавить пользователей** → paste that address →
-   permission **«Просмотр всех сведений о мероприятии»** → **Отправить**. It is the only
-   permission the sync needs; it cannot change or delete anything.
-
-   The robot now reads that whole calendar, so if there is anything on it he would rather the sync
-   never looked at, the answer is a title filter (`GOOGLE_BOOKING_TITLE`, step 5 below), not a different permission.
-
-### The owner does this, once
-
-4. **Make the robot.** [console.cloud.google.com](https://console.cloud.google.com) → create a
-   project → **APIs & Services → Library** → **Google Calendar API** → **Enable**. Then
-   **IAM & Admin → Service Accounts → Create service account** → any name → **Done**. Open it →
-   **Keys → Add key → Create new key → JSON**. A file downloads. It holds the private key, it is
-   the only copy, and it must never be mailed, pasted into a chat, or committed — this repository
-   is public.
-
-   Send the coach the service account's address (`…@….iam.gserviceaccount.com`) so he can do
-   step 3. That address is not a secret.
-
-5. **Put five secrets into GitHub.** Repository → **Settings → Secrets and variables → Actions →
-   New repository secret**, once per name. Type each value in yourself; nobody else needs to see
-   them, and none of them is ever printed in a run log.
-
-   | Secret name            | Required | What to paste                                                                                                                 |
-   | ---------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
-   | `GOOGLE_SA_JSON`       | yes      | The **whole** JSON key file from step 4, from the first `{` to the last `}`. Open it in any text editor, select all, copy.    |
-   | `GOOGLE_CALENDAR_ID`   | yes      | The calendar to read — the coach's own Gmail address (the one whose calendar he shared in step 3).                            |
-   | `GOOGLE_SYNC_TOKEN`    | yes      | Any long random string: `openssl rand -hex 32`, or 40+ letters and digits typed at random. It is the lock on the function.    |
-   | `GOOGLE_BOOKING_TITLE` | strongly | The appointment schedule's title from step 1, exactly, e.g. `Персональная тренировка`. Only events with it count as bookings. |
-   | `GOOGLE_COACH_EMAILS`  | no       | Other addresses that are the coach, comma-separated, so they are never mistaken for a client.                                 |
-
-   **Set `GOOGLE_BOOKING_TITLE`.** Without it, any event on that calendar with exactly one outside
-   guest is read as a booking, and the coach's lunch with a friend becomes a session in somebody's
-   app — and a message in the «Онлайн-тренировки» topic.
-
-   Instead of `GOOGLE_SA_JSON` the two halves can be given separately as `GOOGLE_SA_CLIENT_EMAIL`
-   and `GOOGLE_SA_PRIVATE_KEY` (`client_email` and `private_key` out of the file). The whole file is
-   easier to paste from a phone, and the job takes it apart itself.
-
-   The key file is the only copy of the robot's password. Once it is in the secret, delete the
-   downloaded file. If it is ever pasted somewhere it should not be, delete that key in the Cloud
-   console (service account → **Keys**), create a new one and replace the secret: the old one stops
-   working immediately.
-
-6. **Run Actions → Supabase apply → `deploy-calendar`.** It deploys `google-calendar-sync` with JWT
-   verification off (a schedule has no signed-in person; the token is the lock), copies the
-   secrets that are set in GitHub into Supabase — an empty one never overwrites a value typed in
-   the dashboard — lists which names the project has, and then runs **one real sync** so the
-   answer is on the run page right away:
-
-   | What the run says                         | What it means                                                                                 |
-   | ----------------------------------------- | --------------------------------------------------------------------------------------------- |
-   | `Первый опрос прошёл: scanned=… booked=…` | It works. `booked` is how many bookings it found in the next 60 days.                         |
-   | `502 — Google не пустил`                  | Wrong key file, or the calendar is not shared with the robot yet (step 3), or wrong calendar. |
-   | `503 — функции не хватает секретов`       | A warning above names the missing secret.                                                     |
-   | `booked=0 ignored=12`                     | Nothing matched: the schedule's title and `GOOGLE_BOOKING_TITLE` disagree.                    |
-
-   The first sync also sends one «Выбрали время» message per future booking it finds into the
-   owner's channel — the channel has never heard of them. After that, only new ones.
-
-7. **Nothing else to schedule.** `.github/workflows/calendar-sync.yml` wakes the function every ten
-   minutes (pg_cron is not enabled in this project; this is the same arrangement as
-   `telegram-notify.yml`). Each run prints one line of counters and nothing else — never an
-   address, never an event title. Until `GOOGLE_SYNC_TOKEN` exists the schedule only leaves a note
-   and exits green, so a red cross in Actions always means something real: `403` — the token in
-   GitHub and in Supabase differ (run `deploy-calendar` again); `502` — Google stopped letting the
-   robot in, usually because the calendar was un-shared.
-
-8. **Book a test slot** from the coach's link with an address you can sign in with, wait up to ten
-   minutes (or run **Actions → Sync the coach's Google Calendar → Run workflow**), and open the
-   Тренер tab signed in with that address: the session is at the top, with its join link. The
-   owner's channel gets «Выбрали время» in «Онлайн-тренировки» at the same time. Nothing in the
-   logs says who booked, by design; to find one booking, look it up by its `external_id`
-   (`gcal:<event id>`).
-
-9. **From the phone: Админка → Записи** (0045) lists the sessions — upcoming, past, cancelled — in
-   Moscow time, and «Синхронизировать сейчас» runs the same function at once. The button sends the
-   admin's own sign-in instead of `GOOGLE_SYNC_TOKEN`; the function lets it in only when PostgREST,
-   asked with that token, says `is_admin()` (`google-calendar-sync/door.ts`), and waits half a
-   minute between two such runs. When the Google secrets are missing the screen says so and names
-   them (the function's `503`); when the function is not deployed at all, it says to run
-   `deploy-calendar`. Needs `deploy-calendar` once after 0045 for the new door.
-
-### If the coach ever cancels by deleting the event
-
-Both ways are handled. A cancelled event comes back from Google with `status: 'cancelled'` and is
-marked cancelled here. An event that has been deleted long enough to disappear from the calendar
-entirely is caught by the second rule: after a poll that read the whole window successfully,
-anything the app still holds as active inside that window and did not see is cancelled too. The
-row is never deleted — the person needs to see that the session is gone, and the coach needs the
-history.
+After the first real booking through the app is confirmed, delete the old secrets: in GitHub
+(`GOOGLE_SA_JSON`, `GOOGLE_CALENDAR_ID`, `GOOGLE_SYNC_TOKEN`, `GOOGLE_BOOKING_TITLE`,
+`GOOGLE_COACH_EMAILS`, and `GOOGLE_SA_CLIENT_EMAIL` / `GOOGLE_SA_PRIVATE_KEY` if set) and in
+Supabase → Edge Functions → Secrets, then delete the `google-calendar-sync` function in Supabase →
+Edge Functions. The service account in Google Cloud can be deleted too, and the coach can stop
+sharing his calendar with it.
 
 ---
 
@@ -1320,7 +1209,6 @@ apply → Run workflow**, pick a task:
 | `deploy-notify`                        | Deploys `telegram-notify`, copies `NOTIFY_TOKEN` and the owner's-channel secrets (§7.11).    |
 | `deploy-payments`                      | Deploys `prodamus-webhook`, checks its two secrets and probes the live address (§7.4).       |
 | `deploy-lava`                          | Deploys `lava-webhook`, copies its three secrets, fails if any is missing, probes (§7.9).    |
-| `deploy-calendar`                      | Deploys `google-calendar-sync`, copies its secrets and runs the first sync (§7.7).           |
 | `secrets-check`                        | Read-only: which function secrets Supabase has, which are missing, which override the repo.  |
 | `webhook-info`                         | Read-only: what Telegram itself believes about the bot's webhook, and why delivery failed.   |
 | `payments-check`                       | Read-only: how many payment notifications have arrived and whether the last one applied.     |
@@ -1361,9 +1249,8 @@ which are shared. `secrets-check` warns about every one it finds. To go back to 
 text, delete the secret in Supabase → Project Settings → Edge Functions → Secrets.
 
 `secrets-check` also lists every secret the functions read — the required ones as warnings when
-missing (`NOTIFY_TOKEN`, `LAVA_WEBHOOK_SECRET`, `LAVA_PRODUCTS`, `GOOGLE_*` included), the optional
-ones (`TELEGRAM_ADMIN_*`, the price overrides, `GOOGLE_BOOKING_TITLE`, `GOOGLE_COACH_EMAILS`) as a
-plain line.
+missing (`NOTIFY_TOKEN`, `LAVA_WEBHOOK_SECRET`, `LAVA_PRODUCTS` included), the optional ones
+(`TELEGRAM_ADMIN_*`, the price overrides) as a plain line.
 
 **The Supabase CLI version is pinned** in the workflow (`SUPABASE_CLI_VERSION` at the top of
 `supabase-apply.yml`). It used to download `releases/latest`, so two deploys a day apart could run
@@ -1868,7 +1755,7 @@ back. Then each coach's room link and availability are entered in the admin. Unt
 screen ships (B2), nothing creates holds, so the payment links keep working as before: a session
 paid with no hold arrives in the channel as «Оплата занятия без брони».
 
-Google rows (`google-calendar-sync`) stay valid and still block Sergey's time while the sync runs.
+Google rows from before the cutover stay valid as history and still block Sergey's time (§7.7).
 
 ## 7.10 What is still only in Russian
 

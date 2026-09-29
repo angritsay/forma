@@ -981,8 +981,8 @@ function OutcomeList({
  *    the person booked *in* — Calendly records it — and it is only the fallback for a browser that
  *    will not name its own. Somebody who booked from a laptop abroad and opens the Mini App at home
  *    wants their kitchen clock, not the one in the hotel.
- * 2. **The join link is often absent.** A Google Calendar booking carries no cancel or reschedule
- *    URL at all (supabase/functions/google-calendar-sync/sync.ts never sets one), and a session with
+ * 2. **The join link is often absent.** A historical Google Calendar booking (read in by a sync
+ *    that is gone since the cutover) carries no cancel or reschedule URL at all, and a session with
  *    a physical location carries an address instead of a link. Every control here is drawn from the
  *    field that would make it work, so a missing field removes the control rather than disabling it.
  * 3. **Nothing is booked, for almost everybody**, and that is not an empty state to design — the

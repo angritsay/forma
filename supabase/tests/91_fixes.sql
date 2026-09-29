@@ -235,7 +235,7 @@ begin
   assert v_rows = 1, 'только живая строка адресата с телеграмом, получили ' || v_rows;
   assert v_tg = 43043043, 'вместе с id чата';
 
-  -- Брони сервисной роли видны (google-calendar-sync).
+  -- Брони сервисной роли видны (вебхуки оплат, 0055; раньше — синк Google Календаря).
   perform count(*) from public.coach_bookings;
 end $$;
 reset role;

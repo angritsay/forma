@@ -1,63 +1,43 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { BOOKING } from './booking';
 
 /**
- * Guards on the slot links, because the failure they prevent is silent and lands after payment.
+ * Guards on the two lengths, because the failures they prevent are silent and land after payment.
  *
- * Nothing here is about the code — `scheduleUrl` is a string the owner pastes in from Google
- * Calendar, and the two ways that paste goes wrong both produce a screen that looks completely
- * fine. A client picks «60 мин», pays 3 500 ₽, taps «Выбрать время», and is shown a page offering
- * thirty minutes. Nobody finds out until the session starts.
+ * Since the cutover the time is picked in the app and the payment confirms the held slot (0055).
+ * Prodamus tells the lengths apart by the amount paid alone (`SESSION_PRICES` in
+ * `prodamus-webhook`), so two lengths at one price would confirm whichever hold the webhook
+ * guessed, and a price changed here but not there would leave every payment unclaimed.
  */
-/** The rule, as a function, so it can be shown to catch something before it is aimed at real data. */
-function duplicateSlotLinks(urls: readonly (string | undefined)[]): boolean {
-  const set = urls.filter((u): u is string => Boolean(u));
-  return new Set(set).size !== set.length;
-}
-
-describe('BOOKING slot links', () => {
-  /*
-   * Both `scheduleUrl` fields are empty today, so every assertion below passes over an empty list
-   * and proves nothing about the rule. This one aims it at a fixture instead: the guard is only
-   * worth having if it fires on the paste it exists to catch, and it will sit here unexercised
-   * until the owner fills the links in.
-   */
-  it('the duplicate rule fires on the paste it exists to catch', () => {
-    const same = 'https://calendar.app.google/abc';
-    expect(duplicateSlotLinks([same, same])).toBe(true);
-    expect(duplicateSlotLinks([same, 'https://calendar.app.google/xyz'])).toBe(false);
-    // Two empty fields are the state of the file today, and are not a duplicate.
-    expect(duplicateSlotLinks([undefined, undefined])).toBe(false);
+describe('BOOKING options', () => {
+  it('prices every length differently in roubles', () => {
+    const rub = BOOKING.options.map((o) => o.price.rub);
+    expect(new Set(rub).size).toBe(rub.length);
   });
 
-  it('never gives two lengths the same slot page', () => {
-    /*
-     * A Google Calendar appointment schedule carries ONE duration, fixed on the schedule. So the
-     * half-hour and the hour are two schedules with two links, and the same link on both means one
-     * of them is wrong — the commonest way to paste this in, and invisible on screen.
-     *
-     * This does not fire on the shared `BOOKING.scheduleUrl`: a single page that asks the visitor
-     * to choose a length is a different, valid arrangement, and it lives in that field.
-     */
-    expect(duplicateSlotLinks(BOOKING.options.map((o) => o.scheduleUrl))).toBe(false);
-  });
-
-  it('only ever holds absolute https links', () => {
-    // `paymentTarget` drops anything else, so a wrong-shaped link does not throw — the button
-    // simply stops being drawn, and the screen quietly falls back to «напиши тренеру».
-    const all = [...BOOKING.options.map((o) => o.scheduleUrl), BOOKING.scheduleUrl];
-    for (const url of all) {
-      if (!url) continue;
-      expect(url, url).toMatch(/^https:\/\//);
+  it('matches the default amounts the Prodamus webhook routes by', () => {
+    const src = readFileSync(
+      fileURLToPath(new URL('../../supabase/functions/prodamus-webhook/index.ts', import.meta.url)),
+      'utf8',
+    );
+    for (const o of BOOKING.options) {
+      const m = new RegExp(
+        `\\b${o.id}: Number\\(Deno\\.env\\.get\\('\\w+'\\) \\?\\? '(\\d+)'\\)`,
+      ).exec(src);
+      expect(m?.[1], o.id).toBe(String(o.price.rub));
     }
   });
 
-  it('keeps a payment link and a slot link apart on the same option', () => {
-    // They are different steps — pay, then choose a time — and pasting the payform link into both
-    // would send somebody who has already paid back to the payment page.
+  it('only ever holds absolute https payment links', () => {
+    // `paymentTarget` drops anything else, so a wrong-shaped link does not throw — the button
+    // simply stops being drawn.
     for (const o of BOOKING.options) {
-      if (!o.scheduleUrl) continue;
-      expect(Object.values(o.paymentUrl)).not.toContain(o.scheduleUrl);
+      for (const url of Object.values(o.paymentUrl)) {
+        if (!url) continue;
+        expect(url, url).toMatch(/^https:\/\//);
+      }
     }
   });
 });
