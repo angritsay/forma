@@ -45,7 +45,13 @@ export type NotifyKind =
   | 'duo_nudge'
   | 'club_task'
   | 'club_reminder'
-  | 'club_recap';
+  | 'club_recap'
+  | 'subscription_ending'
+  | 'club_trial_tomorrow'
+  | 'session_confirmed'
+  | 'session_reminder'
+  | 'session_moved'
+  | 'session_cancelled';
 
 /** Языки, на которых выходит продукт — `LOCALES` в src/content/schema.ts. */
 export type Locale = 'ru' | 'en';
@@ -134,10 +140,39 @@ interface Copy {
   clubRecapWeek: string;
   clubRecapPlace: string;
   clubRecapStreak: string;
-  /** Формы слов при числе: балл / день / задание. */
+  /**
+   * The club ends in three days (0054): `{date}` is the last day, «2 октября». No auto-renewal
+   * exists, so the second line says renewal is by hand — the one thing the person must do.
+   */
+  subscriptionEnding: string;
+  subscriptionEndingDo: string;
+  /** The free club week after a course ends tomorrow (0054). */
+  trialTomorrow: string;
+  trialTomorrowDo: string;
+  /** Coach sessions (0054; queued by the booking core, 0055). */
+  sessionConfirmed: string;
+  sessionReminderDay: string;
+  sessionReminderHour: string;
+  sessionReminderSoon: string;
+  sessionMoved: string;
+  sessionMovedFrom: string;
+  sessionCancelled: string;
+  sessionCancelledDo: string;
+  /** Moving is self-service only 24 h ahead; later, the person writes to the coach. */
+  sessionMoveRule: string;
+  /** Link text for the coach's room; the URL itself is never printed. */
+  sessionJoin: string;
+  /** Who, when the queue did not name the coach. */
+  sessionCoachFallback: string;
+  /** `{date}, {time}` then the zone: «2 октября, 14:30 МСК». */
+  sessionWhen: string;
+  /** The zone label for Moscow; any other zone is printed as its IANA name. */
+  moscowTime: string;
+  /** Формы слов при числе: балл / день / задание / минута. */
   points: Plural;
   days: Plural;
   tasks: Plural;
+  minutes: Plural;
 }
 
 /** Формы одного слова при числе. `few` — у русского (2–4); английскому хватает двух. */
@@ -190,10 +225,30 @@ const COPY: Record<Locale, Copy> = {
     clubRecapWeek: 'Неделя {week}: ',
     clubRecapPlace: ', место {place}',
     clubRecapStreak: 'Серия {streak} 🔥. ',
+    subscriptionEnding: 'Клуб открыт до {date}',
+    subscriptionEndingDo:
+      'Автопродления нет: чтобы остаться в клубе, оплати следующий месяц в приложении.',
+    trialTomorrow: 'Завтра заканчивается пробная неделя клуба',
+    trialTomorrowDo: 'Чтобы остаться в клубе, оформи подписку в приложении.',
+    sessionConfirmed: 'Встреча с тренером подтверждена',
+    sessionReminderDay: 'Завтра встреча с тренером',
+    sessionReminderHour: 'Через час встреча с тренером',
+    sessionReminderSoon: 'Скоро встреча с тренером',
+    sessionMoved: 'Встреча перенесена',
+    sessionMovedFrom: 'Было: {when}',
+    sessionCancelled: 'Встреча отменена',
+    sessionCancelledDo: 'Чтобы выбрать другое время, напиши тренеру.',
+    sessionMoveRule:
+      'Перенести время можно в приложении не позже чем за 24 часа. Позже — напиши тренеру.',
+    sessionJoin: 'Ссылка на созвон',
+    sessionCoachFallback: 'Тренер',
+    sessionWhen: '{date}, {time} {zone}',
+    moscowTime: 'МСК',
     points: { one: 'балл', few: 'балла', many: 'баллов' },
     days: { one: 'день', few: 'дня', many: 'дней' },
     // Родительный после «из»: «из 1 задания», «из 5 заданий».
     tasks: { one: 'задания', few: 'заданий', many: 'заданий' },
+    minutes: { one: 'минута', few: 'минуты', many: 'минут' },
   },
   en: {
     afterPayment:
@@ -224,9 +279,29 @@ const COPY: Record<Locale, Copy> = {
     clubRecapWeek: 'Week {week}: ',
     clubRecapPlace: ', place {place}',
     clubRecapStreak: 'Streak {streak} 🔥. ',
+    subscriptionEnding: 'The club is open until {date}',
+    subscriptionEndingDo:
+      'There is no auto-renewal: to stay in the club, pay for the next month in the app.',
+    trialTomorrow: 'Your free week in the club ends tomorrow',
+    trialTomorrowDo: 'To stay in the club, subscribe in the app.',
+    sessionConfirmed: 'Your session with the coach is confirmed',
+    sessionReminderDay: 'Your session with the coach is tomorrow',
+    sessionReminderHour: 'Your session with the coach is in an hour',
+    sessionReminderSoon: 'Your session with the coach is coming up',
+    sessionMoved: 'Your session has been moved',
+    sessionMovedFrom: 'Was: {when}',
+    sessionCancelled: 'Your session has been cancelled',
+    sessionCancelledDo: 'To pick another time, write to the coach.',
+    sessionMoveRule:
+      'You can move it in the app up to 24 hours ahead. Later than that, write to the coach.',
+    sessionJoin: 'Call link',
+    sessionCoachFallback: 'Coach',
+    sessionWhen: '{date}, {time} {zone}',
+    moscowTime: 'Moscow time',
     points: { one: 'point', many: 'points' },
     days: { one: 'day', many: 'days' },
     tasks: { one: 'task', many: 'tasks' },
+    minutes: { one: 'minute', many: 'minutes' },
   },
 };
 
@@ -349,6 +424,28 @@ export function messageFor(row: OutboxRow, locale: Locale = DEFAULT_LOCALE): Mes
     case 'club_recap':
       return clubRecapMessage(params, c, locale);
 
+    /*
+     * Access running out (0054). The date is the one thing that changes; without it there is
+     * nothing to say that the app does not already show, so no message.
+     */
+    case 'subscription_ending': {
+      const date = dayOf(params.expires_at, locale);
+      if (!date) return null;
+      return {
+        text: `<b>${c.subscriptionEnding.replace('{date}', date)}</b>\n\n${c.subscriptionEndingDo}`,
+        buttonText: c.openApp,
+      };
+    }
+
+    case 'club_trial_tomorrow':
+      return { text: `<b>${c.trialTomorrow}</b>\n\n${c.trialTomorrowDo}`, buttonText: c.openApp };
+
+    case 'session_confirmed':
+    case 'session_reminder':
+    case 'session_moved':
+    case 'session_cancelled':
+      return sessionMessage(row.kind, params, c, locale);
+
     default:
       return null;
   }
@@ -462,4 +559,151 @@ function clubReminderPointsLine(params: Record<string, unknown>, c: Copy): strin
   if (!due || !/^[A-Za-z_]+(\/[A-Za-z0-9_+-]+)+$/.test(tz)) return '';
   const zone = tz === 'Europe/Moscow' ? c.clubZoneMoscow : `(${escapeHtml(tz)})`;
   return c.clubReminderPoints.replace('{time}', `${due[1]}:${due[2]}`).replace('{zone}', zone);
+}
+
+/** The zone the product runs on: the club rounds' and the coaches' default. */
+const DEFAULT_TIME_ZONE = 'Europe/Moscow';
+
+/** The IANA zone from the queue if the runtime knows it, else Moscow. */
+function zoneOf(x: unknown): string {
+  const tz = typeof x === 'string' ? x.trim() : '';
+  if (!tz) return DEFAULT_TIME_ZONE;
+  try {
+    new Intl.DateTimeFormat('en-GB', { timeZone: tz });
+    return tz;
+  } catch {
+    return DEFAULT_TIME_ZONE;
+  }
+}
+
+/** A timestamp from the queue, or `null` when it is missing or unreadable. */
+function instant(x: unknown): Date | null {
+  if (typeof x !== 'string' || !x.trim()) return null;
+  const d = new Date(x);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/**
+ * «2 октября» / «2 October», on the calendar of `tz`.
+ *
+ * `en-GB` rather than `en-US`: day before month reads the same way as the Russian half. No year —
+ * every date here is days away.
+ */
+function dayOf(x: unknown, locale: Locale, tz: string = DEFAULT_TIME_ZONE): string {
+  const d = instant(x);
+  if (!d) return '';
+  return new Intl.DateTimeFormat(locale === 'ru' ? 'ru-RU' : 'en-GB', {
+    day: 'numeric',
+    month: 'long',
+    timeZone: tz,
+  }).format(d);
+}
+
+/**
+ * «2 октября, 14:30 МСК» — the date, a 24-hour time and the zone.
+ *
+ * Built from parts rather than one `Intl` call with both date and time: how ICU joins the two
+ * («2 октября в 14:30», «2 октября, 14:30») differs between Node and Deno releases, and the test
+ * would pass on one and the message change on the other.
+ */
+function whenOf(x: unknown, tz: string, c: Copy, locale: Locale): string {
+  const d = instant(x);
+  if (!d) return '';
+  const time = new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    timeZone: tz,
+  }).format(d);
+  return c.sessionWhen
+    .replace('{date}', dayOf(x, locale, tz))
+    .replace('{time}', time)
+    .replace('{zone}', tz === DEFAULT_TIME_ZONE ? c.moscowTime : tz);
+}
+
+/** The coach's room link, only when it is an https URL; `"` is escaped for the attribute. */
+function joinLink(x: unknown, c: Copy): string {
+  if (typeof x !== 'string') return '';
+  let url: URL;
+  try {
+    url = new URL(x.trim());
+  } catch {
+    return '';
+  }
+  if (url.protocol !== 'https:') return '';
+  const href = escapeHtml(url.href).replace(/"/g, '&quot;');
+  return `<a href="${href}">${c.sessionJoin}</a>`;
+}
+
+/**
+ * A coach session (0054; the rows are queued by the booking core, 0055).
+ *
+ * Params, as the booking core writes them:
+ *   * `starts_at` — ISO timestamp of the start. Required: a session message without a time says
+ *     nothing, so it is `null`.
+ *   * `minutes` — 30 or 60; `tz` — the coach's IANA zone, Moscow by default.
+ *   * `coach` / `coach_en` — the coach's name in each language; the Russian one is the fallback.
+ *   * `join_url` — the coach's fixed room link (https only); omitted for a cancelled session.
+ *   * `from_starts_at` — `session_moved` only: the old time.
+ *   * `hours_before` — `session_reminder` only: 24 or 1, which picks the headline.
+ *
+ * Layout: a bold headline, then «Сергей · 30 минут · 2 октября, 14:30 МСК», then the link and,
+ * for a confirmation or a move, the 24-hour rule. The coach's name is a person's own words and is
+ * escaped like any other.
+ */
+function sessionMessage(
+  kind: string,
+  params: Record<string, unknown>,
+  c: Copy,
+  locale: Locale,
+): Message | null {
+  const tz = zoneOf(params.tz);
+  const when = whenOf(params.starts_at, tz, c, locale);
+  if (!when) return null;
+
+  const ru = typeof params.coach === 'string' ? params.coach.trim() : '';
+  const en = typeof params.coach_en === 'string' ? params.coach_en.trim() : '';
+  const coach =
+    escapeHtml((locale === 'en' && en ? en : ru).slice(0, 60)) || c.sessionCoachFallback;
+  const minutes = count(params.minutes);
+  const length = minutes && minutes > 0 ? `${minutes} ${plural(locale, minutes, c.minutes)}` : '';
+  const details = [coach, length, when].filter(Boolean).join(' · ');
+  const link = kind === 'session_cancelled' ? '' : joinLink(params.join_url, c);
+
+  let title: string;
+  const lines: string[] = [];
+  switch (kind) {
+    case 'session_confirmed':
+      title = c.sessionConfirmed;
+      lines.push(details);
+      if (link) lines.push(link);
+      lines.push(c.sessionMoveRule);
+      break;
+    case 'session_reminder': {
+      const hours = count(params.hours_before);
+      title =
+        hours === 24
+          ? c.sessionReminderDay
+          : hours === 1
+            ? c.sessionReminderHour
+            : c.sessionReminderSoon;
+      lines.push(details);
+      if (link) lines.push(link);
+      break;
+    }
+    case 'session_moved': {
+      title = c.sessionMoved;
+      lines.push(details);
+      const from = whenOf(params.from_starts_at, tz, c, locale);
+      if (from) lines.push(c.sessionMovedFrom.replace('{when}', from));
+      if (link) lines.push(link);
+      lines.push(c.sessionMoveRule);
+      break;
+    }
+    default:
+      title = c.sessionCancelled;
+      lines.push(details);
+      lines.push(c.sessionCancelledDo);
+  }
+  return { text: [`<b>${title}</b>`, ...lines].join('\n\n'), buttonText: c.openApp };
 }

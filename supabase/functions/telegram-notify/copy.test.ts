@@ -90,7 +90,7 @@ describe('messageFor', () => {
    * всю рассылку нельзя, поэтому null, а не исключение.
    */
   it('answers null for a kind it does not know', () => {
-    expect(messageFor({ kind: 'club_trial_tomorrow', params: {} })).toBeNull();
+    expect(messageFor({ kind: 'club_breakfast', params: {} })).toBeNull();
     expect(messageFor({ kind: '', params: {} })).toBeNull();
   });
 
@@ -105,6 +105,12 @@ describe('messageFor', () => {
       'club_task',
       'club_reminder',
       'club_recap',
+      'subscription_ending',
+      'club_trial_tomorrow',
+      'session_confirmed',
+      'session_reminder',
+      'session_moved',
+      'session_cancelled',
     ]) {
       for (const locale of ['ru', 'en'] as const) {
         const m = messageFor(
@@ -119,6 +125,12 @@ describe('messageFor', () => {
               streak: 999999,
               points: 999999,
               week: 999999,
+              coach: 'х'.repeat(500),
+              minutes: 999999,
+              starts_at: '2026-10-02T11:30:00Z',
+              from_starts_at: '2026-10-01T11:30:00Z',
+              expires_at: '2026-10-02T11:30:00Z',
+              join_url: `https://example.com/${'x'.repeat(500)}`,
             },
           },
           locale,
@@ -185,6 +197,12 @@ describe('the language of the person being written to', () => {
     'club_task',
     'club_reminder',
     'club_recap',
+    'subscription_ending',
+    'club_trial_tomorrow',
+    'session_confirmed',
+    'session_reminder',
+    'session_moved',
+    'session_cancelled',
   ];
 
   it('writes English to someone who chose English', () => {
@@ -198,7 +216,20 @@ describe('the language of the person being written to', () => {
   it('translates every kind, leaving no Russian behind', () => {
     for (const kind of KINDS) {
       const m = messageFor(
-        { kind, params: { title: 'Morning legs', prize: 'An hour', streak: 3, week: 2 } },
+        {
+          kind,
+          params: {
+            title: 'Morning legs',
+            prize: 'An hour',
+            streak: 3,
+            week: 2,
+            expires_at: '2026-10-02T11:30:00Z',
+            starts_at: '2026-10-02T11:30:00Z',
+            coach: 'Сергей',
+            coach_en: 'Sergey',
+            minutes: 30,
+          },
+        },
         'en',
       );
       expect(m).not.toBeNull();
@@ -423,6 +454,149 @@ describe('the club’s daily touches (0052)', () => {
   it('still says something when the numbers are missing', () => {
     const m = messageFor({ kind: 'club_recap', params: {} });
     expect(m?.text).toBe('<b>0 баллов, 0 из 0 заданий. Новая неделя — в понедельник.</b>');
+  });
+});
+
+describe('access running out (0054)', () => {
+  it('names the last day of the club and says renewal is by hand', () => {
+    // 21:30 UTC is already the 3rd in Moscow: the date is the Moscow calendar's.
+    const m = messageFor({
+      kind: 'subscription_ending',
+      params: { expires_at: '2026-10-02T21:30:00Z' },
+    });
+    expect(m?.text).toBe(
+      '<b>Клуб открыт до 3 октября</b>\n\n' +
+        'Автопродления нет: чтобы остаться в клубе, оплати следующий месяц в приложении.',
+    );
+    expect(m?.buttonText).toBe('Открыть приложение');
+    const en = messageFor(
+      { kind: 'subscription_ending', params: { expires_at: '2026-10-02T21:30:00Z' } },
+      'en',
+    );
+    expect(en?.text).toContain('<b>The club is open until 3 October</b>');
+    expect(en?.text).toContain('no auto-renewal');
+  });
+
+  it('sends nothing without a readable date', () => {
+    for (const expires_at of [undefined, '', 'soon', 42]) {
+      expect(messageFor({ kind: 'subscription_ending', params: { expires_at } })).toBeNull();
+    }
+  });
+
+  it('warns about the last day of the free week', () => {
+    const m = messageFor({
+      kind: 'club_trial_tomorrow',
+      params: { ends_at: '2026-10-02T09:00:00Z' },
+    });
+    expect(m?.text).toBe(
+      '<b>Завтра заканчивается пробная неделя клуба</b>\n\n' +
+        'Чтобы остаться в клубе, оформи подписку в приложении.',
+    );
+    expect(messageFor({ kind: 'club_trial_tomorrow', params: null }, 'en')?.text).toContain(
+      'Your free week in the club ends tomorrow',
+    );
+  });
+});
+
+describe('coach sessions (0054)', () => {
+  const base = {
+    starts_at: '2026-10-02T11:30:00Z',
+    minutes: 30,
+    coach: 'Сергей',
+    coach_en: 'Sergey',
+    tz: 'Europe/Moscow',
+    join_url: 'https://telemost.yandex.ru/j/123?a=1&b=2',
+  };
+
+  it('confirms with who, how long, when in Moscow time, the link and the 24-hour rule', () => {
+    const m = messageFor({ kind: 'session_confirmed', params: base });
+    expect(m?.text).toBe(
+      [
+        '<b>Встреча с тренером подтверждена</b>',
+        'Сергей · 30 минут · 2 октября, 14:30 МСК',
+        '<a href="https://telemost.yandex.ru/j/123?a=1&amp;b=2">Ссылка на созвон</a>',
+        'Перенести время можно в приложении не позже чем за 24 часа. Позже — напиши тренеру.',
+      ].join('\n\n'),
+    );
+    expect(m?.buttonText).toBe('Открыть приложение');
+  });
+
+  it('says the same in English, with the coach’s English name', () => {
+    const m = messageFor({ kind: 'session_confirmed', params: { ...base, minutes: 60 } }, 'en');
+    expect(m?.text).toContain('<b>Your session with the coach is confirmed</b>');
+    expect(m?.text).toContain('Sergey · 60 minutes · 2 October, 14:30 Moscow time');
+    expect(m?.text).toContain('up to 24 hours ahead');
+  });
+
+  it('picks the reminder headline by how far ahead it is', () => {
+    const day = messageFor({ kind: 'session_reminder', params: { ...base, hours_before: 24 } });
+    expect(day?.text).toContain('<b>Завтра встреча с тренером</b>');
+    const hour = messageFor({ kind: 'session_reminder', params: { ...base, hours_before: 1 } });
+    expect(hour?.text).toContain('<b>Через час встреча с тренером</b>');
+    expect(hour?.text).toContain('Ссылка на созвон');
+    expect(hour?.text).not.toContain('24 часа');
+    const other = messageFor({ kind: 'session_reminder', params: base }, 'en');
+    expect(other?.text).toContain('<b>Your session with the coach is coming up</b>');
+  });
+
+  it('names the new time and the old one when a session moves', () => {
+    const m = messageFor({
+      kind: 'session_moved',
+      params: { ...base, from_starts_at: '2026-10-01T15:00:00Z' },
+    });
+    expect(m?.text).toContain('<b>Встреча перенесена</b>');
+    expect(m?.text).toContain('2 октября, 14:30 МСК');
+    expect(m?.text).toContain('Было: 1 октября, 18:00 МСК');
+  });
+
+  it('cancels without a link and points to the coach', () => {
+    const m = messageFor({ kind: 'session_cancelled', params: base });
+    expect(m?.text).toContain('<b>Встреча отменена</b>');
+    expect(m?.text).not.toContain('<a ');
+    expect(m?.text).toContain('напиши тренеру');
+  });
+
+  it('prints another zone by name', () => {
+    const m = messageFor({ kind: 'session_confirmed', params: { ...base, tz: 'Asia/Dubai' } });
+    expect(m?.text).toContain('2 октября, 15:30 Asia/Dubai');
+    const bad = messageFor({ kind: 'session_confirmed', params: { ...base, tz: 'Mars/Base' } });
+    expect(bad?.text).toContain('14:30 МСК');
+  });
+
+  it('escapes the coach’s name and drops a link that is not https', () => {
+    const m = messageFor({
+      kind: 'session_confirmed',
+      params: { ...base, coach: '<b>С</b>', join_url: 'javascript:alert(1)' },
+    });
+    expect(m?.text).toContain('&lt;b&gt;С&lt;/b&gt;');
+    expect(m?.text).not.toContain('<a ');
+    const http = messageFor({
+      kind: 'session_confirmed',
+      params: { ...base, join_url: 'http://example.com/"x' },
+    });
+    expect(http?.text).not.toContain('<a ');
+    const quote = messageFor({
+      kind: 'session_confirmed',
+      params: { ...base, join_url: 'https://example.com/a"b' },
+    });
+    expect(quote?.text).not.toContain('a"b');
+  });
+
+  it('falls back to a word for the coach and leaves out a missing length', () => {
+    const m = messageFor({ kind: 'session_confirmed', params: { starts_at: base.starts_at } });
+    expect(m?.text).toContain('Тренер · 2 октября, 14:30 МСК');
+  });
+
+  it('sends nothing without a start time', () => {
+    for (const kind of [
+      'session_confirmed',
+      'session_reminder',
+      'session_moved',
+      'session_cancelled',
+    ]) {
+      expect(messageFor({ kind, params: { ...base, starts_at: 'later' } })).toBeNull();
+      expect(messageFor({ kind, params: null })).toBeNull();
+    }
   });
 });
 

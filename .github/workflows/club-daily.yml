@@ -21,6 +21,13 @@ name: Club daily messages
 # Функция возвращает, сколько строк легло в очередь. Ни адресов, ни имён, ни
 # текстов заданий: страница запуска публичного репозитория видна всем и остаётся
 # навсегда.
+#
+# ## Access warnings (0054)
+#
+# The same hourly run also calls `club_enqueue_access_ending()`: `subscription_ending` three days
+# before a subscription ends and `club_trial_tomorrow` a day before a course's free club week
+# ends. It has no hour of its own — its windows are 72 and 24 hours wide and its key is the
+# period — so it runs on every tick, and prints one number like the rest.
 
 on:
   schedule:
@@ -28,7 +35,7 @@ on:
   workflow_dispatch:
     inputs:
       kind:
-        description: 'Какой вид проверить (all — все три, как по расписанию)'
+        description: 'Which kind to check (all — everything, as on schedule)'
         type: choice
         default: all
         options:
@@ -36,6 +43,7 @@ on:
           - club_task
           - club_reminder
           - club_recap
+          - access_ending
 
 concurrency:
   group: club-daily
@@ -68,21 +76,34 @@ jobs:
           fi
 
           case "$KIND" in
-            all) KINDS="club_task club_reminder club_recap" ;;
-            club_task|club_reminder|club_recap) KINDS="$KIND" ;;
+            all) KINDS="club_task club_reminder club_recap access_ending" ;;
+            club_task|club_reminder|club_recap|access_ending) KINDS="$KIND" ;;
             *) echo "::error::Неизвестный вид: $KIND"; exit 1 ;;
           esac
 
           rc=0
           for kind in $KINDS; do
-            printf 'select public.club_enqueue_daily(%s) as queued;' "'$kind'" \
-              | jq -Rs '{query: .}' > /tmp/body.json
+            if [ "$kind" = access_ending ]; then
+              # Not a daily kind: its own function, both warnings in one call (0054).
+              printf 'select public.club_enqueue_access_ending() as queued;' \
+                | jq -Rs '{query: .}' > /tmp/body.json
+            else
+              printf 'select public.club_enqueue_daily(%s) as queued;' "'$kind'" \
+                | jq -Rs '{query: .}' > /tmp/body.json
+            fi
             code=$(curl -sS -o /tmp/out.json -w '%{http_code}' \
               -X POST "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
               -H "Authorization: Bearer $TOKEN" \
               -H 'Content-Type: application/json' \
               --data-binary @/tmp/body.json)
 
+            if [ "$code" -ge 300 ] && [ "$kind" = access_ending ] \
+              && jq -r '.message // ""' < /tmp/out.json 2>/dev/null \
+                 | grep -q 'club_enqueue_access_ending.*does not exist'; then
+              # Merged before 0054 was applied: not a failure, just not switched on yet.
+              echo "::notice::access_ending is not on yet: apply 0054_outbox_kinds.sql."
+              continue
+            fi
             if [ "$code" -ge 300 ]; then
               # Печатается только текст ошибки самого API — в нём не бывает строк таблицы.
               echo "::error::Supabase ответил HTTP $code на «$kind»."

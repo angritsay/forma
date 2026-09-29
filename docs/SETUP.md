@@ -1772,6 +1772,15 @@ queues when the hour is right.
 
 Each run prints one number per kind — how many rows were queued — and nothing else.
 
+**Access warnings (0054).** The same hourly run calls `club_enqueue_access_ending()`, which queues
+`subscription_ending` («Клуб открыт до 3 октября», three days ahead; not to admins, not for a
+grant of three days or less) and `club_trial_tomorrow` (a day before a course's free club week
+ends; only to someone in the club whose subscription does not outlive it), once per period.
+`0054_outbox_kinds.sql` also adds `session_confirmed`, `session_reminder`, `session_moved` and
+`session_cancelled` to the kind list for the in-app booking (0055). To turn it on: apply
+**`0054_outbox_kinds.sql`**, then run **`deploy-notify`**. Until 0054 is applied the workflow
+prints a notice for `access_ending` instead of failing.
+
 ---
 
 ## 7.15 A private page: direct link and password
