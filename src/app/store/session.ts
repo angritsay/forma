@@ -18,6 +18,7 @@ import { newestActivation } from '@/app/features/marathon/gameAccess';
 import { getMySubscription } from '@/lib/api/subscriptions';
 import type { Subscription } from '@/lib/api/types';
 import { clearDraft } from '@/app/screens/onboarding/draft';
+import { forgetMyRef } from '@/lib/referral/mine';
 import { useFlags } from './flags';
 import { useLocale } from './locale';
 
@@ -86,6 +87,9 @@ function endSession(): void {
   inflight = null;
   // The feature flags (0049) were somebody's; they go with the session.
   useFlags.getState().clear();
+  // So is the referral code cached for the site (`forma.myRef` / `forma.myName`): a link made
+  // personal after sign-out would pay the reward to whoever used this device last.
+  forgetMyRef();
 }
 
 export const useSession = create<SessionState>((set, get) => {
@@ -127,6 +131,9 @@ export const useSession = create<SessionState>((set, get) => {
   function loadUser(user: SessionUser): Promise<void> {
     if (inflight && inflight.userId === user.id) return inflight.promise;
     const startedAt = epoch;
+    // Another account on the same device: the previous one's cached code is not this one's.
+    const previous = get().user;
+    if (previous && previous.id !== user.id) forgetMyRef();
     const promise = (async () => {
       set({ user, error: undefined });
       // Feature flags (0049) load beside the profile and never hold it up: `load` cannot reject,

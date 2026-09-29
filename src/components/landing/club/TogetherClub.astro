@@ -1,0 +1,84 @@
+---
+/**
+ * `/together/`'s «Вдвоём в клубе»: what the club adds for two people, said only as far as it is
+ * true (site synthesis §4, the owner's decision of 29 Sep).
+ *
+ * It lives in `club/` so `site-club-no-neon.test.ts` holds it to the club's rule: warm gradient,
+ * no neon. The section is `data-club-zone`, so the phone's sticky bar steps aside over it.
+ *
+ * Two versions of the first line, and the page's script shows one:
+ * - `[data-with-ref]` — the visitor came with a friend's code (valid, not their own): +30 days of
+ *   the club each once they pay through this link, and one pair if neither has a pair yet (0051,
+ *   0053). Hidden in the HTML, because the static page cannot know.
+ * - `[data-no-ref]` — no code: how two club members become a pair by hand (`app.duoInvite`), or
+ *   the club's Monday matching.
+ *
+ * Then the prize for a pair (the coach announces the winner; an hour each — never «вступите вдвоём
+ * — получите час»), the price as `clubPriceLabels` gives it (666 never without the year's 7 990),
+ * the gradient join (`data-club-join`: with a pending code the layout's script sends it through the
+ * app's club screen so the code attaches before payment), and the app's own `app.inviteNote`.
+ */
+import type { Locale } from '@/content/schema';
+import { t } from '@/i18n/index';
+import { href } from '@/lib/util/paths';
+import Button from '../Button.astro';
+import { clubPriceLabels } from './clubPrice';
+
+interface Props {
+  locale: Locale;
+  id?: string;
+}
+const { locale, id = 'club' } = Astro.props;
+const club = clubPriceLabels(locale);
+---
+
+<section
+  id={id}
+  data-club-zone
+  class="club-aurora-host mx-auto max-w-6xl overflow-x-clip px-5 py-16 md:py-24"
+>
+  <span class="club-aurora" aria-hidden="true"></span>
+  <div class="border-t border-border pt-8">
+    <p class="eyebrow">{t(locale, 'landing.togetherClubEyebrow')}</p>
+    <h2 class="font-display mt-4 max-w-2xl text-3xl text-balance md:text-4xl">
+      {t(locale, 'landing.togetherClubTitle')}
+    </h2>
+  </div>
+
+  <div class="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-14">
+    <div class="flex flex-col gap-5">
+      <p class="max-w-xl text-base leading-relaxed text-text md:text-lg" data-with-ref hidden>
+        {t(locale, 'landing.togetherClubRef')}
+      </p>
+      <p class="max-w-xl text-base leading-relaxed text-text md:text-lg" data-no-ref>
+        {t(locale, 'landing.togetherClubNoRef', { invite: t(locale, 'app.duoInvite') })}
+      </p>
+      <p
+        class="max-w-xl border-l-2 border-border-strong pl-4 text-[15px] leading-relaxed text-muted"
+      >
+        {t(locale, 'landing.togetherClubPrize')}
+      </p>
+    </div>
+
+    {
+      club && (
+        <div class="glass-card flex flex-col gap-4 rounded-card border border-border p-6">
+          <p class="numeral text-4xl leading-tight">{club.headline}</p>
+          <p class="text-[14px] leading-snug text-text">{club.charge}</p>
+          <p class="text-[13px] leading-snug text-muted">{t(locale, 'landing.clubNoAutoRenew')}</p>
+          <Button
+            href={`${href(locale, '/subscribe/')}#order`}
+            variant="gradient"
+            size="lg"
+            class="w-full"
+            data-club-join
+            data-goal="club_join"
+          >
+            {club.join}
+          </Button>
+          <p class="text-[13px] leading-snug text-muted">{t(locale, 'app.inviteNote')}</p>
+        </div>
+      )
+    }
+  </div>
+</section>

@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from '@/content/schema';
+import { DEFAULT_LOCALE, type Locale } from '@/content/locales';
 
 /**
  * Following a payment link hands the visitor's email to a third party, so only an absolute

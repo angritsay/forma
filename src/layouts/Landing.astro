@@ -17,8 +17,9 @@
  * menu. The navigation is the four products in the order the app runs them — Курс, Клуб, Тренер,
  * Вместе — plus the guides; «Упражнения» lives in the menu and the footer.
  *
- * «Вместе» points at the homepage's `#together` block for now. Its own page, `/together/`, comes
- * with the personal invite (PR 3); the three links that name it are `togetherHref` below.
+ * «Вместе» is the friend's page, `/together/` (site synthesis §4); the three links that name it are
+ * `togetherHref` below. The footer's «Позвать с собой» is also a one-tap share (`shareHome.ts`):
+ * the system sheet with the Monday message where there is one, the page itself where there is not.
  *
  * ## The one script
  *
@@ -39,6 +40,7 @@ import Logo from '@/components/landing/Logo.astro';
 import LangSwitch from '@/components/landing/LangSwitch.astro';
 import { t } from '@/i18n/index';
 import { href, appHref } from '@/lib/util/paths';
+import { inviteShareAttrs } from '@/components/landing/inviteProps';
 import { BRAND } from '@content/site/brand';
 import { entityName } from '@content/site/legalEntity';
 import { LINKS } from '@content/site/links';
@@ -65,8 +67,9 @@ interface Props {
 const { locale, sitePath, localizedPaths, mainClass = '', ...seo } = Astro.props;
 const year = new Date().getFullYear();
 
-/** The homepage's together block; becomes `/together/` when that page ships (PR 3). */
-const togetherHref = `${href(locale, '/')}#together`;
+/** The friend's page: «Тренируемся вместе с понедельника». */
+const togetherHref = href(locale, '/together/');
+const share = inviteShareAttrs(locale);
 const exercisesLink = {
   href: href(locale, '/exercises/'),
   label: t(locale, 'landing.navExercises'),
@@ -305,7 +308,7 @@ const quietLink = 'text-muted transition-colors duration-150 hover:text-text';
         </a>
         <ul class="mt-4 flex flex-col gap-2.5 text-sm">
           <li>
-            <a class={quietLink} href={togetherHref}>
+            <a class={quietLink} href={togetherHref} data-goal="share_home" {...share}>
               {t(locale, 'landing.shareCta')}
             </a>
           </li>
@@ -416,11 +419,14 @@ const quietLink = 'text-muted transition-colors duration-150 hover:text-text';
   </footer>
 
   <script>
+    import { bindShareHome } from '@/components/landing/shareHome';
     import { bindVisit } from '@/components/landing/visit';
 
     // Referral, first touch, goals and app links (visit.ts). Before the menu: it rewrites hrefs
     // the menu's links point at.
     bindVisit();
+    // The footer's «Позвать с собой» (and any other `[data-share-home]` on the page).
+    bindShareHome();
 
     // Mobile menu: keep aria-expanded in sync and close on Esc, on link click, on outside click
     // and when the viewport grows. Esc always returns focus to the summary that opened the menu.

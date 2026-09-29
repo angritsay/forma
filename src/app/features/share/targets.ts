@@ -16,6 +16,7 @@
  *
  * Pure: the environment is passed in, so the rules are tested in node.
  */
+import { telegramShareUrl } from '@/lib/share/targets';
 import { hashSeed, type StoryTemplateId } from './story/templates';
 
 export type ShareTarget = 'instagram' | 'telegramStory' | 'telegramChat' | 'save' | 'more';
@@ -56,9 +57,24 @@ export function shareTargets(env: ShareEnv): ShareTarget[] {
   return out;
 }
 
-/** Telegram's own share picker for a link and a line of text. */
-export function telegramShareUrl(url: string, text: string): string {
-  return `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+/** Telegram's own share picker for a link and a line of text (shared with the site). */
+export { telegramShareUrl };
+
+/**
+ * The Telegram chat target's link. The picture at a public URL makes the best preview, so it is
+ * the message's URL whenever there is one. But a `link` the caller passed — the club's share
+ * carries the member's referral link (0051) — is the reason the message is worth sending, and it
+ * used to be dropped the moment the picture uploaded. Now it rides in the text instead; without a
+ * picture it is the URL itself, and without either the app's own link stands in.
+ */
+export function telegramChatShareUrl(
+  text: string,
+  link: string | undefined,
+  picture: string | null,
+  fallback: string,
+): string {
+  if (picture) return telegramShareUrl(picture, link ? `${text} ${link}` : text);
+  return telegramShareUrl(link ?? fallback, text);
 }
 
 /** A story's caption is capped at 200 characters for accounts without Premium. */

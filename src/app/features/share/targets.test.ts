@@ -4,6 +4,7 @@ import {
   shareTargets,
   storyCaption,
   storyFileName,
+  telegramChatShareUrl,
   telegramShareUrl,
   type ShareEnv,
 } from './targets';
@@ -58,6 +59,26 @@ describe('share strings', () => {
   it('builds Telegram’s share link', () => {
     expect(telegramShareUrl('https://x.co/a b', 'Готово & всё')).toBe(
       'https://t.me/share/url?url=https%3A%2F%2Fx.co%2Fa%20b&text=%D0%93%D0%BE%D1%82%D0%BE%D0%B2%D0%BE%20%26%20%D0%B2%D1%81%D1%91',
+    );
+  });
+
+  it('keeps the referral link in the Telegram chat message', () => {
+    const ref = 'https://forma.app/together/?ref=abcd1234';
+    const pic = 'https://cdn.example/story.png';
+    const read = (u: string) => new URL(u).searchParams;
+    // The picture previews; the link rides in the text.
+    expect(read(telegramChatShareUrl('Готово', ref, pic, 'https://app')).get('url')).toBe(pic);
+    expect(read(telegramChatShareUrl('Готово', ref, pic, 'https://app')).get('text')).toBe(
+      `Готово ${ref}`,
+    );
+    // No picture: the link is the URL.
+    expect(read(telegramChatShareUrl('Готово', ref, null, 'https://app')).get('url')).toBe(ref);
+    // No link at all (the workout summary): as before.
+    expect(read(telegramChatShareUrl('Готово', undefined, pic, 'https://app')).get('text')).toBe(
+      'Готово',
+    );
+    expect(read(telegramChatShareUrl('Готово', undefined, null, 'https://app')).get('url')).toBe(
+      'https://app',
     );
   });
 

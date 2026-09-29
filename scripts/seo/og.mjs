@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * OG image generator — renders 1200×630 PNGs into public/og/ with @resvg/resvg-js:
- *   default.png, hub-<home|courses|exercises|guides>-<locale>.png, course-<id>-<locale>.png,
+ *   default.png, hub-<home|courses|exercises|guides|together>-<locale>.png, course-<id>-<locale>.png,
  *   exercise-<id>-<locale>.png, guide-<translationKey>-<locale>.png
  *
  * Usage: npm run seo:og [-- --only default,hub,course,exercise,guide] [--limit N] [--quiet]
@@ -63,6 +63,12 @@ const COLORS = {
   onFieldQuiet: 'rgba(255,255,255,0.86)',
   accent: '#AFE9FD',
   action: '#F4FF3F',
+  /*
+   * The club's warm gradient (`--grad-warm`, global.css) and the ink it carries: 13.2 / 15.7 /
+   * 6.04 on its three stops — the «Warm» story (design/CHANGELOG.md §24).
+   */
+  warm: ['#AFE9FD', '#FFE6D0', '#FF5A00'],
+  ink: '#111111',
 };
 
 // Node prints an ExperimentalWarning for type stripping; keep every other warning.
@@ -232,17 +238,25 @@ function fitText(text, sizes, maxWidth, maxLines, family) {
  * brand's light blue with a hand-drawn neon swoosh under it, and no tile — the field is the colour.
  * Only the default card wears it: one field per screen, and the default is the brand's own screen.
  *
- * @param {{ eyebrow: string, title: string, subtitle: string, tile: string, brand: string, host: string, big?: boolean, field?: boolean }} c
+ * With `warm`, the card is the club's warm gradient in the same inset shape, ink on it and no
+ * swoosh — the «Warm» story of the app's share pictures (design/CHANGELOG.md §24). Only the
+ * together card wears it: an invitation to two people, which is the club's colour, and one image
+ * for every link, so nobody's name or words can ever reach a preview.
+ *
+ * @param {{ eyebrow: string, title: string, subtitle: string, tile: string, brand: string, host: string, big?: boolean, field?: boolean, warm?: boolean }} c
  */
 function template(c) {
-  const field = c.field === true;
+  const warm = c.warm === true;
+  const field = c.field === true || warm;
   const margin = field ? 104 : 80;
   // The tile is a sharp square: a colour swatch, not a card.
   const tile = { x: 720, y: 105, size: 420, r: 0 };
   const textWidth = field ? WIDTH - margin * 2 : tile.x - margin - 56;
-  const ink = field
-    ? { title: COLORS.onField, body: COLORS.onFieldQuiet, quiet: COLORS.onFieldQuiet }
-    : { title: COLORS.text, body: COLORS.muted, quiet: COLORS.muted2 };
+  const ink = warm
+    ? { title: COLORS.ink, body: COLORS.ink, quiet: COLORS.ink }
+    : field
+      ? { title: COLORS.onField, body: COLORS.onFieldQuiet, quiet: COLORS.onFieldQuiet }
+      : { title: COLORS.text, body: COLORS.muted, quiet: COLORS.muted2 };
   /*
    * The headline is Unbounded, drawn exactly as the title is written — sentence case, and no
    * `toUpperCase()`. That call was here for as long as `.font-display` uppercased; the owner
@@ -286,7 +300,7 @@ function template(c) {
    * On the field the title's last word is the key word: light blue, a neon swoosh under it. The
    * split is on the last line only — the swoosh underlines one word, never a wrapped phrase.
    */
-  const keyAt = field ? (title.lines[lastLine] ?? '').lastIndexOf(' ') + 1 : -1;
+  const keyAt = field && !warm ? (title.lines[lastLine] ?? '').lastIndexOf(' ') + 1 : -1;
   const titleTspans = title.lines
     .map((line, i) => {
       const at = `x="${margin}" y="${(y + i * titleLineHeight).toFixed(1)}"`;
@@ -296,7 +310,7 @@ function template(c) {
     })
     .join('');
   let swoosh = '';
-  if (field) {
+  if (field && !warm) {
     const line = title.lines[lastLine] ?? '';
     const x0 = margin + advanceWidth(line.slice(0, keyAt), DISPLAY) * title.size;
     const x1 = margin + advanceWidth(line, DISPLAY) * title.size;
@@ -346,9 +360,12 @@ function template(c) {
     <text x="${(margin + fWidth + orWidth).toFixed(1)}" y="${wmY}" font-weight="200" letter-spacing="${wmTracking}">MA</text>
   </g>`;
   const inset = 36;
-  const ground = field
-    ? `<rect x="${inset}" y="${inset}" width="${WIDTH - inset * 2}" height="${HEIGHT - inset * 2}" rx="40" fill="${COLORS.field}"/>`
-    : `<rect x="${tile.x}" y="${tile.y}" width="${tile.size}" height="${tile.size}" fill="${c.tile}"/>`;
+  const [w0, w1, w2] = COLORS.warm;
+  const ground = warm
+    ? `<defs><linearGradient id="warm" x1="0" y1="0.41" x2="1" y2="0.59"><stop offset="0" stop-color="${w0}"/><stop offset="0.45" stop-color="${w1}"/><stop offset="1" stop-color="${w2}"/></linearGradient></defs><rect x="${inset}" y="${inset}" width="${WIDTH - inset * 2}" height="${HEIGHT - inset * 2}" rx="40" fill="url(#warm)"/>`
+    : field
+      ? `<rect x="${inset}" y="${inset}" width="${WIDTH - inset * 2}" height="${HEIGHT - inset * 2}" rx="40" fill="${COLORS.field}"/>`
+      : `<rect x="${tile.x}" y="${tile.y}" width="${tile.size}" height="${tile.size}" fill="${c.tile}"/>`;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${WIDTH}" height="${HEIGHT}" viewBox="0 0 ${WIDTH} ${HEIGHT}">
   <rect width="${WIDTH}" height="${HEIGHT}" fill="${COLORS.bg}"/>
   ${ground}
@@ -443,6 +460,20 @@ function buildJobs(content, labels, host) {
         },
       });
     }
+    // «Вместе с понедельника»: the page friends open from an invite, in the club's warm colours.
+    jobs.push({
+      file: `hub-together-${locale}.png`,
+      kind: 'hub',
+      card: {
+        eyebrow: '',
+        title: L.togetherTitle ?? '',
+        subtitle: L.togetherDescription ?? '',
+        tile: BRAND_TILE,
+        brand,
+        host,
+        warm: true,
+      },
+    });
     for (const course of liveCourses) {
       jobs.push({
         file: `course-${course.id}-${locale}.png`,

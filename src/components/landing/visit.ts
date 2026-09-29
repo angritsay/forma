@@ -3,12 +3,14 @@
  *
  * The layout's one client script (`src/layouts/Landing.astro`) runs this on every page:
  *
- * - `?ref=<code>` → `localStorage['forma.referral']`, by the app's rule (`stashReferral` in
- *   `duoInvite.ts`): the pattern of `referral_codes.code` (0051) and *first code wins* — a second
- *   friend's link does not take the reward away from the first one. The rule is repeated here, not
- *   imported: `duoInvite` pulls in `@/lib/api/errors` (zod, Supabase error codes), ~65 KB that
- *   every site page would load for two tiny functions. `visit.test.ts` runs both copies side by
- *   side so they cannot drift.
+ * - `?ref=<code>` → `localStorage['forma.referral']`, by the one rule the app uses too
+ *   (`src/lib/referral/pending.ts`): the pattern of `referral_codes.code` (0051) and *first code
+ *   wins* — a second friend's link does not take the reward away from the first one. The
+ *   visitor's own code (`forma.myRef`, cached by the app, `mine.ts`) is never stashed: that is
+ *   someone opening the link they are about to send ({@link acceptReferral}). That module
+ *   imports nothing, so the rule is shared without the app: `duoInvite.ts`, which re-exports it,
+ *   pulls in `@/lib/api/errors` (zod, Supabase error codes), ~65 KB that every site page would
+ *   otherwise load. `visit.test.ts` keeps the site off `@/app` and checks both ends agree.
  * - First touch → `localStorage['forma.src']`: `utm_source` (+ `utm_campaign`), else `?src=`, else
  *   the page the person landed on (`site`, `site-courses-…`). Lower-case, `[a-z0-9_-]`, at most 40
  *   characters — the same shape the app's `?src=` reader accepts (`src/app/features/entry/params.ts`)
@@ -24,54 +26,15 @@
  * The parsing is pure and tested (`visit.test.ts`); {@link bindVisit} is the thin DOM wrapper.
  */
 import { appHref, parsePath } from '@/lib/util/paths';
+import { myRef } from '@/lib/referral/mine';
+import { isReferralCode, localStore, pendingReferral, stashReferral } from '@/lib/referral/pending';
 
-/** The app's key (`REFERRAL_KEY` in marathon/duoInvite.ts), repeated to keep the app out of the site bundle. */
-export const REFERRAL_KEY = 'forma.referral';
-
-/** The pattern of `referral_codes.code` (0051), as `CODE_RE` in duoInvite.ts. */
-const REFERRAL_RE = /^[a-z0-9]{8}$/;
+export { REFERRAL_KEY, pendingReferral, stashReferral } from '@/lib/referral/pending';
 
 /** The app's key (`SRC_KEY` in entry/params.ts), repeated so the site bundle skips the app store. */
 export const SRC_KEY = 'forma.src';
 
 const SRC_MAX = 40;
-
-type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
-
-function localStore(): StorageLike | null {
-  try {
-    return typeof localStorage === 'undefined' ? null : localStorage;
-  } catch {
-    return null;
-  }
-}
-
-function isReferralCode(code: string | null | undefined): code is string {
-  return typeof code === 'string' && REFERRAL_RE.test(code);
-}
-
-/** A friend's code from `?ref=`, kept until the app attaches it. First code wins. */
-export function stashReferral(code: string | undefined, store = localStore()): boolean {
-  if (!store || !isReferralCode(code)) return false;
-  try {
-    if (isReferralCode(store.getItem(REFERRAL_KEY))) return false;
-    store.setItem(REFERRAL_KEY, code);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/** The code waiting to be attached, or null. */
-export function pendingReferral(store = localStore()): string | null {
-  if (!store) return null;
-  try {
-    const code = store.getItem(REFERRAL_KEY);
-    return isReferralCode(code) ? code : null;
-  } catch {
-    return null;
-  }
-}
 
 /** Any text → a report label: lower-case, `[a-z0-9_-]`, dashes collapsed, ≤ 40, or '' if nothing is left. */
 export function slugSource(raw: string): string {
@@ -98,6 +61,44 @@ export function visitSource(search: string, pathname: string): string {
   const { locale, path } = parsePath(pathname);
   const page = slugSource(path.replace(/\//g, '-'));
   return slugSource(['site', locale === 'ru' ? '' : locale, page].filter(Boolean).join('-'));
+}
+
+type Store = ReturnType<typeof localStore>;
+
+/**
+ * A `?ref=` from the address bar, set aside for the app — unless it is the visitor's own code.
+ *
+ * - `own`: the code the app cached for this browser's account; not stashed (the server would
+ *   refuse it as `own_code` anyway), and `/together/` says «это твоя ссылка».
+ * - `stashed`: now waiting in `forma.referral`.
+ * - `kept`: a valid code, but another was waiting first — first code wins.
+ * - `none`: no code, or not in the code's shape.
+ */
+export function acceptReferral(
+  raw: string | null | undefined,
+  store: Store = localStore(),
+): 'own' | 'stashed' | 'kept' | 'none' {
+  if (!isReferralCode(raw)) return 'none';
+  if (raw === myRef(store).code) return 'own';
+  return stashReferral(raw, store) ? 'stashed' : 'kept';
+}
+
+/** The code waiting to be attached, unless it is this browser's own (stashed before it was cached). */
+export function activeReferral(store: Store = localStore()): string | null {
+  const code = pendingReferral(store);
+  return code && code !== myRef(store).code ? code : null;
+}
+
+/**
+ * Whether this link's own `ref` is the code waiting — the only case in which a page may promise
+ * «+30 дней … по этой ссылке». A code kept from an earlier friend's link (first code wins), the
+ * visitor's own code, or a link with no `ref` promise nothing.
+ */
+export function referralIsThisLink(
+  raw: string | null | undefined,
+  store: Store = localStore(),
+): boolean {
+  return isReferralCode(raw) && activeReferral(store) === raw;
 }
 
 /** First touch: written once, never overwritten. */
@@ -168,11 +169,10 @@ function metrikaCounter(): number | null {
 /** Run once per page load, from the layout's script. */
 export function bindVisit(win: Window = window): void {
   const { search, pathname } = win.location;
-  const ref = new URLSearchParams(search).get('ref');
-  stashReferral(ref ?? undefined);
+  acceptReferral(new URLSearchParams(search).get('ref'));
   rememberSource(visitSource(search, pathname));
 
-  const code = pendingReferral();
+  const code = activeReferral();
   if (code) {
     win.document.querySelectorAll<HTMLAnchorElement>('a[data-app-link]').forEach((a) => {
       const link = a.getAttribute('href');
