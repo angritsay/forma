@@ -179,7 +179,7 @@ export const seo = {
 
   // llms.txt / RSS / OG
   llmsIntro:
-    'Forma is home CrossFit from coach Sergey Titov: the no-equipment Start course, a club with one small task a day and a weekly board, and the coach on hand in Telegram. The app runs in Telegram and in the browser and adapts reps, rest and load after every session; a bought course is yours for life.',
+    'Forma is home CrossFit in small steps: the no-equipment Start course, a club with one small task a day and a weekly board, and the coach on hand in Telegram. The app runs in Telegram and in the browser and adapts reps, rest and load after every session; a bought course is yours for life.',
   llmsCourses: 'Courses',
   llmsGuides: 'Guides',
   llmsExercises: 'Exercise library',
