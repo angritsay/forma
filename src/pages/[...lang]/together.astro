@@ -1,0 +1,331 @@
+---
+/**
+ * `/together/` — the page a friend opens from «Давай с понедельника вместе» (site synthesis §4).
+ *
+ * Indexable and in the sitemap (`STATIC_PAGES`), with one canonical URL and no query in it: the
+ * link people forward carries `?d=…&from=…&ref=…`, and none of those three is ever written into
+ * the HTML. The build knows nothing about who sent the link, so every personal line is filled in
+ * by the page's script, from the address bar, through the invite's validators:
+ *
+ * - `from` → `cleanName` (letters, marks, spaces, hyphens, ≤ 16) → the eyebrow «{Имя} зовёт тебя»,
+ *   set with `textContent` only. Never in `<title>`, the H1 or the preview image — the preview is
+ *   one static card (`hub-together-*`), so nobody can make a link that previews their own words.
+ * - `d` → `validDate` (a Monday in Moscow, today … +14 days, else the coming Monday) → the lead,
+ *   «Понедельник, 5 октября — первая тренировка».
+ * - `ref` → the layout's `bindVisit` and this script both hand it to `acceptReferral`: stashed
+ *   for the app when it has the code's shape, first code wins, and never when it is the visitor's
+ *   own (`forma.myRef`) — then the page says «Это твоя ссылка — отправь её». While a code is
+ *   pending, every `[data-app-link]` carries it and `[data-club-join]` goes through the app's
+ *   club screen, so the +30 days attach before any payment. The club block switches to its
+ *   with-code line.
+ *
+ * Sections: the blue hero field (H1 «Тренируемся вместе с понедельника», the homepage's pills,
+ * the neon «Начать с тренировки 1» — the page's one neon — and «Ответить: я в деле»), the first
+ * week in three steps, «Вдвоём в клубе» (`club/TogetherClub`, warm, no neon), a small word from
+ * the coach, `ShareInvite` for «Позвать ещё кого-то», and three questions. JSON-LD: FAQPage and
+ * BreadcrumbList.
+ */
+import Landing from '@/layouts/Landing.astro';
+import Breadcrumbs from '@/components/landing/Breadcrumbs.astro';
+import Button from '@/components/landing/Button.astro';
+import Faq from '@/components/landing/Faq.astro';
+import HeroField from '@/components/landing/HeroField.astro';
+import KeyTitle from '@/components/landing/KeyTitle.astro';
+import Pill from '@/components/landing/Pill.astro';
+import Section from '@/components/landing/Section.astro';
+import ShareInvite from '@/components/landing/ShareInvite';
+import Steps from '@/components/landing/Steps.astro';
+import TogetherClub from '@/components/landing/club/TogetherClub.astro';
+import { DEMO_COURSE_ID, firstWorkoutFacts } from '@/components/landing/demo';
+import { shareInviteProps } from '@/components/landing/inviteProps';
+import { breadcrumbLd, faqLd } from '@/components/landing/jsonld';
+import { COURSE_BY_ID } from '@/content/registry';
+import { SITE_COURSES } from '@/content/published';
+import type { Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { ogImagePath } from '@/lib/seo/meta';
+import { canonicalUrl } from '@/lib/seo/urls';
+import { appHref, href, localeStaticPaths, withBase } from '@/lib/util/paths';
+import { COACH } from '@content/site/coach';
+
+export function getStaticPaths() {
+  return localeStaticPaths();
+}
+
+const locale: Locale = Astro.params.lang === 'en' ? 'en' : 'ru';
+const site = (Astro.site?.toString() ?? 'http://localhost:4321').replace(/\/$/, '');
+
+const title = t(locale, 'seo.togetherTitle');
+const description = t(locale, 'seo.togetherDescription');
+const h1 = t(locale, 'landing.togetherH1');
+/* Heavy for the first two words, light up to the key word: «Тренируемся вместе | с | понедельника». */
+const thin = ` ${h1.split(' ').slice(2).join(' ')}`;
+
+const startHref = appHref('/start', { locale });
+const demoCourse = COURSE_BY_ID.get(DEMO_COURSE_ID) ?? SITE_COURSES[0];
+const facts = firstWorkoutFacts(locale, demoCourse);
+
+/* The lead, split around its date so the script can replace only that span (textContent). */
+const leadTemplate = t(locale, 'landing.togetherLead', {
+  total: facts ? String(facts.totalMinutes) : '',
+});
+const [leadBefore = '', leadAfter = ''] = leadTemplate.split('{date}');
+
+/* The homepage hero's pills, the same five facts in the same order. */
+const chips = [
+  t(locale, 'landing.heroChipFree'),
+  t(locale, 'landing.heroChipTime'),
+  t(locale, 'landing.heroChipNoKit'),
+  t(locale, 'landing.heroChipVideo'),
+  t(locale, 'landing.heroChipNoJumps'),
+];
+const rightTilt = chips.length - 1;
+
+const week = [1, 2, 3].map((n) => ({
+  title: t(locale, `landing.togetherWeek${n}Title` as 'landing.togetherWeek1Title'),
+  text: t(locale, `landing.togetherWeek${n}Text` as 'landing.togetherWeek1Text'),
+}));
+
+const faq = [1, 2, 3].map((n) => ({
+  q: t(locale, `landing.togetherFaq${n}Q` as 'landing.togetherFaq1Q'),
+  a: t(locale, `landing.togetherFaq${n}A` as 'landing.togetherFaq1A'),
+}));
+
+const coachName = l(COACH.name, locale);
+
+const jsonLd = [
+  breadcrumbLd([
+    { name: t(locale, 'landing.breadcrumbHome'), url: canonicalUrl(site, locale, '/') },
+    { name: t(locale, 'landing.navTogether'), url: canonicalUrl(site, locale, '/together/') },
+  ]),
+  faqLd(
+    faq.map((f) => ({ q: { ru: f.q, en: f.q }, a: { ru: f.a, en: f.a } })),
+    locale,
+  ),
+];
+---
+
+<Landing
+  locale={locale}
+  title={title}
+  description={description}
+  sitePath="/together/"
+  image={ogImagePath('hub', 'together', locale)}
+  jsonLd={jsonLd}
+>
+  <div class="mx-auto max-w-6xl px-5 pt-8 md:pt-12" data-together data-locale={locale}>
+    <Breadcrumbs
+      ariaLabel={t(locale, 'landing.breadcrumbHome')}
+      items={[
+        { label: t(locale, 'landing.breadcrumbHome'), href: href(locale, '/') },
+        { label: t(locale, 'landing.navTogether') },
+      ]}
+    />
+
+    <p
+      class="mt-6 border-l-2 border-accent pl-3 text-[14px] leading-snug text-text"
+      data-inapp-hint
+      hidden
+    >
+      {t(locale, 'landing.togetherInApp')}
+    </p>
+
+    <div class="mt-6 max-w-3xl">
+      <HeroField>
+        {/* Filled by the script with textContent; the HTML says only «Приглашение». */}
+        <p
+          class="eyebrow"
+          data-together-eyebrow
+          data-template={t(locale, 'landing.togetherEyebrowFrom')}
+        >
+          {t(locale, 'landing.togetherEyebrowPlain')}
+        </p>
+        <KeyTitle
+          text={h1}
+          keyWords={1}
+          thin={thin}
+          class="display mt-4 max-w-[18ch] text-[clamp(1.75rem,7vw,2.75rem)]"
+        />
+        <p class="field-lead mt-5 max-w-xl text-base leading-relaxed md:text-lg">
+          {leadBefore}<span data-together-date>{t(locale, 'landing.togetherLeadSoon')}</span>{
+            leadAfter
+          }
+        </p>
+        <ul class="mt-6 flex flex-wrap gap-2">
+          {
+            chips.map((c, i) => (
+              <li class="flex max-w-full">
+                <Pill
+                  size="md"
+                  tone={i === 0 ? 'white' : 'ghost'}
+                  tilt={i === 0 ? 'left' : i === rightTilt ? 'right' : undefined}
+                >
+                  {c}
+                </Pill>
+              </li>
+            ))
+          }
+        </ul>
+      </HeroField>
+
+      <div class="mt-5 flex flex-col gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+          <Button
+            href={startHref}
+            variant="primary"
+            size="lg"
+            class="w-full sm:w-auto"
+            data-goal="app_start"
+            data-app-link
+          >
+            {t(locale, 'landing.togetherStart')}
+            <span class="glyph" aria-hidden="true">→</span>
+          </Button>
+          <Button
+            variant="plain"
+            size="lg"
+            class="w-full sm:w-auto"
+            data-reply
+            data-reply-text={t(locale, 'landing.togetherReplyText')}
+            data-reply-done={t(locale, 'landing.togetherReplyDone')}
+            data-reply-failed={t(locale, 'landing.togetherReplyFailed')}
+            data-goal="together_reply"
+          >
+            <span data-reply-label aria-live="polite">{t(locale, 'landing.togetherReply')}</span>
+          </Button>
+        </div>
+        <p class="text-[13px] leading-snug text-muted">{t(locale, 'landing.startHint')}</p>
+        <p
+          class="border-l-2 border-accent pl-3 text-[14px] leading-snug text-text"
+          data-own-link
+          hidden
+        >
+          {t(locale, 'landing.togetherOwnLink')}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <Section
+    id="week"
+    eyebrow={t(locale, 'landing.togetherWeekEyebrow')}
+    title={t(locale, 'landing.togetherWeekTitle')}
+  >
+    <Steps steps={week} />
+  </Section>
+
+  <TogetherClub locale={locale} />
+
+  <section class="mx-auto max-w-6xl px-5 py-12 md:py-16">
+    <div
+      class="grid items-center gap-6 border-t border-border pt-8 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-8"
+    >
+      {
+        COACH.photo && (
+          <div class="glass-card relative size-24 overflow-hidden rounded-tile md:size-28">
+            <img
+              src={withBase(COACH.photo)}
+              alt={coachName}
+              width="112"
+              height="112"
+              loading="lazy"
+              class="photo-mono absolute inset-0 size-full object-cover"
+            />
+          </div>
+        )
+      }
+      <figure class="max-w-2xl">
+        <blockquote class="font-display text-lg leading-snug text-balance md:text-xl">
+          «{t(locale, 'landing.firstQuote')}»
+        </blockquote>
+        <figcaption class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
+          <span>— {coachName}, {l(COACH.role, locale)}</span>
+          <a
+            href={href(locale, '/about/')}
+            class="text-text underline decoration-border-strong underline-offset-4 hover:decoration-text"
+          >
+            {t(locale, 'landing.togetherCoachMore')}
+            <span class="glyph" aria-hidden="true">→</span>
+          </a>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <Section id="together" title={t(locale, 'landing.togetherMoreTitle')}>
+    <ShareInvite client:visible {...shareInviteProps(locale, site)} />
+  </Section>
+
+  <Section id="faq" title={t(locale, 'landing.faqTitle')}>
+    <Faq items={faq} />
+  </Section>
+</Landing>
+
+<script>
+  import { copyText } from '@/components/landing/shareHome';
+  import { acceptReferral, referralIsThisLink } from '@/components/landing/visit';
+  import { cleanName, mondayLabel, validDate } from '@/lib/share/invite';
+
+  /*
+   * Everything personal on this page comes from the address bar and goes in through `textContent`
+   * after a validator. The values are never parsed as HTML, never put into an attribute, and never
+   * sent anywhere.
+   */
+  const root = document.querySelector<HTMLElement>('[data-together]');
+  if (root) {
+    const locale = root.dataset.locale === 'en' ? 'en' : 'ru';
+    const query = new URLSearchParams(location.search);
+    const now = new Date();
+
+    const name = cleanName(query.get('from'));
+    const eyebrow = document.querySelector<HTMLElement>('[data-together-eyebrow]');
+    if (eyebrow && name) {
+      eyebrow.textContent = (eyebrow.dataset.template ?? '{name}').split('{name}').join(name);
+    }
+
+    const label = mondayLabel(locale, validDate(query.get('d'), now), now);
+    const day = label.charAt(0).toLocaleUpperCase(locale) + label.slice(1);
+    document.querySelectorAll<HTMLElement>('[data-together-date]').forEach((el) => {
+      el.textContent = day;
+    });
+
+    // The layout's bindVisit does the same; whichever runs first stashes, the rule is one.
+    if (acceptReferral(query.get('ref')) === 'own') {
+      document.querySelector<HTMLElement>('[data-own-link]')?.removeAttribute('hidden');
+    }
+    // The +30 line only when *this* link's code is the one waiting: a code kept from an earlier
+    // friend's link (first code wins) or a plain link with no `ref` promises nothing here.
+    const withRef = referralIsThisLink(query.get('ref'));
+    document.querySelectorAll<HTMLElement>('[data-with-ref]').forEach((el) => {
+      el.hidden = !withRef;
+    });
+    document.querySelectorAll<HTMLElement>('[data-no-ref]').forEach((el) => {
+      el.hidden = withRef;
+    });
+
+    // Instagram's and Facebook's in-app browsers drop storage between sessions.
+    if (/\b(Instagram|FBAN|FBAV)\b/.test(navigator.userAgent)) {
+      document.querySelector<HTMLElement>('[data-inapp-hint]')?.removeAttribute('hidden');
+    }
+
+    // «Ответить: я в деле»: the share sheet inside the tap, else the line on the clipboard.
+    document.querySelectorAll<HTMLElement>('[data-reply]').forEach((button) => {
+      const text = button.dataset.replyText ?? '';
+      const labelEl = button.querySelector<HTMLElement>('[data-reply-label]') ?? button;
+      const idle = labelEl.textContent ?? '';
+      let timer = 0;
+      button.addEventListener('click', () => {
+        if (typeof navigator.share === 'function') {
+          navigator.share({ text }).catch(() => undefined);
+          return;
+        }
+        void copyText(text).then((ok) => {
+          labelEl.textContent =
+            (ok ? button.dataset.replyDone : button.dataset.replyFailed) ?? idle;
+          window.clearTimeout(timer);
+          timer = window.setTimeout(() => (labelEl.textContent = idle), ok ? 2500 : 4000);
+        });
+      });
+    });
+  }
+</script>

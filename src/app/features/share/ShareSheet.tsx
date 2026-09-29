@@ -45,7 +45,7 @@ import {
   shareTargets,
   storyCaption,
   storyFileName,
-  telegramShareUrl,
+  telegramChatShareUrl,
   type ShareEnv,
   type ShareTarget,
 } from './targets';
@@ -231,14 +231,14 @@ export function ShareSheet({ open, onClose, data, text, link, seed }: ShareSheet
           return;
         }
         case 'telegramChat': {
-          let url = link ?? appLink();
-          if (env.publicUploads) {
-            // The picture itself when it can be put somewhere public; the app's link otherwise.
-            url = await upload(rendered.blob)
-              .then((u) => (u.public ? u.url : url))
-              .catch(() => url);
-          }
-          const shareUrl = telegramShareUrl(url, text);
+          // The picture itself when it can be put somewhere public; the caller's link (the
+          // club's referral link) stays in the message either way (`telegramChatShareUrl`).
+          const picture = env.publicUploads
+            ? await upload(rendered.blob)
+                .then((u) => (u.public ? u.url : null))
+                .catch(() => null)
+            : null;
+          const shareUrl = telegramChatShareUrl(text, link, picture, appLink());
           if (!openExternal(shareUrl)) window.open(shareUrl, '_blank', 'noopener');
           return;
         }

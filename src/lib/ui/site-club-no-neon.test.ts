@@ -11,6 +11,10 @@
  * variant (and a `<Button>` with no variant at all, which *is* `primary`), the `action` pill tone,
  * the `bg-action` / `text-action` utilities, and `data-neon`, the mark a neon control carries for
  * the sticky bar. Prose in comments may say «neon»; only code counts.
+ *
+ * Two surfaces outside `club/` wear the club's colours and so obey the same rule: the invite card
+ * (`ShareInvite.tsx` — the aurora, the gradient hairline, a gradient «Отправить») and, through
+ * `club/TogetherClub.astro`, the «Вдвоём в клубе» block of `/together/`.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -19,6 +23,8 @@ import { describe, expect, it } from 'vitest';
 
 const SRC = fileURLToPath(new URL('../../', import.meta.url));
 const CLUB = join(SRC, 'components/landing/club');
+/** Club-coloured surfaces that live outside `club/`. */
+const ALSO = [join(SRC, 'components/landing/ShareInvite.tsx')];
 
 function files(dir: string): string[] {
   const out: string[] = [];
@@ -66,11 +72,13 @@ function offences(file: string, text = readFileSync(file, 'utf8')): string[] {
 }
 
 describe('the site’s club zone has no neon', () => {
-  const found = files(CLUB);
+  const found = [...files(CLUB), ...ALSO];
 
   it('finds the club’s components', () => {
     expect(found.some((f) => f.endsWith('ClubTitle.astro'))).toBe(true);
     expect(found.some((f) => f.endsWith('ClubDay.astro'))).toBe(true);
+    expect(found.some((f) => f.endsWith('TogetherClub.astro'))).toBe(true);
+    expect(found.some((f) => f.endsWith('ShareInvite.tsx'))).toBe(true);
   });
 
   it('flags the neon’s variants, tones, classes and mark, and only those (the scanner itself)', () => {

@@ -7,12 +7,16 @@ import {
   stashReferral as appStashReferral,
 } from '@/app/features/marathon/duoInvite';
 import { parseEntryParams, SRC_KEY as APP_SRC_KEY } from '@/app/features/entry/params';
+import { MY_REF_KEY } from '@/lib/referral/mine';
 import {
   REFERRAL_KEY,
   SRC_KEY,
+  acceptReferral,
+  activeReferral,
   clubJoinWithRef,
   pendingReferral,
   reachGoal,
+  referralIsThisLink,
   rememberSource,
   rememberedSource,
   slugSource,
@@ -71,11 +75,22 @@ describe('the referral rule matches the app', () => {
     }
   });
 
+  it('is one copy, not two', () => {
+    expect(stashReferral).toBe(appStashReferral);
+    expect(pendingReferral).toBe(appPendingReferral);
+  });
+
   it('keeps the app out of the site bundle', () => {
     for (const file of ['./visit.ts', './StartForm.tsx']) {
       const src = readFileSync(fileURLToPath(new URL(file, import.meta.url)), 'utf8');
       expect(src, file).not.toMatch(/from ['"]@\/app\//);
     }
+    // The shared rule itself imports nothing: whatever it pulled in, every page would load.
+    const pending = readFileSync(
+      fileURLToPath(new URL('../../lib/referral/pending.ts', import.meta.url)),
+      'utf8',
+    );
+    expect(pending).not.toMatch(/^import /m);
   });
 });
 
@@ -154,5 +169,46 @@ describe('reachGoal', () => {
     const ym = vi.fn();
     reachGoal('app_start', null, { ym });
     expect(ym).not.toHaveBeenCalled();
+  });
+});
+
+describe('a referral from the address bar', () => {
+  it('stashes a friend’s code, first code wins', () => {
+    const store = memory();
+    expect(acceptReferral('abcd1234', store)).toBe('stashed');
+    expect(acceptReferral('zzzz9999', store)).toBe('kept');
+    expect(pendingReferral(store)).toBe('abcd1234');
+    expect(acceptReferral('<script>', store)).toBe('none');
+    expect(acceptReferral(null, store)).toBe('none');
+  });
+
+  it('never stashes the visitor’s own code', () => {
+    const store = memory();
+    store.setItem(MY_REF_KEY, 'abcd1234');
+    expect(acceptReferral('abcd1234', store)).toBe('own');
+    expect(pendingReferral(store)).toBeNull();
+  });
+
+  it('ignores an own code stashed before the app cached it', () => {
+    const store = memory();
+    store.setItem(REFERRAL_KEY, 'abcd1234');
+    expect(activeReferral(store)).toBe('abcd1234');
+    store.setItem(MY_REF_KEY, 'abcd1234');
+    expect(activeReferral(store)).toBeNull();
+  });
+
+  it('promises the +30 only for the link whose code is the one waiting', () => {
+    const store = memory();
+    // Аня's link first: her code waits.
+    expect(acceptReferral('aaaa1111', store)).toBe('stashed');
+    expect(referralIsThisLink('aaaa1111', store)).toBe(true);
+    // Маша's link later: kept, and her page must not promise the reward.
+    expect(acceptReferral('bbbb2222', store)).toBe('kept');
+    expect(referralIsThisLink('bbbb2222', store)).toBe(false);
+    // A plain link with an old code waiting promises nothing either.
+    expect(referralIsThisLink(null, store)).toBe(false);
+    // Nor does the visitor's own code.
+    store.setItem(MY_REF_KEY, 'aaaa1111');
+    expect(referralIsThisLink('aaaa1111', store)).toBe(false);
   });
 });

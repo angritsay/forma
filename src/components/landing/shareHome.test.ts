@@ -1,17 +1,26 @@
 import { describe, expect, it } from 'vitest';
-import { absoluteShareUrl } from './shareHome';
+import { parseInviteCopy } from './shareHome';
 
-describe('absoluteShareUrl', () => {
-  it('joins the origin, the built path and the anchor', () => {
-    expect(absoluteShareUrl('https://forma.fit', '/', '#together')).toBe(
-      'https://forma.fit/#together',
-    );
-    expect(absoluteShareUrl('https://x.github.io/', '/forma/en/', 'together')).toBe(
-      'https://x.github.io/forma/en/#together',
-    );
+describe('parseInviteCopy', () => {
+  const full = {
+    when: 'a',
+    whenTomorrow: 'b',
+    whenToday: 'c',
+    whenSoon: 'd',
+    soonLabel: 'e',
+    text: 'f {when} {url}',
+    refLine: 'g',
+  };
+
+  it('reads the templates a button carries', () => {
+    expect(parseInviteCopy(JSON.stringify(full))).toEqual(full);
   });
 
-  it('leaves the anchor off when there is none', () => {
-    expect(absoluteShareUrl('https://forma.fit', 'en/')).toBe('https://forma.fit/en/');
+  it('refuses anything missing, mistyped or not JSON', () => {
+    expect(parseInviteCopy(undefined)).toBeNull();
+    expect(parseInviteCopy('{')).toBeNull();
+    expect(parseInviteCopy(JSON.stringify({ ...full, text: 1 }))).toBeNull();
+    const partial = Object.fromEntries(Object.entries(full).filter(([k]) => k !== 'refLine'));
+    expect(parseInviteCopy(JSON.stringify(partial))).toBeNull();
   });
 });

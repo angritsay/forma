@@ -13,6 +13,7 @@
  * Чистый модуль, без React: проверяется в node.
  */
 import type { TKey } from '@/i18n';
+import { localStore, stashReferral } from '@/lib/referral/pending';
 import { isAppError, isNetworkError } from '@/lib/api/errors';
 
 export const DUO_INVITE_KEY = 'forma.duoInvite';
@@ -21,31 +22,27 @@ export const DUO_START_SEEN_KEY = 'forma.duoInviteStartSeen';
 /** `t.me/<bot>/<app>?startapp=duo_<token>` — the prefix says what the parameter carries. */
 export const DUO_START_PREFIX = 'duo_';
 /**
- * Реферальный код (0051): `?startapp=ref_<код>` или `#/ref/<код>`. Живёт в localStorage, а не в
- * сессии: подруга открывает ссылку сегодня, а регистрируется и платит через несколько дней, и
- * код должен дождаться первого входа. Снимается сразу после первой попытки привязки.
+ * Реферальный код (0051): `?startapp=ref_<код>`, `?ref=<код>` или `#/ref/<код>`. Правило — где он
+ * ждёт, какой формы и «первый код побеждает» — одно на сайт и приложение и живёт в
+ * `src/lib/referral/pending.ts`; здесь оно только переэкспортируется для старых импортов.
  */
-export const REFERRAL_KEY = 'forma.referral';
+export {
+  REFERRAL_KEY,
+  clearReferral,
+  isReferralCode,
+  pendingReferral,
+  stashReferral,
+} from '@/lib/referral/pending';
 export const REF_START_PREFIX = 'ref_';
 
 /** Тот же шаблон, что `check` на `club_duo_invites.token` (0034): всё прочее не наше. */
 const TOKEN_RE = /^[A-Za-z0-9_-]{16,64}$/;
-/** Тот же шаблон, что `check` на `referral_codes.code` (0051). */
-const CODE_RE = /^[a-z0-9]{8}$/;
 
 type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
 function storage(): StorageLike | null {
   try {
     return typeof sessionStorage === 'undefined' ? null : sessionStorage;
-  } catch {
-    return null;
-  }
-}
-
-function localStore(): StorageLike | null {
-  try {
-    return typeof localStorage === 'undefined' ? null : localStorage;
   } catch {
     return null;
   }
@@ -113,41 +110,6 @@ export function stashStartParam(
     return false;
   }
   return stashDuoInvite(token, store);
-}
-
-/** Реферальный код (0051) — форма `referral_codes.code`, и ничего больше. */
-export function isReferralCode(code: string | null | undefined): code is string {
-  return typeof code === 'string' && CODE_RE.test(code);
-}
-
-/** Отложить код до входа и анкеты. Уже лежащий не перезаписывается: первый код побеждает. */
-export function stashReferral(code: string | undefined, store = localStore()): boolean {
-  if (!store || !isReferralCode(code)) return false;
-  try {
-    if (isReferralCode(store.getItem(REFERRAL_KEY))) return false;
-    store.setItem(REFERRAL_KEY, code);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export function pendingReferral(store = localStore()): string | null {
-  if (!store) return null;
-  try {
-    const code = store.getItem(REFERRAL_KEY);
-    return isReferralCode(code) ? code : null;
-  } catch {
-    return null;
-  }
-}
-
-export function clearReferral(store = localStore()): void {
-  try {
-    store?.removeItem(REFERRAL_KEY);
-  } catch {
-    /* приватный режим: снимать нечего */
-  }
 }
 
 /** `https://t.me/<bot>/<app>`, без хвостовых слэшей — или '' для всего, что на неё не похоже. */

@@ -20,15 +20,17 @@
  * buttons it duplicates (`[data-club-join]`) and the footer.
  *
  * The share square uses `shareHome.ts`: the system share sheet inside the tap where there is one,
- * otherwise a scroll to `#together`. While hidden the bar is `inert`, so it is not in the tab order
+ * with the Monday message and the `/together/` link (`inviteShareAttrs`), otherwise a scroll to
+ * `#together` — or, on a page without that block, the `/together/` page itself. While hidden the bar is `inert`, so it is not in the tab order
  * or the accessibility tree; it slides rather than fades, and a reduced-motion reader gets no
  * slide at all (`motion-reduce:transition-none`).
  */
 import type { Locale } from '@/content/schema';
 import { t } from '@/i18n/index';
-import { appHref, href, localePath, withBase } from '@/lib/util/paths';
+import { appHref, href } from '@/lib/util/paths';
 import Button from './Button.astro';
 import { clubPriceLabels } from './club/clubPrice';
+import { inviteShareAttrs } from './inviteProps';
 
 interface Props {
   locale: Locale;
@@ -52,7 +54,7 @@ const {
 } = Astro.props;
 
 const club = variant === 'club' ? clubPriceLabels(locale) : null;
-const sharePath = withBase(localePath(locale, '/'));
+const share = inviteShareAttrs(locale);
 ---
 
 <div
@@ -91,10 +93,7 @@ const sharePath = withBase(localePath(locale, '/'));
     </div>
     <button
       type="button"
-      data-share-home
-      data-share-path={sharePath}
-      data-share-title={t(locale, 'landing.shareTitle')}
-      data-share-text={t(locale, 'landing.shareText')}
+      {...share}
       aria-label={t(locale, 'landing.shareCta')}
       class="flex size-14 shrink-0 items-center justify-center rounded-control border border-border-strong bg-surface-2 text-text transition-colors hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
@@ -104,10 +103,7 @@ const sharePath = withBase(localePath(locale, '/'));
 </div>
 
 <script>
-  import { bindShareHome } from './shareHome';
-
-  bindShareHome();
-
+  // The share icon is bound by the layout's `bindShareHome()`, like every `[data-share-home]`.
   document.querySelectorAll<HTMLElement>('[data-sticky-start]').forEach((bar) => {
     const anchor = document.querySelector(bar.dataset.anchor ?? '');
     const blockers = Array.from(

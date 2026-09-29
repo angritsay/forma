@@ -91,9 +91,6 @@ export const landing = {
   togetherIntro:
     'Starting alone is easy to put off; with someone else, you would rather not let them down. Take the link right here, no sign-up.',
   togetherLinkLabel: 'A link to send',
-  togetherLinkHint: 'Your friend opens this same page — and sees the same three steps.',
-  togetherPersonal:
-    'A personal link is made in the app: if someone pays for the club through it, you both get +30 days of the club.',
   togetherPersonalCta: 'Make the link personal',
   togetherNoDiscount: 'No discount — just days, and a partner.',
   togetherStep1Title: 'Send the link',
@@ -387,10 +384,9 @@ export const landing = {
   startEmailInvalid: 'Check the address — or leave the field empty',
   shareCta: 'Bring someone along',
   shareTitle: 'Forma — home CrossFit',
-  shareText:
-    'Shall we train together? Forma is home CrossFit in small steps. The first workout is free.',
   copyLink: 'Copy the link',
   copyLinkDone: 'Link copied',
+  copyLinkFailed: "Couldn't copy — the link is in the message above",
   stickyRegion: 'Quick start',
   clubPriceMonth: '{price} / mo',
   clubPriceYear: '{price} a year',
@@ -424,4 +420,73 @@ export const landing = {
   phonesMinute: 'Minute {n} of {total}',
   phonesAfter: 'After the workout',
   qrLabel: 'Open it on your phone — point the camera',
+  // The invite to start together (src/lib/share/invite.ts). {date} is «5 October», built by Intl.
+  inviteWhen: 'on Monday, {date}',
+  inviteWhenTomorrow: 'tomorrow, Monday {date}',
+  inviteWhenToday: 'today',
+  inviteShareText:
+    "Shall we start training together {when}? It's Forma — home CrossFit in small steps from coach Sergey Titov: short workouts, no jumping, the load adapts to you. The first one is free: {url}",
+  inviteShareRef: 'Pay for the club through this link and we both get +30 days.',
+  inviteCalendarTitle: 'Forma — workout 1',
+  inviteCalendarDetails: 'Workout 1, together. Open it here: {url}',
+  inviteWhenSoon: 'on the coming Monday',
+  inviteSoonLabel: 'the coming Monday',
+  // The «Bring someone along» card (ShareInvite.tsx). No neon: «Send» is the warm gradient.
+  inviteChip: 'Start — {date}',
+  inviteNameLabel: 'How to sign it',
+  inviteNamePlaceholder: 'Your name — optional',
+  inviteNameHint: 'Letters only, up to 16 — otherwise unsigned',
+  invitePreviewLabel: 'What the message will say',
+  inviteSend: 'Send',
+  inviteCalendar: 'Add to calendar',
+  inviteCalendarGoogle: 'Google Calendar',
+  inviteCalendarFile: 'File for Apple and Outlook (.ics)',
+  inviteRefOff:
+    '+30 days of the club for both of you — if the link is personal and the club is paid for through it.',
+  inviteRefOn: 'The link is personal: if the club is paid for through it, you both get +30 days.',
+  // The friend's page, /together/. The name from the link is set with textContent only.
+  togetherEyebrowFrom: '{name} invites you',
+  togetherEyebrowPlain: 'An invitation',
+  togetherH1: 'Training together from Monday',
+  togetherLead: '{date} — workout 1. Free, about {total} minutes, no jumping and no equipment.',
+  togetherLeadSoon: 'The coming Monday',
+  togetherStart: 'Start with workout 1',
+  togetherReply: "Reply: I'm in",
+  togetherReplyText: "I'm in — we start on Monday!",
+  togetherReplyDone: 'Copied — paste it into the chat',
+  togetherReplyFailed: "Couldn't copy — just write «I'm in» yourself",
+  togetherOwnLink: 'This is your own link — send it on',
+  togetherInApp: 'Open this in your browser so the invitation is not lost',
+  togetherWeekEyebrow: 'The first week',
+  togetherWeekTitle: 'How the first week goes',
+  togetherWeek1Title: 'Monday — workout 1',
+  togetherWeek1Text: 'Each of you at home. Free, and you can repeat it.',
+  togetherWeek2Title: 'Then — at your own pace',
+  togetherWeek2Text: 'The coach suggests five a week, but a skipped day breaks nothing.',
+  togetherWeek3Title: 'Every day together — the club',
+  togetherWeek3Text:
+    'One small task a day and one board for the two of you. The club is a subscription.',
+  togetherClubEyebrow: 'Two of you in the club',
+  togetherClubTitle: 'One board for two',
+  togetherClubRef:
+    '+30 days of the club — for you and the friend who invited you, once you pay for the club through this link. And you become one pair, if neither of you has a pair yet.',
+  togetherClubNoRef:
+    'Once you are both in the club, one of you taps «{invite}» in the duo — and you are a pair. Or on Monday the club finds you a partner.',
+  togetherClubPrize:
+    'The pair on top of the board on Sunday gets an hour with the coach each. The coach announces the winner.',
+  togetherCoachMore: 'More about the coach',
+  togetherMoreTitle: 'Invite someone else',
+  togetherFaq1Q: 'How do we get +30 days?',
+  togetherFaq1A:
+    'Open the personal link of the friend who invited you and join the club through the app — you both get +30 days. There is no reward if you have been in the club before or only buy the course. It is not a discount: the price stays the same, the days are added.',
+  togetherFaq2Q: 'What is the prize for a pair?',
+  togetherFaq2A:
+    'Every Sunday the pair on top of the club board gets an hour with the coach each. The coach announces the winner and settles any ties.',
+  togetherFaq3Q: 'How do we end up as one pair?',
+  togetherFaq3A:
+    'If the club is paid for through a personal link, you become a pair on your own — as long as neither of you has a pair yet. Otherwise one of you taps «Invite a friend» in the duo. And with no pair, on Monday the club finds you a partner.',
+  // /subscribe/: a note for people who came with an invitation (revealed by the script).
+  subscribeRefNote:
+    'Came with an invitation? Join through the app — that way you both get +30 days.',
+  subscribeRefCta: 'Join through the app',
 } as const;

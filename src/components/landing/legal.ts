@@ -139,6 +139,10 @@ export function privacyDocument(): LegalDocument {
             en: 'Name (display name) and avatar — you set them yourself in your profile; other participants see them on the leaderboard.',
           },
           {
+            ru: 'Приглашения: по чьей ссылке ты пришёл и оплачен ли после этого клуб — чтобы начислить дни клуба обоим (раздел 5а оферты). На экране приглашений пригласивший видит только числа — сколько человек пришло и оплатило, — а не почту.',
+            en: 'Invitations: whose link you came through and whether the club was paid for afterwards — so that club days can be credited to both (section 5a of the terms). On the invitation screen the inviter sees only numbers — how many people came and paid — never an email.',
+          },
+          {
             ru: 'Данные тренировок: ответы при первом входе (возрастная группа, пол, оборудование), результаты тестов, выполненные тренировки, оценки усилия и самочувствия, очки.',
             en: 'Training data: your onboarding answers (age band, sex, equipment), test results, completed workouts, effort and feeling ratings and points.',
           },
@@ -268,6 +272,46 @@ export function privacyDocument(): LegalDocument {
         ],
       },
       cookiesSection(),
+      /*
+       * What the site and the app keep in the browser, key by key. Each is functional (the invite,
+       * the way back after sign-in, where a visit came from), none is advertising, and 152-ФЗ
+       * ст. 18.1 wants the purposes named rather than summed up as «служебные данные».
+       */
+      {
+        id: 'browser',
+        heading: {
+          ru: '4а. Что хранится в браузере',
+          en: '4a. What is kept in the browser',
+        },
+        paragraphs: [
+          {
+            ru: 'Кроме сессии входа и настроек, сайт и приложение записывают в память браузера (localStorage или sessionStorage) несколько служебных значений. Они лежат только на твоём устройстве; удалить их можно, очистив данные сайта в браузере.',
+            en: 'Besides the login session and settings, the site and the app write a few functional values to the browser’s storage (localStorage or sessionStorage). They stay on your device; you can remove them by clearing the site’s data in your browser.',
+          },
+        ],
+        bullets: [
+          {
+            ru: '«forma.referral» (localStorage) — код приглашения из ссылки, по которой ты пришёл, чтобы после входа засчитать его и начислить дни клуба. Приложение передаёт код на сервер при первой попытке привязать его к аккаунту и сразу после этого удаляет из браузера.',
+            en: '«forma.referral» (localStorage) — the invitation code from the link you came through, so that after sign-in it can be applied and the club days credited. The app sends the code to the server on its first attempt to attach it to your account and removes it from the browser right after.',
+          },
+          {
+            ru: '«forma.myRef» и «forma.myName» (localStorage) — твой собственный код приглашения и первое слово имени из профиля, чтобы сайт мог собрать твою личную ссылку и подписать её. Записываются, когда ты открываешь экран приглашения или делишься клубом в приложении, и удаляются при выходе из аккаунта. Имя попадает только в ссылку, которую ты сам отправляешь.',
+            en: '«forma.myRef» and «forma.myName» (localStorage) — your own invitation code and the first word of your profile name, so the site can build your personal link and sign it. They are written when you open the invitation screen or share the club in the app and removed when you sign out. The name goes only into the link you choose to send.',
+          },
+          {
+            ru: '«forma.src» (localStorage) — одна короткая метка того, откуда пришёл первый визит: рекламная метка ссылки или страница сайта. Пишется один раз и не перезаписывается; вместе с заявкой на оплату передаётся на сервер, чтобы понимать, какие ссылки работают. Хранится, пока не очистишь данные сайта.',
+            en: '«forma.src» (localStorage) — one short label of where the first visit came from: a campaign tag of the link or the page of the site. It is written once and never overwritten; it is sent to the server with an order, so that we know which links work. It stays until you clear the site’s data.',
+          },
+          {
+            ru: '«forma.next» (sessionStorage) — куда вела ссылка, пока ты входишь или проходишь первые вопросы, чтобы потом открыть именно этот экран. Удаляется, как только использован, и в любом случае при закрытии вкладки.',
+            en: '«forma.next» (sessionStorage) — where a link was going while you sign in or answer the first questions, so that exactly that screen opens afterwards. It is removed once used, and in any case when the tab is closed.',
+          },
+          {
+            ru: '«forma.authEmail» (sessionStorage) — адрес, который ты ввёл на главной странице, чтобы приложение отправило код без повторного ввода. Удаляется, как только приложение его прочитало, и в любом случае при закрытии вкладки; в адрес страницы он не попадает.',
+            en: '«forma.authEmail» (sessionStorage) — the address you typed on the homepage, so the app can send the code without asking again. It is removed as soon as the app has read it, and in any case when the tab is closed; it never goes into a page address.',
+          },
+        ],
+      },
       {
         id: 'retention',
         heading: { ru: '5. Срок хранения', en: '5. Retention' },
@@ -437,6 +481,74 @@ export function termsDocument(): LegalDocument {
           {
             ru: 'Подписка не списывается автоматически: каждый период Пользователь оплачивает сам, по цене, указанной на странице на момент оплаты. Мы не храним реквизиты карт и не можем списать деньги без нового действия Пользователя. Если автосписание когда-нибудь появится, оно будет отдельно включаемой опцией, а не изменением этих условий.',
             en: 'A Subscription is not charged automatically: the User pays for each period themselves, at the price shown on the page at the time of payment. We do not store card details and cannot take money without a fresh action by the User. Should automatic renewal ever be introduced, it will be an option to switch on, not a change to these terms.',
+          },
+        ],
+      },
+      /*
+       * The invitation programme (0051, 0053) and the weekly prize (0033), as they actually work.
+       * Days, never a discount; the prize is what the coach gives, and nothing here promises an
+       * hour for simply joining together (the owner's decision of 29 Sep).
+       */
+      {
+        id: 'referral',
+        heading: {
+          ru: '5а. Приглашения: +30 дней клуба',
+          en: '5a. Invitations: +30 days of the club',
+        },
+        bullets: [
+          {
+            ru: 'У каждого Пользователя есть личная ссылка-приглашение. Если человек, пришедший по ней, оплатит Подписку (клуб) через Приложение, Исполнитель добавляет по 30 дней доступа к клубу обоим — ему и пригласившему.',
+            en: 'Every User has a personal invitation link. If a person who came through it pays for a Subscription (the club) through the App, the Provider adds 30 days of club access to both of them — the new member and the one who invited them.',
+          },
+          {
+            ru: 'Награда начисляется только за оплату Подписки. Покупка отдельного Курса её не даёт.',
+            en: 'The reward is given only for paying for a Subscription. Buying a single Course does not earn it.',
+          },
+          {
+            ru: 'Награды нет, если у пришедшего уже была Подписка до того, как он пришёл по ссылке, и если это его собственная ссылка.',
+            en: 'There is no reward if the new member already had a Subscription before coming through the link, or if the link is their own.',
+          },
+          {
+            ru: 'Засчитывается первая ссылка, по которой человек пришёл: следующие её не заменяют.',
+            en: 'The first link a person came through is the one that counts; later links do not replace it.',
+          },
+          {
+            ru: 'Пригласивший получает не больше 12 наград за 12 месяцев; пришедший получает свои 30 дней в любом случае.',
+            en: 'The one who invites receives at most 12 rewards in 12 months; the new member receives their 30 days in any case.',
+          },
+          {
+            ru: 'Это не скидка: цена Подписки не меняется, к сроку доступа прибавляются дни. Дни не обмениваются на деньги.',
+            en: 'This is not a discount: the Subscription price stays the same, and days are added to the access period. Days cannot be exchanged for money.',
+          },
+          {
+            ru: 'Вместе с наградой пригласивший, которого ещё нет в клубе, попадает в оба его круга — соло и дуо, если награда ему начислена и его доступ к клубу действует; тот, кто из клуба вышел, обратно не добавляется. Если оба в клубе и ни у кого из двоих нет пары, выбранной самими, они становятся парой в дуо сами, без приглашения.',
+            en: 'Along with the reward, an inviter who is not in the club yet is added to both of its circles — solo and duo — if the reward was credited to them and their club access is active; someone who left the club is not added back. If both are in the club and neither has a partner they chose themselves, they become a duo pair on their own, without an invitation.',
+          },
+          {
+            ru: 'Исполнитель может изменить или завершить программу приглашений, опубликовав изменения на этой странице; уже начисленные дни сохраняются.',
+            en: 'The Provider may change or end the invitation programme by publishing the change on this page; days already credited are kept.',
+          },
+        ],
+      },
+      {
+        id: 'prize',
+        heading: { ru: '5б. Приз недели в клубе', en: '5b. The club’s weekly prize' },
+        bullets: [
+          {
+            ru: 'Участники клуба набирают очки за задания; таблица недели подводится в воскресенье.',
+            en: 'Club members earn points for tasks; the week’s board is settled on Sunday.',
+          },
+          {
+            ru: 'Победителя недели объявляет тренер. При равном результате победителя определяет тренер.',
+            en: 'The coach announces the winner of the week. When results are tied, the coach decides the winner.',
+          },
+          {
+            ru: 'Приз — онлайн-занятие с тренером длительностью один час. В дуо приз получает каждый из пары — по часу.',
+            en: 'The prize is a one-hour online session with the coach. In the duo, each member of the pair gets the prize — an hour each.',
+          },
+          {
+            ru: 'Время занятия согласуется с тренером. Приз не обменивается на деньги.',
+            en: 'The time of the session is agreed with the coach. The prize cannot be exchanged for money.',
           },
         ],
       },

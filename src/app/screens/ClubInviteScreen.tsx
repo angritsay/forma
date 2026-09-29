@@ -13,6 +13,10 @@
  * иначе копирует в буфер и говорит об этом. Текст ссылки виден и без кнопки: он и есть
  * запасной путь.
  *
+ * Полученный код остаётся и в `localStorage['forma.myRef']` (с первым словом имени —
+ * `forma.myName`, `src/lib/referral/mine.ts`): сайт своей сессии не имеет и так узнаёт, что
+ * ссылку «Позвать с собой» на его страницах можно сделать личной. Уходит вместе с сессией.
+ *
  * Это экран клуба, и неона здесь нет: рамка — гребень клуба, кнопка — тёплая половина градиента
  * (`Button` `gradient`), ключевое слово — `.text-gradient` (design/CHANGELOG.md §17).
  */
@@ -30,6 +34,8 @@ import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { TopBar } from '@/app/components/TopBar';
 import { shareFailure } from '@/app/features/marathon/duoInvite';
 import { referralUrl } from '@/app/features/referral/link';
+import { useSession } from '@/app/store/session';
+import { rememberMyRef } from '@/lib/referral/mine';
 
 export default function ClubInviteScreen() {
   const { t, locale } = useT();
@@ -39,6 +45,7 @@ export default function ClubInviteScreen() {
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [busy, setBusy] = useState(false);
+  const displayName = useSession((s) => s.profile?.displayName ?? null);
 
   useEffect(() => {
     let alive = true;
@@ -57,7 +64,12 @@ export default function ClubInviteScreen() {
     };
   }, [attempt]);
 
-  const url = code ? referralUrl(code) : '';
+  // The site reads the code from here to make its own invite links personal (`mine.ts`).
+  useEffect(() => {
+    if (code) rememberMyRef(code, displayName);
+  }, [code, displayName]);
+
+  const url = code ? referralUrl(code, displayName, locale) : '';
 
   const copy = useCallback(async () => {
     if (!url) return;

@@ -8,7 +8,7 @@
  *   hero   «Кроссфит дома. Первая тренировка — сегодня», the email form (`StartForm`) and
  *          «Позвать с собой» right under it
  *   01     workout 1 in three phones, the coach's line, the course it opens, the QR from `lg`
- *   02     «Вместе с понедельника» (`#together`): steps and the link card (`TogetherLink`)
+ *   02     «Вместе с понедельника» (`#together`): steps and the invite card (`ShareInvite`)
  *   03     the load follows you: the adaptation demo and the engine's numbers as pills
  *   04     the club (`club/ClubSection`, the club's palette, no neon)
  *   05     the coach and his two tickets
@@ -39,10 +39,10 @@ import PriceLadder from '@/components/landing/PriceLadder.astro';
 import QrCode from '@/components/landing/QrCode.astro';
 import Section from '@/components/landing/Section.astro';
 import SessionTickets from '@/components/landing/SessionTickets.astro';
+import ShareInvite from '@/components/landing/ShareInvite';
 import StartForm from '@/components/landing/StartForm';
 import Steps from '@/components/landing/Steps.astro';
 import StickyStart from '@/components/landing/StickyStart.astro';
-import TogetherLink from '@/components/landing/TogetherLink.astro';
 import ClubSection from '@/components/landing/club/ClubSection.astro';
 import {
   buildDemo,
@@ -50,6 +50,7 @@ import {
   firstWorkoutFacts,
   firstWorkoutIntro,
 } from '@/components/landing/demo';
+import { inviteShareAttrs, shareInviteProps } from '@/components/landing/inviteProps';
 import { ADAPTATION, CHOICE_VOLUME } from '@/lib/training/constants';
 import { courseHref, coursePath } from '@/components/landing/courseHelpers';
 import { faqLd, itemListLd, organizationLd, websiteLd } from '@/components/landing/jsonld';
@@ -60,14 +61,7 @@ import type { Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { PHOTOS, photoSrc } from '@/lib/media/photos';
 import { canonicalUrl } from '@/lib/seo/urls';
-import {
-  absoluteUrl,
-  appHref,
-  href,
-  localePath,
-  localeStaticPaths,
-  withBase,
-} from '@/lib/util/paths';
+import { absoluteUrl, appHref, href, localeStaticPaths, withBase } from '@/lib/util/paths';
 import { BOOKING } from '@content/site/booking';
 import { COACH } from '@content/site/coach';
 import { ASSESSMENT_TOTAL_MIN } from '@content/site/assessment';
@@ -87,7 +81,6 @@ const description = t(locale, 'landing.homeDescription');
 
 const startHref = appHref('/start', { locale });
 const signInHref = appHref('', { locale });
-const homePath = withBase(localePath(locale, '/'));
 const telegramBot = LINKS.telegramBot;
 
 const demoCourse = COURSE_BY_ID.get(DEMO_COURSE_ID) ?? SITE_COURSES[0];
@@ -143,13 +136,11 @@ const adaptRows = [
   { title: t(locale, 'landing.adaptRow3Title'), text: t(locale, 'landing.adaptRow3Text') },
 ];
 
-/** The share button's data: the homepage on the visitor's origin, the app-neutral text. */
-const share = {
-  'data-share-home': true,
-  'data-share-path': homePath,
-  'data-share-title': t(locale, 'landing.shareTitle'),
-  'data-share-text': t(locale, 'landing.shareText'),
-} as const;
+/**
+ * «Позвать с собой»: the Monday message and the `/together/` link, composed in the tap by the same
+ * rule the together card uses (`inviteShareAttrs`, `shareHome.ts`).
+ */
+const share = inviteShareAttrs(locale);
 
 const quietLink =
   'control-label inline-flex min-h-11 items-center gap-2 text-[14px] text-text underline decoration-border-strong underline-offset-4 hover:decoration-text';
@@ -202,7 +193,8 @@ const jsonLd = [
     {
       /*
       «Позвать с собой» right under the form, on every width: the share sheet inside the tap
-      where there is one, otherwise a scroll to the together block (shareHome.ts).
+      where there is one — the Monday message and the /together/ link — otherwise a scroll to the
+      together block's card (shareHome.ts).
     */
     }
     <div slot="after" class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2">
@@ -309,7 +301,7 @@ const jsonLd = [
         },
       ]}
     />
-    <TogetherLink locale={locale} class="mt-10" />
+    <ShareInvite client:visible class="mt-10" {...shareInviteProps(locale, site)} />
   </Section>
 
   <Section
@@ -433,9 +425,3 @@ const jsonLd = [
 
   <StickyStart locale={locale} />
 </Landing>
-
-<script>
-  import { bindShareHome } from '@/components/landing/shareHome';
-
-  bindShareHome();
-</script>

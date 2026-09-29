@@ -106,6 +106,19 @@ const STATIC_PAGES: StaticDef[] = [
         } satisfies StaticDef,
       ]
     : []),
+  /*
+   * The page a friend opens from an invite. It is a real page with its own words, not a
+   * personalised copy: the query a link carries (`d`, `from`, `ref`) never reaches the HTML, so one
+   * canonical URL per language is the whole of it.
+   */
+  {
+    sitePath: '/together/',
+    kind: 'hub',
+    changefreq: 'monthly',
+    priority: 0.7,
+    title: (loc) => t(loc, 'seo.togetherTitle'),
+    description: (loc) => t(loc, 'seo.togetherDescription'),
+  },
   {
     sitePath: '/about/',
     kind: 'other',

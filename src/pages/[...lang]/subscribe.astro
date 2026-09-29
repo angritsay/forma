@@ -10,6 +10,16 @@
  * (records the intent, then hands over to Prodamus for `ru` and lava.top otherwise — see
  * `payRoute`), course vs club, a short FAQ. JSON-LD: Product with one Offer per plan,
  * BreadcrumbList, FAQPage.
+ *
+ * **Came with an invitation.** The order form pays first and signs in later, so a friend's code
+ * waiting in `forma.referral` would never reach the account before the payment — and the +30 days
+ * for both would be lost. While a code is pending (and is not the visitor's own), the page's
+ * script reveals a note that sends them through the app's club screen instead
+ * (`appHref('/marathon')`; the link is `data-club-join`, so the layout adds the code). No code in
+ * the payment URL, ever.
+ *
+ * **«Позвать с собой»** (`#together`): the same `ShareInvite` card as the homepage — the club is
+ * better with a pair, so the page that sells it is one of the places to send the Monday link.
  */
 import Landing from '@/layouts/Landing.astro';
 import HeroField from '@/components/landing/HeroField.astro';
@@ -19,6 +29,8 @@ import Faq from '@/components/landing/Faq.astro';
 import OrderForm, { type PlanOption } from '@/components/landing/OrderForm';
 import Pill from '@/components/landing/Pill.astro';
 import Section from '@/components/landing/Section.astro';
+import ShareInvite from '@/components/landing/ShareInvite';
+import { shareInviteProps } from '@/components/landing/inviteProps';
 import { breadcrumbLd, faqLd, organizationId } from '@/components/landing/jsonld';
 import type { Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
@@ -108,6 +120,22 @@ const jsonLd = [
         { label: t(locale, 'landing.navSubscribe') },
       ]}
     />
+    <p
+      class="mt-6 max-w-3xl border-l-2 border-accent pl-3 text-[14px] leading-snug text-text"
+      data-ref-note
+      hidden
+    >
+      {t(locale, 'landing.subscribeRefNote')}{' '}
+      <a
+        href={appHref('/marathon', { locale })}
+        class="whitespace-nowrap underline decoration-border-strong underline-offset-4 hover:decoration-text"
+        data-club-join
+        data-goal="club_join_ref"
+      >
+        {t(locale, 'landing.subscribeRefCta')}
+        <span class="glyph" aria-hidden="true">→</span>
+      </a>
+    </p>
     <div class="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12">
       <div>
         <HeroField>
@@ -247,7 +275,22 @@ const jsonLd = [
     </div>
   </Section>
 
+  <Section id="together" title={t(locale, 'landing.togetherTitle')} class="!pt-0 !pb-12 md:!pb-16">
+    <ShareInvite client:visible {...shareInviteProps(locale, site)} />
+  </Section>
+
   <Section id="faq" title={t(locale, 'landing.faqTitle')} class="!pt-0 !pb-12 md:!pb-16">
     <Faq items={faq} />
   </Section>
 </Landing>
+
+<script>
+  import { acceptReferral, activeReferral } from '@/components/landing/visit';
+
+  // A friend's code is waiting: show the way in that keeps it (the layout rewrites the link).
+  // `acceptReferral` first, as the layout does, so the order of the two scripts does not matter.
+  acceptReferral(new URLSearchParams(location.search).get('ref'));
+  if (activeReferral()) {
+    document.querySelector<HTMLElement>('[data-ref-note]')?.removeAttribute('hidden');
+  }
+</script>

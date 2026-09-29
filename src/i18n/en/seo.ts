@@ -12,6 +12,9 @@ export const seo = {
   coursesHubTitle: 'Home CrossFit courses',
   coursesHubDescription:
     'Home CrossFit from zero: a twenty-workout no-equipment course, a club with a task a day and the coach in Telegram. Sign in by email; the load adapts to you.',
+  togetherTitle: 'Train together from Monday',
+  togetherDescription:
+    'Bring a friend along: workout 1 of Forma is free for each of you, and in the Small Steps Club you can play as a pair — one board for the two of you.',
   aboutPage: 'About the coach',
   contactPage: 'Contact',
   privacyPage: 'Privacy policy',

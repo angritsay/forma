@@ -55,6 +55,7 @@ describe('buildPages', () => {
       '/privacy/',
       '/terms/',
       '/refund/',
+      '/together/',
     ]) {
       expect(
         pages

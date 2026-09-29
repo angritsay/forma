@@ -27,7 +27,7 @@ export const PRICING = {
    * changes: a log that names a version nobody can read any more proves nothing, and a person who
    * agreed to the old text has not agreed to the new one.
    */
-  legalUpdatedAt: '2026-09-18',
+  legalUpdatedAt: '2026-09-29',
   /** Supabase project region, named in the privacy policy. Match the region chosen in Supabase. */
   dataRegion: 'eu' as 'eu' | 'us',
   /** Minimum age to use the service, stated in the terms and the privacy policy. */

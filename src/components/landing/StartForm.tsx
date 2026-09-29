@@ -30,7 +30,7 @@
  * (`StickyStart.astro`) steps aside while it is on screen.
  */
 import { useId, useState, type SubmitEvent } from 'react';
-import { pendingReferral, withRef } from './visit';
+import { activeReferral, withRef } from './visit';
 
 export interface StartFormLabels {
   emailLabel: string;
@@ -99,7 +99,7 @@ export default function StartForm({
       }
     }
     // A friend's code waiting from `?ref=` rides along, as on every `[data-app-link]` (visit.ts).
-    const code = pendingReferral();
+    const code = activeReferral();
     window.location.assign(code ? withRef(appUrl, code) : appUrl);
   }
 
