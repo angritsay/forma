@@ -26,8 +26,8 @@ name: Deploy site
 # Repository secrets:
 #   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID   required when DEPLOY_TARGET is "cloudflare"
 #   INDEXNOW_KEY    optional — enables IndexNow submission after deploy
-#   PRIVATE_PAGE_KEY, PRIVATE_PAGE_PASSWORD   optional — with the variable PRIVATE_PAGE_PATH,
-#                   publish the password-protected private page (docs/SETUP.md §7.15)
+#   PRIVATE_PAGE_KEY, PRIVATE_PAGE_PASSWORD, PRIVATE_PAGE_PATH   optional — publish the
+#                   password-protected private page (docs/SETUP.md §7.15)
 
 on:
   push:
@@ -156,12 +156,16 @@ jobs:
 
       # The password-protected private page, reachable by direct link only (docs/SETUP.md §7.15).
       # Added after the audit and outside Astro, so no sitemap, llms.txt, RSS or IndexNow ever
-      # lists it. Skips itself until the two secrets and the variable are set.
+      # lists it. Skips itself until the three secrets are set. The path is a secret too, not a
+      # variable: a step's env is printed in the log, this repository's logs are public, and only
+      # secrets are masked there. A broken private page (a mistyped key) marks the step red but
+      # never holds back the rest of the site.
       - name: Private page
+        continue-on-error: true
         env:
           PRIVATE_PAGE_KEY: ${{ secrets.PRIVATE_PAGE_KEY }}
           PRIVATE_PAGE_PASSWORD: ${{ secrets.PRIVATE_PAGE_PASSWORD }}
-          PRIVATE_PAGE_PATH: ${{ vars.PRIVATE_PAGE_PATH }}
+          PRIVATE_PAGE_PATH: ${{ secrets.PRIVATE_PAGE_PATH }}
         run: node scripts/private/publish.mjs
 
       # CNAME is how GitHub Pages remembers a custom domain; Cloudflare keeps that in its own

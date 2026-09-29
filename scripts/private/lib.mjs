@@ -79,7 +79,10 @@ export function unseal(sealed, keyB64) {
     ).toString('utf8');
   } catch (err) {
     if (err instanceof Error && err.message.startsWith('PRIVATE_PAGE_KEY')) throw err;
-    throw new Error('PRIVATE_PAGE_KEY does not open this sealed page', { cause: err });
+    throw new Error(
+      'PRIVATE_PAGE_KEY does not open this sealed page: a character of the key differs from the one printed by seal.mjs (copy it again, exactly)',
+      { cause: err },
+    );
   }
 }
 

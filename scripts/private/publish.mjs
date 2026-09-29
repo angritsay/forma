@@ -7,7 +7,8 @@
  * Environment (see lib.mjs for the scheme):
  *   PRIVATE_PAGE_KEY       secret   — opens private/pitch.enc
  *   PRIVATE_PAGE_PASSWORD  secret   — what a visitor types
- *   PRIVATE_PAGE_PATH      variable — the page's one-segment path, e.g. "k7r2x9mq4t"
+ *   PRIVATE_PAGE_PATH      secret   — the page's one-segment path, e.g. "k7r2x9mq4t"
+ *                                     (a secret so the public log masks it)
  *   PRIVATE_PAGE_SOURCE    optional — the sealed file, default private/pitch.enc
  *
  * With any of the first three unset the page is skipped and the deploy goes on without it.
@@ -30,7 +31,7 @@ export function publish({ dist, env, log = console.log }) {
 
   if (!key || !password || !path) {
     log(
-      '[private] skipped: set secrets PRIVATE_PAGE_KEY and PRIVATE_PAGE_PASSWORD and variable PRIVATE_PAGE_PATH to publish the private page',
+      '[private] skipped: set secrets PRIVATE_PAGE_KEY, PRIVATE_PAGE_PASSWORD and PRIVATE_PAGE_PATH to publish the private page',
     );
     return null;
   }

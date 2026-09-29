@@ -1788,14 +1788,19 @@ it with that password (PBKDF2-SHA256, 600 000 iterations → AES-256-GCM).
 
 **Set it up** — Settings → Secrets and variables → Actions:
 
-| Kind     | Name                    | Value                                                          |
-| -------- | ----------------------- | -------------------------------------------------------------- |
-| Secret   | `PRIVATE_PAGE_KEY`      | the key printed when the page was sealed (given once, in chat) |
-| Secret   | `PRIVATE_PAGE_PASSWORD` | the password visitors type — a long passphrase                 |
-| Variable | `PRIVATE_PAGE_PATH`     | the path, one segment of 8–64 `a-z`, `0-9`, `-`                |
+| Kind   | Name                    | Value                                                          |
+| ------ | ----------------------- | -------------------------------------------------------------- |
+| Secret | `PRIVATE_PAGE_KEY`      | the key printed when the page was sealed (given once, in chat) |
+| Secret | `PRIVATE_PAGE_PASSWORD` | the password visitors type — a long passphrase                 |
+| Secret | `PRIVATE_PAGE_PATH`     | the path, one segment of 8–64 `a-z`, `0-9`, `-`                |
+
+All three are secrets, the path included: a step's settings are printed in its log, this
+repository's logs are public, and only secrets are masked there.
 
 Then Actions → Deploy site → Run workflow. The page is at `<site>/<PRIVATE_PAGE_PATH>/`. Until all
-three are set the step logs «skipped» and the site deploys without the page.
+three are set the step logs «skipped» and the site deploys without the page. If the step fails
+(most often a key copied with one character changed — the error says so), it turns red but the
+rest of the site still deploys.
 
 - **Change the password**: edit the secret and run the deploy again. Old copies of the page still
   open with the old password, so treat a leaked password as leaked content.
@@ -1804,9 +1809,9 @@ three are set the step logs «skipped» and the site deploys without the page.
 - **Replace the page**: `node scripts/private/seal.mjs <new.html>` rewrites `private/pitch.enc` and
   prints a new key; commit the file and put the new key into `PRIVATE_PAGE_KEY`. Never commit the
   plain HTML — `.gitignore` refuses anything in `private/` except `*.enc`.
-- **Take it down**: delete the variable `PRIVATE_PAGE_PATH` and run the deploy.
+- **Take it down**: delete the secret `PRIVATE_PAGE_PATH` and run the deploy.
 - The path is not a secret from anyone who reads the `gh-pages` branch; the password is what
-  protects the page. The workflow never prints the path in its public logs.
+  protects the page. Kept in a secret, it is masked in the public workflow logs.
 
 ## 7.10 What is still only in Russian
 
