@@ -52,10 +52,10 @@ export const landing = {
   // Home: SEO. The title already names Forma, so no suffix is added.
   homeTitle: 'Forma — home CrossFit: your first workout is free',
   homeDescription:
-    'Home CrossFit from coach Sergey Titov: short workouts with no jumping, and the load adapts to you. The first one is free, no card needed.',
+    'Home CrossFit in small steps: short workouts with no jumping, and the load adapts to you. The first one is free, no card needed.',
 
   // Home: hero. The key word is «today»; the thin part is «Your first workout —».
-  heroEyebrow: 'Coach — Sergey Titov',
+  heroEyebrow: 'In small steps',
   heroTitle: 'Home CrossFit. Your first workout — today',
   heroThin: 'Your first workout —',
   heroSubtitle:
@@ -387,7 +387,7 @@ export const landing = {
   shareCta: 'Bring someone along',
   shareTitle: 'Forma — home CrossFit',
   shareText:
-    'Shall we train together? Forma is home CrossFit in small steps from coach Sergey Titov. The first workout is free.',
+    'Shall we train together? Forma is home CrossFit in small steps. The first workout is free.',
   copyLink: 'Copy the link',
   copyLinkDone: 'Link copied',
   stickyRegion: 'Quick start',

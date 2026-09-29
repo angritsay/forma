@@ -1,4 +1,4 @@
-FORMA // Сергей Титов
+FORMA
 
 Код для входа · Sign-in code: {{ .Token }}
 
