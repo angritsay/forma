@@ -14,7 +14,10 @@
  *
  * Two surfaces outside `club/` wear the club's colours and so obey the same rule: the invite card
  * (`ShareInvite.tsx` — the aurora, the gradient hairline, a gradient «Отправить») and, through
- * `club/TogetherClub.astro`, the «Вдвоём в клубе» block of `/together/`.
+ * `club/TogetherClub.astro`, the «Вдвоём в клубе» block of `/together/`. And one whole page:
+ * `/subscribe/` is the club (`pages/[...lang]/subscribe.astro`), so none of its own markup may
+ * paint the neon either — its join is the gradient, workout 1 a quiet link, and its order form
+ * takes `tone="club"`.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -24,7 +27,10 @@ import { describe, expect, it } from 'vitest';
 const SRC = fileURLToPath(new URL('../../', import.meta.url));
 const CLUB = join(SRC, 'components/landing/club');
 /** Club-coloured surfaces that live outside `club/`. */
-const ALSO = [join(SRC, 'components/landing/ShareInvite.tsx')];
+const ALSO = [
+  join(SRC, 'components/landing/ShareInvite.tsx'),
+  join(SRC, 'pages/[...lang]/subscribe.astro'),
+];
 
 function files(dir: string): string[] {
   const out: string[] = [];
@@ -78,7 +84,17 @@ describe('the site’s club zone has no neon', () => {
     expect(found.some((f) => f.endsWith('ClubTitle.astro'))).toBe(true);
     expect(found.some((f) => f.endsWith('ClubDay.astro'))).toBe(true);
     expect(found.some((f) => f.endsWith('TogetherClub.astro'))).toBe(true);
+    expect(found.some((f) => f.endsWith('ClubBand.astro'))).toBe(true);
     expect(found.some((f) => f.endsWith('ShareInvite.tsx'))).toBe(true);
+    expect(found.some((f) => f.endsWith('subscribe.astro'))).toBe(true);
+  });
+
+  it('gives the club page’s order form the club’s tone', () => {
+    const page = readFileSync(join(SRC, 'pages/[...lang]/subscribe.astro'), 'utf8');
+    for (const m of page.matchAll(/<OrderForm\b[\s\S]*?\/>/g)) {
+      expect(m[0]).toMatch(/\btone="club"/);
+    }
+    expect(page).toMatch(/<OrderForm\b/);
   });
 
   it('flags the neon’s variants, tones, classes and mark, and only those (the scanner itself)', () => {

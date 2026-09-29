@@ -13,6 +13,9 @@
  *
  * Related things are rows, not grids of cards: exercises as still + name + pills, courses as
  * tile + name + pills, guides as title + reading time.
+ *
+ * The closing call puts workout 1 first (site synthesis §3, row 21): the neon «Сделать тренировку
+ * 1 бесплатно» into the app's `#/start`, «Открыть курс» as the white button beside it.
  */
 import { render, type CollectionEntry } from 'astro:content';
 import Landing from '@/layouts/Landing.astro';
@@ -41,7 +44,7 @@ import {
 import { articleJsonLd, breadcrumbJsonLd, faqJsonLd } from '@/lib/seo/jsonld';
 import { ogImagePath, readingTimeMinutes } from '@/lib/seo/meta';
 import { canonicalUrl, siteOrigin } from '@/lib/seo/urls';
-import { absoluteUrl, href, withBase } from '@/lib/util/paths';
+import { absoluteUrl, appHref, href, withBase } from '@/lib/util/paths';
 import { COACH } from '@content/site/coach';
 
 interface Props {
@@ -315,9 +318,20 @@ const H2 = 'display text-lg md:text-xl';
         <h2 class="display text-2xl md:text-3xl">{t(locale, 'seo.guideCtaTitle')}</h2>
         <p class="mt-4 max-w-xl text-[15px] leading-relaxed text-muted">{ctaText}</p>
       </div>
-      <Button href={ctaHref} size="lg" class="mt-6 w-full shrink-0 sm:w-auto md:mt-0">
-        {ctaButton}
-      </Button>
+      <div class="mt-6 flex shrink-0 flex-col gap-3 sm:flex-row md:mt-0">
+        <Button
+          href={appHref('/start', { locale })}
+          size="lg"
+          class="w-full sm:w-auto"
+          data-goal="app_start"
+          data-app-link
+        >
+          {t(locale, 'landing.startWorkout1Cta')}
+        </Button>
+        <Button href={ctaHref} variant="plain" size="lg" class="w-full sm:w-auto">
+          {ctaButton}
+        </Button>
+      </div>
     </section>
   </div>
 </Landing>

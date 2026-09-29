@@ -1,15 +1,33 @@
 ---
 /**
- * The club page («Клуб + курс»). The path is still /subscribe/ — it is linked from the app's
- * club screen, the banners and the course pages, and the product it sells is still the
- * subscription — but what it sells it *as* is the club: one small task a day, the week's board,
- * the streak and the duo, with the beginners course inside (the owner's decision).
+ * The club page, «Клуб маленьких шагов» (site synthesis §5, PR 4). The path is still /subscribe/ —
+ * the app's club screen, the banners and the course pages link here, and a static host cannot
+ * redirect — but the nav calls it «Клуб», and what it sells is the club with the beginners course
+ * inside.
  *
- * Two plan tickets with the price as the figure (content/site/plans.ts — the club's plan,
- * CLUB_PLAN_ID, is the preselected one and wears the badge), what is included, the order form
- * (records the intent, then hands over to Prodamus for `ru` and lava.top otherwise — see
- * `payRoute`), course vs club, a short FAQ. JSON-LD: Product with one Offer per plan,
- * BreadcrumbList, FAQPage.
+ * Visual-first, like the homepage: every section is a kicker, a headline of at most six words, at
+ * most two short lines, one picture and one action; the details are glyph rows, big figures and
+ * the questions at the foot. The whole page is the club's palette — graphite under the aurora,
+ * the warm gradient for its actions — and **has no neon anywhere** (`site-club-no-neon.test.ts`
+ * scans this file too). Workout 1 is offered as a quiet link, not as the neon it is elsewhere.
+ *
+ *   hero     `ClubTitle` as the H1 (no `KeyTitle`, no blue field), the app's lead (`app.clubLead*`,
+ *            the accent in light blue, as body type must be), the figure with the year's charge
+ *            (`clubPriceLabels`: 666 never without 7 990; EN the year only), the gradient join to
+ *            `#order` (the sticky bar's anchor), «Сначала тренировка 1 — бесплатно»; beside it the
+ *            coach on video
+ *   day      a day in the club as a still chat (`ClubDay`) beside the first three features
+ *            (`app.clubFeature1–3`, verbatim) as glyph rows
+ *   streak   the milestones from `clubMilestones.ts` and the prize (`app.clubFeature4Body`, «в дуо —
+ *            каждому из пары») on the coach's photograph (`club/ClubStreakPrize`)
+ *   pair     `#together`: `app.duoNoneBody` in one line, then the compact `ShareInvite` (which
+ *            carries the conditional +30 and `app.inviteNote`; the full rule is FAQ 6)
+ *   bot      the bot's three moments as tiles (`club/ClubBotMoments`); the messages can be muted
+ *   plans    two tickets (`club/ClubPlans`), each picking its plan in the form below
+ *   order    `OrderForm tone="club"`: the gradient submit, everything else as before
+ *   vs       «Курс или клуб?»: one line and the price ladder's course and club steps
+ *   faq      six questions: the task, the prize, auto-renewal, +30 and the pair, the period's end,
+ *            why the club with a course
  *
  * **Came with an invitation.** The order form pays first and signs in later, so a friend's code
  * waiting in `forma.referral` would never reach the account before the payment — and the +30 days
@@ -18,27 +36,40 @@
  * (`appHref('/marathon')`; the link is `data-club-join`, so the layout adds the code). No code in
  * the payment URL, ever.
  *
- * **«Позвать с собой»** (`#together`): the same `ShareInvite` card as the homepage — the club is
- * better with a pair, so the page that sells it is one of the places to send the Monday link.
+ * JSON-LD: Product with one Offer per plan, BreadcrumbList, FAQPage (the six questions shown).
  */
 import Landing from '@/layouts/Landing.astro';
-import HeroField from '@/components/landing/HeroField.astro';
-import KeyTitle from '@/components/landing/KeyTitle.astro';
 import Breadcrumbs from '@/components/landing/Breadcrumbs.astro';
+import Button from '@/components/landing/Button.astro';
 import Faq from '@/components/landing/Faq.astro';
 import OrderForm, { type PlanOption } from '@/components/landing/OrderForm';
-import Pill from '@/components/landing/Pill.astro';
+import PriceLadder from '@/components/landing/PriceLadder.astro';
 import Section from '@/components/landing/Section.astro';
 import ShareInvite from '@/components/landing/ShareInvite';
+import StickyStart from '@/components/landing/StickyStart.astro';
+import ClubBotMoments from '@/components/landing/club/ClubBotMoments.astro';
+import ClubDay from '@/components/landing/club/ClubDay.astro';
+import ClubPlans from '@/components/landing/club/ClubPlans.astro';
+import ClubStreakPrize from '@/components/landing/club/ClubStreakPrize.astro';
+import ClubTitle from '@/components/landing/club/ClubTitle.astro';
+import { clubPriceLabels } from '@/components/landing/club/clubPrice';
+import LoopVideo from '@/components/landing/media/LoopVideo.astro';
+import { DEMO_COURSE_ID } from '@/components/landing/demo';
+import { filmedFacts } from '@/components/landing/filmed';
 import { shareInviteProps } from '@/components/landing/inviteProps';
 import { breadcrumbLd, faqLd, organizationId } from '@/components/landing/jsonld';
+import { Doodle } from '@/components/ui/Doodle';
+import { COURSE_BY_ID } from '@/content/registry';
+import { SITE_COURSES } from '@/content/published';
 import type { Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
+import { exerciseStillUrl } from '@/lib/api/storage';
 import { canonicalUrl } from '@/lib/seo/urls';
-import { appHref, href, localeStaticPaths } from '@/lib/util/paths';
+import { appHref, href, localeStaticPaths, withBase } from '@/lib/util/paths';
 import { BRAND } from '@content/site/brand';
+import { COACH } from '@content/site/coach';
 import { LINKS } from '@content/site/links';
-import { CLUB_PLAN_ID, PLAN_INCLUDES, PLANS, PLANS_ENABLED } from '@content/site/plans';
+import { CLUB_PLAN_ID, PLANS, PLANS_ENABLED } from '@content/site/plans';
 import { formatPrice, priceForLocale } from '@content/site/pricing';
 
 export function getStaticPaths() {
@@ -59,27 +90,54 @@ const title = t(locale, 'landing.subscribeTitle');
 const description = t(locale, 'landing.subscribeDescription');
 const supportEmail = LINKS.supportEmail || BRAND.contactEmail;
 const supportTelegram = LINKS.supportTelegram || BRAND.telegram || undefined;
+const club = clubPriceLabels(locale);
 
 const planOptions: PlanOption[] = PLANS.map((p) => ({
   id: p.id,
   name: l(p.name, locale),
   price: formatPrice(locale, p.price),
   period: t(locale, p.period === 'year' ? 'landing.subscribePerYear' : 'landing.subscribePerMonth'),
-  note: l(p.note, locale),
+  /*
+   * The year's own note quotes it per month («≈ 666 ₽ в месяц», «≈ $6.60 a month»). RU prints it
+   * under the year's real price; EN shows no monthly figure anywhere (`clubPrice.ts`, rule 2).
+   */
+  note: p.id === CLUB_PLAN_ID && locale !== 'ru' ? undefined : l(p.note, locale),
   badge: p.id === CLUB_PLAN_ID ? t(locale, 'landing.subscribeBestValue') : undefined,
   paymentUrl: p.paymentUrl?.[locale] ?? p.paymentUrl?.ru,
 }));
 
-const faq = [1, 2, 3].map((n) => ({
+/*
+ * The coach on video beside the name: a filmed movement of the course (a squat reads at a glance),
+ * on its own still until it plays — or, in a build with no backend, on his photograph.
+ */
+const demoCourse = COURSE_BY_ID.get(DEMO_COURSE_ID) ?? SITE_COURSES[0];
+const filmed = demoCourse ? filmedFacts(demoCourse) : null;
+const loopId = filmed?.training.includes('air_squat')
+  ? 'air_squat'
+  : (filmed?.training[0] ?? 'air_squat');
+const loopPoster = exerciseStillUrl(loopId) ?? withBase(COACH.heroPhoto || COACH.cardPhoto);
+
+/* The first three features as glyph rows; the fourth — the prize — is the streak block's photo. */
+const features = [
+  { kind: 'steps', n: 1 },
+  { kind: 'camera', n: 2 },
+  { kind: 'flame', n: 3 },
+] as const;
+
+/* The six questions in the order the synthesis gives: task, prize, renewal, +30, end, why. */
+const faq = [1, 4, 5, 6, 2, 3].map((n) => ({
   q: t(locale, `landing.subscribeFaq${n}Q` as 'landing.subscribeFaq1Q'),
   a: t(locale, `landing.subscribeFaq${n}A` as 'landing.subscribeFaq1A'),
 }));
+
+const quietLink =
+  'control-label inline-flex min-h-11 items-center gap-2 text-[14px] text-text underline decoration-border-strong underline-offset-4 hover:decoration-text';
 
 const jsonLd = [
   {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: `${BRAND.name} — ${title}`,
+    name: `${BRAND.name} — ${t(locale, 'app.marathonTitle')}`,
     description,
     brand: { '@id': organizationId(site) },
     offers: PLANS.map((p) => {
@@ -96,7 +154,7 @@ const jsonLd = [
   },
   breadcrumbLd([
     { name: t(locale, 'landing.breadcrumbHome'), url: canonicalUrl(site, locale, '/') },
-    { name: title, url: canonicalUrl(site, locale, '/subscribe/') },
+    { name: t(locale, 'landing.navSubscribe'), url: canonicalUrl(site, locale, '/subscribe/') },
   ]),
   faqLd(
     faq.map((f) => ({ q: { ru: f.q, en: f.q }, a: { ru: f.a, en: f.a } })),
@@ -112,7 +170,11 @@ const jsonLd = [
   sitePath="/subscribe/"
   jsonLd={jsonLd}
 >
-  <div class="mx-auto max-w-6xl px-5 pt-8 md:pt-12">
+  <section
+    data-club-zone
+    class="club-aurora-host mx-auto max-w-6xl overflow-x-clip px-5 pt-8 pb-8 md:pt-12"
+  >
+    <span class="club-aurora" aria-hidden="true"></span>
     <Breadcrumbs
       ariaLabel={t(locale, 'landing.breadcrumbHome')}
       items={[
@@ -136,152 +198,215 @@ const jsonLd = [
         <span class="glyph" aria-hidden="true">→</span>
       </a>
     </p>
-    <div class="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-12">
-      <div>
-        <HeroField>
-          <p class="eyebrow">{t(locale, 'landing.subscribeEyebrow')}</p>
-          <KeyTitle text={title} class="display mt-4 text-4xl md:text-5xl" />
-          <p class="field-lead mt-5 max-w-xl text-base leading-relaxed md:text-lg">
-            {t(locale, 'landing.subscribeLead')}
-          </p>
-        </HeroField>
 
-        <!--
-          Plan tickets: the price is the figure of each — display size, with the period under it
-          as its unit — and «Выгоднее» is a pill, a fact about the plan rather than a stamp. The
-          pill is `shrink-0`: it is a fixed label, not text that can give way. Without it, in the
-          two-up grid at 1024 flex took the missing width out of the badge rather than out of the
-          plan's name, and «Выгоднее» lost its tail (CHANGELOG §9).
-        -->
-        <div class="mt-8 grid gap-4 sm:grid-cols-2">
-          {
-            planOptions.map((p) => (
-              <div
-                class:list={[
-                  'flex flex-col gap-4 rounded-card border p-5 md:p-6',
-                  p.badge ? 'border-border-strong' : 'border-border',
-                ]}
-              >
-                <p class="flex items-center justify-between gap-3">
-                  <span class="eyebrow truncate">{p.name}</span>
-                  {p.badge && (
-                    <Pill tone="action" size="sm" tilt="right" class="shrink-0">
-                      {p.badge}
-                    </Pill>
-                  )}
-                </p>
-                <p class="flex flex-col">
-                  <span class="numeral tabular text-4xl leading-none md:text-5xl">{p.price}</span>
-                  <span class="eyebrow mt-2">{p.period}</span>
-                </p>
-                {p.note && <p class="text-xs leading-relaxed text-muted">{p.note}</p>}
-              </div>
-            ))
-          }
-        </div>
-
-        <!-- What is included: content sentences, ticked. The heading stays — it names the offer. -->
-        <h2 class="eyebrow mt-10 border-t border-border pt-5">
-          {t(locale, 'landing.subscribeIncludes')}
-        </h2>
-        <ul class="mt-3 grid gap-x-8 text-sm sm:grid-cols-2">
-          {
-            PLAN_INCLUDES.map((x) => (
-              <li class="flex items-baseline gap-3 border-b border-border py-3">
-                <span class="glyph shrink-0 text-xs text-text" aria-hidden="true">
-                  ✓
-                </span>
-                <span>{l(x, locale)}</span>
-              </li>
-            ))
-          }
-        </ul>
-        <p class="mt-6 text-sm text-muted">
-          {t(locale, 'landing.subscribeCourseHint')}
-          <a
-            href={href(locale, '/courses/')}
-            class="ml-1 font-semibold text-text underline decoration-border-strong underline-offset-4 hover:decoration-text"
-          >
-            {t(locale, 'landing.subscribeCourseLink')} →
-          </a>
-        </p>
+    <div class="mt-6 grid items-center gap-8 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:gap-12">
+      <div
+        class="relative aspect-[4/3] overflow-hidden rounded-card border border-border bg-surface md:order-2 md:aspect-[4/5]"
+      >
+        <LoopVideo
+          id={loopId}
+          poster={loopPoster}
+          alt={l(COACH.name, locale)}
+          eager
+          class="object-[50%_35%]"
+        />
+        <div class="photo-grain" aria-hidden="true"></div>
       </div>
 
-      <div id="order" class="glass-card rounded-card border border-border p-6 md:p-8">
-        <h2 class="font-display text-xl">{t(locale, 'landing.subscribeOrderTitle')}</h2>
-        <p class="mt-2 text-sm text-muted">{t(locale, 'landing.subscribeOrderIntro')}</p>
-        <div class="mt-6">
+      <div class="md:order-1">
+        <p class="eyebrow">{t(locale, 'landing.clubEyebrow')}</p>
+        <ClubTitle locale={locale} heading="h1" class="mt-4" />
+        <p class="mt-5 max-w-xl text-base leading-snug text-muted md:text-lg">
+          {t(locale, 'app.clubLeadPre')}<span class="text-accent"
+            >{t(locale, 'app.clubLeadAccent')}</span
+          >{t(locale, 'app.clubLeadPost')}
+        </p>
+        {
+          club && (
+            <div class="mt-8 flex flex-col gap-1.5">
+              <p class="numeral text-5xl leading-none md:text-6xl">{club.headline}</p>
+              <p class="max-w-md text-[14px] leading-snug text-text">{club.charge}</p>
+            </div>
+          )
+        }
+        <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2" data-sticky-anchor>
           {
-            PLANS_ENABLED && (
-              <OrderForm
-                client:load
-                courseId="subscription"
-                courseName={t(locale, 'app.marathonTitle')}
-                locale={locale}
-                plans={planOptions}
-                defaultPlan={CLUB_PLAN_ID}
-                appUrl={appHref('', { locale })}
-                privacyUrl={href(locale, '/privacy/')}
-                supportEmail={supportEmail}
-                supportTelegram={supportTelegram}
-                labels={{
-                  emailLabel: t(locale, 'landing.orderEmailLabel'),
-                  emailPlaceholder: t(locale, 'landing.orderEmailPlaceholder'),
-                  consent: t(locale, 'landing.orderConsent'),
-                  consentLink: t(locale, 'landing.orderConsentPrivacy'),
-                  submit: t(locale, 'landing.subscribeOrderTitle'),
-                  submitting: t(locale, 'landing.orderSubmitting'),
-                  redirecting: t(locale, 'landing.orderRedirecting'),
-                  paymentNote: t(locale, 'landing.orderPaymentNote'),
-                  successTitle: t(locale, 'landing.orderSuccessTitle'),
-                  successText: t(locale, 'landing.subscribeSuccessText'),
-                  successApp: t(locale, 'landing.orderSuccessApp'),
-                  errorEmail: t(locale, 'landing.orderErrorEmail'),
-                  errorConsent: t(locale, 'landing.orderErrorConsent'),
-                  errorNetwork: t(locale, 'landing.orderErrorNetwork'),
-                  errorGeneric: t(locale, 'landing.orderErrorGeneric'),
-                  notConfigured: t(locale, 'landing.orderNotConfigured'),
-                  payAnyway: t(locale, 'landing.orderPayAnyway'),
-                  tryAgain: t(locale, 'landing.orderTryAgain'),
-                  lifetimeNote: t(locale, 'landing.subscribeNote'),
-                  telegramLabel: t(locale, 'landing.contactTelegram'),
-                  plansLabel: t(locale, 'landing.subscribePlanLabel'),
-                }}
-              />
+            club && (
+              <Button
+                href="#order"
+                variant="gradient"
+                size="lg"
+                class="w-full sm:w-auto"
+                data-club-join
+                data-goal="club_join"
+              >
+                {club.join}
+              </Button>
             )
           }
+          <a
+            href={appHref('/start', { locale })}
+            class={quietLink}
+            data-app-link
+            data-goal="app_start"
+          >
+            {t(locale, 'landing.subscribeStartFirst')}
+            <span class="glyph" aria-hidden="true">→</span>
+          </a>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <Section id="vs" title={t(locale, 'landing.subscribeVsTitle')} class="!py-12 md:!py-16">
-    <!-- Two hairline columns led by their numerals, not two boxes with one highlighted. -->
-    <div class="grid gap-x-10 md:grid-cols-2">
-      <div class="border-t border-border pt-5">
-        <span class="numeral text-4xl leading-none text-text" aria-hidden="true">01</span>
-        <p class="eyebrow mt-4">{t(locale, 'landing.navCourses')}</p>
-        <p class="mt-2 text-sm leading-relaxed text-muted md:text-base">
-          {t(locale, 'landing.subscribeVsCourse')}
-        </p>
-      </div>
-      <div class="mt-6 border-t border-border pt-5 md:mt-0">
-        <span class="numeral text-4xl leading-none text-text" aria-hidden="true">02</span>
-        <p class="eyebrow mt-4">{t(locale, 'landing.navSubscribe')}</p>
-        <p class="mt-2 text-sm leading-relaxed text-muted md:text-base">
-          {t(locale, 'landing.subscribeVsPlan')}
-        </p>
-      </div>
+  <Section
+    id="day"
+    eyebrow={t(locale, 'landing.subscribeDayEyebrow')}
+    title={t(locale, 'landing.subscribeDayTitle')}
+  >
+    <div class="grid items-center gap-10 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-14">
+      <ClubDay locale={locale} class="mx-auto w-full max-w-[320px]" />
+      <ul class="flex flex-col divide-y divide-border border-y border-border">
+        {
+          features.map((f) => (
+            <li class="flex items-start gap-4 py-5 md:gap-6 md:py-6">
+              <span class="shrink-0 text-accent" aria-hidden="true">
+                <Doodle kind={f.kind} className="size-10 md:size-12" />
+              </span>
+              <div class="flex min-w-0 flex-col gap-1.5">
+                <h3 class="font-display text-lg leading-snug md:text-xl">
+                  {t(locale, `app.clubFeature${f.n}Title` as 'app.clubFeature1Title')}
+                </h3>
+                <p class="max-w-lg text-[14px] leading-snug text-muted md:text-[15px]">
+                  {t(locale, `app.clubFeature${f.n}Body` as 'app.clubFeature1Body')}
+                </p>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
     </div>
   </Section>
 
-  <Section id="together" title={t(locale, 'landing.togetherTitle')} class="!pt-0 !pb-12 md:!pb-16">
-    <ShareInvite client:visible {...shareInviteProps(locale, site)} />
+  <Section
+    id="streak"
+    eyebrow={t(locale, 'landing.subscribeStreakEyebrow')}
+    title={t(locale, 'landing.subscribeStreakTitle')}
+  >
+    <ClubStreakPrize locale={locale} />
   </Section>
 
-  <Section id="faq" title={t(locale, 'landing.faqTitle')} class="!pt-0 !pb-12 md:!pb-16">
+  <Section
+    id="together"
+    eyebrow={t(locale, 'landing.subscribeDuoEyebrow')}
+    title={t(locale, 'landing.subscribeDuoTitle')}
+  >
+    <p class="max-w-md text-base leading-snug text-muted">{t(locale, 'app.duoNoneBody')}</p>
+    <div class="mt-8">
+      <ShareInvite client:visible compact {...shareInviteProps(locale, site)} />
+    </div>
+  </Section>
+
+  <Section
+    id="bot"
+    eyebrow={t(locale, 'landing.subscribeBotEyebrow')}
+    title={t(locale, 'landing.subscribeBotTitle')}
+  >
+    <ClubBotMoments locale={locale} />
+    <div class="mt-6 flex flex-wrap items-center justify-between gap-x-8 gap-y-3">
+      <p class="max-w-md text-[14px] leading-snug text-muted">
+        {t(locale, 'landing.subscribeBotMute')}
+      </p>
+      {
+        LINKS.telegramBot && (
+          <a href={LINKS.telegramBot} rel="noopener" class={quietLink} data-goal="telegram_open">
+            {t(locale, 'landing.openTelegram')}
+            <span class="glyph" aria-hidden="true">
+              ↗
+            </span>
+          </a>
+        )
+      }
+    </div>
+  </Section>
+
+  <Section
+    id="plans"
+    eyebrow={t(locale, 'landing.subscribePlansEyebrow')}
+    title={t(locale, 'landing.subscribePlansTitle')}
+  >
+    <ClubPlans locale={locale} />
+  </Section>
+
+  <section id="order" class="mx-auto max-w-6xl scroll-mt-20 px-5 pb-16 md:pb-24">
+    {/* The tickets' targets: `#order-<plan id>` lands here and picks that plan in the form. */}
+    {PLANS.map((p) => <span id={`order-${p.id}`} class="block scroll-mt-20" aria-hidden="true" />)}
+    <div
+      class="grid gap-8 border-t border-border pt-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-14"
+    >
+      <header>
+        <p class="eyebrow">{t(locale, 'landing.subscribeOrderEyebrow')}</p>
+        <h2 class="font-display mt-4 text-4xl text-balance md:text-5xl">
+          {t(locale, 'landing.subscribeOrderTitle')}
+        </h2>
+        <p class="mt-4 max-w-md text-base leading-snug text-muted">
+          {t(locale, 'landing.subscribeOrderIntro')}
+        </p>
+      </header>
+      <div class="glass-card rounded-card border border-border p-5 md:p-8">
+        <OrderForm
+          client:load
+          tone="club"
+          courseId="subscription"
+          courseName={t(locale, 'app.marathonTitle')}
+          locale={locale}
+          plans={planOptions}
+          defaultPlan={CLUB_PLAN_ID}
+          appUrl={appHref('', { locale })}
+          privacyUrl={href(locale, '/privacy/')}
+          supportEmail={supportEmail}
+          supportTelegram={supportTelegram}
+          labels={{
+            emailLabel: t(locale, 'landing.orderEmailLabel'),
+            emailPlaceholder: t(locale, 'landing.orderEmailPlaceholder'),
+            consent: t(locale, 'landing.orderConsent'),
+            consentLink: t(locale, 'landing.orderConsentPrivacy'),
+            submit: t(locale, 'landing.subscribeOrderTitle'),
+            submitting: t(locale, 'landing.orderSubmitting'),
+            redirecting: t(locale, 'landing.orderRedirecting'),
+            paymentNote: t(locale, 'landing.orderPaymentNote'),
+            successTitle: t(locale, 'landing.orderSuccessTitle'),
+            successText: t(locale, 'landing.subscribeSuccessText'),
+            successApp: t(locale, 'landing.orderSuccessApp'),
+            errorEmail: t(locale, 'landing.orderErrorEmail'),
+            errorConsent: t(locale, 'landing.orderErrorConsent'),
+            errorNetwork: t(locale, 'landing.orderErrorNetwork'),
+            errorGeneric: t(locale, 'landing.orderErrorGeneric'),
+            notConfigured: t(locale, 'landing.orderNotConfigured'),
+            payAnyway: t(locale, 'landing.orderPayAnyway'),
+            tryAgain: t(locale, 'landing.orderTryAgain'),
+            lifetimeNote: t(locale, 'landing.subscribeNote'),
+            telegramLabel: t(locale, 'landing.contactTelegram'),
+            plansLabel: t(locale, 'landing.subscribePlanLabel'),
+          }}
+        />
+      </div>
+    </div>
+  </section>
+
+  <Section
+    id="vs"
+    eyebrow={t(locale, 'landing.subscribeVsEyebrow')}
+    title={t(locale, 'landing.subscribeVsTitle')}
+    intro={t(locale, 'landing.subscribeVsLine')}
+  >
+    <PriceLadder locale={locale} omit={['free', 'coach']} />
+  </Section>
+
+  <Section id="faq" eyebrow={t(locale, 'landing.faqEyebrow')} title={t(locale, 'landing.faqTitle')}>
     <Faq items={faq} />
   </Section>
+
+  <StickyStart locale={locale} variant="club" joinHref="#order" />
 </Landing>
 
 <script>

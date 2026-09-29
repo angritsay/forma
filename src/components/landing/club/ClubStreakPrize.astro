@@ -1,0 +1,91 @@
+---
+/**
+ * `/subscribe/`'s «Серия и приз»: the streak's milestones drawn as a staircase, and the weekly
+ * prize as the coach's photograph — two pictures where the old page had two sentences.
+ *
+ *   steps   the milestones from the app's `MILESTONES` (`clubMilestones.ts`: 3 · 7 · 14 · 30 · 100),
+ *           never retyped here, as five steps rising left to right — the club of small steps, drawn.
+ *           The heights are a picture of «further», not a scale (100 would dwarf 3). The unit is the
+ *           app's own «дней подряд» (`app.clubStreakDaysMany`)
+ *   prize   his photograph (`COACH.cardPhoto`, the 4:5 crop with his face in the upper third, so
+ *           the caption at the foot never covers it) under a scrim, the warm «Приз недели» pill, the prize
+ *           rule verbatim (`app.clubFeature4Body`) and the duo half of it — in a duo each of the
+ *           pair gets the hour (0033; `/together/`'s second question says the same)
+ *
+ * Club palette, no neon (`site-club-no-neon.test.ts`): the top step is the warm gradient under
+ * ink, the one pill is `warm`, the rest is glass and hairlines.
+ */
+import { MILESTONES } from '@/app/features/marathon/clubMilestones';
+import { Doodle } from '@/components/ui/Doodle';
+import type { Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { withBase } from '@/lib/util/paths';
+import { COACH } from '@content/site/coach';
+import Pill from '../Pill.astro';
+
+interface Props {
+  locale: Locale;
+  class?: string;
+}
+const { locale, class: extra = '' } = Astro.props;
+
+const last = MILESTONES.length - 1;
+/* Evenly rising steps, from a fifth of the height to all of it. */
+const height = (i: number) => `${Math.round(((i + 1) / MILESTONES.length) * 100)}%`;
+const photo = COACH.cardPhoto || COACH.photo;
+---
+
+<div class:list={['grid items-stretch gap-4 md:grid-cols-2 md:gap-5', extra]}>
+  <div class="glass-card flex flex-col gap-6 rounded-card border border-border p-5 md:p-8">
+    <div class="flex items-center gap-3">
+      <span class="text-accent" aria-hidden="true">
+        <Doodle kind="flame" className="size-9 md:size-10" />
+      </span>
+      <p class="font-display text-[15px] md:text-base">{t(locale, 'app.clubStreakDaysMany')}</p>
+    </div>
+    <ol
+      class="mt-auto flex h-52 items-end gap-2 md:h-64 md:gap-3"
+      aria-label={t(locale, 'app.clubMilestonesTitle')}
+    >
+      {
+        MILESTONES.map((m, i) => (
+          <li
+            class:list={[
+              'numeral flex flex-1 items-start justify-center rounded-tile pt-3 text-lg leading-none md:text-2xl',
+              i === last ? 'bg-warm text-ink' : 'glass-card-2 border border-border-strong',
+            ]}
+            style={{ height: height(i) }}
+          >
+            {m}
+          </li>
+        ))
+      }
+    </ol>
+    <p class="text-[13px] leading-snug text-muted">{t(locale, 'landing.subscribeStreakLine')}</p>
+  </div>
+
+  <figure
+    class="relative m-0 min-h-[24rem] overflow-hidden rounded-card border border-border bg-surface-2 md:min-h-[28rem]"
+  >
+    <img
+      src={withBase(photo)}
+      alt={l(COACH.name, locale)}
+      width="720"
+      height="900"
+      loading="lazy"
+      decoding="async"
+      class="photo-mono absolute inset-0 size-full object-cover object-[50%_18%]"
+    />
+    <div class="photo-grain" aria-hidden="true"></div>
+    <div class="photo-scrim" aria-hidden="true"></div>
+    <figcaption
+      class="absolute inset-x-5 bottom-5 flex flex-col items-start gap-3 md:inset-x-8 md:bottom-8"
+    >
+      <Pill tone="warm" tilt="left">{t(locale, 'app.clubPrizeWeek')}</Pill>
+      <p class="font-display max-w-sm text-xl leading-snug text-balance text-paper md:text-2xl">
+        {t(locale, 'app.clubFeature4Body')}
+      </p>
+      <p class="text-[14px] leading-snug text-paper">{t(locale, 'landing.subscribePrizeDuo')}</p>
+    </figcaption>
+  </figure>
+</div>

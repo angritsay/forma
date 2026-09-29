@@ -15,6 +15,7 @@ import type { SubscriptionPlan } from '@/lib/api/types';
 import { courseKey, lavaUrl, planKey } from '@content/site/payments';
 import { TEST_PAYMENT_URL } from '@content/site/testPayment';
 import { payHost, payHref, payRoute } from '@/lib/util/payment';
+import { planFromOrderHash } from './orderPlanHash';
 import { rememberedSource } from './visit';
 
 export interface OrderFormLabels {
@@ -88,6 +89,13 @@ export interface OrderFormProps {
   supportEmail: string;
   supportTelegram?: string;
   labels: OrderFormLabels;
+  /**
+   * Whose colours the form wears. `course` (default): the neon submit, the course's one main
+   * action. `club` (`/subscribe/`): the club has no neon (design/CHANGELOG.md §17), so the submit,
+   * the plan badge and the success button take the warm gradient under ink instead. Only the
+   * paint changes — validation, the order record and the hand-off to payment are the same.
+   */
+  tone?: 'course' | 'club';
 }
 
 type Status =
@@ -131,7 +139,10 @@ export default function OrderForm({
   supportEmail,
   supportTelegram,
   labels,
+  tone = 'course',
 }: OrderFormProps) {
+  /* The filled action's paint: neon for a course, the club's warm gradient under ink. */
+  const paint = tone === 'club' ? 'bg-warm text-ink' : 'bg-action text-on-action';
   const [email, setEmail] = useState('');
   const [planId, setPlanId] = useState<SubscriptionPlan>(
     defaultPlan ?? plans?.[0]?.id ?? 'monthly',
@@ -152,6 +163,33 @@ export default function OrderForm({
   useEffect(() => {
     setDemo(isDemo());
   }, []);
+
+  /*
+   * A plan picked outside the form: the club page's tickets link to `#order-<plan id>`, and the
+   * page gives each of those an anchor at the form. The hash only ever selects a plan this form
+   * already offers; anything else is ignored (`planFromOrderHash`). A ticket tapped a second time
+   * leaves the hash as it was and fires no `hashchange`, so the tap itself picks the plan too —
+   * otherwise a switch to 30 days inside the form would survive a second tap on «Выбрать год».
+   */
+  useEffect(() => {
+    if (!plans) return;
+    const pick = (hash: string | null) => {
+      const found = planFromOrderHash(hash, plans);
+      if (found) setPlanId(found.id);
+    };
+    const onHash = () => pick(window.location.hash);
+    const onClick = (e: MouseEvent) => {
+      const link = e.target instanceof Element ? e.target.closest('a[href^="#order-"]') : null;
+      if (link) pick(link.getAttribute('href'));
+    };
+    onHash();
+    window.addEventListener('hashchange', onHash);
+    document.addEventListener('click', onClick);
+    return () => {
+      window.removeEventListener('hashchange', onHash);
+      document.removeEventListener('click', onClick);
+    };
+  }, [plans]);
 
   const configured = isConfigured() || demo;
   const [consentBefore, consentAfter] = labels.consent.split('{privacy}');
@@ -284,7 +322,7 @@ export default function OrderForm({
         </p>
         <a
           href={appUrl}
-          className="control-label mt-5 inline-flex h-12 items-center justify-center rounded-control bg-action px-6.5 text-[15px] text-on-action transition-opacity duration-150 hover:opacity-85"
+          className={`control-label mt-5 inline-flex h-12 items-center justify-center rounded-control px-6.5 text-[15px] transition-opacity duration-150 hover:opacity-85 ${paint}`}
         >
           {labels.successApp}
         </a>
@@ -317,7 +355,7 @@ export default function OrderForm({
               return (
                 <label
                   key={p.id}
-                  className={`relative flex cursor-pointer flex-col gap-1 border p-4 transition-colors duration-150 ${
+                  className={`relative flex cursor-pointer flex-col gap-1 border p-4 transition-colors duration-150 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
                     selected
                       ? 'border-accent bg-surface-2'
                       : 'border-border hover:border-border-strong'
@@ -334,7 +372,9 @@ export default function OrderForm({
                   <span className="flex items-baseline justify-between gap-3">
                     <span className="font-display text-sm">{p.name}</span>
                     {p.badge && (
-                      <span className="inline-flex h-6 items-center rounded-pill bg-action px-2.5 text-[12px] font-semibold tracking-[0.01em] text-on-action">
+                      <span
+                        className={`inline-flex h-6 items-center rounded-pill px-2.5 text-[12px] font-semibold tracking-[0.01em] ${paint}`}
+                      >
                         {p.badge}
                       </span>
                     )}
@@ -439,7 +479,7 @@ export default function OrderForm({
       <button
         type="submit"
         disabled={busy}
-        className="control-label inline-flex h-14 items-center justify-center rounded-control bg-action px-8 text-[15px] text-on-action transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-85 active:scale-[0.98] disabled:cursor-wait disabled:opacity-40"
+        className={`control-label inline-flex h-14 items-center justify-center rounded-control px-8 text-[15px] transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-85 active:scale-[0.98] disabled:cursor-wait disabled:opacity-40 ${paint}`}
       >
         {status.kind === 'submitting'
           ? labels.submitting

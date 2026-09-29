@@ -7,6 +7,14 @@
  * Drawn in the owner's prototype's language (design/CHANGELOG.md §10): the headings and the
  * coach's text stay — they are what this page ranks on — but the page shows one paragraph of him
  * and opens the rest on request, and every fact that was a sentence is a pill or a numeral.
+ *
+ * **Workout 1 first** (site synthesis §5, «Course page»). For the start course the ticket's neon is
+ * «Тренировка 1 — бесплатно» into the app's `#/start`, and «Получить доступ · 2 990 ₽» is the
+ * white second button to `#order`; the club line under it quotes 666 ₽ only with the year's
+ * 7 990 ₽ (EN: the year only). «Первая тренировка — бесплатно» shows workout 1's three movements as
+ * loops, folds the full plan under a toggle and puts the QR beside the button from `lg`. «Как
+ * приложение подстраивается» is the engine's four steps as figures (`ADAPTATION`, never typed),
+ * and a small «Позови с собой» strip to `/together/` stands before the FAQ.
  */
 import type { InferGetStaticPropsType } from 'astro';
 import { getCollection } from 'astro:content';
@@ -21,8 +29,12 @@ import OrderForm from '@/components/landing/OrderForm';
 import Pill from '@/components/landing/Pill.astro';
 import ProgramOverview from '@/components/landing/ProgramOverview.astro';
 import Section from '@/components/landing/Section.astro';
+import QrCode from '@/components/landing/QrCode.astro';
 import Stat from '@/components/landing/Stat.astro';
 import WorkoutPlan from '@/components/landing/WorkoutPlan.astro';
+import LoopTile from '@/components/landing/media/LoopTile.astro';
+import { firstWorkoutFacts } from '@/components/landing/demo';
+import { Doodle } from '@/components/ui/Doodle';
 import {
   courseEquipmentForDisplay,
   coursePath,
@@ -44,6 +56,7 @@ import { DEFAULT_LOCALE, LOCALES, type Locale } from '@/content/schema';
 import { l, plural, t } from '@/i18n/index';
 import { publicMediaUrl } from '@/lib/api/storage';
 import { canonicalUrl } from '@/lib/seo/urls';
+import { ADAPTATION } from '@/lib/training/constants';
 import { courseTileStyle } from '@/lib/ui/tile';
 import { absoluteUrl, appHref, href } from '@/lib/util/paths';
 import { BRAND } from '@content/site/brand';
@@ -74,9 +87,32 @@ const name = l(course.name, locale);
  * screen. The beginner course goes through `#/start` — its first trainable workout, whatever its
  * layout — and any other through its path. Both survive sign-in (src/app/features/entry/next.ts).
  */
-const courseAppHref = appHref(course.id === 'start' ? '/start' : `/courses/${course.id}`, {
+const isStart = course.id === 'start';
+const courseAppHref = appHref(isStart ? '/start' : `/courses/${course.id}`, {
   locale,
 });
+/*
+ * The club line under the ticket: the month only beside the year's single charge (RU), the year
+ * alone on EN — the same rule `clubPriceLabels` keeps, with the course page's own sentence.
+ */
+const clubLine =
+  PLANS_ENABLED && clubPlan
+    ? t(locale, 'landing.courseOrSubscribe', {
+        price: formatPrice(locale, planMonthlyPrice(clubPlan)),
+        year: formatPrice(locale, clubPlan.price),
+      })
+    : '';
+/* Workout 1's movements as loops, and the QR a desktop visitor scans to open it on the phone. */
+const facts = isStart ? firstWorkoutFacts(locale, course) : null;
+const qrUrl = `${absoluteUrl(site, '/app/')}?lang=${locale}&src=qr#/${isStart ? 'start' : `courses/${course.id}`}`;
+/* The engine's four steps after a workout, as signed whole percents: +5, +2, −5, −10. */
+const signed = (d: number) => `${d > 0 ? '+' : '−'}${Math.abs(Math.round(d * 100))}`;
+const adaptSteps = [
+  { value: signed(ADAPTATION.easyDelta), label: t(locale, 'landing.courseAdaptStepEasy') },
+  { value: signed(ADAPTATION.moderateDelta), label: t(locale, 'landing.courseAdaptStepOk') },
+  { value: signed(ADAPTATION.hardDelta), label: t(locale, 'landing.courseAdaptStepHard') },
+  { value: signed(ADAPTATION.painDelta), label: t(locale, 'landing.courseAdaptStepPain') },
+];
 // Keep <title> ≤ 60 chars once SeoHead appends " — Forma": drop the suffix for long names.
 const titleWithSuffix = `${name} — ${t(locale, 'landing.courseTitleSuffix')}`;
 const title = `${titleWithSuffix} — ${BRAND.name}`.length <= 60 ? titleWithSuffix : name;
@@ -123,6 +159,20 @@ const guides = (
       !g.data.draft && g.id.startsWith(`${locale}/`) && g.data.relatedCourses.includes(course.id),
   )
 ).sort((a, b) => b.data.priority - a.data.priority);
+
+/*
+ * The closing link lists stay short on a phone: the five strongest guides and workout 1's own
+ * movements (or the first six of the course without it), each with a link to its full hub. All
+ * sixteen guides and twenty-eight chips were the longest block on the page, and both hubs list
+ * everything anyway.
+ */
+const quietLink =
+  'control-label inline-flex min-h-11 items-center gap-2 text-[14px] text-text underline decoration-border-strong underline-offset-4 hover:decoration-text';
+const GUIDES_SHOWN = 5;
+const guidesShown = guides.slice(0, GUIDES_SHOWN);
+const workout1Ids = new Set(facts?.moves.map((m) => m.exerciseId) ?? []);
+const exercisesShown =
+  workout1Ids.size > 0 ? exercises.filter((ex) => workout1Ids.has(ex.id)) : exercises.slice(0, 6);
 
 const supportEmail = LINKS.supportEmail || BRAND.contactEmail;
 const supportTelegram = LINKS.supportTelegram || BRAND.telegram;
@@ -244,23 +294,45 @@ const jsonLd = [
             </li>
           </ul>
         </HeroField>
-        <!-- The price is the figure of this screen; one button beside it. -->
-        <div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-4">
-          <span class="numeral tabular text-5xl leading-none">{price}</span>
-          <Button href="#order" size="lg" class="w-full sm:w-auto">
-            {t(locale, 'landing.courseCtaOrder')}
-          </Button>
-        </div>
         {
-          PLANS_ENABLED && clubPlan && (
+          /*
+            The start course leads with workout 1 in neon and prices the course in the white
+            button beside it; any other course keeps its price as the figure and one button.
+          */
+        }
+        {
+          isStart ? (
+            <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Button
+                href={courseAppHref}
+                size="lg"
+                class="w-full sm:w-auto"
+                data-goal="app_start"
+                data-app-link
+              >
+                {t(locale, 'landing.cardStartCta')}
+              </Button>
+              <Button href="#order" variant="plain" size="lg" class="w-full sm:w-auto">
+                {t(locale, 'landing.courseBuyCta', { price })}
+              </Button>
+            </div>
+          ) : (
+            <div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-4">
+              <span class="numeral tabular text-5xl leading-none">{price}</span>
+              <Button href="#order" size="lg" class="w-full sm:w-auto">
+                {t(locale, 'landing.courseCtaOrder')}
+              </Button>
+            </div>
+          )
+        }
+        {
+          clubLine && (
             <p class="mt-4 text-sm">
               <a
                 href={href(locale, '/subscribe/')}
                 class="text-muted underline decoration-border-strong underline-offset-4 hover:text-text hover:decoration-text"
               >
-                {t(locale, 'landing.courseOrSubscribe', {
-                  price: formatPrice(locale, planMonthlyPrice(clubPlan)),
-                })}
+                {clubLine}
               </a>
             </p>
           )
@@ -282,12 +354,14 @@ const jsonLd = [
 
   <Section id="about" title={t(locale, 'landing.courseAboutTitle')} class="!py-12 md:!py-16">
     <div class="grid gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]" style={tileVars}>
-      <!--
-        The coach's text, one paragraph showing. The other three are his too and stay on the page —
-        this is the copy the page is found by — but they open on request instead of standing four
-        deep between the ticket and the programme. A `<details>` keeps them in the HTML and out of
-        the way; the toggle is the FAQ's + glyph.
-      -->
+      {
+        /*
+          The coach's text, one paragraph showing. The other three are his too and stay on the
+          page — this is the copy the page is found by — but they open on request instead of
+          standing four deep between the ticket and the programme. A details element keeps them in
+          the HTML and out of the way; the toggle is the FAQ's + glyph.
+        */
+      }
       <div class="text-base leading-relaxed text-muted md:text-lg">
         {firstParagraph && <p>{l(firstParagraph, locale)}</p>}
         {
@@ -391,40 +465,80 @@ const jsonLd = [
       >
         {/*
           Кнопка стоит над планом, а не под ним: человек, уже решивший попробовать, не должен
-          пролистывать всю тренировку, чтобы найти вход. А тому, кто читает, план никуда не денется.
+          пролистывать всю тренировку, чтобы найти вход. Движения — петлями видео тренера; план
+          целиком свёрнут под переключателем, QR — рядом с кнопкой с `lg`.
         */}
-        <p class="mb-6">
-          <a
+        {facts && (
+          <ul class="-mx-5 mb-8 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-5 px-5 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 md:gap-4">
+            {facts.moves.map((m) => (
+              <li class="w-[72%] shrink-0 snap-start sm:w-auto">
+                <LoopTile
+                  id={m.exerciseId}
+                  name={m.name}
+                  numeral={m.reps ? `×${m.reps}` : undefined}
+                  href={m.href}
+                  size="lg"
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+        <div class="flex flex-wrap items-center gap-6">
+          <Button
             href={courseAppHref}
-            class="control-label inline-flex h-12 items-center rounded-control bg-action px-6.5 text-[15px] text-on-action transition-opacity duration-150 hover:opacity-85"
+            size="lg"
+            class="w-full sm:w-auto"
+            data-goal="app_start"
+            data-app-link
           >
             {t(locale, 'landing.courseSampleCta')}
-          </a>
-        </p>
-        <div class="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]" style={tileVars}>
-          <WorkoutPlan locale={locale} workout={workout} />
-          <div class="border-t border-border pt-5">
-            <h3 class="font-display text-xl">{t(locale, 'landing.courseAdaptTitle')}</h3>
-            <p class="mt-3 text-sm leading-relaxed text-muted md:text-base">
-              {t(locale, 'landing.courseAdaptText')}
-            </p>
-            {/* The three numbers of that paragraph, as pills. */}
-            <ul class="mt-4 flex flex-wrap gap-2">
-              <li class="flex max-w-full">
-                <Pill size="md">{t(locale, 'landing.courseAdaptEasy')}</Pill>
-              </li>
-              <li class="flex max-w-full">
-                <Pill size="md">{t(locale, 'landing.courseAdaptHard')}</Pill>
-              </li>
-              <li class="flex max-w-full">
-                <Pill size="md">{t(locale, 'landing.courseAdaptDeload')}</Pill>
-              </li>
-            </ul>
-          </div>
+          </Button>
+          <QrCode url={qrUrl} label={t(locale, 'landing.qrLabel')} class="max-lg:hidden" />
         </div>
+        <details class="group mt-8" style={tileVars}>
+          <summary class="control-label flex min-h-11 cursor-pointer list-none items-center gap-2 text-[14px] text-text [&::-webkit-details-marker]:hidden">
+            {t(locale, 'landing.courseSamplePlan')}
+            <span
+              class="glyph text-lg transition-transform duration-150 ease-(--ease-out) group-open:rotate-45"
+              aria-hidden="true"
+            >
+              +
+            </span>
+          </summary>
+          <div class="mt-4">
+            <WorkoutPlan locale={locale} workout={workout} />
+          </div>
+        </details>
       </Section>
     )
   }
+
+  {
+    /*
+    How the load follows the athlete: the engine's four steps as figures, one tile each, read from
+    `ADAPTATION` — the course has no deload, so the page no longer promises one.
+  */
+  }
+  <Section
+    id="adapt"
+    title={t(locale, 'landing.courseAdaptTitle')}
+    intro={t(locale, 'landing.courseAdaptText')}
+    class="!py-12 md:!py-16"
+  >
+    <ul class="grid grid-cols-2 gap-3 md:grid-cols-4">
+      {
+        adaptSteps.map((step) => (
+          <li class="glass-card flex min-h-[8.5rem] flex-col justify-between gap-4 rounded-tile border border-border p-4 md:p-5">
+            <span class="numeral text-5xl leading-none text-accent">
+              {step.value}
+              <span class="text-2xl"> %</span>
+            </span>
+            <span class="font-display text-[15px] leading-snug md:text-base">{step.label}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </Section>
 
   <Section
     id="order"
@@ -513,6 +627,35 @@ const jsonLd = [
     </div>
   </Section>
 
+  {
+    /*
+    «Позови с собой»: one line and one button to `/together/`, where the invite card lives — the
+    course's own FAQ follows.
+  */
+  }
+  <div class="mx-auto max-w-6xl px-5">
+    <div
+      class="glass-card flex flex-col gap-4 rounded-card border border-border p-5 sm:flex-row sm:items-center sm:justify-between md:p-6"
+    >
+      <p class="flex items-center gap-4">
+        <span class="shrink-0 text-accent" aria-hidden="true">
+          <Doodle kind="heart" className="size-10" />
+        </span>
+        <span class="font-display text-[15px] leading-snug md:text-base">
+          {t(locale, 'landing.courseInviteLine')}
+        </span>
+      </p>
+      <Button
+        href={href(locale, '/together/')}
+        variant="secondary"
+        class="w-full shrink-0 sm:w-auto"
+        data-goal="share_course"
+      >
+        {t(locale, 'landing.shareCta')}
+      </Button>
+    </div>
+  </div>
+
   <Section id="faq" title={t(locale, 'landing.courseFaqTitle')} class="!py-12 md:!py-16">
     <Faq items={course.faq.map((f) => ({ q: l(f.q, locale), a: l(f.a, locale) }))} />
   </Section>
@@ -532,7 +675,7 @@ const jsonLd = [
                 arrow says the row is a door.
               */}
               <ul class="mt-5 flex flex-col">
-                {guides.map((g) => (
+                {guidesShown.map((g) => (
                   <li>
                     <a
                       href={href(locale, `/guides/${g.id.slice(locale.length + 1)}/`)}
@@ -546,6 +689,14 @@ const jsonLd = [
                   </li>
                 ))}
               </ul>
+              {guides.length > guidesShown.length && (
+                <a href={href(locale, '/guides/')} class={`mt-4 ${quietLink}`}>
+                  {t(locale, 'seo.guidesAll')}
+                  <span class="glyph" aria-hidden="true">
+                    →
+                  </span>
+                </a>
+              )}
             </div>
           )}
           {exercises.length > 0 && (
@@ -553,7 +704,7 @@ const jsonLd = [
               <h2 class="font-display text-2xl">{t(locale, 'landing.courseExercisesTitle')}</h2>
               {/* Links, so they stay on the control radius: these are pressed, not read. */}
               <ul class="mt-5 flex flex-wrap gap-2">
-                {exercises.map((ex) => (
+                {exercisesShown.map((ex) => (
                   <li>
                     <a
                       href={exerciseHref(locale, ex)}
@@ -564,6 +715,14 @@ const jsonLd = [
                   </li>
                 ))}
               </ul>
+              {exercises.length > exercisesShown.length && (
+                <a href={href(locale, '/exercises/')} class={`mt-4 ${quietLink}`}>
+                  {t(locale, 'landing.filmedMore')}
+                  <span class="glyph" aria-hidden="true">
+                    →
+                  </span>
+                </a>
+              )}
             </div>
           )}
         </div>

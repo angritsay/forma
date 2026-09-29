@@ -19,6 +19,11 @@
  * `wide` lays the ticket sideways from `md` — cover left, words right — for a page with one course
  * on it: a 4:3 cover the full width of a 1152px container is 860px of picture and a page that
  * scrolls a screen before it reaches a price.
+ *
+ * `startHref` turns the ticket into the courses hub's one offer (site synthesis §5, `/courses/`):
+ * the neon «Тренировка 1 — бесплатно» into the app's `#/start`, the white «Купить — 2 990 ₽» to
+ * the course page's order form, and the warm «Неделя клуба в подарок» pill over the facts. The
+ * price then rides in the buy button, so the separate figure is not printed twice.
  */
 import ExerciseStill from '@/components/media/ExerciseStill';
 import { publicMediaUrl } from '@/lib/api/storage';
@@ -26,6 +31,7 @@ import type { Course, Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { courseTileStyle } from '@/lib/ui/tile';
 import { formatPrice, isFree } from '@content/site/pricing';
+import Button from './Button.astro';
 import Pill from './Pill.astro';
 import {
   courseEquipmentForDisplay,
@@ -52,9 +58,18 @@ interface Props {
    * page with nothing neon above it asks for the neon.
    */
   action?: boolean;
+  /** The app's workout 1 (`appHref('/start')`): two buttons and the gift pill (see above). */
+  startHref?: string;
 }
 
-const { course, locale, headingLevel: Heading = 'h3', wide = false, action = false } = Astro.props;
+const {
+  course,
+  locale,
+  headingLevel: Heading = 'h3',
+  wide = false,
+  action = false,
+  startHref,
+} = Astro.props;
 const url = courseHref(locale, course);
 const signature = signatureExercise(course);
 /*
@@ -83,9 +98,6 @@ const facts = [
     wide && 'md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,4fr)]',
   ]}
   style={courseTileStyle(course.tile)}
-  data-course-card
-  data-equipment={course.equipment.join(' ')}
-  data-level={course.level}
 >
   <!--
     The cover, 4:3 — the ticket's ratio, chosen there so the art carries the name. A decorative
@@ -133,6 +145,15 @@ const facts = [
     <Heading class="font-display mt-3 text-lg leading-snug text-balance">
       <a href={url} class="hover:underline">{l(course.name, locale)}</a>
     </Heading>
+    {
+      startHref && (
+        <p class="mt-4 flex">
+          <Pill tone="warm" tilt="right">
+            {t(locale, 'landing.cardGift')}
+          </Pill>
+        </p>
+      )
+    }
     <ul class="mt-4 flex flex-wrap gap-1.5">
       {
         facts.map((f) => (
@@ -150,18 +171,33 @@ const facts = [
       way — the price is the ticket's figure and the button is a control — so when they do not fit
       side by side the button drops to its own line. It had to: in the sideways ticket at 768 the
       words sit in 4fr of a 728px grid, which left «2 990 ₽» 54px and rendered it «2 99…».
+      The start/buy pair always stacks full width: the ticket's column (~440px at 1280) cannot hold
+      both side by side, and a wrapped row left two buttons of different widths.
     -->
-    <div class="mt-auto flex flex-wrap items-center justify-between gap-x-4 gap-y-4 pt-6">
-      <span class="numeral tabular shrink-0 text-3xl whitespace-nowrap">{price}</span>
-      <a
-        href={url}
-        class:list={[
-          'control-label inline-flex h-12 shrink-0 items-center rounded-control px-6 text-[15px] transition-opacity duration-150 group-hover:opacity-85',
-          action ? 'bg-action text-on-action' : 'bg-primary text-on-primary',
-        ]}
-      >
-        {t(locale, 'landing.cardView')}
-      </a>
-    </div>
+    {
+      startHref ? (
+        <div class="mt-auto flex flex-col gap-3 pt-6">
+          <Button href={startHref} class="w-full" data-goal="app_start" data-app-link>
+            {t(locale, 'landing.cardStartCta')}
+          </Button>
+          <Button href={`${url}#order`} variant="plain" class="w-full">
+            {t(locale, 'landing.cardBuyCta', { price })}
+          </Button>
+        </div>
+      ) : (
+        <div class="mt-auto flex flex-wrap items-center justify-between gap-x-4 gap-y-4 pt-6">
+          <span class="numeral tabular shrink-0 text-3xl whitespace-nowrap">{price}</span>
+          <a
+            href={url}
+            class:list={[
+              'control-label inline-flex h-12 shrink-0 items-center rounded-control px-6 text-[15px] transition-opacity duration-150 group-hover:opacity-85',
+              action ? 'bg-action text-on-action' : 'bg-primary text-on-primary',
+            ]}
+          >
+            {t(locale, 'landing.cardView')}
+          </a>
+        </div>
+      )
+    }
   </div>
 </article>

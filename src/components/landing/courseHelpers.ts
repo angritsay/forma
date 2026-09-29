@@ -236,16 +236,3 @@ export function metaDescription(text: string, max = 158): string {
   const space = cut.lastIndexOf(' ');
   return `${cut.slice(0, space > 60 ? space : cut.length).replace(/[,;:—-]$/, '')}…`;
 }
-
-/** Equipment values present across courses, in schema order. */
-export function equipmentAcrossCourses(courses: readonly Course[], order: readonly Equipment[]) {
-  const present = new Set<Equipment>();
-  for (const c of courses) for (const e of courseEquipmentForDisplay(c)) present.add(e);
-  return order.filter((e) => present.has(e));
-}
-
-export function levelsAcrossCourses(courses: readonly Course[]): Level[] {
-  const present = new Set<Level>();
-  for (const c of courses) present.add(c.level);
-  return ([1, 2, 3] as const).filter((lv) => present.has(lv));
-}

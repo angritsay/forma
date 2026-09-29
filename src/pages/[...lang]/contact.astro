@@ -6,10 +6,14 @@
  * are rows with the value on the right and a › at the edge — «E-mail … hello@ ›» the way the
  * prototype sets «Подписка … до 12 октября ›» — not kicker-over-address columns. The three
  * things to check before writing stay a numbered «01 / 02 / 03» column.
+ *
+ * The bot (`LINKS.telegramBot`) is a row of its own while it is set: its `/start` opens the app
+ * inside Telegram. The page closes on `StartBand` — «Начать бесплатно» into workout 1.
  */
 import Landing from '@/layouts/Landing.astro';
 import HeroField from '@/components/landing/HeroField.astro';
 import KeyTitle from '@/components/landing/KeyTitle.astro';
+import StartBand from '@/components/landing/StartBand.astro';
 import Breadcrumbs from '@/components/landing/Breadcrumbs.astro';
 import { breadcrumbLd } from '@/components/landing/jsonld';
 import type { Locale } from '@/content/schema';
@@ -30,6 +34,7 @@ const description = t(locale, 'landing.contactDescription');
 // Widened to `string`: the config literals are '' until the owner fills them in.
 const email: string = LINKS.supportEmail || BRAND.contactEmail;
 const telegram: string = LINKS.supportTelegram || BRAND.telegram;
+const bot: string = LINKS.telegramBot;
 
 const channels = [
   { label: t(locale, 'landing.contactEmail'), value: email, href: `mailto:${email}` },
@@ -39,6 +44,15 @@ const channels = [
           label: t(locale, 'landing.contactTelegram'),
           value: telegram.replace(/^https?:\/\//, ''),
           href: telegram,
+        },
+      ]
+    : []),
+  ...(bot
+    ? [
+        {
+          label: t(locale, 'landing.contactBot'),
+          value: bot.replace(/^https?:\/\//, ''),
+          href: bot,
         },
       ]
     : []),
@@ -128,4 +142,5 @@ const jsonLd = breadcrumbLd([
       </ol>
     </section>
   </div>
+  <StartBand locale={locale} />
 </Landing>

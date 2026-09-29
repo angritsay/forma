@@ -1,0 +1,87 @@
+---
+/**
+ * `/subscribe/`'s two plan tickets: the year (the club's plan, `CLUB_PLAN_ID`) and 30 days.
+ *
+ *   year     the warm «Выгоднее» pill, the plan's name, the club's figure from `clubPriceLabels`
+ *            — «666 ₽ / мес» on RU with the year's single charge (`app.clubChargeNote`, 7 990 ₽)
+ *            directly under it, because 666 never stands alone; EN leads with «$79 a year» and
+ *            shows no monthly figure — then «Автосписаний нет» and the gradient «Выбрать год»
+ *   30 days  the name, the price and the plan's own note from `plans.ts` («Автосписания пока нет —
+ *            продлевается вручную»), and a quiet «Выбрать 30 дней»
+ *
+ * Each button goes to the order form with its plan picked (`#order-<id>`: the page anchors both
+ * ids at the form and `OrderForm` reads the hash). Both buttons are `data-club-join`, so with a
+ * friend's code pending the layout sends either through the app's club screen and the +30 days
+ * attach before the payment — the reward (`0051_referrals.sql`) is paid on any club plan.
+ *
+ * Every figure comes from `PLANS` / `PLAN_BY_ID`; nothing here is typed. The year's own note
+ * («≈ 666 ₽ в месяц…», «≈ $6.60 a month…») is not printed: the RU figure already says it and EN
+ * shows no month at all. Club palette, no neon (`site-club-no-neon.test.ts`).
+ */
+import type { Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { CLUB_PLAN_ID, PLAN_BY_ID, PLANS } from '@content/site/plans';
+import { formatPrice } from '@content/site/pricing';
+import Button from '../Button.astro';
+import Pill from '../Pill.astro';
+import { clubPriceLabels } from './clubPrice';
+
+interface Props {
+  locale: Locale;
+  class?: string;
+}
+const { locale, class: extra = '' } = Astro.props;
+
+const club = clubPriceLabels(locale);
+const year = PLAN_BY_ID.get(CLUB_PLAN_ID);
+const thirty = PLANS.find((p) => p.period === 'month' && p.id !== CLUB_PLAN_ID);
+const card = 'relative flex flex-col gap-4 overflow-hidden rounded-card border p-5 md:p-7';
+---
+
+{
+  club && year && (
+    <ul class:list={['grid gap-3 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:gap-4', extra]}>
+      <li class={`club-aurora-host glass-card-2 border-border-strong ${card}`}>
+        <span class="club-aurora" aria-hidden="true" />
+        <p class="flex items-start justify-between gap-3">
+          <span class="text-[14px] leading-snug text-muted">{l(year.name, locale)}</span>
+          <Pill tone="warm" tilt="right" class="shrink-0">
+            {t(locale, 'landing.subscribeBestValue')}
+          </Pill>
+        </p>
+        <p class="numeral text-5xl leading-none md:text-6xl">{club.headline}</p>
+        <div class="flex flex-col gap-1">
+          <p class="text-[14px] leading-snug text-text">{club.charge}</p>
+          <p class="text-[13px] leading-snug text-muted">{t(locale, 'landing.clubNoAutoRenew')}</p>
+        </div>
+        <Button
+          href={`#order-${year.id}`}
+          variant="gradient"
+          size="lg"
+          class="mt-auto w-full sm:w-auto sm:self-start"
+          data-club-join
+          data-goal="club_join"
+        >
+          {t(locale, 'landing.subscribePickYear')}
+        </Button>
+      </li>
+      {thirty && (
+        <li class={`glass-card border-border ${card}`}>
+          <p class="text-[14px] leading-snug text-muted">{l(thirty.name, locale)}</p>
+          <p class="numeral text-5xl leading-none">{formatPrice(locale, thirty.price)}</p>
+          <p class="text-[13px] leading-snug text-muted">{l(thirty.note, locale)}</p>
+          <Button
+            href={`#order-${thirty.id}`}
+            variant="secondary"
+            size="lg"
+            class="mt-auto w-full sm:w-auto sm:self-start"
+            data-club-join
+            data-goal="club_join"
+          >
+            {t(locale, 'landing.subscribePick30')}
+          </Button>
+        </li>
+      )}
+    </ul>
+  )
+}

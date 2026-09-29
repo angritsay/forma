@@ -1,0 +1,64 @@
+---
+/**
+ * `/subscribe/`'s «Сообщения в Telegram»: the club bot's three moments as three tiles across the
+ * width — when, and what — instead of a sentence that lists them.
+ *
+ * The moments are the bot's real ones (0052, `telegram-notify`): the day's task in the morning, a
+ * nudge in the evening only when the streak is at risk, the week's results on Sunday evening. Each
+ * tile is its when and its what, two short labels, with the glyph of the thing it is about (the
+ * task, the streak, the prize). The bot's actual wording is not quoted, because it changes with
+ * the task, and a quoted message would be a promise about its text.
+ *
+ * Club palette, no neon (`site-club-no-neon.test.ts`): glass tiles, the when and the glyph in the
+ * light-blue accent.
+ */
+import { Doodle } from '@/components/ui/Doodle';
+import type { Locale } from '@/content/schema';
+import { t } from '@/i18n/index';
+
+interface Props {
+  locale: Locale;
+  class?: string;
+}
+const { locale, class: extra = '' } = Astro.props;
+
+const moments = [
+  {
+    kind: 'steps',
+    when: t(locale, 'landing.subscribeBotMorningWhen'),
+    what: t(locale, 'landing.subscribeBotMorning'),
+  },
+  {
+    kind: 'flame',
+    when: t(locale, 'landing.subscribeBotEveningWhen'),
+    what: t(locale, 'landing.subscribeBotEvening'),
+  },
+  {
+    kind: 'trophy',
+    when: t(locale, 'landing.subscribeBotSundayWhen'),
+    what: t(locale, 'landing.subscribeBotSunday'),
+  },
+] as const;
+---
+
+<ol class:list={['grid gap-3 md:grid-cols-3 md:gap-4', extra]}>
+  {
+    moments.map((m, i) => (
+      <li class="glass-card relative flex items-center gap-4 rounded-card border border-border p-5 md:min-h-[11rem] md:flex-col md:items-start md:justify-between md:p-6">
+        <span class="shrink-0 text-accent" aria-hidden="true">
+          <Doodle kind={m.kind} className="size-10 md:size-12" />
+        </span>
+        <span class="flex min-w-0 flex-col gap-1">
+          <span class="text-[13px] leading-tight text-accent">{m.when}</span>
+          <span class="font-display text-lg leading-snug md:text-xl">{m.what}</span>
+        </span>
+        <span
+          class="numeral absolute top-5 right-5 text-sm text-muted-2 max-md:hidden"
+          aria-hidden="true"
+        >
+          {String(i + 1).padStart(2, '0')}
+        </span>
+      </li>
+    ))
+  }
+</ol>

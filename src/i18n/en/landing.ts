@@ -97,7 +97,6 @@ export const landing = {
   coachCredentials: 'Credentials',
   coachMore: 'More about the coach',
   coachBook: 'Book a one-to-one',
-  coachBookHint: 'Half an hour or an hour online · from {price} · in the app',
 
   // Home: before and after (caption: `app.clubPhotosClientsRow`).
   // Deliberately does not claim these came from the courses on this page. They are Sergey's
@@ -115,22 +114,15 @@ export const landing = {
   homeCtaTitle: 'Workout 1 is waiting',
   // The closing call on other pages (about, courses).
   ctaTitle: 'Start with the first workout',
-  ctaText: 'Pick a course, enter your email and train at home at your own pace.',
-  ctaPrimary: 'Choose a course',
-  ctaSecondary: 'Open app',
+  ctaText: 'Workout 1 is free, no card needed. Then go at your own pace.',
 
   // Courses hub
-  coursesHubTitle: 'Home CrossFit courses — with or without equipment',
+  coursesHubTitle: 'Home CrossFit course with no equipment',
   coursesHubDescription:
     'Forma. Start: twenty no-equipment home CrossFit workouts, a load that adapts to you, the coach’s video for every move. Plus the club and the coach in Telegram.',
-  coursesHubH1: 'Courses',
-  coursesHubIntro: 'Twenty workouts in order, at your own pace. Lifetime access.',
-  filterEquipment: 'Equipment',
-  filterLevel: 'Level',
-  filterAll: 'All',
-  filterReset: 'Reset filters',
-  filterNoResults: 'No courses match these filters.',
-  filterResultsLabel: 'Courses',
+  coursesHubH1: 'A course to start with',
+  coursesHubIntro: 'Twenty workouts in order, no jumping and no equipment. The first one is free.',
+  coursesHubListLabel: 'Courses',
 
   // Course page
   courseTitleSuffix: 'home course',
@@ -141,24 +133,24 @@ export const landing = {
   courseEquipmentTitle: 'Equipment',
   courseEquipmentNone: 'No equipment — you need a sturdy chair and a mat',
   courseProgramTitle: 'Program',
-  courseProgramIntro: 'Week by week. Tap a week to see its days.',
+  courseProgramIntro: 'Twenty workouts in order. The weeks are a guide, not a calendar.',
   courseWeek: 'Week {n}',
   courseDay: 'Day {n}',
   courseDeload: 'Deload',
   // This block was a shop window. Now it is an invitation: the same workout, except it can be
   // done rather than only read.
   courseSampleTitle: 'The first workout is free',
-  courseSampleIntro:
-    'Here it is in full — as in the app, before it is scaled to your level. You can do it right now, no card and no payment.',
+  courseSampleIntro: 'Here it is in full. Do it now — no card, no payment.',
   courseSampleCta: 'Do it in the app',
   courseFreeFirst: 'First workout free',
   courseAdaptTitle: 'How the app adapts',
   courseAdaptText:
     'Before a workout you choose Easier, As usual or Harder. Afterwards you rate the effort from 1 to 10 and the next load shifts.',
-  // The three numbers of that paragraph, as pills.
-  courseAdaptEasy: '+5 % when easy',
-  courseAdaptHard: '−5 % when too hard',
-  courseAdaptDeload: 'Deload built in',
+  // The engine's four steps (`ADAPTATION`), one tile each; the figure is computed, not typed.
+  courseAdaptStepEasy: 'Easy, all done',
+  courseAdaptStepOk: 'Just right',
+  courseAdaptStepHard: 'At the limit',
+  courseAdaptStepPain: 'Something hurt',
   /* «About the course» shows one paragraph; the rest of the coach's text opens under this. */
   courseMoreAbout: 'More about the course',
   // «2 rest days» on a week's row of the program.
@@ -172,7 +164,7 @@ export const landing = {
   courseOrderIntro:
     'Leave your email and pay — access opens automatically and the course appears in the app under this email.',
   courseLifetimeNote: 'One payment, access forever',
-  courseOrSubscribe: 'Or the club with the course — {price} a month, paid yearly',
+  courseOrSubscribe: 'Or the club with the course — {year} a year, one payment',
   nodeWorkout: 'Workout',
   // It said «7,000 steps» while the app counted steps (see the Russian file).
   nodeRest: 'Walk',
@@ -211,13 +203,9 @@ export const landing = {
   orderTryAgain: 'Try again',
 
   // Subscribe page
-  subscribeTitle: 'The Small Steps Club and a home course',
+  subscribeTitle: 'Small Steps Club — a task a day and a coach',
   subscribeDescription:
-    'The Small Steps Club: one small task a day, a weekly board with a prize, a streak and a partner. The Start course is included. Monthly or yearly.',
-  subscribeEyebrow: 'The club',
-  subscribeLead:
-    'Big plans do not survive a working week. The club is one small task a day, a weekly board and a partner — and the Start course is already inside.',
-  subscribeIncludes: 'What you get',
+    'The Small Steps Club: one small task a day, a streak, a weekly board and a prize — an hour with the coach. The Start course is inside. No auto-renewal.',
   subscribePlanLabel: 'Plan',
   subscribePerMonth: '/ month',
   subscribePerYear: '/ year',
@@ -230,20 +218,14 @@ export const landing = {
   subscribeNote: 'One payment · access for the whole paid period · renew whenever you want',
   subscribeSuccessText:
     'We have recorded {course} for {email}. Once the payment lands, access opens automatically — sign in to the app with this email.',
-  subscribeCourseHint: 'Just the course, for good?',
-  subscribeCourseLink: 'See the course',
   subscribeVsTitle: 'Course or club?',
-  subscribeVsCourse:
-    'One course, paid once, yours forever — with the first week of the club as a gift. Right when you want a training programme.',
-  subscribeVsPlan:
-    'The club and the course, paid monthly or yearly: a task every day, the board, a streak and a partner. Right when the goal is to keep going.',
   subscribeFaq1Q: 'What is the task of the day?',
   // There is nothing to cancel: nothing is ever charged unless you pay for a period.
   subscribeFaq1A:
     'One small thing: ten minutes on foot, twenty squats, a glass of water before coffee. Done it — mark it in the app and earn points on the weekly board. The week’s leader gets a prize.',
   subscribeFaq2Q: 'What happens when the paid period ends?',
   subscribeFaq2A:
-    'The club and the course close, your progress and stats stay. There is no auto-renewal: money only moves when you pay. Renew and you continue where you stopped.',
+    'The club and the course close; your progress and stats stay. Renew and you carry on where you stopped.',
   subscribeFaq3Q: 'I already bought the course. Why the club?',
   // It said «the other four». There are six courses and one is published: a number here promises
   // programmes that are not on the site yet.
@@ -251,19 +233,19 @@ export const landing = {
     'A bought course is yours forever, and the first week of the club comes with it. The subscription keeps you in the club after that: a task every day, the weekly board, a streak and a partner.',
 
   // About
-  aboutTitle: 'About the coach',
+  aboutTitle: 'Sergey Titov — Forma coach, online sessions',
   aboutDescription:
-    'Who runs the Forma courses, how adaptive load works, and why safety and consistency beat records.',
-  aboutPhilosophyTitle: 'Principles',
+    'Sergey Titov, founder and coach of Forma, with more than 10,000 hours of one-to-one training. Online: half an hour for technique; an hour adds load and a plan.',
+  aboutPhilosophyTitle: 'How the workouts work',
   aboutPhilosophy1Title: 'Load that fits you',
   aboutPhilosophy1Text:
-    'No two people are the same, so no two workouts should be. Tests set your starting level; from there the load follows your effort ratings.',
+    'You start from five questions, with no max-effort tests; a check-in comes after the second workout.',
   aboutPhilosophy2Title: 'Safety',
   aboutPhilosophy2Text:
-    'Technique before volume. Every exercise comes with cues and common mistakes, and every one has an easier version. Pain is a signal to reduce load, not to push through.',
+    'Technique before volume. Every movement has cues and an easier version; pain is a signal to lower the load.',
   aboutPhilosophy3Title: 'Consistency',
   aboutPhilosophy3Text:
-    'Results come from weeks in a row, not one hard session. That is why the app counts workouts rather than unbroken days, and a missed day resets nothing.',
+    'The course counts workouts, not days in a row: a skipped one breaks nothing. The streak lives only in the club, for the small tasks.',
   aboutScienceTitle: 'The science, briefly',
   aboutScienceText:
     'The programs draw on ACSM and WHO physical-activity guidelines, progressive overload and RPE-based autoregulation.',
@@ -283,6 +265,7 @@ export const landing = {
     'Write to us if the code did not arrive, a course did not open or you have a question about the program.',
   contactEmail: 'Email',
   contactTelegram: 'Telegram',
+  contactBot: 'Forma bot',
   contactOrder: 'We answer in the order received.',
   contactBeforeTitle: 'Before you write',
   contactBefore1: 'No code? Check the spam folder and request a new one after a minute.',
@@ -307,7 +290,6 @@ export const landing = {
   notFoundTitle: 'Page not found',
   notFoundText: 'This page does not exist or has moved.',
   notFoundHome: 'Go home',
-  notFoundApp: 'Open app',
 
   // Home v2 (PR 2): building blocks — start form, sticky bar, club, coach, prices.
   startEmailLabel: 'Email',
@@ -418,4 +400,69 @@ export const landing = {
   coachFiguresLabel: 'Sergey Titov in numbers',
   ladderCourseShort: 'The course, for good',
   ladderFootnoteShort: 'No auto-renewal. Refund within {days} days if under {n} workouts are done.',
+  // The club (/subscribe/) and the coach (/about/), PR 4: two short lines at most, the rest in the FAQ.
+  subscribeStartFirst: 'Workout 1 first — it’s free',
+  subscribeDayEyebrow: 'A day in the club',
+  subscribeDayTitle: 'One small thing a day',
+  subscribeStreakEyebrow: 'Streak and prize',
+  subscribeStreakTitle: 'Days in a row, and a prize',
+  subscribeStreakLine: 'The app marks each milestone — once.',
+  subscribePrizeDuo: 'In a duo, each of the pair gets one.',
+  subscribeDuoEyebrow: 'Solo or as two',
+  subscribeDuoTitle: 'Harder to skip as two',
+  subscribeBotEyebrow: 'Messages in Telegram',
+  subscribeBotTitle: 'The bot keeps you on it',
+  subscribeBotMorningWhen: 'Morning',
+  subscribeBotMorning: 'The day’s task',
+  subscribeBotEveningWhen: 'Evening',
+  subscribeBotEvening: 'If your streak is at risk',
+  subscribeBotSundayWhen: 'Sunday evening',
+  subscribeBotSunday: 'The week’s results',
+  subscribeBotMute: 'Telegram connects after you sign in. Messages can be switched off.',
+  subscribePlansEyebrow: 'Plans',
+  subscribePlansTitle: 'A year, or 30 days',
+  subscribePickYear: 'Choose the year',
+  subscribePick30: 'Choose 30 days',
+  subscribeOrderEyebrow: 'Payment',
+  subscribeVsEyebrow: 'Compare',
+  subscribeVsLine: 'The course is a programme you keep. The club keeps you going.',
+  subscribeFaq4Q: 'Who gets the prize?',
+  subscribeFaq4A:
+    'Whoever is top of the board on Sunday: an hour one to one with Sergey, online. In a duo, an hour for each of the pair. The coach announces the winner and settles any tie.',
+  subscribeFaq5Q: 'Will I be charged again automatically?',
+  subscribeFaq5A:
+    'No. It is one payment — for a year or for 30 days — and that is all. Renew by hand whenever you like.',
+  subscribeFaq6Q: 'How do the +30 days and the pair work?',
+  subscribeFaq6A:
+    'Send a friend your personal link. If they pay for the club through it, you both get +30 days, and you become a pair if neither of you has one yet. No bonus if your friend has been in the club before. It is not a discount: the price is the same, the days are added.',
+  aboutOutcomesEyebrow: 'One to one',
+  aboutOutcomesTitle: 'What a session gives you',
+  aboutSessionsEyebrow: 'Online sessions',
+  aboutSessionsTitle: 'Half an hour or an hour',
+  aboutHowTitle: 'How to book',
+  aboutHowPick: 'Pay, then pick a time',
+  aboutHowWrite: 'Pay, then message him — the coach sets the time',
+  aboutRule: 'No refunds — a session can be moved if you ask at least 24 hours ahead',
+  aboutDailyEyebrow: 'In the app',
+  aboutDailyTitle: 'Every day in Forma',
+  aboutDailyFilmed: 'Filmed every movement',
+  aboutDailyReports: 'Reads every report',
+  aboutDailyBot: 'Answers in the bot',
+  aboutDailyWinner: 'Names the week’s winner',
+  aboutPhilosophyEyebrow: 'Principles',
+  aboutCredEyebrow: 'Experience',
+  aboutBioMore: 'More about Sergey',
+  aboutScienceEyebrow: 'Science',
+  // Courses, the course page, guides, exercises, contact (PR 4, stage 2).
+  cardStartCta: 'Workout 1 — free',
+  cardBuyCta: 'Buy — {price}',
+  cardGift: 'A week of the club as a gift',
+  clubBandEyebrow: 'The club, with the course',
+  clubBandMore: 'What is in the club',
+  courseBuyCta: 'Get access · {price}',
+  courseInviteLine: 'It is easier not to quit as two — start on Monday.',
+  courseSamplePlan: 'The full plan',
+  startWorkout1Cta: 'Do workout 1 for free',
+  inWorkout1: 'This movement is in workout 1',
+  hubCtaText: 'About {total} minutes — free, no card needed.',
 } as const;

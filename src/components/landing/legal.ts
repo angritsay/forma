@@ -7,7 +7,8 @@ import type { L10n } from '@/content/schema';
 import { BRAND } from '@content/site/brand';
 import { entityLines, entityName, hasLegalEntity } from '@content/site/legalEntity';
 import { LINKS } from '@content/site/links';
-import { PRICING } from '@content/site/pricing';
+import { BOOKING } from '@content/site/booking';
+import { formatPrice, PRICING } from '@content/site/pricing';
 
 export interface LegalSection {
   id: string;
@@ -38,6 +39,68 @@ const days = PRICING.refundDays;
 const maxWorkouts = PRICING.refundMaxCompletedWorkouts;
 const age = PRICING.minimumAge;
 const notice = PRICING.shutdownNoticeDays;
+
+/*
+ * One-to-one sessions with the coach, as the terms and the refund policy describe them: every
+ * length and price from `BOOKING.options`, and how the time is set read from each option's slot
+ * page — a length with one is «оплати и выбери время», one without is «оплати и напиши, время
+ * поставит тренер» (the same rule `/about/` prints). The money rule is the owner's decision of
+ * 29 Sep: no refund for a session; it moves if the client writes at least 24 hours ahead; a session
+ * missed without that notice is not moved. A session that fails on our side is moved or refunded —
+ * that is ours to owe, not the client's choice to cancel.
+ */
+const sessionPrices: L10n = {
+  ru: BOOKING.options
+    .map((o) => `${o.durationMin} минут — ${formatPrice('ru', o.price)}`)
+    .join(', '),
+  en: BOOKING.options
+    .map((o) => `${o.durationMin} minutes — ${formatPrice('en', o.price)}`)
+    .join(', '),
+};
+const sessionFlow: L10n[] = BOOKING.options.map((o) =>
+  o.scheduleUrl || BOOKING.scheduleUrl
+    ? {
+        ru: `${o.durationMin} минут: Пользователь оплачивает занятие по ссылке из Приложения и сразу выбирает время на странице записи.`,
+        en: `${o.durationMin} minutes: the User pays through the link in the App and picks a time on the booking page straight away.`,
+      }
+    : {
+        ru: `${o.durationMin} минут: Пользователь оплачивает занятие по ссылке из Приложения и пишет тренеру — время назначает тренер.`,
+        en: `${o.durationMin} minutes: the User pays through the link in the App and writes to the coach, who sets the time.`,
+      },
+);
+const SESSION_RULES: L10n[] = [
+  {
+    ru: 'Возврата за оплаченное занятие нет. Вместо этого занятие можно перенести — если написать тренеру или на e-mail ниже не позднее чем за 24 часа до его начала.',
+    en: 'A paid session is not refunded. Instead, it can be moved — if the User writes to the coach or to the email below at least 24 hours before it starts.',
+  },
+  {
+    ru: 'Если Пользователь не пришёл на занятие и не предупредил об этом за 24 часа, занятие считается проведённым и не переносится.',
+    en: 'If the User does not attend and has not given 24 hours’ notice, the session counts as held and is not moved.',
+  },
+  {
+    ru: 'Если занятие не состоялось по вине тренера или из-за сбоя на нашей стороне, мы переносим его на удобное время, а если перенести не получается — возвращаем деньги.',
+    en: 'If a session does not take place because of the coach or a fault on our side, we move it to a convenient time, and if it cannot be moved, we refund the payment.',
+  },
+];
+
+/*
+ * The same three rules in the refund policy's own voice. /refund/ speaks to the reader as «ты»,
+ * the offer as «Пользователь»; the rules are one decision, so change both lists together.
+ */
+const SESSION_RULES_YOU: L10n[] = [
+  {
+    ru: 'Возврата за оплаченное занятие нет. Вместо этого занятие можно перенести — если написать тренеру или на e-mail ниже не позднее чем за 24 часа до его начала.',
+    en: 'A paid session is not refunded. Instead, you can move it — write to the coach or to the email below at least 24 hours before it starts.',
+  },
+  {
+    ru: 'Если ты не пришёл на занятие и не предупредил об этом за 24 часа, занятие считается проведённым и не переносится.',
+    en: 'If you do not attend and have not given 24 hours’ notice, the session counts as held and is not moved.',
+  },
+  {
+    ru: 'Если занятие не состоялось по вине тренера или из-за сбоя на нашей стороне, мы переносим его на удобное тебе время, а если перенести не получается — возвращаем деньги.',
+    en: 'If a session does not take place because of the coach or a fault on our side, we move it to a time that suits you, and if it cannot be moved, we refund the payment.',
+  },
+];
 
 const region: L10n =
   PRICING.dataRegion === 'eu'
@@ -411,6 +474,10 @@ export function termsDocument(): LegalDocument {
             en: 'App — the web application at /app/ where the training happens.',
           },
           {
+            ru: 'Занятие с тренером — онлайн-занятие один на один с тренером Forma по видеосвязи, оплачиваемое отдельно (раздел 5в).',
+            en: 'Coaching session — a one-to-one online session with the Forma coach over video, paid for separately (section 5c).',
+          },
+          {
             ru: 'Подписка — доступ ко всем Курсам на оплаченный период: 30 дней или год. Автоматического списания нет: период заканчивается, и доступ закрывается, пока Пользователь не оплатит следующий сам.',
             en: 'Subscription — access to every Course for a paid period: 30 days or a year. There is no automatic charge: the period ends and access closes until the User pays for the next one themselves.',
           },
@@ -553,6 +620,27 @@ export function termsDocument(): LegalDocument {
         ],
       },
       {
+        id: 'sessions',
+        heading: { ru: '5в. Занятия с тренером', en: '5c. Coaching sessions' },
+        paragraphs: [
+          {
+            ru: `Исполнитель оказывает услугу — занятие с тренером один на один, онлайн, по видеосвязи. Длительность и цена: ${sessionPrices.ru}. Действует цена, указанная в Приложении на момент оплаты.`,
+            en: `The Provider offers a service — a one-to-one session with the coach, online, over video. Length and price: ${sessionPrices.en}. The price shown in the App at the time of payment applies.`,
+          },
+        ],
+        bullets: [...sessionFlow, ...SESSION_RULES],
+        after: [
+          {
+            ru: 'Час с тренером, выигранный как приз недели в клубе (раздел 5б), — не платное занятие по этому разделу: его время согласуется с тренером.',
+            en: 'An hour with the coach won as the club’s weekly prize (section 5b) is not a paid session under this section: its time is agreed with the coach.',
+          },
+          {
+            ru: 'Эти правила не ограничивают права по Закону «О защите прав потребителей» — они описаны в политике возврата на странице /refund/.',
+            en: 'These rules do not limit your rights under ЗоЗПП — they are described in the refund policy at /refund/.',
+          },
+        ],
+      },
+      {
         id: 'health',
         heading: { ru: '6. Здоровье и безопасность', en: '6. Health and safety' },
         paragraphs: [
@@ -599,8 +687,8 @@ export function termsDocument(): LegalDocument {
             en: 'The App is provided “as is”. The Provider strives to keep it running but does not guarantee the absence of interruptions and errors and is not responsible for outages of third-party services (hosting, email, payment). The Provider does not guarantee specific training results — they depend on the User’s consistency, nutrition, sleep and health.',
           },
           {
-            ru: 'Ответственность Исполнителя по этой оферте ограничена стоимостью оплаченного Курса.',
-            en: 'The Provider’s liability under these terms is limited to the price paid for the Course.',
+            ru: 'Ответственность Исполнителя по этой оферте ограничена стоимостью оплаченного Курса, Подписки или занятия с тренером.',
+            en: 'The Provider’s liability under these terms is limited to the price paid for the Course, the Subscription or the coaching session.',
           },
         ],
       },
@@ -609,8 +697,8 @@ export function termsDocument(): LegalDocument {
         heading: { ru: '9. Возврат средств', en: '9. Refunds' },
         paragraphs: [
           {
-            ru: `Возврат возможен в течение ${days} дней после активации доступа, если выполнено меньше ${maxWorkouts} тренировок Курса. Подробности — в политике возврата на странице /refund/.`,
-            en: `A refund is possible within ${days} days of activation if fewer than ${maxWorkouts} workouts of the Course are completed. Details are in the refund policy at /refund/.`,
+            ru: `Возврат возможен в течение ${days} дней после активации доступа (для Подписки — с момента оплаты), если выполнено меньше ${maxWorkouts} тренировок Курса (для Подписки — за оплаченный период). Для занятий с тренером действует раздел 5в. Подробности — в политике возврата на странице /refund/.`,
+            en: `A refund is possible within ${days} days of activation (for a Subscription, from payment) if fewer than ${maxWorkouts} workouts of the Course are completed (for a Subscription, within the paid period). Coaching sessions follow section 5c. Details are in the refund policy at /refund/.`,
           },
           {
             ru: 'Это наше правило, а не предел твоих прав. По ст. 32 Закона «О защите прав потребителей» ты можешь отказаться от услуги в любой момент, оплатив фактически понесённые нами расходы. Правило выше проще и в большинстве случаев выгоднее; если оно не подходит, напиши — будем считать по закону.',
@@ -731,6 +819,17 @@ export function refundDocument(): LegalDocument {
           },
           { ru: 'Курс был бесплатным.', en: 'The Course was free.' },
         ],
+      },
+      {
+        id: 'sessions',
+        heading: { ru: '4а. Занятия с тренером', en: '4a. Coaching sessions' },
+        paragraphs: [
+          {
+            ru: `Правило выше — для Курсов и Подписки. Для занятий с тренером (${sessionPrices.ru}) оно другое:`,
+            en: `The rule above is for Courses and Subscriptions. Coaching sessions (${sessionPrices.en}) work differently:`,
+          },
+        ],
+        bullets: SESSION_RULES_YOU,
       },
       {
         id: 'technical',
