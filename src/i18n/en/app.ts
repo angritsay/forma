@@ -2001,5 +2001,5 @@ export const app = {
   bookingsCancelledToast: 'Booking cancelled',
   bookingsSourceForma: 'In the app',
   bookingsExternalHint:
-    'A Google Calendar booking from before booking moved into the app. It is kept here as history — agree a move or a cancellation with the client directly.',
+    'This booking was not made in the app. It is kept here as history — agree a move or a cancellation with the client directly.',
 } as const;

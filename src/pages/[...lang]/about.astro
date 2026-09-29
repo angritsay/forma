@@ -56,6 +56,7 @@ import { SITE_COURSES } from '@/content/published';
 import type { Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { exerciseStillUrl } from '@/lib/api/storage';
+import { HOLD_MINUTES } from '@/lib/coach/slots';
 import { canonicalUrl } from '@/lib/seo/urls';
 import { appHref, href, localeStaticPaths, withBase } from '@/lib/util/paths';
 import { BOOKING } from '@content/site/booking';
@@ -246,7 +247,7 @@ const jsonLd = [
           ))}
         </ol>
         <p class="mt-6 border-l-2 border-ciel pl-3 text-[14px] leading-snug text-text">
-          {t(locale, 'landing.aboutRule')}
+          {t(locale, 'landing.aboutRule', { n: HOLD_MINUTES })}
         </p>
         <div class="mt-8">
           <Button

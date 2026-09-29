@@ -159,7 +159,8 @@ export default function AdminBookingsScreen() {
                    * Only a booking made here is ours to change. A Google row is history from
                    * before the cutover: it has no coach, no option and no room link, and moving it
                    * here would skip the overlap check our own rows get (0055). It still blocks
-                   * Sergey's time, and it is changed with the client directly.
+                   * Sergey's time, and it is changed with the client directly. The same holds for
+                   * a manual (`admin`) or legacy `calendly_webhook` row, so the hint stays neutral.
                    * `source` comes with the RPC's own row, never from the optional second read.
                    */
                   const editable = scope === 'upcoming' && row.source === 'forma';
