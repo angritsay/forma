@@ -592,4 +592,20 @@ describe('auditInternalLinks', () => {
       ...extractAnchorIds('<div id="a&amp;b"></div><a name="top"></a><p data-id="no">'),
     ]).toEqual(['a&b', 'top']);
   });
+
+  it('does not take a name on any tag but <a> as an anchor', () => {
+    const pages = new Map([
+      [
+        'index.html',
+        page(
+          '<meta name="description" content="x"><input name="q">' +
+            '<a href="#description">d</a><a href="#q">q</a>',
+        ),
+      ],
+    ]);
+    expect(messages(auditInternalLinks(pages, files))).toEqual([
+      'dist/index.html: link #description points at #description, which is not an id on index.html',
+      'dist/index.html: link #q points at #q, which is not an id on index.html',
+    ]);
+  });
 });

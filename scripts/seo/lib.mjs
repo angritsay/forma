@@ -1541,12 +1541,18 @@ function resolveDistPath(path, files) {
 
 /**
  * The ids (and legacy `<a name>`s) a document can be scrolled to.
+ *
+ * `name` counts only on `<a>`: a browser scrolls to no other element by it, and taking it on any
+ * tag would let `#description` pass on the strength of `<meta name="description">`.
  * @param {string} html
  */
 export function extractAnchorIds(html) {
   /** @type {Set<string>} */
   const ids = new Set();
-  for (const m of html.matchAll(/<[a-zA-Z][^>]*?\s(?:id|name)="([^"]*)"/g)) {
+  for (const m of html.matchAll(/<[a-zA-Z][^>]*?\sid="([^"]*)"/g)) {
+    ids.add(decodeEntities(m[1] ?? ''));
+  }
+  for (const m of html.matchAll(/<a\b[^>]*?\sname="([^"]*)"/gi)) {
     ids.add(decodeEntities(m[1] ?? ''));
   }
   return ids;

@@ -19,6 +19,7 @@
  */
 import ExerciseStill from '@/components/media/ExerciseStill';
 import Pill from '@/components/landing/Pill.astro';
+import { SITE_COURSES } from '@/content/published';
 import type { Exercise, Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { equipmentNames, exerciseTile, levelName, patternName } from '@/lib/seo/exercises';
@@ -39,7 +40,7 @@ const name = l(ex.name, locale);
 <a
   href={href(locale, `/exercises/${ex.slug[locale]}/`)}
   class="group flex h-full items-start gap-4 border-t border-border py-4 transition-colors duration-150 hover:border-border-strong"
-  style={courseTileStyle(exerciseTile(ex))}
+  style={courseTileStyle(exerciseTile(ex, SITE_COURSES))}
 >
   <!-- Monochrome like every photograph on the site; the tile shows through where no still exists. -->
   <div class="hero-art relative size-[72px] shrink-0 overflow-hidden rounded-inner">

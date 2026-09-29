@@ -88,7 +88,7 @@ const title = exerciseTitle(ex, locale);
 const description = exerciseDescription(ex, locale);
 const image = ogImagePath('exercise', ex.id, locale);
 const imageUrl = absoluteUrl(site, image);
-const tile = exerciseTile(ex);
+const tile = exerciseTile(ex, SITE_COURSES);
 /*
  * The step numerals are the light blue — key figures, the semantic colour map's job for it
  * (global.css header) — whatever the movement's course: the programme colour is identity for a
