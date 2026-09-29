@@ -28,7 +28,7 @@
  * видно всем и навсегда.
  */
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
-import { messageFor, toLocale, type Locale } from './copy.ts';
+import { accessWarningEnd, messageFor, toLocale, type Locale } from './copy.ts';
 import { adminFailure, adminMessage, parseTopics, stripLinks, type AdminRow } from './admin.ts';
 
 /** Сколько строк за один запуск. При раз в 10 минут это с огромным запасом. */
@@ -278,6 +278,35 @@ async function loadDue(admin: SupabaseClient): Promise<Due> {
   };
 }
 
+/**
+ * Whether an access warning (0054) has become moot: its moment (`end`, from `accessWarningEnd`)
+ * has passed, or the person now has a live subscription that runs past it — a renewal for
+ * `subscription_ending`, a new subscription for `club_trial_tomorrow`. `null` when the lookup
+ * failed; the caller then leaves the row for the next run.
+ */
+async function accessWarningMoot(
+  admin: SupabaseClient,
+  row: Row,
+  end: number,
+  now: number,
+): Promise<boolean | null> {
+  if (end <= now) return true;
+  if (!row.email) return true;
+  const { data, error } = await admin
+    .from('subscriptions')
+    .select('id')
+    .eq('email', row.email)
+    .in('status', ['active', 'cancelled'])
+    .gt('expires_at', new Date(end).toISOString())
+    .limit(1);
+  if (error) {
+    const e = error as PgError;
+    console.error('telegram-notify: could not check the subscription', e.code);
+    return null;
+  }
+  return (data ?? []).length > 0;
+}
+
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return reply(405, { ok: false });
 
@@ -369,6 +398,23 @@ Deno.serve(async (req) => {
     if (who === null) {
       // Ждёт: человек может открыть приложение из телеграма завтра, и тогда дойдёт.
       continue;
+    }
+
+    /*
+     * An access warning (0054) is checked again right before it goes: it may have waited for the
+     * person to link Telegram, and in the meantime the moment passed or they renewed. Either way
+     * «the club is open until…» would now be wrong, so the row is dropped, not sent. A failed
+     * lookup leaves the row for the next run: the row's own TTL still ends it.
+     */
+    const end = accessWarningEnd(row);
+    if (end !== null) {
+      const moot = await accessWarningMoot(admin, row, end, now);
+      if (moot === null) continue;
+      if (moot) {
+        await done('skipped', 'no longer due');
+        skipped += 1;
+        continue;
+      }
     }
 
     const message = messageFor(row, who.locale);
