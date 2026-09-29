@@ -624,10 +624,27 @@ On the longer length the block shows the **delta and only the delta** — «Вс
 reader do the diffing. `HOUR.includes` is still the whole list for any other surface; it is composed
 from the half's promises plus `adds`, so the two cannot drift.
 
-After the button comes the step the offer used to be missing. With `BOOKING.scheduleUrl` set it is
-the slot page («оплатил → выбрал время»); with it empty — today's state — it says outright that the
-coach sets the time in a message, rather than ending the screen on a paid button. Opening payment
-from the screen sharpens that block instead of leaving the person to find it.
+**Pick a time, then pay** (0055, owner 29 Sep). The block ends in the slot picker on the calendar
+of the coach whose card is in view (Nastia's behind `coach_nastia`): the next 14 days as a strip of
+day dots (`DayStrip`), then that day's free starts as chips, all in the device's clock with the zone
+named (`src/lib/coach/slots.ts`, `available_slots`). «Забронировать и оплатить» calls `hold_slot`
+and opens the same static till link (`payRoute` / `payHref`); the slot is held for 20 minutes and the
+card shows «Слот держится до 14:35» with the minutes left, the pay button again and «Выбрать другое
+время» (`release_hold`). The payment confirms the hold server-side (the webhooks'
+`apply_session_payment`); the screen only asks again on focus, and the session appears at the top.
+Without a till link for the length there is nothing to hold, and the action is «Написать тренеру».
+
+The booked session's card shows «Подключиться» (the coach's room link) from 15 minutes before the
+start until the end. A session booked in the app moves in the app — «Перенести» opens the same
+picker in a sheet and calls `move_my_booking` — only while the start is 24 hours or more away; later
+the card says so and offers «Написать тренеру». There is no self-cancel and no refund.
+
+The admin's «Записи» (`/admin/bookings`) has two views: the bookings list (upcoming / past /
+cancelled, each with its coach, and move or cancel on an upcoming one — `admin_move_booking`,
+`admin_cancel_booking`, Moscow time) and «Расписание», per coach: the room link
+(`admin_save_coach`), the week as day rows with time ranges (`admin_set_availability`, sent whole)
+and per-date exceptions (a day or hours off, extra hours). The demo backend runs all of it locally
+(`src/lib/api/demo/booking.ts`), with the payment stood in for by `confirmDemoHold`.
 
 The same `/app/` build runs inside Telegram as a Mini App (`src/lib/telegram/webapp.ts`): the SDK
 is loaded only when Telegram opened the page, Telegram's back button follows the route, and links

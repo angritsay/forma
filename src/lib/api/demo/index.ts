@@ -6,6 +6,7 @@ export * from './api';
 export * from './clubAdmin';
 export * from './adminPayments';
 export * from './flags';
+export * from './booking';
 export {
   getSession,
   getUser,

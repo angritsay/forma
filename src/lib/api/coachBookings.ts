@@ -1,11 +1,11 @@
 /**
  * Coach bookings: the one-to-one sessions the signed-in person has with the coach.
  *
- * Read-only from the app. Bookings are made in a scheduler — a free Google Calendar appointment
- * schedule, read by supabase/functions/google-calendar-sync/ — and written server-side with the
- * service role; `coach_bookings` has no write policy for a signed-in user, not even for their own
- * rows, so there is nothing here to write with. The view `my_coach_bookings` is already filtered
- * to the caller by
+ * Read-only here. A session is made in the app since 0055 — a slot picked and held
+ * (`coachSlots.ts`), then confirmed server-side by the payment — or, until the cutover, read from
+ * the coach's Google Calendar by supabase/functions/google-calendar-sync/. `coach_bookings` has no
+ * write policy for a signed-in user, not even for their own rows: every change goes through an
+ * RPC that checks the rules. The view `my_coach_bookings` is already filtered to the caller by
  * `current_email()` — the `status`/`starts_at` filters below are about what is worth showing, not
  * about who may see it.
  *
@@ -22,7 +22,7 @@ import { isDemo } from './mode';
 import type { CoachBooking } from './types';
 
 const COLUMNS =
-  'id, starts_at, ends_at, timezone, join_url, location_kind, location_text, cancel_url, reschedule_url, status, event_name';
+  'id, starts_at, ends_at, timezone, join_url, location_kind, location_text, cancel_url, reschedule_url, status, event_name, coach_id, option_id';
 
 /**
  * Every session this person has, soonest first — including cancelled and finished ones, so a

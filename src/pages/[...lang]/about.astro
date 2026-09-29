@@ -77,16 +77,13 @@ const photo = COACH.cardPhoto || COACH.photo;
 const figures = COACH.figures.map((f) => ({ value: f.value, label: l(f.label, locale) }));
 
 /*
- * How each length is booked, from whether it has a slot page — a length with one is «pay, then
- * pick a time»; one without is «pay, then write, and he sets the time» (booking.ts, `HOUR`).
+ * How each length is booked. Both the same way since the app has its own calendar (0055): pick a
+ * time in the app, then pay — the slot is held for 20 minutes and the payment confirms it.
  */
 const howTo = BOOKING.options.map((o) => ({
   id: o.id,
   minutes: t(locale, 'landing.ticketsMinutes', { n: o.durationMin }),
-  text: t(
-    locale,
-    o.scheduleUrl || BOOKING.scheduleUrl ? 'landing.aboutHowPick' : 'landing.aboutHowWrite',
-  ),
+  text: t(locale, 'landing.aboutHowPick'),
 }));
 
 const daily = [

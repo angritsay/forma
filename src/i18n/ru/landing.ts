@@ -457,8 +457,8 @@ export const landing = {
   aboutSessionsEyebrow: 'Занятия онлайн',
   aboutSessionsTitle: 'Полчаса или час',
   aboutHowTitle: 'Как записаться',
-  aboutHowPick: 'Оплати и выбери время',
-  aboutHowWrite: 'Оплати и напиши — время поставит тренер',
+  // Порядок владельца (29 сент.): сначала время, потом оплата — слот держится 20 минут.
+  aboutHowPick: 'Выбери время и оплати',
   aboutRule: 'Возврата нет — занятие можно перенести, если написать не позднее чем за 24 часа',
   aboutDailyEyebrow: 'В приложении',
   aboutDailyTitle: 'Каждый день в Forma',

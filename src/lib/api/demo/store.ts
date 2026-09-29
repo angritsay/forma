@@ -93,6 +93,45 @@ export interface DemoRival {
 /** A `coach_bookings` row as the demo holds it: the view's columns plus the email it is filed under. */
 export interface DemoCoachBooking extends DbCoachBooking {
   email: string;
+  /*
+   * Our own calendar (0055). Optional, like the tables below: a demo stored before it has
+   * sessions without a coach, and those read exactly as Google rows do.
+   */
+  source?: string;
+  /** `pending` rows are holds; they are never shown as a session (the view's rule). */
+  hold_expires_at?: string | null;
+  cancel_reason?: string | null;
+}
+
+/** One row of `coaches`, with the admin-only columns. */
+export interface DemoCoach {
+  id: string;
+  name: string;
+  nameEn: string | null;
+  email: string | null;
+  roomUrl: string | null;
+  timezone: string;
+  active: boolean;
+  flag: string | null;
+}
+
+/** One row of `coach_availability`. */
+export interface DemoCoachRule {
+  coachId: string;
+  weekday: number;
+  start: string;
+  end: string;
+}
+
+/** One row of `coach_availability_exceptions`. */
+export interface DemoCoachException {
+  id: string;
+  coachId: string;
+  date: string;
+  start: string | null;
+  end: string | null;
+  kind: 'off' | 'extra';
+  note: string | null;
 }
 
 export interface DemoDb {
@@ -140,6 +179,13 @@ export interface DemoDb {
    * for the same reason as `introViews` — no `DEMO_SCHEMA_VERSION` bump for one new table.
    */
   featureFlags?: DemoFeatureFlag[];
+  /**
+   * Our own calendar (0055): the coaches, their weeks and their exceptions. Optional and seeded
+   * where they are read (`demo/booking.ts`), for the same reason as `featureFlags`.
+   */
+  coaches?: DemoCoach[];
+  coachRules?: DemoCoachRule[];
+  coachExceptions?: DemoCoachException[];
 }
 
 /** One row of `feature_flags`. */
@@ -394,6 +440,12 @@ export function readDb(storage: StorageLike = defaultStorage()): DemoDb {
       marathonWinners: asRows<DemoWinner>(parsed.marathonWinners),
       introViews: asRows<DemoIntroView>(parsed.introViews),
       featureFlags: asRows<DemoFeatureFlag>(parsed.featureFlags),
+      // Absent stays absent: `undefined` is what tells `demo/booking.ts` to seed the calendar.
+      coaches: Array.isArray(parsed.coaches) ? (parsed.coaches as DemoCoach[]) : undefined,
+      coachRules: Array.isArray(parsed.coachRules)
+        ? (parsed.coachRules as DemoCoachRule[])
+        : undefined,
+      coachExceptions: asRows<DemoCoachException>(parsed.coachExceptions),
     };
   } catch {
     return emptyDb();
@@ -496,12 +548,17 @@ function seedCoachBooking(email: string, today: string): DemoCoachBooking {
     ends_at: endsAt.toISOString(),
     timezone: null,
     join_url: 'https://example.com/j/forma-demo',
-    location_kind: 'zoom_conference',
+    location_kind: 'room',
     location_text: null,
-    cancel_url: 'https://example.com/cancellations/forma-demo',
-    reschedule_url: 'https://example.com/reschedulings/forma-demo',
+    cancel_url: null,
+    reschedule_url: null,
     status: 'active',
     event_name: 'Персональная тренировка',
+    // Booked in the app (0055): Sergey's calendar, the hour. Tomorrow is under the 24 hours, so
+    // the card offers «Написать тренеру» rather than «Перенести» — the rule, shown.
+    coach_id: 'sergey',
+    option_id: 'hour',
+    source: 'forma',
   };
 }
 

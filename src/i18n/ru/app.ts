@@ -1697,7 +1697,8 @@ export const app = {
     'Оплати — и выбери слот на её странице. Ближайший может быть уже через {n} минут.',
   bookNextContactHer:
     'Страницы со слотами нет: оплати и напиши — время она поставит сама, хоть за {n} минут до начала.',
-  bookPaidNote: 'Оплата открылась в браузере. Как оплатишь — возвращайся сюда за временем.',
+  bookPaidNote:
+    'Оплата открылась в браузере. Как оплатишь — бронь подтвердится сама и появится здесь.',
 
   // --- Stream 3: sign-in, the bot, the emailed code -------------------------
   // Sign-in errors that used to share one generic line. Each says what happened first and what to
@@ -1931,7 +1932,7 @@ export const app = {
   bookInDaysMany: 'через {n} дней',
   // Дата и часы — в поясе устройства, а не в том, в котором бронировали.
   bookWhen: '{date} · {from} – {to} · {dur}',
-  bookJoin: 'Войти в тренировку',
+  bookJoin: 'Подключиться',
   // Занятие в зале: адрес вместо ссылки, и кнопки здесь нет — нажимать нечего.
   bookPlace: 'Место: {place}',
   // Ссылка на конференцию создаётся не мгновенно, а у брони из Google Календаря её может не быть
@@ -2019,7 +2020,7 @@ export const app = {
   bookingsEmptyUpcoming: 'Предстоящих записей нет',
   bookingsEmpty: 'Здесь пусто',
   bookingsEmptyBody:
-    'Записи приходят из Google Календаря тренера. Нажми «Синхронизировать сейчас», чтобы прочитать его сразу.',
+    'Запись появляется, когда клиент выбирает время и оплачивает. Свободные часы — на вкладке «Расписание».',
   bookingsLoadError: 'Не удалось загрузить записи.',
   bookingsMinutes: '{n} мин',
   bookingsMsk: 'МСК',
@@ -2051,4 +2052,92 @@ export const app = {
   // Ноль — не место. У того, кто ещё ничего не набрал, места в таблице нет, и «0 место» —
   // не предложение ни на одном языке.
   // И это не то же самое: строки в таблице недели у человека пока просто нет.
+  // --- Coach: our own calendar (0055) — the picker, the hold, the move -------------------
+  // Сначала время, потом оплата (владелец, 29 сент.): слот держится 20 минут, оплата его подтверждает.
+  bookPickerTitle: 'Выбери время',
+  bookPickerDays: 'Две недели вперёд',
+  bookPickerTimes: 'Свободное время',
+  bookPickerDayNone: '{date}: свободного времени нет',
+  bookPickerDaySome: '{date}: свободных слотов — {n}',
+  bookPickerZone: 'Время твоего устройства · {zone}',
+  bookPickerEmpty:
+    'На две недели вперёд свободного времени нет. Напиши тренеру — подберёте время вместе.',
+  bookPickerError: 'Не удалось загрузить свободное время.',
+  bookPickerRetry: 'Ещё раз',
+  bookHoldPay: 'Забронировать и оплатить {price}',
+  // Над кнопкой оплаты, пока слот держится за человеком. {time} — часы устройства.
+  bookHoldUntil: 'Слот держится до {time}',
+  bookHoldLeft: 'осталось {left}',
+  bookHoldRelease: 'Выбрать другое время',
+  bookHoldNote: 'Оплата подтвердит бронь сама — тренировка появится здесь, наверху.',
+  bookHoldExpired: 'Время на оплату вышло, и слот снова свободен. Выбери время ещё раз.',
+  bookHoldTaken: 'Это время только что заняли. Выбери другое.',
+  bookHoldRateLimited: 'Слишком много попыток за час — попробуй позже.',
+  bookCoachUnavailable: 'Запись к этому тренеру сейчас закрыта.',
+  bookHoldError: 'Не получилось забронировать. Попробуй ещё раз.',
+  bookDemoPaid: 'Демо: оплата засчитана, тренировка записана.',
+  // Карточка записанной тренировки: вход открывается за 15 минут, перенос — не позже чем за 24 часа.
+  bookJoinSoon: 'Кнопка «Подключиться» появится за {n} минут до начала.',
+  bookMoveLate: 'До начала меньше 24 часов — перенести можно только через тренера.',
+  bookMoveTitle: 'Перенести тренировку',
+  bookMoveNow: 'Сейчас: {when}',
+  bookMoveConfirm: 'Перенести на {time}',
+  bookMoveDone: 'Тренировка перенесена.',
+  bookMoveTooLate: 'До начала уже меньше 24 часов — напиши тренеру.',
+  // --- Admin «Записи»: the calendar editor (0055) ---------------------------------------
+  bookingsViewList: 'Записи',
+  bookingsViewSchedule: 'Расписание',
+  bookingsCoach: 'Тренер',
+  bookingsCoachFlag: 'Видят только люди с функцией {flag}',
+  bookingsRoom: 'Ссылка на комнату',
+  bookingsRoomHint:
+    'Одна постоянная ссылка, https://… Её получает каждый оплативший; новая дойдёт и до уже записанных.',
+  bookingsRoomSave: 'Сохранить ссылку',
+  bookingsRoomSaved: 'Ссылка сохранена',
+  bookingsRoomInvalid: 'Нужна ссылка, которая начинается с https://',
+  bookingsNoRoom: 'Ссылки на комнату нет: оплатившие получат запись без неё.',
+  bookingsWeek: 'Часы по неделе',
+  bookingsWeekHint: 'Время тренера ({zone}). Начало слота — каждые 30 минут.',
+  bookingsDayOff: 'выходной',
+  bookingsAddRange: 'Добавить часы',
+  bookingsRemoveRange: 'Убрать',
+  bookingsRangeFrom: 'С',
+  bookingsRangeTo: 'До',
+  bookingsRangeFormat: 'Время в виде 10:00',
+  bookingsRangeOrder: 'Конец раньше начала',
+  bookingsRangeOverlap: 'Пересекается с другими часами',
+  bookingsWeekSave: 'Сохранить неделю',
+  bookingsWeekSaved: 'Неделя сохранена',
+  bookingsExceptions: 'Исключения по датам',
+  bookingsExceptionsEmpty: 'Исключений нет.',
+  bookingsExceptionDate: 'Дата',
+  bookingsExceptionKind: 'Что',
+  bookingsExceptionOff: 'Не работает',
+  bookingsExceptionExtra: 'Дополнительные часы',
+  bookingsExceptionAllDay: 'весь день',
+  bookingsExceptionNote: 'Заметка, если нужна',
+  bookingsExceptionHint: 'Без времени — весь день. У дополнительных часов время обязательно.',
+  bookingsExceptionAdd: 'Добавить исключение',
+  bookingsExceptionAdded: 'Исключение добавлено',
+  bookingsExceptionRemove: 'Удалить',
+  bookingsExceptionInvalid:
+    'Проверь дату и время: у дополнительных часов нужны оба, и конец позже начала.',
+  bookingsSaveError: 'Не удалось сохранить.',
+  bookingsMove: 'Перенести',
+  bookingsMoveTitle: 'Перенести запись',
+  bookingsMoveDate: 'Дата',
+  bookingsMoveTime: 'Время, МСК',
+  bookingsMoveHint:
+    'Любое будущее время, о котором договорились с тренером. Клиенту придёт сообщение в бота.',
+  bookingsMoved: 'Запись перенесена',
+  bookingsMoveTaken: 'На это время у тренера уже есть запись.',
+  bookingsMoveInvalid: 'Время должно быть в будущем.',
+  bookingsCancel: 'Отменить',
+  bookingsCancelTitle: 'Отменить запись?',
+  bookingsCancelBody:
+    'Запись уйдёт в отменённые, клиенту придёт сообщение. Деньги сами не вернутся — возврат, если он нужен, делается в кассе вручную.',
+  bookingsCancelReason: 'Причина, если нужна',
+  bookingsCancelConfirm: 'Отменить запись',
+  bookingsCancelledToast: 'Запись отменена',
+  bookingsSourceForma: 'В приложении',
 } as const;
