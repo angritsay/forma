@@ -23,7 +23,7 @@ visible to customers until replaced.
 | Support links                      | `content/site/links.ts`                          | `supportTelegram`, `supportEmail` (used when a course has no `paymentUrl`)                                                                                                                                                                                                                 |
 | Prices                             | `content/courses/<course>.ts` → `price`          | `{ rub, usd }` per course                                                                                                                                                                                                                                                                  |
 | Payment links                      | `content/courses/<course>.ts` → `paymentUrl`     | `{ ru, en }`, optional; see §7                                                                                                                                                                                                                                                             |
-| Paying from outside Russia         | `content/site/payments.ts` + `deploy-lava`       | **Outstanding.** A lava.top product link and id per course and per plan, then the secrets and the button. Until it is done, a non-Russian "buy" button leads to the support address. §7.9                                                                                                  |
+| Paying from outside Russia         | `content/site/payments.ts` + `deploy-lava`       | Links and product ids are in for the course, both plans and both session lengths. What is left is on the owner's side: the secrets `LAVA_WEBHOOK_SECRET` (`login:password`, Basic) and `LAVA_PRODUCTS`, `deploy-lava`, the webhook URL in the cabinet, and one real payment. §7.9          |
 | Intro / exercise videos            | `content/courses/*.ts`, `content/exercises/*.ts` | `storage:videos/…` refs; see §5                                                                                                                                                                                                                                                            |
 | Sign-in montage                    | Storage: bucket `images`, path `site/auth.mp4`   | The reference in `content/site/media.ts` already points here. Until the file is uploaded to that exact path the sign-in screen shows the poster still — which is a working screen, not a broken one. §5                                                                                    |
 | Sign-in email templates            | **Actions → Supabase apply → `email-templates`** | One button: it PATCHes the Management API with `supabase/templates/otp.html` into **both** Magic Link and Confirm signup, subject included. This row used to say the dashboard was the only way and that only the owner could do it; both stopped being true when the task was added. §3.2 |
@@ -31,6 +31,7 @@ visible to customers until replaced.
 | Supabase URL + anon key            | `.env` (local) and GitHub repo variables         | §6                                                                                                                                                                                                                                                                                         |
 | Site URL + base path               | `.env` and GitHub repo variables                 | §6                                                                                                                                                                                                                                                                                         |
 | Coach admin email                  | `public.admins` table                            | §4                                                                                                                                                                                                                                                                                         |
+| Coaches' hours and room links      | **Admin → Записи → Расписание**                  | After 0055: each coach's weekly hours, days off and one fixed call link. Until a coach has hours, the booking screen shows no free times for them. Nastia is bookable only with the `coach_nastia` flag. §7.16                                                                             |
 | The bot's answer to `/start`       | **Actions → Supabase apply → `deploy-bot`**      | One button. It deploys the function, sets its secrets and calls `setWebhook`, then reads the hook back and prints what Telegram believes. Needs the repository secret `TELEGRAM_BOT_TOKEN`. §7.6                                                                                           |
 | Payments reaching the app          | **Actions → Supabase apply → `deploy-payments`** | **Outstanding.** Two secrets in Supabase (`WEBHOOK_TOKEN`, `PRODAMUS_SECRET`), then this button, then the notification URL in Prodamus. Until all three are done the function refuses every notification and no payment activates anything. §7.4                                           |
 | Email sender (SMTP)                | Dashboard → Project Settings → Authentication    | §3                                                                                                                                                                                                                                                                                         |
@@ -281,7 +282,9 @@ header of `supabase/tests/00_shim.sql` for the exact commands; the short version
 throwaway database, apply `00_shim.sql` and then every file in `supabase/migrations/` in order,
 then run `10_smoke.sql`, `20_subscriptions.sql`, `30_course_builder.sql`, `40_marathon.sql`,
 `60_coach_bookings.sql` and `61_google_calendar_bookings.sql`. (`50_step_proofs.sql` is gone with
-the step feature — §2.6.)
+the step feature — §2.6.) Later features brought their own files, numbered after those:
+`93_outbox_kinds.sql` for the message kinds of 0054 and `94_booking_core.sql` for the in-app
+booking of 0055 (slots, holds, the overlap constraint, moves, payment confirming a hold).
 Each ends with a "PASSED" line. The test files are **not** idempotent — they insert fixtures — so
 rebuild the database for each run.
 
@@ -868,14 +871,22 @@ it opens asks for a sum the customer can type, the link is pointing at an open f
 a product with a locked price, and the two will disagree until the link is fixed on the processor
 (see §7.1).
 
-The time is picked **in the app, before paying** (§7.16): the client chooses a free slot in the
-coach's own calendar, it is held for 20 minutes, and the payment confirms it. There is no slot page
-to configure here. Prodamus tells the two lengths apart by the amount alone (`SESSION_PRICES`), so
-the two prices must stay different (`content/site/booking.test.ts` checks it).
+The time is picked **in the app, before paying** (§7.16): on the Тренер tab the client picks the
+coach (Nastia only with the `coach_nastia` flag), the length, a day and a free time, then presses
+«Забронировать и оплатить». The slot is held for 20 minutes and the same static link opens; the
+payment confirms the slot. There is no slot page to configure anywhere — the Google appointment
+pages are gone (§7.7).
 
-Until `paymentUrl` is set the screen shows **Message the coach** (Telegram from `links.ts`, else
-mail) instead of a payment button, so the offer is live from day one. Set `enabled: false` to hide
-the offer everywhere.
+The webhook has to know which length was paid, and each till says it differently. Prodamus tells
+the two apart **by amount alone** (`SESSION_PRICES`, §7.4), so the two rouble prices must stay
+different (`content/site/booking.test.ts` checks it). lava.top tells them apart **by product**:
+`session:half` and `session:hour` in `content/site/payments.ts` and in the `LAVA_PRODUCTS` secret
+(§7.9). An English reader is sent to the lava.top product for the length they hold.
+
+Until a length has its rouble `paymentUrl` (and, for an English reader, its lava.top product as
+well), the screen shows **Написать тренеру** instead of the picker, because there is nothing to hold
+a slot for. Set `enabled: false` to hide the offer
+everywhere.
 
 ### 7.4 Subscription: two plans, one webhook
 
@@ -934,8 +945,10 @@ no session and no course price opens nothing** (since `0043`): it is recorded as
 payment and the owner's channel gets «Платёж не привязан». It used to open whatever course the
 address had a pending order for, for any amount.
 
-A paid session is recorded with `applied = true`: there is nothing to attach it to, so it is never
-counted as unclaimed.
+A paid session is recorded unapplied first, then `apply_session_payment()` (0055) turns the
+payer's live hold for that length into a booking and marks the payment applied. With no matching
+hold it books nothing: the payment stays unclaimed and the owner's «Онлайн-тренировки» topic gets
+«Оплата занятия без брони» (§7.16).
 
 ### 7.5 Automating course purchases later
 
@@ -950,8 +963,9 @@ Telegram and adapts. All that is needed on Telegram's side is a bot whose menu b
 
 1. `/newbot` → a name, then a username ending in `bot` (ours: `@forma_training_bot`).
 2. `/mybots` → the bot → **Bot Settings → Menu Button → Configure menu button**. BotFather asks
-   two questions, answer them as two separate messages: the URL
-   (`https://<user>.github.io/<repo>/app/`), then the button text.
+   two questions, answer them as two separate messages: the URL — in production
+   `https://forma-app.co/app/` (the `github.io` address only if the site is built for it again,
+   see `.env.example`) — then the button text.
 3. Optional but worth it: `/setuserpic`, `/setdescription`, `/setabouttext`.
 
 Setting the menu button again overwrites it; there is nothing to undo.
@@ -1123,9 +1137,30 @@ function that has nothing to say.**
 
 ### What the bot writes, and when
 
-`telegram_outbox` (`0027_telegram_outbox.sql`) is a queue. The database records the **occasion**;
-`telegram-notify` turns it into a message and sends it. Four occasions so far: a course paid, a
-subscription paid, a workout assigned, and the winner of a club week (`0029_winner_message.sql`).
+`telegram_outbox` (`0027_telegram_outbox.sql`) is a queue. The database records the **occasion**
+(a `kind` and its parameters); `telegram-notify` turns it into a message in the reader's language
+and sends it. A row can wait for its moment: `send_after` holds it back until then, and a
+`dedupe_key` keeps an occasion from being queued twice. The kinds the sender knows today:
+
+| Kind                                                                          | Occasion                                                                         | Since       |
+| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ----------- |
+| `course_paid`, `subscription_paid`                                            | access opened by a payment or by hand                                            | 0027        |
+| `workout_assigned`                                                            | the coach gave the person a workout                                              | 0027        |
+| `weekly_winner`                                                               | the winner of a club week (`0029_winner_message.sql`)                            | 0029        |
+| `support_reply`                                                               | the coach's answer to an «Обращение» (§7.12)                                     | 0045        |
+| `referral_reward`, `duo_nudge`                                                | +30 days for a referral; the duo partner already did the day (§7.13)             | 0051        |
+| `club_task`, `club_reminder`, `club_recap`                                    | the club's morning, evening and Sunday messages (§7.14)                          | 0052        |
+| `subscription_ending`, `club_trial_tomorrow`                                  | club access ends in three days; a course's free club week ends tomorrow          | 0054        |
+| `session_confirmed`, `session_reminder`, `session_moved`, `session_cancelled` | a booked session: paid and confirmed, a day and an hour before, moved, cancelled | 0054 / 0055 |
+
+**Deploy `telegram-notify` before the migration that adds a kind.** An older sender marks a kind
+it does not know as `skipped`, for good; the newer sender is harmless before the migration. 0054
+only adds names to the list — the booking kinds are queued by 0055, the two access warnings by the
+hourly club run (§7.14).
+
+The session messages carry the coach, the length, the time in the coach's zone and — except on a
+cancellation — the room link. The two reminders are queued with `send_after` at 24 h and 1 h
+before the start; a move drops the reminders for the old time and queues new ones.
 
 The winner's message is the one that would otherwise not arrive at all. A payment is visible the
 moment they open the app; a win is not — the strip on the club tab is seen only by whoever looked
@@ -1175,6 +1210,18 @@ with a coach: when it starts, how long until it starts, and where to join. **A s
 never write a booking directly, not even their own** — every change goes through an RPC that
 checks the rules (§7.16) — and it is read through `my_coach_bookings`, which shows each person only
 their own. Every new booking reaches the owner's channel as «Выбрали время» (§7.11, trigger 0040).
+
+**What the client sees.** The booked session stands at the top of the Тренер tab: the coach, the
+length and the time. «Подключиться» appears 15 minutes before the start (`JOIN_OPENS_MINUTES` in
+`src/lib/coach/slots.ts`) and opens the coach's room link. «Перенести» is there while the session is
+24 hours or more away and opens the same picker (`move_my_booking`); under 24 hours it gives way to
+«Написать тренеру». There is no cancel button and no refund for a session — the owner's decision.
+
+**What the admin sees.** **Admin → Записи** (`/admin/bookings`) has two views. «Записи» lists
+upcoming, past and cancelled sessions with their coach; an upcoming one can be moved to any future
+time that does not overlap another session, or cancelled. «Расписание» is per coach: the room link,
+the weekly hours and the per-date exceptions the client's picker is built from. All times there are
+Moscow time, labelled so. «Синхронизировать» is gone with the Google sync.
 
 Since 0055 bookings are made in the app (§7.16). Until then they were read in from Sergey's Google
 Calendar by a sync function on a ten-minute cron; **that function, its cron and its `GOOGLE_*`
@@ -1284,9 +1331,10 @@ inside it, not a config change.
    one-off products.
 
    The sessions were the gap the owner named — «в лава топ не добавлены продажи на 30 минут и на
-   60 минут Сергея» — and until they exist, an English reader on the coach's tab is offered a
-   message to him instead of a button. Their prices are in `content/site/booking.ts` and must
-   match it: **\$29 for the half-hour, \$39 for the hour**.
+   60 минут Сергея». Both products now exist and are in `content/site/payments.ts`; a length
+   without its product would offer an English reader «Написать тренеру» instead of the picker.
+   Their prices are in `content/site/booking.ts` and must match it: **\$29 for the half-hour, \$39
+   for the hour**.
 
 3. From each product take **two values**: its public link, and its id.
 4. **Put them in `content/site/payments.ts`** under our own key — `course:<course id>`,
@@ -1323,12 +1371,15 @@ inside it, not a config change.
    }
    ```
 
-   A `session:` key means **money arrived and nothing is unlocked**: a session is the coach's
-   time, not access, and the slot is agreed with a person. The function records the payment and
-   stops there. That branch exists so a session can never be mistaken for a course — everything
-   that is not a subscription otherwise goes to `apply_course_payment()`, which opens the single
-   pending course order of that email, and somebody who had ordered a course and then bought an
-   hour would have got the course for free.
+   A `session:` key means **a session was paid, and no access is unlocked**: a session is the
+   coach's time. The product says which length (`session:half` or `session:hour`); the function
+   records the payment and calls `apply_session_payment()` (0055), which turns the payer's live
+   hold for that length into a booking with the coach's room link (§7.16). No matching hold books
+   nothing: the payment stays unclaimed and the owner's channel gets «Оплата занятия без брони».
+   The branch also keeps a session from ever being mistaken for a course — everything that is not
+   a subscription otherwise goes to `apply_course_payment()`, which opens the single pending
+   course order of that email, and somebody who had ordered a course and then bought an hour
+   would have got the course for free.
 
    **The subscription needs the price form, and that is not decoration.** In lava.top a
    subscription is a _tier_, and a tier is one product holding several periods — the monthly price
@@ -1354,7 +1405,7 @@ inside it, not a config change.
 
    **Only the three prefixes mean anything.** `course:<id>` opens that course (the id must exist
    in the database), `plan:monthly` / `plan:annual` the subscription, `session:<…>` records a paid
-   session. Anything else — a product missing from the map, a typo in a key, an unknown price or
+   session and confirms its hold. Anything else — a product missing from the map, a typo in a key, an unknown price or
    currency — opens nothing: the payment is recorded unclaimed and «Платёж не привязан» arrives in
    the owner's channel. Before `0043` everything that was not a plan or a session went on to open
    the pending course order of that address.
@@ -1383,21 +1434,23 @@ Rows written before `0038` keep whatever they had: `source` says `prodamus` on l
 earlier, and `payments.provider` is null. Nothing is rewritten — the figure is only trustworthy
 going forward, which is worth knowing before reading an old row as evidence.
 
-### The contract was reconstructed, so the first payment is the test
+### How the webhook proves it is lava.top, and why the first payment is still the test
 
-lava.top's own documentation is unreachable from the environment this was written in, so the
-webhook's contract — the `signature` header, HMAC-SHA256 over the raw body, the event names —
-comes from their public SDK. It is very probably right, and it is not confirmed.
+Two doors, and both have to open: the `token` in the URL (`WEBHOOK_TOKEN`, shared with Prodamus)
+and **Basic authorization** — the login and password set on the webhook in the cabinet, kept as
+`LAVA_WEBHOOK_SECRET` (`login:password`). Either failing is a 403 with nothing written. There is no
+body signature: the cabinet offers Basic or an API key and signs nothing, which is why the first
+version, built around an HMAC header from their SDK, was replaced (step 5 above). Without
+`LAVA_WEBHOOK_SECRET` the function refuses every delivery.
 
-The failure mode is safe by construction: a signature that does not match is a 403 and nothing is
-written. So if the contract is wrong, it looks like "payments do not arrive", never like "access
-opened for somebody who did not pay". If that first live payment does not open anything, the
-function's logs say whether the signature matched, and fixing it is a change in one file.
+The body's shape — `eventType`, `product.id`, `contractId`, `buyer`, `amount`, `currency` — comes
+from their SDK and the cabinet, not from documentation this repository could read, so the first
+real payment is the test. The failure mode is safe by construction: a notification the function
+cannot read opens nothing, so a wrong guess looks like "payments do not arrive", never like "access
+opened for somebody who did not pay". Read Supabase → Edge Functions → `lava-webhook` → Logs and
+**`payments-check`** after that first payment.
 
 ### What the webhook does
-
-Two doors guard it, the same pair as Prodamus: the token in the URL and the HMAC signature. Either
-failing is a 403 with nothing written.
 
 Then `product.id` says what was bought — which Prodamus cannot do, because its short links drop
 the query parameters, and there the course has to be inferred from the single pending order. Here
@@ -1410,7 +1463,8 @@ still has to run out.
 `contractId` is the idempotency key, so a notification delivered twice opens access once.
 
 A payment whose product is not in the map is recorded rather than lost, exactly as with Prodamus,
-and waits for the owner. A paid session is recorded as applied — there is nothing to attach.
+and waits for the owner. A paid session confirms the payer's hold (§7.16); without one it waits
+unclaimed like any other payment.
 
 «Оплатил(а) с другой почты?» (`claim_payment`) no longer burns a course payment when there is no
 pending order to open: the answer is `no_order` (the app shows the same «nothing to open yet,
@@ -1588,31 +1642,48 @@ The owner's decision: a free month for **both** the person who invited and the f
 paid out when the friend's club subscription first becomes active. `0051_referrals.sql`.
 
 **What it does.** Every signed-in person has one short code (`my_referral_code()`, made on first
-use, never changed). The link is `t.me/<bot>/<app>?startapp=ref_<code>` when `LINKS.telegramMiniApp`
-is set in `content/site/links.ts`, and `…/app/#/ref/<code>` otherwise — the web link works, but it
-opens a browser rather than the app inside Telegram, so set the Mini App link first. A friend who
+use, never changed). The link goes to the site's **`/together/`** page in the person's language —
+`<site>/[en/]together/?ref=<code>&from=<first name>` — and to `t.me/<bot>/<app>?startapp=ref_<code>`
+instead once `LINKS.telegramMiniApp` is set in `content/site/links.ts` (it is empty today). Links
+sent before `/together/` existed point at `…/app/#/ref/<code>`; that route still works. A friend who
 meets the bot before the app (`t.me/<bot>?start=ref_<code>`) is carried on: the bot puts the code on
-its app button. The code waits in the friend's phone until they sign in; then `referral_attach`
-records it — silently ignored for anybody who already has a code or already had a club
-subscription (they are not a new customer).
+its app button. The code waits in the friend's browser (`forma.referral`) until they sign in; then
+`referral_attach` records it — silently ignored for anybody who already has a code or already had a
+club subscription (they are not a new customer).
+
+**`/together/` — «Тренируемся вместе с понедельника».** The page a friend opens
+(`src/pages/[...lang]/together.astro`, indexable, one canonical URL). Everything personal is read
+from the address bar by the page's script and never written into the HTML, the title or the preview
+image: `from` becomes «{Имя} зовёт тебя» (letters only, at most 16), `d` the Monday of the first
+workout (the coming Monday when missing or invalid), and `ref` is kept for the app — never when it
+is the visitor's own code, where the page says «Это твоя ссылка — отправь её». Below: workout 1,
+the club for two, and the invite card again. That card (`ShareInvite`) is also on the homepage and
+`/subscribe/`: a ready message for the coming Monday, sent through the share sheet, Telegram or
+WhatsApp, copied, or added to a calendar, and carrying the sender's code when the site knows it.
 
 **The reward.** A `before` trigger on `subscriptions`: when the friend's row becomes active, their
 own period gets +30 days in the same write, the inviter's live subscription is extended by 30 days
 (or a 30-day row is created, `source = 'referral'`), both get one bot message, and «Реферал оплатил»
-lands in the «Клуб» topic. If both are in the duo club, they are put in one chosen pair. A
+lands in the «Клуб» topic. The two are put in one duo pair if neither has a pair they chose —
+and since **`0053_referral_inviter_club.sql`** that works even when the inviter never opened the
+club: a rewarded inviter with live club access is added to both circles first, so the pair actually
+forms. An inviter who left the club (`removed`) is not brought back, and one over the yearly limit
+is not added. A
 subscription that came from a reward never pays a reward itself, and **an inviter is rewarded at
 most 12 times in a rolling year** — the friend still gets theirs, the topic message says «лимит за
 год». Nothing here can break a payment: the reward is wrapped in its own error handling.
 
 **Turning it on**, in this order:
 
-1. Actions → Supabase apply → `migration` with **`0051_referrals.sql`**.
+1. Actions → Supabase apply → `migration` with **`0051_referrals.sql`**, then
+   **`0053_referral_inviter_club.sql`** (it only replaces `referral_reward()`; idempotent).
 2. Actions → Supabase apply → **`deploy-notify`** — two new kinds in `telegram_outbox`:
    `referral_reward` (to both people) and `duo_nudge` («{имя} уже сделал(а) задание — твоя
    очередь», sent by `club_duo_nudge()` at most once a day per direction). An older sender marks
    them `skipped`, so deploy before the first payment through a link.
 3. Actions → Supabase apply → **`deploy-bot`** — for `/start ref_<code>`.
-4. Set `LINKS.telegramMiniApp` and deploy the site.
+4. Deploy the site — `/together/` ships with it. Set `LINKS.telegramMiniApp` (BotFather
+   `/newapp`, §7.6) when the Mini App link exists, and deploy again.
 
 The screen is **Профиль → Позови друга** (`/invite`): the link, how it works, and three counts
 (came · paid · days earned). Counts only — `my_referrals()` returns no addresses, and the two
@@ -1748,12 +1819,26 @@ database half:
 - **Messages.** The client's bot gets `session_confirmed`, reminders a day and an hour before,
   `session_moved` and `session_cancelled`; reminders for an old time are dropped on a move.
 
-**To turn it on:** apply **`0055_booking_core.sql`** (after 0054), then run **`deploy-payments`**,
-**`deploy-lava`** and **`deploy-notify`**. A webhook deployed before 0055 is applied keeps the old
-behaviour (the session is recorded, the coach agrees the time) — it sees `PGRST202` and falls
-back. Then each coach's room link and availability are entered in the admin. Until the booking
-screen ships (B2), nothing creates holds, so the payment links keep working as before: a session
-paid with no hold arrives in the channel as «Оплата занятия без брони».
+**The client's side** is the Тренер tab (§7.3, §7.7): coach, length, a day in the next two weeks,
+a free time, «Забронировать и оплатить». While the hold lives the card shows «Слот держится до
+14:35» with the minutes left, the pay button again and a way to give the slot back. The app never
+confirms anything itself — the webhook does, and the screen asks again when the person comes back
+to it. The admin's side is **Admin → Записи** (§7.7).
+
+**To turn it on**, in this order:
+
+1. **`deploy-notify`** first, then apply **`0054_outbox_kinds.sql`** (§7.14) — the session kinds
+   must be known to the sender before anything queues them.
+2. Apply **`0055_booking_core.sql`**.
+3. Run **`deploy-payments`** and **`deploy-lava`** — the webhooks with the session branch. A webhook
+   deployed before 0055 is applied keeps the old behaviour (the payment is recorded as applied
+   and the time is agreed by hand): it sees `PGRST202` and falls back.
+4. Deploy the site (the booking screen and the admin views ship with it).
+5. **Each coach enters their room link and weekly hours** in Admin → Записи → Расписание. Until a
+   coach has hours, the picker shows no free times for them. Nastia stays hidden from everyone
+   without the `coach_nastia` flag.
+6. Book and pay one real half-hour, then run **`payments-check`** and **`outbox-check`**: the
+   booking should be active with the room link, and `session_confirmed` plus two reminders queued.
 
 Google rows from before the cutover stay valid as history and still block Sergey's time (§7.7).
 
@@ -1883,7 +1968,8 @@ request itself failed (wrong URL, network, ad blocker) — open the request in t
 
 `BASE_PATH` must equal `/<repository-name>/` (with both slashes) and `SITE_URL` must be
 `https://<user>.github.io/<repository-name>` — no trailing slash. For a custom domain set
-`BASE_PATH=/` and `SITE_URL=https://your-domain`. Every link in the code goes through
+`BASE_PATH=/` and `SITE_URL=https://your-domain`; production is `SITE_URL=https://forma-app.co`
+with `BASE_PATH=/`. Every link in the code goes through
 `withBase()`; if a link is missing the prefix, that is a bug in the page, not in the config.
 
 **Video does not play / "Object not found"**
