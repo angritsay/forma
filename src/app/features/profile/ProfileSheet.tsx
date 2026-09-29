@@ -38,8 +38,10 @@ import type { Equipment } from '@/content/schema';
 import { formatNumber, LANGUAGE_NAME } from '@/i18n/index';
 import { isAppError } from '@/lib/api/errors';
 import { setMyFeatureFlag } from '@/lib/api/flags';
+import { isDemo } from '@/lib/api/mode';
 import type { ProfilePatch } from '@/lib/api/types';
 import { levelForPoints } from '@/lib/training/levels';
+import { clubJoinHref } from '@/app/features/marathon/clubPlan';
 import { useSound } from '@/app/features/player/sound';
 import { useT } from '@/app/hooks/useT';
 import { useFlag, useFlags } from '@/app/store/flags';
@@ -53,6 +55,7 @@ import { FeatureFlags } from '@/app/features/admin/person/FeatureFlags';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { NameSheet } from './NameSheet';
 import { equipmentSummary, withEquipment } from './model';
+import { subscriptionLeadsToJoin, subscriptionSubtitle } from './subscription';
 
 export interface ProfileSheetProps {
   open: boolean;
@@ -67,6 +70,7 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
   const sound = useSound();
   const profile = useSession((s) => s.profile);
   const user = useSession((s) => s.user);
+  const subscription = useSession((s) => s.subscription);
   const points = useTotalPoints();
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -92,6 +96,8 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
   const remaining = level.nextAt === null ? 0 : Math.max(0, level.nextAt - points);
   const name = profile?.displayName ?? '';
   const email = profile?.email || user?.email || '';
+  const subscriptionValue = subscriptionSubtitle(tr, subscription);
+  const subscriptionJoin = subscriptionLeadsToJoin(subscription);
 
   /**
    * One writer for both editable things, so the toast, the error mapping and the busy flag cannot
@@ -259,6 +265,29 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
                 }
               />
             </li>
+            {/*
+             * «Подписка» and until when (audit item 2): there is no auto-renewal and no warning,
+             * so this is where a member finds the date before the club tab turns into the selling
+             * screen. While it runs the row is a fact and opens nothing; before the first payment
+             * and once it has ended it is the way (back) in — the club's own payment link, the
+             * same one `ClubPitch` sends to. No price configured and no subscription: no row.
+             */}
+            {subscriptionValue ? (
+              <li>
+                <ListRow
+                  title={t('app.profileSubscription')}
+                  href={subscriptionJoin ? clubJoinHref(locale, email, isDemo()) : undefined}
+                  trailing={
+                    <>
+                      <span className="max-w-[44vw] truncate text-[15px] text-muted md:max-w-[220px]">
+                        {subscriptionValue}
+                      </span>
+                      {subscriptionJoin ? <Glyph size={16}>›</Glyph> : null}
+                    </>
+                  }
+                />
+              </li>
+            ) : null}
             <li>
               <ListRow
                 title={t('app.profileEquipment')}

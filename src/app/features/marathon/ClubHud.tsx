@@ -18,12 +18,18 @@
  *     pulse and the milestones sheet it always had. The slot keeps its width when the streak is
  *     zero, so the row does not jump the morning it comes back.
  *
+ * **On the course's trial week** (`gameAccess` → `reason: 'trial'`) a quiet pill sits under the
+ * row: «Пробная неделя · осталось 3 дн.». The trial was invisible (audit item 5): no countdown,
+ * and on day eight the club locked without a word. It is a fact to read, not a control, so it is
+ * the neutral hairline pill rather than the warm material the club keeps for its actions.
+ *
  * Under the row the screen draws the week track (`WeekTrack`); the two together are what the
  * «День 7 · неделя 1 из 522» line was trying to say.
  */
 import type { ReactNode } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Chip } from '@/components/ui/Chip';
+import { Pill } from '@/components/ui/Pill';
 import { formatNumber } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
@@ -46,14 +52,16 @@ export interface ClubHudProps {
   hasDuo: boolean;
   /** The streak pill, or nothing. */
   streak: ReactNode;
+  /** Whole days left of the course's trial week (`gameAccess`); null or absent off the trial. */
+  trialDaysLeft?: number | null;
 }
 
-export function ClubHud({ points, mode, onMode, hasDuo, streak }: ClubHudProps) {
+export function ClubHud({ points, mode, onMode, hasDuo, streak, trialDaysLeft }: ClubHudProps) {
   const { t, locale } = useT();
   const me = useMeAvatar();
   const pair = hasDuo && mode === 'duo';
   const pairWord = t('app.clubPairPoints');
-  return (
+  const row = (
     <div className="flex items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-2.5">
         <Avatar seed={me.seed} name={me.name} size={32} />
@@ -90,6 +98,13 @@ export function ClubHud({ points, mode, onMode, hasDuo, streak }: ClubHudProps) 
 
       {/* A fixed slot: an empty streak must not let the chips slide to the edge. */}
       <div className="flex min-w-16 shrink-0 justify-end">{streak}</div>
+    </div>
+  );
+  if (trialDaysLeft == null) return row;
+  return (
+    <div className="flex flex-col items-start gap-2.5">
+      <div className="w-full">{row}</div>
+      <Pill>{t('app.clubTrialPill', { n: formatNumber(locale, trialDaysLeft) })}</Pill>
     </div>
   );
 }

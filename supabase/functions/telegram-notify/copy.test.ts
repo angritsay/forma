@@ -323,7 +323,7 @@ describe('the club’s daily touches (0052)', () => {
 
   it('reminds about the streak that is about to break, in the right plural', () => {
     expect(messageFor({ kind: 'club_reminder', params: { streak: 1 } })?.text).toBe(
-      '<b>Сегодня ещё нет отметки. Серия 1 день — сгорит в полночь 🔥</b>',
+      '<b>Сегодня ещё нет отметки. Серия 1 день — сгорит в полночь 🔥</b>\n\nБаллы — до 22:00.',
     );
     expect(messageFor({ kind: 'club_reminder', params: { streak: 3 } })?.text).toContain(
       'Серия 3 дня —',
@@ -335,7 +335,7 @@ describe('the club’s daily touches (0052)', () => {
       'Серия 5 дней —',
     );
     expect(messageFor({ kind: 'club_reminder', params: { streak: 1 } }, 'en')?.text).toBe(
-      '<b>No tick today yet. Your streak of 1 day burns out at midnight 🔥</b>',
+      '<b>No tick today yet. Your streak of 1 day burns out at midnight 🔥</b>\n\nPoints count until 22:00.',
     );
     expect(messageFor({ kind: 'club_reminder', params: { streak: 4 } }, 'en')?.text).toContain(
       'streak of 4 days',

@@ -1,79 +1,15 @@
-/** Course-level lookups and labels shared by the Home rows and the Courses screen. */
-import { findExercise } from '@/content/catalogue';
-import type { Course, Equipment, Exercise, Locale } from '@/content/schema';
-import { plural } from '@/i18n/index';
+/**
+ * The one course-level link the app still needs: where the subscription is sold.
+ *
+ * This file used to hold the Home rows' and the old Courses screen's labels (the signature
+ * exercise, the weeks and per-week words, the gear chips, the three pills). Those screens are
+ * gone and nothing read them any more; the landing keeps its own copies in
+ * `components/landing/courseHelpers.ts`.
+ */
+import type { Locale } from '@/content/schema';
 import { href } from '@/lib/util/paths';
-import type { Translator } from '@/app/hooks/useT';
-import { workoutSignatureExercise } from '@/app/features/path/plan';
-import { EQUIPMENT_LABEL } from '@/app/screens/onboarding/labels';
-
-/** The exercise whose figure represents the course: from its first real workout. */
-export function courseSignatureExercise(course: Course): Exercise | undefined {
-  const node =
-    course.nodes.find((n) => n.kind === 'workout' && n.workoutId) ??
-    course.nodes.find((n) => n.workoutId);
-  const workout = node?.workoutId
-    ? course.workouts.find((w) => w.id === node.workoutId)
-    : course.workouts[0];
-  const fromWorkout = workout ? workoutSignatureExercise(workout) : undefined;
-  if (fromWorkout) return fromWorkout;
-  const first = course.workouts[0]?.blocks[0]?.items[0];
-  return first ? findExercise(first.exerciseId) : undefined;
-}
-
-/** Landing course page (same site, base-prefixed) — where a locked course is bought. */
-export function courseLandingHref(locale: Locale, course: Course): string {
-  return href(locale, `/courses/${course.slug[locale]}/`);
-}
 
 /** The landing page that sells the subscription (every course). */
 export function subscribeHref(locale: Locale): string {
   return href(locale, '/subscribe/');
-}
-
-export function isBodyweightCourse(course: Course): boolean {
-  return course.equipment.every((e) => e === 'none' || e === 'mat');
-}
-
-/** Equipment worth a chip: `['none']` for bodyweight courses, else the real gear. */
-export function courseEquipmentForDisplay(course: Course): Equipment[] {
-  if (isBodyweightCourse(course)) return ['none'];
-  return course.equipment.filter((e) => e !== 'none' && e !== 'mat');
-}
-
-export function weeksLabel(tr: Translator, n: number): string {
-  const word = plural(tr.locale, n, {
-    one: tr.t('app.coursesWeekWordOne'),
-    few: tr.t('app.coursesWeekWordFew'),
-    many: tr.t('app.coursesWeekWordMany'),
-  });
-  return `${n} ${word}`;
-}
-
-export function perWeekLabel(tr: Translator, n: number): string {
-  return plural(tr.locale, n, {
-    one: tr.t('app.coursesPerWeekOne', { n }),
-    few: tr.t('app.coursesPerWeekFew', { n }),
-    many: tr.t('app.coursesPerWeekMany', { n }),
-  });
-}
-
-/**
- * The course in three pills — «4 недели», «18 мин», «без оборудования» — the way the owner's
- * prototype (`design/ui_kits/app-v2`, «Программы») states a programme instead of describing it.
- *
- * The three are the tagline's facts without the tagline: how long the course runs, how long a
- * session takes, what it needs. Gear is the real list where there is one, capped at two so a
- * course that wants a bar, a rope and a box does not grow a fourth line of pills; a bodyweight
- * course says so in one word, because «без оборудования» is the fact that sells it.
- */
-export function coursePills(tr: Translator, course: Course): string[] {
-  const gear = courseEquipmentForDisplay(course)
-    .slice(0, 2)
-    .map((e) => tr.t(EQUIPMENT_LABEL[e]));
-  return [
-    weeksLabel(tr, course.weeks),
-    `${course.avgSessionMin} ${tr.t('common.minutesUnit')}`,
-    ...gear,
-  ];
 }

@@ -30,6 +30,11 @@
  *      таблица →» as a ghost.
  *   4. `ClubWinner`, `ClubWeekRecap`, `ClubInviteCard` — unchanged.
  *
+ * **A failure is said, never drawn as a quiet state.** The day that did not load is an
+ * `EmptyState` with «Повторить», not the «Отдых» face; the board that did not load is the same,
+ * not three dashed steps. Both read as facts («rest today», «nobody scored»), and both facts were
+ * false (audit item 4). On the course's trial week the HUD counts the days left.
+ *
  * From `md` the card sits left and the podium right: the race beside the task is the whole
  * argument for having a board on the same tab.
  *
@@ -138,7 +143,7 @@ export default function MarathonScreen() {
   /* Закрытый круг, который тренер ведёт руками, клубом не является — он приезжает в `anyRound`. */
   const marathon = clubFor({ soloClub, duoClub, marathon: anyRound }, mode);
   const dayIndex = marathon?.dayIndex ?? 0;
-  const { data: tasks, status, reload } = useMarathonDay(marathon, dayIndex);
+  const { data: tasks, status, error: dayError, reload } = useMarathonDay(marathon, dayIndex);
   const {
     data: scores,
     status: scoresStatus,
@@ -359,6 +364,7 @@ export default function MarathonScreen() {
         onMode={setMode}
         hasDuo={duoClub !== null}
         streak={<ClubStreak days={days} today={today} compact />}
+        trialDaysLeft={access.reason === 'trial' ? (access.trialDaysLeft ?? null) : null}
       />
       <WeekTrack days={days} today={today} />
 
@@ -376,6 +382,22 @@ export default function MarathonScreen() {
             />
           ) : status === 'loading' ? (
             <DaySkeleton />
+          ) : status === 'error' ? (
+            /* A failed load says so. It used to fall through to the empty list and read «Отдых»,
+               and a member told today is a rest day loses the task and the streak to a network
+               error (audit item 4). */
+            <EmptyState
+              className="py-6"
+              title={t('app.marathonErrorTitle')}
+              description={
+                dayError?.code === 'network' ? t('common.errorOffline') : t('common.errorGeneric')
+              }
+              action={
+                <Button variant="gradient" size="lg" onClick={reload}>
+                  {t('common.retry')}
+                </Button>
+              }
+            />
           ) : tasks.length === 0 ? (
             <ClubCard item={null} duo={duoRow(null)} />
           ) : (
@@ -424,13 +446,27 @@ export default function MarathonScreen() {
         {/* 384px: wide enough for three podium columns beside the card without reading as a
             sidebar. */}
         <section className="flex flex-col gap-5 md:w-96 md:shrink-0">
-          <ClubPodium
-            standings={standings}
-            delta={rankDelta}
-            gap={gap}
-            prize={clubPrize(tr, marathon.prize)}
-            onAll={() => navigate(boardPath(duo ? 'duo' : 'solo'))}
-          />
+          {/* The same honesty for the race: three dashed steps would say nobody has scored. */}
+          {scoresStatus === 'error' ? (
+            <EmptyState
+              className="py-6"
+              title={t('app.clubPodiumError')}
+              description={t('common.errorGeneric')}
+              action={
+                <Button variant="ghost" size="md" onClick={reloadScores}>
+                  {t('common.retry')}
+                </Button>
+              }
+            />
+          ) : (
+            <ClubPodium
+              standings={standings}
+              delta={rankDelta}
+              gap={gap}
+              prize={clubPrize(tr, marathon.prize)}
+              onAll={() => navigate(boardPath(duo ? 'duo' : 'solo'))}
+            />
+          )}
         </section>
       </div>
 

@@ -58,10 +58,11 @@ export interface ShareSheetProps {
   /** The line that travels with the picture: the chat message, the story's caption. */
   text: string;
   /**
-   * A link to go with the line. The chat target sends it as the message's URL (unless the
-   * picture itself can be linked), the story's widget already carries the app's own, and the
-   * system share and the clipboard get it appended to `text`. Without it those two get the
-   * text alone — the workout summary, whose line ends in «— Forma», never carried a link.
+   * A link to go with the line — the member's referral link (`useReferralLink`) from both the
+   * club and the workout summary. The chat target sends it as the message's URL (unless the
+   * picture itself can be linked), the story's widget carries it as its link, and the system
+   * share and the clipboard get it appended to `text`. Without it the widget and the chat fall
+   * back to the plain app link and the other two get the text alone.
    */
   link?: string;
   /** Picks the design and names the file: a session id, a task id — anything stable. */
@@ -224,7 +225,7 @@ export function ShareSheet({ open, onClose, data, text, link, seed }: ShareSheet
             isPublic &&
             shareToStory(url, {
               text: storyCaption(text),
-              widget_link: { url: appLink(), name: BRAND.name },
+              widget_link: { url: link ?? appLink(), name: BRAND.name },
             });
           if (ok) haptic('success');
           else failed();

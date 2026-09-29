@@ -123,6 +123,8 @@ interface Copy {
   clubTaskDo: string;
   /** Вечер (0052): `{streak}` — «3 дня». */
   clubReminder: string;
+  /** The line under it: the streak waits for midnight, the week's points do not. */
+  clubReminderPoints: string;
   /** Воскресенье (0052): `{place}` — «, место 3» или ничего; `{streak}` — «Серия 3 дня 🔥. » или ничего. */
   clubRecap: string;
   clubRecapWeek: string;
@@ -177,6 +179,7 @@ const COPY: Record<Locale, Copy> = {
     clubTask: 'Задание на сегодня: <b>{title}</b>{points}',
     clubTaskDo: 'Сделай — и отметь в приложении.',
     clubReminder: 'Сегодня ещё нет отметки. Серия {streak} — сгорит в полночь 🔥',
+    clubReminderPoints: 'Баллы — до 22:00.',
     clubRecap:
       '{week}{points}, {done} из {total} {tasks}{place}. {streak}Новая неделя — в понедельник.',
     clubRecapWeek: 'Неделя {week}: ',
@@ -209,6 +212,7 @@ const COPY: Record<Locale, Copy> = {
     clubTask: 'Today’s task: <b>{title}</b>{points}',
     clubTaskDo: 'Do it — and tick it off in the app.',
     clubReminder: 'No tick today yet. Your streak of {streak} burns out at midnight 🔥',
+    clubReminderPoints: 'Points count until 22:00.',
     clubRecap:
       '{week}{points}, {done} of {total} {tasks}{place}. {streak}A new week starts Monday.',
     clubRecapWeek: 'Week {week}: ',
@@ -329,7 +333,15 @@ export function messageFor(row: OutboxRow, locale: Locale = DEFAULT_LOCALE): Mes
         '{streak}',
         `${streak} ${plural(locale, streak, c.days)}`,
       );
-      return { text: `<b>${line}</b>`, buttonText: c.openForma };
+      /*
+       * The streak lives until midnight, but the task is due at 22:00 (0016's `due_time`), and a
+       * proof after that keeps the streak and scores nothing for the week (audit item 8). The
+       * reminder goes out at 20:00, so both clocks are still running when it is read.
+       */
+      return {
+        text: `<b>${line}</b>\n\n${c.clubReminderPoints}`,
+        buttonText: c.openForma,
+      };
     }
 
     case 'club_recap':

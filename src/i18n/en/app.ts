@@ -9,8 +9,6 @@ export const app = {
   // three-word name does not fit. The full name goes where there is room — see marathonTitle.
   tabGame: 'Club',
   navMain: 'Main navigation',
-  navLocaleRu: 'RU',
-  navLocaleEn: 'EN',
 
   // UI kit
   kitClose: 'Close',
@@ -119,7 +117,6 @@ export const app = {
   onbLimOther: 'Something else',
   onbLimOtherPlaceholder: 'What should we protect? E.g. neck, ankle, shoulder surgery',
   onbLimOtherHint: 'The coach reads this. Exercises are not chosen from it automatically.',
-  onbAssessOfferTitle: 'Fit the training to you?',
   onbAssessMoves: '{n} movements',
   // The owner's words for this screen: «не выжимаем максимум… конец».
   onbAssessWarnTitle: 'No maxing out',
@@ -164,36 +161,13 @@ export const app = {
   homeTodayNoCourseTitle: 'Pick a programme',
   homeTodayNoCourseBody: 'And your first workout appears here — today.',
   homeTodayOpenPath: 'Open the path',
-  homeStatsKcal: 'kcal this week',
-  homeStatsMinutes: 'Minutes this week',
-  homeStatsPoints: 'Points',
-  homeStatsPointsHint: 'all time',
-  homeYourCourses: 'Your courses',
-  homeMoreCourses: 'More courses',
-  homeCourseProgress: '{pct}% done',
   homeDeckStart: 'Start',
   homeDeckContinue: 'Continue',
   homeErrorTitle: 'Couldn’t load your progress',
   homeErrorBody: 'Check the connection and try again.',
 
   // Courses
-  coursesOwned: 'Yours',
-  coursesLocked: 'Locked',
-  coursesContinue: 'Continue · {pct}%',
-  coursesStart: 'Start the course',
   coursesCompleted: 'Completed — open the path',
-  coursesBoughtHint:
-    'Already paid? The course opens by itself, usually within a couple of minutes. If not, write to us.',
-  coursesSubscribeHint: 'from {price} a month · or buy this course for good',
-  coursesBuyOne: 'Buy this course',
-  coursesWeekWordOne: 'week',
-  coursesWeekWordFew: 'weeks',
-  coursesWeekWordMany: 'weeks',
-  coursesPerWeekOne: '{n}× a week',
-  coursesPerWeekFew: '{n}× a week',
-  coursesPerWeekMany: '{n}× a week',
-  coursesAvgMin: '~{n} min',
-  coursesOpenPage: 'Open the course page',
 
   // Course path
   pathProgressLabel: 'Course progress',
@@ -256,7 +230,7 @@ export const app = {
   claimLink: 'Paid from another address?',
   claimTitle: 'Payment from another address',
   claimBody:
-    'If the payment came from an address other than the one you sign in with, enter the order number from the Prodamus receipt. We will find the payment and open access here.',
+    'If the payment came from an address other than the one you sign in with, enter the order number from your receipt (Prodamus or lava.top). We will find the payment and open access here.',
   claimPlaceholder: 'Order number from the receipt',
   claimCta: 'Find the payment',
   claimOk: 'Found it. Access is open.',
@@ -270,15 +244,12 @@ export const app = {
   // never happened.
   pathTrialLeftBody: 'The first workout of this course is free — start there, then decide.',
   pathTrialLeftCta: 'To the first workout',
-  pathPaywalledToast: 'The rest comes with the subscription, or with the course',
   pathNotOwnedTitle: 'You don’t have this course yet',
   pathNotOwnedBody: 'The first workout was free. The rest is the whole course, in one payment.',
-  pathNotOwnedCta: 'Course page',
   pathNotFound: 'Course not found',
   pathCompleted: 'Course completed!',
 
   // Node preview
-  nodeBack: 'Course path',
   nodeTestBadge: 'Test',
   nodeBenchmarkBadge: 'Benchmark',
   nodeTestTitle: 'How the test works',
@@ -332,7 +303,6 @@ export const app = {
   playerRoundsOne: '{n} round',
   playerRoundsFew: '{n} rounds',
   playerRoundsMany: '{n} rounds',
-  playerBlockOf: 'Block {n} of {total}',
   playerSectionsLabel: 'Workout sections',
   playerSectionWarmup: 'Warm-up',
   playerSectionMain: 'Workout',
@@ -367,7 +337,6 @@ export const app = {
   playerTestSecondsQuestion: 'How long did you hold?',
   playerTestResultLabel: 'Test result',
   playerTestSave: 'Save result',
-  playerSkipRest: 'Skip rest',
   playerAmrapRounds: 'Rounds',
   playerAmrapRemoveRound: 'Undo round',
   playerRoundDone: 'Round done',
@@ -399,7 +368,6 @@ export const app = {
   playerSkipStep: 'Skip this step',
   // The star row is one image to a screen reader, never three separate marks.
   pathStars: '{n} of 3 stars',
-  pathStarsNone: 'No stars yet',
   playerRestartStep: 'Restart this step',
   playerEndWorkout: 'End workout',
   playerEndTitle: 'End the workout now?',
@@ -483,7 +451,6 @@ export const app = {
   summaryNoResultsBody: 'This workout wasn’t finished on this device, so there is nothing to show.',
 
   // Progress
-  statsLeaderboard: 'Leaderboard',
   statsLevelEyebrow: 'Level {n}',
   statsPointsValue: '{n} points',
   statsLevelProgress: 'How far to the next level',
@@ -537,10 +504,13 @@ export const app = {
   profileTitle: 'Profile',
   profileWeightsKg: '{list} kg',
   profileLimitationsNone: 'Nothing',
+  profileSubscription: 'Subscription',
   profileSubscriptionNoneHint: 'from {price} a month',
-  profileSubscriptionLive: '{plan} · until {date}',
+  profileSubscriptionLive: 'until {date}',
+  profileSubscriptionLiveUndated: 'Active',
   profileSubscriptionCancelled: 'Cancelled · access until {date}',
   profileSubscriptionEnded: 'Ended {date} · renew',
+  profileSubscriptionEndedUndated: 'Ended · renew',
   profileSubscriptionPending: 'Waiting for payment',
   planMonthly: 'Monthly',
   planAnnual: 'Annual',
@@ -782,7 +752,6 @@ export const app = {
   demoOpenBody:
     'Demo mode runs the whole app on made-up data stored in this browser. Nothing is sent anywhere and no Supabase project is needed.',
   demoAuthCode: 'Demo: code is {code}',
-  demoSection: 'Demo mode',
 
   // --- custom (coach-built) workouts + builder ---
   customWorkoutTitle: 'Workout',
@@ -791,7 +760,6 @@ export const app = {
   customWorkoutMissingTitle: 'Workout not found',
   customWorkoutMissingBody: 'The link is invalid or the workout was removed.',
   customWorkoutFromCoach: 'From the coach',
-  customWorkoutOpen: 'Open',
   customWorkoutRounds: '{n} rounds',
   customWorkoutSeconds: '{n} sec',
   customWorkoutReps: '{n} reps',
@@ -1176,8 +1144,6 @@ export const app = {
   dayDeload: 'Deload week',
   dayImage: 'Day image',
   dayImageHint: "Shown on the day's screen",
-  // Node preview: the formula kicker and the secondary action of the two-button row.
-  nodeLater: 'Later',
   // Admin: the exercise row's "has a video" stamp, and the course tile field's format error.
   exHasVideo: 'video',
   courseTileInvalid: 'A colour is six hex digits, e.g. #2e2e2e',
@@ -1195,11 +1161,7 @@ export const app = {
   // delivers: a board with names, a day everyone is having at once. Where the two
   // disagree is the prize, so the prize stopped being the pitch and became a fact of the week.
   marathonTitle: 'Small Steps Club',
-  // The cover's big line before there is a day to count: what the format is, in one line.
-  marathonCoverPitch: 'One small step a day',
   marathonTabBoard: 'Board',
-  marathonDayN: 'Day {n}',
-  marathonOfTotal: 'of {total}',
   // The full board's own switch; the club screen carries no week kicker (see the Russian file).
   marathonWeekThis: 'This week',
   marathonWeekLast: 'Last week',
@@ -1256,18 +1218,15 @@ export const app = {
   clubNudge: 'Remind',
   clubNudgeSent: 'Reminded',
   marathonBoardAll: 'Full board',
-  marathonHomeTasksLeft: '{n} left today',
-  marathonHomeAllDone: 'Done for today',
   // A round of the club starts and ends; the club itself does not.
   marathonNotStarted: 'The club has not met yet',
   marathonNotStartedBody: 'The first tasks arrive on the morning of day one.',
-  marathonFinished: 'This round is over',
-  marathonFinishedBody: 'The board stays up — you can still see how it ended.',
   clubRestTitle: 'Rest',
   clubRestBody: 'A new one in the morning',
   marathonErrorTitle: 'Could not load the club',
+  clubPodiumError: 'The table did not load',
+  clubTrialPill: 'Trial week · {n} d left',
   // One task
-  marathonDeadline: 'Until {time}',
   marathonDeadlinePassed: 'The day has closed',
   marathonPointsOne: '{n} point',
   marathonPointsFew: '{n} points',
@@ -1276,13 +1235,10 @@ export const app = {
   marathonRulePerMember: 'Each of you earns',
   marathonRuleCapped: 'Up to {n} for the team',
   marathonRuleNone: 'No points',
-  marathonProofUndo: 'Undo',
   marathonProofSent: 'Sent',
   marathonProofTextLabel: 'Say how it went',
   marathonProofNumberLabel: 'How many',
-  marathonProofPhoto: 'Attach a photo',
   marathonProofPhotoAgain: 'Replace the photo',
-  marathonProofPhotoSent: 'Photo sent',
   // Optional on every task, hence the «+» rather than a button: another control delivers the task,
   // this is the evidence for it.
   marathonProofAttach: 'Attach a photo or a clip',
@@ -1299,7 +1255,6 @@ export const app = {
   // The board
   marathonBoardEmpty: 'Nobody has scored yet',
   marathonBoardYou: 'You',
-  marathonBoardPoints: '{n}',
 
   // --- Marathon admin --------------------------------------------------------
   mAdminTitle: 'Club',
@@ -1348,9 +1303,6 @@ export const app = {
   mAdminCopyDayError: 'Nothing to copy',
   mAdminRepeatUntil: 'Repeat until',
   mAdminRepeatUntilHint: 'Empty — this day only',
-  mAdminRepeat: 'Repeat',
-  mAdminTaskNew: 'New task',
-  mAdminTaskEdit: 'Task',
   mAdminTaskTitle: 'What to do',
   mAdminTaskBody: 'Details',
   mAdminTaskImage: 'Picture',
@@ -1392,7 +1344,6 @@ export const app = {
   mAdminRemove: 'Remove',
   mAdminRestore: 'Bring back',
   mAdminRemoved: 'Removed',
-  mAdminPeopleEmpty: 'Nobody yet',
   mAdminPeopleEmptyBody:
     'People join the round on their own when they pay for the club. Add someone by email only when they paid outside the checkout — a transfer or a gift.',
   mAdminAddError: 'Could not add',
@@ -1412,7 +1363,6 @@ export const app = {
   mAdminProofsAll: 'Every day',
   mAdminVoid: 'Do not count',
   mAdminVoidReason: 'Your note to them',
-  mAdminVoided: 'Not counted',
   mAdminRestoreProof: 'Count it again',
   mAdminAcceptProof: 'Leave it as is',
   mAdminProofsNeedReview: 'Waiting for a look',
@@ -1675,11 +1625,11 @@ export const app = {
   bookNext: 'Next',
   bookNextSchedule: 'Pay, then pick a slot on his page. The next one may be {n} minutes away.',
   bookNextContact:
-    'There is no slot page yet: pay and message the coach — he sets the time himself, even {n} minutes before the start.',
+    'There is no slot page: pay and message the coach — he sets the time himself, even {n} minutes before the start.',
   // Her side of the same step (design/CHANGELOG.md §23): her own slot page, and she sets the time.
   bookNextScheduleHer: 'Pay, then pick a slot on her page. The next one may be {n} minutes away.',
   bookNextContactHer:
-    'There is no slot page yet: pay and send a message — she sets the time herself, even {n} minutes before the start.',
+    'There is no slot page: pay and send a message — she sets the time herself, even {n} minutes before the start.',
   bookPaidNote: 'The payment page opened in your browser. Once it is paid, come back for a time.',
 
   // --- Stream 3: sign-in, the bot, the emailed code -------------------------
@@ -1695,7 +1645,6 @@ export const app = {
   // --- Stream 2: three tabs, «Курсы» as the main screen -----------------------
   tabCourses: 'Courses',
   tabCoach: 'Coach',
-  coursesMore: 'Learn more',
   achievementsTitle: 'Achievements',
   // `achievementsLead` stood here and said what the list under it plainly is.
   achievementsEmpty: 'Nothing to show yet.',
