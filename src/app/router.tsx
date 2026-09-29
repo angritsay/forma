@@ -165,6 +165,12 @@ export function AppRoutes() {
                * onboarding it is full-screen, which is what a test asked for mid-session has to be.
                */}
               <Route path="/assessment" element={<LazyScreen name="AssessmentScreen" />} />
+              {/*
+               * The onboarding stories replayed («Как это работает» in the account sheet). Here
+               * for the same reason as the test above: the player is a `fixed` full-screen
+               * surface and must not sit under a transformed ancestor.
+               */}
+              <Route path="/intro" element={<LazyScreen name="IntroScreen" />} />
             </Route>
           </Route>
           <Route path="/duo/:token" element={<DuoInviteCapture />} />

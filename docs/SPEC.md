@@ -577,6 +577,7 @@ was ever linked or bookmarked broke:
 
 ```
 /auth  /onboarding  /assessment   (outside the tabbed shell — the test is full-screen)
+/intro                     the onboarding stories replayed (also outside the shell: a fixed player)
 /                          «Курсы» — the main screen: progress across every course there is
 /courses                   → redirect to `/` (the path this screen had while it was the second tab)
 /courses/:id               the course's path
@@ -680,6 +681,20 @@ that leave the app open outside it. Everything Telegram-specific is a no-op on t
    no measurement is not a result. Every reader of the index already copes with its absence by
    recomputing from the training profile, which for a profile with no self-tests is capped
    (`NO_TEST_INDEX_CAP`, docs/TRAINING_SCIENCE.md §2).
+
+   **Stories between the questions and after the last one** (`screens/onboarding/stories.ts`,
+   `Story.tsx`, `slides/*`). «Далее» on «Что беречь?» shows one full-screen slide about what the
+   answer does (substitution for knees, back, shoulders, wrists; no heavy loads or long holds for
+   blood pressure; «полегче» in pregnancy) before the next question. «Начать тренироваться» on the
+   level step shows the tour — the adaptive load (start from the slider, полегче · нормально ·
+   посложнее with a recommendation, ±2–10 % after the rating), the path, the player's gestures, the
+   club, the coach — and its last slide carries the «Начать тренироваться» button that runs
+   `finish()`. The player: a segmented `ProgressBar` per slide, auto-advance 7 s (none under
+   reduced motion), tap right two-thirds → next, left third → back, hold pauses, swipe down or ×
+   leaves. Each set plays once — `seenStories` on the draft records it, watched or skipped — and
+   back from a set's first slide returns to the question unrecorded. `STEP_IDS` and «01/05» are
+   unchanged. **Every line on a slide is something the engine does**; change the engine and the copy
+   is re-read. The six slides replay from the account sheet's «Как это работает» at `/intro`.
 
    **The assessment is a screen of its own, offered after the second completed workout.** Route
    `/assessment`. The rule is `shouldOfferAssessment` (`src/app/features/assessment/model.ts`):

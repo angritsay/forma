@@ -1657,6 +1657,57 @@ export const app = {
   // «Далее», а не «Продолжить»: продолжают то, что прервали, а по анкете идут вперёд.
   onbNext: 'Далее',
   onbFinish: 'Начать тренироваться',
+  // Сторис между вопросами и после них (screens/onboarding/stories.ts). Каждая фраза — про то,
+  // что код делает на самом деле: подстановка упражнений и «полегче» при беременности —
+  // prescribe.ts; старт по уровню — startingScale (без тестов возраст не участвует);
+  // подсказка перед тренировкой — recommendDifficulty; ±2–10 % после — adaptScale. Меняя
+  // движок, перечитай эти строки. Кикеры — до 29 знаков.
+  onbStoryBack: 'Предыдущий слайд',
+  onbStoryNext: 'Следующий слайд',
+  onbStoryCareEyebrow: 'Что беречь',
+  onbStoryCareTitle: 'Бережём то, что просишь',
+  onbStoryCareLine1:
+    'Колени, поясница, плечи, запястья — рискованные движения заменяются на безопасные.',
+  onbStoryCareLine2: 'Давление — без тяжёлых весов и долгих удержаний.',
+  onbStoryCareLine3: 'Беременность — всегда режим «полегче».',
+  onbStoryCareFrom: 'выпады',
+  onbStoryCareTo: 'ягодичный мост',
+  onbStoryAdaptEyebrow: 'Адаптивная нагрузка',
+  onbStoryAdaptTitle: 'Нагрузка подстраивается',
+  onbStoryAdaptLine1: 'Старт — по твоему уровню: сколько ты тренируешься сейчас.',
+  onbStoryAdaptLine2:
+    'Перед тренировкой выбираешь полегче · нормально · посложнее — мы подсказываем.',
+  onbStoryAdaptLine3: 'После — оцениваешь, и следующая станет на 2–10 % легче или тяжелее.',
+  onbStoryAdaptEasier: 'Полегче',
+  onbStoryAdaptNormal: 'Нормально',
+  onbStoryAdaptHarder: 'Посложнее',
+  onbStoryAdaptDelta: '+5 %',
+  onbStoryPathEyebrow: 'Курс',
+  onbStoryPathTitle: 'Курс — это путь',
+  onbStoryPathLine1: 'Тренировки открываются по порядку, одна за другой — в своём темпе.',
+  onbStoryPathLine2: 'Первая тренировка — бесплатно.',
+  onbStoryPathLine3: 'Дальше — весь курс одной оплатой.',
+  onbStoryPlayerEyebrow: 'Плеер',
+  onbStoryPlayerTitle: 'Плеер — как лента',
+  onbStoryPlayerLine1: 'Свайп вверх — следующее движение, вниз — предыдущее.',
+  onbStoryPlayerLine2: 'Свайп влево — техника и слова тренера.',
+  onbStoryPlayerLine3: 'Тап — пауза.',
+  onbStoryPlayerUp: 'следующее',
+  onbStoryPlayerDown: 'предыдущее',
+  onbStoryPlayerLeft: 'техника',
+  onbStoryPlayerTap: 'пауза',
+  onbStoryClubEyebrow: 'Клуб',
+  onbStoryClubTitle: 'Клуб маленьких шагов',
+  onbStoryClubLine1: 'Одно маленькое задание в день.',
+  onbStoryClubLine2: 'Баллы за каждое и серия — за дни подряд.',
+  onbStoryClubLine3: 'Приз недели — час с тренером.',
+  onbStoryCoachEyebrow: 'Тренер',
+  onbStoryCoachTitle: 'Тренер рядом',
+  onbStoryCoachLine1: 'Сергей Титов снял каждое движение и объяснил технику к нему.',
+  onbStoryCoachLine2: 'Полчаса или час один на один — во вкладке «Тренер».',
+  // Повтор сторис из профиля: строка «Как это работает» и кнопка на последнем слайде.
+  introRow: 'Как это работает',
+  introDone: 'Понятно',
   // Баннер с предложением пройти тест — после второй завершённой тренировки.
   // Текст подсказки повторяет homeTaskAssessHint: цифры совпадают с ASSESSMENT_MOVES и
   // ASSESSMENT_TOTAL_MIN в content/site/assessment.ts.
