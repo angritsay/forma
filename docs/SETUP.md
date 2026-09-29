@@ -1028,7 +1028,7 @@ every private message gets the same greeting with an inline button that launches
    | `TELEGRAM_PHOTO_URL`        | `https://forma-app.co/og/default.png` | The picture itself             |
    | `TELEGRAM_BUTTON_TEXT`      | «Тренироваться»                       | The button that opens the app  |
    | `TELEGRAM_SITE_BUTTON_TEXT` | «Что за курс»                         | The button that opens the site |
-   | `TELEGRAM_SITE_URL`         | `https://forma-app.co/courses/start/` | Where that button goes         |
+   | `TELEGRAM_SITE_URL`         | `https://forma-app.co/`               | Where that button goes         |
 
    **The picture is fetched by Telegram's own servers, not by this function**, so it has to be a
    public URL that answers with an image. The default is the OG card the deploy generates, which

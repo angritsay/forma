@@ -41,7 +41,7 @@ const ONE: BotCopy = {
 const COPY: Record<Locale, BotCopy> = { ru: ONE, en: ONE };
 
 const APP = 'https://forma-app.co/app/';
-const SITE = 'https://forma-app.co/courses/start/';
+const SITE = 'https://forma-app.co/courses/start-krossfit-doma-bez-oborudovaniya/';
 
 describe('replyFor', () => {
   it('answers /start', () => {
