@@ -9,6 +9,7 @@ import { entityLines, entityName, hasLegalEntity } from '@content/site/legalEnti
 import { LINKS } from '@content/site/links';
 import { BOOKING } from '@content/site/booking';
 import { formatPrice, PRICING } from '@content/site/pricing';
+import { HOLD_MINUTES } from '@/lib/coach/slots';
 
 export interface LegalSection {
   id: string;
@@ -42,12 +43,14 @@ const notice = PRICING.shutdownNoticeDays;
 
 /*
  * One-to-one sessions with the coach, as the terms and the refund policy describe them: every
- * length and price from `BOOKING.options`, and how the time is set read from each option's slot
- * page — a length with one is «оплати и выбери время», one without is «оплати и напиши, время
- * поставит тренер» (the same rule `/about/` prints). The money rule is the owner's decision of
- * 29 Sep: no refund for a session; it moves if the client writes at least 24 hours ahead; a session
- * missed without that notice is not moved. A session that fails on our side is moved or refunded —
- * that is ours to owe, not the client's choice to cancel.
+ * length and price from `BOOKING.options`, and how a session is booked — the owner's order of
+ * 29 Sep, the same for every length and every coach: the client picks a free time in the App, the
+ * slot is held for `HOLD_MINUTES` (`hold_slot`, 0055), and the payment through the App's link
+ * confirms it; a slot left unpaid is free again. `/about/` says the same in its own words («Выбери
+ * время и оплати»). The money rule is the owner's decision of 29 Sep: no refund for a session; the
+ * client moves it themselves in the App (or by writing) at least 24 hours ahead — the same line
+ * `move_my_booking` holds; a session missed without that notice is not moved. A session that fails
+ * on our side is moved or refunded — that is ours to owe, not the client's choice to cancel.
  */
 const sessionPrices: L10n = {
   ru: BOOKING.options
@@ -57,21 +60,14 @@ const sessionPrices: L10n = {
     .map((o) => `${o.durationMin} minutes — ${formatPrice('en', o.price)}`)
     .join(', '),
 };
-const sessionFlow: L10n[] = BOOKING.options.map((o) =>
-  o.scheduleUrl || BOOKING.scheduleUrl
-    ? {
-        ru: `${o.durationMin} минут: Пользователь оплачивает занятие по ссылке из Приложения и сразу выбирает время на странице записи.`,
-        en: `${o.durationMin} minutes: the User pays through the link in the App and picks a time on the booking page straight away.`,
-      }
-    : {
-        ru: `${o.durationMin} минут: Пользователь оплачивает занятие по ссылке из Приложения и пишет тренеру — время назначает тренер.`,
-        en: `${o.durationMin} minutes: the User pays through the link in the App and writes to the coach, who sets the time.`,
-      },
-);
+const sessionFlow: L10n = {
+  ru: `Пользователь выбирает свободное время в Приложении; выбранное время держится за ним ${HOLD_MINUTES} минут, и оплата по ссылке из Приложения в это время подтверждает запись. Если оплата не поступила за ${HOLD_MINUTES} минут, время снова становится свободным.`,
+  en: `The User picks a free time in the App; the time is held for them for ${HOLD_MINUTES} minutes, and paying through the App’s link within that time confirms the booking. If no payment arrives within ${HOLD_MINUTES} minutes, the time becomes free again.`,
+};
 const SESSION_RULES: L10n[] = [
   {
-    ru: 'Возврата за оплаченное занятие нет. Вместо этого занятие можно перенести — если написать тренеру или на e-mail ниже не позднее чем за 24 часа до его начала.',
-    en: 'A paid session is not refunded. Instead, it can be moved — if the User writes to the coach or to the email below at least 24 hours before it starts.',
+    ru: 'Возврата за оплаченное занятие нет. Вместо этого занятие можно перенести — самостоятельно в Приложении или написав тренеру или на e-mail ниже, не позднее чем за 24 часа до его начала.',
+    en: 'A paid session is not refunded. Instead, it can be moved — by the User in the App, or by writing to the coach or to the email below, at least 24 hours before it starts.',
   },
   {
     ru: 'Если Пользователь не пришёл на занятие и не предупредил об этом за 24 часа, занятие считается проведённым и не переносится.',
@@ -89,8 +85,8 @@ const SESSION_RULES: L10n[] = [
  */
 const SESSION_RULES_YOU: L10n[] = [
   {
-    ru: 'Возврата за оплаченное занятие нет. Вместо этого занятие можно перенести — если написать тренеру или на e-mail ниже не позднее чем за 24 часа до его начала.',
-    en: 'A paid session is not refunded. Instead, you can move it — write to the coach or to the email below at least 24 hours before it starts.',
+    ru: 'Возврата за оплаченное занятие нет. Вместо этого занятие можно перенести — самому в Приложении или написав тренеру или на e-mail ниже, не позднее чем за 24 часа до его начала.',
+    en: 'A paid session is not refunded. Instead, you can move it — yourself in the App, or by writing to the coach or to the email below, at least 24 hours before it starts.',
   },
   {
     ru: 'Если ты не пришёл на занятие и не предупредил об этом за 24 часа, занятие считается проведённым и не переносится.',
@@ -628,7 +624,7 @@ export function termsDocument(): LegalDocument {
             en: `The Provider offers a service — a one-to-one session with the coach, online, over video. Length and price: ${sessionPrices.en}. The price shown in the App at the time of payment applies.`,
           },
         ],
-        bullets: [...sessionFlow, ...SESSION_RULES],
+        bullets: [sessionFlow, ...SESSION_RULES],
         after: [
           {
             ru: 'Час с тренером, выигранный как приз недели в клубе (раздел 5б), — не платное занятие по этому разделу: его время согласуется с тренером.',

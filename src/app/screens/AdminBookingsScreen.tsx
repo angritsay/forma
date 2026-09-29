@@ -154,16 +154,26 @@ export default function AdminBookingsScreen() {
               />
             ) : (
               <ul className="flex flex-col">
-                {rows.map((row) => (
-                  <li key={row.id}>
-                    <BookingRow
-                      row={row}
-                      coach={coachName(row.coachId)}
-                      onMove={scope === 'upcoming' ? () => setMoving(row) : undefined}
-                      onCancel={scope === 'upcoming' ? () => setCancelling(row) : undefined}
-                    />
-                  </li>
-                ))}
+                {rows.map((row) => {
+                  /*
+                   * Only a booking made here is ours to change. A Google row is rewritten by
+                   * google-calendar-sync from the calendar every few minutes, so a move or a
+                   * cancel here would be undone quietly after the client had been told of it.
+                   * `source` comes with the RPC's own row, never from the optional second read.
+                   */
+                  const editable = scope === 'upcoming' && row.source === 'forma';
+                  return (
+                    <li key={row.id}>
+                      <BookingRow
+                        row={row}
+                        coach={coachName(row.coachId)}
+                        external={scope === 'upcoming' && row.source !== 'forma'}
+                        onMove={editable ? () => setMoving(row) : undefined}
+                        onCancel={editable ? () => setCancelling(row) : undefined}
+                      />
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </>
@@ -213,11 +223,14 @@ export default function AdminBookingsScreen() {
 function BookingRow({
   row,
   coach,
+  external = false,
   onMove,
   onCancel,
 }: {
   row: AdminBooking;
   coach: string | null;
+  /** Upcoming but synced from a calendar: changed there, not here. */
+  external?: boolean;
   onMove?: () => void;
   onCancel?: () => void;
 }) {
@@ -248,6 +261,9 @@ function BookingRow({
       <span className="text-xs text-muted-2">{details.join(' · ')}</span>
       {row.cancelReason && row.status === 'cancelled' ? (
         <span className="text-xs text-muted">{row.cancelReason}</span>
+      ) : null}
+      {live && external ? (
+        <span className="text-xs text-muted">{t('app.bookingsExternalHint')}</span>
       ) : null}
       {live && (row.joinUrl || onMove || onCancel) ? (
         <div className="-mb-2 -ml-4.5 flex flex-wrap items-center">

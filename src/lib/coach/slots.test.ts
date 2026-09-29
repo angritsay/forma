@@ -8,9 +8,11 @@ import {
   firstOpenDay,
   generateSlots,
   holdClock,
+  holdDeadline,
   isoWeekday,
   joinOpen,
   parseClock,
+  parseEndClock,
   rangeProblems,
   rulesToWeek,
   slotsByDay,
@@ -48,6 +50,14 @@ describe('clocks and zones', () => {
     expect(parseClock('24:00')).toBeNull();
     expect(parseClock('9:00')).toBeNull();
     expect(parseClock('')).toBeNull();
+  });
+
+  it('reads midnight as the end of the day, for ends only', () => {
+    expect(parseEndClock('24:00')).toBe(1440);
+    expect(parseEndClock('24:00:00')).toBe(1440);
+    expect(parseEndClock('00:00')).toBe(1440);
+    expect(parseEndClock('23:30')).toBe(1410);
+    expect(parseEndClock('24:30')).toBeNull();
   });
 
   it('turns a Moscow wall clock into the instant it names', () => {
@@ -192,6 +202,15 @@ describe('the hold', () => {
     expect(holdClock(until, NOW)).toEqual({ expired: false, seconds: 1182, left: '19:42' });
   });
 
+  it('fixes the deadline on the device clock, never longer than the hold itself', () => {
+    const until = new Date(NOW + 20 * 60_000).toISOString();
+    // A clock 5 minutes ahead ends early; the screen never takes the same hold back.
+    expect(holdDeadline(until, NOW + 5 * 60_000)).toBe(NOW + 20 * 60_000);
+    // A clock 30 minutes behind would show 50 minutes; it shows the 20 a hold lasts.
+    expect(holdDeadline(until, NOW - 30 * 60_000)).toBe(NOW - 10 * 60_000);
+    expect(holdClock(holdDeadline('later', NOW), NOW).expired).toBe(true);
+  });
+
   it('is over at its expiry, and an unreadable expiry is over too', () => {
     expect(holdClock(new Date(NOW).toISOString(), NOW).expired).toBe(true);
     expect(holdClock('later', NOW)).toEqual({ expired: true, seconds: 0, left: '0:00' });
@@ -230,6 +249,17 @@ describe('the admin week', () => {
     expect(problems.get(2)).toBe('overlap');
     expect(problems.get(3)).toBe('format');
     expect(problems.get(4)).toBe('order');
+  });
+
+  it('takes a range until midnight, typed as 00:00, and sends it as 24:00', () => {
+    expect(rangeProblems([{ start: '23:00', end: '00:00' }]).size).toBe(0);
+    const week = rulesToWeek([{ weekday: 5, start: '23:00:00', end: '24:00:00' }]);
+    expect(week.get(5)).toEqual([{ start: '23:00', end: '00:00' }]);
+    expect(weekToRules(week)).toEqual([{ weekday: 5, start: '23:00', end: '24:00' }]);
+    expect(starts(query({ rules: [{ weekday: 1, start: '23:00', end: '24:00' }] }))).toEqual([
+      '23:00',
+      '23:30',
+    ]);
   });
 
   it('round-trips the week through the rules the server takes', () => {

@@ -10,7 +10,13 @@
  * Kept out of `admin.ts` for the reason `adminInbox.ts` is: one screen owns these calls, and the
  * mappers are pure so they are tested without a database.
  */
-import { formatClock, parseClock, type WeeklyRule } from '@/lib/coach/slots';
+import {
+  endForDb,
+  formatClock,
+  parseClock,
+  parseEndClock,
+  type WeeklyRule,
+} from '@/lib/coach/slots';
 import { supabase } from './client';
 import { demo } from './demo/load';
 import { AppError } from './errors';
@@ -98,7 +104,7 @@ export interface DbRule {
 /** A rule from the table; Postgres prints `time` as `HH:MM:SS`. Unreadable rows are dropped. */
 export function ruleFromDb(r: DbRule): WeeklyRule | null {
   const a = parseClock(r.start_time);
-  const b = parseClock(r.end_time);
+  const b = parseEndClock(r.end_time);
   if (a === null || b === null || !(r.weekday >= 1 && r.weekday <= 7)) return null;
   return { weekday: r.weekday, start: formatClock(a), end: formatClock(b) };
 }
@@ -114,7 +120,7 @@ export interface DbException {
 
 export function exceptionFromDb(r: DbException): CoachException {
   const a = parseClock(r.start_time);
-  const b = parseClock(r.end_time);
+  const b = parseEndClock(r.end_time);
   const timed = a !== null && b !== null;
   return {
     id: r.id,
@@ -143,7 +149,7 @@ export function exceptionToDb(
   if (draft.kind === 'extra' && start === null) throw new AppError('validation', 'invalid_times');
   if (start !== null && end !== null) {
     const a = parseClock(start);
-    const b = parseClock(end);
+    const b = parseEndClock(end);
     if (a === null || b === null || b <= a) throw new AppError('validation', 'invalid_times');
   }
   const note = draft.note?.trim() || null;
@@ -151,7 +157,7 @@ export function exceptionToDb(
     coach_id: coach,
     date: draft.date,
     start_time: start,
-    end_time: end,
+    end_time: end === null ? null : endForDb(end),
     kind: draft.kind,
     note: note ? note.slice(0, 200) : null,
   };

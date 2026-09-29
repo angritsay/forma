@@ -142,6 +142,8 @@ export interface SlotPickerProps {
   onChange: (startsAt: string | null) => void;
   /** Change it to fetch again (after a taken slot, an expired hold, a move). */
   reloadKey?: number;
+  /** True while the times are being asked for: a pick from before is not one on this list yet. */
+  onLoading?: (loading: boolean) => void;
   empty?: ReactNode;
 }
 
@@ -153,6 +155,7 @@ export function SlotPicker({
   value,
   onChange,
   reloadKey = 0,
+  onLoading,
   empty,
 }: SlotPickerProps) {
   const timeZone = deviceTimeZone();
@@ -182,6 +185,11 @@ export function SlotPicker({
       alive = false;
     };
   }, [coach, option, reloadKey, attempt]);
+
+  const loading = state.kind === 'loading';
+  useEffect(() => {
+    onLoading?.(loading);
+  }, [loading, onLoading]);
 
   // A pick the fresh list no longer offers (taken, or the other length) is not a pick any more.
   useEffect(() => {

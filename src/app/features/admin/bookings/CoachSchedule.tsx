@@ -12,7 +12,7 @@
  * the button stays off until there is none. Times are the coach's wall clock, named in the hint,
  * because the owner may be travelling and the coach is not.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
@@ -53,7 +53,11 @@ export function CoachSchedule({ coach, onSaved }: { coach: AdminCoach; onSaved: 
   const tr = useT();
   const { t, locale } = tr;
   const toast = useToast();
-  const today = dateIn(Date.now(), coach.timezone);
+  /*
+   * Read once per coach zone, not every render: `load` depends on it, and a value that turned
+   * over at midnight would reload the week from the server over the admin's unsaved edits.
+   */
+  const today = useMemo(() => dateIn(Date.now(), coach.timezone), [coach.timezone]);
 
   const [loading, setLoading] = useState(true);
   const [week, setWeek] = useState<Map<number, RangeDraft[]>>(() => rulesToWeek([]));
@@ -75,11 +79,19 @@ export function CoachSchedule({ coach, onSaved }: { coach: AdminCoach; onSaved: 
       .finally(() => setLoading(false));
   }, [coach.id, today, toast, tr]);
 
+  /*
+   * Two effects on purpose. Saving the room link reloads the coach list and hands back a new
+   * `roomUrl`; that must reset the link field only — reloading the week then would throw away
+   * ranges the admin has edited and not saved yet. The week and exceptions load per coach.
+   */
   useEffect(() => {
     setRoom(coach.roomUrl ?? '');
     setRoomError(false);
+  }, [coach.roomUrl]);
+
+  useEffect(() => {
     load();
-  }, [coach.id, coach.roomUrl, load]);
+  }, [load]);
 
   const saveRoom = async () => {
     setBusy('room');

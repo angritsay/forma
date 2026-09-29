@@ -131,7 +131,14 @@ import {
 import { isAppError } from '@/lib/api/errors';
 import type { BookingHold, CoachBooking, SessionOption } from '@/lib/api/types';
 import { describeCountdown, deviceTimeZone, type Countdown } from '@/lib/coach/booking';
-import { canSelfMove, clockIn, holdClock, JOIN_OPENS_MINUTES, joinOpen } from '@/lib/coach/slots';
+import {
+  canSelfMove,
+  clockIn,
+  holdClock,
+  holdDeadline,
+  JOIN_OPENS_MINUTES,
+  joinOpen,
+} from '@/lib/coach/slots';
 import { isDemo } from '@/lib/api/mode';
 import { COACH_TILE, courseTileVars } from '@/lib/ui/tile';
 import { openExternal } from '@/lib/telegram/webapp';
@@ -153,6 +160,9 @@ import { COACH } from '@content/site/coach';
 import { NASTIA, type NastiaLink } from '@content/site/nastia';
 import { lavaUrl, sessionKey } from '@content/site/payments';
 import { formatPrice } from '@content/site/pricing';
+
+/** A hold as the screen keeps it: the server's row plus its deadline on this device's clock. */
+type HeldSlot = BookingHold & { deadline: number };
 
 export default function BookScreen() {
   const { t, locale } = useT();
@@ -194,8 +204,25 @@ export default function BookScreen() {
   /*
    * The slot held for this person while they pay (0055), or null. Read with the booking, so a
    * reload — or coming back from the payment page — finds the countdown where it was.
+   *
+   * The countdown runs on this device's clock from a deadline fixed when the hold arrived
+   * (`holdDeadline`), never by comparing the server's `hold_expires_at` with `Date.now()` on
+   * every tick: a phone whose clock runs ahead would see the hold end early, drop it, ask again,
+   * get the same live hold back and drop it again, once a round trip, until the server caught up.
+   * So the same hold coming back keeps the deadline it had (and the same object, so nothing
+   * re-fires), and a hold that has lapsed here is never taken back (`lapsed`), whatever the
+   * server still says about it for the few seconds its clock is behind ours.
    */
-  const [hold, setHold] = useState<BookingHold | null>(null);
+  const [hold, setHold] = useState<HeldSlot | null>(null);
+  const lapsed = useRef(new Set<string>());
+  const adoptHold = useCallback((next: BookingHold | null) => {
+    const receivedAt = Date.now();
+    setHold((prev) => {
+      if (!next || lapsed.current.has(next.id)) return null;
+      if (prev && prev.id === next.id && prev.holdExpiresAt === next.holdExpiresAt) return prev;
+      return { ...next, deadline: holdDeadline(next.holdExpiresAt, receivedAt) };
+    });
+  }, []);
   const alive = useRef(true);
   useEffect(
     () => () => {
@@ -219,12 +246,12 @@ export default function BookScreen() {
       });
     getMyHold()
       .then((h) => {
-        if (alive.current) setHold(h);
+        if (alive.current) adoptHold(h);
       })
       .catch(() => {
         /* No countdown is better than an error where the offer is. */
       });
-  }, []);
+  }, [adoptHold]);
 
   useEffect(() => {
     refresh();
@@ -315,6 +342,19 @@ export default function BookScreen() {
   );
 
   /*
+   * The picker's state: the start picked on the card in view, and a counter that makes the picker
+   * ask again (a slot someone else took, a hold that ran out, a hold given back).
+   */
+  const [slot, setSlot] = useState<string | null>(null);
+  const [slotsKey, setSlotsKey] = useState(0);
+  const [holding, setHolding] = useState(false);
+  /* Said once under the picker after a hold ran out, until the next pick. */
+  const [holdLapsed, setHoldLapsed] = useState(false);
+  /* The picker is asking for times: nothing on screen is a pick yet, so the button waits. */
+  const [slotsLoading, setSlotsLoading] = useState(true);
+  const reloadSlots = () => setSlotsKey((n) => n + 1);
+
+  /*
    * The strip: which card it rests on, read once the scroll settles. A debounce rather than every
    * frame, so the content below changes once per swipe and not back and forth mid-gesture.
    */
@@ -322,10 +362,16 @@ export default function BookScreen() {
   const settle = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(settle.current), []);
 
+  /*
+   * Another card is another calendar: the time picked on the first is not a time on the second,
+   * so it goes, and «Забронировать и оплатить» waits for a pick on the calendar now in view.
+   */
   const choose = (next: CoachPerson) => {
     if (next === person) return;
     setPerson(next);
     setSwapped(true);
+    setSlot(null);
+    setHoldLapsed(false);
   };
 
   const onStripScroll = () => {
@@ -356,20 +402,10 @@ export default function BookScreen() {
   const personName = who === 'nastia' ? herName : name;
   const herLinks = NASTIA.links[locale] ?? NASTIA.links.ru;
 
-  /*
-   * The picker's state: the start picked on the card in view, and a counter that makes the picker
-   * ask again (a slot someone else took, a hold that ran out, a hold given back).
-   */
-  const [slot, setSlot] = useState<string | null>(null);
-  const [slotsKey, setSlotsKey] = useState(0);
-  const [holding, setHolding] = useState(false);
-  /* Said once under the picker after a hold ran out, until the next pick. */
-  const [holdLapsed, setHoldLapsed] = useState(false);
-  const reloadSlots = () => setSlotsKey((n) => n + 1);
-
-  const clock = hold ? holdClock(hold.holdExpiresAt, now) : null;
+  const clock = hold ? holdClock(hold.deadline, now) : null;
   useEffect(() => {
     if (!hold || !clock?.expired) return;
+    lapsed.current.add(hold.id);
     setHold(null);
     setSent(false);
     setHoldLapsed(true);
@@ -384,7 +420,11 @@ export default function BookScreen() {
    */
   const payFor = async (held: BookingHold) => {
     const route = routeFor(BOOKING.options.find((o) => o.id === held.optionId));
-    if (!route) return;
+    // No till for the hold's length in this language: the panel offers a message instead.
+    if (!route) {
+      openContact();
+      return;
+    }
     if (isDemo()) {
       await confirmDemoHold().catch(() => false);
       toast.show({ kind: 'success', title: t('app.bookDemoPaid') });
@@ -402,7 +442,7 @@ export default function BookScreen() {
 
   /* «Забронировать и оплатить»: hold the picked slot, then straight to the till. */
   const book = async () => {
-    if (!slot || !option || !payment || holding) return;
+    if (!slot || !option || !payment || holding || slotsLoading) return;
     setHolding(true);
     setHoldLapsed(false);
     try {
@@ -413,7 +453,9 @@ export default function BookScreen() {
         reloadSlots();
         return;
       }
-      setHold(held);
+      // A fresh pick is a fresh hold, even of a start that lapsed here before.
+      lapsed.current.delete(held.id);
+      adoptHold(held);
       setNow(Date.now());
       await payFor(held);
     } catch (e) {
@@ -737,6 +779,8 @@ export default function BookScreen() {
                 <HoldPanel
                   hold={hold}
                   left={clock.left}
+                  canPay={routeFor(BOOKING.options.find((o) => o.id === hold.optionId)) !== null}
+                  onContact={openContact}
                   sent={sent}
                   busy={holding || redirecting}
                   onPay={() => void payFor(hold)}
@@ -755,6 +799,7 @@ export default function BookScreen() {
                     option={option.id as SessionOption}
                     value={slot}
                     onChange={setSlot}
+                    onLoading={setSlotsLoading}
                     reloadKey={slotsKey}
                     empty={
                       <Button
@@ -772,7 +817,7 @@ export default function BookScreen() {
                     variant="action"
                     size="lg"
                     fullWidth
-                    disabled={!slot}
+                    disabled={!slot || slotsLoading}
                     loading={holding}
                     onClick={() => void book()}
                   >
@@ -1215,13 +1260,21 @@ function Option({
 function HoldPanel({
   hold,
   left,
+  canPay,
+  onContact,
   sent,
   busy,
   onPay,
   onRelease,
 }: {
-  hold: BookingHold;
+  hold: HeldSlot;
   left: string;
+  /**
+   * The hold's length has a till in this language. It may not — a hold made in one language and
+   * looked at in another — and then the pay button would do nothing, so a message stands in.
+   */
+  canPay: boolean;
+  onContact: () => void;
   sent: boolean;
   busy: boolean;
   onPay: () => void;
@@ -1236,7 +1289,7 @@ function HoldPanel({
       <div className="flex flex-col gap-1.5">
         <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
           <span className="font-display text-[17px] leading-snug">
-            {t('app.bookHoldUntil', { time: clockIn(hold.holdExpiresAt, zone) })}
+            {t('app.bookHoldUntil', { time: clockIn(hold.deadline, zone) })}
           </span>
           <span className="tabular text-[13px] text-accent">{t('app.bookHoldLeft', { left })}</span>
         </div>
@@ -1256,11 +1309,15 @@ function HoldPanel({
       ) : (
         <p className="text-sm leading-snug text-muted">{t('app.bookHoldNote')}</p>
       )}
-      {option ? (
+      {option && canPay ? (
         <Button variant="action" size="lg" fullWidth loading={busy} onClick={onPay}>
           {t('app.bookPay', { price: formatPrice(locale, option.price) })}
         </Button>
-      ) : null}
+      ) : (
+        <Button variant="secondary" size="lg" fullWidth disabled={busy} onClick={onContact}>
+          {t('app.bookContact')}
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="md"
@@ -1343,6 +1400,12 @@ function MoveSheet({
         <p className="tabular text-[13px] text-muted">
           {t('app.bookMoveNow', { when: whenLine(tr, booking.startsAt, booking.endsAt, zone) })}
         </p>
+        {/*
+         * `available_slots` counts this very session as busy, so a start overlapping it (10:00 →
+         * 10:30) is not offered here though `move_my_booking` would take it. Said, until the
+         * server offers slots for a move (`p_ignore`), rather than left as a silent gap.
+         */}
+        <p className="text-xs leading-snug text-muted-2">{t('app.bookMoveOverlapNote')}</p>
         {booking.coachId ? (
           <SlotPicker
             coach={booking.coachId}

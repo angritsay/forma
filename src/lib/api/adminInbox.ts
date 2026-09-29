@@ -216,6 +216,12 @@ export function adminBookingFromDb(r: DbAdminBooking): AdminBooking {
  * comes from the table itself, which an admin may read whole (0014 «admins all») — one more read
  * rather than redefining a function another migration owns. A failed second read costs only the
  * coach's name on the rows, never the list.
+ *
+ * The second read repeats the RPC's scope (status, `ends_at`, order, 200) instead of listing the
+ * ids: two hundred uuids in a GET query string is about 7.5 KB, past what some gateways take.
+ * Only rows with a coach are asked for — the rest have no name to show — and dropping rows from
+ * an ordered list never pushes one of the RPC's first 200 out of it. The boundary is the device's
+ * clock rather than the server's; a row ending this very minute may lose its name, nothing else.
  */
 export async function listAdminBookings(scope: BookingScope): Promise<AdminBooking[]> {
   if (isDemo()) return (await demo()).listAdminBookings(scope);
@@ -224,13 +230,18 @@ export async function listAdminBookings(scope: BookingScope): Promise<AdminBooki
       await supabase().rpc('admin_coach_bookings', { p_scope: scope }),
     ).map(adminBookingFromDb);
     if (rows.length === 0) return rows;
-    const { data } = await supabase()
+    const at = new Date().toISOString();
+    const base = supabase()
       .from('coach_bookings')
       .select('id, coach_id')
-      .in(
-        'id',
-        rows.map((r) => r.id),
-      );
+      .not('coach_id', 'is', null);
+    const scoped =
+      scope === 'upcoming'
+        ? base.eq('status', 'active').gt('ends_at', at).order('starts_at', { ascending: true })
+        : scope === 'past'
+          ? base.eq('status', 'active').lte('ends_at', at).order('starts_at', { ascending: false })
+          : base.eq('status', 'cancelled').order('starts_at', { ascending: false });
+    const { data } = await scoped.limit(200);
     const coaches = new Map(
       ((data ?? []) as { id: string; coach_id: string | null }[]).map((r) => [r.id, r.coach_id]),
     );

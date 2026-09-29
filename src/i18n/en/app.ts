@@ -1960,6 +1960,8 @@ export const app = {
   bookJoinSoon: 'The «Join» button appears {n} minutes before the start.',
   bookMoveLate: 'Less than 24 hours to go — only the coach can move it now.',
   bookMoveTitle: 'Move the session',
+  bookMoveOverlapNote:
+    'Times that overlap the current session are not shown here. To shift it by half an hour, message the coach.',
   bookMoveNow: 'Now: {when}',
   bookMoveConfirm: 'Move to {time}',
   bookMoveDone: 'The session is moved.',
@@ -1977,7 +1979,8 @@ export const app = {
   bookingsRoomInvalid: 'The link has to start with https://',
   bookingsNoRoom: 'No room link: paid clients get a booking without one.',
   bookingsWeek: 'Weekly hours',
-  bookingsWeekHint: 'The coach’s time ({zone}). A slot starts every 30 minutes.',
+  bookingsWeekHint:
+    'The coach’s time ({zone}). A slot starts every 30 minutes; an end at 00:00 means until midnight.',
   bookingsDayOff: 'day off',
   bookingsAddRange: 'Add hours',
   bookingsRemoveRange: 'Remove',
@@ -2019,4 +2022,5 @@ export const app = {
   bookingsCancelConfirm: 'Cancel the booking',
   bookingsCancelledToast: 'Booking cancelled',
   bookingsSourceForma: 'In the app',
+  bookingsExternalHint: 'This booking comes from the calendar — move or cancel it there.',
 } as const;

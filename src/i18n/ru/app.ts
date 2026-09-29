@@ -2080,6 +2080,8 @@ export const app = {
   bookJoinSoon: 'Кнопка «Подключиться» появится за {n} минут до начала.',
   bookMoveLate: 'До начала меньше 24 часов — перенести можно только через тренера.',
   bookMoveTitle: 'Перенести тренировку',
+  bookMoveOverlapNote:
+    'Время, которое пересекается с текущим занятием, здесь не показано. Чтобы сдвинуть его на полчаса, напиши тренеру.',
   bookMoveNow: 'Сейчас: {when}',
   bookMoveConfirm: 'Перенести на {time}',
   bookMoveDone: 'Тренировка перенесена.',
@@ -2097,7 +2099,8 @@ export const app = {
   bookingsRoomInvalid: 'Нужна ссылка, которая начинается с https://',
   bookingsNoRoom: 'Ссылки на комнату нет: оплатившие получат запись без неё.',
   bookingsWeek: 'Часы по неделе',
-  bookingsWeekHint: 'Время тренера ({zone}). Начало слота — каждые 30 минут.',
+  bookingsWeekHint:
+    'Время тренера ({zone}). Начало слота — каждые 30 минут; конец в 00:00 — до полуночи.',
   bookingsDayOff: 'выходной',
   bookingsAddRange: 'Добавить часы',
   bookingsRemoveRange: 'Убрать',
@@ -2140,4 +2143,5 @@ export const app = {
   bookingsCancelConfirm: 'Отменить запись',
   bookingsCancelledToast: 'Запись отменена',
   bookingsSourceForma: 'В приложении',
+  bookingsExternalHint: 'Запись пришла из календаря — перенести или отменить её можно только там.',
 } as const;

@@ -78,7 +78,30 @@ export function parseClock(value: string | null | undefined): number | null {
   return Number(m[1]) * 60 + Number(m[2]);
 }
 
-/** `HH:MM` of minutes since midnight. */
+/**
+ * Midnight at the end of the day: `24:00` as Postgres `time` spells it, or `00:00` as a browser's
+ * time field can only say it (it has no 24:00). A range cannot end at the start of its own day,
+ * so an end at `00:00` means only one thing.
+ */
+const DAY_END_RE = /^(?:24:00|00:00)(?::00)?$/;
+/** Minutes in a day: the end of a range that runs until midnight. */
+export const DAY_END = 24 * 60;
+
+/**
+ * Minutes since midnight of a range's *end*: everything `parseClock` reads, with midnight as 1440,
+ * so a window can run until midnight (23:00–24:00). Only ends — a start at 00:00 is midnight.
+ */
+export function parseEndClock(value: string | null | undefined): number | null {
+  return DAY_END_RE.test((value ?? '').trim()) ? DAY_END : parseClock(value);
+}
+
+/** A range's end as the server takes it: midnight is `24:00`, anything else as typed. */
+export function endForDb(value: string): string {
+  const v = value.trim();
+  return parseEndClock(v) === DAY_END ? '24:00' : v;
+}
+
+/** `HH:MM` of minutes since midnight (1440 is `24:00`, the end of the day). */
 export function formatClock(minutes: number): string {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
@@ -237,19 +260,19 @@ export function generateSlots(q: SlotQuery): SlotTimes[] {
       for (const r of q.rules) {
         if (r.weekday !== isoWeekday(day)) continue;
         const a = parseClock(r.start);
-        const b = parseClock(r.end);
+        const b = parseEndClock(r.end);
         if (a !== null && b !== null && b > a) windows.push([a, b]);
       }
     }
     for (const e of todays) {
       if (e.kind !== 'extra') continue;
       const a = parseClock(e.start);
-      const b = parseClock(e.end);
+      const b = parseEndClock(e.end);
       if (a !== null && b !== null && b > a) windows.push([a, b]);
     }
     const offs = todays
       .filter((e) => e.kind === 'off' && e.start !== null)
-      .map((e) => [parseClock(e.start), parseClock(e.end)] as const);
+      .map((e) => [parseClock(e.start), parseEndClock(e.end)] as const);
 
     const cells = new Set<number>();
     for (const [a, b] of windows) {
@@ -350,9 +373,26 @@ export interface HoldClock {
   left: string;
 }
 
-/** What is left of a hold at `now`. An unparseable expiry reads as already over. */
-export function holdClock(holdExpiresAt: string, now: number): HoldClock {
+/**
+ * When a hold runs out on *this device's* clock, fixed at the moment the hold arrived.
+ *
+ * `hold_expires_at` is the server's instant, and comparing it with `Date.now()` trusts the phone's
+ * clock. A clock running behind would show more than `HOLD_MINUTES` left; one running ahead would
+ * end the countdown while the server still holds the slot. So the deadline is taken once, on
+ * receipt: never later than `HOLD_MINUTES` from `receivedAt` (a hold is never longer than that),
+ * and never later than the server's own instant read on the local clock. A clock ahead still ends
+ * the countdown early — no answer here carries the server's time — and the screen copes with
+ * that by never taking the same hold back once it has lapsed locally (`BookScreen`).
+ */
+export function holdDeadline(holdExpiresAt: string, receivedAt: number): number {
   const ends = Date.parse(holdExpiresAt);
+  const longest = receivedAt + HOLD_MINUTES * MINUTE;
+  return Number.isFinite(ends) ? Math.min(ends, longest) : receivedAt;
+}
+
+/** What is left of a hold at `now`. An unparseable expiry reads as already over. */
+export function holdClock(holdExpiresAt: string | number, now: number): HoldClock {
+  const ends = typeof holdExpiresAt === 'number' ? holdExpiresAt : Date.parse(holdExpiresAt);
   const seconds = Number.isFinite(ends) ? Math.max(0, Math.ceil((ends - now) / 1000)) : 0;
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
@@ -391,7 +431,7 @@ export type RangeProblem = 'format' | 'order' | 'overlap';
  */
 export function rangeProblems(ranges: readonly RangeDraft[]): Map<number, RangeProblem> {
   const out = new Map<number, RangeProblem>();
-  const parsed = ranges.map((r) => [parseClock(r.start), parseClock(r.end)] as const);
+  const parsed = ranges.map((r) => [parseClock(r.start), parseEndClock(r.end)] as const);
   parsed.forEach(([a, b], i) => {
     if (a === null || b === null) out.set(i, 'format');
     else if (b <= a) out.set(i, 'order');
@@ -416,7 +456,7 @@ export function weekToRules(week: ReadonlyMap<number, readonly RangeDraft[]>): W
     const ranges = [...(week.get(weekday) ?? [])]
       .map((r) => ({ start: r.start.trim(), end: r.end.trim() }))
       .sort((a, b) => a.start.localeCompare(b.start));
-    for (const r of ranges) out.push({ weekday, start: r.start, end: r.end });
+    for (const r of ranges) out.push({ weekday, start: r.start, end: endForDb(r.end) });
   }
   return out;
 }
@@ -427,9 +467,10 @@ export function rulesToWeek(rules: readonly WeeklyRule[]): Map<number, RangeDraf
   for (let d = 1; d <= 7; d += 1) week.set(d, []);
   for (const r of rules) {
     const a = parseClock(r.start);
-    const b = parseClock(r.end);
+    const b = parseEndClock(r.end);
     if (a === null || b === null || r.weekday < 1 || r.weekday > 7) continue;
-    week.get(r.weekday)!.push({ start: formatClock(a), end: formatClock(b) });
+    // A time field cannot show 24:00; midnight is 00:00 there, and read back as the end of the day.
+    week.get(r.weekday)!.push({ start: formatClock(a), end: formatClock(b % DAY_END) });
   }
   for (const list of week.values()) list.sort((x, y) => x.start.localeCompare(y.start));
   return week;
