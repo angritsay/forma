@@ -4,6 +4,7 @@ import {
   ADMIN_TOPICS,
   adminFailure,
   adminLink,
+  adminLinkPath,
   adminMessage,
   appBase,
   escapeHtml,
@@ -111,6 +112,7 @@ describe('adminMessage', () => {
       'session_booked',
       'session_moved',
       'session_cancelled',
+      'session_unmatched',
       'payment_unclaimed',
       'claim_no_order',
       'club_closed',
@@ -416,5 +418,41 @@ describe('links into the admin (0044)', () => {
     expect(adminMessage(row('club_closed', { email: 'a@b.co' }))).toContain(
       'Доступ к клубу закрыт',
     );
+  });
+});
+
+describe('session_unmatched (0055)', () => {
+  it('names the reason, the length and the held time, and says what to do', () => {
+    const text = adminMessage(
+      row('session_unmatched', {
+        email: 'a@b.co',
+        option: 'hour',
+        reason: 'slot_taken',
+        startsAt: '2026-10-02T08:00:00+00:00',
+        amount: '3500.00',
+        currency: 'RUB',
+        provider: 'prodamus',
+        ref: 'R-1',
+      }),
+    )!;
+    expect(text).toContain('Оплата занятия без брони');
+    expect(text).toContain('60 мин');
+    expect(text).toContain('время уже заняли');
+    expect(text).toContain('11:00');
+    expect(text).toContain('Встреча не создана');
+  });
+
+  it('opens the payment in the admin', () => {
+    const PAY = '11111111-2222-3333-4444-555555555555';
+    const link = adminLinkPath({
+      topic: 'sessions',
+      kind: 'session_unmatched',
+      params: { paymentId: PAY },
+    });
+    expect(link?.path).toBe(`/admin?tab=payments&id=${PAY}`);
+  });
+
+  it('shows the coach on a booking', () => {
+    expect(adminMessage(row('session_booked', { coach: 'Сергей' }))).toContain('Тренер: Сергей');
   });
 });

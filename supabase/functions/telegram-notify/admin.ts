@@ -98,6 +98,21 @@ const PLAN_NAMES: Readonly<Record<string, string>> = {
   annual: 'год',
 };
 
+/** Длительность занятия по ключу варианта (`content/site/booking.ts`). */
+const SESSION_OPTION_NAMES: Readonly<Record<string, string>> = {
+  half: '30 мин',
+  hour: '60 мин',
+};
+
+/** Почему оплата занятия не подтвердила бронь (`apply_session_payment`, 0055). */
+const UNMATCHED_REASONS: Readonly<Record<string, string>> = {
+  no_hold: 'брони нет — почта в кассе другая или время не выбирали',
+  option_mismatch: 'оплачена не та длительность, что выбрана',
+  slot_taken: 'бронь истекла, и время уже заняли',
+  hold_in_past: 'бронь была на время, которое уже прошло',
+  no_payment: 'платёж не записался в журнал — проверь кассу',
+};
+
 const INTENT_NAMES: Readonly<Record<string, string>> = {
   monthly: 'подписка на месяц',
   annual: 'подписка на год',
@@ -276,7 +291,12 @@ function personPath(email: string): string | null {
   return EMAIL_RE.test(e) ? `/admin/people/${encodeURIComponent(e.toLowerCase())}` : null;
 }
 
-const PAYMENT_KINDS = new Set(['payment_unclaimed', 'session_paid', 'claim_no_order']);
+const PAYMENT_KINDS = new Set([
+  'payment_unclaimed',
+  'session_paid',
+  'claim_no_order',
+  'session_unmatched',
+]);
 
 /** Куда ведёт сообщение этого вида, и как ссылка подписана. */
 export function adminLinkPath(row: AdminRow): { path: string; label: string } | null {
@@ -464,6 +484,7 @@ function adminBody(row: AdminRow): string | null {
         'Выбрали время',
         lines(
           ['Когда', str(p, 'startsAt') ? moscowTime(str(p, 'startsAt')) : ''],
+          ['Тренер', str(p, 'coach')],
           ['Длительность', str(p, 'minutes') ? `${str(p, 'minutes')} мин` : ''],
           ['Почта', email],
           ['Часовой пояс клиента', str(p, 'timezone')],
@@ -475,6 +496,7 @@ function adminBody(row: AdminRow): string | null {
         'Встречу перенесли',
         lines(
           ['Новое время', str(p, 'startsAt') ? moscowTime(str(p, 'startsAt')) : ''],
+          ['Тренер', str(p, 'coach')],
           ['Почта', email],
         ),
       );
@@ -483,6 +505,25 @@ function adminBody(row: AdminRow): string | null {
       return block(
         'Встречу отменили',
         lines(['Было', str(p, 'startsAt') ? moscowTime(str(p, 'startsAt')) : ''], ['Почта', email]),
+      );
+
+    /*
+     * Занятие оплачено, а бронь не подтвердилась (0055): у этой почты нет брони на эту длительность,
+     * или бронь истекла и время заняли. Человек заплатил и думает, что записан, — поэтому причина
+     * названа, а что делать — сказано.
+     */
+    case 'session_unmatched':
+      return block(
+        'Оплата занятия без брони',
+        lines(
+          ['Почта', email],
+          ['Длительность', SESSION_OPTION_NAMES[str(p, 'option')] ?? str(p, 'option')],
+          ['Почему', UNMATCHED_REASONS[str(p, 'reason')] ?? str(p, 'reason')],
+          ['Бронь была на', str(p, 'startsAt') ? moscowTime(str(p, 'startsAt')) : ''],
+          ['Сумма', money(p)],
+          ['Касса', tillName(str(p, 'provider'))],
+          ['Заказ', str(p, 'ref')],
+        ) + '\n\nВстреча не создана. Свяжись с человеком и договорись о времени.',
       );
 
     /*

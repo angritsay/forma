@@ -63,6 +63,7 @@ export function ClaimSheet({ open, onClose }: ClaimSheetProps) {
   const note: Record<ClaimResult, string> = {
     subscription: t('app.claimOk'),
     course: t('app.claimOk'),
+    session: t('app.claimSession'),
     linked: t('app.claimLinked'),
     not_found: t('app.claimNotFound'),
     email_taken: t('app.claimEmailTaken'),

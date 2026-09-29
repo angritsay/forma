@@ -1827,6 +1827,49 @@ rest of the site still deploys.
 - The path is not a secret from anyone who reads the `gh-pages` branch; the password is what
   protects the page. Kept in a secret, it is masked in the public workflow logs.
 
+## 7.16 Booking a session in the app (0055)
+
+The client picks a slot, then pays; the payment confirms the slot. `0055_booking_core.sql` is the
+database half:
+
+- **Coaches and their calendars.** `coaches` holds Sergey and Nastia (Nastia is bookable only with
+  the `coach_nastia` flag, like her card). Each has one fixed room link (`room_url`, https), a
+  zone (Moscow by default), weekly rules (`coach_availability`) and per-date exceptions
+  (`coach_availability_exceptions`, `off` or `extra`). The address and the room link are never
+  public: the admin reads them through `admin_coaches()` and saves them through
+  `admin_save_coach()`; weekly rules are saved whole through `admin_set_availability()`.
+- **Slots and holds.** `available_slots(coach, option, from, to)` applies the rules, then the
+  exceptions, on a 30-minute grid, at least 15 minutes (`BOOKING.leadTimeMin`) and at most 60
+  days ahead, minus bookings and live holds. `hold_slot()` holds one for 20 minutes (one hold per
+  address; no row back means the slot is taken, and the person's previous hold stays);
+  `release_hold()` and `my_booking_hold()` go with it. Nastia's slots and hours are hidden from
+  anybody without her flag. An exclusion constraint makes
+  selling one slot twice impossible, even by hand.
+- **Payment.** `prodamus-webhook` (the option by amount) and `lava-webhook` (products
+  `session:half` / `session:hour`) record the payment, then call `apply_session_payment()`: the
+  address's hold for that option becomes an active booking with the coach's room link. A payment
+  after its hold expired still books when the slot is free (unless the client had already picked
+  another slot, or the admin ended the hold). A payment from an address already linked to the
+  account (`payment_emails`) finds the hold made under the account's own address. Anything else —
+  an unknown address, the wrong length, the slot gone — books nothing, stays unapplied in the
+  ledger, and the owner's «Онлайн-тренировки» topic gets «Оплата занятия без брони» with the
+  reason. When the client then claims that payment by its order number («Оплатил(а) с другой
+  почты?», `claim_payment()`), the claim confirms their hold.
+- **Changes.** `move_my_booking()` lets a client move a session 24 hours or more before it, into a
+  free slot. There is no self-cancel and no refund. The admin moves (`admin_move_booking`, any
+  future time that does not overlap) and cancels (`admin_cancel_booking`).
+- **Messages.** The client's bot gets `session_confirmed`, reminders a day and an hour before,
+  `session_moved` and `session_cancelled`; reminders for an old time are dropped on a move.
+
+**To turn it on:** apply **`0055_booking_core.sql`** (after 0054), then run **`deploy-payments`**,
+**`deploy-lava`** and **`deploy-notify`**. A webhook deployed before 0055 is applied keeps the old
+behaviour (the session is recorded, the coach agrees the time) — it sees `PGRST202` and falls
+back. Then each coach's room link and availability are entered in the admin. Until the booking
+screen ships (B2), nothing creates holds, so the payment links keep working as before: a session
+paid with no hold arrives in the channel as «Оплата занятия без брони».
+
+Google rows (`google-calendar-sync`) stay valid and still block Sergey's time while the sync runs.
+
 ## 7.10 What is still only in Russian
 
 Everything written ahead of time is bilingual and the build says so: the interface dictionaries are

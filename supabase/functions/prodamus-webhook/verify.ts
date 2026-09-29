@@ -166,6 +166,15 @@ export function routeAmount(
   return { kind: 'unknown' };
 }
 
+/**
+ * The booking option a payment confirms (0055, `apply_session_payment`), or null when the amount
+ * is not a session price. The option picks which of the payer's holds the money is for: half an
+ * hour paid while an hour is held confirms nothing, and the owner is told.
+ */
+export function sessionOptionOf(route: ProdamusRoute): 'half' | 'hour' | null {
+  return route.kind === 'session' ? route.session : null;
+}
+
 /** Вид платежа в журнале (`payments.intent`). Незнакомая сумма пишется курсом — см. lava-webhook. */
 export function intentForRoute(route: ProdamusRoute): 'monthly' | 'annual' | 'session' | 'course' {
   if (route.kind === 'plan') return route.plan;

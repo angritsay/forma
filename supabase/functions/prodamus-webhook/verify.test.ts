@@ -11,6 +11,7 @@ import {
   readPayment,
   routeAmount,
   sessionForAmount,
+  sessionOptionOf,
   sign,
   signatureMatches,
 } from './verify';
@@ -178,13 +179,28 @@ describe('course prices', () => {
   });
 });
 
-/* Обработчик здесь не запускается (`Deno.serve`); ветки 0043 проверяются по тексту. */
+/* Обработчик здесь не запускается (`Deno.serve`); ветки 0043 и 0055 проверяются по тексту. */
 describe('index.ts', () => {
   const src = readFileSync(new URL('./index.ts', import.meta.url), 'utf8');
   const branch = (marker: string) => src.slice(src.indexOf(marker), src.indexOf(marker) + 400);
 
-  it('records a paid session as applied', () => {
-    expect(branch("if (route.kind === 'session')")).toContain('await record(true)');
+  /*
+   * 0055: a session payment confirms the payer's hold. It is recorded unapplied first (the RPC
+   * marks it applied when it books), and it never reaches the course branch.
+   */
+  it('records a session, then confirms its hold, before any course is applied', () => {
+    const session = src.indexOf('if (option) {');
+    expect(session).toBeGreaterThan(0);
+    expect(session).toBeLessThan(src.indexOf("rpc('apply_course_payment'"));
+    const body = src.slice(session, src.indexOf("rpc('apply_course_payment'"));
+    expect(body.indexOf('await record(false)')).toBeGreaterThan(0);
+    expect(body.indexOf('await record(false)')).toBeLessThan(
+      body.indexOf("rpc('apply_session_payment'"),
+    );
+    expect(body).toContain('p_option: option');
+    // The ledger row's id, so a payment without an order number still lands on its booking.
+    expect(body).toContain('const paymentId = await record(false)');
+    expect(body).toContain('p_payment_id: paymentId');
   });
 
   it('stops an unknown amount before any course is applied', () => {
@@ -192,5 +208,35 @@ describe('index.ts', () => {
     expect(unknown).toBeGreaterThan(0);
     expect(unknown).toBeLessThan(src.indexOf("rpc('apply_course_payment'"));
     expect(branch("if (route.kind === 'unknown')")).toContain('await record(false)');
+  });
+});
+
+/*
+ * The session branch of the webhook (0055): which hold a payment confirms is decided by the
+ * option the amount names, so every option the booking screen sells must be reachable by its own
+ * price, and nothing else may name one.
+ */
+describe('sessionOptionOf', () => {
+  const prices = {
+    plans: { monthly: 1990, annual: 7990 },
+    sessions: { half: 2500, hour: 3500 },
+    courses: [2990, 3990, 4990],
+  };
+
+  it('names the option for a session price, and nothing for anything else', () => {
+    expect(sessionOptionOf(routeAmount('2500.00', prices))).toBe('half');
+    expect(sessionOptionOf(routeAmount('3500', prices))).toBe('hour');
+    expect(sessionOptionOf(routeAmount('1990', prices))).toBeNull();
+    expect(sessionOptionOf(routeAmount('3990', prices))).toBeNull();
+    expect(sessionOptionOf(routeAmount('100', prices))).toBeNull();
+    expect(sessionOptionOf(routeAmount(undefined, prices))).toBeNull();
+  });
+
+  it('reaches every option the booking screen sells, by its own price', () => {
+    for (const option of BOOKING.options) {
+      expect(sessionOptionOf(routeAmount(String(option.price.rub), prices)), option.id).toBe(
+        option.id,
+      );
+    }
   });
 });
