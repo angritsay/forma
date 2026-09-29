@@ -122,7 +122,11 @@ export function WorkTimerStep({
 
       <div className="flex flex-col gap-2">
         <StepHeading
-          eyebrow={step.totalSets > 1 ? setLabel(t, format, step.set, step.totalSets) : undefined}
+          eyebrow={
+            step.totalSets > 1
+              ? setLabel(t, format, step.set, step.totalSets, step.round)
+              : undefined
+          }
           title={exerciseName(step.exerciseId, locale)}
         />
         {facts.length > 0 ? (

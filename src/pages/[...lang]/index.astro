@@ -44,7 +44,12 @@ import Steps from '@/components/landing/Steps.astro';
 import StickyStart from '@/components/landing/StickyStart.astro';
 import TogetherLink from '@/components/landing/TogetherLink.astro';
 import ClubSection from '@/components/landing/club/ClubSection.astro';
-import { buildDemo, DEMO_COURSE_ID, firstWorkoutFacts } from '@/components/landing/demo';
+import {
+  buildDemo,
+  DEMO_COURSE_ID,
+  firstWorkoutFacts,
+  firstWorkoutIntro,
+} from '@/components/landing/demo';
 import { ADAPTATION, CHOICE_VOLUME } from '@/lib/training/constants';
 import { courseHref, coursePath } from '@/components/landing/courseHelpers';
 import { faqLd, itemListLd, organizationLd, websiteLd } from '@/components/landing/jsonld';
@@ -222,12 +227,7 @@ const jsonLd = [
     n={1}
     eyebrow={t(locale, 'landing.firstEyebrow')}
     title={t(locale, 'landing.firstTitle')}
-    intro={facts
-      ? t(locale, 'landing.firstIntro', {
-          work: t(locale, 'common.minutesShort', { n: facts.workMinutes }),
-          total: facts.totalMinutes,
-        })
-      : undefined}
+    intro={facts ? firstWorkoutIntro(locale, facts) : undefined}
   >
     <FirstWorkoutPhones locale={locale} />
 

@@ -69,12 +69,8 @@ const ANNOTATIONS = {
       label: '1',
       messages: [201],
       alternatives: [80, 198, 199],
-      flags: [
-        l(
-          'Сколько циклов по 4 минуты? Приложение играет один цикл: три минуты работы (отжимания, приседания, «жук»), и на этом основная часть заканчивается — около 3 минут работы. В канале приложена схема таймера, её в экспорте нет. Нужно два-три цикла?',
-          'How many 4-minute cycles? The app plays one: three working minutes (push-ups, squats, dead bugs) and the main part ends — about 3 minutes of work. The channel post had a timer picture that is not in the export. Should it be two or three cycles?',
-        ),
-      ],
+      // Answered by the owner on 29 September: three rounds, a rest minute between them.
+      flags: [],
     },
     w_s02_emom: {
       label: '2',
@@ -82,8 +78,8 @@ const ANNOTATIONS = {
       alternatives: [84],
       flags: [
         l(
-          'Тот же вопрос, что в первой: сколько циклов по 4 минуты? Сейчас один. Диапазоны в подсказках — твои из сообщения 207: обратные отжимания 10–20, выпады 10–18, «жук» 10–16; «как написано» по 12.',
-          'Same question as workout 1: how many 4-minute cycles? One today. The ranges in the notes are yours from message 207: dips 10–20, lunges 10–18, dead bugs 10–16; authored at 12 each.',
+          'Три круга по 4 минуты, как в первой. Диапазоны в подсказках — твои из сообщения 207: обратные отжимания 10–20, выпады 10–18, «жук» 10–16; «как написано» по 12.',
+          'Three 4-minute rounds, as in workout 1. The ranges in the notes are yours from message 207: dips 10–20, lunges 10–18, dead bugs 10–16; authored at 12 each.',
         ),
       ],
     },
@@ -1489,7 +1485,8 @@ const page = html`<title>${course.name.ru}</title>
             parts.push(t('cap') + ' ' + Math.round(b.durationSec / 60) + ' ' + t('minutesWindow'));
         } else if (b.format === 'circuit') parts.push(b.sets + ' ' + t('rounds'));
         else if (b.format === 'sets') parts.push(b.sets + ' ' + t('sets'));
-        if (b.restBetweenSec && b.format !== 'emom' && b.format !== 'amrap')
+        // An EMOM's rest between rounds is the coach's «4-я минута — отдых» (s01, s02): shown too.
+        if (b.restBetweenSec && b.format !== 'amrap')
           parts.push(t('restBetween') + ' ' + b.restBetweenSec + ' ' + t('sec'));
         parts.push('≈' + min(b.minutes) + ' ' + t('minutes'));
         return parts.join(' · ');

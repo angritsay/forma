@@ -20,8 +20,12 @@
  *   "start from the minimum" advice without a separate beginner column.
  * - Numbers that the difficulty choice moves (reps, AMRAP windows, caps, EMOM minutes, rounds)
  *   stay out of titles; texts quote them only for `scalable: false` blocks (the ladders and the
- *   two benchmarks), whose numbers are the same at every difficulty, and for workout 4's
- *   5 minutes (a one-item AMRAP is a max-reps block whose window never moves).
+ *   two benchmarks), whose numbers are the same at every difficulty, for workout 4's 5 minutes
+ *   (a one-item AMRAP is a max-reps block whose window never moves), and for the three rounds of
+ *   workouts 1 and 2 (an EMOM that rests between its rounds keeps them at every choice).
+ * - Workouts 1 and 2 are Sergey's «1-я минута … 4-я минута — отдых», three rounds: `rounds` is
+ *   the 9 work minutes and `restBetweenRoundsSec: 60` is the 4th minute, played between rounds
+ *   but not after the last — 3 + 1 + 3 + 1 + 3 = 11 minutes.
  * - His channel numbered two workouts "13"; the duplicate (a 2-minute max-squat test) is not
  *   part of his spec, so the course is exactly his 20 sessions, numbered 1–20.
  */
@@ -220,8 +224,8 @@ const WORKOUTS: WorkoutInput[] = [
     name: l('Отжимания, приседания, «жук»', 'Push-ups, squats, dead bugs'),
     focus: l('Знакомим тело с тренировками', 'Introducing the body to training'),
     description: l(
-      'Тренировка 1. Работаем по таймеру: каждую минуту — новое упражнение, выполнил и до конца минуты отдыхаешь. 1-я минута — отжимания с колен, 2-я — приседания, 3-я — «мёртвый жук», 4-я — отдых. Цель — включить в работу большие группы мышц и просто начать. Не спеши и не гонись за максимумом: техника и комфортная нагрузка важнее цифр. Первая тренировка не должна тебя уничтожить — она должна помочь захотеть прийти на вторую.',
-      'Workout 1. Work by the timer: every minute a new exercise — do it, then rest until the minute is up. Minute 1 knee push-ups, 2 squats, 3 dead bugs, 4 rest. The goal is to switch on the big muscle groups and simply begin. No rush, no maximum: technique and a comfortable load matter more than numbers.',
+      'Тренировка 1. Работаем по таймеру: каждую минуту — новое упражнение, выполнил и до конца минуты отдыхаешь. 1-я минута — отжимания с колен, 2-я — приседания, 3-я — «мёртвый жук», 4-я — отдых. Три таких круга, после третьего — сразу заминка. Цель — включить в работу большие группы мышц и просто начать. Не спеши и не гонись за максимумом: техника и комфортная нагрузка важнее цифр. Первая тренировка не должна тебя уничтожить — она должна помочь захотеть прийти на вторую.',
+      'Workout 1. Work by the timer: every minute a new exercise — do it, then rest until the minute is up. Minute 1 knee push-ups, 2 squats, 3 dead bugs, 4 rest. Three such rounds; after the third, straight to the cool-down. The goal is to switch on the big muscle groups and simply begin. No rush, no maximum: technique and a comfortable load matter more than numbers.',
     ),
     basePoints: 90,
     tags: ['emom', 'beginner', 'full_body'],
@@ -231,11 +235,12 @@ const WORKOUTS: WorkoutInput[] = [
         id: 's01_main',
         type: 'metcon',
         format: 'emom',
-        rounds: 3,
+        rounds: 9,
+        restBetweenRoundsSec: 60,
         title: l('По минутам', 'By the minute'),
         description: l(
-          'Каждую минуту — новое движение, потом отдых до конца минуты. После трёх минут — минута отдыха. Спокойный темп, аккуратная техника.',
-          'A new movement every minute, then rest until the minute is up. After the three minutes, take a rest minute. Easy pace, careful technique.',
+          'Три круга. 1-я минута — отжимания с колен, 2-я — приседания, 3-я — «мёртвый жук»: выполнил и до конца минуты отдыхаешь. 4-я минута — отдых. После третьего круга отдыха нет — сразу заминка. Спокойный темп, аккуратная техника.',
+          'Three rounds. Minute 1 knee push-ups, 2 squats, 3 dead bugs: do them, then rest until the minute is up. Minute 4 is rest. No rest after the third round — straight to the cool-down. Easy pace, careful technique.',
         ),
         items: [
           {
@@ -274,8 +279,8 @@ const WORKOUTS: WorkoutInput[] = [
     name: l('Обратные отжимания, выпады, «жук»', 'Dips, lunges, dead bugs'),
     focus: l('Трицепс, ноги и пресс', 'Triceps, legs and abs'),
     description: l(
-      'Тренировка 2. Та же схема, что в первой, но другие движения: обратные отжимания от стула, выпады назад и «жук». Каждую минуту новое упражнение, 4-я минута — отдых. Не гонимся за количеством: выбирай число, при котором последние повторения ощущаются, а техника остаётся хорошей.',
-      'Workout 2. Same scheme as workout 1 with new movements: chair dips, reverse lunges and dead bugs. A new exercise every minute, minute 4 is rest. Do not chase reps: pick a number where the last reps are felt but the technique holds.',
+      'Тренировка 2. Та же схема, что в первой, но другие движения: обратные отжимания от стула, выпады назад и «жук». Каждую минуту новое упражнение, 4-я минута — отдых, и так три круга. Не гонимся за количеством: выбирай число, при котором последние повторения ощущаются, а техника остаётся хорошей.',
+      'Workout 2. Same scheme as workout 1 with new movements: chair dips, reverse lunges and dead bugs. A new exercise every minute, minute 4 is rest, three rounds. Do not chase reps: pick a number where the last reps are felt but the technique holds.',
     ),
     basePoints: 90,
     tags: ['emom', 'beginner', 'full_body'],
@@ -285,11 +290,12 @@ const WORKOUTS: WorkoutInput[] = [
         id: 's02_main',
         type: 'metcon',
         format: 'emom',
-        rounds: 3,
+        rounds: 9,
+        restBetweenRoundsSec: 60,
         title: l('По минутам', 'By the minute'),
         description: l(
-          'Минута 1 — обратные отжимания, 2 — выпады, 3 — «жук», 4 — отдых. Выполнил движение — отдыхаешь до конца минуты.',
-          'Minute 1 dips, 2 lunges, 3 dead bugs, 4 rest. Do the movement, then rest until the minute is up.',
+          'Три круга. 1-я минута — обратные отжимания, 2-я — выпады, 3-я — «жук»: выполнил и до конца минуты отдыхаешь. 4-я минута — отдых. После третьего круга отдыха нет — сразу заминка.',
+          'Three rounds. Minute 1 dips, 2 lunges, 3 dead bugs: do them, then rest until the minute is up. Minute 4 is rest. No rest after the third round — straight to the cool-down.',
         ),
         items: [
           {

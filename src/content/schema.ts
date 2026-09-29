@@ -322,13 +322,27 @@ export const BlockSchema = z
     description: L10nSchema.optional(),
     /** Number of sets (format 'sets') or rounds (format 'circuit'). */
     sets: z.number().int().positive().optional(),
-    /** EMOM minutes, Tabata rounds (default 8), interval rounds. */
+    /**
+     * EMOM minutes, Tabata rounds (default 8), interval rounds.
+     *
+     * On an EMOM this is the total number of WORK minutes, never the number of passes: three
+     * movements over `rounds: 9` is three passes through them. A rest between the passes is
+     * `restBetweenRoundsSec`, not an extra minute here.
+     */
     rounds: z.number().int().positive().optional(),
     /** AMRAP total seconds, For-time cap seconds. */
     durationSec: z.number().int().positive().optional(),
     workSec: z.number().int().positive().optional(),
     restSec: z.number().int().nonnegative().optional(),
     restBetweenSetsSec: z.number().int().nonnegative().optional(),
+    /**
+     * Rest between rounds (circuit, for-time), between the items' Tabatas (tabata), and — on an
+     * EMOM — after every full pass through the items except the last. Sergey's workout 1 is
+     * «1-я минута — отжимания, 2-я — приседания, 3-я — "жук", 4-я — отдых», three times: that is
+     * `rounds: 9, restBetweenRoundsSec: 60`, 3 + 1 + 3 + 1 + 3 = 11 minutes, with no rest minute
+     * after the last pass. An EMOM that has one must run whole passes (`rounds` a multiple of the
+     * items), or the rest would land in the middle of one.
+     */
     restBetweenRoundsSec: z.number().int().nonnegative().optional(),
     /**
      * Rest after the whole block, before the next one starts (s14: two minutes between the 20s and
@@ -365,6 +379,11 @@ export const BlockSchema = z
         break;
       case 'emom':
         need(!!b.rounds, 'rounds (minutes) is required for emom');
+        if (b.rounds && (b.restBetweenRoundsSec ?? 0) > 0)
+          need(
+            b.rounds % b.items.length === 0,
+            'an emom with restBetweenRoundsSec needs rounds (minutes) in whole passes of its items',
+          );
         break;
       case 'tabata':
       case 'interval':

@@ -72,7 +72,8 @@ export const landing = {
   // Home, 01: workout 1.
   firstEyebrow: 'Workout 1',
   firstTitle: 'Here it is — workout 1',
-  // {work} is the engine's minutes of work («3 min»), never typed by hand.
+  // {work} is the engine's working minutes («9 min», the rest minutes between rounds left out),
+  // {total} the whole workout with the warm-up; never typed by hand.
   firstIntro:
     'On a timer: a new movement every minute, {work} of work in all. Before and after, a warm-up and a cool-down — about {total} minutes with them.',
   firstQuote:

@@ -6,6 +6,7 @@ import { findExercise } from '@/content/catalogue';
 import type { Exercise, Workout } from '@/content/schema';
 import { plural, type TKey } from '@/i18n/index';
 import type { Translator } from '@/app/hooks/useT';
+import { blockEmomRounds } from '@/lib/training/player';
 import type { DifficultyChoice, PrescribedBlock, PrescribedItem } from '@/lib/training/types';
 
 export const DIFFICULTY_CHOICES: readonly DifficultyChoice[] = ['easier', 'normal', 'harder'];
@@ -47,7 +48,10 @@ function roundsLabel(tr: Translator, n: number): string {
   return `${n} ${word}`;
 }
 
-/** "Sets · 3 sets", "AMRAP · 6 min", "For time · 4 rounds · 12 min", "Tabata · 20s on / 10s off × 8". */
+/**
+ * "Sets · 3 sets", "AMRAP · 6 min", "For time · 4 rounds · 12 min", "EMOM · 3 rounds · 11 min",
+ * "Tabata · 20s on / 10s off × 8".
+ */
 export function blockMetaLabel(tr: Translator, block: PrescribedBlock): string {
   const format = tr.t(`training.format_${block.format}`);
   switch (block.format) {
@@ -65,8 +69,17 @@ export function blockMetaLabel(tr: Translator, block: PrescribedBlock): string {
         : '';
       return `${format} · ${roundsLabel(tr, block.sets)}${cap}`;
     }
-    case 'emom':
+    case 'emom': {
+      // With a rest between passes, «EMOM · 3 круга · 11 мин»: the minutes are the whole clock,
+      // rests included, not the work minutes the block counts.
+      const passes = blockEmomRounds(block);
+      if (passes) {
+        return `${format} · ${roundsLabel(tr, passes.rounds)} · ${tr.t('app.nodeBlockMinutes', {
+          n: Math.round(passes.totalSec / 60),
+        })}`;
+      }
       return `${format} · ${tr.t('app.nodeBlockMinutes', { n: block.sets })}`;
+    }
     case 'tabata':
     case 'interval':
       return `${format} · ${tr.t('app.nodeBlockTabata', {

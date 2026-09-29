@@ -11,6 +11,7 @@ import { formatNumber, l, plural, t } from '@/i18n/index';
 import { ADAPTATION } from '@/lib/training/constants';
 import {
   adaptScale,
+  blockEmomRounds,
   estimateDuration,
   estimateTrainingDuration,
   estimatePoints,
@@ -98,8 +99,18 @@ function blockMeta(locale: Locale, b: PrescribedBlock): string {
       return `${format} · ${t(locale, 'landing.blockMinutes', {
         n: Math.round((b.durationSec ?? b.estimatedSec) / 60),
       })}`;
-    case 'emom':
+    case 'emom': {
+      // With a rest between passes: «3 круга · 11 мин», the minutes being the whole clock.
+      const passes = blockEmomRounds(b);
+      if (passes) {
+        return `${format} · ${countLabel(locale, 'round', passes.rounds)} · ${t(
+          locale,
+          'landing.blockMinutes',
+          { n: Math.round(passes.totalSec / 60) },
+        )}`;
+      }
       return `${format} · ${t(locale, 'landing.blockMinutes', { n: b.sets })}`;
+    }
     case 'tabata':
     case 'interval':
       return `${format} · ${t(locale, 'landing.blockTabata', {
@@ -235,7 +246,10 @@ export interface FirstWorkoutFacts {
   /** «Тренировка 1» and its real subtitle, «По таймеру, 3 движения». */
   nodeTitle: string;
   nodeSubtitle: string;
-  /** Minutes of work, warm-up and cool-down excluded: the engine's estimate, whole minutes. */
+  /**
+   * The training blocks' clock, warm-up and cool-down excluded: the engine's estimate, whole
+   * minutes. It runs the rest minutes between rounds too, so it is not the minutes of work.
+   */
   workMinutes: number;
   /**
    * The whole workout, warm-up and cool-down included: `estimateDuration`, whole minutes. An EMOM
@@ -249,9 +263,26 @@ export interface FirstWorkoutFacts {
    * minutes. The copy says «круг» only as many times as this.
    */
   cycles: number;
+  /**
+   * The player's «Минута 1 из N»: the main block's prescribed work minutes. Not `workMinutes`,
+   * which also holds the rest minute between rounds (s01 is 9 work minutes over an 11-minute clock).
+   */
+  playerMinutes: number;
   moves: FirstWorkoutMove[];
   /** What «Легко» does to the next workout, in whole percent (+5): `ADAPTATION.easyDelta`. */
   easyDeltaPercent: number;
+}
+
+/**
+ * The «Тренировка 1» section's intro sentence. Its «минут работы» is {@link
+ * FirstWorkoutFacts.playerMinutes}, the minutes something is done, and not `workMinutes`, whose
+ * clock also runs the rest minutes between rounds.
+ */
+export function firstWorkoutIntro(locale: Locale, facts: FirstWorkoutFacts): string {
+  return t(locale, 'landing.firstIntro', {
+    work: t(locale, 'common.minutesShort', { n: facts.playerMinutes }),
+    total: facts.totalMinutes,
+  });
 }
 
 /**
@@ -296,6 +327,7 @@ export function firstWorkoutFacts(locale: Locale, course?: Course): FirstWorkout
     workMinutes,
     totalMinutes,
     cycles,
+    playerMinutes: Math.max(1, mainPrescribed?.sets ?? movements),
     moves: main.items.map((it) => {
       const ex = EXERCISE_BY_ID.get(it.exerciseId);
       return {

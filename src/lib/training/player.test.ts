@@ -7,7 +7,7 @@ import {
   profile,
   workout,
 } from './fixtures.test-helpers';
-import { amrapExpectedRounds, buildPlayerSteps, warmupSkipIndex } from './player';
+import { amrapExpectedRounds, buildPlayerSteps, emomRounds, warmupSkipIndex } from './player';
 import { prescribeWorkout } from './prescribe';
 import { computeCompletion } from './session';
 import type { PlayerStep, PrescribeOptions, PrescribedWorkout } from './types';
@@ -114,6 +114,71 @@ describe('buildPlayerSteps — timed formats', () => {
     expect(w.map((x) => x.target)).toEqual([8, 12, 8, 12]);
     expect(w.map((x) => x.set)).toEqual([1, 2, 3, 4]);
     expect(rests(steps)).toHaveLength(0);
+    expect(w.every((x) => x.round === undefined)).toBe(true);
+  });
+
+  /*
+   * Sergey's «4-я минута — отдых»: a rest after every full pass through the items, never after
+   * the last one, and the minutes still count work only.
+   */
+  it('emom with restBetweenRoundsSec: a rest after each full pass but the last', () => {
+    const steps = stepsFor({
+      id: 'e',
+      format: 'emom',
+      rounds: 6,
+      restBetweenRoundsSec: 60,
+      items: [item('burpee', { reps: 8 }), item('air_squat', { reps: 12 })],
+    });
+    expect(kinds(steps)).toEqual([
+      'block_intro',
+      'work',
+      'work',
+      'rest',
+      'work',
+      'work',
+      'rest',
+      'work',
+      'work',
+      'done',
+    ]);
+    const r = rests(steps);
+    expect(r.map((x) => x.durationSec)).toEqual([60, 60]);
+    // The rest previews the first movement of the next pass.
+    expect(r.every((x) => x.nextExerciseId === 'burpee')).toBe(true);
+    const w = works(steps);
+    expect(w.map((x) => [x.set, x.totalSets])).toEqual([
+      [1, 6],
+      [2, 6],
+      [3, 6],
+      [4, 6],
+      [5, 6],
+      [6, 6],
+    ]);
+    expect(w.map((x) => x.round)).toEqual([
+      { n: 1, total: 3 },
+      { n: 1, total: 3 },
+      { n: 2, total: 3 },
+      { n: 2, total: 3 },
+      { n: 3, total: 3 },
+      { n: 3, total: 3 },
+    ]);
+  });
+
+  it('emomRounds: passes, rests and the whole clock', () => {
+    expect(emomRounds(9, 3, 60)).toEqual({
+      rounds: 3,
+      minutes: 9,
+      restSec: 60,
+      rests: 2,
+      totalSec: 11 * 60,
+    });
+    // One pass: nothing to rest between.
+    expect(emomRounds(3, 3, 60)).toMatchObject({ rounds: 1, rests: 0, totalSec: 180 });
+    // A partial last pass (a hand-made workout) still rests only after full ones.
+    expect(emomRounds(7, 3, 30)).toMatchObject({ rounds: 3, rests: 2, totalSec: 7 * 60 + 60 });
+    expect(emomRounds(9, 3, 0)).toBeNull();
+    expect(emomRounds(9, 3, undefined)).toBeNull();
+    expect(emomRounds(9, 0, 60)).toBeNull();
   });
 
   it('tabata: rounds × (work + rest) per item, trailing rest skipped', () => {

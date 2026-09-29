@@ -423,6 +423,10 @@ function effectiveSets(
       return clamp(base + fromScale + fromChoice, floor, base + MAX_SETS_ADDED);
     }
     case 'emom':
+      // An EMOM that rests between its passes is Sergey's «три круга» (s01, s02): the passes are
+      // the shape of the session, as a one- or two-round circuit's are (`holdsRounds`), so the
+      // choice moves the reps and never adds or drops a pass with its rest minute.
+      if ((block.restBetweenRoundsSec ?? 0) > 0) return block.rounds ?? 1;
       return emomMinutes(block.rounds ?? 1, block.items.length, scalable, choice);
     case 'tabata':
       return scaleRounds(block.rounds ?? TABATA_DEFAULT_ROUNDS, scalable, choice);

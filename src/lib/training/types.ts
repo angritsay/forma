@@ -256,6 +256,11 @@ export type PlayerStep =
       /** 1-based set/round/minute index within the block. */
       set: number;
       totalSets: number;
+      /**
+       * An EMOM with a rest between its passes (`emomRounds`): which pass this minute is in, so
+       * the player can say «Круг 2 из 3» beside «Минута 4 из 9». Absent everywhere else.
+       */
+      round?: { n: number; total: number };
       mode: 'reps' | 'timer';
       /** Seconds for timer mode (tabata/interval/emom minute/seconds-based items). */
       durationSec?: number;

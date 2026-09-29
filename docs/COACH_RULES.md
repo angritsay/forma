@@ -179,8 +179,9 @@ tests at every difficulty. Keep sessions well under the cap; his target is 5–1
 Tracked on the review page (`scripts/content/review-course.mjs`, `ANNOTATIONS.start`) and in the
 PR; update both when he answers.
 
-- Workouts 1–2: how many 4-minute EMOM cycles? The app plays one (his timer picture is not in the
-  export).
+- Workouts 1–2: how many 4-minute EMOM cycles? Answered by the owner (29 September): three, with
+  the rest minute between rounds and none after the last — 3 + 1 + 3 + 1 + 3 = 11 minutes
+  (`rounds: 9, restBetweenRoundsSec: 60`).
 - Workout 3: the core pair's volume (sit-ups authored at 8 against his 10–20, then 30 dead bugs);
   the 2-minute rest after each pair standing in for "start every 2 minutes"; «Посложнее» adding a
   second pass of all three pairs.

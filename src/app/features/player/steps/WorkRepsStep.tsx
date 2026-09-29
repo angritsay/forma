@@ -59,7 +59,9 @@ export function WorkRepsStep({
   return (
     <div className="flex flex-col gap-4 md:flex-1">
       <StepHeading
-        eyebrow={step.totalSets > 1 ? setLabel(t, format, step.set, step.totalSets) : undefined}
+        eyebrow={
+          step.totalSets > 1 ? setLabel(t, format, step.set, step.totalSets, step.round) : undefined
+        }
         title={exerciseName(step.exerciseId, locale)}
       />
       <div className="flex flex-col items-center gap-1.5">

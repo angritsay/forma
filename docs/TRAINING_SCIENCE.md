@@ -202,7 +202,9 @@ below 2, unless authored with fewer), and the difficulty choice adds or removes 
 two blocks (floor of 1 set when the athlete chose `easier` — one honest set beats skipping the
 session). The two together may never add more than `MAX_SETS_ADDED` (2) on top of what was
 authored. This keeps per-set reps in the authored range instead of stretching one set to absurd
-lengths. EMOM minutes and Tabata / interval / for-time rounds move with the choice instead.
+lengths. EMOM minutes and Tabata / interval / for-time rounds move with the choice instead —
+except an EMOM that rests between its passes (workouts 1–2 of «Старт», three rounds): its passes
+are the session's shape and hold at every choice, so the choice moves its reps.
 
 The set change **compounds** with the scaled targets — it does not redistribute them. At the far
 ends the total volume therefore moves further than the scale alone: a three-set block at effective
@@ -338,7 +340,7 @@ there is no rest after the last set, the last Tabata round or the last interval.
 | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | sets / circuit | sets × (Σ item work + 8 s × items) + sets × Σ restAfter (all items but the last) + (sets − 1) × (rest between sets/rounds, or the last item's restAfter when there is none) |
 | amrap          | `durationSec` (70% work / 30% rest)                                                                                                                                         |
-| emom           | minutes × 60 (70% / 30%)                                                                                                                                                    |
+| emom           | minutes × 60 (70% / 30%) + (passes − 1) × rest between rounds, when the block has one (`emomRounds`; the rest minutes are rest in full)                                     |
 | tabata         | rounds × work × items + items × (rounds − 1) × rest + (items − 1) × max(rest between rounds, rest) — each item gets its own Tabata                                          |
 | interval       | rounds × work × items + (rounds × items − 1) × rest — items alternate every round                                                                                           |
 | fortime        | min(cap, rounds × Σ item work × 1.15 + (rounds − 1) × rest between rounds)                                                                                                  |
@@ -367,6 +369,8 @@ unknown. The result is an estimate for motivation and trend, not a measurement.
 - **sets / circuit:** per set → per item: `work` (`timer` for seconds, `reps` otherwise), `rest`
   after the item (`restAfterSec`) or between sets/rounds; no rest after the last set;
 - **emom:** one 60 s `timer` step per minute, items round-robin, `target` = reps of that item;
+  with `restBetweenRoundsSec`, a `rest` step after every full pass through the items except the
+  last (Sergey's «4-я минута — отдых»), and each work step carries its pass (`round`);
 - **tabata:** per item, rounds × (work + rest) without the trailing rest; a rest between items;
 - **interval:** items alternate every round, trailing rest skipped;
 - **amrap:** one `amrap` step with `expectedRounds = floor(duration / (Σ item seconds + 8 s × items))`, min 1

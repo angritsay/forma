@@ -88,6 +88,55 @@ export function amrapExpectedRounds(block: PrescribedBlock): number {
   return Math.max(1, Math.floor(duration / perRound));
 }
 
+/** The passes of an EMOM that rests between them — see `emomRounds`. */
+export interface EmomRounds {
+  /** Passes through the items (the last one may be partial on a hand-made workout). */
+  rounds: number;
+  /** Work minutes, as authored in `rounds` / prescribed in `sets`. */
+  minutes: number;
+  /** One rest between two passes. */
+  restSec: number;
+  /** Rests actually played: after every full pass but the last. */
+  rests: number;
+  /** Work minutes plus the rests — the clock the athlete lives through. */
+  totalSec: number;
+}
+
+/**
+ * An EMOM's passes when it rests between them, or null when it does not.
+ *
+ * `minutes` stays the number of work minutes (the meaning every other EMOM relies on); a rest of
+ * `restSec` follows each full pass through the `movements`, except the last — Sergey's «4-я
+ * минута — отдых», three times, is 3 + 1 + 3 + 1 + 3. The player, the estimate and every summary
+ * read the passes from here, so they cannot disagree about where the rest falls.
+ */
+export function emomRounds(
+  minutes: number | undefined,
+  movements: number,
+  restSec: number | undefined,
+): EmomRounds | null {
+  const m = Math.max(1, Math.floor(num(minutes, 1)));
+  const n = Math.floor(num(movements));
+  const rest = Math.max(0, num(restSec));
+  if (n < 1 || rest <= 0) return null;
+  const rests = Math.floor((m - 1) / n);
+  return {
+    rounds: Math.ceil(m / n),
+    minutes: m,
+    restSec: rest,
+    rests,
+    totalSec: m * 60 + rests * rest,
+  };
+}
+
+/** `emomRounds` of a prescribed block (null for any other format). */
+export function blockEmomRounds(
+  block: Pick<PrescribedBlock, 'format' | 'sets' | 'items' | 'restBetweenRoundsSec'>,
+): EmomRounds | null {
+  if (block.format !== 'emom') return null;
+  return emomRounds(block.sets, block.items.length, block.restBetweenRoundsSec);
+}
+
 export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
   const steps: PlayerStep[] = [];
   /*
@@ -169,10 +218,18 @@ export function buildPlayerSteps(p: PrescribedWorkout): PlayerStep[] {
          * up front, in order, before its first minute.
          */
         items.forEach((item) => introduce(block, item.exerciseId));
+        // With a rest between passes (`emomRounds`): a rest step after every full pass but the
+        // last. The minutes keep counting work only — «Минута 4 из 9» is the first of pass 2.
+        const passes = blockEmomRounds(block);
         for (let m = 1; m <= minutes; m++) {
           const item = items[(m - 1) % n]!;
           introduce(block, item.exerciseId);
-          steps.push(workStep(block, item, m, minutes, { durationSec: 60, target: item.target }));
+          const step = workStep(block, item, m, minutes, { durationSec: 60, target: item.target });
+          if (passes) step.round = { n: Math.ceil(m / n), total: passes.rounds };
+          steps.push(step);
+          if (passes && m % n === 0 && m < minutes) {
+            steps.push(restStep(block, passes.restSec, items[0]));
+          }
         }
         break;
       }

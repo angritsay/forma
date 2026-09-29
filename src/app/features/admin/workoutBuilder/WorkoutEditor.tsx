@@ -7,8 +7,8 @@
  * It also has to *edit* workouts it did not write. A course imported from content brings EMOMs,
  * AMRAPs, for-time pieces and Tabatas, whose timing this form has no controls for — so every
  * section and item keeps the object it came from, and saving merges the edited fields over it
- * rather than rebuilding from the form's own state. Without that, opening a 12-minute EMOM and
- * changing one rep count would drop the twelve minutes.
+ * rather than rebuilding from the form's own state (see `draft.ts`). Without that, opening a
+ * 12-minute EMOM and changing one rep count would drop the twelve minutes.
  */
 import { clsx } from 'clsx';
 import { useEffect, useRef, useState } from 'react';
@@ -21,41 +21,18 @@ import { Select } from '@/components/ui/Select';
 import type { CustomWorkoutInput } from '@/lib/api/customWorkouts';
 import { AUTHORS } from '@content/site/authors';
 import type { ExerciseCatalogRow } from '@/lib/api/types';
-import type {
-  CustomSectionKind,
-  CustomWorkoutItem,
-  CustomWorkoutSection,
-  CustomWorkoutStructure,
-} from '@/lib/training/customWorkout';
-import type { ExerciseUnit } from '@/content/schema';
-import { findExercise } from '@/content/catalogue';
+import type { CustomSectionKind, CustomWorkoutStructure } from '@/lib/training/customWorkout';
 import type { TKey } from '@/i18n/index';
 import { LangTabs, useEditingLocale } from '@/app/features/admin/LangTabs';
 import { useT } from '@/app/hooks/useT';
 import { ExercisePickerSheet } from './ExercisePickerSheet';
-
-interface DraftItem {
-  key: string;
-  exerciseId: string;
-  nameRu: string;
-  unit: ExerciseUnit;
-  target: number;
-  perSide: boolean;
-  restAfterSec: number;
-  note: string;
-  noteEn: string;
-  /** The item this was read from, so fields the form has no control for survive a save. */
-  source?: CustomWorkoutItem;
-}
-
-interface DraftSection {
-  kind: CustomSectionKind;
-  sets: number;
-  restBetweenRoundsSec: number;
-  items: DraftItem[];
-  /** The section this was read from; see the note at the top of the file. */
-  source?: CustomWorkoutSection;
-}
+import {
+  draftToStructure,
+  emptySections,
+  nextKey,
+  type DraftItem,
+  type DraftSection,
+} from './draft';
 
 export interface WorkoutEditorProps {
   initialTitle?: string;
@@ -72,39 +49,11 @@ export interface WorkoutEditorProps {
   onDirtyChange?: (dirty: boolean) => void;
 }
 
-const KINDS: CustomSectionKind[] = ['warmup', 'main', 'cooldown'];
 const SECTION_KEY: Record<CustomSectionKind, TKey> = {
   warmup: 'app.playerSectionWarmup',
   main: 'app.playerSectionMain',
   cooldown: 'app.playerSectionCooldown',
 };
-
-let counter = 0;
-const nextKey = () => `it_${(counter += 1)}`;
-
-function emptySections(initial?: CustomWorkoutStructure): DraftSection[] {
-  return KINDS.map((kind) => {
-    const found = initial?.sections.find((s) => s.kind === kind);
-    return {
-      kind,
-      sets: found?.sets ?? 1,
-      restBetweenRoundsSec: found?.restBetweenRoundsSec ?? (kind === 'main' ? 60 : 0),
-      source: found,
-      items: (found?.items ?? []).map((it) => ({
-        key: nextKey(),
-        exerciseId: it.exerciseId,
-        nameRu: findExercise(it.exerciseId)?.name.ru ?? it.exerciseId,
-        unit: it.unit,
-        target: it.target,
-        perSide: it.perSide === true,
-        restAfterSec: it.restAfterSec,
-        note: it.note ?? '',
-        noteEn: it.noteEn ?? '',
-        source: it,
-      })),
-    };
-  });
-}
 
 const clampInt = (v: string, lo: number, hi: number, fallback: number) => {
   const n = Math.round(Number(v));
@@ -240,30 +189,7 @@ export function WorkoutEditor({
      * overwritten; a section's format, its EMOM minutes or AMRAP length, an item's load — anything
      * that came from an imported course and has no control here — is carried through untouched.
      */
-    const structure: CustomWorkoutStructure = {
-      sections: sections
-        .filter((s) => s.items.length > 0)
-        .map((s) => ({
-          ...s.source,
-          kind: s.kind,
-          format: s.source?.format ?? 'circuit',
-          sets: s.kind === 'main' ? Math.max(1, s.sets) : (s.source?.sets ?? 1),
-          restBetweenRoundsSec:
-            s.kind === 'main'
-              ? Math.max(0, s.restBetweenRoundsSec)
-              : (s.source?.restBetweenRoundsSec ?? 0),
-          items: s.items.map((it) => ({
-            ...it.source,
-            exerciseId: it.exerciseId,
-            unit: it.unit,
-            target: Math.max(1, it.target),
-            ...(it.perSide ? { perSide: true } : { perSide: undefined }),
-            restAfterSec: Math.max(0, it.restAfterSec),
-            ...(it.note.trim() ? { note: it.note.trim() } : { note: undefined }),
-            ...(it.noteEn.trim() ? { noteEn: it.noteEn.trim() } : { noteEn: undefined }),
-          })),
-        })),
-    };
+    const structure = draftToStructure(sections);
     onSave({
       title: title.trim(),
       authorSlug: authorSlug || null,
