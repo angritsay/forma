@@ -4,9 +4,7 @@ export const landing = {
   navCourses: 'Courses',
   navExercises: 'Exercises',
   navGuides: 'Guides',
-  navAbout: 'About',
   navSubscribe: 'Club',
-  navApp: 'Open app',
   navHome: 'Home',
   navContact: 'Contact',
   navMenu: 'Menu',
@@ -22,6 +20,13 @@ export const landing = {
   footerProduct: 'Product',
   footerLegal: 'Legal',
   footerReach: 'Get in touch',
+  // Shell v2 (PR 2): short nav items, sign-in, Telegram, the line under the mark in the footer.
+  navCourse: 'Course',
+  navCoach: 'Coach',
+  navTogether: 'Together',
+  navSignIn: 'Sign in',
+  openTelegram: 'Open in Telegram',
+  footerTagline: 'Home CrossFit in small steps.',
 
   // Plural words
   courseWordOne: 'course',
@@ -44,59 +49,66 @@ export const landing = {
   avgSession: '~{n} min',
   priceFree: 'Free',
 
-  // Home: SEO
-  homeTitle: 'Forma — home CrossFit that adapts to you',
+  // Home: SEO. The title already names Forma, so no suffix is added.
+  homeTitle: 'Forma — home CrossFit: your first workout is free',
   homeDescription:
-    'Home CrossFit with coach Sergey Titov: the no-equipment Start course, a club with one small task a day, and the coach on hand in Telegram.',
+    'Home CrossFit from coach Sergey Titov: short workouts with no jumping, and the load adapts to you. The first one is free, no card needed.',
 
-  // Home: hero
-  heroTitle: 'Home CrossFit that adapts to you',
-  // One line under the headline; the facts it used to carry are the pills below it.
-  heroSubtitle: 'Courses for home training, with or without equipment — the load adapts to you.',
-  // The home page’s main button: not “look” but “do”.
-  heroCtaFree: 'Train for free',
-  heroCtaCourses: 'Choose a course',
+  // Home: hero. The key word is «today»; the thin part is «Your first workout —».
+  heroEyebrow: 'Coach — Sergey Titov',
+  heroTitle: 'Home CrossFit. Your first workout — today',
+  heroThin: 'Your first workout —',
+  heroSubtitle:
+    'Small steps: 13–20 minutes with the warm-up, just a chair and a mat. Sergey shows every movement on video, and the load adapts after each workout. The first one is free, no card.',
+  heroChipFree: 'The first one is free',
+  heroChipTime: '13–20 minutes',
+  heroChipNoKit: 'No equipment',
+  heroChipVideo: 'The coach’s video for every move',
+  heroChipNoJumps: 'No jumping',
+  heroSignIn: 'Already training? Sign in',
   heroCtaApp: 'Open app',
-  heroTileTop: 'Adaptive load',
   chipCourses: '{n} {word}',
-  chipLifetime: 'Lifetime access',
-  chipAdaptive: 'Adapts to you',
-  chipHome: 'At home, with or without equipment',
-  chipVideo: 'Video for every exercise',
 
-  // Home: how it works
-  howEyebrow: 'How it works',
-  howTitle: 'Three steps to your first workout',
-  howStep1Title: 'Pick a course',
-  howStep1Text: 'The coach’s program in order: twenty workouts at your own pace.',
-  howStep2Title: 'Enter your email',
-  howStep2Text: 'No passwords: your email on the course page, and the course is yours for good.',
-  howStep3Title: 'Log in with a code and train',
-  howStep3Text: 'Enter the code from the email and go: the path, the timer, technique cues.',
+  // Home, 01: workout 1.
+  firstEyebrow: 'Workout 1',
+  firstTitle: 'Here it is — workout 1',
+  // {work} is the engine's minutes of work («3 min»), never typed by hand.
+  firstIntro:
+    'On a timer: a new movement every minute, {work} of work in all. Before and after, a warm-up and a cool-down — about {total} minutes with them.',
+  firstQuote:
+    'Your first workout should not wipe you out — it should make you want to come back for the second.',
+  firstCourseTag: 'First workout free',
+  firstCoursePrice: '{price} for life · a week of the club as a gift',
+  firstCourseLine:
+    'Workout 1 opens the {course} course: 20 workouts, 4 blocks of 5, at your own pace.',
+  firstCourseMore: 'Course programme',
+  firstCta: 'Do workout 1',
 
-  // Home: courses
-  resultsEyebrow: 'Results',
-  resultsTitle: 'Before and after',
-  // Deliberately does not claim these came from the courses on this page. They are Sergey's
-  // one-to-one clients; saying otherwise would be a claim we cannot substantiate.
-  resultsIntro:
-    'People Sergey has coached. Every photograph is published with that person’s permission.',
-  resultsBefore: 'Before',
-  resultsAfter: 'After',
-  coursesEyebrow: 'Courses',
-  coursesTitle: 'Pick your program',
-  coursesIntro:
-    'The coach’s program in order, with the load fitted to you. Buy once, keep forever.',
-  coursesAll: 'All courses',
-  cardView: 'View course',
-  /* The ticket's kicker: what kind of thing this is («Course · Beginner»), as in the app. */
-  cardKicker: 'Course',
+  // Home, 02: together from Monday. No «join as a pair, get an hour» promise.
+  togetherEyebrow: 'Together from Monday',
+  togetherTitle: 'Bring someone along — start on Monday',
+  togetherIntro:
+    'Starting alone is easy to put off; with someone else, you would rather not let them down. Take the link right here, no sign-up.',
+  togetherLinkLabel: 'A link to send',
+  togetherLinkHint: 'Your friend opens this same page — and sees the same three steps.',
+  togetherPersonal:
+    'A personal link is made in the app: if someone pays for the club through it, you both get +30 days of the club.',
+  togetherPersonalCta: 'Make the link personal',
+  togetherNoDiscount: 'No discount — just days, and a partner.',
+  togetherStep1Title: 'Send the link',
+  togetherStep1Text:
+    'Copy it here and send it to a friend — on Telegram, WhatsApp or wherever suits.',
+  togetherStep2Title: 'Monday — workout 1',
+  togetherStep2Text: 'Each of you at home. Free, about {total} minutes.',
+  togetherStep3Title: 'Then — together in the club',
+  togetherStep3Text:
+    'If you like: the club by subscription, one board for the two of you, and the pair on top on Sunday gets an hour with the coach each.',
 
-  // Home: adaptive load demo
-  adaptEyebrow: 'Adaptive load',
-  adaptTitle: 'Every workout comes in three versions. The app tells you which one is yours',
+  // Home, 03: the load follows you (DifficultyDemo).
+  adaptEyebrow: 'How the load adapts',
+  adaptTitle: 'The load follows you',
   adaptIntro:
-    'Before you start, choose Easier, As usual or Harder. Afterwards, one effort rating, and the next workout adjusts.',
+    'Before a workout you choose: easier, as usual or harder — the app suggests one. Afterwards, one rating, and the next shifts by a few percent. No max-effort grinding.',
   adaptWorkoutLabel: 'Workout from the {course} course: {workout}',
   adaptRecommended: 'Recommended',
   adaptPlanTitle: 'Your plan',
@@ -113,55 +125,64 @@ export const landing = {
   adaptNextTime: 'Next time',
   adaptScaleNow: 'Load scale: {scale}',
   adaptHowTitle: 'The rules behind it',
-  /* The engine's constants as pills, not as three sentences — see the Russian file. */
+  /* The engine's constants as pills — see the Russian file. */
+  adaptRuleEasy: 'Easy → {x}',
+  adaptRuleModerate: 'Just right → {x}',
+  adaptRuleHard: 'Too hard → {x}',
+  adaptRulePain: 'Something hurt → {x}',
   adaptRuleEasier: 'Easier · volume ×{x}',
   adaptRuleHarder: 'Harder · volume ×{x}',
-  adaptRulePoints: 'Points ×{easier} / ×{harder}',
-  // The two streak pills went with the streak itself: the course schedules rest days.
-  adaptRuleDeload: 'Deload · volume ×{x}',
+  adaptRow1Title: 'The start — five questions',
+  adaptRow1Text: 'No max-effort tests. A check after the second workout, {n} minutes.',
+  adaptRow2Title: 'Sore spots are spared',
+  adaptRow2Text: 'Knees, back, shoulders, wrists: the movements change, not only the reps.',
+  adaptRow3Title: 'A missed day breaks nothing',
+  adaptRow3Text: 'The course counts workouts, not days in a row.',
+  adaptCta: 'Try it on workout 1',
 
-  // Home: path & motivation
-  pathEyebrow: 'Path & motivation',
-  pathTitle: 'Every week feels like a level in a game',
-  pathIntro: 'Twenty workouts come in order — you always see where you are.',
-  // «Streak» and «7,000 steps on rest days» stood here. Neither is in the app any more.
-  pathCountTitle: 'Workout count',
-  pathCountText: 'Every workout counts. A week off resets nothing — the number only goes up.',
-  pathBoardTitle: 'Leaderboard',
-  pathBoardText: 'Points from your workouts go into one leaderboard: this week and all time.',
-  pathYou: 'you',
-  pathWeekdays: 'M,T,W,T,F,S,S',
-  pathNodeDone: 'Done',
-  pathNodeCurrent: 'Up next',
-  pathNodeOpen: 'Open',
   pathNodeLocked: 'Locked',
+  cardView: 'View course',
+  /* The ticket's kicker: what kind of thing this is («Course · Beginner»), as in the app. */
+  cardKicker: 'Course',
 
-  // Home: inside a workout
-  insideEyebrow: 'Inside a workout',
-  insideTitle: 'Explain, show, time it',
-  insideIntro: 'The player walks you through every exercise: what, how, how much — then rest.',
-  insideStep1Title: 'Explain',
-  insideStep1Text: 'Technique cues and common mistakes before every exercise.',
-  insideStep2Title: 'Animate',
-  insideStep2Text: 'The figure shows the movement at tempo; where there is a video, it is here.',
-  insideStep3Title: 'Timer or reps',
-  insideStep3Text: 'Seconds count down on their own; you tick off reps with Done.',
-  insideStep4Title: 'Rest',
-  insideStep4Text: 'A countdown to the next exercise — skip it if you are ready.',
-  insideTimerLabel: 'Timer',
-  insideRepsLabel: 'Reps',
-  insideRestLabel: 'Rest',
+  // Home, 04: the Small Steps club. Title, lead and features are the app's keys (`app.club*`).
+  clubEyebrow: 'The club — to keep going',
+  clubSoloTitle: 'Solo or as a pair',
+  clubDuoPrize: 'In a duo the prize is an hour with the coach for each of the pair.',
+  clubBotTitle: 'Messages on Telegram',
+  clubBot:
+    'If you connect Telegram, the bot sends the task in the morning, reminds you in the evening if your streak is at risk, and sums up the week on Sunday evening. Messages can be switched off.',
+  clubFirstFree: 'Workout 1 first — it is free',
+  clubInvite: 'Bring someone along — +30 days',
 
-  // Home: coach
+  // Home, 05: coach.
   coachEyebrow: 'Coach',
+  coachTitle: 'Sergey Titov — half an hour or an hour online',
   coachCredentials: 'Credentials',
   coachMore: 'More about the coach',
   coachBook: 'Book a one-to-one',
   coachBookHint: 'Half an hour or an hour online · from {price} · in the app',
 
-  // Home: FAQ + CTA
+  // Home: before and after (caption: `app.clubPhotosClientsRow`).
+  // Deliberately does not claim these came from the courses on this page. They are Sergey's
+  // one-to-one clients; saying otherwise would be a claim we cannot substantiate.
+  resultsEyebrow: 'Sergey’s clients',
+  resultsTitle: 'Before and after — from one-to-one sessions',
+  resultsBefore: 'Before',
+  resultsAfter: 'After',
+
+  // Home, 06: prices.
+  pricesEyebrow: 'Prices',
+  pricesTitle: 'Starting is free',
+
+  // Home, 07: FAQ + the closing call.
   faqEyebrow: 'FAQ',
   faqTitle: 'Frequently asked questions',
+  homeCtaTitle: 'Workout 1 is waiting',
+  homeCtaText: 'About {total} minutes, a chair and a mat. Free, no card.',
+  homeCtaNote:
+    'The app runs in the browser, nothing to download — add it to your home screen and it opens with one tap.',
+  // The closing call on other pages (about, courses).
   ctaTitle: 'Start with the first workout',
   ctaText: 'Pick a course, enter your email and train at home at your own pace.',
   ctaPrimary: 'Choose a course',
@@ -356,4 +377,50 @@ export const landing = {
   notFoundText: 'This page does not exist or has moved.',
   notFoundHome: 'Go home',
   notFoundApp: 'Open app',
+
+  // Home v2 (PR 2): building blocks — start form, sticky bar, club, coach, prices.
+  startEmailLabel: 'Email',
+  startEmailPlaceholder: 'Your email — optional',
+  startCta: 'Start free',
+  startHint: 'We email you a code — no password, no card',
+  startEmailInvalid: 'Check the address — or leave the field empty',
+  shareCta: 'Bring someone along',
+  shareTitle: 'Forma — home CrossFit',
+  shareText:
+    'Shall we train together? Forma is home CrossFit in small steps from coach Sergey Titov. The first workout is free.',
+  copyLink: 'Copy the link',
+  copyLinkDone: 'Link copied',
+  stickyRegion: 'Quick start',
+  clubPriceMonth: '{price} / mo',
+  clubPriceYear: '{price} a year',
+  clubJoinYear: 'Join — {price} a year',
+  clubChargeShort: '{price} a year, one payment',
+  clubOr30: 'Or 30 days of access — {price}',
+  clubNoAutoRenew: 'No auto-renewal',
+  ticketsMinutes: '{n} minutes',
+  ticketsHalfCta: 'Choose half an hour',
+  ticketsHourCta: 'Choose an hour',
+  ticketsPickTime: 'Pay, then pick a time',
+  ticketsWrite: 'Pay, then write — the coach sets the time',
+  ticketsNote: 'No refunds — a session can be moved if you write at least 24 hours ahead.',
+  ladderLabel: 'Prices',
+  ladderFreeTitle: 'Workout 1',
+  ladderFreePrice: '{price} — no card, repeat it as often as you like',
+  ladderCourseTitle: 'The {course} course, yours for good',
+  ladderCourseNote: 'a week of the club as a gift',
+  ladderCourseCta: 'Buy the course',
+  ladderClubTitle: 'The club and the course',
+  ladderClubBadge: 'Best value',
+  ladderCoachTitle: 'The coach, one to one',
+  ladderCoachPrice: 'Half an hour — {half} · an hour — {hour}',
+  ladderCoachCta: 'Book the coach',
+  ladderFootnote:
+    'No auto-renewal: a paid period simply ends. The course and the club can be refunded within {days} days if fewer than {n} workouts are done.',
+  phonesLabel: 'Workout 1 in the app',
+  phonesPath: 'The course path',
+  phonesToday: 'today',
+  phonesPlayer: 'Player',
+  phonesMinute: 'Minute {n} of {total}',
+  phonesAfter: 'After the workout',
+  qrLabel: 'Open it on your phone — point the camera',
 } as const;

@@ -4,9 +4,7 @@ export const landing = {
   navCourses: 'Курсы',
   navExercises: 'Упражнения',
   navGuides: 'Гайды',
-  navAbout: 'О тренере',
   navSubscribe: 'Клуб',
-  navApp: 'Открыть приложение',
   navHome: 'Главная',
   navContact: 'Контакты',
   navMenu: 'Меню',
@@ -22,6 +20,13 @@ export const landing = {
   footerProduct: 'Продукт',
   footerLegal: 'Документы',
   footerReach: 'Связаться',
+  // Оболочка v2 (PR 2): короткие пункты навигации, вход, Telegram, строка под знаком в подвале.
+  navCourse: 'Курс',
+  navCoach: 'Тренер',
+  navTogether: 'Вместе',
+  navSignIn: 'Войти',
+  openTelegram: 'Открыть в Telegram',
+  footerTagline: 'Кроссфит дома маленькими шагами.',
 
   // Формы множественного числа
   courseWordOne: 'курс',
@@ -44,56 +49,66 @@ export const landing = {
   avgSession: '~{n} мин',
   priceFree: 'Бесплатно',
 
-  // Главная: SEO
-  homeTitle: 'Forma — кроссфит дома, который подстраивается под тебя',
+  // Главная: SEO. В заголовке уже есть «Forma», поэтому суффикс не добавляется.
+  homeTitle: 'Forma — кроссфит дома: первая тренировка бесплатно',
   homeDescription:
-    'Кроссфит дома с тренером Сергеем Титовым: курс «Форма с нуля» без оборудования, клуб с маленьким заданием на каждый день и тренер на связи в Telegram.',
+    'Домашний кроссфит от тренера Сергея Титова: короткие тренировки без прыжков, нагрузка подстраивается под тебя. Первая — бесплатно, без карты.',
 
-  // Главная: hero
-  heroTitle: 'Кроссфит дома, который подстраивается под тебя',
-  // One line under the headline; the facts it used to carry are the pills below it.
-  heroSubtitle: 'Курсы для дома, с оборудованием и без — нагрузка подстраивается под тебя.',
-  // Главная кнопка главной страницы: не «посмотри», а «сделай».
-  heroCtaFree: 'Тренироваться бесплатно',
-  heroCtaCourses: 'Выбрать курс',
+  // Главная: hero. Ключевое слово заголовка — «сегодня», тонкая часть — «Первая тренировка —».
+  heroEyebrow: 'Тренер — Сергей Титов',
+  heroTitle: 'Кроссфит дома. Первая тренировка — сегодня',
+  heroThin: 'Первая тренировка —',
+  heroSubtitle:
+    'Маленькими шагами: 13–20 минут вместе с разминкой, нужны только стул и коврик. Сергей показывает каждое движение на видео, а нагрузка подстраивается после каждой тренировки. Первая — бесплатно и без карты.',
+  heroChipFree: 'Первая — бесплатно',
+  heroChipTime: '13–20 минут',
+  heroChipNoKit: 'Без оборудования',
+  heroChipVideo: 'Видео тренера к каждому движению',
+  heroChipNoJumps: 'Без прыжков',
+  heroSignIn: 'Уже тренируешься? Войти',
   heroCtaApp: 'Открыть приложение',
-  heroTileTop: 'Адаптивная нагрузка',
   chipCourses: '{n} {word}',
-  chipLifetime: 'Пожизненный доступ',
-  chipAdaptive: 'Подстраивается под тебя',
-  chipHome: 'Дома, с оборудованием и без',
-  chipVideo: 'Видео к каждому упражнению',
 
-  // Главная: как это работает
-  howEyebrow: 'Как это работает',
-  howTitle: 'Три шага до первой тренировки',
-  howStep1Title: 'Выбери курс',
-  howStep1Text: 'Программа тренера по порядку: двадцать тренировок в своём темпе.',
-  howStep2Title: 'Оставь e-mail',
-  howStep2Text: 'Без паролей: почта на странице курса — и курс закреплён за тобой навсегда.',
-  howStep3Title: 'Войди по коду и тренируйся',
-  howStep3Text: 'Код из письма — и вперёд: путь по неделям, таймер, подсказки по технике.',
+  // Главная, 01: тренировка 1.
+  firstEyebrow: 'Тренировка 1',
+  firstTitle: 'Вот она — тренировка 1',
+  // {work} — минуты работы из движка («3 мин»), {total} — вся тренировка с разминкой; не набирать руками.
+  firstIntro:
+    'По таймеру: каждую минуту — новое движение, всего {work} работы. До и после — разминка и заминка, вместе с ними ~{total} минут.',
+  firstQuote:
+    'Первая тренировка не должна тебя уничтожить — она должна помочь захотеть прийти на вторую.',
+  firstCourseTag: 'Первая тренировка бесплатно',
+  firstCoursePrice: '{price} навсегда · неделя клуба в подарок',
+  firstCourseLine:
+    'Тренировка 1 — начало курса «{course}»: 20 тренировок, 4 блока по 5, в своём темпе.',
+  firstCourseMore: 'Программа курса',
+  firstCta: 'Сделать тренировку 1',
 
-  // Главная: курсы
-  resultsEyebrow: 'Результаты',
-  resultsTitle: 'До и после',
-  resultsIntro: 'Люди, которых тренировал Сергей. Каждая фотография опубликована с их разрешения.',
-  resultsBefore: 'До',
-  resultsAfter: 'После',
-  coursesEyebrow: 'Курсы',
-  coursesTitle: 'Выбери свою программу',
-  coursesIntro:
-    'Программа тренера по порядку, нагрузка под тебя. Купил один раз — доступ навсегда.',
-  coursesAll: 'Все курсы',
-  cardView: 'Открыть курс',
-  /* The ticket's kicker: what kind of thing this is («Курс · Начальный»), as in the app. */
-  cardKicker: 'Курс',
+  // Главная, 02: вместе с понедельника. Никаких обещаний «вступите вдвоём — получите час».
+  togetherEyebrow: 'Вместе с понедельника',
+  togetherTitle: 'Позови с собой — начните в понедельник',
+  togetherIntro:
+    'Начинать в одиночку легко отложить, вдвоём — неудобно подвести. Ссылку можно взять прямо здесь, без регистрации.',
+  togetherLinkLabel: 'Ссылка, чтобы позвать',
+  togetherLinkHint: 'Друг откроет эту же страницу — и увидит те же три шага.',
+  togetherPersonal:
+    'Личная ссылка делается в приложении: если по ней оплатят клуб, вам обоим — по +30 дней клуба.',
+  togetherPersonalCta: 'Сделать ссылку личной',
+  togetherNoDiscount: 'Скидки нет — есть дни и пара.',
+  togetherStep1Title: 'Отправь ссылку',
+  togetherStep1Text:
+    'Скопируй её здесь и пришли подруге или другу — в Telegram, WhatsApp или куда удобно.',
+  togetherStep2Title: 'В понедельник — тренировка 1',
+  togetherStep2Text: 'Каждый у себя дома. Бесплатно, ~{total} минут.',
+  togetherStep3Title: 'Дальше — вместе в клубе',
+  togetherStep3Text:
+    'По желанию: клуб по подписке, одна таблица на двоих, а паре наверху в воскресенье — по часу с тренером каждому.',
 
-  // Главная: адаптивная нагрузка
-  adaptEyebrow: 'Адаптивная нагрузка',
-  adaptTitle: 'У каждой тренировки три версии. Приложение подскажет, какая твоя',
+  // Главная, 03: нагрузка идёт за тобой (демо DifficultyDemo).
+  adaptEyebrow: 'Как подстраивается нагрузка',
+  adaptTitle: 'Нагрузка идёт за тобой',
   adaptIntro:
-    'Перед стартом выбираешь: полегче, как обычно или посложнее. После — одна оценка усилия, и следующая подстроится.',
+    'Перед тренировкой выбираешь: полегче, как обычно или посложнее — приложение подскажет. После — одна оценка, и следующая сдвигается на несколько процентов. Максимум не выжимаем.',
   adaptWorkoutLabel: 'Тренировка из курса «{course}»: {workout}',
   adaptRecommended: 'Рекомендуем',
   adaptPlanTitle: 'Твой план',
@@ -111,62 +126,64 @@ export const landing = {
   adaptScaleNow: 'Коэффициент нагрузки: {scale}',
   adaptHowTitle: 'Правила, по которым это считается',
   /*
-   * The engine's constants (src/lib/training) as pills, not as three sentences: each is one fact,
-   * and a fact that is not a control is a pill (design/CHANGELOG.md §10). The numbers are filled
-   * in from src/lib/training/constants.ts by the home page, so the pills cannot drift from the
-   * engine again (they said ×0,85 / ×1,15 while the engine used ×0,9 / ×1,1).
+   * The engine's constants (src/lib/training) as pills. The numbers are filled in from
+   * `ADAPTATION` and `CHOICE_VOLUME` by the home page, so the pills cannot drift from the engine.
    */
+  adaptRuleEasy: 'Легко → {x}',
+  adaptRuleModerate: 'В самый раз → {x}',
+  adaptRuleHard: 'Слишком тяжело → {x}',
+  adaptRulePain: 'Что-то болело → {x}',
   adaptRuleEasier: 'Полегче · объём ×{x}',
   adaptRuleHarder: 'Посложнее · объём ×{x}',
-  adaptRulePoints: 'Очки ×{easier} / ×{harder}',
-  // Две пилюли за серию — «+10 % с 7 дней», «+20 % с 30» — ушли вместе с самой серией:
-  // курс планирует дни отдыха, и бонус за тренировки подряд платил за то, чтобы план нарушать.
-  adaptRuleDeload: 'Разгрузка · объём ×{x}',
+  adaptRow1Title: 'Старт — пять вопросов',
+  adaptRow1Text: 'Без тестов на максимум. Проверка — после второй тренировки, {n} мин.',
+  adaptRow2Title: 'Больное бережём',
+  adaptRow2Text: 'Колени, спина, плечи, запястья: меняются сами упражнения, а не только повторы.',
+  adaptRow3Title: 'Пропуск ничего не ломает',
+  adaptRow3Text: 'Курс считает тренировки, а не дни подряд.',
+  adaptCta: 'Попробовать на тренировке 1',
 
-  // Главная: путь и мотивация
-  pathEyebrow: 'Путь и мотивация',
-  pathTitle: 'Каждая неделя — как уровень в игре',
-  pathIntro: 'Двадцать тренировок идут по порядку — ты всегда видишь, где находишься.',
-  // Здесь были «Серия» и «7 000 шагов в день отдыха». Ни того ни другого в приложении нет:
-  // серия рвалась о собственные дни отдыха курса, а шаги Mini App прочитать неоткуда.
-  pathCountTitle: 'Счётчик тренировок',
-  pathCountText:
-    'Каждая тренировка идёт в счёт. Пропущенная неделя ничего не обнуляет — счётчик только растёт.',
-  pathBoardTitle: 'Таблица лидеров',
-  pathBoardText: 'Очки за тренировки идут в общий рейтинг — за неделю и за всё время.',
-  pathYou: 'ты',
-  pathWeekdays: 'П,В,С,Ч,П,С,В',
-  pathNodeDone: 'Сделано',
-  pathNodeCurrent: 'Следующая',
-  pathNodeOpen: 'Открыто',
   pathNodeLocked: 'Закрыто',
+  cardView: 'Открыть курс',
+  /* The ticket's kicker: what kind of thing this is («Курс · Начальный»), as in the app. */
+  cardKicker: 'Курс',
 
-  // Главная: внутри тренировки
-  insideEyebrow: 'Внутри тренировки',
-  insideTitle: 'Объяснили, показали, засекли',
-  insideIntro: 'Плеер ведёт по каждому упражнению: что это, как двигаться, сколько — и отдых.',
-  insideStep1Title: 'Объяснение',
-  insideStep1Text: 'Подсказки по технике и типичные ошибки перед каждым упражнением.',
-  insideStep2Title: 'Анимация',
-  insideStep2Text: 'Фигурка показывает движение в темпе; где есть видео — оно здесь.',
-  insideStep3Title: 'Таймер или повторы',
-  insideStep3Text: 'Секунды идут сами, повторы отмечаешь кнопкой «Готово».',
-  insideStep4Title: 'Отдых',
-  insideStep4Text: 'Обратный отсчёт до следующего упражнения — можно пропустить.',
-  insideTimerLabel: 'Таймер',
-  insideRepsLabel: 'Повторы',
-  insideRestLabel: 'Отдых',
+  // Главная, 04: клуб маленьких шагов. Заголовок, лид и фичи — ключи приложения (`app.club*`).
+  clubEyebrow: 'Клуб — чтобы не бросить',
+  clubSoloTitle: 'Соло или вдвоём',
+  clubDuoPrize: 'В дуо приз — час с тренером каждому из пары.',
+  clubBotTitle: 'Сообщения в Telegram',
+  clubBot:
+    'Если подключишь Telegram, бот пришлёт задание утром, напомнит вечером, если серия под угрозой, и подведёт итоги в воскресенье вечером. Сообщения можно выключить.',
+  clubFirstFree: 'Сначала тренировка 1 — бесплатно',
+  clubInvite: 'Позвать с собой — +30 дней',
 
-  // Главная: тренер
+  // Главная, 05: тренер.
   coachEyebrow: 'Тренер',
+  coachTitle: 'Сергей Титов — полчаса или час онлайн',
   coachCredentials: 'Образование и сертификаты',
   coachMore: 'Подробнее о тренере',
   coachBook: 'Записаться на занятие',
   coachBookHint: 'Полчаса или час онлайн · от {price} · в приложении',
 
-  // Главная: FAQ + CTA
+  // Главная: до и после (подпись — `app.clubPhotosClientsRow`).
+  resultsEyebrow: 'Ученики Сергея',
+  resultsTitle: 'До и после — с персональных занятий',
+  resultsBefore: 'До',
+  resultsAfter: 'После',
+
+  // Главная, 06: цены.
+  pricesEyebrow: 'Цены',
+  pricesTitle: 'Начать — бесплатно',
+
+  // Главная, 07: FAQ + финальный призыв.
   faqEyebrow: 'Вопросы',
   faqTitle: 'Частые вопросы',
+  homeCtaTitle: 'Тренировка 1 ждёт',
+  homeCtaText: '~{total} минут, стул и коврик. Бесплатно и без карты.',
+  homeCtaNote:
+    'Приложение работает в браузере, скачивать ничего не нужно — добавь его на экран «Домой», и оно откроется одним касанием.',
+  // Финальный призыв других страниц (about, courses).
   ctaTitle: 'Начни с первой тренировки',
   ctaText: 'Выбери курс, оставь e-mail — и тренируйся дома в своём темпе.',
   ctaPrimary: 'Выбрать курс',
@@ -372,4 +389,57 @@ export const landing = {
   notFoundText: 'Такой страницы нет или её адрес изменился.',
   notFoundHome: 'На главную',
   notFoundApp: 'Открыть приложение',
+
+  // Главная v2 (PR 2): строительные блоки — форма старта, липкая панель, клуб, тренер, цены.
+  // Форма старта (StartForm.tsx): почта необязательна, согласие — `app.authLegal` из приложения.
+  startEmailLabel: 'Почта',
+  startEmailPlaceholder: 'Твоя почта — необязательно',
+  startCta: 'Начать бесплатно',
+  startHint: 'Пришлём код на почту — без пароля и без карты',
+  startEmailInvalid: 'Проверь адрес — или оставь поле пустым',
+  // Позвать с собой: кнопка, текст для «Поделиться», копирование ссылки.
+  shareCta: 'Позвать с собой',
+  shareTitle: 'Forma — кроссфит дома',
+  shareText:
+    'Давай тренироваться вместе? Forma — кроссфит дома маленькими шагами от тренера Сергея Титова. Первая тренировка — бесплатно.',
+  copyLink: 'Скопировать ссылку',
+  copyLinkDone: 'Ссылка скопирована',
+  stickyRegion: 'Быстрый старт',
+  // Цена клуба: 666 ₽ только рядом с 7 990 ₽; на английском — только цена за год.
+  clubPriceMonth: '{price} / мес',
+  clubPriceYear: '{price} за год',
+  clubJoinYear: 'Вступить — {price} за год',
+  clubChargeShort: '{price} за год, одной оплатой',
+  clubOr30: 'Или доступ на 30 дней — {price}',
+  clubNoAutoRenew: 'Автосписаний нет',
+  // Занятия с тренером (SessionTickets.astro).
+  ticketsMinutes: '{n} минут',
+  ticketsHalfCta: 'Выбрать полчаса',
+  ticketsHourCta: 'Выбрать час',
+  ticketsPickTime: 'Оплати и выбери время',
+  ticketsWrite: 'Оплати и напиши — время поставит тренер',
+  ticketsNote: 'Возврата нет — занятие можно перенести, если написать не позднее чем за 24 часа.',
+  // Лестница цен (PriceLadder.astro).
+  ladderLabel: 'Цены',
+  ladderFreeTitle: 'Тренировка 1',
+  ladderFreePrice: '{price} — без карты, можно повторять',
+  ladderCourseTitle: 'Курс «{course}» навсегда',
+  ladderCourseNote: 'неделя клуба в подарок',
+  ladderCourseCta: 'Купить курс',
+  ladderClubTitle: 'Клуб и курс',
+  ladderClubBadge: 'Выгоднее',
+  ladderCoachTitle: 'Тренер один на один',
+  ladderCoachPrice: 'Полчаса — {half} · час — {hour}',
+  ladderCoachCta: 'Записаться к тренеру',
+  ladderFootnote:
+    'Автосписаний нет: оплаченный период просто заканчивается. Курс и клуб можно вернуть в течение {days} дней, если сделано меньше {n} тренировок.',
+  // Три телефона тренировки 1 (FirstWorkoutPhones.astro).
+  phonesLabel: 'Тренировка 1 в приложении',
+  phonesPath: 'Путь курса',
+  phonesToday: 'сегодня',
+  phonesPlayer: 'Плеер',
+  phonesMinute: 'Минута {n} из {total}',
+  phonesAfter: 'После тренировки',
+  // QR для десктопа (QrCode.astro).
+  qrLabel: 'Открой на телефоне — наведи камеру',
 } as const;

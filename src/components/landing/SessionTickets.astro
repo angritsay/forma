@@ -1,0 +1,97 @@
+---
+/**
+ * The coach's two lengths as tickets — half an hour and an hour — white on deep ciel.
+ *
+ * Deep ciel is the coach's card field (design/CHANGELOG.md §19): `--ciel-deep`, where white type
+ * reads at 5.26 and black on plain ciel read poorly on a phone. So the tickets are that field with
+ * white words, the product colour of the coach (§22: courses neon, club warm, coach ciel); no neon
+ * and no gradient here. The button on each is the white `plain` fill, the ticket's own action.
+ *
+ * Everything is read from `content/site/booking.ts`, the one place the business sells his time:
+ * the options in their order (cheapest first), each one's name, minutes, price for the locale and
+ * its own list of what fits — «полчаса» holds two promises, the hour those two and two more. No
+ * figure is typed here. The links go to the app's booking screen with the length preselected
+ * (`appHref('/book?len=half' | 'hour')`, PR 1's `?len`), never to a payment page, so no price and
+ * no referral code ever rides in a payment URL.
+ *
+ * Under each price the next step, which depends on whether that length has a slot page: with one,
+ * «Оплати и выбери время»; without one (the hour, today), «Оплати и напиши — время поставит
+ * тренер». Under both: the format and the lead time as section-level pills, as BookScreen shows
+ * them for the whole offer, and the owner's rule for the money — no refunds, a session can be
+ * moved if asked at least 24 hours ahead.
+ *
+ * Renders nothing while `BOOKING.enabled` is off.
+ */
+import type { Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { appHref } from '@/lib/util/paths';
+import { BOOKING } from '@content/site/booking';
+import { formatPrice } from '@content/site/pricing';
+import Button from './Button.astro';
+import Pill from './Pill.astro';
+
+interface Props {
+  locale: Locale;
+  /** Heading level of each ticket's name. */
+  headingLevel?: 'h3' | 'h4';
+  class?: string;
+}
+const { locale, headingLevel: Heading = 'h3', class: extra = '' } = Astro.props;
+
+const tickets = BOOKING.options.map((o) => ({
+  id: o.id,
+  name: l(o.name, locale),
+  minutes: t(locale, 'landing.ticketsMinutes', { n: o.durationMin }),
+  price: formatPrice(locale, o.price),
+  includes: o.includes.map((line) => l(line, locale)),
+  next: t(
+    locale,
+    o.scheduleUrl || BOOKING.scheduleUrl ? 'landing.ticketsPickTime' : 'landing.ticketsWrite',
+  ),
+  cta: t(locale, o.id === 'half' ? 'landing.ticketsHalfCta' : 'landing.ticketsHourCta'),
+  href: appHref(`/book?len=${o.id}`, { locale }),
+}));
+---
+
+{
+  BOOKING.enabled && (
+    <div class:list={['flex flex-col gap-5', extra]}>
+      <ul class="grid gap-4 sm:grid-cols-2">
+        {tickets.map((ticket) => (
+          <li class="flex flex-col gap-5 rounded-card bg-ciel-deep p-6 text-on-field">
+            <div class="flex flex-col gap-1">
+              <Heading class="font-display text-lg leading-snug">{ticket.name}</Heading>
+              <p class="text-[13px] text-on-field">{ticket.minutes}</p>
+            </div>
+            <p class="numeral text-4xl leading-none">{ticket.price}</p>
+            <ul class="flex flex-col gap-2 text-[14px] leading-snug">
+              {ticket.includes.map((line) => (
+                <li class="flex gap-2">
+                  <span class="glyph" aria-hidden="true">
+                    ✓
+                  </span>
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
+            <div class="mt-auto flex flex-col gap-2">
+              <p class="text-[13px] leading-snug text-on-field">{ticket.next}</p>
+              <Button href={ticket.href} variant="plain" class="w-full" data-app-link>
+                {ticket.cta}
+              </Button>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <ul class="flex flex-wrap gap-2">
+        <li class="flex max-w-full">
+          <Pill>{l(BOOKING.format, locale)}</Pill>
+        </li>
+        <li class="flex max-w-full">
+          <Pill>{t(locale, 'app.bookLeadTimePill', { n: BOOKING.leadTimeMin })}</Pill>
+        </li>
+      </ul>
+      <p class="text-[13px] leading-snug text-muted">{t(locale, 'landing.ticketsNote')}</p>
+    </div>
+  )
+}

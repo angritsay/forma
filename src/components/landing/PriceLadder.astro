@@ -1,0 +1,152 @@
+---
+/**
+ * Every price Forma charges, as one ladder in the order a person meets them: workout 1 for
+ * nothing, the course for good, the club with the course, the coach when needed. The same order
+ * wherever prices are listed (site synthesis §5), so a reader who has seen it once can find a step
+ * again.
+ *
+ * **No figure is typed here.** Workout 1 is zero by rule (0022, `firstTrainableNode`); the course
+ * is `course.price` from `content/courses/start.ts`; the club is `clubPriceLabels()` over
+ * `content/site/plans.ts`; the coach is `BOOKING.options` from `content/site/booking.ts`; the
+ * refund window and its limit are `PRICING`. Change a price in its file and the ladder follows.
+ *
+ * **The rules the ladder keeps.**
+ * - Neon on the first step only: it is the one main action of the section, «Начать бесплатно»
+ *   into workout 1. The course is the white `plain`, the coach `secondary`.
+ * - The club's step is the club's palette — the warm `Выгоднее` pill and the gradient button under
+ *   ink, marked `data-club-zone` so the sticky bar steps aside — and no neon (§17).
+ * - 666 never without 7 990: the club step prints `clubPriceLabels().charge` directly under the
+ *   headline, then «Автосписаний нет», then the 30-day alternative smaller. EN leads with the
+ *   year's `$` price and shows no monthly figure.
+ * - Links go to the app, the course page's order form and the club page's order form — never to a
+ *   payment page, so no price and no referral code rides in a payment URL. The club's button is
+ *   `data-club-join`, which the layout script reroutes through the app when a referral is pending.
+ */
+import { COURSE_BY_ID } from '@/content/registry';
+import type { Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { appHref, href } from '@/lib/util/paths';
+import { BOOKING } from '@content/site/booking';
+import { formatPrice, PRICING } from '@content/site/pricing';
+import Button from './Button.astro';
+import Pill from './Pill.astro';
+import { clubPriceLabels } from './club/clubPrice';
+import { courseHref } from './courseHelpers';
+import { DEMO_COURSE_ID } from './demo';
+
+interface Props {
+  locale: Locale;
+  class?: string;
+}
+const { locale, class: extra = '' } = Astro.props;
+
+const course = COURSE_BY_ID.get(DEMO_COURSE_ID);
+const club = clubPriceLabels(locale);
+const half = BOOKING.options.find((o) => o.id === 'half');
+const hour = BOOKING.options.find((o) => o.id === 'hour');
+const free = formatPrice(locale, { rub: 0, usd: 0 });
+---
+
+<div class:list={['flex flex-col gap-6', extra]}>
+  <ol class="flex flex-col" aria-label={t(locale, 'landing.ladderLabel')}>
+    <li
+      class="grid gap-4 border-t border-border py-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+    >
+      <div class="flex flex-col gap-1.5">
+        <h3 class="font-display text-lg">{t(locale, 'landing.ladderFreeTitle')}</h3>
+        <p class="text-[15px] leading-snug text-muted">
+          {t(locale, 'landing.ladderFreePrice', { price: free })}
+        </p>
+      </div>
+      <Button
+        href={appHref('/start', { locale })}
+        variant="primary"
+        data-goal="app_start"
+        data-app-link
+      >
+        {t(locale, 'landing.startCta')}
+      </Button>
+    </li>
+
+    {
+      course && (
+        <li class="grid gap-4 border-t border-border py-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+          <div class="flex flex-col gap-1.5">
+            <h3 class="font-display text-lg">
+              {t(locale, 'landing.ladderCourseTitle', {
+                course: l(course.shortName ?? course.name, locale),
+              })}
+            </h3>
+            <p class="text-[15px] leading-snug text-muted">
+              <span class="numeral text-text">{formatPrice(locale, course.price)}</span>
+              {` · ${t(locale, 'landing.ladderCourseNote')}`}
+            </p>
+          </div>
+          <Button href={`${courseHref(locale, course)}#order`} variant="plain">
+            {t(locale, 'landing.ladderCourseCta')}
+          </Button>
+        </li>
+      )
+    }
+
+    {
+      club && (
+        <li
+          data-club-zone
+          class="club-aurora-host glass-card-2 my-2 grid gap-4 overflow-hidden rounded-card border border-border-strong p-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+        >
+          <span class="club-aurora" aria-hidden="true" />
+          <div class="flex flex-col gap-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <h3 class="font-display text-lg">{t(locale, 'landing.ladderClubTitle')}</h3>
+              <Pill tone="warm" tilt="right">
+                {t(locale, 'landing.ladderClubBadge')}
+              </Pill>
+            </div>
+            <p class="numeral text-3xl leading-tight">{club.headline}</p>
+            <p class="text-[14px] leading-snug text-text">{club.charge}</p>
+            <p class="text-[13px] leading-snug text-muted">
+              {t(locale, 'landing.clubNoAutoRenew')}
+              {club.monthly && <span class="block text-muted-2">{club.monthly}</span>}
+            </p>
+          </div>
+          <Button
+            href={`${href(locale, '/subscribe/')}#order`}
+            variant="gradient"
+            data-club-join
+            data-goal="club_join"
+          >
+            {club.join}
+          </Button>
+        </li>
+      )
+    }
+
+    {
+      BOOKING.enabled && half && hour && (
+        <li class="grid gap-4 border-t border-border py-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+          <div class="flex flex-col gap-1.5">
+            <h3 class="font-display text-lg">{t(locale, 'landing.ladderCoachTitle')}</h3>
+            <p class="text-[15px] leading-snug text-muted">
+              {t(locale, 'landing.ladderCoachPrice', {
+                half: formatPrice(locale, half.price),
+                hour: formatPrice(locale, hour.price),
+              })}
+            </p>
+          </div>
+          <Button href={appHref('/book', { locale })} variant="secondary" data-app-link>
+            {t(locale, 'landing.ladderCoachCta')}
+          </Button>
+        </li>
+      )
+    }
+  </ol>
+  <p class="border-t border-border pt-5 text-[13px] leading-snug text-muted">
+    {
+      t(locale, 'landing.ladderFootnote', {
+        days: PRICING.refundDays,
+        n: PRICING.refundMaxCompletedWorkouts,
+      })
+    }
+  </p>
+</div>

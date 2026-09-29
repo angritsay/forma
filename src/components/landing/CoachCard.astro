@@ -20,8 +20,13 @@ interface Props {
   /** Compact = home section; full = /about hero. */
   variant?: 'compact' | 'full';
   moreHref?: string;
+  /**
+   * Draw the card's own «Записаться» button. The homepage turns it off: its coach section sells
+   * the sessions with `SessionTickets` under the card, and the page's neon belongs to workout 1.
+   */
+  book?: boolean;
 }
-const { locale, variant = 'compact', moreHref } = Astro.props;
+const { locale, variant = 'compact', moreHref, book = true } = Astro.props;
 const name = l(COACH.name, locale);
 const role = l(COACH.role, locale);
 const bio = l(COACH.bio, locale);
@@ -66,7 +71,8 @@ const bookHint = t(locale, 'landing.coachBookHint', {
     </span>
   </div>
   <div>
-    <p class="eyebrow">{role}</p>
+    {/* Body text, not `.eyebrow`: the role runs past 40 characters, eyebrows stay under 29. */}
+    <p class="text-sm text-muted">{role}</p>
     {
       variant === 'full' ? (
         <h1 class="display mt-3 text-4xl md:text-5xl">{name}</h1>
@@ -117,7 +123,7 @@ const bookHint = t(locale, 'landing.coachBookHint', {
       )
     }
     {
-      BOOKING.enabled && (
+      book && BOOKING.enabled && (
         /*
          * The booking's terms stay a line of type, not a pill. «Полчаса или час онлайн · от
          * 2 500 ₽ · в приложении» is three clauses of a sentence, and a pill is one line that

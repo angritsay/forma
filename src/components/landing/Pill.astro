@@ -33,6 +33,11 @@
  * of them — on `ciel` too (4.75), where the graphite would not. `tilt` leans a tag ±5–6°, the
  * hand-placed look of the owner's mockups; use it on one or two tags in a row, not all of them.
  *
+ * `warm` is the club's one filled pill — the prize, «Выгоднее» on the club's step of a price
+ * ladder — the twin of the kit's `warm` Pill (design/CHANGELOG.md §17): the warm half of the
+ * crossroads gradient (`.bg-warm`) under ink, ≥ 6.04 on every stop. It stands where `action`
+ * would stand anywhere else, because the club has no neon.
+ *
  * The neutral tones — `ghost`, `white`, `paper` — are glass (`.glass-tag`, design/CHANGELOG.md
  * §16): a frosted tint of the surface with a hairline, white words on it. `white` used to be a
  * white fill with blue words and `ghost` a bare white outline; on glass they share the material
@@ -61,7 +66,8 @@ interface Props extends HTMLAttributes<'span'> {
     | 'ciel'
     | 'sky'
     | 'white'
-    | 'ghost';
+    | 'ghost'
+    | 'warm';
   size?: 'sm' | 'md';
   /** Lean the tag: `left` −6°, `right` +5°. */
   tilt?: 'left' | 'right';
@@ -81,6 +87,7 @@ const TONE = {
   sky: 'border-transparent bg-accent text-on-accent',
   white: 'glass-tag border-on-field/80 text-on-field',
   ghost: 'glass-tag border-on-field/40 text-on-field',
+  warm: 'border-transparent bg-warm text-ink',
 } as const;
 
 const TILT = { left: '-rotate-6', right: 'rotate-5' } as const;

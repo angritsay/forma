@@ -7,18 +7,31 @@
  * #f4ff3f (17.3:1) — so a section asks for it once. `plain` is the white fill the primary used to
  * be, for a second strong action beside it; secondary is a raised surface behind a strong
  * hairline, ghost is text alone, danger an outline with red text. None of them ever takes the
- * programme colour, and none is ever a gradient. Heights 40 / 48 / 56; the label is sentence case at 14–15px
+ * programme colour. Heights 40 / 48 / 56; the label is sentence case at 14–15px
  * (`.control-label`), up from the 12–13px the tracked capitals forced. Hover drops to .85 opacity
  * or lightens one surface; press is a 2% scale.
+ *
+ * `gradient` is the club's main button and the one gradient a button may be — the twin of the
+ * kit's `gradient` variant (design/CHANGELOG.md §17): the *warm* half of the crossroads gradient
+ * (`--grad-warm`, `.bg-warm`) under ink, which clears 4.5 on every stop (`contrast-usage.test.ts`).
+ * The club has no neon, so inside a `data-club-zone` this is what the main action wears instead of
+ * `primary`; everywhere else it does not appear (`site-club-no-neon.test.ts`).
+ *
+ * A neon button marks itself `data-neon`, so the phone's sticky start bar (`StickyStart.astro`)
+ * can step aside while another neon action is on screen — one neon per viewport, counted by the
+ * page rather than by review. Any other `data-*` (`data-goal`, `data-club-join`, …) and `id` pass
+ * through to the element.
  * Renders <a> when `href` is set, otherwise <button>.
  */
 interface Props {
   href?: string;
-  variant?: 'primary' | 'plain' | 'secondary' | 'ghost' | 'danger';
+  variant?: 'primary' | 'plain' | 'secondary' | 'ghost' | 'danger' | 'gradient';
   size?: 'sm' | 'md' | 'lg';
   type?: 'button' | 'submit';
   class?: string;
   ariaLabel?: string;
+  id?: string;
+  [data: `data-${string}`]: string | boolean | undefined;
 }
 
 const {
@@ -28,7 +41,9 @@ const {
   type = 'button',
   class: extra = '',
   ariaLabel,
+  ...rest
 } = Astro.props;
+const attrs = { ...rest, 'data-neon': variant === 'primary' ? true : undefined };
 
 const base =
   'control-label inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-control transition-[background-color,color,opacity,transform] duration-150 ease-(--ease-out) active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
@@ -44,17 +59,18 @@ const variants = {
   secondary: 'border border-border-strong bg-surface-2 text-text hover:bg-surface-3',
   ghost: 'bg-transparent text-muted hover:text-text',
   danger: 'border border-border-strong bg-transparent text-danger hover:bg-surface-2',
+  gradient: 'bg-warm text-ink hover:opacity-90',
 };
 const cls = `${base} ${sizes[size]} ${variants[variant]} ${extra}`;
 ---
 
 {
   href ? (
-    <a href={href} class={cls} aria-label={ariaLabel}>
+    <a href={href} class={cls} aria-label={ariaLabel} {...attrs}>
       <slot />
     </a>
   ) : (
-    <button type={type} class={cls} aria-label={ariaLabel}>
+    <button type={type} class={cls} aria-label={ariaLabel} {...attrs}>
       <slot />
     </button>
   )

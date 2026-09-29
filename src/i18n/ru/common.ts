@@ -1,7 +1,6 @@
 /** Общие строки интерфейса (лендинг и приложение). Ключи должны совпадать с en/common.ts. */
 export const common = {
   brand: 'Forma',
-  tagline: 'Кроссфит дома. Под тебя.',
   minutesShort: '{n} мин',
   minutesUnit: 'мин',
   hoursShort: '{n} ч',
@@ -24,7 +23,6 @@ export const common = {
   remove: 'Убрать',
   skip: 'Пропустить',
   start: 'Начать',
-  openApp: 'Открыть приложение',
   errorGeneric: 'Что-то пошло не так. Попробуйте ещё раз.',
   errorOffline: 'Похоже, нет соединения. Проверьте интернет и попробуйте снова.',
   equipment_none: 'Без оборудования',

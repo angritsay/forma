@@ -123,11 +123,11 @@ export const PLAN_BY_ID: ReadonlyMap<SubscriptionPlan, Plan> = new Map(PLANS.map
  */
 export const PLAN_INCLUDES: readonly L10n[] = [
   {
-    ru: 'Клуб: одно маленькое задание в день и таблица недели с призом',
-    en: 'The club: one small task a day and a weekly board with a prize',
+    ru: 'Клуб: одно маленькое задание в день, таблица недели и приз — час с тренером',
+    en: 'The club: one small task a day, the weekly board and a prize — an hour with the coach',
   },
   {
-    ru: 'Серия дней подряд и пара на неделю — или с подругой по приглашению',
+    ru: 'Серия дней подряд и пара на неделю — или подруга или друг по приглашению',
     en: 'A streak, and a partner for the week — or a friend by invitation',
   },
   {
