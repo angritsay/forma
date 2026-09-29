@@ -76,6 +76,46 @@ describe('blockCompletions', () => {
     // Only one block has any results, so the engine's weighted total is lower, never higher.
     expect(computeCompletion(steps, results)).toBeLessThanOrEqual(metcon.completion);
   });
+
+  /*
+   * The rest minute between an EMOM's rounds is a step of the block with no result of its own: it
+   * must neither count against the block nor add reps.
+   */
+  it('scores an EMOM with rests between rounds on its work minutes alone', () => {
+    const p = prescribeWorkout(
+      workout({
+        id: 'w',
+        blocks: [
+          block({
+            id: 'e',
+            format: 'emom',
+            rounds: 6,
+            restBetweenRoundsSec: 60,
+            items: [item('push_up', { reps: 8 }), item('air_squat', { reps: 12 })],
+          }),
+        ],
+      }),
+      opts,
+      fixtureLookup,
+    );
+    const st = buildPlayerSteps(p);
+    expect(st.filter((s) => s.kind === 'rest')).toHaveLength(2);
+    const results: PlayerResult[] = [];
+    st.forEach((s, i) => {
+      if (s.kind === 'work')
+        results.push({
+          stepIndex: i,
+          blockId: 'e',
+          exerciseId: s.exerciseId,
+          completed: true,
+          achieved: 60,
+        });
+    });
+    const [e] = blockCompletions(p, st, results, t, 'en');
+    expect(e!.completion).toBe(1);
+    expect(e!.skipped).toBe(false);
+    expect(computeCompletion(st, results)).toBe(1);
+  });
 });
 
 describe('totalReps', () => {
@@ -292,6 +332,12 @@ describe('model helpers', () => {
   it('labels sets / rounds / minutes by block format', () => {
     expect(setLabel(t, 'sets', 2, 3)).toBe('Set 2 of 3');
     expect(setLabel(t, 'emom', 4, 12)).toBe('Minute 4 of 12');
+    // An EMOM that rests between rounds names the round too; the minutes count work only.
+    expect(setLabel(t, 'emom', 4, 9, { n: 2, total: 3 })).toBe('Minute 4 of 9 · Round 2 of 3');
+    expect(setLabel((k, p) => translate('ru', k, p), 'emom', 4, 9, { n: 2, total: 3 })).toBe(
+      'Минута 4 из 9 · Круг 2 из 3',
+    );
+    expect(setLabel(t, 'emom', 2, 3, { n: 1, total: 1 })).toBe('Minute 2 of 3');
     expect(setLabel(t, 'circuit', 1, 3)).toBe('Round 1 of 3');
     expect(setsText(t, 'en', 1)).toBe('1 set');
     expect(setsText((k, p) => translate('ru', k, p), 'ru', 3)).toBe('3 подхода');

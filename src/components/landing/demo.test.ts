@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { COURSE_BY_ID } from '@/content/registry';
 import { estimateDuration, estimateTrainingDuration, prescribeWorkout } from '@/lib/training';
 import { ADAPTATION } from '@/lib/training/constants';
-import { DEMO_COURSE_ID, DEMO_PROFILE, firstWorkoutFacts } from './demo';
+import { DEMO_COURSE_ID, DEMO_PROFILE, firstWorkoutFacts, firstWorkoutIntro } from './demo';
 
 describe('firstWorkoutFacts', () => {
   const course = COURSE_BY_ID.get(DEMO_COURSE_ID)!;
@@ -31,6 +31,22 @@ describe('firstWorkoutFacts', () => {
     expect(facts.workMinutes).toBeGreaterThan(0);
     // One movement a minute: whole passes through the three never exceed the minutes.
     expect(facts.cycles * facts.moves.length).toBeLessThanOrEqual(facts.workMinutes);
+  });
+
+  it('counts Sergey’s three rounds: nine player minutes inside an 11-minute clock', () => {
+    expect(facts.cycles).toBe(3);
+    expect(facts.playerMinutes).toBe(9);
+    // 9 work minutes + 2 rest minutes, plus the block intro, rounded to whole minutes.
+    expect(facts.workMinutes).toBe(11);
+  });
+
+  it('says nine minutes of work in the intro, not the 11-minute clock', () => {
+    const ru = firstWorkoutIntro('ru', facts);
+    expect(ru).toContain('всего 9 мин работы');
+    expect(ru).toContain(`около ${facts.totalMinutes} мин.`);
+    expect(ru).not.toContain('11 мин работы');
+    const en = firstWorkoutIntro('en', firstWorkoutFacts('en', course)!);
+    expect(en).toContain('9 min of work');
   });
 
   it('gives the whole workout, warm-up and cool-down included, one engine figure for every choice', () => {

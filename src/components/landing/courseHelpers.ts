@@ -15,6 +15,7 @@ import type {
   WorkoutItem,
 } from '@/content/schema';
 import { plural, t } from '@/i18n/index';
+import { emomRounds } from '@/lib/training/player';
 import { href } from '@/lib/util/paths';
 
 /** Site path (no base, no locale) of a course page. */
@@ -193,8 +194,18 @@ export function blockMetaLabel(locale: Locale, block: Block): string {
       return `${format} · ${t(locale, 'landing.blockMinutes', {
         n: Math.round((block.durationSec ?? 0) / 60),
       })}`;
-    case 'emom':
+    case 'emom': {
+      // With a rest between passes: «3 круга · 11 мин», the minutes being the whole clock.
+      const passes = emomRounds(block.rounds, block.items.length, block.restBetweenRoundsSec);
+      if (passes) {
+        return `${format} · ${countLabel('landing.blockRounds', passes.rounds)} · ${t(
+          locale,
+          'landing.blockMinutes',
+          { n: Math.round(passes.totalSec / 60) },
+        )}`;
+      }
       return `${format} · ${t(locale, 'landing.blockMinutes', { n: block.rounds ?? 1 })}`;
+    }
     case 'tabata':
     case 'interval':
       return `${format} · ${t(locale, 'landing.blockTabata', {

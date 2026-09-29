@@ -13,7 +13,7 @@ import type {
 import { findExercise } from '@/content/catalogue';
 import { plural, type Locale, type TKey, type TParams } from '@/i18n/index';
 import { ISOMETRIC_ID_PATTERN } from '@/lib/training/constants';
-import { isMaxRepsAmrap } from '@/lib/training/player';
+import { blockEmomRounds, isMaxRepsAmrap } from '@/lib/training/player';
 import { conflictsWithLimitations } from '@/lib/training/prescribe';
 import type {
   IntroTier,
@@ -412,13 +412,29 @@ export function mainPart(
   return i < 0 ? null : { n: i + 1, total: mains.length };
 }
 
-/** "Set 2 of 3" / "Round 2 of 3" / "Minute 2 of 12" depending on the block format. */
-export function setLabel(t: Translate, format: BlockFormat, set: number, total: number): string {
+/**
+ * "Set 2 of 3" / "Round 2 of 3" / "Minute 2 of 12" depending on the block format.
+ *
+ * An EMOM that rests between its passes also names the pass — «Минута 4 из 9 · Круг 2 из 3» —
+ * because the minutes count work only and skip the rests, so the minute alone does not say how
+ * much of the session is left. `round` is the work step's own (`PlayerStep.round`).
+ */
+export function setLabel(
+  t: Translate,
+  format: BlockFormat,
+  set: number,
+  total: number,
+  round?: { n: number; total: number },
+): string {
   switch (format) {
     case 'sets':
       return t('app.playerSetOf', { n: set, total });
-    case 'emom':
-      return t('app.playerMinuteOf', { n: set, total });
+    case 'emom': {
+      const minute = t('app.playerMinuteOf', { n: set, total });
+      return round && round.total > 1
+        ? `${minute} · ${t('app.playerRoundOf', { n: round.n, total: round.total })}`
+        : minute;
+    }
     case 'circuit':
     case 'tabata':
     case 'interval':
@@ -461,8 +477,14 @@ export function blockMeta(t: Translate, locale: Locale, block: PrescribedBlock):
       return setsText(t, locale, block.sets);
     case 'circuit':
       return roundsText(t, locale, block.sets);
-    case 'emom':
+    case 'emom': {
+      // With a rest between passes: «EMOM · 3 круга · 11 мин», the minutes being the whole clock.
+      const passes = blockEmomRounds(block);
+      if (passes) {
+        return `${formatLabel(t, 'emom')} · ${roundsText(t, locale, passes.rounds)} · ${t('common.minutesShort', { n: Math.round(passes.totalSec / 60) })}`;
+      }
       return `${formatLabel(t, 'emom')} · ${t('common.minutesShort', { n: block.sets })}`;
+    }
     case 'tabata':
       return `${formatLabel(t, 'tabata')} · ${block.sets} × ${block.workSec ?? 20}/${block.restSec ?? 10} ${t('training.seconds')}`;
     case 'interval':

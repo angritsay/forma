@@ -111,7 +111,7 @@ const moveLine = (name: string, reps: number | undefined) => (reps ? `${name} ·
               {first && <ExerciseStill exerciseId={first.exerciseId} />}
             </div>
             <div class="flex items-center gap-4 px-4 pt-4 pb-5">
-              <Ring value={1 / facts.workMinutes} size={64} stroke={5}>
+              <Ring value={1 / facts.playerMinutes} size={64} stroke={5}>
                 <span class="numeral text-lg">1</span>
               </Ring>
               <div class="flex min-w-0 flex-col gap-1">
@@ -119,7 +119,7 @@ const moveLine = (name: string, reps: number | undefined) => (reps ? `${name} ·
                   {first && moveLine(first.name, first.reps)}
                 </p>
                 <p class="text-[12px] leading-tight text-muted">
-                  {t(locale, 'landing.phonesMinute', { n: 1, total: facts.workMinutes })}
+                  {t(locale, 'landing.phonesMinute', { n: 1, total: facts.playerMinutes })}
                 </p>
               </div>
             </div>

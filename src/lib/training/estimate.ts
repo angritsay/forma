@@ -25,6 +25,7 @@ import type {
   PrescribedItem,
   PrescribedWorkout,
 } from './types';
+import { blockEmomRounds } from './player';
 import { num, sum } from './util';
 
 export const registryLookup: ExerciseLookup = (id) => findExercise(id);
@@ -115,6 +116,10 @@ export function blockSegments(
       const d = Math.max(1, num(block.sets, 1)) * 60;
       work.push({ sec: d * AMRAP_WORK_SHARE, met: averageMet(items, lookup) });
       restSec = d * (1 - AMRAP_WORK_SHARE);
+      // A rest between passes (`emomRounds`) is rest in full, outside the 70/30 split of the
+      // minutes: nobody works in it. The rounds above stay the work minutes.
+      const passes = blockEmomRounds(block);
+      if (passes) restSec += passes.rests * passes.restSec;
       break;
     }
     case 'tabata': {

@@ -12,7 +12,12 @@ import { findCourse, findExercise, findWorkout } from '@/content/catalogue';
 import type { Course, Workout } from '@/content/schema';
 import { computeFitnessIndex, initialScale } from '@/lib/training/assessment';
 import { SUBSTITUTE_REPS_FACTOR } from '@/lib/training/constants';
-import { estimateTrainingDuration, isTrainingBlock } from '@/lib/training/estimate';
+import {
+  estimateBlockDuration,
+  estimateTrainingDuration,
+  isTrainingBlock,
+  workoutVolume,
+} from '@/lib/training/estimate';
 import { buildPlayerSteps } from '@/lib/training/player';
 import { holdsRounds, prescribeWorkout } from '@/lib/training/prescribe';
 import type {
@@ -303,6 +308,57 @@ describe('«Форма с нуля» through the engine', () => {
         expect(min, `${w.id} ${choice}`).toBeLessThan(30);
       }
     }
+  });
+
+  /*
+   * «Должно быть три круга. Точнее должно быть так как написал Сережа.» His workouts 1 and 2:
+   * minute 1, 2 and 3 a movement each, minute 4 rest — three rounds, and nothing to rest for after
+   * the last one. 3 + 1 + 3 + 1 + 3 = 11 minutes of main part, at every choice.
+   */
+  it.each(['w_s01_emom', 'w_s02_emom'])(
+    '%s: three rounds of three minutes with a rest minute between them',
+    (id) => {
+      const workout = workouts.find((w) => w.id === id)!;
+      const main = workout.blocks.find((b) => b.format === 'emom')!;
+      for (const c of PROFILES) {
+        for (const choice of CHOICES) {
+          const p = prescribe(workout, c, choice);
+          const block = p.blocks.find((b) => b.blockId === main.id)!;
+          expect(block.sets, `${c.name} ${choice}`).toBe(9);
+          const steps = buildPlayerSteps(p).filter(
+            (s) => 'blockId' in s && s.blockId === main.id && s.kind !== 'block_intro',
+          );
+          // work × 3, rest, work × 3, rest, work × 3 — no rest after the last round.
+          expect(steps.map((s) => s.kind)).toEqual([
+            ...['work', 'work', 'work', 'rest'],
+            ...['work', 'work', 'work', 'rest'],
+            ...['work', 'work', 'work'],
+          ]);
+          const works = steps.filter((s) => s.kind === 'work');
+          expect(works.map((s) => s.exerciseId)).toEqual(
+            [0, 1, 2, 0, 1, 2, 0, 1, 2].map((i) => block.items[i]!.exerciseId),
+          );
+          expect(works.map((s) => s.round?.n)).toEqual([1, 1, 1, 2, 2, 2, 3, 3, 3]);
+          for (const s of steps) {
+            if (s.kind === 'rest') expect(s.durationSec).toBe(60);
+          }
+          // The main part's clock: nine work minutes and two rest minutes.
+          const d = estimateBlockDuration(block);
+          expect(d.workSec + d.restSec).toBe(11 * 60);
+        }
+      }
+    },
+  );
+
+  it('workout 1 at the authored numbers is 3 × (8 + 13 + 13) = 102 reps', () => {
+    const workout = workouts.find((w) => w.id === 'w_s01_emom')!;
+    const p = prescribeWorkout(workout, {
+      profile: { ...BEGINNER, limitations: [] },
+      level: 2,
+      scale: 1,
+      choice: 'normal',
+    });
+    expect(workoutVolume(p).reps).toBe(102);
   });
 
   it('opens the first workout free and the rest after payment, in order', () => {

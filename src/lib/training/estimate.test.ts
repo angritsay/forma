@@ -67,6 +67,26 @@ describe('estimateDuration', () => {
     expect(e.workSec).toBe(420);
   });
 
+  /*
+   * «Форма с нуля», тренировка 1 as Sergey wrote it: three rounds of «1-я, 2-я, 3-я минута — по
+   * движению, 4-я — отдых», no rest after the last round. 9 work minutes (70/30 as any EMOM) and
+   * two whole rest minutes: 3 + 1 + 3 + 1 + 3 = 11, plus the block intro.
+   */
+  it('emom with a rest between passes adds the rests the player plays, in full', () => {
+    const e = estimateDuration(
+      one({
+        id: 'e',
+        format: 'emom',
+        rounds: 9,
+        restBetweenRoundsSec: 60,
+        items: [item('knee_push_up'), item('air_squat'), item('dead_bug')],
+      }),
+    );
+    expect(e.workSec).toBe(9 * 60 * 0.7);
+    expect(e.restSec).toBe(9 * 60 * 0.3 + 2 * 60);
+    expect(e.totalSec).toBe(9 * 60 + 2 * 60 + 20);
+  });
+
   it('tabata and interval: rounds × work × items plus the rests the player actually plays', () => {
     const t = estimateDuration(
       one({
@@ -341,6 +361,22 @@ describe('workoutVolume', () => {
     });
     // Minutes 1, 3 and 5 are squats, 2 and 4 are push-ups: 30 + 12.
     expect(workoutVolume(p).reps).toBe(42);
+  });
+
+  it('counts an EMOM with rests between passes by its work minutes only', () => {
+    const p = one({
+      id: 'e',
+      format: 'emom',
+      rounds: 9,
+      restBetweenRoundsSec: 60,
+      items: [
+        item('knee_push_up', { reps: 8 }),
+        item('air_squat', { reps: 13 }),
+        item('dead_bug', { reps: 13 }),
+      ],
+    });
+    // Three rounds of 8 + 13 + 13; the rest minutes hold no reps.
+    expect(workoutVolume(p).reps).toBe(3 * 34);
   });
 
   it('ignores work measured in seconds, and reports it as seconds instead', () => {
