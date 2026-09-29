@@ -26,6 +26,8 @@ name: Deploy site
 # Repository secrets:
 #   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID   required when DEPLOY_TARGET is "cloudflare"
 #   INDEXNOW_KEY    optional — enables IndexNow submission after deploy
+#   PRIVATE_PAGE_KEY, PRIVATE_PAGE_PASSWORD   optional — with the variable PRIVATE_PAGE_PATH,
+#                   publish the password-protected private page (docs/SETUP.md §7.15)
 
 on:
   push:
@@ -151,6 +153,16 @@ jobs:
 
       - name: SEO audit (fails the deploy on SEO errors)
         run: npm run seo:audit
+
+      # The password-protected private page, reachable by direct link only (docs/SETUP.md §7.15).
+      # Added after the audit and outside Astro, so no sitemap, llms.txt, RSS or IndexNow ever
+      # lists it. Skips itself until the two secrets and the variable are set.
+      - name: Private page
+        env:
+          PRIVATE_PAGE_KEY: ${{ secrets.PRIVATE_PAGE_KEY }}
+          PRIVATE_PAGE_PASSWORD: ${{ secrets.PRIVATE_PAGE_PASSWORD }}
+          PRIVATE_PAGE_PATH: ${{ vars.PRIVATE_PAGE_PATH }}
+        run: node scripts/private/publish.mjs
 
       # CNAME is how GitHub Pages remembers a custom domain; Cloudflare keeps that in its own
       # dashboard, so the file would just be dead weight in the deployment there.
