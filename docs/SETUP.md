@@ -1774,6 +1774,40 @@ Each run prints one number per kind — how many rows were queued — and nothin
 
 ---
 
+## 7.15 A private page: direct link and password
+
+One page on the site is private: it is published at a path nothing links to, kept out of search,
+and shows a password form until the right password is typed. It is not an app route; the deploy
+workflow adds it after the build (`scripts/private/`).
+
+**Why it is built this way.** This repository is public, and so is everything GitHub Pages serves
+(including the `gh-pages` branch), and Pages cannot check a password on a server. So the page's
+plain HTML is never committed: `private/pitch.enc` is the page encrypted under a random key, and
+each deploy opens it with that key and encrypts it again under the password. The browser decrypts
+it with that password (PBKDF2-SHA256, 600 000 iterations → AES-256-GCM).
+
+**Set it up** — Settings → Secrets and variables → Actions:
+
+| Kind     | Name                    | Value                                                          |
+| -------- | ----------------------- | -------------------------------------------------------------- |
+| Secret   | `PRIVATE_PAGE_KEY`      | the key printed when the page was sealed (given once, in chat) |
+| Secret   | `PRIVATE_PAGE_PASSWORD` | the password visitors type — a long passphrase                 |
+| Variable | `PRIVATE_PAGE_PATH`     | the path, one segment of 8–64 `a-z`, `0-9`, `-`                |
+
+Then Actions → Deploy site → Run workflow. The page is at `<site>/<PRIVATE_PAGE_PATH>/`. Until all
+three are set the step logs «skipped» and the site deploys without the page.
+
+- **Change the password**: edit the secret and run the deploy again. Old copies of the page still
+  open with the old password, so treat a leaked password as leaked content.
+- **Use a long passphrase** (four or more random words). Anyone can download the encrypted page
+  and guess passwords offline; the iteration count only slows that down.
+- **Replace the page**: `node scripts/private/seal.mjs <new.html>` rewrites `private/pitch.enc` and
+  prints a new key; commit the file and put the new key into `PRIVATE_PAGE_KEY`. Never commit the
+  plain HTML — `.gitignore` refuses anything in `private/` except `*.enc`.
+- **Take it down**: delete the variable `PRIVATE_PAGE_PATH` and run the deploy.
+- The path is not a secret from anyone who reads the `gh-pages` branch; the password is what
+  protects the page. The workflow never prints the path in its public logs.
+
 ## 7.10 What is still only in Russian
 
 Everything written ahead of time is bilingual and the build says so: the interface dictionaries are

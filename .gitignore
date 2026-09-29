@@ -30,3 +30,8 @@ serve/
 
 # Course review pages rendered by `npm run content:review`
 review/
+
+# Private pages are committed only sealed (private/*.enc, scripts/private/lib.mjs); a plain copy
+# here would publish the page to the whole internet through this public repository.
+private/*
+!private/*.enc
