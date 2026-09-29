@@ -21,6 +21,8 @@ describe('isRootRoute', () => {
       '/achievements',
       '/marathon/board',
       '/admin/courses',
+      // The stories replay is opened from the account sheet and closes back to «Курсы».
+      '/intro',
     ]) {
       expect(isRootRoute(path)).toBe(false);
     }

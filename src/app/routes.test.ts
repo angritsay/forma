@@ -69,6 +69,16 @@ describe('navigation targets', () => {
     });
   }
 
+  /*
+   * The account sheet's row «Как это работает» reaches `/intro` through a `navigate()` call, not
+   * a nav table, so the scan above never sees it. Named here so the replay cannot lose its route
+   * the way the course builder once did.
+   */
+  it('declares the replay of the onboarding stories', () => {
+    expect(routes).toContain('/intro');
+    expect(read('features/profile/ProfileSheet.tsx')).toContain("navigate('/intro')");
+  });
+
   it('declares a route for every registered screen name that is reachable by path', () => {
     // A screen in the registry with no route is dead weight; one is usually half-finished wiring.
     const registry = read('screens/registry.ts');

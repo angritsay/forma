@@ -19,6 +19,8 @@ export const SCREEN_NAMES = [
   'SummaryScreen',
   // The physical test, now asked for after a couple of workouts rather than during onboarding.
   'AssessmentScreen',
+  // The onboarding stories again, from «Как это работает» in the account sheet.
+  'IntroScreen',
   'LeaderboardScreen',
   'MarathonScreen',
   'MarathonBoardScreen',

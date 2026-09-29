@@ -178,6 +178,12 @@ export const DraftSchema = z.object({
   limitationsOther: z.string().max(LIMITATION_NOTE_MAX).default(''),
   /** 1..10 from the slider; undefined until the handle is touched. */
   level: z.number().int().min(LEVEL_MIN).max(LEVEL_MAX).optional(),
+  /**
+   * The story sets already shown (or skipped), keyed by the step they follow (`stories.ts`,
+   * `seenKey`). Not a step of its own: `STEP_IDS` and the «01/05» counter do not know about it,
+   * and a draft saved before the stories existed parses with an empty list and simply shows them.
+   */
+  seenStories: z.array(z.string()).default([]),
 });
 
 export type OnboardingDraft = z.infer<typeof DraftSchema>;

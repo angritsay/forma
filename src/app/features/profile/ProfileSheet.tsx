@@ -371,6 +371,22 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
                 trailing={<Glyph size={16}>›</Glyph>}
               />
             </li>
+            {/*
+             * The onboarding stories, again. They play once, between the questions and after the
+             * last one, and a person who tapped through them on day one has nowhere else to read
+             * what the difficulty sheet or the club actually do. `/intro` is the same six slides
+             * with a × back to «Курсы».
+             */}
+            <li>
+              <ListRow
+                title={t('app.introRow')}
+                onClick={() => {
+                  onClose();
+                  navigate('/intro');
+                }}
+                trailing={<Glyph size={16}>›</Glyph>}
+              />
+            </li>
           </ul>
 
           {/*

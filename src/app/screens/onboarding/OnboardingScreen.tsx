@@ -17,6 +17,16 @@
  * design/CHANGELOG.md §10 records why the leads, kickers and descriptions went. The footer keeps
  * the one primary button and nothing else; the way out for a wrong account is the icon in the
  * header's left slot, on the first step.
+ *
+ * **Stories between the questions, and after the last one** (`stories.ts`, `Story.tsx`). Owner:
+ * «После онбординга с вопросами нужно сделать в стиле сторис пояснение про приложение. Может
+ * некоторые экраны замкнуть между вопросами, например про адаптивную нагрузку». So «Далее» on
+ * «Что беречь?» shows one slide about what the answer does before the next question, and the last
+ * step's button shows the tour — the load, the path, the player, the club, the coach — and ends
+ * in `finish()` from its last slide. Each set plays once: the draft records it in `seenStories`
+ * whether it was watched or skipped (nothing on a slide is an answer, so skipping loses nothing),
+ * and back from a set's first slide returns to the question without recording anything. The
+ * counter stays «01/05»: a story is not a step, and `STEP_IDS` does not know about it.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
@@ -45,6 +55,8 @@ import { StepLevel } from './StepLevel';
 import { StepLimitations } from './StepLimitations';
 import { StepName } from './StepName';
 import { StepSex } from './StepSex';
+import { hasSeen, markSeen, storiesFor } from './stories';
+import { Story } from './Story';
 import type { StepProps } from './types';
 
 /**
@@ -105,6 +117,8 @@ export default function OnboardingScreen() {
     initialDraft(locale, profileName, resumeStepIndex(searchParams.get('step'))),
   );
   const [saving, setSaving] = useState(false);
+  /** The step whose story set is on screen instead of a question, or null. */
+  const [story, setStory] = useState<StepId | null>(null);
 
   useEffect(() => {
     saveDraft(draft);
@@ -115,6 +129,7 @@ export default function OnboardingScreen() {
   const total = STEP_IDS.length;
   const isLast = stepIndex === total - 1;
   const canContinue = isStepComplete(draft, step);
+  const counter = `${String(stepIndex + 1).padStart(2, '0')}/${String(total).padStart(2, '0')}`;
 
   const update = useCallback((patch: Partial<OnboardingDraft>) => {
     setDraft((d) => ({ ...d, ...patch }));
@@ -128,14 +143,23 @@ export default function OnboardingScreen() {
     [total],
   );
 
+  /**
+   * Whether the completed step still owes its story: it has a set, and the draft has not seen it.
+   * The last step's set ends in `finish()`, so the wizard's button asks this too.
+   */
+  const storyDue = useCallback(
+    (s: StepId) => storiesFor(s) !== null && !hasSeen(draft.seenStories, s),
+    [draft.seenStories],
+  );
+
   const next = useCallback(() => {
-    setDraft((d) => {
-      const current = STEP_IDS[d.step] ?? 'name';
-      if (!isStepComplete(d, current)) return d;
-      return { ...d, step: Math.min(total - 1, d.step + 1) };
-    });
-    window.scrollTo({ top: 0 });
-  }, [total]);
+    if (!isStepComplete(draft, step)) return;
+    if (storyDue(step)) {
+      setStory(step);
+      return;
+    }
+    goTo(stepIndex + 1);
+  }, [draft, step, stepIndex, storyDue, goTo]);
 
   const back = () => goTo(stepIndex - 1);
 
@@ -182,8 +206,55 @@ export default function OnboardingScreen() {
     }
   };
 
+  /** The last step's button: the tour first, when it is still owed; `finish()` otherwise. */
+  const finishPressed = () => {
+    if (!canContinue) return;
+    if (storyDue(step)) {
+      setStory(step);
+      return;
+    }
+    void finish();
+  };
+
+  /*
+   * A set is over — watched to the end or skipped, the two are the same here: it is marked seen
+   * and the wizard moves on. For the last step «on» is `finish()`; the seen mark is written first
+   * so that a failed save, which leaves the athlete on the step, does not replay the tour on the
+   * next press.
+   */
+  const storyOver = () => {
+    const s = story;
+    setStory(null);
+    if (!s) return;
+    if (s === STEP_IDS[total - 1]) {
+      setDraft((d) => ({ ...d, seenStories: markSeen(d.seenStories, s) }));
+      void finish();
+      return;
+    }
+    setDraft((d) => ({
+      ...d,
+      seenStories: markSeen(d.seenStories, s),
+      step: Math.min(total - 1, d.step + 1),
+    }));
+    window.scrollTo({ top: 0 });
+  };
+
   const StepView = STEP_COMPONENT[step];
   const stepProps = useMemo<StepProps>(() => ({ draft, update, next }), [draft, update, next]);
+
+  const storySlides = story ? storiesFor(story) : null;
+  if (story && storySlides) {
+    return (
+      <Story
+        slides={storySlides}
+        onDone={storyOver}
+        onExit={storyOver}
+        onBackOut={() => setStory(null)}
+        finalLabel={story === STEP_IDS[total - 1] ? t('app.onbFinish') : undefined}
+        stepOfTotal={counter}
+      />
+    );
+  }
 
   return (
     <Screen
@@ -251,8 +322,8 @@ export default function OnboardingScreen() {
             className="flex-1"
           />
           <span className="numeral tabular shrink-0 text-right text-sm">
-            <span className="text-text">{String(stepIndex + 1).padStart(2, '0')}</span>
-            <span className="text-muted-2">/{String(total).padStart(2, '0')}</span>
+            <span className="text-text">{counter.slice(0, 2)}</span>
+            <span className="text-muted-2">{counter.slice(2)}</span>
           </span>
         </div>
       }
@@ -270,7 +341,7 @@ export default function OnboardingScreen() {
               fullWidth
               loading={saving}
               disabled={!canContinue}
-              onClick={() => void finish()}
+              onClick={finishPressed}
             >
               {t('app.onbFinish')}
             </Button>
