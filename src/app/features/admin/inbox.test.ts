@@ -9,7 +9,6 @@ import {
   mailLink,
   replyErrorKey,
   replyRoute,
-  syncMessage,
 } from './inbox';
 
 describe('formatMoscow', () => {
@@ -81,27 +80,5 @@ describe('replyErrorKey', () => {
     );
     expect(replyErrorKey(new AppError('validation', 'text_too_long'))).toBe('app.supportErrorLong');
     expect(replyErrorKey(new Error('?'))).toBe('app.inboxReplyError');
-  });
-});
-
-describe('syncMessage', () => {
-  it('reports the counts of a good sync as a success', () => {
-    expect(syncMessage({ kind: 'ok', booked: 2, cancelled: 1, failed: 0 })).toEqual({
-      key: 'app.bookingsSyncOk',
-      params: { booked: 2, cancelled: 1 },
-      tone: 'success',
-    });
-  });
-
-  /* The 503 is the one she can fix herself, and the sentence names how. */
-  it('keeps the not-configured explanation on screen', () => {
-    expect(syncMessage({ kind: 'not_configured' })).toEqual({
-      key: 'app.bookingsSyncNotConfigured',
-      tone: 'error',
-    });
-  });
-
-  it('treats a double tap as information, not an error', () => {
-    expect(syncMessage({ kind: 'busy' }).tone).toBe('info');
   });
 });

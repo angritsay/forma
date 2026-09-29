@@ -2,10 +2,10 @@
  * Coach bookings: the one-to-one sessions the signed-in person has with the coach.
  *
  * Read-only here. A session is made in the app since 0055 — a slot picked and held
- * (`coachSlots.ts`), then confirmed server-side by the payment — or, until the cutover, read from
- * the coach's Google Calendar by supabase/functions/google-calendar-sync/. `coach_bookings` has no
- * write policy for a signed-in user, not even for their own rows: every change goes through an
- * RPC that checks the rules. The view `my_coach_bookings` is already filtered to the caller by
+ * (`coachSlots.ts`), then confirmed server-side by the payment. Rows read from the coach's
+ * Google Calendar before the cutover stay as history (`source = 'google_calendar'`).
+ * `coach_bookings` has no write policy for a signed-in user, not even for their own rows: every
+ * change goes through an RPC that checks the rules. The view `my_coach_bookings` is already filtered to the caller by
  * `current_email()` — the `status`/`starts_at` filters below are about what is worth showing, not
  * about who may see it.
  *

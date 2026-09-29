@@ -4,7 +4,6 @@ import {
   replyResultFromDb,
   supportItemFromDb,
   supportPageFromDb,
-  syncOutcome,
   type DbAdminBooking,
   type DbSupportItem,
 } from './adminInbox';
@@ -156,32 +155,5 @@ describe('adminBookingFromDb', () => {
 
   it('never reports negative minutes', () => {
     expect(adminBookingFromDb(booking({ ends_at: 'nonsense' })).minutes).toBe(0);
-  });
-});
-
-describe('syncOutcome', () => {
-  const line = 'scanned=12 booked=3 cancelled=1 vanished=2 ignored=6 failed=0 interval=10m';
-
-  it('reads the counts from the function’s own line', () => {
-    expect(syncOutcome(200, line)).toEqual({ kind: 'ok', booked: 3, cancelled: 3, failed: 0 });
-  });
-
-  it('tells a partial write from a crash', () => {
-    expect(syncOutcome(500, line.replace('failed=0', 'failed=2'))).toEqual({
-      kind: 'partial',
-      booked: 3,
-      cancelled: 3,
-      failed: 2,
-    });
-    expect(syncOutcome(500, 'boom').kind).toBe('network');
-  });
-
-  it('names every refusal', () => {
-    expect(syncOutcome(503, 'not configured').kind).toBe('not_configured');
-    expect(syncOutcome(404, '').kind).toBe('not_deployed');
-    expect(syncOutcome(403, 'not an admin').kind).toBe('forbidden');
-    expect(syncOutcome(401, '').kind).toBe('forbidden');
-    expect(syncOutcome(429, 'just synced').kind).toBe('busy');
-    expect(syncOutcome(502, 'google refused the credentials').kind).toBe('google');
   });
 });

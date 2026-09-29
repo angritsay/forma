@@ -156,9 +156,10 @@ export default function AdminBookingsScreen() {
               <ul className="flex flex-col">
                 {rows.map((row) => {
                   /*
-                   * Only a booking made here is ours to change. A Google row is rewritten by
-                   * google-calendar-sync from the calendar every few minutes, so a move or a
-                   * cancel here would be undone quietly after the client had been told of it.
+                   * Only a booking made here is ours to change. A Google row is history from
+                   * before the cutover: it has no coach, no option and no room link, and moving it
+                   * here would skip the overlap check our own rows get (0055). It still blocks
+                   * Sergey's time, and it is changed with the client directly.
                    * `source` comes with the RPC's own row, never from the optional second read.
                    */
                   const editable = scope === 'upcoming' && row.source === 'forma';
@@ -229,7 +230,7 @@ function BookingRow({
 }: {
   row: AdminBooking;
   coach: string | null;
-  /** Upcoming but synced from a calendar: changed there, not here. */
+  /** Upcoming but from the old Google calendar: kept as history, not changed here. */
   external?: boolean;
   onMove?: () => void;
   onCancel?: () => void;

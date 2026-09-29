@@ -396,7 +396,8 @@ export const landing = {
   clubTileStreak: 'Your streak',
   clubTilePrize: 'A weekly prize',
   clubTileDuo: 'Solo or as a pair',
-  coachRules: 'Online · move it 24 h ahead · no refunds',
+  // Under the tickets (SessionTickets): the booking order and the money rule on one line.
+  coachRules: 'Online · time first, then payment · move it 24 h ahead · no refunds',
   coachFiguresLabel: 'Sergey Titov in numbers',
   ladderCourseShort: 'The course, for good',
   ladderFootnoteShort: 'No auto-renewal. Refund within {days} days if under {n} workouts are done.',
@@ -442,7 +443,8 @@ export const landing = {
   aboutHowTitle: 'How to book',
   // The owner's order (29 Sep): the time first, then the payment — the slot is held 20 minutes.
   aboutHowPick: 'Pick a time, then pay',
-  aboutRule: 'No refunds — a session can be moved if you ask at least 24 hours ahead',
+  aboutRule:
+    'The slot is held for 20 minutes while you pay. No refunds — you can move a session yourself in the app at least 24 hours ahead',
   aboutDailyEyebrow: 'In the app',
   aboutDailyTitle: 'Every day in Forma',
   aboutDailyFilmed: 'Filmed every movement',

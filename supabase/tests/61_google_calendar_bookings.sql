@@ -2,10 +2,13 @@
 -- Google Calendar bookings: the claim 0014 makes about itself, tested.
 --
 -- 0014_coach_bookings.sql says it is provider-neutral — that a second ingestion path is "a new
--- caller, never a migration". This file is that claim under load: every value
--- supabase/functions/google-calendar-sync/ actually produces, written through the same two
--- service-role functions, on the schema as merged. If anything here needed a column that does not
--- exist or a constraint that refuses a real Google value, this file is where it fails.
+-- caller, never a migration". This file is that claim under load: every value the Google
+-- Calendar sync produced, written through the same two service-role functions, on the schema as
+-- merged. If anything here needed a column that does not exist or a constraint that refuses a real
+-- Google value, this file is where it fails.
+--
+-- The sync itself is gone since the cutover to booking in the app (0055); its rows stay in
+-- `coach_bookings` as history, so this file stays too: it proves they remain valid rows.
 --
 -- Run after 10_smoke.sql on the same database, with 0014_coach_bookings.sql applied. Independent
 -- of 60_coach_bookings.sql: it makes its own people and counts only its own rows.

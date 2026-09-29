@@ -542,7 +542,6 @@ export const app = {
   bookLengthLabel: 'Длительность сессии',
   bookDuration: '{n} мин',
   bookPay: 'Оплатить {price}',
-  bookPickTime: 'Выбрать время',
   bookContact: 'Написать тренеру',
   bookContactHint: 'Оплата пока не подключена: напиши — о времени и оплате договоритесь напрямую.',
   bookDemoNote: 'В демо-режиме оплата отключена.',
@@ -1687,16 +1686,6 @@ export const app = {
    * «Сверх 30 минут» kicker, and the third line had nothing left to belong to. Each length prints
    * its own full list now.
    */
-  bookNext: 'Дальше',
-  bookNextSchedule:
-    'Оплати — и выбери слот на его странице. Ближайший может быть уже через {n} минут.',
-  bookNextContact:
-    'Страницы со слотами нет: оплати и напиши тренеру — время он поставит сам, хоть за {n} минут до начала.',
-  // Её сторона того же шага (design/CHANGELOG.md §23): своя страница записи, время ставит она.
-  bookNextScheduleHer:
-    'Оплати — и выбери слот на её странице. Ближайший может быть уже через {n} минут.',
-  bookNextContactHer:
-    'Страницы со слотами нет: оплати и напиши — время она поставит сама, хоть за {n} минут до начала.',
   bookPaidNote:
     'Оплата открылась в браузере. Как оплатишь — бронь подтвердится сама и появится здесь.',
 
@@ -2030,20 +2019,6 @@ export const app = {
   bookingsSourceAdmin: 'Вручную',
   bookingsSourceOther: 'Другое',
   bookingsJoin: 'Ссылка на встречу',
-  bookingsSync: 'Синхронизировать сейчас',
-  bookingsSyncHint: 'Календарь и так читается сам каждые 10 минут.',
-  bookingsSyncOk: 'Календарь прочитан: записей {booked}, отмен {cancelled}.',
-  bookingsSyncPartial:
-    'Календарь прочитан, но {failed} сохранить не удалось. Попробуй ещё раз через минуту.',
-  bookingsSyncNotConfigured:
-    'Календарь не подключён: в Supabase не заданы секреты Google (GOOGLE_CALENDAR_ID, GOOGLE_SA_CLIENT_EMAIL, GOOGLE_SA_PRIVATE_KEY). Задай их и запусти Actions → Supabase apply → deploy-calendar.',
-  bookingsSyncNotDeployed:
-    'Функция синхронизации ещё не выложена. Запусти Actions → Supabase apply → deploy-calendar.',
-  bookingsSyncForbidden: 'Нет доступа. Войди заново с почтой админа.',
-  bookingsSyncBusy: 'Только что синхронизировали — попробуй через полминуты.',
-  bookingsSyncGoogle: 'Google не пустил. Проверь, что календарь открыт для сервисного аккаунта.',
-  bookingsSyncNetwork: 'Сервер не ответил. Проверь соединение.',
-  bookingsSyncDemo: 'В демо календаря нет.',
   // --- Club: the week's board, top three and where you are (stream: club-board) ---
   // The break between the top of the table and your own row, counted in rows left out.
   marathonBoardGapOne: 'ещё {n} место',
@@ -2143,5 +2118,6 @@ export const app = {
   bookingsCancelConfirm: 'Отменить запись',
   bookingsCancelledToast: 'Запись отменена',
   bookingsSourceForma: 'В приложении',
-  bookingsExternalHint: 'Запись пришла из календаря — перенести или отменить её можно только там.',
+  bookingsExternalHint:
+    'Запись из Google Календаря, сделанная до записи в приложении. Здесь она для истории — перенос или отмену договорите с клиентом напрямую.',
 } as const;

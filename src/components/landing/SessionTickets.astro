@@ -14,8 +14,9 @@
  * no referral code ever rides in a payment URL.
  *
  * Each ticket is its length, its price and one button — no list of what fits: that is the coach's
- * page's job. The rule for the money (no refunds, a session moves if asked 24 hours ahead) is the
- * one line the caller prints under both.
+ * page's job. The booking order (time first, then payment — the app holds the slot 20 minutes) and
+ * the rule for the money (no refunds, the client moves a session in the app 24 hours ahead) are
+ * the one line the caller prints under both (`landing.coachRules`).
  *
  * Renders nothing while `BOOKING.enabled` is off.
  */
