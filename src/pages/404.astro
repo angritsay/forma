@@ -9,6 +9,9 @@
  * Before any of that paints, an inline script tries to rescue the link: `/start`, `/Club`,
  * `/ru/about`, `/forma/…` and friends go to the page they meant (src/lib/seo/notFoundRedirect.ts).
  * It leaves only for a route this build emitted, so a truly unknown path still ends up here.
+ *
+ * Each language's neon is «Начать бесплатно» into the app's `#/start` — a lost visitor is still
+ * one tap from workout 1 — and the way home is the quiet second button.
  */
 import Base from '@/layouts/Base.astro';
 import HeroField from '@/components/landing/HeroField.astro';
@@ -27,14 +30,14 @@ const blocks = [
     title: t('ru', 'landing.notFoundTitle'),
     text: t('ru', 'landing.notFoundText'),
     home: t('ru', 'landing.notFoundHome'),
-    app: t('ru', 'landing.notFoundApp'),
+    start: t('ru', 'landing.startCta'),
   },
   {
     locale: 'en' as const,
     title: t('en', 'landing.notFoundTitle'),
     text: t('en', 'landing.notFoundText'),
     home: t('en', 'landing.notFoundHome'),
-    app: t('en', 'landing.notFoundApp'),
+    start: t('en', 'landing.startCta'),
   },
 ];
 ---
@@ -69,16 +72,17 @@ const blocks = [
             <p class="mt-3 text-[15px] text-muted">{b.text}</p>
             <div class="mt-6 flex flex-wrap gap-3">
               <a
-                href={href(b.locale, '/')}
+                href={appHref('/start', { locale: b.locale })}
                 class="control-label inline-flex h-12 items-center rounded-control bg-action px-6.5 text-[13px] text-on-action hover:opacity-85"
+                data-app-link
               >
-                {b.home}
+                {b.start}
               </a>
               <a
-                href={appHref('', { locale: b.locale })}
+                href={href(b.locale, '/')}
                 class="control-label inline-flex h-12 items-center rounded-control border border-border-strong bg-surface-2 px-6.5 text-[13px] hover:bg-surface-3"
               >
-                {b.app}
+                {b.home}
               </a>
             </div>
           </section>

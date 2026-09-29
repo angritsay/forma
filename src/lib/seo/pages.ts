@@ -124,8 +124,8 @@ const STATIC_PAGES: StaticDef[] = [
     kind: 'other',
     changefreq: 'monthly',
     priority: 0.5,
-    title: (loc) => t(loc, 'seo.aboutPage'),
-    description: (loc) => t(loc, 'seo.aboutPage'),
+    title: (loc) => t(loc, 'landing.aboutTitle'),
+    description: (loc) => t(loc, 'landing.aboutDescription'),
   },
   {
     sitePath: '/contact/',

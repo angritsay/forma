@@ -18,6 +18,7 @@
 import Landing from '@/layouts/Landing.astro';
 import HeroField from '@/components/landing/HeroField.astro';
 import KeyTitle from '@/components/landing/KeyTitle.astro';
+import StartBand from '@/components/landing/StartBand.astro';
 import Breadcrumbs from '@/components/seo/Breadcrumbs.astro';
 import ExerciseCard from '@/components/exercises/ExerciseCard.astro';
 import { FILMED_EXERCISES } from '@/content/registry';
@@ -158,4 +159,5 @@ const jsonLd = [
       )
     }
   </div>
+  <StartBand locale={locale} />
 </Landing>

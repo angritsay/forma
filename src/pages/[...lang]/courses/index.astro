@@ -1,7 +1,20 @@
 ---
 /**
- * Courses hub: intro, client-side filters by equipment/level (progressive enhancement over
- * plain links), course cards. JSON-LD: ItemList + BreadcrumbList.
+ * Courses hub: «Курс для старта» (site synthesis §5, `/courses/`). One course is on sale, so the
+ * page is one offer, not a catalogue: the filters it used to open with sorted a list of one.
+ *
+ *   hero    the blue field, the H1 and one line of facts — twenty workouts, no jumps,
+ *           no kit, the first one free
+ *   ticket  the course lying sideways (`CourseCard wide`), with the neon «Тренировка 1 —
+ *           бесплатно» into the app's `#/start`, the white «Купить — 2 990 ₽» to the course page's
+ *           order form and the warm «Неделя клуба в подарок» pill; a grid again if a second
+ *           course is ever published
+ *   club    `club/ClubBand`: the club beside the course, in its own palette (666 ₽ never without
+ *           7 990 ₽; EN the year only)
+ *   close   the `Cta` band, «Начать бесплатно» into workout 1
+ *
+ * Neon: the ticket's start button and the closing band's, far apart. Every price comes from the
+ * content files through the blocks that print them. JSON-LD: ItemList + BreadcrumbList.
  */
 import Landing from '@/layouts/Landing.astro';
 import HeroField from '@/components/landing/HeroField.astro';
@@ -9,17 +22,11 @@ import KeyTitle from '@/components/landing/KeyTitle.astro';
 import Breadcrumbs from '@/components/landing/Breadcrumbs.astro';
 import CourseCard from '@/components/landing/CourseCard.astro';
 import Cta from '@/components/landing/Cta.astro';
-import SubscribeBanner from '@/components/landing/SubscribeBanner.astro';
-import {
-  coursePath,
-  equipmentAcrossCourses,
-  equipmentLabel,
-  levelLabel,
-  levelsAcrossCourses,
-} from '@/components/landing/courseHelpers';
+import ClubBand from '@/components/landing/club/ClubBand.astro';
+import { coursePath } from '@/components/landing/courseHelpers';
 import { breadcrumbLd, itemListLd } from '@/components/landing/jsonld';
 import { SITE_COURSES } from '@/content/published';
-import { EQUIPMENT, type Locale } from '@/content/schema';
+import type { Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { canonicalUrl } from '@/lib/seo/urls';
 import { appHref, href, localeStaticPaths } from '@/lib/util/paths';
@@ -33,10 +40,8 @@ const site = (Astro.site?.toString() ?? 'http://localhost:4321').replace(/\/$/, 
 
 const title = t(locale, 'landing.coursesHubTitle');
 const description = t(locale, 'landing.coursesHubDescription');
-
-const equipmentOptions = equipmentAcrossCourses(SITE_COURSES, EQUIPMENT);
-const levelOptions = levelsAcrossCourses(SITE_COURSES);
-const self = href(locale, '/courses/');
+const startHref = appHref('/start', { locale });
+const single = SITE_COURSES.length === 1;
 
 const jsonLd = [
   breadcrumbLd([
@@ -75,214 +80,43 @@ const jsonLd = [
       </p>
     </HeroField>
 
-    <!-- Filters as two hairline rows: a kicker, then the chips. -->
-    <div
-      class="mt-10 flex flex-col divide-y divide-border border-y border-border"
-      data-course-filters
-    >
-      <div class="flex flex-wrap items-center gap-2 py-3">
-        <span class="eyebrow mr-3">{t(locale, 'landing.filterEquipment')}</span>
-        <a
-          href={`${self}#courses`}
-          data-filter="equipment"
-          data-value="all"
-          aria-current="true"
-          class="filter-chip"
-        >
-          {t(locale, 'landing.filterAll')}
-        </a>
-        {
-          equipmentOptions.map((e) => (
-            <a
-              href={`${self}?equipment=${e}#courses`}
-              data-filter="equipment"
-              data-value={e}
-              class="filter-chip"
-            >
-              {equipmentLabel(locale, e)}
-            </a>
-          ))
-        }
-      </div>
-      <div class="flex flex-wrap items-center gap-2 py-3">
-        <span class="eyebrow mr-3">{t(locale, 'landing.filterLevel')}</span>
-        <a
-          href={`${self}#courses`}
-          data-filter="level"
-          data-value="all"
-          aria-current="true"
-          class="filter-chip"
-        >
-          {t(locale, 'landing.filterAll')}
-        </a>
-        {
-          levelOptions.map((lv) => (
-            <a
-              href={`${self}?level=${lv}#courses`}
-              data-filter="level"
-              data-value={String(lv)}
-              class="filter-chip"
-            >
-              {levelLabel(locale, lv)}
-            </a>
-          ))
-        }
-      </div>
-    </div>
-
     <!--
-      The tickets. One course on sale lies sideways across the page; the grid never asks for more
-      columns than it has tickets (see the home page's course section for why).
+      The ticket. One course on sale lies sideways across the page with both of its buttons; the
+      grid never asks for more columns than it has tickets (see the home page's course section).
     -->
     <ul
       id="courses"
       class:list={[
-        'mt-8 grid scroll-mt-24 gap-5',
+        'mt-8 grid scroll-mt-24 gap-5 md:mt-10',
         SITE_COURSES.length >= 2 && 'sm:grid-cols-2',
         SITE_COURSES.length >= 3 && 'lg:grid-cols-3',
       ]}
-      aria-label={t(locale, 'landing.filterResultsLabel')}
+      aria-label={t(locale, 'landing.coursesHubListLabel')}
     >
       {
         SITE_COURSES.map((c) => (
-          <li data-course-item data-equipment={c.equipment.join(' ')} data-level={c.level}>
+          <li>
             <CourseCard
               course={c}
               locale={locale}
               headingLevel="h2"
-              wide={SITE_COURSES.length === 1}
+              wide={single}
+              startHref={c.id === 'start' ? startHref : undefined}
             />
           </li>
         ))
       }
     </ul>
-    <p hidden data-filter-empty role="status" class="mt-8 border-t border-border pt-5 text-muted">
-      {t(locale, 'landing.filterNoResults')}
-      <a
-        href={`${self}#courses`}
-        data-filter-reset
-        class="control-label ml-3 inline-flex min-h-11 items-center text-[12px] text-text hover:opacity-85"
-      >
-        {t(locale, 'landing.filterReset')}
-      </a>
-    </p>
   </div>
 
-  <div class="mx-auto max-w-6xl px-5 pt-10">
-    <SubscribeBanner locale={locale} />
+  <div class="mx-auto max-w-6xl px-5 pt-12 md:pt-16">
+    <ClubBand locale={locale} />
   </div>
 
   <Cta
     title={t(locale, 'landing.ctaTitle')}
     text={t(locale, 'landing.ctaText')}
-    primary={{ label: t(locale, 'landing.heroCtaApp'), href: appHref('', { locale }) }}
+    primary={{ label: t(locale, 'landing.startCta'), href: startHref }}
+    primaryData={{ 'data-goal': 'app_start', 'data-app-link': true }}
   />
 </Landing>
-
-<style>
-  /*
-   * The kit's Chip as a scoped style (the chips are plain <a> links so filtering works without
-   * JS): 34px, sentence case at 14px, --surface-3 behind a hairline. The selected filter is the
-   * white fill with black text — the same inversion the primary button uses, and the only fill in
-   * the row. The visual box is 34px; the pseudo-element grows the hit area to 44px.
-   *
-   * Sizes and tracking track `src/components/ui/Chip.tsx` by hand; when that one moves, move this.
-   */
-  .filter-chip {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    height: 2.125rem;
-    padding: 0 0.75rem;
-    border: 1px solid var(--border);
-    background: var(--surface-3);
-    font-size: 0.875rem;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    white-space: nowrap;
-    color: var(--muted);
-    transition:
-      color 150ms var(--ease-out),
-      border-color 150ms var(--ease-out),
-      background 150ms var(--ease-out),
-      transform 150ms var(--ease-out);
-  }
-  .filter-chip::before {
-    content: '';
-    position: absolute;
-    inset: -5px 0;
-  }
-  .filter-chip:hover {
-    color: var(--text);
-    border-color: var(--border-strong);
-  }
-  .filter-chip:active {
-    transform: scale(0.98);
-  }
-  .filter-chip[aria-current='true'] {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: var(--on-primary);
-  }
-</style>
-
-<script>
-  // Client-side filtering. Without JS the chips are plain links and all courses stay visible.
-  const root = document.querySelector<HTMLElement>('[data-course-filters]');
-  if (root) {
-    const chips = Array.from(root.querySelectorAll<HTMLAnchorElement>('a[data-filter]'));
-    const items = Array.from(document.querySelectorAll<HTMLElement>('[data-course-item]'));
-    const empty = document.querySelector<HTMLElement>('[data-filter-empty]');
-    const reset = document.querySelector<HTMLAnchorElement>('[data-filter-reset]');
-    type FilterKey = 'equipment' | 'level';
-    const isFilterKey = (k: string | undefined): k is FilterKey =>
-      k === 'equipment' || k === 'level';
-    const state: Record<FilterKey, string> = { equipment: 'all', level: 'all' };
-
-    const apply = () => {
-      let visible = 0;
-      for (const item of items) {
-        const eq = (item.dataset.equipment ?? '').split(' ');
-        const okEq = state.equipment === 'all' || eq.includes(state.equipment);
-        const okLv = state.level === 'all' || item.dataset.level === state.level;
-        const show = okEq && okLv;
-        item.hidden = !show;
-        if (show) visible++;
-      }
-      if (empty) empty.hidden = visible > 0;
-      for (const chip of chips) {
-        const key = chip.dataset.filter;
-        const pressed = isFilterKey(key) && state[key] === chip.dataset.value;
-        if (pressed) chip.setAttribute('aria-current', 'true');
-        else chip.removeAttribute('aria-current');
-      }
-      const params = new URLSearchParams();
-      if (state.equipment !== 'all') params.set('equipment', state.equipment);
-      if (state.level !== 'all') params.set('level', state.level);
-      const qs = params.toString();
-      history.replaceState(null, '', `${location.pathname}${qs ? `?${qs}` : ''}${location.hash}`);
-    };
-
-    const initial = new URLSearchParams(location.search);
-    for (const key of ['equipment', 'level'] as const) {
-      const v = initial.get(key);
-      if (v) state[key] = v;
-    }
-    for (const chip of chips) {
-      chip.addEventListener('click', (e) => {
-        e.preventDefault();
-        const key = chip.dataset.filter;
-        if (!isFilterKey(key)) return;
-        state[key] = chip.dataset.value ?? 'all';
-        apply();
-      });
-    }
-    reset?.addEventListener('click', (e) => {
-      e.preventDefault();
-      state.equipment = 'all';
-      state.level = 'all';
-      apply();
-    });
-    apply();
-  }
-</script>

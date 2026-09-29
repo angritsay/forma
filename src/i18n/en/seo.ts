@@ -9,7 +9,7 @@ export const seo = {
   chooseCourse: 'Choose a course',
 
   // Static page names (sitemap registry, llms.txt)
-  coursesHubTitle: 'Home CrossFit courses',
+  coursesHubTitle: 'Home CrossFit course with no equipment',
   coursesHubDescription:
     'Home CrossFit from zero: a twenty-workout no-equipment course, a club with a task a day and the coach in Telegram. Sign in by email; the load adapts to you.',
   togetherTitle: 'Train together from Monday',

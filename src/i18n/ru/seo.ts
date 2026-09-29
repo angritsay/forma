@@ -9,7 +9,7 @@ export const seo = {
   chooseCourse: 'Выбрать курс',
 
   // Названия статических страниц (реестр sitemap, llms.txt)
-  coursesHubTitle: 'Курсы кроссфита для дома',
+  coursesHubTitle: 'Курс кроссфита дома без оборудования',
   coursesHubDescription:
     'Кроссфит дома с нуля: курс из двадцати тренировок без оборудования, клуб с заданием на день и тренер в Telegram. Войди по email — нагрузка подстроится под тебя.',
   togetherTitle: 'Тренироваться вместе с понедельника',
@@ -40,7 +40,8 @@ export const seo = {
   exerciseTitleFull: 'Упражнение {name}: техника, ошибки, варианты',
   exerciseTitleMedium: '{name}: техника и ошибки',
   exerciseTitleShort: '{name}: техника',
-  exerciseDescriptionCta: 'Анимация, пошаговая техника, подсказки и варианты — в библиотеке Forma.',
+  exerciseDescriptionCta:
+    'Видео тренера, пошаговая техника, подсказки и варианты — в библиотеке Forma.',
   exerciseFacts: 'Коротко',
   factMuscles: 'Мышцы',
   factPattern: 'Паттерн',

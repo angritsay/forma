@@ -365,7 +365,11 @@ const jsonLd = [
             </p>
           )
         }
-        <a href={href(locale, '/about/')} class={quietLink}>
+        {/* `#sessions` exists on /about/ only while booking is on; otherwise the page itself. */}
+        <a
+          href={`${href(locale, '/about/')}${BOOKING.enabled ? '#sessions' : ''}`}
+          class={quietLink}
+        >
           {t(locale, 'landing.coachMore')}
           <span class="glyph" aria-hidden="true">→</span>
         </a>

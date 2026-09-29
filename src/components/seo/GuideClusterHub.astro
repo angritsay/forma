@@ -14,6 +14,7 @@ import Breadcrumbs from '@/components/seo/Breadcrumbs.astro';
 import GuideCard from '@/components/seo/GuideCard.astro';
 import HeroField from '@/components/landing/HeroField.astro';
 import KeyTitle from '@/components/landing/KeyTitle.astro';
+import StartBand from '@/components/landing/StartBand.astro';
 import type { Locale } from '@/content/schema';
 import { LOCALES } from '@/content/schema';
 import { plural, t } from '@/i18n/index';
@@ -123,4 +124,5 @@ const jsonLd = [
       </a>
     </p>
   </div>
+  <StartBand locale={locale} />
 </Landing>

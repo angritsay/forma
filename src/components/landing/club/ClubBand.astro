@@ -1,0 +1,91 @@
+---
+/**
+ * The club as one warm band beside a course — the courses hub's answer to «а что после курса?»
+ * (site synthesis §5, `/courses/`). It replaces the old `SubscribeBanner`, which listed four
+ * sentences of `PLAN_INCLUDES` and two prices in white.
+ *
+ *   left   a kicker, the club's name as its lockup (`ClubTitle`), the figure large with the
+ *          year's single charge directly under it and «Автосписаний нет»
+ *   right  the four glyph tiles the homepage's club section uses — a task a day, the streak, the
+ *          weekly prize, solo or as a pair — and the gradient join with a quiet link to the page
+ *
+ * **Price rules** come from `clubPriceLabels`: 666 ₽ never without the year's 7 990 ₽ (the full
+ * `app.clubChargeNote` here, there is room for it), EN leads with «$79 a year» and prints no
+ * month. The join is `data-club-join`, so with a friend's code pending the layout sends it
+ * through the app's club screen. Club palette, `data-club-zone`, no neon — it lives in `club/` so
+ * `site-club-no-neon.test.ts` holds it to that. Draws nothing while plans are switched off.
+ */
+import type { Locale } from '@/content/schema';
+import { t } from '@/i18n/index';
+import { href } from '@/lib/util/paths';
+import Button from '../Button.astro';
+import IconTiles from '../IconTiles.astro';
+import ClubTitle from './ClubTitle.astro';
+import { clubPriceLabels } from './clubPrice';
+
+interface Props {
+  locale: Locale;
+  class?: string;
+}
+const { locale, class: extra = '' } = Astro.props;
+
+const club = clubPriceLabels(locale);
+const tiles = [
+  { kind: 'steps', label: t(locale, 'landing.clubTileTask') },
+  { kind: 'flame', label: t(locale, 'landing.clubTileStreak') },
+  { kind: 'trophy', label: t(locale, 'landing.clubTilePrize') },
+  { kind: 'heart', label: t(locale, 'landing.clubTileDuo') },
+] as const;
+const quietLink =
+  'control-label inline-flex min-h-11 items-center gap-2 text-[14px] text-text underline decoration-border-strong underline-offset-4 hover:decoration-text';
+---
+
+{
+  club && (
+    <section
+      data-club-zone
+      class:list={[
+        'club-aurora-host glass-card-2 relative overflow-hidden rounded-card border border-border-strong p-6 md:p-10',
+        extra,
+      ]}
+    >
+      <span class="club-aurora" aria-hidden="true" />
+      <div class="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-end lg:gap-14">
+        <div class="flex flex-col gap-6">
+          <div>
+            <p class="eyebrow">{t(locale, 'landing.clubBandEyebrow')}</p>
+            <ClubTitle locale={locale} class="mt-4 !text-[clamp(30px,7vw,44px)]" />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <p class="numeral text-5xl leading-none md:text-6xl">{club.headline}</p>
+            <p class="text-[14px] leading-snug text-text">{club.charge}</p>
+            <p class="text-[13px] leading-snug text-muted">
+              {t(locale, 'landing.clubNoAutoRenew')}
+            </p>
+          </div>
+        </div>
+        <div class="flex flex-col gap-6">
+          <IconTiles items={tiles} />
+          <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <Button
+              href={`${href(locale, '/subscribe/')}#order`}
+              variant="gradient"
+              size="lg"
+              class="w-full sm:w-auto"
+              data-club-join
+              data-goal="club_join"
+            >
+              {club.join}
+            </Button>
+            <a href={href(locale, '/subscribe/')} class={quietLink}>
+              {t(locale, 'landing.clubBandMore')}
+              <span class="glyph" aria-hidden="true">
+                →
+              </span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}

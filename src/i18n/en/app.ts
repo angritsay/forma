@@ -1241,7 +1241,7 @@ export const app = {
   inviteHow: 'How it works',
   inviteStep1: 'Your friend opens your link',
   inviteStep2: 'They pay for the club',
-  inviteStep3: 'You both get +30 days and land in one duo pair',
+  inviteStep3: 'You both get +30 days — and a duo pair, if neither of you has one',
   inviteNote: 'No bonus if the friend has been in the club before. Up to 12 rewards a year.',
   inviteLinkLabel: 'Your link',
   inviteCopy: 'Copy',

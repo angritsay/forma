@@ -17,7 +17,8 @@
  * `/subscribe/`): the club's gradient join button instead — «Вступить за 666 ₽ / мес» on RU with
  * «7 990 ₽ за год, одной оплатой» directly under it, because 666 never stands without the year's
  * charge; EN names the year only (`clubPriceLabels`). The club variant hides only on the join
- * buttons it duplicates (`[data-club-join]`) and the footer.
+ * buttons it duplicates (`[data-club-join]`), the order form it links to (`#order` — so it never
+ * sits over the email field, the consent or the submit, or above a phone keyboard) and the footer.
  *
  * The share square uses `shareHome.ts`: the system share sheet inside the tap where there is one,
  * with the Monday message and the `/together/` link (`inviteShareAttrs`), otherwise a scroll to
@@ -48,7 +49,7 @@ const {
   variant = 'start',
   anchor = '[data-sticky-anchor]',
   hideOn = variant === 'club'
-    ? '[data-club-join], footer'
+    ? '[data-club-join], #order, footer'
     : '[data-neon], [data-club-zone], #together, footer',
   joinHref = `${href(locale, '/subscribe/')}#order`,
 } = Astro.props;

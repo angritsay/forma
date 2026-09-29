@@ -1,0 +1,32 @@
+---
+/**
+ * The closing band of the pages that are not about buying — the guides and exercises hubs, a
+ * guide cluster, the contact page (site synthesis §3, rows 21–22): «Тренировка 1 ждёт», one line
+ * with its real length, and the neon «Начать бесплатно» into the app's `#/start`.
+ *
+ * The minutes are workout 1's, warm-up and cool-down included, from the engine and the course
+ * file (`firstWorkoutFacts().totalMinutes`), never typed; without the course the line says only
+ * that it is free.
+ */
+import type { Locale } from '@/content/schema';
+import { t } from '@/i18n/index';
+import { appHref } from '@/lib/util/paths';
+import Cta from './Cta.astro';
+import { firstWorkoutFacts } from './demo';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const facts = firstWorkoutFacts(locale);
+const text = facts
+  ? t(locale, 'landing.hubCtaText', { total: facts.totalMinutes })
+  : t(locale, 'landing.ctaText');
+---
+
+<Cta
+  title={t(locale, 'landing.homeCtaTitle')}
+  text={text}
+  primary={{ label: t(locale, 'landing.startCta'), href: appHref('/start', { locale }) }}
+  primaryData={{ 'data-goal': 'app_start', 'data-app-link': true }}
+/>
