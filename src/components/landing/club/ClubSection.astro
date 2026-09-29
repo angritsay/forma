@@ -1,27 +1,33 @@
 ---
 /**
  * The homepage's club section, «Клуб маленьких шагов» (site synthesis §2, S5): the reason to stay,
- * in the club's own palette.
+ * in the club's own palette, drawn rather than described.
  *
  * It lives in `club/` so `site-club-no-neon.test.ts` holds it to the club's rule: no neon. The
- * one action is the warm-gradient join button, the one filled pill would be `warm`, and the section
- * is marked `data-club-zone` so the phone's neon sticky bar steps aside while it is on screen.
+ * one action is the warm-gradient join button, and the section is marked `data-club-zone` so the
+ * phone's neon sticky bar steps aside while it is on screen.
  *
- * Every sentence that describes the club is the app's, quoted from its keys rather than retyped:
- * the name (`ClubTitle`), the lead (`app.clubLead*`, its middle phrase in the light blue — body
- * size, so not the gradient), the four features, the duo rule (`app.duoNoneBody`) and the
- * charge (`app.clubChargeNote`, through `clubPriceLabels`, which never returns the month without
- * the year). What the site adds is only what the app says elsewhere: the prize for a pair
- * (migration 0033), the bot's rhythm in words («утром / вечером / в воскресенье вечером», never
- * clock times), and the two ways out — workout 1 first, or the together block.
+ *   header   kicker, the name as a lockup (`ClubTitle`) — no line under it; the phone says it
+ *   picture  a day in the club as a still chat in a phone (`ClubDay`), beside four glyph tiles —
+ *            a task a day, the streak, the weekly prize, solo or as a pair
+ *   price    the figure large (`clubPriceLabels`: 666 never without the year's 7 990, EN the year
+ *            only), «Автосписаний нет», the gradient join
+ *   photos   the strip `clubPitchPhotos()` gives, labelled by whose photographs they are
+ *            (`app.clubPhotosMembers` / `app.clubPhotosClients`) with the matching consent line
+ *
+ * The paragraphs that used to explain each feature, the duo rule and the bot's rhythm belong to
+ * the club's own page (`/subscribe/`).
  *
  * The header copies `Section`'s hairline, kicker and number, because `Section` takes its title
  * as a string and the club's is a three-weight lockup.
  */
 import type { Locale } from '@/content/schema';
 import { t } from '@/i18n/index';
-import { appHref, href } from '@/lib/util/paths';
+import { href } from '@/lib/util/paths';
+import { clubPitchPhotos } from '@content/site/club';
 import Button from '../Button.astro';
+import IconTiles from '../IconTiles.astro';
+import PhotoStrip from '../media/PhotoStrip.astro';
 import ClubDay from './ClubDay.astro';
 import ClubTitle from './ClubTitle.astro';
 import { clubPriceLabels } from './clubPrice';
@@ -35,31 +41,33 @@ interface Props {
 const { locale, n, id = 'club' } = Astro.props;
 
 const club = clubPriceLabels(locale);
-const features = [
-  { title: t(locale, 'app.clubFeature1Title'), body: t(locale, 'app.clubFeature1Body') },
-  { title: t(locale, 'app.clubFeature2Title'), body: t(locale, 'app.clubFeature2Body') },
-  { title: t(locale, 'app.clubFeature3Title'), body: t(locale, 'app.clubFeature3Body') },
-  { title: t(locale, 'app.clubFeature4Title'), body: t(locale, 'app.clubFeature4Body') },
-];
-const quietLink =
-  'control-label inline-flex min-h-11 items-center gap-2 text-[14px] text-text underline decoration-border-strong underline-offset-4 hover:decoration-text';
+const tiles = [
+  { kind: 'steps', label: t(locale, 'landing.clubTileTask') },
+  { kind: 'flame', label: t(locale, 'landing.clubTileStreak') },
+  { kind: 'trophy', label: t(locale, 'landing.clubTilePrize') },
+  { kind: 'heart', label: t(locale, 'landing.clubTileDuo') },
+] as const;
+
+const { photos, source } = clubPitchPhotos();
+const members = source === 'members';
+const strip = photos.map((p) => ({
+  src: p.src,
+  alt: p.alt ? p.alt[locale] : '',
+  width: 1000,
+  height: 1000,
+}));
 ---
 
 <section
   id={id}
   data-club-zone
-  class="club-aurora-host mx-auto max-w-6xl overflow-x-clip px-5 py-16 md:py-24"
+  class="club-aurora-host mx-auto max-w-6xl overflow-x-clip px-5 py-16"
 >
   <span class="club-aurora" aria-hidden="true"></span>
   <div class="flex items-start justify-between gap-8 border-t border-border pt-8">
     <header class="max-w-2xl">
       <p class="eyebrow">{t(locale, 'landing.clubEyebrow')}</p>
       <ClubTitle locale={locale} class="mt-4" />
-      <p class="mt-5 max-w-xl text-base leading-relaxed text-muted md:text-lg">
-        {t(locale, 'app.clubLeadPre')}<span class="text-accent"
-          >{t(locale, 'app.clubLeadAccent')}</span
-        >{t(locale, 'app.clubLeadPost')}
-      </p>
     </header>
     {
       n !== undefined && (
@@ -70,46 +78,22 @@ const quietLink =
     }
   </div>
 
-  <div class="mt-10 grid items-start gap-10 md:mt-12 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-14">
+  <div class="mt-10 grid items-center gap-10 md:mt-12 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-14">
     <ClubDay locale={locale} class="mx-auto w-full max-w-[320px]" />
 
-    <div class="flex flex-col">
-      <ul class="grid gap-x-8 sm:grid-cols-2">
-        {
-          features.map((f) => (
-            <li class="flex flex-col gap-2 border-t border-border py-5">
-              <h3 class="font-display text-base">{f.title}</h3>
-              <p class="text-sm leading-relaxed text-muted">{f.body}</p>
-            </li>
-          ))
-        }
-      </ul>
-
-      <div class="grid gap-x-8 sm:grid-cols-2">
-        <div class="flex flex-col gap-2 border-t border-border py-5">
-          <h3 class="font-display text-base">{t(locale, 'landing.clubSoloTitle')}</h3>
-          <p class="text-sm leading-relaxed text-muted">
-            {t(locale, 'app.duoNoneBody')}
-            {' '}
-            {t(locale, 'landing.clubDuoPrize')}
-          </p>
-        </div>
-        <div class="flex flex-col gap-2 border-t border-border py-5">
-          <h3 class="font-display text-base">{t(locale, 'landing.clubBotTitle')}</h3>
-          <p class="text-sm leading-relaxed text-muted">{t(locale, 'landing.clubBot')}</p>
-        </div>
-      </div>
-
+    <div class="flex flex-col gap-8">
+      <IconTiles items={tiles} />
       {
         club && (
-          <div class="flex flex-col gap-5 border-t border-border pt-6 sm:flex-row sm:items-end sm:justify-between">
+          <div class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div class="flex flex-col gap-1.5">
-              <p class="numeral text-4xl leading-tight">{club.headline}</p>
-              <p class="max-w-sm text-[14px] leading-snug text-text">{club.charge}</p>
-              <p class="text-[13px] leading-snug text-muted">
-                {t(locale, 'landing.clubNoAutoRenew')}
-                {club.monthly && <span class="block text-muted-2">{club.monthly}</span>}
-              </p>
+              <p class="numeral text-5xl leading-none md:text-6xl">{club.headline}</p>
+              <p class="text-[14px] leading-snug text-text">{club.chargeShort}</p>
+              {club.chargeShort !== t(locale, 'landing.clubNoAutoRenew') && (
+                <p class="text-[13px] leading-snug text-muted">
+                  {t(locale, 'landing.clubNoAutoRenew')}
+                </p>
+              )}
             </div>
             <Button
               href={`${href(locale, '/subscribe/')}#order`}
@@ -124,17 +108,13 @@ const quietLink =
           </div>
         )
       }
-
-      <div class="mt-4 flex flex-wrap gap-x-6">
-        <a href={appHref('/start', { locale })} class={quietLink} data-app-link>
-          {t(locale, 'landing.clubFirstFree')}
-          <span class="glyph" aria-hidden="true">→</span>
-        </a>
-        <a href="#together" class={quietLink}>
-          {t(locale, 'landing.clubInvite')}
-          <span class="glyph" aria-hidden="true">→</span>
-        </a>
-      </div>
     </div>
   </div>
+
+  <PhotoStrip
+    class="mt-12"
+    photos={strip}
+    label={t(locale, members ? 'app.clubPhotosMembers' : 'app.clubPhotosClients')}
+    caption={t(locale, members ? 'app.clubPhotosMembersRow' : 'app.clubPhotosClientsRow')}
+  />
 </section>

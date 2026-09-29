@@ -1,0 +1,81 @@
+---
+/**
+ * A horizontal strip of photographs you swipe: before/after results, club photos.
+ *
+ *   <PhotoStrip label="Результаты клиентов" photos={[{ src, alt, width: 1000, height: 1000 }]}
+ *     caption="Фото с согласия клиентов" />
+ *
+ * Scroll-snap, no JavaScript: about 1.15 cards on a phone (the sliver of the next one is the cue
+ * that it scrolls), three from `md` up. The scroller itself is focusable and labelled, so a
+ * keyboard reaches it with Tab and moves it with the arrow keys, and the global focus ring shows
+ * where focus is. Every image is lazy with its intrinsic size, and the cell is an aspect-ratio box,
+ * so ten photographs arriving late move nothing.
+ *
+ * `caption` is the one line under the strip — for result photos it is the consent line, and it has
+ * to stay wherever those photos are shown. Photographs are monochrome with grain, as everywhere on
+ * the site.
+ */
+import { withBase } from '@/lib/util/paths';
+
+export interface StripPhoto {
+  /** A path under `public/` (base-resolved here) or an absolute URL. */
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+}
+
+interface Props {
+  photos: readonly StripPhoto[];
+  /** Accessible name of the scroller, e.g. «Результаты клиентов». */
+  label: string;
+  caption?: string;
+  ratio?: 'square' | 'portrait';
+  class?: string;
+}
+
+const { photos, label, caption, ratio = 'square', class: extra = '' } = Astro.props;
+const RATIO = { square: 'aspect-square', portrait: 'aspect-[4/5]' } as const;
+const url = (src: string) => (/^https?:\/\//i.test(src) ? src : withBase(src));
+---
+
+{
+  photos.length > 0 && (
+    <figure class={`m-0 ${extra}`}>
+      <div
+        class="photo-strip -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-2 md:mx-0 md:scroll-px-0 md:px-0"
+        role="region"
+        aria-label={label}
+        tabindex="0"
+      >
+        {photos.map((p) => (
+          <div
+            class={`relative w-[calc((100%-0.75rem)/1.15)] shrink-0 snap-start overflow-hidden rounded-card border border-border bg-surface-2 md:w-[calc((100%-1.5rem)/3)] ${RATIO[ratio]}`}
+          >
+            <img
+              src={url(p.src)}
+              alt={p.alt}
+              width={p.width}
+              height={p.height}
+              loading="lazy"
+              decoding="async"
+              class="photo-mono absolute inset-0 size-full object-cover"
+            />
+            <div class="photo-grain" aria-hidden="true" />
+          </div>
+        ))}
+      </div>
+      {caption && <figcaption class="mt-3 text-[13px] text-muted">{caption}</figcaption>}
+    </figure>
+  )
+}
+
+<style>
+  .photo-strip {
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .photo-strip::-webkit-scrollbar {
+    display: none;
+  }
+</style>

@@ -10,18 +10,19 @@
  * gave the photograph the bottom half of the first screen and three lines of body copy the top was
  * the old ratio.
  *
- * From `md` the composition returns to the editorial 7/5 grid the landing already had: columns
- * aligned on their baselines, the photograph running past the page gutter with a vertical kicker
- * down its outer margin. That layout works and was not the complaint; what changed on it is the
- * same as on the phone — one line of copy, pills instead of chips, the plate with the brand's
- * formula gone (the «Внутри тренировки» section says it as its headline).
+ * From `md` the words and the picture split the width evenly (6/6) and stretch to one height, so
+ * the photograph is never smaller than the field and the form beside it; it runs past the page
+ * gutter. The kicker is said once, over the headline (the vertical copy down the picture's edge is
+ * gone). On the phone the first screen keeps to the headline, the first pill and the form: the lead
+ * and the other pills appear from `sm`, where they no longer push the button below the fold.
  *
  * The headline is the brand's main typographic device — two weights in one line, 800 and 200:
  * «КРОССФИТ ДОМА. Первая тренировка — сегодня». The copy is not touched; the split falls at
  * the first comma, or after the first two words when there is none, and `thin` overrides it.
  *
- * `photo` wins when it is set; a frame from the named movement's clip stands in, so the hero still
- * renders before a usable photograph exists.
+ * The picture is a silent loop of the coach doing one filmed movement (`LoopVideo`), with his
+ * photograph as the poster: that is what shows before the clip plays, under reduced motion or data
+ * saver, and whenever there is no clip at all. The lead is one line, the pills three at most.
  *
  * Style A (global.css header): the words stand in the blue hero field — the page's one — white,
  * the headline's last `keyWords` words («сегодня», «today») in the brand's light blue over the swoosh.
@@ -30,11 +31,10 @@
  * leans, the rest are white hairlines. The primary button is the page's neon and stands under the
  * field, on charcoal, as in the owner's mockup.
  */
-import ExerciseStill from '@/components/media/ExerciseStill';
-import Button from './Button.astro';
 import HeroField from './HeroField.astro';
 import KeyTitle from './KeyTitle.astro';
 import Pill from './Pill.astro';
+import LoopVideo from './media/LoopVideo.astro';
 
 interface Props {
   title: string;
@@ -42,37 +42,19 @@ interface Props {
   thin?: string;
   /** How many trailing words are the light-blue key word over the swoosh. */
   keyWords?: number;
-  subtitle: string;
-  /**
-   * The neon button under the field. Omitted when the page passes its own action in the `action`
-   * slot — the homepage's `StartForm` island, which *is* the neon.
-   */
-  primary?: { label: string; href: string };
-  /** Shown from `md` only: the phone gets one button, and the app is one tap away in the menu. */
-  secondary?: { label: string; href: string };
-  /** Facts, as pills. */
+  /** One line under the headline. */
+  lead: string;
+  /** Facts, as pills — three at most. */
   chips: string[];
   /** Which pill leans right (+5°). Defaults to the first short one after the first. */
   tiltRight?: number;
-  /** Movement whose still stands in for the photograph. */
-  figure: { exerciseId: string };
-  /** The coach, photographed. Takes precedence over `figure`. */
-  photo?: { src: string; alt: string };
-  /** The kicker over the headline and down the photograph's edge. */
+  /** The filmed movement that loops, the photograph that stands until it plays, and its alt. */
+  loop: { id: string; poster: string; alt?: string };
+  /** The kicker over the headline. */
   tileTop: string;
 }
 
-const {
-  title,
-  keyWords = 2,
-  subtitle,
-  primary,
-  secondary,
-  chips,
-  figure,
-  photo,
-  tileTop,
-} = Astro.props;
+const { title, keyWords = 2, lead, chips, loop, tileTop } = Astro.props;
 
 /** Where the heavy half of the headline ends: at the first comma, else after two words. */
 function thinFrom(text: string, thin?: string): string | undefined {
@@ -92,20 +74,18 @@ const rightTilt = Astro.props.tiltRight ?? chips.findIndex((c, i) => i > 0 && c.
 ---
 
 <!--
-  `isolate` + the photograph at `-z-10`: on the phone the picture is absolutely positioned behind
-  the type inside this section's own stacking context, so it can never slide under the page or over
-  the glass header. `overflow-x-clip` is load-bearing (not `hidden`, which would make this a scroll
+  `isolate`: the picture and the words stack inside this section's own context, so the picture can
+  never slide over the glass header. On the phone the picture comes first (`order-first`), a band
+  about half the screen tall, and the words rise into its foot; the field is opaque, so it needs no
+  protection there. `overflow-x-clip` is load-bearing (not `hidden`, which would make this a scroll
   container and stop the sticky header): from `md` the photograph bleeds past the gutter with a
   negative right margin, and between 768 and 1152 there is no slack beside the container for it to
   bleed into — 1044px of scroll width in a 1024px window, measured, before the clip.
-
-  `min-h-[86svh]` on the phone: the first screen is the photograph with the type at its foot, and
-  the 14% left over is the top of the next section showing — the hint that there is one.
 -->
 <section
-  class="relative isolate mx-auto flex min-h-[86svh] max-w-6xl flex-col justify-end overflow-x-clip px-5 pt-10 pb-12 md:grid md:min-h-0 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:items-end md:gap-14 md:pt-20 md:pb-28"
+  class="relative isolate mx-auto flex max-w-6xl flex-col overflow-x-clip px-5 pb-10 md:grid md:grid-cols-[minmax(0,6fr)_minmax(0,6fr)] md:items-stretch md:gap-12 md:pt-16 md:pb-12"
 >
-  <div class="relative z-10">
+  <div class="relative z-10 -mt-28 md:mt-0 md:self-end">
     <HeroField>
       <p class="eyebrow">{tileTop}</p>
       <KeyTitle
@@ -114,11 +94,13 @@ const rightTilt = Astro.props.tiltRight ?? chips.findIndex((c, i) => i > 0 && c.
         thin={thin}
         class="display mt-4 max-w-[16ch] text-[clamp(1.75rem,7vw,2.75rem)]"
       />
-      <p class="field-lead mt-5 max-w-xl text-base leading-relaxed md:text-lg">{subtitle}</p>
-      <ul class="mt-6 flex flex-wrap gap-2">
+      <p class="field-lead mt-5 max-w-xl text-base leading-snug max-sm:hidden md:text-lg">
+        {lead}
+      </p>
+      <ul class="mt-5 flex flex-wrap gap-2 sm:mt-6">
         {
           chips.map((c, i) => (
-            <li class="flex max-w-full">
+            <li class:list={['flex max-w-full', i > 0 && 'max-sm:hidden']}>
               <Pill
                 size="md"
                 tone={i === 0 ? 'white' : 'ghost'}
@@ -132,86 +114,52 @@ const rightTilt = Astro.props.tiltRight ?? chips.findIndex((c, i) => i > 0 && c.
       </ul>
     </HeroField>
     {
-      /*
-       * `action` replaces the one button with whatever the page brings — the homepage's email form
-       * — and `after` is the quiet row under it (share, sign in, Telegram). Both are optional, so
-       * a page that passes only `primary` gets the hero it always had.
-       */
-      Astro.slots.has('action') ? (
+      /* The page's action — the homepage's email form — and the quiet row under it. */
+      Astro.slots.has('action') && (
         <div class="mt-5">
           <slot name="action" />
         </div>
-      ) : (
-        (primary || secondary) && (
-          <div class="mt-5 flex flex-wrap items-center gap-3">
-            {primary && (
-              <Button href={primary.href} size="lg" class="w-full sm:w-auto">
-                {primary.label}
-              </Button>
-            )}
-            {secondary && (
-              <Button href={secondary.href} variant="secondary" size="lg" class="max-md:hidden">
-                {secondary.label}
-              </Button>
-            )}
-          </div>
-        )
       )
     }
     <slot name="after" />
   </div>
 
   <!--
-    The photograph. Absolute and full-bleed on the phone; a 4:5 frame in the second column from
-    `md`, with `-mr-10` running it past the gutter. Square corners, monochrome, grain — a photograph
-    is the one element in this system allowed to reach the edge of the page, and rounding it would
-    turn it straight back into a tile.
+    The picture. On the phone a full-width band over the top of the screen that the field rises
+    into (`-mt-28` on the words), fading to the ground at its foot; a 4:5 frame in the second
+    column from `md`, with `-mr-10` running it past the gutter. Square corners, monochrome, grain — a photograph is
+    the one element in this system allowed to reach the edge of the page.
   -->
-  <div class="absolute inset-0 -z-10 md:relative md:inset-auto md:z-0 md:-mr-10">
-    <div
-      class:list={[
-        'relative h-full w-full overflow-hidden md:aspect-[4/5] md:h-auto',
-        photo ? 'bg-surface' : 'hero-art',
-      ]}
-    >
+  <div
+    class="relative order-first -mx-5 h-[48svh] min-h-80 md:order-none md:mx-0 md:h-auto md:-mr-10"
+  >
+    <div class="relative h-full w-full overflow-hidden bg-surface md:min-h-full md:aspect-[4/5]">
       {
-        photo ? (
-          <>
-            {/*
-              `object-[35%_30%]` on the phone: the frame is 3:4 and the screen behind the type is
-              taller than that, so the sides are cropped — and the coach stands a third of the way
-              in from the left, which a centred crop would cut through.
-            */}
-            <img
-              src={photo.src}
-              alt={photo.alt}
-              width="900"
-              height="1125"
-              fetchpriority="high"
-              decoding="async"
-              class="photo-mono absolute inset-0 size-full object-cover object-[35%_30%] md:object-center"
-            />
-            <div class="photo-grain" aria-hidden="true" />
-            <div class="photo-scrim" aria-hidden="true" />
-            {/*
-              A second, page-coloured scrim for the phone only, where the field stands on the
-              picture: the field is opaque and needs no protection, but the photograph has to run
-              out into charcoal under it, so the button beneath the field stands on the ground.
-            */}
-            <div
-              class="absolute inset-0 bg-linear-to-t from-bg via-bg/80 via-45% to-transparent md:hidden"
-              aria-hidden="true"
-            />
-          </>
-        ) : (
-          <div class="absolute inset-0 flex items-center justify-center">
-            <ExerciseStill exerciseId={figure.exerciseId} loading="eager" />
-          </div>
-        )
+        /*
+        `object-[35%_30%]` on the phone: the screen behind the type is taller than the frame, so
+        the sides are cropped — and the coach stands a third of the way in from the left.
+      */
       }
+      <LoopVideo
+        id={loop.id}
+        poster={loop.poster}
+        alt={loop.alt}
+        eager
+        class="object-[35%_30%] md:object-center"
+      />
+      <div class="photo-grain" aria-hidden="true"></div>
+      <div class="photo-scrim" aria-hidden="true"></div>
+      {
+        /*
+        A page-coloured scrim for the phone only, where the field stands on the picture: it runs
+        out into the ground under the field, so the form beneath stands on graphite.
+      */
+      }
+      <div
+        class="absolute inset-0 bg-linear-to-t from-bg via-bg/30 via-35% to-transparent md:hidden"
+        aria-hidden="true"
+      >
+      </div>
     </div>
-    <span class="eyebrow kicker-vertical absolute top-1 -left-5 hidden md:block" aria-hidden="true">
-      {tileTop}
-    </span>
   </div>
 </section>

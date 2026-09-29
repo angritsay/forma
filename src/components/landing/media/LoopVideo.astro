@@ -1,0 +1,79 @@
+---
+/**
+ * The picture of one filmed movement, filling its positioned parent: a silent loop over a poster,
+ * or the poster alone, or nothing.
+ *
+ *   <div class="relative aspect-[4/5]"><LoopVideo id="air_squat" /></div>
+ *   <LoopVideo id="reverse_lunge" poster={withBase('/coach/sergey-hero.jpg')} eager />
+ *
+ * The loop is `images/loops/<id>.mp4` (`exerciseLoopUrl`, cut by the `site-loops` task) and the
+ * poster is the movement's still (`exerciseStillUrl`) unless the caller brings its own — the hero
+ * shows the coach's photograph until the clip plays. The `<video>` carries no `src` in the HTML:
+ * the shared playback script in `loops.ts` sets it when the picture is first ≥ 40% on screen, plays
+ * at most four at once, pauses what scrolls away, and does nothing at all under reduced motion or
+ * data saver — the poster is the whole picture then. A clip that fails falls back to the poster.
+ *
+ * With no backend configured there is no loop and no still: a caller's own poster still shows as
+ * an `<img>`, otherwise nothing is drawn and the parent's surface shows through.
+ *
+ * **`eager`** is for the one picture above the fold, and it is the largest paint of the page: the
+ * poster is always an `<img loading="eager" fetchpriority="high">` then, with the video (when there
+ * is a loop) laid over it — a `<video poster>` alone would load at default priority.
+ *
+ * Decorative by default (`alt=""`, `aria-hidden` on the video): whoever places it sets the words
+ * beside it. Pass `alt` when the picture itself is content — the hero's photograph of the coach.
+ * The script block below is bundled once per page however many of these the page has.
+ */
+import { exerciseLoopUrl, exerciseStillUrl } from '@/lib/api/storage';
+
+interface Props {
+  /** Exercise id, e.g. `air_squat`. */
+  id: string;
+  /** A poster of the caller's own (base-resolved), in place of the movement's still. */
+  poster?: string;
+  /** For the one picture above the fold: the poster loads at once, with high priority. */
+  eager?: boolean;
+  /** The poster's alt text when it says something; decorative (`""`) otherwise. */
+  alt?: string;
+  /** Extra classes on the media element, e.g. an `object-position`. */
+  class?: string;
+}
+
+const { id, poster: own, eager = false, alt = '', class: extra = '' } = Astro.props;
+const loop = exerciseLoopUrl(id);
+const poster = own ?? exerciseStillUrl(id);
+const cls = `photo-mono absolute inset-0 size-full object-cover ${extra}`;
+---
+
+{
+  poster && (eager || !loop) && (
+    <img
+      src={poster}
+      alt={alt}
+      loading={eager ? 'eager' : 'lazy'}
+      fetchpriority={eager ? 'high' : undefined}
+      decoding={eager ? 'sync' : 'async'}
+      class={cls}
+    />
+  )
+}
+{
+  loop && (
+    <video
+      class={cls}
+      data-loop-src={loop}
+      poster={poster}
+      muted
+      playsinline
+      loop
+      preload="none"
+      disablepictureinpicture
+      aria-hidden="true"
+    />
+  )
+}
+
+<script>
+  import { bindLoops } from './loops';
+  bindLoops(document);
+</script>

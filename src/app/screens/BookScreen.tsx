@@ -50,7 +50,7 @@
  *
  * ## And the photograph
  *
- * 4:5, monochrome, with grain over it — the frame `CoachCard.astro` gives him on the website, and
+ * 4:5, monochrome, with grain over it — the frame the homepage's coach section gives him on the website, and
  * the treatment every photograph in this product gets. It replaces a 120px circle, which was the
  * one piece of imagery on the tab and was reading as an avatar in a settings row. The source is
  * only 240×240 (`content/site/coach.ts` says so and asks for a larger one), so it is held at 128px

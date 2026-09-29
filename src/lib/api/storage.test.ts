@@ -10,14 +10,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const createSignedUrls = vi.fn();
 const createSignedUrl = vi.fn();
 
+const mode = vi.hoisted(() => ({ configured: true, demo: false }));
+
 vi.mock('./client', () => ({
-  isConfigured: () => true,
+  isConfigured: () => mode.configured,
   projectUrl: () => 'https://project.example',
   supabase: () => ({
     storage: { from: () => ({ createSignedUrls, createSignedUrl }) },
   }),
 }));
-vi.mock('./mode', () => ({ isDemo: () => false }));
+vi.mock('./mode', () => ({ isDemo: () => mode.demo }));
 
 class MemoryStorage {
   private map = new Map<string, string>();
@@ -56,6 +58,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  mode.configured = true;
+  mode.demo = false;
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
@@ -122,5 +126,28 @@ describe('the signed-URL cache', () => {
     );
     expect(s.cachedMediaUrl('https://cdn.example/a.mp4')).toBe('https://cdn.example/a.mp4');
     expect(s.cachedMediaUrl(undefined)).toBeUndefined();
+  });
+});
+
+describe('exercise stills and loops', () => {
+  it('derive public addresses next to each other in the images bucket', async () => {
+    const s = await load();
+    expect(s.exerciseStillUrl('air_squat')).toBe(
+      'https://project.example/storage/v1/object/public/images/exercises/air_squat.jpg',
+    );
+    expect(s.exerciseLoopUrl('air_squat')).toBe(
+      'https://project.example/storage/v1/object/public/images/loops/air_squat.mp4',
+    );
+  });
+
+  it('are undefined in the demo and without a backend, so the site draws nothing to 404', async () => {
+    const s = await load();
+    mode.demo = true;
+    expect(s.exerciseLoopUrl('air_squat')).toBeUndefined();
+    expect(s.exerciseStillUrl('air_squat')).toBeUndefined();
+    mode.demo = false;
+    mode.configured = false;
+    expect(s.exerciseLoopUrl('air_squat')).toBeUndefined();
+    expect(s.exerciseStillUrl('air_squat')).toBeUndefined();
   });
 });

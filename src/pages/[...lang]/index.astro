@@ -1,73 +1,75 @@
 ---
 /**
- * Landing home: «Тренировка 1 — сегодня» (site synthesis §2). The page sells one thing first —
- * workout 1 of «Форма с нуля», real, free, no card — and then follows the order the app runs in:
- * today workout 1, from Monday together with someone, every day the club, when needed the coach.
- * JSON-LD: WebSite, Organization, FAQPage, ItemList (the set is unchanged).
+ * Landing home: «Тренировка 1 — сегодня» (site synthesis §2), visual-first.
  *
- *   hero   «Кроссфит дома. Первая тренировка — сегодня», the email form (`StartForm`) and
- *          «Позвать с собой» right under it
- *   01     workout 1 in three phones, the coach's line, the course it opens, the QR from `lg`
- *   02     «Вместе с понедельника» (`#together`): steps and the invite card (`ShareInvite`)
- *   03     the load follows you: the adaptation demo and the engine's numbers as pills
- *   04     the club (`club/ClubSection`, the club's palette, no neon)
- *   05     the coach and his two tickets
- *   —      before and after, only while there is something publishable
- *   06     prices, one ladder
- *   07     FAQ, then the closing band
+ * The owner's note on the first version was «слишком много текстов, мало графики, визуала и
+ * фотографий», so every section here keeps to one shape: a kicker, a headline of at most six
+ * words, at most one line under it, one dominant picture and one main action. Lists are glyph
+ * tiles of four words at most, numbers are set large, and the explanations moved to the inner
+ * pages (the course page, `/subscribe/`, `/about/`). The pictures are the coach on video (the
+ * hero, the movements, the closing band), his photographs, and the app's own screens in phones.
+ *
+ *   hero   the coach's loop beside the blue field, «Кроссфит дома. Первая тренировка — сегодня»,
+ *          one line and three pills (from `sm`; the phone keeps the first pill only), the email
+ *          form (`StartForm`) and «Позвать с собой» (a text link on the phone)
+ *   01     workout 1: its three movements as big loop tiles across the full width with the
+ *          coach's counts, «Сделать тренировку 1» (the QR is the closing band's)
+ *   —      «Каждое движение — на видео»: a strip of eight more filmed movements you swipe, each a
+ *          link to its page; drawn only when the build can point at the stills
+ *   02     «Вместе с понедельника» (`#together`): the invite card, compact — the Monday message in
+ *          a phone, «Отправить», a row of icons, the referral line
+ *   03     the load follows you: one diagram and a link to the course page
+ *   04     the club (`club/ClubSection`: phone, four tiles, the price, the photo strip; no neon)
+ *   05     the coach: a frame of his own footage with his two figures on it, two tickets and the
+ *          one line of rules the tickets need
+ *   —      before and after, only when the club's strip is not already showing the same photographs
+ *   06     prices: only the steps not priced above (workout 1 and the course); 07 five questions;
+ *          then the closing band over a loop
  *
  * **Colour.** Neon is workout 1's and nobody else's: the hero form, 01's button, the ladder's
- * first step, the closing band and the phone's sticky bar all go to `#/start`. The club is the
+ * first card, the closing band and the phone's sticky bar all go to `#/start`. The club is the
  * warm gradient, the coach's tickets ciel, everything else white or glass.
  *
- * **Numbers are never typed here.** Minutes of work come from the engine (`firstWorkoutFacts`),
- * the adaptation pills from `ADAPTATION` / `CHOICE_VOLUME`, every price from the content files
- * through the blocks that print them.
+ * **Numbers are never typed here.** Minutes and reps come from the engine and the course file
+ * (`firstWorkoutFacts`), the load step from `ADAPTATION`, the filmed count from the exercise files
+ * (`filmedFacts`), the coach's figures from `COACH.figures`, every price from the content files
+ * through the blocks that print them. JSON-LD: WebSite, Organization, FAQPage (the five questions
+ * shown), ItemList.
  */
 import Landing from '@/layouts/Landing.astro';
-import BeforeAfter from '@/components/landing/BeforeAfter.astro';
 import Button from '@/components/landing/Button.astro';
-import CoachCard from '@/components/landing/CoachCard.astro';
-import CourseCard from '@/components/landing/CourseCard.astro';
-import Cta from '@/components/landing/Cta.astro';
-import DifficultyDemo from '@/components/landing/DifficultyDemo';
 import Faq from '@/components/landing/Faq.astro';
-import FirstWorkoutPhones from '@/components/landing/FirstWorkoutPhones.astro';
 import Hero from '@/components/landing/Hero.astro';
-import Pill from '@/components/landing/Pill.astro';
+import LoadDiagram from '@/components/landing/LoadDiagram.astro';
 import PriceLadder from '@/components/landing/PriceLadder.astro';
 import QrCode from '@/components/landing/QrCode.astro';
 import Section from '@/components/landing/Section.astro';
 import SessionTickets from '@/components/landing/SessionTickets.astro';
 import ShareInvite from '@/components/landing/ShareInvite';
 import StartForm from '@/components/landing/StartForm';
-import Steps from '@/components/landing/Steps.astro';
 import StickyStart from '@/components/landing/StickyStart.astro';
 import ClubSection from '@/components/landing/club/ClubSection.astro';
-import {
-  buildDemo,
-  DEMO_COURSE_ID,
-  firstWorkoutFacts,
-  firstWorkoutIntro,
-} from '@/components/landing/demo';
+import LoopTile from '@/components/landing/media/LoopTile.astro';
+import LoopVideo from '@/components/landing/media/LoopVideo.astro';
+import PhotoStrip from '@/components/landing/media/PhotoStrip.astro';
+import { DEMO_COURSE_ID, firstWorkoutFacts } from '@/components/landing/demo';
+import { filmedFacts, wallMoves } from '@/components/landing/filmed';
 import { inviteShareAttrs, shareInviteProps } from '@/components/landing/inviteProps';
-import { ADAPTATION, CHOICE_VOLUME } from '@/lib/training/constants';
-import { courseHref, coursePath } from '@/components/landing/courseHelpers';
+import { courseHref, coursePath, exerciseHref } from '@/components/landing/courseHelpers';
 import { faqLd, itemListLd, organizationLd, websiteLd } from '@/components/landing/jsonld';
-import { COURSE_BY_ID } from '@/content/registry';
+import { COURSE_BY_ID, EXERCISE_BY_ID } from '@/content/registry';
 import { SITE_COURSES } from '@/content/published';
+import { clubPitchPhotos } from '@content/site/club';
 import { publishableResults } from '@content/site/results';
 import type { Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
-import { PHOTOS, photoSrc } from '@/lib/media/photos';
+import { exerciseStillUrl } from '@/lib/api/storage';
 import { canonicalUrl } from '@/lib/seo/urls';
 import { absoluteUrl, appHref, href, localeStaticPaths, withBase } from '@/lib/util/paths';
+import { AUTH_FILM } from '@content/site/media';
 import { BOOKING } from '@content/site/booking';
 import { COACH } from '@content/site/coach';
-import { ASSESSMENT_TOTAL_MIN } from '@content/site/assessment';
-import { FAQ } from '@content/site/faq';
-import { LINKS } from '@content/site/links';
-import { formatPrice } from '@content/site/pricing';
+import { HOME_FAQ } from '@content/site/faq';
 
 export function getStaticPaths() {
   return localeStaticPaths();
@@ -80,11 +82,8 @@ const title = t(locale, 'landing.homeTitle');
 const description = t(locale, 'landing.homeDescription');
 
 const startHref = appHref('/start', { locale });
-const signInHref = appHref('', { locale });
-const telegramBot = LINKS.telegramBot;
 
 const demoCourse = COURSE_BY_ID.get(DEMO_COURSE_ID) ?? SITE_COURSES[0];
-const demo = demoCourse ? buildDemo(locale, demoCourse) : null;
 const facts = firstWorkoutFacts(locale, demoCourse);
 
 /*
@@ -94,47 +93,56 @@ const facts = firstWorkoutFacts(locale, demoCourse);
 const qrUrl = `${absoluteUrl(site, '/app/')}?lang=${locale}&src=qr#/start`;
 
 /*
- * The coach, photographed, with a monochrome placeholder until his picture exists
- * (src/lib/media/photos.ts; decorative — the headline says everything the picture would).
+ * The filmed movements. The hero and the closing band each loop one of the course's training
+ * movements — a lunge stands tall in a portrait frame, the climber reads across a wide band — and
+ * fall back to the first filmed one if the course ever drops them. The wall shows eight more,
+ * none of them workout 1's three (01 shows those) or the two above.
  */
-const heroPhoto = COACH.heroPhoto
-  ? { src: withBase(COACH.heroPhoto), alt: COACH.name[locale] }
-  : { src: photoSrc(PHOTOS.landingHero), alt: '' };
+const filmed = demoCourse ? filmedFacts(demoCourse) : null;
+const pick = (want: string) =>
+  filmed?.training.includes(want) ? want : (filmed?.training[0] ?? want);
+const heroLoopId = pick('reverse_lunge');
+const bandLoopId = pick('mountain_climber');
+const firstIds = facts?.moves.map((m) => m.exerciseId) ?? [];
+const wall = filmed
+  ? wallMoves(filmed, [...firstIds, heroLoopId, bandLoopId], 8).flatMap((id) => {
+      const ex = EXERCISE_BY_ID.get(id);
+      return ex ? [{ id, name: l(ex.name, locale), href: exerciseHref(locale, ex) }] : [];
+    })
+  : [];
+/*
+ * A build with no backend has no stills and no loops: the wall would be eight empty cards, so it
+ * is left out; 01's three tiles show their glyph fallback (`LoopTile`).
+ */
+const hasStills = exerciseStillUrl(firstIds[0] ?? heroLoopId) !== undefined;
+/*
+ * The closing band stands on the movement's own still until the loop plays; with no backend, on
+ * the hero photograph's horizon — never on the course cover, whose lettering fights the headline.
+ */
+const bandPoster = exerciseStillUrl(bandLoopId) ?? withBase(COACH.heroPhoto);
+
+/* Three pills at most: what the one line under the headline does not already say. */
+const chips = [
+  t(locale, 'landing.heroChipNoJumps'),
+  t(locale, 'landing.heroChipVideo'),
+  t(locale, 'landing.heroChipAdapt'),
+];
 
 /*
- * The hero's pills: the first white and leaning left, the short «Без прыжков» leaning right. No
- * «Пожизненный доступ» and no «с оборудованием и без» — the page sells workout 1, not a catalogue.
+ * Before and after. The club's strip (04) falls back to these very photographs while the club has
+ * none of its own; the page does not show the same ten pictures twice, so this section appears
+ * only once the club's strip is its members'. Wherever they are shown, the consent line is too.
  */
-const chips = [
-  t(locale, 'landing.heroChipFree'),
-  t(locale, 'landing.heroChipTime'),
-  t(locale, 'landing.heroChipNoKit'),
-  t(locale, 'landing.heroChipVideo'),
-  t(locale, 'landing.heroChipNoJumps'),
-];
-
-// The engine's constants, as pills under the demo — read from the engine, never retyped.
-const factor = (n: number) => new Intl.NumberFormat(locale).format(n);
-const percent = (n: number) =>
-  new Intl.NumberFormat(locale, { style: 'percent', signDisplay: 'exceptZero' })
-    .format(n)
-    .replace('-', '−');
-const adaptRules = [
-  t(locale, 'landing.adaptRuleEasy', { x: percent(ADAPTATION.easyDelta) }),
-  t(locale, 'landing.adaptRuleModerate', { x: percent(ADAPTATION.moderateDelta) }),
-  t(locale, 'landing.adaptRuleHard', { x: percent(ADAPTATION.hardDelta) }),
-  t(locale, 'landing.adaptRulePain', { x: percent(ADAPTATION.painDelta) }),
-  t(locale, 'landing.adaptRuleEasier', { x: factor(CHOICE_VOLUME.easier) }),
-  t(locale, 'landing.adaptRuleHarder', { x: factor(CHOICE_VOLUME.harder) }),
-];
-const adaptRows = [
-  {
-    title: t(locale, 'landing.adaptRow1Title'),
-    text: t(locale, 'landing.adaptRow1Text', { n: ASSESSMENT_TOTAL_MIN }),
-  },
-  { title: t(locale, 'landing.adaptRow2Title'), text: t(locale, 'landing.adaptRow2Text') },
-  { title: t(locale, 'landing.adaptRow3Title'), text: t(locale, 'landing.adaptRow3Text') },
-];
+const results = publishableResults();
+const showResults = results.length > 0 && clubPitchPhotos().source === 'members';
+const resultPhotos = results
+  .map((r) => ({
+    src: r.composite ?? r.after ?? '',
+    alt: (r.composite ? r.compositeAlt : r.afterAlt)?.[locale] ?? '',
+    width: 1000,
+    height: 1000,
+  }))
+  .filter((p) => p.src !== '');
 
 /**
  * «Позвать с собой»: the Monday message and the `/together/` link, composed in the tap by the same
@@ -142,13 +150,20 @@ const adaptRows = [
  */
 const share = inviteShareAttrs(locale);
 
+const coachName = l(COACH.name, locale);
+/*
+ * 05's frame is his own footage (the sign-in film's first frame), not the hero's photograph again:
+ * the hero, 05 and the band each show a different picture of him.
+ */
+const coachPhoto = AUTH_FILM.poster || COACH.photo;
+
 const quietLink =
   'control-label inline-flex min-h-11 items-center gap-2 text-[14px] text-text underline decoration-border-strong underline-offset-4 hover:decoration-text';
 
 const jsonLd = [
   websiteLd(site, locale, description),
   organizationLd(site, locale),
-  faqLd(FAQ, locale),
+  faqLd(HOME_FAQ, locale),
   itemListLd(
     SITE_COURSES.map((c) => ({
       name: l(c.name, locale),
@@ -164,11 +179,10 @@ const jsonLd = [
     title={t(locale, 'landing.heroTitle')}
     thin={t(locale, 'landing.heroThin')}
     keyWords={1}
-    subtitle={t(locale, 'landing.heroSubtitle')}
+    lead={t(locale, 'landing.heroLead')}
     chips={chips}
     tiltRight={chips.length - 1}
-    figure={{ exerciseId: 'knee_push_up' }}
-    photo={heroPhoto}
+    loop={{ id: heroLoopId, poster: withBase(COACH.heroPhoto), alt: coachName }}
     tileTop={t(locale, 'landing.heroEyebrow')}
   >
     {/* The hero's one neon is the form's button; the sticky bar appears once it scrolls away. */}
@@ -194,23 +208,18 @@ const jsonLd = [
       /*
       «Позвать с собой» right under the form, on every width: the share sheet inside the tap
       where there is one — the Monday message and the /together/ link — otherwise a scroll to the
-      together block's card (shareHome.ts).
+      together block's card (shareHome.ts). A text link on the phone, so the first screen has one
+      big button; the white button from `sm`. Sign-in and Telegram are the header's and footer's.
     */
     }
-    <div slot="after" class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2">
-      <Button variant="plain" size="lg" class="w-full sm:w-auto" data-goal="share_home" {...share}>
+    <div slot="after" class="mt-3 sm:mt-4">
+      <button type="button" class={`${quietLink} sm:hidden`} data-goal="share_home" {...share}>
+        {t(locale, 'landing.shareCta')}
+        <span class="glyph" aria-hidden="true">↗</span>
+      </button>
+      <Button variant="plain" size="lg" class="max-sm:hidden" data-goal="share_home" {...share}>
         {t(locale, 'landing.shareCta')}
       </Button>
-      <a href={signInHref} class={quietLink} data-app-link>
-        {t(locale, 'landing.heroSignIn')}
-      </a>
-      {
-        telegramBot && (
-          <a href={telegramBot} class={quietLink} rel="noopener">
-            {t(locale, 'landing.openTelegram')}
-          </a>
-        )
-      }
     </div>
   </Hero>
 
@@ -219,50 +228,25 @@ const jsonLd = [
     n={1}
     eyebrow={t(locale, 'landing.firstEyebrow')}
     title={t(locale, 'landing.firstTitle')}
-    intro={facts ? firstWorkoutIntro(locale, facts) : undefined}
   >
-    <FirstWorkoutPhones locale={locale} />
-
-    <figure class="mt-10 max-w-2xl border-l-2 border-accent pl-5">
-      <blockquote class="font-display text-xl leading-snug text-balance md:text-2xl">
-        «{t(locale, 'landing.firstQuote')}»
-      </blockquote>
-      <figcaption class="mt-3 text-sm text-muted">— {l(COACH.name, locale)}</figcaption>
-    </figure>
-
     {
-      demoCourse && (
-        <div class="mt-12 flex flex-col gap-5">
-          <div class="flex flex-wrap items-center gap-3">
-            <Pill tone="sky" tilt="left">
-              {t(locale, 'landing.firstCourseTag')}
-            </Pill>
-            <span class="text-[15px] text-muted">
-              {t(locale, 'landing.firstCoursePrice', {
-                price: formatPrice(locale, demoCourse.price),
-              })}
-            </span>
-          </div>
-          <CourseCard course={demoCourse} locale={locale} wide />
-          <p class="max-w-2xl text-base leading-relaxed text-muted">
-            {t(locale, 'landing.firstCourseLine', {
-              course: l(demoCourse.shortName ?? demoCourse.name, locale),
-            })}{' '}
-            <a
-              href={courseHref(locale, demoCourse)}
-              class="whitespace-nowrap text-text underline decoration-border-strong underline-offset-4 hover:decoration-text"
-            >
-              {t(locale, 'landing.firstCourseMore')}
-              <span class="glyph" aria-hidden="true">
-                →
-              </span>
-            </a>
-          </p>
-        </div>
+      facts && (
+        <ul class="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-5 px-5 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 md:gap-4">
+          {facts.moves.map((m) => (
+            <li class="w-[72%] shrink-0 snap-start sm:w-auto">
+              <LoopTile
+                id={m.exerciseId}
+                name={m.name}
+                numeral={m.reps ? `×${m.reps}` : undefined}
+                href={m.href}
+                size="lg"
+              />
+            </li>
+          ))}
+        </ul>
       )
     }
-
-    <div class="mt-10 flex flex-wrap items-end justify-between gap-8">
+    <div class="mt-10">
       <Button
         href={startHref}
         size="lg"
@@ -272,36 +256,43 @@ const jsonLd = [
       >
         {t(locale, 'landing.firstCta')}
       </Button>
-      <QrCode url={qrUrl} label={t(locale, 'landing.qrLabel')} class="max-lg:hidden" />
     </div>
   </Section>
+
+  {
+    hasStills && wall.length > 0 && (
+      <Section
+        id="filmed"
+        eyebrow={t(locale, 'landing.filmedEyebrow')}
+        title={t(locale, 'landing.filmedTitle')}
+      >
+        {/* One row you swipe (the tiles are links, so Tab walks it); four and a sliver from `md`. */}
+        <ul class="filmed-strip -mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-5 px-5 pb-2 md:mx-0 md:scroll-px-0 md:px-0">
+          {wall.map((m) => (
+            <li class="w-[40%] shrink-0 snap-start sm:w-[30%] md:w-[calc((100%-2.25rem)/4.3)]">
+              <LoopTile id={m.id} name={m.name} href={m.href} ratio="square" />
+            </li>
+          ))}
+        </ul>
+        <div class="mt-8">
+          <Button href={href(locale, '/exercises/')} variant="secondary">
+            {t(locale, 'landing.filmedMore')}
+            <span class="glyph" aria-hidden="true">
+              →
+            </span>
+          </Button>
+        </div>
+      </Section>
+    )
+  }
 
   <Section
     id="together"
     n={2}
     eyebrow={t(locale, 'landing.togetherEyebrow')}
     title={t(locale, 'landing.togetherTitle')}
-    intro={t(locale, 'landing.togetherIntro')}
   >
-    <Steps
-      steps={[
-        {
-          title: t(locale, 'landing.togetherStep1Title'),
-          text: t(locale, 'landing.togetherStep1Text'),
-        },
-        {
-          title: t(locale, 'landing.togetherStep2Title'),
-          text: facts
-            ? t(locale, 'landing.togetherStep2Text', { total: facts.totalMinutes })
-            : t(locale, 'landing.heroChipFree'),
-        },
-        {
-          title: t(locale, 'landing.togetherStep3Title'),
-          text: t(locale, 'landing.togetherStep3Text'),
-        },
-      ]}
-    />
-    <ShareInvite client:visible class="mt-10" {...shareInviteProps(locale, site)} />
+    <ShareInvite client:visible compact {...shareInviteProps(locale, site)} />
   </Section>
 
   <Section
@@ -309,37 +300,20 @@ const jsonLd = [
     n={3}
     eyebrow={t(locale, 'landing.adaptEyebrow')}
     title={t(locale, 'landing.adaptTitle')}
-    intro={t(locale, 'landing.adaptIntro')}
   >
-    {demo && <DifficultyDemo client:visible {...demo} />}
-    <div class="mt-8 border-t border-border pt-5">
-      {/* Body text in the quiet register, not `.eyebrow`: it is a sentence, and past 29 chars. */}
-      <h3 class="text-[13px] leading-[1.3] text-muted">{t(locale, 'landing.adaptHowTitle')}</h3>
-      <ul class="mt-4 flex flex-wrap gap-2">
-        {
-          adaptRules.map((rule) => (
-            <li class="flex max-w-full">
-              <Pill size="md">{rule}</Pill>
-            </li>
-          ))
-        }
-      </ul>
-    </div>
-    <ul class="mt-8 grid gap-x-8 md:grid-cols-3">
-      {
-        adaptRows.map((row) => (
-          <li class="flex flex-col gap-2 border-t border-border py-5">
-            <h3 class="font-display text-base">{row.title}</h3>
-            <p class="text-sm leading-relaxed text-muted">{row.text}</p>
-          </li>
-        ))
-      }
-    </ul>
-    <div class="mt-6">
-      <Button href={startHref} variant="plain" data-goal="app_start" data-app-link>
-        {t(locale, 'landing.adaptCta')}
-      </Button>
-    </div>
+    {facts && <LoadDiagram locale={locale} deltaPercent={facts.easyDeltaPercent} />}
+    {
+      demoCourse && (
+        <div class="mt-6">
+          <a href={courseHref(locale, demoCourse)} class={quietLink}>
+            {t(locale, 'landing.adaptMore')}
+            <span class="glyph" aria-hidden="true">
+              →
+            </span>
+          </a>
+        </div>
+      )
+    }
   </Section>
 
   <ClubSection locale={locale} n={4} />
@@ -350,40 +324,67 @@ const jsonLd = [
     eyebrow={t(locale, 'landing.coachEyebrow')}
     title={t(locale, 'landing.coachTitle')}
   >
-    <CoachCard locale={locale} moreHref={href(locale, '/about/')} book={false} />
-    {
-      BOOKING.enabled && (
-        <>
-          <ul class="mt-12 grid gap-x-8 md:grid-cols-3">
-            {BOOKING.outcomes.map((o) => (
-              <li class="flex flex-col gap-2 border-t border-border py-5">
-                <h3 class="font-display text-base">{l(o.title, locale)}</h3>
-                <p class="text-sm leading-relaxed text-muted">{l(o.body, locale)}</p>
-              </li>
-            ))}
-          </ul>
-          <SessionTickets locale={locale} class="mt-8" />
-          <div class="mt-8">
-            <Button href={appHref('/book', { locale })} variant="secondary" data-app-link>
-              {t(locale, 'landing.ladderCoachCta')}
-            </Button>
-          </div>
-        </>
-      )
-    }
+    <div class="grid items-center gap-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-12">
+      <figure
+        class="relative m-0 aspect-[4/5] overflow-hidden rounded-card border border-border bg-surface-2"
+      >
+        {/* A 9:16 frame in a 4:5 box: the foot of it, where his face and raised arm are. */}
+        <img
+          src={withBase(coachPhoto)}
+          alt={coachName}
+          width="720"
+          height="1280"
+          loading="lazy"
+          decoding="async"
+          class="photo-mono absolute inset-0 size-full object-cover object-[30%_78%]"
+        />
+        <div class="photo-grain" aria-hidden="true"></div>
+        <div class="photo-scrim" aria-hidden="true"></div>
+        <figcaption class="absolute inset-x-5 bottom-5">
+          <dl class="grid grid-cols-2 gap-4" aria-label={t(locale, 'landing.coachFiguresLabel')}>
+            {
+              COACH.figures.map((f) => (
+                <div class="flex flex-col-reverse gap-1">
+                  <dt class="text-[13px] leading-tight text-paper">{l(f.label, locale)}</dt>
+                  <dd class="numeral m-0 text-4xl leading-none text-paper md:text-5xl">
+                    {f.value}
+                  </dd>
+                </div>
+              ))
+            }
+          </dl>
+        </figcaption>
+      </figure>
+      <div class="flex flex-col gap-5">
+        <SessionTickets locale={locale} />
+        {/* The money rule belongs to the tickets: set tight under their buttons, never cut. */}
+        {
+          BOOKING.enabled && (
+            <p class="-mt-2 text-[13px] leading-snug text-muted">
+              {t(locale, 'landing.coachRules')}
+            </p>
+          )
+        }
+        <a href={href(locale, '/about/')} class={quietLink}>
+          {t(locale, 'landing.coachMore')}
+          <span class="glyph" aria-hidden="true">→</span>
+        </a>
+      </div>
+    </div>
   </Section>
 
   {
-    /* Social proof sits next to the coach. The whole section is skipped while there is nothing
-       publishable, so the landing never shows an empty "before and after" promise. */
-    publishableResults().length > 0 && (
+    showResults && (
       <Section
         id="results"
         eyebrow={t(locale, 'landing.resultsEyebrow')}
         title={t(locale, 'landing.resultsTitle')}
-        intro={t(locale, 'app.clubPhotosClientsRow')}
       >
-        <BeforeAfter locale={locale} />
+        <PhotoStrip
+          photos={resultPhotos}
+          label={t(locale, 'app.clubPhotosClients')}
+          caption={t(locale, 'app.clubPhotosClientsRow')}
+        />
       </Section>
     )
   }
@@ -394,7 +395,7 @@ const jsonLd = [
     eyebrow={t(locale, 'landing.pricesEyebrow')}
     title={t(locale, 'landing.pricesTitle')}
   >
-    <PriceLadder locale={locale} />
+    <PriceLadder locale={locale} omit={['club', 'coach']} />
   </Section>
 
   <Section
@@ -403,25 +404,65 @@ const jsonLd = [
     eyebrow={t(locale, 'landing.faqEyebrow')}
     title={t(locale, 'landing.faqTitle')}
   >
-    <Faq items={FAQ.map((f) => ({ q: l(f.q, locale), a: l(f.a, locale) }))} />
+    <Faq items={HOME_FAQ.map((f) => ({ q: l(f.q, locale), a: l(f.a, locale) }))} />
   </Section>
 
-  <Cta
-    title={t(locale, 'landing.homeCtaTitle')}
-    text={facts
-      ? t(locale, 'landing.homeCtaText', { total: facts.totalMinutes })
-      : t(locale, 'landing.heroChipFree')}
-    primary={{ label: t(locale, 'landing.startCta'), href: startHref }}
-    primaryData={{ 'data-goal': 'app_start', 'data-app-link': true }}
-  >
-    <Button slot="actions" variant="plain" size="lg" data-goal="share_home" {...share}>
-      {t(locale, 'landing.shareCta')}
-    </Button>
-    <div class="flex flex-wrap items-end justify-between gap-8">
-      <p class="max-w-xl text-sm leading-relaxed text-muted">{t(locale, 'landing.homeCtaNote')}</p>
-      <QrCode url={qrUrl} label={t(locale, 'landing.qrLabel')} class="max-lg:hidden" />
+  {
+    /*
+    The closing band: a filmed movement across the full width (its still until it plays),
+    the page's ground laid over it so the headline reads, one neon button and «Позвать с собой». The QR from `lg`.
+  */
+  }
+  <section class="relative isolate mt-8 overflow-hidden">
+    <div class="absolute inset-0 -z-10 bg-surface" aria-hidden="true">
+      <LoopVideo id={bandLoopId} poster={bandPoster} class="object-[50%_42%]" />
+      <div class="photo-grain"></div>
+      <div class="absolute inset-0 bg-bg/60"></div>
+      <div class="photo-scrim"></div>
     </div>
-  </Cta>
+    <div
+      class="mx-auto flex min-h-[60svh] max-w-6xl flex-col justify-end px-5 py-16 md:min-h-[32rem] md:py-20"
+    >
+      <div class="flex flex-wrap items-end justify-between gap-8">
+        <div class="flex flex-col gap-8">
+          <h2 class="display text-[clamp(2.25rem,8vw,4rem)] leading-[1.1] text-balance">
+            {t(locale, 'landing.homeCtaTitle')}
+          </h2>
+          <div class="flex flex-wrap items-center gap-3">
+            <Button
+              href={startHref}
+              size="lg"
+              class="w-full sm:w-auto"
+              data-goal="app_start"
+              data-app-link
+            >
+              {t(locale, 'landing.startCta')}
+            </Button>
+            <Button
+              variant="plain"
+              size="lg"
+              class="w-full sm:w-auto"
+              data-goal="share_home"
+              {...share}
+            >
+              {t(locale, 'landing.shareCta')}
+            </Button>
+          </div>
+        </div>
+        <QrCode url={qrUrl} label={t(locale, 'landing.qrLabel')} class="max-lg:hidden" />
+      </div>
+    </div>
+  </section>
 
   <StickyStart locale={locale} />
 </Landing>
+
+<style>
+  .filmed-strip {
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .filmed-strip::-webkit-scrollbar {
+    display: none;
+  }
+</style>

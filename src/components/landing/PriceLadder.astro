@@ -1,6 +1,7 @@
 ---
 /**
- * Every price Forma charges, as one ladder in the order a person meets them: workout 1 for
+ * Every price Forma charges, as one ladder of four cards — a short label, the figure large, one
+ * button each — in the order a person meets them: workout 1 for
  * nothing, the course for good, the club with the course, the coach when needed. The same order
  * wherever prices are listed (site synthesis §5), so a reader who has seen it once can find a step
  * again.
@@ -15,12 +16,16 @@
  *   into workout 1. The course is the white `plain`, the coach `secondary`.
  * - The club's step is the club's palette — the warm `Выгоднее` pill and the gradient button under
  *   ink, marked `data-club-zone` so the sticky bar steps aside — and no neon (§17).
- * - 666 never without 7 990: the club step prints `clubPriceLabels().charge` directly under the
- *   headline, then «Автосписаний нет», then the 30-day alternative smaller. EN leads with the
- *   year's `$` price and shows no monthly figure.
+ * - 666 never without 7 990: the club step prints `clubPriceLabels().chargeShort` («7 990 ₽ за
+ *   год, одной оплатой») directly under the headline. EN leads with the year's `$` price and shows
+ *   no monthly figure. The 30-day alternative and the long charge line live on `/subscribe/`.
  * - Links go to the app, the course page's order form and the club page's order form — never to a
  *   payment page, so no price and no referral code rides in a payment URL. The club's button is
  *   `data-club-join`, which the layout script reroutes through the app when a referral is pending.
+ *
+ * `omit` leaves steps out where the page already prices them: the homepage prints the club's
+ * figure in its club section and the coach's tickets in its coach section, so its ladder is only
+ * workout 1 and the course — each price once on the page. The order of what remains never changes.
  */
 import { COURSE_BY_ID } from '@/content/registry';
 import type { Locale } from '@/content/schema';
@@ -34,55 +39,66 @@ import { clubPriceLabels } from './club/clubPrice';
 import { courseHref } from './courseHelpers';
 import { DEMO_COURSE_ID } from './demo';
 
+type Step = 'free' | 'course' | 'club' | 'coach';
+
 interface Props {
   locale: Locale;
+  /** Steps the page already prices elsewhere. */
+  omit?: readonly Step[];
   class?: string;
 }
-const { locale, class: extra = '' } = Astro.props;
+const { locale, omit = [], class: extra = '' } = Astro.props;
+const show = (step: Step) => !omit.includes(step);
 
 const course = COURSE_BY_ID.get(DEMO_COURSE_ID);
 const club = clubPriceLabels(locale);
 const half = BOOKING.options.find((o) => o.id === 'half');
-const hour = BOOKING.options.find((o) => o.id === 'hour');
 const free = formatPrice(locale, { rub: 0, usd: 0 });
+
+const card = 'flex flex-col gap-4 rounded-card border p-5 md:p-6';
+const label = 'text-[14px] leading-snug text-muted';
+const figure = 'numeral text-5xl leading-none';
 ---
 
-<div class:list={['flex flex-col gap-6', extra]}>
-  <ol class="flex flex-col" aria-label={t(locale, 'landing.ladderLabel')}>
-    <li
-      class="grid gap-4 border-t border-border py-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
-    >
-      <div class="flex flex-col gap-1.5">
-        <h3 class="font-display text-lg">{t(locale, 'landing.ladderFreeTitle')}</h3>
-        <p class="text-[15px] leading-snug text-muted">
-          {t(locale, 'landing.ladderFreePrice', { price: free })}
-        </p>
-      </div>
-      <Button
-        href={appHref('/start', { locale })}
-        variant="primary"
-        data-goal="app_start"
-        data-app-link
-      >
-        {t(locale, 'landing.startCta')}
-      </Button>
-    </li>
+<div class:list={['flex flex-col gap-5', extra]}>
+  <ol
+    class:list={[
+      'grid gap-3 sm:grid-cols-2',
+      omit.length === 0 ? 'lg:grid-cols-4' : omit.length === 1 ? 'lg:grid-cols-3' : '',
+    ]}
+    aria-label={t(locale, 'landing.ladderLabel')}
+  >
+    {
+      show('free') && (
+        <li class={`glass-card border-border ${card}`}>
+          <h3 class={label}>{t(locale, 'landing.ladderFreeTitle')}</h3>
+          <p class={figure}>{free}</p>
+          <Button
+            href={appHref('/start', { locale })}
+            variant="primary"
+            class="mt-auto w-full"
+            data-goal="app_start"
+            data-app-link
+          >
+            {t(locale, 'landing.startCta')}
+          </Button>
+        </li>
+      )
+    }
 
     {
-      course && (
-        <li class="grid gap-4 border-t border-border py-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-          <div class="flex flex-col gap-1.5">
-            <h3 class="font-display text-lg">
-              {t(locale, 'landing.ladderCourseTitle', {
-                course: l(course.shortName ?? course.name, locale),
-              })}
-            </h3>
-            <p class="text-[15px] leading-snug text-muted">
-              <span class="numeral text-text">{formatPrice(locale, course.price)}</span>
-              {` · ${t(locale, 'landing.ladderCourseNote')}`}
-            </p>
-          </div>
-          <Button href={`${courseHref(locale, course)}#order`} variant="plain">
+      show('course') && course && (
+        <li class={`glass-card border-border ${card}`}>
+          <h3 class={label}>{t(locale, 'landing.ladderCourseShort')}</h3>
+          <p class={figure}>{formatPrice(locale, course.price)}</p>
+          <p class="-mt-2 text-[13px] leading-snug text-muted-2">
+            {t(locale, 'landing.ladderCourseNote')}
+          </p>
+          <Button
+            href={`${courseHref(locale, course)}#order`}
+            variant="plain"
+            class="mt-auto w-full"
+          >
             {t(locale, 'landing.ladderCourseCta')}
           </Button>
         </li>
@@ -90,60 +106,53 @@ const free = formatPrice(locale, { rub: 0, usd: 0 });
     }
 
     {
-      club && (
+      show('club') && club && (
         <li
           data-club-zone
-          class="club-aurora-host glass-card-2 my-2 grid gap-4 overflow-hidden rounded-card border border-border-strong p-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+          class={`club-aurora-host glass-card-2 relative overflow-hidden border-border-strong ${card}`}
         >
           <span class="club-aurora" aria-hidden="true" />
-          <div class="flex flex-col gap-2">
-            <div class="flex flex-wrap items-center gap-2">
-              <h3 class="font-display text-lg">{t(locale, 'landing.ladderClubTitle')}</h3>
-              <Pill tone="warm" tilt="right">
-                {t(locale, 'landing.ladderClubBadge')}
-              </Pill>
-            </div>
-            <p class="numeral text-3xl leading-tight">{club.headline}</p>
-            <p class="text-[14px] leading-snug text-text">{club.charge}</p>
-            <p class="text-[13px] leading-snug text-muted">
-              {t(locale, 'landing.clubNoAutoRenew')}
-              {club.monthly && <span class="block text-muted-2">{club.monthly}</span>}
-            </p>
-          </div>
+          <h3 class={label}>{t(locale, 'landing.ladderClubTitle')}</h3>
+          <span class="absolute top-4 right-4 flex">
+            <Pill tone="warm" tilt="right">
+              {t(locale, 'landing.ladderClubBadge')}
+            </Pill>
+          </span>
+          <p class={figure}>{club.headline}</p>
+          <p class="-mt-2 text-[13px] leading-snug text-text">{club.chargeShort}</p>
           <Button
             href={`${href(locale, '/subscribe/')}#order`}
             variant="gradient"
+            class="mt-auto w-full"
             data-club-join
             data-goal="club_join"
           >
-            {club.join}
+            {t(locale, 'landing.subscribeOrderTitle')}
           </Button>
         </li>
       )
     }
 
     {
-      BOOKING.enabled && half && hour && (
-        <li class="grid gap-4 border-t border-border py-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-          <div class="flex flex-col gap-1.5">
-            <h3 class="font-display text-lg">{t(locale, 'landing.ladderCoachTitle')}</h3>
-            <p class="text-[15px] leading-snug text-muted">
-              {t(locale, 'landing.ladderCoachPrice', {
-                half: formatPrice(locale, half.price),
-                hour: formatPrice(locale, hour.price),
-              })}
-            </p>
-          </div>
-          <Button href={appHref('/book', { locale })} variant="secondary" data-app-link>
+      show('coach') && BOOKING.enabled && half && (
+        <li class={`glass-card border-border ${card}`}>
+          <h3 class={label}>{l(half.name, locale)}</h3>
+          <p class={figure}>{formatPrice(locale, half.price)}</p>
+          <Button
+            href={appHref('/book', { locale })}
+            variant="secondary"
+            class="mt-auto w-full"
+            data-app-link
+          >
             {t(locale, 'landing.ladderCoachCta')}
           </Button>
         </li>
       )
     }
   </ol>
-  <p class="border-t border-border pt-5 text-[13px] leading-snug text-muted">
+  <p class="text-[13px] leading-snug text-muted">
     {
-      t(locale, 'landing.ladderFootnote', {
+      t(locale, 'landing.ladderFootnoteShort', {
         days: PRICING.refundDays,
         n: PRICING.refundMaxCompletedWorkouts,
       })

@@ -140,6 +140,19 @@ export const COACH = {
    */
   photo: '/coach/sergey.jpg',
   /**
+   * The coach card's photograph for /about/'s rebuild, under /public: a 720x900 (4:5) crop of
+   * `heroPhoto`, taken around him at the source's own resolution. The homepage no longer shows it —
+   * its section 05 uses a frame of his own footage (`AUTH_FILM.poster`), so the hero's photograph
+   * is not on the page twice.
+   *
+   * It exists because the card's 4:5 frame is up to 280 px wide, and `photo` is the 240 px square —
+   * soft at 1x in that frame and blurred on a retina screen. The crop keeps some sky over his head
+   * and the rail beside him, so the frame reads as the same place as the hero. Made once with sharp
+   * from `sergey-hero.jpg` (extract left 45, top 480, 720x900); remake it the same way when the hero
+   * photograph changes. Empty falls back to `photo`.
+   */
+  cardPhoto: '/coach/sergey-card.jpg' as string,
+  /**
    * Large photograph for the home hero, under /public. Empty falls back to the animated figure.
    *
    * This is the whole frame of the owner's photograph, resized to 1200x1600 and not cropped —
