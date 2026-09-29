@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: programming
 translationKey: training-frequency
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-23'
+updatedAt: '2026-09-29'
 faq:
   - q: 'How many times a week should a beginner work out at home?'
     a: 'Three times, with a rest day between sessions. The ACSM advises novices to leave about 48 hours between sessions that load the same muscle groups, and three 30- to 40-minute sessions fit that rule.'
@@ -89,7 +89,7 @@ Any one of these is a reason to remove a day, not add one.
 
 ## What counts as a workout and what counts as rest
 
-Rest is not the couch. A day without a workout should still contain movement: a walk, light stretching, chores on your feet. That is exactly how rest days in the Forma courses are built: between workouts there is a day with a 7,000-step goal, and it counts toward your streak the same as a session. The threshold is not arbitrary; large cohort studies have linked around 7,000 steps a day with markedly lower all-cause mortality, with little extra benefit above roughly 10,000.
+Rest is not the couch. A day without a workout should still contain movement: a walk, light stretching, chores on your feet. A walk of about 7,000 steps is a good rest-day target, and the threshold is not arbitrary: large cohort studies have linked around 7,000 steps a day with markedly lower all-cause mortality, with little extra benefit above roughly 10,000.
 
 A workout is anything after which you honestly rate the effort at 4 out of 10 or higher: a strength circuit, an AMRAP, an EMOM, a Tabata. Ten minutes of stretching is not a workout, and that is fine. How rest days between workouts feed the result is covered in the guide on [rest days and 7,000 steps](guide:rest-days-steps).
 
@@ -113,15 +113,15 @@ Every exercise is in the Forma library; no equipment needed. Warm up for five mi
 
 **Friday, Strength B, 30 minutes.** Three rounds: 12 [single-leg glute bridges](exercise:single_leg_glute_bridge) per leg, 12 [step-ups](exercise:step_up) per leg, 12 [supermans](exercise:superman), 30 seconds of [side plank](exercise:side_plank) per side. Rest as on Monday.
 
-How the app adapts the week. Before every session Forma offers "easier", "as planned" or "harder". It suggests "easier" on its own when you rated the last session 9 or higher, completed less than 80 percent of the plan, trained less than 24 hours ago, or walked more than 15,000 steps yesterday. It suggests "harder" when two consecutive sessions came in at 6 out of 10 or lower with the full plan done and at least 48 hours have passed. In other words, the app does the recovery math: if you squeeze in a fourth session the day after the third, it will offer to reduce the volume rather than repeat it heroically. At level 1, push-ups become [knee push-ups](exercise:knee_push_up) and the rounds get shorter.
+How the app adapts the week. Before every session Forma offers "easier", "as planned" or "harder". It suggests "easier" on its own when you rated the last session 9 or higher, completed less than 80 percent of the plan or trained less than 24 hours ago. It suggests "harder" when two consecutive sessions came in at 6 out of 10 or lower with the full plan done and at least 48 hours have passed. In other words, the app does the recovery math: if you squeeze in a fourth session the day after the third, it will offer to reduce the volume rather than repeat it heroically. At level 1, push-ups become [knee push-ups](exercise:knee_push_up) and the rounds get shorter.
 
 ## Common mistakes
 
 - **Every day while motivation lasts.** Seven sessions in the first week is the most common scene before quitting. Start with three.
 - **The same muscles two days running.** Push-ups and burpees on back-to-back days overload the shoulders and wrists. Alternate squat-and-push with hinge-and-core.
 - **Measuring a session by how wrecked you are.** If you are drained after every workout you cannot train often. An effort of 7 to 8 out of 10 is the working range.
-- **Rest as a full stop.** Three days on the couch between sessions make you feel worse and break your streak. Walk.
-- **Skipping the deload week.** Week four is where you want to push. It is also where accumulated fatigue turns into progress.
+- **Rest as a full stop.** Three days on the couch between sessions make you feel worse and break your rhythm. Walk.
+- **Skipping the deload week in a longer program.** Week four is where you want to push. It is also where accumulated fatigue turns into progress.
 - **Treating sleep as optional.** Five sessions on six hours of sleep lose to three sessions on eight.
 
 If you have a chronic condition, are recovering from an injury, or have not trained in a long time, agree the frequency and intensity with a doctor before you start.

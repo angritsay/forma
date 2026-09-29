@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: equipment
 translationKey: home-gym-equipment
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-23'
+updatedAt: '2026-09-29'
 faq:
   - q: 'What should I buy first for CrossFit at home?'
     a: 'A mat and a sturdy chair: they cover the first month of technique work. The first loaded implement, a kettlebell or a pair of dumbbells, is worth buying once bodyweight exercises have become easy.'
@@ -82,7 +82,7 @@ This is the main tier-2 question, and the answer depends on what you want. Dumbb
 
 Two types: fixed pairs and adjustable. A fixed pair is simple and needs no maintenance, but your legs and back are stronger than your shoulders: a weight that is heavy for a [standing press](exercise:db_shoulder_press) is light for a [deadlift](exercise:db_deadlift). So either two pairs, or adjustable dumbbells with plates, or one pair and difficulty managed through tempo and pauses.
 
-The rule for the light pair: you can press it overhead cleanly 15 times in a row. For the heavy pair: eight deadlifts take real effort. For most beginners that lands roughly between 4 and 10 kg per hand for the light pair and 12 to 20 kg for the heavy one; the exact number depends on your bodyweight and history, not on your age or sex. If you own a single pair, pick the one that makes 12 [goblet squats](exercise:db_goblet_squat) honestly hard; in the presses you compensate with tempo. Weight selection for every movement is covered in the [full body dumbbell workout at home](guide:dumbbell-home-workout).
+The rule for the light pair: you can press it overhead cleanly 15 times in a row. For the heavy pair: eight deadlifts take real effort. For most beginners that lands roughly between 4 and 10 kg per hand for the light pair and 12 to 20 kg for the heavy one; the exact number depends on your bodyweight and history, not on your age or sex. If you own a single pair, pick the one that makes 12 [goblet squats](exercise:db_goblet_squat) honestly hard; in the presses you compensate with tempo.
 
 ### Which kettlebell to buy
 
@@ -120,7 +120,7 @@ A minimal home gym is a chair, a mat and one implement: a kettlebell or a pair o
 
 **Cool-down.** [Hamstring stretch](exercise:hamstring_stretch) and [hip flexor stretch](exercise:hip_flexor_stretch), 30 seconds per side, child's pose 45 seconds.
 
-How the app scales this session. Before you start, Forma offers "easier", "as planned" or "harder": the first trims the reps by about 15 percent and lengthens the rest, the third adds volume and shortens the breaks. If your test placed you at level 1, push-ups become [knee push-ups](exercise:knee_push_up) and swings become [kettlebell deadlifts](exercise:kb_deadlift). After the session you rate the effort from 1 to 10, and the next one adjusts.
+How the app scales this session. Before you start, Forma offers "easier", "as planned" or "harder": the first trims the reps by about 15 percent and lengthens the rest, the third adds volume and shortens the breaks. If the questionnaire and test placed you at level 1, push-ups become [knee push-ups](exercise:knee_push_up) and swings become [kettlebell deadlifts](exercise:kb_deadlift). After the session you rate the effort from 1 to 10, and the next one adjusts.
 
 ## Common buying mistakes
 
@@ -140,7 +140,7 @@ If you have joint, back or blood-pressure problems, talk to a doctor before your
 3. **Month 3.** A jump rope and bands. They are cheap and close the gaps in jumping and pulling.
 4. **Later.** A pull-up bar, a second pair or a second bell, a box, as the exercises with your current set become easy.
 
-**The signal that it is time to buy the next item:** two consecutive sessions rated 6 out of 10 or lower with the full plan completed, the same rule Forma uses to recommend "harder". Until that signal shows up, there is nothing to buy. What to do with the bell once it arrives is covered in [kettlebell workouts at home for beginners](guide:kettlebell-beginners).
+**The signal that it is time to buy the next item:** two consecutive sessions rated 6 out of 10 or lower with the full plan completed, the same rule Forma uses to recommend "harder". Until that signal shows up, there is nothing to buy.
 
 ## Wrap-up
 

@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: beginners
 translationKey: push-up-progression
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-23'
+updatedAt: '2026-09-29'
 faq:
   - q: 'Where do I start if I cannot do a single push-up?'
     a: 'With incline push-ups against a high surface such as a table or a kitchen counter. Find the height where you can do 8 clean reps and train there three times a week until you reach three sets of 12.'
@@ -55,7 +55,7 @@ A push-up progression for beginners exists because the full push-up is not a sta
 - Why push-ups fail, and which of three weak links is yours.
 - Push-up form in four checkpoints: hands, elbows, trunk and range.
 - A five-step progression with a clear rule for moving up.
-- A weekly plan built from the Forma library, and how the app scales it from your test.
+- A weekly plan built from the Forma library, and how the app fits it to you.
 - The mistakes that stall beginners and a two-month progression plan.
 
 ## Push-up progression for beginners: why the floor is too hard at first
@@ -116,7 +116,7 @@ Three short sessions a week on alternating days. Each one starts with a warm-up:
 
 If you own a resistance band, add 3 × 12 [band rows](exercise:band_row) on any day. A strong upper back keeps the shoulders in place instead of letting them roll forward.
 
-**How the app scales the plan.** During onboarding you test your max push-ups, with a knee option if full reps are not there yet. Forma turns the result into a fitness index and a level; push-ups carry more weight in that index than any other test. If you are at level 1 and choose "easier" before a session, every push-up in the plan is swapped for knee push-ups, and level-3 movements such as diamond push-ups are always swapped for a level-1 athlete: the app walks the "easier" chain up to two steps. "Easier" also trims volume by about 15 percent and lengthens the rest. After the session you rate the effort from 1 to 10; finish the plan and rate it 6 or lower, and the next session grows by 5 percent.
+**How the app scales the plan.** There is no max test at the start: on first login you answer a few questions, and Forma sets your starting level from them. After your second workout the app offers a short test, asking roughly how many push-ups, full or on your knees, you could do without going to failure. Forma refines your fitness index and level from it; push-ups carry more weight in that index than any other movement, and from then on the rating after each session adjusts the volume. If you are at level 1 and choose "easier" before a session, every push-up in the plan is swapped for knee push-ups, and level-3 movements such as diamond push-ups are always swapped for a level-1 athlete: the app walks the "easier" chain up to two steps. "Easier" also trims volume by about 15 percent and lengthens the rest. After the session you rate the effort from 1 to 10; finish the plan and rate it 6 or lower, and the next session grows by 5 percent.
 
 ## Common mistakes
 

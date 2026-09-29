@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: no_equipment
 translationKey: 20-minute-workouts
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-23'
+updatedAt: '2026-09-29'
 faq:
   - q: 'Is a 20-minute workout enough to get results?'
     a: 'Yes, if the minutes are dense: a three-minute warm-up, 12 to 14 minutes of timed work and a cool-down. Four such sessions a week add up to 80 minutes, which fits the WHO recommendation of 75 to 150 minutes of vigorous activity a week.'
@@ -122,7 +122,7 @@ Count reps in every interval; a Tabata's score is the worst interval. This is th
 
 In Forma every session is shown in three versions before you start. "Easier" trims reps by about 15 percent and lengthens rest by 15 percent, "harder" adds 15 percent volume and shortens rest by 10 percent, "as usual" keeps the coach's numbers multiplied by your current volume scale. The clock on AMRAP, EMOM and Tabata never changes, only the work inside it. Warm-ups and cool-downs are never scaled.
 
-If your baseline tests put you at level 1, push-ups become [knee push-ups](exercise:knee_push_up), and if you add [burpees](exercise:burpee) to Workout A they become [half burpees](exercise:half_burpee). With a knee limitation the app removes jumping movements; with hypertension it caps the plank at 30 seconds. The workout preview shows an honest duration estimate, slightly over 20 minutes because it includes 20 seconds of intro per block and 8 seconds of transition per exercise. After the session you rate the effort from 1 to 10, and next time the volume moves 2 to 5 percent in the right direction.
+If the questionnaire and the short test after your second workout put you at level 1, push-ups become [knee push-ups](exercise:knee_push_up), and if you add [burpees](exercise:burpee) to Workout A they become [half burpees](exercise:half_burpee). With a knee limitation the app removes jumping movements; with hypertension it caps the plank at 30 seconds. The workout preview shows an honest duration estimate, slightly over 20 minutes because it includes 20 seconds of intro per block and 8 seconds of transition per exercise. After the session you rate the effort from 1 to 10, and next time the volume moves 2 to 5 percent in the right direction.
 
 ## Common mistakes
 

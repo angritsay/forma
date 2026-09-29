@@ -228,6 +228,7 @@ describe('resolveContentLink / localizedHref', () => {
     { locale: 'ru', slug: 'kak-delat-berpi', data: { translationKey: 'how-to-burpee' } },
     { locale: 'en', slug: 'how-to-do-a-burpee', data: { translationKey: 'how-to-burpee' } },
     { locale: 'ru', slug: 'tolko-ru', data: { translationKey: 'ru-only' } },
+    { locale: 'ru', slug: 'chernovik', data: { translationKey: 'held-back', draft: true } },
   ];
   const ctx = { ...index, guides };
   it('resolves exercises, courses and guides per locale', () => {
@@ -264,6 +265,13 @@ describe('resolveContentLink / localizedHref', () => {
     });
     expect(resolveContentLink('https://example.com', 'ru', ctx)).toBeNull();
     expect(resolveContentLink('/courses/', 'ru', ctx)).toBeNull();
+  });
+  it('treats a draft guide as unpublished, not as a page to link to', () => {
+    expect(resolveContentLink('guide:held-back', 'ru', ctx)).toEqual({
+      kind: 'guide',
+      id: 'held-back',
+      unpublished: true,
+    });
   });
   it('builds locale-prefixed, base-prefixed hrefs', () => {
     expect(localizedHref('ru', '/exercises/prisedaniya/')).toBe('/exercises/prisedaniya/');

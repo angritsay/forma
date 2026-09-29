@@ -159,7 +159,7 @@ export const DEFAULT_COPY: Record<Locale, BotCopy> = {
     greeting:
       'Привет. Это Сережа и Настя — создатели приложения <b>Forma</b> с тренировками, ' +
       'которые не захочется бросить.\n\n' +
-      'Никакого зала. Всё что тебе нужно — это 15 минут и коврик.\n\n' +
+      'Никакого зала. Всё что тебе нужно — это 15–20 минут и коврик.\n\n' +
       'Внутри три раздела:\n\n' +
       '🎬 <b>Курсы</b>\n' +
       'Пока что только курс для новичков, но скоро добавим ещё. На каждое движение есть видео ' +
@@ -192,7 +192,7 @@ export const DEFAULT_COPY: Record<Locale, BotCopy> = {
     greeting:
       'Hi. We are Sergey and Nastya — the people behind <b>Forma</b>, an app with workouts ' +
       'you will not want to quit.\n\n' +
-      'No gym. All you need is 15 minutes and a mat.\n\n' +
+      'No gym. All you need is 15–20 minutes and a mat.\n\n' +
       'There are three sections inside:\n\n' +
       '🎬 <b>Courses</b>\n' +
       'For now just the beginner course, more are coming. Every movement has a video and ' +

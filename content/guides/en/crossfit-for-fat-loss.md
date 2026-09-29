@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: fat_loss
 translationKey: crossfit-fat-loss
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-23'
+updatedAt: '2026-09-29'
 faq:
   - q: 'How many times a week should I do CrossFit to lose fat?'
     a: 'Three or four sessions a week: two strength days and one or two short metcons, plus 7,000 or more steps on the other days. More than that usually hurts recovery and the quality of every session.'
@@ -91,7 +91,7 @@ A working layout for the first two months:
 | Saturday  | Short metcon or a Tabata finisher      | 20 min       |
 | Sunday    | Rest, steps without a target           | —            |
 
-Three or four sessions a week with a day between the intense ones is the volume you can recover from and keep up past week three. Walking is mandatory here, not optional: in the app a day with 7,000 steps counts toward your streak just like a workout, and large cohort studies have linked around 7,000 steps a day with markedly lower all-cause mortality, with the benefit levelling off near 10,000. For how to spread the days, see the guide on [how many times a week to work out at home](guide:training-frequency).
+Three or four sessions a week with a day between the intense ones is the volume you can recover from and keep up past week three. Walking is mandatory here, not optional: large cohort studies have linked around 7,000 steps a day with markedly lower all-cause mortality, with the benefit levelling off near 10,000. For how to spread the days, see the guide on [how many times a week to work out at home](guide:training-frequency).
 
 ## Fat loss workout at home: a 30-minute example
 
@@ -123,7 +123,7 @@ Training creates the conditions; food creates the deficit. A moderate deficit, e
 ## How to progress
 
 1. **Weeks 1 and 2.** Three sessions: two strength, one metcon. Walk every day. Learn to hold a pace and to record the score.
-2. **Weeks 3 and 4.** Four sessions: add a short metcon or a Tabata on Saturday. Forma makes week four a deload, with less volume and longer rest; that is part of the plan, not a step back.
+2. **Weeks 3 and 4.** Four sessions: add a short metcon or a Tabata on Saturday. If fatigue builds up, make week four a deload, with less volume and longer rest; that is part of the plan, not a step back. The Start course has no separate deload week; there you choose the pauses yourself.
 3. **Month 2.** Raise the density: less rest between rounds, full burpees instead of half burpees, [jump squats](exercise:jump_squat) instead of air squats. Repeat the session from this guide and compare rounds.
 4. **Month 3.** If you get dumbbells or a kettlebell, add one loaded day; nothing protects muscle better. For the formats that fit here, read the [breakdown of AMRAP, EMOM and Tabata](guide:workout-formats).
 

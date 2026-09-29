@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: kettlebell
 translationKey: kettlebell-beginners
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-02'
+updatedAt: '2026-09-29'
 faq:
   - q: 'Which kettlebell weight should a beginner start with?'
     a: 'One cast-iron bell with a smooth handle. For people with no strength-training background a sensible start is 8 kg for women and 12 kg for men; if you are already fit, go one size up. Choose the weight for the swing, not the press.'
@@ -45,7 +45,7 @@ relatedGuides:
 cta:
   courseId: start
 priority: 0.8
-draft: false
+draft: true
 ---
 
 Kettlebell workouts at home for beginners are the fastest route from "I squat and do push-ups" to real strength training. One bell takes up half a metre of floor, needs no rack or bench, and every movement with it loads the legs, back, shoulders and grip at the same time. The catch is the learning curve. The swing, the clean and the snatch are easy to do badly, and a bad swing gives you a sore lower back instead of a strong one. This is a coach's plan for your first two months: which bell to buy, the five movements to learn first and in what order, how to build a week out of them, and when you have earned the harder lifts.

@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: beginners
 translationKey: crossfit-home-beginners
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-23'
+updatedAt: '2026-09-29'
 faq:
   - q: 'Can I do CrossFit at home with zero experience?'
     a: 'Yes, as long as you start with the basic movements and no jumping: squats, incline push-ups, glute bridges and planks. Three short sessions a week with a rest day in between is a safe starting dose for a beginner.'
@@ -122,7 +122,7 @@ On first login Forma asks a few short questions, and after your second workout t
 1. **Starting with burpees and jumps.** Knees and ankles are not ready and the squat is not clean yet. Squat first, jump later.
 2. **Skipping the warm-up.** Five minutes of [jogging in place](exercise:jog_in_place) and arm circles are not a formality; they are shoulder and lower-back injury prevention. How to build one is covered in [the warm-up guide](guide:warm-up-home).
 3. **Chasing numbers.** Ten squats to parallel beat twenty half squats. Only clean reps count — in the test and in the session.
-4. **Training every day.** Strength is built on rest days. Instead of a fourth session, walk: 7 000 steps counts as an active day in the app and keeps your streak alive.
+4. **Training every day.** Strength is built on rest days. Instead of a fourth session, take a 7 000-step walk. The workout count in the app does not reset on a rest day, so rest without worrying.
 5. **Quitting in week two.** The first result is not visible muscle; it is sets that stop feeling like punishment. Give the program four honest weeks, then retest.
 
 ## How to progress

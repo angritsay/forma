@@ -219,8 +219,8 @@ const ANNOTATIONS = {
       messages: [163],
       flags: [
         l(
-          'Каждый интервал — два шага: входной билет (крышка минута), потом минута на максимум. Минута отдыха между интервалами пока только в тексте. Так годится?',
-          'Each interval is two steps: the buy-in (a one-minute cap), then a minute of max reps. The minute of rest between intervals is only in the text for now. Good enough?',
+          'Каждый интервал — два шага: входной билет (крышка минута), потом минута на максимум, между интервалами — минута отдыха. Так годится?',
+          'Each interval is two steps: the buy-in (a one-minute cap), then a minute of max reps, with a minute of rest between the intervals. Good enough?',
         ),
       ],
     },
@@ -244,8 +244,8 @@ const GENERAL_NOTES = {
       'The course is your programme of 10 September: 20 workouts in a row, four blocks of five, no rest days on the path, no test at the start or the end and no deload. Beside each workout is the nearest channel message, with its channel number where there is one.',
     ),
     l(
-      'Разминка — суставная гимнастика сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы, потом медленный присед; без бега, около 5 минут. Заминка — растяжка: спина, бёдра, сгибатели бедра, поза ребёнка — и запись ощущений, плюс «не получилось потренироваться — прогулка». Твоих трёх разминочных роликов в экспорте нет — если пришлёшь, подставим их. Разминка и заминка не масштабируются.',
-      'The warm-up is joint mobility from the top down: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles, then a slow squat; no running, about 5 minutes. The cool-down is a stretch — spine, thighs, hip flexors, child pose — a note of how it felt, and "could not train? Go for a walk". Your three warm-up clips are not in the export — send them and we will wire them in. Warm-up and cool-down do not scale.',
+      'Разминка — суставная гимнастика сверху вниз: шея, плечи, локти и кисти, корпус, таз, колени, стопы, потом медленный присед; без бега, около 5 минут. Заминка — растяжка: спина, бёдра, сгибатели бедра, поза ребёнка — и запись ощущений, плюс «не получилось потренироваться — прогулка». Разминка и заминка не масштабируются.',
+      'The warm-up is joint mobility from the top down: neck, shoulders, elbows and wrists, trunk, hips, knees, ankles, then a slow squat; no running, about 5 minutes. The cool-down is a stretch — spine, thighs, hip flexors, child pose — a note of how it felt, and "could not train? Go for a walk". Warm-up and cool-down do not scale.',
     ),
     l(
       'Цифры «как написано» — для уверенного новичка. Приложение умножает их на коэффициент человека: новичок получает 0,6–0,8, и цифры сходятся с твоим «начинайте с минимума». Ниже показано и то и другое. Лесенки (12, 13) и точки отсчёта (19, 20) одинаковы при любой сложности.',

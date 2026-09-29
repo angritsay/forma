@@ -880,6 +880,12 @@ export function resolveContentLink(href, locale, ctx) {
   const id = /** @type {string} */ (m[2]);
   if (kind === 'guide') {
     const g = ctx.guides.find((x) => x.locale === locale && x.data.translationKey === id);
+    /*
+     * A draft guide has no page (`isPublished`, src/lib/seo/guides.ts), so a link to it would be a
+     * 404. It is held back the way a course is — the dumbbell and kettlebell guides wait for their
+     * movements to be filmed — so the sentence stays and the link goes, like a hidden course.
+     */
+    if (g && g.data.draft === true) return { kind, id, unpublished: true };
     if (g) return { kind, id, sitePath: `/guides/${g.slug}/` };
     const other = ctx.guides.find((x) => x.data.translationKey === id);
     return {
@@ -1147,13 +1153,18 @@ export function auditGuides(guides, index, clusters = DEFAULT_GUIDE_CLUSTERS) {
            * wrong, it is ahead of the camera, and failing the build over it would mean editing
            * every guide twice: once to take the movement out and once to put it back. The template
            * drops the card (`GuideArticle.astro`), and this line is how many will reappear.
+           *
+           * A draft guide is the same case as an exercise: `relatedGuidesFor` skips it, and the
+           * card comes back the day the guide is published again.
            */
           else if ('unpublished' in r)
             push(
-              kind === 'exercise' ? 'info' : 'error',
+              kind === 'course' ? 'error' : 'info',
               kind === 'exercise'
                 ? `${field} "${id}": not filmed yet, so no card is drawn for it`
-                : `${field} "${id}": that course is not published (no page to link to)`,
+                : kind === 'guide'
+                  ? `${field} "${id}": that guide is a draft, so no card is drawn for it`
+                  : `${field} "${id}": that course is not published (no page to link to)`,
             );
         }
       }

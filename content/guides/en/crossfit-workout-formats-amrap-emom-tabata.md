@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: formats
 translationKey: workout-formats
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-02'
+updatedAt: '2026-09-29'
 faq:
   - q: 'What does AMRAP mean in a workout?'
     a: 'AMRAP stands for "as many rounds as possible": you repeat a short circuit for a fixed time and count how many full rounds you complete, plus the reps of the unfinished round. The clock is fixed; the work is up to you.'
@@ -130,7 +130,7 @@ How the app scales these sessions. Before you start, Forma offers three choices:
 3. **Month 2.** Add Tabata as a short finisher after a strength block rather than as a stand-alone session. Increase volume by 5 to 10 percent at a time, never double it.
 4. **The sign it is time to go harder:** two consecutive sessions rated 6 out of 10 or lower with the full plan completed. That is the same rule Forma uses to recommend the "harder" option.
 
-If you are not sure what volume to start from, read the [beginner's guide to CrossFit at home](guide:crossfit-home-beginners), which walks through the first four weeks. And once you own a pair of dumbbells, the same formats work with load; see the [full body dumbbell workout at home](guide:dumbbell-home-workout).
+If you are not sure what volume to start from, read the [beginner's guide to CrossFit at home](guide:crossfit-home-beginners), which walks through the first four weeks. And once you own a pair of dumbbells, the same formats work with load.
 
 ## Wrap-up
 
