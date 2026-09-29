@@ -1,0 +1,152 @@
+---
+/**
+ * The phone's way in from anywhere on a long page: a glass capsule at the bottom of the screen
+ * with the main action and a square «Позвать с собой». Phones only (`sm:hidden`) — from 640px up
+ * the header's own button is always in reach.
+ *
+ * **When it shows.** Not at first: the hero has the same action, and two neon buttons in one
+ * viewport make neither of them the main one (global.css header). The bar appears once the anchor
+ * (`[data-sticky-anchor]`, the hero's form) has scrolled up out of view, and it steps aside again
+ * whenever anything in `hideOn` is on screen — by default another neon control (`[data-neon]`,
+ * which the landing `Button` and `StartForm` set on themselves), the club zone (which has no neon,
+ * `data-club-zone`), the together block and the footer. So there is never a second neon on screen,
+ * and the bar never covers the club's gradient or the footer's links. Without an anchor on the
+ * page it shows after one screen of scrolling.
+ *
+ * **Two variants.** `start` (default): the neon «Начать бесплатно» into workout 1. `club` (for
+ * `/subscribe/`): the club's gradient join button instead — «Вступить за 666 ₽ / мес» on RU with
+ * «7 990 ₽ за год, одной оплатой» directly under it, because 666 never stands without the year's
+ * charge; EN names the year only (`clubPriceLabels`). The club variant hides only on the join
+ * buttons it duplicates (`[data-club-join]`) and the footer.
+ *
+ * The share square uses `shareHome.ts`: the system share sheet inside the tap where there is one,
+ * otherwise a scroll to `#together`. While hidden the bar is `inert`, so it is not in the tab order
+ * or the accessibility tree; it slides rather than fades, and a reduced-motion reader gets no
+ * slide at all (`motion-reduce:transition-none`).
+ */
+import type { Locale } from '@/content/schema';
+import { t } from '@/i18n/index';
+import { appHref, href, localePath, withBase } from '@/lib/util/paths';
+import Button from './Button.astro';
+import { clubPriceLabels } from './club/clubPrice';
+
+interface Props {
+  locale: Locale;
+  variant?: 'start' | 'club';
+  /** What has to scroll out of view before the bar appears. */
+  anchor?: string;
+  /** While any of these is on screen the bar steps aside. Defaults by variant. */
+  hideOn?: string;
+  /** The club variant's join link; defaults to the club page's order form. */
+  joinHref?: string;
+}
+
+const {
+  locale,
+  variant = 'start',
+  anchor = '[data-sticky-anchor]',
+  hideOn = variant === 'club'
+    ? '[data-club-join], footer'
+    : '[data-neon], [data-club-zone], #together, footer',
+  joinHref = `${href(locale, '/subscribe/')}#order`,
+} = Astro.props;
+
+const club = variant === 'club' ? clubPriceLabels(locale) : null;
+const sharePath = withBase(localePath(locale, '/'));
+---
+
+<div
+  data-sticky-start
+  data-anchor={anchor}
+  data-hide-on={hideOn}
+  data-visible="false"
+  inert
+  role="region"
+  aria-label={t(locale, 'landing.stickyRegion')}
+  class="fixed inset-x-4 bottom-[max(12px,env(safe-area-inset-bottom))] z-30 translate-y-[calc(100%+max(12px,env(safe-area-inset-bottom))+12px)] transition-transform duration-300 ease-(--ease-out) motion-reduce:transition-none data-[visible=true]:translate-y-0 sm:hidden"
+>
+  <div class="glass-capsule flex items-center gap-2 rounded-card border border-border-strong p-2">
+    <div class="flex min-w-0 flex-1 flex-col gap-1">
+      {
+        club ? (
+          <>
+            <Button href={joinHref} variant="gradient" size="lg" class="w-full" data-club-join>
+              {club.join}
+            </Button>
+            <p class="px-2 text-center text-[12px] leading-tight text-muted">{club.chargeShort}</p>
+          </>
+        ) : (
+          <Button
+            href={appHref('/start', { locale })}
+            variant="primary"
+            size="lg"
+            class="w-full"
+            data-goal="app_start"
+            data-app-link
+          >
+            {t(locale, 'landing.startCta')}
+          </Button>
+        )
+      }
+    </div>
+    <button
+      type="button"
+      data-share-home
+      data-share-path={sharePath}
+      data-share-title={t(locale, 'landing.shareTitle')}
+      data-share-text={t(locale, 'landing.shareText')}
+      aria-label={t(locale, 'landing.shareCta')}
+      class="flex size-14 shrink-0 items-center justify-center rounded-control border border-border-strong bg-surface-2 text-text transition-colors hover:bg-surface-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+    >
+      <span class="glyph text-xl" aria-hidden="true">↗</span>
+    </button>
+  </div>
+</div>
+
+<script>
+  import { bindShareHome } from './shareHome';
+
+  bindShareHome();
+
+  document.querySelectorAll<HTMLElement>('[data-sticky-start]').forEach((bar) => {
+    const anchor = document.querySelector(bar.dataset.anchor ?? '');
+    const blockers = Array.from(
+      document.querySelectorAll<HTMLElement>(bar.dataset.hideOn ?? 'footer'),
+    ).filter((el) => !bar.contains(el));
+
+    let passed = false;
+    const onScreen = new Set<Element>();
+
+    const render = () => {
+      const show = passed && onScreen.size === 0;
+      bar.dataset.visible = String(show);
+      bar.toggleAttribute('inert', !show);
+    };
+
+    if (anchor) {
+      new IntersectionObserver(([entry]) => {
+        if (!entry) return;
+        passed = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+        render();
+      }).observe(anchor);
+    } else {
+      const onScroll = () => {
+        passed = window.scrollY > window.innerHeight;
+        render();
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    }
+
+    if (blockers.length) {
+      const io = new IntersectionObserver((entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) onScreen.add(e.target);
+          else onScreen.delete(e.target);
+        }
+        render();
+      });
+      blockers.forEach((el) => io.observe(el));
+    }
+  });
+</script>

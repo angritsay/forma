@@ -104,8 +104,9 @@ export default function DifficultyDemo({
       <div className="glass-card rounded-card border border-border p-5 md:p-7">
         {/* Two lines rather than one clipped one: «Тренировка из курса «Форма с нуля: кроссфит
             дома без оборудования»: Отжимания…» is a sentence carrying a course name, and at 390px
-            `truncate` cut it inside a word. */}
-        <p className="eyebrow line-clamp-2">{workoutLabel}</p>
+            `truncate` cut it inside a word. Body text, not `.eyebrow`: at ~90 characters it is a
+            sentence, and eyebrows stay under 29. */}
+        <p className="line-clamp-2 text-sm text-muted">{workoutLabel}</p>
 
         <div className="mt-5 flex flex-col gap-2" role="group" aria-label={labels.planTitle}>
           {choices.map((c) => {

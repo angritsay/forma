@@ -23,6 +23,15 @@ describe('splitKeyWord', () => {
     expect(splitKeyWord('Контакты', 3)).toEqual({ head: '', key: 'Контакты', tail: '' });
   });
 
+  it('keys the homepage hero on «сегодня», past the dash', () => {
+    expect(splitKeyWord('Кроссфит дома. Первая тренировка — сегодня')).toEqual({
+      head: 'Кроссфит дома. Первая тренировка — ',
+      key: 'сегодня',
+      tail: '',
+    });
+    expect(splitKeyWord('Home CrossFit. Your first workout — today').key).toBe('today');
+  });
+
   it('never returns an empty key for a word that is all punctuation', () => {
     expect(splitKeyWord('Что дальше —').key).toBe('—');
   });

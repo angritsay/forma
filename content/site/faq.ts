@@ -1,87 +1,156 @@
 /**
- * Landing FAQ (home page + FAQPage JSON-LD). Answers describe how the product actually works;
- * numbers come from config so they never drift from the policies.
+ * Landing FAQ (home page + FAQPage JSON-LD): ten questions in the order the page tells the story —
+ * what is free, how to get in, course or club, starting together, the +30 days, the weekly prize,
+ * the coach, auto-renewal, equipment, refunds (site synthesis §2, S9).
+ *
+ * Answers describe how the product actually works, and **every figure is read from its file**:
+ * the course's price from `content/courses/start.ts`, the club's year and month from `plans.ts`
+ * (`planMonthlyPrice`, so «666 ₽» is always the year divided by twelve and is never printed
+ * without the year's price beside it), the coach's two lengths from `booking.ts`, the refund window
+ * from `pricing.ts`. English quotes the club's year only, as every EN surface does (`clubPrice.ts`).
+ *
+ * Two owner rules are written into the wording, not left to taste:
+ * - **The pair is not a promotion.** +30 days each happens when a friend pays for the club through
+ *   a personal link, and the weekly prize is an hour with the coach for each of a winning pair.
+ *   Nothing here promises an hour for joining together.
+ * - **Coach sessions are not refunded.** A session can be moved when the coach is told at least 24
+ *   hours ahead — the same line `SessionTickets` prints under the tickets.
+ *
+ * A question whose product is switched off (`BOOKING.enabled`, `PLANS_ENABLED`) drops out rather
+ * than describing something that cannot be bought.
  */
-import type { FaqItem } from '@/content/schema';
-import { BRAND } from './brand';
-import { LINKS } from './links';
-import { BOOKING, bookingFromPrice } from './booking';
-import { formatPrice, PRICING } from './pricing';
+import type { FaqItem, L10n } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { COURSE_START } from '../courses/start';
+import { BOOKING, type BookingOption } from './booking';
+import { CLUB_PLAN_ID, PLAN_BY_ID, PLANS, PLANS_ENABLED, planMonthlyPrice } from './plans';
+import { formatPrice, PRICING, type CoursePrice } from './pricing';
 
-const supportEmail = LINKS.supportEmail || BRAND.contactEmail;
-const hasTelegram = Boolean(LINKS.supportTelegram || BRAND.telegram);
+/** Both locales' spelling of one price. */
+function both(price: CoursePrice): L10n {
+  return { ru: formatPrice('ru', price), en: formatPrice('en', price) };
+}
 
-export const FAQ: FaqItem[] = [
-  ...(BOOKING.enabled
+const course = both(COURSE_START.price);
+const courseName: L10n = {
+  ru: l(COURSE_START.shortName, 'ru'),
+  en: l(COURSE_START.shortName, 'en'),
+};
+const clubPlan = PLANS_ENABLED ? PLAN_BY_ID.get(CLUB_PLAN_ID) : undefined;
+const thirtyDays = PLANS.find((p) => p.period === 'month' && p.id !== CLUB_PLAN_ID);
+
+const half = BOOKING.options.find((o) => o.id === 'half');
+const hour = BOOKING.options.find((o) => o.id === 'hour');
+
+/** «Оплати и выбери время» when the length has a slot page, else the coach sets the time. */
+function howToBook(o: BookingOption): L10n {
+  return o.scheduleUrl || BOOKING.scheduleUrl
+    ? { ru: 'оплати и выбери время', en: 'pay and pick a time' }
+    : {
+        ru: 'оплати и напиши — время поставит тренер',
+        en: 'pay and send a message — the coach sets the time',
+      };
+}
+
+const courseOrClub: FaqItem[] = clubPlan
+  ? [
+      {
+        q: { ru: 'Курс или клуб?', en: 'Course or club?' },
+        a: {
+          ru: `Курс — 20 тренировок навсегда за ${course.ru}, и неделя клуба в подарок. Клуб — задание в день, серия, таблица недели и приз; курс уже внутри. ${formatPrice('ru', planMonthlyPrice(clubPlan))} в месяц — это одна оплата ${formatPrice('ru', clubPlan.price)} за год.`,
+          en: `The course is 20 workouts for life for ${course.en}, with a week of the club as a gift. The club is a task a day, a streak, the weekly board and a prize, with the course inside. It is one payment of ${formatPrice('en', clubPlan.price)} for a year.`,
+        },
+      },
+    ]
+  : [];
+
+const together: FaqItem = {
+  q: { ru: 'Как начать вместе?', en: 'How do we start together?' },
+  a: {
+    ru: `Возьми ссылку в блоке «Вместе с понедельника» на этой странице — регистрироваться не нужно. В понедельник каждый делает тренировку 1 у себя дома. В клубе можно стать парой: в приложении — Клуб → Дуо → «${t('ru', 'app.duoInvite')}».`,
+    en: `Take the link from the “Together from Monday” block on this page — no sign-up needed. On Monday each of you does workout 1 at home. In the club you can become a pair: in the app, Club → Duo → “${t('en', 'app.duoInvite')}”.`,
+  },
+};
+
+const pairAndPrize: FaqItem[] = clubPlan
+  ? [
+      {
+        q: { ru: 'Что за +30 дней?', en: 'What are the +30 days?' },
+        a: {
+          ru: 'Когда человек по твоей личной ссылке оплатит клуб — на 30 дней или на год, — вы оба получаете по 30 дней клуба. Если друг уже был в клубе, бонус не начисляется. До 12 наград в год. Это не скидка: цена та же, дней больше.',
+          en: 'When someone pays for the club through your personal link — for 30 days or for a year — you both get 30 days of the club. No bonus if your friend has been in the club before. Up to 12 rewards a year. It is not a discount: the price is the same, the days are more.',
+        },
+      },
+      {
+        q: { ru: 'Что за приз недели?', en: 'What is the weekly prize?' },
+        a: {
+          ru: 'Час один на один с Сергеем. Кто наверху таблицы в воскресенье, получает его; в дуо — каждый из пары. Победителя объявляет тренер.',
+          en: 'An hour one-to-one with Sergey. Whoever tops the board on Sunday gets it; in a duo, each of the pair. The coach announces the winner.',
+        },
+      },
+    ]
+  : [];
+
+const coach: FaqItem[] =
+  BOOKING.enabled && half && hour
     ? [
         {
           q: {
-            ru: 'Можно позаниматься с тренером лично?',
+            ru: 'Можно заниматься с тренером лично?',
             en: 'Can I train with the coach one-to-one?',
           },
           a: {
-            ru: `Да. В приложении есть занятие один на один по видеосвязи — полчаса или час, от ${formatPrice('ru', bookingFromPrice())}: разбор техники, корректировка программы, ответы на вопросы. Курсы при этом не требуют участия тренера: программа адаптируется сама.`,
-            en: `Yes. The app offers a one-to-one session over video — half an hour or an hour, from ${formatPrice('en', bookingFromPrice())}: technique review, program adjustments, your questions. The courses themselves need no coach involvement: the program adapts on its own.`,
+            ru: `Да, онлайн: полчаса — ${formatPrice('ru', half.price)}, час — ${formatPrice('ru', hour.price)}. Полчаса: ${howToBook(half).ru}. Час: ${howToBook(hour).ru}. Возврата нет — занятие можно перенести, если написать не позднее чем за 24 часа.`,
+            en: `Yes, online: half an hour is ${formatPrice('en', half.price)}, an hour ${formatPrice('en', hour.price)}. Half an hour: ${howToBook(half).en}. An hour: ${howToBook(hour).en}. No refunds — a session can be moved if you write at least 24 hours ahead.`,
           },
         },
       ]
-    : []),
+    : [];
+
+const autoRenewal: FaqItem[] = clubPlan
+  ? [
+      {
+        q: { ru: 'Есть автосписание?', en: 'Is there auto-renewal?' },
+        a: {
+          ru: `Нет. Доступ ${thirtyDays ? 'на 30 дней или на год' : 'на год'} оплачивается один раз и просто заканчивается — отменять нечего.`,
+          en: `No. ${thirtyDays ? 'Thirty days or a year of access is' : 'A year of access is'} paid once and simply ends — there is nothing to cancel.`,
+        },
+      },
+    ]
+  : [];
+
+export const FAQ: FaqItem[] = [
   {
-    q: { ru: 'Как я получу доступ к курсу?', en: 'How do I get access to a course?' },
+    q: { ru: 'Что бесплатно?', en: 'What is free?' },
     a: {
-      ru: 'На странице курса оставь e-mail и оплати. Доступ откроется сам сразу после оплаты — курс появится в приложении под этой почтой. Купленный курс — навсегда. Клуб с заданием на каждый день и курс вместе — по подписке, помесячно или на год.',
-      en: 'Leave your email on the course page and pay. Access opens automatically right after the payment — the course shows up in the app under that email. A bought course is yours for life. The club with a task every day comes together with the course by subscription, monthly or annual.',
+      ru: `Первая тренировка курса «${courseName.ru}» — без карты, и её можно повторять. Нужны только почта и код из письма.`,
+      en: `The first workout of the ${courseName.en} course — no card, and you can repeat it. All it takes is your email and the code we send to it.`,
     },
   },
   {
-    q: {
-      ru: 'Что за код по почте? Нужен ли пароль?',
-      en: 'What is the email code? Do I need a password?',
-    },
+    q: { ru: 'Как войти?', en: 'How do I sign in?' },
     a: {
-      ru: 'Пароля нет. При входе в приложение ты вводишь e-mail, получаешь шестизначный код письмом и подтверждаешь его. Если письмо не пришло — проверь «Спам»; новый код можно запросить через минуту.',
-      en: 'There is no password. To sign in you enter your email, receive a six-digit code by email and confirm it. If the email did not arrive, check spam; you can request a new code after a minute.',
+      ru: 'По почте: приходит код из 6 цифр, пароля нет. Приложение работает в браузере — скачивать ничего не нужно, его можно добавить на экран «Домой». Telegram подключается после входа, чтобы получать сообщения клуба.',
+      en: 'With your email: a 6-digit code arrives, and there is no password. The app runs in the browser — nothing to download, and you can add it to your home screen. Telegram is connected after sign-in, for the club’s messages.',
     },
   },
-  {
-    q: {
-      ru: 'На каких устройствах работает приложение?',
-      en: 'Which devices does the app work on?',
-    },
-    a: {
-      ru: 'В любом современном браузере: на телефоне, планшете и компьютере. Устанавливать ничего не нужно — открой ссылку и войди. Прогресс хранится в аккаунте, поэтому можно свободно переключаться между устройствами.',
-      en: 'Any modern browser on a phone, tablet or computer. Nothing to install: open the link and sign in. Progress is stored in your account, so you can switch devices freely.',
-    },
-  },
+  ...courseOrClub,
+  together,
+  ...pairAndPrize,
+  ...coach,
+  ...autoRenewal,
   {
     q: { ru: 'Нужно ли оборудование?', en: 'Do I need equipment?' },
     a: {
-      ru: 'Нет. «Форма с нуля» — без оборудования: хватит коврика и устойчивого стула. Если движение пока не получается, приложение заменит его более простым.',
-      en: 'No. Forma. Start uses no equipment: a mat and a sturdy chair are enough. If a movement is not there yet, the app swaps it for a simpler one.',
+      ru: 'Нет: устойчивый стул и коврик. Прыжков и бёрпи в курсе нет.',
+      en: 'No: a sturdy chair and a mat. There are no jumps and no burpees in the course.',
     },
   },
   {
-    q: { ru: 'Я новичок. С чего начать?', en: 'I am a beginner. Where do I start?' },
+    q: { ru: 'Можно вернуть деньги?', en: 'Can I get a refund?' },
     a: {
-      ru: 'С курса «Форма с нуля» — он для новичков и тех, кто возвращается после перерыва. При первом входе ты ответишь на пять коротких вопросов, а после второй тренировки приложение предложит тест из пяти движений: приседания, отжимания, подъёмы корпуса, выпады и планку. По нему оно уточнит уровень и нагрузку.',
-      en: 'With Forma. Start — it is made for beginners and for anyone coming back after a break. On first login you answer five short questions, and after your second workout the app offers a test of five movements: squats, push-ups, sit-ups, lunges and a plank. It uses them to fine-tune your level and load.',
-    },
-  },
-  {
-    q: { ru: 'Можно ли вернуть деньги?', en: 'Can I get a refund?' },
-    a: {
-      ru: `Да, в течение ${PRICING.refundDays} дней после активации доступа, если ты выполнил меньше ${PRICING.refundMaxCompletedWorkouts} тренировок курса. Как это сделать — в политике возврата.`,
-      en: `Yes, within ${PRICING.refundDays} days of activation if you have completed fewer than ${PRICING.refundMaxCompletedWorkouts} workouts of the course. The refund policy explains how.`,
-    },
-  },
-  {
-    q: {
-      ru: 'Куда писать, если что-то не работает?',
-      en: 'Where do I write if something does not work?',
-    },
-    a: {
-      ru: `На ${supportEmail}${hasTelegram ? ' или в Telegram' : ''}. Укажи почту, с которой оформлял доступ, — так мы быстрее найдём заказ. Отвечаем в порядке очереди.`,
-      en: `Email ${supportEmail}${hasTelegram ? ' or message us on Telegram' : ''}. Mention the email you ordered with so we can find the order quickly. We answer in the order received.`,
+      ru: `За курс — в течение ${PRICING.refundDays} дней после открытия доступа, за клуб — после оплаты, если сделано меньше ${PRICING.refundMaxCompletedWorkouts} тренировок. Занятие с тренером не возвращается — его можно перенести.`,
+      en: `For the course — within ${PRICING.refundDays} days of access opening, for the club — of payment, if fewer than ${PRICING.refundMaxCompletedWorkouts} workouts are done. A coach session is not refunded — it can be moved.`,
     },
   },
 ];

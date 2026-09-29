@@ -3,10 +3,30 @@
  * Landing shell: Base + top navigation (with a mobile menu) + footer.
  * The landing area owns the visual design of nav/footer; other areas only pass props.
  *
- * The header is the lockup «FORMA // Сергей Титов» on the left, the navigation as text-only caps
- * kickers, one white button for the app, and a hairline under it all. No icons anywhere — the
+ * The header is the lockup «FORMA // Сергей Титов» on the left, the navigation as text-only
+ * kickers, one white button into the app, and a hairline under it all. No icons anywhere — the
  * mobile menu opens on the word «Меню» and closes on a × glyph. The footer is the mark, the
  * tagline and three columns of links divided by hairlines, not boxes.
+ *
+ * ## A way in on every screen (site synthesis §2, S0)
+ *
+ * The site sells workout 1 first, so the header's button is «Начать бесплатно» → `#/start` — white,
+ * not neon: on the homepage the hero owns the neon, and one neon per viewport is the rule. Below
+ * 640px there is no room for that label beside «Меню», and a phone header used to have no way into
+ * the app at all; it gets a compact white «Войти» instead, and «Начать бесплатно» moves into the
+ * menu. The navigation is the four products in the order the app runs them — Курс, Клуб, Тренер,
+ * Вместе — plus the guides; «Упражнения» lives in the menu and the footer.
+ *
+ * «Вместе» points at the homepage's `#together` block for now. Its own page, `/together/`, comes
+ * with the personal invite (PR 3); the three links that name it are `togetherHref` below.
+ *
+ * ## The one script
+ *
+ * Besides the mobile menu it runs `bindVisit()` (src/components/landing/visit.ts): a friend's
+ * `?ref=` code is set aside for the app, the first touch is remembered for the order form, goal
+ * clicks reach whichever counters are loaded, and — while a code is pending — `[data-app-link]`
+ * links carry it and `[data-club-join]` buttons go through the app's club screen instead of the
+ * pay-first form. Every link into the app on this shell is marked `data-app-link` for that reason.
  *
  * `sitePath` / `localizedPaths` are forwarded to <SeoHead> for the canonical URL and the hreflang
  * alternates, and to <LangSwitch> for the language links — deliberately the same map, so that what
@@ -45,22 +65,44 @@ interface Props {
 const { locale, sitePath, localizedPaths, mainClass = '', ...seo } = Astro.props;
 const year = new Date().getFullYear();
 
+/** The homepage's together block; becomes `/together/` when that page ships (PR 3). */
+const togetherHref = `${href(locale, '/')}#together`;
+const exercisesLink = {
+  href: href(locale, '/exercises/'),
+  label: t(locale, 'landing.navExercises'),
+};
+const contactLink = { href: href(locale, '/contact/'), label: t(locale, 'landing.navContact') };
+
 const navLinks = [
-  { href: href(locale, '/courses/'), label: t(locale, 'landing.navCourses') },
+  { href: href(locale, '/courses/'), label: t(locale, 'landing.navCourse') },
   // While the subscription is off sale there is no /subscribe/ page, so the nav must not offer
   // one: every other entry point already checks this flag, and an unguarded link in the header
   // sits on every page of the site — the most visible 404 it is possible to ship.
   ...(PLANS_ENABLED
     ? [{ href: href(locale, '/subscribe/'), label: t(locale, 'landing.navSubscribe') }]
     : []),
-  { href: href(locale, '/exercises/'), label: t(locale, 'landing.navExercises') },
+  { href: href(locale, '/about/'), label: t(locale, 'landing.navCoach') },
+  { href: togetherHref, label: t(locale, 'landing.navTogether') },
   { href: href(locale, '/guides/'), label: t(locale, 'landing.navGuides') },
-  { href: href(locale, '/about/'), label: t(locale, 'landing.navAbout') },
+];
+const menuLinks = [
+  { href: href(locale, '/'), label: t(locale, 'landing.navHome') },
+  ...navLinks,
+  exercisesLink,
+  contactLink,
 ];
 const productLinks = [
   ...navLinks,
+  exercisesLink,
   { href: href(locale, '/contact/'), label: t(locale, 'landing.footerContact') },
 ];
+
+/** Workout 1 of the free course; the app routes through language, sign-in and onboarding as needed. */
+const startHref = appHref('/start', { locale });
+/** The app as it is: its own home, or the sign-in screen for someone who is not signed in yet. */
+const signInHref = appHref('', { locale });
+/** «Открыть в Telegram» is offered only while the bot link is configured. */
+const telegramBot = LINKS.telegramBot;
 const legalLinks = [
   { href: href(locale, '/privacy/'), label: t(locale, 'landing.footerPrivacy') },
   { href: href(locale, '/terms/'), label: t(locale, 'landing.footerTerms') },
@@ -75,7 +117,8 @@ const socials = [
 ].filter((s) => Boolean(s.url));
 
 const primaryLink =
-  'control-label inline-flex h-10 items-center rounded-control bg-primary px-4.5 text-[14px] text-on-primary transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-85 active:scale-[0.98]';
+  'control-label inline-flex h-10 items-center rounded-control bg-primary text-[14px] text-on-primary transition-[opacity,transform] duration-150 ease-(--ease-out) hover:opacity-85 active:scale-[0.98]';
+const quietLink = 'text-muted transition-colors duration-150 hover:text-text';
 ---
 
 <Base locale={locale}>
@@ -148,11 +191,28 @@ const primaryLink =
           meant to be pressed, and it keeps the edge. The switch is two letters of caps kicker, the
           same weight as the navigation it sits beside.
         -->
-        <LangSwitch locale={locale} localizedPaths={localizedPaths} class="-mr-1" />
+        <LangSwitch
+          locale={locale}
+          sitePath={sitePath}
+          localizedPaths={localizedPaths}
+          class="-mr-1"
+        />
 
         <!-- `max-sm:hidden`, not `hidden sm:inline-flex` — see the note on the lockup above. -->
-        <a href={appHref('', { locale })} class:list={[primaryLink, 'max-sm:hidden']}>
-          {t(locale, 'landing.navApp')}
+        <a
+          href={startHref}
+          class:list={[primaryLink, 'px-4.5 max-sm:hidden']}
+          data-app-link
+          data-goal="app_start"
+        >
+          {t(locale, 'landing.startCta')}
+        </a>
+        <!--
+          The phone's way in. «Начать бесплатно» does not fit beside «Меню» at 390px, and the
+          person most likely to look for a button up here already has an account.
+        -->
+        <a href={signInHref} class:list={[primaryLink, 'px-3.5 sm:hidden']} data-app-link>
+          {t(locale, 'landing.navSignIn')}
         </a>
 
         <details class="group lg:hidden" data-mobile-nav>
@@ -174,13 +234,8 @@ const primaryLink =
             class="absolute inset-x-0 top-full border-b border-border bg-bg px-5 pt-2 pb-6"
           >
             <ul class="flex flex-col divide-y divide-border">
-              <li>
-                <a class="font-display flex min-h-12 items-center text-sm" href={href(locale, '/')}>
-                  {t(locale, 'landing.navHome')}
-                </a>
-              </li>
               {
-                navLinks.map((x) => (
+                menuLinks.map((x) => (
                   <li>
                     <a class="font-display flex min-h-12 items-center text-sm" href={x.href}>
                       {x.label}
@@ -188,21 +243,45 @@ const primaryLink =
                   </li>
                 ))
               }
-              <li>
-                <a
-                  class="font-display flex min-h-12 items-center text-sm"
-                  href={href(locale, '/contact/')}
-                >
-                  {t(locale, 'landing.navContact')}
-                </a>
-              </li>
             </ul>
-            <a
-              href={appHref('', { locale })}
-              class="control-label mt-4 flex h-12 items-center justify-center rounded-control bg-primary px-5 text-[15px] text-on-primary"
-            >
-              {t(locale, 'landing.navApp')}
-            </a>
+            <!-- Two ways into the app, then the two ways to pass it on or open it elsewhere. -->
+            <div class="mt-4 grid grid-cols-2 gap-2">
+              <a
+                href={startHref}
+                class="control-label flex h-12 items-center justify-center rounded-control bg-primary px-4 text-[15px] text-on-primary"
+                data-app-link
+                data-goal="app_start"
+              >
+                {t(locale, 'landing.startCta')}
+              </a>
+              <a
+                href={signInHref}
+                class="control-label flex h-12 items-center justify-center rounded-control border border-border-strong bg-surface-2 px-4 text-[15px] text-text"
+                data-app-link
+              >
+                {t(locale, 'landing.navSignIn')}
+              </a>
+            </div>
+            <div class="mt-3 flex flex-wrap gap-x-6">
+              <a
+                href={togetherHref}
+                class:list={[quietLink, 'tap-target-y inline-flex items-center text-sm']}
+              >
+                {t(locale, 'landing.shareCta')}
+              </a>
+              {
+                telegramBot && (
+                  <a
+                    href={telegramBot}
+                    rel="noopener"
+                    class:list={[quietLink, 'tap-target-y inline-flex items-center text-sm']}
+                    data-goal="telegram_open"
+                  >
+                    {t(locale, 'landing.openTelegram')}
+                  </a>
+                )
+              }
+            </div>
           </div>
         </details>
       </div>
@@ -222,14 +301,32 @@ const primaryLink =
           <Logo label={BRAND.name} />
         </a>
         <p class="mt-4 max-w-xs text-sm leading-relaxed text-muted">
-          {t(locale, 'common.tagline')}
+          {t(locale, 'landing.footerTagline')}
         </p>
         <a
-          href={appHref('', { locale })}
+          href={startHref}
           class="control-label mt-6 inline-flex h-10 items-center rounded-control border border-border-strong bg-surface-2 px-4.5 text-[14px] transition-colors duration-150 hover:bg-surface-3"
+          data-app-link
+          data-goal="app_start"
         >
-          {t(locale, 'common.openApp')}
+          {t(locale, 'landing.startCta')}
         </a>
+        <ul class="mt-4 flex flex-col gap-2.5 text-sm">
+          <li>
+            <a class={quietLink} href={togetherHref}>
+              {t(locale, 'landing.shareCta')}
+            </a>
+          </li>
+          {
+            telegramBot && (
+              <li>
+                <a class={quietLink} href={telegramBot} rel="noopener" data-goal="telegram_open">
+                  {t(locale, 'landing.openTelegram')}
+                </a>
+              </li>
+            )
+          }
+        </ul>
       </div>
       <!-- Each column starts with a hairline on the phone and a hairline on its left above it. -->
       <div class="border-t border-border pt-6 md:border-t-0 md:border-l md:pt-0 md:pl-6">
@@ -327,6 +424,12 @@ const primaryLink =
   </footer>
 
   <script>
+    import { bindVisit } from '@/components/landing/visit';
+
+    // Referral, first touch, goals and app links (visit.ts). Before the menu: it rewrites hrefs
+    // the menu's links point at.
+    bindVisit();
+
     // Mobile menu: keep aria-expanded in sync and close on Esc, on link click, on outside click
     // and when the viewport grows. Esc always returns focus to the summary that opened the menu.
     const nav = document.querySelector<HTMLDetailsElement>('[data-mobile-nav]');
@@ -358,7 +461,8 @@ const primaryLink =
       document.addEventListener('click', (e) => {
         if (nav.open && e.target instanceof Node && !nav.contains(e.target)) close();
       });
-      const mq = window.matchMedia('(min-width: 768px)');
+      // The menu is `lg:hidden`, so it closes where the inline navigation takes over.
+      const mq = window.matchMedia('(min-width: 1024px)');
       mq.addEventListener('change', (e) => {
         if (e.matches) close();
       });

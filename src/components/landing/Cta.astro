@@ -14,8 +14,10 @@ interface Props {
   text: string;
   primary: { label: string; href: string };
   secondary?: { label: string; href: string };
+  /** Marks on the primary (`data-goal`, `data-app-link`), passed to the `Button`. */
+  primaryData?: Record<`data-${string}`, string | boolean>;
 }
-const { title, text, primary, secondary } = Astro.props;
+const { title, text, primary, secondary, primaryData = {} } = Astro.props;
 ---
 
 <section class="mx-auto max-w-6xl px-5 py-8 md:py-12">
@@ -25,8 +27,8 @@ const { title, text, primary, secondary } = Astro.props;
         <h2 class="font-display text-4xl text-balance md:text-5xl">{title}</h2>
         <p class="mt-5 max-w-xl text-lg text-muted">{text}</p>
       </div>
-      <div class="flex flex-wrap gap-4">
-        <Button href={primary.href} size="lg">{primary.label}</Button>
+      <div class="flex flex-wrap items-center gap-4">
+        <Button href={primary.href} size="lg" {...primaryData}>{primary.label}</Button>
         {
           secondary && (
             <Button href={secondary.href} variant="secondary" size="lg">
@@ -34,7 +36,17 @@ const { title, text, primary, secondary } = Astro.props;
             </Button>
           )
         }
+        {/* Anything else the band offers beside the buttons — the homepage's share button. */}
+        <slot name="actions" />
       </div>
     </div>
+    {
+      /* An optional foot: a line of small print and, from `lg`, the QR code (the homepage). */
+      Astro.slots.has('default') && (
+        <div class="mt-8">
+          <slot />
+        </div>
+      )
+    }
   </div>
 </section>

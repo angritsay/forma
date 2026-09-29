@@ -1,0 +1,64 @@
+---
+import qrcode from 'qrcode-generator';
+
+/**
+ * A QR code drawn at build time as inline SVG — the desktop's bridge to the phone: «Открой на
+ * телефоне — наведи камеру» beside a code for `…/app/?lang=ru&src=qr#/start`.
+ *
+ * The code is modules as `<rect>`s in `currentColor` on a paper plate, so no colour is typed here
+ * and a scanner gets the dark-on-light it needs whatever the page around it is. Error correction
+ * `M`, a four-module quiet zone as the standard asks, `shape-rendering="crispEdges"` so the modules
+ * do not blur into each other when the tile is scaled.
+ *
+ * The encoder is `qrcode-generator` (a devDependency, no runtime cost — nothing ships to the
+ * browser), imported statically: a missing package fails the build instead of silently dropping
+ * the tile, which is how both codes once went missing from the built page.
+ */
+interface Props {
+  /** The absolute URL the code opens. */
+  url: string;
+  /** The caption under the code; also the SVG's accessible name. */
+  label: string;
+  /** Rendered size of the code in px. */
+  size?: number;
+  class?: string;
+}
+const { url, label, size = 132, class: extra = '' } = Astro.props;
+
+const cells: { x: number; y: number }[] = [];
+const QUIET = 4;
+const qr = qrcode(0, 'M');
+qr.addData(url);
+qr.make();
+const count = qr.getModuleCount();
+for (let y = 0; y < count; y++) {
+  for (let x = 0; x < count; x++) {
+    if (qr.isDark(y, x)) cells.push({ x: x + QUIET, y: y + QUIET });
+  }
+}
+const box = count + QUIET * 2;
+---
+
+{
+  count > 0 && (
+    <figure class:list={['flex flex-col items-center gap-3', extra]}>
+      <div class="rounded-inner bg-paper p-2 text-ink">
+        <svg
+          width={size}
+          height={size}
+          viewBox={`0 0 ${box} ${box}`}
+          role="img"
+          aria-label={label}
+          shape-rendering="crispEdges"
+        >
+          {cells.map((c) => (
+            <rect x={c.x} y={c.y} width="1" height="1" fill="currentColor" />
+          ))}
+        </svg>
+      </div>
+      <figcaption class="max-w-[180px] text-center text-[13px] leading-snug text-muted">
+        {label}
+      </figcaption>
+    </figure>
+  )
+}

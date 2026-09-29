@@ -15,6 +15,7 @@ import type { SubscriptionPlan } from '@/lib/api/types';
 import { courseKey, lavaUrl, planKey } from '@content/site/payments';
 import { TEST_PAYMENT_URL } from '@content/site/testPayment';
 import { payHost, payHref, payRoute } from '@/lib/util/payment';
+import { rememberedSource } from './visit';
 
 export interface OrderFormLabels {
   emailLabel: string;
@@ -199,16 +200,22 @@ export default function OrderForm({
       return;
     }
     setStatus({ kind: 'submitting' });
+    /*
+     * The first touch the layout remembered (`forma.src`: a campaign, a QR, the landing page) goes
+     * to the RPC as `p_source` — `create_order` and `create_subscription_order` both take it and
+     * cut it at 40 (0002, 0005). Without one, the form still says which form it was.
+     */
+    const firstTouch = rememberedSource();
     try {
       if (plan) {
         await createSubscriptionOrder({
           email: trimmed,
           plan: plan.id,
           locale,
-          source: 'subscribe',
+          source: firstTouch ?? 'subscribe',
         });
       } else {
-        await createOrder({ email: trimmed, courseId, locale, source: 'landing' });
+        await createOrder({ email: trimmed, courseId, locale, source: firstTouch ?? 'landing' });
       }
     } catch (err) {
       /*

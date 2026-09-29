@@ -9,8 +9,13 @@
  * exists over there. Two sources would drift, and a switch that lands on a 404 is worse than no
  * switch at all.
  *
+ * A page that passes no map exists in every language at the same path (`/about/`, `/subscribe/`), so
+ * the switch goes to its own `sitePath` there — the same rule `alternates()` in src/lib/seo/urls.ts
+ * applies to hreflang. It used to go home, which threw a reader who switched on /about/ back to the
+ * start of the site.
+ *
  * Guides are the one place where a language can be genuinely missing — an article is written, not
- * assembled from the dictionaries. There the switch falls back to that language's home page
+ * assembled from the dictionaries. A map without that language falls back to its home page
  * instead of disappearing: a reader who wants English wants it whatever page they happen to be on,
  * and a control that vanishes on some pages reads as a bug rather than as a statement about this
  * particular article.
@@ -27,12 +32,14 @@ import { href } from '@/lib/util/paths';
 
 interface Props {
   locale: Locale;
+  /** This page's site path (unprefixed), the same in every language unless `localizedPaths` says otherwise. */
+  sitePath?: string;
   /** Site paths (unprefixed) of this page per language, exactly as <SeoHead> receives them. */
   localizedPaths?: Partial<Record<Locale, string>>;
   class?: string;
 }
 
-const { locale, localizedPaths, class: klass = '' } = Astro.props;
+const { locale, sitePath = '/', localizedPaths, class: klass = '' } = Astro.props;
 
 /** Two letters, in the language itself — a reader looking for English is not reading Russian yet. */
 const LABEL: Record<Locale, string> = { ru: 'RU', en: 'EN' };
@@ -40,7 +47,7 @@ const LABEL: Record<Locale, string> = { ru: 'RU', en: 'EN' };
 const items = LOCALES.map((loc) => ({
   loc,
   current: loc === locale,
-  href: href(loc, localizedPaths?.[loc] ?? '/'),
+  href: href(loc, localizedPaths ? (localizedPaths[loc] ?? '/') : sitePath),
 }));
 ---
 

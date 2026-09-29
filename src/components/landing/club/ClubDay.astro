@@ -1,0 +1,96 @@
+---
+/**
+ * One day in the club, as a still chat inside a phone — the site's twin of the app's
+ * `ClubDemoChat.tsx`, without the clock.
+ *
+ * The app plays the script message by message; a static page has no reason to hydrate React for
+ * four bubbles, so this draws the finished exchange. The script is the app's: the task from the
+ * club's first weeks and its points (`DEMO_TASK_POINTS`, 0017 — «Стакан воды до кофе», 8), the
+ * reply, the coach's acceptance. Every line is an `app.clubDemo*` key, quoted, with only the emoji
+ * taken off by `stripEmoji()` — the site keeps colour pictographs off the page.
+ *
+ * The Sunday line (`clubDemoWin`) is left out on purpose: it names the prize, and the prize has
+ * its own row beside the phone (`app.clubFeature4*`), where it is stated as a rule rather than as
+ * somebody's win. Nothing here is a person but the coach — no member, no name, no table position
+ * (the app's rule for this chat, `clubDemo.ts`).
+ *
+ * Club palette: the reply is the light blue with ink, the points pill `sky`, the coach's bubbles
+ * the raised surface. No neon anywhere (`site-club-no-neon.test.ts`).
+ */
+import { DEMO_TASK_POINTS } from '@/app/features/marathon/clubDemo';
+import type { Locale } from '@/content/schema';
+import { l, t } from '@/i18n/index';
+import { withBase } from '@/lib/util/paths';
+import { COACH } from '@content/site/coach';
+import PhoneFrame from '../PhoneFrame.astro';
+import Pill from '../Pill.astro';
+import { stripEmoji } from './stripEmoji';
+
+interface Props {
+  locale: Locale;
+  class?: string;
+}
+const { locale, class: extra = '' } = Astro.props;
+
+const eyebrow = t(locale, 'app.clubDemoEyebrow');
+const messages = [
+  {
+    mine: false,
+    title: t(locale, 'app.clubDemoTaskTitle'),
+    text: t(locale, 'app.clubDemoTaskBody'),
+    points: t(locale, 'app.clubDemoPoints', { n: DEMO_TASK_POINTS }),
+  },
+  { mine: true, text: stripEmoji(t(locale, 'app.clubDemoDone')) },
+  { mine: false, text: stripEmoji(t(locale, 'app.clubDemoAccepted', { n: DEMO_TASK_POINTS })) },
+];
+---
+
+<PhoneFrame class={extra}>
+  <section aria-label={eyebrow} class="flex flex-col gap-3 px-3 pt-3 pb-4">
+    <p class="eyebrow">{eyebrow}</p>
+    <header class="flex items-center gap-2.5">
+      <img
+        src={withBase(COACH.photo)}
+        alt=""
+        width="32"
+        height="32"
+        loading="lazy"
+        decoding="async"
+        class="photo-mono size-8 shrink-0 rounded-full object-cover"
+      />
+      <div class="flex min-w-0 flex-col">
+        <p class="truncate text-[13px] leading-tight font-semibold">{l(COACH.name, locale)}</p>
+        <p class="text-[12px] leading-tight text-muted">{t(locale, 'app.clubDemoCoachRole')}</p>
+      </div>
+    </header>
+    <ol class="flex flex-col gap-2">
+      {
+        messages.map((m) => (
+          <li
+            class:list={[
+              'flex max-w-[86%] flex-col',
+              m.mine ? 'items-end self-end' : 'items-start self-start',
+            ]}
+          >
+            <div
+              class:list={[
+                'flex flex-col gap-1.5 rounded-tile px-3.5 py-2.5 text-[14px] leading-snug',
+                m.mine
+                  ? 'rounded-br-md bg-accent text-ink'
+                  : 'rounded-bl-md bg-surface-2 text-text',
+              ]}
+            >
+              {m.title && <p class="font-semibold">{m.title}</p>}
+              <p>{m.text}</p>
+              {m.points && (
+                <span class="flex">
+                  <Pill tone="sky">{m.points}</Pill>
+                </span>
+              )}
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+</PhoneFrame>

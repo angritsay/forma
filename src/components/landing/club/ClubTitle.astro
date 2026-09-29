@@ -1,0 +1,36 @@
+---
+/**
+ * The club's name as a lockup — «Клуб» 200 · «маленьких» 800 in the warm gradient · «шагов» 200 —
+ * the site's twin of the app's `Name` in `ClubPitch.tsx`.
+ *
+ * The words are the app's (`app.clubNameLead/Accent/Tail`), never retyped, so the club is called
+ * the same thing in both places and a rename is one edit. The accent is `.text-gradient`: the
+ * warm half of the crossroads gradient as type, which is legal only at display size on graphite
+ * (global.css, `.club-aurora`), and this is display size.
+ *
+ * **No swoosh and no `KeyTitle`.** A hero's key word is light blue with the neon swoosh under it;
+ * the club has no neon (design/CHANGELOG.md §17, `site-club-no-neon.test.ts`), and its key word is
+ * already marked by the gradient. `leading-[1.12]` as in the app: none of the three words has a
+ * descender, so the lockup sits tighter than `.display`'s 1.2.
+ */
+import type { Locale } from '@/content/schema';
+import { t } from '@/i18n/index';
+
+interface Props {
+  locale: Locale;
+  /** `h2` on the homepage, `h1` where the club is the page (`/subscribe/`). */
+  heading?: 'h1' | 'h2';
+  class?: string;
+}
+const { locale, heading: Tag = 'h2', class: extra = '' } = Astro.props;
+---
+
+<Tag
+  class:list={['display text-[clamp(32px,8vw,56px)] leading-[1.12] text-balance text-text', extra]}
+>
+  <span class="t-thin block">{t(locale, 'app.clubNameLead')}</span>
+  <span class="block"
+    ><span class="text-gradient box-decoration-clone">{t(locale, 'app.clubNameAccent')}</span></span
+  >
+  <span class="t-thin block">{t(locale, 'app.clubNameTail')}</span>
+</Tag>

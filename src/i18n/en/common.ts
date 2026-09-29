@@ -1,7 +1,6 @@
 /** Shared UI strings (both landing and app). Keys must match ru/common.ts. */
 export const common = {
   brand: 'Forma',
-  tagline: 'Home CrossFit that adapts to you.',
   minutesShort: '{n} min',
   minutesUnit: 'min',
   hoursShort: '{n} h',
@@ -24,7 +23,6 @@ export const common = {
   remove: 'Remove',
   skip: 'Skip',
   start: 'Start',
-  openApp: 'Open the app',
   errorGeneric: 'Something went wrong. Please try again.',
   errorOffline: 'You seem to be offline. Check your connection and try again.',
   equipment_none: 'No equipment',
