@@ -380,8 +380,8 @@ export function privacyDocument(): LegalDocument {
         heading: { ru: '5. Срок хранения', en: '5. Retention' },
         paragraphs: [
           {
-            ru: 'Данные хранятся, пока у тебя есть аккаунт и доступ к курсам (доступ пожизненный), либо пока ты не попросишь их удалить. Записи о заявках и возвратах мы храним столько, сколько требует закон о бухгалтерском и налоговом учёте.',
-            en: 'Data is kept while you have an account and course access (access is for life) or until you ask us to delete it. Records of orders and refunds are kept as long as accounting and tax law requires.',
+            ru: 'Данные хранятся, пока у тебя есть аккаунт и доступ к курсам (купленный курс открыт без ограничения срока, пока существует Приложение), либо пока ты не попросишь их удалить. Записи о заявках и возвратах мы храним столько, сколько требует закон о бухгалтерском и налоговом учёте.',
+            en: 'Data is kept while you have an account and course access (a purchased course stays open with no time limit for as long as the App exists) or until you ask us to delete it. Records of orders and refunds are kept as long as accounting and tax law requires.',
           },
           {
             ru: 'Когда основание для обработки отпадает — ты отозвал согласие, попросил удалить аккаунт или цель достигнута — мы удаляем данные в течение 30 дней (152-ФЗ ст. 21). Удаление значит удаление: строки стираются из базы, файлы — из хранилища. Исключение одно: документы об оплатах, которые продавец обязан хранить по налоговому законодательству.',

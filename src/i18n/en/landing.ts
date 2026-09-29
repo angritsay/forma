@@ -281,7 +281,7 @@ export const landing = {
     'What data Forma collects (email, name, training data), why, where it is stored and how to change or delete it.',
   termsTitle: 'Terms of service',
   termsDescription:
-    'Terms for buying a Forma digital training program: access, lifetime use, health disclaimer, restrictions and liability.',
+    'Terms for buying a Forma training program: access with no time limit while the App exists, health disclaimer, restrictions and liability.',
   refundTitle: 'Refund policy',
   refundDescription:
     'How to get a refund for a Forma course: {days} days after activation if fewer than {n} workouts are completed.',

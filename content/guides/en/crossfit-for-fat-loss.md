@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: fat_loss
 translationKey: crossfit-fat-loss
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-23'
+updatedAt: '2026-09-29'
 faq:
   - q: 'How many times a week should I do CrossFit to lose fat?'
     a: 'Three or four sessions a week: two strength days and one or two short metcons, plus 7,000 or more steps on the other days. More than that usually hurts recovery and the quality of every session.'
@@ -91,7 +91,7 @@ A working layout for the first two months:
 | Saturday  | Short metcon or a Tabata finisher      | 20 min       |
 | Sunday    | Rest, steps without a target           | —            |
 
-Three or four sessions a week with a day between the intense ones is the volume you can recover from and keep up past week three. Walking is mandatory here, not optional: in the app a day with 7,000 steps counts toward your streak just like a workout, and large cohort studies have linked around 7,000 steps a day with markedly lower all-cause mortality, with the benefit levelling off near 10,000. For how to spread the days, see the guide on [how many times a week to work out at home](guide:training-frequency).
+Three or four sessions a week with a day between the intense ones is the volume you can recover from and keep up past week three. Walking is mandatory here, not optional: large cohort studies have linked around 7,000 steps a day with markedly lower all-cause mortality, with the benefit levelling off near 10,000. For how to spread the days, see the guide on [how many times a week to work out at home](guide:training-frequency).
 
 ## Fat loss workout at home: a 30-minute example
 
@@ -105,7 +105,7 @@ Every movement is in the Forma library, and you can lose fat without equipment; 
 
 **Cool-down, 3 minutes.** 30 seconds of [hamstring stretch](exercise:hamstring_stretch) per leg and a minute in [child's pose](exercise:child_pose).
 
-How the app scales this session. Before you start, Forma offers three choices: "easier" trims the volume by roughly 15 percent and lengthens the rest, "harder" adds reps and shortens the breaks, "as planned" keeps the coach's numbers. If your baseline test put you at level 1, burpees become [half burpees](exercise:half_burpee) and push-ups become [knee push-ups](exercise:knee_push_up). At the end you see minutes, a calorie estimate and rate the effort from 1 to 10; two consecutive sessions at 6 or lower with the full plan completed make the next one harder. The load grows without you doing the math.
+How the app scales this session. Before you start, Forma offers three choices: "easier" drops a set from one or two of the biggest blocks and trims the reps by about 10 percent, "harder" does the reverse, "as planned" keeps the coach's numbers; rest between sets stays the same. If your baseline test put you at level 1, burpees become [half burpees](exercise:half_burpee) and push-ups become [knee push-ups](exercise:knee_push_up). At the end you see minutes, a calorie estimate and rate the effort from 1 to 10; two consecutive sessions at 6 or lower with the full plan completed make the next one harder. The load grows without you doing the math.
 
 ## Food and sleep: the part training cannot replace
 
@@ -123,7 +123,7 @@ Training creates the conditions; food creates the deficit. A moderate deficit, e
 ## How to progress
 
 1. **Weeks 1 and 2.** Three sessions: two strength, one metcon. Walk every day. Learn to hold a pace and to record the score.
-2. **Weeks 3 and 4.** Four sessions: add a short metcon or a Tabata on Saturday. Forma makes week four a deload, with less volume and longer rest; that is part of the plan, not a step back.
+2. **Weeks 3 and 4.** Four sessions: add a short metcon or a Tabata on Saturday. If fatigue builds up, make week four a deload, with less volume and longer rest; that is part of the plan, not a step back. The Start course has no separate deload week; there you choose the pauses yourself.
 3. **Month 2.** Raise the density: less rest between rounds, full burpees instead of half burpees, [jump squats](exercise:jump_squat) instead of air squats. Repeat the session from this guide and compare rounds.
 4. **Month 3.** If you get dumbbells or a kettlebell, add one loaded day; nothing protects muscle better. For the formats that fit here, read the [breakdown of AMRAP, EMOM and Tabata](guide:workout-formats).
 

@@ -230,6 +230,7 @@ describe('resolveContentLink / localizedHref', () => {
     { locale: 'ru', slug: 'kak-delat-berpi', data: { translationKey: 'how-to-burpee' } },
     { locale: 'en', slug: 'how-to-do-a-burpee', data: { translationKey: 'how-to-burpee' } },
     { locale: 'ru', slug: 'tolko-ru', data: { translationKey: 'ru-only' } },
+    { locale: 'ru', slug: 'chernovik', data: { translationKey: 'held-back', draft: true } },
   ];
   const ctx = { ...index, guides };
   it('resolves exercises, courses and guides per locale', () => {
@@ -266,6 +267,13 @@ describe('resolveContentLink / localizedHref', () => {
     });
     expect(resolveContentLink('https://example.com', 'ru', ctx)).toBeNull();
     expect(resolveContentLink('/courses/', 'ru', ctx)).toBeNull();
+  });
+  it('treats a draft guide as unpublished, not as a page to link to', () => {
+    expect(resolveContentLink('guide:held-back', 'ru', ctx)).toEqual({
+      kind: 'guide',
+      id: 'held-back',
+      unpublished: true,
+    });
   });
   it('builds locale-prefixed, base-prefixed hrefs', () => {
     expect(localizedHref('ru', '/exercises/prisedaniya/')).toBe('/exercises/prisedaniya/');
@@ -337,6 +345,7 @@ faq:
 ${faq.map((f) => `  - q: "${f.q}"\n    a: "${f.a}"`).join('\n')}
 relatedExercises: [${(opts.relatedExercises ?? ['air_squat']).join(', ')}]
 relatedCourses: [${(opts.relatedCourses ?? ['start']).join(', ')}]
+relatedGuides: [${(opts.relatedGuides ?? []).join(', ')}]
 cta:
   courseId: ${opts.ctaCourse ?? 'start'}
 draft: ${fm.draft}
@@ -424,6 +433,42 @@ describe('auditGuides', () => {
     expect(softMsgs).toContain('warning:850 words (aim ≥ 900)');
     expect(softMsgs).toContain('warning:0 FAQ items (aim 3–5)');
     expect(softMsgs.some((m) => m.startsWith('error:'))).toBe(false);
+  });
+  /*
+   * A `related*` target with no page draws no card. For a draft guide that is a note — the card
+   * comes back when the guide is published — while a held-back course stays an error, because a
+   * guide pointing at one is a link the owner meant to have.
+   */
+  it('notes a draft related guide but fails on an unpublished related course', () => {
+    const idx = makeIndex();
+    idx.courses.set('hidden', {
+      id: 'hidden',
+      slug: { ru: 'hidden', en: 'hidden' },
+      name: { ru: 'Скрыт', en: 'Hidden' },
+      file: 'content/courses/hidden.ts',
+      published: false,
+    });
+    const draft = readGuideFile(
+      guideMarkdown({ draft: true, translationKey: 'held-back' }),
+      'en',
+      'held-back.md',
+    );
+    const linking = readGuideFile(
+      guideMarkdown({
+        translationKey: 'linking',
+        relatedGuides: ['held-back'],
+        relatedCourses: ['start', 'hidden'],
+      }),
+      'en',
+      'linking.md',
+    );
+    const msgs = auditGuides([draft, linking], idx)
+      .filter((i) => i.file.endsWith('linking.md') && i.message.startsWith('related'))
+      .map((i) => `${i.level}:${i.message}`);
+    expect(msgs).toEqual([
+      'error:relatedCourses "hidden": that course is not published (no page to link to)',
+      'info:relatedGuides "held-back": that guide is a draft, so no card is drawn for it',
+    ]);
   });
 });
 

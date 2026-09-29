@@ -1,6 +1,6 @@
 ---
 title: 'Rest Days: Recovery, 7000 Steps and Why They Matter'
-description: 'Rest days, recovery, 7000 steps: why the body adapts between workouts, what to do on a day off and how a walk keeps your streak alive. Read and plan your week.'
+description: 'Rest days, recovery, 7000 steps: why the body adapts between workouts, what to do on a day off and how much to walk without stalling. Read and plan your week.'
 h1: 'Rest days: recovery, 7000 steps and why progress happens between workouts'
 targetKeyword: 'rest days recovery 7000 steps'
 secondaryKeywords:
@@ -12,14 +12,14 @@ secondaryKeywords:
 cluster: recovery
 translationKey: rest-days-steps
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-23'
+updatedAt: '2026-09-29'
 faq:
   - q: 'How many rest days a week do I need?'
     a: 'Beginners need at least two or three, and the ACSM recommends 48 to 72 hours between sessions for the same muscle groups. Three or four workouts a week with a rest day between them is a sound home schedule.'
   - q: 'Why 7000 steps and not 10,000?'
     a: 'In cohort studies (Paluch et al., 2021 and 2022) mortality risk dropped clearly at around 7000 steps a day and gained little above roughly 10,000. The 10,000 figure never had that kind of evidence behind it; by the usual account it came from pedometer marketing.'
-  - q: 'Does a rest day count toward my streak?'
-    a: 'Yes, if you walk 7000 steps and log them in the app. Forma counts a day when a workout is completed or logged steps reach the goal, and the current day never breaks the streak until it is over.'
+  - q: 'Does Forma count my steps on a rest day?'
+    a: 'No. The app counts completed workouts, and a day without one resets nothing: the count only grows. The walk is the coach''s advice for recovery, not something to report. The only day-by-day streak is in the Small Steps Club, for completing the day''s task.'
   - q: 'Can I train on a rest day if I feel good?'
     a: 'Light activity, yes: a walk, stretching, mobility work. Another intense workout, no. Adaptation happens in the pause, and extra load eats into it.'
   - q: 'What if muscle soreness is severe and will not go away?'
@@ -46,14 +46,14 @@ priority: 0.8
 draft: false
 ---
 
-Rest days, recovery, 7000 steps: three things a beginner thinks about last and a coach asks about first. Muscles do not grow during a workout. The session creates the stimulus; you get stronger and fitter in the gap between sessions, while you sleep, eat and walk. Fill that gap with extra workouts, or with a whole day on the couch, and progress slows either way, and in both cases it will feel like you are "not trying hard enough". This guide covers how recovery after a workout actually works, how many rest days a week you need, where the 7000-step figure comes from and how Forma turns a rest day into a streak day.
+Rest days, recovery, 7000 steps: three things a beginner thinks about last and a coach asks about first. Muscles do not grow during a workout. The session creates the stimulus; you get stronger and fitter in the gap between sessions, while you sleep, eat and walk. Fill that gap with extra workouts, or with a whole day on the couch, and progress slows either way, and in both cases it will feel like you are "not trying hard enough". This guide covers how recovery after a workout actually works, how many rest days a week you need, where the 7000-step figure comes from and what the app does with a rest day.
 
 ## What you will get from this guide
 
 - A plain explanation of what happens to your body between workouts and why rest is part of the plan, not a skipped day.
 - Recovery benchmarks from the ACSM and the WHO, and the signs you are not recovering enough.
 - The 7000-steps research without the hype.
-- The exact streak and steps rules the app uses.
+- What the app counts on its own and what is left to you.
 - A ready-made rest day: a walk plus a ten-minute mobility circuit.
 
 ## Rest days, recovery, 7000 steps: how they fit together
@@ -79,33 +79,27 @@ Forma watches the first two on its own. If your last session was less than 24 ho
 
 ### Planned deloads
 
-Rest is not only the gap between sessions but also the gap between weeks. In longer programmes week four is often a deload: every workout's volume drops by about a third and the rest inside the session gets longer. That is not a weakness in the program; it is standard practice among strength coaches, shedding accumulated fatigue before the next step up.
+Rest is not only the gap between sessions but also the gap between weeks. In longer programmes week four is often a deload: every workout's volume drops by about a third and the rest inside the session gets longer. That is not a weakness in the program; it is standard practice among strength coaches, shedding accumulated fatigue before the next step up. The Start course has no separate deload week: its twenty workouts go at your pace, and you take a pause yourself when you need one.
 
 ## Why 7000 steps a day
 
 The 10,000-step target did not come from science; by the usual account it came from the name of a Japanese pedometer sold in the 1960s. The number with research behind it is different. In the CARDIA cohort (Paluch et al., JAMA Network Open, 2021), middle-aged adults who took at least 7000 steps a day had a 50 to 70 percent lower risk of all-cause mortality than those who took fewer, and above roughly 10,000 steps the extra benefit was small. A meta-analysis of 15 cohorts (Paluch et al., The Lancet Public Health, 2022) refined that: for people over 60 the benefit plateaus at about 6000 to 8000 steps, for younger adults at about 8000 to 10,000.
 
-These are observational data: they show an association, not a guarantee for any one person. But for a home-training audience 7000 steps is a sensible bar. It is reachable on an ordinary day, it fits the WHO guidance on moderate activity, and, most important for training progress, it does not interfere with recovery. That is why it became Forma's rest-day goal.
+These are observational data: they show an association, not a guarantee for any one person. But for a home-training audience 7000 steps is a sensible bar. It is reachable on an ordinary day, it fits the WHO guidance on moderate activity, and, most important for training progress, it does not interfere with recovery. That is why the coach recommends it for rest days.
 
-## How the app counts streaks and steps
+## What the app counts on a rest day
 
-The rules are simple and worth knowing precisely.
+In short: workouts, not steps.
 
-| What happened | Counts toward the streak | Points |
-| --- | --- | --- |
-| Completed a workout | Yes | Workout points |
-| Logged 7000 steps or more | Yes | 30 at the goal, +5 per full extra 1000, capped at 60 |
-| Logged fewer than 7000 steps | No | 0 |
-| Logged nothing by the end of the day | No, the streak resets | 0 |
+| What happened | What the app sees |
+| --- | --- |
+| Completed a workout | One more on the workout count, and its points |
+| Went for a walk or did the mobility circuit | Nothing: the app does not record steps or stretching |
+| Went a day without a workout | Nothing resets; the count stays where it was |
 
-- **A day is active** when you complete a workout or log steps at or above the goal. The default goal is 7000; some rest days in a course can carry their own goal.
-- **Today never breaks the streak until it is over.** With nothing logged in the morning the streak card shows an "at risk" state and prompts you to get your steps, but the count holds until midnight.
-- **Steps points are capped:** 60 points means 13,000 steps, and walking cannot earn more than that. A walking day is worth roughly a quarter to a half of a workout and never replaces one on the leaderboard.
-- **The streak boosts your workouts:** from day seven every workout pays 10 percent more points, from day thirty 20 percent more.
-- **Too many steps count too:** if you walked 15,000 or more yesterday, the app treats your legs as tired and recommends "easier" today.
-- You enter steps by hand on the Steps screen, from any tracker or your phone. Achievements for 3-, 7- and 30-day streaks and for 10 days at the steps goal unlock automatically.
-
-The mobility circuit in the next section does not count toward the streak: the app distinguishes a workout from a stretch. If you want the rest day to count, walk.
+- **The count never breaks.** Forma shows how many workouts you have done in total, how many since Monday and your best week. Workouts have no day-by-day streak, so a rest day costs nothing; rest without worrying.
+- **Steps are advice, not a report.** The app has no steps screen: you walk 7000 steps for recovery, not for a number.
+- **The only streak is the club's.** In the Small Steps Club the streak counts consecutive days with the day's task done. The task is small and fits into any day, a rest day included.
 
 ## What to do on a rest day: a one-hour plan
 
@@ -135,19 +129,19 @@ The American Academy of Sleep Medicine recommends that adults sleep at least sev
 - **Complete rest.** A day on the couch recovers you worse than a day with a walk: soreness lasts longer and stiffness is greater.
 - **A "light" session that is not light.** If active recovery leaves you sweaty and tired, it was a workout. Rest-day effort is 3 or 4 out of 10.
 - **Chasing steps at night.** 7000 steps at half past eleven, pacing the apartment, is not recovery. Plan the walk for daytime.
-- **Skipping the deload week.** If it is in the plan, it is there for a reason; choosing "harder" when the app asks for "easier" is the fastest route to a plateau.
-- **Putting the streak above how you feel.** The streak is a habit tool, not the goal. A sick day is better skipped, then start again.
+- **Arguing with "easier".** When the app suggests an easier session, it has a reason: too little time since the last one, a high effort rating or pain you flagged. Choosing "harder" on such a day is the fastest route to a plateau.
+- **Training through illness.** A sick day is better skipped: the workout count does not reset, and recovery does not drag on.
 - **Cutting sleep for a workout.** Getting up early to train on six hours of sleep takes more than it gives.
 
 ## How to progress
 
-1. **Weeks 1 and 2.** Three workouts on alternate days; on the other days, 7000 steps logged in the app. The target is a seven-day streak without a single evening in the "at risk" state.
+1. **Weeks 1 and 2.** Three workouts on alternate days; on the other days, a 7000-step walk. The target is three workouts in one week, which the app marks with the "A good week" achievement.
 2. **Weeks 3 and 4.** Add the ten-minute mobility circuit on two of your four rest days. Watch your effort: if two consecutive sessions come in at 6 out of 10 or lower with the plan completed, the app will offer "harder" on its own, which is the sign recovery is working.
-3. **Month 2.** Raise the rest-day walk to 8000 to 10,000 steps, but not beyond: from 15,000 steps the app treats the day as heavy. Take the deload week as written.
+3. **Month 2.** Raise the rest-day walk to 8000 to 10,000 steps, but not beyond: 15,000 steps and more already load your legs, and the next workout will feel heavier. If your program is longer and has a deload week, take it as written.
 4. **The sign of good recovery:** workout volume climbs 2 to 5 percent at a time while effort stays flat. If effort climbs instead, go back to step 1.
 
-For keeping motivation over a long streak, read [how to stay consistent with workouts](guide:streaks-consistency); for rating effort honestly, see the [RPE scale guide](guide:rpe-autoregulation).
+For keeping motivation past the first month or two, read [how to stay consistent with workouts](guide:streaks-consistency); for rating effort honestly, see the [RPE scale guide](guide:rpe-autoregulation).
 
 ## Wrap-up
 
-Progress is made between workouts, not during them: 48 to 72 hours between sessions for the same muscles, 7000 steps on rest days, at least seven hours of sleep and a deload week once a month. The app counts such a day toward your streak and tells you when to back off. If you would rather have the workouts already in order, open the [Start: home CrossFit basics course](course:start): twenty workouts in four blocks of five, at your own pace, and a walk on a free day.
+Progress is made between workouts, not during them: 48 to 72 hours between sessions for the same muscles, 7000 steps on rest days, at least seven hours of sleep and, in longer programs, a deload week. The app counts workouts, not days, so rest resets nothing, and before a session it tells you when to back off. If you would rather have the workouts already in order, open the [Start: home CrossFit basics course](course:start): twenty workouts in four blocks of five, at your own pace, and a walk on a free day.

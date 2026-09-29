@@ -23,8 +23,8 @@ Everything below follows from that.
 | Record    | Write down how it felt, 2–3 minutes                       | after    | —                    |
 | Fallback  | Did not feel like training? Walk, up to 10 000 steps      | any day  | —                    |
 
-A session in the app is therefore 13–20 minutes at "as usual" (about 17 on average); the work inside
-it is 3–10 minutes.
+A session in the app is therefore 14–21 minutes at "as usual" (about 18 on average, the «15–20 минут»
+the site and the bot promise); the work inside it is 3–10 minutes.
 
 ### Warm-up: joint mobility, top to bottom
 
@@ -44,8 +44,8 @@ Easy pace, the range of motion grows gradually, no jerks. One round:
 | 9   | Squat-to-stand (`squat_to_stand`)               | 5 reps        | slowly, to a comfortable depth            |
 
 In content this is the `warmup()` block in `content/courses/start.ts` (`scalable: false`, so the
-engine never shrinks or grows it). His own three warm-up videos are not in the export; if he sends
-them, they attach to these exercises as `video:` references — no course change needed.
+engine never shrinks or grows it). His warm-up clips arrived with the Drive export and are mapped
+onto these exercises in `media/names.json` — no course change was needed.
 
 ### Cool-down: stretch, then write it down
 
@@ -195,4 +195,3 @@ PR; update both when he answers.
   (16–19).
 - Workouts 17–18: how the "max in the time left" windows are played (buy-in + a fixed count, then
   3 minutes of rest; buy-in with a one-minute cap + a one-minute AMRAP).
-- His three warm-up videos — send them; the warm-up has no picture until they arrive.

@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: programming
 translationKey: rpe-autoregulation
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-02'
+updatedAt: '2026-09-29'
 faq:
   - q: 'What is RPE in simple terms?'
     a: 'RPE is a rating of effort from 1 to 10 after a workout: 10 means you had nothing left, 7 means it was hard but you had three reps in reserve. It is a way to set the load by feel when there is no coach in the room.'
@@ -100,11 +100,11 @@ The rules are simple and always apply in this order:
 | RPE 7–8 with at least 90 percent completed | +2 percent |
 | Anything else | no change |
 
-The percentages are of the course's authored volume. Every user has a volume multiplier: after the intake test it starts somewhere between 0.6 and 1.3, and from there it moves within 0.5–1.5. A 2–5 percent step per session sits at the low end of the ACSM "2–10 percent" rule on purpose: nobody is checking your form at home, so the steps stay small.
+The percentages are of the course's authored volume. Every user has a volume multiplier: the questionnaire and the short test after your second workout start it somewhere between 0.6 and 1.3, and from there it moves within 0.5–1.5. A 2–5 percent step per session sits at the low end of the ACSM "2–10 percent" rule on purpose: nobody is checking your form at home, so the steps stay small.
 
 ### The pre-workout recommendation
 
-Before you start, Forma suggests one of three options and tells you why. "Harder" appears when your last two sessions were rated 6 or lower with at least 95 percent completed and at least 48 hours have passed since the last one; those are the 48–72 hours of recovery between sessions for the same muscles that the ACSM recommends for novices. "Easier" appears when the last session involved pain, was rated 9 or 10, was less than 80 percent completed, happened less than 24 hours ago, or you logged 15,000 steps or more yesterday. Otherwise it is "as planned". The choice stays yours: "easier" trims volume by 15 percent and lengthens rest by 15 percent, "harder" adds 15 percent volume and cuts rest by 10 percent. The harder option pays more points, but easier is never punished: you still get 80 percent of the points for a fully completed session. Deload weeks inside the courses work separately: volume ×0.65 and rest ×1.2.
+Before you start, Forma suggests one of three options and tells you why. "Harder" appears when your last two sessions were rated 6 or lower with at least 95 percent completed and at least 48 hours have passed since the last one; those are the 48–72 hours of recovery between sessions for the same muscles that the ACSM recommends for novices. "Easier" appears when the last session involved pain, was rated 9 or 10, was less than 80 percent completed or happened less than 24 hours ago. Otherwise it is "as planned". The choice stays yours: "easier" drops a set from one or two of the biggest blocks and trims reps by about 10 percent, "harder" adds a set and about 10 percent more reps; rest between sets stays the same. The harder option pays more points, but easier is never punished: you still get 80 percent of the points for a fully completed session. If a course has a deload week, its volume is ×0.65 and rest ×1.2; the Start course has none.
 
 ## A sample workout with RPE targets
 
@@ -114,7 +114,7 @@ A level-2 bodyweight session, about 30 minutes. Warm up first for five minutes: 
 
 **Finisher, AMRAP 6 minutes.** 4 burpees, 8 [sit-ups](exercise:sit_up). Target RPE 8 by the end of minute six, not sooner.
 
-How the app scales it. Say your test set the multiplier at 0.8: you get 12 squats instead of 15, 8 push-ups instead of 10, and if you are at level 1 and pick "easier", burpees become [half burpees](exercise:half_burpee). You finish everything and rate it a 5: the multiplier becomes 0.85 and next time you squat 13. You finish everything and rate it a 7: the multiplier becomes 0.82, which may not change a single number in this session yet, but two such ratings in a row take it to 0.84 and the squats to 13. You rate it a 9, or quit the finisher in minute three: 0.75, and the volume drops slightly. No single rating changes the workout sharply; ten honest ratings in a row put the volume exactly where you need it.
+How the app scales it. Say the questionnaire and test set your multiplier at 0.8: you get 12 squats instead of 15, 8 push-ups instead of 10, and if you are at level 1 and pick "easier", burpees become [half burpees](exercise:half_burpee). You finish everything and rate it a 5: the multiplier becomes 0.85 and next time you squat 13. You finish everything and rate it a 7: the multiplier becomes 0.82, which may not change a single number in this session yet, but two such ratings in a row take it to 0.84 and the squats to 13. You rate it a 9, or quit the finisher in minute three: 0.75, and the volume drops slightly. No single rating changes the workout sharply; ten honest ratings in a row put the volume exactly where you need it.
 
 ## Common mistakes
 
@@ -127,7 +127,7 @@ How the app scales it. Say your test set the multiplier at 0.8: you get 12 squat
 ## How to progress
 
 1. **Weeks 1–2.** Rate every session and change nothing by hand. The job is learning to tell a 5 from a 7.
-2. **Weeks 3–4.** Once a week, accept "harder" when it appears. Notice how +15 percent volume with −10 percent rest feels.
+2. **Weeks 3–4.** Once a week, accept "harder" when it appears. Notice how an extra set with a few more reps feels.
 3. **Month 2.** Run the calibration set to failure once every two weeks to check that your "8" has not drifted.
 4. **The sign the system works:** most sessions at RPE 7–8, two or three a month at 5–6, and a 9–10 test every few weeks with rising numbers.
 

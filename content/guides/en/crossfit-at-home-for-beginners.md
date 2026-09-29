@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: beginners
 translationKey: crossfit-home-beginners
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-23'
+updatedAt: '2026-09-29'
 faq:
   - q: 'Can I do CrossFit at home with zero experience?'
     a: 'Yes, as long as you start with the basic movements and no jumping: squats, incline push-ups, glute bridges and planks. Three short sessions a week with a rest day in between is a safe starting dose for a beginner.'
@@ -115,14 +115,14 @@ This is a workout for your first day; in the Start course day one has no max-eff
 
 ### How the app scales it
 
-On first login Forma asks a few short questions, and after your second workout the app offers a short test: squats, push-ups, sit-ups, lunges and a plank. The answers and the test produce a fitness index, and the index sets your volume multiplier — anywhere from 0.6 to 1.3. A beginner with a weak test gets 6 squats per set instead of 10; someone arriving with a base gets 13. Before each session you can pick easier or harder (volume changes by 15 %, rest gets longer or shorter), and afterwards you rate the effort from 1 to 10. Finished everything at an easy effort? The next session grows a little. Struggled, or something hurt? The volume drops, and the app tells you to back off and to see a professional if the pain persists.
+On first login Forma asks a few short questions, and after your second workout the app offers a short test: squats, push-ups, sit-ups, lunges and a plank. The answers and the test produce a fitness index, and the index sets your volume multiplier — anywhere from 0.6 to 1.3. A beginner with a weak test gets 6 squats per set instead of 10; someone arriving with a base gets 13. Before each session you can pick easier or harder (a set fewer or more in one or two blocks, reps down or up about 10 %, rest unchanged), and afterwards you rate the effort from 1 to 10. Finished everything at an easy effort? The next session grows a little. Struggled, or something hurt? The volume drops, and the app tells you to back off and to see a professional if the pain persists.
 
 ## Common beginner mistakes
 
 1. **Starting with burpees and jumps.** Knees and ankles are not ready and the squat is not clean yet. Squat first, jump later.
 2. **Skipping the warm-up.** Five minutes of [jogging in place](exercise:jog_in_place) and arm circles are not a formality; they are shoulder and lower-back injury prevention. How to build one is covered in [the warm-up guide](guide:warm-up-home).
 3. **Chasing numbers.** Ten squats to parallel beat twenty half squats. Only clean reps count — in the test and in the session.
-4. **Training every day.** Strength is built on rest days. Instead of a fourth session, walk: 7 000 steps counts as an active day in the app and keeps your streak alive.
+4. **Training every day.** Strength is built on rest days. Instead of a fourth session, take a 7 000-step walk. The workout count in the app does not reset on a rest day, so rest without worrying.
 5. **Quitting in week two.** The first result is not visible muscle; it is sets that stop feeling like punishment. Give the program four honest weeks, then retest.
 
 ## How to progress

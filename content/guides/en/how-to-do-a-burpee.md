@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: no_equipment
 translationKey: how-to-burpee
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-23'
+updatedAt: '2026-09-29'
 faq:
   - q: 'What is a half burpee and who is it for?'
     a: 'A half burpee is a burpee without the push-up and the jump: hands to the floor, step back to a plank, step forward, stand fully tall. It is the starting stage for beginners and the substitute for anyone with wrist or knee issues.'
@@ -53,7 +53,7 @@ You want to know how to do a burpee that trains you instead of wrecking your wri
 ## What you will get from this guide
 
 - Burpee technique step by step, with the control points that matter.
-- What burpees work and why they sit in tests and metcons rather than strength blocks.
+- What burpees work and why they sit in metcons and finishers rather than strength blocks.
 - A four-stage beginner progression and the harder variants after it.
 - A ready 10-minute workout and a plan to add reps without losing quality.
 
@@ -74,11 +74,11 @@ Exhale on the push-up and on the jump, inhale in between. The one rule is never 
 
 ### How long should one burpee take
 
-The training target is 10 to 12 clean reps per minute. Forma's "burpees in 60 seconds" test counts only clean reps: chest to the floor, full extension, clap overhead. Twelve honest burpees are worth more than twenty sloppy ones, and the app scores the honest ones.
+The training target is 10 to 12 clean reps per minute. Clean means chest to the floor, full extension and a clap overhead. Twelve honest burpees are worth more than twenty sloppy ones.
 
 ## What do burpees work, and why they are in the program
 
-A burpee loads everything at once: legs in the squat and the jump, chest, shoulders and triceps in the push-up, the core in the plank. But its real job is heart rate. In the Compendium of Physical Activities burpees sit among the most vigorous calisthenics, with one of the highest energy-cost ratings of any equipment-free exercise, which is why they spike the pulse faster than anything else you can do on a mat. That defines their place in a program: short sets inside EMOMs and AMRAPs, a finisher after strength work, and the 60-second endurance test.
+A burpee loads everything at once: legs in the squat and the jump, chest, shoulders and triceps in the push-up, the core in the plank. But its real job is heart rate. In the Compendium of Physical Activities burpees sit among the most vigorous calisthenics, with one of the highest energy-cost ratings of any equipment-free exercise, which is why they spike the pulse faster than anything else you can do on a mat. That defines their place in a program: short sets inside EMOMs and AMRAPs and a finisher after strength work.
 
 Do not make burpees your only exercise. They do not replace squats and hinges as strength work, and the dose of high intensity is limited: the WHO recommends 150 to 300 minutes of moderate activity a week, and most of it should be moderate. Burpees are the seasoning, not the meal.
 
@@ -116,7 +116,7 @@ Suitable for week two or three, once stage 2 or 3 is solid. Every exercise is in
 
 **Cool-down.** 45 seconds in [child's pose](exercise:child_pose), then 40 seconds of the [hamstring stretch](exercise:hamstring_stretch) per leg.
 
-How the app scales this session. Your baseline test sets your level, and at level 1 the burpees in the plan are automatically swapped for half burpees and the push-ups for knee push-ups. Before you start there are three options: "easier" removes about 15 percent of the reps and lengthens the rest, "harder" adds volume and shortens the breaks, "as planned" keeps the coach's numbers. After the session you rate the effort from 1 to 10; two sessions in a row rated 6 or lower with the full plan completed is the signal for Forma to suggest "harder".
+How the app scales this session. The questionnaire on first login and the short test after your second workout set your level, and at level 1 the burpees in the plan are automatically swapped for half burpees and the push-ups for knee push-ups. Before you start there are three options: "easier" drops a set from one or two of the biggest blocks and trims the reps by about 10 percent, "harder" does the reverse, "as planned" keeps the coach's numbers; rest between sets stays the same. After the session you rate the effort from 1 to 10; two sessions in a row rated 6 or lower with the full plan completed is the signal for Forma to suggest "harder".
 
 ## Common mistakes
 
@@ -134,7 +134,7 @@ If your wrists hurt, you have lower-back or knee problems, high blood pressure, 
 
 1. **Weeks 1 and 2.** Half burpees or burpees without the push-up: 4 to 5 sets of 6 to 8 reps with 45 seconds of rest, twice a week.
 2. **Weeks 3 and 4.** An 8 to 10 minute EMOM with 5 to 6 burpees on the odd minutes, like the workout above. Keep each task under 40 seconds.
-3. **Month 2.** The 60-second test; write down the number. Then burpees inside AMRAP and For Time workouts, explained in the [guide to workout formats](guide:workout-formats). Increase volume by 5 to 10 percent at a time.
+3. **Month 2.** Burpees inside AMRAP and For Time workouts, explained in the [guide to workout formats](guide:workout-formats). Increase volume by 5 to 10 percent at a time.
 4. **How many burpees should you do.** For a beginner, 30 to 50 per session two or three times a week is plenty. Add more only when your technique looks the same on the last rep as on the first.
 
 Burpees fit into any [no-equipment CrossFit workout](guide:no-equipment-crossfit), and the [beginner's guide to CrossFit at home](guide:crossfit-home-beginners) shows where they belong in your first four weeks.

@@ -12,7 +12,7 @@ secondaryKeywords:
 cluster: dumbbells
 translationKey: dumbbell-home-workout
 publishedAt: '2026-09-02'
-updatedAt: '2026-09-02'
+updatedAt: '2026-09-29'
 faq:
   - q: 'What dumbbell weight should I use at home?'
     a: 'Pick a weight you can press overhead for 10 clean reps with the last two feeling hard. That same pair will be light for squats and deadlifts, which is why adjustable dumbbells or two pairs are worth having.'
@@ -43,7 +43,7 @@ relatedGuides:
 cta:
   courseId: start
 priority: 0.8
-draft: false
+draft: true
 ---
 
 A full body dumbbell workout at home is the shortest route from "I move a bit" to "I am getting stronger". One pair of dumbbells covers every basic movement: squat, deadlift, press, row, lunge and carry. You do not depend on a gym, the session fits in 35 to 40 minutes, and the load can be measured rather than guessed. Below is the program I would give someone with one or two pairs of dumbbells and a mat: how to choose the weight, the full session with reps and rest, the mistakes I correct most often, and a plain progression scheme for the first two months.
@@ -102,7 +102,7 @@ Do the first set of superset A with a light weight; that is your specific warm-u
 
 ### How the app scales the session
 
-Before you start, Forma offers three options. "Easier" cuts reps by roughly 15 percent and lengthens the rest, "harder" adds reps and shortens the breaks, "as planned" keeps the coach's numbers. The warm-up and cool-down are never scaled. If your baseline test placed you at level 1, complex movements are swapped for simpler ones down the exercise's own chain: the thruster becomes a front squat or a goblet squat, the floor press becomes a push-up, the deadlift becomes a [glute bridge](exercise:glute_bridge). After the session you rate the effort from 1 to 10 and log how much you completed, and the next session gets slightly easier or harder.
+Before you start, Forma offers three options. "Easier" drops a set from one or two of the biggest blocks and trims the reps by about 10 percent, "harder" does the reverse, "as planned" keeps the coach's numbers; rest between sets stays the same. The warm-up and cool-down are never scaled. If your baseline test placed you at level 1, complex movements are swapped for simpler ones down the exercise's own chain: the thruster becomes a front squat or a goblet squat, the floor press becomes a push-up, the deadlift becomes a [glute bridge](exercise:glute_bridge). After the session you rate the effort from 1 to 10 and log how much you completed, and the next session gets slightly easier or harder.
 
 ## Common mistakes
 

@@ -26,10 +26,10 @@ export const seo = {
   // Exercises hub
   exercisesHubTitle: 'Home CrossFit exercises: technique library',
   exercisesHubDescription:
-    'Home CrossFit exercises on video, with step-by-step technique, common mistakes and easier or harder versions. Pick movements for your gear and level.',
+    'Home CrossFit exercises on video, with step-by-step technique, common mistakes and easier or harder versions. All you need is a mat and a chair.',
   exercisesHubH1: 'Home CrossFit exercises',
   exercisesHubIntro:
-    'These are the home CrossFit exercises used in the Forma courses: bodyweight movements and work with dumbbells, a kettlebell, bands, a jump rope and a pull-up bar. Every entry has a video, step-by-step technique, coaching cues, common mistakes and an easier or harder version, so you can build a session for your level.',
+    'These are the home CrossFit exercises the coach filmed for the Forma courses: bodyweight movements, with a chair and on a mat, and no dumbbells or other gear. Every entry has a video, step-by-step technique, coaching cues and common mistakes, and many have an easier or harder version, so you can build a session for your level.',
   exercisesHubEmpty: 'The library is being filled — exercises will appear here soon.',
   exercisesHubPatternsNav: 'Movement patterns',
   exerciseWordOne: 'exercise',
