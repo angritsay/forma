@@ -2,8 +2,9 @@
 /**
  * Coach profile from content/site/coach.ts — renders only the fields that are filled in.
  *
- * The photograph is monochrome with grain, 4:5, with the lockup running vertically down its edge
- * on wide screens — the same frame the design system's landing gives the coach. Links are quiet
+ * The photograph is monochrome with grain, 4:5, with the wordmark running vertically down its
+ * edge on wide screens — the same frame the design system's landing gives the coach. The mark
+ * only, not «FORMA // name»: the brand is not one coach's (design/CHANGELOG.md §25). Links are quiet
  * outlined labels; the one filled button is the booking, and only when booking is on.
  */
 import type { Locale } from '@/content/schema';
@@ -63,7 +64,7 @@ const bookHint = t(locale, 'landing.coachBookHint', {
       )
     }
     <span class="eyebrow kicker-vertical absolute top-1 -left-5 hidden md:block" aria-hidden="true">
-      FORMA // {name}
+      FORMA
     </span>
     {/* The coach's section tag: bleu ciel, the colour his tab wears in the app (Style A). */}
     <span class="absolute -bottom-3 left-3 flex" aria-hidden="true">

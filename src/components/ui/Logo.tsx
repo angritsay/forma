@@ -2,20 +2,8 @@ import { clsx } from 'clsx';
 import type { HTMLAttributes } from 'react';
 
 export interface LogoProps extends HTMLAttributes<HTMLSpanElement> {
-  /**
-   * With the coach's name beside it: «FORMA // Сергей Титов». The site header uses it; inside the
-   * app the mark stands alone.
-   */
-  lockup?: boolean;
   /** Accessible name; the letters are decorative once this is set. */
   label?: string;
-  /**
-   * The name in the lockup, in the reader's language — `l(COACH.name, locale)` at the call site.
-   * It is a prop rather than a literal because it is the one part of the lockup that is data, and
-   * a Cyrillic name beside the mark on an English screen reads as a translation nobody checked.
-   * The default is the Russian form, which is what the bilingual 404 page wants.
-   */
-  coach?: string;
 }
 
 /**
@@ -27,41 +15,21 @@ export interface LogoProps extends HTMLAttributes<HTMLSpanElement> {
  * cannot change weight halfway. Colour is inherited, so the mark is white on the dark ground and
  * ink on paper without being told. There is no full stop any more.
  *
+ * The mark always stands alone. It used to have a lockup with the coach's name
+ * («FORMA // Сергей Титов»); Forma now has more than one coach, so the brand is the mark only
+ * (design/CHANGELOG.md §25).
+ *
  * Size comes from the font-size of the element or a `text-*` class on it; everything inside is
  * in em.
  */
-export function Logo({
-  lockup = false,
-  label = 'Forma',
-  coach = 'Сергей Титов',
-  className,
-  ...rest
-}: LogoProps) {
-  const mark = (
-    <span className="wordmark inline-flex items-baseline" aria-hidden={label ? true : undefined}>
-      <span className="wordmark-f">F</span>
-      <span>OR</span>
-      <span className="wordmark-thin">MA</span>
-    </span>
-  );
-  if (!lockup) {
-    return (
-      <span className={clsx('inline-flex items-baseline', className)} aria-label={label} {...rest}>
-        {mark}
-      </span>
-    );
-  }
+export function Logo({ label = 'Forma', className, ...rest }: LogoProps) {
   return (
-    <span
-      className={clsx('inline-flex items-baseline gap-[0.6em]', className)}
-      aria-label={`${label} — ${coach}`}
-      {...rest}
-    >
-      {mark}
-      <span className="glyph text-[0.55em] text-muted-2" aria-hidden="true">
-        //
+    <span className={clsx('inline-flex items-baseline', className)} aria-label={label} {...rest}>
+      <span className="wordmark inline-flex items-baseline" aria-hidden={label ? true : undefined}>
+        <span className="wordmark-f">F</span>
+        <span>OR</span>
+        <span className="wordmark-thin">MA</span>
       </span>
-      <span className="text-[0.68em] font-semibold tracking-[0.01em] text-muted">{coach}</span>
     </span>
   );
 }
