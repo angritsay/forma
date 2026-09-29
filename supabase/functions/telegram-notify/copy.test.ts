@@ -342,6 +342,44 @@ describe('the club’s daily touches (0052)', () => {
     );
   });
 
+  /*
+   * The points deadline is the round's own (audit item 8): the time the row carries, in the zone
+   * the row names — never a clock typed into the copy.
+   */
+  it('names the points deadline the row carries, in its zone', () => {
+    const moscow = { streak: 2, due: '22:00:00', late_counts: false, tz: 'Europe/Moscow' };
+    expect(messageFor({ kind: 'club_reminder', params: moscow })?.text).toContain(
+      '\n\nБаллы — до 22:00 по Москве.',
+    );
+    expect(messageFor({ kind: 'club_reminder', params: moscow }, 'en')?.text).toContain(
+      '\n\nPoints count until 22:00 Moscow time.',
+    );
+    // A coach moved the time: the message follows it.
+    expect(
+      messageFor({ kind: 'club_reminder', params: { ...moscow, due: '21:30' } })?.text,
+    ).toContain('Баллы — до 21:30 по Москве.');
+    // Another zone is named, not converted.
+    expect(
+      messageFor({ kind: 'club_reminder', params: { ...moscow, tz: 'Europe/London' } }, 'en')?.text,
+    ).toContain('Points count until 22:00 (Europe/London).');
+  });
+
+  it('says nothing about a deadline it cannot vouch for', () => {
+    const base = { streak: 2, due: '22:00', late_counts: false, tz: 'Europe/Moscow' };
+    for (const params of [
+      { ...base, late_counts: true }, // a late proof still scores
+      { ...base, late_counts: undefined },
+      { ...base, due: undefined },
+      { ...base, due: '25:00' },
+      { ...base, tz: undefined },
+      { ...base, tz: '<b>' },
+    ]) {
+      const text = messageFor({ kind: 'club_reminder', params })?.text ?? '';
+      expect(text).toContain('Серия 2 дня');
+      expect(text).not.toContain('Баллы');
+    }
+  });
+
   /* Серии нет — напоминать не о чем; база такое не кладёт, но старая строка может. */
   it('sends no reminder without a streak', () => {
     expect(messageFor({ kind: 'club_reminder', params: { streak: 0 } })).toBeNull();

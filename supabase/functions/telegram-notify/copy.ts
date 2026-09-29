@@ -123,6 +123,12 @@ interface Copy {
   clubTaskDo: string;
   /** Вечер (0052): `{streak}` — «3 дня». */
   clubReminder: string;
+  /**
+   * The line under it: the streak waits for midnight, the week's points do not. `{time}` is the
+   * task's due time, `{zone}` the round's zone (`clubZoneMoscow`, or the IANA name in brackets).
+   */
+  clubReminderPoints: string;
+  clubZoneMoscow: string;
   /** Воскресенье (0052): `{place}` — «, место 3» или ничего; `{streak}` — «Серия 3 дня 🔥. » или ничего. */
   clubRecap: string;
   clubRecapWeek: string;
@@ -177,6 +183,8 @@ const COPY: Record<Locale, Copy> = {
     clubTask: 'Задание на сегодня: <b>{title}</b>{points}',
     clubTaskDo: 'Сделай — и отметь в приложении.',
     clubReminder: 'Сегодня ещё нет отметки. Серия {streak} — сгорит в полночь 🔥',
+    clubReminderPoints: 'Баллы — до {time} {zone}.',
+    clubZoneMoscow: 'по Москве',
     clubRecap:
       '{week}{points}, {done} из {total} {tasks}{place}. {streak}Новая неделя — в понедельник.',
     clubRecapWeek: 'Неделя {week}: ',
@@ -209,6 +217,8 @@ const COPY: Record<Locale, Copy> = {
     clubTask: 'Today’s task: <b>{title}</b>{points}',
     clubTaskDo: 'Do it — and tick it off in the app.',
     clubReminder: 'No tick today yet. Your streak of {streak} burns out at midnight 🔥',
+    clubReminderPoints: 'Points count until {time} {zone}.',
+    clubZoneMoscow: 'Moscow time',
     clubRecap:
       '{week}{points}, {done} of {total} {tasks}{place}. {streak}A new week starts Monday.',
     clubRecapWeek: 'Week {week}: ',
@@ -329,7 +339,11 @@ export function messageFor(row: OutboxRow, locale: Locale = DEFAULT_LOCALE): Mes
         '{streak}',
         `${streak} ${plural(locale, streak, c.days)}`,
       );
-      return { text: `<b>${line}</b>`, buttonText: c.openForma };
+      const points = clubReminderPointsLine(params, c);
+      return {
+        text: points ? `<b>${line}</b>\n\n${points}` : `<b>${line}</b>`,
+        buttonText: c.openForma,
+      };
     }
 
     case 'club_recap':
@@ -428,4 +442,24 @@ function supportReplyMessage(params: Record<string, unknown>, c: Copy): Message 
     buttonText: '',
     ...(Number.isSafeInteger(replyTo) && replyTo > 0 ? { replyTo } : {}),
   };
+}
+
+/**
+ * «Баллы — до 22:00 по Москве.» under the evening reminder, or nothing (audit item 8).
+ *
+ * The streak lives until midnight, but a proof after the task's due time keeps the streak and
+ * scores nothing for the week — unless the task has `late_counts`. The reminder goes out at 20:00,
+ * so both clocks are still running when it is read. The line states the deadline only when the
+ * queue row carries it: `due` is `coalesce(task.due_time, marathons.due_time)` («HH:MM»),
+ * `late_counts` the task's flag and `tz` the round's `marathons.timezone` (all from 0011). A clock
+ * typed into the copy would be wrong the day a coach moves the time, and a Moscow time read in
+ * London is two hours off — so no `due`, no `tz`, or a task that scores late: no line.
+ */
+function clubReminderPointsLine(params: Record<string, unknown>, c: Copy): string {
+  if (params.late_counts !== false) return '';
+  const due = typeof params.due === 'string' ? /^([01]\d|2[0-3]):([0-5]\d)/.exec(params.due) : null;
+  const tz = typeof params.tz === 'string' ? params.tz.trim() : '';
+  if (!due || !/^[A-Za-z_]+(\/[A-Za-z0-9_+-]+)+$/.test(tz)) return '';
+  const zone = tz === 'Europe/Moscow' ? c.clubZoneMoscow : `(${escapeHtml(tz)})`;
+  return c.clubReminderPoints.replace('{time}', `${due[1]}:${due[2]}`).replace('{zone}', zone);
 }

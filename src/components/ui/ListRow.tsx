@@ -9,6 +9,11 @@ export interface ListRowProps {
   subtitle?: ReactNode;
   /** Right slot; defaults to a `›` glyph for interactive rows. */
   trailing?: ReactNode;
+  /**
+   * On an `href` row it runs as the anchor's own click handler, before the navigation: a link out
+   * of the Mini App passes `externalLinkProps(href).onClick` here, which hands the address to
+   * Telegram and cancels the anchor's navigation (see `app/hooks/useExternalLink.ts`).
+   */
   onClick?: MouseEventHandler<HTMLElement>;
   href?: string;
   disabled?: boolean;
@@ -51,6 +56,7 @@ export const ListRow = forwardRef<HTMLElement, ListRowProps>(function ListRow(
       <a
         ref={ref as React.Ref<HTMLAnchorElement>}
         href={href}
+        onClick={onClick}
         className={classes}
         aria-disabled={disabled}
       >

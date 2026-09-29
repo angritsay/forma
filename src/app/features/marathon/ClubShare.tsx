@@ -10,19 +10,13 @@
  * after, not instead.
  *
  * The caption is the club's name, the same facts in words and **the member's referral link**
- * (0051): whoever taps it and pays gives both of them a month. The code is fetched the first
- * time the sheet opens and the plain app link stands in until it arrives, or if it never does —
- * a share must not wait on a second request. The code is also cached for the site
- * (`rememberMyRef`, `src/lib/referral/mine.ts`), whose invite links then carry it too.
+ * (0051): whoever taps it and pays gives both of them a month. `useReferralLink` fetches it the
+ * first time the sheet opens, with the plain app link standing in until then.
  */
-import { useEffect, useMemo, useState } from 'react';
-import { getMyReferralCode } from '@/lib/api/referral';
-import { referralUrl } from '@/app/features/referral/link';
-import { useSession } from '@/app/store/session';
-import { rememberMyRef } from '@/lib/referral/mine';
+import { useMemo, useState } from 'react';
+import { useReferralLink } from '@/app/features/referral/useReferralLink';
 import { Button } from '@/components/ui/Button';
 import { useT } from '@/app/hooks/useT';
-import { appLink } from '@/app/features/share/appLink';
 import { ShareSheet } from '@/app/features/share/ShareSheet';
 import { clubShareText, clubStoryData, type ClubStoryInput } from '@/app/features/share/story/data';
 import { BRAND } from '@content/site/brand';
@@ -51,22 +45,7 @@ export function ClubShare({
 }: ClubShareProps) {
   const { t, locale } = useT();
   const [open, setOpen] = useState(false);
-  const displayName = useSession((s) => s.profile?.displayName ?? null);
-  const [link, setLink] = useState<string>(() => appLink());
-  useEffect(() => {
-    if (!open) return;
-    let alive = true;
-    getMyReferralCode()
-      .then((code) => {
-        if (!alive || !code) return;
-        rememberMyRef(code, displayName);
-        setLink(referralUrl(code, displayName, locale));
-      })
-      .catch(() => undefined);
-    return () => {
-      alive = false;
-    };
-  }, [open, displayName, locale]);
+  const link = useReferralLink(open);
   // The date is fixed when the button mounts, so the picture does not change under the sheet.
   const [at] = useState(() => new Date().toISOString());
   const input = useMemo<ClubStoryInput>(

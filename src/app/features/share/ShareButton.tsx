@@ -3,11 +3,14 @@
  * opens the share sheet with the story picture (`ShareSheet`).
  *
  * The picture's facts are built here (`workoutStoryData`) rather than in the sheet, which draws
- * whatever it is handed — the club shares through the same sheet with its own facts.
+ * whatever it is handed — the club shares through the same sheet with its own facts. The link
+ * that travels with it is the athlete's referral link (`useReferralLink`), as the club's is: a
+ * friend who comes from a workout post earns the inviter the same +30 days.
  */
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { useT } from '@/app/hooks/useT';
+import { useReferralLink } from '@/app/features/referral/useReferralLink';
 import { shareText } from '@/app/features/player/summaryModel';
 import type { SessionSummary } from '@/lib/training/types';
 import { BRAND } from '@content/site/brand';
@@ -25,6 +28,7 @@ export interface ShareButtonProps {
 export function ShareButton({ summary, workoutName, courseName, stars, reps }: ShareButtonProps) {
   const { t, locale } = useT();
   const [open, setOpen] = useState(false);
+  const link = useReferralLink(open);
   const data = useMemo(
     () =>
       workoutStoryData(t, locale, {
@@ -51,6 +55,7 @@ export function ShareButton({ summary, workoutName, courseName, stars, reps }: S
         onClose={() => setOpen(false)}
         data={data}
         text={shareText(t, workoutName, summary)}
+        link={link}
         seed={summary.sessionId ?? summary.completedAt}
       />
     </>

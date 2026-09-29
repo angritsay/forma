@@ -8,8 +8,6 @@ export const app = {
   // текстах приглашения (marathonTitle и ниже); короткое — во вкладке и в верхней строке.
   tabGame: 'Клуб',
   navMain: 'Основная навигация',
-  navLocaleRu: 'RU',
-  navLocaleEn: 'EN',
 
   // UI kit
   kitClose: 'Закрыть',
@@ -122,7 +120,6 @@ export const app = {
   onbLimOther: 'Другое',
   onbLimOtherPlaceholder: 'Что беречь? Например: шея, голеностоп, операция на плече',
   onbLimOtherHint: 'Это прочитает тренер. Упражнения по тексту не подбираются автоматически.',
-  onbAssessOfferTitle: 'Подстроить тренировки под тебя?',
   onbAssessMoves: '{n} упражнений',
   // The owner's words for this screen: «не выжимаем максимум… конец».
   onbAssessWarnTitle: 'Максимум не выжимаем',
@@ -168,13 +165,6 @@ export const app = {
   homeTodayNoCourseTitle: 'Выбери программу',
   homeTodayNoCourseBody: 'И первая тренировка появится здесь — уже сегодня.',
   homeTodayOpenPath: 'Открыть путь',
-  homeStatsKcal: 'ккал за неделю',
-  homeStatsMinutes: 'Минут за неделю',
-  homeStatsPoints: 'Очки',
-  homeStatsPointsHint: 'за всё время',
-  homeYourCourses: 'Твои курсы',
-  homeMoreCourses: 'Ещё курсы',
-  homeCourseProgress: '{pct}% пройдено',
   // One word each, as the prototype's buttons have it: «Начать →», «Продолжить →».
   homeDeckStart: 'Начать',
   homeDeckContinue: 'Продолжить',
@@ -182,23 +172,7 @@ export const app = {
   homeErrorBody: 'Проверь соединение и попробуй ещё раз.',
 
   // Курсы
-  coursesOwned: 'Твои',
-  coursesLocked: 'Закрыт',
-  coursesContinue: 'Продолжить · {pct}%',
-  coursesStart: 'Начать курс',
   coursesCompleted: 'Пройден — открыть путь',
-  coursesBoughtHint:
-    'Уже оплатил? Курс откроется сам, обычно за пару минут. Если нет — напиши нам.',
-  coursesSubscribeHint: 'от {price} в месяц · или купи этот курс навсегда',
-  coursesBuyOne: 'Купить этот курс',
-  coursesWeekWordOne: 'неделя',
-  coursesWeekWordFew: 'недели',
-  coursesWeekWordMany: 'недель',
-  coursesPerWeekOne: '{n} раз в неделю',
-  coursesPerWeekFew: '{n} раза в неделю',
-  coursesPerWeekMany: '{n} раз в неделю',
-  coursesAvgMin: '~{n} мин',
-  coursesOpenPage: 'Открыть страницу курса',
 
   // Путь курса
   pathProgressLabel: 'Прогресс курса',
@@ -283,15 +257,12 @@ export const app = {
   // Тому, кто пробу ещё не тратил, говорить «была бесплатной» нельзя: этого не было.
   pathTrialLeftBody: 'Первая тренировка курса бесплатна — начни с неё, а дальше решишь.',
   pathTrialLeftCta: 'К первой тренировке',
-  pathPaywalledToast: 'Дальше — по подписке или после оплаты курса',
   pathNotOwnedTitle: 'Этого курса у тебя пока нет',
   pathNotOwnedBody: 'Первая тренировка была бесплатной. Дальше — весь курс, одной оплатой.',
-  pathNotOwnedCta: 'Страница курса',
   pathNotFound: 'Курс не найден',
   pathCompleted: 'Курс пройден!',
 
   // Превью тренировки
-  nodeBack: 'Путь курса',
   nodeTestBadge: 'Тест',
   nodeBenchmarkBadge: 'Бенчмарк',
   nodeTestTitle: 'Как проходит тест',
@@ -346,7 +317,6 @@ export const app = {
   playerRoundsOne: '{n} круг',
   playerRoundsFew: '{n} круга',
   playerRoundsMany: '{n} кругов',
-  playerBlockOf: 'Блок {n} из {total}',
   playerSectionsLabel: 'Части тренировки',
   playerSectionWarmup: 'Разминка',
   playerSectionMain: 'Тренировка',
@@ -380,7 +350,6 @@ export const app = {
   playerTestSecondsQuestion: 'Сколько секунд удалось продержать?',
   playerTestResultLabel: 'Результат теста',
   playerTestSave: 'Записать результат',
-  playerSkipRest: 'Пропустить отдых',
   playerAmrapRounds: 'Круги',
   playerAmrapRemoveRound: 'Убрать круг',
   playerRoundDone: 'Круг готов',
@@ -413,7 +382,6 @@ export const app = {
   playerSkipStep: 'Пропустить шаг',
   // The star row is one image to a screen reader, never three separate marks.
   pathStars: '{n} из 3 звёзд',
-  pathStarsNone: 'Звёзды ещё не заработаны',
   playerRestartStep: 'Начать шаг заново',
   playerEndWorkout: 'Завершить тренировку',
   playerEndTitle: 'Завершить тренировку сейчас?',
@@ -499,7 +467,6 @@ export const app = {
   summaryNoResultsBody: 'Эта тренировка не была завершена на этом устройстве, поэтому итогов нет.',
 
   // Прогресс
-  statsLeaderboard: 'Рейтинг',
   statsLevelEyebrow: 'Уровень {n}',
   statsPointsValue: '{n} очков',
   statsLevelProgress: 'Сколько осталось до следующего уровня',
@@ -556,11 +523,17 @@ export const app = {
   profileTitle: 'Профиль',
   profileWeightsKg: '{list} кг',
   profileLimitationsNone: 'Ничего',
+  // The account sheet's «Подписка» row (features/profile/subscription.ts): the value on the
+  // right says until when; once it has ended the row is the way back to the club's payment.
+  profileSubscription: 'Подписка',
   profileSubscriptionNoneHint: 'от {price} в месяц',
-  profileSubscriptionLive: '{plan} · до {date}',
+  profileSubscriptionLive: 'до {date}',
+  profileSubscriptionLiveUndated: 'Активна',
   profileSubscriptionCancelled: 'Отменена · доступ до {date}',
   profileSubscriptionEnded: 'Закончилась {date} · продлить',
+  profileSubscriptionEndedUndated: 'Закончилась · продлить',
   profileSubscriptionPending: 'Ждёт оплаты',
+  profileSubscriptionCharge: 'Одна оплата: {price} за год',
   planMonthly: 'Месяц',
   planAnnual: 'Год',
 
@@ -803,7 +776,6 @@ export const app = {
   demoOpenBody:
     'В демо-режиме приложение работает целиком, на выдуманных данных внутри этого браузера. Ничего никуда не отправляется, Supabase не нужен.',
   demoAuthCode: 'Демо: код {code}',
-  demoSection: 'Демо-режим',
 
   // --- custom (coach-built) workouts + builder ---
   customWorkoutTitle: 'Тренировка',
@@ -812,9 +784,6 @@ export const app = {
   customWorkoutMissingTitle: 'Тренировка не найдена',
   customWorkoutMissingBody: 'Ссылка недействительна или тренировку удалили.',
   customWorkoutFromCoach: 'От тренера',
-  // На карточке в ленте «Курсов». «Открыть», а не «Начать»: нажатие ведёт на экран тренировки, где
-  // она расписана и где стоит настоящее «Начать», — обещать старт с карточки значит врать на один шаг.
-  customWorkoutOpen: 'Открыть',
   customWorkoutRounds: '{n} кр.',
   customWorkoutSeconds: '{n} сек',
   customWorkoutReps: '{n} повт.',
@@ -1196,8 +1165,6 @@ export const app = {
   dayDeload: 'Разгрузочная неделя',
   dayImage: 'Картинка дня',
   dayImageHint: 'Показывается на экране дня',
-  // Node preview: the formula kicker and the secondary action of the two-button row.
-  nodeLater: 'Позже',
   // Admin: the exercise row's "has a video" stamp, and the course tile field's format error.
   exHasVideo: 'видео',
   courseTileInvalid: 'Цвет — шесть шестнадцатеричных знаков, например #2e2e2e',
@@ -1217,14 +1184,7 @@ export const app = {
   // disagree is the prize, so the prize stopped being the pitch and became a fact of the week (see
   // the Club block at the end of this file).
   marathonTitle: 'Клуб маленьких шагов',
-  // The cover's big line before there is a day to count: what the format is, in one line.
-  // No dash in it on purpose — the line sets in capitals across two lines of a 390px screen, and
-  // an em-dash that lands first on the second line reads as a stray mark rather than as pause.
-  marathonCoverPitch: 'Один маленький шаг в день',
   marathonTabBoard: 'Таблица',
-  // The same line in two weights on the challenge's head: «ДЕНЬ 10» heavy, «из 14» light.
-  marathonDayN: 'День {n}',
-  marathonOfTotal: 'из {total}',
   // The full board's own switch. The club screen has no week kicker any more — «Только задание,
   // кнопка и лидерборд» — so «Эта неделя» is said here, on the screen that can show another one.
   marathonWeekThis: 'Эта неделя',
@@ -1285,21 +1245,24 @@ export const app = {
   clubNudge: 'Напомнить',
   clubNudgeSent: 'Напомнили',
   marathonBoardAll: 'Вся таблица',
-  marathonHomeTasksLeft: 'Осталось заданий: {n}',
-  marathonHomeAllDone: 'На сегодня всё',
   // A round of the club has a start and an end; the club itself does not. So these two lines are
   // about the round, and «клуб» is not the thing that begins or finishes.
   marathonNotStarted: 'Клуб ещё не собрался',
   marathonNotStartedBody: 'Задания появятся утром первого дня.',
-  marathonFinished: 'Этот круг закончен',
-  marathonFinishedBody: 'Таблица остаётся — можно посмотреть, чем всё кончилось.',
   // A rest day is the card's face reading «Отдых» (ClubCard); the week track already says it.
   clubRestTitle: 'Отдых',
   clubRestBody: 'Новое — утром',
   marathonErrorTitle: 'Не удалось загрузить клуб',
-  // The pill on the day screen: «Пробная неделя · осталось 7 дней →», leading to the subscription.
+  // Today's task did not load, though the club did: said as that, with «Повторить», never as
+  // «Отдых» — a member told it is a rest day loses the task and the streak to a network error.
+  clubDayError: 'Задание дня не загрузилось',
+  // The podium when the week's table did not arrive: said as a failure with «Повторить», never
+  // drawn as an empty week — three dashed steps would claim nobody has scored.
+  clubPodiumError: 'Таблица не загрузилась',
+  // The HUD's pill on the course's trial week (gameAccess `reason: 'trial'`): the days are
+  // counted, so day eight is not a surprise. «дн.» so one string serves every number.
+  clubTrialPill: 'Пробная неделя · осталось {n} дн.',
   // One task
-  marathonDeadline: 'До {time}',
   marathonDeadlinePassed: 'Время вышло',
   // The pill on a task: what it is worth, said in full.
   marathonPointsOne: '{n} балл',
@@ -1309,13 +1272,10 @@ export const app = {
   marathonRulePerMember: 'Каждому за себя',
   marathonRuleCapped: 'На команду не больше {n}',
   marathonRuleNone: 'Без баллов',
-  marathonProofUndo: 'Отменить',
   marathonProofSent: 'Отправлено',
   marathonProofTextLabel: 'Напиши, как прошло',
   marathonProofNumberLabel: 'Сколько получилось',
-  marathonProofPhoto: 'Прикрепить фото',
   marathonProofPhotoAgain: 'Заменить фото',
-  marathonProofPhotoSent: 'Фото отправлено',
   // Необязательное вложение на любом задании — отсюда «+», а не кнопка: задание доставляет другой
   // контрол, а это доказательство к нему.
   marathonProofAttach: 'Прикрепить фото или видео',
@@ -1333,7 +1293,6 @@ export const app = {
   // The board
   marathonBoardEmpty: 'Пока никто не набрал баллов',
   marathonBoardYou: 'Ты',
-  marathonBoardPoints: '{n}',
 
   // --- Marathon admin --------------------------------------------------------
   mAdminTitle: 'Клуб',
@@ -1381,9 +1340,6 @@ export const app = {
   mAdminCopyDayError: 'Копировать нечего',
   mAdminRepeatUntil: 'Повторять до',
   mAdminRepeatUntilHint: 'Пусто — только этот день',
-  mAdminRepeat: 'Повторить',
-  mAdminTaskNew: 'Новое задание',
-  mAdminTaskEdit: 'Задание',
   mAdminTaskTitle: 'Что сделать',
   mAdminTaskBody: 'Подробности',
   mAdminTaskImage: 'Картинка',
@@ -1426,7 +1382,6 @@ export const app = {
   mAdminRemove: 'Убрать',
   mAdminRestore: 'Вернуть',
   mAdminRemoved: 'Убран',
-  mAdminPeopleEmpty: 'Пока никого',
   // В клуб попадают оплатой: участник — это тот, кто заплатил. Руками добавляют только тех, кто
   // заплатил мимо кассы.
   mAdminPeopleEmptyBody:
@@ -1451,7 +1406,6 @@ export const app = {
   mAdminVoid: 'Не засчитать',
   // Read by one person on their own screen, so the field asks for a message and not a code.
   mAdminVoidReason: 'Комментарий участнику',
-  mAdminVoided: 'Не засчитано',
   mAdminRestoreProof: 'Вернуть',
   mAdminAcceptProof: 'Оставить как есть',
   mAdminProofsNeedReview: 'Ждут проверки',
@@ -1735,12 +1689,12 @@ export const app = {
   bookNextSchedule:
     'Оплати — и выбери слот на его странице. Ближайший может быть уже через {n} минут.',
   bookNextContact:
-    'Страницы со слотами пока нет: оплати и напиши тренеру — время он поставит сам, хоть за {n} минут до начала.',
+    'Страницы со слотами нет: оплати и напиши тренеру — время он поставит сам, хоть за {n} минут до начала.',
   // Её сторона того же шага (design/CHANGELOG.md §23): своя страница записи, время ставит она.
   bookNextScheduleHer:
     'Оплати — и выбери слот на её странице. Ближайший может быть уже через {n} минут.',
   bookNextContactHer:
-    'Страницы со слотами пока нет: оплати и напиши — время она поставит сама, хоть за {n} минут до начала.',
+    'Страницы со слотами нет: оплати и напиши — время она поставит сама, хоть за {n} минут до начала.',
   bookPaidNote: 'Оплата открылась в браузере. Как оплатишь — возвращайся сюда за временем.',
 
   // --- Stream 3: sign-in, the bot, the emailed code -------------------------
@@ -1756,7 +1710,6 @@ export const app = {
   // --- Stream 2: три вкладки и «Курсы» как главный экран ----------------------
   tabCourses: 'Курсы',
   tabCoach: 'Тренер',
-  coursesMore: 'Подробнее',
   achievementsTitle: 'Достижения',
   // `achievementsLead` («Всё, что можно взять, и как.») stood here and said what the list under
   // it plainly is. The count in the header is the only line this screen needs over the rules.
