@@ -5,6 +5,10 @@
  *
  * The numeral is the page: «4 0 4» with the middle figure at 200, the brand's 800 + 200 device
  * doing the work a grey caption used to do. Everything else is one line per language.
+ *
+ * Before any of that paints, an inline script tries to rescue the link: `/start`, `/Club`,
+ * `/ru/about`, `/forma/…` and friends go to the page they meant (src/lib/seo/notFoundRedirect.ts).
+ * It leaves only for a route this build emitted, so a truly unknown path still ends up here.
  */
 import Base from '@/layouts/Base.astro';
 import HeroField from '@/components/landing/HeroField.astro';
@@ -12,6 +16,10 @@ import Logo from '@/components/landing/Logo.astro';
 import { t } from '@/i18n/index';
 import { appHref, href, withBase } from '@/lib/util/paths';
 import { BRAND } from '@content/site/brand';
+import { notFoundConfig, notFoundScript } from '@/lib/seo/notFoundRedirect';
+import { allPages } from '@/lib/seo/routes';
+
+const rescue = notFoundScript(notFoundConfig((await allPages()).map((p) => p.path)));
 
 const blocks = [
   {
@@ -36,6 +44,7 @@ const blocks = [
     <title>404 — {BRAND.name}</title>
     <meta name="robots" content="noindex, nofollow" />
     <meta name="description" content={`${blocks[0]!.title} / ${blocks[1]!.title}`} />
+    <script is:inline set:html={rescue} />
   </Fragment>
   <main class="mx-auto flex min-h-dvh max-w-3xl flex-col justify-center gap-10 px-6 py-16">
     <a href={withBase('/')} class="inline-flex text-2xl text-text">
