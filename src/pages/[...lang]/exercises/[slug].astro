@@ -35,6 +35,7 @@ import LoopVideo from '@/components/landing/media/LoopVideo.astro';
 import { firstWorkoutFacts } from '@/components/landing/demo';
 import { Doodle } from '@/components/ui/Doodle';
 import { FILMED_EXERCISES, coursesUsingExercise, getExercise } from '@/content/registry';
+import { SITE_COURSES } from '@/content/published';
 import { LOCALES, type Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import {
@@ -87,7 +88,7 @@ const title = exerciseTitle(ex, locale);
 const description = exerciseDescription(ex, locale);
 const image = ogImagePath('exercise', ex.id, locale);
 const imageUrl = absoluteUrl(site, image);
-const tile = exerciseTile(ex);
+const tile = exerciseTile(ex, SITE_COURSES);
 /*
  * The step numerals are the light blue — key figures, the semantic colour map's job for it
  * (global.css header) — whatever the movement's course: the programme colour is identity for a
@@ -96,7 +97,7 @@ const tile = exerciseTile(ex);
 const coloured = isLightTile(tile);
 const numeralCls = 'text-accent';
 
-const courses = coursesUsingExercise(ex.id);
+const courses = coursesUsingExercise(ex.id, SITE_COURSES);
 const primary = courses[0];
 const { easier, harder } = scalingExercises(ex);
 const related = relatedExercises(ex, locale);

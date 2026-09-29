@@ -151,9 +151,21 @@ export function courseExercises(course: Course): Exercise[] {
   return out;
 }
 
-/** Courses that use a given exercise. */
-export function coursesUsingExercise(exerciseId: string): Course[] {
-  return COURSES.filter((c) =>
+/**
+ * Courses on sale that use a given exercise.
+ *
+ * The default pool is {@link LIVE_COURSES}, not {@link COURSES}: every caller draws a link from
+ * the answer («В каких курсах есть», the exercise page's CTA, the tile colour of the course it
+ * belongs to), and a course that is not sold has no page — linking it printed a 404 on 25 of the
+ * 27 exercise pages. A built page passes `SITE_COURSES` (`./published`) instead, so a course
+ * published from the admin panel counts too; it cannot be the default here because that module
+ * fetches at build time and imports this one.
+ */
+export function coursesUsingExercise(
+  exerciseId: string,
+  pool: readonly Course[] = LIVE_COURSES,
+): Course[] {
+  return pool.filter((c) =>
     c.workouts.some((w) =>
       w.blocks.some((b) => b.items.some((it) => it.exerciseId === exerciseId)),
     ),

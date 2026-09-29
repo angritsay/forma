@@ -158,6 +158,13 @@ own file, hreflang alternates including `x-default` whose targets all exist, the
 sitemap itself: every URL inside the base path, unique, and backed by a file. `robots.txt`,
 `llms.txt` and `rss.xml` must exist.
 
+Internal links are checked on every page outside `/app/` (the 404 page included): each `href` is
+resolved as a browser would, under the base path, and must land on a file in `dist/`; a
+`#fragment` must be an `id` on the page it lands on. Other origins, `mailto:`/`tel:` and the app's
+hash routes (`/app/#/start`) are skipped. A broken target is one error with a page count, so a
+template that links a course not on sale (the exercise pages' «В каких курсах есть» did, on 25 of
+27 pages) reads as one line per course.
+
 ## 5. After deploy
 
 1. **IndexNow** (Yandex, Bing): `deploy.yml` runs `npm run seo:indexnow` when the `INDEXNOW_KEY`

@@ -68,13 +68,22 @@ export function exercisesByPattern(
   return out;
 }
 
-/** First course (by display order) that programs the exercise. */
-export function primaryCourse(ex: Exercise): Course | undefined {
-  return coursesUsingExercise(ex.id)[0];
+/**
+ * First course (by display order) that programs the exercise, out of `courses` — the same list
+ * `coursesUsingExercise()` takes. Pages pass `SITE_COURSES`, so a course published from the admin
+ * panel counts; the default stays the compiled on-sale list because `published.ts` imports the
+ * registry and cannot be imported back into it.
+ */
+export function primaryCourse(ex: Exercise, courses?: readonly Course[]): Course | undefined {
+  return coursesUsingExercise(ex.id, courses)[0];
 }
 
-export function exerciseTile(ex: Exercise): string {
-  const course = primaryCourse(ex);
+/**
+ * The tile colour of the exercise's primary course, or the neutral tile. Takes the same course
+ * list as the course cards beside it, so the tile never names a different course than they do.
+ */
+export function exerciseTile(ex: Exercise, courses?: readonly Course[]): string {
+  const course = primaryCourse(ex, courses);
   return course ? course.tile : DEFAULT_TILE;
 }
 

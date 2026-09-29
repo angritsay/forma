@@ -1372,7 +1372,7 @@ export function urlToDistFile(url, dist, base) {
 }
 
 /**
- * Audit the built site in `dist/`: sitemap coverage and per-page checks.
+ * Audit the built site in `dist/`: sitemap coverage, per-page checks and internal links.
  * @param {string} dist
  * @param {{ base?: string }} [opts]
  * @returns {Issue[]}
@@ -1476,7 +1476,179 @@ export function auditDist(dist, opts = {}) {
         });
     }
   }
+
+  // Internal links: every page outside the app (the app is one SPA shell with its own router).
+  const files = walkFiles(dist);
+  /** @type {Map<string, string>} */
+  const pages = new Map();
+  for (const file of htmlFiles) {
+    if (isApp(file)) continue;
+    pages.set(relHtml(file), readFileSync(file, 'utf8'));
+  }
+  issues.push(
+    ...auditInternalLinks(pages, files, {
+      base,
+      readPage: (f) => (existsSync(join(dist, f)) ? readFileSync(join(dist, f), 'utf8') : null),
+    }),
+  );
   return issues;
+}
+
+/**
+ * Every file under `dir`, as dist-relative paths with forward slashes.
+ * @param {string} dir
+ * @param {string} [root]
+ * @param {Set<string>} [out]
+ */
+function walkFiles(dir, root = dir, out = new Set()) {
+  for (const name of readdirSync(dir)) {
+    const p = join(dir, name);
+    if (statSync(p).isDirectory()) walkFiles(p, root, out);
+    else out.add(rel(root, p));
+  }
+  return out;
+}
+
+/** An origin no real link can have, so "same origin" means "relative to this site". */
+const LINK_ORIGIN = 'http://internal.invalid';
+
+/**
+ * The site URL a dist file is served at: `en/x/index.html` → `/en/x/`, `404.html` → `/404.html`.
+ * @param {string} file dist-relative path
+ * @param {string} base normalized base path
+ */
+function distFileUrl(file, base) {
+  const path = file.replace(/(^|\/)index\.html$/, '$1');
+  return `${LINK_ORIGIN}${base}${path}`;
+}
+
+/**
+ * The dist file a site path is served from, or null. A directory path is its `index.html`; a
+ * path without a trailing slash is tried as a file, then as a directory (the host redirects).
+ * @param {string} path decoded site path with the base removed, no leading slash
+ * @param {Set<string>} files
+ */
+function resolveDistPath(path, files) {
+  if (path === '' || path.endsWith('/')) {
+    const f = `${path}index.html`;
+    return files.has(f) ? f : null;
+  }
+  if (files.has(path)) return path;
+  if (files.has(`${path}/index.html`)) return `${path}/index.html`;
+  if (files.has(`${path}.html`)) return `${path}.html`;
+  return null;
+}
+
+/**
+ * The ids (and legacy `<a name>`s) a document can be scrolled to.
+ *
+ * `name` counts only on `<a>`: a browser scrolls to no other element by it, and taking it on any
+ * tag would let `#description` pass on the strength of `<meta name="description">`.
+ * @param {string} html
+ */
+export function extractAnchorIds(html) {
+  /** @type {Set<string>} */
+  const ids = new Set();
+  for (const m of html.matchAll(/<[a-zA-Z][^>]*?\sid="([^"]*)"/g)) {
+    ids.add(decodeEntities(m[1] ?? ''));
+  }
+  for (const m of html.matchAll(/<a\b[^>]*?\sname="([^"]*)"/gi)) {
+    ids.add(decodeEntities(m[1] ?? ''));
+  }
+  return ids;
+}
+
+/** @param {string} s */
+function safeDecode(s) {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+}
+
+/**
+ * Internal links in the built site that lead nowhere.
+ *
+ * Every `href` on a page is resolved the way a browser would (relative to the page, under the
+ * base path) and must land on a file in dist; a `#fragment` must also be an id on the page it
+ * lands on. Other origins, `mailto:` and `tel:` are left alone, and so is a fragment that starts
+ * with `/`: that is the app's hash router (`/app/#/start`), not an anchor.
+ *
+ * This is the check that would have caught the exercise pages linking to courses that are not on
+ * sale: 25 of 27 pages printed «В каких курсах есть» cards pointing at pages that were never built.
+ * It reports one issue per broken target, with a page count, so a template bug reads as one line.
+ *
+ * @param {Map<string, string>} pages dist-relative path → HTML of every page to scan
+ * @param {Set<string>} files every dist-relative file, pages included
+ * @param {{ base?: string, readPage?: (file: string) => string | null }} [opts] `readPage` returns
+ *   the HTML of a link target outside `pages` (the app shell), for its anchor ids
+ * @returns {Issue[]}
+ */
+export function auditInternalLinks(pages, files, opts = {}) {
+  const base = normalizeBase(opts.base ?? '/');
+  /** @type {Map<string, Set<string>>} */
+  const idCache = new Map();
+  const idsOf = (/** @type {string} */ file) => {
+    let ids = idCache.get(file);
+    if (!ids) {
+      ids = extractAnchorIds(pages.get(file) ?? opts.readPage?.(file) ?? '');
+      idCache.set(file, ids);
+    }
+    return ids;
+  };
+  /** @type {Map<string, { first: string, pages: Set<string>, message: string }>} */
+  const broken = new Map();
+  const report = (
+    /** @type {string} */ key,
+    /** @type {string} */ page,
+    /** @type {string} */ message,
+  ) => {
+    const b = broken.get(key) ?? { first: page, pages: new Set(), message };
+    b.pages.add(page);
+    broken.set(key, b);
+  };
+
+  for (const [page, html] of pages) {
+    const pageUrl = distFileUrl(page, base);
+    for (const m of html.matchAll(/\shref="([^"]*)"/g)) {
+      const raw = decodeEntities(m[1] ?? '').trim();
+      if (raw === '' || /^(?:mailto|tel|javascript|data):/i.test(raw)) continue;
+      let url;
+      try {
+        url = new URL(raw, pageUrl);
+      } catch {
+        report(`bad:${raw}`, page, `unparseable link ${raw}`);
+        continue;
+      }
+      if (url.origin !== LINK_ORIGIN) continue;
+      const path = safeDecode(url.pathname);
+      if (!`${path}/`.startsWith(base)) {
+        report(`base:${path}`, page, `link ${raw} is outside the base path ${base}`);
+        continue;
+      }
+      const target = resolveDistPath(path.slice(base.length), files);
+      if (!target) {
+        report(`page:${path}`, page, `link to ${path} has no page (404)`);
+        continue;
+      }
+      const hash = url.hash.slice(1);
+      if (hash === '' || hash.startsWith('/') || !target.endsWith('.html')) continue;
+      const fragment = safeDecode(hash);
+      if (!idsOf(target).has(fragment))
+        report(
+          `anchor:${target}#${fragment}`,
+          page,
+          `link ${raw} points at #${fragment}, which is not an id on ${target}`,
+        );
+    }
+  }
+
+  return [...broken.values()].map((b) => ({
+    level: /** @type {const} */ ('error'),
+    file: `dist/${b.first}`,
+    message: b.pages.size > 1 ? `${b.message} (on ${b.pages.size} pages)` : b.message,
+  }));
 }
 
 /** @param {string} b */
