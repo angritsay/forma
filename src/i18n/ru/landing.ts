@@ -481,5 +481,6 @@ export const landing = {
   courseSamplePlan: 'Весь план по минутам',
   startWorkout1Cta: 'Сделать тренировку 1 бесплатно',
   inWorkout1: 'Это движение — в тренировке 1',
-  hubCtaText: 'Около {total} минут — бесплатно и без карты.',
+  // {total} is workout 1 whole, from the engine (21 now): «мин», since «около 21 минут» is wrong.
+  hubCtaText: 'Около {total} мин — бесплатно и без карты.',
 } as const;
