@@ -166,6 +166,7 @@ jobs:
           # One statement file to the query endpoint. The response body is kept in a file and
           # only its error message is ever printed.
           run_sql() {
+            rm -f /tmp/out.json
             jq -Rs '{query: .}' < "$1" > /tmp/body.json
             curl -sS -o /tmp/out.json -w '%{http_code}' \
               -X POST "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
@@ -173,6 +174,8 @@ jobs:
               -H 'Content-Type: application/json' \
               --data-binary @/tmp/body.json
           }
+          # 2xx only. A dropped connection comes back as 000, which `-ge 300` would let through.
+          ok() { case "$1" in 2??) return 0 ;; *) return 1 ;; esac; }
           shopt -s nullglob
           parts=(supabase/course-import/[0-9]*.sql)
           if [ "${#parts[@]}" -eq 0 ]; then
@@ -182,19 +185,20 @@ jobs:
           n=0
           for f in "${parts[@]}"; do
             n=$((n + 1))
-            code=$(run_sql "$f")
-            if [ "$code" -ge 300 ]; then
+            # A dropped connection is a failure like any other, not a silent exit under set -e.
+            code=$(run_sql "$f") || code=000
+            if ! ok "$code"; then
               echo "::error::Part $n of ${#parts[@]} ($(basename "$f")) failed with HTTP $code. Nothing after it was sent; the parts before it are in and stay in. The message follows; it is the API's own error text, not row data."
-              jq -r '.message // .error // "(no message)"' < /tmp/out.json || true
+              jq -r '.message // .error // "(no message)"' /tmp/out.json 2>/dev/null || true
               exit 1
             fi
             echo "Part $n of ${#parts[@]}: $(basename "$f") ($(wc -c < "$f") bytes) — HTTP $code"
           done
 
-          code=$(run_sql supabase/migrations/0036_authored_by.sql)
-          if [ "$code" -ge 300 ]; then
+          code=$(run_sql supabase/migrations/0036_authored_by.sql) || code=000
+          if ! ok "$code"; then
             echo "::error::The courses are in, but re-running 0036_authored_by.sql failed with HTTP $code, so the imported workouts carry no author. Run this task again."
-            jq -r '.message // .error // "(no message)"' < /tmp/out.json || true
+            jq -r '.message // .error // "(no message)"' /tmp/out.json 2>/dev/null || true
             exit 1
           fi
           echo "0036_authored_by.sql re-run — HTTP $code"
@@ -207,8 +211,8 @@ jobs:
                  (select count(*) from public.custom_workouts)::int    as workouts,
                  (select count(*) from public.custom_workouts where author_slug is null)::int as unsigned
           SQL
-          code=$(run_sql /tmp/count.sql)
-          if [ "$code" -ge 300 ]; then
+          code=$(run_sql /tmp/count.sql) || code=000
+          if ! ok "$code"; then
             echo "::warning::The import is done, but the counts could not be read (HTTP $code)."
             exit 0
           fi
@@ -1460,15 +1464,16 @@ jobs:
               failed=$((failed + 1))
               continue
             fi
+            rm -f /tmp/out.json
             code=$(curl -sS -o /tmp/out.json -w '%{http_code}' -X DELETE \
               "https://api.supabase.com/v1/projects/$PROJECT_REF/functions/$name" \
-              -H "Authorization: Bearer $TOKEN" || echo 000)
+              -H "Authorization: Bearer $TOKEN") || code=000
             case "$code" in
               2??) echo "::notice::$name deleted." ;;
               404) echo "::notice::$name is already gone." ;;
               *)
                 echo "::error::$name: Supabase returned HTTP $code."
-                jq -r '.message // .error // "(no message)"' < /tmp/out.json 2>/dev/null || true
+                jq -r '.message // .error // "(no message)"' /tmp/out.json 2>/dev/null || true
                 failed=$((failed + 1))
                 ;;
             esac
