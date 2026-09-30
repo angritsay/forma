@@ -18,6 +18,7 @@ import {
 import { toLocalDateIso } from '@/lib/util/dates';
 import { useT } from '@/app/hooks/useT';
 import { useActiveWorkoutStore } from '@/app/store/activeWorkout';
+import { useSession } from '@/app/store/session';
 
 export interface StartableCustomWorkout {
   shortId: string;
@@ -64,6 +65,7 @@ export function useCustomWorkoutStart() {
           workoutId: workout.shortId,
           prescribed,
           startedAt,
+          userId: useSession.getState().user?.id,
         });
         setReplacing(null);
         navigate('/play');

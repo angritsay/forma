@@ -29,6 +29,7 @@
  * so those are settled, not awaited-or-thrown.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { isNetworkError } from '@/lib/api/errors';
 import { useBackOr } from '@/app/hooks/useBackOr';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -171,8 +172,11 @@ export default function AssessmentScreen() {
         fitnessIndex: fitness.index,
         fitnessLevel: fitness.level,
       });
-    } catch {
-      toast.show({ kind: 'error', title: t('app.onbSaveError') });
+    } catch (e) {
+      toast.show({
+        kind: 'error',
+        title: isNetworkError(e) ? t('common.errorOffline') : t('app.onbSaveError'),
+      });
       setSaving(false);
       return;
     }

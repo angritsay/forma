@@ -51,13 +51,19 @@ const GREET_KEY: Record<ReturnType<typeof dayPart>, TKey> = {
   night: 'app.homeGreetNight',
 };
 
+/** What stands in for a figure the app could not load: a dash, never a zero. */
+const UNKNOWN = '—';
+
 export interface CoursesHeadProps {
   /** First name, from the profile or the address — `greetingName()` decides it. */
   name: string;
-  /** Workouts finished, ever. */
-  workouts: number;
-  /** Achievements taken and achievements there are — the catalogue's own figure. */
-  unlocked: number;
+  /**
+   * Workouts finished, ever; null while the progress has not loaded (or failed to). A zero there
+   * would tell somebody with forty workouts behind them that they have none.
+   */
+  workouts: number | null;
+  /** Achievements taken and achievements there are — the catalogue's own figure; null = unknown. */
+  unlocked: number | null;
   total: number;
   /** Opens the account sheet, which the screen owns. */
   onAccount: () => void;
@@ -67,6 +73,7 @@ export function CoursesHead({ name, workouts, unlocked, total, onAccount }: Cour
   const { t, locale } = useT();
   const navigate = useNavigate();
   const [calendar, setCalendar] = useState(false);
+  const shown = workouts === null ? UNKNOWN : formatNumber(locale, workouts);
 
   return (
     <div className="flex items-start gap-3 px-6 pt-1 pb-4 md:px-10">
@@ -97,7 +104,7 @@ export function CoursesHead({ name, workouts, unlocked, total, onAccount }: Cour
       <div className="flex shrink-0 items-center gap-2 pt-1.5">
         <button
           type="button"
-          aria-label={`${t('app.homeWorkoutsTitle')}: ${formatNumber(locale, workouts)}`}
+          aria-label={`${t('app.homeWorkoutsTitle')}: ${shown}`}
           onClick={() => setCalendar(true)}
           className="flex h-9 items-center gap-1.5 rounded-pill bg-surface-2 px-3 text-text transition-colors duration-150 ease-(--ease-out) hover:bg-surface-3"
         >
@@ -118,14 +125,12 @@ export function CoursesHead({ name, workouts, unlocked, total, onAccount }: Cour
           <span aria-hidden="true" className="emoji" style={{ fontSize: 15 }}>
             💪
           </span>
-          <span className="tabular text-[13px] leading-none font-medium">
-            {formatNumber(locale, workouts)}
-          </span>
+          <span className="tabular text-[13px] leading-none font-medium">{shown}</span>
         </button>
         <button
           type="button"
           aria-label={`${t('app.achievementsTitle')}: ${t('app.statsAchievementsCount', {
-            done: formatNumber(locale, unlocked),
+            done: unlocked === null ? UNKNOWN : formatNumber(locale, unlocked),
             total: formatNumber(locale, total),
           })}`}
           onClick={() => navigate('/achievements')}

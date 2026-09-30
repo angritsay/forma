@@ -32,6 +32,12 @@ export interface ActiveSession {
   prescribed: PrescribedWorkout;
   /** ISO timestamp of the real start (from the session row). */
   startedAt: string;
+  /**
+   * The account that started it. A session is never resumed or saved under anybody else: another
+   * account signing in on this device drops it (`store/session.ts`). Absent on sessions persisted
+   * before it existed, which stay with whoever is signed in.
+   */
+  userId?: string;
 }
 
 export type BeginInput = ActiveSession;
@@ -72,7 +78,11 @@ export interface ActiveWorkoutState {
   goTo: (index: number) => void;
   /** Upsert a result by its `stepIndex`. */
   recordResult: (result: PlayerResult) => void;
-  setPaused: (paused: boolean) => void;
+  /**
+   * Pause or resume. `at` (a `Date.now()` value) pauses as of that moment rather than now — the
+   * player pausing a session that was left in the background, counting only the grace it allows.
+   */
+  setPaused: (paused: boolean, at?: number) => void;
   /** Re-derive `elapsedSec` from the timestamps (call on an interval while playing). */
   tick: () => void;
   /** Start the current step over: its clock back to zero, the session clock untouched. */
@@ -146,6 +156,7 @@ function isSession(v: unknown): v is ActiveSession {
     typeof s.nodeId === 'string' &&
     typeof s.workoutId === 'string' &&
     typeof s.startedAt === 'string' &&
+    (s.userId === undefined || typeof s.userId === 'string') &&
     typeof p === 'object' &&
     p !== null &&
     Array.isArray(p.blocks)
@@ -233,7 +244,7 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState>()(
         }));
       },
 
-      setPaused: (paused) => {
+      setPaused: (paused, at) => {
         const s = get();
         if (!s.session || s.finishedAt) return;
         if (paused) {
@@ -241,7 +252,10 @@ export const useActiveWorkoutStore = create<ActiveWorkoutState>()(
             if (!s.paused) set({ paused: true });
             return;
           }
-          const elapsedMs = elapsedNow(s);
+          const elapsedMs =
+            at === undefined
+              ? elapsedNow(s)
+              : s.elapsedMs + Math.max(0, Math.min(at, Date.now()) - s.activeSince);
           set({
             paused: true,
             activeSince: null,

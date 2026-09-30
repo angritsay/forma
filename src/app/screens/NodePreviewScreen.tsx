@@ -53,6 +53,7 @@ import {
   nodeAccess,
 } from '@/app/features/courses/courseAccess';
 import { UnlockSheet } from '@/app/features/courses/UnlockSheet';
+import { PurchasesUnknown } from '@/app/components/PurchasesUnknown';
 import {
   estimateSession,
   sessionPills,
@@ -78,7 +79,7 @@ import {
   useProgressLoader,
   useTrainedCourseIds,
 } from '@/app/store/progress';
-import { useSession } from '@/app/store/session';
+import { purchasesUnknown, useSession } from '@/app/store/session';
 
 /** One difficulty's plan and its estimate — what the sheet offers as a row, what the pills state. */
 type Plan = SessionEstimate;
@@ -97,6 +98,7 @@ export default function NodePreviewScreen() {
     course && node?.workoutId ? course.workouts.find((w) => w.id === node.workoutId) : undefined;
 
   const entitlements = useSession((s) => s.entitlements);
+  const unknownPurchases = useSession(purchasesUnknown);
   const trained = useTrainedCourseIds();
   const [unlockOpen, setUnlockOpen] = useState(false);
   const owned = entitlements.includes(id ?? '');
@@ -143,6 +145,15 @@ export default function NodePreviewScreen() {
       }),
     );
   }, [workout, ctx, engineState.scale, deload, repeat]);
+
+  // Purchases unknown: neither «not found» nor the price, but the retry (`purchasesUnknown`).
+  if (course && !owned && unknownPurchases) {
+    return (
+      <Screen header={<TopBar back={`/courses/${course.id}`} title={l(courseTitle(course))} />}>
+        <PurchasesUnknown />
+      </Screen>
+    );
+  }
 
   // A course off sale is as absent here as on its path screen (`courseVisible`).
   if (!course || !node || !courseVisible(course, owned)) {
@@ -318,6 +329,7 @@ export default function NodePreviewScreen() {
         workoutId: workout.id,
         prescribed,
         startedAt,
+        userId: useSession.getState().user?.id,
       });
       setChooserOpen(false);
       navigate('/play');

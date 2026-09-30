@@ -320,7 +320,12 @@ export async function verifyCode(email: string, token: string): Promise<void> {
 
 export async function signOut(): Promise<void> {
   if (isDemo()) return (await demo()).signOut();
-  const { error } = await supabase().auth.signOut();
+  /*
+   * This device only. The default (`global`) also revokes every other session of the account, so
+   * «Выйти» on an old phone signed the athlete out of the one in their hand — and it needs the
+   * server to answer, so offline it failed and left the local session half-cleared.
+   */
+  const { error } = await supabase().auth.signOut({ scope: 'local' });
   if (error) throw toAuthError(error);
 }
 

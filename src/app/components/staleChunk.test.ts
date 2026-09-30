@@ -1,5 +1,9 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { isStaleChunkError, reloadOnceForStaleChunk } from './staleChunk';
+import { t } from '@/i18n/index';
+import { ErrorFallback } from './ErrorBoundary';
+import { isOfflineChunkError, isStaleChunkError, reloadOnceForStaleChunk } from './staleChunk';
 
 function memoryStorage() {
   const m = new Map<string, string>();
@@ -75,5 +79,34 @@ describe('reloadOnceForStaleChunk', () => {
     };
     expect(reloadOnceForStaleChunk(stale, { storage: throwing, reload })).toBe(false);
     expect(reload).not.toHaveBeenCalled();
+  });
+});
+
+/*
+ * A chunk that fails offline is a connection, not a deploy: reloading would swap the app for the
+ * browser's own «no internet» page and spend the session's one reload for nothing.
+ */
+describe('offline', () => {
+  const stale = new Error('Failed to fetch dynamically imported module: /app/_astro/Summary.js');
+
+  it('does not reload while the device is offline, and keeps the budget', () => {
+    const storage = memoryStorage();
+    const reload = vi.fn();
+    expect(reloadOnceForStaleChunk(stale, { storage, reload, online: () => false })).toBe(false);
+    expect(reload).not.toHaveBeenCalled();
+    // Back online, it is a stale chunk again and the one reload is still there.
+    expect(reloadOnceForStaleChunk(stale, { storage, reload, online: () => true })).toBe(true);
+  });
+
+  it('says «Нет соединения» with a retry instead of the crash screen', () => {
+    expect(isOfflineChunkError(stale, false)).toBe(true);
+    expect(isOfflineChunkError(stale, true)).toBe(false);
+    expect(isOfflineChunkError(new Error('boom'), false)).toBe(false);
+    const html = renderToStaticMarkup(
+      createElement(ErrorFallback, { error: stale, onRetry: () => {}, online: false }),
+    );
+    expect(html).toContain(t('ru', 'app.errorChunkOffline'));
+    expect(html).toContain(t('ru', 'common.retry'));
+    expect(html).not.toContain(t('ru', 'app.errorReload'));
   });
 });

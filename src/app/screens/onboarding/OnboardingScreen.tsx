@@ -29,6 +29,7 @@
  * counter stays «01/05»: a story is not a step, and `STEP_IDS` does not know about it.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { isNetworkError } from '@/lib/api/errors';
 import { useNavigate, useSearchParams } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { IconButton } from '@/components/ui/IconButton';
@@ -201,8 +202,11 @@ export default function OnboardingScreen() {
       clearDraft();
       // The deep link that sent them through sign-up, if there was one (features/entry/next.ts).
       navigate(consumeNext() ?? '/', { replace: true });
-    } catch {
-      toast.show({ kind: 'error', title: t('app.onbSaveError') });
+    } catch (e) {
+      toast.show({
+        kind: 'error',
+        title: isNetworkError(e) ? t('common.errorOffline') : t('app.onbSaveError'),
+      });
     } finally {
       setSaving(false);
     }

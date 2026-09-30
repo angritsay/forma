@@ -72,6 +72,7 @@ import { ClubCard } from '@/app/features/marathon/ClubCard';
 import { ClubHud } from '@/app/features/marathon/ClubHud';
 import { ClubInviteCard } from '@/app/features/marathon/ClubInviteCard';
 import { ClubPitch } from '@/app/features/marathon/ClubPitch';
+import { PurchasesUnknown } from '@/app/components/PurchasesUnknown';
 import { ClubPodium } from '@/app/features/marathon/ClubPodium';
 import { ClubShare } from '@/app/features/marathon/ClubShare';
 import { ClubStreak, useClubDays } from '@/app/features/marathon/ClubStreak';
@@ -101,7 +102,7 @@ import {
   useMarathonScores,
   useMyMarathons,
 } from '@/app/features/marathon/useMarathon';
-import { useSession } from '@/app/store/session';
+import { purchasesUnknown, useSession } from '@/app/store/session';
 import { gameAccess } from '@/app/features/marathon/gameAccess';
 import { GAME_REQUIRES_SUBSCRIPTION } from '@content/site/plans';
 
@@ -119,6 +120,7 @@ export default function MarathonScreen() {
   const { t, locale } = tr;
   const subscription = useSession((s) => s.subscription);
   const newestPurchaseAt = useSession((s) => s.newestPurchaseAt);
+  const unknownPurchases = useSession(purchasesUnknown);
   const navigate = useNavigate();
   const toast = useToast();
   const {
@@ -305,6 +307,14 @@ export default function MarathonScreen() {
     now: Date.now(),
     gated: GAME_REQUIRES_SUBSCRIPTION,
   });
+
+  /*
+   * Whether the club is paid for could not be read: the pitch would sell the club to somebody
+   * who may be in it. Said as that, with a retry (`purchasesUnknown`).
+   */
+  if (!access.allowed && unknownPurchases) {
+    return page(<PurchasesUnknown variant="gradient" />);
+  }
 
   if (!access.allowed) {
     return page(<ClubPitch locked />);

@@ -47,6 +47,30 @@ export function isStaleChunkError(error: unknown): boolean {
 interface ReloadDeps {
   storage: Pick<Storage, 'getItem' | 'setItem'> | null;
   reload: () => void;
+  /**
+   * Whether the device thinks it is online. A module that would not load without a connection is
+   * not a stale deploy — the same file loads once the signal is back — and reloading then trades a
+   * working app for the browser's own «no internet» page and spends the session's one reload.
+   * Optional so a caller that does not care keeps the old behaviour.
+   */
+  online?: () => boolean;
+}
+
+/** `navigator.onLine`, where there is one; unknown counts as online (the old behaviour). */
+export function deviceOnline(): boolean {
+  try {
+    return typeof navigator === 'undefined' || navigator.onLine !== false;
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * A module that would not load while the device is offline: not a deploy, a connection. The
+ * fallback says so and offers a retry instead of reloading (ErrorBoundary.tsx).
+ */
+export function isOfflineChunkError(error: unknown, online: boolean = deviceOnline()): boolean {
+  return isStaleChunkError(error) && !online;
 }
 
 function defaultDeps(): ReloadDeps {
@@ -58,6 +82,7 @@ function defaultDeps(): ReloadDeps {
         return null;
       }
     })(),
+    online: deviceOnline,
     reload: () => {
       /*
        * A cache-busting parameter rather than `location.reload()`.
@@ -82,6 +107,7 @@ function defaultDeps(): ReloadDeps {
  */
 export function reloadOnceForStaleChunk(error: unknown, deps: ReloadDeps = defaultDeps()): boolean {
   if (!isStaleChunkError(error)) return false;
+  if (deps.online && !deps.online()) return false;
   try {
     if (!deps.storage || deps.storage.getItem(MARK)) return false;
     deps.storage.setItem(MARK, '1');

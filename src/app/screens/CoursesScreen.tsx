@@ -21,6 +21,7 @@
  * every other course offers its path instead of a start. The rule is derived in exactly one place;
  * this screen reads it and never re-decides it.
  */
+import { PurchasesUnknown } from '@/app/components/PurchasesUnknown';
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/Button';
@@ -53,7 +54,7 @@ import {
   useTrainingCount,
   useTodayIso,
 } from '@/app/store/progress';
-import { useSession } from '@/app/store/session';
+import { purchasesUnknown, useSession } from '@/app/store/session';
 import { formatPrice } from '@content/site/pricing';
 
 /**
@@ -83,6 +84,7 @@ export default function CoursesScreen() {
   const profile = useSession((s) => s.profile);
   const user = useSession((s) => s.user);
   const entitlements = useSession((s) => s.entitlements);
+  const unknownPurchases = useSession(purchasesUnknown);
   const trained = useTrainedCourseIds();
   const status = useProgress((s) => s.status);
   const loading = useProgress((s) => s.loading);
@@ -163,16 +165,62 @@ export default function CoursesScreen() {
   if (status === 'idle' || status === 'loading') {
     body = <ScreenLoader />;
   } else if (status === 'error') {
+    /*
+     * The progress did not load — but the workout on the device did not go anywhere. Its button
+     * stays above the error, so a failed read never stands between somebody and resuming (or
+     * saving) the session they are in the middle of.
+     */
     body = (
-      <EmptyState
-        title={t('app.homeErrorTitle')}
-        description={error?.code === 'network' ? t('common.errorOffline') : t('app.homeErrorBody')}
-        action={
-          <Button variant="action" size="lg" loading={loading} onClick={() => void refresh()}>
-            {t('common.retry')}
+      <div className="flex flex-col gap-4">
+        {resume ? (
+          <Button
+            variant="action"
+            size="lg"
+            fullWidth
+            onClick={() => navigate(resume.path)}
+            iconRight={<Glyph size={14}>→</Glyph>}
+          >
+            {t(resume.ctaKey)}
           </Button>
-        }
-      />
+        ) : null}
+        <EmptyState
+          title={t('app.homeErrorTitle')}
+          description={
+            error?.code === 'network' ? t('common.errorOffline') : t('app.homeErrorBody')
+          }
+          action={
+            <Button
+              variant={resume ? 'secondary' : 'action'}
+              size="lg"
+              loading={loading}
+              onClick={() => void refresh()}
+            >
+              {t('common.retry')}
+            </Button>
+          }
+        />
+      </div>
+    );
+  } else if (unknownPurchases) {
+    /*
+     * What they own could not be read, so every owned course would show as a card with a price.
+     * The workout in progress keeps its button; the deck waits for the retry.
+     */
+    body = (
+      <div className="flex flex-col gap-4">
+        {resume ? (
+          <Button
+            variant="action"
+            size="lg"
+            fullWidth
+            onClick={() => navigate(resume.path)}
+            iconRight={<Glyph size={14}>→</Glyph>}
+          >
+            {t(resume.ctaKey)}
+          </Button>
+        ) : null}
+        <PurchasesUnknown variant={resume ? 'secondary' : 'action'} />
+      </div>
     );
   } else if (entries.length === 0) {
     body = (
@@ -334,8 +382,8 @@ export default function CoursesScreen() {
   const header = (
     <CoursesHead
       name={name}
-      workouts={training.total}
-      unlocked={unlocked}
+      workouts={status === 'ready' ? training.total : null}
+      unlocked={status === 'ready' ? unlocked : null}
       total={achievements.length}
       onAccount={() => setAccount(true)}
     />

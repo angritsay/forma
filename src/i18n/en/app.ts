@@ -21,8 +21,18 @@ export const app = {
   errorBody: 'The app hit an unexpected error. Reload the page — your progress is saved.',
   errorReload: 'Reload',
   errorTryAgain: 'Try again',
+  errorChunkOffline:
+    'This part of the app couldn’t load without internet. Get back online and tap “Retry” — nothing is lost.',
   errorLoadProfileTitle: 'Couldn’t load your profile',
-  errorLoadProfileBody: 'Check your connection and try again.',
+  errorLoadProfileBody:
+    'Try again. If it still fails, open the details below and send them to support.',
+  offlineTitle: 'No connection',
+  offlineBody:
+    'Couldn’t check your sign-in. Get back online and tap “Retry” — you’ll stay signed in.',
+  purchasesUnknownTitle: 'Couldn’t check your purchases',
+  purchasesUnknownBody:
+    'Without it we can’t tell what’s unlocked for you. Your purchases are safe — tap “Retry”.',
+  authSessionEnded: 'Your session ended — sign in again.',
   errorNotConfiguredTitle: 'Backend is not configured',
   errorNotConfiguredBody:
     'The app needs a Supabase project. Set these environment variables and rebuild the site.',
@@ -141,7 +151,7 @@ export const app = {
   assessDoneHubTitle: 'Test taken',
   assessDoneHubBody:
     'The numbers are recorded and your load is built from them. They cannot be rewritten — the next measurement will be a new one, when we ask for it.',
-  onbSaveError: 'Couldn’t save your profile. Check the connection and try again.',
+  onbSaveError: 'Couldn’t save your profile. Try again.',
 
   // Home
   /*
@@ -161,7 +171,7 @@ export const app = {
   homeDeckStart: 'Start',
   homeDeckContinue: 'Continue',
   homeErrorTitle: 'Couldn’t load your progress',
-  homeErrorBody: 'Check the connection and try again.',
+  homeErrorBody: 'It’s safe, it just didn’t load. Try again.',
 
   // Course path
   pathProgressLabel: 'Course progress',
@@ -201,7 +211,7 @@ export const app = {
   pathMilestoneBody: 'A checkpoint on the path. Mark it reached and carry on.',
   pathMilestoneDone: 'Milestone reached',
   pathMilestoneMark: 'Mark as reached',
-  pathSaveError: 'Couldn’t save. Check the connection and try again.',
+  pathSaveError: 'Couldn’t save. Try again.',
   // --- The first workout is free (0019) --------------------------------------
   // The promise is short and checkable: one workout, no card. Anything longer goes unread, and
   // anything vaguer ("try the course") promises more than is given.
@@ -451,6 +461,7 @@ export const app = {
   shareInstagramSaved: 'Image saved — open a story and pick it',
   shareSaved: 'Image saved',
   shareRenderFailed: 'Could not draw the story',
+  shareRenderFailedBody: 'The picture didn’t draw. Share the text instead, or try again.',
   shareFailed: 'Could not share. Try again.',
   summaryNotFoundTitle: 'Session not found',
   summaryNotFoundBody: 'We couldn’t find this workout. It may have been saved from another device.',

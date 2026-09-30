@@ -82,7 +82,7 @@ import {
   type ActiveSession,
   type PlayerResult,
 } from '@/app/store/activeWorkout';
-import { useSession } from '@/app/store/session';
+import { purchasesUnknown, useSession } from '@/app/store/session';
 import { findCourse, findNode } from '@/content/catalogue';
 import { isAppError } from '@/lib/api/errors';
 import { haptic } from '@/lib/telegram/webapp';
@@ -254,6 +254,7 @@ function SavedView({
   const { t, locale } = useT();
   const navigate = useNavigate();
   const days = useWorkoutNumber(fresh === true);
+  const unknownPurchases = useSession(purchasesUnknown);
 
   /*
    * Награда звучит.
@@ -327,7 +328,8 @@ function SavedView({
          * Показывается только тому, у кого курса нет: купившему предлагать купить — худший вид
          * невнимательности, и именно так выглядит большинство встроенных продаж.
          */}
-        <UnlockCard courseId={courseId} />
+        {/* Not while purchases are unknown: it would offer the course to somebody who owns it. */}
+        {unknownPurchases ? null : <UnlockCard courseId={courseId} />}
       </div>
     </Screen>
   );

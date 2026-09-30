@@ -41,6 +41,7 @@ import { renderStory } from './story/render';
 import { nextTemplate, pickTemplate, type StoryTemplateId } from './story/templates';
 import {
   instagramRoute,
+  needsPicture,
   saveRoute,
   shareTargets,
   storyCaption,
@@ -99,11 +100,53 @@ function isAbort(e: unknown): boolean {
   return e instanceof Error && e.name === 'AbortError';
 }
 
+/**
+ * The picture's place in the sheet: the story, the skeleton while it is drawn, or — when drawing
+ * failed — what happened and a way to try again. It used to stay a skeleton for good after a
+ * failure, with every button under it dead.
+ */
+export function SharePreview({
+  url,
+  failed,
+  onRetry,
+}: {
+  url: string | null;
+  failed: boolean;
+  onRetry: () => void;
+}) {
+  const { t } = useT();
+  if (url) {
+    return (
+      <img src={url} alt={t('app.sharePreviewAlt')} className="block h-full w-full object-cover" />
+    );
+  }
+  if (failed) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center gap-3 p-4 text-center">
+        <p role="alert" className="text-[13px] leading-snug text-muted">
+          {t('app.shareRenderFailedBody')}
+        </p>
+        <Button variant="secondary" size="sm" onClick={onRetry}>
+          {t('common.retry')}
+        </Button>
+      </div>
+    );
+  }
+  return (
+    <div role="status" aria-label={t('app.shareRendering')} className="h-full w-full">
+      <Skeleton className="h-full w-full" />
+    </div>
+  );
+}
+
 export function ShareSheet({ open, onClose, data, text, link, seed }: ShareSheetProps) {
   const { t } = useT();
   const toast = useToast();
   const [template, setTemplate] = useState<StoryTemplateId>(() => pickTemplate(seed));
   const [rendered, setRendered] = useState<Rendered | null>(null);
+  const [renderError, setRenderError] = useState(false);
+  /** Bumped by «Повторить» under a failed picture, to draw it again. */
+  const [attempt, setAttempt] = useState(0);
   const [busy, setBusy] = useState<ShareTarget | null>(null);
   const cache = useRef(new Map<StoryTemplateId, Rendered>());
   const uploads = useRef(new Map<StoryTemplateId, Promise<StoryUpload>>());
@@ -136,6 +179,7 @@ export function ShareSheet({ open, onClose, data, text, link, seed }: ShareSheet
     }
     let alive = true;
     setRendered(null);
+    setRenderError(false);
     renderStory(data, template)
       .then((blob) => {
         const entry = { blob, url: URL.createObjectURL(blob) };
@@ -143,12 +187,14 @@ export function ShareSheet({ open, onClose, data, text, link, seed }: ShareSheet
         if (alive) setRendered(entry);
       })
       .catch(() => {
-        if (alive) renderFailed.current();
+        if (!alive) return;
+        setRenderError(true);
+        renderFailed.current();
       });
     return () => {
       alive = false;
     };
-  }, [open, template, data]);
+  }, [open, template, data, attempt]);
 
   // The object URLs die with the sheet's owner.
   useEffect(() => {
@@ -198,11 +244,13 @@ export function ShareSheet({ open, onClose, data, text, link, seed }: ShareSheet
   }
 
   async function run(target: ShareTarget): Promise<void> {
-    if (!rendered || !file) return;
+    // The chat and the system share go without a picture; the rest cannot.
+    if (needsPicture(target) && (!rendered || !file)) return;
     setBusy(target);
     try {
       switch (target) {
         case 'instagram': {
+          if (!rendered || !file) return;
           const route = instagramRoute(env);
           if (route === 'share') {
             await navigator.share({ files: [file] });
@@ -220,6 +268,7 @@ export function ShareSheet({ open, onClose, data, text, link, seed }: ShareSheet
           return;
         }
         case 'telegramStory': {
+          if (!rendered) return;
           const { url, public: isPublic } = await upload(rendered.blob);
           const ok =
             isPublic &&
@@ -234,16 +283,18 @@ export function ShareSheet({ open, onClose, data, text, link, seed }: ShareSheet
         case 'telegramChat': {
           // The picture itself when it can be put somewhere public; the caller's link (the
           // club's referral link) stays in the message either way (`telegramChatShareUrl`).
-          const picture = env.publicUploads
-            ? await upload(rendered.blob)
-                .then((u) => (u.public ? u.url : null))
-                .catch(() => null)
-            : null;
+          const picture =
+            env.publicUploads && rendered
+              ? await upload(rendered.blob)
+                  .then((u) => (u.public ? u.url : null))
+                  .catch(() => null)
+              : null;
           const shareUrl = telegramChatShareUrl(text, link, picture, appLink());
           if (!openExternal(shareUrl)) window.open(shareUrl, '_blank', 'noopener');
           return;
         }
         case 'save': {
+          if (!rendered) return;
           if (saveRoute(env) === 'telegramDownload') {
             if (await telegramSave(rendered.blob)) {
               haptic('success');
@@ -257,9 +308,9 @@ export function ShareSheet({ open, onClose, data, text, link, seed }: ShareSheet
         case 'more': {
           if (typeof navigator.share === 'function') {
             const withFile =
-              env.fileShare && navigator.canShare?.({ text: withLink, files: [file] });
+              file && env.fileShare && navigator.canShare?.({ text: withLink, files: [file] });
             await navigator.share(
-              withFile ? { text: withLink, files: [file] } : { text: withLink },
+              withFile && file ? { text: withLink, files: [file] } : { text: withLink },
             );
             haptic('success');
             return;
@@ -289,22 +340,16 @@ export function ShareSheet({ open, onClose, data, text, link, seed }: ShareSheet
     <Sheet open={open} onClose={onClose} title={t('app.shareSheetTitle')}>
       <div className="flex flex-col items-center gap-3">
         <div className="aspect-[9/16] w-[min(52vw,220px)] overflow-hidden rounded-card bg-surface-2">
-          {rendered ? (
-            <img
-              src={rendered.url}
-              alt={t('app.sharePreviewAlt')}
-              className="block h-full w-full object-cover"
-            />
-          ) : (
-            <div role="status" aria-label={t('app.shareRendering')} className="h-full w-full">
-              <Skeleton className="h-full w-full" />
-            </div>
-          )}
+          <SharePreview
+            url={rendered?.url ?? null}
+            failed={renderError}
+            onRetry={() => setAttempt((n) => n + 1)}
+          />
         </div>
         <Button
           variant="ghost"
           size="sm"
-          disabled={!rendered || busy !== null}
+          disabled={(!rendered && !renderError) || busy !== null}
           onClick={() => setTemplate((id) => nextTemplate(id))}
         >
           {t('app.shareAnother')}
@@ -319,7 +364,7 @@ export function ShareSheet({ open, onClose, data, text, link, seed }: ShareSheet
             fullWidth
             className={target === 'more' && targets.length % 2 === 1 ? 'col-span-2' : undefined}
             loading={busy === target}
-            disabled={!rendered || (busy !== null && busy !== target)}
+            disabled={(needsPicture(target) && !rendered) || (busy !== null && busy !== target)}
             onClick={() => void run(target)}
           >
             {LABEL[target]}

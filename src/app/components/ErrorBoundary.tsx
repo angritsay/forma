@@ -2,7 +2,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useT } from '@/app/hooks/useT';
-import { reloadOnceForStaleChunk } from './staleChunk';
+import { isOfflineChunkError, reloadOnceForStaleChunk } from './staleChunk';
 
 interface Props {
   children: ReactNode;
@@ -28,9 +28,38 @@ interface State {
  * reader nothing and fills the screen doing it. Anything more belongs in a log the app ships, not
  * in front of a customer.
  */
-function ErrorFallback({ error, onRetry }: { error: Error | null; onRetry: () => void }) {
+export function ErrorFallback({
+  error,
+  onRetry,
+  online,
+}: {
+  error: Error | null;
+  onRetry: () => void;
+  /** Injected in tests; the device's own answer otherwise. */
+  online?: boolean;
+}) {
   const { t } = useT();
   const detail = error?.message?.trim();
+  /*
+   * A screen that would not load because there is no connection: nothing broke, and a reload
+   * offline would only replace the app with the browser's error page. Said as that, with the
+   * retry first — the next attempt fetches the screen again (`getScreen`, registry.ts).
+   */
+  if (isOfflineChunkError(error, online)) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center px-5">
+        <EmptyState
+          title={t('app.offlineTitle')}
+          description={t('app.errorChunkOffline')}
+          action={
+            <Button variant="action" size="lg" onClick={onRetry}>
+              {t('common.retry')}
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
   return (
     <div className="flex min-h-dvh items-center justify-center px-5">
       {/* No warning triangle over the heading: the words say what happened. */}
