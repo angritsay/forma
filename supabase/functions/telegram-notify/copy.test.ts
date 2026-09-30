@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { accessWarningEnd, escapeHtml, messageFor, plural, toLocale } from './copy';
+import {
+  accessWarningEnd,
+  clientFailure,
+  escapeHtml,
+  MAX_ATTEMPTS,
+  messageFor,
+  plainText,
+  plural,
+  toLocale,
+} from './copy';
 
 describe('escapeHtml', () => {
   it('escapes the three characters Telegram treats as HTML', () => {
@@ -668,5 +677,44 @@ describe('plural', () => {
     ]);
     expect(plural('en', 1, { one: 'day', many: 'days' })).toBe('day');
     expect(plural('en', 0, { one: 'day', many: 'days' })).toBe('days');
+  });
+});
+
+describe('plainText', () => {
+  it('drops the tags and undoes the escapes', () => {
+    expect(plainText('<b>Курс открыт</b>\n\nA &amp; B &lt;3')).toBe('Курс открыт\n\nA & B <3');
+  });
+
+  // In a session message the address is the point: without markup it must still be there.
+  it('keeps a link as its words and its address', () => {
+    expect(plainText('<a href="https://meet.example/x">Ссылка на встречу</a>')).toBe(
+      'Ссылка на встречу: https://meet.example/x',
+    );
+  });
+
+  it('turns every real message into text Telegram cannot refuse to parse', () => {
+    const m = messageFor({ kind: 'course_paid', params: { courseId: 'base' } });
+    const plain = plainText(m!.text);
+    expect(plain).not.toMatch(/<[a-z/]/i);
+    expect(plain).toContain('курс открыт');
+  });
+});
+
+describe('clientFailure', () => {
+  it('tries the words without markup once after a 400', () => {
+    expect(clientFailure(400, 1, false)).toBe('retry_plain');
+    expect(clientFailure(400, 1, true)).toBe('retry');
+  });
+
+  it('reads a 403 as a blocked chat, whatever the count', () => {
+    expect(clientFailure(403, 1, false)).toBe('blocked');
+    expect(clientFailure(403, MAX_ATTEMPTS, true)).toBe('blocked');
+  });
+
+  // A network error used to be retried forever: it counts like any other failure now.
+  it('gives up on a network error at the same limit', () => {
+    expect(clientFailure(0, MAX_ATTEMPTS - 1, true)).toBe('retry');
+    expect(clientFailure(0, MAX_ATTEMPTS, true)).toBe('give_up');
+    expect(clientFailure(502, MAX_ATTEMPTS, true)).toBe('give_up');
   });
 });

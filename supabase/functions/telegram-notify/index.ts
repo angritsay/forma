@@ -11,7 +11,8 @@
  *
  * **Отправляет, но ничего не решает.** Кому и по какому поводу писать — решили триггеры в базе;
  * здесь только «взять готовое и отнести». Поэтому повторный запуск безвреден: строка, у которой
- * `status` уже `sent`, второй раз не берётся.
+ * `status` уже `sent`, второй раз не берётся, а пачку запуск забирает себе (0059: `skip locked`
+ * и аренда на пять минут) — два запуска, наложившиеся друг на друга, одну строку не шлют дважды.
  *
  * **Никакой параллельности.** Телеграм разрешает около 30 сообщений в секунду, а порядок здесь
  * не важен вовсе; последовательная отправка пачкой в 50 строк проще и никогда не упрётся в лимит.
@@ -28,8 +29,22 @@
  * видно всем и навсегда.
  */
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2';
-import { accessWarningEnd, messageFor, toLocale, type Locale } from './copy.ts';
-import { adminFailure, adminMessage, parseTopics, stripLinks, type AdminRow } from './admin.ts';
+import {
+  accessWarningEnd,
+  clientFailure,
+  messageFor,
+  plainText,
+  toLocale,
+  type Locale,
+} from './copy.ts';
+import {
+  ADMIN_KINDS,
+  adminFailure,
+  adminMessage,
+  parseTopics,
+  stripLinks,
+  type AdminRow,
+} from './admin.ts';
 
 /** Сколько строк за один запуск. При раз в 10 минут это с огромным запасом. */
 const BATCH = 50;
@@ -46,9 +61,6 @@ interface AdminQueueRow extends AdminRow {
   attempts: number;
 }
 
-/** После скольких неудач подряд строка людям признаётся безнадёжной. У канала свой счёт (`admin.ts`). */
-const MAX_ATTEMPTS = 5;
-
 const DEFAULT_APP_URL = 'https://forma-app.co/app/';
 
 interface Row {
@@ -64,6 +76,25 @@ interface Row {
 interface PgError {
   code?: string;
   message?: string;
+}
+
+/** A read that may come from either of two calls (the 0059 claim, or the read before it). */
+interface Read {
+  data: unknown;
+  error: unknown;
+}
+
+/**
+ * Whether a row's new state was written. A write that failed is the one failure here that can
+ * send a message twice — the row is still `pending`, and its lease (0059) runs out — so the run
+ * stops at the first one instead of sending more it may not be able to record.
+ */
+async function recorded(write: PromiseLike<{ error: unknown }>, queue: string): Promise<boolean> {
+  const { error } = await write;
+  if (!error) return true;
+  const e = error as PgError;
+  console.error(`telegram-notify: could not record a ${queue} row`, e.code, e.message);
+  return false;
 }
 
 function reply(status: number, body: Record<string, unknown>): Response {
@@ -100,36 +131,49 @@ async function drainAdmin(
   admin: SupabaseClient,
   fallbackToken: string,
   appUrl: string,
-): Promise<{ sent: number; failed: number }> {
+): Promise<{ sent: number; failed: number; unrecorded: number }> {
   const chatId = Deno.env.get('TELEGRAM_ADMIN_CHAT') ?? '';
-  if (!chatId.trim()) return { sent: 0, failed: 0 };
+  if (!chatId.trim()) return { sent: 0, failed: 0, unrecorded: 0 };
 
   const botToken = (Deno.env.get('TELEGRAM_ADMIN_BOT_TOKEN') ?? '').trim() || fallbackToken;
 
   const topics = parseTopics(Deno.env.get('TELEGRAM_ADMIN_TOPICS') ?? '');
 
-  const { data, error } = await admin
-    .from('admin_outbox')
-    .select('id, topic, kind, params, attempts, dedupe_key')
-    .eq('status', 'pending')
-    .order('created_at', { ascending: true })
-    .limit(BATCH);
+  /*
+   * The batch is claimed (0059): locked with `skip locked` and leased in one statement, so a run
+   * that overlaps this one sends none of it again. Only kinds this deploy can word are taken —
+   * an unknown one stays in the queue without taking a place in the batch. A database without
+   * 0059 answers `PGRST202`, and then the plain read, filtered the same way.
+   */
+  let read: Read = await admin.rpc('admin_outbox_claim', { p_kinds: ADMIN_KINDS, p_limit: BATCH });
+  if (read.error && (read.error as PgError).code === 'PGRST202') {
+    read = await admin
+      .from('admin_outbox')
+      .select('id, topic, kind, params, attempts, dedupe_key')
+      .eq('status', 'pending')
+      .in('kind', [...ADMIN_KINDS])
+      .order('created_at', { ascending: true })
+      .limit(BATCH);
+  }
+  const { data, error } = read;
 
   if (error) {
     const e = error as PgError;
     // Не 500 на весь запуск: рассылка людям к этой таблице отношения не имеет и должна уйти.
     console.error('telegram-notify: could not read admin_outbox', e.code, e.message);
-    return { sent: 0, failed: 0 };
+    return { sent: 0, failed: 0, unrecorded: 0 };
   }
 
   const rows = (data ?? []) as unknown as AdminQueueRow[];
   let sent = 0;
   let failed = 0;
+  let unrecorded = 0;
 
   for (const row of rows) {
     // Со ссылкой прямо на экран админки (0044): платёж, отчёты клуба или человек.
     const text = adminMessage(row, appUrl);
     if (!text) {
+      // Only on the fallback read of a database without 0059, or ADMIN_KINDS out of step.
       console.warn(`telegram-notify: unknown admin kind ${row.kind}; left in the queue`);
       continue;
     }
@@ -140,14 +184,17 @@ async function drainAdmin(
     }
 
     const done = (status: string, lastError?: string) =>
-      admin
-        .from('admin_outbox')
-        .update({
-          status,
-          attempts: row.attempts + 1,
-          last_error: lastError ? lastError.slice(0, 500) : null,
-        })
-        .eq('id', row.id);
+      recorded(
+        admin
+          .from('admin_outbox')
+          .update({
+            status,
+            attempts: row.attempts + 1,
+            last_error: lastError ? lastError.slice(0, 500) : null,
+          })
+          .eq('id', row.id),
+        'admin',
+      );
 
     const send = (body: string) =>
       fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
@@ -180,14 +227,20 @@ async function drainAdmin(
       }
     } catch (e) {
       const giveUp = adminFailure(0, '', row.attempts + 1, true) === 'give_up';
-      await done(giveUp ? 'failed' : 'pending', String(e));
       failed += 1;
+      if (!(await done(giveUp ? 'failed' : 'pending', String(e)))) {
+        unrecorded += 1;
+        break;
+      }
       continue;
     }
 
     if (res.ok) {
-      await done('sent');
       sent += 1;
+      if (!(await done('sent'))) {
+        unrecorded += 1;
+        break;
+      }
       continue;
     }
 
@@ -197,14 +250,17 @@ async function drainAdmin(
      * удалена», «бота выгнали» — это чинится руками, и сообщение о деньгах должно этого дождаться.
      */
     const giveUp = adminFailure(res.status, answer, row.attempts + 1, true) === 'give_up';
-    await done(giveUp ? 'failed' : 'pending', `${res.status} ${answer}`);
     failed += 1;
+    if (!(await done(giveUp ? 'failed' : 'pending', `${res.status} ${answer}`))) {
+      unrecorded += 1;
+      break;
+    }
 
     // 429 — телеграм просит подождать. Долбить его остальной пачкой значит продлить запрет.
     if (res.status === 429) break;
   }
 
-  return { sent, failed };
+  return { sent, failed, unrecorded };
 }
 
 /** Строка очереди людям вместе с тем, куда и на каком языке её слать; `chat: null` — некуда. */
@@ -226,7 +282,16 @@ type Due = { rows: DueRow[] } | { stage: string; code: string };
  * пачка по времени и поиск получателей по адресам. Хуже, но работает.
  */
 async function loadDue(admin: SupabaseClient): Promise<Due> {
-  const { data, error } = await admin.rpc('telegram_outbox_due', { p_limit: BATCH });
+  /*
+   * Claimed, not just read (0059): the same rows as `telegram_outbox_due`, locked with `skip
+   * locked` and leased in one statement, so an overlapping run never sends them a second time.
+   * Without 0059 the claim is `PGRST202`, and the plain due list is the next best thing.
+   */
+  let read: Read = await admin.rpc('telegram_outbox_claim', { p_limit: BATCH });
+  if (read.error && (read.error as PgError).code === 'PGRST202') {
+    read = await admin.rpc('telegram_outbox_due', { p_limit: BATCH });
+  }
+  const { data, error } = read;
   if (!error) {
     const rows = (data ?? []) as (Row & { telegram_id: number; locale: unknown })[];
     return {
@@ -374,23 +439,36 @@ Deno.serve(async (req) => {
   const now = Date.now();
   let sent = 0;
   let failed = 0;
+  let blocked = 0;
+  let unrecorded = 0;
+  /**
+   * Chats that answered 403 in this run. A later row to the same chat is left pending, untouched:
+   * its lease runs out, and from then on the blocked flag keeps it out of the batch.
+   */
+  const blockedChats = new Set<number>();
 
   for (const row of rows) {
     const done = (status: string, lastError?: string) =>
-      admin
-        .from('telegram_outbox')
-        .update({
-          status,
-          attempts: row.attempts + 1,
-          last_error: lastError ? lastError.slice(0, 500) : null,
-        })
-        .eq('id', row.id);
+      recorded(
+        admin
+          .from('telegram_outbox')
+          .update({
+            status,
+            attempts: row.attempts + 1,
+            last_error: lastError ? lastError.slice(0, 500) : null,
+          })
+          .eq('id', row.id),
+        'client',
+      );
 
     // Просрочено — уже не новость. Так же уходят те, у кого телеграма нет вовсе:
     // владелец про них — «Это нормально».
     if (new Date(row.expires_at).getTime() < now) {
-      await done('skipped');
       skipped += 1;
+      if (!(await done('skipped'))) {
+        unrecorded += 1;
+        break;
+      }
       continue;
     }
 
@@ -399,6 +477,7 @@ Deno.serve(async (req) => {
       // Ждёт: человек может открыть приложение из телеграма завтра, и тогда дойдёт.
       continue;
     }
+    if (blockedChats.has(who.id)) continue;
 
     /*
      * An access warning (0054) is checked again right before it goes: it may have waited for the
@@ -411,8 +490,11 @@ Deno.serve(async (req) => {
       const moot = await accessWarningMoot(admin, row, end, now);
       if (moot === null) continue;
       if (moot) {
-        await done('skipped', 'no longer due');
         skipped += 1;
+        if (!(await done('skipped', 'no longer due'))) {
+          unrecorded += 1;
+          break;
+        }
         continue;
       }
     }
@@ -420,20 +502,23 @@ Deno.serve(async (req) => {
     const message = messageFor(row, who.locale, now);
     if (!message) {
       console.error('telegram-notify: unknown kind', row.kind);
-      await done('skipped', `unknown kind ${row.kind}`);
       skipped += 1;
+      if (!(await done('skipped', `unknown kind ${row.kind}`))) {
+        unrecorded += 1;
+        break;
+      }
       continue;
     }
 
-    let res: Response;
-    try {
-      res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+    /** `plain`: the same words with no markup — the second try after a 400 (`clientFailure`). */
+    const send = (plain: boolean) =>
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           chat_id: who.id,
-          text: message.text,
-          parse_mode: 'HTML',
+          text: plain ? plainText(message.text) : message.text,
+          parse_mode: plain ? undefined : 'HTML',
           link_preview_options: { is_disabled: true },
           reply_markup: message.buttonText
             ? { inline_keyboard: [[{ text: message.buttonText, web_app: { url: appUrl } }]] }
@@ -447,39 +532,95 @@ Deno.serve(async (req) => {
             : undefined,
         }),
       });
+
+    let res: Response;
+    let body = '';
+    try {
+      res = await send(false);
+      if (!res.ok) {
+        body = await res.text().catch(() => '');
+        if (clientFailure(res.status, row.attempts + 1, false) === 'retry_plain') {
+          res = await send(true);
+          body = res.ok ? '' : await res.text().catch(() => '');
+        }
+      }
     } catch (e) {
-      await done('pending', String(e));
+      // A network error counts towards the same limit as a refusal: it is not a free retry forever.
+      const giveUp = clientFailure(0, row.attempts + 1, true) === 'give_up';
       failed += 1;
+      if (!(await done(giveUp ? 'failed' : 'pending', String(e)))) {
+        unrecorded += 1;
+        break;
+      }
       continue;
     }
 
     if (res.ok) {
-      await done('sent');
       sent += 1;
+      if (!(await done('sent'))) {
+        unrecorded += 1;
+        break;
+      }
       continue;
     }
+
+    const verdict = clientFailure(res.status, row.attempts + 1, true);
 
     /*
-     * 403 — человек заблокировал бота или удалил чат. Это ответ, а не сбой: повторять нечего,
-     * и держать такую строку в очереди значит долбиться в закрытую дверь каждые десять минут.
+     * 403 — человек заблокировал бота или удалил чат. Это ответ, а не сбой: повторять нечего.
+     * Строка уходит в `skipped`, а профиль помечается (0059), и следующие строки этому человеку
+     * очередь больше не предлагает — до тех пор, пока он снова не напишет боту.
      */
-    const body = await res.text().catch(() => '');
-    if (res.status === 403) {
-      await done('skipped', body);
+    if (verdict === 'blocked') {
       skipped += 1;
+      blocked += 1;
+      blockedChats.add(who.id);
+      const { error: flagError } = await admin.rpc('telegram_set_blocked', {
+        p_telegram_id: who.id,
+        p_blocked: true,
+      });
+      if (flagError) {
+        const fe = flagError as PgError;
+        // Without 0059 there is nothing to flag; the row is still skipped, as before.
+        if (fe.code !== 'PGRST202') {
+          console.error('telegram-notify: could not flag a blocked chat', fe.code);
+        }
+      }
+      if (!(await done('skipped', body))) {
+        unrecorded += 1;
+        break;
+      }
       continue;
     }
 
-    // Остальное (429, 5xx, обрыв) — повод попробовать ещё раз в следующий запуск.
-    const giveUp = row.attempts + 1 >= MAX_ATTEMPTS;
-    await done(giveUp ? 'failed' : 'pending', body);
+    // Остальное (429, 5xx, 400 и после простого текста) — ещё раз в следующий запуск.
     failed += 1;
+    if (!(await done(verdict === 'give_up' ? 'failed' : 'pending', `${res.status} ${body}`))) {
+      unrecorded += 1;
+      break;
+    }
     // 429 — телеграм просит подождать; остальная пачка подождёт следующего запуска.
     if (res.status === 429) break;
   }
 
   console.log(
-    `telegram-notify: sent ${sent}, skipped ${skipped}, failed ${failed}; admin sent ${admins.sent}, failed ${admins.failed}`,
+    `telegram-notify: sent ${sent}, skipped ${skipped} (blocked ${blocked}), failed ${failed}, unrecorded ${unrecorded}; admin sent ${admins.sent}, failed ${admins.failed}, unrecorded ${admins.unrecorded}`,
   );
-  return reply(200, { ok: true, stage: 'done', sent, skipped, failed, admin: admins });
+
+  /*
+   * A row that went out and could not be marked will go out again once its lease runs out: that
+   * is worth a red run, not a green one with a number in it nobody reads.
+   */
+  if (unrecorded + admins.unrecorded > 0) {
+    return reply(500, {
+      ok: false,
+      stage: 'record',
+      sent,
+      skipped,
+      failed,
+      blocked,
+      admin: admins,
+    });
+  }
+  return reply(200, { ok: true, stage: 'done', sent, skipped, failed, blocked, admin: admins });
 });

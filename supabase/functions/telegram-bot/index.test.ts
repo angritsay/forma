@@ -328,6 +328,7 @@ describe('routeUpdate', () => {
         username: 'anya_k',
         text: 'Колено болит — можно заниматься?',
         attachment: '',
+        truncated: false,
       },
     });
   });
@@ -344,6 +345,7 @@ describe('routeUpdate', () => {
     if (route?.kind !== 'support') return;
     expect(Array.from(route.request.text)).toHaveLength(SUPPORT_MAX);
     expect(route.request.text.endsWith('💪')).toBe(true);
+    expect(route.request.truncated).toBe(true);
   });
 
   it('passes a caption on and says what it was under', () => {
@@ -483,5 +485,75 @@ describe('the swipe in the greeting', () => {
     expect(DEFAULT_COPY.ru.greeting).not.toContain('свайп вниз');
     expect(DEFAULT_COPY.en.greeting).toContain('swipe up');
     expect(DEFAULT_COPY.en.greeting).not.toContain('swipe down');
+  });
+});
+
+describe('what the person is told when not all of it went through (0059)', () => {
+  it('says a long message was cut, and what to do with the rest', () => {
+    const route = routeUpdate(privateMessage('а'.repeat(SUPPORT_MAX + 1)));
+    if (route?.kind !== 'support') throw new Error('expected support');
+    const text = supportReplyText('queued', 'ru', route.request);
+    expect(text).toContain(SUPPORT_COPY.ru.queued);
+    expect(text).toContain(SUPPORT_COPY.ru.truncated);
+    expect(text).not.toContain(SUPPORT_COPY.ru.attachmentDropped);
+  });
+
+  it('says the photo itself did not go, only its caption', () => {
+    const update: TelegramUpdate = {
+      message: {
+        message_id: 9,
+        chat: { id: 42, type: 'private' },
+        from: { id: 4242, first_name: 'Аня' },
+        photo: [{}],
+        caption: 'так?',
+      },
+    };
+    const route = routeUpdate(update);
+    if (route?.kind !== 'support') throw new Error('expected support');
+    const text = supportReplyText('queued', 'en', route.request);
+    expect(text).toContain(SUPPORT_COPY.en.attachmentDropped);
+    expect(text).not.toContain(SUPPORT_COPY.en.truncated);
+  });
+
+  it('adds nothing to a whole text message', () => {
+    const route = routeUpdate(privateMessage('вопрос'));
+    if (route?.kind !== 'support') throw new Error('expected support');
+    expect(supportReplyText('queued', 'ru', route.request)).toBe(SUPPORT_COPY.ru.queued);
+  });
+
+  it('has both notes in both languages', () => {
+    for (const locale of ['ru', 'en'] as const) {
+      expect(SUPPORT_COPY[locale].truncated).toContain(String(SUPPORT_MAX));
+      expect(SUPPORT_COPY[locale].attachmentDropped).toBeTruthy();
+    }
+    expect(SUPPORT_COPY.en.truncated + SUPPORT_COPY.en.attachmentDropped).not.toMatch(/[А-Яа-яЁё]/);
+  });
+});
+
+describe('blocking the bot (0059)', () => {
+  const member = (status: string, type = 'private'): TelegramUpdate => ({
+    my_chat_member: {
+      chat: { id: 4242, type },
+      from: { id: 4242 },
+      new_chat_member: { status },
+    },
+  });
+
+  it('reads a block and an unblock in a private chat', () => {
+    expect(routeUpdate(member('kicked'))).toEqual({
+      kind: 'membership',
+      telegramId: 4242,
+      blocked: true,
+    });
+    expect(routeUpdate(member('member'))).toEqual({
+      kind: 'membership',
+      telegramId: 4242,
+      blocked: false,
+    });
+  });
+
+  it('ignores groups and every other state', () => {
+    expect(routeUpdate(member('kicked', 'group'))).toBeNull();
+    expect(routeUpdate(member('administrator'))).toBeNull();
   });
 });

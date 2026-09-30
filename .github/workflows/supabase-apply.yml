@@ -841,6 +841,7 @@ jobs:
         if: ${{ inputs.task == 'secrets-check' }}
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: |
           # Не `set -e`: каждая ошибка обрабатывается явно, а `grep`, ничего не
           # нашедший, — это нормальный ответ «такого секрета нет», а не падение.
@@ -944,11 +945,50 @@ jobs:
             echo "  нет — бот показывает то, что лежит в репозитории"
           fi
 
+          # -------------------------------------------------------------------
+          # Совпадает ли секрет вебхука (0059).
+          #
+          # Значение секрета не видно ни в Supabase, ни в Telegram: getWebhookInfo
+          # его не отдаёт. Но Telegram помнит, что ему ответила функция, и
+          # «403 Forbidden» в last_error_message — это ровно её ответ «bad secret»:
+          # секрет, с которым стучится Telegram (поставлен deploy-bot из GitHub), и
+          # TELEGRAM_WEBHOOK_SECRET в Supabase разные. Больше ничего из ответа не
+          # печатается; токен живёт только в пути запроса.
+          # -------------------------------------------------------------------
+          echo ""
+          echo "Вебхук бота:"
+          if [ -z "${BOT_TOKEN:-}" ]; then
+            echo "  · TELEGRAM_BOT_TOKEN не задан в секретах GitHub — спросить Telegram нечем, проверка пропущена"
+          elif ! curl -sS -o /tmp/info.json "https://api.telegram.org/bot$BOT_TOKEN/getWebhookInfo"; then
+            echo "::warning::Не удалось обратиться к Telegram — проверка вебхука пропущена."
+          elif [ "$(jq -r '.ok' < /tmp/info.json)" != "true" ]; then
+            echo "::warning::Telegram отказал: $(jq -r '.description // "без объяснения"' < /tmp/info.json). Обычно это значит, что TELEGRAM_BOT_TOKEN в GitHub неверный или отозван."
+          else
+            hook=$(jq -r '.result.url // ""' < /tmp/info.json)
+            err=$(jq -r '.result.last_error_message // ""' < /tmp/info.json)
+            if [ -z "$hook" ]; then
+              echo "::warning::Вебхук не зарегистрирован — бот не получает сообщений. Запусти задачу deploy-bot."
+            else
+              case "$err" in
+                *403*)
+                  echo "::warning::Функция бота отвечает Telegram 403: секреты вебхука не совпадают. TELEGRAM_WEBHOOK_SECRET в GitHub и в Supabase должен быть одним и тем же — приведи их к одному и запусти deploy-bot."
+                  missing=$((missing + 1))
+                  ;;
+                "")
+                  echo "  ✓ вебхук зарегистрирован, ошибок доставки нет"
+                  ;;
+                *)
+                  echo "::warning::Последняя ошибка доставки вебхука: $err. Подробности — задача webhook-info."
+                  ;;
+              esac
+            fi
+          fi
+
           echo ""
           if [ "$missing" -eq 0 ]; then
             echo "Всё, что нужно работающим функциям, на месте."
           else
-            echo "Не задано: $missing. Задать: Supabase → Project Settings → Edge Functions → Secrets."
+            echo "Не задано или не совпадает: $missing. Задать: Supabase → Project Settings → Edge Functions → Secrets."
           fi
 
       # ---------------------------------------------------------------------

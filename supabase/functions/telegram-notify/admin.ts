@@ -65,6 +65,35 @@ export function parseTopics(raw: string): Readonly<Record<string, number>> {
   return out;
 }
 
+/**
+ * Every kind `adminMessage` can word — the `case`s of `adminBody` below, kept in step by
+ * `admin.test.ts`. The sender claims only these (`admin_outbox_claim`, 0059): a row of a kind the
+ * deployed function does not know yet waits in the queue, out of the batch, instead of taking a
+ * place in it every run and stalling the channel behind it.
+ */
+export const ADMIN_KINDS: readonly string[] = [
+  'signup',
+  'course_paid',
+  'course_refunded',
+  'club_paid',
+  'club_renewed',
+  'club_closed',
+  'club_refunded',
+  'club_cancelled',
+  'duo_paired',
+  'referral_paid',
+  'proof_resubmitted',
+  'session_paid',
+  'session_booked',
+  'session_moved',
+  'session_cancelled',
+  'session_unmatched',
+  'payment_unclaimed',
+  'payment_reversed',
+  'claim_no_order',
+  'support_message',
+] as const;
+
 export interface AdminRow {
   topic: string;
   kind: string;
@@ -294,6 +323,7 @@ function personPath(email: string): string | null {
 
 const PAYMENT_KINDS = new Set([
   'payment_unclaimed',
+  'payment_reversed',
   'session_paid',
   'claim_no_order',
   'session_unmatched',

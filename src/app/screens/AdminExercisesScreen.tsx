@@ -24,13 +24,13 @@ import {
   updateExercise,
 } from '@/lib/api/exercises';
 import type { ExerciseCatalogRow, ExerciseDraft } from '@/lib/api/types';
-import { BootScreen } from '@/app/components/BootScreen';
 import { TopBar } from '@/app/components/TopBar';
 import { adminErrorTitle } from '@/app/features/admin/adminError';
 import { useT } from '@/app/hooks/useT';
 import { SEARCH_DEBOUNCE_MS } from '@/app/features/admin/model';
 import { useDebounced } from '@/app/features/admin/useDebounced';
 import { useCatalogue } from '@/app/store/catalogue';
+import { AdminBoot } from '@/app/features/admin/AdminBoot';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { ExerciseEditor } from '@/app/features/admin/exercises/ExerciseEditor';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
@@ -80,7 +80,7 @@ export default function AdminExercisesScreen() {
     });
   }, [rows, search, filter]);
 
-  if (admin === null) return <BootScreen />;
+  if (admin === null) return <AdminBoot />;
   if (admin === false) return <Navigate to="/" replace />;
 
   const onSave = async (draft: ExerciseDraft) => {

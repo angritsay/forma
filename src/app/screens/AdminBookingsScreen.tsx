@@ -22,6 +22,11 @@
  * «Синхронизировать сейчас» is gone with the Google calendar as the source of bookings: a session
  * is made in the app now, so there is nothing to read in. Old Google rows stay in the list as
  * history.
+ *
+ * A list that did not load says so with «Повторить», never «Записей нет» (0059); switching the
+ * tab clears the previous tab's rows at once. A row whose client has blocked the bot says that
+ * the messages about it will not arrive. Unsaved weekly hours are asked about before leaving the
+ * screen, the «Расписание» view or the coach.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate } from 'react-router';
@@ -42,64 +47,91 @@ import {
 } from '@/lib/api/adminCoaches';
 import { listAdminBookings, type AdminBooking, type BookingScope } from '@/lib/api/adminInbox';
 import { isAppError } from '@/lib/api/errors';
+import { listTelegramBlocked } from '@/lib/api/telegramBlocked';
 import { clockIn, dateIn, parseClock, wallToInstant } from '@/lib/coach/slots';
-import { BootScreen } from '@/app/components/BootScreen';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { adminErrorTitle } from '@/app/features/admin/adminError';
 import { bookingSourceKey, COACH_TIME_ZONE, formatMoscow } from '@/app/features/admin/inbox';
+import { AdminBoot } from '@/app/features/admin/AdminBoot';
+import { AdminLoadError } from '@/app/features/admin/AdminLoadError';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
+import { useUnsavedGuard } from '@/app/features/admin/useUnsavedGuard';
 import { CoachSchedule } from '@/app/features/admin/bookings/CoachSchedule';
 
 type View = 'list' | 'schedule';
 
 export default function AdminBookingsScreen() {
-  const tr = useT();
-  const { t, locale } = tr;
-  const toast = useToast();
+  const { t, locale } = useT();
   const admin = useIsAdmin();
 
   const [view, setView] = useState<View>('list');
   const [scope, setScope] = useState<BookingScope>('upcoming');
   const [rows, setRows] = useState<AdminBooking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<unknown>(null);
+  /** Lower-cased addresses of clients who blocked the bot (0059); empty when unknown. */
+  const [blocked, setBlocked] = useState<Set<string>>(() => new Set());
   const [coaches, setCoaches] = useState<AdminCoach[]>([]);
+  const [coachesError, setCoachesError] = useState<unknown>(null);
+  const [scheduleDirty, setScheduleDirty] = useState(false);
+  /** A switch of view or coach held back while the week has unsaved edits. */
+  const [pendingSwitch, setPendingSwitch] = useState<(() => void) | null>(null);
   const [coachId, setCoachId] = useState<string | null>(null);
   const [moving, setMoving] = useState<AdminBooking | null>(null);
   const [cancelling, setCancelling] = useState<AdminBooking | null>(null);
   const request = useRef(0);
+  /** The scope the rows on screen belong to. */
+  const shown = useRef<BookingScope | null>(null);
+  const guard = useUnsavedGuard(scheduleDirty, '/admin');
 
-  const load = useCallback(
-    (which: BookingScope) => {
-      const id = ++request.current;
-      setLoading(true);
-      listAdminBookings(which)
-        .then((list) => {
-          if (id === request.current) setRows(list);
-        })
-        .catch((e: unknown) => {
-          if (id === request.current) {
-            toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.bookingsLoadError') });
-          }
-        })
-        .finally(() => {
-          if (id === request.current) setLoading(false);
-        });
-    },
-    [toast, tr],
-  );
+  const load = useCallback((which: BookingScope) => {
+    const id = ++request.current;
+    setLoading(true);
+    setLoadError(null);
+    // Another tab's rows are never shown under this one, not even while it loads.
+    if (shown.current !== which) {
+      shown.current = which;
+      setRows([]);
+      setBlocked(new Set());
+    }
+    listAdminBookings(which)
+      .then((list) => {
+        if (id !== request.current) return;
+        setRows(list);
+        // Best effort: without it the rows simply carry no warning.
+        listTelegramBlocked(list.map((r) => r.email))
+          .then((set) => {
+            if (id === request.current) setBlocked(set);
+          })
+          .catch(() => {
+            if (id === request.current) setBlocked(new Set());
+          });
+      })
+      .catch((e: unknown) => {
+        if (id === request.current) setLoadError(e);
+      })
+      .finally(() => {
+        if (id === request.current) setLoading(false);
+      });
+  }, []);
 
   const loadCoaches = useCallback(() => {
+    setCoachesError(null);
     listCoaches()
       .then((list) => {
         setCoaches(list);
         setCoachId((cur) => cur ?? list[0]?.id ?? null);
       })
-      .catch((e: unknown) =>
-        toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.bookingsLoadError') }),
-      );
-  }, [toast, tr]);
+      .catch((e: unknown) => setCoachesError(e));
+  }, []);
+
+  /** Do it now, or — with unsaved hours on screen — after asking. */
+  const guarded = (action: () => void) => {
+    if (scheduleDirty) setPendingSwitch(() => action);
+    else action();
+  };
 
   useEffect(() => {
     if (admin) load(scope);
@@ -109,8 +141,10 @@ export default function AdminBookingsScreen() {
     if (admin) loadCoaches();
   }, [admin, loadCoaches]);
 
-  if (admin === null) return <BootScreen />;
+  if (admin === null) return <AdminBoot />;
   if (admin === false) return <Navigate to="/" replace />;
+
+  const leaveKind = pendingSwitch ? 'switch' : guard.asking ? 'leave' : null;
 
   const nameOf = (c: AdminCoach) => (locale === 'en' ? (c.nameEn ?? c.name) : c.name);
   const coachName = (id: string | null) => {
@@ -120,13 +154,13 @@ export default function AdminBookingsScreen() {
   const coach = coaches.find((c) => c.id === coachId) ?? null;
 
   return (
-    <Screen header={<TopBar back title={t('app.bookingsTitle')} />}>
+    <Screen header={<TopBar back={guard.attempt} title={t('app.bookingsTitle')} />}>
       <div className="flex flex-col gap-4 py-2">
         <SegmentedControl<View>
           fullWidth
           label={t('app.bookingsTitle')}
           value={view}
-          onChange={setView}
+          onChange={(v) => guarded(() => setView(v))}
           options={[
             { value: 'list', label: t('app.bookingsViewList') },
             { value: 'schedule', label: t('app.bookingsViewSchedule') },
@@ -150,6 +184,12 @@ export default function AdminBookingsScreen() {
             />
             {loading ? (
               <LoadingBlock />
+            ) : loadError !== null ? (
+              <AdminLoadError
+                error={loadError}
+                onRetry={() => load(scope)}
+                title="app.bookingsLoadError"
+              />
             ) : rows.length === 0 ? (
               <EmptyState
                 title={t(
@@ -178,6 +218,7 @@ export default function AdminBookingsScreen() {
                       <BookingRow
                         row={row}
                         coach={coachName(row.coachId)}
+                        blocked={blocked.has(row.email.toLowerCase())}
                         external={scope === 'upcoming' && row.source !== 'forma'}
                         onMove={editable ? () => setMoving(row) : undefined}
                         onCancel={editable ? () => setCancelling(row) : undefined}
@@ -189,7 +230,15 @@ export default function AdminBookingsScreen() {
             )}
           </>
         ) : !coach ? (
-          <LoadingBlock />
+          coachesError !== null ? (
+            <AdminLoadError
+              error={coachesError}
+              onRetry={loadCoaches}
+              fallback="app.bookingsCoachesError"
+            />
+          ) : (
+            <LoadingBlock />
+          )
         ) : (
           <>
             {coaches.length > 1 ? (
@@ -198,11 +247,16 @@ export default function AdminBookingsScreen() {
                 size="sm"
                 label={t('app.bookingsCoach')}
                 value={coach.id}
-                onChange={setCoachId}
+                onChange={(id) => guarded(() => setCoachId(id))}
                 options={coaches.map((c) => ({ value: c.id, label: nameOf(c) }))}
               />
             ) : null}
-            <CoachSchedule key={coach.id} coach={coach} onSaved={loadCoaches} />
+            <CoachSchedule
+              key={coach.id}
+              coach={coach}
+              onSaved={loadCoaches}
+              onDirtyChange={setScheduleDirty}
+            />
           </>
         )}
       </div>
@@ -217,6 +271,28 @@ export default function AdminBookingsScreen() {
           }}
         />
       ) : null}
+      <Modal
+        open={leaveKind !== null}
+        onClose={() => {
+          setPendingSwitch(null);
+          guard.stay();
+        }}
+        title={t('app.builderLeaveTitle')}
+        description={t('app.bookingsLeaveBody')}
+        confirmLabel={t('app.builderLeaveConfirm')}
+        cancelLabel={t('app.builderLeaveStay')}
+        danger
+        onConfirm={() => {
+          const action = pendingSwitch;
+          setPendingSwitch(null);
+          if (action) {
+            setScheduleDirty(false);
+            action();
+          } else {
+            guard.leave();
+          }
+        }}
+      />
       {cancelling ? (
         <CancelBookingModal
           row={cancelling}
@@ -234,12 +310,15 @@ export default function AdminBookingsScreen() {
 function BookingRow({
   row,
   coach,
+  blocked = false,
   external = false,
   onMove,
   onCancel,
 }: {
   row: AdminBooking;
   coach: string | null;
+  /** The client blocked the bot (0059): messages about this session will not reach them. */
+  blocked?: boolean;
   /** Upcoming but from the old Google calendar: kept as history, not changed here. */
   external?: boolean;
   onMove?: () => void;
@@ -277,6 +356,9 @@ function BookingRow({
         </Badge>
       </div>
       <span className="text-xs text-muted-2">{details.join(' · ')}</span>
+      {blocked && (live || held) ? (
+        <span className="text-xs text-warning">{t('app.bookingsTelegramBlocked')}</span>
+      ) : null}
       {held && row.holdExpiresAt ? (
         <span className="text-xs text-muted">
           {t('app.bookingsHoldUntil', { time: clockIn(row.holdExpiresAt, COACH_TIME_ZONE) })}

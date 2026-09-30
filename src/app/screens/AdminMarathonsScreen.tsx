@@ -28,10 +28,10 @@ import { formatNumber } from '@/i18n/index';
 import { createMarathon, listMarathons, setLiveClub } from '@/lib/api/marathonAdmin';
 import type { MarathonRow, MarathonStatus } from '@/lib/api/types';
 import { toLocalDateIso } from '@/lib/util/dates';
-import { BootScreen } from '@/app/components/BootScreen';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
+import { AdminBoot } from '@/app/features/admin/AdminBoot';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { MARATHON_SLUG_RE, statusKey } from '@/app/features/marathon/admin/model';
 import {
@@ -99,7 +99,7 @@ export default function AdminMarathonsScreen() {
     if (admin) refresh();
   }, [admin, refresh]);
 
-  if (admin === null) return <BootScreen />;
+  if (admin === null) return <AdminBoot />;
   if (admin === false) return <Navigate to="/" replace />;
 
   const slugError =

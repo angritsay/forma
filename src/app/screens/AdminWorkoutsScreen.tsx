@@ -38,8 +38,8 @@ import { openExternal } from '@/lib/telegram/webapp';
 import { TopBar } from '@/app/components/TopBar';
 import { adminErrorTitle } from '@/app/features/admin/adminError';
 import { useT } from '@/app/hooks/useT';
-import { BootScreen } from '@/app/components/BootScreen';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
+import { AdminBoot } from '@/app/features/admin/AdminBoot';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { telegramShareUrl } from '@/app/features/admin/share';
 import { useUnsavedGuard } from '@/app/features/admin/useUnsavedGuard';
@@ -54,7 +54,7 @@ function shareUrl(token: string): string {
 export default function AdminWorkoutsScreen() {
   const { id } = useParams();
   const admin = useIsAdmin();
-  if (admin === null) return <BootScreen />;
+  if (admin === null) return <AdminBoot />;
   if (admin === false) return <Navigate to="/" replace />;
   return id ? <WorkoutEditScreen id={id} /> : <WorkoutList />;
 }

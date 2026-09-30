@@ -39,6 +39,15 @@ export function useUnsavedGuard(dirty: boolean, fallback: string): UnsavedGuard 
     if (canGoBack) void navigate(-1);
     else void navigate(fallback, { replace: true });
   }, [canGoBack, fallback, navigate]);
+  /*
+   * The pop handler is registered once, so it reads these through refs. The guard entry stays on
+   * the stack after the work is saved; a back press then consumes it and goes on back, instead of
+   * asking about edits that no longer exist.
+   */
+  const dirtyRef = useRef(dirty);
+  dirtyRef.current = dirty;
+  const exitRef = useRef(exit);
+  exitRef.current = exit;
 
   // Arm while dirty and not already asking.
   useEffect(() => {
@@ -59,7 +68,8 @@ export function useUnsavedGuard(dirty: boolean, fallback: string): UnsavedGuard 
       if (armed.current) {
         // The guard entry was consumed by a back press: ask, and re-arm if they stay.
         armed.current = false;
-        setAsking(true);
+        if (dirtyRef.current) setAsking(true);
+        else exitRef.current();
       }
     };
     window.addEventListener('popstate', onPop);

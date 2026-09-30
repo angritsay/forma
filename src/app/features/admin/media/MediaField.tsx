@@ -11,7 +11,7 @@ import { useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { formatBytes } from '@/i18n/index';
-import { deleteMedia, uploadMedia } from '@/lib/api/storage';
+import { uploadMedia } from '@/lib/api/storage';
 import { useT } from '@/app/hooks/useT';
 import { useMediaUrl } from '@/app/features/player/useMediaUrl';
 
@@ -85,6 +85,8 @@ export function MediaField({
   const [busy, setBusy] = useState(false);
   /** The size of the file that was just uploaded — what the coach checks after a re-encode. */
   const [uploadedBytes, setUploadedBytes] = useState<{ ref: string; bytes: number } | null>(null);
+  /** «Убрать» was just pressed on this field's own file: say where the file still is. */
+  const [removedOwn, setRemovedOwn] = useState(false);
   /*
    * Public images resolve at once; a private clip or recording needs a signed URL, which the hook
    * fetches when it has to. Either way the preview is what was actually uploaded, which is the
@@ -108,6 +110,7 @@ export function MediaField({
     try {
       const ref = await uploadMedia(bucket, `${pathBase}.${extensionOf(file)}`, file);
       setUploadedBytes({ ref, bytes: file.size });
+      setRemovedOwn(false);
       onChange(ref);
       toast.show({ kind: 'success', title: t('app.mediaUploaded') });
     } catch {
@@ -118,23 +121,20 @@ export function MediaField({
   };
 
   /*
-   * Clearing the field clears the reference first, whatever happens to the file: the reference is
-   * what the product reads. The object is removed only when it is this field's own (see
-   * `ownsObject`), and best effort — the demo backend refuses every delete, and a file that stays
-   * behind is an orphan in the library, not a broken exercise.
+   * «Убрать» clears the reference and nothing else (0059).
+   *
+   * It used to delete this field's own file from the bucket at the same moment — before the form
+   * around it had saved anything. An editor closed without saving, or an autosave that failed,
+   * then left the saved record pointing at a file that no longer existed: an exercise with a
+   * silent clip, a course with a broken cover. The reference is what the product reads, and it
+   * changes only when the parent saves; the file stays, and the next upload of the same format
+   * into this field overwrites it (the path is stable, the extension is the file's). Removing a file for good is the media library's job,
+   * which knows what still references it.
    */
-  const remove = async () => {
+  const remove = () => {
     const current = value;
     onChange(null);
-    if (!current || !ownsObject(current, bucket, pathBase)) return;
-    setBusy(true);
-    try {
-      await deleteMedia(current);
-    } catch {
-      toast.show({ kind: 'error', title: t('app.mediaDeleteError') });
-    } finally {
-      setBusy(false);
-    }
+    setRemovedOwn(!!current && ownsObject(current, bucket, pathBase));
   };
 
   return (
@@ -175,11 +175,14 @@ export function MediaField({
               {value ? t('app.mediaReplace') : t('app.mediaUpload')}
             </Button>
             {value ? (
-              <Button size="sm" variant="ghost" disabled={busy} onClick={() => void remove()}>
+              <Button size="sm" variant="ghost" disabled={busy} onClick={remove}>
                 {t('app.mediaRemove')}
               </Button>
             ) : null}
           </div>
+          {!value && removedOwn ? (
+            <p className="text-[13px] text-muted-2">{t('app.mediaRemovedKept')}</p>
+          ) : null}
         </div>
       </div>
       <input

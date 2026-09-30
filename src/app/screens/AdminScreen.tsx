@@ -70,6 +70,7 @@ import {
 import { PurchaseList, STATUS_LABEL } from '@/app/features/admin/PurchaseList';
 import { PeopleList } from '@/app/features/admin/PeopleList';
 import { useDebounced } from '@/app/features/admin/useDebounced';
+import { AdminBoot } from '@/app/features/admin/AdminBoot';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { BindPaymentSheet } from '@/app/features/admin/payments/BindPaymentSheet';
 import { BookSessionSheet } from '@/app/features/admin/payments/BookSessionSheet';
@@ -625,7 +626,7 @@ export default function AdminScreen() {
     return (
       <Screen header={header}>
         <div className="py-4">
-          <ListSkeleton />
+          <AdminBoot inline waiting={<ListSkeleton />} />
         </div>
       </Screen>
     );

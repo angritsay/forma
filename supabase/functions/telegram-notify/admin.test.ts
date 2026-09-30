@@ -1,5 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
+  ADMIN_KINDS,
   ADMIN_MAX_ATTEMPTS,
   ADMIN_TOPICS,
   adminFailure,
@@ -540,5 +542,26 @@ describe('session_unmatched (0055)', () => {
 
   it('has no text for the retired channel_ready kind', () => {
     expect(adminMessage(row('channel_ready'))).toBeNull();
+  });
+});
+
+describe('ADMIN_KINDS', () => {
+  /*
+   * The sender claims only these (0059). A kind worded below but missing here would never be
+   * claimed, and so never sent; one listed here but not worded would be claimed every run.
+   */
+  it('is exactly the kinds adminMessage words', () => {
+    const source = readFileSync(new URL('./admin.ts', import.meta.url), 'utf8');
+    const body = source.slice(source.indexOf('function adminBody'));
+    const worded = [...body.slice(0, body.indexOf('\n}\n')).matchAll(/case '([a-z_]+)':/g)].map(
+      (m) => m[1],
+    );
+    expect([...ADMIN_KINDS].sort()).toEqual(worded.sort());
+  });
+
+  it('gives each of them a message', () => {
+    for (const kind of ADMIN_KINDS) {
+      expect(adminMessage({ topic: 'courses', kind, params: {} }), kind).not.toBeNull();
+    }
   });
 });

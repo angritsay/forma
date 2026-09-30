@@ -60,6 +60,15 @@ export interface TelegramUpdate {
     voice?: unknown;
     sticker?: unknown;
   };
+  /**
+   * The bot's own standing in a chat changed. In a private chat that is the person blocking the
+   * bot (`kicked`) or unblocking it (`member`) — Telegram sends it by default, with no message.
+   */
+  my_chat_member?: {
+    chat?: { id?: number; type?: string };
+    from?: { id?: number; is_bot?: boolean };
+    new_chat_member?: { status?: string };
+  };
 }
 
 /** Языки, на которых выходит продукт — `LOCALES` в src/content/schema.ts. */
@@ -290,6 +299,8 @@ export interface SupportRequest {
   text: string;
   /** `photo`, `video`, … when the text is a caption, else ''. */
   attachment: string;
+  /** The text was longer than {@link SUPPORT_MAX} and only its start is passed on. */
+  truncated: boolean;
 }
 
 /**
@@ -310,12 +321,30 @@ export interface SupportRequest {
 export type Route =
   | { kind: 'greeting'; reply: BotReply }
   | { kind: 'support'; request: SupportRequest }
-  | { kind: 'media'; chatId: number; locale: Locale };
+  | { kind: 'media'; chatId: number; locale: Locale }
+  | { kind: 'membership'; telegramId: number; blocked: boolean };
+
+/**
+ * The person blocked or unblocked the bot (0059): the sender stops knocking on a blocked chat
+ * (`profiles.telegram_blocked_at`), and this is how it learns the door is open again. Only a
+ * private chat, only a person, and only the two states that mean anything here.
+ */
+function membershipOf(update: TelegramUpdate): Route | null {
+  const m = update.my_chat_member;
+  if (!m || m.chat?.type !== 'private' || m.from?.is_bot) return null;
+  const telegramId = m.from?.id;
+  if (typeof telegramId !== 'number' || telegramId <= 0) return null;
+  const status = m.new_chat_member?.status;
+  if (status === 'kicked') return { kind: 'membership', telegramId, blocked: true };
+  if (status === 'member') return { kind: 'membership', telegramId, blocked: false };
+  return null;
+}
 
 export function routeUpdate(
   update: TelegramUpdate,
   copy: Record<Locale, BotCopy> = DEFAULT_COPY,
 ): Route | null {
+  if (update.my_chat_member) return membershipOf(update);
   const message = update.message;
   const chatId = message?.chat?.id;
   if (typeof chatId !== 'number') return null;
@@ -370,6 +399,7 @@ export function routeUpdate(
       username: /^[A-Za-z0-9_]{3,32}$/.test(username) ? username : '',
       text: Array.from(words).slice(0, SUPPORT_MAX).join(''),
       attachment: text ? '' : attachment,
+      truncated: Array.from(words).length > SUPPORT_MAX,
     },
   };
 }
@@ -424,10 +454,21 @@ export function parseSupportStatus(body: unknown): SupportStatus {
  */
 export const SUPPORT_COPY: Record<
   Locale,
-  { queued: string; limited: string; media: string; failed: string }
+  {
+    queued: string;
+    limited: string;
+    media: string;
+    failed: string;
+    truncated: string;
+    attachmentDropped: string;
+  }
 > = {
   ru: {
     queued: 'Передали тренеру — ответ придёт сюда, в этот чат.',
+    truncated:
+      'Сообщение длинное, поэтому передали первые 1000 знаков. Остальное пришли отдельным сообщением.',
+    attachmentDropped:
+      'Сам файл тренеру не передаётся, только подпись к нему. Если важно, что на нём, — опиши словами.',
     limited:
       'Сообщения дошли. Подожди, пожалуйста, ответа тренера, прежде чем писать ещё, — ' +
       'следующий час новые сообщения ему не передаются.',
@@ -442,15 +483,34 @@ export const SUPPORT_COPY: Record<
     media:
       'Only text is passed on to the coach. Write it in words — or send the photo with a caption.',
     failed: 'Could not pass your message on to the coach. Please try again a little later.',
+    truncated:
+      'Your message was long, so the first 1000 characters were passed on. Send the rest as a separate message.',
+    attachmentDropped:
+      'The file itself is not passed on to the coach, only its caption. If what is in it matters, describe it in words.',
   },
 };
 
-/** The reply to a support message, or null when silence is the right answer. */
-export function supportReplyText(status: SupportStatus, locale: Locale): string | null {
+/**
+ * The reply to a support message, or null when silence is the right answer.
+ *
+ * A message that went through, but not whole, says so (0059): the start of a long text, or the
+ * caption without the photo under it. The person otherwise believes the coach saw all of it.
+ */
+export function supportReplyText(
+  status: SupportStatus,
+  locale: Locale,
+  request?: Pick<SupportRequest, 'truncated' | 'attachment'>,
+): string | null {
   const c = SUPPORT_COPY[locale] ?? SUPPORT_COPY.ru;
   switch (status) {
     case 'queued':
-      return c.queued;
+      return [
+        c.queued,
+        request?.truncated ? c.truncated : '',
+        request?.attachment ? c.attachmentDropped : '',
+      ]
+        .filter(Boolean)
+        .join('\n\n');
     case 'limited':
       return c.limited;
     case 'empty':
@@ -570,28 +630,61 @@ export async function handleRequest(req: Request): Promise<Response> {
   const route = routeUpdate(update, { ru: copyFor('ru'), en: copyFor('en') });
   if (!route) return reply(200, 'ignored');
 
-  const call = (method: string, body: Record<string, unknown>) =>
-    fetch(`https://api.telegram.org/bot${token}/${method}`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+  if (route.kind === 'membership') {
+    await setBlocked(route.telegramId, route.blocked);
+    return reply(200, 'ok');
+  }
+
+  /*
+   * A Telegram call that could not be made at all (DNS, a reset connection) is `null`, logged,
+   * and the update still answered 200. Thrown, it would be a 500, and Telegram would deliver the
+   * same update again and again — a support message passed on twice is caught by the database,
+   * but a greeting would simply be sent twice.
+   */
+  const call = async (method: string, body: Record<string, unknown>): Promise<Response | null> => {
+    try {
+      return await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+    } catch (error) {
+      console.error(`telegram-bot: ${method} unreachable`, (error as Error).name);
+      return null;
+    }
+  };
+  const said = async (res: Response | null): Promise<string> =>
+    res ? `${res.status} ${await res.text().catch(() => '')}` : 'unreachable';
+
+  /*
+   * Anybody writing to the bot has not blocked it: whatever the sender remembered (0059) is
+   * over. In a private chat the chat id is the person's id.
+   */
+  const chatOf =
+    route.kind === 'greeting'
+      ? route.reply.chatId
+      : route.kind === 'media'
+        ? route.chatId
+        : route.request.chatId;
+  await setBlocked(chatOf, false);
 
   if (route.kind === 'media') {
     const res = await call('sendMessage', {
       chat_id: route.chatId,
       text: SUPPORT_COPY[route.locale].media,
     });
-    if (!res.ok) console.error('telegram-bot: media note failed', res.status);
+    if (!res?.ok) console.error('telegram-bot: media note failed', res?.status ?? 'unreachable');
     return reply(200, 'ok');
   }
 
   if (route.kind === 'support') {
     const status = await passOn(route.request);
-    const text = supportReplyText(status, route.request.locale);
+    const text = supportReplyText(status, route.request.locale, route.request);
     if (text) {
       const res = await call('sendMessage', { chat_id: route.request.chatId, text });
-      if (!res.ok) console.error('telegram-bot: support reply failed', res.status);
+      if (!res?.ok) {
+        console.error('telegram-bot: support reply failed', res?.status ?? 'unreachable');
+      }
     }
     // The status and nothing else: never who wrote, never what.
     console.info(`telegram-bot: support ${status}`);
@@ -615,19 +708,38 @@ export async function handleRequest(req: Request): Promise<Response> {
     ? await call('sendPhoto', sendPhotoBody(answer, appUrl, siteUrl))
     : await call('sendMessage', sendMessageBody(answer, appUrl, siteUrl));
 
-  if (!res.ok && answer.photoUrl) {
-    console.error(
-      'telegram-bot: sendPhoto failed, falling back to text',
-      res.status,
-      await res.text(),
-    );
+  if (!res?.ok && answer.photoUrl) {
+    console.error('telegram-bot: sendPhoto failed, falling back to text', await said(res));
     res = await call('sendMessage', sendMessageBody(answer, appUrl, siteUrl));
   }
-  if (!res.ok) {
+  if (!res?.ok) {
     // Logged, not retried: a message Telegram refused once it will refuse again.
-    console.error('telegram-bot: sendMessage failed', res.status, await res.text());
+    console.error('telegram-bot: sendMessage failed', await said(res));
   }
   return reply(200, 'ok');
+}
+
+/**
+ * Remember or forget that this person blocked the bot (`telegram_set_blocked`, 0059). Best
+ * effort: without 0059, or with the database away, the bot answers exactly as it did before.
+ */
+async function setBlocked(telegramId: number, blocked: boolean): Promise<void> {
+  const url = Deno.env.get('SUPABASE_URL');
+  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!url || !key || !(telegramId > 0)) return;
+  try {
+    const res = await fetch(`${url}/rest/v1/rpc/telegram_set_blocked`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', apikey: key, authorization: `Bearer ${key}` },
+      body: JSON.stringify({ p_telegram_id: telegramId, p_blocked: blocked }),
+    });
+    // 404 is PGRST202 — the function is not there yet. Nothing about the person is logged.
+    if (!res.ok && res.status !== 404) {
+      console.error('telegram-bot: telegram_set_blocked failed', res.status);
+    }
+  } catch (error) {
+    console.error('telegram-bot: telegram_set_blocked unreachable', (error as Error).name);
+  }
 }
 
 /**

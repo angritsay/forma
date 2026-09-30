@@ -62,11 +62,12 @@ import type {
   MarathonTaskTarget,
   MarathonTeamRow,
 } from '@/lib/api/types';
-import { BootScreen } from '@/app/components/BootScreen';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
 import { LangTabs, useEditingLocale } from '@/app/features/admin/LangTabs';
+import { AdminBoot } from '@/app/features/admin/AdminBoot';
+import { AdminLoadError } from '@/app/features/admin/AdminLoadError';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { BoardTab } from '@/app/features/marathon/admin/BoardTab';
 import { clubErrorKey, otherLiveClub } from '@/app/features/marathon/admin/clubTools';
@@ -116,6 +117,9 @@ export default function AdminMarathonScreen() {
   const [dayFilter, setDayFilter] = useState<number | null>(null);
   const [needsReviewOnly, setNeedsReviewOnly] = useState(false);
   const [loading, setLoading] = useState(true);
+  /** The last load's failure: said with a retry, or «не найдено», instead of loading forever. */
+  const [loadError, setLoadError] = useState<unknown>(null);
+  const [attempt, setAttempt] = useState(0);
   const [day, setDay] = useState(1);
   const [editing, setEditing] = useState<MarathonTaskRow | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -184,6 +188,7 @@ export default function AdminMarathonScreen() {
   useEffect(() => {
     if (!admin || !id) return;
     setLoading(true);
+    setLoadError(null);
     refresh()
       .then((m) => {
         // Open on the day he is actually working on: today, or the first day if it has not started.
@@ -193,9 +198,9 @@ export default function AdminMarathonScreen() {
         // hundreds of rows, none of which is the one he came to look at.
         setDayFilter(today);
       })
-      .catch(fail('app.mAdminLoadError'))
+      .catch((e: unknown) => setLoadError(e))
       .finally(() => setLoading(false));
-  }, [admin, id, refresh, fail]);
+  }, [admin, id, refresh, attempt]);
 
   const reloadProofs = useCallback(() => {
     listMarathonProofs({
@@ -226,12 +231,25 @@ export default function AdminMarathonScreen() {
     [marathon],
   );
 
-  if (admin === null) return <BootScreen />;
+  if (admin === null) return <AdminBoot />;
   if (admin === false) return <Navigate to="/" replace />;
   if (loading || !marathon) {
     return (
       <Screen header={<TopBar back title={t('app.mAdminTitle')} />}>
-        <LoadingBlock />
+        {!loading && loadError !== null ? (
+          <AdminLoadError
+            error={loadError}
+            onRetry={() => setAttempt((n) => n + 1)}
+            title="app.mAdminLoadError"
+            notFound={{
+              title: 'app.mAdminNotFoundTitle',
+              body: 'app.mAdminNotFoundBody',
+              back: '/admin/marathons',
+            }}
+          />
+        ) : (
+          <LoadingBlock />
+        )}
       </Screen>
     );
   }

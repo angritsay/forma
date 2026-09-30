@@ -745,3 +745,53 @@ function sessionMessage(
   }
   return { text: [`<b>${title}</b>`, ...lines].join('\n\n'), buttonText: c.openApp };
 }
+
+/* ---------------------------------------------------------------------------------------------
+ * When Telegram says no (0059).
+ * ------------------------------------------------------------------------------------------- */
+
+/** After how many failures in a row a row to a person is given up on (`failed`). */
+export const MAX_ATTEMPTS = 5;
+
+/**
+ * The same message without markup, for `sendMessage` with no `parse_mode`.
+ *
+ * A link keeps its address — «Ссылка на встречу: https://…» — because in a session message the
+ * address is the point; everything else is tags dropped and the three escapes undone.
+ */
+export function plainText(html: string): string {
+  return html
+    .replace(/<a\s[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, (_, href: string, label: string) =>
+      label.trim() ? `${label}: ${href}` : href,
+    )
+    .replace(/<[^>]+>/g, '')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
+
+/** What to do with a row to a person after Telegram refused it. */
+export type ClientFailure = 'retry_plain' | 'blocked' | 'retry' | 'give_up';
+
+/**
+ * The decision, as a pure function so it is tested rather than learned from a live refusal.
+ *
+ * * **400, first time** — the text again without markup, at once. A 400 is almost always the
+ *   message itself (a tag Telegram would not parse, a link it would not take), and the person
+ *   would rather have the words without the bold than nothing.
+ * * **403** — the person blocked the bot or deleted the chat. An answer, not a failure: nothing
+ *   is retried, and the profile is flagged so the queue stops knocking (0059).
+ * * **Anything else** — 429, 5xx, a 400 that the plain text did not cure, a network error
+ *   (`status` 0) — is tried again next run, and given up on after {@link MAX_ATTEMPTS}.
+ *
+ * `attemptsAfter` is how many attempts there will be, counting this one.
+ */
+export function clientFailure(
+  status: number,
+  attemptsAfter: number,
+  plainTried: boolean,
+): ClientFailure {
+  if (status === 403) return 'blocked';
+  if (status === 400 && !plainTried) return 'retry_plain';
+  return attemptsAfter >= MAX_ATTEMPTS ? 'give_up' : 'retry';
+}
