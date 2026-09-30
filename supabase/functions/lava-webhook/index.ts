@@ -60,8 +60,8 @@ const SECRET = Deno.env.get('LAVA_WEBHOOK_SECRET') ?? '';
 
 /**
  * События, на которые нечего делать, и это осознанно — в отличие от тех, про которые мы просто не
- * знаем. Возврата и чарджбэка здесь нет намеренно: они требуют закрыть доступ, а этого функция
- * пока не умеет, и молчать о них значит терять их.
+ * знаем. Возврата и чарджбэка здесь нет намеренно: доступ по ним закрывает владелец, и узнаёт он о
+ * них из своего канала (`record_payment_reversal`, 0057), а не из журнала функции.
  */
 const IGNORED = new Set([
   'payment.failed',
@@ -127,15 +127,35 @@ Deno.serve(async (req) => {
    * руками, и единственное, что отделяет «сделано руками» от «никто не заметил», — строка в
    * журнале. Поэтому незнакомое событие кричит, а известное безобидное шепчет.
    */
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+  );
+
   if (!grantsAccess(hook.eventType)) {
     if (IGNORED.has(hook.eventType)) {
       console.info(`lava-webhook: ${hook.eventType} (${hook.contractId}) — nothing to do`);
-    } else {
-      console.warn(
-        `lava-webhook: ${hook.eventType} (${hook.contractId}) is not handled — access left as it is, look at it by hand`,
-      );
+      return reply(200, `ignored: ${hook.eventType}`);
     }
-    return reply(200, `ignored: ${hook.eventType}`);
+    /*
+     * A refund, a chargeback, or an event this function does not know. The log line above used to
+     * be all there was; now it is also a message in the owner's channel (0057), with the contract
+     * and, when the ledger has it, the payment it undoes. Access is still not touched — revoking it
+     * is the owner's call — and it is still a 200.
+     */
+    console.warn(
+      `lava-webhook: ${hook.eventType} (${hook.contractId}) is not handled — access left as it is, the owner is told`,
+    );
+    const { error } = await supabase.rpc('record_payment_reversal', {
+      p_provider: 'lava',
+      p_event: hook.eventType,
+      p_provider_ref: hook.contractId,
+      p_email: (hook.buyer.email ?? '').trim().toLowerCase() || null,
+      p_amount: typeof hook.amount === 'number' ? hook.amount : null,
+      p_currency: currencyCode(hook.currency) ?? null,
+    });
+    if (error) console.warn('lava-webhook: record_payment_reversal failed', error.message);
+    return reply(200, `ignored: ${hook.eventType}, the owner is told`);
   }
 
   const email = (hook.buyer.email ?? '').trim().toLowerCase();
@@ -143,11 +163,6 @@ Deno.serve(async (req) => {
     console.warn(`lava-webhook: ${hook.eventType} without a buyer email (${hook.contractId})`);
     return reply(200, 'ignored: no email');
   }
-
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-  );
   const paidAt = hook.timestamp ?? new Date().toISOString();
   /*
    * Сумма участвует наравне с товаром: тариф в lava.top держит месяц и год под одним `product.id`,

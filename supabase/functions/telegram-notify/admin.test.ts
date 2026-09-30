@@ -115,6 +115,7 @@ describe('adminMessage', () => {
       'session_unmatched',
       'payment_unclaimed',
       'claim_no_order',
+      'payment_reversed',
       'club_closed',
       'club_refunded',
       'support_message',
@@ -270,6 +271,46 @@ describe('money', () => {
     expect(text).toContain('work@b.co');
     expect(text).toContain('2990.00 RUB');
     expect(text).toContain('Prodamus');
+  });
+
+  it('tells «several orders» from «no order» (0057)', () => {
+    const text = adminMessage(row('claim_no_order', { email: 'me@b.co', reason: 'ambiguous' }))!;
+    expect(text).toContain('заказов несколько');
+    expect(text).toContain('спроси, какой курс оплачен');
+    expect(adminMessage(row('claim_no_order', { reason: 'no_order' }))).toContain('заказа нет');
+  });
+
+  it('names a payment that came without an address', () => {
+    const text = adminMessage(
+      row('payment_unclaimed', { email: '', ref: 'R-9', intent: 'course' }),
+    )!;
+    expect(text).toContain('касса не прислала');
+    expect(text).toContain('R-9');
+  });
+
+  it('puts a refund in the channel and says access was left open (0057)', () => {
+    const r = {
+      topic: 'club',
+      kind: 'payment_reversed',
+      params: {
+        paymentId: '11111111-2222-4333-8444-555555555555',
+        email: 'a@b.co',
+        event: 'order_canceled',
+        intent: 'annual',
+        amount: '7990.00',
+        currency: 'RUB',
+        provider: 'prodamus',
+        ref: 'R-2',
+      },
+    };
+    const text = adminMessage(r)!;
+    expect(text).toContain('Возврат или отмена в кассе');
+    expect(text).toContain('order_canceled');
+    expect(text).toContain('подписка на год');
+    expect(text).toContain('Доступ не закрыт автоматически');
+    expect(adminLinkPath(r)?.path).toBe(
+      '/admin?tab=payments&id=11111111-2222-4333-8444-555555555555',
+    );
   });
 });
 

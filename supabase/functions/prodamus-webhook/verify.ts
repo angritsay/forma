@@ -200,6 +200,7 @@ function str(v: FormValue | undefined): string | undefined {
 }
 
 export interface Payment {
+  /** The address typed on the payment form; empty when Prodamus sent none (0057). */
   email: string;
   sum: string | undefined;
   status: string | undefined;
@@ -207,10 +208,32 @@ export interface Payment {
   ref: string;
 }
 
-/** The fields the webhook acts on; null when the notification is not a paid order. */
+/**
+ * The fields the webhook acts on; null only when the notification names nothing to find the
+ * payment by — no address and no order number.
+ *
+ * A payment without an address used to be null too, and the webhook answered 400: Prodamus retried
+ * it forever and the ledger never saw the money. Now it comes back with `email: ''`, and the
+ * webhook records it unapplied for the owner and for a claim by order number (`record_payment`,
+ * 0057).
+ */
 export function readPayment(data: FormTree): Payment | null {
-  const email = str(data.customer_email)?.trim().toLowerCase();
-  if (!email) return null;
+  const email = str(data.customer_email)?.trim().toLowerCase() ?? '';
   const ref = str(data.order_id) ?? str(data.order_num) ?? '';
+  if (!email && !ref) return null;
   return { email, sum: str(data.sum), status: str(data.payment_status), ref };
+}
+
+/**
+ * What the webhook does with a verified notification.
+ *
+ * * `reversal` — any status other than success: a refund, a cancellation, a chargeback. It opens
+ *   nothing and revokes nothing; the owner's channel hears it (`record_payment_reversal`, 0057).
+ * * `unaddressed` — paid, but no address: recorded unapplied, 200, so Prodamus stops retrying.
+ * * `apply` — the usual path.
+ */
+export function paymentDisposition(payment: Payment): 'reversal' | 'unaddressed' | 'apply' {
+  if (payment.status && payment.status !== 'success') return 'reversal';
+  if (!payment.email) return 'unaddressed';
+  return 'apply';
 }

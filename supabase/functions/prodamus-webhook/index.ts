@@ -19,9 +19,14 @@
  * is not chosen by amount: amounts collide between products and a Prodamus short link drops the query parameters it was given, so the
  * course id cannot ride along with the payment. `apply_course_payment()` reads what the system
  * already knows instead — the `pending` purchase that both the site form and the app's unlock
- * sheet write through `create_order()` before sending anyone to pay. When that is ambiguous (no
- * pending order, or several) it answers null and the row is left to the coach, because activating
- * the wrong course silently is worse than activating the right one late.
+ * sheet write through `create_order()` before sending anyone to pay. With several open orders the
+ * amount picks the newest one at that price, and orders older than 48 hours stop counting (0057).
+ * When that still leaves no answer (no pending order, or several and none at that price) it
+ * answers null and the row is left to the coach, because activating the wrong course silently is
+ * worse than activating the right one late.
+ *
+ * A notification without an address is recorded unapplied rather than refused, and one that is
+ * not a success (a refund, a chargeback) goes to the owner's channel (0057).
  *
  * Order matters: the plan check runs first because it is an exact amount match, and a course
  * priced at exactly a plan's price would otherwise be read as a subscription. `plans.test.ts`
@@ -34,6 +39,7 @@ import {
   DEFAULT_SESSION_PRICES_RUB,
   intentForRoute,
   parseForm,
+  paymentDisposition,
   parsePriceList,
   readPayment,
   routeAmount,
@@ -102,8 +108,9 @@ Deno.serve(async (req) => {
   }
 
   const payment = readPayment(data as Parameters<typeof readPayment>[0]);
-  if (!payment) return reply(400, 'no customer_email');
-  if (payment.status && payment.status !== 'success') return reply(200, 'ignored: not a success');
+  // Neither an address nor an order number: nothing could ever find this payment again.
+  if (!payment) return reply(400, 'no customer_email and no order id');
+  const disposition = paymentDisposition(payment);
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -111,6 +118,26 @@ Deno.serve(async (req) => {
     { auth: { persistSession: false } },
   );
   const paidAt = new Date().toISOString();
+
+  /*
+   * Not a success: a refund, a cancellation, a chargeback. It opens nothing, and it revokes
+   * nothing either — that is the owner's decision — but it is no longer silent: the owner's
+   * channel gets «Возврат или отмена в кассе» with the order (0057). 200 whatever the queue said:
+   * a retry would change nothing.
+   */
+  if (disposition === 'reversal') {
+    const sum = Number.parseFloat(payment.sum ?? '');
+    const { error } = await supabase.rpc('record_payment_reversal', {
+      p_provider: 'prodamus',
+      p_event: payment.status ?? '',
+      p_provider_ref: payment.ref || null,
+      p_email: payment.email || null,
+      p_amount: Number.isFinite(sum) ? sum : null,
+      p_currency: 'RUB',
+    });
+    if (error) console.warn('prodamus-webhook: record_payment_reversal failed', error.message);
+    return reply(200, `ignored: ${payment.status}, the owner is told`);
+  }
 
   /*
    * Write the payment down, whatever happens to it next.
@@ -149,6 +176,20 @@ Deno.serve(async (req) => {
     // into a 500 and an endless Prodamus retry.
     if (error) console.warn('prodamus-webhook: record_payment failed', error.message);
     return typeof data === 'string' ? data : null;
+  }
+
+  /*
+   * Paid, but the notification carries no address. It used to be a 400, which Prodamus retries
+   * forever while the ledger never sees the money. Now it is written down unapplied — the 0044
+   * trigger puts «Платёж не привязан» in the owner's channel — and the payer can still claim it by
+   * the order number on their receipt. 200: a retry would bring no address either.
+   */
+  if (disposition === 'unaddressed') {
+    await record(false);
+    console.warn(
+      `prodamus-webhook: a payment of ${payment.sum ?? '?'} arrived without an address; recorded as unclaimed (order ${payment.ref || 'without a number'})`,
+    );
+    return reply(200, 'ignored: no address, recorded, waiting to be claimed');
   }
 
   if (route.kind === 'plan') {
@@ -236,19 +277,31 @@ Deno.serve(async (req) => {
    *
    * A 500 here would be wrong twice over: Prodamus retries on 5xx, and there is nothing to retry
    * when the cause is that a person paid without ever placing an order. The RPC answers null for
-   * exactly that case, and for the other ambiguous one (several pending orders); both end in a
-   * 200 and a log line, with the purchase left for the coach to confirm by hand.
+   * exactly that case, and for the other ambiguous one (several pending orders, none at the paid
+   * price); both end in a 200 and a log line, with the purchase left for the coach to confirm by
+   * hand.
    */
   // Named rather than destructured as `data`: the parsed body above already holds that name in
   // this scope, and `let data` followed by `const { data }` is a SyntaxError — the module refuses
   // to load at all, subscriptions included. Nothing in CI type-checks the edge functions, so it
   // would have surfaced as "payments stopped working" and no other clue.
-  const { data: activated, error } = await supabase.rpc('apply_course_payment', {
+  //
+  // The amount goes along (0057): with several open orders it picks the one whose course costs
+  // what was paid, instead of giving up. A database before 0057 does not know the argument
+  // (PGRST202), and the call is repeated without it — the old behaviour, not an outage.
+  const courseArgs = {
     p_email: payment.email,
     p_provider_ref: payment.ref || null,
     p_paid_at: paidAt,
     p_source: 'prodamus',
+  };
+  let { data: activated, error } = await supabase.rpc('apply_course_payment', {
+    ...courseArgs,
+    p_amount: Number.isFinite(amount) ? amount : null,
   });
+  if (error && (error as { code?: string }).code === 'PGRST202') {
+    ({ data: activated, error } = await supabase.rpc('apply_course_payment', courseArgs));
+  }
   if (error) {
     console.error('prodamus-webhook: apply_course_payment failed', error.message);
     await record(false);
@@ -257,7 +310,7 @@ Deno.serve(async (req) => {
   if (!activated) {
     await record(false);
     console.warn(
-      `prodamus-webhook: ${payment.email} paid ${payment.sum ?? '?'} and no single pending order matches it; recorded as unclaimed (order ${payment.ref || 'without a number'})`,
+      `prodamus-webhook: ${payment.email} paid ${payment.sum ?? '?'} and no pending order could be chosen (none, or several and none at that price); recorded as unclaimed (order ${payment.ref || 'without a number'})`,
     );
     return reply(200, 'ignored: recorded, waiting to be claimed');
   }
