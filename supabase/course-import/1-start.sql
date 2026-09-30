@@ -250,6 +250,11 @@ on conflict (short_id) do update set
   points = excluded.points,
   updated_at = now();
 
+-- days no longer in the course
+delete from public.admin_course_days
+ where course_id = (select id from public.admin_courses where slug_id = 'start')
+   and node_id <> all ('{"w1_d1_s01","w1_d2_s02","w1_d3_s03","w1_d4_s04","w1_d5_s05","w2_d1_s06","w2_d2_s07","w2_d3_s08","w2_d4_s09","w2_d5_s10","w3_d1_s11","w3_d2_s12","w3_d3_s13","w3_d4_s14","w3_d5_s15","w4_d1_s16","w4_d2_s17","w4_d3_s18","w4_d4_s19","w4_d5_s20"}'::text[]);
+
 -- days
 insert into public.admin_course_days (
   course_id, node_id, week, day, kind, custom_workout_id, content, deload,

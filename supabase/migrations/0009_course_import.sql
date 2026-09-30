@@ -241,6 +241,11 @@ on conflict (short_id) do update set
   points = excluded.points,
   updated_at = now();
 
+-- days no longer in the course
+delete from public.admin_course_days
+ where course_id = (select id from public.admin_courses where slug_id = 'start')
+   and node_id <> all ('{"w1_d1_s01","w1_d2_s02","w1_d3_s03","w1_d4_s04","w1_d5_s05","w2_d1_s06","w2_d2_s07","w2_d3_s08","w2_d4_s09","w2_d5_s10","w3_d1_s11","w3_d2_s12","w3_d3_s13","w3_d4_s14","w3_d5_s15","w4_d1_s16","w4_d2_s17","w4_d3_s18","w4_d4_s19","w4_d5_s20"}'::text[]);
+
 -- days
 insert into public.admin_course_days (
   course_id, node_id, week, day, kind, custom_workout_id, content, deload,
@@ -786,6 +791,11 @@ on conflict (short_id) do update set
   structure = excluded.structure,
   points = excluded.points,
   updated_at = now();
+
+-- days no longer in the course
+delete from public.admin_course_days
+ where course_id = (select id from public.admin_courses where slug_id = 'engine')
+   and node_id <> all ('{"w1d1_test","w1d2_rest","w1d3_squat_push","w1d4_rest","w1d5_hinge_core","w1d6_engine","w1d7_rest","w2d1_squat_push","w2d2_rest","w2d3_hinge_core","w2d4_engine","w2d5_rest","w2d6_chipper","w2d7_rest","w3d1_squat_push","w3d2_rest","w3d3_hinge_core","w3d4_engine","w3d5_rest","w3d6_benchmark","w3d7_rest","w4d1_squat_push","w4d2_rest","w4d3_hinge_core","w4d4_engine","w4d5_rest","w4d6_flow","w4d7_rest","w5d1_squat_push","w5d2_rest","w5d3_hinge_core","w5d4_engine","w5d5_rest","w5d6_chipper","w5d7_rest","w6d1_squat_push","w6d2_rest","w6d3_benchmark","w6d4_rest","w6d5_flow","w6d6_rest","w6d7_retest"}'::text[]);
 
 -- days
 insert into public.admin_course_days (
@@ -1729,6 +1739,11 @@ on conflict (short_id) do update set
   points = excluded.points,
   updated_at = now();
 
+-- days no longer in the course
+delete from public.admin_course_days
+ where course_id = (select id from public.admin_courses where slug_id = 'dumbbells')
+   and node_id <> all ('{"w1d1_test","w1d2_rest","w1d3_squat_press","w1d4_rest","w1d5_hinge_pull","w1d6_engine","w1d7_rest","w2d1_squat_press","w2d2_rest","w2d3_hinge_pull","w2d4_engine","w2d5_rest","w2d6_complex","w2d7_rest","w3d1_squat_press","w3d2_rest","w3d3_hinge_pull","w3d4_engine","w3d5_rest","w3d6_benchmark","w3d7_rest","w4d1_squat_press","w4d2_rest","w4d3_hinge_pull","w4d4_engine","w4d5_rest","w4d6_flow","w4d7_rest","w5d1_squat_press","w5d2_rest","w5d3_hinge_pull","w5d4_engine","w5d5_rest","w5d6_complex","w5d7_rest","w6d1_hinge_pull","w6d2_rest","w6d3_benchmark","w6d4_rest","w6d5_flow","w6d6_rest","w6d7_retest"}'::text[]);
+
 -- days
 insert into public.admin_course_days (
   course_id, node_id, week, day, kind, custom_workout_id, content, deload,
@@ -2641,6 +2656,11 @@ on conflict (short_id) do update set
   points = excluded.points,
   updated_at = now();
 
+-- days no longer in the course
+delete from public.admin_course_days
+ where course_id = (select id from public.admin_courses where slug_id = 'kettlebell')
+   and node_id <> all ('{"w1d1_test","w1d2_rest","w1d3_squat_press","w1d4_rest","w1d5_swing_school","w1d7_rest","w2d1_squat_press","w2d2_rest","w2d3_swing_school","w2d4_rest","w2d5_metcon","w2d7_rest","w3d1_squat_press","w3d2_rest","w3d3_clean_press","w3d4_rest","w3d5_metcon","w3d7_rest","w4d1_squat_press","w4d2_rest","w4d3_clean_press","w4d4_rest","w4d5_flow","w4d7_rest","w5d1_squat_press","w5d2_rest","w5d3_snatch","w5d4_rest","w5d5_metcon","w5d7_rest","w6d1_squat_press","w6d2_rest","w6d3_benchmark","w6d4_rest","w6d5_flow","w6d6_rest","w6d7_retest"}'::text[]);
+
 -- days
 insert into public.admin_course_days (
   course_id, node_id, week, day, kind, custom_workout_id, content, deload,
@@ -3512,6 +3532,11 @@ on conflict (short_id) do update set
   structure = excluded.structure,
   points = excluded.points,
   updated_at = now();
+
+-- days no longer in the course
+delete from public.admin_course_days
+ where course_id = (select id from public.admin_courses where slug_id = 'athlete')
+   and node_id <> all ('{"w1d1_test","w1d2_rest","w1d3_squat_push","w1d4_rest","w1d5_pull_hinge","w1d6_engine","w1d7_rest","w2d1_squat_push","w2d2_rest","w2d3_pull_hinge","w2d4_engine","w2d5_rest","w2d6_chipper","w2d7_rest","w3d1_squat_push","w3d2_rest","w3d3_pull_hinge","w3d4_engine","w3d5_rest","w3d6_murph_prep","w3d7_rest","w4d1_squat_push","w4d2_rest","w4d3_pull_hinge","w4d4_flow","w4d5_rest","w4d6_benchmark","w4d7_rest","w5d1_squat_push","w5d2_rest","w5d3_pull_hinge","w5d4_engine","w5d5_rest","w5d6_chipper","w5d7_rest","w6d1_squat_push","w6d2_rest","w6d3_pull_hinge","w6d4_engine","w6d5_rest","w6d6_murph_prep","w6d7_rest","w7d1_squat_push","w7d2_rest","w7d3_pull_hinge","w7d4_engine","w7d5_rest","w7d6_murph_prep","w7d7_rest","w8d1_flow","w8d2_rest","w8d3_benchmark","w8d4_rest","w8d5_rest","w8d6_retest"}'::text[]);
 
 -- days
 insert into public.admin_course_days (
@@ -4696,6 +4721,11 @@ on conflict (short_id) do update set
   structure = excluded.structure,
   points = excluded.points,
   updated_at = now();
+
+-- days no longer in the course
+delete from public.admin_course_days
+ where course_id = (select id from public.admin_courses where slug_id = 'tempo')
+   and node_id <> all ('{"w1d1_gate","w1d2_rest","w1d3_strength","w1d4_ladder","w1d5_rest","w1d6_cap","w1d7_rest","w2d1_strength","w2d2_rest","w2d3_ladder","w2d4_cap","w2d5_rest","w2d6_rounds","w2d7_rest","w3d1_strength","w3d2_rest","w3d3_ladder","w3d4_cap","w3d5_rest","w3d6_gate","w3d7_rest","w4d1_strength","w4d2_rest","w4d3_ladder","w4d4_cap","w4d5_rest","w4d6_rounds","w4d7_rest","w5d1_strength","w5d2_rest","w5d3_flow","w5d4_ladder","w5d5_rest","w5d6_rounds","w5d7_rest","w6d1_strength","w6d2_rest","w6d3_ladder","w6d4_cap","w6d5_rest","w6d6_gate","w6d7_rest","w7d1_strength","w7d2_rest","w7d3_ladder","w7d4_cap","w7d5_rest","w7d6_rounds","w7d7_rest","w8d1_strength","w8d2_rest","w8d3_rounds","w8d4_flow","w8d5_rest","w8d6_rest","w8d7_gate"}'::text[]);
 
 -- days
 insert into public.admin_course_days (
