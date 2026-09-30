@@ -160,7 +160,7 @@ export const landing = {
   courseOrderTitle: 'Get access to the course',
   courseOrderIntro:
     'Leave your email and pay — access opens automatically and the course appears in the app under this email.',
-  courseLifetimeNote: 'One payment, access forever',
+  courseLifetimeNote: 'One payment, no time limit',
   courseOrSubscribe: 'Or the club with the course — {year} a year, one payment',
   nodeWorkout: 'Workout',
   // It said «7,000 steps» while the app counted steps (see the Russian file).
@@ -230,7 +230,7 @@ export const landing = {
   // It said «the other four». There are six courses and one is published: a number here promises
   // programmes that are not on the site yet.
   subscribeFaq3A:
-    'A bought course is yours forever, and the first week of the club comes with it. The subscription keeps you in the club after that: a task every day, the weekly board, a streak and a partner.',
+    'A bought course is yours with no time limit, and the first week of the club comes with it. The subscription keeps you in the club after that: a task every day, the weekly board, a streak and a partner.',
 
   // About
   aboutTitle: 'Sergey Titov — Forma coach, online sessions',

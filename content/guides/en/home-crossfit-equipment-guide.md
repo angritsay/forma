@@ -118,8 +118,6 @@ A minimal home gym is a chair, a mat and one implement: a kettlebell or a pair o
 
 **Cool-down.** [Hamstring stretch](exercise:hamstring_stretch) and [hip flexor stretch](exercise:hip_flexor_stretch), 30 seconds per side, child's pose 45 seconds.
 
-How the app scales this session. Before you start, Forma offers "easier", "as planned" or "harder": the first drops a set from one or two of the biggest blocks and trims the reps by about 10 percent, the third does the reverse; rest between sets stays the same. If the questionnaire and test placed you at level 1, push-ups become [knee push-ups](exercise:knee_push_up) and swings become [kettlebell deadlifts](exercise:kb_deadlift). After the session you rate the effort from 1 to 10, and the next one adjusts.
-
 ## Common buying mistakes
 
 - **Dumbbells that are too light.** A 2 kg pair is fine for warming up the shoulders and nothing else. Squats and hinges need a weight you could not curl with one arm.
