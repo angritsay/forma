@@ -880,8 +880,13 @@ update public.coach_bookings
 select pg_temp.as_user('00000000-0000-0000-0000-0000000055f9', 'book-hana@example.com');
 do $$
 begin
-  assert not exists (select 1 from public.hold_slot('sergey', 'half', pg_temp.msk(4, '16:30'))),
-    'Hana held 16:30 again straight after her hold ran out';
+  -- Not «taken» (0058): she is told when she may pick it again, and it is not offered to her.
+  begin
+    perform public.hold_slot('sergey', 'half', pg_temp.msk(4, '16:30'));
+    assert false, 'Hana held 16:30 again straight after her hold ran out';
+  exception when others then
+    assert sqlerrm = 'hold_again_later', 'hold_again_later, got ' || sqlerrm;
+  end;
 end $$;
 select pg_temp.as_user('00000000-0000-0000-0000-0000000055b2', 'book-boris@example.com');
 do $$

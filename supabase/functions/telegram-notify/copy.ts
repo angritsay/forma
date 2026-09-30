@@ -151,6 +151,8 @@ interface Copy {
   trialTomorrowDo: string;
   /** Coach sessions (0054; queued by the booking core, 0055). */
   sessionConfirmed: string;
+  /** A confirmation sent after the start (0058): the session is running, join now. */
+  sessionConfirmedRunning: string;
   sessionReminderDay: string;
   sessionReminderHour: string;
   sessionReminderSoon: string;
@@ -232,6 +234,7 @@ const COPY: Record<Locale, Copy> = {
     trialTomorrow: 'Завтра заканчивается пробная неделя клуба',
     trialTomorrowDo: 'Чтобы остаться в клубе, оформи подписку в приложении.',
     sessionConfirmed: 'Встреча с тренером подтверждена',
+    sessionConfirmedRunning: 'Встреча уже идёт — заходи по ссылке, тренер ждёт.',
     sessionReminderDay: 'Завтра встреча с тренером',
     sessionReminderHour: 'Через час встреча с тренером',
     sessionReminderSoon: 'Скоро встреча с тренером',
@@ -287,6 +290,7 @@ const COPY: Record<Locale, Copy> = {
     trialTomorrow: 'Your free week in the club ends tomorrow',
     trialTomorrowDo: 'To stay in the club, subscribe in the app.',
     sessionConfirmed: 'Your session with the coach is confirmed',
+    sessionConfirmedRunning: 'It has already started — join through the link, the coach is waiting.',
     sessionReminderDay: 'Your session with the coach is tomorrow',
     sessionReminderHour: 'Your session with the coach is in an hour',
     sessionReminderSoon: 'Your session with the coach is coming up',
@@ -707,12 +711,20 @@ function sessionMessage(
   let title: string;
   const lines: string[] = [];
   switch (kind) {
-    case 'session_confirmed':
+    case 'session_confirmed': {
       title = c.sessionConfirmed;
       lines.push(details);
       if (link) lines.push(link);
-      lines.push(c.sessionMoveRule);
+      // Confirmed after the start (0058: a slow payment, the admin booking it late): the move rule
+      // is moot, and the one thing to say is to go in.
+      const starts = instant(params.starts_at)?.getTime() ?? null;
+      if (now !== undefined && starts !== null && now >= starts) {
+        lines.push(c.sessionConfirmedRunning);
+      } else {
+        lines.push(c.sessionMoveRule);
+      }
       break;
+    }
     case 'session_reminder': {
       const hours = count(params.hours_before);
       const starts = instant(params.starts_at)?.getTime() ?? null;
