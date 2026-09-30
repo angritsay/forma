@@ -18,6 +18,8 @@ export function slotErrorKey(e: unknown): TKey {
       return 'app.bookHoldRateLimited';
     case 'too_late':
       return 'app.bookMoveTooLate';
+    case 'too_soon':
+      return 'app.bookMoveTooSoon';
     case 'coach_unavailable':
       return 'app.bookCoachUnavailable';
     default:

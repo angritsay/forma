@@ -296,8 +296,10 @@ throwaway database, apply `00_shim.sql` and then every file in `supabase/migrati
 then run `10_smoke.sql`, `20_subscriptions.sql`, `30_course_builder.sql`, `40_marathon.sql`,
 `60_coach_bookings.sql` and `61_google_calendar_bookings.sql`. (`50_step_proofs.sql` is gone with
 the step feature — §2.6.) Later features brought their own files, numbered after those:
-`93_outbox_kinds.sql` for the message kinds of 0054 and `94_booking_core.sql` for the in-app
-booking of 0055 (slots, holds, the overlap constraint, moves, payment confirming a hold).
+`93_outbox_kinds.sql` for the message kinds of 0054, `94_booking_core.sql` for the in-app
+booking of 0055 (slots, holds, the overlap constraint, moves, payment confirming a hold) and
+`95_booking_admin.sql` for 0056 (booking a paid session from the admin, holds in «Записи», a move
+over its own old time, the reminder's lifetime).
 Each ends with a "PASSED" line. The test files are **not** idempotent — they insert fixtures — so
 rebuild the database for each run.
 
@@ -981,7 +983,8 @@ address had a pending order for, for any amount.
 A paid session is recorded unapplied first, then `apply_session_payment()` (0055) turns the
 payer's live hold for that length into a booking and marks the payment applied. With no matching
 hold it books nothing: the payment stays unclaimed and the owner's «Онлайн-тренировки» topic gets
-«Оплата занятия без брони» (§7.16).
+«Оплата занятия без брони» (§7.16). In Admin → Платежи such a payment reads «Оплачено, время не
+выбрано» and has «Записать на время» (0056).
 
 ### 7.5 Automating course purchases later
 
@@ -1881,10 +1884,21 @@ database half:
   reason. When the client then claims that payment by its order number («Оплатил(а) с другой
   почты?», `claim_payment()`), the claim confirms their hold.
 - **Changes.** `move_my_booking()` lets a client move a session 24 hours or more before it, into a
-  free slot. There is no self-cancel and no refund. The admin moves (`admin_move_booking`, any
-  future time that does not overlap) and cancels (`admin_cancel_booking`).
-- **Messages.** The client's bot gets `session_confirmed`, reminders a day and an hour before,
-  `session_moved` and `session_cancelled`; reminders for an old time are dropped on a move.
+  free slot also 24 hours or more away (0056); the picker asks `available_slots` with
+  `p_ignore_booking`, so the session can move half an hour over its own old time. There is no
+  self-cancel and no refund. The admin moves (`admin_move_booking`, any future time that does not
+  overlap) and cancels (`admin_cancel_booking`).
+- **A paid session with no time (0056).** A payment that matched no hold is booked by the admin:
+  Admin → Платежи → «Записать на время» (`admin_book_from_payment(payment, coach, starts_at)`) —
+  any future time that overlaps no session or live hold, for the account behind the payment, with
+  the room link, the client's confirmation and reminders; the payment is marked applied.
+- **Messages.** The client's bot gets `session_confirmed`, reminders a day and an hour before (the
+  hour-before one lives 90 minutes, so one late run of the sender does not drop it — 0056; sent
+  late, it says «скоро» or «уже началась» rather than «через час»), `session_moved` and
+  `session_cancelled`; reminders for an old time are dropped on a move. The owner's channel says
+  «Занятие оплачено» once for a paid hold: while the payment's own line is still queued, it is
+  taken out and the booking's message carries the payment. A booking made after that line went
+  out (a claim, the admin's «Записать на время») is the plain «Выбрали время».
 
 **The client's side** is the Тренер tab (§7.3, §7.7): coach, length, a day in the next two weeks,
 a free time, «Забронировать и оплатить». While the hold lives the card shows «Слот держится до
@@ -1908,6 +1922,10 @@ to it. The admin's side is **Admin → Записи** (§7.7).
    booking should be active with the room link, and `session_confirmed` plus two reminders queued.
 
 Google rows from before the cutover stay valid as history and still block Sergey's time (§7.7).
+
+**0056** (`0056_booking_admin.sql`) needs no order of its own beyond 0055: apply it, then deploy
+`deploy-notify` (the owner's channel prints the payment on «Занятие оплачено», and a late
+hour-before reminder picks its headline by the clock) and the site.
 
 ## 7.10 What is still only in Russian
 

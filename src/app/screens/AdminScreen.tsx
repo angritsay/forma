@@ -34,6 +34,7 @@ import {
 import { isAppError, toAppError, type AppError } from '@/lib/api/errors';
 import {
   bindPayment,
+  bookFromPayment,
   dismissPayment,
   endSubscription,
   listPayments,
@@ -71,11 +72,13 @@ import { PeopleList } from '@/app/features/admin/PeopleList';
 import { useDebounced } from '@/app/features/admin/useDebounced';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { BindPaymentSheet } from '@/app/features/admin/payments/BindPaymentSheet';
+import { BookSessionSheet } from '@/app/features/admin/payments/BookSessionSheet';
 import { PaymentList } from '@/app/features/admin/payments/PaymentList';
 import { TodayCard } from '@/app/features/admin/payments/TodayCard';
 import {
   adminTabFrom,
   bindErrorKey,
+  bookErrorKey,
   formatMoney,
   INTENT_LABEL,
   paymentFilterFrom,
@@ -244,6 +247,9 @@ export default function AdminScreen() {
   const [bindError, setBindError] = useState<string | null>(null);
   const [pendingBind, setPendingBind] = useState<PendingBind | null>(null);
   const [pendingDismiss, setPendingDismiss] = useState<PaymentRow | null>(null);
+  /* «Записать на время» (0056): the paid session being booked, and the server's refusal. */
+  const [bookRow, setBookRow] = useState<PaymentRow | null>(null);
+  const [bookError, setBookError] = useState<string | null>(null);
 
   /*
    * The people list. Separate state rather than a third branch of the purchases one: it answers a
@@ -462,6 +468,40 @@ export default function AdminScreen() {
         toast.show({ kind: 'error', title: t('app.adminActionError'), description: t(key) });
       } else {
         setBindRow(null);
+        toast.show({
+          kind: 'error',
+          title: t('app.adminActionError'),
+          description: key ? t(key) : errorText(e),
+        });
+        reload();
+      }
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const confirmBook = async (coach: string, startsAt: string, option: 'half' | 'hour') => {
+    if (!bookRow) return;
+    const row = bookRow;
+    setBusyId(row.id);
+    setBookError(null);
+    try {
+      await bookFromPayment(row.id, coach, startsAt, option);
+      toast.show({ kind: 'success', title: t('app.adminPayBooked') });
+      setBookRow(null);
+      reload();
+    } catch (e) {
+      const key = bookErrorKey(e);
+      // What can be fixed in the sheet stays in it; the rest closes it and says why.
+      if (
+        key === 'app.adminPayBookErrTaken' ||
+        key === 'app.adminPayBookErrTime' ||
+        key === 'app.adminPayBookErrLength' ||
+        key === 'app.adminPayBookErrOption'
+      ) {
+        setBookError(t(key));
+      } else {
+        setBookRow(null);
         toast.show({
           kind: 'error',
           title: t('app.adminActionError'),
@@ -693,6 +733,10 @@ export default function AdminScreen() {
               setBindRow(row);
             }}
             onDismiss={(row) => setPendingDismiss(row)}
+            onBook={(row) => {
+              setBookError(null);
+              setBookRow(row);
+            }}
           />
           {!payId && payRows.length < payTotal ? (
             <Button
@@ -971,6 +1015,16 @@ export default function AdminScreen() {
         danger={SUB_CONFIRM[pendingSub?.action ?? 'extend_month'].danger}
         loading={busyId !== null}
         onConfirm={() => void applySubAction()}
+      />
+      <BookSessionSheet
+        row={bookRow}
+        busy={bookRow !== null && busyId === bookRow.id}
+        error={bookError}
+        onClose={() => {
+          setBookRow(null);
+          setBookError(null);
+        }}
+        onSubmit={(coach, startsAt, option) => void confirmBook(coach, startsAt, option)}
       />
       <BindPaymentSheet
         open={pendingBind === null}

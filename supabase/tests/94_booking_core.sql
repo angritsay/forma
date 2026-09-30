@@ -441,8 +441,8 @@ begin
     'the hour-before reminder';
   assert (select expires_at from public.telegram_outbox
           where email = 'book-boris@example.com' and kind = 'session_reminder'
-            and (params ->> 'hours_before')::int = 1) < pg_temp.msk(3, '11:00'),
-    'a reminder never outlives the start';
+            and (params ->> 'hours_before')::int = 1) = pg_temp.msk(3, '11:30'),
+    'the hour-before reminder lives 90 minutes (0056), past one late run of the sender';
 
   -- The owner's channel: the payment, and the booking once it is paid — not the hold.
   assert exists (select 1 from public.admin_outbox

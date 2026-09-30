@@ -5,12 +5,15 @@ import {
   adminHref,
   adminTabFrom,
   bindErrorKey,
+  bookErrorKey,
   canBind,
+  canBookSession,
   canDismiss,
   formatMoney,
   paymentFilterFrom,
   paymentIdFrom,
   paymentState,
+  sessionOptionOf,
   todayRows,
 } from './model';
 
@@ -78,6 +81,60 @@ describe('payment state and buttons', () => {
     expect(paymentState(bound)).toBe('bound');
     expect(canBind(bound)).toBe(false);
     expect(paymentState(pay({ applied: true }))).toBe('applied');
+  });
+});
+
+/*
+ * 0056: a session payment that became no booking is money with no time on the calendar. It used
+ * to read «Оплачено» like a booked one, and the admin had no way to see it or act on it.
+ */
+describe('a paid session with no time', () => {
+  it('reads «Оплачено, время не выбрано» and offers «Записать на время»', () => {
+    const unbooked = pay({ intent: 'session', applied: false });
+    expect(paymentState(unbooked)).toBe('sessionUnbooked');
+    expect(canBookSession(unbooked)).toBe(true);
+    // Still nothing to bind: a session opens no access.
+    expect(canBind(unbooked)).toBe(false);
+    expect(canDismiss(unbooked)).toBe(false);
+  });
+
+  it('is plain «Оплачено» once booked, or once somebody dismissed it', () => {
+    const booked = pay({ intent: 'session', applied: true });
+    expect(paymentState(booked)).toBe('session');
+    expect(canBookSession(booked)).toBe(false);
+    const dismissed = pay({ intent: 'session', applied: false, resolution: 'dismissed' });
+    expect(paymentState(dismissed)).toBe('session');
+    expect(canBookSession(dismissed)).toBe(false);
+  });
+
+  it('only a session payment is ever booked', () => {
+    expect(canBookSession(pay())).toBe(false);
+    expect(canBookSession(pay({ intent: 'monthly' }))).toBe(false);
+  });
+
+  it('guesses the length from the amount, and says nothing when it cannot', () => {
+    expect(sessionOptionOf(pay({ intent: 'session', amount: 2500 }))).toBe('half');
+    expect(sessionOptionOf(pay({ intent: 'session', amount: 3500 }))).toBe('hour');
+    expect(sessionOptionOf(pay({ intent: 'session', amount: 39, currency: 'USD' }))).toBe('hour');
+    expect(sessionOptionOf(pay({ intent: 'session', amount: 1 }))).toBeNull();
+    expect(sessionOptionOf(pay({ intent: 'session', amount: null }))).toBeNull();
+  });
+
+  it('names the refusals of the booking', () => {
+    expect(bookErrorKey(new AppError('validation', 'slot_taken'))).toBe('app.adminPayBookErrTaken');
+    expect(bookErrorKey(new AppError('validation', 'invalid_times'))).toBe(
+      'app.adminPayBookErrTime',
+    );
+    expect(bookErrorKey(new AppError('validation', 'already_applied'))).toBe(
+      'app.adminPayBookErrApplied',
+    );
+    expect(bookErrorKey(new AppError('validation', 'invalid_option'))).toBe(
+      'app.adminPayBookErrOption',
+    );
+    expect(bookErrorKey(new AppError('validation', 'option_mismatch'))).toBe(
+      'app.adminPayBookErrLength',
+    );
+    expect(bookErrorKey(new AppError('network', 'fetch failed'))).toBeNull();
   });
 });
 

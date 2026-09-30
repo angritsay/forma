@@ -185,12 +185,21 @@ export async function listFreeSlots(
   option: SessionOption,
   fromIso: string,
   toIso: string,
+  ignore?: string,
 ): Promise<FreeSlot[]> {
   return run(() => {
-    requireUser();
+    const user = requireUser();
     return mutateDb((db) => {
       const c = visibleCoach(db, coach);
-      return slotsFor(db, c, option, Date.parse(fromIso), Date.parse(toIso));
+      // Only the caller's own session is looked through (0056 `p_ignore_booking`).
+      const own = db.coachBookings.find(
+        (b) =>
+          b.id === ignore &&
+          b.email === user.email &&
+          b.status === 'active' &&
+          b.coach_id === coach,
+      );
+      return slotsFor(db, c, option, Date.parse(fromIso), Date.parse(toIso), own?.id);
     });
   });
 }
@@ -271,6 +280,8 @@ export async function moveMyBooking(id: string, startsAt: string): Promise<FreeS
       );
       if (!row || !row.coach_id) throw new AppError('validation', 'not_found');
       if (!canSelfMove(row.starts_at, Date.now())) throw new AppError('validation', 'too_late');
+      // The new start is held to the same 24 hours (0056).
+      if (!canSelfMove(startsAt, Date.now())) throw new AppError('validation', 'too_soon');
       const coach = calendar(db).coaches.find((c) => c.id === row.coach_id);
       const option: SessionOption = row.option_id === 'half' ? 'half' : 'hour';
       const at = new Date(Date.parse(startsAt)).toISOString();
@@ -434,7 +445,7 @@ export async function adminCancelBooking(id: string, reason: string | null): Pro
   });
 }
 
-/** `admin_coach_bookings(scope)` over the store: sessions only, never holds. */
+/** `admin_coach_bookings(scope)` over the store: sessions, or live holds under `holds` (0056). */
 export async function listAdminBookings(scope: BookingScope): Promise<AdminBooking[]> {
   return run(() => {
     requireUser();
@@ -443,10 +454,13 @@ export async function listAdminBookings(scope: BookingScope): Promise<AdminBooki
     const rows = db.coachBookings.filter((b) => {
       const over = Date.parse(b.ends_at) <= now;
       if (scope === 'cancelled') return b.status === 'cancelled';
+      if (scope === 'holds') {
+        return b.status === 'pending' && Date.parse(b.hold_expires_at ?? '') > now;
+      }
       return b.status === 'active' && (scope === 'past' ? over : !over);
     });
     rows.sort((a, b) =>
-      scope === 'upcoming'
+      scope === 'upcoming' || scope === 'holds'
         ? a.starts_at.localeCompare(b.starts_at)
         : b.starts_at.localeCompare(a.starts_at),
     );
@@ -455,7 +469,8 @@ export async function listAdminBookings(scope: BookingScope): Promise<AdminBooki
       startsAt: b.starts_at,
       endsAt: b.ends_at,
       minutes: Math.round((Date.parse(b.ends_at) - Date.parse(b.starts_at)) / MINUTE),
-      status: b.status === 'cancelled' ? 'cancelled' : 'active',
+      status:
+        b.status === 'cancelled' ? 'cancelled' : b.status === 'pending' ? 'pending' : 'active',
       source: b.source ?? 'google_calendar',
       eventName: b.event_name,
       email: b.email,
@@ -464,6 +479,8 @@ export async function listAdminBookings(scope: BookingScope): Promise<AdminBooki
       locationText: b.location_text,
       cancelReason: b.cancel_reason ?? null,
       coachId: b.coach_id ?? null,
+      optionId: b.option_id ?? null,
+      holdExpiresAt: b.status === 'pending' ? (b.hold_expires_at ?? null) : null,
     }));
   });
 }

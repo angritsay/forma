@@ -4,7 +4,9 @@
  *
  * Two views under one switch:
  *
- *   * **Записи** — the list, upcoming / past / cancelled, each row with its coach. An upcoming
+ *   * **Записи** — the list, upcoming / held / past / cancelled, each row with its coach (the RPC
+ *     names it since 0056). «Держат» are the live holds: somebody picked the time and is paying for
+ *     it right now, so the slot is not free though nobody has booked it yet. An upcoming
  *     session can be moved to any future time the coach agreed to (`admin_move_booking`; never on
  *     top of another session) or cancelled (`admin_cancel_booking`; the row stays, money goes back
  *     by hand in the till if at all). Both reach the client as a bot message through the
@@ -141,6 +143,7 @@ export default function AdminBookingsScreen() {
               onChange={setScope}
               options={[
                 { value: 'upcoming', label: t('app.bookingsTabUpcoming') },
+                { value: 'holds', label: t('app.bookingsTabHolds') },
                 { value: 'past', label: t('app.bookingsTabPast') },
                 { value: 'cancelled', label: t('app.bookingsTabCancelled') },
               ]}
@@ -149,7 +152,13 @@ export default function AdminBookingsScreen() {
               <LoadingBlock />
             ) : rows.length === 0 ? (
               <EmptyState
-                title={t(scope === 'upcoming' ? 'app.bookingsEmptyUpcoming' : 'app.bookingsEmpty')}
+                title={t(
+                  scope === 'upcoming'
+                    ? 'app.bookingsEmptyUpcoming'
+                    : scope === 'holds'
+                      ? 'app.bookingsEmptyHolds'
+                      : 'app.bookingsEmpty',
+                )}
                 description={scope === 'upcoming' ? t('app.bookingsEmptyBody') : undefined}
               />
             ) : (
@@ -161,7 +170,7 @@ export default function AdminBookingsScreen() {
                    * here would skip the overlap check our own rows get (0055). It still blocks
                    * Sergey's time, and it is changed with the client directly. The same holds for
                    * a manual (`admin`) or legacy `calendly_webhook` row, so the hint stays neutral.
-                   * `source` comes with the RPC's own row, never from the optional second read.
+                   * A hold is nobody's session yet: shown, never moved or cancelled from here.
                    */
                   const editable = scope === 'upcoming' && row.source === 'forma';
                   return (
@@ -244,6 +253,7 @@ function BookingRow({
     row.eventName,
   ].filter(Boolean);
   const live = row.status === 'active';
+  const held = row.status === 'pending';
 
   return (
     <article className="flex flex-col gap-2 border-t border-border py-4">
@@ -256,11 +266,22 @@ function BookingRow({
           <span className="truncate text-sm">{row.name ?? row.email}</span>
           {row.name ? <span className="truncate text-xs text-muted">{row.email}</span> : null}
         </div>
-        <Badge tone={live ? 'inverse' : 'neutral'}>
-          {t(live ? 'app.bookingsStatusActive' : 'app.bookingsStatusCancelled')}
+        <Badge tone={live ? 'inverse' : held ? 'warning' : 'neutral'}>
+          {t(
+            live
+              ? 'app.bookingsStatusActive'
+              : held
+                ? 'app.bookingsStatusHold'
+                : 'app.bookingsStatusCancelled',
+          )}
         </Badge>
       </div>
       <span className="text-xs text-muted-2">{details.join(' · ')}</span>
+      {held && row.holdExpiresAt ? (
+        <span className="text-xs text-muted">
+          {t('app.bookingsHoldUntil', { time: clockIn(row.holdExpiresAt, COACH_TIME_ZONE) })}
+        </span>
+      ) : null}
       {row.cancelReason && row.status === 'cancelled' ? (
         <span className="text-xs text-muted">{row.cancelReason}</span>
       ) : null}

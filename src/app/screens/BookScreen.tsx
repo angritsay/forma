@@ -73,6 +73,11 @@
  * never confirms anything itself: the webhook does, and the screen asks again when the person
  * comes back to it (focus, visibility), which is when the session appears at the top.
  *
+ * A hold that runs out *after* the payment page was opened is not «pick again» (0056): the money
+ * may be on its way, and the webhook still confirms a hold that simply ran out while the slot is
+ * free. So the card says «Оплата проверяется…», hides the picker and keeps asking until the
+ * session appears (`PaymentChecking`, `holdLapse`) — a second pick here was a second payment.
+ *
  * This replaced the Google appointment page and the «pay, then write, and he sets the time»
  * block. Without a till link for the length there is still nothing to hold a slot for, so that
  * case keeps «Написать тренеру».
@@ -120,7 +125,7 @@ import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Sheet } from '@/components/ui/Sheet';
 import { useToast } from '@/components/ui/Toast';
 import { l, plural, type Locale } from '@/i18n/index';
-import { getMyUpcomingBooking } from '@/lib/api/coachBookings';
+import { getMyCoachBookings, getMyUpcomingBooking } from '@/lib/api/coachBookings';
 import {
   confirmDemoHold,
   getMyHold,
@@ -136,8 +141,10 @@ import {
   clockIn,
   holdClock,
   holdDeadline,
+  holdLapse,
   JOIN_OPENS_MINUTES,
   joinOpen,
+  MOVE_CUTOFF_HOURS,
 } from '@/lib/coach/slots';
 import { isDemo } from '@/lib/api/mode';
 import { COACH_TILE, courseTileVars } from '@/lib/ui/tile';
@@ -148,6 +155,7 @@ import { SupportSheet } from '@/app/features/support/SupportSheet';
 import { splitName } from '@/app/features/profile/model';
 import { Doodle } from '@/components/ui/Doodle';
 import { CoachHeroCard } from '@/app/features/coach/CoachHeroCard';
+import { PaymentChecking } from '@/app/features/coach/PaymentChecking';
 import { SlotPicker } from '@/app/features/coach/SlotPicker';
 import { dateOf, slotErrorKey } from '@/app/features/coach/slotCopy';
 import { activeFromScroll, COACH_PEOPLE, type CoachPerson } from '@/lib/coach/person';
@@ -402,17 +410,63 @@ export default function BookScreen() {
   const personName = who === 'nastia' ? herName : name;
   const herLinks = NASTIA.links[locale] ?? NASTIA.links.ru;
 
+  /*
+   * A hold that ran out after the till was opened (0056): which hold, and when it lapsed here.
+   * While it is set the picker is hidden and the screen asks for the session every few seconds.
+   */
+  const [checking, setChecking] = useState<{ id: string; since: number } | null>(null);
+  const lapse = checking ? holdLapse(true, checking.since, now) : null;
+
   const clock = hold ? holdClock(hold.deadline, now) : null;
   useEffect(() => {
     if (!hold || !clock?.expired) return;
     lapsed.current.add(hold.id);
     setHold(null);
+    if (sent) {
+      setChecking({ id: hold.id, since: Date.now() });
+    } else {
+      setHoldLapsed(true);
+      setSlotsKey((n) => n + 1);
+    }
     setSent(false);
-    setHoldLapsed(true);
-    setSlotsKey((n) => n + 1);
     // A payment that landed in the last seconds may have made it a session: ask.
     refresh();
-  }, [hold, clock?.expired, refresh]);
+  }, [hold, clock?.expired, sent, refresh]);
+
+  /*
+   * While a payment is being checked: ask every ten seconds whether the lapsed hold became a
+   * session. All the person's sessions, not only the soonest — an earlier one would hide it. The
+   * clock ticks too, so the wait ends by itself after `PAYMENT_CHECK_MINUTES`.
+   */
+  useEffect(() => {
+    if (!checking || lapse !== 'checking') return;
+    const ask = () => {
+      getMyCoachBookings()
+        .then((list) => {
+          if (!alive.current) return;
+          if (list.some((b) => b.id === checking.id && b.status === 'active')) {
+            setChecking(null);
+            refresh();
+          }
+        })
+        .catch(() => {
+          /* Asked again in ten seconds. */
+        });
+    };
+    ask();
+    const id = window.setInterval(() => {
+      setNow(Date.now());
+      ask();
+    }, 10_000);
+    return () => window.clearInterval(id);
+  }, [checking, lapse, refresh]);
+
+  /* «Я не платил(а)»: the picker comes back, and the lapsed slot is free to everybody again. */
+  const stopChecking = () => {
+    setChecking(null);
+    setSlot(null);
+    reloadSlots();
+  };
 
   /*
    * Open the till for a held slot. In the demo there is no till: the demo's stand-in for the
@@ -775,7 +829,9 @@ export default function BookScreen() {
                * and the thing they are in the middle of. No till for this length, no picker: there
                * would be nothing to hold a slot for (`Option` offers the message instead).
                */}
-              {hold && clock && !clock.expired ? (
+              {checking && lapse && lapse !== 'expired' && !hold ? (
+                <PaymentChecking state={lapse} onContact={openContact} onDismiss={stopChecking} />
+              ) : hold && clock && !clock.expired ? (
                 <HoldPanel
                   hold={hold}
                   left={clock.left}
@@ -851,6 +907,10 @@ export default function BookScreen() {
           {moving ? (
             <MoveSheet
               booking={moving}
+              onContact={() => {
+                setMoving(null);
+                openContact();
+              }}
               onClose={() => setMoving(null)}
               onMoved={() => {
                 setMoving(null);
@@ -978,13 +1038,14 @@ function OutcomeList({
  * about what is shown.
  *
  * 1. The times are stored in UTC and shown in the **device's** zone. `booking.timezone` is the zone
- *    the person booked *in* — Calendly records it — and it is only the fallback for a browser that
- *    will not name its own. Somebody who booked from a laptop abroad and opens the Mini App at home
- *    wants their kitchen clock, not the one in the hotel.
+ *    the booking was made in — the coach's for one made here (0055) — and it is only the fallback
+ *    for a browser that will not name its own. Somebody who booked from a laptop abroad and opens
+ *    the Mini App at home wants their kitchen clock, not the one in the hotel.
  * 2. **The join link is often absent.** A historical Google Calendar booking (read in by a sync
- *    that is gone since the cutover) carries no cancel or reschedule URL at all, and a session with
- *    a physical location carries an address instead of a link. Every control here is drawn from the
- *    field that would make it work, so a missing field removes the control rather than disabling it.
+ *    that is gone since the cutover) may carry none, a session booked here before the coach's room
+ *    was set carries none, and a session with a physical location carries an address instead.
+ *    Every control here is drawn from the field that would make it work, so a missing field
+ *    removes the control rather than disabling it.
  * 3. **Nothing is booked, for almost everybody**, and that is not an empty state to design — the
  *    card simply is not rendered. `BookScreen` holds that: `booking === null` draws nothing.
  */
@@ -1145,23 +1206,6 @@ function UpcomingSession({
             </div>
           </div>
         )
-      ) : null}
-
-      {/* A Calendly booking's own links; a Google Calendar booking has neither, and then there is
-          no row at all. */}
-      {!booking.coachId && (booking.rescheduleUrl || booking.cancelUrl) ? (
-        <div className="-mb-2 -ml-4.5 flex flex-wrap items-center">
-          {booking.rescheduleUrl ? (
-            <LinkButton href={booking.rescheduleUrl} variant="ghost" size="sm" external>
-              {t('app.bookMove')}
-            </LinkButton>
-          ) : null}
-          {booking.cancelUrl ? (
-            <LinkButton href={booking.cancelUrl} variant="ghost" size="sm" external>
-              {t('app.bookCancel')}
-            </LinkButton>
-          ) : null}
-        </div>
       ) : null}
     </section>
   );
@@ -1335,13 +1379,20 @@ function HoldPanel({
  * «Перенести» (0055): the same picker on the session's own calendar and length, and one button
  * that names the new time. `move_my_booking` checks the 24 hours again — the sheet may have sat
  * open across the line — and a refusal says what to do instead.
+ *
+ * Since 0056 the picker asks for slots with this session ignored (`p_ignore_booking`), so it can
+ * move half an hour over its own old time, and only from 24 hours ahead — the rule that decides
+ * whether «Перенести» is shown at all holds for the new time too. Two weeks with nothing free end
+ * in «Написать тренеру», as on the tab.
  */
 function MoveSheet({
   booking,
+  onContact,
   onClose,
   onMoved,
 }: {
   booking: CoachBooking;
+  onContact: () => void;
   onClose: () => void;
   onMoved: () => void;
 }) {
@@ -1400,12 +1451,6 @@ function MoveSheet({
         <p className="tabular text-[13px] text-muted">
           {t('app.bookMoveNow', { when: whenLine(tr, booking.startsAt, booking.endsAt, zone) })}
         </p>
-        {/*
-         * `available_slots` counts this very session as busy, so a start overlapping it (10:00 →
-         * 10:30) is not offered here though `move_my_booking` would take it. Said, until the
-         * server offers slots for a move (`p_ignore`), rather than left as a silent gap.
-         */}
-        <p className="text-xs leading-snug text-muted-2">{t('app.bookMoveOverlapNote')}</p>
         {booking.coachId ? (
           <SlotPicker
             coach={booking.coachId}
@@ -1413,6 +1458,13 @@ function MoveSheet({
             value={slot}
             onChange={setSlot}
             reloadKey={reload}
+            ignore={booking.id}
+            leadMs={MOVE_CUTOFF_HOURS * 3_600_000}
+            empty={
+              <Button variant="secondary" size="md" className="self-start" onClick={onContact}>
+                {t('app.bookContact')}
+              </Button>
+            }
           />
         ) : null}
       </div>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   addDaysIso,
+  bookingsOutsideHours,
   canSelfMove,
   clockIn,
   dateIn,
@@ -9,8 +10,10 @@ import {
   generateSlots,
   holdClock,
   holdDeadline,
+  holdLapse,
   isoWeekday,
   joinOpen,
+  PAYMENT_CHECK_MINUTES,
   parseClock,
   parseEndClock,
   rangeProblems,
@@ -277,5 +280,69 @@ describe('the admin week', () => {
       { weekday: 3, start: '10:00', end: '12:00' },
       { weekday: 3, start: '18:00', end: '20:00' },
     ]);
+  });
+});
+
+/*
+ * 0056: the schedule editor warns about sessions the new hours leave out. Monday 5 Oct 2026 in
+ * Moscow (UTC+3, no daylight saving): 10:00 there is 07:00 UTC.
+ */
+describe('bookingsOutsideHours', () => {
+  const MSK = 'Europe/Moscow';
+  const at = (hhmm: string, minutes: number) => {
+    const startsAt = new Date(`2026-10-05T${hhmm}:00+03:00`).toISOString();
+    return {
+      id: hhmm,
+      startsAt,
+      endsAt: new Date(Date.parse(startsAt) + minutes * 60_000).toISOString(),
+    };
+  };
+  const monday = [
+    { weekday: 1, start: '10:00', end: '12:00' },
+    { weekday: 1, start: '12:00', end: '14:00' },
+  ];
+
+  it('keeps a session inside the hours, across touching windows', () => {
+    expect(bookingsOutsideHours([at('10:00', 60), at('11:30', 60)], monday, [], MSK)).toEqual([]);
+  });
+
+  it('lists a session that starts before or runs past the hours', () => {
+    const out = bookingsOutsideHours([at('09:30', 60), at('13:30', 60)], monday, [], MSK);
+    expect(out.map((b) => b.id)).toEqual(['09:30', '13:30']);
+  });
+
+  it('lists everything on a weekday with no hours any more', () => {
+    expect(bookingsOutsideHours([at('10:00', 30)], [], [], MSK)).toHaveLength(1);
+  });
+
+  it('lists a session on a day off and under an hour off, not beside it', () => {
+    const dayOff = [{ date: '2026-10-05', start: null, end: null, kind: 'off' as const }];
+    expect(bookingsOutsideHours([at('10:00', 30)], monday, dayOff, MSK)).toHaveLength(1);
+    const hourOff = [{ date: '2026-10-05', start: '11:00', end: '12:00', kind: 'off' as const }];
+    const out = bookingsOutsideHours([at('10:00', 60), at('10:30', 60)], monday, hourOff, MSK);
+    expect(out.map((b) => b.id)).toEqual(['10:30']);
+  });
+
+  it('counts an extra window as hours', () => {
+    const extra = [{ date: '2026-10-05', start: '18:00', end: '20:00', kind: 'extra' as const }];
+    expect(bookingsOutsideHours([at('18:30', 60)], monday, extra, MSK)).toEqual([]);
+  });
+});
+
+/*
+ * 0056: a hold that runs out after the payment page was opened is not «pick again» — that would be
+ * a second payment. The screen waits for the webhook, then gives up and points to the coach.
+ */
+describe('holdLapse', () => {
+  const T = Date.parse('2026-10-05T07:00:00Z');
+  it('says pick again only when the till was never opened', () => {
+    expect(holdLapse(false, T, T)).toBe('expired');
+    expect(holdLapse(false, T, T + 60 * 60_000)).toBe('expired');
+  });
+
+  it('waits for the payment after the till was opened, then stops waiting', () => {
+    expect(holdLapse(true, T, T)).toBe('checking');
+    expect(holdLapse(true, T, T + (PAYMENT_CHECK_MINUTES - 1) * 60_000)).toBe('checking');
+    expect(holdLapse(true, T, T + PAYMENT_CHECK_MINUTES * 60_000)).toBe('unconfirmed');
   });
 });

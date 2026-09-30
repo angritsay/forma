@@ -6,6 +6,7 @@ describe('slotErrorKey', () => {
   it('names what to do for each server code', () => {
     expect(slotErrorKey(new AppError('validation', 'slot_taken'))).toBe('app.bookHoldTaken');
     expect(slotErrorKey(new AppError('validation', 'too_late'))).toBe('app.bookMoveTooLate');
+    expect(slotErrorKey(new AppError('validation', 'too_soon'))).toBe('app.bookMoveTooSoon');
     expect(slotErrorKey(new AppError('validation', 'rate_limited'))).toBe(
       'app.bookHoldRateLimited',
     );

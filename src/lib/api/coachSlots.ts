@@ -67,18 +67,25 @@ function checkInstant(iso: string): void {
   if (!Number.isFinite(Date.parse(iso))) throw new AppError('validation', 'invalid_times');
 }
 
-/** Free starts of a coach for a length between two instants (`available_slots`). */
+/**
+ * Free starts of a coach for a length between two instants (`available_slots`). `ignore` is the
+ * caller's own session being moved (0056): it does not block its own new time, so a session can
+ * move half an hour over where it was. The server honours it only for the caller's own booking.
+ */
 export async function listFreeSlots(
   coach: string,
   option: SessionOption,
   fromIso: string,
   toIso: string,
+  ignore: string | null = null,
 ): Promise<FreeSlot[]> {
   checkCoach(coach);
   checkOption(option);
   checkInstant(fromIso);
   checkInstant(toIso);
-  if (isDemo()) return (await demo()).listFreeSlots(coach, option, fromIso, toIso);
+  if (isDemo()) {
+    return (await demo()).listFreeSlots(coach, option, fromIso, toIso, ignore ?? undefined);
+  }
   return guard(async () => {
     await requireUser();
     const rows = unwrapMaybe<DbSlot[]>(
@@ -87,6 +94,8 @@ export async function listFreeSlots(
         p_option: option,
         p_from: fromIso,
         p_to: toIso,
+        // Sent only when there is one, so the call reads the same as before for a new booking.
+        ...(ignore ? { p_ignore_booking: ignore } : {}),
       }),
     );
     return (rows ?? []).map(slotFromDb);

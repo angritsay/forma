@@ -156,4 +156,29 @@ describe('adminBookingFromDb', () => {
   it('never reports negative minutes', () => {
     expect(adminBookingFromDb(booking({ ends_at: 'nonsense' })).minutes).toBe(0);
   });
+
+  /* 0056: the row names its coach itself, and a hold says so and when it ends. */
+  it('reads the coach, the length and a hold from the row', () => {
+    const hold = adminBookingFromDb(
+      booking({
+        status: 'pending',
+        source: 'forma',
+        coach_id: 'nastia',
+        option_id: 'half',
+        hold_expires_at: '2026-09-25T14:20:00Z',
+      }),
+    );
+    expect(hold).toMatchObject({
+      status: 'pending',
+      coachId: 'nastia',
+      optionId: 'half',
+      holdExpiresAt: '2026-09-25T14:20:00Z',
+    });
+    // A server without 0056 sends none of the three: nulls, not a crash.
+    expect(adminBookingFromDb(booking())).toMatchObject({
+      coachId: null,
+      optionId: null,
+      holdExpiresAt: null,
+    });
+  });
 });

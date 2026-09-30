@@ -11,6 +11,11 @@
  * checked here before they go (`rangeProblems`): a reversed or overlapping range is a typo, and
  * the button stays off until there is none. Times are the coach's wall clock, named in the hint,
  * because the owner may be travelling and the coach is not.
+ *
+ * Changing the hours moves and cancels nothing (0056). So the editor reads the coach's upcoming
+ * sessions and, as the week is edited and exceptions added, lists the ones the hours would no
+ * longer cover (`bookingsOutsideHours`) — a paid session is not stranded without anybody seeing
+ * it. They are moved or cancelled in «Записи», with the client told.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -26,8 +31,10 @@ import {
   type AdminCoach,
   type CoachException,
 } from '@/lib/api/adminCoaches';
+import { listAdminBookings, type AdminBooking } from '@/lib/api/adminInbox';
 import { isAppError } from '@/lib/api/errors';
 import {
+  bookingsOutsideHours,
   dateIn,
   rangeProblems,
   rulesToWeek,
@@ -40,6 +47,7 @@ import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { useT } from '@/app/hooks/useT';
 import { adminErrorTitle } from '@/app/features/admin/adminError';
 import { dayLong, weekdayLong } from '@/app/features/coach/slotCopy';
+import { formatMoscow } from '@/app/features/admin/inbox';
 
 const PROBLEM: Record<RangeProblem, TKey> = {
   format: 'app.bookingsRangeFormat',
@@ -65,6 +73,8 @@ export function CoachSchedule({ coach, onSaved }: { coach: AdminCoach; onSaved: 
   const [room, setRoom] = useState(coach.roomUrl ?? '');
   const [roomError, setRoomError] = useState(false);
   const [busy, setBusy] = useState<'room' | 'week' | 'exception' | null>(null);
+  /* This coach's upcoming sessions, for the warning; none when the read fails. */
+  const [sessions, setSessions] = useState<AdminBooking[]>([]);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -93,6 +103,20 @@ export function CoachSchedule({ coach, onSaved }: { coach: AdminCoach; onSaved: 
     load();
   }, [load]);
 
+  useEffect(() => {
+    let alive = true;
+    listAdminBookings('upcoming')
+      .then((rows) => {
+        if (alive) setSessions(rows.filter((r) => r.coachId === coach.id));
+      })
+      .catch(() => {
+        /* The warning is a courtesy: without the list the editor still works. */
+      });
+    return () => {
+      alive = false;
+    };
+  }, [coach.id]);
+
   const saveRoom = async () => {
     setBusy('room');
     setRoomError(false);
@@ -112,6 +136,11 @@ export function CoachSchedule({ coach, onSaved }: { coach: AdminCoach; onSaved: 
   const weekValid = [...problems.values()].every((p) => p.size === 0);
 
   const editDay = (day: number, next: RangeDraft[]) => setWeek((w) => new Map(w).set(day, next));
+
+  /* Against the week as edited (once it reads), and the exceptions as saved. */
+  const outside = weekValid
+    ? bookingsOutsideHours(sessions, weekToRules(week), exceptions, coach.timezone)
+    : [];
 
   const saveWeek = async () => {
     setBusy('week');
@@ -250,6 +279,23 @@ export function CoachSchedule({ coach, onSaved }: { coach: AdminCoach; onSaved: 
           {t('app.bookingsWeekSave')}
         </Button>
       </section>
+
+      {outside.length > 0 ? (
+        <section role="status" className="flex flex-col gap-2 border-t border-border pt-4">
+          <h2 className="text-[15px] text-warning">{t('app.bookingsOutsideTitle')}</h2>
+          <ul className="flex flex-col gap-1">
+            {outside.map((b) => (
+              <li key={b.id} className="text-sm">
+                <span className="tabular">{formatMoscow(b.startsAt, locale)}</span>{' '}
+                <span className="text-xs text-muted-2">{t('app.bookingsMsk')}</span>
+                {' · '}
+                <span className="break-all text-muted">{b.name ?? b.email}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-muted-2">{t('app.bookingsOutsideBody')}</p>
+        </section>
+      ) : null}
 
       <Exceptions
         coachId={coach.id}

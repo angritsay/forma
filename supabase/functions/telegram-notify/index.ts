@@ -417,7 +417,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const message = messageFor(row, who.locale);
+    const message = messageFor(row, who.locale, now);
     if (!message) {
       console.error('telegram-notify: unknown kind', row.kind);
       await done('skipped', `unknown kind ${row.kind}`);

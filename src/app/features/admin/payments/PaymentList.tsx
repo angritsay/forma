@@ -5,6 +5,7 @@
  *
  * Buttons only where there is something to decide: an unmatched payment for something that can be
  * opened gets «Привязать к человеку» and, until somebody has decided, «Отметить как разобранный».
+ * A session paid for with no time on the calendar gets «Записать на время» (0056).
  */
 import { Badge, type BadgeTone } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -15,6 +16,7 @@ import { courseName, sourceLabel } from '../model';
 import { rowIndex } from '../PurchaseList';
 import {
   canBind,
+  canBookSession,
   canDismiss,
   formatMoney,
   INTENT_LABEL,
@@ -23,13 +25,15 @@ import {
   type PaymentState,
 } from './model';
 
-/* The unmatched payment is the one lit stamp — it is the only state that asks for something. */
+/* The lit stamps are the states that ask for something: money that opened nothing, and a session
+   paid for with no time on the calendar. */
 const STATE_TONE: Record<PaymentState, BadgeTone> = {
   unclaimed: 'warning',
   applied: 'neutral',
   bound: 'neutral',
   dismissed: 'neutral',
   session: 'neutral',
+  sessionUnbooked: 'warning',
 };
 
 export interface PaymentListProps {
@@ -39,9 +43,18 @@ export interface PaymentListProps {
   highlightId?: string | null;
   onBind: (row: PaymentRow) => void;
   onDismiss: (row: PaymentRow) => void;
+  /** «Записать на время» for a paid session with no time (0056). */
+  onBook: (row: PaymentRow) => void;
 }
 
-export function PaymentList({ rows, busyId, highlightId, onBind, onDismiss }: PaymentListProps) {
+export function PaymentList({
+  rows,
+  busyId,
+  highlightId,
+  onBind,
+  onDismiss,
+  onBook,
+}: PaymentListProps) {
   const { t, locale } = useT();
   const time = (iso: string) =>
     new Intl.DateTimeFormat(locale === 'ru' ? 'ru-RU' : 'en-GB', {
@@ -127,6 +140,18 @@ export function PaymentList({ rows, busyId, highlightId, onBind, onDismiss }: Pa
                         {t('app.adminPayDismiss')}
                       </Button>
                     ) : null}
+                  </div>
+                ) : canBookSession(row) ? (
+                  <div className="flex flex-wrap gap-2 lg:shrink-0">
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      loading={busyId === row.id}
+                      disabled={busyId !== null && busyId !== row.id}
+                      onClick={() => onBook(row)}
+                    >
+                      {t('app.adminPayBook')}
+                    </Button>
                   </div>
                 ) : null}
               </div>
