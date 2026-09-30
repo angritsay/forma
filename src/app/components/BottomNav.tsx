@@ -2,6 +2,7 @@ import { clsx } from 'clsx';
 import { useMemo } from 'react';
 import { NavLink, useLocation } from 'react-router';
 import { haptic } from '@/lib/telegram/webapp';
+import { BOOKING } from '@content/site/booking';
 import { useT } from '@/app/hooks/useT';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import type { TKey } from '@/i18n/index';
@@ -55,9 +56,16 @@ const TABS: readonly NavItem[] = [
 /** The fourth seat. Appended, never inserted: the three the product is keep their order. */
 const ADMIN_TAB: NavItem = { to: '/admin', labelKey: 'app.adminTitle' };
 
-/** The seats this bar actually has — three, or four for somebody with the panel. */
-export function tabItems(admin: boolean): readonly NavItem[] {
-  return admin ? [...TABS, ADMIN_TAB] : TABS;
+/**
+ * The seats this bar actually has — three, or four for somebody with the panel.
+ *
+ * «Тренер» sits only while booking is on (`BOOKING.enabled`, `content/site/booking.ts`): a seat
+ * that opens a closed offer is a seat that lies. `booking` is a parameter for the tests; the app
+ * always passes the flag.
+ */
+export function tabItems(admin: boolean, booking: boolean = BOOKING.enabled): readonly NavItem[] {
+  const tabs = booking ? TABS : TABS.filter((item) => item.to !== '/book');
+  return admin ? [...tabs, ADMIN_TAB] : tabs;
 }
 
 /**
@@ -77,9 +85,13 @@ export function tabItems(admin: boolean): readonly NavItem[] {
  * -1 is a real answer, not a failure: `/leaderboard` and the player's summary both show
  * this bar and belong to no seat, and the highlight fades out rather than pointing at one of them.
  */
-export function activeTabIndex(pathname: string, admin = false): number {
+export function activeTabIndex(
+  pathname: string,
+  admin = false,
+  booking: boolean = BOOKING.enabled,
+): number {
   const under = (base: string) => pathname === base || pathname.startsWith(`${base}/`);
-  return tabItems(admin).findIndex(
+  return tabItems(admin, booking).findIndex(
     (item) => (item.end ? pathname === item.to : under(item.to)) || (item.owns ?? []).some(under),
   );
 }

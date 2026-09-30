@@ -27,7 +27,3 @@ export const FLAG_LABEL: Record<Flag, TKey> = {
 export const SELF_FLAGS = ['club_quiet'] as const satisfies readonly Flag[];
 
 export type SelfFlag = (typeof SELF_FLAGS)[number];
-
-export function isFlag(value: string): value is Flag {
-  return (FLAGS as readonly string[]).includes(value);
-}

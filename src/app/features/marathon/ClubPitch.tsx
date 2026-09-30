@@ -246,11 +246,11 @@ export function ClubPitch({ locked }: ClubPitchProps) {
  * So the slot keeps the pill's footprint and stops being a pill: same `-mx-2`, same `h-13`, same
  * second line underneath. It is outlined in the club's colour instead of filled with it, and that
  * difference is the whole message — a filled bar is something you press, and there is nothing here
- * to press. The coach forms each round by hand, so no button could put anyone in one.
+ * to press. No button could put anyone in a round.
  *
  * Nothing on it is invented. There is no start date, no countdown and no number of participants,
  * because the app holds none of the three: outside a round there is exactly one true thing to say
- * about this person's standing, and the line under it says who starts the next one.
+ * about this person's standing, and the line under it says where the tasks will appear.
  */
 export function ClubMember() {
   const { t } = useT();

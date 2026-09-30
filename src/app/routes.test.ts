@@ -103,6 +103,15 @@ describe('navigation targets', () => {
     }
   });
 
+  it('has a module for every registered screen name', () => {
+    // `getScreen` has no fallback screen any more; a name without its file would throw on open.
+    const registry = read('screens/registry.ts');
+    const names = [...registry.matchAll(/'([A-Za-z]+Screen)'/g)].map((m) => m[1]!);
+    for (const name of names) {
+      expect(() => read(`screens/${name}.tsx`), `${name} has no module`).not.toThrow();
+    }
+  });
+
   it('declares a route for every registered screen name that is reachable by path', () => {
     // A screen in the registry with no route is dead weight; one is usually half-finished wiring.
     const registry = read('screens/registry.ts');

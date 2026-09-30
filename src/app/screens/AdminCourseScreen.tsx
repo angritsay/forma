@@ -146,14 +146,23 @@ export default function AdminCourseScreen() {
 
   const { course, days, workouts } = bundle;
   const openDay = days.find((d) => d.id === openDayId) ?? null;
+  /*
+   * A compiled course's file wins over this draft (see CompiledCourseNotice), so publishing it
+   * would change nothing for anyone — the button stays off rather than pretend (`canPublish`) —
+   * and neither would an edit. The screen is read-only for it: the fields are disabled, no day is
+   * added or removed, and nothing is autosaved. The notice stays and says why.
+   */
+  const compiled = isCompiledCourse(course.slugId);
 
   /** Apply a patch locally at once, and schedule the write. */
   const patchCourse = (patch: AdminCoursePatch) => {
+    if (compiled) return;
     setBundle((b) => (b ? { ...b, course: { ...b.course, ...patch } } : b));
     courseSave.push(patch);
   };
 
   const patchDay = (dayId: string, patch: AdminCourseDayPatch) => {
+    if (compiled) return;
     setBundle((b) =>
       b ? { ...b, days: b.days.map((d) => (d.id === dayId ? { ...d, ...patch } : d)) } : b,
     );
@@ -313,9 +322,6 @@ export default function AdminCourseScreen() {
   // --- the course -------------------------------------------------------------
   const issues = assembled?.issues ?? [];
   const published = course.status === 'published';
-  // A compiled course's file wins over this draft (see CompiledCourseNotice), so publishing it
-  // would change nothing for anyone — the button stays off rather than pretend (`canPublish`).
-  const compiled = isCompiledCourse(course.slugId);
 
   return (
     <Screen
@@ -332,7 +338,7 @@ export default function AdminCourseScreen() {
         />
       }
       footer={
-        tab === 'days' ? (
+        tab === 'days' && !compiled ? (
           <Button
             size="lg"
             fullWidth
@@ -372,7 +378,15 @@ export default function AdminCourseScreen() {
         </div>
       ) : null}
 
-      {tab === 'meta' ? <CourseMetaEditor course={course} onPatch={patchCourse} /> : null}
+      {/*
+       * Read-only on a compiled course: a disabled fieldset turns off every input, select and
+       * button inside the editors at once, and `patchCourse` / `patchDay` refuse the write anyway.
+       */}
+      {tab === 'meta' ? (
+        <fieldset disabled={compiled} className="min-w-0">
+          <CourseMetaEditor course={course} onPatch={patchCourse} />
+        </fieldset>
+      ) : null}
 
       {tab === 'days' ? (
         days.length === 0 ? (
@@ -419,15 +433,17 @@ export default function AdminCourseScreen() {
                     {t('app.courseTabDays')}
                   </Button>
                 </div>
-                <DayEditor
-                  courseSlugId={course.slugId}
-                  day={openDay}
-                  workout={workouts.find((w) => w.id === openDay.customWorkoutId) ?? null}
-                  onPatch={(patch) => patchDay(openDay.id, patch)}
-                  onBuildNewWorkout={() => setWorkoutFor({ dayId: openDay.id, existing: null })}
-                  onEditWorkout={(workoutId) => void openWorkoutEditor(openDay.id, workoutId)}
-                  onDelete={() => setConfirm({ kind: 'deleteDay', dayId: openDay.id })}
-                />
+                <fieldset disabled={compiled} className="min-w-0">
+                  <DayEditor
+                    courseSlugId={course.slugId}
+                    day={openDay}
+                    workout={workouts.find((w) => w.id === openDay.customWorkoutId) ?? null}
+                    onPatch={(patch) => patchDay(openDay.id, patch)}
+                    onBuildNewWorkout={() => setWorkoutFor({ dayId: openDay.id, existing: null })}
+                    onEditWorkout={(workoutId) => void openWorkoutEditor(openDay.id, workoutId)}
+                    onDelete={() => setConfirm({ kind: 'deleteDay', dayId: openDay.id })}
+                  />
+                </fieldset>
               </div>
             ) : null}
           </div>
@@ -497,6 +513,7 @@ export default function AdminCourseScreen() {
               variant="secondary"
               size="lg"
               loading={publishing}
+              disabled={compiled}
               onClick={() => setConfirm({ kind: 'unpublish' })}
             >
               {t('app.courseUnpublish')}
@@ -513,7 +530,7 @@ export default function AdminCourseScreen() {
             </Button>
           )}
 
-          {!published && days.length === 0 ? (
+          {!published && days.length === 0 && !compiled ? (
             <Button
               variant="danger"
               size="sm"

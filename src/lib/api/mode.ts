@@ -46,24 +46,11 @@ export function isDemo(): boolean {
   return storage()?.getItem(DEMO_FLAG_KEY) === FLAG_ON;
 }
 
-/** True when the build forces demo mode, so the visitor cannot leave it from the UI. */
-export function isDemoForced(): boolean {
-  return isDemoEnv();
-}
-
 export function enableDemo(): void {
   try {
     storage()?.setItem(DEMO_FLAG_KEY, FLAG_ON);
   } catch {
     /* Nothing to do: without storage the choice cannot be remembered. */
-  }
-}
-
-export function disableDemo(): void {
-  try {
-    storage()?.removeItem(DEMO_FLAG_KEY);
-  } catch {
-    /* ignore */
   }
 }
 

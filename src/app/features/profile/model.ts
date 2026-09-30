@@ -11,24 +11,7 @@ import type { Profile } from '@/lib/api/types';
 import { computeFitnessIndex } from '@/lib/training/assessment';
 import type { Limitation, UserTrainingProfile } from '@/lib/training/types';
 import type { Translator } from '@/app/hooks/useT';
-import { EQUIPMENT_LABEL, LIMITATION_LABEL } from '@/app/screens/onboarding/labels';
-
-/**
- * The assessment has never been done: the profile carries neither of the two counts the fitness
- * index reads from it.
- *
- * This is what «Не сейчас» leaves behind. The onboarding draft is cleared the moment the profile
- * is saved, so the postponement cannot be remembered there — and it does not need to be: the
- * absence of the numbers *is* the state, and it stays true across devices and reinstalls. Home
- * turns it into today's second task.
- */
-export function assessmentPending(
-  profile: Pick<Profile, 'trainingProfile'> | null | undefined,
-): boolean {
-  const tp = profile?.trainingProfile;
-  if (!tp) return false;
-  return tp.tests.pushups === undefined && tp.tests.squats60s === undefined;
-}
+import { EQUIPMENT_LABEL } from '@/app/screens/onboarding/labels';
 
 /** 16 hex characters from the platform RNG (Math.random when crypto is unavailable). */
 export function newAvatarSeed(): string {
@@ -99,12 +82,6 @@ export function equipmentSummary(tr: Translator, tp: UserTrainingProfile | null)
         : label;
     })
     .join(', ');
-}
-
-export function limitationsSummary(tr: Translator, tp: UserTrainingProfile | null): string {
-  const items = tp?.limitations ?? [];
-  if (items.length === 0) return tr.t('app.profileLimitationsNone');
-  return items.map((l) => tr.t(LIMITATION_LABEL[l])).join(', ');
 }
 
 /**

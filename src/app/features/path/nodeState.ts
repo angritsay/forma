@@ -65,11 +65,6 @@ export function nodeStatus(
   return index < current ? 'open' : 'locked';
 }
 
-/** True when the node can be opened (done, current or available). */
-export function isUnlocked(status: NodeStatus): boolean {
-  return status !== 'locked';
-}
-
 /** The next node to do, or null when the course is finished. */
 export function nextNode(course: Course, state: PathState | null | undefined): CourseNode | null {
   const i = currentNodeIndex(course.nodes, state);

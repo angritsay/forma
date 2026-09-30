@@ -34,11 +34,6 @@ export type RestStep = Extract<PlayerStep, { kind: 'rest' }>;
 export type AmrapStep = Extract<PlayerStep, { kind: 'amrap' }>;
 export type FortimeStep = Extract<PlayerStep, { kind: 'fortime' }>;
 
-/** Steps that produce a result and count towards completion. */
-export function isWorkType(step: PlayerStep): boolean {
-  return step.kind === 'work' || step.kind === 'amrap' || step.kind === 'fortime';
-}
-
 /*
  * Re-exported so the player's own modules have one place to ask from. It used to read the compiled
  * registry directly; it now goes through the catalogue, which also knows the exercises written in

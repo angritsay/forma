@@ -22,9 +22,3 @@ export async function listEntitlements(): Promise<Entitlement[]> {
     return rows.map(entitlementFromDb);
   });
 }
-
-/** True when the current user owns the course. */
-export async function hasEntitlement(courseId: string): Promise<boolean> {
-  const list = await listEntitlements();
-  return list.some((e) => e.courseId === courseId);
-}

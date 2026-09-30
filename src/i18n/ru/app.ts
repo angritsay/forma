@@ -27,8 +27,9 @@ export const app = {
   errorNotConfiguredBody:
     'Приложению нужен проект Supabase. Задай эти переменные окружения и пересобери сайт.',
   errorNotConfiguredHint: 'Пошаговая инструкция:',
-  errorScreenMissingTitle: 'Этот экран пока недоступен',
-  errorScreenMissingBody: 'Вернись на главный экран.',
+  // «Тренер» with booking switched off (`BOOKING.enabled`): no tab, and a link lands here.
+  bookOffTitle: 'Запись к тренеру сейчас закрыта',
+  bookOffBody: 'Когда она откроется, записаться можно будет здесь.',
 
   // Звук. Одна строка, один переключатель и никаких пояснений: ListRow обрезает подпись, а
   // предложение, которое нельзя дочитать, хуже, чем его отсутствие.
@@ -170,9 +171,6 @@ export const app = {
   homeDeckContinue: 'Продолжить',
   homeErrorTitle: 'Не удалось загрузить прогресс',
   homeErrorBody: 'Проверь соединение и попробуй ещё раз.',
-
-  // Курсы
-  coursesCompleted: 'Пройден — открыть путь',
 
   // Путь курса
   pathProgressLabel: 'Прогресс курса',
@@ -544,7 +542,6 @@ export const app = {
   bookPay: 'Оплатить {price}',
   bookContact: 'Написать тренеру',
   bookContactHint: 'Оплата пока не подключена: напиши — о времени и оплате договоритесь напрямую.',
-  bookDemoNote: 'В демо-режиме оплата отключена.',
   profileSignOut: 'Выйти',
   profileSignOutTitle: 'Выйти из аккаунта?',
   profileSignOutBody: 'Всё сделанное останется на месте. Чтобы вернуться, введи код из письма.',
@@ -1122,7 +1119,7 @@ export const app = {
   coursePublish: 'Опубликовать',
   courseUnpublish: 'Снять с публикации',
   coursePublishReady: 'Курс готов к публикации.',
-  courseCompiledNotice: 'Этот курс ведётся в коде — правки здесь не видны ученикам.',
+  courseCompiledNotice: 'Этот курс ведётся в коде — здесь он открыт только для просмотра.',
   coursePublishBlocked: 'Пока опубликовать нельзя:',
   coursePublishSite:
     'Страница курса на сайте появится после следующей сборки — она собирается раз в сутки. Нужно сразу — запусти «Deploy site» в GitHub Actions.',
@@ -1895,11 +1892,10 @@ export const app = {
   clubStorySticker: 'Клуб',
   // --- Club, for somebody who is already in it (stream: club-pitch-states) ----
   // Where the join pill stands on the selling screen. They pay, so there is nothing to sell and
-  // nothing to press: the coach builds each round by hand. The note is the sentence that used to
-  // be four lines of grey body copy in the button's place (marathonPitchNoRound, now gone).
+  // nothing to press until a round is running. The note promises only what is true: the club
+  // opens soon and its tasks land on this screen.
   clubMemberTitle: 'Ты в клубе',
-  clubMemberNote:
-    'Круг собирает тренер: он добавляет участников и разбивает на пары сам. Как только начнётся новый, задания появятся здесь.',
+  clubMemberNote: 'Клуб скоро откроется — задания появятся здесь.',
   // --- Coach: the session already booked (stream: coach-sentence) -------------
   // `src/lib/coach/booking.ts` returns a shape and never a string, deliberately, so the Russian
   // lives here. The shape exists for the day boundary: тренировка завтра в 9:00 — это «завтра в

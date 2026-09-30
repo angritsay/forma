@@ -9,8 +9,6 @@
  */
 import { EMAIL_RE } from '@/lib/api/internal';
 
-export const PERSON_ROUTE = '/admin/people/:email';
-
 /** The page for one address. */
 export function personPath(email: string): string {
   return `/admin/people/${encodeURIComponent(email.trim().toLowerCase())}`;

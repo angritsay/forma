@@ -47,6 +47,7 @@ import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { useT } from '@/app/hooks/useT';
 import { courseTileVars } from '@/lib/ui/tile';
 import {
+  courseVisible,
   firstTrainableNode,
   hasCompletedIn,
   nodeAccess,
@@ -141,7 +142,8 @@ export default function NodePreviewScreen() {
     );
   }, [workout, ctx, engineState.scale, deload, repeat]);
 
-  if (!course || !node) {
+  // A course off sale is as absent here as on its path screen (`courseVisible`).
+  if (!course || !node || !courseVisible(course, owned)) {
     return (
       <Screen header={<TopBar back="/courses" />}>
         <EmptyState

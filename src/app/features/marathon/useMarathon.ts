@@ -15,14 +15,12 @@ import { toAppError, type AppError } from '@/lib/api/errors';
 import {
   getMarathonDay,
   getMarathonMyPoints,
-  getMarathonRoster,
   getMarathonScores,
   joinClub,
   listMyMarathons,
 } from '@/lib/api/marathon';
 import type {
   MarathonDayPoints,
-  MarathonRosterRow,
   MarathonScoreRow,
   MarathonTodayTask,
   MyMarathon,
@@ -154,13 +152,5 @@ export function useMarathonMyPoints(
     () => (marathonId ? getMarathonMyPoints(marathonId) : Promise.resolve([])),
     [],
     [marathonId, version],
-  );
-}
-
-export function useMarathonRoster(marathonId: string | null): Loaded<MarathonRosterRow[]> {
-  return useLoader<MarathonRosterRow[]>(
-    () => (marathonId ? getMarathonRoster(marathonId) : Promise.resolve([])),
-    [],
-    [marathonId],
   );
 }
