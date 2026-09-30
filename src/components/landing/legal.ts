@@ -10,6 +10,7 @@ import { LINKS } from '@content/site/links';
 import { BOOKING } from '@content/site/booking';
 import { formatPrice, PRICING } from '@content/site/pricing';
 import { HOLD_MINUTES } from '@/lib/coach/slots';
+import { GAME_TRIAL_DAYS } from '@/app/features/marathon/gameAccess';
 
 export interface LegalSection {
   id: string;
@@ -40,6 +41,8 @@ const days = PRICING.refundDays;
 const maxWorkouts = PRICING.refundMaxCompletedWorkouts;
 const age = PRICING.minimumAge;
 const notice = PRICING.shutdownNoticeDays;
+/** The club days a course opens, counted from its activation (`gameAccess.ts`, `club_access()`). */
+const giftDays = GAME_TRIAL_DAYS;
 
 /*
  * One-to-one sessions with the coach, as the terms and the refund policy describe them: every
@@ -222,11 +225,25 @@ export function privacyDocument(): LegalDocument {
            * Номер аккаунта в телеграме — персональные данные, и он появляется в базе сам, без
            * единого действия человека: приложение открылось внутри телеграма — связка записалась.
            * Именно поэтому сказать об этом надо здесь и прямо, а не считать, что «он же и так
-           * открыл нас из телеграма, значит знал».
+           * открыл нас из телеграма, значит знал». Путь с сайта — тот же номер, привязанный
+           * человеком из браузера, и цели у него те же.
            */
           {
-            ru: 'Номер твоего аккаунта в телеграме — если ты открываешь приложение внутри телеграма. Он нужен только затем, чтобы бот мог написать тебе про оплату и про то, что тренер выдал тренировку. Ни имени, ни телефона, ни переписки мы из телеграма не получаем.',
-            en: 'Your Telegram account number — if you open the app inside Telegram. It exists only so the bot can write to you about a payment or a workout the coach assigned. We receive no name, phone number or messages from Telegram.',
+            ru: 'Номер твоего аккаунта в телеграме — если ты открываешь приложение внутри телеграма или привязываешь телеграм к аккаунту с сайта. Он нужен только затем, чтобы бот мог писать тебе: про оплату и про тренировку, которую выдал тренер, сообщения клуба, подтверждения и напоминания о занятиях с тренером. Ни имени, ни телефона, ни переписки с другими людьми мы из телеграма не получаем.',
+            en: 'Your Telegram account number — if you open the app inside Telegram or link Telegram to your account from the website. It exists only so the bot can write to you: about a payment and a workout the coach assigned, club messages, and confirmations and reminders of coaching sessions. We receive no name, phone number or conversations with other people from Telegram.',
+          },
+          /*
+           * Запись к тренеру (0055): всё, что лежит в строке брони и что человек видит у себя.
+           * Сообщение «Написать тренеру» (0042): текст уходит в закрытую группу владельца, а в
+           * базе остаётся только журнал частоты — кто и когда, без текста.
+           */
+          {
+            ru: 'Записи к тренеру: время и длительность занятия, тренер, статус записи (ожидает оплаты, подтверждена, отменена или не оплачена вовремя) и ссылка на комнату видеосвязи, которая приходит после оплаты.',
+            en: 'Coaching bookings: the time and length of the session, the coach, the booking’s status (awaiting payment, confirmed, cancelled or not paid in time) and the video room link you receive after payment.',
+          },
+          {
+            ru: 'Сообщения тренеру — то, что ты пишешь через «Написать тренеру» в приложении или боту в телеграме. Текст передаётся тренеру, чтобы он ответил; в базе мы храним только то, кто и когда написал, — чтобы ограничить частоту сообщений.',
+            en: 'Messages to the coach — what you write through “Message the coach” in the app or to the bot in Telegram. The text goes to the coach so they can answer; in the database we keep only who wrote and when, to limit how often messages can be sent.',
           },
           {
             ru: 'Технические данные: время действий и данные сессии, необходимые для работы входа.',
@@ -289,8 +306,16 @@ export function privacyDocument(): LegalDocument {
             en: 'Progress, statistics and the leaderboard (which shows only name, avatar and points — never your email).',
           },
           {
-            ru: 'Поддержка, возвраты и выполнение требований закона.',
-            en: 'Support, refunds and compliance with legal requirements.',
+            ru: 'Сообщения в телеграме: про оплату и выданную тренировку, сообщения клуба (задание дня, напоминание о серии, итоги недели), предупреждение о конце доступа к клубу, подтверждения и напоминания о занятиях с тренером. Ежедневные сообщения клуба можно выключить в профиле.',
+            en: 'Telegram messages: about payments and assigned workouts, club messages (the task of the day, a streak reminder, the week’s results), a warning before club access ends, and confirmations and reminders of coaching sessions. The daily club messages can be switched off in your profile.',
+          },
+          {
+            ru: 'Запись к тренеру: держать выбранное время, подтвердить его оплатой, перенести и прислать ссылку на комнату.',
+            en: 'Coaching bookings: to hold the chosen time, confirm it on payment, move it and send the room link.',
+          },
+          {
+            ru: 'Поддержка, ответы на сообщения тренеру, возвраты и выполнение требований закона.',
+            en: 'Support, answers to messages to the coach, refunds and compliance with legal requirements.',
           },
           /*
            * Цель обработки, которую надо было назвать: тренер смотрит сводку по всем — сколько
@@ -479,8 +504,8 @@ export function termsDocument(): LegalDocument {
             en: 'Coaching session — a one-to-one online session with the Forma coach over video, paid for separately (section 5c).',
           },
           {
-            ru: 'Подписка — доступ ко всем Курсам на оплаченный период: 30 дней или год. Автоматического списания нет: период заканчивается, и доступ закрывается, пока Пользователь не оплатит следующий сам.',
-            en: 'Subscription — access to every Course for a paid period: 30 days or a year. There is no automatic charge: the period ends and access closes until the User pays for the next one themselves.',
+            ru: 'Подписка (клуб) — доступ к клубу маленьких шагов в Приложении (задание дня, таблица недели, приз) и ко всем Курсам на оплаченный период: 30 дней или год. Автоматического списания нет: период заканчивается, и доступ закрывается, пока Пользователь не оплатит следующий сам.',
+            en: 'Subscription (the club) — access to the Small Steps Club in the App (the task of the day, the weekly board, the prize) and to every Course for a paid period: 30 days or a year. There is no automatic charge: the period ends and access closes until the User pays for the next one themselves.',
           },
         ],
       },
@@ -493,8 +518,12 @@ export function termsDocument(): LegalDocument {
             en: 'The Provider grants the User access to the chosen Course or, under a Subscription, to every Course in the App, and the User pays the price shown on the Course or Subscription page at the time of the order. The Course is a digital product for self-directed training; it is not a medical, healthcare or educational service with individual supervision.',
           },
           {
-            ru: 'Оферта считается принятой (акцепт) в момент, когда Пользователь оставил e-mail на странице Курса и оплатил его, а если Курс бесплатный — в момент заявки.',
-            en: 'The offer is accepted when the User leaves an email on the Course page and pays for it, or, for a free Course, at the moment of the order.',
+            ru: 'Оферта считается принятой (акцепт) в момент любой оплаты: Курса на сайте, Подписки (клуба) на сайте или в Приложении, занятия с тренером в Приложении. Если Курс бесплатный — в момент заявки на него.',
+            en: 'The offer is accepted at the moment of any payment: for a Course on the site, for a Subscription (the club) on the site or in the App, or for a coaching session in the App. For a free Course, it is accepted at the moment of the order.',
+          },
+          {
+            ru: `К оплаченному Курсу прилагается неделя клуба в подарок: ${giftDays} дней доступа к клубу с момента активации Курса, без отдельной оплаты. Неделя не продлевается сама и не превращается в Подписку; чтобы остаться в клубе, Пользователь оплачивает Подписку. При возврате денег за Курс неделя клуба заканчивается вместе с ним.`,
+            en: `A paid Course comes with a week of the club as a gift: ${giftDays} days of club access from the Course’s activation, at no extra charge. The week does not renew and does not turn into a Subscription; to stay in the club, the User pays for a Subscription. If the Course is refunded, the club week ends with it.`,
           },
           {
             ru: 'Первая тренировка каждого Курса доступна бесплатно и без оплаты — один раз. Это не услуга по настоящей оферте и не её часть: договор между Исполнителем и Пользователем возникает только при оплате Курса. Исполнитель вправе изменить или прекратить бесплатный доступ в любой момент, и на уже оплаченные Курсы это не влияет.',
@@ -543,8 +572,8 @@ export function termsDocument(): LegalDocument {
         heading: { ru: '5. Стоимость и оплата', en: '5. Price and payment' },
         paragraphs: [
           {
-            ru: 'Цена каждого Курса и Подписки указана на его странице в рублях. Оплата проходит через внешний платёжный сервис по ссылке со страницы; чек или подтверждение выдаёт этот сервис. Если платёжная ссылка не подключена, порядок оплаты согласовывается по e-mail.',
-            en: 'Each Course and Subscription price is shown on its page in Russian roubles. Payment goes through an external payment service linked from that page; the receipt is issued by that service. If no payment link is connected, payment is arranged by email.',
+            ru: 'Цена каждого Курса, Подписки и занятия с тренером указана на его странице в валюте этой страницы: в рублях (₽) на русской версии, в долларах США ($) на английской. Оплата проходит через внешний платёжный сервис по ссылке со страницы: Prodamus — для оплаты в рублях, lava.top — для оплаты в долларах; чек или подтверждение выдаёт этот сервис. Если платёжная ссылка не подключена, порядок оплаты согласовывается по e-mail.',
+            en: 'Each Course, Subscription and coaching session price is shown on its page in the currency shown on the page (₽ in Russian, $ in English). Payment goes through an external payment service linked from that page: Prodamus for payments in roubles, lava.top for payments in dollars; the receipt or confirmation is issued by that service. If no payment link is connected, payment is arranged by email.',
           },
           {
             ru: 'Подписка не списывается автоматически: каждый период Пользователь оплачивает сам, по цене, указанной на странице на момент оплаты. Мы не храним реквизиты карт и не можем списать деньги без нового действия Пользователя. Если автосписание когда-нибудь появится, оно будет отдельно включаемой опцией, а не изменением этих условий.',

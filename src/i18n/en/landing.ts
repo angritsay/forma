@@ -60,7 +60,6 @@ export const landing = {
   heroThin: 'Your first workout —',
   heroChipVideo: 'A video for every move',
   heroChipNoJumps: 'No jumping',
-  heroCtaApp: 'Open app',
   chipCourses: '{n} {word}',
 
   // Home, 01: workout 1.
@@ -131,11 +130,9 @@ export const landing = {
   courseForWhomTitle: 'Who it is for',
   courseOutcomesTitle: 'What you will get',
   courseEquipmentTitle: 'Equipment',
-  courseEquipmentNone: 'No equipment — you need a sturdy chair and a mat',
   courseProgramTitle: 'Program',
   courseProgramIntro: 'Twenty workouts in order. The weeks are a guide, not a calendar.',
   courseWeek: 'Week {n}',
-  courseDay: 'Day {n}',
   courseDeload: 'Deload',
   // This block was a shop window. Now it is an invitation: the same workout, except it can be
   // done rather than only read.
@@ -213,6 +210,9 @@ export const landing = {
   subscribeOrderTitle: 'Join the club',
   subscribeOrderIntro:
     'Leave your email and pay on the next page — the club and the course open in the app under this email on their own.',
+  // The club's own payment line: the shared one (`orderPaymentNote`) is written for a course.
+  subscribePaymentNote:
+    'Payment is handled on {host}. Use the same email you entered here: the club opens automatically as soon as the payment lands, and another address will not be matched to the order.',
   // This line sits under the pay button and promised auto-renewal, which does not exist — see
   // `content/site/plans.ts`. The plan card said the opposite two rows above it.
   subscribeNote: 'One payment · access for the whole paid period · renew whenever you want',
@@ -235,7 +235,7 @@ export const landing = {
   // About
   aboutTitle: 'Sergey Titov — Forma coach, online sessions',
   aboutDescription:
-    'Sergey Titov, founder and coach of Forma, with more than 10,000 hours of one-to-one training. Online: half an hour for technique; an hour adds load and a plan.',
+    'Sergey Titov, founder and coach of Forma: 10,000+ hours one-to-one. Online: half an hour for technique; an hour adds load and a plan. Booking is in the app.',
   aboutPhilosophyTitle: 'How the workouts work',
   aboutPhilosophy1Title: 'Load that fits you',
   aboutPhilosophy1Text:
