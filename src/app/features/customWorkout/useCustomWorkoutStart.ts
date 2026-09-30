@@ -7,7 +7,9 @@ import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useToast } from '@/components/ui/Toast';
 import { withIntros } from '@/app/features/player/introViews';
+import { startNeedsConfirm } from '@/app/features/player/ReplaceWorkout';
 import { unlockAudio } from '@/app/features/player/sound';
+import { isNetworkError } from '@/lib/api/errors';
 import { startSession } from '@/lib/api/sessions';
 import {
   buildPrescribedFromCustom,
@@ -27,8 +29,10 @@ export function useCustomWorkoutStart() {
   const toast = useToast();
   const { t } = useT();
   const [busy, setBusy] = useState(false);
+  /** The workout waiting on «Есть незаконченная тренировка»; null when nothing is asked. */
+  const [replacing, setReplacing] = useState<StartableCustomWorkout | null>(null);
 
-  const start = useCallback(
+  const begin = useCallback(
     async (workout: StartableCustomWorkout) => {
       // First thing, before any await: this is the tap that lets the player make sound — the
       // cues and the spoken names both — and a browser only honours it inside the gesture.
@@ -61,9 +65,13 @@ export function useCustomWorkoutStart() {
           prescribed,
           startedAt,
         });
+        setReplacing(null);
         navigate('/play');
-      } catch {
-        toast.show({ kind: 'error', title: t('app.nodeStartError') });
+      } catch (e) {
+        toast.show({
+          kind: 'error',
+          title: isNetworkError(e) ? t('app.nodeStartOffline') : t('app.nodeStartError'),
+        });
       } finally {
         setBusy(false);
       }
@@ -71,5 +79,26 @@ export function useCustomWorkoutStart() {
     [busy, navigate, toast, t],
   );
 
-  return { start, busy };
+  /*
+   * Beginning a session replaces the one on the device. This used to start straight over an
+   * unsaved workout and lose it; now it asks first (`ReplaceWorkoutModal`), like the course preview.
+   */
+  const start = useCallback(
+    (workout: StartableCustomWorkout) => {
+      if (startNeedsConfirm()) {
+        unlockAudio();
+        setReplacing(workout);
+        return;
+      }
+      void begin(workout);
+    },
+    [begin],
+  );
+
+  const confirmReplace = useCallback(() => {
+    if (replacing) void begin(replacing);
+  }, [begin, replacing]);
+  const cancelReplace = useCallback(() => setReplacing(null), []);
+
+  return { start, busy, replacing: replacing !== null, confirmReplace, cancelReplace };
 }

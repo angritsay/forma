@@ -131,3 +131,17 @@ export function parseIntField(value: string, max: number): number | undefined {
   if (!Number.isFinite(n) || n < 0) return undefined;
   return Math.min(max, Math.floor(n));
 }
+
+/**
+ * Record the benchmark counts and say which keys did not land. A benchmark that fails must not
+ * cost the profile already written, so they are settled rather than thrown — but no longer
+ * silently: the keys come back, and the screen offers to write just those again.
+ */
+export async function recordAssessmentBenchmarks(
+  entries: Record<string, number>,
+  record: (key: string, reps: number) => Promise<unknown>,
+): Promise<string[]> {
+  const keys = Object.keys(entries);
+  const settled = await Promise.allSettled(keys.map((key) => record(key, entries[key]!)));
+  return keys.filter((_, i) => settled[i]!.status === 'rejected');
+}

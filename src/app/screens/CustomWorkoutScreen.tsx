@@ -47,6 +47,7 @@ import { mainOnly } from '@/app/features/path/mainWork';
 import type { TKey } from '@/i18n/index';
 import { useT } from '@/app/hooks/useT';
 import { useCustomWorkoutStart } from '@/app/features/customWorkout/useCustomWorkoutStart';
+import { ReplaceWorkoutModal } from '@/app/features/player/ReplaceWorkout';
 import { DisplayTitle } from '@/app/features/home/DisplayTitle';
 import { workLabel } from '@/app/features/courses/sessionEstimate';
 import { WorkoutHero } from '@/app/features/path/WorkoutHero';
@@ -98,7 +99,7 @@ export default function CustomWorkoutScreen() {
   const [state, setState] = useState<LoadState>({ status: 'loading' });
   /** Упражнение, открытое крупно поверх экрана, или null. */
   const [preview, setPreview] = useState<PrescribedItem | null>(null);
-  const { start, busy } = useCustomWorkoutStart();
+  const { start, busy, replacing, confirmReplace, cancelReplace } = useCustomWorkoutStart();
 
   useEffect(() => {
     let alive = true;
@@ -344,6 +345,12 @@ export default function CustomWorkoutScreen() {
         )}
       </div>
       <ExercisePreview item={preview} onClose={() => setPreview(null)} />
+      <ReplaceWorkoutModal
+        open={replacing}
+        loading={busy}
+        onClose={cancelReplace}
+        onReplace={confirmReplace}
+      />
     </Screen>
   );
 }

@@ -49,8 +49,10 @@ export interface AssessmentRunnerProps {
   onKneesChange: (onKnees: boolean) => void;
   /** Every movement is done. */
   onDone: () => void;
-  /** Left before the first movement started: the wizard shows the offer again. */
+  /** Left mid-run: the screen shows the offer again, with the answers so far kept. */
   onCancel: () => void;
+  /** The movement to open on — a run resumed after a reload picks up where it stopped. */
+  startIndex?: number;
 }
 
 /**
@@ -105,9 +107,10 @@ export function AssessmentRunner({
   onKneesChange,
   onDone,
   onCancel,
+  startIndex = 0,
 }: AssessmentRunnerProps) {
   const { t, l, locale } = useT();
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(startIndex);
   const [reps, setReps] = useState('');
   const move = ASSESSMENT_MOVES[index];
   /*
@@ -147,14 +150,13 @@ export function AssessmentRunner({
 
       {/*
        * The top edge: the way out, and where you are as the numeral pair the whole product counts
-       * with. The way out is offered only before the first movement has started; once a minute has
-       * been counted, leaving would throw it away, and the wizard is one tap on from the last one.
+       * with. The way out is there on every movement: it used to vanish after the first, because
+       * leaving threw the counted minutes away, but the answers are kept now
+       * (`features/assessment/draft.ts`) and a run left halfway picks up where it stopped.
        */}
       <header className="relative z-10 flex h-14 items-center justify-between px-3 pt-[var(--safe-top)]">
         <div className="w-11">
-          {index === 0 ? (
-            <IconButton label={t('common.back')} icon="back" variant="on-art" onClick={onCancel} />
-          ) : null}
+          <IconButton label={t('common.back')} icon="back" variant="on-art" onClick={onCancel} />
         </div>
         <span className="numeral tabular pr-2 text-sm">
           <span className="text-paper">{String(index + 1).padStart(2, '0')}</span>

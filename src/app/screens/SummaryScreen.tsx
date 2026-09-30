@@ -20,12 +20,27 @@ import { useNavigate, useParams } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Glyph } from '@/components/ui/Icon';
+import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import { TopBar } from '@/app/components/TopBar';
 import { publishSessionResult } from '@/app/features/player/progress';
-import { buildSummary, createSummarySaver, type SaveOutcome } from '@/app/features/player/save';
+import {
+  buildSummary,
+  createSummarySaver,
+  saveErrorKind,
+  saveRetryable,
+  type SaveErrorKind,
+  type SaveOutcome,
+} from '@/app/features/player/save';
+import {
+  clearSummaryDraft,
+  draftProgressStore,
+  readFeedback,
+  rowSaved,
+  writeFeedback,
+} from '@/app/features/player/summary/saveDraft';
 import { playCue } from '@/app/features/player/sound';
 import { loadUserStats } from '@/app/features/player/stats';
 import { DonePoster } from '@/app/features/player/summary/DonePoster';
@@ -79,11 +94,87 @@ import { courseTileVars } from '@/lib/ui/tile';
 import type {
   AchievementStatus,
   PlayerStep,
+  SessionFeedback,
   SessionSummary,
   UserStats,
 } from '@/lib/training/types';
+import type { TKey } from '@/i18n/index';
 
 type SaveStatus = 'idle' | 'saving' | 'error';
+
+/** The line under a failed save: what happened and, by the buttons beside it, what to do. */
+export function saveErrorKey(kind: SaveErrorKind): TKey {
+  switch (kind) {
+    case 'offline':
+      return 'common.errorOffline';
+    case 'daily_limit':
+      return 'app.summarySaveDailyLimit';
+    case 'gone':
+      return 'app.summarySaveGone';
+    case 'auth':
+      return 'app.summarySaveAuth';
+    case 'generic':
+      return 'app.summarySaveError';
+  }
+}
+
+/**
+ * The footer of a local summary: save, or — after a failure — what can still be done about it.
+ * A failure that no retry will fix (the daily limit, a session the server no longer has) offers
+ * only letting the workout go; every other failure keeps «Повторить» first and the way out second,
+ * so an athlete who cannot save is never stuck on this screen.
+ */
+export function SummaryFooter({
+  status,
+  errorKind,
+  canSave,
+  onSave,
+  onDiscard,
+}: {
+  status: SaveStatus;
+  errorKind: SaveErrorKind | null;
+  canSave: boolean;
+  onSave: () => void;
+  onDiscard: () => void;
+}) {
+  const { t } = useT();
+  const retryable = errorKind === null || saveRetryable(errorKind);
+  return (
+    <div className="flex flex-col gap-2">
+      {status === 'error' && errorKind ? (
+        <p role="alert" className="text-center text-sm text-danger">
+          {t(saveErrorKey(errorKind))}
+        </p>
+      ) : null}
+      {retryable ? (
+        <Button
+          variant="action"
+          size="lg"
+          fullWidth
+          loading={status === 'saving'}
+          disabled={!canSave}
+          onClick={onSave}
+        >
+          {status === 'saving'
+            ? t('app.summarySaving')
+            : status === 'error'
+              ? t('common.retry')
+              : t('common.save')}
+        </Button>
+      ) : null}
+      {status === 'error' ? (
+        <Button
+          variant={retryable ? 'ghost' : 'action'}
+          size={retryable ? 'md' : 'lg'}
+          fullWidth
+          onClick={onDiscard}
+        >
+          {t('app.summaryDiscard')}
+        </Button>
+      ) : null}
+    </div>
+  );
+}
 
 interface SavedState {
   outcome: SaveOutcome;
@@ -269,12 +360,25 @@ function LocalSummary({
   const weightKg = useSession((s) => s.profile?.trainingProfile?.weightKg);
   const abandon = useActiveWorkoutStore((s) => s.abandon);
 
-  const [feedback, setFeedback] = useState<FeedbackValue>({ rpe: 5, feeling: null, note: '' });
+  // The feedback outlives a failed save and a walk away from this screen (saveDraft.ts).
+  const [feedback, setFeedbackState] = useState<FeedbackValue>(
+    () => readFeedback(session.sessionId) ?? { rpe: 5, feeling: null, note: '' },
+  );
+  const setFeedback = useCallback(
+    (value: FeedbackValue) => {
+      setFeedbackState(value);
+      writeFeedback(session.sessionId, value);
+    },
+    [session.sessionId],
+  );
   const [details, setDetails] = useState(false);
   const [status, setStatus] = useState<SaveStatus>('idle');
-  const [errorText, setErrorText] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<SaveErrorKind | null>(null);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  /** The row is on the server already: its feedback can no longer change, so the form locks. */
+  const [rowDone, setRowDone] = useState(() => rowSaved(session.sessionId));
   const [before, setBefore] = useState<UserStats | null>(null);
-  const saver = useRef<(() => Promise<SaveOutcome>) | null>(null);
+  const saver = useRef<((feedback?: SessionFeedback) => Promise<SaveOutcome>) | null>(null);
   const completedAt = useMemo(() => finishedAt ?? new Date().toISOString(), [finishedAt]);
 
   const names = courseNames(session.courseId, session.nodeId, session.workoutId, locale);
@@ -338,24 +442,31 @@ function LocalSummary({
   const save = useCallback(async () => {
     if (!feedback.feeling) return;
     setStatus('saving');
-    setErrorText(null);
+    setErrorKind(null);
+    const given: SessionFeedback = {
+      rpe: feedback.rpe,
+      feeling: feedback.feeling,
+      ...(feedback.note.trim() ? { note: feedback.note.trim() } : {}),
+    };
     if (!saver.current) {
-      saver.current = createSummarySaver({
-        session,
-        steps,
-        results,
-        feedback: {
-          rpe: feedback.rpe,
-          feeling: feedback.feeling,
-          ...(feedback.note.trim() ? { note: feedback.note.trim() } : {}),
+      // The progress is kept on the device, so a save resumed after a remount or a reload never
+      // completes the row, adapts the scale or records a benchmark twice.
+      saver.current = createSummarySaver(
+        {
+          session,
+          steps,
+          results,
+          feedback: given,
+          completedAt,
+          elapsedSec,
+          ...(weightKg !== undefined ? { weightKg } : {}),
         },
-        completedAt,
-        elapsedSec,
-        ...(weightKg !== undefined ? { weightKg } : {}),
-      });
+        draftProgressStore(),
+      );
     }
     try {
-      const outcome = await saver.current();
+      // The feedback as it stands now: the form unlocks after a failure and may have changed.
+      const outcome = await saver.current(given);
       let unlocked: AchievementStatus[] = [];
       try {
         unlocked = newlyUnlocked(before, await loadUserStats());
@@ -364,15 +475,13 @@ function LocalSummary({
       }
       onSaved({ outcome, unlocked, workoutName: names.workout, courseId: session.courseId, reps });
       abandon();
+      clearSummaryDraft();
       publishSessionResult(outcome);
       toast.show({ kind: 'success', title: t('app.summarySavedTitle') });
     } catch (e) {
       setStatus('error');
-      setErrorText(
-        isAppError(e) && e.code === 'network'
-          ? t('common.errorOffline')
-          : t('app.summarySaveError'),
-      );
+      setErrorKind(saveErrorKind(e));
+      setRowDone(rowSaved(session.sessionId));
     }
   }, [
     feedback,
@@ -391,40 +500,35 @@ function LocalSummary({
     reps,
   ]);
 
-  const locked = status !== 'idle';
+  const leave = useCallback(
+    () => navigate(session.courseId === 'custom' ? '/' : `/courses/${session.courseId}`),
+    [navigate, session.courseId],
+  );
+
+  /** Let the workout go: nothing is saved, the device forgets it, and the way out is open. */
+  const discard = useCallback(() => {
+    setConfirmDiscard(false);
+    abandon();
+    clearSummaryDraft();
+    leave();
+  }, [abandon, leave]);
+
+  // Unlocked after a failure, so «Как зашло?» can still be changed — until the row holds it.
+  const locked = status === 'saving' || rowDone;
 
   return (
     <Screen
-      header={
-        <TopBar
-          title={t('app.summaryEyebrow')}
-          back={() =>
-            navigate(session.courseId === 'custom' ? '/' : `/courses/${session.courseId}`)
+      header={<TopBar title={t('app.summaryEyebrow')} back={leave} />}
+      footer={
+        <SummaryFooter
+          status={status}
+          errorKind={errorKind}
+          canSave={Boolean(feedback.feeling)}
+          onSave={() => void save()}
+          onDiscard={() =>
+            errorKind && saveRetryable(errorKind) ? setConfirmDiscard(true) : discard()
           }
         />
-      }
-      footer={
-        <div className="flex flex-col gap-2">
-          {errorText ? (
-            <p role="alert" className="text-center text-sm text-danger">
-              {errorText}
-            </p>
-          ) : null}
-          <Button
-            variant="action"
-            size="lg"
-            fullWidth
-            loading={status === 'saving'}
-            disabled={!feedback.feeling}
-            onClick={() => void save()}
-          >
-            {status === 'saving'
-              ? t('app.summarySaving')
-              : status === 'error'
-                ? t('common.retry')
-                : t('common.save')}
-          </Button>
-        </div>
       }
     >
       <div
@@ -477,6 +581,16 @@ function LocalSummary({
           ) : null}
         </div>
       </div>
+      <Modal
+        open={confirmDiscard}
+        onClose={() => setConfirmDiscard(false)}
+        title={t('app.summaryDiscardTitle')}
+        description={t('app.summaryDiscardBody')}
+        confirmLabel={t('app.summaryDiscard')}
+        cancelLabel={t('common.cancel')}
+        danger
+        onConfirm={discard}
+      />
     </Screen>
   );
 }

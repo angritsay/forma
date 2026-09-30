@@ -31,11 +31,11 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Glyph } from '@/components/ui/Icon';
-import { Modal } from '@/components/ui/Modal';
 import { Screen } from '@/components/ui/Screen';
 import { useToast } from '@/components/ui/Toast';
 import { Pill } from '@/components/ui/Pill';
 import { courseTitle, findCourse } from '@/content/catalogue';
+import { isAppError } from '@/lib/api/errors';
 import { startSession } from '@/lib/api/sessions';
 import { exerciseStillUrl } from '@/lib/api/storage';
 import { prescribeWorkout } from '@/lib/training/prescribe';
@@ -68,6 +68,7 @@ import { useTrainingContext } from '@/app/features/path/useTrainingContext';
 import { WorkoutHero } from '@/app/features/path/WorkoutHero';
 import { WorkoutStrip } from '@/app/features/path/WorkoutStrip';
 import { withIntros } from '@/app/features/player/introViews';
+import { ReplaceWorkoutModal } from '@/app/features/player/ReplaceWorkout';
 import { unlockAudio } from '@/app/features/player/sound';
 import { useActiveWorkoutStore } from '@/app/store/activeWorkout';
 import {
@@ -101,6 +102,7 @@ export default function NodePreviewScreen() {
   const owned = entitlements.includes(id ?? '');
   const hasCompleted = hasCompletedIn(trained, id ?? '');
   const status = useProgress((s) => s.status);
+  const progressLoading = useProgress((s) => s.loading);
   const row = useCourseStateRow(course?.id);
   const engineState = useEngineCourseState(course?.id ?? '');
   const ctx = useTrainingContext();
@@ -228,6 +230,32 @@ export default function NodePreviewScreen() {
     );
   }
 
+  /*
+   * The progress list did not arrive. Without it this day would read as locked («пройди
+   * предыдущие») to somebody deep into the course, and a start from here would have nothing to
+   * start from — so the screen says what failed and offers the retry instead.
+   */
+  if (status === 'error') {
+    return (
+      <Screen header={header}>
+        <EmptyState
+          title={t('app.nodeProgressErrorTitle')}
+          description={t('app.nodeProgressErrorBody')}
+          action={
+            <Button
+              variant="action"
+              size="lg"
+              loading={progressLoading}
+              onClick={() => void useProgress.getState().refresh()}
+            >
+              {t('common.retry')}
+            </Button>
+          }
+        />
+      </Screen>
+    );
+  }
+
   if (status === 'loading' || status === 'idle' || !plans || !recommendation) {
     return (
       <Screen header={header}>
@@ -293,8 +321,23 @@ export default function NodePreviewScreen() {
       });
       setChooserOpen(false);
       navigate('/play');
-    } catch {
-      toast.show({ kind: 'error', title: t('app.nodeStartError') });
+    } catch (e) {
+      /*
+       * By what went wrong: a refusal from the server (the course is not theirs, or the free
+       * workout is spent) is the price, not an error; no connection says so; anything else is
+       * the plain failure.
+       */
+      const code = isAppError(e) ? e.code : 'unknown';
+      if (code === 'forbidden') {
+        setChooserOpen(false);
+        setReplaceFor(null);
+        setUnlockOpen(true);
+      } else {
+        toast.show({
+          kind: 'error',
+          title: code === 'network' ? t('app.nodeStartOffline') : t('app.nodeStartError'),
+        });
+      }
     } finally {
       setPending(null);
     }
@@ -557,17 +600,13 @@ export default function NodePreviewScreen() {
           onPick={onPick}
         />
 
-        <Modal
+        <ReplaceWorkoutModal
           open={replaceFor !== null}
           onClose={() => setReplaceFor(null)}
-          title={t('app.nodeReplaceTitle')}
-          description={t('app.nodeReplaceBody')}
-          confirmLabel={t('app.nodeStart')}
-          cancelLabel={t('common.cancel')}
-          danger
           loading={pending !== null}
-          onConfirm={() => replaceFor && void start(replaceFor)}
+          onReplace={() => replaceFor && void start(replaceFor)}
         />
+        <UnlockSheet open={unlockOpen} course={course} onClose={() => setUnlockOpen(false)} />
       </Screen>
     </div>
   );

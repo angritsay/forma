@@ -69,3 +69,35 @@ export async function upsertCourseState(
     return courseStateFromDb(row);
   });
 }
+
+/**
+ * Create the state for a course only when there is none, and return whatever is stored.
+ *
+ * Insert-only on purpose (`ignoreDuplicates`): the first start of a course writes the starting
+ * scale and day one, and a plain upsert with those values was how a device that simply had not
+ * seen the row yet — a flaky network, a list read that failed — reset somebody to day one. When
+ * the row already exists nothing is written and the stored one is read back instead.
+ */
+export async function createCourseState(
+  courseId: string,
+  patch: CourseStatePatch,
+): Promise<CourseStateRow> {
+  if (isDemo()) return (await demo()).createCourseState(courseId, patch);
+  return guard(async () => {
+    if (!COURSE_ID_RE.test(courseId)) throw new AppError('validation', 'invalid_course');
+    const me = await requireUser();
+    const inserted = unwrap<DbCourseState[]>(
+      await supabase()
+        .from(TABLE)
+        .upsert(
+          { user_id: me.id, course_id: courseId, ...courseStatePatchToDb(patch) },
+          { onConflict: 'user_id,course_id', ignoreDuplicates: true },
+        )
+        .select('*'),
+    );
+    if (inserted[0]) return courseStateFromDb(inserted[0]);
+    const existing = await getCourseState(courseId);
+    if (!existing) throw new AppError('not_found', 'course_state_missing');
+    return existing;
+  });
+}
