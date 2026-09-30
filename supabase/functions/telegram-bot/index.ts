@@ -720,16 +720,6 @@ export async function handleRequest(req: Request): Promise<Response> {
 }
 
 /**
- * Hand a support message to the database (`support_from_telegram`, 0042), which rate-limits it,
- * recognises a redelivery and queues it for the owner's «Обращения» topic.
- *
- * Plain `fetch` to PostgREST rather than supabase-js: this file stays one file with no imports
- * (see the header). The service-role key is the platform's own secret in the function's
- * environment; it is never logged, and neither is anything the person wrote. Any failure —
- * migration not applied, network — is `failed`, and the person is told the truth: it did not
- * go through.
- */
-/**
  * Remember or forget that this person blocked the bot (`telegram_set_blocked`, 0059). Best
  * effort: without 0059, or with the database away, the bot answers exactly as it did before.
  */
@@ -752,6 +742,16 @@ async function setBlocked(telegramId: number, blocked: boolean): Promise<void> {
   }
 }
 
+/**
+ * Hand a support message to the database (`support_from_telegram`, 0042), which rate-limits it,
+ * recognises a redelivery and queues it for the owner's «Обращения» topic.
+ *
+ * Plain `fetch` to PostgREST rather than supabase-js: this file stays one file with no imports
+ * (see the header). The service-role key is the platform's own secret in the function's
+ * environment; it is never logged, and neither is anything the person wrote. Any failure —
+ * migration not applied, network — is `failed`, and the person is told the truth: it did not
+ * go through.
+ */
 async function passOn(request: SupportRequest): Promise<SupportStatus> {
   const url = Deno.env.get('SUPABASE_URL');
   const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');

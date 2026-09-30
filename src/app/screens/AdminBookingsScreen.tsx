@@ -94,6 +94,7 @@ export default function AdminBookingsScreen() {
     if (shown.current !== which) {
       shown.current = which;
       setRows([]);
+      setBlocked(new Set());
     }
     listAdminBookings(which)
       .then((list) => {

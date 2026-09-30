@@ -127,8 +127,8 @@ export function MediaField({
    * around it had saved anything. An editor closed without saving, or an autosave that failed,
    * then left the saved record pointing at a file that no longer existed: an exercise with a
    * silent clip, a course with a broken cover. The reference is what the product reads, and it
-   * changes only when the parent saves; the file stays, and the next upload into this field
-   * overwrites it (the path is stable). Removing a file for good is the media library's job,
+   * changes only when the parent saves; the file stays, and the next upload of the same format
+   * into this field overwrites it (the path is stable, the extension is the file's). Removing a file for good is the media library's job,
    * which knows what still references it.
    */
   const remove = () => {

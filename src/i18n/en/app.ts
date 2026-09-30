@@ -2106,7 +2106,7 @@ export const app = {
     'The coach will have no working hours, and nobody can book until you add hours or an exception. Sessions already booked stay.',
   bookingsWeekEmptyConfirm: 'Save with no hours',
   bookingsWeekStale:
-    'The week was changed in another window. Load it again — the edits on this screen will be lost.',
+    'The week was changed in another window or on another device. Load it again — the edits on this screen will be lost.',
   bookingsWeekReload: 'Load again',
   bookingsLeaveBody: 'Your changes to the weekly hours will be lost.',
   bookingsExceptionRemoveTitle: 'Delete this exception?',
@@ -2118,7 +2118,7 @@ export const app = {
   bookingsTelegramBlocked: 'Blocked the bot — booking messages will not arrive',
   personTelegramBlocked: 'Bot blocked',
   mediaRemovedKept:
-    'Removed from the field. The file itself stays in storage — a new upload here replaces it.',
+    'Removed from the field, but the file stays in storage: a new upload of the same format replaces it, and the Media library can delete it for good.',
   bookPaymentChecking: 'Checking the payment…',
   bookPaymentCheckingNote:
     'The time to pay ran out while the payment page was open. If you have paid, the session will show up here by itself — no need to pick a time again.',

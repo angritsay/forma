@@ -441,6 +441,11 @@ Deno.serve(async (req) => {
   let failed = 0;
   let blocked = 0;
   let unrecorded = 0;
+  /**
+   * Chats that answered 403 in this run. A later row to the same chat is left pending, untouched:
+   * its lease runs out, and from then on the blocked flag keeps it out of the batch.
+   */
+  const blockedChats = new Set<number>();
 
   for (const row of rows) {
     const done = (status: string, lastError?: string) =>
@@ -472,6 +477,7 @@ Deno.serve(async (req) => {
       // Ждёт: человек может открыть приложение из телеграма завтра, и тогда дойдёт.
       continue;
     }
+    if (blockedChats.has(who.id)) continue;
 
     /*
      * An access warning (0054) is checked again right before it goes: it may have waited for the
@@ -568,6 +574,7 @@ Deno.serve(async (req) => {
     if (verdict === 'blocked') {
       skipped += 1;
       blocked += 1;
+      blockedChats.add(who.id);
       const { error: flagError } = await admin.rpc('telegram_set_blocked', {
         p_telegram_id: who.id,
         p_blocked: true,
