@@ -89,6 +89,7 @@ export const ADMIN_KINDS: readonly string[] = [
   'session_cancelled',
   'session_unmatched',
   'payment_unclaimed',
+  'payment_reversed',
   'claim_no_order',
   'support_message',
 ] as const;
@@ -322,6 +323,7 @@ function personPath(email: string): string | null {
 
 const PAYMENT_KINDS = new Set([
   'payment_unclaimed',
+  'payment_reversed',
   'session_paid',
   'claim_no_order',
   'session_unmatched',
