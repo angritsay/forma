@@ -39,7 +39,7 @@
 -- is not immutable — so an expired hold keeps its place in the constraint until somebody needs it,
 -- and every write path first marks the dead holds in its way `expired` (`booking_sweep_holds`).
 -- Every read path already ignores them. Google rows (`coach_id` null) are outside the constraint
--- and stay valid; Sergey's `available_slots` still treats them as busy while the sync runs.
+-- and stay valid as history; Sergey's `available_slots` still treats an upcoming one as busy.
 --
 -- ## Messages
 --

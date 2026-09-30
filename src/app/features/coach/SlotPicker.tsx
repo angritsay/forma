@@ -145,6 +145,10 @@ export interface SlotPickerProps {
   /** True while the times are being asked for: a pick from before is not one on this list yet. */
   onLoading?: (loading: boolean) => void;
   empty?: ReactNode;
+  /** A move (0056): the session being moved, which does not block its own new time. */
+  ignore?: string | null;
+  /** A move (0056): no start earlier than this many ms from now — the 24-hour rule. */
+  leadMs?: number;
 }
 
 const DAY = 86_400_000;
@@ -157,6 +161,8 @@ export function SlotPicker({
   reloadKey = 0,
   onLoading,
   empty,
+  ignore = null,
+  leadMs = 0,
 }: SlotPickerProps) {
   const timeZone = deviceTimeZone();
   const [state, setState] = useState<SlotsState>({ kind: 'loading' });
@@ -172,8 +178,9 @@ export function SlotPicker({
     listFreeSlots(
       coach,
       option,
-      new Date(at).toISOString(),
+      new Date(at + leadMs).toISOString(),
       new Date(at + PICKER_DAYS * DAY).toISOString(),
+      ignore,
     )
       .then((slots) => {
         if (alive) setState({ kind: 'ready', slots });
@@ -184,7 +191,7 @@ export function SlotPicker({
     return () => {
       alive = false;
     };
-  }, [coach, option, reloadKey, attempt]);
+  }, [coach, option, reloadKey, attempt, ignore, leadMs]);
 
   const loading = state.kind === 'loading';
   useEffect(() => {

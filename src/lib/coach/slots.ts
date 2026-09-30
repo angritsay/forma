@@ -210,6 +210,65 @@ export function zoneLabel(timeZone: string | undefined, at: number, locale: 'ru'
   }
 }
 
+// --- bookings the hours no longer cover (the admin's schedule editor, 0056) --------------------
+
+/**
+ * The bookings that fall outside the coach's hours: not wholly inside the union of that day's
+ * weekly windows and `extra` windows, or on a day (or an hour) taken off. The editor lists them
+ * under the week and the exceptions, so a change of hours never silently strands a paid session —
+ * the schedule does not move or cancel anything by itself.
+ *
+ * Minute-exact rather than on the 30-minute grid: the admin can put a session at any time
+ * (`admin_move_booking`), and a session is outside the hours if any minute of it is. A session
+ * that runs past midnight is checked against its start's day, to the end of that day.
+ */
+export function bookingsOutsideHours<T extends SlotTimes>(
+  bookings: readonly T[],
+  rules: readonly WeeklyRule[],
+  exceptions: readonly DateException[],
+  timeZone: string,
+): T[] {
+  return bookings.filter((b) => {
+    const starts = Date.parse(b.startsAt);
+    const ends = Date.parse(b.endsAt);
+    if (!Number.isFinite(starts) || !Number.isFinite(ends) || ends <= starts) return false;
+    const day = dateIn(starts, timeZone);
+    const from = parseClock(clockIn(starts, timeZone));
+    if (from === null) return false;
+    const to = from + Math.round((ends - starts) / MINUTE);
+
+    const todays = exceptions.filter((e) => e.date === day);
+    if (todays.some((e) => e.kind === 'off' && e.start === null)) return true;
+    const offHit = todays.some((e) => {
+      if (e.kind !== 'off') return false;
+      const a = parseClock(e.start);
+      const z = parseEndClock(e.end);
+      return a !== null && z !== null && from < z && to > a;
+    });
+    if (offHit) return true;
+
+    const windows: [number, number][] = [];
+    for (const r of rules) {
+      if (r.weekday !== isoWeekday(day)) continue;
+      const a = parseClock(r.start);
+      const z = parseEndClock(r.end);
+      if (a !== null && z !== null && z > a) windows.push([a, z]);
+    }
+    for (const e of todays) {
+      if (e.kind !== 'extra') continue;
+      const a = parseClock(e.start);
+      const z = parseEndClock(e.end);
+      if (a !== null && z !== null && z > a) windows.push([a, z]);
+    }
+    // Walk the merged windows from the start: touching or overlapping ones join (10–12 + 12–14).
+    let reach = from;
+    for (const [a, z] of windows.sort((x, y) => x[0] - y[0])) {
+      if (a <= reach && z > reach) reach = z;
+    }
+    return reach < to;
+  });
+}
+
 // --- the slot engine, for the demo --------------------------------------------------------------
 
 export interface SlotQuery {
@@ -397,6 +456,26 @@ export function holdClock(holdExpiresAt: string | number, now: number): HoldCloc
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return { expired: seconds === 0, seconds, left: `${m}:${String(s).padStart(2, '0')}` };
+}
+
+/** How long the screen waits for a payment whose hold ran out after the till was opened. */
+export const PAYMENT_CHECK_MINUTES = 30;
+
+/**
+ * What the screen says when a hold runs out (0056).
+ *
+ *   * `expired` — the till was never opened from here: the slot is free again, pick again;
+ *   * `checking` — the till was opened (`sent`): the money may be on its way, and «pick again»
+ *     would be an invitation to pay twice. The webhook still confirms a hold that simply ran out
+ *     while the slot is free (0055 §10), so the screen waits and asks again;
+ *   * `unconfirmed` — `PAYMENT_CHECK_MINUTES` passed with nothing: it stops waiting and says to
+ *     write to the coach if the money was taken.
+ */
+export type HoldLapse = 'expired' | 'checking' | 'unconfirmed';
+
+export function holdLapse(sent: boolean, lapsedAt: number, now: number): HoldLapse {
+  if (!sent) return 'expired';
+  return now - lapsedAt < PAYMENT_CHECK_MINUTES * MINUTE ? 'checking' : 'unconfirmed';
 }
 
 // --- the booked session ------------------------------------------------------------------------

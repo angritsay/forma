@@ -118,7 +118,6 @@ describe('adminMessage', () => {
       'club_closed',
       'club_refunded',
       'support_message',
-      'channel_ready',
     ];
     for (const kind of kinds) {
       expect(adminMessage(row(kind)), kind).not.toBeNull();
@@ -468,5 +467,35 @@ describe('session_unmatched (0055)', () => {
 
   it('shows the coach on a booking', () => {
     expect(adminMessage(row('session_booked', { coach: 'Сергей' }))).toContain('Тренер: Сергей');
+  });
+
+  /*
+   * 0056: a hold confirmed by a payment is one message, not «Занятие оплачено» and then «Выбрали
+   * время». The booking carries the money; without a payment it is the time alone.
+   */
+  it('says «Занятие оплачено» once, with the money, when a payment confirmed the booking', () => {
+    const paid = adminMessage(
+      row('session_booked', {
+        coach: 'Сергей',
+        paymentId: '11111111-2222-3333-4444-555555555555',
+        amount: '3500.00',
+        currency: 'RUB',
+        provider: 'prodamus',
+        ref: 'R-1',
+      }),
+    )!;
+    expect(paid).toContain('Занятие оплачено');
+    expect(paid).toContain('Сумма: 3500.00 RUB');
+    expect(paid).toContain('Касса: Prodamus');
+    expect(paid).not.toContain('Выбрали время');
+
+    const plain = adminMessage(row('session_booked', { coach: 'Сергей' }))!;
+    expect(plain).toContain('Выбрали время');
+    expect(plain).not.toContain('Сумма');
+    expect(plain).not.toContain('Касса');
+  });
+
+  it('has no text for the retired channel_ready kind', () => {
+    expect(adminMessage(row('channel_ready'))).toBeNull();
   });
 });

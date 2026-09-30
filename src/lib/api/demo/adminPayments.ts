@@ -129,6 +129,18 @@ export async function bindPayment(
   });
 }
 
+/** The demo holds no payments, so there is none to book (`admin_book_from_payment`, 0056). */
+export async function bookFromPayment(
+  _paymentId: string,
+  _coach: string,
+  _startsAt: string,
+  _option: 'half' | 'hour' | null = null,
+): Promise<string> {
+  return run(() => {
+    throw new AppError('not_found', 'not_found');
+  });
+}
+
 export async function dismissPayment(_paymentId: string, _note?: string): Promise<void> {
   return run(() => {
     throw new AppError('not_found', 'not_found');

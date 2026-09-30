@@ -632,17 +632,25 @@ card shows «Слот держится до 14:35» with the minutes left, the p
 время» (`release_hold`). The payment confirms the hold server-side (the webhooks'
 `apply_session_payment`); the screen only asks again on focus, and the session appears at the top.
 Without a till link for the length there is nothing to hold, and the action is «Написать тренеру».
+A hold that runs out after the payment page was opened is not «pick again» (0056): the card says
+«Оплата проверяется…», hides the picker and asks every ten seconds for half an hour — the webhook
+still confirms a hold that ran out on a free slot — with «Я не платил(а) — выбрать время» to leave.
 
 The booked session's card shows «Подключиться» (the coach's room link) from 15 minutes before the
 start until the end. A session booked in the app moves in the app — «Перенести» opens the same
-picker in a sheet and calls `move_my_booking` — only while the start is 24 hours or more away; later
-the card says so and offers «Написать тренеру». There is no self-cancel and no refund.
+picker in a sheet and calls `move_my_booking` — only while the start is 24 hours or more away, and
+only to a start 24 hours or more away; the session itself does not block its new time
+(`p_ignore_booking`, 0056), and two empty weeks end in «Написать тренеру». Later than 24 hours the
+card says so and offers «Написать тренеру». There is no self-cancel and no refund.
 
-The admin's «Записи» (`/admin/bookings`) has two views: the bookings list (upcoming / past /
+The admin's «Записи» (`/admin/bookings`) has two views: the bookings list (upcoming / held / past /
 cancelled, each with its coach, and move or cancel on an upcoming one — `admin_move_booking`,
-`admin_cancel_booking`, Moscow time) and «Расписание», per coach: the room link
-(`admin_save_coach`), the week as day rows with time ranges (`admin_set_availability`, sent whole)
-and per-date exceptions (a day or hours off, extra hours). The demo backend runs all of it locally
+`admin_cancel_booking`, Moscow time; «Держат» are the live holds, 0056) and «Расписание», per
+coach: the room link (`admin_save_coach`), the week as day rows with time ranges
+(`admin_set_availability`, sent whole) and per-date exceptions (a day or hours off, extra hours).
+Under them the editor lists the upcoming sessions the hours no longer cover — the schedule moves
+nothing by itself. A session paid with no matching hold reads «Оплачено, время не выбрано» in
+Платежи and is booked there with «Записать на время» (`admin_book_from_payment`, 0056). The demo backend runs all of it locally
 (`src/lib/api/demo/booking.ts`), with the payment stood in for by `confirmDemoHold`.
 
 The same `/app/` build runs inside Telegram as a Mini App (`src/lib/telegram/webapp.ts`): the SDK

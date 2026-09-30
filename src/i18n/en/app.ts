@@ -881,7 +881,7 @@ export const app = {
   adminPayDismissed: 'Payment marked as handled',
   adminPayErrNoOrder: 'This person has no pending order — pick a course.',
   adminPayErrApplied: 'This payment is already matched.',
-  adminPayErrSession: 'A session opens nothing — there is nothing to match.',
+  adminPayErrSession: 'This pays for a session: it is not matched, it is booked — «Book a time».',
   adminPayErrCourse: 'There is no such course in the catalogue.',
   adminSubStatusRefunded: 'Refunded',
   adminSubCloseNow: 'End access now',
@@ -1806,7 +1806,6 @@ export const app = {
   // one. An honest line beats a dead button.
   bookNoLink: 'No join link yet.',
   bookMove: 'Reschedule',
-  bookCancel: 'Cancel',
   // --- «Message the coach»: a message into the owner's «Обращения» topic (0042) ---
   supportWrite: 'Message the coach',
   supportTitle: 'Message the coach',
@@ -1929,8 +1928,6 @@ export const app = {
   bookJoinSoon: 'The «Join» button appears {n} minutes before the start.',
   bookMoveLate: 'Less than 24 hours to go — only the coach can move it now.',
   bookMoveTitle: 'Move the session',
-  bookMoveOverlapNote:
-    'Times that overlap the current session are not shown here. To shift it by half an hour, message the coach.',
   bookMoveNow: 'Now: {when}',
   bookMoveConfirm: 'Move to {time}',
   bookMoveDone: 'The session is moved.',
@@ -1993,4 +1990,32 @@ export const app = {
   bookingsSourceForma: 'In the app',
   bookingsExternalHint:
     'This booking was not made in the app. It is kept here as history — agree a move or a cancellation with the client directly.',
+  // --- Booking admin (0056): a paid session with no time, holds, the move's 24 hours --------
+  adminPayStateSessionUnbooked: 'Paid, no time booked',
+  adminPayBook: 'Book a time',
+  adminPayBookTitle: 'Book a time',
+  adminPayBookLead:
+    'The time agreed with the client. The session appears in their app and the bot sends a confirmation with the link.',
+  adminPayBookFor: 'Client: {email}',
+  adminPayBookLength: 'Length',
+  adminPayBookConfirm: 'Book',
+  adminPayBooked: 'Session booked',
+  adminPayBookErrTaken: 'The coach already has a session or a hold at that time.',
+  adminPayBookErrTime: 'The time has to be in the future.',
+  adminPayBookErrApplied: 'This payment is already booked or handled.',
+  adminPayBookErrOption: 'Pick a length.',
+  bookingsTabHolds: 'Held',
+  bookingsStatusHold: 'Held',
+  bookingsHoldUntil: 'Held until {time} MSK — waiting for the payment',
+  bookingsEmptyHolds: 'Nobody is holding a time right now',
+  bookingsOutsideTitle: 'These bookings end up outside working hours',
+  bookingsOutsideBody:
+    'The schedule does not cancel them — move or cancel them under «Bookings» if the coach is not working then.',
+  bookPaymentChecking: 'Checking the payment…',
+  bookPaymentCheckingNote:
+    'The time to pay ran out while the payment page was open. If you have paid, the session will show up here by itself — no need to pick a time again.',
+  bookPaymentCheckingLong:
+    'The payment has not arrived. If you were charged, message the coach and we will book it by hand.',
+  bookPaymentNotPaid: 'I did not pay — pick a time',
+  bookMoveTooSoon: 'A session can only be moved to a time at least 24 hours away.',
 } as const;

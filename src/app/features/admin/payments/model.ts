@@ -15,6 +15,7 @@ import {
   type PaymentRow,
 } from '@/lib/api/adminPayments';
 import type { Locale } from '@/content/schema';
+import { BOOKING } from '@content/site/booking';
 import type { TKey } from '@/i18n/index';
 
 export const ADMIN_TABS = ['purchases', 'subscriptions', 'payments', 'people'] as const;
@@ -54,11 +55,21 @@ export const INTENT_LABEL: Record<PaymentIntent, TKey> = {
   session: 'app.adminPayIntentSession',
 };
 
-export type PaymentState = 'unclaimed' | 'applied' | 'bound' | 'dismissed' | 'session';
+export type PaymentState =
+  'unclaimed' | 'applied' | 'bound' | 'dismissed' | 'session' | 'sessionUnbooked';
 
-/** One word for where a payment stands; the badge on its row. */
+/**
+ * One word for where a payment stands; the badge on its row.
+ *
+ * A session payment is applied when it became a booking (0055: the webhook confirmed the hold, a
+ * claim did, or the admin booked it — 0056). One that is not applied paid for a session with no
+ * time on the calendar: «Оплачено, время не выбрано», and it asks for «Записать на время». Rows
+ * from before 0055 were all marked applied (0043), so they stay «Оплачено».
+ */
 export function paymentState(row: PaymentRow): PaymentState {
-  if (row.intent === 'session') return 'session';
+  if (row.intent === 'session') {
+    return row.applied || row.resolution === 'dismissed' ? 'session' : 'sessionUnbooked';
+  }
   if (row.resolution === 'bound') return 'bound';
   if (row.applied) return 'applied';
   if (row.resolution === 'dismissed') return 'dismissed';
@@ -71,11 +82,48 @@ export const STATE_LABEL: Record<PaymentState, TKey> = {
   bound: 'app.adminPayStateBound',
   dismissed: 'app.adminPayStateDismissed',
   session: 'app.adminPayStateSession',
+  sessionUnbooked: 'app.adminPayStateSessionUnbooked',
 };
 
 /** Money came, access did not open, and the payment is for something that can be opened. */
 export function canBind(row: PaymentRow): boolean {
   return !row.applied && row.intent !== 'session';
+}
+
+/** A session was paid for and has no time yet: the admin books one (`admin_book_from_payment`). */
+export function canBookSession(row: PaymentRow): boolean {
+  return paymentState(row) === 'sessionUnbooked';
+}
+
+/**
+ * The session length a payment's amount stands for — the webhook's own rule (Prodamus tells the
+ * two by the rouble amount, lava.top by product, and its dollar prices are distinct too). Only a
+ * starting position for the sheet's switch: the server keeps the length it recorded, if any.
+ */
+export function sessionOptionOf(row: PaymentRow): 'half' | 'hour' | null {
+  if (row.amount === null) return null;
+  const usd = row.currency === 'USD';
+  const found = BOOKING.options.find((o) => (usd ? o.price.usd : o.price.rub) === row.amount);
+  return found ? found.id : null;
+}
+
+/** What `admin_book_from_payment` refused with, as a line under the form; null = generic text. */
+export function bookErrorKey(e: unknown): TKey | null {
+  if (!isAppError(e)) return null;
+  switch (e.message) {
+    case 'slot_taken':
+      return 'app.adminPayBookErrTaken';
+    case 'invalid_times':
+      return 'app.adminPayBookErrTime';
+    case 'already_applied':
+      return 'app.adminPayBookErrApplied';
+    case 'invalid_option':
+      return 'app.adminPayBookErrOption';
+    case 'coach_unavailable':
+      return 'app.bookCoachUnavailable';
+    default:
+      return null;
+  }
 }
 
 /** Same, and nobody has decided about it yet. */

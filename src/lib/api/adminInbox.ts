@@ -159,14 +159,15 @@ export async function replySupport(id: string, text: string): Promise<ReplyResul
 
 // --- «Записи» -------------------------------------------------------------------------------
 
-export type BookingScope = 'upcoming' | 'past' | 'cancelled';
+export type BookingScope = 'upcoming' | 'past' | 'cancelled' | 'holds';
 
 export interface AdminBooking {
   id: string;
   startsAt: string;
   endsAt: string;
   minutes: number;
-  status: 'active' | 'cancelled';
+  /** `pending` is a live hold (0056 `holds` scope): somebody picked the time and is paying. */
+  status: 'active' | 'cancelled' | 'pending';
   source: string;
   eventName: string | null;
   email: string;
@@ -174,8 +175,12 @@ export interface AdminBooking {
   joinUrl: string | null;
   locationText: string | null;
   cancelReason: string | null;
-  /** Whose calendar (0055); null for a historical Google row. Filled by a second read, see below. */
+  /** Whose calendar (0055); null for a historical Google row. */
   coachId: string | null;
+  /** `half` / `hour` for our own rows; null for a Google row. */
+  optionId: string | null;
+  /** When a hold runs out; null for anything but a hold. */
+  holdExpiresAt: string | null;
 }
 
 export interface DbAdminBooking {
@@ -190,6 +195,10 @@ export interface DbAdminBooking {
   join_url: string | null;
   location_text: string | null;
   cancel_reason: string | null;
+  /** 0056; absent from a server that has not applied it. */
+  coach_id?: string | null;
+  option_id?: string | null;
+  hold_expires_at?: string | null;
 }
 
 export function adminBookingFromDb(r: DbAdminBooking): AdminBooking {
@@ -199,7 +208,7 @@ export function adminBookingFromDb(r: DbAdminBooking): AdminBooking {
     startsAt: r.starts_at,
     endsAt: r.ends_at,
     minutes: Number.isFinite(minutes) && minutes > 0 ? minutes : 0,
-    status: r.status === 'cancelled' ? 'cancelled' : 'active',
+    status: r.status === 'cancelled' ? 'cancelled' : r.status === 'pending' ? 'pending' : 'active',
     source: r.source ?? '',
     eventName: blank(r.event_name),
     email: r.email,
@@ -208,44 +217,22 @@ export function adminBookingFromDb(r: DbAdminBooking): AdminBooking {
     joinUrl: r.join_url && /^https:\/\//.test(r.join_url) ? r.join_url : null,
     locationText: blank(r.location_text),
     cancelReason: blank(r.cancel_reason),
-    coachId: null,
+    coachId: blank(r.coach_id),
+    optionId: blank(r.option_id),
+    holdExpiresAt: blank(r.hold_expires_at),
   };
 }
 
 /**
- * The list, with each row's coach. `admin_coach_bookings` (0045) predates coaches, so the coach
- * comes from the table itself, which an admin may read whole (0014 «admins all») — one more read
- * rather than redefining a function another migration owns. A failed second read costs only the
- * coach's name on the rows, never the list.
- *
- * The second read repeats the RPC's scope (status, `ends_at`, order, 200) instead of listing the
- * ids: two hundred uuids in a GET query string is about 7.5 KB, past what some gateways take.
- * Only rows with a coach are asked for — the rest have no name to show — and dropping rows from
- * an ordered list never pushes one of the RPC's first 200 out of it. The boundary is the device's
- * clock rather than the server's; a row ending this very minute may lose its name, nothing else.
+ * The list, each row with its coach. Since 0056 `admin_coach_bookings` returns the coach, the
+ * length and a hold's expiry itself, so this is one read — it used to read `coach_bookings` a
+ * second time for the coach.
  */
 export async function listAdminBookings(scope: BookingScope): Promise<AdminBooking[]> {
   if (isDemo()) return (await demo()).listAdminBookings(scope);
-  return guard(async () => {
-    const rows = unwrap<DbAdminBooking[]>(
-      await supabase().rpc('admin_coach_bookings', { p_scope: scope }),
-    ).map(adminBookingFromDb);
-    if (rows.length === 0) return rows;
-    const at = new Date().toISOString();
-    const base = supabase()
-      .from('coach_bookings')
-      .select('id, coach_id')
-      .not('coach_id', 'is', null);
-    const scoped =
-      scope === 'upcoming'
-        ? base.eq('status', 'active').gt('ends_at', at).order('starts_at', { ascending: true })
-        : scope === 'past'
-          ? base.eq('status', 'active').lte('ends_at', at).order('starts_at', { ascending: false })
-          : base.eq('status', 'cancelled').order('starts_at', { ascending: false });
-    const { data } = await scoped.limit(200);
-    const coaches = new Map(
-      ((data ?? []) as { id: string; coach_id: string | null }[]).map((r) => [r.id, r.coach_id]),
-    );
-    return rows.map((r) => ({ ...r, coachId: coaches.get(r.id) ?? null }));
-  });
+  return guard(async () =>
+    unwrap<DbAdminBooking[]>(await supabase().rpc('admin_coach_bookings', { p_scope: scope })).map(
+      adminBookingFromDb,
+    ),
+  );
 }

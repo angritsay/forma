@@ -333,7 +333,6 @@ export function adminLinkPath(row: AdminRow): { path: string; label: string } | 
   ) {
     return { path: '/admin/bookings', label: 'Открыть записи в админке' };
   }
-  if (row.kind === 'channel_ready') return null;
   // Пара и реферал — про двоих; ссылка ведёт на того, кто позвал (0040, 0051).
   const person = personPath(
     row.kind === 'duo_paired' || row.kind === 'referral_paid' ? str(p, 'inviter') : str(p, 'email'),
@@ -480,17 +479,27 @@ function adminBody(row: AdminRow): string | null {
         ),
       );
 
-    case 'session_booked':
+    /*
+     * Бронь стала сессией. Если её подтвердила оплата (0056), в параметрах лежит платёж, и это
+     * единственное «Занятие оплачено» в канале: строку `session_paid` того же платежа база снимает
+     * с очереди, чтобы про одни деньги не приходило два сообщения.
+     */
+    case 'session_booked': {
+      const paid = str(p, 'paymentId') !== '';
       return block(
-        'Выбрали время',
+        paid ? 'Занятие оплачено' : 'Выбрали время',
         lines(
           ['Когда', str(p, 'startsAt') ? moscowTime(str(p, 'startsAt')) : ''],
           ['Тренер', str(p, 'coach')],
           ['Длительность', str(p, 'minutes') ? `${str(p, 'minutes')} мин` : ''],
           ['Почта', email],
           ['Часовой пояс клиента', str(p, 'timezone')],
+          ['Сумма', paid ? money(p) : ''],
+          ['Касса', paid ? tillName(str(p, 'provider')) : ''],
+          ['Заказ', paid ? str(p, 'ref') : ''],
         ),
       );
+    }
 
     case 'session_moved':
       return block(
@@ -565,9 +574,6 @@ function adminBody(row: AdminRow): string | null {
 
     case 'support_message':
       return supportMessage(p);
-
-    case 'channel_ready':
-      return block('Канал подключён', 'Сюда будут приходить события этой темы.');
 
     default:
       return null;

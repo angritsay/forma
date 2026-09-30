@@ -273,6 +273,31 @@ export async function bindPayment(
   });
 }
 
+/**
+ * Book a paid session that matched no hold (RPC `admin_book_from_payment`, 0056): the coach and
+ * the start the admin agreed with the client. The length is the payment's own when the webhook
+ * knew it; `option` is used only when it did not. Answers the new booking's id.
+ */
+export async function bookFromPayment(
+  paymentId: string,
+  coach: string,
+  startsAt: string,
+  option: 'half' | 'hour' | null = null,
+): Promise<string> {
+  if (!Number.isFinite(Date.parse(startsAt))) throw new AppError('validation', 'invalid_times');
+  if (isDemo()) return (await demo()).bookFromPayment(paymentId, coach, startsAt, option);
+  return guard(async () =>
+    unwrap<string>(
+      await supabase().rpc('admin_book_from_payment', {
+        p_payment_id: paymentId,
+        p_coach: coach,
+        p_starts_at: startsAt,
+        p_option: option,
+      }),
+    ),
+  );
+}
+
 /** Mark a payment as dealt with, granting nothing (RPC `admin_dismiss_payment`). */
 export async function dismissPayment(paymentId: string, note?: string): Promise<void> {
   if (isDemo()) return (await demo()).dismissPayment(paymentId, note);
