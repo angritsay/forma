@@ -3,6 +3,8 @@ import { readFileSync } from 'node:fs';
 import {
   canonicalize,
   DEFAULT_COURSE_PRICES_RUB,
+  DEFAULT_PLAN_PRICES_RUB,
+  DEFAULT_SESSION_PRICES_RUB,
   encode,
   intentForRoute,
   parseForm,
@@ -17,7 +19,6 @@ import {
 } from './verify';
 import { COURSES } from '@/content/registry';
 import { BOOKING } from '@content/site/booking';
-import { COURSES } from '@/content/registry';
 import { PLANS } from '@content/site/plans';
 
 describe('parseForm', () => {
@@ -71,6 +72,25 @@ describe('planForAmount', () => {
     expect(planForAmount(undefined, prices)).toBeNull();
     expect(planForAmount('abc', prices)).toBeNull();
   });
+  /* Умолчания функции — цены тарифов из контента, как их видит покупатель. */
+  it('defaults to the plan prices the site shows', () => {
+    for (const plan of PLANS) {
+      expect(DEFAULT_PLAN_PRICES_RUB[plan.id], plan.id).toBe(plan.price.rub);
+      expect(planForAmount(String(plan.price.rub), DEFAULT_PLAN_PRICES_RUB)).toBe(plan.id);
+    }
+  });
+
+  /* index.ts берёт умолчания отсюда, а не держит свои числа рядом с секретами. */
+  it('is what index.ts falls back to', () => {
+    const src = readFileSync(new URL('./index.ts', import.meta.url), 'utf8');
+    expect(src).toContain("Deno.env.get('PLAN_MONTHLY_RUB') ?? DEFAULT_PLAN_PRICES_RUB.monthly");
+    expect(src).toContain("Deno.env.get('PLAN_ANNUAL_RUB') ?? DEFAULT_PLAN_PRICES_RUB.annual");
+    expect(src).toContain("Deno.env.get('SESSION_HALF_RUB') ?? DEFAULT_SESSION_PRICES_RUB.half");
+    expect(src).toContain("Deno.env.get('SESSION_HOUR_RUB') ?? DEFAULT_SESSION_PRICES_RUB.hour");
+    expect(src).toContain(
+      "parsePriceList(Deno.env.get('COURSE_PRICES_RUB'), DEFAULT_COURSE_PRICES_RUB)",
+    );
+  });
 });
 
 describe('sessionForAmount', () => {
@@ -102,12 +122,21 @@ describe('sessionForAmount', () => {
     }
   });
 
-  /* И сами цены — те, что напечатаны на экране брони, а не забытые умолчания функции. */
+  /*
+   * И сами цены — те, что напечатаны на экране брони. Сверяются настоящие умолчания, которые
+   * читает index.ts, а не копия чисел в этом файле: копия прошла бы и после того, как умолчание
+   * в функции разошлось с экраном.
+   */
   it('defaults to the prices the booking screen shows', () => {
-    const half = BOOKING.options.find((o) => o.id === 'half');
-    const hour = BOOKING.options.find((o) => o.id === 'hour');
-    expect(sessionForAmount(String(half?.price.rub), prices)).toBe('half');
-    expect(sessionForAmount(String(hour?.price.rub), prices)).toBe('hour');
+    for (const option of BOOKING.options) {
+      expect(DEFAULT_SESSION_PRICES_RUB[option.id], option.id).toBe(option.price.rub);
+      expect(sessionForAmount(String(option.price.rub), DEFAULT_SESSION_PRICES_RUB)).toBe(
+        option.id,
+      );
+    }
+    expect(Object.keys(DEFAULT_SESSION_PRICES_RUB).sort()).toEqual(
+      BOOKING.options.map((o) => o.id).sort(),
+    );
   });
 });
 
@@ -128,8 +157,8 @@ describe('readPayment', () => {
 
 describe('routeAmount', () => {
   const prices = {
-    plans: { monthly: 1990, annual: 7990 },
-    sessions: { half: 2500, hour: 3500 },
+    plans: DEFAULT_PLAN_PRICES_RUB,
+    sessions: DEFAULT_SESSION_PRICES_RUB,
     courses: DEFAULT_COURSE_PRICES_RUB,
   };
 
@@ -218,9 +247,9 @@ describe('index.ts', () => {
  */
 describe('sessionOptionOf', () => {
   const prices = {
-    plans: { monthly: 1990, annual: 7990 },
-    sessions: { half: 2500, hour: 3500 },
-    courses: [2990, 3990, 4990],
+    plans: DEFAULT_PLAN_PRICES_RUB,
+    sessions: DEFAULT_SESSION_PRICES_RUB,
+    courses: DEFAULT_COURSE_PRICES_RUB,
   };
 
   it('names the option for a session price, and nothing for anything else', () => {

@@ -32,7 +32,7 @@ visible to customers until replaced.
 | Site URL + base path               | `.env` and GitHub repo variables                 | §6                                                                                                                                                                                                                                                                                         |
 | Coach admin email                  | `public.admins` table                            | §4                                                                                                                                                                                                                                                                                         |
 | Coaches' hours and room links      | **Admin → Записи → Расписание**                  | After 0055: each coach's weekly hours, days off and one fixed call link. Until a coach has hours, the booking screen shows no free times for them. Nastia is bookable only with the `coach_nastia` flag. §7.16                                                                             |
-| The bot's answer to `/start`       | **Actions → Supabase apply → `deploy-bot`**      | One button. It deploys the function, sets its secrets and calls `setWebhook`, then reads the hook back and prints what Telegram believes. Needs the repository secret `TELEGRAM_BOT_TOKEN`. §7.6                                                                                           |
+| The bot's answer to `/start`       | **Actions → Supabase apply → `deploy-bot`**      | One button. It deploys the function, sets its secrets and calls `setWebhook`, then reads the hook back and prints what Telegram believes. Needs the repository secrets `TELEGRAM_BOT_TOKEN` and `TELEGRAM_WEBHOOK_SECRET` (both required). §7.6                                            |
 | Payments reaching the app          | **Actions → Supabase apply → `deploy-payments`** | **Outstanding.** Two secrets in Supabase (`WEBHOOK_TOKEN`, `PRODAMUS_SECRET`), then this button, then the notification URL in Prodamus. Until all three are done the function refuses every notification and no payment activates anything. §7.4                                           |
 | Email sender (SMTP)                | Dashboard → Project Settings → Authentication    | §3                                                                                                                                                                                                                                                                                         |
 | Analytics / verification ids       | `.env` / repo variables (`PUBLIC_*`)             | Optional; rendered only when set                                                                                                                                                                                                                                                           |
@@ -80,19 +80,26 @@ committed bundle is missing one.
 
 2. Dashboard → **SQL Editor** → **New query** → paste the whole file → **Run**. It ends with
    "Success. No rows returned".
-3. Optional, and the reason the five existing courses become editable: the files in
-   [`supabase/course-import/`](../supabase/course-import/), one per course. Paste and run them
-   **in order** — a course's days reference its course row. Skip them and the course builder
-   still works, it is just empty.
+3. Optional, and the reason the six existing courses become editable: the files in
+   [`supabase/course-import/`](../supabase/course-import/), one per course. **From a phone, do not
+   paste them:** GitHub → **Actions → Supabase apply → `course-import`** sends the six parts in
+   order, stops on the first error, then re-runs `0036_authored_by.sql` (below) and prints only
+   counters — part by part, then how many courses, days and workouts the admin panel holds. By
+   hand: paste and run them **in order** — a course's days reference its course row. Skip them and
+   the course builder still works, it is just empty.
 
    They are `0009_course_import.sql` cut one course per file by `node scripts/db/split-import.mjs`,
-   because the whole thing is 660 KB — too big for a browser text area, and importing a file is
-   more ceremony than pasting five. Running the single migration instead loads exactly the same
-   rows; `scripts/db/verify-bundle.sh` checks that the two agree.
+   because the whole thing is 814 KB — too big for a browser text area, and a single Management
+   API request that size fails, which is why `migration` with `0009` fails and `course-import`
+   exists.
+   Each part is 107–174 KB. Running the single migration instead loads exactly the same rows;
+   `scripts/db/verify-bundle.sh` checks that the two agree, and CI checks that the parts match the
+   migration (`split-import.mjs --check`).
 
    The import runs after the bundle, so the workouts it brings in miss one backfill the bundle
-   made earlier: `0036` signs every existing workout as Sergey's. Run `setup-all.sql` once more
-   after the import (it is safe to re-run) and they get the signature too.
+   made earlier: `0036` signs every existing workout as Sergey's. `course-import` re-runs it for
+   you; after a paste by hand, run `setup-all.sql` once more (it is safe to re-run) and they get
+   the signature too.
 
 Both steps are safe to re-run, and re-running is how an existing project is upgraded.
 
@@ -100,7 +107,8 @@ Both steps are safe to re-run, and re-running is how an existing project is upgr
 
 Dashboard → **SQL Editor** → **New query**, paste each file of `supabase/migrations/` **in filename
 order** and click **Run** — the same order the bundle uses and the same set, plus `0009`. From a
-phone, Actions → Supabase apply → `migration` runs one file by name (§7.8).
+phone, Actions → Supabase apply → `migration` runs one file by name (§7.8) — every file but `0009`,
+which is too big for one request: use `course-import` for it (Option A, step 3).
 
 What to know along the way:
 
@@ -180,7 +188,12 @@ change a set count or the order of two days, they also have to exist as `admin_c
 ```bash
 node scripts/content/gen-course-import.mjs           # rewrites 0009_course_import.sql
 node scripts/content/gen-course-import.mjs --check   # CI-style check that it matches the content
+node scripts/db/split-import.mjs                     # re-cuts supabase/course-import/ from it
+node scripts/db/split-import.mjs --check             # CI-style check that the parts match 0009
 ```
+
+CI runs both checks. To load the rows into the project: Actions → Supabase apply →
+`course-import` (§2, Option A, step 3).
 
 Three things worth knowing:
 
@@ -751,6 +764,17 @@ upload everything. Anonymous users can read nothing.
 Dashboard → **Storage → videos** → create the folder → **Upload**. (Uploads through the app are
 also allowed for admins, but there is no UI for it yet.)
 
+From GitHub instead, three workflows — each one's header lists exactly what it needs:
+
+- **Actions → Upload videos** (`.github/workflows/upload-videos.yml`) transcodes the coach's clips
+  and uploads them. Needs the repository **secret** `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project
+  Settings → API → service_role; it bypasses RLS, so it lives only there) and the variable
+  `PUBLIC_SUPABASE_URL`. A dry run needs no secret.
+- **Actions → Probe video access** (`probe-video.yml`) checks that a real signed-in user gets a
+  clip. Same secret, plus the variable `PUBLIC_SUPABASE_ANON_KEY`.
+- **Actions → Supabase apply → `site-loops`** cuts the silent loops the website shows. Only
+  `SUPABASE_ACCESS_TOKEN` (§7.8); it fetches the service key itself.
+
 ### 5.4 Reference from content
 
 In the exercise or course file:
@@ -781,8 +805,16 @@ All variables are read at build time. `PUBLIC_*` values are embedded in the stat
 Local: `cp .env.example .env` and fill in the values (`.env` is git-ignored).
 
 GitHub: repository → **Settings → Secrets and variables → Actions** → **Variables** tab for the
-`PUBLIC_*`, `SITE_URL`, `BASE_PATH` values and **Secrets** tab for `INDEXNOW_KEY`. Then
-**Settings → Pages → Source: GitHub Actions**. The deploy workflow reads these names verbatim.
+`PUBLIC_*`, `SITE_URL`, `BASE_PATH` values and **Secrets** tab for `INDEXNOW_KEY`. The deploy
+workflow reads these names verbatim.
+
+**Where the site goes** is the variable `DEPLOY_TARGET`, and the header of
+`.github/workflows/deploy.yml` is the full list for it: unset publishes to the `gh-pages` branch
+and needs nothing else; `github-pages-actions` needs **Settings → Pages → Source: GitHub Actions**
+once; `cloudflare` needs the secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (and
+optionally the variable `CLOUDFLARE_PROJECT`). The same header lists `CUSTOM_DOMAIN` and the
+optional `PRIVATE_PAGE_*` secrets (§7.15). The secrets the edge functions and Supabase tasks need
+are in §7.8.
 
 When the backend variables are missing, the app renders a localized "backend not configured"
 screen instead of crashing (`isConfigured()` in `src/lib/api/client.ts`).
@@ -866,7 +898,8 @@ paymentUrl: { ru: 'https://…/pay/session-ru', en: 'https://…/pay/session-en'
 
 Same rule as courses in every respect, including the important one: `https://` only, the signed-in
 email is appended as `?email=`, and **the amount is set on the processor, never here**. The app's
-button says «Оплатить 3 500 ₽» because `price` in this file is what the product costs; if the page
+button says «Забронировать и оплатить 3 500 ₽» (and, on the held slot's card, «Оплатить 3 500 ₽»)
+because `price` in this file is what the product costs; if the page
 it opens asks for a sum the customer can type, the link is pointing at an open form rather than at
 a product with a locked price, and the two will disagree until the link is fixed on the processor
 (see §7.1).
@@ -989,18 +1022,32 @@ started that same bot. Two entrances buy two silent failures. The bot therefore 
 `@forma_training_bot`, which is the one people already have.
 
 Nothing in this repository is built from the username in any case: `BRAND.telegram` is empty,
-`MINI_APP_URL` points at the website rather than at `t.me`, and the handle appears only in prose
-and in one test fixture.
+the app button opens the website (`https://forma-app.co/app/`) rather than a `t.me` link, and the
+handle appears only in prose and in one test fixture.
 
 **A direct link** is worth more than the menu button: it is what goes in an Instagram bio, in the
 Telegram channel and in any post. `/newapp` → the bot → title, short description, a 640×360
 image (`npm run telegram:icon` renders one from the brand), `/empty` for the demo GIF, then the
 same URL and a short name. The result is `t.me/<bot>/<short name>`, which opens the app in one tap.
 
-**Answering `/start`.** A bot with no program behind it is silent when someone opens the chat and
-taps **Start**, which is the one moment the menu button and the direct link do not cover — the
-person is looking at an empty chat. `supabase/functions/telegram-bot` closes that and nothing else:
-every private message gets the same greeting with an inline button that launches the app.
+**Answering `/start`, and passing on what people write.** A bot with no program behind it is
+silent when someone opens the chat and taps **Start**, which is the one moment the menu button and
+the direct link do not cover — the person is looking at an empty chat.
+`supabase/functions/telegram-bot` answers it, in private chats only (groups and channels are left
+alone):
+
+- **A command** — `/start`, or any other — gets the greeting: the owner's text about Forma and its
+  three sections (Курсы, Клуб маленьких шагов, Тренер) under a photo, with two buttons, «Открыть
+  приложение» (opens the app) and «Почитать на сайте» (opens the site). In English when the
+  person's Telegram language is neither Russian nor a language whose readers usually read Russian
+  (`localeOf` in `index.ts`); no language at all means Russian. A `/start ref_…` link carries the referral into the app
+  button (§7.13).
+- **Anything typed that is not a command** is not answered with the greeting. It goes to the
+  coach: `support_from_telegram` (0042) queues it for the «Обращения» topic of the owner's channel
+  (§7.12), and the person gets one line back — «Передали тренеру — ответ придёт сюда, в этот чат.»
+  The coach's answer arrives from the bot, in the same chat.
+- **A photo, voice note or sticker with no words** is not passed on; the person is asked to write
+  it in words or add a caption.
 
 1. **The token.** @BotFather → `/mybots` → the bot → **API Token**. It never goes in this
    repository, which is public — it is a Supabase secret and nothing else. If it is ever pasted
@@ -1016,8 +1063,14 @@ every private message gets the same greeting with an inline button that launches
    error if there is one. Nothing in the log contains the token.
 
    Add `TELEGRAM_WEBHOOK_SECRET` (any value, e.g. `openssl rand -hex 32`) as a second repository
-   secret before running it. Without it the hook still works, but it is unauthenticated: anyone who
-   guesses the URL can post updates to it, and the run says so.
+   secret before running it. **It is required:** the function refuses every delivery without it
+   (503, fail closed), so `deploy-bot` stops with an error rather than point Telegram at a bot that
+   answers nothing.
+
+   Nothing else is needed. `MINI_APP_URL` is not a secret to set: the code's default is the real
+   app, and `deploy-bot` no longer copies a repository variable of that name. If an earlier run
+   did, `secrets-check` warns about it as an override — delete it in Supabase → Project Settings →
+   Edge Functions → Secrets.
 
    Steps 3 and 4 below are what that button does, kept for when it has to be done by hand — the
    dashboard editor deploys a single pasted file, which is why this function is one file on purpose
@@ -1028,25 +1081,27 @@ every private message gets the same greeting with an inline button that launches
    ```sh
    supabase secrets set \
      TELEGRAM_BOT_TOKEN=123456:AA… \
-     TELEGRAM_WEBHOOK_SECRET=$(openssl rand -hex 24) \
-     MINI_APP_URL=https://forma-app.co/app/
+     TELEGRAM_WEBHOOK_SECRET=$(openssl rand -hex 24)
    ```
 
-   Everything the greeting is made of can be overridden without touching the code; leave any of
-   them unset to use what is baked into `index.ts`.
+   Both are required. Everything the greeting is made of can be overridden without touching the
+   code — but **leave them unset**: the defaults below are what is baked into `index.ts`, and a set
+   secret beats every later change to it (§7.8, «Secrets that override the repository»). Each text
+   has an English twin with an `_EN` suffix.
 
-   | Secret                      | Default                               | What it is                     |
-   | --------------------------- | ------------------------------------- | ------------------------------ |
-   | `TELEGRAM_GREETING`         | three lines ending «Что открыть?»     | The caption under the picture  |
-   | `TELEGRAM_PHOTO_URL`        | `https://forma-app.co/og/default.png` | The picture itself             |
-   | `TELEGRAM_BUTTON_TEXT`      | «Тренироваться»                       | The button that opens the app  |
-   | `TELEGRAM_SITE_BUTTON_TEXT` | «Что за курс»                         | The button that opens the site |
-   | `TELEGRAM_SITE_URL`         | `https://forma-app.co/`               | Where that button goes         |
+   | Secret                      | Default in `index.ts`                                      | What it is                     |
+   | --------------------------- | ---------------------------------------------------------- | ------------------------------ |
+   | `TELEGRAM_GREETING`         | «Привет. Это Сережа и Настя — создатели приложения Forma…» | The caption under the picture  |
+   | `TELEGRAM_PHOTO_URL`        | `https://forma-app.co/bot/welcome.jpg`                     | The picture itself             |
+   | `TELEGRAM_BUTTON_TEXT`      | «Открыть приложение» / "Open the app"                      | The button that opens the app  |
+   | `TELEGRAM_SITE_BUTTON_TEXT` | «Почитать на сайте» / "Read on the site"                   | The button that opens the site |
+   | `TELEGRAM_SITE_URL`         | `https://forma-app.co/` (English readers: `/en/`)          | Where that button goes         |
+   | `MINI_APP_URL`              | `https://forma-app.co/app/`                                | Where the app button goes      |
 
    **The picture is fetched by Telegram's own servers, not by this function**, so it has to be a
-   public URL that answers with an image. The default is the OG card the deploy generates, which
-   means it exists as soon as the site has deployed once. Set `TELEGRAM_SITE_BUTTON_TEXT=` (empty)
-   to drop the second button and leave one.
+   public URL that answers with an image. The default is `public/bot/welcome.jpg`, which exists as
+   soon as the site has deployed once. Set `TELEGRAM_SITE_BUTTON_TEXT=` (empty) to drop the second
+   button and leave one.
 
    A photo Telegram refuses — moved, slow, never generated — is not a silent failure: the function
    logs it and sends the same words and the same buttons as a plain message. So a broken picture
@@ -1069,7 +1124,8 @@ every private message gets the same greeting with an inline button that launches
 
 The secret is what guards the door: Telegram echoes it back in `X-Telegram-Bot-Api-Secret-Token` on
 every delivery, so a request without it is not Telegram and gets a 403. Without the secret set the
-function still runs and says so in its log, but the URL is then the only thing protecting it.
+function answers 503 to everything and says so in its log — Telegram keeps the queued updates and
+retries, so nothing sent meanwhile is lost once the secret is set.
 
 **What the app does inside Telegram** (`src/lib/telegram/webapp.ts`, no-ops everywhere else):
 
@@ -1233,8 +1289,10 @@ of those is agreed with the client directly.
 After the first real booking through the app is confirmed, delete the old secrets: in GitHub
 (`GOOGLE_SA_JSON`, `GOOGLE_CALENDAR_ID`, `GOOGLE_SYNC_TOKEN`, `GOOGLE_BOOKING_TITLE`,
 `GOOGLE_COACH_EMAILS`, and `GOOGLE_SA_CLIENT_EMAIL` / `GOOGLE_SA_PRIVATE_KEY` if set) and in
-Supabase → Edge Functions → Secrets, then delete the `google-calendar-sync` function in Supabase →
-Edge Functions. The service account in Google Cloud can be deleted too, and the coach can stop
+Supabase → Edge Functions → Secrets, then delete the retired functions: **Actions → Supabase
+apply → `functions-cleanup`** deletes `google-calendar-sync` and `calendly-webhook` — those two
+and nothing else — and a function that is already gone is not an error. Run it only when the owner
+says so. The service account in Google Cloud can be deleted too, and the coach can stop
 sharing his calendar with it.
 
 ---
@@ -1244,26 +1302,29 @@ sharing his calendar with it.
 `.github/workflows/supabase-apply.yml` does the dashboard chores from a phone. **Actions → Supabase
 apply → Run workflow**, pick a task:
 
-| Task                                   | What it does                                                                                 |
-| -------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `migration`                            | Runs one file from `supabase/migrations/`. The second input is its bare filename.            |
-| `club-seed`                            | Runs `supabase/seed-club-week.sql` — the club's test week and its invented cohort (§9.1).    |
-| `club-join`                            | Puts the real testers in that week, reading their addresses from a secret.                   |
-| `email-templates`                      | Puts `supabase/templates/otp.html` into **both** Magic Link and Confirm signup (§3.2).       |
-| `email-templates-check`                | Read-only: do the stored templates match the repo, and is a Send Email Hook overriding them. |
-| `deploy-bot`                           | Deploys the `telegram-bot` function and sets its secrets (§7.6).                             |
-| `deploy-link`                          | Deploys `link-telegram`, which attaches a Telegram account to a profile (§7.6).              |
-| `deploy-notify`                        | Deploys `telegram-notify`, copies `NOTIFY_TOKEN` and the owner's-channel secrets (§7.11).    |
-| `deploy-payments`                      | Deploys `prodamus-webhook`, checks its two secrets and probes the live address (§7.4).       |
-| `deploy-lava`                          | Deploys `lava-webhook`, copies its three secrets, fails if any is missing, probes (§7.9).    |
-| `secrets-check`                        | Read-only: which function secrets Supabase has, which are missing, which override the repo.  |
-| `webhook-info`                         | Read-only: what Telegram itself believes about the bot's webhook, and why delivery failed.   |
-| `payments-check`                       | Read-only: how many payment notifications have arrived and whether the last one applied.     |
-| `telegram-check`                       | Read-only: how many people have a Telegram account attached, so the bot can reach them.      |
-| `outbox-check`                         | Read-only: both queues (bot and owner's channel), by status. Counts only, no addresses.      |
-| `translation-check`                    | Read-only: how much of what the coach typed still has no English half. Counts only (§7.10).  |
-| `reset-athlete`                        | Resets one person to "just signed in"; the address comes from the `RESET_EMAIL` secret.      |
-| `migration` → `0030_reload_schema.sql` | Not a schema change: tells PostgREST to re-read the schema. Run it on `PGRST205`.            |
+| Task                                   | What it does                                                                                   |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `migration`                            | Runs one file from `supabase/migrations/`. The second input is its bare filename.              |
+| `course-import`                        | The six courses as editable rows: the parts of `0009`, one per request, then `0036` (§2).      |
+| `club-seed`                            | Runs `supabase/seed-club-week.sql` — the club's test week and its invented cohort (§9.1).      |
+| `club-join`                            | Puts the real testers in that week, reading their addresses from a secret.                     |
+| `email-templates`                      | Puts `supabase/templates/otp.html` into **both** Magic Link and Confirm signup (§3.2).         |
+| `email-templates-check`                | Read-only: do the stored templates match the repo, and is a Send Email Hook overriding them.   |
+| `deploy-bot`                           | Deploys the `telegram-bot` function and sets its secrets (§7.6).                               |
+| `deploy-link`                          | Deploys `link-telegram`, which attaches a Telegram account to a profile (§7.6).                |
+| `deploy-notify`                        | Deploys `telegram-notify`, copies `NOTIFY_TOKEN` and the owner's-channel secrets (§7.11).      |
+| `deploy-payments`                      | Deploys `prodamus-webhook`, checks its two secrets and probes the live address (§7.4).         |
+| `deploy-lava`                          | Deploys `lava-webhook`, copies its three secrets, fails if any is missing, probes (§7.9).      |
+| `secrets-check`                        | Read-only: which function secrets Supabase has, which are missing, which override the repo.    |
+| `webhook-info`                         | Read-only: what Telegram itself believes about the bot's webhook, and why delivery failed.     |
+| `payments-check`                       | Read-only: how many payment notifications have arrived and whether the last one applied.       |
+| `telegram-check`                       | Read-only: how many people have a Telegram account attached, so the bot can reach them.        |
+| `outbox-check`                         | Read-only: both queues (bot and owner's channel), by status. Counts only, no addresses.        |
+| `translation-check`                    | Read-only: how much of what the coach typed still has no English half. Counts only (§7.10).    |
+| `reset-athlete`                        | Resets one person to "just signed in"; the address comes from the `RESET_EMAIL` secret.        |
+| `site-loops`                           | Cuts silent loops of the coach's clips into the public `images` bucket for the site (§5.3).    |
+| `functions-cleanup`                    | Deletes `calendly-webhook` and `google-calendar-sync`, nothing else. Only on the owner's word. |
+| `migration` → `0030_reload_schema.sql` | Not a schema change: tells PostgREST to re-read the schema. Run it on `PGRST205`.              |
 
 One secret makes it work: **`SUPABASE_ACCESS_TOKEN`** (Settings → Secrets and variables → Actions),
 a personal access token from <https://supabase.com/dashboard/account/tokens>. The project ref is
@@ -1292,8 +1353,10 @@ the repository never reaches Telegram. Each has an English twin with an `_EN` su
 readers whose Telegram is not in Russian: `TELEGRAM_GREETING` / `TELEGRAM_GREETING_EN`,
 `TELEGRAM_BUTTON_TEXT` / `TELEGRAM_BUTTON_TEXT_EN`, `TELEGRAM_SITE_BUTTON_TEXT` /
 `TELEGRAM_SITE_BUTTON_TEXT_EN`; plus `TELEGRAM_PHOTO_URL`, `TELEGRAM_SITE_URL` and `MINI_APP_URL`,
-which are shared. `secrets-check` warns about every one it finds. To go back to the repository's
-text, delete the secret in Supabase → Project Settings → Edge Functions → Secrets.
+which are shared. `secrets-check` warns about every one it finds. `deploy-bot` sets none of them
+(it used to copy a repository variable into `MINI_APP_URL`, which only produced this warning). To
+go back to the repository's text, delete the secret in Supabase → Project Settings → Edge
+Functions → Secrets.
 
 `secrets-check` also lists every secret the functions read — the required ones as warnings when
 missing (`NOTIFY_TOKEN`, `LAVA_WEBHOOK_SECRET`, `LAVA_PRODUCTS` included), the optional ones
@@ -1304,7 +1367,11 @@ missing (`NOTIFY_TOKEN`, `LAVA_WEBHOOK_SECRET`, `LAVA_PRODUCTS` included), the o
 different programs. To upgrade, change that one line and watch the next run.
 
 What it cannot do: DNS (SPF/DKIM/DMARC live at the registrar), anything on Prodamus, and uploading
-video, which is not in this repository.
+video, which is not in this repository (Actions → Upload videos does that, §5.3).
+
+Secrets that belong to other workflows are listed in their headers: the site's deploy
+(`DEPLOY_TARGET`, Cloudflare, `PRIVATE_PAGE_*`) in `deploy.yml` (§6), the video upload and probe
+(`SUPABASE_SERVICE_ROLE_KEY`) in `upload-videos.yml` and `probe-video.yml` (§5.3).
 
 ## 7.9 Paying from outside Russia: lava.top
 

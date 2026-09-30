@@ -15,5 +15,9 @@ a course's days reference its course row.
 
 Every part is idempotent: re-running one updates its rows in place and changes nothing else.
 
+From a phone: GitHub → Actions → **Supabase apply** → task `course-import` sends these parts
+in order, stops on the first error, and then re-runs `0036_authored_by.sql` so the imported
+workouts get their author.
+
 If you have the Supabase CLI, ignore all of this and let `supabase db push` apply the
 migration itself — these files exist only to avoid the dashboard's file import.

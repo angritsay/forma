@@ -41,6 +41,15 @@ jobs:
       - name: Unit tests (engine, content, i18n, seo scripts)
         run: npm run test
 
+      # 0009_course_import.sql is generated from content/courses/, and supabase/course-import/ is
+      # that file cut one course per part — the parts are what Supabase apply → course-import
+      # sends. A course edit without regenerating both would import yesterday's courses.
+      - name: Course import is fresh
+        run: node scripts/content/gen-course-import.mjs --check
+
+      - name: Course import parts are fresh
+        run: node scripts/db/split-import.mjs --check
+
       - name: OG images
         run: npm run seo:og
 

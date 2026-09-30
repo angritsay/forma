@@ -30,6 +30,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import {
   DEFAULT_COURSE_PRICES_RUB,
+  DEFAULT_PLAN_PRICES_RUB,
+  DEFAULT_SESSION_PRICES_RUB,
   intentForRoute,
   parseForm,
   parsePriceList,
@@ -41,14 +43,14 @@ import {
 } from './verify.ts';
 
 const PRICES = {
-  monthly: Number(Deno.env.get('PLAN_MONTHLY_RUB') ?? '1990'),
-  annual: Number(Deno.env.get('PLAN_ANNUAL_RUB') ?? '7990'),
+  monthly: Number(Deno.env.get('PLAN_MONTHLY_RUB') ?? DEFAULT_PLAN_PRICES_RUB.monthly),
+  annual: Number(Deno.env.get('PLAN_ANNUAL_RUB') ?? DEFAULT_PLAN_PRICES_RUB.annual),
 };
 
 /** Цены занятий с тренером — те же, что в `content/site/booking.ts`. */
 const SESSION_PRICES = {
-  half: Number(Deno.env.get('SESSION_HALF_RUB') ?? '2500'),
-  hour: Number(Deno.env.get('SESSION_HOUR_RUB') ?? '3500'),
+  half: Number(Deno.env.get('SESSION_HALF_RUB') ?? DEFAULT_SESSION_PRICES_RUB.half),
+  hour: Number(Deno.env.get('SESSION_HOUR_RUB') ?? DEFAULT_SESSION_PRICES_RUB.hour),
 };
 
 /** Цены курсов: сумма, не равная ни одной, ничего не открывает (`verify.ts`, `routeAmount`). */
