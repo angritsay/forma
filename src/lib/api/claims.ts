@@ -10,7 +10,7 @@
  * it is proof rather than a claim — which is why this asks for a number and not simply for a second
  * address to trust.
  *
- * Every outcome is a string rather than a thrown error, because four of the six are things a person
+ * Every outcome is a string rather than a thrown error, because most of them are things a person
  * did rather than faults: `not_found` (no such number, or somebody already claimed it),
  * `email_taken` (that payment address belongs to another account) and `rate_limited` (ten tries an
  * hour) are answers the screen shows, not exceptions to report.
@@ -29,6 +29,11 @@ export const CLAIM_RESULTS = [
   'session',
   /** The address is linked, but there was nothing waiting to activate. */
   'linked',
+  /**
+   * A course payment, and the account has several open orders none of which it matches (0057).
+   * Nothing is claimed; the owner is told and asks which course it was.
+   */
+  'ambiguous',
   'not_found',
   'email_taken',
   'rate_limited',

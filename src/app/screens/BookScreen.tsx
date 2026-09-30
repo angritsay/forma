@@ -188,6 +188,14 @@ export default function BookScreen() {
   const [swapped, setSwapped] = useState(false);
   const who: CoachPerson = nastia ? person : 'sergey';
   const [redirecting, setRedirecting] = useState(false);
+  // Back from the till restores this page from the back-forward cache with the spinner still on.
+  useEffect(() => {
+    const onShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setRedirecting(false);
+    };
+    window.addEventListener('pageshow', onShow);
+    return () => window.removeEventListener('pageshow', onShow);
+  }, []);
   /*
    * Whether the payment page has been opened from here. It is not proof of a payment — nothing on
    * a static front end can be — and it is not meant to be: it is what turns the step after the

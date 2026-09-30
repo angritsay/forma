@@ -42,6 +42,7 @@ import { isDemo } from '@/lib/api/mode';
 import type { ProfilePatch } from '@/lib/api/types';
 import { levelForPoints } from '@/lib/training/levels';
 import { clubJoinHref } from '@/app/features/marathon/clubPlan';
+import { ClaimSheet } from '@/app/features/payments/ClaimSheet';
 import { useSound } from '@/app/features/player/sound';
 import { externalLinkProps } from '@/app/hooks/useExternalLink';
 import { useT } from '@/app/hooks/useT';
@@ -84,6 +85,7 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
   const [dataOpen, setDataOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [levelsOpen, setLevelsOpen] = useState(false);
+  const [claiming, setClaiming] = useState(false);
   const isAdmin = useIsAdmin() === true;
   const [saving, setSaving] = useState(false);
   /*
@@ -276,9 +278,11 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
             {/*
              * «Подписка» and until when (audit item 2): there is no auto-renewal and no warning,
              * so this is where a member finds the date before the club tab turns into the selling
-             * screen. While it runs the row is a fact and opens nothing; before the first payment
-             * and once it has ended it is the way (back) in — the club's own payment link, the
-             * same one `ClubPitch` sends to. No price configured and no subscription: no row.
+             * screen. While it runs the row is a fact and opens nothing; before the first payment,
+             * with an order still unpaid, in the last week («· продлить», so the bot's «продли в
+             * приложении» is true) and once it has ended it is the way (back) in — the club's own
+             * payment link, the same one `ClubPitch` sends to. No price configured and no
+             * subscription: no row.
              *
              * The link goes through `externalLinkProps`: a bare anchor out of the Mini App is dead
              * or strands the member on the payment page. And since it goes straight to the annual
@@ -303,6 +307,20 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
                       {subscriptionJoin ? <Glyph size={16}>›</Glyph> : null}
                     </>
                   }
+                />
+              </li>
+            ) : null}
+            {/*
+             * Paid, and the club did not open: the payment came from another address. Shown
+             * whenever the club is not live — nothing bought, an order waiting for its payment,
+             * or the period over — the moments somebody who paid would be looking at this row.
+             */}
+            {subscriptionValue && !subscription?.isLive ? (
+              <li>
+                <ListRow
+                  title={t('app.claimLink')}
+                  onClick={() => setClaiming(true)}
+                  trailing={<Glyph size={16}>›</Glyph>}
                 />
               </li>
             ) : null}
@@ -460,6 +478,7 @@ export function ProfileSheet({ open, onClose }: ProfileSheetProps) {
       <DataSheet open={dataOpen} email={email} onClose={() => setDataOpen(false)} />
       <LanguageSheet open={langOpen} onClose={() => setLangOpen(false)} />
       <LevelsSheet open={levelsOpen} points={points} onClose={() => setLevelsOpen(false)} />
+      <ClaimSheet open={claiming} onClose={() => setClaiming(false)} />
       <NameSheet
         open={renaming}
         name={name}

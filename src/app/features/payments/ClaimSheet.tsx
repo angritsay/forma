@@ -6,6 +6,10 @@ import { useToast } from '@/components/ui/Toast';
 import { claimPayment, ORDER_REF_MAX, type ClaimResult } from '@/lib/api/claims';
 import { useT } from '@/app/hooks/useT';
 import { useSession } from '@/app/store/session';
+import { SupportSheet } from '@/app/features/support/SupportSheet';
+
+/** The answers that end in «напиши нам»: each gets a button that does it, not only the words. */
+const NEEDS_US: ReadonlySet<ClaimResult> = new Set(['linked', 'email_taken', 'ambiguous']);
 
 export interface ClaimSheetProps {
   open: boolean;
@@ -25,8 +29,9 @@ export interface ClaimSheetProps {
  * и, зная адрес чужого покупателя, им мог бы воспользоваться кто угодно. Номер заказа приходит в
  * чеке на почту плательщика и больше нигде не появляется, поэтому он — доказательство.
  *
- * Ответов шесть и все шесть человеческие, включая неудачи: «такого номера нет» — это не ошибка
- * приложения, это опечатка или чужой номер, и экран говорит об этом словами, а не красным.
+ * Все ответы человеческие, включая неудачи: «такого номера нет» — это не ошибка приложения, это
+ * опечатка или чужой номер, и экран говорит об этом словами, а не красным. Там, где ответ — «напиши
+ * нам», рядом кнопка, которая это делает (`SupportSheet`), с номером заказа в контексте.
  */
 export function ClaimSheet({ open, onClose }: ClaimSheetProps) {
   const { t } = useT();
@@ -35,29 +40,43 @@ export function ClaimSheet({ open, onClose }: ClaimSheetProps) {
   const [ref, setRef] = useState('');
   const [busy, setBusy] = useState(false);
   const [answer, setAnswer] = useState<ClaimResult | null>(null);
+  // The claim went through, but re-reading access did not: the screen underneath is behind.
+  const [stale, setStale] = useState(false);
+  const [writing, setWriting] = useState(false);
 
   const submit = async () => {
     setBusy(true);
     setAnswer(null);
+    setStale(false);
+    let result: ClaimResult;
     try {
-      const result = await claimPayment(ref);
-      setAnswer(result);
-      if (result === 'subscription' || result === 'course') {
-        // Доступ уже выдан в базе; перечитываем, чтобы экраны под шторкой это увидели, и только
-        // потом закрываем — иначе человек вернётся на тот же замок, который только что оплатил.
-        await refreshEntitlements();
-        toast.show({ kind: 'success', title: t('app.claimOk') });
-        onClose();
-      }
+      result = await claimPayment(ref);
     } catch (e) {
       // «Нет соединения» — только когда его и правда нет; отказ сервера — другая фраза.
       toast.show({
         kind: 'error',
         title: t(isNetworkError(e) ? 'common.errorOffline' : 'common.errorGeneric'),
       });
-    } finally {
       setBusy(false);
+      return;
     }
+    setAnswer(result);
+    if (result === 'subscription' || result === 'course') {
+      /*
+       * Доступ уже выдан в базе; перечитываем, чтобы экраны под шторкой это увидели, и только
+       * потом закрываем — иначе человек вернётся на тот же замок, который только что оплатил.
+       * Сбой перечитывания — отдельная беда, не «ошибка»: платёж уже забран, и повторить поиск
+       * значило бы получить «такого номера нет». Шторка остаётся и говорит, что делать.
+       */
+      try {
+        await refreshEntitlements();
+        toast.show({ kind: 'success', title: t('app.claimOk') });
+        onClose();
+      } catch {
+        setStale(true);
+      }
+    }
+    setBusy(false);
   };
 
   const note: Record<ClaimResult, string> = {
@@ -65,6 +84,7 @@ export function ClaimSheet({ open, onClose }: ClaimSheetProps) {
     course: t('app.claimOk'),
     session: t('app.claimSession'),
     linked: t('app.claimLinked'),
+    ambiguous: t('app.claimAmbiguous'),
     not_found: t('app.claimNotFound'),
     email_taken: t('app.claimEmailTaken'),
     rate_limited: t('app.claimRateLimited'),
@@ -98,8 +118,30 @@ export function ClaimSheet({ open, onClose }: ClaimSheetProps) {
           {t('app.claimCta')}
         </Button>
 
-        {answer ? <p className="text-[13px] leading-snug text-muted">{note[answer]}</p> : null}
+        {/* Announced as it appears: the answer is the whole point of pressing the button. */}
+        <div role="status" className="flex flex-col gap-3">
+          {answer ? (
+            <p className="text-[13px] leading-snug text-muted">
+              {stale ? t('app.claimRefreshFailed') : note[answer]}
+            </p>
+          ) : null}
+          {answer && NEEDS_US.has(answer) ? (
+            <Button
+              variant="secondary"
+              size="md"
+              className="self-start"
+              onClick={() => setWriting(true)}
+            >
+              {t('app.contactUs')}
+            </Button>
+          ) : null}
+        </div>
       </div>
+      <SupportSheet
+        open={writing}
+        onClose={() => setWriting(false)}
+        context={`claim ${answer ?? ''} ${ref.trim()}`.trim()}
+      />
     </Sheet>
   );
 }

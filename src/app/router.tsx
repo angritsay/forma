@@ -14,6 +14,7 @@
  */
 import { Suspense, useEffect, useRef, type ReactElement } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router';
+import { isNetworkError } from '@/lib/api/errors';
 import { attachReferral } from '@/lib/api/referral';
 import { AppShell, FocusShell } from './components/AppShell';
 import { BootScreen } from './components/BootScreen';
@@ -111,10 +112,14 @@ function StartRedirect() {
  * Attach the referral code set aside by `#/ref/<code>` or `?startapp=ref_<code>`, once the person
  * is signed in and through onboarding — which is exactly when this shell first renders.
  *
- * Once, and cleared whatever the outcome: the database answers silently when the person already
- * has a code or already paid, and loudly only for a malformed or their own code — none of which
- * is anything to show somebody who tapped a link and did not press anything. Nothing is logged:
- * a referral is who knows whom.
+ * Once per launch, and cleared once the database has answered, whatever the answer: it answers
+ * silently when the person already has a code or already paid, and loudly only for a malformed or
+ * their own code — none of which is anything to show somebody who tapped a link and did not press
+ * anything. Nothing is logged: a referral is who knows whom.
+ *
+ * **Except no answer at all.** A dropped connection is not the database saying no, and clearing
+ * the code then lost the friend's +30 days for good. So a network failure keeps it set aside, and
+ * the next launch tries again.
  */
 function useAttachPendingReferral(): void {
   const done = useRef(false);
@@ -123,10 +128,11 @@ function useAttachPendingReferral(): void {
     done.current = true;
     const code = pendingReferral();
     if (!code) return;
-    clearReferral();
-    attachReferral(code).catch(() => {
-      /* see above */
-    });
+    attachReferral(code)
+      .then(() => clearReferral())
+      .catch((e: unknown) => {
+        if (!isNetworkError(e)) clearReferral();
+      });
   }, []);
 }
 
