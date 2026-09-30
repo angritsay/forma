@@ -1,6 +1,6 @@
 -- =============================================================================
--- «Обращения» (0042) и то, что синхронизация календаря будит канал владельца (0040).
--- Запускать после 00_shim.sql и всех миграций до 0042 включительно, на той же базе.
+-- «Обращения» (0042) и то, что оплаченная бронь будит канал владельца (0040, 0055).
+-- Запускать после 00_shim.sql и всех миграций до 0055 включительно, на той же базе.
 --
 -- Проверяется:
 --   * из приложения — пишет только вошедший, пустое и слишком длинное отказывают, шестое за час —
@@ -8,8 +8,12 @@
 --   * из бота — зовёт только сервисная роль, повтор доставки не даёт второго обращения, после
 --     лимита бот один раз слышит `limited` и дальше `muted`;
 --   * длинный текст из эмодзи режется так, что строка помещается в `admin_outbox.params`;
---   * бронь, записанная `apply_coach_booking(… 'google_calendar')`, ставит в очередь
---     «Выбрали время» — триггер 0040 срабатывает на вставку из синхронизации.
+--   * бронь, оплаченная через `hold_slot()` + `apply_session_payment()`, ставит в очередь
+--     «Выбрали время» ровно один раз — триггер 0055 срабатывает, когда бронь становится активной,
+--     а повтор той же оплаты ничего не пишет.
+--
+-- Свой пользователь (…88e1), а не общий …e1: на одной базе с остальными наборами тот id уже занят
+-- другим адресом, и `on conflict do nothing` молча оставлял чужую почту.
 -- =============================================================================
 \set ON_ERROR_STOP on
 \set QUIET on
@@ -33,14 +37,14 @@ end $$;
 select pg_temp.as_super();
 
 insert into auth.users (id, email, raw_user_meta_data) values
-  ('00000000-0000-0000-0000-0000000000e1', 'support@example.com', '{}')
+  ('00000000-0000-0000-0000-0000000088e1', 'support@example.com', '{}')
 on conflict (id) do nothing;
 update public.profiles
    set display_name = 'Аня', locale = 'en', telegram_id = 777001
- where id = '00000000-0000-0000-0000-0000000000e1';
+ where id = '00000000-0000-0000-0000-0000000088e1';
 
 -- --- из приложения ------------------------------------------------------------
-select pg_temp.as_user('00000000-0000-0000-0000-0000000000e1', 'support@example.com');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000088e1', 'support@example.com');
 do $$
 declare v_msg text; begin
   begin
@@ -93,7 +97,7 @@ declare v_blocked boolean := false; begin
 end $$;
 
 -- Вошедший не может выдать себя за бота.
-select pg_temp.as_user('00000000-0000-0000-0000-0000000000e1', 'support@example.com');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000088e1', 'support@example.com');
 do $$
 declare v_blocked boolean := false; begin
   begin
@@ -154,30 +158,68 @@ declare v_row record; begin
   assert v_row.params ->> 'attachment' = 'photo', 'вложение отмечено';
 end $$;
 
--- --- синхронизация календаря будит канал владельца ------------------------------
+-- --- оплаченная бронь будит канал владельца ------------------------------------
+-- Окно у Сергея через шесть дней, 10:00–11:00 по Москве; в конце набора оно удаляется вместе со
+-- всем, что набор тут создал, — чтобы 94_booking_core на той же базе видел чистое расписание.
+select pg_temp.as_super();
+insert into public.coach_availability_exceptions (coach_id, date, start_time, end_time, kind, note)
+values ('sergey', (now() at time zone 'Europe/Moscow')::date + 6, '10:00', '11:00', 'extra', '88_support');
+
+select pg_temp.as_user('00000000-0000-0000-0000-0000000088e1', 'support@example.com');
+do $$
+declare v_id uuid; begin
+  select h.id into v_id from public.hold_slot('sergey', 'half',
+    (((now() at time zone 'Europe/Moscow')::date + 6) + time '10:00') at time zone 'Europe/Moscow') h;
+  assert v_id is not null, 'окно свободно — бронь держится';
+end $$;
+
+select pg_temp.as_super();
+do $$
+declare v_count int; begin
+  select count(*) into v_count from public.admin_outbox
+   where topic = 'sessions' and params ->> 'email' = 'support@example.com';
+  assert v_count = 0, 'пока бронь не оплачена, в канал не пишется ничего, а не ' || v_count;
+end $$;
+
 select pg_temp.as_user('00000000-0000-0000-0000-000000000000', '', 'service_role');
-select public.apply_coach_booking(
-  'support@example.com', 'gcal:evt-support-1', 'evt-support-1',
-  '2030-01-02 10:00+00', '2030-01-02 11:00+00',
-  'Europe/Moscow', 'https://meet.google.com/abc-defg-hij', 'google_meet', null,
-  null, null, 'Персональная тренировка', null, 'google_calendar');
--- Второй опрос той же брони — ничего нового.
-select public.apply_coach_booking(
-  'support@example.com', 'gcal:evt-support-1', 'evt-support-1',
-  '2030-01-02 10:00+00', '2030-01-02 11:00+00',
-  'Europe/Moscow', 'https://meet.google.com/abc-defg-hij', 'google_meet', null,
-  null, null, 'Персональная тренировка', null, 'google_calendar');
+do $$
+declare v_id uuid; v_again uuid; begin
+  perform public.record_payment('support@example.com', 2500, 'SUPPORT-88-1', now(), 'session', false, 'prodamus');
+  v_id := public.apply_session_payment('support@example.com', 'SUPPORT-88-1', 'half');
+  assert v_id is not null, 'оплата подтверждает бронь';
+  -- Повторная доставка той же оплаты.
+  v_again := public.apply_session_payment('support@example.com', 'SUPPORT-88-1', 'half');
+  assert v_again = v_id, 'повтор оплаты возвращает ту же бронь';
+end $$;
 
 select pg_temp.as_super();
 do $$
 declare v_count int; begin
   select count(*) into v_count from public.admin_outbox
    where topic = 'sessions' and kind = 'session_booked'
-     and dedupe_key like 'session_booked:gcal:evt-support-1:%';
-  assert v_count = 1, 'бронь из календаря — ровно одно «Выбрали время», а не ' || v_count;
+     and params ->> 'email' = 'support@example.com';
+  assert v_count = 1, 'оплаченная бронь — ровно одно «Выбрали время», а не ' || v_count;
+  -- Сама оплата пишет своё «Оплачено» (session_paid) — это другое сообщение, и оно тоже одно.
+  -- Кроме этих двух — ничего: ни второго «Выбрали время» на повтор, ни «не нашли бронь».
   select count(*) into v_count from public.admin_outbox
-   where topic = 'sessions' and dedupe_key like '%gcal:evt-support-1:%';
-  assert v_count = 1, 'повторный опрос той же брони не пишет в канал ничего';
+   where topic = 'sessions' and kind = 'session_paid'
+     and params ->> 'email' = 'support@example.com';
+  assert v_count = 1, 'одна оплата — одно «Оплачено», а не ' || v_count;
+  select count(*) into v_count from public.admin_outbox
+   where topic = 'sessions' and kind not in ('session_booked', 'session_paid')
+     and params ->> 'email' = 'support@example.com';
+  assert v_count = 0, 'повтор оплаты не пишет в канал ничего нового, а не ' || v_count;
+end $$;
+
+-- --- уборка ---------------------------------------------------------------------
+do $$
+begin
+  delete from public.coach_bookings where email = 'support@example.com';
+  delete from public.telegram_outbox where email = 'support@example.com';
+  delete from public.admin_outbox where topic = 'sessions' and params ->> 'email' = 'support@example.com';
+  delete from public.payments where provider_ref = 'SUPPORT-88-1';
+  delete from public.coach_availability_exceptions where note = '88_support';
+  delete from public.order_throttle where bucket = 'hold:00000000-0000-0000-0000-0000000088e1';
 end $$;
 
 select 'ok 88_support';

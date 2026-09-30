@@ -3,9 +3,11 @@
  * pass anything else a person writes on to the coach («Обращения», 0042).
  *
  * Deploy:  supabase functions deploy telegram-bot --no-verify-jwt
- * Secrets: supabase secrets set TELEGRAM_BOT_TOKEN=… TELEGRAM_WEBHOOK_SECRET=… MINI_APP_URL=…
- *          (SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided by the platform; the support
- *          path uses them to call `support_from_telegram`.)
+ * Secrets: supabase secrets set TELEGRAM_BOT_TOKEN=… TELEGRAM_WEBHOOK_SECRET=…
+ *          (both required: without the second every delivery is refused. SUPABASE_URL and
+ *          SUPABASE_SERVICE_ROLE_KEY are provided by the platform; the support path uses them to
+ *          call `support_from_telegram`. MINI_APP_URL is not needed — DEFAULT_APP_URL below is the
+ *          real app — and a set one overrides the code, which secrets-check flags.)
  * Then point Telegram at it once:
  *   https://api.telegram.org/bot<TOKEN>/setWebhook
  *     ?url=https://<project>.functions.supabase.co/telegram-bot

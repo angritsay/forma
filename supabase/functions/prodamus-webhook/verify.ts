@@ -90,6 +90,13 @@ export function planForAmount(
 }
 
 /**
+ * Цены тарифов по умолчанию, в рублях, — те, что в `content/site/plans.ts`. Секреты
+ * `PLAN_MONTHLY_RUB` и `PLAN_ANNUAL_RUB` перекрывают их; `verify.test.ts` сверяет именно эти числа
+ * с контентом, а не свои копии.
+ */
+export const DEFAULT_PLAN_PRICES_RUB = { monthly: 1990, annual: 7990 } as const;
+
+/**
  * Занятие с тренером, опознанное по сумме, — получас, час или ничего.
  *
  * Сумма здесь различает так же, как у тарифа выше, и по той же причине: короткая ссылка Prodamus
@@ -112,6 +119,12 @@ export function sessionForAmount(
   if (Math.abs(amount - prices.hour) < 0.5) return 'hour';
   return null;
 }
+
+/**
+ * Цены занятий по умолчанию, в рублях, — те, что на экране брони (`content/site/booking.ts`).
+ * Секреты `SESSION_HALF_RUB` и `SESSION_HOUR_RUB` перекрывают их.
+ */
+export const DEFAULT_SESSION_PRICES_RUB = { half: 2500, hour: 3500 } as const;
 
 /**
  * Цены курсов по умолчанию, в рублях, — те, что стоят в `content/courses/*.ts`. `verify.test.ts`

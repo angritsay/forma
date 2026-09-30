@@ -314,7 +314,7 @@ select pg_temp.as_anon();
 do $$ begin
   assert (select count(*) from public.admin_courses where slug_id = 'yoga') = 1,
     'a published course is readable without signing in';
-  -- Scoped to yoga: `start` was published earlier in this file, so its 28 days are public too.
+  -- Scoped to yoga: `start` was published earlier in this file, so its 20 days are public too.
   assert (select count(*) from public.admin_course_days d
           join public.admin_courses c on c.id = d.course_id
           where c.slug_id = 'yoga') = 4,

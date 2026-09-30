@@ -12,7 +12,8 @@
 --     activity totals, last sessions with the custom title, support rows without the ids,
 --     payments under the account's own, a linked and a claimed address;
 --   * the payment typed at checkout under a different address is found through payment_emails;
---   * `can_end_subscription` follows the catalogue.
+--   * `can_end_subscription` is true: 0044 ships `admin_end_subscription(p_email, …)`, so every
+--     database with the migrations applied has it.
 -- =============================================================================
 begin;
 
@@ -206,20 +207,7 @@ begin
   from jsonb_array_elements(j->'payments') p;
   assert v_refs = array['p46-1', 'p46-2', 'p46-3'], 'own, linked and claimed payments: ' || v_refs::text;
 
-  assert not (j->>'can_end_subscription')::boolean, 'no admin_end_subscription yet';
-end $$;
-
--- ---------------------------------------------------------------------------
--- 4. The feature check follows the catalogue.
--- ---------------------------------------------------------------------------
-select pg_temp.as_super();
-create function public.admin_end_subscription(p_email text, p_note text default null)
-returns void language sql as $$ select null::void $$;
-select pg_temp.as_user('00000000-0000-0000-0000-0000000046a1', 'person-admin@example.com');
-do $$
-begin
-  assert (public.admin_person('person-one@example.com')->>'can_end_subscription')::boolean,
-    'admin_end_subscription(p_email) is seen';
+  assert (j->>'can_end_subscription')::boolean, 'admin_end_subscription (0044) is seen';
 end $$;
 
 \o

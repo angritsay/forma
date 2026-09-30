@@ -216,7 +216,13 @@ begin
   assert (v_row.params ->> 'place')::int >= 1, 'место на доске';
   assert (v_row.params ->> 'total')::int >= (v_row.params ->> 'done')::int, 'всего — не меньше сделанного';
   assert (v_row.params ->> 'week')::int = public.marathon_week_of(v_day), 'неделя круга';
-  assert (v_row.params ->> 'streak')::int = 2, 'серия в итогах';
+  -- Серия в итогах — на воскресенье, а не на сегодня. У Алисы позавчера и вчера, сегодня нет:
+  -- если сегодня и есть воскресенье, серия — два дня; воскресенье позже — вчера для него не
+  -- отмечено, и серии нет. Жёсткое «2» падало всю неделю, кроме воскресенья.
+  assert (v_row.params ->> 'streak')::int = case when v_sunday = v_today then 2 else 0 end,
+    'серия в итогах на воскресенье ' || v_sunday::text || ', получили ' || (v_row.params ->> 'streak');
+  assert (v_row.params ->> 'streak')::int = public.club_streak_of('daily-alice@example.com', v_sunday),
+    'серия в итогах — та же, что club_streak_of на воскресенье';
 
   -- Не воскресенье — молчим.
   v_at := ((v_sunday - 1)::timestamp + time '21:30') at time zone v_tz;

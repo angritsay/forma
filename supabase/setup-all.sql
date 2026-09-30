@@ -15,8 +15,9 @@
 -- real sign-in addresses there. Left as they are, the script stops without changing anything.
 --
 -- AFTERWARDS, OPTIONAL: 0009_course_import.sql loads the existing courses as rows the admin
--- panel can edit. It is 660 KB — too big to paste comfortably — so open it as a file instead:
--- SQL Editor -> "+" -> Import SQL file. Skip it and the course builder still works, just empty.
+-- panel can edit. It is 814 KB, nearly this file again, so it goes in six parts instead: GitHub ->
+-- Actions -> Supabase apply -> course-import, or paste supabase/course-import/*.sql in order.
+-- Skip it and the course builder still works, just empty.
 -- =============================================================================
 
 -- =============================================================================

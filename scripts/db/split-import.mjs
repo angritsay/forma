@@ -2,7 +2,8 @@
 /**
  * Split 0009_course_import.sql into one file per course, small enough to paste.
  *
- *   node scripts/db/split-import.mjs
+ *   node scripts/db/split-import.mjs            # rewrite supabase/course-import/
+ *   node scripts/db/split-import.mjs --check    # CI: exit 1 if the committed parts are stale
  *
  * The import is hundreds of kilobytes because it carries every word of every course —
  * descriptions, FAQ, the lot. That is too big to paste into a browser text area, which leaves
@@ -19,11 +20,12 @@
  * The parts are ordered and must be run in order: a course's days reference the course row.
  * Each is idempotent on its own, exactly like the file it came from.
  */
-import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 
 const SRC = 'supabase/migrations/0009_course_import.sql';
 const DEST = 'supabase/course-import';
+const CHECK = process.argv.includes('--check');
 
 const sql = readFileSync(SRC, 'utf8');
 
@@ -56,8 +58,8 @@ if (starts.length === 0) throw new Error(`no course sections found in ${SRC}`);
 
 const header = lines.slice(0, starts[0].line).join('\n').trimEnd();
 
-rmSync(DEST, { recursive: true, force: true });
-mkdirSync(DEST, { recursive: true });
+/** Every file the directory should hold, by name. Built in full before anything is written. */
+const files = new Map();
 
 const width = String(starts.length).length;
 const written = [];
@@ -88,12 +90,12 @@ starts.forEach((s, n) => {
     `-- GENERATED from ${SRC} by scripts/db/split-import.mjs — do not edit by hand.`,
   ].join('\n');
 
-  writeFileSync(join(DEST, name), `${note}\n\n${header}\n\n${body}\n`);
+  files.set(name, `${note}\n\n${header}\n\n${body}\n`);
   written.push(name);
 });
 
-writeFileSync(
-  join(DEST, 'README.md'),
+files.set(
+  'README.md',
   [
     `# The ${written.length} courses, in paste-sized pieces`,
     '',
@@ -107,14 +109,43 @@ writeFileSync(
     '',
     'Every part is idempotent: re-running one updates its rows in place and changes nothing else.',
     '',
+    'From a phone: GitHub → Actions → **Supabase apply** → task `course-import` sends these parts',
+    'in order, stops on the first error, and then re-runs `0036_authored_by.sql` so the imported',
+    'workouts get their author.',
+    '',
     'If you have the Supabase CLI, ignore all of this and let `supabase db push` apply the',
     "migration itself — these files exist only to avoid the dashboard's file import.",
     '',
   ].join('\n'),
 );
 
+/*
+ * --check: the parts are what the workflow's `course-import` task sends, so a 0009 regenerated
+ * without re-splitting would import yesterday's courses. Compared byte for byte, with a stray
+ * file counted as stale too — the task sends every `[0-9]*.sql` in the directory.
+ */
+if (CHECK) {
+  const onDisk = existsSync(DEST) ? readdirSync(DEST) : [];
+  const stale = [
+    ...[...files]
+      .filter(([n, text]) => !onDisk.includes(n) || readFileSync(join(DEST, n), 'utf8') !== text)
+      .map(([n]) => n),
+    ...onDisk.filter((n) => !files.has(n)),
+  ];
+  if (stale.length > 0) {
+    console.error(`${DEST}/ is stale (${stale.join(', ')}); run node scripts/db/split-import.mjs`);
+    process.exit(1);
+  }
+  console.log(`${DEST}/ is up to date (${written.length} parts).`);
+  process.exit(0);
+}
+
+rmSync(DEST, { recursive: true, force: true });
+mkdirSync(DEST, { recursive: true });
+for (const [n, text] of files) writeFileSync(join(DEST, n), text);
+
 console.log(`${DEST}/  ${written.length} parts`);
 for (const n of written) {
-  const kb = (readFileSync(join(DEST, n), 'utf8').length / 1024).toFixed(0);
+  const kb = (files.get(n).length / 1024).toFixed(0);
   console.log(`  ${n}  ${kb} KB`);
 }

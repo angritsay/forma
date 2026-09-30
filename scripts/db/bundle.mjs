@@ -22,10 +22,10 @@ const DEST = 'supabase/setup-all.sql';
  * 0009_course_import.sql is deliberately NOT bundled.
  *
  * It carries the existing courses — every workout and day of Sergey's programming — as editable
- * rows, and at 660 KB it is four times the size of everything else here put together. Pasting that
- * into a browser text editor is a bad experience and an easy way to lose a paste halfway through;
- * it wants to be opened as a file instead (SQL Editor's "+" -> Import SQL file), or pasted as the
- * per-course files in supabase/course-import/.
+ * rows, and at 814 KB it would nearly double this bundle. Pasting it on top of the rest into a
+ * browser text editor is a bad experience and an easy way to lose a paste halfway through, and one
+ * Management API request that size fails; it goes in as the per-course files in
+ * supabase/course-import/ instead (Actions -> Supabase apply -> course-import, or pasted in order).
  *
  * Nothing else depends on it: it only needs the tables 0008 creates, and skipping it leaves a
  * working, empty course builder. So it stays a separate, optional second step.
@@ -82,8 +82,9 @@ const head = `${rule}
 -- real sign-in addresses there. Left as they are, the script stops without changing anything.
 --
 -- AFTERWARDS, OPTIONAL: ${SEPARATE} loads the existing courses as rows the admin
--- panel can edit. It is 660 KB — too big to paste comfortably — so open it as a file instead:
--- SQL Editor -> "+" -> Import SQL file. Skip it and the course builder still works, just empty.
+-- panel can edit. It is 814 KB, nearly this file again, so it goes in six parts instead: GitHub ->
+-- Actions -> Supabase apply -> course-import, or paste supabase/course-import/*.sql in order.
+-- Skip it and the course builder still works, just empty.
 ${rule}
 `;
 

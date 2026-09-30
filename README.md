@@ -5,7 +5,7 @@ is live at **<https://forma-app.co>**, in Russian and English, and sells three t
 
 - **One course** — «Форма с нуля» / _Forma. Start_: home CrossFit from zero, with a chair and a mat
   and no other equipment. The first workout is free; the rest open with the purchase, with no time
-  limit. Four more courses are in the repository with `published: false` and are not sold.
+  limit. Five more courses are in the repository with `published: false` and are not sold.
 - **The club** — paid access for 30 days or a year: a task a day, points, a weekly board and a
   winner, solo and in pairs (duo). Members get the bot's morning, evening and Sunday messages, and
   «+30 дней тебе и другу» for bringing a friend through the site's `/together/` page.

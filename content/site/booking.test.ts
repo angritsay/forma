@@ -1,6 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_SESSION_PRICES_RUB } from '../../supabase/functions/prodamus-webhook/verify';
 import { BOOKING } from './booking';
 
 /**
@@ -17,16 +16,10 @@ describe('BOOKING options', () => {
     expect(new Set(rub).size).toBe(rub.length);
   });
 
+  // The exported defaults themselves, which index.ts falls back to (verify.test.ts pins that).
   it('matches the default amounts the Prodamus webhook routes by', () => {
-    const src = readFileSync(
-      fileURLToPath(new URL('../../supabase/functions/prodamus-webhook/index.ts', import.meta.url)),
-      'utf8',
-    );
     for (const o of BOOKING.options) {
-      const m = new RegExp(
-        `\\b${o.id}: Number\\(Deno\\.env\\.get\\('\\w+'\\) \\?\\? '(\\d+)'\\)`,
-      ).exec(src);
-      expect(m?.[1], o.id).toBe(String(o.price.rub));
+      expect(DEFAULT_SESSION_PRICES_RUB[o.id], o.id).toBe(o.price.rub);
     }
   });
 
