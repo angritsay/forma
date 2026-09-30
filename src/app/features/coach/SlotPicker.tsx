@@ -12,8 +12,12 @@
  *
  * The times are the device's (`src/lib/coach/slots.ts` says why) and the zone is named under the
  * chips, so somebody in Yekaterinburg is never left wondering whether 12:00 is Moscow's.
+ *
+ * A list read an hour ago is a list of times somebody may have taken since, and the lead time has
+ * moved on too. So coming back to the tab (focus, visibility) asks again once the list is older
+ * than `STALE_MS` (0058) — not on every focus, which in a Mini App is every tap on the keyboard.
  */
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { DayStrip, type StripDayItem } from '@/components/ui/DayStrip';
@@ -152,6 +156,13 @@ export interface SlotPickerProps {
 }
 
 const DAY = 86_400_000;
+/** How old the list may get before coming back to the tab asks again. */
+export const STALE_MS = 60_000;
+
+/** The list is old enough to ask again on return (pure, for the test). */
+export function isStale(fetchedAt: number | null, now: number): boolean {
+  return fetchedAt !== null && now - fetchedAt > STALE_MS;
+}
 
 export function SlotPicker({
   coach,
@@ -169,12 +180,14 @@ export function SlotPicker({
   const [now, setNow] = useState(() => Date.now());
   const [day, setDay] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const fetchedAt = useRef<number | null>(null);
 
   useEffect(() => {
     let alive = true;
     const at = Date.now();
     setNow(at);
     setState({ kind: 'loading' });
+    fetchedAt.current = at;
     listFreeSlots(
       coach,
       option,
@@ -205,6 +218,19 @@ export function SlotPicker({
   }, [state, value, onChange]);
 
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
+
+  useEffect(() => {
+    const back = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (isStale(fetchedAt.current, Date.now())) setAttempt((n) => n + 1);
+    };
+    document.addEventListener('visibilitychange', back);
+    window.addEventListener('focus', back);
+    return () => {
+      document.removeEventListener('visibilitychange', back);
+      window.removeEventListener('focus', back);
+    };
+  }, []);
 
   return (
     <SlotPickerView

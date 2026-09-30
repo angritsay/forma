@@ -7,8 +7,12 @@ import {
   bindErrorKey,
   bookErrorKey,
   canBind,
+  canBookAsSession,
   canBookSession,
   canDismiss,
+  canRefundSession,
+  likelyPerson,
+  needsPerson,
   formatMoney,
   paymentFilterFrom,
   paymentIdFrom,
@@ -35,6 +39,7 @@ const pay = (over: Partial<PaymentRow> = {}): PaymentRow => ({
   resolveNote: null,
   courseId: null,
   hasAccount: false,
+  sessionOption: null,
   ...over,
 });
 
@@ -98,18 +103,50 @@ describe('a paid session with no time', () => {
     expect(canDismiss(unbooked)).toBe(false);
   });
 
-  it('is plain «Оплачено» once booked, or once somebody dismissed it', () => {
+  it('is plain «Оплачено» once booked, and «Закрыт без записи» once refunded', () => {
     const booked = pay({ intent: 'session', applied: true });
     expect(paymentState(booked)).toBe('session');
     expect(canBookSession(booked)).toBe(false);
-    const dismissed = pay({ intent: 'session', applied: false, resolution: 'dismissed' });
-    expect(paymentState(dismissed)).toBe('session');
-    expect(canBookSession(dismissed)).toBe(false);
+    expect(canRefundSession(booked)).toBe(false);
+    const closed = pay({ intent: 'session', applied: false, resolution: 'dismissed' });
+    expect(paymentState(closed)).toBe('sessionClosed');
+    expect(canBookSession(closed)).toBe(false);
+    expect(canRefundSession(closed)).toBe(false);
+    expect(canRefundSession(pay({ intent: 'session' }))).toBe(true);
+  });
+
+  /* 0058: money that opened nothing at a price nobody sells may be a session at the wrong amount. */
+  it('offers «Это занятие» only for an unmatched course payment', () => {
+    expect(canBookAsSession(pay())).toBe(true);
+    expect(canBookAsSession(pay({ courseId: 'start' }))).toBe(false);
+    expect(canBookAsSession(pay({ applied: true }))).toBe(false);
+    expect(canBookAsSession(pay({ resolution: 'dismissed' }))).toBe(false);
+    expect(canBookAsSession(pay({ intent: 'monthly' }))).toBe(false);
+    expect(canBookAsSession(pay({ intent: 'session' }))).toBe(false);
+  });
+
+  /* 0058: with nobody behind the payment the admin must pick the person. */
+  it('asks for the person only when no account stands behind the payment', () => {
+    const stranger = pay({ intent: 'session' });
+    expect(needsPerson(stranger)).toBe(true);
+    expect(likelyPerson(stranger)).toBe('');
+    const own = pay({ intent: 'session', hasAccount: true });
+    expect(needsPerson(own)).toBe(false);
+    expect(likelyPerson(own)).toBe('buyer@example.com');
+    const claimed = pay({ intent: 'session', accountEmail: 'anna@example.com' });
+    expect(needsPerson(claimed)).toBe(false);
+    expect(likelyPerson(claimed)).toBe('anna@example.com');
   });
 
   it('only a session payment is ever booked', () => {
     expect(canBookSession(pay())).toBe(false);
     expect(canBookSession(pay({ intent: 'monthly' }))).toBe(false);
+  });
+
+  it('starts on the recorded length, whatever the amount says', () => {
+    expect(sessionOptionOf(pay({ intent: 'session', amount: 2500, sessionOption: 'hour' }))).toBe(
+      'hour',
+    );
   });
 
   it('guesses the length from the amount, and says nothing when it cannot', () => {
@@ -122,6 +159,9 @@ describe('a paid session with no time', () => {
 
   it('names the refusals of the booking', () => {
     expect(bookErrorKey(new AppError('validation', 'slot_taken'))).toBe('app.adminPayBookErrTaken');
+    expect(bookErrorKey(new AppError('validation', 'person_required'))).toBe(
+      'app.adminPayBookErrPerson',
+    );
     expect(bookErrorKey(new AppError('validation', 'invalid_times'))).toBe(
       'app.adminPayBookErrTime',
     );

@@ -426,6 +426,22 @@ export async function adminMoveBooking(id: string, startsAt: string): Promise<vo
   });
 }
 
+/** `admin_release_hold` (0058): a live hold goes, as «Выбрать другое время» would. */
+export async function adminReleaseHold(id: string): Promise<void> {
+  return run(() => {
+    requireUser();
+    mutateDb((db) => {
+      const row = db.coachBookings.find(
+        (b) =>
+          b.id === id && b.status === 'pending' && Date.parse(b.hold_expires_at ?? '') > Date.now(),
+      );
+      if (!row) throw new AppError('validation', 'not_found');
+      row.status = 'expired';
+      row.cancel_reason = 'released_by_admin';
+    });
+  });
+}
+
 export async function adminCancelBooking(id: string, reason: string | null): Promise<void> {
   return run(() => {
     requireUser();
@@ -481,6 +497,8 @@ export async function listAdminBookings(scope: BookingScope): Promise<AdminBooki
       coachId: b.coach_id ?? null,
       optionId: b.option_id ?? null,
       holdExpiresAt: b.status === 'pending' ? (b.hold_expires_at ?? null) : null,
+      // The demo has no bot: everybody reads as linked, so no row shouts about it.
+      hasTelegram: true,
     }));
   });
 }

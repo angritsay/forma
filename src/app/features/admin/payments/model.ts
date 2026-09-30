@@ -56,7 +56,7 @@ export const INTENT_LABEL: Record<PaymentIntent, TKey> = {
 };
 
 export type PaymentState =
-  'unclaimed' | 'applied' | 'bound' | 'dismissed' | 'session' | 'sessionUnbooked';
+  'unclaimed' | 'applied' | 'bound' | 'dismissed' | 'session' | 'sessionUnbooked' | 'sessionClosed';
 
 /**
  * One word for where a payment stands; the badge on its row.
@@ -64,11 +64,14 @@ export type PaymentState =
  * A session payment is applied when it became a booking (0055: the webhook confirmed the hold, a
  * claim did, or the admin booked it — 0056). One that is not applied paid for a session with no
  * time on the calendar: «Оплачено, время не выбрано», and it asks for «Записать на время». Rows
- * from before 0055 were all marked applied (0043), so they stay «Оплачено».
+ * from before 0055 were all marked applied (0043), so they stay «Оплачено». One the admin closed
+ * without a booking — refunded in the till (0058 «Возврат сделан») — is «Закрыт без записи»: it
+ * was never a session, and «Оплачено» would say it was.
  */
 export function paymentState(row: PaymentRow): PaymentState {
   if (row.intent === 'session') {
-    return row.applied || row.resolution === 'dismissed' ? 'session' : 'sessionUnbooked';
+    if (row.applied) return 'session';
+    return row.resolution === 'dismissed' ? 'sessionClosed' : 'sessionUnbooked';
   }
   if (row.resolution === 'bound') return 'bound';
   if (row.applied) return 'applied';
@@ -83,6 +86,7 @@ export const STATE_LABEL: Record<PaymentState, TKey> = {
   dismissed: 'app.adminPayStateDismissed',
   session: 'app.adminPayStateSession',
   sessionUnbooked: 'app.adminPayStateSessionUnbooked',
+  sessionClosed: 'app.adminPayStateSessionClosed',
 };
 
 /** Money came, access did not open, and the payment is for something that can be opened. */
@@ -96,11 +100,44 @@ export function canBookSession(row: PaymentRow): boolean {
 }
 
 /**
- * The session length a payment's amount stands for — the webhook's own rule (Prodamus tells the
- * two by the rouble amount, lava.top by product, and its dollar prices are distinct too). Only a
- * starting position for the sheet's switch: the server keeps the length it recorded, if any.
+ * A session paid for with no time can be closed instead, when the money went back in the till
+ * (0058 «Возврат сделан»): `admin_dismiss_payment` with a note, so it stops asking for a time.
+ */
+export function canRefundSession(row: PaymentRow): boolean {
+  return paymentState(row) === 'sessionUnbooked';
+}
+
+/**
+ * «Это занятие» (0058): money that opened nothing and matched no price may be a session paid at
+ * the wrong amount — the webhook tells a session by its amount, so it wrote it as a course. The
+ * admin books it with an explicit length, and it becomes a session.
+ */
+export function canBookAsSession(row: PaymentRow): boolean {
+  return row.intent === 'course' && !row.applied && row.resolution === null && !row.courseId;
+}
+
+/**
+ * Nobody the app can see stands behind the payment: no account claimed it and none signs in with
+ * the checkout address. The admin must pick the person (0058 `person_required`) — booking the
+ * checkout address blind put sessions where nobody would see them.
+ */
+export function needsPerson(row: PaymentRow): boolean {
+  return !row.accountEmail && !row.boundEmail && !row.hasAccount;
+}
+
+/** The person the booking will likely go to, as the server decides it; empty when nobody. */
+export function likelyPerson(row: PaymentRow): string {
+  return row.accountEmail ?? row.boundEmail ?? (row.hasAccount ? row.email : '');
+}
+
+/**
+ * The session length to start the sheet on: the one the webhook recorded (0058 returns it), else
+ * the one the amount stands for — the webhook's own rule (Prodamus tells the two by the rouble
+ * amount, lava.top by product, and its dollar prices are distinct too). The server keeps the
+ * length it recorded, if any.
  */
 export function sessionOptionOf(row: PaymentRow): 'half' | 'hour' | null {
+  if (row.sessionOption) return row.sessionOption;
   if (row.amount === null) return null;
   const usd = row.currency === 'USD';
   const found = BOOKING.options.find((o) => (usd ? o.price.usd : o.price.rub) === row.amount);
@@ -123,6 +160,10 @@ export function bookErrorKey(e: unknown): TKey | null {
       return 'app.adminPayBookErrLength';
     case 'coach_unavailable':
       return 'app.bookCoachUnavailable';
+    case 'person_required':
+      return 'app.adminPayBookErrPerson';
+    case 'invalid_email':
+      return 'app.adminInvalidEmail';
     default:
       return null;
   }

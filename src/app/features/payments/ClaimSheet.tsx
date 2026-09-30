@@ -14,6 +14,11 @@ const NEEDS_US: ReadonlySet<ClaimResult> = new Set(['linked', 'email_taken', 'am
 export interface ClaimSheetProps {
   open: boolean;
   onClose: () => void;
+  /**
+   * Every answer, after the sheet has shown it. The «Тренер» tab listens for `session`: the claim
+   * confirmed the held slot, so it stops waiting for the payment and reads the session (0058).
+   */
+  onResult?: (result: ClaimResult) => void;
 }
 
 /**
@@ -33,7 +38,7 @@ export interface ClaimSheetProps {
  * опечатка или чужой номер, и экран говорит об этом словами, а не красным. Там, где ответ — «напиши
  * нам», рядом кнопка, которая это делает (`SupportSheet`), с номером заказа в контексте.
  */
-export function ClaimSheet({ open, onClose }: ClaimSheetProps) {
+export function ClaimSheet({ open, onClose, onResult }: ClaimSheetProps) {
   const { t } = useT();
   const toast = useToast();
   const refreshEntitlements = useSession((s) => s.refreshEntitlements);
@@ -61,6 +66,7 @@ export function ClaimSheet({ open, onClose }: ClaimSheetProps) {
       return;
     }
     setAnswer(result);
+    onResult?.(result);
     if (result === 'subscription' || result === 'course') {
       /*
        * Доступ уже выдан в базе; перечитываем, чтобы экраны под шторкой это увидели, и только

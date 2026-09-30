@@ -290,7 +290,8 @@ const COPY: Record<Locale, Copy> = {
     trialTomorrow: 'Your free week in the club ends tomorrow',
     trialTomorrowDo: 'To stay in the club, subscribe in the app.',
     sessionConfirmed: 'Your session with the coach is confirmed',
-    sessionConfirmedRunning: 'It has already started — join through the link, the coach is waiting.',
+    sessionConfirmedRunning:
+      'It has already started — join through the link, the coach is waiting.',
     sessionReminderDay: 'Your session with the coach is tomorrow',
     sessionReminderHour: 'Your session with the coach is in an hour',
     sessionReminderSoon: 'Your session with the coach is coming up',

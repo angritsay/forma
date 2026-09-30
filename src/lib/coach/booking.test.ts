@@ -3,6 +3,7 @@ import {
   describeCountdown,
   durationMinutes,
   isUpcoming,
+  pickCancelled,
   pickUpcoming,
   type BookingTimes,
 } from './booking';
@@ -63,6 +64,21 @@ describe('pickUpcoming', () => {
   it('is null when there is nothing left', () => {
     expect(pickUpcoming([], NOW)).toBeNull();
     expect(pickUpcoming([at('2026-03-01T09:00:00Z')], NOW)).toBeNull();
+  });
+});
+
+describe('pickCancelled', () => {
+  it('takes the soonest cancelled session that has not happened yet', () => {
+    const later = at('2026-03-12T09:00:00Z', 60, 'cancelled');
+    const soon = at('2026-03-11T09:00:00Z', 60, 'cancelled');
+    const past = at('2026-03-09T09:00:00Z', 60, 'cancelled');
+    const active = at('2026-03-10T13:00:00Z');
+    expect(pickCancelled([later, past, active, soon], NOW)).toBe(soon);
+  });
+
+  it('is null with nothing cancelled ahead', () => {
+    expect(pickCancelled([at('2026-03-11T09:00:00Z')], NOW)).toBeNull();
+    expect(pickCancelled([at('2026-03-09T09:00:00Z', 60, 'cancelled')], NOW)).toBeNull();
   });
 });
 

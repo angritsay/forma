@@ -248,6 +248,8 @@ export default function AdminScreen() {
   const [bindError, setBindError] = useState<string | null>(null);
   const [pendingBind, setPendingBind] = useState<PendingBind | null>(null);
   const [pendingDismiss, setPendingDismiss] = useState<PaymentRow | null>(null);
+  /* «Возврат сделан» (0058): a paid session with no time, closed because the money went back. */
+  const [pendingRefund, setPendingRefund] = useState<PaymentRow | null>(null);
   /* «Записать на время» (0056): the paid session being booked, and the server's refusal. */
   const [bookRow, setBookRow] = useState<PaymentRow | null>(null);
   const [bookError, setBookError] = useState<string | null>(null);
@@ -481,13 +483,18 @@ export default function AdminScreen() {
     }
   };
 
-  const confirmBook = async (coach: string, startsAt: string, option: 'half' | 'hour') => {
+  const confirmBook = async (
+    coach: string,
+    startsAt: string,
+    option: 'half' | 'hour',
+    email: string | null,
+  ) => {
     if (!bookRow) return;
     const row = bookRow;
     setBusyId(row.id);
     setBookError(null);
     try {
-      await bookFromPayment(row.id, coach, startsAt, option);
+      await bookFromPayment(row.id, coach, startsAt, option, email);
       toast.show({ kind: 'success', title: t('app.adminPayBooked') });
       setBookRow(null);
       reload();
@@ -498,7 +505,9 @@ export default function AdminScreen() {
         key === 'app.adminPayBookErrTaken' ||
         key === 'app.adminPayBookErrTime' ||
         key === 'app.adminPayBookErrLength' ||
-        key === 'app.adminPayBookErrOption'
+        key === 'app.adminPayBookErrOption' ||
+        key === 'app.adminPayBookErrPerson' ||
+        key === 'app.adminInvalidEmail'
       ) {
         setBookError(t(key));
       } else {
@@ -531,6 +540,29 @@ export default function AdminScreen() {
         title: t('app.adminActionError'),
         description: key ? t(key) : errorText(e),
       });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const confirmRefund = async () => {
+    if (!pendingRefund) return;
+    const row = pendingRefund;
+    setBusyId(row.id);
+    try {
+      await dismissPayment(row.id, t('app.adminPayRefundNote'));
+      toast.show({ kind: 'success', title: t('app.adminPayRefunded') });
+      setPendingRefund(null);
+      reload();
+    } catch (e) {
+      const key = bindErrorKey(e);
+      toast.show({
+        kind: 'error',
+        title: t('app.adminActionError'),
+        description: key ? t(key) : errorText(e),
+      });
+      setPendingRefund(null);
+      reload();
     } finally {
       setBusyId(null);
     }
@@ -738,6 +770,7 @@ export default function AdminScreen() {
               setBookError(null);
               setBookRow(row);
             }}
+            onRefund={(row) => setPendingRefund(row)}
           />
           {!payId && payRows.length < payTotal ? (
             <Button
@@ -1025,7 +1058,9 @@ export default function AdminScreen() {
           setBookRow(null);
           setBookError(null);
         }}
-        onSubmit={(coach, startsAt, option) => void confirmBook(coach, startsAt, option)}
+        onSubmit={(coach, startsAt, option, email) =>
+          void confirmBook(coach, startsAt, option, email)
+        }
       />
       <BindPaymentSheet
         open={pendingBind === null}
@@ -1086,6 +1121,25 @@ export default function AdminScreen() {
         cancelLabel={t('common.cancel')}
         loading={busyId !== null}
         onConfirm={() => void confirmDismiss()}
+      />
+      <Modal
+        open={pendingRefund !== null}
+        onClose={() => setPendingRefund(null)}
+        title={t('app.adminPayRefundTitle')}
+        description={
+          pendingRefund
+            ? `${formatMoney(
+                locale,
+                pendingRefund.amount,
+                pendingRefund.currency,
+                pendingRefund.provider,
+              )} · ${pendingRefund.email}. ${t('app.adminPayRefundBody')}`
+            : undefined
+        }
+        confirmLabel={t('app.adminPayRefund')}
+        cancelLabel={t('common.cancel')}
+        loading={busyId !== null}
+        onConfirm={() => void confirmRefund()}
       />
       <AddSubscriptionSheet
         open={subAddOpen}

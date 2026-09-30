@@ -1,7 +1,8 @@
 /**
  * The «Тренер» tab after a hold ran out with the payment page already opened (0056): it must say
  * the payment is being checked — never «the time ran out, pick again», which is how a client paid
- * twice — and offer the coach once it stops waiting.
+ * twice — and offer the coach once it stops waiting. Since 0058 it also offers the claim by order
+ * number, for money paid from another address, and does not claim the payment «never arrived».
  */
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -12,7 +13,12 @@ import { PaymentChecking } from './PaymentChecking';
 
 const render = (state: 'checking' | 'unconfirmed') =>
   renderToStaticMarkup(
-    createElement(PaymentChecking, { state, onContact: () => {}, onDismiss: () => {} }),
+    createElement(PaymentChecking, {
+      state,
+      onContact: () => {},
+      onDismiss: () => {},
+      onClaimed: () => {},
+    }),
   );
 
 describe('PaymentChecking', () => {
@@ -26,6 +32,8 @@ describe('PaymentChecking', () => {
     // No coach button while it is still waiting: the booking may appear any second.
     expect(html).not.toContain(t('ru', 'app.bookContact'));
     expect(html).toContain(t('ru', 'app.bookPaymentNotPaid'));
+    // Paid from another address: the webhook will never match it, so the way is there already.
+    expect(html).toContain(t('ru', 'app.bookPaymentOtherEmail'));
   });
 
   it('stops waiting and points to the coach', () => {
@@ -33,5 +41,14 @@ describe('PaymentChecking', () => {
     expect(html).not.toContain('aria-busy');
     expect(html).toContain(t('ru', 'app.bookPaymentCheckingLong'));
     expect(html).toContain(t('ru', 'app.bookContact'));
+    expect(html).toContain(t('ru', 'app.bookPaymentOtherEmail'));
+  });
+
+  it('does not say the payment never came — only that it is not seen yet', () => {
+    for (const locale of ['ru', 'en'] as const) {
+      const long = t(locale, 'app.bookPaymentCheckingLong');
+      expect(long).not.toMatch(/не дошла|has not arrived/);
+    }
+    expect(t('ru', 'app.bookPaymentCheckingLong')).toContain('номер заказа');
   });
 });

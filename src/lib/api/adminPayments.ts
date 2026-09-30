@@ -46,6 +46,8 @@ export interface PaymentRow {
   courseId: string | null;
   /** Somebody has signed in with the checkout address. */
   hasAccount: boolean;
+  /** The session length the webhook recorded (0055); null when it could not tell, or before 0058. */
+  sessionOption: 'half' | 'hour' | null;
 }
 
 export interface PaymentPage {
@@ -128,6 +130,8 @@ export interface DbPaymentRow {
   course_id: string | null;
   has_account: boolean;
   total: Num;
+  /** 0058; absent from a server that has not applied it. */
+  session_option?: string | null;
 }
 
 export function paymentFromDb(r: DbPaymentRow): PaymentRow {
@@ -150,6 +154,8 @@ export function paymentFromDb(r: DbPaymentRow): PaymentRow {
     resolveNote: text(r.resolve_note),
     courseId: text(r.course_id),
     hasAccount: r.has_account === true,
+    sessionOption:
+      r.session_option === 'half' || r.session_option === 'hour' ? r.session_option : null,
   };
 }
 
@@ -277,6 +283,10 @@ export async function bindPayment(
  * Book a paid session that matched no hold (RPC `admin_book_from_payment`, 0056): the coach and
  * the start the admin agreed with the client. The length is the payment's own when the webhook
  * knew it (an `option` that contradicts it is refused, `option_mismatch`), else `option`.
+ *
+ * `email` (0058) is the person the admin picked; without it the server books the account behind
+ * the payment and refuses (`person_required`) when there is none. A course payment that opened
+ * nothing books too, with an explicit `option` — a session paid at the wrong amount.
  * Answers the new booking's id.
  */
 export async function bookFromPayment(
@@ -284,9 +294,12 @@ export async function bookFromPayment(
   coach: string,
   startsAt: string,
   option: 'half' | 'hour' | null = null,
+  email: string | null = null,
 ): Promise<string> {
   if (!Number.isFinite(Date.parse(startsAt))) throw new AppError('validation', 'invalid_times');
-  if (isDemo()) return (await demo()).bookFromPayment(paymentId, coach, startsAt, option);
+  const person = email?.trim().toLowerCase() || null;
+  if (person !== null && !EMAIL_RE.test(person)) throw new AppError('validation', 'invalid_email');
+  if (isDemo()) return (await demo()).bookFromPayment(paymentId, coach, startsAt, option, person);
   return guard(async () =>
     unwrap<string>(
       await supabase().rpc('admin_book_from_payment', {
@@ -294,6 +307,8 @@ export async function bookFromPayment(
         p_coach: coach,
         p_starts_at: startsAt,
         p_option: option,
+        // Sent only when there is one, so the call reads the same as before without a pick.
+        ...(person ? { p_email: person } : {}),
       }),
     ),
   );

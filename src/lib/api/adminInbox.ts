@@ -181,6 +181,11 @@ export interface AdminBooking {
   optionId: string | null;
   /** When a hold runs out; null for anything but a hold. */
   holdExpiresAt: string | null;
+  /**
+   * The client has Telegram linked, so the bot's messages about this session reach them (0058);
+   * null from a server without 0058, where nobody can tell.
+   */
+  hasTelegram: boolean | null;
 }
 
 export interface DbAdminBooking {
@@ -199,6 +204,8 @@ export interface DbAdminBooking {
   coach_id?: string | null;
   option_id?: string | null;
   hold_expires_at?: string | null;
+  /** 0058. */
+  has_telegram?: boolean | null;
 }
 
 export function adminBookingFromDb(r: DbAdminBooking): AdminBooking {
@@ -220,6 +227,7 @@ export function adminBookingFromDb(r: DbAdminBooking): AdminBooking {
     coachId: blank(r.coach_id),
     optionId: blank(r.option_id),
     holdExpiresAt: blank(r.hold_expires_at),
+    hasTelegram: typeof r.has_telegram === 'boolean' ? r.has_telegram : null,
   };
 }
 

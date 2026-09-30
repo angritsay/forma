@@ -11,7 +11,9 @@
  *     top of another session) or cancelled (`admin_cancel_booking`; the row stays, money goes back
  *     by hand in the till if at all). Both reach the client as a bot message through the
  *     booking's own trigger. Later than 24 hours before a session this is the only way to move
- *     it: the client cannot any more, and writes here instead.
+ *     it: the client cannot any more, and writes here instead. A client without Telegram is
+ *     marked on the row — the bot's message will not reach them (0058). A hold can be freed
+ *     («Освободить», 0058), and a row that changed meanwhile says so and the list is read again.
  *   * **Расписание** — per coach: the room link, the weekly hours and the per-date exceptions the
  *     client's picker is computed from (`CoachSchedule`).
  *
@@ -42,13 +44,17 @@ import { useToast } from '@/components/ui/Toast';
 import {
   adminCancelBooking,
   adminMoveBooking,
+  adminReleaseHold,
+  getAvailability,
   listCoaches,
   type AdminCoach,
+  type CoachAvailability,
 } from '@/lib/api/adminCoaches';
 import { listAdminBookings, type AdminBooking, type BookingScope } from '@/lib/api/adminInbox';
 import { isAppError } from '@/lib/api/errors';
 import { listTelegramBlocked } from '@/lib/api/telegramBlocked';
 import { clockIn, dateIn, parseClock, wallToInstant } from '@/lib/coach/slots';
+import { BootScreen } from '@/app/components/BootScreen';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
@@ -59,6 +65,7 @@ import { AdminLoadError } from '@/app/features/admin/AdminLoadError';
 import { useIsAdmin } from '@/app/features/admin/useIsAdmin';
 import { useUnsavedGuard } from '@/app/features/admin/useUnsavedGuard';
 import { CoachSchedule } from '@/app/features/admin/bookings/CoachSchedule';
+import { isGone, planMove } from '@/app/features/admin/bookings/move';
 
 type View = 'list' | 'schedule';
 
@@ -81,6 +88,7 @@ export default function AdminBookingsScreen() {
   const [coachId, setCoachId] = useState<string | null>(null);
   const [moving, setMoving] = useState<AdminBooking | null>(null);
   const [cancelling, setCancelling] = useState<AdminBooking | null>(null);
+  const [releasing, setReleasing] = useState<AdminBooking | null>(null);
   const request = useRef(0);
   /** The scope the rows on screen belong to. */
   const shown = useRef<BookingScope | null>(null);
@@ -222,6 +230,11 @@ export default function AdminBookingsScreen() {
                         external={scope === 'upcoming' && row.source !== 'forma'}
                         onMove={editable ? () => setMoving(row) : undefined}
                         onCancel={editable ? () => setCancelling(row) : undefined}
+                        onRelease={
+                          scope === 'holds' && row.status === 'pending'
+                            ? () => setReleasing(row)
+                            : undefined
+                        }
                       />
                     </li>
                   );
@@ -264,6 +277,7 @@ export default function AdminBookingsScreen() {
       {moving ? (
         <MoveBookingSheet
           row={moving}
+          coach={coaches.find((c) => c.id === moving.coachId) ?? null}
           onClose={() => setMoving(null)}
           onDone={() => {
             setMoving(null);
@@ -303,6 +317,16 @@ export default function AdminBookingsScreen() {
           }}
         />
       ) : null}
+      {releasing ? (
+        <ReleaseHoldModal
+          row={releasing}
+          onClose={() => setReleasing(null)}
+          onDone={() => {
+            setReleasing(null);
+            load(scope);
+          }}
+        />
+      ) : null}
     </Screen>
   );
 }
@@ -314,6 +338,7 @@ function BookingRow({
   external = false,
   onMove,
   onCancel,
+  onRelease,
 }: {
   row: AdminBooking;
   coach: string | null;
@@ -323,6 +348,8 @@ function BookingRow({
   external?: boolean;
   onMove?: () => void;
   onCancel?: () => void;
+  /** «Освободить» a live hold (0058). */
+  onRelease?: () => void;
 }) {
   const { t, locale } = useT();
   const details = [
@@ -342,7 +369,13 @@ function BookingRow({
             {formatMoscow(row.startsAt, locale)}{' '}
             <span className="text-xs text-muted-2">{t('app.bookingsMsk')}</span>
           </span>
-          <span className="truncate text-sm">{row.name ?? row.email}</span>
+          <span className="truncate text-sm">
+            {row.name ?? row.email}
+            {/* Every message about the session goes through the bot (0058). */}
+            {row.hasTelegram === false && row.status !== 'cancelled' ? (
+              <span className="text-xs text-muted-2"> · {t('app.bookingsNoTelegram')}</span>
+            ) : null}
+          </span>
           {row.name ? <span className="truncate text-xs text-muted">{row.email}</span> : null}
         </div>
         <Badge tone={live ? 'inverse' : held ? 'warning' : 'neutral'}>
@@ -363,6 +396,13 @@ function BookingRow({
         <span className="text-xs text-muted">
           {t('app.bookingsHoldUntil', { time: clockIn(row.holdExpiresAt, COACH_TIME_ZONE) })}
         </span>
+      ) : null}
+      {held && onRelease ? (
+        <div className="-mb-2 -ml-4.5 flex">
+          <Button variant="ghost" size="sm" onClick={onRelease}>
+            {t('app.bookingsRelease')}
+          </Button>
+        </div>
       ) : null}
       {row.cancelReason && row.status === 'cancelled' ? (
         <span className="text-xs text-muted">{row.cancelReason}</span>
@@ -398,13 +438,19 @@ function BookingRow({
   );
 }
 
-/** Move a session to a Moscow date and time the coach agreed to. */
+/**
+ * Move a session to a Moscow date and time the coach agreed to. The button waits for a change,
+ * a time outside the coach's hours is a warning rather than a refusal (0058, `planMove`), and a
+ * client without Telegram is named — the bot's «перенесено» will not reach them.
+ */
 function MoveBookingSheet({
   row,
+  coach,
   onClose,
   onDone,
 }: {
   row: AdminBooking;
+  coach: AdminCoach | null;
   onClose: () => void;
   onDone: () => void;
 }) {
@@ -415,11 +461,36 @@ function MoveBookingSheet({
   const [time, setTime] = useState(() => clockIn(row.startsAt, COACH_TIME_ZONE));
   const [problem, setProblem] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [hours, setHours] = useState<CoachAvailability | null>(null);
+
+  /* The coach's hours, for the warning only: without them the form works as before. */
+  const coachId = coach?.id ?? null;
+  useEffect(() => {
+    if (!coachId) return;
+    let alive = true;
+    getAvailability(coachId, dateIn(Date.now(), COACH_TIME_ZONE))
+      .then((a) => {
+        if (alive) setHours(a);
+      })
+      .catch(() => {
+        /* No hours, no warning: the move itself does not depend on them. */
+      });
+    return () => {
+      alive = false;
+    };
+  }, [coachId]);
+
+  const plan = planMove(
+    row,
+    date,
+    time,
+    COACH_TIME_ZONE,
+    hours && coach ? { ...hours, timeZone: coach.timezone } : null,
+  );
 
   const move = async () => {
-    const minutes = parseClock(time);
-    const at = minutes === null ? Number.NaN : wallToInstant(date, minutes, COACH_TIME_ZONE);
-    if (!Number.isFinite(at) || at <= Date.now()) {
+    const at = plan.at;
+    if (at === null || at <= Date.now()) {
       setProblem(t('app.bookingsMoveInvalid'));
       return;
     }
@@ -433,7 +504,11 @@ function MoveBookingSheet({
       const code = isAppError(e) ? e.message : '';
       if (code === 'slot_taken') setProblem(t('app.bookingsMoveTaken'));
       else if (code === 'invalid_times') setProblem(t('app.bookingsMoveInvalid'));
-      else toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.bookingsSaveError') });
+      else if (isGone(e)) {
+        // Cancelled or moved by somebody else meanwhile: say so and read the list again.
+        toast.show({ kind: 'error', title: t('app.bookingsGone') });
+        onDone();
+      } else toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.bookingsSaveError') });
     } finally {
       setBusy(false);
     }
@@ -445,7 +520,14 @@ function MoveBookingSheet({
       onClose={onClose}
       title={t('app.bookingsMoveTitle')}
       footer={
-        <Button variant="primary" size="lg" fullWidth loading={busy} onClick={() => void move()}>
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
+          loading={busy}
+          disabled={plan.unchanged}
+          onClick={() => void move()}
+        >
           {t('app.bookingsMove')}
         </Button>
       }
@@ -471,7 +553,15 @@ function MoveBookingSheet({
             onChange={(e) => setTime(e.target.value)}
           />
         </div>
+        {plan.outside ? (
+          <p role="status" className="text-sm text-warning">
+            {t('app.bookingsMoveOutside')}
+          </p>
+        ) : null}
         <p className="text-xs text-muted-2">{t('app.bookingsMoveHint')}</p>
+        {row.hasTelegram === false ? (
+          <p className="text-xs text-muted">{t('app.bookingsMoveNoTelegram')}</p>
+        ) : null}
         {problem ? (
           <p role="alert" className="text-sm text-danger">
             {problem}
@@ -505,7 +595,12 @@ function CancelBookingModal({
       toast.show({ kind: 'success', title: t('app.bookingsCancelledToast') });
       onDone();
     } catch (e) {
-      toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.bookingsSaveError') });
+      if (isGone(e)) {
+        toast.show({ kind: 'error', title: t('app.bookingsGone') });
+        onDone();
+      } else {
+        toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.bookingsSaveError') });
+      }
     } finally {
       setBusy(false);
     }
@@ -529,5 +624,53 @@ function CancelBookingModal({
         onChange={(e) => setReason(e.target.value)}
       />
     </Modal>
+  );
+}
+
+/** «Освободить» a live hold (0058): the slot is free again for everybody. */
+function ReleaseHoldModal({
+  row,
+  onClose,
+  onDone,
+}: {
+  row: AdminBooking;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const tr = useT();
+  const { t, locale } = tr;
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+
+  const release = async () => {
+    setBusy(true);
+    try {
+      await adminReleaseHold(row.id);
+      toast.show({ kind: 'success', title: t('app.bookingsReleased') });
+      onDone();
+    } catch (e) {
+      // Paid, run out or released meanwhile: the list is read again either way.
+      if (isGone(e)) {
+        toast.show({ kind: 'error', title: t('app.bookingsGone') });
+        onDone();
+      } else {
+        toast.show({ kind: 'error', title: adminErrorTitle(tr, e, 'app.bookingsSaveError') });
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      title={t('app.bookingsReleaseTitle')}
+      description={`${row.name ?? row.email} · ${formatMoscow(row.startsAt, locale)} ${t('app.bookingsMsk')}. ${t('app.bookingsReleaseBody')}`}
+      confirmLabel={t('app.bookingsRelease')}
+      danger
+      loading={busy}
+      onConfirm={() => void release()}
+    />
   );
 }

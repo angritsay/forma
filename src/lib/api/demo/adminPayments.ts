@@ -135,6 +135,7 @@ export async function bookFromPayment(
   _coach: string,
   _startsAt: string,
   _option: 'half' | 'hour' | null = null,
+  _email: string | null = null,
 ): Promise<string> {
   return run(() => {
     throw new AppError('not_found', 'not_found');

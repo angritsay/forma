@@ -289,6 +289,17 @@ export async function adminMoveBooking(id: string, startsAt: string): Promise<vo
   });
 }
 
+/**
+ * Free a live hold (`admin_release_hold`, 0058): «Освободить» on «Держат». `not_found` when it ran
+ * out, was paid or was released meanwhile.
+ */
+export async function adminReleaseHold(id: string): Promise<void> {
+  if (isDemo()) return (await demo()).adminReleaseHold(id);
+  return guard(async () => {
+    unwrapVoid(await supabase().rpc('admin_release_hold', { p_id: id }));
+  });
+}
+
 /** Cancel a session; the row stays, money goes back by hand if at all (`admin_cancel_booking`). */
 export async function adminCancelBooking(id: string, reason: string | null): Promise<void> {
   if (isDemo()) return (await demo()).adminCancelBooking(id, reason);
