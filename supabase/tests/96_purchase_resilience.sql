@@ -7,8 +7,8 @@
 -- Checks:
 --   * the amount picks the order among several pending ones, the newest on a tie;
 --   * several open orders and no amount stay unopened (a person decides);
---   * a pending order older than 48 hours no longer makes a fresh one ambiguous, and a lone old
---     order is still honoured;
+--   * a pending order older than 48 hours no longer makes a fresh one ambiguous, a lone old
+--     order is still honoured, and an old order at the paid price beats a fresh one at another;
 --   * `claim_payment` answers `ambiguous` (not `no_order`) with several open orders, burns
 --     nothing, tells the owner which it was — and opens the right course when the amount matches;
 --   * a payment without an address is recorded unapplied, alerts the owner, and its claim links
@@ -126,6 +126,23 @@ begin
   v_id := public.apply_course_payment('pr-old@example.com', 'PR-5');
   select course_id into v_course from public.purchases where id = v_id;
   assert v_course = 'start', 'the only fresh order is the one paid: ' || coalesce(v_course, 'null');
+end $$;
+
+-- The amount outranks freshness: paid at the old order's price, the old order opens — not the
+-- only fresh one, which is for another course.
+insert into public.purchases (email, course_id, status, created_at, updated_at) values
+  ('pr-oldpay@example.com', 'engine', 'pending', now() - interval '5 days', now() - interval '5 days'),
+  ('pr-oldpay@example.com', 'start',  'pending', now() - interval '10 minutes', now() - interval '10 minutes');
+
+do $$
+declare v_id uuid; v_course text; v_status text;
+begin
+  v_id := public.apply_course_payment('pr-oldpay@example.com', 'PR-5B', now(), null, 'prodamus', 3990);
+  select course_id into v_course from public.purchases where id = v_id;
+  assert v_course = 'engine', 'the order at the paid price, however old: ' || coalesce(v_course, 'null');
+  select status into v_status from public.purchases
+   where email = 'pr-oldpay@example.com' and course_id = 'start';
+  assert v_status = 'pending', 'the fresh order for another course stays open';
 end $$;
 
 -- A lone old order is still honoured: a late payment for the one thing ordered.

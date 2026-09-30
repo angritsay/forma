@@ -17554,7 +17554,8 @@ notify pgrst, 'reload schema';
 -- to tell «ambiguous» from «nothing to open». Internal: granted to nobody.
 --
 --   * with an amount: the most recent fresh (≤ 48 h) pending order whose course costs that much
---     (`admin_courses.price_rub`, the catalogue the course import keeps in step with the site);
+--     (`admin_courses.price_rub`, the catalogue the course import keeps in step with the site),
+--     then the most recent older one at that price — the amount outranks freshness;
 --   * otherwise the only fresh pending order;
 --   * otherwise, when every order is old, the only pending order there is;
 --   * otherwise nothing — `open_count` then says whether that was «none» or «several».
@@ -17588,6 +17589,21 @@ begin
       and abs(c.price_rub - p_amount) < 0.5
     order by p.updated_at desc, p.created_at desc
     limit 1;
+
+    -- No fresh order at that price, but an older one is: the amount is the better evidence. Without
+    -- this, a fresh order for another course would be «the only fresh one» below and open instead
+    -- of the course that was actually paid for.
+    if v_pick is null then
+      select p.course_id into v_pick
+      from public.purchases p
+      join public.admin_courses c on c.slug_id = p.course_id
+      where p.email = p_email
+        and p.status = 'pending'
+        and c.price_rub > 0
+        and abs(c.price_rub - p_amount) < 0.5
+      order by p.updated_at desc, p.created_at desc
+      limit 1;
+    end if;
   end if;
 
   if v_pick is null and v_fresh = 1 then

@@ -227,7 +227,7 @@ export const app = {
     'The first workout of “{course}” was free. The rest is the whole course: the workouts in order, adapted to your level. One payment, yours for good.',
   unlockCta: 'Go to payment',
   unlockNote:
-    'On the payment page, enter {email} — the course opens for that address on its own, usually within a couple of minutes. Another address will not be matched to the order.',
+    'On the payment page, enter {email} — the course opens for that address on its own, usually within a couple of minutes. With another address it will not open by itself: then find the payment by the order number on your receipt.',
   unlockNoteManual:
     'The order was not recorded — you can still pay, but the coach opens access by hand. Usually the same day.',
   unlockNoPayment: 'Payment for this course is not connected yet. Write to us and we will open it.',
@@ -1238,7 +1238,7 @@ export const app = {
   duoRedeemFailed: 'We could not accept the invite. Please try again later.',
   duoSwitchTitle: 'Switch partners?',
   duoSwitchBody:
-    'You are paired with {name} right now. Accepting this invite breaks that pair, and {name} stays without a partner until Monday.',
+    'You are paired with {name} right now. Accepting this invite breaks that pair, and {name} stays without a partner — until Monday or until they invite someone.',
   duoSwitchAccept: 'Accept the invite',
   duoSwitchKeep: 'Stay in my pair',
   // «Позови друга» (0051): +30 days for both when the friend pays for the club.

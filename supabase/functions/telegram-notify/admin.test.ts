@@ -277,7 +277,9 @@ describe('money', () => {
     const text = adminMessage(row('claim_no_order', { email: 'me@b.co', reason: 'ambiguous' }))!;
     expect(text).toContain('заказов несколько');
     expect(text).toContain('спроси, какой курс оплачен');
-    expect(adminMessage(row('claim_no_order', { reason: 'no_order' }))).toContain('заказа нет');
+    const none = adminMessage(row('claim_no_order', { reason: 'no_order' }))!;
+    expect(none).toContain('заказа нет');
+    expect(none).not.toContain('их несколько');
   });
 
   it('names a payment that came without an address', () => {
