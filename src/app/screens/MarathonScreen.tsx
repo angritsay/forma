@@ -50,7 +50,7 @@
  * **The tab has a second state, and it is a screen rather than a closed door.** Somebody who is
  * not in the club gets the selling screen the owner drew (`ClubPitch`).
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -65,6 +65,12 @@ import { prefersReducedMotion } from '@/lib/ui/motion';
 import { courseTileVars, GAME_TILE } from '@/lib/ui/tile';
 import { toLocalDateIso } from '@/lib/util/dates';
 import { downscaleImage, extensionFor, isVideoFile, MAX_VIDEO_BYTES } from '@/lib/util/image';
+import {
+  MAX_IMAGE_BYTES,
+  proofErrorKey,
+  proofErrorKind,
+  sameFile,
+} from '@/app/features/marathon/proofError';
 import { useT } from '@/app/hooks/useT';
 import { ScreenLoader } from '@/app/components/ScreenLoader';
 import { celebrate } from '@/app/features/marathon/ClubCelebrate';
@@ -206,7 +212,8 @@ export default function MarathonScreen() {
     update((m) => rememberBoard(m, mode, now));
   }, [scoresStatus, now, mode, update]);
 
-  const send = useCallback(
+  /** Send a proof; says what failed and throws on, so `sendMedia` knows the row did not land. */
+  const deliver = useCallback(
     async (
       taskId: string,
       proof: Omit<ProofInput, 'taskId' | 'memberId'>,
@@ -236,13 +243,30 @@ export default function MarathonScreen() {
          */
         reloadScores();
         setDaysVersion((v) => v + 1);
-      } catch {
-        toast.show({ kind: 'error', title: t('common.errorGeneric') });
+      } catch (e) {
+        toast.show({ kind: 'error', title: t(proofErrorKey(proofErrorKind(e))) });
+        // Thrown on so an upload that landed is remembered rather than repeated (`sendMedia`).
+        throw e;
       } finally {
         setSending(false);
       }
     },
     [marathon, tasks, reload, reloadScores, t, toast],
+  );
+  // The card's own «Отправить»: the failure is already on screen, nothing more to do with it.
+  const send = useCallback(
+    (taskId: string, proof: Omit<ProofInput, 'taskId' | 'memberId'>, anchor?: HTMLElement | null) =>
+      deliver(taskId, proof, anchor).catch(() => undefined),
+    [deliver],
+  );
+
+  /*
+   * Files already in the bucket, by task. A proof whose upload landed but whose row did not (the
+   * signal dropped between the two) is sent again with the same reference when the same file is
+   * picked again, instead of uploading the same bytes a second time.
+   */
+  const uploaded = useRef(
+    new Map<string, { name: string; size: number; lastModified: number; ref: string }>(),
   );
 
   const sendMedia = useCallback(
@@ -272,17 +296,39 @@ export default function MarathonScreen() {
         });
         return;
       }
+      let ref: string;
+      const kept = uploaded.current.get(taskId);
+      if (kept && sameFile(file, kept)) {
+        ref = kept.ref;
+      } else {
+        try {
+          const blob = video ? file : await downscaleImage(file);
+          if (!video && blob.size > MAX_IMAGE_BYTES) {
+            toast.show({ kind: 'error', title: t('app.marathonProofTooLarge') });
+            return;
+          }
+          const ext = extensionFor(blob, file.name.split('.').pop() || (video ? 'mp4' : 'jpg'));
+          const path = proofMediaPath(marathon.id, marathon.memberId, taskId, ext);
+          ref = await uploadMedia(PROOFS_BUCKET, path, blob);
+          uploaded.current.set(taskId, {
+            name: file.name,
+            size: file.size,
+            lastModified: file.lastModified,
+            ref,
+          });
+        } catch (e) {
+          toast.show({ kind: 'error', title: t(proofErrorKey(proofErrorKind(e))) });
+          return;
+        }
+      }
       try {
-        const blob = video ? file : await downscaleImage(file);
-        const ext = extensionFor(blob, file.name.split('.').pop() || (video ? 'mp4' : 'jpg'));
-        const path = proofMediaPath(marathon.id, marathon.memberId, taskId, ext);
-        const ref = await uploadMedia(PROOFS_BUCKET, path, blob);
-        await send(taskId, { ...keep, mediaPath: ref }, anchor);
+        await deliver(taskId, { ...keep, mediaPath: ref }, anchor);
+        uploaded.current.delete(taskId);
       } catch {
-        toast.show({ kind: 'error', title: t('common.errorGeneric') });
+        /* `deliver` has said what went wrong; the upload stays remembered for the retry. */
       }
     },
-    [marathon, send, t, toast],
+    [marathon, deliver, t, toast],
   );
 
   /*

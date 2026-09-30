@@ -32,6 +32,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Glyph } from '@/components/ui/Icon';
 import { IconButton } from '@/components/ui/IconButton';
+import { Modal } from '@/components/ui/Modal';
 import { Sheet } from '@/components/ui/Sheet';
 import { useToast } from '@/components/ui/Toast';
 import { formatNumber } from '@/i18n/index';
@@ -53,6 +54,8 @@ export function DuoRow({ item, onChanged, onStatus }: DuoRowProps) {
   const me = useMeAvatar();
   const { row, busy, share, leave } = useClubDuoPair({ onChanged, onStatus });
   const [open, setOpen] = useState(false);
+  /** «Выйти из пары» asks first: a pair chosen by invite does not come back by itself. */
+  const [confirmLeave, setConfirmLeave] = useState(false);
 
   // Not loaded yet (or a failed read): hold the row's height so the card does not jump when it
   // lands, and the hairline above it is not drawn over nothing.
@@ -144,7 +147,7 @@ export function DuoRow({ item, onChanged, onStatus }: DuoRowProps) {
                 loading={busy}
                 onClick={() => {
                   setOpen(false);
-                  void leave();
+                  setConfirmLeave(true);
                 }}
               >
                 {t('app.duoLeave')}
@@ -153,6 +156,20 @@ export function DuoRow({ item, onChanged, onStatus }: DuoRowProps) {
           ) : null}
         </div>
       </Sheet>
+      <Modal
+        open={confirmLeave}
+        onClose={() => setConfirmLeave(false)}
+        title={t('app.duoLeaveTitle')}
+        description={row.isAuto ? t('app.duoLeaveBodyAuto') : t('app.duoLeaveBodyChosen')}
+        confirmLabel={t('app.duoLeave')}
+        cancelLabel={t('common.cancel')}
+        danger
+        loading={busy}
+        onConfirm={() => {
+          setConfirmLeave(false);
+          void leave();
+        }}
+      />
     </div>
   );
 }

@@ -1191,6 +1191,11 @@ export const app = {
   duoMateAuto: 'Matched for this week',
   duoMateChosen: 'The two of you, by invitation',
   duoLeave: 'Leave the pair',
+  duoLeaveTitle: 'Leave the pair?',
+  duoLeaveBodyAuto:
+    'You won’t have a partner this week — we’ll match you with someone new on Monday.',
+  duoLeaveBodyChosen:
+    'You and your friend will no longer be a pair — we’ll match you with someone on Monday.',
   duoNoneBody:
     'On Monday we will match you with someone — and again every week after. Or invite a friend yourself: then you stay together until you decide otherwise.',
   duoInvite: 'Invite a friend',
@@ -1264,6 +1269,8 @@ export const app = {
   marathonProofAttachAgain: 'Replace the photo or clip',
   marathonProofTooBig:
     'That file is over {n} MB. Film a shorter one — 10–15 seconds is usually enough.',
+  marathonProofClosed: 'This round is closed, so proof is no longer accepted.',
+  marathonProofTooLarge: 'The file is too large. Pick a smaller photo or shoot a shorter clip.',
   marathonProofVoided: 'Not counted: {reason}',
   marathonProofCoachOnly: 'Only the coach sees this',
   marathonProofCoachNote: 'Sergey watched it',
@@ -1273,6 +1280,10 @@ export const app = {
   marathonProofResent: 'Sent again — Sergey will take another look',
   // The board
   marathonBoardEmpty: 'Nobody has scored yet',
+  marathonBoardNoClubTitle: 'No table yet',
+  marathonBoardNoClubBody:
+    'You’re not in the club yet, so there’s no table for you. Take a look at the Club tab.',
+  marathonBoardNoClubCta: 'Open the club',
   marathonBoardYou: 'You',
 
   // --- Marathon admin --------------------------------------------------------

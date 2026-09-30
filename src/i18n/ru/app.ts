@@ -1222,6 +1222,9 @@ export const app = {
   duoMateAuto: 'Подобрали на эту неделю',
   duoMateChosen: 'Вы вдвоём по приглашению',
   duoLeave: 'Выйти из пары',
+  duoLeaveTitle: 'Выйти из пары?',
+  duoLeaveBodyAuto: 'Напарника на эту неделю больше не будет — нового подберём в понедельник.',
+  duoLeaveBodyChosen: 'Вы с другом больше не будете парой — в понедельник подберём тебе напарника.',
   // The «···» sheet on the duo row (DuoRow): how a pair comes to be. Read once, not daily.
   duoNoneBody:
     'В понедельник подберём напарника — и так каждую неделю. Или позови друга сам(а): тогда вы останетесь вместе, пока не решите иначе.',
@@ -1305,6 +1308,8 @@ export const app = {
   marathonProofAttach: 'Прикрепить фото или видео',
   marathonProofAttachAgain: 'Заменить фото или видео',
   marathonProofTooBig: 'Файл больше {n} МБ. Сними покороче — 10–15 секунд обычно хватает.',
+  marathonProofClosed: 'Этот раунд уже закрыт — пруф больше не принимается.',
+  marathonProofTooLarge: 'Файл слишком большой. Выбери фото поменьше или сними видео покороче.',
   marathonProofVoided: 'Не засчитано: {reason}',
   marathonProofCoachOnly: 'Видит только тренер',
   // The coach's verdict on one attempt. It is his message, so it is his name over it and a way
@@ -1316,6 +1321,10 @@ export const app = {
   marathonProofResent: 'Отправлено заново — Сергей посмотрит',
   // The board
   marathonBoardEmpty: 'Пока никто не набрал баллов',
+  marathonBoardNoClubTitle: 'Таблицы пока нет',
+  marathonBoardNoClubBody:
+    'Ты ещё не в клубе, поэтому и таблицы для тебя нет. Загляни во вкладку «Клуб».',
+  marathonBoardNoClubCta: 'Открыть клуб',
   marathonBoardYou: 'Ты',
 
   // --- Marathon admin --------------------------------------------------------
