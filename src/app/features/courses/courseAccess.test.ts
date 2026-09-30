@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { Course, CourseNode } from '@/content/schema';
-import { courseAccess, firstTrainableNode, hasCompletedIn, nodeAccess } from './courseAccess';
+import {
+  courseAccess,
+  courseVisible,
+  firstTrainableNode,
+  hasCompletedIn,
+  nodeAccess,
+} from './courseAccess';
 
 function node(id: string, kind: CourseNode['kind']): CourseNode {
   return { id, kind, title: { ru: id, en: id }, workoutId: 'w1' } as CourseNode;
@@ -16,6 +22,18 @@ describe('courseAccess', () => {
     expect(courseAccess({ owned: true, hasCompleted: true })).toBe('owned');
     expect(courseAccess({ owned: false, hasCompleted: false })).toBe('trial');
     expect(courseAccess({ owned: false, hasCompleted: true })).toBe('tried');
+  });
+});
+
+describe('courseVisible', () => {
+  it('shows a course on sale to anybody', () => {
+    expect(courseVisible({ published: true } as Course, false)).toBe(true);
+  });
+
+  /* Taken off sale: whoever bought it before keeps it; a stranger by URL finds nothing. */
+  it('hides a course off sale from everybody but its owners', () => {
+    expect(courseVisible({ published: false } as Course, true)).toBe(true);
+    expect(courseVisible({ published: false } as Course, false)).toBe(false);
   });
 });
 

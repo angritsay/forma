@@ -1,11 +1,11 @@
 /**
  * Lazy screen registry.
  *
- * Screen agents add `src/app/screens/<Name>Screen.tsx` files (default export = the screen).
- * The router looks them up here by name. Modules are discovered with Vite's `import.meta.glob`
- * so a screen that has not landed yet does not break the type check or the build — the router
- * renders a localized "not available" state for it instead. To pin a screen explicitly, replace
- * its lookup with `lazy(() => import('./CoursesScreen'))`.
+ * Each screen is `src/app/screens/<Name>Screen.tsx` (default export = the screen), and the router
+ * looks it up here by name. Modules are discovered with Vite's `import.meta.glob`, so every screen
+ * is its own chunk. Every name below has its file — `routes.test.ts` checks it — so a lookup never
+ * misses; the "not available yet" state the router used to keep for a screen still being written
+ * went with the last screen that landed.
  */
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
 
@@ -54,19 +54,15 @@ type ScreenModule = { default: ComponentType };
 const modules = import.meta.glob<ScreenModule>('./*Screen.tsx');
 const cache = new Map<ScreenName, LazyExoticComponent<ComponentType>>();
 
-/** Lazy component for a registered screen, or null when its module does not exist yet. */
-export function getScreen(name: ScreenName): LazyExoticComponent<ComponentType> | null {
-  const loader = modules[`./${name}.tsx`];
-  if (!loader) return null;
+/** Lazy component for a registered screen. */
+export function getScreen(name: ScreenName): LazyExoticComponent<ComponentType> {
   let component = cache.get(name);
   if (!component) {
+    const loader = modules[`./${name}.tsx`];
+    // Unreachable while `routes.test.ts` passes: every registered name has its module.
+    if (!loader) throw new Error(`screen module missing: ${name}`);
     component = lazy(loader);
     cache.set(name, component);
   }
   return component;
-}
-
-/** Names of screens whose modules are present in this build. */
-export function availableScreens(): ScreenName[] {
-  return SCREEN_NAMES.filter((n) => Boolean(modules[`./${n}.tsx`]));
 }

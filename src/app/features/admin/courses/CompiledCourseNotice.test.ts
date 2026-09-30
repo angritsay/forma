@@ -4,6 +4,8 @@
  * A render test rather than a screenshot: there is no browser in CI, and what matters is that the
  * sentence is on the page for «start» and absent for a course the admin built.
  */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -24,5 +26,29 @@ describe('CompiledCourseNotice', () => {
     expect(
       renderToStaticMarkup(createElement(CompiledCourseNotice, { slugId: 'my_own_course' })),
     ).toBe('');
+  });
+});
+
+/*
+ * The screen around the notice is read-only for such a course: nothing typed there could reach
+ * anyone, so nothing can be typed and nothing is autosaved. Read out of the source, like
+ * `routes.test.ts` does, because the screen needs a router, a session and a backend to render.
+ */
+describe('AdminCourseScreen on a compiled course', () => {
+  const src = readFileSync(
+    join(process.cwd(), 'src', 'app', 'screens', 'AdminCourseScreen.tsx'),
+    'utf8',
+  );
+
+  it('disables both editors', () => {
+    expect(src.match(/<fieldset disabled=\{compiled\}/g)).toHaveLength(2);
+  });
+
+  it('refuses every write before it reaches the autosave', () => {
+    for (const fn of ['patchCourse', 'patchDay']) {
+      expect(src, fn).toMatch(
+        new RegExp(`const ${fn} = \\([^)]*\\) => \\{\\s*if \\(compiled\\) return;`),
+      );
+    }
   });
 });

@@ -27,13 +27,7 @@ import { starsForSession } from '@/lib/training/stars';
 import { countTraining } from '@/lib/training/consistency';
 import type { CourseState, SessionSummary, TrainingCount } from '@/lib/training/types';
 import { toLocalDateIso } from '@/lib/util/dates';
-import {
-  buildDayActivity,
-  isCompletedSession,
-  totalPoints,
-  weekStats,
-  type WeekStats,
-} from '@/app/features/home/stats';
+import { buildDayActivity, isCompletedSession, totalPoints } from '@/app/features/home/stats';
 import { completeNodePatch } from '@/app/features/path/nodeState';
 import { useSession, type Profile } from './session';
 
@@ -420,12 +414,6 @@ export function useTrainingCount(): TrainingCount {
   const sessions = useProgress((s) => s.recentSessions);
   const today = useTodayIso();
   return useMemo(() => selectTrainingCount(sessions, today), [sessions, today]);
-}
-
-export function useWeekStats(): WeekStats {
-  const sessions = useProgress((s) => s.recentSessions);
-  const today = useTodayIso();
-  return useMemo(() => weekStats(sessions, today), [sessions, today]);
 }
 
 /** All-time points: the server total when available, else the sum of the loaded rows. */

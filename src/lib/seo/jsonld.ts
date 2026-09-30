@@ -1,62 +1,19 @@
 /**
  * schema.org JSON-LD builders. Each returns a plain node (no @context); JsonLd.astro wraps a
- * list of nodes in one @graph. Only real config/content values are emitted — placeholder
- * emails and empty fields are skipped.
+ * list of nodes in one @graph. Only real config/content values are emitted — empty fields are
+ * skipped. The Organization, WebSite and Person nodes the landing pages carry are built in
+ * `src/components/landing/jsonld.ts`.
  */
 import type { Course, Exercise, Locale } from '@/content/schema';
 import { l, t } from '@/i18n/index';
 import { absoluteUrl } from '@/lib/util/paths';
-import { BRAND } from '@content/site/brand';
 import { COACH } from '@content/site/coach';
-import { canonicalUrl, langTag } from './urls';
+import { langTag } from './urls';
 
 export type JsonLd = Record<string, unknown>;
 
 export function organizationId(site: string): string {
   return `${absoluteUrl(site, '/')}#organization`;
-}
-
-function isPlaceholderEmail(email: string): boolean {
-  return !email || /@example\.(com|org|net)$/i.test(email);
-}
-
-export function organizationJsonLd(site: string, locale: Locale): JsonLd {
-  const sameAs = [BRAND.telegram, BRAND.instagram, BRAND.youtube].filter((x) => x.length > 0);
-  return {
-    '@type': 'Organization',
-    '@id': organizationId(site),
-    name: BRAND.organization,
-    url: absoluteUrl(site, '/'),
-    description: BRAND.tagline[locale],
-    logo: { '@type': 'ImageObject', url: absoluteUrl(site, '/favicon.svg') },
-    ...(isPlaceholderEmail(BRAND.contactEmail) ? {} : { email: BRAND.contactEmail }),
-    ...(sameAs.length ? { sameAs } : {}),
-  };
-}
-
-export function websiteJsonLd(site: string, locale: Locale): JsonLd {
-  return {
-    '@type': 'WebSite',
-    '@id': `${absoluteUrl(site, '/')}#website`,
-    name: BRAND.name,
-    url: canonicalUrl(site, locale, '/'),
-    inLanguage: langTag(locale),
-    publisher: { '@id': organizationId(site) },
-  };
-}
-
-/** The coach as a schema.org Person; only filled config fields are emitted. */
-export function personJsonLd(site: string, locale: Locale): JsonLd {
-  const links = COACH.links.map((x) => x.url).filter((x) => x.length > 0);
-  return {
-    '@type': 'Person',
-    name: l(COACH.name, locale),
-    jobTitle: l(COACH.role, locale),
-    description: l(COACH.bio, locale),
-    worksFor: { '@id': organizationId(site) },
-    ...(COACH.photo ? { image: absoluteUrl(site, COACH.photo) } : {}),
-    ...(links.length ? { sameAs: links } : {}),
-  };
 }
 
 export function breadcrumbJsonLd(items: { name: string; url: string }[]): JsonLd {

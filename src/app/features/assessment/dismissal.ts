@@ -27,11 +27,3 @@ export function dismissAssessment(): void {
     /* ignore */
   }
 }
-
-export function clearAssessmentDismissal(): void {
-  try {
-    localStorage?.removeItem(ASSESSMENT_DISMISSED_KEY);
-  } catch {
-    /* ignore */
-  }
-}

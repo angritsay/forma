@@ -15,14 +15,9 @@
 import { Suspense, useEffect, useRef, type ReactElement } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router';
 import { attachReferral } from '@/lib/api/referral';
-import { Button } from '@/components/ui/Button';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { Screen } from '@/components/ui/Screen';
 import { AppShell, FocusShell } from './components/AppShell';
 import { BootScreen } from './components/BootScreen';
 import { RedirectIfAuthed, RequireAuth, RequireOnboarded } from './components/RouteGuards';
-import { TopBar } from './components/TopBar';
-import { useT } from './hooks/useT';
 import { useTelegramBack } from './hooks/useTelegramBack';
 import { useLocale } from './store/locale';
 import { useSession } from './store/session';
@@ -40,29 +35,11 @@ import {
 import { firstTrainableNode } from './features/courses/courseAccess';
 import { consumeNext } from './features/entry/next';
 import { findCourse } from '@/content/catalogue';
-
-function MissingScreen({ name }: { name: ScreenName }) {
-  const { t } = useT();
-  const navigate = useNavigate();
-  return (
-    <Screen header={<TopBar back title={name.replace(/Screen$/, '')} />}>
-      <EmptyState
-        icon="info"
-        title={t('app.errorScreenMissingTitle')}
-        description={t('app.errorScreenMissingBody')}
-        action={
-          <Button variant="action" onClick={() => navigate('/')}>
-            {t('app.tabCourses')}
-          </Button>
-        }
-      />
-    </Screen>
-  );
-}
+import { BOOKING } from '@content/site/booking';
+import { BookingOff } from './features/coach/BookingOff';
 
 function LazyScreen({ name }: { name: ScreenName }) {
   const Component = getScreen(name);
-  if (!Component) return <MissingScreen name={name} />;
   return <Component />;
 }
 
@@ -246,7 +223,11 @@ export function AppRoutes() {
                 <Route path="/duo" element={<LazyScreen name="DuoInviteScreen" />} />
                 {/* «Позови друга» — the referral link and what it has brought (0051). */}
                 <Route path="/invite" element={<LazyScreen name="ClubInviteScreen" />} />
-                <Route path="/book" element={<LazyScreen name="BookScreen" />} />
+                {/* Booking switched off (`BOOKING.enabled`): the address stays, the offer does not. */}
+                <Route
+                  path="/book"
+                  element={BOOKING.enabled ? <LazyScreen name="BookScreen" /> : <BookingOff />}
+                />
                 <Route path="/admin" element={<LazyScreen name="AdminScreen" />} />
                 <Route path="/admin/workouts" element={<LazyScreen name="AdminWorkoutsScreen" />} />
                 {/* The workout editor on its own address (`new` for a new one), so back leaves it. */}

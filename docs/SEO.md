@@ -46,10 +46,10 @@ Building blocks (all under `src/lib/seo/` and `src/components/seo/`):
   exercise description simply yields a shorter meta description, which the audit warns about
   below 80 chars). `ogImagePath()` returns the generated PNG or `/og/default.png` when it does
   not exist.
-- `jsonld.ts` — schema.org builders (`organizationJsonLd`, `websiteJsonLd`, `personJsonLd`,
-  `breadcrumbJsonLd`, `faqJsonLd`, `itemListJsonLd`, `collectionPageJsonLd`, `howToJsonLd`,
-  `videoObjectJsonLd`, `articleJsonLd`, `courseJsonLd`). `JsonLd.astro` merges them into one
-  `@graph`. Placeholder emails (`@example.com`) and empty config fields are never emitted.
+- `jsonld.ts` — schema.org builders (`breadcrumbJsonLd`, `faqJsonLd`, `itemListJsonLd`,
+  `collectionPageJsonLd`, `howToJsonLd`, `videoObjectJsonLd`, `articleJsonLd`, `courseJsonLd`).
+  `JsonLd.astro` merges them into one `@graph`. Empty config fields are never emitted. The
+  Organization, WebSite and Person nodes come from `src/components/landing/jsonld.ts`.
 - `exercises.ts` — grouping by movement pattern, related exercises (same pattern → shared muscles →
   same equipment), scaling links, generated FAQ (mistakes, cues, then breathing / scaling /
   equipment — the coach's own text re-phrased as Q&A), public video detection (`storage:` refs

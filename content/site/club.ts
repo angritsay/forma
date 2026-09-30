@@ -105,24 +105,6 @@ export function publishableClubPhotos(): readonly ClubPhoto[] {
  */
 export const CLUB_PITCH_PHOTO_COUNT = 10;
 
-/**
- * Whether the cell shows the whole file.
- *
- * **It does, and that is the change.** The row used to be three tall narrow panels, each showing
- * about 32% of a square file, which needed a measured `object-position` per photograph so the crop
- * landed on the person rather than on the seam between the two halves of a before/after composite.
- * Square cells need none of it: `results.ts` ships 1000×1000 files, a square cell shows all of one,
- * and there is no slice to choose. The arithmetic that chose it (`panelFocus`, the per-file
- * `COMPOSITE_SUBJECT_CENTER` table measured with a ruler) is gone with the shape it served — the
- * git history has it if a narrow row is ever wanted again.
- *
- * The consequence worth stating: the frames are before/after composites, and a square cell shows
- * **both** halves. That is what the website already shows of the same files (the homepage's photo strip),
- * with the same consent behind it, so nothing new is claimed — but it does mean the alt text can
- * now be the honest one. See `clubPitchPhotos()`.
- */
-export const CLUB_PITCH_WHOLE_FILE = true;
-
 /** Whose photographs the row ended up with — the label on the row is chosen from this. */
 export type ClubPhotoSource = 'members' | 'coachClients';
 

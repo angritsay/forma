@@ -111,15 +111,6 @@ export function courseWorkoutCount(course: Course): number {
   return course.nodes.filter((n) => n.kind !== 'rest').length;
 }
 
-export function coursesCountLabel(locale: Locale, n: number): string {
-  const word = plural(locale, n, {
-    one: t(locale, 'landing.courseWordOne'),
-    few: t(locale, 'landing.courseWordFew'),
-    many: t(locale, 'landing.courseWordMany'),
-  });
-  return t(locale, 'landing.chipCourses', { n, word });
-}
-
 /** True when the course needs nothing beyond a mat. */
 export function isBodyweightCourse(course: Course): boolean {
   return course.equipment.every((e) => e === 'none' || e === 'mat');

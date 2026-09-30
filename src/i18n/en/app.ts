@@ -27,8 +27,9 @@ export const app = {
   errorNotConfiguredBody:
     'The app needs a Supabase project. Set these environment variables and rebuild the site.',
   errorNotConfiguredHint: 'Step-by-step instructions:',
-  errorScreenMissingTitle: 'This screen isn’t available yet',
-  errorScreenMissingBody: 'Head back to the home screen.',
+  // «Coach» with booking switched off (`BOOKING.enabled`): no tab, and a link lands here.
+  bookOffTitle: 'Booking the coach is closed for now',
+  bookOffBody: 'When it opens, you book right here.',
 
   // Sound. One row, one switch, no explanation: ListRow truncates a subtitle, and a sentence
   // that cannot be read to the end is worse than none. The switch says what it does by moving.
@@ -143,10 +144,6 @@ export const app = {
   onbSaveError: 'Couldn’t save your profile. Check the connection and try again.',
 
   // Home
-  homeGreetingMorning: 'Good morning, {name}',
-  homeGreetingAfternoon: 'Good afternoon, {name}',
-  homeGreetingEvening: 'Good evening, {name}',
-  homeGreetingNight: 'Still up, {name}?',
   /*
    * Five streak keys stood here. The streak is gone: the course trains five days a week, so anyone
    * following it lost their streak every weekend for doing as they were told. Workouts are counted
@@ -165,9 +162,6 @@ export const app = {
   homeDeckContinue: 'Continue',
   homeErrorTitle: 'Couldn’t load your progress',
   homeErrorBody: 'Check the connection and try again.',
-
-  // Courses
-  coursesCompleted: 'Completed — open the path',
 
   // Course path
   pathProgressLabel: 'Course progress',
@@ -504,7 +498,6 @@ export const app = {
   // Profile
   profileTitle: 'Profile',
   profileWeightsKg: '{list} kg',
-  profileLimitationsNone: 'Nothing',
   profileSubscription: 'Subscription',
   profileSubscriptionNoneHint: 'from {price} a month',
   profileSubscriptionLive: 'until {date}',
@@ -524,7 +517,6 @@ export const app = {
   bookContact: 'Message the coach',
   bookContactHint:
     'Payment isn’t connected yet: write, and you agree on a time and payment directly.',
-  bookDemoNote: 'Payments are off in demo mode.',
   profileSignOut: 'Sign out',
   profileSignOutTitle: 'Sign out?',
   profileSignOutBody:
@@ -1102,7 +1094,7 @@ export const app = {
   coursePublish: 'Publish',
   courseUnpublish: 'Unpublish',
   coursePublishReady: 'The course is ready to publish.',
-  courseCompiledNotice: 'This course is maintained in code — edits here are not seen by students.',
+  courseCompiledNotice: 'This course is maintained in code — here it is read-only.',
   coursePublishBlocked: 'Not publishable yet:',
   coursePublishSite:
     'The course page on the website appears on the next build, which runs nightly. Need it now — run "Deploy site" in GitHub Actions.',
@@ -1683,9 +1675,9 @@ export const app = {
   profileSaveError: 'Couldn’t save. Check the connection and try again.',
 
   // --- Stream: «Курсы» and the tab bar, to the owner's mockup ------------------
-  // The mockup sets the greeting on two lines — «Доброе утро» over the name, large. Same four
-  // times of day as homeGreeting*, without the {name} slot: the name is its own line in its own
-  // face, so there is nothing left to interpolate it into.
+  // The mockup sets the greeting on two lines — «Доброе утро» over the name, large. The four
+  // times of day, without a {name} slot: the name is its own line in its own face, so there is
+  // nothing left to interpolate it into.
   homeGreetMorning: 'Good morning',
   homeGreetAfternoon: 'Good afternoon',
   homeGreetEvening: 'Good evening',
@@ -1784,8 +1776,7 @@ export const app = {
   clubStorySticker: 'Club',
   // --- Club, for somebody who is already in it (stream: club-pitch-states) ----
   clubMemberTitle: 'You are in the club',
-  clubMemberNote:
-    'The coach puts each round together himself — he adds the members and makes the pairs. The moment a new one starts, the tasks appear here.',
+  clubMemberNote: 'The club opens soon — the tasks appear here.',
   // --- Coach: the session already booked (stream: coach-sentence) -------------
   // `src/lib/coach/booking.ts` returns a shape and never a string, so the wording lives here. The
   // shape exists for the day boundary: a session tomorrow at 09:00 is «tomorrow at 9:00», not «in

@@ -43,7 +43,7 @@ import {
   useProgressLoader,
 } from '@/app/store/progress';
 import { useSession } from '@/app/store/session';
-import { nodeAccess } from '@/app/features/courses/courseAccess';
+import { courseVisible, nodeAccess } from '@/app/features/courses/courseAccess';
 import { UnlockSheet } from '@/app/features/courses/UnlockSheet';
 
 export default function CoursePathScreen() {
@@ -95,10 +95,11 @@ export default function CoursePathScreen() {
     // Курс, который пробуют, — тоже тот, которым человек сейчас занят: иначе «Сегодня» осталось бы
     // пустым ровно у того, кто только что начал. Оговорки «кроме потративших пробу» здесь больше
     // нет: проба не тратится (0022), и попробовавшему по-прежнему есть что открыть отсюда.
-    if (course) setActiveCourse(course.id);
-  }, [course, setActiveCourse]);
+    if (course && courseVisible(course, owned)) setActiveCourse(course.id);
+  }, [course, owned, setActiveCourse]);
 
-  if (!course) {
+  // Off sale and not theirs: the same «not found» as a mistyped id (`courseVisible`).
+  if (!course || !courseVisible(course, owned)) {
     return (
       <Screen header={<TopBar back="/courses" />}>
         <EmptyState

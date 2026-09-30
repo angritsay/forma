@@ -30,6 +30,14 @@ describe('activeTabIndex', () => {
     expect(activeTabIndex('/book', true)).toBe(2);
   });
 
+  it('drops «Тренер» while booking is off, and the admin seat moves up', () => {
+    expect(tabItems(false, false).map((i) => i.to)).toEqual(['/', '/marathon']);
+    expect(tabItems(true, false).map((i) => i.to)).toEqual(['/', '/marathon', '/admin']);
+    // `/book` still answers (the not-available screen), but no seat lights for it.
+    expect(activeTabIndex('/book', false, false)).toBe(-1);
+    expect(activeTabIndex('/admin', true, false)).toBe(2);
+  });
+
   it('keeps a tab lit for the screens inside it', () => {
     expect(activeTabIndex('/marathon/board')).toBe(1);
     expect(activeTabIndex('/admin/marathons/xyz', true)).toBe(3);

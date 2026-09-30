@@ -1,5 +1,6 @@
 /**
  * The exercise picker used by the workout builder: search the database catalogue and tap to add.
+ * Only filmed movements are offered (`pickableExercises`).
  */
 import { useEffect, useMemo, useState } from 'react';
 import { Glyph } from '@/components/ui/Icon';
@@ -9,6 +10,7 @@ import { listExerciseCatalog } from '@/lib/api/exercises';
 import type { ExerciseCatalogRow } from '@/lib/api/types';
 import { useT } from '@/app/hooks/useT';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
+import { pickableExercises } from './filmed';
 
 export interface ExercisePickerSheetProps {
   open: boolean;
@@ -29,7 +31,8 @@ export function ExercisePickerSheet({ open, onClose, onPick }: ExercisePickerShe
     let alive = true;
     setLoading(true);
     listExerciseCatalog()
-      .then((r) => {
+      .then((all) => {
+        const r = pickableExercises(all);
         cache = r;
         if (alive) {
           setRows(r);

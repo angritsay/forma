@@ -1,5 +1,5 @@
 /**
- * Shared plumbing for the API modules (not exported from the barrel).
+ * Shared plumbing for the API modules; callers import the modules themselves, never this one.
  */
 import type { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from './client';

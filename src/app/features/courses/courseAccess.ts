@@ -24,6 +24,18 @@
  */
 import type { Course, CourseNode } from '@/content/schema';
 
+/**
+ * Can this person see the course at all.
+ *
+ * `findCourse` resolves every compiled course, including the ones taken off sale
+ * (`published: false`), because somebody who bought one before it came off the shelf still opens
+ * it. A stranger arriving by URL did not buy it, and for them a hidden course does not exist: the
+ * screen says «not found» rather than drawing a path they could never be sold.
+ */
+export function courseVisible(course: Course, owned: boolean): boolean {
+  return course.published || owned;
+}
+
 export type CourseAccess =
   /** Куплен или открыт подпиской: всё доступно. */
   | 'owned'

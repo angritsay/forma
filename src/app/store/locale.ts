@@ -29,7 +29,7 @@
  * можешь автоматически проставить русский») and it needs no migration: the data is already there.
  */
 import { create } from 'zustand';
-import { DEFAULT_LOCALE, isLocale, LOCALES, type Locale } from '@/i18n/index';
+import { DEFAULT_LOCALE, isLocale, type Locale } from '@/i18n/index';
 
 export const LOCALE_STORAGE_KEY = 'forma.locale';
 
@@ -95,6 +95,3 @@ export const useLocale = create<LocaleState>()((set, get) => ({
     set({ locale, hinted: true });
   },
 }));
-
-/** What the first screen and the account switch offer: the published languages, in order. */
-export const OFFERED_LOCALES: readonly Locale[] = LOCALES;
