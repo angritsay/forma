@@ -586,6 +586,11 @@ describe('coach sessions (0054)', () => {
     const early = messageFor({ kind: 'session_confirmed', params: base }, 'en', start - 60_000);
     expect(early?.text).toContain('24 hours');
     expect(early?.text).not.toContain('already started');
+    // Booked by the admin for a coach with no room yet: no «join through the link» without one.
+    const bare = { ...base, join_url: null };
+    const noLink = messageFor({ kind: 'session_confirmed', params: bare }, 'ru', start + 60_000);
+    expect(noLink?.text).not.toContain('Встреча уже идёт');
+    expect(noLink?.text).not.toContain('24 часа');
   });
 
   it('picks the reminder headline by how far ahead it is', () => {

@@ -717,10 +717,10 @@ function sessionMessage(
       lines.push(details);
       if (link) lines.push(link);
       // Confirmed after the start (0058: a slow payment, the admin booking it late): the move rule
-      // is moot, and the one thing to say is to go in.
+      // is moot, and the one thing to say is to go in — when there is a link to go in by.
       const starts = instant(params.starts_at)?.getTime() ?? null;
       if (now !== undefined && starts !== null && now >= starts) {
-        lines.push(c.sessionConfirmedRunning);
+        if (link) lines.push(c.sessionConfirmedRunning);
       } else {
         lines.push(c.sessionMoveRule);
       }

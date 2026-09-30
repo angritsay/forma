@@ -111,6 +111,15 @@ describe('the payment landed', () => {
     expect(paymentLanded([{ id: 'b9', status: 'cancelled' }], record)).toBe(false);
   });
 
+  it('with the old list unread, only the held slot counts: an older session is not the payment', () => {
+    const unread = { ...record, known: null };
+    expect(paymentLanded([{ id: 'b0', status: 'active' }], unread)).toBe(false);
+    expect(paymentLanded([{ id: 'h1', status: 'active' }], unread)).toBe(true);
+    const store = memory();
+    writePaying(unread, store);
+    expect(readPaying('u1', T, store)).toEqual(unread);
+  });
+
   it('knows the active ids a record starts from', () => {
     expect(
       activeIds([

@@ -36,8 +36,12 @@ export interface PayingRecord {
   deadline: number;
   /** The held start, for the message to the coach while the payment is checked. */
   startsAt: string;
-  /** Active sessions the person had when the till opened. */
-  known: string[];
+  /**
+   * Active sessions the person had when the till opened; null when the list could not be read
+   * then. Without it a session the person already had would read as the payment landing, so only
+   * the held slot's own id counts.
+   */
+  known: string[] | null;
 }
 
 type StorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
@@ -53,8 +57,7 @@ function isRecord(v: unknown): v is PayingRecord {
     typeof r.deadline === 'number' &&
     Number.isFinite(r.deadline) &&
     typeof r.startsAt === 'string' &&
-    Array.isArray(r.known) &&
-    r.known.every((x) => typeof x === 'string')
+    (r.known === null || (Array.isArray(r.known) && r.known.every((x) => typeof x === 'string')))
   );
 }
 
@@ -103,14 +106,17 @@ export function activeIds(list: readonly Pick<CoachBooking, 'id' | 'status'>[]):
 
 /**
  * The payment landed: the held slot became a session, or an active session appeared that was not
- * there when the till opened (a claim, the admin, another device).
+ * there when the till opened (a claim, the admin, another device). With `known` unread (null) only
+ * the held slot counts: any session could be one the person already had.
  */
 export function paymentLanded(
   list: readonly Pick<CoachBooking, 'id' | 'status'>[],
   paying: Pick<PayingRecord, 'holdId' | 'known'>,
 ): boolean {
   return list.some(
-    (b) => b.status === 'active' && (b.id === paying.holdId || !paying.known.includes(b.id)),
+    (b) =>
+      b.status === 'active' &&
+      (b.id === paying.holdId || (paying.known !== null && !paying.known.includes(b.id))),
   );
 }
 

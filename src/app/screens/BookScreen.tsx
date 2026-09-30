@@ -263,8 +263,11 @@ export default function BookScreen() {
   const [readFailed, setReadFailed] = useState(false);
   /* Whether the bot can reach them about the session (0058); asked once a session exists. */
   const [tgLinked, setTgLinked] = useState<boolean | null>(null);
-  /* The active sessions last read: what a payment in flight is compared against. */
-  const knownActive = useRef<string[]>([]);
+  /*
+   * The active sessions last read: what a payment in flight is compared against. Null until a read
+   * has succeeded — an empty list would make every session the person already has look new.
+   */
+  const knownActive = useRef<string[] | null>(null);
   const [now, setNow] = useState(() => Date.now());
   /*
    * The slot held for this person while they pay (0055), or null. Read with the booking, so a
@@ -564,7 +567,7 @@ export default function BookScreen() {
       getMyCoachBookings()
         .then((list) => {
           if (!alive.current) return;
-          const known = payingRef.current?.known ?? knownActive.current;
+          const known = payingRef.current?.known ?? null;
           if (paymentLanded(list, { holdId: checking.id, known })) {
             setChecking(null);
             forgetPaying();

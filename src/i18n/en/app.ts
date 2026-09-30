@@ -2148,7 +2148,7 @@ export const app = {
   bookingsRelease: 'Release',
   bookingsReleaseTitle: 'Release the time?',
   bookingsReleaseBody:
-    'The hold goes and the time is free for everybody. If the payment still arrives while the time is free, the booking is confirmed; otherwise the payment shows up under «Payments» with no time.',
+    'The hold goes and the time is free for everybody. If the payment still arrives, it does not confirm a booking by itself: it shows up under «Payments» with no time, and you can book it from there.',
   bookingsReleased: 'Time released',
   adminPayBookWhoHint:
     'No account stands behind this payment. Pick the person — the session will show up in their app.',
