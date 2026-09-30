@@ -53,8 +53,7 @@ import {
 import { listAdminBookings, type AdminBooking, type BookingScope } from '@/lib/api/adminInbox';
 import { isAppError } from '@/lib/api/errors';
 import { listTelegramBlocked } from '@/lib/api/telegramBlocked';
-import { clockIn, dateIn, parseClock, wallToInstant } from '@/lib/coach/slots';
-import { BootScreen } from '@/app/components/BootScreen';
+import { clockIn, dateIn } from '@/lib/coach/slots';
 import { LoadingBlock } from '@/app/components/LoadingBlock';
 import { TopBar } from '@/app/components/TopBar';
 import { useT } from '@/app/hooks/useT';
